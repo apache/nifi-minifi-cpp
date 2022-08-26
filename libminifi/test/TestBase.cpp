@@ -92,7 +92,7 @@ void LogTestController::setLevelByClassName(spdlog::level::level_enum level, con
   }
 }
 
-bool LogTestController::contains(const std::ostringstream& stream, const std::string& ending, std::chrono::seconds timeout, std::chrono::milliseconds sleep_interval) const {
+bool LogTestController::contains(const std::ostringstream& stream, const std::string& ending, std::chrono::milliseconds timeout, std::chrono::milliseconds sleep_interval) const {
   if (ending.length() == 0) {
     return false;
   }
@@ -113,7 +113,7 @@ bool LogTestController::contains(const std::ostringstream& stream, const std::st
   return found;
 }
 
-std::optional<std::smatch> LogTestController::matchesRegex(const std::string& regex_str, std::chrono::seconds timeout, std::chrono::milliseconds sleep_interval) const {
+std::optional<std::smatch> LogTestController::matchesRegex(const std::string& regex_str, std::chrono::milliseconds timeout, std::chrono::milliseconds sleep_interval) const {
   if (regex_str.length() == 0) {
     return std::nullopt;
   }
@@ -147,6 +147,10 @@ void LogTestController::reset() {
   modified_loggers.clear();
   if (config)
     config = logging::LoggerConfiguration::newInstance();
+  clear();
+}
+
+void LogTestController::clear() {
   resetStream(log_output);
 }
 
@@ -482,7 +486,7 @@ bool TestPlan::runCurrentProcessor(const PreTriggerVerifier& /*verify*/) {
   return runProcessor(location);
 }
 
-bool TestPlan::runCurrentProcessorUntilFlowfileIsProduced(const std::chrono::seconds& wait_duration) {
+bool TestPlan::runCurrentProcessorUntilFlowfileIsProduced(std::chrono::milliseconds wait_duration) {
   using org::apache::nifi::minifi::utils::verifyEventHappenedInPollTime;
   const auto isFlowFileProduced = [&] {
     runCurrentProcessor();

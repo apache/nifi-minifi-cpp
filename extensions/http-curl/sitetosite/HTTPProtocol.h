@@ -31,13 +31,7 @@
 #include "sitetosite/Peer.h"
 #include "utils/Id.h"
 
-namespace org::apache::nifi::minifi::sitetosite {
-
-typedef struct Site2SitePeerStatus {
-  std::string host_;
-  int port_;
-  bool isSecure_;
-} Site2SitePeerStatus;
+namespace org::apache::nifi::minifi::extensions::curl {
 
 class HttpSiteToSiteClient : public sitetosite::SiteToSiteClient {
   static constexpr char const* PROTOCOL_VERSION_HEADER = "x-nifi-site-to-site-protocol-version";
@@ -45,15 +39,15 @@ class HttpSiteToSiteClient : public sitetosite::SiteToSiteClient {
  public:
   explicit HttpSiteToSiteClient(const std::string& /*name*/, const utils::Identifier& /*uuid*/ = {})
       : SiteToSiteClient(),
-        current_code(UNRECOGNIZED_RESPONSE_CODE) {
-    peer_state_ = READY;
+        current_code(sitetosite::UNRECOGNIZED_RESPONSE_CODE) {
+    peer_state_ = sitetosite::READY;
   }
 
-  explicit HttpSiteToSiteClient(std::unique_ptr<SiteToSitePeer> peer)
+  explicit HttpSiteToSiteClient(std::unique_ptr<sitetosite::SiteToSitePeer> peer)
       : SiteToSiteClient(),
-        current_code(UNRECOGNIZED_RESPONSE_CODE) {
+        current_code(sitetosite::UNRECOGNIZED_RESPONSE_CODE) {
     peer_ = std::move(peer);
-    peer_state_ = READY;
+    peer_state_ = sitetosite::READY;
   }
   ~HttpSiteToSiteClient() override = default;
 
@@ -61,11 +55,11 @@ class HttpSiteToSiteClient : public sitetosite::SiteToSiteClient {
   EXTENSIONAPI static constexpr bool SupportsDynamicProperties = false;
   EXTENSIONAPI static constexpr bool SupportsDynamicRelationships = false;
 
-  void setPeer(std::unique_ptr<SiteToSitePeer> peer) override {
+  void setPeer(std::unique_ptr<sitetosite::SiteToSitePeer> peer) override {
     peer_ = std::move(peer);
   }
 
-  bool getPeerList(std::vector<PeerStatus> &peers) override;
+  bool getPeerList(std::vector<sitetosite::PeerStatus> &peers) override;
 
   /**
    * Establish the protocol connection. Not needed for the HTTP connection, so we simply
@@ -75,7 +69,7 @@ class HttpSiteToSiteClient : public sitetosite::SiteToSiteClient {
     return true;
   }
 
-  std::shared_ptr<Transaction> createTransaction(TransferDirection direction) override;
+  std::shared_ptr<sitetosite::Transaction> createTransaction(sitetosite::TransferDirection direction) override;
 
   // Transfer flow files for the process session
   // virtual bool transferFlowFiles(const std::shared_ptr<core::ProcessContext> &context, const std::shared_ptr<core::ProcessSession> &session);
@@ -92,15 +86,15 @@ class HttpSiteToSiteClient : public sitetosite::SiteToSiteClient {
    */
   void closeTransaction(const utils::Identifier &transactionID);
 
-  int readResponse(const std::shared_ptr<Transaction> &transaction, RespondCode &code, std::string &message) override;
+  int readResponse(const std::shared_ptr<sitetosite::Transaction> &transaction, sitetosite::RespondCode &code, std::string &message) override;
   // write respond
-  int writeResponse(const std::shared_ptr<Transaction> &transaction, RespondCode code, std::string message) override;
+  int writeResponse(const std::shared_ptr<sitetosite::Transaction> &transaction, sitetosite::RespondCode code, std::string message) override;
 
   /**
    * Bootstrapping is not really required for the HTTP Site To Site so we will set the peer state and return true.
    */
   bool bootstrap() override {
-    peer_state_ = READY;
+    peer_state_ = sitetosite::READY;
     return true;
   }
 
@@ -110,7 +104,7 @@ class HttpSiteToSiteClient : public sitetosite::SiteToSiteClient {
    * @param transaction transaction against which we are performing our sends
    * @return HTTP Client shared pointer.
    */
-  std::shared_ptr<minifi::utils::HTTPClient> openConnectionForSending(const std::shared_ptr<HttpTransaction> &transaction);
+  std::shared_ptr<minifi::extensions::curl::HTTPClient> openConnectionForSending(const std::shared_ptr<HttpTransaction> &transaction);
 
   /**
    * Creates a connection for receiving, returning an HTTP client that is structured and configured
@@ -118,7 +112,7 @@ class HttpSiteToSiteClient : public sitetosite::SiteToSiteClient {
    * @param transaction transaction against which we are performing our reads
    * @return HTTP Client shared pointer.
    */
-  std::shared_ptr<minifi::utils::HTTPClient> openConnectionForReceive(const std::shared_ptr<HttpTransaction> &transaction);
+  std::shared_ptr<minifi::extensions::curl::HTTPClient> openConnectionForReceive(const std::shared_ptr<HttpTransaction> &transaction);
 
   std::string getBaseURI() {
     std::string uri = ssl_context_service_ != nullptr ? "https://" : "http://";
@@ -133,8 +127,8 @@ class HttpSiteToSiteClient : public sitetosite::SiteToSiteClient {
 
   static std::optional<utils::Identifier> parseTransactionId(const std::string &uri);
 
-  std::unique_ptr<utils::HTTPClient> create_http_client(const std::string &uri, const std::string &method = "POST", bool setPropertyHeaders = false) {
-    std::unique_ptr<utils::HTTPClient> http_client_ = std::make_unique<utils::HTTPClient>(uri, ssl_context_service_);
+  std::unique_ptr<minifi::extensions::curl::HTTPClient> create_http_client(const std::string &uri, const std::string &method = "POST", bool setPropertyHeaders = false) {
+    std::unique_ptr<minifi::extensions::curl::HTTPClient> http_client_ = std::make_unique<minifi::extensions::curl::HTTPClient>(uri, ssl_context_service_);
     http_client_->initialize(method, uri, ssl_context_service_);
     if (setPropertyHeaders) {
       if (_currentVersion >= 5) {
@@ -154,7 +148,7 @@ class HttpSiteToSiteClient : public sitetosite::SiteToSiteClient {
   }
 
  private:
-  RespondCode current_code;
+  sitetosite::RespondCode current_code;
   std::shared_ptr<core::logging::Logger> logger_ = core::logging::LoggerFactory<HttpSiteToSiteClient>::getLogger();
   // Prevent default copy constructor and assignment operation
   // Only support pass by reference or pointer
@@ -163,4 +157,4 @@ class HttpSiteToSiteClient : public sitetosite::SiteToSiteClient {
   static std::shared_ptr<utils::IdGenerator> id_generator_;
 };
 
-}  // namespace org::apache::nifi::minifi::sitetosite
+}  // namespace org::apache::nifi::minifi::extensions::curl

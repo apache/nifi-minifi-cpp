@@ -192,7 +192,7 @@ class PythonScriptEngine : public script::ScriptEngine {
     call("onSchedule", script_context);
   }
 
-  void onTrigger(const std::shared_ptr<core::ProcessContext> &context, const std::shared_ptr<core::ProcessSession> &session) {
+  void onTrigger(const std::shared_ptr<core::ProcessContext> &context, const std::shared_ptr<core::ProcessSession> &session) override {
     auto script_context = convertContext(context);
     auto py_session = convertSession(session);
     TriggerSession trigger_session(script_context, py_session);

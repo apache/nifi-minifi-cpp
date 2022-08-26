@@ -84,6 +84,7 @@ class PostElasticsearch : public core::Processor {
   uint64_t max_batch_size_ = 100;
   std::string host_url_;
   std::shared_ptr<ElasticsearchCredentialsControllerService> credentials_service_;
+  curl::HTTPClient client_;
   std::shared_ptr<core::logging::Logger> logger_ = core::logging::LoggerFactory<PostElasticsearch>::getLogger();
 };
 

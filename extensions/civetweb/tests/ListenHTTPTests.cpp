@@ -40,6 +40,8 @@
 
 namespace org::apache::nifi::minifi::test {
 
+using namespace std::literals::chrono_literals;
+
 class ListenHTTPTestsFixture {
  public:
   struct HttpResponseExpectations {
@@ -60,7 +62,7 @@ class ListenHTTPTestsFixture {
     LogTestController::getInstance().setTrace<minifi::processors::ListenHTTP>();
     LogTestController::getInstance().setTrace<minifi::processors::ListenHTTP::Handler>();
     LogTestController::getInstance().setDebug<minifi::processors::LogAttribute>();
-    LogTestController::getInstance().setDebug<utils::HTTPClient>();
+    LogTestController::getInstance().setDebug<minifi::extensions::curl::HTTPClient>();
     LogTestController::getInstance().setDebug<minifi::controllers::SSLContextService>();
 
     // Create temporary directories
@@ -146,11 +148,11 @@ class ListenHTTPTestsFixture {
       return;
     }
 
-    client = std::make_unique<utils::HTTPClient>();
+    client = std::make_unique<minifi::extensions::curl::HTTPClient>();
     client->initialize(method, url, ssl_context_service);
-    client->setVerbose();
+    client->setVerbose(false);
     for (const auto &header : headers) {
-      client->appendHeader(header.first, header.second);
+      client->setRequestHeader(header.first, header.second);
     }
     if (method == "POST") {
       client->setPostFields(payload);
@@ -163,10 +165,10 @@ class ListenHTTPTestsFixture {
       if (!update_attribute->getDynamicProperty("mime.type", content_type)) {
         content_type = "application/octet-stream";
       }
-      REQUIRE(content_type == utils::StringUtils::trim(client->getParsedHeaders().at("Content-type")));
-      REQUIRE("19" == utils::StringUtils::trim(client->getParsedHeaders().at("Content-length")));
+      REQUIRE(content_type == utils::StringUtils::trim(client->getResponseHeaderMap().at("Content-type")));
+      REQUIRE("19" == utils::StringUtils::trim(client->getResponseHeaderMap().at("Content-length")));
     } else {
-      REQUIRE("0" == utils::StringUtils::trim(client->getParsedHeaders().at("Content-length")));
+      REQUIRE("0" == utils::StringUtils::trim(client->getResponseHeaderMap().at("Content-length")));
     }
   }
 
@@ -231,7 +233,7 @@ class ListenHTTPTestsFixture {
   std::string payload;
   std::string endpoint = "test";
   std::string url;
-  std::unique_ptr<utils::HTTPClient> client;
+  std::unique_ptr<minifi::extensions::curl::HTTPClient> client;
   std::size_t batch_size_ = 0;
   std::size_t buffer_size_ = 0;
 };
@@ -359,7 +361,7 @@ TEST_CASE_METHOD(ListenHTTPTestsFixture, "HTTP filtered headers", "[headers]") {
   test_connect();
 
   REQUIRE(LogTestController::getInstance().contains("key:foo value:1"));
-  REQUIRE(false == LogTestController::getInstance().contains("key:bar value:2", std::chrono::seconds(0) /*timeout*/));
+  REQUIRE(false == LogTestController::getInstance().contains("key:bar value:2", 0s));
 }
 
 TEST_CASE_METHOD(ListenHTTPTestsFixture, "HTTP Batch tests", "[batch]") {
@@ -367,10 +369,10 @@ TEST_CASE_METHOD(ListenHTTPTestsFixture, "HTTP Batch tests", "[batch]") {
   std::vector<HttpResponseExpectations> requests;
   auto create_requests = [&](std::size_t successful, std::size_t failed) {
     for (std::size_t i = 0; i < successful; ++i) {
-      requests.push_back(HttpResponseExpectations{true, 200});
+      requests.emplace_back(true, 200);
     }
     for (std::size_t i = 0; i < failed; ++i) {
-      requests.push_back(HttpResponseExpectations{true, 503});
+      requests.emplace_back(true, 503);
     }
   };
 
@@ -646,8 +648,8 @@ TEST_CASE_METHOD(ListenHTTPTestsFixture, "HTTPS minimum SSL version", "[https]")
 
   run_server();
 
-  client = std::make_unique<utils::HTTPClient>();
-  client->setVerbose();
+  client = std::make_unique<minifi::extensions::curl::HTTPClient>();
+  client->setVerbose(false);
   client->initialize(method, url, ssl_context_service);
   if (method == "POST") {
     client->setPostFields(payload);

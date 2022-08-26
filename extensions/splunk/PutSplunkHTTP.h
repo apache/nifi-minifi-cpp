@@ -21,7 +21,9 @@
 #include <memory>
 
 #include "SplunkHECProcessor.h"
+#include "client/HTTPClient.h"
 #include "utils/ArrayUtils.h"
+#include "utils/ResourceQueue.h"
 #include "utils/gsl.h"
 
 namespace org::apache::nifi::minifi::extensions::splunk {
@@ -68,6 +70,10 @@ class PutSplunkHTTP final : public SplunkHECProcessor {
   void onTrigger(const std::shared_ptr<core::ProcessContext> &context, const std::shared_ptr<core::ProcessSession> &session) override;
   void initialize() override;
   void onSchedule(const std::shared_ptr<core::ProcessContext> &context, const std::shared_ptr<core::ProcessSessionFactory> &sessionFactory) override;
+
+ private:
+  std::shared_ptr<core::logging::Logger> logger_{core::logging::LoggerFactory<PutSplunkHTTP>::getLogger()};
+  std::shared_ptr<utils::ResourceQueue<extensions::curl::HTTPClient>> client_queue_;
 };
 
 }  // namespace org::apache::nifi::minifi::extensions::splunk

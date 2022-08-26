@@ -27,11 +27,7 @@
 #include "io/BaseStream.h"
 #include "HTTPClient.h"
 
-namespace org {
-namespace apache {
-namespace nifi {
-namespace minifi {
-namespace io {
+namespace org::apache::nifi::minifi::extensions::curl {
 
 class HttpStream : public io::BaseStream {
  public:
@@ -39,19 +35,19 @@ class HttpStream : public io::BaseStream {
    * File Stream constructor that accepts an fstream shared pointer.
    * It must already be initialized for read and write.
    */
-  explicit HttpStream(std::shared_ptr<utils::HTTPClient> client);
+  explicit HttpStream(std::shared_ptr<HTTPClient> client);
 
-  virtual ~HttpStream() {
+  ~HttpStream() override {
     forceClose();
   }
 
   void close() override;
 
-  const std::shared_ptr<utils::HTTPClient> &getClientRef() {
+  const std::shared_ptr<HTTPClient>& getClientRef() {
     return http_client_;
   }
 
-  const std::shared_ptr<utils::HTTPClient> &getClient() {
+  const std::shared_ptr<HTTPClient>& getClient() {
     http_client_future_.get();
     return http_client_;
   }
@@ -72,15 +68,16 @@ class HttpStream : public io::BaseStream {
       started_ = false;
     }
   }
+
   /**
    * Skip to the specified offset.
    * @param offset offset to which we will skip
    */
   void seek(size_t offset) override;
 
-  size_t tell() const override;
+  [[nodiscard]] size_t tell() const override;
 
-  size_t size() const override {
+  [[nodiscard]] size_t size() const override {
     return written;
   }
 
@@ -99,16 +96,16 @@ class HttpStream : public io::BaseStream {
    * @param value value to write
    * @param size size of value
    */
-  size_t write(const uint8_t *value, size_t size) override;
+  size_t write(const uint8_t* value, size_t size) override;
 
-  static bool submit_client(std::shared_ptr<utils::HTTPClient> client) {
+  static bool submit_client(const std::shared_ptr<HTTPClient>& client) {
     if (client == nullptr)
       return false;
     bool submit_status = client->submit();
     return submit_status;
   }
 
-  static bool submit_read_client(std::shared_ptr<utils::HTTPClient> client, utils::ByteOutputCallback *callback) {
+  static bool submit_read_client(const std::shared_ptr<HTTPClient>& client, utils::ByteOutputCallback* callback) {
     if (client == nullptr)
       return false;
     bool submit_status = client->submit();
@@ -118,8 +115,9 @@ class HttpStream : public io::BaseStream {
 
   inline bool isFinished(int seconds = 0) {
     return http_client_future_.wait_for(std::chrono::seconds(seconds)) == std::future_status::ready
-        && http_read_callback_.getSize() == 0
-        && http_read_callback_.waitingOps();
+        && http_client_->getReadCallback()
+        && http_client_->getReadCallback()->getSize() == 0
+        && http_client_->getReadCallback()->waitingOps();
   }
 
   /**
@@ -128,36 +126,27 @@ class HttpStream : public io::BaseStream {
   bool waitForDataAvailable() {
     do {
       logger_->log_trace("Waiting for more data");
-    } while (http_client_future_.wait_for(std::chrono::seconds(0)) != std::future_status::ready && http_read_callback_.getSize() == 0);
+    } while (http_client_future_.wait_for(std::chrono::seconds(0)) != std::future_status::ready
+        && http_client_->getReadCallback()
+        && http_client_->getReadCallback()->getSize() == 0);
 
-    return http_read_callback_.getSize() > 0;
+    return http_client_->getReadCallback()
+        && http_client_->getReadCallback()->getSize() > 0;
   }
 
  protected:
   std::vector<uint8_t> array;
 
-  std::shared_ptr<utils::HTTPClient> http_client_;
+  std::shared_ptr<HTTPClient> http_client_;
   std::future<bool> http_client_future_;
 
-  size_t written;
+  size_t written{0};
 
   std::mutex mutex_;
 
-  utils::HttpStreamingCallback http_callback_;
-
-  utils::HTTPUploadCallback callback_;
-
-  utils::ByteOutputCallback http_read_callback_;
-
-  utils::HTTPReadCallback read_callback_;
-
-  std::atomic<bool> started_;
+  std::atomic<bool> started_{false};
 
  private:
   std::shared_ptr<core::logging::Logger> logger_ = core::logging::LoggerFactory<HttpStream>::getLogger();
 };
-} /* namespace io */
-} /* namespace minifi */
-} /* namespace nifi */
-} /* namespace apache */
-} /* namespace org */
+}  // namespace org::apache::nifi::minifi::extensions::curl

@@ -27,16 +27,13 @@
 
 #include "core/logging/LoggerConfiguration.h"
 #include "utils/ByteArrayCallback.h"
+#include "utils/BaseHTTPClient.h"
 
-namespace org {
-namespace apache {
-namespace nifi {
-namespace minifi {
-namespace utils {
+namespace org::apache::nifi::minifi::extensions::curl {
 
 /**
  * The original class here was deadlock-prone, undocumented and was a smorgasbord of multithreading primitives used inconsistently.
- * This is a rewrite based on the contract inferred from this class's usage in utils::HTTPClient
+ * This is a rewrite based on the contract inferred from this class's usage in curl::HTTPClient
  * through HTTPStream and the non-buggy part of the behaviour of the original class.
  * Based on these:
  *  - this class provides a mechanism through which chunks of data can be inserted on a producer thread, while a
@@ -53,19 +50,9 @@ namespace utils {
  *  - because of this, all functions that request data at a specific offset are implicit seeks and potentially modify
  *    the current buffer
  */
-class HttpStreamingCallback final : public ByteInputCallback {
+class HttpStreamingCallback final : public utils::HTTPUploadCallback {
  public:
-  HttpStreamingCallback()
-      : is_alive_(true),
-        total_bytes_loaded_(0U),
-        current_buffer_start_(0U),
-        current_pos_(0U),
-        ptr_(nullptr) {
-  }
-
-  ~HttpStreamingCallback() override = default;
-
-  void close() {
+  void close() override {
     logger_->log_trace("close() called");
     std::unique_lock<std::mutex> lock(mutex_);
     is_alive_ = false;
@@ -210,19 +197,15 @@ class HttpStreamingCallback final : public ByteInputCallback {
   std::mutex mutex_;
   std::condition_variable cv;
 
-  bool is_alive_;
-  size_t total_bytes_loaded_;
-  size_t current_buffer_start_;
-  size_t current_pos_;
+  bool is_alive_{true};
+  size_t total_bytes_loaded_{0U};
+  size_t current_buffer_start_{0U};
+  size_t current_pos_{0U};
 
   std::deque<std::vector<std::byte>> byte_arrays_;
 
   std::vector<std::byte> current_vec_;
-  std::byte *ptr_;
+  std::byte* ptr_{nullptr};
 };
 
-} /* namespace utils */
-} /* namespace minifi */
-} /* namespace nifi */
-} /* namespace apache */
-} /* namespace org */
+}  // namespace org::apache::nifi::minifi::extensions::curl

@@ -18,7 +18,7 @@
 #include "core/logging/alert/AlertSink.h"
 #include "core/TypedValues.h"
 #include "core/ClassLoader.h"
-#include "utils/HTTPClient.h"
+#include "utils/BaseHTTPClient.h"
 #include "utils/Hash.h"
 #include "core/logging/Utils.h"
 #include "controllers/SSLContextService.h"
@@ -212,11 +212,9 @@ void AlertSink::send(Services& services) {
   rapidjson::Writer<rapidjson::StringBuffer> writer(buffer);
   doc.Accept(writer);
 
-  auto data_input = std::make_unique<utils::ByteInputCallback>();
-  auto data_cb = std::make_unique<utils::HTTPUploadCallback>();
+  auto data_input = std::make_unique<utils::HTTPUploadCallback>();
   data_input->write(std::string(buffer.GetString(), buffer.GetSize()));
-  data_cb->ptr = data_input.get();
-  client->setUploadCallback(data_cb.get());
+  client->setUploadCallback(std::move(data_input));
   client->setContentType("application/json");
 
   bool req_success = client->submit();

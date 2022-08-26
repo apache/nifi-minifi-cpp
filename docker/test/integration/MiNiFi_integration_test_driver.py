@@ -149,7 +149,9 @@ class MiNiFi_integration_test:
         input_port_node.set_uuid(uuid.uuid3(remote_process_group.get_uuid(), "input_port"))
         return input_port_node
 
-    def add_test_data(self, path, test_data, file_name=str(uuid.uuid4())):
+    def add_test_data(self, path, test_data, file_name=None):
+        if file_name is None:
+            file_name = str(uuid.uuid4())
         test_data = decode_escaped_str(test_data)
         self.docker_directory_bindings.put_file_to_docker_path(self.test_id, path, file_name, test_data.encode('utf-8'))
 

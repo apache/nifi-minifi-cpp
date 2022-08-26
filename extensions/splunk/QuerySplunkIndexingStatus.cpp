@@ -28,29 +28,12 @@
 #include "core/ProcessSession.h"
 #include "core/Resource.h"
 #include "client/HTTPClient.h"
-#include "utils/HTTPClient.h"
 
 #include "rapidjson/document.h"
 #include "rapidjson/stringbuffer.h"
 #include "rapidjson/writer.h"
 
 namespace org::apache::nifi::minifi::extensions::splunk {
-
-void QuerySplunkIndexingStatus::initialize() {
-  setSupportedProperties(properties());
-  setSupportedRelationships(relationships());
-}
-
-void QuerySplunkIndexingStatus::onSchedule(const std::shared_ptr<core::ProcessContext>& context, const std::shared_ptr<core::ProcessSessionFactory>& sessionFactory) {
-  gsl_Expects(context && sessionFactory);
-  SplunkHECProcessor::onSchedule(context, sessionFactory);
-  std::string max_wait_time_str;
-  if (auto max_age = context->getProperty<core::TimePeriodValue>(MaximumWaitingTime)) {
-    max_age_ = max_age->getMilliseconds();
-  }
-
-  context->getProperty(MaxQuerySize.getName(), batch_size_);
-}
 
 namespace {
 constexpr std::string_view getEndpoint() {
@@ -103,7 +86,7 @@ std::string getAckIdsAsPayload(const std::unordered_map<uint64_t, FlowFileWithIn
   return buffer.GetString();
 }
 
-void getIndexingStatusFromSplunk(utils::HTTPClient& client, std::unordered_map<uint64_t, FlowFileWithIndexStatus>& undetermined_flow_files) {
+void getIndexingStatusFromSplunk(curl::HTTPClient& client, std::unordered_map<uint64_t, FlowFileWithIndexStatus>& undetermined_flow_files) {
   rapidjson::Document response;
   if (!client.submit())
     return;
@@ -151,17 +134,32 @@ void routeFlowFilesBasedOnIndexingStatus(core::ProcessSession& session,
 }
 }  // namespace
 
+void QuerySplunkIndexingStatus::initialize() {
+  setSupportedProperties(properties());
+  setSupportedRelationships(relationships());
+}
+
+void QuerySplunkIndexingStatus::onSchedule(const std::shared_ptr<core::ProcessContext>& context, const std::shared_ptr<core::ProcessSessionFactory>& sessionFactory) {
+  gsl_Expects(context && sessionFactory);
+  SplunkHECProcessor::onSchedule(context, sessionFactory);
+  std::string max_wait_time_str;
+  if (auto max_age = context->getProperty<core::TimePeriodValue>(MaximumWaitingTime)) {
+    max_age_ = max_age->getMilliseconds();
+  }
+
+  context->getProperty(MaxQuerySize.getName(), batch_size_);
+  initializeClient(client_, getNetworkLocation().append(getEndpoint()), getSSLContextService(*context));
+}
+
 void QuerySplunkIndexingStatus::onTrigger(const std::shared_ptr<core::ProcessContext>& context, const std::shared_ptr<core::ProcessSession>& session) {
   gsl_Expects(context && session);
   std::string ack_request;
 
-  utils::HTTPClient client;
-  initializeClient(client, getNetworkLocation().append(getEndpoint()), getSSLContextService(*context));
   auto undetermined_flow_files = getUndeterminedFlowFiles(*session, batch_size_);
   if (undetermined_flow_files.empty())
     return;
-  client.setPostFields(getAckIdsAsPayload(undetermined_flow_files));
-  getIndexingStatusFromSplunk(client, undetermined_flow_files);
+  client_.setPostFields(getAckIdsAsPayload(undetermined_flow_files));
+  getIndexingStatusFromSplunk(client_, undetermined_flow_files);
   routeFlowFilesBasedOnIndexingStatus(*session, undetermined_flow_files, max_age_);
 }
 

@@ -29,7 +29,7 @@
 #include "io/CRCStream.h"
 #include "io/StreamFactory.h"
 #include "utils/Id.h"
-#include "utils/HTTPClient.h"
+#include "utils/BaseHTTPClient.h"
 #include "utils/Export.h"
 
 namespace org {

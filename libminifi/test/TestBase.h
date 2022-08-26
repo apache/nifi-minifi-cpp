@@ -129,21 +129,23 @@ class LogTestController {
 
   void setLevelByClassName(spdlog::level::level_enum level, const std::string& class_name);
 
-  bool contains(const std::string &ending, std::chrono::seconds timeout = std::chrono::seconds(3), std::chrono::milliseconds sleep_interval = std::chrono::milliseconds(200)) const {
+  bool contains(const std::string &ending, std::chrono::milliseconds timeout = std::chrono::seconds(3), std::chrono::milliseconds sleep_interval = std::chrono::milliseconds(200)) const {
     return contains(log_output, ending, timeout, sleep_interval);
   }
 
   bool contains(const std::ostringstream &stream, const std::string &ending,
-                std::chrono::seconds timeout = std::chrono::seconds(3),
+                std::chrono::milliseconds timeout = std::chrono::seconds(3),
                 std::chrono::milliseconds sleep_interval = std::chrono::milliseconds(200)) const;
 
   std::optional<std::smatch> matchesRegex(const std::string &regex_str,
-                std::chrono::seconds timeout = std::chrono::seconds(3),
+                std::chrono::milliseconds timeout = std::chrono::seconds(3),
                 std::chrono::milliseconds sleep_interval = std::chrono::milliseconds(200)) const;
 
   int countOccurrences(const std::string& pattern) const;
 
   void reset();
+
+  void clear();
 
   static void resetStream(std::ostringstream &stream);
 
@@ -241,7 +243,7 @@ class TestPlan {
   bool runProcessor(size_t target_location, const PreTriggerVerifier& verify = nullptr);
   bool runNextProcessor(const PreTriggerVerifier& verify = nullptr);
   bool runCurrentProcessor(const PreTriggerVerifier& verify = nullptr);
-  bool runCurrentProcessorUntilFlowfileIsProduced(const std::chrono::seconds& wait_duration);
+  bool runCurrentProcessorUntilFlowfileIsProduced(std::chrono::milliseconds wait_duration);
 
   std::set<std::shared_ptr<minifi::provenance::ProvenanceEventRecord>> getProvenanceRecords();
 

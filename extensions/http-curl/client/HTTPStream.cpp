@@ -26,25 +26,17 @@
 #include "io/validation.h"
 #include "utils/gsl.h"
 
-namespace org {
-namespace apache {
-namespace nifi {
-namespace minifi {
-namespace io {
+namespace org::apache::nifi::minifi::extensions::curl {
 
-HttpStream::HttpStream(std::shared_ptr<utils::HTTPClient> client)
-    : http_client_(std::move(client)),
-      written(0),
-      // given the nature of the stream we don't want to slow libCURL, we will produce
-      // a warning instead allowing us to adjust it server side or through the local configuration.
-      http_read_callback_(66560, true),
-      started_(false) {
-  // submit early on
+HttpStream::HttpStream(std::shared_ptr<HTTPClient> client)
+    : http_client_(std::move(client)) {
 }
 
 void HttpStream::close() {
-  http_callback_.close();
-  http_read_callback_.close();
+  if (auto read_callback = http_client_->getReadCallback())
+    read_callback->close();
+  if (auto upload_callback = http_client_->getUploadCallback())
+    upload_callback->close();
 }
 
 void HttpStream::seek(size_t /*offset*/) {
@@ -52,29 +44,31 @@ void HttpStream::seek(size_t /*offset*/) {
   throw std::logic_error{"HttpStream::seek is unimplemented"};
 }
 
-size_t HttpStream::tell() const  {
+size_t HttpStream::tell() const {
   // tell is an unnecessary part of this implementation
   throw std::logic_error{"HttpStream::tell is unimplemented"};
 }
 
 // data stream overrides
 
-size_t HttpStream::write(const uint8_t *value, size_t size) {
+size_t HttpStream::write(const uint8_t* value, size_t size) {
   if (size == 0) return 0;
   if (IsNullOrEmpty(value)) {
-    return STREAM_ERROR;
+    return io::STREAM_ERROR;
   }
   if (!started_) {
     std::lock_guard<std::mutex> lock(mutex_);
     if (!started_) {
-      callback_.ptr = &http_callback_;
-      callback_.pos = 0;
-      http_client_->setUploadCallback(&callback_);
+      auto callback = std::make_unique<HttpStreamingCallback>();
+      http_client_->setUploadCallback(std::move(callback));
       http_client_future_ = std::async(std::launch::async, submit_client, http_client_);
       started_ = true;
     }
   }
-  http_callback_.process(value, size);
+  if (auto http_callback = dynamic_cast<HttpStreamingCallback*>(http_client_->getUploadCallback()))
+    http_callback->process(value, size);
+  else
+    throw std::runtime_error("Invalid http streaming callback");
   return size;
 }
 
@@ -84,22 +78,17 @@ size_t HttpStream::read(gsl::span<std::byte> buf) {
     if (!started_) {
       std::lock_guard<std::mutex> lock(mutex_);
       if (!started_) {
-        read_callback_.ptr = &http_read_callback_;
-        read_callback_.pos = 0;
-        http_client_->setReadCallback(&read_callback_);
-        http_client_future_ = std::async(std::launch::async, submit_read_client, http_client_, &http_read_callback_);
+        auto read_callback = std::make_unique<utils::HTTPReadCallback>(66560, true);
+        http_client_future_ = std::async(std::launch::async, submit_read_client, http_client_, read_callback.get());
+        http_client_->setReadCallback(std::move(read_callback));
         started_ = true;
       }
     }
-    return http_read_callback_.readFully(reinterpret_cast<char*>(buf.data()), buf.size());
+    return http_client_->getReadCallback()->readFully(reinterpret_cast<char*>(buf.data()), buf.size());
   } else {
-    return STREAM_ERROR;
+    return io::STREAM_ERROR;
   }
 }
 
-} /* namespace io */
-} /* namespace minifi */
-} /* namespace nifi */
-} /* namespace apache */
-} /* namespace org */
+}  // namespace org::apache::nifi::minifi::extensions::curl
 

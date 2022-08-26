@@ -106,7 +106,7 @@ class DockerTestCluster(SingleNodeDockerCluster):
         output = output.decode(self.get_stdout_encoding())
         return code == 0 and url in output \
             and ((output.count("TCP_DENIED") != 0
-                 and output.count("TCP_MISS") == output.count("TCP_DENIED"))
+                 and output.count("TCP_MISS") >= output.count("TCP_DENIED"))
                  or output.count("TCP_DENIED") == 0 and "TCP_MISS" in output)
 
     @retry_check()

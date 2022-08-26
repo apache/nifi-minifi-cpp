@@ -19,7 +19,7 @@
 #include <string>
 #include "../TestBase.h"
 #include "../Catch.h"
-#include "utils/HTTPClient.h"
+#include "utils/BaseHTTPClient.h"
 
 TEST_CASE("The URL class can parse various URL strings", "[URL][parsing]") {
   const auto canParseURL = [](const std::string& url_string) { return utils::URL{url_string}.toString() == url_string; };

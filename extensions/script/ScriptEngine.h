@@ -17,15 +17,12 @@
 
 #pragma once
 
+#include <memory>
 #include <string>
 #include <vector>
 #include <utility>
 
-namespace org {
-namespace apache {
-namespace nifi {
-namespace minifi {
-namespace script {
+namespace org::apache::nifi::minifi::script {
 
 class ScriptEngine {
  public:
@@ -47,14 +44,12 @@ class ScriptEngine {
     module_paths_ = std::move(module_paths);
   }
 
+  virtual void onTrigger(const std::shared_ptr<core::ProcessContext> &context, const std::shared_ptr<core::ProcessSession> &session) = 0;
+
   virtual ~ScriptEngine() = default;
 
  protected:
   std::vector<std::string> module_paths_;
 };
 
-} /* namespace script */
-} /* namespace minifi */
-} /* namespace nifi */
-} /* namespace apache */
-} /* namespace org */
+}  // namespace org::apache::nifi::minifi::script

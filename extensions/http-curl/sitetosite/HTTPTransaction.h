@@ -15,8 +15,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#ifndef EXTENSIONS_HTTP_CURL_SITETOSITE_HTTPTRANSACTION_H_
-#define EXTENSIONS_HTTP_CURL_SITETOSITE_HTTPTRANSACTION_H_
+#pragma once
 
 #include <utility>
 #include <string>
@@ -27,11 +26,7 @@
 #include "sitetosite/Peer.h"
 #include "HTTPStream.h"
 
-namespace org {
-namespace apache {
-namespace nifi {
-namespace minifi {
-namespace sitetosite {
+namespace org::apache::nifi::minifi::extensions::curl {
 
 /**
  * Purpose: HTTP Transaction is an implementation that exposes the site to site client.
@@ -39,13 +34,13 @@ namespace sitetosite {
  */
 class HttpTransaction : public sitetosite::Transaction {
  public:
-  explicit HttpTransaction(sitetosite::TransferDirection direction, org::apache::nifi::minifi::io::CRCStream<SiteToSitePeer> &&stream)
+  explicit HttpTransaction(sitetosite::TransferDirection direction, org::apache::nifi::minifi::io::CRCStream<sitetosite::SiteToSitePeer> &&stream)
       : Transaction(direction, std::move(stream)),
         client_ref_(nullptr) {
   }
 
   ~HttpTransaction() {
-    auto stream = dynamic_cast< org::apache::nifi::minifi::io::HttpStream*>(dynamic_cast<SiteToSitePeer*>(crcStream.getstream())->getStream() );
+    auto stream = dynamic_cast<HttpStream*>(dynamic_cast<sitetosite::SiteToSitePeer*>(crcStream.getstream())->getStream() );
   if (stream)
     stream->forceClose();
   }
@@ -65,10 +60,4 @@ class HttpTransaction : public sitetosite::Transaction {
   std::string transaction_url_;
 };
 
-} /* namespace sitetosite */
-} /* namespace minifi */
-} /* namespace nifi */
-} /* namespace apache */
-} /* namespace org */
-
-#endif /* EXTENSIONS_HTTP_CURL_SITETOSITE_HTTPTRANSACTION_H_ */
+}  // namespace org::apache::nifi::minifi::extensions::curl

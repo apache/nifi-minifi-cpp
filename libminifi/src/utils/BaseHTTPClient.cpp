@@ -18,7 +18,7 @@
 #include <algorithm>
 #include <string>
 
-#include "utils/HTTPClient.h"
+#include "utils/BaseHTTPClient.h"
 #include "utils/StringUtils.h"
 
 namespace minifi = org::apache::nifi::minifi;
@@ -55,13 +55,9 @@ std::optional<int> parsePortNumber(const std::string& port_string) {
 
 }  // namespace
 
-namespace org {
-namespace apache {
-namespace nifi {
-namespace minifi {
-namespace utils {
+namespace org::apache::nifi::minifi::utils {
 
-std::string get_token(utils::BaseHTTPClient *client, std::string username, std::string password) {
+std::string get_token(utils::BaseHTTPClient* client, const std::string& username, const std::string& password) {
   if (nullptr == client) {
     return "";
   }
@@ -164,8 +160,4 @@ std::string URL::toString() const {
   }
 }
 
-}  // namespace utils
-}  // namespace minifi
-}  // namespace nifi
-}  // namespace apache
-}  // namespace org
+}  // namespace org::apache::nifi::minifi::utils

@@ -32,11 +32,7 @@
 #include "utils/ProcessorConfigUtils.h"
 #include "utils/StringUtils.h"
 
-namespace org {
-namespace apache {
-namespace nifi {
-namespace minifi {
-namespace processors {
+namespace org::apache::nifi::minifi::processors {
 
 const core::Property ExecuteScript::ScriptEngine(
   core::PropertyBuilder::createProperty("Script Engine")
@@ -58,7 +54,7 @@ const core::Relationship ExecuteScript::Failure("failure", "Script failures");
 ScriptEngineFactory::ScriptEngineFactory(const core::Relationship& success, const core::Relationship& failure, std::shared_ptr<core::logging::Logger> logger)
   : success_(success),
     failure_(failure),
-    logger_(logger) {
+    logger_(std::move(logger)) {
 }
 
 void ExecuteScript::initialize() {
@@ -72,7 +68,7 @@ void ExecuteScript::initialize() {
 
 void ExecuteScript::onSchedule(core::ProcessContext *context, core::ProcessSessionFactory* /*sessionFactory*/) {
 #ifdef LUA_SUPPORT
-  script_engine_q_ = std::make_unique<ScriptEngineQueue<lua::LuaScriptEngine>>(getMaxConcurrentTasks(), engine_factory_, logger_);
+  lua_script_engine_queue_ = utils::ResourceQueue<lua::LuaScriptEngine>::create(getMaxConcurrentTasks(), logger_);
 #endif  // LUA_SUPPORT
 #ifdef PYTHON_SUPPORT
   python_script_engine_ = engine_factory_.createEngine<python::PythonScriptEngine>();
@@ -99,17 +95,28 @@ void ExecuteScript::onSchedule(core::ProcessContext *context, core::ProcessSessi
 
 void ExecuteScript::onTrigger(const std::shared_ptr<core::ProcessContext> &context,
                               const std::shared_ptr<core::ProcessSession> &session) {
-  std::shared_ptr<script::ScriptEngine> engine;
+  script::ScriptEngine* engine = nullptr;
+
+#ifdef LUA_SUPPORT
+  std::optional<utils::ResourceQueue<lua::LuaScriptEngine>::ResourceWrapper> lua_script_engine;
+#endif
 
   if (script_engine_ == ScriptEngineOption::PYTHON) {
 #ifdef PYTHON_SUPPORT
-    engine = python_script_engine_;
+    gsl_Expects(python_script_engine_);
+    engine = python_script_engine_.get();
 #else
     throw std::runtime_error("Python support is disabled in this build.");
 #endif  // PYTHON_SUPPORT
   } else if (script_engine_ == ScriptEngineOption::LUA) {
 #ifdef LUA_SUPPORT
-    engine = script_engine_q_->getScriptEngine();
+    gsl_Expects(lua_script_engine_queue_);
+    auto create_engine = [&]() -> std::unique_ptr<lua::LuaScriptEngine> {
+      return engine_factory_.createEngine<lua::LuaScriptEngine>();
+    };
+
+    lua_script_engine.emplace(lua_script_engine_queue_->getResource(create_engine));
+    engine = lua_script_engine->get();
 #else
     throw std::runtime_error("Lua support is disabled in this build.");
 #endif  // LUA_SUPPORT
@@ -131,26 +138,9 @@ void ExecuteScript::onTrigger(const std::shared_ptr<core::ProcessContext> &conte
     throw std::runtime_error("Neither Script Body nor Script File is available to execute");
   }
 
-  if (script_engine_ == ScriptEngineOption::PYTHON) {
-#ifdef PYTHON_SUPPORT
-    triggerEngineProcessor<python::PythonScriptEngine>(engine, context, session);
-#else
-    throw std::runtime_error("Python support is disabled in this build.");
-#endif  // PYTHON_SUPPORT
-  } else if (script_engine_ == ScriptEngineOption::LUA) {
-#ifdef LUA_SUPPORT
-    triggerEngineProcessor<lua::LuaScriptEngine>(engine, context, session);
-    script_engine_q_->returnScriptEngine(std::static_pointer_cast<lua::LuaScriptEngine>(engine));
-#else
-    throw std::runtime_error("Lua support is disabled in this build.");
-#endif  // LUA_SUPPORT
-  }
+  engine->onTrigger(context, session);
 }
 
 REGISTER_RESOURCE(ExecuteScript, Processor);
 
-} /* namespace processors */
-} /* namespace minifi */
-} /* namespace nifi */
-} /* namespace apache */
-} /* namespace org */
+}  // namespace org::apache::nifi::minifi::processors

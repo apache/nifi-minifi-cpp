@@ -28,6 +28,8 @@
 #include "properties/Configuration.h"
 #include "io/ZlibStream.h"
 
+using namespace std::literals::chrono_literals;
+
 namespace org::apache::nifi::minifi::c2 {
 
 RESTSender::RESTSender(const std::string &name, const utils::Identifier &uuid)
@@ -85,7 +87,7 @@ C2Payload RESTSender::consumePayload(const C2Payload &payload, Direction directi
 void RESTSender::update(const std::shared_ptr<Configure> &) {
 }
 
-void RESTSender::setSecurityContext(utils::HTTPClient &client, const std::string &type, const std::string &url) {
+void RESTSender::setSecurityContext(extensions::curl::HTTPClient &client, const std::string &type, const std::string &url) {
   // only use the SSL Context if we have a secure URL.
   auto generatedService = std::make_shared<minifi::controllers::SSLContextService>("Service", configuration_);
   generatedService->onEnable();
@@ -97,19 +99,10 @@ C2Payload RESTSender::sendPayload(const std::string& url, const Direction direct
     return {payload.getOperation(), state::UpdateState::READ_ERROR};
   }
 
-  // Callback for transmit. Declared in order to destruct in proper order - take care!
-  std::vector<std::unique_ptr<utils::ByteInputCallback>> inputs;
-  std::vector<std::unique_ptr<utils::HTTPUploadCallback>> callbacks;
-
-  // Callback for transfer. Declared in order to destruct in proper order - take care!
-  std::unique_ptr<utils::ByteOutputCallback> file_callback = nullptr;
-  utils::HTTPReadCallback read;
-
-  // Client declared last to make sure calbacks are still available when client is destructed
-  utils::HTTPClient client(url, ssl_context_service_);
-  client.setKeepAliveProbe(std::chrono::milliseconds(2000));
-  client.setKeepAliveIdle(std::chrono::milliseconds(2000));
-  client.setConnectionTimeout(std::chrono::milliseconds(2000));
+  // Client declared last to make sure callbacks are still available when client is destructed
+  extensions::curl::HTTPClient client(url, ssl_context_service_);
+  client.setKeepAliveProbe(extensions::curl::KeepAliveProbeData{2s, 2s});
+  client.setConnectionTimeout(2s);
   if (direction == Direction::TRANSMIT) {
     client.set_request_method("POST");
     if (!ssl_context_service_ && url.find("https://") == 0) {
@@ -122,17 +115,12 @@ C2Payload RESTSender::sendPayload(const std::string& url, const Direction direct
         if (filename.empty()) {
           throw std::logic_error("Missing filename");
         }
-        auto file_input = std::make_unique<utils::ByteInputCallback>();
         auto file_cb = std::make_unique<utils::HTTPUploadCallback>();
-        file_input->write(file.getRawDataAsString());
-        file_cb->ptr = file_input.get();
-        client.addFormPart("application/octet-stream", "file", file_cb.get(), filename);
-        inputs.push_back(std::move(file_input));
-        callbacks.push_back(std::move(file_cb));
+        file_cb->write(file.getRawDataAsString());
+        client.addFormPart("application/octet-stream", "file", std::move(file_cb), filename);
       }
     } else {
-      auto data_input = std::make_unique<utils::ByteInputCallback>();
-      auto data_cb = std::make_unique<utils::HTTPUploadCallback>();
+      auto data_input = std::make_unique<utils::HTTPUploadCallback>();
       if (data && req_encoding_ == RequestEncoding::Gzip) {
         io::BufferStream compressed_payload;
         bool compression_success = [&] {
@@ -146,7 +134,7 @@ C2Payload RESTSender::sendPayload(const std::string& url, const Direction direct
         }();
         if (compression_success) {
           data_input->setBuffer(compressed_payload.moveBuffer());
-          client.appendHeader("Content-Encoding", "gzip");
+          client.setRequestHeader("Content-Encoding", "gzip");
         } else {
           logger_->log_error("Failed to compress request body, falling back to no compression");
           data_input->write(data.value());
@@ -154,11 +142,8 @@ C2Payload RESTSender::sendPayload(const std::string& url, const Direction direct
       } else {
         data_input->write(data.value_or(""));
       }
-      data_cb->ptr = data_input.get();
-      client.setUploadCallback(data_cb.get());
       client.setPostSize(data_input->getBufferSize());
-      inputs.push_back(std::move(data_input));
-      callbacks.push_back(std::move(data_cb));
+      client.setUploadCallback(std::move(data_input));
     }
   } else {
     // we do not need to set the upload callback
@@ -170,12 +155,10 @@ C2Payload RESTSender::sendPayload(const std::string& url, const Direction direct
   }
 
   if (payload.getOperation() == Operation::TRANSFER) {
-    file_callback = std::make_unique<utils::ByteOutputCallback>(std::numeric_limits<size_t>::max());
-    read.pos = 0;
-    read.ptr = file_callback.get();
-    client.setReadCallback(&read);
+    auto read = std::make_unique<utils::HTTPReadCallback>(std::numeric_limits<size_t>::max());
+    client.setReadCallback(std::move(read));
   } else {
-    client.appendHeader("Accept: application/json");
+    client.setRequestHeader("Accept", "application/json");
     client.setContentType("application/json");
   }
   bool isOkay = client.submit();

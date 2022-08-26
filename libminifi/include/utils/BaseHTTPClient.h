@@ -16,33 +16,21 @@
  * limitations under the License.
  */
 
-// Visual Studio 2017 warns when overriding a deprecated function, even if
-// the override is also deprecated.  Note that we need to put this #pragma
-// here, because it doesn't work inside the #ifndef
-#ifdef WIN32
-#pragma warning(push)
-#pragma warning(disable: 4996)
-#endif
-
-#ifndef LIBMINIFI_INCLUDE_UTILS_HTTPCLIENT_H_
-#define LIBMINIFI_INCLUDE_UTILS_HTTPCLIENT_H_
+#pragma once
 
 #include <map>
 #include <memory>
 #include <optional>
 #include <string>
 #include <vector>
+#include <utility>
 
 #include "ByteArrayCallback.h"
 #include "controllers/SSLContextService.h"
 #include "core/Deprecated.h"
 #include "utils/gsl.h"
 
-namespace org {
-namespace apache {
-namespace nifi {
-namespace minifi {
-namespace utils {
+namespace org::apache::nifi::minifi::utils {
 
 struct HTTPProxy {
   std::string host;
@@ -51,38 +39,20 @@ struct HTTPProxy {
   int port = 0;
 };
 
-struct HTTPUploadCallback {
-  HTTPUploadCallback() {
-    stop = false;
-    ptr = nullptr;
-    pos = 0;
-  }
-  std::mutex mutex;
-  std::atomic<bool> stop;
-  ByteInputCallback *ptr;
-  size_t pos;
+class HTTPUploadCallback : public ByteInputCallback {
+ public:
+  using ByteInputCallback::ByteInputCallback;
 
-  size_t getPos() {
-    std::lock_guard<std::mutex> lock(mutex);
-    return pos;
-  }
+  std::atomic<bool> stop = false;
+  std::atomic<size_t> pos = 0;
 };
 
-struct HTTPReadCallback {
-  HTTPReadCallback() {
-    stop = false;
-    ptr = nullptr;
-    pos = 0;
-  }
-  std::mutex mutex;
-  std::atomic<bool> stop;
-  ByteOutputCallback *ptr;
-  size_t pos;
+class HTTPReadCallback : public ByteOutputCallback {
+ public:
+  using ByteOutputCallback::ByteOutputCallback;
 
-  size_t getPos() {
-    std::lock_guard<std::mutex> lock(mutex);
-    return pos;
-  }
+  std::atomic<bool> stop = false;
+  std::atomic<size_t> pos = 0;
 };
 
 enum class SSLVersion : uint8_t {
@@ -93,27 +63,10 @@ enum class SSLVersion : uint8_t {
 
 struct HTTPHeaderResponse {
  public:
-  HTTPHeaderResponse(int max) : max_tokens_(max) , parsed(false) {} // NOLINT
-
-  /* Deprecated, headers are stored internally and can be accessed by getHeaderLines or getHeaderMap */
-  DEPRECATED(/*deprecated in*/ 0.7.0, /*will remove in */ 2.0) void append(const std::string &header) {
-    if (max_tokens_ == -1 || (int32_t)header_tokens_.size() <= max_tokens_) {
-      header_tokens_.push_back(header);
-    }
-  }
-
-  /* Deprecated, headers are stored internally and can be accessed by getHeaderLines or getHeaderMap */
-  DEPRECATED(/*deprecated in*/ 0.7.0, /*will remove in */ 2.0) void append(const std::string &key, const std::string &value) {
-    header_mapping_[key].append(value);
-  }
-
-  int32_t max_tokens_;
-  std::vector<std::string> header_tokens_;
-  std::map<std::string, std::string> header_mapping_;
-  bool parsed;
+  HTTPHeaderResponse() = default;
 
   static size_t receive_headers(void *buffer, size_t size, size_t nmemb, void *userp) {
-    HTTPHeaderResponse *pHeaders = static_cast<HTTPHeaderResponse*>(userp);
+    auto *pHeaders = static_cast<HTTPHeaderResponse*>(userp);
     if (pHeaders == nullptr) {
       return 0U;
     }
@@ -121,8 +74,14 @@ struct HTTPHeaderResponse {
     return size * nmemb;
   }
 
-  const std::vector<std::string>& getHeaderLines() const {
+  [[nodiscard]] const std::vector<std::string>& getHeaderLines() const {
     return header_tokens_;
+  }
+
+  void clear() {
+    parsed = false;
+    header_tokens_.clear();
+    header_mapping_.clear();
   }
 
   const std::map<std::string, std::string>& getHeaderMap() {
@@ -166,6 +125,11 @@ struct HTTPHeaderResponse {
     }
     return header_mapping_;
   }
+
+ private:
+  std::vector<std::string> header_tokens_;
+  std::map<std::string, std::string> header_mapping_;
+  bool parsed{false};
 };
 
 /**
@@ -191,22 +155,19 @@ class HTTPRequestResponse {
       : max_queue(other.max_queue) {
   }
 
-  HTTPRequestResponse(size_t max) // NOLINT
-      : max_queue(max) {
-  }
   /**
    * Receive HTTP Response.
    */
-  static size_t recieve_write(char * data, size_t size, size_t nmemb, void * p) {
+  static size_t receiveWrite(char * data, size_t size, size_t nmemb, void * p) {
     try {
       if (p == nullptr) {
         return CALLBACK_ABORT;
       }
-      HTTPReadCallback *callback = static_cast<HTTPReadCallback *>(p);
+      auto *callback = static_cast<HTTPReadCallback *>(p);
       if (callback->stop) {
         return CALLBACK_ABORT;
       }
-      callback->ptr->write(data, (size * nmemb));
+      callback->write(data, (size * nmemb));
       return (size * nmemb);
     } catch (...) {
       return CALLBACK_ABORT;
@@ -226,17 +187,17 @@ class HTTPRequestResponse {
       if (p == nullptr) {
         return CALLBACK_ABORT;
       }
-      HTTPUploadCallback *callback = reinterpret_cast<HTTPUploadCallback*>(p);
+      auto *callback = reinterpret_cast<HTTPUploadCallback*>(p);
       if (callback->stop) {
         return CALLBACK_ABORT;
       }
-      size_t buffer_size = callback->ptr->getBufferSize();
-      if (callback->getPos() <= buffer_size) {
+      size_t buffer_size = callback->getBufferSize();
+      if (callback->pos <= buffer_size) {
         size_t len = buffer_size - callback->pos;
         if (len <= 0) {
           return 0;
         }
-        auto *ptr = callback->ptr->getBuffer(callback->getPos());
+        auto *ptr = callback->getBuffer(callback->pos);
 
         if (ptr == nullptr) {
           return 0;
@@ -245,7 +206,7 @@ class HTTPRequestResponse {
           len = size * nmemb;
         memcpy(data, ptr, len);
         callback->pos += len;
-        callback->ptr->seek(callback->getPos());
+        callback->seek(callback->pos);
         return len;
       }
       return 0;
@@ -259,15 +220,15 @@ class HTTPRequestResponse {
       if (p == nullptr) {
         return SEEKFUNC_FAIL;
       }
-      HTTPUploadCallback *callback = reinterpret_cast<HTTPUploadCallback*>(p);
+      auto *callback = reinterpret_cast<HTTPUploadCallback*>(p);
       if (callback->stop) {
         return SEEKFUNC_FAIL;
       }
-      if (callback->ptr->getBufferSize() <= static_cast<size_t>(offset)) {
+      if (callback->getBufferSize() <= static_cast<size_t>(offset)) {
         return SEEKFUNC_FAIL;
       }
       callback->pos = offset;
-      callback->ptr->seek(callback->getPos());
+      callback->seek(callback->pos);
       return SEEKFUNC_OK;
     } catch (...) {
       return SEEKFUNC_FAIL;
@@ -299,21 +260,15 @@ class BaseHTTPClient {
 
   virtual ~BaseHTTPClient() = default;
 
-  virtual void setVerbose(bool use_stderr = false) = 0;
+  virtual void setVerbose(bool use_stderr) = 0;
 
-  virtual void initialize(const std::string &method, const std::string url = "", const std::shared_ptr<minifi::controllers::SSLContextService> ssl_context_service = nullptr) = 0;
-
-  DEPRECATED(/*deprecated in*/ 0.8.0, /*will remove in */ 2.0) virtual void setConnectionTimeout(int64_t timeout) = 0;
-
-  DEPRECATED(/*deprecated in*/ 0.8.0, /*will remove in */ 2.0) virtual void setReadTimeout(int64_t timeout) = 0;
+  virtual void initialize(std::string method, std::string url, std::shared_ptr<minifi::controllers::SSLContextService> ssl_context_service) = 0;
 
   virtual void setConnectionTimeout(std::chrono::milliseconds timeout) = 0;
 
   virtual void setReadTimeout(std::chrono::milliseconds timeout) = 0;
 
-  virtual void setUploadCallback(HTTPUploadCallback *callbackObj) = 0;
-
-  virtual void setSeekFunction(HTTPUploadCallback *callbackObj) = 0;
+  virtual void setUploadCallback(std::unique_ptr<HTTPUploadCallback> callbackObj) = 0;
 
   virtual void setContentType(std::string content_type) = 0;
 
@@ -323,58 +278,41 @@ class BaseHTTPClient {
 
   virtual bool submit() = 0;
 
-  virtual int64_t getResponseCode() const = 0;
+  [[nodiscard]] virtual int64_t getResponseCode() const = 0;
 
   virtual const char *getContentType() = 0;
 
-  virtual const std::vector<char> &getResponseBody() {
-    return response_body_;
-  }
+  virtual void setRequestHeader(std::string key, std::optional<std::string> value) = 0;
 
-  virtual void appendHeader(const std::string &new_header) = 0;
+  virtual void set_request_method(std::string method) = 0;
 
-  virtual void set_request_method(const std::string method) = 0;
-
-  virtual void setUseChunkedEncoding() = 0;
-
-  virtual void setDisablePeerVerification() = 0;
+  virtual void setPeerVerification(bool peer_verification) = 0;
+  virtual void setHostVerification(bool host_verification) = 0;
 
   virtual void setHTTPProxy(const utils::HTTPProxy &proxy) = 0;
 
-  virtual void setBasicAuth(std::string username, std::string password) = 0;
+  virtual void setBasicAuth(const std::string& username, const std::string& password) = 0;
   virtual void clearBasicAuth() = 0;
 
-  virtual void setDisableHostVerification() = 0;
-
   virtual bool setSpecificSSLVersion(SSLVersion specific_version) = 0;
-
   virtual bool setMinimumSSLVersion(SSLVersion minimum_version) = 0;
 
-  virtual const std::vector<std::string> &getHeaders() {
-    return headers_;
-  }
-
-  virtual const std::map<std::string, std::string> &getParsedHeaders() {
-    return header_mapping_;
-  }
-
- protected:
-  std::vector<char> response_body_;
-  std::vector<std::string> headers_;
-  std::map<std::string, std::string> header_mapping_;
+  virtual const std::vector<char>& getResponseBody() = 0;
+  virtual const std::vector<std::string>& getResponseHeaders() = 0;
+  virtual const std::map<std::string, std::string>& getResponseHeaderMap() = 0;
 };
 
-std::string get_token(utils::BaseHTTPClient *client, std::string username, std::string password);
+std::string get_token(utils::BaseHTTPClient *client, const std::string& username, const std::string& password);
 
 class URL {
  public:
   explicit URL(const std::string& url_input);
-  bool isValid() const { return is_valid_; }
-  std::string protocol() const { return protocol_; }
-  std::string host() const { return host_; }
-  int port() const;
-  std::string hostPort() const;
-  std::string toString() const;
+  [[nodiscard]] bool isValid() const { return is_valid_; }
+  [[nodiscard]] std::string protocol() const { return protocol_; }
+  [[nodiscard]] std::string host() const { return host_; }
+  [[nodiscard]] int port() const;
+  [[nodiscard]] std::string hostPort() const;
+  [[nodiscard]] std::string toString() const;
 
  private:
   std::string protocol_;
@@ -385,14 +323,4 @@ class URL {
   std::shared_ptr<core::logging::Logger> logger_ = core::logging::LoggerFactory<URL>::getLogger();
 };
 
-}  // namespace utils
-}  // namespace minifi
-}  // namespace nifi
-}  // namespace apache
-}  // namespace org
-
-#endif  // LIBMINIFI_INCLUDE_UTILS_HTTPCLIENT_H_
-
-#ifdef WIN32
-#pragma warning(pop)
-#endif  // NOLINT
+}  // namespace org::apache::nifi::minifi::utils
