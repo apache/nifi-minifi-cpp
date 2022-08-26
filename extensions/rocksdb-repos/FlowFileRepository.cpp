@@ -193,7 +193,7 @@ void FlowFileRepository::prune_stored_flowfiles() {
   }
 }
 
-bool FlowFileRepository::ExecuteWithRetry(std::function<rocksdb::Status()> operation) {
+bool FlowFileRepository::ExecuteWithRetry(const std::function<rocksdb::Status()>& operation) {
   std::chrono::milliseconds waitTime = 0ms;
   for (int i=0; i < 3; ++i) {
     auto status = operation();

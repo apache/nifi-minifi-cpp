@@ -219,7 +219,7 @@ class FlowFileRepository : public ThreadedRepository, public SwapManager {
  private:
   void run() override;
 
-  bool ExecuteWithRetry(std::function<rocksdb::Status()> operation);
+  bool ExecuteWithRetry(const std::function<rocksdb::Status()>& operation);
 
   void initialize_repository();
 
