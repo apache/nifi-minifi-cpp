@@ -45,7 +45,7 @@ class ResourceQueue : public std::enable_shared_from_this<ResourceQueue<Resource
  public:
   class ResourceWrapper {
    public:
-    ResourceWrapper(std::weak_ptr<ResourceQueue<ResourceType>> queue, std::unique_ptr<ResourceType>&& resource) : queue_(std::move(queue)), resource_(std::move(resource)) {}
+    ResourceWrapper(std::weak_ptr<ResourceQueue<ResourceType>> queue, std::unique_ptr<ResourceType> resource) : queue_(std::move(queue)), resource_(std::move(resource)) {}
     ResourceWrapper(ResourceWrapper&& src) = default;
     ResourceWrapper(const ResourceWrapper&) = delete;
     ~ResourceWrapper() {
@@ -100,7 +100,7 @@ class ResourceQueue : public std::enable_shared_from_this<ResourceQueue<Resource
   }
 
  private:
-  void returnResource(std::unique_ptr<ResourceType>&& resource) {
+  void returnResource(std::unique_ptr<ResourceType> resource) {
     logDebug("Returning [%p] resource", resource.get());
     internal_queue_.enqueue(std::move(resource));
   }
