@@ -91,14 +91,11 @@ class AzureDataLakeStorageClient : public DataLakeStorageClient {
     Azure::Storage::Files::DataLake::Models::DownloadFileResult result_;
   };
 
-  void resetClientIfNeeded(const AzureStorageCredentials& credentials, const std::string& file_system_name, std::optional<uint64_t> number_of_retries);
-  Azure::Storage::Files::DataLake::DataLakeDirectoryClient getDirectoryClient(const AzureDataLakeStorageParameters& params);
-  Azure::Storage::Files::DataLake::DataLakeFileClient getFileClient(const AzureDataLakeStorageFileOperationParameters& params);
+  static std::unique_ptr<Azure::Storage::Files::DataLake::DataLakeFileSystemClient> createClient(
+    const AzureStorageCredentials& credentials, const std::string& file_system_name, std::optional<uint64_t> number_of_retries);
+  static Azure::Storage::Files::DataLake::DataLakeDirectoryClient getDirectoryClient(const AzureDataLakeStorageParameters& params);
+  static Azure::Storage::Files::DataLake::DataLakeFileClient getFileClient(const AzureDataLakeStorageFileOperationParameters& params);
 
-  AzureStorageCredentials credentials_;
-  std::string file_system_name_;
-  std::optional<uint64_t> number_of_retries_;
-  std::unique_ptr<Azure::Storage::Files::DataLake::DataLakeFileSystemClient> client_;
   std::shared_ptr<core::logging::Logger> logger_{core::logging::LoggerFactory<AzureDataLakeStorageClient>::getLogger()};
 };
 
