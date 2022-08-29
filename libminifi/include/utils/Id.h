@@ -126,12 +126,12 @@ class NonRepeatingStringGenerator {
   std::string generate() {
     return prefix_ + std::to_string(incrementor_++);
   }
-    uint64_t generateId() {
-      return incrementor_++;
-    }
+  uint64_t generateId() {
+    return incrementor_++;
+  }
  private:
   std::atomic<uint64_t> incrementor_{0};
-  std::string prefix_{std::to_string(std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now().time_since_epoch()).count()) + "-"};
+  std::string prefix_{IdGenerator::getIdGenerator()->generate().to_string() + "-"};
 };
 
 }  // namespace org::apache::nifi::minifi::utils
