@@ -32,11 +32,13 @@ TEST_CASE("maximum_number_of_creatable_resources", "[utils::ResourceQueue]") {
   std::shared_ptr<core::logging::Logger> logger_{core::logging::LoggerFactory<ResourceQueue<int>>::getLogger()};
   LogTestController::getInstance().setTrace<ResourceQueue<int>>();
 
+  std::mutex resources_created_mutex;
   std::set<int> resources_created;
 
   auto worker = [&](int value, const std::shared_ptr<ResourceQueue<int>>& resource_queue) {
     auto resource = resource_queue->getResource([value]{return std::make_unique<int>(value);});
     std::this_thread::sleep_for(10ms);
+    std::lock_guard<std::mutex> lock(resources_created_mutex);
     resources_created.emplace(*resource);
   };
 
