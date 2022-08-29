@@ -30,7 +30,6 @@
 #include "range/v3/view/filter.hpp"
 #include "range/v3/view/transform.hpp"
 #include "range/v3/view/join.hpp"
-#include "range/v3/view/cache1.hpp"
 #include "range/v3/range/conversion.hpp"
 
 namespace org::apache::nifi::minifi::docs {
@@ -42,7 +41,6 @@ static std::string escape(std::string str) {
 }
 
 static std::string prettifyJson(const std::string& str) {
-  return str;
   rapidjson::Document doc;
   rapidjson::ParseResult res = doc.Parse(str.c_str(), str.length());
   assert(res);
@@ -62,8 +60,8 @@ void writePropertySchema(const core::Property& prop, std::ostream& out) {
     out << ", \"enum\": ["
         << (values
             | ranges::views::transform([] (auto& val) {return '"' + escape(val.to_string()) + '"';})
-            | ranges::views::cache1
-            | ranges::views::join(','))
+            | ranges::views::join(std::string{','})
+            | ranges::to<std::string>())
         << "]";
   }
   if (const auto& def_value = prop.getDefaultValue(); !def_value.empty()) {
@@ -80,6 +78,9 @@ void writePropertySchema(const core::Property& prop, std::ostream& out) {
     } else {
       out << ", \"type\": \"string\", \"default\": \"" << escape(def_value.to_string()) << "\"";
     }
+  } else {
+    // no default value, no type information, fallback to string
+    out << ", \"type\": \"string\"";
   }
   out << "}";  // property.getName()
 }
@@ -93,8 +94,8 @@ void writeProperties(const PropertyContainer& props, bool supports_dynamic, std:
         << (props
             | ranges::views::filter([] (auto& prop) {return prop.getRequired();})
             | ranges::views::transform([] (auto& prop) {return '"' + escape(prop.getName()) + '"';})
-            | ranges::views::cache1
-            | ranges::views::join(','))
+            | ranges::views::join(std::string{','})
+            | ranges::to<std::string>())
         << "]";
 
   out << ", \"properties\": {";
@@ -143,6 +144,40 @@ static std::string buildSchema(const std::unordered_map<std::string, std::string
     }
   )";
 
+  std::stringstream cron_pattern;
+  {
+    const char* all = "\\\\*";
+    const char* any = "\\\\?";
+    const char* increment = "(-?[0-9]+)";
+    const char* secs = "([0-5]?[0-9])";
+    const char* mins = "([0-5]?[0-9])";
+    const char* hours = "(1?[0-9]|2[0-3])";
+    const char* days = "([1-2]?[0-9]|3[0-1])";
+    const char* months = "([0-9]|1[0-2]|jan|feb|mar|apr|may|jun|jul|aug|sep|oct|nov|dec)";
+    const char* weekdays = "([0-7]|sun|mon|tue|wed|thu|fri|sat)";
+    const char* years = "([0-9]+)";
+
+    auto makeCommon = [&] (const char* pattern) {
+      std::stringstream common;
+      common << all << "|" << any
+        << "|" << pattern << "(," << pattern << ")*"
+        << "|" << pattern << "-" << pattern
+        << "|" << "(" << all << "|" << pattern << ")" << "/" << increment;
+      return std::move(common).str();
+    };
+
+    cron_pattern << "^"
+      << "(" << makeCommon(secs) << ")" << " "
+      << "(" << makeCommon(mins) << ")" << " "
+      << "(" << makeCommon(hours) << ")" << " "
+      << "(" << makeCommon(days) << "|LW|L|L-" << days << "|" << days << "W" << ")" << " "
+      << "(" << makeCommon(months) << ")" << " "
+      << "(" << makeCommon(weekdays) << "|L|" << weekdays << "#" << "[1-5]" << ")"
+      << "( " << makeCommon(years) << ")?"
+      << "$";
+
+  }
+
   return prettifyJson(R"(
 {
   "$schema": "http://json-schema.org/draft-07/schema",
@@ -158,7 +193,7 @@ static std::string buildSchema(const std::unordered_map<std::string, std::string
     },
     "cron_pattern": {
       "type": "string",
-      "pattern": ""
+      "pattern": ")" + std::move(cron_pattern).str() + R"("
     },
     "remote_port": {
       "type": "object",
