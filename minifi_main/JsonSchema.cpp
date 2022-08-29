@@ -23,6 +23,15 @@
 
 #include "agent/agent_version.h"
 #include "agent/build_description.h"
+#include "rapidjson/document.h"
+#include "rapidjson/prettywriter.h"
+#include "RemoteProcessorGroupPort.h"
+
+#include "range/v3/view/filter.hpp"
+#include "range/v3/view/transform.hpp"
+#include "range/v3/view/join.hpp"
+#include "range/v3/view/cache1.hpp"
+#include "range/v3/range/conversion.hpp"
 
 namespace org::apache::nifi::minifi::docs {
 
@@ -32,16 +41,109 @@ static std::string escape(std::string str) {
   return str;
 }
 
-static std::string buildSchema(const std::unordered_map<std::string, std::string>& relationships, const std::string& processors) {
-  std::stringstream conn_source_rels;
+static std::string prettifyJson(const std::string& str) {
+  return str;
+  rapidjson::Document doc;
+  rapidjson::ParseResult res = doc.Parse(str.c_str(), str.length());
+  assert(res);
+
+  rapidjson::StringBuffer buffer;
+
+  rapidjson::PrettyWriter<rapidjson::StringBuffer> writer(buffer);
+  doc.Accept(writer);
+
+  return std::string{buffer.GetString(), buffer.GetSize()};
+}
+
+void writePropertySchema(const core::Property& prop, std::ostream& out) {
+  out << "\"" << escape(prop.getName()) << "\" : {";
+  out << "\"description\": \"" << escape(prop.getDescription()) << "\"";
+  if (const auto& values = prop.getAllowedValues(); !values.empty()) {
+    out << ", \"enum\": ["
+        << (values
+            | ranges::views::transform([] (auto& val) {return '"' + escape(val.to_string()) + '"';})
+            | ranges::views::cache1
+            | ranges::views::join(','))
+        << "]";
+  }
+  if (const auto& def_value = prop.getDefaultValue(); !def_value.empty()) {
+    const auto& type = def_value.getTypeInfo();
+    if (type == state::response::Value::INT_TYPE
+        || type == state::response::Value::INT64_TYPE
+        || type == state::response::Value::UINT32_TYPE
+        || type == state::response::Value::UINT64_TYPE) {
+      out << ", \"type\": \"integer\", \"default\": " << static_cast<int64_t>(def_value);
+    } else if (type == state::response::Value::DOUBLE_TYPE) {
+      out << ", \"type\": \"number\", \"default\": " << static_cast<double>(def_value);
+    } else if (type == state::response::Value::BOOL_TYPE) {
+      out << ", \"type\": \"boolean\", \"default\": " << (static_cast<bool>(def_value) ? "true" : "false");
+    } else {
+      out << ", \"type\": \"string\", \"default\": \"" << escape(def_value.to_string()) << "\"";
+    }
+  }
+  out << "}";  // property.getName()
+}
+
+template<typename PropertyContainer>
+void writeProperties(const PropertyContainer& props, bool supports_dynamic, std::ostream& out) {
+  out << "\"Properties\": {"
+        << "\"type\": \"object\","
+        << "\"additionalProperties\": " << (supports_dynamic? "true" : "false") << ","
+        << "\"required\": ["
+        << (props
+            | ranges::views::filter([] (auto& prop) {return prop.getRequired();})
+            | ranges::views::transform([] (auto& prop) {return '"' + escape(prop.getName()) + '"';})
+            | ranges::views::cache1
+            | ranges::views::join(','))
+        << "]";
+
+  out << ", \"properties\": {";
+  for (size_t prop_idx = 0; prop_idx < props.size(); ++prop_idx) {
+    const auto& property = props[prop_idx];
+    if (prop_idx != 0) out << ",";
+    writePropertySchema(property, out);
+  }
+  out << "}";  // "properties"
+  out << "}";  // "Properties"
+}
+
+static std::string buildSchema(const std::unordered_map<std::string, std::string>& relationships, const std::string& processors, const std::string& controller_services) {
   std::stringstream all_rels;
   for (const auto& [name, rels] : relationships) {
     all_rels << "\"relationships-" << escape(name) << "\": " << rels << ", ";
-    conn_source_rels
-      << "{\"if\": {\"properties\": {\"name\": {\"pattern\": \"^" << escape(name) << "\"}}},"
-      << "\"then\": {\"properties\": {\"source relationship names\": {\"items\": {\"$ref\": \"#/$defs/relationships-" << escape(name) << "\"}}}}},\n";
   }
-  return R"(
+
+  std::stringstream remote_port_props;
+  writeProperties(minifi::RemoteProcessorGroupPort::properties(), minifi::RemoteProcessorGroupPort::SupportsDynamicProperties, remote_port_props);
+
+  std::string process_group_properties = R"(
+    "Processors": {
+      "type": "array",
+      "items": {"$ref": "#/$defs/processor"}
+    },
+    "Connections": {
+      "type": "array",
+      "items": {"$ref": "#/$defs/connection"}
+    },
+    "Controller Services": {
+      "type": "array",
+      "items": {"$ref": "#/$defs/controller_service"}
+    },
+    "Remote Process Groups": {
+      "type": "array",
+      "items": {"$ref": "#/$defs/remote_process_group"}
+    },
+    "Process Groups": {
+      "type": "array",
+      "items": {"$ref": "#/$defs/simple_process_group"}
+    },
+    "Funnels": {
+      "type": "array",
+      "items": {"$ref": "#/$defs/funnel"}
+    }
+  )";
+
+  return prettifyJson(R"(
 {
   "$schema": "http://json-schema.org/draft-07/schema",
   "$defs": {)" + std::move(all_rels).str() + R"(
@@ -58,10 +160,29 @@ static std::string buildSchema(const std::unordered_map<std::string, std::string
       "type": "string",
       "pattern": ""
     },
+    "remote_port": {
+      "type": "object",
+      "properties": {
+        "required": ["name", "id", "Properties"],
+        "name": {"type": "string"},
+        "id": {"$ref": "#/$defs/uuid"},
+        "max concurrent tasks": {"type": "integer"},
+        )" + std::move(remote_port_props).str() +  R"(
+      }
+    },
     "time": {
       "type": "string",
       "pattern": "^\\s*[0-9]+\\s*(ns|nano|nanos|nanoseconds|nanosecond|us|micro|micros|microseconds|microsecond|msec|ms|millisecond|milliseconds|msecs|millis|milli|sec|s|second|seconds|secs|min|m|mins|minute|minutes|h|hr|hour|hrs|hours|d|day|days)\\s*$"
     },
+    "controller_service": {"allOf": [{
+      "type": "object",
+      "required": ["name", "id", "class"],
+      "properties": {
+        "name": {"type": "string"},
+        "class": {"type": "string"},
+        "id": {"$ref": "#/$defs/uuid"}
+      }
+    }, )" + std::move(controller_services) + R"(]},
     "processor": {"allOf": [{
       "type": "object",
       "required": ["name", "id", "class", "scheduling strategy"],
@@ -93,54 +214,96 @@ static std::string buildSchema(const std::unordered_map<std::string, std::string
       }, {
         "if": {"properties": {"scheduling strategy": {"const": "CRON_DRIVEN"}}},
         "then": {"required": ["scheduling period"], "properties": {"scheduling period": {"$ref": "#/$defs/cron_pattern"}}}
-      }]
+      }, )" + processors + R"(]
+    },
+    "remote_process_group": {"allOf": [{
+      "type": "object",
+      "required": ["name", "id", "Input Ports"],
+      "properties": {
+        "name": {"type": "string"},
+        "id": {"$ref": "#/$defs/uuid"},
+        "url": {"type": "string"},
+        "yield period": {"$ref": "#/$defs/time"},
+        "timeout": {"$ref": "#/$defs/time"},
+        "local network interface": {"type": "string"},
+        "transport protocol": {"enum": ["HTTP", "RAW"]},
+        "Input Ports": {
+          "type": "array",
+          "items": {"$ref": "#/$defs/remote_port"}
+        },
+        "Output Ports": {
+          "type": "array",
+          "items": {"$ref": "#/$defs/remote_port"}
+        }
+      }
+    }, {
+      "if": {"properties": {"transport protocol": {"const": "HTTP"}}},
+      "then": {"properties": {
+        "proxy host": {"type": "string"},
+        "proxy user": {"type": "string"},
+        "proxy password": {"type": "string"},
+        "proxy port": {"type": "integer"}
+      }}
+    }]},
+    "connection": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["name", "id", "source name", "source id", "source relationship names", "destination name", "destination id"],
+      "properties": {
+        "name": {"type": "string"},
+        "id": {"$ref": "#/$defs/uuid"},
+        "source name": {"type": "string"},
+        "source id": {"$ref": "#/$defs/uuid"},
+        "source relationship names": {
+          "type": "array",
+          "items": {"type": "string"}
+        },
+        "destination name": {"type": "string"},
+        "destination id": {"$ref": "#/$defs/uuid"},
+        "max work queue size": {"type": "integer", "default": 10000},
+        "max work queue data size": {"$ref": "#/$defs/datasize", "default": "10 MB"},
+        "flowfile expiration": {"$ref": "#/$defs/time", "default": "0 ms"}
+      }
+    },
+    "funnel": {
+      "type": "object",
+      "required": ["name"],
+      "properties": {
+        "id": {"$ref": "#/$defs/uuid"},
+        "name": {"type": "string"}
+      }
+    },
+    "simple_process_group": {
+      "type": "object",
+      "required": ["name"],
+      "additionalProperties": false,
+      "properties": {
+        "name": {"type": "string"},
+        "version": {"type": "integer"},
+        "onschedule retry interval": {"$ref": "#/$defs/time"},
+        )" + process_group_properties + R"(
+      }
+    },
+    "root_process_group": {
+      "type": "object",
+      "required": ["Flow Controller"],
+      "additionalProperties": false,
+      "properties": {
+        "$schema": {"type": "string"},
+        "Flow Controller": {
+          "type": "object",
+          "required": ["name"],
+          "name": {"type": "string"},
+          "version": {"type": "integer"},
+          "onschedule retry interval": {"$ref": "#/$defs/time"}
+        },
+        )" + process_group_properties + R"(
+      }
     }
   },
-  "type": "object",
-  "additionalProperties": false,
-  "properties": {
-    "$schema": {"type": "string"},
-    "Flow Controller": {
-      "type": "object"
-    },
-    "Processors": {
-      "type": "array",
-      "items": {
-        "allOf": [{"$ref": "#/$defs/processor"}, )" + processors + R"(]
-      }
-    },
-    "Connections": {
-      "type": "array",
-      "items": {"allOf": [)" + std::move(conn_source_rels).str() + R"({
-        "type": "object",
-        "additionalProperties": false,
-        "required": ["name", "id", "source name", "source id", "source relationship names", "destination name", "destination id"],
-        "properties": {
-          "name": {"type": "string"},
-          "id": {"$ref": "#/$defs/uuid"},
-          "source name": {"type": "string"},
-          "source id": {"$ref": "#/$defs/uuid"},
-          "source relationship names": {
-            "type": "array",
-            "items": {"type": "string"}
-          },
-          "destination name": {"type": "string"},
-          "destination id": {"$ref": "#/$defs/uuid"},
-          "max work queue size": {"type": "integer", "default": 10000},
-          "max work queue data size": {"$ref": "#/$defs/datasize", "default": "10 MB"},
-          "flowfile expiration": {"$ref": "#/$defs/time", "default": "0 ms"}
-        }
-      }]}
-    },
-    "Remote Processing Groups": {
-      "type": "array",
-      "items": {
-
-      }
-    }
-  }
+  "$ref": "#/$defs/root_process_group"
 }
-)";
+)");
 }
 
 std::string generateJsonSchema() {
@@ -149,85 +312,57 @@ std::string generateJsonSchema() {
   auto putProcSchema = [&] (const ClassDescription& proc) {
     std::stringstream schema;
     schema
-        << "{\n"
-        << "\"if\": {\"properties\": {\"class\": {\"const\": \"" << escape(proc.short_name_) << "\"}}},\n"
-        << "\"then\": {\n"
-        << "\"required\": [\"Properties\"],\n"
-        << "\"properties\": {\n";
+        << "{"
+        << "\"if\": {\"properties\": {\"class\": {\"const\": \"" << escape(proc.short_name_) << "\"}}},"
+        << "\"then\": {"
+        << "\"required\": [\"Properties\"],"
+        << "\"properties\": {";
 
     if (proc.isSingleThreaded_) {
-      schema << "\"max concurrent tasks\": {\"const\": 1},\n";
+      schema << "\"max concurrent tasks\": {\"const\": 1},";
     }
 
-    schema << "\"auto-terminated relationships list\": {\"items\": {\"$ref\": \"#/$defs/relationships-" << escape(proc.short_name_) << "\"}},\n";
+    schema << "\"auto-terminated relationships list\": {\"items\": {\"$ref\": \"#/$defs/relationships-" << escape(proc.short_name_) << "\"}},";
     {
       std::stringstream rel_schema;
       rel_schema << "{\"anyOf\": [";
       if (proc.dynamic_relationships_) {
-        rel_schema << "{\"type\": \"string\"}\n";
+        rel_schema << "{\"type\": \"string\"}";
       }
       for (size_t rel_idx = 0; rel_idx < proc.class_relationships_.size(); ++rel_idx) {
         if (rel_idx != 0 || proc.dynamic_relationships_) rel_schema << ", ";
-        rel_schema << "{\"const\": \"" << escape(proc.class_relationships_[rel_idx].getName()) << "\"}\n";
+        rel_schema << "{\"const\": \"" << escape(proc.class_relationships_[rel_idx].getName()) << "\"}";
       }
-      rel_schema << "]}\n";
+      rel_schema << "]}";
       relationships[proc.short_name_] = std::move(rel_schema).str();
     }
 
-    schema << "\"Properties\": {\n"
-        << "\"type\": \"object\",\n"
-        << "\"additionalProperties\": " << (proc.dynamic_properties_ ? "true" : "false") << ",\n";
+    writeProperties(proc.class_properties_, proc.dynamic_properties_, schema);
 
-    {
-      schema << "\"required\": [";
-      bool first = true;
-      for (const auto& prop : proc.class_properties_) {
-        if (!prop.getRequired()) continue;
-        if (!first) schema << ", ";
-        first = false;
-        schema << "\"" << escape(prop.getName()) << "\"";
-      }
-      schema << "]\n";
-    }
-
-    schema << ", \"properties\": {\n";
-    for (size_t prop_idx = 0; prop_idx < proc.class_properties_.size(); ++prop_idx) {
-      const auto& property = proc.class_properties_[prop_idx];
-      if (prop_idx != 0) schema << ",";
-      schema << "\"" << escape(property.getName()) << "\" : {";
-      schema << "\"description\": \"" << escape(property.getDescription()) << "\"\n";
-      if (const auto& values = property.getAllowedValues(); !values.empty()) {
-        schema << ", \"enum\": [";
-        for (size_t val_idx = 0; val_idx < values.size(); ++val_idx) {
-          if (val_idx != 0) schema << ", ";
-          schema << "\"" << escape(values[val_idx].to_string()) << "\"";
-        }
-        schema << "]\n";
-      }
-      if (const auto& def_value = property.getDefaultValue(); !def_value.empty()) {
-        const auto& type = def_value.getTypeInfo();
-        if (type == state::response::Value::INT_TYPE
-            || type == state::response::Value::INT64_TYPE
-            || type == state::response::Value::UINT32_TYPE
-            || type == state::response::Value::UINT64_TYPE) {
-          schema << ", \"type\": \"integer\", \"default\": " << static_cast<int64_t>(def_value);
-        } else if (type == state::response::Value::DOUBLE_TYPE) {
-          schema << ", \"type\": \"number\", \"default\": " << static_cast<double>(def_value);
-        } else if (type == state::response::Value::BOOL_TYPE) {
-          schema << ", \"type\": \"boolean\", \"default\": " << static_cast<bool>(def_value);
-        } else {
-          schema << ", \"type\": \"string\", \"default\": \"" << escape(def_value.to_string()) << "\"";
-        }
-      }
-      schema << "\n}\n";  // property.getName()
-    }
-    schema << "}\n";  // "properties"
-    schema << "}\n";  // "Properties"
-    schema << "}\n";  // "properties"
-    schema << "}\n";  // "then"
-    schema << "}\n";  // if-block
+    schema << "}";  // "properties"
+    schema << "}";  // "then"
+    schema << "}";  // if-block
 
     proc_schemas.push_back(std::move(schema).str());
+  };
+
+  std::vector<std::string> controller_services;
+  auto putControllerService = [&] (const ClassDescription& service) {
+    std::stringstream schema;
+    schema
+        << "{"
+        << "\"if\": {\"properties\": {\"class\": {\"const\": \"" << escape(service.short_name_) << "\"}}},"
+        << "\"then\": {"
+        << "\"required\": [\"Properties\"],"
+        << "\"properties\": {";
+
+    writeProperties(service.class_properties_, service.dynamic_properties_, schema);
+
+    schema << "}";  // "properties"
+    schema << "}";  // "then"
+    schema << "}";  // if-block
+
+    controller_services.push_back(std::move(schema).str());
   };
 
   const auto& descriptions = AgentDocs::getClassDescriptions();
@@ -239,17 +374,22 @@ std::string generateJsonSchema() {
     for (const auto& proc : it->second.processors_) {
       putProcSchema(proc);
     }
-  }
-
-  for (const auto& bundle : ExternalBuildDescription::getExternalGroups()) {
-    for (const auto& proc : ExternalBuildDescription::getClassDescriptions(bundle.artifact).processors_) {
-      putProcSchema(proc);
+    for (const auto& service : it->second.controller_services_) {
+      putControllerService(service);
     }
   }
 
+  for (const auto& bundle : ExternalBuildDescription::getExternalGroups()) {
+    auto description = ExternalBuildDescription::getClassDescriptions(bundle.artifact);
+    for (const auto& proc : description.processors_) {
+      putProcSchema(proc);
+    }
+    for (const auto& service : description.controller_services_) {
+      putControllerService(service);
+    }
+  }
 
-
-  return buildSchema(relationships, utils::StringUtils::join(", ", proc_schemas));
+  return buildSchema(relationships, utils::StringUtils::join(", ", proc_schemas), utils::StringUtils::join(", ", controller_services));
 }
 
 }  // namespace org::apache::nifi::minifi::docs
