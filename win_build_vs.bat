@@ -112,7 +112,8 @@ if [%generator%] EQU ["Ninja"] (
 ) else (
     set "buildcmd=msbuild /m nifi-minifi-cpp.sln /property:Configuration=%cmake_build_type% /property:Platform=%build_platform% && copy bin\%cmake_build_type%\minifi.exe minifi_main\"
 )
-cmake -G %generator% -DINSTALLER_MERGE_MODULES=%installer_merge_modules% -DTEST_CUSTOM_WEL_PROVIDER=%test_custom_wel_provider% -DENABLE_SQL=%build_SQL% -DUSE_REAL_ODBC_TEST_DRIVER=%real_odbc% ^
+echo on
+cmake -G %generator% -A %build_platform% -DINSTALLER_MERGE_MODULES=%installer_merge_modules% -DTEST_CUSTOM_WEL_PROVIDER=%test_custom_wel_provider% -DENABLE_SQL=%build_SQL% -DUSE_REAL_ODBC_TEST_DRIVER=%real_odbc% ^
         -DCMAKE_BUILD_TYPE_INIT=%cmake_build_type% -DCMAKE_BUILD_TYPE=%cmake_build_type% -DWIN32=WIN32 -DENABLE_LIBRDKAFKA=%build_kafka% -DENABLE_JNI=%build_jni% -DOPENSSL_OFF=OFF ^
         -DENABLE_COAP=%build_coap% -DENABLE_AWS=%build_AWS% -DENABLE_PDH=%build_PDH% -DENABLE_AZURE=%build_azure% -DENABLE_SFTP=%build_SFTP% -DENABLE_SPLUNK=%build_SPLUNK% -DENABLE_GCP=%build_GCP% ^
         -DENABLE_NANOFI=%build_nanofi% -DENABLE_OPENCV=%build_opencv% -DENABLE_PROMETHEUS=%build_prometheus% -DENABLE_ELASTICSEARCH=%build_ELASTIC% -DUSE_SHARED_LIBS=OFF -DDISABLE_CONTROLLER=ON  ^
