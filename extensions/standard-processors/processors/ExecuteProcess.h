@@ -17,8 +17,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#ifndef EXTENSIONS_STANDARD_PROCESSORS_PROCESSORS_EXECUTEPROCESS_H_
-#define EXTENSIONS_STANDARD_PROCESSORS_PROCESSORS_EXECUTEPROCESS_H_
+#pragma once
 
 #include <errno.h>
 #include <signal.h>
@@ -42,26 +41,22 @@
 #include "FlowFileRecord.h"
 #include "utils/gsl.h"
 
-namespace org {
-namespace apache {
-namespace nifi {
-namespace minifi {
-namespace processors {
+namespace org::apache::nifi::minifi::processors {
 #ifndef WIN32
 
-// ExecuteProcess Class
 class ExecuteProcess : public core::Processor {
  public:
-  ExecuteProcess(const std::string& name, const utils::Identifier& uuid = {}) // NOLINT
-      : Processor(name, uuid) {
-    _redirectErrorStream = false;
-    _workingDir = ".";
-    _processRunning = false;
-    _pid = 0;
+  explicit ExecuteProcess(const std::string& name, const utils::Identifier& uuid = {})
+      : Processor(name, uuid),
+        working_dir_("."),
+        redirect_error_stream_(false),
+        process_running_(false),
+        pid_(0) {
   }
   ~ExecuteProcess() override {
-    if (_processRunning && _pid > 0)
-      kill(_pid, SIGTERM);
+    if (process_running_ && pid_ > 0) {
+      kill(pid_, SIGTERM);
+    }
   }
 
   EXTENSIONAPI static constexpr const char* Description = "Runs an operating system command specified by the user and writes the output of that command to a FlowFile. "
@@ -93,33 +88,21 @@ class ExecuteProcess : public core::Processor {
   ADD_COMMON_VIRTUAL_FUNCTIONS_FOR_PROCESSORS
 
  public:
-  // OnTrigger method, implemented by NiFi ExecuteProcess
   void onTrigger(core::ProcessContext *context, core::ProcessSession *session) override;
-  // Initialize, over write by NiFi ExecuteProcess
   void initialize() override;
 
  private:
-  // Logger
   std::shared_ptr<core::logging::Logger> logger_ = core::logging::LoggerFactory<ExecuteProcess>::getLogger();
-  // Property
-  std::string _command;
-  std::string _commandArgument;
-  std::string _workingDir;
-  std::chrono::milliseconds _batchDuration  = std::chrono::milliseconds(0);
-  bool _redirectErrorStream;
-  // Full command
-  std::string _fullCommand;
-  // whether the process is running
-  bool _processRunning;
-  int _pipefd[2];
-  pid_t _pid;
+  std::string command_;
+  std::string command_argument_;
+  std::string working_dir_;
+  std::chrono::milliseconds batch_duration_  = std::chrono::milliseconds(0);
+  bool redirect_error_stream_;
+  std::string full_command_;
+  bool process_running_;
+  int pipefd_[2];
+  pid_t pid_;
 };
 
 #endif
-}  // namespace processors
-}  // namespace minifi
-}  // namespace nifi
-}  // namespace apache
-}  // namespace org
-
-#endif  // EXTENSIONS_STANDARD_PROCESSORS_PROCESSORS_EXECUTEPROCESS_H_
+}  // namespace org::apache::nifi::minifi::processors

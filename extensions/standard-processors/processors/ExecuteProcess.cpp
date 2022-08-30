@@ -42,11 +42,7 @@
 
 using namespace std::literals::chrono_literals;
 
-namespace org {
-namespace apache {
-namespace nifi {
-namespace minifi {
-namespace processors {
+namespace org::apache::nifi::minifi::processors {
 #ifndef WIN32
 core::Property ExecuteProcess::Command(
     core::PropertyBuilder::createProperty("Command")->withDescription("Specifies the command to be executed; if just the name of an executable"
@@ -78,37 +74,37 @@ void ExecuteProcess::onTrigger(core::ProcessContext *context, core::ProcessSessi
   std::string value;
   std::shared_ptr<core::FlowFile> flow_file;
   if (context->getProperty(Command, value, flow_file)) {
-    this->_command = value;
+    this->command_ = value;
   }
   if (context->getProperty(CommandArguments, value, flow_file)) {
-    this->_commandArgument = value;
+    this->command_argument_ = value;
   }
   if (context->getProperty(WorkingDir, value, flow_file)) {
-    this->_workingDir = value;
+    this->working_dir_ = value;
   }
   if (auto batch_duration = context->getProperty<core::TimePeriodValue>(BatchDuration)) {
-    _batchDuration = batch_duration->getMilliseconds();
-    logger_->log_debug("Setting _batchDuration");
+    batch_duration_ = batch_duration->getMilliseconds();
+    logger_->log_debug("Setting batch_duration_");
   }
   if (context->getProperty(RedirectErrorStream.getName(), value)) {
-    _redirectErrorStream =  org::apache::nifi::minifi::utils::StringUtils::toBool(value).value_or(false);
+    redirect_error_stream_ =  org::apache::nifi::minifi::utils::StringUtils::toBool(value).value_or(false);
   }
-  this->_fullCommand = _command + " " + _commandArgument;
-  if (_fullCommand.length() == 0) {
+  this->full_command_ = command_ + " " + command_argument_;
+  if (full_command_.length() == 0) {
     yield();
     return;
   }
-  if (_workingDir.length() > 0 && _workingDir != ".") {
+  if (working_dir_.length() > 0 && working_dir_ != ".") {
     // change to working directory
-    if (chdir(_workingDir.c_str()) != 0) {
-      logger_->log_error("Execute Command can not chdir %s", _workingDir);
+    if (chdir(working_dir_.c_str()) != 0) {
+      logger_->log_error("Execute Command can not chdir %s", working_dir_);
       yield();
       return;
     }
   }
-  logger_->log_info("Execute Command %s", _fullCommand);
+  logger_->log_info("Execute Command %s", full_command_);
   // split the command into array
-  char *p = std::strtok(const_cast<char*>(_fullCommand.c_str()), " ");
+  char *p = std::strtok(const_cast<char*>(full_command_.c_str()), " ");
   int argc = 0;
   char *argv[64];
   while (p != 0 && argc < 64) {
@@ -118,49 +114,49 @@ void ExecuteProcess::onTrigger(core::ProcessContext *context, core::ProcessSessi
   }
   argv[argc] = NULL;
   int status;
-  if (!_processRunning) {
-    _processRunning = true;
+  if (!process_running_) {
+    process_running_ = true;
     // if the process has not launched yet
     // create the pipe
-    if (pipe(_pipefd) == -1) {
-      _processRunning = false;
+    if (pipe(pipefd_) == -1) {
+      process_running_ = false;
       yield();
       return;
     }
-    switch (_pid = fork()) {
+    switch (pid_ = fork()) {
       case -1:
         logger_->log_error("Execute Process fork failed");
-        _processRunning = false;
-        close(_pipefd[0]);
-        close(_pipefd[1]);
+        process_running_ = false;
+        close(pipefd_[0]);
+        close(pipefd_[1]);
         yield();
         break;
       case 0:  // this is the code the child runs
         close(1);      // close stdout
-        dup(_pipefd[1]);  // points pipefd at file descriptor
-        if (_redirectErrorStream)
+        dup(pipefd_[1]);  // points pipefd at file descriptor
+        if (redirect_error_stream_)
           // redirect stderr
-          dup2(_pipefd[1], 2);
-        close(_pipefd[0]);
+          dup2(pipefd_[1], 2);
+        close(pipefd_[0]);
         execvp(argv[0], argv);
         exit(1);
         break;
       default:  // this is the code the parent runs
         // the parent isn't going to write to the pipe
-        close(_pipefd[1]);
-        if (_batchDuration > 0ms) {
+        close(pipefd_[1]);
+        if (batch_duration_ > 0ms) {
           while (true) {
-            std::this_thread::sleep_for(_batchDuration);
+            std::this_thread::sleep_for(batch_duration_);
             char buffer[4096];
-            const auto  numRead = read(_pipefd[0], buffer, sizeof(buffer));
+            const auto  numRead = read(pipefd_[0], buffer, sizeof(buffer));
             if (numRead <= 0)
               break;
             logger_->log_debug("Execute Command Respond %zd", numRead);
             auto flowFile = session->create();
             if (!flowFile)
               continue;
-            flowFile->addAttribute("command", _command);
-            flowFile->addAttribute("command.arguments", _commandArgument);
+            flowFile->addAttribute("command", command_);
+            flowFile->addAttribute("command.arguments", command_argument_);
             session->writeBuffer(flowFile, gsl::make_span(buffer, gsl::narrow<size_t>(numRead)));
             session->transfer(flowFile, Success);
             session->commit();
@@ -171,7 +167,7 @@ void ExecuteProcess::onTrigger(core::ProcessContext *context, core::ProcessSessi
           size_t totalRead = 0;
           std::shared_ptr<core::FlowFile> flowFile = nullptr;
           while (true) {
-            const auto numRead = read(_pipefd[0], bufPtr, (sizeof(buffer) - totalRead));
+            const auto numRead = read(pipefd_[0], bufPtr, (sizeof(buffer) - totalRead));
             if (numRead <= 0) {
               if (totalRead > 0) {
                 logger_->log_debug("Execute Command Respond %zu", totalRead);
@@ -181,8 +177,8 @@ void ExecuteProcess::onTrigger(core::ProcessContext *context, core::ProcessSessi
                   flowFile = session->create();
                   if (!flowFile)
                     break;
-                  flowFile->addAttribute("command", _command);
-                  flowFile->addAttribute("command.arguments", _commandArgument);
+                  flowFile->addAttribute("command", command_);
+                  flowFile->addAttribute("command.arguments", command_argument_);
                   session->writeBuffer(flowFile, buffer_span);
                 } else {
                   session->appendBuffer(flowFile, buffer_span);
@@ -198,8 +194,8 @@ void ExecuteProcess::onTrigger(core::ProcessContext *context, core::ProcessSessi
                   flowFile = session->create();
                   if (!flowFile)
                     continue;
-                  flowFile->addAttribute("command", _command);
-                  flowFile->addAttribute("command.arguments", _commandArgument);
+                  flowFile->addAttribute("command", command_);
+                  flowFile->addAttribute("command.arguments", command_argument_);
                   session->writeBuffer(flowFile, buffer);
                 } else {
                   session->appendBuffer(flowFile, buffer);
@@ -217,13 +213,13 @@ void ExecuteProcess::onTrigger(core::ProcessContext *context, core::ProcessSessi
 
         wait(&status);
         if (WIFEXITED(status)) {
-          logger_->log_info("Execute Command Complete %s status %d pid %d", _fullCommand, WEXITSTATUS(status), _pid);
+          logger_->log_info("Execute Command Complete %s status %d pid %d", full_command_, WEXITSTATUS(status), pid_);
         } else {
-          logger_->log_info("Execute Command Complete %s status %d pid %d", _fullCommand, WTERMSIG(status), _pid);
+          logger_->log_info("Execute Command Complete %s status %d pid %d", full_command_, WTERMSIG(status), pid_);
         }
 
-        close(_pipefd[0]);
-        _processRunning = false;
+        close(pipefd_[0]);
+        process_running_ = false;
         break;
     }
   }
@@ -232,11 +228,7 @@ void ExecuteProcess::onTrigger(core::ProcessContext *context, core::ProcessSessi
 REGISTER_RESOURCE(ExecuteProcess, Processor);
 
 #endif
-} /* namespace processors */
-} /* namespace minifi */
-} /* namespace nifi */
-} /* namespace apache */
-} /* namespace org */
+}  // namespace org::apache::nifi::minifi::processors
 
 #if defined(__clang__)
 #pragma clang diagnostic pop
