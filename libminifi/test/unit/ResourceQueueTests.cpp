@@ -62,13 +62,13 @@ TEST_CASE("Resource limitation is not set to the resource queue", "[utils::Resou
   auto resource_queue = ResourceQueue<int>::create(std::nullopt, logger_);
   std::set<int> resources_created;
 
-  auto resource_one = resource_queue->getResource([]{return std::make_unique<int>(1);});
-  auto resource_two = resource_queue->getResource([]{return std::make_unique<int>(2);});
-  auto resource_three = resource_queue->getResource([]{return std::make_unique<int>(3);});
+  auto resource_wrapper_one = resource_queue->getResource([]{return std::make_unique<int>(1);});
+  auto resource_wrapper_two = resource_queue->getResource([]{return std::make_unique<int>(2);});
+  auto resource_wrapper_three = resource_queue->getResource([]{return std::make_unique<int>(3);});
 
-  resources_created.emplace(*resource_one);
-  resources_created.emplace(*resource_two);
-  resources_created.emplace(*resource_three);
+  resources_created.emplace(*resource_wrapper_one);
+  resources_created.emplace(*resource_wrapper_two);
+  resources_created.emplace(*resource_wrapper_three);
 
   CHECK(!LogTestController::getInstance().contains("Waiting for resource", 0ms));
   CHECK(LogTestController::getInstance().contains("Number of instances: 3", 0ms));
