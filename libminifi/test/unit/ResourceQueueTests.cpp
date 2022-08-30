@@ -28,7 +28,7 @@ using namespace std::literals::chrono_literals;
 
 namespace org::apache::nifi::minifi::utils::testing {
 
-TEST_CASE("maximum_number_of_creatable_resources", "[utils::ResourceQueue]") {
+TEST_CASE("Limiting resource queue to a maximum of 2 resources", "[utils::ResourceQueue]") {
   std::shared_ptr<core::logging::Logger> logger_{core::logging::LoggerFactory<ResourceQueue<int>>::getLogger()};
   LogTestController::getInstance().setTrace<ResourceQueue<int>>();
 
@@ -42,36 +42,37 @@ TEST_CASE("maximum_number_of_creatable_resources", "[utils::ResourceQueue]") {
     resources_created.emplace(*resource);
   };
 
-  SECTION("Maximum 2 resources") {
-    auto resource_queue = ResourceQueue<int>::create(2, logger_);
-    std::thread thread_one{[&] { worker(1, resource_queue); }};
-    std::thread thread_two{[&] { worker(2, resource_queue); }};
-    std::thread thread_three{[&] { worker(3, resource_queue); }};
+  auto resource_queue = ResourceQueue<int>::create(2, logger_);
+  std::thread thread_one{[&] { worker(1, resource_queue); }};
+  std::thread thread_two{[&] { worker(2, resource_queue); }};
+  std::thread thread_three{[&] { worker(3, resource_queue); }};
 
-    thread_one.join();
-    thread_two.join();
-    thread_three.join();
+  thread_one.join();
+  thread_two.join();
+  thread_three.join();
 
-    CHECK(!resources_created.empty());
-    CHECK(resources_created.size() <= 2);
-  }
+  CHECK(!resources_created.empty());
+  CHECK(resources_created.size() <= 2);
+}
 
-  SECTION("No Maximum resources") {
-    LogTestController::getInstance().clear();
-    auto resource_queue = ResourceQueue<int>::create(std::nullopt, logger_);
-    std::thread thread_one{[&] { worker(1, resource_queue); }};
-    std::thread thread_two{[&] { worker(2, resource_queue); }};
-    std::thread thread_three{[&] { worker(3, resource_queue); }};
+TEST_CASE("Resource limitation is not set to the resource queue", "[utils::ResourceQueue]") {
+  std::shared_ptr<core::logging::Logger> logger_{core::logging::LoggerFactory<ResourceQueue<int>>::getLogger()};
+  LogTestController::getInstance().setTrace<ResourceQueue<int>>();
+  LogTestController::getInstance().clear();
+  auto resource_queue = ResourceQueue<int>::create(std::nullopt, logger_);
+  std::set<int> resources_created;
 
-    thread_one.join();
-    thread_two.join();
-    thread_three.join();
+  auto resource_one = resource_queue->getResource([]{return std::make_unique<int>(1);});
+  auto resource_two = resource_queue->getResource([]{return std::make_unique<int>(2);});
+  auto resource_three = resource_queue->getResource([]{return std::make_unique<int>(3);});
 
-    CHECK(!resources_created.empty());
-    CHECK(!LogTestController::getInstance().contains("Waiting for resource", 0ms));
-    CHECK(LogTestController::getInstance().contains("Number of instances: 3", 0ms));
-    CHECK(resources_created.size() <= 3);
-  }
+  resources_created.emplace(*resource_one);
+  resources_created.emplace(*resource_two);
+  resources_created.emplace(*resource_three);
+
+  CHECK(!LogTestController::getInstance().contains("Waiting for resource", 0ms));
+  CHECK(LogTestController::getInstance().contains("Number of instances: 3", 0ms));
+  CHECK(resources_created.size() == 3);
 }
 
 TEST_CASE("resource returns when it goes out of scope", "[utils::ResourceQueue]") {
