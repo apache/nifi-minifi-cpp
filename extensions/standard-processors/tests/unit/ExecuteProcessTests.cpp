@@ -1,0 +1,126 @@
+/**
+ * Licensed to the Apache Software Foundation (ASF) under one or more
+ * contributor license agreements.  See the NOTICE file distributed with
+ * this work for additional information regarding copyright ownership.
+ * The ASF licenses this file to You under the Apache License, Version 2.0
+ * (the "License"); you may not use this file except in compliance with
+ * the License.  You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+#include <string>
+
+#include "Catch.h"
+#include "processors/ExecuteProcess.h"
+#include "SingleProcessorTestController.h"
+#include "utils/file/FileUtils.h"
+
+using namespace std::literals::chrono_literals;
+
+namespace org::apache::nifi::minifi::test {
+#ifndef WIN32
+
+class ExecuteProcessTestsFixture {
+ public:
+  ExecuteProcessTestsFixture()
+      : execute_process_(std::make_shared<processors::ExecuteProcess>("ExecuteProcess")),
+        controller_(execute_process_){
+    LogTestController::getInstance().setTrace<processors::ExecuteProcess>();
+  }
+ protected:
+  std::shared_ptr<processors::ExecuteProcess> execute_process_;
+  test::SingleProcessorTestController controller_;
+};
+
+TEST_CASE_METHOD(ExecuteProcessTestsFixture, "ExecuteProcess can run a single command", "[ExecuteProcess]") {
+  REQUIRE(execute_process_->setProperty(processors::ExecuteProcess::Command, "echo -n test"));
+
+  controller_.plan->scheduleProcessor(execute_process_);
+  auto result = controller_.trigger("data");
+
+  auto success_flow_files = result.at(processors::ExecuteProcess::Success);
+  REQUIRE(success_flow_files.size() == 1);
+  CHECK(controller_.plan->getContent(success_flow_files[0]) == "test");
+}
+
+TEST_CASE_METHOD(ExecuteProcessTestsFixture, "ExecuteProcess can run an executable with a parameter", "[ExecuteProcess]") {
+  REQUIRE(execute_process_->setProperty(processors::ExecuteProcess::Command, utils::file::FileUtils::concat_path(utils::file::FileUtils::get_executable_dir(), "EchoParameters")));
+  REQUIRE(execute_process_->setProperty(processors::ExecuteProcess::CommandArguments, "0 test_data"));
+
+  controller_.plan->scheduleProcessor(execute_process_);
+  auto result = controller_.trigger("data");
+
+  auto success_flow_files = result.at(processors::ExecuteProcess::Success);
+  REQUIRE(success_flow_files.size() == 1);
+  CHECK(controller_.plan->getContent(success_flow_files[0]) == "test_data\n");
+}
+
+TEST_CASE_METHOD(ExecuteProcessTestsFixture, "ExecuteProcess can run an executable with escaped parameters", "[ExecuteProcess]") {
+  REQUIRE(execute_process_->setProperty(processors::ExecuteProcess::Command, utils::file::FileUtils::concat_path(utils::file::FileUtils::get_executable_dir(), "EchoParameters")));
+  REQUIRE(execute_process_->setProperty(processors::ExecuteProcess::CommandArguments, "0 test_data test_data2"));
+
+  controller_.plan->scheduleProcessor(execute_process_);
+  auto result = controller_.trigger("data");
+
+  auto success_flow_files = result.at(processors::ExecuteProcess::Success);
+  REQUIRE(success_flow_files.size() == 1);
+  CHECK(controller_.plan->getContent(success_flow_files[0]) == "test_data\ntest_data2\n");
+}
+
+TEST_CASE_METHOD(ExecuteProcessTestsFixture, "ExecuteProcess does not produce a flowfile if no output is generated", "[ExecuteProcess]") {
+  REQUIRE(execute_process_->setProperty(processors::ExecuteProcess::Command, utils::file::FileUtils::concat_path(utils::file::FileUtils::get_executable_dir(), "EchoParameters")));
+
+  controller_.plan->scheduleProcessor(execute_process_);
+  auto result = controller_.trigger("data");
+
+  auto success_flow_files = result.at(processors::ExecuteProcess::Success);
+  REQUIRE(success_flow_files.empty());
+}
+
+TEST_CASE_METHOD(ExecuteProcessTestsFixture, "ExecuteProcess can redirect error stream to stdout", "[ExecuteProcess]") {
+  REQUIRE(execute_process_->setProperty(processors::ExecuteProcess::Command, utils::file::FileUtils::concat_path(utils::file::FileUtils::get_executable_dir(), "EchoParameters")));
+  REQUIRE(execute_process_->setProperty(processors::ExecuteProcess::RedirectErrorStream, "true"));
+
+  controller_.plan->scheduleProcessor(execute_process_);
+  auto result = controller_.trigger("data");
+
+  auto success_flow_files = result.at(processors::ExecuteProcess::Success);
+  REQUIRE(success_flow_files.size() == 1);
+  CHECK(controller_.plan->getContent(success_flow_files[0]) == "Usage: ./EchoParameters <delay milliseconds> <text to write>\n");
+}
+
+TEST_CASE_METHOD(ExecuteProcessTestsFixture, "ExecuteProcess can change workdir", "[ExecuteProcess]") {
+  REQUIRE(execute_process_->setProperty(processors::ExecuteProcess::Command, "./EchoParameters"));
+  REQUIRE(execute_process_->setProperty(processors::ExecuteProcess::CommandArguments, "0 test_data"));
+  REQUIRE(execute_process_->setProperty(processors::ExecuteProcess::WorkingDir, utils::file::FileUtils::get_executable_dir()));
+
+  controller_.plan->scheduleProcessor(execute_process_);
+  auto result = controller_.trigger("data");
+
+  auto success_flow_files = result.at(processors::ExecuteProcess::Success);
+  REQUIRE(success_flow_files.size() == 1);
+  CHECK(controller_.plan->getContent(success_flow_files[0]) == "test_data\n");
+}
+
+TEST_CASE_METHOD(ExecuteProcessTestsFixture, "ExecuteProcess can forward long running output in batches", "[ExecuteProcess]") {
+  REQUIRE(execute_process_->setProperty(processors::ExecuteProcess::Command, utils::file::FileUtils::concat_path(utils::file::FileUtils::get_executable_dir(), "EchoParameters")));
+  REQUIRE(execute_process_->setProperty(processors::ExecuteProcess::CommandArguments, "100 test_data1 test_data2"));
+  REQUIRE(execute_process_->setProperty(processors::ExecuteProcess::BatchDuration, "10 ms"));
+
+  controller_.plan->scheduleProcessor(execute_process_);
+  auto result = controller_.trigger("data");
+
+  auto success_flow_files = result.at(processors::ExecuteProcess::Success);
+  REQUIRE(success_flow_files.size() == 2);
+  CHECK(controller_.plan->getContent(success_flow_files[0]) == "test_data1\n");
+  CHECK(controller_.plan->getContent(success_flow_files[1]) == "test_data2\n");
+}
+
+#endif
+}  // namespace org::apache::nifi::minifi::test
