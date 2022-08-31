@@ -37,6 +37,19 @@
 #include "utils/gsl.h"
 #include "utils/meta/detected.h"
 
+// libc++ doesn't define operator<=> on strings, and apparently the operator rewrite rules don't automagically make one
+#if defined(_LIBCPP_VERSION) && _LIBCPP_VERSION <= 14000
+#include <compare>
+#endif
+
+#if defined(_LIBCPP_VERSION) && _LIBCPP_VERSION <= 14000
+template<typename _CharT, typename _Traits, typename _Alloc>
+constexpr std::strong_ordering operator<=>(const std::basic_string<_CharT, _Traits, _Alloc>& __lhs,
+    const std::basic_string<_CharT, _Traits, _Alloc>& __rhs) noexcept {
+  return __lhs.compare(__rhs) <=> 0;
+}
+#endif
+
 namespace org::apache::nifi::minifi {
 namespace utils {
 

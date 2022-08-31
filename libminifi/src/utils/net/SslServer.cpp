@@ -81,7 +81,6 @@ SslServer::SslServer(std::optional<size_t> max_queue_size, uint16_t port, std::s
     } else if (client_auth == ClientAuthOption::WANT) {
       context_.set_verify_mode(asio::ssl::verify_peer);
     }
-  startAccept();
 }
 
 std::shared_ptr<SslSession> SslServer::createSession() {
