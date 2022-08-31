@@ -104,7 +104,7 @@ TEST_CASE("PutUDP", "[putudp]") {
     REQUIRE(failure_flow_files.size() == 1);
     CHECK(result.at(PutUDP::Success).empty());
     CHECK(controller.plan->getContent(failure_flow_files[0]) == message);
-    CHECK(LogTestController::getInstance().contains("Host not found"));
+    CHECK((LogTestController::getInstance().contains("Host not found") || LogTestController::getInstance().contains("No such host is known")));
   }
 }
 }  // namespace org::apache::nifi::minifi::processors
