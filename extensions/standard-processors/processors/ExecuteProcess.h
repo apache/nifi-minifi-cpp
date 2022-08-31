@@ -54,7 +54,7 @@ class ExecuteProcess : public core::Processor {
         pid_(0) {
   }
   ~ExecuteProcess() override {
-    if (process_running_ && pid_ > 0) {
+    if (pid_ > 0) {
       kill(pid_, SIGTERM);
     }
   }
@@ -83,15 +83,25 @@ class ExecuteProcess : public core::Processor {
 
   EXTENSIONAPI static constexpr bool SupportsDynamicProperties = false;
   EXTENSIONAPI static constexpr bool SupportsDynamicRelationships = false;
-  EXTENSIONAPI static constexpr core::annotation::Input InputRequirement = core::annotation::Input::INPUT_ALLOWED;
-  EXTENSIONAPI static constexpr bool IsSingleThreaded = false;
+  EXTENSIONAPI static constexpr core::annotation::Input InputRequirement = core::annotation::Input::INPUT_FORBIDDEN;
+  EXTENSIONAPI static constexpr bool IsSingleThreaded = true;
   ADD_COMMON_VIRTUAL_FUNCTIONS_FOR_PROCESSORS
 
- public:
   void onTrigger(core::ProcessContext *context, core::ProcessSession *session) override;
+  void onSchedule(core::ProcessContext *context, core::ProcessSessionFactory *session_factory) override;
   void initialize() override;
 
  private:
+  void getProperties(core::ProcessContext& context, const std::shared_ptr<core::FlowFile>& flow_file);
+  bool changeWorkdir();
+  void populateArgArray(char** argv);
+  void executeProcessForkFailed();
+  void executeChildProcess(char** argv);
+  void collectChildProcessOutput(core::ProcessSession& session);
+  void readOutputInBatches(core::ProcessSession& session);
+  void readOutput(core::ProcessSession& session);
+  bool writeToFlowFile(core::ProcessSession& session, std::shared_ptr<core::FlowFile>& flow_file, gsl::span<const char> buffer);
+
   std::shared_ptr<core::logging::Logger> logger_ = core::logging::LoggerFactory<ExecuteProcess>::getLogger();
   std::string command_;
   std::string command_argument_;

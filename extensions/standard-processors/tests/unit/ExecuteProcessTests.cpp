@@ -47,11 +47,15 @@ TEST_CASE_METHOD(ExecuteProcessTestsFixture, "ExecuteProcess can run a single co
   auto success_flow_files = result.at(processors::ExecuteProcess::Success);
   REQUIRE(success_flow_files.size() == 1);
   CHECK(controller_.plan->getContent(success_flow_files[0]) == "test");
+  CHECK(success_flow_files[0]->getAttribute("command") == "echo -n test");
+  CHECK(success_flow_files[0]->getAttribute("command.arguments") == "");
 }
 
 TEST_CASE_METHOD(ExecuteProcessTestsFixture, "ExecuteProcess can run an executable with a parameter", "[ExecuteProcess]") {
-  REQUIRE(execute_process_->setProperty(processors::ExecuteProcess::Command, utils::file::FileUtils::concat_path(utils::file::FileUtils::get_executable_dir(), "EchoParameters")));
-  REQUIRE(execute_process_->setProperty(processors::ExecuteProcess::CommandArguments, "0 test_data"));
+  auto command = utils::file::FileUtils::concat_path(utils::file::FileUtils::get_executable_dir(), "EchoParameters");
+  std::string arguments = "0 test_data";
+  REQUIRE(execute_process_->setProperty(processors::ExecuteProcess::Command, command));
+  REQUIRE(execute_process_->setProperty(processors::ExecuteProcess::CommandArguments, arguments));
 
   controller_.plan->scheduleProcessor(execute_process_);
   auto result = controller_.trigger("data");
@@ -59,11 +63,15 @@ TEST_CASE_METHOD(ExecuteProcessTestsFixture, "ExecuteProcess can run an executab
   auto success_flow_files = result.at(processors::ExecuteProcess::Success);
   REQUIRE(success_flow_files.size() == 1);
   CHECK(controller_.plan->getContent(success_flow_files[0]) == "test_data\n");
+  CHECK(success_flow_files[0]->getAttribute("command") == command);
+  CHECK(success_flow_files[0]->getAttribute("command.arguments") == arguments);
 }
 
 TEST_CASE_METHOD(ExecuteProcessTestsFixture, "ExecuteProcess can run an executable with escaped parameters", "[ExecuteProcess]") {
-  REQUIRE(execute_process_->setProperty(processors::ExecuteProcess::Command, utils::file::FileUtils::concat_path(utils::file::FileUtils::get_executable_dir(), "EchoParameters")));
-  REQUIRE(execute_process_->setProperty(processors::ExecuteProcess::CommandArguments, "0 test_data test_data2"));
+  auto command = utils::file::FileUtils::concat_path(utils::file::FileUtils::get_executable_dir(), "EchoParameters");
+  std::string arguments = "0 test_data test_data2";
+  REQUIRE(execute_process_->setProperty(processors::ExecuteProcess::Command, command));
+  REQUIRE(execute_process_->setProperty(processors::ExecuteProcess::CommandArguments, arguments));
 
   controller_.plan->scheduleProcessor(execute_process_);
   auto result = controller_.trigger("data");
@@ -71,10 +79,13 @@ TEST_CASE_METHOD(ExecuteProcessTestsFixture, "ExecuteProcess can run an executab
   auto success_flow_files = result.at(processors::ExecuteProcess::Success);
   REQUIRE(success_flow_files.size() == 1);
   CHECK(controller_.plan->getContent(success_flow_files[0]) == "test_data\ntest_data2\n");
+  CHECK(success_flow_files[0]->getAttribute("command") == command);
+  CHECK(success_flow_files[0]->getAttribute("command.arguments") == arguments);
 }
 
 TEST_CASE_METHOD(ExecuteProcessTestsFixture, "ExecuteProcess does not produce a flowfile if no output is generated", "[ExecuteProcess]") {
-  REQUIRE(execute_process_->setProperty(processors::ExecuteProcess::Command, utils::file::FileUtils::concat_path(utils::file::FileUtils::get_executable_dir(), "EchoParameters")));
+  auto command = utils::file::FileUtils::concat_path(utils::file::FileUtils::get_executable_dir(), "EchoParameters");
+  REQUIRE(execute_process_->setProperty(processors::ExecuteProcess::Command, command));
 
   controller_.plan->scheduleProcessor(execute_process_);
   auto result = controller_.trigger("data");
@@ -84,7 +95,8 @@ TEST_CASE_METHOD(ExecuteProcessTestsFixture, "ExecuteProcess does not produce a 
 }
 
 TEST_CASE_METHOD(ExecuteProcessTestsFixture, "ExecuteProcess can redirect error stream to stdout", "[ExecuteProcess]") {
-  REQUIRE(execute_process_->setProperty(processors::ExecuteProcess::Command, utils::file::FileUtils::concat_path(utils::file::FileUtils::get_executable_dir(), "EchoParameters")));
+  auto command = utils::file::FileUtils::concat_path(utils::file::FileUtils::get_executable_dir(), "EchoParameters");
+  REQUIRE(execute_process_->setProperty(processors::ExecuteProcess::Command, command));
   REQUIRE(execute_process_->setProperty(processors::ExecuteProcess::RedirectErrorStream, "true"));
 
   controller_.plan->scheduleProcessor(execute_process_);
@@ -93,11 +105,15 @@ TEST_CASE_METHOD(ExecuteProcessTestsFixture, "ExecuteProcess can redirect error 
   auto success_flow_files = result.at(processors::ExecuteProcess::Success);
   REQUIRE(success_flow_files.size() == 1);
   CHECK(controller_.plan->getContent(success_flow_files[0]) == "Usage: ./EchoParameters <delay milliseconds> <text to write>\n");
+  CHECK(success_flow_files[0]->getAttribute("command") == command);
+  CHECK(success_flow_files[0]->getAttribute("command.arguments") == "");
 }
 
 TEST_CASE_METHOD(ExecuteProcessTestsFixture, "ExecuteProcess can change workdir", "[ExecuteProcess]") {
-  REQUIRE(execute_process_->setProperty(processors::ExecuteProcess::Command, "./EchoParameters"));
-  REQUIRE(execute_process_->setProperty(processors::ExecuteProcess::CommandArguments, "0 test_data"));
+  auto command = "./EchoParameters";
+  std::string arguments = "0 test_data";
+  REQUIRE(execute_process_->setProperty(processors::ExecuteProcess::Command, command));
+  REQUIRE(execute_process_->setProperty(processors::ExecuteProcess::CommandArguments, arguments));
   REQUIRE(execute_process_->setProperty(processors::ExecuteProcess::WorkingDir, utils::file::FileUtils::get_executable_dir()));
 
   controller_.plan->scheduleProcessor(execute_process_);
@@ -106,11 +122,15 @@ TEST_CASE_METHOD(ExecuteProcessTestsFixture, "ExecuteProcess can change workdir"
   auto success_flow_files = result.at(processors::ExecuteProcess::Success);
   REQUIRE(success_flow_files.size() == 1);
   CHECK(controller_.plan->getContent(success_flow_files[0]) == "test_data\n");
+  CHECK(success_flow_files[0]->getAttribute("command") == command);
+  CHECK(success_flow_files[0]->getAttribute("command.arguments") == arguments);
 }
 
 TEST_CASE_METHOD(ExecuteProcessTestsFixture, "ExecuteProcess can forward long running output in batches", "[ExecuteProcess]") {
-  REQUIRE(execute_process_->setProperty(processors::ExecuteProcess::Command, utils::file::FileUtils::concat_path(utils::file::FileUtils::get_executable_dir(), "EchoParameters")));
-  REQUIRE(execute_process_->setProperty(processors::ExecuteProcess::CommandArguments, "100 test_data1 test_data2"));
+  auto command = utils::file::FileUtils::concat_path(utils::file::FileUtils::get_executable_dir(), "EchoParameters");
+  std::string arguments = "100 test_data1 test_data2";
+  REQUIRE(execute_process_->setProperty(processors::ExecuteProcess::Command, command));
+  REQUIRE(execute_process_->setProperty(processors::ExecuteProcess::CommandArguments, arguments));
   REQUIRE(execute_process_->setProperty(processors::ExecuteProcess::BatchDuration, "10 ms"));
 
   controller_.plan->scheduleProcessor(execute_process_);
@@ -119,7 +139,28 @@ TEST_CASE_METHOD(ExecuteProcessTestsFixture, "ExecuteProcess can forward long ru
   auto success_flow_files = result.at(processors::ExecuteProcess::Success);
   REQUIRE(success_flow_files.size() == 2);
   CHECK(controller_.plan->getContent(success_flow_files[0]) == "test_data1\n");
+  CHECK(success_flow_files[0]->getAttribute("command") == command);
+  CHECK(success_flow_files[0]->getAttribute("command.arguments") == arguments);
   CHECK(controller_.plan->getContent(success_flow_files[1]) == "test_data2\n");
+  CHECK(success_flow_files[1]->getAttribute("command") == command);
+  CHECK(success_flow_files[1]->getAttribute("command.arguments") == arguments);
+}
+
+TEST_CASE_METHOD(ExecuteProcessTestsFixture, "ExecuteProcess buffer long outputs", "[ExecuteProcess]") {
+  auto command = utils::file::FileUtils::concat_path(utils::file::FileUtils::get_executable_dir(), "EchoParameters");
+  REQUIRE(execute_process_->setProperty(processors::ExecuteProcess::Command, command));
+  std::string param1(8200, 'a');
+  std::string arguments = "0 " + param1;
+  REQUIRE(execute_process_->setProperty(processors::ExecuteProcess::CommandArguments, arguments));
+
+  controller_.plan->scheduleProcessor(execute_process_);
+  auto result = controller_.trigger("data");
+
+  auto success_flow_files = result.at(processors::ExecuteProcess::Success);
+  REQUIRE(success_flow_files.size() == 1);
+  CHECK(controller_.plan->getContent(success_flow_files[0]) == param1.append("\n"));
+  CHECK(success_flow_files[0]->getAttribute("command") == command);
+  CHECK(success_flow_files[0]->getAttribute("command.arguments") == arguments);
 }
 
 #endif
