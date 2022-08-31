@@ -93,7 +93,7 @@ void ExecuteProcess::onSchedule(core::ProcessContext* context, core::ProcessSess
   full_command_ = command_ + " " + command_argument_;
 }
 
-bool ExecuteProcess::changeWorkdir() {
+bool ExecuteProcess::changeWorkdir() const {
   if (working_dir_.length() > 0 && working_dir_ != ".") {
     if (chdir(working_dir_.c_str()) != 0) {
       logger_->log_error("Execute Command can not chdir %s", working_dir_);
@@ -103,15 +103,34 @@ bool ExecuteProcess::changeWorkdir() {
   return true;
 }
 
-void ExecuteProcess::populateArgArray(char** argv) {
-  char *parameter = std::strtok(const_cast<char*>(full_command_.c_str()), " ");
-  int argc = 0;
-  while (parameter != 0 && argc < 64) {
-    argv[argc] = parameter;
-    parameter = std::strtok(nullptr, " ");
-    argc++;
+std::vector<std::string> ExecuteProcess::readArgs() const {
+  std::vector<std::string> args;
+  std::string current_param;
+  bool in_escaped = false;
+  for (std::size_t i = 0; i < full_command_.size(); ++i) {
+    if (full_command_[i] == '\"') {
+      if (in_escaped && i > 0 && full_command_[i - 1] == '\\') {
+        current_param += full_command_[i];
+      } else {
+        in_escaped = !in_escaped;
+      }
+    } else if (full_command_[i] == ' ') {
+      if (in_escaped) {
+        current_param += full_command_[i];
+      } else {
+        if (!current_param.empty()) {
+          args.push_back(current_param);
+        }
+        current_param.clear();
+      }
+    } else if (full_command_[i] != '\\') {
+      current_param += full_command_[i];
+    }
   }
-  argv[argc] = nullptr;
+  if (!current_param.empty()) {
+    args.push_back(current_param);
+  }
+  return args;
 }
 
 void ExecuteProcess::executeProcessForkFailed() {
@@ -121,7 +140,7 @@ void ExecuteProcess::executeProcessForkFailed() {
   yield();
 }
 
-void ExecuteProcess::executeChildProcess(char** argv) {
+void ExecuteProcess::executeChildProcess(const std::vector<char*>& argv) {
   const int STDOUT = 1;
   const int STDERR = 2;
   close(STDOUT);
@@ -130,7 +149,7 @@ void ExecuteProcess::executeChildProcess(char** argv) {
     dup2(pipefd_[1], STDERR);
   }
   close(pipefd_[0]);
-  execvp(argv[0], argv);
+  execvp(argv[0], argv.data());
   exit(1);
 }
 
@@ -155,7 +174,7 @@ void ExecuteProcess::readOutputInBatches(core::ProcessSession& session) {
   }
 }
 
-bool ExecuteProcess::writeToFlowFile(core::ProcessSession& session, std::shared_ptr<core::FlowFile>& flow_file, gsl::span<const char> buffer) {
+bool ExecuteProcess::writeToFlowFile(core::ProcessSession& session, std::shared_ptr<core::FlowFile>& flow_file, gsl::span<const char> buffer) const {
   if (!flow_file) {
     flow_file = session.create();
     if (!flow_file) {
@@ -236,8 +255,13 @@ void ExecuteProcess::onTrigger(core::ProcessContext *context, core::ProcessSessi
     return;
   }
   logger_->log_info("Execute Command %s", full_command_);
-  char *argv[64];
-  populateArgArray(argv);
+  std::vector<char*> argv;
+  auto args = readArgs();
+  argv.reserve(args.size() + 1);
+  for (std::size_t i = 0; i < args.size(); ++i) {
+    argv.push_back(args[i].data());
+  }
+  argv.push_back(nullptr);
   if (process_running_) {
     return;
   }

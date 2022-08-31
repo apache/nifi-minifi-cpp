@@ -69,7 +69,7 @@ TEST_CASE_METHOD(ExecuteProcessTestsFixture, "ExecuteProcess can run an executab
 
 TEST_CASE_METHOD(ExecuteProcessTestsFixture, "ExecuteProcess can run an executable with escaped parameters", "[ExecuteProcess]") {
   auto command = utils::file::FileUtils::concat_path(utils::file::FileUtils::get_executable_dir(), "EchoParameters");
-  std::string arguments = "0 test_data test_data2";
+  std::string arguments = "0 test_data test_data2 \"test data 3\" \"\\\"test data 4\\\"";
   REQUIRE(execute_process_->setProperty(processors::ExecuteProcess::Command, command));
   REQUIRE(execute_process_->setProperty(processors::ExecuteProcess::CommandArguments, arguments));
 
@@ -78,7 +78,7 @@ TEST_CASE_METHOD(ExecuteProcessTestsFixture, "ExecuteProcess can run an executab
 
   auto success_flow_files = result.at(processors::ExecuteProcess::Success);
   REQUIRE(success_flow_files.size() == 1);
-  CHECK(controller_.plan->getContent(success_flow_files[0]) == "test_data\ntest_data2\n");
+  CHECK(controller_.plan->getContent(success_flow_files[0]) == "test_data\ntest_data2\ntest data 3\n\"test data 4\"\n");
   CHECK(success_flow_files[0]->getAttribute("command") == command);
   CHECK(success_flow_files[0]->getAttribute("command.arguments") == arguments);
 }

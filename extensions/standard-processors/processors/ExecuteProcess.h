@@ -29,6 +29,7 @@
 #include <memory>
 #include <string>
 #include <thread>
+#include <vector>
 
 #ifndef WIN32
 #include <sys/wait.h>
@@ -92,15 +93,14 @@ class ExecuteProcess : public core::Processor {
   void initialize() override;
 
  private:
-  void getProperties(core::ProcessContext& context, const std::shared_ptr<core::FlowFile>& flow_file);
-  bool changeWorkdir();
-  void populateArgArray(char** argv);
+  bool changeWorkdir() const;
+  std::vector<std::string> readArgs() const;
   void executeProcessForkFailed();
-  void executeChildProcess(char** argv);
+  void executeChildProcess(const std::vector<char*>& argv);
   void collectChildProcessOutput(core::ProcessSession& session);
   void readOutputInBatches(core::ProcessSession& session);
   void readOutput(core::ProcessSession& session);
-  bool writeToFlowFile(core::ProcessSession& session, std::shared_ptr<core::FlowFile>& flow_file, gsl::span<const char> buffer);
+  bool writeToFlowFile(core::ProcessSession& session, std::shared_ptr<core::FlowFile>& flow_file, gsl::span<const char> buffer) const;
 
   std::shared_ptr<core::logging::Logger> logger_ = core::logging::LoggerFactory<ExecuteProcess>::getLogger();
   std::string command_;
