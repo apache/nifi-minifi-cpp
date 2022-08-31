@@ -58,8 +58,6 @@ class PutUDP final : public core::Processor {
   void onTrigger(core::ProcessContext*, core::ProcessSession*) final;
 
  private:
-  std::string hostname_;
-  std::string port_;
   std::shared_ptr<core::logging::Logger> logger_;
 };
 }  // namespace org::apache::nifi::minifi::processors

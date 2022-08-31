@@ -94,7 +94,7 @@ TEST_CASE("PutUDP", "[putudp]") {
     CHECK(!received_message->sender_address.to_string().empty());
   }
 
-  {  // Resolving hostname fails
+  {
     const char* const message = "message for invalid host";
     controller.plan->setProperty(put_udp, PutUDP::Hostname.getName(), "invalid_hostname");
     const auto result = controller.trigger(message);
@@ -104,6 +104,7 @@ TEST_CASE("PutUDP", "[putudp]") {
     REQUIRE(failure_flow_files.size() == 1);
     CHECK(result.at(PutUDP::Success).empty());
     CHECK(controller.plan->getContent(failure_flow_files[0]) == message);
+    CHECK(LogTestController::getInstance().contains("Host not found"));
   }
 }
 }  // namespace org::apache::nifi::minifi::processors
