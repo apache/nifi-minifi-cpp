@@ -33,9 +33,9 @@ namespace org::apache::nifi::minifi::core::repository {
  */
 class FileSystemRepository : public core::ContentRepository, public core::CoreComponent {
  public:
-  FileSystemRepository(std::string name = getClassName<FileSystemRepository>()) // NOLINT
-          : core::CoreComponent(name),
-            logger_(logging::LoggerFactory<FileSystemRepository>::getLogger()) {
+  explicit FileSystemRepository(const std::string& name = getClassName<FileSystemRepository>())
+      : core::CoreComponent(name),
+        logger_(logging::LoggerFactory<FileSystemRepository>::getLogger()) {
   }
 
   virtual ~FileSystemRepository() = default;
