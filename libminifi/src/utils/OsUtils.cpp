@@ -316,10 +316,12 @@ std::string OsUtils::getMachineArchitecture() {
   return "unknown";
 }
 
-std::string OsUtils::getHostName() {
+std::optional<std::string> OsUtils::getHostName() {
   char hostname[1024];
   hostname[1023] = '\0';
-  gethostname(hostname, 1023);
+  if (gethostname(hostname, 1023) != 0) {
+    return std::nullopt;
+  }
   return {hostname};
 }
 

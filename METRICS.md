@@ -64,7 +64,7 @@ The following section defines the currently available metrics to be published by
 
 NOTE: In Prometheus all metrics are extended with a `minifi_` prefix to mark the domain of the metric. For example the `connection_name` metric is published as `minifi_connection_name` in Prometheus.
 
-## Generic labels
+### Generic labels
 
 The following labels are set for every single metric and are not listed separately in the labels of the metrics below.
 

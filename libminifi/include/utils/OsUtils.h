@@ -17,6 +17,7 @@
 #pragma once
 
 #include <string>
+#include <optional>
 
 struct sockaddr;
 
@@ -47,6 +48,6 @@ std::string getMachineArchitecture();
 extern std::string resolve_common_identifiers(const std::string &id);
 #endif
 
-std::string getHostName();
+std::optional<std::string> getHostName();
 
 }  // namespace org::apache::nifi::minifi::utils::OsUtils

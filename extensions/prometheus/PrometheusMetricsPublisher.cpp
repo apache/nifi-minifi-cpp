@@ -22,6 +22,7 @@
 #include "utils/StringUtils.h"
 #include "utils/OsUtils.h"
 #include "PrometheusExposerWrapper.h"
+#include "utils/Id.h"
 
 namespace org::apache::nifi::minifi::extensions::prometheus {
 
@@ -89,7 +90,8 @@ void PrometheusMetricsPublisher::loadAgentIdentifier() {
   if (agent_identifier && !agent_identifier->empty()) {
     agent_identifier_ = *agent_identifier;
   } else {
-    agent_identifier_ = utils::OsUtils::getHostName();
+    auto hostname = utils::OsUtils::getHostName();
+    agent_identifier_ = hostname ? *hostname : "unknown-host-" + utils::IdGenerator::getIdGenerator()->generate().to_string();
   }
 }
 

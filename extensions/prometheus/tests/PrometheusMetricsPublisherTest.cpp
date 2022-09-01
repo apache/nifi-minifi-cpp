@@ -25,7 +25,7 @@
 #include "core/state/nodes/ResponseNodeLoader.h"
 #include "core/RepositoryFactory.h"
 #include "range/v3/algorithm/find_if.hpp"
-#include "range/v3/algorithm/find.hpp"
+#include "range/v3/algorithm/contains.hpp"
 
 namespace org::apache::nifi::minifi::extensions::prometheus::test {
 
@@ -102,7 +102,7 @@ TEST_CASE_METHOD(PrometheusPublisherTestFixtureWithDummyExposer, "Test adding me
       for (const auto& prometheus_metric : metric_family.metric) {
         auto metric_class_label_it = ranges::find_if(prometheus_metric.label, [](const auto& label) { return label.name == "metric_class"; });
         REQUIRE(metric_class_label_it != ranges::end(prometheus_metric.label));
-        REQUIRE(ranges::find(valid_metrics_without_flow, metric_class_label_it->value) != ranges::end(valid_metrics_without_flow));
+        REQUIRE(ranges::contains(valid_metrics_without_flow, metric_class_label_it->value));
         auto agent_identifier_label_it = ranges::find_if(prometheus_metric.label, [](const auto& label) { return label.name == "agent_identifier"; });
         REQUIRE(agent_identifier_label_it != ranges::end(prometheus_metric.label));
         REQUIRE(agent_identifier_label_it->value == "AgentId-1");
