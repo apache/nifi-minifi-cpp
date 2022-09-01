@@ -37,19 +37,16 @@ namespace org::apache::nifi::minifi::processors {
 core::Property ExecuteProcess::Command(
     core::PropertyBuilder::createProperty("Command")
       ->withDescription("Specifies the command to be executed; if just the name of an executable is provided, it must be in the user's environment PATH.")
-      ->withDefaultValue("")
       ->build());
 
 core::Property ExecuteProcess::CommandArguments(
     core::PropertyBuilder::createProperty("Command Arguments")
       ->withDescription("The arguments to supply to the executable delimited by white space. White space can be escaped by enclosing it in double-quotes.")
-      ->withDefaultValue("")
       ->build());
 
 core::Property ExecuteProcess::WorkingDir(
     core::PropertyBuilder::createProperty("Working Directory")
       ->withDescription("The directory to use as the current working directory when executing the command")
-      ->withDefaultValue("")
       ->build());
 
 core::Property ExecuteProcess::BatchDuration(
