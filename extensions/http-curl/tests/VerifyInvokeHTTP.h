@@ -81,7 +81,7 @@ class VerifyInvokeHTTP : public HTTPIntegrationBase {
   virtual void setupFlow(const std::optional<std::string>& flow_yml_path) {
     testSetup();
 
-    std::shared_ptr<core::Repository> test_repo = std::make_shared<TestRepository>();
+    std::shared_ptr<core::Repository> test_repo = std::make_shared<TestThreadedRepository>();
     std::shared_ptr<core::Repository> test_flow_repo = std::make_shared<TestFlowRepository>();
 
     if (flow_yml_path) {

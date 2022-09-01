@@ -1,5 +1,4 @@
 /**
- *
  * Licensed to the Apache Software Foundation (ASF) under one or more
  * contributor license agreements.  See the NOTICE file distributed with
  * this work for additional information regarding copyright ownership.
@@ -15,6 +14,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 #ifndef LIBMINIFI_INCLUDE_CORE_REPOSITORY_VOLATILECONTENTREPOSITORY_H_
 #define LIBMINIFI_INCLUDE_CORE_REPOSITORY_VOLATILECONTENTREPOSITORY_H_
 
@@ -32,23 +32,13 @@
 #include "core/logging/LoggerFactory.h"
 #include "utils/GeneralUtils.h"
 
-namespace org {
-namespace apache {
-namespace nifi {
-namespace minifi {
-namespace core {
-namespace repository {
+namespace org::apache::nifi::minifi::core::repository {
 
 /**
- * Purpose: Stages content into a volatile area of memory. Note that   when the maximum number
+ * Purpose: Stages content into a volatile area of memory. Note that when the maximum number
  * of entries is consumed we will rollback a session to wait for others to be freed.
  */
-class VolatileContentRepository :
-    public core::ContentRepository,
-    public core::repository::VolatileRepository<ResourceClaim::Path>,
-    public utils::EnableSharedFromThis<VolatileContentRepository> {
-  using utils::EnableSharedFromThis<VolatileContentRepository>::sharedFromThis;
-
+class VolatileContentRepository : public core::ContentRepository, public core::repository::VolatileRepository<ResourceClaim::Path> {
  public:
   static const char *minimal_locking;
 
@@ -59,7 +49,8 @@ class VolatileContentRepository :
         logger_(logging::LoggerFactory<VolatileContentRepository>::getLogger()) {
     max_count_ = 15000;
   }
-  virtual ~VolatileContentRepository() {
+
+  ~VolatileContentRepository() override {
     logger_->log_debug("Clearing repository");
     if (!minimize_locking_) {
       std::lock_guard<std::mutex> lock(map_mutex_);
@@ -70,38 +61,41 @@ class VolatileContentRepository :
     }
   }
 
+  bool start() override {
+    return true;
+  }
+
+  bool stop() override {
+    return true;
+  }
+
   /**
    * Initialize the volatile content repo
    * @param configure configuration
    */
-  virtual bool initialize(const std::shared_ptr<Configure> &configure);
-
-  /**
-   * Stop any thread associated with the volatile content repository.
-   */
-  virtual void stop();
+  bool initialize(const std::shared_ptr<Configure> &configure) override;
 
   /**
    * Creates writable stream.
    * @param claim resource claim
    * @return BaseStream shared pointer that represents the stream the consumer will write to.
    */
-  virtual std::shared_ptr<io::BaseStream> write(const minifi::ResourceClaim &claim, bool append);
+  std::shared_ptr<io::BaseStream> write(const minifi::ResourceClaim &claim, bool append) override;
 
   /**
    * Creates readable stream.
    * @param claim resource claim
    * @return BaseStream shared pointer that represents the stream from which the consumer will read..
    */
-  virtual std::shared_ptr<io::BaseStream> read(const minifi::ResourceClaim &claim);
+  std::shared_ptr<io::BaseStream> read(const minifi::ResourceClaim &claim) override;
 
-  virtual bool exists(const minifi::ResourceClaim &claim);
+  bool exists(const minifi::ResourceClaim &claim) override;
 
   /**
    * Closes the claim.
    * @return whether or not the claim is associated with content stored in volatile memory.
    */
-  virtual bool close(const minifi::ResourceClaim &claim) {
+  bool close(const minifi::ResourceClaim &claim) override {
     return remove(claim);
   }
 
@@ -109,12 +103,7 @@ class VolatileContentRepository :
    * Closes the claim.
    * @return whether or not the claim is associated with content stored in volatile memory.
    */
-  virtual bool remove(const minifi::ResourceClaim &claim);
-
- protected:
-  virtual void start();
-
-  virtual void run();
+  bool remove(const minifi::ResourceClaim &claim) override;
 
  private:
   bool minimize_locking_;
@@ -129,11 +118,6 @@ class VolatileContentRepository :
   std::shared_ptr<logging::Logger> logger_;
 };
 
-}  // namespace repository
-}  // namespace core
-}  // namespace minifi
-}  // namespace nifi
-}  // namespace apache
-}  // namespace org
+}  // namespace org::apache::nifi::minifi::core::repository
 
 #endif  // LIBMINIFI_INCLUDE_CORE_REPOSITORY_VOLATILECONTENTREPOSITORY_H_

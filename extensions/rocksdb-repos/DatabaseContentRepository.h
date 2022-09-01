@@ -62,7 +62,7 @@ class DatabaseContentRepository : public core::ContentRepository, public core::C
 
   bool initialize(const std::shared_ptr<minifi::Configure> &configuration) override;
 
-  void stop() override;
+  void stop();
 
   std::shared_ptr<io::BaseStream> write(const minifi::ResourceClaim &claim, bool append = false) override;
 

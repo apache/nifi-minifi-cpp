@@ -39,23 +39,16 @@ namespace nifi {
 namespace minifi {
 namespace core {
 namespace repository {
-#if defined(__clang__)
-#pragma clang diagnostic push
-#pragma clang diagnostic ignored "-Woverloaded-virtual"
-#elif defined(__GNUC__) || defined(__GNUG__)
-#pragma GCC diagnostic push
-#pragma GCC diagnostic ignored "-Woverloaded-virtual"
-#endif
+
 /**
  * Flow File repository
  * Design: Extends Repository and implements the run function, using RocksDB as the primary substrate.
  */
-template<typename T>
-class VolatileRepository : public core::Repository {
+template<typename KeyType, typename RepositoryType = core::Repository>
+class VolatileRepository : public RepositoryType {
  public:
   static const char *volatile_repo_max_count;
   static const char *volatile_repo_max_bytes;
-  // Constructor
 
   explicit VolatileRepository(std::string repo_name = "",
                               std::string /*dir*/ = REPOSITORY_DIRECTORY,
@@ -63,7 +56,7 @@ class VolatileRepository : public core::Repository {
                               int64_t maxPartitionBytes = MAX_REPOSITORY_STORAGE_SIZE,
                               std::chrono::milliseconds purgePeriod = REPOSITORY_PURGE_PERIOD)
       : core::SerializableComponent(repo_name),
-        Repository(repo_name.length() > 0 ? repo_name : core::getClassName<VolatileRepository>(), "", maxPartitionMillis, maxPartitionBytes, purgePeriod),
+        RepositoryType(repo_name.length() > 0 ? repo_name : core::getClassName<VolatileRepository>(), "", maxPartitionMillis, maxPartitionBytes, purgePeriod),
         current_size_(0),
         current_index_(0),
         max_count_(10000),
@@ -75,14 +68,11 @@ class VolatileRepository : public core::Repository {
   ~VolatileRepository() override;
 
   /**
-   * Initialize thevolatile repsitory
+   * Initialize the volatile repository
    **/
-
   bool initialize(const std::shared_ptr<Configure> &configure) override;
 
-  void run() override = 0;
-
-  bool isNoop() override {
+  bool isNoop() const override {
     return false;
   }
 
@@ -91,26 +81,26 @@ class VolatileRepository : public core::Repository {
    * @param key key to add to the repository
    * @param buf buffer
    **/
-  bool Put(T key, const uint8_t *buf, size_t bufLen) override;
+  bool Put(const KeyType& key, const uint8_t *buf, size_t bufLen) override;
 
   /**
    * Places new objects into the volatile memory area
    * @param data the key-value pairs to add to the repository
    **/
-  bool MultiPut(const std::vector<std::pair<T, std::unique_ptr<io::BufferStream>>>& data) override;
+  bool MultiPut(const std::vector<std::pair<KeyType, std::unique_ptr<io::BufferStream>>>& data) override;
 
   /**
    * Deletes the key
    * @return status of the delete operation
    */
-  bool Delete(T key) override;
+  bool Delete(const KeyType& key) override;
 
   /**
    * Sets the value from the provided key. Once the item is retrieved
    * it may not be retrieved again.
    * @return status of the get operation.
    */
-  bool Get(const T &key, std::string &value) override;
+  bool Get(const KeyType& key, std::string &value) override;
   /**
    * Deserializes objects into store
    * @param store vector in which we will store newly created objects.
@@ -131,28 +121,14 @@ class VolatileRepository : public core::Repository {
    */
   void loadComponent(const std::shared_ptr<core::ContentRepository> &content_repo) override;
 
-  void start() override;
-
-  uint64_t getRepoSize() override {
+  uint64_t getRepoSize() const override {
     return current_size_;
   }
 
  protected:
-  virtual void emplace(RepoValue<T> &old_value) {
+  virtual void emplace(RepoValue<KeyType> &old_value) {
     std::lock_guard<std::mutex> lock(purge_mutex_);
     purge_list_.push_back(old_value.getKey());
-  }
-
-  /**
-   * Tests whether or not the current size exceeds the capacity
-   * if the new prospectiveSize is inserted.
-   * @param prospectiveSize size of item to be added.
-   */
-  inline bool exceedsCapacity(uint32_t prospectiveSize) {
-    if (current_size_ + prospectiveSize > max_size_)
-      return true;
-    else
-      return false;
   }
 
   // current size of the volatile repo.
@@ -161,7 +137,7 @@ class VolatileRepository : public core::Repository {
   std::atomic<uint16_t> current_index_;
   // value vector that exists for non blocking iteration over
   // objects that store data for this repo instance.
-  std::vector<AtomicEntry<T>*> value_vector_;
+  std::vector<AtomicEntry<KeyType>*> value_vector_;
 
   // max count we are allowed to store.
   uint32_t max_count_;
@@ -172,42 +148,40 @@ class VolatileRepository : public core::Repository {
 
   std::mutex purge_mutex_;
   // purge list
-  std::vector<T> purge_list_;
+  std::vector<KeyType> purge_list_;
 
  private:
   std::shared_ptr<logging::Logger> logger_;
 };
 
-template<typename T>
-const char *VolatileRepository<T>::volatile_repo_max_count = "max.count";
-template<typename T>
-const char *VolatileRepository<T>::volatile_repo_max_bytes = "max.bytes";
+template<typename KeyType, typename RepositoryType>
+const char *VolatileRepository<KeyType, RepositoryType>::volatile_repo_max_count = "max.count";
+template<typename KeyType, typename RepositoryType>
+const char *VolatileRepository<KeyType, RepositoryType>::volatile_repo_max_bytes = "max.bytes";
 
-template<typename T>
-void VolatileRepository<T>::loadComponent(const std::shared_ptr<core::ContentRepository>& /*content_repo*/) {
+template<typename KeyType, typename RepositoryType>
+void VolatileRepository<KeyType, RepositoryType>::loadComponent(const std::shared_ptr<core::ContentRepository>& /*content_repo*/) {
 }
 
 // Destructor
-template<typename T>
-VolatileRepository<T>::~VolatileRepository() {
+template<typename KeyType, typename RepositoryType>
+VolatileRepository<KeyType, RepositoryType>::~VolatileRepository() {
   for (auto ent : value_vector_) {
     delete ent;
   }
-
-  stop();
 }
 
 /**
- * Initialize the volatile repsitory
+ * Initialize the volatile repository
  **/
-template<typename T>
-bool VolatileRepository<T>::initialize(const std::shared_ptr<Configure> &configure) {
+template<typename KeyType, typename RepositoryType>
+bool VolatileRepository<KeyType, RepositoryType>::initialize(const std::shared_ptr<Configure> &configure) {
   std::string value = "";
 
   if (configure != nullptr) {
     int64_t max_cnt = 0;
     std::stringstream strstream;
-    strstream << Configure::nifi_volatile_repository_options << getName() << "." << volatile_repo_max_count;
+    strstream << Configure::nifi_volatile_repository_options << RepositoryType::getName() << "." << volatile_repo_max_count;
     if (configure->get(strstream.str(), value)) {
       if (core::Property::StringToInt(value, max_cnt)) {
         max_count_ = gsl::narrow<uint32_t>(max_cnt);
@@ -217,7 +191,7 @@ bool VolatileRepository<T>::initialize(const std::shared_ptr<Configure> &configu
     strstream.str("");
     strstream.clear();
     int64_t max_bytes = 0;
-    strstream << Configure::nifi_volatile_repository_options << getName() << "." << volatile_repo_max_bytes;
+    strstream << Configure::nifi_volatile_repository_options << RepositoryType::getName() << "." << volatile_repo_max_bytes;
     if (configure->get(strstream.str(), value)) {
       if (core::Property::StringToInt(value, max_bytes)) {
         if (max_bytes <= 0) {
@@ -229,11 +203,11 @@ bool VolatileRepository<T>::initialize(const std::shared_ptr<Configure> &configu
     }
   }
 
-  logging::LOG_INFO(logger_) << "Resizing value_vector_ for " << getName() << " count is " << max_count_;
-  logging::LOG_INFO(logger_) << "Using a maximum size for " << getName() << " of  " << max_size_;
+  logging::LOG_INFO(logger_) << "Resizing value_vector_ for " << RepositoryType::getName() << " count is " << max_count_;
+  logging::LOG_INFO(logger_) << "Using a maximum size for " << RepositoryType::getName() << " of  " << max_size_;
   value_vector_.reserve(max_count_);
   for (uint32_t i = 0; i < max_count_; i++) {
-    value_vector_.emplace_back(new AtomicEntry<T>(&current_size_, &max_size_));
+    value_vector_.emplace_back(new AtomicEntry<KeyType>(&current_size_, &max_size_));
   }
   return true;
 }
@@ -243,14 +217,14 @@ bool VolatileRepository<T>::initialize(const std::shared_ptr<Configure> &configu
  * @param key key to add to the repository
  * @param buf buffer
  **/
-template<typename T>
-bool VolatileRepository<T>::Put(T key, const uint8_t *buf, size_t bufLen) {
-  RepoValue<T> new_value(key, buf, bufLen);
+template<typename KeyType, typename RepositoryType>
+bool VolatileRepository<KeyType, RepositoryType>::Put(const KeyType& key, const uint8_t *buf, size_t bufLen) {
+  RepoValue<KeyType> new_value(key, buf, bufLen);
 
   const size_t size = new_value.size();
   bool updated = false;
   size_t reclaimed_size = 0;
-  RepoValue<T> old_value;
+  RepoValue<KeyType> old_value;
   do {
     uint16_t private_index = current_index_.fetch_add(1);
     // round robin through the beginning
@@ -266,7 +240,6 @@ bool VolatileRepository<T>::Put(T key, const uint8_t *buf, size_t bufLen) {
     updated = value_vector_.at(private_index)->setRepoValue(new_value, old_value, reclaimed_size);
     logger_->log_debug("Set repo value at %u out of %u updated %u current_size %u, adding %u to  %u", private_index, max_count_, updated == true, reclaimed_size, size, current_size_.load());
     if (updated && reclaimed_size > 0) {
-      std::lock_guard<std::mutex> lock(mutex_);
       emplace(old_value);
     }
     if (reclaimed_size > 0) {
@@ -287,8 +260,8 @@ bool VolatileRepository<T>::Put(T key, const uint8_t *buf, size_t bufLen) {
   return true;
 }
 
-template<typename T>
-bool VolatileRepository<T>::MultiPut(const std::vector<std::pair<T, std::unique_ptr<io::BufferStream>>>& data) {
+template<typename KeyType, typename RepositoryType>
+bool VolatileRepository<KeyType, RepositoryType>::MultiPut(const std::vector<std::pair<KeyType, std::unique_ptr<io::BufferStream>>>& data) {
   for (const auto& item : data) {
     if (!Put(item.first, item.second->getBuffer().template as_span<const uint8_t>().data(), item.second->size())) {
       return false;
@@ -301,12 +274,12 @@ bool VolatileRepository<T>::MultiPut(const std::vector<std::pair<T, std::unique_
  * Deletes the key
  * @return status of the delete operation
  */
-template<typename T>
-bool VolatileRepository<T>::Delete(T key) {
+template<typename KeyType, typename RepositoryType>
+bool VolatileRepository<KeyType, RepositoryType>::Delete(const KeyType& key) {
   logger_->log_debug("Delete from volatile");
   for (auto ent : value_vector_) {
     // let the destructor do the cleanup
-    RepoValue<T> value;
+    RepoValue<KeyType> value;
     if (ent->getValue(key, value)) {
       current_size_ -= value.size();
       logger_->log_debug("Delete and pushed into purge_list from volatile");
@@ -321,11 +294,11 @@ bool VolatileRepository<T>::Delete(T key) {
  * it may not be retrieved again.
  * @return status of the get operation.
  */
-template<typename T>
-bool VolatileRepository<T>::Get(const T &key, std::string &value) {
+template<typename KeyType, typename RepositoryType>
+bool VolatileRepository<KeyType, RepositoryType>::Get(const KeyType &key, std::string &value) {
   for (auto ent : value_vector_) {
     // let the destructor do the cleanup
-    RepoValue<T> repo_value;
+    RepoValue<KeyType> repo_value;
     if (ent->getValue(key, repo_value)) {
       current_size_ -= value.size();
       repo_value.emplace(value);
@@ -335,13 +308,14 @@ bool VolatileRepository<T>::Get(const T &key, std::string &value) {
   return false;
 }
 
-template<typename T>
-bool VolatileRepository<T>::DeSerialize(std::vector<std::shared_ptr<core::SerializableComponent>> &store, size_t &max_size, std::function<std::shared_ptr<core::SerializableComponent>()> lambda) {
+template<typename KeyType, typename RepositoryType>
+bool VolatileRepository<KeyType, RepositoryType>::DeSerialize(std::vector<std::shared_ptr<core::SerializableComponent>> &store,
+                                                      size_t &max_size, std::function<std::shared_ptr<core::SerializableComponent>()> lambda) {
   size_t requested_batch = max_size;
   max_size = 0;
   for (auto ent : value_vector_) {
     // let the destructor do the cleanup
-    RepoValue<T> repo_value;
+    RepoValue<KeyType> repo_value;
 
     if (ent->getValue(repo_value)) {
       std::shared_ptr<core::SerializableComponent> newComponent = lambda();
@@ -364,13 +338,13 @@ bool VolatileRepository<T>::DeSerialize(std::vector<std::shared_ptr<core::Serial
   }
 }
 
-template<typename T>
-bool VolatileRepository<T>::DeSerialize(std::vector<std::shared_ptr<core::SerializableComponent>> &store, size_t &max_size) {
+template<typename KeyType, typename RepositoryType>
+bool VolatileRepository<KeyType, RepositoryType>::DeSerialize(std::vector<std::shared_ptr<core::SerializableComponent>> &store, size_t &max_size) {
   logger_->log_debug("VolatileRepository -- DeSerialize %u", current_size_.load());
   max_size = 0;
   for (auto ent : value_vector_) {
     // let the destructor do the cleanup
-    RepoValue<T> repo_value;
+    RepoValue<KeyType> repo_value;
 
     if (ent->getValue(repo_value)) {
       // we've taken ownership of this repo value
@@ -387,22 +361,6 @@ bool VolatileRepository<T>::DeSerialize(std::vector<std::shared_ptr<core::Serial
     return false;
   }
 }
-
-template<typename T>
-void VolatileRepository<T>::start() {
-  if (this->purge_period_ <= std::chrono::milliseconds(0))
-    return;
-  if (running_)
-    return;
-  running_ = true;
-  thread_ = std::thread(&VolatileRepository<T>::run, this);
-  logger_->log_debug("%s Repository Monitor Thread Start", name_);
-}
-#if defined(__clang__)
-#pragma clang diagnostic pop
-#elif defined(__GNUC__) || defined(__GNUG__)
-#pragma GCC diagnostic pop
-#endif
 
 }  // namespace repository
 }  // namespace core

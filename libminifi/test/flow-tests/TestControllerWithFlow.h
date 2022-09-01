@@ -55,7 +55,7 @@ class TestControllerWithFlow: public TestController{
   }
 
   void setupFlow() {
-    std::shared_ptr<core::Repository> prov_repo = std::make_shared<TestRepository>();
+    std::shared_ptr<core::Repository> prov_repo = std::make_shared<TestThreadedRepository>();
     std::shared_ptr<core::Repository> ff_repo = std::make_shared<TestFlowRepository>();
     std::shared_ptr<core::ContentRepository> content_repo = std::make_shared<core::repository::VolatileContentRepository>();
 

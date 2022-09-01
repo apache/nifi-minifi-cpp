@@ -26,10 +26,10 @@
 #include "rocksdb/options.h"
 #include "rocksdb/slice.h"
 #include "rocksdb/utilities/checkpoint.h"
-#include "core/Repository.h"
 #include "core/Core.h"
-#include "Connection.h"
 #include "core/logging/LoggerConfiguration.h"
+#include "core/ThreadedRepository.h"
+#include "Connection.h"
 #include "concurrentqueue.h"
 #include "database/RocksDatabase.h"
 #include "encryption/RocksDbEncryptionProvider.h"
@@ -37,17 +37,18 @@
 #include "SwapManager.h"
 #include "FlowFileLoader.h"
 #include "range/v3/algorithm/all_of.hpp"
+#include "utils/Literals.h"
 
 namespace org::apache::nifi::minifi::core::repository {
 
 #ifdef WIN32
-#define FLOWFILE_REPOSITORY_DIRECTORY ".\\flowfile_repository"
-#define FLOWFILE_CHECKPOINT_DIRECTORY ".\\flowfile_checkpoint"
+constexpr auto FLOWFILE_REPOSITORY_DIRECTORY = ".\\flowfile_repository";
+constexpr auto FLOWFILE_CHECKPOINT_DIRECTORY = ".\\flowfile_checkpoint";
 #else
-#define FLOWFILE_REPOSITORY_DIRECTORY "./flowfile_repository"
-#define FLOWFILE_CHECKPOINT_DIRECTORY "./flowfile_checkpoint"
+constexpr auto FLOWFILE_REPOSITORY_DIRECTORY = "./flowfile_repository";
+constexpr auto FLOWFILE_CHECKPOINT_DIRECTORY = "./flowfile_checkpoint";
 #endif
-#define MAX_FLOWFILE_REPOSITORY_STORAGE_SIZE (10*1024*1024)  // 10M
+constexpr auto MAX_FLOWFILE_REPOSITORY_STORAGE_SIZE = 10_MiB;
 constexpr auto MAX_FLOWFILE_REPOSITORY_ENTRY_LIFE_TIME = std::chrono::minutes(10);
 constexpr auto FLOWFILE_REPOSITORY_PURGE_PERIOD = std::chrono::seconds(2);
 constexpr auto FLOWFILE_REPOSITORY_RETRY_INTERVAL_INCREMENTS = std::chrono::milliseconds(500);
@@ -56,23 +57,22 @@ constexpr auto FLOWFILE_REPOSITORY_RETRY_INTERVAL_INCREMENTS = std::chrono::mill
  * Flow File repository
  * Design: Extends Repository and implements the run function, using rocksdb as the primary substrate.
  */
-class FlowFileRepository : public core::Repository, public SwapManager, public std::enable_shared_from_this<FlowFileRepository> {
+class FlowFileRepository : public ThreadedRepository, public SwapManager {
  public:
   static constexpr const char* ENCRYPTION_KEY_NAME = "nifi.flowfile.repository.encryption.key";
-  // Constructor
 
   FlowFileRepository(const std::string& name, const utils::Identifier& /*uuid*/)
       : FlowFileRepository(name) {
   }
 
-  explicit FlowFileRepository(const std::string repo_name = "",
-                     const std::string& checkpoint_dir = FLOWFILE_CHECKPOINT_DIRECTORY,
+  explicit FlowFileRepository(const std::string& repo_name = "",
+                     std::string checkpoint_dir = FLOWFILE_CHECKPOINT_DIRECTORY,
                      std::string directory = FLOWFILE_REPOSITORY_DIRECTORY,
                      std::chrono::milliseconds maxPartitionMillis = MAX_FLOWFILE_REPOSITORY_ENTRY_LIFE_TIME,
                      int64_t maxPartitionBytes = MAX_FLOWFILE_REPOSITORY_STORAGE_SIZE,
                      std::chrono::milliseconds purgePeriod = FLOWFILE_REPOSITORY_PURGE_PERIOD)
       : core::SerializableComponent(repo_name),
-        Repository(repo_name.length() > 0 ? repo_name : core::getClassName<FlowFileRepository>(), std::move(directory), maxPartitionMillis, maxPartitionBytes, purgePeriod),
+        ThreadedRepository(repo_name.length() > 0 ? repo_name : core::getClassName<FlowFileRepository>(), std::move(directory), maxPartitionMillis, maxPartitionBytes, purgePeriod),
         checkpoint_dir_(std::move(checkpoint_dir)),
         content_repo_(nullptr),
         checkpoint_(nullptr),
@@ -88,7 +88,7 @@ class FlowFileRepository : public core::Repository, public SwapManager, public s
   EXTENSIONAPI static constexpr bool SupportsDynamicProperties = false;
   EXTENSIONAPI static constexpr bool SupportsDynamicRelationships = false;
 
-  bool isNoop() override {
+  bool isNoop() const override {
     return false;
   }
 
@@ -96,7 +96,6 @@ class FlowFileRepository : public core::Repository, public SwapManager, public s
 
   virtual void printStats();
 
-  // initialize
   bool initialize(const std::shared_ptr<Configure> &configure) override {
     config_ = configure;
     std::string value;
@@ -141,9 +140,7 @@ class FlowFileRepository : public core::Repository, public SwapManager, public s
     }
   }
 
-  void run() override;
-
-  bool Put(std::string key, const uint8_t *buf, size_t bufLen) override {
+  bool Put(const std::string& key, const uint8_t *buf, size_t bufLen) override {
     // persistent to the DB
     auto opendb = db_->open();
     if (!opendb) {
@@ -172,16 +169,15 @@ class FlowFileRepository : public core::Repository, public SwapManager, public s
     return ExecuteWithRetry(operation);
   }
 
-
   /**
-   *
    * Deletes the key
    * @return status of the delete operation
    */
-  bool Delete(std::string key) override {
+  bool Delete(const std::string& key) override {
     keys_to_delete.enqueue(key);
     return true;
   }
+
   /**
    * Sets the value from the provided key
    * @return status of the get operation.
@@ -196,29 +192,22 @@ class FlowFileRepository : public core::Repository, public SwapManager, public s
 
   void loadComponent(const std::shared_ptr<core::ContentRepository> &content_repo) override;
 
-  void start() override {
-    if (this->purge_period_ <= std::chrono::milliseconds(0)) {
-      return;
-    }
-    if (running_) {
-      return;
-    }
-    running_ = true;
-    thread_ = std::thread(&FlowFileRepository::run, this);
-    logger_->log_debug("%s Repository Monitor Thread Start", getName());
+  bool start() override {
+    const bool ret = ThreadedRepository::start();
     if (swap_loader_) {
       swap_loader_->start();
     }
+    return ret;
   }
 
-  void stop() override {
+  bool stop() override {
     if (swap_loader_) {
       swap_loader_->stop();
     }
-    core::Repository::stop();
+    return ThreadedRepository::stop();
   }
 
-  void store(std::vector<std::shared_ptr<core::FlowFile>> flow_files) override {
+  void store([[maybe_unused]] std::vector<std::shared_ptr<core::FlowFile>> flow_files) override {
     gsl_Expects(ranges::all_of(flow_files, &FlowFile::isStored));
     // pass, flowfiles are already persisted in the repository
   }
@@ -228,11 +217,10 @@ class FlowFileRepository : public core::Repository, public SwapManager, public s
   }
 
  private:
-  bool ExecuteWithRetry(std::function<rocksdb::Status()> operation);
+  void run() override;
 
-  /**
-   * Initialize the repository
-   */
+  bool ExecuteWithRetry(const std::function<rocksdb::Status()>& operation);
+
   void initialize_repository();
 
   /**
@@ -241,10 +229,11 @@ class FlowFileRepository : public core::Repository, public SwapManager, public s
    */
   static bool need_checkpoint(minifi::internal::OpenRocksDb& opendb);
 
-  /**
-   * Prunes stored flow files.
-   */
   void prune_stored_flowfiles();
+
+  std::thread& getThread() override {
+    return thread_;
+  }
 
   std::string checkpoint_dir_;
   moodycamel::ConcurrentQueue<std::string> keys_to_delete;
@@ -254,6 +243,7 @@ class FlowFileRepository : public core::Repository, public SwapManager, public s
   std::unique_ptr<FlowFileLoader> swap_loader_;
   std::shared_ptr<logging::Logger> logger_;
   std::shared_ptr<minifi::Configure> config_;
+  std::thread thread_;
 };
 
 }  // namespace org::apache::nifi::minifi::core::repository

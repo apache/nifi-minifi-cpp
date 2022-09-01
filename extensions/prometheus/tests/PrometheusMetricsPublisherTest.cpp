@@ -49,8 +49,8 @@ class PrometheusPublisherTestFixture {
  public:
   explicit PrometheusPublisherTestFixture(bool user_dummy_exposer)
     : configuration_(std::make_shared<Configure>()),
-      provenance_repo_(core::createRepository("provenancerepository", true)),
-      flow_file_repo_(core::createRepository("flowfilerepository", true)),
+      provenance_repo_(core::createRepository("provenancerepository")),
+      flow_file_repo_(core::createRepository("flowfilerepository")),
       response_node_loader_(configuration_, provenance_repo_, flow_file_repo_, nullptr) {
     std::unique_ptr<DummyMetricsExposer> dummy_exposer;
     if (user_dummy_exposer) {

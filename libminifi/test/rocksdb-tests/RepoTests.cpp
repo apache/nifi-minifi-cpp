@@ -59,10 +59,10 @@ class TestProcessor : public minifi::core::Processor {
 }  // namespace
 
 TEST_CASE("Test Repo Names", "[TestFFR1]") {
-  auto repoA = minifi::core::createRepository("FlowFileRepository", false, "flowfile");
+  auto repoA = minifi::core::createRepository("FlowFileRepository", "flowfile");
   REQUIRE("flowfile" == repoA->getName());
 
-  auto repoB = minifi::core::createRepository("ProvenanceRepository", false, "provenance");
+  auto repoB = minifi::core::createRepository("ProvenanceRepository", "provenance");
   REQUIRE("provenance" == repoB->getName());
 }
 
@@ -287,8 +287,8 @@ TEST_CASE("Test FlowFile Restore", "[TestFFR6]") {
   config->set(minifi::Configure::nifi_dbcontent_repository_directory_default, utils::file::FileUtils::concat_path(dir, "content_repository"));
   config->set(minifi::Configure::nifi_flowfile_repository_directory_default, utils::file::FileUtils::concat_path(dir, "flowfile_repository"));
 
-  std::shared_ptr<core::Repository> prov_repo = std::make_shared<TestRepository>();
-  std::shared_ptr<core::repository::FlowFileRepository> ff_repository = std::make_shared<core::repository::FlowFileRepository>("flowFileRepository", REPOTEST_FLOWFILE_CHECKPOINT_DIR);
+  std::shared_ptr<core::Repository> prov_repo = std::make_shared<TestThreadedRepository>();
+  auto ff_repository = std::make_shared<core::repository::FlowFileRepository>("flowFileRepository", REPOTEST_FLOWFILE_CHECKPOINT_DIR);
   std::shared_ptr<core::ContentRepository> content_repo = std::make_shared<core::repository::FileSystemRepository>();
   ff_repository->initialize(config);
   content_repo->initialize(config);
@@ -366,7 +366,8 @@ TEST_CASE("Flush deleted flowfiles before shutdown", "[TestFFR7]") {
    public:
     explicit TestFlowFileRepository(const std::string& name)
         : core::SerializableComponent(name),
-          FlowFileRepository(name, REPOTEST_FLOWFILE_CHECKPOINT_DIR, FLOWFILE_REPOSITORY_DIRECTORY, 10min, MAX_FLOWFILE_REPOSITORY_STORAGE_SIZE, 1ms) {}
+          FlowFileRepository(name, REPOTEST_FLOWFILE_CHECKPOINT_DIR, core::repository::FLOWFILE_REPOSITORY_DIRECTORY,
+                             10min, core::repository::MAX_FLOWFILE_REPOSITORY_STORAGE_SIZE, 1ms) {}
     void flush() override {
       FlowFileRepository::flush();
       if (onFlush_) {

@@ -39,7 +39,7 @@ void ProvenanceRepository::printStats() {
 
 void ProvenanceRepository::run() {
   size_t count = 0;
-  while (running_) {
+  while (isRunning()) {
     std::this_thread::sleep_for(std::chrono::seconds(1));
     count++;
     // Hack, to be removed in scope of https://issues.apache.org/jira/browse/MINIFICPP-1145

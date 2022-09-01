@@ -26,6 +26,7 @@
 #include "io/ClientSocket.h"
 #include "c2/ControllerSocketProtocol.h"
 #include "utils/gsl.h"
+#include "Exception.h"
 #include "FlowController.h"
 
 /**
@@ -246,14 +247,21 @@ std::shared_ptr<org::apache::nifi::minifi::core::controller::ControllerService> 
 
   configuration->get(org::apache::nifi::minifi::Configure::nifi_provenance_repository_class_name, prov_repo_class);
   // Create repos for flow record and provenance
-  const std::shared_ptr prov_repo = org::apache::nifi::minifi::core::createRepository(prov_repo_class, true, "provenance");
+  const std::shared_ptr prov_repo = org::apache::nifi::minifi::core::createRepository(prov_repo_class, "provenance");
+  if (!prov_repo) {
+    throw org::apache::nifi::minifi::Exception(org::apache::nifi::minifi::REPOSITORY_EXCEPTION, "Could not create provenance repository");
+  }
   prov_repo->initialize(configuration);
 
   configuration->get(org::apache::nifi::minifi::Configure::nifi_flow_repository_class_name, flow_repo_class);
 
-  const std::shared_ptr flow_repo = org::apache::nifi::minifi::core::createRepository(flow_repo_class, true, "flowfile");
+  const std::shared_ptr flow_repo = org::apache::nifi::minifi::core::createRepository(flow_repo_class, "flowfile");
+  if (!flow_repo) {
+    throw org::apache::nifi::minifi::Exception(org::apache::nifi::minifi::REPOSITORY_EXCEPTION, "Could not create flowfile repository");
+  }
 
   flow_repo->initialize(configuration);
+
 
   configuration->get(org::apache::nifi::minifi::Configure::nifi_content_repository_class_name, content_repo_class);
 
@@ -295,12 +303,18 @@ void printManifest(const std::shared_ptr<org::apache::nifi::minifi::Configure> &
 
   configuration->get(org::apache::nifi::minifi::Configure::nifi_provenance_repository_class_name, prov_repo_class);
   // Create repos for flow record and provenance
-  const std::shared_ptr prov_repo = org::apache::nifi::minifi::core::createRepository(prov_repo_class, true, "provenance");
+  const std::shared_ptr prov_repo = org::apache::nifi::minifi::core::createRepository(prov_repo_class, "provenance");
+  if (!prov_repo) {
+    throw org::apache::nifi::minifi::Exception(org::apache::nifi::minifi::REPOSITORY_EXCEPTION, "Could not create provenance repository");
+  }
   prov_repo->initialize(configuration);
 
   configuration->get(org::apache::nifi::minifi::Configure::nifi_flow_repository_class_name, flow_repo_class);
 
-  const std::shared_ptr flow_repo = org::apache::nifi::minifi::core::createRepository(flow_repo_class, true, "flowfile");
+  const std::shared_ptr flow_repo = org::apache::nifi::minifi::core::createRepository(flow_repo_class, "flowfile");
+  if (!flow_repo) {
+    throw org::apache::nifi::minifi::Exception(org::apache::nifi::minifi::REPOSITORY_EXCEPTION, "Could not create flowfile repository");
+  }
 
   flow_repo->initialize(configuration);
 

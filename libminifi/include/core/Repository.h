@@ -20,30 +20,29 @@
 #ifndef LIBMINIFI_INCLUDE_CORE_REPOSITORY_H_
 #define LIBMINIFI_INCLUDE_CORE_REPOSITORY_H_
 
-#include <memory>
-#include <utility>
 #include <atomic>
 #include <cstdint>
 #include <cstring>
-#include <iostream>
 #include <map>
+#include <memory>
 #include <set>
 #include <string>
-#include <thread>
+#include <utility>
 #include <vector>
-#include "core/ContentRepository.h"
-#include "core/SerializableComponent.h"
-#include "properties/Configure.h"
-#include "core/logging/LoggerFactory.h"
-#include "core/Property.h"
-#include "ResourceClaim.h"
-#include "utils/TimeUtil.h"
-#include "utils/StringUtils.h"
+
 #include "Core.h"
+#include "ResourceClaim.h"
 #include "core/Connectable.h"
-#include "core/TraceableResource.h"
+#include "core/ContentRepository.h"
+#include "core/Property.h"
+#include "core/SerializableComponent.h"
+#include "core/logging/LoggerFactory.h"
+#include "properties/Configure.h"
 #include "utils/BackTrace.h"
 #include "SwapManager.h"
+#include "utils/Literals.h"
+#include "utils/StringUtils.h"
+#include "utils/TimeUtil.h"
 
 #ifndef WIN32
 #include <sys/stat.h>
@@ -51,50 +50,42 @@
 
 namespace org::apache::nifi::minifi::core {
 
-#define REPOSITORY_DIRECTORY "./repo"
-#define MAX_REPOSITORY_STORAGE_SIZE (10*1024*1024)  // 10M
+constexpr auto REPOSITORY_DIRECTORY = "./repo";
+constexpr auto MAX_REPOSITORY_STORAGE_SIZE = 10_MiB;
 constexpr auto MAX_REPOSITORY_ENTRY_LIFE_TIME = std::chrono::minutes(10);
 constexpr auto REPOSITORY_PURGE_PERIOD = std::chrono::milliseconds(2500);
 
-class Repository : public virtual core::SerializableComponent, public core::TraceableResource {
+class Repository : public virtual core::SerializableComponent {
  public:
-  /*
-   * Constructor for the repository
-   */
-  explicit Repository(std::string repo_name = "Repository",
+  explicit Repository(const std::string& repo_name = "Repository",
              std::string directory = REPOSITORY_DIRECTORY,
              std::chrono::milliseconds maxPartitionMillis = MAX_REPOSITORY_ENTRY_LIFE_TIME,
              int64_t maxPartitionBytes = MAX_REPOSITORY_STORAGE_SIZE,
              std::chrono::milliseconds purgePeriod = REPOSITORY_PURGE_PERIOD)
       : core::SerializableComponent(repo_name),
-        thread_(),
+        directory_(std::move(directory)),
+        max_partition_millis_(maxPartitionMillis),
+        max_partition_bytes_(maxPartitionBytes),
+        purge_period_(purgePeriod),
+        repo_full_(false),
         repo_size_(0),
         logger_(logging::LoggerFactory<Repository>::getLogger()) {
-    directory_ = directory;
-    max_partition_millis_ = maxPartitionMillis;
-    max_partition_bytes_ = maxPartitionBytes;
-    purge_period_ = purgePeriod;
-    running_ = false;
-    repo_full_ = false;
   }
 
-  // Destructor
-  ~Repository() override {
-    stop();
-  }
+  virtual bool initialize(const std::shared_ptr<Configure>& /*configure*/) = 0;
 
-  virtual bool isNoop() {
+  virtual bool start() = 0;
+
+  virtual bool stop() = 0;
+
+  virtual bool isNoop() const {
     return true;
   }
 
-  virtual void flush();
-
-  // initialize
-  virtual bool initialize(const std::shared_ptr<Configure>& /*configure*/) {
-    return true;
+  virtual void flush() {
   }
-  // Put
-  virtual bool Put(std::string /*key*/, const uint8_t* /*buf*/, size_t /*bufLen*/) {
+
+  virtual bool Put(const std::string& /*key*/, const uint8_t* /*buf*/, size_t /*bufLen*/) {
     return true;
   }
 
@@ -102,8 +93,7 @@ class Repository : public virtual core::SerializableComponent, public core::Trac
     return true;
   }
 
-  // Delete
-  virtual bool Delete(std::string /*key*/) {
+  virtual bool Delete(const std::string& /*key*/) {
     return true;
   }
 
@@ -127,29 +117,9 @@ class Repository : public virtual core::SerializableComponent, public core::Trac
     return false;
   }
 
-  // Run function for the thread
-  virtual void run() {
-    // no op
-  }
-
-  /**
-   * Since SerializableComponents represent a runnable object, we should return traces
-   */
-  BackTrace getTraces() override {
-    return TraceResolver::getResolver().getBackTrace(getName(), thread_.native_handle());
-  }
-
-  // Start the repository monitor thread
-  virtual void start();
-  // Stop the repository monitor thread
-  virtual void stop();
   // whether the repo is full
   virtual bool isFull() {
     return repo_full_;
-  }
-  // whether the repo is enable
-  bool isRunning() override {
-    return running_;
   }
 
   /**
@@ -219,14 +189,12 @@ class Repository : public virtual core::SerializableComponent, public core::Trac
     return Put(key, buffer, bufferSize);
   }
 
-  uint64_t incrementSize(const char* /*fpath*/, const struct stat *sb, int /*typeflag*/) {
-    return (repo_size_ += sb->st_size);
-  }
-
   virtual void loadComponent(const std::shared_ptr<core::ContentRepository>& /*content_repo*/) {
   }
 
-  virtual uint64_t getRepoSize();
+  virtual uint64_t getRepoSize() const {
+    return repo_size_;
+  }
 
   std::string getDirectory() const {
     return directory_;
@@ -241,30 +209,16 @@ class Repository : public virtual core::SerializableComponent, public core::Trac
   std::map<std::string, core::Connectable*> containers_;
 
   std::map<std::string, core::Connectable*> connection_map_;
-  // Mutex for protection
-  std::mutex mutex_;
-  // repository directory
   std::string directory_;
-  // max db entry life time
+  // max db entry lifetime
   std::chrono::milliseconds max_partition_millis_;
   // max db size
   int64_t max_partition_bytes_;
-  // purge period
   std::chrono::milliseconds purge_period_;
-  // thread
-  std::thread thread_;
-  // whether the monitoring thread is running for the repo while it was enabled
-  std::atomic<bool> running_;
-  // whether stop accepting provenace event
+  // whether to stop accepting provenance event
   std::atomic<bool> repo_full_;
-  // repoSize
 
-  // size of the directory
   std::atomic<uint64_t> repo_size_;
-  // Run function for the thread
-  void threadExecutor() {
-    run();
-  }
 
  private:
   std::shared_ptr<logging::Logger> logger_;

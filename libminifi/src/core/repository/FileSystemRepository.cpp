@@ -22,14 +22,9 @@
 #include "io/FileStream.h"
 #include "utils/file/FileUtils.h"
 
-namespace org {
-namespace apache {
-namespace nifi {
-namespace minifi {
-namespace core {
-namespace repository {
+namespace org::apache::nifi::minifi::core::repository {
 
-bool FileSystemRepository::initialize(const std::shared_ptr<minifi::Configure> &configuration) {
+bool FileSystemRepository::initialize(const std::shared_ptr<minifi::Configure>& configuration) {
   std::string value;
   if (configuration->get(Configure::nifi_dbcontent_repository_directory_default, value)) {
     directory_ = value;
@@ -39,31 +34,24 @@ bool FileSystemRepository::initialize(const std::shared_ptr<minifi::Configure> &
   utils::file::create_dir(directory_);
   return true;
 }
-void FileSystemRepository::stop() {
-}
 
-std::shared_ptr<io::BaseStream> FileSystemRepository::write(const minifi::ResourceClaim &claim, bool append) {
+std::shared_ptr<io::BaseStream> FileSystemRepository::write(const minifi::ResourceClaim& claim, bool append) {
   return std::make_shared<io::FileStream>(claim.getContentFullPath(), append);
 }
 
-bool FileSystemRepository::exists(const minifi::ResourceClaim &streamId) {
+bool FileSystemRepository::exists(const minifi::ResourceClaim& streamId) {
   std::ifstream file(streamId.getContentFullPath());
   return file.good();
 }
 
-std::shared_ptr<io::BaseStream> FileSystemRepository::read(const minifi::ResourceClaim &claim) {
+std::shared_ptr<io::BaseStream> FileSystemRepository::read(const minifi::ResourceClaim& claim) {
   return std::make_shared<io::FileStream>(claim.getContentFullPath(), 0, false);
 }
 
-bool FileSystemRepository::remove(const minifi::ResourceClaim &claim) {
+bool FileSystemRepository::remove(const minifi::ResourceClaim& claim) {
   logger_->log_debug("Deleting resource %s", claim.getContentFullPath());
   std::remove(claim.getContentFullPath().c_str());
   return true;
 }
 
-} /* namespace repository */
-} /* namespace core */
-} /* namespace minifi */
-} /* namespace nifi */
-} /* namespace apache */
-} /* namespace org */
+}  // namespace org::apache::nifi::minifi::core::repository

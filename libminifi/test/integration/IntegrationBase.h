@@ -140,7 +140,7 @@ void IntegrationBase::run(const std::optional<std::string>& test_file_location, 
   using namespace std::literals::chrono_literals;
   testSetup();
 
-  std::shared_ptr<core::Repository> test_repo = std::make_shared<TestRepository>();
+  std::shared_ptr<core::Repository> test_repo = std::make_shared<TestThreadedRepository>();
   std::shared_ptr<core::Repository> test_flow_repo = std::make_shared<TestFlowRepository>();
 
   if (test_file_location) {
@@ -186,8 +186,6 @@ void IntegrationBase::run(const std::optional<std::string>& test_file_location, 
 
     std::shared_ptr<core::ProcessGroup> pg(flow_config->getRoot());
     queryRootProcessGroup(pg);
-
-    std::shared_ptr<TestRepository> repo = std::static_pointer_cast<TestRepository>(test_repo);
 
     const auto request_restart = [&, this] {
       ++restart_requested_count_;

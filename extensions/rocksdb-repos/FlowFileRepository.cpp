@@ -111,10 +111,10 @@ void FlowFileRepository::printStats() {
 
 void FlowFileRepository::run() {
   auto last = std::chrono::steady_clock::now();
-  if (running_) {
+  if (isRunning()) {
     prune_stored_flowfiles();
   }
-  while (running_) {
+  while (isRunning()) {
     std::this_thread::sleep_for(purge_period_);
     flush();
     auto now = std::chrono::steady_clock::now();
@@ -193,7 +193,7 @@ void FlowFileRepository::prune_stored_flowfiles() {
   }
 }
 
-bool FlowFileRepository::ExecuteWithRetry(std::function<rocksdb::Status()> operation) {
+bool FlowFileRepository::ExecuteWithRetry(const std::function<rocksdb::Status()>& operation) {
   std::chrono::milliseconds waitTime = 0ms;
   for (int i=0; i < 3; ++i) {
     auto status = operation();

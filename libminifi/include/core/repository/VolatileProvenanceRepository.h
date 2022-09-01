@@ -21,6 +21,7 @@
 #include <string>
 
 #include "VolatileRepository.h"
+#include "core/ThreadedRepository.h"
 
 namespace org {
 namespace apache {
@@ -29,10 +30,7 @@ namespace minifi {
 namespace core {
 namespace repository {
 
-/**
- * Volatile provenance repository.
- */
-class VolatileProvenanceRepository : public VolatileRepository<std::string> {
+class VolatileProvenanceRepository : public VolatileRepository<std::string, core::ThreadedRepository> {
  public:
   explicit VolatileProvenanceRepository(std::string repo_name = "",
                                         std::string /*dir*/ = REPOSITORY_DIRECTORY,
@@ -43,14 +41,23 @@ class VolatileProvenanceRepository : public VolatileRepository<std::string> {
     purge_required_ = false;
   }
 
-  virtual void run() {
-    repo_full_ = false;
+  ~VolatileProvenanceRepository() override {
+    stop();
   }
- protected:
-  virtual void emplace(RepoValue<std::string> &old_value) {
+
+ private:
+  void run() override {
+  }
+
+  std::thread& getThread() override {
+    return thread_;
+  }
+
+  void emplace(RepoValue<std::string> &old_value) override {
     purge_list_.push_back(old_value.getKey());
   }
- private:
+
+  std::thread thread_;
 };
 
 }  // namespace repository

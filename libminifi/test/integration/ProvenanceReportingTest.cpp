@@ -50,15 +50,14 @@ int main(int argc, char **argv) {
   LogTestController::getInstance().setDebug<core::ProcessGroup>();
 
   std::shared_ptr<minifi::Configure> configuration = std::make_shared<minifi::Configure>();
-  std::shared_ptr<core::Repository> test_repo = std::make_shared<TestRepository>();
-  std::shared_ptr<core::Repository> test_flow_repo = std::make_shared<TestFlowRepository>();
+  auto test_repo = std::make_shared<TestThreadedRepository>();
+  auto test_flow_repo = std::make_shared<TestFlowRepository>();
 
   configuration->set(minifi::Configure::nifi_flow_configuration_file, test_file_location);
   std::shared_ptr<minifi::io::StreamFactory> stream_factory = minifi::io::StreamFactory::getInstance(configuration);
   std::shared_ptr<core::ContentRepository> content_repo = std::make_shared<core::repository::VolatileContentRepository>();
   std::unique_ptr<core::FlowConfiguration> yaml_ptr = std::make_unique<core::YamlConfiguration>(
       test_repo, test_repo, content_repo, stream_factory, configuration, test_file_location);
-  std::shared_ptr<TestRepository> repo = std::static_pointer_cast<TestRepository>(test_repo);
 
   const auto controller = std::make_shared<minifi::FlowController>(
       test_repo, test_flow_repo, configuration, std::move(yaml_ptr), content_repo, DEFAULT_ROOT_GROUP_NAME,

@@ -50,27 +50,8 @@ bool VolatileContentRepository::initialize(const std::shared_ptr<Configure> &con
     }
     value_vector_.clear();
   }
-  start();
 
   return true;
-}
-
-void VolatileContentRepository::stop() {
-  running_ = false;
-}
-
-void VolatileContentRepository::run() {
-}
-
-void VolatileContentRepository::start() {
-  if (this->purge_period_ <= 0ms)
-    return;
-  if (running_)
-    return;
-  thread_ = std::thread(&VolatileContentRepository::run, sharedFromThis());
-  thread_.detach();
-  running_ = true;
-  logger_->log_info("%s Repository Monitor Thread Start", getName());
 }
 
 std::shared_ptr<io::BaseStream> VolatileContentRepository::write(const minifi::ResourceClaim &claim, bool /*append*/) {
