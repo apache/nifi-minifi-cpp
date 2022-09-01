@@ -107,24 +107,23 @@ std::vector<std::string> ExecuteProcess::readArgs() const {
   std::vector<std::string> args;
   std::string current_param;
   bool in_escaped = false;
+  auto currentParamShouldBeAppended = [&](std::size_t i) {
+    bool current_char_is_escaped_apostrophe = full_command_[i] == '\"' && in_escaped && i > 0 && full_command_[i - 1] == '\\';
+    bool whitespace_in_escaped_block = full_command_[i] == ' ' && in_escaped;
+    bool non_special_character = full_command_[i] != '\\' && full_command_[i] != '\"' && full_command_[i] != ' ';
+    return current_char_is_escaped_apostrophe || whitespace_in_escaped_block || non_special_character;
+  };
+
   for (std::size_t i = 0; i < full_command_.size(); ++i) {
-    if (full_command_[i] == '\"') {
-      if (in_escaped && i > 0 && full_command_[i - 1] == '\\') {
-        current_param += full_command_[i];
-      } else {
-        in_escaped = !in_escaped;
-      }
-    } else if (full_command_[i] == ' ') {
-      if (in_escaped) {
-        current_param += full_command_[i];
-      } else {
-        if (!current_param.empty()) {
-          args.push_back(current_param);
-        }
-        current_param.clear();
-      }
-    } else if (full_command_[i] != '\\') {
+    if (currentParamShouldBeAppended(i)) {
       current_param += full_command_[i];
+    } else if (full_command_[i] == '\"' && (!in_escaped || i == 0 || full_command_[i - 1] != '\\')) {
+      in_escaped = !in_escaped;
+    } else if (full_command_[i] == ' ' && !in_escaped) {
+      if (!current_param.empty()) {
+        args.push_back(current_param);
+      }
+      current_param.clear();
     }
   }
   if (!current_param.empty()) {
