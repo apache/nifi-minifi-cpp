@@ -69,7 +69,7 @@ TEST_CASE_METHOD(ExecuteProcessTestsFixture, "ExecuteProcess can run an executab
 
 TEST_CASE_METHOD(ExecuteProcessTestsFixture, "ExecuteProcess can run an executable with escaped parameters", "[ExecuteProcess]") {
   auto command = utils::file::FileUtils::concat_path(utils::file::FileUtils::get_executable_dir(), "EchoParameters");
-  std::string arguments = "0 test_data test_data2 \"test data 3\" \"\\\"test data 4\\\"";
+  std::string arguments = R"(0 test_data test_data2 "test data 3" "\"test data 4\")";
   REQUIRE(execute_process_->setProperty(processors::ExecuteProcess::Command, command));
   REQUIRE(execute_process_->setProperty(processors::ExecuteProcess::CommandArguments, arguments));
 

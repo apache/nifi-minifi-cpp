@@ -265,8 +265,8 @@ void ExecuteProcess::onTrigger(core::ProcessContext *context, core::ProcessSessi
   std::vector<char*> argv;
   auto args = readArgs();
   argv.reserve(args.size() + 1);
-  for (std::size_t i = 0; i < args.size(); ++i) {
-    argv.push_back(args[i].data());
+  for (auto& arg : args) {
+    argv.push_back(arg.data());
   }
   argv.push_back(nullptr);
   if (process_running_) {
