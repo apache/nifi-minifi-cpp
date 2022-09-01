@@ -30,7 +30,7 @@ class ExecuteProcessTestsFixture {
  public:
   ExecuteProcessTestsFixture()
       : execute_process_(std::make_shared<processors::ExecuteProcess>("ExecuteProcess")),
-        controller_(execute_process_){
+        controller_(execute_process_) {
     LogTestController::getInstance().setTrace<processors::ExecuteProcess>();
   }
  protected:

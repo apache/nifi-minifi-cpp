@@ -143,13 +143,21 @@ void ExecuteProcess::executeChildProcess(const std::vector<char*>& argv) {
   const int STDOUT = 1;
   const int STDERR = 2;
   close(STDOUT);
-  dup(pipefd_[1]);  // points pipefd at file descriptor
-  if (redirect_error_stream_) {
-    dup2(pipefd_[1], STDERR);
+  const auto guard = gsl::finally([]() {
+    exit(1);
+  });
+  if (dup(pipefd_[1]) < 0) {  // points pipefd at file descriptor
+    logger_->log_error("Failed to point pipe at file descriptor");
+    return;
+  }
+  if (redirect_error_stream_ && dup2(pipefd_[1], STDERR) < 0) {
+    logger_->log_error("Failed to redirect error stream of the executed process to the output stream");
+    return;
   }
   close(pipefd_[0]);
-  execvp(argv[0], argv.data());
-  exit(1);
+  if (execvp(argv[0], argv.data()) < 0) {
+    logger_->log_error("Failed to execute child process");
+  }
 }
 
 void ExecuteProcess::readOutputInBatches(core::ProcessSession& session) {
