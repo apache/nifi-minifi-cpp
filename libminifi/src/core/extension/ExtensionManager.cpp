@@ -82,6 +82,11 @@ bool ExtensionManager::initialize(const std::shared_ptr<Configure>& config) {
         // error already logged by method
         continue;
       }
+      if (module->findSymbol("LOAD_EXTENSION_AS_GLOBAL")) {
+        if (!module->load(true)) {
+          continue;
+        }
+      }
       if (!module->initialize(config)) {
         logger_->log_error("Failed to initialize module '%s' at '%s'", library->name, library->getFullPath().string());
       } else {

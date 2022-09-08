@@ -44,6 +44,10 @@ function(use_libre_ssl SOURCE_DIR BINARY_DIR)
             "-DCMAKE_INSTALL_PREFIX=${LIBRESSL_BIN_DIR}"
             -DLIBRESSL_APPS=OFF
             -DLIBRESSL_TESTS=OFF
+            -DCMAKE_POLICY_DEFAULT_CMP0063=NEW
+            -DCMAKE_C_VISIBILITY_PRESET=hidden
+            -DCMAKE_CXX_VISIBILITY_PRESET=hidden
+            -DCMAKE_VISIBILITY_INLINES_HIDDEN=ON
             )
 
     # Build project

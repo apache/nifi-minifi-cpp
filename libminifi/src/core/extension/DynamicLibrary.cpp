@@ -52,9 +52,13 @@ DynamicLibrary::DynamicLibrary(std::string name, std::filesystem::path library_p
     library_path_(std::move(library_path)) {
 }
 
-bool DynamicLibrary::load() {
+bool DynamicLibrary::load(bool global) {
   dlerror();
-  handle_ = dlopen(library_path_.string().c_str(), RTLD_NOW | RTLD_LOCAL);
+  if (global) {
+    handle_ = dlopen(library_path_.string().c_str(), RTLD_NOW | RTLD_GLOBAL);
+  } else {
+    handle_ = dlopen(library_path_.string().c_str(), RTLD_NOW | RTLD_LOCAL);
+  }
   if (!handle_) {
     logger_->log_error("Failed to load extension '%s' at '%s': %s", name_, library_path_.string(), dlerror());
     return false;
@@ -78,6 +82,13 @@ bool DynamicLibrary::unload() {
   logger_->log_trace("Unloaded extension '%s' at '%s'", name_, library_path_.string());
   handle_ = nullptr;
   return true;
+}
+
+void* DynamicLibrary::findSymbol(const char *name) {
+  if (!handle_) {
+    throw std::logic_error("Dynamic library has not been loaded");
+  }
+  return dlsym(handle_, name);
 }
 
 DynamicLibrary::~DynamicLibrary() = default;

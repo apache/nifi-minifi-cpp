@@ -52,8 +52,9 @@ class DynamicLibrary : public Module {
   int dlclose(void* handle);
 #endif
 
-  bool load();
+  bool load(bool global = false);
   bool unload();
+  void* findSymbol(const char* name);
 
   std::filesystem::path library_path_;
   gsl::owner<void*> handle_ = nullptr;
