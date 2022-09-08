@@ -16,6 +16,7 @@
  * limitations under the License.
  */
 
+#include <filesystem>
 #include <memory>
 #include <string>
 #include <set>
@@ -398,19 +399,12 @@ TEST_CASE("Lua: Test Require", "[executescriptLuaRequire]") {
 
 TEST_CASE("Lua: Test Module Directory property", "[executescriptLuaModuleDirectoryProperty]") {
   using org::apache::nifi::minifi::utils::file::concat_path;
-  using org::apache::nifi::minifi::utils::file::get_executable_dir;
 
   TestController testController;
 
   LogTestController &logTestController = LogTestController::getInstance();
   logTestController.setDebug<TestPlan>();
   logTestController.setDebug<minifi::processors::ExecuteScript>();
-
-  const std::string SCRIPT_FILES_DIRECTORY = concat_path(get_executable_dir(), "test_lua_scripts");
-
-  auto getScriptFullPath = [&SCRIPT_FILES_DIRECTORY](const std::string& script_file_name) {
-    return concat_path(SCRIPT_FILES_DIRECTORY, script_file_name);
-  };
 
   auto plan = testController.createPlan();
 
@@ -420,9 +414,12 @@ TEST_CASE("Lua: Test Module Directory property", "[executescriptLuaModuleDirecto
                                           core::Relationship("success", "description"),
                                           true);
 
+  const auto SCRIPT_FILES_DIRECTORY = std::filesystem::path(__FILE__).parent_path() / "test_lua_scripts";
+
   plan->setProperty(executeScript, minifi::processors::ExecuteScript::ScriptEngine.getName(), "lua");
-  plan->setProperty(executeScript, minifi::processors::ExecuteScript::ScriptFile.getName(), getScriptFullPath("foo_bar_processor.lua"));
-  plan->setProperty(executeScript, minifi::processors::ExecuteScript::ModuleDirectory.getName(), getScriptFullPath("foo_modules/foo.lua") + "," + getScriptFullPath("bar_modules"));
+  plan->setProperty(executeScript, minifi::processors::ExecuteScript::ScriptFile.getName(), (SCRIPT_FILES_DIRECTORY / "foo_bar_processor.lua").string());
+  plan->setProperty(executeScript, minifi::processors::ExecuteScript::ModuleDirectory.getName(),
+      (SCRIPT_FILES_DIRECTORY / "foo_modules" / "foo.lua").string() + "," + (SCRIPT_FILES_DIRECTORY / "bar_modules").string());
 
   auto getFileDir = testController.createTempDirectory();
   plan->setProperty(getFile, minifi::processors::GetFile::Directory.getName(), getFileDir);
