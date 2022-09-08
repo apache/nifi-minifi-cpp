@@ -26,11 +26,7 @@ add_library(minifi-standard-processors SHARED ${SOURCES})
 
 include(RangeV3)
 include(Asio)
-target_link_libraries(minifi-standard-processors PUBLIC ${LIBMINIFI} Threads::Threads range-v3 asio)
-if (NOT OPENSSL_OFF)
-  # for HashContent processor
-  target_link_libraries(minifi-standard-processors PRIVATE OpenSSL::Crypto)
-endif()
+target_link_libraries(minifi-standard-processors ${LIBMINIFI} Threads::Threads range-v3 asio)
 
 register_extension(minifi-standard-processors "STANDARD PROCESSORS" STANDARD-PROCESSORS "Provides standard processors" "extensions/standard-processors/tests/")
 
