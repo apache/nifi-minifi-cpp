@@ -35,7 +35,9 @@ static void deinit() {
   // TODO(adebreceni): deinitialization is not implemented
 }
 
-extern "C" int LOAD_EXTENSION_AS_GLOBAL = 1;
+extern "C" {
+  int LOAD_MODULE_AS_GLOBAL = 1;
+}
 
 REGISTER_EXTENSION("PythonExtension", init, deinit);
 

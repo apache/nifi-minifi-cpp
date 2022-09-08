@@ -82,7 +82,7 @@ bool ExtensionManager::initialize(const std::shared_ptr<Configure>& config) {
         // error already logged by method
         continue;
       }
-      if (module->findSymbol("LOAD_EXTENSION_AS_GLOBAL")) {
+      if (module->findSymbol("LOAD_MODULE_AS_GLOBAL")) {
         if (!module->load(true)) {
           continue;
         }
