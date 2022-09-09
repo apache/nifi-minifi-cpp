@@ -22,6 +22,7 @@
 #include <string_view>
 #include <vector>
 #include <cstddef>
+#include <utility>
 
 // There is a bug in std::regex implementation of libstdc++ which causes stack overflow on long matches: https://gcc.gnu.org/bugzilla/show_bug.cgi?id=86164
 // Due to this bug we should use regex.h for regex searches if libstdc++ is used until a fix is released.

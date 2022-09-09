@@ -400,11 +400,11 @@ SMatch getLastRegexMatch(const std::string& string, const utils::Regex& regex) {
   last_match.ready_ = true;
   for (auto& info : match_infos) {
     size_t match_off = info.matched ? offset : 0;
-    last_match.matches_.emplace_back(
+    last_match.matches_.emplace_back(SMatch::Regmatch{
       info.matched,
       last_match.string_.cbegin() + info.begin + match_off,
       last_match.string_.cbegin() + info.end + match_off
-    );
+    });
   }
   return last_match;
 #endif
