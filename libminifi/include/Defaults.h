@@ -18,15 +18,15 @@
 #pragma once
 
 #ifdef WIN32
-#define DEFAULT_NIFI_CONFIG_YML "conf\\config.yml"
-#define DEFAULT_NIFI_PROPERTIES_FILE "conf\\minifi.properties"
-#define DEFAULT_LOG_PROPERTIES_FILE "conf\\minifi-log.properties"
-#define DEFAULT_UID_PROPERTIES_FILE "conf\\minifi-uid.properties"
-#define DEFAULT_BOOTSTRAP_FILE "conf\\bootstrap.conf"
+constexpr const char* DEFAULT_NIFI_CONFIG_YML = "conf\\config.yml";
+constexpr const char* DEFAULT_NIFI_PROPERTIES_FILE = "conf\\minifi.properties";
+constexpr const char* DEFAULT_LOG_PROPERTIES_FILE = "conf\\minifi-log.properties";
+constexpr const char* DEFAULT_UID_PROPERTIES_FILE = "conf\\minifi-uid.properties";
+constexpr const char* DEFAULT_BOOTSTRAP_FILE = "conf\\bootstrap.conf";
 #else
-#define DEFAULT_NIFI_CONFIG_YML "conf/config.yml"
-#define DEFAULT_NIFI_PROPERTIES_FILE "conf/minifi.properties"
-#define DEFAULT_LOG_PROPERTIES_FILE "conf/minifi-log.properties"
-#define DEFAULT_UID_PROPERTIES_FILE "conf/minifi-uid.properties"
-#define DEFAULT_BOOTSTRAP_FILE "conf/bootstrap.conf"
+constexpr const char* DEFAULT_NIFI_CONFIG_YML = "conf/config.yml";
+constexpr const char* DEFAULT_NIFI_PROPERTIES_FILE = "conf/minifi.properties";
+constexpr const char* DEFAULT_LOG_PROPERTIES_FILE = "conf/minifi-log.properties";
+constexpr const char* DEFAULT_UID_PROPERTIES_FILE = "conf/minifi-uid.properties";
+constexpr const char* DEFAULT_BOOTSTRAP_FILE = "conf/bootstrap.conf";
 #endif

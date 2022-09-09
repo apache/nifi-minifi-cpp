@@ -144,7 +144,7 @@ std::string determineMinifiHome(const std::shared_ptr<logging::Logger>& logger) 
   if (validHome(minifiHome)) {
     minifiHomeValid = true;
   } else {
-    logger->log_info("%s is not a valid " MINIFI_HOME_ENV_KEY ", because there is no " DEFAULT_NIFI_PROPERTIES_FILE " file in it.", minifiHome);
+    logger->log_info("%s is not a valid %s, because there is no %s file in it.", minifiHome, MINIFI_HOME_ENV_KEY, DEFAULT_NIFI_PROPERTIES_FILE);
 
     const std::filesystem::path path{minifiHome};
     std::string minifiHomeWithoutBin = path.parent_path().string();
@@ -155,15 +155,15 @@ std::string determineMinifiHome(const std::shared_ptr<logging::Logger>& logger) 
         minifiHomeValid = true;
         minifiHome = std::move(minifiHomeWithoutBin);
       } else {
-        logger->log_info("%s is not a valid " MINIFI_HOME_ENV_KEY ", because there is no " DEFAULT_NIFI_PROPERTIES_FILE " file in it.", minifiHomeWithoutBin);
+        logger->log_info("%s is not a valid %s, because there is no %s file in it.", minifiHomeWithoutBin, MINIFI_HOME_ENV_KEY, DEFAULT_NIFI_PROPERTIES_FILE);
       }
     }
   }
 
   /* Fail if not */
   if (!minifiHomeValid) {
-    logger->log_error("Cannot find a valid " MINIFI_HOME_ENV_KEY " containing a " DEFAULT_NIFI_PROPERTIES_FILE " file in it. "
-                      "Please set " MINIFI_HOME_ENV_KEY " or run minifi from a valid location.");
+    logger->log_error("Cannot find a valid %s containing a %s file in it. Please set %s or run minifi from a valid location.",
+        MINIFI_HOME_ENV_KEY, DEFAULT_NIFI_PROPERTIES_FILE, MINIFI_HOME_ENV_KEY);
     return "";
   }
 
