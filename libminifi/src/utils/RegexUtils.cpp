@@ -22,7 +22,6 @@
 #include <vector>
 
 #include "Exception.h"
-#include <regex.h>
 
 namespace org::apache::nifi::minifi::utils {
 
@@ -280,9 +279,9 @@ bool regexMatch(const std::string& str, SMatch& match, const Regex& regex) {
       if (matched) {
         auto begin = match.string_.begin() + regmatch.rm_so;
         auto end = match.string_.begin() + regmatch.rm_eo;
-        match.matches_.push_back(SMatch::Regmatch{true, begin, end});
+        match.matches_.emplace_back(true, begin, end);
       } else {
-        match.matches_.push_back(SMatch::Regmatch{false, match.string_.end(), match.string_.end()});
+        match.matches_.emplace_back(false, match.string_.end(), match.string_.end());
       }
     }
   }
@@ -345,9 +344,9 @@ bool regexSearch(const std::string& str, SMatch& match, const Regex& regex) {
       if (matched) {
         auto begin = match.string_.begin() + regmatch.rm_so;
         auto end = match.string_.begin() + regmatch.rm_eo;
-        match.matches_.push_back(SMatch::Regmatch{true, begin, end});
+        match.matches_.emplace_back(true, begin, end);
       } else {
-        match.matches_.push_back(SMatch::Regmatch{false, match.string_.end(), match.string_.end()});
+        match.matches_.emplace_back(false, match.string_.end(), match.string_.end());
       }
     }
   }
@@ -389,7 +388,7 @@ SMatch getLastRegexMatch(const std::string& string, const utils::Regex& regex) {
   std::vector<MatchInfo> match_infos;
   match_infos.reserve(last_match.size());
   for (auto& match : last_match.matches_) {
-    match_infos.push_back({
+    match_infos.emplace_back(MatchInfo{
       .matched = match.matched,
       .begin = gsl::narrow<size_t>(std::distance(last_match.string_.cbegin(), match.first)),
       .end = gsl::narrow<size_t>(std::distance(last_match.string_.cbegin(), match.second))
@@ -401,11 +400,11 @@ SMatch getLastRegexMatch(const std::string& string, const utils::Regex& regex) {
   last_match.ready_ = true;
   for (auto& info : match_infos) {
     size_t match_off = info.matched ? offset : 0;
-    last_match.matches_.push_back(SMatch::Regmatch{
+    last_match.matches_.emplace_back(
       info.matched,
       last_match.string_.cbegin() + info.begin + match_off,
       last_match.string_.cbegin() + info.end + match_off
-    });
+    );
   }
   return last_match;
 #endif
