@@ -190,14 +190,14 @@ TEST_CASE("Test ListenTCP with SSL connection", "[ListenTCP]") {
     controller.plan->scheduleProcessor(listen_tcp);
 
     minifi::utils::net::SslData ssl_data;
-    ssl_data.ca_loc = minifi::utils::file::FileUtils::get_executable_dir() + "/resources/ca_cert.crt";
-    ssl_data.cert_loc = minifi::utils::file::FileUtils::get_executable_dir() + "/resources/cert_and_private_key.pem";
-    ssl_data.key_loc = minifi::utils::file::FileUtils::get_executable_dir() + "/resources/cert_and_private_key.pem";
+    ssl_data.ca_loc = minifi::utils::file::concat_path(minifi::utils::file::get_executable_dir(), "resources", "ca_cert.crt");
+    ssl_data.cert_loc = minifi::utils::file::concat_path(minifi::utils::file::get_executable_dir(), "resources", "cert_and_private_key.pem");
+    ssl_data.key_loc = minifi::utils::file::concat_path(minifi::utils::file::get_executable_dir(), "resources", "cert_and_private_key.pem");
     ssl_data.key_pw = "Password12";
 
     expected_successful_messages = {"test_message_1", "another_message"};
     for (const auto& message : expected_successful_messages) {
-      REQUIRE(utils::sendMessagesViaSSL({message}, endpoint, minifi::utils::file::FileUtils::get_executable_dir() + "/resources/ca_cert.crt", ssl_data));
+      REQUIRE(utils::sendMessagesViaSSL({message}, endpoint, minifi::utils::file::concat_path(minifi::utils::file::get_executable_dir(), "resources", "ca_cert.crt"), ssl_data));
     }
   }
 
@@ -214,7 +214,7 @@ TEST_CASE("Test ListenTCP with SSL connection", "[ListenTCP]") {
     ssl_context_service->enable();
     controller.plan->scheduleProcessor(listen_tcp);
 
-    REQUIRE_FALSE(utils::sendMessagesViaSSL({"test_message_1"}, endpoint, minifi::utils::file::concat_path(executable_dir, "/resources/ca_cert.crt")));
+    REQUIRE_FALSE(utils::sendMessagesViaSSL({"test_message_1"}, endpoint, minifi::utils::file::concat_path(executable_dir, "resources", "ca_cert.crt")));
   }
 
   ProcessorTriggerResult result;
