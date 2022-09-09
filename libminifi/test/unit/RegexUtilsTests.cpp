@@ -125,3 +125,55 @@ TEST_CASE("TestRegexUtils::getLastRegexMatch works correctly", "[getLastRegexMat
     CHECK(last_match.position(0) == 21);
   }
 }
+
+TEST_CASE("TestRegexUtils::regexMatch works with const char*", "[matchConstChar]") {
+  std::string pat = "Speed limit 130 all the way";
+  std::string rgx1 = "Speed limit ([0-9]+) (.*)";
+  Regex r1(rgx1);
+  minifi::utils::CMatch matches;
+  REQUIRE(minifi::utils::regexMatch(pat.c_str(), matches, r1));
+  REQUIRE(matches.size() == 3);
+  REQUIRE(matches[0].str() == "Speed limit 130 all the way");
+  REQUIRE(matches[1].str() == "130");
+  REQUIRE(matches[2].str() == "all the way");
+  REQUIRE(matches.suffix().str().empty());
+}
+
+TEST_CASE("TestRegexUtils::regexMatch works with std::string_view", "[matchStringView]") {
+  std::string pat = "Speed limit 130 all the way";
+  std::string rgx1 = "Speed limit ([0-9]+) (.*)";
+  Regex r1(rgx1);
+  minifi::utils::SVMatch matches;
+  REQUIRE(minifi::utils::regexMatch(std::string_view{pat}, matches, r1));
+  REQUIRE(matches.size() == 3);
+  REQUIRE(matches[0].str() == "Speed limit 130 all the way");
+  REQUIRE(matches[1].str() == "130");
+  REQUIRE(matches[2].str() == "all the way");
+  REQUIRE(matches.suffix().str().empty());
+}
+
+TEST_CASE("TestRegexUtils::regexSearch works with const char*", "[searchConstChar]") {
+  std::string pat = "Speed limit 130 all the way";
+  std::string rgx1 = "Speed limit ([0-9]+) (.*)";
+  Regex r1(rgx1);
+  minifi::utils::CMatch matches;
+  REQUIRE(minifi::utils::regexSearch(pat.c_str(), matches, r1));
+  REQUIRE(matches.size() == 3);
+  REQUIRE(matches[0].str() == "Speed limit 130 all the way");
+  REQUIRE(matches[1].str() == "130");
+  REQUIRE(matches[2].str() == "all the way");
+  REQUIRE(matches.suffix().str().empty());
+}
+
+TEST_CASE("TestRegexUtils::regexSearch works with std::string_view", "[searchStringView]") {
+  std::string pat = "Speed limit 130 all the way";
+  std::string rgx1 = "Speed limit ([0-9]+) (.*)";
+  Regex r1(rgx1);
+  minifi::utils::SVMatch matches;
+  REQUIRE(minifi::utils::regexSearch(std::string_view{pat}, matches, r1));
+  REQUIRE(matches.size() == 3);
+  REQUIRE(matches[0].str() == "Speed limit 130 all the way");
+  REQUIRE(matches[1].str() == "130");
+  REQUIRE(matches[2].str() == "all the way");
+  REQUIRE(matches.suffix().str().empty());
+}
