@@ -436,10 +436,18 @@ inline std::tuple<std::string /*parent_path*/, std::string /*child_path*/> split
   return std::make_tuple(std::move(parent), std::move(child));
 }
 
+/**
+ * Returns the directory part of the input path.
+ * Note that empty filenames are allowed, so `get_parent_path("foo/bar/") == "foo/bar"`.
+ */
 inline std::string get_parent_path(const std::string& path) {
   return std::filesystem::path{path}.parent_path().string();
 }
 
+/**
+ * Returns the filename part of the input path.
+ * Note that empty filenames are allowed, so `get_child_path("foo/bar/") == ""`.
+ */
 inline std::string get_child_path(const std::string& path) {
   return std::filesystem::path{path}.filename().string();
 }
