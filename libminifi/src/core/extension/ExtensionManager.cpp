@@ -27,12 +27,7 @@
 #include "core/extension/Utils.h"
 #include "properties/Configuration.h"
 
-namespace org {
-namespace apache {
-namespace nifi {
-namespace minifi {
-namespace core {
-namespace extension {
+namespace org::apache::nifi::minifi::core::extension {
 
 const std::shared_ptr<logging::Logger> ExtensionManager::logger_ = logging::LoggerFactory<ExtensionManager>::getLogger();
 
@@ -109,9 +104,4 @@ void ExtensionManager::unregisterExtension(Extension& extension) {
   }
 }
 
-}  // namespace extension
-}  // namespace core
-}  // namespace minifi
-}  // namespace nifi
-}  // namespace apache
-}  // namespace org
+}  // namespace org::apache::nifi::minifi::core::extension
