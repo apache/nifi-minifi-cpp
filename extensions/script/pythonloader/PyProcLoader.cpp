@@ -36,6 +36,8 @@ static void deinit() {
 }
 
 extern "C" {
+  // request this module (shared library) to be opened into the global namespace, exposing
+  // the symbols of the python library
   int LOAD_MODULE_AS_GLOBAL = 1;
 }
 
