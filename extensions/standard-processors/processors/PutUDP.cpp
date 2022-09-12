@@ -111,7 +111,7 @@ void PutUDP::onTrigger(core::ProcessContext* context, core::ProcessSession* cons
 
   const auto debug_log_resolved_endpoint = [&hostname, &logger = this->logger_](const udp::resolver::results_type& resolved_query) -> udp::endpoint {
     if (logger->should_log(core::logging::LOG_LEVEL::debug))
-      core::logging::LOG_WARN(logger) << "resolved " << hostname << " to: " << resolved_query->endpoint();
+      core::logging::LOG_DEBUG(logger) << "resolved " << hostname << " to: " << resolved_query->endpoint();
     return resolved_query->endpoint();
   };
 
