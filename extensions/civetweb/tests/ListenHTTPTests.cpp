@@ -468,8 +468,8 @@ TEST_CASE_METHOD(ListenHTTPTestsFixture, "HTTPS without client cert", "[basic][h
 }
 
 TEST_CASE_METHOD(ListenHTTPTestsFixture, "HTTPS with client cert from good CA", "[https]") {
-  plan->setProperty(listen_http, "SSL Certificate", minifi::utils::file::concat_path (minifi::utils::file::get_executable_dir(), "resources", "server.pem"));
-  plan->setProperty(listen_http, "SSL Certificate Authority", minifi::utils::file::concat_path (minifi::utils::file::get_executable_dir(), "resources", "goodCA.crt"));
+  plan->setProperty(listen_http, "SSL Certificate", minifi::utils::file::concat_path(minifi::utils::file::get_executable_dir(), "resources", "server.pem"));
+  plan->setProperty(listen_http, "SSL Certificate Authority", minifi::utils::file::concat_path(minifi::utils::file::get_executable_dir(), "resources", "goodCA.crt"));
   plan->setProperty(listen_http, "SSL Verify Peer", "yes");
 
   create_ssl_context_service("goodCA.crt", "goodCA_goodClient.pem");
@@ -491,8 +491,8 @@ TEST_CASE_METHOD(ListenHTTPTestsFixture, "HTTPS with client cert from good CA", 
 }
 
 TEST_CASE_METHOD(ListenHTTPTestsFixture, "HTTPS with PKCS12 client cert from good CA", "[https]") {
-  plan->setProperty(listen_http, "SSL Certificate", minifi::utils::file::concat_path (minifi::utils::file::get_executable_dir(), "resources", "server.pem"));
-  plan->setProperty(listen_http, "SSL Certificate Authority", minifi::utils::file::concat_path (minifi::utils::file::get_executable_dir(), "resources", "goodCA.crt"));
+  plan->setProperty(listen_http, "SSL Certificate", minifi::utils::file::concat_path(minifi::utils::file::get_executable_dir(), "resources", "server.pem"));
+  plan->setProperty(listen_http, "SSL Certificate Authority", minifi::utils::file::concat_path(minifi::utils::file::get_executable_dir(), "resources", "goodCA.crt"));
   plan->setProperty(listen_http, "SSL Verify Peer", "yes");
 
   create_ssl_context_service("goodCA.crt", "goodCA_goodClient.p12");
@@ -514,8 +514,8 @@ TEST_CASE_METHOD(ListenHTTPTestsFixture, "HTTPS with PKCS12 client cert from goo
 }
 
 TEST_CASE_METHOD(ListenHTTPTestsFixture, "HTTPS with client cert from bad CA", "[https]") {
-  plan->setProperty(listen_http, "SSL Certificate", minifi::utils::file::concat_path (minifi::utils::file::get_executable_dir(), "resources", "server.pem"));
-  plan->setProperty(listen_http, "SSL Certificate Authority", minifi::utils::file::concat_path (minifi::utils::file::get_executable_dir(), "resources", "goodCA.crt"));
+  plan->setProperty(listen_http, "SSL Certificate", minifi::utils::file::concat_path(minifi::utils::file::get_executable_dir(), "resources", "server.pem"));
+  plan->setProperty(listen_http, "SSL Certificate Authority", minifi::utils::file::concat_path(minifi::utils::file::get_executable_dir(), "resources", "goodCA.crt"));
 
   bool should_succeed = false;
   int64_t response_code = 0;
@@ -560,8 +560,8 @@ TEST_CASE_METHOD(ListenHTTPTestsFixture, "HTTPS with client cert from bad CA", "
 }
 
 TEST_CASE_METHOD(ListenHTTPTestsFixture, "HTTPS with client cert with matching DN", "[https][DN]") {
-  plan->setProperty(listen_http, "SSL Certificate", minifi::utils::file::concat_path (minifi::utils::file::get_executable_dir(), "resources", "server.pem"));
-  plan->setProperty(listen_http, "SSL Certificate Authority", minifi::utils::file::concat_path (minifi::utils::file::get_executable_dir(), "resources", "goodCA.crt"));
+  plan->setProperty(listen_http, "SSL Certificate", minifi::utils::file::concat_path(minifi::utils::file::get_executable_dir(), "resources", "server.pem"));
+  plan->setProperty(listen_http, "SSL Certificate Authority", minifi::utils::file::concat_path(minifi::utils::file::get_executable_dir(), "resources", "goodCA.crt"));
   plan->setProperty(listen_http, "Authorized DN Pattern", ".*/CN=good\\..*");
   plan->setProperty(listen_http, "SSL Verify Peer", "yes");
 
@@ -584,8 +584,8 @@ TEST_CASE_METHOD(ListenHTTPTestsFixture, "HTTPS with client cert with matching D
 }
 
 TEST_CASE_METHOD(ListenHTTPTestsFixture, "HTTPS with client cert with non-matching DN", "[https][DN]") {
-  plan->setProperty(listen_http, "SSL Certificate", minifi::utils::file::concat_path (minifi::utils::file::get_executable_dir(), "resources", "server.pem"));
-  plan->setProperty(listen_http, "SSL Certificate Authority", minifi::utils::file::concat_path (minifi::utils::file::get_executable_dir(), "resources", "goodCA.crt"));
+  plan->setProperty(listen_http, "SSL Certificate", minifi::utils::file::concat_path(minifi::utils::file::get_executable_dir(), "resources", "server.pem"));
+  plan->setProperty(listen_http, "SSL Certificate Authority", minifi::utils::file::concat_path(minifi::utils::file::get_executable_dir(), "resources", "goodCA.crt"));
   plan->setProperty(listen_http, "Authorized DN Pattern", ".*/CN=good\\..*");
 
   int64_t response_code = 0;
@@ -630,8 +630,8 @@ TEST_CASE_METHOD(ListenHTTPTestsFixture, "HTTPS with client cert with non-matchi
 
 #if CURL_AT_LEAST_VERSION(7, 54, 0)
 TEST_CASE_METHOD(ListenHTTPTestsFixture, "HTTPS minimum SSL version", "[https]") {
-  plan->setProperty(listen_http, "SSL Certificate", minifi::utils::file::concat_path (minifi::utils::file::get_executable_dir(), "resources", "server.pem"));
-  plan->setProperty(listen_http, "SSL Certificate Authority", minifi::utils::file::concat_path (minifi::utils::file::get_executable_dir(), "resources", "goodCA.crt"));
+  plan->setProperty(listen_http, "SSL Certificate", minifi::utils::file::concat_path(minifi::utils::file::get_executable_dir(), "resources", "server.pem"));
+  plan->setProperty(listen_http, "SSL Certificate Authority", minifi::utils::file::concat_path(minifi::utils::file::get_executable_dir(), "resources", "goodCA.crt"));
 
   SECTION("GET") {
     method = "GET";
