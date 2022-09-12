@@ -146,16 +146,16 @@ std::string determineMinifiHome(const std::shared_ptr<logging::Logger>& logger) 
   } else {
     logger->log_info("%s is not a valid %s, because there is no %s file in it.", minifiHome, MINIFI_HOME_ENV_KEY, DEFAULT_NIFI_PROPERTIES_FILE);
 
-    const std::filesystem::path path{minifiHome};
-    std::string minifiHomeWithoutBin = path.parent_path().string();
-    std::string binDir = path.filename().string();
-    if (!minifiHomeWithoutBin.empty() && (binDir == "bin" || binDir == std::string("bin") + minifi::utils::file::get_separator())) {
-      if (validHome(minifiHomeWithoutBin)) {
-        logger->log_info("%s is a valid " MINIFI_HOME_ENV_KEY ", falling back to it.", minifiHomeWithoutBin);
+    const std::filesystem::path maybe_bin_dir_under_minifi_home{minifiHome};
+    std::string maybe_minifi_home = maybe_bin_dir_under_minifi_home.parent_path().string();
+    std::string maybe_bin_dir = maybe_bin_dir_under_minifi_home.filename().string();
+    if (!maybe_minifi_home.empty() && maybe_bin_dir == "bin") {
+      if (validHome(maybe_minifi_home)) {
+        logger->log_info("%s is a valid " MINIFI_HOME_ENV_KEY ", falling back to it.", maybe_minifi_home);
         minifiHomeValid = true;
-        minifiHome = std::move(minifiHomeWithoutBin);
+        minifiHome = std::move(maybe_minifi_home);
       } else {
-        logger->log_info("%s is not a valid %s, because there is no %s file in it.", minifiHomeWithoutBin, MINIFI_HOME_ENV_KEY, DEFAULT_NIFI_PROPERTIES_FILE);
+        logger->log_info("%s is not a valid %s, because there is no %s file in it.", maybe_minifi_home, MINIFI_HOME_ENV_KEY, DEFAULT_NIFI_PROPERTIES_FILE);
       }
     }
   }
