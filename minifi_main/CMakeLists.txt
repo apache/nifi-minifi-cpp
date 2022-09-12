@@ -36,6 +36,11 @@ set(MINIFIEXE_SOURCES MiNiFiMain.cpp MainHelper.cpp MiNiFiWindowsService.cpp Age
 if(WIN32)
     set_source_files_properties("${CMAKE_BINARY_DIR}/libminifi/src/core/logging/WindowsMessageTextFile.rc" PROPERTIES GENERATED TRUE)
     list(APPEND MINIFIEXE_SOURCES "${CMAKE_BINARY_DIR}/libminifi/src/core/logging/WindowsMessageTextFile.rc")
+
+    set(EXECUTABLE_FILE_NAME "minifi.exe")
+    set(EXECUTABLE_FILE_DESCRIPTION "MiNiFi C++ agent")
+    configure_file(${CMAKE_SOURCE_DIR}/versioninfo.rc.in ${CMAKE_CURRENT_BINARY_DIR}/versioninfo.rc @ONLY)
+    list(APPEND MINIFIEXE_SOURCES "${CMAKE_CURRENT_BINARY_DIR}/versioninfo.rc")
 endif()
 add_executable(minifiexe ${MINIFIEXE_SOURCES})
 

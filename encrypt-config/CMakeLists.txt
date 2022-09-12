@@ -17,6 +17,12 @@
 # under the License.
 
 file(GLOB ENCRYPT_CONFIG_FILES  "*.cpp")
+if (WIN32)
+    set(EXECUTABLE_FILE_NAME "encrypt-config.exe")
+    set(EXECUTABLE_FILE_DESCRIPTION "MiNiFi C++ encrypt-config tool")
+    configure_file(${CMAKE_SOURCE_DIR}/versioninfo.rc.in ${CMAKE_CURRENT_BINARY_DIR}/versioninfo.rc @ONLY)
+    list(APPEND ENCRYPT_CONFIG_FILES "${CMAKE_CURRENT_BINARY_DIR}/versioninfo.rc")
+endif()
 add_executable(encrypt-config "${ENCRYPT_CONFIG_FILES}")
 target_include_directories(encrypt-config PRIVATE ../libminifi/include)
 target_link_libraries(encrypt-config libsodium ${LIBMINIFI})
