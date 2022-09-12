@@ -77,7 +77,10 @@ bool ExtensionManager::initialize(const std::shared_ptr<Configure>& config) {
         // error already logged by method
         continue;
       }
+      // some modules (shared libraries) might need to be loaded into the global namespace exposing
+      // their definitions (e.g. python script extension)
       if (module->findSymbol("LOAD_MODULE_AS_GLOBAL")) {
+        // reload library as global
         if (!module->load(true)) {
           continue;
         }
