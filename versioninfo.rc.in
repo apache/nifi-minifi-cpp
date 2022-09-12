@@ -1,0 +1,44 @@
+#include <windows.h>
+
+#define VER_FILEVERSION             @PROJECT_VERSION_MAJOR@,@PROJECT_VERSION_MINOR@,@PROJECT_VERSION_PATCH@,0
+#define VER_FILEVERSION_STR         "@PROJECT_VERSION_MAJOR@.@PROJECT_VERSION_MINOR@.@PROJECT_VERSION_PATCH@\0"
+
+#define VER_PRODUCTVERSION          @PROJECT_VERSION_MAJOR@,@PROJECT_VERSION_MINOR@,@PROJECT_VERSION_PATCH@,0
+#define VER_PRODUCTVERSION_STR      "@PROJECT_VERSION_MAJOR@.@PROJECT_VERSION_MINOR@.@PROJECT_VERSION_PATCH@\0"
+
+#ifndef DEBUG
+#define VER_DEBUG                   0
+#else
+#define VER_DEBUG                   VS_FF_DEBUG
+#endif
+
+VS_VERSION_INFO VERSIONINFO
+FILEVERSION     VER_FILEVERSION
+PRODUCTVERSION  VER_PRODUCTVERSION
+FILEFLAGSMASK   VS_FFI_FILEFLAGSMASK
+FILEFLAGS       VER_DEBUG
+FILEOS          VOS__WINDOWS32
+FILETYPE        VFT_APP
+BEGIN
+    BLOCK "StringFileInfo"
+    BEGIN
+        BLOCK "0409FDE9"
+        BEGIN
+            VALUE "LegalCopyright",   "@LEGAL_COPYRIGHT@"
+            VALUE "CompanyName",      "@COMPANY_NAME@"
+            VALUE "ProductName",      "@PRODUCT_NAME@"
+            VALUE "ProductVersion",   VER_PRODUCTVERSION_STR
+            VALUE "OriginalFilename", "@EXECUTABLE_FILE_NAME@"
+            VALUE "FileDescription",  "@EXECUTABLE_FILE_DESCRIPTION@"
+            VALUE "FileVersion",      VER_FILEVERSION_STR
+        END
+    END
+
+    BLOCK "VarFileInfo"
+    BEGIN
+        /* 0x409 == US English, 65001 = UTF-8                                                   */
+        /* this corresponds to the BLOCK statement under StringFileInfo: 65001 == 0xFDE9        */
+        VALUE "Translation", 0x409, 65001
+        /* more translations could be added here, with more corresponding StringFileInfo blocks */
+    END
+END

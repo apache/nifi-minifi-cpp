@@ -30,7 +30,15 @@ endif()
 include(CppVersion)
 set_cpp_version()
 
-add_executable(minificontroller MiNiFiController.cpp ../minifi_main/MainHelper.cpp)
+set(MINIFI_CONTROLLER_SOURCES MiNiFiController.cpp ../minifi_main/MainHelper.cpp)
+if (WIN32)
+    set(EXECUTABLE_FILE_NAME "minificontroller.exe")
+    set(EXECUTABLE_FILE_DESCRIPTION "${PRODUCT_NAME} controller")
+    configure_file(${CMAKE_SOURCE_DIR}/versioninfo.rc.in ${CMAKE_CURRENT_BINARY_DIR}/versioninfo.rc @ONLY)
+    list(APPEND MINIFI_CONTROLLER_SOURCES "${CMAKE_CURRENT_BINARY_DIR}/versioninfo.rc")
+endif()
+
+add_executable(minificontroller ${MINIFI_CONTROLLER_SOURCES})
 target_link_libraries(minificontroller ${LIBMINIFI} cxxopts Threads::Threads)
 
 set_target_properties(minificontroller PROPERTIES

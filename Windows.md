@@ -82,6 +82,12 @@ Examples:
 
 `win_build_vs.bat` requires a Visual Studio 2019 build environment to be set up. Use the `x86 Native Tools Command Prompt for VS 2019`, or the `x64 Native Tools Command Prompt for VS 2019` for 32-bit and 64-bit builds respectively.
 
+You can specify additional CMake arguments by setting the EXTRA_CMAKE_ARGUMENTS variable:
+```
+> set EXTRA_CMAKE_ARGUMENTS=-DCOMPANY_NAME="Acme Inc" -DPRODUCT_NAME="Roadrunner Stopper"
+> win_build_vs.bat ...
+```
+
 ## Building directly with CMake
 
 The project can also be built manually using CMake. It requires the same environment the build script does (the proper Native Tools Command Prompt).

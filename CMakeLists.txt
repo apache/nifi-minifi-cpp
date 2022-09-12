@@ -20,7 +20,7 @@
 cmake_minimum_required(VERSION 3.17)
 cmake_policy(SET CMP0096 NEW) # policy to preserve the leading zeros in PROJECT_VERSION_{MAJOR,MINOR,PATCH,TWEAK}
 cmake_policy(SET CMP0065 OLD) # default export policy, required for self-dlopen
-project(nifi-minifi-cpp VERSION 0.12.0)
+project(nifi-minifi-cpp VERSION 0.13.0)
 set(PROJECT_NAME "nifi-minifi-cpp")
 
 # Optional build number for linux distribution targets' tar.gz output
@@ -53,6 +53,12 @@ if (NOT BUILD_IDENTIFIER)
 endif()
 
 message("BUILD_IDENTIFIER is ${BUILD_IDENTIFIER}")
+
+if (WIN32)
+    set(LEGAL_COPYRIGHT "Apache License v2.0" CACHE STRING "Used in Windows versioninfo.rc")
+    set(COMPANY_NAME "Apache Software Foundation" CACHE STRING "Used in Windows versioninfo.rc")
+    set(PRODUCT_NAME "MiNiFi C++" CACHE STRING "Used in Windows versioninfo.rc")
+endif()
 
 if (${FORCE_COLORED_OUTPUT})
     message("CMAKE_CXX_COMPILER_ID is ${CMAKE_CXX_COMPILER_ID}")
