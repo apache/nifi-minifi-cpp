@@ -1,5 +1,4 @@
 /**
- *
  * Licensed to the Apache Software Foundation (ASF) under one or more
  * contributor license agreements.  See the NOTICE file distributed with
  * this work for additional information regarding copyright ownership.
@@ -15,7 +14,6 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#undef NDEBUG
 
 #include <array>
 #include <chrono>
@@ -35,11 +33,12 @@
 #include "../../extensions/libarchive/MergeContent.h"
 #include "core/repository/VolatileFlowFileRepository.h"
 #include "../../extensions/rocksdb-repos/DatabaseContentRepository.h"
-#include "utils/gsl.h"
 #include "utils/IntegrationTestUtils.h"
 
 using Connection = minifi::Connection;
 using MergeContent = minifi::processors::MergeContent;
+
+using minifi::utils::verifyEventHappenedInPollTime;
 
 namespace {
 
@@ -115,7 +114,7 @@ struct TestFlow{
     core::ProcessSession sessionGenFlowFile(inputContext);
     std::shared_ptr<core::FlowFile> flow = std::static_pointer_cast<core::FlowFile>(sessionGenFlowFile.create());
     sessionGenFlowFile.importFrom(stream, flow);
-    assert(flow->getResourceClaim()->getFlowFileRecordOwnedCount() == 1);
+    REQUIRE(flow->getResourceClaim()->getFlowFileRecordOwnedCount() == 1);
     sessionGenFlowFile.transfer(flow, {"input", "d"});
     sessionGenFlowFile.commit();
     return flow;
@@ -194,6 +193,7 @@ TEST_CASE("Processors Can Store FlowFiles", "[TestP1]") {
 
     flowController->load(std::move(flow.root_));
     ff_repository->start();
+    REQUIRE(verifyEventHappenedInPollTime(std::chrono::seconds(1), [&ff_repository]{ return ff_repository->isRunning(); }));
 
     // write two files into the input
     flow.write("one");
@@ -222,10 +222,8 @@ TEST_CASE("Processors Can Store FlowFiles", "[TestP1]") {
 
     flowController->load(std::move(flow.root_));
     ff_repository->start();
-    // wait for FlowFileRepository to start and notify the owners of
-    // the resurrected FlowFiles
-    using org::apache::nifi::minifi::utils::verifyEventHappenedInPollTime;
-    assert(verifyEventHappenedInPollTime(std::chrono::seconds(1), []{ return LogTestController::getInstance().countOccurrences("Found connection for") == 2; }, std::chrono::milliseconds(100)));
+    REQUIRE(verifyEventHappenedInPollTime(std::chrono::seconds(1), [&ff_repository]{ return ff_repository->isRunning(); }));
+    REQUIRE(verifyEventHappenedInPollTime(std::chrono::seconds(1), []{ return LogTestController::getInstance().countOccurrences("Found connection for") == 2; }));
 
     // write the third file into the input
     flow.write("three");
@@ -239,7 +237,7 @@ TEST_CASE("Processors Can Store FlowFiles", "[TestP1]") {
       file = flow.output_->poll(expired);
       return file != nullptr;
     };
-    assert(verifyEventHappenedInPollTime(std::chrono::seconds(1), flowFileArrivedInOutput, std::chrono::milliseconds(50)));
+    REQUIRE(verifyEventHappenedInPollTime(std::chrono::seconds(1), flowFileArrivedInOutput, std::chrono::milliseconds(50)));
     REQUIRE(expired.empty());
 
     auto content = flow.read(file);
@@ -315,6 +313,7 @@ TEST_CASE("Persisted flowFiles are updated on modification", "[TestP1]") {
 
     flowController->load(std::move(flow.root_));
     ff_repository->start();
+    REQUIRE(verifyEventHappenedInPollTime(std::chrono::seconds(1), [&ff_repository]{ return ff_repository->isRunning(); }));
 
     std::string removedResource;
     {
@@ -351,17 +350,15 @@ TEST_CASE("Persisted flowFiles are updated on modification", "[TestP1]") {
 
     flowController->load(std::move(flow.root_));
     ff_repository->start();
-    // wait for FlowFileRepository to start and notify the owners of
-    // the resurrected FlowFiles
-    LogTestController::getInstance().contains("Found connection for");
+    REQUIRE(verifyEventHappenedInPollTime(std::chrono::seconds(1), [&ff_repository]{ return ff_repository->isRunning(); }));
+
     std::set<std::shared_ptr<core::FlowFile>> expired;
     std::shared_ptr<org::apache::nifi::minifi::core::FlowFile> file = nullptr;
-    using org::apache::nifi::minifi::utils::verifyEventHappenedInPollTime;
     const auto flowFileArrivedInOutput = [&file, &expired, &flow] {
       file = flow.output_->poll(expired);
       return file != nullptr;
     };
-    assert(verifyEventHappenedInPollTime(std::chrono::seconds(1), flowFileArrivedInOutput, std::chrono::milliseconds(50)));
+    REQUIRE(verifyEventHappenedInPollTime(std::chrono::seconds(1), flowFileArrivedInOutput, std::chrono::milliseconds(50)));
     REQUIRE(expired.empty());
 
     auto content = flow.read(file);
