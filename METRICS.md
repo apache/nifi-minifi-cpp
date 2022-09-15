@@ -157,11 +157,11 @@ There are general metrics that are available for all processors. Besides these m
 | transferred_bytes                      | metric_class, processor_name, processor_uuid | Number of bytes transferred to a relationship                                       |
 | transferred_to_\<relationship\>        | metric_class, processor_name, processor_uuid | Number of flow files transferred to a specific relationship                         |
 
-| Label          | Description                                                    |
-|----------------|----------------------------------------------------------------|
-| metric_class   | Class name to filter for this metric, set to GetFileMetrics    |
-| processor_name | Name of the processor                                          |
-| processor_uuid | UUID of the processor                                          |
+| Label          | Description                                                            |
+|----------------|------------------------------------------------------------------------|
+| metric_class   | Class name to filter for this metric, set to \<processor type\>Metrics |
+| processor_name | Name of the processor                                                  |
+| processor_uuid | UUID of the processor                                                  |
 
 ### GetFileMetrics
 

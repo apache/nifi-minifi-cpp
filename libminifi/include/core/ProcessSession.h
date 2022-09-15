@@ -37,7 +37,7 @@
 #include "WeakReference.h"
 #include "provenance/Provenance.h"
 #include "utils/gsl.h"
-#include "Processor.h"
+#include "ProcessorMetrics.h"
 
 namespace org::apache::nifi::minifi::core {
 namespace detail {

@@ -58,16 +58,10 @@ class GetFileMetrics : public core::ProcessorMetrics {
     auto resp = core::ProcessorMetrics::serialize();
     auto& root_node = resp[0];
 
-    state::response::SerializedResponseNode accepted_files_node;
-    accepted_files_node.name = "AcceptedFiles";
-    accepted_files_node.value = (uint32_t)accepted_files.load();
-
+    state::response::SerializedResponseNode accepted_files_node{"AcceptedFiles", accepted_files.load()};
     root_node.children.push_back(accepted_files_node);
 
-    state::response::SerializedResponseNode input_bytes_node;
-    input_bytes_node.name = "InputBytes";
-    input_bytes_node.value = (uint32_t)input_bytes.load();
-
+    state::response::SerializedResponseNode input_bytes_node{"InputBytes", input_bytes.load()};
     root_node.children.push_back(input_bytes_node);
 
     return resp;
@@ -80,8 +74,8 @@ class GetFileMetrics : public core::ProcessorMetrics {
     return metrics;
   }
 
-  std::atomic<size_t> accepted_files{0};
-  std::atomic<size_t> input_bytes{0};
+  std::atomic<uint32_t> accepted_files{0};
+  std::atomic<uint64_t> input_bytes{0};
 };
 
 class GetFile : public core::Processor {

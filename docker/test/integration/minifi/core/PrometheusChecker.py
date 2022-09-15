@@ -4,7 +4,7 @@ from prometheus_api_client import PrometheusConnect
 
 class PrometheusChecker:
     def __init__(self):
-        self.prometheus_client = PrometheusConnect(url="http://localhost:9090")
+        self.prometheus_client = PrometheusConnect(url="http://localhost:9090", disable_ssl=True)
 
     def wait_for_metric_class_on_prometheus(self, metric_class, timeout_seconds):
         start_time = time.perf_counter()
@@ -81,7 +81,6 @@ class PrometheusChecker:
     def verify_metric_larger_than_zero(self, metric_name, metric_class, labels={}):
         labels['metric_class'] = metric_class
         result = self.prometheus_client.get_current_metric_value(metric_name=metric_name, label_config=labels)
-        print(result)
         return len(result) > 0 and int(result[0]['value'][1]) > 0
 
     def verify_metrics_larger_than_zero(self, metric_names, metric_class, labels={}):

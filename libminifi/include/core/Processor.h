@@ -38,9 +38,10 @@
 #include "Scheduling.h"
 #include "utils/TimeUtil.h"
 #include "core/state/nodes/MetricsBase.h"
+#include "ProcessorMetrics.h"
 #include "utils/gsl.h"
 
-#if WIN32
+#ifdef WIN32
 #define ADD_GET_PROCESSOR_NAME \
   std::string getProcessorType() const override { \
     return org::apache::nifi::minifi::utils::StringUtils::split(__FUNCDNAME__, "@")[1]; \
@@ -78,37 +79,6 @@ class ProcessSessionFactory;
 constexpr std::chrono::nanoseconds MINIMUM_SCHEDULING_NANOS{30000};
 
 #define BUILDING_DLL 1
-
-class Processor;
-
-class ProcessorMetrics : public state::response::ResponseNode {
- public:
-  explicit ProcessorMetrics(const Processor& source_processor);
-
-  [[nodiscard]] std::string getName() const override;
-
-  std::vector<state::response::SerializedResponseNode> serialize() override;
-  std::vector<state::PublishedMetric> calculateMetrics() override;
-  void incrementRelationshipTransferCount(const std::string& relationship);
-  std::chrono::milliseconds getAverageOnTriggerRuntime() const;
-  std::chrono::milliseconds getLastOnTriggerRuntime() const;
-  void addLastOnTriggerRuntime(std::chrono::milliseconds runtime);
-
-  std::atomic<size_t> iterations{0};
-  std::atomic<size_t> transferred_flow_files{0};
-  std::atomic<uint64_t> transferred_bytes{0};
-
- protected:
-  [[nodiscard]] std::unordered_map<std::string, std::string> getCommonLabels() const;
-  static const uint8_t STORED_ON_TRIGGER_RUNTIME_COUNT = 10;
-
-  std::mutex relationship_mutex_;
-  std::unordered_map<std::string, size_t> transferred_relationships_;
-  mutable std::mutex average_on_trigger_runtime_mutex_;
-  uint32_t next_average_index_ = 0;
-  std::vector<std::chrono::milliseconds> on_trigger_runtimes_;
-  const Processor& source_processor_;
-};
 
 class Processor : public Connectable, public ConfigurableComponent, public state::response::ResponseNodeSource {
  public:

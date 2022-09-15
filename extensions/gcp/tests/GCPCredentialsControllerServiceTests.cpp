@@ -26,6 +26,7 @@
 #include "rapidjson/stream.h"
 #include "rapidjson/writer.h"
 #include "google/cloud/internal/setenv.h"
+#include "DummyProcessor.h"
 
 using GCPCredentialsControllerService = org::apache::nifi::minifi::extensions::gcp::GCPCredentialsControllerService;
 
@@ -62,22 +63,6 @@ std::optional<std::filesystem::path> create_mock_json_file(const std::filesystem
   p.close();
   return path;
 }
-
-class DummyProcessor : public org::apache::nifi::minifi::core::Processor {
- public:
-  using minifi::core::Processor::Processor;
-
-  static constexpr const char* Description = "A processor that does nothing.";
-  static auto properties() { return std::array<core::Property, 0>{}; }
-  static auto relationships() { return std::array<core::Relationship, 0>{}; }
-  static constexpr bool SupportsDynamicProperties = false;
-  static constexpr bool SupportsDynamicRelationships = false;
-  static constexpr core::annotation::Input InputRequirement = core::annotation::Input::INPUT_ALLOWED;
-  static constexpr bool IsSingleThreaded = false;
-  ADD_COMMON_VIRTUAL_FUNCTIONS_FOR_PROCESSORS
-};
-
-REGISTER_RESOURCE(DummyProcessor, Processor);
 }  // namespace
 
 class GCPCredentialsTests : public ::testing::Test {

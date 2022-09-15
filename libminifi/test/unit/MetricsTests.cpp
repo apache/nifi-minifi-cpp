@@ -234,6 +234,7 @@ TEST_CASE("Test ProcessorMetrics", "[ProcessorMetrics]") {
 
   metrics.addLastOnTriggerRuntime(10ms);
   REQUIRE(metrics.getLastOnTriggerRuntime() == 10ms);
+  REQUIRE(metrics.getAverageOnTriggerRuntime() == 46ms);
 }
 
 }  // namespace org::apache::nifi::minifi::test

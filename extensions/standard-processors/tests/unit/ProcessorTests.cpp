@@ -823,7 +823,7 @@ TEST_CASE("isSingleThreaded - two threads for a single threaded processor", "[is
                                                     "\"max concurrent tasks\" value is too high. It was set to 1 from 2."));
 }
 
-TEST_CASE("Test getProcessorName", "[getProcessorName]") {
+TEST_CASE("Test getProcessorType", "[getProcessorType]") {
   TestController testController;
 
   std::shared_ptr<TestPlan> plan = testController.createPlan();
