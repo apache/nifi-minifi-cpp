@@ -24,7 +24,11 @@ namespace org::apache::nifi::minifi::utils {
 template<typename T>
 concept Summable = requires(T x) { x + x; };  // NOLINT(readability/braces)
 
-template<Summable ValueType>
+template<typename T>
+concept DividableByInteger = requires(T x, uint32_t divisor) { x / divisor; };  // NOLINT(readability/braces)
+
+template<typename ValueType>
+requires Summable<ValueType> && DividableByInteger<ValueType>
 class Averager {
  public:
   explicit Averager(uint32_t sample_size) : SAMPLE_SIZE_(sample_size) {

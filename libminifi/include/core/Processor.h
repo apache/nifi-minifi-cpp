@@ -41,18 +41,12 @@
 #include "ProcessorMetrics.h"
 #include "utils/gsl.h"
 
-#ifdef WIN32
 #define ADD_GET_PROCESSOR_NAME \
   std::string getProcessorType() const override { \
-    return org::apache::nifi::minifi::utils::StringUtils::split(__FUNCDNAME__, "@")[1]; \
+    auto class_name = org::apache::nifi::minifi::core::getClassName<decltype(*this)>(); \
+    auto splitted = org::apache::nifi::minifi::utils::StringUtils::split(class_name, "::"); \
+    return splitted[splitted.size() - 1]; \
   }
-#else
-#define ADD_GET_PROCESSOR_NAME \
-  std::string getProcessorType() const override { \
-    auto splitted = org::apache::nifi::minifi::utils::StringUtils::split(__PRETTY_FUNCTION__, "::"); \
-    return splitted[splitted.size() - 2]; \
-  }
-#endif
 
 #define ADD_COMMON_VIRTUAL_FUNCTIONS_FOR_PROCESSORS \
   bool supportsDynamicProperties() const override { return SupportsDynamicProperties; } \
