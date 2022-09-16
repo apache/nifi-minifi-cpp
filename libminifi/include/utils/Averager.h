@@ -46,6 +46,7 @@ class Averager {
 };
 
 template<typename ValueType>
+requires Summable<ValueType> && DividableByInteger<ValueType>
 ValueType Averager<ValueType>::getAverage() const {
   if (values_.empty()) {
     return {};
@@ -59,6 +60,7 @@ ValueType Averager<ValueType>::getAverage() const {
 }
 
 template<typename ValueType>
+requires Summable<ValueType> && DividableByInteger<ValueType>
 void Averager<ValueType>::addValue(ValueType runtime) {
   std::lock_guard<std::mutex> lock(average_value_mutex_);
   if (values_.size() < SAMPLE_SIZE_) {
@@ -73,6 +75,7 @@ void Averager<ValueType>::addValue(ValueType runtime) {
 }
 
 template<typename ValueType>
+requires Summable<ValueType> && DividableByInteger<ValueType>
 ValueType Averager<ValueType>::getLastValue() const {
   std::lock_guard<std::mutex> lock(average_value_mutex_);
   if (values_.empty()) {
