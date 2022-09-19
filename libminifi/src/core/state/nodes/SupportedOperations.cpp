@@ -139,7 +139,7 @@ std::vector<SerializedResponseNode> SupportedOperations::serialize() {
     SerializedResponseNode properties;
     properties.name = "properties";
 
-    fillProperties(properties, minifi::c2::Operation::parse(operation.c_str()));
+    fillProperties(properties, minifi::c2::Operation::parse(operation.c_str(), {}, false));
 
     child.children.push_back(operation_type);
     child.children.push_back(properties);

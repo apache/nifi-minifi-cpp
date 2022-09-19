@@ -110,7 +110,7 @@ class FlowController : public core::controller::ForwardingControllerServiceProvi
   int16_t resume() override;
   // Unload the current flow YAML, clean the root process group and all its children
   int16_t stop() override;
-  int16_t applyUpdate(const std::string &source, const std::string &configuration, bool persist) override;
+  int16_t applyUpdate(const std::string &source, const std::string &configuration, bool persist, const std::optional<std::string>& flow_id) override;
   int16_t drainRepositories() override {
     return -1;
   }
@@ -145,7 +145,7 @@ class FlowController : public core::controller::ForwardingControllerServiceProvi
   // first it will validate the payload with the current root node config for flowController
   // like FlowController id/name is the same and new version is greater than the current version
   // after that, it will apply the configuration
-  bool applyConfiguration(const std::string &source, const std::string &configurePayload);
+  bool applyConfiguration(const std::string &source, const std::string &configurePayload, const std::optional<std::string>& flow_id = std::nullopt);
 
   // get name
   std::string getName() const override {

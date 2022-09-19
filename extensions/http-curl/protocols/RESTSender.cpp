@@ -158,7 +158,8 @@ C2Payload RESTSender::sendPayload(const std::string& url, const Direction direct
     auto read = std::make_unique<utils::HTTPReadCallback>(std::numeric_limits<size_t>::max());
     client.setReadCallback(std::move(read));
   } else {
-    client.setRequestHeader("Accept", "application/json");
+    // Due to a bug in MiNiFi C2 the Accept header is not handled properly thus we need to exclude it to be compatible
+    // client.setRequestHeader("Accept", "application/json");
     client.setContentType("application/json");
   }
   bool isOkay = client.submit();

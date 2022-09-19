@@ -65,7 +65,9 @@ C2Payload RESTProtocol::parseJsonResponse(const C2Payload &payload, gsl::span<co
       std::string identifier;
       for (auto key : {"operationid", "operationId", "identifier"}) {
         if (root.HasMember(key)) {
-          identifier = root[key].GetString();
+          if (!root[key].IsNull()) {
+            identifier = root[key].GetString();
+          }
           break;
         }
       }
@@ -73,7 +75,9 @@ C2Payload RESTProtocol::parseJsonResponse(const C2Payload &payload, gsl::span<co
       int size = 0;
       for (auto key : {"requested_operations", "requestedOperations"}) {
         if (root.HasMember(key)) {
-          size = root[key].Size();
+          if (!root[key].IsNull()) {
+            size = root[key].Size();
+          }
           break;
         }
       }
