@@ -103,26 +103,30 @@ void PutUDP::onTrigger(core::ProcessContext* context, core::ProcessSession* cons
   const auto resolve_hostname = [&io_context, &hostname, &port]() -> nonstd::expected<udp::resolver::results_type, std::error_code> {
     udp::resolver resolver(io_context);
     std::error_code error_code;
-    auto resolved_query = resolver.resolve(udp::v4(), hostname, port, error_code);
+    auto resolved_query = resolver.resolve(hostname, port, error_code);
     if (error_code)
       return nonstd::make_unexpected(error_code);
     return resolved_query;
   };
 
-  const auto debug_log_resolved_endpoint = [&hostname, &logger = this->logger_](const udp::resolver::results_type& resolved_query) -> udp::endpoint {
-    if (logger->should_log(core::logging::LOG_LEVEL::debug))
-      core::logging::LOG_DEBUG(logger) << "resolved " << hostname << " to: " << resolved_query->endpoint();
-    return resolved_query->endpoint();
-  };
-
-  const auto send_data_to_endpoint = [&io_context, &data](const udp::endpoint& endpoint) -> nonstd::expected<void, std::error_code> {
-    std::error_code send_error;
-    udp::socket socket(io_context);
-    socket.open(udp::v4());
-    socket.send_to(asio::buffer(data.buffer), endpoint, udp::socket::message_flags{}, send_error);
-    if (send_error)
-      return nonstd::make_unexpected(send_error);
-    return {};
+  const auto send_data_to_endpoint = [&io_context, &data, &logger = this->logger_](const udp::resolver::results_type& resolved_query) -> nonstd::expected<void, std::error_code> {
+    std::error_code error;
+    for (const auto& resolver_entry : resolved_query) {
+      error.clear();
+      udp::socket socket(io_context);
+      socket.open(resolver_entry.endpoint().protocol(), error);
+      if (error) {
+        logger->log_debug("opening %s socket failed due to %s ", resolver_entry.endpoint().protocol() == udp::v4() ? "IPv4" : "IPv6", error.message());
+        continue;
+      }
+      socket.send_to(asio::buffer(data.buffer), resolver_entry.endpoint(), udp::socket::message_flags{}, error);
+      if (error) {
+        core::logging::LOG_DEBUG(logger) << "sending to endpoint " << resolver_entry.endpoint() << " failed due to " << error.message();
+        continue;
+      }
+      return {};
+    }
+    return nonstd::make_unexpected(error);
   };
 
   const auto transfer_to_success = [&session, &flow_file]() -> void {
@@ -136,7 +140,6 @@ void PutUDP::onTrigger(core::ProcessContext* context, core::ProcessSession* cons
   };
 
   resolve_hostname()
-      | utils::map(debug_log_resolved_endpoint)
       | utils::flatMap(send_data_to_endpoint)
       | utils::map(transfer_to_success)
       | utils::orElse(transfer_to_failure);
@@ -145,4 +148,3 @@ void PutUDP::onTrigger(core::ProcessContext* context, core::ProcessSession* cons
 REGISTER_RESOURCE(PutUDP, Processor);
 
 }  // namespace org::apache::nifi::minifi::processors
-
