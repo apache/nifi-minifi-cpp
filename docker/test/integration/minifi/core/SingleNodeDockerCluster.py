@@ -40,6 +40,7 @@ from .SyslogTcpClientContainer import SyslogTcpClientContainer
 from .MinifiAsPodInKubernetesCluster import MinifiAsPodInKubernetesCluster
 from .TcpClientContainer import TcpClientContainer
 from .PrometheusContainer import PrometheusContainer
+from .MinifiC2ServerContainer import MinifiC2ServerContainer
 
 
 class SingleNodeDockerCluster(Cluster):
@@ -133,6 +134,8 @@ class SingleNodeDockerCluster(Cluster):
             return self.containers.setdefault(name, TcpClientContainer(name, self.vols, self.network, self.image_store, command))
         elif engine == "prometheus":
             return self.containers.setdefault(name, PrometheusContainer(name, self.vols, self.network, self.image_store, command))
+        elif engine == "minifi-c2-server":
+            return self.containers.setdefault(name, MinifiC2ServerContainer(name, self.vols, self.network, self.image_store, command))
         else:
             raise Exception('invalid flow engine: \'%s\'' % engine)
 

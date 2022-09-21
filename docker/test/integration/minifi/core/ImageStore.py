@@ -64,6 +64,8 @@ class ImageStore:
             image = self.__build_elasticsearch_image()
         elif container_engine == "opensearch":
             image = self.__build_opensearch_image()
+        elif container_engine == "minifi-c2-server":
+            image = self.__build_minifi_c2_image()
         else:
             raise Exception("There is no associated image for " + container_engine)
 
@@ -106,6 +108,14 @@ class ImageStore:
                 RUN echo nifi.metrics.publisher.class=PrometheusMetricsPublisher >> {minifi_root}/conf/minifi.properties
                 RUN echo nifi.metrics.publisher.PrometheusMetricsPublisher.port=9936 >> {minifi_root}/conf/minifi.properties
                 RUN echo nifi.metrics.publisher.metrics=RepositoryMetrics,QueueMetrics,GetFileMetrics,GetTCPMetrics,PutFileMetrics,FlowInformation,DeviceInfoNode,AgentStatus >> {minifi_root}/conf/minifi.properties
+                RUN echo nifi.c2.enable=true  >> {minifi_root}/conf/minifi.properties
+                RUN echo nifi.c2.rest.url=http://minifi-c2-server:10090/c2/config/heartbeat  >> {minifi_root}/conf/minifi.properties
+                RUN echo nifi.c2.rest.url.ack=http://minifi-c2-server:10090/c2/config/acknowledge  >> {minifi_root}/conf/minifi.properties
+                RUN echo nifi.c2.flow.base.url=http://minifi-c2-server:10090/c2/config/  >> {minifi_root}/conf/minifi.properties
+                RUN echo nifi.c2.root.classes=DeviceInfoNode,AgentInformation,FlowInformation  >> {minifi_root}/conf/minifi.properties
+                RUN echo nifi.c2.full.heartbeat=false  >> {minifi_root}/conf/minifi.properties
+                RUN echo nifi.c2.agent.class=minifi-test-class  >> {minifi_root}/conf/minifi.properties
+                RUN echo nifi.c2.agent.identifier=minifi-test-id  >> {minifi_root}/conf/minifi.properties
                 USER minificpp
                 """.format(base_image='apacheminificpp:' + MinifiContainer.MINIFI_VERSION,
                            minifi_root=MinifiContainer.MINIFI_ROOT))
@@ -194,6 +204,9 @@ class ImageStore:
 
     def __build_opensearch_image(self):
         return self.__build_image_by_path(self.test_dir + "/resources/opensearch", 'opensearch')
+
+    def __build_minifi_c2_image(self):
+        return self.__build_image_by_path(self.test_dir + "/resources/minifi-c2-server", 'minifi-c2-server')
 
     def __build_image(self, dockerfile, context_files=[]):
         conf_dockerfile_buffer = BytesIO()
