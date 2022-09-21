@@ -38,12 +38,7 @@
 #include "utils/GeneralUtils.h"
 #include "core/logging/LoggerConfiguration.h"
 
-namespace org {
-namespace apache {
-namespace nifi {
-namespace minifi {
-namespace core {
-namespace extension {
+namespace org::apache::nifi::minifi::core::extension {
 
 const std::shared_ptr<logging::Logger> DynamicLibrary::logger_ = logging::LoggerFactory<DynamicLibrary>::getLogger();
 
@@ -198,9 +193,4 @@ int DynamicLibrary::dlclose(void* handle) {
 
 #endif
 
-}  // namespace extension
-}  // namespace core
-}  // namespace minifi
-}  // namespace nifi
-}  // namespace apache
-}  // namespace org
+}  // namespace org::apache::nifi::minifi::core::extension
