@@ -172,7 +172,7 @@ class C2Agent : public state::UpdateController {
 
   std::optional<std::string> resolveFlowUrl(const std::string& url) const;
   std::optional<std::string> resolveUrl(const std::string& url) const;
-  std::optional<std::string> getFlowIdFromConfigUpdate(const C2ContentResponse &resp) const;
+  static std::optional<std::string> getFlowIdFromConfigUpdate(const C2ContentResponse &resp);
 
  protected:
   std::timed_mutex metrics_mutex_;

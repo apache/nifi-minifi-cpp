@@ -848,7 +848,7 @@ std::optional<std::string> C2Agent::fetchFlow(const std::string& uri) const {
   return response.getRawDataAsString();
 }
 
-std::optional<std::string> C2Agent::getFlowIdFromConfigUpdate(const C2ContentResponse &resp) const {
+std::optional<std::string> C2Agent::getFlowIdFromConfigUpdate(const C2ContentResponse &resp) {
   auto flow_id = resp.operation_arguments.find("flowId");
   return flow_id == resp.operation_arguments.end() ? std::nullopt : std::make_optional(flow_id->second.to_string());
 }
