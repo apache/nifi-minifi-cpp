@@ -357,7 +357,6 @@ int main(int argc, char **argv) {
 
     std::unique_ptr<core::FlowConfiguration> flow_configuration = core::createFlowConfiguration(
         core::ConfigurationContext{
-          .repo = prov_repo,
           .flow_file_repo = flow_repo,
           .content_repo = content_repo,
           .stream_factory = stream_factory,

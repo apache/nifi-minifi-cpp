@@ -34,7 +34,6 @@
 #include "core/Core.h"
 #include "core/logging/Logger.h"
 #include "core/ProcessGroup.h"
-#include "core/yaml/YamlConfiguration.h"
 #include "FlowController.h"
 #include "properties/Configure.h"
 #include "../unit/ProvenanceTestHelper.h"

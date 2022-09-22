@@ -68,7 +68,7 @@ int main(int argc, char **argv) {
   std::shared_ptr<core::ContentRepository> content_repo = std::make_shared<core::repository::VolatileContentRepository>();
   content_repo->initialize(configuration);
   std::unique_ptr<core::FlowConfiguration> yaml_ptr = std::make_unique<core::YamlConfiguration>(
-      core::ConfigurationContext{test_repo, test_repo, content_repo, stream_factory, configuration, args.test_file});
+      core::ConfigurationContext{test_repo, content_repo, stream_factory, configuration, args.test_file});
 
   const auto controller = std::make_shared<minifi::FlowController>(test_repo, test_flow_repo, configuration, std::move(yaml_ptr),
       content_repo,
@@ -79,7 +79,7 @@ int main(int argc, char **argv) {
   disabled = false;
   std::shared_ptr<core::controller::ControllerServiceMap> map = std::make_shared<core::controller::ControllerServiceMap>();
 
-  core::YamlConfiguration yaml_config({test_repo, test_repo, content_repo, stream_factory, configuration, args.test_file});
+  core::YamlConfiguration yaml_config({test_repo, content_repo, stream_factory, configuration, args.test_file});
 
   auto pg = yaml_config.getRoot();
 

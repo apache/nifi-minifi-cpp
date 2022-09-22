@@ -53,7 +53,6 @@ class static_initializers {
 extern static_initializers &get_static_functions();
 
 struct ConfigurationContext {
-  std::shared_ptr<core::Repository> repo;
   std::shared_ptr<core::Repository> flow_file_repo;
   std::shared_ptr<core::ContentRepository> content_repo;
   std::shared_ptr<io::StreamFactory> stream_factory;

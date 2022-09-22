@@ -25,7 +25,6 @@
 #include <tlhelp32.h>
 
 #include "MainHelper.h"
-#include "core/FlowConfiguration.h"
 
 namespace minifi = org::apache::nifi::minifi;
 
@@ -226,7 +225,7 @@ void RunAsServiceIfNeeded() {
         if (!SetServiceStatus(s_statusHandle, &s_serviceStatus)) {
           Log()->log_error("!SetServiceStatus SERVICE_STOPPED lastError %x", GetLastError());
         }
-      } 
+      }
     },
     {0, 0}
   };

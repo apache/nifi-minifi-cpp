@@ -24,7 +24,6 @@
 #include <sstream>
 #include <utility>
 
-#include "core/FlowConfiguration.h"
 #include "core/Processor.h"
 #include "core/ProcessContextBuilder.h"
 #include "core/logging/LoggerConfiguration.h"
