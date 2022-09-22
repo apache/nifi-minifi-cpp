@@ -35,5 +35,9 @@ static void deinit() {
   // TODO(adebreceni): deinitialization is not implemented
 }
 
+// request this module (shared library) to be opened into the global namespace, exposing
+// the symbols of the python library
+extern "C" const int LOAD_MODULE_AS_GLOBAL = 1;
+
 REGISTER_EXTENSION("PythonExtension", init, deinit);
 

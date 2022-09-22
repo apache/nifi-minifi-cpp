@@ -27,12 +27,7 @@
 #include "core/extension/Utils.h"
 #include "properties/Configuration.h"
 
-namespace org {
-namespace apache {
-namespace nifi {
-namespace minifi {
-namespace core {
-namespace extension {
+namespace org::apache::nifi::minifi::core::extension {
 
 const std::shared_ptr<logging::Logger> ExtensionManager::logger_ = logging::LoggerFactory<ExtensionManager>::getLogger();
 
@@ -82,6 +77,14 @@ bool ExtensionManager::initialize(const std::shared_ptr<Configure>& config) {
         // error already logged by method
         continue;
       }
+      // some modules (shared libraries) might need to be loaded into the global namespace exposing
+      // their definitions (e.g. python script extension)
+      if (module->findSymbol("LOAD_MODULE_AS_GLOBAL")) {
+        // reload library as global
+        if (!module->load(true)) {
+          continue;
+        }
+      }
       if (!module->initialize(config)) {
         logger_->log_error("Failed to initialize module '%s' at '%s'", library->name, library->getFullPath().string());
       } else {
@@ -104,9 +107,4 @@ void ExtensionManager::unregisterExtension(Extension& extension) {
   }
 }
 
-}  // namespace extension
-}  // namespace core
-}  // namespace minifi
-}  // namespace nifi
-}  // namespace apache
-}  // namespace org
+}  // namespace org::apache::nifi::minifi::core::extension

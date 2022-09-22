@@ -24,12 +24,7 @@
 
 #include "Module.h"
 
-namespace org {
-namespace apache {
-namespace nifi {
-namespace minifi {
-namespace core {
-namespace extension {
+namespace org::apache::nifi::minifi::core::extension {
 
 class DynamicLibrary : public Module {
   friend class ExtensionManager;
@@ -52,8 +47,9 @@ class DynamicLibrary : public Module {
   int dlclose(void* handle);
 #endif
 
-  bool load();
+  bool load(bool global = false);
   bool unload();
+  void* findSymbol(const char* name);
 
   std::filesystem::path library_path_;
   gsl::owner<void*> handle_ = nullptr;
@@ -61,9 +57,4 @@ class DynamicLibrary : public Module {
   static const std::shared_ptr<logging::Logger> logger_;
 };
 
-}  // namespace extension
-}  // namespace core
-}  // namespace minifi
-}  // namespace nifi
-}  // namespace apache
-}  // namespace org
+}  // namespace org::apache::nifi::minifi::core::extension
