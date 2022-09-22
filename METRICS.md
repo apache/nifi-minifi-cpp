@@ -46,11 +46,17 @@ To use the publisher a port should also be configured where the metrics will be 
 
 	nifi.metrics.publisher.PrometheusMetricsPublisher.port=9936
 
-The last option defines which metric classes should be exposed through the metrics publisher in configured with a comma separated value:
+The following option defines which metric classes should be exposed through the metrics publisher in configured with a comma separated value:
 
 	# in minifi.properties
 
 	nifi.metrics.publisher.metrics=QueueMetrics,RepositoryMetrics,GetFileMetrics,DeviceInfoNode,FlowInformation
+
+An agent identifier should also be defined to identify which agent the metric is exposed from. If not set, the hostname is used as the identifier.
+
+	# in minifi.properties
+
+	nifi.metrics.publisher.agent.identifier=Agent1
 
 ## Metrics
 
@@ -58,20 +64,28 @@ The following section defines the currently available metrics to be published by
 
 NOTE: In Prometheus all metrics are extended with a `minifi_` prefix to mark the domain of the metric. For example the `connection_name` metric is published as `minifi_connection_name` in Prometheus.
 
+### Generic labels
+
+The following labels are set for every single metric and are not listed separately in the labels of the metrics below.
+
+| Label                    | Description                                                                                                                             |
+|--------------------------|-----------------------------------------------------------------------------------------------------------------------------------------|
+| metric_class             | Class name to filter for this metric, set to the name of the metric e.g. QueueMetrics, GetFileMetrics                                   |
+| agent_identifier         | Set to the identifier set in minifi.properties in the nifi.metrics.publisher.agent.identifier property. If not set the hostname is used |
+
 ### QueueMetrics
 
 QueueMetrics is a system level metric that reports queue metrics for every connection in the flow.
 
-| Metric name          | Labels                                         | Description                                |
-|----------------------|------------------------------------------------|--------------------------------------------|
-| queue_data_size      | metric_class, connection_uuid, connection_name | Current queue data size                    |
-| queue_data_size_max  | metric_class, connection_uuid, connection_name | Max queue data size to apply back pressure |
-| queue_size           | metric_class, connection_uuid, connection_name | Current queue size                         |
-| queue_size_max       | metric_class, connection_uuid, connection_name | Max queue size to apply back pressure      |
+| Metric name          | Labels                           | Description                                |
+|----------------------|----------------------------------|--------------------------------------------|
+| queue_data_size      | connection_uuid, connection_name | Current queue data size                    |
+| queue_data_size_max  | connection_uuid, connection_name | Max queue data size to apply back pressure |
+| queue_size           | connection_uuid, connection_name | Current queue size                         |
+| queue_size_max       | connection_uuid, connection_name | Max queue size to apply back pressure      |
 
 | Label                    | Description                                                |
 |--------------------------|------------------------------------------------------------|
-| metric_class             | Class name to filter for this metric, set to QueueMetrics  |
 | connection_uuid          | UUID of the connection defined in the flow configuration   |
 | connection_name          | Name of the connection defined in the flow configuration   |
 
@@ -79,30 +93,28 @@ QueueMetrics is a system level metric that reports queue metrics for every conne
 
 RepositoryMetrics is a system level metric that reports metrics for the registered repositories (by default flowfile and provenance repository)
 
-| Metric name          | Labels                        | Description                           |
-|----------------------|-------------------------------|---------------------------------------|
-| is_running           | metric_class, repository_name | Is the repository running (1 or 0)    |
-| is_full              | metric_class, repository_name | Is the repository full (1 or 0)       |
-| repository_size      | metric_class, repository_name | Current size of the repository        |
+| Metric name          | Labels          | Description                           |
+|----------------------|-----------------|---------------------------------------|
+| is_running           | repository_name | Is the repository running (1 or 0)    |
+| is_full              | repository_name | Is the repository full (1 or 0)       |
+| repository_size      | repository_name | Current size of the repository        |
 
 | Label                    | Description                                                     |
 |--------------------------|-----------------------------------------------------------------|
-| metric_class             | Class name to filter for this metric, set to RepositoryMetrics  |
 | repository_name          | Name of the reported repository                                 |
 
 ### GetFileMetrics
 
 Processor level metric that reports metrics for the GetFile processor if defined in the flow configuration
 
-| Metric name           | Labels                                       | Description                                    |
-|-----------------------|----------------------------------------------|------------------------------------------------|
-| onTrigger_invocations | metric_class, processor_name, processor_uuid | Number of times the processor was triggered    |
-| accepted_files        | metric_class, processor_name, processor_uuid | Number of files that matched the set criterias |
-| input_bytes           | metric_class, processor_name, processor_uuid | Sum of file sizes processed                    |
+| Metric name           | Labels                         | Description                                    |
+|-----------------------|--------------------------------|------------------------------------------------|
+| onTrigger_invocations | processor_name, processor_uuid | Number of times the processor was triggered    |
+| accepted_files        | processor_name, processor_uuid | Number of files that matched the set criterias |
+| input_bytes           | processor_name, processor_uuid | Sum of file sizes processed                    |
 
 | Label          | Description                                                    |
 |----------------|----------------------------------------------------------------|
-| metric_class   | Class name to filter for this metric, set to GetFileMetrics    |
 | processor_name | Name of the processor                                          |
 | processor_uuid | UUID of the processor                                          |
 
@@ -110,13 +122,12 @@ Processor level metric that reports metrics for the GetFile processor if defined
 
 Processor level metric that reports metrics for the GetTCPMetrics processor if defined in the flow configuration
 
-| Metric name           | Labels                                       | Description                                    |
-|-----------------------|----------------------------------------------|------------------------------------------------|
-| onTrigger_invocations | metric_class, processor_name, processor_uuid | Number of times the processor was triggered    |
+| Metric name           | Labels                         | Description                                    |
+|-----------------------|--------------------------------|------------------------------------------------|
+| onTrigger_invocations | processor_name, processor_uuid | Number of times the processor was triggered    |
 
 | Label          | Description                                                    |
 |----------------|----------------------------------------------------------------|
-| metric_class   | Class name to filter for this metric, set to GetTCPMetrics     |
 | processor_name | Name of the processor                                          |
 | processor_uuid | UUID of the processor                                          |
 
@@ -126,29 +137,24 @@ DeviceInfoNode is a system level metric that reports metrics about the system re
 
 | Metric name     | Labels       | Description               |
 |-----------------|--------------|---------------------------|
-| physical_mem    | metric_class | Physical memory available |
-| memory_usage    | metric_class | Memory used by the agent  |
-| cpu_utilization | metric_class | CPU utilized by the agent |
-
-| Label          | Description                                                 |
-|----------------|-------------------------------------------------------------|
-| metric_class   | Class name to filter for this metric, set to DeviceInfoNode |
+| physical_mem    | -            | Physical memory available |
+| memory_usage    | -            | Memory used by the agent  |
+| cpu_utilization | -            | CPU utilized by the agent |
 
 ### FlowInformation
 
 DeviceInfoNode is a system level metric that reports metrics about the system resources used and available
 
-| Metric name          | Labels                                         | Description                                |
-|----------------------|------------------------------------------------|--------------------------------------------|
-| queue_data_size      | metric_class, connection_uuid, connection_name | Current queue data size                    |
-| queue_data_size_max  | metric_class, connection_uuid, connection_name | Max queue data size to apply back pressure |
-| queue_size           | metric_class, connection_uuid, connection_name | Current queue size                         |
-| queue_size_max       | metric_class, connection_uuid, connection_name | Max queue size to apply back pressure      |
-| is_running           | metric_class, component_uuid, component_name   | Check if the component is running (1 or 0) |
+| Metric name          | Labels                           | Description                                |
+|----------------------|----------------------------------|--------------------------------------------|
+| queue_data_size      | connection_uuid, connection_name | Current queue data size                    |
+| queue_data_size_max  | connection_uuid, connection_name | Max queue data size to apply back pressure |
+| queue_size           | connection_uuid, connection_name | Current queue size                         |
+| queue_size_max       | connection_uuid, connection_name | Max queue size to apply back pressure      |
+| is_running           | component_uuid, component_name   | Check if the component is running (1 or 0) |
 
 | Label           | Description                                                  |
 |-----------------|--------------------------------------------------------------|
-| metric_class    | Class name to filter for this metric, set to FlowInformation |
 | connection_uuid | UUID of the connection defined in the flow configuration     |
 | connection_name | Name of the connection defined in the flow configuration     |
 | component_uuid  | UUID of the component                                        |

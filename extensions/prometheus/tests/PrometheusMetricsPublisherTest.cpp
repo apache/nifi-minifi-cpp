@@ -24,7 +24,8 @@
 #include "MetricsExposer.h"
 #include "core/state/nodes/ResponseNodeLoader.h"
 #include "core/RepositoryFactory.h"
-#include "range/v3/algorithm/find.hpp"
+#include "range/v3/algorithm/find_if.hpp"
+#include "range/v3/algorithm/contains.hpp"
 
 namespace org::apache::nifi::minifi::extensions::prometheus::test {
 
@@ -90,6 +91,7 @@ TEST_CASE_METHOD(PrometheusPublisherTestFixtureWithRealExposer, "Test prometheus
 
 TEST_CASE_METHOD(PrometheusPublisherTestFixtureWithDummyExposer, "Test adding metrics to exposer", "[prometheusPublisherTest]") {
   configuration_->set(Configure::nifi_metrics_publisher_metrics, "QueueMetrics,RepositoryMetrics,DeviceInfoNode,FlowInformation,AgentInformation,InvalidMetrics,GetFileMetrics,GetTCPMetrics");
+  configuration_->set(Configure::nifi_metrics_publisher_agent_identifier, "AgentId-1");
   publisher_->initialize(configuration_, response_node_loader_, nullptr);
   auto stored_metrics = exposer_->getMetrics();
   std::vector<std::string> valid_metrics_without_flow = {"QueueMetrics", "RepositoryMetrics", "DeviceInfoNode", "FlowInformation", "AgentInformation"};
@@ -98,11 +100,12 @@ TEST_CASE_METHOD(PrometheusPublisherTestFixtureWithDummyExposer, "Test adding me
     auto collection = stored_metric->Collect();
     for (const auto& metric_family : collection) {
       for (const auto& prometheus_metric : metric_family.metric) {
-        for (const auto& label : prometheus_metric.label) {
-          if (label.name == "metric_class") {
-            REQUIRE(ranges::find(valid_metrics_without_flow, label.value) != ranges::end(valid_metrics_without_flow));
-          }
-        }
+        auto metric_class_label_it = ranges::find_if(prometheus_metric.label, [](const auto& label) { return label.name == "metric_class"; });
+        REQUIRE(metric_class_label_it != ranges::end(prometheus_metric.label));
+        REQUIRE(ranges::contains(valid_metrics_without_flow, metric_class_label_it->value));
+        auto agent_identifier_label_it = ranges::find_if(prometheus_metric.label, [](const auto& label) { return label.name == "agent_identifier"; });
+        REQUIRE(agent_identifier_label_it != ranges::end(prometheus_metric.label));
+        REQUIRE(agent_identifier_label_it->value == "AgentId-1");
       }
     }
   }

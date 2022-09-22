@@ -18,6 +18,7 @@
 
 #include <memory>
 #include <vector>
+#include <string>
 
 #include "state/PublishedMetricProvider.h"
 #include "prometheus/collectable.h"
@@ -27,11 +28,12 @@ namespace org::apache::nifi::minifi::extensions::prometheus {
 
 class PublishedMetricGaugeCollection : public ::prometheus::Collectable {
  public:
-  explicit PublishedMetricGaugeCollection(std::shared_ptr<state::PublishedMetricProvider> metric);
+  explicit PublishedMetricGaugeCollection(std::shared_ptr<state::PublishedMetricProvider> metric, std::string agent_identifier);
   std::vector<::prometheus::MetricFamily> Collect() const override;
 
  private:
   std::shared_ptr<state::PublishedMetricProvider> metric_;
+  std::string agent_identifier_;
 };
 
 }  // namespace org::apache::nifi::minifi::extensions::prometheus

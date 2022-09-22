@@ -20,7 +20,9 @@
 
 #include "core/Resource.h"
 #include "utils/StringUtils.h"
+#include "utils/OsUtils.h"
 #include "PrometheusExposerWrapper.h"
+#include "utils/Id.h"
 
 namespace org::apache::nifi::minifi::extensions::prometheus {
 
@@ -35,6 +37,7 @@ void PrometheusMetricsPublisher::initialize(const std::shared_ptr<Configure>& co
   if (!exposer_) {
     exposer_ = std::make_unique<PrometheusExposerWrapper>(readPort());
   }
+  loadAgentIdentifier();
   loadMetricNodes(root);
 }
 
@@ -61,7 +64,7 @@ void PrometheusMetricsPublisher::loadMetricNodes(core::ProcessGroup* root) {
 
   for (const auto& metric_node : nodes) {
     logger_->log_debug("Registering metric node '%s'", metric_node->getName());
-    gauge_collections_.push_back(std::make_shared<PublishedMetricGaugeCollection>(metric_node));
+    gauge_collections_.push_back(std::make_shared<PublishedMetricGaugeCollection>(metric_node, agent_identifier_));
     exposer_->registerMetric(gauge_collections_.back());
   }
 }
@@ -80,6 +83,16 @@ std::vector<std::shared_ptr<state::response::ResponseNode>> PrometheusMetricsPub
     }
   }
   return nodes;
+}
+
+void PrometheusMetricsPublisher::loadAgentIdentifier() {
+  auto agent_identifier = configuration_->get(Configure::nifi_metrics_publisher_agent_identifier);
+  if (agent_identifier && !agent_identifier->empty()) {
+    agent_identifier_ = *agent_identifier;
+  } else {
+    auto hostname = utils::OsUtils::getHostName();
+    agent_identifier_ = hostname ? *hostname : "unknown-host-" + utils::IdGenerator::getIdGenerator()->generate().to_string();
+  }
 }
 
 REGISTER_RESOURCE(PrometheusMetricsPublisher, DescriptionOnly);

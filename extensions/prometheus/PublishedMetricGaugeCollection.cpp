@@ -26,7 +26,9 @@
 
 namespace org::apache::nifi::minifi::extensions::prometheus {
 
-PublishedMetricGaugeCollection::PublishedMetricGaugeCollection(std::shared_ptr<state::PublishedMetricProvider> metric) : metric_{std::move(metric)} {
+PublishedMetricGaugeCollection::PublishedMetricGaugeCollection(std::shared_ptr<state::PublishedMetricProvider> metric, std::string agent_identifier)
+  : metric_{std::move(metric)},
+    agent_identifier_(std::move(agent_identifier)) {
 }
 
 std::vector<::prometheus::MetricFamily> PublishedMetricGaugeCollection::Collect() const {
@@ -35,6 +37,7 @@ std::vector<::prometheus::MetricFamily> PublishedMetricGaugeCollection::Collect(
     ::prometheus::ClientMetric client_metric;
     client_metric.label = ranges::views::transform(metric.labels, [](auto&& kvp) { return ::prometheus::ClientMetric::Label{kvp.first, kvp.second}; })
       | ranges::to<std::vector<::prometheus::ClientMetric::Label>>;
+    client_metric.label.push_back(::prometheus::ClientMetric::Label{"agent_identifier", agent_identifier_});
     client_metric.gauge = ::prometheus::ClientMetric::Gauge{metric.value};
     collection.push_back({
       .name = "minifi_" + metric.name,

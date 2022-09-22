@@ -57,11 +57,7 @@
 #include <sys/sysctl.h>
 #endif
 
-namespace org {
-namespace apache {
-namespace nifi {
-namespace minifi {
-namespace utils {
+namespace org::apache::nifi::minifi::utils {
 
 #ifdef _WIN32
 /*
@@ -320,9 +316,13 @@ std::string OsUtils::getMachineArchitecture() {
   return "unknown";
 }
 
-}  // namespace utils
-}  // namespace minifi
-}  // namespace nifi
-}  // namespace apache
-}  // namespace org
+std::optional<std::string> OsUtils::getHostName() {
+  char hostname[1024];
+  hostname[1023] = '\0';
+  if (gethostname(hostname, 1023) != 0) {
+    return std::nullopt;
+  }
+  return {hostname};
+}
 
+}  // namespace org::apache::nifi::minifi::utils
