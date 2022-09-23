@@ -54,6 +54,12 @@ endif()
 
 message("BUILD_IDENTIFIER is ${BUILD_IDENTIFIER}")
 
+if (WIN32)
+    set(LEGAL_COPYRIGHT "Apache License v2.0" CACHE STRING "Used in Windows versioninfo.rc")
+    set(COMPANY_NAME "Apache Software Foundation" CACHE STRING "Used in Windows versioninfo.rc")
+    set(PRODUCT_NAME "MiNiFi C++" CACHE STRING "Used in Windows versioninfo.rc")
+endif()
+
 if (${FORCE_COLORED_OUTPUT})
     message("CMAKE_CXX_COMPILER_ID is ${CMAKE_CXX_COMPILER_ID}")
     if ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "GNU")

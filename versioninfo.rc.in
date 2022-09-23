@@ -24,9 +24,9 @@ BEGIN
     BEGIN
         BLOCK "0409FDE9"
         BEGIN
-            VALUE "LegalCopyright",   "Apache License v2.0"
-            VALUE "CompanyName",      "Apache Software Foundation"
-            VALUE "ProductName",      "MiNiFi C++"
+            VALUE "LegalCopyright",   "@LEGAL_COPYRIGHT@"
+            VALUE "CompanyName",      "@COMPANY_NAME@"
+            VALUE "ProductName",      "@PRODUCT_NAME@"
             VALUE "ProductVersion",   VER_PRODUCTVERSION_STR
             VALUE "OriginalFilename", "@EXECUTABLE_FILE_NAME@"
             VALUE "FileDescription",  "@EXECUTABLE_FILE_DESCRIPTION@"

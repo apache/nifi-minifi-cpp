@@ -38,7 +38,7 @@ if(WIN32)
     list(APPEND MINIFIEXE_SOURCES "${CMAKE_BINARY_DIR}/libminifi/src/core/logging/WindowsMessageTextFile.rc")
 
     set(EXECUTABLE_FILE_NAME "minifi.exe")
-    set(EXECUTABLE_FILE_DESCRIPTION "MiNiFi C++ agent")
+    set(EXECUTABLE_FILE_DESCRIPTION "${PRODUCT_NAME} agent")
     configure_file(${CMAKE_SOURCE_DIR}/versioninfo.rc.in ${CMAKE_CURRENT_BINARY_DIR}/versioninfo.rc @ONLY)
     list(APPEND MINIFIEXE_SOURCES "${CMAKE_CURRENT_BINARY_DIR}/versioninfo.rc")
 endif()

@@ -19,7 +19,7 @@
 file(GLOB ENCRYPT_CONFIG_FILES  "*.cpp")
 if (WIN32)
     set(EXECUTABLE_FILE_NAME "encrypt-config.exe")
-    set(EXECUTABLE_FILE_DESCRIPTION "MiNiFi C++ encrypt-config tool")
+    set(EXECUTABLE_FILE_DESCRIPTION "${PRODUCT_NAME} encrypt-config tool")
     configure_file(${CMAKE_SOURCE_DIR}/versioninfo.rc.in ${CMAKE_CURRENT_BINARY_DIR}/versioninfo.rc @ONLY)
     list(APPEND ENCRYPT_CONFIG_FILES "${CMAKE_CURRENT_BINARY_DIR}/versioninfo.rc")
 endif()
