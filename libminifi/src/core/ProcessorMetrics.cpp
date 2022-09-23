@@ -68,7 +68,7 @@ std::vector<state::response::SerializedResponseNode> ProcessorMetrics::serialize
 
   for (const auto& [relationship, count] : transferred_relationships_) {
     state::response::SerializedResponseNode transferred_to_relationship_node;
-    gsl_Expects(relationship.size() > 0);
+    gsl_Expects(!relationship.empty());
     transferred_to_relationship_node.name = std::string("TransferredTo").append(1, toupper(relationship[0])).append(relationship.substr(1));
     transferred_to_relationship_node.value = static_cast<uint32_t>(count);
 
