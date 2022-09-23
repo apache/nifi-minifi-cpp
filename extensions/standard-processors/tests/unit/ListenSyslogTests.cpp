@@ -249,7 +249,7 @@ void check_parsed_attributes(const core::FlowFile& flow_file, const ValidRFC3164
   CHECK(original_message.msg_ == flow_file.getAttribute("syslog.msg"));
 }
 
-TEST_CASE("ListenSyslog without parsing test", "[ListenSyslog]") {
+TEST_CASE("ListenSyslog without parsing test", "[ListenSyslog][NetworkListenerProcessor]") {
   const auto listen_syslog = std::make_shared<ListenSyslog>("ListenSyslog");
 
   SingleProcessorTestController controller{listen_syslog};
@@ -301,7 +301,7 @@ TEST_CASE("ListenSyslog without parsing test", "[ListenSyslog]") {
   check_for_only_basic_attributes(*result.at(ListenSyslog::Success)[1], SYSLOG_PORT, protocol);
 }
 
-TEST_CASE("ListenSyslog with parsing test", "[ListenSyslog]") {
+TEST_CASE("ListenSyslog with parsing test", "[ListenSyslog][NetworkListenerProcessor]") {
   const auto listen_syslog = std::make_shared<ListenSyslog>("ListenSyslog");
 
   SingleProcessorTestController controller{listen_syslog};
@@ -403,7 +403,7 @@ TEST_CASE("ListenSyslog with parsing test", "[ListenSyslog]") {
 }
 
 
-TEST_CASE("ListenSyslog can be rescheduled", "[ListenSyslog]") {
+TEST_CASE("ListenSyslog can be rescheduled", "[ListenSyslog][NetworkListenerProcessor]") {
   const auto listen_syslog = std::make_shared<ListenSyslog>("ListenSyslog");
   SingleProcessorTestController controller{listen_syslog};
   LogTestController::getInstance().setTrace<ListenSyslog>();
@@ -425,7 +425,7 @@ TEST_CASE("ListenSyslog can be rescheduled", "[ListenSyslog]") {
   }
 }
 
-TEST_CASE("ListenSyslog max queue and max batch size test", "[ListenSyslog]") {
+TEST_CASE("ListenSyslog max queue and max batch size test", "[ListenSyslog][NetworkListenerProcessor]") {
   const auto listen_syslog = std::make_shared<ListenSyslog>("ListenSyslog");
 
   SingleProcessorTestController controller{listen_syslog};
@@ -479,7 +479,7 @@ TEST_CASE("ListenSyslog max queue and max batch size test", "[ListenSyslog]") {
   CHECK(controller.trigger().at(ListenSyslog::Success).empty());
 }
 
-TEST_CASE("Test ListenSyslog via TCP with SSL connection", "[ListenSyslog]") {
+TEST_CASE("Test ListenSyslog via TCP with SSL connection", "[ListenSyslog][NetworkListenerProcessor]") {
   asio::ip::tcp::endpoint endpoint;
   SECTION("sending through IPv4", "[IPv4]") {
     endpoint = asio::ip::tcp::endpoint(asio::ip::address_v4::loopback(), SYSLOG_PORT);

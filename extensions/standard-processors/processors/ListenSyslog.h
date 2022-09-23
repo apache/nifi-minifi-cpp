@@ -70,8 +70,6 @@ class ListenSyslog : public NetworkListenerProcessor {
   const core::Property& getMaxBatchSizeProperty() override;
   const core::Property& getMaxQueueSizeProperty() override;
   const core::Property& getPortProperty() override;
-  const core::Property& getSslContextProperty() override;
-  const core::Property& getClientAuthProperty() override;
 
  private:
   void transferAsFlowFile(const utils::net::Message& message, core::ProcessSession& session) override;

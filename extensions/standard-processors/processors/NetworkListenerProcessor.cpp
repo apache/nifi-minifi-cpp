@@ -61,18 +61,17 @@ void NetworkListenerProcessor::startServer(const ServerOptions& options, utils::
                      max_batch_size_);
 }
 
-void NetworkListenerProcessor::startTcpServer(const core::ProcessContext& context) {
+void NetworkListenerProcessor::startTcpServer(const core::ProcessContext& context, const core::Property& ssl_context_property, const core::Property& client_auth_property) {
   gsl_Expects(!server_thread_.joinable() && !server_);
   auto options = readServerOptions(context);
 
   std::string ssl_value;
-  auto& ssl_prop = getSslContextProperty();
-  if (context.getProperty(ssl_prop.getName(), ssl_value) && !ssl_value.empty()) {
-    auto ssl_data = utils::net::getSslData(context, ssl_prop, logger_);
+  if (context.getProperty(ssl_context_property.getName(), ssl_value) && !ssl_value.empty()) {
+    auto ssl_data = utils::net::getSslData(context, ssl_context_property, logger_);
     if (!ssl_data || !ssl_data->isValid()) {
       throw Exception(PROCESSOR_EXCEPTION, "SSL Context Service is set, but no valid SSL data was found!");
     }
-    auto client_auth = utils::parseEnumProperty<utils::net::SslServer::ClientAuthOption>(context, getClientAuthProperty());
+    auto client_auth = utils::parseEnumProperty<utils::net::SslServer::ClientAuthOption>(context, client_auth_property);
     server_ = std::make_unique<utils::net::SslServer>(options.max_queue_size, options.port, logger_, *ssl_data, client_auth);
   } else {
     server_ = std::make_unique<utils::net::TcpServer>(options.max_queue_size, options.port, logger_);

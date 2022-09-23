@@ -25,27 +25,22 @@
 
 namespace org::apache::nifi::minifi::processors {
 
-class ListenTCP : public NetworkListenerProcessor {
+class ListenUDP : public NetworkListenerProcessor {
  public:
-  explicit ListenTCP(const std::string& name, const utils::Identifier& uuid = {})
-    : NetworkListenerProcessor(name, uuid, core::logging::LoggerFactory<ListenTCP>::getLogger()) {
+  explicit ListenUDP(const std::string& name, const utils::Identifier& uuid = {})
+    : NetworkListenerProcessor(name, uuid, core::logging::LoggerFactory<ListenUDP>::getLogger()) {
   }
 
-  EXTENSIONAPI static constexpr const char* Description = "Listens for incoming TCP connections and reads data from each connection using a line separator as the message demarcator. "
-                                                          "For each message the processor produces a single FlowFile.";
+  EXTENSIONAPI static constexpr const char* Description = "Listens for incoming UDP datagrams. For each datagram the processor produces a single FlowFile.";
 
   EXTENSIONAPI static const core::Property Port;
   EXTENSIONAPI static const core::Property MaxBatchSize;
   EXTENSIONAPI static const core::Property MaxQueueSize;
-  EXTENSIONAPI static const core::Property SSLContextService;
-  EXTENSIONAPI static const core::Property ClientAuth;
   static auto properties() {
     return std::array{
       Port,
       MaxBatchSize,
       MaxQueueSize,
-      SSLContextService,
-      ClientAuth
     };
   }
 
