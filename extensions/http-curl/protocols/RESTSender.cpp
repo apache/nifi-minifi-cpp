@@ -159,7 +159,7 @@ C2Payload RESTSender::sendPayload(const std::string& url, const Direction direct
     client.setReadCallback(std::move(read));
   } else {
     // Due to a bug in MiNiFi C2 the Accept header is not handled properly thus we need to exclude it to be compatible
-    // TODO(lordgamez): The header should be re-added when the bug in MiNiFi C2 is fixed.
+    // TODO(lordgamez): The header should be re-added when the issue in MiNiFi C2 is fixed: https://issues.apache.org/jira/browse/NIFI-10535
     // client.setRequestHeader("Accept", "application/json");
     client.setContentType("application/json");
   }
