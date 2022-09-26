@@ -103,10 +103,10 @@ uint64_t StructuredConnectionParser::getWorkQueueDataSize() const {
   return 0;
 }
 
-uint64_t YamlConnectionParser::getSwapThresholdFromYaml() const {
-  const YAML::Node swap_threshold_node = connectionNode_["swap threshold"];
+uint64_t StructuredConnectionParser::getSwapThreshold() const {
+  const flow::Node swap_threshold_node = connectionNode_["swap threshold"];
   if (swap_threshold_node) {
-    auto swap_threshold_str = swap_threshold_node.as<std::string>();
+    auto swap_threshold_str = swap_threshold_node.getString().value();
     uint64_t swap_threshold;
     if (core::Property::StringToInt(swap_threshold_str, swap_threshold)) {
       logger_->log_debug("Setting %" PRIu64 " as the swap threshold.", swap_threshold);

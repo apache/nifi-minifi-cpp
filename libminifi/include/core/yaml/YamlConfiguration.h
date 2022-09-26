@@ -38,7 +38,7 @@ class YamlConfigurationTestAccessor;
 
 namespace org::apache::nifi::minifi::core {
 
-class YamlConfiguration : public StructuredConfiguration {
+class YamlConfiguration : public flow::StructuredConfiguration {
  public:
   explicit YamlConfiguration(ConfigurationContext ctx);
 

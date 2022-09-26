@@ -40,13 +40,13 @@ A string value, all conversions to numbers happen on the fly.
 
 ### Conversions
 
-#### 1. `::as&lt;std::string&gt;`
+#### 1. `::as<std::string>`
 
 * `Null` --> `"null"`
 * `Scalar` --> the string value
 * others --> throws
 
-#### 2. `::as&lt;YAML::Node&gt;`
+#### 2. `::as<YAML::Node>`
 
 It was used in multiple places, it seems to throw on `Undefined` and return itself for all
 other types.

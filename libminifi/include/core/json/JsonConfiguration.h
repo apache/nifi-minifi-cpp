@@ -39,25 +39,19 @@ class JsonConfigurationTestAccessor;
 
 namespace org::apache::nifi::minifi::core {
 
-class JsonConfiguration : public StructuredConfiguration {
+class JsonConfiguration : public flow::StructuredConfiguration {
  public:
   explicit JsonConfiguration(ConfigurationContext ctx);
 
   ~JsonConfiguration() override = default;
 
   /**
-   * Returns a shared pointer to a ProcessGroup object containing the
-   * flow configuration.
-   *
    * @return               the root ProcessGroup node of the flow
    *                        configuration tree
    */
   std::unique_ptr<core::ProcessGroup> getRoot() override;
 
   /**
-   * Returns a shared pointer to a ProcessGroup object containing the
-   * flow configuration. The json_config argument must be
-   * a payload for the raw JSON configuration.
    *
    * @param json_config      an input payload for the raw JSON configuration
    *                           to be parsed and loaded into the flow

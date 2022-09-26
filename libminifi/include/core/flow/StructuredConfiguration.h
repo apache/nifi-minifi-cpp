@@ -34,7 +34,7 @@
 #include "utils/file/FileSystem.h"
 #include "core/flow/Node.h"
 
-namespace org::apache::nifi::minifi::core {
+namespace org::apache::nifi::minifi::core::flow {
 
 static constexpr char const* CONFIG_FLOW_CONTROLLER_KEY = "Flow Controller";
 static constexpr char const* CONFIG_PROCESSORS_KEY = "Processors";
@@ -45,13 +45,6 @@ static constexpr char const* CONFIG_PROVENANCE_REPORT_KEY = "Provenance Reportin
 static constexpr char const* CONFIG_FUNNELS_KEY = "Funnels";
 static constexpr char const* CONFIG_INPUT_PORTS_KEY = "Input Ports";
 static constexpr char const* CONFIG_OUTPUT_PORTS_KEY = "Output Ports";
-
-#define CONFIGURATION_USE_REGEX
-
-// Disable regex in EL for incompatible compilers
-#if __GNUC__ < 4 || (__GNUC__ == 4 && __GNUC_MINOR__ < 9)
-#undef CONFIGURATION_USE_REGEX
-#endif
 
 class StructuredConfiguration : public FlowConfiguration {
  public:
@@ -72,41 +65,41 @@ class StructuredConfiguration : public FlowConfiguration {
    * Returns a shared pointer to a ProcessGroup object containing the
    * flow configuration.
    *
-   * @param root_node a pointer to a flow::Node object containing the root
+   * @param root_node a pointer to a Node object containing the root
    *                       node of the parsed document
    * @return             the root ProcessGroup node of the flow
    *                       configuration tree
    */
-  std::unique_ptr<core::ProcessGroup> getRootFrom(const flow::Node& root_node);
+  std::unique_ptr<core::ProcessGroup> getRootFrom(const Node& root_node);
 
-  std::unique_ptr<core::ProcessGroup> createProcessGroup(const flow::Node& node, bool is_root = false);
+  std::unique_ptr<core::ProcessGroup> createProcessGroup(const Node& node, bool is_root = false);
 
-  std::unique_ptr<core::ProcessGroup> parseProcessGroup(const flow::Node& header_node, const flow::Node& node, bool is_root = false);
+  std::unique_ptr<core::ProcessGroup> parseProcessGroup(const Node& header_node, const Node& node, bool is_root = false);
   /**
    * Parses processors from its corresponding config node and adds
    * them to a parent ProcessGroup. The processors_node argument must point
-   * to a flow::Node containing the processors configuration. Processor
+   * to a Node containing the processors configuration. Processor
    * objects will be created and added to the parent ProcessGroup specified
    * by the parent argument.
    *
-   * @param processor_node_seq  the flow::Node containing the processor configuration
+   * @param processors_node  the Node containing the processor configuration
    * @param parent              the parent ProcessGroup to which the the created
    *                            Processor should be added
    */
-  void parseProcessorNode(const flow::Node& processor_node_seq, core::ProcessGroup* parent);
+  void parseProcessorNode(const Node& processors_node, core::ProcessGroup* parent);
 
   /**
    * Parses a port from its corresponding config node and adds
    * it to a parent ProcessGroup. The port_node argument must point
-   * to a flow::Node containing the port configuration. A RemoteProcessorGroupPort
+   * to a Node containing the port configuration. A RemoteProcessorGroupPort
    * object will be created a added to the parent ProcessGroup specified
    * by the parent argument.
    *
-   * @param port_node  the flow::Node containing the port configuration
+   * @param port_node  the Node containing the port configuration
    * @param parent    the parent ProcessGroup for the port
    * @param direction the TransferDirection of the port
    */
-  void parsePort(const flow::Node& port_node, core::ProcessGroup* parent, sitetosite::TransferDirection direction);
+  void parsePort(const Node& port_node, core::ProcessGroup* parent, sitetosite::TransferDirection direction);
 
   /**
    * Parses the root level node for the flow configuration and
@@ -116,11 +109,11 @@ class StructuredConfiguration : public FlowConfiguration {
    * @param root_flow_node
    * @return
    */
-  std::unique_ptr<core::ProcessGroup> parseRootProcessGroup(const flow::Node& root_flow_node);
+  std::unique_ptr<core::ProcessGroup> parseRootProcessGroup(const Node& root_flow_node);
 
-  void parseProcessorProperty(const flow::Node& doc, const flow::Node& node, std::shared_ptr<core::Processor> processor);
+  void parseProcessorProperty(const Node& doc, const Node& node, std::shared_ptr<core::Processor> processor);
 
-  void parseControllerServices(const flow::Node& controller_services_node);
+  void parseControllerServices(const Node& controller_services_node);
 
   /**
    * Parses the Connections section of a configuration.
@@ -131,49 +124,49 @@ class StructuredConfiguration : public FlowConfiguration {
    * @param parent                the root node of flow configuration to which
    *                              to add the connections that are parsed
    */
-  void parseConnection(const flow::Node& connection_node_seq, core::ProcessGroup* parent);
+  void parseConnection(const Node& connection_node_seq, core::ProcessGroup* parent);
 
   /**
    * Parses the Remote Process Group section of a configuration.
    * The resulting Process Group is added to the parent ProcessGroup.
    *
-   * @param rpg_node_seq  the flow::Node containing the Remote Process Group
-   *                      section of the configuration YAML
+   * @param rpg_node_seq  the Node containing the Remote Process Group
+   *                      section of the configuration
    * @param parent        the root node of flow configuration to which
    *                      to add the process groups that are parsed
    */
-  void parseRemoteProcessGroup(const flow::Node& rpg_node_seq, core::ProcessGroup* parent);
+  void parseRemoteProcessGroup(const Node& rpg_node_seq, core::ProcessGroup* parent);
 
   /**
    * Parses the Provenance Reporting section of a configuration.
    * The resulting Provenance Reporting processor is added to the
    * parent ProcessGroup.
    *
-   * @param report_node  the flow::Node containing the provenance
+   * @param report_node  the Node containing the provenance
    *                      reporting configuration
    * @param parent_group the root node of flow configuration to which
    *                      to add the provenance reporting config
    */
-  void parseProvenanceReporting(const flow::Node& report_node, core::ProcessGroup* parent_group);
+  void parseProvenanceReporting(const Node& report_node, core::ProcessGroup* parent_group);
 
   /**
-   * A helper function to parse the Properties flow::Node for a processor.
+   * A helper function to parse the Properties Node for a processor.
    *
-   * @param properties_node the flow::Node containing the properties
+   * @param properties_node the Node containing the properties
    * @param processor      the Processor to which to add the resulting properties
    */
-  void parsePropertiesNode(const flow::Node& properties_node, core::ConfigurableComponent& component, const std::string& component_name, const std::string& section);
+  void parsePropertiesNode(const Node& properties_node, core::ConfigurableComponent& component, const std::string& component_name, const std::string& section);
 
   /**
    * Parses the Funnels section of a configuration.
    * The resulting Funnels are added to the parent ProcessGroup.
    *
-   * @param node   the flow::Node containing the Funnels section
+   * @param node   the Node containing the Funnels section
    *                 of the configuration
    * @param parent the root node of flow configuration to which
    *                 to add the funnels that are parsed
    */
-  void parseFunnels(const flow::Node& node, core::ProcessGroup* parent);
+  void parseFunnels(const Node& node, core::ProcessGroup* parent);
 
   /**
    * Parses the Input/Output Ports section of a configuration YAML.
@@ -196,15 +189,15 @@ class StructuredConfiguration : public FlowConfiguration {
    * as a UUID and the UUID string will be returned. If not present, a
    * random UUID string will be generated and returned.
    *
-   * @param node     a pointer to the flow::Node that will be checked for the
+   * @param node     a pointer to the Node that will be checked for the
    *                   presence of an idField
    * @param id_field  the string of the name of the idField to check for. This
    *                   is optional and defaults to 'id'
    * @return         the parsed or generated UUID string
    */
-  std::string getOrGenerateId(const flow::Node& node, const std::string& id_field = "id");
+  std::string getOrGenerateId(const Node& node, const std::string& id_field = "id");
 
-  std::string getRequiredIdField(const flow::Node& node, std::string_view section = "", std::string_view error_message = "");
+  std::string getRequiredIdField(const Node& node, std::string_view section = "", std::string_view error_message = "");
 
   /**
    * This is a helper function for getting an optional value, if it exists.
@@ -220,17 +213,17 @@ class StructuredConfiguration : public FlowConfiguration {
    *                       the optional field is missing. If not provided,
    *                       a default info message will be generated.
    */
-  std::string getOptionalField(const flow::Node& node, const std::string& field_name, const std::string& default_value, const std::string& section = "", const std::string& info_message = "");
+  std::string getOptionalField(const Node& node, const std::string& field_name, const std::string& default_value, const std::string& section = "", const std::string& info_message = "");
 
   static std::shared_ptr<utils::IdGenerator> id_generator_;
   std::unordered_set<std::string> uuids_;
   std::shared_ptr<logging::Logger> logger_;
 
  private:
-  PropertyValue getValidatedProcessorPropertyForDefaultTypeInfo(const core::Property& property_from_processor, const flow::Node& property_value_node);
-  void parsePropertyValueSequence(const std::string& property_name, const flow::Node& property_value_node, core::ConfigurableComponent& component);
-  void parseSingleProperty(const std::string& property_name, const flow::Node& property_value_node, core::ConfigurableComponent& processor);
-  void parsePropertyNodeElement(const std::string& propertyName, const flow::Node& property_value_node, core::ConfigurableComponent& processor);
+  PropertyValue getValidatedProcessorPropertyForDefaultTypeInfo(const core::Property& property_from_processor, const Node& property_value_node);
+  void parsePropertyValueSequence(const std::string& property_name, const Node& property_value_node, core::ConfigurableComponent& component);
+  void parseSingleProperty(const std::string& property_name, const Node& property_value_node, core::ConfigurableComponent& processor);
+  void parsePropertyNodeElement(const std::string& propertyName, const Node& property_value_node, core::ConfigurableComponent& processor);
   void addNewId(const std::string& uuid);
 
   /**
@@ -243,5 +236,5 @@ class StructuredConfiguration : public FlowConfiguration {
   void raiseComponentError(const std::string &component_name, const std::string &section, const std::string &reason) const;
 };
 
-}  // namespace org::apache::nifi::minifi::core
+}  // namespace org::apache::nifi::minifi::core::flow
 

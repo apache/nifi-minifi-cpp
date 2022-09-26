@@ -33,20 +33,19 @@ class Node {
     int pos;
   };
 
-  class Impl;
   class Iterator {
    public:
     class Value;
 
-    class Impl {
+    class IteratorImpl {
      public:
-      virtual Impl& operator++() = 0;
-      virtual bool operator==(const Impl& other) const = 0;
+      virtual IteratorImpl& operator++() = 0;
+      virtual bool operator==(const IteratorImpl& other) const = 0;
       virtual Value operator*() const = 0;
-      bool operator!=(const Impl& other) const {return !(*this == other);}
+      bool operator!=(const IteratorImpl& other) const {return !(*this == other);}
 
-      virtual std::unique_ptr<Impl> clone() const = 0;
-      virtual ~Impl() = default;
+      virtual std::unique_ptr<IteratorImpl> clone() const = 0;
+      virtual ~IteratorImpl() = default;
     };
 
     Iterator& operator++() {
@@ -54,7 +53,7 @@ class Node {
       return *this;
     }
 
-    explicit Iterator(std::unique_ptr<Impl> impl) : impl_(std::move(impl)) {}
+    explicit Iterator(std::unique_ptr<IteratorImpl> impl) : impl_(std::move(impl)) {}
     Iterator(const Iterator& other): impl_(other.impl_->clone()) {}
     Iterator(Iterator&&) = default;
     Iterator& operator=(const Iterator& other) {
@@ -72,16 +71,15 @@ class Node {
     Value operator*() const;
 
    private:
-    std::unique_ptr<Impl> impl_;
+    std::unique_ptr<IteratorImpl> impl_;
   };
 
-  class Impl {
+  class NodeImpl {
    public:
     virtual explicit operator bool() const = 0;
     virtual bool isSequence() const = 0;
     virtual bool isMap() const = 0;
     virtual bool isNull() const = 0;
-    virtual bool isScalar() const = 0;
 
     virtual nonstd::expected<std::string, std::exception_ptr> getString() const = 0;
     virtual nonstd::expected<int, std::exception_ptr> getInt() const = 0;
@@ -97,19 +95,18 @@ class Node {
     virtual Iterator end() const = 0;
     virtual Node operator[](std::string_view key) const = 0;
 
-    virtual std::optional<Cursor> getCursor() const {return std::nullopt;}
+    virtual std::optional<Cursor> getCursor() const = 0;
 
-    virtual ~Impl() = default;
+    virtual ~NodeImpl() = default;
   };
 
   Node() = default;
-  explicit Node(std::shared_ptr<Impl> impl): impl_(std::move(impl)) {}
+  explicit Node(std::shared_ptr<NodeImpl> impl): impl_(std::move(impl)) {}
 
   explicit operator bool() const {return impl_->operator bool();}
   bool isSequence() const {return impl_->isSequence();}
   bool isMap() const {return impl_->isMap();}
   bool isNull() const {return impl_->isNull();}
-  bool isScalar() const {return impl_->isScalar();}
 
   nonstd::expected<std::string, std::exception_ptr> getString() const {return impl_->getString();}
   nonstd::expected<bool, std::exception_ptr> getBool() const {return impl_->getBool();}
@@ -132,7 +129,7 @@ class Node {
   std::optional<Cursor> getCursor() const {return impl_->getCursor();}
 
  private:
-  std::shared_ptr<Impl> impl_;
+  std::shared_ptr<NodeImpl> impl_;
 };
 
 class Node::Iterator::Value : public Node, public std::pair<Node, Node> {

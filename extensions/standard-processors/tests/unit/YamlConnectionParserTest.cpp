@@ -67,9 +67,17 @@ TEST_CASE("Connections components are parsed from yaml", "[YamlConfiguration]") 
     YAML::Node yaml_node = YAML::Load(std::string {
         "max work queue size: 231\n"
         "max work queue data size: 12 MB\n" });
-    YamlConnectionParser yaml_connection_parser(connection_node, "test_node", parent_ptr, logger);
-    REQUIRE(231 == yaml_connection_parser.getWorkQueueSizeFromYaml());
-    REQUIRE(12582912 == yaml_connection_parser.getWorkQueueDataSizeFromYaml());  // 12 * 1024 * 1024 B
+    flow::Node connection_node{std::make_shared<YamlNode>(yaml_node)};
+    StructuredConnectionParser yaml_connection_parser(connection_node, "test_node", parent_ptr, logger);
+    REQUIRE(231 == yaml_connection_parser.getWorkQueueSize());
+    REQUIRE(12_MiB == yaml_connection_parser.getWorkQueueDataSize());
+  }
+  SECTION("Queue swap threshold is read") {
+    YAML::Node yaml_node = YAML::Load(std::string {
+        "swap threshold: 231\n" });
+    flow::Node connection_node{std::make_shared<YamlNode>(yaml_node)};
+    StructuredConnectionParser yaml_connection_parser(connection_node, "test_node", parent_ptr, logger);
+    REQUIRE(231 == yaml_connection_parser.getSwapThreshold());
   }
   SECTION("Source and destination names and uuids are read") {
     const utils::Identifier expected_source_id = utils::generateUUID();

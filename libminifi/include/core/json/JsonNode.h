@@ -24,7 +24,7 @@
 
 namespace org::apache::nifi::minifi::core {
 
-class JsonNode : public flow::Node::Impl {
+class JsonNode : public flow::Node::NodeImpl {
  public:
   explicit JsonNode(const rapidjson::Value* node): node_(node) {}
 
@@ -39,10 +39,6 @@ class JsonNode : public flow::Node::Impl {
   }
   bool isNull() const override {
     return node_ ? node_->IsNull() : false;
-  }
-  bool isScalar() const override {
-    // TODO:
-    return node_ ? node_->IsString() : false;
   }
 
   nonstd::expected<std::string, std::exception_ptr> getString() const override {
@@ -166,19 +162,23 @@ class JsonNode : public flow::Node::Impl {
     return flow::Node{std::make_shared<JsonNode>(&it->value)};
   }
 
+  std::optional<flow::Node::Cursor> getCursor() const override {
+    return std::nullopt;
+  }
+
  private:
   const rapidjson::Value* node_;
 };
 
-class JsonValueIterator : public flow::Node::Iterator::Impl {
+class JsonValueIterator : public flow::Node::Iterator::IteratorImpl {
  public:
   explicit JsonValueIterator(rapidjson::Value::ConstValueIterator it): it_(std::move(it)) {}
 
-  Impl& operator++() override {
+  IteratorImpl& operator++() override {
     ++it_;
     return *this;
   }
-  bool operator==(const Impl& other) const override {
+  bool operator==(const IteratorImpl& other) const override {
     const auto* ptr = dynamic_cast<const JsonValueIterator*>(&other);
     gsl_Expects(ptr);
     return it_ == ptr->it_;
@@ -190,7 +190,7 @@ class JsonValueIterator : public flow::Node::Iterator::Impl {
     return {std::move(node), std::move(first), std::move(second)};
   }
 
-  std::unique_ptr<Impl> clone() const override {
+  std::unique_ptr<IteratorImpl> clone() const override {
     return std::make_unique<JsonValueIterator>(it_);
   }
 
@@ -198,15 +198,15 @@ class JsonValueIterator : public flow::Node::Iterator::Impl {
   rapidjson::Value::ConstValueIterator it_;
 };
 
-class JsonMemberIterator : public flow::Node::Iterator::Impl {
+class JsonMemberIterator : public flow::Node::Iterator::IteratorImpl {
  public:
   explicit JsonMemberIterator(rapidjson::Value::ConstMemberIterator it): it_(std::move(it)) {}
 
-  Impl& operator++() override {
+  IteratorImpl& operator++() override {
     ++it_;
     return *this;
   }
-  bool operator==(const Impl& other) const override {
+  bool operator==(const IteratorImpl& other) const override {
     const auto* ptr = dynamic_cast<const JsonMemberIterator*>(&other);
     gsl_Expects(ptr);
     return it_ == ptr->it_;
@@ -218,7 +218,7 @@ class JsonMemberIterator : public flow::Node::Iterator::Impl {
     return flow::Node::Iterator::Value(node, first, second);
   }
 
-  std::unique_ptr<Impl> clone() const override {
+  std::unique_ptr<IteratorImpl> clone() const override {
     return std::make_unique<JsonMemberIterator>(it_);
   }
 
