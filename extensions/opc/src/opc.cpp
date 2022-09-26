@@ -108,7 +108,7 @@ core::logging::LOG_LEVEL MapOPCLogLevel(UA_LogLevel ualvl) {
  * End of internal functions
  */
 
-Client::Client(std::shared_ptr<core::logging::Logger> logger, const std::string& applicationURI,
+Client::Client(const std::shared_ptr<core::logging::Logger>& logger, const std::string& applicationURI,
                const std::vector<char>& certBuffer, const std::vector<char>& keyBuffer,
                const std::vector<std::vector<char>>& trustBuffers) {
   client_ = UA_Client_new();
@@ -221,7 +221,7 @@ NodeData Client::getNodeData(const UA_ReferenceDescription *ref, const std::stri
     }
     nodedata.attributes["Browsename"] = browsename;
     nodedata.attributes["Full path"] = basePath + "/" + browsename;
-    nodedata.dataTypeID = UA_TYPES_COUNT;
+    nodedata.dataTypeID = static_cast<UA_DataTypeKind>(UA_DATATYPEKINDS);
     UA_Variant* var = UA_Variant_new();
     if (UA_Client_readValueAttribute(client_, ref->nodeId.nodeId, var) == UA_STATUSCODE_GOOD && var->type != nullptr && var->data != nullptr) {
       // Because the timestamps are eliminated in readValueAttribute for simplification
@@ -243,7 +243,7 @@ NodeData Client::getNodeData(const UA_ReferenceDescription *ref, const std::stri
       nodedata.attributes["Sourcetimestamp"] = source_timestamp;
       UA_ReadResponse_clear(&response);
 
-      nodedata.dataTypeID = var->type->typeIndex;
+      nodedata.dataTypeID = static_cast<UA_DataTypeKind>(var->type->typeKind);
       nodedata.addVariant(var);
       if (var->type->typeName) {
         nodedata.attributes["Typename"] = std::string(var->type->typeName);
@@ -276,7 +276,7 @@ UA_ReferenceDescription * Client::getNodeReference(UA_NodeId nodeId) {
   return ref;
 }
 
-void Client::traverse(UA_NodeId nodeId, std::function<nodeFoundCallBackFunc> cb, const std::string& basePath, uint64_t maxDepth, bool fetchRoot) {
+void Client::traverse(UA_NodeId nodeId, const std::function<nodeFoundCallBackFunc>& cb, const std::string& basePath, uint64_t maxDepth, bool fetchRoot) {
   if (fetchRoot) {
     UA_ReferenceDescription *rootRef = getNodeReference(nodeId);
     if ((rootRef->nodeClass == UA_NODECLASS_VARIABLE || rootRef->nodeClass == UA_NODECLASS_OBJECT) && rootRef->browseName.name.length > 0) {
@@ -397,7 +397,7 @@ UA_StatusCode Client::translateBrowsePathsToNodeIdsRequest(const std::string& pa
 }
 
 template<typename T>
-UA_StatusCode Client::add_node(const UA_NodeId parentNodeId, const UA_NodeId targetNodeId, std::string browseName, T value, UA_NodeId *receivedNodeId) {
+UA_StatusCode Client::add_node(const UA_NodeId parentNodeId, const UA_NodeId targetNodeId, const std::string& browseName, T value, UA_NodeId *receivedNodeId) {
   UA_VariableAttributes attr = UA_VariableAttributes_default;
   add_value_to_variant(&attr.value, value);
   char local[6] = "en-US";
@@ -422,7 +422,7 @@ UA_StatusCode Client::update_node(const UA_NodeId nodeId, T value) {
   return sc;
 }
 
-std::unique_ptr<Client> Client::createClient(std::shared_ptr<core::logging::Logger> logger, const std::string& applicationURI,
+std::unique_ptr<Client> Client::createClient(const std::shared_ptr<core::logging::Logger>& logger, const std::string& applicationURI,
                                              const std::vector<char>& certBuffer, const std::vector<char>& keyBuffer,
                                              const std::vector<std::vector<char>>& trustBuffers) {
   try {
@@ -443,16 +443,16 @@ template UA_StatusCode Client::update_node<bool>(const UA_NodeId nodeId, bool va
 template UA_StatusCode Client::update_node<const char *>(const UA_NodeId nodeId, const char * value);
 template UA_StatusCode Client::update_node<std::string>(const UA_NodeId nodeId, std::string value);
 
-template UA_StatusCode Client::add_node<int64_t>(const UA_NodeId parentNodeId, const UA_NodeId targetNodeId, std::string browseName, int64_t value, UA_NodeId *receivedNodeId);
-template UA_StatusCode Client::add_node<uint64_t>(const UA_NodeId parentNodeId, const UA_NodeId targetNodeId, std::string browseName, uint64_t value, UA_NodeId *receivedNodeId);
-template UA_StatusCode Client::add_node<int32_t>(const UA_NodeId parentNodeId, const UA_NodeId targetNodeId, std::string browseName, int32_t value, UA_NodeId *receivedNodeId);
-template UA_StatusCode Client::add_node<uint32_t>(const UA_NodeId parentNodeId, const UA_NodeId targetNodeId, std::string browseName, uint32_t value, UA_NodeId *receivedNodeId);
-template UA_StatusCode Client::add_node<float>(const UA_NodeId parentNodeId, const UA_NodeId targetNodeId, std::string browseName, float value, UA_NodeId *receivedNodeId);
-template UA_StatusCode Client::add_node<double>(const UA_NodeId parentNodeId, const UA_NodeId targetNodeId, std::string browseName, double value, UA_NodeId *receivedNodeId);
-template UA_StatusCode Client::add_node<bool>(const UA_NodeId parentNodeId, const UA_NodeId targetNodeId, std::string browseName, bool value, UA_NodeId *receivedNodeId);
-template UA_StatusCode Client::add_node<const char *>(const UA_NodeId parentNodeId, const UA_NodeId targetNodeId, std::string browseName,
+template UA_StatusCode Client::add_node<int64_t>(const UA_NodeId parentNodeId, const UA_NodeId targetNodeId, const std::string& browseName, int64_t value, UA_NodeId *receivedNodeId);
+template UA_StatusCode Client::add_node<uint64_t>(const UA_NodeId parentNodeId, const UA_NodeId targetNodeId, const std::string& browseName, uint64_t value, UA_NodeId *receivedNodeId);
+template UA_StatusCode Client::add_node<int32_t>(const UA_NodeId parentNodeId, const UA_NodeId targetNodeId, const std::string& browseName, int32_t value, UA_NodeId *receivedNodeId);
+template UA_StatusCode Client::add_node<uint32_t>(const UA_NodeId parentNodeId, const UA_NodeId targetNodeId, const std::string& browseName, uint32_t value, UA_NodeId *receivedNodeId);
+template UA_StatusCode Client::add_node<float>(const UA_NodeId parentNodeId, const UA_NodeId targetNodeId, const std::string& browseName, float value, UA_NodeId *receivedNodeId);
+template UA_StatusCode Client::add_node<double>(const UA_NodeId parentNodeId, const UA_NodeId targetNodeId, const std::string& browseName, double value, UA_NodeId *receivedNodeId);
+template UA_StatusCode Client::add_node<bool>(const UA_NodeId parentNodeId, const UA_NodeId targetNodeId, const std::string& browseName, bool value, UA_NodeId *receivedNodeId);
+template UA_StatusCode Client::add_node<const char *>(const UA_NodeId parentNodeId, const UA_NodeId targetNodeId, const std::string& browseName,
     const char * value, UA_NodeId *receivedNodeId);
-template UA_StatusCode Client::add_node<std::string>(const UA_NodeId parentNodeId, const UA_NodeId targetNodeId, std::string browseName,
+template UA_StatusCode Client::add_node<std::string>(const UA_NodeId parentNodeId, const UA_NodeId targetNodeId, const std::string& browseName,
     std::string value, UA_NodeId *receivedNodeId);
 
 std::set<std::string> stringToOPCDataTypeMapKeys() {
@@ -466,59 +466,59 @@ std::set<std::string> stringToOPCDataTypeMapKeys() {
 std::string nodeValue2String(const NodeData& nd) {
   std::string ret_val;
   switch (nd.dataTypeID) {
-    case UA_TYPES_STRING:
-    case UA_TYPES_LOCALIZEDTEXT:
-    case UA_TYPES_BYTESTRING: {
+    case UA_DATATYPEKIND_STRING:
+    case UA_DATATYPEKIND_LOCALIZEDTEXT:
+    case UA_DATATYPEKIND_BYTESTRING: {
       UA_String value = *reinterpret_cast<UA_String *>(nd.var_->data);
       ret_val = std::string(reinterpret_cast<const char *>(value.data), value.length);
       break;
     }
-    case UA_TYPES_BOOLEAN:
+    case UA_DATATYPEKIND_BOOLEAN:
       bool b;
       memcpy(&b, nd.data.data(), sizeof(bool));
       ret_val = b ? "True" : "False";
       break;
-    case UA_TYPES_SBYTE:
+    case UA_DATATYPEKIND_SBYTE:
       int8_t i8t;
       memcpy(&i8t, nd.data.data(), sizeof(i8t));
       ret_val = std::to_string(i8t);
       break;
-    case UA_TYPES_BYTE:
+    case UA_DATATYPEKIND_BYTE:
       uint8_t ui8t;
       memcpy(&ui8t, nd.data.data(), sizeof(ui8t));
       ret_val = std::to_string(ui8t);
       break;
-    case UA_TYPES_INT16:
+    case UA_DATATYPEKIND_INT16:
       int16_t i16t;
       memcpy(&i16t, nd.data.data(), sizeof(i16t));
       ret_val = std::to_string(i16t);
       break;
-    case UA_TYPES_UINT16:
+    case UA_DATATYPEKIND_UINT16:
       uint16_t ui16t;
       memcpy(&ui16t, nd.data.data(), sizeof(ui16t));
       ret_val = std::to_string(ui16t);
       break;
-    case UA_TYPES_INT32:
+    case UA_DATATYPEKIND_INT32:
       int32_t i32t;
       memcpy(&i32t, nd.data.data(), sizeof(i32t));
       ret_val = std::to_string(i32t);
       break;
-    case UA_TYPES_UINT32:
+    case UA_DATATYPEKIND_UINT32:
       uint32_t ui32t;
       memcpy(&ui32t, nd.data.data(), sizeof(ui32t));
       ret_val = std::to_string(ui32t);
       break;
-    case UA_TYPES_INT64:
+    case UA_DATATYPEKIND_INT64:
       int64_t i64t;
       memcpy(&i64t, nd.data.data(), sizeof(i64t));
       ret_val = std::to_string(i64t);
       break;
-    case UA_TYPES_UINT64:
+    case UA_DATATYPEKIND_UINT64:
       uint64_t ui64t;
       memcpy(&ui64t, nd.data.data(), sizeof(ui64t));
       ret_val = std::to_string(ui64t);
       break;
-    case UA_TYPES_FLOAT:
+    case UA_DATATYPEKIND_FLOAT:
       if (sizeof(float) == 4 && std::numeric_limits<float>::is_iec559) {
         float f;
         memcpy(&f, nd.data.data(), sizeof(float));
@@ -527,7 +527,7 @@ std::string nodeValue2String(const NodeData& nd) {
         throw OPCException(GENERAL_EXCEPTION, "Float is non-standard on this system, OPC data cannot be extracted!");
       }
       break;
-    case UA_TYPES_DOUBLE:
+    case UA_DATATYPEKIND_DOUBLE:
       if (sizeof(double) == 8 && std::numeric_limits<double>::is_iec559) {
         double d;
         memcpy(&d, nd.data.data(), sizeof(double));
@@ -536,7 +536,7 @@ std::string nodeValue2String(const NodeData& nd) {
         throw OPCException(GENERAL_EXCEPTION, "Double is non-standard on this system, OPC data cannot be extracted!");
       }
       break;
-    case UA_TYPES_DATETIME: {
+    case UA_DATATYPEKIND_DATETIME: {
       UA_DateTime dt;
       memcpy(&dt, nd.data.data(), sizeof(UA_DateTime));
       ret_val = opc::OPCDateTime2String(dt);
