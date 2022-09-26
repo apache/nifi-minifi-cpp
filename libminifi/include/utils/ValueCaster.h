@@ -18,12 +18,7 @@
 
 #pragma once
 
-namespace org {
-namespace apache {
-namespace nifi {
-namespace minifi {
-namespace utils {
-namespace internal {
+namespace org::apache::nifi::minifi::utils::internal {
 
 template<class T, class U>
 bool cast_if_in_range(T in, U& out) {
@@ -37,9 +32,4 @@ bool cast_if_in_range(T in, U& out) {
   return true;
 }
 
-} /* namespace internal */
-} /* namespace utils */
-} /* namespace minifi */
-} /* namespace nifi */
-} /* namespace apache */
-} /* namespace org */
+}  // namespace org::apache::nifi::minifi::utils::internal

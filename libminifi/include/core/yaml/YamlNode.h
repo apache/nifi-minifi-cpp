@@ -19,6 +19,8 @@
 #pragma once
 
 #include <memory>
+#include <string>
+#include <utility>
 
 #include "yaml-cpp/yaml.h"
 #include "core/flow/Node.h"

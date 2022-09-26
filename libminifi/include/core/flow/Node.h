@@ -21,6 +21,9 @@
 #include <string_view>
 #include <tuple>
 #include <optional>
+#include <string>
+#include <memory>
+#include <utility>
 #include "nonstd/expected.hpp"
 
 namespace org::apache::nifi::minifi::core::flow {

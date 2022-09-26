@@ -18,9 +18,14 @@
 
 #pragma once
 
+#include <string>
+#include <utility>
+#include <memory>
+
 #include "core/flow/Node.h"
 #include "rapidjson/document.h"
 #include "utils/gsl.h"
+#include "utils/ValueCaster.h"
 
 namespace org::apache::nifi::minifi::core {
 
@@ -54,32 +59,20 @@ class JsonNode : public flow::Node::NodeImpl {
       return nonstd::make_unexpected(std::current_exception());
     }
   }
+
   nonstd::expected<int, std::exception_ptr> getInt() const override {
-    try {
-      if (!node_) {
-        throw std::runtime_error("Cannot get int of invalid json value");
-      }
-      if (!node_->IsInt()) {
-        throw std::runtime_error("Cannot get int of non-int json value");
-      }
-      return node_->GetInt();
-    } catch (...) {
-      return nonstd::make_unexpected(std::current_exception());
-    }
+    return getNumber<int>("int");
   }
   nonstd::expected<unsigned int, std::exception_ptr> getUInt() const override {
-    try {
-      if (!node_) {
-        throw std::runtime_error("Cannot get unsigned int of invalid json value");
-      }
-      if (!node_->IsUint()) {
-        throw std::runtime_error("Cannot get unsigned int of non-unsigned int json value");
-      }
-      return node_->GetUint();
-    } catch (...) {
-      return nonstd::make_unexpected(std::current_exception());
-    }
+    return getNumber<unsigned int>("unsigned int");
   }
+  nonstd::expected<int64_t, std::exception_ptr> getInt64() const override {
+    return getNumber<int64_t>("int64_t");
+  }
+  nonstd::expected<uint64_t, std::exception_ptr> getUInt64() const override {
+    return getNumber<uint64_t>("uint64_t");
+  }
+
   nonstd::expected<bool, std::exception_ptr> getBool() const override {
     try {
       if (!node_) {
@@ -89,32 +82,6 @@ class JsonNode : public flow::Node::NodeImpl {
         throw std::runtime_error("Cannot get bool of non-bool json value");
       }
       return node_->GetBool();
-    } catch (...) {
-      return nonstd::make_unexpected(std::current_exception());
-    }
-  }
-  nonstd::expected<int64_t, std::exception_ptr> getInt64() const override {
-    try {
-      if (!node_) {
-        throw std::runtime_error("Cannot get int64 of invalid json value");
-      }
-      if (!node_->IsInt64()) {
-        throw std::runtime_error("Cannot get int64 of non-int64 json value");
-      }
-      return node_->GetInt64();
-    } catch (...) {
-      return nonstd::make_unexpected(std::current_exception());
-    }
-  }
-  nonstd::expected<uint64_t, std::exception_ptr> getUInt64() const override {
-    try {
-      if (!node_) {
-        throw std::runtime_error("Cannot get uint64 of invalid json value");
-      }
-      if (!node_->IsUint64()) {
-        throw std::runtime_error("Cannot get uint64 of non-uint64 json value");
-      }
-      return node_->GetUint64();
     } catch (...) {
       return nonstd::make_unexpected(std::current_exception());
     }
@@ -167,6 +134,32 @@ class JsonNode : public flow::Node::NodeImpl {
   }
 
  private:
+  template<typename T, typename U>
+  std::optional<T> narrow(const U& value) {
+    T res = static_cast<T>(value);
+    if (static_cast<U>(res) != value) {
+      return std::nullopt;
+    }
+    return res;
+  }
+
+  template<typename T>
+  nonstd::expected<T, std::exception_ptr> getNumber(const char* type_name) const {
+    try {
+      if (!node_) {
+        throw std::runtime_error("Cannot get " + std::string(type_name) + " of invalid json value");
+      }
+      T result;
+      if (node_->IsInt() && utils::internal::cast_if_in_range(node_->GetInt(), result)) return result;
+      if (node_->IsUint() && utils::internal::cast_if_in_range(node_->GetUint(), result)) return result;
+      if (node_->IsInt64() && utils::internal::cast_if_in_range(node_->GetInt64(), result)) return result;
+      if (node_->IsUint64() && utils::internal::cast_if_in_range(node_->GetUint64(), result)) return result;
+      throw std::runtime_error("Cannot get " + std::string(type_name) + " of non-numeric json value");
+    } catch (...) {
+      return nonstd::make_unexpected(std::current_exception());
+    }
+  }
+
   const rapidjson::Value* node_;
 };
 

@@ -311,7 +311,6 @@ void StructuredConfiguration::parseRemoteProcessGroup(const Node& rpg_node_seq, 
     return;
   }
   for (const auto currRpgNode : rpg_node_seq) {
-
     checkRequiredField(currRpgNode, "name", CONFIG_REMOTE_PROCESS_GROUP_KEY);
     auto name = currRpgNode["name"].getString().value();
     id = getOrGenerateId(currRpgNode);
@@ -656,24 +655,21 @@ void StructuredConfiguration::parsePropertyValueSequence(const std::string& prop
 }
 
 PropertyValue StructuredConfiguration::getValidatedProcessorPropertyForDefaultTypeInfo(const core::Property& propertyFromProcessor, const Node& propertyValueNode) {
+  using state::response::Value;
   PropertyValue defaultValue;
   defaultValue = propertyFromProcessor.getDefaultValue();
   const std::type_index defaultType = defaultValue.getTypeInfo();
   try {
     PropertyValue coercedValue = defaultValue;
-    if (defaultType == typeid(int64_t) && propertyValueNode.getInt64()) {
+    if (defaultType == Value::INT64_TYPE && propertyValueNode.getInt64()) {
       coercedValue = propertyValueNode.getInt64().value();
-    } else if (defaultType == typeid(int32_t) && propertyValueNode.getInt64()) {
-      coercedValue = gsl::narrow<int32_t>(propertyValueNode.getInt64().value());
-    } else if (defaultType == typeid(uint64_t) && propertyValueNode.getUInt64()) {
+    } else if (defaultType == Value::UINT64_TYPE && propertyValueNode.getUInt64()) {
       coercedValue = propertyValueNode.getUInt64().value();
-    } else if (defaultType == typeid(uint32_t) && propertyValueNode.getUInt64()) {
+    } else if (defaultType == Value::UINT32_TYPE && propertyValueNode.getUInt64()) {
       coercedValue = gsl::narrow<uint32_t>(propertyValueNode.getUInt64().value());
-    } else if (defaultType == typeid(int) && propertyValueNode.getInt()) {
+    } else if (defaultType == Value::INT_TYPE && propertyValueNode.getInt()) {
       coercedValue = propertyValueNode.getInt().value();
-    } else if (defaultType == typeid(unsigned int) && propertyValueNode.getUInt()) {
-      coercedValue = propertyValueNode.getUInt().value();
-    } else if (defaultType == typeid(bool) && propertyValueNode.getBool()) {
+    } else if (defaultType == Value::BOOL_TYPE && propertyValueNode.getBool()) {
       coercedValue = propertyValueNode.getBool().value();
     } else {
       coercedValue = propertyValueNode.getString().value();
