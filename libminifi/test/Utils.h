@@ -120,10 +120,10 @@ bool sendMessagesViaTCP(const std::vector<std::string_view>& contents, const asi
     std::string tcp_message(content);
     tcp_message += '\n';
     asio::write(socket, asio::buffer(tcp_message, tcp_message.size()), err);
+    if (err) {
+      return false;
+    }
   }
-  if (err)
-    return false;
-  socket.close();
   return true;
 }
 
@@ -133,10 +133,7 @@ bool sendUDPPacket(const std::string_view content, const asio::ip::udp::endpoint
   socket.open(remote_endpoint.protocol());
   std::error_code err;
   socket.send_to(asio::buffer(content, content.size()), remote_endpoint, 0, err);
-  if (err)
-    return false;
-  socket.close();
-  return true;
+  return !err;
 }
 
 bool isIPv6Disabled() {
@@ -188,11 +185,10 @@ bool sendMessagesViaSSL(const std::vector<std::string_view>& contents,
     std::string tcp_message(content);
     tcp_message += '\n';
     asio::write(socket, asio::buffer(tcp_message, tcp_message.size()), err);
+    if (err) {
+      return false;
+    }
   }
-  if (err) {
-    return false;
-  }
-  socket.lowest_layer().close();
   return true;
 }
 

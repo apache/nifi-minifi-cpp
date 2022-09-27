@@ -124,6 +124,7 @@ void PutUDP::onTrigger(core::ProcessContext* context, core::ProcessSession* cons
         core::logging::LOG_DEBUG(logger) << "sending to endpoint " << resolver_entry.endpoint() << " failed due to " << error.message();
         continue;
       }
+      core::logging::LOG_INFO(logger) << "sending to endpoint " << resolver_entry.endpoint() << " succeeded";
       return {};
     }
     return nonstd::make_unexpected(error);
