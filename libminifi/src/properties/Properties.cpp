@@ -63,7 +63,7 @@ int Properties::getInt(const std::string &key, int default_value) const {
 }
 
 // Load Configure File
-void Properties::loadConfigureFile(std::filesystem::path configuration_file) {
+void Properties::loadConfigureFile(const std::filesystem::path& configuration_file) {
   std::lock_guard<std::mutex> lock(mutex_);
   if (configuration_file.empty()) {
     logger_->log_error("Configuration file path for %s is empty!", getName());

@@ -20,12 +20,7 @@
 #include "utils/file/FileSystem.h"
 #include "utils/crypto/EncryptionProvider.h"
 
-namespace org {
-namespace apache {
-namespace nifi {
-namespace minifi {
-namespace utils {
-namespace file {
+namespace org::apache::nifi::minifi::utils::file {
 
 FileSystem::FileSystem(bool should_encrypt_on_write, std::optional<utils::crypto::EncryptionProvider> encryptor)
     : should_encrypt_on_write_(should_encrypt_on_write),
@@ -72,9 +67,4 @@ bool FileSystem::write(const std::filesystem::path& file_name, const std::string
   return static_cast<bool>(output);
 }
 
-}  // namespace file
-}  // namespace utils
-}  // namespace minifi
-}  // namespace nifi
-}  // namespace apache
-}  // namespace org
+}  // namespace org::apache::nifi::minifi::utils::file
