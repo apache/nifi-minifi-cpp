@@ -435,7 +435,7 @@ void ConsumeWindowsEventLog::onTrigger(const std::shared_ptr<core::ProcessContex
   }
 }
 
-wel::WindowsEventLogHandler ConsumeWindowsEventLog::getEventLogHandler(const std::string & name) {
+wel::WindowsEventLogHandler& ConsumeWindowsEventLog::getEventLogHandler(const std::string & name) {
   logger_->log_trace("Getting Event Log Handler corresponding to %s", name.c_str());
   auto provider = providers_.find(name);
   if (provider != std::end(providers_)) {
@@ -591,7 +591,7 @@ bool ConsumeWindowsEventLog::createEventRender(EVT_HANDLE hEvent, EventRender& e
   if (output_.plaintext) {
     logger_->log_trace("Writing event in plain text");
 
-    auto handler = getEventLogHandler(providerName);
+    auto& handler = getEventLogHandler(providerName);
     auto message = handler.getEventMessage(hEvent);
 
     if (!message.empty()) {

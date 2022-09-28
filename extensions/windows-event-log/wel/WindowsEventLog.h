@@ -36,31 +36,27 @@
 #include "core/ProcessSession.h"
 #include "utils/OsUtils.h"
 #include "FlowFileRecord.h"
+#include "UniqueEvtHandle.h"
 
 #include "pugixml.hpp"
 
-namespace org {
-namespace apache {
-namespace nifi {
-namespace minifi {
-namespace wel {
+namespace org::apache::nifi::minifi::wel {
 
-
-  enum METADATA {
-    LOG_NAME,
-    SOURCE,
-    TIME_CREATED,
-    EVENTID,
-    OPCODE,
-    EVENT_RECORDID,
-    EVENT_TYPE,
-    TASK_CATEGORY,
-    LEVEL,
-    KEYWORDS,
-    USER,
-    COMPUTER,
-    UNKNOWN
-  };
+enum METADATA {
+  LOG_NAME,
+  SOURCE,
+  TIME_CREATED,
+  EVENTID,
+  OPCODE,
+  EVENT_RECORDID,
+  EVENT_TYPE,
+  TASK_CATEGORY,
+  LEVEL,
+  KEYWORDS,
+  USER,
+  COMPUTER,
+  UNKNOWN
+};
 
 
 // this is a continuous enum so we can rely on the array
@@ -77,11 +73,10 @@ class WindowsEventLogHandler {
 
   std::string getEventMessage(EVT_HANDLE eventHandle) const;
 
-
   EVT_HANDLE getMetadata() const;
 
  private:
-  EVT_HANDLE metadata_provider_;
+  unique_evt_handle metadata_provider_;
 };
 
 class WindowsEventLogMetadata {
@@ -93,9 +88,9 @@ class WindowsEventLogMetadata {
 
   static std::string getMetadataString(METADATA val) {
     static std::map<METADATA, std::string> map = {
-        {LOG_NAME, "LOG_NAME" },
+        {LOG_NAME, "LOG_NAME"},
         {SOURCE, "SOURCE"},
-        {TIME_CREATED, "TIME_CREATED" },
+        {TIME_CREATED, "TIME_CREATED"},
         {EVENTID, "EVENTID"},
         {OPCODE, "OPCODE"},
         {EVENT_RECORDID, "EVENT_RECORDID"},
@@ -110,11 +105,11 @@ class WindowsEventLogMetadata {
     return map[val];
   }
 
-  static METADATA getMetadataFromString(const std::string &val) {
+  static METADATA getMetadataFromString(const std::string& val) {
     static std::map<std::string, METADATA> map = {
         {"LOG_NAME", LOG_NAME},
         {"SOURCE", SOURCE},
-        {"TIME_CREATED", TIME_CREATED },
+        {"TIME_CREATED", TIME_CREATED},
         {"EVENTID", EVENTID},
         {"OPCODE", OPCODE},
         {"EVENT_RECORDID", EVENT_RECORDID},
@@ -176,7 +171,7 @@ class WindowsEventLogHeader {
  public:
   explicit WindowsEventLogHeader(METADATA_NAMES header_names) : header_names_(header_names) {}
 
-  void setDelimiter(const std::string &delim);
+  void setDelimiter(const std::string& delim);
 
   template<typename MetadataCollection>
   std::string getEventHeader(const MetadataCollection& metadata_collection) const;
@@ -192,11 +187,11 @@ template<typename MetadataCollection>
 std::string WindowsEventLogHeader::getEventHeader(const MetadataCollection& metadata_collection) const {
   std::stringstream eventHeader;
   size_t max = 1;
-  for (const auto &option : header_names_) {
+  for (const auto& option : header_names_) {
     max = (std::max(max, option.second.size()));
   }
   ++max;  // increment by one to get space.
-  for (const auto &option : header_names_) {
+  for (const auto& option : header_names_) {
     auto name = option.second;
     if (!name.empty()) {
       eventHeader << name << (delimiter_.empty() ? createDefaultDelimiter(max, name.size()) : delimiter_);
@@ -207,9 +202,4 @@ std::string WindowsEventLogHeader::getEventHeader(const MetadataCollection& meta
   return eventHeader.str();
 }
 
-} /* namespace wel */
-} /* namespace minifi */
-} /* namespace nifi */
-} /* namespace apache */
-} /* namespace org */
-
+}  // namespace org::apache::nifi::minifi::wel

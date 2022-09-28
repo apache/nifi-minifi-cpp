@@ -118,7 +118,7 @@ class ConsumeWindowsEventLog : public core::Processor {
  protected:
   void refreshTimeZoneData();
   void putEventRenderFlowFileToSession(const EventRender& eventRender, core::ProcessSession& session) const;
-  wel::WindowsEventLogHandler getEventLogHandler(const std::string & name);
+  wel::WindowsEventLogHandler& getEventLogHandler(const std::string & name);
   bool insertHeaderName(wel::METADATA_NAMES &header, const std::string &key, const std::string &value) const;
   void LogWindowsError(std::string error = "Error") const;
   bool createEventRender(EVT_HANDLE eventHandle, EventRender& eventRender);
