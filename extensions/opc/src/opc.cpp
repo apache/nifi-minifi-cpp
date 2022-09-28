@@ -397,16 +397,16 @@ UA_StatusCode Client::translateBrowsePathsToNodeIdsRequest(const std::string& pa
 }
 
 template<typename T>
-UA_StatusCode Client::add_node(const UA_NodeId parentNodeId, const UA_NodeId targetNodeId, const std::string& browseName, T value, UA_NodeId *receivedNodeId) {
+UA_StatusCode Client::add_node(const UA_NodeId parentNodeId, const UA_NodeId targetNodeId, std::string_view browseName, T value, UA_NodeId *receivedNodeId) {
   UA_VariableAttributes attr = UA_VariableAttributes_default;
   add_value_to_variant(&attr.value, value);
   char local[6] = "en-US";
-  attr.displayName = UA_LOCALIZEDTEXT(local, const_cast<char*>(browseName.c_str()));
+  attr.displayName = UA_LOCALIZEDTEXT(local, const_cast<char*>(browseName.data()));
   UA_StatusCode sc = UA_Client_addVariableNode(client_,
                                                targetNodeId,
                                                parentNodeId,
                                                UA_NODEID_NUMERIC(0, UA_NS0ID_ORGANIZES),
-                                               UA_QUALIFIEDNAME(1, const_cast<char*>(browseName.c_str())),
+                                               UA_QUALIFIEDNAME(1, const_cast<char*>(browseName.data())),
                                                UA_NODEID_NULL,
                                                attr, receivedNodeId);
   UA_Variant_clear(&attr.value);
@@ -443,16 +443,16 @@ template UA_StatusCode Client::update_node<bool>(const UA_NodeId nodeId, bool va
 template UA_StatusCode Client::update_node<const char *>(const UA_NodeId nodeId, const char * value);
 template UA_StatusCode Client::update_node<std::string>(const UA_NodeId nodeId, std::string value);
 
-template UA_StatusCode Client::add_node<int64_t>(const UA_NodeId parentNodeId, const UA_NodeId targetNodeId, const std::string& browseName, int64_t value, UA_NodeId *receivedNodeId);
-template UA_StatusCode Client::add_node<uint64_t>(const UA_NodeId parentNodeId, const UA_NodeId targetNodeId, const std::string& browseName, uint64_t value, UA_NodeId *receivedNodeId);
-template UA_StatusCode Client::add_node<int32_t>(const UA_NodeId parentNodeId, const UA_NodeId targetNodeId, const std::string& browseName, int32_t value, UA_NodeId *receivedNodeId);
-template UA_StatusCode Client::add_node<uint32_t>(const UA_NodeId parentNodeId, const UA_NodeId targetNodeId, const std::string& browseName, uint32_t value, UA_NodeId *receivedNodeId);
-template UA_StatusCode Client::add_node<float>(const UA_NodeId parentNodeId, const UA_NodeId targetNodeId, const std::string& browseName, float value, UA_NodeId *receivedNodeId);
-template UA_StatusCode Client::add_node<double>(const UA_NodeId parentNodeId, const UA_NodeId targetNodeId, const std::string& browseName, double value, UA_NodeId *receivedNodeId);
-template UA_StatusCode Client::add_node<bool>(const UA_NodeId parentNodeId, const UA_NodeId targetNodeId, const std::string& browseName, bool value, UA_NodeId *receivedNodeId);
-template UA_StatusCode Client::add_node<const char *>(const UA_NodeId parentNodeId, const UA_NodeId targetNodeId, const std::string& browseName,
+template UA_StatusCode Client::add_node<int64_t>(const UA_NodeId parentNodeId, const UA_NodeId targetNodeId, std::string_view browseName, int64_t value, UA_NodeId *receivedNodeId);
+template UA_StatusCode Client::add_node<uint64_t>(const UA_NodeId parentNodeId, const UA_NodeId targetNodeId, std::string_view browseName, uint64_t value, UA_NodeId *receivedNodeId);
+template UA_StatusCode Client::add_node<int32_t>(const UA_NodeId parentNodeId, const UA_NodeId targetNodeId, std::string_view browseName, int32_t value, UA_NodeId *receivedNodeId);
+template UA_StatusCode Client::add_node<uint32_t>(const UA_NodeId parentNodeId, const UA_NodeId targetNodeId, std::string_view browseName, uint32_t value, UA_NodeId *receivedNodeId);
+template UA_StatusCode Client::add_node<float>(const UA_NodeId parentNodeId, const UA_NodeId targetNodeId, std::string_view browseName, float value, UA_NodeId *receivedNodeId);
+template UA_StatusCode Client::add_node<double>(const UA_NodeId parentNodeId, const UA_NodeId targetNodeId, std::string_view browseName, double value, UA_NodeId *receivedNodeId);
+template UA_StatusCode Client::add_node<bool>(const UA_NodeId parentNodeId, const UA_NodeId targetNodeId, std::string_view browseName, bool value, UA_NodeId *receivedNodeId);
+template UA_StatusCode Client::add_node<const char *>(const UA_NodeId parentNodeId, const UA_NodeId targetNodeId, std::string_view browseName,
     const char * value, UA_NodeId *receivedNodeId);
-template UA_StatusCode Client::add_node<std::string>(const UA_NodeId parentNodeId, const UA_NodeId targetNodeId, const std::string& browseName,
+template UA_StatusCode Client::add_node<std::string>(const UA_NodeId parentNodeId, const UA_NodeId targetNodeId, std::string_view browseName,
     std::string value, UA_NodeId *receivedNodeId);
 
 std::set<std::string> stringToOPCDataTypeMapKeys() {

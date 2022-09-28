@@ -24,6 +24,7 @@
 #include <set>
 #include <vector>
 #include <memory>
+#include <string_view>
 
 #include "open62541/client.h"
 #include "logging/Logger.h"
@@ -63,7 +64,7 @@ class Client {
   UA_StatusCode update_node(const UA_NodeId nodeId, T value);
 
   template<typename T>
-  UA_StatusCode add_node(const UA_NodeId parentNodeId, const UA_NodeId targetNodeId, const std::string& browseName, T value, UA_NodeId *receivedNodeId);
+  UA_StatusCode add_node(const UA_NodeId parentNodeId, const UA_NodeId targetNodeId, std::string_view browseName, T value, UA_NodeId *receivedNodeId);
 
   static std::unique_ptr<Client> createClient(const std::shared_ptr<core::logging::Logger>& logger, const std::string& applicationURI,
                                               const std::vector<char>& certBuffer, const std::vector<char>& keyBuffer,
