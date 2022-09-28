@@ -35,8 +35,6 @@
 #include "utils/file/FileSystem.h"
 #include "core/flow/StructuredConfiguration.h"
 
-class JsonConfigurationTestAccessor;
-
 namespace org::apache::nifi::minifi::core {
 
 class JsonConfiguration : public flow::StructuredConfiguration {
@@ -45,20 +43,8 @@ class JsonConfiguration : public flow::StructuredConfiguration {
 
   ~JsonConfiguration() override = default;
 
-  /**
-   * @return               the root ProcessGroup node of the flow
-   *                        configuration tree
-   */
   std::unique_ptr<core::ProcessGroup> getRoot() override;
 
-  /**
-   *
-   * @param json_config      an input payload for the raw JSON configuration
-   *                           to be parsed and loaded into the flow
-   *                           configuration tree
-   * @return                 the root ProcessGroup node of the flow
-   *                           configuration tree
-   */
   std::unique_ptr<core::ProcessGroup> getRootFromPayload(const std::string &json_config) override;
 };
 

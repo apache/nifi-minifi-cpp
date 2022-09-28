@@ -680,7 +680,6 @@ TEST_CASE("Test Dependent Property 2", "[YamlConfigurationDependentProperty2]") 
   REQUIRE(config_failed);
 }
 
-#ifdef YAML_CONFIGURATION_USE_REGEX
 TEST_CASE("Test Exclusive Property", "[YamlConfigurationExclusiveProperty]") {
   TestController test_controller;
 
@@ -692,7 +691,7 @@ TEST_CASE("Test Exclusive Property", "[YamlConfigurationExclusiveProperty]") {
   std::shared_ptr<minifi::Configure> configuration = std::make_shared<minifi::Configure>();
   std::shared_ptr<minifi::io::StreamFactory> streamFactory = minifi::io::StreamFactory::getInstance(configuration);
   std::shared_ptr<core::ContentRepository> content_repo = std::make_shared<core::repository::VolatileContentRepository>();
-  core::YamlConfiguration yamlConfig(testProvRepo, testFlowFileRepo, content_repo, streamFactory, configuration);
+  core::YamlConfiguration yamlConfig({testProvRepo, testFlowFileRepo, content_repo, streamFactory, configuration});
   const auto component = std::make_shared<DummyComponent>();
   component->setSupportedProperties(std::array{
     core::Property("Prop A", "Prop A desc", "val A", true, "", { }, { }),
@@ -712,7 +711,7 @@ TEST_CASE("Test Regex Property", "[YamlConfigurationRegexProperty]") {
   std::shared_ptr<minifi::Configure> configuration = std::make_shared<minifi::Configure>();
   std::shared_ptr<minifi::io::StreamFactory> streamFactory = minifi::io::StreamFactory::getInstance(configuration);
   std::shared_ptr<core::ContentRepository> content_repo = std::make_shared<core::repository::VolatileContentRepository>();
-  core::YamlConfiguration yamlConfig(testProvRepo, testFlowFileRepo, content_repo, streamFactory, configuration);
+  core::YamlConfiguration yamlConfig({testProvRepo, testFlowFileRepo, content_repo, streamFactory, configuration});
   const auto component = std::make_shared<DummyComponent>();
   component->setSupportedProperties(std::array{
     core::Property("Prop A", "Prop A desc", "val A", true, "", { }, { }),
@@ -733,7 +732,7 @@ TEST_CASE("Test Exclusive Property 2", "[YamlConfigurationExclusiveProperty2]") 
   std::shared_ptr<minifi::Configure> configuration = std::make_shared<minifi::Configure>();
   std::shared_ptr<minifi::io::StreamFactory> streamFactory = minifi::io::StreamFactory::getInstance(configuration);
   std::shared_ptr<core::ContentRepository> content_repo = std::make_shared<core::repository::VolatileContentRepository>();
-  core::YamlConfiguration yamlConfig(testProvRepo, testFlowFileRepo, content_repo, streamFactory, configuration);
+  core::YamlConfiguration yamlConfig({testProvRepo, testFlowFileRepo, content_repo, streamFactory, configuration});
   const auto component = std::make_shared<DummyComponent>();
   component->setSupportedProperties(std::array{
     core::Property("Prop A", "Prop A desc", "val A", true, "", { }, { }),
@@ -761,7 +760,7 @@ TEST_CASE("Test Regex Property 2", "[YamlConfigurationRegexProperty2]") {
   std::shared_ptr<minifi::Configure> configuration = std::make_shared<minifi::Configure>();
   std::shared_ptr<minifi::io::StreamFactory> streamFactory = minifi::io::StreamFactory::getInstance(configuration);
   std::shared_ptr<core::ContentRepository> content_repo = std::make_shared<core::repository::VolatileContentRepository>();
-  core::YamlConfiguration yamlConfig(testProvRepo, testFlowFileRepo, content_repo, streamFactory, configuration);
+  core::YamlConfiguration yamlConfig({testProvRepo, testFlowFileRepo, content_repo, streamFactory, configuration});
   const auto component = std::make_shared<DummyComponent>();
   component->setSupportedProperties(std::array{
     core::Property("Prop A", "Prop A desc", "val A", true, "", { }, { }),
@@ -778,8 +777,6 @@ TEST_CASE("Test Regex Property 2", "[YamlConfigurationRegexProperty2]") {
   }
   REQUIRE(config_failed);
 }
-
-#endif  // YAML_CONFIGURATION_USE_REGEX
 
 TEST_CASE("Test YAML Config With Funnel", "[YamlConfiguration]") {
   TestController test_controller;

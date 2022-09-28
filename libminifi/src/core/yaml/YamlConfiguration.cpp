@@ -27,10 +27,7 @@
 #include "utils/TimeUtil.h"
 #include "yaml-cpp/yaml.h"
 #include "core/yaml/YamlNode.h"
-
-#ifdef YAML_CONFIGURATION_USE_REGEX
 #include "utils/RegexUtils.h"
-#endif  // YAML_CONFIGURATION_USE_REGEX
 
 namespace org::apache::nifi::minifi::core {
 
