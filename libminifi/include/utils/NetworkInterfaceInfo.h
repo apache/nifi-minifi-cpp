@@ -32,12 +32,7 @@ typedef IP_ADAPTER_ADDRESSES_LH IP_ADAPTER_ADDRESSES;
 struct ifaddrs;
 #endif
 
-namespace org {
-namespace apache {
-namespace nifi {
-namespace minifi {
-
-namespace utils {
+namespace org::apache::nifi::minifi::utils {
 class NetworkInterfaceInfo {
  public:
   NetworkInterfaceInfo(NetworkInterfaceInfo&& src) noexcept = default;
@@ -49,17 +44,18 @@ class NetworkInterfaceInfo {
   explicit NetworkInterfaceInfo(const struct ifaddrs* ifa);
 #endif
   NetworkInterfaceInfo& operator=(NetworkInterfaceInfo&& other) noexcept = default;
-  const std::string& getName() const noexcept { return name_; }
-  bool hasIpV4Address() const noexcept { return !ip_v4_addresses_.empty(); }
-  bool hasIpV6Address() const noexcept { return !ip_v6_addresses_.empty(); }
-  bool isRunning() const noexcept { return running_; }
-  bool isLoopback() const noexcept { return loopback_; }
-  const std::vector<std::string>& getIpV4Addresses() const noexcept { return ip_v4_addresses_; }
-  const std::vector<std::string>& getIpV6Addresses() const noexcept { return ip_v6_addresses_; }
+  [[nodiscard]] const std::string& getName() const noexcept { return name_; }
+  [[nodiscard]] bool hasIpV4Address() const noexcept { return !ip_v4_addresses_.empty(); }
+  [[nodiscard]] bool hasIpV6Address() const noexcept { return !ip_v6_addresses_.empty(); }
+  [[nodiscard]] bool isRunning() const noexcept { return running_; }
+  [[nodiscard]] bool isLoopback() const noexcept { return loopback_; }
+  [[nodiscard]] const std::vector<std::string>& getIpV4Addresses() const noexcept { return ip_v4_addresses_; }
+  [[nodiscard]] const std::vector<std::string>& getIpV6Addresses() const noexcept { return ip_v6_addresses_; }
 
   // Traverses the ip addresses and merges them together based on the interface name
-  static std::vector<NetworkInterfaceInfo> getNetworkInterfaceInfos(std::function<bool(const NetworkInterfaceInfo&)> filter = { [](const NetworkInterfaceInfo&) { return true; } },
-      const std::optional<uint32_t> max_interfaces = std::nullopt);
+  static std::vector<NetworkInterfaceInfo> getNetworkInterfaceInfos(
+      const std::function<bool(const NetworkInterfaceInfo&)>& filter = { [](const NetworkInterfaceInfo&) { return true; } },
+      std::optional<uint32_t> max_interfaces = std::nullopt);
 
  private:
   void moveAddressesInto(NetworkInterfaceInfo& destination);
@@ -71,8 +67,4 @@ class NetworkInterfaceInfo {
   bool loopback_;
   static std::shared_ptr<core::logging::Logger> logger_;
 };
-} /* namespace utils */
-} /* namespace minifi */
-} /* namespace nifi */
-} /* namespace apache */
-} /* namespace org */
+}  // namespace org::apache::nifi::minifi::utils
