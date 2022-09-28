@@ -236,23 +236,23 @@ void ConsumeWindowsEventLog::onSchedule(const std::shared_ptr<core::ProcessConte
   context->getProperty(EventHeaderDelimiter.getName(), header_delimiter_);
   context->getProperty(BatchCommitSize.getName(), batch_commit_size_);
 
-  std::string header;
-  context->getProperty(EventHeader.getName(), header);
-
-  auto keyValueSplit = utils::StringUtils::split(header, ",");
-  for (const auto &kv : keyValueSplit) {
-    auto splitKeyAndValue = utils::StringUtils::split(kv, "=");
-    if (splitKeyAndValue.size() == 2) {
-      auto key = utils::StringUtils::trim(splitKeyAndValue.at(0));
-      auto value = utils::StringUtils::trim(splitKeyAndValue.at(1));
-      if (!insertHeaderName(header_names_, key, value)) {
-        logger_->log_error("%s is an invalid key for the header map", key);
+  header_names_.clear();
+  if (auto header = context->getProperty(EventHeader)) {
+    auto keyValueSplit = utils::StringUtils::split(*header, ",");
+    for (const auto &kv : keyValueSplit) {
+      auto splitKeyAndValue = utils::StringUtils::split(kv, "=");
+      if (splitKeyAndValue.size() == 2) {
+        auto key = utils::StringUtils::trim(splitKeyAndValue.at(0));
+        auto value = utils::StringUtils::trim(splitKeyAndValue.at(1));
+        if (!insertHeaderName(header_names_, key, value)) {
+          logger_->log_error("%s is an invalid key for the header map", key);
+        }
+      } else if (splitKeyAndValue.size() == 1) {
+        auto key = utils::StringUtils::trim(splitKeyAndValue.at(0));
+        if (!insertHeaderName(header_names_, key, "")) {
+          logger_->log_error("%s is an invalid key for the header map", key);
+        }
       }
-    } else if (splitKeyAndValue.size() == 1) {
-     auto key = utils::StringUtils::trim(splitKeyAndValue.at(0));
-     if (!insertHeaderName(header_names_, key, "")) {
-       logger_->log_error("%s is an invalid key for the header map", key);
-     }
     }
   }
 
