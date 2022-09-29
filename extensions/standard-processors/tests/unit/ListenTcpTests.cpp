@@ -21,6 +21,7 @@
 #include "SingleProcessorTestController.h"
 #include "Utils.h"
 #include "controllers/SSLContextService.h"
+#include "range/v3/algorithm/contains.hpp"
 
 using ListenTCP = org::apache::nifi::minifi::processors::ListenTCP;
 
@@ -32,7 +33,8 @@ constexpr uint64_t PORT = 10254;
 
 void check_for_attributes(core::FlowFile& flow_file) {
   CHECK(std::to_string(PORT) == flow_file.getAttribute("tcp.port"));
-  CHECK(("::ffff:127.0.0.1" == flow_file.getAttribute("tcp.sender") || "::1" == flow_file.getAttribute("tcp.sender")));
+  const auto local_addresses = {"127.0.0.1", "::ffff:127.0.0.1", "::1"};
+  CHECK(ranges::contains(local_addresses, flow_file.getAttribute("tcp.sender")));
 }
 
 TEST_CASE("ListenTCP test multiple messages", "[ListenTCP]") {

@@ -103,10 +103,10 @@ void PutUDP::onTrigger(core::ProcessContext* context, core::ProcessSession* cons
   const auto resolve_hostname = [&io_context, &hostname, &port]() -> nonstd::expected<udp::resolver::results_type, std::error_code> {
     udp::resolver resolver(io_context);
     std::error_code error_code;
-    auto resolved_query = resolver.resolve(hostname, port, error_code);
+    auto results = resolver.resolve(hostname, port, error_code);
     if (error_code)
       return nonstd::make_unexpected(error_code);
-    return resolved_query;
+    return results;
   };
 
   const auto send_data_to_endpoint = [&io_context, &data, &logger = this->logger_](const udp::resolver::results_type& resolved_query) -> nonstd::expected<void, std::error_code> {

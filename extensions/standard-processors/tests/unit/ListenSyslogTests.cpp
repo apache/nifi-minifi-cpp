@@ -21,6 +21,7 @@
 #include "SingleProcessorTestController.h"
 #include "Utils.h"
 #include "controllers/SSLContextService.h"
+#include "range/v3/algorithm/contains.hpp"
 
 using ListenSyslog = org::apache::nifi::minifi::processors::ListenSyslog;
 
@@ -218,7 +219,8 @@ void check_for_only_basic_attributes(core::FlowFile& flow_file, uint16_t port, s
 void check_parsed_attributes(const core::FlowFile& flow_file, const ValidRFC5424Message& original_message, uint16_t port, std::string_view protocol) {
   CHECK(std::to_string(port) == flow_file.getAttribute("syslog.port"));
   CHECK(protocol == flow_file.getAttribute("syslog.protocol"));
-  CHECK(("::ffff:127.0.0.1" == flow_file.getAttribute("syslog.sender") || "::1" == flow_file.getAttribute("syslog.sender")));
+  const auto local_addresses = {"127.0.0.1", "::ffff:127.0.0.1", "::1"};
+  CHECK(ranges::contains(local_addresses, flow_file.getAttribute("syslog.sender")));
 
   CHECK("true" == flow_file.getAttribute("syslog.valid"));
   CHECK(original_message.priority_ == flow_file.getAttribute("syslog.priority"));
@@ -237,7 +239,8 @@ void check_parsed_attributes(const core::FlowFile& flow_file, const ValidRFC5424
 void check_parsed_attributes(const core::FlowFile& flow_file, const ValidRFC3164Message& original_message, uint16_t port, std::string_view protocol) {
   CHECK(std::to_string(port) == flow_file.getAttribute("syslog.port"));
   CHECK(protocol == flow_file.getAttribute("syslog.protocol"));
-  CHECK(("::ffff:127.0.0.1" == flow_file.getAttribute("syslog.sender") || "::1" == flow_file.getAttribute("syslog.sender")));
+  const auto local_addresses = {"127.0.0.1", "::ffff:127.0.0.1", "::1"};
+  CHECK(ranges::contains(local_addresses, flow_file.getAttribute("syslog.sender")));
 
   CHECK("true" == flow_file.getAttribute("syslog.valid"));
   CHECK(original_message.priority_ == flow_file.getAttribute("syslog.priority"));
@@ -271,8 +274,8 @@ TEST_CASE("ListenSyslog without parsing test", "[ListenSyslog]") {
     protocol = "UDP";
     REQUIRE(listen_syslog->setProperty(ListenSyslog::ProtocolProperty, "UDP"));
     controller.plan->scheduleProcessor(listen_syslog);
-    utils::sendUDPPacket(rfc5424_logger_example_1, endpoint);
-    utils::sendUDPPacket(invalid_syslog, endpoint);
+    utils::sendUdpDatagram(rfc5424_logger_example_1, endpoint);
+    utils::sendUdpDatagram(invalid_syslog, endpoint);
   }
 
   SECTION("TCP") {
@@ -324,18 +327,18 @@ TEST_CASE("ListenSyslog with parsing test", "[ListenSyslog]") {
     REQUIRE(listen_syslog->setProperty(ListenSyslog::ProtocolProperty, "UDP"));
     controller.plan->scheduleProcessor(listen_syslog);
     std::this_thread::sleep_for(100ms);
-    utils::sendUDPPacket(rfc5424_doc_example_1.unparsed_, endpoint);
-    utils::sendUDPPacket(rfc5424_doc_example_2.unparsed_, endpoint);
-    utils::sendUDPPacket(rfc5424_doc_example_3.unparsed_, endpoint);
-    utils::sendUDPPacket(rfc5424_doc_example_4.unparsed_, endpoint);
+    utils::sendUdpDatagram(rfc5424_doc_example_1.unparsed_, endpoint);
+    utils::sendUdpDatagram(rfc5424_doc_example_2.unparsed_, endpoint);
+    utils::sendUdpDatagram(rfc5424_doc_example_3.unparsed_, endpoint);
+    utils::sendUdpDatagram(rfc5424_doc_example_4.unparsed_, endpoint);
 
-    utils::sendUDPPacket(rfc3164_doc_example_1.unparsed_, endpoint);
-    utils::sendUDPPacket(rfc3164_doc_example_2.unparsed_, endpoint);
-    utils::sendUDPPacket(rfc3164_doc_example_3.unparsed_, endpoint);
-    utils::sendUDPPacket(rfc3164_doc_example_4.unparsed_, endpoint);
+    utils::sendUdpDatagram(rfc3164_doc_example_1.unparsed_, endpoint);
+    utils::sendUdpDatagram(rfc3164_doc_example_2.unparsed_, endpoint);
+    utils::sendUdpDatagram(rfc3164_doc_example_3.unparsed_, endpoint);
+    utils::sendUdpDatagram(rfc3164_doc_example_4.unparsed_, endpoint);
 
-    utils::sendUDPPacket(rfc5424_logger_example_1, endpoint);
-    utils::sendUDPPacket(invalid_syslog, endpoint);
+    utils::sendUdpDatagram(rfc5424_logger_example_1, endpoint);
+    utils::sendUdpDatagram(invalid_syslog, endpoint);
   }
 
   SECTION("TCP") {
@@ -448,7 +451,7 @@ TEST_CASE("ListenSyslog max queue and max batch size test", "[ListenSyslog]") {
     REQUIRE(listen_syslog->setProperty(ListenSyslog::ProtocolProperty, "UDP"));
     controller.plan->scheduleProcessor(listen_syslog);
     for (auto i = 0; i < 100; ++i) {
-      utils::sendUDPPacket(rfc5424_doc_example_1.unparsed_, endpoint);
+      utils::sendUdpDatagram(rfc5424_doc_example_1.unparsed_, endpoint);
     }
     CHECK(utils::countLogOccurrencesUntil("Queue is full. UDP message ignored.", 50, 300ms, 50ms));
   }

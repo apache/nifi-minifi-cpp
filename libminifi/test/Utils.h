@@ -127,13 +127,21 @@ bool sendMessagesViaTCP(const std::vector<std::string_view>& contents, const asi
   return true;
 }
 
-bool sendUDPPacket(const std::string_view content, const asio::ip::udp::endpoint& remote_endpoint) {
+bool sendUdpDatagram(const asio::const_buffer& content, const asio::ip::udp::endpoint& remote_endpoint) {
   asio::io_context io_context;
   asio::ip::udp::socket socket(io_context);
   socket.open(remote_endpoint.protocol());
   std::error_code err;
-  socket.send_to(asio::buffer(content, content.size()), remote_endpoint, 0, err);
+  socket.send_to(content, remote_endpoint, 0, err);
   return !err;
+}
+
+bool sendUdpDatagram(const gsl::span<std::byte const> content, const asio::ip::udp::endpoint& remote_endpoint) {
+  return sendUdpDatagram(asio::const_buffer(content.begin(), content.size()), remote_endpoint);
+}
+
+bool sendUdpDatagram(const std::string_view content, const asio::ip::udp::endpoint& remote_endpoint) {
+  return sendUdpDatagram(asio::const_buffer(content.begin(), content.size()), remote_endpoint);
 }
 
 bool isIPv6Disabled() {
