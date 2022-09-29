@@ -200,7 +200,8 @@ constexpr std::string_view invalid_syslog = "not syslog";
 void check_for_only_basic_attributes(core::FlowFile& flow_file, uint16_t port, std::string_view protocol) {
   CHECK(std::to_string(port) == flow_file.getAttribute("syslog.port"));
   CHECK(protocol == flow_file.getAttribute("syslog.protocol"));
-  CHECK(("::ffff:127.0.0.1" == flow_file.getAttribute("syslog.sender") || "::1" == flow_file.getAttribute("syslog.sender")));
+  const auto local_addresses = {"127.0.0.1", "::ffff:127.0.0.1", "::1"};
+  CHECK(ranges::contains(local_addresses, flow_file.getAttribute("syslog.sender")));
 
   CHECK(std::nullopt == flow_file.getAttribute("syslog.valid"));
   CHECK(std::nullopt == flow_file.getAttribute("syslog.priority"));
