@@ -30,6 +30,7 @@ using namespace std::literals::chrono_literals;
 namespace org::apache::nifi::minifi::test {
 
 constexpr uint64_t SYSLOG_PORT = 10255;
+constexpr auto local_addresses = {"127.0.0.1", "::ffff:127.0.0.1", "::1"};
 
 struct ValidRFC5424Message {
   constexpr ValidRFC5424Message(std::string_view message,
@@ -201,7 +202,6 @@ constexpr std::string_view invalid_syslog = "not syslog";
 void check_for_only_basic_attributes(core::FlowFile& flow_file, uint16_t port, std::string_view protocol) {
   CHECK(std::to_string(port) == flow_file.getAttribute("syslog.port"));
   CHECK(protocol == flow_file.getAttribute("syslog.protocol"));
-  const auto local_addresses = {"127.0.0.1", "::ffff:127.0.0.1", "::1"};
   CHECK(ranges::contains(local_addresses, flow_file.getAttribute("syslog.sender")));
 
   CHECK(std::nullopt == flow_file.getAttribute("syslog.valid"));
@@ -219,7 +219,6 @@ void check_for_only_basic_attributes(core::FlowFile& flow_file, uint16_t port, s
 void check_parsed_attributes(const core::FlowFile& flow_file, const ValidRFC5424Message& original_message, uint16_t port, std::string_view protocol) {
   CHECK(std::to_string(port) == flow_file.getAttribute("syslog.port"));
   CHECK(protocol == flow_file.getAttribute("syslog.protocol"));
-  const auto local_addresses = {"127.0.0.1", "::ffff:127.0.0.1", "::1"};
   CHECK(ranges::contains(local_addresses, flow_file.getAttribute("syslog.sender")));
 
   CHECK("true" == flow_file.getAttribute("syslog.valid"));
@@ -239,7 +238,6 @@ void check_parsed_attributes(const core::FlowFile& flow_file, const ValidRFC5424
 void check_parsed_attributes(const core::FlowFile& flow_file, const ValidRFC3164Message& original_message, uint16_t port, std::string_view protocol) {
   CHECK(std::to_string(port) == flow_file.getAttribute("syslog.port"));
   CHECK(protocol == flow_file.getAttribute("syslog.protocol"));
-  const auto local_addresses = {"127.0.0.1", "::ffff:127.0.0.1", "::1"};
   CHECK(ranges::contains(local_addresses, flow_file.getAttribute("syslog.sender")));
 
   CHECK("true" == flow_file.getAttribute("syslog.valid"));

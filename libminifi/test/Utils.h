@@ -127,7 +127,7 @@ bool sendMessagesViaTCP(const std::vector<std::string_view>& contents, const asi
   return true;
 }
 
-bool sendUdpDatagram(const asio::const_buffer& content, const asio::ip::udp::endpoint& remote_endpoint) {
+bool sendUdpDatagram(const asio::const_buffer content, const asio::ip::udp::endpoint& remote_endpoint) {
   asio::io_context io_context;
   asio::ip::udp::socket socket(io_context);
   socket.open(remote_endpoint.protocol());
