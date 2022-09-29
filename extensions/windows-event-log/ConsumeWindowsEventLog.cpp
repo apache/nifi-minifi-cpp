@@ -447,7 +447,7 @@ wel::WindowsEventLogHandler& ConsumeWindowsEventLog::getEventLogHandler(const st
   LPCWSTR widechar = temp_wstring.c_str();
 
   providers_[name] = wel::WindowsEventLogHandler(EvtOpenPublisherMetadata(NULL, widechar, NULL, 0, 0));
-  logger_->log_trace("Not found the handler -> created handler for %s", name.c_str());
+  logger_->log_info("Not found the handler -> created handler for %s, number of cached handlers: %zu", name.c_str(), providers_.size());
   return providers_[name];
 }
 
