@@ -26,6 +26,7 @@
 #include "rapidjson/document.h"
 #include "rapidjson/prettywriter.h"
 #include "RemoteProcessorGroupPort.h"
+#include "utils/gsl.h"
 
 #include "range/v3/view/filter.hpp"
 #include "range/v3/view/transform.hpp"
@@ -43,7 +44,7 @@ static std::string escape(std::string str) {
 static std::string prettifyJson(const std::string& str) {
   rapidjson::Document doc;
   rapidjson::ParseResult res = doc.Parse(str.c_str(), str.length());
-  assert(res);
+  gsl_Assert(res);
 
   rapidjson::StringBuffer buffer;
 
