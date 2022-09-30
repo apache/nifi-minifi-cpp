@@ -141,7 +141,7 @@ bool sendUdpDatagram(const gsl::span<std::byte const> content, const asio::ip::u
 }
 
 bool sendUdpDatagram(const std::string_view content, const asio::ip::udp::endpoint& remote_endpoint) {
-  return sendUdpDatagram(asio::const_buffer(content.begin(), content.size()), remote_endpoint);
+  return sendUdpDatagram(asio::buffer(content), remote_endpoint);
 }
 
 bool isIPv6Disabled() {
