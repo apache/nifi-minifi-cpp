@@ -284,6 +284,10 @@ int64_t OsUtils::getTotalPagingFileSize() {
   DWORDLONG total_paging_file_size = memory_info.ullTotalPageFile;
   return total_paging_file_size;
 }
+
+std::error_code OsUtils::windowsErrorToErrorCode(DWORD error_code) {
+  return {gsl::narrow_cast<int>(error_code), std::system_category()};
+}
 #endif
 
 std::string OsUtils::getMachineArchitecture() {

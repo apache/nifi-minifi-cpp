@@ -39,6 +39,7 @@
 #include "UniqueEvtHandle.h"
 
 #include "pugixml.hpp"
+#include "utils/expected.h"
 
 namespace org::apache::nifi::minifi::wel {
 
@@ -59,9 +60,9 @@ enum METADATA {
 };
 
 
-// this is a continuous enum so we can rely on the array
+// this is a continuous enum, so we can rely on the array
 
-typedef std::vector<std::pair<METADATA, std::string>> METADATA_NAMES;
+using METADATA_NAMES = std::vector<std::pair<METADATA, std::string>>;
 
 class WindowsEventLogHandler {
  public:
@@ -71,9 +72,9 @@ class WindowsEventLogHandler {
   explicit WindowsEventLogHandler(EVT_HANDLE metadataProvider) : metadata_provider_(metadataProvider) {
   }
 
-  std::string getEventMessage(EVT_HANDLE eventHandle) const;
+  nonstd::expected<std::string, std::error_code> getEventMessage(EVT_HANDLE eventHandle) const;
 
-  EVT_HANDLE getMetadata() const;
+  [[nodiscard]] EVT_HANDLE getMetadata() const;
 
  private:
   unique_evt_handle metadata_provider_;
@@ -82,8 +83,8 @@ class WindowsEventLogHandler {
 class WindowsEventLogMetadata {
  public:
   virtual ~WindowsEventLogMetadata() = default;
-  virtual std::string getEventData(EVT_FORMAT_MESSAGE_FLAGS flags) const = 0;
-  virtual std::string getEventTimestamp() const = 0;
+  [[nodiscard]] virtual std::string getEventData(EVT_FORMAT_MESSAGE_FLAGS flags) const = 0;
+  [[nodiscard]] virtual std::string getEventTimestamp() const = 0;
   virtual short getEventTypeIndex() const = 0;  // NOLINT short comes from WINDOWS API
 
   static std::string getMetadataString(METADATA val) {
@@ -146,22 +147,21 @@ class WindowsEventLogMetadata {
 
 class WindowsEventLogMetadataImpl : public WindowsEventLogMetadata {
  public:
-  WindowsEventLogMetadataImpl(EVT_HANDLE metadataProvider, EVT_HANDLE event_ptr) : metadata_ptr_(metadataProvider), event_timestamp_(0), event_ptr_(event_ptr) {
+  WindowsEventLogMetadataImpl(EVT_HANDLE metadataProvider, EVT_HANDLE event_ptr) : metadata_ptr_(metadataProvider), event_ptr_(event_ptr) {
     renderMetadata();
   }
 
-  std::string getEventData(EVT_FORMAT_MESSAGE_FLAGS flags) const override;
+  [[nodiscard]] std::string getEventData(EVT_FORMAT_MESSAGE_FLAGS flags) const override;
 
-  std::string getEventTimestamp() const override { return event_timestamp_str_; }
+  [[nodiscard]] std::string getEventTimestamp() const override { return event_timestamp_str_; }
 
   short getEventTypeIndex() const override { return event_type_index_; }  // NOLINT short comes from WINDOWS API
 
  private:
   void renderMetadata();
 
-  uint64_t event_timestamp_;
   std::string event_type_;
-  short event_type_index_;  // NOLINT short comes from WINDOWS API
+  short event_type_index_ = 0;  // NOLINT short comes from WINDOWS API
   std::string event_timestamp_str_;
   EVT_HANDLE event_ptr_;
   EVT_HANDLE metadata_ptr_;
@@ -169,33 +169,31 @@ class WindowsEventLogMetadataImpl : public WindowsEventLogMetadata {
 
 class WindowsEventLogHeader {
  public:
-  explicit WindowsEventLogHeader(METADATA_NAMES header_names) : header_names_(header_names) {}
-
-  void setDelimiter(const std::string& delim);
+  explicit WindowsEventLogHeader(const METADATA_NAMES& header_names, const std::optional<std::string>& custom_delimiter, size_t minimum_size);
 
   template<typename MetadataCollection>
   std::string getEventHeader(const MetadataCollection& metadata_collection) const;
 
+  [[nodiscard]] std::string getDelimiterFor(size_t length) const;
  private:
-  std::string createDefaultDelimiter(size_t max, size_t length) const;
+  [[nodiscard]] std::string createDefaultDelimiter(size_t length) const;
 
-  std::string delimiter_;
-  METADATA_NAMES header_names_;
+  const METADATA_NAMES& header_names_;
+  const std::optional<std::string>& custom_delimiter_;
+  const size_t longest_header_name_;
 };
 
 template<typename MetadataCollection>
 std::string WindowsEventLogHeader::getEventHeader(const MetadataCollection& metadata_collection) const {
   std::stringstream eventHeader;
-  size_t max = 1;
-  for (const auto& option : header_names_) {
-    max = (std::max(max, option.second.size()));
-  }
-  ++max;  // increment by one to get space.
+
   for (const auto& option : header_names_) {
     auto name = option.second;
-    if (!name.empty()) {
-      eventHeader << name << (delimiter_.empty() ? createDefaultDelimiter(max, name.size()) : delimiter_);
-    }
+    eventHeader << name;
+    if (custom_delimiter_)
+      eventHeader << *custom_delimiter_;
+    else
+      eventHeader << createDefaultDelimiter(name.size());
     eventHeader << utils::StringUtils::trim(metadata_collection(option.first)) << std::endl;
   }
 
