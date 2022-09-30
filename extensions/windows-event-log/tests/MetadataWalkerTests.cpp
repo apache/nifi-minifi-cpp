@@ -16,12 +16,8 @@
  * limitations under the License.
  */
 
-#include <fstream>
 #include <map>
-#include <memory>
-#include <utility>
 #include <string>
-#include <set>
 
 #include "TestBase.h"
 #include "Catch.h"
@@ -32,11 +28,28 @@
 
 using METADATA = org::apache::nifi::minifi::wel::METADATA;
 using MetadataWalker = org::apache::nifi::minifi::wel::MetadataWalker;
-using WindowsEventLogHandler = org::apache::nifi::minifi::wel::WindowsEventLogHandler;
 using WindowsEventLogMetadata = org::apache::nifi::minifi::wel::WindowsEventLogMetadata;
+using WindowsEventLogMetadataImpl = org::apache::nifi::minifi::wel::WindowsEventLogMetadataImpl;
 using XmlString = org::apache::nifi::minifi::wel::XmlString;
 
 namespace {
+
+std::string updateXmlMetadata(const std::string &xml, EVT_HANDLE metadata_ptr, EVT_HANDLE event_ptr, bool update_xml, bool resolve, std::optional<utils::Regex> regex = std::nullopt) {
+  WindowsEventLogMetadataImpl metadata{metadata_ptr, event_ptr};
+  MetadataWalker walker(metadata, "", update_xml, resolve, regex);
+
+  pugi::xml_document doc;
+  pugi::xml_parse_result result = doc.load_string(xml.c_str());
+
+  if (result) {
+    doc.traverse(walker);
+    XmlString writer;
+    doc.print(writer, "", pugi::format_raw);  // no indentation or formatting
+    return writer.xml_;
+  } else {
+    throw std::runtime_error("Could not parse XML document");
+  }
+}
 
 std::string formatXml(const std::string &xml) {
   pugi::xml_document doc;
@@ -60,8 +73,8 @@ const short event_type_index = 178;  // NOLINT short comes from WINDOWS API
 
 class FakeWindowsEventLogMetadata : public WindowsEventLogMetadata {
  public:
-  std::string getEventData(EVT_FORMAT_MESSAGE_FLAGS flags) const override { return "event_data_for_flag_" + std::to_string(flags); }
-  std::string getEventTimestamp() const override { return "event_timestamp"; }
+  [[nodiscard]] std::string getEventData(EVT_FORMAT_MESSAGE_FLAGS flags) const override { return "event_data_for_flag_" + std::to_string(flags); }
+  [[nodiscard]] std::string getEventTimestamp() const override { return "event_timestamp"; }
   short getEventTypeIndex() const override { return event_type_index; }  // NOLINT short comes from WINDOWS API
 };
 
@@ -71,33 +84,35 @@ TEST_CASE("MetadataWalker updates the Sid in the XML if both update_xml and reso
   std::string xml = readFile("resources/nobodysid.xml");
 
   SECTION("No resolution") {
-    REQUIRE(MetadataWalker::updateXmlMetadata(xml, 0x00, 0x00, false, true) == formatXml(xml));
+    REQUIRE(updateXmlMetadata(xml, nullptr, nullptr, false, true) == formatXml(xml));
   }
 
   SECTION("Resolve nobody") {
     std::string nobody = readFile("resources/withsids.xml");
-    REQUIRE(MetadataWalker::updateXmlMetadata(xml, 0x00, 0x00, true, true, ".*Sid") == formatXml(nobody));
+    std::optional<utils::Regex> regex = utils::Regex(".*Sid");
+    REQUIRE(updateXmlMetadata(xml, nullptr, nullptr, true, true, regex) == formatXml(nobody));
   }
 }
 
 TEST_CASE("MetadataWalker works even when there is no Data block", "[updateXmlMetadata]") {
   std::string xml = readFile("resources/nodata.xml");
 
-  REQUIRE(MetadataWalker::updateXmlMetadata(xml, 0x00, 0x00, false, true) == formatXml(xml));
+  REQUIRE(updateXmlMetadata(xml, nullptr, nullptr, false, true) == formatXml(xml));
 }
 
 TEST_CASE("MetadataWalker throws if the input XML is invalid", "[updateXmlMetadata]") {
   std::string xml = readFile("resources/invalidxml.xml");
 
-  REQUIRE_THROWS(MetadataWalker::updateXmlMetadata(xml, 0x00, 0x00, false, true) == formatXml(xml));
+  REQUIRE_THROWS(updateXmlMetadata(xml, nullptr, nullptr, false, true) == formatXml(xml));
 }
 
 TEST_CASE("MetadataWalker will leave a Sid unchanged if it doesn't correspond to a user", "[updateXmlMetadata]") {
   std::string xml = readFile("resources/unknownsid.xml");
 
-  REQUIRE(MetadataWalker::updateXmlMetadata(xml, 0x00, 0x00, false, true) == formatXml(xml));
-  REQUIRE(MetadataWalker::updateXmlMetadata(xml, 0x00, 0x00, true, true) == formatXml(xml));
-  REQUIRE(MetadataWalker::updateXmlMetadata(xml, 0x00, 0x00, true, true, ".*Sid") == formatXml(xml));
+  REQUIRE(updateXmlMetadata(xml, nullptr, nullptr, false, true) == formatXml(xml));
+  REQUIRE(updateXmlMetadata(xml, nullptr, nullptr, true, true) == formatXml(xml));
+  std::optional<utils::Regex> regex = utils::Regex(".*Sid");
+  REQUIRE(updateXmlMetadata(xml, nullptr, nullptr, true, true, regex) == formatXml(xml));
 }
 
 TEST_CASE("MetadataWalker can replace multiple Sids", "[updateXmlMetadata]") {
@@ -106,7 +121,7 @@ TEST_CASE("MetadataWalker can replace multiple Sids", "[updateXmlMetadata]") {
   std::string programmaticallyResolved;
 
   pugi::xml_document doc;
-  xml = MetadataWalker::updateXmlMetadata(xml, 0x00, 0x00, false, true);
+  xml = updateXmlMetadata(xml, nullptr, nullptr, false, true);
   pugi::xml_parse_result result = doc.load_string(xml.c_str());
 
   for (const auto &node : doc.child("Event").child("EventData").children()) {
@@ -128,21 +143,23 @@ namespace {
 void extractMappingsTestHelper(const std::string &file_name,
                                bool update_xml,
                                bool resolve,
-                               std::map<std::string, std::string> expected_identifiers,
-                               std::map<METADATA, std::string> expected_metadata,
-                               std::map<std::string, std::string> expected_field_values) {
+                               const std::map<std::string, std::string>& expected_identifiers,
+                               const std::map<METADATA, std::string>& expected_metadata,
+                               const std::map<std::string, std::string>& expected_field_values) {
   std::string input_xml = readFile(file_name);
+  REQUIRE(!input_xml.empty());
   pugi::xml_document doc;
   pugi::xml_parse_result result = doc.load_string(input_xml.c_str());
-  REQUIRE(result);
+  CHECK(result);
 
-  MetadataWalker walker(FakeWindowsEventLogMetadata{}, METADATA_WALKER_TESTS_LOG_NAME, update_xml, resolve, ".*Sid");
+  std::optional<utils::Regex> regex = utils::Regex(".*Sid");
+  MetadataWalker walker(FakeWindowsEventLogMetadata{}, METADATA_WALKER_TESTS_LOG_NAME, update_xml, resolve, regex);
   doc.traverse(walker);
 
-  REQUIRE(walker.getIdentifiers() == expected_identifiers);
-  REQUIRE(walker.getFieldValues() == expected_field_values);
+  CHECK(walker.getIdentifiers() == expected_identifiers);
+  CHECK(walker.getFieldValues() == expected_field_values);
   for (const auto &key_value_pair : expected_metadata) {
-    REQUIRE(walker.getMetadata(key_value_pair.first) == key_value_pair.second);
+    CHECK(walker.getMetadata(key_value_pair.first) == key_value_pair.second);
   }
 }
 

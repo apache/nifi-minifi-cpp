@@ -217,10 +217,10 @@ TEST_CASE("Bookmark::getNewBookmarkXml() updates the bookmark", "[add_event]") {
   unique_evt_handle results = queryEvents();
   unique_evt_handle event = getFirstEventFromResults(results);
 
-  std::wstring bookmark_xml_after;
-  REQUIRE(bookmark->getNewBookmarkXml(event.get(), bookmark_xml_after));
+  auto bookmark_xml_after = bookmark->getNewBookmarkXml(event.get());
 
-  REQUIRE(bookmark_xml_before != bookmark_xml_after);
+  REQUIRE(bookmark_xml_after);
+  CHECK(bookmark_xml_before != *bookmark_xml_after);
 }
 
 TEST_CASE("Bookmark::saveBookmarkXml() updates the bookmark and saves it to the state manager", "[save_bookmark][state]") {

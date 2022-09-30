@@ -22,19 +22,19 @@
 #include "processors/PutFile.h"
 #include "TestBase.h"
 #include "Catch.h"
-#include "utils/TestUtils.h"
 #include "utils/file/FileUtils.h"
-
-#include "rapidjson/document.h"
 
 #include "CWELTestUtils.h"
 #include "Utils.h"
+#include "../wel/UniqueEvtHandle.h"
+#include "utils/Deleters.h"
 
 using ConsumeWindowsEventLog = org::apache::nifi::minifi::processors::ConsumeWindowsEventLog;
 using LogAttribute = org::apache::nifi::minifi::processors::LogAttribute;
 using PutFile = org::apache::nifi::minifi::processors::PutFile;
 using ConfigurableComponent = org::apache::nifi::minifi::core::ConfigurableComponent;
 using IdGenerator = org::apache::nifi::minifi::utils::IdGenerator;
+using unique_evt_handle = org::apache::nifi::minifi::wel::unique_evt_handle;
 
 namespace org::apache::nifi::minifi::test {
 
@@ -56,10 +56,10 @@ class SimpleFormatTestController : public OutputFormatTestController {
   using OutputFormatTestController::OutputFormatTestController;
 
  protected:
-  void dispatchBookmarkEvent() {
+  void dispatchBookmarkEvent() override {
     reportEvent(APPLICATION_CHANNEL, "Event zero: this is in the past");
   }
-  void OutputFormatTestController::dispatchCollectedEvent() {
+  void dispatchCollectedEvent() override {
     reportEvent(APPLICATION_CHANNEL, "Event one");
   }
 };
@@ -82,7 +82,7 @@ TEST_CASE("ConsumeWindowsEventLog properties work with default values", "[create
   std::shared_ptr<TestPlan> test_plan = test_controller.createPlan();
 
   auto processor = test_plan->addProcessor("ConsumeWindowsEventLog", "cwel");
-  test_controller.runSession(test_plan);
+  TestController::runSession(test_plan);
 
   auto properties_required_or_with_default_value = {
     ConsumeWindowsEventLog::Channel,
@@ -114,7 +114,7 @@ TEST_CASE("ConsumeWindowsEventLog properties work with default values", "[create
     }
   }
 
-  REQUIRE(LogTestController::getInstance().contains("Successfully configured CWEL"));
+  CHECK(LogTestController::getInstance().contains("Successfully configured CWEL"));
 }
 
 TEST_CASE("ConsumeWindowsEventLog onSchedule throws if it cannot create the bookmark", "[create][bookmark]") {
@@ -144,35 +144,37 @@ TEST_CASE("ConsumeWindowsEventLog can consume new events", "[onTrigger]") {
 
   reportEvent(APPLICATION_CHANNEL, "Event zero");
 
-  test_controller.runSession(test_plan);
-  REQUIRE(LogTestController::getInstance().contains("processed 0 Events"));
+  TestController::runSession(test_plan);
+  CHECK(LogTestController::getInstance().contains("processed 0 Events"));
   // event zero is not reported as the bookmark is created on the first run
   // and we use the default config setting ProcessOldEvents = false
   // later runs will start with a bookmark saved in the state manager
 
   test_plan->reset();
-  LogTestController::getInstance().resetStream(LogTestController::getInstance().log_output);
+  LogTestController::resetStream(LogTestController::getInstance().log_output);
 
   SECTION("Read one event") {
     reportEvent(APPLICATION_CHANNEL, "Event one");
 
-    test_controller.runSession(test_plan);
-    REQUIRE(LogTestController::getInstance().contains("processed 1 Events"));
-    REQUIRE(LogTestController::getInstance().contains("<EventData><Data>Event one</Data></EventData>"));
+    TestController::runSession(test_plan);
+    CHECK(LogTestController::getInstance().contains("processed 1 Events"));
+    CHECK(LogTestController::getInstance().contains("<EventData><Data>Event one</Data></EventData>"));
 
     // make sure timezone attributes are present
-    REQUIRE(LogTestController::getInstance().contains("key:timezone.offset value:"));
-    REQUIRE(LogTestController::getInstance().contains("key:timezone.name value:"));
+    CHECK(LogTestController::getInstance().contains("key:timezone.offset value:"));
+    CHECK(LogTestController::getInstance().contains("key:timezone.name value:"));
   }
 
-  SECTION("Read two events") {
+  SECTION("Read three events") {
     reportEvent(APPLICATION_CHANNEL, "Event two");
     reportEvent(APPLICATION_CHANNEL, "Event three");
+    reportEvent(APPLICATION_CHANNEL, "%%1844");  // %%1844 expands to System
 
-    test_controller.runSession(test_plan);
-    REQUIRE(LogTestController::getInstance().contains("processed 2 Events"));
-    REQUIRE(LogTestController::getInstance().contains("<EventData><Data>Event two</Data></EventData>"));
-    REQUIRE(LogTestController::getInstance().contains("<EventData><Data>Event three</Data></EventData>"));
+    TestController::runSession(test_plan);
+    CHECK(LogTestController::getInstance().contains("processed 3 Events"));
+    CHECK(LogTestController::getInstance().contains("<EventData><Data>Event two</Data></EventData>"));
+    CHECK(LogTestController::getInstance().contains("<EventData><Data>Event three</Data></EventData>"));
+    CHECK(LogTestController::getInstance().contains("<EventData><Data>System</Data></EventData>"));
   }
 }
 
@@ -191,35 +193,35 @@ TEST_CASE("ConsumeWindowsEventLog bookmarking works", "[onTrigger]") {
 
   reportEvent(APPLICATION_CHANNEL, "Event zero");
 
-  test_controller.runSession(test_plan);
-  REQUIRE(LogTestController::getInstance().contains("processed 0 Events"));
+  TestController::runSession(test_plan);
+  CHECK(LogTestController::getInstance().contains("processed 0 Events"));
 
   test_plan->reset();
-  LogTestController::getInstance().resetStream(LogTestController::getInstance().log_output);
+  LogTestController::resetStream(LogTestController::getInstance().log_output);
 
   SECTION("Read in one go") {
     reportEvent(APPLICATION_CHANNEL, "Event one");
     reportEvent(APPLICATION_CHANNEL, "Event two");
     reportEvent(APPLICATION_CHANNEL, "Event three");
 
-    test_controller.runSession(test_plan);
-    REQUIRE(LogTestController::getInstance().contains("processed 3 Events"));
+    TestController::runSession(test_plan);
+    CHECK(LogTestController::getInstance().contains("processed 3 Events"));
   }
 
   SECTION("Read in two batches") {
     reportEvent(APPLICATION_CHANNEL, "Event one");
 
-    test_controller.runSession(test_plan);
-    REQUIRE(LogTestController::getInstance().contains("processed 1 Events"));
+    TestController::runSession(test_plan);
+    CHECK(LogTestController::getInstance().contains("processed 1 Events"));
 
     reportEvent(APPLICATION_CHANNEL, "Event two");
     reportEvent(APPLICATION_CHANNEL, "Event three");
 
     test_plan->reset();
-    LogTestController::getInstance().resetStream(LogTestController::getInstance().log_output);
+    LogTestController::resetStream(LogTestController::getInstance().log_output);
 
-    test_controller.runSession(test_plan);
-    REQUIRE(LogTestController::getInstance().contains("processed 2 Events"));
+    TestController::runSession(test_plan);
+    CHECK(LogTestController::getInstance().contains("processed 2 Events"));
   }
 }
 
@@ -240,33 +242,33 @@ TEST_CASE("ConsumeWindowsEventLog extracts some attributes by default", "[onTrig
   {
     reportEvent(APPLICATION_CHANNEL, "Event zero: this is in the past");
 
-    test_controller.runSession(test_plan);
+    TestController::runSession(test_plan);
   }
 
   test_plan->reset();
-  LogTestController::getInstance().resetStream(LogTestController::getInstance().log_output);
+  LogTestController::resetStream(LogTestController::getInstance().log_output);
 
   // 1st event, on Info level
   {
     reportEvent(APPLICATION_CHANNEL, "Event one: something interesting happened", EVENTLOG_INFORMATION_TYPE);
 
-    test_controller.runSession(test_plan);
+    TestController::runSession(test_plan);
 
-    REQUIRE(LogTestController::getInstance().contains("key:Keywords value:Classic"));
-    REQUIRE(LogTestController::getInstance().contains("key:Level value:Information"));
+    CHECK(LogTestController::getInstance().contains("key:Keywords value:Classic"));
+    CHECK(LogTestController::getInstance().contains("key:Level value:Information"));
   }
 
   test_plan->reset();
-  LogTestController::getInstance().resetStream(LogTestController::getInstance().log_output);
+  LogTestController::resetStream(LogTestController::getInstance().log_output);
 
   // 2st event, on Warning level
   {
     reportEvent(APPLICATION_CHANNEL, "Event two: something fishy happened!", EVENTLOG_WARNING_TYPE);
 
-    test_controller.runSession(test_plan);
+    TestController::runSession(test_plan);
 
-    REQUIRE(LogTestController::getInstance().contains("key:Keywords value:Classic"));
-    REQUIRE(LogTestController::getInstance().contains("key:Level value:Warning"));
+    CHECK(LogTestController::getInstance().contains("key:Keywords value:Classic"));
+    CHECK(LogTestController::getInstance().contains("key:Level value:Warning"));
   }
 }
 
@@ -289,18 +291,18 @@ void outputFormatSetterTestHelper(const std::string &output_format, int expected
   {
     reportEvent(APPLICATION_CHANNEL, "Event zero: this is in the past");
 
-    test_controller.runSession(test_plan);
+    TestController::runSession(test_plan);
   }
 
   test_plan->reset();
-  LogTestController::getInstance().resetStream(LogTestController::getInstance().log_output);
+  LogTestController::resetStream(LogTestController::getInstance().log_output);
 
   {
     reportEvent(APPLICATION_CHANNEL, "Event one");
 
-    test_controller.runSession(test_plan);
+    TestController::runSession(test_plan);
 
-    REQUIRE(LogTestController::getInstance().contains("Logged " + std::to_string(expected_num_flow_files) + " flow files"));
+    CHECK(LogTestController::getInstance().contains("Logged " + std::to_string(expected_num_flow_files) + " flow files"));
   }
 }
 
@@ -316,31 +318,44 @@ TEST_CASE("ConsumeWindowsEventLog output format can be set", "[create][output_fo
   outputFormatSetterTestHelper("InvalidValue", 0);
 }
 
-// NOTE(fgerlits): I don't know how to unit test this, as my manually published events all result in an empty string if OutputFormat is Plaintext
-//                 but it does seem to work, based on manual tests reading system logs
-// TEST_CASE("ConsumeWindowsEventLog prints events in plain text correctly", "[onTrigger]")
+TEST_CASE("ConsumeWindowsEventLog prints events in plain text correctly", "[onTrigger]") {
+  std::string event = SimpleFormatTestController{APPLICATION_CHANNEL, QUERY, "Plaintext"}.run();
+  CHECK(!event.empty());
+  CHECK(event.find(R"(Log Name:      Application)") != std::string::npos);
+  CHECK(event.find(R"(Source:        Application)") != std::string::npos);
+  CHECK(event.find(R"(Date:          )") != std::string::npos);
+  CHECK(event.find(R"(Record ID:     )") != std::string::npos);
+  CHECK(event.find(R"(Event ID:      14985)") != std::string::npos);
+  CHECK(event.find(R"(Task Category: N/A)") != std::string::npos);
+  CHECK(event.find(R"(Level:         Information)") != std::string::npos);
+  CHECK(event.find(R"(Keywords:      Classic)") != std::string::npos);
+  CHECK(event.find(R"(User:          N/A)") != std::string::npos);
+  CHECK(event.find(R"(Computer:      )") != std::string::npos);
+  CHECK(event.find(R"(EventType:     4)") != std::string::npos);
+  CHECK(event.find(R"(Error:         The message resource is present but the message was not found in the message table.)") != std::string::npos);
+}
 
 TEST_CASE("ConsumeWindowsEventLog prints events in XML correctly", "[onTrigger]") {
   std::string event = SimpleFormatTestController{APPLICATION_CHANNEL, QUERY, "XML"}.run();
 
-  REQUIRE(event.find(R"(<Event xmlns="http://schemas.microsoft.com/win/2004/08/events/event"><System><Provider Name="Application"/>)") != std::string::npos);
-  REQUIRE(event.find(R"(<EventID Qualifiers="0">14985</EventID>)") != std::string::npos);
-  REQUIRE(event.find(R"(<Level>4</Level>)") != std::string::npos);
-  REQUIRE(event.find(R"(<Task>0</Task>)") != std::string::npos);
-  REQUIRE(event.find(R"(<Keywords>0x80000000000000</Keywords><TimeCreated SystemTime=")") != std::string::npos);
+  CHECK(event.find(R"(<Event xmlns="http://schemas.microsoft.com/win/2004/08/events/event"><System><Provider Name="Application"/>)") != std::string::npos);
+  CHECK(event.find(R"(<EventID Qualifiers="0">14985</EventID>)") != std::string::npos);
+  CHECK(event.find(R"(<Level>4</Level>)") != std::string::npos);
+  CHECK(event.find(R"(<Task>0</Task>)") != std::string::npos);
+  CHECK(event.find(R"(<Keywords>0x80000000000000</Keywords><TimeCreated SystemTime=")") != std::string::npos);
   // the timestamp (when the event was published) goes here
-  REQUIRE(event.find(R"("/><EventRecordID>)") != std::string::npos);
+  CHECK(event.find(R"("/><EventRecordID>)") != std::string::npos);
   // the ID of the event goes here (a number)
-  REQUIRE(event.find(R"(</EventRecordID>)") != std::string::npos);
-  REQUIRE(event.find(R"(<Channel>Application</Channel><Computer>)") != std::string::npos);
+  CHECK(event.find(R"(</EventRecordID>)") != std::string::npos);
+  CHECK(event.find(R"(<Channel>Application</Channel><Computer>)") != std::string::npos);
   // the computer name goes here
-  REQUIRE(event.find(R"(</Computer><Security/></System><EventData><Data>Event one</Data></EventData></Event>)") != std::string::npos);
+  CHECK(event.find(R"(</Computer><Security/></System><EventData><Data>Event one</Data></EventData></Event>)") != std::string::npos);
 }
 
 TEST_CASE("ConsumeWindowsEventLog prints events in JSON::Simple correctly", "[onTrigger]") {
   std::string event = SimpleFormatTestController{APPLICATION_CHANNEL, "*", "JSON", "Simple"}.run();
   // the json must be single-line
-  REQUIRE(event.find('\n') == std::string::npos);
+  CHECK(event.find('\n') == std::string::npos);
   utils::verifyJSON(event, R"json(
     {
       "System": {
@@ -410,11 +425,11 @@ void batchCommitSizeTestHelper(std::size_t num_events_read, std::size_t batch_co
   {
     reportEvent(APPLICATION_CHANNEL, "Event zero: this is in the past");
 
-    test_controller.runSession(test_plan);
+    TestController::runSession(test_plan);
   }
 
   test_plan->reset();
-  LogTestController::getInstance().resetStream(LogTestController::getInstance().log_output);
+  LogTestController::resetStream(LogTestController::getInstance().log_output);
 
   auto generate_events = [](const std::size_t event_count) {
     std::vector<std::string> events;
@@ -427,8 +442,8 @@ void batchCommitSizeTestHelper(std::size_t num_events_read, std::size_t batch_co
   for (const auto& event : generate_events(num_events_read))
     reportEvent(APPLICATION_CHANNEL, event.c_str());
 
-  test_controller.runSession(test_plan);
-  REQUIRE(LogTestController::getInstance().contains("processed " + std::to_string(expected_event_count) + " Events"));
+  TestController::runSession(test_plan);
+  CHECK(LogTestController::getInstance().contains("processed " + std::to_string(expected_event_count) + " Events"));
 }
 
 }  // namespace

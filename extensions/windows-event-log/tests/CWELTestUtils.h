@@ -45,7 +45,7 @@ class OutputFormatTestController : public TestController {
       json_format_(std::move(json_format)) {}
 
   std::string run() {
-    LogTestController::getInstance().setDebug<ConsumeWindowsEventLog>();
+    LogTestController::getInstance().setTrace<ConsumeWindowsEventLog>();
     LogTestController::getInstance().setDebug<PutFile>();
     std::shared_ptr<TestPlan> test_plan = createPlan();
 
@@ -69,7 +69,7 @@ class OutputFormatTestController : public TestController {
     }
 
     test_plan->reset();
-    LogTestController::getInstance().resetStream(LogTestController::getInstance().log_output);
+    LogTestController::resetStream(LogTestController::getInstance().log_output);
 
 
     {

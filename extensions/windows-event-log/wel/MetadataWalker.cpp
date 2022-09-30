@@ -30,11 +30,7 @@
 #include "MetadataWalker.h"
 #include "XMLString.h"
 
-namespace org {
-namespace apache {
-namespace nifi {
-namespace minifi {
-namespace wel {
+namespace org::apache::nifi::minifi::wel {
 
 bool MetadataWalker::for_each(pugi::xml_node &node) {
   // don't shortcut resolution here so that we can log attributes.
@@ -43,7 +39,7 @@ bool MetadataWalker::for_each(pugi::xml_node &node) {
     for (pugi::xml_attribute attr : node.attributes())  {
       const auto idUpdate = [&](const std::string &input) {
         if (resolve_) {
-          const auto resolved = utils::OsUtils::userIdToUsername(input);
+          auto resolved = utils::OsUtils::userIdToUsername(input);
           replaced_identifiers_[input] = resolved;
           return resolved;
         }
@@ -106,11 +102,11 @@ bool MetadataWalker::for_each(pugi::xml_node &node) {
   return true;
 }
 
-std::vector<std::string> MetadataWalker::getIdentifiers(const std::string &text) const {
+std::vector<std::string> MetadataWalker::getIdentifiers(const std::string &text) {
   auto pos = text.find("%{");
   std::vector<std::string> found_strings;
   while (pos != std::string::npos) {
-    auto next_pos = text.find("}", pos);
+    auto next_pos = text.find('}', pos);
     if (next_pos != std::string::npos) {
       auto potential_identifier = text.substr(pos + 2, next_pos - (pos + 2));
       std::smatch match;
@@ -146,7 +142,7 @@ std::string MetadataWalker::getMetadata(METADATA metadata) const {
       case EVENT_TYPE:
         return std::to_string(windows_event_log_metadata_.getEventTypeIndex());
       case COMPUTER:
-        return windows_event_log_metadata_.getComputerName();
+        return WindowsEventLogMetadata::getComputerName();
     }
     return "N/A";
 }
@@ -157,23 +153,6 @@ std::map<std::string, std::string> MetadataWalker::getFieldValues() const {
 
 std::map<std::string, std::string> MetadataWalker::getIdentifiers() const {
   return replaced_identifiers_;
-}
-
-std::string MetadataWalker::updateXmlMetadata(const std::string &xml, EVT_HANDLE metadata_ptr, EVT_HANDLE event_ptr, bool update_xml, bool resolve, const std::string &regex) {
-  WindowsEventLogMetadataImpl metadata{metadata_ptr, event_ptr};
-  MetadataWalker walker(metadata, "", update_xml, resolve, regex);
-
-  pugi::xml_document doc;
-  pugi::xml_parse_result result = doc.load_string(xml.c_str());
-
-  if (result) {
-    doc.traverse(walker);
-    wel::XmlString writer;
-    doc.print(writer, "", pugi::format_raw);  // no indentation or formatting
-    return writer.xml_;
-  } else {
-    throw std::runtime_error("Could not parse XML document");
-  }
 }
 
 std::string MetadataWalker::to_string(const wchar_t* pChar) {
@@ -193,8 +172,4 @@ void MetadataWalker::updateText(pugi::xml_node &node, const std::string &field_n
   }
 }
 
-} /* namespace wel */
-} /* namespace minifi */
-} /* namespace nifi */
-} /* namespace apache */
-} /* namespace org */
+}  // namespace org::apache::nifi::minifi::wel

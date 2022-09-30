@@ -38,6 +38,8 @@ int64_t getSystemTotalPhysicalMemory();
 #ifdef WIN32
 /// Returns the total paging file size in bytes
 int64_t getTotalPagingFileSize();
+
+std::string getWindowsErrorAsString(unsigned long error_code);  // NOLINT [runtime/int]
 #endif
 
 /// Returns the host architecture (e.g. x32, arm64)
