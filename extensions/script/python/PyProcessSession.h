@@ -25,7 +25,8 @@
 #include "pybind11/embed.h"
 #include "core/ProcessSession.h"
 #include "../ScriptFlowFile.h"
-#include "PyBaseStream.h"
+#include "PyInputStream.h"
+#include "PyOutputStream.h"
 
 #if defined(__GNUC__) || defined(__GNUG__)
 #pragma GCC visibility push(hidden)

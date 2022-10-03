@@ -33,7 +33,8 @@
 #include <arpa/inet.h>
 
 #endif
-#include "BaseStream.h"
+#include "InputStream.h"
+#include "OutputStream.h"
 #include "Exception.h"
 
 namespace org {

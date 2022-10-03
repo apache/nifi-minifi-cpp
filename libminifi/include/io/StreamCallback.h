@@ -21,12 +21,13 @@
 
 namespace org::apache::nifi::minifi::io {
 
-class BaseStream;
+class InputStream;
+class OutputStream;
 
 // FlowFile IO Callback functions for input and output
 // throw exception for error
-using InputStreamCallback = std::function<int64_t(const std::shared_ptr<BaseStream>& input_stream)>;
-using OutputStreamCallback = std::function<int64_t(const std::shared_ptr<BaseStream>& output_stream)>;
-using InputOutputStreamCallback = std::function<int64_t(const std::shared_ptr<BaseStream>& input_stream, const std::shared_ptr<BaseStream>& output_stream)>;
+using InputStreamCallback = std::function<int64_t(const std::shared_ptr<InputStream>& input_stream)>;
+using OutputStreamCallback = std::function<int64_t(const std::shared_ptr<OutputStream>& output_stream)>;
+using InputOutputStreamCallback = std::function<int64_t(const std::shared_ptr<InputStream>& input_stream, const std::shared_ptr<OutputStream>& output_stream)>;
 
 }  // namespace org::apache::nifi::minifi::io

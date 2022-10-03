@@ -19,38 +19,18 @@
 #include <memory>
 #include <utility>
 #include <string>
-#include <vector>
 
-#include "PyBaseStream.h"
+#include "PyOutputStream.h"
 
 #include "utils/gsl.h"
 
 namespace org::apache::nifi::minifi::python {
 
-PyBaseStream::PyBaseStream(std::shared_ptr<io::BaseStream> stream)
+PyOutputStream::PyOutputStream(std::shared_ptr<io::OutputStream> stream)
     : stream_(std::move(stream)) {
 }
 
-py::bytes PyBaseStream::read() {
-  return read(stream_->size());
-}
-
-py::bytes PyBaseStream::read(size_t len) {
-  if (len == 0) {
-    len = stream_->size();
-  }
-
-  if (len <= 0) {
-    return nullptr;
-  }
-
-  std::vector<std::byte> buffer(len);
-
-  const auto read = stream_->read(buffer);
-  return {reinterpret_cast<char *>(buffer.data()), read};
-}
-
-size_t PyBaseStream::write(const py::bytes& buf) {
+size_t PyOutputStream::write(const py::bytes& buf) {
   return stream_->write(gsl::make_span(static_cast<std::string>(buf)).as_span<const std::byte>());
 }
 

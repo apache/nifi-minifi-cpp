@@ -19,7 +19,6 @@
 
 #include <memory>
 
-#include "io/BaseStream.h"
 #include "civetweb.h"
 #include "utils/gsl.h"
 

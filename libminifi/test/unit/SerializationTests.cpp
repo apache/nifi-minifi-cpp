@@ -19,7 +19,6 @@
 #include <memory>
 #include <string>
 
-#include "io/BaseStream.h"
 #include "SiteToSiteHelper.h"
 #include "../TestBase.h"
 #include "../Catch.h"

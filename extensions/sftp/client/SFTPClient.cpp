@@ -464,7 +464,7 @@ SFTPError SFTPClient::getLastError() const {
   return last_error_;
 }
 
-bool SFTPClient::getFile(const std::string& path, io::BaseStream& output, int64_t expected_size /*= -1*/) {
+bool SFTPClient::getFile(const std::string& path, io::OutputStream& output, int64_t expected_size /*= -1*/) {
   /**
    * SFTP servers should not set the mode of an existing file on open
    * (see https://tools.ietf.org/html/draft-ietf-secsh-filexfer-13, Page 33
@@ -535,7 +535,7 @@ bool SFTPClient::getFile(const std::string& path, io::BaseStream& output, int64_
   return true;
 }
 
-bool SFTPClient::putFile(const std::string& path, io::BaseStream& input, bool overwrite, int64_t expected_size /*= -1*/) {
+bool SFTPClient::putFile(const std::string& path, io::InputStream& input, bool overwrite, int64_t expected_size /*= -1*/) {
   int flags = LIBSSH2_FXF_WRITE | LIBSSH2_FXF_CREAT | (overwrite ? LIBSSH2_FXF_TRUNC : LIBSSH2_FXF_EXCL);
   logger_->log_trace("Opening remote file \"%s\"", path.c_str());
   LIBSSH2_SFTP_HANDLE *file_handle = libssh2_sftp_open(sftp_session_, path.c_str(), flags, 0644);

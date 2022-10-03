@@ -97,7 +97,7 @@ class FixedBuffer {
     } while (size_ != capacity_);
     return total_read;
   }
-  int64_t operator()(const std::shared_ptr<minifi::io::BaseStream>& stream) {
+  int64_t operator()(const std::shared_ptr<minifi::io::InputStream>& stream) {
     return write(*stream, capacity_);
   }
 
@@ -680,7 +680,7 @@ TEST_CASE_METHOD(MergeTestController, "Test Merge File Attributes Keeping All Un
   REQUIRE(attributes["mime.type"] == "application/tar");
 }
 
-void writeString(const std::string& str, const std::shared_ptr<minifi::io::BaseStream>& out) {
+void writeString(const std::string& str, const std::shared_ptr<minifi::io::OutputStream>& out) {
   out->write(reinterpret_cast<const uint8_t*>(str.data()), str.length());
 }
 

@@ -19,7 +19,6 @@
 #include <memory>
 #include <string>
 
-#include "io/BaseStream.h"
 #include "serialization/FlowFileV3Serializer.h"
 #include "serialization/PayloadSerializer.h"
 #include "core/FlowFile.h"

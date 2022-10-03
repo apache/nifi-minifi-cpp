@@ -15,19 +15,39 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#include "io/BaseStream.h"
-#include <vector>
+
+#include <memory>
+#include <utility>
 #include <string>
-#include "core/expect.h"
+#include <vector>
 
-namespace org {
-namespace apache {
-namespace nifi {
-namespace minifi {
-namespace io {
+#include "PyInputStream.h"
 
-} /* namespace io */
-} /* namespace minifi */
-} /* namespace nifi */
-} /* namespace apache */
-} /* namespace org */
+#include "utils/gsl.h"
+
+namespace org::apache::nifi::minifi::python {
+
+PyInputStream::PyInputStream(std::shared_ptr<io::InputStream> stream)
+    : stream_(std::move(stream)) {
+}
+
+py::bytes PyInputStream::read() {
+  return read(stream_->size());
+}
+
+py::bytes PyInputStream::read(size_t len) {
+  if (len == 0) {
+    len = stream_->size();
+  }
+
+  if (len <= 0) {
+    return nullptr;
+  }
+
+  std::vector<std::byte> buffer(len);
+
+  const auto read = stream_->read(buffer);
+  return {reinterpret_cast<char *>(buffer.data()), read};
+}
+
+}  // namespace org::apache::nifi::minifi::python

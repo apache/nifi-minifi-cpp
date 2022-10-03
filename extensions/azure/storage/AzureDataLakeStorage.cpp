@@ -92,7 +92,7 @@ bool AzureDataLakeStorage::deleteFile(const DeleteAzureDataLakeStorageParameters
   }
 }
 
-std::optional<uint64_t> AzureDataLakeStorage::fetchFile(const FetchAzureDataLakeStorageParameters& params, io::BaseStream& stream) {
+std::optional<uint64_t> AzureDataLakeStorage::fetchFile(const FetchAzureDataLakeStorageParameters& params, io::OutputStream& stream) {
   try {
     auto result = data_lake_storage_client_->fetchFile(params);
     return internal::pipe(*result, stream);

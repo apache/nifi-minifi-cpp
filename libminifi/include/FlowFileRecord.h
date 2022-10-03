@@ -31,7 +31,6 @@
 #include <fstream>
 #include <set>
 #include "core/ContentRepository.h"
-#include "io/BaseStream.h"
 #include "core/FlowFile.h"
 #include "utils/TimeUtil.h"
 #include "core/logging/LoggerFactory.h"

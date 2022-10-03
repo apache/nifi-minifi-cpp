@@ -16,26 +16,20 @@
  * limitations under the License.
  */
 
-#pragma once
-
+#include <memory>
+#include <utility>
 #include <string>
-#include <vector>
-#include <iostream>
-#include <cstdint>
-#include "core/expect.h"
-#include "InputStream.h"
-#include "OutputStream.h"
 
-namespace org::apache::nifi::minifi::io {
+#include "LuaOutputStream.h"
 
-/**
- * Base Stream is the base of a composable stream architecture.
- * Intended to be the base of layered streams ala DatInputStreams in Java.
- *
- * ** Not intended to be thread safe as it is not intended to be shared**
- *
- * Extensions may be thread safe and thus shareable, but that is up to the implementation.
- */
-class BaseStream : public InputStream, public OutputStream {};
+namespace org::apache::nifi::minifi::lua {
 
-}  // namespace org::apache::nifi::minifi::io
+LuaOutputStream::LuaOutputStream(std::shared_ptr<io::OutputStream> stream)
+    : stream_(std::move(stream)) {
+}
+
+size_t LuaOutputStream::write(std::string buf) {
+  return stream_->write(reinterpret_cast<const uint8_t*>(buf.data()), buf.length());
+}
+
+}  // namespace org::apache::nifi::minifi::lua

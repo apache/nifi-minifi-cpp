@@ -290,7 +290,7 @@ bool PutSFTP::processOne(const std::shared_ptr<core::ProcessContext> &context, c
   logger_->log_debug("The target path is %s, final target path is %s", target_path.c_str(), final_target_path.c_str());
 
   try {
-    session->read(flow_file, [&client, &target_path, this](const std::shared_ptr<io::BaseStream>& stream) {
+    session->read(flow_file, [&client, &target_path, this](const std::shared_ptr<io::InputStream>& stream) {
       if (!client->putFile(target_path,
           *stream,
           conflict_resolution_ == CONFLICT_RESOLUTION_REPLACE /*overwrite*/,

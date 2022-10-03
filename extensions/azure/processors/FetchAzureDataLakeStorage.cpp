@@ -74,7 +74,7 @@ void FetchAzureDataLakeStorage::onTrigger(const std::shared_ptr<core::ProcessCon
 
   auto fetched_flow_file = session->create(flow_file);
   std::optional<uint64_t> result;
-  session->write(fetched_flow_file, [&, this](const std::shared_ptr<io::BaseStream>& output_stream) -> int64_t {
+  session->write(fetched_flow_file, [&, this](const std::shared_ptr<io::OutputStream>& output_stream) -> int64_t {
     result = azure_data_lake_storage_.fetchFile(*params, *output_stream);
     if (!result) {
       return 0;

@@ -258,7 +258,7 @@ class ReadCallback {
   ReadCallback(const ReadCallback&) = delete;
   ReadCallback& operator=(ReadCallback) = delete;
 
-  int64_t operator()(const std::shared_ptr<io::BaseStream>& stream) {
+  int64_t operator()(const std::shared_ptr<io::InputStream>& stream) {
     std::vector<std::byte> buffer;
 
     buffer.resize(max_seg_size_);
@@ -734,7 +734,7 @@ void PublishKafka::onTrigger(const std::shared_ptr<core::ProcessContext> &contex
     context->getProperty(FailEmptyFlowFiles.getName(), failEmptyFlowFiles);
 
     ReadCallback callback(max_flow_seg_size_, kafkaKey, thisTopic->getTopic(), conn_->getConnection(), *flowFile,
-                                        attributeNameRegex_, messages, flow_file_index, failEmptyFlowFiles, logger_);
+                          attributeNameRegex_, messages, flow_file_index, failEmptyFlowFiles, logger_);
     session->read(flowFile, std::ref(callback));
 
     if (!callback.called_) {

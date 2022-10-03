@@ -40,7 +40,6 @@
 #include "core/Processor.h"
 #include "core/ProcessSession.h"
 #include "FlowFileRecord.h"
-#include "io/BaseStream.h"
 #include "utils/gsl.h"
 
 namespace org {

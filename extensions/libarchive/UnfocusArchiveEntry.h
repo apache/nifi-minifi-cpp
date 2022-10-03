@@ -64,7 +64,7 @@ class UnfocusArchiveEntry : public core::Processor {
   class WriteCallback {
    public:
     explicit WriteCallback(ArchiveMetadata *archiveMetadata);
-    int64_t operator()(const std::shared_ptr<io::BaseStream>& stream) const;
+    int64_t operator()(const std::shared_ptr<io::OutputStream>& stream) const;
    private:
     //! Logger
     std::shared_ptr<Logger> logger_ = core::logging::LoggerFactory<UnfocusArchiveEntry>::getLogger();

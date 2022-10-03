@@ -101,7 +101,7 @@ class PutS3Object : public S3Processor {
       , s3_wrapper_(s3_wrapper) {
     }
 
-    int64_t operator()(const std::shared_ptr<io::BaseStream>& stream) {
+    int64_t operator()(const std::shared_ptr<io::InputStream>& stream) {
       if (flow_size_ > MAX_SIZE) {
         return -1;
       }

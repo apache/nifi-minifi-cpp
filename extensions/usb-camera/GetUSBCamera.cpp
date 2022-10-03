@@ -384,7 +384,7 @@ GetUSBCamera::PNGWriteCallback::PNGWriteCallback(std::shared_ptr<std::mutex> wri
       height_(height) {
 }
 
-int64_t GetUSBCamera::PNGWriteCallback::operator()(const std::shared_ptr<io::BaseStream>& stream) {
+int64_t GetUSBCamera::PNGWriteCallback::operator()(const std::shared_ptr<io::OutputStream>& stream) {
   std::lock_guard<std::mutex> lock(*png_write_mtx_);
   logger_->log_info("Writing %d bytes of raw capture data to PNG output", frame_->data_bytes);
   png_structp png = png_create_write_struct(PNG_LIBPNG_VER_STRING, nullptr, nullptr, nullptr);

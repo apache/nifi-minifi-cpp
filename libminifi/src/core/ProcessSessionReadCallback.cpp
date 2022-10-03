@@ -24,26 +24,21 @@
 #include <string>
 
 #include "core/logging/LoggerConfiguration.h"
-#include "io/BaseStream.h"
 #include "utils/gsl.h"
 
-namespace org {
-namespace apache {
-namespace nifi {
-namespace minifi {
-namespace core {
+namespace org::apache::nifi::minifi::core {
 
 ProcessSessionReadCallback::ProcessSessionReadCallback(const std::string &tmpFile,
-                                                       const std::string &destFile,
+                                                       std::string destFile,
                                                        std::shared_ptr<logging::Logger> logger)
-    : logger_(logger),
+    : logger_(std::move(logger)),
     _tmpFileOs(tmpFile, std::ios::binary),
     _tmpFile(tmpFile),
-    _destFile(destFile) {
+    _destFile(std::move(destFile)) {
 }
 
 // Copy the entire file contents to the temporary file
-int64_t ProcessSessionReadCallback::operator()(const std::shared_ptr<io::BaseStream>& stream) {
+int64_t ProcessSessionReadCallback::operator()(const std::shared_ptr<io::InputStream>& stream) {
   // Copy file contents into tmp file
   _writeSucceeded = false;
   size_t size = 0;
@@ -95,8 +90,4 @@ ProcessSessionReadCallback::~ProcessSessionReadCallback() {
   std::remove(_tmpFile.c_str());
 }
 
-}  // namespace core
-}  // namespace minifi
-}  // namespace nifi
-}  // namespace apache
-}  // namespace org
+}  // namespace org::apache::nifi::minifi::core

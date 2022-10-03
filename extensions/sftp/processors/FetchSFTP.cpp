@@ -122,11 +122,11 @@ void FetchSFTP::onTrigger(const std::shared_ptr<core::ProcessContext> &context, 
 
   /* Download file */
   try {
-    session->write(flow_file, [&remote_file, &client](const std::shared_ptr<io::BaseStream>& stream) -> int64_t {
+    session->write(flow_file, [&remote_file, &client, &flow_file](const std::shared_ptr<io::OutputStream>& stream) -> int64_t {
       if (!client->getFile(remote_file, *stream)) {
         throw utils::SFTPException{client->getLastError()};
       }
-      return gsl::narrow<int64_t>(stream->size());
+      return gsl::narrow<int64_t>(flow_file->getSize());
     });
   } catch (const utils::SFTPException& ex) {
     logger_->log_debug(ex.what());

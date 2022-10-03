@@ -36,7 +36,7 @@ namespace ContentRepositoryDependentTests {
 struct ReadUntilItCan {
   std::string value_;
 
-  int64_t operator()(const std::shared_ptr<minifi::io::BaseStream> &stream) {
+  int64_t operator()(const std::shared_ptr<minifi::io::InputStream> &stream) {
     value_.clear();
     std::array<std::byte, 1024> buffer{};
     size_t bytes_read = 0;

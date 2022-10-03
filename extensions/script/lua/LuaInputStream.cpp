@@ -21,19 +21,15 @@
 #include <utility>
 #include <string>
 
-#include "LuaBaseStream.h"
+#include "LuaInputStream.h"
 
-namespace org {
-namespace apache {
-namespace nifi {
-namespace minifi {
-namespace lua {
+namespace org::apache::nifi::minifi::lua {
 
-LuaBaseStream::LuaBaseStream(std::shared_ptr<io::BaseStream> stream)
+LuaInputStream::LuaInputStream(std::shared_ptr<io::InputStream> stream)
     : stream_(std::move(stream)) {
 }
 
-std::string LuaBaseStream::read(size_t len) {
+std::string LuaInputStream::read(size_t len) {
   if (len == 0) {
     len = stream_->size();
   }
@@ -59,12 +55,4 @@ std::string LuaBaseStream::read(size_t len) {
   return io::isError(read) ? std::string{} : buffer;
 }
 
-size_t LuaBaseStream::write(std::string buf) {
-  return stream_->write(reinterpret_cast<const uint8_t*>(buf.data()), buf.length());
-}
-
-} /* namespace lua */
-} /* namespace minifi */
-} /* namespace nifi */
-} /* namespace apache */
-} /* namespace org */
+}  // namespace org::apache::nifi::minifi::lua

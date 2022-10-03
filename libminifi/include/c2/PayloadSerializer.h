@@ -26,7 +26,8 @@
 
 #include "core/state/Value.h"
 #include "c2/C2Protocol.h"
-#include "io/BaseStream.h"
+#include "io/OutputStream.h"
+#include "io/InputStream.h"
 #include "io/BufferStream.h"
 #include "utils/gsl.h"
 
@@ -41,7 +42,7 @@ class PayloadSerializer {
   /**
    * Static function that serializes the value nodes
    */
-  static void serializeValueNode(state::response::ValueNode &value, std::shared_ptr<io::BaseStream> stream) {
+  static void serializeValueNode(state::response::ValueNode &value, std::shared_ptr<io::OutputStream> stream) {
     auto base_type = value.getValue();
     if (!base_type) {
       uint8_t type = 0;
@@ -75,7 +76,7 @@ class PayloadSerializer {
       stream->write(str);
     }
   }
-  static void serialize(uint16_t op, const C2Payload &payload, std::shared_ptr<io::BaseStream> stream) {
+  static void serialize(uint16_t op, const C2Payload &payload, std::shared_ptr<io::OutputStream> stream) {
     uint8_t st;
     uint32_t size = gsl::narrow<uint32_t>(payload.getNestedPayloads().size());
     stream->write(size);
@@ -143,8 +144,8 @@ class PayloadSerializer {
     }
     return op;
   }
-  static std::shared_ptr<io::BaseStream> serialize(uint16_t version, const C2Payload &payload) {
-    std::shared_ptr<io::BaseStream> stream = std::make_shared<io::BufferStream>();
+  static std::shared_ptr<io::OutputStream> serialize(uint16_t version, const C2Payload &payload) {
+    std::shared_ptr<io::OutputStream> stream = std::make_shared<io::BufferStream>();
     uint16_t op = 0;
     uint8_t st = 0;
     op = opToInt(payload.getOperation());
@@ -176,7 +177,7 @@ class PayloadSerializer {
     return stream;
   }
 
-  static state::response::ValueNode deserializeValueNode(io::BaseStream *stream) {
+  static state::response::ValueNode deserializeValueNode(io::InputStream *stream) {
     uint8_t type = 0;
     stream->read(type);
     state::response::ValueNode node;
@@ -224,7 +225,7 @@ class PayloadSerializer {
    * @param identifier for this payload
    * @param stream base stream in which we will serialize the parent payload.
    */
-  static bool deserializePayload(C2Payload &parent, Operation operation, std::string identifier, io::BaseStream *stream) {
+  static bool deserializePayload(C2Payload &parent, Operation operation, std::string identifier, io::InputStream *stream) {
     uint32_t payloads = 0;
     stream->read(payloads);
     uint8_t op{}, st{};

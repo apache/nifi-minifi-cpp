@@ -17,27 +17,21 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#ifndef LIBMINIFI_INCLUDE_CORE_PROCESSSESSIONREADCALLBACK_H_
-#define LIBMINIFI_INCLUDE_CORE_PROCESSSESSIONREADCALLBACK_H_
+#pragma once
 
 #include <memory>
 #include <string>
 
 #include "core/logging/LoggerFactory.h"
-#include "io/BaseStream.h"
 #include "FlowFileRecord.h"
+#include "io/InputStream.h"
 
-namespace org {
-namespace apache {
-namespace nifi {
-namespace minifi {
-namespace core {
+namespace org::apache::nifi::minifi::core {
 class ProcessSessionReadCallback {
  public:
-  ProcessSessionReadCallback(const std::string &tmpFile, const std::string &destFile,
-      std::shared_ptr<logging::Logger> logger);
+  ProcessSessionReadCallback(const std::string &tmpFile, std::string destFile, std::shared_ptr<logging::Logger> logger);
   ~ProcessSessionReadCallback();
-  int64_t operator()(const std::shared_ptr<io::BaseStream>& stream);
+  int64_t operator()(const std::shared_ptr<io::InputStream>& stream);
   bool commit();
 
  private:
@@ -47,9 +41,4 @@ class ProcessSessionReadCallback {
   std::string _tmpFile;
   std::string _destFile;
 };
-}  // namespace core
-}  // namespace minifi
-}  // namespace nifi
-}  // namespace apache
-}  // namespace org
-#endif  // LIBMINIFI_INCLUDE_CORE_PROCESSSESSIONREADCALLBACK_H_
+}  // namespace org::apache::nifi::minifi::core

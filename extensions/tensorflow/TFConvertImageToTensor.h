@@ -23,6 +23,8 @@
 #include <core/Processor.h>
 #include <tensorflow/core/public/session.h>
 #include <concurrentqueue.h>
+#include "io/InputStream.h"
+#include "io/OutputStream.h"
 
 namespace org::apache::nifi::minifi::processors {
 
@@ -89,7 +91,7 @@ class TFConvertImageToTensor : public core::Processor {
         : tensor_(tensor) {
     }
     ~ImageReadCallback() override = default;
-    int64_t process(const std::shared_ptr<io::BaseStream>& stream) override;
+    int64_t process(const std::shared_ptr<io::InputStream>& stream) override;
 
    private:
     tensorflow::Tensor *tensor_;
@@ -101,7 +103,7 @@ class TFConvertImageToTensor : public core::Processor {
         : tensor_proto_(std::move(tensor_proto)) {
     }
     ~TensorWriteCallback() override = default;
-    int64_t process(const std::shared_ptr<io::BaseStream>& stream) override;
+    int64_t process(const std::shared_ptr<io::OutputStream>& stream) override;
 
    private:
     std::shared_ptr<tensorflow::TensorProto> tensor_proto_;

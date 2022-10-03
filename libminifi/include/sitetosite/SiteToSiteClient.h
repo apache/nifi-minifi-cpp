@@ -16,8 +16,7 @@
  * limitations under the License.
  */
 
-#ifndef LIBMINIFI_INCLUDE_SITETOSITE_SITETOSITECLIENT_H_
-#define LIBMINIFI_INCLUDE_SITETOSITE_SITETOSITECLIENT_H_
+#pragma once
 
 #include <algorithm>
 #include <array>
@@ -34,11 +33,7 @@
 #include "core/Connectable.h"
 #include "utils/gsl.h"
 
-namespace org {
-namespace apache {
-namespace nifi {
-namespace minifi {
-namespace sitetosite {
+namespace org::apache::nifi::minifi::sitetosite {
 
 /**
  * Represents a piece of data that is to be sent to or that was received from a
@@ -219,7 +214,7 @@ class SiteToSiteClient : public core::Connectable {
   // read Respond
   virtual int readResponse(const std::shared_ptr<Transaction> &transaction, RespondCode &code, std::string &message);
   // write respond
-  virtual int writeResponse(const std::shared_ptr<Transaction> &transaction, RespondCode code, std::string message);
+  virtual int writeResponse(const std::shared_ptr<Transaction> &transaction, RespondCode code, const std::string& message);
   // getRespondCodeContext
   virtual RespondCodeContext *getRespondCodeContext(RespondCode code) {
     for (auto & i : SiteToSiteRequest::respondCodeContext) {
@@ -266,10 +261,4 @@ class SiteToSiteClient : public core::Connectable {
   std::shared_ptr<core::logging::Logger> logger_{core::logging::LoggerFactory<SiteToSiteClient>::getLogger()};
 };
 
-}  // namespace sitetosite
-}  // namespace minifi
-}  // namespace nifi
-}  // namespace apache
-}  // namespace org
-
-#endif  // LIBMINIFI_INCLUDE_SITETOSITE_SITETOSITECLIENT_H_
+}  // namespace org::apache::nifi::minifi::sitetosite

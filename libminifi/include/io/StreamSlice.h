@@ -20,7 +20,8 @@
 #include <algorithm>
 #include <memory>
 
-#include "BaseStream.h"
+#include "StreamCallback.h"
+#include "InputStream.h"
 
 namespace org::apache::nifi::minifi::io {
 
@@ -28,16 +29,13 @@ namespace org::apache::nifi::minifi::io {
  * A wrapped Base Stream with configurable offset and size
  * It hides the original (bigger stream) and acts like the stream starts and ends at the configured offset/size
  */
-class StreamSlice : public BaseStream {  // TODO(MINIFICPP-1648) This should be an InputStreamCallback, because writing to Slice is not supported
+class StreamSlice : public InputStream {
  public:
-  StreamSlice(std::shared_ptr<io::BaseStream>& stream, size_t offset, size_t size);
+  StreamSlice(std::shared_ptr<io::InputStream>& stream, size_t offset, size_t size);
 
   // from InputStream
   size_t size() const override { return slice_size_; }
   size_t read(gsl::span<std::byte> out_buffer) override;
-
-  // from OutputStream
-  size_t write(const uint8_t*, size_t) override { throw std::runtime_error("write is not supported in StreamSlice"); }
 
   // from Stream
   void close() override { stream_->close(); }
@@ -48,7 +46,7 @@ class StreamSlice : public BaseStream {  // TODO(MINIFICPP-1648) This should be 
   [[nodiscard]] gsl::span<const std::byte> getBuffer() const override;
 
  private:
-  const std::shared_ptr<io::BaseStream>& stream_;
+  const std::shared_ptr<io::InputStream>& stream_;
   size_t slice_offset_;
   size_t slice_size_;
 };

@@ -94,7 +94,7 @@ void ExtractText::onTrigger(core::ProcessContext *context, core::ProcessSession 
   session->transfer(flowFile, Success);
 }
 
-int64_t ExtractText::ReadCallback::operator()(const std::shared_ptr<io::BaseStream>& stream) const {
+int64_t ExtractText::ReadCallback::operator()(const std::shared_ptr<io::InputStream>& stream) const {
   size_t read_size = 0;
   bool regex_mode;
   size_t size_limit = flowFile_->getSize();

@@ -36,7 +36,7 @@ class ByteInputCallback {
  public:
   virtual ~ByteInputCallback() = default;
 
-  virtual int64_t operator()(const std::shared_ptr<io::BaseStream>& stream) {
+  virtual int64_t operator()(const std::shared_ptr<io::InputStream>& stream) {
     stream->seek(0);
 
     if (stream->size() > 0) {

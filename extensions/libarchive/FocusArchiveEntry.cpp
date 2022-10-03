@@ -85,7 +85,7 @@ void FocusArchiveEntry::onTrigger(core::ProcessContext *context, core::ProcessSe
   }
 
   // Restore target archive entry
-  if (targetEntryStashKey != "") {
+  if (!targetEntryStashKey.empty()) {
     session->restore(targetEntryStashKey, flowFile);
   } else {
     logger_->log_warn("FocusArchiveEntry failed to locate target entry: %s",
@@ -127,7 +127,7 @@ void FocusArchiveEntry::onTrigger(core::ProcessContext *context, core::ProcessSe
 }
 
 struct FocusArchiveEntryReadData {
-  std::shared_ptr<io::BaseStream> stream;
+  std::shared_ptr<io::InputStream> stream;
   core::Processor *processor;
   std::array<std::byte, 8196> buf;
 };
@@ -152,7 +152,7 @@ la_ssize_t FocusArchiveEntry::ReadCallback::read_cb(struct archive * a, void *d,
   return gsl::narrow<la_ssize_t>(read);
 }
 
-int64_t FocusArchiveEntry::ReadCallback::operator()(const std::shared_ptr<io::BaseStream>& stream) const {
+int64_t FocusArchiveEntry::ReadCallback::operator()(const std::shared_ptr<io::InputStream>& stream) const {
   auto inputArchive = archive_read_new();
   struct archive_entry *entry;
   int64_t nlen = 0;

@@ -20,11 +20,7 @@
 #include "core/ProcessSession.h"
 #include "core/Resource.h"
 
-namespace org {
-namespace apache {
-namespace nifi {
-namespace minifi {
-namespace processors {
+namespace org::apache::nifi::minifi::processors {
 
 const core::Property CaptureRTSPFrame::RTSPUsername(
     "RTSP Username",
@@ -140,7 +136,7 @@ void CaptureRTSPFrame::onTrigger(const std::shared_ptr<core::ProcessContext> &co
       session->putAttribute(flow_file, "filename", filename);
       session->putAttribute(flow_file, "video.backend.driver", video_backend_driver_);
 
-      session->write(flow_file, [&frame, this](const std::shared_ptr<io::BaseStream>& output_stream) -> int64_t {
+      session->write(flow_file, [&frame, this](const std::shared_ptr<io::OutputStream>& output_stream) -> int64_t {
         std::vector<uchar> image_buf;
         imencode(image_encoding_, frame, image_buf);
         const auto ret = output_stream->write(image_buf.data(), image_buf.size());
@@ -163,8 +159,4 @@ void CaptureRTSPFrame::notifyStop() {
 
 REGISTER_RESOURCE(CaptureRTSPFrame, Processor);
 
-} /* namespace processors */
-} /* namespace minifi */
-} /* namespace nifi */
-} /* namespace apache */
-} /* namespace org */
+}  // namespace org::apache::nifi::minifi::processors

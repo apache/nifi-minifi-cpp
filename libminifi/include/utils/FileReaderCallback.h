@@ -24,11 +24,7 @@
 #include "io/StreamPipe.h"
 #include "core/logging/Logger.h"
 
-namespace org {
-namespace apache {
-namespace nifi {
-namespace minifi {
-namespace utils {
+namespace org::apache::nifi::minifi::utils {
 
 /**
  * Simple callback to read a file, to be used with ProcessSession::write().
@@ -36,7 +32,7 @@ namespace utils {
 class FileReaderCallback {
  public:
   explicit FileReaderCallback(std::string file_name);
-  int64_t operator()(const std::shared_ptr<io::BaseStream>& output_stream) const;
+  int64_t operator()(const std::shared_ptr<io::OutputStream>& output_stream) const;
 
  private:
   std::string file_name_;
@@ -49,8 +45,4 @@ class FileReaderCallbackIOError : public std::runtime_error {
   int error_code;
 };
 
-}  // namespace utils
-}  // namespace minifi
-}  // namespace nifi
-}  // namespace apache
-}  // namespace org
+}  // namespace org::apache::nifi::minifi::utils

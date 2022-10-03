@@ -21,17 +21,13 @@
 #include <string>
 
 #include "sol/sol.hpp"
-#include "io/BaseStream.h"
+#include "io/InputStream.h"
 
-namespace org {
-namespace apache {
-namespace nifi {
-namespace minifi {
-namespace lua {
+namespace org::apache::nifi::minifi::lua {
 
-class LuaBaseStream {
+class LuaInputStream {
  public:
-  explicit LuaBaseStream(std::shared_ptr<io::BaseStream> stream);
+  explicit LuaInputStream(std::shared_ptr<io::InputStream> stream);
 
   /**
    * Read n bytes of data (returns string, to follow Lua idioms)
@@ -39,19 +35,8 @@ class LuaBaseStream {
    */
   std::string read(size_t len = 0);
 
-  /**
-   * Write data (receives string, to follow Lua idioms)
-   * @param buf
-   * @return
-   */
-  size_t write(std::string buf);
-
  private:
-  std::shared_ptr<io::BaseStream> stream_;
+  std::shared_ptr<io::InputStream> stream_;
 };
 
-} /* namespace lua */
-} /* namespace minifi */
-} /* namespace nifi */
-} /* namespace apache */
-} /* namespace org */
+}  // namespace org::apache::nifi::minifi::lua

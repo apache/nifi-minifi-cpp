@@ -164,7 +164,7 @@ int HttpSiteToSiteClient::readResponse(const std::shared_ptr<sitetosite::Transac
   return SiteToSiteClient::readResponse(transaction, code, message);
 }
 // write respond
-int HttpSiteToSiteClient::writeResponse(const std::shared_ptr<sitetosite::Transaction> &transaction, sitetosite::RespondCode code, std::string message) {
+int HttpSiteToSiteClient::writeResponse(const std::shared_ptr<sitetosite::Transaction> &transaction, sitetosite::RespondCode code, const std::string& message) {
   current_code = code;
   if (code == sitetosite::CONFIRM_TRANSACTION || code == sitetosite::FINISH_TRANSACTION) {
     return 1;

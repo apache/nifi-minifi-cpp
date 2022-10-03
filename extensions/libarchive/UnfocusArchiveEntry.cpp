@@ -140,7 +140,7 @@ UnfocusArchiveEntry::WriteCallback::WriteCallback(ArchiveMetadata *archiveMetada
 }
 
 struct UnfocusArchiveEntryWriteData {
-  std::shared_ptr<io::BaseStream> stream;
+  std::shared_ptr<io::OutputStream> stream;
 };
 
 la_ssize_t UnfocusArchiveEntry::WriteCallback::write_cb(struct archive *, void *d, const void *buffer, size_t length) {
@@ -149,7 +149,7 @@ la_ssize_t UnfocusArchiveEntry::WriteCallback::write_cb(struct archive *, void *
   return io::isError(write_ret) ? -1 : gsl::narrow<la_ssize_t>(write_ret);
 }
 
-int64_t UnfocusArchiveEntry::WriteCallback::operator()(const std::shared_ptr<io::BaseStream>& stream) const {
+int64_t UnfocusArchiveEntry::WriteCallback::operator()(const std::shared_ptr<io::OutputStream>& stream) const {
   auto outputArchive = archive_write_new();
   int64_t nlen = 0;
 

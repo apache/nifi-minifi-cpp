@@ -74,7 +74,7 @@ std::string S3Wrapper::getEncryptionString(Aws::S3::Model::ServerSideEncryption 
   return "";
 }
 
-std::optional<PutObjectResult> S3Wrapper::putObject(const PutObjectRequestParameters& put_object_params, std::shared_ptr<Aws::IOStream> data_stream) {
+std::optional<PutObjectResult> S3Wrapper::putObject(const PutObjectRequestParameters& put_object_params, const std::shared_ptr<Aws::IOStream>& data_stream) {
   Aws::S3::Model::PutObjectRequest request;
   request.SetBucket(put_object_params.bucket);
   request.SetKey(put_object_params.object_key);
@@ -116,7 +116,7 @@ bool S3Wrapper::deleteObject(const DeleteObjectRequestParameters& params) {
   return request_sender_->sendDeleteObjectRequest(request, params.credentials, params.client_config);
 }
 
-int64_t S3Wrapper::writeFetchedBody(Aws::IOStream& source, const int64_t data_size, io::BaseStream& output) {
+int64_t S3Wrapper::writeFetchedBody(Aws::IOStream& source, const int64_t data_size, io::OutputStream& output) {
   std::vector<uint8_t> buffer(4096);
   size_t write_size = 0;
   if (data_size < 0) return 0;
@@ -134,7 +134,7 @@ int64_t S3Wrapper::writeFetchedBody(Aws::IOStream& source, const int64_t data_si
   return gsl::narrow<int64_t>(write_size);
 }
 
-std::optional<GetObjectResult> S3Wrapper::getObject(const GetObjectRequestParameters& get_object_params, io::BaseStream& out_body) {
+std::optional<GetObjectResult> S3Wrapper::getObject(const GetObjectRequestParameters& get_object_params, io::OutputStream& out_body) {
   auto request = createFetchObjectRequest<Aws::S3::Model::GetObjectRequest>(get_object_params);
   auto aws_result = request_sender_->sendGetObjectRequest(request, get_object_params.credentials, get_object_params.client_config);
   if (!aws_result) {

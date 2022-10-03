@@ -17,8 +17,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#ifndef EXTENSIONS_STANDARD_PROCESSORS_PROCESSORS_HASHCONTENT_H_
-#define EXTENSIONS_STANDARD_PROCESSORS_PROCESSORS_HASHCONTENT_H_
+#pragma once
 
 #ifdef OPENSSL_SUPPORT
 
@@ -37,7 +36,6 @@
 #include "FlowFileRecord.h"
 #include "core/Processor.h"
 #include "core/ProcessSession.h"
-#include "io/BaseStream.h"
 #include "utils/StringUtils.h"
 #include "utils/Export.h"
 
@@ -47,7 +45,7 @@ using HashReturnType = std::pair<std::string, int64_t>;
 namespace { // NOLINT
 #define HASH_BUFFER_SIZE 16384
 
-  HashReturnType MD5Hash(const std::shared_ptr<org::apache::nifi::minifi::io::BaseStream>& stream) {
+  HashReturnType MD5Hash(const std::shared_ptr<org::apache::nifi::minifi::io::InputStream>& stream) {
     HashReturnType ret_val;
     ret_val.second = 0;
     std::array<std::byte, HASH_BUFFER_SIZE> buffer{};
@@ -71,7 +69,7 @@ namespace { // NOLINT
     return ret_val;
   }
 
-  HashReturnType SHA1Hash(const std::shared_ptr<org::apache::nifi::minifi::io::BaseStream>& stream) {
+  HashReturnType SHA1Hash(const std::shared_ptr<org::apache::nifi::minifi::io::InputStream>& stream) {
     HashReturnType ret_val;
     ret_val.second = 0;
     std::array<std::byte, HASH_BUFFER_SIZE> buffer{};
@@ -95,7 +93,7 @@ namespace { // NOLINT
     return ret_val;
   }
 
-  HashReturnType SHA256Hash(const std::shared_ptr<org::apache::nifi::minifi::io::BaseStream>& stream) {
+  HashReturnType SHA256Hash(const std::shared_ptr<org::apache::nifi::minifi::io::InputStream>& stream) {
     HashReturnType ret_val;
     ret_val.second = 0;
     std::array<std::byte, HASH_BUFFER_SIZE> buffer{};
@@ -123,7 +121,7 @@ namespace { // NOLINT
 
 namespace org::apache::nifi::minifi::processors {
 
-static const std::map<std::string, const std::function<HashReturnType(const std::shared_ptr<io::BaseStream>&)>> HashAlgos =
+static const std::map<std::string, const std::function<HashReturnType(const std::shared_ptr<io::InputStream>&)>> HashAlgos =
   { {"MD5",  MD5Hash}, {"SHA1", SHA1Hash}, {"SHA256", SHA256Hash} };
 
 class HashContent : public core::Processor {
@@ -171,5 +169,3 @@ class HashContent : public core::Processor {
 }  // namespace org::apache::nifi::minifi::processors
 
 #endif  // OPENSSL_SUPPORT
-
-#endif  // EXTENSIONS_STANDARD_PROCESSORS_PROCESSORS_HASHCONTENT_H_

@@ -105,7 +105,7 @@ class JniByteInputStream {
       : buffer_(size),
         read_size_(0) {
   }
-  int64_t operator()(const std::shared_ptr<minifi::io::BaseStream>& stream) {
+  int64_t operator()(const std::shared_ptr<minifi::io::InputStream>& stream) {
     stream_ = stream;
     return 0;
   }
@@ -145,7 +145,7 @@ class JniByteInputStream {
     return stream_->read(arr);
   }
 
-  std::shared_ptr<minifi::io::BaseStream> stream_;
+  std::shared_ptr<minifi::io::InputStream> stream_;
   std::vector<std::byte> buffer_;
   uint64_t read_size_;
 };

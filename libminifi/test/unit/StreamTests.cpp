@@ -83,14 +83,16 @@ TEST_CASE("TestWrite1", "[testwrite]") {
 TEST_CASE("InvalidStreamSliceTest", "[teststreamslice]") {
   std::shared_ptr<minifi::io::BaseStream> base = std::make_shared<minifi::io::BufferStream>();
   base->write((const uint8_t*)"\x01\x02\x03\x04\x05\x06\x07\x08", 8);
-  REQUIRE_THROWS_WITH(std::make_shared<minifi::io::StreamSlice>(base, 0, 9), "StreamSlice is bigger than the Stream");
-  REQUIRE_THROWS_WITH(std::make_shared<minifi::io::StreamSlice>(base, 7, 3), "StreamSlice is bigger than the Stream");
+  auto input_stream = std::static_pointer_cast<minifi::io::InputStream>(base);
+  REQUIRE_THROWS_WITH(std::make_shared<minifi::io::StreamSlice>(input_stream, 0, 9), "StreamSlice is bigger than the Stream");
+  REQUIRE_THROWS_WITH(std::make_shared<minifi::io::StreamSlice>(input_stream, 7, 3), "StreamSlice is bigger than the Stream");
 }
 
 TEST_CASE("StreamSliceTest1", "[teststreamslice]") {
   std::shared_ptr<minifi::io::BaseStream> base = std::make_shared<minifi::io::BufferStream>();
   base->write((const uint8_t*)"\x01\x02\x03\x04\x05\x06\x07\x08", 8);
-  std::shared_ptr<minifi::io::BaseStream> stream_slice = std::make_shared<minifi::io::StreamSlice>(base, 2, 4);
+  auto input_stream = std::static_pointer_cast<minifi::io::InputStream>(base);
+  std::shared_ptr<minifi::io::InputStream> stream_slice = std::make_shared<minifi::io::StreamSlice>(input_stream, 2, 4);
   std::vector<std::byte> buffer;
   buffer.resize(stream_slice->size());
   REQUIRE(stream_slice->read(buffer) == 4);
