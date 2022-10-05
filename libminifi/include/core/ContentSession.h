@@ -23,11 +23,7 @@
 #include "ResourceClaim.h"
 #include "io/BaseStream.h"
 
-namespace org {
-namespace apache {
-namespace nifi {
-namespace minifi {
-namespace core {
+namespace org::apache::nifi::minifi::core {
 
 class ContentRepository;
 
@@ -40,27 +36,40 @@ class ContentSession {
 
   explicit ContentSession(std::shared_ptr<ContentRepository> repository);
 
-  std::shared_ptr<ResourceClaim> create();
+  virtual std::shared_ptr<ResourceClaim> create();
 
-  std::shared_ptr<io::BaseStream> write(const std::shared_ptr<ResourceClaim>& resourceId, WriteMode mode = WriteMode::OVERWRITE);
+  virtual std::shared_ptr<io::BaseStream> write(const std::shared_ptr<ResourceClaim>& resourceId, WriteMode mode = WriteMode::OVERWRITE);
 
-  std::shared_ptr<io::BaseStream> read(const std::shared_ptr<ResourceClaim>& resourceId);
+  virtual std::shared_ptr<io::BaseStream> read(const std::shared_ptr<ResourceClaim>& resourceId);
 
   virtual void commit();
 
-  void rollback();
+  virtual void rollback();
 
   virtual ~ContentSession() = default;
 
  protected:
-  std::map<std::shared_ptr<ResourceClaim>, std::shared_ptr<io::BufferStream>> managedResources_;
-  std::map<std::shared_ptr<ResourceClaim>, std::shared_ptr<io::BufferStream>> extendedResources_;
   std::shared_ptr<ContentRepository> repository_;
 };
 
-}  // namespace core
-}  // namespace minifi
-}  // namespace nifi
-}  // namespace apache
-}  // namespace org
+class BufferedContentSession : public ContentSession {
+ public:
+  explicit BufferedContentSession(std::shared_ptr<ContentRepository> repository);
+
+  std::shared_ptr<ResourceClaim> create() override;
+
+  std::shared_ptr<io::BaseStream> write(const std::shared_ptr<ResourceClaim>& resourceId, WriteMode mode = WriteMode::OVERWRITE) override;
+
+  std::shared_ptr<io::BaseStream> read(const std::shared_ptr<ResourceClaim>& resourceId) override;
+
+  void commit() override;
+
+  void rollback() override;
+
+ protected:
+  std::map<std::shared_ptr<ResourceClaim>, std::shared_ptr<io::BufferStream>> managedResources_;
+  std::map<std::shared_ptr<ResourceClaim>, std::shared_ptr<io::BufferStream>> extendedResources_;
+};
+
+}  // namespace org::apache::nifi::minifi::core
 

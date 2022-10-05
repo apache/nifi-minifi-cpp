@@ -34,7 +34,7 @@ namespace org::apache::nifi::minifi::core::repository {
  * DatabaseContentRepository is a content repository that stores data onto the local file system.
  */
 class DatabaseContentRepository : public core::ContentRepository, public core::Connectable {
-  class Session : public ContentSession {
+  class Session : public BufferedContentSession {
    public:
     explicit Session(std::shared_ptr<ContentRepository> repository);
 

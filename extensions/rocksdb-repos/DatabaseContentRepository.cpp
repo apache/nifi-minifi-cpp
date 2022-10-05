@@ -77,7 +77,7 @@ void DatabaseContentRepository::stop() {
   db_.reset();
 }
 
-DatabaseContentRepository::Session::Session(std::shared_ptr<ContentRepository> repository) : ContentSession(std::move(repository)) {}
+DatabaseContentRepository::Session::Session(std::shared_ptr<ContentRepository> repository) : BufferedContentSession(std::move(repository)) {}
 
 std::shared_ptr<ContentSession> DatabaseContentRepository::createSession() {
   return std::make_shared<Session>(sharedFromThis());

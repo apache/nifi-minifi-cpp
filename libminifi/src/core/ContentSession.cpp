@@ -24,21 +24,39 @@
 #include "Exception.h"
 #include "utils/gsl.h"
 
-namespace org {
-namespace apache {
-namespace nifi {
-namespace minifi {
-namespace core {
+namespace org::apache::nifi::minifi::core {
 
 ContentSession::ContentSession(std::shared_ptr<ContentRepository> repository) : repository_(std::move(repository)) {}
 
 std::shared_ptr<ResourceClaim> ContentSession::create() {
+  return std::make_shared<ResourceClaim>(repository_);
+}
+
+std::shared_ptr<io::BaseStream> ContentSession::write(const std::shared_ptr<ResourceClaim>& resourceId, WriteMode mode) {
+  return repository_->write(*resourceId, mode == WriteMode::APPEND);
+}
+
+std::shared_ptr<io::BaseStream> ContentSession::read(const std::shared_ptr<ResourceClaim>& resourceId) {
+  return repository_->read(*resourceId);
+}
+
+void ContentSession::commit() {
+  // pass
+}
+
+void ContentSession::rollback() {
+  // pass
+}
+
+BufferedContentSession::BufferedContentSession(std::shared_ptr<ContentRepository> repository) : ContentSession(std::move(repository)) {}
+
+std::shared_ptr<ResourceClaim> BufferedContentSession::create() {
   std::shared_ptr<ResourceClaim> claim = std::make_shared<ResourceClaim>(repository_);
   managedResources_[claim] = std::make_shared<io::BufferStream>();
   return claim;
 }
 
-std::shared_ptr<io::BaseStream> ContentSession::write(const std::shared_ptr<ResourceClaim>& resourceId, WriteMode mode) {
+std::shared_ptr<io::BaseStream> BufferedContentSession::write(const std::shared_ptr<ResourceClaim>& resourceId, WriteMode mode) {
   auto it = managedResources_.find(resourceId);
   if (it == managedResources_.end()) {
     if (mode == WriteMode::OVERWRITE) {
@@ -56,7 +74,7 @@ std::shared_ptr<io::BaseStream> ContentSession::write(const std::shared_ptr<Reso
   return it->second;
 }
 
-std::shared_ptr<io::BaseStream> ContentSession::read(const std::shared_ptr<ResourceClaim>& resourceId) {
+std::shared_ptr<io::BaseStream> BufferedContentSession::read(const std::shared_ptr<ResourceClaim>& resourceId) {
   // TODO(adebreceni):
   //  after the stream refactor is merged we should be able to share the underlying buffer
   //  between multiple InputStreams, moreover create a ConcatInputStream
@@ -66,7 +84,7 @@ std::shared_ptr<io::BaseStream> ContentSession::read(const std::shared_ptr<Resou
   return repository_->read(*resourceId);
 }
 
-void ContentSession::commit() {
+void BufferedContentSession::commit() {
   for (const auto& resource : managedResources_) {
     auto outStream = repository_->write(*resource.first);
     if (outStream == nullptr) {
@@ -94,14 +112,10 @@ void ContentSession::commit() {
   extendedResources_.clear();
 }
 
-void ContentSession::rollback() {
+void BufferedContentSession::rollback() {
   managedResources_.clear();
   extendedResources_.clear();
 }
 
-}  // namespace core
-}  // namespace minifi
-}  // namespace nifi
-}  // namespace apache
-}  // namespace org
+}  // namespace org::apache::nifi::minifi::core
 
