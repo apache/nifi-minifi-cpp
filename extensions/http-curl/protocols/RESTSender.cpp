@@ -115,12 +115,12 @@ C2Payload RESTSender::sendPayload(const std::string& url, const Direction direct
         if (filename.empty()) {
           throw std::logic_error("Missing filename");
         }
-        auto file_cb = std::make_unique<utils::HTTPUploadCallback>();
+        auto file_cb = std::make_unique<utils::HTTPUploadByteArrayInputCallback>();
         file_cb->write(file.getRawDataAsString());
         client.addFormPart("application/octet-stream", "file", std::move(file_cb), filename);
       }
     } else {
-      auto data_input = std::make_unique<utils::HTTPUploadCallback>();
+      auto data_input = std::make_unique<utils::HTTPUploadByteArrayInputCallback>();
       if (data && req_encoding_ == RequestEncoding::Gzip) {
         io::BufferStream compressed_payload;
         bool compression_success = [&] {

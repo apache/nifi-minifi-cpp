@@ -160,4 +160,118 @@ std::string URL::toString() const {
   }
 }
 
+/**
+ * Receive HTTP Response.
+ */
+size_t HTTPRequestResponse::receiveWrite(char *data, size_t size, size_t nmemb, void *p) {
+  try {
+    if (p == nullptr) {
+      return CALLBACK_ABORT;
+    }
+    auto *callback = static_cast<HTTPReadCallback *>(p);
+    if (callback->stop) {
+      return CALLBACK_ABORT;
+    }
+    callback->write(data, (size * nmemb));
+    return (size * nmemb);
+  } catch (...) {
+    return CALLBACK_ABORT;
+  }
+}
+
+/**
+ * Callback for post, put, and patch operations
+ * @param data output buffer to write to
+ * @param size number of elements to write
+ * @param nmemb size of each element to write
+ * @param p input object to read from
+ */
+size_t HTTPRequestResponse::send_write(char *data, size_t size, size_t nmemb, void *p) {
+  try {
+    if (p == nullptr) {
+      return CALLBACK_ABORT;
+    }
+    auto *callback = reinterpret_cast<HTTPUploadCallback *>(p);
+    return callback->getDataChunk(data, size * nmemb);
+  } catch (...) {
+    return CALLBACK_ABORT;
+  }
+}
+
+int HTTPRequestResponse::seek_callback(void *p, int64_t offset, int) {
+  try {
+    if (p == nullptr) {
+      return SEEKFUNC_FAIL;
+    }
+    auto *callback = reinterpret_cast<HTTPUploadCallback *>(p);
+    return callback->setPosition(offset);
+  } catch (...) {
+    return SEEKFUNC_FAIL;
+  }
+}
+
+size_t HTTPUploadByteArrayInputCallback::getDataChunk(char *data, size_t size) {
+  if (stop) {
+    return HTTPRequestResponse::CALLBACK_ABORT;
+  }
+  size_t buffer_size = getBufferSize();
+  if (pos <= buffer_size) {
+    size_t len = buffer_size - pos;
+    if (len <= 0) {
+      return 0;
+    }
+    auto *ptr = getBuffer(pos);
+
+    if (ptr == nullptr) {
+      return 0;
+    }
+    if (len > size)
+      len = size;
+    memcpy(data, ptr, len);
+    pos += len;
+    seek(pos);
+    return len;
+  }
+  return 0;
+}
+
+size_t HTTPUploadByteArrayInputCallback::setPosition(int64_t offset) {
+  if (stop) {
+    return HTTPRequestResponse::SEEKFUNC_FAIL;
+  }
+  if (getBufferSize() <= static_cast<size_t>(offset)) {
+    return HTTPRequestResponse::SEEKFUNC_FAIL;
+  }
+  pos = offset;
+  seek(pos);
+  return HTTPRequestResponse::SEEKFUNC_OK;
+}
+
+size_t HTTPUploadStreamContentsCallback::getDataChunk(char *data, size_t size) {
+  logger_->log_trace("HTTPUploadStreamContentsCallback is asked for up to %zu bytes", size);
+
+  std::vector<std::byte> buffer(size);
+  size_t num_read = input_stream_->read(buffer);
+
+  if (io::isError(num_read)) {
+    logger_->log_error("Error reading the input stream in HTTPUploadStreamContentsCallback");
+    return 0;
+  }
+  logger_->log_debug("HTTPUploadStreamContentsCallback is returning %zu bytes", num_read);
+
+  gsl_Expects(num_read <= size);
+  memcpy(data, buffer.data(), num_read);
+  return num_read;
+}
+
+size_t HTTPUploadStreamContentsCallback::setPosition(int64_t offset) {
+  if (offset == 0) {
+    logger_->log_debug("HTTPUploadStreamContentsCallback is ignoring request to rewind to the beginning");
+  } else {
+    logger_->log_warn("HTTPUploadStreamContentsCallback is ignoring request to seek to position %" PRId64, offset);
+  }
+
+  return HTTPRequestResponse::SEEKFUNC_OK;
+}
+
 }  // namespace org::apache::nifi::minifi::utils

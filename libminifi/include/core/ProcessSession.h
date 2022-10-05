@@ -89,6 +89,8 @@ class ProcessSession : public ReferenceContainer {
   void removeAttribute(const std::shared_ptr<core::FlowFile> &flow, const std::string& key);
   // Remove Flow File
   void remove(const std::shared_ptr<core::FlowFile> &flow);
+  // Access the contents of the flow file as an input stream; returns null if the flow file has no content claim
+  std::shared_ptr<io::InputStream> getFlowFileContentStream(const std::shared_ptr<core::FlowFile>& flow_file);
   // Execute the given read callback against the content
   int64_t read(const std::shared_ptr<core::FlowFile> &flow, const io::InputStreamCallback& callback);
   // Read content into buffer
