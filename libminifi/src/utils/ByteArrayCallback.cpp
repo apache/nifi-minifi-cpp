@@ -24,13 +24,9 @@
 
 #include "utils/gsl.h"
 
-namespace org {
-namespace apache {
-namespace nifi {
-namespace minifi {
-namespace utils {
+namespace org::apache::nifi::minifi::utils {
 
-int64_t ByteOutputCallback::operator()(const std::shared_ptr<io::BaseStream>& stream) {
+int64_t ByteOutputCallback::operator()(const std::shared_ptr<io::InputStream>& stream) {
   stream->seek(0);
   if (stream->size() > 0) {
     std::vector<std::byte> buffer;
@@ -40,20 +36,6 @@ int64_t ByteOutputCallback::operator()(const std::shared_ptr<io::BaseStream>& st
     return gsl::narrow<int64_t>(stream->size());
   }
   return gsl::narrow<int64_t>(size_.load());
-}
-
-int64_t StreamOutputCallback::operator()(const std::shared_ptr<io::BaseStream>& stream) {
-  stream->seek(0);
-  std::unique_ptr<char> buffer = std::unique_ptr<char>(new char[size_.load()]);
-  auto written = readFully(buffer.get(), size_);
-  stream->write(reinterpret_cast<uint8_t*>(buffer.get()), written);
-  return gsl::narrow<int64_t>(stream->size());
-}
-
-void StreamOutputCallback::write(char *data, size_t size) {
-  if (!is_alive_)
-    return;
-  write_and_notify(data, size);
 }
 
 std::vector<char> ByteOutputCallback::to_string() {
@@ -173,8 +155,5 @@ bool ByteOutputCallback::preload_next_str() {
   size_ -= current_str.size();
   return true;
 }
-} /* namespace utils */
-} /* namespace minifi */
-} /* namespace nifi */
-} /* namespace apache */
-} /* namespace org */
+
+}  // namespace org::apache::nifi::minifi::utils

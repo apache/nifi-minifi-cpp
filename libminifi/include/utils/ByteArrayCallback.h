@@ -14,8 +14,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#ifndef LIBMINIFI_INCLUDE_UTILS_BYTEARRAYCALLBACK_H_
-#define LIBMINIFI_INCLUDE_UTILS_BYTEARRAYCALLBACK_H_
+#pragma once
 
 #include <memory>
 #include <string>
@@ -101,7 +100,7 @@ class ByteOutputCallback {
     close();
   }
 
-  virtual int64_t operator()(const std::shared_ptr<io::BaseStream>& stream);
+  virtual int64_t operator()(const std::shared_ptr<io::InputStream>& stream);
 
   virtual std::vector<char> to_string();
 
@@ -141,17 +140,4 @@ class ByteOutputCallback {
   std::shared_ptr<core::logging::Logger> logger_;
 };
 
-class StreamOutputCallback : public ByteOutputCallback {
- public:
-  explicit StreamOutputCallback(size_t max_size, bool wait_on_read = false)
-      : ByteOutputCallback(max_size, wait_on_read) {
-  }
-
-  void write(char *data, size_t size) override;
-
-  int64_t operator()(const std::shared_ptr<io::BaseStream>& stream) override;
-};
-
 }  // namespace org::apache::nifi::minifi::utils
-
-#endif  // LIBMINIFI_INCLUDE_UTILS_BYTEARRAYCALLBACK_H_
