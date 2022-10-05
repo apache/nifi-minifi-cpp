@@ -21,6 +21,7 @@
 #include "SingleProcessorTestController.h"
 #include "Utils.h"
 #include "controllers/SSLContextService.h"
+#include "range/v3/algorithm/contains.hpp"
 
 using ListenTCP = org::apache::nifi::minifi::processors::ListenTCP;
 
@@ -32,10 +33,20 @@ constexpr uint64_t PORT = 10254;
 
 void check_for_attributes(core::FlowFile& flow_file) {
   CHECK(std::to_string(PORT) == flow_file.getAttribute("tcp.port"));
-  CHECK("127.0.0.1" == flow_file.getAttribute("tcp.sender"));
+  const auto local_addresses = {"127.0.0.1", "::ffff:127.0.0.1", "::1"};
+  CHECK(ranges::contains(local_addresses, flow_file.getAttribute("tcp.sender")));
 }
 
 TEST_CASE("ListenTCP test multiple messages", "[ListenTCP]") {
+  asio::ip::tcp::endpoint endpoint;
+  SECTION("sending through IPv4", "[IPv4]") {
+    endpoint = asio::ip::tcp::endpoint(asio::ip::address_v4::loopback(), PORT);
+  }
+  SECTION("sending through IPv6", "[IPv6]") {
+    if (utils::isIPv6Disabled())
+      return;
+    endpoint = asio::ip::tcp::endpoint(asio::ip::address_v6::loopback(), PORT);
+  }
   const auto listen_tcp = std::make_shared<ListenTCP>("ListenTCP");
 
   SingleProcessorTestController controller{listen_tcp};
@@ -44,8 +55,8 @@ TEST_CASE("ListenTCP test multiple messages", "[ListenTCP]") {
   REQUIRE(listen_tcp->setProperty(ListenTCP::MaxBatchSize, "2"));
 
   controller.plan->scheduleProcessor(listen_tcp);
-  REQUIRE(utils::sendMessagesViaTCP({"test_message_1"}, PORT));
-  REQUIRE(utils::sendMessagesViaTCP({"another_message"}, PORT));
+  REQUIRE(utils::sendMessagesViaTCP({"test_message_1"}, endpoint));
+  REQUIRE(utils::sendMessagesViaTCP({"another_message"}, endpoint));
   ProcessorTriggerResult result;
   REQUIRE(controller.triggerUntil({{ListenTCP::Success, 2}}, result, 300s, 50ms));
   CHECK(controller.plan->getContent(result.at(ListenTCP::Success)[0]) == "test_message_1");
@@ -68,6 +79,15 @@ TEST_CASE("ListenTCP can be rescheduled", "[ListenTCP]") {
 }
 
 TEST_CASE("ListenTCP max queue and max batch size test", "[ListenTCP]") {
+  asio::ip::tcp::endpoint endpoint;
+  SECTION("sending through IPv4", "[IPv4]") {
+    endpoint = asio::ip::tcp::endpoint(asio::ip::address_v4::loopback(), PORT);
+  }
+  SECTION("sending through IPv6", "[IPv6]") {
+    if (utils::isIPv6Disabled())
+      return;
+    endpoint = asio::ip::tcp::endpoint(asio::ip::address_v6::loopback(), PORT);
+  }
   const auto listen_tcp = std::make_shared<ListenTCP>("ListenTCP");
 
   SingleProcessorTestController controller{listen_tcp};
@@ -79,7 +99,7 @@ TEST_CASE("ListenTCP max queue and max batch size test", "[ListenTCP]") {
 
   controller.plan->scheduleProcessor(listen_tcp);
   for (auto i = 0; i < 100; ++i) {
-    REQUIRE(utils::sendMessagesViaTCP({"test_message"}, PORT));
+    REQUIRE(utils::sendMessagesViaTCP({"test_message"}, endpoint));
   }
 
   CHECK(utils::countLogOccurrencesUntil("Queue is full. TCP message ignored.", 50, 300ms, 50ms));
@@ -110,27 +130,61 @@ TEST_CASE("Test ListenTCP with SSL connection", "[ListenTCP]") {
   REQUIRE(controller.plan->setProperty(listen_tcp, ListenTCP::SSLContextService.getName(), "SSLContextService"));
   std::vector<std::string> expected_successful_messages;
 
+  asio::ip::tcp::endpoint endpoint;
+
   SECTION("Without client certificate verification") {
     SECTION("Client certificate not required, Client Auth set to NONE by default") {
+      SECTION("sending through IPv4", "[IPv4]") {
+        endpoint = asio::ip::tcp::endpoint(asio::ip::address_v4::loopback(), PORT);
+      }
+      SECTION("sending through IPv6", "[IPv6]") {
+        if (utils::isIPv6Disabled())
+          return;
+        endpoint = asio::ip::tcp::endpoint(asio::ip::address_v6::loopback(), PORT);
+      }
     }
     SECTION("Client certificate not required, but validated if provided") {
       REQUIRE(controller.plan->setProperty(listen_tcp, ListenTCP::ClientAuth.getName(), "WANT"));
+      SECTION("sending through IPv4", "[IPv4]") {
+        endpoint = asio::ip::tcp::endpoint(asio::ip::address_v4::loopback(), PORT);
+      }
+      SECTION("sending through IPv6", "[IPv6]") {
+        if (utils::isIPv6Disabled())
+          return;
+        endpoint = asio::ip::tcp::endpoint(asio::ip::address_v6::loopback(), PORT);
+      }
     }
     ssl_context_service->enable();
     controller.plan->scheduleProcessor(listen_tcp);
 
     expected_successful_messages = {"test_message_1", "another_message"};
-    for (const auto& message : expected_successful_messages) {
-      REQUIRE(utils::sendMessagesViaSSL({message}, PORT, minifi::utils::file::concat_path(executable_dir, "resources/ca_cert.crt")));
+    for (const auto& message: expected_successful_messages) {
+      REQUIRE(utils::sendMessagesViaSSL({message}, endpoint, minifi::utils::file::concat_path(executable_dir, "resources/ca_cert.crt")));
     }
   }
 
   SECTION("With client certificate provided") {
     SECTION("Client certificate required") {
       REQUIRE(controller.plan->setProperty(listen_tcp, ListenTCP::ClientAuth.getName(), "REQUIRED"));
+      SECTION("sending through IPv4", "[IPv4]") {
+        endpoint = asio::ip::tcp::endpoint(asio::ip::address_v4::loopback(), PORT);
+      }
+      SECTION("sending through IPv6", "[IPv6]") {
+        if (utils::isIPv6Disabled())
+          return;
+        endpoint = asio::ip::tcp::endpoint(asio::ip::address_v6::loopback(), PORT);
+      }
     }
     SECTION("Client certificate not required but validated") {
       REQUIRE(controller.plan->setProperty(listen_tcp, ListenTCP::ClientAuth.getName(), "WANT"));
+      SECTION("sending through IPv4", "[IPv4]") {
+        endpoint = asio::ip::tcp::endpoint(asio::ip::address_v4::loopback(), PORT);
+      }
+      SECTION("sending through IPv6", "[IPv6]") {
+        if (utils::isIPv6Disabled())
+          return;
+        endpoint = asio::ip::tcp::endpoint(asio::ip::address_v6::loopback(), PORT);
+      }
     }
     ssl_context_service->enable();
     controller.plan->scheduleProcessor(listen_tcp);
@@ -143,16 +197,24 @@ TEST_CASE("Test ListenTCP with SSL connection", "[ListenTCP]") {
 
     expected_successful_messages = {"test_message_1", "another_message"};
     for (const auto& message : expected_successful_messages) {
-      REQUIRE(utils::sendMessagesViaSSL({message}, PORT, minifi::utils::file::FileUtils::get_executable_dir() + "/resources/ca_cert.crt", ssl_data));
+      REQUIRE(utils::sendMessagesViaSSL({message}, endpoint, minifi::utils::file::FileUtils::get_executable_dir() + "/resources/ca_cert.crt", ssl_data));
     }
   }
 
   SECTION("Required certificate not provided") {
+    SECTION("sending through IPv4", "[IPv4]") {
+      endpoint = asio::ip::tcp::endpoint(asio::ip::address_v4::loopback(), PORT);
+    }
+    SECTION("sending through IPv6", "[IPv6]") {
+      if (utils::isIPv6Disabled())
+        return;
+      endpoint = asio::ip::tcp::endpoint(asio::ip::address_v6::loopback(), PORT);
+    }
     REQUIRE(controller.plan->setProperty(listen_tcp, ListenTCP::ClientAuth.getName(), "REQUIRED"));
     ssl_context_service->enable();
     controller.plan->scheduleProcessor(listen_tcp);
 
-    REQUIRE_FALSE(utils::sendMessagesViaSSL({"test_message_1"}, PORT, minifi::utils::file::concat_path(executable_dir, "/resources/ca_cert.crt")));
+    REQUIRE_FALSE(utils::sendMessagesViaSSL({"test_message_1"}, endpoint, minifi::utils::file::concat_path(executable_dir, "/resources/ca_cert.crt")));
   }
 
   ProcessorTriggerResult result;

@@ -111,22 +111,45 @@ bool countLogOccurrencesUntil(const std::string& pattern,
   return false;
 }
 
-bool sendMessagesViaTCP(const std::vector<std::string_view>& contents, uint64_t port) {
+bool sendMessagesViaTCP(const std::vector<std::string_view>& contents, const asio::ip::tcp::endpoint& remote_endpoint) {
   asio::io_context io_context;
   asio::ip::tcp::socket socket(io_context);
-  asio::ip::tcp::endpoint remote_endpoint(asio::ip::address::from_string("127.0.0.1"), port);
   socket.connect(remote_endpoint);
   std::error_code err;
   for (auto& content : contents) {
     std::string tcp_message(content);
     tcp_message += '\n';
     asio::write(socket, asio::buffer(tcp_message, tcp_message.size()), err);
+    if (err) {
+      return false;
+    }
   }
-  if (err) {
-    return false;
-  }
-  socket.close();
   return true;
+}
+
+bool sendUdpDatagram(const asio::const_buffer content, const asio::ip::udp::endpoint& remote_endpoint) {
+  asio::io_context io_context;
+  asio::ip::udp::socket socket(io_context);
+  socket.open(remote_endpoint.protocol());
+  std::error_code err;
+  socket.send_to(content, remote_endpoint, 0, err);
+  return !err;
+}
+
+bool sendUdpDatagram(const gsl::span<std::byte const> content, const asio::ip::udp::endpoint& remote_endpoint) {
+  return sendUdpDatagram(asio::const_buffer(content.begin(), content.size()), remote_endpoint);
+}
+
+bool sendUdpDatagram(const std::string_view content, const asio::ip::udp::endpoint& remote_endpoint) {
+  return sendUdpDatagram(asio::buffer(content), remote_endpoint);
+}
+
+bool isIPv6Disabled() {
+  asio::io_context io_context;
+  std::error_code error_code;
+  asio::ip::tcp::socket socket_tcp(io_context);
+  socket_tcp.connect(asio::ip::tcp::endpoint(asio::ip::address_v6::loopback(), 10), error_code);
+  return error_code.value() == EADDRNOTAVAIL;
 }
 
 struct ConnectionTestAccessor {
@@ -143,7 +166,10 @@ struct FlowFileQueueTestAccessor {
   FIELD_ACCESSOR(queue_);
 };
 
-bool sendMessagesViaSSL(const std::vector<std::string_view>& contents, uint64_t port, const std::string& ca_cert_path, const std::optional<minifi::utils::net::SslData>& ssl_data = std::nullopt) {
+bool sendMessagesViaSSL(const std::vector<std::string_view>& contents,
+                        const asio::ip::tcp::endpoint& remote_endpoint,
+                        const std::string& ca_cert_path,
+                        const std::optional<minifi::utils::net::SslData>& ssl_data = std::nullopt) {
   asio::ssl::context ctx(asio::ssl::context::sslv23);
   ctx.load_verify_file(ca_cert_path);
   if (ssl_data) {
@@ -154,7 +180,6 @@ bool sendMessagesViaSSL(const std::vector<std::string_view>& contents, uint64_t 
   }
   asio::io_context io_context;
   asio::ssl::stream<asio::ip::tcp::socket> socket(io_context, ctx);
-  asio::ip::tcp::endpoint remote_endpoint(asio::ip::address::from_string("127.0.0.1"), port);
   asio::error_code err;
   socket.lowest_layer().connect(remote_endpoint, err);
   if (err) {
@@ -168,11 +193,10 @@ bool sendMessagesViaSSL(const std::vector<std::string_view>& contents, uint64_t 
     std::string tcp_message(content);
     tcp_message += '\n';
     asio::write(socket, asio::buffer(tcp_message, tcp_message.size()), err);
+    if (err) {
+      return false;
+    }
   }
-  if (err) {
-    return false;
-  }
-  socket.lowest_layer().close();
   return true;
 }
 

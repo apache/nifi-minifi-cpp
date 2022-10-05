@@ -29,7 +29,7 @@ class SessionHandlingServer : public Server {
  public:
   SessionHandlingServer(std::optional<size_t> max_queue_size, uint16_t port, std::shared_ptr<core::logging::Logger> logger)
       : Server(max_queue_size, std::move(logger)),
-        acceptor_(io_context_, asio::ip::tcp::endpoint(asio::ip::tcp::v4(), port)) {
+        acceptor_(io_context_, asio::ip::tcp::endpoint(asio::ip::tcp::v6(), port)) {
   }
 
   void run() override {

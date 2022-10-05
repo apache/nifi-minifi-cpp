@@ -22,7 +22,7 @@ UdpServer::UdpServer(std::optional<size_t> max_queue_size,
                      uint16_t port,
                      std::shared_ptr<core::logging::Logger> logger)
     : Server(max_queue_size, std::move(logger)),
-      socket_(io_context_, asio::ip::udp::endpoint(asio::ip::udp::v4(), port)) {
+      socket_(io_context_, asio::ip::udp::endpoint(asio::ip::udp::v6(), port)) {
   doReceive();
 }
 

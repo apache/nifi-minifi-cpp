@@ -24,78 +24,59 @@
 #include "Catch.h"
 #include "PutUDP.h"
 #include "core/ProcessContext.h"
-#include "utils/net/DNS.h"
-#include "utils/net/Socket.h"
+#include "utils/net/UdpServer.h"
 #include "utils/expected.h"
 #include "utils/StringUtils.h"
+
+using namespace std::literals::chrono_literals;
 
 namespace org::apache::nifi::minifi::processors {
 
 namespace {
-struct DatagramListener {
-  DatagramListener(const char* const hostname, const char* const port)
-    :resolved_names_{utils::net::resolveHost(hostname, port, utils::net::IpProtocol::UDP).value()},
-     open_socket_{utils::net::open_socket(*resolved_names_)
-        | utils::valueOrElse([=]() -> utils::net::OpenSocketResult { throw std::runtime_error{utils::StringUtils::join_pack("Failed to connect to ", hostname, " on port ", port)}; })}
-  {
-    const auto bind_result = bind(open_socket_.socket_.get(), open_socket_.selected_name->ai_addr, open_socket_.selected_name->ai_addrlen);
-    if (bind_result == utils::net::SocketError) {
-      throw std::runtime_error{utils::StringUtils::join_pack("bind: ", utils::net::get_last_socket_error().message())};
-    }
+std::optional<utils::net::Message> tryDequeueWithTimeout(utils::net::UdpServer& listener, std::chrono::milliseconds timeout = 200ms, std::chrono::milliseconds interval = 10ms) {
+  auto start_time = std::chrono::system_clock::now();
+  utils::net::Message result;
+  while (start_time + timeout > std::chrono::system_clock::now()) {
+    if (listener.tryDequeue(result))
+      return result;
+    std::this_thread::sleep_for(interval);
   }
-
-  struct ReceiveResult {
-    std::string remote_address;
-    std::string message;
-  };
-
-  [[nodiscard]] ReceiveResult receive(const size_t max_message_size = 8192) const {
-    ReceiveResult result;
-    result.message.resize(max_message_size);
-    sockaddr_storage remote_address{};
-    socklen_t addrlen = sizeof(remote_address);
-    const auto recv_result = recvfrom(open_socket_.socket_.get(), result.message.data(), result.message.size(), 0, std::launder(reinterpret_cast<sockaddr*>(&remote_address)), &addrlen);
-    if (recv_result == utils::net::SocketError) {
-      throw std::runtime_error{utils::StringUtils::join_pack("recvfrom: ", utils::net::get_last_socket_error().message())};
-    }
-    result.message.resize(gsl::narrow<size_t>(recv_result));
-    result.remote_address = utils::net::sockaddr_ntop(std::launder(reinterpret_cast<sockaddr*>(&remote_address)));
-    return result;
-  }
-
-  std::unique_ptr<addrinfo, utils::net::addrinfo_deleter> resolved_names_;
-  utils::net::OpenSocketResult open_socket_;
-};
+  return std::nullopt;
+}
 }  // namespace
 
-// Testing the failure relationship is not required, because since UDP in general without guarantees, flow files are always routed to success, unless there is
-// some weird IO error with the content repo.
 TEST_CASE("PutUDP", "[putudp]") {
-  const auto putudp = std::make_shared<PutUDP>("PutUDP");
+  const auto put_udp = std::make_shared<PutUDP>("PutUDP");
   auto random_engine = std::mt19937{std::random_device{}()};  // NOLINT: "Missing space before {  [whitespace/braces] [5]"
   // most systems use ports 32768 - 65535 as ephemeral ports, so avoid binding to those
   const auto port = std::uniform_int_distribution<uint16_t>{10000, 32768 - 1}(random_engine);
-  const auto port_str = std::to_string(port);
 
-  test::SingleProcessorTestController controller{putudp};
+  test::SingleProcessorTestController controller{put_udp};
   LogTestController::getInstance().setTrace<PutUDP>();
   LogTestController::getInstance().setTrace<core::ProcessContext>();
-  LogTestController::getInstance().setLevelByClassName(spdlog::level::trace, "org::apache::nifi::minifi::core::ProcessContextExpr");
-  putudp->setProperty(PutUDP::Hostname, "${literal('localhost')}");
-  putudp->setProperty(PutUDP::Port, utils::StringUtils::join_pack("${literal('", port_str, "')}"));
+  put_udp->setProperty(PutUDP::Hostname, "${literal('localhost')}");
+  put_udp->setProperty(PutUDP::Port, utils::StringUtils::join_pack("${literal('", std::to_string(port), "')}"));
 
-  DatagramListener listener{"localhost", port_str.c_str()};
+  utils::net::UdpServer listener{std::nullopt, port, core::logging::LoggerFactory<utils::net::UdpServer>().getLogger()};
+
+  auto server_thread = std::thread([&listener]() { listener.run(); });
+  auto cleanup_server = gsl::finally([&]{
+    listener.stop();
+    server_thread.join();
+  });
 
   {
     const char* const message = "first message: hello";
     const auto result = controller.trigger(message);
     const auto& success_flow_files = result.at(PutUDP::Success);
     REQUIRE(success_flow_files.size() == 1);
-    REQUIRE(result.at(PutUDP::Failure).empty());
-    REQUIRE(controller.plan->getContent(success_flow_files[0]) == message);
-    auto receive_result = listener.receive();
-    REQUIRE(receive_result.message == message);
-    REQUIRE(!receive_result.remote_address.empty());
+    CHECK(result.at(PutUDP::Failure).empty());
+    CHECK(controller.plan->getContent(success_flow_files[0]) == message);
+    auto received_message = tryDequeueWithTimeout(listener);
+    REQUIRE(received_message);
+    CHECK(received_message->message_data == message);
+    CHECK(received_message->protocol == utils::net::IpProtocol::UDP);
+    CHECK(!received_message->sender_address.to_string().empty());
   }
 
   {
@@ -103,12 +84,39 @@ TEST_CASE("PutUDP", "[putudp]") {
     const auto result = controller.trigger(message);
     const auto& success_flow_files = result.at(PutUDP::Success);
     REQUIRE(success_flow_files.size() == 1);
-    REQUIRE(result.at(PutUDP::Failure).empty());
-    REQUIRE(controller.plan->getContent(success_flow_files[0]) == message);
-    auto receive_result = listener.receive();
-    REQUIRE(receive_result.message == message);
-    REQUIRE(!receive_result.remote_address.empty());
+    CHECK(result.at(PutUDP::Failure).empty());
+    CHECK(controller.plan->getContent(success_flow_files[0]) == message);
+    auto received_message = tryDequeueWithTimeout(listener);
+    REQUIRE(received_message);
+    CHECK(received_message->message_data == message);
+    CHECK(received_message->protocol == utils::net::IpProtocol::UDP);
+    CHECK(!received_message->sender_address.to_string().empty());
+  }
+
+  {
+    LogTestController::getInstance().clear();
+    auto message = std::string(65536, 'a');
+    const auto result = controller.trigger(message);
+    const auto& failure_flow_files = result.at(PutUDP::Failure);
+    REQUIRE(failure_flow_files.size() == 1);
+    CHECK(result.at(PutUDP::Success).empty());
+    CHECK(controller.plan->getContent(failure_flow_files[0]) == message);
+    CHECK((LogTestController::getInstance().contains("Message too long")
+        || LogTestController::getInstance().contains("A message sent on a datagram socket was larger than the internal message buffer")));
+  }
+
+  {
+    LogTestController::getInstance().clear();
+    const char* const message = "message for invalid host";
+    controller.plan->setProperty(put_udp, PutUDP::Hostname.getName(), "invalid_hostname");
+    const auto result = controller.trigger(message);
+    const auto& failure_flow_files = result.at(PutUDP::Failure);
+    auto received_message = tryDequeueWithTimeout(listener);
+    CHECK(!received_message);
+    REQUIRE(failure_flow_files.size() == 1);
+    CHECK(result.at(PutUDP::Success).empty());
+    CHECK(controller.plan->getContent(failure_flow_files[0]) == message);
+    CHECK((LogTestController::getInstance().contains("Host not found") || LogTestController::getInstance().contains("No such host is known")));
   }
 }
-
 }  // namespace org::apache::nifi::minifi::processors
