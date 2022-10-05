@@ -40,9 +40,9 @@ class EncryptionManager {
 
   [[nodiscard]] std::optional<XSalsa20Cipher> createXSalsa20Cipher(const std::string& key_name) const;
   [[nodiscard]] std::optional<Aes256EcbCipher> createAes256EcbCipher(const std::string& key_name) const;
- private:
-  [[nodiscard]] std::optional<Bytes> readKey(const std::string& key_name) const;
-  [[nodiscard]] bool writeKey(const std::string& key_name, const Bytes& key) const;
+ protected:
+  [[nodiscard]] virtual std::optional<Bytes> readKey(const std::string& key_name) const;
+  [[nodiscard]] virtual bool writeKey(const std::string& key_name, const Bytes& key) const;
 
   std::string key_dir_;
 };

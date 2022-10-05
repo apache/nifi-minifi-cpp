@@ -86,9 +86,9 @@ void RocksDbPersistableKeyValueStoreService::onEnable() {
     }
   };
   // Use the same buffer settings as the FlowFileRepository
-  auto set_cf_opts = [] (minifi::internal::Writable<rocksdb::ColumnFamilyOptions>& cf_opts) {
-    cf_opts.set(&rocksdb::ColumnFamilyOptions::write_buffer_size, 8ULL << 20U);
-    cf_opts.set<int>(&rocksdb::ColumnFamilyOptions::min_write_buffer_number_to_merge, 1);
+  auto set_cf_opts = [] (rocksdb::ColumnFamilyOptions& cf_opts) {
+    cf_opts.write_buffer_size = 8ULL << 20U;
+    cf_opts.min_write_buffer_number_to_merge = 1;
   };
   db_ = minifi::internal::RocksDatabase::create(set_db_opts, set_cf_opts, directory_);
   if (db_->open()) {

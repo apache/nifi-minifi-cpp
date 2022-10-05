@@ -82,10 +82,16 @@ std::unique_ptr<RocksDatabase> RocksDatabase::create(const DBOptionsPatch& db_op
 }
 
 RocksDatabase::RocksDatabase(std::shared_ptr<RocksDbInstance> db, std::string column, DBOptionsPatch db_options_patch, ColumnFamilyOptionsPatch cf_options_patch)
-  : column_(std::move(column)), db_options_patch_(std::move(db_options_patch)), cf_options_patch_(std::move(cf_options_patch)), db_(std::move(db)) {}
+    : column_(std::move(column)), db_(std::move(db)) {
+  db_->registerColumnConfig(column_, db_options_patch, cf_options_patch);
+}
+
+RocksDatabase::~RocksDatabase() {
+  db_->unregisterColumnConfig(column_);
+}
 
 std::optional<OpenRocksDb> RocksDatabase::open() {
-  return db_->open(column_, db_options_patch_, cf_options_patch_);
+  return db_->open(column_);
 }
 
 }  // namespace internal

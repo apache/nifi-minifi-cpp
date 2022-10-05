@@ -16,22 +16,14 @@
  * limitations under the License.
  */
 
-#pragma once
-
-#include <optional>
-#include <memory>
-#include <utility>
-#include "rocksdb/db.h"
-#include "RocksDbUtils.h"
+#include "DbHandle.h"
+#include "logging/LoggerConfiguration.h"
 
 namespace org::apache::nifi::minifi::internal {
 
-struct ColumnHandle {
-  explicit ColumnHandle(std::unique_ptr<rocksdb::ColumnFamilyHandle> handle, ColumnFamilyOptionsPatch cfo_patch)
-      : cfo_patch(cfo_patch), handle(std::move(handle)) {}
-  ~ColumnHandle();
-  ColumnFamilyOptionsPatch cfo_patch;
-  std::unique_ptr<rocksdb::ColumnFamilyHandle> handle;
-};
+DbHandle::~DbHandle() {
+  static auto logger = core::logging::LoggerFactory<DbHandle>::getLogger();
+  logger->log_trace("Closing database handle '%s'", handle->GetName());
+}
 
 }  // namespace org::apache::nifi::minifi::internal

@@ -32,40 +32,51 @@ namespace nifi {
 namespace minifi {
 namespace internal {
 
+class RocksDatabase;
 class OpenRocksDb;
 struct ColumnHandle;
+struct DbHandle;
 
 /**
  * Purpose: represents a single rocksdb instance backed by a directory
  */
 class RocksDbInstance {
   friend class OpenRocksDb;
+  friend class RocksDatabase;
+
+  struct ColumnConfig {
+    DBOptionsPatch dbo_patch;
+    ColumnFamilyOptionsPatch cfo_patch;
+  };
 
  public:
   explicit RocksDbInstance(const std::string& path, RocksDbMode mode = RocksDbMode::ReadWrite);
 
-  std::optional<OpenRocksDb> open(const std::string& column, const DBOptionsPatch& db_options_patch, const ColumnFamilyOptionsPatch& cf_options_patch);
+  std::optional<OpenRocksDb> open(const std::string& column);
 
  protected:
   // caller must hold the mtx_ mutex
-  std::shared_ptr<ColumnHandle> getOrCreateColumnFamily(const std::string& column, const ColumnFamilyOptionsPatch& cf_options_patch, const std::lock_guard<std::mutex>& guard);
+  std::shared_ptr<ColumnHandle> getOrCreateColumnFamily(const std::string& column, const std::lock_guard<std::mutex>& guard);
   /*
    * notify RocksDatabase that the next open should check if they can reopen the database
    * until a successful reopen no more open is possible
    */
   void invalidate();
 
+  void invalidate(const std::lock_guard<std::mutex>&);
+
+  void registerColumnConfig(const std::string& column, const DBOptionsPatch& db_options_patch, const ColumnFamilyOptionsPatch& cf_options_patch);
+  void unregisterColumnConfig(const std::string& column);
+
   rocksdb::DBOptions db_options_;
   const std::string db_name_;
   const RocksDbMode mode_;
 
   std::mutex mtx_;
-  std::shared_ptr<rocksdb::DB> impl_;
+  std::shared_ptr<DbHandle> impl_;
   std::unordered_map<std::string, std::shared_ptr<ColumnHandle>> columns_;
 
-  // the patcher could have internal resources the we need to keep alive
-  // as long as the database is open (e.g. custom environment)
-  DBOptionsPatch db_options_patch_;
+  std::unordered_map<std::string, ColumnConfig> column_configs_;
 
   static std::shared_ptr<core::logging::Logger> logger_;
 };

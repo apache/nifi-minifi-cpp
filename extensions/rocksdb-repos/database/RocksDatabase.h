@@ -48,12 +48,17 @@ class RocksDatabase {
 
   RocksDatabase(std::shared_ptr<RocksDbInstance> db, std::string column, DBOptionsPatch db_options_patch, ColumnFamilyOptionsPatch cf_options_patch);
 
+  RocksDatabase(const RocksDatabase&) = delete;
+  RocksDatabase(RocksDatabase&&) = delete;
+  RocksDatabase& operator=(const RocksDatabase&) = delete;
+  RocksDatabase& operator=(RocksDatabase&&) = delete;
+
   std::optional<OpenRocksDb> open();
+
+  ~RocksDatabase();
 
  private:
   const std::string column_;
-  const DBOptionsPatch db_options_patch_;
-  const ColumnFamilyOptionsPatch cf_options_patch_;
   std::shared_ptr<RocksDbInstance> db_;
 
   static std::shared_ptr<core::logging::Logger> logger_;
