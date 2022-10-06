@@ -218,7 +218,7 @@ static std::string buildSchema(const std::unordered_map<std::string, std::string
         "class": {"type": "string"},
         "id": {"$ref": "#/$defs/uuid"}
       }
-    }, )" + std::move(controller_services) + R"(]},
+    }, )" + controller_services + R"(]},
     "processor": {"allOf": [{
       "type": "object",
       "required": ["name", "id", "class", "scheduling strategy"],
