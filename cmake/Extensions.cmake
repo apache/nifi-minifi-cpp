@@ -102,12 +102,11 @@ function(registerTest dirName)
 endfunction(registerTest)
 
 macro(register_extension_linter target-name)
-    if(ENABLE_LINTER)
-        get_property(extensions GLOBAL PROPERTY EXTENSION-LINTERS)
-        set_property(GLOBAL APPEND PROPERTY EXTENSION-LINTERS "${target-name}")
-        add_custom_target(${target-name}
-            COMMAND python3 ${CMAKE_SOURCE_DIR}/thirdparty/google-styleguide/run_linter.py -q -i ${CMAKE_CURRENT_LIST_DIR}/)
-    endif()
+    get_property(extensions GLOBAL PROPERTY EXTENSION-LINTERS)
+    set_property(GLOBAL APPEND PROPERTY EXTENSION-LINTERS "${target-name}")
+    add_custom_target(${target-name}
+        COMMAND python3 ${CMAKE_SOURCE_DIR}/thirdparty/google-styleguide/run_linter.py -q -i ${CMAKE_CURRENT_LIST_DIR}/)
+    set_target_properties(${target-name} PROPERTIES EXCLUDE_FROM_DEFAULT_BUILD TRUE)
 endmacro()
 
 function(get_component_name extension-name output)

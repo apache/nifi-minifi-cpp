@@ -52,7 +52,6 @@ set cpack=OFF
 set installer_merge_modules=OFF
 set strict_gsl_checks=
 set redist=
-set build_linter=OFF
 set build_nanofi=OFF
 set build_opencv=OFF
 set build_prometheus=OFF
@@ -99,7 +98,6 @@ for %%x in (%*) do (
     if [%%~x] EQU [/DD]          set cmake_build_type=Debug
     if [%%~x] EQU [/CI]          set "strict_gsl_checks=-DSTRICT_GSL_CHECKS=AUDIT" & set test_custom_wel_provider=ON
     if [%%~x] EQU [/NONFREEUCRT] set "redist=-DMSI_REDISTRIBUTE_UCRT_NONASL=ON"
-    if [%%~x] EQU [/L]           set build_linter=ON
     if [%%~x] EQU [/RO]          set real_odbc=ON
     if [%%~x] EQU [/NINJA]       set generator="Ninja"
 )
@@ -121,7 +119,7 @@ cmake -G %generator% -A %build_platform% -DINSTALLER_MERGE_MODULES=%installer_me
         -DENABLE_MQTT=%enable_mqtt% -DENABLE_OPC=%enable_opc% -DENABLE_OPENWSMAN=%enable_openwsman% -DENABLE_OPS=%enable_ops% -DENABLE_PCAP=%enable_pcap% ^
         -DENABLE_SCRIPTING=%enable_scripting% -DENABLE_SENSORS=%enable_sensors% -DENABLE_TENSORFLOW=%enable_tensorflow% -DENABLE_USB_CAMERA=%enable_usb_camera% ^
         -DBUILD_ROCKSDB=ON -DFORCE_WINDOWS=ON -DUSE_SYSTEM_UUID=OFF -DDISABLE_LIBARCHIVE=OFF -DEXCLUDE_BOOST=ON -DENABLE_WEL=ON -DFAIL_ON_WARNINGS=OFF -DSKIP_TESTS=%skiptests% ^
-        %strict_gsl_checks% %redist% -DENABLE_LINTER=%build_linter% %EXTRA_CMAKE_ARGUMENTS% "%scriptdir%" && %buildcmd%
+        %strict_gsl_checks% %redist% %EXTRA_CMAKE_ARGUMENTS% "%scriptdir%" && %buildcmd%
 IF %ERRORLEVEL% NEQ 0 EXIT /b %ERRORLEVEL%
 if [%cpack%] EQU [ON] (
     cpack -C %cmake_build_type%
