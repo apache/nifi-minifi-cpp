@@ -132,7 +132,6 @@ TEST_CASE("ProcessSession::append should append to the flowfile and set its size
       ContentRepositoryDependentTests::testAppendToManagedFlowFile(std::make_shared<minifi::core::repository::FileSystemRepository>());
     }
   }
-
 }
 
 TEST_CASE("ProcessSession::read can read zero length flowfiles without crash", "[zerolengthread]") {
