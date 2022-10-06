@@ -32,11 +32,7 @@
 #include <ifaddrs.h>
 #endif
 
-namespace org {
-namespace apache {
-namespace nifi {
-namespace minifi {
-namespace utils {
+namespace org::apache::nifi::minifi::utils {
 
 std::shared_ptr<core::logging::Logger> NetworkInterfaceInfo::logger_ = core::logging::LoggerFactory<NetworkInterfaceInfo>::getLogger();
 
@@ -87,7 +83,7 @@ struct HasName {
 };
 }
 
-std::vector<NetworkInterfaceInfo> NetworkInterfaceInfo::getNetworkInterfaceInfos(std::function<bool(const NetworkInterfaceInfo&)> filter,
+std::vector<NetworkInterfaceInfo> NetworkInterfaceInfo::getNetworkInterfaceInfos(const std::function<bool(const NetworkInterfaceInfo&)>& filter,
     const std::optional<uint32_t> max_interfaces) {
   std::vector<NetworkInterfaceInfo> network_adapters;
 #ifdef WIN32
@@ -120,7 +116,7 @@ std::vector<NetworkInterfaceInfo> NetworkInterfaceInfo::getNetworkInterfaceInfos
   }
 #else
   struct ifaddrs* interface_addresses = nullptr;
-  auto cleanup = gsl::finally([interface_addresses] { freeifaddrs(interface_addresses); });
+  auto cleanup = gsl::finally([&interface_addresses] { freeifaddrs(interface_addresses); });
   if (getifaddrs(&interface_addresses) == -1) {
     logger_->log_error("getifaddrs failed: %s", std::strerror(errno));
     return network_adapters;
@@ -158,8 +154,4 @@ void NetworkInterfaceInfo::moveAddressesInto(NetworkInterfaceInfo& destination) 
   move_append(std::move(ip_v6_addresses_), destination.ip_v6_addresses_);
 }
 
-} /* namespace utils */
-} /* namespace minifi */
-} /* namespace nifi */
-} /* namespace apache */
-} /* namespace org */
+}  // namespace org::apache::nifi::minifi::utils
