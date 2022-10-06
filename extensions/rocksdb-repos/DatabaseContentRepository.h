@@ -22,7 +22,7 @@
 #include "core/Core.h"
 #include "core/Connectable.h"
 #include "core/ContentRepository.h"
-#include "core/ContentSession.h"
+#include "core/BufferedContentSession.h"
 #include "core/logging/LoggerConfiguration.h"
 #include "core/Property.h"
 #include "database/RocksDatabase.h"

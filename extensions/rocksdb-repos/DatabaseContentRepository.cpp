@@ -90,7 +90,7 @@ void DatabaseContentRepository::Session::commit() {
     throw Exception(REPOSITORY_EXCEPTION, "Couldn't open rocksdb database to commit content changes");
   }
   auto batch = opendb->createWriteBatch();
-  for (const auto& resource : managedResources_) {
+  for (const auto& resource : managed_resources_) {
     auto outStream = dbContentRepository->write(*resource.first, false, &batch);
     if (outStream == nullptr) {
       throw Exception(REPOSITORY_EXCEPTION, "Couldn't open the underlying resource for write: " + resource.first->getContentFullPath());
@@ -100,7 +100,7 @@ void DatabaseContentRepository::Session::commit() {
       throw Exception(REPOSITORY_EXCEPTION, "Failed to write new resource: " + resource.first->getContentFullPath());
     }
   }
-  for (const auto& resource : extendedResources_) {
+  for (const auto& resource : extended_resources_) {
     auto outStream = dbContentRepository->write(*resource.first, true, &batch);
     if (outStream == nullptr) {
       throw Exception(REPOSITORY_EXCEPTION, "Couldn't open the underlying resource for append: " + resource.first->getContentFullPath());
@@ -118,8 +118,8 @@ void DatabaseContentRepository::Session::commit() {
     throw Exception(REPOSITORY_EXCEPTION, "Batch write failed: " + status.ToString());
   }
 
-  managedResources_.clear();
-  extendedResources_.clear();
+  managed_resources_.clear();
+  extended_resources_.clear();
 }
 
 std::shared_ptr<io::BaseStream> DatabaseContentRepository::write(const minifi::ResourceClaim &claim, bool append) {

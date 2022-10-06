@@ -19,26 +19,35 @@
 #pragma once
 
 #include <memory>
+#include <map>
 #include "ResourceClaim.h"
 #include "io/BaseStream.h"
+#include "ContentSession.h"
 
 namespace org::apache::nifi::minifi::core {
 
-class ContentSession {
+class ContentRepository;
+
+class BufferedContentSession : public ContentSession {
  public:
-  virtual std::shared_ptr<ResourceClaim> create() = 0;
+  explicit BufferedContentSession(std::shared_ptr<ContentRepository> repository);
 
-  virtual std::shared_ptr<io::BaseStream> write(const std::shared_ptr<ResourceClaim>& resource_id) = 0;
+  std::shared_ptr<ResourceClaim> create() override;
 
-  virtual std::shared_ptr<io::BaseStream> append(const std::shared_ptr<ResourceClaim>& resource_id) = 0;
+  std::shared_ptr<io::BaseStream> write(const std::shared_ptr<ResourceClaim>& resource_id) override;
 
-  virtual std::shared_ptr<io::BaseStream> read(const std::shared_ptr<ResourceClaim>& resource_id) = 0;
+  std::shared_ptr<io::BaseStream> append(const std::shared_ptr<ResourceClaim>& resource_id) override;
 
-  virtual void commit() = 0;
+  std::shared_ptr<io::BaseStream> read(const std::shared_ptr<ResourceClaim>& resource_id) override;
 
-  virtual void rollback() = 0;
+  void commit() override;
 
-  virtual ~ContentSession() = default;
+  void rollback() override;
+
+ protected:
+  std::map<std::shared_ptr<ResourceClaim>, std::shared_ptr<io::BufferStream>> managed_resources_;
+  std::map<std::shared_ptr<ResourceClaim>, std::shared_ptr<io::BufferStream>> extended_resources_;
+  std::shared_ptr<ContentRepository> repository_;
 };
 
 }  // namespace org::apache::nifi::minifi::core

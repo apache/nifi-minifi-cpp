@@ -24,6 +24,7 @@
 #include "FileSystemRepository.h"
 #include "VolatileContentRepository.h"
 #include "DatabaseContentRepository.h"
+#include "BufferedContentSession.h"
 #include "FlowFileRecord.h"
 #include "../TestBase.h"
 #include "../Catch.h"
@@ -72,7 +73,6 @@ void test_template() {
   ContentSessionController<ContentRepositoryClass> controller;
   std::shared_ptr<core::ContentRepository> contentRepository = controller.contentRepository;
 
-
   std::shared_ptr<minifi::ResourceClaim> oldClaim;
   {
     auto session = contentRepository->createSession();
@@ -82,23 +82,32 @@ void test_template() {
   }
 
   auto session = contentRepository->createSession();
+  const bool is_buffered_session = std::dynamic_pointer_cast<core::BufferedContentSession>(session) != nullptr;
+
   REQUIRE_THROWS(session->write(oldClaim));
 
   REQUIRE_NOTHROW(session->read(oldClaim));
-  session->write(oldClaim, core::ContentSession::WriteMode::APPEND) << "-addendum";
-  REQUIRE_THROWS(session->read(oldClaim));  // now throws because we appended to the content
+
+  session->append(oldClaim) << "-addendum";
+  // TODO(adebreceni): MINIFICPP-1954
+  if (is_buffered_session) {
+    REQUIRE_THROWS(session->read(oldClaim));
+  }
 
   auto claim1 = session->create();
   session->write(claim1) << "hello content!";
-  REQUIRE_THROWS(session->read(claim1));  // TODO(adebreceni): we currently have no means to create joined streams
+  // TODO(adebreceni): MINIFICPP-1954
+  if (is_buffered_session) {
+    REQUIRE_THROWS(session->read(claim1));
+  }
 
   auto claim2 = session->create();
-  session->write(claim2, core::ContentSession::WriteMode::APPEND) << "beginning";
-  session->write(claim2, core::ContentSession::WriteMode::APPEND) << "-end";
+  session->append(claim2) << "beginning";
+  session->append(claim2) << "-end";
 
   auto claim3 = session->create();
   session->write(claim3) << "first";
-  session->write(claim3, core::ContentSession::WriteMode::APPEND) << "-last";
+  session->append(claim3) << "-last";
 
   auto claim4 = session->create();
   session->write(claim4) << "beginning";
@@ -127,14 +136,15 @@ void test_template() {
   SECTION("Rollback") {
     session->rollback();
 
-    std::string content;
-    contentRepository->read(*oldClaim) >> content;
-    REQUIRE(content == "data");
-
-    REQUIRE(!contentRepository->exists(*claim1));
-    REQUIRE(!contentRepository->exists(*claim2));
-    REQUIRE(!contentRepository->exists(*claim3));
-    REQUIRE(!contentRepository->exists(*claim4));
+    if (is_buffered_session) {
+      std::string content;
+      contentRepository->read(*oldClaim) >> content;
+      REQUIRE(content == "data");
+      REQUIRE(!contentRepository->exists(*claim1));
+      REQUIRE(!contentRepository->exists(*claim2));
+      REQUIRE(!contentRepository->exists(*claim3));
+      REQUIRE(!contentRepository->exists(*claim4));
+    }
   }
 }
 
