@@ -28,6 +28,10 @@ namespace org::apache::nifi::minifi::core {
 
 class ContentRepository;
 
+/**
+ * Warning: this implementation simply forwards all calls to the underlying
+ * repository without any atomicity guarantees.
+ */
 class ForwardingContentSession : public ContentSession {
  public:
   explicit ForwardingContentSession(std::shared_ptr<ContentRepository> repository);
