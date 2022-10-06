@@ -34,16 +34,17 @@ function(use_bundled_open62541 SOURCE_DIR BINARY_DIR)
 
     set(OPEN62541_CMAKE_ARGS ${PASSTHROUGH_CMAKE_ARGS}
             "-DCMAKE_INSTALL_PREFIX=${OPEN62541_BYPRODUCT_DIR}"
-            -DOPEN62541_VERSION=v1.0
-            -DUA_ENABLE_ENCRYPTION=ON)
+            -DOPEN62541_VERSION=v1.3.3
+            -DUA_ENABLE_ENCRYPTION=ON
+            -DUA_FORCE_WERROR=OFF)
 
     append_third_party_passthrough_args(OPEN62541_CMAKE_ARGS "${OPEN62541_CMAKE_ARGS}")
 
     # Build project
     ExternalProject_Add(
             open62541-external
-            URL "https://github.com/open62541/open62541/archive/v1.2.2.tar.gz"
-            URL_HASH "SHA256=9b5bfd811ee523be601f11abc514a93c67fe5c6e957cd6c36fe6ea4f28e009bb"
+            URL "https://github.com/open62541/open62541/archive/v1.3.3.tar.gz"
+            URL_HASH "SHA256=52c049c0f107b4cc382c9e480d677a6360cdd96c472f84689af91b423bd108cb"
             SOURCE_DIR "${BINARY_DIR}/thirdparty/open62541-src"
             PATCH_COMMAND ${PC}
             LIST_SEPARATOR % # This is needed for passing semicolon-separated lists

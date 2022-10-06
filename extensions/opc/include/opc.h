@@ -24,6 +24,7 @@
 #include <set>
 #include <vector>
 #include <memory>
+#include <string_view>
 
 #include "open62541/client.h"
 #include "logging/Logger.h"
@@ -55,7 +56,7 @@ class Client {
   ~Client();
   NodeData getNodeData(const UA_ReferenceDescription *ref, const std::string& basePath = "");
   UA_ReferenceDescription * getNodeReference(UA_NodeId nodeId);
-  void traverse(UA_NodeId nodeId, std::function<nodeFoundCallBackFunc> cb, const std::string& basePath = "", uint64_t maxDepth = 0, bool fetchRoot = true);
+  void traverse(UA_NodeId nodeId, const std::function<nodeFoundCallBackFunc>& cb, const std::string& basePath = "", uint64_t maxDepth = 0, bool fetchRoot = true);
   bool exists(UA_NodeId nodeId);
   UA_StatusCode translateBrowsePathsToNodeIdsRequest(const std::string& path, std::vector<UA_NodeId>& foundNodeIDs, const std::shared_ptr<core::logging::Logger>& logger);
 
@@ -63,14 +64,14 @@ class Client {
   UA_StatusCode update_node(const UA_NodeId nodeId, T value);
 
   template<typename T>
-  UA_StatusCode add_node(const UA_NodeId parentNodeId, const UA_NodeId targetNodeId, std::string browseName, T value, UA_NodeId *receivedNodeId);
+  UA_StatusCode add_node(const UA_NodeId parentNodeId, const UA_NodeId targetNodeId, std::string_view browseName, T value, UA_NodeId *receivedNodeId);
 
-  static std::unique_ptr<Client> createClient(std::shared_ptr<core::logging::Logger> logger, const std::string& applicationURI,
+  static std::unique_ptr<Client> createClient(const std::shared_ptr<core::logging::Logger>& logger, const std::string& applicationURI,
                                               const std::vector<char>& certBuffer, const std::vector<char>& keyBuffer,
                                               const std::vector<std::vector<char>>& trustBuffers);
 
  private:
-  Client(std::shared_ptr<core::logging::Logger> logger, const std::string& applicationURI,
+  Client(const std::shared_ptr<core::logging::Logger>& logger, const std::string& applicationURI,
       const std::vector<char>& certBuffer, const std::vector<char>& keyBuffer,
       const std::vector<std::vector<char>>& trustBuffers);
 
@@ -82,7 +83,7 @@ using ClientPtr = std::unique_ptr<Client>;
 
 struct NodeData {
   std::vector<uint8_t> data;
-  uint16_t dataTypeID;
+  UA_DataTypeKind dataTypeID;
   std::map<std::string, std::string> attributes;
 
   virtual ~NodeData() {
