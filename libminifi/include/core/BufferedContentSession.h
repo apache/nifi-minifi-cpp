@@ -28,6 +28,11 @@ namespace org::apache::nifi::minifi::core {
 
 class ContentRepository;
 
+/**
+ * Buffers the changes in-memory and forwards those to the repository on commit.
+ * Atomicity is NOT guaranteed in this implementation, override commit if needed.
+ * Rollback is possible.
+ */
 class BufferedContentSession : public ContentSession {
  public:
   explicit BufferedContentSession(std::shared_ptr<ContentRepository> repository);

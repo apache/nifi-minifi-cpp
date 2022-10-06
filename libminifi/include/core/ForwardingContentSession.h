@@ -30,7 +30,7 @@ class ContentRepository;
 
 /**
  * Warning: this implementation simply forwards all calls to the underlying
- * repository without any atomicity guarantees.
+ * repository without any atomicity guarantees or possibility of rollback.
  */
 class ForwardingContentSession : public ContentSession {
  public:
