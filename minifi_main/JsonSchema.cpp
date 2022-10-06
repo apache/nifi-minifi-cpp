@@ -56,9 +56,9 @@ static std::string prettifyJson(const std::string& str) {
 
 void writePropertySchema(const core::Property& prop, std::ostream& out) {
   out << "\"" << escape(prop.getName()) << "\" : {";
-  out << "\"description\": \"" << escape(prop.getDescription()) << "\"";
+  out << R"("description": ")" << escape(prop.getDescription()) << "\"";
   if (const auto& values = prop.getAllowedValues(); !values.empty()) {
-    out << ", \"enum\": ["
+    out << R"(, "enum": [)"
         << (values
             | ranges::views::transform([] (auto& val) {return '"' + escape(val.to_string()) + '"';})
             | ranges::views::join(std::string{','})
@@ -71,27 +71,27 @@ void writePropertySchema(const core::Property& prop, std::ostream& out) {
         || type == state::response::Value::INT64_TYPE
         || type == state::response::Value::UINT32_TYPE
         || type == state::response::Value::UINT64_TYPE) {
-      out << ", \"type\": \"integer\", \"default\": " << static_cast<int64_t>(def_value);
+      out << R"(, "type": "integer", "default": )" << static_cast<int64_t>(def_value);
     } else if (type == state::response::Value::DOUBLE_TYPE) {
-      out << ", \"type\": \"number\", \"default\": " << static_cast<double>(def_value);
+      out << R"(, "type": "number", "default": )" << static_cast<double>(def_value);
     } else if (type == state::response::Value::BOOL_TYPE) {
-      out << ", \"type\": \"boolean\", \"default\": " << (static_cast<bool>(def_value) ? "true" : "false");
+      out << R"(, "type": "boolean", "default": )" << (static_cast<bool>(def_value) ? "true" : "false");
     } else {
-      out << ", \"type\": \"string\", \"default\": \"" << escape(def_value.to_string()) << "\"";
+      out << R"(, "type": "string", "default": ")" << escape(def_value.to_string()) << "\"";
     }
   } else {
     // no default value, no type information, fallback to string
-    out << ", \"type\": \"string\"";
+    out << R"(, "type": "string")";
   }
   out << "}";  // property.getName()
 }
 
 template<typename PropertyContainer>
 void writeProperties(const PropertyContainer& props, bool supports_dynamic, std::ostream& out) {
-  out << "\"Properties\": {"
-        << "\"type\": \"object\","
-        << "\"additionalProperties\": " << (supports_dynamic? "true" : "false") << ","
-        << "\"required\": ["
+  out << R"("Properties": {)"
+        << R"("type": "object",)"
+        << R"("additionalProperties": )" << (supports_dynamic? "true" : "false") << ","
+        << R"("required": [)"
         << (props
             | ranges::views::filter([] (auto& prop) {return prop.getRequired();})
             | ranges::views::transform([] (auto& prop) {return '"' + escape(prop.getName()) + '"';})
@@ -99,7 +99,7 @@ void writeProperties(const PropertyContainer& props, bool supports_dynamic, std:
             | ranges::to<std::string>())
         << "]";
 
-  out << ", \"properties\": {";
+  out << R"(, "properties": {)";
   for (size_t prop_idx = 0; prop_idx < props.size(); ++prop_idx) {
     const auto& property = props[prop_idx];
     if (prop_idx != 0) out << ",";
@@ -189,8 +189,8 @@ static std::string buildSchema(const std::unordered_map<std::string, std::string
     },
     "uuid": {
       "type": "string",
-      "pattern": "^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$",
-      "default": "00000000-0000-0000-000000000000"
+      "pattern": "^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$",
+      "default": "00000000-0000-0000-0000-000000000000"
     },
     "cron_pattern": {
       "type": "string",
@@ -349,25 +349,25 @@ std::string generateJsonSchema() {
     std::stringstream schema;
     schema
         << "{"
-        << "\"if\": {\"properties\": {\"class\": {\"const\": \"" << escape(proc.short_name_) << "\"}}},"
-        << "\"then\": {"
-        << "\"required\": [\"Properties\"],"
-        << "\"properties\": {";
+        << R"("if": {"properties": {"class": {"const": ")" << escape(proc.short_name_) << "\"}}},"
+        << R"("then": {)"
+        << R"("required": ["Properties"],)"
+        << R"("properties": {)";
 
     if (proc.isSingleThreaded_) {
-      schema << "\"max concurrent tasks\": {\"const\": 1},";
+      schema << R"("max concurrent tasks": {"const": 1},)";
     }
 
-    schema << "\"auto-terminated relationships list\": {\"items\": {\"$ref\": \"#/$defs/relationships-" << escape(proc.short_name_) << "\"}},";
+    schema << R"("auto-terminated relationships list": {"items": {"$ref": "#/$defs/relationships-)" << escape(proc.short_name_) << "\"}},";
     {
       std::stringstream rel_schema;
-      rel_schema << "{\"anyOf\": [";
+      rel_schema << R"({"anyOf": [)";
       if (proc.dynamic_relationships_) {
-        rel_schema << "{\"type\": \"string\"}";
+        rel_schema << R"({"type": "string"})";
       }
       for (size_t rel_idx = 0; rel_idx < proc.class_relationships_.size(); ++rel_idx) {
         if (rel_idx != 0 || proc.dynamic_relationships_) rel_schema << ", ";
-        rel_schema << "{\"const\": \"" << escape(proc.class_relationships_[rel_idx].getName()) << "\"}";
+        rel_schema << R"({"const": ")" << escape(proc.class_relationships_[rel_idx].getName()) << "\"}";
       }
       rel_schema << "]}";
       relationships[proc.short_name_] = std::move(rel_schema).str();
@@ -387,10 +387,10 @@ std::string generateJsonSchema() {
     std::stringstream schema;
     schema
         << "{"
-        << "\"if\": {\"properties\": {\"class\": {\"const\": \"" << escape(service.short_name_) << "\"}}},"
-        << "\"then\": {"
-        << "\"required\": [\"Properties\"],"
-        << "\"properties\": {";
+        << R"("if": {"properties": {"class": {"const": ")" << escape(service.short_name_) << "\"}}},"
+        << R"("then": {)"
+        << R"("required": ["Properties"],)"
+        << R"("properties": {)";
 
     writeProperties(service.class_properties_, service.dynamic_properties_, schema);
 
