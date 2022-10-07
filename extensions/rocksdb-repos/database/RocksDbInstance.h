@@ -26,11 +26,7 @@
 #include "rocksdb/db.h"
 #include "logging/Logger.h"
 
-namespace org {
-namespace apache {
-namespace nifi {
-namespace minifi {
-namespace internal {
+namespace org::apache::nifi::minifi::internal {
 
 class RocksDatabase;
 class OpenRocksDb;
@@ -50,7 +46,7 @@ class RocksDbInstance {
   };
 
  public:
-  explicit RocksDbInstance(const std::string& path, RocksDbMode mode = RocksDbMode::ReadWrite);
+  explicit RocksDbInstance(std::string path, RocksDbMode mode = RocksDbMode::ReadWrite);
 
   std::optional<OpenRocksDb> open(const std::string& column);
 
@@ -81,8 +77,4 @@ class RocksDbInstance {
   static std::shared_ptr<core::logging::Logger> logger_;
 };
 
-}  // namespace internal
-}  // namespace minifi
-}  // namespace nifi
-}  // namespace apache
-}  // namespace org
+}  // namespace org::apache::nifi::minifi::internal

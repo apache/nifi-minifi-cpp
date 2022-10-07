@@ -25,11 +25,7 @@
 #include "utils/StringUtils.h"
 #include "RocksDbInstance.h"
 
-namespace org {
-namespace apache {
-namespace nifi {
-namespace minifi {
-namespace internal {
+namespace org::apache::nifi::minifi::internal {
 
 std::shared_ptr<core::logging::Logger> RocksDatabase::logger_ = core::logging::LoggerFactory<RocksDatabase>::getLogger();
 
@@ -81,7 +77,7 @@ std::unique_ptr<RocksDatabase> RocksDatabase::create(const DBOptionsPatch& db_op
   return std::make_unique<RocksDatabase>(instance, db_column, db_options_patch, cf_options_patch);
 }
 
-RocksDatabase::RocksDatabase(std::shared_ptr<RocksDbInstance> db, std::string column, DBOptionsPatch db_options_patch, ColumnFamilyOptionsPatch cf_options_patch)
+RocksDatabase::RocksDatabase(std::shared_ptr<RocksDbInstance> db, std::string column, const DBOptionsPatch& db_options_patch, const ColumnFamilyOptionsPatch& cf_options_patch)
     : column_(std::move(column)), db_(std::move(db)) {
   db_->registerColumnConfig(column_, db_options_patch, cf_options_patch);
 }
@@ -94,8 +90,4 @@ std::optional<OpenRocksDb> RocksDatabase::open() {
   return db_->open(column_);
 }
 
-}  // namespace internal
-}  // namespace minifi
-}  // namespace nifi
-}  // namespace apache
-}  // namespace org
+}  // namespace org::apache::nifi::minifi::internal

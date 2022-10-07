@@ -27,11 +27,7 @@
 #include "RocksDbUtils.h"
 #include "OpenRocksDb.h"
 
-namespace org {
-namespace apache {
-namespace nifi {
-namespace minifi {
-namespace internal {
+namespace org::apache::nifi::minifi::internal {
 
 class RocksDbInstance;
 
@@ -46,7 +42,7 @@ class RocksDatabase {
                                                const std::string& uri,
                                                RocksDbMode mode = RocksDbMode::ReadWrite);
 
-  RocksDatabase(std::shared_ptr<RocksDbInstance> db, std::string column, DBOptionsPatch db_options_patch, ColumnFamilyOptionsPatch cf_options_patch);
+  RocksDatabase(std::shared_ptr<RocksDbInstance> db, std::string column, const DBOptionsPatch& db_options_patch, const ColumnFamilyOptionsPatch& cf_options_patch);
 
   RocksDatabase(const RocksDatabase&) = delete;
   RocksDatabase(RocksDatabase&&) = delete;
@@ -64,8 +60,4 @@ class RocksDatabase {
   static std::shared_ptr<core::logging::Logger> logger_;
 };
 
-}  // namespace internal
-}  // namespace minifi
-}  // namespace nifi
-}  // namespace apache
-}  // namespace org
+}  // namespace org::apache::nifi::minifi::internal

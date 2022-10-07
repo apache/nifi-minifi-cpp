@@ -29,7 +29,7 @@ namespace org::apache::nifi::minifi::internal {
 
 std::shared_ptr<core::logging::Logger> RocksDbInstance::logger_ = core::logging::LoggerFactory<RocksDbInstance>::getLogger();
 
-RocksDbInstance::RocksDbInstance(const std::string& path, RocksDbMode mode) : db_name_(path), mode_(mode) {}
+RocksDbInstance::RocksDbInstance(std::string path, RocksDbMode mode) : db_name_(std::move(path)), mode_(mode) {}
 
 void RocksDbInstance::invalidate() {
   std::lock_guard<std::mutex> db_guard{mtx_};
