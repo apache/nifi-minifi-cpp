@@ -34,10 +34,6 @@ class Relationship {
         description_(std::move(description)) {
   }
 
-  Relationship(const Relationship& other) = default;
-  Relationship &operator=(const Relationship& other) = default;
-  ~Relationship() = default;
-
   [[nodiscard]] std::string getName() const {
     return name_;
   }
