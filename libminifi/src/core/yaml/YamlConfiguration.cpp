@@ -67,9 +67,8 @@ std::unique_ptr<core::ProcessGroup> YamlConfiguration::getYamlRoot(std::istream 
     return getRootFrom(root);
   } catch (const YAML::ParserException &pe) {
     logger_->log_error(pe.what());
-    std::rethrow_exception(std::current_exception());
+    throw;
   }
-  return nullptr;
 }
 
 std::unique_ptr<core::ProcessGroup> YamlConfiguration::getRootFromPayload(const std::string &yamlConfigPayload) {
@@ -79,9 +78,8 @@ std::unique_ptr<core::ProcessGroup> YamlConfiguration::getRootFromPayload(const 
     return getRootFrom(root);
   } catch (const YAML::ParserException &pe) {
     logger_->log_error(pe.what());
-    std::rethrow_exception(std::current_exception());
+    throw;
   }
-  return nullptr;
 }
 
 }  // namespace org::apache::nifi::minifi::core

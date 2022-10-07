@@ -87,6 +87,19 @@ class JsonNode : public flow::Node::NodeImpl {
     }
   }
 
+  nonstd::expected<std::string, std::exception_ptr> getIntegerAsString() const override {
+    try {
+      if (!node_) throw std::runtime_error("Cannot get string from invalid json value");
+      if (node_->IsInt()) return std::to_string(node_->GetInt());
+      if (node_->IsUint()) return std::to_string(node_->GetUint());
+      if (node_->IsInt64()) return std::to_string(node_->GetInt64());
+      if (node_->IsUint64()) return std::to_string(node_->GetUint64());
+      throw std::runtime_error("Cannot get string from non-integer json value");
+    } catch (...) {
+      return nonstd::make_unexpected(std::current_exception());
+    }
+  }
+
   std::string getDebugString() const override {
     if (!node_) return "<invalid>";
     if (node_->IsObject()) return "<Map>";
@@ -116,11 +129,11 @@ class JsonNode : public flow::Node::NodeImpl {
   flow::Node::Iterator end() const override;
 
   flow::Node operator[](std::string_view key) const override {
-    if (!node_) {
-      throw std::runtime_error("Cannot get member of invalid json value");
+    if (!node_ || node_->IsArray() || node_->IsNull()) {
+      return flow::Node{std::make_shared<JsonNode>(nullptr)};
     }
     if (!node_->IsObject()) {
-      return flow::Node{std::make_shared<JsonNode>(nullptr)};
+      throw std::runtime_error("Cannot get member of scalar json value");
     }
     auto it = node_->FindMember(rapidjson::Value(rapidjson::StringRef(key.data(), key.length())));
     if (it == node_->MemberEnd()) {
@@ -134,15 +147,6 @@ class JsonNode : public flow::Node::NodeImpl {
   }
 
  private:
-  template<typename T, typename U>
-  std::optional<T> narrow(const U& value) {
-    T res = static_cast<T>(value);
-    if (static_cast<U>(res) != value) {
-      return std::nullopt;
-    }
-    return res;
-  }
-
   template<typename T>
   nonstd::expected<T, std::exception_ptr> getNumber(const char* type_name) const {
     try {
@@ -154,7 +158,7 @@ class JsonNode : public flow::Node::NodeImpl {
       if (node_->IsUint() && utils::internal::cast_if_in_range(node_->GetUint(), result)) return result;
       if (node_->IsInt64() && utils::internal::cast_if_in_range(node_->GetInt64(), result)) return result;
       if (node_->IsUint64() && utils::internal::cast_if_in_range(node_->GetUint64(), result)) return result;
-      throw std::runtime_error("Cannot get " + std::string(type_name) + " of non-numeric json value");
+      throw std::runtime_error("Cannot get " + std::string(type_name) + " from json value; it is either non-numeric or out of range");
     } catch (...) {
       return nonstd::make_unexpected(std::current_exception());
     }

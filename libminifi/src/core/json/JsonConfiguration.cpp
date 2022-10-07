@@ -71,10 +71,10 @@ std::unique_ptr<core::ProcessGroup> JsonConfiguration::getRoot() {
   }
 }
 
-std::unique_ptr<core::ProcessGroup> JsonConfiguration::getRootFromPayload(const std::string &yamlConfigPayload) {
+std::unique_ptr<core::ProcessGroup> JsonConfiguration::getRootFromPayload(const std::string &json_config) {
   try {
     rapidjson::Document doc;
-    rapidjson::ParseResult res = doc.Parse(yamlConfigPayload.c_str(), yamlConfigPayload.length());
+    rapidjson::ParseResult res = doc.Parse(json_config.c_str(), json_config.length());
     if (!res) {
       throw std::runtime_error("Could not parse json file");
     }

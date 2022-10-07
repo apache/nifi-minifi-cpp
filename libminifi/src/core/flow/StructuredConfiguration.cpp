@@ -104,7 +104,7 @@ std::unique_ptr<core::ProcessGroup> StructuredConfiguration::parseProcessGroup(c
   parsePorts(outputPortsNode, group.get(), PortType::OUTPUT);
 
   if (childProcessGroupNodeSeq && childProcessGroupNodeSeq.isSequence()) {
-    for (const auto childProcessGroupNode : childProcessGroupNodeSeq) {
+    for (const auto& childProcessGroupNode : childProcessGroupNodeSeq) {
       group->addProcessGroup(parseProcessGroup(childProcessGroupNode, childProcessGroupNode));
     }
   }
@@ -153,7 +153,7 @@ void StructuredConfiguration::parseProcessorNode(const Node& processors_node, co
         "Cannot instantiate a MiNiFi instance without a defined Processors configuration node.");
   }
   // Evaluate sequence of processors
-  for (const auto procNode : processors_node) {
+  for (const auto& procNode : processors_node) {
     core::ProcessorConfig procCfg;
 
     checkRequiredField(procNode, "name", CONFIG_PROCESSORS_KEY);
@@ -194,11 +194,7 @@ void StructuredConfiguration::parseProcessorNode(const Node& processors_node, co
     logger_->log_debug("parseProcessorNode: scheduling period => [%s]", procCfg.schedulingPeriod);
 
     if (auto tasksNode = procNode["max concurrent tasks"]) {
-      if (auto int_val = tasksNode.getUInt64()) {
-        procCfg.maxConcurrentTasks = std::to_string(int_val.value());
-      } else {
-        procCfg.maxConcurrentTasks = tasksNode.getString().value();
-      }
+      procCfg.maxConcurrentTasks = tasksNode.getIntegerAsString().value();
       logger_->log_debug("parseProcessorNode: max concurrent tasks => [%s]", procCfg.maxConcurrentTasks);
     }
 
@@ -213,11 +209,7 @@ void StructuredConfiguration::parseProcessorNode(const Node& processors_node, co
     }
 
     if (auto runNode = procNode["run duration nanos"]) {
-      if (auto int_val = runNode.getUInt64()) {
-        procCfg.runDurationNanos = std::to_string(int_val.value());
-      } else {
-        procCfg.runDurationNanos = runNode.getString().value();
-      }
+      procCfg.runDurationNanos = runNode.getIntegerAsString().value();
       logger_->log_debug("parseProcessorNode: run duration nanos => [%s]", procCfg.runDurationNanos);
     }
 
@@ -226,7 +218,7 @@ void StructuredConfiguration::parseProcessorNode(const Node& processors_node, co
       Node autoTerminatedSequence = procNode["auto-terminated relationships list"];
       std::vector<std::string> rawAutoTerminatedRelationshipValues;
       if (autoTerminatedSequence.isSequence() && autoTerminatedSequence.size() > 0) {
-        for (const auto autoTerminatedRel : autoTerminatedSequence) {
+        for (const auto& autoTerminatedRel : autoTerminatedSequence) {
           rawAutoTerminatedRelationshipValues.push_back(autoTerminatedRel.getString().value());
         }
       }
@@ -310,7 +302,7 @@ void StructuredConfiguration::parseRemoteProcessGroup(const Node& rpg_node_seq, 
   if (!rpg_node_seq || !rpg_node_seq.isSequence()) {
     return;
   }
-  for (const auto currRpgNode : rpg_node_seq) {
+  for (const auto& currRpgNode : rpg_node_seq) {
     checkRequiredField(currRpgNode, "name", CONFIG_REMOTE_PROCESS_GROUP_KEY);
     auto name = currRpgNode["name"].getString().value();
     id = getOrGenerateId(currRpgNode);
@@ -373,7 +365,7 @@ void StructuredConfiguration::parseRemoteProcessGroup(const Node& rpg_node_seq, 
             group->setHttpProxyPassWord(http_proxy_password);
           }
           if (currRpgNode["proxy port"]) {
-            auto http_proxy_port = currRpgNode["proxy port"].getString().value();
+            auto http_proxy_port = currRpgNode["proxy port"].getIntegerAsString().value();
             int32_t port;
             if (core::Property::StringToInt(http_proxy_port, port)) {
               logger_->log_debug("parseRemoteProcessGroupYaml: proxy port => [%d]", port);
@@ -396,13 +388,13 @@ void StructuredConfiguration::parseRemoteProcessGroup(const Node& rpg_node_seq, 
     checkRequiredField(currRpgNode, "Input Ports", CONFIG_REMOTE_PROCESS_GROUP_KEY);
     auto inputPorts = currRpgNode["Input Ports"];
     if (inputPorts && inputPorts.isSequence()) {
-      for (const auto currPort : inputPorts) {
+      for (const auto& currPort : inputPorts) {
         parsePort(currPort, group.get(), sitetosite::SEND);
       }  // for node
     }
     auto outputPorts = currRpgNode["Output Ports"];
     if (outputPorts && outputPorts.isSequence()) {
-      for (const auto currPort : outputPorts) {
+      for (const auto& currPort : outputPorts) {
         logger_->log_debug("Got a current port, iterating...");
 
         parsePort(currPort, group.get(), sitetosite::RECEIVE);
@@ -448,12 +440,7 @@ void StructuredConfiguration::parseProvenanceReporting(const Node& node, core::P
   if (node["host"] && node["port"]) {
     auto hostStr = node["host"].getString().value();
 
-    std::string portStr;
-    if (auto int_val = node["port"].getInt()) {
-      portStr = std::to_string(int_val.value());
-    } else {
-      portStr = node["port"].getString().value();
-    }
+    std::string portStr = node["port"].getIntegerAsString().value();
     if (core::Property::StringToInt(portStr, lvalue) && !hostStr.empty()) {
       logger_->log_debug("ProvenanceReportingTask port %" PRId64, lvalue);
       std::string url = hostStr + ":" + portStr;
@@ -617,12 +604,7 @@ void StructuredConfiguration::parsePort(const Node& inputPortsObj, core::Process
   processor.setScheduledState(core::RUNNING);
 
   if (auto tasksNode = inputPortsObj["max concurrent tasks"]) {
-    std::string rawMaxConcurrentTasks;
-    if (auto int_val = tasksNode.getUInt64()) {
-      rawMaxConcurrentTasks = int_val.value();
-    } else {
-      rawMaxConcurrentTasks = tasksNode.getString().value();
-    }
+    std::string rawMaxConcurrentTasks = tasksNode.getIntegerAsString().value();
     int32_t maxConcurrentTasks;
     if (core::Property::StringToInt(rawMaxConcurrentTasks, maxConcurrentTasks)) {
       processor.setMaxConcurrentTasks(maxConcurrentTasks);
