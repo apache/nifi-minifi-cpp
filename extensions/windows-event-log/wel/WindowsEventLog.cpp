@@ -26,11 +26,7 @@
 #include "utils/Deleters.h"
 #include "utils/gsl.h"
 
-namespace org {
-namespace apache {
-namespace nifi {
-namespace minifi {
-namespace wel {
+namespace org::apache::nifi::minifi::wel {
 
 void WindowsEventLogMetadataImpl::renderMetadata() {
   DWORD status = ERROR_SUCCESS;
@@ -171,7 +167,7 @@ std::string WindowsEventLogHandler::getEventMessage(EVT_HANDLE eventHandle) cons
   DWORD num_chars_used = 0;
   DWORD status = 0;
 
-  EvtFormatMessage(metadata_provider_, eventHandle, 0, 0, NULL, EvtFormatMessageEvent, num_chars_in_buffer, buffer.get(), &num_chars_used);
+  EvtFormatMessage(metadata_provider_.get(), eventHandle, 0, 0, NULL, EvtFormatMessageEvent, num_chars_in_buffer, buffer.get(), &num_chars_used);
   if (num_chars_used == 0) {
     return returnValue;
   }
@@ -189,7 +185,7 @@ std::string WindowsEventLogHandler::getEventMessage(EVT_HANDLE eventHandle) cons
       return returnValue;
     }
 
-    EvtFormatMessage(metadata_provider_, eventHandle, 0, 0, NULL, EvtFormatMessageEvent, num_chars_in_buffer, buffer.get(), &num_chars_used);
+    EvtFormatMessage(metadata_provider_.get(), eventHandle, 0, 0, NULL, EvtFormatMessageEvent, num_chars_in_buffer, buffer.get(), &num_chars_used);
   }
 
   if (ERROR_EVT_MESSAGE_NOT_FOUND == status || ERROR_EVT_MESSAGE_ID_NOT_FOUND == status) {
@@ -213,12 +209,7 @@ std::string WindowsEventLogHeader::createDefaultDelimiter(size_t max, size_t len
 }
 
 EVT_HANDLE WindowsEventLogHandler::getMetadata() const {
-  return metadata_provider_;
+  return metadata_provider_.get();
 }
 
-} /* namespace wel */
-} /* namespace minifi */
-} /* namespace nifi */
-} /* namespace apache */
-} /* namespace org */
-
+}  // namespace org::apache::nifi::minifi::wel

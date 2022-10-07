@@ -236,23 +236,23 @@ void ConsumeWindowsEventLog::onSchedule(const std::shared_ptr<core::ProcessConte
   context->getProperty(EventHeaderDelimiter.getName(), header_delimiter_);
   context->getProperty(BatchCommitSize.getName(), batch_commit_size_);
 
-  std::string header;
-  context->getProperty(EventHeader.getName(), header);
-
-  auto keyValueSplit = utils::StringUtils::split(header, ",");
-  for (const auto &kv : keyValueSplit) {
-    auto splitKeyAndValue = utils::StringUtils::split(kv, "=");
-    if (splitKeyAndValue.size() == 2) {
-      auto key = utils::StringUtils::trim(splitKeyAndValue.at(0));
-      auto value = utils::StringUtils::trim(splitKeyAndValue.at(1));
-      if (!insertHeaderName(header_names_, key, value)) {
-        logger_->log_error("%s is an invalid key for the header map", key);
+  header_names_.clear();
+  if (auto header = context->getProperty(EventHeader)) {
+    auto keyValueSplit = utils::StringUtils::split(*header, ",");
+    for (const auto &kv : keyValueSplit) {
+      auto splitKeyAndValue = utils::StringUtils::split(kv, "=");
+      if (splitKeyAndValue.size() == 2) {
+        auto key = utils::StringUtils::trim(splitKeyAndValue.at(0));
+        auto value = utils::StringUtils::trim(splitKeyAndValue.at(1));
+        if (!insertHeaderName(header_names_, key, value)) {
+          logger_->log_error("%s is an invalid key for the header map", key);
+        }
+      } else if (splitKeyAndValue.size() == 1) {
+        auto key = utils::StringUtils::trim(splitKeyAndValue.at(0));
+        if (!insertHeaderName(header_names_, key, "")) {
+          logger_->log_error("%s is an invalid key for the header map", key);
+        }
       }
-    } else if (splitKeyAndValue.size() == 1) {
-     auto key = utils::StringUtils::trim(splitKeyAndValue.at(0));
-     if (!insertHeaderName(header_names_, key, "")) {
-       logger_->log_error("%s is an invalid key for the header map", key);
-     }
     }
   }
 
@@ -435,7 +435,7 @@ void ConsumeWindowsEventLog::onTrigger(const std::shared_ptr<core::ProcessContex
   }
 }
 
-wel::WindowsEventLogHandler ConsumeWindowsEventLog::getEventLogHandler(const std::string & name) {
+wel::WindowsEventLogHandler& ConsumeWindowsEventLog::getEventLogHandler(const std::string & name) {
   logger_->log_trace("Getting Event Log Handler corresponding to %s", name.c_str());
   auto provider = providers_.find(name);
   if (provider != std::end(providers_)) {
@@ -447,7 +447,7 @@ wel::WindowsEventLogHandler ConsumeWindowsEventLog::getEventLogHandler(const std
   LPCWSTR widechar = temp_wstring.c_str();
 
   providers_[name] = wel::WindowsEventLogHandler(EvtOpenPublisherMetadata(NULL, widechar, NULL, 0, 0));
-  logger_->log_trace("Not found the handler -> created handler for %s", name.c_str());
+  logger_->log_info("Handler not found for %s, creating. Number of cached handlers: %zu", name, providers_.size());
   return providers_[name];
 }
 
@@ -591,7 +591,7 @@ bool ConsumeWindowsEventLog::createEventRender(EVT_HANDLE hEvent, EventRender& e
   if (output_.plaintext) {
     logger_->log_trace("Writing event in plain text");
 
-    auto handler = getEventLogHandler(providerName);
+    auto& handler = getEventLogHandler(providerName);
     auto message = handler.getEventMessage(hEvent);
 
     if (!message.empty()) {
