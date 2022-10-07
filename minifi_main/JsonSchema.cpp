@@ -67,7 +67,11 @@ void writePropertySchema(const core::Property& prop, std::ostream& out) {
   }
   if (const auto& def_value = prop.getDefaultValue(); !def_value.empty()) {
     const auto& type = def_value.getTypeInfo();
-    if (type == state::response::Value::INT_TYPE
+    // order is important as both DataSizeValue and TimePeriodValue's type_id is uint64_t
+    if (std::dynamic_pointer_cast<core::DataSizeValue>(def_value.getValue())
+        || std::dynamic_pointer_cast<core::TimePeriodValue>(def_value.getValue())) {
+      out << R"(, "type": "string", "default": ")" << escape(def_value.to_string()) << "\"";
+    } else if (type == state::response::Value::INT_TYPE
         || type == state::response::Value::INT64_TYPE
         || type == state::response::Value::UINT32_TYPE
         || type == state::response::Value::UINT64_TYPE) {
@@ -93,7 +97,7 @@ void writeProperties(const PropertyContainer& props, bool supports_dynamic, std:
         << R"("additionalProperties": )" << (supports_dynamic? "true" : "false") << ","
         << R"("required": [)"
         << (props
-            | ranges::views::filter([] (auto& prop) {return prop.getRequired();})
+            | ranges::views::filter([] (auto& prop) {return prop.getRequired() && prop.getDefaultValue().empty();})
             | ranges::views::transform([] (auto& prop) {return '"' + escape(prop.getName()) + '"';})
             | ranges::views::join(std::string{','})
             | ranges::to<std::string>())
