@@ -25,6 +25,7 @@
 #include <string>
 #include <tuple>
 #include <memory>
+#include <optional>
 
 #include "Exception.h"
 #include "utils/Enum.h"
@@ -116,7 +117,7 @@ class SFTPClient {
    */
   [[nodiscard]] SFTPError getLastError() const;
 
-  bool getFile(const std::string& path, io::OutputStream& output, int64_t expected_size = -1);
+  std::optional<uint64_t> getFile(const std::string& path, io::OutputStream& output, int64_t expected_size = -1);
 
   bool putFile(const std::string& path, io::InputStream& input, bool overwrite, int64_t expected_size = -1);
 

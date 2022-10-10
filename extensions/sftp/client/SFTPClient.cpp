@@ -464,7 +464,7 @@ SFTPError SFTPClient::getLastError() const {
   return last_error_;
 }
 
-bool SFTPClient::getFile(const std::string& path, io::OutputStream& output, int64_t expected_size /*= -1*/) {
+std::optional<uint64_t> SFTPClient::getFile(const std::string& path, io::OutputStream& output, int64_t expected_size /*= -1*/) {
   /**
    * SFTP servers should not set the mode of an existing file on open
    * (see https://tools.ietf.org/html/draft-ietf-secsh-filexfer-13, Page 33
@@ -493,7 +493,7 @@ bool SFTPClient::getFile(const std::string& path, io::OutputStream& output, int6
       libssh2_session_last_error(ssh_session_, &err_msg, nullptr, 0);
       logger_->log_error("Failed to open remote file \"%s\" due to an underlying SSH error: %s", path.c_str(), err_msg);
     }
-    return false;
+    return std::nullopt;
   }
   const auto guard = gsl::finally([&file_handle]() {
     libssh2_sftp_close(file_handle);
@@ -507,7 +507,7 @@ bool SFTPClient::getFile(const std::string& path, io::OutputStream& output, int6
     if (read_ret < 0) {
       last_error_.setSftpError(SFTPError::IoError);
       logger_->log_error("Failed to read remote file \"%s\"", path.c_str());
-      return false;
+      return std::nullopt;
     } else if (read_ret == 0) {
       logger_->log_trace("EOF while reading remote file \"%s\"", path.c_str());
       break;
@@ -520,7 +520,7 @@ bool SFTPClient::getFile(const std::string& path, io::OutputStream& output, int6
       if (io::isError(write_ret)) {
         last_error_.setLibssh2Error(LIBSSH2_FX_OK);
         logger_->log_error("Failed to write output");
-        return false;
+        return std::nullopt;
       }
       remaining -= gsl::narrow<decltype(remaining)>(write_ret);
     }
@@ -529,10 +529,10 @@ bool SFTPClient::getFile(const std::string& path, io::OutputStream& output, int6
   if (expected_size >= 0 && total_read != gsl::narrow<uint64_t>(expected_size)) {
     last_error_.setLibssh2Error(LIBSSH2_FX_OK);
     logger_->log_error("Remote file \"%s\" has unexpected size, expected: %ld, actual: %lu", path.c_str(), expected_size, total_read);
-    return false;
+    return std::nullopt;
   }
 
-  return true;
+  return total_read;
 }
 
 bool SFTPClient::putFile(const std::string& path, io::InputStream& input, bool overwrite, int64_t expected_size /*= -1*/) {
