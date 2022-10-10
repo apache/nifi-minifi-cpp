@@ -782,11 +782,6 @@ ProcessSession::RouteResult ProcessSession::routeFlowFile(const std::shared_ptr<
       }
     }
   }
-  if (metrics_) {
-    metrics_->transferred_bytes += record->getSize();
-    ++metrics_->transferred_flow_files;
-    metrics_->incrementRelationshipTransferCount(relationship.getName());
-  }
   return RouteResult::Ok_Routed;
 }
 
@@ -878,6 +873,24 @@ void ProcessSession::commit() {
           cq.first->put(file);
         }
       }
+    }
+
+    auto increaseMetrics = [this](const std::shared_ptr<core::FlowFile>& record) {
+      if (record->isDeleted() || !metrics_) {
+        return;
+      }
+      metrics_->transferred_bytes += record->getSize();
+      ++metrics_->transferred_flow_files;
+      auto relationship = _transferRelationship.at(record->getUUID());
+      metrics_->incrementRelationshipTransferCount(relationship.getName());
+    };
+
+    for (const auto& it : _updatedFlowFiles) {
+      increaseMetrics(it.second.modified);
+    }
+
+    for (const auto& it : _addedFlowFiles) {
+      increaseMetrics(it.second);
     }
 
     // All done

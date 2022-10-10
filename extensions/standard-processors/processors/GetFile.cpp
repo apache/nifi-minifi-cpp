@@ -246,7 +246,7 @@ bool GetFile::fileMatchesRequestCriteria(const std::string& fullName, const std:
     return false;
   }
 
-  auto getfile_metrics = static_cast<GetFileMetrics*>(metrics_.get());
+  auto* const getfile_metrics = static_cast<GetFileMetrics*>(metrics_.get());
   getfile_metrics->input_bytes += file_size;
   ++getfile_metrics->accepted_files;
   return true;

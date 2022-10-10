@@ -151,6 +151,7 @@ There are general metrics that are available for all processors. Besides these m
 
 | Metric name                            | Labels                                       | Description                                                                         |
 |----------------------------------------|----------------------------------------------|-------------------------------------------------------------------------------------|
+| onTrigger_invocations                  | metric_class, processor_name, processor_uuid | The number of processor onTrigger calls                                             |
 | average_onTrigger_runtime_milliseconds | metric_class, processor_name, processor_uuid | The average runtime in milliseconds of the last 10 onTrigger calls of the processor |
 | last_onTrigger_runtime_milliseconds    | metric_class, processor_name, processor_uuid | The runtime in milliseconds of the last onTrigger call of the processor             |
 | transferred_flow_files                 | metric_class, processor_name, processor_uuid | Number of flow files transferred to a relationship                                  |

@@ -39,47 +39,25 @@ std::unordered_map<std::string, std::string> ProcessorMetrics::getCommonLabels()
 std::vector<state::response::SerializedResponseNode> ProcessorMetrics::serialize() {
   std::vector<state::response::SerializedResponseNode> resp;
 
-  state::response::SerializedResponseNode root_node;
-  root_node.name = source_processor_.getUUIDStr();
-
-  state::response::SerializedResponseNode iter;
-  iter.name = "OnTriggerInvocations";
-  iter.value = static_cast<uint32_t>(iterations.load());
-
-  root_node.children.push_back(iter);
-
-  state::response::SerializedResponseNode average_ontrigger_runtime_node;
-  average_ontrigger_runtime_node.name = "AverageOnTriggerRunTime";
-  average_ontrigger_runtime_node.value = static_cast<uint64_t>(getAverageOnTriggerRuntime().count());
-
-  root_node.children.push_back(average_ontrigger_runtime_node);
-
-  state::response::SerializedResponseNode last_ontrigger_runtime_node;
-  last_ontrigger_runtime_node.name = "LastOnTriggerRunTime";
-  last_ontrigger_runtime_node.value = static_cast<uint64_t>(getLastOnTriggerRuntime().count());
-
-  root_node.children.push_back(last_ontrigger_runtime_node);
-
-  state::response::SerializedResponseNode transferred_flow_files_node;
-  transferred_flow_files_node.name = "TransferredFlowFiles";
-  transferred_flow_files_node.value = static_cast<uint32_t>(transferred_flow_files.load());
-
-  root_node.children.push_back(transferred_flow_files_node);
+  state::response::SerializedResponseNode root_node {
+    .name = source_processor_.getUUIDStr(),
+    .children = {
+      {.name = "OnTriggerInvocations", .value = static_cast<uint32_t>(iterations.load())},
+      {.name = "AverageOnTriggerRunTime", .value = static_cast<uint64_t>(getAverageOnTriggerRuntime().count())},
+      {.name = "LastOnTriggerRunTime", .value = static_cast<uint64_t>(getLastOnTriggerRuntime().count())},
+      {.name = "TransferredFlowFiles", .value = static_cast<uint32_t>(transferred_flow_files.load())},
+      {.name = "TransferredBytes", .value = transferred_bytes.load()}
+    }
+  };
 
   for (const auto& [relationship, count] : transferred_relationships_) {
-    state::response::SerializedResponseNode transferred_to_relationship_node;
     gsl_Expects(!relationship.empty());
+    state::response::SerializedResponseNode transferred_to_relationship_node;
     transferred_to_relationship_node.name = std::string("TransferredTo").append(1, toupper(relationship[0])).append(relationship.substr(1));
     transferred_to_relationship_node.value = static_cast<uint32_t>(count);
 
     root_node.children.push_back(transferred_to_relationship_node);
   }
-
-  state::response::SerializedResponseNode transferred_bytes_node;
-  transferred_bytes_node.name = "TransferredBytes";
-  transferred_bytes_node.value = transferred_bytes.load();
-
-  root_node.children.push_back(transferred_bytes_node);
 
   resp.push_back(root_node);
 

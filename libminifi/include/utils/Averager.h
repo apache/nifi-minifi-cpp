@@ -32,6 +32,7 @@ requires Summable<ValueType> && DividableByInteger<ValueType>
 class Averager {
  public:
   explicit Averager(uint32_t sample_size) : SAMPLE_SIZE_(sample_size) {
+    values_.reserve(SAMPLE_SIZE_);
   }
 
   ValueType getAverage() const;
