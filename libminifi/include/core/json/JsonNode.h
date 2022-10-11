@@ -60,17 +60,8 @@ class JsonNode : public flow::Node::NodeImpl {
     }
   }
 
-  nonstd::expected<int, std::exception_ptr> getInt() const override {
-    return getNumber<int>("int");
-  }
-  nonstd::expected<unsigned int, std::exception_ptr> getUInt() const override {
-    return getNumber<unsigned int>("unsigned int");
-  }
   nonstd::expected<int64_t, std::exception_ptr> getInt64() const override {
     return getNumber<int64_t>("int64_t");
-  }
-  nonstd::expected<uint64_t, std::exception_ptr> getUInt64() const override {
-    return getNumber<uint64_t>("uint64_t");
   }
 
   nonstd::expected<bool, std::exception_ptr> getBool() const override {
@@ -105,10 +96,9 @@ class JsonNode : public flow::Node::NodeImpl {
     if (node_->IsObject()) return "<Map>";
     if (node_->IsArray()) return "<Array>";
     if (node_->IsNull()) return "null";
-    if (node_->IsInt()) return std::to_string(node_->GetInt());
-    if (node_->IsUint()) return std::to_string(node_->GetUint());
-    if (node_->IsInt64()) return std::to_string(node_->GetInt64());
-    if (node_->IsUint64()) return std::to_string(node_->GetUint64());
+    if (auto int_str = getIntegerAsString()) {
+      return int_str.value();
+    }
     if (node_->IsTrue()) return "true";
     if (node_->IsFalse()) return "false";
     if (node_->IsDouble()) return std::to_string(node_->GetDouble());

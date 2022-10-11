@@ -57,22 +57,6 @@ class YamlNode : public flow::Node::NodeImpl {
     }
   }
 
-  nonstd::expected<int, std::exception_ptr> getInt() const override {
-    try {
-      return node_.as<int>();
-    } catch (...) {
-      return nonstd::make_unexpected(std::current_exception());
-    }
-  }
-
-  nonstd::expected<unsigned int, std::exception_ptr> getUInt() const override {
-    try {
-      return node_.as<unsigned int>();
-    } catch (...) {
-      return nonstd::make_unexpected(std::current_exception());
-    }
-  }
-
   nonstd::expected<bool, std::exception_ptr> getBool() const override {
     try {
       return node_.as<bool>();
@@ -84,14 +68,6 @@ class YamlNode : public flow::Node::NodeImpl {
   nonstd::expected<int64_t, std::exception_ptr> getInt64() const override {
     try {
       return node_.as<int64_t>();
-    } catch (...) {
-      return nonstd::make_unexpected(std::current_exception());
-    }
-  }
-
-  nonstd::expected<uint64_t, std::exception_ptr> getUInt64() const override {
-    try {
-      return node_.as<uint64_t>();
     } catch (...) {
       return nonstd::make_unexpected(std::current_exception());
     }

@@ -85,11 +85,8 @@ class Node {
     virtual bool isNull() const = 0;
 
     virtual nonstd::expected<std::string, std::exception_ptr> getString() const = 0;
-    virtual nonstd::expected<int, std::exception_ptr> getInt() const = 0;
-    virtual nonstd::expected<unsigned int, std::exception_ptr> getUInt() const = 0;
     virtual nonstd::expected<bool, std::exception_ptr> getBool() const = 0;
     virtual nonstd::expected<int64_t, std::exception_ptr> getInt64() const = 0;
-    virtual nonstd::expected<uint64_t, std::exception_ptr> getUInt64() const = 0;
     virtual nonstd::expected<std::string, std::exception_ptr> getIntegerAsString() const = 0;
 
     virtual std::string getDebugString() const = 0;
@@ -114,10 +111,7 @@ class Node {
 
   nonstd::expected<std::string, std::exception_ptr> getString() const {return impl_->getString();}
   nonstd::expected<bool, std::exception_ptr> getBool() const {return impl_->getBool();}
-  nonstd::expected<int, std::exception_ptr> getInt() const {return impl_->getInt();}
-  nonstd::expected<unsigned int, std::exception_ptr> getUInt() const {return impl_->getUInt();}
   nonstd::expected<int64_t, std::exception_ptr> getInt64() const {return impl_->getInt64();}
-  nonstd::expected<uint64_t, std::exception_ptr> getUInt64() const {return impl_->getUInt64();}
   nonstd::expected<std::string, std::exception_ptr> getIntegerAsString() const {return impl_->getIntegerAsString();}
 
   // return a string representation of the node (need not to be deserializable)

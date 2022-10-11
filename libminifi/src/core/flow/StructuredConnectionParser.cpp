@@ -68,12 +68,7 @@ void StructuredConnectionParser::configureConnectionSourceRelationships(minifi::
 
 uint64_t StructuredConnectionParser::getWorkQueueSize() const {
   if (auto max_work_queue_data_size_node = connectionNode_["max work queue size"]) {
-    std::string max_work_queue_str;
-    if (auto int_val = max_work_queue_data_size_node.getUInt64()) {
-      max_work_queue_str = std::to_string(int_val.value());
-    } else {
-      max_work_queue_str = max_work_queue_data_size_node.getString().value();
-    }
+    std::string max_work_queue_str = max_work_queue_data_size_node.getIntegerAsString().value();
     uint64_t max_work_queue_size;
     if (core::Property::StringToInt(max_work_queue_str, max_work_queue_size)) {
       logger_->log_debug("Setting %" PRIu64 " as the max queue size.", max_work_queue_size);
@@ -87,12 +82,7 @@ uint64_t StructuredConnectionParser::getWorkQueueSize() const {
 uint64_t StructuredConnectionParser::getWorkQueueDataSize() const {
   const flow::Node max_work_queue_data_size_node = connectionNode_["max work queue data size"];
   if (max_work_queue_data_size_node) {
-    std::string max_work_queue_str;
-    if (auto int_val = max_work_queue_data_size_node.getUInt64()) {
-      max_work_queue_str = std::to_string(int_val.value());
-    } else {
-      max_work_queue_str = max_work_queue_data_size_node.getString().value();
-    }
+    std::string max_work_queue_str = max_work_queue_data_size_node.getIntegerAsString().value();
     uint64_t max_work_queue_data_size = 0;
     if (core::Property::StringToInt(max_work_queue_str, max_work_queue_data_size)) {
       logger_->log_debug("Setting %" PRIu64 "as the max as the max queue data size.", max_work_queue_data_size);

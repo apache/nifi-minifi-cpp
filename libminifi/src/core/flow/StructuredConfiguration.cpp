@@ -55,7 +55,7 @@ std::unique_ptr<core::ProcessGroup> StructuredConfiguration::createProcessGroup(
   uuid = getOrGenerateId(node);
 
   if (node["version"]) {
-    version = node["version"].getInt().value();
+    version = gsl::narrow<int>(node["version"].getInt64().value());
   }
 
   logger_->log_debug("parseRootProcessGroup: id => [%s], name => [%s]", uuid.to_string(), flowName);
@@ -643,14 +643,15 @@ PropertyValue StructuredConfiguration::getValidatedProcessorPropertyForDefaultTy
   const std::type_index defaultType = defaultValue.getTypeInfo();
   try {
     PropertyValue coercedValue = defaultValue;
-    if (defaultType == Value::INT64_TYPE && propertyValueNode.getInt64()) {
-      coercedValue = propertyValueNode.getInt64().value();
-    } else if (defaultType == Value::UINT64_TYPE && propertyValueNode.getUInt64()) {
-      coercedValue = propertyValueNode.getUInt64().value();
-    } else if (defaultType == Value::UINT32_TYPE && propertyValueNode.getUInt64()) {
-      coercedValue = gsl::narrow<uint32_t>(propertyValueNode.getUInt64().value());
-    } else if (defaultType == Value::INT_TYPE && propertyValueNode.getInt()) {
-      coercedValue = propertyValueNode.getInt().value();
+    auto int64_val = propertyValueNode.getInt64();
+    if (defaultType == Value::INT64_TYPE && int64_val) {
+      coercedValue = gsl::narrow<int64_t>(int64_val.value());
+    } else if (defaultType == Value::UINT64_TYPE && int64_val) {
+      coercedValue = gsl::narrow<uint64_t>(int64_val.value());
+    } else if (defaultType == Value::UINT32_TYPE && int64_val) {
+      coercedValue = gsl::narrow<uint32_t>(int64_val.value());
+    } else if (defaultType == Value::INT_TYPE && int64_val) {
+      coercedValue = gsl::narrow<int>(int64_val.value());
     } else if (defaultType == Value::BOOL_TYPE && propertyValueNode.getBool()) {
       coercedValue = propertyValueNode.getBool().value();
     } else {
