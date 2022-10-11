@@ -61,7 +61,17 @@ class JsonNode : public flow::Node::NodeImpl {
   }
 
   nonstd::expected<int64_t, std::exception_ptr> getInt64() const override {
-    return getNumber<int64_t>("int64_t");
+    try {
+      if (!node_) {
+        throw std::runtime_error("Cannot get int64 of invalid json value");
+      }
+      if (!node_->IsInt64()) {
+        throw std::runtime_error("Cannot get int64 of non-int64 json value");
+      }
+      return node_->GetInt64();
+    } catch (...) {
+      return nonstd::make_unexpected(std::current_exception());
+    }
   }
 
   nonstd::expected<bool, std::exception_ptr> getBool() const override {
@@ -81,8 +91,6 @@ class JsonNode : public flow::Node::NodeImpl {
   nonstd::expected<std::string, std::exception_ptr> getIntegerAsString() const override {
     try {
       if (!node_) throw std::runtime_error("Cannot get string from invalid json value");
-      if (node_->IsInt()) return std::to_string(node_->GetInt());
-      if (node_->IsUint()) return std::to_string(node_->GetUint());
       if (node_->IsInt64()) return std::to_string(node_->GetInt64());
       if (node_->IsUint64()) return std::to_string(node_->GetUint64());
       throw std::runtime_error("Cannot get string from non-integer json value");
@@ -137,23 +145,6 @@ class JsonNode : public flow::Node::NodeImpl {
   }
 
  private:
-  template<typename T>
-  nonstd::expected<T, std::exception_ptr> getNumber(const char* type_name) const {
-    try {
-      if (!node_) {
-        throw std::runtime_error("Cannot get " + std::string(type_name) + " of invalid json value");
-      }
-      T result;
-      if (node_->IsInt() && utils::internal::cast_if_in_range(node_->GetInt(), result)) return result;
-      if (node_->IsUint() && utils::internal::cast_if_in_range(node_->GetUint(), result)) return result;
-      if (node_->IsInt64() && utils::internal::cast_if_in_range(node_->GetInt64(), result)) return result;
-      if (node_->IsUint64() && utils::internal::cast_if_in_range(node_->GetUint64(), result)) return result;
-      throw std::runtime_error("Cannot get " + std::string(type_name) + " from json value; it is either non-numeric or out of range");
-    } catch (...) {
-      return nonstd::make_unexpected(std::current_exception());
-    }
-  }
-
   const rapidjson::Value* node_;
 };
 
