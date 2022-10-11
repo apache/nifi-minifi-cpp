@@ -119,7 +119,7 @@ class SFTPClient {
 
   std::optional<uint64_t> getFile(const std::string& path, io::OutputStream& output, int64_t expected_size = -1);
 
-  bool putFile(const std::string& path, io::InputStream& input, bool overwrite, int64_t expected_size = -1);
+  std::optional<uint64_t> putFile(const std::string& path, io::InputStream& input, bool overwrite, int64_t expected_size = -1);
 
   bool rename(const std::string& source_path, const std::string& target_path, bool overwrite);
 

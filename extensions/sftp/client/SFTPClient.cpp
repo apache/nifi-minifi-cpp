@@ -535,7 +535,7 @@ std::optional<uint64_t> SFTPClient::getFile(const std::string& path, io::OutputS
   return total_read;
 }
 
-bool SFTPClient::putFile(const std::string& path, io::InputStream& input, bool overwrite, int64_t expected_size /*= -1*/) {
+std::optional<uint64_t> SFTPClient::putFile(const std::string& path, io::InputStream& input, bool overwrite, int64_t expected_size /*= -1*/) {
   int flags = LIBSSH2_FXF_WRITE | LIBSSH2_FXF_CREAT | (overwrite ? LIBSSH2_FXF_TRUNC : LIBSSH2_FXF_EXCL);
   logger_->log_trace("Opening remote file \"%s\"", path.c_str());
   LIBSSH2_SFTP_HANDLE *file_handle = libssh2_sftp_open(sftp_session_, path.c_str(), flags, 0644);
@@ -559,7 +559,7 @@ bool SFTPClient::putFile(const std::string& path, io::InputStream& input, bool o
 
   /* If they just want a zero byte file, we are done */
   if (expected_size == 0) {
-    return true;
+    return 0;
   }
 
   const size_t buf_size = expected_size < 0 ? MAX_BUFFER_SIZE : std::min(gsl::narrow<size_t>(expected_size), MAX_BUFFER_SIZE);
@@ -570,7 +570,7 @@ bool SFTPClient::putFile(const std::string& path, io::InputStream& input, bool o
     if (io::isError(read_ret)) {
       last_error_.setLibssh2Error(LIBSSH2_FX_OK);
       logger_->log_error("Error while reading input");
-      return false;
+      return std::nullopt;
     } else if (read_ret == 0) {
       logger_->log_trace("EOF while reading input");
       break;
@@ -583,7 +583,7 @@ bool SFTPClient::putFile(const std::string& path, io::InputStream& input, bool o
       if (write_ret < 0) {
         last_error_.setSftpError(SFTPError::IoError);
         logger_->log_error("Failed to write remote file \"%s\"", path.c_str());
-        return false;
+        return std::nullopt;
       }
       logger_->log_trace("Wrote %d bytes to remote file \"%s\"", write_ret, path.c_str());
       remaining -= gsl::narrow<size_t>(write_ret);
@@ -593,10 +593,10 @@ bool SFTPClient::putFile(const std::string& path, io::InputStream& input, bool o
   if (expected_size >= 0 && total_read != gsl::narrow<size_t>(expected_size)) {
     last_error_.setLibssh2Error(LIBSSH2_FX_OK);
     logger_->log_error("Input has unexpected size, expected: %ld, actual: %lu", path.c_str(), expected_size, total_read);
-    return false;
+    return std::nullopt;
   }
 
-  return true;
+  return total_read;
 }
 
 bool SFTPClient::rename(const std::string& source_path, const std::string& target_path, bool overwrite) {
