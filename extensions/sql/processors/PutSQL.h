@@ -30,7 +30,7 @@ namespace org::apache::nifi::minifi::processors {
 
 class PutSQL : public SQLProcessor {
  public:
-  explicit PutSQL(const std::string& name, const utils::Identifier& uuid = {});
+  explicit PutSQL(std::string name, const utils::Identifier& uuid = {});
 
   EXTENSIONAPI static constexpr const char* Description = "PutSQL to execute SQL command via ODBC.";
 

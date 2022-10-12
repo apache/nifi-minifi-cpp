@@ -27,15 +27,11 @@
 #include "properties/Configure.h"
 #include "core/controller/ControllerService.h"
 
-namespace org {
-namespace apache {
-namespace nifi {
-namespace minifi {
-namespace controllers {
+namespace org::apache::nifi::minifi::controllers {
 
 class KeyValueStoreService : public core::controller::ControllerService {
  public:
-  explicit KeyValueStoreService(const std::string& name, const utils::Identifier& uuid = {});
+  explicit KeyValueStoreService(std::string name, const utils::Identifier& uuid = {});
 
   ~KeyValueStoreService() override;
 
@@ -56,10 +52,6 @@ class KeyValueStoreService : public core::controller::ControllerService {
   virtual bool update(const std::string& key, const std::function<bool(bool /*exists*/, std::string& /*value*/)>& update_func) = 0;
 };
 
-}  // namespace controllers
-}  // namespace minifi
-}  // namespace nifi
-}  // namespace apache
-}  // namespace org
+}  // namespace org::apache::nifi::minifi::controllers
 
 #endif  // LIBMINIFI_INCLUDE_CONTROLLERS_KEYVALUE_KEYVALUESTORESERVICE_H_

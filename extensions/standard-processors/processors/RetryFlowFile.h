@@ -33,16 +33,12 @@
 #include "utils/OptionalUtils.h"
 #include "utils/Export.h"
 
-namespace org {
-namespace apache {
-namespace nifi {
-namespace minifi {
-namespace processors {
+namespace org::apache::nifi::minifi::processors {
 
 class RetryFlowFile : public core::Processor {
  public:
-  explicit RetryFlowFile(const std::string& name, const utils::Identifier& uuid = {})
-      : Processor(name, uuid) {}
+  explicit RetryFlowFile(std::string name, const utils::Identifier& uuid = {})
+      : Processor(std::move(name), uuid) {}
   ~RetryFlowFile() override = default;
 
   EXTENSIONAPI static constexpr const char* Description = "FlowFiles passed to this Processor have a 'Retry Attribute' value checked against a configured 'Maximum Retries' value. "
@@ -110,8 +106,4 @@ class RetryFlowFile : public core::Processor {
   std::shared_ptr<core::logging::Logger> logger_ = core::logging::LoggerFactory<RetryFlowFile>::getLogger();
 };
 
-} /* namespace processors */
-} /* namespace minifi */
-} /* namespace nifi */
-} /* namespace apache */
-} /* namespace org */
+}  // namespace org::apache::nifi::minifi::processors

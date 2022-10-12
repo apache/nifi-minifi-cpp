@@ -61,18 +61,18 @@ class FlowFileRepository : public ThreadedRepository, public SwapManager {
  public:
   static constexpr const char* ENCRYPTION_KEY_NAME = "nifi.flowfile.repository.encryption.key";
 
-  FlowFileRepository(const std::string& name, const utils::Identifier& /*uuid*/)
-      : FlowFileRepository(name) {
+  FlowFileRepository(std::string name, const utils::Identifier& /*uuid*/)
+      : FlowFileRepository(std::move(name)) {
   }
 
-  explicit FlowFileRepository(const std::string& repo_name = "",
+  explicit FlowFileRepository(std::string repo_name = "",
                      std::string checkpoint_dir = FLOWFILE_CHECKPOINT_DIRECTORY,
                      std::string directory = FLOWFILE_REPOSITORY_DIRECTORY,
                      std::chrono::milliseconds maxPartitionMillis = MAX_FLOWFILE_REPOSITORY_ENTRY_LIFE_TIME,
                      int64_t maxPartitionBytes = MAX_FLOWFILE_REPOSITORY_STORAGE_SIZE,
                      std::chrono::milliseconds purgePeriod = FLOWFILE_REPOSITORY_PURGE_PERIOD)
       : core::SerializableComponent(repo_name),
-        ThreadedRepository(repo_name.length() > 0 ? repo_name : core::getClassName<FlowFileRepository>(), std::move(directory), maxPartitionMillis, maxPartitionBytes, purgePeriod),
+        ThreadedRepository(repo_name.length() > 0 ? std::move(repo_name) : core::getClassName<FlowFileRepository>(), std::move(directory), maxPartitionMillis, maxPartitionBytes, purgePeriod),
         checkpoint_dir_(std::move(checkpoint_dir)),
         content_repo_(nullptr),
         checkpoint_(nullptr),

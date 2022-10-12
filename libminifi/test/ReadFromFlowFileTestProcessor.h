@@ -15,10 +15,11 @@
  * limitations under the License.
  */
 
-#include <string>
-#include <memory>
-#include <vector>
 #include <map>
+#include <memory>
+#include <string>
+#include <vector>
+#include <utility>
 
 #include "core/Processor.h"
 #include "core/ProcessSession.h"
@@ -37,8 +38,8 @@ class ReadFromFlowFileTestProcessor : public core::Processor {
   static constexpr const char* ON_TRIGGER_LOG_STR = "ReadFromFlowFileTestProcessor::onTrigger executed";
   static constexpr const char* ON_UNSCHEDULE_LOG_STR = "ReadFromFlowFileTestProcessor::onUnSchedule executed";
 
-  explicit ReadFromFlowFileTestProcessor(const std::string& name, const utils::Identifier& uuid = utils::Identifier())
-      : Processor(name, uuid) {
+  explicit ReadFromFlowFileTestProcessor(std::string name, const utils::Identifier& uuid = utils::Identifier())
+      : Processor(std::move(name), uuid) {
   }
 
   static constexpr const char* Description = "ReadFromFlowFileTestProcessor (only for testing purposes)";

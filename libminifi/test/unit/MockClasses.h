@@ -18,6 +18,7 @@
 
 #include <memory>
 #include <string>
+#include <utility>
 
 #include "core/controller/ControllerService.h"
 #include "core/Processor.h"
@@ -31,12 +32,12 @@ std::mutex control_mutex;
 
 class MockControllerService : public minifi::core::controller::ControllerService {
  public:
-  explicit MockControllerService(const std::string &name, const minifi::utils::Identifier &uuid)
-      : ControllerService(name, uuid) {
+  explicit MockControllerService(std::string name, const minifi::utils::Identifier &uuid)
+      : ControllerService(std::move(name), uuid) {
   }
 
-  explicit MockControllerService(const std::string &name)
-      : ControllerService(name) {
+  explicit MockControllerService(std::string name)
+      : ControllerService(std::move(name)) {
   }
   MockControllerService() = default;
 
@@ -77,13 +78,13 @@ class MockControllerService : public minifi::core::controller::ControllerService
 
 class MockProcessor : public minifi::core::Processor {
  public:
-  explicit MockProcessor(const std::string &name, const minifi::utils::Identifier &uuid)
-      : Processor(name, uuid) {
+  explicit MockProcessor(std::string name, const minifi::utils::Identifier &uuid)
+      : Processor(std::move(name), uuid) {
     setTriggerWhenEmpty(true);
   }
 
-  explicit MockProcessor(const std::string &name)
-      : Processor(name) {
+  explicit MockProcessor(std::string name)
+      : Processor(std::move(name)) {
     setTriggerWhenEmpty(true);
   }
 

@@ -57,12 +57,12 @@ constexpr auto REPOSITORY_PURGE_PERIOD = std::chrono::milliseconds(2500);
 
 class Repository : public virtual core::SerializableComponent {
  public:
-  explicit Repository(const std::string& repo_name = "Repository",
+  explicit Repository(std::string repo_name = "Repository",
              std::string directory = REPOSITORY_DIRECTORY,
              std::chrono::milliseconds maxPartitionMillis = MAX_REPOSITORY_ENTRY_LIFE_TIME,
              int64_t maxPartitionBytes = MAX_REPOSITORY_STORAGE_SIZE,
              std::chrono::milliseconds purgePeriod = REPOSITORY_PURGE_PERIOD)
-      : core::SerializableComponent(repo_name),
+      : core::SerializableComponent(std::move(repo_name)),
         directory_(std::move(directory)),
         max_partition_millis_(maxPartitionMillis),
         max_partition_bytes_(maxPartitionBytes),

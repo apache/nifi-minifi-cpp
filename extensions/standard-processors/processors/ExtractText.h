@@ -21,6 +21,7 @@
 
 #include <memory>
 #include <string>
+#include <utility>
 #include <vector>
 
 #include "core/Processor.h"
@@ -32,8 +33,8 @@ namespace org::apache::nifi::minifi::processors {
 
 class ExtractText : public core::Processor {
  public:
-  explicit ExtractText(const std::string& name,  const utils::Identifier& uuid = {})
-      : Processor(name, uuid) {
+  explicit ExtractText(std::string name,  const utils::Identifier& uuid = {})
+      : Processor(std::move(name), uuid) {
   }
 
   EXTENSIONAPI static constexpr const char* Description = "Extracts the content of a FlowFile and places it into an attribute.";

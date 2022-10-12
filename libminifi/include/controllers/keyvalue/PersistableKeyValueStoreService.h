@@ -26,15 +26,11 @@
 #include "core/Core.h"
 #include "properties/Configure.h"
 
-namespace org {
-namespace apache {
-namespace nifi {
-namespace minifi {
-namespace controllers {
+namespace org::apache::nifi::minifi::controllers {
 
 class PersistableKeyValueStoreService : public KeyValueStoreService, public AbstractCoreComponentStateManagerProvider {
  public:
-  explicit PersistableKeyValueStoreService(const std::string& name, const utils::Identifier& uuid = {});
+  explicit PersistableKeyValueStoreService(std::string name, const utils::Identifier& uuid = {});
 
   ~PersistableKeyValueStoreService() override;
 
@@ -48,10 +44,6 @@ class PersistableKeyValueStoreService : public KeyValueStoreService, public Abst
   bool persistImpl() override;
 };
 
-}  // namespace controllers
-}  // namespace minifi
-}  // namespace nifi
-}  // namespace apache
-}  // namespace org
+}  // namespace org::apache::nifi::minifi::controllers
 
 #endif  // LIBMINIFI_INCLUDE_CONTROLLERS_KEYVALUE_PERSISTABLEKEYVALUESTORESERVICE_H_

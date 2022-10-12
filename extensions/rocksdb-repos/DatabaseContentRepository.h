@@ -16,8 +16,9 @@
  */
 #pragma once
 
-#include <string>
 #include <memory>
+#include <string>
+#include <utility>
 
 #include "core/Core.h"
 #include "core/Connectable.h"
@@ -44,8 +45,8 @@ class DatabaseContentRepository : public core::ContentRepository, public core::C
  public:
   static constexpr const char* ENCRYPTION_KEY_NAME = "nifi.database.content.repository.encryption.key";
 
-  explicit DatabaseContentRepository(const std::string& name = getClassName<DatabaseContentRepository>(), const utils::Identifier& uuid = {})
-      : core::Connectable(name, uuid),
+  explicit DatabaseContentRepository(std::string name = getClassName<DatabaseContentRepository>(), const utils::Identifier& uuid = {})
+      : core::Connectable(std::move(name), uuid),
         is_valid_(false),
         db_(nullptr),
         logger_(logging::LoggerFactory<DatabaseContentRepository>::getLogger()) {

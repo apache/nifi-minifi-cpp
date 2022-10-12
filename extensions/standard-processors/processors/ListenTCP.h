@@ -18,6 +18,7 @@
 
 #include <memory>
 #include <string>
+#include <utility>
 
 #include "NetworkListenerProcessor.h"
 #include "core/logging/LoggerConfiguration.h"
@@ -27,8 +28,8 @@ namespace org::apache::nifi::minifi::processors {
 
 class ListenTCP : public NetworkListenerProcessor {
  public:
-  explicit ListenTCP(const std::string& name, const utils::Identifier& uuid = {})
-    : NetworkListenerProcessor(name, uuid, core::logging::LoggerFactory<ListenTCP>::getLogger()) {
+  explicit ListenTCP(std::string name, const utils::Identifier& uuid = {})
+    : NetworkListenerProcessor(std::move(name), uuid, core::logging::LoggerFactory<ListenTCP>::getLogger()) {
   }
 
   EXTENSIONAPI static constexpr const char* Description = "Listens for incoming TCP connections and reads data from each connection using a line separator as the message demarcator. "

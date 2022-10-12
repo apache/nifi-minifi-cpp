@@ -153,11 +153,6 @@ class ProvenanceEventRecord : public core::SerializableComponent {
   };
   static const char *ProvenanceEventTypeStr[REPLAY + 1];
 
- public:
-  // Constructor
-  /*!
-   * Create a new provenance event record
-   */
   ProvenanceEventRecord(ProvenanceEventType event, std::string componentId, std::string componentType);
 
   ProvenanceEventRecord()

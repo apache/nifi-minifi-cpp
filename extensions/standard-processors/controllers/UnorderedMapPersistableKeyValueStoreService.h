@@ -34,8 +34,8 @@ namespace org::apache::nifi::minifi::controllers {
 class UnorderedMapPersistableKeyValueStoreService : public AbstractAutoPersistingKeyValueStoreService,
                                                     public UnorderedMapKeyValueStoreService {
  public:
-  explicit UnorderedMapPersistableKeyValueStoreService(const std::string& name, const utils::Identifier& uuid = {});
-  explicit UnorderedMapPersistableKeyValueStoreService(const std::string& name, const std::shared_ptr<Configure>& configuration);
+  explicit UnorderedMapPersistableKeyValueStoreService(std::string name, const utils::Identifier& uuid = {});
+  explicit UnorderedMapPersistableKeyValueStoreService(std::string name, const std::shared_ptr<Configure>& configuration);
 
   ~UnorderedMapPersistableKeyValueStoreService() override;
 

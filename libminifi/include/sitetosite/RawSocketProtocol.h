@@ -53,10 +53,6 @@ class RawSiteToSiteClient : public sitetosite::SiteToSiteClient {
   // HandShakeProperty Str
   static const char *HandShakePropertyStr[MAX_HANDSHAKE_PROPERTY];
 
-  // Constructor
-  /*!
-   * Create a new control protocol
-   */
   RawSiteToSiteClient(std::unique_ptr<SiteToSitePeer> peer) { // NOLINT
     peer_ = std::move(peer);
     _batchSize = 0;
@@ -75,7 +71,7 @@ class RawSiteToSiteClient : public sitetosite::SiteToSiteClient {
     _currentCodecVersion = _supportedCodecVersion[0];
     _currentCodecVersionIndex = 0;
   }
-  // Destructor
+
   ~RawSiteToSiteClient() override {
     tearDown();
   }

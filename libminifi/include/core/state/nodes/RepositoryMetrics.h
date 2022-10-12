@@ -36,12 +36,12 @@ namespace org::apache::nifi::minifi::state::response {
  */
 class RepositoryMetrics : public ResponseNode {
  public:
-  RepositoryMetrics(const std::string &name, const utils::Identifier &uuid)
-      : ResponseNode(name, uuid) {
+  RepositoryMetrics(std::string name, const utils::Identifier &uuid)
+      : ResponseNode(std::move(name), uuid) {
   }
 
-  RepositoryMetrics(const std::string &name) // NOLINT
-      : ResponseNode(name) {
+  explicit RepositoryMetrics(std::string name)
+      : ResponseNode(std::move(name)) {
   }
 
   RepositoryMetrics()

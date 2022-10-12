@@ -19,6 +19,7 @@
 #include <limits>
 #include <memory>
 #include <string>
+#include <utility>
 #include <vector>
 
 #include "core/Processor.h"
@@ -37,8 +38,8 @@ static constexpr const char* const MQTT_SECURITY_PROTOCOL_SSL = "ssl";
 
 class AbstractMQTTProcessor : public core::Processor {
  public:
-  explicit AbstractMQTTProcessor(const std::string& name, const utils::Identifier& uuid = {})
-      : core::Processor(name, uuid) {
+  explicit AbstractMQTTProcessor(std::string name, const utils::Identifier& uuid = {})
+      : core::Processor(std::move(name), uuid) {
   }
 
   ~AbstractMQTTProcessor() override {

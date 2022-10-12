@@ -25,12 +25,12 @@
 
 namespace org::apache::nifi::minifi::core::expressions {
 
-ExpressionContextBuilder::ExpressionContextBuilder(const std::string &name, const minifi::utils::Identifier &uuid)
-    : core::ProcessContextBuilder(name, uuid) {
+ExpressionContextBuilder::ExpressionContextBuilder(std::string name, const minifi::utils::Identifier &uuid)
+    : core::ProcessContextBuilder(std::move(name), uuid) {
 }
 
-ExpressionContextBuilder::ExpressionContextBuilder(const std::string &name)
-    : core::ProcessContextBuilder(name) {
+ExpressionContextBuilder::ExpressionContextBuilder(std::string name)
+    : core::ProcessContextBuilder(std::move(name)) {
 }
 
 ExpressionContextBuilder::~ExpressionContextBuilder() = default;

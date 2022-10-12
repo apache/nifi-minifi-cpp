@@ -16,12 +16,12 @@
  */
 
 #pragma once
-#include <string>
 #include <memory>
+#include <string>
+#include <utility>
 
 #include "controllers/SSLContextService.h"
 #include "core/Processor.h"
-
 
 namespace org::apache::nifi::minifi::extensions::curl {
 class HTTPClient;
@@ -46,8 +46,8 @@ class SplunkHECProcessor : public core::Processor {
     };
   }
 
-  explicit SplunkHECProcessor(const std::string& name, const utils::Identifier& uuid = {})
-      : Processor(name, uuid) {
+  explicit SplunkHECProcessor(std::string name, const utils::Identifier& uuid = {})
+      : Processor(std::move(name), uuid) {
   }
   ~SplunkHECProcessor() override = default;
 

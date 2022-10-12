@@ -17,14 +17,10 @@
 
 #include "controllers/keyvalue/KeyValueStoreService.h"
 
-namespace org {
-namespace apache {
-namespace nifi {
-namespace minifi {
-namespace controllers {
+namespace org::apache::nifi::minifi::controllers {
 
-KeyValueStoreService::KeyValueStoreService(const std::string& name, const utils::Identifier& uuid /*= utils::Identifier()*/)
-    : ControllerService(name, uuid) {
+KeyValueStoreService::KeyValueStoreService(std::string name, const utils::Identifier& uuid /*= utils::Identifier()*/)
+    : ControllerService(std::move(name), uuid) {
 }
 
 KeyValueStoreService::~KeyValueStoreService() = default;
@@ -40,9 +36,4 @@ bool KeyValueStoreService::isWorkAvailable() {
   return false;
 }
 
-
-} /* namespace controllers */
-} /* namespace minifi */
-} /* namespace nifi */
-} /* namespace apache */
-} /* namespace org */
+}  // namespace org::apache::nifi::minifi::controllers

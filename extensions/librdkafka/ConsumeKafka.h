@@ -133,8 +133,8 @@ class ConsumeKafka : public KafkaProcessorBase {
   static constexpr char const* DEFAULT_MAX_POLL_TIME = "4 seconds";
   static constexpr const std::size_t METADATA_COMMUNICATIONS_TIMEOUT_MS{ 60000 };
 
-  explicit ConsumeKafka(const std::string& name, const utils::Identifier& uuid = utils::Identifier()) :
-      KafkaProcessorBase(name, uuid, core::logging::LoggerFactory<ConsumeKafka>::getLogger()) {}
+  explicit ConsumeKafka(std::string name, const utils::Identifier& uuid = utils::Identifier()) :
+      KafkaProcessorBase(std::move(name), uuid, core::logging::LoggerFactory<ConsumeKafka>::getLogger()) {}
 
   ~ConsumeKafka() override = default;
 

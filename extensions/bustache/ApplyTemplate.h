@@ -21,6 +21,7 @@
 
 #include <memory>
 #include <string>
+#include <utility>
 
 #include "core/Processor.h"
 #include "core/ProcessSession.h"
@@ -33,8 +34,8 @@ namespace org::apache::nifi::minifi::processors {
  */
 class ApplyTemplate : public core::Processor {
  public:
-  explicit ApplyTemplate(const std::string& name, const utils::Identifier& uuid = {})
-      : Processor(name, uuid) {}
+  explicit ApplyTemplate(std::string name, const utils::Identifier& uuid = {})
+      : Processor(std::move(name), uuid) {}
 
   EXTENSIONAPI static constexpr const char* Description = "Applies the mustache template specified by the \"Template\" property and writes the output to the flow file content. "
     "FlowFile attributes are used as template parameters.";

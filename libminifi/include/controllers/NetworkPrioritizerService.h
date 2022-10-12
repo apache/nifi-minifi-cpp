@@ -39,10 +39,10 @@ namespace org::apache::nifi::minifi::controllers {
  */
 class NetworkPrioritizerService : public core::controller::ControllerService, public minifi::io::NetworkPrioritizer, public std::enable_shared_from_this<NetworkPrioritizerService> {
  public:
-  explicit NetworkPrioritizerService(const std::string& name,
+  explicit NetworkPrioritizerService(std::string name,
                                      const utils::Identifier& uuid = {},
                                      std::shared_ptr<utils::timeutils::Clock> clock = std::make_shared<utils::timeutils::SteadyClock>())
-      : ControllerService(name, uuid),
+      : ControllerService(std::move(name), uuid),
         enabled_(false),
         max_throughput_(std::numeric_limits<uint64_t>::max()),
         max_payload_(std::numeric_limits<uint64_t>::max()),
@@ -54,8 +54,8 @@ class NetworkPrioritizerService : public core::controller::ControllerService, pu
         clock_(std::move(clock)) {
   }
 
-  explicit NetworkPrioritizerService(const std::string &name, const std::shared_ptr<Configure> &configuration)
-      : NetworkPrioritizerService(name) {
+  explicit NetworkPrioritizerService(std::string name, const std::shared_ptr<Configure> &configuration)
+      : NetworkPrioritizerService(std::move(name)) {
     setConfiguration(configuration);
     initialize();
   }

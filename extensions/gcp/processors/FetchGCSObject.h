@@ -17,8 +17,9 @@
 
 #pragma once
 
-#include <string>
 #include <memory>
+#include <string>
+#include <utility>
 
 #include "GCSProcessor.h"
 #include "google/cloud/storage/well_known_headers.h"
@@ -29,8 +30,8 @@ namespace org::apache::nifi::minifi::extensions::gcp {
 
 class FetchGCSObject : public GCSProcessor {
  public:
-  explicit FetchGCSObject(const std::string& name, const utils::Identifier& uuid = {})
-      : GCSProcessor(name, uuid, core::logging::LoggerFactory<FetchGCSObject>::getLogger()) {
+  explicit FetchGCSObject(std::string name, const utils::Identifier& uuid = {})
+      : GCSProcessor(std::move(name), uuid, core::logging::LoggerFactory<FetchGCSObject>::getLogger()) {
   }
   ~FetchGCSObject() override = default;
 

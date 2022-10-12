@@ -43,13 +43,14 @@
 #include <stdlib.h>
 #include <string.h>
 
-#include <set>
-#include <string>
-#include <vector>
 #include <fstream>
 #include <functional>
 #include <map>
+#include <set>
 #include <sstream>
+#include <string>
+#include <vector>
+#include <utility>
 
 #include "../nodes/MetricsBase.h"
 #include "Connection.h"
@@ -287,16 +288,16 @@ class Device {
  */
 class DeviceInfoNode : public DeviceInformation {
  public:
-  DeviceInfoNode(const std::string& name, const utils::Identifier& uuid)
-      : DeviceInformation(name, uuid) {
+  DeviceInfoNode(std::string name, const utils::Identifier& uuid)
+      : DeviceInformation(std::move(name), uuid) {
     static Device device;
     hostname_ = device.canonical_hostname_;
     ip_ = device.ip_;
     device_id_ = device.device_id_;
   }
 
-  explicit DeviceInfoNode(const std::string &name)
-      : DeviceInformation(name) {
+  explicit DeviceInfoNode(std::string name)
+      : DeviceInformation(std::move(name)) {
     static Device device;
     hostname_ = device.canonical_hostname_;
     ip_ = device.ip_;

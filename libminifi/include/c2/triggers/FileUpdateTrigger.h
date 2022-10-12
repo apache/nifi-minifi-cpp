@@ -16,9 +16,11 @@
  */
 #pragma once
 
+#include <atomic>
 #include <memory>
 #include <string>
-#include <atomic>
+#include <utility>
+
 #include "c2/C2Trigger.h"
 #include "utils/StringUtils.h"
 #include "utils/file/FileUtils.h"
@@ -36,8 +38,8 @@ class FileUpdateTrigger : public C2Trigger {
  public:
   MINIFIAPI static constexpr const char* Description = "Defines a file update trigger when the last write time of a file has been changed.";
 
-  explicit FileUpdateTrigger(const std::string &name, const utils::Identifier &uuid = {})
-      : C2Trigger(name, uuid),
+  explicit FileUpdateTrigger(std::string name, const utils::Identifier &uuid = {})
+      : C2Trigger(std::move(name), uuid),
         update_(false) {
   }
 

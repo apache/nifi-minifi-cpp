@@ -17,17 +17,17 @@
 
 #include "AgentPrinter.h"
 
-#include <algorithm>
 #include <memory>
 #include <string>
+#include <utility>
 
 #include "rapidjson/prettywriter.h"
 #include "core/Resource.h"
 
 namespace org::apache::nifi::minifi::c2 {
 
-AgentPrinter::AgentPrinter(const std::string& name, const utils::Identifier& uuid)
-: HeartbeatReporter(name, uuid) {
+AgentPrinter::AgentPrinter(std::string name, const utils::Identifier& uuid)
+: HeartbeatReporter(std::move(name), uuid) {
 }
 
 void AgentPrinter::initialize(core::controller::ControllerServiceProvider* controller, state::StateMonitor* updateSink,

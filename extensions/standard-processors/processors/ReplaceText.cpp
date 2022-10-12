@@ -75,8 +75,8 @@ const core::Relationship ReplaceText::Success("success", "FlowFiles that have be
                                                          "This includes both FlowFiles that had text replaced and those that did not.");
 const core::Relationship ReplaceText::Failure("failure", "FlowFiles that could not be updated are routed to this relationship.");
 
-ReplaceText::ReplaceText(const std::string& name, const utils::Identifier& uuid)
-  : core::Processor(name, uuid),
+ReplaceText::ReplaceText(std::string name, const utils::Identifier& uuid)
+  : core::Processor(std::move(name), uuid),
     logger_(core::logging::LoggerFactory<ReplaceText>::getLogger()) {
 }
 

@@ -35,19 +35,15 @@
 #include "range/v3/algorithm.hpp"
 #include "properties/Configuration.h"
 
-namespace org {
-namespace apache {
-namespace nifi {
-namespace minifi {
-namespace python {
+namespace org::apache::nifi::minifi::python {
 
 /**
  * Can be used to load the python processors from NiFi properties.
  */
 class PythonCreator : public minifi::core::CoreComponent {
  public:
-  explicit PythonCreator(const std::string &name, const utils::Identifier &uuid = {})
-      : minifi::core::CoreComponent(name, uuid) {
+  explicit PythonCreator(std::string name, const utils::Identifier &uuid = {})
+      : minifi::core::CoreComponent(std::move(name), uuid) {
   }
 
   ~PythonCreator() override {
@@ -158,8 +154,4 @@ class PythonCreator : public minifi::core::CoreComponent {
   std::shared_ptr<core::logging::Logger> logger_ = core::logging::LoggerFactory<PythonCreator>::getLogger();
 };
 
-} /* namespace python */
-} /* namespace minifi */
-} /* namespace nifi */
-} /* namespace apache */
-} /* namespace org */
+}  // namespace org::apache::nifi::minifi::python

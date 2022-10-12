@@ -33,7 +33,7 @@ namespace org::apache::nifi::minifi::controllers {
 
 class AbstractAutoPersistingKeyValueStoreService : virtual public PersistableKeyValueStoreService {
  public:
-  explicit AbstractAutoPersistingKeyValueStoreService(const std::string& name, const utils::Identifier& uuid = {});
+  explicit AbstractAutoPersistingKeyValueStoreService(std::string name, const utils::Identifier& uuid = {});
 
   ~AbstractAutoPersistingKeyValueStoreService() override;
 

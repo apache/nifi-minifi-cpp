@@ -22,6 +22,7 @@
 
 #include <memory>
 #include <string>
+#include <utility>
 #include <vector>
 
 #include "concurrentqueue.h"
@@ -36,17 +37,12 @@
 #pragma GCC visibility push(hidden)
 #endif
 
-namespace org {
-namespace apache {
-namespace nifi {
-namespace minifi {
-namespace python {
-namespace processors {
+namespace org::apache::nifi::minifi::python::processors {
 
 class ExecutePythonProcessor : public core::Processor {
  public:
-  explicit ExecutePythonProcessor(const std::string &name, const utils::Identifier &uuid = {})
-      : Processor(name, uuid),
+  explicit ExecutePythonProcessor(std::string name, const utils::Identifier &uuid = {})
+      : Processor(std::move(name), uuid),
         processor_initialized_(false),
         python_dynamic_(false),
         reload_on_script_change_(true) {
@@ -137,12 +133,7 @@ class ExecutePythonProcessor : public core::Processor {
   std::unique_ptr<PythonScriptEngine> createScriptEngine();
 };
 
-} /* namespace processors */
-} /* namespace python */
-} /* namespace minifi */
-} /* namespace nifi */
-} /* namespace apache */
-} /* namespace org */
+}  // namespace org::apache::nifi::minifi::python::processors
 
 #if defined(__GNUC__) || defined(__GNUG__)
 #pragma GCC visibility pop

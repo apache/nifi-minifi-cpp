@@ -60,8 +60,8 @@ class FetchAzureBlobStorage final : public AzureBlobStorageSingleBlobProcessorBa
 
   ADD_COMMON_VIRTUAL_FUNCTIONS_FOR_PROCESSORS
 
-  explicit FetchAzureBlobStorage(const std::string& name, const minifi::utils::Identifier& uuid = minifi::utils::Identifier())
-    : FetchAzureBlobStorage(name, uuid, nullptr) {
+  explicit FetchAzureBlobStorage(std::string name, const minifi::utils::Identifier& uuid = minifi::utils::Identifier())
+    : FetchAzureBlobStorage(std::move(name), uuid, nullptr) {
   }
 
   void initialize() override;
@@ -70,8 +70,8 @@ class FetchAzureBlobStorage final : public AzureBlobStorageSingleBlobProcessorBa
  private:
   friend class ::AzureBlobStorageTestsFixture<FetchAzureBlobStorage>;
 
-  explicit FetchAzureBlobStorage(const std::string& name, const minifi::utils::Identifier& uuid, std::unique_ptr<storage::BlobStorageClient> blob_storage_client)
-    : AzureBlobStorageSingleBlobProcessorBase(name, uuid, core::logging::LoggerFactory<FetchAzureBlobStorage>::getLogger(), std::move(blob_storage_client)) {
+  explicit FetchAzureBlobStorage(std::string name, const minifi::utils::Identifier& uuid, std::unique_ptr<storage::BlobStorageClient> blob_storage_client)
+    : AzureBlobStorageSingleBlobProcessorBase(std::move(name), uuid, core::logging::LoggerFactory<FetchAzureBlobStorage>::getLogger(), std::move(blob_storage_client)) {
   }
 
   std::optional<storage::FetchAzureBlobStorageParameters> buildFetchAzureBlobStorageParameters(

@@ -20,6 +20,7 @@
 
 #include <memory>
 #include <string>
+#include <utility>
 
 #include "core/Connectable.h"
 #include "core/Core.h"
@@ -32,12 +33,12 @@ namespace org::apache::nifi::minifi::core {
  */
 class SerializableComponent : public core::Connectable {
  public:
-  SerializableComponent(const std::string& name) // NOLINT
-        : core::Connectable(name) {
+  explicit SerializableComponent(std::string name)
+        : core::Connectable(std::move(name)) {
     }
 
-  SerializableComponent(const std::string& name, const utils::Identifier& uuid)
-      : core::Connectable(name, uuid) {
+  SerializableComponent(std::string name, const utils::Identifier& uuid)
+      : core::Connectable(std::move(name), uuid) {
   }
 
   ~SerializableComponent() override = default;

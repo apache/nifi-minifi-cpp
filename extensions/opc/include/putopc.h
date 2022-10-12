@@ -19,6 +19,7 @@
 
 #include <memory>
 #include <string>
+#include <utility>
 #include <vector>
 
 #include "opc.h"
@@ -70,8 +71,8 @@ class PutOPCProcessor : public BaseOPCProcessor {
 
   ADD_COMMON_VIRTUAL_FUNCTIONS_FOR_PROCESSORS
 
-  explicit PutOPCProcessor(const std::string& name, const utils::Identifier& uuid = {})
-      : BaseOPCProcessor(name, uuid), nameSpaceIdx_(0), parentExists_(false) {
+  explicit PutOPCProcessor(std::string name, const utils::Identifier& uuid = {})
+      : BaseOPCProcessor(std::move(name), uuid), nameSpaceIdx_(0), parentExists_(false) {
     logger_ = core::logging::LoggerFactory<PutOPCProcessor>::getLogger();
   }
 

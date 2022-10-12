@@ -18,10 +18,12 @@
 
 #pragma once
 
-#include <unordered_map>
-#include <string>
 #include <memory>
 #include <random>
+#include <string>
+#include <unordered_map>
+#include <utility>
+
 #include <YamlConfiguration.h>
 #include "core/Processor.h"
 #include "TestBase.h"
@@ -30,11 +32,7 @@
 #include "core/PropertyBuilder.h"
 #include "core/Resource.h"
 
-namespace org {
-namespace apache {
-namespace nifi {
-namespace minifi {
-namespace processors {
+namespace org::apache::nifi::minifi::processors {
 
 static core::Relationship Apple{"apple", ""};
 static core::Relationship Banana{"banana", ""};
@@ -51,7 +49,7 @@ class ProcessorWithStatistics {
 
 class TestProcessor : public core::Processor, public ProcessorWithStatistics {
  public:
-  TestProcessor(const std::string& name, const utils::Identifier& uuid) : Processor(name, uuid) {}
+  TestProcessor(std::string name, const utils::Identifier& uuid) : Processor(std::move(name), uuid) {}
   explicit TestProcessor(const std::string& name) : Processor(name) {}
 
   static constexpr const char* Description = "Processor used for testing cycles";
@@ -105,7 +103,7 @@ class TestProcessor : public core::Processor, public ProcessorWithStatistics {
 
 class TestFlowFileGenerator : public processors::GenerateFlowFile, public ProcessorWithStatistics {
  public:
-  TestFlowFileGenerator(const std::string& name, const utils::Identifier& uuid) : GenerateFlowFile(name, uuid) {}
+  TestFlowFileGenerator(std::string name, const utils::Identifier& uuid) : GenerateFlowFile(std::move(name), uuid) {}
   explicit TestFlowFileGenerator(const std::string& name) : GenerateFlowFile(name) {}
 
   static constexpr const char* Description = "Processor generating files and notifying us";
@@ -123,8 +121,4 @@ class TestFlowFileGenerator : public processors::GenerateFlowFile, public Proces
 REGISTER_RESOURCE(TestProcessor, Processor);
 REGISTER_RESOURCE(TestFlowFileGenerator, Processor);
 
-} /* namespace processors */
-} /* namespace minifi */
-} /* namespace nifi */
-} /* namespace apache */
-} /* namespace org */
+}  // namespace org::apache::nifi::minifi::processors

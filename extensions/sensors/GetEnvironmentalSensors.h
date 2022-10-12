@@ -20,6 +20,7 @@
 #include <memory>
 #include <regex>
 #include <string>
+#include <utility>
 
 #include "utils/ByteArrayCallback.h"
 #include "FlowFileRecord.h"
@@ -32,16 +33,12 @@
 #include "SensorBase.h"
 #include "RTMath.h"
 
-namespace org {
-namespace apache {
-namespace nifi {
-namespace minifi {
-namespace processors {
+namespace org::apache::nifi::minifi::processors {
 
 class GetEnvironmentalSensors : public SensorBase {
  public:
-  explicit GetEnvironmentalSensors(const std::string& name, const utils::Identifier& uuid = {})
-      : SensorBase(name, uuid) {
+  explicit GetEnvironmentalSensors(std::string name, const utils::Identifier& uuid = {})
+      : SensorBase(std::move(name), uuid) {
   }
   ~GetEnvironmentalSensors() override;
 
@@ -70,8 +67,4 @@ class GetEnvironmentalSensors : public SensorBase {
   static std::shared_ptr<utils::IdGenerator> id_generator_;
 };
 
-} /* namespace processors */
-} /* namespace minifi */
-} /* namespace nifi */
-} /* namespace apache */
-} /* namespace org */
+}  // namespace org::apache::nifi::minifi::processors

@@ -18,6 +18,7 @@
 #pragma once
 
 #include <string>
+#include <utility>
 #include <vector>
 
 #include "core/state/nodes/MetricsBase.h"
@@ -29,7 +30,7 @@ namespace org::apache::nifi::minifi::state::response {
 class ConfigurationChecksums : public ResponseNode {
  public:
   ConfigurationChecksums() = default;
-  explicit ConfigurationChecksums(const std::string& name, const utils::Identifier& uuid = {}) : ResponseNode(name, uuid) {}
+  explicit ConfigurationChecksums(std::string name, const utils::Identifier& uuid = {}) : ResponseNode(std::move(name), uuid) {}
 
   MINIFIAPI static constexpr const char* Description = "Metric node that defines checksums of configuration files in the C2 protocol";
 

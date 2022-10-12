@@ -25,6 +25,7 @@
 #include <memory>
 #include <sstream>
 #include <string>
+#include <utility>
 
 #include "../nodes/MetricsBase.h"
 #include "agent/agent_version.h"
@@ -34,22 +35,17 @@
 #include "core/state/UpdateController.h"
 #include "io/ClientSocket.h"
 
-namespace org {
-namespace apache {
-namespace nifi {
-namespace minifi {
-namespace state {
-namespace response {
+namespace org::apache::nifi::minifi::state::response {
 
 class StateMonitorNode : public DeviceInformation {
  public:
-  StateMonitorNode(const std::string& name, const utils::Identifier& uuid)
-      : DeviceInformation(name, uuid),
+  StateMonitorNode(std::string name, const utils::Identifier& uuid)
+      : DeviceInformation(std::move(name), uuid),
         monitor_(nullptr) {
   }
 
-  StateMonitorNode(const std::string &name) // NOLINT
-      : DeviceInformation(name),
+  explicit StateMonitorNode(std::string name)
+      : DeviceInformation(std::move(name)),
         monitor_(nullptr) {
   }
 
@@ -60,11 +56,6 @@ class StateMonitorNode : public DeviceInformation {
   state::StateMonitor* monitor_;
 };
 
-}  // namespace response
-}  // namespace state
-}  // namespace minifi
-}  // namespace nifi
-}  // namespace apache
-}  // namespace org
+}  // namespace org::apache::nifi::minifi::state::response
 
 #endif  // LIBMINIFI_INCLUDE_CORE_STATE_NODES_STATEMONITOR_H_

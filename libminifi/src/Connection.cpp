@@ -37,32 +37,32 @@ using namespace std::literals::chrono_literals;
 
 namespace org::apache::nifi::minifi {
 
-Connection::Connection(std::shared_ptr<core::Repository> flow_repository, std::shared_ptr<core::ContentRepository> content_repo, const std::string &name)
-    : core::Connectable(name),
+Connection::Connection(std::shared_ptr<core::Repository> flow_repository, std::shared_ptr<core::ContentRepository> content_repo, std::string name)
+    : core::Connectable(std::move(name)),
       flow_repository_(std::move(flow_repository)),
       content_repo_(std::move(content_repo)) {
   logger_->log_debug("Connection %s created", name_);
 }
 
-Connection::Connection(std::shared_ptr<core::Repository> flow_repository, std::shared_ptr<core::ContentRepository> content_repo, const std::string &name, const utils::Identifier &uuid)
-    : core::Connectable(name, uuid),
+Connection::Connection(std::shared_ptr<core::Repository> flow_repository, std::shared_ptr<core::ContentRepository> content_repo, std::string name, const utils::Identifier &uuid)
+    : core::Connectable(std::move(name), uuid),
       flow_repository_(std::move(flow_repository)),
       content_repo_(std::move(content_repo)) {
   logger_->log_debug("Connection %s created", name_);
 }
 
-Connection::Connection(std::shared_ptr<core::Repository> flow_repository, std::shared_ptr<core::ContentRepository> content_repo, const std::string &name, const utils::Identifier &uuid,
+Connection::Connection(std::shared_ptr<core::Repository> flow_repository, std::shared_ptr<core::ContentRepository> content_repo, std::string name, const utils::Identifier &uuid,
                        const utils::Identifier& srcUUID)
-    : core::Connectable(name, uuid),
+    : core::Connectable(std::move(name), uuid),
       flow_repository_(std::move(flow_repository)),
       content_repo_(std::move(content_repo)) {
   src_uuid_ = srcUUID;
   logger_->log_debug("Connection %s created", name_);
 }
 
-Connection::Connection(std::shared_ptr<core::Repository> flow_repository, std::shared_ptr<core::ContentRepository> content_repo, const std::string &name, const utils::Identifier &uuid,
+Connection::Connection(std::shared_ptr<core::Repository> flow_repository, std::shared_ptr<core::ContentRepository> content_repo, std::string name, const utils::Identifier &uuid,
                        const utils::Identifier& srcUUID, const utils::Identifier& destUUID)
-    : core::Connectable(name, uuid),
+    : core::Connectable(std::move(name), uuid),
       flow_repository_(std::move(flow_repository)),
       content_repo_(std::move(content_repo)) {
   src_uuid_ = srcUUID;
@@ -71,8 +71,8 @@ Connection::Connection(std::shared_ptr<core::Repository> flow_repository, std::s
 }
 
 Connection::Connection(std::shared_ptr<core::Repository> flow_repository, std::shared_ptr<core::ContentRepository> content_repo, std::shared_ptr<SwapManager> swap_manager,
-                       const std::string& name, const utils::Identifier& uuid)
-    : core::Connectable(name, uuid),
+                       std::string name, const utils::Identifier& uuid)
+    : core::Connectable(std::move(name), uuid),
       flow_repository_(std::move(flow_repository)),
       content_repo_(std::move(content_repo)),
       queue_(std::move(swap_manager)) {

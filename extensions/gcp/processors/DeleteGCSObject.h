@@ -17,8 +17,9 @@
 
 #pragma once
 
-#include <string>
 #include <memory>
+#include <string>
+#include <utility>
 
 #include "GCSProcessor.h"
 #include "core/logging/LoggerConfiguration.h"
@@ -28,8 +29,8 @@ namespace org::apache::nifi::minifi::extensions::gcp {
 
 class DeleteGCSObject : public GCSProcessor {
  public:
-  explicit DeleteGCSObject(const std::string& name, const utils::Identifier& uuid = {})
-      : GCSProcessor(name, uuid, core::logging::LoggerFactory<DeleteGCSObject>::getLogger()) {
+  explicit DeleteGCSObject(std::string name, const utils::Identifier& uuid = {})
+      : GCSProcessor(std::move(name), uuid, core::logging::LoggerFactory<DeleteGCSObject>::getLogger()) {
   }
   ~DeleteGCSObject() override = default;
 

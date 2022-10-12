@@ -36,11 +36,7 @@
 #include "core/Core.h"
 #include "core/logging/LoggerConfiguration.h"
 
-namespace org {
-namespace apache {
-namespace nifi {
-namespace minifi {
-namespace processors {
+namespace org::apache::nifi::minifi::processors {
 
 class CallbackProcessor : public core::Processor {
  public:
@@ -56,8 +52,8 @@ class CallbackProcessor : public core::Processor {
 
   ADD_COMMON_VIRTUAL_FUNCTIONS_FOR_PROCESSORS
 
-  explicit CallbackProcessor(const std::string& name, const utils::Identifier& uuid = {})
-      : Processor(name, uuid) {
+  explicit CallbackProcessor(std::string name, const utils::Identifier& uuid = {})
+      : Processor(std::move(name), uuid) {
   }
   ~CallbackProcessor() override = default;
 
@@ -80,10 +76,6 @@ class CallbackProcessor : public core::Processor {
   std::shared_ptr<core::logging::Logger> logger_{ core::logging::LoggerFactory<CallbackProcessor>::getLogger() };
 };
 
-} /* namespace processors */
-} /* namespace minifi */
-} /* namespace nifi */
-} /* namespace apache */
-} /* namespace org */
+}  // namespace org::apache::nifi::minifi::processors
 
 #endif

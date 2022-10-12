@@ -18,6 +18,7 @@
 
 #include <memory>
 #include <string>
+#include <utility>
 
 #include "archive.h"
 
@@ -34,8 +35,8 @@ namespace org::apache::nifi::minifi::processors {
 
 class FocusArchiveEntry : public core::Processor {
  public:
-  explicit FocusArchiveEntry(const std::string& name, const utils::Identifier& uuid = {})
-  : core::Processor(name, uuid) {
+  explicit FocusArchiveEntry(std::string name, const utils::Identifier& uuid = {})
+  : core::Processor(std::move(name), uuid) {
   }
   ~FocusArchiveEntry()   override = default;
 

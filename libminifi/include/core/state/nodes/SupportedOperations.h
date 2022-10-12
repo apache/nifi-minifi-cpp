@@ -30,8 +30,8 @@ namespace org::apache::nifi::minifi::state::response {
 
 class SupportedOperations : public DeviceInformation {
  public:
-  SupportedOperations(const std::string &name, const utils::Identifier &uuid);
-  explicit SupportedOperations(const std::string &name);
+  SupportedOperations(std::string name, const utils::Identifier &uuid);
+  explicit SupportedOperations(std::string name);
 
   MINIFIAPI static constexpr const char* Description = "Metric node that defines the supported C2 operations in the Agent Manifest.";
 

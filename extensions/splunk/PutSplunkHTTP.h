@@ -17,8 +17,9 @@
 
 #pragma once
 
-#include <string>
 #include <memory>
+#include <string>
+#include <utility>
 
 #include "SplunkHECProcessor.h"
 #include "client/HTTPClient.h"
@@ -30,8 +31,8 @@ namespace org::apache::nifi::minifi::extensions::splunk {
 
 class PutSplunkHTTP final : public SplunkHECProcessor {
  public:
-  explicit PutSplunkHTTP(const std::string& name, const utils::Identifier& uuid = {})
-      : SplunkHECProcessor(name, uuid) {
+  explicit PutSplunkHTTP(std::string name, const utils::Identifier& uuid = {})
+      : SplunkHECProcessor(std::move(name), uuid) {
   }
   PutSplunkHTTP(const PutSplunkHTTP&) = delete;
   PutSplunkHTTP(PutSplunkHTTP&&) = delete;

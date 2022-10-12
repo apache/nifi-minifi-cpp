@@ -19,6 +19,7 @@
 #include <memory>
 #include <regex>
 #include <string>
+#include <utility>
 
 #include "FlowFileRecord.h"
 #include "core/controller/ControllerService.h"
@@ -34,12 +35,7 @@
 #include "jvm/NarClassLoader.h"
 #include "ClassRegistrar.h"
 
-namespace org {
-namespace apache {
-namespace nifi {
-namespace minifi {
-namespace jni {
-namespace controllers {
+namespace org::apache::nifi::minifi::jni::controllers {
 
 /**
  * Purpose: Enables isolated java loading through the use of controller services
@@ -53,8 +49,8 @@ namespace controllers {
  */
 class ExecuteJavaControllerService : public ConfigurationContext, public std::enable_shared_from_this<ConfigurationContext> {
  public:
-  explicit ExecuteJavaControllerService(const std::string& name, const utils::Identifier& uuid = {})
-      : ConfigurationContext(name, uuid) {
+  explicit ExecuteJavaControllerService(std::string name, const utils::Identifier& uuid = {})
+      : ConfigurationContext(std::move(name), uuid) {
   }
   ~ExecuteJavaControllerService() override;
 
@@ -140,9 +136,4 @@ class ExecuteJavaControllerService : public ConfigurationContext, public std::en
   std::shared_ptr<core::logging::Logger> logger_ = core::logging::LoggerFactory<ExecuteJavaControllerService>::getLogger();
 };
 
-} /* namespace controllers */
-} /* namespace jni */
-} /* namespace minifi */
-} /* namespace nifi */
-} /* namespace apache */
-} /* namespace org */
+}  // namespace org::apache::nifi::minifi::jni::controllers

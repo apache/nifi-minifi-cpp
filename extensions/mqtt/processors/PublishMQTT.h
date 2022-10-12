@@ -37,8 +37,8 @@ namespace org::apache::nifi::minifi::processors {
 
 class PublishMQTT : public processors::AbstractMQTTProcessor {
  public:
-  explicit PublishMQTT(const std::string& name, const utils::Identifier& uuid = {})
-      : processors::AbstractMQTTProcessor(name, uuid) {
+  explicit PublishMQTT(std::string name, const utils::Identifier& uuid = {})
+      : processors::AbstractMQTTProcessor(std::move(name), uuid) {
   }
 
   EXTENSIONAPI static constexpr const char* Description = "PublishMQTT serializes FlowFile content as an MQTT payload, sending the message to the configured topic and broker.";

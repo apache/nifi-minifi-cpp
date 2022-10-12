@@ -26,16 +26,12 @@
 #include "RTIMULib.h"
 #include "RTMath.h"
 
-namespace org {
-namespace apache {
-namespace nifi {
-namespace minifi {
-namespace processors {
+namespace org::apache::nifi::minifi::processors {
 
 class SensorBase : public core::Processor {
  public:
-  explicit SensorBase(const std::string& name, const utils::Identifier& uuid = {})
-    : Processor(name, uuid) {
+  explicit SensorBase(std::string name, const utils::Identifier& uuid = {})
+    : Processor(std::move(name), uuid) {
   }
   ~SensorBase() override;
 
@@ -49,8 +45,4 @@ class SensorBase : public core::Processor {
   std::shared_ptr<core::logging::Logger> logger_ = core::logging::LoggerFactory<SensorBase>::getLogger();
 };
 
-} /* namespace processors */
-} /* namespace minifi */
-} /* namespace nifi */
-} /* namespace apache */
-} /* namespace org */
+}  // namespace org::apache::nifi::minifi::processors

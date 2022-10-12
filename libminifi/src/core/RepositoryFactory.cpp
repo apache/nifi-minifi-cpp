@@ -61,9 +61,9 @@ createContentRepository(const std::string& configuration_class_name, bool fail_s
 
 class NoOpThreadedRepository : public core::ThreadedRepository {
  public:
-  explicit NoOpThreadedRepository(const std::string& repo_name)
+  explicit NoOpThreadedRepository(std::string repo_name)
           : core::SerializableComponent(repo_name),
-            ThreadedRepository(repo_name) {
+            ThreadedRepository(std::move(repo_name)) {
   }
 
   ~NoOpThreadedRepository() override {

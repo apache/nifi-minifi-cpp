@@ -20,8 +20,9 @@
 
 #include <memory>
 #include <regex>
-#include <vector>
 #include <string>
+#include <utility>
+#include <vector>
 
 #include "PcapLiveDeviceList.h"
 #include "PcapFilter.h"
@@ -35,11 +36,7 @@
 #include "core/logging/LoggerConfiguration.h"
 #include "utils/Id.h"
 
-namespace org {
-namespace apache {
-namespace nifi {
-namespace minifi {
-namespace processors {
+namespace org::apache::nifi::minifi::processors {
 
 class CapturePacketMechanism {
  public:
@@ -90,14 +87,13 @@ struct PacketMovers {
   moodycamel::ConcurrentQueue<CapturePacketMechanism*> sink;
 };
 
-// CapturePacket Class
 class CapturePacket : public core::Processor {
  public:
-  explicit CapturePacket(const std::string& name, const utils::Identifier& uuid = {})
-      : Processor(name, uuid) {
-    mover = std::unique_ptr<PacketMovers>(new PacketMovers());
+  explicit CapturePacket(std::string name, const utils::Identifier& uuid = {})
+      : Processor(std::move(name), uuid) {
+    mover = std::make_unique<PacketMovers>();
   }
-  virtual ~CapturePacket();
+  ~CapturePacket() override;
 
   EXTENSIONAPI static constexpr const char* Description = "CapturePacket captures and writes one or more packets into a PCAP file that will be used as the content of a flow file."
     " Configuration options exist to adjust the batching of PCAP files. PCAP batching will place a single PCAP into a flow file. "
@@ -174,8 +170,4 @@ class CapturePacket : public core::Processor {
   static std::shared_ptr<utils::IdGenerator> id_generator_;
 };
 
-} /* namespace processors */
-} /* namespace minifi */
-} /* namespace nifi */
-} /* namespace apache */
-} /* namespace org */
+}  // namespace org::apache::nifi::minifi::processors

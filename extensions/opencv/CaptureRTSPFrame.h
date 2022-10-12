@@ -36,8 +36,8 @@ namespace org::apache::nifi::minifi::processors {
 
 class CaptureRTSPFrame : public core::Processor {
  public:
-  explicit CaptureRTSPFrame(const std::string &name, const utils::Identifier &uuid = {})
-      : Processor(name, uuid) {
+  explicit CaptureRTSPFrame(std::string name, const utils::Identifier &uuid = {})
+      : Processor(std::move(name), uuid) {
   }
 
   EXTENSIONAPI static constexpr const char* Description = "Captures a frame from the RTSP stream at specified intervals.";

@@ -73,8 +73,8 @@ const core::Property ConsumeJournald::TimestampFormat = core::PropertyBuilder::c
     ->isRequired(true)
     ->build();
 
-ConsumeJournald::ConsumeJournald(const std::string &name, const utils::Identifier &id, std::unique_ptr<libwrapper::LibWrapper>&& libwrapper)
-    :core::Processor{name, id}, libwrapper_{std::move(libwrapper)}
+ConsumeJournald::ConsumeJournald(std::string name, const utils::Identifier &id, std::unique_ptr<libwrapper::LibWrapper>&& libwrapper)
+    :core::Processor{std::move(name), id}, libwrapper_{std::move(libwrapper)}
 {}
 
 void ConsumeJournald::initialize() {

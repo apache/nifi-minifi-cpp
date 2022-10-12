@@ -38,8 +38,8 @@ int ssl_protocol_en(void* /*ssl_context*/, void* /*user_data*/) {
   return 0;
 }
 
-RESTReceiver::RESTReceiver(const std::string& name, const utils::Identifier& uuid)
-    : HeartbeatReporter(name, uuid) {
+RESTReceiver::RESTReceiver(std::string name, const utils::Identifier& uuid)
+    : HeartbeatReporter(std::move(name), uuid) {
 }
 
 void RESTReceiver::initialize(core::controller::ControllerServiceProvider* controller, state::StateMonitor* updateSink, const std::shared_ptr<Configure> &configure) {

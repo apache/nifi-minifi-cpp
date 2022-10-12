@@ -73,9 +73,9 @@ struct RPG {
 
 class RemoteProcessorGroupPort : public core::Processor {
  public:
-  RemoteProcessorGroupPort(const std::shared_ptr<io::StreamFactory> &stream_factory, const std::string &name, std::string url, const std::shared_ptr<Configure> &configure, const utils::Identifier &uuid = {}) // NOLINT
-      : core::Processor(name, uuid),
-        configure_(configure),
+  RemoteProcessorGroupPort(const std::shared_ptr<io::StreamFactory> &stream_factory, std::string name, std::string url, std::shared_ptr<Configure> configure, const utils::Identifier &uuid = {})
+      : core::Processor(std::move(name), uuid),
+        configure_(std::move(configure)),
         direction_(sitetosite::SEND),
         transmitting_(false),
         timeout_(0),

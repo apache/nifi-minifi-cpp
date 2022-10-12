@@ -17,8 +17,9 @@
 
 #pragma once
 
-#include <string>
 #include <memory>
+#include <string>
+#include <utility>
 
 #include "GCSProcessor.h"
 #include "core/logging/LoggerConfiguration.h"
@@ -39,8 +40,8 @@ class PutGCSObject : public GCSProcessor {
              (PUBLIC_READ_ONLY, "publicRead"),
              (PUBLIC_READ_WRITE, "publicReadWrite"));
 
-  explicit PutGCSObject(const std::string& name, const utils::Identifier& uuid = {})
-      : GCSProcessor(name, uuid, core::logging::LoggerFactory<PutGCSObject>::getLogger()) {
+  explicit PutGCSObject(std::string name, const utils::Identifier& uuid = {})
+      : GCSProcessor(std::move(name), uuid, core::logging::LoggerFactory<PutGCSObject>::getLogger()) {
   }
   ~PutGCSObject() override = default;
 

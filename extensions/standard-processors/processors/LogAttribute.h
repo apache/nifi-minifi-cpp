@@ -36,8 +36,8 @@ namespace org::apache::nifi::minifi::processors {
 
 class LogAttribute : public core::Processor {
  public:
-  explicit LogAttribute(const std::string& name, const utils::Identifier& uuid = {})
-      : Processor(name, uuid),
+  explicit LogAttribute(std::string name, const utils::Identifier& uuid = {})
+      : Processor(std::move(name), uuid),
         flowfiles_to_log_(1),
         hexencode_(false),
         max_line_length_(80U) {

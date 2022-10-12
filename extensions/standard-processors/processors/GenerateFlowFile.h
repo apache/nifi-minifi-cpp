@@ -35,8 +35,8 @@ namespace org::apache::nifi::minifi::processors {
 
 class GenerateFlowFile : public core::Processor {
  public:
-  GenerateFlowFile(const std::string& name, const utils::Identifier& uuid = {}) // NOLINT
-      : Processor(name, uuid) {
+  GenerateFlowFile(std::string name, const utils::Identifier& uuid = {}) // NOLINT
+      : Processor(std::move(name), uuid) {
     batchSize_ = 1;
     uniqueFlowFile_ = true;
     fileSize_ = 1024;

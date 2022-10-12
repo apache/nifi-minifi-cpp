@@ -19,17 +19,14 @@
 #define LIBMINIFI_INCLUDE_C2_C2TRIGGER_H_
 
 #include <memory>
+#include <utility>
 #include <string>
 
 #include "core/Connectable.h"
 #include "c2/C2Payload.h"
 #include "properties/Configure.h"
 
-namespace org {
-namespace apache {
-namespace nifi {
-namespace minifi {
-namespace c2 {
+namespace org::apache::nifi::minifi::c2 {
 
 /**
  * Purpose: Defines basic triggering mechanism for command and control interfaces
@@ -38,12 +35,12 @@ namespace c2 {
  *
  * The state machine expects triggered (yes ) -> getAction -> reset(optional)
  */
-class C2Trigger : public core::Connectable{
+class C2Trigger : public core::Connectable {
  public:
-  C2Trigger(const std::string& name, const utils::Identifier& uuid)
-        : core::Connectable(name, uuid) {
+  C2Trigger(std::string name, const utils::Identifier& uuid)
+        : core::Connectable(std::move(name), uuid) {
   }
-  virtual ~C2Trigger() = default;
+  ~C2Trigger() override = default;
 
 
   /**
@@ -73,10 +70,6 @@ class C2Trigger : public core::Connectable{
   virtual C2Payload getAction() = 0;
 };
 
-}  // namespace c2
-}  // namespace minifi
-}  // namespace nifi
-}  // namespace apache
-}  // namespace org
+}  // namespace org::apache::nifi::minifi::c2
 
 #endif  // LIBMINIFI_INCLUDE_C2_C2TRIGGER_H_

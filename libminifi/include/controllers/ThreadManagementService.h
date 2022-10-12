@@ -18,19 +18,17 @@
 #ifndef LIBMINIFI_INCLUDE_CONTROLLERS_THREADMANAGEMENTSERVICE_H_
 #define LIBMINIFI_INCLUDE_CONTROLLERS_THREADMANAGEMENTSERVICE_H_
 
-#include <string>
 #include <iostream>
+#include <string>
 #include <memory>
+#include <utility>
+
 #include "utils/StringUtils.h"
 #include "io/validation.h"
 #include "core/controller/ControllerService.h"
 #include "core/logging/LoggerFactory.h"
 
-namespace org {
-namespace apache {
-namespace nifi {
-namespace minifi {
-namespace controllers {
+namespace org::apache::nifi::minifi::controllers {
 
 /**
  * Purpose: Thread management service provides a contextual awareness across
@@ -38,13 +36,13 @@ namespace controllers {
  */
 class ThreadManagementService : public core::controller::ControllerService {
  public:
-  explicit ThreadManagementService(const std::string &name, const utils::Identifier &uuid = {})
-      : ControllerService(name, uuid),
+  explicit ThreadManagementService(std::string name, const utils::Identifier &uuid = {})
+      : ControllerService(std::move(name), uuid),
         logger_(core::logging::LoggerFactory<ThreadManagementService>::getLogger()) {
   }
 
-  explicit ThreadManagementService(const std::string &name, const std::shared_ptr<Configure>& /*configuration*/)
-      : ControllerService(name),
+  explicit ThreadManagementService(std::string name, const std::shared_ptr<Configure>& /*configuration*/)
+      : ControllerService(std::move(name)),
         logger_(core::logging::LoggerFactory<ThreadManagementService>::getLogger()) {
   }
 
@@ -111,10 +109,6 @@ class ThreadManagementService : public core::controller::ControllerService {
   std::shared_ptr<core::logging::Logger> logger_;
 };
 
-}  // namespace controllers
-}  // namespace minifi
-}  // namespace nifi
-}  // namespace apache
-}  // namespace org
+}  // namespace org::apache::nifi::minifi::controllers
 
 #endif  // LIBMINIFI_INCLUDE_CONTROLLERS_THREADMANAGEMENTSERVICE_H_

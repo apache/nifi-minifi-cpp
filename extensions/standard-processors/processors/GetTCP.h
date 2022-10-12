@@ -99,8 +99,8 @@ class DataHandler {
 
 class GetTCP : public core::Processor {
  public:
-  explicit GetTCP(const std::string& name, const utils::Identifier& uuid = {})
-    : Processor(name, uuid),
+  explicit GetTCP(std::string name, const utils::Identifier& uuid = {})
+    : Processor(std::move(name), uuid),
       running_(false),
       stay_connected_(true),
       concurrent_handlers_(2),

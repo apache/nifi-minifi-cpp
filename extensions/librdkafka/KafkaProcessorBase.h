@@ -16,9 +16,10 @@
  */
 #pragma once
 
-#include <optional>
 #include <memory>
+#include <optional>
 #include <string>
+#include <utility>
 
 #include "core/Processor.h"
 #include "rdkafka_utils.h"
@@ -62,8 +63,8 @@ class KafkaProcessorBase : public core::Processor {
     (PLAIN, "PLAIN")
   )
 
-  KafkaProcessorBase(const std::string& name, const utils::Identifier& uuid, std::shared_ptr<core::logging::Logger> logger)
-      : core::Processor(name, uuid),
+  KafkaProcessorBase(std::string name, const utils::Identifier& uuid, std::shared_ptr<core::logging::Logger> logger)
+      : core::Processor(std::move(name), uuid),
         logger_(logger) {
   }
 

@@ -16,8 +16,9 @@
  */
 #pragma once
 
-#include <string>
 #include <memory>
+#include <string>
+#include <utility>
 
 #include "core/Processor.h"
 #include "core/ProcessSession.h"
@@ -51,8 +52,8 @@ class FetchFile : public core::Processor {
     (LOGGING_OFF, "OFF")
   )
 
-  explicit FetchFile(const std::string& name, const utils::Identifier& uuid = {})
-    : core::Processor(name, uuid) {
+  explicit FetchFile(std::string name, const utils::Identifier& uuid = {})
+    : core::Processor(std::move(name), uuid) {
   }
 
   EXTENSIONAPI static constexpr const char* Description = "Reads the contents of a file from disk and streams it into the contents of an incoming FlowFile. "

@@ -21,10 +21,11 @@
 #define EXTENSIONS_STANDARD_PROCESSORS_PROCESSORS_APPENDHOSTINFO_H_
 
 #include <memory>
-#include <string>
 #include <optional>
 #include <regex>
 #include <shared_mutex>
+#include <string>
+#include <utility>
 
 #include "core/Property.h"
 #include "FlowFileRecord.h"
@@ -34,19 +35,15 @@
 #include "core/logging/LoggerConfiguration.h"
 #include "utils/Export.h"
 
-namespace org {
-namespace apache {
-namespace nifi {
-namespace minifi {
-namespace processors {
+namespace org::apache::nifi::minifi::processors {
 
 class AppendHostInfo : public core::Processor {
  public:
   static constexpr const char* REFRESH_POLICY_ON_TRIGGER = "On every trigger";
   static constexpr const char* REFRESH_POLICY_ON_SCHEDULE = "On schedule";
 
-  explicit AppendHostInfo(const std::string& name, const utils::Identifier& uuid = {})
-      : core::Processor(name, uuid),
+  explicit AppendHostInfo(std::string name, const utils::Identifier& uuid = {})
+      : core::Processor(std::move(name), uuid),
         refresh_on_trigger_(false) {
   }
   ~AppendHostInfo() override = default;
@@ -95,10 +92,6 @@ class AppendHostInfo : public core::Processor {
   std::optional<std::string> ipaddresses_;
 };
 
-}  // namespace processors
-}  // namespace minifi
-}  // namespace nifi
-}  // namespace apache
-}  // namespace org
+}  // namespace org::apache::nifi::minifi::processors
 
 #endif  // EXTENSIONS_STANDARD_PROCESSORS_PROCESSORS_APPENDHOSTINFO_H_

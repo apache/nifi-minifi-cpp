@@ -27,8 +27,8 @@ namespace org::apache::nifi::minifi::coap::c2 {
 
 uint8_t CoapProtocol::REGISTRATION_MSG[8] = { 0x72, 0x65, 0x67, 0x69, 0x73, 0x74, 0x65, 0x72 };
 
-CoapProtocol::CoapProtocol(const std::string &name, const utils::Identifier &uuid)
-    : RESTSender(name, uuid),
+CoapProtocol::CoapProtocol(std::string name, const utils::Identifier &uuid)
+    : RESTSender(std::move(name), uuid),
       require_registration_(false) {
 }
 

@@ -122,8 +122,8 @@ class PublishKafka : public KafkaProcessorBase {
   static constexpr const char* DELIVERY_BEST_EFFORT = "0";
   static constexpr const char* KAFKA_KEY_ATTRIBUTE = "kafka.key";
 
-  explicit PublishKafka(const std::string& name, const utils::Identifier& uuid = {})
-      : KafkaProcessorBase(name, uuid, core::logging::LoggerFactory<PublishKafka>::getLogger()) {
+  explicit PublishKafka(std::string name, const utils::Identifier& uuid = {})
+      : KafkaProcessorBase(std::move(name), uuid, core::logging::LoggerFactory<PublishKafka>::getLogger()) {
   }
 
   ~PublishKafka() override = default;

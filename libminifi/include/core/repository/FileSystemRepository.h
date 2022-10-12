@@ -20,6 +20,7 @@
 
 #include <memory>
 #include <string>
+#include <utility>
 
 #include "core/Core.h"
 #include "../ContentRepository.h"
@@ -33,8 +34,8 @@ namespace org::apache::nifi::minifi::core::repository {
  */
 class FileSystemRepository : public core::ContentRepository, public core::CoreComponent {
  public:
-  explicit FileSystemRepository(const std::string& name = getClassName<FileSystemRepository>())
-      : core::CoreComponent(name),
+  explicit FileSystemRepository(std::string name = getClassName<FileSystemRepository>())
+      : core::CoreComponent(std::move(name)),
         logger_(logging::LoggerFactory<FileSystemRepository>::getLogger()) {
   }
 

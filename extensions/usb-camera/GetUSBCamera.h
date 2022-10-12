@@ -22,6 +22,7 @@
 #include <list>
 #include <memory>
 #include <string>
+#include <utility>
 #include <vector>
 
 #include "libuvc/libuvc.h"
@@ -32,16 +33,12 @@
 #include "core/Core.h"
 #include "core/logging/LoggerConfiguration.h"
 
-namespace org {
-namespace apache {
-namespace nifi {
-namespace minifi {
-namespace processors {
+namespace org::apache::nifi::minifi::processors {
 
 class GetUSBCamera : public core::Processor {
  public:
-  explicit GetUSBCamera(const std::string &name, const utils::Identifier &uuid = {})
-      : core::Processor(name, uuid) {
+  explicit GetUSBCamera(std::string name, const utils::Identifier &uuid = {})
+      : core::Processor(std::move(name), uuid) {
     png_write_mtx_ = std::make_shared<std::mutex>();
     dev_access_mtx_ = std::make_shared<std::recursive_mutex>();
   }
@@ -147,8 +144,4 @@ class GetUSBCamera : public core::Processor {
   void cleanupUvc();
 };
 
-} /* namespace processors */
-} /* namespace minifi */
-} /* namespace nifi */
-} /* namespace apache */
-} /* namespace org */
+}  // namespace org::apache::nifi::minifi::processors

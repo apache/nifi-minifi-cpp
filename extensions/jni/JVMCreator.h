@@ -17,9 +17,10 @@
 
 #pragma once
 
-#include <vector>
-#include <string>
 #include <memory>
+#include <string>
+#include <utility>
+#include <vector>
 #include "jvm/JVMLoader.h"
 #include "jvm/JavaControllerService.h"
 #include "utils/file/FileUtils.h"
@@ -34,8 +35,8 @@ namespace org::apache::nifi::minifi::jni {
  */
 class JVMCreator : public minifi::core::CoreComponent {
  public:
-  explicit JVMCreator(const std::string &name, const utils::Identifier &uuid = {})
-      : minifi::core::CoreComponent(name, uuid) {
+  explicit JVMCreator(std::string name, const utils::Identifier &uuid = {})
+      : minifi::core::CoreComponent(std::move(name), uuid) {
   }
 
   ~JVMCreator() override;

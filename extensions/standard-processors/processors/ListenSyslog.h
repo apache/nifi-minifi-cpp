@@ -30,8 +30,8 @@ namespace org::apache::nifi::minifi::processors {
 
 class ListenSyslog : public NetworkListenerProcessor {
  public:
-  explicit ListenSyslog(const std::string& name, const utils::Identifier& uuid = {})
-      : NetworkListenerProcessor(name, uuid, core::logging::LoggerFactory<ListenSyslog>::getLogger()) {
+  explicit ListenSyslog(std::string name, const utils::Identifier& uuid = {})
+      : NetworkListenerProcessor(std::move(name), uuid, core::logging::LoggerFactory<ListenSyslog>::getLogger()) {
   }
 
   EXTENSIONAPI static constexpr const char* Description = "Listens for Syslog messages being sent to a given port over TCP or UDP. "

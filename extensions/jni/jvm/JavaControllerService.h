@@ -40,8 +40,8 @@ namespace org::apache::nifi::minifi::jni::controllers {
  */
 class JavaControllerService : public core::controller::ControllerService, public std::enable_shared_from_this<JavaControllerService>, public JavaServicer {
  public:
-  explicit JavaControllerService(const std::string &name, const utils::Identifier &uuid = {})
-      : ControllerService(name, uuid) {
+  explicit JavaControllerService(std::string name, const utils::Identifier &uuid = {})
+      : ControllerService(std::move(name), uuid) {
   }
 
   explicit JavaControllerService(const std::string &name, const std::shared_ptr<Configure> &configuration)

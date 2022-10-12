@@ -22,6 +22,7 @@
 #include <memory>
 #include <string>
 #include <unordered_map>
+#include <utility>
 
 #include "FlowFileRecord.h"
 #include "core/Processor.h"
@@ -46,8 +47,8 @@ class InvokeHTTP : public core::Processor {
     (DROP, "drop")
   )
 
-  explicit InvokeHTTP(const std::string& name, const utils::Identifier& uuid = {})
-      : Processor(name, uuid) {
+  explicit InvokeHTTP(std::string name, const utils::Identifier& uuid = {})
+      : Processor(std::move(name), uuid) {
     setTriggerWhenEmpty(true);
   }
 

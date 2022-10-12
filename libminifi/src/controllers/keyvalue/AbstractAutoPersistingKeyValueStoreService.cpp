@@ -23,8 +23,8 @@ using namespace std::literals::chrono_literals;
 
 namespace org::apache::nifi::minifi::controllers {
 
-AbstractAutoPersistingKeyValueStoreService::AbstractAutoPersistingKeyValueStoreService(const std::string& name, const utils::Identifier& uuid /*= utils::Identifier()*/)
-    : PersistableKeyValueStoreService(name, uuid)
+AbstractAutoPersistingKeyValueStoreService::AbstractAutoPersistingKeyValueStoreService(std::string name, const utils::Identifier& uuid /*= utils::Identifier()*/)
+    : PersistableKeyValueStoreService(std::move(name), uuid)
     , always_persist_(false)
     , auto_persistence_interval_(0U)
     , running_(false) {
