@@ -24,13 +24,10 @@
 #include "../ScriptFlowFile.h"
 
 #include "sol/sol.hpp"
-#include "LuaBaseStream.h"
+#include "LuaInputStream.h"
+#include "LuaOutputStream.h"
 
-namespace org {
-namespace apache {
-namespace nifi {
-namespace minifi {
-namespace lua {
+namespace org::apache::nifi::minifi::lua {
 
 class LuaProcessSession {
  public:
@@ -39,7 +36,7 @@ class LuaProcessSession {
   std::shared_ptr<script::ScriptFlowFile> get();
   std::shared_ptr<script::ScriptFlowFile> create();
   std::shared_ptr<script::ScriptFlowFile> create(const std::shared_ptr<script::ScriptFlowFile> &flow_file);
-  void transfer(const std::shared_ptr<script::ScriptFlowFile> &flow_file, core::Relationship relationship);
+  void transfer(const std::shared_ptr<script::ScriptFlowFile> &flow_file, const core::Relationship& relationship);
   void read(const std::shared_ptr<script::ScriptFlowFile> &script_flow_file, sol::table input_stream_callback);
   void write(const std::shared_ptr<script::ScriptFlowFile> &flow_file, sol::table output_stream_callback);
 
@@ -58,8 +55,4 @@ class LuaProcessSession {
   std::shared_ptr<core::ProcessSession> session_;
 };
 
-} /* namespace lua */
-} /* namespace minifi */
-} /* namespace nifi */
-} /* namespace apache */
-} /* namespace org */
+}  // namespace org::apache::nifi::minifi::lua

@@ -301,7 +301,7 @@ class FlowFileResponder : public ServerAwareHandler {
           "Connection: close\r\n\r\n",
           total);
       minifi::io::BufferStream serializer;
-      minifi::io::CRCStream < minifi::io::BaseStream > stream(gsl::make_not_null(&serializer));
+      minifi::io::CRCStream <minifi::io::OutputStream> stream(gsl::make_not_null(&serializer));
       for (const auto& flow : flows) {
         uint32_t num_attributes = gsl::narrow<uint32_t>(flow->attributes.size());
         stream.write(num_attributes);

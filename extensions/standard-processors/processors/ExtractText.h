@@ -75,7 +75,7 @@ class ExtractText : public core::Processor {
   class ReadCallback {
    public:
     ReadCallback(std::shared_ptr<core::FlowFile> flowFile, core::ProcessContext *ct, std::shared_ptr<core::logging::Logger> lgr);
-    int64_t operator()(const std::shared_ptr<io::BaseStream>& stream) const;
+    int64_t operator()(const std::shared_ptr<io::InputStream>& stream) const;
 
    private:
     std::shared_ptr<core::FlowFile> flowFile_;

@@ -19,7 +19,7 @@
 #include "c2/PayloadParser.h"
 #include "coap_functions.h"
 #include "coap_message.h"
-#include "io/BaseStream.h"
+#include "io/OutputStream.h"
 #include "core/Resource.h"
 #include "utils/gsl.h"
 
@@ -50,7 +50,7 @@ minifi::c2::C2Payload CoapProtocol::consumePayload(const std::string &url, const
   return RESTSender::consumePayload(url, payload, direction, false);
 }
 
-int CoapProtocol::writeAcknowledgement(io::BaseStream *stream, const minifi::c2::C2Payload &payload) {
+int CoapProtocol::writeAcknowledgement(io::OutputStream *stream, const minifi::c2::C2Payload &payload) {
   auto ident = payload.getIdentifier();
   auto state = payload.getStatus().getState();
   stream->write(ident);
@@ -78,7 +78,7 @@ int CoapProtocol::writeAcknowledgement(io::BaseStream *stream, const minifi::c2:
   return 0;
 }
 
-int CoapProtocol::writeHeartbeat(io::BaseStream *stream, const minifi::c2::C2Payload &payload) {
+int CoapProtocol::writeHeartbeat(io::OutputStream *stream, const minifi::c2::C2Payload &payload) {
   bool byte;
   uint16_t size = 0;
 

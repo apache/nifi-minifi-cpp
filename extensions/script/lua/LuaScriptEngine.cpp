@@ -54,10 +54,12 @@ LuaScriptEngine::LuaScriptEngine() {
       "removeAttribute", &script::ScriptFlowFile::removeAttribute,
       "updateAttribute", &script::ScriptFlowFile::updateAttribute,
       "setAttribute", &script::ScriptFlowFile::setAttribute);
-  lua_.new_usertype<lua::LuaBaseStream>(
-      "BaseStream",
-      "read", &lua::LuaBaseStream::read,
-      "write", &lua::LuaBaseStream::write);
+  lua_.new_usertype<lua::LuaInputStream>(
+      "InputStream",
+      "read", &lua::LuaInputStream::read);
+  lua_.new_usertype<lua::LuaOutputStream>(
+      "OutputStream",
+      "write", &lua::LuaOutputStream::write);
 }
 
 void LuaScriptEngine::executeScriptWithAppendedModulePaths(std::string& script) {

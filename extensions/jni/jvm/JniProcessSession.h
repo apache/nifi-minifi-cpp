@@ -25,7 +25,6 @@
 #include <iterator>
 #include <algorithm>
 
-#include "io/BaseStream.h"
 #include "FlowFileRecord.h"
 #include "core/ProcessSession.h"
 #include "core/ProcessSessionFactory.h"

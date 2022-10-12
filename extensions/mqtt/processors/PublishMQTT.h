@@ -74,7 +74,7 @@ class PublishMQTT : public processors::AbstractMQTTProcessor {
           retain_(retain) {
     }
 
-    int64_t operator()(const std::shared_ptr<io::BaseStream>& stream);
+    int64_t operator()(const std::shared_ptr<io::InputStream>& stream);
 
     size_t read_size_ = 0;
     int status_ = 0;

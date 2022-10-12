@@ -28,7 +28,7 @@
 #include <mutex>
 
 #include "c2/C2Protocol.h"
-#include "io/BaseStream.h"
+#include "io/OutputStream.h"
 #include "agent/agent_version.h"
 #include "CoapConnector.h"
 
@@ -92,20 +92,20 @@ class CoapProtocol : public minifi::c2::RESTSender {
   static minifi::c2::Operation getOperation(int type);
 
   /**
-   * Writes a heartbeat to the provided BaseStream ptr.
-   * @param stream BaseStream
+   * Writes a heartbeat to the provided OutputStream ptr.
+   * @param stream OutputStream
    * @param payload payload to serialize
    * @return result 0 if success failure otherwise
    */
-  int writeHeartbeat(io::BaseStream *stream, const minifi::c2::C2Payload &payload);
+  int writeHeartbeat(io::OutputStream *stream, const minifi::c2::C2Payload &payload);
 
   /**
-   * Writes a acknowledgement to the provided BaseStream ptr.
-   * @param stream BaseStream
+   * Writes a acknowledgement to the provided OutputStream ptr.
+   * @param stream OutputStream
    * @param payload payload to serialize
    * @return result 0 if success failure otherwise
    */
-  static int writeAcknowledgement(io::BaseStream *stream, const minifi::c2::C2Payload &payload);
+  static int writeAcknowledgement(io::OutputStream *stream, const minifi::c2::C2Payload &payload);
 
   minifi::c2::C2Payload serialize(const minifi::c2::C2Payload &payload);
 

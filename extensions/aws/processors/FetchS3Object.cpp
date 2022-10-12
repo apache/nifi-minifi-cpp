@@ -28,12 +28,7 @@
 #include "core/Resource.h"
 #include "utils/OptionalUtils.h"
 
-namespace org {
-namespace apache {
-namespace nifi {
-namespace minifi {
-namespace aws {
-namespace processors {
+namespace org::apache::nifi::minifi::aws::processors {
 
 void FetchS3Object::initialize() {
   setSupportedProperties(properties());
@@ -90,7 +85,7 @@ void FetchS3Object::onTrigger(const std::shared_ptr<core::ProcessContext> &conte
   }
 
   std::optional<minifi::aws::s3::GetObjectResult> result;
-  session->write(flow_file, [&get_object_params, &result, this](const std::shared_ptr<io::BaseStream>& stream) -> int64_t {
+  session->write(flow_file, [&get_object_params, &result, this](const std::shared_ptr<io::OutputStream>& stream) -> int64_t {
     result = s3_wrapper_.getObject(*get_object_params, *stream);
     return (result | minifi::utils::map(&s3::GetObjectResult::write_size)).value_or(0);
   });
@@ -120,9 +115,4 @@ void FetchS3Object::onTrigger(const std::shared_ptr<core::ProcessContext> &conte
   }
 }
 
-}  // namespace processors
-}  // namespace aws
-}  // namespace minifi
-}  // namespace nifi
-}  // namespace apache
-}  // namespace org
+}  // namespace org::apache::nifi::minifi::aws::processors

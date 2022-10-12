@@ -23,7 +23,6 @@
 #include <queue>
 #include <map>
 #include <iostream>
-#include "io/BaseStream.h"
 
 #include "core/Core.h"
 

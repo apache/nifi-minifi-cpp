@@ -25,7 +25,7 @@
 #include <memory>
 #include <vector>
 
-#include "BaseStream.h"
+#include "OutputStream.h"
 #include "core/logging/Logger.h"
 #include "utils/gsl.h"
 

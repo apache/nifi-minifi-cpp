@@ -75,7 +75,7 @@ bool AzureBlobStorage::deleteBlob(const DeleteAzureBlobStorageParameters& params
   }
 }
 
-std::optional<uint64_t> AzureBlobStorage::fetchBlob(const FetchAzureBlobStorageParameters& params, io::BaseStream& stream) {
+std::optional<uint64_t> AzureBlobStorage::fetchBlob(const FetchAzureBlobStorageParameters& params, io::OutputStream& stream) {
   try {
     auto fetch_res = blob_storage_client_->fetchBlob(params);
     return internal::pipe(*fetch_res, stream);

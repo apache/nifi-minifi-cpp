@@ -18,24 +18,23 @@
 
 #pragma once
 
-#include <string>
-#include <vector>
-#include <iostream>
-#include <cstdint>
-#include "core/expect.h"
-#include "InputStream.h"
-#include "OutputStream.h"
+#include <memory>
 
-namespace org::apache::nifi::minifi::io {
+#include "pybind11/embed.h"
+#include "io/OutputStream.h"
 
-/**
- * Base Stream is the base of a composable stream architecture.
- * Intended to be the base of layered streams ala DatInputStreams in Java.
- *
- * ** Not intended to be thread safe as it is not intended to be shared**
- *
- * Extensions may be thread safe and thus shareable, but that is up to the implementation.
- */
-class BaseStream : public InputStream, public OutputStream {};
+namespace org::apache::nifi::minifi::python {
 
-}  // namespace org::apache::nifi::minifi::io
+namespace py = pybind11;
+
+class PyOutputStream {
+ public:
+  explicit PyOutputStream(std::shared_ptr<io::OutputStream> stream);
+
+  size_t write(const py::bytes& buf);
+
+ private:
+  std::shared_ptr<io::OutputStream> stream_;
+};
+
+}  // namespace org::apache::nifi::minifi::python

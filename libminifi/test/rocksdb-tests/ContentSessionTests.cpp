@@ -47,12 +47,12 @@ class ContentSessionController : public TestController {
   std::shared_ptr<core::ContentRepository> contentRepository;
 };
 
-const std::shared_ptr<minifi::io::BaseStream>& operator<<(const std::shared_ptr<minifi::io::BaseStream>& stream, const std::string& str) {
+const std::shared_ptr<minifi::io::OutputStream>& operator<<(const std::shared_ptr<minifi::io::OutputStream>& stream, const std::string& str) {
   REQUIRE(stream->write(reinterpret_cast<const uint8_t*>(str.data()), str.length()) == str.length());
   return stream;
 }
 
-const std::shared_ptr<minifi::io::BaseStream>& operator>>(const std::shared_ptr<minifi::io::BaseStream>& stream, std::string& str) {
+const std::shared_ptr<minifi::io::InputStream>& operator>>(const std::shared_ptr<minifi::io::InputStream>& stream, std::string& str) {
   str = "";
   std::array<std::byte, 4096> buffer{};
   while (true) {

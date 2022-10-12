@@ -25,12 +25,12 @@
 #include <string>
 #include <tuple>
 #include <memory>
+#include <optional>
 
 #include "Exception.h"
 #include "utils/Enum.h"
 #include "utils/BaseHTTPClient.h"
 #include "core/logging/Logger.h"
-#include "io/BaseStream.h"
 
 namespace org::apache::nifi::minifi::utils {
 
@@ -117,9 +117,9 @@ class SFTPClient {
    */
   [[nodiscard]] SFTPError getLastError() const;
 
-  bool getFile(const std::string& path, io::BaseStream& output, int64_t expected_size = -1);
+  std::optional<uint64_t> getFile(const std::string& path, io::OutputStream& output, int64_t expected_size = -1);
 
-  bool putFile(const std::string& path, io::BaseStream& input, bool overwrite, int64_t expected_size = -1);
+  std::optional<uint64_t> putFile(const std::string& path, io::InputStream& input, bool overwrite, int64_t expected_size = -1);
 
   bool rename(const std::string& source_path, const std::string& target_path, bool overwrite);
 

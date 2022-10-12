@@ -54,7 +54,7 @@ class ReadCallback {
   ReadCallback& operator=(const ReadCallback&) = delete;
   ReadCallback& operator=(ReadCallback&&) = delete;
 
-  int64_t operator()(const std::shared_ptr<minifi::io::BaseStream>& stream) {
+  int64_t operator()(const std::shared_ptr<minifi::io::InputStream>& stream) {
     int64_t total_read = 0;
     do {
       const auto ret = stream->read(gsl::make_span(buffer_).subspan(read_size_));

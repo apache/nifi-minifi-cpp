@@ -69,7 +69,7 @@ class AzureDataLakeStorage {
 
   storage::UploadDataLakeStorageResult uploadFile(const storage::PutAzureDataLakeStorageParameters& params, gsl::span<const std::byte> buffer);
   bool deleteFile(const storage::DeleteAzureDataLakeStorageParameters& params);
-  std::optional<uint64_t> fetchFile(const FetchAzureDataLakeStorageParameters& params, io::BaseStream& stream);
+  std::optional<uint64_t> fetchFile(const FetchAzureDataLakeStorageParameters& params, io::OutputStream& stream);
   std::optional<ListDataLakeStorageResult> listDirectory(const ListAzureDataLakeStorageParameters& params);
 
  private:

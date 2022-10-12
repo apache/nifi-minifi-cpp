@@ -218,8 +218,8 @@ class FileReaderCallback {
     openFile(file_name, offset, input_stream_, logger_);
   }
 
-  int64_t operator()(const std::shared_ptr<io::BaseStream>& output_stream) {
-    io::CRCStream<io::BaseStream> crc_stream{gsl::make_not_null(output_stream.get()), checksum_};
+  int64_t operator()(const std::shared_ptr<io::OutputStream>& output_stream) {
+    io::CRCStream<io::OutputStream> crc_stream{gsl::make_not_null(output_stream.get()), checksum_};
 
     uint64_t num_bytes_written = 0;
     bool found_delimiter = false;
@@ -291,10 +291,10 @@ class WholeFileReaderCallback {
     return checksum_;
   }
 
-  int64_t operator()(const std::shared_ptr<io::BaseStream>& output_stream) {
+  int64_t operator()(const std::shared_ptr<io::OutputStream>& output_stream) {
     std::array<char, BUFFER_SIZE> buffer;
 
-    io::CRCStream<io::BaseStream> crc_stream{gsl::make_not_null(output_stream.get()), checksum_};
+    io::CRCStream<io::OutputStream> crc_stream{gsl::make_not_null(output_stream.get()), checksum_};
 
     uint64_t num_bytes_written = 0;
 

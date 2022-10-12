@@ -32,11 +32,7 @@
 #include "core/FlowFile.h"
 #include "core/Resource.h"
 
-namespace org {
-namespace apache {
-namespace nifi {
-namespace minifi {
-namespace processors {
+namespace org::apache::nifi::minifi::processors {
 
 const core::Property HashContent::HashAttribute("Hash Attribute", "Attribute to store checksum to", "Checksum");
 const core::Property HashContent::HashAlgorithm("Hash Algorithm", "Name of the algorithm used to generate checksum", "SHA256");
@@ -83,7 +79,7 @@ void HashContent::onTrigger(core::ProcessContext *, core::ProcessSession *sessio
   }
 
   logger_->log_trace("attempting read");
-  session->read(flowFile, [&flowFile, this](const std::shared_ptr<io::BaseStream>& stream) {
+  session->read(flowFile, [&flowFile, this](const std::shared_ptr<io::InputStream>& stream) {
     // This throws in case algo is not found, but that's fine
     logger_->log_trace("Searching for %s", algoName_);
     auto algo = HashAlgos.at(algoName_);
@@ -99,10 +95,6 @@ void HashContent::onTrigger(core::ProcessContext *, core::ProcessSession *sessio
 
 REGISTER_RESOURCE(HashContent, Processor);
 
-}  // namespace processors
-}  // namespace minifi
-}  // namespace nifi
-}  // namespace apache
-}  // namespace org
+}  // namespace org::apache::nifi::minifi::processors
 
 #endif  // OPENSSL_SUPPORT

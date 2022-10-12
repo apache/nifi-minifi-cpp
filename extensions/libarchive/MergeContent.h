@@ -78,7 +78,7 @@ class BinaryConcatenationMerge : public MergeBin {
     std::deque<std::shared_ptr<core::FlowFile>> &flows_;
     FlowFileSerializer& serializer_;
 
-    int64_t operator()(const std::shared_ptr<io::BaseStream>& stream) const {
+    int64_t operator()(const std::shared_ptr<io::OutputStream>& stream) const {
       size_t write_size_sum = 0;
       if (!header_.empty()) {
         const auto write_ret = stream->write(reinterpret_cast<const uint8_t*>(header_.data()), header_.size());
@@ -164,7 +164,7 @@ class ArchiveMerge {
 
     std::string merge_type_;
     std::deque<std::shared_ptr<core::FlowFile>> &flows_;
-    std::shared_ptr<io::BaseStream> stream_;
+    std::shared_ptr<io::OutputStream> stream_;
     size_t size_;
     std::shared_ptr<core::logging::Logger> logger_ = core::logging::LoggerFactory<ArchiveMerge>::getLogger();
     FlowFileSerializer& serializer_;
@@ -190,7 +190,7 @@ class ArchiveMerge {
       return totalWrote;
     }
 
-    int64_t operator()(const std::shared_ptr<io::BaseStream>& stream) {
+    int64_t operator()(const std::shared_ptr<io::OutputStream>& stream) {
       struct archive *arch;
 
       arch = archive_write_new();

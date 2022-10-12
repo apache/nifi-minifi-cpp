@@ -20,11 +20,7 @@
 
 #include "LuaProcessSession.h"
 
-namespace org {
-namespace apache {
-namespace nifi {
-namespace minifi {
-namespace lua {
+namespace org::apache::nifi::minifi::lua {
 
 LuaProcessSession::LuaProcessSession(std::shared_ptr<core::ProcessSession> session)
     : session_(std::move(session)) {
@@ -48,7 +44,7 @@ std::shared_ptr<script::ScriptFlowFile> LuaProcessSession::get() {
 }
 
 void LuaProcessSession::transfer(const std::shared_ptr<script::ScriptFlowFile> &script_flow_file,
-                                 core::Relationship relationship) {
+                                 const core::Relationship& relationship) {
   if (!session_) {
     throw std::runtime_error("Access of ProcessSession after it has been released");
   }
@@ -74,9 +70,9 @@ void LuaProcessSession::read(const std::shared_ptr<script::ScriptFlowFile> &scri
     throw std::runtime_error("Access of FlowFile after it has been released");
   }
 
-  session_->read(flow_file, [&input_stream_callback](const std::shared_ptr<io::BaseStream>& input_stream) -> int64_t {
+  session_->read(flow_file, [&input_stream_callback](const std::shared_ptr<io::InputStream>& input_stream) -> int64_t {
     sol::function callback = input_stream_callback["process"];
-    return callback(input_stream_callback, std::make_shared<LuaBaseStream>(input_stream));
+    return callback(input_stream_callback, std::make_shared<LuaInputStream>(input_stream));
   });
 }
 
@@ -92,9 +88,9 @@ void LuaProcessSession::write(const std::shared_ptr<script::ScriptFlowFile> &scr
     throw std::runtime_error("Access of FlowFile after it has been released");
   }
 
-  session_->write(flow_file, [&output_stream_callback](const std::shared_ptr<io::BaseStream>& output_stream) -> int64_t {
+  session_->write(flow_file, [&output_stream_callback](const std::shared_ptr<io::OutputStream>& output_stream) -> int64_t {
     sol::function callback = output_stream_callback["process"];
-    return callback(output_stream_callback, std::make_shared<LuaBaseStream>(output_stream));
+    return callback(output_stream_callback, std::make_shared<LuaOutputStream>(output_stream));
   });
 }
 
@@ -135,8 +131,4 @@ void LuaProcessSession::releaseCoreResources() {
   session_.reset();
 }
 
-} /* namespace lua */
-} /* namespace minifi */
-} /* namespace nifi */
-} /* namespace apache */
-} /* namespace org */
+}  // namespace org::apache::nifi::minifi::lua

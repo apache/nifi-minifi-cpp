@@ -201,14 +201,14 @@ void ProcessSession::remove(const std::shared_ptr<core::FlowFile> &flow) {
   provenance_report_->drop(flow, reason);
 }
 
-void ProcessSession::putAttribute(const std::shared_ptr<core::FlowFile> &flow, std::string key, std::string value) {
+void ProcessSession::putAttribute(const std::shared_ptr<core::FlowFile> &flow, const std::string& key, const std::string& value) {
   flow->setAttribute(key, value);
   std::stringstream details;
   details << process_context_->getProcessorNode()->getName() << " modify flow record " << flow->getUUIDStr() << " attribute " << key << ":" << value;
   provenance_report_->modifyAttributes(flow, details.str());
 }
 
-void ProcessSession::removeAttribute(const std::shared_ptr<core::FlowFile> &flow, std::string key) {
+void ProcessSession::removeAttribute(const std::shared_ptr<core::FlowFile> &flow, const std::string& key) {
   flow->removeAttribute(key);
   std::stringstream details;
   details << process_context_->getProcessorNode()->getName() << " remove flow record " << flow->getUUIDStr() << " attribute " + key;
@@ -221,7 +221,7 @@ void ProcessSession::penalize(const std::shared_ptr<core::FlowFile> &flow) {
   flow->penalize(penalization_period);
 }
 
-void ProcessSession::transfer(const std::shared_ptr<core::FlowFile> &flow, Relationship relationship) {
+void ProcessSession::transfer(const std::shared_ptr<core::FlowFile> &flow, const Relationship& relationship) {
   logging::LOG_INFO(logger_) << "Transferring " << flow->getUUIDStr() << " from " << process_context_->getProcessorNode()->getName() << " to relationship " << relationship.getName();
   utils::Identifier uuid = flow->getUUID();
   _transferRelationship[uuid] = relationship;
@@ -267,7 +267,7 @@ void ProcessSession::writeBuffer(const std::shared_ptr<core::FlowFile>& flow_fil
   writeBuffer(flow_file, buffer.as_span<const std::byte>());
 }
 void ProcessSession::writeBuffer(const std::shared_ptr<core::FlowFile>& flow_file, gsl::span<const std::byte> buffer) {
-  write(flow_file, [buffer](const std::shared_ptr<io::BaseStream>& output_stream) {
+  write(flow_file, [buffer](const std::shared_ptr<io::OutputStream>& output_stream) {
     const auto write_status = output_stream->write(buffer);
     return io::isError(write_status) ? -1 : gsl::narrow<int64_t>(write_status);
   });
@@ -318,7 +318,7 @@ void ProcessSession::appendBuffer(const std::shared_ptr<core::FlowFile>& flow_fi
   appendBuffer(flow_file, buffer.as_span<const std::byte>());
 }
 void ProcessSession::appendBuffer(const std::shared_ptr<core::FlowFile>& flow_file, gsl::span<const std::byte> buffer) {
-  append(flow_file, [buffer](const std::shared_ptr<io::BaseStream>& output_stream) {
+  append(flow_file, [buffer](const std::shared_ptr<io::OutputStream>& output_stream) {
     const auto write_status = output_stream->write(buffer);
     return io::isError(write_status) ? -1 : gsl::narrow<int64_t>(write_status);
   });
@@ -339,7 +339,7 @@ int64_t ProcessSession::read(const std::shared_ptr<core::FlowFile> &flow, const 
 
     claim = flow->getResourceClaim();
 
-    std::shared_ptr<io::BaseStream> stream = content_session_->read(claim);
+    std::shared_ptr<io::InputStream> stream = content_session_->read(claim);
 
     if (nullptr == stream) {
       throw Exception(FILE_OPERATION_EXCEPTION, "Failed to open flowfile content for read");
@@ -410,7 +410,7 @@ int64_t ProcessSession::readWrite(const std::shared_ptr<core::FlowFile> &flow, c
 
 detail::ReadBufferResult ProcessSession::readBuffer(const std::shared_ptr<core::FlowFile>& flow) {
   detail::ReadBufferResult result;
-  result.status = read(flow, [&result, this](const std::shared_ptr<io::BaseStream>& input_stream) {
+  result.status = read(flow, [&result, this](const std::shared_ptr<io::InputStream>& input_stream) {
     result.buffer.resize(input_stream->size());
     const auto read_status = input_stream->read(result.buffer);
     if (read_status != result.buffer.size()) {

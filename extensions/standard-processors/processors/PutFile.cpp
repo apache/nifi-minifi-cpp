@@ -185,7 +185,7 @@ std::string PutFile::tmpWritePath(const std::string &filename, const std::string
   return tmpFile;
 }
 
-bool PutFile::putFile(core::ProcessSession *session, std::shared_ptr<core::FlowFile> flowFile, const std::string &tmpFile, const std::string &destFile, const std::string &destDir) {
+bool PutFile::putFile(core::ProcessSession *session, const std::shared_ptr<core::FlowFile>& flowFile, const std::string &tmpFile, const std::string &destFile, const std::string &destDir) {
   if (!utils::file::exists(destDir) && try_mkdirs_) {
     // Attempt to create directories in file's path
     std::stringstream dir_path_stream;
@@ -296,7 +296,7 @@ PutFile::ReadCallback::ReadCallback(std::string tmp_file, std::string dest_file)
 }
 
 // Copy the entire file contents to the temporary file
-int64_t PutFile::ReadCallback::operator()(const std::shared_ptr<io::BaseStream>& stream) {
+int64_t PutFile::ReadCallback::operator()(const std::shared_ptr<io::InputStream>& stream) {
   // Copy file contents into tmp file
   write_succeeded_ = false;
   size_t size = 0;

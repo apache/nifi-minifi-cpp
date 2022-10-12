@@ -70,7 +70,7 @@ void PublishMQTT::onTrigger(const std::shared_ptr<core::ProcessContext>& /*conte
   }
 }
 
-int64_t PublishMQTT::ReadCallback::operator()(const std::shared_ptr<io::BaseStream>& stream) {
+int64_t PublishMQTT::ReadCallback::operator()(const std::shared_ptr<io::InputStream>& stream) {
   if (flow_size_ < max_seg_size_)
     max_seg_size_ = flow_size_;
   gsl_Expects(max_seg_size_ < gsl::narrow<uint64_t>(std::numeric_limits<int>::max()));

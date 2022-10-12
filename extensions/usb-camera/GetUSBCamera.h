@@ -118,7 +118,7 @@ class GetUSBCamera : public core::Processor {
   class PNGWriteCallback {
    public:
     PNGWriteCallback(std::shared_ptr<std::mutex> write_mtx, uvc_frame_t *frame, uint32_t width, uint32_t height);
-    int64_t operator()(const std::shared_ptr<io::BaseStream>& stream);
+    int64_t operator()(const std::shared_ptr<io::OutputStream>& stream);
 
    private:
     std::shared_ptr<std::mutex> png_write_mtx_;

@@ -80,7 +80,7 @@ void ConsumeMQTT::onTrigger(const std::shared_ptr<core::ProcessContext>& /*conte
     const auto& message = msg_queue.front();
     std::shared_ptr<core::FlowFile> processFlowFile = session->create();
     int write_status{};
-    session->write(processFlowFile, [&message, &write_status](const std::shared_ptr<io::BaseStream>& stream) -> int64_t {
+    session->write(processFlowFile, [&message, &write_status](const std::shared_ptr<io::OutputStream>& stream) -> int64_t {
       if (message->payloadlen < 0) {
         write_status = -1;
         return -1;

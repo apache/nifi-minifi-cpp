@@ -52,7 +52,6 @@
 #include "processors/LogAttribute.h"
 #include "CoapC2Protocol.h"
 #include "CoapServer.h"
-#include "io/BaseStream.h"
 #include "concurrentqueue.h"
 #include "utils/IntegrationTestUtils.h"
 

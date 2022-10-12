@@ -30,7 +30,6 @@
 #include <utility>
 #include <sys/types.h>
 #include "core/cstructs.h"
-#include "io/BaseStream.h"
 #include "FlowFileRecord.h"
 #include "core/Processor.h"
 #include "core/ProcessSession.h"

@@ -130,7 +130,7 @@ class RouteText::ReadCallback {
   ReadCallback(Segmentation segmentation, size_t file_size, Fn&& fn)
     : segmentation_(segmentation), file_size_(file_size), fn_(std::move(fn)) {}
 
-  int64_t operator()(const std::shared_ptr<io::BaseStream>& stream) const {
+  int64_t operator()(const std::shared_ptr<io::InputStream>& stream) const {
     std::vector<std::byte> buffer;
     buffer.resize(file_size_);
     size_t ret = stream->read(buffer);

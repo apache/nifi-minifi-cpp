@@ -74,7 +74,7 @@ void SiteToSiteClient::deleteTransaction(const utils::Identifier& transactionID)
   known_transactions_.erase(transactionID);
 }
 
-int SiteToSiteClient::writeResponse(const std::shared_ptr<Transaction>& /*transaction*/, RespondCode code, std::string message) {
+int SiteToSiteClient::writeResponse(const std::shared_ptr<Transaction>& /*transaction*/, RespondCode code, const std::string& message) {
   RespondCodeContext *resCode = this->getRespondCodeContext(code);
   if (!resCode) {
     return -1;
@@ -465,7 +465,7 @@ int16_t SiteToSiteClient::send(const utils::Identifier &transactionID, DataPacke
       return -1;
     }
     if (flowFile->getSize() > 0) {
-      session->read(flowFile, [packet](const std::shared_ptr<io::BaseStream>& input_stream) -> int64_t {
+      session->read(flowFile, [packet](const std::shared_ptr<io::InputStream>& input_stream) -> int64_t {
         const auto result = internal::pipe(*input_stream, packet->transaction_->getStream());
         if (result == -1) return -1;
         packet->_size = gsl::narrow<size_t>(result);
@@ -692,7 +692,7 @@ bool SiteToSiteClient::receiveFlowFiles(const std::shared_ptr<core::ProcessConte
       }
 
       if (packet._size > 0) {
-        session->write(flowFile, [&packet](const std::shared_ptr<io::BaseStream>& output_stream) -> int64_t {
+        session->write(flowFile, [&packet](const std::shared_ptr<io::OutputStream>& output_stream) -> int64_t {
           return internal::pipe(packet.transaction_->getStream(), *output_stream);
         });
         if (flowFile->getSize() != packet._size) {

@@ -1,5 +1,4 @@
 /**
- *
  * Licensed to the Apache Software Foundation (ASF) under one or more
  * contributor license agreements.  See the NOTICE file distributed with
  * this work for additional information regarding copyright ownership.
@@ -19,24 +18,26 @@
 #pragma once
 
 #include <memory>
+#include <string>
 
-#include "pybind11/embed.h"
-#include "io/BaseStream.h"
+#include "sol/sol.hpp"
+#include "io/OutputStream.h"
 
-namespace org::apache::nifi::minifi::python {
+namespace org::apache::nifi::minifi::lua {
 
-namespace py = pybind11;
-
-class PyBaseStream {
+class LuaOutputStream {
  public:
-  explicit PyBaseStream(std::shared_ptr<io::BaseStream> stream);
+  explicit LuaOutputStream(std::shared_ptr<io::OutputStream> stream);
 
-  py::bytes read();
-  py::bytes read(size_t len = 0);
-  size_t write(const py::bytes& buf);
+  /**
+   * Write data (receives string, to follow Lua idioms)
+   * @param buf
+   * @return
+   */
+  size_t write(std::string buf);
 
  private:
-  std::shared_ptr<io::BaseStream> stream_;
+  std::shared_ptr<io::OutputStream> stream_;
 };
 
-}  // namespace org::apache::nifi::minifi::python
+}  // namespace org::apache::nifi::minifi::lua

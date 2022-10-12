@@ -29,18 +29,14 @@ constexpr std::size_t BUFFER_SIZE = 4096;
 
 }  // namespace
 
-namespace org {
-namespace apache {
-namespace nifi {
-namespace minifi {
-namespace utils {
+namespace org::apache::nifi::minifi::utils {
 
 FileReaderCallback::FileReaderCallback(std::string file_name)
     : file_name_{std::move(file_name)},
     logger_(core::logging::LoggerFactory<FileReaderCallback>::getLogger()) {
 }
 
-int64_t FileReaderCallback::operator()(const std::shared_ptr<io::BaseStream>& output_stream) const {
+int64_t FileReaderCallback::operator()(const std::shared_ptr<io::OutputStream>& output_stream) const {
   std::array<char, BUFFER_SIZE> buffer;
   uint64_t num_bytes_written = 0;
 
@@ -66,8 +62,4 @@ int64_t FileReaderCallback::operator()(const std::shared_ptr<io::BaseStream>& ou
   return num_bytes_written;
 }
 
-}  // namespace utils
-}  // namespace minifi
-}  // namespace nifi
-}  // namespace apache
-}  // namespace org
+}  // namespace org::apache::nifi::minifi::utils

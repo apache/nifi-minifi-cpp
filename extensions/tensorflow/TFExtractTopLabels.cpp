@@ -116,7 +116,7 @@ void TFExtractTopLabels::onTrigger(const std::shared_ptr<core::ProcessContext>& 
   }
 }
 
-int64_t TFExtractTopLabels::LabelsReadCallback::process(const std::shared_ptr<io::BaseStream>& stream) {
+int64_t TFExtractTopLabels::LabelsReadCallback::process(const std::shared_ptr<io::InputStream>& stream) {
   size_t total_read = 0;
   std::string label;
   uint64_t max_label_len = 65536;
@@ -145,7 +145,7 @@ int64_t TFExtractTopLabels::LabelsReadCallback::process(const std::shared_ptr<io
   return gsl::narrow<int64_t>(total_read);
 }
 
-int64_t TFExtractTopLabels::TensorReadCallback::process(const std::shared_ptr<io::BaseStream>& stream) {
+int64_t TFExtractTopLabels::TensorReadCallback::process(const std::shared_ptr<io::OutputStream>& stream) {
   std::string tensor_proto_buf;
   tensor_proto_buf.resize(stream->size());
   const auto num_read = stream->read(reinterpret_cast<uint8_t *>(&tensor_proto_buf[0]), stream->size());

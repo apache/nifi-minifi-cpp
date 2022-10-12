@@ -30,7 +30,8 @@
 
 #include "PyProcessSession.h"
 #include "PythonProcessor.h"
-#include "PyBaseStream.h"
+#include "PyInputStream.h"
+#include "PyOutputStream.h"
 
 PYBIND11_EMBEDDED_MODULE(minifi_native, m) { // NOLINT
   namespace py = pybind11;
@@ -74,8 +75,10 @@ PYBIND11_EMBEDDED_MODULE(minifi_native, m) { // NOLINT
       .def("getName", &org::apache::nifi::minifi::core::Relationship::getName)
       .def("getDescription", &org::apache::nifi::minifi::core::Relationship::getDescription);
 
-  py::class_<python::PyBaseStream, std::shared_ptr<python::PyBaseStream>>(m, "BaseStream")
-      .def("read", static_cast<py::bytes (python::PyBaseStream::*)()>(&python::PyBaseStream::read))
-      .def("read", static_cast<py::bytes (python::PyBaseStream::*)(size_t)>(&python::PyBaseStream::read))
-      .def("write", &python::PyBaseStream::write);
+  py::class_<python::PyInputStream, std::shared_ptr<python::PyInputStream>>(m, "InputStream")
+      .def("read", static_cast<py::bytes (python::PyInputStream::*)()>(&python::PyInputStream::read))
+      .def("read", static_cast<py::bytes (python::PyInputStream::*)(size_t)>(&python::PyInputStream::read));
+
+  py::class_<python::PyOutputStream, std::shared_ptr<python::PyOutputStream>>(m, "OutputStream")
+      .def("write", &python::PyOutputStream::write);
 }

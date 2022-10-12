@@ -36,7 +36,7 @@ namespace utils {
 class JsonInputCallback {
  public:
   explicit JsonInputCallback(rapidjson::Document& document) : document_(document) {}
-  int64_t operator()(const std::shared_ptr<io::BaseStream>& stream) {
+  int64_t operator()(const std::shared_ptr<io::InputStream>& stream) {
     std::string content;
     content.resize(stream->size());
     const auto read_ret = stream->read(gsl::make_span(content).as_span<std::byte>());
@@ -58,7 +58,7 @@ class JsonOutputCallback {
   explicit JsonOutputCallback(rapidjson::Document&& root, std::optional<uint8_t> decimal_places)
       : root_(std::move(root)), decimal_places_(decimal_places) {}
 
-  int64_t operator()(const std::shared_ptr<io::BaseStream>& stream) const {
+  int64_t operator()(const std::shared_ptr<io::OutputStream>& stream) const {
     rapidjson::StringBuffer buffer;
     rapidjson::Writer<rapidjson::StringBuffer> writer(buffer);
     if (decimal_places_.has_value())
@@ -78,7 +78,7 @@ class PrettyJsonOutputCallback {
   explicit PrettyJsonOutputCallback(rapidjson::Document&& root, std::optional<uint8_t> decimal_places)
       : root_(std::move(root)), decimal_places_(decimal_places) {}
 
-  int64_t operator()(const std::shared_ptr<io::BaseStream>& stream) const {
+  int64_t operator()(const std::shared_ptr<io::OutputStream>& stream) const {
     rapidjson::StringBuffer buffer;
     rapidjson::PrettyWriter<rapidjson::StringBuffer> writer(buffer);
     if (decimal_places_.has_value())

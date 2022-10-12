@@ -23,7 +23,8 @@
 #include <functional>
 #include <memory>
 #include <utility>
-#include "BaseStream.h"
+#include "InputStream.h"
+#include "OutputStream.h"
 #include "StreamCallback.h"
 
 namespace org::apache::nifi::minifi {
@@ -62,7 +63,7 @@ class InputStreamPipe {
  public:
   explicit InputStreamPipe(io::OutputStream& output) : output_(&output) {}
 
-  int64_t operator()(const std::shared_ptr<io::BaseStream>& stream) const {
+  int64_t operator()(const std::shared_ptr<io::InputStream>& stream) const {
     return internal::pipe(*stream, *output_);
   }
 
@@ -74,7 +75,7 @@ class OutputStreamPipe {
  public:
   explicit OutputStreamPipe(io::InputStream& input) : input_(&input) {}
 
-  int64_t operator()(const std::shared_ptr<io::BaseStream>& stream) const {
+  int64_t operator()(const std::shared_ptr<io::OutputStream>& stream) const {
     return internal::pipe(*input_, *stream);
   }
 

@@ -17,8 +17,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#ifndef EXTENSIONS_STANDARD_PROCESSORS_PROCESSORS_PUTFILE_H_
-#define EXTENSIONS_STANDARD_PROCESSORS_PROCESSORS_PUTFILE_H_
+#pragma once
 
 #include <memory>
 #include <string>
@@ -32,11 +31,7 @@
 #include "utils/Id.h"
 #include "utils/Export.h"
 
-namespace org {
-namespace apache {
-namespace nifi {
-namespace minifi {
-namespace processors {
+namespace org::apache::nifi::minifi::processors {
 
 class PutFile : public core::Processor {
  public:
@@ -92,7 +87,7 @@ class PutFile : public core::Processor {
    public:
     ReadCallback(std::string tmp_file, std::string dest_file);
     ~ReadCallback();
-    int64_t operator()(const std::shared_ptr<io::BaseStream>& stream);
+    int64_t operator()(const std::shared_ptr<io::InputStream>& stream);
     bool commit();
 
    private:
@@ -116,7 +111,7 @@ class PutFile : public core::Processor {
   int64_t max_dest_files_ = -1;
 
   bool putFile(core::ProcessSession *session,
-               std::shared_ptr<core::FlowFile> flowFile,
+               const std::shared_ptr<core::FlowFile>& flowFile,
                const std::string &tmpFile,
                const std::string &destFile,
                const std::string &destDir);
@@ -140,10 +135,4 @@ class PutFile : public core::Processor {
 #endif
 };
 
-}  // namespace processors
-}  // namespace minifi
-}  // namespace nifi
-}  // namespace apache
-}  // namespace org
-
-#endif  // EXTENSIONS_STANDARD_PROCESSORS_PROCESSORS_PUTFILE_H_
+}  // namespace org::apache::nifi::minifi::processors

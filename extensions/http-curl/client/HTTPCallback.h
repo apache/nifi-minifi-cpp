@@ -65,7 +65,7 @@ class HttpStreamingCallback final : public utils::HTTPUploadCallback {
     seekInner(lock, pos);
   }
 
-  int64_t operator()(const std::shared_ptr<io::BaseStream>& stream) override {
+  int64_t operator()(const std::shared_ptr<io::InputStream>& stream) override {
     std::vector<std::byte> vec;
 
     if (stream->size() > 0) {
