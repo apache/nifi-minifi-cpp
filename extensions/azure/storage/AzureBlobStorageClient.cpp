@@ -54,59 +54,49 @@ AzureBlobStorageClient::AzureBlobStorageClient() {
   utils::AzureSdkLogger::initialize();
 }
 
-void AzureBlobStorageClient::resetClientIfNeeded(const AzureStorageCredentials &credentials, const std::string &container_name) {
-  if (container_client_ && credentials == credentials_ && container_name == container_name_) {
-    logger_->log_debug("Azure Blob Storage client credentials have not changed, no need to reset client");
-    return;
-  }
-
+std::unique_ptr<Azure::Storage::Blobs::BlobContainerClient> AzureBlobStorageClient::createClient(const AzureStorageCredentials &credentials, const std::string &container_name) {
   if (credentials.getUseManagedIdentityCredentials()) {
     auto storage_client = Azure::Storage::Blobs::BlobServiceClient(
       "https://" + credentials.getStorageAccountName() + ".blob." + credentials.getEndpointSuffix(), std::make_shared<Azure::Identity::ManagedIdentityCredential>());
 
-    container_client_ = std::make_unique<Azure::Storage::Blobs::BlobContainerClient>(storage_client.GetBlobContainerClient(container_name));
-    logger_->log_debug("Azure Blob Storage client has been reset with new managed identity credentials.");
+    return std::make_unique<Azure::Storage::Blobs::BlobContainerClient>(storage_client.GetBlobContainerClient(container_name));
   } else {
-    container_client_ = std::make_unique<Azure::Storage::Blobs::BlobContainerClient>(
+    return std::make_unique<Azure::Storage::Blobs::BlobContainerClient>(
       Azure::Storage::Blobs::BlobContainerClient::CreateFromConnectionString(credentials.buildConnectionString(), container_name));
-    logger_->log_debug("Azure Blob Storage client has been reset with new connection string credentials.");
   }
-
-  credentials_ = credentials;
-  container_name_ = container_name;
 }
 
 bool AzureBlobStorageClient::createContainerIfNotExists(const PutAzureBlobStorageParameters& params) {
-  resetClientIfNeeded(params.credentials, params.container_name);
-  return container_client_->CreateIfNotExists().Value.Created;
+  auto container_client = createClient(params.credentials, params.container_name);
+  return container_client->CreateIfNotExists().Value.Created;
 }
 
 Azure::Storage::Blobs::Models::UploadBlockBlobResult AzureBlobStorageClient::uploadBlob(const PutAzureBlobStorageParameters& params, gsl::span<const std::byte> buffer) {
-  resetClientIfNeeded(params.credentials, params.container_name);
-  auto blob_client = container_client_->GetBlockBlobClient(params.blob_name);
+  auto container_client = createClient(params.credentials, params.container_name);
+  auto blob_client = container_client->GetBlockBlobClient(params.blob_name);
   return blob_client.UploadFrom(reinterpret_cast<const uint8_t*>(buffer.data()), buffer.size()).Value;
 }
 
 std::string AzureBlobStorageClient::getUrl(const AzureBlobStorageParameters& params) {
-  resetClientIfNeeded(params.credentials, params.container_name);
-  return container_client_->GetUrl();
+  auto container_client = createClient(params.credentials, params.container_name);
+  return container_client->GetUrl();
 }
 
 bool AzureBlobStorageClient::deleteBlob(const DeleteAzureBlobStorageParameters& params) {
-  resetClientIfNeeded(params.credentials, params.container_name);
+  auto container_client = createClient(params.credentials, params.container_name);
   Azure::Storage::Blobs::DeleteBlobOptions delete_options;
   if (params.optional_deletion == OptionalDeletion::INCLUDE_SNAPSHOTS) {
     delete_options.DeleteSnapshots = Azure::Storage::Blobs::Models::DeleteSnapshotsOption::IncludeSnapshots;
   } else if (params.optional_deletion == OptionalDeletion::DELETE_SNAPSHOTS_ONLY) {
     delete_options.DeleteSnapshots = Azure::Storage::Blobs::Models::DeleteSnapshotsOption::OnlySnapshots;
   }
-  auto response = container_client_->DeleteBlob(params.blob_name, delete_options);
+  auto response = container_client->DeleteBlob(params.blob_name, delete_options);
   return response.Value.Deleted;
 }
 
 std::unique_ptr<io::InputStream> AzureBlobStorageClient::fetchBlob(const FetchAzureBlobStorageParameters& params) {
-  resetClientIfNeeded(params.credentials, params.container_name);
-  auto blob_client = container_client_->GetBlobClient(params.blob_name);
+  auto container_client = createClient(params.credentials, params.container_name);
+  auto blob_client = container_client->GetBlobClient(params.blob_name);
   Azure::Storage::Blobs::DownloadBlobOptions options;
   if (params.range_start || params.range_length) {
     Azure::Core::Http::HttpRange range;
@@ -125,10 +115,10 @@ std::unique_ptr<io::InputStream> AzureBlobStorageClient::fetchBlob(const FetchAz
 
 std::vector<Azure::Storage::Blobs::Models::BlobItem> AzureBlobStorageClient::listContainer(const ListAzureBlobStorageParameters& params) {
   std::vector<Azure::Storage::Blobs::Models::BlobItem> result;
-  resetClientIfNeeded(params.credentials, params.container_name);
+  auto container_client = createClient(params.credentials, params.container_name);
   Azure::Storage::Blobs::ListBlobsOptions options;
   options.Prefix = params.prefix;
-  for (auto page_result = container_client_->ListBlobs(options); page_result.HasPage(); page_result.MoveToNextPage()) {
+  for (auto page_result = container_client->ListBlobs(options); page_result.HasPage(); page_result.MoveToNextPage()) {
     result.insert(result.end(), page_result.Blobs.begin(), page_result.Blobs.end());
   }
   return result;
