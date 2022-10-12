@@ -52,8 +52,7 @@ class SiteToSiteProvenanceReportingTask : public minifi::RemoteProcessorGroupPor
   void onSchedule(const std::shared_ptr<core::ProcessContext> &context, const std::shared_ptr<core::ProcessSessionFactory> &sessionFactory) override;
   void onTrigger(const std::shared_ptr<core::ProcessContext> &context, const std::shared_ptr<core::ProcessSession> &session) override;
 
-  //! Initialize, over write by NiFi SiteToSiteProvenanceReportingTask
-  virtual void initialize();
+  void initialize() override;
 
   void setPortUUID(utils::Identifier &port_uuid) {
     protocol_uuid_ = port_uuid;

@@ -68,16 +68,18 @@ class ResponseNode : public core::Connectable, public PublishedMetricProvider {
 
   virtual std::vector<SerializedResponseNode> serialize() = 0;
 
-  virtual void yield() {
+  void yield() override {
   }
-  virtual bool isRunning() {
-    return true;
-  }
-  virtual bool isWorkAvailable() {
+
+  bool isRunning() override {
     return true;
   }
 
-  bool isArray() {
+  bool isWorkAvailable() override {
+    return true;
+  }
+
+  bool isArray() const {
     return is_array_;
   }
 
