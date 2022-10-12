@@ -19,12 +19,13 @@
  */
 #pragma once
 
-#include <vector>
-#include <string>
-#include <set>
-#include <unordered_set>
-#include <memory>
 #include <map>
+#include <memory>
+#include <set>
+#include <string>
+#include <unordered_set>
+#include <utility>
+#include <vector>
 
 #include "rapidjson/document.h"
 #include "core/FlowFile.h"
@@ -36,11 +37,7 @@
 #include "utils/Export.h"
 #include "utils/RegexUtils.h"
 
-namespace org {
-namespace apache {
-namespace nifi {
-namespace minifi {
-namespace processors {
+namespace org::apache::nifi::minifi::processors {
 
 class AttributesToJSON : public core::Processor {
  public:
@@ -77,8 +74,8 @@ class AttributesToJSON : public core::Processor {
     (FLOWFILE_CONTENT, "flowfile-content")
   )
 
-  explicit AttributesToJSON(const std::string& name, const utils::Identifier& uuid = {})
-      : core::Processor(name, uuid) {
+  explicit AttributesToJSON(std::string name, const utils::Identifier& uuid = {})
+      : core::Processor(std::move(name), uuid) {
   }
 
   void initialize() override;
@@ -99,8 +96,4 @@ class AttributesToJSON : public core::Processor {
   bool null_value_ = false;
 };
 
-}  // namespace processors
-}  // namespace minifi
-}  // namespace nifi
-}  // namespace apache
-}  // namespace org
+}  // namespace org::apache::nifi::minifi::processors

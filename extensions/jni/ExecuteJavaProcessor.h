@@ -19,8 +19,9 @@
 #pragma once
 
 #include <memory>
-#include <vector>
 #include <string>
+#include <utility>
+#include <vector>
 
 #include "FlowFileRecord.h"
 #include "core/Processor.h"
@@ -38,12 +39,7 @@
 #include "jvm/JniControllerServiceLookup.h"
 #include "jvm/JniInitializationContext.h"
 #include "ClassRegistrar.h"
-namespace org {
-namespace apache {
-namespace nifi {
-namespace minifi {
-namespace jni {
-namespace processors {
+namespace org::apache::nifi::minifi::jni::processors {
 
 /**
  * Purpose and Justification: Executes a java NiFi Processor
@@ -52,8 +48,8 @@ namespace processors {
  */
 class ExecuteJavaProcessor : public core::Processor {
  public:
-  explicit ExecuteJavaProcessor(const std::string& name, const utils::Identifier& uuid = {})
-      : Processor(name, uuid) {
+  explicit ExecuteJavaProcessor(std::string name, const utils::Identifier& uuid = {})
+      : Processor(std::move(name), uuid) {
   }
   virtual ~ExecuteJavaProcessor();
 
@@ -289,9 +285,4 @@ class ExecuteJavaProcessor : public core::Processor {
   JniInitializationContext init_context_;
 };
 
-} /* namespace processors */
-} /* namespace jni */
-} /* namespace minifi */
-} /* namespace nifi */
-} /* namespace apache */
-} /* namespace org */
+}  // namespace org::apache::nifi::minifi::jni::processors

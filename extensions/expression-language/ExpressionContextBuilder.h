@@ -19,6 +19,7 @@
 
 #include <string>
 #include <memory>
+#include <utility>
 
 #include "core/ProcessContextBuilder.h"
 
@@ -33,9 +34,9 @@ namespace org::apache::nifi::minifi::core::expressions {
  */
 class ExpressionContextBuilder : public core::ProcessContextBuilder {
  public:
-  ExpressionContextBuilder(const std::string &name, const minifi::utils::Identifier &uuid);
+  ExpressionContextBuilder(std::string name, const minifi::utils::Identifier &uuid);
 
-  explicit ExpressionContextBuilder(const std::string &name);
+  explicit ExpressionContextBuilder(std::string name);
 
   virtual ~ExpressionContextBuilder();
 

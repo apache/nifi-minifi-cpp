@@ -16,10 +16,11 @@
  */
 #pragma once
 
-#include <string>
-#include <regex>
-#include <optional>
 #include <memory>
+#include <optional>
+#include <regex>
+#include <string>
+#include <utility>
 
 #include "core/Processor.h"
 #include "core/ProcessSession.h"
@@ -33,8 +34,8 @@ namespace org::apache::nifi::minifi::processors {
 
 class ListFile : public core::Processor {
  public:
-  explicit ListFile(const std::string& name, const utils::Identifier& uuid = {})
-    : core::Processor(name, uuid) {
+  explicit ListFile(std::string name, const utils::Identifier& uuid = {})
+    : core::Processor(std::move(name), uuid) {
   }
 
   EXTENSIONAPI static constexpr const char* Description = "Retrieves a listing of files from the local filesystem. For each file that is listed, "

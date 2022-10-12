@@ -33,6 +33,7 @@
 #include <thread>
 #include <vector>
 
+#include <utility>
 #include "core/Core.h"
 #include "core/logging/LoggerConfiguration.h"
 #include "core/Processor.h"
@@ -44,8 +45,8 @@ namespace org::apache::nifi::minifi::processors {
 
 class ExecuteProcess : public core::Processor {
  public:
-  explicit ExecuteProcess(const std::string& name, const utils::Identifier& uuid = {})
-      : Processor(name, uuid),
+  explicit ExecuteProcess(std::string name, const utils::Identifier& uuid = {})
+      : Processor(std::move(name), uuid),
         working_dir_("."),
         redirect_error_stream_(false),
         pid_(0) {

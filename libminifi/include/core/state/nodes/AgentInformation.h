@@ -68,12 +68,12 @@ namespace org::apache::nifi::minifi::state::response {
 
 class ComponentManifest : public DeviceInformation {
  public:
-  ComponentManifest(const std::string& name, const utils::Identifier& uuid)
-      : DeviceInformation(name, uuid) {
+  ComponentManifest(std::string name, const utils::Identifier& uuid)
+      : DeviceInformation(std::move(name), uuid) {
   }
 
-  ComponentManifest(const std::string &name) // NOLINT
-      : DeviceInformation(name) {
+  explicit ComponentManifest(std::string name)
+      : DeviceInformation(std::move(name)) {
   }
 
   std::string getName() const override {
@@ -310,12 +310,12 @@ class ComponentManifest : public DeviceInformation {
 
 class ExternalManifest : public ComponentManifest {
  public:
-  ExternalManifest(const std::string& name, const utils::Identifier& uuid)
-      : ComponentManifest(name, uuid) {
+  ExternalManifest(std::string name, const utils::Identifier& uuid)
+      : ComponentManifest(std::move(name), uuid) {
   }
 
-  ExternalManifest(const std::string &name) // NOLINT
-      : ComponentManifest(name) {
+  explicit ExternalManifest(std::string name)
+      : ComponentManifest(std::move(name)) {
   }
 
   std::vector<SerializedResponseNode> serialize() override {
@@ -332,13 +332,13 @@ class ExternalManifest : public ComponentManifest {
 
 class Bundles : public DeviceInformation {
  public:
-  Bundles(const std::string& name, const utils::Identifier& uuid)
-      : DeviceInformation(name, uuid) {
+  Bundles(std::string name, const utils::Identifier& uuid)
+      : DeviceInformation(std::move(name), uuid) {
     setArray(true);
   }
 
-  Bundles(const std::string &name) // NOLINT
-      : DeviceInformation(name) {
+  explicit Bundles(std::string name)
+      : DeviceInformation(std::move(name)) {
     setArray(true);
   }
 
@@ -410,12 +410,12 @@ class Bundles : public DeviceInformation {
  */
 class AgentStatus : public StateMonitorNode {
  public:
-  AgentStatus(const std::string& name, const utils::Identifier& uuid)
-      : StateMonitorNode(name, uuid) {
+  AgentStatus(std::string name, const utils::Identifier& uuid)
+      : StateMonitorNode(std::move(name), uuid) {
   }
 
-  AgentStatus(const std::string &name) // NOLINT
-      : StateMonitorNode(name) {
+  explicit AgentStatus(std::string name)
+      : StateMonitorNode(std::move(name)) {
   }
 
   MINIFIAPI static constexpr const char* Description = "Metric node that defines current agent status including repository, component and resource usage information.";
@@ -629,12 +629,12 @@ class AgentMonitor {
  */
 class AgentManifest : public DeviceInformation {
  public:
-  AgentManifest(const std::string& name, const utils::Identifier& uuid)
-    : DeviceInformation(name, uuid) {
+  AgentManifest(std::string name, const utils::Identifier& uuid)
+    : DeviceInformation(std::move(name), uuid) {
   }
 
-  explicit AgentManifest(const std::string& name)
-    : DeviceInformation(name) {
+  explicit AgentManifest(std::string name)
+    : DeviceInformation(std::move(name)) {
   }
 
   std::string getName() const override {
@@ -694,13 +694,13 @@ class AgentManifest : public DeviceInformation {
 
 class AgentNode : public DeviceInformation, public AgentMonitor, public AgentIdentifier {
  public:
-  AgentNode(const std::string& name, const utils::Identifier& uuid)
-      : DeviceInformation(name, uuid) {
+  AgentNode(std::string name, const utils::Identifier& uuid)
+      : DeviceInformation(std::move(name), uuid) {
     setArray(false);
   }
 
-  explicit AgentNode(const std::string& name)
-      : DeviceInformation(name) {
+  explicit AgentNode(std::string name)
+      : DeviceInformation(std::move(name)) {
     setArray(false);
   }
 
@@ -779,14 +779,14 @@ class AgentNode : public DeviceInformation, public AgentMonitor, public AgentIde
  */
 class AgentInformation : public AgentNode {
  public:
-  AgentInformation(const std::string& name, const utils::Identifier& uuid)
-      : AgentNode(name, uuid),
+  AgentInformation(std::string name, const utils::Identifier& uuid)
+      : AgentNode(std::move(name), uuid),
         include_agent_status_(true) {
     setArray(false);
   }
 
-  explicit AgentInformation(const std::string &name)
-      : AgentNode(name),
+  explicit AgentInformation(std::string name)
+      : AgentNode(std::move(name)),
         include_agent_status_(true) {
     setArray(false);
   }

@@ -37,8 +37,8 @@ namespace org::apache::nifi::minifi::extensions::procfs {
 
 class ProcFsMonitor : public core::Processor {
  public:
-  explicit ProcFsMonitor(const std::string& name, utils::Identifier uuid = utils::Identifier())
-      : Processor(name, uuid) {
+  explicit ProcFsMonitor(std::string name, utils::Identifier uuid = utils::Identifier())
+      : Processor(std::move(name), uuid) {
   }
   ~ProcFsMonitor() override = default;
 

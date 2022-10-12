@@ -19,6 +19,7 @@
 #include <memory>
 #include <string>
 #include <unordered_map>
+#include <utility>
 #include <vector>
 
 #include "opc.h"
@@ -37,8 +38,8 @@ namespace org::apache::nifi::minifi::processors {
 
 class FetchOPCProcessor : public BaseOPCProcessor {
  public:
-  explicit FetchOPCProcessor(const std::string& name, const utils::Identifier& uuid = {})
-      : BaseOPCProcessor(name, uuid), nameSpaceIdx_(0), nodesFound_(0), variablesFound_(0), maxDepth_(0) {
+  explicit FetchOPCProcessor(std::string name, const utils::Identifier& uuid = {})
+      : BaseOPCProcessor(std::move(name), uuid), nameSpaceIdx_(0), nodesFound_(0), variablesFound_(0), maxDepth_(0) {
     logger_ = core::logging::LoggerFactory<FetchOPCProcessor>::getLogger();
   }
 

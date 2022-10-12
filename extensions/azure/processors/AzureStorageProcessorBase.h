@@ -23,6 +23,7 @@
 #include <memory>
 #include <string>
 #include <optional>
+#include <utility>
 #include <tuple>
 
 #include "core/Property.h"
@@ -37,8 +38,8 @@ class AzureStorageProcessorBase : public core::Processor {
   EXTENSIONAPI static const core::Property AzureStorageCredentialsService;
   static auto properties() { return std::array{AzureStorageCredentialsService}; }
 
-  AzureStorageProcessorBase(const std::string& name, const minifi::utils::Identifier& uuid, const std::shared_ptr<core::logging::Logger>& logger)
-    : core::Processor(name, uuid),
+  AzureStorageProcessorBase(std::string name, const minifi::utils::Identifier& uuid, const std::shared_ptr<core::logging::Logger>& logger)
+    : core::Processor(std::move(name), uuid),
       logger_(logger) {
   }
 

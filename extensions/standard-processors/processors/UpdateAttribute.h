@@ -22,6 +22,7 @@
 
 #include <memory>
 #include <string>
+#include <utility>
 #include <vector>
 
 #include "FlowFileRecord.h"
@@ -30,16 +31,12 @@
 #include "core/Core.h"
 #include "core/logging/LoggerConfiguration.h"
 
-namespace org {
-namespace apache {
-namespace nifi {
-namespace minifi {
-namespace processors {
+namespace org::apache::nifi::minifi::processors {
 
 class UpdateAttribute : public core::Processor {
  public:
-  UpdateAttribute(const std::string& name,  const utils::Identifier& uuid = {}) // NOLINT
-      : core::Processor(name, uuid) {
+  UpdateAttribute(std::string name,  const utils::Identifier& uuid = {}) // NOLINT
+      : core::Processor(std::move(name), uuid) {
   }
 
   EXTENSIONAPI static constexpr const char* Description = "This processor updates the attributes of a FlowFile using properties that are added by the user. "
@@ -67,10 +64,6 @@ class UpdateAttribute : public core::Processor {
   std::vector<core::Property> attributes_;
 };
 
-}  // namespace processors
-}  // namespace minifi
-}  // namespace nifi
-}  // namespace apache
-}  // namespace org
+}  // namespace org::apache::nifi::minifi::processors
 
 #endif  // EXTENSIONS_STANDARD_PROCESSORS_PROCESSORS_UPDATEATTRIBUTE_H_

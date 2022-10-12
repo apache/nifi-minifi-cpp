@@ -18,14 +18,10 @@
 #include "controllers/keyvalue/PersistableKeyValueStoreService.h"
 #include "core/logging/LoggerConfiguration.h"
 
-namespace org {
-namespace apache {
-namespace nifi {
-namespace minifi {
-namespace controllers {
+namespace org::apache::nifi::minifi::controllers {
 
-PersistableKeyValueStoreService::PersistableKeyValueStoreService(const std::string& name, const utils::Identifier& uuid /*= utils::Identifier()*/)
-    : KeyValueStoreService(name, uuid) {
+PersistableKeyValueStoreService::PersistableKeyValueStoreService(std::string name, const utils::Identifier& uuid /*= utils::Identifier()*/)
+    : KeyValueStoreService(std::move(name), uuid) {
 }
 
 PersistableKeyValueStoreService::~PersistableKeyValueStoreService() = default;
@@ -64,8 +60,4 @@ bool PersistableKeyValueStoreService::persistImpl() {
   return persist();
 }
 
-} /* namespace controllers */
-} /* namespace minifi */
-} /* namespace nifi */
-} /* namespace apache */
-} /* namespace org */
+}  // namespace org::apache::nifi::minifi::controllers

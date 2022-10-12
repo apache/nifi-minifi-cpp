@@ -48,8 +48,8 @@ const core::Property PutUDP::Port = core::PropertyBuilder::createProperty("Port"
 const core::Relationship PutUDP::Success{"success", "FlowFiles that are sent to the destination are sent out this relationship."};
 const core::Relationship PutUDP::Failure{"failure", "FlowFiles that encountered IO errors are send out this relationship."};
 
-PutUDP::PutUDP(const std::string& name, const utils::Identifier& uuid)
-    :Processor(name, uuid), logger_{core::logging::LoggerFactory<PutUDP>::getLogger()}
+PutUDP::PutUDP(std::string name, const utils::Identifier& uuid)
+    : Processor(std::move(name), uuid), logger_{core::logging::LoggerFactory<PutUDP>::getLogger()}
 { }
 
 PutUDP::~PutUDP() = default;

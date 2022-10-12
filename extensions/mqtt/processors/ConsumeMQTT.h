@@ -40,8 +40,8 @@ namespace org::apache::nifi::minifi::processors {
 
 class ConsumeMQTT : public processors::AbstractMQTTProcessor {
  public:
-  explicit ConsumeMQTT(const std::string& name, const utils::Identifier& uuid = {})
-      : processors::AbstractMQTTProcessor(name, uuid) {
+  explicit ConsumeMQTT(std::string name, const utils::Identifier& uuid = {})
+      : processors::AbstractMQTTProcessor(std::move(name), uuid) {
     maxQueueSize_ = 100;
   }
 

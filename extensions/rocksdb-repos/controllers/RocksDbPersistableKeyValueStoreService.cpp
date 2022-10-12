@@ -16,6 +16,7 @@
  */
 
 #include <fstream>
+#include <utility>
 
 #include "RocksDbPersistableKeyValueStoreService.h"
 #include "../encryption/RocksDbEncryptionProvider.h"
@@ -47,9 +48,9 @@ const core::Property RocksDbPersistableKeyValueStoreService::Directory(
     ->isRequired(true)
     ->build());
 
-RocksDbPersistableKeyValueStoreService::RocksDbPersistableKeyValueStoreService(const std::string& name, const utils::Identifier& uuid /*= utils::Identifier()*/)
+RocksDbPersistableKeyValueStoreService::RocksDbPersistableKeyValueStoreService(std::string name, const utils::Identifier& uuid /*= utils::Identifier()*/)
     : PersistableKeyValueStoreService(name, uuid)
-    , AbstractAutoPersistingKeyValueStoreService(name, uuid) {
+    , AbstractAutoPersistingKeyValueStoreService(std::move(name), uuid) {
 }
 
 void RocksDbPersistableKeyValueStoreService::initialize() {

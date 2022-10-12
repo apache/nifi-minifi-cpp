@@ -31,15 +31,11 @@
 #include "data/SQLColumnIdentifier.h"
 #include "utils/ArrayUtils.h"
 
-namespace org {
-namespace apache {
-namespace nifi {
-namespace minifi {
-namespace processors {
+namespace org::apache::nifi::minifi::processors {
 
 class QueryDatabaseTable: public SQLProcessor, public FlowFileSource {
  public:
-  explicit QueryDatabaseTable(const std::string& name, const utils::Identifier& uuid = {});
+  explicit QueryDatabaseTable(std::string name, const utils::Identifier& uuid = {});
 
   EXTENSIONAPI static const std::string RESULT_TABLE_NAME;
   EXTENSIONAPI static const std::string RESULT_ROW_COUNT;
@@ -95,8 +91,4 @@ class QueryDatabaseTable: public SQLProcessor, public FlowFileSource {
   std::unordered_map<sql::SQLColumnIdentifier, std::string> max_values_;
 };
 
-}  // namespace processors
-}  // namespace minifi
-}  // namespace nifi
-}  // namespace apache
-}  // namespace org
+}  // namespace org::apache::nifi::minifi::processors

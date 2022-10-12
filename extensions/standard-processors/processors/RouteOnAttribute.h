@@ -23,6 +23,7 @@
 #include <map>
 #include <memory>
 #include <string>
+#include <utility>
 
 #include "FlowFileRecord.h"
 #include "core/Processor.h"
@@ -30,16 +31,12 @@
 #include "core/Core.h"
 #include "core/logging/LoggerConfiguration.h"
 
-namespace org {
-namespace apache {
-namespace nifi {
-namespace minifi {
-namespace processors {
+namespace org::apache::nifi::minifi::processors {
 
 class RouteOnAttribute : public core::Processor {
  public:
-  explicit RouteOnAttribute(const std::string& name, const utils::Identifier& uuid = {})
-      : core::Processor(name, uuid) {
+  explicit RouteOnAttribute(std::string name, const utils::Identifier& uuid = {})
+      : core::Processor(std::move(name), uuid) {
   }
 
   EXTENSIONAPI static constexpr const char* Description = "Routes FlowFiles based on their Attributes using the Attribute Expression Language.";
@@ -67,10 +64,6 @@ class RouteOnAttribute : public core::Processor {
   std::map<std::string, core::Relationship> route_rels_;
 };
 
-}  // namespace processors
-}  // namespace minifi
-}  // namespace nifi
-}  // namespace apache
-}  // namespace org
+}  // namespace org::apache::nifi::minifi::processors
 
 #endif  // EXTENSIONS_STANDARD_PROCESSORS_PROCESSORS_ROUTEONATTRIBUTE_H_

@@ -42,8 +42,8 @@ HTTPClient::HTTPClient(std::string url, std::shared_ptr<minifi::controllers::SSL
   http_session_.reset(curl_easy_init());
 }
 
-HTTPClient::HTTPClient(const std::string& name, const utils::Identifier& uuid)
-    : core::Connectable(name, uuid) {
+HTTPClient::HTTPClient(std::string name, const utils::Identifier& uuid)
+    : core::Connectable(std::move(name), uuid) {
   http_session_.reset(curl_easy_init());
 }
 

@@ -21,17 +21,14 @@
 #include <memory>
 #include <set>
 #include <string>
+#include <utility>
 #include <vector>
 
 #include "ConfigurableComponent.h"
 #include "Connectable.h"
 #include "Property.h"
 
-namespace org {
-namespace apache {
-namespace nifi {
-namespace minifi {
-namespace core {
+namespace org::apache::nifi::minifi::core {
 
 /**
  * Processor node functions as a pass through to the implementing Connectables
@@ -182,16 +179,16 @@ class ProcessorNode : public ConfigurableComponent, public Connectable {
    * Set name.
    * @param name
    */
-  void setName(const std::string &name) {
+  void setName(std::string name) override {
     Connectable::setName(name);
-    processor_->setName(name);
+    processor_->setName(std::move(name));
   }
 
   /**
    * Set UUID in this instance
    * @param uuid uuid to apply to the internal representation.
    */
-  void setUUID(const utils::Identifier& uuid) {
+  void setUUID(const utils::Identifier& uuid) override {
     Connectable::setUUID(uuid);
     processor_->setUUID(uuid);
   }
@@ -280,10 +277,6 @@ class ProcessorNode : public ConfigurableComponent, public Connectable {
   Connectable* processor_;
 };
 
-}  // namespace core
-}  // namespace minifi
-}  // namespace nifi
-}  // namespace apache
-}  // namespace org
+}  // namespace org::apache::nifi::minifi::core
 
 #endif  // LIBMINIFI_INCLUDE_CORE_PROCESSORNODE_H_

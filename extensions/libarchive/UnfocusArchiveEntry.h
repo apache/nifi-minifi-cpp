@@ -21,6 +21,7 @@
 
 #include <memory>
 #include <string>
+#include <utility>
 
 #include "archive.h"
 
@@ -38,8 +39,8 @@ using core::logging::Logger;
 
 class UnfocusArchiveEntry : public core::Processor {
  public:
-  explicit UnfocusArchiveEntry(const std::string& name, const utils::Identifier& uuid = {})
-      : core::Processor(name, uuid) {
+  explicit UnfocusArchiveEntry(std::string name, const utils::Identifier& uuid = {})
+      : core::Processor(std::move(name), uuid) {
   }
   ~UnfocusArchiveEntry() override = default;
 

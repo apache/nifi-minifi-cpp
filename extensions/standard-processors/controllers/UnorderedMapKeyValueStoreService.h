@@ -34,8 +34,8 @@ namespace org::apache::nifi::minifi::controllers {
 /// Key-value store service purely in RAM without disk usage
 class UnorderedMapKeyValueStoreService : virtual public PersistableKeyValueStoreService {
  public:
-  explicit UnorderedMapKeyValueStoreService(const std::string& name, const utils::Identifier& uuid = {});
-  explicit UnorderedMapKeyValueStoreService(const std::string& name, const std::shared_ptr<Configure>& configuration);
+  explicit UnorderedMapKeyValueStoreService(std::string name, const utils::Identifier& uuid = {});
+  explicit UnorderedMapKeyValueStoreService(std::string name, const std::shared_ptr<Configure>& configuration);
 
   ~UnorderedMapKeyValueStoreService() override;
 

@@ -42,7 +42,7 @@ class RESTSender : public RESTProtocol, public C2Protocol {
   )
 
  public:
-  explicit RESTSender(const std::string &name, const utils::Identifier &uuid = utils::Identifier());
+  explicit RESTSender(std::string name, const utils::Identifier &uuid = utils::Identifier());
 
   EXTENSIONAPI static constexpr const char* Description = "Encapsulates the restful protocol that is built upon C2Protocol.";
 

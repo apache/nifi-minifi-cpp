@@ -33,16 +33,16 @@ class AzureDataLakeStorageFileProcessorBase : public AzureDataLakeStorageProcess
     return utils::array_cat(AzureDataLakeStorageProcessorBase::properties(), std::array{FileName});
   }
 
-  explicit AzureDataLakeStorageFileProcessorBase(const std::string& name, const minifi::utils::Identifier& uuid, const std::shared_ptr<core::logging::Logger> &logger)
-    : AzureDataLakeStorageProcessorBase(name, uuid, logger) {
+  explicit AzureDataLakeStorageFileProcessorBase(std::string name, const minifi::utils::Identifier& uuid, const std::shared_ptr<core::logging::Logger> &logger)
+    : AzureDataLakeStorageProcessorBase(std::move(name), uuid, logger) {
   }
 
   ~AzureDataLakeStorageFileProcessorBase() override = default;
 
  protected:
-  explicit AzureDataLakeStorageFileProcessorBase(const std::string& name, const minifi::utils::Identifier& uuid, const std::shared_ptr<core::logging::Logger> &logger,
+  explicit AzureDataLakeStorageFileProcessorBase(std::string name, const minifi::utils::Identifier& uuid, const std::shared_ptr<core::logging::Logger> &logger,
       std::unique_ptr<storage::DataLakeStorageClient> data_lake_storage_client)
-    : AzureDataLakeStorageProcessorBase(name, uuid, logger, std::move(data_lake_storage_client)) {
+    : AzureDataLakeStorageProcessorBase(std::move(name), uuid, logger, std::move(data_lake_storage_client)) {
   }
 
   bool setFileOperationCommonParameters(

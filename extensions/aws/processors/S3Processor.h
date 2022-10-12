@@ -36,12 +36,7 @@
 #include "core/logging/LoggerConfiguration.h"
 #include "utils/OptionalUtils.h"
 
-namespace org {
-namespace apache {
-namespace nifi {
-namespace minifi {
-namespace aws {
-namespace processors {
+namespace org::apache::nifi::minifi::aws::processors {
 
 namespace region {
 
@@ -116,7 +111,7 @@ class S3Processor : public core::Processor {
     };
   }
 
-  explicit S3Processor(const std::string& name, const minifi::utils::Identifier& uuid, std::shared_ptr<core::logging::Logger> logger);
+  explicit S3Processor(std::string name, const minifi::utils::Identifier& uuid, std::shared_ptr<core::logging::Logger> logger);
 
   void onSchedule(const std::shared_ptr<core::ProcessContext> &context, const std::shared_ptr<core::ProcessSessionFactory> &sessionFactory) override;
 
@@ -133,9 +128,4 @@ class S3Processor : public core::Processor {
   std::optional<Aws::Client::ClientConfiguration> client_config_;
 };
 
-}  // namespace processors
-}  // namespace aws
-}  // namespace minifi
-}  // namespace nifi
-}  // namespace apache
-}  // namespace org
+}  // namespace org::apache::nifi::minifi::aws::processors

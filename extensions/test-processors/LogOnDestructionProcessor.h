@@ -20,6 +20,7 @@
 
 #include <memory>
 #include <string>
+#include <utility>
 
 #include "core/logging/LoggerConfiguration.h"
 #include "core/Processor.h"
@@ -28,8 +29,8 @@ namespace org::apache::nifi::minifi::processors {
 
 class LogOnDestructionProcessor : public core::Processor {
  public:
-  explicit LogOnDestructionProcessor(const std::string& name, const utils::Identifier& uuid = utils::Identifier())
-    : Processor(name, uuid) {
+  explicit LogOnDestructionProcessor(std::string name, const utils::Identifier& uuid = utils::Identifier())
+    : Processor(std::move(name), uuid) {
   }
 
   ~LogOnDestructionProcessor() override {

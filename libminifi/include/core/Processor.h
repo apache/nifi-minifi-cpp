@@ -76,8 +76,8 @@ constexpr std::chrono::nanoseconds MINIMUM_SCHEDULING_NANOS{30000};
 
 class Processor : public Connectable, public ConfigurableComponent, public state::response::ResponseNodeSource {
  public:
-  Processor(const std::string& name, const utils::Identifier& uuid, std::shared_ptr<ProcessorMetrics> metrics = nullptr);
-  explicit Processor(const std::string& name, std::shared_ptr<ProcessorMetrics> metrics = nullptr);
+  Processor(std::string name, const utils::Identifier& uuid, std::shared_ptr<ProcessorMetrics> metrics = nullptr);
+  explicit Processor(std::string name, std::shared_ptr<ProcessorMetrics> metrics = nullptr);
 
   Processor(const Processor& parent) = delete;
   Processor& operator=(const Processor& parent) = delete;

@@ -71,8 +71,8 @@ class ExecuteScript : public core::Processor {
     (PYTHON, "python")
   )
 
-  explicit ExecuteScript(const std::string &name, const utils::Identifier &uuid = {})
-      : Processor(name, uuid),
+  explicit ExecuteScript(std::string name, const utils::Identifier &uuid = {})
+      : Processor(std::move(name), uuid),
         engine_factory_(Success, Failure, logger_) {
   }
 

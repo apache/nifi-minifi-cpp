@@ -32,11 +32,7 @@
 #include "coap_server.h"
 #include "coap_message.h"
 
-namespace org {
-namespace apache {
-namespace nifi {
-namespace minifi {
-namespace coap {
+namespace org::apache::nifi::minifi::coap {
 
 enum class Method {
   Get,
@@ -103,8 +99,8 @@ class CoapResponse {
  */
 class CoapServer : public core::Connectable {
  public:
-  explicit CoapServer(const std::string &name, const utils::Identifier &uuid)
-      : core::Connectable(name, uuid),
+  explicit CoapServer(std::string name, const utils::Identifier &uuid)
+      : core::Connectable(std::move(name), uuid),
         server_(nullptr),
         port_(0) {
     // TODO(_): this allows this class to be instantiated via the the class loader
@@ -239,8 +235,4 @@ class CoapServer : public core::Connectable {
   uint16_t port_;
 };
 
-} /* namespace coap */
-} /* namespace minifi */
-} /* namespace nifi */
-} /* namespace apache */
-} /* namespace org */
+}  // namespace org::apache::nifi::minifi::coap

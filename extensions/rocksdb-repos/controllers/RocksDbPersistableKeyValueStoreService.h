@@ -34,7 +34,7 @@ class RocksDbPersistableKeyValueStoreService : public AbstractAutoPersistingKeyV
  public:
   static constexpr const char* ENCRYPTION_KEY_NAME = "nifi.state.management.provider.local.encryption.key";
 
-  explicit RocksDbPersistableKeyValueStoreService(const std::string& name, const utils::Identifier& uuid = {});
+  explicit RocksDbPersistableKeyValueStoreService(std::string name, const utils::Identifier& uuid = {});
 
   ~RocksDbPersistableKeyValueStoreService() override = default;
 

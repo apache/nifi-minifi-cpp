@@ -44,14 +44,14 @@ struct ConnectionTestAccessor;
 class Connection : public core::Connectable {
   friend struct test::utils::ConnectionTestAccessor;
  public:
-  explicit Connection(std::shared_ptr<core::Repository> flow_repository, std::shared_ptr<core::ContentRepository> content_repo, const std::string &name);
-  explicit Connection(std::shared_ptr<core::Repository> flow_repository, std::shared_ptr<core::ContentRepository> content_repo, const std::string &name, const utils::Identifier &uuid);
-  explicit Connection(std::shared_ptr<core::Repository> flow_repository, std::shared_ptr<core::ContentRepository> content_repo, const std::string &name, const utils::Identifier &uuid,
+  explicit Connection(std::shared_ptr<core::Repository> flow_repository, std::shared_ptr<core::ContentRepository> content_repo, std::string name);
+  explicit Connection(std::shared_ptr<core::Repository> flow_repository, std::shared_ptr<core::ContentRepository> content_repo, std::string name, const utils::Identifier &uuid);
+  explicit Connection(std::shared_ptr<core::Repository> flow_repository, std::shared_ptr<core::ContentRepository> content_repo, std::string name, const utils::Identifier &uuid,
                       const utils::Identifier &srcUUID);
-  explicit Connection(std::shared_ptr<core::Repository> flow_repository, std::shared_ptr<core::ContentRepository> content_repo, const std::string &name, const utils::Identifier &uuid,
+  explicit Connection(std::shared_ptr<core::Repository> flow_repository, std::shared_ptr<core::ContentRepository> content_repo, std::string name, const utils::Identifier &uuid,
                       const utils::Identifier &srcUUID, const utils::Identifier &destUUID);
   explicit Connection(std::shared_ptr<core::Repository> flow_repository, std::shared_ptr<core::ContentRepository> content_repo, std::shared_ptr<SwapManager> swap_manager,
-                      const std::string& name, const utils::Identifier& uuid);
+                      std::string name, const utils::Identifier& uuid);
   // Destructor
   ~Connection() override = default;
 

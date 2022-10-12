@@ -20,6 +20,7 @@
 #include <memory>
 #include <regex>
 #include <string>
+#include <utility>
 
 #include "utils/ByteArrayCallback.h"
 #include "FlowFileRecord.h"
@@ -32,16 +33,12 @@
 #include "RTIMULib.h"
 #include "RTMath.h"
 
-namespace org {
-namespace apache {
-namespace nifi {
-namespace minifi {
-namespace processors {
+namespace org::apache::nifi::minifi::processors {
 
 class GetMovementSensors : public SensorBase {
  public:
-  explicit GetMovementSensors(const std::string& name, const utils::Identifier& uuid = {})
-      : SensorBase(name, uuid) {
+  explicit GetMovementSensors(std::string name, const utils::Identifier& uuid = {})
+      : SensorBase(std::move(name), uuid) {
   }
   virtual ~GetMovementSensors();
 
@@ -63,8 +60,4 @@ class GetMovementSensors : public SensorBase {
   std::shared_ptr<core::logging::Logger> logger_ = core::logging::LoggerFactory<GetMovementSensors>::getLogger();
 };
 
-} /* namespace processors */
-} /* namespace minifi */
-} /* namespace nifi */
-} /* namespace apache */
-} /* namespace org */
+}  // namespace org::apache::nifi::minifi::processors

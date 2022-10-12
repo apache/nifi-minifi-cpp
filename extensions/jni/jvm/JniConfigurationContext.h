@@ -17,21 +17,18 @@
 
 #pragma once
 
-#include <string>
 #include <memory>
+#include <utility>
+#include <string>
 
 #include "core/controller/ControllerService.h"
 
-namespace org {
-namespace apache {
-namespace nifi {
-namespace minifi {
-namespace jni {
+namespace org::apache::nifi::minifi::jni {
 
 class ConfigurationContext : public core::controller::ControllerService {
  public:
-  explicit ConfigurationContext(const std::string& name, const utils::Identifier& uuid = {})
-      : core::controller::ControllerService(name, uuid) {
+  explicit ConfigurationContext(std::string name, const utils::Identifier& uuid = {})
+      : core::controller::ControllerService(std::move(name), uuid) {
   }
 
   ~ConfigurationContext() override = default;
@@ -42,8 +39,4 @@ struct JniConfigurationContext {
   std::shared_ptr<ConfigurationContext> service_reference_;
 };
 
-} /* namespace jni */
-} /* namespace minifi */
-} /* namespace nifi */
-} /* namespace apache */
-} /* namespace org */
+}  // namespace org::apache::nifi::minifi::jni

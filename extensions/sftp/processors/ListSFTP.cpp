@@ -74,8 +74,8 @@ void ListSFTP::initialize() {
   setSupportedRelationships(relationships());
 }
 
-ListSFTP::ListSFTP(const std::string& name, const utils::Identifier& uuid /*= utils::Identifier()*/)
-    : SFTPProcessorBase(name, uuid)
+ListSFTP::ListSFTP(std::string name, const utils::Identifier& uuid /*= utils::Identifier()*/)
+    : SFTPProcessorBase(std::move(name), uuid)
     , search_recursively_(false)
     , follow_symlink_(false)
     , ignore_dotted_files_(false)

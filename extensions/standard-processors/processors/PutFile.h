@@ -39,8 +39,8 @@ class PutFile : public core::Processor {
   static constexpr char const *CONFLICT_RESOLUTION_STRATEGY_IGNORE = "ignore";
   static constexpr char const *CONFLICT_RESOLUTION_STRATEGY_FAIL = "fail";
 
-  PutFile(const std::string& name,  const utils::Identifier& uuid = {}) // NOLINT
-      : core::Processor(name, uuid) {
+  explicit PutFile(std::string name,  const utils::Identifier& uuid = {})
+      : core::Processor(std::move(name), uuid) {
   }
 
   ~PutFile() override = default;

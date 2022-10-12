@@ -19,6 +19,7 @@
 
 #include <memory>
 #include <string>
+#include <utility>
 
 #include "MockConnectors.h"
 #include "services/DatabaseService.h"
@@ -29,14 +30,14 @@ namespace org::apache::nifi::minifi::sql::controllers {
 
 class MockODBCService : public DatabaseService {
  public:
-  explicit MockODBCService(const std::string &name, utils::Identifier uuid = utils::Identifier())
-    : DatabaseService(name, uuid),
+  explicit MockODBCService(std::string name, utils::Identifier uuid = utils::Identifier())
+    : DatabaseService(std::move(name), uuid),
       logger_(logging::LoggerFactory<MockODBCService>::getLogger()) {
     initialize();
   }
 
-  explicit MockODBCService(const std::string &name, const std::shared_ptr<Configure> &configuration)
-      : DatabaseService(name),
+  explicit MockODBCService(std::string name, const std::shared_ptr<Configure> &configuration)
+      : DatabaseService(std::move(name)),
         logger_(logging::LoggerFactory<MockODBCService>::getLogger()) {
     setConfiguration(configuration);
     initialize();

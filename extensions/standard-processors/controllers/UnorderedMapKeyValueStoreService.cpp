@@ -26,12 +26,12 @@ const core::Property UnorderedMapKeyValueStoreService::LinkedServices(
     ->withDescription("Referenced Controller Services")
     ->build());
 
-UnorderedMapKeyValueStoreService::UnorderedMapKeyValueStoreService(const std::string& name, const utils::Identifier& uuid /*= utils::Identifier()*/)
-    : PersistableKeyValueStoreService(name, uuid) {
+UnorderedMapKeyValueStoreService::UnorderedMapKeyValueStoreService(std::string name, const utils::Identifier& uuid /*= utils::Identifier()*/)
+    : PersistableKeyValueStoreService(std::move(name), uuid) {
 }
 
-UnorderedMapKeyValueStoreService::UnorderedMapKeyValueStoreService(const std::string& name, const std::shared_ptr<Configure> &configuration)
-    : PersistableKeyValueStoreService(name) {
+UnorderedMapKeyValueStoreService::UnorderedMapKeyValueStoreService(std::string name, const std::shared_ptr<Configure> &configuration)
+    : PersistableKeyValueStoreService(std::move(name)) {
   setConfiguration(configuration);
 }
 

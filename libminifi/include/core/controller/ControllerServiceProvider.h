@@ -31,31 +31,23 @@
 #include "core/ClassLoader.h"
 #include "utils/Monitors.h"
 
-namespace org {
-namespace apache {
-namespace nifi {
-namespace minifi {
-namespace core {
-namespace controller {
+namespace org::apache::nifi::minifi::core::controller {
 
 class ControllerServiceProvider : public CoreComponent, public ConfigurableComponent, public ControllerServiceLookup {
  public:
-  explicit ControllerServiceProvider(const std::string &name)
-      : CoreComponent(name),
-        ConfigurableComponent() {
+  explicit ControllerServiceProvider(std::string name)
+      : CoreComponent(std::move(name)) {
     controller_map_ = std::make_shared<ControllerServiceMap>();
   }
 
   explicit ControllerServiceProvider(std::shared_ptr<ControllerServiceMap> services)
       : CoreComponent(core::getClassName<ControllerServiceProvider>()),
-        ConfigurableComponent(),
-        controller_map_(services) {
+        controller_map_(std::move(services)) {
   }
 
-  explicit ControllerServiceProvider(const std::string &name, std::shared_ptr<ControllerServiceMap> services)
-      : CoreComponent(name),
-        ConfigurableComponent(),
-        controller_map_(services) {
+  explicit ControllerServiceProvider(std::string name, std::shared_ptr<ControllerServiceMap> services)
+      : CoreComponent(std::move(name)),
+        controller_map_(std::move(services)) {
   }
 
   ControllerServiceProvider(const ControllerServiceProvider &other) = delete;
@@ -279,11 +271,6 @@ class ControllerServiceProvider : public CoreComponent, public ConfigurableCompo
   std::shared_ptr<ControllerServiceMap> controller_map_;
 };
 
-}  // namespace controller
-}  // namespace core
-}  // namespace minifi
-}  // namespace nifi
-}  // namespace apache
-}  // namespace org
+}  // namespace org::apache::nifi::minifi::core::controller
 
 #endif  // LIBMINIFI_INCLUDE_CORE_CONTROLLER_CONTROLLERSERVICEPROVIDER_H_

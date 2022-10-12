@@ -32,14 +32,14 @@ namespace org::apache::nifi::minifi::sql::controllers {
  */
 class DatabaseService : public core::controller::ControllerService {
  public:
-  explicit DatabaseService(const std::string &name, const utils::Identifier &uuid = {})
-      : ControllerService(name, uuid),
+  explicit DatabaseService(std::string name, const utils::Identifier &uuid = {})
+      : ControllerService(std::move(name), uuid),
         initialized_(false) {
     initialize();
   }
 
-  explicit DatabaseService(const std::string &name, const std::shared_ptr<Configure> &configuration)
-      : ControllerService(name),
+  explicit DatabaseService(std::string name, const std::shared_ptr<Configure> &configuration)
+      : ControllerService(std::move(name)),
         initialized_(false) {
     setConfiguration(configuration);
     initialize();

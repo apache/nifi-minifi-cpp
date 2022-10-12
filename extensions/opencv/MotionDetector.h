@@ -20,22 +20,19 @@
 #include <iomanip>
 #include <memory>
 #include <string>
+#include <utility>
 
 #include "core/logging/LoggerConfiguration.h"
 #include "core/Processor.h"
 #include "opencv2/opencv.hpp"
 #include "opencv2/imgproc.hpp"
 
-namespace org {
-namespace apache {
-namespace nifi {
-namespace minifi {
-namespace processors {
+namespace org::apache::nifi::minifi::processors {
 
 class MotionDetector : public core::Processor {
  public:
-  explicit MotionDetector(const std::string &name, const utils::Identifier &uuid = {})
-      : Processor(name, uuid) {
+  explicit MotionDetector(std::string name, const utils::Identifier &uuid = {})
+      : Processor(std::move(name), uuid) {
   }
 
   EXTENSIONAPI static constexpr const char* Description = "Detect motion from captured images.";
@@ -88,8 +85,4 @@ class MotionDetector : public core::Processor {
   const double IMG_WIDTH = 500.0;
 };
 
-} /* namespace processors */
-} /* namespace minifi */
-} /* namespace nifi */
-} /* namespace apache */
-} /* namespace org */
+}  // namespace org::apache::nifi::minifi::processors

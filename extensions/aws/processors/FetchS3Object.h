@@ -60,8 +60,8 @@ class FetchS3Object : public S3Processor {
 
   ADD_COMMON_VIRTUAL_FUNCTIONS_FOR_PROCESSORS
 
-  explicit FetchS3Object(const std::string& name, const minifi::utils::Identifier& uuid = minifi::utils::Identifier())
-    : S3Processor(name, uuid, core::logging::LoggerFactory<FetchS3Object>::getLogger()) {
+  explicit FetchS3Object(std::string name, const minifi::utils::Identifier& uuid = minifi::utils::Identifier())
+    : S3Processor(std::move(name), uuid, core::logging::LoggerFactory<FetchS3Object>::getLogger()) {
   }
 
   ~FetchS3Object() override = default;

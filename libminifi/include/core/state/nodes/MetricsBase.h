@@ -41,16 +41,17 @@ class ResponseNode : public core::Connectable, public PublishedMetricProvider {
         is_array_(false) {
   }
 
-  ResponseNode(const std::string& name) // NOLINT
-      : core::Connectable(name),
+  explicit ResponseNode(std::string name)
+      : core::Connectable(std::move(name)),
         is_array_(false) {
   }
 
-  ResponseNode(const std::string& name, const utils::Identifier& uuid)
-      : core::Connectable(name, uuid),
+  ResponseNode(std::string name, const utils::Identifier& uuid)
+      : core::Connectable(std::move(name), uuid),
         is_array_(false) {
   }
-  virtual ~ResponseNode() = default;
+
+  ~ResponseNode() override = default;
 
   static std::vector<state::response::SerializedResponseNode> serializeAndMergeResponseNodes(const std::vector<std::shared_ptr<ResponseNode>>& nodes) {
     if (nodes.empty()) {
@@ -67,16 +68,18 @@ class ResponseNode : public core::Connectable, public PublishedMetricProvider {
 
   virtual std::vector<SerializedResponseNode> serialize() = 0;
 
-  virtual void yield() {
+  void yield() override {
   }
-  virtual bool isRunning() {
-    return true;
-  }
-  virtual bool isWorkAvailable() {
+
+  bool isRunning() override {
     return true;
   }
 
-  bool isArray() {
+  bool isWorkAvailable() override {
+    return true;
+  }
+
+  bool isArray() const {
     return is_array_;
   }
 
@@ -97,11 +100,12 @@ class ResponseNode : public core::Connectable, public PublishedMetricProvider {
  */
 class DeviceInformation : public ResponseNode {
  public:
-  DeviceInformation(const std::string& name, const utils::Identifier& uuid)
-      : ResponseNode(name, uuid) {
+  DeviceInformation(std::string name, const utils::Identifier& uuid)
+      : ResponseNode(std::move(name), uuid) {
   }
-  DeviceInformation(const std::string& name) // NOLINT
-      : ResponseNode(name) {
+
+  explicit DeviceInformation(std::string name)
+      : ResponseNode(std::move(name)) {
   }
 };
 
@@ -110,8 +114,8 @@ class DeviceInformation : public ResponseNode {
  */
 class ObjectNode : public ResponseNode {
  public:
-  ObjectNode(const std::string& name, const utils::Identifier& uuid = {}) // NOLINT
-      : ResponseNode(name, uuid) {
+  explicit ObjectNode(std::string name, const utils::Identifier& uuid = {})
+      : ResponseNode(std::move(name), uuid) {
   }
 
   void add_node(const std::shared_ptr<ResponseNode> &node) {

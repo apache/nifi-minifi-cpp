@@ -19,22 +19,19 @@
  */
 #pragma once
 
-#include <memory>
 #include <string>
+#include <memory>
+#include <utility>
 
 #include "../FlowFileRecord.h"
 #include "../core/Processor.h"
 
-namespace org {
-namespace apache {
-namespace nifi {
-namespace minifi {
-namespace processors {
+namespace org::apache::nifi::minifi::processors {
 
 class GetGPS : public core::Processor {
  public:
-  explicit GetGPS(const std::string& name, const utils::Identifier& uuid = {})
-      : core::Processor(name, uuid) {
+  explicit GetGPS(std::string name, const utils::Identifier& uuid = {})
+      : core::Processor(std::move(name), uuid) {
     gpsdHost_ = "localhost";
     gpsdPort_ = "2947";
     gpsdWaitTime_ = 50000000;
@@ -75,8 +72,4 @@ class GetGPS : public core::Processor {
   std::shared_ptr<core::logging::Logger> logger_ = core::logging::LoggerFactory<GetGPS>::getLogger();
 };
 
-} /* namespace processors */
-} /* namespace minifi */
-} /* namespace nifi */
-} /* namespace apache */
-} /* namespace org */
+}  // namespace org::apache::nifi::minifi::processors

@@ -19,8 +19,8 @@
 #define LIBMINIFI_INCLUDE_CORE_STATE_NODES_SCHEDULINGNODES_H_
 
 #include <string>
+#include <utility>
 #include <vector>
-
 
 #include "MetricsBase.h"
 #include "core/ProcessorConfig.h"
@@ -29,12 +29,12 @@ namespace org::apache::nifi::minifi::state::response {
 
 class SchedulingDefaults : public DeviceInformation {
  public:
-  SchedulingDefaults(const std::string &name, const utils::Identifier &uuid)
-      : DeviceInformation(name, uuid) {
+  SchedulingDefaults(std::string name, const utils::Identifier &uuid)
+      : DeviceInformation(std::move(name), uuid) {
   }
 
-  SchedulingDefaults(const std::string &name) // NOLINT
-      : DeviceInformation(name) {
+  explicit SchedulingDefaults(std::string name)
+      : DeviceInformation(std::move(name)) {
   }
 
   std::string getName() const override {

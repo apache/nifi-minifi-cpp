@@ -19,6 +19,7 @@
 
 #include <string>
 #include <memory>
+#include <utility>
 #include <vector>
 
 #include "opc.h"
@@ -50,8 +51,8 @@ class BaseOPCProcessor : public core::Processor {
     };
   }
 
-  explicit BaseOPCProcessor(const std::string& name, const utils::Identifier& uuid = {})
-  : Processor(name, uuid) {
+  explicit BaseOPCProcessor(std::string name, const utils::Identifier& uuid = {})
+  : Processor(std::move(name), uuid) {
   }
 
   void onSchedule(const std::shared_ptr<core::ProcessContext> &context, const std::shared_ptr<core::ProcessSessionFactory> &factory) override;

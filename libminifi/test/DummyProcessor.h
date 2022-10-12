@@ -18,6 +18,7 @@
 
 #include <array>
 #include <string>
+#include <utility>
 
 #include "core/Processor.h"
 #include "agent/agent_docs.h"
@@ -28,8 +29,8 @@ class DummyProcessor : public minifi::core::Processor {
   using minifi::core::Processor::Processor;
 
  public:
-  DummyProcessor(const std::string& name, const minifi::utils::Identifier& uuid) : Processor(name, uuid) {}
-  explicit DummyProcessor(const std::string& name) : Processor(name) {}
+  DummyProcessor(std::string name, const minifi::utils::Identifier& uuid) : Processor(std::move(name), uuid) {}
+  explicit DummyProcessor(std::string name) : Processor(std::move(name)) {}
   static constexpr const char* Description = "A processor that does nothing.";
   static auto properties() { return std::array<core::Property, 0>{}; }
   static auto relationships() { return std::array<core::Relationship, 0>{}; }

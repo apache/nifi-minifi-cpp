@@ -20,7 +20,9 @@
 
 #include <memory>
 #include <string>
+#include <utility>
 #include <vector>
+
 #include "properties/Configure.h"
 #include "core/Core.h"
 #include "core/ConfigurableComponent.h"
@@ -29,12 +31,7 @@
 #define ADD_COMMON_VIRTUAL_FUNCTIONS_FOR_CONTROLLER_SERVICES \
   bool supportsDynamicProperties() const override { return SupportsDynamicProperties; }
 
-namespace org {
-namespace apache {
-namespace nifi {
-namespace minifi {
-namespace core {
-namespace controller {
+namespace org::apache::nifi::minifi::core::controller {
 
 enum ControllerServiceState {
   /**
@@ -63,32 +60,23 @@ enum ControllerServiceState {
  */
 class ControllerService : public ConfigurableComponent, public Connectable {
  public:
-  /**
-   * Controller Service constructor.
-   */
   ControllerService()
       : Connectable(core::getClassName<ControllerService>()),
         configuration_(std::make_shared<Configure>()) {
     current_state_ = DISABLED;
   }
 
-  /**
-   * Controller Service constructor.
-   */
-  explicit ControllerService(const std::string &name, const utils::Identifier &uuid)
-      : Connectable(name, uuid),
+  explicit ControllerService(std::string name, const utils::Identifier &uuid)
+      : Connectable(std::move(name), uuid),
         configuration_(std::make_shared<Configure>()) {
     current_state_ = DISABLED;
   }
 
-  /**
-     * Controller Service constructor.
-     */
-    explicit ControllerService(const std::string &name)
-        : Connectable(name),
-          configuration_(std::make_shared<Configure>()) {
-      current_state_ = DISABLED;
-    }
+  explicit ControllerService(std::string name)
+      : Connectable(std::move(name)),
+        configuration_(std::make_shared<Configure>()) {
+    current_state_ = DISABLED;
+  }
 
   void initialize() override {
     current_state_ = ENABLED;
@@ -145,11 +133,6 @@ class ControllerService : public ConfigurableComponent, public Connectable {
   }
 };
 
-}  // namespace controller
-}  // namespace core
-}  // namespace minifi
-}  // namespace nifi
-}  // namespace apache
-}  // namespace org
+}  // namespace org::apache::nifi::minifi::core::controller
 
 #endif  // LIBMINIFI_INCLUDE_CORE_CONTROLLER_CONTROLLERSERVICE_H_

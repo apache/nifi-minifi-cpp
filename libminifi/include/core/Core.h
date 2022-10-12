@@ -111,7 +111,7 @@ std::unique_ptr<T> instantiate(const std::string name = {}) {
  */
 class CoreComponent {
  public:
-  explicit CoreComponent(const std::string &name, const utils::Identifier &uuid = {}, const std::shared_ptr<utils::IdGenerator> &idGenerator = utils::IdGenerator::getIdGenerator());
+  explicit CoreComponent(std::string name, const utils::Identifier &uuid = {}, const std::shared_ptr<utils::IdGenerator> &idGenerator = utils::IdGenerator::getIdGenerator());
   CoreComponent(const CoreComponent &other) = default;
   CoreComponent(CoreComponent &&other) = default;
   CoreComponent& operator=(const CoreComponent&) = default;
@@ -119,20 +119,20 @@ class CoreComponent {
 
   virtual ~CoreComponent() = default;
 
-  // Get component name Name
+  // Get component name
   [[nodiscard]] virtual std::string getName() const;
 
   /**
    * Set name.
    * @param name
    */
-  void setName(const std::string &name);
+  virtual void setName(std::string name);
 
   /**
    * Set UUID in this instance
    * @param uuid uuid to apply to the internal representation.
    */
-  void setUUID(const utils::Identifier& uuid);
+  virtual void setUUID(const utils::Identifier& uuid);
 
   /**
    * Returns the UUID.

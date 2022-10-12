@@ -30,8 +30,8 @@
 
 namespace org::apache::nifi::minifi::aws::processors {
 
-S3Processor::S3Processor(const std::string& name, const minifi::utils::Identifier& uuid, std::shared_ptr<core::logging::Logger> logger)
-  : core::Processor(name, uuid),
+S3Processor::S3Processor(std::string name, const minifi::utils::Identifier& uuid, std::shared_ptr<core::logging::Logger> logger)
+  : core::Processor(std::move(name), uuid),
     logger_(std::move(logger)) {
 }
 

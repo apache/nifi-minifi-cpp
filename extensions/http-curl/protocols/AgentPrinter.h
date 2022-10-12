@@ -31,7 +31,7 @@ namespace org::apache::nifi::minifi::c2 {
  */
 class AgentPrinter : public HeartbeatJsonSerializer, public HeartbeatReporter {
  public:
-  explicit AgentPrinter(const std::string& name, const utils::Identifier& uuid = {});
+  explicit AgentPrinter(std::string name, const utils::Identifier& uuid = {});
 
   EXTENSIONAPI static constexpr const char* Description = "Encapsulates printing agent information.";
 

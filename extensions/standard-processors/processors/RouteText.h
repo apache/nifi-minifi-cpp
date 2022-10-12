@@ -74,7 +74,7 @@ class RouteText : public core::Processor {
 
   ADD_COMMON_VIRTUAL_FUNCTIONS_FOR_PROCESSORS
 
-  explicit RouteText(const std::string& name, const utils::Identifier& uuid = {});
+  explicit RouteText(std::string name, const utils::Identifier& uuid = {});
 
   void initialize() override;
   void onSchedule(core::ProcessContext *context, core::ProcessSessionFactory* sessionFactory) override;

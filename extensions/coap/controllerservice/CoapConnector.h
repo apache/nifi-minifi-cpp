@@ -40,8 +40,8 @@ namespace org::apache::nifi::minifi::coap::controllers {
  */
 class CoapConnectorService : public core::controller::ControllerService {
  public:
-  explicit CoapConnectorService(const std::string &name, const utils::Identifier &uuid = {})
-      : ControllerService(name, uuid) {
+  explicit CoapConnectorService(std::string name, const utils::Identifier &uuid = {})
+      : ControllerService(std::move(name), uuid) {
     initialize();
   }
 

@@ -41,8 +41,8 @@ void FetchSFTP::initialize() {
   setSupportedRelationships(relationships());
 }
 
-FetchSFTP::FetchSFTP(const std::string& name, const utils::Identifier& uuid /*= utils::Identifier()*/)
-    : SFTPProcessorBase(name, uuid),
+FetchSFTP::FetchSFTP(std::string name, const utils::Identifier& uuid /*= utils::Identifier()*/)
+    : SFTPProcessorBase(std::move(name), uuid),
       create_directory_(false),
       disable_directory_listing_(false) {
   logger_ = core::logging::LoggerFactory<FetchSFTP>::getLogger();

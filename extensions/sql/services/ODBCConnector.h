@@ -32,13 +32,13 @@ namespace org::apache::nifi::minifi::sql::controllers {
  */
 class ODBCService : public DatabaseService {
  public:
-  explicit ODBCService(const std::string &name, const utils::Identifier &uuid = {})
-    : DatabaseService(name, uuid) {
+  explicit ODBCService(std::string name, const utils::Identifier &uuid = {})
+    : DatabaseService(std::move(name), uuid) {
     initialize();
   }
 
-  explicit ODBCService(const std::string &name, const std::shared_ptr<Configure> &configuration)
-      : DatabaseService(name) {
+  explicit ODBCService(std::string name, const std::shared_ptr<Configure> &configuration)
+      : DatabaseService(std::move(name)) {
     setConfiguration(configuration);
     initialize();
   }

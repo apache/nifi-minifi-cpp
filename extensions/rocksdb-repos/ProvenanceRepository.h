@@ -41,16 +41,16 @@ constexpr auto PROVENANCE_PURGE_PERIOD = std::chrono::milliseconds(2500);
 
 class ProvenanceRepository : public core::ThreadedRepository {
  public:
-  ProvenanceRepository(const std::string& name, const utils::Identifier& /*uuid*/)
-      : ProvenanceRepository(name) {
+  ProvenanceRepository(std::string name, const utils::Identifier& /*uuid*/)
+      : ProvenanceRepository(std::move(name)) {
   }
 
-  explicit ProvenanceRepository(const std::string& repo_name = "", std::string directory = PROVENANCE_DIRECTORY,
+  explicit ProvenanceRepository(std::string repo_name = "", std::string directory = PROVENANCE_DIRECTORY,
       std::chrono::milliseconds maxPartitionMillis = MAX_PROVENANCE_ENTRY_LIFE_TIME,
       int64_t maxPartitionBytes = MAX_PROVENANCE_STORAGE_SIZE,
       std::chrono::milliseconds purgePeriod = PROVENANCE_PURGE_PERIOD)
     : core::SerializableComponent(repo_name),
-      ThreadedRepository(repo_name.length() > 0 ? repo_name : core::getClassName<ProvenanceRepository>(), directory,
+      ThreadedRepository(repo_name.length() > 0 ? std::move(repo_name) : core::getClassName<ProvenanceRepository>(), directory,
         maxPartitionMillis, maxPartitionBytes, purgePeriod) {
   }
 

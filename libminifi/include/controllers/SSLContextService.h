@@ -31,9 +31,12 @@
 #include <openssl/bio.h>
 #include <openssl/pkcs12.h>
 #endif
+
 #include <iostream>
 #include <memory>
 #include <string>
+#include <utility>
+
 #include "utils/StringUtils.h"
 #include "utils/tls/ExtendedKeyUsage.h"
 #include "io/validation.h"
@@ -76,15 +79,15 @@ class SSLContext {
  */
 class SSLContextService : public core::controller::ControllerService {
  public:
-  explicit SSLContextService(const std::string &name, const utils::Identifier &uuid = {})
-      : ControllerService(name, uuid),
+  explicit SSLContextService(std::string name, const utils::Identifier &uuid = {})
+      : ControllerService(std::move(name), uuid),
         initialized_(false),
         valid_(false),
         logger_(core::logging::LoggerFactory<SSLContextService>::getLogger()) {
   }
 
-  explicit SSLContextService(const std::string &name, const std::shared_ptr<Configure> &configuration)
-      : ControllerService(name),
+  explicit SSLContextService(std::string name, const std::shared_ptr<Configure> &configuration)
+      : ControllerService(std::move(name)),
         initialized_(false),
         valid_(false),
         logger_(core::logging::LoggerFactory<SSLContextService>::getLogger()) {

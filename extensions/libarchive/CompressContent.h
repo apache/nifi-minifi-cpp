@@ -46,8 +46,8 @@ namespace org::apache::nifi::minifi::processors {
 
 class CompressContent : public core::Processor {
  public:
-  explicit CompressContent(const std::string& name, const utils::Identifier& uuid = {})
-    : core::Processor(name, uuid)
+  explicit CompressContent(std::string name, const utils::Identifier& uuid = {})
+    : core::Processor(std::move(name), uuid)
     , updateFileName_(false)
     , encapsulateInTar_(false) {
   }

@@ -52,7 +52,6 @@ class ProcessorController;
 
 namespace core {
 
-// Process Group Type
 enum ProcessGroupType {
   ROOT_PROCESS_GROUP = 0,
   SIMPLE_PROCESS_GROUP,
@@ -61,7 +60,6 @@ enum ProcessGroupType {
 
 #define ONSCHEDULE_RETRY_INTERVAL 30000  // millisecs
 
-// ProcessGroup Class
 class ProcessGroup : public CoreComponent {
   friend struct ::ProcessGroupTestAccessor;
  public:
@@ -69,15 +67,11 @@ class ProcessGroup : public CoreComponent {
     ExcludeChildren,
     IncludeChildren
   };
-  // Constructor
-  /*!
-   * Create a new process group
-   */
 
-  ProcessGroup(ProcessGroupType type, const std::string& name, const utils::Identifier& uuid, int version, ProcessGroup *parent);
-  ProcessGroup(ProcessGroupType type, const std::string& name);
-  ProcessGroup(ProcessGroupType type, const std::string& name, const utils::Identifier& uuid);
-  ProcessGroup(ProcessGroupType type, const std::string& name, const utils::Identifier& uuid, int version);
+  ProcessGroup(ProcessGroupType type, std::string name, const utils::Identifier& uuid, int version, ProcessGroup *parent);
+  ProcessGroup(ProcessGroupType type, std::string name);
+  ProcessGroup(ProcessGroupType type, std::string name, const utils::Identifier& uuid);
+  ProcessGroup(ProcessGroupType type, std::string name, const utils::Identifier& uuid, int version);
   // Destructor
   ~ProcessGroup() override;
   // Set URL

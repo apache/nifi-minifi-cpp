@@ -127,12 +127,12 @@ class FlowVersion : public DeviceInformation {
 
 class FlowMonitor : public StateMonitorNode, public ConnectionStore {
  public:
-  FlowMonitor(const std::string &name, const utils::Identifier &uuid)
-      : StateMonitorNode(name, uuid) {
+  FlowMonitor(std::string name, const utils::Identifier &uuid)
+      : StateMonitorNode(std::move(name), uuid) {
   }
 
-  FlowMonitor(const std::string &name) // NOLINT
-      : StateMonitorNode(name) {
+  explicit FlowMonitor(std::string name)
+      : StateMonitorNode(std::move(name)) {
   }
 
   void setFlowVersion(std::shared_ptr<state::response::FlowVersion> flow_version) {
@@ -148,12 +148,12 @@ class FlowMonitor : public StateMonitorNode, public ConnectionStore {
  */
 class FlowInformation : public FlowMonitor {
  public:
-  FlowInformation(const std::string &name, const utils::Identifier &uuid)
-      : FlowMonitor(name, uuid) {
+  FlowInformation(std::string name, const utils::Identifier &uuid)
+      : FlowMonitor(std::move(name), uuid) {
   }
 
-  FlowInformation(const std::string &name) // NOLINT
-      : FlowMonitor(name) {
+  explicit FlowInformation(std::string name)
+      : FlowMonitor(std::move(name)) {
   }
 
   MINIFIAPI static constexpr const char* Description = "Metric node that defines the flow ID and flow URL deployed to this agent";

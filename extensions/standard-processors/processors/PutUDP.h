@@ -18,6 +18,7 @@
 #include <cstddef>
 #include <memory>
 #include <string>
+#include <utility>
 #include <vector>
 
 #include "Processor.h"
@@ -47,7 +48,7 @@ class PutUDP final : public core::Processor {
 
   ADD_COMMON_VIRTUAL_FUNCTIONS_FOR_PROCESSORS
 
-  explicit PutUDP(const std::string& name, const utils::Identifier& uuid = {});
+  explicit PutUDP(std::string name, const utils::Identifier& uuid = {});
   PutUDP(const PutUDP&) = delete;
   PutUDP& operator=(const PutUDP&) = delete;
   ~PutUDP() final;

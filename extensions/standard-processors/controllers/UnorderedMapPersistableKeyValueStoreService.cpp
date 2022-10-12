@@ -72,16 +72,16 @@ const core::Property UnorderedMapPersistableKeyValueStoreService::File(
     ->isRequired(true)
     ->build());
 
-UnorderedMapPersistableKeyValueStoreService::UnorderedMapPersistableKeyValueStoreService(const std::string& name, const utils::Identifier& uuid /*= utils::Identifier()*/)
+UnorderedMapPersistableKeyValueStoreService::UnorderedMapPersistableKeyValueStoreService(std::string name, const utils::Identifier& uuid /*= utils::Identifier()*/)
     : PersistableKeyValueStoreService(name, uuid)
     , AbstractAutoPersistingKeyValueStoreService(name, uuid)
-    , UnorderedMapKeyValueStoreService(name, uuid) {
+    , UnorderedMapKeyValueStoreService(std::move(name), uuid) {
 }
 
-UnorderedMapPersistableKeyValueStoreService::UnorderedMapPersistableKeyValueStoreService(const std::string& name, const std::shared_ptr<Configure> &configuration)
+UnorderedMapPersistableKeyValueStoreService::UnorderedMapPersistableKeyValueStoreService(std::string name, const std::shared_ptr<Configure> &configuration)
     : PersistableKeyValueStoreService(name)
     , AbstractAutoPersistingKeyValueStoreService(name)
-    , UnorderedMapKeyValueStoreService(name) {
+    , UnorderedMapKeyValueStoreService(std::move(name)) {
   setConfiguration(configuration);
 }
 

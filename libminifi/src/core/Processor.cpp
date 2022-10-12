@@ -41,8 +41,8 @@ using namespace std::literals::chrono_literals;
 
 namespace org::apache::nifi::minifi::core {
 
-Processor::Processor(const std::string& name, std::shared_ptr<ProcessorMetrics> metrics)
-    : Connectable(name),
+Processor::Processor(std::string name, std::shared_ptr<ProcessorMetrics> metrics)
+    : Connectable(std::move(name)),
       logger_(logging::LoggerFactory<Processor>::getLogger()),
       metrics_(metrics ? std::move(metrics) : std::make_shared<ProcessorMetrics>(*this)) {
   has_work_.store(false);
@@ -60,8 +60,8 @@ Processor::Processor(const std::string& name, std::shared_ptr<ProcessorMetrics> 
   logger_->log_debug("Processor %s created UUID %s", name_, getUUIDStr());
 }
 
-Processor::Processor(const std::string& name, const utils::Identifier& uuid, std::shared_ptr<ProcessorMetrics> metrics)
-    : Connectable(name, uuid),
+Processor::Processor(std::string name, const utils::Identifier& uuid, std::shared_ptr<ProcessorMetrics> metrics)
+    : Connectable(std::move(name), uuid),
       logger_(logging::LoggerFactory<Processor>::getLogger()),
       metrics_(metrics ? std::move(metrics) : std::make_shared<ProcessorMetrics>(*this)) {
   has_work_.store(false);

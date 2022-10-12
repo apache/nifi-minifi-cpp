@@ -19,6 +19,7 @@
 #include <map>
 #include <memory>
 #include <string>
+#include <utility>
 #include <vector>
 
 #include "HeartbeatReporter.h"
@@ -33,8 +34,8 @@ namespace org::apache::nifi::minifi::c2 {
  */
 class ControllerSocketProtocol : public HeartbeatReporter {
  public:
-  ControllerSocketProtocol(const std::string& name, const utils::Identifier& uuid = {}) // NOLINT
-      : HeartbeatReporter(name, uuid) {
+  ControllerSocketProtocol(std::string name, const utils::Identifier& uuid = {}) // NOLINT
+      : HeartbeatReporter(std::move(name), uuid) {
   }
 
   MINIFIAPI static constexpr const char* Description = "Creates a reporter that can handle basic c2 operations for a localized environment through a simple TCP socket.";

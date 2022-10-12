@@ -16,10 +16,12 @@
  */
 #pragma once
 
-#include <string>
 #include <iostream>
-#include <memory>
 #include <limits>
+#include <memory>
+#include <string>
+#include <utility>
+
 #include "utils/StringUtils.h"
 #include "io/validation.h"
 #include "core/controller/ControllerService.h"
@@ -35,12 +37,12 @@ namespace org::apache::nifi::minifi::controllers {
  */
 class UpdatePolicyControllerService : public core::controller::ControllerService, public std::enable_shared_from_this<UpdatePolicyControllerService> {
  public:
-  explicit UpdatePolicyControllerService(const std::string &name, const utils::Identifier &uuid = {})
-      : ControllerService(name, uuid) {
+  explicit UpdatePolicyControllerService(std::string name, const utils::Identifier &uuid = {})
+      : ControllerService(std::move(name), uuid) {
   }
 
-  explicit UpdatePolicyControllerService(const std::string &name, const std::shared_ptr<Configure> &configuration)
-      : UpdatePolicyControllerService(name) {
+  explicit UpdatePolicyControllerService(std::string name, const std::shared_ptr<Configure> &configuration)
+      : UpdatePolicyControllerService(std::move(name)) {
     setConfiguration(configuration);
     initialize();
   }

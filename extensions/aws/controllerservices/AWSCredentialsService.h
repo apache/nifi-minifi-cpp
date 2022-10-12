@@ -21,6 +21,7 @@
 #include <memory>
 #include <optional>
 #include <string>
+#include <utility>
 
 #include "aws/core/auth/AWSCredentials.h"
 
@@ -31,21 +32,16 @@
 
 class AWSCredentialsServiceTestAccessor;
 
-namespace org {
-namespace apache {
-namespace nifi {
-namespace minifi {
-namespace aws {
-namespace controllers {
+namespace org::apache::nifi::minifi::aws::controllers {
 
 class AWSCredentialsService : public core::controller::ControllerService {
  public:
-  explicit AWSCredentialsService(const std::string &name, const minifi::utils::Identifier &uuid = {})
-      : ControllerService(name, uuid) {
+  explicit AWSCredentialsService(std::string name, const minifi::utils::Identifier &uuid = {})
+      : ControllerService(std::move(name), uuid) {
   }
 
-  explicit AWSCredentialsService(const std::string &name, const std::shared_ptr<Configure>& /*configuration*/)
-      : ControllerService(name) {
+  explicit AWSCredentialsService(std::string name, const std::shared_ptr<Configure>& /*configuration*/)
+      : ControllerService(std::move(name)) {
   }
 
   EXTENSIONAPI static constexpr const char* Description = "AWS Credentials Management Service";
@@ -91,9 +87,4 @@ class AWSCredentialsService : public core::controller::ControllerService {
   AWSCredentialsProvider aws_credentials_provider_;
 };
 
-}  // namespace controllers
-}  // namespace aws
-}  // namespace minifi
-}  // namespace nifi
-}  // namespace apache
-}  // namespace org
+}  // namespace org::apache::nifi::minifi::aws::controllers

@@ -32,8 +32,8 @@ namespace org::apache::nifi::minifi::processors {
 
 class NetworkListenerProcessor : public core::Processor {
  public:
-  NetworkListenerProcessor(const std::string& name, const utils::Identifier& uuid, std::shared_ptr<core::logging::Logger> logger)
-    : core::Processor(name, uuid),
+  NetworkListenerProcessor(std::string name, const utils::Identifier& uuid, std::shared_ptr<core::logging::Logger> logger)
+    : core::Processor(std::move(name), uuid),
       logger_(std::move(logger)) {
   }
   ~NetworkListenerProcessor() override;

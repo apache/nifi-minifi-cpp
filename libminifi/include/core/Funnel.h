@@ -17,8 +17,9 @@
  */
 #pragma once
 
-#include <string>
 #include <memory>
+#include <string>
+#include <utility>
 
 #include "logging/LoggerFactory.h"
 #include "Processor.h"
@@ -27,8 +28,8 @@ namespace org::apache::nifi::minifi::core {
 
 class Funnel final : public Processor {
  public:
-  Funnel(const std::string& name, const utils::Identifier& uuid) : Processor(name, uuid), logger_(logging::LoggerFactory<Funnel>::getLogger()) {}
-  explicit Funnel(const std::string& name) : Processor(name), logger_(logging::LoggerFactory<Funnel>::getLogger()) {}
+  Funnel(std::string name, const utils::Identifier& uuid) : Processor(std::move(name), uuid), logger_(logging::LoggerFactory<Funnel>::getLogger()) {}
+  explicit Funnel(std::string name) : Processor(std::move(name)), logger_(logging::LoggerFactory<Funnel>::getLogger()) {}
 
   static auto properties() { return std::array<core::Property, 0>{}; }
   MINIFIAPI static const core::Relationship Success;

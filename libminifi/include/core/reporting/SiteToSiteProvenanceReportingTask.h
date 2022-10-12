@@ -19,9 +19,11 @@
  */
 #pragma once
 
-#include <mutex>
 #include <memory>
+#include <mutex>
 #include <stack>
+#include <utility>
+
 #include "FlowFileRecord.h"
 #include "core/Processor.h"
 #include "core/ProcessSession.h"
@@ -31,50 +33,39 @@
 
 namespace org::apache::nifi::minifi::core::reporting {
 
-//! SiteToSiteProvenanceReportingTask Class
 class SiteToSiteProvenanceReportingTask : public minifi::RemoteProcessorGroupPort {
  public:
-  //! Constructor
-  /*!
-   * Create a new processor
-   */
   SiteToSiteProvenanceReportingTask(const std::shared_ptr<io::StreamFactory> &stream_factory, std::shared_ptr<Configure> configure)
-      : minifi::RemoteProcessorGroupPort(stream_factory, ReportTaskName, "", configure),
+      : minifi::RemoteProcessorGroupPort(stream_factory, ReportTaskName, "", std::move(configure)),
         logger_(logging::LoggerFactory<SiteToSiteProvenanceReportingTask>::getLogger()) {
     this->setTriggerWhenEmpty(true);
     batch_size_ = 100;
   }
-  //! Destructor
-  ~SiteToSiteProvenanceReportingTask() = default;
-  //! Report Task Name
+
+  ~SiteToSiteProvenanceReportingTask() override = default;
+
   static constexpr char const* ReportTaskName = "SiteToSiteProvenanceReportingTask";
   static const char *ProvenanceAppStr;
 
- public:
-  //! Get provenance json report
   static void getJsonReport(const std::shared_ptr<core::ProcessContext> &context, const std::shared_ptr<core::ProcessSession> &session, std::vector<std::shared_ptr<core::SerializableComponent>> &records, std::string &report); // NOLINT
 
+  void onSchedule(const std::shared_ptr<core::ProcessContext> &context, const std::shared_ptr<core::ProcessSessionFactory> &sessionFactory) override;
+  void onTrigger(const std::shared_ptr<core::ProcessContext> &context, const std::shared_ptr<core::ProcessSession> &session) override;
 
-  void onSchedule(const std::shared_ptr<core::ProcessContext> &context, const std::shared_ptr<core::ProcessSessionFactory> &sessionFactory);
-  //! OnTrigger method, implemented by NiFi SiteToSiteProvenanceReportingTask
-  void onTrigger(const std::shared_ptr<core::ProcessContext> &context, const std::shared_ptr<core::ProcessSession> &session);
+  void initialize() override;
 
-  //! Initialize, over write by NiFi SiteToSiteProvenanceReportingTask
-  virtual void initialize(void);
-  //! Set Port UUID
   void setPortUUID(utils::Identifier &port_uuid) {
     protocol_uuid_ = port_uuid;
   }
 
-  //! Set Batch Size
   void setBatchSize(int size) {
     batch_size_ = size;
   }
-  //! Get Batch Size
-  int getBatchSize(void) {
+
+  int getBatchSize() const {
     return (batch_size_);
   }
-  //! Get Port UUID
+
   void getPortUUID(utils::Identifier & port_uuid) {
     port_uuid = protocol_uuid_;
   }

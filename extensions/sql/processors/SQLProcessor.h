@@ -27,11 +27,7 @@
 
 #include "services/DatabaseService.h"
 
-namespace org {
-namespace apache {
-namespace nifi {
-namespace minifi {
-namespace processors {
+namespace org::apache::nifi::minifi::processors {
 
 class SQLProcessor: public core::Processor {
  public:
@@ -39,8 +35,8 @@ class SQLProcessor: public core::Processor {
   static auto properties() { return std::array{DBControllerService}; }
 
  protected:
-  SQLProcessor(const std::string& name, const utils::Identifier& uuid, std::shared_ptr<core::logging::Logger> logger)
-    : core::Processor(name, uuid), logger_(std::move(logger)) {
+  SQLProcessor(std::string name, const utils::Identifier& uuid, std::shared_ptr<core::logging::Logger> logger)
+    : core::Processor(std::move(name), uuid), logger_(std::move(logger)) {
   }
 
   static std::vector<std::string> collectArguments(const std::shared_ptr<core::FlowFile>& flow_file);
@@ -61,9 +57,5 @@ class SQLProcessor: public core::Processor {
   std::unique_ptr<sql::Connection> connection_;
 };
 
-}  // namespace processors
-}  // namespace minifi
-}  // namespace nifi
-}  // namespace apache
-}  // namespace org
+}  // namespace org::apache::nifi::minifi::processors
 

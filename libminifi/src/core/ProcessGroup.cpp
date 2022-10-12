@@ -25,38 +25,33 @@
 #include <set>
 #include <chrono>
 #include <thread>
-#include "core/logging/LoggerConfiguration.h"
 #include "core/Processor.h"
 #include "core/state/ProcessorController.h"
 #include "core/state/UpdateController.h"
 
 using namespace std::literals::chrono_literals;
 
-namespace org {
-namespace apache {
-namespace nifi {
-namespace minifi {
-namespace core {
+namespace org::apache::nifi::minifi::core {
 
 std::shared_ptr<utils::IdGenerator> ProcessGroup::id_generator_ = utils::IdGenerator::getIdGenerator();
 
-ProcessGroup::ProcessGroup(ProcessGroupType type, const std::string& name, const utils::Identifier& uuid)
-    : ProcessGroup(type, name, uuid, 0, 0) {
+ProcessGroup::ProcessGroup(ProcessGroupType type, std::string name, const utils::Identifier& uuid)
+    : ProcessGroup(type, std::move(name), uuid, 0, nullptr) {
 }
 
-ProcessGroup::ProcessGroup(ProcessGroupType type, const std::string& name, const utils::Identifier& uuid, int version)
-    : ProcessGroup(type, name, uuid, version, 0) {
+ProcessGroup::ProcessGroup(ProcessGroupType type, std::string name, const utils::Identifier& uuid, int version)
+    : ProcessGroup(type, std::move(name), uuid, version, nullptr) {
 }
 
-ProcessGroup::ProcessGroup(ProcessGroupType type, const std::string& name, const utils::Identifier& uuid, int version, ProcessGroup* parent)
-    : CoreComponent(name, uuid, id_generator_),
+ProcessGroup::ProcessGroup(ProcessGroupType type, std::string name, const utils::Identifier& uuid, int version, ProcessGroup* parent)
+    : CoreComponent(std::move(name), uuid, id_generator_),
       config_version_(version),
       type_(type),
       parent_process_group_(parent),
       logger_(logging::LoggerFactory<ProcessGroup>::getLogger()) {
   yield_period_msec_ = 0ms;
 
-  if (parent_process_group_ != 0) {
+  if (parent_process_group_ != nullptr) {
     onschedule_retry_msec_ = parent_process_group_->getOnScheduleRetryPeriod();
   } else {
     onschedule_retry_msec_ = ONSCHEDULE_RETRY_INTERVAL;
@@ -67,8 +62,8 @@ ProcessGroup::ProcessGroup(ProcessGroupType type, const std::string& name, const
   logger_->log_debug("ProcessGroup %s created", name_);
 }
 
-ProcessGroup::ProcessGroup(ProcessGroupType type, const std::string& name)
-    : CoreComponent(name, {}, id_generator_),
+ProcessGroup::ProcessGroup(ProcessGroupType type, std::string name)
+    : CoreComponent(std::move(name), {}, id_generator_),
       config_version_(0),
       type_(type),
       parent_process_group_(nullptr),
@@ -385,8 +380,4 @@ void ProcessGroup::verify() const {
   }
 }
 
-} /* namespace core */
-} /* namespace minifi */
-} /* namespace nifi */
-} /* namespace apache */
-} /* namespace org */
+}  // namespace org::apache::nifi::minifi::core

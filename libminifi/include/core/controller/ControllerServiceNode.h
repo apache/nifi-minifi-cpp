@@ -20,6 +20,7 @@
 
 #include <memory>
 #include <string>
+#include <utility>
 #include <vector>
 
 #include "core/Core.h"
@@ -30,12 +31,7 @@
 #include "io/validation.h"
 #include "Exception.h"
 
-namespace org {
-namespace apache {
-namespace nifi {
-namespace minifi {
-namespace core {
-namespace controller {
+namespace org::apache::nifi::minifi::core::controller {
 
 class ControllerServiceNode : public CoreComponent, public ConfigurableComponent {
  public:
@@ -45,19 +41,18 @@ class ControllerServiceNode : public CoreComponent, public ConfigurableComponent
    * @param id identifier for this node.
    * @param configuration shared pointer configuration.
    */
-  explicit ControllerServiceNode(std::shared_ptr<ControllerService> service, const std::string &id, std::shared_ptr<Configure> configuration)
-      : CoreComponent(id),
-        ConfigurableComponent(),
+  explicit ControllerServiceNode(std::shared_ptr<ControllerService> service, std::string id, std::shared_ptr<Configure> configuration)
+      : CoreComponent(std::move(id)),
         active(false),
-        configuration_(configuration),
-        controller_service_(service) {
-    if (service == nullptr || IsNullOrEmpty(service.get())) {
+        configuration_(std::move(configuration)),
+        controller_service_(std::move(service)) {
+    if (controller_service_ == nullptr || IsNullOrEmpty(controller_service_.get())) {
       throw Exception(GENERAL_EXCEPTION, "Service must be properly configured");
     }
-    if (IsNullOrEmpty(configuration)) {
+    if (IsNullOrEmpty(configuration_)) {
       throw Exception(GENERAL_EXCEPTION, "Configuration must be properly configured");
     }
-    service->setConfiguration(configuration);
+    controller_service_->setConfiguration(configuration_);
   }
 
   void initialize() override {
@@ -67,12 +62,12 @@ class ControllerServiceNode : public CoreComponent, public ConfigurableComponent
     });
   }
 
-  void setName(const std::string name) {
-    CoreComponent::setName(name);
+  void setName(std::string name) override {
     controller_service_->setName(name);
+    CoreComponent::setName(std::move(name));
   }
 
-  void setUUID(const utils::Identifier& uuid) {
+  void setUUID(const utils::Identifier& uuid) override {
     CoreComponent::setUUID(uuid);
     controller_service_->setUUID(uuid);
   }
@@ -131,11 +126,6 @@ class ControllerServiceNode : public CoreComponent, public ConfigurableComponent
   std::vector<std::shared_ptr<ConfigurableComponent> > linked_components_;
 };
 
-}  // namespace controller
-}  // namespace core
-}  // namespace minifi
-}  // namespace nifi
-}  // namespace apache
-}  // namespace org
+}  // namespace org::apache::nifi::minifi::core::controller
 
 #endif  // LIBMINIFI_INCLUDE_CORE_CONTROLLER_CONTROLLERSERVICENODE_H_

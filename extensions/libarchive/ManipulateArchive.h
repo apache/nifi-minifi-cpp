@@ -19,8 +19,9 @@
  */
 #pragma once
 
-#include <string>
 #include <memory>
+#include <string>
+#include <utility>
 
 #include "FlowFileRecord.h"
 #include "ArchiveMetadata.h"
@@ -29,18 +30,14 @@
 
 #include "utils/Export.h"
 
-namespace org {
-namespace apache {
-namespace nifi {
-namespace minifi {
-namespace processors {
+namespace org::apache::nifi::minifi::processors {
 
 using core::logging::Logger;
 
 class ManipulateArchive : public core::Processor {
  public:
-  explicit ManipulateArchive(const std::string& name, const utils::Identifier& uuid = {})
-      : core::Processor(name, uuid) {
+  explicit ManipulateArchive(std::string name, const utils::Identifier& uuid = {})
+      : core::Processor(std::move(name), uuid) {
   }
   ~ManipulateArchive() override = default;
 
@@ -87,8 +84,4 @@ class ManipulateArchive : public core::Processor {
   std::string before_, after_, operation_, destination_, targetEntry_;
 };
 
-} /* namespace processors */
-} /* namespace minifi */
-} /* namespace nifi */
-} /* namespace apache */
-} /* namespace org */
+}  // namespace org::apache::nifi::minifi::processors

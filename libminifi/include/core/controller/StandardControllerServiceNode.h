@@ -19,6 +19,7 @@
 
 #include <memory>
 #include <string>
+#include <utility>
 
 #include "core/Core.h"
 #include "ControllerServiceNode.h"
@@ -29,15 +30,15 @@ namespace org::apache::nifi::minifi::core::controller {
 
 class StandardControllerServiceNode : public ControllerServiceNode {
  public:
-  explicit StandardControllerServiceNode(std::shared_ptr<ControllerService> service, std::shared_ptr<ControllerServiceProvider> provider, const std::string &id,
+  explicit StandardControllerServiceNode(std::shared_ptr<ControllerService> service, std::shared_ptr<ControllerServiceProvider> provider, std::string id,
                                          std::shared_ptr<Configure> configuration)
-      : ControllerServiceNode(service, id, configuration),
-        provider(provider),
+      : ControllerServiceNode(std::move(service), std::move(id), std::move(configuration)),
+        provider(std::move(provider)),
         logger_(logging::LoggerFactory<StandardControllerServiceNode>::getLogger()) {
   }
 
-  explicit StandardControllerServiceNode(std::shared_ptr<ControllerService> service, const std::string &id, std::shared_ptr<Configure> configuration)
-      : ControllerServiceNode(service, id, configuration),
+  explicit StandardControllerServiceNode(std::shared_ptr<ControllerService> service, std::string id, std::shared_ptr<Configure> configuration)
+      : ControllerServiceNode(std::move(service), std::move(id), std::move(configuration)),
         provider(nullptr),
         logger_(logging::LoggerFactory<StandardControllerServiceNode>::getLogger()) {
   }

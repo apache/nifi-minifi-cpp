@@ -17,6 +17,7 @@
 #pragma once
 
 #include <string>
+#include <utility>
 #include <vector>
 
 #ifndef WIN32
@@ -59,12 +60,12 @@ namespace org::apache::nifi::minifi::state::response {
  */
 class BuildInformation : public DeviceInformation {
  public:
-  BuildInformation(const std::string &name, const utils::Identifier &uuid)
-      : DeviceInformation(name, uuid) {
+  BuildInformation(std::string name, const utils::Identifier &uuid)
+      : DeviceInformation(std::move(name), uuid) {
   }
 
-  explicit BuildInformation(const std::string &name)
-      : DeviceInformation(name) {
+  explicit BuildInformation(std::string name)
+      : DeviceInformation(std::move(name)) {
   }
 
   MINIFIAPI static constexpr const char* Description = "Metric node that defines the pertinent build information for this agent binary";

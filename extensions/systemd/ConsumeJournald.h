@@ -37,7 +37,7 @@
 #include "utils/gsl.h"
 #include "utils/FifoExecutor.h"
 
-namespace org { namespace apache { namespace nifi { namespace minifi { namespace extensions { namespace systemd {
+namespace org::apache::nifi::minifi::extensions::systemd {
 
 enum class PayloadFormat { Raw, Syslog };
 
@@ -80,7 +80,7 @@ class ConsumeJournald final : public core::Processor {
 
   ADD_COMMON_VIRTUAL_FUNCTIONS_FOR_PROCESSORS
 
-  explicit ConsumeJournald(const std::string& name, const utils::Identifier& id = {}, std::unique_ptr<libwrapper::LibWrapper>&& = libwrapper::createLibWrapper());
+  explicit ConsumeJournald(std::string name, const utils::Identifier& id = {}, std::unique_ptr<libwrapper::LibWrapper>&& = libwrapper::createLibWrapper());
   ConsumeJournald(const ConsumeJournald&) = delete;
   ConsumeJournald(ConsumeJournald&&) = delete;
   ConsumeJournald& operator=(const ConsumeJournald&) = delete;
@@ -123,9 +123,4 @@ class ConsumeJournald final : public core::Processor {
   std::string timestamp_format_ = "%x %X %Z";
 };
 
-}  // namespace systemd
-}  // namespace extensions
-}  // namespace minifi
-}  // namespace nifi
-}  // namespace apache
-}  // namespace org
+}  // namespace org::apache::nifi::minifi::extensions::systemd

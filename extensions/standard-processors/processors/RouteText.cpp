@@ -104,8 +104,8 @@ const core::Relationship RouteText::Unmatched("unmatched", "Segments that do not
 
 const core::Relationship RouteText::Matched("matched", "Segments that satisfy the required user-defined rules will be routed to this Relationship");
 
-RouteText::RouteText(const std::string& name, const utils::Identifier& uuid)
-    : core::Processor(name, uuid), logger_(core::logging::LoggerFactory<RouteText>::getLogger()) {}
+RouteText::RouteText(std::string name, const utils::Identifier& uuid)
+    : core::Processor(std::move(name), uuid), logger_(core::logging::LoggerFactory<RouteText>::getLogger()) {}
 
 void RouteText::initialize() {
   setSupportedProperties(properties());

@@ -37,7 +37,7 @@ class HttpSiteToSiteClient : public sitetosite::SiteToSiteClient {
   static constexpr char const* PROTOCOL_VERSION_HEADER = "x-nifi-site-to-site-protocol-version";
 
  public:
-  explicit HttpSiteToSiteClient(const std::string& /*name*/, const utils::Identifier& /*uuid*/ = {})
+  explicit HttpSiteToSiteClient(std::string /*name*/, const utils::Identifier& /*uuid*/ = {})
       : SiteToSiteClient(),
         current_code(sitetosite::UNRECOGNIZED_RESPONSE_CODE) {
     peer_state_ = sitetosite::READY;

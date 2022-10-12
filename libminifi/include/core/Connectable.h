@@ -44,9 +44,9 @@ class FlowFile;
  */
 class Connectable : public CoreComponent {
  public:
-  explicit Connectable(const std::string &name);
+  explicit Connectable(std::string name);
 
-  explicit Connectable(const std::string &name, const utils::Identifier &uuid);
+  explicit Connectable(std::string name, const utils::Identifier &uuid);
 
   Connectable(const Connectable &other) = delete;
   Connectable(Connectable &&other) = delete;
