@@ -25,7 +25,6 @@
 #include <set>
 #include <chrono>
 #include <thread>
-#include "core/logging/LoggerConfiguration.h"
 #include "core/Processor.h"
 #include "core/state/ProcessorController.h"
 #include "core/state/UpdateController.h"
@@ -37,11 +36,11 @@ namespace org::apache::nifi::minifi::core {
 std::shared_ptr<utils::IdGenerator> ProcessGroup::id_generator_ = utils::IdGenerator::getIdGenerator();
 
 ProcessGroup::ProcessGroup(ProcessGroupType type, std::string name, const utils::Identifier& uuid)
-    : ProcessGroup(type, std::move(name), uuid, 0, 0) {
+    : ProcessGroup(type, std::move(name), uuid, 0, nullptr) {
 }
 
 ProcessGroup::ProcessGroup(ProcessGroupType type, std::string name, const utils::Identifier& uuid, int version)
-    : ProcessGroup(type, std::move(name), uuid, version, 0) {
+    : ProcessGroup(type, std::move(name), uuid, version, nullptr) {
 }
 
 ProcessGroup::ProcessGroup(ProcessGroupType type, std::string name, const utils::Identifier& uuid, int version, ProcessGroup* parent)
@@ -52,7 +51,7 @@ ProcessGroup::ProcessGroup(ProcessGroupType type, std::string name, const utils:
       logger_(logging::LoggerFactory<ProcessGroup>::getLogger()) {
   yield_period_msec_ = 0ms;
 
-  if (parent_process_group_ != 0) {
+  if (parent_process_group_ != nullptr) {
     onschedule_retry_msec_ = parent_process_group_->getOnScheduleRetryPeriod();
   } else {
     onschedule_retry_msec_ = ONSCHEDULE_RETRY_INTERVAL;
