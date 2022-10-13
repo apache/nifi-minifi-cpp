@@ -16,12 +16,11 @@
  */
 #pragma once
 
-#include <vector>
-#include <string>
-#include <memory>
-#include <utility>
-
 #include <limits>
+#include <memory>
+#include <string>
+#include <unordered_map>
+#include <utility>
 
 #include "FlowFileRecord.h"
 #include "core/Processor.h"
@@ -43,12 +42,18 @@ class PublishMQTT : public processors::AbstractMQTTProcessor {
 
   EXTENSIONAPI static constexpr const char* Description = "PublishMQTT serializes FlowFile content as an MQTT payload, sending the message to the configured topic and broker.";
 
+  EXTENSIONAPI static const core::Property Topic;
   EXTENSIONAPI static const core::Property Retain;
+  EXTENSIONAPI static const core::Property MessageExpiryInterval;
+  EXTENSIONAPI static const core::Property ContentType;
 
   static auto properties() {
-    return utils::array_cat(AbstractMQTTProcessor::properties(), std::array{
-      Retain
-    });
+    return utils::array_cat(AbstractMQTTProcessor::basicProperties(), std::array{
+      Topic,
+      Retain,
+      MessageExpiryInterval,
+      ContentType
+    }, AbstractMQTTProcessor::advancedProperties());
   }
 
   EXTENSIONAPI static const core::Relationship Success;
@@ -62,72 +67,114 @@ class PublishMQTT : public processors::AbstractMQTTProcessor {
 
   ADD_COMMON_VIRTUAL_FUNCTIONS_FOR_PROCESSORS
 
+  void readProperties(const std::shared_ptr<core::ProcessContext>& context) override;
+  void onTriggerImpl(const std::shared_ptr<core::ProcessContext>& context, const std::shared_ptr<core::ProcessSession>& session) override;
+  void initialize() override;
+
+ private:
   class ReadCallback {
    public:
-    ReadCallback(PublishMQTT* processor, uint64_t flow_size, uint64_t max_seg_size, std::string topic, MQTTAsync client, int qos, bool retain)
+    ReadCallback(PublishMQTT* processor, std::shared_ptr<core::FlowFile> flow_file, std::string topic, std::string content_type)
         : processor_(processor),
-          flow_size_(flow_size),
-          max_seg_size_(max_seg_size),
+          flow_file_(std::move(flow_file)),
           topic_(std::move(topic)),
-          client_(client),
-          qos_(qos),
-          retain_(retain) {
+          content_type_(std::move(content_type)) {
     }
 
     int64_t operator()(const std::shared_ptr<io::InputStream>& stream);
 
-    size_t read_size_ = 0;
-    int status_ = 0;
+    bool sendMessage(const MQTTAsync_message* message_to_publish, MQTTAsync_responseOptions* response_options);
+
+    [[nodiscard]] size_t getReadSize() const {
+      return read_size_;
+    }
+
+    [[nodiscard]] bool getSuccessStatus() const {
+      return success_status_;
+    }
 
    private:
-    PublishMQTT* processor_;
-    uint64_t flow_size_;
-    uint64_t max_seg_size_;
-    std::string topic_;
-    MQTTAsync client_;
+    // MQTT static async callbacks, calling their notify with context being pointer to a ReadCallback::Context object
+    static void sendSuccess(void* context, MQTTAsync_successData* response);
+    static void sendSuccess5(void* context, MQTTAsync_successData5* response);
+    static void sendFailure(void* context, MQTTAsync_failureData* response);
+    static void sendFailure5(void* context, MQTTAsync_failureData5* response);
 
-    int qos_;
-    bool retain_;
+    void notify(bool success, std::optional<int> response_code, std::optional<MQTTReasonCodes> reason_code);
+    void setMqtt5Properties(MQTTAsync_message& message) const;
+    void addAttributesAsUserProperties(MQTTAsync_message& message) const;
+
+    PublishMQTT* processor_;
+    uint64_t read_size_ = 0;
+    std::shared_ptr<core::FlowFile> flow_file_;
+    std::string topic_;
+    std::string content_type_;
+
+    bool success_status_ = true;
   };
 
-  void onSchedule(const std::shared_ptr<core::ProcessContext> &context, const std::shared_ptr<core::ProcessSessionFactory> &factory) override;
-  void onTrigger(const std::shared_ptr<core::ProcessContext> &context, const std::shared_ptr<core::ProcessSession> &session) override;
-  void initialize() override;
-
- private:
-  // MQTT async callback
-  static void sendSuccess(void* context, MQTTAsync_successData* response) {
-    auto* processor = reinterpret_cast<PublishMQTT*>(context);
-    processor->onSendSuccess(response);
-  }
-
-  // MQTT async callback
-  static void sendFailure(void* context, MQTTAsync_failureData* response) {
-    auto* processor = reinterpret_cast<PublishMQTT*>(context);
-    processor->onSendFailure(response);
-  }
-
-  void onSendSuccess(MQTTAsync_successData* /*response*/) {
-    logger_->log_debug("Successfully sent message to MQTT topic %s on broker %s", topic_, uri_);
-  }
-
-  void onSendFailure(MQTTAsync_failureData* response) {
-    logger_->log_error("Sending message failed on topic %s to MQTT broker %s (%d)", topic_, uri_, response->code);
-    if (response->message != nullptr) {
-      logger_->log_error("Detailed reason for sending failure: %s", response->message);
+  class InFlightMessageCounter {
+   public:
+    void setMqttVersion(const MqttVersions mqtt_version) {
+      mqtt_version_ = mqtt_version;
     }
-  }
+
+    void setQoS(const MqttQoS qos) {
+      qos_ = qos;
+    }
+
+    void setMax(const uint16_t new_limit) {
+      limit_ = new_limit;
+    }
+
+    // increase on sending, wait if limit is reached
+    void increase();
+
+    // decrease on success or failure, notify
+    void decrease();
+
+   private:
+    std::mutex mutex_;
+    std::condition_variable cv_;
+    uint16_t counter_{0};
+    uint16_t limit_{65535};
+    MqttVersions mqtt_version_;
+    MqttQoS qos_;
+  };
 
   bool getCleanSession() const override {
     return true;
   }
 
-  bool startupClient() override {
-    // there is no need to do anything like subscribe on the beginning
+  bool getCleanStart() const override {
     return true;
   }
 
+  std::chrono::seconds getSessionExpiryInterval() const override {
+    // non-persistent session as we only publish
+    return std::chrono::seconds{0};
+  }
+
+  void startupClient() override {
+    // there is no need to do anything like subscribe in the beginning
+  }
+
+  void checkProperties() override;
+  void checkBrokerLimitsImpl() override;
+
+  /**
+   * Resolves topic from expression language
+   */
+  std::string getTopic(const std::shared_ptr<core::ProcessContext>& context, const std::shared_ptr<core::FlowFile>& flow_file) const;
+
+  /**
+   * Resolves content type from expression language
+   */
+  std::string getContentType(const std::shared_ptr<core::ProcessContext>& context, const std::shared_ptr<core::FlowFile>& flow_file) const;
+
   bool retain_ = false;
+  std::optional<std::chrono::seconds> message_expiry_interval_;
+  InFlightMessageCounter in_flight_message_counter_;
   std::shared_ptr<core::logging::Logger> logger_ = core::logging::LoggerFactory<PublishMQTT>::getLogger(uuid_);
 };
 

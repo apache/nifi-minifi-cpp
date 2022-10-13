@@ -16,10 +16,11 @@
  */
 #pragma once
 
-#include <deque>
 #include <limits>
 #include <memory>
+#include <queue>
 #include <string>
+#include <unordered_map>
 #include <utility>
 
 #include "FlowFileRecord.h"
@@ -35,27 +36,35 @@
 
 namespace org::apache::nifi::minifi::processors {
 
-#define MQTT_TOPIC_ATTRIBUTE "mqtt.topic"
-#define MQTT_BROKER_ATTRIBUTE "mqtt.broker"
-
 class ConsumeMQTT : public processors::AbstractMQTTProcessor {
  public:
   explicit ConsumeMQTT(std::string name, const utils::Identifier& uuid = {})
       : processors::AbstractMQTTProcessor(std::move(name), uuid) {
-    maxQueueSize_ = 100;
   }
 
   EXTENSIONAPI static constexpr const char* Description = "This Processor gets the contents of a FlowFile from a MQTT broker for a specified topic. "
       "The the payload of the MQTT message becomes content of a FlowFile";
 
+  EXTENSIONAPI static const core::Property Topic;
   EXTENSIONAPI static const core::Property CleanSession;
+  EXTENSIONAPI static const core::Property CleanStart;
+  EXTENSIONAPI static const core::Property SessionExpiryInterval;
   EXTENSIONAPI static const core::Property QueueBufferMaxMessage;
+  EXTENSIONAPI static const core::Property AttributeFromContentType;
+  EXTENSIONAPI static const core::Property TopicAliasMaximum;
+  EXTENSIONAPI static const core::Property ReceiveMaximum;
 
   static auto properties() {
-    return utils::array_cat(AbstractMQTTProcessor::properties(), std::array{
+    return utils::array_cat(AbstractMQTTProcessor::basicProperties(), std::array{
+      Topic,
       CleanSession,
-      QueueBufferMaxMessage
-    });
+      CleanStart,
+      SessionExpiryInterval,
+      QueueBufferMaxMessage,
+      AttributeFromContentType,
+      TopicAliasMaximum,
+      ReceiveMaximum
+    }, AbstractMQTTProcessor::advancedProperties());
   }
 
   EXTENSIONAPI static const core::Relationship Success;
@@ -68,8 +77,11 @@ class ConsumeMQTT : public processors::AbstractMQTTProcessor {
 
   ADD_COMMON_VIRTUAL_FUNCTIONS_FOR_PROCESSORS
 
-  void onSchedule(const std::shared_ptr<core::ProcessContext> &context, const std::shared_ptr<core::ProcessSessionFactory> &factory) override;
-  void onTrigger(const std::shared_ptr<core::ProcessContext> &context, const std::shared_ptr<core::ProcessSession> &session) override;
+  static constexpr const char* const MQTT_TOPIC_ATTRIBUTE = "mqtt.topic";
+  static constexpr const char* const MQTT_BROKER_ATTRIBUTE = "mqtt.broker";
+
+  void readProperties(const std::shared_ptr<core::ProcessContext>& context) override;
+  void onTriggerImpl(const std::shared_ptr<core::ProcessContext>& context, const std::shared_ptr<core::ProcessSession>& session) override;
   void initialize() override;
 
  private:
@@ -79,52 +91,79 @@ class ConsumeMQTT : public processors::AbstractMQTTProcessor {
     }
   };
 
-  void getReceivedMQTTMsg(std::deque<std::unique_ptr<MQTTAsync_message, MQTTMessageDeleter>>& msg_queue) {
-    std::unique_ptr<MQTTAsync_message, MQTTMessageDeleter> message;
-    while (queue_.try_dequeue(message)) {
-      msg_queue.push_back(std::move(message));
+  struct SmartMessage {
+    std::unique_ptr<MQTTAsync_message, MQTTMessageDeleter> contents;
+    std::string topic;
+  };
+
+  class WriteCallback {
+   public:
+    explicit WriteCallback(const SmartMessage& message)
+      : message_(message) {
     }
-  }
 
-  // MQTT async callback
-  static void subscriptionSuccess(void* context, MQTTAsync_successData* response) {
-    auto* processor = reinterpret_cast<ConsumeMQTT*>(context);
-    processor->onSubscriptionSuccess(response);
-  }
+    int64_t operator() (const std::shared_ptr<io::OutputStream>& stream);
 
-  // MQTT async callback
-  static void subscriptionFailure(void* context, MQTTAsync_failureData* response) {
-    auto* processor = reinterpret_cast<ConsumeMQTT*>(context);
-    processor->onSubscriptionFailure(response);
-  }
-
-  void onSubscriptionSuccess(MQTTAsync_successData* /*response*/) {
-    logger_->log_info("Successfully subscribed to MQTT topic %s on broker %s", topic_, uri_);
-  }
-
-  void onSubscriptionFailure(MQTTAsync_failureData* response) {
-    logger_->log_error("Subscription failed on topic %s to MQTT broker %s (%d)", topic_, uri_, response->code);
-    if (response->message != nullptr) {
-      logger_->log_error("Detailed reason for subscription failure: %s", response->message);
+    [[nodiscard]] bool getSuccessStatus() const {
+      return success_status_;
     }
-  }
 
-  bool getCleanSession() const override {
-    return cleanSession_;
-  }
+   private:
+    const SmartMessage& message_;
+    bool success_status_ = true;
+  };
 
+  std::queue<SmartMessage> getReceivedMqttMessages();
+
+  // MQTT static async callbacks, calling their non-static counterparts with context being pointer to "this"
+  static void subscriptionSuccess(void* context, MQTTAsync_successData* response);
+  static void subscriptionSuccess5(void* context, MQTTAsync_successData5* response);
+  static void subscriptionFailure(void* context, MQTTAsync_failureData* response);
+  static void subscriptionFailure5(void* context, MQTTAsync_failureData5* response);
+
+  // MQTT non-static async callbacks
+  void onSubscriptionSuccess();
+  void onSubscriptionFailure(MQTTAsync_failureData* response);
+  void onSubscriptionFailure5(MQTTAsync_failureData5* response);
   void onMessageReceived(char* topic_name, int /*topic_len*/, MQTTAsync_message* message) override;
 
-  void enqueueReceivedMQTTMsg(std::unique_ptr<MQTTAsync_message, MQTTMessageDeleter> message);
-
-  bool startupClient() override;
-
+  void enqueueReceivedMQTTMsg(SmartMessage message);
+  void startupClient() override;
   void checkProperties() override;
+  void checkBrokerLimitsImpl() override;
 
+  void resolveTopicFromAlias(MQTTAsync_message* message, std::string& topic);
+
+  bool getCleanSession() const override {
+    return clean_session_;
+  }
+
+  bool getCleanStart() const override {
+    return clean_start_;
+  }
+
+  std::chrono::seconds getSessionExpiryInterval() const override {
+    return session_expiry_interval_;
+  }
+
+  void putUserPropertiesAsAttributes(const SmartMessage& message, const std::shared_ptr<core::FlowFile>& flow_file, const std::shared_ptr<core::ProcessSession>& session) const;
+  void fillAttributeFromContentType(const SmartMessage& message, const std::shared_ptr<core::FlowFile>& flow_file, const std::shared_ptr<core::ProcessSession>& session) const;
+
+  void setMqtt5ConnectOptionsImpl(MQTTProperties& connect_props) const override;
+
+  std::string topic_;
+  bool clean_session_ = true;
+  bool clean_start_ = true;
+  std::chrono::seconds session_expiry_interval_{0};
+  uint64_t max_queue_size_ = 1000;
+  std::string attribute_from_content_type_;
+
+  uint16_t topic_alias_maximum_{0};
+  uint16_t receive_maximum_{65535};
+  std::unordered_map<uint16_t, std::string> alias_to_topic_;
+
+  moodycamel::ConcurrentQueue<SmartMessage> queue_;
   std::shared_ptr<core::logging::Logger> logger_ = core::logging::LoggerFactory<ConsumeMQTT>::getLogger(uuid_);
-  bool cleanSession_ = true;
-  uint64_t maxQueueSize_;
-  moodycamel::ConcurrentQueue<std::unique_ptr<MQTTAsync_message, MQTTMessageDeleter>> queue_;
 };
 
 }  // namespace org::apache::nifi::minifi::processors

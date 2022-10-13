@@ -338,28 +338,34 @@ This Processor gets the contents of a FlowFile from a MQTT broker for a specifie
 
 In the list below, the names of required properties appear in bold. Any other properties (not in bold) are considered optional. The table also indicates any default values, and whether a property supports the NiFi Expression Language.
 
-| Name                  | Default Value | Allowable Values | Description                                                                                                                 |
-|-----------------------|---------------|------------------|-----------------------------------------------------------------------------------------------------------------------------|
-| **Broker URI**        |               |                  | The URI to use to connect to the MQTT broker                                                                                |
-| **Topic**             |               |                  | The topic to subscribe to                                                                                                   |
-| Client ID             |               |                  | MQTT client ID to use                                                                                                       |
-| Quality of Service    | 0             |                  | The Quality of Service (QoS) to receive the message with. Accepts three values '0', '1' and '2'                             |
-| Connection Timeout    | 30 sec        |                  | Maximum time interval the client will wait for the network connection to the MQTT broker                                    |
-| Keep Alive Interval   | 60 sec        |                  | Defines the maximum time interval between messages being sent to the broker                                                 |
-| Max Flow Segment Size |               |                  | Maximum flow content payload segment size for the MQTT record                                                               |
-| Last Will Topic       |               |                  | The topic to send the client's Last Will to. If the Last Will topic is not set then a Last Will will not be sent            |
-| Last Will Message     |               |                  | The message to send as the client's Last Will. If the Last Will Message is empty, Last Will will be deleted from the broker |
-| Last Will QoS         | 0             |                  | The Quality of Service (QoS) to send the last will with. Accepts three values '0', '1' and '2'                              |
-| Last Will Retain      | false         |                  | Whether to retain the client's Last Will                                                                                    |
-| Security Protocol     |               |                  | Protocol used to communicate with brokers                                                                                   |
-| Security CA           |               |                  | File or directory path to CA certificate(s) for verifying the broker's key                                                  |
-| Security Cert         |               |                  | Path to client's public key (PEM) used for authentication                                                                   |
-| Security Private Key  |               |                  | Path to client's private key (PEM) used for authentication                                                                  |
-| Security Pass Phrase  |               |                  | Private key passphrase                                                                                                      |
-| Username              |               |                  | Username to use when connecting to the broker                                                                               |
-| Password              |               |                  | Password to use when connecting to the broker                                                                               |
-| Clean Session         | true          |                  | Whether to start afresh rather than remembering previous subscriptions                                                      |
-| Queue Max Message     | 1000          |                  | Maximum number of messages allowed on the received MQTT queue                                                               |
+| Name                        | Default Value | Allowable Values            | Description                                                                                                                                                 |
+|-----------------------------|---------------|-----------------------------|-------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| **Broker URI**              |               |                             | The URI to use to connect to the MQTT broker                                                                                                                |
+| Client ID                   |               |                             | MQTT client ID to use. WARNING: Must not be empty when using MQTT 3.1.0!                                                                                    |
+| MQTT Version                | 3.x AUTO      | 3.x AUTO, 3.1.0, 3.1.1, 5.0 | The MQTT specification version when connecting to the broker.                                                                                               |
+| **Topic**                   |               |                             | The topic to subscribe to.                                                                                                                                  |
+| Clean Session               | true          |                             | Whether to start afresh rather than remembering previous subscriptions. Also make broker remember subscriptions after disconnected. WARNING: MQTT 3.x only. |
+| Clean Start                 | true          |                             | Whether to start afresh rather than remembering previous subscriptions. WARNING: MQTT 5.x only.                                                             |
+| Session Expiry Interval     | 0 s           |                             | Time to delete session on broker after client is disconnected. WARNING: MQTT 5.x only.                                                                      |
+| Queue Max Message           | 1000          |                             | Maximum number of messages allowed on the received MQTT queue                                                                                               |
+| Attribute From Content Type |               |                             | Name of FlowFile attribute to be filled from content type of received message. WARNING: MQTT 5.x only.                                                      |
+| Topic Alias Maximum         | 0             |                             | Maximum number of topic aliases to use, set to 0 to turn feature off. WARNING: MQTT 5.x only.                                                               |
+| Receive Maximum             | 65535         |                             | Maximum number of unacknowledged messages allowed. WARNING: MQTT 5.x only.                                                                                  |
+| Quality of Service          | 0             | 0, 1 and 2                  | The Quality of Service (QoS) to receive the message with.                                                                                                   |
+| Connection Timeout          | 10 sec        |                             | Maximum time interval the client will wait for the network connection to the MQTT broker                                                                    |
+| Keep Alive Interval         | 60 sec        |                             | Defines the maximum time interval between messages being received from the broker                                                                           |
+| Last Will Topic             |               |                             | The topic to send the client's Last Will to. If the Last Will topic is not set then a Last Will will not be sent                                            |
+| Last Will Message           |               |                             | The message to send as the client's Last Will. If the Last Will Message is empty, Last Will will be deleted from the broker                                 |
+| Last Will QoS               | 0             | 0, 1 and 2                  | The Quality of Service (QoS) to send the last will with.                                                                                                    |
+| Last Will Retain            | false         |                             | Whether to retain the client's Last Will                                                                                                                    |
+| Last Will Content Type      |               |                             | Content type of the client's Last Will. WARNING: MQTT 5.x only.                                                                                             |
+| Username                    |               |                             | Username to use when connecting to the broker                                                                                                               |
+| Password                    |               |                             | Password to use when connecting to the broker                                                                                                               |
+| Security Protocol           |               |                             | Protocol used to communicate with brokers                                                                                                                   |
+| Security CA                 |               |                             | File or directory path to CA certificate(s) for verifying the broker's key                                                                                  |
+| Security Cert               |               |                             | Path to client's public key (PEM) used for authentication                                                                                                   |
+| Security Private Key        |               |                             | Path to client's private key (PEM) used for authentication                                                                                                  |
+| Security Pass Phrase        |               |                             | Private key passphrase                                                                                                                                      |
 
 
 ### Relationships
@@ -1841,27 +1847,30 @@ PublishMQTT serializes FlowFile content as an MQTT payload, sending the message 
 
 In the list below, the names of required properties appear in bold. Any other properties (not in bold) are considered optional. The table also indicates any default values, and whether a property supports the NiFi Expression Language.
 
-| Name                  | Default Value | Allowable Values | Description                                                                                                                 |
-|-----------------------|---------------|------------------|-----------------------------------------------------------------------------------------------------------------------------|
-| **Broker URI**        |               |                  | The URI to use to connect to the MQTT broker                                                                                |
-| **Topic**             |               |                  | The topic to publish to                                                                                                     |
-| Client ID             |               |                  | MQTT client ID to use                                                                                                       |
-| Quality of Service    | 0             |                  | The Quality of Service (QoS) to send the message with. Accepts three values '0', '1' and '2'                                |
-| Connection Timeout    | 30 sec        |                  | Maximum time interval the client will wait for the network connection to the MQTT broker                                    |
-| Keep Alive Interval   | 60 sec        |                  | Defines the maximum time interval between messages being sent to the broker                                                 |
-| Max Flow Segment Size |               |                  | Maximum flow content payload segment size for the MQTT record                                                               |
-| Last Will Topic       |               |                  | The topic to send the client's Last Will to. If the Last Will topic is not set then a Last Will will not be sent            |
-| Last Will Message     |               |                  | The message to send as the client's Last Will. If the Last Will Message is empty, Last Will will be deleted from the broker |
-| Last Will QoS         | 0             |                  | The Quality of Service (QoS) to send the last will with. Accepts three values '0', '1' and '2'                              |
-| Last Will Retain      | false         |                  | Whether to retain the client's Last Will                                                                                    |
-| Security Protocol     |               |                  | Protocol used to communicate with brokers                                                                                   |
-| Security CA           |               |                  | File or directory path to CA certificate(s) for verifying the broker's key                                                  |
-| Security Cert         |               |                  | Path to client's public key (PEM) used for authentication                                                                   |
-| Security Private Key  |               |                  | Path to client's private key (PEM) used for authentication                                                                  |
-| Security Pass Phrase  |               |                  | Private key passphrase                                                                                                      |
-| Username              |               |                  | Username to use when connecting to the broker                                                                               |
-| Password              |               |                  | Password to use when connecting to the broker                                                                               |
-| Retain                | false         |                  | Retain published message in broker                                                                                          |
+| Name                    | Default Value | Allowable Values            | Description                                                                                                                 |
+|-------------------------|---------------|-----------------------------|-----------------------------------------------------------------------------------------------------------------------------|
+| **Broker URI**          |               |                             | The URI to use to connect to the MQTT broker                                                                                |
+| Client ID               |               |                             | MQTT client ID to use. WARNING: Must not be empty when using MQTT 3.1.0!                                                    |
+| MQTT Version            | 3.x AUTO      | 3.x AUTO, 3.1.0, 3.1.1, 5.0 | The MQTT specification version when connecting to the broker.                                                               |
+| **Topic**               |               |                             | The topic to publish to. <br/>**Supports Expression Language: true**                                                        |
+| Retain                  | false         |                             | Retain published message in broker                                                                                          |
+| Message Expiry Interval |               |                             | Time while message is valid and will be forwarded by broker. WARNING: MQTT 5.x only.                                        |
+| Content Type            |               |                             | Content type of the message. WARNING: MQTT 5.x only. <br/>**Supports Expression Language: true**                            |
+| Quality of Service      | 0             | 0, 1 and 2                  | The Quality of Service (QoS) to send the message with.                                                                      |
+| Connection Timeout      | 10 sec        |                             | Maximum time interval the client will wait for the network connection to the MQTT broker                                    |
+| Keep Alive Interval     | 60 sec        |                             | Defines the maximum time interval between messages being sent to the broker                                                 |
+| Last Will Topic         |               |                             | The topic to send the client's Last Will to. If the Last Will topic is not set then a Last Will will not be sent            |
+| Last Will Message       |               |                             | The message to send as the client's Last Will. If the Last Will Message is empty, Last Will will be deleted from the broker |
+| Last Will QoS           | 0             | 0, 1 and 2                  | The Quality of Service (QoS) to send the last will with.                                                                    |
+| Last Will Retain        | false         |                             | Whether to retain the client's Last Will                                                                                    |
+| Last Will Content Type  |               |                             | Content type of the client's Last Will. WARNING: MQTT 5.x only.                                                             |
+| Username                |               |                             | Username to use when connecting to the broker                                                                               |
+| Password                |               |                             | Password to use when connecting to the broker                                                                               |
+| Security Protocol       |               |                             | Protocol used to communicate with brokers                                                                                   |
+| Security CA             |               |                             | File or directory path to CA certificate(s) for verifying the broker's key                                                  |
+| Security Cert           |               |                             | Path to client's public key (PEM) used for authentication                                                                   |
+| Security Private Key    |               |                             | Path to client's private key (PEM) used for authentication                                                                  |
+| Security Pass Phrase    |               |                             | Private key passphrase                                                                                                      |
 
 
 ### Relationships
@@ -2398,6 +2407,8 @@ In the list below, the names of required properties appear in bold. Any other pr
 ### Description
 
 Routes FlowFiles based on their Attributes using the Attribute Expression Language.
+Any number of user-defined dynamic properties can be added, which all support the Attribute Expression Language. Relationships matching the name of the properties will be added.
+FlowFiles will be routed to all the relationships whose matching property evaluates to "true". Unmatched FlowFiles will be routed for "unmatched" relationship, while failed ones to "failure".
 ### Properties
 
 In the list below, the names of required properties appear in bold. Any other properties (not in bold) are considered optional. The table also indicates any default values, and whether a property supports the NiFi Expression Language.
