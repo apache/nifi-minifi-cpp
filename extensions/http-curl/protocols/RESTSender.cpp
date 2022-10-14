@@ -103,11 +103,19 @@ C2Payload RESTSender::sendPayload(const std::string& url, const Direction direct
   extensions::curl::HTTPClient client(url, ssl_context_service_);
   client.setKeepAliveProbe(extensions::curl::KeepAliveProbeData{2s, 2s});
   client.setConnectionTimeout(2s);
-  if (direction == Direction::TRANSMIT) {
-    client.set_request_method("POST");
-    if (!ssl_context_service_ && url.find("https://") == 0) {
-      setSecurityContext(client, "POST", url);
+
+  auto setUpHttpRequest = [&](const std::string& http_method) {
+    client.set_request_method(http_method);
+    if (url.find("https://") == 0) {
+      if (!ssl_context_service_) {
+        setSecurityContext(client, http_method, url);
+      } else {
+        client.initialize(http_method, url, ssl_context_service_);
+      }
     }
+  };
+  if (direction == Direction::TRANSMIT) {
+    setUpHttpRequest("POST");
     if (payload.getOperation() == Operation::TRANSFER) {
       // treat nested payloads as files
       for (const auto& file : payload.getNestedPayloads()) {
@@ -148,10 +156,7 @@ C2Payload RESTSender::sendPayload(const std::string& url, const Direction direct
   } else {
     // we do not need to set the upload callback
     // since we are not uploading anything on a get
-    if (!ssl_context_service_ && url.find("https://") == 0) {
-      setSecurityContext(client, "GET", url);
-    }
-    client.set_request_method("GET");
+    setUpHttpRequest("GET");
   }
 
   if (payload.getOperation() == Operation::TRANSFER) {

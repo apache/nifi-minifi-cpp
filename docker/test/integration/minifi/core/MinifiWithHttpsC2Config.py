@@ -13,22 +13,9 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+from .MinifiContainer import MinifiContainer
 
-from .Container import Container
 
-
-class FlowContainer(Container):
-    def __init__(self, config_dir, name, engine, vols, network, image_store, command):
-        super().__init__(name, engine, vols, network, image_store, command)
-        self.start_nodes = []
-        self.config_dir = config_dir
-        self.controllers = []
-
-    def get_start_nodes(self):
-        return self.start_nodes
-
-    def add_start_node(self, node):
-        self.start_nodes.append(node)
-
-    def add_controller(self, controller):
-        self.controllers.append(controller)
+class MinifiWithHttpsC2Config(MinifiContainer):
+    def __init__(self, config_dir, name, vols, network, image_store, command=None):
+        super().__init__(config_dir, name, vols, network, image_store, command, engine='minifi-cpp-with-https-c2-config')
