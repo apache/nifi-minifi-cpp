@@ -25,6 +25,7 @@
 #include <string>
 #include <utility>
 #include <vector>
+#include <cinttypes>
 
 #include "AtomicRepoEntries.h"
 #include "Connection.h"
@@ -134,7 +135,7 @@ class VolatileRepository : public RepositoryType {
   // current size of the volatile repo.
   std::atomic<size_t> current_size_;
   // current index.
-  std::atomic<uint16_t> current_index_;
+  std::atomic<uint32_t> current_index_;
   // value vector that exists for non blocking iteration over
   // objects that store data for this repo instance.
   std::vector<AtomicEntry<KeyType>*> value_vector_;
@@ -226,11 +227,11 @@ bool VolatileRepository<KeyType, RepositoryType>::Put(const KeyType& key, const 
   size_t reclaimed_size = 0;
   RepoValue<KeyType> old_value;
   do {
-    uint16_t private_index = current_index_.fetch_add(1);
+    uint32_t private_index = current_index_.fetch_add(1);
     // round robin through the beginning
     if (private_index >= max_count_) {
-      uint16_t new_index = 0;
-      if (current_index_.compare_exchange_weak(new_index, 0)) {
+      uint32_t new_index = private_index + 1;
+      if (current_index_.compare_exchange_weak(new_index, 1)) {
         private_index = 0;
       } else {
         continue;
@@ -256,7 +257,7 @@ bool VolatileRepository<KeyType, RepositoryType>::Put(const KeyType& key, const 
   } while (!updated);
   current_size_ += size;
 
-  logger_->log_debug("VolatileRepository -- put %u %u", current_size_.load(), current_index_.load());
+  logger_->log_debug("VolatileRepository -- put %zu " PRIu32, current_size_.load(), current_index_.load());
   return true;
 }
 

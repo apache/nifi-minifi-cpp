@@ -331,10 +331,19 @@ class TestPlan {
 
 class TestController {
  public:
+  struct PlanConfig {
+    std::shared_ptr<minifi::Configure> configuration;
+    const char* state_dir = nullptr;
+    std::shared_ptr<minifi::core::ContentRepository> content_repo;
+    std::shared_ptr<minifi::core::Repository> flow_file_repo;
+  };
+
   TestController();
 
+  std::shared_ptr<TestPlan> createPlan(PlanConfig config);
+
   std::shared_ptr<TestPlan> createPlan(std::shared_ptr<minifi::Configure> configuration = nullptr, const char* state_dir = nullptr,
-      std::shared_ptr<minifi::core::ContentRepository> content_repo = std::make_shared<minifi::core::repository::VolatileContentRepository>());
+      std::shared_ptr<minifi::core::ContentRepository> content_repo = nullptr);
 
   static void runSession(const std::shared_ptr<TestPlan> &plan,
                   bool runToCompletion = true,
