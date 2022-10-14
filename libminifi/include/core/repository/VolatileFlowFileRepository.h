@@ -26,6 +26,8 @@
 #include "core/ThreadedRepository.h"
 #include "utils/gsl.h"
 
+struct VolatileFlowFileRepositoryTestAccessor;
+
 namespace org {
 namespace apache {
 namespace nifi {
@@ -38,6 +40,8 @@ namespace repository {
  * those which we no longer hold.
  */
 class VolatileFlowFileRepository : public VolatileRepository<std::string, core::ThreadedRepository> {
+  friend struct ::VolatileFlowFileRepositoryTestAccessor;
+
  public:
   explicit VolatileFlowFileRepository(const std::string& repo_name = "",
                                       const std::string& /*dir*/ = REPOSITORY_DIRECTORY,

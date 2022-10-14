@@ -976,54 +976,72 @@ void ProcessSession::persistFlowFilesBeforeTransfer(
   auto flowFileRepo = process_context_->getFlowFileRepository();
   auto contentRepo = process_context_->getContentRepository();
 
-  for (auto& [target, flows] : transactionMap) {
-    const auto connection = dynamic_cast<Connection*>(target);
-    const bool shouldDropEmptyFiles = connection && connection->getDropEmptyFlowFiles();
-    for (auto &ff : flows) {
-      if (shouldDropEmptyFiles && ff->getSize() == 0) {
-        // the receiver will drop this FF
-        continue;
+  enum class Type {
+    Dropped, Transferred
+  };
+
+  auto forEachFlowFile = [&] (Type type, auto fn) {
+    for (auto& [target, flows] : transactionMap) {
+      const auto connection = dynamic_cast<Connection*>(target);
+      const bool shouldDropEmptyFiles = connection && connection->getDropEmptyFlowFiles();
+      for (auto &ff : flows) {
+        auto snapshotIt = modifiedFlowFiles.find(ff->getUUID());
+        auto original = snapshotIt != modifiedFlowFiles.end() ? snapshotIt->second.snapshot : nullptr;
+        if (shouldDropEmptyFiles && ff->getSize() == 0) {
+          // the receiver will drop this FF
+          if (type == Type::Dropped) {
+            fn(ff, original);
+          }
+        } else {
+          if (type == Type::Transferred) {
+            fn(ff, original);
+          }
+        }
       }
-
-      std::unique_ptr<io::BufferStream> stream(new io::BufferStream());
-      std::static_pointer_cast<FlowFileRecord>(ff)->Serialize(*stream);
-
-      flowData.emplace_back(ff->getUUIDStr(), std::move(stream));
     }
-  }
+  };
+
+  // collect serialized flowfiles
+  forEachFlowFile(Type::Transferred, [&] (auto& ff, auto& /*original*/) {
+    auto stream = std::make_unique<io::BufferStream>();
+    std::static_pointer_cast<FlowFileRecord>(ff)->Serialize(*stream);
+
+    flowData.emplace_back(ff->getUUIDStr(), std::move(stream));
+  });
+
+  // increment on behalf of the to be persisted instance
+  forEachFlowFile(Type::Transferred, [&] (auto& ff, auto& /*original*/) {
+    if (auto claim = ff->getResourceClaim())
+      claim->increaseFlowFileRecordOwnedCount();
+  });
 
   if (!flowFileRepo->MultiPut(flowData)) {
     logger_->log_error("Failed execute multiput on FF repo!");
+    // decrement on behalf of the failed persisted instance
+    forEachFlowFile(Type::Transferred, [&] (auto& ff, auto& /*original*/) {
+      if (auto claim = ff->getResourceClaim())
+        claim->decreaseFlowFileRecordOwnedCount();
+    });
     throw Exception(PROCESS_SESSION_EXCEPTION, "Failed to put flowfiles to repository");
   }
 
-  for (auto& [target, flows] : transactionMap) {
-    const auto connection = dynamic_cast<Connection*>(target);
-    const bool shouldDropEmptyFiles = connection && connection->getDropEmptyFlowFiles();
-    for (auto &ff : flows) {
-      utils::Identifier uuid = ff->getUUID();
-      auto snapshotIt = modifiedFlowFiles.find(uuid);
-      auto original = snapshotIt != modifiedFlowFiles.end() ? snapshotIt->second.snapshot : nullptr;
-      if (shouldDropEmptyFiles && ff->getSize() == 0) {
-        // the receiver promised to drop this FF, no need for it anymore
-        if (ff->isStored() && flowFileRepo->Delete(ff->getUUIDStr())) {
-          // original must be non-null since this flowFile is already stored in the repos ->
-          // must have come from a session->get()
-          assert(original);
-          ff->setStoredToRepository(false);
-        }
-        continue;
-      }
-      auto claim = ff->getResourceClaim();
-      // increment on behalf of the persisted instance
-      if (claim) claim->increaseFlowFileRecordOwnedCount();
-      auto originalClaim = original ? original->getResourceClaim() : nullptr;
-      // decrement on behalf of the overridden instance if any
-      if (originalClaim) originalClaim->decreaseFlowFileRecordOwnedCount();
-
-      ff->setStoredToRepository(true);
+  // decrement on behalf of the overridden instance if any
+  forEachFlowFile(Type::Transferred, [&] (auto& ff, auto& original) {
+    if (auto original_claim = original ? original->getResourceClaim() : nullptr) {
+      original_claim->decreaseFlowFileRecordOwnedCount();
     }
-  }
+    ff->setStoredToRepository(true);
+  });
+
+  forEachFlowFile(Type::Dropped, [&] (auto& ff, auto& original) {
+    // the receiver promised to drop this FF, no need for it anymore
+    if (ff->isStored() && flowFileRepo->Delete(ff->getUUIDStr())) {
+      // original must be non-null since this flowFile is already stored in the repos ->
+      // must have come from a session->get()
+      gsl_Assert(original);
+      ff->setStoredToRepository(false);
+    }
+  });
 }
 
 void ProcessSession::ensureNonNullResourceClaim(

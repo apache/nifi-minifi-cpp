@@ -619,16 +619,34 @@ TestController::TestController()
   flow_version_ = std::make_shared<minifi::state::response::FlowVersion>("test", "test", "test");
 }
 
-std::shared_ptr<TestPlan> TestController::createPlan(std::shared_ptr<minifi::Configure> configuration, const char* state_dir, std::shared_ptr<minifi::core::ContentRepository> content_repo) {
-  if (configuration == nullptr) {
-    configuration = std::make_shared<minifi::Configure>();
-    configuration->set(minifi::Configure::nifi_state_management_provider_local_class_name, "UnorderedMapKeyValueStoreService");
-      configuration->set(minifi::Configure::nifi_dbcontent_repository_directory_default, createTempDirectory());
+std::shared_ptr<TestPlan> TestController::createPlan(PlanConfig config) {
+  if (!config.configuration) {
+    config.configuration = std::make_shared<minifi::Configure>();
+    config.configuration->set(minifi::Configure::nifi_state_management_provider_local_class_name, "UnorderedMapKeyValueStoreService");
+    config.configuration->set(minifi::Configure::nifi_dbcontent_repository_directory_default, createTempDirectory());
   }
 
-  content_repo->initialize(configuration);
+  if (!config.flow_file_repo)
+    config.flow_file_repo = std::make_shared<TestRepository>();
 
-  return std::make_shared<TestPlan>(std::move(content_repo), std::make_shared<TestRepository>(), std::make_shared<TestRepository>(), flow_version_, configuration, state_dir);
+  if (!config.content_repo)
+    config.content_repo = std::make_shared<minifi::core::repository::VolatileContentRepository>();
+
+  config.content_repo->initialize(config.configuration);
+  config.flow_file_repo->initialize(config.configuration);
+  config.flow_file_repo->loadComponent(config.content_repo);
+
+  return std::make_shared<TestPlan>(
+      std::move(config.content_repo), std::move(config.flow_file_repo), std::make_shared<TestRepository>(),
+      flow_version_, config.configuration, config.state_dir ? config.state_dir->string().c_str() : nullptr);
+}
+
+std::shared_ptr<TestPlan> TestController::createPlan(std::shared_ptr<minifi::Configure> configuration, std::optional<std::filesystem::path> state_dir, std::shared_ptr<minifi::core::ContentRepository> content_repo) {
+  return createPlan(PlanConfig{
+    .configuration = std::move(configuration),
+    .state_dir = std::move(state_dir),
+    .content_repo = std::move(content_repo)
+  });
 }
 
 std::string TestController::createTempDirectory() {
