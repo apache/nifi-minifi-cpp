@@ -36,7 +36,7 @@ std::shared_ptr<ResourceClaim> ForwardingContentSession::create() {
 }
 
 std::shared_ptr<io::BaseStream> ForwardingContentSession::write(const std::shared_ptr<ResourceClaim>& resource_id) {
-  if (created_claims_.find(resource_id) == created_claims_.end()) {
+  if (!created_claims_.contains(resource_id)) {
     throw Exception(REPOSITORY_EXCEPTION, "Can only overwrite owned resource");
   }
   return repository_->write(*resource_id, false);
