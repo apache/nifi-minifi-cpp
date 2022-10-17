@@ -1038,7 +1038,7 @@ void ProcessSession::persistFlowFilesBeforeTransfer(
     if (ff->isStored() && flowFileRepo->Delete(ff->getUUIDStr())) {
       // original must be non-null since this flowFile is already stored in the repos ->
       // must have come from a session->get()
-      assert(original);
+      gsl_Assert(original);
       ff->setStoredToRepository(false);
     }
   });
