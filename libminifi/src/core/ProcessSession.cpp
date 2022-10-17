@@ -224,7 +224,7 @@ void ProcessSession::penalize(const std::shared_ptr<core::FlowFile> &flow) {
 void ProcessSession::transfer(const std::shared_ptr<core::FlowFile> &flow, const Relationship& relationship) {
   logging::LOG_INFO(logger_) << "Transferring " << flow->getUUIDStr() << " from " << process_context_->getProcessorNode()->getName() << " to relationship " << relationship.getName();
   utils::Identifier uuid = flow->getUUID();
-  _transferRelationship[uuid] = std::move(relationship);
+  _transferRelationship[uuid] = relationship;
   flow->setDeleted(false);
 }
 
