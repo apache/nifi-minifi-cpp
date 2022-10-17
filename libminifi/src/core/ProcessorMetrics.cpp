@@ -101,4 +101,47 @@ std::chrono::milliseconds ProcessorMetrics::getLastOnTriggerRuntime() const {
   return on_trigger_runtime_averager_.getLastValue();
 }
 
+
+template<typename ValueType>
+requires Summable<ValueType> && DividableByInteger<ValueType>
+ValueType ProcessorMetrics::Averager<ValueType>::getAverage() const {
+  if (values_.empty()) {
+    return {};
+  }
+  ValueType sum{};
+  std::lock_guard<std::mutex> lock(average_value_mutex_);
+  for (const auto& value : values_) {
+    sum += value;
+  }
+  return sum / values_.size();
+}
+
+template<typename ValueType>
+requires Summable<ValueType> && DividableByInteger<ValueType>
+void ProcessorMetrics::Averager<ValueType>::addValue(ValueType runtime) {
+  std::lock_guard<std::mutex> lock(average_value_mutex_);
+  if (values_.size() < SAMPLE_SIZE_) {
+    values_.push_back(runtime);
+  } else {
+    if (next_average_index_ >= values_.size()) {
+      next_average_index_ = 0;
+    }
+    values_[next_average_index_] = runtime;
+    ++next_average_index_;
+  }
+}
+
+template<typename ValueType>
+requires Summable<ValueType> && DividableByInteger<ValueType>
+ValueType ProcessorMetrics::Averager<ValueType>::getLastValue() const {
+  std::lock_guard<std::mutex> lock(average_value_mutex_);
+  if (values_.empty()) {
+    return {};
+  } else if (values_.size() < SAMPLE_SIZE_) {
+    return values_[values_.size() - 1];
+  } else {
+    return values_[next_average_index_ - 1];
+  }
+}
+
 }  // namespace org::apache::nifi::minifi::core

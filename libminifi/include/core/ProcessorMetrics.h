@@ -25,9 +25,14 @@
 
 #include "core/state/nodes/MetricsBase.h"
 #include "core/state/PublishedMetricProvider.h"
-#include "utils/Averager.h"
 
 namespace org::apache::nifi::minifi::core {
+
+template<typename T>
+concept Summable = requires(T x) { x + x; };  // NOLINT(readability/braces)
+
+template<typename T>
+concept DividableByInteger = requires(T x, uint32_t divisor) { x / divisor; };  // NOLINT(readability/braces)
 
 class Processor;
 
@@ -49,13 +54,32 @@ class ProcessorMetrics : public state::response::ResponseNode {
   std::atomic<uint64_t> transferred_bytes{0};
 
  protected:
+  template<typename ValueType>
+  requires Summable<ValueType> && DividableByInteger<ValueType>
+  class Averager {
+   public:
+    explicit Averager(uint32_t sample_size) : SAMPLE_SIZE_(sample_size) {
+      values_.reserve(SAMPLE_SIZE_);
+    }
+
+    ValueType getAverage() const;
+    ValueType getLastValue() const;
+    void addValue(ValueType runtime);
+
+   private:
+    const uint32_t SAMPLE_SIZE_;
+    mutable std::mutex average_value_mutex_;
+    uint32_t next_average_index_ = 0;
+    std::vector<ValueType> values_;
+  };
+
   [[nodiscard]] std::unordered_map<std::string, std::string> getCommonLabels() const;
   static const uint8_t STORED_ON_TRIGGER_RUNTIME_COUNT = 10;
 
   std::mutex transferred_relationships_mutex_;
   std::unordered_map<std::string, size_t> transferred_relationships_;
   const Processor& source_processor_;
-  utils::Averager<std::chrono::milliseconds> on_trigger_runtime_averager_;
+  Averager<std::chrono::milliseconds> on_trigger_runtime_averager_;
 };
 
 }  // namespace org::apache::nifi::minifi::core
