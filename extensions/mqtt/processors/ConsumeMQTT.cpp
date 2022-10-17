@@ -142,7 +142,7 @@ void ConsumeMQTT::putUserPropertiesAsAttributes(const SmartMessage& message, con
     MQTTProperty* property = MQTTProperties_getPropertyAt(&message.contents->properties, MQTTPROPERTY_CODE_USER_PROPERTY, i);
     std::string key(property->value.data.data, property->value.data.len);
     std::string value(property->value.value.data, property->value.value.len);
-    session->putAttribute(flow_file, std::move(key), std::move(value));
+    session->putAttribute(flow_file, key, value);
   }
 }
 
@@ -157,7 +157,7 @@ void ConsumeMQTT::fillAttributeFromContentType(const SmartMessage& message, cons
   }
 
   std::string content_type(property->value.data.data, property->value.data.len);
-  session->putAttribute(flow_file, attribute_from_content_type_, std::move(content_type));
+  session->putAttribute(flow_file, attribute_from_content_type_, content_type);
 }
 
 void ConsumeMQTT::startupClient() {
