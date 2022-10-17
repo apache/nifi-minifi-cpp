@@ -225,16 +225,27 @@ TEST_CASE("Test ProcessorMetrics", "[ProcessorMetrics]") {
   REQUIRE(metrics.getLastOnTriggerRuntime() == 30ms);
   REQUIRE(metrics.getAverageOnTriggerRuntime() == 20ms);
 
-  for (auto i = 0; i < 10; ++i) {
+  for (auto i = 0; i < 7; ++i) {
     metrics.addLastOnTriggerRuntime(50ms);
   }
+  REQUIRE(metrics.getAverageOnTriggerRuntime() == 41ms);
+  REQUIRE(metrics.getLastOnTriggerRuntime() == 50ms);
 
+  for (auto i = 0; i < 3; ++i) {
+    metrics.addLastOnTriggerRuntime(50ms);
+  }
   REQUIRE(metrics.getAverageOnTriggerRuntime() == 50ms);
   REQUIRE(metrics.getLastOnTriggerRuntime() == 50ms);
 
+  for (auto i = 0; i < 10; ++i) {
+    metrics.addLastOnTriggerRuntime(40ms);
+  }
+  REQUIRE(metrics.getAverageOnTriggerRuntime() == 40ms);
+  REQUIRE(metrics.getLastOnTriggerRuntime() == 40ms);
+
   metrics.addLastOnTriggerRuntime(10ms);
   REQUIRE(metrics.getLastOnTriggerRuntime() == 10ms);
-  REQUIRE(metrics.getAverageOnTriggerRuntime() == 46ms);
+  REQUIRE(metrics.getAverageOnTriggerRuntime() == 37ms);
 }
 
 }  // namespace org::apache::nifi::minifi::test

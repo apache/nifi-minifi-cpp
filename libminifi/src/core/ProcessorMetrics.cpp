@@ -18,6 +18,7 @@
 
 #include "core/Processor.h"
 #include "utils/gsl.h"
+#include "range/v3/numeric/accumulate.hpp"
 
 using namespace std::literals::chrono_literals;
 
@@ -50,13 +51,16 @@ std::vector<state::response::SerializedResponseNode> ProcessorMetrics::serialize
     }
   };
 
-  for (const auto& [relationship, count] : transferred_relationships_) {
-    gsl_Expects(!relationship.empty());
-    state::response::SerializedResponseNode transferred_to_relationship_node;
-    transferred_to_relationship_node.name = std::string("TransferredTo").append(1, toupper(relationship[0])).append(relationship.substr(1));
-    transferred_to_relationship_node.value = static_cast<uint32_t>(count);
+  {
+    std::lock_guard<std::mutex> lock(transferred_relationships_mutex_);
+    for (const auto& [relationship, count] : transferred_relationships_) {
+      gsl_Expects(!relationship.empty());
+      state::response::SerializedResponseNode transferred_to_relationship_node;
+      transferred_to_relationship_node.name = std::string("TransferredTo").append(1, toupper(relationship[0])).append(relationship.substr(1));
+      transferred_to_relationship_node.value = static_cast<uint32_t>(count);
 
-    root_node.children.push_back(transferred_to_relationship_node);
+      root_node.children.push_back(transferred_to_relationship_node);
+    }
   }
 
   resp.push_back(root_node);
@@ -108,12 +112,8 @@ ValueType ProcessorMetrics::Averager<ValueType>::getAverage() const {
   if (values_.empty()) {
     return {};
   }
-  ValueType sum{};
   std::lock_guard<std::mutex> lock(average_value_mutex_);
-  for (const auto& value : values_) {
-    sum += value;
-  }
-  return sum / values_.size();
+  return ranges::accumulate(values_, ValueType{}) / values_.size();
 }
 
 template<typename ValueType>

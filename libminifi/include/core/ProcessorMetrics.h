@@ -58,7 +58,7 @@ class ProcessorMetrics : public state::response::ResponseNode {
   requires Summable<ValueType> && DividableByInteger<ValueType>
   class Averager {
    public:
-    explicit Averager(uint32_t sample_size) : SAMPLE_SIZE_(sample_size) {
+    explicit Averager(uint32_t sample_size) : SAMPLE_SIZE_(sample_size), next_average_index_(SAMPLE_SIZE_) {
       values_.reserve(SAMPLE_SIZE_);
     }
 
@@ -69,7 +69,7 @@ class ProcessorMetrics : public state::response::ResponseNode {
    private:
     const uint32_t SAMPLE_SIZE_;
     mutable std::mutex average_value_mutex_;
-    uint32_t next_average_index_ = 0;
+    uint32_t next_average_index_;
     std::vector<ValueType> values_;
   };
 
