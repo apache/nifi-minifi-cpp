@@ -22,7 +22,6 @@
 #include "ResourceClaim.h"
 #include "io/BaseStream.h"
 #include "Exception.h"
-#include "utils/gsl.h"
 
 namespace org::apache::nifi::minifi::core {
 
@@ -35,24 +34,21 @@ std::shared_ptr<ResourceClaim> BufferedContentSession::create() {
 }
 
 std::shared_ptr<io::BaseStream> BufferedContentSession::write(const std::shared_ptr<ResourceClaim>& resource_id) {
-  auto it = managed_resources_.find(resource_id);
-  if (it == managed_resources_.end()) {
-    throw Exception(REPOSITORY_EXCEPTION, "Can only overwrite owned resource");
+  if (auto it = managed_resources_.find(resource_id); it != managed_resources_.end()) {
+    return it->second = std::make_shared<io::BufferStream>();
   }
-  it->second = std::make_shared<io::BufferStream>();
-  return it->second;
+  throw Exception(REPOSITORY_EXCEPTION, "Can only overwrite owned resource");
 }
 
 std::shared_ptr<io::BaseStream> BufferedContentSession::append(const std::shared_ptr<ResourceClaim>& resource_id) {
-  auto it = managed_resources_.find(resource_id);
-  if (it == managed_resources_.end()) {
-    auto& extension = extended_resources_[resource_id];
-    if (!extension) {
-      extension = std::make_shared<io::BufferStream>();
-    }
-    return extension;
+  if (auto it = managed_resources_.find(resource_id); it != managed_resources_.end()) {
+    return it->second;
   }
-  return it->second;
+  auto& extension = extended_resources_[resource_id];
+  if (!extension) {
+    extension = std::make_shared<io::BufferStream>();
+  }
+  return extension;
 }
 
 std::shared_ptr<io::BaseStream> BufferedContentSession::read(const std::shared_ptr<ResourceClaim>& resource_id) {
