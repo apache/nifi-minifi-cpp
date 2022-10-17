@@ -59,7 +59,7 @@ std::shared_ptr<io::BaseStream> BufferedContentSession::read(const std::shared_p
   // TODO(adebreceni):
   //  after the stream refactor is merged we should be able to share the underlying buffer
   //  between multiple InputStreams, moreover create a ConcatInputStream
-  if (managed_resources_.find(resource_id) != managed_resources_.end() || extended_resources_.find(resource_id) != extended_resources_.end()) {
+  if (managed_resources_.contains(resource_id) || extended_resources_.contains(resource_id)) {
     throw Exception(REPOSITORY_EXCEPTION, "Can only read non-modified resource");
   }
   return repository_->read(*resource_id);
