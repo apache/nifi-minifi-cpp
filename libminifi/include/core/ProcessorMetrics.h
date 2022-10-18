@@ -44,7 +44,7 @@ class ProcessorMetrics : public state::response::ResponseNode {
 
   std::vector<state::response::SerializedResponseNode> serialize() override;
   std::vector<state::PublishedMetric> calculateMetrics() override;
-  void incrementRelationshipTransferCount(const std::string& relationship);
+  void increaseRelationshipTransferCount(const std::string& relationship, size_t count = 1);
   std::chrono::milliseconds getAverageOnTriggerRuntime() const;
   std::chrono::milliseconds getLastOnTriggerRuntime() const;
   void addLastOnTriggerRuntime(std::chrono::milliseconds runtime);

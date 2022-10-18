@@ -27,6 +27,7 @@
 #include <atomic>
 #include <algorithm>
 #include <set>
+#include <unordered_map>
 
 #include "ProcessContext.h"
 #include "FlowFileRecord.h"
@@ -179,7 +180,12 @@ class ProcessSession : public ReferenceContainer {
     Error_NoRelationship
   };
 
-  RouteResult routeFlowFile(const std::shared_ptr<FlowFile>& record);
+  struct TransferMetrics {
+    size_t transfer_count = 0;
+    uint64_t transfer_size = 0;
+  };
+
+  RouteResult routeFlowFile(const std::shared_ptr<FlowFile>& record, std::unordered_map<std::string, TransferMetrics>& transfers);
 
   void persistFlowFilesBeforeTransfer(
       std::map<Connectable*, std::vector<std::shared_ptr<core::FlowFile>>>& transactionMap,

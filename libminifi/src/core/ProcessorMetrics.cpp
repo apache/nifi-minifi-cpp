@@ -88,9 +88,9 @@ std::vector<state::PublishedMetric> ProcessorMetrics::calculateMetrics() {
   return metrics;
 }
 
-void ProcessorMetrics::incrementRelationshipTransferCount(const std::string& relationship) {
+void ProcessorMetrics::increaseRelationshipTransferCount(const std::string& relationship, size_t count) {
   std::lock_guard<std::mutex> lock(transferred_relationships_mutex_);
-  ++transferred_relationships_[relationship];
+  transferred_relationships_[relationship] += count;
 }
 
 std::chrono::milliseconds ProcessorMetrics::getAverageOnTriggerRuntime() const {
