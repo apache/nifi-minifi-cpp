@@ -17,10 +17,10 @@
 
 #include "RouteText.h"
 
-#include <map>
-#include <vector>
-#include <utility>
 #include <algorithm>
+#include <vector>
+#include <unordered_map>
+#include <utility>
 
 #include "core/ProcessSession.h"
 #include "core/PropertyBuilder.h"
@@ -379,7 +379,7 @@ std::string_view RouteText::preprocess(std::string_view str) const {
 bool RouteText::matchSegment(MatchingContext& context, const Segment& segment, const core::Property& prop) const {
   switch (matching_.value()) {
     case Matching::EXPRESSION: {
-      std::map<std::string, std::string> variables;
+      std::unordered_map<std::string, std::string> variables;
       variables["segment"] = segment.value_;
       variables["segmentNo"] = std::to_string(segment.idx_);
       if (segmentation_ == Segmentation::PER_LINE) {

@@ -169,7 +169,6 @@ class TailFile : public core::Processor {
     TimePoint mtime_;
   };
 
-  void parseAttributeProviderServiceProperty(core::ProcessContext& context);
   void parseStateFileLine(char *buf, std::map<std::string, TailState> &state) const;
   void processAllRotatedFiles(const std::shared_ptr<core::ProcessSession> &session, TailState &state);
   void processRotatedFiles(const std::shared_ptr<core::ProcessSession> &session, TailState &state, std::vector<TailState> &rotated_file_states);

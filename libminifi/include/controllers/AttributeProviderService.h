@@ -23,7 +23,13 @@
 
 #include "core/controller/ControllerService.h"
 
-namespace org::apache::nifi::minifi::controllers {
+namespace org::apache::nifi::minifi {
+
+namespace core {
+class ProcessContext;
+}
+
+namespace controllers {
 
 class AttributeProviderService : public core::controller::ControllerService {
  public:
@@ -36,6 +42,9 @@ class AttributeProviderService : public core::controller::ControllerService {
   using AttributeMap = std::unordered_map<std::string, std::string>;
   virtual std::optional<std::vector<AttributeMap>> getAttributes() = 0;
   virtual std::string_view name() const = 0;
+
+  static AttributeProviderService* getFromProperty(const core::ProcessContext& context, const core::Property& attributeProviderService);
 };
 
-}  // namespace org::apache::nifi::minifi::controllers
+}  // namespace controllers
+}  // namespace org::apache::nifi::minifi

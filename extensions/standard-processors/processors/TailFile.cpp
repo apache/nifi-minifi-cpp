@@ -351,7 +351,7 @@ void TailFile::onSchedule(const std::shared_ptr<core::ProcessContext> &context, 
   if (mode == "Multiple file") {
     tail_mode_ = Mode::MULTIPLE;
 
-    parseAttributeProviderServiceProperty(*context);
+    attribute_provider_service_ = controllers::AttributeProviderService::getFromProperty(*context, AttributeProviderService);
 
     if (!context->getProperty(BaseDirectory.getName(), base_dir_)) {
       throw minifi::Exception(ExceptionType::PROCESSOR_EXCEPTION, "Base directory is required for multiple tail mode.");
@@ -395,24 +395,6 @@ void TailFile::onSchedule(const std::shared_ptr<core::ProcessContext> &context, 
   context->getProperty(RollingFilenamePattern.getName(), rolling_filename_pattern_glob);
   rolling_filename_pattern_ = utils::file::globToRegex(rolling_filename_pattern_glob);
   initial_start_position_ = InitialStartPositions{utils::parsePropertyWithAllowableValuesOrThrow(*context, InitialStartPosition.getName(), InitialStartPositions::values())};
-}
-
-void TailFile::parseAttributeProviderServiceProperty(core::ProcessContext& context) {
-  const auto attribute_provider_service_name = context.getProperty(AttributeProviderService);
-  if (!attribute_provider_service_name || attribute_provider_service_name->empty()) {
-    return;
-  }
-
-  std::shared_ptr<core::controller::ControllerService> controller_service = context.getControllerService(*attribute_provider_service_name);
-  if (!controller_service) {
-    throw minifi::Exception{ExceptionType::PROCESS_SCHEDULE_EXCEPTION, utils::StringUtils::join_pack("Controller service '", *attribute_provider_service_name, "' not found")};
-  }
-
-  // we drop ownership of the service here -- in the long term, getControllerService() should return a non-owning pointer or optional reference
-  attribute_provider_service_ = dynamic_cast<minifi::controllers::AttributeProviderService*>(controller_service.get());
-  if (!attribute_provider_service_) {
-    throw minifi::Exception{ExceptionType::PROCESS_SCHEDULE_EXCEPTION, utils::StringUtils::join_pack("Controller service '", *attribute_provider_service_name, "' is not an AttributeProviderService")};
-  }
 }
 
 void TailFile::parseStateFileLine(char *buf, std::map<std::string, TailState> &state) const {

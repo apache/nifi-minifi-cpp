@@ -30,6 +30,7 @@
 #include "FlowController.h"
 #include "TestBase.h"
 #include "Catch.h"
+#include "controllers/test/TestAttributeProviderService.h"
 #include "core/Core.h"
 #include "core/FlowFile.h"
 #include "utils/file/FileUtils.h"
@@ -1774,29 +1775,6 @@ TEST_CASE("TailFile onSchedule throws if an invalid Attribute Provider Service i
 
   REQUIRE_THROWS_AS(plan->runNextProcessor(), minifi::Exception);
 }
-
-namespace {
-
-class TestAttributeProviderService : public minifi::controllers::AttributeProviderService {
- public:
-  using AttributeProviderService::AttributeProviderService;
-
-  static constexpr const char* Description = "An attribute provider service which provides a constant set of records.";
-  static auto properties() { return std::array<core::Property, 0>{}; }
-  static constexpr bool SupportsDynamicProperties = false;
-  ADD_COMMON_VIRTUAL_FUNCTIONS_FOR_CONTROLLER_SERVICES
-
-  void initialize() override {};
-  void onEnable() override {};
-  std::optional<std::vector<AttributeMap>> getAttributes() override {
-    return std::vector<AttributeMap>{AttributeMap{{"color", "red"}, {"fruit", "apple"}, {"uid", "001"}, {"animal", "dog"}},
-                                     AttributeMap{{"color", "yellow"}, {"fruit", "banana"}, {"uid", "004"}, {"animal", "dolphin"}}};
-  }
-  std::string_view name() const override { return "test"; }
-};
-REGISTER_RESOURCE(TestAttributeProviderService, ControllerService);
-
-}  // namespace
 
 TEST_CASE("TailFile can use an AttributeProviderService", "[AttributeProviderService]") {
   TestController testController;

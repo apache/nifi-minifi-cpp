@@ -18,6 +18,7 @@
 #include "TestBase.h"
 #include "Catch.h"
 #include <memory>
+#include "controllers/test/TestAttributeProviderService.h"
 #include "LogAttribute.h"
 #include "UpdateAttribute.h"
 #include "GenerateFlowFile.h"
@@ -43,6 +44,35 @@ TEST_CASE("UpdateAttributeTest", "[updateAttributeTest]") {
 
   REQUIRE(LogTestController::getInstance().contains("key:test_attr_1 value:test_val_1"));
   REQUIRE(LogTestController::getInstance().contains("key:test_attr_2 value:test_val_2"));
+
+  LogTestController::getInstance().reset();
+}
+
+TEST_CASE("UpdateAttributeTestWithAttributeProviderService", "[updateAttributeTest]") {
+  TestController testController;
+
+  LogTestController::getInstance().setDebug<minifi::processors::UpdateAttribute>();
+  LogTestController::getInstance().setDebug<TestPlan>();
+  LogTestController::getInstance().setDebug<minifi::processors::LogAttribute>();
+  std::shared_ptr<TestPlan> plan = testController.createPlan();
+
+  plan->addController("TestAttributeProviderService", "attribute_provider_service");
+
+  plan->addProcessor("GenerateFlowFile", "generate");
+  const auto &update_proc = plan->addProcessor("UpdateAttribute", "update", core::Relationship("success", "description"), true);
+  plan->addProcessor("LogAttribute", "log", core::Relationship("success", "description"), true);
+
+  // use provided attributes in Expression Language properties
+  plan->setProperty(update_proc, minifi::processors::UpdateAttribute::AttributeProviderService.getName(), "attribute_provider_service", false);
+  plan->setProperty(update_proc, "test_attr_1", "${color}", true);
+  plan->setProperty(update_proc, "test_attr_2", "${fruit}", true);
+
+  testController.runSession(plan, false);  // generate
+  testController.runSession(plan, false);  // update
+  testController.runSession(plan, false);  // log
+
+  REQUIRE(LogTestController::getInstance().contains("key:test_attr_1 value:yellow"));
+  REQUIRE(LogTestController::getInstance().contains("key:test_attr_2 value:banana"));
 
   LogTestController::getInstance().reset();
 }

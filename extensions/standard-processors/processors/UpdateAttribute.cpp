@@ -20,17 +20,19 @@
 
 #include "UpdateAttribute.h"
 
-#include <memory>
-#include <string>
+#include <utility>
 
+#include "controllers/AttributeProviderService.h"
 #include "core/PropertyBuilder.h"
 #include "core/Resource.h"
 
-namespace org {
-namespace apache {
-namespace nifi {
-namespace minifi {
-namespace processors {
+namespace org::apache::nifi::minifi::processors {
+
+const core::Property UpdateAttribute::AttributeProviderService(
+        core::PropertyBuilder::createProperty("Attribute Provider Service")
+                ->withDescription("Provides a list of key-value pair records which can be used in other (dynamic) properties using Expression Language.")
+                ->asType<controllers::AttributeProviderService>()
+                ->build());
 
 const core::Relationship UpdateAttribute::Success("success", "All files are routed to success");
 const core::Relationship UpdateAttribute::Failure("failure", "Failed files are transferred to failure");
@@ -40,18 +42,24 @@ void UpdateAttribute::initialize() {
   setSupportedRelationships(relationships());
 }
 
-void UpdateAttribute::onSchedule(core::ProcessContext *context, core::ProcessSessionFactory* /*sessionFactory*/) {
+void UpdateAttribute::onSchedule(core::ProcessContext* context, core::ProcessSessionFactory* /*sessionFactory*/) {
+  gsl_Expects(context);
+
   attributes_.clear();
-  const auto &dynamic_prop_keys = context->getDynamicPropertyKeys();
+  const auto& dynamic_prop_keys = context->getDynamicPropertyKeys();
   logger_->log_info("UpdateAttribute registering %d keys", dynamic_prop_keys.size());
 
-  for (const auto &key : dynamic_prop_keys) {
+  attributes_.reserve(dynamic_prop_keys.size());
+
+  for (const auto& key : dynamic_prop_keys) {
     attributes_.emplace_back(core::PropertyBuilder::createProperty(key)->withDescription("auto generated")->supportsExpressionLanguage(true)->build());
     logger_->log_info("UpdateAttribute registered attribute '%s'", key);
   }
+
+  attribute_provider_service_ = controllers::AttributeProviderService::getFromProperty(*context, AttributeProviderService);
 }
 
-void UpdateAttribute::onTrigger(core::ProcessContext *context, core::ProcessSession *session) {
+void UpdateAttribute::onTrigger(core::ProcessContext* context, core::ProcessSession* session) {
   auto flow_file = session->get();
 
   // Do nothing if there are no incoming files
@@ -60,24 +68,41 @@ void UpdateAttribute::onTrigger(core::ProcessContext *context, core::ProcessSess
   }
 
   try {
-    for (const auto &attribute : attributes_) {
+    for (const auto& attribute : attributes_) {
       std::string value;
-      context->getDynamicProperty(attribute, value, flow_file);
+      context->getDynamicProperty(attribute, value, flow_file, getAttributeMap());
       flow_file->setAttribute(attribute.getName(), value);
       logger_->log_info("Set attribute '%s' of flow file '%s' with value '%s'", attribute.getName(), flow_file->getUUIDStr(), value);
     }
     session->transfer(flow_file, Success);
-  } catch (const std::exception &e) {
+  } catch (const std::exception& e) {
     logger_->log_error("Caught exception while updating attributes: %s", e.what());
     session->transfer(flow_file, Failure);
     yield();
   }
 }
 
+std::unordered_map<std::string, std::string> UpdateAttribute::getAttributeMap() const {
+  if (!attribute_provider_service_) {
+    return {};
+  }
+
+  auto attribute_map_list_opt = attribute_provider_service_->getAttributes();
+  if (!attribute_map_list_opt || attribute_map_list_opt->empty()) {
+    return {};
+  }
+
+  // flatten vector of maps to a single map
+  std::unordered_map<std::string, std::string> ret;
+  for (auto& attribute_map : *attribute_map_list_opt) {
+    for (auto& [key, value] : attribute_map) {
+      ret[key] = std::move(value);
+    }
+  }
+
+  return ret;
+}
+
 REGISTER_RESOURCE(UpdateAttribute, Processor);
 
-} /* namespace processors */
-} /* namespace minifi */
-} /* namespace nifi */
-} /* namespace apache */
-} /* namespace org */
+}  // namespace org::apache::nifi::minifi::processors

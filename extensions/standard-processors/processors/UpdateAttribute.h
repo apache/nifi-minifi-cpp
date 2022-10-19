@@ -17,11 +17,12 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#ifndef EXTENSIONS_STANDARD_PROCESSORS_PROCESSORS_UPDATEATTRIBUTE_H_
-#define EXTENSIONS_STANDARD_PROCESSORS_PROCESSORS_UPDATEATTRIBUTE_H_
+
+#pragma once
 
 #include <memory>
 #include <string>
+#include <unordered_map>
 #include <vector>
 
 #include "FlowFileRecord.h"
@@ -30,25 +31,30 @@
 #include "core/Core.h"
 #include "core/logging/LoggerConfiguration.h"
 
-namespace org {
-namespace apache {
-namespace nifi {
-namespace minifi {
+namespace org::apache::nifi::minifi {
+
+namespace controllers {
+class AttributeProviderService;
+}
+
 namespace processors {
 
 class UpdateAttribute : public core::Processor {
  public:
-  UpdateAttribute(const std::string& name,  const utils::Identifier& uuid = {}) // NOLINT
-      : core::Processor(name, uuid) {
+  explicit UpdateAttribute(const std::string& name, const utils::Identifier& uuid = {})
+          : core::Processor(name, uuid) {
   }
 
   EXTENSIONAPI static constexpr const char* Description = "This processor updates the attributes of a FlowFile using properties that are added by the user. "
       "This allows you to set default attribute changes that affect every FlowFile going through the processor, equivalent to the \"basic\" usage in Apache NiFi.";
 
-  static auto properties() { return std::array<core::Property, 0>{}; }
+  EXTENSIONAPI static const core::Property AttributeProviderService;
+
+  static auto properties() { return std::array{AttributeProviderService}; }
 
   EXTENSIONAPI static const core::Relationship Success;
   EXTENSIONAPI static const core::Relationship Failure;
+
   static auto relationships() { return std::array{Success, Failure}; }
 
   EXTENSIONAPI static constexpr bool SupportsDynamicProperties = true;
@@ -58,19 +64,19 @@ class UpdateAttribute : public core::Processor {
 
   ADD_COMMON_VIRTUAL_FUNCTIONS_FOR_PROCESSORS
 
-  void onSchedule(core::ProcessContext *context, core::ProcessSessionFactory *sessionFactory) override;
-  void onTrigger(core::ProcessContext *context, core::ProcessSession *session) override;
+  void onSchedule(core::ProcessContext* context, core::ProcessSessionFactory* sessionFactory) override;
+
+  void onTrigger(core::ProcessContext* context, core::ProcessSession* session) override;
+
   void initialize() override;
 
  private:
+  std::unordered_map<std::string, std::string> getAttributeMap() const;
+
   std::shared_ptr<core::logging::Logger> logger_ = core::logging::LoggerFactory<UpdateAttribute>::getLogger();
   std::vector<core::Property> attributes_;
+  controllers::AttributeProviderService* attribute_provider_service_ = nullptr;
 };
 
 }  // namespace processors
-}  // namespace minifi
-}  // namespace nifi
-}  // namespace apache
-}  // namespace org
-
-#endif  // EXTENSIONS_STANDARD_PROCESSORS_PROCESSORS_UPDATEATTRIBUTE_H_
+}  // namespace org::apache::nifi::minifi
