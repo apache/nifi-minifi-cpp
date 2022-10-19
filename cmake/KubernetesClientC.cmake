@@ -36,8 +36,8 @@ set(WEBSOCKETS_PATCH_FILE "${CMAKE_SOURCE_DIR}/thirdparty/libwebsockets/fix-incl
 set(WEBSOCKETS_PC ${Bash_EXECUTABLE} -c "set -x &&\
         (${Patch_EXECUTABLE} -R -p1 -s -f --dry-run -i ${WEBSOCKETS_PATCH_FILE} || ${Patch_EXECUTABLE} -p1 -i ${WEBSOCKETS_PATCH_FILE})")
 FetchContent_Declare(websockets
-        GIT_REPOSITORY  https://github.com/warmcat/libwebsockets.git
-        GIT_TAG         b0a749c8e7a8294b68581ce4feac0e55045eb00b  # v4.3.2
+        URL             https://github.com/warmcat/libwebsockets/archive/refs/tags/v4.3.2.tar.gz
+        URL_HASH        SHA256=6a85a1bccf25acc7e8e5383e4934c9b32a102880d1e4c37c70b27ae2a42406e1
         PATCH_COMMAND "${WEBSOCKETS_PC}"
 )
 
@@ -48,8 +48,8 @@ set(K8S_PATCH_FILE "${CMAKE_SOURCE_DIR}/thirdparty/kubernetes-client-c/remove-fi
 set(K8S_PC ${Bash_EXECUTABLE} -c "set -x &&\
         (${Patch_EXECUTABLE} -R -p1 -s -f --dry-run -i ${K8S_PATCH_FILE} || ${Patch_EXECUTABLE} -p1 -i ${K8S_PATCH_FILE})")
 FetchContent_Declare(kubernetes
-    GIT_REPOSITORY https://github.com/kubernetes-client/c
-    GIT_TAG f5f12a807432824963bbea380cdf4d9ba412e00e  # v0.4.0
+    URL             https://github.com/kubernetes-client/c/archive/refs/tags/v0.5.0.tar.gz
+    URL_HASH        SHA256=dbb6e6cd29ae2ac6c15de894aefb9b1e3d48916541d443f089aa0ffad6517ec6
     PATCH_COMMAND "${K8S_PC}"
 )
 
