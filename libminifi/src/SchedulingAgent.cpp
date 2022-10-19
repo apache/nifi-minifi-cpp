@@ -80,6 +80,7 @@ std::future<utils::TaskRescheduleInfo> SchedulingAgent::disableControllerService
 
 bool SchedulingAgent::onTrigger(core::Processor* processor, const std::shared_ptr<core::ProcessContext> &processContext,
                                 const std::shared_ptr<core::ProcessSessionFactory> &sessionFactory) {
+  gsl_Expects(processor);
   if (processor->isYield()) {
     logger_->log_debug("Not running %s since it must yield", processor->getName());
     return false;
@@ -113,16 +114,14 @@ bool SchedulingAgent::onTrigger(core::Processor* processor, const std::shared_pt
   processor->incrementActiveTasks();
   try {
     processor->onTrigger(processContext, sessionFactory);
-    processor->decrementActiveTask();
-  } catch (std::exception &exception) {
-    logger_->log_debug("Caught Exception %s", exception.what());
+  } catch (const std::exception& exception) {
+    logger_->log_warn("Caught Exception during SchedulingAgent::onTrigger of processor %s (uuid: %s), type: %s, what: %s", processor->getName(), processor->getUUIDStr(), typeid(exception).name(), exception.what());
     processor->yield(admin_yield_duration_);
-    processor->decrementActiveTask();
   } catch (...) {
-    logger_->log_debug("Caught Exception during SchedulingAgent::onTrigger");
+    logger_->log_warn("Caught Exception during SchedulingAgent::onTrigger of processor %s (uuid: %s), type: %s", processor->getName(), processor->getUUIDStr(), getCurrentExceptionTypeName());
     processor->yield(admin_yield_duration_);
-    processor->decrementActiveTask();
   }
+  processor->decrementActiveTask();
 
   return false;
 }

@@ -114,9 +114,9 @@ auto commitAndRollbackWarnings = [] {
   const std::string logs = LogTestController::getInstance().log_output.str();
   const auto errorResult = utils::StringUtils::countOccurrences(logs, "[error]");
   const auto commitWarningResult = utils::StringUtils::countOccurrences(logs, "[warning] Caught \"Process Session Operation: State manager commit failed.\"");
-  const auto rollbackWarningResult = utils::StringUtils::countOccurrences(logs,
-    "[warning] Caught Exception during process session rollback: Process Session Operation: State manager rollback failed.");
-  return errorResult.second == 0 && commitWarningResult.second == 1 && rollbackWarningResult.second == 1;
+  const auto rollbackWarningFirst = utils::StringUtils::countOccurrences(logs, "[warning] Caught Exception during process session rollback");
+  const auto rollbackWarningSecond = utils::StringUtils::countOccurrences(logs, "Process Session Operation: State manager rollback failed.");
+  return errorResult.second == 0 && commitWarningResult.second == 1 && rollbackWarningFirst.second == 1 && rollbackWarningSecond.second == 1;
 };
 
 auto exceptionRollbackWarnings = [] {

@@ -254,11 +254,11 @@ void ProcessSession::write(const std::shared_ptr<core::FlowFile> &flow, const io
     std::string details = process_context_->getProcessorNode()->getName() + " modify flow record content " + flow->getUUIDStr();
     auto duration = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::steady_clock::now() - start_time);
     provenance_report_->modifyContent(flow, details, duration);
-  } catch (std::exception &exception) {
-    logger_->log_debug("Caught Exception %s", exception.what());
+  } catch (const std::exception& exception) {
+    logger_->log_debug("Caught Exception during process session write, type: %s, what: %s", typeid(exception).name(), exception.what());
     throw;
   } catch (...) {
-    logger_->log_debug("Caught Exception during process session write");
+    logger_->log_debug("Caught Exception during process session write, type: %s", getCurrentExceptionTypeName());
     throw;
   }
 }
@@ -306,11 +306,11 @@ void ProcessSession::append(const std::shared_ptr<core::FlowFile> &flow, const i
     details << process_context_->getProcessorNode()->getName() << " modify flow record content " << flow->getUUIDStr();
     auto duration = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::steady_clock::now() - start_time);
     provenance_report_->modifyContent(flow, details.str(), duration);
-  } catch (std::exception &exception) {
-    logger_->log_debug("Caught Exception %s", exception.what());
+  } catch (const std::exception& exception) {
+    logger_->log_debug("Caught Exception during process session append, type: %s, what: %s", typeid(exception).name(), exception.what());
     throw;
   } catch (...) {
-    logger_->log_debug("Caught Exception during process session append");
+    logger_->log_debug("Caught Exception during process session append, type: %s", getCurrentExceptionTypeName());
     throw;
   }
 }
@@ -354,7 +354,7 @@ int64_t ProcessSession::read(const std::shared_ptr<core::FlowFile> &flow, const 
       throw Exception(FILE_OPERATION_EXCEPTION, "Failed to process flowfile content");
     }
     return ret;
-  } catch (std::exception &exception) {
+  } catch (const std::exception& exception) {
     logger_->log_debug("Caught Exception %s", exception.what());
     throw;
   } catch (...) {
@@ -403,10 +403,10 @@ int64_t ProcessSession::readWrite(const std::shared_ptr<core::FlowFile> &flow, c
 
     return bytes_written;
   } catch (const std::exception& exception) {
-    logger_->log_debug("Caught exception %s during process session readWrite", exception.what());
+    logger_->log_debug("Caught exception during process session readWrite, type: %s, what: %s", typeid(exception).name(), exception.what());
     throw;
   } catch (...) {
-    logger_->log_debug("Caught unknown exception during process session readWrite");
+    logger_->log_debug("Caught unknown exception during process session readWrite, type: %s", getCurrentExceptionTypeName());
     throw;
   }
 }
@@ -470,11 +470,11 @@ void ProcessSession::importFrom(io::InputStream &stream, const std::shared_ptr<c
     details << process_context_->getProcessorNode()->getName() << " modify flow record content " << flow->getUUIDStr();
     auto duration = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::steady_clock::now() - start_time);
     provenance_report_->modifyContent(flow, details.str(), duration);
-  } catch (std::exception &exception) {
-    logger_->log_debug("Caught Exception %s", exception.what());
+  } catch (const std::exception& exception) {
+    logger_->log_debug("Caught Exception during ProcessSession::importFrom, type: %s, what: %s", typeid(exception).name(), exception.what());
     throw;
   } catch (...) {
-    logger_->log_debug("Caught Exception during process session write");
+    logger_->log_debug("Caught Exception during ProcessSession::importFrom, type: %s", getCurrentExceptionTypeName());
     throw;
   }
 }
@@ -542,11 +542,11 @@ void ProcessSession::import(std::string source, const std::shared_ptr<FlowFile> 
     } else {
       throw Exception(FILE_OPERATION_EXCEPTION, "File Import Error");
     }
-  } catch (std::exception &exception) {
-    logger_->log_debug("Caught Exception %s", exception.what());
+  } catch (const std::exception& exception) {
+    logger_->log_debug("Caught Exception during ProcessSession::import, type: %s, what: %s", exception.what());
     throw;
   } catch (...) {
-    logger_->log_debug("Caught Exception during process session write");
+    logger_->log_debug("Caught Exception during ProcessSession::import, type: %s", getCurrentExceptionTypeName());
     throw;
   }
 }
@@ -642,11 +642,11 @@ void ProcessSession::import(const std::string& source, std::vector<std::shared_p
         begin = delimiterPos + 1;
       }
     }
-  } catch (std::exception &exception) {
-    logger_->log_debug("Caught Exception %s", exception.what());
+  } catch (const std::exception& exception) {
+    logger_->log_debug("Caught Exception during ProcessSession::import, type: %s, what: %s", typeid(exception).name(), exception.what());
     throw;
   } catch (...) {
-    logger_->log_debug("Caught Exception during process session write");
+    logger_->log_debug("Caught Exception during ProcessSession::import, type: %s", getCurrentExceptionTypeName());
     throw;
   }
 }
@@ -885,11 +885,11 @@ void ProcessSession::commit() {
     // persistent the provenance report
     this->provenance_report_->commit();
     logger_->log_trace("ProcessSession committed for %s", process_context_->getProcessorNode()->getName());
-  } catch (std::exception &exception) {
-    logger_->log_debug("Caught Exception %s", exception.what());
+  } catch (const std::exception& exception) {
+    logger_->log_debug("Caught Exception during process session commit, type: %s, what: %s", typeid(exception).name(), exception.what());
     throw;
   } catch (...) {
-    logger_->log_debug("Caught Exception during process session commit");
+    logger_->log_debug("Caught Exception during process session commit, type: %s", getCurrentExceptionTypeName());
     throw;
   }
 }
@@ -940,11 +940,11 @@ void ProcessSession::rollback() {
     _updatedFlowFiles.clear();
     _deletedFlowFiles.clear();
     logger_->log_warn("ProcessSession rollback for %s executed", process_context_->getProcessorNode()->getName());
-  } catch (std::exception &exception) {
-    logger_->log_warn("Caught Exception during process session rollback: %s", exception.what());
+  } catch (const std::exception& exception) {
+    logger_->log_warn("Caught Exception during process session rollback, type: %s, what: %s", typeid(exception).name(), exception.what());
     throw;
   } catch (...) {
-    logger_->log_warn("Caught Exception during process session rollback");
+    logger_->log_warn("Caught Exception during process session rollback, type: %s", getCurrentExceptionTypeName());
     throw;
   }
 }

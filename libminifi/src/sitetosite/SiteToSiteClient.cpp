@@ -172,14 +172,14 @@ bool SiteToSiteClient::transferFlowFiles(const std::shared_ptr<core::ProcessCont
       deleteTransaction(transactionID);
     context->yield();
     tearDown();
-    logger_->log_debug("Caught Exception %s", exception.what());
+    logger_->log_debug("Caught Exception during SiteToSiteClient::transferFlowFiles, type: %s, what: %s", typeid(exception).name(), exception.what());
     throw;
   } catch (...) {
     if (transaction)
       deleteTransaction(transactionID);
     context->yield();
     tearDown();
-    logger_->log_debug("Caught Exception during SiteToSiteClient::transferFlowFiles");
+    logger_->log_debug("Caught Exception during SiteToSiteClient::transferFlowFiles, type: %s", getCurrentExceptionTypeName());
     throw;
   }
 
@@ -732,14 +732,14 @@ bool SiteToSiteClient::receiveFlowFiles(const std::shared_ptr<core::ProcessConte
       deleteTransaction(transactionID);
     context->yield();
     tearDown();
-    logger_->log_warn("Caught Exception %s", exception.what());
+    logger_->log_warn("Caught Exception during RawSiteToSiteClient::receiveFlowFiles, type: %s, what: %s", typeid(exception).name(), exception.what());
     throw;
   } catch (...) {
     if (transaction)
       deleteTransaction(transactionID);
     context->yield();
     tearDown();
-    logger_->log_warn("Caught Exception during RawSiteToSiteClient::receiveFlowFiles");
+    logger_->log_warn("Caught Exception during RawSiteToSiteClient::receiveFlowFiles, type: %s", getCurrentExceptionTypeName());
     throw;
   }
 
