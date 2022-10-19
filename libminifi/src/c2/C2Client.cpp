@@ -143,8 +143,10 @@ void C2Client::loadC2ResponseConfiguration(const std::string &prefix) {
 
       // We don't need to lock here, we already do it in the initializeResponseNodes member function
       root_response_nodes_[name].push_back(new_node);
+    } catch (const std::exception& ex) {
+      logger_->log_error("Could not create metrics class %s, exception type: %s, what: %s", metricsClass, typeid(ex).name(), ex.what());
     } catch (...) {
-      logger_->log_error("Could not create metrics class %s", metricsClass);
+      logger_->log_error("Could not create metrics class %s, exception type: %s", metricsClass, getCurrentExceptionTypeName());
     }
   }
 }
@@ -187,8 +189,10 @@ std::shared_ptr<state::response::ResponseNode> C2Client::loadC2ResponseConfigura
           std::static_pointer_cast<state::response::ObjectNode>(prev_node)->add_node(sub_node);
         }
       }
+    } catch (const std::exception& ex) {
+      logger_->log_error("Could not create metrics class %s, exception type: %s, what: %s", metricsClass, typeid(ex).name(), ex.what());
     } catch (...) {
-      logger_->log_error("Could not create metrics class %s", metricsClass);
+      logger_->log_error("Could not create metrics class %s, exception type: %s", metricsClass, getCurrentExceptionTypeName());
     }
   }
   return prev_node;

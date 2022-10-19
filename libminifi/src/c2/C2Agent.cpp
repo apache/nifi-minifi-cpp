@@ -760,10 +760,10 @@ utils::TaskRescheduleInfo C2Agent::produce() {
       performHeartBeat();
     }
     catch (const std::exception &e) {
-      logger_->log_error("Exception occurred while performing heartbeat. error: %s", e.what());
+      logger_->log_error("Exception occurred while performing heartbeat. type: %s, what: %s", typeid(e).name(), e.what());
     }
     catch (...) {
-      logger_->log_error("Unknown exception occurred while performing heartbeat.");
+      logger_->log_error("Unknown exception occurred while performing heartbeat, type: %s", getCurrentExceptionTypeName());
     }
   }
 

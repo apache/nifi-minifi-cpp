@@ -115,11 +115,11 @@ bool SchedulingAgent::onTrigger(core::Processor* processor, const std::shared_pt
     processor->onTrigger(processContext, sessionFactory);
     processor->decrementActiveTask();
   } catch (std::exception &exception) {
-    logger_->log_debug("Caught Exception %s", exception.what());
+    logger_->log_debug("Caught Exception during SchedulingAgent::onTrigger, type: %s, what: %s", typeid(exception).name(), exception.what());
     processor->yield(admin_yield_duration_);
     processor->decrementActiveTask();
   } catch (...) {
-    logger_->log_debug("Caught Exception during SchedulingAgent::onTrigger");
+    logger_->log_debug("Caught Exception during SchedulingAgent::onTrigger, type: %s", getCurrentExceptionTypeName());
     processor->yield(admin_yield_duration_);
     processor->decrementActiveTask();
   }

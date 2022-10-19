@@ -17,8 +17,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#ifndef LIBMINIFI_INCLUDE_EXCEPTION_H_
-#define LIBMINIFI_INCLUDE_EXCEPTION_H_
+#pragma once
 
 #include <errno.h>
 #include <string.h>
@@ -31,10 +30,7 @@
 
 #include "utils/StringUtils.h"
 
-namespace org {
-namespace apache {
-namespace nifi {
-namespace minifi {
+namespace org::apache::nifi::minifi {
 
 enum ExceptionType {
   FILE_OPERATION_EXCEPTION = 0,
@@ -58,6 +54,8 @@ inline const char *ExceptionTypeToString(ExceptionType type) {
   else
     return nullptr;
 }
+
+std::string getCurrentExceptionTypeName();
 
 struct Exception : public std::runtime_error {
   /*!
@@ -92,8 +90,4 @@ struct SystemErrorException : Exception {
   std::error_condition error_condition_;
 };
 
-}  // namespace minifi
-}  // namespace nifi
-}  // namespace apache
-}  // namespace org
-#endif  // LIBMINIFI_INCLUDE_EXCEPTION_H_
+}  // namespace org::apache::nifi::minifi

@@ -180,7 +180,7 @@ void Processor::onTrigger(ProcessContext *context, ProcessSessionFactory *sessio
     // Call the virtual trigger function
     onTrigger(context, session.get());
     session->commit();
-  } catch (std::exception &exception) {
+  } catch (const std::exception& exception) {
     logger_->log_warn("Caught \"%s\" (%s) during Processor::onTrigger of processor: %s (%s)",
         exception.what(), typeid(exception).name(), getUUIDStr(), getName());
     session->rollback();
@@ -228,8 +228,9 @@ bool Processor::isWorkAvailable() {
       }
     }
   } catch (...) {
-    logger_->log_error("Caught an exception while checking if work is available;"
-                       " unless it was positively determined that work is available, assuming NO work is available!");
+    logger_->log_error("Caught an exception (type: %s) while checking if work is available;"
+        " unless it was positively determined that work is available, assuming NO work is available!",
+        getCurrentExceptionTypeName());
   }
 
   return hasWork;

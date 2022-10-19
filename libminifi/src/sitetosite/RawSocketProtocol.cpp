@@ -601,14 +601,14 @@ bool RawSiteToSiteClient::transmitPayload(const std::shared_ptr<core::ProcessCon
       deleteTransaction(transactionID);
     context->yield();
     tearDown();
-    logger_->log_debug("Caught Exception %s", exception.what());
+    logger_->log_debug("Caught Exceptionduring RawSiteToSiteClient::transferBytes, type: %s, what: %s", typeid(exception).name(), exception.what());
     throw;
   } catch (...) {
     if (transaction)
       deleteTransaction(transactionID);
     context->yield();
     tearDown();
-    logger_->log_debug("Caught Exception during RawSiteToSiteClient::transferBytes");
+    logger_->log_debug("Caught Exception during RawSiteToSiteClient::transferBytes, type: %s", getCurrentExceptionTypeName());
     throw;
   }
 

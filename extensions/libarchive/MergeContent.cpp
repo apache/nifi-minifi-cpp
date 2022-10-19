@@ -253,8 +253,11 @@ bool MergeContent::processBin(core::ProcessContext *context, core::ProcessSessio
   try {
     mergeBin->merge(context, session, bin->getFlowFile(), *serializer, merge_flow);
     session->putAttribute(merge_flow, core::SpecialFlowAttribute::MIME_TYPE, mimeType);
+  } catch (const std::exception& ex) {
+    logger_->log_error("Merge Content merge catch exception, type: %s, what: %s", typeid(ex).name(), ex.what());
+    return false;
   } catch (...) {
-    logger_->log_error("Merge Content merge catch exception");
+    logger_->log_error("Merge Content merge catch exception, type: %s", getCurrentExceptionTypeName());
     return false;
   }
   session->putAttribute(merge_flow, BinFiles::FRAGMENT_COUNT_ATTRIBUTE, std::to_string(bin->getSize()));

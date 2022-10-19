@@ -106,8 +106,11 @@ bool FlowController::applyConfiguration(const std::string &source, const std::st
   std::unique_ptr<core::ProcessGroup> newRoot;
   try {
     newRoot = flow_configuration_->updateFromPayload(source, configurePayload);
+  } catch (const std::exception& ex) {
+    logger_->log_error("Invalid configuration payload, type: %s, what: %s", typeid(ex).name(), ex.what());
+    return false;
   } catch (...) {
-    logger_->log_error("Invalid configuration payload");
+    logger_->log_error("Invalid configuration payload, type: %s", getCurrentExceptionTypeName());
     return false;
   }
 

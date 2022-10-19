@@ -153,8 +153,10 @@ void ProcessGroup::startProcessingProcessors(const std::shared_ptr<TimerDrivenSc
   for (const auto processor : failed_processors_) {
     try {
       processor->onUnSchedule();
+    } catch (const std::exception& ex) {
+      logger_->log_error("Exception occured during unscheduling processor: %s (%s), type: %s, what: %s", processor->getUUIDStr(), processor->getName(), typeid(ex).name(), ex.what());
     } catch (...) {
-      logger_->log_error("Exception occured during unscheduling processor: %s (%s)", processor->getUUIDStr(), processor->getName());
+      logger_->log_error("Exception occured during unscheduling processor: %s (%s), type: %s", processor->getUUIDStr(), processor->getName(), getCurrentExceptionTypeName());
     }
   }
 
@@ -191,7 +193,7 @@ void ProcessGroup::startProcessing(const std::shared_ptr<TimerDrivenSchedulingAg
     logger_->log_debug("Caught Exception %s", exception.what());
     throw;
   } catch (...) {
-    logger_->log_debug("Caught Exception during process group start processing");
+    logger_->log_debug("Caught Exception during process group start processing, type: %s", getCurrentExceptionTypeName());
     throw;
   }
 }
@@ -229,11 +231,11 @@ void ProcessGroup::stopProcessing(const std::shared_ptr<TimerDrivenSchedulingAge
     for (auto& childGroup : child_process_groups_) {
       childGroup->stopProcessing(timeScheduler, eventScheduler, cronScheduler, filter);
     }
-  } catch (std::exception &exception) {
-    logger_->log_debug("Caught Exception %s", exception.what());
+  } catch (const std::exception& exception) {
+    logger_->log_debug("Caught Exception type: %s, what: %s", typeid(exception).name(), exception.what());
     throw;
   } catch (...) {
-    logger_->log_debug("Caught Exception during process group stop processing");
+    logger_->log_debug("Caught Exception during process group stop processing, type: %s", getCurrentExceptionTypeName());
     throw;
   }
 }
