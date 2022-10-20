@@ -64,6 +64,17 @@ class PrometheusChecker:
     def verify_device_info_node_metrics(self):
         return self.verify_metrics_exist(['minifi_physical_mem', 'minifi_memory_usage', 'minifi_cpu_utilization'], 'DeviceInfoNode')
 
+    def verify_agent_status_metrics(self):
+        label_list = [{'repository_name': 'provenance'}, {'repository_name': 'flowfile'}]
+        for labels in label_list:
+            if not (self.verify_metric_exists('minifi_is_running', 'AgentStatus', labels)
+                    and self.verify_metric_exists('minifi_is_full', 'AgentStatus', labels)
+                    and self.verify_metric_exists('minifi_repository_size', 'AgentStatus', labels)):
+                return False
+        return self.verify_metric_exists('minifi_uptime_milliseconds', 'AgentStatus') and \
+            self.verify_metric_exists('minifi_agent_memory_usage_bytes', 'AgentStatus') and \
+            self.verify_metric_exists('minifi_agent_cpu_utilization', 'AgentStatus')
+
     def verify_metric_exists(self, metric_name, metric_class, labels={}):
         labels['metric_class'] = metric_class
         labels['agent_identifier'] = "Agent1"
