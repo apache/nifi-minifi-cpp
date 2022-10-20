@@ -16,58 +16,53 @@
  * limitations under the License.
  */
 
+#include "core/BufferedContentSession.h"
 #include <memory>
 #include "core/ContentRepository.h"
-#include "core/ContentSession.h"
 #include "ResourceClaim.h"
 #include "io/BaseStream.h"
 #include "Exception.h"
-#include "utils/gsl.h"
 
-namespace org {
-namespace apache {
-namespace nifi {
-namespace minifi {
-namespace core {
+namespace org::apache::nifi::minifi::core {
 
-ContentSession::ContentSession(std::shared_ptr<ContentRepository> repository) : repository_(std::move(repository)) {}
+BufferedContentSession::BufferedContentSession(std::shared_ptr<ContentRepository> repository) : repository_(std::move(repository)) {}
 
-std::shared_ptr<ResourceClaim> ContentSession::create() {
+std::shared_ptr<ResourceClaim> BufferedContentSession::create() {
   std::shared_ptr<ResourceClaim> claim = std::make_shared<ResourceClaim>(repository_);
-  managedResources_[claim] = std::make_shared<io::BufferStream>();
+  managed_resources_[claim] = std::make_shared<io::BufferStream>();
   return claim;
 }
 
-std::shared_ptr<io::BaseStream> ContentSession::write(const std::shared_ptr<ResourceClaim>& resourceId, WriteMode mode) {
-  auto it = managedResources_.find(resourceId);
-  if (it == managedResources_.end()) {
-    if (mode == WriteMode::OVERWRITE) {
-      throw Exception(REPOSITORY_EXCEPTION, "Can only overwrite owned resource");
-    }
-    auto& extension = extendedResources_[resourceId];
-    if (!extension) {
-      extension = std::make_shared<io::BufferStream>();
-    }
-    return extension;
+std::shared_ptr<io::BaseStream> BufferedContentSession::write(const std::shared_ptr<ResourceClaim>& resource_id) {
+  if (auto it = managed_resources_.find(resource_id); it != managed_resources_.end()) {
+    return it->second = std::make_shared<io::BufferStream>();
   }
-  if (mode == WriteMode::OVERWRITE) {
-    it->second = std::make_shared<io::BufferStream>();
-  }
-  return it->second;
+  throw Exception(REPOSITORY_EXCEPTION, "Can only overwrite owned resource");
 }
 
-std::shared_ptr<io::BaseStream> ContentSession::read(const std::shared_ptr<ResourceClaim>& resourceId) {
+std::shared_ptr<io::BaseStream> BufferedContentSession::append(const std::shared_ptr<ResourceClaim>& resource_id) {
+  if (auto it = managed_resources_.find(resource_id); it != managed_resources_.end()) {
+    return it->second;
+  }
+  auto& extension = extended_resources_[resource_id];
+  if (!extension) {
+    extension = std::make_shared<io::BufferStream>();
+  }
+  return extension;
+}
+
+std::shared_ptr<io::BaseStream> BufferedContentSession::read(const std::shared_ptr<ResourceClaim>& resource_id) {
   // TODO(adebreceni):
   //  after the stream refactor is merged we should be able to share the underlying buffer
   //  between multiple InputStreams, moreover create a ConcatInputStream
-  if (managedResources_.find(resourceId) != managedResources_.end() || extendedResources_.find(resourceId) != extendedResources_.end()) {
+  if (managed_resources_.contains(resource_id) || extended_resources_.contains(resource_id)) {
     throw Exception(REPOSITORY_EXCEPTION, "Can only read non-modified resource");
   }
-  return repository_->read(*resourceId);
+  return repository_->read(*resource_id);
 }
 
-void ContentSession::commit() {
-  for (const auto& resource : managedResources_) {
+void BufferedContentSession::commit() {
+  for (const auto& resource : managed_resources_) {
     auto outStream = repository_->write(*resource.first);
     if (outStream == nullptr) {
       throw Exception(REPOSITORY_EXCEPTION, "Couldn't open the underlying resource for write: " + resource.first->getContentFullPath());
@@ -78,7 +73,7 @@ void ContentSession::commit() {
       throw Exception(REPOSITORY_EXCEPTION, "Failed to write new resource: " + resource.first->getContentFullPath());
     }
   }
-  for (const auto& resource : extendedResources_) {
+  for (const auto& resource : extended_resources_) {
     auto outStream = repository_->write(*resource.first, true);
     if (outStream == nullptr) {
       throw Exception(REPOSITORY_EXCEPTION, "Couldn't open the underlying resource for append: " + resource.first->getContentFullPath());
@@ -90,18 +85,14 @@ void ContentSession::commit() {
     }
   }
 
-  managedResources_.clear();
-  extendedResources_.clear();
+  managed_resources_.clear();
+  extended_resources_.clear();
 }
 
-void ContentSession::rollback() {
-  managedResources_.clear();
-  extendedResources_.clear();
+void BufferedContentSession::rollback() {
+  managed_resources_.clear();
+  extended_resources_.clear();
 }
 
-}  // namespace core
-}  // namespace minifi
-}  // namespace nifi
-}  // namespace apache
-}  // namespace org
+}  // namespace org::apache::nifi::minifi::core
 

@@ -15,8 +15,8 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#ifndef LIBMINIFI_INCLUDE_CORE_REPOSITORY_FILESYSTEMREPOSITORY_H_
-#define LIBMINIFI_INCLUDE_CORE_REPOSITORY_FILESYSTEMREPOSITORY_H_
+
+#pragma once
 
 #include <memory>
 #include <string>
@@ -38,26 +38,26 @@ class FileSystemRepository : public core::ContentRepository, public core::CoreCo
         logger_(logging::LoggerFactory<FileSystemRepository>::getLogger()) {
   }
 
-  virtual ~FileSystemRepository() = default;
+  ~FileSystemRepository() override = default;
 
-  virtual bool initialize(const std::shared_ptr<minifi::Configure>& configuration);
+  bool initialize(const std::shared_ptr<minifi::Configure>& configuration) override;
 
-  bool exists(const minifi::ResourceClaim& streamId);
+  bool exists(const minifi::ResourceClaim& streamId) override;
 
-  virtual std::shared_ptr<io::BaseStream> write(const minifi::ResourceClaim& claim, bool append = false);
+  std::shared_ptr<io::BaseStream> write(const minifi::ResourceClaim& claim, bool append = false) override;
 
-  virtual std::shared_ptr<io::BaseStream> read(const minifi::ResourceClaim& claim);
+  std::shared_ptr<io::BaseStream> read(const minifi::ResourceClaim& claim) override;
 
-  virtual bool close(const minifi::ResourceClaim& claim) {
+  bool close(const minifi::ResourceClaim& claim) override {
     return remove(claim);
   }
 
-  virtual bool remove(const minifi::ResourceClaim& claim);
+  bool remove(const minifi::ResourceClaim& claim) override;
+
+  std::shared_ptr<ContentSession> createSession() override;
 
  private:
   std::shared_ptr<logging::Logger> logger_;
 };
 
 }  // namespace org::apache::nifi::minifi::core::repository
-
-#endif  // LIBMINIFI_INCLUDE_CORE_REPOSITORY_FILESYSTEMREPOSITORY_H_

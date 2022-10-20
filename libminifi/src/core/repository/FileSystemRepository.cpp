@@ -21,6 +21,7 @@
 #include <string>
 #include "io/FileStream.h"
 #include "utils/file/FileUtils.h"
+#include "core/ForwardingContentSession.h"
 
 namespace org::apache::nifi::minifi::core::repository {
 
@@ -52,6 +53,10 @@ bool FileSystemRepository::remove(const minifi::ResourceClaim& claim) {
   logger_->log_debug("Deleting resource %s", claim.getContentFullPath());
   std::remove(claim.getContentFullPath().c_str());
   return true;
+}
+
+std::shared_ptr<ContentSession> FileSystemRepository::createSession() {
+  return std::make_shared<ForwardingContentSession>(sharedFromThis());
 }
 
 }  // namespace org::apache::nifi::minifi::core::repository

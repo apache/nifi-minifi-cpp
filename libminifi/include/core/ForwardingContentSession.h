@@ -18,27 +18,39 @@
 
 #pragma once
 
+#include <unordered_set>
 #include <memory>
 #include "ResourceClaim.h"
 #include "io/BaseStream.h"
+#include "ContentSession.h"
 
 namespace org::apache::nifi::minifi::core {
 
-class ContentSession {
+class ContentRepository;
+
+/**
+ * Warning: this implementation simply forwards all calls to the underlying
+ * repository without any atomicity guarantees or possibility of rollback.
+ */
+class ForwardingContentSession : public ContentSession {
  public:
-  virtual std::shared_ptr<ResourceClaim> create() = 0;
+  explicit ForwardingContentSession(std::shared_ptr<ContentRepository> repository);
 
-  virtual std::shared_ptr<io::BaseStream> write(const std::shared_ptr<ResourceClaim>& resource_id) = 0;
+  std::shared_ptr<ResourceClaim> create() override;
 
-  virtual std::shared_ptr<io::BaseStream> append(const std::shared_ptr<ResourceClaim>& resource_id) = 0;
+  std::shared_ptr<io::BaseStream> write(const std::shared_ptr<ResourceClaim>& resource_id) override;
 
-  virtual std::shared_ptr<io::BaseStream> read(const std::shared_ptr<ResourceClaim>& resource_id) = 0;
+  std::shared_ptr<io::BaseStream> append(const std::shared_ptr<ResourceClaim>& resource_id) override;
 
-  virtual void commit() = 0;
+  std::shared_ptr<io::BaseStream> read(const std::shared_ptr<ResourceClaim>& resource_id) override;
 
-  virtual void rollback() = 0;
+  void commit() override;
 
-  virtual ~ContentSession() = default;
+  void rollback() override;
+
+ protected:
+  std::unordered_set<std::shared_ptr<ResourceClaim>> created_claims_;
+  std::shared_ptr<ContentRepository> repository_;
 };
 
 }  // namespace org::apache::nifi::minifi::core

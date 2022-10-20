@@ -286,7 +286,7 @@ void ProcessSession::append(const std::shared_ptr<core::FlowFile> &flow, const i
 
   try {
     auto start_time = std::chrono::steady_clock::now();
-    std::shared_ptr<io::BaseStream> stream = content_session_->write(claim, ContentSession::WriteMode::APPEND);
+    std::shared_ptr<io::BaseStream> stream = content_session_->append(claim);
     if (nullptr == stream) {
       throw Exception(FILE_OPERATION_EXCEPTION, "Failed to open flowfile content for append");
     }
@@ -296,7 +296,7 @@ void ProcessSession::append(const std::shared_ptr<core::FlowFile> &flow, const i
     size_t stream_size_before_callback = stream->size();
     // this prevents an issue if we write, above, with zero length.
     if (stream_size_before_callback > 0)
-      stream->seek(stream_size_before_callback + 1);
+      stream->seek(stream_size_before_callback);
     if (callback(stream) < 0) {
       throw Exception(FILE_OPERATION_EXCEPTION, "Failed to process flowfile content");
     }

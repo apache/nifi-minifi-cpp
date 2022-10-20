@@ -16,18 +16,15 @@
  * limitations under the License.
  */
 
+#include "core/ContentRepository.h"
+
 #include <map>
 #include <memory>
 #include <string>
 
-#include "core/ContentRepository.h"
-#include "core/ContentSession.h"
+#include "core/BufferedContentSession.h"
 
-namespace org {
-namespace apache {
-namespace nifi {
-namespace minifi {
-namespace core {
+namespace org::apache::nifi::minifi::core {
 
 std::string ContentRepository::getStoragePath() const {
   return directory_;
@@ -39,7 +36,7 @@ void ContentRepository::reset() {
 }
 
 std::shared_ptr<ContentSession> ContentRepository::createSession() {
-  return std::make_shared<ContentSession>(sharedFromThis());
+  return std::make_shared<BufferedContentSession>(sharedFromThis());
 }
 
 uint32_t ContentRepository::getStreamCount(const minifi::ResourceClaim &streamId) {
@@ -77,8 +74,4 @@ ContentRepository::StreamState ContentRepository::decrementStreamCount(const min
   }
 }
 
-}  // namespace core
-}  // namespace minifi
-}  // namespace nifi
-}  // namespace apache
-}  // namespace org
+}  // namespace org::apache::nifi::minifi::core

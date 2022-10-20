@@ -115,11 +115,23 @@ TEST_CASE("ProcessSession::read reads the flowfile from offset to size", "[reado
 }
 
 TEST_CASE("ProcessSession::append should append to the flowfile and set its size correctly" "[appendsetsize]") {
-  ContentRepositoryDependentTests::testAppendToUnmanagedFlowFile(std::make_shared<minifi::core::repository::VolatileContentRepository>());
-  ContentRepositoryDependentTests::testAppendToUnmanagedFlowFile(std::make_shared<minifi::core::repository::FileSystemRepository>());
+  SECTION("Unmanaged") {
+    SECTION("VolatileContentRepository") {
+      ContentRepositoryDependentTests::testAppendToUnmanagedFlowFile(std::make_shared<minifi::core::repository::VolatileContentRepository>());
+    }
+    SECTION("FileSystemRepository") {
+      ContentRepositoryDependentTests::testAppendToUnmanagedFlowFile(std::make_shared<minifi::core::repository::FileSystemRepository>());
+    }
+  }
 
-  ContentRepositoryDependentTests::testAppendToManagedFlowFile(std::make_shared<minifi::core::repository::VolatileContentRepository>());
-  ContentRepositoryDependentTests::testAppendToManagedFlowFile(std::make_shared<minifi::core::repository::FileSystemRepository>());
+  SECTION("Managed") {
+    SECTION("VolatileContentRepository") {
+      ContentRepositoryDependentTests::testAppendToManagedFlowFile(std::make_shared<minifi::core::repository::VolatileContentRepository>());
+    }
+    SECTION("FileSystemRepository") {
+      ContentRepositoryDependentTests::testAppendToManagedFlowFile(std::make_shared<minifi::core::repository::FileSystemRepository>());
+    }
+  }
 }
 
 TEST_CASE("ProcessSession::read can read zero length flowfiles without crash", "[zerolengthread]") {
