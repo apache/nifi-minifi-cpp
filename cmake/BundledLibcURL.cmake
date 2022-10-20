@@ -61,7 +61,7 @@ function(use_bundled_curl SOURCE_DIR BINARY_DIR)
     # Build project
     ExternalProject_Add(
             curl-external
-            URL "https://curl.haxx.se/download/curl-7.64.0.tar.gz"
+            URL "https://github.com/curl/curl/releases/download/curl-7_64_0/curl-7.64.0.tar.gz"
             URL_HASH "SHA256=cb90d2eb74d4e358c1ed1489f8e3af96b50ea4374ad71f143fa4595e998d81b5"
             SOURCE_DIR "${BINARY_DIR}/thirdparty/curl-src"
             LIST_SEPARATOR % # This is needed for passing semicolon-separated lists
