@@ -135,6 +135,13 @@ const core::Property TailFile::AttributeProviderService(
         ->asType<minifi::controllers::AttributeProviderService>()
         ->build());
 
+const core::Property TailFile::BatchSize(
+    core::PropertyBuilder::createProperty("Batch Size")
+        ->withDescription("Maximum number of lines to process in a single trigger. If set to 0 all new lines will be processed.")
+        ->isRequired(true)
+        ->withDefaultValue<uint32_t>(0)
+        ->build());
+
 const core::Relationship TailFile::Success("success", "All files are routed to success");
 
 const char *TailFile::CURRENT_STR = "CURRENT.";
@@ -395,6 +402,11 @@ void TailFile::onSchedule(const std::shared_ptr<core::ProcessContext> &context, 
   context->getProperty(RollingFilenamePattern.getName(), rolling_filename_pattern_glob);
   rolling_filename_pattern_ = utils::file::globToRegex(rolling_filename_pattern_glob);
   initial_start_position_ = InitialStartPositions{utils::parsePropertyWithAllowableValuesOrThrow(*context, InitialStartPosition.getName(), InitialStartPositions::values())};
+
+  uint32_t batch_size = 0;
+  if (context->getProperty(BatchSize.getName(), batch_size) && batch_size != 0) {
+    batch_size_ = batch_size;
+  }
 }
 
 void TailFile::parseAttributeProviderServiceProperty(core::ProcessContext& context) {
@@ -784,7 +796,7 @@ void TailFile::processSingleFile(const std::shared_ptr<core::ProcessSession> &se
     FileReaderCallback file_reader{full_file_name, state.position_, delim, state.checksum_};
     TailState state_copy{state};
 
-    while (file_reader.hasMoreToRead()) {
+    while (file_reader.hasMoreToRead() && (!batch_size_ || *batch_size_ > num_flow_files)) {
       auto flow_file = session->create();
       session->write(flow_file, std::ref(file_reader));
 

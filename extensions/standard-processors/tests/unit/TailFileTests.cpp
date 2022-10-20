@@ -1847,3 +1847,38 @@ TEST_CASE("TailFile can use an AttributeProviderService", "[AttributeProviderSer
 
   LogTestController::getInstance().reset();
 }
+
+TEST_CASE("TailFile honors batch size for maximum lines processed", "[batchSize]") {
+  TestController testController;
+  LogTestController::getInstance().setTrace<minifi::processors::TailFile>();
+  LogTestController::getInstance().setDebug<minifi::processors::LogAttribute>();
+
+  std::shared_ptr<TestPlan> plan = testController.createPlan();
+  std::shared_ptr<core::Processor> tailfile = plan->addProcessor("TailFile", "TailFile");
+  auto logattribute = plan->addProcessor("LogAttribute", "LogAttribute", core::Relationship("success", "description"), true);
+  plan->setProperty(logattribute, org::apache::nifi::minifi::processors::LogAttribute::FlowFilesToLog.getName(), "0");
+
+  auto dir = testController.createTempDirectory();
+  std::stringstream temp_file;
+  temp_file << dir << utils::file::get_separator() << TMP_FILE;
+
+  std::ofstream tmpfile;
+  tmpfile.open(temp_file.str(), std::ios::out | std::ios::binary);
+  for (auto i = 0; i < 20; ++i) {
+    tmpfile << NEW_TAIL_DATA;
+  }
+  tmpfile.close();
+
+  std::stringstream state_file;
+  state_file << dir << utils::file::get_separator() << STATE_FILE;
+
+  plan->setProperty(tailfile, org::apache::nifi::minifi::processors::TailFile::FileName.getName(), temp_file.str());
+  plan->setProperty(tailfile, org::apache::nifi::minifi::processors::TailFile::Delimiter.getName(), "\n");
+  plan->setProperty(tailfile, org::apache::nifi::minifi::processors::TailFile::BatchSize.getName(), "10");
+
+  testController.runSession(plan);
+
+  REQUIRE(LogTestController::getInstance().contains("Logged 10 flow files"));
+
+  LogTestController::getInstance().reset();
+}
