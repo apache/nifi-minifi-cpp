@@ -17,8 +17,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#ifndef EXTENSIONS_STANDARD_PROCESSORS_PROCESSORS_TAILFILE_H_
-#define EXTENSIONS_STANDARD_PROCESSORS_PROCESSORS_TAILFILE_H_
+#pragma once
 
 #include <map>
 #include <memory>
@@ -27,6 +26,7 @@
 #include <unordered_map>
 #include <vector>
 #include <set>
+#include <optional>
 
 #include "controllers/AttributeProviderService.h"
 #include "FlowFileRecord.h"
@@ -37,11 +37,7 @@
 #include "utils/Enum.h"
 #include "utils/Export.h"
 
-namespace org {
-namespace apache {
-namespace nifi {
-namespace minifi {
-namespace processors {
+namespace org::apache::nifi::minifi::processors {
 
 struct TailState {
   TailState(std::string path, std::string file_name, uint64_t position,
@@ -106,6 +102,7 @@ class TailFile : public core::Processor {
   EXTENSIONAPI static const core::Property RollingFilenamePattern;
   EXTENSIONAPI static const core::Property InitialStartPosition;
   EXTENSIONAPI static const core::Property AttributeProviderService;
+  EXTENSIONAPI static const core::Property BatchSize;
 
   static auto properties() {
     return std::array{
@@ -118,7 +115,8 @@ class TailFile : public core::Processor {
       LookupFrequency,
       RollingFilenamePattern,
       InitialStartPosition,
-      AttributeProviderService
+      AttributeProviderService,
+      BatchSize
     };
   }
 
@@ -215,13 +213,8 @@ class TailFile : public core::Processor {
   bool first_trigger_{true};
   controllers::AttributeProviderService* attribute_provider_service_ = nullptr;
   std::unordered_map<std::string, controllers::AttributeProviderService::AttributeMap> extra_attributes_;
+  std::optional<uint32_t> batch_size_;
   std::shared_ptr<core::logging::Logger> logger_ = core::logging::LoggerFactory<TailFile>::getLogger();
 };
 
-}  // namespace processors
-}  // namespace minifi
-}  // namespace nifi
-}  // namespace apache
-}  // namespace org
-
-#endif  // EXTENSIONS_STANDARD_PROCESSORS_PROCESSORS_TAILFILE_H_
+}  // namespace org::apache::nifi::minifi::processors

@@ -44,6 +44,7 @@
 #include "LogAttribute.h"
 #include "utils/TestUtils.h"
 #include "utils/StringUtils.h"
+#include "SingleProcessorTestController.h"
 
 using namespace std::literals::chrono_literals;
 
@@ -1846,4 +1847,33 @@ TEST_CASE("TailFile can use an AttributeProviderService", "[AttributeProviderSer
   CHECK_FALSE(LogTestController::getInstance().contains("key:test.animal value:horse", 0s, 0ms));
 
   LogTestController::getInstance().reset();
+}
+
+TEST_CASE("TailFile honors batch size for maximum lines processed", "[batchSize]") {
+  LogTestController::getInstance().setTrace<minifi::processors::TailFile>();
+
+  auto tailfile = std::make_shared<minifi::processors::TailFile>("TailFile");
+  minifi::test::SingleProcessorTestController test_controller(tailfile);
+
+  auto dir = test_controller.createTempDirectory();
+  std::stringstream temp_file;
+  temp_file << dir << utils::file::get_separator() << TMP_FILE;
+
+  std::ofstream tmpfile;
+  tmpfile.open(temp_file.str(), std::ios::out | std::ios::binary);
+  for (auto i = 0; i < 20; ++i) {
+    tmpfile << NEW_TAIL_DATA;
+  }
+  tmpfile.close();
+
+  std::stringstream state_file;
+  state_file << dir << utils::file::get_separator() << STATE_FILE;
+
+  tailfile->setProperty(minifi::processors::TailFile::FileName.getName(), temp_file.str());
+  tailfile->setProperty(minifi::processors::TailFile::Delimiter.getName(), "\n");
+  tailfile->setProperty(minifi::processors::TailFile::BatchSize.getName(), "10");
+
+  const auto result = test_controller.trigger();
+  const auto& file_contents = result.at(minifi::processors::TailFile::Success);
+  REQUIRE(file_contents.size() == 10);
 }
