@@ -50,7 +50,7 @@ namespace org::apache::nifi::minifi::extensions::curl {
  *  - because of this, all functions that request data at a specific offset are implicit seeks and potentially modify
  *    the current buffer
  */
-class HttpStreamingCallback final : public utils::HTTPUploadCallback {
+class HttpStreamingCallback final : public utils::HTTPUploadByteArrayInputCallback {
  public:
   void close() override {
     logger_->log_trace("close() called");

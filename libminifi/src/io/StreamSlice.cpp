@@ -20,7 +20,7 @@
 
 namespace org::apache::nifi::minifi::io {
 
-StreamSlice::StreamSlice(std::shared_ptr<io::InputStream>& stream, size_t offset, size_t size) : stream_(stream), slice_offset_(offset), slice_size_(size) {
+StreamSlice::StreamSlice(std::shared_ptr<io::InputStream> stream, size_t offset, size_t size) : stream_(std::move(stream)), slice_offset_(offset), slice_size_(size) {
   stream_->seek(slice_offset_);
   if (stream_->size() < slice_offset_ + slice_size_)
     throw std::invalid_argument("StreamSlice is bigger than the Stream");

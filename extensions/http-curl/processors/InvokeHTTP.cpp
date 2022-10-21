@@ -338,24 +338,25 @@ void InvokeHTTP::onTriggerWithClient(const std::shared_ptr<core::ProcessContext>
 
   if (shouldEmitFlowFile(client)) {
     logger_->log_trace("InvokeHTTP -- reading flowfile");
-    std::shared_ptr<ResourceClaim> claim = flow_file->getResourceClaim();
-    if (claim) {
-      auto callback_obj = std::make_unique<utils::HTTPUploadCallback>();
-      callback_obj->pos = 0;
+    const auto flow_file_reader_stream = session->getFlowFileContentStream(flow_file);
+    if (flow_file_reader_stream) {
+      std::unique_ptr<utils::HTTPUploadCallback> callback_obj;
       if (send_message_body_) {
-        session->read(flow_file, std::ref(*callback_obj));
+        callback_obj = std::make_unique<utils::HTTPUploadStreamContentsCallback>(flow_file_reader_stream);
+      } else {
+        callback_obj = std::make_unique<utils::HTTPUploadByteArrayInputCallback>();
       }
-      logger_->log_trace("InvokeHTTP -- Setting callback, size is %d", callback_obj->getBufferSize());
+      client.setUploadCallback(std::move(callback_obj));
+      logger_->log_trace("InvokeHTTP -- Setting callback, size is %d", flow_file->getSize());
+
       if (!send_message_body_) {
         client.setRequestHeader("Content-Length", "0");
       } else if (!use_chunked_encoding_) {
         client.setRequestHeader("Content-Length", std::to_string(flow_file->getSize()));
       }
-      client.setUploadCallback(std::move(callback_obj));
     } else {
       logger_->log_error("InvokeHTTP -- no resource claim");
     }
-
   } else {
     logger_->log_trace("InvokeHTTP -- Not emitting flowfile to HTTP Server");
   }

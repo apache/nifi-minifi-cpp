@@ -324,28 +324,31 @@ void ProcessSession::appendBuffer(const std::shared_ptr<core::FlowFile>& flow_fi
   });
 }
 
+std::shared_ptr<io::InputStream> ProcessSession::getFlowFileContentStream(const std::shared_ptr<core::FlowFile>& flow_file) {
+  if (flow_file->getResourceClaim() == nullptr) {
+    logger_->log_debug("For %s, no resource claim but size is %d", flow_file->getUUIDStr(), flow_file->getSize());
+    if (flow_file->getSize() == 0) {
+      return {};
+    }
+    throw Exception(FILE_OPERATION_EXCEPTION, "No Content Claim existed for read");
+  }
+
+  std::shared_ptr<ResourceClaim> claim = flow_file->getResourceClaim();
+  std::shared_ptr<io::InputStream> stream = content_session_->read(claim);
+  if (nullptr == stream) {
+    throw Exception(FILE_OPERATION_EXCEPTION, "Failed to open flowfile content for read");
+  }
+
+  return std::make_shared<io::StreamSlice>(stream, flow_file->getOffset(), flow_file->getSize());
+}
+
 int64_t ProcessSession::read(const std::shared_ptr<core::FlowFile> &flow, const io::InputStreamCallback& callback) {
   try {
-    std::shared_ptr<ResourceClaim> claim = nullptr;
-
-    if (flow->getResourceClaim() == nullptr) {
-      // No existed claim for read, we throw exception
-      logger_->log_debug("For %s, no resource claim but size is %d", flow->getUUIDStr(), flow->getSize());
-      if (flow->getSize() == 0) {
-        return 0;
-      }
-      throw Exception(FILE_OPERATION_EXCEPTION, "No Content Claim existed for read");
+    auto flow_file_stream = getFlowFileContentStream(flow);
+    if (!flow_file_stream) {
+      return 0;
     }
 
-    claim = flow->getResourceClaim();
-
-    std::shared_ptr<io::InputStream> stream = content_session_->read(claim);
-
-    if (nullptr == stream) {
-      throw Exception(FILE_OPERATION_EXCEPTION, "Failed to open flowfile content for read");
-    }
-
-    auto flow_file_stream = std::make_shared<io::StreamSlice>(stream, flow->getOffset(), flow->getSize());
     auto ret = callback(flow_file_stream);
     if (ret < 0) {
       throw Exception(FILE_OPERATION_EXCEPTION, "Failed to process flowfile content");

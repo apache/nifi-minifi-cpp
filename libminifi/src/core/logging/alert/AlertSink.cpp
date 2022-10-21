@@ -212,7 +212,7 @@ void AlertSink::send(Services& services) {
   rapidjson::Writer<rapidjson::StringBuffer> writer(buffer);
   doc.Accept(writer);
 
-  auto data_input = std::make_unique<utils::HTTPUploadCallback>();
+  auto data_input = std::make_unique<utils::HTTPUploadByteArrayInputCallback>();
   data_input->write(std::string(buffer.GetString(), buffer.GetSize()));
   client->setUploadCallback(std::move(data_input));
   client->setContentType("application/json");

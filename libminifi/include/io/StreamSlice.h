@@ -31,7 +31,7 @@ namespace org::apache::nifi::minifi::io {
  */
 class StreamSlice : public InputStream {
  public:
-  StreamSlice(std::shared_ptr<io::InputStream>& stream, size_t offset, size_t size);
+  StreamSlice(std::shared_ptr<io::InputStream> stream, size_t offset, size_t size);
 
   // from InputStream
   size_t size() const override { return slice_size_; }
@@ -46,7 +46,7 @@ class StreamSlice : public InputStream {
   [[nodiscard]] gsl::span<const std::byte> getBuffer() const override;
 
  private:
-  const std::shared_ptr<io::InputStream>& stream_;
+  std::shared_ptr<io::InputStream> stream_;
   size_t slice_offset_;
   size_t slice_size_;
 };

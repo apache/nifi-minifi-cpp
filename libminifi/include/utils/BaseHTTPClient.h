@@ -39,12 +39,47 @@ struct HTTPProxy {
   int port = 0;
 };
 
-class HTTPUploadCallback : public ByteInputCallback {
+class HTTPUploadCallback {
+ public:
+  virtual ~HTTPUploadCallback() = default;
+
+  virtual size_t getDataChunk(char* data, size_t size) = 0;
+  virtual size_t setPosition(int64_t offset) = 0;
+
+  virtual size_t size() = 0;
+  virtual void requestStop() = 0;
+  virtual void close() = 0;
+};
+
+class HTTPUploadByteArrayInputCallback : public HTTPUploadCallback, public ByteInputCallback {
  public:
   using ByteInputCallback::ByteInputCallback;
 
+  size_t getDataChunk(char* data, size_t size) override;
+  size_t setPosition(int64_t offset) override;
+
+  size_t size() override { return getBufferSize(); }
+  void requestStop() override { stop = true; }
+  void close() override { ByteInputCallback::close(); }
+
   std::atomic<bool> stop = false;
   std::atomic<size_t> pos = 0;
+};
+
+class HTTPUploadStreamContentsCallback : public HTTPUploadCallback {
+ public:
+  explicit HTTPUploadStreamContentsCallback(std::shared_ptr<io::InputStream> input_stream) : input_stream_{std::move(input_stream)} {}
+
+  size_t getDataChunk(char* data, size_t size) override;
+  size_t setPosition(int64_t offset) override;
+
+ private:
+  size_t size() override { return input_stream_->size(); }
+  void requestStop() override {}
+  void close() override {}
+
+  std::shared_ptr<io::InputStream> input_stream_;
+  std::shared_ptr<core::logging::Logger> logger_ = core::logging::LoggerFactory<HTTPUploadStreamContentsCallback>::getLogger();
 };
 
 class HTTPReadCallback : public ByteOutputCallback {
@@ -132,127 +167,15 @@ struct HTTPHeaderResponse {
   bool parsed{false};
 };
 
-/**
- * HTTP Response object
- */
-class HTTPRequestResponse {
-  std::vector<char> data;
-  std::condition_variable space_available_;
-  std::mutex data_mutex_;
+namespace HTTPRequestResponse {
+  const size_t CALLBACK_ABORT = 0x10000000;
+  const int SEEKFUNC_OK = 0;
+  const int SEEKFUNC_FAIL = 1;
 
-  size_t max_queue;
-
- public:
-  static const size_t CALLBACK_ABORT = 0x10000000;
-  static const int SEEKFUNC_OK = 0;
-  static const int SEEKFUNC_FAIL = 1;
-
-  const std::vector<char> &getData() {
-    return data;
-  }
-
-  HTTPRequestResponse(const HTTPRequestResponse &other)
-      : max_queue(other.max_queue) {
-  }
-
-  /**
-   * Receive HTTP Response.
-   */
-  static size_t receiveWrite(char * data, size_t size, size_t nmemb, void * p) {
-    try {
-      if (p == nullptr) {
-        return CALLBACK_ABORT;
-      }
-      auto *callback = static_cast<HTTPReadCallback *>(p);
-      if (callback->stop) {
-        return CALLBACK_ABORT;
-      }
-      callback->write(data, (size * nmemb));
-      return (size * nmemb);
-    } catch (...) {
-      return CALLBACK_ABORT;
-    }
-  }
-
-  /**
-   * Callback for post, put, and patch operations
-   * @param buffer
-   * @param size size of buffer
-   * @param nitems items to add
-   * @param insteam input stream object.
-   */
-
-  static size_t send_write(char * data, size_t size, size_t nmemb, void * p) {
-    try {
-      if (p == nullptr) {
-        return CALLBACK_ABORT;
-      }
-      auto *callback = reinterpret_cast<HTTPUploadCallback*>(p);
-      if (callback->stop) {
-        return CALLBACK_ABORT;
-      }
-      size_t buffer_size = callback->getBufferSize();
-      if (callback->pos <= buffer_size) {
-        size_t len = buffer_size - callback->pos;
-        if (len <= 0) {
-          return 0;
-        }
-        auto *ptr = callback->getBuffer(callback->pos);
-
-        if (ptr == nullptr) {
-          return 0;
-        }
-        if (len > size * nmemb)
-          len = size * nmemb;
-        memcpy(data, ptr, len);
-        callback->pos += len;
-        callback->seek(callback->pos);
-        return len;
-      }
-      return 0;
-    } catch (...) {
-      return CALLBACK_ABORT;
-    }
-  }
-
-  static int seek_callback(void *p, int64_t offset, int) {
-    try {
-      if (p == nullptr) {
-        return SEEKFUNC_FAIL;
-      }
-      auto *callback = reinterpret_cast<HTTPUploadCallback*>(p);
-      if (callback->stop) {
-        return SEEKFUNC_FAIL;
-      }
-      if (callback->getBufferSize() <= static_cast<size_t>(offset)) {
-        return SEEKFUNC_FAIL;
-      }
-      callback->pos = offset;
-      callback->seek(callback->pos);
-      return SEEKFUNC_OK;
-    } catch (...) {
-      return SEEKFUNC_FAIL;
-    }
-  }
-
-  int read_data(uint8_t *buf, size_t size) {
-    size_t size_to_read = size;
-    if (size_to_read > data.size()) {
-      size_to_read = data.size();
-    }
-    memcpy(buf, data.data(), size_to_read);
-    return gsl::narrow<int>(size_to_read);
-  }
-
-  size_t write_content(char* ptr, size_t size, size_t nmemb) {
-    if (data.size() + (size * nmemb) > max_queue) {
-      std::unique_lock<std::mutex> lock(data_mutex_);
-      space_available_.wait(lock, [&] {return data.size() + (size*nmemb) < max_queue;});
-    }
-    data.insert(data.end(), ptr, ptr + size * nmemb);
-    return size * nmemb;
-  }
-};
+  size_t receiveWrite(char * data, size_t size, size_t nmemb, void * p);
+  size_t send_write(char * data, size_t size, size_t nmemb, void * p);
+  int seek_callback(void *p, int64_t offset, int);
+}
 
 class BaseHTTPClient {
  public:
