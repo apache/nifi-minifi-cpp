@@ -25,7 +25,7 @@ import tempfile
 from .LogSource import LogSource
 from .SingleNodeDockerCluster import SingleNodeDockerCluster
 from .PrometheusChecker import PrometheusChecker
-from .utils import retry_check
+from .utils import retry_check, get_peak_memory_usage, get_minifi_pid, get_memory_usage
 from azure.storage.blob import BlobServiceClient
 from azure.core.exceptions import ResourceExistsError
 
@@ -318,3 +318,25 @@ class DockerTestCluster(SingleNodeDockerCluster):
 
     def wait_for_processor_metric_on_prometheus(self, metric_class, timeout_seconds, processor_name):
         return PrometheusChecker().wait_for_processor_metric_on_prometheus(metric_class, timeout_seconds, processor_name)
+
+    def wait_for_peak_memory_usage(self, minimum_peak_memory_usage: int, timeout_seconds: int) -> bool:
+        start_time = time.perf_counter()
+        current_peak_memory_usage = get_peak_memory_usage(get_minifi_pid())
+        while (time.perf_counter() - start_time) < timeout_seconds:
+            if current_peak_memory_usage > minimum_peak_memory_usage:
+                return True
+            current_peak_memory_usage = get_peak_memory_usage(get_minifi_pid())
+            time.sleep(1)
+        print(f"Peak memory usage ({current_peak_memory_usage}) didnt exceed minimum asserted peak memory usage {minimum_peak_memory_usage}")
+        return False
+
+    def wait_for_maximum_memory_usage(self, max_memory_usage: int, timeout_seconds: int) -> bool:
+        start_time = time.perf_counter()
+        current_memory_usage = get_memory_usage(get_minifi_pid())
+        while (time.perf_counter() - start_time) < timeout_seconds:
+            if current_memory_usage < max_memory_usage:
+                return True
+            current_memory_usage = get_memory_usage(get_minifi_pid())
+            time.sleep(1)
+        print(f"Memory usage ({current_memory_usage}) is more than the maximum asserted memory usage ({max_memory_usage})")
+        return False

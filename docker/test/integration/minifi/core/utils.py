@@ -17,6 +17,8 @@
 import time
 import functools
 import os
+import subprocess
+from typing import Optional
 
 
 def retry_check(max_tries=5, retry_interval=1):
@@ -57,3 +59,25 @@ def decode_escaped_str(str):
 
 def is_temporary_output_file(filepath):
     return filepath.split(os.path.sep)[-1][0] == '.'
+
+
+def get_minifi_pid() -> int:
+    return int(subprocess.run(["pidof", "-s", "minifi"], capture_output=True).stdout)
+
+
+def get_peak_memory_usage(pid: int) -> Optional[int]:
+    with open("/proc/" + str(pid) + "/status") as stat_file:
+        for line in stat_file:
+            if "VmHWM" in line:
+                peak_resident_set_size = [int(s) for s in line.split() if s.isdigit()].pop()
+                return peak_resident_set_size * 1024
+    return None
+
+
+def get_memory_usage(pid: int) -> Optional[int]:
+    with open("/proc/" + str(pid) + "/status") as stat_file:
+        for line in stat_file:
+            if "VmRSS" in line:
+                resident_set_size = [int(s) for s in line.split() if s.isdigit()].pop()
+                return resident_set_size * 1024
+    return None

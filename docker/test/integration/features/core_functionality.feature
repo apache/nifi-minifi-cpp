@@ -40,3 +40,12 @@ Feature: Core flow functionalities
     Given a GenerateFlowFile processor with the name "generateFlowFile" in the "minifi-cpp-with-provenance-repo" flow with engine "minifi-cpp-with-provenance-repo"
     When the MiNiFi instance starts up
     Then the "minifi-cpp-with-provenance-repo" flow has a log line matching "MiNiFi started" in less than 30 seconds
+
+  Scenario: Memory usage returns after peak usage
+    Given a GenerateFlowFile processor with the "Batch Size" property set to "20000"
+    And the "Data Format" property of the GenerateFlowFile processor is set to "Text"
+    And the "Unique FlowFiles" property of the GenerateFlowFile processor is set to "false"
+    And the "Custom Text" property of the GenerateFlowFile processor is set to "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Curabitur tellus quam, sagittis quis ante ac, finibus ornare lectus. Morbi libero mauris, mollis sed mi at."
+    When all instances start up
+    Then the peak memory usage of the agent is more than 100 MB in less than 10 seconds
+    And the memory usage of the agent is less than 1 MB in less than 20 seconds
