@@ -52,8 +52,9 @@ endif(NOT USE_SHARED_LIBS)
 target_link_libraries(minifiexe Threads::Threads)
 
 target_link_libraries(minifiexe yaml-cpp)
-if(NOT WIN32 AND ENABLE_JNI AND NOT DISABLE_JEMALLOC)
-    target_link_libraries(minifiexe JeMalloc::JeMalloc)
+if(CUSTOM_MALLOC_LIB)
+    message(VERBOSE "Using custom malloc lib ${CUSTOM_MALLOC_LIB} for minifiexe")
+    target_link_libraries(minifiexe ${CUSTOM_MALLOC_LIB})
 endif()
 
 if (WIN32)

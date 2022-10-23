@@ -1,5 +1,4 @@
 behave==1.2.6
-pytimeparse==1.1.8
 docker==5.0.0
 kafka-python==2.0.2
 confluent-kafka==1.7.0
@@ -9,3 +8,4 @@ watchdog==2.1.2
 pyopenssl==23.0.0
 azure-storage-blob==12.9.0
 prometheus-api-client==0.5.0
+humanfriendly==10.0

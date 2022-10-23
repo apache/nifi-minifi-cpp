@@ -28,6 +28,12 @@ function(add_minifi_dependent_option OPTION_NAME OPTION_DESCRIPTION OPTION_VALUE
     set(MINIFI_OPTIONS ${MINIFI_OPTIONS} PARENT_SCOPE)
 endfunction()
 
+function(set_minifi_cache_variable VARIABLE_NAME VARIABLE_VALUE DOCSTRING)
+    set(${VARIABLE_NAME} ${VARIABLE_VALUE} CACHE STRING ${DOCSTRING})
+    list(APPEND MINIFI_OPTIONS ${VARIABLE_NAME})
+    set(MINIFI_OPTIONS ${MINIFI_OPTIONS} PARENT_SCOPE)
+endfunction()
+
 add_minifi_option(CI_BUILD "Build is used for CI." OFF)
 add_minifi_option(SKIP_TESTS "Skips building all tests." OFF)
 add_minifi_option(DOCKER_BUILD_ONLY "Disables all targets except docker build scripts. Ideal for systems without an up-to-date compiler." OFF)
@@ -116,6 +122,9 @@ add_minifi_option(ENABLE_KUBERNETES "Enables the Kubernetes extensions." OFF)
 add_minifi_option(ENABLE_TEST_PROCESSORS "Enables test processors" OFF)
 add_minifi_option(ENABLE_PROMETHEUS "Enables Prometheus support." OFF)
 add_minifi_option(DISABLE_JEMALLOC "Disables jemalloc." OFF)
+
+set_minifi_cache_variable(CUSTOM_MALLOC OFF "Overwrite malloc implementation.")
+set_property(CACHE CUSTOM_MALLOC PROPERTY STRINGS "jemalloc" "mimalloc" "rpmalloc" OFF)
 
 if(CMAKE_SYSTEM_NAME STREQUAL "Linux")
     add_minifi_option(ENABLE_PROCFS "Enables the procfs extension." ON)
