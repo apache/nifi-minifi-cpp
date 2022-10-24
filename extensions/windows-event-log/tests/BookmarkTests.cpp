@@ -40,7 +40,7 @@ constexpr DWORD EVT_NEXT_TIMEOUT_MS = 100;
 std::unique_ptr<Bookmark> createBookmark(TestPlan &test_plan,
                                          const std::wstring &channel,
                                          const utils::Identifier &uuid,
-                                         core::CoreComponentStateManager* state_manager) {
+                                         core::StateManager* state_manager) {
   const auto logger = test_plan.getLogger();
   return std::make_unique<Bookmark>(channel, L"*", "", uuid, false, state_manager, logger);
 }
@@ -103,7 +103,7 @@ TEST_CASE("Bookmark constructor works", "[create]") {
 
 
   const utils::Identifier uuid = IdGenerator::getIdGenerator()->generate();
-  auto state_manager = test_plan->getStateManagerProvider()->getCoreComponentStateManager(uuid);
+  auto state_manager = test_plan->getStateStorage()->getStateManager(uuid);
   std::unique_ptr<Bookmark> bookmark = createBookmark(*test_plan, APPLICATION_CHANNEL, uuid, state_manager.get());
   REQUIRE(bookmark);
   REQUIRE(*bookmark);
@@ -120,7 +120,7 @@ TEST_CASE("Bookmark is restored from the state", "[create][state]") {
   LogTestController::getInstance().setTrace<TestPlan>();
 
   utils::Identifier uuid = IdGenerator::getIdGenerator()->generate();
-  auto state_manager = test_plan->getStateManagerProvider()->getCoreComponentStateManager(uuid);
+  auto state_manager = test_plan->getStateStorage()->getStateManager(uuid);
   std::unique_ptr<Bookmark> bookmark_before = createBookmark(*test_plan, APPLICATION_CHANNEL, uuid, state_manager.get());
   std::wstring bookmark_xml_before = bookmarkAsXml(bookmark_before);
 
@@ -139,14 +139,14 @@ TEST_CASE("Bookmark created after a new event is different", "[create][state]") 
   LogTestController::getInstance().setTrace<TestPlan>();
 
   utils::Identifier uuid_one = IdGenerator::getIdGenerator()->generate();
-  auto state_manager_one = test_plan->getStateManagerProvider()->getCoreComponentStateManager(uuid_one);
+  auto state_manager_one = test_plan->getStateStorage()->getStateManager(uuid_one);
   std::unique_ptr<Bookmark> bookmark_before = createBookmark(*test_plan, APPLICATION_CHANNEL, uuid_one, state_manager_one.get());
 
   reportEvent(APPLICATION_CHANNEL, "Something interesting happened");
 
   utils::Identifier uuid_two = IdGenerator::getIdGenerator()->generate();
   // different uuid, so we get a new, empty, state manager
-  auto state_manager_two = test_plan->getStateManagerProvider()->getCoreComponentStateManager(uuid_two);
+  auto state_manager_two = test_plan->getStateStorage()->getStateManager(uuid_two);
   std::unique_ptr<Bookmark> bookmark_after = createBookmark(*test_plan, APPLICATION_CHANNEL, uuid_two, state_manager_two.get());
 
   REQUIRE(bookmarkAsXml(bookmark_before) != bookmarkAsXml(bookmark_after));
@@ -158,7 +158,7 @@ TEST_CASE("Bookmark::getBookmarkHandleFromXML() returns the same event from a co
   LogTestController::getInstance().setTrace<TestPlan>();
 
   utils::Identifier uuid = IdGenerator::getIdGenerator()->generate();
-  auto state_manager = test_plan->getStateManagerProvider()->getCoreComponentStateManager(uuid);
+  auto state_manager = test_plan->getStateStorage()->getStateManager(uuid);
   std::unique_ptr<Bookmark> bookmark_one = createBookmark(*test_plan, APPLICATION_CHANNEL, uuid, state_manager.get());
   std::unique_ptr<Bookmark> bookmark_two = createBookmark(*test_plan, APPLICATION_CHANNEL, uuid, state_manager.get());
 
@@ -174,14 +174,14 @@ TEST_CASE("Bookmark::getBookmarkHandleFromXML() returns a different event after 
 
   GIVEN("We have two different bookmarks") {
     const auto uuid = IdGenerator::getIdGenerator()->generate();
-    auto state_manager = test_plan->getStateManagerProvider()->getCoreComponentStateManager(uuid);
+    auto state_manager = test_plan->getStateStorage()->getStateManager(uuid);
     std::unique_ptr<Bookmark> bookmark_one = createBookmark(*test_plan, APPLICATION_CHANNEL, uuid, state_manager.get());
     std::wstring bookmark_one_xml = bookmarkAsXml(bookmark_one);
 
     reportEvent(APPLICATION_CHANNEL, "Something interesting happened");
 
     const utils::Identifier uuid_two = IdGenerator::getIdGenerator()->generate();
-    auto state_manager_two = test_plan->getStateManagerProvider()->getCoreComponentStateManager(uuid_two);
+    auto state_manager_two = test_plan->getStateStorage()->getStateManager(uuid_two);
     std::unique_ptr<Bookmark> bookmark_two = createBookmark(*test_plan, APPLICATION_CHANNEL, uuid_two, state_manager_two.get());
     std::wstring bookmark_two_xml = bookmarkAsXml(bookmark_two);
 
@@ -208,7 +208,7 @@ TEST_CASE("Bookmark::getNewBookmarkXml() updates the bookmark", "[add_event]") {
   LogTestController::getInstance().setTrace<TestPlan>();
 
   const utils::Identifier uuid = IdGenerator::getIdGenerator()->generate();
-  auto state_manager = test_plan->getStateManagerProvider()->getCoreComponentStateManager(uuid);
+  auto state_manager = test_plan->getStateStorage()->getStateManager(uuid);
   std::unique_ptr<Bookmark> bookmark = createBookmark(*test_plan, APPLICATION_CHANNEL, uuid, state_manager.get());
   std::wstring bookmark_xml_before = bookmarkAsXml(bookmark);
 
@@ -230,13 +230,13 @@ TEST_CASE("Bookmark::saveBookmarkXml() updates the bookmark and saves it to the 
 
   GIVEN("We have two different bookmarks with two different state managers") {
     utils::Identifier uuid_one = IdGenerator::getIdGenerator()->generate();
-    auto state_manager_one = test_plan->getStateManagerProvider()->getCoreComponentStateManager(uuid_one);
+    auto state_manager_one = test_plan->getStateStorage()->getStateManager(uuid_one);
     std::unique_ptr<Bookmark> bookmark_one = createBookmark(*test_plan, APPLICATION_CHANNEL, uuid_one, state_manager_one.get());
 
     reportEvent(APPLICATION_CHANNEL, "Something interesting happened");
 
     utils::Identifier uuid_two = IdGenerator::getIdGenerator()->generate();
-    auto state_manager_two = test_plan->getStateManagerProvider()->getCoreComponentStateManager(uuid_two);
+    auto state_manager_two = test_plan->getStateStorage()->getStateManager(uuid_two);
     std::unique_ptr<Bookmark> bookmark_two = createBookmark(*test_plan, APPLICATION_CHANNEL, uuid_two, state_manager_two.get());
 
     REQUIRE(bookmarkAsXml(bookmark_one) != bookmarkAsXml(bookmark_two));

@@ -198,16 +198,16 @@ TestPlan::TestPlan(std::shared_ptr<minifi::core::ContentRepository> content_repo
   stream_factory = org::apache::nifi::minifi::io::StreamFactory::getInstance(std::make_shared<minifi::Configure>());
   controller_services_ = std::make_shared<minifi::core::controller::ControllerServiceMap>();
   controller_services_provider_ = std::make_shared<minifi::core::controller::StandardControllerServiceProvider>(controller_services_, nullptr, configuration_);
-  /* Inject the default state provider ahead of ProcessContext to make sure we have a unique state directory */
+  /* Inject the default state storage ahead of ProcessContext to make sure we have a unique state directory */
   if (state_dir == nullptr) {
     state_dir_ = std::make_unique<TempDirectory>();
   } else {
     state_dir_ = std::make_unique<TempDirectory>(state_dir);
   }
-  if (!configuration_->get(minifi::Configure::nifi_state_management_provider_local_path)) {
-    configuration_->set(minifi::Configure::nifi_state_management_provider_local_path, state_dir_->getPath().string());
+  if (!configuration_->get(minifi::Configure::nifi_state_storage_local_path)) {
+    configuration_->set(minifi::Configure::nifi_state_storage_local_path, state_dir_->getPath().string());
   }
-  state_manager_provider_ = minifi::core::ProcessContext::getOrCreateDefaultStateManagerProvider(controller_services_provider_.get(), configuration_);
+  state_storage_ = minifi::core::ProcessContext::getOrCreateDefaultStateStorage(controller_services_provider_.get(), configuration_);
 }
 
 TestPlan::~TestPlan() {
@@ -621,7 +621,7 @@ TestController::TestController()
 std::shared_ptr<TestPlan> TestController::createPlan(PlanConfig config) {
   if (!config.configuration) {
     config.configuration = std::make_shared<minifi::Configure>();
-    config.configuration->set(minifi::Configure::nifi_state_management_provider_local_class_name, "UnorderedMapKeyValueStoreService");
+    config.configuration->set(minifi::Configure::nifi_state_storage_local_class_name, "VolatileMapStateStorage");
     config.configuration->set(minifi::Configure::nifi_dbcontent_repository_directory_default, createTempDirectory().string());
   }
 

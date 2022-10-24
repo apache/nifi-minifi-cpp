@@ -29,7 +29,7 @@
 #include <utility>
 #include <vector>
 
-#include "core/CoreComponentState.h"
+#include "core/StateManager.h"
 #include "core/Processor.h"
 #include "core/logging/LoggerConfiguration.h"
 #include "libwrapper/LibWrapper.h"
@@ -112,7 +112,7 @@ class ConsumeJournald final : public core::Processor {
 
   std::atomic<bool> running_{false};
   std::shared_ptr<core::logging::Logger> logger_ = core::logging::LoggerFactory<ConsumeJournald>::getLogger(uuid_);
-  core::CoreComponentStateManager* state_manager_;
+  core::StateManager* state_manager_;
   std::unique_ptr<libwrapper::LibWrapper> libwrapper_;
   std::unique_ptr<utils::FifoExecutor> worker_;
   std::unique_ptr<libwrapper::Journal> journal_;

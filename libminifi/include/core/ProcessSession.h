@@ -215,7 +215,7 @@ class ProcessSession : public ReferenceContainer {
 
   std::shared_ptr<ContentSession> content_session_;
 
-  CoreComponentStateManager* stateManager_;
+  StateManager* stateManager_;
 
   static std::shared_ptr<utils::IdGenerator> id_generator_;
 

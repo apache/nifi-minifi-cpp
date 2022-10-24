@@ -83,7 +83,7 @@ class QueryDatabaseTable: public SQLProcessor, public FlowFileSource {
 
   bool saveState();
 
-  core::CoreComponentStateManager* state_manager_{};
+  core::StateManager* state_manager_{};
   std::string table_name_;
   std::unordered_set<sql::SQLColumnIdentifier> return_columns_;
   std::string queried_columns_;

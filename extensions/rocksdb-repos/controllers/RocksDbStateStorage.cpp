@@ -15,10 +15,11 @@
  * limitations under the License.
  */
 
+#include <cinttypes>
 #include <fstream>
 #include <utility>
 
-#include "RocksDbPersistableKeyValueStoreService.h"
+#include "RocksDbStateStorage.h"
 #include "../encryption/RocksDbEncryptionProvider.h"
 #include "utils/StringUtils.h"
 #include "core/PropertyBuilder.h"
@@ -26,55 +27,63 @@
 
 namespace org::apache::nifi::minifi::controllers {
 
-const core::Property RocksDbPersistableKeyValueStoreService::LinkedServices(
-    core::PropertyBuilder::createProperty("Linked Services")
-    ->withDescription("Referenced Controller Services")
-    ->build());
-const core::Property RocksDbPersistableKeyValueStoreService::AlwaysPersist(
-    core::PropertyBuilder::createProperty(AbstractAutoPersistingKeyValueStoreService::AlwaysPersistPropertyName)
+const core::Property RocksDbStateStorage::AlwaysPersist(
+    core::PropertyBuilder::createProperty(ALWAYS_PERSIST_PROPERTY_NAME)
     ->withDescription("Persist every change instead of persisting it periodically.")
     ->isRequired(false)
     ->withDefaultValue<bool>(false)
     ->build());
-const core::Property RocksDbPersistableKeyValueStoreService::AutoPersistenceInterval(
-    core::PropertyBuilder::createProperty(AbstractAutoPersistingKeyValueStoreService::AutoPersistenceIntervalPropertyName)
+const core::Property RocksDbStateStorage::AutoPersistenceInterval(
+    core::PropertyBuilder::createProperty(AUTO_PERSISTENCE_INTERVAL_PROPERTY_NAME)
     ->withDescription("The interval of the periodic task persisting all values. Only used if Always Persist is false. If set to 0 seconds, auto persistence will be disabled.")
     ->isRequired(false)
     ->withDefaultValue<core::TimePeriodValue>("1 min")
     ->build());
-const core::Property RocksDbPersistableKeyValueStoreService::Directory(
+const core::Property RocksDbStateStorage::Directory(
     core::PropertyBuilder::createProperty("Directory")
     ->withDescription("Path to a directory for the database")
     ->isRequired(true)
     ->build());
 
-RocksDbPersistableKeyValueStoreService::RocksDbPersistableKeyValueStoreService(std::string name, const utils::Identifier& uuid /*= utils::Identifier()*/)
-    : PersistableKeyValueStoreService(name, uuid)
-    , AbstractAutoPersistingKeyValueStoreService(std::move(name), uuid) {
+RocksDbStateStorage::RocksDbStateStorage(const std::string& name, const utils::Identifier& uuid /*= utils::Identifier()*/)
+    : KeyValueStateStorage(name, uuid) {
 }
 
-void RocksDbPersistableKeyValueStoreService::initialize() {
+RocksDbStateStorage::~RocksDbStateStorage() {
+  auto_persistor_.stop();
+}
+
+void RocksDbStateStorage::initialize() {
   ControllerService::initialize();
   setSupportedProperties(properties());
 }
 
-void RocksDbPersistableKeyValueStoreService::onEnable() {
+void RocksDbStateStorage::onEnable() {
   if (configuration_ == nullptr) {
-    logger_->log_debug("Cannot enable RocksDbPersistableKeyValueStoreService");
+    logger_->log_debug("Cannot enable RocksDbStateStorage");
     return;
   }
 
-  AbstractAutoPersistingKeyValueStoreService::onEnable();
+  const auto always_persist = getProperty<bool>(AlwaysPersist.getName()).value_or(false);
+  logger_->log_info("Always Persist property: %s", always_persist ? "true" : "false");
+
+  const auto auto_persistence_interval = getProperty<core::TimePeriodValue>(AutoPersistenceInterval.getName()).value_or(core::TimePeriodValue{}).getMilliseconds();
+  logger_->log_info("Auto Persistence Interval property: %" PRId64 " ms", auto_persistence_interval.count());
 
   if (!getProperty(Directory.getName(), directory_)) {
     logger_->log_error("Invalid or missing property: Directory");
     return;
   }
 
+  auto_persistor_.start(always_persist, auto_persistence_interval, [this] { return persistNonVirtual(); });
+
   db_.reset();
 
-  const auto encrypted_env = createEncryptingEnv(utils::crypto::EncryptionManager{configuration_->getHome()}, core::repository::DbEncryptionOptions{directory_, ENCRYPTION_KEY_NAME});
-  logger_->log_info("Using %s RocksDbPersistableKeyValueStoreService", encrypted_env ? "encrypted" : "plaintext");
+  auto encrypted_env = createEncryptingEnv(utils::crypto::EncryptionManager{configuration_->getHome()}, core::repository::DbEncryptionOptions{directory_, ENCRYPTION_KEY_NAME});
+  if (!encrypted_env) {
+    encrypted_env = createEncryptingEnv(utils::crypto::EncryptionManager{configuration_->getHome()}, core::repository::DbEncryptionOptions{directory_, ENCRYPTION_KEY_NAME_OLD});
+  }
+  logger_->log_info("Using %s RocksDbStateStorage", encrypted_env ? "encrypted" : "plaintext");
 
   auto set_db_opts = [encrypted_env] (internal::Writable<rocksdb::DBOptions>& db_opts) {
     db_opts.set(&rocksdb::DBOptions::create_if_missing, true);
@@ -100,20 +109,19 @@ void RocksDbPersistableKeyValueStoreService::onEnable() {
     return;
   }
 
-  if (always_persist_) {
+  if (auto_persistor_.isAlwaysPersisting()) {
     default_write_options.sync = true;
   }
 
-  logger_->log_trace("Enabled RocksDbPersistableKeyValueStoreService");
+  logger_->log_trace("Enabled RocksDbStateStorage");
 }
 
-void RocksDbPersistableKeyValueStoreService::notifyStop() {
-  AbstractAutoPersistingKeyValueStoreService::notifyStop();
-
+void RocksDbStateStorage::notifyStop() {
+  auto_persistor_.stop();
   db_.reset();
 }
 
-bool RocksDbPersistableKeyValueStoreService::set(const std::string& key, const std::string& value) {
+bool RocksDbStateStorage::set(const std::string& key, const std::string& value) {
   if (!db_) {
     return false;
   }
@@ -129,7 +137,7 @@ bool RocksDbPersistableKeyValueStoreService::set(const std::string& key, const s
   return true;
 }
 
-bool RocksDbPersistableKeyValueStoreService::get(const std::string& key, std::string& value) {
+bool RocksDbStateStorage::get(const std::string& key, std::string& value) {
   if (!db_) {
     return false;
   }
@@ -149,7 +157,7 @@ bool RocksDbPersistableKeyValueStoreService::get(const std::string& key, std::st
   return true;
 }
 
-bool RocksDbPersistableKeyValueStoreService::get(std::unordered_map<std::string, std::string>& kvs) {
+bool RocksDbStateStorage::get(std::unordered_map<std::string, std::string>& kvs) {
   if (!db_) {
     return false;
   }
@@ -169,7 +177,7 @@ bool RocksDbPersistableKeyValueStoreService::get(std::unordered_map<std::string,
   return true;
 }
 
-bool RocksDbPersistableKeyValueStoreService::remove(const std::string& key) {
+bool RocksDbStateStorage::remove(const std::string& key) {
   if (!db_) {
     return false;
   }
@@ -185,7 +193,7 @@ bool RocksDbPersistableKeyValueStoreService::remove(const std::string& key) {
   return true;
 }
 
-bool RocksDbPersistableKeyValueStoreService::clear() {
+bool RocksDbStateStorage::clear() {
   if (!db_) {
     return false;
   }
@@ -208,7 +216,7 @@ bool RocksDbPersistableKeyValueStoreService::clear() {
   return true;
 }
 
-bool RocksDbPersistableKeyValueStoreService::update(const std::string& /*key*/, const std::function<bool(bool /*exists*/, std::string& /*value*/)>& /*update_func*/) {
+bool RocksDbStateStorage::update(const std::string& /*key*/, const std::function<bool(bool /*exists*/, std::string& /*value*/)>& /*update_func*/) {
   if (!db_) {
     return false;
   }
@@ -219,7 +227,7 @@ bool RocksDbPersistableKeyValueStoreService::update(const std::string& /*key*/, 
   throw std::logic_error("Unsupported method");
 }
 
-bool RocksDbPersistableKeyValueStoreService::persist() {
+bool RocksDbStateStorage::persistNonVirtual() {
   if (!db_) {
     return false;
   }
@@ -227,12 +235,12 @@ bool RocksDbPersistableKeyValueStoreService::persist() {
   if (!opendb) {
     return false;
   }
-  if (always_persist_) {
+  if (auto_persistor_.isAlwaysPersisting()) {
     return true;
   }
   return opendb->FlushWAL(true /*sync*/).ok();
 }
 
-REGISTER_RESOURCE_AS(RocksDbPersistableKeyValueStoreService, ControllerService, ("RocksDbPersistableKeyValueStoreService", "rocksdbpersistablekeyvaluestoreservice"));
+REGISTER_RESOURCE_AS(RocksDbStateStorage, ControllerService, ("RocksDbPersistableKeyValueStoreService", "rocksdbpersistablekeyvaluestoreservice", "RocksDbStateStorage"));
 
 }  // namespace org::apache::nifi::minifi::controllers

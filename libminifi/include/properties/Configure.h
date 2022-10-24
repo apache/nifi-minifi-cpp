@@ -28,20 +28,20 @@
 
 struct ConfigTestAccessor;
 
-namespace org {
-namespace apache {
-namespace nifi {
-namespace minifi {
+namespace org::apache::nifi::minifi {
 
 class Configure : public Configuration, public core::AgentIdentificationProvider {
   friend struct ::ConfigTestAccessor;
  public:
   explicit Configure(std::optional<Decryptor> decryptor = std::nullopt, std::shared_ptr<core::logging::LoggerProperties> logger_properties = {})
-      : Configuration{}, decryptor_(std::move(decryptor)), logger_properties_(std::move(logger_properties)) {}
+      : decryptor_(std::move(decryptor))
+      , logger_properties_(std::move(logger_properties)) {
+  }
 
   bool get(const std::string& key, std::string& value) const;
   bool get(const std::string& key, const std::string& alternate_key, std::string& value) const;
   std::optional<std::string> get(const std::string& key) const;
+  std::optional<std::string> getWithFallback(const std::string& key, const std::string& alternate_key) const;
   std::optional<std::string> getRawValue(const std::string& key) const;
 
   std::optional<std::string> getAgentClass() const override;
@@ -56,7 +56,7 @@ class Configure : public Configuration, public core::AgentIdentificationProvider
  private:
   // WARNING! a test utility
   void setLoggerProperties(std::shared_ptr<core::logging::LoggerProperties> new_properties) {
-    logger_properties_ = new_properties;
+    logger_properties_ = std::move(new_properties);
   }
 
   bool isEncrypted(const std::string& key) const;
@@ -68,7 +68,4 @@ class Configure : public Configuration, public core::AgentIdentificationProvider
   std::shared_ptr<core::logging::LoggerProperties> logger_properties_;
 };
 
-}  // namespace minifi
-}  // namespace nifi
-}  // namespace apache
-}  // namespace org
+}  // namespace org::apache::nifi::minifi

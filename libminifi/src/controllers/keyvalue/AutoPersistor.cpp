@@ -15,72 +15,49 @@
  * limitations under the License.
  */
 
-#include "controllers/keyvalue/AbstractAutoPersistingKeyValueStoreService.h"
-
 #include <cinttypes>
+
+#include "controllers/keyvalue/AutoPersistor.h"
+#include "core/PropertyBuilder.h"
+#include "core/TypedValues.h"
 
 using namespace std::literals::chrono_literals;
 
 namespace org::apache::nifi::minifi::controllers {
 
-AbstractAutoPersistingKeyValueStoreService::AbstractAutoPersistingKeyValueStoreService(std::string name, const utils::Identifier& uuid /*= utils::Identifier()*/)
-    : PersistableKeyValueStoreService(std::move(name), uuid)
-    , always_persist_(false)
-    , auto_persistence_interval_(0U)
-    , running_(false) {
+AutoPersistor::~AutoPersistor() {
+  stop();
 }
 
-AbstractAutoPersistingKeyValueStoreService::~AbstractAutoPersistingKeyValueStoreService() {
-  stopPersistingThread();
-}
-
-void AbstractAutoPersistingKeyValueStoreService::stopPersistingThread() {
+void AutoPersistor::stop() {
   std::unique_lock<std::mutex> lock(persisting_mutex_);
   if (persisting_thread_.joinable()) {
     running_ = false;
-    persisting_cv_.notify_one();
     lock.unlock();
+    persisting_cv_.notify_one();
     persisting_thread_.join();
   }
 }
 
-void AbstractAutoPersistingKeyValueStoreService::onEnable() {
+void AutoPersistor::start(bool always_persist, std::chrono::milliseconds auto_persistence_interval, std::function<bool()> persist) {
   std::unique_lock<std::mutex> lock(persisting_mutex_);
 
-  if (configuration_ == nullptr) {
-    logger_->log_debug("Cannot enable AbstractAutoPersistingKeyValueStoreService");
-    return;
-  }
-
-  std::string value;
-  if (!getProperty(AlwaysPersistPropertyName, value)) {
-    logger_->log_error("Always Persist attribute is missing or invalid");
-  } else {
-    always_persist_ = utils::StringUtils::toBool(value).value_or(false);
-  }
-  core::TimePeriodValue auto_persistence_interval;
-  if (!getProperty(AutoPersistenceIntervalPropertyName, auto_persistence_interval)) {
-    logger_->log_error("Auto Persistence Interval attribute is missing or invalid");
-  } else {
-    auto_persistence_interval_ = auto_persistence_interval.getMilliseconds();
-  }
+  always_persist_ = always_persist;
+  auto_persistence_interval_ = auto_persistence_interval;
+  persist_ = std::move(persist);
 
   if (!always_persist_ && auto_persistence_interval_ != 0s) {
     if (!persisting_thread_.joinable()) {
       logger_->log_trace("Starting auto persistence thread");
       running_ = true;
-      persisting_thread_ = std::thread(&AbstractAutoPersistingKeyValueStoreService::persistingThreadFunc, this);
+      persisting_thread_ = std::thread(&AutoPersistor::persistingThreadFunc, this);
     }
   }
 
-  logger_->log_trace("Enabled AbstractAutoPersistingKeyValueStoreService");
+  logger_->log_trace("Enabled AutoPersistor");
 }
 
-void AbstractAutoPersistingKeyValueStoreService::notifyStop() {
-  stopPersistingThread();
-}
-
-void AbstractAutoPersistingKeyValueStoreService::persistingThreadFunc() {
+void AutoPersistor::persistingThreadFunc() {
   std::unique_lock<std::mutex> lock(persisting_mutex_);
 
   while (true) {
@@ -94,7 +71,11 @@ void AbstractAutoPersistingKeyValueStoreService::persistingThreadFunc() {
       return;
     }
 
-    persist();
+    if (!persist_) {
+      logger_->log_error("Persist function is empty");
+    } else if (!persist_()) {
+      logger_->log_error("Persisting failed");
+    }
   }
 }
 

@@ -35,7 +35,7 @@ Bookmark::Bookmark(const std::wstring& channel,
     const std::filesystem::path& bookmarkRootDir,
     const utils::Identifier& uuid,
     bool processOldEvents,
-    core::CoreComponentStateManager* state_manager,
+    core::StateManager* state_manager,
     std::shared_ptr<core::logging::Logger> logger)
     : logger_(std::move(logger)),
       state_manager_(state_manager) {

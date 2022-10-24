@@ -20,7 +20,8 @@
 #include <string>
 #include <memory>
 
-#include "controllers/keyvalue/AbstractAutoPersistingKeyValueStoreService.h"
+#include "controllers/keyvalue/AutoPersistor.h"
+#include "controllers/keyvalue/KeyValueStateStorage.h"
 #include "core/Core.h"
 #include "core/logging/Logger.h"
 #include "core/logging/LoggerConfiguration.h"
@@ -30,27 +31,28 @@
 
 namespace org::apache::nifi::minifi::controllers {
 
-class RocksDbPersistableKeyValueStoreService : public AbstractAutoPersistingKeyValueStoreService {
+class RocksDbStateStorage : public KeyValueStateStorage {
  public:
-  static constexpr const char* ENCRYPTION_KEY_NAME = "nifi.state.management.provider.local.encryption.key";
+  static constexpr const char* ENCRYPTION_KEY_NAME = "nifi.state.storage.local.encryption.key";
+  static constexpr const char* ENCRYPTION_KEY_NAME_OLD = "nifi.state.management.provider.local.encryption.key";
 
-  explicit RocksDbPersistableKeyValueStoreService(std::string name, const utils::Identifier& uuid = {});
+  explicit RocksDbStateStorage(const std::string& name, const utils::Identifier& uuid = {});
 
-  ~RocksDbPersistableKeyValueStoreService() override = default;
+  ~RocksDbStateStorage() override;
 
-  EXTENSIONAPI static constexpr const char* Description = "A key-value service implemented by RocksDB";
-  EXTENSIONAPI static const core::Property LinkedServices;
+  EXTENSIONAPI static constexpr const char* Description = "A state storage service implemented by RocksDB";
+
   EXTENSIONAPI static const core::Property AlwaysPersist;
   EXTENSIONAPI static const core::Property AutoPersistenceInterval;
   EXTENSIONAPI static const core::Property Directory;
   static auto properties() {
     return std::array{
-      LinkedServices,
       AlwaysPersist,
       AutoPersistenceInterval,
       Directory
     };
   }
+
   EXTENSIONAPI static constexpr bool SupportsDynamicProperties = false;
   ADD_COMMON_VIRTUAL_FUNCTIONS_FOR_CONTROLLER_SERVICES
 
@@ -59,27 +61,25 @@ class RocksDbPersistableKeyValueStoreService : public AbstractAutoPersistingKeyV
   void notifyStop() override;
 
   bool set(const std::string& key, const std::string& value) override;
-
   bool get(const std::string& key, std::string& value) override;
-
   bool get(std::unordered_map<std::string, std::string>& kvs) override;
-
   bool remove(const std::string& key) override;
-
   bool clear() override;
-
   bool update(const std::string& key, const std::function<bool(bool /*exists*/, std::string& /*value*/)>& update_func) override;
-
-  bool persist() override;
-
- protected:
-  std::string directory_;
-
-  std::unique_ptr<minifi::internal::RocksDatabase> db_;
-  rocksdb::WriteOptions default_write_options;
+  bool persist() override {
+    return persistNonVirtual();
+  }
 
  private:
-  std::shared_ptr<core::logging::Logger> logger_ = core::logging::LoggerFactory<RocksDbPersistableKeyValueStoreService>::getLogger();
+  // non-virtual to allow calling on AutoPersistor's thread during destruction
+  bool persistNonVirtual();
+
+  std::string directory_;
+  std::unique_ptr<minifi::internal::RocksDatabase> db_;
+  rocksdb::WriteOptions default_write_options;
+  AutoPersistor auto_persistor_;
+
+  std::shared_ptr<core::logging::Logger> logger_ = core::logging::LoggerFactory<RocksDbStateStorage>::getLogger();
 };
 
 }  // namespace org::apache::nifi::minifi::controllers

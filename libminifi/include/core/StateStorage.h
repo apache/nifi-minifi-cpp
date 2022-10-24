@@ -15,25 +15,31 @@
  * limitations under the License.
  */
 
-#include "controllers/keyvalue/KeyValueStoreService.h"
+#pragma once
 
-namespace org::apache::nifi::minifi::controllers {
+#include "Core.h"
+#include "StateManager.h"
 
-KeyValueStoreService::KeyValueStoreService(std::string name, const utils::Identifier& uuid /*= utils::Identifier()*/)
-    : ControllerService(std::move(name), uuid) {
-}
+#include <memory>
+#include <string>
+#include <unordered_map>
 
-KeyValueStoreService::~KeyValueStoreService() = default;
+namespace org::apache::nifi::minifi::core {
 
-void KeyValueStoreService::yield() {
-}
+/**
+ * Serves as a state storage background for the entire application, all StateManagers are created by it and use it.
+ */
+class StateStorage {
+ public:
+  virtual ~StateStorage() = default;
 
-bool KeyValueStoreService::isRunning() {
-  return getState() == core::controller::ControllerServiceState::ENABLED;
-}
+  virtual std::unique_ptr<StateManager> getStateManager(const utils::Identifier& uuid) = 0;
 
-bool KeyValueStoreService::isWorkAvailable() {
-  return false;
-}
+  std::unique_ptr<StateManager> getStateManager(const CoreComponent& component) {
+    return getStateManager(component.getUUID());
+  }
 
-}  // namespace org::apache::nifi::minifi::controllers
+  virtual std::unordered_map<utils::Identifier, StateManager::State> getAllStates() = 0;
+};
+
+}  // namespace org::apache::nifi::minifi::core

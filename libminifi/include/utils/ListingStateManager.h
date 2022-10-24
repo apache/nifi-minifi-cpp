@@ -25,7 +25,7 @@
 #include <chrono>
 #include <utility>
 
-#include "core/CoreComponentState.h"
+#include "core/StateManager.h"
 #include "core/logging/Logger.h"
 #include "core/logging/LoggerFactory.h"
 
@@ -49,7 +49,7 @@ struct ListingState {
 
 class ListingStateManager {
  public:
-  explicit ListingStateManager(core::CoreComponentStateManager* state_manager)
+  explicit ListingStateManager(core::StateManager* state_manager)
     : state_manager_(state_manager) {
   }
 
@@ -63,7 +63,7 @@ class ListingStateManager {
   [[nodiscard]] static uint64_t getLatestListedKeyTimestampInMilliseconds(const std::unordered_map<std::string, std::string> &state);
   [[nodiscard]] static std::unordered_set<std::string> getLatestListedKeys(const std::unordered_map<std::string, std::string> &state);
 
-  core::CoreComponentStateManager* state_manager_;
+  core::StateManager* state_manager_;
   std::shared_ptr<core::logging::Logger> logger_{core::logging::LoggerFactory<ListingStateManager>::getLogger()};
 };
 

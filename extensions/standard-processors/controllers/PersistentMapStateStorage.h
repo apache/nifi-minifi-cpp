@@ -14,7 +14,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#pragma  once
+#pragma once
 
 #include <unordered_map>
 #include <string>
@@ -22,46 +22,69 @@
 #include <memory>
 #include <utility>
 
-#include "controllers/keyvalue/KeyValueStoreService.h"
+#include "controllers/keyvalue/AutoPersistor.h"
 #include "core/Core.h"
 #include "properties/Configure.h"
+#include "InMemoryKeyValueStorage.h"
+#include "controllers/keyvalue/KeyValueStateStorage.h"
 #include "core/logging/Logger.h"
 #include "core/logging/LoggerConfiguration.h"
-#include "controllers/keyvalue/PersistableKeyValueStoreService.h"
 
 namespace org::apache::nifi::minifi::controllers {
 
-/// Key-value store service purely in RAM without disk usage
-class UnorderedMapKeyValueStoreService : virtual public PersistableKeyValueStoreService {
+class PersistentMapStateStorage : public KeyValueStateStorage {
  public:
-  explicit UnorderedMapKeyValueStoreService(std::string name, const utils::Identifier& uuid = {});
-  explicit UnorderedMapKeyValueStoreService(std::string name, const std::shared_ptr<Configure>& configuration);
+  explicit PersistentMapStateStorage(const std::string& name, const utils::Identifier& uuid = {});
+  explicit PersistentMapStateStorage(const std::string& name, const std::shared_ptr<Configure>& configuration);
 
-  ~UnorderedMapKeyValueStoreService() override;
+  ~PersistentMapStateStorage() override;
 
-  EXTENSIONAPI static constexpr const char* Description = "A key-value service implemented by a locked std::unordered_map<std::string, std::string>";
-  EXTENSIONAPI static const core::Property LinkedServices;
-  static auto properties() { return std::array{LinkedServices}; }
+  EXTENSIONAPI static constexpr const char* Description = "A persistable state storage service implemented by a locked std::unordered_map<std::string, std::string> and persisted into a file";
+
+  EXTENSIONAPI static const core::Property AlwaysPersist;
+  EXTENSIONAPI static const core::Property AutoPersistenceInterval;
+  EXTENSIONAPI static const core::Property File;
+  static auto properties() {
+    return std::array{
+      AlwaysPersist,
+      AutoPersistenceInterval,
+      File
+    };
+  }
+
   EXTENSIONAPI static constexpr bool SupportsDynamicProperties = false;
   ADD_COMMON_VIRTUAL_FUNCTIONS_FOR_CONTROLLER_SERVICES
+
+  void onEnable() override;
+  void initialize() override;
+  void notifyStop() override;
 
   bool set(const std::string& key, const std::string& value) override;
   bool get(const std::string& key, std::string& value) override;
   bool get(std::unordered_map<std::string, std::string>& kvs) override;
   bool remove(const std::string& key) override;
   bool clear() override;
-  void initialize() override;
   bool update(const std::string& key, const std::function<bool(bool /*exists*/, std::string& /*value*/)>& update_func) override;
+
   bool persist() override {
-    return true;
+    return persistNonVirtual();
   }
 
- protected:
-  std::unordered_map<std::string, std::string> map_;
-  std::recursive_mutex mutex_;
-
  private:
-  std::shared_ptr<core::logging::Logger> logger_ = core::logging::LoggerFactory<UnorderedMapKeyValueStoreService>::getLogger();
+  static constexpr const char* FORMAT_VERSION_KEY = "__UnorderedMapPersistableKeyValueStoreService_FormatVersion";
+  static constexpr int FORMAT_VERSION = 1;
+
+  bool load();
+  bool parseLine(const std::string& line, std::string& key, std::string& value);
+
+  // non-virtual to allow calling in destructor
+  bool persistNonVirtual();
+
+  std::mutex mutex_;
+  std::string file_;
+  InMemoryKeyValueStorage storage_;
+  AutoPersistor auto_persistor_;
+  std::shared_ptr<core::logging::Logger> logger_ = core::logging::LoggerFactory<PersistentMapStateStorage>::getLogger();
 };
 
 }  // namespace org::apache::nifi::minifi::controllers

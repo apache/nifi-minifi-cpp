@@ -21,13 +21,12 @@
 #include <string>
 #include "../TestBase.h"
 #include "../Catch.h"
-#include "core/controller/ControllerService.h"
+#include "controllers/keyvalue/AutoPersistor.h"
+#include "controllers/keyvalue/KeyValueStateStorage.h"
 #include "core/ProcessGroup.h"
 #include "core/yaml/YamlConfiguration.h"
 #include "unit/ProvenanceTestHelper.h"
 #include "repository/VolatileContentRepository.h"
-
-#include "Catch.h"
 
 namespace {
   std::string config_yaml; // NOLINT
@@ -39,7 +38,7 @@ int main(int argc, char* argv[]) {
   auto cli = session.cli()
       | Catch::clara::Opt{config_yaml, "config-yaml"}
           ["--config-yaml"]
-          ("path to the config.yaml containing the UnorderedMapKeyValueStoreServiceTest controller service configuration");
+          ("path to the config.yaml containing the VolatileMapStateStorageTest controller service configuration");
   session.cli(cli);
 
   int ret = session.applyCommandLine(argc, argv);
@@ -48,19 +47,19 @@ int main(int argc, char* argv[]) {
   }
 
   if (config_yaml.empty()) {
-    std::cerr << "Missing --config-yaml <path>. It must contain the path to the config.yaml containing the UnorderedMapKeyValueStoreServiceTest controller service configuration." << std::endl;
+    std::cerr << "Missing --config-yaml <path>. It must contain the path to the config.yaml containing the VolatileMapStateStorageTest controller service configuration." << std::endl;
     return -1;
   }
 
   return session.run();
 }
 
-class UnorderedMapKeyValueStoreServiceTestFixture {
+class VolatileMapStateStorageTestFixture {
  public:
-  UnorderedMapKeyValueStoreServiceTestFixture() {
+  VolatileMapStateStorageTestFixture() {
     LogTestController::getInstance().setTrace<TestPlan>();
-    LogTestController::getInstance().setTrace<minifi::controllers::PersistableKeyValueStoreService>();
-    LogTestController::getInstance().setTrace<minifi::controllers::AbstractAutoPersistingKeyValueStoreService>();
+    LogTestController::getInstance().setTrace<minifi::controllers::KeyValueStateStorage>();
+    LogTestController::getInstance().setTrace<minifi::controllers::AutoPersistor>();
 
     std::filesystem::current_path(testController.createTempDirectory());
 
@@ -72,12 +71,12 @@ class UnorderedMapKeyValueStoreServiceTestFixture {
     REQUIRE(key_value_store_service_node != nullptr);
     key_value_store_service_node->enable();
 
-    controller = std::dynamic_pointer_cast<minifi::controllers::PersistableKeyValueStoreService>(
+    controller = std::dynamic_pointer_cast<minifi::controllers::KeyValueStateStorage>(
             key_value_store_service_node->getControllerServiceImplementation());
     REQUIRE(controller != nullptr);
   }
 
-  virtual ~UnorderedMapKeyValueStoreServiceTestFixture() {
+  virtual ~VolatileMapStateStorageTestFixture() {
     LogTestController::getInstance().reset();
   }
 
@@ -93,12 +92,12 @@ class UnorderedMapKeyValueStoreServiceTestFixture {
   std::unique_ptr<core::ProcessGroup> process_group;
 
   std::shared_ptr<core::controller::ControllerServiceNode> key_value_store_service_node;
-  std::shared_ptr<minifi::controllers::PersistableKeyValueStoreService> controller;
+  std::shared_ptr<minifi::controllers::KeyValueStateStorage> controller;
 
   TestController testController;
 };
 
-TEST_CASE_METHOD(UnorderedMapKeyValueStoreServiceTestFixture, "UnorderedMapKeyValueStoreServiceTest set and get", "[basic]") {
+TEST_CASE_METHOD(VolatileMapStateStorageTestFixture, "VolatileMapStateStorageTest set and get", "[basic]") {
   const char* key = "foobar";
   const char* value = "234";
   REQUIRE(true == controller->set(key, value));
@@ -108,7 +107,7 @@ TEST_CASE_METHOD(UnorderedMapKeyValueStoreServiceTestFixture, "UnorderedMapKeyVa
   REQUIRE(value == res);
 }
 
-TEST_CASE_METHOD(UnorderedMapKeyValueStoreServiceTestFixture, "UnorderedMapKeyValueStoreServiceTestFixture set and get all", "[basic]") {
+TEST_CASE_METHOD(VolatileMapStateStorageTestFixture, "VolatileMapStateStorageTestFixture set and get all", "[basic]") {
   const std::unordered_map<std::string, std::string> kvs = {
           {"foobar", "234"},
           {"buzz", "value"},
@@ -122,7 +121,7 @@ TEST_CASE_METHOD(UnorderedMapKeyValueStoreServiceTestFixture, "UnorderedMapKeyVa
   REQUIRE(kvs == kvs_res);
 }
 
-TEST_CASE_METHOD(UnorderedMapKeyValueStoreServiceTestFixture, "UnorderedMapKeyValueStoreServiceTestFixture set and overwrite", "[basic]") {
+TEST_CASE_METHOD(VolatileMapStateStorageTestFixture, "VolatileMapStateStorageTestFixture set and overwrite", "[basic]") {
   const char* key = "foobar";
   const char* value = "234";
   const char* new_value = "baz";
@@ -134,7 +133,7 @@ TEST_CASE_METHOD(UnorderedMapKeyValueStoreServiceTestFixture, "UnorderedMapKeyVa
   REQUIRE(new_value == res);
 }
 
-TEST_CASE_METHOD(UnorderedMapKeyValueStoreServiceTestFixture, "UnorderedMapKeyValueStoreServiceTestFixture set and remove", "[basic]") {
+TEST_CASE_METHOD(VolatileMapStateStorageTestFixture, "VolatileMapStateStorageTestFixture set and remove", "[basic]") {
   const char* key = "foobar";
   const char* value = "234";
   REQUIRE(true == controller->set(key, value));
@@ -145,7 +144,7 @@ TEST_CASE_METHOD(UnorderedMapKeyValueStoreServiceTestFixture, "UnorderedMapKeyVa
 }
 
 
-TEST_CASE_METHOD(UnorderedMapKeyValueStoreServiceTestFixture, "UnorderedMapKeyValueStoreServiceTestFixture set and clear", "[basic]") {
+TEST_CASE_METHOD(VolatileMapStateStorageTestFixture, "VolatileMapStateStorageTestFixture set and clear", "[basic]") {
   const std::unordered_map<std::string, std::string> kvs = {
           {"foobar", "234"},
           {"buzz", "value"},
