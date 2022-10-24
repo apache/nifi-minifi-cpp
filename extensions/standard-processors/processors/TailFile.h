@@ -201,7 +201,7 @@ class TailFile : public core::Processor {
   static const int BUFFER_SIZE = 512;
 
   std::string delimiter_;  // Delimiter for the data incoming from the tailed file.
-  core::CoreComponentStateManager* state_manager_ = nullptr;
+  core::StateManager* state_manager_ = nullptr;
   std::map<std::filesystem::path, TailState> tail_states_;
   Mode tail_mode_ = Mode::UNDEFINED;
   std::optional<utils::Regex> pattern_regex_;

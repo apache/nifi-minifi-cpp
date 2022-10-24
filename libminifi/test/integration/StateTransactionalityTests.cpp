@@ -131,10 +131,10 @@ const std::unordered_map<std::string, HookCollection> testCasesToHookLists {
   {"State_is_recorded_after_committing", {
     {},
     {
-      [] (core::CoreComponentStateManager& stateManager) {
+      [] (core::StateManager& stateManager) {
         assert(stateManager.set(exampleState));
       },
-      [] (core::CoreComponentStateManager& stateManager) {
+      [] (core::StateManager& stateManager) {
         std::unordered_map<std::string, std::string> state;
         assert(stateManager.get(state));
         assert(state == exampleState);
@@ -145,14 +145,14 @@ const std::unordered_map<std::string, HookCollection> testCasesToHookLists {
   {"State_is_discarded_after_rolling_back", {
     {},
     {
-      [](core::CoreComponentStateManager& stateManager) {
+      [](core::StateManager& stateManager) {
         assert(stateManager.set(exampleState));
       },
-      [](core::CoreComponentStateManager& stateManager) {
+      [](core::StateManager& stateManager) {
         assert(stateManager.set(exampleState2));
         throw std::runtime_error("Triggering rollback");
       },
-      [](core::CoreComponentStateManager& stateManager) {
+      [](core::StateManager& stateManager) {
         std::unordered_map<std::string, std::string> state;
         assert(stateManager.get(state));
         assert(state == exampleState);
@@ -162,7 +162,7 @@ const std::unordered_map<std::string, HookCollection> testCasesToHookLists {
   }},
   {
     "Get_in_onSchedule_without_previous_state", {
-    [](core::CoreComponentStateManager& stateManager) {
+    [](core::StateManager& stateManager) {
       std::unordered_map<std::string, std::string> state;
       assert(!stateManager.get(state));
       assert(state.empty());
@@ -173,11 +173,11 @@ const std::unordered_map<std::string, HookCollection> testCasesToHookLists {
   },
   {
     "Set_in_onSchedule", {
-      [](core::CoreComponentStateManager& stateManager) {
+      [](core::StateManager& stateManager) {
         assert(stateManager.set(exampleState));
       },
       {
-        [](core::CoreComponentStateManager& stateManager) {
+        [](core::StateManager& stateManager) {
           std::unordered_map<std::string, std::string> state;
           assert(stateManager.get(state));
           assert(state == exampleState);
@@ -188,13 +188,13 @@ const std::unordered_map<std::string, HookCollection> testCasesToHookLists {
   },
   {
     "Clear_in_onSchedule", {
-      [](core::CoreComponentStateManager& stateManager) {
+      [](core::StateManager& stateManager) {
         assert(!stateManager.clear());
         assert(stateManager.set(exampleState));
         assert(stateManager.clear());
       },
       {
-        [](core::CoreComponentStateManager& stateManager) {
+        [](core::StateManager& stateManager) {
           std::unordered_map<std::string, std::string> state;
           assert(!stateManager.get(state));
           assert(state.empty());
@@ -206,7 +206,7 @@ const std::unordered_map<std::string, HookCollection> testCasesToHookLists {
   {
     "Persist_in_onSchedule", {
       {
-        [](core::CoreComponentStateManager& stateManager) {
+        [](core::StateManager& stateManager) {
           assert(stateManager.persist());
         }
       },
@@ -218,7 +218,7 @@ const std::unordered_map<std::string, HookCollection> testCasesToHookLists {
     "Manual_beginTransaction", {
       {},
       {
-        [](core::CoreComponentStateManager& stateManager) {
+        [](core::StateManager& stateManager) {
           assert(!stateManager.beginTransaction());
         }
       },
@@ -229,7 +229,7 @@ const std::unordered_map<std::string, HookCollection> testCasesToHookLists {
     "Manual_commit", {
       {},
       {
-        [](core::CoreComponentStateManager& stateManager) {
+        [](core::StateManager& stateManager) {
           assert(stateManager.set(exampleState));
           assert(stateManager.commit());
         }
@@ -241,7 +241,7 @@ const std::unordered_map<std::string, HookCollection> testCasesToHookLists {
     "Manual_rollback", {
       {},
       {
-        [](core::CoreComponentStateManager& stateManager) {
+        [](core::StateManager& stateManager) {
           assert(stateManager.rollback());
         }
       },
@@ -252,7 +252,7 @@ const std::unordered_map<std::string, HookCollection> testCasesToHookLists {
     "Get_without_previous_state", {
       {},
       {
-        [](core::CoreComponentStateManager& stateManager) {
+        [](core::StateManager& stateManager) {
           std::unordered_map<std::string, std::string> state;
           assert(!stateManager.get(state));
           assert(state.empty());
@@ -265,10 +265,10 @@ const std::unordered_map<std::string, HookCollection> testCasesToHookLists {
     "(set),(get,get)", {
       {},
       {
-        [](core::CoreComponentStateManager& stateManager) {
+        [](core::StateManager& stateManager) {
           assert(stateManager.set(exampleState));
         },
-        [](core::CoreComponentStateManager& stateManager) {
+        [](core::StateManager& stateManager) {
           std::unordered_map<std::string, std::string> state;
           assert(stateManager.get(state));
           assert(state == exampleState);
@@ -283,10 +283,10 @@ const std::unordered_map<std::string, HookCollection> testCasesToHookLists {
     "(set),(get,set)", {
       {},
       {
-        [](core::CoreComponentStateManager& stateManager) {
+        [](core::StateManager& stateManager) {
           assert(stateManager.set(exampleState));
         },
-        [](core::CoreComponentStateManager& stateManager) {
+        [](core::StateManager& stateManager) {
           std::unordered_map<std::string, std::string> state;
           assert(stateManager.get(state));
           assert(state == exampleState);
@@ -300,10 +300,10 @@ const std::unordered_map<std::string, HookCollection> testCasesToHookLists {
     "(set),(get,clear)", {
       {},
       {
-        [](core::CoreComponentStateManager& stateManager) {
+        [](core::StateManager& stateManager) {
           assert(stateManager.set(exampleState));
         },
-        [](core::CoreComponentStateManager& stateManager) {
+        [](core::StateManager& stateManager) {
           std::unordered_map<std::string, std::string> state;
           assert(stateManager.get(state));
           assert(state == exampleState);
@@ -317,10 +317,10 @@ const std::unordered_map<std::string, HookCollection> testCasesToHookLists {
     "(set),(get,persist)", {
       {},
       {
-        [](core::CoreComponentStateManager& stateManager) {
+        [](core::StateManager& stateManager) {
           assert(stateManager.set(exampleState));
         },
-        [](core::CoreComponentStateManager& stateManager) {
+        [](core::StateManager& stateManager) {
           std::unordered_map<std::string, std::string> state;
           assert(stateManager.get(state));
           assert(state == exampleState);
@@ -334,7 +334,7 @@ const std::unordered_map<std::string, HookCollection> testCasesToHookLists {
     "(set,!get)", {
       {},
       {
-        [](core::CoreComponentStateManager& stateManager) {
+        [](core::StateManager& stateManager) {
           assert(stateManager.set(exampleState));
           std::unordered_map<std::string, std::string> state;
           assert(!stateManager.get(state));
@@ -348,7 +348,7 @@ const std::unordered_map<std::string, HookCollection> testCasesToHookLists {
     "(set,set)", {
       {},
       {
-        [](core::CoreComponentStateManager& stateManager) {
+        [](core::StateManager& stateManager) {
           assert(stateManager.set(exampleState));
           assert(stateManager.set(exampleState));
         },
@@ -360,7 +360,7 @@ const std::unordered_map<std::string, HookCollection> testCasesToHookLists {
     "(set,!clear)", {
       {},
       {
-        [](core::CoreComponentStateManager& stateManager) {
+        [](core::StateManager& stateManager) {
           assert(stateManager.set(exampleState));
           assert(!stateManager.clear());
         },
@@ -372,7 +372,7 @@ const std::unordered_map<std::string, HookCollection> testCasesToHookLists {
     "(set,persist)", {
       {},
       {
-        [](core::CoreComponentStateManager& stateManager) {
+        [](core::StateManager& stateManager) {
           assert(stateManager.set(exampleState));
           assert(stateManager.persist());
         },
@@ -384,10 +384,10 @@ const std::unordered_map<std::string, HookCollection> testCasesToHookLists {
     "(set),(clear,!get)", {
       {},
       {
-        [](core::CoreComponentStateManager& stateManager) {
+        [](core::StateManager& stateManager) {
           assert(stateManager.set(exampleState));
         },
-        [](core::CoreComponentStateManager& stateManager) {
+        [](core::StateManager& stateManager) {
           assert(stateManager.clear());
           std::unordered_map<std::string, std::string> state;
           assert(!stateManager.get(state));
@@ -401,21 +401,21 @@ const std::unordered_map<std::string, HookCollection> testCasesToHookLists {
     "(set),(clear),(!get),(set),(get)", {
       {},
       {
-        [](core::CoreComponentStateManager& stateManager) {
+        [](core::StateManager& stateManager) {
           assert(stateManager.set(exampleState));
         },
-        [](core::CoreComponentStateManager& stateManager) {
+        [](core::StateManager& stateManager) {
           assert(stateManager.clear());
         },
-        [](core::CoreComponentStateManager& stateManager) {
+        [](core::StateManager& stateManager) {
           std::unordered_map<std::string, std::string> state;
           assert(!stateManager.get(state));
           assert(state.empty());
         },
-        [](core::CoreComponentStateManager& stateManager) {
+        [](core::StateManager& stateManager) {
           assert(stateManager.set(exampleState));
         },
-        [](core::CoreComponentStateManager& stateManager) {
+        [](core::StateManager& stateManager) {
           std::unordered_map<std::string, std::string> state;
           assert(stateManager.get(state));
           assert(state == exampleState);
@@ -428,10 +428,10 @@ const std::unordered_map<std::string, HookCollection> testCasesToHookLists {
     "(set),(clear,set)", {
       {},
       {
-        [](core::CoreComponentStateManager& stateManager) {
+        [](core::StateManager& stateManager) {
           assert(stateManager.set(exampleState));
         },
-        [](core::CoreComponentStateManager& stateManager) {
+        [](core::StateManager& stateManager) {
           assert(stateManager.clear());
           assert(stateManager.set(exampleState));
         },
@@ -443,13 +443,13 @@ const std::unordered_map<std::string, HookCollection> testCasesToHookLists {
     "(set),(clear),(!clear)", {
       {},
       {
-        [](core::CoreComponentStateManager& stateManager) {
+        [](core::StateManager& stateManager) {
           assert(stateManager.set(exampleState));
         },
-        [](core::CoreComponentStateManager& stateManager) {
+        [](core::StateManager& stateManager) {
           assert(stateManager.clear());
         },
-        [](core::CoreComponentStateManager& stateManager) {
+        [](core::StateManager& stateManager) {
           assert(!stateManager.clear());
         },
       },
@@ -460,13 +460,13 @@ const std::unordered_map<std::string, HookCollection> testCasesToHookLists {
     "(set),(clear),(persist)", {
       {},
       {
-        [](core::CoreComponentStateManager& stateManager) {
+        [](core::StateManager& stateManager) {
           assert(stateManager.set(exampleState));
         },
-        [](core::CoreComponentStateManager& stateManager) {
+        [](core::StateManager& stateManager) {
           assert(stateManager.clear());
         },
-        [](core::CoreComponentStateManager& stateManager) {
+        [](core::StateManager& stateManager) {
           assert(stateManager.persist());
         },
       },
@@ -477,13 +477,13 @@ const std::unordered_map<std::string, HookCollection> testCasesToHookLists {
     "(persist),(set),(get)", {
       {},
       {
-        [](core::CoreComponentStateManager& stateManager) {
+        [](core::StateManager& stateManager) {
           assert(stateManager.persist());
         },
-        [](core::CoreComponentStateManager& stateManager) {
+        [](core::StateManager& stateManager) {
           assert(stateManager.set(exampleState));
         },
-        [](core::CoreComponentStateManager& stateManager) {
+        [](core::StateManager& stateManager) {
           std::unordered_map<std::string, std::string> state;
           assert(stateManager.get(state));
           assert(state == exampleState);
@@ -496,13 +496,13 @@ const std::unordered_map<std::string, HookCollection> testCasesToHookLists {
     "(persist),(set),(clear)", {
       {},
       {
-        [](core::CoreComponentStateManager& stateManager) {
+        [](core::StateManager& stateManager) {
           assert(stateManager.persist());
         },
-        [](core::CoreComponentStateManager& stateManager) {
+        [](core::StateManager& stateManager) {
           assert(stateManager.set(exampleState));
         },
-        [](core::CoreComponentStateManager& stateManager) {
+        [](core::StateManager& stateManager) {
           assert(stateManager.clear());
         },
       },
@@ -513,10 +513,10 @@ const std::unordered_map<std::string, HookCollection> testCasesToHookLists {
     "(persist),(persist)", {
       {},
       {
-        [](core::CoreComponentStateManager& stateManager) {
+        [](core::StateManager& stateManager) {
           assert(stateManager.persist());
         },
-        [](core::CoreComponentStateManager& stateManager) {
+        [](core::StateManager& stateManager) {
           assert(stateManager.persist());
         },
       },
@@ -527,8 +527,8 @@ const std::unordered_map<std::string, HookCollection> testCasesToHookLists {
     "No_change_2_rounds", {
       {},
       {
-        [](core::CoreComponentStateManager&) {},
-        [](core::CoreComponentStateManager&) {},
+        [](core::StateManager&) {},
+        [](core::StateManager&) {},
       },
       standardLogChecker
     },
@@ -537,7 +537,7 @@ const std::unordered_map<std::string, HookCollection> testCasesToHookLists {
     "(!clear)", {
       {},
       {
-        [](core::CoreComponentStateManager& stateManager) {
+        [](core::StateManager& stateManager) {
           assert(!stateManager.clear());
         },
       },
@@ -548,10 +548,10 @@ const std::unordered_map<std::string, HookCollection> testCasesToHookLists {
     "(set),(get,throw)", {
       {},
       {
-        [](core::CoreComponentStateManager& stateManager) {
+        [](core::StateManager& stateManager) {
           assert(stateManager.set(exampleState));
         },
-        [](core::CoreComponentStateManager& stateManager) {
+        [](core::StateManager& stateManager) {
           std::unordered_map<std::string, std::string> state;
           assert(stateManager.get(state));
           assert(state == exampleState);
@@ -565,14 +565,14 @@ const std::unordered_map<std::string, HookCollection> testCasesToHookLists {
     "(set),(clear,throw),(get)", {
       {},
       {
-        [](core::CoreComponentStateManager& stateManager) {
+        [](core::StateManager& stateManager) {
           assert(stateManager.set(exampleState));
         },
-        [](core::CoreComponentStateManager& stateManager) {
+        [](core::StateManager& stateManager) {
           assert(stateManager.clear());
           throw std::runtime_error("Triggering rollback");
         },
-        [](core::CoreComponentStateManager& stateManager) {
+        [](core::StateManager& stateManager) {
           std::unordered_map<std::string, std::string> state;
           assert(stateManager.get(state));
           assert(state == exampleState);
@@ -585,7 +585,7 @@ const std::unordered_map<std::string, HookCollection> testCasesToHookLists {
     "(set),(clear,throw),(get)", {
       {},
       {
-        [](core::CoreComponentStateManager& stateManager) {
+        [](core::StateManager& stateManager) {
           assert(stateManager.persist());
           throw std::runtime_error("Triggering rollback");
         },

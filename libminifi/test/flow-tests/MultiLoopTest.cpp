@@ -83,9 +83,9 @@ Connections:
 Remote Processing Groups:
 
 Controller Services:
-  - name: defaultstatemanagerprovider
+  - name: defaultstatestorage
     id: 2438e3c8-015a-1000-79ca-83af40ec1997
-    class: UnorderedMapPersistableKeyValueStoreService
+    class: PersistentMapStateStorage
     Properties:
       Auto Persistence Interval:
           - value: 0 sec

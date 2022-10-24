@@ -26,11 +26,6 @@ Connections: []
 Controller Services:
     - name: testcontroller
       id: 2438e3c8-015a-1000-79ca-83af40ec1994
-      class: RocksDbPersistableKeyValueStoreService
-      Properties:
-        Auto Persistence Interval:
-            - value: 0 sec
-        Directory:
-            - value: state
+      class: VolatileMapStateStorage
 
 Remote Processing Groups: []

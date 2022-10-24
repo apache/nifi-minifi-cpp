@@ -146,7 +146,7 @@ void IntegrationBase::run(const std::optional<std::filesystem::path>& test_file_
   if (test_file_location) {
     configuration->set(minifi::Configure::nifi_flow_configuration_file, test_file_location->string());
   }
-  configuration->set(minifi::Configure::nifi_state_management_provider_local_class_name, "UnorderedMapKeyValueStoreService");
+  configuration->set(minifi::Configure::nifi_state_storage_local_class_name, "VolatileMapStateStorage");
 
   configureC2();
   configureFullHeartbeat();
@@ -179,10 +179,10 @@ void IntegrationBase::run(const std::optional<std::filesystem::path>& test_file_
     auto controller_service_provider = flow_config->getControllerServiceProvider();
     char state_dir_name_template[] = "/var/tmp/integrationstate.XXXXXX";
     state_dir = utils::file::create_temp_directory(state_dir_name_template);
-    if (!configuration->get(minifi::Configure::nifi_state_management_provider_local_path)) {
-      configuration->set(minifi::Configure::nifi_state_management_provider_local_path, state_dir.string());
+    if (!configuration->get(minifi::Configure::nifi_state_storage_local_path)) {
+      configuration->set(minifi::Configure::nifi_state_storage_local_path, state_dir.string());
     }
-    core::ProcessContext::getOrCreateDefaultStateManagerProvider(controller_service_provider.get(), configuration);
+    core::ProcessContext::getOrCreateDefaultStateStorage(controller_service_provider.get(), configuration);
 
     std::shared_ptr<core::ProcessGroup> pg(flow_config->getRoot());
     queryRootProcessGroup(pg);

@@ -21,7 +21,7 @@
 #include <utility>
 #include <vector>
 #include "core/Processor.h"
-#include "core/CoreComponentState.h"
+#include "core/StateManager.h"
 
 namespace org::apache::nifi::minifi::processors {
 
@@ -41,13 +41,13 @@ class StatefulProcessor : public core::Processor {
   void onSchedule(const std::shared_ptr<core::ProcessContext>& context, const std::shared_ptr<core::ProcessSessionFactory>&) override;
   void onTrigger(const std::shared_ptr<core::ProcessContext>&, const std::shared_ptr<core::ProcessSession>&) override;
 
-  using HookType = std::function<void(core::CoreComponentStateManager&)>;
+  using HookType = std::function<void(core::StateManager&)>;
   void setHooks(HookType onScheduleHook, std::vector<HookType> onTriggerHooks);
   [[nodiscard]] bool hasFinishedHooks() const;
 
  private:
   mutable std::mutex mutex_;
-  core::CoreComponentStateManager* state_manager_;
+  core::StateManager* state_manager_;
   HookType on_schedule_hook_;
   std::vector<HookType> on_trigger_hooks_;
   size_t on_trigger_hook_index_ = 0;

@@ -16,47 +16,49 @@
  */
 #pragma once
 
+#include <condition_variable>
+#include <memory>
+#include <mutex>
 #include <string>
 #include <thread>
-#include <mutex>
-#include <memory>
 #include <utility>
 
-#include "PersistableKeyValueStoreService.h"
+#include "core/ConfigurableComponent.h"
 #include "core/Core.h"
-#include "properties/Configure.h"
-#include "core/logging/Logger.h"
 #include "core/logging/LoggerFactory.h"
 #include "utils/Export.h"
 
 namespace org::apache::nifi::minifi::controllers {
 
-class AbstractAutoPersistingKeyValueStoreService : virtual public PersistableKeyValueStoreService {
+/**
+ *  Persists in given intervals.
+ *  Has an own thread, so stop() must be called before destruction of data used by persist_.
+ */
+class AutoPersistor {
  public:
-  explicit AbstractAutoPersistingKeyValueStoreService(std::string name, const utils::Identifier& uuid = {});
+  virtual ~AutoPersistor();
 
-  ~AbstractAutoPersistingKeyValueStoreService() override;
+  EXTENSIONAPI static const core::Property AlwaysPersist;
+  EXTENSIONAPI static const core::Property AutoPersistenceInterval;
 
-  static constexpr const char* AlwaysPersistPropertyName = "Always Persist";
-  static constexpr const char* AutoPersistenceIntervalPropertyName = "Auto Persistence Interval";
+  void start(const core::ConfigurableComponent& property_source, std::function<bool()> persist);
+  void stop();
 
-  void onEnable() override;
-  void notifyStop() override;
-
- protected:
-  bool always_persist_;
-  std::chrono::milliseconds auto_persistence_interval_;
-
-  std::thread persisting_thread_;
-  bool running_;
-  std::mutex persisting_mutex_;
-  std::condition_variable persisting_cv_;
-  void persistingThreadFunc();
+  [[nodiscard]] bool isAlwaysPersisting() const {
+    return always_persist_;
+  }
 
  private:
-  std::shared_ptr<core::logging::Logger> logger_ = core::logging::LoggerFactory<AbstractAutoPersistingKeyValueStoreService>::getLogger();
+  void persistingThreadFunc();
 
-  void stopPersistingThread();
+  bool always_persist_ = false;
+  std::chrono::milliseconds auto_persistence_interval_{0};
+  std::thread persisting_thread_;
+  bool running_ = false;
+  std::mutex persisting_mutex_;
+  std::condition_variable persisting_cv_;
+  std::function<bool()> persist_;
+  std::shared_ptr<core::logging::Logger> logger_ = core::logging::LoggerFactory<AutoPersistor>::getLogger();
 };
 
 }  // namespace org::apache::nifi::minifi::controllers

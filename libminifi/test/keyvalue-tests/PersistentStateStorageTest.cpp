@@ -28,8 +28,8 @@
 #include "core/controller/ControllerService.h"
 #include "core/ProcessGroup.h"
 #include "core/yaml/YamlConfiguration.h"
-#include "controllers/keyvalue/PersistableKeyValueStoreService.h"
-#include "controllers/keyvalue/AbstractAutoPersistingKeyValueStoreService.h"
+#include "controllers/keyvalue/KeyValueStateStorage.h"
+#include "controllers/keyvalue/AutoPersistor.h"
 #include "unit/ProvenanceTestHelper.h"
 #include "repository/VolatileContentRepository.h"
 
@@ -41,7 +41,7 @@ int main(int argc, char* argv[]) {
   auto cli = session.cli()
       | Catch::clara::Opt{config_yaml, "config-yaml"}
           ["--config-yaml"]
-          ("path to the config.yaml containing the PersistableKeyValueStoreService controller service configuration");
+          ("path to the config.yaml containing the StateStorage controller service configuration");
   session.cli(cli);
 
   int ret = session.applyCommandLine(argc, argv);
@@ -50,25 +50,25 @@ int main(int argc, char* argv[]) {
   }
 
   if (config_yaml.empty()) {
-    std::cerr << "Missing --config-yaml <path>. It must contain the path to the config.yaml containing the PersistableKeyValueStoreService controller service configuration." << std::endl;
+    std::cerr << "Missing --config-yaml <path>. It must contain the path to the config.yaml containing the StateStorage controller service configuration." << std::endl;
     return -1;
   }
 
   return session.run();
 }
 
-class PersistableKeyValueStoreServiceTestsFixture {
+class PersistentStateStorageTestsFixture {
  public:
-  PersistableKeyValueStoreServiceTestsFixture() {
+  PersistentStateStorageTestsFixture() {
     LogTestController::getInstance().setTrace<TestPlan>();
-    LogTestController::getInstance().setTrace<minifi::controllers::PersistableKeyValueStoreService>();
-    LogTestController::getInstance().setTrace<minifi::controllers::AbstractAutoPersistingKeyValueStoreService>();
+    LogTestController::getInstance().setTrace<minifi::controllers::KeyValueStateStorage>();
+    LogTestController::getInstance().setTrace<minifi::controllers::AutoPersistor>();
 
     std::filesystem::current_path(testController.createTempDirectory());
     loadYaml();
   }
 
-  virtual ~PersistableKeyValueStoreServiceTestsFixture() {
+  virtual ~PersistentStateStorageTestsFixture() {
     LogTestController::getInstance().reset();
   }
 
@@ -102,7 +102,7 @@ class PersistableKeyValueStoreServiceTestsFixture {
     REQUIRE(persistable_key_value_store_service_node != nullptr);
     persistable_key_value_store_service_node->enable();
 
-    controller = std::dynamic_pointer_cast<minifi::controllers::PersistableKeyValueStoreService>(
+    controller = std::dynamic_pointer_cast<minifi::controllers::KeyValueStateStorage>(
         persistable_key_value_store_service_node->getControllerServiceImplementation());
     REQUIRE(controller != nullptr);
   }
@@ -118,13 +118,13 @@ class PersistableKeyValueStoreServiceTestsFixture {
   std::unique_ptr<core::ProcessGroup> process_group;
 
   std::shared_ptr<core::controller::ControllerServiceNode> persistable_key_value_store_service_node;
-  std::shared_ptr<minifi::controllers::PersistableKeyValueStoreService> controller;
+  std::shared_ptr<minifi::controllers::KeyValueStateStorage> controller;
 
   TestController testController;
 };
 
 
-TEST_CASE_METHOD(PersistableKeyValueStoreServiceTestsFixture, "PersistableKeyValueStoreServiceTestsFixture set and get", "[basic]") {
+TEST_CASE_METHOD(PersistentStateStorageTestsFixture, "PersistentStateStorageTestsFixture set and get", "[basic]") {
   const char* key = "foobar";
   const char* value = "234";
   REQUIRE(true == controller->set(key, value));
@@ -141,7 +141,7 @@ TEST_CASE_METHOD(PersistableKeyValueStoreServiceTestsFixture, "PersistableKeyVal
   REQUIRE(value == res);
 }
 
-TEST_CASE_METHOD(PersistableKeyValueStoreServiceTestsFixture, "PersistableKeyValueStoreServiceTestsFixture special characters", "[basic]") {
+TEST_CASE_METHOD(PersistentStateStorageTestsFixture, "PersistentStateStorageTestsFixture special characters", "[basic]") {
   const char* key = "[]{}()==\\=\n\n";
   const char* value = ":./'\\=!\n=[]{}()";
   REQUIRE(true == controller->set(key, value));
@@ -158,7 +158,7 @@ TEST_CASE_METHOD(PersistableKeyValueStoreServiceTestsFixture, "PersistableKeyVal
   REQUIRE(value == res);
 }
 
-TEST_CASE_METHOD(PersistableKeyValueStoreServiceTestsFixture, "PersistableKeyValueStoreServiceTestsFixture set and get all", "[basic]") {
+TEST_CASE_METHOD(PersistentStateStorageTestsFixture, "PersistentStateStorageTestsFixture set and get all", "[basic]") {
   const std::unordered_map<std::string, std::string> kvs = {
       {"foobar", "234"},
       {"buzz", "value"},
@@ -179,7 +179,7 @@ TEST_CASE_METHOD(PersistableKeyValueStoreServiceTestsFixture, "PersistableKeyVal
   REQUIRE(kvs == kvs_res);
 }
 
-TEST_CASE_METHOD(PersistableKeyValueStoreServiceTestsFixture, "PersistableKeyValueStoreServiceTestsFixture set and overwrite", "[basic]") {
+TEST_CASE_METHOD(PersistentStateStorageTestsFixture, "PersistentStateStorageTestsFixture set and overwrite", "[basic]") {
   const char* key = "foobar";
   const char* value = "234";
   const char* new_value = "baz";
@@ -198,7 +198,7 @@ TEST_CASE_METHOD(PersistableKeyValueStoreServiceTestsFixture, "PersistableKeyVal
   REQUIRE(new_value == res);
 }
 
-TEST_CASE_METHOD(PersistableKeyValueStoreServiceTestsFixture, "PersistableKeyValueStoreServiceTestsFixture set and remove", "[basic]") {
+TEST_CASE_METHOD(PersistentStateStorageTestsFixture, "PersistentStateStorageTestsFixture set and remove", "[basic]") {
   const char* key = "foobar";
   const char* value = "234";
   REQUIRE(true == controller->set(key, value));
@@ -216,7 +216,7 @@ TEST_CASE_METHOD(PersistableKeyValueStoreServiceTestsFixture, "PersistableKeyVal
 }
 
 
-TEST_CASE_METHOD(PersistableKeyValueStoreServiceTestsFixture, "PersistableKeyValueStoreServiceTestsFixture set and clear", "[basic]") {
+TEST_CASE_METHOD(PersistentStateStorageTestsFixture, "PersistentStateStorageTestsFixture set and clear", "[basic]") {
   const std::unordered_map<std::string, std::string> kvs = {
       {"foobar", "234"},
       {"buzz", "value"},

@@ -18,68 +18,63 @@
 
 #include <unordered_map>
 #include <string>
+#include <mutex>
 #include <memory>
+#include <utility>
 
-#include "controllers/keyvalue/AbstractAutoPersistingKeyValueStoreService.h"
+#include "controllers/keyvalue/AutoPersistor.h"
+#include "VolatileMapStateStorage.h"
 #include "core/Core.h"
+#include "properties/Configure.h"
 #include "core/logging/Logger.h"
 #include "core/logging/LoggerConfiguration.h"
-#include "../database/RocksDatabase.h"
-
-#include "rocksdb/options.h"
 
 namespace org::apache::nifi::minifi::controllers {
 
-class RocksDbPersistableKeyValueStoreService : public AbstractAutoPersistingKeyValueStoreService {
+class PersistentMapStateStorage : public VolatileMapStateStorage {
  public:
-  static constexpr const char* ENCRYPTION_KEY_NAME = "nifi.state.management.provider.local.encryption.key";
+  explicit PersistentMapStateStorage(std::string name, const utils::Identifier& uuid = {});
+  explicit PersistentMapStateStorage(std::string name, const std::shared_ptr<Configure>& configuration);
 
-  explicit RocksDbPersistableKeyValueStoreService(std::string name, const utils::Identifier& uuid = {});
+  ~PersistentMapStateStorage() override;
 
-  ~RocksDbPersistableKeyValueStoreService() override = default;
-
-  EXTENSIONAPI static constexpr const char* Description = "A key-value service implemented by RocksDB";
-  EXTENSIONAPI static const core::Property LinkedServices;
-  EXTENSIONAPI static const core::Property AlwaysPersist;
-  EXTENSIONAPI static const core::Property AutoPersistenceInterval;
-  EXTENSIONAPI static const core::Property Directory;
+  EXTENSIONAPI static constexpr const char* Description = "A persistable state storage service implemented by a locked std::unordered_map<std::string, std::string> and persisted into a file";
+  EXTENSIONAPI static const core::Property File;
   static auto properties() {
     return std::array{
-      LinkedServices,
-      AlwaysPersist,
-      AutoPersistenceInterval,
-      Directory
+      AutoPersistor::AlwaysPersist,
+      AutoPersistor::AutoPersistenceInterval,
+      File
     };
   }
   EXTENSIONAPI static constexpr bool SupportsDynamicProperties = false;
   ADD_COMMON_VIRTUAL_FUNCTIONS_FOR_CONTROLLER_SERVICES
 
-  void initialize() override;
   void onEnable() override;
+  void initialize() override;
   void notifyStop() override;
 
   bool set(const std::string& key, const std::string& value) override;
-
-  bool get(const std::string& key, std::string& value) override;
-
-  bool get(std::unordered_map<std::string, std::string>& kvs) override;
-
   bool remove(const std::string& key) override;
-
   bool clear() override;
-
   bool update(const std::string& key, const std::function<bool(bool /*exists*/, std::string& /*value*/)>& update_func) override;
-
-  bool persist() override;
-
- protected:
-  std::string directory_;
-
-  std::unique_ptr<minifi::internal::RocksDatabase> db_;
-  rocksdb::WriteOptions default_write_options;
+  bool persist() override {
+    return persistNonVirtual();
+  }
 
  private:
-  std::shared_ptr<core::logging::Logger> logger_ = core::logging::LoggerFactory<RocksDbPersistableKeyValueStoreService>::getLogger();
+  static constexpr const char* FORMAT_VERSION_KEY = "__UnorderedMapPersistableKeyValueStoreService_FormatVersion";
+  static constexpr int FORMAT_VERSION = 1;
+
+  bool load();
+  bool parseLine(const std::string& line, std::string& key, std::string& value);
+
+  // non-virtual to allow calling in destructor
+  bool persistNonVirtual();
+
+  std::string file_;
+  AutoPersistor auto_persistor_;
+  std::shared_ptr<core::logging::Logger> logger_ = core::logging::LoggerFactory<PersistentMapStateStorage>::getLogger();
 };
 
 }  // namespace org::apache::nifi::minifi::controllers

@@ -47,7 +47,7 @@ namespace core = minifi::core;
 namespace org::apache::nifi::minifi {
 class Connection;
 namespace core {
-class CoreComponentStateManagerProvider;
+class StateStorage;
 class ContentRepository;
 class FlowFile;
 class Processor;
@@ -275,8 +275,8 @@ class TestPlan {
     return state_dir_->getPath();
   }
 
-  [[nodiscard]] std::shared_ptr<core::CoreComponentStateManagerProvider> getStateManagerProvider() const {
-    return state_manager_provider_;
+  [[nodiscard]] std::shared_ptr<core::StateStorage> getStateStorage() const {
+    return state_storage_;
   }
 
   std::string getContent(const std::shared_ptr<const minifi::core::FlowFile>& file) const { return getContent(*file); }
@@ -303,7 +303,7 @@ class TestPlan {
   std::shared_ptr<minifi::core::controller::ControllerServiceMap> controller_services_;
   std::shared_ptr<minifi::core::controller::ControllerServiceProvider> controller_services_provider_;
 
-  std::shared_ptr<minifi::core::CoreComponentStateManagerProvider> state_manager_provider_;
+  std::shared_ptr<minifi::core::StateStorage> state_storage_;
 
   std::recursive_mutex mutex;
 

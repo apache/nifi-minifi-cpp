@@ -36,8 +36,8 @@ ENDFOREACH()
 
 message("-- Finished building ${KEYVALUE_INT_TEST_COUNT} keyvalue controller test file(s)...")
 
-add_test(NAME UnorderedMapPersistableKeyValueStoreServiceTest COMMAND PersistableKeyValueStoreServiceTest --config-yaml "${TEST_RESOURCES}/UnorderedMapPersistableKeyValueStoreServiceTest.yml")
+add_test(NAME PersistentMapStateStorageTest COMMAND PersistentStateStorageTest --config-yaml "${TEST_RESOURCES}/PersistentMapStateStorage.yml")
 if (NOT DISABLE_ROCKSDB)
-    add_test(NAME RocksdDbPersistableKeyValueStoreServiceTest COMMAND PersistableKeyValueStoreServiceTest --config-yaml "${TEST_RESOURCES}/RocksDbPersistableKeyValueStoreServiceTest.yml")
+    add_test(NAME RocksDbStateStorageTest COMMAND PersistentStateStorageTest --config-yaml "${TEST_RESOURCES}/RocksDbStateStorage.yml")
 endif()
-add_test(NAME UnorderedMapKeyValueStoreServiceTest COMMAND UnorderedMapKeyValueStoreServiceTest --config-yaml "${TEST_RESOURCES}/UnorderedMapKeyValueStoreServiceTest.yml")
+add_test(NAME VolatileMapStateStorageTest COMMAND VolatileMapStateStorageTest --config-yaml "${TEST_RESOURCES}/VolatileMapStateStorage.yml")

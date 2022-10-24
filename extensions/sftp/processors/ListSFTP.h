@@ -33,7 +33,7 @@
 #include "core/Property.h"
 #include "utils/ArrayUtils.h"
 #include "utils/Id.h"
-#include "controllers/keyvalue/PersistableKeyValueStoreService.h"
+#include "controllers/keyvalue/KeyValueStateStorage.h"
 #include "utils/RegexUtils.h"
 
 namespace org::apache::nifi::minifi::processors {
@@ -119,7 +119,7 @@ class ListSFTP : public SFTPProcessorBase {
   void onSchedule(const std::shared_ptr<core::ProcessContext> &context, const std::shared_ptr<core::ProcessSessionFactory> &sessionFactory) override;
 
  private:
-  core::CoreComponentStateManager* state_manager_;
+  core::StateManager* state_manager_;
   std::string listing_strategy_;
   bool search_recursively_;
   bool follow_symlink_;

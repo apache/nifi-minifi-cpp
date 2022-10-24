@@ -31,7 +31,7 @@
 
 #include "c2/ControllerSocketProtocol.h"
 #include "core/ProcessContext.h"
-#include "core/CoreComponentState.h"
+#include "core/StateManager.h"
 #include "core/state/UpdateController.h"
 #include "core/logging/Logger.h"
 #include "core/logging/LoggerConfiguration.h"
@@ -450,11 +450,11 @@ void C2Agent::handle_clear(const C2ContentResponse &resp) {
     }
     case ClearOperand::CORECOMPONENTSTATE: {
       for (const auto& corecomponent : resp.operation_arguments) {
-        auto state_manager_provider = core::ProcessContext::getStateManagerProvider(logger_, controller_, configuration_);
-        if (state_manager_provider != nullptr) {
-          update_sink_->executeOnComponent(corecomponent.second.to_string(), [this, &state_manager_provider] (state::StateController& component) {
+        auto state_storage = core::ProcessContext::getStateStorage(logger_, controller_, configuration_);
+        if (state_storage != nullptr) {
+          update_sink_->executeOnComponent(corecomponent.second.to_string(), [this, &state_storage] (state::StateController& component) {
             logger_->log_debug("Clearing state for component %s", component.getComponentName());
-            auto state_manager = state_manager_provider->getCoreComponentStateManager(component.getComponentUUID());
+            auto state_manager = state_storage->getStateManager(component.getComponentUUID());
             if (state_manager != nullptr) {
               component.stop();
               state_manager->clear();
@@ -465,7 +465,7 @@ void C2Agent::handle_clear(const C2ContentResponse &resp) {
             }
           });
         } else {
-          logger_->log_error("Failed to get StateManagerProvider");
+          logger_->log_error("Failed to get StateStorage");
         }
       }
       break;
@@ -562,9 +562,9 @@ void C2Agent::handle_describe(const C2ContentResponse &resp) {
       response.setLabel("corecomponentstate");
       C2Payload states(Operation::ACKNOWLEDGE, resp.ident, true);
       states.setLabel("corecomponentstate");
-      auto state_manager_provider = core::ProcessContext::getStateManagerProvider(logger_, controller_, configuration_);
-      if (state_manager_provider != nullptr) {
-        auto core_component_states = state_manager_provider->getAllCoreComponentStates();
+      auto state_storage = core::ProcessContext::getStateStorage(logger_, controller_, configuration_);
+      if (state_storage != nullptr) {
+        auto core_component_states = state_storage->getAllStates();
         for (const auto& core_component_state : core_component_states) {
           C2Payload state(Operation::ACKNOWLEDGE, resp.ident, true);
           state.setLabel(core_component_state.first.to_string());

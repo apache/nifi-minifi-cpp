@@ -24,10 +24,7 @@
 #include "utils/StringUtils.h"
 #include "properties/Configuration.h"
 
-namespace org {
-namespace apache {
-namespace nifi {
-namespace minifi {
+namespace org::apache::nifi::minifi {
 
 bool Configure::get(const std::string& key, std::string& value) const {
   if (auto opt_value = getRawValue(key)) {
@@ -59,6 +56,14 @@ bool Configure::get(const std::string& key, const std::string& alternate_key, st
 std::optional<std::string> Configure::get(const std::string& key) const {
   std::string value;
   if (get(key, value)) {
+    return value;
+  }
+  return std::nullopt;
+}
+
+std::optional<std::string> Configure::getWithFallback(const std::string& key, const std::string& alternate_key) const {
+  std::string value;
+  if (get(key, alternate_key, value)) {
     return value;
   }
   return std::nullopt;
@@ -129,7 +134,4 @@ bool Configure::commitChanges() {
   return success;
 }
 
-} /* namespace minifi */
-} /* namespace nifi */
-} /* namespace apache */
-} /* namespace org */
+}  // namespace org::apache::nifi::minifi

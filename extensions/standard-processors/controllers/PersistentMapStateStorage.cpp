@@ -15,7 +15,7 @@
  * limitations under the License.
  */
 
-#include "UnorderedMapPersistableKeyValueStoreService.h"
+#include "PersistentMapStateStorage.h"
 
 #include <fstream>
 #include <set>
@@ -50,46 +50,29 @@ namespace {
 
 namespace org::apache::nifi::minifi::controllers {
 
-const core::Property UnorderedMapPersistableKeyValueStoreService::LinkedServices(
-    core::PropertyBuilder::createProperty("Linked Services")
-    ->withDescription("Referenced Controller Services")
-    ->build());
-const core::Property UnorderedMapPersistableKeyValueStoreService::AlwaysPersist(
-    core::PropertyBuilder::createProperty(AbstractAutoPersistingKeyValueStoreService::AlwaysPersistPropertyName)
-    ->withDescription("Persist every change instead of persisting it periodically.")
-    ->isRequired(false)
-    ->withDefaultValue<bool>(false)
-    ->build());
-const core::Property UnorderedMapPersistableKeyValueStoreService::AutoPersistenceInterval(
-    core::PropertyBuilder::createProperty(AbstractAutoPersistingKeyValueStoreService::AutoPersistenceIntervalPropertyName)
-    ->withDescription("The interval of the periodic task persisting all values. Only used if Always Persist is false. If set to 0 seconds, auto persistence will be disabled.")
-    ->isRequired(false)
-    ->withDefaultValue<core::TimePeriodValue>("1 min")
-    ->build());
-const core::Property UnorderedMapPersistableKeyValueStoreService::File(
+const core::Property PersistentMapStateStorage::File(
     core::PropertyBuilder::createProperty("File")
     ->withDescription("Path to a file to store state")
     ->isRequired(true)
     ->build());
 
-UnorderedMapPersistableKeyValueStoreService::UnorderedMapPersistableKeyValueStoreService(std::string name, const utils::Identifier& uuid /*= utils::Identifier()*/)
-    : PersistableKeyValueStoreService(name, uuid)
-    , AbstractAutoPersistingKeyValueStoreService(name, uuid)
-    , UnorderedMapKeyValueStoreService(std::move(name), uuid) {
+PersistentMapStateStorage::PersistentMapStateStorage(std::string name, const utils::Identifier& uuid /*= utils::Identifier()*/)
+    : KeyValueStateStorage(name, uuid)
+    , VolatileMapStateStorage(std::move(name), uuid) {
 }
 
-UnorderedMapPersistableKeyValueStoreService::UnorderedMapPersistableKeyValueStoreService(std::string name, const std::shared_ptr<Configure> &configuration)
-    : PersistableKeyValueStoreService(name)
-    , AbstractAutoPersistingKeyValueStoreService(name)
-    , UnorderedMapKeyValueStoreService(std::move(name)) {
+PersistentMapStateStorage::PersistentMapStateStorage(std::string name, const std::shared_ptr<Configure> &configuration)
+    : KeyValueStateStorage(name)
+    , VolatileMapStateStorage(std::move(name)) {
   setConfiguration(configuration);
 }
 
-UnorderedMapPersistableKeyValueStoreService::~UnorderedMapPersistableKeyValueStoreService() {
+PersistentMapStateStorage::~PersistentMapStateStorage() {
+  auto_persistor_.stop();
   persistNonVirtual();
 }
 
-bool UnorderedMapPersistableKeyValueStoreService::parseLine(const std::string& line, std::string& key, std::string& value) {
+bool PersistentMapStateStorage::parseLine(const std::string& line, std::string& key, std::string& value) {
   std::stringstream key_ss;
   std::stringstream value_ss;
   bool in_escape_sequence = false;
@@ -144,15 +127,15 @@ bool UnorderedMapPersistableKeyValueStoreService::parseLine(const std::string& l
   return true;
 }
 
-void UnorderedMapPersistableKeyValueStoreService::initialize() {
-  // UnorderedMapKeyValueStoreService::initialize() also calls setSupportedProperties, and we don't want that
+void PersistentMapStateStorage::initialize() {
+  // VolatileMapStateStorage::initialize() also calls setSupportedProperties, and we don't want that
   ControllerService::initialize();  // NOLINT(bugprone-parent-virtual-call)
   setSupportedProperties(properties());
 }
 
-void UnorderedMapPersistableKeyValueStoreService::onEnable() {
+void PersistentMapStateStorage::onEnable() {
   if (configuration_ == nullptr) {
-    logger_->log_debug("Cannot enable UnorderedMapPersistableKeyValueStoreService");
+    logger_->log_debug("Cannot enable PersistentMapStateStorage");
     return;
   }
 
@@ -164,53 +147,53 @@ void UnorderedMapPersistableKeyValueStoreService::onEnable() {
   /* We must not start the persistence thread until we attempted to load the state */
   load();
 
-  AbstractAutoPersistingKeyValueStoreService::onEnable();
+  auto_persistor_.start(*this, [this] { return persistNonVirtual(); });
 
-  logger_->log_trace("Enabled UnorderedMapPersistableKeyValueStoreService");
+  logger_->log_trace("Enabled PersistentMapStateStorage");
 }
 
-void UnorderedMapPersistableKeyValueStoreService::notifyStop() {
-  AbstractAutoPersistingKeyValueStoreService::notifyStop();
+void PersistentMapStateStorage::notifyStop() {
+  auto_persistor_.stop();
   persist();
 }
 
-bool UnorderedMapPersistableKeyValueStoreService::set(const std::string& key, const std::string& value) {
+bool PersistentMapStateStorage::set(const std::string& key, const std::string& value) {
   std::lock_guard<std::recursive_mutex> lock(mutex_);
-  bool res = UnorderedMapKeyValueStoreService::set(key, value);
-  if (always_persist_ && res) {
+  bool res = VolatileMapStateStorage::set(key, value);
+  if (auto_persistor_.isAlwaysPersisting() && res) {
     return persist();
   }
   return res;
 }
 
-bool UnorderedMapPersistableKeyValueStoreService::remove(const std::string& key) {
+bool PersistentMapStateStorage::remove(const std::string& key) {
   std::lock_guard<std::recursive_mutex> lock(mutex_);
-  bool res = UnorderedMapKeyValueStoreService::remove(key);
-  if (always_persist_ && res) {
+  bool res = VolatileMapStateStorage::remove(key);
+  if (auto_persistor_.isAlwaysPersisting() && res) {
     return persist();
   }
   return res;
 }
 
-bool UnorderedMapPersistableKeyValueStoreService::clear() {
+bool PersistentMapStateStorage::clear() {
   std::lock_guard<std::recursive_mutex> lock(mutex_);
-  bool res = UnorderedMapKeyValueStoreService::clear();
-  if (always_persist_ && res) {
+  bool res = VolatileMapStateStorage::clear();
+  if (auto_persistor_.isAlwaysPersisting() && res) {
     return persist();
   }
   return res;
 }
 
-bool UnorderedMapPersistableKeyValueStoreService::update(const std::string& key, const std::function<bool(bool /*exists*/, std::string& /*value*/)>& update_func) {
+bool PersistentMapStateStorage::update(const std::string& key, const std::function<bool(bool /*exists*/, std::string& /*value*/)>& update_func) {
   std::lock_guard<std::recursive_mutex> lock(mutex_);
-  bool res = UnorderedMapKeyValueStoreService::update(key, update_func);
-  if (always_persist_ && res) {
+  bool res = VolatileMapStateStorage::update(key, update_func);
+  if (auto_persistor_.isAlwaysPersisting() && res) {
     return persist();
   }
   return res;
 }
 
-bool UnorderedMapPersistableKeyValueStoreService::persistNonVirtual() {
+bool PersistentMapStateStorage::persistNonVirtual() {
   std::lock_guard<std::recursive_mutex> lock(mutex_);
   std::ofstream ofs(file_);
   if (!ofs.is_open()) {
@@ -224,7 +207,7 @@ bool UnorderedMapPersistableKeyValueStoreService::persistNonVirtual() {
   return true;
 }
 
-bool UnorderedMapPersistableKeyValueStoreService::load() {
+bool PersistentMapStateStorage::load() {
   std::lock_guard<std::recursive_mutex> lock(mutex_);
   std::ifstream ifs(file_);
   if (!ifs.is_open()) {
@@ -260,6 +243,6 @@ bool UnorderedMapPersistableKeyValueStoreService::load() {
   return true;
 }
 
-REGISTER_RESOURCE(UnorderedMapPersistableKeyValueStoreService, ControllerService);
+REGISTER_RESOURCE_AS(PersistentMapStateStorage, ControllerService, ("UnorderedMapPersistableKeyValueStoreService", "PersistentMapStateStorage"));
 
 }  // namespace org::apache::nifi::minifi::controllers

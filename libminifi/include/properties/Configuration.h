@@ -121,11 +121,16 @@ class Configuration : public Properties {
   static constexpr const char *nifi_c2_mqtt_update_topic = "nifi.c2.mqtt.update.topic";
 
   // state management options
-  static constexpr const char *nifi_state_management_provider_local = "nifi.state.management.provider.local";
-  static constexpr const char *nifi_state_management_provider_local_class_name = "nifi.state.management.provider.local.class.name";
-  static constexpr const char *nifi_state_management_provider_local_always_persist = "nifi.state.management.provider.local.always.persist";
-  static constexpr const char *nifi_state_management_provider_local_auto_persistence_interval = "nifi.state.management.provider.local.auto.persistence.interval";
-  static constexpr const char *nifi_state_management_provider_local_path = "nifi.state.management.provider.local.path";
+  static constexpr const char *nifi_state_storage_local = "nifi.state.storage.local";
+  static constexpr const char *nifi_state_storage_local_old = "nifi.state.management.provider.local";
+  static constexpr const char *nifi_state_storage_local_class_name = "nifi.state.storage.local.class.name";
+  static constexpr const char *nifi_state_storage_local_class_name_old = "nifi.state.management.provider.local.class.name";
+  static constexpr const char *nifi_state_storage_local_always_persist = "nifi.state.storage.local.always.persist";
+  static constexpr const char *nifi_state_storage_local_always_persist_old = "nifi.state.management.provider.local.always.persist";
+  static constexpr const char *nifi_state_storage_local_auto_persistence_interval = "nifi.state.storage.local.auto.persistence.interval";
+  static constexpr const char *nifi_state_storage_local_auto_persistence_interval_old = "nifi.state.management.provider.local.auto.persistence.interval";
+  static constexpr const char *nifi_state_storage_local_path = "nifi.state.storage.local.path";
+  static constexpr const char *nifi_state_storage_local_path_old = "nifi.state.management.provider.local.path";
 
   // disk space watchdog options
   static constexpr const char *minifi_disk_space_watchdog_enable = "minifi.disk.space.watchdog.enable";

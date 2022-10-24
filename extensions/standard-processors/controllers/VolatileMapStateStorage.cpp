@@ -15,35 +15,33 @@
  * limitations under the License.
  */
 
-#include "UnorderedMapKeyValueStoreService.h"
+#include "VolatileMapStateStorage.h"
 #include "core/PropertyBuilder.h"
 #include "core/Resource.h"
 
 namespace org::apache::nifi::minifi::controllers {
 
-const core::Property UnorderedMapKeyValueStoreService::LinkedServices(
+const core::Property VolatileMapStateStorage::LinkedServices(
     core::PropertyBuilder::createProperty("Linked Services")
     ->withDescription("Referenced Controller Services")
     ->build());
 
-UnorderedMapKeyValueStoreService::UnorderedMapKeyValueStoreService(std::string name, const utils::Identifier& uuid /*= utils::Identifier()*/)
-    : PersistableKeyValueStoreService(std::move(name), uuid) {
+VolatileMapStateStorage::VolatileMapStateStorage(std::string name, const utils::Identifier& uuid /*= utils::Identifier()*/)
+    : KeyValueStateStorage(std::move(name), uuid) {
 }
 
-UnorderedMapKeyValueStoreService::UnorderedMapKeyValueStoreService(std::string name, const std::shared_ptr<Configure> &configuration)
-    : PersistableKeyValueStoreService(std::move(name)) {
+VolatileMapStateStorage::VolatileMapStateStorage(std::string name, const std::shared_ptr<Configure> &configuration)
+    : KeyValueStateStorage(std::move(name)) {
   setConfiguration(configuration);
 }
 
-UnorderedMapKeyValueStoreService::~UnorderedMapKeyValueStoreService() = default;
-
-bool UnorderedMapKeyValueStoreService::set(const std::string& key, const std::string& value) {
+bool VolatileMapStateStorage::set(const std::string& key, const std::string& value) {
   std::lock_guard<std::recursive_mutex> lock(mutex_);
   map_[key] = value;
   return true;
 }
 
-bool UnorderedMapKeyValueStoreService::get(const std::string& key, std::string& value) {
+bool VolatileMapStateStorage::get(const std::string& key, std::string& value) {
   std::lock_guard<std::recursive_mutex> lock(mutex_);
   auto it = map_.find(key);
   if (it == map_.end()) {
@@ -54,29 +52,29 @@ bool UnorderedMapKeyValueStoreService::get(const std::string& key, std::string& 
   }
 }
 
-bool UnorderedMapKeyValueStoreService::get(std::unordered_map<std::string, std::string>& kvs) {
+bool VolatileMapStateStorage::get(std::unordered_map<std::string, std::string>& kvs) {
   std::lock_guard<std::recursive_mutex> lock(mutex_);
   kvs = map_;
   return true;
 }
 
-bool UnorderedMapKeyValueStoreService::remove(const std::string& key) {
+bool VolatileMapStateStorage::remove(const std::string& key) {
   std::lock_guard<std::recursive_mutex> lock(mutex_);
   return map_.erase(key) == 1U;
 }
 
-bool UnorderedMapKeyValueStoreService::clear() {
+bool VolatileMapStateStorage::clear() {
   std::lock_guard<std::recursive_mutex> lock(mutex_);
   map_.clear();
   return true;
 }
 
-void UnorderedMapKeyValueStoreService::initialize() {
+void VolatileMapStateStorage::initialize() {
   ControllerService::initialize();
   setSupportedProperties(properties());
 }
 
-bool UnorderedMapKeyValueStoreService::update(const std::string& key, const std::function<bool(bool /*exists*/, std::string& /*value*/)>& update_func) {
+bool VolatileMapStateStorage::update(const std::string& key, const std::function<bool(bool /*exists*/, std::string& /*value*/)>& update_func) {
   std::lock_guard<std::recursive_mutex> lock(mutex_);
   bool exists = false;
   std::string value;
@@ -103,6 +101,6 @@ bool UnorderedMapKeyValueStoreService::update(const std::string& key, const std:
   return true;
 }
 
-REGISTER_RESOURCE(UnorderedMapKeyValueStoreService, ControllerService);
+REGISTER_RESOURCE_AS(VolatileMapStateStorage, ControllerService, ("UnorderedMapKeyValueStoreService", "VolatileMapStateStorage"));
 
 }  // namespace org::apache::nifi::minifi::controllers
