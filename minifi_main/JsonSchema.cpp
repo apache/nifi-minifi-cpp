@@ -37,7 +37,7 @@ namespace org::apache::nifi::minifi::docs {
 
 static std::string escape(std::string str) {
   utils::StringUtils::replaceAll(str, "\"", "\\\"");
-  utils::StringUtils::replaceAll(str, "\n", "");
+  utils::StringUtils::replaceAll(str, "\n", "\\n");
   return str;
 }
 
@@ -70,6 +70,7 @@ void writePropertySchema(const core::Property& prop, std::ostream& out) {
     // order is important as both DataSizeValue and TimePeriodValue's type_id is uint64_t
     if (std::dynamic_pointer_cast<core::DataSizeValue>(def_value.getValue())
         || std::dynamic_pointer_cast<core::TimePeriodValue>(def_value.getValue())) {
+      // special value types
       out << R"(, "type": "string", "default": ")" << escape(def_value.to_string()) << "\"";
     } else if (type == state::response::Value::INT_TYPE
         || type == state::response::Value::INT64_TYPE
@@ -81,7 +82,7 @@ void writePropertySchema(const core::Property& prop, std::ostream& out) {
     } else if (type == state::response::Value::BOOL_TYPE) {
       out << R"(, "type": "boolean", "default": )" << (static_cast<bool>(def_value) ? "true" : "false");
     } else {
-      out << R"(, "type": "string", "default": ")" << escape(def_value.to_string()) << "\"";
+      out << R"(, "type": "string", "default": ")" << escape(def_value.to_string()) << "\"";  // NOLINT(bugprone-branch-clone)
     }
   } else {
     // no default value, no type information, fallback to string
@@ -172,12 +173,12 @@ static std::string buildSchema(const std::unordered_map<std::string, std::string
     };
 
     cron_pattern << "^"
-      << "(" << makeCommon(secs) << ")" << " "
-      << "(" << makeCommon(mins) << ")" << " "
-      << "(" << makeCommon(hours) << ")" << " "
-      << "(" << makeCommon(days) << "|LW|L|L-" << days << "|" << days << "W" << ")" << " "
-      << "(" << makeCommon(months) << ")" << " "
-      << "(" << makeCommon(weekdays) << "|L|" << weekdays << "#" << "[1-5]" << ")"
+      << "(" << makeCommon(secs) << ")"
+      << "( " << makeCommon(mins) << ")"
+      << "( " << makeCommon(hours) << ")"
+      << "( " << makeCommon(days) << "|LW|L|L-" << days << "|" << days << "W" << ")"
+      << "( " << makeCommon(months) << ")"
+      << "( " << makeCommon(weekdays) << "|L|" << weekdays << "#" << "[1-5]" << ")"
       << "( " << makeCommon(years) << ")?"
       << "$";
 
@@ -189,7 +190,7 @@ static std::string buildSchema(const std::unordered_map<std::string, std::string
   "$defs": {)" + std::move(all_rels).str() + R"(
     "datasize": {
       "type": "string",
-      "pattern": "^\\s*[0-9]+\\s*(B|K|M|G|T|P|KB|MB|GB|TB|PT)\\s*$"
+      "pattern": "^\\s*[0-9]+\\s*(B|K|M|G|T|P|KB|MB|GB|TB|PB)\\s*$"
     },
     "uuid": {
       "type": "string",
@@ -288,7 +289,7 @@ static std::string buildSchema(const std::unordered_map<std::string, std::string
     "connection": {
       "type": "object",
       "additionalProperties": false,
-      "required": ["name", "id", "source name", "source id", "source relationship names", "destination name", "destination id"],
+      "required": ["name", "id", "source id", "source relationship names", "destination id"],
       "properties": {
         "name": {"type": "string"},
         "id": {"$ref": "#/$defs/uuid"},
