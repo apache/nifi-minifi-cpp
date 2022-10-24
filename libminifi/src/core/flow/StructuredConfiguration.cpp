@@ -526,6 +526,8 @@ void StructuredConfiguration::parseConnection(const Node& connection_node_seq, c
   }
 
   for (const auto& connection_node : connection_node_seq) {
+    // for backwards compatibility we ignore invalid connection_nodes instead of throwing
+    // previously the ConnectionParser created an unreachable connection in this case
     if (!connection_node || !connection_node.isMap()) {
       logger_->log_error("Invalid connection node, ignoring");
       continue;
