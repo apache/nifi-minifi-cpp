@@ -45,8 +45,8 @@ class ConnectionId {
 
   auto operator<=>(const ConnectionId&) const = default;
 
-  std::string& getHostname() { return hostname_; }
-  std::string& getPort() { return port_; }
+  std::string_view getHostname() { return hostname_; }
+  std::string_view getPort() { return port_; }
 
  private:
   std::string hostname_;
@@ -113,7 +113,7 @@ class PutTCP final : public core::Processor {
   std::optional<std::unordered_map<ConnectionId, std::shared_ptr<IConnectionHandler>, ConnectionId::hash>> connections_;
   std::optional<std::chrono::milliseconds> idle_connection_expiration_;
   std::optional<size_t> max_size_of_socket_send_buffer_;
-  std::chrono::milliseconds timeout_;
+  std::chrono::milliseconds timeout_ = std::chrono::seconds(15);
   std::shared_ptr<controllers::SSLContextService> ssl_context_service_;
   std::shared_ptr<core::logging::Logger> logger_ = core::logging::LoggerFactory<PutTCP>::getLogger();
 };

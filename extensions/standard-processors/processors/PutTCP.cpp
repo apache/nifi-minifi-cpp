@@ -20,6 +20,7 @@
 #include <utility>
 
 #include "range/v3/range/conversion.hpp"
+#include "range/v3/view/transform.hpp"
 
 #include "utils/gsl.h"
 #include "utils/expected.h"
@@ -138,9 +139,7 @@ void PutTCP::onSchedule(core::ProcessContext* const context, core::ProcessSessio
 
   delimiter_.clear();
   if (auto delimiter_str = context->getProperty(OutgoingMessageDelimiter)) {
-    std::transform(std::begin(*delimiter_str), std::end(*delimiter_str), std::back_inserter(delimiter_), [](char c) {
-      return std::byte(c);
-    });
+    delimiter_ = ranges::views::transform(*delimiter_str, [](char c) { return static_cast<std::byte>(c); }) | ranges::to<std::vector>();
   }
 
   if (context->getProperty<bool>(ConnectionPerFlowFile).value_or(false))
@@ -169,6 +168,7 @@ class ConnectionHandler : public IConnectionHandler {
         max_size_of_socket_send_buffer_(max_size_of_socket_send_buffer),
         ssl_context_service_(std::move(ssl_context_service)) {
   }
+
   ~ConnectionHandler() override = default;
 
   nonstd::expected<void, std::error_code> sendData(const std::vector<std::byte>& data, const std::vector<std::byte>& delimiter) override;
@@ -267,15 +267,15 @@ void ConnectionHandler<SocketType>::startConnect(tcp::resolver::results_type::it
   last_error_.clear();
   deadline_.expires_after(timeout_);
   socket->lowest_layer().async_connect(endpoint_iter->endpoint(),
-                                       [&socket, endpoint_iter, this](std::error_code err) {
-                                         handleConnect(err, endpoint_iter, socket);
-                                       });
+      [&socket, endpoint_iter, this](std::error_code err) {
+        handleConnect(err, endpoint_iter, socket);
+      });
 }
 
 template<class SocketType>
 void ConnectionHandler<SocketType>::handleConnect(const std::error_code& error,
-                                                   tcp::resolver::results_type::iterator endpoint_iter,
-                                                   const std::shared_ptr<SocketType>& socket) {
+                                                  tcp::resolver::results_type::iterator endpoint_iter,
+                                                  const std::shared_ptr<SocketType>& socket) {
   bool connection_failed_before_deadline = error.operator bool();
   bool connection_failed_due_to_deadline = !socket->lowest_layer().is_open();
 
@@ -300,15 +300,15 @@ void ConnectionHandler<SocketType>::handleConnect(const std::error_code& error,
 
 template<class SocketType>
 void ConnectionHandler<SocketType>::handleHandshake(const std::error_code&,
-                                                     const tcp::resolver::results_type::iterator&,
-                                                     const std::shared_ptr<SocketType>&) {
+                                                    const tcp::resolver::results_type::iterator&,
+                                                    const std::shared_ptr<SocketType>&) {
   throw std::invalid_argument("Handshake called without SSL");
 }
 
 template<>
 void ConnectionHandler<SslSocket>::handleHandshake(const std::error_code& error,
-                                                                        const tcp::resolver::results_type::iterator& endpoint_iter,
-                                                                        const std::shared_ptr<SslSocket>& socket) {
+                                                   const tcp::resolver::results_type::iterator& endpoint_iter,
+                                                   const std::shared_ptr<SslSocket>& socket) {
   if (!error) {
     core::logging::LOG_TRACE(logger_) << "Successful handshake with " << endpoint_iter->endpoint();
     deadline_.cancel();
@@ -322,7 +322,7 @@ void ConnectionHandler<SslSocket>::handleHandshake(const std::error_code& error,
 
 template<>
 void ConnectionHandler<TcpSocket>::handleConnectionSuccess(const tcp::resolver::results_type::iterator& endpoint_iter,
-                                                             const std::shared_ptr<TcpSocket>& socket) {
+                                                           const std::shared_ptr<TcpSocket>& socket) {
   core::logging::LOG_TRACE(logger_) << "Connected to " << endpoint_iter->endpoint();
   socket->lowest_layer().non_blocking(true);
   deadline_.cancel();
@@ -330,7 +330,7 @@ void ConnectionHandler<TcpSocket>::handleConnectionSuccess(const tcp::resolver::
 
 template<>
 void ConnectionHandler<SslSocket>::handleConnectionSuccess(const tcp::resolver::results_type::iterator& endpoint_iter,
-                                                                                const std::shared_ptr<SslSocket>& socket) {
+                                                           const std::shared_ptr<SslSocket>& socket) {
   core::logging::LOG_TRACE(logger_) << "Connected to " << endpoint_iter->endpoint();
   socket->async_handshake(asio::ssl::stream_base::client, [this, &socket, endpoint_iter](const std::error_code handshake_error) {
     handleHandshake(handshake_error, endpoint_iter, socket);
@@ -339,9 +339,9 @@ void ConnectionHandler<SslSocket>::handleConnectionSuccess(const tcp::resolver::
 
 template<class SocketType>
 void ConnectionHandler<SocketType>::handleWrite(const std::error_code& error,
-                                                 std::size_t bytes_written,
-                                                 const std::vector<std::byte>& delimiter,
-                                                 const std::shared_ptr<SocketType>& socket) {
+                                                std::size_t bytes_written,
+                                                const std::vector<std::byte>& delimiter,
+                                                const std::shared_ptr<SocketType>& socket) {
   bool write_failed_before_deadline = error.operator bool();
   bool write_failed_due_to_deadline = !socket->lowest_layer().is_open();
 
@@ -362,7 +362,7 @@ void ConnectionHandler<SocketType>::handleWrite(const std::error_code& error,
 
   logger_->log_trace("Writing flowfile(%zu bytes) to socket succeeded", bytes_written);
 
-  asio::async_write(*socket, asio::buffer(delimiter), [&](std::error_code error, std::size_t bytes_written){
+  asio::async_write(*socket, asio::buffer(delimiter), [&](std::error_code error, std::size_t bytes_written) {
     handleDelimiterWrite(error, bytes_written, socket);
   });
 }
@@ -434,8 +434,8 @@ nonstd::expected<std::shared_ptr<SslSocket>, std::error_code> ConnectionHandler<
 
 template<class SocketType>
 nonstd::expected<void, std::error_code> ConnectionHandler<SocketType>::sendDataToSocket(const std::shared_ptr<SocketType>& socket,
-                                                                                         const std::vector<std::byte>& data,
-                                                                                         const std::vector<std::byte>& delimiter) {
+                                                                                        const std::vector<std::byte>& data,
+                                                                                        const std::vector<std::byte>& delimiter) {
   if (!socket || !socket->lowest_layer().is_open())
     return nonstd::make_unexpected(asio::error::not_socket);
 
@@ -481,8 +481,8 @@ void PutTCP::onTrigger(core::ProcessContext* context, core::ProcessSession* cons
   auto port = context->getProperty(Port, flow_file).value_or(std::string{});
   if (hostname.empty() || port.empty()) {
     logger_->log_error("[%s] invalid target endpoint: hostname: %s, port: %s", flow_file->getUUIDStr(),
-                       hostname.empty() ? "(empty)" : hostname.c_str(),
-                       port.empty() ? "(empty)" : port.c_str());
+        hostname.empty() ? "(empty)" : hostname.c_str(),
+        port.empty() ? "(empty)" : port.c_str());
     session->transfer(flow_file, Failure);
     return;
   }

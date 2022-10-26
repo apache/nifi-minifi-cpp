@@ -49,7 +49,7 @@ class ISessionAwareServer {
   virtual void closeSessions() = 0;
 };
 
-template<class SocketType>
+template<class SessionType>
 class SessionAwareServer : public ISessionAwareServer {
  protected:
   size_t getNumberOfSessions() const override {
@@ -71,7 +71,7 @@ class SessionAwareServer : public ISessionAwareServer {
   }
 
   mutable std::mutex mutex_;
-  std::vector<std::weak_ptr<SocketType>> sessions_;
+  std::vector<std::weak_ptr<SessionType>> sessions_;
 };
 
 class SessionAwareTcpServer : public TcpServer, public SessionAwareServer<TcpSession> {
@@ -96,7 +96,7 @@ class SessionAwareSslServer : public SslServer, public SessionAwareServer<SslSes
   std::shared_ptr<SslSession> createSession() override {
     std::lock_guard lock_guard{mutex_};
     auto session = SslServer::createSession();
-    logger_->log_trace("SessionAwareTcpServer::createSession %p", session.get());
+    logger_->log_trace("SessionAwareSslServer::createSession %p", session.get());
     sessions_.emplace_back(session);
     return session;
   }
@@ -105,9 +105,9 @@ class SessionAwareSslServer : public SslServer, public SessionAwareServer<SslSes
 utils::net::SslData createSslDataForServer() {
   const std::filesystem::path executable_dir = minifi::utils::file::FileUtils::get_executable_dir();
   utils::net::SslData ssl_data;
-  ssl_data.ca_loc = (executable_dir / "resources/ca_A.crt").string();
-  ssl_data.cert_loc = (executable_dir / "resources/localhost_by_A.pem").string();
-  ssl_data.key_loc = (executable_dir / "resources/localhost_by_A.pem").string();
+  ssl_data.ca_loc = (executable_dir / "resources" / "ca_A.crt").string();
+  ssl_data.cert_loc = (executable_dir / "resources" / "localhost_by_A.pem").string();
+  ssl_data.key_loc = (executable_dir / "resources" / "localhost_by_A.pem").string();
   return ssl_data;
 }
 }  // namespace
@@ -130,7 +130,7 @@ class PutTCPTestFixture {
 
   void startTCPServer() {
     gsl_Expects(!listener_ && !server_thread_.joinable());
-    listener_ = std::make_unique<SessionAwareTcpServer>(std::nullopt, port_, core::logging::LoggerFactory<utils::net::Server>().getLogger());
+    listener_ = std::make_unique<SessionAwareTcpServer>(std::nullopt, port_, core::logging::LoggerFactory<utils::net::Server>::getLogger());
     server_thread_ = std::thread([this]() { listener_->run(); });
   }
 
@@ -138,7 +138,7 @@ class PutTCPTestFixture {
     gsl_Expects(!listener_ && !server_thread_.joinable());
     listener_ = std::make_unique<SessionAwareSslServer>(std::nullopt,
         port_,
-        core::logging::LoggerFactory<utils::net::Server>().getLogger(),
+        core::logging::LoggerFactory<utils::net::Server>::getLogger(),
         createSslDataForServer(),
         utils::net::SslServer::ClientAuthOption::REQUIRED);
     server_thread_ = std::thread([this]() { listener_->run(); });
@@ -188,7 +188,7 @@ class PutTCPTestFixture {
     return std::nullopt;
   }
 
-  void addSSLContextToPutTCP(const std::filesystem::path& ca_cert, std::optional<std::filesystem::path> client_cert_key) {
+  void addSSLContextToPutTCP(const std::filesystem::path& ca_cert, const std::optional<std::filesystem::path>& client_cert_key) {
     const std::filesystem::path ca_dir = std::filesystem::path(minifi::utils::file::FileUtils::get_executable_dir()) / "resources";
     auto ssl_context_service_node = controller_.plan->addController("SSLContextService", "SSLContextService");
     REQUIRE(controller_.plan->setProperty(ssl_context_service_node, SSLContextService::CACertificate.getName(), (ca_dir / ca_cert).string()));
