@@ -69,7 +69,7 @@ void writePropertySchema(const core::Property& prop, std::ostream& out) {
     const auto& type = def_value.getTypeInfo();
     // order is important as both DataSizeValue and TimePeriodValue's type_id is uint64_t
     if (std::dynamic_pointer_cast<core::DataSizeValue>(def_value.getValue())
-        || std::dynamic_pointer_cast<core::TimePeriodValue>(def_value.getValue())) {
+        || std::dynamic_pointer_cast<core::TimePeriodValue>(def_value.getValue())) { // NOLINT(bugprone-branch-clone)
       // special value types
       out << R"(, "type": "string", "default": ")" << escape(def_value.to_string()) << "\"";
     } else if (type == state::response::Value::INT_TYPE
@@ -82,7 +82,7 @@ void writePropertySchema(const core::Property& prop, std::ostream& out) {
     } else if (type == state::response::Value::BOOL_TYPE) {
       out << R"(, "type": "boolean", "default": )" << (static_cast<bool>(def_value) ? "true" : "false");
     } else {
-      out << R"(, "type": "string", "default": ")" << escape(def_value.to_string()) << "\"";  // NOLINT(bugprone-branch-clone)
+      out << R"(, "type": "string", "default": ")" << escape(def_value.to_string()) << "\"";
     }
   } else {
     // no default value, no type information, fallback to string
