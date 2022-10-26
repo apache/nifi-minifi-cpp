@@ -257,25 +257,25 @@ void test_invalid_host(PutTCPTestFixture& test_fixture) {
   test_fixture.setHostname("invalid_hostname");
   trigger_expect_failure(test_fixture, "message for invalid host");
 
-  CHECK((LogTestController::getInstance().contains("Host not found")
-      || LogTestController::getInstance().contains("No such host is known")));
+  CHECK((LogTestController::getInstance().contains("Host not found", 0ms)
+      || LogTestController::getInstance().contains("No such host is known", 0ms)));
 }
 
 void test_invalid_server(PutTCPTestFixture& test_fixture) {
   test_fixture.setHostname("localhost");
   trigger_expect_failure(test_fixture, "message for invalid server");
 
-  CHECK((LogTestController::getInstance().contains("Connection refused")
-      || LogTestController::getInstance().contains("No connection could be made because the target machine actively refused it")));
+  CHECK((LogTestController::getInstance().contains("Connection refused", 0ms)
+      || LogTestController::getInstance().contains("No connection could be made because the target machine actively refused it", 0ms)));
 }
 
 void test_non_routable_server(PutTCPTestFixture& test_fixture) {
   test_fixture.setHostname("192.168.255.255");
   trigger_expect_failure(test_fixture, "message for non-routable server");
 
-  CHECK((LogTestController::getInstance().contains("Connection timed out")
-      || LogTestController::getInstance().contains("Operation timed out")
-      || LogTestController::getInstance().contains("host has failed to respond")));
+  CHECK((LogTestController::getInstance().contains("Connection timed out", 0ms)
+      || LogTestController::getInstance().contains("Operation timed out", 0ms)
+      || LogTestController::getInstance().contains("host has failed to respond", 0ms)));
 }
 
 void test_cert_verify_failure(PutTCPTestFixture& test_fixture) {
@@ -284,8 +284,8 @@ void test_cert_verify_failure(PutTCPTestFixture& test_fixture) {
 
   trigger_expect_failure(test_fixture, "message for invalid-cert server");
 
-  CHECK((LogTestController::getInstance().contains("certificate verify failed")
-      || LogTestController::getInstance().contains("asio.ssl error")));
+  CHECK((LogTestController::getInstance().contains("certificate verify failed", 0ms)
+      || LogTestController::getInstance().contains("asio.ssl error", 0ms)));
 }
 
 void test_handshake_failure(PutTCPTestFixture& test_fixture) {
@@ -294,8 +294,8 @@ void test_handshake_failure(PutTCPTestFixture& test_fixture) {
 
   trigger_expect_failure(test_fixture, "message for invalid-cert server");
 
-  CHECK((LogTestController::getInstance().contains("sslv3 alert handshake failure")
-      || LogTestController::getInstance().contains("asio.ssl error")));
+  CHECK((LogTestController::getInstance().contains("sslv3 alert handshake failure", 0ms)
+      || LogTestController::getInstance().contains("asio.ssl error", 0ms)));
 }
 
 constexpr std::string_view first_message = "message 1";
