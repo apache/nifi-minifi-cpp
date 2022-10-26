@@ -38,7 +38,7 @@
 #include "utils/meta/detected.h"
 
 // libc++ doesn't define operator<=> on strings, and apparently the operator rewrite rules don't automagically make one
-#if defined(_LIBCPP_VERSION) && _LIBCPP_VERSION <= 16000
+#if defined(_LIBCPP_VERSION) && _LIBCPP_VERSION < 16000
 #include <compare>
 
 template<typename _CharT, typename _Traits, typename _Alloc>
