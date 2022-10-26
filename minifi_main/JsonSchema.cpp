@@ -255,7 +255,7 @@ static std::string buildSchema(const std::unordered_map<std::string, std::string
       }, {
         "if": {"properties": {"scheduling strategy": {"const": "CRON_DRIVEN"}}},
         "then": {"required": ["scheduling period"], "properties": {"scheduling period": {"$ref": "#/$defs/cron_pattern"}}}
-      }, )" + processors + R"(]
+      })" + (!processors.empty() ? ", " : "") + processors + R"(]
     },
     "remote_process_group": {"allOf": [{
       "type": "object",
