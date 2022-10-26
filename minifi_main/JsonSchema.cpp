@@ -172,14 +172,14 @@ static std::string buildSchema(const std::unordered_map<std::string, std::string
       return std::move(common).str();
     };
 
-    cron_pattern << "^"
+    cron_pattern << "(?i)^"
       << "(" << makeCommon(secs) << ")"
-      << "( " << makeCommon(mins) << ")"
-      << "( " << makeCommon(hours) << ")"
-      << "( " << makeCommon(days) << "|LW|L|L-" << days << "|" << days << "W" << ")"
-      << "( " << makeCommon(months) << ")"
-      << "( " << makeCommon(weekdays) << "|L|" << weekdays << "#" << "[1-5]" << ")"
-      << "( " << makeCommon(years) << ")?"
+      << " (" << makeCommon(mins) << ")"
+      << " (" << makeCommon(hours) << ")"
+      << " (" << makeCommon(days) << "|LW|L|L-" << days << "|" << days << "W" << ")"
+      << " (" << makeCommon(months) << ")"
+      << " (" << makeCommon(weekdays) << "|" << weekdays << "?L|" << weekdays << "#" << "[1-5]" << ")"
+      << "( (" << makeCommon(years) << "))?"
       << "$";
 
   }
