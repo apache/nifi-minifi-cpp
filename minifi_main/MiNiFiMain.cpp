@@ -262,7 +262,7 @@ int main(int argc, char **argv) {
         exit(1);
       }
 
-      std::cerr << "Dumping docs to " << argv[2] << std::endl;
+      std::cout << "Dumping docs to " << argv[2] << std::endl;
       if (argc == 4) {
         std::string filepath;
         std::string filename;
@@ -285,7 +285,7 @@ int main(int argc, char **argv) {
         std::exit(1);
       }
 
-      std::cerr << "Writing json schema to " << argv[2] << std::endl;
+      std::cout << "Writing json schema to " << argv[2] << std::endl;
 
       {
         std::ofstream schema_file{argv[2]};
