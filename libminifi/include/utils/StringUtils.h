@@ -38,11 +38,9 @@
 #include "utils/meta/detected.h"
 
 // libc++ doesn't define operator<=> on strings, and apparently the operator rewrite rules don't automagically make one
-#if defined(_LIBCPP_VERSION) && _LIBCPP_VERSION <= 14000
+#if defined(_LIBCPP_VERSION) && _LIBCPP_VERSION <= 16000
 #include <compare>
-#endif
 
-#if defined(_LIBCPP_VERSION) && _LIBCPP_VERSION <= 14000
 template<typename _CharT, typename _Traits, typename _Alloc>
 constexpr std::strong_ordering operator<=>(const std::basic_string<_CharT, _Traits, _Alloc>& __lhs,
     const std::basic_string<_CharT, _Traits, _Alloc>& __rhs) noexcept {
