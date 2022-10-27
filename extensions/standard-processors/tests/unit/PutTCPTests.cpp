@@ -266,7 +266,8 @@ void test_invalid_server(PutTCPTestFixture& test_fixture) {
   trigger_expect_failure(test_fixture, "message for invalid server");
 
   CHECK((LogTestController::getInstance().contains("Connection refused", 0ms)
-      || LogTestController::getInstance().contains("No connection could be made because the target machine actively refused it", 0ms)));
+      || LogTestController::getInstance().contains("No connection could be made because the target machine actively refused it", 0ms)
+      || LogTestController::getInstance().contains("A connection attempt failed because the connected party did not properly respond", 0ms)));
 }
 
 void test_non_routable_server(PutTCPTestFixture& test_fixture) {

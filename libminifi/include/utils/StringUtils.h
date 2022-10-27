@@ -41,10 +41,8 @@
 #if defined(_LIBCPP_VERSION) && _LIBCPP_VERSION < 16000
 #include <compare>
 
-template<typename _CharT, typename _Traits, typename _Alloc>
-constexpr std::strong_ordering operator<=>(const std::basic_string<_CharT, _Traits, _Alloc>& __lhs,
-    const std::basic_string<_CharT, _Traits, _Alloc>& __rhs) noexcept {
-  return __lhs.compare(__rhs) <=> 0;
+constexpr std::strong_ordering operator<=>(const std::string& lhs, const std::string& rhs) noexcept {
+  return lhs.compare(rhs) <=> 0;
 }
 #endif
 
