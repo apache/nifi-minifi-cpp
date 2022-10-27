@@ -26,12 +26,12 @@ const core::Property VolatileMapStateStorage::LinkedServices(
     ->withDescription("Referenced Controller Services")
     ->build());
 
-VolatileMapStateStorage::VolatileMapStateStorage(std::string name, const utils::Identifier& uuid /*= utils::Identifier()*/)
-    : KeyValueStateStorage(std::move(name), uuid) {
+VolatileMapStateStorage::VolatileMapStateStorage(const std::string& name, const utils::Identifier& uuid /*= utils::Identifier()*/)
+    : KeyValueStateStorage(name, uuid) {
 }
 
-VolatileMapStateStorage::VolatileMapStateStorage(std::string name, const std::shared_ptr<Configure> &configuration)
-    : KeyValueStateStorage(std::move(name)) {
+VolatileMapStateStorage::VolatileMapStateStorage(const std::string& name, const std::shared_ptr<Configure> &configuration)
+    : KeyValueStateStorage(name) {
   setConfiguration(configuration);
 }
 

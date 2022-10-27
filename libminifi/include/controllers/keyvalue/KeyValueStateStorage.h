@@ -31,7 +31,7 @@ namespace org::apache::nifi::minifi::controllers {
 
 class KeyValueStateStorage : public core::StateStorage, public core::controller::ControllerService {
  public:
-  explicit KeyValueStateStorage(std::string name, const utils::Identifier& uuid = {});
+  explicit KeyValueStateStorage(const std::string& name, const utils::Identifier& uuid = {});
 
   static core::StateManager::State deserialize(const std::string& serialized);
   static std::string serialize(const core::StateManager::State& kvs);

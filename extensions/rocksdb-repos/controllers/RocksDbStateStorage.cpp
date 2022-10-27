@@ -32,8 +32,8 @@ const core::Property RocksDbStateStorage::Directory(
     ->isRequired(true)
     ->build());
 
-RocksDbStateStorage::RocksDbStateStorage(std::string name, const utils::Identifier& uuid /*= utils::Identifier()*/)
-    : KeyValueStateStorage(std::move(name), uuid) {
+RocksDbStateStorage::RocksDbStateStorage(const std::string& name, const utils::Identifier& uuid /*= utils::Identifier()*/)
+    : KeyValueStateStorage(name, uuid) {
 }
 
 RocksDbStateStorage::~RocksDbStateStorage() {

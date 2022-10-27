@@ -56,12 +56,12 @@ const core::Property PersistentMapStateStorage::File(
     ->isRequired(true)
     ->build());
 
-PersistentMapStateStorage::PersistentMapStateStorage(std::string name, const utils::Identifier& uuid /*= utils::Identifier()*/)
+PersistentMapStateStorage::PersistentMapStateStorage(const std::string& name, const utils::Identifier& uuid /*= utils::Identifier()*/)
     : KeyValueStateStorage(name, uuid)
     , VolatileMapStateStorage(std::move(name), uuid) {
 }
 
-PersistentMapStateStorage::PersistentMapStateStorage(std::string name, const std::shared_ptr<Configure> &configuration)
+PersistentMapStateStorage::PersistentMapStateStorage(const std::string& name, const std::shared_ptr<Configure> &configuration)
     : KeyValueStateStorage(name)
     , VolatileMapStateStorage(std::move(name)) {
   setConfiguration(configuration);

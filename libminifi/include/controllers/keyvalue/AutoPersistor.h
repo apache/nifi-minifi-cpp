@@ -38,8 +38,8 @@ class AutoPersistor {
  public:
   virtual ~AutoPersistor();
 
-  EXTENSIONAPI static const core::Property AlwaysPersist;
-  EXTENSIONAPI static const core::Property AutoPersistenceInterval;
+  MINIFIAPI static const core::Property AlwaysPersist;
+  MINIFIAPI static const core::Property AutoPersistenceInterval;
 
   void start(const core::ConfigurableComponent& property_source, std::function<bool()> persist);
   void stop();

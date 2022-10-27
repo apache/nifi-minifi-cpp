@@ -36,7 +36,7 @@ class RocksDbStateStorage : public KeyValueStateStorage {
   static constexpr const char* ENCRYPTION_KEY_NAME = "nifi.state.storage.local.encryption.key";
   static constexpr const char* ENCRYPTION_KEY_NAME_OLD = "nifi.state.management.provider.local.encryption.key";
 
-  explicit RocksDbStateStorage(std::string name, const utils::Identifier& uuid = {});
+  explicit RocksDbStateStorage(const std::string& name, const utils::Identifier& uuid = {});
 
   ~RocksDbStateStorage() override;
 

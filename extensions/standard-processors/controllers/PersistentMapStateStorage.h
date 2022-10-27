@@ -33,8 +33,8 @@ namespace org::apache::nifi::minifi::controllers {
 
 class PersistentMapStateStorage : public VolatileMapStateStorage {
  public:
-  explicit PersistentMapStateStorage(std::string name, const utils::Identifier& uuid = {});
-  explicit PersistentMapStateStorage(std::string name, const std::shared_ptr<Configure>& configuration);
+  explicit PersistentMapStateStorage(const std::string& name, const utils::Identifier& uuid = {});
+  explicit PersistentMapStateStorage(const std::string& name, const std::shared_ptr<Configure>& configuration);
 
   ~PersistentMapStateStorage() override;
 

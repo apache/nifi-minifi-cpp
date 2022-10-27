@@ -63,8 +63,8 @@ core::StateManager::State KeyValueStateStorage::deserialize(const std::string& s
   return retState;
 }
 
-KeyValueStateStorage::KeyValueStateStorage(std::string name, const utils::Identifier& uuid)
-  : ControllerService(std::move(name), uuid) {
+KeyValueStateStorage::KeyValueStateStorage(const std::string& name, const utils::Identifier& uuid)
+  : ControllerService(name, uuid) {
 }
 
 std::unique_ptr<core::StateManager> KeyValueStateStorage::getStateManager(const utils::Identifier& uuid) {

@@ -33,8 +33,8 @@ namespace org::apache::nifi::minifi::controllers {
 /// Key-value state storage purely in RAM without disk usage
 class VolatileMapStateStorage : virtual public KeyValueStateStorage {
  public:
-  explicit VolatileMapStateStorage(std::string name, const utils::Identifier& uuid = {});
-  explicit VolatileMapStateStorage(std::string name, const std::shared_ptr<Configure>& configuration);
+  explicit VolatileMapStateStorage(const std::string& name, const utils::Identifier& uuid = {});
+  explicit VolatileMapStateStorage(const std::string& name, const std::shared_ptr<Configure>& configuration);
 
   EXTENSIONAPI static constexpr const char* Description = "A key-value service implemented by a locked std::unordered_map<std::string, std::string>";
   EXTENSIONAPI static const core::Property LinkedServices;
