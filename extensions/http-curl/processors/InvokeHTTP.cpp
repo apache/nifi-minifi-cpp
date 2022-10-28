@@ -334,6 +334,10 @@ void InvokeHTTP::onTriggerWithClient(const std::shared_ptr<core::ProcessContext>
 
   logger_->log_debug("onTrigger InvokeHTTP with %s to %s", client.getRequestMethod(), client.getURL());
 
+  const auto remove_callback_from_client_at_exit = gsl::finally([&client] {
+    client.setUploadCallback({});
+  });
+
   std::string transaction_id = utils::IdGenerator::getIdGenerator()->generate().to_string();
 
   if (shouldEmitFlowFile(client)) {
