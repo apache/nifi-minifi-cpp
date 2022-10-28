@@ -146,7 +146,7 @@ class ConsumeWindowsEventLog : public core::Processor {
                                                     const EVT_HANDLE& event_query_results);
 
   std::shared_ptr<core::logging::Logger> logger_;
-  core::CoreComponentStateManager* state_manager_{nullptr};
+  core::StateManager* state_manager_{nullptr};
   wel::METADATA_NAMES header_names_;
   std::optional<std::string> header_delimiter_;
   std::string channel_;
