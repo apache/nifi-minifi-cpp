@@ -257,7 +257,7 @@ bool VolatileRepository<KeyType, RepositoryType>::Put(const KeyType& key, const 
   } while (!updated);
   current_size_ += size;
 
-  logger_->log_debug("VolatileRepository -- put %zu " PRIu32, current_size_.load(), current_index_.load());
+  logger_->log_debug("VolatileRepository -- put %zu %" PRIu32, current_size_.load(), current_index_.load());
   return true;
 }
 
