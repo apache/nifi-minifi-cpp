@@ -1874,6 +1874,6 @@ TEST_CASE("TailFile honors batch size for maximum lines processed", "[batchSize]
   tailfile->setProperty(minifi::processors::TailFile::BatchSize.getName(), "10");
 
   const auto result = test_controller.trigger("");
-  auto file_contents = result.at(minifi::processors::TailFile::Success);
+  const auto& file_contents = result.at(minifi::processors::TailFile::Success);
   REQUIRE(file_contents.size() == 10);
 }
