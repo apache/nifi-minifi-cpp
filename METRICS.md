@@ -145,15 +145,15 @@ FlowInformation is a system level metric that reports component and queue relate
 
 AgentStatus is a system level metric that defines current agent status including repository, component and resource usage information.
 
-| Metric name              | Labels                         | Description                                            |
-|--------------------------|--------------------------------|--------------------------------------------------------|
-| is_running               | repository_name                | Is the repository running (1 or 0)                     |
-| is_full                  | repository_name                | Is the repository full (1 or 0)                        |
-| repository_size          | repository_name                | Current size of the repository                         |
-| uptime_milliseconds      | -                              | Agent uptime in milliseconds                           |
-| is_running               | component_uuid, component_name | Check if the component is running (1 or 0)             |
-| agent_memory_usage_bytes | -                              | Memory used by the agent process in bytes              |
-| agent_cpu_utilization    | -                              | CPU utilization of the agent process (between 0 and 1) |
+| Metric name              | Labels                         | Description                                                                                                |
+|--------------------------|--------------------------------|------------------------------------------------------------------------------------------------------------|
+| is_running               | repository_name                | Is the repository running (1 or 0)                                                                         |
+| is_full                  | repository_name                | Is the repository full (1 or 0)                                                                            |
+| repository_size          | repository_name                | Current size of the repository                                                                             |
+| uptime_milliseconds      | -                              | Agent uptime in milliseconds                                                                               |
+| is_running               | component_uuid, component_name | Check if the component is running (1 or 0)                                                                 |
+| agent_memory_usage_bytes | -                              | Memory used by the agent process in bytes                                                                  |
+| agent_cpu_utilization    | -                              | CPU utilization of the agent process (between 0 and 1). In case of a query error the returned value is -1. |
 
 | Label           | Description                                              |
 |-----------------|----------------------------------------------------------|
