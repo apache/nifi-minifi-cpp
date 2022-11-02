@@ -743,7 +743,7 @@ void ProcessSession::restore(const std::string &key, const std::shared_ptr<core:
   flow->clearStashClaim(key);
 }
 
-ProcessSession::RouteResult ProcessSession::routeFlowFile(const std::shared_ptr<FlowFile> &record, std::unordered_map<std::string, TransferMetrics>& transfers) {
+ProcessSession::RouteResult ProcessSession::routeFlowFile(const std::shared_ptr<FlowFile> &record, const std::function<void(const FlowFile&, const Relationship&)>& transfer_callback) {
   if (record->isDeleted()) {
     return RouteResult::Ok_Deleted;
   }
@@ -755,11 +755,6 @@ ProcessSession::RouteResult ProcessSession::routeFlowFile(const std::shared_ptr<
   Relationship relationship = itRelationship->second;
   // Find the relationship, we need to find the connections for that relationship
   const auto connections = process_context_->getProcessorNode()->getOutGoingConnections(relationship.getName());
-
-  auto increaseTransferMetrics = [&](const std::shared_ptr<FlowFile> &record) {
-    ++transfers[relationship.getName()].transfer_count;
-    transfers[relationship.getName()].transfer_size += record->getSize();
-  };
   if (connections.empty()) {
     // No connection
     if (!process_context_->getProcessorNode()->isAutoTerminated(relationship)) {
@@ -769,7 +764,7 @@ ProcessSession::RouteResult ProcessSession::routeFlowFile(const std::shared_ptr<
     } else {
       // Autoterminated
       remove(record);
-      increaseTransferMetrics(record);
+      transfer_callback(*record, relationship);
       return RouteResult::Ok_AutoTerminated;
     }
   } else {
@@ -779,13 +774,13 @@ ProcessSession::RouteResult ProcessSession::routeFlowFile(const std::shared_ptr<
       if (itConnection == connections.begin()) {
         // First connection which the flow need be routed to
         record->setConnection(connection);
-        increaseTransferMetrics(record);
+        transfer_callback(*record, relationship);
       } else {
         // Clone the flow file and route to the connection
         std::shared_ptr<core::FlowFile> cloneRecord = this->cloneDuringTransfer(record);
         if (cloneRecord) {
           cloneRecord->setConnection(connection);
-          increaseTransferMetrics(cloneRecord);
+          transfer_callback(*cloneRecord, relationship);
         } else {
           throw Exception(PROCESS_SESSION_EXCEPTION, "Can not clone the flow for transfer " + record->getUUIDStr());
         }
@@ -798,10 +793,14 @@ ProcessSession::RouteResult ProcessSession::routeFlowFile(const std::shared_ptr<
 void ProcessSession::commit() {
   try {
     std::unordered_map<std::string, TransferMetrics> transfers;
+      auto increaseTransferMetrics = [&](const FlowFile& record, const Relationship& relationship) {
+      ++transfers[relationship.getName()].transfer_count;
+      transfers[relationship.getName()].transfer_size += record.getSize();
+    };
     // First we clone the flow record based on the transferred relationship for updated flow record
     for (auto && it : _updatedFlowFiles) {
       auto record = it.second.modified;
-      if (routeFlowFile(record, transfers) == RouteResult::Error_NoRelationship) {
+      if (routeFlowFile(record, increaseTransferMetrics) == RouteResult::Error_NoRelationship) {
         // Can not find relationship for the flow
         throw Exception(PROCESS_SESSION_EXCEPTION, "Can not find the transfer relationship for the updated flow " + record->getUUIDStr());
       }
@@ -810,7 +809,7 @@ void ProcessSession::commit() {
     // Do the same thing for added flow file
     for (const auto& it : _addedFlowFiles) {
       auto record = it.second;
-      if (routeFlowFile(record, transfers) == RouteResult::Error_NoRelationship) {
+      if (routeFlowFile(record, increaseTransferMetrics) == RouteResult::Error_NoRelationship) {
         // Can not find relationship for the flow
         throw Exception(PROCESS_SESSION_EXCEPTION, "Can not find the transfer relationship for the added flow " + record->getUUIDStr());
       }

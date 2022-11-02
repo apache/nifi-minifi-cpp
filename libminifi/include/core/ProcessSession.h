@@ -185,7 +185,7 @@ class ProcessSession : public ReferenceContainer {
     uint64_t transfer_size = 0;
   };
 
-  RouteResult routeFlowFile(const std::shared_ptr<FlowFile>& record, std::unordered_map<std::string, TransferMetrics>& transfers);
+  RouteResult routeFlowFile(const std::shared_ptr<FlowFile>& record, const std::function<void(const FlowFile&, const Relationship&)>& transfer_callback);
 
   void persistFlowFilesBeforeTransfer(
       std::map<Connectable*, std::vector<std::shared_ptr<core::FlowFile>>>& transactionMap,

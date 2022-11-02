@@ -42,10 +42,7 @@ class PrometheusChecker:
 
     def verify_repository_metrics(self):
         label_list = [{'repository_name': 'provenance'}, {'repository_name': 'flowfile'}]
-        for labels in label_list:
-            if not self.verify_metrics_exist(['minifi_is_running', 'minifi_is_full', 'minifi_repository_size'], 'RepositoryMetrics', labels):
-                return False
-        return True
+        return all((self.verify_metrics_exist(['minifi_is_running', 'minifi_is_full', 'minifi_repository_size'], 'RepositoryMetrics', labels) for labels in label_list))
 
     def verify_queue_metrics(self):
         return self.verify_metrics_exist(['minifi_queue_data_size', 'minifi_queue_data_size_max', 'minifi_queue_size', 'minifi_queue_size_max'], 'QueueMetrics')
@@ -73,10 +70,7 @@ class PrometheusChecker:
         return len(self.prometheus_client.get_current_metric_value(metric_name=metric_name, label_config=labels)) > 0
 
     def verify_metrics_exist(self, metric_names, metric_class, labels={}):
-        for metric_name in metric_names:
-            if not self.verify_metric_exists(metric_name, metric_class, labels):
-                return False
-        return True
+        return all((self.verify_metric_exists(metric_name, metric_class, labels) for metric_name in metric_names))
 
     def verify_metric_larger_than_zero(self, metric_name, metric_class, labels={}):
         labels['metric_class'] = metric_class
@@ -84,7 +78,4 @@ class PrometheusChecker:
         return len(result) > 0 and int(result[0]['value'][1]) > 0
 
     def verify_metrics_larger_than_zero(self, metric_names, metric_class, labels={}):
-        for metric_name in metric_names:
-            if not self.verify_metric_larger_than_zero(metric_name, metric_class, labels):
-                return False
-        return True
+        return all((self.verify_metric_larger_than_zero(metric_name, metric_class, labels) for metric_name in metric_names))
