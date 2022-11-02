@@ -100,6 +100,8 @@ const core::Property PutTCP::MaxSizeOfSocketSendBuffer = core::PropertyBuilder::
 const core::Relationship PutTCP::Success{"success", "FlowFiles that are sent to the destination are sent out this relationship."};
 const core::Relationship PutTCP::Failure{"failure", "FlowFiles that encountered IO errors are send out this relationship."};
 
+constexpr size_t chunk_size = 1024;
+
 PutTCP::PutTCP(const std::string& name, const utils::Identifier& uuid)
     : Processor(name, uuid) {}
 
@@ -174,7 +176,7 @@ class ConnectionHandler : public IConnectionHandler {
 
   ~ConnectionHandler() override = default;
 
-  nonstd::expected<void, std::error_code> sendData(const std::vector<std::byte>& data, const std::vector<std::byte>& delimiter) override;
+  nonstd::expected<void, std::error_code> sendData(const std::shared_ptr<io::InputStream>& flow_file_content_stream, const std::vector<std::byte>& delimiter) override;
 
  private:
   nonstd::expected<std::shared_ptr<SocketType>, std::error_code> getSocket();
@@ -207,6 +209,7 @@ class ConnectionHandler : public IConnectionHandler {
 
   void handleWrite(std::error_code error,
                    std::size_t bytes_written,
+                   const std::shared_ptr<io::InputStream>& flow_file_content_stream,
                    const std::vector<std::byte>& delimiter,
                    const std::shared_ptr<SocketType>& socket);
 
@@ -230,12 +233,14 @@ class ConnectionHandler : public IConnectionHandler {
   std::shared_ptr<controllers::SSLContextService> ssl_context_service_;
 
   nonstd::expected<tcp::resolver::results_type, std::error_code> resolveHostname();
-  nonstd::expected<void, std::error_code> sendDataToSocket(const std::shared_ptr<SocketType>& socket, const std::vector<std::byte>& data, const std::vector<std::byte>& delimiter);
+  nonstd::expected<void, std::error_code> sendDataToSocket(const std::shared_ptr<SocketType>& socket,
+                                                           const std::shared_ptr<io::InputStream>& flow_file_content_stream,
+                                                           const std::vector<std::byte>& delimiter);
 };
 
 template<class SocketType>
-nonstd::expected<void, std::error_code> ConnectionHandler<SocketType>::sendData(const std::vector<std::byte>& data, const std::vector<std::byte>& delimiter) {
-  return getSocket() | utils::flatMap([&](const std::shared_ptr<SocketType>& socket) { return sendDataToSocket(socket, data, delimiter); });;
+nonstd::expected<void, std::error_code> ConnectionHandler<SocketType>::sendData(const std::shared_ptr<io::InputStream>& flow_file_content_stream, const std::vector<std::byte>& delimiter) {
+  return getSocket() | utils::flatMap([&](const std::shared_ptr<SocketType>& socket) { return sendDataToSocket(socket, flow_file_content_stream, delimiter); });;
 }
 
 template<class SocketType>
@@ -346,6 +351,7 @@ void ConnectionHandler<SslSocket>::handleConnectionSuccess(const tcp::resolver::
 template<class SocketType>
 void ConnectionHandler<SocketType>::handleWrite(std::error_code error,
                                                 std::size_t bytes_written,
+                                                const std::shared_ptr<io::InputStream>& flow_file_content_stream,
                                                 const std::vector<std::byte>& delimiter,
                                                 const std::shared_ptr<SocketType>& socket) {
   bool write_failed_before_deadline = error.operator bool();
@@ -367,10 +373,19 @@ void ConnectionHandler<SocketType>::handleWrite(std::error_code error,
   }
 
   logger_->log_trace("Writing flowfile(%zu bytes) to socket succeeded", bytes_written);
-
-  asio::async_write(*socket, asio::buffer(delimiter), [&](std::error_code error, std::size_t bytes_written) {
-    handleDelimiterWrite(error, bytes_written, socket);
-  });
+  if (flow_file_content_stream->size() == flow_file_content_stream->tell()) {
+    asio::async_write(*socket, asio::buffer(delimiter), [&](std::error_code error, std::size_t bytes_written) {
+      handleDelimiterWrite(error, bytes_written, socket);
+    });
+  } else {
+    std::vector<std::byte> data_chunk;
+    data_chunk.resize(chunk_size);
+    gsl::span<std::byte> buffer{data_chunk};
+    size_t num_read = flow_file_content_stream->read(buffer);
+    asio::async_write(*socket, asio::buffer(data_chunk, num_read), [&](const std::error_code err, std::size_t bytes_written) {
+      handleWrite(err, bytes_written, flow_file_content_stream, delimiter, socket);
+    });
+  }
 }
 
 template<class SocketType>
@@ -441,7 +456,7 @@ nonstd::expected<std::shared_ptr<SslSocket>, std::error_code> ConnectionHandler<
 
 template<class SocketType>
 nonstd::expected<void, std::error_code> ConnectionHandler<SocketType>::sendDataToSocket(const std::shared_ptr<SocketType>& socket,
-                                                                                        const std::vector<std::byte>& data,
+                                                                                        const std::shared_ptr<io::InputStream>& flow_file_content_stream,
                                                                                         const std::vector<std::byte>& delimiter) {
   if (!socket || !socket->lowest_layer().is_open())
     return nonstd::make_unexpected(asio::error::not_socket);
@@ -452,8 +467,14 @@ nonstd::expected<void, std::error_code> ConnectionHandler<SocketType>::sendDataT
   });
   io_context_.restart();
 
-  asio::async_write(*socket, asio::buffer(data), [&](const std::error_code err, std::size_t bytes_written) {
-    handleWrite(err, bytes_written, delimiter, socket);
+  std::vector<std::byte> data_chunk;
+  data_chunk.resize(chunk_size);
+
+  gsl::span<std::byte> buffer{data_chunk};
+  size_t num_read = flow_file_content_stream->read(buffer);
+  logger_->log_trace("read %zu bytes from flowfile", num_read);
+  asio::async_write(*socket, asio::buffer(data_chunk, num_read), [&](const std::error_code err, std::size_t bytes_written) {
+    handleWrite(err, bytes_written, flow_file_content_stream, delimiter, socket);
   });
   deadline_.async_wait([&](std::error_code error_code) -> void {
     checkDeadline(error_code, socket.get());
@@ -497,8 +518,8 @@ void PutTCP::onTrigger(core::ProcessContext* context, core::ProcessSession* cons
     return;
   }
 
-  auto data = session->readBuffer(flow_file);
-  if (data.status < 0) {
+  auto flow_file_content_stream = session->getFlowFileContentStream(flow_file);
+  if (!flow_file_content_stream) {
     session->transfer(flow_file, Failure);
     return;
   }
@@ -518,7 +539,7 @@ void PutTCP::onTrigger(core::ProcessContext* context, core::ProcessSession* cons
 
   gsl_Expects(handler);
 
-  processFlowFile(handler, data.buffer, *session, flow_file);
+  processFlowFile(handler, flow_file_content_stream, *session, flow_file);
 }
 
 void PutTCP::removeExpiredConnections() {
@@ -531,15 +552,15 @@ void PutTCP::removeExpiredConnections() {
 }
 
 void PutTCP::processFlowFile(std::shared_ptr<IConnectionHandler>& connection_handler,
-                             const std::vector<std::byte>& data,
+                             const std::shared_ptr<io::InputStream>& flow_file_content_stream,
                              core::ProcessSession& session,
                              const std::shared_ptr<core::FlowFile>& flow_file) {
-  auto result = connection_handler->sendData(data, delimiter_);
+  auto result = connection_handler->sendData(flow_file_content_stream, delimiter_);
 
   if (!result && connection_handler->hasBeenUsed()) {
     logger_->log_warn("%s with reused connection, retrying...", result.error().message());
     connection_handler->reset();
-    result = connection_handler->sendData(data, delimiter_);
+    result = connection_handler->sendData(flow_file_content_stream, delimiter_);
   }
 
   const auto transfer_to_success = [&session, &flow_file]() -> void {

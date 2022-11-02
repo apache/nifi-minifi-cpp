@@ -24,6 +24,7 @@
 #include <unordered_map>
 #include <utility>
 
+#include "io/InputStream.h"
 #include "Processor.h"
 #include "utils/Export.h"
 #include "controllers/SSLContextService.h"
@@ -39,8 +40,8 @@ class ConnectionId {
 
   auto operator<=>(const ConnectionId&) const = default;
 
-  std::string_view getHostname() const { return hostname_; }
-  std::string_view getPort() const { return port_; }
+  [[nodiscard]] std::string_view getHostname() const { return hostname_; }
+  [[nodiscard]] std::string_view getPort() const { return port_; }
 
  private:
   std::string hostname_;
@@ -66,7 +67,7 @@ class IConnectionHandler {
 
   [[nodiscard]] virtual bool hasBeenUsed() const = 0;
   [[nodiscard]] virtual bool hasBeenUsedIn(std::chrono::milliseconds dur) const = 0;
-  virtual nonstd::expected<void, std::error_code> sendData(const std::vector<std::byte>& data, const std::vector<std::byte>& delimiter) = 0;
+  virtual nonstd::expected<void, std::error_code> sendData(const std::shared_ptr<io::InputStream>& flow_file_content_stream, const std::vector<std::byte>& delimiter) = 0;
   virtual void reset() = 0;
 };
 
@@ -112,7 +113,7 @@ class PutTCP final : public core::Processor {
  private:
   void removeExpiredConnections();
   void processFlowFile(std::shared_ptr<IConnectionHandler>& connection_handler,
-                       const std::vector<std::byte>& data,
+                       const std::shared_ptr<io::InputStream>& flow_file_content_stream,
                        core::ProcessSession& session,
                        const std::shared_ptr<core::FlowFile>& flow_file);
 

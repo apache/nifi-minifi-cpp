@@ -415,4 +415,18 @@ TEST_CASE("PutTCP test idle connection expiration", "[PutTCP]") {
   CHECK(2 == test_fixture.getNumberOfActiveSessions());
 }
 
+TEST_CASE("PutTCP test long flow file chunked sending", "[PutTCP]") {
+  PutTCPTestFixture test_fixture;
+  SECTION("No SSL") {
+    test_fixture.startTCPServer();
+  }
+  SECTION("SSL") {
+    test_fixture.addSSLContextToPutTCP("ca_A.crt", "alice_by_A.pem");
+    test_fixture.startSSLServer();
+  }
+  std::string long_message(3500, 'a');
+  trigger_expect_success(test_fixture, long_message);
+  receive_success(test_fixture, long_message);
+}
+
 }  // namespace org::apache::nifi::minifi::processors
