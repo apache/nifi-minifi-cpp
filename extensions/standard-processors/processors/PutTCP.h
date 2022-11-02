@@ -49,7 +49,8 @@ class ConnectionId {
 }  // namespace org::apache::nifi::minifi::processors::detail
 
 namespace std {
-template <> struct hash<org::apache::nifi::minifi::processors::detail::ConnectionId> {
+template <>
+struct hash<org::apache::nifi::minifi::processors::detail::ConnectionId> {
   size_t operator()(const org::apache::nifi::minifi::processors::detail::ConnectionId& connection_id) const {
     return org::apache::nifi::minifi::utils::hash_combine(
         std::hash<std::string_view>{}(connection_id.getHostname()),

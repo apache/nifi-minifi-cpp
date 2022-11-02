@@ -133,8 +133,15 @@ void PutTCP::onSchedule(core::ProcessContext* const context, core::ProcessSessio
     timeout_ = 15s;
 
   std::string context_name;
-  if (context->getProperty(SSLContextService.getName(), context_name) && !IsNullOrEmpty(context_name))
-    ssl_context_service_ = std::dynamic_pointer_cast<minifi::controllers::SSLContextService>(context->getControllerService(context_name));
+  ssl_context_service_.reset();
+  if (context->getProperty(SSLContextService.getName(), context_name) && !IsNullOrEmpty(context_name)) {
+    if (auto controller_service = context->getControllerService(context_name)) {
+      ssl_context_service_ = std::dynamic_pointer_cast<minifi::controllers::SSLContextService>(context->getControllerService(context_name));
+      logger_->log_error("%s is not a SSL Context Service", context_name);
+    } else {
+      logger_->log_error("Invalid controller service: %s", context_name);
+    }
+  }
 
   delimiter_ = utils::span_to<std::vector>(gsl::make_span(context->getProperty(OutgoingMessageDelimiter).value_or(std::string{})).as_span<const std::byte>());
 
@@ -186,7 +193,7 @@ class ConnectionHandler : public IConnectionHandler {
     deadline_.expires_at(asio::steady_timer::time_point::max());
   }
 
-  void checkDeadline(std::error_code error_code, const std::shared_ptr<SocketType>& socket);
+  void checkDeadline(std::error_code error_code, SocketType* socket);
   void startConnect(tcp::resolver::results_type::iterator endpoint_iter, const std::shared_ptr<SocketType>& socket);
 
   void handleConnect(std::error_code error,
@@ -243,7 +250,7 @@ nonstd::expected<std::shared_ptr<SocketType>, std::error_code> ConnectionHandler
 }
 
 template<class SocketType>
-void ConnectionHandler<SocketType>::checkDeadline(std::error_code error_code, const std::shared_ptr<SocketType>& socket) {
+void ConnectionHandler<SocketType>::checkDeadline(std::error_code error_code, SocketType* socket) {
   if (error_code != asio::error::operation_aborted) {
     deadline_.expires_at(asio::steady_timer::time_point::max());
     last_error_ = asio::error::timed_out;
@@ -263,7 +270,7 @@ void ConnectionHandler<SocketType>::startConnect(tcp::resolver::results_type::it
   last_error_.clear();
   deadline_.expires_after(timeout_);
   deadline_.async_wait([&](std::error_code error_code) -> void {
-    checkDeadline(error_code, socket);
+    checkDeadline(error_code, socket.get());
   });
   socket->lowest_layer().async_connect(endpoint_iter->endpoint(),
       [&socket, endpoint_iter, this](std::error_code err) {
@@ -397,7 +404,7 @@ nonstd::expected<std::shared_ptr<TcpSocket>, std::error_code> ConnectionHandler<
   startConnect(resolved_query.begin(), socket);
   deadline_.expires_after(timeout_);
   deadline_.async_wait([&](std::error_code error_code) -> void {
-    checkDeadline(error_code, socket);
+    checkDeadline(error_code, socket.get());
   });
   io_context_.run();
   if (last_error_)
@@ -424,7 +431,7 @@ nonstd::expected<std::shared_ptr<SslSocket>, std::error_code> ConnectionHandler<
   auto socket = std::make_shared<SslSocket>(io_context_, ssl_context);
   startConnect(resolved_query.begin(), socket);
   deadline_.async_wait([&](std::error_code error_code) -> void {
-    checkDeadline(error_code, socket);
+    checkDeadline(error_code, socket.get());
   });
   io_context_.run();
   if (last_error_)
@@ -441,7 +448,7 @@ nonstd::expected<void, std::error_code> ConnectionHandler<SocketType>::sendDataT
 
   deadline_.expires_after(timeout_);
   deadline_.async_wait([&](std::error_code error_code) -> void {
-    checkDeadline(error_code, socket);
+    checkDeadline(error_code, socket.get());
   });
   io_context_.restart();
 
@@ -449,7 +456,7 @@ nonstd::expected<void, std::error_code> ConnectionHandler<SocketType>::sendDataT
     handleWrite(err, bytes_written, delimiter, socket);
   });
   deadline_.async_wait([&](std::error_code error_code) -> void {
-    checkDeadline(error_code, socket);
+    checkDeadline(error_code, socket.get());
   });
   io_context_.run();
   if (last_error_)

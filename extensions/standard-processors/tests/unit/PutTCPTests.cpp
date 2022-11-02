@@ -253,52 +253,6 @@ void receive_success(PutTCPTestFixture& test_fixture, const std::string_view exp
   }
 }
 
-void test_invalid_host(PutTCPTestFixture& test_fixture) {
-  test_fixture.setHostname("invalid_hostname");
-  trigger_expect_failure(test_fixture, "message for invalid host");
-
-  CHECK((LogTestController::getInstance().contains("Host not found", 0ms)
-      || LogTestController::getInstance().contains("No such host is known", 0ms)));
-}
-
-void test_invalid_server(PutTCPTestFixture& test_fixture) {
-  test_fixture.setHostname("localhost");
-  trigger_expect_failure(test_fixture, "message for invalid server");
-
-  CHECK((LogTestController::getInstance().contains("Connection refused", 0ms)
-      || LogTestController::getInstance().contains("No connection could be made because the target machine actively refused it", 0ms)
-      || LogTestController::getInstance().contains("A connection attempt failed because the connected party did not properly respond", 0ms)));
-}
-
-void test_non_routable_server(PutTCPTestFixture& test_fixture) {
-  test_fixture.setHostname("192.168.255.255");
-  trigger_expect_failure(test_fixture, "message for non-routable server");
-
-  CHECK((LogTestController::getInstance().contains("Connection timed out", 0ms)
-      || LogTestController::getInstance().contains("Operation timed out", 0ms)
-      || LogTestController::getInstance().contains("host has failed to respond", 0ms)));
-}
-
-void test_cert_verify_failure(PutTCPTestFixture& test_fixture) {
-  test_fixture.setHostname("localhost");
-  test_fixture.startSSLServer();
-
-  trigger_expect_failure(test_fixture, "message for invalid-cert server");
-
-  CHECK((LogTestController::getInstance().contains("certificate verify failed", 0ms)
-      || LogTestController::getInstance().contains("asio.ssl error", 0ms)));
-}
-
-void test_handshake_failure(PutTCPTestFixture& test_fixture) {
-  test_fixture.setHostname("localhost");
-  test_fixture.startSSLServer();
-
-  trigger_expect_failure(test_fixture, "message for invalid-cert server");
-
-  CHECK((LogTestController::getInstance().contains("sslv3 alert handshake failure", 0ms)
-      || LogTestController::getInstance().contains("asio.ssl error", 0ms)));
-}
-
 constexpr std::string_view first_message = "message 1";
 constexpr std::string_view second_message = "message 22";
 constexpr std::string_view third_message = "message 333";
@@ -306,7 +260,16 @@ constexpr std::string_view fourth_message = "message 4444";
 constexpr std::string_view fifth_message = "message 55555";
 constexpr std::string_view sixth_message = "message 666666";
 
-void test_dropped_in_use_socket(PutTCPTestFixture& test_fixture) {
+TEST_CASE("Server closes in-use socket", "[PutTCP]") {
+  PutTCPTestFixture test_fixture;
+  SECTION("No SSL") {
+    test_fixture.startTCPServer();
+  }
+  SECTION("SSL") {
+    test_fixture.addSSLContextToPutTCP("ca_A.crt", "alice_by_A.pem");
+    test_fixture.startSSLServer();
+  }
+
   trigger_expect_success(test_fixture, first_message);
   trigger_expect_success(test_fixture, second_message);
   trigger_expect_success(test_fixture, third_message);
@@ -329,7 +292,16 @@ void test_dropped_in_use_socket(PutTCPTestFixture& test_fixture) {
   CHECK(2 == test_fixture.getNumberOfActiveSessions());
 }
 
-void test_connection_per_flow_file(PutTCPTestFixture& test_fixture) {
+TEST_CASE("Connection per flow file", "[PutTCP]") {
+  PutTCPTestFixture test_fixture;
+  SECTION("No SSL") {
+    test_fixture.startTCPServer();
+  }
+  SECTION("SSL") {
+    test_fixture.addSSLContextToPutTCP("ca_A.crt", "alice_by_A.pem");
+    test_fixture.startSSLServer();
+  }
+
   test_fixture.enableConnectionPerFlowFile();
 
   trigger_expect_success(test_fixture, first_message);
@@ -351,7 +323,87 @@ void test_connection_per_flow_file(PutTCPTestFixture& test_fixture) {
   CHECK(6 == test_fixture.getNumberOfActiveSessions());
 }
 
-void test_idle_expiration(PutTCPTestFixture& test_fixture) {
+TEST_CASE("PutTCP test invalid host", "[PutTCP]") {
+  PutTCPTestFixture test_fixture;
+  SECTION("No SSL") {
+  }
+  SECTION("SSL") {
+    test_fixture.addSSLContextToPutTCP("ca_A.crt", "alice_by_A.pem");
+  }
+
+  test_fixture.setHostname("invalid_hostname");
+  trigger_expect_failure(test_fixture, "message for invalid host");
+
+  CHECK((LogTestController::getInstance().contains("Host not found", 0ms)
+      || LogTestController::getInstance().contains("No such host is known", 0ms)));
+}
+
+TEST_CASE("PutTCP test invalid server", "[PutTCP]") {
+  PutTCPTestFixture test_fixture;
+  SECTION("No SSL") {
+  }
+  SECTION("SSL") {
+    test_fixture.addSSLContextToPutTCP("ca_A.crt", "alice_by_A.pem");
+  }
+  test_fixture.setHostname("localhost");
+  trigger_expect_failure(test_fixture, "message for invalid server");
+
+  CHECK((LogTestController::getInstance().contains("Connection refused", 0ms)
+      || LogTestController::getInstance().contains("No connection could be made because the target machine actively refused it", 0ms)
+      || LogTestController::getInstance().contains("A connection attempt failed because the connected party did not properly respond", 0ms)));
+}
+
+TEST_CASE("PutTCP test non-routable server", "[PutTCP]") {
+  PutTCPTestFixture test_fixture;
+  SECTION("No SSL") {
+  }
+  SECTION("SSL") {
+    test_fixture.addSSLContextToPutTCP("ca_A.crt", "alice_by_A.pem");
+  }
+  test_fixture.setHostname("192.168.255.255");
+  trigger_expect_failure(test_fixture, "message for non-routable server");
+
+  CHECK((LogTestController::getInstance().contains("Connection timed out", 0ms)
+    || LogTestController::getInstance().contains("Operation timed out", 0ms)
+    || LogTestController::getInstance().contains("host has failed to respond", 0ms)));
+}
+
+TEST_CASE("PutTCP test invalid server cert", "[PutTCP]") {
+  PutTCPTestFixture test_fixture;
+
+  test_fixture.addSSLContextToPutTCP("ca_B.crt", "alice_by_B.pem");
+  test_fixture.setHostname("localhost");
+  test_fixture.startSSLServer();
+
+  trigger_expect_failure(test_fixture, "message for invalid-cert server");
+
+  CHECK((LogTestController::getInstance().contains("certificate verify failed", 0ms)
+      || LogTestController::getInstance().contains("asio.ssl error", 0ms)));
+}
+
+TEST_CASE("PutTCP test missing client cert", "[PutTCP]") {
+  PutTCPTestFixture test_fixture;
+
+  test_fixture.addSSLContextToPutTCP("ca_A.crt", std::nullopt);
+  test_fixture.setHostname("localhost");
+  test_fixture.startSSLServer();
+
+  trigger_expect_failure(test_fixture, "message for invalid-cert server");
+
+  CHECK((LogTestController::getInstance().contains("sslv3 alert handshake failure", 0ms)
+      || LogTestController::getInstance().contains("asio.ssl error", 0ms)));}
+
+TEST_CASE("PutTCP test idle connection expiration", "[PutTCP]") {
+  PutTCPTestFixture test_fixture;
+
+  SECTION("No SSL") {
+    test_fixture.startTCPServer();
+  }
+  SECTION("SSL") {
+    test_fixture.startSSLServer();
+    test_fixture.addSSLContextToPutTCP("ca_A.crt", "alice_by_A.pem");
+  }
+
   test_fixture.setIdleConnectionExpiration("100ms");
   trigger_expect_success(test_fixture, first_message);
   std::this_thread::sleep_for(110ms);
@@ -361,95 +413,6 @@ void test_idle_expiration(PutTCPTestFixture& test_fixture) {
   receive_success(test_fixture, second_message);
 
   CHECK(2 == test_fixture.getNumberOfActiveSessions());
-}
-
-TEST_CASE("Server closes in-use socket", "[PutTCP]") {
-  PutTCPTestFixture test_fixture;
-  SECTION("No SSL") {
-    test_fixture.startTCPServer();
-    test_dropped_in_use_socket(test_fixture);
-  }
-  SECTION("SSL") {
-    test_fixture.addSSLContextToPutTCP("ca_A.crt", "alice_by_A.pem");
-    test_fixture.startSSLServer();
-
-    test_dropped_in_use_socket(test_fixture);
-  }
-}
-
-TEST_CASE("Connection per flow file", "[PutTCP]") {
-  PutTCPTestFixture test_fixture;
-  SECTION("No SSL") {
-    test_fixture.startTCPServer();
-    test_connection_per_flow_file(test_fixture);
-  }
-  SECTION("SSL") {
-    test_fixture.addSSLContextToPutTCP("ca_A.crt", "alice_by_A.pem");
-    test_fixture.startSSLServer();
-
-    test_connection_per_flow_file(test_fixture);
-  }
-}
-
-TEST_CASE("PutTCP test invalid host", "[PutTCP]") {
-  PutTCPTestFixture test_fixture;
-  SECTION("No SSL") {
-    test_invalid_host(test_fixture);
-  }
-  SECTION("SSL") {
-    test_fixture.addSSLContextToPutTCP("ca_A.crt", "alice_by_A.pem");
-    test_invalid_host(test_fixture);
-  }
-}
-
-TEST_CASE("PutTCP test invalid server", "[PutTCP]") {
-  PutTCPTestFixture test_fixture;
-  SECTION("No SSL") {
-    test_invalid_server(test_fixture);
-  }
-  SECTION("SSL") {
-    test_fixture.addSSLContextToPutTCP("ca_A.crt", "alice_by_A.pem");
-    test_invalid_server(test_fixture);
-  }
-}
-
-TEST_CASE("PutTCP test non-routable server", "[PutTCP]") {
-  PutTCPTestFixture test_fixture;
-  SECTION("No SSL") {
-    test_non_routable_server(test_fixture);
-  }
-  SECTION("SSL") {
-    test_fixture.addSSLContextToPutTCP("ca_A.crt", "alice_by_A.pem");
-    test_non_routable_server(test_fixture);
-  }
-}
-
-TEST_CASE("PutTCP test invalid server cert", "[PutTCP]") {
-  PutTCPTestFixture test_fixture;
-
-  test_fixture.addSSLContextToPutTCP("ca_B.crt", "alice_by_B.pem");
-  test_cert_verify_failure(test_fixture);
-}
-
-TEST_CASE("PutTCP test missing client cert", "[PutTCP]") {
-  PutTCPTestFixture test_fixture;
-
-  test_fixture.addSSLContextToPutTCP("ca_A.crt", std::nullopt);
-  test_handshake_failure(test_fixture);
-}
-
-TEST_CASE("PutTCP test idle connection expiration", "[PutTCP]") {
-  PutTCPTestFixture test_fixture;
-
-  SECTION("No SSL") {
-    test_fixture.startTCPServer();
-    test_idle_expiration(test_fixture);
-  }
-  SECTION("SSL") {
-    test_fixture.startSSLServer();
-    test_fixture.addSSLContextToPutTCP("ca_A.crt", "alice_by_A.pem");
-    test_idle_expiration(test_fixture);
-  }
 }
 
 }  // namespace org::apache::nifi::minifi::processors
