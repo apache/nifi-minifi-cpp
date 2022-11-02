@@ -41,7 +41,6 @@ from .MinifiAsPodInKubernetesCluster import MinifiAsPodInKubernetesCluster
 from .TcpClientContainer import TcpClientContainer
 from .PrometheusContainer import PrometheusContainer
 from .MinifiC2ServerContainer import MinifiC2ServerContainer
-from .MinifiC2ServerSslContainer import MinifiC2ServerSslContainer
 from .MinifiWithHttpsC2Config import MinifiWithHttpsC2Config
 
 
@@ -141,7 +140,7 @@ class SingleNodeDockerCluster(Cluster):
         elif engine == "minifi-c2-server":
             return self.containers.setdefault(name, MinifiC2ServerContainer(name, self.vols, self.network, self.image_store, command))
         elif engine == "minifi-c2-server-ssl":
-            return self.containers.setdefault(name, MinifiC2ServerSslContainer(name, self.vols, self.network, self.image_store, command))
+            return self.containers.setdefault(name, MinifiC2ServerContainer(name, self.vols, self.network, self.image_store, command, ssl=True))
         else:
             raise Exception('invalid flow engine: \'%s\'' % engine)
 

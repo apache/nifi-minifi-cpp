@@ -18,8 +18,9 @@ from .Container import Container
 
 
 class MinifiC2ServerContainer(Container):
-    def __init__(self, name, vols, network, image_store, command=None):
-        super().__init__(name, 'minifi-c2-server', vols, network, image_store, command)
+    def __init__(self, name, vols, network, image_store, command=None, ssl=False):
+        engine = "minifi-c2-server-ssl" if ssl else "minifi-c2-server"
+        super().__init__(name, engine, vols, network, image_store, command)
 
     def get_startup_finished_log_entry(self):
         return "Server Started"
