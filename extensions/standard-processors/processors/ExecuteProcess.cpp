@@ -185,7 +185,6 @@ void ExecuteProcess::readOutput(core::ProcessSession& session) {
   size_t read_to_buffer = 0;
   std::shared_ptr<core::FlowFile> flow_file;
   auto num_read = read(pipefd_[0], buf_ptr, (sizeof(buffer) - read_to_buffer));
-  bool is_output_empty = num_read == 0;
   while (num_read > 0) {
     if (num_read == static_cast<ssize_t>((sizeof(buffer) - read_to_buffer))) {
       // we reach the max buffer size
@@ -211,7 +210,7 @@ void ExecuteProcess::readOutput(core::ProcessSession& session) {
       return;
     }
   }
-  if (!is_output_empty) {
+  if (flow_file) {
     session.transfer(flow_file, Success);
   }
 }
