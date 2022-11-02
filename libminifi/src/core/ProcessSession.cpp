@@ -471,10 +471,10 @@ void ProcessSession::importFrom(io::InputStream &stream, const std::shared_ptr<c
     auto duration = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::steady_clock::now() - start_time);
     provenance_report_->modifyContent(flow, details.str(), duration);
   } catch (const std::exception& exception) {
-    logger_->log_debug("Caught Exception during process session write, type: %s, what: %s", typeid(exception).name(), exception.what());
+    logger_->log_debug("Caught Exception during ProcessSession::importFrom, type: %s, what: %s", typeid(exception).name(), exception.what());
     throw;
   } catch (...) {
-    logger_->log_debug("Caught Exception during process session write, type: %s", getCurrentExceptionTypeName());
+    logger_->log_debug("Caught Exception during ProcessSession::importFrom, type: %s", getCurrentExceptionTypeName());
     throw;
   }
 }
@@ -543,10 +543,10 @@ void ProcessSession::import(std::string source, const std::shared_ptr<FlowFile> 
       throw Exception(FILE_OPERATION_EXCEPTION, "File Import Error");
     }
   } catch (const std::exception& exception) {
-    logger_->log_debug("Caught Exception during process session write, type: %s, what: %s", exception.what());
+    logger_->log_debug("Caught Exception during ProcessSession::import, type: %s, what: %s", exception.what());
     throw;
   } catch (...) {
-    logger_->log_debug("Caught Exception during process session write, type: %s", getCurrentExceptionTypeName());
+    logger_->log_debug("Caught Exception during ProcessSession::import, type: %s", getCurrentExceptionTypeName());
     throw;
   }
 }
@@ -643,10 +643,10 @@ void ProcessSession::import(const std::string& source, std::vector<std::shared_p
       }
     }
   } catch (const std::exception& exception) {
-    logger_->log_debug("Caught Exception during process session write, type: %s, what: %s", typeid(exception).name(), exception.what());
+    logger_->log_debug("Caught Exception during ProcessSession::import, type: %s, what: %s", typeid(exception).name(), exception.what());
     throw;
   } catch (...) {
-    logger_->log_debug("Caught Exception during process session write, type: %s", getCurrentExceptionTypeName());
+    logger_->log_debug("Caught Exception during ProcessSession::import, type: %s", getCurrentExceptionTypeName());
     throw;
   }
 }
