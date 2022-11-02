@@ -20,6 +20,7 @@
 #include <new>
 #include <random>
 #include <string>
+
 #include "SingleProcessorTestController.h"
 #include "Catch.h"
 #include "PutTCP.h"
@@ -119,69 +120,58 @@ class PutTCPTestFixture {
     LogTestController::getInstance().setInfo<core::ProcessSession>();
     LogTestController::getInstance().setTrace<utils::net::Server>();
     put_tcp_->setProperty(PutTCP::Hostname, "${literal('localhost')}");
-    put_tcp_->setProperty(PutTCP::Port, utils::StringUtils::join_pack("${literal('", std::to_string(port_), "')}"));
     put_tcp_->setProperty(PutTCP::Timeout, "200 ms");
     put_tcp_->setProperty(PutTCP::OutgoingMessageDelimiter, "\n");
   }
 
   ~PutTCPTestFixture() {
-    stopServer();
+    stopServers();
   }
 
-  void startTCPServer() {
-    gsl_Expects(!listener_ && !server_thread_.joinable());
-    listener_ = std::make_unique<SessionAwareTcpServer>(std::nullopt, port_, core::logging::LoggerFactory<utils::net::Server>::getLogger());
-    server_thread_ = std::thread([this]() { listener_->run(); });
+  void stopServers() {
+    for (auto& [port, server] : listeners_) {
+      auto& listener = server.listener_;
+      auto& server_thread = server.server_thread_;
+      if (listener)
+        listener->stop();
+      if (server_thread.joinable())
+        server_thread.join();
+      listener.reset();
+    }
   }
 
-  void startSSLServer() {
-    gsl_Expects(!listener_ && !server_thread_.joinable());
-    listener_ = std::make_unique<SessionAwareSslServer>(std::nullopt,
-        port_,
-        core::logging::LoggerFactory<utils::net::Server>::getLogger(),
-        createSslDataForServer(),
-        utils::net::SslServer::ClientAuthOption::REQUIRED);
-    server_thread_ = std::thread([this]() { listener_->run(); });
-  }
-
-  void stopServer() {
-    if (listener_)
-      listener_->stop();
-    if (server_thread_.joinable())
-      server_thread_.join();
-    listener_.reset();
-  }
-
-  size_t getNumberOfActiveSessions() {
-    if (auto session_aware_listener = dynamic_cast<ISessionAwareServer*>(listener_.get())) {
+  size_t getNumberOfActiveSessions(std::optional<uint16_t> port = std::nullopt) {
+    if (auto session_aware_listener = dynamic_cast<ISessionAwareServer*>(getListener(port))) {
       return session_aware_listener->getNumberOfSessions() - 1;  // There is always one inactive session waiting for a new connection
     }
     return -1;
   }
 
   void closeActiveConnections() {
-    if (auto session_aware_listener = dynamic_cast<ISessionAwareServer*>(listener_.get())) {
-      session_aware_listener->closeSessions();
+    for (auto& [port, server] : listeners_) {
+      if (auto session_aware_listener = dynamic_cast<ISessionAwareServer*>(server.listener_.get())) {
+        session_aware_listener->closeSessions();
+      }
     }
     std::this_thread::sleep_for(200ms);
   }
 
-  auto trigger(const std::string_view& message) {
-    return controller_.trigger(message);
+  auto trigger(std::string_view message, std::unordered_map<std::string, std::string> input_flow_file_attributes = {}) {
+    return controller_.trigger(message, std::move(input_flow_file_attributes));
   }
 
   auto getContent(const auto& flow_file) {
     return controller_.plan->getContent(flow_file);
   }
 
-  std::optional<utils::net::Message> tryDequeueReceivedMessage() {
+  std::optional<utils::net::Message> tryDequeueReceivedMessage(std::optional<uint16_t> port = std::nullopt) {
     auto timeout = 200ms;
     auto interval = 10ms;
 
     auto start_time = std::chrono::system_clock::now();
     utils::net::Message result;
     while (start_time + timeout > std::chrono::system_clock::now()) {
-      if (listener_->tryDequeue(result))
+      if (getListener(port)->tryDequeue(result))
         return result;
       std::this_thread::sleep_for(interval);
     }
@@ -213,20 +203,72 @@ class PutTCPTestFixture {
     REQUIRE(controller_.plan->setProperty(put_tcp_, PutTCP::IdleConnectionExpiration.getName(), idle_connection_expiration_str));
   }
 
+  uint16_t addTCPServer() {
+    uint16_t port = std::uniform_int_distribution<uint16_t>{10000, 32768 - 1}(random_engine_);
+    listeners_[port].startTCPServer(port);
+    return port;
+  }
+
+  uint16_t addSSLServer() {
+    uint16_t port = std::uniform_int_distribution<uint16_t>{10000, 32768 - 1}(random_engine_);
+    listeners_[port].startSSLServer(port);
+    return port;
+  }
+
+  void setPutTCPPort(uint16_t port) {
+    put_tcp_->setProperty(PutTCP::Port, utils::StringUtils::join_pack("${literal('", std::to_string(port), "')}"));
+  }
+
+  void setPutTCPPort(std::string port_str) {
+    put_tcp_->setProperty(PutTCP::Port, std::move(port_str));
+  }
+
+  uint16_t getSinglePort() const {
+    gsl_Expects(listeners_.size() == 1);
+    return listeners_.begin()->first;
+  }
+
  private:
+  utils::net::Server* getListener(std::optional<uint16_t> port) {
+    if (!port)
+      port = getSinglePort();
+    return listeners_.at(*port).listener_.get();
+  }
+
   const std::shared_ptr<PutTCP> put_tcp_ = std::make_shared<PutTCP>("PutTCP");
   test::SingleProcessorTestController controller_{put_tcp_};
 
   std::mt19937 random_engine_{std::random_device{}()};  // NOLINT: "Missing space before {  [whitespace/braces] [5]"
   // most systems use ports 32768 - 65535 as ephemeral ports, so avoid binding to those
-  const uint16_t port_ = std::uniform_int_distribution<uint16_t>{10000, 32768 - 1}(random_engine_);
 
-  std::unique_ptr<utils::net::Server> listener_;
-  std::thread server_thread_;
+  class Server {
+   public:
+    Server() = default;
+
+    void startTCPServer(uint16_t port) {
+      gsl_Expects(!listener_ && !server_thread_.joinable());
+      listener_ = std::make_unique<SessionAwareTcpServer>(std::nullopt, port, core::logging::LoggerFactory<utils::net::Server>::getLogger());
+      server_thread_ = std::thread([this]() { listener_->run(); });
+    }
+
+    void startSSLServer(uint16_t port) {
+      gsl_Expects(!listener_ && !server_thread_.joinable());
+      listener_ = std::make_unique<SessionAwareSslServer>(std::nullopt,
+                                                          port,
+                                                          core::logging::LoggerFactory<utils::net::Server>::getLogger(),
+                                                          createSslDataForServer(),
+                                                          utils::net::SslServer::ClientAuthOption::REQUIRED);
+      server_thread_ = std::thread([this]() { listener_->run(); });
+    }
+
+    std::unique_ptr<utils::net::Server> listener_;
+    std::thread server_thread_;
+  };
+  std::unordered_map<uint16_t, Server> listeners_;
 };
 
-void trigger_expect_success(PutTCPTestFixture& test_fixture, const std::string_view message) {
-  const auto result = test_fixture.trigger(message);
+void trigger_expect_success(PutTCPTestFixture& test_fixture, const std::string_view message, std::unordered_map<std::string, std::string> input_flow_file_attributes = {}) {
+  const auto result = test_fixture.trigger(message, std::move(input_flow_file_attributes));
   const auto& success_flow_files = result.at(PutTCP::Success);
   CHECK(success_flow_files.size() == 1);
   CHECK(result.at(PutTCP::Failure).empty());
@@ -243,8 +285,8 @@ void trigger_expect_failure(PutTCPTestFixture& test_fixture, const std::string_v
     CHECK(test_fixture.getContent(failure_flow_files[0]) == message);
 }
 
-void receive_success(PutTCPTestFixture& test_fixture, const std::string_view expected_message)  {
-  auto received_message = test_fixture.tryDequeueReceivedMessage();
+void receive_success(PutTCPTestFixture& test_fixture, const std::string_view expected_message, std::optional<uint16_t> port = std::nullopt) {
+  auto received_message = test_fixture.tryDequeueReceivedMessage(port);
   CHECK(received_message);
   if (received_message) {
     CHECK(received_message->message_data == expected_message);
@@ -263,11 +305,13 @@ constexpr std::string_view sixth_message = "message 666666";
 TEST_CASE("Server closes in-use socket", "[PutTCP]") {
   PutTCPTestFixture test_fixture;
   SECTION("No SSL") {
-    test_fixture.startTCPServer();
+    auto port = test_fixture.addTCPServer();
+    test_fixture.setPutTCPPort(port);
   }
   SECTION("SSL") {
     test_fixture.addSSLContextToPutTCP("ca_A.crt", "alice_by_A.pem");
-    test_fixture.startSSLServer();
+    auto port = test_fixture.addSSLServer();
+    test_fixture.setPutTCPPort(port);
   }
 
   trigger_expect_success(test_fixture, first_message);
@@ -295,11 +339,13 @@ TEST_CASE("Server closes in-use socket", "[PutTCP]") {
 TEST_CASE("Connection per flow file", "[PutTCP]") {
   PutTCPTestFixture test_fixture;
   SECTION("No SSL") {
-    test_fixture.startTCPServer();
+    auto port = test_fixture.addTCPServer();
+    test_fixture.setPutTCPPort(port);
   }
   SECTION("SSL") {
     test_fixture.addSSLContextToPutTCP("ca_A.crt", "alice_by_A.pem");
-    test_fixture.startSSLServer();
+    auto port = test_fixture.addSSLServer();
+    test_fixture.setPutTCPPort(port);
   }
 
   test_fixture.enableConnectionPerFlowFile();
@@ -331,6 +377,7 @@ TEST_CASE("PutTCP test invalid host", "[PutTCP]") {
     test_fixture.addSSLContextToPutTCP("ca_A.crt", "alice_by_A.pem");
   }
 
+  test_fixture.setPutTCPPort(1235);
   test_fixture.setHostname("invalid_hostname");
   trigger_expect_failure(test_fixture, "message for invalid host");
 
@@ -345,6 +392,7 @@ TEST_CASE("PutTCP test invalid server", "[PutTCP]") {
   SECTION("SSL") {
     test_fixture.addSSLContextToPutTCP("ca_A.crt", "alice_by_A.pem");
   }
+  test_fixture.setPutTCPPort(1235);
   test_fixture.setHostname("localhost");
   trigger_expect_failure(test_fixture, "message for invalid server");
 
@@ -361,6 +409,7 @@ TEST_CASE("PutTCP test non-routable server", "[PutTCP]") {
     test_fixture.addSSLContextToPutTCP("ca_A.crt", "alice_by_A.pem");
   }
   test_fixture.setHostname("192.168.255.255");
+  test_fixture.setPutTCPPort(1235);
   trigger_expect_failure(test_fixture, "message for non-routable server");
 
   CHECK((LogTestController::getInstance().contains("Connection timed out", 0ms)
@@ -373,7 +422,8 @@ TEST_CASE("PutTCP test invalid server cert", "[PutTCP]") {
 
   test_fixture.addSSLContextToPutTCP("ca_B.crt", "alice_by_B.pem");
   test_fixture.setHostname("localhost");
-  test_fixture.startSSLServer();
+  auto port = test_fixture.addSSLServer();
+  test_fixture.setPutTCPPort(port);
 
   trigger_expect_failure(test_fixture, "message for invalid-cert server");
 
@@ -386,7 +436,8 @@ TEST_CASE("PutTCP test missing client cert", "[PutTCP]") {
 
   test_fixture.addSSLContextToPutTCP("ca_A.crt", std::nullopt);
   test_fixture.setHostname("localhost");
-  test_fixture.startSSLServer();
+  auto port = test_fixture.addSSLServer();
+  test_fixture.setPutTCPPort(port);
 
   trigger_expect_failure(test_fixture, "message for invalid-cert server");
 
@@ -397,10 +448,12 @@ TEST_CASE("PutTCP test idle connection expiration", "[PutTCP]") {
   PutTCPTestFixture test_fixture;
 
   SECTION("No SSL") {
-    test_fixture.startTCPServer();
+    auto port = test_fixture.addTCPServer();
+    test_fixture.setPutTCPPort(port);
   }
   SECTION("SSL") {
-    test_fixture.startSSLServer();
+    auto port = test_fixture.addSSLServer();
+    test_fixture.setPutTCPPort(port);
     test_fixture.addSSLContextToPutTCP("ca_A.crt", "alice_by_A.pem");
   }
 
@@ -418,15 +471,47 @@ TEST_CASE("PutTCP test idle connection expiration", "[PutTCP]") {
 TEST_CASE("PutTCP test long flow file chunked sending", "[PutTCP]") {
   PutTCPTestFixture test_fixture;
   SECTION("No SSL") {
-    test_fixture.startTCPServer();
+    auto port = test_fixture.addTCPServer();
+    test_fixture.setPutTCPPort(port);
   }
   SECTION("SSL") {
     test_fixture.addSSLContextToPutTCP("ca_A.crt", "alice_by_A.pem");
-    test_fixture.startSSLServer();
+    auto port = test_fixture.addSSLServer();
+    test_fixture.setPutTCPPort(port);
   }
   std::string long_message(3500, 'a');
   trigger_expect_success(test_fixture, long_message);
   receive_success(test_fixture, long_message);
 }
 
+TEST_CASE("PutTCP test multiple servers", "[PutTCP]") {
+  PutTCPTestFixture test_fixture;
+  size_t number_of_servers = 5;
+  std::vector<uint16_t> ports;
+  SECTION("No SSL") {
+    for (size_t i = 0; i < number_of_servers; ++i) {
+      ports.push_back(test_fixture.addTCPServer());
+    }
+  }
+  SECTION("SSL") {
+    test_fixture.addSSLContextToPutTCP("ca_A.crt", "alice_by_A.pem");
+    for (size_t i = 0; i < number_of_servers; ++i) {
+      ports.push_back(test_fixture.addSSLServer());
+    }
+  }
+
+  test_fixture.setPutTCPPort("${tcp_port}");
+
+  for (auto i = 0; i < 3; ++i) {
+    for (auto& port : ports) {
+      std::string message = "Test message ";
+      message.append(std::to_string(port));
+      trigger_expect_success(test_fixture, message, {{"tcp_port", std::to_string(port)}});
+      receive_success(test_fixture, message, port);
+    }
+  }
+  for (auto& port : ports) {
+    CHECK(1 == test_fixture.getNumberOfActiveSessions(port));
+  }
+}
 }  // namespace org::apache::nifi::minifi::processors
