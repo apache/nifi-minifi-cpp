@@ -223,7 +223,7 @@ class PutTCPTestFixture {
     put_tcp_->setProperty(PutTCP::Port, std::move(port_str));
   }
 
-  uint16_t getSinglePort() const {
+  [[nodiscard]] uint16_t getSinglePort() const {
     gsl_Expects(listeners_.size() == 1);
     return listeners_.begin()->first;
   }
