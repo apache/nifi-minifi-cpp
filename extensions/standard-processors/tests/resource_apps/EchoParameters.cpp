@@ -21,7 +21,7 @@
 
 int main(int argc, char** argv) {
   if (argc < 3) {
-    std::cerr << "Usage: ./EchoParameters <delay milliseconds> <text to write>" << std::endl;
+    std::cerr << "Usage: ./EchoParameters <delay between parameters milliseconds> <text to write>" << std::endl;
     return 1;
   }
 

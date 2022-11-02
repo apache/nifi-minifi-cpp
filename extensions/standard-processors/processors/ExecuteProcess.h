@@ -17,12 +17,14 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+#ifndef WIN32
 #pragma once
 
 #include <errno.h>
 #include <signal.h>
 #include <stdio.h>
 #include <sys/types.h>
+#include <sys/wait.h>
 
 #include <chrono>
 #include <iostream>
@@ -31,10 +33,6 @@
 #include <thread>
 #include <vector>
 
-#ifndef WIN32
-#include <sys/wait.h>
-
-#endif
 #include "core/Core.h"
 #include "core/logging/LoggerConfiguration.h"
 #include "core/Processor.h"
@@ -43,7 +41,6 @@
 #include "utils/gsl.h"
 
 namespace org::apache::nifi::minifi::processors {
-#ifndef WIN32
 
 class ExecuteProcess : public core::Processor {
  public:
@@ -51,7 +48,6 @@ class ExecuteProcess : public core::Processor {
       : Processor(name, uuid),
         working_dir_("."),
         redirect_error_stream_(false),
-        process_running_(false),
         pid_(0) {
   }
   ~ExecuteProcess() override {
@@ -62,7 +58,8 @@ class ExecuteProcess : public core::Processor {
 
   EXTENSIONAPI static constexpr const char* Description = "Runs an operating system command specified by the user and writes the output of that command to a FlowFile. "
       "If the command is expected to be long-running, the Processor can output the partial data on a specified interval. "
-      "When this option is used, the output is expected to be in textual format, as it typically does not make sense to split binary data on arbitrary time-based intervals.";
+      "When this option is used, the output is expected to be in textual format, as it typically does not make sense to split binary data on arbitrary time-based intervals. "
+      "This processor is not available on Windows systems.";
 
   EXTENSIONAPI static core::Property Command;
   EXTENSIONAPI static core::Property CommandArguments;
@@ -93,10 +90,9 @@ class ExecuteProcess : public core::Processor {
   void initialize() override;
 
  private:
-  bool changeWorkdir() const;
   std::vector<std::string> readArgs() const;
   void executeProcessForkFailed();
-  void executeChildProcess(const std::vector<char*>& argv);
+  void executeChildProcess();
   void collectChildProcessOutput(core::ProcessSession& session);
   void readOutputInBatches(core::ProcessSession& session);
   void readOutput(core::ProcessSession& session);
@@ -109,10 +105,9 @@ class ExecuteProcess : public core::Processor {
   std::chrono::milliseconds batch_duration_  = std::chrono::milliseconds(0);
   bool redirect_error_stream_;
   std::string full_command_;
-  bool process_running_;
-  int pipefd_[2];
+  int pipefd_[2]{};
   pid_t pid_;
 };
 
-#endif
 }  // namespace org::apache::nifi::minifi::processors
+#endif

@@ -42,7 +42,7 @@ TEST_CASE_METHOD(ExecuteProcessTestsFixture, "ExecuteProcess can run a single co
   REQUIRE(execute_process_->setProperty(processors::ExecuteProcess::Command, "echo -n test"));
 
   controller_.plan->scheduleProcessor(execute_process_);
-  auto result = controller_.trigger("data");
+  auto result = controller_.trigger();
 
   auto success_flow_files = result.at(processors::ExecuteProcess::Success);
   REQUIRE(success_flow_files.size() == 1);
@@ -58,7 +58,7 @@ TEST_CASE_METHOD(ExecuteProcessTestsFixture, "ExecuteProcess can run an executab
   REQUIRE(execute_process_->setProperty(processors::ExecuteProcess::CommandArguments, arguments));
 
   controller_.plan->scheduleProcessor(execute_process_);
-  auto result = controller_.trigger("data");
+  auto result = controller_.trigger();
 
   auto success_flow_files = result.at(processors::ExecuteProcess::Success);
   REQUIRE(success_flow_files.size() == 1);
@@ -74,7 +74,7 @@ TEST_CASE_METHOD(ExecuteProcessTestsFixture, "ExecuteProcess can run an executab
   REQUIRE(execute_process_->setProperty(processors::ExecuteProcess::CommandArguments, arguments));
 
   controller_.plan->scheduleProcessor(execute_process_);
-  auto result = controller_.trigger("data");
+  auto result = controller_.trigger();
 
   auto success_flow_files = result.at(processors::ExecuteProcess::Success);
   REQUIRE(success_flow_files.size() == 1);
@@ -88,7 +88,7 @@ TEST_CASE_METHOD(ExecuteProcessTestsFixture, "ExecuteProcess does not produce a 
   REQUIRE(execute_process_->setProperty(processors::ExecuteProcess::Command, command));
 
   controller_.plan->scheduleProcessor(execute_process_);
-  auto result = controller_.trigger("data");
+  auto result = controller_.trigger();
 
   auto success_flow_files = result.at(processors::ExecuteProcess::Success);
   REQUIRE(success_flow_files.empty());
@@ -100,11 +100,11 @@ TEST_CASE_METHOD(ExecuteProcessTestsFixture, "ExecuteProcess can redirect error 
   REQUIRE(execute_process_->setProperty(processors::ExecuteProcess::RedirectErrorStream, "true"));
 
   controller_.plan->scheduleProcessor(execute_process_);
-  auto result = controller_.trigger("data");
+  auto result = controller_.trigger();
 
   auto success_flow_files = result.at(processors::ExecuteProcess::Success);
   REQUIRE(success_flow_files.size() == 1);
-  CHECK(controller_.plan->getContent(success_flow_files[0]) == "Usage: ./EchoParameters <delay milliseconds> <text to write>\n");
+  CHECK(controller_.plan->getContent(success_flow_files[0]) == "Usage: ./EchoParameters <delay between parameters milliseconds> <text to write>\n");
   CHECK(success_flow_files[0]->getAttribute("command") == command);
   CHECK(success_flow_files[0]->getAttribute("command.arguments") == "");
 }
@@ -117,7 +117,7 @@ TEST_CASE_METHOD(ExecuteProcessTestsFixture, "ExecuteProcess can change workdir"
   REQUIRE(execute_process_->setProperty(processors::ExecuteProcess::WorkingDir, minifi::utils::file::get_executable_dir()));
 
   controller_.plan->scheduleProcessor(execute_process_);
-  auto result = controller_.trigger("data");
+  auto result = controller_.trigger();
 
   auto success_flow_files = result.at(processors::ExecuteProcess::Success);
   REQUIRE(success_flow_files.size() == 1);
@@ -134,7 +134,7 @@ TEST_CASE_METHOD(ExecuteProcessTestsFixture, "ExecuteProcess can forward long ru
   REQUIRE(execute_process_->setProperty(processors::ExecuteProcess::BatchDuration, "10 ms"));
 
   controller_.plan->scheduleProcessor(execute_process_);
-  auto result = controller_.trigger("data");
+  auto result = controller_.trigger();
 
   auto success_flow_files = result.at(processors::ExecuteProcess::Success);
   REQUIRE(success_flow_files.size() == 2);
@@ -149,12 +149,20 @@ TEST_CASE_METHOD(ExecuteProcessTestsFixture, "ExecuteProcess can forward long ru
 TEST_CASE_METHOD(ExecuteProcessTestsFixture, "ExecuteProcess buffer long outputs", "[ExecuteProcess]") {
   auto command = minifi::utils::file::concat_path(minifi::utils::file::get_executable_dir(), "EchoParameters");
   REQUIRE(execute_process_->setProperty(processors::ExecuteProcess::Command, command));
-  std::string param1(8200, 'a');
+  std::string param1;
+
+  SECTION("Exact buffer size output") {
+    param1.assign(4095, 'a');  // buffer size is 4096, so 4095 'a' characters plus '\n' character should be exactly the buffer size
+  }
+  SECTION("Larger than buffer size output") {
+    param1.assign(8200, 'a');
+  }
+
   std::string arguments = "0 " + param1;
   REQUIRE(execute_process_->setProperty(processors::ExecuteProcess::CommandArguments, arguments));
 
   controller_.plan->scheduleProcessor(execute_process_);
-  auto result = controller_.trigger("data");
+  auto result = controller_.trigger();
 
   auto success_flow_files = result.at(processors::ExecuteProcess::Success);
   REQUIRE(success_flow_files.size() == 1);

@@ -17,10 +17,12 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+#ifndef WIN32
 #include "ExecuteProcess.h"
 #include <cstring>
 #include <memory>
 #include <string>
+#include <iomanip>
 #include "core/ProcessContext.h"
 #include "core/ProcessSession.h"
 #include "core/PropertyBuilder.h"
@@ -29,11 +31,11 @@
 #include "utils/TimeUtil.h"
 #include "core/TypedValues.h"
 #include "utils/gsl.h"
+#include "utils/Environment.h"
 
 using namespace std::literals::chrono_literals;
 
 namespace org::apache::nifi::minifi::processors {
-#ifndef WIN32
 core::Property ExecuteProcess::Command(
     core::PropertyBuilder::createProperty("Command")
       ->withDescription("Specifies the command to be executed; if just the name of an executable is provided, it must be in the user's environment PATH.")
@@ -90,42 +92,17 @@ void ExecuteProcess::onSchedule(core::ProcessContext* context, core::ProcessSess
   full_command_ = command_ + " " + command_argument_;
 }
 
-bool ExecuteProcess::changeWorkdir() const {
-  if (working_dir_.length() > 0 && working_dir_ != ".") {
-    if (chdir(working_dir_.c_str()) != 0) {
-      logger_->log_error("Execute Command can not chdir %s", working_dir_);
-      return false;
-    }
-  }
-  return true;
-}
-
 std::vector<std::string> ExecuteProcess::readArgs() const {
   std::vector<std::string> args;
-  std::string current_param;
-  bool in_escaped = false;
-  auto currentParamShouldBeAppended = [&](std::size_t i) {
-    bool current_char_is_escaped_apostrophe = full_command_[i] == '\"' && in_escaped && i > 0 && full_command_[i - 1] == '\\';
-    bool whitespace_in_escaped_block = full_command_[i] == ' ' && in_escaped;
-    bool non_special_character = full_command_[i] != '\\' && full_command_[i] != '\"' && full_command_[i] != ' ';
-    return current_char_is_escaped_apostrophe || whitespace_in_escaped_block || non_special_character;
-  };
-
-  for (std::size_t i = 0; i < full_command_.size(); ++i) {
-    if (currentParamShouldBeAppended(i)) {
-      current_param += full_command_[i];
-    } else if (full_command_[i] == '\"' && (!in_escaped || i == 0 || full_command_[i - 1] != '\\')) {
-      in_escaped = !in_escaped;
-    } else if (full_command_[i] == ' ' && !in_escaped) {
-      if (!current_param.empty()) {
-        args.push_back(current_param);
-      }
-      current_param.clear();
+  std::stringstream input_stream{full_command_};
+  while (input_stream) {
+    std::string word;
+    input_stream >> std::quoted(word);
+    if (!word.empty()) {
+      args.push_back(word);
     }
   }
-  if (!current_param.empty()) {
-    args.push_back(current_param);
-  }
+
   return args;
 }
 
@@ -136,25 +113,32 @@ void ExecuteProcess::executeProcessForkFailed() {
   yield();
 }
 
-void ExecuteProcess::executeChildProcess(const std::vector<char*>& argv) {
-  const int STDOUT = 1;
-  const int STDERR = 2;
+void ExecuteProcess::executeChildProcess() {
+  std::vector<char*> argv;
+  auto args = readArgs();
+  argv.reserve(args.size() + 1);
+  for (auto& arg : args) {
+    argv.push_back(arg.data());
+  }
+  argv.push_back(nullptr);
+
+  static constexpr int STDOUT = 1;
+  static constexpr int STDERR = 2;
   close(STDOUT);
-  const auto guard = gsl::finally([]() {
-    exit(1);
-  });
   if (dup(pipefd_[1]) < 0) {  // points pipefd at file descriptor
     logger_->log_error("Failed to point pipe at file descriptor");
-    return;
+    exit(1);
   }
   if (redirect_error_stream_ && dup2(pipefd_[1], STDERR) < 0) {
     logger_->log_error("Failed to redirect error stream of the executed process to the output stream");
-    return;
+    exit(1);
   }
   close(pipefd_[0]);
   if (execvp(argv[0], argv.data()) < 0) {
     logger_->log_error("Failed to execute child process");
+    exit(1);
   }
+  exit(0);
 }
 
 void ExecuteProcess::readOutputInBatches(core::ProcessSession& session) {
@@ -168,6 +152,7 @@ void ExecuteProcess::readOutputInBatches(core::ProcessSession& session) {
     logger_->log_debug("Execute Command Respond %zd", num_read);
     auto flow_file = session.create();
     if (!flow_file) {
+      logger_->log_error("Flow file could not be created!");
       continue;
     }
     flow_file->addAttribute("command", command_);
@@ -182,6 +167,7 @@ bool ExecuteProcess::writeToFlowFile(core::ProcessSession& session, std::shared_
   if (!flow_file) {
     flow_file = session.create();
     if (!flow_file) {
+      logger_->log_error("Flow file could not be created!");
       return false;
     }
     flow_file->addAttribute("command", command_);
@@ -196,33 +182,36 @@ bool ExecuteProcess::writeToFlowFile(core::ProcessSession& session, std::shared_
 void ExecuteProcess::readOutput(core::ProcessSession& session) {
   char buffer[4096];
   char *buf_ptr = buffer;
-  size_t total_read = 0;
+  size_t read_to_buffer = 0;
   std::shared_ptr<core::FlowFile> flow_file;
-  auto num_read = read(pipefd_[0], buf_ptr, (sizeof(buffer) - total_read));
+  auto num_read = read(pipefd_[0], buf_ptr, (sizeof(buffer) - read_to_buffer));
+  bool is_output_empty = num_read == 0;
   while (num_read > 0) {
-    if (num_read == static_cast<ssize_t>((sizeof(buffer) - total_read))) {
+    if (num_read == static_cast<ssize_t>((sizeof(buffer) - read_to_buffer))) {
       // we reach the max buffer size
       logger_->log_debug("Execute Command Max Respond %zu", sizeof(buffer));
       if (!writeToFlowFile(session, flow_file, buffer)) {
         continue;
       }
       // Rewind
-      total_read = 0;
+      read_to_buffer = 0;
       buf_ptr = buffer;
     } else {
-      total_read += num_read;
+      read_to_buffer += num_read;
       buf_ptr += num_read;
     }
-    num_read = read(pipefd_[0], buf_ptr, (sizeof(buffer) - total_read));
+    num_read = read(pipefd_[0], buf_ptr, (sizeof(buffer) - read_to_buffer));
   }
 
-  if (total_read > 0) {
-    logger_->log_debug("Execute Command Respond %zu", total_read);
+  if (read_to_buffer > 0) {
+    logger_->log_debug("Execute Command Respond %zu", read_to_buffer);
     // child exits and close the pipe
-    const auto buffer_span = gsl::make_span(buffer, total_read);
+    const auto buffer_span = gsl::make_span(buffer, read_to_buffer);
     if (!writeToFlowFile(session, flow_file, buffer_span)) {
       return;
     }
+  }
+  if (!is_output_empty) {
     session.transfer(flow_file, Success);
   }
 }
@@ -254,21 +243,11 @@ void ExecuteProcess::onTrigger(core::ProcessContext *context, core::ProcessSessi
     yield();
     return;
   }
-  if (!changeWorkdir()) {
+  if (!utils::Environment::setCurrentWorkingDirectory(working_dir_.c_str())) {
     yield();
     return;
   }
   logger_->log_info("Execute Command %s", full_command_);
-  std::vector<char*> argv;
-  auto args = readArgs();
-  argv.reserve(args.size() + 1);
-  for (auto& arg : args) {
-    argv.push_back(arg.data());
-  }
-  argv.push_back(nullptr);
-  if (process_running_) {
-    return;
-  }
 
   if (pipe(pipefd_) == -1) {
     yield();
@@ -279,7 +258,7 @@ void ExecuteProcess::onTrigger(core::ProcessContext *context, core::ProcessSessi
       executeProcessForkFailed();
       break;
     case 0:  // this is the code the child runs
-      executeChildProcess(argv);
+      executeChildProcess();
       break;
     default:  // this is the code the parent runs
       collectChildProcessOutput(*session);
@@ -289,5 +268,5 @@ void ExecuteProcess::onTrigger(core::ProcessContext *context, core::ProcessSessi
 
 REGISTER_RESOURCE(ExecuteProcess, Processor);
 
-#endif
 }  // namespace org::apache::nifi::minifi::processors
+#endif
