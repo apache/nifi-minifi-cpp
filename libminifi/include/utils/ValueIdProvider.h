@@ -20,6 +20,7 @@
 
 #include <optional>
 #include <unordered_map>
+#include <vector>
 
 namespace org::apache::nifi::minifi::utils {
 
