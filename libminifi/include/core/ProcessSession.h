@@ -39,6 +39,7 @@
 #include "provenance/Provenance.h"
 #include "utils/gsl.h"
 #include "ProcessorMetrics.h"
+#include "utils/ValueIdProvider.h"
 
 namespace org::apache::nifi::minifi::core {
 namespace detail {
@@ -161,16 +162,25 @@ class ProcessSession : public ReferenceContainer {
     std::shared_ptr<FlowFile> snapshot;
   };
 
+  using Relationships = utils::ValueIdProvider<Relationship>;
+
+  Relationships relationships_;
+
+  struct NewFlowFileInfo {
+    std::shared_ptr<core::FlowFile> flow_file;
+    Relationships::id_type rel{Relationships::INVALID_ID};
+  };
+
   // FlowFiles being modified by current process session
-  std::map<utils::Identifier, FlowFileUpdate> _updatedFlowFiles;
+  std::map<utils::Identifier, FlowFileUpdate> updated_flowfiles_;
+  // updated FlowFiles being transferred to the relationship
+  std::map<utils::Identifier, Relationships::id_type> updated_relationships_;
   // FlowFiles being added by current process session
-  std::map<utils::Identifier, std::shared_ptr<core::FlowFile>> _addedFlowFiles;
+  std::map<utils::Identifier, NewFlowFileInfo> added_flowfiles_;
   // FlowFiles being deleted by current process session
-  std::vector<std::shared_ptr<core::FlowFile>> _deletedFlowFiles;
-  // FlowFiles being transfered to the relationship
-  std::map<utils::Identifier, Relationship> _transferRelationship;
+  std::vector<std::shared_ptr<core::FlowFile>> deleted_flowfiles_;
   // FlowFiles being cloned for multiple connections per relationship
-  std::vector<std::shared_ptr<core::FlowFile>> _clonedFlowFiles;
+  std::vector<std::shared_ptr<core::FlowFile>> cloned_flowfiles_;
 
  private:
   enum class RouteResult {
