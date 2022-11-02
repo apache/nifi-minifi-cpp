@@ -28,6 +28,7 @@
 #include <algorithm>
 #include <set>
 #include <unordered_map>
+#include <unordered_set>
 
 #include "ProcessContext.h"
 #include "FlowFileRecord.h"
@@ -161,16 +162,25 @@ class ProcessSession : public ReferenceContainer {
     std::shared_ptr<FlowFile> snapshot;
   };
 
+  using Relationships = std::unordered_set<Relationship>;
+
+  Relationships relationships_;
+
+  struct NewFlowFileInfo {
+    std::shared_ptr<core::FlowFile> flow_file;
+    const Relationship* rel{nullptr};
+  };
+
   // FlowFiles being modified by current process session
-  std::map<utils::Identifier, FlowFileUpdate> _updatedFlowFiles;
+  std::map<utils::Identifier, FlowFileUpdate> updated_flowfiles_;
+  // updated FlowFiles being transferred to the relationship
+  std::map<utils::Identifier, const Relationship*> updated_relationships_;
   // FlowFiles being added by current process session
-  std::map<utils::Identifier, std::shared_ptr<core::FlowFile>> _addedFlowFiles;
+  std::map<utils::Identifier, NewFlowFileInfo> added_flowfiles_;
   // FlowFiles being deleted by current process session
-  std::vector<std::shared_ptr<core::FlowFile>> _deletedFlowFiles;
-  // FlowFiles being transfered to the relationship
-  std::map<utils::Identifier, Relationship> _transferRelationship;
+  std::vector<std::shared_ptr<core::FlowFile>> deleted_flowfiles_;
   // FlowFiles being cloned for multiple connections per relationship
-  std::vector<std::shared_ptr<core::FlowFile>> _clonedFlowFiles;
+  std::vector<std::shared_ptr<core::FlowFile>> cloned_flowfiles_;
 
  private:
   enum class RouteResult {

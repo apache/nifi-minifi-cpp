@@ -15,8 +15,7 @@
  * limitations under the License.
  */
 
-#ifndef LIBMINIFI_INCLUDE_CORE_PROCESSORNODE_H_
-#define LIBMINIFI_INCLUDE_CORE_PROCESSORNODE_H_
+#pragma once
 
 #include <memory>
 #include <set>
@@ -167,11 +166,11 @@ class ProcessorNode : public ConfigurableComponent, public Connectable {
     processor_->setAutoTerminatedRelationships(relationships);
   }
 
-  bool isAutoTerminated(Relationship relationship) {
+  bool isAutoTerminated(const Relationship& relationship) {
     return processor_->isAutoTerminated(relationship);
   }
 
-  bool isSupportedRelationship(Relationship relationship) {
+  bool isSupportedRelationship(const Relationship& relationship) {
     return processor_->isSupportedRelationship(relationship);
   }
 
@@ -278,5 +277,3 @@ class ProcessorNode : public ConfigurableComponent, public Connectable {
 };
 
 }  // namespace org::apache::nifi::minifi::core
-
-#endif  // LIBMINIFI_INCLUDE_CORE_PROCESSORNODE_H_
