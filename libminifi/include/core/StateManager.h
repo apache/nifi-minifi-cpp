@@ -29,7 +29,7 @@ namespace org::apache::nifi::minifi::core {
 /**
  * Stores state for one component.
  * Supported operations: get(), set(), clear(), persist().
- * Behavior can transactional. Use beginTransaction() to enter a transaction and commit() or rollback() to conclude it.
+ * Behavior can be transactional. Use beginTransaction() to enter a transaction and commit() or rollback() to conclude it.
  */
 class StateManager {
  public:
