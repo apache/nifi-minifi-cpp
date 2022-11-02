@@ -44,6 +44,7 @@
 #include "LogAttribute.h"
 #include "utils/TestUtils.h"
 #include "utils/StringUtils.h"
+#include "SingleProcessorTestController.h"
 
 using namespace std::literals::chrono_literals;
 
@@ -1849,16 +1850,12 @@ TEST_CASE("TailFile can use an AttributeProviderService", "[AttributeProviderSer
 }
 
 TEST_CASE("TailFile honors batch size for maximum lines processed", "[batchSize]") {
-  TestController testController;
   LogTestController::getInstance().setTrace<minifi::processors::TailFile>();
-  LogTestController::getInstance().setDebug<minifi::processors::LogAttribute>();
 
-  std::shared_ptr<TestPlan> plan = testController.createPlan();
-  std::shared_ptr<core::Processor> tailfile = plan->addProcessor("TailFile", "TailFile");
-  auto logattribute = plan->addProcessor("LogAttribute", "LogAttribute", core::Relationship("success", "description"), true);
-  plan->setProperty(logattribute, org::apache::nifi::minifi::processors::LogAttribute::FlowFilesToLog.getName(), "0");
+  auto tailfile = std::make_shared<minifi::processors::TailFile>("TailFile");
+  minifi::test::SingleProcessorTestController test_controller(tailfile);
 
-  auto dir = testController.createTempDirectory();
+  auto dir = test_controller.createTempDirectory();
   std::stringstream temp_file;
   temp_file << dir << utils::file::get_separator() << TMP_FILE;
 
@@ -1872,13 +1869,11 @@ TEST_CASE("TailFile honors batch size for maximum lines processed", "[batchSize]
   std::stringstream state_file;
   state_file << dir << utils::file::get_separator() << STATE_FILE;
 
-  plan->setProperty(tailfile, org::apache::nifi::minifi::processors::TailFile::FileName.getName(), temp_file.str());
-  plan->setProperty(tailfile, org::apache::nifi::minifi::processors::TailFile::Delimiter.getName(), "\n");
-  plan->setProperty(tailfile, org::apache::nifi::minifi::processors::TailFile::BatchSize.getName(), "10");
+  tailfile->setProperty(minifi::processors::TailFile::FileName.getName(), temp_file.str());
+  tailfile->setProperty(minifi::processors::TailFile::Delimiter.getName(), "\n");
+  tailfile->setProperty(minifi::processors::TailFile::BatchSize.getName(), "10");
 
-  testController.runSession(plan);
-
-  REQUIRE(LogTestController::getInstance().contains("Logged 10 flow files"));
-
-  LogTestController::getInstance().reset();
+  const auto result = test_controller.trigger("");
+  auto file_contents = result.at(minifi::processors::TailFile::Success);
+  REQUIRE(file_contents.size() == 10);
 }

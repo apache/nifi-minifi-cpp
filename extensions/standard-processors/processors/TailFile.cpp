@@ -137,7 +137,7 @@ const core::Property TailFile::AttributeProviderService(
 
 const core::Property TailFile::BatchSize(
     core::PropertyBuilder::createProperty("Batch Size")
-        ->withDescription("Maximum number of lines to process in a single trigger. If set to 0 all new lines will be processed.")
+        ->withDescription("Maximum number of flowfiles emitted in a single trigger. If set to 0 all new content will be processed.")
         ->isRequired(true)
         ->withDefaultValue<uint32_t>(0)
         ->build());
