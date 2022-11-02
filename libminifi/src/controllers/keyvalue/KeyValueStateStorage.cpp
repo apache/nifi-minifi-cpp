@@ -46,9 +46,8 @@ std::string KeyValueStateStorage::serialize(const core::StateManager::State& kvs
 }
 
 core::StateManager::State KeyValueStateStorage::deserialize(const std::string& serialized) {
-  rapidjson::StringStream stream(serialized.c_str());
   rapidjson::Document doc;
-  rapidjson::ParseResult res = doc.ParseStream(stream);
+  rapidjson::ParseResult res = doc.Parse(serialized.c_str(), serialized.length());
   if (!res || !doc.IsObject()) {
     using org::apache::nifi::minifi::Exception;
     using org::apache::nifi::minifi::FILE_OPERATION_EXCEPTION;
