@@ -1117,7 +1117,7 @@ TEST_CASE("TailFile finds and finishes the renamed file and continues with the n
   // use persistent state storage that defaults to rocksDB, not volatile
   const auto configuration = std::make_shared<minifi::Configure>();
   {
-    auto test_plan = testController.createPlan(configuration, state_dir.c_str());
+    auto test_plan = testController.createPlan(configuration, state_dir);
     auto tail_file = test_plan->addProcessor("TailFile", tail_file_uuid, "Tail", {success_relationship});
     test_plan->setProperty(tail_file, minifi::processors::TailFile::FileName.getName(), test_file);
     auto log_attr = test_plan->addProcessor("LogAttribute", "Log", success_relationship, true);
@@ -1138,7 +1138,7 @@ TEST_CASE("TailFile finds and finishes the renamed file and continues with the n
   createTempFile(log_dir, "test.log", "line eight is the last line\n");
 
   {
-    auto test_plan = testController.createPlan(configuration, state_dir.c_str());
+    auto test_plan = testController.createPlan(configuration, state_dir);
     auto tail_file = test_plan->addProcessor("TailFile", tail_file_uuid, "Tail", {success_relationship});
     test_plan->setProperty(tail_file, minifi::processors::TailFile::FileName.getName(), test_file);
     auto log_attr = test_plan->addProcessor("LogAttribute", "Log", success_relationship, true);

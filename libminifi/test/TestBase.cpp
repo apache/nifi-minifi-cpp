@@ -636,10 +636,12 @@ std::shared_ptr<TestPlan> TestController::createPlan(PlanConfig config) {
   config.flow_file_repo->initialize(config.configuration);
   config.flow_file_repo->loadComponent(config.content_repo);
 
-  return std::make_shared<TestPlan>(std::move(config.content_repo), std::move(config.flow_file_repo), std::make_shared<TestRepository>(), flow_version_, config.configuration, config.state_dir);
+  return std::make_shared<TestPlan>(
+      std::move(config.content_repo), std::move(config.flow_file_repo), std::make_shared<TestRepository>(),
+      flow_version_, config.configuration, config.state_dir ? config.state_dir->string().c_str() : nullptr);
 }
 
-std::shared_ptr<TestPlan> TestController::createPlan(std::shared_ptr<minifi::Configure> configuration, const char* state_dir, std::shared_ptr<minifi::core::ContentRepository> content_repo) {
+std::shared_ptr<TestPlan> TestController::createPlan(std::shared_ptr<minifi::Configure> configuration, std::optional<std::filesystem::path> state_dir, std::shared_ptr<minifi::core::ContentRepository> content_repo) {
   return createPlan(PlanConfig{
     .configuration = std::move(configuration),
     .state_dir = state_dir,

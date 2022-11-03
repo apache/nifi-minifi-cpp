@@ -94,7 +94,7 @@ class ListSFTPTestsFixture {
     list_sftp.reset();
     plan.reset();
 
-    plan = testController.createPlan(configuration, state_dir.c_str());
+    plan = testController.createPlan(configuration, state_dir);
     if (list_sftp_uuid == nullptr) {
       list_sftp = plan->addProcessor(
           "ListSFTP",

@@ -1003,7 +1003,7 @@ void ProcessSession::persistFlowFilesBeforeTransfer(
 
   // collect serialized flowfiles
   forEachFlowFile(Type::Transferred, [&] (auto& ff, auto& /*original*/) {
-    std::unique_ptr<io::BufferStream> stream(new io::BufferStream());
+    auto stream = std::make_unique<io::BufferStream>();
     std::static_pointer_cast<FlowFileRecord>(ff)->Serialize(*stream);
 
     flowData.emplace_back(ff->getUUIDStr(), std::move(stream));

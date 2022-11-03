@@ -161,6 +161,8 @@ TEST_CASE("ProcessSession::commit avoids dangling ResourceClaims when using Vola
   session.transfer(flow_file_3, Success);
   session.commit();
 
+  // flow_files are owned by the shared_ptr on the stack and the ff_repo
+  // but the first one has been evicted from the ff_repo
   REQUIRE(flow_file_1->getResourceClaim()->getFlowFileRecordOwnedCount() == 1);
   REQUIRE(flow_file_2->getResourceClaim()->getFlowFileRecordOwnedCount() == 2);
   REQUIRE(flow_file_3->getResourceClaim()->getFlowFileRecordOwnedCount() == 2);
