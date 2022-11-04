@@ -183,9 +183,7 @@ class ConnectionHandler : public IConnectionHandler {
   nonstd::expected<std::shared_ptr<SocketType>, std::error_code> getSocket();
 
   [[nodiscard]] bool hasBeenUsedIn(std::chrono::milliseconds dur) const override {
-    if (!last_used_)
-      return false;
-    return *last_used_ >= (std::chrono::steady_clock::now() - dur);
+    return last_used_ && *last_used_ >= (std::chrono::steady_clock::now() - dur);
   }
 
   void reset() override {
