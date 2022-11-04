@@ -139,7 +139,8 @@ void PutTCP::onSchedule(core::ProcessContext* const context, core::ProcessSessio
   if (context->getProperty(SSLContextService.getName(), context_name) && !IsNullOrEmpty(context_name)) {
     if (auto controller_service = context->getControllerService(context_name)) {
       ssl_context_service_ = std::dynamic_pointer_cast<minifi::controllers::SSLContextService>(context->getControllerService(context_name));
-      logger_->log_error("%s is not a SSL Context Service", context_name);
+      if (!ssl_context_service_)
+        logger_->log_error("%s is not a SSL Context Service", context_name);
     } else {
       logger_->log_error("Invalid controller service: %s", context_name);
     }
