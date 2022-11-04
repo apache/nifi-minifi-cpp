@@ -61,9 +61,9 @@ struct hash<org::apache::nifi::minifi::processors::detail::ConnectionId> {
 }  // namespace std
 
 namespace org::apache::nifi::minifi::processors {
-class IConnectionHandler {
+class ConnectionHandlerBase {
  public:
-  virtual ~IConnectionHandler() = default;
+  virtual ~ConnectionHandlerBase() = default;
 
   [[nodiscard]] virtual bool hasBeenUsed() const = 0;
   [[nodiscard]] virtual bool hasBeenUsedIn(std::chrono::milliseconds dur) const = 0;
@@ -112,13 +112,13 @@ class PutTCP final : public core::Processor {
 
  private:
   void removeExpiredConnections();
-  void processFlowFile(std::shared_ptr<IConnectionHandler>& connection_handler,
+  void processFlowFile(std::shared_ptr<ConnectionHandlerBase>& connection_handler,
                        const std::shared_ptr<io::InputStream>& flow_file_content_stream,
                        core::ProcessSession& session,
                        const std::shared_ptr<core::FlowFile>& flow_file);
 
   std::vector<std::byte> delimiter_;
-  std::optional<std::unordered_map<detail::ConnectionId, std::shared_ptr<IConnectionHandler>>> connections_;
+  std::optional<std::unordered_map<detail::ConnectionId, std::shared_ptr<ConnectionHandlerBase>>> connections_;
   std::optional<std::chrono::milliseconds> idle_connection_expiration_;
   std::optional<size_t> max_size_of_socket_send_buffer_;
   std::chrono::milliseconds timeout_ = std::chrono::seconds(15);

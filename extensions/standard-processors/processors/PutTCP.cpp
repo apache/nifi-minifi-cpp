@@ -161,7 +161,7 @@ void PutTCP::onSchedule(core::ProcessContext* const context, core::ProcessSessio
 
 namespace {
 template<class SocketType>
-class ConnectionHandler : public IConnectionHandler {
+class ConnectionHandler : public ConnectionHandlerBase {
  public:
   ConnectionHandler(detail::ConnectionId connection_id,
                     std::chrono::milliseconds timeout,
@@ -524,7 +524,7 @@ void PutTCP::onTrigger(core::ProcessContext* context, core::ProcessSession* cons
   }
 
   auto connection_id = detail::ConnectionId(std::move(hostname), std::move(port));
-  std::shared_ptr<IConnectionHandler> handler;
+  std::shared_ptr<ConnectionHandlerBase> handler;
   if (!connections_ || !connections_->contains(connection_id)) {
     if (ssl_context_service_)
       handler = std::make_shared<ConnectionHandler<SslSocket>>(connection_id, timeout_, logger_, max_size_of_socket_send_buffer_, ssl_context_service_);
@@ -550,7 +550,7 @@ void PutTCP::removeExpiredConnections() {
   }
 }
 
-void PutTCP::processFlowFile(std::shared_ptr<IConnectionHandler>& connection_handler,
+void PutTCP::processFlowFile(std::shared_ptr<ConnectionHandlerBase>& connection_handler,
                              const std::shared_ptr<io::InputStream>& flow_file_content_stream,
                              core::ProcessSession& session,
                              const std::shared_ptr<core::FlowFile>& flow_file) {
