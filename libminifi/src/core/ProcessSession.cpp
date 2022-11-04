@@ -760,8 +760,6 @@ ProcessSession::RouteResult ProcessSession::routeFlowFile(const std::shared_ptr<
   } else {
     return RouteResult::Error_NoRelationship;
   }
-  // const Relationship& relationship = itRelationship->second;
-  // Relationship relationship = used_relationships_.at(itRelationship->second);
   // Find the relationship, we need to find the connections for that relationship
   const auto connections = process_context_->getProcessorNode()->getOutGoingConnections(relationship.getName());
   if (connections.empty()) {
