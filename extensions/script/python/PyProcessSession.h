@@ -17,36 +17,21 @@
  */
 
 #pragma once
-
-#include <utility>
-#include <memory>
-#include <vector>
-
-#include "pybind11/embed.h"
 #include "core/ProcessSession.h"
 #include "../ScriptFlowFile.h"
-#include "PyInputStream.h"
-#include "PyOutputStream.h"
-
-#if defined(__GNUC__) || defined(__GNUG__)
-#pragma GCC visibility push(hidden)
-#endif
+#include "PythonBindings.h"
 
 namespace org::apache::nifi::minifi::python {
-
-namespace py = pybind11;
 
 class PyProcessSession {
  public:
   explicit PyProcessSession(std::shared_ptr<core::ProcessSession> session);
 
   std::shared_ptr<script::ScriptFlowFile> get();
-  std::shared_ptr<script::ScriptFlowFile> create();
   std::shared_ptr<script::ScriptFlowFile> create(const std::shared_ptr<script::ScriptFlowFile>& flow_file);
   void transfer(const std::shared_ptr<script::ScriptFlowFile>& flow_file, const core::Relationship& relationship);
-  void read(const std::shared_ptr<script::ScriptFlowFile>& flow_file, py::object input_stream_callback);
-  void write(const std::shared_ptr<script::ScriptFlowFile>& flow_file, py::object output_stream_callback);
-  void remove(const std::shared_ptr<script::ScriptFlowFile>& flow_file);
+  void read(const std::shared_ptr<script::ScriptFlowFile>& flow_file, BorrowedObject input_stream_callback);
+  void write(const std::shared_ptr<script::ScriptFlowFile>& flow_file, BorrowedObject output_stream_callback);
 
   /**
    * Sometimes we want to release shared pointers to core resources when
@@ -63,8 +48,27 @@ class PyProcessSession {
   std::shared_ptr<core::ProcessSession> session_;
 };
 
-}  // namespace org::apache::nifi::minifi::python
+struct PyProcessSessionObject {
+  using HeldType = std::weak_ptr<PyProcessSession>;
 
-#if defined(__GNUC__) || defined(__GNUG__)
-#pragma GCC visibility pop
-#endif
+  PyObject_HEAD
+  HeldType process_session_;
+
+  static PyObject *newInstance(PyTypeObject *type, PyObject *args, PyObject *kwds);
+  static int init(PyProcessSessionObject *self, PyObject *args, PyObject *kwds);
+  static void dealloc(PyProcessSessionObject *self);
+
+  static PyObject *get(PyProcessSessionObject *self);
+  static PyObject *create(PyProcessSessionObject *self, PyObject *args);
+  static PyObject *read(PyProcessSessionObject *self, PyObject *args);
+  static PyObject *write(PyProcessSessionObject *self, PyObject *args);
+  static PyObject *transfer(PyProcessSessionObject* self, PyObject *args);
+
+  static PyTypeObject *typeObject();
+};
+
+namespace object {
+template <>
+struct Converter<PyProcessSessionObject::HeldType> : public HolderTypeConverter<PyProcessSessionObject> {};
+}  // namespace object
+}  // namespace org::apache::nifi::minifi::python

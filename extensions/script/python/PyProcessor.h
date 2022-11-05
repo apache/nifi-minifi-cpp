@@ -1,5 +1,4 @@
 /**
- *
  * Licensed to the Apache Software Foundation (ASF) under one or more
  * contributor license agreements.  See the NOTICE file distributed with
  * this work for additional information regarding copyright ownership.
@@ -15,37 +14,32 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
 #pragma once
 
-#include <string>
-#include <memory>
-
-#include "core/Processor.h"
+#include "PythonBindings.h"
+#include "PythonProcessor.h"
 
 namespace org::apache::nifi::minifi::python {
 
-namespace processors {
-class ExecutePythonProcessor;
-}
+struct PyProcessor {
+  using HeldType = std::weak_ptr<PythonProcessor>;
 
-// namespace py = pybind11;
+  PyObject_HEAD
+  HeldType processor_;
 
-/**
- * Defines a reference to the processor.
- */
-class PythonProcessor {
- public:
-  explicit PythonProcessor(core::Processor* proc);
+  static PyObject *newInstance(PyTypeObject *type, PyObject *args, PyObject *kwds);
+  static int init(PyProcessor *self, PyObject *args, PyObject *kwds);
+  static void dealloc(PyProcessor *self);
 
-  void setSupportsDynamicProperties();
+  static PyObject *setSupportsDynamicProperties(PyProcessor *self, PyObject *args);
+  static PyObject *setDescription(PyProcessor *self, PyObject *args);
+  static PyObject *addProperty(PyProcessor *self, PyObject *args);
 
-  void setDescription(const std::string &desc);
-
-  void addProperty(const std::string &name, const std::string &description, const std::string &defaultvalue, bool required, bool el);
-
- private:
-  python::processors::ExecutePythonProcessor* processor_;
+  static PyTypeObject *typeObject();
 };
 
-}  // namespace org::apache::nifi::minifi::python
+namespace object {
+template <>
+struct Converter<PyProcessor::HeldType> : public HolderTypeConverter<PyProcessor> {};
+}  // namespace object
+} //  namespace org::apache::nifi::minifi::python

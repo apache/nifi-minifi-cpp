@@ -1,5 +1,4 @@
 /**
- *
  * Licensed to the Apache Software Foundation (ASF) under one or more
  * contributor license agreements.  See the NOTICE file distributed with
  * this work for additional information regarding copyright ownership.
@@ -15,31 +14,35 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
 #pragma once
 
 #include "PythonBindings.h"
-#include "io/OutputStream.h"
+#include "../ScriptFlowFile.h"
 
 namespace org::apache::nifi::minifi::python {
 
-struct PyOutputStream {
-  using HeldType = std::weak_ptr<org::apache::nifi::minifi::io::OutputStream>;
+struct PyScriptFlowFile {
+  using ScriptFlowFile = org::apache::nifi::minifi::script::ScriptFlowFile;
+  using HeldType = std::weak_ptr<ScriptFlowFile>;
 
   PyObject_HEAD
-  HeldType output_stream_;
+  HeldType script_flow_file_;
 
   static PyObject *newInstance(PyTypeObject *type, PyObject *args, PyObject *kwds);
-  static int init(PyOutputStream *self, PyObject *args, PyObject *kwds);
-  static void dealloc(PyOutputStream *self);
+  static int init(PyScriptFlowFile *self, PyObject *args, PyObject *kwds);
+  static void dealloc(PyScriptFlowFile *self);
 
-  static PyObject *write(PyOutputStream *self, PyObject *args);
+  static PyObject *getAttribute(PyScriptFlowFile *self, PyObject *args);
+  static PyObject *addAttribute(PyScriptFlowFile *self, PyObject *args);
+  static PyObject *updateAttribute(PyScriptFlowFile *self, PyObject *args);
+  static PyObject *removeAttribute(PyScriptFlowFile *self, PyObject *args);
+  static PyObject *setAttribute(PyScriptFlowFile *self, PyObject *args);
 
   static PyTypeObject *typeObject();
 };
 
 namespace object {
 template <>
-struct Converter<PyOutputStream::HeldType> : public HolderTypeConverter<PyOutputStream> {};
-}  // namespace object
-}  // namespace org::apache::nifi::minifi::python
+struct Converter<PyScriptFlowFile::HeldType> : public HolderTypeConverter<PyScriptFlowFile> {};
+} // namespace object
+} // namespace org::apache::nifi::minifi::python

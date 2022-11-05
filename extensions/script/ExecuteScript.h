@@ -24,6 +24,7 @@
 #include <memory>
 #include <utility>
 #include <optional>
+#include <concepts>
 
 #include "concurrentqueue.h"
 #include "core/Processor.h"
@@ -47,8 +48,8 @@ class ScriptEngineFactory {
  public:
   ScriptEngineFactory(const core::Relationship& success, const core::Relationship& failure, std::shared_ptr<core::logging::Logger> logger);
 
-  template<typename T>
-  std::enable_if_t<std::is_base_of_v<script::ScriptEngine, T>, std::unique_ptr<T>> createEngine() const {
+  template<std::derived_from<script::ScriptEngine> T>
+  std::unique_ptr<T> createEngine() const {
     auto engine = std::make_unique<T>();
 
     engine->bind("log", logger_);

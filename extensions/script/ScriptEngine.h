@@ -41,7 +41,7 @@ class ScriptEngine {
    */
   virtual void evalFile(const std::string &file_name) = 0;
 
-  void setModulePaths(std::vector<std::filesystem::path>&& module_paths) {
+  void setModulePaths(std::vector<std::filesystem::path> module_paths) {
     module_paths_ = std::move(module_paths);
   }
 

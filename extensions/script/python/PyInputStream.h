@@ -18,24 +18,28 @@
 
 #pragma once
 
-#include <memory>
-
-#include "pybind11/embed.h"
+#include "PythonBindings.h"
 #include "io/InputStream.h"
 
 namespace org::apache::nifi::minifi::python {
 
-namespace py = pybind11;
+struct PyInputStream {
+  using HeldType = std::weak_ptr<org::apache::nifi::minifi::io::InputStream>;
 
-class PyInputStream {
- public:
-  explicit PyInputStream(std::shared_ptr<io::InputStream> stream);
+  PyObject_HEAD
+  HeldType input_stream_;
 
-  py::bytes read();
-  py::bytes read(size_t len = 0);
+  static PyObject *newInstance(PyTypeObject *type, PyObject *args, PyObject *kwds);
+  static int init(PyInputStream *self, PyObject *args, PyObject *kwds);
+  static void dealloc(PyInputStream *self);
 
- private:
-  std::shared_ptr<io::InputStream> stream_;
+  static PyObject *read(PyInputStream *self, PyObject *args);
+
+  static PyTypeObject *typeObject();
 };
 
+namespace object {
+template <>
+struct Converter<PyInputStream::HeldType> : public HolderTypeConverter<PyInputStream> {};
+}
 }  // namespace org::apache::nifi::minifi::python

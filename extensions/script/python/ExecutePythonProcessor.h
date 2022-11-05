@@ -91,7 +91,7 @@ class ExecutePythonProcessor : public core::Processor {
         core::PropertyBuilder::createProperty(name)->withDefaultValue(defaultvalue)->withDescription(description)->isRequired(required)->supportsExpressionLanguage(el)->build());
   }
 
-  std::vector<core::Property> getPythonProperties() const {
+  const std::vector<core::Property> &getPythonProperties() const {
     return python_properties_;
   }
 
@@ -122,7 +122,7 @@ class ExecutePythonProcessor : public core::Processor {
   std::optional<std::filesystem::file_time_type> last_script_write_time_;
   std::string script_file_path_;
   std::shared_ptr<core::logging::Logger> python_logger_;
-  std::unique_ptr<PythonScriptEngine> python_script_engine_;
+  std::unique_ptr<NewPythonScriptEngine> python_script_engine_;
 
   void appendPathForImportModules();
   void loadScriptFromFile();
@@ -130,7 +130,7 @@ class ExecutePythonProcessor : public core::Processor {
   void reloadScriptIfUsingScriptFileProperty();
   void initalizeThroughScriptEngine();
 
-  std::unique_ptr<PythonScriptEngine> createScriptEngine();
+  std::unique_ptr<NewPythonScriptEngine> createScriptEngine();
 };
 
 }  // namespace org::apache::nifi::minifi::python::processors

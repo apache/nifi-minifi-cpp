@@ -27,7 +27,7 @@ static minifi::python::PythonCreator& getPythonCreator() {
 }
 
 static bool init(const std::shared_ptr<minifi::Configure>& config) {
-  getPythonCreator().configure(config);
+  // getPythonCreator().configure(config);
   return true;
 }
 

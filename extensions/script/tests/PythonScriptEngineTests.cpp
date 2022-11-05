@@ -23,21 +23,44 @@
 namespace org::apache::nifi::minifi::test {
 
 TEST_CASE("PythonScriptEngine errors during eval", "[pythonscriptengineeval]") {
-  python::PythonScriptEngine engine;
+  python::NewPythonScriptEngine engine;
   REQUIRE_NOTHROW(engine.eval("print('foo')"));
   REQUIRE_THROWS_MATCHES(engine.eval("shout('foo')"), script::ScriptException, utils::ExceptionSubStringMatcher<script::ScriptException>({"name 'shout' is not defined"}));
 }
 
+TEST_CASE("GilScopedAcquire should lock threads properly", "[pythonscriptengineeval]") {
+  python::NewPythonScriptEngine engine;
+  for (int i = 0; i < 10; ++i) {
+    DYNAMIC_SECTION("Iteration: " << i) {
+      std::vector<std::string_view> messages;
+      auto sleeping_thread = std::thread([&] {
+        using namespace std::chrono_literals;
+        python::GilScopedAcquire gil_lock;
+        messages.emplace_back("Before sleep");
+        std::this_thread::sleep_for(100ms);
+        messages.emplace_back("First thread");
+      });
+      std::this_thread::sleep_for(15ms);
+
+      auto non_sleeping_thread = std::thread([&] {
+        python::GilScopedAcquire gil_lock;
+        messages.emplace_back("Second thread");
+      });
+      non_sleeping_thread.join();
+      sleeping_thread.join();
+      REQUIRE(messages == std::vector<std::string_view>{"Before sleep", "First thread", "Second thread"});
+    }
+  }
+}
+
 TEST_CASE("PythonScriptEngine errors during call", "[luascriptenginecall]") {
-  python::PythonScriptEngine engine;
-  REQUIRE_NOTHROW(engine.eval(R"(
-    def foo():
-      print('foo')
+  python::NewPythonScriptEngine engine;
+  REQUIRE_NOTHROW(engine.eval(R"(def foo():
+  print('foo')
 
-    def bar():
-      shout('bar')
-
-  )"));
+def bar():
+  shout('bar')
+)"));
   REQUIRE_NOTHROW(engine.call("foo"));
   REQUIRE_THROWS_MATCHES(engine.call("bar"), script::ScriptException, utils::ExceptionSubStringMatcher<script::ScriptException>({"name 'shout' is not defined"}));
 }

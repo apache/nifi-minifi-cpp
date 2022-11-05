@@ -16,38 +16,86 @@
  * limitations under the License.
  */
 
-#include <memory>
-#include <utility>
-#include <string>
-#include <vector>
-
 #include "PyInputStream.h"
-
+#include "Exception.h"
 #include "utils/gsl.h"
 
+extern "C" {
 namespace org::apache::nifi::minifi::python {
 
-PyInputStream::PyInputStream(std::shared_ptr<io::InputStream> stream)
-    : stream_(std::move(stream)) {
-}
+static PyMethodDef PyInputStream_methods[] = {
+  { "read", (PyCFunction) PyInputStream::read, METH_VARARGS, nullptr, },
+  { nullptr } /* Sentinel */
+};
 
-py::bytes PyInputStream::read() {
-  return read(stream_->size());
-}
+static PyTypeObject PyInputStreamType = {
+  PyVarObject_HEAD_INIT(nullptr, 0)
+  .tp_name = "minifi_native.InputStream",
+  .tp_doc = nullptr,
+  .tp_basicsize = sizeof(PyInputStream),
+  .tp_itemsize = 0,
+  .tp_flags = Py_TPFLAGS_DEFAULT,
+  .tp_new = PyInputStream::newInstance,
+  .tp_init = reinterpret_cast<initproc>(PyInputStream::init),
+  .tp_dealloc = reinterpret_cast<destructor>(PyInputStream::dealloc),
+  .tp_methods = PyInputStream_methods
+};
 
-py::bytes PyInputStream::read(size_t len) {
-  if (len == 0) {
-    len = stream_->size();
+PyObject *PyInputStream::newInstance(PyTypeObject *type, PyObject *args, PyObject *kwds) {
+  auto self = reinterpret_cast<PyInputStream*>(type->tp_alloc(type, 0));
+  if (self == nullptr) {
+    return nullptr;
   }
 
-  if (len <= 0) {
-    return {};
+  self->input_stream_.reset();
+  return reinterpret_cast<PyObject*>(self);
+}
+
+int PyInputStream::init(PyInputStream *self, PyObject *args, PyObject *kwds) {
+  PyObject *weak_ptr_capsule = nullptr;
+    if (!PyArg_ParseTuple(args, "O", &weak_ptr_capsule)) {
+    return -1;
+  }
+
+  auto input_stream = static_cast<HeldType*>(PyCapsule_GetPointer(weak_ptr_capsule, nullptr));
+  // Py_DECREF(weak_ptr_capsule);
+  self->input_stream_ = *input_stream;
+  return 0;
+}
+
+void PyInputStream::dealloc(PyInputStream *self) {
+  self->input_stream_.reset();
+}
+
+PyObject *PyInputStream::read(PyInputStream *self, PyObject *args) {
+  auto input_stream = self->input_stream_.lock();
+  if (!input_stream) {
+    PyErr_SetString(PyExc_AttributeError, "tried reading FlowFile outside 'on_trigger'");
+    return nullptr;
+  }
+
+  size_t len = 0;
+  if (!PyArg_ParseTuple(args, "|K")) {
+    throw PyException();
+  }
+
+  if (len == 0) {
+    len = input_stream->size();
+  }
+
+  if (len == 0) {
+    return nullptr;
   }
 
   std::vector<std::byte> buffer(len);
 
-  const auto read = stream_->read(buffer);
-  return {reinterpret_cast<char *>(buffer.data()), read};
+  const auto read = input_stream->read(buffer);
+  return object::returnReference(OwnedBytes::fromStringAndSize(std::string_view(reinterpret_cast<const char*>(buffer.data()), read)));
+}
+
+PyTypeObject *PyInputStream::typeObject() {
+  return &PyInputStreamType;
 }
 
 }  // namespace org::apache::nifi::minifi::python
+}  // extern "C"

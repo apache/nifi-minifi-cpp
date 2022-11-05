@@ -36,7 +36,7 @@ void PythonProcessor::setSupportsDynamicProperties() {
   processor_->setSupportsDynamicProperties();
 }
 
-void PythonProcessor::setDecription(const std::string &desc) {
+void PythonProcessor::setDescription(const std::string &desc) {
   processor_->setDescription(desc);
 }
 

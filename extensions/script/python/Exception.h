@@ -1,5 +1,4 @@
 /**
- *
  * Licensed to the Apache Software Foundation (ASF) under one or more
  * contributor license agreements.  See the NOTICE file distributed with
  * this work for additional information regarding copyright ownership.
@@ -15,37 +14,22 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
 #pragma once
-
-#include <string>
-#include <memory>
-
-#include "core/Processor.h"
+#include "BaseTypes.h"
+#include <stdexcept>
 
 namespace org::apache::nifi::minifi::python {
 
-namespace processors {
-class ExecutePythonProcessor;
-}
-
-// namespace py = pybind11;
-
-/**
- * Defines a reference to the processor.
- */
-class PythonProcessor {
+class PyException : public std::runtime_error {
  public:
-  explicit PythonProcessor(core::Processor* proc);
-
-  void setSupportsDynamicProperties();
-
-  void setDescription(const std::string &desc);
-
-  void addProperty(const std::string &name, const std::string &description, const std::string &defaultvalue, bool required, bool el);
+  PyException();
 
  private:
-  python::processors::ExecutePythonProcessor* processor_;
+  static std::string exceptionString();
+
+  OwnedReference type_;
+  OwnedReference value_;
+  OwnedReference traceback_;
 };
 
-}  // namespace org::apache::nifi::minifi::python
+} // namespace org::apache::nifi::minifi::python

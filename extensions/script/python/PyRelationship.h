@@ -1,5 +1,4 @@
 /**
- *
  * Licensed to the Apache Software Foundation (ASF) under one or more
  * contributor license agreements.  See the NOTICE file distributed with
  * this work for additional information regarding copyright ownership.
@@ -15,37 +14,32 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
 #pragma once
 
-#include <string>
-#include <memory>
-
-#include "core/Processor.h"
+#include "PythonBindings.h"
+#include "../core/Relationship.h"
 
 namespace org::apache::nifi::minifi::python {
 
-namespace processors {
-class ExecutePythonProcessor;
-}
+struct PyRelationship {
+  using Relationship = org::apache::nifi::minifi::core::Relationship;
+  using HeldType = Relationship;
 
-// namespace py = pybind11;
+  PyObject_HEAD
+  HeldType relationship_;
 
-/**
- * Defines a reference to the processor.
- */
-class PythonProcessor {
- public:
-  explicit PythonProcessor(core::Processor* proc);
+  static PyObject *newInstance(PyTypeObject *type, PyObject *args, PyObject *kwds);
+  static int init(PyRelationship *self, PyObject *args, PyObject *kwds);
+  static void dealloc(PyRelationship *self);
 
-  void setSupportsDynamicProperties();
+  static PyObject *getName(PyRelationship *self, PyObject *args);
+  static PyObject *getDescription(PyRelationship *self, PyObject *args);
 
-  void setDescription(const std::string &desc);
-
-  void addProperty(const std::string &name, const std::string &description, const std::string &defaultvalue, bool required, bool el);
-
- private:
-  python::processors::ExecutePythonProcessor* processor_;
+  static PyTypeObject *typeObject();
 };
 
+namespace object {
+template <>
+struct Converter<PyRelationship::HeldType> : public HolderTypeConverter<PyRelationship> {};
+}
 }  // namespace org::apache::nifi::minifi::python

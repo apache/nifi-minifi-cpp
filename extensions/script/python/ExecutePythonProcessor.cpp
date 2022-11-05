@@ -24,6 +24,8 @@
 #include <utility>
 
 #include "ExecutePythonProcessor.h"
+#include "PyRelationship.h"
+#include "PyLogger.h"
 
 #include "utils/StringUtils.h"
 #include "utils/file/FileUtils.h"
@@ -166,11 +168,11 @@ void ExecutePythonProcessor::reloadScriptIfUsingScriptFileProperty() {
   }
 }
 
-std::unique_ptr<PythonScriptEngine> ExecutePythonProcessor::createScriptEngine() {
-  auto engine = std::make_unique<PythonScriptEngine>();
+std::unique_ptr<NewPythonScriptEngine> ExecutePythonProcessor::createScriptEngine() {
+  auto engine = std::make_unique<NewPythonScriptEngine>();
 
   python_logger_ = core::logging::LoggerFactory<ExecutePythonProcessor>::getAliasedLogger(getName());
-  engine->bind("log", python_logger_);
+  engine->bind("log", std::weak_ptr(python_logger_));
   engine->bind("REL_SUCCESS", Success);
   engine->bind("REL_FAILURE", Failure);
 
