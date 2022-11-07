@@ -111,7 +111,7 @@ bool countLogOccurrencesUntil(const std::string& pattern,
   return false;
 }
 
-bool sendMessagesViaTCP(const std::vector<std::string_view>& contents, const asio::ip::tcp::endpoint& remote_endpoint) {
+std::error_code sendMessagesViaTCP(const std::vector<std::string_view>& contents, const asio::ip::tcp::endpoint& remote_endpoint) {
   asio::io_context io_context;
   asio::ip::tcp::socket socket(io_context);
   socket.connect(remote_endpoint);
@@ -121,10 +121,10 @@ bool sendMessagesViaTCP(const std::vector<std::string_view>& contents, const asi
     tcp_message += '\n';
     asio::write(socket, asio::buffer(tcp_message, tcp_message.size()), err);
     if (err) {
-      return false;
+      return err;
     }
   }
-  return true;
+  return std::error_code();
 }
 
 bool sendUdpDatagram(const asio::const_buffer content, const asio::ip::udp::endpoint& remote_endpoint) {
@@ -166,10 +166,10 @@ struct FlowFileQueueTestAccessor {
   FIELD_ACCESSOR(queue_);
 };
 
-bool sendMessagesViaSSL(const std::vector<std::string_view>& contents,
-                        const asio::ip::tcp::endpoint& remote_endpoint,
-                        const std::filesystem::path& ca_cert_path,
-                        const std::optional<minifi::utils::net::SslData>& ssl_data = std::nullopt) {
+std::error_code sendMessagesViaSSL(const std::vector<std::string_view>& contents,
+                                   const asio::ip::tcp::endpoint& remote_endpoint,
+                                   const std::filesystem::path& ca_cert_path,
+                                   const std::optional<minifi::utils::net::SslData>& ssl_data = std::nullopt) {
   asio::ssl::context ctx(asio::ssl::context::sslv23);
   ctx.load_verify_file(ca_cert_path.string());
   if (ssl_data) {
@@ -183,21 +183,21 @@ bool sendMessagesViaSSL(const std::vector<std::string_view>& contents,
   asio::error_code err;
   socket.lowest_layer().connect(remote_endpoint, err);
   if (err) {
-    return false;
+    return err;
   }
   socket.handshake(asio::ssl::stream_base::client, err);
   if (err) {
-    return false;
+    return err;
   }
   for (auto& content : contents) {
     std::string tcp_message(content);
     tcp_message += '\n';
     asio::write(socket, asio::buffer(tcp_message, tcp_message.size()), err);
     if (err) {
-      return false;
+      return err;
     }
   }
-  return true;
+  return std::error_code();
 }
 
 #ifdef WIN32

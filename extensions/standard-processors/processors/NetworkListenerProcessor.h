@@ -26,7 +26,6 @@
 #include "core/ProcessSession.h"
 #include "core/Property.h"
 #include "utils/net/Server.h"
-#include "utils/net/SslServer.h"
 
 namespace org::apache::nifi::minifi::processors {
 

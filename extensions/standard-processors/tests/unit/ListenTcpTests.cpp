@@ -30,6 +30,11 @@ using namespace std::literals::chrono_literals;
 namespace org::apache::nifi::minifi::test {
 
 constexpr uint64_t PORT = 10254;
+constexpr auto server_startup_wait_time = 30ms;
+
+void check_no_error(std::error_code error_code) {
+  CHECK_FALSE(error_code);
+}
 
 void check_for_attributes(core::FlowFile& flow_file) {
   CHECK(std::to_string(PORT) == flow_file.getAttribute("tcp.port"));
@@ -55,8 +60,9 @@ TEST_CASE("ListenTCP test multiple messages", "[ListenTCP][NetworkListenerProces
   REQUIRE(listen_tcp->setProperty(ListenTCP::MaxBatchSize, "2"));
 
   controller.plan->scheduleProcessor(listen_tcp);
-  REQUIRE(utils::sendMessagesViaTCP({"test_message_1"}, endpoint));
-  REQUIRE(utils::sendMessagesViaTCP({"another_message"}, endpoint));
+  std::this_thread::sleep_for(server_startup_wait_time);
+  check_no_error(utils::sendMessagesViaTCP({"test_message_1"}, endpoint));
+  check_no_error(utils::sendMessagesViaTCP({"another_message"}, endpoint));
   ProcessorTriggerResult result;
   REQUIRE(controller.triggerUntil({{ListenTCP::Success, 2}}, result, 300s, 50ms));
   CHECK(controller.plan->getContent(result.at(ListenTCP::Success)[0]) == "test_message_1");
@@ -98,8 +104,9 @@ TEST_CASE("ListenTCP max queue and max batch size test", "[ListenTCP][NetworkLis
   LogTestController::getInstance().setWarn<ListenTCP>();
 
   controller.plan->scheduleProcessor(listen_tcp);
+  std::this_thread::sleep_for(server_startup_wait_time);
   for (auto i = 0; i < 100; ++i) {
-    REQUIRE(utils::sendMessagesViaTCP({"test_message"}, endpoint));
+    check_no_error(utils::sendMessagesViaTCP({"test_message"}, endpoint));
   }
 
   CHECK(utils::countLogOccurrencesUntil("Queue is full. TCP message ignored.", 50, 300ms, 50ms));
@@ -153,10 +160,11 @@ TEST_CASE("Test ListenTCP with SSL connection", "[ListenTCP][NetworkListenerProc
     }
     ssl_context_service->enable();
     controller.plan->scheduleProcessor(listen_tcp);
+    std::this_thread::sleep_for(server_startup_wait_time);
 
     expected_successful_messages = {"test_message_1", "another_message"};
-    for (const auto& message : expected_successful_messages) {
-      REQUIRE(utils::sendMessagesViaSSL({message}, endpoint, executable_dir / "resources" / "ca_A.crt"));
+    for (const auto& message: expected_successful_messages) {
+      check_no_error(utils::sendMessagesViaSSL({message}, endpoint, executable_dir / "resources" / "ca_A.crt"));
     }
   }
 
@@ -185,6 +193,7 @@ TEST_CASE("Test ListenTCP with SSL connection", "[ListenTCP][NetworkListenerProc
     }
     ssl_context_service->enable();
     controller.plan->scheduleProcessor(listen_tcp);
+    std::this_thread::sleep_for(server_startup_wait_time);
 
     minifi::utils::net::SslData ssl_data;
     ssl_data.ca_loc = executable_dir / "resources" / "ca_A.crt";
@@ -194,7 +203,8 @@ TEST_CASE("Test ListenTCP with SSL connection", "[ListenTCP][NetworkListenerProc
 
     expected_successful_messages = {"test_message_1", "another_message"};
     for (const auto& message : expected_successful_messages) {
-      REQUIRE(utils::sendMessagesViaSSL({message}, endpoint, executable_dir / "resources" / "ca_A.crt", ssl_data));
+      auto send_error = utils::sendMessagesViaSSL({message}, endpoint, executable_dir / "resources" / "ca_A.crt", ssl_data);
+      check_no_error(send_error);
     }
   }
 
@@ -210,8 +220,10 @@ TEST_CASE("Test ListenTCP with SSL connection", "[ListenTCP][NetworkListenerProc
     REQUIRE(controller.plan->setProperty(listen_tcp, ListenTCP::ClientAuth.getName(), "REQUIRED"));
     ssl_context_service->enable();
     controller.plan->scheduleProcessor(listen_tcp);
+    std::this_thread::sleep_for(server_startup_wait_time);
 
-    REQUIRE_FALSE(utils::sendMessagesViaSSL({"test_message_1"}, endpoint, executable_dir / "resources" / "ca_A.crt"));
+    auto send_error = utils::sendMessagesViaSSL({"test_message_1"}, endpoint, executable_dir / "resources" / "ca_A.crt");
+    CHECK(send_error);
   }
 
   ProcessorTriggerResult result;

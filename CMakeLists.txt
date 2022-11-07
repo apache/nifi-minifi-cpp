@@ -286,6 +286,9 @@ target_include_directories(RapidJSON SYSTEM INTERFACE "${CMAKE_CURRENT_SOURCE_DI
 # cxxopts
 include(CxxOpts)
 
+include(Coroutines)
+enable_coroutines()
+
 # gsl-lite
 include(GslLite)
 

@@ -31,6 +31,11 @@ namespace org::apache::nifi::minifi::test {
 
 constexpr uint64_t SYSLOG_PORT = 10255;
 constexpr auto local_addresses = {"127.0.0.1", "::ffff:127.0.0.1", "::1"};
+constexpr auto server_startup_wait_time = 30ms;
+
+void check_no_error(std::error_code error_code) {
+  CHECK_FALSE(error_code);
+}
 
 struct ValidRFC5424Message {
   constexpr ValidRFC5424Message(std::string_view message,
@@ -272,8 +277,9 @@ TEST_CASE("ListenSyslog without parsing test", "[ListenSyslog][NetworkListenerPr
     protocol = "UDP";
     REQUIRE(listen_syslog->setProperty(ListenSyslog::ProtocolProperty, "UDP"));
     controller.plan->scheduleProcessor(listen_syslog);
-    utils::sendUdpDatagram(rfc5424_logger_example_1, endpoint);
-    utils::sendUdpDatagram(invalid_syslog, endpoint);
+    std::this_thread::sleep_for(server_startup_wait_time);
+    CHECK(utils::sendUdpDatagram(rfc5424_logger_example_1, endpoint));
+    CHECK(utils::sendUdpDatagram(invalid_syslog, endpoint));
   }
 
   SECTION("TCP") {
@@ -289,8 +295,9 @@ TEST_CASE("ListenSyslog without parsing test", "[ListenSyslog][NetworkListenerPr
     protocol = "TCP";
     REQUIRE(listen_syslog->setProperty(ListenSyslog::ProtocolProperty, "TCP"));
     controller.plan->scheduleProcessor(listen_syslog);
-    REQUIRE(utils::sendMessagesViaTCP({rfc5424_logger_example_1}, endpoint));
-    REQUIRE(utils::sendMessagesViaTCP({invalid_syslog}, endpoint));
+    std::this_thread::sleep_for(server_startup_wait_time);
+    check_no_error(utils::sendMessagesViaTCP({rfc5424_logger_example_1}, endpoint));
+    check_no_error(utils::sendMessagesViaTCP({invalid_syslog}, endpoint));
   }
   std::unordered_map<core::Relationship, std::vector<std::shared_ptr<core::FlowFile>>> result;
   REQUIRE(controller.triggerUntil({{ListenSyslog::Success, 2}}, result, 300ms, 50ms));
@@ -324,7 +331,7 @@ TEST_CASE("ListenSyslog with parsing test", "[ListenSyslog][NetworkListenerProce
     protocol = "UDP";
     REQUIRE(listen_syslog->setProperty(ListenSyslog::ProtocolProperty, "UDP"));
     controller.plan->scheduleProcessor(listen_syslog);
-    std::this_thread::sleep_for(100ms);
+    std::this_thread::sleep_for(10ms);
     utils::sendUdpDatagram(rfc5424_doc_example_1.unparsed_, endpoint);
     utils::sendUdpDatagram(rfc5424_doc_example_2.unparsed_, endpoint);
     utils::sendUdpDatagram(rfc5424_doc_example_3.unparsed_, endpoint);
@@ -352,29 +359,30 @@ TEST_CASE("ListenSyslog with parsing test", "[ListenSyslog][NetworkListenerProce
     protocol = "TCP";
     REQUIRE(listen_syslog->setProperty(ListenSyslog::ProtocolProperty, "TCP"));
     controller.plan->scheduleProcessor(listen_syslog);
-    std::this_thread::sleep_for(100ms);
-    REQUIRE(utils::sendMessagesViaTCP({rfc5424_doc_example_1.unparsed_,
-                                       rfc5424_doc_example_2.unparsed_,
-                                       rfc5424_doc_example_3.unparsed_,
-                                       rfc5424_doc_example_4.unparsed_}, endpoint));
+    std::this_thread::sleep_for(server_startup_wait_time);
+    check_no_error(utils::sendMessagesViaTCP({rfc5424_doc_example_1.unparsed_,
+                                           rfc5424_doc_example_2.unparsed_,
+                                           rfc5424_doc_example_3.unparsed_,
+                                           rfc5424_doc_example_4.unparsed_}, endpoint));
 
-    REQUIRE(utils::sendMessagesViaTCP({rfc3164_doc_example_1.unparsed_,
-                                       rfc3164_doc_example_2.unparsed_,
-                                       rfc3164_doc_example_3.unparsed_,
-                                       rfc3164_doc_example_4.unparsed_}, endpoint));
+    check_no_error(utils::sendMessagesViaTCP({rfc3164_doc_example_1.unparsed_,
+                                           rfc3164_doc_example_2.unparsed_,
+                                           rfc3164_doc_example_3.unparsed_,
+                                           rfc3164_doc_example_4.unparsed_}, endpoint));
 
-    REQUIRE(utils::sendMessagesViaTCP({rfc5424_logger_example_1}, endpoint));
-    REQUIRE(utils::sendMessagesViaTCP({invalid_syslog}, endpoint));
+    check_no_error(utils::sendMessagesViaTCP({rfc5424_logger_example_1}, endpoint));
+    check_no_error(utils::sendMessagesViaTCP({invalid_syslog}, endpoint));
   }
 
   std::unordered_map<core::Relationship, std::vector<std::shared_ptr<core::FlowFile>>> result;
-  REQUIRE(controller.triggerUntil({{ListenSyslog::Success, 9}, {ListenSyslog::Invalid, 1}}, result, 300ms, 50ms));
+  REQUIRE(controller.triggerUntil({{ListenSyslog::Success, 9},
+                                   {ListenSyslog::Invalid, 1}}, result, 300ms, 50ms));
   REQUIRE(result.at(ListenSyslog::Success).size() == 9);
   REQUIRE(result.at(ListenSyslog::Invalid).size() == 1);
 
   std::unordered_map<std::string, core::FlowFile&> success_flow_files;
 
-  for (auto& flow_file : result.at(ListenSyslog::Success)) {
+  for (auto& flow_file: result.at(ListenSyslog::Success)) {
     success_flow_files.insert({controller.plan->getContent(flow_file), *flow_file});
   }
 
@@ -448,6 +456,7 @@ TEST_CASE("ListenSyslog max queue and max batch size test", "[ListenSyslog][Netw
     }
     REQUIRE(listen_syslog->setProperty(ListenSyslog::ProtocolProperty, "UDP"));
     controller.plan->scheduleProcessor(listen_syslog);
+    std::this_thread::sleep_for(server_startup_wait_time);
     for (auto i = 0; i < 100; ++i) {
       utils::sendUdpDatagram(rfc5424_doc_example_1.unparsed_, endpoint);
     }
@@ -466,8 +475,9 @@ TEST_CASE("ListenSyslog max queue and max batch size test", "[ListenSyslog][Netw
     }
     REQUIRE(listen_syslog->setProperty(ListenSyslog::ProtocolProperty, "TCP"));
     controller.plan->scheduleProcessor(listen_syslog);
+    std::this_thread::sleep_for(server_startup_wait_time);
     for (auto i = 0; i < 100; ++i) {
-      REQUIRE(utils::sendMessagesViaTCP({rfc5424_doc_example_1.unparsed_}, endpoint));
+      check_no_error(utils::sendMessagesViaTCP({rfc5424_doc_example_1.unparsed_}, endpoint));
     }
     CHECK(utils::countLogOccurrencesUntil("Queue is full. TCP message ignored.", 50, 300ms, 50ms));
   }
@@ -505,8 +515,9 @@ TEST_CASE("Test ListenSyslog via TCP with SSL connection", "[ListenSyslog][Netwo
   REQUIRE(listen_syslog->setProperty(ListenSyslog::SSLContextService, "SSLContextService"));
   ssl_context_service->enable();
   controller.plan->scheduleProcessor(listen_syslog);
-  REQUIRE(utils::sendMessagesViaSSL({rfc5424_logger_example_1}, endpoint, executable_dir / "resources" / "ca_A.crt"));
-  REQUIRE(utils::sendMessagesViaSSL({invalid_syslog}, endpoint, executable_dir / "resources" / "ca_A.crt"));
+  std::this_thread::sleep_for(server_startup_wait_time);
+  check_no_error(utils::sendMessagesViaSSL({rfc5424_logger_example_1}, endpoint, executable_dir / "resources" / "ca_A.crt"));
+  check_no_error(utils::sendMessagesViaSSL({invalid_syslog}, endpoint, executable_dir / "resources" / "ca_A.crt"));
 
   std::unordered_map<core::Relationship, std::vector<std::shared_ptr<core::FlowFile>>> result;
   REQUIRE(controller.triggerUntil({{ListenSyslog::Success, 2}}, result, 300ms, 50ms));

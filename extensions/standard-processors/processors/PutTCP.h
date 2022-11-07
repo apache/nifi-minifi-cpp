@@ -32,6 +32,10 @@
 #include "utils/expected.h"
 #include "utils/StringUtils.h"  // for string <=> on libc++
 
+#include <asio/io_context.hpp>
+#include <asio/awaitable.hpp>
+#include <asio/ssl/context.hpp>
+
 namespace org::apache::nifi::minifi::processors::detail {
 
 class ConnectionId {
@@ -64,11 +68,13 @@ namespace org::apache::nifi::minifi::processors {
 class ConnectionHandlerBase {
  public:
   virtual ~ConnectionHandlerBase() = default;
+  virtual void reset() = 0;
 
   [[nodiscard]] virtual bool hasBeenUsed() const = 0;
   [[nodiscard]] virtual bool hasBeenUsedIn(std::chrono::milliseconds dur) const = 0;
-  virtual nonstd::expected<void, std::error_code> sendData(const std::shared_ptr<io::InputStream>& flow_file_content_stream, const std::vector<std::byte>& delimiter) = 0;
-  virtual void reset() = 0;
+  [[nodiscard]] virtual asio::awaitable<std::error_code> sendStreamWithDelimiter(const std::shared_ptr<io::InputStream>& stream_to_send,
+                                                                                 const std::vector<std::byte>& delimiter,
+                                                                                 asio::io_context& io_context) = 0;
 };
 
 class PutTCP final : public core::Processor {
@@ -113,16 +119,18 @@ class PutTCP final : public core::Processor {
  private:
   void removeExpiredConnections();
   void processFlowFile(std::shared_ptr<ConnectionHandlerBase>& connection_handler,
-                       const std::shared_ptr<io::InputStream>& flow_file_content_stream,
                        core::ProcessSession& session,
                        const std::shared_ptr<core::FlowFile>& flow_file);
 
+  std::error_code sendFlowFileContent(std::shared_ptr<ConnectionHandlerBase>& connection_handler, const std::shared_ptr<io::InputStream>& flow_file_content_stream);
+
   std::vector<std::byte> delimiter_;
+  asio::io_context io_context_;
   std::optional<std::unordered_map<detail::ConnectionId, std::shared_ptr<ConnectionHandlerBase>>> connections_;
   std::optional<std::chrono::milliseconds> idle_connection_expiration_;
   std::optional<size_t> max_size_of_socket_send_buffer_;
-  std::chrono::milliseconds timeout_ = std::chrono::seconds(15);
-  std::shared_ptr<controllers::SSLContextService> ssl_context_service_;
+  std::chrono::milliseconds timeout_duration_ = std::chrono::seconds(15);
+  std::optional<asio::ssl::context> ssl_context_;
   std::shared_ptr<core::logging::Logger> logger_ = core::logging::LoggerFactory<PutTCP>::getLogger(uuid_);
 };
 

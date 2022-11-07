@@ -60,6 +60,7 @@ TEST_CASE("PutUDP", "[putudp]") {
   utils::net::UdpServer listener{std::nullopt, port, core::logging::LoggerFactory<utils::net::UdpServer>::getLogger()};
 
   auto server_thread = std::thread([&listener]() { listener.run(); });
+  std::this_thread::sleep_for(30ms);
   auto cleanup_server = gsl::finally([&]{
     listener.stop();
     server_thread.join();
