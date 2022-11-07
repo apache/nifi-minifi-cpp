@@ -48,14 +48,16 @@ FOREACH(testfile ${PROCESSOR_UNIT_TESTS})
 
     MATH(EXPR PROCESSOR_INT_TEST_COUNT "${PROCESSOR_INT_TEST_COUNT}+1")
 
-    # Copy test resources
-    add_custom_command(
-        TARGET "${testfilename}"
-        POST_BUILD
-        COMMAND ${CMAKE_COMMAND} -E copy_directory
-                "${CMAKE_SOURCE_DIR}/extensions/standard-processors/tests/unit/resources"
-                "$<TARGET_FILE_DIR:${testfilename}>/resources"
-        )
+    if(PROCESSOR_INT_TEST_COUNT EQUAL 1)
+        # Copy test resources
+        add_custom_command(
+            TARGET "${testfilename}"
+            POST_BUILD
+            COMMAND ${CMAKE_COMMAND} -E copy_directory
+                    "${CMAKE_SOURCE_DIR}/extensions/standard-processors/tests/unit/resources"
+                    "$<TARGET_FILE_DIR:${testfilename}>/resources"
+            )
+    endif()
 ENDFOREACH()
 
 message("-- Finished building ${PROCESSOR_INT_TEST_COUNT} processor unit test file(s)...")

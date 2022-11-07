@@ -358,11 +358,7 @@ TEST_CASE("Python: Test Module Directory property", "[executescriptPythonModuleD
   logTestController.setDebug<TestPlan>();
   logTestController.setDebug<minifi::processors::ExecuteScript>();
 
-  std::string path;
-  std::string filename;
-  minifi::utils::file::getFileNameAndPath(__FILE__, path, filename);
-  const std::string SCRIPT_FILES_DIRECTORY = minifi::utils::file::getFullPath(concat_path(path, "test_python_scripts"));
-
+  const std::string SCRIPT_FILES_DIRECTORY = minifi::utils::file::getFullPath(concat_path(minifi::utils::file::FileUtils::get_executable_dir(), "test_python_scripts"));
   auto getScriptFullPath = [&SCRIPT_FILES_DIRECTORY](const std::string& script_file_name) {
     return concat_path(SCRIPT_FILES_DIRECTORY, script_file_name);
   };
