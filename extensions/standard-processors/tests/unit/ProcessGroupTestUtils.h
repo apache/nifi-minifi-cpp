@@ -73,14 +73,32 @@ struct Proc {
   }
 };
 
+template<typename Tag>
+struct Port {
+  std::string id;
+  std::string name;
+
+  Lines serialize() const {
+    return {{
+      "- id: " + id,
+      "  name: " + name
+    }};
+  }
+};
+
+using InputPort = Port<struct InputTag>;
+using OutputPort = Port<struct OutputTag>;
+
 struct UnresolvedProc {
   explicit UnresolvedProc(std::string id): id(std::move(id)) {}
   std::string id;
 };
 
 struct MaybeProc {
-  MaybeProc(const Proc& proc): id(proc.id), name(proc.name) {}  // NOLINT
-  MaybeProc(const UnresolvedProc& proc) : id(proc.id) {}  // NOLINT
+  MaybeProc(const Proc& proc) : id(proc.id), name(proc.name) {}
+  MaybeProc(const UnresolvedProc& proc) : id(proc.id) {}
+  MaybeProc(const InputPort& proc) : id(proc.id), name(proc.name) {}
+  MaybeProc(const OutputPort& proc) : id(proc.id), name(proc.name) {}
 
   std::string id;
   std::optional<std::string> name;
@@ -139,6 +157,14 @@ struct Group {
     rpgs_ = std::move(rpgs);
     return *this;
   }
+  Group& With(std::vector<InputPort> input_ports) {
+    input_ports_ = std::move(input_ports);
+    return *this;
+  }
+  Group& With(std::vector<OutputPort> output_ports) {
+    output_ports_ = std::move(output_ports);
+    return *this;
+  }
   Lines serialize(bool is_root = true) const {
     Lines body;
     if (processors_.empty()) {
@@ -169,6 +195,22 @@ struct Group {
         body.append(subgroup.serialize(false).indentAll());
       }
     }
+    if (input_ports_.empty()) {
+      body.emplace_back("Input Ports: []");
+    } else {
+      body.emplace_back("Input Ports:");
+      for (const auto& port : input_ports_) {
+        body.append(port.serialize().indentAll());
+      }
+    }
+    if (output_ports_.empty()) {
+      body.emplace_back("Output Ports: []");
+    } else {
+      body.emplace_back("Output Ports:");
+      for (const auto& port : output_ports_) {
+        body.append(port.serialize().indentAll());
+      }
+    }
     Lines lines;
     if (is_root) {
       lines.emplace_back("Flow Controller:");
@@ -186,6 +228,8 @@ struct Group {
   std::vector<Proc> processors_;
   std::vector<Group> subgroups_;
   std::vector<RPG> rpgs_;
+  std::vector<InputPort> input_ports_;
+  std::vector<OutputPort> output_ports_;
 };
 
 struct ProcessGroupTestAccessor {

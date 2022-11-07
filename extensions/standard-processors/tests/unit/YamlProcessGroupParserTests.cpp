@@ -129,3 +129,19 @@ TEST_CASE("Cannot connect processors from different groups", "[YamlProcessGroupP
 
   verifyProcessGroup(*root, pattern);
 }
+
+TEST_CASE("Processor can communicate with root process group's input port", "[YamlProcessGroupParser4]") {
+  auto pattern = Group("root")
+    .With({Conn{"Conn1",
+                Proc{"00000000-0000-0000-0000-000000000001", "Proc1"},
+                InputPort{"00000000-0000-0000-0000-000000000002", "Port1"}}})
+    .With({Proc{"00000000-0000-0000-0000-000000000001", "Proc1"}})
+    .With({
+      Group("Child1")
+      .With({Proc{"00000000-0000-0000-0000-000000000002", "Port1"}})
+    });
+
+  auto root = config.getRootFromPayload(pattern.serialize().join("\n"));
+
+  verifyProcessGroup(*root, pattern);
+}
