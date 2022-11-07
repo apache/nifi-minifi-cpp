@@ -266,6 +266,7 @@ void BinFiles::onTrigger(const std::shared_ptr<core::ProcessContext> &context, c
     // for each merge as a rollback erases all
     // previously added files
     core::ProcessSession mergeSession(context);
+    mergeSession.setMetrics(metrics_);
     std::unique_ptr<Bin> bin = std::move(readyBins.front());
     readyBins.pop_front();
     // add bin's flows to the session

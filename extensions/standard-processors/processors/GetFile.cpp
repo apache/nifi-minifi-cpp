@@ -136,8 +136,6 @@ void GetFile::onSchedule(core::ProcessContext *context, core::ProcessSessionFact
 }
 
 void GetFile::onTrigger(core::ProcessContext* /*context*/, core::ProcessSession* session) {
-  metrics_->iterations_++;
-
   const bool is_dir_empty_before_poll = isListingEmpty();
   logger_->log_debug("Listing is %s before polling directory", is_dir_empty_before_poll ? "empty" : "not empty");
   if (is_dir_empty_before_poll) {
@@ -194,7 +192,7 @@ bool GetFile::isListingEmpty() const {
   return directory_listing_.empty();
 }
 
-void GetFile::putListing(std::string fileName) {
+void GetFile::putListing(const std::string& fileName) {
   logger_->log_trace("Adding file to queue: %s", fileName);
 
   std::lock_guard<std::mutex> lock(directory_listing_mutex_);
@@ -213,7 +211,7 @@ std::queue<std::string> GetFile::pollListing(uint64_t batch_size) {
   return list;
 }
 
-bool GetFile::fileMatchesRequestCriteria(std::string fullName, std::string name, const GetFileRequest &request) {
+bool GetFile::fileMatchesRequestCriteria(const std::string& fullName, const std::string& name, const GetFileRequest &request) {
   logger_->log_trace("Checking file: %s", fullName);
 
   std::error_code ec;
@@ -248,8 +246,9 @@ bool GetFile::fileMatchesRequestCriteria(std::string fullName, std::string name,
     return false;
   }
 
-  metrics_->input_bytes_ += file_size;
-  metrics_->accepted_files_++;
+  auto* const getfile_metrics = static_cast<GetFileMetrics*>(metrics_.get());
+  getfile_metrics->input_bytes += file_size;
+  ++getfile_metrics->accepted_files;
   return true;
 }
 
@@ -262,11 +261,6 @@ void GetFile::performListing(const GetFileRequest &request) {
     return isRunning();
   };
   utils::file::list_dir(request.inputDirectory, callback, logger_, request.recursive);
-}
-
-int16_t GetFile::getMetricNodes(std::vector<std::shared_ptr<state::response::ResponseNode>> &metric_vector) {
-  metric_vector.push_back(metrics_);
-  return 0;
 }
 
 REGISTER_RESOURCE(GetFile, Processor);

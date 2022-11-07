@@ -77,7 +77,7 @@ const core::Property GetTCP::EndOfMessageByte(
 const core::Relationship GetTCP::Success("success", "All files are routed to success");
 const core::Relationship GetTCP::Partial("partial", "Indicates an incomplete message as a result of encountering the end of message byte trigger");
 
-int16_t DataHandler::handle(std::string source, uint8_t *message, size_t size, bool partial) {
+int16_t DataHandler::handle(const std::string& source, uint8_t *message, size_t size, bool partial) {
   std::shared_ptr<core::ProcessSession> my_session = sessionFactory_->createSession();
   std::shared_ptr<core::FlowFile> flowFile = my_session->create();
 
@@ -224,7 +224,6 @@ void GetTCP::notifyStop() {
 }
 void GetTCP::onTrigger(const std::shared_ptr<core::ProcessContext> &context, const std::shared_ptr<core::ProcessSession>& /*session*/) {
   // Perform directory list
-  metrics_->iterations_++;
   std::lock_guard<std::mutex> lock(mutex_);
   // check if the futures are valid. If they've terminated remove it from the map.
 
@@ -287,11 +286,6 @@ void GetTCP::onTrigger(const std::shared_ptr<core::ProcessContext> &context, con
   }
   logger_->log_debug("Updating endpoint");
   context->yield();
-}
-
-int16_t GetTCP::getMetricNodes(std::vector<std::shared_ptr<state::response::ResponseNode>> &metric_vector) {
-  metric_vector.push_back(metrics_);
-  return 0;
 }
 
 REGISTER_RESOURCE(GetTCP, Processor);

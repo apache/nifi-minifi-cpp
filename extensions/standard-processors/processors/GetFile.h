@@ -48,70 +48,40 @@ struct GetFileRequest {
   std::string inputDirectory;
 };
 
-class GetFileMetrics : public state::response::ResponseNode {
+class GetFileMetrics : public core::ProcessorMetrics {
  public:
-  explicit GetFileMetrics(const CoreComponent& source_component)
-    : state::response::ResponseNode("GetFileMetrics"),
-      source_component_(source_component) {
-  }
-
-  std::string getName() const override {
-    return core::Connectable::getName();
+  explicit GetFileMetrics(const core::Processor& source_processor)
+    : core::ProcessorMetrics(source_processor) {
   }
 
   std::vector<state::response::SerializedResponseNode> serialize() override {
-    std::vector<state::response::SerializedResponseNode> resp;
+    auto resp = core::ProcessorMetrics::serialize();
+    auto& root_node = resp[0];
 
-    state::response::SerializedResponseNode root_node;
-    root_node.name = source_component_.getUUIDStr();
+    state::response::SerializedResponseNode accepted_files_node{"AcceptedFiles", accepted_files.load()};
+    root_node.children.push_back(accepted_files_node);
 
-    state::response::SerializedResponseNode iter;
-    iter.name = "OnTriggerInvocations";
-    iter.value = (uint32_t)iterations_.load();
-
-    root_node.children.push_back(iter);
-
-    state::response::SerializedResponseNode accepted_files;
-    accepted_files.name = "AcceptedFiles";
-    accepted_files.value = (uint32_t)accepted_files_.load();
-
-    root_node.children.push_back(accepted_files);
-
-    state::response::SerializedResponseNode input_bytes;
-    input_bytes.name = "InputBytes";
-    input_bytes.value = (uint32_t)input_bytes_.load();
-
-    root_node.children.push_back(input_bytes);
-    resp.push_back(root_node);
+    state::response::SerializedResponseNode input_bytes_node{"InputBytes", input_bytes.load()};
+    root_node.children.push_back(input_bytes_node);
 
     return resp;
   }
 
   std::vector<state::PublishedMetric> calculateMetrics() override {
-    return {
-      {"onTrigger_invocations", static_cast<double>(iterations_.load()),
-        {{"metric_class", "GetFileMetrics"}, {"processor_name", source_component_.getName()}, {"processor_uuid", source_component_.getUUIDStr()}}},
-      {"accepted_files", static_cast<double>(accepted_files_.load()),
-        {{"metric_class", "GetFileMetrics"}, {"processor_name", source_component_.getName()}, {"processor_uuid", source_component_.getUUIDStr()}}},
-      {"input_bytes", static_cast<double>(input_bytes_.load()),
-        {{"metric_class", "GetFileMetrics"}, {"processor_name", source_component_.getName()}, {"processor_uuid", source_component_.getUUIDStr()}}}
-    };
+    auto metrics = core::ProcessorMetrics::calculateMetrics();
+    metrics.push_back({"accepted_files", static_cast<double>(accepted_files.load()), getCommonLabels()});
+    metrics.push_back({"input_bytes", static_cast<double>(input_bytes.load()), getCommonLabels()});
+    return metrics;
   }
 
- protected:
-  friend class GetFile;
-
-  const CoreComponent& source_component_;
-  std::atomic<size_t> iterations_{0};
-  std::atomic<size_t> accepted_files_{0};
-  std::atomic<size_t> input_bytes_{0};
+  std::atomic<uint32_t> accepted_files{0};
+  std::atomic<uint64_t> input_bytes{0};
 };
 
-class GetFile : public core::Processor, public state::response::MetricsNodeSource {
+class GetFile : public core::Processor {
  public:
   explicit GetFile(const std::string& name, const utils::Identifier& uuid = {})
-      : Processor(name, uuid),
-        metrics_(std::make_shared<GetFileMetrics>(*this)) {
+      : Processor(name, uuid, std::make_shared<GetFileMetrics>(*this)) {
   }
   ~GetFile() override = default;
 
@@ -164,16 +134,13 @@ class GetFile : public core::Processor, public state::response::MetricsNodeSourc
    */
   void performListing(const GetFileRequest &request);
 
-  int16_t getMetricNodes(std::vector<std::shared_ptr<state::response::ResponseNode>> &metric_vector) override;
-
  private:
   bool isListingEmpty() const;
-  void putListing(std::string fileName);
+  void putListing(const std::string& fileName);
   std::queue<std::string> pollListing(uint64_t batch_size);
-  bool fileMatchesRequestCriteria(std::string fullName, std::string name, const GetFileRequest &request);
+  bool fileMatchesRequestCriteria(const std::string& fullName, const std::string& name, const GetFileRequest &request);
   void getSingleFile(core::ProcessSession& session, const std::string& file_name) const;
 
-  std::shared_ptr<GetFileMetrics> metrics_;
   GetFileRequest request_;
   std::queue<std::string> directory_listing_;
   mutable std::mutex directory_listing_mutex_;

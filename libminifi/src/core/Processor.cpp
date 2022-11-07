@@ -20,6 +20,7 @@
 #include "core/Processor.h"
 
 #include <ctime>
+#include <cctype>
 
 #include <memory>
 #include <set>
@@ -40,9 +41,10 @@ using namespace std::literals::chrono_literals;
 
 namespace org::apache::nifi::minifi::core {
 
-Processor::Processor(const std::string& name)
+Processor::Processor(const std::string& name, std::shared_ptr<ProcessorMetrics> metrics)
     : Connectable(name),
-      logger_(logging::LoggerFactory<Processor>::getLogger()) {
+      logger_(logging::LoggerFactory<Processor>::getLogger()),
+      metrics_(metrics ? std::move(metrics) : std::make_shared<ProcessorMetrics>(*this)) {
   has_work_.store(false);
   // Setup the default values
   state_ = DISABLED;
@@ -58,9 +60,10 @@ Processor::Processor(const std::string& name)
   logger_->log_debug("Processor %s created UUID %s", name_, getUUIDStr());
 }
 
-Processor::Processor(const std::string& name, const utils::Identifier& uuid)
+Processor::Processor(const std::string& name, const utils::Identifier& uuid, std::shared_ptr<ProcessorMetrics> metrics)
     : Connectable(name, uuid),
-      logger_(logging::LoggerFactory<Processor>::getLogger()) {
+      logger_(logging::LoggerFactory<Processor>::getLogger()),
+      metrics_(metrics ? std::move(metrics) : std::make_shared<ProcessorMetrics>(*this)) {
   has_work_.store(false);
   // Setup the default values
   state_ = DISABLED;
@@ -174,11 +177,15 @@ bool Processor::flowFilesOutGoingFull() const {
 }
 
 void Processor::onTrigger(ProcessContext *context, ProcessSessionFactory *sessionFactory) {
+  ++metrics_->iterations;
   auto session = sessionFactory->createSession();
+  session->setMetrics(metrics_);
 
   try {
     // Call the virtual trigger function
+    const auto start = std::chrono::steady_clock::now();
     onTrigger(context, session.get());
+    metrics_->addLastOnTriggerRuntime(std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::steady_clock::now() - start));
     session->commit();
   } catch (const std::exception& exception) {
     logger_->log_warn("Caught \"%s\" (%s) during Processor::onTrigger of processor: %s (%s)",
@@ -193,11 +200,15 @@ void Processor::onTrigger(ProcessContext *context, ProcessSessionFactory *sessio
 }
 
 void Processor::onTrigger(const std::shared_ptr<ProcessContext> &context, const std::shared_ptr<ProcessSessionFactory> &sessionFactory) {
+  ++metrics_->iterations;
   auto session = sessionFactory->createSession();
+  session->setMetrics(metrics_);
 
   try {
     // Call the virtual trigger function
+    const auto start = std::chrono::steady_clock::now();
     onTrigger(context, session);
+    metrics_->addLastOnTriggerRuntime(std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::steady_clock::now() - start));
     session->commit();
   } catch (std::exception &exception) {
     logger_->log_warn("Caught \"%s\" (%s) during Processor::onTrigger of processor: %s (%s)",

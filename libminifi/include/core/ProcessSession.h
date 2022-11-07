@@ -27,6 +27,7 @@
 #include <atomic>
 #include <algorithm>
 #include <set>
+#include <unordered_map>
 
 #include "ProcessContext.h"
 #include "FlowFileRecord.h"
@@ -37,6 +38,7 @@
 #include "WeakReference.h"
 #include "provenance/Provenance.h"
 #include "utils/gsl.h"
+#include "ProcessorMetrics.h"
 
 namespace org::apache::nifi::minifi::core {
 namespace detail {
@@ -82,11 +84,11 @@ class ProcessSession : public ReferenceContainer {
   // Clone a new UUID FlowFile from parent for attributes and sub set of parent content resource claim
   std::shared_ptr<core::FlowFile> clone(const std::shared_ptr<core::FlowFile> &parent, int64_t offset, int64_t size);
   // Transfer the FlowFile to the relationship
-  virtual void transfer(const std::shared_ptr<core::FlowFile> &flow, const Relationship& relationship);
+  virtual void transfer(const std::shared_ptr<core::FlowFile>& flow, const Relationship& relationship);
   // Put Attribute
-  void putAttribute(const std::shared_ptr<core::FlowFile> &flow, const std::string& key, const std::string& value);
+  void putAttribute(const std::shared_ptr<core::FlowFile>& flow, const std::string& key, const std::string& value);
   // Remove Attribute
-  void removeAttribute(const std::shared_ptr<core::FlowFile> &flow, const std::string& key);
+  void removeAttribute(const std::shared_ptr<core::FlowFile>& flow, const std::string& key);
   // Remove Flow File
   void remove(const std::shared_ptr<core::FlowFile> &flow);
   // Access the contents of the flow file as an input stream; returns null if the flow file has no content claim
@@ -144,6 +146,10 @@ class ProcessSession : public ReferenceContainer {
 
   bool existsFlowFileInRelationship(const Relationship &relationship);
 
+  void setMetrics(const std::shared_ptr<ProcessorMetrics>& metrics) {
+    metrics_ = metrics;
+  }
+
 // Prevent default copy constructor and assignment operation
 // Only support pass by reference or pointer
   ProcessSession(const ProcessSession &parent) = delete;
@@ -174,7 +180,12 @@ class ProcessSession : public ReferenceContainer {
     Error_NoRelationship
   };
 
-  RouteResult routeFlowFile(const std::shared_ptr<FlowFile>& record);
+  struct TransferMetrics {
+    size_t transfer_count = 0;
+    uint64_t transfer_size = 0;
+  };
+
+  RouteResult routeFlowFile(const std::shared_ptr<FlowFile>& record, const std::function<void(const FlowFile&, const Relationship&)>& transfer_callback);
 
   void persistFlowFilesBeforeTransfer(
       std::map<Connectable*, std::vector<std::shared_ptr<core::FlowFile>>>& transactionMap,
@@ -197,6 +208,8 @@ class ProcessSession : public ReferenceContainer {
   CoreComponentStateManager* stateManager_;
 
   static std::shared_ptr<utils::IdGenerator> id_generator_;
+
+  std::shared_ptr<ProcessorMetrics> metrics_;
 };
 
 }  // namespace org::apache::nifi::minifi::core
