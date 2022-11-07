@@ -644,7 +644,7 @@ std::shared_ptr<TestPlan> TestController::createPlan(PlanConfig config) {
 std::shared_ptr<TestPlan> TestController::createPlan(std::shared_ptr<minifi::Configure> configuration, std::optional<std::filesystem::path> state_dir, std::shared_ptr<minifi::core::ContentRepository> content_repo) {
   return createPlan(PlanConfig{
     .configuration = std::move(configuration),
-    .state_dir = state_dir,
+    .state_dir = std::move(state_dir),
     .content_repo = std::move(content_repo)
   });
 }
