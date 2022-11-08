@@ -48,8 +48,8 @@ FOREACH(testfile ${PROCESSOR_UNIT_TESTS})
 
     MATH(EXPR PROCESSOR_INT_TEST_COUNT "${PROCESSOR_INT_TEST_COUNT}+1")
 
+    # Copy test resources only once after the first build to be available for all test cases
     if(PROCESSOR_INT_TEST_COUNT EQUAL 1)
-        # Copy test resources
         add_custom_command(
             TARGET "${testfilename}"
             POST_BUILD

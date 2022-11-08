@@ -46,8 +46,8 @@ FOREACH(testfile ${EXECUTESCRIPT_PYTHON_TESTS})
     MATH(EXPR EXTENSIONS_TEST_COUNT "${EXTENSIONS_TEST_COUNT}+1")
     add_test(NAME "${testfilename}" COMMAND "${testfilename}" WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR})
 
+    # Copy test resources only once after the first build to be available for all test cases
     if(EXTENSIONS_TEST_COUNT EQUAL 1)
-        # Copy test resources
         add_custom_command(
             TARGET "${testfilename}"
             POST_BUILD
@@ -81,8 +81,8 @@ FOREACH(testfile ${EXECUTEPYTHONPROCESSOR_UNIT_TESTS})
     add_test(NAME "${testfilename}" COMMAND "${testfilename}"  WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR})
     MATH(EXPR EXTENSIONS_TEST_COUNT "${EXTENSIONS_TEST_COUNT}+1")
 
+    # Copy test resources only once after the first build to be available for all test cases
     if(EXTENSIONS_TEST_COUNT EQUAL 1)
-        # Copy test resources
         add_custom_command(
             TARGET "${testfilename}"
             POST_BUILD
