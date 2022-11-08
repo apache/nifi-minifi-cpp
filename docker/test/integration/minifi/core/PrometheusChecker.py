@@ -37,6 +37,8 @@ class PrometheusChecker:
             return self.verify_flow_information_metrics()
         elif metric_class == "DeviceInfoNode":
             return self.verify_device_info_node_metrics()
+        elif metric_class == "AgentStatus":
+            return self.verify_agent_status_metrics()
         else:
             raise Exception("Metric class '%s' verification is not implemented" % metric_class)
 
