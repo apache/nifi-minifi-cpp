@@ -124,8 +124,7 @@ void ExecuteProcess::executeChildProcess() {
 
   static constexpr int STDOUT = 1;
   static constexpr int STDERR = 2;
-  close(STDOUT);
-  if (dup(pipefd_[1]) < 0) {  // points pipefd at file descriptor
+  if (dup2(pipefd_[1], STDOUT) < 0) {  // points pipefd at file descriptor
     logger_->log_error("Failed to point pipe at file descriptor");
     exit(1);
   }
@@ -184,9 +183,9 @@ void ExecuteProcess::readOutput(core::ProcessSession& session) {
   char *buf_ptr = buffer;
   size_t read_to_buffer = 0;
   std::shared_ptr<core::FlowFile> flow_file;
-  auto num_read = read(pipefd_[0], buf_ptr, (sizeof(buffer) - read_to_buffer));
+  auto num_read = read(pipefd_[0], buf_ptr, sizeof(buffer));
   while (num_read > 0) {
-    if (num_read == static_cast<ssize_t>((sizeof(buffer) - read_to_buffer))) {
+    if (num_read == static_cast<ssize_t>(sizeof(buffer) - read_to_buffer)) {
       // we reach the max buffer size
       logger_->log_debug("Execute Command Max Respond %zu", sizeof(buffer));
       if (!writeToFlowFile(session, flow_file, buffer)) {
