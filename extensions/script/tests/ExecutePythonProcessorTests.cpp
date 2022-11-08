@@ -47,7 +47,7 @@ class ExecutePythonProcessorTestBase {
     std::string path;
     std::string filename;
     getFileNameAndPath(__FILE__, path, filename);
-    SCRIPT_FILES_DIRECTORY = getFullPath(concat_path(path, "test_python_scripts"));
+    SCRIPT_FILES_DIRECTORY = getFullPath(concat_path(minifi::utils::file::FileUtils::get_executable_dir(), "test_python_scripts"));
     reInitialize();
   }
   virtual ~ExecutePythonProcessorTestBase() {

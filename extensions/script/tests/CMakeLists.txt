@@ -21,11 +21,7 @@ if (NOT DISABLE_PYTHON_SCRIPTING)
     file(GLOB EXECUTESCRIPT_PYTHON_TESTS  "TestExecuteScriptProcessorWithPythonScript.cpp" "PythonScriptEngineTests.cpp" "PythonManifestTests.cpp")
     file(GLOB EXECUTEPYTHONPROCESSOR_UNIT_TESTS  "ExecutePythonProcessorTests.cpp")
     file(GLOB PY_SOURCES  "python/*.cpp")
-    find_package(PythonLibs 3.5)
-    if (NOT PYTHONLIBS_FOUND)
-        find_package(PythonLibs 3.0 REQUIRED)
-    endif()
-    file(COPY "${CMAKE_SOURCE_DIR}/extensions/script/tests/test_python_scripts" DESTINATION "${CMAKE_BINARY_DIR}/bin/")
+    find_package(PythonLibs 3.6 REQUIRED)
 endif()
 
 if (ENABLE_LUA_SCRIPTING)
@@ -49,6 +45,17 @@ FOREACH(testfile ${EXECUTESCRIPT_PYTHON_TESTS})
     createTests("${testfilename}")
     MATH(EXPR EXTENSIONS_TEST_COUNT "${EXTENSIONS_TEST_COUNT}+1")
     add_test(NAME "${testfilename}" COMMAND "${testfilename}" WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR})
+
+    # Copy test resources only once after the first build to be available for all test cases
+    if(EXTENSIONS_TEST_COUNT EQUAL 1)
+        add_custom_command(
+            TARGET "${testfilename}"
+            POST_BUILD
+            COMMAND ${CMAKE_COMMAND} -E copy_directory
+                    "${CMAKE_SOURCE_DIR}/extensions/script/tests/test_python_scripts"
+                    "$<TARGET_FILE_DIR:${testfilename}>/test_python_scripts"
+            )
+    endif()
 ENDFOREACH()
 
 FOREACH(testfile ${EXECUTEPYTHONPROCESSOR_UNIT_TESTS})
@@ -73,6 +80,17 @@ FOREACH(testfile ${EXECUTEPYTHONPROCESSOR_UNIT_TESTS})
     createTests("${testfilename}")
     add_test(NAME "${testfilename}" COMMAND "${testfilename}"  WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR})
     MATH(EXPR EXTENSIONS_TEST_COUNT "${EXTENSIONS_TEST_COUNT}+1")
+
+    # Copy test resources only once after the first build to be available for all test cases
+    if(EXTENSIONS_TEST_COUNT EQUAL 1)
+        add_custom_command(
+            TARGET "${testfilename}"
+            POST_BUILD
+            COMMAND ${CMAKE_COMMAND} -E copy_directory
+                    "${CMAKE_SOURCE_DIR}/extensions/script/tests/test_python_scripts"
+                    "$<TARGET_FILE_DIR:${testfilename}>/test_python_scripts"
+            )
+    endif()
 ENDFOREACH()
 
 FOREACH(testfile ${EXECUTESCRIPT_LUA_TESTS})
