@@ -58,7 +58,6 @@ void TcpSession::handleReadUntilNewLine(std::error_code error_code) {
 
 TcpServer::TcpServer(std::optional<size_t> max_queue_size, uint16_t port, std::shared_ptr<core::logging::Logger> logger)
     : SessionHandlingServer<TcpSession>(max_queue_size, port, std::move(logger)) {
-  startAccept();
 }
 
 std::shared_ptr<TcpSession> TcpServer::createSession() {

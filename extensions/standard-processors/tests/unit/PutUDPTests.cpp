@@ -57,7 +57,7 @@ TEST_CASE("PutUDP", "[putudp]") {
   put_udp->setProperty(PutUDP::Hostname, "${literal('localhost')}");
   put_udp->setProperty(PutUDP::Port, utils::StringUtils::join_pack("${literal('", std::to_string(port), "')}"));
 
-  utils::net::UdpServer listener{std::nullopt, port, core::logging::LoggerFactory<utils::net::UdpServer>().getLogger()};
+  utils::net::UdpServer listener{std::nullopt, port, core::logging::LoggerFactory<utils::net::UdpServer>::getLogger()};
 
   auto server_thread = std::thread([&listener]() { listener.run(); });
   auto cleanup_server = gsl::finally([&]{
