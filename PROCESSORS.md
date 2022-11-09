@@ -375,6 +375,13 @@ In the list below, the names of required properties appear in bold. Any other pr
 | success | FlowFiles that are sent successfully to the destination are transferred to this relationship |
 
 
+### Output Attributes
+
+| Attribute     | Description               |
+|---------------|---------------------------|
+| _mqtt.broker_ | URI of the sending broker |
+| _mqtt.topic_  | Topic of the message      |
+
 ## ConsumeWindowsEventLog
 
 ### Description
