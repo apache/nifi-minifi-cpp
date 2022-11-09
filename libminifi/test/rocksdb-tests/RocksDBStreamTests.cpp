@@ -31,8 +31,8 @@ class RocksDBStreamTest : TestController {
       db_opts.set(&rocksdb::DBOptions::use_direct_io_for_flush_and_compaction, true);
       db_opts.set(&rocksdb::DBOptions::use_direct_reads, true);
     };
-    auto set_cf_opts = [] (minifi::internal::Writable<rocksdb::ColumnFamilyOptions>& cf_opts) {
-      cf_opts.set(&rocksdb::ColumnFamilyOptions::merge_operator, std::make_shared<core::repository::StringAppender>(), core::repository::StringAppender::Eq{});
+    auto set_cf_opts = [] (rocksdb::ColumnFamilyOptions& cf_opts) {
+      cf_opts.merge_operator = std::make_shared<core::repository::StringAppender>();
     };
     db = minifi::internal::RocksDatabase::create(set_db_opts, set_cf_opts, dbPath);
     REQUIRE(db->open());

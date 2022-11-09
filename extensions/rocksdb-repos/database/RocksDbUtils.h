@@ -67,7 +67,7 @@ class Writable {
  * options of the existing database, apply a "patch" and then check for compatibility.
  */
 using DBOptionsPatch = std::function<void(Writable<rocksdb::DBOptions>&)>;
-using ColumnFamilyOptionsPatch = std::function<void(Writable<rocksdb::ColumnFamilyOptions>&)>;
+using ColumnFamilyOptionsPatch = std::function<void(rocksdb::ColumnFamilyOptions&)>;
 
 }  // namespace internal
 }  // namespace minifi

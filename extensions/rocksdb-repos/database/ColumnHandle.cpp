@@ -19,19 +19,11 @@
 #include "ColumnHandle.h"
 #include "logging/LoggerConfiguration.h"
 
-namespace org {
-namespace apache {
-namespace nifi {
-namespace minifi {
-namespace internal {
+namespace org::apache::nifi::minifi::internal {
 
 ColumnHandle::~ColumnHandle() {
   static auto logger = core::logging::LoggerFactory<ColumnHandle>::getLogger();
   logger->log_trace("Closing column handle '%s'", handle->GetName());
 }
 
-}  // namespace internal
-}  // namespace minifi
-}  // namespace nifi
-}  // namespace apache
-}  // namespace org
+}  // namespace org::apache::nifi::minifi::internal
