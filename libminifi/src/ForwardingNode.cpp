@@ -1,5 +1,4 @@
 /**
- *
  * Licensed to the Apache Software Foundation (ASF) under one or more
  * contributor license agreements.  See the NOTICE file distributed with
  * this work for additional information regarding copyright ownership.
@@ -15,19 +14,25 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#pragma once
 
 #include "ForwardingNode.h"
+#include "core/ProcessSession.h"
 
 namespace org::apache::nifi::minifi {
 
-class Funnel final : public ForwardingNode {
- public:
-  Funnel(std::string name, const utils::Identifier& uuid) : ForwardingNode(std::move(name), uuid, core::logging::LoggerFactory<Funnel>::getLogger()) {}
-  explicit Funnel(std::string name) : ForwardingNode(std::move(name), core::logging::LoggerFactory<Funnel>::getLogger()) {}
+const core::Relationship ForwardingNode::Success("success", "FlowFiles are routed to success relationship");
 
-  MINIFIAPI static constexpr core::annotation::Input InputRequirement = core::annotation::Input::INPUT_REQUIRED;
-  ADD_COMMON_VIRTUAL_FUNCTIONS_FOR_PROCESSORS
-};
+void ForwardingNode::initialize() {
+  setSupportedRelationships(relationships());
+}
+
+void ForwardingNode::onTrigger(const std::shared_ptr<core::ProcessContext>& /*context*/, const std::shared_ptr<core::ProcessSession>& session) {
+  logger_->log_trace("On trigger %s", getUUIDStr());
+  std::shared_ptr<core::FlowFile> flow_file = session->get();
+  if (!flow_file) {
+    return;
+  }
+  session->transfer(flow_file, Success);
+}
 
 }  // namespace org::apache::nifi::minifi
