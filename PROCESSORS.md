@@ -551,18 +551,18 @@ In the list below, the names of required properties appear in bold. Any other pr
 
 ### Description
 
-Runs an operating system command specified by the user and writes the output of that command to a FlowFile. If the command is expected to be long-running,the Processor can output the partial data on a specified interval. When this option is used, the output is expected to be in textual format,as it typically does not make sense to split binary data on arbitrary time-based intervals.
+Runs an operating system command specified by the user and writes the output of that command to a FlowFile. If the command is expected to be long-running,the Processor can output the partial data on a specified interval. When this option is used, the output is expected to be in textual format,as it typically does not make sense to split binary data on arbitrary time-based intervals. This processor is not available on Windows systems.
 ### Properties
 
 In the list below, the names of required properties appear in bold. Any other properties (not in bold) are considered optional. The table also indicates any default values, and whether a property supports the NiFi Expression Language.
 
-| Name                  | Default Value | Allowable Values | Description                                                                                                                                                                 |
-|-----------------------|---------------|------------------|-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
-| Batch Duration        | 0 sec         |                  | If the process is expected to be long-running and produce textual output, a batch duration can be specified.                                                                |
-| Command               |               |                  | Specifies the command to be executed; if just the name of an executable is provided, it must be in the user's environment PATH.<br/>**Supports Expression Language: true**  |
-| Command Arguments     |               |                  | The arguments to supply to the executable delimited by white space. White space can be escaped by enclosing it in double-quotes.<br/>**Supports Expression Language: true** |
-| Redirect Error Stream | false         |                  | If true will redirect any error stream output of the process to the output stream.                                                                                          |
-| Working Directory     |               |                  | The directory to use as the current working directory when executing the command<br/>**Supports Expression Language: true**                                                 |
+| Name                  | Default Value | Allowable Values | Description                                                                                                                      |
+|-----------------------|---------------|------------------|----------------------------------------------------------------------------------------------------------------------------------|
+| Batch Duration        | 0 sec         |                  | If the process is expected to be long-running and produce textual output, a batch duration can be specified.                     |
+| Command               |               |                  | Specifies the command to be executed; if just the name of an executable is provided, it must be in the user's environment PATH.  |
+| Command Arguments     |               |                  | The arguments to supply to the executable delimited by white space. White space can be escaped by enclosing it in double-quotes. |
+| Redirect Error Stream | false         |                  | If true will redirect any error stream output of the process to the output stream.                                               |
+| Working Directory     |               |                  | The directory to use as the current working directory when executing the command                                                 |
 ### Relationships
 
 | Name    | Description                                            |
