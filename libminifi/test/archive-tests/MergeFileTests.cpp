@@ -822,3 +822,59 @@ TEST_CASE_METHOD(MergeTestController, "Batch Size", "[testMergeFileBatchSize]") 
     REQUIRE(callback.to_string() == expected[1]);
   }
 }
+
+TEST_CASE_METHOD(MergeTestController, "Maximum Group Size is respected", "[testMergeFileMaximumGroupSize]") {
+  std::string expected[2]{
+      flowFileContents_[0] + flowFileContents_[1],
+      flowFileContents_[2] + flowFileContents_[3]
+  };
+
+  context_->setProperty(minifi::processors::MergeContent::MergeFormat, minifi::processors::merge_content_options::MERGE_FORMAT_CONCAT_VALUE);
+  context_->setProperty(minifi::processors::MergeContent::MergeStrategy, minifi::processors::merge_content_options::MERGE_STRATEGY_BIN_PACK);
+  context_->setProperty(minifi::processors::MergeContent::DelimiterStrategy, minifi::processors::merge_content_options::DELIMITER_STRATEGY_TEXT);
+  context_->setProperty(minifi::processors::BinFiles::BatchSize, "1000");
+  context_->setProperty(minifi::processors::BinFiles::MaxSize, std::to_string(flowFileContents_[0].length() * 5 / 2));
+
+  core::ProcessSession sessionGenFlowFile(context_);
+  // enqueue 4 (four) flowFiles
+  for (const int i : {0, 1, 2, 3, 4}) {
+    const auto flow = sessionGenFlowFile.create();
+    sessionGenFlowFile.writeBuffer(flow, flowFileContents_[i]);
+    sessionGenFlowFile.flushContent();
+    input_->put(flow);
+  }
+
+  REQUIRE(merge_content_processor_->getName() == "mergecontent");
+  auto factory = std::make_shared<core::ProcessSessionFactory>(context_);
+  merge_content_processor_->onSchedule(context_, factory);
+  // a single trigger is enough to process all five flowFiles
+  {
+    auto session = std::make_shared<core::ProcessSession>(context_);
+    merge_content_processor_->onTrigger(context_, session);
+    session->commit();
+  }
+  // validate the merge content
+  std::set<std::shared_ptr<core::FlowFile>> expiredFlowRecords;
+  std::shared_ptr<core::FlowFile> flow1 = output_->poll(expiredFlowRecords);
+  REQUIRE(expiredFlowRecords.empty());
+  REQUIRE(flow1);
+  {
+    FixedBuffer callback(gsl::narrow<size_t>(flow1->getSize()));
+    sessionGenFlowFile.read(flow1, std::ref(callback));
+    REQUIRE(callback.to_string() == expected[0]);
+  }
+
+  std::shared_ptr<core::FlowFile> flow2 = output_->poll(expiredFlowRecords);
+  REQUIRE(expiredFlowRecords.empty());
+  REQUIRE(flow2);
+  {
+    FixedBuffer callback(gsl::narrow<size_t>(flow2->getSize()));
+    sessionGenFlowFile.read(flow2, std::ref(callback));
+    REQUIRE(callback.to_string() == expected[1]);
+  }
+
+  // no more flowfiles
+  std::shared_ptr<core::FlowFile> flow3 = output_->poll(expiredFlowRecords);
+  REQUIRE(expiredFlowRecords.empty());
+  REQUIRE_FALSE(flow3);
+}
