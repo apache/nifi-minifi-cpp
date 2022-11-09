@@ -102,11 +102,11 @@ TEST_CASE("The agent identifier is excluded from the checksum", "[ChecksumCalcul
   std::string file_location_1 = utils::putFileToDir(test_dir, "agent_one.txt",
       "nifi.c2.agent.class=Test\n"
       "nifi.c2.agent.identifier=Test-111\n"
-      "nifi.c2.agent.heartbeat.period=10000\n");
+      "nifi.c2.agent.heartbeat.period=10 sec\n");
   std::string file_location_2 = utils::putFileToDir(test_dir, "agent_two.txt",
       "nifi.c2.agent.class=Test\n"
       "nifi.c2.agent.identifier=Test-222\n"
-      "nifi.c2.agent.heartbeat.period=10000\n");
+      "nifi.c2.agent.heartbeat.period=10 sec\n");
 
   utils::ChecksumCalculator checksum_calculator_1;
   checksum_calculator_1.setFileLocation(file_location_1);
