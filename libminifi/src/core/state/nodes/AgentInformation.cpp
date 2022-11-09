@@ -24,5 +24,6 @@ utils::ProcessCpuUsageTracker AgentStatus::cpu_load_tracker_;
 std::mutex AgentStatus::cpu_load_tracker_mutex_;
 
 REGISTER_RESOURCE(AgentInformation, DescriptionOnly);
+REGISTER_RESOURCE(AgentStatus, DescriptionOnly);
 
 }  // namespace org::apache::nifi::minifi::state::response

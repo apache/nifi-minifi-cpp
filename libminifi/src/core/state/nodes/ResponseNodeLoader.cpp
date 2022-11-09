@@ -126,6 +126,15 @@ void ResponseNodeLoader::initializeAgentNode(const std::shared_ptr<ResponseNode>
   }
 }
 
+void ResponseNodeLoader::initializeAgentStatus(const std::shared_ptr<ResponseNode>& response_node) {
+  auto agent_status = dynamic_cast<state::response::AgentStatus*>(response_node.get());
+  if (agent_status != nullptr) {
+    agent_status->addRepository(provenance_repo_);
+    agent_status->addRepository(flow_file_repo_);
+    agent_status->setStateMonitor(update_sink_);
+  }
+}
+
 void ResponseNodeLoader::initializeConfigurationChecksums(const std::shared_ptr<ResponseNode>& response_node) {
   auto configuration_checksums = dynamic_cast<state::response::ConfigurationChecksums*>(response_node.get());
   if (configuration_checksums) {
@@ -169,6 +178,7 @@ std::vector<std::shared_ptr<ResponseNode>> ResponseNodeLoader::loadResponseNodes
     initializeAgentIdentifier(response_node);
     initializeAgentMonitor(response_node);
     initializeAgentNode(response_node);
+    initializeAgentStatus(response_node);
     initializeConfigurationChecksums(response_node);
     initializeFlowMonitor(response_node, root);
   }

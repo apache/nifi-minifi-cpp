@@ -16,6 +16,7 @@ Feature: MiNiFi can publish metrics to Prometheus server
     And "PutFileMetrics" processor metric is published to the Prometheus server in less than 60 seconds for "PutFile" processor
     And "FlowInformation" is published to the Prometheus server in less than 60 seconds
     And "DeviceInfoNode" is published to the Prometheus server in less than 60 seconds
+    And "AgentStatus" is published to the Prometheus server in less than 60 seconds
 
   Scenario: Multiple GetFile metrics are reported by Prometheus
     Given a GetFile processor with the name "GetFile1" and the "Input Directory" property set to "/tmp/input"

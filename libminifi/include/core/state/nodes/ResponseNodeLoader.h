@@ -52,6 +52,7 @@ class ResponseNodeLoader {
   void initializeAgentIdentifier(const std::shared_ptr<ResponseNode>& response_node);
   void initializeAgentMonitor(const std::shared_ptr<ResponseNode>& response_node);
   void initializeAgentNode(const std::shared_ptr<ResponseNode>& response_node);
+  void initializeAgentStatus(const std::shared_ptr<ResponseNode>& response_node);
   void initializeConfigurationChecksums(const std::shared_ptr<ResponseNode>& response_node);
   void initializeFlowMonitor(const std::shared_ptr<ResponseNode>& response_node, core::ProcessGroup* root);
 
