@@ -145,3 +145,59 @@ TEST_CASE("Processor can communicate with root process group's input port", "[Ya
 
   verifyProcessGroup(*root, pattern);
 }
+
+TEST_CASE("Child process group can provide input for root processor through output port", "[YamlProcessGroupParser5]") {
+  auto pattern = Group("root")
+    .With({Conn{"Conn1",
+                OutputPort{"00000000-0000-0000-0000-000000000002", "Port1"},
+                Proc{"00000000-0000-0000-0000-000000000001", "Proc1"}}})
+    .With({Proc{"00000000-0000-0000-0000-000000000001", "Proc1"}})
+    .With({
+      Group("Child1")
+      .With({OutputPort{"00000000-0000-0000-0000-000000000002", "Port1"}})
+    });
+
+  auto root = config.getRootFromPayload(pattern.serialize().join("\n"));
+
+  verifyProcessGroup(*root, pattern);
+}
+
+TEST_CASE("Child process groups can communicate through ports", "[YamlProcessGroupParser6]") {
+  auto pattern = Group("root")
+    .With({Conn{"Conn1",
+                OutputPort{"00000000-0000-0000-0000-000000000002", "Port1"},
+                InputPort{"00000000-0000-0000-0000-000000000003", "Port2"}}})
+    .With({Proc{"00000000-0000-0000-0000-000000000001", "Proc1"}})
+    .With({
+      Group("Child1")
+      .With({OutputPort{"00000000-0000-0000-0000-000000000002", "Port1"}}),
+      Group("Child2")
+      .With({InputPort{"00000000-0000-0000-0000-000000000003", "Port2"}})
+    });
+
+  auto root = config.getRootFromPayload(pattern.serialize().join("\n"));
+
+  verifyProcessGroup(*root, pattern);
+}
+
+TEST_CASE("Processor cannot communicate with child's nested process group", "[YamlProcessGroupParser6]") {
+  Proc Proc1{"00000000-0000-0000-0000-000000000001", "Proc1"};
+  OutputPort Port1{"00000000-0000-0000-0000-000000000002", "Port1"};
+  InputPort Port2{"00000000-0000-0000-0000-000000000003", "Port2"};
+
+  auto pattern = Group("root")
+    .With({Conn{"Conn1",
+                Proc1,
+                UnresolvedProc{Port2.id}}})
+    .With({Proc1})
+    .With({
+      Group("Child1")
+      .With({Port1})
+      .With({Group("Child2")
+            .With({Port2})})
+    });
+
+  auto root = config.getRootFromPayload(pattern.serialize().join("\n"));
+
+  verifyProcessGroup(*root, pattern);
+}

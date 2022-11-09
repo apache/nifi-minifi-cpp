@@ -236,6 +236,7 @@ struct ProcessGroupTestAccessor {
   FIELD_ACCESSOR(processors_)
   FIELD_ACCESSOR(connections_)
   FIELD_ACCESSOR(child_process_groups_)
+  FIELD_ACCESSOR(ports_)
 };
 
 template<typename T, typename = void>
@@ -295,11 +296,29 @@ void verifyProcessGroup(core::ProcessGroup& group, const Group& pattern) {
     }
   }
 
-  // verify processors
+  // verify processors and ports
   const auto& processors = ProcessGroupTestAccessor::get_processors_(group);
-  REQUIRE(processors.size() == pattern.processors_.size());
+  REQUIRE(processors.size() == pattern.processors_.size() + pattern.input_ports_.size() + pattern.output_ports_.size());
   for (auto& expected : pattern.processors_) {
     REQUIRE(findByName(processors, expected.name));
+  }
+
+  for (auto& expected : pattern.input_ports_) {
+    REQUIRE(findByName(processors, expected.name));
+  }
+
+  for (auto& expected : pattern.output_ports_) {
+    REQUIRE(findByName(processors, expected.name));
+  }
+
+  const auto& ports = ProcessGroupTestAccessor::get_ports_(group);
+  REQUIRE(ports.size() == pattern.input_ports_.size() + pattern.output_ports_.size());
+  for (auto& expected : pattern.input_ports_) {
+    REQUIRE(findByName(ports, expected.name));
+  }
+
+  for (auto& expected : pattern.output_ports_) {
+    REQUIRE(findByName(ports, expected.name));
   }
 
   std::set<core::ProcessGroup*> simple_subgroups;
