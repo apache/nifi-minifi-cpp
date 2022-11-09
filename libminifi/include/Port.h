@@ -21,13 +21,24 @@
 
 namespace org::apache::nifi::minifi {
 
-class Funnel final : public ForwardingNode {
+enum class PortType {
+  INPUT,
+  OUTPUT
+};
+
+class Port final : public ForwardingNode {
  public:
-  Funnel(std::string name, const utils::Identifier& uuid) : ForwardingNode(std::move(name), uuid, core::logging::LoggerFactory<Funnel>::getLogger()) {}
-  explicit Funnel(std::string name) : ForwardingNode(std::move(name), core::logging::LoggerFactory<Funnel>::getLogger()) {}
+  Port(std::string name, const utils::Identifier& uuid, PortType port_type) : ForwardingNode(std::move(name), uuid, core::logging::LoggerFactory<Port>::getLogger()), port_type_(port_type) {}
+  explicit Port(std::string name, PortType port_type) : ForwardingNode(std::move(name), core::logging::LoggerFactory<Port>::getLogger()), port_type_(port_type) {}
+  PortType getPortType() const {
+    return port_type_;
+  }
 
   MINIFIAPI static constexpr core::annotation::Input InputRequirement = core::annotation::Input::INPUT_ALLOWED;
   ADD_COMMON_VIRTUAL_FUNCTIONS_FOR_PROCESSORS
+
+ private:
+  PortType port_type_;
 };
 
 }  // namespace org::apache::nifi::minifi

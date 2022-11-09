@@ -138,7 +138,7 @@ TEST_CASE("Processor can communicate with root process group's input port", "[Ya
     .With({Proc{"00000000-0000-0000-0000-000000000001", "Proc1"}})
     .With({
       Group("Child1")
-      .With({Proc{"00000000-0000-0000-0000-000000000002", "Port1"}})
+      .With({InputPort{"00000000-0000-0000-0000-000000000002", "Port1"}})
     });
 
   auto root = config.getRootFromPayload(pattern.serialize().join("\n"));

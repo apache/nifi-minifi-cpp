@@ -50,6 +50,8 @@ static constexpr char const* CONFIG_YAML_REMOTE_PROCESS_GROUP_KEY = "Remote Proc
 static constexpr char const* CONFIG_YAML_REMOTE_PROCESS_GROUP_KEY_V3 = "Remote Process Groups";
 static constexpr char const* CONFIG_YAML_PROVENANCE_REPORT_KEY = "Provenance Reporting";
 static constexpr char const* CONFIG_YAML_FUNNELS_KEY = "Funnels";
+static constexpr char const* CONFIG_YAML_INPUT_PORTS_KEY = "Input Ports";
+static constexpr char const* CONFIG_YAML_OUTPUT_PORTS_KEY = "Output Ports";
 
 #define YAML_CONFIGURATION_USE_REGEX
 
@@ -260,6 +262,17 @@ class YamlConfiguration : public FlowConfiguration {
    *                 to add the funnels that are parsed
    */
   void parseFunnelsYaml(const YAML::Node& node, core::ProcessGroup* parent);
+
+  /**
+   * Parses the Input/Output Ports section of a configuration YAML.
+   * The resulting ports are added to the parent ProcessGroup.
+   *
+   * @param node   the YAML::Node containing the Input/Output Ports section
+   *                 of the configuration YAML
+   * @param parent the root node of flow configuration to which
+   *                 to add the funnels that are parsed
+   */
+  void parsePorts(const YAML::Node& node, core::ProcessGroup* parent, PortType port_type);
 
   /**
    * A helper function for parsing or generating optional id fields.

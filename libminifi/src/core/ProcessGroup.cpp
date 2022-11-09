@@ -91,7 +91,7 @@ bool ProcessGroup::isRemoteProcessGroup() {
 }
 
 
-void ProcessGroup::addProcessor(std::unique_ptr<Processor> processor) {
+std::tuple<Processor*, bool> ProcessGroup::addProcessor(std::unique_ptr<Processor> processor) {
   gsl_Expects(processor);
   const auto name = processor->getName();
   std::lock_guard<std::recursive_mutex> lock(mutex_);
@@ -100,6 +100,15 @@ void ProcessGroup::addProcessor(std::unique_ptr<Processor> processor) {
     logger_->log_debug("Add processor %s into process group %s", name, name_);
   } else {
     logger_->log_debug("Not adding processor %s into process group %s, as it is already there", name, name_);
+  }
+  return std::make_tuple(iter->get(), inserted);
+}
+
+void ProcessGroup::addPort(std::unique_ptr<Port> port) {
+  std::lock_guard<std::recursive_mutex> lock(mutex_);
+  auto [processor, inserted] = addProcessor(std::move(port));
+  if (inserted) {
+    ports_.insert(static_cast<Port*>(processor));
   }
 }
 
@@ -236,7 +245,7 @@ void ProcessGroup::stopProcessing(const std::shared_ptr<TimerDrivenSchedulingAge
 }
 
 Processor* ProcessGroup::findProcessorById(const utils::Identifier& uuid, Traverse traverse) const {
-  const auto id_matches = [&] (const std::unique_ptr<Processor>& processor) {
+  const auto id_matches = [&] (Processor* processor) {
     logger_->log_trace("Searching for processor by id, checking processor %s", processor->getName());
     utils::Identifier processorUUID = processor->getUUID();
     return processorUUID && uuid == processorUUID;
@@ -245,7 +254,7 @@ Processor* ProcessGroup::findProcessorById(const utils::Identifier& uuid, Traver
 }
 
 Processor* ProcessGroup::findProcessorByName(const std::string &processorName, Traverse traverse) const {
-  const auto name_matches = [&] (const std::unique_ptr<Processor>& processor) {
+  const auto name_matches = [&] (Processor* processor) {
     logger_->log_trace("Searching for processor by name, checking processor %s", processor->getName());
     return processor->getName() == processorName;
   };
@@ -335,14 +344,14 @@ void ProcessGroup::addConnection(std::unique_ptr<Connection> connection) {
 
   logger_->log_debug("Add connection %s into process group %s", insertedConnection->getName(), name_);
   // only allow connections between processors of the same process group
-  auto source = this->findProcessorById(insertedConnection->getSourceUUID(), Traverse::ExcludeChildren);
+  auto source = findProcessorById(insertedConnection->getSourceUUID(), Traverse::ExcludeChildren);
   if (source) {
     source->addConnection(insertedConnection.get());
   } else {
     logger_->log_error("Cannot find the source processor with id '%s' for the connection [name = '%s', id = '%s']",
                        insertedConnection->getSourceUUID().to_string(), insertedConnection->getName(), insertedConnection->getUUIDStr());
   }
-  auto destination = this->findProcessorById(insertedConnection->getDestinationUUID(), Traverse::ExcludeChildren);
+  auto destination = findProcessorById(insertedConnection->getDestinationUUID(), Traverse::ExcludeChildren);
   if (!destination) {
     logger_->log_error("Cannot find the destination processor with id '%s' for the connection [name = '%s', id = '%s']",
                        insertedConnection->getDestinationUUID().to_string(), insertedConnection->getName(), insertedConnection->getUUIDStr());

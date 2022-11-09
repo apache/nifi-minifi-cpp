@@ -29,17 +29,18 @@
 #include <utility>
 
 #include "Processor.h"
-#include "Funnel.h"
 #include "Exception.h"
 #include "TimerDrivenSchedulingAgent.h"
 #include "EventDrivenSchedulingAgent.h"
 #include "CronDrivenSchedulingAgent.h"
+#include "Port.h"
 #include "core/logging/Logger.h"
 #include "controller/ControllerServiceNode.h"
 #include "controller/ControllerServiceMap.h"
 #include "utils/Id.h"
 #include "utils/BaseHTTPClient.h"
 #include "utils/CallBackTimer.h"
+#include "range/v3/algorithm/find_if.hpp"
 
 struct ProcessGroupTestAccessor;
 
@@ -164,21 +165,34 @@ class ProcessGroup : public CoreComponent {
     std::lock_guard<std::recursive_mutex> lock(mutex_);
     return parent_process_group_;
   }
-  // Add processor
-  void addProcessor(std::unique_ptr<Processor> processor);
-  // Add child processor group
+  [[maybe_unused]] std::tuple<Processor*, bool> addProcessor(std::unique_ptr<Processor> processor);
+  void addPort(std::unique_ptr<Port> port);
   void addProcessGroup(std::unique_ptr<ProcessGroup> child);
-  // ! Add connections
   void addConnection(std::unique_ptr<Connection> connection);
-  // Generic find
+  const std::set<Port*>& getPorts() const {
+    return ports_;
+  }
+
   template <typename Fun>
   Processor* findProcessor(Fun condition, Traverse traverse) const {
     std::lock_guard<std::recursive_mutex> lock(mutex_);
-    const auto found = std::find_if(processors_.cbegin(), processors_.cend(), condition);
-    if (found != processors_.cend()) {
-      return found->get();
+    Processor* found_processor = nullptr;
+    for (const auto& processor : processors_) {
+      if (condition(processor.get())) {
+        found_processor = processor.get();
+        break;
+      }
+    }
+    if (found_processor != nullptr) {
+      return found_processor;
     }
     for (const auto& processGroup : child_process_groups_) {
+      const auto ports = processGroup->getPorts();
+      const auto port_found = ranges::find_if(ports, condition);
+      if (port_found != ranges::end(ports)) {
+        return *port_found;
+      }
+
       if (processGroup->isRemoteProcessGroup() || traverse == Traverse::IncludeChildren) {
         const auto processor = processGroup->findProcessor(condition, traverse);
         if (processor) {
@@ -231,9 +245,10 @@ class ProcessGroup : public CoreComponent {
   int config_version_;
   // Process Group Type
   const ProcessGroupType type_;
-  // Processors (ProcessNode) inside this process group which include Input/Output Port, Remote Process Group input/Output port
+  // Processors (ProcessNode) inside this process group which include Remote Process Group input/Output port
   std::set<std::unique_ptr<Processor>> processors_;
   std::set<Processor*> failed_processors_;
+  std::set<Port*> ports_;
   std::set<std::unique_ptr<ProcessGroup>> child_process_groups_;
   // Connections between the processor inside the group;
   std::set<std::unique_ptr<Connection>> connections_;
