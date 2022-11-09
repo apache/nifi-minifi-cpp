@@ -45,11 +45,10 @@ void RocksDbInstance::invalidate(const std::lock_guard<std::mutex>&) {
 void RocksDbInstance::registerColumnConfig(const std::string& column, const DBOptionsPatch& db_options_patch, const ColumnFamilyOptionsPatch& cf_options_patch) {
   std::lock_guard<std::mutex> db_guard{mtx_};
   logger_->log_trace("Registering column '%s' in database '%s'", column, db_name_);
-  auto it = column_configs_.find(column);
-  if (it != column_configs_.end()) {
+  auto [_, inserted] = column_configs_.insert({column, ColumnConfig{.dbo_patch = db_options_patch, .cfo_patch = cf_options_patch}});
+  if (!inserted) {
     throw std::runtime_error("Configuration is already registered for column '" + column + "'");
   }
-  column_configs_[column] = {.dbo_patch = db_options_patch, .cfo_patch = cf_options_patch};
 
   bool need_reopen = [&] {
     if (!impl_) {
@@ -86,11 +85,9 @@ void RocksDbInstance::registerColumnConfig(const std::string& column, const DBOp
 
 void RocksDbInstance::unregisterColumnConfig(const std::string& column) {
   std::lock_guard<std::mutex> db_guard{mtx_};
-  auto it = column_configs_.find(column);
-  if (it == column_configs_.end()) {
+  if (column_configs_.erase(column) == 0) {
     throw std::runtime_error("Could not find column configuration for column '" + column + "'");
   }
-  column_configs_.erase(it);
 }
 
 std::optional<OpenRocksDb> RocksDbInstance::open(const std::string& column) {
