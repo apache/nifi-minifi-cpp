@@ -63,7 +63,7 @@ class Bin {
   }
   // check whether the bin meet the min required size and entries so that it can be processed for merge
   [[nodiscard]] bool isReadyForMerge() const {
-    return isFull() || (queued_data_size_ >= minSize_ && queue_.size() >= minEntries_);
+    return closed_ || isFull() || (queued_data_size_ >= minSize_ && queue_.size() >= minEntries_);
   }
   // check whether the bin is older than the time specified in msec
   [[nodiscard]] bool isOlderThan(const std::chrono::milliseconds duration) const {
@@ -87,8 +87,10 @@ class Bin {
       }
     }
 
-    if ((queued_data_size_ + flow->getSize()) > maxSize_ || (queue_.size() + 1) > maxEntries_)
+    if ((queued_data_size_ + flow->getSize()) > maxSize_ || (queue_.size() + 1) > maxEntries_) {
+      closed_ = true;
       return false;
+    }
 
     queue_.push_back(flow);
     queued_data_size_ += flow->getSize();
@@ -119,6 +121,7 @@ class Bin {
   size_t minEntries_;
   // Queued data size
   uint64_t queued_data_size_;
+  bool closed_{false};
   // Queue for the Flow File
   std::deque<std::shared_ptr<core::FlowFile>> queue_;
   std::chrono::system_clock::time_point creation_dated_;
