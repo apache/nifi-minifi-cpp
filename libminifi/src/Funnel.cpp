@@ -15,12 +15,12 @@
  * limitations under the License.
  */
 
-#include "core/Funnel.h"
+#include "Funnel.h"
 #include "core/ProcessSession.h"
 
-namespace org::apache::nifi::minifi::core {
+namespace org::apache::nifi::minifi {
 
-const Relationship Funnel::Success("success", "FlowFiles are routed to success relationship");
+const core::Relationship Funnel::Success("success", "FlowFiles are routed to success relationship");
 
 void Funnel::initialize() {
   setSupportedRelationships(relationships());
@@ -35,4 +35,4 @@ void Funnel::onTrigger(const std::shared_ptr<core::ProcessContext>& /*context*/,
   session->transfer(flow_file, Success);
 }
 
-}  // namespace org::apache::nifi::minifi::core
+}  // namespace org::apache::nifi::minifi

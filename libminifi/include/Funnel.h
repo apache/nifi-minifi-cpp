@@ -21,12 +21,12 @@
 #include <string>
 #include <utility>
 
-#include "logging/LoggerFactory.h"
-#include "Processor.h"
+#include "core/logging/LoggerFactory.h"
+#include "core/Processor.h"
 
-namespace org::apache::nifi::minifi::core {
+namespace org::apache::nifi::minifi {
 
-class Funnel final : public Processor {
+class Funnel final : public core::Processor {
  public:
   Funnel(std::string name, const utils::Identifier& uuid) : Processor(std::move(name), uuid), logger_(logging::LoggerFactory<Funnel>::getLogger()) {}
   explicit Funnel(std::string name) : Processor(std::move(name)), logger_(logging::LoggerFactory<Funnel>::getLogger()) {}
@@ -45,7 +45,7 @@ class Funnel final : public Processor {
   void onTrigger(const std::shared_ptr<core::ProcessContext>& context, const std::shared_ptr<core::ProcessSession>& session) override;
 
  private:
-  std::shared_ptr<logging::Logger> logger_;
+  std::shared_ptr<core::logging::Logger> logger_;
 };
 
-}  // namespace org::apache::nifi::minifi::core
+}  // namespace org::apache::nifi::minifi

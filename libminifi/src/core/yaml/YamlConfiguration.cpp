@@ -27,6 +27,7 @@
 #include "core/state/Value.h"
 #include "Defaults.h"
 #include "utils/TimeUtil.h"
+#include "Funnel.h"
 
 #ifdef YAML_CONFIGURATION_USE_REGEX
 #include "utils/RegexUtils.h"
@@ -773,7 +774,7 @@ void YamlConfiguration::parseFunnelsYaml(const YAML::Node& node, core::ProcessGr
       throw Exception(ExceptionType::GENERAL_EXCEPTION, "Incorrect funnel UUID format.");
     });
 
-    auto funnel = std::make_unique<core::Funnel>(name, uuid.value());
+    auto funnel = std::make_unique<Funnel>(name, uuid.value());
     logger_->log_debug("Created funnel with UUID %s and name %s", id, name);
     funnel->setScheduledState(core::RUNNING);
     funnel->setSchedulingStrategy(core::EVENT_DRIVEN);
