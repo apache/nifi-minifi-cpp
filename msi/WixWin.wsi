@@ -257,7 +257,7 @@ Licensed to the Apache Software Foundation (ASF) under one or more
     <Property Id="AGENT_CLASS"  Value="Your Agent Class" />
     <Property Id="AGENT_IDENTIFIER"  />
     <Property Id="AGENT_PROTOCOL"  Value="RESTSender" />
-    <Property Id="AGENT_HEARTBEAT"  Value="250 msec" />
+    <Property Id="AGENT_HEARTBEAT"  Value="30 sec" />
     <Property Id="SERVER_HEARTBEAT"  Value="http://localhost:8181/heartbeat" />
     <Property Id="SERVER_ACK"  Value="http://localhost:8181/acknowledge" />
     <Property Id="ENABLEC2" />
