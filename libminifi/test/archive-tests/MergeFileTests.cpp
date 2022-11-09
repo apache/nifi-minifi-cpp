@@ -824,6 +824,10 @@ TEST_CASE_METHOD(MergeTestController, "Batch Size", "[testMergeFileBatchSize]") 
 }
 
 TEST_CASE_METHOD(MergeTestController, "Maximum Group Size is respected", "[testMergeFileMaximumGroupSize]") {
+  // each flowfile content is 32 bytes
+  for (auto& ff : flowFileContents_) {
+    REQUIRE(ff.length() == 32);
+  }
   std::string expected[2]{
       flowFileContents_[0] + flowFileContents_[1],
       flowFileContents_[2] + flowFileContents_[3]
@@ -833,11 +837,17 @@ TEST_CASE_METHOD(MergeTestController, "Maximum Group Size is respected", "[testM
   context_->setProperty(minifi::processors::MergeContent::MergeStrategy, minifi::processors::merge_content_options::MERGE_STRATEGY_BIN_PACK);
   context_->setProperty(minifi::processors::MergeContent::DelimiterStrategy, minifi::processors::merge_content_options::DELIMITER_STRATEGY_TEXT);
   context_->setProperty(minifi::processors::BinFiles::BatchSize, "1000");
-  context_->setProperty(minifi::processors::BinFiles::MaxSize, std::to_string(flowFileContents_[0].length() * 5 / 2));
+
+  // we want a bit more than 2 flowfiles
+  context_->setProperty(minifi::processors::BinFiles::MinSize, "65");
+  context_->setProperty(minifi::processors::BinFiles::MaxSize, "65");
+
+  context_->setProperty(minifi::processors::BinFiles::MinEntries, "3");
+  context_->setProperty(minifi::processors::BinFiles::MaxEntries, "3");
 
   core::ProcessSession sessionGenFlowFile(context_);
-  // enqueue 4 (four) flowFiles
-  for (const int i : {0, 1, 2, 3, 4}) {
+  // enqueue 6 (six) flowFiles
+  for (const int i : {0, 1, 2, 3, 4, 5}) {
     const auto flow = sessionGenFlowFile.create();
     sessionGenFlowFile.writeBuffer(flow, flowFileContents_[i]);
     sessionGenFlowFile.flushContent();
