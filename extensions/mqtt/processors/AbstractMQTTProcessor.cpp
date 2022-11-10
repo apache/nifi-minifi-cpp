@@ -380,7 +380,7 @@ void AbstractMQTTProcessor::connectionFailure5(void* context, MQTTAsync_failureD
 
 int AbstractMQTTProcessor::msgReceived(void *context, char* topic_name, int topic_len, MQTTAsync_message* message) {
   auto* processor = reinterpret_cast<AbstractMQTTProcessor*>(context);
-  processor->onMessageReceived(std::string(topic_name, topic_len), std::unique_ptr<MQTTAsync_message, MQTTMessageDeleter>(message));
+  processor->onMessageReceived(SmartMessage{std::unique_ptr<MQTTAsync_message, MQTTMessageDeleter>(message), std::string(topic_name, topic_len)});
   MQTTAsync_free(topic_name);
   return 1;
 }

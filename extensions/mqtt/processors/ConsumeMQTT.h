@@ -85,11 +85,6 @@ class ConsumeMQTT : public processors::AbstractMQTTProcessor {
   void initialize() override;
 
  private:
-  struct SmartMessage {
-    std::unique_ptr<MQTTAsync_message, MQTTMessageDeleter> contents;
-    std::string topic;
-  };
-
   class WriteCallback {
    public:
     explicit WriteCallback(const SmartMessage& message)
@@ -119,7 +114,7 @@ class ConsumeMQTT : public processors::AbstractMQTTProcessor {
   void onSubscriptionSuccess();
   void onSubscriptionFailure(MQTTAsync_failureData* response);
   void onSubscriptionFailure5(MQTTAsync_failureData5* response);
-  void onMessageReceived(std::string topic, std::unique_ptr<MQTTAsync_message, MQTTMessageDeleter> message) override;
+  void onMessageReceived(SmartMessage smart_message) override;
 
   void enqueueReceivedMQTTMsg(SmartMessage message);
   void startupClient() override;

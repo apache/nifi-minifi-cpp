@@ -180,17 +180,16 @@ void ConsumeMQTT::startupClient() {
   logger_->log_debug("Successfully subscribed to MQTT topic: %s", topic_);
 }
 
-void ConsumeMQTT::onMessageReceived(std::string topic, std::unique_ptr<MQTTAsync_message, MQTTMessageDeleter> message) {
+void ConsumeMQTT::onMessageReceived(SmartMessage smart_message) {
   if (mqtt_version_ == MqttVersions::V_5_0) {
-    resolveTopicFromAlias(message, topic);
+    resolveTopicFromAlias(smart_message.contents, smart_message.topic);
   }
 
-  if (topic.empty()) {
+  if (smart_message.topic.empty()) {
     logger_->log_error("Received message without topic");
     return;
   }
 
-  SmartMessage smart_message{std::move(message), std::move(topic)};
   enqueueReceivedMQTTMsg(std::move(smart_message));
 }
 

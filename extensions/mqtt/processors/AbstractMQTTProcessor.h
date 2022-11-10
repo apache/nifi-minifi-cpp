@@ -117,6 +117,11 @@ class AbstractMQTTProcessor : public core::Processor {
     }
   };
 
+  struct SmartMessage {
+    std::unique_ptr<MQTTAsync_message, MQTTMessageDeleter> contents;
+    std::string topic;
+  };
+
   // defined by Paho MQTT C library
   static constexpr int PAHO_MQTT_C_FAILURE_CODE = -9999999;
 
@@ -202,7 +207,7 @@ class AbstractMQTTProcessor : public core::Processor {
    * @param topic topic of message
    * @param message MQTT message
    */
-  virtual void onMessageReceived(std::string topic, std::unique_ptr<MQTTAsync_message, MQTTMessageDeleter> message) {
+  virtual void onMessageReceived(SmartMessage /*smartmessage*/) {
   }
 
   virtual bool getCleanSession() const = 0;
