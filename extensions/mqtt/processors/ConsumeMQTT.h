@@ -85,12 +85,6 @@ class ConsumeMQTT : public processors::AbstractMQTTProcessor {
   void initialize() override;
 
  private:
-  struct MQTTMessageDeleter {
-    void operator()(MQTTAsync_message* message) {
-      MQTTAsync_freeMessage(&message);
-    }
-  };
-
   struct SmartMessage {
     std::unique_ptr<MQTTAsync_message, MQTTMessageDeleter> contents;
     std::string topic;
@@ -125,14 +119,14 @@ class ConsumeMQTT : public processors::AbstractMQTTProcessor {
   void onSubscriptionSuccess();
   void onSubscriptionFailure(MQTTAsync_failureData* response);
   void onSubscriptionFailure5(MQTTAsync_failureData5* response);
-  void onMessageReceived(char* topic_name, int /*topic_len*/, MQTTAsync_message* message) override;
+  void onMessageReceived(std::string topic, std::unique_ptr<MQTTAsync_message, MQTTMessageDeleter> message) override;
 
   void enqueueReceivedMQTTMsg(SmartMessage message);
   void startupClient() override;
   void checkProperties() override;
   void checkBrokerLimitsImpl() override;
 
-  void resolveTopicFromAlias(MQTTAsync_message* message, std::string& topic);
+  void resolveTopicFromAlias(const std::unique_ptr<MQTTAsync_message, MQTTMessageDeleter>& message, std::string& topic);
 
   bool getCleanSession() const override {
     return clean_session_;

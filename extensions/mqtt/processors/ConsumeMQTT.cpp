@@ -180,10 +180,7 @@ void ConsumeMQTT::startupClient() {
   logger_->log_debug("Successfully subscribed to MQTT topic: %s", topic_);
 }
 
-void ConsumeMQTT::onMessageReceived(char* topic_name, int topic_len, MQTTAsync_message* message) {
-  std::string topic(topic_name, topic_len);
-  MQTTAsync_free(topic_name);
-
+void ConsumeMQTT::onMessageReceived(std::string topic, std::unique_ptr<MQTTAsync_message, MQTTMessageDeleter> message) {
   if (mqtt_version_ == MqttVersions::V_5_0) {
     resolveTopicFromAlias(message, topic);
   }
@@ -193,18 +190,15 @@ void ConsumeMQTT::onMessageReceived(char* topic_name, int topic_len, MQTTAsync_m
     return;
   }
 
-  SmartMessage smart_message{std::unique_ptr<MQTTAsync_message, MQTTMessageDeleter>(message), topic};
+  SmartMessage smart_message{std::move(message), std::move(topic)};
   enqueueReceivedMQTTMsg(std::move(smart_message));
 }
 
-void ConsumeMQTT::resolveTopicFromAlias(MQTTAsync_message* message, std::string& topic) {
+void ConsumeMQTT::resolveTopicFromAlias(const std::unique_ptr<MQTTAsync_message, MQTTMessageDeleter>& message, std::string& topic) {
   auto raw_alias = MQTTProperties_getNumericValue(&message->properties, MQTTPROPERTY_CODE_TOPIC_ALIAS);
 
-  // defined by Paho MQTT C library
-  static const int failure_code = -9999999;
-
   std::optional<uint16_t> alias;
-  if (raw_alias != failure_code) {
+  if (raw_alias != PAHO_MQTT_C_FAILURE_CODE) {
     alias = gsl::narrow<uint16_t>(raw_alias);
   }
 

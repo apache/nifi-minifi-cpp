@@ -111,6 +111,15 @@ class AbstractMQTTProcessor : public core::Processor {
   }
 
  protected:
+  struct MQTTMessageDeleter {
+    void operator()(MQTTAsync_message* message) {
+      MQTTAsync_freeMessage(&message);
+    }
+  };
+
+  // defined by Paho MQTT C library
+  static constexpr int PAHO_MQTT_C_FAILURE_CODE = -9999999;
+
   /**
    * Connect to MQTT broker. Synchronously waits until connection succeeds or fails.
    */
@@ -190,13 +199,10 @@ class AbstractMQTTProcessor : public core::Processor {
 
   /**
    * Called if message is received. This is default implementation, to be overridden if subclass wants to use the message.
-   * @param topic_name name of the topic of message
-   * @param topic_len length of topic name
+   * @param topic topic of message
    * @param message MQTT message
    */
-  virtual void onMessageReceived(char* topic_name, int /*topic_len*/, MQTTAsync_message* message) {
-    MQTTAsync_freeMessage(&message);
-    MQTTAsync_free(topic_name);
+  virtual void onMessageReceived(std::string topic, std::unique_ptr<MQTTAsync_message, MQTTMessageDeleter> message) {
   }
 
   virtual bool getCleanSession() const = 0;

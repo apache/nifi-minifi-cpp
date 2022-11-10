@@ -31,7 +31,7 @@ void AbstractMQTTProcessor::onSchedule(const std::shared_ptr<core::ProcessContex
   }
   logger_->log_debug("AbstractMQTTProcessor: BrokerURI [%s]", uri_);
 
-  mqtt_version_ = MqttVersions{utils::parsePropertyWithAllowableValuesOrThrow(*context, MqttVersion.getName(), MqttVersions::values())};
+  mqtt_version_ = utils::parseEnumProperty<MqttVersions>(*context, MqttVersion);
   logger_->log_debug("AbstractMQTTProcessor: MQTT Specification Version: %s", mqtt_version_.toString());
 
   if (auto value = context->getProperty(ClientID)) {
@@ -61,7 +61,7 @@ void AbstractMQTTProcessor::onSchedule(const std::shared_ptr<core::ProcessContex
   }
   logger_->log_debug("AbstractMQTTProcessor: ConnectionTimeout [%" PRId64 "] s", int64_t{connection_timeout_.count()});
 
-  qos_ = MqttQoS{utils::parsePropertyWithAllowableValuesOrThrow(*context, QoS.getName(), MqttQoS::values())};
+  qos_ = utils::parseEnumProperty<MqttQoS>(*context, QoS);
   logger_->log_debug("AbstractMQTTProcessor: QoS [%d]", qos_.value());
 
   if (const auto security_protocol = context->getProperty(SecurityProtocol)) {
@@ -103,7 +103,7 @@ void AbstractMQTTProcessor::onSchedule(const std::shared_ptr<core::ProcessContex
       last_will_->message = last_will_message_.c_str();
     }
 
-    last_will_qos_ = MqttQoS{utils::parsePropertyWithAllowableValuesOrThrow(*context, LastWillQoS.getName(), MqttQoS::values())};
+    last_will_qos_ = utils::parseEnumProperty<MqttQoS>(*context, LastWillQoS);
     logger_->log_debug("AbstractMQTTProcessor: Last Will QoS [%d]", last_will_qos_.value());
     last_will_->qos = last_will_qos_.value();
 
@@ -305,15 +305,12 @@ void AbstractMQTTProcessor::disconnect() {
 
 void AbstractMQTTProcessor::setBrokerLimits(MQTTAsync_successData5* response) {
   auto readProperty = [response] (MQTTPropertyCodes property_code, auto& out_var) {
-    // defined by Paho MQTT C library
-    static const int failure_code = -9999999;
-
     const int value = MQTTProperties_getNumericValue(&response->properties, property_code);
-    if (value != failure_code) {
+    if (value != PAHO_MQTT_C_FAILURE_CODE) {
       if constexpr (std::is_same_v<decltype(out_var), std::optional<std::chrono::seconds>&>) {
         out_var = std::chrono::seconds(value);
       } else {
-        out_var = gsl::narrow<typename std::remove_reference<decltype(out_var)>::type::value_type>(value);
+        out_var = gsl::narrow<typename std::remove_reference_t<decltype(out_var)>::value_type>(value);
       }
     } else {
       out_var.reset();
@@ -383,7 +380,8 @@ void AbstractMQTTProcessor::connectionFailure5(void* context, MQTTAsync_failureD
 
 int AbstractMQTTProcessor::msgReceived(void *context, char* topic_name, int topic_len, MQTTAsync_message* message) {
   auto* processor = reinterpret_cast<AbstractMQTTProcessor*>(context);
-  processor->onMessageReceived(topic_name, topic_len, message);
+  processor->onMessageReceived(std::string(topic_name, topic_len), std::unique_ptr<MQTTAsync_message, MQTTMessageDeleter>(message));
+  MQTTAsync_free(topic_name);
   return 1;
 }
 
