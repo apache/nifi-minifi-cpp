@@ -60,9 +60,19 @@ struct Lines {
   }
 };
 
+enum class ConnectionFailure {
+  UNRESOLVED_SOURCE,
+  UNRESOLVED_DESTINATION,
+  INPUT_CONNECTION_NOT_ALLOWED,
+  OUTPUT_CONNECTION_NOT_ALLOWED
+};
+
 struct Proc {
+  Proc(std::string id, std::string name, const std::optional<ConnectionFailure>& failure = std::nullopt)
+    : id(std::move(id)), name(std::move(name)), failure(failure) {}
   std::string id;
   std::string name;
+  std::optional<ConnectionFailure> failure;
 
   Lines serialize() const {
     return {{
@@ -75,8 +85,11 @@ struct Proc {
 
 template<typename Tag>
 struct Port {
+  Port(std::string id, std::string name, const std::optional<ConnectionFailure>& failure = std::nullopt)
+    : id(std::move(id)), name(std::move(name)), failure(failure) {}
   std::string id;
   std::string name;
+  std::optional<ConnectionFailure> failure;
 
   Lines serialize() const {
     return {{
@@ -89,19 +102,14 @@ struct Port {
 using InputPort = Port<struct InputTag>;
 using OutputPort = Port<struct OutputTag>;
 
-struct UnresolvedProc {
-  explicit UnresolvedProc(std::string id): id(std::move(id)) {}
-  std::string id;
-};
-
 struct MaybeProc {
-  MaybeProc(const Proc& proc) : id(proc.id), name(proc.name) {}
-  MaybeProc(const UnresolvedProc& proc) : id(proc.id) {}
-  MaybeProc(const InputPort& proc) : id(proc.id), name(proc.name) {}
-  MaybeProc(const OutputPort& proc) : id(proc.id), name(proc.name) {}
+  MaybeProc(const Proc& proc) : id(proc.id), name(proc.name), failure(proc.failure) {}
+  MaybeProc(const InputPort& port) : id(port.id), name(port.name), failure(port.failure) {}
+  MaybeProc(const OutputPort& port) : id(port.id), name(port.name), failure(port.failure) {}
 
   std::string id;
-  std::optional<std::string> name;
+  std::string name;
+  std::optional<ConnectionFailure> failure;
 };
 
 struct Conn {
@@ -267,6 +275,46 @@ auto findByName(const std::set<T>& set, const std::string& name) -> decltype(Res
   return nullptr;
 }
 
+void assertFailure(const Conn& expected, ConnectionFailure failure) {
+  switch (failure) {
+    case ConnectionFailure::INPUT_CONNECTION_NOT_ALLOWED: {
+      break;
+    }
+    case ConnectionFailure::OUTPUT_CONNECTION_NOT_ALLOWED: {
+      break;
+    }
+    case ConnectionFailure::UNRESOLVED_DESTINATION: {
+      REQUIRE(utils::verifyLogLinePresenceInPollTime(
+        std::chrono::seconds{1},
+        "Cannot find the destination processor with id '" + expected.destination.id
+        + "' for the connection [name = '" + expected.name + "'"));
+      break;
+    }
+    case ConnectionFailure::UNRESOLVED_SOURCE: {
+      REQUIRE(utils::verifyLogLinePresenceInPollTime(
+        std::chrono::seconds{1},
+        "Cannot find the source processor with id '" + expected.source.id
+        + "' for the connection [name = '" + expected.name + "'"));
+      break;
+    }
+  }
+}
+
+void verifyConnectionNode(minifi::Connection* conn, const Conn& expected) {
+  if (expected.source.failure) {
+    REQUIRE(conn->getSource() == nullptr);
+    assertFailure(expected, *expected.source.failure);
+  } else {
+    REQUIRE(conn->getSource()->getName() == expected.source.name);
+  }
+  if (expected.destination.failure) {
+    REQUIRE(conn->getDestination() == nullptr);
+    assertFailure(expected, *expected.destination.failure);
+  } else {
+    REQUIRE(conn->getDestination()->getName() == expected.destination.name);
+  }
+}
+
 void verifyProcessGroup(core::ProcessGroup& group, const Group& pattern) {
   // verify name
   REQUIRE(group.getName() == pattern.name_);
@@ -276,24 +324,7 @@ void verifyProcessGroup(core::ProcessGroup& group, const Group& pattern) {
   for (auto& expected : pattern.connections_) {
     auto conn = findByName(connections, expected.name);
     REQUIRE(conn);
-    if (!expected.source.name) {
-      REQUIRE(conn->getSource() == nullptr);
-      REQUIRE(utils::verifyLogLinePresenceInPollTime(
-          std::chrono::seconds{1},
-          "Cannot find the source processor with id '" + expected.source.id
-          + "' for the connection [name = '" + expected.name + "'"));
-    } else {
-      REQUIRE(conn->getSource()->getName() == expected.source.name);
-    }
-    if (!expected.destination.name) {
-      REQUIRE(conn->getDestination() == nullptr);
-      REQUIRE(utils::verifyLogLinePresenceInPollTime(
-          std::chrono::seconds{1},
-          "Cannot find the destination processor with id '" + expected.destination.id
-          + "' for the connection [name = '" + expected.name + "'"));
-    } else {
-      REQUIRE(conn->getDestination()->getName() == expected.destination.name);
-    }
+    verifyConnectionNode(conn, expected);
   }
 
   // verify processors and ports

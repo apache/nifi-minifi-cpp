@@ -102,18 +102,18 @@ TEST_CASE("Cannot connect processors from different groups", "[YamlProcessGroupP
   }
 
   SECTION("Connecting processors in their child/parent group") {
-    Conn1.source = UnresolvedProc{Child1_Proc1.id};
-    Conn1.destination = UnresolvedProc{Child1_Port1.id};
+    Conn1.source = Proc{Child1_Proc1.id, Child1_Proc1.name, ConnectionFailure::UNRESOLVED_SOURCE};
+    Conn1.destination = Proc{Child1_Port1.id, Child1_Port1.name, ConnectionFailure::UNRESOLVED_DESTINATION};
 
-    Child1_Conn1.source = UnresolvedProc{Proc1.id};
-    Child1_Conn1.destination = UnresolvedProc{Port1.id};
+    Child1_Conn1.source = Proc{Proc1.id, Proc1.name, ConnectionFailure::UNRESOLVED_SOURCE};
+    Child1_Conn1.destination = Proc{Port1.id, Proc1.name, ConnectionFailure::UNRESOLVED_DESTINATION};
   }
 
   SECTION("Connecting processors between their own and their child/parent group") {
     Conn1.source = Proc1;
-    Conn1.destination = UnresolvedProc{Child1_Port1.id};
+    Conn1.destination = Proc{Child1_Port1.id, Child1_Port1.name, ConnectionFailure::UNRESOLVED_DESTINATION};
 
-    Child1_Conn1.source = UnresolvedProc{Port1.id};
+    Child1_Conn1.source = Proc{Port1.id, Port1.name, ConnectionFailure::UNRESOLVED_SOURCE};
     Child1_Conn1.destination = Child1_Proc1;
   }
 
@@ -121,8 +121,8 @@ TEST_CASE("Cannot connect processors from different groups", "[YamlProcessGroupP
     Conn1.source = Proc1;
     Conn1.destination = Port1;
 
-    Child1_Conn1.source = UnresolvedProc{Child2_Proc1.id};
-    Child1_Conn1.destination = UnresolvedProc{Child2_Port1.id};
+    Child1_Conn1.source = Proc{Child2_Proc1.id, Child2_Proc1.name, ConnectionFailure::UNRESOLVED_SOURCE};
+    Child1_Conn1.destination = Proc{Child2_Port1.id, Child2_Port1.name, ConnectionFailure::UNRESOLVED_DESTINATION};
   }
 
   auto root = config.getRootFromPayload(pattern.serialize().join("\n"));
@@ -183,12 +183,12 @@ TEST_CASE("Child process groups can communicate through ports", "[YamlProcessGro
 TEST_CASE("Processor cannot communicate with child's nested process group", "[YamlProcessGroupParser6]") {
   Proc Proc1{"00000000-0000-0000-0000-000000000001", "Proc1"};
   OutputPort Port1{"00000000-0000-0000-0000-000000000002", "Port1"};
-  InputPort Port2{"00000000-0000-0000-0000-000000000003", "Port2"};
+  InputPort Port2{"00000000-0000-0000-0000-000000000003", "Port2", ConnectionFailure::UNRESOLVED_DESTINATION};
 
   auto pattern = Group("root")
     .With({Conn{"Conn1",
                 Proc1,
-                UnresolvedProc{Port2.id}}})
+                Port2}})
     .With({Proc1})
     .With({
       Group("Child1")
