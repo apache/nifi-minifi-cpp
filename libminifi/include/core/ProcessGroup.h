@@ -173,26 +173,18 @@ class ProcessGroup : public CoreComponent {
     return ports_;
   }
 
+  Processor* findPortById(const std::set<Port*>& ports, const utils::Identifier& uuid) const;
+  Processor* findPortById(const utils::Identifier& uuid) const;
+  Processor* findChildPortById(const utils::Identifier& uuid) const;
+
   template <typename Fun>
   Processor* findProcessor(Fun condition, Traverse traverse) const {
     std::lock_guard<std::recursive_mutex> lock(mutex_);
-    Processor* found_processor = nullptr;
-    for (const auto& processor : processors_) {
-      if (condition(processor.get())) {
-        found_processor = processor.get();
-        break;
-      }
-    }
-    if (found_processor != nullptr) {
-      return found_processor;
+    const auto found = ranges::find_if(processors_, condition);
+    if (found != ranges::end(processors_)) {
+      return found->get();
     }
     for (const auto& processGroup : child_process_groups_) {
-      const auto ports = processGroup->getPorts();
-      const auto port_found = ranges::find_if(ports, condition);
-      if (port_found != ranges::end(ports)) {
-        return *port_found;
-      }
-
       if (processGroup->isRemoteProcessGroup() || traverse == Traverse::IncludeChildren) {
         const auto processor = processGroup->findProcessor(condition, traverse);
         if (processor) {

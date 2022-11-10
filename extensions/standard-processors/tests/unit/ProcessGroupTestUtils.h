@@ -63,8 +63,10 @@ struct Lines {
 enum class ConnectionFailure {
   UNRESOLVED_SOURCE,
   UNRESOLVED_DESTINATION,
-  INPUT_CONNECTION_NOT_ALLOWED,
-  OUTPUT_CONNECTION_NOT_ALLOWED
+  INPUT_CANNOT_BE_SOURCE,
+  OUTPUT_CANNOT_BE_DESTINATION,
+  INPUT_CANNOT_BE_DESTINATION,
+  OUTPUT_CANNOT_BE_SOURCE
 };
 
 struct Proc {
@@ -277,12 +279,6 @@ auto findByName(const std::set<T>& set, const std::string& name) -> decltype(Res
 
 void assertFailure(const Conn& expected, ConnectionFailure failure) {
   switch (failure) {
-    case ConnectionFailure::INPUT_CONNECTION_NOT_ALLOWED: {
-      break;
-    }
-    case ConnectionFailure::OUTPUT_CONNECTION_NOT_ALLOWED: {
-      break;
-    }
     case ConnectionFailure::UNRESOLVED_DESTINATION: {
       REQUIRE(utils::verifyLogLinePresenceInPollTime(
         std::chrono::seconds{1},
@@ -295,6 +291,30 @@ void assertFailure(const Conn& expected, ConnectionFailure failure) {
         std::chrono::seconds{1},
         "Cannot find the source processor with id '" + expected.source.id
         + "' for the connection [name = '" + expected.name + "'"));
+      break;
+    }
+    case ConnectionFailure::INPUT_CANNOT_BE_SOURCE: {
+      REQUIRE(utils::verifyLogLinePresenceInPollTime(
+        std::chrono::seconds{1},
+        "Input port [id = '" + expected.source.id + "'] cannot be a source outside the process group in the connection [name = '" + expected.name + "'"));
+      break;
+    }
+    case ConnectionFailure::OUTPUT_CANNOT_BE_DESTINATION: {
+      REQUIRE(utils::verifyLogLinePresenceInPollTime(
+        std::chrono::seconds{1},
+        "Output port [id = '" + expected.destination.id + "'] cannot be a destination outside the process group in the connection [name = '" + expected.name + "'"));
+      break;
+    }
+    case ConnectionFailure::INPUT_CANNOT_BE_DESTINATION: {
+      REQUIRE(utils::verifyLogLinePresenceInPollTime(
+        std::chrono::seconds{1},
+        "Input port [id = '" + expected.destination.id + "'] cannot be a destination inside the process group in the connection [name = '" + expected.name + "'"));
+      break;
+    }
+    case ConnectionFailure::OUTPUT_CANNOT_BE_SOURCE: {
+      REQUIRE(utils::verifyLogLinePresenceInPollTime(
+        std::chrono::seconds{1},
+        "Output port [id = '" + expected.source.id + "'] cannot be a source inside the process group in the connection [name = '" + expected.name + "'"));
       break;
     }
   }

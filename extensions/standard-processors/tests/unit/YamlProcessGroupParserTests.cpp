@@ -201,3 +201,91 @@ TEST_CASE("Processor cannot communicate with child's nested process group", "[Ya
 
   verifyProcessGroup(*root, pattern);
 }
+
+TEST_CASE("Input port can be a connection's source and the output port can be a destination inside the process group", "[YamlProcessGroupParser7]") {
+  auto pattern = Group("root")
+    .With({Conn{"Conn1",
+                InputPort{"00000000-0000-0000-0000-000000000001", "Port1"},
+                OutputPort{"00000000-0000-0000-0000-000000000002", "Port2"}}})
+    .With({InputPort{"00000000-0000-0000-0000-000000000001", "Port1"}})
+    .With({OutputPort{"00000000-0000-0000-0000-000000000002", "Port2"}});
+
+  auto root = config.getRootFromPayload(pattern.serialize().join("\n"));
+
+  verifyProcessGroup(*root, pattern);
+}
+
+TEST_CASE("Input port cannot be a connection's destination inside the process group", "[YamlProcessGroupParser7]") {
+  auto pattern = Group("root")
+    .With({Conn{"Conn1",
+                Proc{"00000000-0000-0000-0000-000000000002", "Proc1"},
+                InputPort{"00000000-0000-0000-0000-000000000001", "Port1", ConnectionFailure::INPUT_CANNOT_BE_DESTINATION}}})
+    .With({InputPort{"00000000-0000-0000-0000-000000000001", "Port1"}})
+    .With({Proc{"00000000-0000-0000-0000-000000000002", "Proc1"}});
+
+  auto root = config.getRootFromPayload(pattern.serialize().join("\n"));
+
+  verifyProcessGroup(*root, pattern);
+}
+
+TEST_CASE("Output port cannot be a connection's source inside the process group", "[YamlProcessGroupParser7]") {
+  auto pattern = Group("root")
+    .With({Conn{"Conn1",
+                OutputPort{"00000000-0000-0000-0000-000000000001", "Port1", ConnectionFailure::OUTPUT_CANNOT_BE_SOURCE},
+                Proc{"00000000-0000-0000-0000-000000000002", "Proc1"}}})
+    .With({OutputPort{"00000000-0000-0000-0000-000000000001", "Port1"}})
+    .With({Proc{"00000000-0000-0000-0000-000000000002", "Proc1"}});
+
+  auto root = config.getRootFromPayload(pattern.serialize().join("\n"));
+
+  verifyProcessGroup(*root, pattern);
+}
+
+TEST_CASE("Input port can be a connection's source and the output port can be a destination inside the process group through processor", "[YamlProcessGroupParser8]") {
+  auto pattern = Group("root")
+    .With({Conn{"Conn1",
+                InputPort{"00000000-0000-0000-0000-000000000001", "Port1"},
+                Proc{"00000000-0000-0000-0000-000000000003", "Proc1"}},
+           Conn{"Conn2",
+                Proc{"00000000-0000-0000-0000-000000000003", "Proc1"},
+                OutputPort{"00000000-0000-0000-0000-000000000002", "Port2"}}})
+    .With({Proc{"00000000-0000-0000-0000-000000000003", "Proc1"}})
+    .With({InputPort{"00000000-0000-0000-0000-000000000001", "Port1"}})
+    .With({OutputPort{"00000000-0000-0000-0000-000000000002", "Port2"}});
+
+  auto root = config.getRootFromPayload(pattern.serialize().join("\n"));
+
+  verifyProcessGroup(*root, pattern);
+}
+
+TEST_CASE("Processor cannot set connection's destination to child process group's output port", "[YamlProcessGroupParser9]") {
+  auto pattern = Group("root")
+    .With({Conn{"Conn1",
+                Proc{"00000000-0000-0000-0000-000000000001", "Proc1"},
+                OutputPort{"00000000-0000-0000-0000-000000000002", "Port1", ConnectionFailure::OUTPUT_CANNOT_BE_DESTINATION}}})
+    .With({Proc{"00000000-0000-0000-0000-000000000001", "Proc1"}})
+    .With({
+      Group("Child1")
+      .With({OutputPort{"00000000-0000-0000-0000-000000000002", "Port1"}})
+    });
+
+  auto root = config.getRootFromPayload(pattern.serialize().join("\n"));
+
+  verifyProcessGroup(*root, pattern);
+}
+
+TEST_CASE("Processor cannot set connection's source to child process group's input port", "[YamlProcessGroupParser10]") {
+  auto pattern = Group("root")
+    .With({Conn{"Conn1",
+                InputPort{"00000000-0000-0000-0000-000000000002", "Port1", ConnectionFailure::INPUT_CANNOT_BE_SOURCE},
+                Proc{"00000000-0000-0000-0000-000000000001", "Proc1"}}})
+    .With({Proc{"00000000-0000-0000-0000-000000000001", "Proc1"}})
+    .With({
+      Group("Child1")
+      .With({InputPort{"00000000-0000-0000-0000-000000000002", "Port1"}})
+    });
+
+  auto root = config.getRootFromPayload(pattern.serialize().join("\n"));
+
+  verifyProcessGroup(*root, pattern);
+}
