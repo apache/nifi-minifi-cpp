@@ -21,6 +21,7 @@
 #include <optional>
 #include <unordered_map>
 #include <vector>
+#include "utils/gsl.h"
 
 namespace org::apache::nifi::minifi::utils {
 
@@ -43,7 +44,7 @@ class ValueIdProvider {
   std::optional<T> getValue(id_type id) const {
     const auto idx = gsl::narrow<size_t>(id);
     if (idx < values_.size()) {
-      return values_.at(idx);
+      return values_[idx];
     }
     return std::nullopt;
   }
