@@ -25,15 +25,15 @@
 
 namespace org::apache::nifi::minifi::utils {
 
-template<typename T, typename IdType = size_t>
-class ValueIdProvider {
+template<typename T, typename CompressedType = size_t>
+class ValueCompressor {
  public:
-  using id_type = IdType;
-  static constexpr id_type INVALID_ID = static_cast<id_type>(-1);
+  using compressed_type = CompressedType;
+  static constexpr compressed_type INVALID = static_cast<compressed_type>(-1);
 
   [[nodiscard]]
-  id_type getId(const T& value) {
-    auto [it, inserted] = value_to_id_.insert({value, gsl::narrow<id_type>(values_.size())});
+  compressed_type compress(const T& value) {
+    auto [it, inserted] = value_to_id_.insert({value, gsl::narrow<compressed_type>(values_.size())});
     if (inserted) {
       values_.push_back(value);
     }
@@ -41,7 +41,7 @@ class ValueIdProvider {
   }
 
   [[nodiscard]]
-  std::optional<T> getValue(id_type id) const {
+  std::optional<T> decompress(const compressed_type& id) const {
     const auto idx = gsl::narrow<size_t>(id);
     if (idx < values_.size()) {
       return values_[idx];
@@ -55,7 +55,7 @@ class ValueIdProvider {
   }
 
  private:
-  std::unordered_map<T, id_type> value_to_id_;
+  std::unordered_map<T, compressed_type> value_to_id_;
   std::vector<T> values_;
 };
 

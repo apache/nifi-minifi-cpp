@@ -814,7 +814,7 @@ void ProcessSession::commit() {
     }
 
     // Do the same thing for added flow file
-    for (const auto& it : added_flow_files_) {
+    for (const auto& it : added_flowfiles_) {
       auto record = it.second;
       if (routeFlowFile(record, increaseTransferMetrics) == RouteResult::Error_NoRelationship) {
         // Can not find relationship for the flow
