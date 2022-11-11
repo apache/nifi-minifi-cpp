@@ -87,8 +87,9 @@ class ConsumeMQTT : public processors::AbstractMQTTProcessor {
  private:
   class WriteCallback {
    public:
-    explicit WriteCallback(const SmartMessage& message)
-      : message_(message) {
+    explicit WriteCallback(const SmartMessage& message, std::shared_ptr<core::logging::Logger> logger)
+      : message_(message)
+      , logger_(std::move(logger)) {
     }
 
     int64_t operator() (const std::shared_ptr<io::OutputStream>& stream);
@@ -99,6 +100,7 @@ class ConsumeMQTT : public processors::AbstractMQTTProcessor {
 
    private:
     const SmartMessage& message_;
+    std::shared_ptr<core::logging::Logger> logger_;
     bool success_status_ = true;
   };
 

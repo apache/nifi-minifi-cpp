@@ -91,8 +91,12 @@ void ConsumeMQTT::onTriggerImpl(const std::shared_ptr<core::ProcessContext>& /*c
   while (!msg_queue.empty()) {
     const auto& message = msg_queue.front();
     std::shared_ptr<core::FlowFile> flow_file = session->create();
-    WriteCallback write_callback(message);
-    session->write(flow_file, write_callback);
+    WriteCallback write_callback(message, logger_);
+    try {
+      session->write(flow_file, write_callback);
+    } catch (const Exception& ex) {
+      logger_->log_error("Error when processing message queue: %s", ex.what());
+    }
     if (!write_callback.getSuccessStatus()) {
       logger_->log_error("ConsumeMQTT fail for the flow with UUID %s", flow_file->getUUIDStr());
       session->remove(flow_file);
@@ -120,12 +124,14 @@ std::queue<ConsumeMQTT::SmartMessage> ConsumeMQTT::getReceivedMqttMessages() {
 int64_t ConsumeMQTT::WriteCallback::operator() (const std::shared_ptr<io::OutputStream>& stream) {
   if (message_.contents->payloadlen < 0) {
     success_status_ = false;
+    logger_->log_error("Payload length of message is negative, value is [%d]", message_.contents->payloadlen);
     return -1;
   }
 
   const auto len = stream->write(reinterpret_cast<uint8_t*>(message_.contents->payload), gsl::narrow<size_t>(message_.contents->payloadlen));
   if (io::isError(len)) {
     success_status_ = false;
+    logger_->log_error("Stream writing error when processing message");
     return -1;
   }
 
@@ -274,7 +280,7 @@ void ConsumeMQTT::checkBrokerLimitsImpl() {
     return std::any_of(topic.begin(), topic.end(), [] (const char ch) {return ch == '+' || ch == '#';});
   };
 
-  if (wildcard_subscription_available_.has_value() && !*wildcard_subscription_available_ && hasWildcards(topic_)) {
+  if (wildcard_subscription_available_ == false && hasWildcards(topic_)) {
     std::ostringstream os;
     os << "Broker does not support wildcards but topic \"" << topic_ <<"\" has them";
     throw Exception(PROCESS_SCHEDULE_EXCEPTION, os.str());
