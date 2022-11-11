@@ -1,0 +1,69 @@
+MiNiFi Config Version: 3
+Flow Controller:
+  name: MiNiFi Flow
+Processors:
+- name: GenerateFlowFile
+  id: 4812b638-2f79-4dc2-9693-847a90399cbd
+  class: org.apache.nifi.minifi.processors.GenerateFlowFile
+  scheduling strategy: TIMER_DRIVEN
+  scheduling period: 100 ms
+  penalization period: 1000 ms
+  Properties:
+    Batch Size: '1'
+    Data Format: Binary
+    File Size: 10 B
+    Unique FlowFiles: 'true'
+- name: Log attributes
+  id: 2ecd4bb4-b103-43fe-a45d-6a79b12da79b
+  class: org.apache.nifi.minifi.processors.LogAttribute
+  scheduling strategy: EVENT_DRIVEN
+  auto-terminated relationships list:
+  - success
+  Properties:
+    FlowFiles To Log: '0'
+Connections:
+- name: GenerateFlowFile/success/ProcessGroup
+  id: 492bc370-5d4c-4657-952f-3d6093147ad8
+  source id: 4812b638-2f79-4dc2-9693-847a90399cbd
+  source relationship names:
+  - success
+  destination id: 012fc536-3137-4360-be65-3e3b47e05941
+- name: ProcessGroup/success/LogAttribute
+  id: 12656e8e-0b91-4694-a2b7-3aa147574cd2
+  source id: 46dd8c65-8255-4980-8b7e-4381da00867a
+  source relationship names:
+  - success
+  destination id: 2ecd4bb4-b103-43fe-a45d-6a79b12da79b
+Controller Services: []
+Remote Process Groups: []
+Process Groups:
+  - id: 0a3aaf32-8574-4fa7-b720-84001f8dd71a
+    name: Update the attributes
+    Processors:
+      - id: 11624e01-baca-4590-bb9d-512ae2616615
+        name: UpdateAttribute
+        class: org.apache.nifi.minifi.processors.UpdateAttribute
+        scheduling strategy: EVENT_DRIVEN
+        auto-terminated relationships list:
+        - failure
+        Properties:
+          test_attribute: success
+    Input Ports:
+      - id: 012fc536-3137-4360-be65-3e3b47e05941
+        name: in
+    Output Ports:
+      - id: 46dd8c65-8255-4980-8b7e-4381da00867a
+        name: out
+    Connections:
+      - name: Input/success/UpdateAttribute
+        id: 2d33779c-2305-4e1a-88b8-1d2b6a9b134c
+        source id: 012fc536-3137-4360-be65-3e3b47e05941
+        source relationship names:
+        - success
+        destination id: 11624e01-baca-4590-bb9d-512ae2616615
+      - name: UpdateAttribute/success/Output
+        id: 5af95cc8-455a-4d5e-afbb-e16699407ed2
+        source id: 11624e01-baca-4590-bb9d-512ae2616615
+        source relationship names:
+        - success
+        destination id: 46dd8c65-8255-4980-8b7e-4381da00867a

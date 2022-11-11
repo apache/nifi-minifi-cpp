@@ -97,8 +97,8 @@ if(NOT OPENSSL_OFF)
 endif()
 
 add_test(NAME TailFileTest COMMAND TailFileTest "${TEST_RESOURCES}/TestTailFile.yml"  "${TEST_RESOURCES}/")
-
 add_test(NAME TailFileCronTest COMMAND TailFileTest "${TEST_RESOURCES}/TestTailFileCron.yml"  "${TEST_RESOURCES}/")
+add_test(NAME ProcessGroupTest COMMAND ProcessGroupTest "${TEST_RESOURCES}/TestProcessGroup.yml")
 
 FOREACH(resourcefile ${RESOURCE_APPS})
     get_filename_component(resourcefilename "${resourcefile}" NAME_WE)

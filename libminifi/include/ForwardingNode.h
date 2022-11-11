@@ -28,7 +28,9 @@ namespace org::apache::nifi::minifi {
 
 class ForwardingNode : public core::Processor {
  public:
-  ForwardingNode(std::string name, const utils::Identifier& uuid, std::shared_ptr<core::logging::Logger> logger) : Processor(std::move(name), uuid), logger_(std::move(logger)) {}
+  ForwardingNode(std::string name, const utils::Identifier& uuid, std::shared_ptr<core::logging::Logger> logger) : Processor(std::move(name), uuid), logger_(std::move(logger)) {
+    strategy_ = core::SchedulingStrategy::EVENT_DRIVEN;
+  }
   explicit ForwardingNode(std::string name, std::shared_ptr<core::logging::Logger> logger) : Processor(std::move(name)), logger_(std::move(logger)) {}
 
   static auto properties() { return std::array<core::Property, 0>{}; }
