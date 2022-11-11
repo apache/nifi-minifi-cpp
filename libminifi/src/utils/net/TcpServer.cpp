@@ -21,6 +21,8 @@ namespace org::apache::nifi::minifi::utils::net {
 
 asio::awaitable<void> TcpServer::listen() {
   asio::ip::tcp::acceptor acceptor(io_context_, asio::ip::tcp::endpoint(asio::ip::tcp::v6(), port_));
+  if (port_ == 0)
+    port_ = acceptor.local_endpoint().port();
   while (true) {
     auto [accept_error, socket] = co_await acceptor.async_accept(use_nothrow_awaitable);
     if (accept_error) {
@@ -28,9 +30,9 @@ asio::awaitable<void> TcpServer::listen() {
       break;
     }
     if (ssl_data_)
-      co_spawn(socket.get_executor(), secureSession(std::move(socket)), asio::detached);
+      co_spawn(io_context_, secureSession(std::move(socket)), asio::detached);
     else
-      co_spawn(socket.get_executor(), insecureSession(std::move(socket)), asio::detached);
+      co_spawn(io_context_, insecureSession(std::move(socket)), asio::detached);
   }
 }
 

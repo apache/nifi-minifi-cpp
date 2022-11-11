@@ -71,11 +71,16 @@ class Server {
     stop();
   }
 
+  uint16_t getPort() const {
+    return port_;
+  }
+
  protected:
   virtual asio::awaitable<void> listen() = 0;
-  Server(std::optional<size_t> max_queue_size, std::shared_ptr<core::logging::Logger> logger)
-      : max_queue_size_(max_queue_size), logger_(std::move(logger)) {}
+  Server(std::optional<size_t> max_queue_size, uint16_t port, std::shared_ptr<core::logging::Logger> logger)
+      : port_(port), max_queue_size_(max_queue_size), logger_(std::move(logger)) {}
 
+  std::atomic<uint16_t> port_;
   utils::ConcurrentQueue<Message> concurrent_queue_;
   asio::io_context io_context_;
   std::optional<size_t> max_queue_size_;

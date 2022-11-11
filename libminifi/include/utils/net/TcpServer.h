@@ -27,8 +27,7 @@ namespace org::apache::nifi::minifi::utils::net {
 class TcpServer : public Server {
  public:
   TcpServer(std::optional<size_t> max_queue_size_, uint16_t port, std::shared_ptr<core::logging::Logger> logger, std::optional<SslServerOptions> ssl_data)
-      : Server(max_queue_size_, std::move(logger)),
-        port_(port),
+      : Server(max_queue_size_, port, std::move(logger)),
         ssl_data_(std::move(ssl_data)) {
   }
 
@@ -40,7 +39,6 @@ class TcpServer : public Server {
 
   asio::awaitable<void> readLoop(auto& socket);
 
-  uint16_t port_;
   std::optional<SslServerOptions> ssl_data_;
 };
 

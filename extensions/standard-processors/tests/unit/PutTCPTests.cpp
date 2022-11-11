@@ -49,13 +49,15 @@ class CancellableTcpServer : public utils::net::TcpServer {
 
   void cancelEverything() {
     for (auto& timer : cancellable_timers_)
-      io_context_.post([&]{timer->cancel();});
+      io_context_.post([=]{timer->cancel();});
   }
 
   asio::awaitable<void> listen() override {
     using asio::experimental::awaitable_operators::operator||;
 
     asio::ip::tcp::acceptor acceptor(io_context_, asio::ip::tcp::endpoint(asio::ip::tcp::v6(), port_));
+    if (port_ == 0)
+      port_ = acceptor.local_endpoint().port();
     while (true) {
       auto [accept_error, socket] = co_await acceptor.async_accept(utils::net::use_nothrow_awaitable);
       if (accept_error) {
@@ -65,9 +67,9 @@ class CancellableTcpServer : public utils::net::TcpServer {
       auto cancellable_timer = std::make_shared<asio::steady_timer>(io_context_);
       cancellable_timers_.push_back(cancellable_timer);
       if (ssl_data_)
-        co_spawn(socket.get_executor(), secureSession(std::move(socket)) || wait_until_cancelled(cancellable_timer), asio::detached);
+        co_spawn(io_context_, secureSession(std::move(socket)) || wait_until_cancelled(cancellable_timer), asio::detached);
       else
-        co_spawn(socket.get_executor(), insecureSession(std::move(socket)) || wait_until_cancelled(cancellable_timer), asio::detached);
+        co_spawn(io_context_, insecureSession(std::move(socket)) || wait_until_cancelled(cancellable_timer), asio::detached);
     }
   }
 
@@ -181,17 +183,17 @@ class PutTCPTestFixture {
   }
 
   uint16_t addTCPServer() {
-    uint16_t port = std::uniform_int_distribution<uint16_t>{10000, 32768 - 1}(random_engine_);
-    listeners_[port].startTCPServer(port, std::nullopt);
-    std::this_thread::sleep_for(30ms);
+    Server server;
+    uint16_t port = server.startTCPServer(std::nullopt);
+    listeners_[port] = std::move(server);
     return port;
   }
 
   uint16_t addSSLServer() {
-    uint16_t port = std::uniform_int_distribution<uint16_t>{10000, 32768 - 1}(random_engine_);
     auto ssl_server_options = utils::net::SslServerOptions{createSslDataForServer(), utils::net::ClientAuthOption::REQUIRED};
-    listeners_[port].startTCPServer(port, ssl_server_options);
-    std::this_thread::sleep_for(30ms);
+    Server server;
+    uint16_t port = server.startTCPServer(ssl_server_options);
+    listeners_[port] = std::move(server);
     return port;
   }
 
@@ -218,17 +220,22 @@ class PutTCPTestFixture {
   const std::shared_ptr<PutTCP> put_tcp_ = std::make_shared<PutTCP>("PutTCP");
   test::SingleProcessorTestController controller_{put_tcp_};
 
-  std::mt19937 random_engine_{std::random_device{}()};  // NOLINT: "Missing space before {  [whitespace/braces] [5]"
-  // most systems use ports 32768 - 65535 as ephemeral ports, so avoid binding to those
-
   class Server {
    public:
     Server() = default;
 
-    void startTCPServer(uint16_t port, std::optional<utils::net::SslServerOptions> ssl_server_options) {
+    uint16_t startTCPServer(std::optional<utils::net::SslServerOptions> ssl_server_options) {
       gsl_Expects(!listener_ && !server_thread_.joinable());
-      listener_ = std::make_unique<CancellableTcpServer>(std::nullopt, port, core::logging::LoggerFactory<utils::net::Server>::getLogger(), ssl_server_options);
+      listener_ = std::make_unique<CancellableTcpServer>(std::nullopt, 0, core::logging::LoggerFactory<utils::net::Server>::getLogger(), std::move(ssl_server_options));
       server_thread_ = std::thread([this]() { listener_->run(); });
+      uint16_t port = listener_->getPort();
+      auto deadline = std::chrono::steady_clock::now() + 200ms;
+      while (port == 0 && deadline > std::chrono::steady_clock::now()) {
+        std::this_thread::sleep_for(20ms);
+        port = listener_->getPort();
+      }
+      REQUIRE(port != 0);
+      return port;
     }
 
     std::unique_ptr<utils::net::Server> listener_;
@@ -352,7 +359,8 @@ TEST_CASE("PutTCP test invalid host", "[PutTCP]") {
   trigger_expect_failure(test_fixture, "message for invalid host");
 
   CHECK((LogTestController::getInstance().contains("Host not found", 0ms)
-      || LogTestController::getInstance().contains("No such host is known", 0ms)));
+      || LogTestController::getInstance().contains("No such host is known", 0ms)
+      || LogTestController::getInstance().contains("A connection attempt failed because the connected party did not properly respond", 0ms)));
 }
 
 TEST_CASE("PutTCP test invalid server", "[PutTCP]") {

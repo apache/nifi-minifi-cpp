@@ -36,8 +36,6 @@ class UdpServer : public Server {
 
  private:
   asio::awaitable<void> listen() override;
-
-  uint16_t port_;
 };
 
 }  // namespace org::apache::nifi::minifi::utils::net

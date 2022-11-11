@@ -50,6 +50,12 @@ class NetworkListenerProcessor : public core::Processor {
     stopServer();
   }
 
+  uint16_t getPort() {
+    if (server_)
+      return server_->getPort();
+    return 0;
+  }
+
  protected:
   void startTcpServer(const core::ProcessContext& context, const core::Property& ssl_context_property, const core::Property& client_auth_property);
   void startUdpServer(const core::ProcessContext& context);

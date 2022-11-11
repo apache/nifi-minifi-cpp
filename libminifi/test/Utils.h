@@ -114,33 +114,36 @@ bool countLogOccurrencesUntil(const std::string& pattern,
 std::error_code sendMessagesViaTCP(const std::vector<std::string_view>& contents, const asio::ip::tcp::endpoint& remote_endpoint) {
   asio::io_context io_context;
   asio::ip::tcp::socket socket(io_context);
-  socket.connect(remote_endpoint);
   std::error_code err;
+  socket.connect(remote_endpoint, err);
+  if (err)
+    return err;
   for (auto& content : contents) {
     std::string tcp_message(content);
     tcp_message += '\n';
     asio::write(socket, asio::buffer(tcp_message, tcp_message.size()), err);
-    if (err) {
+    if (err)
       return err;
-    }
   }
   return std::error_code();
 }
 
-bool sendUdpDatagram(const asio::const_buffer content, const asio::ip::udp::endpoint& remote_endpoint) {
+std::error_code sendUdpDatagram(const asio::const_buffer content, const asio::ip::udp::endpoint& remote_endpoint) {
   asio::io_context io_context;
   asio::ip::udp::socket socket(io_context);
-  socket.open(remote_endpoint.protocol());
   std::error_code err;
+  socket.open(remote_endpoint.protocol(), err);
+  if (err)
+    return err;
   socket.send_to(content, remote_endpoint, 0, err);
-  return !err;
+  return err;
 }
 
-bool sendUdpDatagram(const gsl::span<std::byte const> content, const asio::ip::udp::endpoint& remote_endpoint) {
+std::error_code sendUdpDatagram(const gsl::span<std::byte const> content, const asio::ip::udp::endpoint& remote_endpoint) {
   return sendUdpDatagram(asio::const_buffer(content.begin(), content.size()), remote_endpoint);
 }
 
-bool sendUdpDatagram(const std::string_view content, const asio::ip::udp::endpoint& remote_endpoint) {
+std::error_code sendUdpDatagram(const std::string_view content, const asio::ip::udp::endpoint& remote_endpoint) {
   return sendUdpDatagram(asio::buffer(content), remote_endpoint);
 }
 

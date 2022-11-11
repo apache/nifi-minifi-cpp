@@ -15,30 +15,29 @@
  * limitations under the License.
  */
 #include "utils/net/UdpServer.h"
-#include "asio/co_spawn.hpp"
 #include "asio/use_awaitable.hpp"
 #include "asio/detached.hpp"
-#include "asio/experimental/as_tuple.hpp"
+#include "utils/net/AsioCoro.h"
 
 namespace org::apache::nifi::minifi::utils::net {
 
 constexpr size_t MAX_UDP_PACKET_SIZE = 65535;
-constexpr auto use_nothrow_awaitable = asio::experimental::as_tuple(asio::use_awaitable);
 
 UdpServer::UdpServer(std::optional<size_t> max_queue_size,
                      uint16_t port,
                      std::shared_ptr<core::logging::Logger> logger)
-    : Server(max_queue_size, std::move(logger)),
-      port_(port) {
+    : Server(max_queue_size, port, std::move(logger)) {
 }
 
 asio::awaitable<void> UdpServer::listen() {
   asio::ip::udp::socket socket(io_context_, asio::ip::udp::endpoint(asio::ip::udp::v6(), port_));
+  if (port_ == 0)
+    port_ = socket.local_endpoint().port();
   while (true) {
     std::string buffer = std::string(MAX_UDP_PACKET_SIZE, {});
     asio::ip::udp::endpoint sender_endpoint;
 
-    auto [receive_error, bytes_received] = co_await socket.async_receive_from(asio::buffer(buffer, MAX_UDP_PACKET_SIZE), sender_endpoint, use_nothrow_awaitable);
+    auto [receive_error, bytes_received] = co_await socket.async_receive_from(asio::buffer(buffer, MAX_UDP_PACKET_SIZE), sender_endpoint, utils::net::use_nothrow_awaitable);
     if (receive_error) {
       logger_->log_warn("Error during receive: %s", receive_error.message());
       continue;
