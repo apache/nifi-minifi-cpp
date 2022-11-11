@@ -350,7 +350,6 @@ Processor* ProcessGroup::findPortById(const utils::Identifier& uuid) const {
 
 Processor* ProcessGroup::findChildPortById(const utils::Identifier& uuid) const {
   std::lock_guard<std::recursive_mutex> lock(mutex_);
-
   for (const auto& processGroup : child_process_groups_) {
     const auto& ports = processGroup->getPorts();
     if (auto processor = findPortById(ports, uuid)) {
@@ -372,6 +371,7 @@ void ProcessGroup::addConnection(std::unique_ptr<Connection> connection) {
 
   logger_->log_debug("Add connection %s into process group %s", insertedConnection->getName(), name_);
   // only allow connections between processors of the same process group or in/output ports of child process groups
+  // check input and output ports connection restrictions inside and outside a process group
   Processor* source = findPortById(insertedConnection->getSourceUUID());
   if (source && static_cast<Port*>(source)->getPortType() == PortType::OUTPUT) {
     logger_->log_error("Output port [id = '%s'] cannot be a source inside the process group in the connection [name = '%s', id = '%s']",

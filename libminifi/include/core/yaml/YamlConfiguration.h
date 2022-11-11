@@ -15,8 +15,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#ifndef LIBMINIFI_INCLUDE_CORE_YAML_YAMLCONFIGURATION_H_
-#define LIBMINIFI_INCLUDE_CORE_YAML_YAMLCONFIGURATION_H_
+#pragma once
 
 #include <memory>
 #include <optional>
@@ -37,11 +36,7 @@
 
 class YamlConfigurationTestAccessor;
 
-namespace org {
-namespace apache {
-namespace nifi {
-namespace minifi {
-namespace core {
+namespace org::apache::nifi::minifi::core {
 
 static constexpr char const* CONFIG_YAML_FLOW_CONTROLLER_KEY = "Flow Controller";
 static constexpr char const* CONFIG_YAML_PROCESSORS_KEY = "Processors";
@@ -333,10 +328,4 @@ class YamlConfiguration : public FlowConfiguration {
   void raiseComponentError(const std::string &component_name, const std::string &yaml_section, const std::string &reason) const;
 };
 
-}  // namespace core
-}  // namespace minifi
-}  // namespace nifi
-}  // namespace apache
-}  // namespace org
-
-#endif  // LIBMINIFI_INCLUDE_CORE_YAML_YAMLCONFIGURATION_H_
+}  // namespace org::apache::nifi::minifi::core

@@ -57,7 +57,6 @@ int main(int argc, char **argv) {
   }
 
   ProcessGroupTestHarness harness;
-
   harness.run(test_file_location);
 
   return 0;

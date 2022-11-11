@@ -119,8 +119,8 @@ std::unique_ptr<core::ProcessGroup> YamlConfiguration::parseProcessGroupYaml(con
     }
   }
 
-  // parse connections last to give feedback if the source and/or destination
-  // is not in the same process group
+  // parse connections last to give feedback if the source and/or destination processors
+  // is not in the same process group or input/output port connections are not allowed
   parseConnectionYaml(connectionsNode, group.get());
   return group;
 }

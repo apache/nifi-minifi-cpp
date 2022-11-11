@@ -278,43 +278,33 @@ auto findByName(const std::set<T>& set, const std::string& name) -> decltype(Res
 }
 
 void assertFailure(const Conn& expected, ConnectionFailure failure) {
+  auto assertMessage = [](const std::string& message) {
+    REQUIRE(utils::verifyLogLinePresenceInPollTime(std::chrono::seconds{1}, message));
+  };
+
   switch (failure) {
     case ConnectionFailure::UNRESOLVED_DESTINATION: {
-      REQUIRE(utils::verifyLogLinePresenceInPollTime(
-        std::chrono::seconds{1},
-        "Cannot find the destination processor with id '" + expected.destination.id
-        + "' for the connection [name = '" + expected.name + "'"));
+      assertMessage("Cannot find the destination processor with id '" + expected.destination.id + "' for the connection [name = '" + expected.name + "'");
       break;
     }
     case ConnectionFailure::UNRESOLVED_SOURCE: {
-      REQUIRE(utils::verifyLogLinePresenceInPollTime(
-        std::chrono::seconds{1},
-        "Cannot find the source processor with id '" + expected.source.id
-        + "' for the connection [name = '" + expected.name + "'"));
+      assertMessage("Cannot find the source processor with id '" + expected.source.id + "' for the connection [name = '" + expected.name + "'");
       break;
     }
     case ConnectionFailure::INPUT_CANNOT_BE_SOURCE: {
-      REQUIRE(utils::verifyLogLinePresenceInPollTime(
-        std::chrono::seconds{1},
-        "Input port [id = '" + expected.source.id + "'] cannot be a source outside the process group in the connection [name = '" + expected.name + "'"));
+      assertMessage("Input port [id = '" + expected.source.id + "'] cannot be a source outside the process group in the connection [name = '" + expected.name + "'");
       break;
     }
     case ConnectionFailure::OUTPUT_CANNOT_BE_DESTINATION: {
-      REQUIRE(utils::verifyLogLinePresenceInPollTime(
-        std::chrono::seconds{1},
-        "Output port [id = '" + expected.destination.id + "'] cannot be a destination outside the process group in the connection [name = '" + expected.name + "'"));
+      assertMessage("Output port [id = '" + expected.destination.id + "'] cannot be a destination outside the process group in the connection [name = '" + expected.name + "'");
       break;
     }
     case ConnectionFailure::INPUT_CANNOT_BE_DESTINATION: {
-      REQUIRE(utils::verifyLogLinePresenceInPollTime(
-        std::chrono::seconds{1},
-        "Input port [id = '" + expected.destination.id + "'] cannot be a destination inside the process group in the connection [name = '" + expected.name + "'"));
+      assertMessage("Input port [id = '" + expected.destination.id + "'] cannot be a destination inside the process group in the connection [name = '" + expected.name + "'");
       break;
     }
     case ConnectionFailure::OUTPUT_CANNOT_BE_SOURCE: {
-      REQUIRE(utils::verifyLogLinePresenceInPollTime(
-        std::chrono::seconds{1},
-        "Output port [id = '" + expected.source.id + "'] cannot be a source inside the process group in the connection [name = '" + expected.name + "'"));
+      assertMessage("Output port [id = '" + expected.source.id + "'] cannot be a source inside the process group in the connection [name = '" + expected.name + "'");
       break;
     }
   }
