@@ -17,6 +17,8 @@
  */
 #pragma once
 
+#include <string>
+
 #include "ForwardingNode.h"
 
 namespace org::apache::nifi::minifi {

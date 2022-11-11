@@ -27,6 +27,7 @@
 #include <algorithm>
 #include <set>
 #include <utility>
+#include <tuple>
 
 #include "Processor.h"
 #include "Exception.h"

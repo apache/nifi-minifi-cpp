@@ -19,6 +19,7 @@
 
 #include <string>
 #include <memory>
+#include <utility>
 
 #include "core/logging/LoggerFactory.h"
 #include "core/Processor.h"

@@ -105,9 +105,9 @@ using InputPort = Port<struct InputTag>;
 using OutputPort = Port<struct OutputTag>;
 
 struct MaybeProc {
-  MaybeProc(const Proc& proc) : id(proc.id), name(proc.name), failure(proc.failure) {}
-  MaybeProc(const InputPort& port) : id(port.id), name(port.name), failure(port.failure) {}
-  MaybeProc(const OutputPort& port) : id(port.id), name(port.name), failure(port.failure) {}
+  MaybeProc(const Proc& proc) : id(proc.id), name(proc.name), failure(proc.failure) {}  // NOLINT(runtime/explicit)
+  MaybeProc(const InputPort& port) : id(port.id), name(port.name), failure(port.failure) {}  // NOLINT(runtime/explicit)
+  MaybeProc(const OutputPort& port) : id(port.id), name(port.name), failure(port.failure) {}  // NOLINT(runtime/explicit)
 
   std::string id;
   std::string name;
