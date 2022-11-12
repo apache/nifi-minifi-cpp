@@ -412,8 +412,8 @@ TEST_CASE("PutTCP test non-routable server", "[PutTCP]") {
   trigger_expect_failure(test_fixture, "message for non-routable server");
 
   CHECK((LogTestController::getInstance().contains("Connection timed out", 0ms)
-    || LogTestController::getInstance().contains("Operation timed out", 0ms)
-    || LogTestController::getInstance().contains("host has failed to respond", 0ms)));
+      || LogTestController::getInstance().contains("Operation timed out", 0ms)
+      || LogTestController::getInstance().contains("host has failed to respond", 0ms)));
 }
 
 TEST_CASE("PutTCP test invalid server cert", "[PutTCP]") {
@@ -426,8 +426,9 @@ TEST_CASE("PutTCP test invalid server cert", "[PutTCP]") {
 
   trigger_expect_failure(test_fixture, "message for invalid-cert server");
 
-  CHECK((LogTestController::getInstance().contains("certificate verify failed", 0ms)
-      || LogTestController::getInstance().contains("asio.ssl error", 0ms)));
+  CHECK((LogTestController::getInstance().contains("sslv3 alert handshake failure", 0ms)
+      || LogTestController::getInstance().contains("asio.ssl error", 0ms)
+      || LogTestController::getInstance().contains("Error occured during SSL handshake", 0ms)));
 }
 
 TEST_CASE("PutTCP test missing client cert", "[PutTCP]") {
@@ -441,7 +442,9 @@ TEST_CASE("PutTCP test missing client cert", "[PutTCP]") {
   trigger_expect_failure(test_fixture, "message for invalid-cert server");
 
   CHECK((LogTestController::getInstance().contains("sslv3 alert handshake failure", 0ms)
-      || LogTestController::getInstance().contains("asio.ssl error", 0ms)));}
+      || LogTestController::getInstance().contains("asio.ssl error", 0ms)
+      || LogTestController::getInstance().contains("Error occured during SSL handshake", 0ms)));
+}
 
 TEST_CASE("PutTCP test idle connection expiration", "[PutTCP]") {
   PutTCPTestFixture test_fixture;
