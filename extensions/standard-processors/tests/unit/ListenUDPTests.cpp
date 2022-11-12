@@ -29,7 +29,7 @@ using namespace std::literals::chrono_literals;
 
 namespace org::apache::nifi::minifi::test {
 
-constexpr uint64_t PORT = 10256;
+const uint16_t PORT = utils::getRandomPort();
 
 void check_for_attributes(core::FlowFile& flow_file) {
   const auto local_addresses = {"127.0.0.1", "::ffff:127.0.0.1", "::1"};
@@ -59,6 +59,7 @@ TEST_CASE("ListenUDP test multiple messages", "[ListenUDP][NetworkListenerProces
   REQUIRE(utils::sendUdpDatagram({"another_message"}, endpoint));
   ProcessorTriggerResult result;
   REQUIRE(controller.triggerUntil({{ListenUDP::Success, 2}}, result, 300ms, 50ms));
+  CHECK(result.at(ListenUDP::Success).size() == 2);
   CHECK(controller.plan->getContent(result.at(ListenUDP::Success)[0]) == "test_message_1");
   CHECK(controller.plan->getContent(result.at(ListenUDP::Success)[1]) == "another_message");
 

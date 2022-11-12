@@ -21,7 +21,6 @@
 
 #include "NetworkListenerProcessor.h"
 #include "core/logging/LoggerConfiguration.h"
-#include "utils/Enum.h"
 
 namespace org::apache::nifi::minifi::processors {
 

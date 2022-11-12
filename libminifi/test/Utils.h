@@ -144,6 +144,12 @@ bool sendUdpDatagram(const std::string_view content, const asio::ip::udp::endpoi
   return sendUdpDatagram(asio::buffer(content), remote_endpoint);
 }
 
+uint16_t getRandomPort() {
+  asio::io_context context;
+  asio::ip::udp::socket socket(context, asio::ip::udp::endpoint(asio::ip::udp::v6(), 0));
+  return socket.local_endpoint().port();
+}
+
 bool isIPv6Disabled() {
   asio::io_context io_context;
   std::error_code error_code;

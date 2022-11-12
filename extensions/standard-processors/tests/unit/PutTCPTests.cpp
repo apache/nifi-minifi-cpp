@@ -24,6 +24,7 @@
 #include "SingleProcessorTestController.h"
 #include "Catch.h"
 #include "PutTCP.h"
+#include "Utils.h"
 #include "controllers/SSLContextService.h"
 #include "core/ProcessSession.h"
 #include "utils/net/TcpServer.h"
@@ -204,13 +205,13 @@ class PutTCPTestFixture {
   }
 
   uint16_t addTCPServer() {
-    uint16_t port = std::uniform_int_distribution<uint16_t>{10000, 32768 - 1}(random_engine_);
+    uint16_t port = test::utils::getRandomPort();
     listeners_[port].startTCPServer(port);
     return port;
   }
 
   uint16_t addSSLServer() {
-    uint16_t port = std::uniform_int_distribution<uint16_t>{10000, 32768 - 1}(random_engine_);
+    uint16_t port = test::utils::getRandomPort();
     listeners_[port].startSSLServer(port);
     return port;
   }
@@ -238,8 +239,6 @@ class PutTCPTestFixture {
   const std::shared_ptr<PutTCP> put_tcp_ = std::make_shared<PutTCP>("PutTCP");
   test::SingleProcessorTestController controller_{put_tcp_};
 
-  std::mt19937 random_engine_{std::random_device{}()};  // NOLINT: "Missing space before {  [whitespace/braces] [5]"
-  // most systems use ports 32768 - 65535 as ephemeral ports, so avoid binding to those
 
   class Server {
    public:
