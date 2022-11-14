@@ -188,7 +188,7 @@ void ConsumeMQTT::startupClient() {
 
 void ConsumeMQTT::onMessageReceived(SmartMessage smart_message) {
   if (mqtt_version_ == MqttVersions::V_5_0) {
-    resolveTopicFromAlias(smart_message.contents, smart_message.topic);
+    resolveTopicFromAlias(smart_message);
   }
 
   if (smart_message.topic.empty()) {
@@ -199,13 +199,15 @@ void ConsumeMQTT::onMessageReceived(SmartMessage smart_message) {
   enqueueReceivedMQTTMsg(std::move(smart_message));
 }
 
-void ConsumeMQTT::resolveTopicFromAlias(const std::unique_ptr<MQTTAsync_message, MQTTMessageDeleter>& message, std::string& topic) {
-  auto raw_alias = MQTTProperties_getNumericValue(&message->properties, MQTTPROPERTY_CODE_TOPIC_ALIAS);
+void ConsumeMQTT::resolveTopicFromAlias(SmartMessage& smart_message) {
+  auto raw_alias = MQTTProperties_getNumericValue(&smart_message.contents->properties, MQTTPROPERTY_CODE_TOPIC_ALIAS);
 
   std::optional<uint16_t> alias;
   if (raw_alias != PAHO_MQTT_C_FAILURE_CODE) {
     alias = gsl::narrow<uint16_t>(raw_alias);
   }
+
+  auto& topic = smart_message.topic;
 
   if (alias.has_value()) {
     if (*alias > topic_alias_maximum_) {

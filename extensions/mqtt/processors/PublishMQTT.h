@@ -21,6 +21,7 @@
 #include <string>
 #include <unordered_map>
 #include <utility>
+#include <vector>
 
 #include "FlowFileRecord.h"
 #include "core/Processor.h"
@@ -72,47 +73,9 @@ class PublishMQTT : public processors::AbstractMQTTProcessor {
   void initialize() override;
 
  private:
-  class ReadCallback {
-   public:
-    ReadCallback(PublishMQTT* processor, std::shared_ptr<core::FlowFile> flow_file, std::string topic, std::string content_type)
-        : processor_(processor),
-          flow_file_(std::move(flow_file)),
-          topic_(std::move(topic)),
-          content_type_(std::move(content_type)) {
-    }
-
-    int64_t operator()(const std::shared_ptr<io::InputStream>& stream);
-
-    bool sendMessage(const MQTTAsync_message* message_to_publish, MQTTAsync_responseOptions* response_options);
-
-    [[nodiscard]] size_t getReadSize() const {
-      return read_size_;
-    }
-
-    [[nodiscard]] bool getSuccessStatus() const {
-      return success_status_;
-    }
-
-   private:
-    // MQTT static async callbacks, calling their notify with context being pointer to a ReadCallback::Context object
-    static void sendSuccess(void* context, MQTTAsync_successData* response);
-    static void sendSuccess5(void* context, MQTTAsync_successData5* response);
-    static void sendFailure(void* context, MQTTAsync_failureData* response);
-    static void sendFailure5(void* context, MQTTAsync_failureData5* response);
-
-    void notify(bool success, std::optional<int> response_code, std::optional<MQTTReasonCodes> reason_code);
-    void setMqtt5Properties(MQTTAsync_message& message) const;
-    void addAttributesAsUserProperties(MQTTAsync_message& message) const;
-
-    PublishMQTT* processor_;
-    uint64_t read_size_ = 0;
-    std::shared_ptr<core::FlowFile> flow_file_;
-    std::string topic_;
-    std::string content_type_;
-
-    bool success_status_ = true;
-  };
-
+  /**
+   * Counts unacknowledged QoS 1 and QoS 2 messages to respect broker's Receive Maximum
+   */
   class InFlightMessageCounter {
    public:
     void setMqttVersion(const MqttVersions mqtt_version) {
@@ -142,6 +105,56 @@ class PublishMQTT : public processors::AbstractMQTTProcessor {
     MqttQoS qos_;
   };
 
+  // MQTT static async callbacks, calling their notify with context being pointer to a packaged_task to notify()
+  static void sendSuccess(void* context, MQTTAsync_successData* response);
+  static void sendSuccess5(void* context, MQTTAsync_successData5* response);
+  static void sendFailure(void* context, MQTTAsync_failureData* response);
+  static void sendFailure5(void* context, MQTTAsync_failureData5* response);
+
+  /**
+   * Resolves topic from expression language
+   */
+  std::string getTopic(const std::shared_ptr<core::ProcessContext>& context, const std::shared_ptr<core::FlowFile>& flow_file) const;
+
+  /**
+   * Resolves content type from expression language
+   */
+  std::string getContentType(const std::shared_ptr<core::ProcessContext>& context, const std::shared_ptr<core::FlowFile>& flow_file) const;
+
+  /**
+   * Sends an MQTT message asynchronously
+   * @param buffer contents of the message
+   * @param topic topic of the message
+   * @param content_type Content Type for MQTT 5
+   * @param flow_file Flow File being processed
+   * @return success of message sending
+   */
+  bool sendMessage(const std::vector<std::byte>& buffer, const std::string& topic, const std::string& content_type, const std::shared_ptr<core::FlowFile>& flow_file);
+
+  /**
+   * Callback for asynchronous message sending
+   * @param success if message sending was successful
+   * @param response_code response code for failure only
+   * @param reason_code MQTT 5 reason code
+   * @return if message sending was successful
+   */
+  bool notify(bool success, std::optional<int> response_code, std::optional<MQTTReasonCodes> reason_code);
+
+  /**
+   * Set MQTT 5-exclusive properties
+   * @param message message object
+   * @param content_type content type
+   * @param flow_file Flow File being processed
+   */
+  void setMqtt5Properties(MQTTAsync_message& message, const std::string& content_type, const std::shared_ptr<core::FlowFile>& flow_file) const;
+
+  /**
+   * Adds flow file attributes as user properties to an MQTT 5 message
+   * @param message message object
+   * @param flow_file Flow File being processed
+   */
+  static void addAttributesAsUserProperties(MQTTAsync_message& message, const std::shared_ptr<core::FlowFile>& flow_file);
+
   bool getCleanSession() const override {
     return true;
   }
@@ -161,16 +174,6 @@ class PublishMQTT : public processors::AbstractMQTTProcessor {
 
   void checkProperties() override;
   void checkBrokerLimitsImpl() override;
-
-  /**
-   * Resolves topic from expression language
-   */
-  std::string getTopic(const std::shared_ptr<core::ProcessContext>& context, const std::shared_ptr<core::FlowFile>& flow_file) const;
-
-  /**
-   * Resolves content type from expression language
-   */
-  std::string getContentType(const std::shared_ptr<core::ProcessContext>& context, const std::shared_ptr<core::FlowFile>& flow_file) const;
 
   bool retain_ = false;
   std::optional<std::chrono::seconds> message_expiry_interval_;

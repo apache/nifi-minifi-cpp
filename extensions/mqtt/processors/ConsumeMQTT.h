@@ -104,8 +104,6 @@ class ConsumeMQTT : public processors::AbstractMQTTProcessor {
     bool success_status_ = true;
   };
 
-  std::queue<SmartMessage> getReceivedMqttMessages();
-
   // MQTT static async callbacks, calling their non-static counterparts with context being pointer to "this"
   static void subscriptionSuccess(void* context, MQTTAsync_successData* response);
   static void subscriptionSuccess5(void* context, MQTTAsync_successData5* response);
@@ -118,12 +116,32 @@ class ConsumeMQTT : public processors::AbstractMQTTProcessor {
   void onSubscriptionFailure5(MQTTAsync_failureData5* response);
   void onMessageReceived(SmartMessage smart_message) override;
 
+  /**
+   * Enqueues received MQTT message into internal message queue.
+   * Called as a callback on a separate thread than onTrigger, as a reaction to message incoming.
+   * @param message message to put to queue
+   */
   void enqueueReceivedMQTTMsg(SmartMessage message);
+
+  /**
+   * Called in onTrigger to return the whole internal message queue
+   * @return message queue of messages received since previous onTrigger
+   */
+  std::queue<SmartMessage> getReceivedMqttMessages();
+
+  /**
+   * Subscribes to topic
+   */
   void startupClient() override;
+
   void checkProperties() override;
   void checkBrokerLimitsImpl() override;
 
-  void resolveTopicFromAlias(const std::unique_ptr<MQTTAsync_message, MQTTMessageDeleter>& message, std::string& topic);
+  /**
+   * Resolve topic name if it was sent with an alias instead of a regular topic name
+   * @param smart_message message to process
+   */
+  void resolveTopicFromAlias(SmartMessage& smart_message);
 
   bool getCleanSession() const override {
     return clean_session_;
@@ -137,7 +155,14 @@ class ConsumeMQTT : public processors::AbstractMQTTProcessor {
     return session_expiry_interval_;
   }
 
+  /**
+   * Turn MQTT 5 User Properties to Flow File attributes
+   */
   void putUserPropertiesAsAttributes(const SmartMessage& message, const std::shared_ptr<core::FlowFile>& flow_file, const std::shared_ptr<core::ProcessSession>& session) const;
+
+  /**
+   * Fill a user-requested Flow File attribute from content type
+   */
   void fillAttributeFromContentType(const SmartMessage& message, const std::shared_ptr<core::FlowFile>& flow_file, const std::shared_ptr<core::ProcessSession>& session) const;
 
   void setMqtt5ConnectOptionsImpl(MQTTProperties& connect_props) const override;
