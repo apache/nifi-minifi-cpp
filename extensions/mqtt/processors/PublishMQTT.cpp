@@ -61,7 +61,7 @@ void PublishMQTT::onTriggerImpl(const std::shared_ptr<core::ProcessContext>& con
   }
 
   // broker's Receive Maximum can change after reconnect
-  in_flight_message_counter_.setMax(broker_receive_maximum_.value_or(65535));
+  in_flight_message_counter_.setMax(broker_receive_maximum_.value_or(MQTT_MAX_RECEIVE_MAXIMUM));
 
   const auto topic = getTopic(context, flow_file);
   PublishMQTT::ReadCallback callback(this, flow_file, topic, getContentType(context, flow_file));

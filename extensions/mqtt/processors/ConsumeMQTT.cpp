@@ -314,7 +314,7 @@ void ConsumeMQTT::setMqtt5ConnectOptionsImpl(MQTTProperties& connect_props) cons
     MQTTProperties_add(&connect_props, &property);
   }
 
-  if (receive_maximum_ < 65535) {
+  if (receive_maximum_ < MQTT_MAX_RECEIVE_MAXIMUM) {
     MQTTProperty property;
     property.identifier = MQTTPROPERTY_CODE_RECEIVE_MAXIMUM;
     property.value.integer2 = receive_maximum_;

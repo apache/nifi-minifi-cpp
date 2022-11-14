@@ -150,7 +150,7 @@ class ConsumeMQTT : public processors::AbstractMQTTProcessor {
   std::string attribute_from_content_type_;
 
   uint16_t topic_alias_maximum_{0};
-  uint16_t receive_maximum_{65535};
+  uint16_t receive_maximum_{MQTT_MAX_RECEIVE_MAXIMUM};
   std::unordered_map<uint16_t, std::string> alias_to_topic_;
 
   moodycamel::ConcurrentQueue<SmartMessage> queue_;

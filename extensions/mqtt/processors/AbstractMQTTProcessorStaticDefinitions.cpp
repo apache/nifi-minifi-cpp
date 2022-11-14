@@ -90,7 +90,7 @@ const core::Property ConsumeMQTT::SessionExpiryInterval("Session Expiry Interval
 const core::Property ConsumeMQTT::QueueBufferMaxMessage("Queue Max Message", "Maximum number of messages allowed on the received MQTT queue", "1000");
 const core::Property ConsumeMQTT::AttributeFromContentType("Attribute From Content Type", "Name of FlowFile attribute to be filled from content type of received message. WARNING: MQTT 5.x only.", "");
 const core::Property ConsumeMQTT::TopicAliasMaximum("Topic Alias Maximum", "Maximum number of topic aliases to use, set to 0 to turn feature off. WARNING: MQTT 5.x only.", "0");
-const core::Property ConsumeMQTT::ReceiveMaximum("Receive Maximum", "Maximum number of unacknowledged messages allowed. WARNING: MQTT 5.x only.", "65535");
+const core::Property ConsumeMQTT::ReceiveMaximum("Receive Maximum", "Maximum number of unacknowledged messages allowed. WARNING: MQTT 5.x only.", std::to_string(MQTT_MAX_RECEIVE_MAXIMUM));
 
 const core::Relationship ConsumeMQTT::Success("success", "FlowFiles that are sent successfully to the destination are transferred to this relationship");
 

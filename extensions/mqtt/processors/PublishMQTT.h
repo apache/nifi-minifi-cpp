@@ -137,7 +137,7 @@ class PublishMQTT : public processors::AbstractMQTTProcessor {
     std::mutex mutex_;
     std::condition_variable cv_;
     uint16_t counter_{0};
-    uint16_t limit_{65535};
+    uint16_t limit_{MQTT_MAX_RECEIVE_MAXIMUM};
     MqttVersions mqtt_version_;
     MqttQoS qos_;
   };

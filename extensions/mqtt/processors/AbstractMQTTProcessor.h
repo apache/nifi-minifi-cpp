@@ -124,6 +124,7 @@ class AbstractMQTTProcessor : public core::Processor {
 
   // defined by Paho MQTT C library
   static constexpr int PAHO_MQTT_C_FAILURE_CODE = -9999999;
+  static constexpr int MQTT_MAX_RECEIVE_MAXIMUM = 65535;
 
   /**
    * Connect to MQTT broker. Synchronously waits until connection succeeds or fails.
