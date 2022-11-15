@@ -143,9 +143,9 @@ bool FlowController::applyConfiguration(const std::string &source, const std::st
       flow_update_ = true;
       started = start() == 0;
     } catch (...) {
-      this->root_ = std::move(prevRoot);
-      load(std::move(this->root_), true);
+      load(std::move(prevRoot), true);
       flow_update_ = true;
+      start();
     }
   }
 
@@ -290,10 +290,6 @@ void FlowController::load(std::unique_ptr<core::ProcessGroup> root, bool reload)
     } else {
       logger_->log_info("Instantiating new flow");
       this->root_ = loadInitialFlow();
-    }
-
-    if (root_) {
-      root_->verify();
     }
 
     logger_->log_info("Loaded root processor Group");

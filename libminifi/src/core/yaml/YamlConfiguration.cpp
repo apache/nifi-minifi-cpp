@@ -135,6 +135,8 @@ std::unique_ptr<core::ProcessGroup> YamlConfiguration::getYamlRoot(const YAML::N
     root->addControllerService(controller_service->getUUIDStr(), controller_service);
   }
 
+  root->verify();
+
   return root;
 }
 
