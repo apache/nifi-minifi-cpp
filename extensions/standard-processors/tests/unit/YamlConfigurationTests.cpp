@@ -516,8 +516,8 @@ TEST_CASE("Test Dynamic Unsupported", "[YamlConfigurationDynamicUnsupported]") {
 Flow Controller:
   name: Simple
 Processors:
-- name: PutFile
-  class: PutFile
+- name: GenerateFlowFile
+  class: GenerateFlowFile
   Properties:
      Dynamic Property: Bad
       )";
@@ -525,10 +525,10 @@ Processors:
   std::unique_ptr<core::ProcessGroup> rootFlowConfig = yamlConfig.getYamlRoot(configYamlStream);
 
   REQUIRE(rootFlowConfig);
-  REQUIRE(rootFlowConfig->findProcessorByName("PutFile"));
-  const utils::Identifier uuid = rootFlowConfig->findProcessorByName("PutFile")->getUUID();
+  REQUIRE(rootFlowConfig->findProcessorByName("GenerateFlowFile"));
+  const utils::Identifier uuid = rootFlowConfig->findProcessorByName("GenerateFlowFile")->getUUID();
   REQUIRE(uuid);
-  REQUIRE(!rootFlowConfig->findProcessorByName("PutFile")->getUUIDStr().empty());
+  REQUIRE(!rootFlowConfig->findProcessorByName("GenerateFlowFile")->getUUIDStr().empty());
 
   REQUIRE(LogTestController::getInstance().contains("[warning] Unable to set the dynamic property "
                                                     "Dynamic Property with value Bad"));

@@ -68,7 +68,7 @@ struct Proc {
     return {{
       "- id: " + id,
       "  name: " + name,
-      "  class: LogAttribute"
+      "  class: LogOnDestructionProcessor"
     }};
   }
 };
