@@ -29,7 +29,7 @@ using namespace std::literals::chrono_literals;
 
 namespace org::apache::nifi::minifi::test {
 
-const uint16_t PORT = utils::getRandomPort();
+constexpr uint64_t PORT = 10254;
 
 void check_for_attributes(core::FlowFile& flow_file) {
   CHECK(std::to_string(PORT) == flow_file.getAttribute("tcp.port"));

@@ -27,7 +27,6 @@
 #include "utils/net/UdpServer.h"
 #include "utils/expected.h"
 #include "utils/StringUtils.h"
-#include "Utils.h"
 
 using namespace std::literals::chrono_literals;
 
@@ -48,7 +47,9 @@ std::optional<utils::net::Message> tryDequeueWithTimeout(utils::net::UdpServer& 
 
 TEST_CASE("PutUDP", "[putudp]") {
   const auto put_udp = std::make_shared<PutUDP>("PutUDP");
-  const auto port = test::utils::getRandomPort();
+  auto random_engine = std::mt19937{std::random_device{}()};  // NOLINT: "Missing space before {  [whitespace/braces] [5]"
+  // most systems use ports 32768 - 65535 as ephemeral ports, so avoid binding to those
+  const auto port = std::uniform_int_distribution<uint16_t>{10000, 32768 - 1}(random_engine);
 
   test::SingleProcessorTestController controller{put_udp};
   LogTestController::getInstance().setTrace<PutUDP>();

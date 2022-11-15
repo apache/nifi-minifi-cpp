@@ -29,7 +29,7 @@ using namespace std::literals::chrono_literals;
 
 namespace org::apache::nifi::minifi::test {
 
-const uint16_t PORT = utils::getRandomPort();
+constexpr uint64_t PORT = 10256;
 
 void check_for_attributes(core::FlowFile& flow_file) {
   const auto local_addresses = {"127.0.0.1", "::ffff:127.0.0.1", "::1"};
