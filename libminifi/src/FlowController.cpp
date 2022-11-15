@@ -142,10 +142,16 @@ bool FlowController::applyConfiguration(const std::string &source, const std::st
       load(std::move(root_), true);
       flow_update_ = true;
       started = start() == 0;
+    } catch (const std::exception& ex) {
+      logger_->log_error("Caught exception while starting flow, type %s, what: %s", typeid(ex).name(), ex.what());
     } catch (...) {
-      this->root_ = std::move(prevRoot);
-      load(std::move(this->root_), true);
+      logger_->log_error("Caught unknown exception while starting flow, type %s", getCurrentExceptionTypeName());
+    }
+    if (!started) {
+      logger_->log_error("Failed to start new flow, restarting previous flow");
+      load(std::move(prevRoot), true);
       flow_update_ = true;
+      start();
     }
   }
 
@@ -290,10 +296,6 @@ void FlowController::load(std::unique_ptr<core::ProcessGroup> root, bool reload)
     } else {
       logger_->log_info("Instantiating new flow");
       this->root_ = loadInitialFlow();
-    }
-
-    if (root_) {
-      root_->verify();
     }
 
     logger_->log_info("Loaded root processor Group");
