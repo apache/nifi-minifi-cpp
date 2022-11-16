@@ -18,18 +18,18 @@
 
 #include "../TestBase.h"
 #include "../Catch.h"
-#include "utils/ValueIdProvider.h"
+#include "utils/ValueCompressor.h"
 
-TEST_CASE("ValueIdProvider allocates and resolves ids") {
-  utils::ValueIdProvider<std::string> provider;
-  auto id1 = provider.getId("banana");
-  auto id2 = provider.getId("apple");
-  REQUIRE(provider.getValue(id1) == "banana");
-  REQUIRE(provider.getValue(id2) == "apple");
+TEST_CASE("ValueIdProvider properly compresses and decompresses values") {
+  utils::ValueCompressor<std::string> compressor;
+  auto id1 = compressor.compress("banana");
+  auto id2 = compressor.compress("apple");
+  REQUIRE(compressor.decompress(id1) == "banana");
+  REQUIRE(compressor.decompress(id2) == "apple");
 }
 
-TEST_CASE("ValueIdProvider returns nullopt on invalid id") {
-  utils::ValueIdProvider<std::string> provider;
-  (void)provider.getId("banana");
-  REQUIRE_FALSE(provider.getValue(1).has_value());
+TEST_CASE("ValueCompressor returns nullopt on invalid compressed value") {
+  utils::ValueCompressor<std::string> compressor;
+  (void)compressor.compress("banana");
+  REQUIRE_FALSE(compressor.decompress(1).has_value());
 }
