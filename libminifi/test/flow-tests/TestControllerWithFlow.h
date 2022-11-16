@@ -39,6 +39,7 @@ class TestControllerWithFlow: public TestController{
     LogTestController::getInstance().setTrace<core::Processor>();
     LogTestController::getInstance().setTrace<minifi::TimerDrivenSchedulingAgent>();
     LogTestController::getInstance().setTrace<minifi::EventDrivenSchedulingAgent>();
+    LogTestController::getInstance().setTrace<minifi::FlowController>();
 
     home_ = createTempDirectory();
 
@@ -78,8 +79,10 @@ class TestControllerWithFlow: public TestController{
   }
 
   ~TestControllerWithFlow() {
-    controller_->stop();
-    controller_->unload();
+    if (controller_) {
+      controller_->stop();
+      controller_->unload();
+    }
     LogTestController::getInstance().reset();
   }
 

@@ -79,6 +79,10 @@ Processor::Processor(std::string name, const utils::Identifier& uuid, std::share
   logger_->log_debug("Processor %s created with uuid %s", name_, getUUIDStr());
 }
 
+Processor::~Processor() {
+  logger_->log_debug("Destroying processor %s with uuid %s", name_, getUUIDStr());
+}
+
 bool Processor::isRunning() {
   return (state_ == RUNNING && active_tasks_ > 0);
 }

@@ -100,6 +100,7 @@ FlowController::~FlowController() {
   protocol_ = nullptr;
   flow_file_repo_ = nullptr;
   provenance_repo_ = nullptr;
+  logger_->log_trace("Destroying FlowController");
 }
 
 bool FlowController::applyConfiguration(const std::string &source, const std::string &configurePayload) {
@@ -129,7 +130,10 @@ bool FlowController::applyConfiguration(const std::string &source, const std::st
     std::lock_guard<std::recursive_mutex> flow_lock(mutex_);
     stop();
     unload();
-    controller_map_->clear();
+
+    // prepare to accept the new controller service provider from flow_configuration_
+    clearControllerServices();
+
     clearResponseNodes();
     if (metrics_publisher_) {
       metrics_publisher_->clearMetricNodes();
