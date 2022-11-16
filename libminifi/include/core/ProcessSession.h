@@ -162,19 +162,19 @@ class ProcessSession : public ReferenceContainer {
     std::shared_ptr<FlowFile> snapshot;
   };
 
-  using Relationships = utils::ValueIdProvider<Relationship>;
+  using Relationships = utils::ValueCompressor<Relationship>;
 
   Relationships relationships_;
 
   struct NewFlowFileInfo {
     std::shared_ptr<core::FlowFile> flow_file;
-    Relationships::id_type rel{Relationships::INVALID_ID};
+    Relationships::compressed_type rel{Relationships::INVALID};
   };
 
   // FlowFiles being modified by current process session
   std::map<utils::Identifier, FlowFileUpdate> updated_flowfiles_;
   // updated FlowFiles being transferred to the relationship
-  std::map<utils::Identifier, Relationships::id_type> updated_relationships_;
+  std::map<utils::Identifier, Relationships::compressed_type> updated_relationships_;
   // FlowFiles being added by current process session
   std::map<utils::Identifier, NewFlowFileInfo> added_flowfiles_;
   // FlowFiles being deleted by current process session
