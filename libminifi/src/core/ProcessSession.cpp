@@ -225,9 +225,9 @@ void ProcessSession::transfer(const std::shared_ptr<core::FlowFile>& flow, const
   logging::LOG_INFO(logger_) << "Transferring " << flow->getUUIDStr() << " from " << process_context_->getProcessorNode()->getName() << " to relationship " << relationship.getName();
   utils::Identifier uuid = flow->getUUID();
   if (auto it = added_flowfiles_.find(uuid); it != added_flowfiles_.end()) {
-    it->second.rel = relationships_.compress(relationship);
+    it->second.rel = &*relationships_.insert(relationship).first;
   } else {
-    updated_relationships_[uuid] = relationships_.compress(relationship);
+    updated_relationships_[uuid] = &*relationships_.insert(relationship).first;
   }
   flow->setDeleted(false);
 }
@@ -754,9 +754,10 @@ ProcessSession::RouteResult ProcessSession::routeFlowFile(const std::shared_ptr<
   utils::Identifier uuid = record->getUUID();
   Relationship relationship;
   if (auto it = updated_relationships_.find(uuid); it != updated_relationships_.end()) {
-    relationship = relationships_.decompress(it->second).value();
-  } else if (auto new_it = added_flowfiles_.find(uuid); new_it != added_flowfiles_.end() && relationships_.decompress(new_it->second.rel)) {
-    relationship = relationships_.decompress(new_it->second.rel).value();
+    gsl_Expects(it->second);
+    relationship = *it->second;
+  } else if (auto new_it = added_flowfiles_.find(uuid); new_it != added_flowfiles_.end() && new_it->second.rel) {
+    relationship = *new_it->second.rel;
   } else {
     return RouteResult::Error_NoRelationship;
   }
@@ -1138,10 +1139,10 @@ bool ProcessSession::outgoingConnectionsFull(const std::string& relationship) {
 bool ProcessSession::existsFlowFileInRelationship(const Relationship &relationship) {
   return std::any_of(updated_relationships_.begin(), updated_relationships_.end(),
       [&](const auto& key_value_pair) {
-        return relationship == relationships_.decompress(key_value_pair.second);
+        return key_value_pair.second && relationship == *key_value_pair.second;
   }) || std::any_of(added_flowfiles_.begin(), added_flowfiles_.end(),
       [&](const auto& key_value_pair) {
-        return relationship == relationships_.decompress(key_value_pair.second.rel);
+        return key_value_pair.second.rel && relationship == *key_value_pair.second.rel;
   });
 }
 

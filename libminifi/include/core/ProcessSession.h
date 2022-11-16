@@ -28,6 +28,7 @@
 #include <algorithm>
 #include <set>
 #include <unordered_map>
+#include <unordered_set>
 
 #include "ProcessContext.h"
 #include "FlowFileRecord.h"
@@ -39,7 +40,6 @@
 #include "provenance/Provenance.h"
 #include "utils/gsl.h"
 #include "ProcessorMetrics.h"
-#include "utils/ValueCompressor.h"
 
 namespace org::apache::nifi::minifi::core {
 namespace detail {
@@ -162,19 +162,19 @@ class ProcessSession : public ReferenceContainer {
     std::shared_ptr<FlowFile> snapshot;
   };
 
-  using Relationships = utils::ValueCompressor<Relationship>;
+  using Relationships = std::unordered_set<Relationship>;
 
   Relationships relationships_;
 
   struct NewFlowFileInfo {
     std::shared_ptr<core::FlowFile> flow_file;
-    Relationships::compressed_type rel{Relationships::INVALID};
+    const Relationship* rel{nullptr};
   };
 
   // FlowFiles being modified by current process session
   std::map<utils::Identifier, FlowFileUpdate> updated_flowfiles_;
   // updated FlowFiles being transferred to the relationship
-  std::map<utils::Identifier, Relationships::compressed_type> updated_relationships_;
+  std::map<utils::Identifier, const Relationship*> updated_relationships_;
   // FlowFiles being added by current process session
   std::map<utils::Identifier, NewFlowFileInfo> added_flowfiles_;
   // FlowFiles being deleted by current process session
