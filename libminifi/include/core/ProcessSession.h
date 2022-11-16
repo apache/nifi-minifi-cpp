@@ -39,7 +39,7 @@
 #include "provenance/Provenance.h"
 #include "utils/gsl.h"
 #include "ProcessorMetrics.h"
-#include "utils/ValueIdProvider.h"
+#include "utils/ValueCompressor.h"
 
 namespace org::apache::nifi::minifi::core {
 namespace detail {
