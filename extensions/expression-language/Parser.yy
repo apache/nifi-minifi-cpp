@@ -19,7 +19,7 @@
 %require "3.0"
 
 %define api.namespace {org::apache::nifi::minifi::expression}
-%parse-param {Driver* driver} 
+%parse-param {Driver* driver}
 %locations
 
 %define parser_class_name {Parser}
@@ -34,6 +34,9 @@
 
   #include <expression/Expression.h>
   #include "location.hh"
+  #if defined(WIN32) && defined(S_FALSE)
+  #undef S_FALSE  // winerror.h #defines S_FALSE, which conflicts with the generated token
+  #endif
 
   namespace org {
   namespace apache {
@@ -56,7 +59,7 @@
 
   #include <expression/Expression.h>
   #include "Driver.h"
-  
+
   #undef yylex
   #define yylex driver->lex
 }
