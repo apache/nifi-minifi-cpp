@@ -84,6 +84,8 @@ class Processor : public Connectable, public ConfigurableComponent, public state
 
   bool isRunning() override;
 
+  ~Processor() override;
+
   void setScheduledState(ScheduledState state);
 
   ScheduledState getScheduledState() const {

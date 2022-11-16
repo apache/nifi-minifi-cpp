@@ -35,6 +35,8 @@
 #include "YamlConfiguration.h"
 #include "CustomProcessors.h"
 #include "TestControllerWithFlow.h"
+#include "EmptyFlow.h"
+#include "utils/IntegrationTestUtils.h"
 
 using namespace std::literals::chrono_literals;
 
@@ -262,4 +264,38 @@ TEST_CASE("Extend the waiting period during shutdown", "[TestFlow4]") {
 
   REQUIRE(sourceProc->trigger_count.load() >= 1);
   REQUIRE(sinkProc->trigger_count.load() >= 3);
+}
+
+TEST_CASE("FlowController destructor releases resources", "[TestFlow5]") {
+  TestControllerWithFlow controller(R"(
+Flow Controller:
+  name: Banana Bread
+Processors:
+- name: GenFF
+  id: 00000000-0000-0000-0000-000000000001
+  class: GenerateFlowFile
+  scheduling strategy: TIMER_DRIVEN
+  scheduling period: 10 sec
+Connections: []
+Remote Processing Groups: []
+Controller Services: []
+)");
+
+  controller.startFlow();
+
+  REQUIRE(LogTestController::getInstance().countOccurrences("Creating scheduling agent") == 3);
+  LogTestController::getInstance().clear();
+
+  bool update_successful = controller.controller_->applyConfiguration("/flows/1", empty_flow);
+  REQUIRE(update_successful);
+
+  REQUIRE(LogTestController::getInstance().countOccurrences("Creating scheduling agent") == 3);
+  REQUIRE(LogTestController::getInstance().countOccurrences("Destroying scheduling agent") == 3);
+  LogTestController::getInstance().clear();
+
+  // manually destroy the controller
+  controller.controller_.reset();
+
+  REQUIRE(utils::verifyLogLinePresenceInPollTime(0s, "Destroying FlowController"));
+  REQUIRE(LogTestController::getInstance().countOccurrences("Destroying scheduling agent") == 3);
 }

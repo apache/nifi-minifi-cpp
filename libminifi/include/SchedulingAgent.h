@@ -78,6 +78,8 @@ class SchedulingAgent {
       watchDogTimer_.reset(new utils::CallBackTimer(std::chrono::milliseconds(SCHEDULING_WATCHDOG_CHECK_PERIOD_MS), f));
       watchDogTimer_->start();
     }
+
+    logger_->log_trace("Creating scheduling agent");
   }
 
   virtual ~SchedulingAgent() {
@@ -85,6 +87,7 @@ class SchedulingAgent {
     // The destructor of the timer also stops is, but the stop should happen first!
     // Otherwise the callback might access already destructed members.
     watchDogTimer_.reset();
+    logger_->log_trace("Destroying scheduling agent");
   }
 
   // onTrigger, return whether the yield is need
