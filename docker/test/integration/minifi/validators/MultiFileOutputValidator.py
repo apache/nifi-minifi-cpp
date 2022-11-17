@@ -19,7 +19,7 @@ import os
 
 from os import listdir
 from os.path import join
-from ..core.utils import is_temporary_output_file
+from utils import is_temporary_output_file
 
 from .FileOutputValidator import FileOutputValidator
 

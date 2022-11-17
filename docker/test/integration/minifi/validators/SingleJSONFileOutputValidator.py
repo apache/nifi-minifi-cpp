@@ -19,7 +19,7 @@ import os
 import json
 
 from .FileOutputValidator import FileOutputValidator
-from ..core.utils import is_temporary_output_file
+from utils import is_temporary_output_file
 
 
 class SingleJSONFileOutputValidator(FileOutputValidator):

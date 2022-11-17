@@ -12,13 +12,26 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
+import logging
+from .Container import Container
 
-from .MinifiContainer import MinifiContainer
 
+class TcpClientContainer(Container):
+    def __init__(self, name, vols, network, image_store, command=None):
+        super().__init__(name, 'tcp-client', vols, network, image_store, command)
 
-class TransientMinifiContainer(MinifiContainer):
-    def __init__(self, config_dir, name, vols, network, image_store, command=None):
-        if not command:
-            command = ["/bin/sh", "-c",
-                       "cp /tmp/minifi_config/config.yml ./conf/ && ./bin/minifi.sh start && sleep 10 && ./bin/minifi.sh stop && sleep 100"]
-        super().__init__(config_dir, name, vols, network, image_store, command)
+    def get_startup_finished_log_entry(self):
+        return "TCP client container started"
+
+    def deploy(self):
+        if not self.set_deployed():
+            return
+
+        logging.info('Creating and running a tcp client docker container...')
+        self.client.containers.run(
+            self.image_store.get_image(self.get_engine()),
+            detach=True,
+            name=self.name,
+            network=self.network.name,
+            entrypoint=self.command)
+        logging.info('Added container \'%s\'', self.name)

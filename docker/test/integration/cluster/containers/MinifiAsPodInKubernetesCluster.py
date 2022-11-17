@@ -19,7 +19,7 @@ import logging
 import os
 import shutil
 
-from .LogSource import LogSource
+from ..LogSource import LogSource
 from .MinifiContainer import MinifiContainer
 
 
@@ -27,17 +27,20 @@ class MinifiAsPodInKubernetesCluster(MinifiContainer):
     MINIFI_IMAGE_NAME = 'apacheminificpp'
     MINIFI_IMAGE_TAG = 'docker_test'
 
-    def __init__(self, kubernetes_proxy, config_dir, name, vols, network, image_store, command=None):
-        super().__init__(config_dir, name, vols, network, image_store, command)
-        self.kubernetes_proxy = kubernetes_proxy
-
+    def __init__(self, kubernetes_proxy, config_dir, minifi_options, name, vols, network, image_store, command=None):
         test_dir = os.environ['TEST_DIRECTORY']
-        shutil.copy(os.path.join(test_dir, os.pardir, os.pardir, os.pardir, 'conf', 'minifi.properties'), self.config_dir)
-        shutil.copy(os.path.join(test_dir, 'resources', 'kubernetes', 'minifi-conf', 'minifi-log.properties'), self.config_dir)
+        shutil.copy(os.path.join(test_dir, os.pardir, os.pardir, os.pardir, 'conf', 'minifi.properties'), config_dir)
+        shutil.copy(os.path.join(test_dir, 'resources', 'kubernetes', 'minifi-conf', 'minifi-log.properties'), config_dir)
+        super().__init__(config_dir, minifi_options, name, vols, network, image_store, command)
+
+        self.kubernetes_proxy = kubernetes_proxy
 
         docker_client = docker.from_env()
         minifi_image = docker_client.images.get(MinifiAsPodInKubernetesCluster.MINIFI_IMAGE_NAME + ':' + os.environ['MINIFI_VERSION'])
         minifi_image.tag(MinifiAsPodInKubernetesCluster.MINIFI_IMAGE_NAME, MinifiAsPodInKubernetesCluster.MINIFI_IMAGE_TAG)
+
+    def _create_container_config_dir(self, config_dir):
+        return config_dir
 
     def deploy(self):
         if not self.set_deployed():
@@ -45,8 +48,8 @@ class MinifiAsPodInKubernetesCluster(MinifiContainer):
 
         logging.info('Setting up container: %s', self.name)
 
-        self.kubernetes_proxy.create_helper_objects()
         self._create_config()
+        self.kubernetes_proxy.create_helper_objects()
         self.kubernetes_proxy.load_docker_image(MinifiAsPodInKubernetesCluster.MINIFI_IMAGE_NAME, MinifiAsPodInKubernetesCluster.MINIFI_IMAGE_TAG)
         self.kubernetes_proxy.create_minifi_pod()
 

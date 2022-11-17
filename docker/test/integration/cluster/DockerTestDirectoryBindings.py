@@ -43,7 +43,8 @@ class DockerTestDirectoryBindings:
             "resources_dir": "/tmp/.nifi-test-resources." + self.test_id,
             "minifi_config_dir": "/tmp/.nifi-test-minifi-config-dir." + self.test_id,
             "nifi_config_dir": "/tmp/.nifi-test-nifi-config-dir." + self.test_id,
-            "kubernetes_temp_dir": "/tmp/.nifi-test-kubernetes-temp-dir." + self.test_id
+            "kubernetes_temp_dir": "/tmp/.nifi-test-kubernetes-temp-dir." + self.test_id,
+            "kubernetes_config_dir": "/tmp/.nifi-test-kubernetes-config-dir." + self.test_id
         }
 
         [self.create_directory(directory) for directory in self.data_directories[self.test_id].values()]
@@ -57,6 +58,7 @@ class DockerTestDirectoryBindings:
         shutil.copytree(test_dir + "/resources/elasticsearch/certs", self.data_directories[self.test_id]["resources_dir"] + "/elasticsearch")
         shutil.copytree(test_dir + "/resources/opensearch/certs", self.data_directories[self.test_id]["resources_dir"] + "/opensearch")
         shutil.copytree(test_dir + "/resources/minifi-c2-server-ssl/certs", self.data_directories[self.test_id]["resources_dir"] + "/minifi-c2-server-ssl")
+        shutil.copytree(test_dir + "/resources/minifi", self.data_directories[self.test_id]["minifi_config_dir"], dirs_exist_ok=True)
 
     def get_data_directories(self, test_id):
         return self.data_directories[test_id]
@@ -89,6 +91,7 @@ class DockerTestDirectoryBindings:
         vols[self.data_directories[test_id]["resources_dir"]] = {"bind": "/tmp/resources", "mode": "rw"}
         vols[self.data_directories[test_id]["minifi_config_dir"]] = {"bind": "/tmp/minifi_config", "mode": "rw"}
         vols[self.data_directories[test_id]["nifi_config_dir"]] = {"bind": "/tmp/nifi_config", "mode": "rw"}
+        vols[self.data_directories[test_id]["kubernetes_config_dir"]] = {"bind": "/tmp/kubernetes_config", "mode": "rw"}
         return vols
 
     @staticmethod

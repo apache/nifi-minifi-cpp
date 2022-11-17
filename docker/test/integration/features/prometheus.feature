@@ -1,3 +1,18 @@
+# Licensed to the Apache Software Foundation (ASF) under one or more
+# contributor license agreements.  See the NOTICE file distributed with
+# this work for additional information regarding copyright ownership.
+# The ASF licenses this file to You under the Apache License, Version 2.0
+# (the "License"); you may not use this file except in compliance with
+# the License.  You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
 Feature: MiNiFi can publish metrics to Prometheus server
 
   Background:
@@ -8,6 +23,7 @@ Feature: MiNiFi can publish metrics to Prometheus server
     And a file with the content "test" is present in "/tmp/input"
     And a PutFile processor with the "Directory" property set to "/tmp/output"
     And the "success" relationship of the GetFile1 processor is connected to the PutFile
+    And Prometheus is enabled in MiNiFi
     And a Prometheus server is set up
     When all instances start up
     Then "RepositoryMetrics" is published to the Prometheus server in less than 60 seconds
@@ -28,6 +44,7 @@ Feature: MiNiFi can publish metrics to Prometheus server
     And a PutFile processor with the "Directory" property set to "/tmp/output"
     And the "success" relationship of the GetFile1 processor is connected to the PutFile
     And the "success" relationship of the GetFile2 processor is connected to the PutFile
+    And Prometheus is enabled in MiNiFi
     And a Prometheus server is set up
     When all instances start up
     Then "GetFileMetrics" processor metric is published to the Prometheus server in less than 60 seconds for "GetFile1" processor

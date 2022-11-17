@@ -22,7 +22,7 @@ from pydoc import locate
 
 from minifi.core.InputPort import InputPort
 
-from minifi.core.DockerTestCluster import DockerTestCluster
+from cluster.DockerTestCluster import DockerTestCluster
 
 from minifi.validators.EmptyFilesOutPutValidator import EmptyFilesOutPutValidator
 from minifi.validators.NoFileOutPutValidator import NoFileOutPutValidator
@@ -32,8 +32,7 @@ from minifi.validators.SingleOrMultiFileOutputValidator import SingleOrMultiFile
 from minifi.validators.NoContentCheckFileNumberValidator import NoContentCheckFileNumberValidator
 from minifi.validators.NumFileRangeValidator import NumFileRangeValidator
 from minifi.validators.SingleJSONFileOutputValidator import SingleJSONFileOutputValidator
-
-from minifi.core.utils import decode_escaped_str, get_minifi_pid, get_peak_memory_usage
+from utils import decode_escaped_str, get_minifi_pid, get_peak_memory_usage
 
 
 class MiNiFi_integration_test:
@@ -58,57 +57,49 @@ class MiNiFi_integration_test:
     def acquire_container(self, name, engine='minifi-cpp', command=None):
         return self.cluster.acquire_container(name, engine, command)
 
-    def wait_for_container_startup_to_finish(self, container_name):
-        startup_success = self.cluster.wait_for_startup_log(container_name, 120)
-        if not startup_success:
-            logging.error("Cluster startup failed for %s", container_name)
-            self.cluster.log_app_output()
-        return startup_success
-
     def start_kafka_broker(self):
         self.cluster.acquire_container('kafka-broker', 'kafka-broker')
-        self.cluster.deploy('zookeeper')
-        self.cluster.deploy('kafka-broker')
-        assert self.wait_for_container_startup_to_finish('kafka-broker')
+        self.cluster.deploy_container('zookeeper')
+        self.cluster.deploy_container('kafka-broker')
+        assert self.cluster.wait_for_container_startup_to_finish('kafka-broker')
 
     def start_splunk(self):
         self.cluster.acquire_container('splunk', 'splunk')
-        self.cluster.deploy('splunk')
-        assert self.wait_for_container_startup_to_finish('splunk')
+        self.cluster.deploy_container('splunk')
+        assert self.cluster.wait_for_container_startup_to_finish('splunk')
         assert self.cluster.enable_splunk_hec_indexer('splunk', 'splunk_hec_token')
 
     def start_elasticsearch(self):
         self.cluster.acquire_container('elasticsearch', 'elasticsearch')
-        self.cluster.deploy('elasticsearch')
-        assert self.wait_for_container_startup_to_finish('elasticsearch')
+        self.cluster.deploy_container('elasticsearch')
+        assert self.cluster.wait_for_container_startup_to_finish('elasticsearch')
 
     def start_opensearch(self):
         self.cluster.acquire_container('opensearch', 'opensearch')
-        self.cluster.deploy('opensearch')
-        assert self.wait_for_container_startup_to_finish('opensearch')
+        self.cluster.deploy_container('opensearch')
+        assert self.cluster.wait_for_container_startup_to_finish('opensearch')
 
     def start(self, container_name=None):
         if container_name is not None:
             logging.info("Starting container %s", container_name)
-            self.cluster.deploy_flow(container_name)
-            assert self.wait_for_container_startup_to_finish(container_name)
+            self.cluster.deploy_container(container_name)
+            assert self.cluster.wait_for_container_startup_to_finish(container_name)
             return
         logging.info("MiNiFi_integration_test start")
-        self.cluster.deploy_flow()
-        for container_name in self.cluster.containers:
-            assert self.wait_for_container_startup_to_finish(container_name)
+        self.cluster.deploy_all()
+        assert self.cluster.wait_for_all_containers_to_finish_startup()
 
     def stop(self, container_name):
         logging.info("Stopping container %s", container_name)
-        self.cluster.stop_flow(container_name)
+        self.cluster.stop_container(container_name)
 
     def kill(self, container_name):
         logging.info("Killing container %s", container_name)
-        self.cluster.kill_flow(container_name)
+        self.cluster.kill_container(container_name)
 
     def restart(self, container_name):
         logging.info("Restarting container %s", container_name)
-        self.cluster.restart_flow(container_name)
+        self.cluster.restart_container(container_name)
 
     def add_node(self, processor):
         if processor.get_name() in (elem.get_name() for elem in self.connectable_nodes):
@@ -210,116 +201,117 @@ class MiNiFi_integration_test:
 
     def __check_output(self, timeout_seconds, output_validator, max_files=0):
         result = self.file_system_observer.validate_output(timeout_seconds, output_validator, max_files)
-        self.cluster.log_app_output()
-        assert not self.cluster.segfault_happened()
-        assert result
+        assert not self.cluster.segfault_happened() or self.cluster.log_app_output()
+        assert result or self.cluster.log_app_output()
 
     def __validate(self, validator):
-        self.cluster.log_app_output()
-        assert not self.cluster.segfault_happened()
-        assert validator.validate()
+        assert not self.cluster.segfault_happened() or self.cluster.log_app_output()
+        assert validator.validate() or self.cluster.log_app_output()
 
     def check_s3_server_object_data(self, s3_container_name, object_data):
-        assert self.cluster.check_s3_server_object_data(s3_container_name, object_data)
+        assert self.cluster.check_s3_server_object_data(s3_container_name, object_data) or self.cluster.log_app_output()
 
     def check_s3_server_object_metadata(self, s3_container_name, content_type):
-        assert self.cluster.check_s3_server_object_metadata(s3_container_name, content_type)
+        assert self.cluster.check_s3_server_object_metadata(s3_container_name, content_type) or self.cluster.log_app_output()
 
     def check_empty_s3_bucket(self, s3_container_name):
-        assert self.cluster.is_s3_bucket_empty(s3_container_name)
+        assert self.cluster.is_s3_bucket_empty(s3_container_name) or self.cluster.log_app_output()
 
     def check_http_proxy_access(self, http_proxy_container_name, url):
-        assert self.cluster.check_http_proxy_access(http_proxy_container_name, url)
+        assert self.cluster.check_http_proxy_access(http_proxy_container_name, url) or self.cluster.log_app_output()
 
     def check_azure_storage_server_data(self, azure_container_name, object_data):
-        assert self.cluster.check_azure_storage_server_data(azure_container_name, object_data)
+        assert self.cluster.check_azure_storage_server_data(azure_container_name, object_data) or self.cluster.log_app_output()
 
     def wait_for_kafka_consumer_to_be_registered(self, kafka_container_name):
-        assert self.cluster.wait_for_kafka_consumer_to_be_registered(kafka_container_name)
+        assert self.cluster.wait_for_kafka_consumer_to_be_registered(kafka_container_name) or self.cluster.log_app_output()
 
     def check_splunk_event(self, splunk_container_name, query):
-        assert self.cluster.check_splunk_event(splunk_container_name, query)
+        assert self.cluster.check_splunk_event(splunk_container_name, query) or self.cluster.log_app_output()
 
     def check_splunk_event_with_attributes(self, splunk_container_name, query, attributes):
-        assert self.cluster.check_splunk_event_with_attributes(splunk_container_name, query, attributes)
+        assert self.cluster.check_splunk_event_with_attributes(splunk_container_name, query, attributes) or self.cluster.log_app_output()
 
     def check_google_cloud_storage(self, gcs_container_name, content):
-        assert self.cluster.check_google_cloud_storage(gcs_container_name, content)
+        assert self.cluster.check_google_cloud_storage(gcs_container_name, content) or self.cluster.log_app_output()
 
     def check_empty_gcs_bucket(self, gcs_container_name):
-        assert self.cluster.is_gcs_bucket_empty(gcs_container_name)
+        assert self.cluster.is_gcs_bucket_empty(gcs_container_name) or self.cluster.log_app_output()
 
     def check_empty_elastic(self, elastic_container_name):
-        assert self.cluster.is_elasticsearch_empty(elastic_container_name)
+        assert self.cluster.is_elasticsearch_empty(elastic_container_name) or self.cluster.log_app_output()
 
     def elastic_generate_apikey(self, elastic_container_name):
-        return self.cluster.elastic_generate_apikey(elastic_container_name)
+        return self.cluster.elastic_generate_apikey(elastic_container_name) or self.cluster.log_app_output()
 
     def create_doc_elasticsearch(self, elastic_container_name, index_name, doc_id):
-        assert self.cluster.create_doc_elasticsearch(elastic_container_name, index_name, doc_id)
+        assert self.cluster.create_doc_elasticsearch(elastic_container_name, index_name, doc_id) or self.cluster.log_app_output()
 
     def check_elastic_field_value(self, elastic_container_name, index_name, doc_id, field_name, field_value):
-        assert self.cluster.check_elastic_field_value(elastic_container_name, index_name, doc_id, field_name, field_value)
+        assert self.cluster.check_elastic_field_value(elastic_container_name, index_name, doc_id, field_name, field_value) or self.cluster.log_app_output()
 
     def add_elastic_user_to_opensearch(self, container_name):
-        assert self.cluster.add_elastic_user_to_opensearch(container_name)
+        assert self.cluster.add_elastic_user_to_opensearch(container_name) or self.cluster.log_app_output()
 
     def check_minifi_log_contents(self, line, timeout_seconds=60, count=1):
         self.check_container_log_contents("minifi-cpp", line, timeout_seconds, count)
 
     def check_minifi_log_matches_regex(self, regex, timeout_seconds=60, count=1):
-        for container in self.cluster.containers.values():
-            if container.get_engine() == "minifi-cpp":
-                line_found = self.cluster.wait_for_app_logs_regex(container.get_name(), regex, timeout_seconds, count)
-                if line_found:
-                    return
-        assert False
+        assert self.cluster.check_minifi_log_matches_regex(regex, timeout_seconds, count) or self.cluster.log_app_output()
 
     def check_container_log_contents(self, container_engine, line, timeout_seconds=60, count=1):
-        for container in self.cluster.containers.values():
-            if container.get_engine() == container_engine:
-                line_found = self.cluster.wait_for_app_logs(container.get_name(), line, timeout_seconds, count)
-                if line_found:
-                    return
-        assert False
+        assert self.cluster.check_container_log_contents(container_engine, line, timeout_seconds, count) or self.cluster.log_app_output()
 
     def check_minifi_log_does_not_contain(self, line, wait_time_seconds):
-        time.sleep(wait_time_seconds)
-        for container in self.cluster.containers.values():
-            if container.get_engine() == "minifi-cpp":
-                _, logs = self.cluster.get_app_log(container.get_name())
-                if logs is not None and 1 <= logs.decode("utf-8").count(line):
-                    assert False
+        assert self.cluster.check_minifi_log_does_not_contain(line, wait_time_seconds) or self.cluster.log_app_output()
 
     def check_query_results(self, postgresql_container_name, query, number_of_rows, timeout_seconds):
-        assert self.cluster.check_query_results(postgresql_container_name, query, number_of_rows, timeout_seconds)
+        assert self.cluster.check_query_results(postgresql_container_name, query, number_of_rows, timeout_seconds) or self.cluster.log_app_output()
 
     def check_container_log_matches_regex(self, container_name, log_pattern, timeout_seconds, count=1):
-        assert self.cluster.wait_for_app_logs_regex(container_name, log_pattern, timeout_seconds, count)
+        assert self.cluster.wait_for_app_logs_regex(container_name, log_pattern, timeout_seconds, count) or self.cluster.log_app_output()
 
     def add_test_blob(self, blob_name, content, with_snapshot):
         self.cluster.add_test_blob(blob_name, content, with_snapshot)
 
     def check_azure_blob_storage_is_empty(self, timeout_seconds):
-        assert self.cluster.check_azure_blob_storage_is_empty(timeout_seconds)
+        assert self.cluster.check_azure_blob_storage_is_empty(timeout_seconds) or self.cluster.log_app_output()
 
     def check_azure_blob_and_snapshot_count(self, blob_and_snapshot_count, timeout_seconds):
-        assert self.cluster.check_azure_blob_and_snapshot_count(blob_and_snapshot_count, timeout_seconds)
+        assert self.cluster.check_azure_blob_and_snapshot_count(blob_and_snapshot_count, timeout_seconds) or self.cluster.log_app_output()
 
     def check_metric_class_on_prometheus(self, metric_class, timeout_seconds):
-        assert self.cluster.wait_for_metric_class_on_prometheus(metric_class, timeout_seconds)
+        assert self.cluster.wait_for_metric_class_on_prometheus(metric_class, timeout_seconds) or self.cluster.log_app_output()
 
     def check_processor_metric_on_prometheus(self, metric_class, timeout_seconds, processor_name):
-        assert self.cluster.wait_for_processor_metric_on_prometheus(metric_class, timeout_seconds, processor_name)
+        assert self.cluster.wait_for_processor_metric_on_prometheus(metric_class, timeout_seconds, processor_name) or self.cluster.log_app_output()
 
     def check_if_peak_memory_usage_exceeded(self, minimum_peak_memory_usage: int, timeout_seconds: int) -> None:
-        assert self.cluster.wait_for_peak_memory_usage_to_exceed(minimum_peak_memory_usage, timeout_seconds)
+        assert self.cluster.wait_for_peak_memory_usage_to_exceed(minimum_peak_memory_usage, timeout_seconds) or self.cluster.log_app_output()
 
     def check_if_memory_usage_is_below(self, maximum_memory_usage: int, timeout_seconds: int) -> None:
-        assert self.cluster.wait_for_memory_usage_to_drop_below(maximum_memory_usage, timeout_seconds)
+        assert self.cluster.wait_for_memory_usage_to_drop_below(maximum_memory_usage, timeout_seconds) or self.cluster.log_app_output()
 
     def check_memory_usage_compared_to_peak(self, peak_multiplier: float, timeout_seconds: int) -> None:
         peak_memory = get_peak_memory_usage(get_minifi_pid())
-        assert (peak_memory is not None)
-        assert (1.0 > peak_multiplier > 0.0)
-        assert self.cluster.wait_for_memory_usage_to_drop_below(peak_memory * peak_multiplier, timeout_seconds)
+        assert (peak_memory is not None) or self.cluster.log_app_output()
+        assert (1.0 > peak_multiplier > 0.0) or self.cluster.log_app_output()
+        assert self.cluster.wait_for_memory_usage_to_drop_below(peak_memory * peak_multiplier, timeout_seconds) or self.cluster.log_app_output()
+
+    def enable_provenance_repository_in_minifi(self):
+        self.cluster.enable_provenance_repository_in_minifi()
+
+    def enable_c2_in_minifi(self):
+        self.cluster.enable_c2_in_minifi()
+
+    def enable_c2_with_ssl_in_minifi(self):
+        self.cluster.enable_c2_with_ssl_in_minifi()
+
+    def enable_prometheus_in_minifi(self):
+        self.cluster.enable_prometheus_in_minifi()
+
+    def enable_splunk_hec_ssl(self, container_name, splunk_cert_pem, splunk_key_pem, root_ca_cert_pem):
+        self.cluster.enable_splunk_hec_ssl(container_name, splunk_cert_pem, splunk_key_pem, root_ca_cert_pem)
+
+    def enable_sql_in_minifi(self):
+        self.cluster.enable_sql_in_minifi()

@@ -23,9 +23,9 @@ sys.path.append('../minifi')
 
 from MiNiFi_integration_test_driver import MiNiFi_integration_test  # noqa: E402
 from minifi import *  # noqa
-from minifi.core.ImageStore import ImageStore # noqa
-from minifi.core.DockerTestDirectoryBindings import DockerTestDirectoryBindings # noqa
-from minifi.core.KubernetesProxy import KubernetesProxy # noqa
+from cluster.ImageStore import ImageStore # noqa
+from cluster.DockerTestDirectoryBindings import DockerTestDirectoryBindings # noqa
+from cluster.KubernetesProxy import KubernetesProxy # noqa
 
 
 def before_scenario(context, scenario):

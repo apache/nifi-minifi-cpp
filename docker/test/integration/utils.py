@@ -81,3 +81,15 @@ def get_memory_usage(pid: int) -> Optional[int]:
                 resident_set_size = [int(s) for s in line.split() if s.isdigit()].pop()
                 return resident_set_size * 1024
     return None
+
+
+def wait_for(action, timeout_seconds, check_period=1, *args, **kwargs):
+    start_time = time.perf_counter()
+    while True:
+        result = action(*args, **kwargs)
+        if result:
+            return result
+        time.sleep(check_period)
+        if timeout_seconds < (time.perf_counter() - start_time):
+            break
+    return False

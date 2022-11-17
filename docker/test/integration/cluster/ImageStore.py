@@ -14,7 +14,7 @@
 # limitations under the License.
 
 
-from .MinifiContainer import MinifiContainer
+from .containers.MinifiContainer import MinifiContainer
 import logging
 import tarfile
 import docker
@@ -42,12 +42,8 @@ class ImageStore:
         if container_engine in self.images:
             return self.images[container_engine]
 
-        if container_engine == "minifi-cpp" or container_engine == "transient-minifi":
-            image = self.__build_minifi_cpp_image()
-        elif container_engine == "minifi-cpp-with-provenance-repo":
-            image = self.__build_minifi_cpp_image_with_provenance_repo()
-        elif container_engine == "minifi-cpp-with-https-c2-config":
-            image = self.__build_minifi_cpp_image_with_https_c2_config()
+        if container_engine == "minifi-cpp-sql":
+            image = self.__build_minifi_cpp_sql_image()
         elif container_engine == "http-proxy":
             image = self.__build_http_proxy_image()
         elif container_engine == "postgresql-server":
@@ -76,7 +72,7 @@ class ImageStore:
         self.images[container_engine] = image
         return image
 
-    def __build_minifi_cpp_image(self):
+    def __build_minifi_cpp_sql_image(self):
         dockerfile = dedent("""\
                 FROM {base_image}
                 USER root
@@ -106,59 +102,8 @@ class ImageStore:
                     echo "UserName = postgres" >> /etc/odbc.ini && \
                     echo "Password = password" >> /etc/odbc.ini && \
                     echo "Database = postgres" >> /etc/odbc.ini
-                RUN sed -i -e 's/INFO/TRACE/g' {minifi_root}/conf/minifi-log.properties
-                RUN echo nifi.flow.engine.threads=5 >> {minifi_root}/conf/minifi.properties
-                RUN echo nifi.metrics.publisher.agent.identifier=Agent1 >> {minifi_root}/conf/minifi.properties
-                RUN echo nifi.metrics.publisher.class=PrometheusMetricsPublisher >> {minifi_root}/conf/minifi.properties
-                RUN echo nifi.metrics.publisher.PrometheusMetricsPublisher.port=9936 >> {minifi_root}/conf/minifi.properties
-                RUN echo nifi.metrics.publisher.metrics=RepositoryMetrics,QueueMetrics,PutFileMetrics,processorMetrics/Get.*,FlowInformation,DeviceInfoNode,AgentStatus >> {minifi_root}/conf/minifi.properties
-                RUN echo nifi.c2.enable=true  >> {minifi_root}/conf/minifi.properties
-                RUN echo nifi.c2.rest.url=http://minifi-c2-server:10090/c2/config/heartbeat  >> {minifi_root}/conf/minifi.properties
-                RUN echo nifi.c2.rest.url.ack=http://minifi-c2-server:10090/c2/config/acknowledge  >> {minifi_root}/conf/minifi.properties
-                RUN echo nifi.c2.flow.base.url=http://minifi-c2-server:10090/c2/config/  >> {minifi_root}/conf/minifi.properties
-                RUN echo nifi.c2.root.classes=DeviceInfoNode,AgentInformation,FlowInformation  >> {minifi_root}/conf/minifi.properties
-                RUN echo nifi.c2.full.heartbeat=false  >> {minifi_root}/conf/minifi.properties
-                RUN echo nifi.c2.agent.class=minifi-test-class  >> {minifi_root}/conf/minifi.properties
-                RUN echo nifi.c2.agent.identifier=minifi-test-id  >> {minifi_root}/conf/minifi.properties
                 USER minificpp
-                """.format(base_image='apacheminificpp:' + MinifiContainer.MINIFI_VERSION,
-                           minifi_root=MinifiContainer.MINIFI_ROOT))
-
-        return self.__build_image(dockerfile)
-
-    def __build_minifi_cpp_image_with_provenance_repo(self):
-        dockerfile = dedent("""\
-                FROM {base_image}
-                USER root
-                COPY minifi.properties {minifi_root}/conf/minifi.properties
-                USER minificpp
-                """.format(base_image='apacheminificpp:' + MinifiContainer.MINIFI_VERSION,
-                           minifi_root=MinifiContainer.MINIFI_ROOT))
-
-        properties_path = self.test_dir + "/resources/minifi_cpp_with_provenance_repo/minifi.properties"
-        properties_context = {'name': 'minifi.properties', 'size': os.path.getsize(properties_path)}
-
-        with open(properties_path, 'rb') as properties_file:
-            properties_context['file_obj'] = properties_file
-            image = self.__build_image(dockerfile, [properties_context])
-        return image
-
-    def __build_minifi_cpp_image_with_https_c2_config(self):
-        dockerfile = dedent("""\
-                FROM {base_image}
-                USER root
-                RUN sed -i -e 's/INFO/DEBUG/g' {minifi_root}/conf/minifi-log.properties
-                RUN echo nifi.c2.enable=true  >> {minifi_root}/conf/minifi.properties
-                RUN echo nifi.c2.rest.url=https://minifi-c2-server:10090/c2/config/heartbeat  >> {minifi_root}/conf/minifi.properties
-                RUN echo nifi.c2.rest.url.ack=https://minifi-c2-server:10090/c2/config/acknowledge  >> {minifi_root}/conf/minifi.properties
-                RUN echo nifi.c2.rest.ssl.context.service=SSLContextService  >> {minifi_root}/conf/minifi.properties
-                RUN echo nifi.c2.flow.base.url=https://minifi-c2-server:10090/c2/config/  >> {minifi_root}/conf/minifi.properties
-                RUN echo nifi.c2.full.heartbeat=false  >> {minifi_root}/conf/minifi.properties
-                RUN echo nifi.c2.agent.class=minifi-test-class  >> {minifi_root}/conf/minifi.properties
-                RUN echo nifi.c2.agent.identifier=minifi-test-id  >> {minifi_root}/conf/minifi.properties
-                USER minificpp
-                """.format(base_image='apacheminificpp:' + MinifiContainer.MINIFI_VERSION,
-                           minifi_root=MinifiContainer.MINIFI_ROOT))
+                """.format(base_image='apacheminificpp:' + MinifiContainer.MINIFI_VERSION))
 
         return self.__build_image(dockerfile)
 

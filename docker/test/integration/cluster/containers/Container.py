@@ -17,7 +17,7 @@
 import docker
 import logging
 
-from .LogSource import LogSource
+from ..LogSource import LogSource
 
 
 class Container:
@@ -63,13 +63,25 @@ class Container:
         return LogSource.FROM_DOCKER_CONTAINER
 
     def stop(self):
-        raise NotImplementedError()
+        logging.info('Stopping docker container "%s"...', self.name)
+        self.client.containers.get(self.name).stop()
+        logging.info('Successfully stopped docker container "%s"', self.name)
+        self.deployed = False
 
     def kill(self):
-        raise NotImplementedError()
+        logging.info('Killing docker container "%s"...', self.name)
+        self.client.containers.get(self.name).kill()
+        logging.info('Successfully killed docker container "%s"', self.name)
+        self.deployed = False
 
     def restart(self):
-        raise NotImplementedError()
+        logging.info('Restarting docker container "%s"...', self.name)
+        self.client.containers.get(self.name).restart()
+        logging.info('Successfully restarted docker container "%s"', self.name)
+        self.deployed = True
 
     def get_startup_finished_log_entry(self):
+        raise NotImplementedError()
+
+    def get_app_log(self):
         raise NotImplementedError()

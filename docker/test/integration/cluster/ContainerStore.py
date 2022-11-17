@@ -12,54 +12,39 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-
-
-import docker
-import logging
 import uuid
-
-from .Cluster import Cluster
-from .MinifiContainer import MinifiContainer
-from .TransientMinifiContainer import TransientMinifiContainer
-from .MinifiWithProvenanceRepoContainer import MinifiWithProvenanceRepoContainer
-from .NifiContainer import NifiContainer
-from .ZookeeperContainer import ZookeeperContainer
-from .KafkaBrokerContainer import KafkaBrokerContainer
-from .S3ServerContainer import S3ServerContainer
-from .AzureStorageServerContainer import AzureStorageServerContainer
-from .FakeGcsServerContainer import FakeGcsServerContainer
-from .HttpProxyContainer import HttpProxyContainer
-from .PostgreSQLServerContainer import PostgreSQLServerContainer
-from .MqttBrokerContainer import MqttBrokerContainer
-from .OPCUAServerContainer import OPCUAServerContainer
-from .SplunkContainer import SplunkContainer
-from .ElasticsearchContainer import ElasticsearchContainer
-from .OpensearchContainer import OpensearchContainer
-from .SyslogUdpClientContainer import SyslogUdpClientContainer
-from .SyslogTcpClientContainer import SyslogTcpClientContainer
-from .MinifiAsPodInKubernetesCluster import MinifiAsPodInKubernetesCluster
-from .TcpClientContainer import TcpClientContainer
-from .PrometheusContainer import PrometheusContainer
-from .MinifiC2ServerContainer import MinifiC2ServerContainer
-from .MinifiWithHttpsC2Config import MinifiWithHttpsC2Config
+import logging
+from .containers.MinifiContainer import MinifiOptions
+from .containers.MinifiContainer import MinifiContainer
+from .containers.NifiContainer import NifiContainer
+from .containers.ZookeeperContainer import ZookeeperContainer
+from .containers.KafkaBrokerContainer import KafkaBrokerContainer
+from .containers.S3ServerContainer import S3ServerContainer
+from .containers.AzureStorageServerContainer import AzureStorageServerContainer
+from .containers.FakeGcsServerContainer import FakeGcsServerContainer
+from .containers.HttpProxyContainer import HttpProxyContainer
+from .containers.PostgreSQLServerContainer import PostgreSQLServerContainer
+from .containers.MqttBrokerContainer import MqttBrokerContainer
+from .containers.OPCUAServerContainer import OPCUAServerContainer
+from .containers.SplunkContainer import SplunkContainer
+from .containers.ElasticsearchContainer import ElasticsearchContainer
+from .containers.OpensearchContainer import OpensearchContainer
+from .containers.SyslogUdpClientContainer import SyslogUdpClientContainer
+from .containers.SyslogTcpClientContainer import SyslogTcpClientContainer
+from .containers.MinifiAsPodInKubernetesCluster import MinifiAsPodInKubernetesCluster
+from .containers.TcpClientContainer import TcpClientContainer
+from .containers.PrometheusContainer import PrometheusContainer
+from .containers.MinifiC2ServerContainer import MinifiC2ServerContainer
 
 
-class SingleNodeDockerCluster(Cluster):
-    """
-    A "cluster" which consists of a single docker node. Useful for
-    testing or use-cases which do not span multiple compute nodes.
-    """
-
-    def __init__(self, context):
-        self.vols = {}
-        self.network = self.create_docker_network()
+class ContainerStore:
+    def __init__(self, network, image_store, kubernetes_proxy):
+        self.minifi_options = MinifiOptions()
         self.containers = {}
-        self.image_store = context.image_store
         self.data_directories = {}
-        self.kubernetes_proxy = context.kubernetes_proxy
-
-        # Get docker client
-        self.client = docker.from_env()
+        self.network = network
+        self.image_store = image_store
+        self.kubernetes_proxy = kubernetes_proxy
 
     def __del__(self):
         self.cleanup()
@@ -79,12 +64,6 @@ class SingleNodeDockerCluster(Cluster):
         for container in self.containers.values():
             container.vols = self.vols
 
-    @staticmethod
-    def create_docker_network():
-        net_name = 'minifi_integration_test_network-' + str(uuid.uuid4())
-        logging.debug('Creating network: %s', net_name)
-        return docker.from_env().networks.create(net_name)
-
     def acquire_container(self, name, engine='minifi-cpp', command=None):
         if name is not None and name in self.containers:
             return self.containers[name]
@@ -96,15 +75,9 @@ class SingleNodeDockerCluster(Cluster):
         if engine == 'nifi':
             return self.containers.setdefault(name, NifiContainer(self.data_directories["nifi_config_dir"], name, self.vols, self.network, self.image_store, command))
         elif engine == 'minifi-cpp':
-            return self.containers.setdefault(name, MinifiContainer(self.data_directories["minifi_config_dir"], name, self.vols, self.network, self.image_store, command))
+            return self.containers.setdefault(name, MinifiContainer(self.data_directories["minifi_config_dir"], self.minifi_options, name, self.vols, self.network, self.image_store, command))
         elif engine == 'kubernetes':
-            return self.containers.setdefault(name, MinifiAsPodInKubernetesCluster(self.kubernetes_proxy, self.data_directories["minifi_config_dir"], name, self.vols, self.network, self.image_store, command))
-        elif engine == 'transient-minifi':
-            return self.containers.setdefault(name, TransientMinifiContainer(self.data_directories["minifi_config_dir"], name, self.vols, self.network, self.image_store, command))
-        elif engine == 'minifi-cpp-with-provenance-repo':
-            return self.containers.setdefault(name, MinifiWithProvenanceRepoContainer(self.data_directories["minifi_config_dir"], name, self.vols, self.network, self.image_store, command))
-        elif engine == 'minifi-cpp-with-https-c2-config':
-            return self.containers.setdefault(name, MinifiWithHttpsC2Config(self.data_directories["minifi_config_dir"], name, self.vols, self.network, self.image_store, command))
+            return self.containers.setdefault(name, MinifiAsPodInKubernetesCluster(self.kubernetes_proxy, self.data_directories["kubernetes_config_dir"], self.minifi_options, name, self.vols, self.network, self.image_store, command))
         elif engine == 'kafka-broker':
             if 'zookeeper' not in self.containers:
                 self.containers.setdefault('zookeeper', ZookeeperContainer('zookeeper', self.vols, self.network, self.image_store, command))
@@ -144,36 +117,57 @@ class SingleNodeDockerCluster(Cluster):
         else:
             raise Exception('invalid flow engine: \'%s\'' % engine)
 
-    def deploy(self, name):
+    def deploy_container(self, name):
         if name is None or name not in self.containers:
             raise Exception('Invalid container to deploy: \'%s\'' % name)
 
         self.containers[name].deploy()
 
-    def deploy_flow(self, container_name=None):
-        if container_name is not None:
-            if container_name not in self.containers:
-                logging.error('Could not start container because it is not found: \'%s\'', container_name)
-                return
-            self.containers[container_name].deploy()
-            return
+    def deploy_all(self):
         for container in self.containers.values():
             container.deploy()
 
-    def stop_flow(self, container_name):
+    def stop_container(self, container_name):
         if container_name not in self.containers:
             logging.error('Could not stop container because it is not found: \'%s\'', container_name)
             return
         self.containers[container_name].stop()
 
-    def kill_flow(self, container_name):
+    def kill_container(self, container_name):
         if container_name not in self.containers:
             logging.error('Could not kill container because it is not found: \'%s\'', container_name)
             return
         self.containers[container_name].kill()
 
-    def restart_flow(self, container_name):
+    def restart_container(self, container_name):
         if container_name not in self.containers:
             logging.error('Could not restart container because it is not found: \'%s\'', container_name)
             return
         self.containers[container_name].restart()
+
+    def enable_provenance_repository_in_minifi(self):
+        self.minifi_options.enable_provenance = True
+
+    def enable_c2_in_minifi(self):
+        self.minifi_options.enable_c2 = True
+
+    def enable_c2_with_ssl_in_minifi(self):
+        self.minifi_options.enable_c2_with_ssl = True
+
+    def enable_prometheus_in_minifi(self):
+        self.minifi_options.enable_prometheus = True
+
+    def enable_sql_in_minifi(self):
+        self.minifi_options.enable_sql = True
+
+    def get_startup_finished_log_entry(self, container_name):
+        return self.containers[container_name].get_startup_finished_log_entry()
+
+    def log_source(self, container_name):
+        return self.containers[container_name].log_source()
+
+    def get_app_log(self, container_name):
+        return self.containers[container_name].get_app_log()
+
+    def get_container_names(self, engine=None):
+        return [key for key in self.containers.keys() if not engine or self.containers[key].get_engine() == engine]
