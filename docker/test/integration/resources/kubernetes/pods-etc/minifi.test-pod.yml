@@ -27,7 +27,7 @@ spec:
       path: /var/log/pods
   - name: tmp-minifi-config
     hostPath:
-      path: /tmp/minifi_config
+      path: /tmp/kubernetes_config
   - name: tmp-output
     hostPath:
       path: /tmp/output

@@ -14,46 +14,53 @@
 # limitations under the License.
 
 
-import os
+import docker
 import logging
-from .FlowContainer import FlowContainer
-from ..flow_serialization.Minifi_flow_yaml_serializer import Minifi_flow_yaml_serializer
+
+from ..LogSource import LogSource
 
 
-class MinifiContainer(FlowContainer):
-    MINIFI_VERSION = os.environ['MINIFI_VERSION']
-    MINIFI_ROOT = '/opt/minifi/nifi-minifi-cpp-' + MINIFI_VERSION
+class Container:
+    def __init__(self, name, engine, vols, network, image_store, command):
+        self.name = name
+        self.engine = engine
+        self.vols = vols
+        self.network = network
+        self.image_store = image_store
+        self.command = command
 
-    def __init__(self, config_dir, name, vols, network, image_store, command=None, engine='minifi-cpp'):
-        if not command:
-            command = ["/bin/sh", "-c", "cp /tmp/minifi_config/config.yml " + MinifiContainer.MINIFI_ROOT + "/conf && /opt/minifi/minifi-current/bin/minifi.sh run"]
-        super().__init__(config_dir, name, engine, vols, network, image_store, command)
+        # Get docker client
+        self.client = docker.from_env()
+        self.deployed = False
 
-    def get_startup_finished_log_entry(self):
-        return "Starting Flow Controller"
+    def __del__(self):
+        self.cleanup()
 
-    def _create_config(self):
-        serializer = Minifi_flow_yaml_serializer()
-        test_flow_yaml = serializer.serialize(self.start_nodes, self.controllers)
-        logging.info('Using generated flow config yml:\n%s', test_flow_yaml)
-        with open(os.path.join(self.config_dir, "config.yml"), 'wb') as config_file:
-            config_file.write(test_flow_yaml.encode('utf-8'))
+    def cleanup(self):
+        logging.info('Cleaning up container: %s', self.name)
+        try:
+            self.client.containers.get(self.name).remove(v=True, force=True)
+        except docker.errors.NotFound:
+            logging.warning("Container '%s' has been cleaned up already, nothing to be done.", self.name)
+            pass
+
+    def set_deployed(self):
+        if self.deployed:
+            return False
+        self.deployed = True
+        return True
+
+    def get_name(self):
+        return self.name
+
+    def get_engine(self):
+        return self.engine
 
     def deploy(self):
-        if not self.set_deployed():
-            return
+        raise NotImplementedError()
 
-        logging.info('Creating and running minifi docker container...')
-        self._create_config()
-
-        self.client.containers.run(
-            self.image_store.get_image(self.get_engine()),
-            detach=True,
-            name=self.name,
-            network=self.network.name,
-            entrypoint=self.command,
-            volumes=self.vols)
-        logging.info('Added container \'%s\'', self.name)
+    def log_source(self):
+        return LogSource.FROM_DOCKER_CONTAINER
 
     def stop(self):
         logging.info('Stopping minifi docker container "%s"...', self.name)
@@ -72,3 +79,9 @@ class MinifiContainer(FlowContainer):
         self.client.containers.get(self.name).restart()
         logging.info('Successfully restarted minifi docker container "%s"', self.name)
         self.deployed = True
+
+    def get_startup_finished_log_entry(self):
+        raise NotImplementedError()
+
+    def get_app_log(self):
+        raise NotImplementedError()

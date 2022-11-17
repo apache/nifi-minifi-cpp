@@ -17,7 +17,7 @@
 import logging
 
 from .FlowContainer import FlowContainer
-from ..flow_serialization.Nifi_flow_xml_serializer import Nifi_flow_xml_serializer
+from minifi.flow_serialization.Nifi_flow_xml_serializer import Nifi_flow_xml_serializer
 import gzip
 import os
 

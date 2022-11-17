@@ -17,7 +17,7 @@
 import logging
 import threading
 import os
-from .utils import is_temporary_output_file
+from utils import is_temporary_output_file
 
 from watchdog.events import FileSystemEventHandler
 

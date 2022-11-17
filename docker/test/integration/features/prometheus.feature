@@ -8,6 +8,7 @@ Feature: MiNiFi can publish metrics to Prometheus server
     And a file with the content "test" is present in "/tmp/input"
     And a PutFile processor with the "Directory" property set to "/tmp/output"
     And the "success" relationship of the GetFile1 processor is connected to the PutFile
+    And Prometheus is enabled in MiNiFi
     And a Prometheus server is set up
     When all instances start up
     Then "RepositoryMetrics" is published to the Prometheus server in less than 60 seconds
@@ -28,6 +29,7 @@ Feature: MiNiFi can publish metrics to Prometheus server
     And a PutFile processor with the "Directory" property set to "/tmp/output"
     And the "success" relationship of the GetFile1 processor is connected to the PutFile
     And the "success" relationship of the GetFile2 processor is connected to the PutFile
+    And Prometheus is enabled in MiNiFi
     And a Prometheus server is set up
     When all instances start up
     Then "GetFileMetrics" processor metric is published to the Prometheus server in less than 60 seconds for "GetFile1" processor

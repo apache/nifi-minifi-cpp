@@ -32,12 +32,14 @@ Feature: Core flow functionalities
 
 
   Scenario: Processors are destructed when agent is stopped
-    Given a LogOnDestructionProcessor processor with the name "logOnDestruction" in the "transient-minifi" flow with engine "transient-minifi"
+    Given a transient MiNiFi flow with the name "transient-minifi" is set up
+    And a LogOnDestructionProcessor processor with the name "logOnDestruction" in the "transient-minifi" flow
     When the MiNiFi instance starts up
     Then the Minifi logs contain the following message: "LogOnDestructionProcessor is being destructed" in less than 100 seconds
 
   Scenario: Agent does not crash when using provenance repositories
-    Given a GenerateFlowFile processor with the name "generateFlowFile" in the "minifi-cpp-with-provenance-repo" flow with engine "minifi-cpp-with-provenance-repo"
+    Given a GenerateFlowFile processor with the name "generateFlowFile" in the "minifi-cpp-with-provenance-repo" flow
+    And the provenance repository is enabled in MiNiFi
     When the MiNiFi instance starts up
     Then the "minifi-cpp-with-provenance-repo" flow has a log line matching "MiNiFi started" in less than 30 seconds
 

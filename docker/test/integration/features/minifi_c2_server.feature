@@ -5,6 +5,7 @@ Feature: MiNiFi can communicate with Apache NiFi MiNiFi C2 server
 
   Scenario: MiNiFi flow config is updated from MiNiFi C2 server
     Given a GetFile processor with the name "GetFile1" and the "Input Directory" property set to "/tmp/non-existent"
+    And C2 is enabled in MiNiFi
     And a file with the content "test" is present in "/tmp/input"
     And a MiNiFi C2 server is set up
     When all instances start up

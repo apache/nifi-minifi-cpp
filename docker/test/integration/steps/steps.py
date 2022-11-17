@@ -14,9 +14,9 @@
 # limitations under the License.
 
 
-from minifi.core.FileSystemObserver import FileSystemObserver
+from filesystem_validation.FileSystemObserver import FileSystemObserver
 from minifi.core.RemoteProcessGroup import RemoteProcessGroup
-from minifi.core.SSL_cert_utils import make_ca, make_cert, dump_certificate, dump_privatekey
+from ssl_utils.SSL_cert_utils import make_ca, make_cert, dump_certificate, dump_privatekey
 from minifi.core.Funnel import Funnel
 
 from minifi.controllers.SSLContextService import SSLContextService
@@ -327,6 +327,26 @@ def step_impl(context, flow_name):
     context.test.acquire_container(flow_name, 'nifi')
 
 
+@given("a transient MiNiFi flow with the name \"{flow_name}\" is set up")
+def step_impl(context, flow_name):
+    context.test.acquire_container(flow_name, 'minifi-cpp', ["/bin/sh", "-c", "./bin/minifi.sh start && sleep 10 && ./bin/minifi.sh stop && sleep 100"])
+
+
+@given("the provenance repository is enabled in MiNiFi")
+def step_impl(context):
+    context.test.enable_provenance_repository_in_minifi()
+
+
+@given("C2 is enabled in MiNiFi")
+def step_impl(context):
+    context.test.enable_c2_in_minifi()
+
+
+@given("Prometheus is enabled in MiNiFi")
+def step_impl(context):
+    context.test.enable_prometheus_in_minifi()
+
+
 # HTTP proxy setup
 @given("the http proxy server is set up")
 @given("a http proxy server is set up accordingly")
@@ -518,7 +538,7 @@ def step_impl(context):
     query_splunk_indexing_status = context.test.get_node_by_name("QuerySplunkIndexingStatus")
     query_splunk_indexing_status.controller_services.append(ssl_context_service)
     query_splunk_indexing_status.set_property("SSL Context Service", ssl_context_service.name)
-    context.test.cluster.enable_splunk_hec_ssl('splunk', dump_certificate(splunk_cert), dump_privatekey(splunk_key), dump_certificate(root_ca_cert))
+    context.test.enable_splunk_hec_ssl('splunk', dump_certificate(splunk_cert), dump_privatekey(splunk_key), dump_certificate(root_ca_cert))
 
 
 @given(u'the {processor_one} processor is set up with a GCPCredentialsControllerService to communicate with the Google Cloud storage server')
@@ -570,6 +590,7 @@ def step_impl(context, processor_name, service_name):
 
 @given("a PostgreSQL server is set up")
 def step_impl(context):
+    context.test.enable_sql_in_minifi()
     context.test.acquire_container("postgresql-server", "postgresql-server")
 
 
@@ -972,8 +993,9 @@ def step_impl(context, doc_id, index, value, field):
 def step_impl(context):
     ssl_context_service = SSLContextService(cert="/tmp/resources/minifi-c2-server-ssl/minifi-cpp-flow.crt", ca_cert="/tmp/resources/minifi-c2-server-ssl/root-ca.pem", key="/tmp/resources/minifi-c2-server-ssl/minifi-cpp-flow.key", passphrase="abcdefgh")
     ssl_context_service.name = "SSLContextService"
-    container = context.test.acquire_container("minifi-cpp-flow", "minifi-cpp-with-https-c2-config")
+    container = context.test.acquire_container("minifi-cpp-flow")
     container.add_controller(ssl_context_service)
+    context.test.enable_c2_with_ssl_in_minifi()
 
 
 @given(u'a MiNiFi C2 server is set up')
