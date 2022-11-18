@@ -24,7 +24,7 @@
 
 static core::YamlConfiguration config(nullptr, nullptr, nullptr, nullptr, std::make_shared<minifi::Configure>());
 
-TEST_CASE("Root process group is correctly parsed", "[YamlProcessGroupParser1]") {
+TEST_CASE("Root process group is correctly parsed", "[YamlProcessGroupParser]") {
   auto pattern = Group("root")
     .With({
       Conn{"Conn1",
@@ -48,7 +48,7 @@ TEST_CASE("Root process group is correctly parsed", "[YamlProcessGroupParser1]")
   verifyProcessGroup(*root, pattern);
 }
 
-TEST_CASE("Nested process group is correctly parsed", "[YamlProcessGroupParser2]") {
+TEST_CASE("Nested process group is correctly parsed", "[YamlProcessGroupParser]") {
   auto pattern = Group("root")
     .With({Conn{"Conn1",
                 Proc{"00000000-0000-0000-0000-000000000001", "Proc1"},
@@ -71,7 +71,7 @@ TEST_CASE("Nested process group is correctly parsed", "[YamlProcessGroupParser2]
   verifyProcessGroup(*root, pattern);
 }
 
-TEST_CASE("Cannot connect processors from different groups", "[YamlProcessGroupParser3]") {
+TEST_CASE("Cannot connect processors from different groups", "[YamlProcessGroupParser]") {
   TestController controller;
   LogTestController::getInstance().setTrace<core::YamlConfiguration>();
   Proc Proc1{"00000000-0000-0000-0000-000000000001", "Proc1"};
@@ -130,7 +130,7 @@ TEST_CASE("Cannot connect processors from different groups", "[YamlProcessGroupP
   verifyProcessGroup(*root, pattern);
 }
 
-TEST_CASE("Processor can communicate with root process group's input port", "[YamlProcessGroupParser4]") {
+TEST_CASE("Processor can communicate with child process group's input port", "[YamlProcessGroupParser]") {
   auto pattern = Group("root")
     .With({Conn{"Conn1",
                 Proc{"00000000-0000-0000-0000-000000000001", "Proc1"},
@@ -146,7 +146,7 @@ TEST_CASE("Processor can communicate with root process group's input port", "[Ya
   verifyProcessGroup(*root, pattern);
 }
 
-TEST_CASE("Child process group can provide input for root processor through output port", "[YamlProcessGroupParser5]") {
+TEST_CASE("Child process group can provide input for root processor through output port", "[YamlProcessGroupParser]") {
   auto pattern = Group("root")
     .With({Conn{"Conn1",
                 OutputPort{"00000000-0000-0000-0000-000000000002", "Port1"},
@@ -162,7 +162,7 @@ TEST_CASE("Child process group can provide input for root processor through outp
   verifyProcessGroup(*root, pattern);
 }
 
-TEST_CASE("Child process groups can communicate through ports", "[YamlProcessGroupParser6]") {
+TEST_CASE("Child process groups can communicate through ports", "[YamlProcessGroupParser]") {
   auto pattern = Group("root")
     .With({Conn{"Conn1",
                 OutputPort{"00000000-0000-0000-0000-000000000002", "Port1"},
@@ -180,7 +180,7 @@ TEST_CASE("Child process groups can communicate through ports", "[YamlProcessGro
   verifyProcessGroup(*root, pattern);
 }
 
-TEST_CASE("Processor cannot communicate with child's nested process group", "[YamlProcessGroupParser6]") {
+TEST_CASE("Processor cannot communicate with child's nested process group", "[YamlProcessGroupParser]") {
   Proc Proc1{"00000000-0000-0000-0000-000000000001", "Proc1"};
   OutputPort Port1{"00000000-0000-0000-0000-000000000002", "Port1"};
   InputPort Port2{"00000000-0000-0000-0000-000000000003", "Port2", ConnectionFailure::UNRESOLVED_DESTINATION};
@@ -215,7 +215,7 @@ TEST_CASE("Input port can be a connection's source and the output port can be a 
   verifyProcessGroup(*root, pattern);
 }
 
-TEST_CASE("Input port cannot be a connection's destination inside the process group", "[YamlProcessGroupParser7]") {
+TEST_CASE("Input port cannot be a connection's destination inside the process group", "[YamlProcessGroupParser]") {
   auto pattern = Group("root")
     .With({Conn{"Conn1",
                 Proc{"00000000-0000-0000-0000-000000000002", "Proc1"},
@@ -228,7 +228,7 @@ TEST_CASE("Input port cannot be a connection's destination inside the process gr
   verifyProcessGroup(*root, pattern);
 }
 
-TEST_CASE("Output port cannot be a connection's source inside the process group", "[YamlProcessGroupParser7]") {
+TEST_CASE("Output port cannot be a connection's source inside the process group", "[YamlProcessGroupParser]") {
   auto pattern = Group("root")
     .With({Conn{"Conn1",
                 OutputPort{"00000000-0000-0000-0000-000000000001", "Port1", ConnectionFailure::OUTPUT_CANNOT_BE_SOURCE},
@@ -241,7 +241,7 @@ TEST_CASE("Output port cannot be a connection's source inside the process group"
   verifyProcessGroup(*root, pattern);
 }
 
-TEST_CASE("Input port can be a connection's source and the output port can be a destination inside the process group through processor", "[YamlProcessGroupParser8]") {
+TEST_CASE("Input port can be a connection's source and the output port can be a destination inside the process group through processor", "[YamlProcessGroupParser]") {
   auto pattern = Group("root")
     .With({Conn{"Conn1",
                 InputPort{"00000000-0000-0000-0000-000000000001", "Port1"},
@@ -258,7 +258,7 @@ TEST_CASE("Input port can be a connection's source and the output port can be a 
   verifyProcessGroup(*root, pattern);
 }
 
-TEST_CASE("Processor cannot set connection's destination to child process group's output port", "[YamlProcessGroupParser9]") {
+TEST_CASE("Processor cannot set connection's destination to child process group's output port", "[YamlProcessGroupParser]") {
   auto pattern = Group("root")
     .With({Conn{"Conn1",
                 Proc{"00000000-0000-0000-0000-000000000001", "Proc1"},
@@ -274,7 +274,7 @@ TEST_CASE("Processor cannot set connection's destination to child process group'
   verifyProcessGroup(*root, pattern);
 }
 
-TEST_CASE("Processor cannot set connection's source to child process group's input port", "[YamlProcessGroupParser10]") {
+TEST_CASE("Processor cannot set connection's source to child process group's input port", "[YamlProcessGroupParser]") {
   auto pattern = Group("root")
     .With({Conn{"Conn1",
                 InputPort{"00000000-0000-0000-0000-000000000002", "Port1", ConnectionFailure::INPUT_CANNOT_BE_SOURCE},
