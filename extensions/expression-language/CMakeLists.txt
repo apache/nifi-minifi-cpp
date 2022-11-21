@@ -30,8 +30,8 @@ if(WIN32)
 
     FetchContent_Declare(
         winflexbison
-        GIT_REPOSITORY "https://github.com/lexxmark/winflexbison.git"
-        GIT_TAG "a72f3d6b5102b65f064a5054ba634d3d62e94f41"
+        URL "https://github.com/lexxmark/winflexbison/archive/refs/tags/v2.5.25.tar.gz"
+        URL_HASH "SHA256=8e1b71e037b524ba3f576babb0cf59182061df1f19cd86112f085a882560f60b"
     )
     FetchContent_GetProperties("winflexbison")
 

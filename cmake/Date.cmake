@@ -46,8 +46,8 @@ if (WIN32)
 endif()
 
 FetchContent_Declare(date_src
-    GIT_REPOSITORY https://github.com/HowardHinnant/date.git
-    GIT_TAG        v3.0.1  # adjust tag/branch/commit as needed
+    URL             https://github.com/HowardHinnant/date/archive/refs/tags/v3.0.1.tar.gz
+    URL_HASH        SHA256=7a390f200f0ccd207e8cff6757e04817c1a0aec3e327b006b7eb451c57ee3538
 )
 FetchContent_GetProperties(date_src)
 if (NOT date_src_POPULATED)
