@@ -51,8 +51,10 @@ class ThreadedRepository : public core::Repository, public core::TraceableResour
       running_state_.store(RunningState::Running);
       return true;
     }
-    getThread() = std::thread(&ThreadedRepository::run, this);
+
+    // must set Running state before calling run(), as run() might check state
     running_state_.store(RunningState::Running);
+    getThread() = std::thread(&ThreadedRepository::run, this);
 
     logger_->log_debug("%s ThreadedRepository monitor thread start", name_);
     return true;
