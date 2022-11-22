@@ -211,7 +211,7 @@ int16_t FlowController::stop() {
     this->flow_file_repo_->stop();
     this->provenance_repo_->stop();
     // stop the ControllerServices
-    this->controller_service_provider_impl_->disableAllControllerServices();
+    disableAllControllerServices(nullptr);
     running_ = false;
   }
   return 0;
@@ -324,10 +324,6 @@ void FlowController::load(std::unique_ptr<core::ProcessGroup> root, bool reload)
     conditionalReloadScheduler<EventDrivenSchedulingAgent>(event_scheduler_, !event_scheduler_ || reload);
     conditionalReloadScheduler<CronDrivenSchedulingAgent>(cron_scheduler_, !cron_scheduler_ || reload);
 
-    std::static_pointer_cast<core::controller::StandardControllerServiceProvider>(controller_service_provider_impl_)->setRootGroup(root_.get());
-    std::static_pointer_cast<core::controller::StandardControllerServiceProvider>(controller_service_provider_impl_)->setSchedulingAgent(
-        std::static_pointer_cast<minifi::SchedulingAgent>(event_scheduler_));
-
     logger_->log_info("Loaded controller service provider");
 
     /*
@@ -374,10 +370,10 @@ int16_t FlowController::start() {
   } else {
     if (!running_) {
       logger_->log_info("Starting Flow Controller");
-      controller_service_provider_impl_->enableAllControllerServices();
-      this->timer_scheduler_->start();
-      this->event_scheduler_->start();
-      this->cron_scheduler_->start();
+      enableAllControllerServices(nullptr);
+      timer_scheduler_->start();
+      event_scheduler_->start();
+      cron_scheduler_->start();
 
       if (this->root_ != nullptr) {
         start_time_ = std::chrono::steady_clock::now();
@@ -391,7 +387,6 @@ int16_t FlowController::start() {
       this->protocol_->start();
       this->provenance_repo_->start();
       this->flow_file_repo_->start();
-      thread_pool_.start();
       logger_->log_info("Started Flow Controller");
     }
     return 0;

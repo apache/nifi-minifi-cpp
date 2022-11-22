@@ -37,7 +37,7 @@ FlowConfiguration::FlowConfiguration(ConfigurationContext ctx)
       filesystem_(std::move(ctx.filesystem)),
       logger_(logging::LoggerFactory<FlowConfiguration>::getLogger()) {
   controller_services_ = std::make_shared<core::controller::ControllerServiceMap>();
-  service_provider_ = std::make_shared<core::controller::StandardControllerServiceProvider>(controller_services_, nullptr, configuration_);
+  service_provider_ = std::make_shared<core::controller::StandardControllerServiceProvider>(controller_services_, configuration_);
   std::string flowUrl;
   std::string bucket_id = "default";
   std::string flowId;
@@ -97,7 +97,7 @@ std::unique_ptr<core::ProcessGroup> FlowConfiguration::updateFromPayload(const s
   auto old_services = controller_services_;
   auto old_provider = service_provider_;
   controller_services_ = std::make_shared<core::controller::ControllerServiceMap>();
-  service_provider_ = std::make_shared<core::controller::StandardControllerServiceProvider>(controller_services_, nullptr, configuration_);
+  service_provider_ = std::make_shared<core::controller::StandardControllerServiceProvider>(controller_services_, configuration_);
   auto payload = getRootFromPayload(yamlConfigPayload);
   if (!url.empty() && payload != nullptr) {
     std::string payload_flow_id;

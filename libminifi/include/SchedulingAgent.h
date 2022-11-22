@@ -17,8 +17,8 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#ifndef LIBMINIFI_INCLUDE_SCHEDULINGAGENT_H_
-#define LIBMINIFI_INCLUDE_SCHEDULINGAGENT_H_
+
+#pragma once
 
 #include <memory>
 #include <string>
@@ -47,10 +47,7 @@
 #define SCHEDULING_WATCHDOG_CHECK_PERIOD_MS 1000  // msec
 #define SCHEDULING_WATCHDOG_DEFAULT_ALERT_PERIOD_MS 5000  // msec
 
-namespace org {
-namespace apache {
-namespace nifi {
-namespace minifi {
+namespace org::apache::nifi::minifi {
 
 // SchedulingAgent Class
 class SchedulingAgent {
@@ -161,8 +158,4 @@ class SchedulingAgent {
   std::chrono::milliseconds alert_time_;
 };
 
-}  // namespace minifi
-}  // namespace nifi
-}  // namespace apache
-}  // namespace org
-#endif  // LIBMINIFI_INCLUDE_SCHEDULINGAGENT_H_
+}  // namespace org::apache::nifi::minifi

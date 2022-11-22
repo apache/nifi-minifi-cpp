@@ -40,6 +40,7 @@
 #include "controllers/ThreadManagementService.h"
 #include "core/controller/ControllerService.h"
 #include "core/controller/ControllerServiceProvider.h"
+
 namespace org::apache::nifi::minifi::utils {
 
 using TaskId = std::string;
@@ -296,6 +297,9 @@ class ThreadPool {
       std::this_thread::sleep_for(std::chrono::milliseconds(1));
     }
   }
+
+  static std::shared_ptr<core::logging::Logger> logger_;
+
 // determines if threads are detached
   bool daemon_threads_;
   std::atomic<int> thread_reduction_count_;

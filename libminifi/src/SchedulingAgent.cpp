@@ -49,8 +49,6 @@ std::future<utils::TaskRescheduleInfo> SchedulingAgent::enableControllerService(
   // we aren't terribly concerned with the result.
   std::future<utils::TaskRescheduleInfo> future;
   thread_pool_.execute(std::move(functor), future);
-  if (future.valid())
-    future.wait();
   return future;
 }
 
@@ -70,8 +68,6 @@ std::future<utils::TaskRescheduleInfo> SchedulingAgent::disableControllerService
   // we aren't terribly concerned with the result.
   std::future<utils::TaskRescheduleInfo> future;
   thread_pool_.execute(std::move(functor), future);
-  if (future.valid())
-    future.wait();
   return future;
 }
 
