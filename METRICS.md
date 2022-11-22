@@ -59,13 +59,13 @@ The following option defines which metric classes should be exposed through the 
 
     # in minifi.properties
 
-    nifi.metrics.publisher.metrics=QueueMetrics,RepositoryMetrics,GetFileMetrics,DeviceInfoNode,FlowInformation
+    nifi.metrics.publisher.metrics=QueueMetrics,RepositoryMetrics,GetFileMetrics,DeviceInfoNode,FlowInformation,processorMetrics/Tail.*
 
 An agent identifier should also be defined to identify which agent the metric is exposed from. If not set, the hostname is used as the identifier.
 
-	# in minifi.properties
+    # in minifi.properties
 
-	nifi.metrics.publisher.agent.identifier=Agent1
+    nifi.metrics.publisher.agent.identifier=Agent1
 
 ## System Metrics
 
@@ -167,6 +167,16 @@ AgentStatus is a system level metric that defines current agent status including
 ## Processor Metrics
 
 Processor level metrics can be accessed for any processor provided by MiNiFi. These metrics correspond to the name of the processor appended by the "Metrics" suffix (e.g. GetFileMetrics, TailFileMetrics, etc.).
+
+Besides configuring processor metrics directly, they can also be configured using regular expressions with the `processorMetrics/` prefix.
+
+All available processor metrics can be requested in the `minifi.properties` by using the following configuration:
+
+    nifi.metrics.publisher.metrics=processorMetrics/.*
+
+Regular expressions can also be used for requesting multiple processor metrics at once, like GetFileMetrics and GetTCPMetrics with the following configuration:
+
+    nifi.metrics.publisher.metrics=processorMetrics/Get.*Metrics
 
 ### General Metrics
 

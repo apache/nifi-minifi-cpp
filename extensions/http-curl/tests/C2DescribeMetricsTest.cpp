@@ -66,8 +66,12 @@ class MetricsHandler: public HeartbeatHandler {
 
   void handleHeartbeat(const rapidjson::Document&, struct mg_connection* conn) override {
     switch (state_) {
-      case TestState::DESCRIBE_SPECIFIC_METRIC: {
+      case TestState::DESCRIBE_SPECIFIC_PROCESSOR_METRIC: {
         sendHeartbeatResponse("DESCRIBE", "metrics", "889347", conn, {{"metricsClass", "GetFileMetrics"}});
+        break;
+      }
+      case TestState::DESCRIBE_SPECIFIC_SYSTEM_METRIC: {
+        sendHeartbeatResponse("DESCRIBE", "metrics", "889347", conn, {{"metricsClass", "QueueMetrics"}});
         break;
       }
       case TestState::DESCRIBE_ALL_METRICS: {
@@ -81,8 +85,12 @@ class MetricsHandler: public HeartbeatHandler {
 
   void handleAcknowledge(const rapidjson::Document& root) override {
     switch (state_) {
-      case TestState::DESCRIBE_SPECIFIC_METRIC: {
-        verifySpecificMetrics(root);
+      case TestState::DESCRIBE_SPECIFIC_PROCESSOR_METRIC: {
+        verifySpecificProcessorMetrics(root);
+        break;
+      }
+      case TestState::DESCRIBE_SPECIFIC_SYSTEM_METRIC: {
+        verifySpecificSystemMetrics(root);
         break;
       }
       case TestState::DESCRIBE_ALL_METRICS: {
@@ -96,7 +104,8 @@ class MetricsHandler: public HeartbeatHandler {
 
  private:
   enum class TestState {
-    DESCRIBE_SPECIFIC_METRIC,
+    DESCRIBE_SPECIFIC_PROCESSOR_METRIC,
+    DESCRIBE_SPECIFIC_SYSTEM_METRIC,
     DESCRIBE_ALL_METRICS
   };
 
@@ -109,12 +118,21 @@ class MetricsHandler: public HeartbeatHandler {
     mg_printf(conn, "HTTP/1.1 200 OK\r\nContent-Type: text/plain\r\nContent-Length: 0\r\nConnection: close\r\n\r\n");
   }
 
-  void verifySpecificMetrics(const rapidjson::Document& root) {
+  void verifySpecificProcessorMetrics(const rapidjson::Document& root) {
     auto getfile_metrics_verified =
       !root.HasMember("metrics") &&
       root.HasMember("GetFileMetrics") &&
       root["GetFileMetrics"].HasMember(GETFILE1_UUID) &&
       root["GetFileMetrics"].HasMember(GETFILE2_UUID);
+    if (getfile_metrics_verified) {
+      state_ = TestState::DESCRIBE_SPECIFIC_SYSTEM_METRIC;
+    }
+  }
+
+  void verifySpecificSystemMetrics(const rapidjson::Document& root) {
+    auto getfile_metrics_verified =
+      !root.HasMember("metrics") &&
+      root.HasMember("QueueMetrics");
     if (getfile_metrics_verified) {
       state_ = TestState::DESCRIBE_ALL_METRICS;
     }
@@ -136,7 +154,7 @@ class MetricsHandler: public HeartbeatHandler {
     }
   }
 
-  TestState state_ = TestState::DESCRIBE_SPECIFIC_METRIC;
+  TestState state_ = TestState::DESCRIBE_SPECIFIC_PROCESSOR_METRIC;
   std::atomic_bool& metrics_found_;
 };
 

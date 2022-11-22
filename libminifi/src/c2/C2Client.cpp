@@ -210,7 +210,7 @@ std::optional<state::response::NodeReporter::ReportedNode> C2Client::getMetricsN
   };
 
   if (!metrics_class.empty()) {
-    auto metrics_nodes = response_node_loader_.getComponentMetricsNodes(metrics_class);
+    auto metrics_nodes = response_node_loader_.loadResponseNodes(metrics_class, root_.get());
     if (!metrics_nodes.empty()) {
       return createReportedNode(metrics_nodes);
     }
