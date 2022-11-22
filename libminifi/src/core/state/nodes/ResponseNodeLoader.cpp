@@ -27,6 +27,8 @@
 #include "core/state/nodes/ConfigurationChecksums.h"
 #include "c2/C2Agent.h"
 #include "utils/gsl.h"
+#include "utils/RegexUtils.h"
+#include "utils/StringUtils.h"
 
 namespace org::apache::nifi::minifi::state::response {
 
@@ -75,7 +77,7 @@ std::vector<std::shared_ptr<ResponseNode>> ResponseNodeLoader::getResponseNodes(
   return {response_node};
 }
 
-void ResponseNodeLoader::initializeRepositoryMetrics(const std::shared_ptr<ResponseNode>& response_node) {
+void ResponseNodeLoader::initializeRepositoryMetrics(const std::shared_ptr<ResponseNode>& response_node) const {
   auto repository_metrics = dynamic_cast<RepositoryMetrics*>(response_node.get());
   if (repository_metrics != nullptr) {
     repository_metrics->addRepository(provenance_repo_);
@@ -98,14 +100,14 @@ void ResponseNodeLoader::initializeQueueMetrics(const std::shared_ptr<ResponseNo
   }
 }
 
-void ResponseNodeLoader::initializeAgentIdentifier(const std::shared_ptr<ResponseNode>& response_node) {
+void ResponseNodeLoader::initializeAgentIdentifier(const std::shared_ptr<ResponseNode>& response_node) const {
   auto identifier = dynamic_cast<state::response::AgentIdentifier*>(response_node.get());
   if (identifier != nullptr) {
     identifier->setAgentIdentificationProvider(configuration_);
   }
 }
 
-void ResponseNodeLoader::initializeAgentMonitor(const std::shared_ptr<ResponseNode>& response_node) {
+void ResponseNodeLoader::initializeAgentMonitor(const std::shared_ptr<ResponseNode>& response_node) const {
   auto monitor = dynamic_cast<state::response::AgentMonitor*>(response_node.get());
   if (monitor != nullptr) {
     monitor->addRepository(provenance_repo_);
@@ -114,7 +116,7 @@ void ResponseNodeLoader::initializeAgentMonitor(const std::shared_ptr<ResponseNo
   }
 }
 
-void ResponseNodeLoader::initializeAgentNode(const std::shared_ptr<ResponseNode>& response_node) {
+void ResponseNodeLoader::initializeAgentNode(const std::shared_ptr<ResponseNode>& response_node) const {
   auto agent_node = dynamic_cast<state::response::AgentNode*>(response_node.get());
   if (agent_node != nullptr && controller_ != nullptr) {
     agent_node->setUpdatePolicyController(std::static_pointer_cast<controllers::UpdatePolicyControllerService>(controller_->getControllerService(c2::C2Agent::UPDATE_NAME)).get());
@@ -126,7 +128,7 @@ void ResponseNodeLoader::initializeAgentNode(const std::shared_ptr<ResponseNode>
   }
 }
 
-void ResponseNodeLoader::initializeAgentStatus(const std::shared_ptr<ResponseNode>& response_node) {
+void ResponseNodeLoader::initializeAgentStatus(const std::shared_ptr<ResponseNode>& response_node) const {
   auto agent_status = dynamic_cast<state::response::AgentStatus*>(response_node.get());
   if (agent_status != nullptr) {
     agent_status->addRepository(provenance_repo_);
@@ -135,7 +137,7 @@ void ResponseNodeLoader::initializeAgentStatus(const std::shared_ptr<ResponseNod
   }
 }
 
-void ResponseNodeLoader::initializeConfigurationChecksums(const std::shared_ptr<ResponseNode>& response_node) {
+void ResponseNodeLoader::initializeConfigurationChecksums(const std::shared_ptr<ResponseNode>& response_node) const {
   auto configuration_checksums = dynamic_cast<state::response::ConfigurationChecksums*>(response_node.get());
   if (configuration_checksums) {
     configuration_checksums->addChecksumCalculator(configuration_->getChecksumCalculator());
@@ -145,7 +147,7 @@ void ResponseNodeLoader::initializeConfigurationChecksums(const std::shared_ptr<
   }
 }
 
-void ResponseNodeLoader::initializeFlowMonitor(const std::shared_ptr<ResponseNode>& response_node, core::ProcessGroup* root) {
+void ResponseNodeLoader::initializeFlowMonitor(const std::shared_ptr<ResponseNode>& response_node, core::ProcessGroup* root) const {
   auto flowMonitor = dynamic_cast<state::response::FlowMonitor*>(response_node.get());
   if (flowMonitor == nullptr) {
     return;
@@ -165,7 +167,7 @@ void ResponseNodeLoader::initializeFlowMonitor(const std::shared_ptr<ResponseNod
   }
 }
 
-std::vector<std::shared_ptr<ResponseNode>> ResponseNodeLoader::loadResponseNodes(const std::string& clazz, core::ProcessGroup* root) {
+std::vector<std::shared_ptr<ResponseNode>> ResponseNodeLoader::loadResponseNodes(const std::string& clazz, core::ProcessGroup* root) const {
   auto response_nodes = getResponseNodes(clazz);
   if (response_nodes.empty()) {
     logger_->log_error("No metric defined for %s", clazz);
@@ -185,9 +187,27 @@ std::vector<std::shared_ptr<ResponseNode>> ResponseNodeLoader::loadResponseNodes
   return response_nodes;
 }
 
+std::vector<std::shared_ptr<ResponseNode>> ResponseNodeLoader::getMatchingComponentMetricsNodes(const std::string& regex_str) const {
+  std::vector<std::shared_ptr<ResponseNode>> result;
+  for (const auto& [metric_name, metrics] : component_metrics_) {
+    utils::Regex regex(regex_str);
+    if (utils::regexMatch(metric_name, regex)) {
+      result.insert(result.end(), metrics.begin(), metrics.end());
+    }
+  }
+  return result;
+}
+
 std::vector<std::shared_ptr<ResponseNode>> ResponseNodeLoader::getComponentMetricsNodes(const std::string& metrics_class) const {
-  if (!metrics_class.empty()) {
-    std::lock_guard<std::mutex> lock(component_metrics_mutex_);
+  if (metrics_class.empty()) {
+    return {};
+  }
+  std::lock_guard<std::mutex> lock(component_metrics_mutex_);
+  static const std::string PROCESSOR_FILTER_PREFIX = "processorMetrics/";
+  if (utils::StringUtils::startsWith(metrics_class, PROCESSOR_FILTER_PREFIX)) {
+    auto regex_str = metrics_class.substr(PROCESSOR_FILTER_PREFIX.size());
+    return getMatchingComponentMetricsNodes(regex_str);
+  } else {
     const auto citer = component_metrics_.find(metrics_class);
     if (citer != component_metrics_.end()) {
       return citer->second;
