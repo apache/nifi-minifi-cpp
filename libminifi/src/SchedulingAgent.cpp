@@ -34,47 +34,6 @@ bool hasWorkToDo(org::apache::nifi::minifi::core::Processor* processor) {
 
 namespace org::apache::nifi::minifi {
 
-std::future<utils::TaskRescheduleInfo> SchedulingAgent::enableControllerService(std::shared_ptr<core::controller::ControllerServiceNode> &serviceNode) {
-  logger_->log_info("Enabling CSN in SchedulingAgent %s", serviceNode->getName());
-  // reference the enable function from serviceNode
-  std::function<utils::TaskRescheduleInfo()> f_ex = [serviceNode] {
-      serviceNode->enable();
-      return utils::TaskRescheduleInfo::Done();
-    };
-
-  // only need to run this once.
-  auto monitor = std::make_unique<utils::ComplexMonitor>();
-  utils::Worker<utils::TaskRescheduleInfo> functor(f_ex, serviceNode->getUUIDStr(), std::move(monitor));
-  // move the functor into the thread pool. While a future is returned
-  // we aren't terribly concerned with the result.
-  std::future<utils::TaskRescheduleInfo> future;
-  thread_pool_.execute(std::move(functor), future);
-  if (future.valid())
-    future.wait();
-  return future;
-}
-
-std::future<utils::TaskRescheduleInfo> SchedulingAgent::disableControllerService(std::shared_ptr<core::controller::ControllerServiceNode> &serviceNode) {
-  logger_->log_info("Disabling CSN in SchedulingAgent %s", serviceNode->getName());
-  // reference the disable function from serviceNode
-  std::function<utils::TaskRescheduleInfo()> f_ex = [serviceNode] {
-    serviceNode->disable();
-    return utils::TaskRescheduleInfo::Done();
-  };
-
-  // only need to run this once.
-  auto monitor = std::make_unique<utils::ComplexMonitor>();
-  utils::Worker<utils::TaskRescheduleInfo> functor(f_ex, serviceNode->getUUIDStr(), std::move(monitor));
-
-  // move the functor into the thread pool. While a future is returned
-  // we aren't terribly concerned with the result.
-  std::future<utils::TaskRescheduleInfo> future;
-  thread_pool_.execute(std::move(functor), future);
-  if (future.valid())
-    future.wait();
-  return future;
-}
-
 bool SchedulingAgent::onTrigger(core::Processor* processor, const std::shared_ptr<core::ProcessContext> &processContext,
                                 const std::shared_ptr<core::ProcessSessionFactory> &sessionFactory) {
   gsl_Expects(processor);

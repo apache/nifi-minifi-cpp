@@ -15,8 +15,8 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#ifndef LIBMINIFI_INCLUDE_CORE_CONTROLLER_CONTROLLERSERVICEPROVIDER_H_
-#define LIBMINIFI_INCLUDE_CORE_CONTROLLER_CONTROLLERSERVICEPROVIDER_H_
+
+#pragma once
 
 #include <memory>
 #include <string>
@@ -79,32 +79,6 @@ class ControllerServiceProvider : public CoreComponent, public ConfigurableCompo
   }
 
   /**
-   * Removes a controller service.
-   * @param serviceNode controller service node.
-   */
-  virtual void removeControllerService(const std::shared_ptr<ControllerServiceNode> &serviceNode) {
-    controller_map_->removeControllerService(serviceNode);
-  }
-
-  /**
-   * Enables the provided controller service
-   * @param serviceNode controller service node.
-   */
-  virtual std::future<utils::TaskRescheduleInfo> enableControllerService(std::shared_ptr<ControllerServiceNode> &serviceNode) = 0;
-
-  /**
-   * Enables the provided controller service nodes
-   * @param serviceNode controller service node.
-   */
-  virtual void enableControllerServices(std::vector<std::shared_ptr<core::controller::ControllerServiceNode>> serviceNodes) = 0;
-
-  /**
-   * Disables the provided controller service node
-   * @param serviceNode controller service node.
-   */
-  virtual std::future<utils::TaskRescheduleInfo> disableControllerService(std::shared_ptr<core::controller::ControllerServiceNode> &serviceNode) = 0;
-
-  /**
    * Removes all controller services.
    */
   virtual void clearControllerServices() = 0;
@@ -114,62 +88,6 @@ class ControllerServiceProvider : public CoreComponent, public ConfigurableCompo
    */
   virtual std::vector<std::shared_ptr<core::controller::ControllerServiceNode>> getAllControllerServices() {
     return controller_map_->getAllControllerServices();
-  }
-
-  /**
-   * Verifies that referencing components can be stopped for the controller service
-   */
-  virtual void verifyCanStopReferencingComponents(std::shared_ptr<core::controller::ControllerServiceNode> &serviceNode) = 0;
-
-  /**
-   *  Unschedules referencing components.
-   */
-  virtual std::vector<std::shared_ptr<core::controller::ControllerServiceNode>> unscheduleReferencingComponents(std::shared_ptr<core::controller::ControllerServiceNode> &serviceNode) = 0;
-
-  /**
-   * Verifies referencing components for <code>serviceNode</code> can be disabled.
-   * @param serviceNode shared pointer to a controller service node.
-   */
-  virtual void verifyCanDisableReferencingServices(std::shared_ptr<core::controller::ControllerServiceNode> &serviceNode) = 0;
-
-  /**
-   * Disables referencing components for <code>serviceNode</code> can be disabled.
-   * @param serviceNode shared pointer to a controller service node.
-   */
-  virtual std::vector<std::shared_ptr<core::controller::ControllerServiceNode>> disableReferencingServices(std::shared_ptr<core::controller::ControllerServiceNode>& /*serviceNode*/) {
-    return std::vector<std::shared_ptr<core::controller::ControllerServiceNode>>();
-  }
-
-  /**
-   * Verifies referencing components for <code>serviceNode</code> can be enabled.
-   * @param serviceNode shared pointer to a controller service node.
-   */
-  virtual void verifyCanEnableReferencingServices(std::shared_ptr<core::controller::ControllerServiceNode> &serviceNode) {
-    std::vector<std::shared_ptr<core::controller::ControllerServiceNode>> references = findLinkedComponents(serviceNode);
-    for (auto ref : references) {
-      ref->canEnable();
-    }
-  }
-
-  /**
-   * Enables referencing components for <code>serviceNode</code> can be Enabled.
-   * @param serviceNode shared pointer to a controller service node.
-   */
-  virtual std::vector<std::shared_ptr<core::controller::ControllerServiceNode>> enableReferencingServices(std::shared_ptr<core::controller::ControllerServiceNode> &serviceNode) = 0;
-
-  /**
-   * Schedules the service node and referencing components.
-   * @param serviceNode shared pointer to a controller service node.
-   */
-  virtual std::vector<std::shared_ptr<core::controller::ControllerServiceNode>> scheduleReferencingComponents(std::shared_ptr<core::controller::ControllerServiceNode> &serviceNode) = 0;
-
-  /**
-   * Returns a controller service for the service identifier and componentID
-   * @param service Identifier service identifier.
-   */
-  virtual std::shared_ptr<ControllerService> getControllerServiceForComponent(const std::string& serviceIdentifier, const utils::Identifier& /*componentId*/) const {
-    std::shared_ptr<ControllerService> node = getControllerService(serviceIdentifier);
-    return node;
   }
 
   /**
@@ -272,5 +190,3 @@ class ControllerServiceProvider : public CoreComponent, public ConfigurableCompo
 };
 
 }  // namespace org::apache::nifi::minifi::core::controller
-
-#endif  // LIBMINIFI_INCLUDE_CORE_CONTROLLER_CONTROLLERSERVICEPROVIDER_H_

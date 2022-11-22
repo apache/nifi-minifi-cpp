@@ -197,7 +197,7 @@ TestPlan::TestPlan(std::shared_ptr<minifi::core::ContentRepository> content_repo
       logger_(logging::LoggerFactory<TestPlan>::getLogger()) {
   stream_factory = org::apache::nifi::minifi::io::StreamFactory::getInstance(std::make_shared<minifi::Configure>());
   controller_services_ = std::make_shared<minifi::core::controller::ControllerServiceMap>();
-  controller_services_provider_ = std::make_shared<minifi::core::controller::StandardControllerServiceProvider>(controller_services_, nullptr, configuration_);
+  controller_services_provider_ = std::make_shared<minifi::core::controller::StandardControllerServiceProvider>(controller_services_, configuration_);
   /* Inject the default state storage ahead of ProcessContext to make sure we have a unique state directory */
   if (state_dir == nullptr) {
     state_dir_ = std::make_unique<TempDirectory>();

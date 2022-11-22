@@ -146,13 +146,13 @@ class ProcessGroup : public CoreComponent {
     return config_version_;
   }
 
-  void startProcessing(const std::shared_ptr<TimerDrivenSchedulingAgent>& timeScheduler,
-                       const std::shared_ptr<EventDrivenSchedulingAgent> &eventScheduler,
-                       const std::shared_ptr<CronDrivenSchedulingAgent> &cronScheduler);
+  void startProcessing(TimerDrivenSchedulingAgent& timeScheduler,
+                       EventDrivenSchedulingAgent& eventScheduler,
+                       CronDrivenSchedulingAgent& cronScheduler);
 
-  void stopProcessing(const std::shared_ptr<TimerDrivenSchedulingAgent>& timeScheduler,
-                      const std::shared_ptr<EventDrivenSchedulingAgent>& eventScheduler,
-                      const std::shared_ptr<CronDrivenSchedulingAgent>& cronScheduler,
+  void stopProcessing(TimerDrivenSchedulingAgent& timeScheduler,
+                      EventDrivenSchedulingAgent& eventScheduler,
+                      CronDrivenSchedulingAgent& cronScheduler,
                       const std::function<bool(const Processor*)>& filter = nullptr);
 
   bool isRemoteProcessGroup();
@@ -231,7 +231,7 @@ class ProcessGroup : public CoreComponent {
   void verify() const;
 
  protected:
-  void startProcessingProcessors(const std::shared_ptr<TimerDrivenSchedulingAgent>& timeScheduler, const std::shared_ptr<EventDrivenSchedulingAgent> &eventScheduler, const std::shared_ptr<CronDrivenSchedulingAgent> &cronScheduler); // NOLINT
+  void startProcessingProcessors(TimerDrivenSchedulingAgent& timeScheduler, EventDrivenSchedulingAgent& eventScheduler, CronDrivenSchedulingAgent& cronScheduler);
 
   // version
   int config_version_;

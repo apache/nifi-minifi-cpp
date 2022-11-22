@@ -56,7 +56,7 @@ TEST_CASE("SchedulingAgentTests", "[SchedulingAgent]") {
   auto test_plan = testController.createPlan();
   auto controller_services_ = std::make_shared<minifi::core::controller::ControllerServiceMap>();
   auto configuration = std::make_shared<minifi::Configure>();
-  auto controller_services_provider_ = std::make_shared<minifi::core::controller::StandardControllerServiceProvider>(controller_services_, nullptr, configuration);
+  auto controller_services_provider_ = std::make_shared<minifi::core::controller::StandardControllerServiceProvider>(controller_services_, configuration);
   utils::ThreadPool<utils::TaskRescheduleInfo> thread_pool;
   auto count_proc = std::make_shared<CountOnTriggersProcessor>("count_proc");
   count_proc->incrementActiveTasks();

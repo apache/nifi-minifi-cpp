@@ -65,7 +65,6 @@ namespace state {
 class ProcessorController;
 }  // namespace state
 
-// Default NiFi Root Group Name
 #define DEFAULT_ROOT_GROUP_NAME ""
 
 /**
@@ -87,28 +86,24 @@ class FlowController : public core::controller::ForwardingControllerServiceProvi
 
   ~FlowController() override;
 
-  // Get the provenance repository
   virtual std::shared_ptr<core::Repository> getProvenanceRepository() {
     return this->provenance_repo_;
   }
 
-  // Load flow xml from disk, after that, create the root process group and its children, initialize the flows
   virtual void load(std::unique_ptr<core::ProcessGroup> root = nullptr, bool reload = false);
 
-  // Whether the Flow Controller is start running
   bool isRunning() override {
     return running_.load() || updating_.load();
   }
 
-  // Whether the Flow Controller has already been initialized (loaded flow XML)
   virtual bool isInitialized() {
     return initialized_.load();
   }
-  // Start to run the Flow Controller which internally start the root process group and all its children
+  // Start the Flow Controller which internally starts the root process group and all its children
   int16_t start() override;
   int16_t pause() override;
   int16_t resume() override;
-  // Unload the current flow YAML, clean the root process group and all its children
+  // Unload the current flow, clean the root process group and all its children
   int16_t stop() override;
   int16_t applyUpdate(const std::string &source, const std::string &configuration, bool persist, const std::optional<std::string>& flow_id) override;
   int16_t drainRepositories() override {
@@ -123,31 +118,27 @@ class FlowController : public core::controller::ForwardingControllerServiceProvi
   int16_t applyUpdate(const std::string& /*source*/, const std::shared_ptr<state::Update>&) override { return -1; }
   // Asynchronous function trigger unloading and wait for a period of time
   virtual void waitUnload(uint64_t timeToWaitMs);
-  // Unload the current flow xml, clean the root process group and all its children
+  // Unload the current flow, clean the root process group and all its children
   virtual void unload();
-  // update property value
   void updatePropertyValue(std::string processorName, std::string propertyName, std::string propertyValue) {
     if (root_ != nullptr)
       root_->updatePropertyValue(std::move(processorName), std::move(propertyName), std::move(propertyValue));
   }
 
-  // set SerialNumber
   void setSerialNumber(std::string number) {
     serial_number_ = std::move(number);
   }
 
-  // get serial number as string
   std::string getSerialNumber() {
     return serial_number_;
   }
 
-  // validate and apply passing yaml configuration payload
+  // validate and apply passing configuration payload
   // first it will validate the payload with the current root node config for flowController
   // like FlowController id/name is the same and new version is greater than the current version
   // after that, it will apply the configuration
   bool applyConfiguration(const std::string &source, const std::string &configurePayload, const std::optional<std::string>& flow_id = std::nullopt);
 
-  // get name
   std::string getName() const override {
     if (root_ != nullptr)
       return root_->getName();
@@ -166,7 +157,6 @@ class FlowController : public core::controller::ForwardingControllerServiceProvi
     return root_->getUUID();
   }
 
-  // get version
   virtual std::string getVersion() {
     if (root_ != nullptr)
       return std::to_string(root_->getVersion());
@@ -201,38 +191,29 @@ class FlowController : public core::controller::ForwardingControllerServiceProvi
   void loadMetricsPublisher();
 
  protected:
-  // function to load the flow file repo.
   void loadFlowRepo();
 
   std::optional<std::chrono::milliseconds> loadShutdownTimeoutFromConfiguration();
 
  private:
   template <typename T, typename = typename std::enable_if<std::is_base_of<SchedulingAgent, T>::value>::type>
-  void conditionalReloadScheduler(std::shared_ptr<T>& scheduler, const bool condition) {
+  void conditionalReloadScheduler(std::unique_ptr<T>& scheduler, const bool condition) {
     if (condition) {
-      scheduler = std::make_shared<T>(gsl::not_null<core::controller::ControllerServiceProvider*>(this), provenance_repo_, flow_file_repo_, content_repo_, configuration_, thread_pool_);
+      scheduler = std::make_unique<T>(gsl::not_null<core::controller::ControllerServiceProvider*>(this), provenance_repo_, flow_file_repo_, content_repo_, configuration_, thread_pool_);
     }
   }
 
  protected:
-  // flow controller mutex
   std::recursive_mutex mutex_;
 
-  // Whether it is running
   std::atomic<bool> running_;
   std::atomic<bool> updating_;
 
-  // Whether it has already been initialized (load the flow XML already)
   std::atomic<bool> initialized_;
-  // Flow Timer Scheduler
-  std::shared_ptr<TimerDrivenSchedulingAgent> timer_scheduler_;
-  // Flow Event Scheduler
-  std::shared_ptr<EventDrivenSchedulingAgent> event_scheduler_;
-  // Cron Schedule
-  std::shared_ptr<CronDrivenSchedulingAgent> cron_scheduler_;
-  // FlowControl Protocol
+  std::unique_ptr<TimerDrivenSchedulingAgent> timer_scheduler_;
+  std::unique_ptr<EventDrivenSchedulingAgent> event_scheduler_;
+  std::unique_ptr<CronDrivenSchedulingAgent> cron_scheduler_;
   std::unique_ptr<FlowControlProtocol> protocol_;
-  // metrics information
   std::chrono::steady_clock::time_point start_time_;
 
  private:

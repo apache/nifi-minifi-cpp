@@ -15,8 +15,8 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#ifndef LIBMINIFI_INCLUDE_CORE_CONTROLLER_STANDARDCONTROLLERSERVICEPROVIDER_H_
-#define LIBMINIFI_INCLUDE_CORE_CONTROLLER_STANDARDCONTROLLERSERVICEPROVIDER_H_
+
+#pragma once
 
 #include <string>
 #include <utility>
@@ -32,32 +32,16 @@
 #include "StandardControllerServiceNode.h"
 #include "ControllerServiceProvider.h"
 #include "core/logging/LoggerFactory.h"
+#include "SchedulingAgent.h"
 
-namespace org {
-namespace apache {
-namespace nifi {
-namespace minifi {
-namespace core {
-namespace controller {
+namespace org::apache::nifi::minifi::core::controller {
 
 class StandardControllerServiceProvider : public ControllerServiceProvider, public std::enable_shared_from_this<StandardControllerServiceProvider> {
  public:
-  explicit StandardControllerServiceProvider(std::shared_ptr<ControllerServiceMap> services, ProcessGroup* root_group, std::shared_ptr<Configure> configuration,
-                                             std::shared_ptr<minifi::SchedulingAgent> agent, ClassLoader &loader = ClassLoader::getDefaultClassLoader())
-      : ControllerServiceProvider(services),
-        agent_(agent),
-        extension_loader_(loader),
-        root_group_(root_group),
-        configuration_(configuration),
-        logger_(logging::LoggerFactory<StandardControllerServiceProvider>::getLogger()) {
-  }
-
-  explicit StandardControllerServiceProvider(std::shared_ptr<ControllerServiceMap> services, ProcessGroup* root_group, std::shared_ptr<Configure> configuration, ClassLoader &loader =
+  explicit StandardControllerServiceProvider(std::shared_ptr<ControllerServiceMap> services, std::shared_ptr<Configure> configuration, ClassLoader &loader =
                                                  ClassLoader::getDefaultClassLoader())
       : ControllerServiceProvider(services),
-        agent_(nullptr),
         extension_loader_(loader),
-        root_group_(root_group),
         configuration_(configuration),
         logger_(logging::LoggerFactory<StandardControllerServiceProvider>::getLogger()) {
   }
@@ -67,14 +51,6 @@ class StandardControllerServiceProvider : public ControllerServiceProvider, publ
 
   StandardControllerServiceProvider& operator=(const StandardControllerServiceProvider &other) = delete;
   StandardControllerServiceProvider& operator=(StandardControllerServiceProvider &&other) = delete;
-
-  void setRootGroup(ProcessGroup* rg) {
-    root_group_ = rg;
-  }
-
-  void setSchedulingAgent(std::shared_ptr<minifi::SchedulingAgent> agent) {
-    agent_ = agent;
-  }
 
   std::shared_ptr<ControllerServiceNode> createControllerService(const std::string &type, const std::string &fullType, const std::string &id, bool /*firstTimeAdded*/) {
     std::shared_ptr<ControllerService> new_controller_service = extension_loader_.instantiate<ControllerService>(type, id);
@@ -97,22 +73,15 @@ class StandardControllerServiceProvider : public ControllerServiceProvider, publ
     return new_service_node;
   }
 
-  std::future<utils::TaskRescheduleInfo> enableControllerService(std::shared_ptr<ControllerServiceNode> &serviceNode) {
-    if (serviceNode->canEnable()) {
-      return agent_->enableControllerService(serviceNode);
-    } else {
-      std::future<utils::TaskRescheduleInfo> no_run = std::async(std::launch::deferred, utils::TaskRescheduleInfo::Done);
-      return no_run;
-    }
-  }
-
   virtual void enableAllControllerServices() {
     logger_->log_info("Enabling %u controller services", controller_map_->getAllControllerServices().size());
     for (auto service : controller_map_->getAllControllerServices()) {
-      if (service->canEnable()) {
-        logger_->log_info("Enabling %s", service->getName());
-        agent_->enableControllerService(service);
-      } else {
+      logger_->log_info("Enabling %s", service->getName());
+      if (!service->canEnable()) {
+        logger_->log_warn("Service %s cannot be enabled", service->getName());
+        continue;
+      }
+      if (!service->enable()) {
         logger_->log_warn("Could not enable %s", service->getName());
       }
     }
@@ -121,24 +90,14 @@ class StandardControllerServiceProvider : public ControllerServiceProvider, publ
   virtual void disableAllControllerServices() {
     logger_->log_info("Disabling %u controller services", controller_map_->getAllControllerServices().size());
     for (auto service : controller_map_->getAllControllerServices()) {
+      logger_->log_info("Disabling %s", service->getName());
+      if (!service->enabled()) {
+        logger_->log_warn("Service %s is not enabled", service->getName());
+        continue;
+      }
       if (!service->disable()) {
         logger_->log_warn("Could not disable %s", service->getName());
       }
-    }
-  }
-
-  void enableControllerServices(std::vector<std::shared_ptr<ControllerServiceNode>> serviceNodes) {
-    for (auto node : serviceNodes) {
-      enableControllerService(node);
-    }
-  }
-
-  std::future<utils::TaskRescheduleInfo> disableControllerService(std::shared_ptr<ControllerServiceNode> &serviceNode) {
-    if (!IsNullOrEmpty(serviceNode.get()) && serviceNode->enabled()) {
-      return agent_->disableControllerService(serviceNode);
-    } else {
-      std::future<utils::TaskRescheduleInfo> no_run = std::async(std::launch::deferred, utils::TaskRescheduleInfo::Done);
-      return no_run;
     }
   }
 
@@ -146,61 +105,12 @@ class StandardControllerServiceProvider : public ControllerServiceProvider, publ
     controller_map_->clear();
   }
 
-  void verifyCanStopReferencingComponents(std::shared_ptr<core::controller::ControllerServiceNode>& /*serviceNode*/) {
-  }
-
-  std::vector<std::shared_ptr<core::controller::ControllerServiceNode>> unscheduleReferencingComponents(std::shared_ptr<core::controller::ControllerServiceNode> &serviceNode) {
-    std::vector<std::shared_ptr<core::controller::ControllerServiceNode>> references = findLinkedComponents(serviceNode);
-    for (auto ref : references) {
-      agent_->disableControllerService(ref);
-    }
-    return references;
-  }
-
-  void verifyCanDisableReferencingServices(std::shared_ptr<core::controller::ControllerServiceNode> &serviceNode) {
-    std::vector<std::shared_ptr<core::controller::ControllerServiceNode>> references = findLinkedComponents(serviceNode);
-    for (auto ref : references) {
-      if (!ref->canEnable()) {
-        logger_->log_info("Cannot disable %s", ref->getName());
-      }
-    }
-  }
-
-  virtual std::vector<std::shared_ptr<core::controller::ControllerServiceNode>> disableReferencingServices(std::shared_ptr<core::controller::ControllerServiceNode> &serviceNode) {
-    std::vector<std::shared_ptr<core::controller::ControllerServiceNode>> references = findLinkedComponents(serviceNode);
-    for (auto ref : references) {
-      agent_->disableControllerService(ref);
-    }
-
-    return references;
-  }
-
-  std::vector<std::shared_ptr<core::controller::ControllerServiceNode>> enableReferencingServices(std::shared_ptr<core::controller::ControllerServiceNode> &serviceNode) {
-    std::vector<std::shared_ptr<core::controller::ControllerServiceNode>> references = findLinkedComponents(serviceNode);
-    for (auto ref : references) {
-      agent_->enableControllerService(ref);
-    }
-    return references;
-  }
-
-  std::vector<std::shared_ptr<core::controller::ControllerServiceNode>> scheduleReferencingComponents(std::shared_ptr<core::controller::ControllerServiceNode> &serviceNode) {
-    std::vector<std::shared_ptr<core::controller::ControllerServiceNode>> references = findLinkedComponents(serviceNode);
-    for (auto ref : references) {
-      agent_->enableControllerService(ref);
-    }
-    return references;
-  }
-
  protected:
   bool canEdit() {
     return false;
   }
 
-  std::shared_ptr<minifi::SchedulingAgent> agent_;
-
   ClassLoader &extension_loader_;
-
-  ProcessGroup* root_group_ = nullptr;
 
   std::shared_ptr<Configure> configuration_;
 
@@ -208,11 +118,4 @@ class StandardControllerServiceProvider : public ControllerServiceProvider, publ
   std::shared_ptr<logging::Logger> logger_;
 };
 
-}  // namespace controller
-}  // namespace core
-}  // namespace minifi
-}  // namespace nifi
-}  // namespace apache
-}  // namespace org
-
-#endif  // LIBMINIFI_INCLUDE_CORE_CONTROLLER_STANDARDCONTROLLERSERVICEPROVIDER_H_
+}  // namespace org::apache::nifi::minifi::core::controller

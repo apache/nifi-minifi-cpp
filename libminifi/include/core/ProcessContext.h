@@ -194,7 +194,7 @@ class ProcessContext : public controller::ControllerServiceLookup, public core::
    * identifier
    */
   std::shared_ptr<core::controller::ControllerService> getControllerService(const std::string &identifier) const override {
-    return controller_service_provider_ == nullptr ? nullptr : controller_service_provider_->getControllerServiceForComponent(identifier, processor_node_->getUUID());
+    return controller_service_provider_ == nullptr ? nullptr : controller_service_provider_->getControllerService(identifier);
   }
 
   /**

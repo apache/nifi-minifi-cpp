@@ -40,6 +40,7 @@
 #include "controllers/ThreadManagementService.h"
 #include "core/controller/ControllerService.h"
 #include "core/controller/ControllerServiceProvider.h"
+
 namespace org::apache::nifi::minifi::utils {
 
 using TaskId = std::string;
@@ -162,18 +163,8 @@ class WorkerThread {
 template<typename T>
 class ThreadPool {
  public:
-  ThreadPool(int max_worker_threads = 2, bool daemon_threads = false, core::controller::ControllerServiceProvider* controller_service_provider = nullptr,
-             std::string name = "NamelessPool")
-      : daemon_threads_(daemon_threads),
-        thread_reduction_count_(0),
-        max_worker_threads_(max_worker_threads),
-        adjust_threads_(false),
-        running_(false),
-        controller_service_provider_(controller_service_provider),
-        name_(std::move(name)) {
-    current_workers_ = 0;
-    thread_manager_ = nullptr;
-  }
+  ThreadPool(int max_worker_threads = 2, bool daemon_threads = false,
+             core::controller::ControllerServiceProvider* controller_service_provider = nullptr, std::string name = "NamelessPool");
 
   ThreadPool(const ThreadPool<T> &other) = delete;
   ThreadPool<T>& operator=(const ThreadPool<T> &other) = delete;
@@ -277,6 +268,9 @@ class ThreadPool {
       start();
   }
 
+ private:
+  std::shared_ptr<controllers::ThreadManagementService> createThreadManager() const;
+
  protected:
   std::thread createThread(std::function<void()> &&functor) {
     return std::thread([ functor ]() mutable {
@@ -296,6 +290,7 @@ class ThreadPool {
       std::this_thread::sleep_for(std::chrono::milliseconds(1));
     }
   }
+
 // determines if threads are detached
   bool daemon_threads_;
   std::atomic<int> thread_reduction_count_;
@@ -337,6 +332,8 @@ class ThreadPool {
   // variable to signal task running completion
   std::condition_variable task_run_complete_;
 
+  std::shared_ptr<core::logging::Logger> logger_;
+
   /**
    * Call for the manager to start worker threads
    */
@@ -345,7 +342,7 @@ class ThreadPool {
   /**
    * Runs worker tasks
    */
-  void run_tasks(std::shared_ptr<WorkerThread> thread);
+  void run_tasks(const std::shared_ptr<WorkerThread>& thread);
 
   void manage_delayed_queue();
 };

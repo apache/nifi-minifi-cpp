@@ -25,12 +25,7 @@
 #include "ControllerServiceProvider.h"
 #include "ControllerServiceNode.h"
 
-namespace org {
-namespace apache {
-namespace nifi {
-namespace minifi {
-namespace core {
-namespace controller {
+namespace org::apache::nifi::minifi::core::controller {
 
 class ForwardingControllerServiceProvider : public ControllerServiceProvider {
  public:
@@ -44,22 +39,6 @@ class ForwardingControllerServiceProvider : public ControllerServiceProvider {
     return controller_service_provider_impl_->getControllerServiceNode(id);
   }
 
-  void removeControllerService(const std::shared_ptr<ControllerServiceNode> &serviceNode) override {
-    return controller_service_provider_impl_->removeControllerService(serviceNode);
-  }
-
-  std::future<utils::TaskRescheduleInfo> enableControllerService(std::shared_ptr<ControllerServiceNode> &serviceNode) override {
-    return controller_service_provider_impl_->enableControllerService(serviceNode);
-  }
-
-  void enableControllerServices(std::vector<std::shared_ptr<core::controller::ControllerServiceNode>> serviceNodes) override {
-    return controller_service_provider_impl_->enableControllerServices(serviceNodes);
-  }
-
-  std::future<utils::TaskRescheduleInfo> disableControllerService(std::shared_ptr<core::controller::ControllerServiceNode> &serviceNode) override {
-    return controller_service_provider_impl_->disableControllerService(serviceNode);
-  }
-
   void clearControllerServices() override {
     return controller_service_provider_impl_->clearControllerServices();
   }
@@ -70,38 +49,6 @@ class ForwardingControllerServiceProvider : public ControllerServiceProvider {
 
   std::vector<std::shared_ptr<core::controller::ControllerServiceNode>> getAllControllerServices() override {
     return controller_service_provider_impl_->getAllControllerServices();
-  }
-
-  std::vector<std::shared_ptr<core::controller::ControllerServiceNode>> unscheduleReferencingComponents(std::shared_ptr<core::controller::ControllerServiceNode> &serviceNode) override {
-    return controller_service_provider_impl_->unscheduleReferencingComponents(serviceNode);
-  }
-
-  void verifyCanEnableReferencingServices(std::shared_ptr<core::controller::ControllerServiceNode> &serviceNode) override {
-    return controller_service_provider_impl_->verifyCanEnableReferencingServices(serviceNode);
-  }
-
-  void verifyCanDisableReferencingServices(std::shared_ptr<core::controller::ControllerServiceNode> &serviceNode) override {
-    return controller_service_provider_impl_->verifyCanDisableReferencingServices(serviceNode);
-  }
-
-  void verifyCanStopReferencingComponents(std::shared_ptr<core::controller::ControllerServiceNode> &serviceNode) override {
-    return controller_service_provider_impl_->verifyCanStopReferencingComponents(serviceNode);
-  }
-
-  std::vector<std::shared_ptr<core::controller::ControllerServiceNode>> disableReferencingServices(std::shared_ptr<core::controller::ControllerServiceNode> &serviceNode) override {
-    return controller_service_provider_impl_->disableReferencingServices(serviceNode);
-  }
-
-  std::vector<std::shared_ptr<core::controller::ControllerServiceNode>> enableReferencingServices(std::shared_ptr<core::controller::ControllerServiceNode> &serviceNode) override {
-    return controller_service_provider_impl_->enableReferencingServices(serviceNode);
-  }
-
-  std::vector<std::shared_ptr<core::controller::ControllerServiceNode>> scheduleReferencingComponents(std::shared_ptr<core::controller::ControllerServiceNode> &serviceNode) override {
-    return controller_service_provider_impl_->scheduleReferencingComponents(serviceNode);
-  }
-
-  std::shared_ptr<ControllerService> getControllerServiceForComponent(const std::string &serviceIdentifier, const utils::Identifier &componentId) const override {
-    return controller_service_provider_impl_->getControllerServiceForComponent(serviceIdentifier, componentId);
   }
 
   bool isControllerServiceEnabled(const std::string &identifier) override {
@@ -128,9 +75,4 @@ class ForwardingControllerServiceProvider : public ControllerServiceProvider {
   std::shared_ptr<ControllerServiceProvider> controller_service_provider_impl_;
 };
 
-}  // namespace controller
-}  // namespace core
-}  // namespace minifi
-}  // namespace nifi
-}  // namespace apache
-}  // namespace org
+}  // namespace org::apache::nifi::minifi::core::controller
