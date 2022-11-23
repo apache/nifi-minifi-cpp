@@ -101,8 +101,6 @@ class SchedulingAgent {
 
   void watchDogFunc();
 
-  virtual std::future<utils::TaskRescheduleInfo> enableControllerService(std::shared_ptr<core::controller::ControllerServiceNode> &serviceNode);
-  virtual std::future<utils::TaskRescheduleInfo> disableControllerService(std::shared_ptr<core::controller::ControllerServiceNode> &serviceNode);
   // schedule, overwritten by different DrivenSchedulingAgent
   virtual void schedule(core::Processor* processor) = 0;
   // unschedule, overwritten by different DrivenSchedulingAgent

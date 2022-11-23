@@ -73,34 +73,30 @@ class StandardControllerServiceProvider : public ControllerServiceProvider, publ
     return new_service_node;
   }
 
-  virtual void enableAllControllerServices(SchedulingAgent* scheduler) {
+  virtual void enableAllControllerServices() {
     logger_->log_info("Enabling %u controller services", controller_map_->getAllControllerServices().size());
     for (auto service : controller_map_->getAllControllerServices()) {
+      logger_->log_info("Enabling %s", service->getName());
       if (!service->canEnable()) {
-        logger_->log_warn("Could not enable %s", service->getName());
+        logger_->log_warn("Service %s can not be enabled", service->getName());
         continue;
       }
-      logger_->log_info("Enabling %s", service->getName());
-      if (scheduler) {
-        scheduler->enableControllerService(service).wait();
-      } else {
-        service->enable();
+      if (!service->enable()) {
+        logger_->log_warn("Could not enable %s", service->getName());
       }
     }
   }
 
-  virtual void disableAllControllerServices(SchedulingAgent* scheduler) {
+  virtual void disableAllControllerServices() {
     logger_->log_info("Disabling %u controller services", controller_map_->getAllControllerServices().size());
     for (auto service : controller_map_->getAllControllerServices()) {
+      logger_->log_info("Disabling %s", service->getName());
       if (!service->enabled()) {
-        logger_->log_warn("Could not disable %s", service->getName());
+        logger_->log_warn("Service %s is not enabled", service->getName());
         continue;
       }
-      logger_->log_info("Disabling %s", service->getName());
-      if (scheduler) {
-        scheduler->disableControllerService(service).wait();
-      } else {
-        service->disable();
+      if (!service->disable()) {
+        logger_->log_warn("Could not disable %s", service->getName());
       }
     }
   }

@@ -208,9 +208,9 @@ class FlowController : public core::controller::ForwardingControllerServiceProvi
 
  private:
   template <typename T, typename = typename std::enable_if<std::is_base_of<SchedulingAgent, T>::value>::type>
-  void conditionalReloadScheduler(std::shared_ptr<T>& scheduler, const bool condition) {
+  void conditionalReloadScheduler(std::unique_ptr<T>& scheduler, const bool condition) {
     if (condition) {
-      scheduler = std::make_shared<T>(gsl::not_null<core::controller::ControllerServiceProvider*>(this), provenance_repo_, flow_file_repo_, content_repo_, configuration_, thread_pool_);
+      scheduler = std::make_unique<T>(gsl::not_null<core::controller::ControllerServiceProvider*>(this), provenance_repo_, flow_file_repo_, content_repo_, configuration_, thread_pool_);
     }
   }
 
@@ -225,11 +225,11 @@ class FlowController : public core::controller::ForwardingControllerServiceProvi
   // Whether it has already been initialized (load the flow XML already)
   std::atomic<bool> initialized_;
   // Flow Timer Scheduler
-  std::shared_ptr<TimerDrivenSchedulingAgent> timer_scheduler_;
+  std::unique_ptr<TimerDrivenSchedulingAgent> timer_scheduler_;
   // Flow Event Scheduler
-  std::shared_ptr<EventDrivenSchedulingAgent> event_scheduler_;
+  std::unique_ptr<EventDrivenSchedulingAgent> event_scheduler_;
   // Cron Schedule
-  std::shared_ptr<CronDrivenSchedulingAgent> cron_scheduler_;
+  std::unique_ptr<CronDrivenSchedulingAgent> cron_scheduler_;
   // FlowControl Protocol
   std::unique_ptr<FlowControlProtocol> protocol_;
   // metrics information

@@ -63,12 +63,12 @@ class ForwardingControllerServiceProvider : public ControllerServiceProvider {
     return controller_service_provider_impl_->getControllerServiceName(identifier);
   }
 
-  void enableAllControllerServices(SchedulingAgent* scheduler) override {
-    return controller_service_provider_impl_->enableAllControllerServices(scheduler);
+  void enableAllControllerServices() override {
+    return controller_service_provider_impl_->enableAllControllerServices();
   }
 
-  void disableAllControllerServices(SchedulingAgent* scheduler) override {
-    return controller_service_provider_impl_->disableAllControllerServices(scheduler);
+  void disableAllControllerServices() override {
+    return controller_service_provider_impl_->disableAllControllerServices();
   }
 
  protected:

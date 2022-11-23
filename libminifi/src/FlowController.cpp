@@ -182,7 +182,7 @@ int16_t FlowController::stop() {
     logger_->log_info("Stop Flow Controller");
     if (this->root_) {
       // stop source processors first
-      this->root_->stopProcessing(timer_scheduler_, event_scheduler_, cron_scheduler_, [] (const core::Processor* proc) -> bool {
+      this->root_->stopProcessing(*timer_scheduler_, *event_scheduler_, *cron_scheduler_, [] (const core::Processor* proc) -> bool {
         return !proc->hasIncomingConnections();
       });
       // we enable C2 to progressively increase the timeout
@@ -194,7 +194,7 @@ int16_t FlowController::stop() {
         std::this_thread::sleep_for(shutdown_check_interval_);
       }
       // shutdown all other processors as well
-      this->root_->stopProcessing(timer_scheduler_, event_scheduler_, cron_scheduler_);
+      this->root_->stopProcessing(*timer_scheduler_, *event_scheduler_, *cron_scheduler_);
     }
     // stop after we've attempted to stop the processors.
     timer_scheduler_->stop();
@@ -211,7 +211,7 @@ int16_t FlowController::stop() {
     this->flow_file_repo_->stop();
     this->provenance_repo_->stop();
     // stop the ControllerServices
-    disableAllControllerServices(nullptr);
+    disableAllControllerServices();
     running_ = false;
   }
   return 0;
@@ -370,7 +370,7 @@ int16_t FlowController::start() {
   } else {
     if (!running_) {
       logger_->log_info("Starting Flow Controller");
-      enableAllControllerServices(nullptr);
+      enableAllControllerServices();
       timer_scheduler_->start();
       event_scheduler_->start();
       cron_scheduler_->start();
@@ -379,7 +379,7 @@ int16_t FlowController::start() {
         start_time_ = std::chrono::steady_clock::now();
         // watch out, this might immediately start the processors
         // as the thread_pool_ is started in load()
-        this->root_->startProcessing(timer_scheduler_, event_scheduler_, cron_scheduler_);
+        this->root_->startProcessing(*timer_scheduler_, *event_scheduler_, *cron_scheduler_);
       }
       C2Client::initialize(this, this, this);
       core::logging::LoggerConfiguration::getConfiguration().initializeAlertSinks(this, configuration_);
@@ -499,11 +499,11 @@ state::StateController* FlowController::getComponent(const std::string& id_or_na
 }
 
 gsl::not_null<std::unique_ptr<state::ProcessorController>> FlowController::createController(core::Processor& processor) {
-  const auto scheduler = [this, &processor]() -> std::shared_ptr<SchedulingAgent> {
+  const auto scheduler = [this, &processor]() -> SchedulingAgent& {
     switch (processor.getSchedulingStrategy()) {
-      case core::SchedulingStrategy::TIMER_DRIVEN: return timer_scheduler_;
-      case core::SchedulingStrategy::EVENT_DRIVEN: return event_scheduler_;
-      case core::SchedulingStrategy::CRON_DRIVEN: return cron_scheduler_;
+      case core::SchedulingStrategy::TIMER_DRIVEN: return *timer_scheduler_;
+      case core::SchedulingStrategy::EVENT_DRIVEN: return *event_scheduler_;
+      case core::SchedulingStrategy::CRON_DRIVEN: return *cron_scheduler_;
     }
     gsl_Assert(false);
   };

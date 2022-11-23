@@ -31,10 +31,6 @@
 #include "core/ClassLoader.h"
 #include "utils/Monitors.h"
 
-namespace org::apache::nifi::minifi {
-class SchedulingAgent;
-}  // namespace org::apache::nifi::minifi
-
 namespace org::apache::nifi::minifi::core::controller {
 
 class ControllerServiceProvider : public CoreComponent, public ConfigurableComponent, public ControllerServiceLookup {
@@ -135,9 +131,9 @@ class ControllerServiceProvider : public CoreComponent, public ConfigurableCompo
     }
   }
 
-  virtual void enableAllControllerServices(SchedulingAgent* scheduler) = 0;
+  virtual void enableAllControllerServices() = 0;
 
-  virtual void disableAllControllerServices(SchedulingAgent* scheduler) = 0;
+  virtual void disableAllControllerServices() = 0;
 
   bool supportsDynamicProperties() const final {
     return false;
