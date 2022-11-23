@@ -191,12 +191,12 @@ void ThreadPool<T>::start() {
     if (nullptr != controller_service_provider_) {
       auto service = controller_service_provider_->getControllerService("ThreadPoolManager");
       if (!service) {
-        logger_->template log_info("Could not find a ThreadPoolManager service");
+        logger_->log_info("Could not find a ThreadPoolManager service");
       } else {
         if (auto thread_manager_service = std::dynamic_pointer_cast<controllers::ThreadManagementService>(service)) {
           thread_manager_ = thread_manager_service;
         } else {
-          logger_->template log_error("Found ThreadPoolManager, but it is not a ThreadManagementService");
+          logger_->log_error("Found ThreadPoolManager, but it is not a ThreadManagementService");
         }
       }
     }
