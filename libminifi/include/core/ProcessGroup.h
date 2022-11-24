@@ -174,8 +174,7 @@ class ProcessGroup : public CoreComponent {
     return ports_;
   }
 
-  Processor* findPortById(const std::set<Port*>& ports, const utils::Identifier& uuid) const;
-  Processor* findPortById(const utils::Identifier& uuid) const;
+  Port* findPortById(const utils::Identifier& uuid) const;
   Processor* findChildPortById(const utils::Identifier& uuid) const;
 
   template <typename Fun>
@@ -267,6 +266,8 @@ class ProcessGroup : public CoreComponent {
   core::controller::ControllerServiceMap controller_service_map_;
 
  private:
+  static Port* findPortById(const std::set<Port*>& ports, const utils::Identifier& uuid);
+
   // Mutex for protection
   mutable std::recursive_mutex mutex_;
   // Logger

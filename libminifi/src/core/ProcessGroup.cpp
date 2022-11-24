@@ -105,9 +105,9 @@ std::tuple<Processor*, bool> ProcessGroup::addProcessor(std::unique_ptr<Processo
 }
 
 void ProcessGroup::addPort(std::unique_ptr<Port> port) {
-  std::lock_guard<std::recursive_mutex> lock(mutex_);
   auto [processor, inserted] = addProcessor(std::move(port));
   if (inserted) {
+    std::lock_guard<std::recursive_mutex> lock(mutex_);
     ports_.insert(static_cast<Port*>(processor));
   }
 }
@@ -332,8 +332,7 @@ void ProcessGroup::getFlowFileContainers(std::map<std::string, Connectable*>& co
   }
 }
 
-Processor* ProcessGroup::findPortById(const std::set<Port*>& ports, const utils::Identifier& uuid) const {
-  std::lock_guard<std::recursive_mutex> lock(mutex_);
+Port* ProcessGroup::findPortById(const std::set<Port*>& ports, const utils::Identifier& uuid) {
   const auto found = ranges::find_if(ports, [&](auto port) {
       utils::Identifier port_uuid = port->getUUID();
       return port_uuid && uuid == port_uuid;
@@ -344,7 +343,8 @@ Processor* ProcessGroup::findPortById(const std::set<Port*>& ports, const utils:
   return nullptr;
 }
 
-Processor* ProcessGroup::findPortById(const utils::Identifier& uuid) const {
+Port* ProcessGroup::findPortById(const utils::Identifier& uuid) const {
+  std::lock_guard<std::recursive_mutex> lock(mutex_);
   return findPortById(ports_, uuid);
 }
 
