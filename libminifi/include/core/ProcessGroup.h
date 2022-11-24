@@ -175,7 +175,7 @@ class ProcessGroup : public CoreComponent {
   }
 
   Port* findPortById(const utils::Identifier& uuid) const;
-  Processor* findChildPortById(const utils::Identifier& uuid) const;
+  Port* findChildPortById(const utils::Identifier& uuid) const;
 
   template <typename Fun>
   Processor* findProcessor(Fun condition, Traverse traverse) const {

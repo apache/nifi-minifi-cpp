@@ -348,12 +348,12 @@ Port* ProcessGroup::findPortById(const utils::Identifier& uuid) const {
   return findPortById(ports_, uuid);
 }
 
-Processor* ProcessGroup::findChildPortById(const utils::Identifier& uuid) const {
+Port* ProcessGroup::findChildPortById(const utils::Identifier& uuid) const {
   std::lock_guard<std::recursive_mutex> lock(mutex_);
   for (const auto& processGroup : child_process_groups_) {
     const auto& ports = processGroup->getPorts();
-    if (auto processor = findPortById(ports, uuid)) {
-      return processor;
+    if (auto port = findPortById(ports, uuid)) {
+      return port;
     }
   }
   return nullptr;
