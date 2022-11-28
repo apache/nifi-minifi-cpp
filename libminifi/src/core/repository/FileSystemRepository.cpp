@@ -27,7 +27,7 @@ namespace org::apache::nifi::minifi::core::repository {
 
 bool FileSystemRepository::initialize(const std::shared_ptr<minifi::Configure>& configuration) {
   std::string directory_str;
-  if (configuration->get(Configure::nifi_dbcontent_repository_directory_default, directory_str)) {
+  if (configuration->get(Configure::nifi_dbcontent_repository_directory_default, directory_str) && !directory_str.empty()) {
     directory_ = directory_str;
   } else {
     directory_ = configuration->getHome().string();

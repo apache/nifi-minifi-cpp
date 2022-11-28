@@ -270,7 +270,7 @@ std::shared_ptr<org::apache::nifi::minifi::core::controller::ControllerService> 
   content_repo->initialize(configuration);
 
   std::string content_repo_path;
-  if (configuration->get(org::apache::nifi::minifi::Configure::nifi_dbcontent_repository_directory_default, content_repo_path)) {
+  if (configuration->get(org::apache::nifi::minifi::Configure::nifi_dbcontent_repository_directory_default, content_repo_path) && !content_repo_path.empty()) {
     std::cout << "setting default dir to " << content_repo_path << std::endl;
     org::apache::nifi::minifi::setDefaultDirectory(content_repo_path);
   }
@@ -326,7 +326,7 @@ void printManifest(const std::shared_ptr<org::apache::nifi::minifi::Configure> &
   content_repo->initialize(configuration);
 
   std::string content_repo_path;
-  if (configuration->get(org::apache::nifi::minifi::Configure::nifi_dbcontent_repository_directory_default, content_repo_path)) {
+  if (configuration->get(org::apache::nifi::minifi::Configure::nifi_dbcontent_repository_directory_default, content_repo_path) && !content_repo_path.empty()) {
     org::apache::nifi::minifi::setDefaultDirectory(content_repo_path);
   }
 

@@ -70,7 +70,7 @@ class ProvenanceRepository : public core::ThreadedRepository {
 
   bool initialize(const std::shared_ptr<org::apache::nifi::minifi::Configure> &config) override {
     std::string value;
-    if (config->get(Configure::nifi_provenance_repository_directory_default, value)) {
+    if (config->get(Configure::nifi_provenance_repository_directory_default, value) && !value.empty()) {
       directory_ = value;
     }
     logger_->log_debug("MiNiFi Provenance Repository Directory %s", directory_);

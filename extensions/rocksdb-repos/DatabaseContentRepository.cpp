@@ -33,7 +33,7 @@ namespace org::apache::nifi::minifi::core::repository {
 
 bool DatabaseContentRepository::initialize(const std::shared_ptr<minifi::Configure> &configuration) {
   std::string value;
-  if (configuration->get(Configure::nifi_dbcontent_repository_directory_default, value)) {
+  if (configuration->get(Configure::nifi_dbcontent_repository_directory_default, value) && !value.empty()) {
     directory_ = value;
   } else {
     directory_ = (configuration->getHome() / "dbcontentrepository").string();
