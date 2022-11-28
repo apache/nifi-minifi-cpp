@@ -29,9 +29,9 @@
 namespace org::apache::nifi::minifi::core {
 
 FlowConfiguration::FlowConfiguration(
-    std::shared_ptr<core::Repository> /*repo*/, std::shared_ptr<core::Repository> flow_file_repo,
+    const std::shared_ptr<core::Repository>& /*repo*/, std::shared_ptr<core::Repository> flow_file_repo,
     std::shared_ptr<core::ContentRepository> content_repo, std::shared_ptr<io::StreamFactory> stream_factory,
-    std::shared_ptr<Configure> configuration, const std::optional<std::string>& path,
+    const std::shared_ptr<Configure>& configuration, const std::optional<std::string>& path,
     std::shared_ptr<utils::file::FileSystem> filesystem)
     : CoreComponent(core::getClassName<FlowConfiguration>()),
       flow_file_repo_(std::move(flow_file_repo)),
@@ -97,24 +97,24 @@ std::unique_ptr<core::reporting::SiteToSiteProvenanceReportingTask> FlowConfigur
   return processor;
 }
 
-std::unique_ptr<core::ProcessGroup> FlowConfiguration::updateFromPayload(const std::string& url, const std::string& yamlConfigPayload) {
+std::unique_ptr<core::ProcessGroup> FlowConfiguration::updateFromPayload(const std::string& url, const std::string& yamlConfigPayload, const std::optional<std::string>& flow_id) {
   auto old_services = controller_services_;
   auto old_provider = service_provider_;
   controller_services_ = std::make_shared<core::controller::ControllerServiceMap>();
   service_provider_ = std::make_shared<core::controller::StandardControllerServiceProvider>(controller_services_, nullptr, configuration_);
   auto payload = getRootFromPayload(yamlConfigPayload);
   if (!url.empty() && payload != nullptr) {
-    std::string flow_id;
+    std::string payload_flow_id;
     std::string bucket_id;
     auto path_split = utils::StringUtils::split(url, "/");
     for (auto it = path_split.cbegin(); it != path_split.cend(); ++it) {
       if (*it == "flows" && std::next(it) != path_split.cend()) {
-        flow_id = *++it;
+        payload_flow_id = *++it;
       } else if (*it == "buckets" && std::next(it) != path_split.cend()) {
         bucket_id = *++it;
       }
     }
-    flow_version_->setFlowVersion(url, bucket_id, flow_id);
+    flow_version_->setFlowVersion(url, bucket_id, flow_id ? *flow_id : payload_flow_id);
   } else {
     controller_services_ = old_services;
     service_provider_ = old_provider;

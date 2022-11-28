@@ -609,7 +609,7 @@ class HeartbeatHandler : public ServerAwareHandler {
     for (const auto& operation_node : agent_manifest["supportedOperations"].GetArray()) {
       assert(operation_node.HasMember("type"));
       operations.insert(operation_node["type"].GetString());
-      verifyProperties(operation_node, minifi::c2::Operation::parse(operation_node["type"].GetString()), verify_components, disallowed_properties);
+      verifyProperties(operation_node, minifi::c2::Operation::parse(operation_node["type"].GetString(), {}, false), verify_components, disallowed_properties);
     }
 
     assert(operations == minifi::c2::Operation::values());

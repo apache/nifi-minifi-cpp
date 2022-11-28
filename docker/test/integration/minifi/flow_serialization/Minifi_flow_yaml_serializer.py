@@ -23,12 +23,15 @@ from ..core.Funnel import Funnel
 
 
 class Minifi_flow_yaml_serializer:
-    def serialize(self, start_nodes):
+    def serialize(self, start_nodes, controllers):
         res = None
         visited = None
 
         for node in start_nodes:
             res, visited = self.serialize_node(node, res, visited)
+
+        for controller in controllers:
+            res = self.serialize_controller(controller, res)
 
         return yaml.dump(res, default_flow_style=False)
 
@@ -145,3 +148,32 @@ class Minifi_flow_yaml_serializer:
                     self.serialize_node(conn_procs, res, visited)
 
         return (res, visited)
+
+    def serialize_controller(self, controller, root=None):
+        if root is None:
+            res = {
+                'Flow Controller': {
+                    'name': 'MiNiFi Flow'
+                },
+                'Processors': [],
+                'Funnels': [],
+                'Connections': [],
+                'Remote Processing Groups': [],
+                'Controller Services': []
+            }
+        else:
+            res = root
+
+        if hasattr(controller, 'name'):
+            connectable_name = controller.name
+        else:
+            connectable_name = str(controller.uuid)
+
+        res['Controller Services'].append({
+            'name': connectable_name,
+            'id': controller.id,
+            'class': controller.service_class,
+            'Properties': controller.properties
+        })
+
+        return res

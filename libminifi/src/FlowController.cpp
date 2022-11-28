@@ -103,10 +103,10 @@ FlowController::~FlowController() {
   logger_->log_trace("Destroying FlowController");
 }
 
-bool FlowController::applyConfiguration(const std::string &source, const std::string &configurePayload) {
+bool FlowController::applyConfiguration(const std::string &source, const std::string &configurePayload, const std::optional<std::string>& flow_id) {
   std::unique_ptr<core::ProcessGroup> newRoot;
   try {
-    newRoot = flow_configuration_->updateFromPayload(source, configurePayload);
+    newRoot = flow_configuration_->updateFromPayload(source, configurePayload, flow_id);
   } catch (const std::exception& ex) {
     logger_->log_error("Invalid configuration payload, type: %s, what: %s", typeid(ex).name(), ex.what());
     return false;
@@ -422,8 +422,8 @@ int16_t FlowController::resume() {
   return 0;
 }
 
-int16_t FlowController::applyUpdate(const std::string &source, const std::string &configuration, bool persist) {
-  if (applyConfiguration(source, configuration)) {
+int16_t FlowController::applyUpdate(const std::string &source, const std::string &configuration, bool persist, const std::optional<std::string>& flow_id) {
+  if (applyConfiguration(source, configuration, flow_id)) {
     if (persist) {
       flow_configuration_->persist(configuration);
     }

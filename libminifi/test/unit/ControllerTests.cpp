@@ -158,7 +158,7 @@ class TestUpdateSink : public minifi::state::StateMonitor {
    * < 0 is an error code
    * 0 is success
    */
-  int16_t applyUpdate(const std::string& /*source*/, const std::string& /*configuration*/, bool /*persist*/ = false) override {
+  int16_t applyUpdate(const std::string& /*source*/, const std::string& /*configuration*/, bool /*persist*/ = false, const std::optional<std::string>& /*flow_id*/ = std::nullopt) override {
     update_calls++;
     return 0;
   }

@@ -40,6 +40,8 @@ from .SyslogTcpClientContainer import SyslogTcpClientContainer
 from .MinifiAsPodInKubernetesCluster import MinifiAsPodInKubernetesCluster
 from .TcpClientContainer import TcpClientContainer
 from .PrometheusContainer import PrometheusContainer
+from .MinifiC2ServerContainer import MinifiC2ServerContainer
+from .MinifiWithHttpsC2Config import MinifiWithHttpsC2Config
 
 
 class SingleNodeDockerCluster(Cluster):
@@ -101,6 +103,8 @@ class SingleNodeDockerCluster(Cluster):
             return self.containers.setdefault(name, TransientMinifiContainer(self.data_directories["minifi_config_dir"], name, self.vols, self.network, self.image_store, command))
         elif engine == 'minifi-cpp-with-provenance-repo':
             return self.containers.setdefault(name, MinifiWithProvenanceRepoContainer(self.data_directories["minifi_config_dir"], name, self.vols, self.network, self.image_store, command))
+        elif engine == 'minifi-cpp-with-https-c2-config':
+            return self.containers.setdefault(name, MinifiWithHttpsC2Config(self.data_directories["minifi_config_dir"], name, self.vols, self.network, self.image_store, command))
         elif engine == 'kafka-broker':
             if 'zookeeper' not in self.containers:
                 self.containers.setdefault('zookeeper', ZookeeperContainer('zookeeper', self.vols, self.network, self.image_store, command))
@@ -133,6 +137,10 @@ class SingleNodeDockerCluster(Cluster):
             return self.containers.setdefault(name, TcpClientContainer(name, self.vols, self.network, self.image_store, command))
         elif engine == "prometheus":
             return self.containers.setdefault(name, PrometheusContainer(name, self.vols, self.network, self.image_store, command))
+        elif engine == "minifi-c2-server":
+            return self.containers.setdefault(name, MinifiC2ServerContainer(name, self.vols, self.network, self.image_store, command))
+        elif engine == "minifi-c2-server-ssl":
+            return self.containers.setdefault(name, MinifiC2ServerContainer(name, self.vols, self.network, self.image_store, command, ssl=True))
         else:
             raise Exception('invalid flow engine: \'%s\'' % engine)
 

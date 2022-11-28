@@ -103,11 +103,19 @@ C2Payload RESTSender::sendPayload(const std::string& url, const Direction direct
   extensions::curl::HTTPClient client(url, ssl_context_service_);
   client.setKeepAliveProbe(extensions::curl::KeepAliveProbeData{2s, 2s});
   client.setConnectionTimeout(2s);
-  if (direction == Direction::TRANSMIT) {
-    client.set_request_method("POST");
-    if (!ssl_context_service_ && url.find("https://") == 0) {
-      setSecurityContext(client, "POST", url);
+
+  auto setUpHttpRequest = [&](const std::string& http_method) {
+    client.set_request_method(http_method);
+    if (url.find("https://") == 0) {
+      if (!ssl_context_service_) {
+        setSecurityContext(client, http_method, url);
+      } else {
+        client.initialize(http_method, url, ssl_context_service_);
+      }
     }
+  };
+  if (direction == Direction::TRANSMIT) {
+    setUpHttpRequest("POST");
     if (payload.getOperation() == Operation::TRANSFER) {
       // treat nested payloads as files
       for (const auto& file : payload.getNestedPayloads()) {
@@ -148,17 +156,16 @@ C2Payload RESTSender::sendPayload(const std::string& url, const Direction direct
   } else {
     // we do not need to set the upload callback
     // since we are not uploading anything on a get
-    if (!ssl_context_service_ && url.find("https://") == 0) {
-      setSecurityContext(client, "GET", url);
-    }
-    client.set_request_method("GET");
+    setUpHttpRequest("GET");
   }
 
   if (payload.getOperation() == Operation::TRANSFER) {
     auto read = std::make_unique<utils::HTTPReadCallback>(std::numeric_limits<size_t>::max());
     client.setReadCallback(std::move(read));
   } else {
-    client.setRequestHeader("Accept", "application/json");
+    // Due to a bug in MiNiFi C2 the Accept header is not handled properly thus we need to exclude it to be compatible
+    // TODO(lordgamez): The header should be re-added when the issue in MiNiFi C2 is fixed: https://issues.apache.org/jira/browse/NIFI-10535
+    // client.setRequestHeader("Accept", "application/json");
     client.setContentType("application/json");
   }
   bool isOkay = client.submit();

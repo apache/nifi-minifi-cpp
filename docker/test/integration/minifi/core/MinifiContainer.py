@@ -34,7 +34,7 @@ class MinifiContainer(FlowContainer):
 
     def _create_config(self):
         serializer = Minifi_flow_yaml_serializer()
-        test_flow_yaml = serializer.serialize(self.start_nodes)
+        test_flow_yaml = serializer.serialize(self.start_nodes, self.controllers)
         logging.info('Using generated flow config yml:\n%s', test_flow_yaml)
         with open(os.path.join(self.config_dir, "config.yml"), 'wb') as config_file:
             config_file.write(test_flow_yaml.encode('utf-8'))

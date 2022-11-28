@@ -17,18 +17,21 @@
 from .Container import Container
 
 
-class FlowContainer(Container):
-    def __init__(self, config_dir, name, engine, vols, network, image_store, command):
+class MinifiC2ServerContainer(Container):
+    def __init__(self, name, vols, network, image_store, command=None, ssl=False):
+        engine = "minifi-c2-server-ssl" if ssl else "minifi-c2-server"
         super().__init__(name, engine, vols, network, image_store, command)
-        self.start_nodes = []
-        self.config_dir = config_dir
-        self.controllers = []
 
-    def get_start_nodes(self):
-        return self.start_nodes
+    def get_startup_finished_log_entry(self):
+        return "Server Started"
 
-    def add_start_node(self, node):
-        self.start_nodes.append(node)
+    def deploy(self):
+        if not self.set_deployed():
+            return
 
-    def add_controller(self, controller):
-        self.controllers.append(controller)
+        self.docker_container = self.client.containers.run(
+            self.image_store.get_image(self.get_engine()),
+            detach=True,
+            name=self.name,
+            network=self.network.name,
+            entrypoint=self.command)

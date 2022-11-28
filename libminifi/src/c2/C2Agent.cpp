@@ -430,7 +430,7 @@ C2Payload C2Agent::prepareConfigurationOptions(const C2ContentResponse &resp) co
 void C2Agent::handle_clear(const C2ContentResponse &resp) {
   ClearOperand operand;
   try {
-    operand = ClearOperand::parse(resp.name.c_str());
+    operand = ClearOperand::parse(resp.name.c_str(), {}, false);
   } catch(const std::runtime_error&) {
     logger_->log_debug("Clearing unknown %s", resp.name);
     return;
@@ -485,7 +485,7 @@ void C2Agent::handle_clear(const C2ContentResponse &resp) {
 void C2Agent::handle_describe(const C2ContentResponse &resp) {
   DescribeOperand operand;
   try {
-    operand = DescribeOperand::parse(resp.name.c_str());
+    operand = DescribeOperand::parse(resp.name.c_str(), {}, false);
   } catch(const std::runtime_error&) {
     C2Payload response(Operation::ACKNOWLEDGE, resp.ident, true);
     enqueue_c2_response(std::move(response));
@@ -587,7 +587,7 @@ void C2Agent::handle_describe(const C2ContentResponse &resp) {
 void C2Agent::handle_update(const C2ContentResponse &resp) {
   UpdateOperand operand;
   try {
-    operand = UpdateOperand::parse(resp.name.c_str());
+    operand = UpdateOperand::parse(resp.name.c_str(), {}, false);
   } catch(const std::runtime_error&) {
     C2Payload response(Operation::ACKNOWLEDGE, state::UpdateState::NOT_APPLIED, resp.ident, true);
     enqueue_c2_response(std::move(response));
@@ -696,7 +696,7 @@ C2Payload C2Agent::bundleDebugInfo(std::map<std::string, std::unique_ptr<io::Inp
 void C2Agent::handle_transfer(const C2ContentResponse &resp) {
   TransferOperand operand;
   try {
-    operand = TransferOperand::parse(resp.name.c_str());
+    operand = TransferOperand::parse(resp.name.c_str(), {}, false);
   } catch(const std::runtime_error&) {
     throw C2TransferError("Unknown operand '" + resp.name + "'");
   }
@@ -848,6 +848,11 @@ std::optional<std::string> C2Agent::fetchFlow(const std::string& uri) const {
   return response.getRawDataAsString();
 }
 
+std::optional<std::string> C2Agent::getFlowIdFromConfigUpdate(const C2ContentResponse &resp) {
+  auto flow_id = resp.operation_arguments.find("flowId");
+  return flow_id == resp.operation_arguments.end() ? std::nullopt : std::make_optional(flow_id->second.to_string());
+}
+
 bool C2Agent::handleConfigurationUpdate(const C2ContentResponse &resp) {
   auto url = resp.operation_arguments.find("location");
 
@@ -886,7 +891,7 @@ bool C2Agent::handleConfigurationUpdate(const C2ContentResponse &resp) {
     return utils::StringUtils::equalsIgnoreCase(persist->second.to_string(), "true");
   }();
 
-  int16_t err = {update_sink_->applyUpdate(file_uri, configuration_str, should_persist)};
+  int16_t err = {update_sink_->applyUpdate(file_uri, configuration_str, should_persist, getFlowIdFromConfigUpdate(resp))};
   if (err != 0) {
     logger_->log_error("Flow configuration update failed with error code %" PRIi16, err);
     C2Payload response(Operation::ACKNOWLEDGE, state::UpdateState::SET_ERROR, resp.ident, true);

@@ -963,3 +963,32 @@ def step_impl(context):
 @then(u'Opensearch has a document with "{doc_id}" in "{index}" that has "{value}" set in "{field}"')
 def step_impl(context, doc_id, index, value, field):
     context.test.check_elastic_field_value("opensearch", index_name=index, doc_id=doc_id, field_name=field, field_value=value)
+
+
+# MiNiFi C2 Server
+@given("a ssl context service is set up for MiNiFi C2 server")
+def step_impl(context):
+    ssl_context_service = SSLContextService(cert="/tmp/resources/minifi-c2-server-ssl/minifi-cpp-flow.crt", ca_cert="/tmp/resources/minifi-c2-server-ssl/root-ca.pem", key="/tmp/resources/minifi-c2-server-ssl/minifi-cpp-flow.key", passphrase="abcdefgh")
+    ssl_context_service.name = "SSLContextService"
+    container = context.test.acquire_container("minifi-cpp-flow", "minifi-cpp-with-https-c2-config")
+    container.add_controller(ssl_context_service)
+
+
+@given(u'a MiNiFi C2 server is set up')
+def step_impl(context):
+    context.test.acquire_container("minifi-c2-server", "minifi-c2-server")
+
+
+@then("the MiNiFi C2 server logs contain the following message: \"{log_message}\" in less than {duration}")
+def step_impl(context, log_message, duration):
+    context.test.check_container_log_contents("minifi-c2-server", log_message, timeparse(duration))
+
+
+@then("the MiNiFi C2 SSL server logs contain the following message: \"{log_message}\" in less than {duration}")
+def step_impl(context, log_message, duration):
+    context.test.check_container_log_contents("minifi-c2-server-ssl", log_message, timeparse(duration))
+
+
+@given(u'a MiNiFi C2 server is set up with SSL')
+def step_impl(context):
+    context.test.acquire_container("minifi-c2-server", "minifi-c2-server-ssl")
