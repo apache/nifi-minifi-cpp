@@ -107,7 +107,7 @@ void ListenSyslog::onSchedule(const std::shared_ptr<core::ProcessContext>& conte
   context->getProperty(ProtocolProperty.getName(), protocol);
 
   if (protocol == utils::net::IpProtocol::TCP) {
-    startTcpServer(*context);
+    startTcpServer(*context, SSLContextService, ClientAuth);
   } else if (protocol == utils::net::IpProtocol::UDP) {
     startUdpServer(*context);
   } else {
@@ -166,14 +166,6 @@ const core::Property& ListenSyslog::getMaxQueueSizeProperty() {
 
 const core::Property& ListenSyslog::getPortProperty() {
   return Port;
-}
-
-const core::Property& ListenSyslog::getSslContextProperty() {
-  return SSLContextService;
-}
-
-const core::Property& ListenSyslog::getClientAuthProperty() {
-  return ClientAuth;
 }
 
 REGISTER_RESOURCE(ListenSyslog, Processor);

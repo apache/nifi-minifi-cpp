@@ -46,6 +46,7 @@
 - [ListenHTTP](#listenhttp)
 - [ListenSyslog](#listensyslog)
 - [ListenTCP](#listentcp)
+- [ListenUDP](#listenudp)
 - [ListFile](#listfile)
 - [ListS3](#lists3)
 - [ListSFTP](#listsftp)
@@ -1331,10 +1332,42 @@ In the list below, the names of required properties appear in bold. Any other pr
 
 ### Output Attributes
 
-| Attribute                | Description                                   | Requirements           |
-|--------------------------|-----------------------------------------------|------------------------|
-| _tcp.port_               | The sending port the messages were received.  | -                      |
-| _tcp.sender_             | The sending host of the messages.             | -                      |
+| Attribute    | Description                                  | Requirements |
+|--------------|----------------------------------------------|--------------|
+| _tcp.port_   | The sending port the messages were received. | -            |
+| _tcp.sender_ | The sending host of the messages.            | -            |
+
+
+
+
+## ListenUDP
+
+### Description
+
+Listens for incoming UDP datagrams. For each datagram the processor produces a single FlowFile.
+
+### Properties
+
+In the list below, the names of required properties appear in bold. Any other properties (not in bold) are considered optional. The table also indicates any default values, and whether a property supports the NiFi Expression Language.
+
+| Name                          | Default Value | Allowable Values           | Description                                                                                                                                                                                      |
+|-------------------------------|---------------|----------------------------|--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| **Listening Port**            |               |                            | The port to listen on for communication.                                                                                                                                                         |
+| **Max Batch Size**            | 500           |                            | The maximum number of messages to process at a time.                                                                                                                                             |
+| **Max Size of Message Queue** | 10000         |                            | Maximum number of messages allowed to be buffered before processing them when the processor is triggered. If the buffer is full, the message is ignored. If set to zero the buffer is unlimited. |
+
+### Relationships
+
+| Name    | Description                                                        |
+|---------|--------------------------------------------------------------------|
+| success | Messages received successfully will be sent out this relationship. |
+
+### Output Attributes
+
+| Attribute    | Description                                   | Requirements |
+|--------------|-----------------------------------------------|--------------|
+| _udp.port_   | The sending port the messages were received.  | -            |
+| _udp.sender_ | The sending host of the messages.             | -            |
 
 
 ## ListFile

@@ -37,7 +37,7 @@ void check_for_attributes(core::FlowFile& flow_file) {
   CHECK(ranges::contains(local_addresses, flow_file.getAttribute("tcp.sender")));
 }
 
-TEST_CASE("ListenTCP test multiple messages", "[ListenTCP]") {
+TEST_CASE("ListenTCP test multiple messages", "[ListenTCP][NetworkListenerProcessor]") {
   asio::ip::tcp::endpoint endpoint;
   SECTION("sending through IPv4", "[IPv4]") {
     endpoint = asio::ip::tcp::endpoint(asio::ip::address_v4::loopback(), PORT);
@@ -66,7 +66,7 @@ TEST_CASE("ListenTCP test multiple messages", "[ListenTCP]") {
   check_for_attributes(*result.at(ListenTCP::Success)[1]);
 }
 
-TEST_CASE("ListenTCP can be rescheduled", "[ListenTCP]") {
+TEST_CASE("ListenTCP can be rescheduled", "[ListenTCP][NetworkListenerProcessor]") {
   const auto listen_tcp = std::make_shared<ListenTCP>("ListenTCP");
   SingleProcessorTestController controller{listen_tcp};
   LogTestController::getInstance().setTrace<ListenTCP>();
@@ -78,7 +78,7 @@ TEST_CASE("ListenTCP can be rescheduled", "[ListenTCP]") {
   REQUIRE_NOTHROW(controller.plan->scheduleProcessor(listen_tcp));
 }
 
-TEST_CASE("ListenTCP max queue and max batch size test", "[ListenTCP]") {
+TEST_CASE("ListenTCP max queue and max batch size test", "[ListenTCP][NetworkListenerProcessor]") {
   asio::ip::tcp::endpoint endpoint;
   SECTION("sending through IPv4", "[IPv4]") {
     endpoint = asio::ip::tcp::endpoint(asio::ip::address_v4::loopback(), PORT);
@@ -111,7 +111,7 @@ TEST_CASE("ListenTCP max queue and max batch size test", "[ListenTCP]") {
   CHECK(controller.trigger().at(ListenTCP::Success).empty());
 }
 
-TEST_CASE("Test ListenTCP with SSL connection", "[ListenTCP]") {
+TEST_CASE("Test ListenTCP with SSL connection", "[ListenTCP][NetworkListenerProcessor]") {
   const auto listen_tcp = std::make_shared<ListenTCP>("ListenTCP");
 
   SingleProcessorTestController controller{listen_tcp};

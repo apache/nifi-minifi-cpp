@@ -52,22 +52,23 @@ class NetworkListenerProcessor : public core::Processor {
   }
 
  protected:
+  void startTcpServer(const core::ProcessContext& context, const core::Property& ssl_context_property, const core::Property& client_auth_property);
+  void startUdpServer(const core::ProcessContext& context);
+
+ private:
   struct ServerOptions {
     std::optional<uint64_t> max_queue_size;
     int port = 0;
   };
 
   void stopServer();
-  void startTcpServer(const core::ProcessContext& context);
-  void startUdpServer(const core::ProcessContext& context);
-  ServerOptions readServerOptions(const core::ProcessContext& context);
   void startServer(const ServerOptions& options, utils::net::IpProtocol protocol);
+  ServerOptions readServerOptions(const core::ProcessContext& context);
+
   virtual void transferAsFlowFile(const utils::net::Message& message, core::ProcessSession& session) = 0;
   virtual const core::Property& getMaxBatchSizeProperty() = 0;
   virtual const core::Property& getMaxQueueSizeProperty() = 0;
   virtual const core::Property& getPortProperty() = 0;
-  virtual const core::Property& getSslContextProperty() = 0;
-  virtual const core::Property& getClientAuthProperty() = 0;
 
   uint64_t max_batch_size_{500};
   std::unique_ptr<utils::net::Server> server_;
