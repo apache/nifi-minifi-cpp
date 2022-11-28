@@ -51,6 +51,7 @@ const std::vector<core::ConfigurationProperty> Configuration::CONFIGURATION_PROP
   core::ConfigurationProperty{Configuration::nifi_provenance_repository_max_storage_time, gsl::make_not_null(core::StandardValidators::get().TIME_PERIOD_VALIDATOR.get())},
   core::ConfigurationProperty{Configuration::nifi_provenance_repository_directory_default},
   core::ConfigurationProperty{Configuration::nifi_flowfile_repository_directory_default},
+  core::ConfigurationProperty{Configuration::nifi_flowfile_checkpoint_directory_default},
   core::ConfigurationProperty{Configuration::nifi_dbcontent_repository_directory_default},
   core::ConfigurationProperty{Configuration::nifi_remote_input_secure, gsl::make_not_null(core::StandardValidators::get().BOOLEAN_VALIDATOR.get())},
   core::ConfigurationProperty{Configuration::nifi_security_need_ClientAuth, gsl::make_not_null(core::StandardValidators::get().BOOLEAN_VALIDATOR.get())},

@@ -13,10 +13,10 @@
   limitations under the License.
 -->
 
-# Apache NiFi -  Configuring MiNiFi - C++ 
+# Apache NiFi -  Configuring MiNiFi - C++
 
 ## Configuring
-The 'conf' directory in the root contains a template config.yml document.  
+The 'conf' directory in the root contains a template config.yml document.
 
 This is partly compatible with the format used with the Java MiNiFi application. MiNiFi C++ is currently compatible with version 1 of the MiNiFi YAML schema.
 Additional information on the YAML format for the config.yml and schema versioning can be found in the [MiNiFi System Administrator Guide](https://nifi.apache.org/minifi/system-admin-guide.html).
@@ -73,7 +73,7 @@ It's recommended to create your configuration in YAML format or configure the ag
 ### Scheduling strategies
 Currently Apache NiFi MiNiFi C++ supports TIMER_DRIVEN, EVENT_DRIVEN, and CRON_DRIVEN. TIMER_DRIVEN uses periods to execute your processor(s) at given intervals.
 The EVENT_DRIVEN strategy awaits for data be available or some other notification mechanism to trigger execution. CRON_DRIVEN executes at the desired intervals
-based on the CRON periods. Apache NiFi MiNiFi C++ supports standard CRON expressions without intervals ( */5 * * * * ). 
+based on the CRON periods. Apache NiFi MiNiFi C++ supports standard CRON expressions without intervals ( */5 * * * * ).
 
 ### SiteToSite Security Configuration
 
@@ -94,14 +94,14 @@ based on the CRON periods. Apache NiFi MiNiFi C++ supports standard CRON express
 
     if you do not want to enable client certificate base authorization
     nifi.security.need.ClientAuth=false
-  
-You have the option of specifying an SSL Context Service definition for the RPGs instead of the properties above. 
-This will link to a corresponding SSL Context service defined in the flow. 
-    
-To do this specify the SSL Context Service Property in your RPGs and link it to 
+
+You have the option of specifying an SSL Context Service definition for the RPGs instead of the properties above.
+This will link to a corresponding SSL Context service defined in the flow.
+
+To do this specify the SSL Context Service Property in your RPGs and link it to
 a defined controller service. If you do not take this approach the options, above, will be used
 for TCP and secure HTTPS communications.
-    
+
     Remote Processing Groups:
     - name: NiFi Flow
       id: 2438e3c8-015a-1000-79ca-83af40ec1998
@@ -119,23 +119,23 @@ for TCP and secure HTTPS communications.
             name: tominifi
             max concurrent tasks: 2
             Properties:
-		SSL Context Service: SSLServiceName
-	Controller Services:
+                SSL Context Service: SSLServiceName
+    Controller Services:
     - name: SSLServiceName
       id: 2438e3c8-015a-1000-79ca-83af40ec1974
       class: SSLContextService
       Properties:
           Client Certificate: <client cert path>
-          Private Key: < private key path > 
+          Private Key: < private key path >
           Passphrase: <passphrase path or passphrase>
           CA Certificate: <CA cert path>
-    
+
 ### HTTP SiteToSite Configuration
 To enable HTTPSiteToSite for a remote process group.
     Remote Processing Groups:
     - name: NiFi Flow
       transport protocol: HTTP
-    
+
 ### HTTP SiteToSite Proxy Configuration
 To enable HTTP Proxy for a remote process group.
 
@@ -148,19 +148,20 @@ To enable HTTP Proxy for a remote process group.
       proxy password:
 
 ### Command and Control Configuration
-Please see the [C2 readme](C2.md) for more informatoin 
-	
-	
+Please see the [C2 readme](C2.md) for more informatoin
+
+
 ### Configuring Repository storage locations
-Persistent repositories, such as the Flow File repository, use a configurable path to store data. 
+Persistent repositories, such as the Flow File repository, use a configurable path to store data.
 The repository locations and their defaults are defined below. By default the MINIFI_HOME env
 variable is used. If this is not specified we extrapolate the path and use the root installation
-folder. You may specify your own path in place of these defaults. 
-     
-     in minifi.properties
-     nifi.provenance.repository.directory.default=${MINIFI_HOME}/provenance_repository
-     nifi.flowfile.repository.directory.default=${MINIFI_HOME}/flowfile_repository
-	 nifi.database.content.repository.directory.default=${MINIFI_HOME}/content_repository
+folder. You may specify your own path in place of these defaults.
+
+    in minifi.properties
+    nifi.provenance.repository.directory.default=${MINIFI_HOME}/provenance_repository
+    nifi.flowfile.repository.directory.default=${MINIFI_HOME}/flowfile_repository
+    nifi.flowfile.checkpoint.directory.default=${MINIFI_HOME}/flowfile_checkpoint
+    nifi.database.content.repository.directory.default=${MINIFI_HOME}/content_repository
 
 #### Shared database
 
@@ -171,21 +172,21 @@ created into. E.g. in `minifidb:///home/user/minifi/agent_state/flowfile` a dire
 `/home/user/minifi/agent_state` populated with rocksdb-specific content, and in that repository a logically
 separate "subdatabase" is created under the name `"flowfile"`.
 
-     in minifi.properties
-     nifi.flowfile.repository.directory.default=minifidb://${MINIFI_HOME}/agent_state/flowfile
-	 nifi.database.content.repository.directory.default=minifidb://${MINIFI_HOME}/agent_state/content
-	 nifi.state.management.provider.local.path=minifidb://${MINIFI_HOME}/agent_state/processor_states
+    in minifi.properties
+    nifi.flowfile.repository.directory.default=minifidb://${MINIFI_HOME}/agent_state/flowfile
+    nifi.database.content.repository.directory.default=minifidb://${MINIFI_HOME}/agent_state/content
+    nifi.state.management.provider.local.path=minifidb://${MINIFI_HOME}/agent_state/processor_states
 
 We should not simultaneously use the same directory with and without the `minifidb://` scheme.
 Moreover the `"default"` name is restricted and should not be used.
 
 
-     in minifi.properties
-     nifi.flowfile.repository.directory.default=minifidb://${MINIFI_HOME}/agent_state/flowfile
-	 nifi.database.content.repository.directory.default=${MINIFI_HOME}/agent_state
-	 ^ error: using the same database directory without the "minifidb://" scheme
-	 nifi.state.management.provider.local.path=minifidb://${MINIFI_HOME}/agent_state/default
-	 ^ error: "default" is restricted
+    in minifi.properties
+    nifi.flowfile.repository.directory.default=minifidb://${MINIFI_HOME}/agent_state/flowfile
+    nifi.database.content.repository.directory.default=${MINIFI_HOME}/agent_state
+    ^ error: using the same database directory without the "minifidb://" scheme
+    nifi.state.management.provider.local.path=minifidb://${MINIFI_HOME}/agent_state/default
+    ^ error: "default" is restricted
 
 ### Configuring Repository encryption
 
@@ -214,33 +215,33 @@ Each of the repositories can be configured to be volatile ( state kept in memory
 
  To configure the repositories:
 
-     in minifi.properties
-     # For Volatile Repositories:
-     nifi.flowfile.repository.class.name=VolatileFlowFileRepository
-     nifi.provenance.repository.class.name=VolatileProvenanceRepository
-     nifi.content.repository.class.name=VolatileContentRepository
+    in minifi.properties
+    # For Volatile Repositories:
+    nifi.flowfile.repository.class.name=VolatileFlowFileRepository
+    nifi.provenance.repository.class.name=VolatileProvenanceRepository
+    nifi.content.repository.class.name=VolatileContentRepository
 
-     # configuration options
-     # maximum number of entries to keep in memory
-     nifi.volatile.repository.options.flowfile.max.count=10000
-     # maximum number of bytes to keep in memory, also limited by option above
-     nifi.volatile.repository.options.flowfile.max.bytes=1M
+    # configuration options
+    # maximum number of entries to keep in memory
+    nifi.volatile.repository.options.flowfile.max.count=10000
+    # maximum number of bytes to keep in memory, also limited by option above
+    nifi.volatile.repository.options.flowfile.max.bytes=1M
 
-     # maximum number of entries to keep in memory
-     nifi.volatile.repository.options.provenance.max.count=10000
-     # maximum number of bytes to keep in memory, also limited by option above
-     nifi.volatile.repository.options.provenance.max.bytes=1M
+    # maximum number of entries to keep in memory
+    nifi.volatile.repository.options.provenance.max.count=10000
+    # maximum number of bytes to keep in memory, also limited by option above
+    nifi.volatile.repository.options.provenance.max.bytes=1M
 
-     # maximum number of entries to keep in memory
-     nifi.volatile.repository.options.content.max.count=100000
-     # maximum number of bytes to keep in memory, also limited by option above
-     nifi.volatile.repository.options.content.max.bytes=1M
-     # limits locking for the content repository
-     nifi.volatile.repository.options.content.minimal.locking=true
-     
-     # For NO-OP Repositories:
-	 nifi.flowfile.repository.class.name=NoOpRepository
-     nifi.provenance.repository.class.name=NoOpRepository
+    # maximum number of entries to keep in memory
+    nifi.volatile.repository.options.content.max.count=100000
+    # maximum number of bytes to keep in memory, also limited by option above
+    nifi.volatile.repository.options.content.max.bytes=1M
+    # limits locking for the content repository
+    nifi.volatile.repository.options.content.minimal.locking=true
+
+    # For NO-OP Repositories:
+    nifi.flowfile.repository.class.name=NoOpRepository
+    nifi.provenance.repository.class.name=NoOpRepository
 
  #### Caveats
  Systems that have limited memory must be cognizant of the options above. Limiting the max count for the number of entries limits memory consumption but also limits the number of events that can be stored. If you are limiting the amount of volatile content you are configuring, you may have excessive session rollback due to invalid stream errors that occur when a claim cannot be found.
@@ -297,18 +298,18 @@ using the `nifi.asset.directory` agent property, which defaults to `${MINIFI_HOM
  If you need to reference a controller service in your config.yml file, use the following template. In the example, below, ControllerServiceClass is the name of the class defining the controller Service. ControllerService1
  is linked to ControllerService2, and requires the latter to be started for ControllerService1 to start.
 
-	Controller Services:
+    Controller Services:
       - name: ControllerService1
- 	    id: 2438e3c8-015a-1000-79ca-83af40ec1974
-	  	class: ControllerServiceClass
-	  	Properties:
-	      Property one: value
-	      Linked Services:
-	        - value: ControllerService2
-	  - name: ControllerService2
-	    id: 2438e3c8-015a-1000-79ca-83af40ec1992
-	  	class: ControllerServiceClass
-	  	Properties:
+        id: 2438e3c8-015a-1000-79ca-83af40ec1974
+        class: ControllerServiceClass
+        Properties:
+          Property one: value
+          Linked Services:
+          - value: ControllerService2
+      - name: ControllerService2
+        id: 2438e3c8-015a-1000-79ca-83af40ec1992
+        class: ControllerServiceClass
+        Properties:
 
 ### Linux Power Manager Controller Service
   The linux power manager controller service can be configured to monitor the battery level and status ( discharging or charging ) via the following configuration.
@@ -325,33 +326,33 @@ using the `nifi.asset.directory` agent property, which defaults to `${MINIFI_HOM
           Trigger Threshold: 90
           Low Battery Threshold: 50
           Wait Period: 500 ms
-          
+
 ### MQTT Controller service
 The MQTTController Service can be configured for MQTT connectivity and provide that capability to your processors when MQTT is built.
-    
+
     Controller Services:
     - name: mqttservice
       id: 294491a38-015a-1000-0000-000000000001
       class: MQTTContextService
       Properties:
           Broker URI: localhost:1883
-    	    Client ID: client ID
+          Client ID: client ID
           Quality of Service: 2
-          
+
 ### Network Prioritizer Controller Service
   The network prioritizer controller service can be configured to manage prioritizing and binding to specific network interfaces. Linked Services, can be used
   as a prioritized list to create a disjunction among multiple networking prioritizers. This allows you to create classes with different configurations that
   create multiple prioritizations. Max Throughput is the maximum throughput in bytes per second. Max Payload is the maximum number of bytes supported by that
   prioritizer. If a prioritizer is configured with the option "Default Prioritizer: true," then all socket communications will use that default prioritizer.
-  
+
   In the configuration below there are two classes defined under "NetworkPrioritizerService", one class "NetworkPrioritizerService2" defines en0, and en1.
-  If en0 is down at any point, then en1 will be given priority before resorting to en2 and en3 of  "NetworkPrioritizerService3". If the throughput for 
-  "NetworkPrioritizerService2" exceeds the defined throughput or the max payload of 1024, then "NetworkPrioritizerService3" will be used. If Max Payload and 
-  Max Throughput are not defined, then they will not be limiting factors. 
-  
+  If en0 is down at any point, then en1 will be given priority before resorting to en2 and en3 of  "NetworkPrioritizerService3". If the throughput for
+  "NetworkPrioritizerService2" exceeds the defined throughput or the max payload of 1024, then "NetworkPrioritizerService3" will be used. If Max Payload and
+  Max Throughput are not defined, then they will not be limiting factors.
+
   Since connection queues can't be re-prioritized, this can create a starvation problem if no connection is available. 
   The configuration is required to account for this.
-    
+
    Controller Services:
    - name: NetworkPrioritizerService
      id: 2438e3c8-015a-1000-79ca-83af40ec1883
