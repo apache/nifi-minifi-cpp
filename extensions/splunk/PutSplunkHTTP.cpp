@@ -40,32 +40,26 @@ void PutSplunkHTTP::initialize() {
   setSupportedRelationships(relationships());
 }
 
-void PutSplunkHTTP::onSchedule(const std::shared_ptr<core::ProcessContext>& context, const std::shared_ptr<core::ProcessSessionFactory>& sessionFactory) {
-  SplunkHECProcessor::onSchedule(context, sessionFactory);
-  client_queue_ = utils::ResourceQueue<extensions::curl::HTTPClient>::create(getMaxConcurrentTasks(), logger_);
-}
-
 namespace {
 std::optional<std::string> getContentType(core::ProcessContext& context, const core::FlowFile& flow_file) {
   return context.getProperty(PutSplunkHTTP::ContentType) | utils::orElse ([&flow_file] {return flow_file.getAttribute("mime.type");});
 }
 
-std::string getEndpoint(core::ProcessContext& context, const gsl::not_null<std::shared_ptr<core::FlowFile>>& flow_file, curl::HTTPClient& client) {
+std::string getEndpoint(core::ProcessContext& context, curl::HTTPClient& client) {
   std::stringstream endpoint;
   endpoint << "/services/collector/raw";
   std::vector<std::string> parameters;
-  std::string prop_value;
-  if (context.getProperty(PutSplunkHTTP::SourceType, prop_value, flow_file)) {
-    parameters.push_back("sourcetype=" + client.escape(prop_value));
+  if (auto source_type = context.getProperty(PutSplunkHTTP::SourceType)) {
+    parameters.push_back("sourcetype=" + client.escape(*source_type));
   }
-  if (context.getProperty(PutSplunkHTTP::Source, prop_value, flow_file)) {
-    parameters.push_back("source=" + client.escape(prop_value));
+  if (auto source = context.getProperty(PutSplunkHTTP::Source)) {
+    parameters.push_back("source=" + client.escape(*source));
   }
-  if (context.getProperty(PutSplunkHTTP::Host, prop_value, flow_file)) {
-    parameters.push_back("host=" + client.escape(prop_value));
+  if (auto host = context.getProperty(PutSplunkHTTP::Host)) {
+    parameters.push_back("host=" + client.escape(*host));
   }
-  if (context.getProperty(PutSplunkHTTP::Index, prop_value, flow_file)) {
-    parameters.push_back("index=" + client.escape(prop_value));
+  if (auto index = context.getProperty(PutSplunkHTTP::Index)) {
+    parameters.push_back("index=" + client.escape(*index));
   }
   if (!parameters.empty()) {
     endpoint << "?" << utils::StringUtils::join("&", parameters);
@@ -117,6 +111,21 @@ void setFlowFileAsPayload(core::ProcessSession& session,
 }
 }  // namespace
 
+void PutSplunkHTTP::onSchedule(const std::shared_ptr<core::ProcessContext>& context, const std::shared_ptr<core::ProcessSessionFactory>& sessionFactory) {
+  SplunkHECProcessor::onSchedule(context, sessionFactory);
+  std::weak_ptr<core::ProcessContext> weak_context = context;
+  auto create_client = [this, weak_context]() -> std::unique_ptr<minifi::extensions::curl::HTTPClient> {
+    if (auto context = weak_context.lock()) {
+      auto client = std::make_unique<curl::HTTPClient>();
+      initializeClient(*client, getNetworkLocation().append(getEndpoint(*context, *client)), getSSLContextService(*context));
+      return client;
+    }
+    return nullptr;
+  };
+
+  client_queue_ = utils::ResourceQueue<extensions::curl::HTTPClient>::create(create_client, getMaxConcurrentTasks(), std::nullopt, logger_);
+}
+
 void PutSplunkHTTP::onTrigger(const std::shared_ptr<core::ProcessContext>& context, const std::shared_ptr<core::ProcessSession>& session) {
   gsl_Expects(context && session && client_queue_);
 
@@ -127,13 +136,7 @@ void PutSplunkHTTP::onTrigger(const std::shared_ptr<core::ProcessContext>& conte
   }
   auto flow_file = gsl::not_null(std::move(ff));
 
-  auto create_client = [&]() -> std::unique_ptr<minifi::extensions::curl::HTTPClient> {
-    auto client = std::make_unique<curl::HTTPClient>();
-    initializeClient(*client, getNetworkLocation().append(getEndpoint(*context, flow_file, *client)), getSSLContextService(*context));
-    return client;
-  };
-
-  auto client = client_queue_->getResource(create_client);
+  auto client = client_queue_->getResource();
 
   setFlowFileAsPayload(*session, *context, *client, flow_file);
 
@@ -145,4 +148,3 @@ void PutSplunkHTTP::onTrigger(const std::shared_ptr<core::ProcessContext>& conte
 }
 
 }  // namespace org::apache::nifi::minifi::extensions::splunk
-
