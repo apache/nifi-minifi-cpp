@@ -24,8 +24,14 @@
 #include "core/ProcessContext.h"
 #include "core/ProcessSession.h"
 #include "Exception.h"
+#include "core/logging/LoggerFactory.h"
 
 namespace org::apache::nifi::minifi::processors {
+
+std::shared_ptr<core::logging::Logger> PutSQL::logger_ = core::logging::LoggerFactory<PutSQL>::getLogger();
+
+const core::Relationship PutSQL::Success{"success", "Flow files successfully executed as put sql statements"};
+const core::Relationship PutSQL::Failure{"failure", "Flow files that contain malformed sql statement"};
 
 PutSQL::PutSQL(std::string name, const utils::Identifier& uuid)
   : SQLProcessor(std::move(name), uuid, core::logging::LoggerFactory<PutSQL>::getLogger(uuid)) {
@@ -55,7 +61,12 @@ void PutSQL::processOnTrigger(core::ProcessContext& context, core::ProcessSessio
     throw Exception(PROCESSOR_EXCEPTION, "Empty SQL statement");
   }
 
-  connection_->prepareStatement(sql_statement)->execute(collectArguments(flow_file));
+  try {
+    connection_->prepareStatement(sql_statement)->execute(collectArguments(flow_file));
+  } catch (const sql::SQLStatementException& ex) {
+    logger_->log_error("Malformed SQL statement in flow file");
+    session.transfer(flow_file, Failure);
+  }
 }
 
 }  // namespace org::apache::nifi::minifi::processors

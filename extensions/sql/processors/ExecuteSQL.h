@@ -27,6 +27,7 @@
 #include "SQLProcessor.h"
 #include "FlowFileSource.h"
 #include "utils/ArrayUtils.h"
+#include "core/logging/Logger.h"
 
 namespace org::apache::nifi::minifi::processors {
 
@@ -42,7 +43,8 @@ class ExecuteSQL : public SQLProcessor, public FlowFileSource {
   }
 
   EXTENSIONAPI static const core::Relationship Success;
-  static auto relationships() { return std::array{Success}; }
+  EXTENSIONAPI static const core::Relationship Failure;
+  static auto relationships() { return std::array{Success, Failure}; }
 
   EXTENSIONAPI static constexpr bool SupportsDynamicProperties = false;
   EXTENSIONAPI static constexpr bool SupportsDynamicRelationships = false;
@@ -58,6 +60,9 @@ class ExecuteSQL : public SQLProcessor, public FlowFileSource {
 
   EXTENSIONAPI static const std::string RESULT_ROW_COUNT;
   EXTENSIONAPI static const std::string INPUT_FLOW_FILE_UUID;
+
+ private:
+  static const std::shared_ptr<core::logging::Logger> logger_;
 };
 
 }  // namespace org::apache::nifi::minifi::processors

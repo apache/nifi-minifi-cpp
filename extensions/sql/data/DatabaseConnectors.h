@@ -62,6 +62,10 @@ class Rowset {
   virtual void next() = 0;
 };
 
+class SQLException : public std::runtime_error {};
+class SQLConnectionException : public SQLException {};
+class SQLStatementException : public SQLException {};
+
 class Statement {
  public:
   explicit Statement(const std::string &query)
