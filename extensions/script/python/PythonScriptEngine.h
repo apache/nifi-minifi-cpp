@@ -112,7 +112,7 @@ class PythonScriptEngine : public script::ScriptEngine {
   void callRequiredFunction(const std::string &fn_name, Args &&...args) {
     py::gil_scoped_acquire gil { };
     if (!(*bindings_).contains(fn_name.c_str()))
-      throw std::runtime_error("Required Function" + fn_name + " is not found within Python bindings");
+      throw std::runtime_error("Required Function " + fn_name + " is not found within Python bindings");
     (*bindings_)[fn_name.c_str()](convert(args)...);
   }
 
