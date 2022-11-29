@@ -36,3 +36,10 @@ Feature: MiNiFi can use python processors in its flows
 
     When all instances start up
     Then the Minifi logs contain the following message: "key:Python attribute value:attributevalue" in less than 60 seconds
+
+  Scenario: FlowFile can be removed from session
+    Given a GenerateFlowFile processor with the "File Size" property set to "0B"
+    And a RemoveFlowFile processor
+
+    When all instances start up
+    Then the Minifi logs contain the following message: "Removing flow file with UUID" in less than 30 seconds

@@ -54,7 +54,8 @@ PYBIND11_EMBEDDED_MODULE(minifi_native, m) { // NOLINT
            static_cast<std::shared_ptr<script::ScriptFlowFile> (python::PyProcessSession::*)(const std::shared_ptr<script::ScriptFlowFile>&)>(&python::PyProcessSession::create))
       .def("read", &python::PyProcessSession::read)
       .def("write", &python::PyProcessSession::write)
-      .def("transfer", &python::PyProcessSession::transfer);
+      .def("transfer", &python::PyProcessSession::transfer)
+      .def("remove", &python::PyProcessSession::remove);
 
   py::class_<python::PythonProcessor, std::shared_ptr<python::PythonProcessor>>(m, "Processor")
         .def("setSupportsDynamicProperties", &python::PythonProcessor::setSupportsDynamicProperties)

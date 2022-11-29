@@ -135,4 +135,18 @@ void PyProcessSession::releaseCoreResources() {
   session_.reset();
 }
 
+void PyProcessSession::remove(const std::shared_ptr<script::ScriptFlowFile>& script_flow_file) {
+  if (!session_) {
+    throw std::runtime_error("Access of ProcessSession after it has been released");
+  }
+
+  auto flow_file = script_flow_file->getFlowFile();
+
+  if (!flow_file) {
+    throw std::runtime_error("Access of FlowFile after it has been released");
+  }
+
+  session_->remove(flow_file);
+}
+
 }  // namespace org::apache::nifi::minifi::python

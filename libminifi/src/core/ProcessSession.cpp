@@ -195,6 +195,7 @@ std::shared_ptr<core::FlowFile> ProcessSession::clone(const std::shared_ptr<core
 }
 
 void ProcessSession::remove(const std::shared_ptr<core::FlowFile> &flow) {
+  logger_->log_trace("Removing flow file with UUID: %s", flow->getUUIDStr());
   flow->setDeleted(true);
   deleted_flowfiles_.push_back(flow);
   std::string reason = process_context_->getProcessorNode()->getName() + " drop flow record " + flow->getUUIDStr();
