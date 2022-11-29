@@ -65,10 +65,12 @@ class ResourceQueue : public std::enable_shared_from_this<ResourceQueue<Resource
     std::unique_ptr<ResourceType> resource_;
   };
 
-  static auto create(std::optional<size_t> maximum_number_of_creatable_resources, std::shared_ptr<core::logging::Logger> logger);
+  static auto create(std::function<std::unique_ptr<ResourceType>()> creator,
+                     std::optional<size_t> maximum_number_of_creatable_resources = std::nullopt,
+                     std::optional<std::function<void(ResourceType&)>> reset_fn = std::nullopt,
+                     std::shared_ptr<core::logging::Logger> logger = nullptr);
 
-  template<typename Fn>
-  [[nodiscard]] std::enable_if_t<std::is_invocable_v<std::unique_ptr<ResourceType>()>, ResourceWrapper> getResource(const Fn& create_resource) {
+  [[nodiscard]] ResourceWrapper getResource() {
     std::unique_ptr<ResourceType> resource;
     // Use an existing resource, if one is available
     if (internal_queue_.tryDequeue(resource)) {
@@ -78,7 +80,7 @@ class ResourceQueue : public std::enable_shared_from_this<ResourceQueue<Resource
       const std::lock_guard<std::mutex> lock(counter_mutex_);
       if (!maximum_number_of_creatable_resources_ || resources_created_ < maximum_number_of_creatable_resources_) {
         ++resources_created_;
-        resource = create_resource();
+        resource = create_new_resource_();
         logDebug("Created new [%p] resource instance. Number of instances: %d%s.",
                  resource.get(),
                  resources_created_,
@@ -94,14 +96,21 @@ class ResourceQueue : public std::enable_shared_from_this<ResourceQueue<Resource
   }
 
  protected:
-  ResourceQueue(std::optional<size_t> maximum_number_of_creatable_resources, std::shared_ptr<core::logging::Logger> logger)
-      : maximum_number_of_creatable_resources_(maximum_number_of_creatable_resources),
+  ResourceQueue(std::function<std::unique_ptr<ResourceType>()> create_new_resource,
+                std::optional<size_t> maximum_number_of_creatable_resources,
+                std::optional<std::function<void(ResourceType&)>> reset_fn,
+                std::shared_ptr<core::logging::Logger> logger)
+      : create_new_resource_(std::move(create_new_resource)),
+        maximum_number_of_creatable_resources_(maximum_number_of_creatable_resources),
+        reset_fn_(std::move(reset_fn)),
         logger_(std::move(logger)) {
   }
 
  private:
   void returnResource(std::unique_ptr<ResourceType> resource) {
     logDebug("Returning [%p] resource", resource.get());
+    if (reset_fn_)
+      reset_fn_.value()(*resource);
     internal_queue_.enqueue(std::move(resource));
   }
 
@@ -111,8 +120,10 @@ class ResourceQueue : public std::enable_shared_from_this<ResourceQueue<Resource
       logger_->log_debug(format, std::forward<Args>(args)...);
   }
 
+  const std::function<std::unique_ptr<ResourceType>()> create_new_resource_;
   const std::optional<size_t> maximum_number_of_creatable_resources_;
-  std::shared_ptr<core::logging::Logger> logger_;
+  const std::optional<std::function<void(ResourceType&)>> reset_fn_;
+  const std::shared_ptr<core::logging::Logger> logger_;
   ConditionConcurrentQueue<std::unique_ptr<ResourceType>> internal_queue_;
   size_t resources_created_ = 0;
   std::mutex counter_mutex_;
@@ -126,7 +137,10 @@ struct ResourceQueue<ResourceType>::make_shared_enabler : public ResourceQueue<R
 };
 
 template<class ResourceType>
-auto ResourceQueue<ResourceType>::create(std::optional<size_t> maximum_number_of_creatable_resources, std::shared_ptr<core::logging::Logger> logger) {
-  return std::make_shared<make_shared_enabler>(maximum_number_of_creatable_resources, std::move(logger));
+auto ResourceQueue<ResourceType>::create(std::function<std::unique_ptr<ResourceType>()> creator,
+                                         std::optional<size_t> maximum_number_of_creatable_resources,
+                                         std::optional<std::function<void(ResourceType&)>> reset_fn,
+                                         std::shared_ptr<core::logging::Logger> logger) {
+  return std::make_shared<make_shared_enabler>(std::move(creator), maximum_number_of_creatable_resources, std::move(reset_fn), std::move(logger));
 }
 }  // namespace org::apache::nifi::minifi::utils

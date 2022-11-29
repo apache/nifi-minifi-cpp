@@ -71,7 +71,10 @@ void ExecuteScript::initialize() {
 
 void ExecuteScript::onSchedule(core::ProcessContext *context, core::ProcessSessionFactory* /*sessionFactory*/) {
 #ifdef LUA_SUPPORT
-  lua_script_engine_queue_ = utils::ResourceQueue<lua::LuaScriptEngine>::create(getMaxConcurrentTasks(), logger_);
+  auto create_engine = [this]() -> std::unique_ptr<lua::LuaScriptEngine> {
+    return engine_factory_.createEngine<lua::LuaScriptEngine>();
+  };
+  lua_script_engine_queue_ = utils::ResourceQueue<lua::LuaScriptEngine>::create(create_engine, getMaxConcurrentTasks(), std::nullopt, logger_);
 #endif  // LUA_SUPPORT
 #ifdef PYTHON_SUPPORT
   python_script_engine_ = engine_factory_.createEngine<python::PythonScriptEngine>();
@@ -114,11 +117,8 @@ void ExecuteScript::onTrigger(const std::shared_ptr<core::ProcessContext> &conte
   } else if (script_engine_ == ScriptEngineOption::LUA) {
 #ifdef LUA_SUPPORT
     gsl_Expects(lua_script_engine_queue_);
-    auto create_engine = [&]() -> std::unique_ptr<lua::LuaScriptEngine> {
-      return engine_factory_.createEngine<lua::LuaScriptEngine>();
-    };
 
-    lua_script_engine.emplace(lua_script_engine_queue_->getResource(create_engine));
+    lua_script_engine.emplace(lua_script_engine_queue_->getResource());
     engine = lua_script_engine->get();
 #else
     throw std::runtime_error("Lua support is disabled in this build.");

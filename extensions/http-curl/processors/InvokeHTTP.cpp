@@ -263,7 +263,15 @@ void InvokeHTTP::onSchedule(const std::shared_ptr<core::ProcessContext>& context
   gsl_Expects(context);
 
   setupMembersFromProperties(*context);
-  client_queue_ = utils::ResourceQueue<extensions::curl::HTTPClient>::create(getMaxConcurrentTasks(), logger_);
+  std::weak_ptr<core::ProcessContext> weak_context = context;
+  auto create_client = [this, weak_context]() -> std::unique_ptr<minifi::extensions::curl::HTTPClient> {
+    if (auto context = weak_context.lock())
+      return createHTTPClientFromPropertiesAndMembers(*context);
+    else
+      return nullptr;
+  };
+
+  client_queue_ = utils::ResourceQueue<extensions::curl::HTTPClient>::create(create_client, getMaxConcurrentTasks(), std::nullopt, logger_);
 }
 
 bool InvokeHTTP::shouldEmitFlowFile(minifi::extensions::curl::HTTPClient& client) {
@@ -306,11 +314,8 @@ bool InvokeHTTP::appendHeaders(const core::FlowFile& flow_file, /*std::invocable
 
 void InvokeHTTP::onTrigger(const std::shared_ptr<core::ProcessContext>& context, const std::shared_ptr<core::ProcessSession>& session) {
   gsl_Expects(session && context && client_queue_);
-  auto create_client = [&]() -> std::unique_ptr<minifi::extensions::curl::HTTPClient> {
-    return createHTTPClientFromPropertiesAndMembers(*context);
-  };
 
-  auto client = client_queue_->getResource(create_client);
+  auto client = client_queue_->getResource();
 
   onTriggerWithClient(context, session, *client);
 }
