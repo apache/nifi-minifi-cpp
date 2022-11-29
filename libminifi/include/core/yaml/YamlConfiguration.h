@@ -15,8 +15,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#ifndef LIBMINIFI_INCLUDE_CORE_YAML_YAMLCONFIGURATION_H_
-#define LIBMINIFI_INCLUDE_CORE_YAML_YAMLCONFIGURATION_H_
+#pragma once
 
 #include <memory>
 #include <optional>
@@ -37,11 +36,7 @@
 
 class YamlConfigurationTestAccessor;
 
-namespace org {
-namespace apache {
-namespace nifi {
-namespace minifi {
-namespace core {
+namespace org::apache::nifi::minifi::core {
 
 static constexpr char const* CONFIG_YAML_FLOW_CONTROLLER_KEY = "Flow Controller";
 static constexpr char const* CONFIG_YAML_PROCESSORS_KEY = "Processors";
@@ -50,6 +45,8 @@ static constexpr char const* CONFIG_YAML_REMOTE_PROCESS_GROUP_KEY = "Remote Proc
 static constexpr char const* CONFIG_YAML_REMOTE_PROCESS_GROUP_KEY_V3 = "Remote Process Groups";
 static constexpr char const* CONFIG_YAML_PROVENANCE_REPORT_KEY = "Provenance Reporting";
 static constexpr char const* CONFIG_YAML_FUNNELS_KEY = "Funnels";
+static constexpr char const* CONFIG_YAML_INPUT_PORTS_KEY = "Input Ports";
+static constexpr char const* CONFIG_YAML_OUTPUT_PORTS_KEY = "Output Ports";
 
 #define YAML_CONFIGURATION_USE_REGEX
 
@@ -262,6 +259,17 @@ class YamlConfiguration : public FlowConfiguration {
   void parseFunnelsYaml(const YAML::Node& node, core::ProcessGroup* parent);
 
   /**
+   * Parses the Input/Output Ports section of a configuration YAML.
+   * The resulting ports are added to the parent ProcessGroup.
+   *
+   * @param node   the YAML::Node containing the Input/Output Ports section
+   *                 of the configuration YAML
+   * @param parent the root node of flow configuration to which
+   *                 to add the funnels that are parsed
+   */
+  void parsePorts(const YAML::Node& node, core::ProcessGroup* parent, PortType port_type);
+
+  /**
    * A helper function for parsing or generating optional id fields.
    *
    * In parsing YAML flow configurations for config schema v1, the
@@ -320,10 +328,4 @@ class YamlConfiguration : public FlowConfiguration {
   void raiseComponentError(const std::string &component_name, const std::string &yaml_section, const std::string &reason) const;
 };
 
-}  // namespace core
-}  // namespace minifi
-}  // namespace nifi
-}  // namespace apache
-}  // namespace org
-
-#endif  // LIBMINIFI_INCLUDE_CORE_YAML_YAMLCONFIGURATION_H_
+}  // namespace org::apache::nifi::minifi::core

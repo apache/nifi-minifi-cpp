@@ -60,9 +60,21 @@ struct Lines {
   }
 };
 
+enum class ConnectionFailure {
+  UNRESOLVED_SOURCE,
+  UNRESOLVED_DESTINATION,
+  INPUT_CANNOT_BE_SOURCE,
+  OUTPUT_CANNOT_BE_DESTINATION,
+  INPUT_CANNOT_BE_DESTINATION,
+  OUTPUT_CANNOT_BE_SOURCE
+};
+
 struct Proc {
+  Proc(std::string id, std::string name, const std::optional<ConnectionFailure>& failure = std::nullopt)
+    : id(std::move(id)), name(std::move(name)), failure(failure) {}
   std::string id;
   std::string name;
+  std::optional<ConnectionFailure> failure;
 
   Lines serialize() const {
     return {{
@@ -73,17 +85,33 @@ struct Proc {
   }
 };
 
-struct UnresolvedProc {
-  explicit UnresolvedProc(std::string id): id(std::move(id)) {}
+template<typename Tag>
+struct Port {
+  Port(std::string id, std::string name, const std::optional<ConnectionFailure>& failure = std::nullopt)
+    : id(std::move(id)), name(std::move(name)), failure(failure) {}
   std::string id;
+  std::string name;
+  std::optional<ConnectionFailure> failure;
+
+  Lines serialize() const {
+    return {{
+      "- id: " + id,
+      "  name: " + name
+    }};
+  }
 };
 
+using InputPort = Port<struct InputTag>;
+using OutputPort = Port<struct OutputTag>;
+
 struct MaybeProc {
-  MaybeProc(const Proc& proc): id(proc.id), name(proc.name) {}  // NOLINT
-  MaybeProc(const UnresolvedProc& proc) : id(proc.id) {}  // NOLINT
+  MaybeProc(const Proc& proc) : id(proc.id), name(proc.name), failure(proc.failure) {}  // NOLINT(runtime/explicit)
+  MaybeProc(const InputPort& port) : id(port.id), name(port.name), failure(port.failure) {}  // NOLINT(runtime/explicit)
+  MaybeProc(const OutputPort& port) : id(port.id), name(port.name), failure(port.failure) {}  // NOLINT(runtime/explicit)
 
   std::string id;
-  std::optional<std::string> name;
+  std::string name;
+  std::optional<ConnectionFailure> failure;
 };
 
 struct Conn {
@@ -139,6 +167,14 @@ struct Group {
     rpgs_ = std::move(rpgs);
     return *this;
   }
+  Group& With(std::vector<InputPort> input_ports) {
+    input_ports_ = std::move(input_ports);
+    return *this;
+  }
+  Group& With(std::vector<OutputPort> output_ports) {
+    output_ports_ = std::move(output_ports);
+    return *this;
+  }
   Lines serialize(bool is_root = true) const {
     Lines body;
     if (processors_.empty()) {
@@ -169,6 +205,22 @@ struct Group {
         body.append(subgroup.serialize(false).indentAll());
       }
     }
+    if (input_ports_.empty()) {
+      body.emplace_back("Input Ports: []");
+    } else {
+      body.emplace_back("Input Ports:");
+      for (const auto& port : input_ports_) {
+        body.append(port.serialize().indentAll());
+      }
+    }
+    if (output_ports_.empty()) {
+      body.emplace_back("Output Ports: []");
+    } else {
+      body.emplace_back("Output Ports:");
+      for (const auto& port : output_ports_) {
+        body.append(port.serialize().indentAll());
+      }
+    }
     Lines lines;
     if (is_root) {
       lines.emplace_back("Flow Controller:");
@@ -186,12 +238,15 @@ struct Group {
   std::vector<Proc> processors_;
   std::vector<Group> subgroups_;
   std::vector<RPG> rpgs_;
+  std::vector<InputPort> input_ports_;
+  std::vector<OutputPort> output_ports_;
 };
 
 struct ProcessGroupTestAccessor {
   FIELD_ACCESSOR(processors_)
   FIELD_ACCESSOR(connections_)
   FIELD_ACCESSOR(child_process_groups_)
+  FIELD_ACCESSOR(ports_)
 };
 
 template<typename T, typename = void>
@@ -222,6 +277,54 @@ auto findByName(const std::set<T>& set, const std::string& name) -> decltype(Res
   return nullptr;
 }
 
+void assertFailure(const Conn& expected, ConnectionFailure failure) {
+  auto assertMessage = [](const std::string& message) {
+    REQUIRE(utils::verifyLogLinePresenceInPollTime(std::chrono::seconds{1}, message));
+  };
+
+  switch (failure) {
+    case ConnectionFailure::UNRESOLVED_DESTINATION: {
+      assertMessage("Cannot find the destination processor with id '" + expected.destination.id + "' for the connection [name = '" + expected.name + "'");
+      break;
+    }
+    case ConnectionFailure::UNRESOLVED_SOURCE: {
+      assertMessage("Cannot find the source processor with id '" + expected.source.id + "' for the connection [name = '" + expected.name + "'");
+      break;
+    }
+    case ConnectionFailure::INPUT_CANNOT_BE_SOURCE: {
+      assertMessage("Input port [id = '" + expected.source.id + "'] cannot be a source outside the process group in the connection [name = '" + expected.name + "'");
+      break;
+    }
+    case ConnectionFailure::OUTPUT_CANNOT_BE_DESTINATION: {
+      assertMessage("Output port [id = '" + expected.destination.id + "'] cannot be a destination outside the process group in the connection [name = '" + expected.name + "'");
+      break;
+    }
+    case ConnectionFailure::INPUT_CANNOT_BE_DESTINATION: {
+      assertMessage("Input port [id = '" + expected.destination.id + "'] cannot be a destination inside the process group in the connection [name = '" + expected.name + "'");
+      break;
+    }
+    case ConnectionFailure::OUTPUT_CANNOT_BE_SOURCE: {
+      assertMessage("Output port [id = '" + expected.source.id + "'] cannot be a source inside the process group in the connection [name = '" + expected.name + "'");
+      break;
+    }
+  }
+}
+
+void verifyConnectionNode(minifi::Connection* conn, const Conn& expected) {
+  if (expected.source.failure) {
+    REQUIRE(conn->getSource() == nullptr);
+    assertFailure(expected, *expected.source.failure);
+  } else {
+    REQUIRE(conn->getSource()->getName() == expected.source.name);
+  }
+  if (expected.destination.failure) {
+    REQUIRE(conn->getDestination() == nullptr);
+    assertFailure(expected, *expected.destination.failure);
+  } else {
+    REQUIRE(conn->getDestination()->getName() == expected.destination.name);
+  }
+}
+
 void verifyProcessGroup(core::ProcessGroup& group, const Group& pattern) {
   // verify name
   REQUIRE(group.getName() == pattern.name_);
@@ -231,31 +334,32 @@ void verifyProcessGroup(core::ProcessGroup& group, const Group& pattern) {
   for (auto& expected : pattern.connections_) {
     auto conn = findByName(connections, expected.name);
     REQUIRE(conn);
-    if (!expected.source.name) {
-      REQUIRE(conn->getSource() == nullptr);
-      REQUIRE(utils::verifyLogLinePresenceInPollTime(
-          std::chrono::seconds{1},
-          "Cannot find the source processor with id '" + expected.source.id
-          + "' for the connection [name = '" + expected.name + "'"));
-    } else {
-      REQUIRE(conn->getSource()->getName() == expected.source.name);
-    }
-    if (!expected.destination.name) {
-      REQUIRE(conn->getDestination() == nullptr);
-      REQUIRE(utils::verifyLogLinePresenceInPollTime(
-          std::chrono::seconds{1},
-          "Cannot find the destination processor with id '" + expected.destination.id
-          + "' for the connection [name = '" + expected.name + "'"));
-    } else {
-      REQUIRE(conn->getDestination()->getName() == expected.destination.name);
-    }
+    verifyConnectionNode(conn, expected);
   }
 
-  // verify processors
+  // verify processors and ports
   const auto& processors = ProcessGroupTestAccessor::get_processors_(group);
-  REQUIRE(processors.size() == pattern.processors_.size());
+  REQUIRE(processors.size() == pattern.processors_.size() + pattern.input_ports_.size() + pattern.output_ports_.size());
   for (auto& expected : pattern.processors_) {
     REQUIRE(findByName(processors, expected.name));
+  }
+
+  for (auto& expected : pattern.input_ports_) {
+    REQUIRE(findByName(processors, expected.name));
+  }
+
+  for (auto& expected : pattern.output_ports_) {
+    REQUIRE(findByName(processors, expected.name));
+  }
+
+  const auto& ports = ProcessGroupTestAccessor::get_ports_(group);
+  REQUIRE(ports.size() == pattern.input_ports_.size() + pattern.output_ports_.size());
+  for (auto& expected : pattern.input_ports_) {
+    REQUIRE(findByName(ports, expected.name));
+  }
+
+  for (auto& expected : pattern.output_ports_) {
+    REQUIRE(findByName(ports, expected.name));
   }
 
   std::set<core::ProcessGroup*> simple_subgroups;

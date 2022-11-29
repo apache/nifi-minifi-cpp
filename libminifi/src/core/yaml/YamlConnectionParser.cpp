@@ -18,6 +18,7 @@
 
 #include "core/yaml/YamlConnectionParser.h"
 #include "core/yaml/CheckRequiredField.h"
+#include "Funnel.h"
 
 namespace org::apache::nifi::minifi::core::yaml {
 
@@ -41,8 +42,8 @@ void YamlConnectionParser::addFunnelRelationshipToConnection(minifi::Connection&
   }
 
   auto& processor_ref = *processor;
-  if (typeid(minifi::core::Funnel) == typeid(processor_ref)) {
-    addNewRelationshipToConnection(minifi::core::Funnel::Success.getName(), connection);
+  if (typeid(minifi::Funnel) == typeid(processor_ref)) {
+    addNewRelationshipToConnection(minifi::Funnel::Success.getName(), connection);
   }
 }
 

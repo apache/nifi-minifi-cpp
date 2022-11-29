@@ -91,7 +91,7 @@ bool ProcessGroup::isRemoteProcessGroup() {
 }
 
 
-void ProcessGroup::addProcessor(std::unique_ptr<Processor> processor) {
+std::tuple<Processor*, bool> ProcessGroup::addProcessor(std::unique_ptr<Processor> processor) {
   gsl_Expects(processor);
   const auto name = processor->getName();
   std::lock_guard<std::recursive_mutex> lock(mutex_);
@@ -100,6 +100,15 @@ void ProcessGroup::addProcessor(std::unique_ptr<Processor> processor) {
     logger_->log_debug("Add processor %s into process group %s", name, name_);
   } else {
     logger_->log_debug("Not adding processor %s into process group %s, as it is already there", name, name_);
+  }
+  return std::make_tuple(iter->get(), inserted);
+}
+
+void ProcessGroup::addPort(std::unique_ptr<Port> port) {
+  auto [processor, inserted] = addProcessor(std::move(port));
+  if (inserted) {
+    std::lock_guard<std::recursive_mutex> lock(mutex_);
+    ports_.insert(static_cast<Port*>(processor));
   }
 }
 
@@ -323,6 +332,33 @@ void ProcessGroup::getFlowFileContainers(std::map<std::string, Connectable*>& co
   }
 }
 
+Port* ProcessGroup::findPortById(const std::set<Port*>& ports, const utils::Identifier& uuid) {
+  const auto found = ranges::find_if(ports, [&](auto port) {
+      utils::Identifier port_uuid = port->getUUID();
+      return port_uuid && uuid == port_uuid;
+    });
+  if (found != ranges::cend(ports)) {
+    return *found;
+  }
+  return nullptr;
+}
+
+Port* ProcessGroup::findPortById(const utils::Identifier& uuid) const {
+  std::lock_guard<std::recursive_mutex> lock(mutex_);
+  return findPortById(ports_, uuid);
+}
+
+Port* ProcessGroup::findChildPortById(const utils::Identifier& uuid) const {
+  std::lock_guard<std::recursive_mutex> lock(mutex_);
+  for (const auto& processGroup : child_process_groups_) {
+    const auto& ports = processGroup->getPorts();
+    if (auto port = findPortById(ports, uuid)) {
+      return port;
+    }
+  }
+  return nullptr;
+}
+
 void ProcessGroup::addConnection(std::unique_ptr<Connection> connection) {
   std::lock_guard<std::recursive_mutex> lock(mutex_);
 
@@ -334,19 +370,52 @@ void ProcessGroup::addConnection(std::unique_ptr<Connection> connection) {
   auto& insertedConnection = *insertPos;
 
   logger_->log_debug("Add connection %s into process group %s", insertedConnection->getName(), name_);
-  // only allow connections between processors of the same process group
-  auto source = this->findProcessorById(insertedConnection->getSourceUUID(), Traverse::ExcludeChildren);
+  // only allow connections between processors of the same process group or in/output ports of child process groups
+  // check input and output ports connection restrictions inside and outside a process group
+  Processor* source = findPortById(insertedConnection->getSourceUUID());
+  if (source && static_cast<Port*>(source)->getPortType() == PortType::OUTPUT) {
+    logger_->log_error("Output port [id = '%s'] cannot be a source inside the process group in the connection [name = '%s', id = '%s']",
+                       insertedConnection->getSourceUUID().to_string(), insertedConnection->getName(), insertedConnection->getUUIDStr());
+    source = nullptr;
+  } else if (!source) {
+    source = findChildPortById(insertedConnection->getSourceUUID());
+    if (source && static_cast<Port*>(source)->getPortType() == PortType::INPUT) {
+      logger_->log_error("Input port [id = '%s'] cannot be a source outside the process group in the connection [name = '%s', id = '%s']",
+                          insertedConnection->getSourceUUID().to_string(), insertedConnection->getName(), insertedConnection->getUUIDStr());
+      source = nullptr;
+    } else if (!source) {
+      source = findProcessorById(insertedConnection->getSourceUUID(), Traverse::ExcludeChildren);
+      if (!source) {
+        logger_->log_error("Cannot find the source processor with id '%s' for the connection [name = '%s', id = '%s']",
+                          insertedConnection->getSourceUUID().to_string(), insertedConnection->getName(), insertedConnection->getUUIDStr());
+      }
+    }
+  }
+
   if (source) {
     source->addConnection(insertedConnection.get());
-  } else {
-    logger_->log_error("Cannot find the source processor with id '%s' for the connection [name = '%s', id = '%s']",
-                       insertedConnection->getSourceUUID().to_string(), insertedConnection->getName(), insertedConnection->getUUIDStr());
   }
-  auto destination = this->findProcessorById(insertedConnection->getDestinationUUID(), Traverse::ExcludeChildren);
-  if (!destination) {
-    logger_->log_error("Cannot find the destination processor with id '%s' for the connection [name = '%s', id = '%s']",
+
+  Processor* destination = findPortById(insertedConnection->getDestinationUUID());
+  if (destination && static_cast<Port*>(destination)->getPortType() == PortType::INPUT) {
+    logger_->log_error("Input port [id = '%s'] cannot be a destination inside the process group in the connection [name = '%s', id = '%s']",
                        insertedConnection->getDestinationUUID().to_string(), insertedConnection->getName(), insertedConnection->getUUIDStr());
+    destination = nullptr;
+  } else if (!destination) {
+    destination = findChildPortById(insertedConnection->getDestinationUUID());
+    if (destination && static_cast<Port*>(destination)->getPortType() == PortType::OUTPUT) {
+      logger_->log_error("Output port [id = '%s'] cannot be a destination outside the process group in the connection [name = '%s', id = '%s']",
+                          insertedConnection->getDestinationUUID().to_string(), insertedConnection->getName(), insertedConnection->getUUIDStr());
+      destination = nullptr;
+    } else if (!destination) {
+      destination = findProcessorById(insertedConnection->getDestinationUUID(), Traverse::ExcludeChildren);
+      if (!destination) {
+        logger_->log_error("Cannot find the destination processor with id '%s' for the connection [name = '%s', id = '%s']",
+                          insertedConnection->getDestinationUUID().to_string(), insertedConnection->getName(), insertedConnection->getUUIDStr());
+      }
+    }
   }
+
   if (destination && destination != source) {
     destination->addConnection(insertedConnection.get());
   }

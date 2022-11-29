@@ -27,6 +27,7 @@
 #include "core/state/Value.h"
 #include "Defaults.h"
 #include "utils/TimeUtil.h"
+#include "Funnel.h"
 
 #ifdef YAML_CONFIGURATION_USE_REGEX
 #include "utils/RegexUtils.h"
@@ -93,6 +94,8 @@ std::unique_ptr<core::ProcessGroup> YamlConfiguration::parseProcessGroupYaml(con
   YAML::Node processorsNode = yamlNode[CONFIG_YAML_PROCESSORS_KEY];
   YAML::Node connectionsNode = yamlNode[yaml::YamlConnectionParser::CONFIG_YAML_CONNECTIONS_KEY];
   YAML::Node funnelsNode = yamlNode[CONFIG_YAML_FUNNELS_KEY];
+  YAML::Node inputPortsNode = yamlNode[CONFIG_YAML_INPUT_PORTS_KEY];
+  YAML::Node outputPortsNode = yamlNode[CONFIG_YAML_OUTPUT_PORTS_KEY];
   YAML::Node remoteProcessingGroupsNode = [&] {
     // assignment is not supported on invalid Yaml nodes
     YAML::Node candidate = yamlNode[CONFIG_YAML_REMOTE_PROCESS_GROUP_KEY];
@@ -106,9 +109,8 @@ std::unique_ptr<core::ProcessGroup> YamlConfiguration::parseProcessGroupYaml(con
   parseProcessorNodeYaml(processorsNode, group.get());
   parseRemoteProcessGroupYaml(remoteProcessingGroupsNode, group.get());
   parseFunnelsYaml(funnelsNode, group.get());
-  // parse connections last to give feedback if the source and/or destination
-  // is not in the same process group
-  parseConnectionYaml(connectionsNode, group.get());
+  parsePorts(inputPortsNode, group.get(), PortType::INPUT);
+  parsePorts(outputPortsNode, group.get(), PortType::OUTPUT);
 
   if (childProcessGroupNodeSeq && childProcessGroupNodeSeq.IsSequence()) {
     for (YAML::const_iterator it = childProcessGroupNodeSeq.begin(); it != childProcessGroupNodeSeq.end(); ++it) {
@@ -116,6 +118,10 @@ std::unique_ptr<core::ProcessGroup> YamlConfiguration::parseProcessGroupYaml(con
       group->addProcessGroup(parseProcessGroupYaml(childProcessGroupNode, childProcessGroupNode));
     }
   }
+
+  // parse connections last to give feedback if the source and/or destination processors
+  // is not in the same process group or input/output port connections are not allowed
+  parseConnectionYaml(connectionsNode, group.get());
   return group;
 }
 
@@ -773,11 +779,41 @@ void YamlConfiguration::parseFunnelsYaml(const YAML::Node& node, core::ProcessGr
       throw Exception(ExceptionType::GENERAL_EXCEPTION, "Incorrect funnel UUID format.");
     });
 
-    auto funnel = std::make_unique<core::Funnel>(name, uuid.value());
+    auto funnel = std::make_unique<Funnel>(name, uuid.value());
     logger_->log_debug("Created funnel with UUID %s and name %s", id, name);
     funnel->setScheduledState(core::RUNNING);
     funnel->setSchedulingStrategy(core::EVENT_DRIVEN);
     parent->addProcessor(std::move(funnel));
+  }
+}
+
+void YamlConfiguration::parsePorts(const YAML::Node& node, core::ProcessGroup* parent, PortType port_type) {
+  if (!parent) {
+    logger_->log_error("parsePorts: no parent group was provided");
+    return;
+  }
+  if (!node || !node.IsSequence()) {
+    return;
+  }
+
+  for (const auto& element : node) {
+    const auto port_node = element.as<YAML::Node>();
+
+    std::string id = getOrGenerateId(port_node);
+
+    // Default name to be same as ID
+    const auto name = port_node["name"].as<std::string>(id);
+
+    const auto uuid = utils::Identifier::parse(id) | utils::orElse([this] {
+      logger_->log_debug("Incorrect port UUID format.");
+      throw Exception(ExceptionType::GENERAL_EXCEPTION, "Incorrect port UUID format.");
+    });
+
+    auto port = std::make_unique<Port>(name, uuid.value(), port_type);
+    logger_->log_debug("Created port UUID %s and name %s", id, name);
+    port->setScheduledState(core::RUNNING);
+    port->setSchedulingStrategy(core::EVENT_DRIVEN);
+    parent->addPort(std::move(port));
   }
 }
 
