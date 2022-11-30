@@ -119,7 +119,7 @@ for TCP and secure HTTPS communications.
             name: tominifi
             max concurrent tasks: 2
             Properties:
-        SSL Context Service: SSLServiceName
+                SSL Context Service: SSLServiceName
     Controller Services:
     - name: SSLServiceName
       id: 2438e3c8-015a-1000-79ca-83af40ec1974
