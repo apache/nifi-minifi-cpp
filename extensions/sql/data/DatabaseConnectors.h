@@ -22,6 +22,7 @@
 #include <string>
 #include <vector>
 #include <ctime>
+#include <stdexcept>
 
 namespace org::apache::nifi::minifi::sql {
 
