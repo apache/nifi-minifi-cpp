@@ -220,7 +220,7 @@ TEST_CASE("ExecuteSQL select query is malformed", "[ExecuteSQL7]") {
   SECTION("Less than required arguments") {
     input_file = plan->addInput({}, "ignored content");
   }
-//  TODO(MINIFICPP-2001):
+// TODO(MINIFICPP-2001):
 //  SECTION("More than required arguments") {
 //    input_file = plan->addInput({
 //      {"sql.args.1.value", "1"},

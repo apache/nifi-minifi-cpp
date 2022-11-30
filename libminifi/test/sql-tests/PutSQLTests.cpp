@@ -94,7 +94,7 @@ TEST_CASE("PutSQL routes to failure on malformed statement") {
   SECTION("Missing parameter") {
     input_file = plan->addInput();
   }
-//  TODO(MINIFICPP-2002):
+// TODO(MINIFICPP-2002):
 //  SECTION("Invalid parameter type") {
 //    input_file = plan->addInput({
 //      {"sql.args.1.value", "banana"},
@@ -128,7 +128,7 @@ TEST_CASE("PutSQL routes to failure on malformed content statement") {
       {"sql.args.1.value", "42"}
     }, "INSERT INTO test_table VALUES(?, ?);");
   }
-//  TODO(MINIFICPP-2001):
+// TODO(MINIFICPP-2001):
 //  SECTION("Too many parameters") {
 //    input_file = plan->addInput({
 //      {"sql.args.1.value", "42"},
@@ -136,7 +136,7 @@ TEST_CASE("PutSQL routes to failure on malformed content statement") {
 //      {"sql.args.3.value", "too_many"}
 //    }, "INSERT INTO test_table VALUES(?, ?);");
 //  }
-//  TODO(MINIFICPP-2002):
+// TODO(MINIFICPP-2002):
 //  SECTION("Invalid parameter type") {
 //    input_file = plan->addInput({
 //      {"sql.args.1.value", "banana"},
