@@ -48,6 +48,7 @@ const core::Property ExecuteSQL::SQLSelectQuery(
   ->supportsExpressionLanguage(true)->build());
 
 const core::Relationship ExecuteSQL::Success("success", "Successfully created FlowFile from SQL query result set.");
+const core::Relationship ExecuteSQL::Failure{"failure", "Flow files containing malformed sql statements"};
 
 REGISTER_RESOURCE(ExecuteSQL, Processor);
 
@@ -107,6 +108,7 @@ const core::Property PutSQL::SQLStatement(
   ->supportsExpressionLanguage(true)->build());
 
 const core::Relationship PutSQL::Success("success", "Database is successfully updated.");
+const core::Relationship PutSQL::Failure{"failure", "Flow files that contain malformed sql statements"};
 
 REGISTER_RESOURCE(PutSQL, Processor);
 

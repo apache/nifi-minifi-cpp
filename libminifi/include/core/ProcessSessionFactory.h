@@ -43,12 +43,14 @@ class ProcessSessionFactory {
   }
 
   // Create the session
-  std::shared_ptr<ProcessSession> createSession();
+  virtual std::shared_ptr<ProcessSession> createSession();
 
   // Prevent default copy constructor and assignment operation
   // Only support pass by reference or pointer
   ProcessSessionFactory(const ProcessSessionFactory &parent) = delete;
   ProcessSessionFactory &operator=(const ProcessSessionFactory &parent) = delete;
+
+  virtual ~ProcessSessionFactory() = default;
 
  private:
   // ProcessContext

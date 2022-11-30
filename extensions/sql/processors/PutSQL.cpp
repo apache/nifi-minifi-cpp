@@ -30,9 +30,6 @@ namespace org::apache::nifi::minifi::processors {
 
 std::shared_ptr<core::logging::Logger> PutSQL::logger_ = core::logging::LoggerFactory<PutSQL>::getLogger();
 
-const core::Relationship PutSQL::Success{"success", "Flow files successfully executed as put sql statements"};
-const core::Relationship PutSQL::Failure{"failure", "Flow files that contain malformed sql statement"};
-
 PutSQL::PutSQL(std::string name, const utils::Identifier& uuid)
   : SQLProcessor(std::move(name), uuid, core::logging::LoggerFactory<PutSQL>::getLogger(uuid)) {
 }
@@ -42,7 +39,11 @@ void PutSQL::initialize() {
   setSupportedRelationships(relationships());
 }
 
-void PutSQL::processOnSchedule(core::ProcessContext& /*context*/) {}
+void PutSQL::processOnSchedule(core::ProcessContext& context) {
+  if (auto sql_statement = context.getProperty(SQLStatement); sql_statement && sql_statement->empty()) {
+    throw Exception(PROCESSOR_EXCEPTION, "Empty SQL statement");
+  }
+}
 
 void PutSQL::processOnTrigger(core::ProcessContext& context, core::ProcessSession& session) {
   auto flow_file = session.get();
@@ -50,20 +51,17 @@ void PutSQL::processOnTrigger(core::ProcessContext& context, core::ProcessSessio
     context.yield();
     return;
   }
-  session.transfer(flow_file, Success);
 
   std::string sql_statement;
   if (!context.getProperty(SQLStatement, sql_statement, flow_file)) {
     logger_->log_debug("Using the contents of the flow file as the SQL statement");
     sql_statement = to_string(session.readBuffer(flow_file));
   }
-  if (sql_statement.empty()) {
-    throw Exception(PROCESSOR_EXCEPTION, "Empty SQL statement");
-  }
 
   try {
     connection_->prepareStatement(sql_statement)->execute(collectArguments(flow_file));
-  } catch (const sql::SQLStatementException& ex) {
+    session.transfer(flow_file, Success);
+  } catch (const sql::StatementException& ex) {
     logger_->log_error("Malformed SQL statement in flow file");
     session.transfer(flow_file, Failure);
   }

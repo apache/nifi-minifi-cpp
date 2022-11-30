@@ -26,12 +26,9 @@
 #include "data/DatabaseConnectors.h"
 #include <soci/soci.h>
 #include <soci/odbc/soci-odbc.h>
+#include "logging/Logger.h"
 
-namespace org {
-namespace apache {
-namespace nifi {
-namespace minifi {
-namespace sql {
+namespace org::apache::nifi::minifi::sql {
 
 class SociRow : public Row {
  public:
@@ -71,14 +68,15 @@ class SociRowset : public Rowset {
 
 class SociStatement : public Statement {
  public:
-  explicit SociStatement(soci::session& session, const std::string &query)
-    : Statement(query), session_(session) {
-  }
+  SociStatement(soci::session& session, const std::string &query);
 
   std::unique_ptr<Rowset> execute(const std::vector<std::string>& args = {}) override;
 
  protected:
   soci::session& session_;
+
+ private:
+  std::shared_ptr<core::logging::Logger> logger_;
 };
 
 class SociSession : public Session {
@@ -112,8 +110,4 @@ class ODBCConnection : public sql::Connection {
   std::string connection_string_;
 };
 
-} /* namespace sql */
-} /* namespace minifi */
-} /* namespace nifi */
-} /* namespace apache */
-} /* namespace org */
+}  // namespace org::apache::nifi::minifi::sql

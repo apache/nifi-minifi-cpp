@@ -23,11 +23,7 @@
 #include <vector>
 #include <ctime>
 
-namespace org {
-namespace apache {
-namespace nifi {
-namespace minifi {
-namespace sql {
+namespace org::apache::nifi::minifi::sql {
 
 enum class DataType {
   STRING,
@@ -62,9 +58,14 @@ class Rowset {
   virtual void next() = 0;
 };
 
-class SQLException : public std::runtime_error {};
-class SQLConnectionException : public SQLException {};
-class SQLStatementException : public SQLException {};
+class ConnectionException : public std::runtime_error {
+ public:
+  using std::runtime_error::runtime_error;
+};
+class StatementException : public std::runtime_error {
+ public:
+  using std::runtime_error::runtime_error;
+};
 
 class Statement {
  public:
@@ -96,9 +97,5 @@ class Connection {
   virtual std::unique_ptr<Session> getSession() const = 0;
 };
 
-} /* namespace sql */
-} /* namespace minifi */
-} /* namespace nifi */
-} /* namespace apache */
-} /* namespace org */
+}  // namespace org::apache::nifi::minifi::sql
 

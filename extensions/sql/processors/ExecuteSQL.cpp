@@ -30,9 +30,6 @@ namespace org::apache::nifi::minifi::processors {
 const std::string ExecuteSQL::RESULT_ROW_COUNT = "executesql.row.count";
 const std::string ExecuteSQL::INPUT_FLOW_FILE_UUID = "input.flowfile.uuid";
 
-const core::Relationship ExecuteSQL::Success{"success", "Flow files successfully executed as sql statements"};
-const core::Relationship ExecuteSQL::Failure{"failure", "Flow files containing malformed sql statements"};
-
 const std::shared_ptr<core::logging::Logger> ExecuteSQL::logger_ = core::logging::LoggerFactory<ExecuteSQL>::getLogger();
 
 ExecuteSQL::ExecuteSQL(std::string name, const utils::Identifier& uuid)
@@ -78,8 +75,10 @@ void ExecuteSQL::processOnTrigger(core::ProcessContext& context, core::ProcessSe
   std::unique_ptr<sql::Rowset> row_set;
   try {
     row_set = connection_->prepareStatement(query)->execute(collectArguments(input_flow_file));
-  } catch (const sql::SQLStatementException& ex) {
+  } catch (const sql::StatementException& ex) {
     logger_->log_error("Malformed sql statement");
+    session.transfer(input_flow_file, Failure);
+    return;
   }
 
   sql::JSONSQLWriter json_writer{output_format_ == OutputType::JSONPretty};
