@@ -983,12 +983,12 @@ def step_impl(context):
 
 @then("the MiNiFi C2 server logs contain the following message: \"{log_message}\" in less than {duration}")
 def step_impl(context, log_message, duration):
-    context.test.check_container_log_contents("minifi-c2-server", log_message, timeparse(duration))
+    context.test.check_container_log_contents("minifi-c2-server", log_message, humanfriendly.parse_timespan(duration))
 
 
 @then("the MiNiFi C2 SSL server logs contain the following message: \"{log_message}\" in less than {duration}")
 def step_impl(context, log_message, duration):
-    context.test.check_container_log_contents("minifi-c2-server-ssl", log_message, timeparse(duration))
+    context.test.check_container_log_contents("minifi-c2-server-ssl", log_message, humanfriendly.parse_timespan(duration))
 
 
 @given(u'a MiNiFi C2 server is set up with SSL')

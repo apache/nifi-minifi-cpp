@@ -322,21 +322,27 @@ class DockerTestCluster(SingleNodeDockerCluster):
     def wait_for_peak_memory_usage(self, minimum_peak_memory_usage: int, timeout_seconds: int) -> bool:
         start_time = time.perf_counter()
         current_peak_memory_usage = get_peak_memory_usage(get_minifi_pid())
+        if current_peak_memory_usage is None:
+            logging.warning("Failed to determine peak memory usage")
+            return False
         while (time.perf_counter() - start_time) < timeout_seconds:
             if current_peak_memory_usage > minimum_peak_memory_usage:
                 return True
             current_peak_memory_usage = get_peak_memory_usage(get_minifi_pid())
             time.sleep(1)
-        print(f"Peak memory usage ({current_peak_memory_usage}) didnt exceed minimum asserted peak memory usage {minimum_peak_memory_usage}")
+        logging.warning(f"Peak memory usage ({current_peak_memory_usage}) didnt exceed minimum asserted peak memory usage {minimum_peak_memory_usage}")
         return False
 
     def wait_for_maximum_memory_usage(self, max_memory_usage: int, timeout_seconds: int) -> bool:
         start_time = time.perf_counter()
         current_memory_usage = get_memory_usage(get_minifi_pid())
+        if current_memory_usage is None:
+            logging.warning("Failed to determine memory usage")
+            return False
         while (time.perf_counter() - start_time) < timeout_seconds:
             if current_memory_usage < max_memory_usage:
                 return True
             current_memory_usage = get_memory_usage(get_minifi_pid())
             time.sleep(1)
-        print(f"Memory usage ({current_memory_usage}) is more than the maximum asserted memory usage ({max_memory_usage})")
+        logging.warning(f"Memory usage ({current_memory_usage}) is more than the maximum asserted memory usage ({max_memory_usage})")
         return False
