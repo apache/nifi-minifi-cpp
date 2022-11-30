@@ -176,7 +176,7 @@ std::unique_ptr<Rowset> MockDB::execute(const std::string& query, const std::vec
   } else if (minifi::utils::StringUtils::startsWith(query, "select", false)) {
     return select(query, args);
   } else {
-    throw std::runtime_error("Unknown query type");
+    throw sql::StatementError("Unknown query type");
   }
 
   return nullptr;
@@ -204,11 +204,17 @@ void MockDB::insertInto(const std::string& query, const std::vector<std::string>
   for (const auto& arg : args) {
     replaced_query = minifi::utils::StringUtils::replaceOne(replaced_query, "?", arg);
   }
+  if (replaced_query.find('?') != std::string::npos) {
+    throw sql::StatementError("Less arguments than required by the insert query");
+  }
 
   std::smatch match;
   std::regex expr(R"(insert into (\w+)\s*(\((.*)\))*\s*values\s*\((.+)\))", std::regex_constants::icase);
   std::regex_search(replaced_query, match, expr);
   std::string table_name = match[1];
+  if (!tables_.contains(table_name)) {
+    throw sql::StatementError("No such table: '" + table_name + "'");
+  }
   std::vector<std::string> values = minifi::utils::StringUtils::splitAndTrimRemovingEmpty(match[4], ",");
   for (auto& value : values) {
     value = minifi::utils::StringUtils::removeFramingCharacters(value, '\'');
@@ -238,6 +244,9 @@ std::unique_ptr<Rowset> MockDB::select(const std::string& query, const std::vect
   for (const auto& arg : args) {
     replaced_query = minifi::utils::StringUtils::replaceOne(replaced_query, "?", arg);
   }
+  if (replaced_query.find('?') != std::string::npos) {
+    throw sql::StatementError("Less arguments than required by the select query");
+  }
 
   std::smatch match;
   std::regex expr(R"(select\s+(.+)\s+from\s+(\w+)\s*(where ((.+(?= order by))|.+$))*\s*(order by (.+))*)", std::regex_constants::icase);
@@ -247,6 +256,9 @@ std::unique_ptr<Rowset> MockDB::select(const std::string& query, const std::vect
     cols = {};
   }
   std::string table_name = match[2];
+  if (!tables_.contains(table_name)) {
+    throw sql::StatementError("No such table: '" + table_name + "'");
+  }
   std::string condition_str = match[4];
   auto condition = parseWhereCondition(condition_str);
   std::string order = match[7];
