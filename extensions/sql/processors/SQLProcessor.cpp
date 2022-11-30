@@ -49,11 +49,11 @@ void SQLProcessor::onTrigger(const std::shared_ptr<core::ProcessContext>& contex
       connection_ = db_service_->getConnection();
     }
     if (!connection_) {
-      throw sql::ConnectionException("Could not establish sql connection");
+      throw sql::ConnectionError("Could not establish sql connection");
     }
     processOnTrigger(*context, *session);
-  } catch (const sql::ConnectionException& ex) {
-    logger_->log_error("Connection exception: %s", ex.what());
+  } catch (const sql::ConnectionError& ex) {
+    logger_->log_error("Connection error: %s", ex.what());
     // try to reconnect next time
     connection_.reset();
     throw;

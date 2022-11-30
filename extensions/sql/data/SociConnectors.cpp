@@ -123,16 +123,15 @@ std::unique_ptr<Rowset> SociStatement::execute(const std::vector<std::string>& a
     }
     return std::make_unique<SociRowset>(stmt);
   } catch (const soci::soci_error& ex) {
-    logger_->log_error("Exception while evaluating query: %s", ex.what());
-    auto err_cat = ex.get_error_category();
-    if (err_cat == soci::soci_error::error_category::invalid_statement
-        || err_cat == soci::soci_error::error_category::constraint_violation) {
-      throw sql::StatementException(ex.get_error_message());
-    } else if (err_cat == soci::soci_error::error_category::connection_error) {
-      throw sql::ConnectionException(ex.get_error_message());
+    logger_->log_error("Error while evaluating query, type: %s, what: %s", typeid(ex).name(), ex.what());
+    if (ex.get_error_category() == soci::soci_error::error_category::connection_error) {
+      throw sql::ConnectionError(ex.get_error_message());
     } else {
-      throw;
+      throw sql::StatementError(ex.get_error_message());
     }
+  } catch (const std::exception& ex) {
+    logger_->log_error("Error while evaluating query, type: %s, what: %s", typeid(ex).name(), ex.what());
+    throw sql::StatementError(ex.what());
   }
 }
 

@@ -61,8 +61,8 @@ void PutSQL::processOnTrigger(core::ProcessContext& context, core::ProcessSessio
   try {
     connection_->prepareStatement(sql_statement)->execute(collectArguments(flow_file));
     session.transfer(flow_file, Success);
-  } catch (const sql::StatementException& ex) {
-    logger_->log_error("Malformed SQL statement in flow file");
+  } catch (const sql::StatementError& ex) {
+    logger_->log_error("Error while executing SQL statement in flow file: %s", ex.what());
     session.transfer(flow_file, Failure);
   }
 }

@@ -75,8 +75,8 @@ void ExecuteSQL::processOnTrigger(core::ProcessContext& context, core::ProcessSe
   std::unique_ptr<sql::Rowset> row_set;
   try {
     row_set = connection_->prepareStatement(query)->execute(collectArguments(input_flow_file));
-  } catch (const sql::StatementException& ex) {
-    logger_->log_error("Malformed sql statement");
+  } catch (const sql::StatementError& ex) {
+    logger_->log_error("Error while executing sql statement: %s", ex.what());
     session.transfer(input_flow_file, Failure);
     return;
   }

@@ -58,11 +58,14 @@ class Rowset {
   virtual void next() = 0;
 };
 
-class ConnectionException : public std::runtime_error {
+class ConnectionError : public std::runtime_error {
  public:
   using std::runtime_error::runtime_error;
 };
-class StatementException : public std::runtime_error {
+// Indicates that the error might be caused by a malformed
+// query, constraint violation or something else that won't
+// fix itself on a retry.
+class StatementError : public std::runtime_error {
  public:
   using std::runtime_error::runtime_error;
 };
