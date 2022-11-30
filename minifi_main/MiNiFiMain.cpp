@@ -55,6 +55,8 @@
 #include "core/ConfigurationFactory.h"
 #include "core/RepositoryFactory.h"
 #include "core/extension/ExtensionManager.h"
+#include "core/repository/VolatileContentRepository.h"
+#include "core/repository/VolatileFlowFileRepository.h"
 #include "DiskSpaceWatchdog.h"
 #include "properties/Decryptor.h"
 #include "utils/file/PathUtils.h"
@@ -335,6 +337,12 @@ int main(int argc, char **argv) {
 
     if (!content_repo->initialize(configure)) {
       logger->log_error("Content repository failed to initialize, exiting..");
+      exit(1);
+    }
+    const bool is_flow_repo_non_persistent = flow_repo->isNoop() || std::dynamic_pointer_cast<core::repository::VolatileFlowFileRepository>(flow_repo) != nullptr;
+    const bool is_content_repo_non_persistent = std::dynamic_pointer_cast<core::repository::VolatileContentRepository>(content_repo) != nullptr;
+    if (is_flow_repo_non_persistent != is_content_repo_non_persistent) {
+      logger->log_error("Both or neither of flowfile and content repositories must be persistent! Exiting..");
       exit(1);
     }
 

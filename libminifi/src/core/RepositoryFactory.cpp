@@ -84,25 +84,21 @@ class NoOpThreadedRepository : public core::ThreadedRepository {
 std::unique_ptr<core::Repository> createRepository(const std::string& configuration_class_name, const std::string& repo_name) {
   std::string class_name_lc = configuration_class_name;
   std::transform(class_name_lc.begin(), class_name_lc.end(), class_name_lc.begin(), ::tolower);
-  try {
-    auto return_obj = core::ClassLoader::getDefaultClassLoader().instantiate<core::ThreadedRepository>(class_name_lc,
-                                                                                                       class_name_lc);
-    if (return_obj) {
-      return_obj->setName(repo_name);
-      return return_obj;
-    }
-    // if the desired repos don't exist, we can try doing string matches and rely on volatile repositories
-    if (class_name_lc == "flowfilerepository" || class_name_lc == "volatileflowfilerepository") {
-      return instantiate<repository::VolatileFlowFileRepository>(repo_name);
-    } else if (class_name_lc == "provenancerepository" || class_name_lc == "volatileprovenancefilerepository") {
-      return instantiate<repository::VolatileProvenanceRepository>(repo_name);
-    } else if (class_name_lc == "nooprepository") {
-      return std::make_unique<core::NoOpThreadedRepository>(repo_name);
-    }
-    return {};
-  } catch (const std::runtime_error&) {
-    throw;
+  auto return_obj = core::ClassLoader::getDefaultClassLoader().instantiate<core::ThreadedRepository>(class_name_lc,
+                                                                                                     class_name_lc);
+  if (return_obj) {
+    return_obj->setName(repo_name);
+    return return_obj;
   }
+  // if the desired repos don't exist, we can try doing string matches and rely on volatile repositories
+  if (class_name_lc == "flowfilerepository" || class_name_lc == "volatileflowfilerepository") {
+    return instantiate<repository::VolatileFlowFileRepository>(repo_name);
+  } else if (class_name_lc == "provenancerepository" || class_name_lc == "volatileprovenancefilerepository") {
+    return instantiate<repository::VolatileProvenanceRepository>(repo_name);
+  } else if (class_name_lc == "nooprepository") {
+    return std::make_unique<core::NoOpThreadedRepository>(repo_name);
+  }
+  return {};
 }
 
 }  // namespace org::apache::nifi::minifi::core
