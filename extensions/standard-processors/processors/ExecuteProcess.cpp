@@ -79,8 +79,8 @@ void ExecuteProcess::onSchedule(core::ProcessContext* context, core::ProcessSess
   if (context->getProperty(CommandArguments.getName(), value)) {
     command_argument_ = value;
   }
-  if (context->getProperty(WorkingDir.getName(), value)) {
-    working_dir_ = value;
+  if (auto working_dir_str = context->getProperty(WorkingDir)) {
+    working_dir_ = *working_dir_str;
   }
   if (auto batch_duration = context->getProperty<core::TimePeriodValue>(BatchDuration)) {
     batch_duration_ = batch_duration->getMilliseconds();
@@ -241,7 +241,9 @@ void ExecuteProcess::onTrigger(core::ProcessContext *context, core::ProcessSessi
     yield();
     return;
   }
-  if (!utils::Environment::setCurrentWorkingDirectory(working_dir_.c_str())) {
+  std::error_code current_path_error;
+  std::filesystem::current_path(working_dir_, current_path_error);
+  if (current_path_error) {
     yield();
     return;
   }

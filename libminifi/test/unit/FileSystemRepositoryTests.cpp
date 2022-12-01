@@ -34,7 +34,7 @@ TEST_CASE("Test Physical memory usage", "[testphysicalmemoryusage]") {
   auto dir = controller.createTempDirectory();
   auto fs_repo = std::make_shared<minifi::core::repository::FileSystemRepository>();
   auto config = std::make_shared<minifi::Configure>();
-  config->set(minifi::Configure::nifi_dbcontent_repository_directory_default, dir);
+  config->set(minifi::Configure::nifi_dbcontent_repository_directory_default, dir.string());
   REQUIRE(fs_repo->initialize(config));
   const auto start_memory = utils::OsUtils::getCurrentProcessPhysicalMemoryUsage();
 

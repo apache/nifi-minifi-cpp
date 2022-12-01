@@ -1833,21 +1833,16 @@ TEST_CASE("TailFile honors batch size for maximum lines processed", "[batchSize]
   auto tailfile = std::make_shared<minifi::processors::TailFile>("TailFile");
   minifi::test::SingleProcessorTestController test_controller(tailfile);
 
-  auto dir = test_controller.createTempDirectory();
-  std::stringstream temp_file;
-  temp_file << dir << utils::file::get_separator() << TMP_FILE;
+  auto temp_file_path  = test_controller.createTempDirectory() / TMP_FILE;
 
   std::ofstream tmpfile;
-  tmpfile.open(temp_file.str(), std::ios::out | std::ios::binary);
+  tmpfile.open(temp_file_path, std::ios::out | std::ios::binary);
   for (auto i = 0; i < 20; ++i) {
     tmpfile << NEW_TAIL_DATA;
   }
   tmpfile.close();
 
-  std::stringstream state_file;
-  state_file << dir << utils::file::get_separator() << STATE_FILE;
-
-  tailfile->setProperty(minifi::processors::TailFile::FileName.getName(), temp_file.str());
+  tailfile->setProperty(minifi::processors::TailFile::FileName.getName(), temp_file_path.string());
   tailfile->setProperty(minifi::processors::TailFile::Delimiter.getName(), "\n");
   tailfile->setProperty(minifi::processors::TailFile::BatchSize.getName(), "10");
 
