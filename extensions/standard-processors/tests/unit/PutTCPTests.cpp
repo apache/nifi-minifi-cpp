@@ -414,7 +414,8 @@ TEST_CASE("PutTCP test non-routable server", "[PutTCP]") {
 
   CHECK((LogTestController::getInstance().contains("Connection timed out", 0ms)
       || LogTestController::getInstance().contains("Operation timed out", 0ms)
-      || LogTestController::getInstance().contains("host has failed to respond", 0ms)));
+      || LogTestController::getInstance().contains("host has failed to respond", 0ms)
+      || LogTestController::getInstance().contains("No route to host", 0ms)));
 }
 
 TEST_CASE("PutTCP test invalid server cert", "[PutTCP]") {
