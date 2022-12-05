@@ -457,7 +457,7 @@ class TestSessionFactory : public minifi::core::ProcessSessionFactory {
   using SessionCallback = std::function<void(const std::shared_ptr<minifi::core::ProcessSession>&)>;
  public:
   TestSessionFactory(std::shared_ptr<minifi::core::ProcessContext> context, SessionCallback on_new_session)
-    : ProcessSessionFactory(context), on_new_session_(on_new_session) {}
+    : ProcessSessionFactory(std::move(context)), on_new_session_(std::move(on_new_session)) {}
 
   std::shared_ptr<minifi::core::ProcessSession> createSession() override {
     auto session = ProcessSessionFactory::createSession();
