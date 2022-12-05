@@ -106,7 +106,7 @@ class ImageStore:
                     echo "UserName = postgres" >> /etc/odbc.ini && \
                     echo "Password = password" >> /etc/odbc.ini && \
                     echo "Database = postgres" >> /etc/odbc.ini
-                RUN sed -i -e 's/INFO/DEBUG/g' {minifi_root}/conf/minifi-log.properties
+                RUN sed -i -e 's/INFO/TRACE/g' {minifi_root}/conf/minifi-log.properties
                 RUN echo nifi.flow.engine.threads=5 >> {minifi_root}/conf/minifi.properties
                 RUN echo nifi.metrics.publisher.agent.identifier=Agent1 >> {minifi_root}/conf/minifi.properties
                 RUN echo nifi.metrics.publisher.class=PrometheusMetricsPublisher >> {minifi_root}/conf/minifi.properties

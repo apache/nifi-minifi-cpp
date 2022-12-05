@@ -46,6 +46,7 @@ class PyProcessSession {
   void transfer(const std::shared_ptr<script::ScriptFlowFile>& flow_file, const core::Relationship& relationship);
   void read(const std::shared_ptr<script::ScriptFlowFile>& flow_file, py::object input_stream_callback);
   void write(const std::shared_ptr<script::ScriptFlowFile>& flow_file, py::object output_stream_callback);
+  void remove(const std::shared_ptr<script::ScriptFlowFile>& flow_file);
 
   /**
    * Sometimes we want to release shared pointers to core resources when
