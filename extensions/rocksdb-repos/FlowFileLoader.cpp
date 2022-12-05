@@ -25,6 +25,7 @@
 
 #include "logging/LoggerConfiguration.h"
 #include "FlowFileRecord.h"
+#include "utils/gsl.h"
 
 namespace org::apache::nifi::minifi {
 
@@ -93,7 +94,7 @@ utils::TaskRescheduleInfo FlowFileLoader::loadImpl(const std::vector<SwappedFlow
       }
       utils::Identifier container_id;
       auto flow_file = FlowFileRecord::DeSerialize(
-          std::as_bytes(std::span(serialized_items[idx])), content_repo_, container_id);
+          gsl::make_span(serialized_items[idx]).as_span<const std::byte>(), content_repo_, container_id);
       if (!flow_file) {
         // corrupted flow file
         logger_->log_error("Failed to deserialize flow file \"%s\"", serialized_keys[idx]);
