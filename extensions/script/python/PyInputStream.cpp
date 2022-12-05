@@ -41,7 +41,7 @@ py::bytes PyInputStream::read(size_t len) {
   }
 
   if (len <= 0) {
-    return nullptr;
+    return {};
   }
 
   std::vector<std::byte> buffer(len);

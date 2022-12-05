@@ -36,3 +36,13 @@ Feature: MiNiFi can use python processors in its flows
 
     When all instances start up
     Then the Minifi logs contain the following message: "key:Python attribute value:attributevalue" in less than 60 seconds
+
+  Scenario: Native python processor can read empty input stream
+    Given a GenerateFlowFile processor with the "File Size" property set to "0B"
+    And a MoveContentToJson processor
+    And a PutFile processor with the "Directory" property set to "/tmp/output"
+    And the "success" relationship of the GenerateFlowFile processor is connected to the MoveContentToJson
+    And the "success" relationship of the MoveContentToJson processor is connected to the PutFile
+
+    When all instances start up
+    Then a flowfile with the content '{"content": ""}' is placed in the monitored directory in less than 60 seconds
