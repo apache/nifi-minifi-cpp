@@ -25,10 +25,10 @@ namespace org::apache::nifi::minifi::controllers {
 KeyValueStateManager::KeyValueStateManager(
         const utils::Identifier& id,
         KeyValueStateStorage* storage)
-    : StateManager(id)
-    , storage_(storage)
-    , transaction_in_progress_(false)
-    , change_type_(ChangeType::NONE) {
+    : StateManager(id),
+      storage_(storage),
+      transaction_in_progress_(false),
+      change_type_(ChangeType::NONE) {
   std::string serialized;
   if (storage_->get(id_.to_string(), serialized)) {
     state_ = KeyValueStateStorage::deserialize(serialized);
@@ -36,16 +36,16 @@ KeyValueStateManager::KeyValueStateManager(
 }
 
 bool KeyValueStateManager::set(const core::StateManager::State& kvs) {
-  bool autoCommit = false;
+  bool auto_commit = false;
   if (!transaction_in_progress_) {
-    autoCommit = true;
+    auto_commit = true;
     transaction_in_progress_ = true;
   }
 
   change_type_ = ChangeType::SET;
   state_to_set_ = kvs;
 
-  if (autoCommit) {
+  if (auto_commit) {
     return commit();
   }
   return true;
@@ -68,16 +68,16 @@ bool KeyValueStateManager::clear() {
     return false;
   }
 
-  bool autoCommit = false;
+  bool auto_commit = false;
   if (!transaction_in_progress_) {
-    autoCommit = true;
+    auto_commit = true;
     transaction_in_progress_ = true;
   }
 
   change_type_ = ChangeType::CLEAR;
   state_to_set_.clear();
 
-  if (autoCommit) {
+  if (auto_commit) {
     return commit();
   }
   return true;
