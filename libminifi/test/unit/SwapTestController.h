@@ -29,6 +29,7 @@
 #include "../Utils.h"
 #include "../Catch.h"
 #include "../unit/ProvenanceTestHelper.h"
+#include "../utils/gsl.h"
 
 namespace org::apache::nifi::minifi::test {
 
@@ -77,7 +78,7 @@ class SwappingFlowFileTestRepo : public TestFlowRepository, public minifi::SwapM
       std::string value;
       Get(ff_id.id.to_string().c_str(), value);
       minifi::utils::Identifier container_id;
-      auto ff = minifi::FlowFileRecord::DeSerialize(std::as_bytes(std::span(value)), content_repo_, container_id);
+      auto ff = minifi::FlowFileRecord::DeSerialize(gsl::make_span(value).as_span<const std::byte>(), content_repo_, container_id);
       ff->setPenaltyExpiration(ff_id.to_be_processed_after);
       load_task.result.push_back(std::move(ff));
     }
