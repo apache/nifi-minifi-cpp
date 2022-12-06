@@ -29,16 +29,14 @@
 
 namespace org::apache::nifi::minifi::processors {
 
+using SendFinishedTask = std::packaged_task<bool(bool, std::optional<int>, std::optional<MQTTReasonCodes>)>;
+
 void PublishMQTT::initialize() {
   setSupportedProperties(properties());
   setSupportedRelationships(relationships());
 }
 
 void PublishMQTT::readProperties(const std::shared_ptr<core::ProcessContext>& context) {
-  if (!context->getProperty(Topic).has_value()) {
-    logger_->log_error("PublishMQTT: could not get Topic");
-  }
-
   if (const auto retain_opt = context->getProperty<bool>(Retain)) {
     retain_ = *retain_opt;
   }
@@ -53,10 +51,11 @@ void PublishMQTT::readProperties(const std::shared_ptr<core::ProcessContext>& co
   in_flight_message_counter_.setQoS(qos_);
 }
 
-void PublishMQTT::onTriggerImpl(const std::shared_ptr<core::ProcessContext>& context, const std::shared_ptr<core::ProcessSession> &session) {
+void PublishMQTT::onTriggerImpl(const std::shared_ptr<core::ProcessContext>& context, const std::shared_ptr<core::ProcessSession>& session) {
   std::shared_ptr<core::FlowFile> flow_file = session->get();
 
   if (!flow_file) {
+    yield();
     return;
   }
 
@@ -80,13 +79,16 @@ void PublishMQTT::onTriggerImpl(const std::shared_ptr<core::ProcessContext>& con
 }
 
 bool PublishMQTT::sendMessage(const std::vector<std::byte>& buffer, const std::string& topic, const std::string& content_type, const std::shared_ptr<core::FlowFile>& flow_file) {
-  if (buffer.size() > 268'435'455) {
-    logger_->log_error("Sending message failed because MQTT limit maximum packet size [268'435'455] is exceeded by FlowFile of [%zu]", buffer.size());
+  static const unsigned max_packet_size = 268'435'455;
+  if (buffer.size() > max_packet_size) {
+    logger_->log_error("Sending message failed because MQTT limit maximum packet size [%u] is exceeded by FlowFile of [%zu]", std::to_string(max_packet_size), buffer.size());
+    return false;
   }
 
   if (maximum_packet_size_.has_value() && buffer.size() > *(maximum_packet_size_)) {
     logger_->log_error("Sending message failed because broker-requested maximum packet size [%" PRIu32 "] is exceeded by FlowFile of [%zu]",
                                    *maximum_packet_size_, buffer.size());
+    return false;
   }
 
   MQTTAsync_message message_to_publish = MQTTAsync_message_initializer;
@@ -107,7 +109,7 @@ bool PublishMQTT::sendMessage(const std::vector<std::byte>& buffer, const std::s
   }
 
   // save context for callback
-  std::packaged_task<bool(bool, std::optional<int>, std::optional<MQTTReasonCodes>)> send_finished_task(
+  SendFinishedTask send_finished_task(
           [this] (const bool success, const std::optional<int> response_code, const std::optional<MQTTReasonCodes> reason_code) {
             return notify(success, response_code, reason_code);
           });
@@ -138,28 +140,28 @@ void PublishMQTT::checkProperties() {
 }
 
 void PublishMQTT::checkBrokerLimitsImpl() {
-  if (retain_available_.has_value() && !*retain_available_ && retain_) {
+  if (retain_available_ == false && retain_) {
     throw Exception(PROCESS_SCHEDULE_EXCEPTION, "Retain was set but broker does not support it");
   }
 }
 
 void PublishMQTT::sendSuccess(void* context, MQTTAsync_successData* /*response*/) {
-  auto send_finished_task = reinterpret_cast<std::packaged_task<void(bool, std::optional<int>, std::optional<MQTTReasonCodes>)>*>(context);
+  auto send_finished_task = reinterpret_cast<SendFinishedTask*>(context);
   (*send_finished_task)(true, std::nullopt, std::nullopt);
 }
 
 void PublishMQTT::sendSuccess5(void* context, MQTTAsync_successData5* response) {
-  auto send_finished_task = reinterpret_cast<std::packaged_task<void(bool, std::optional<int>, std::optional<MQTTReasonCodes>)>*>(context);
+  auto send_finished_task = reinterpret_cast<SendFinishedTask*>(context);
   (*send_finished_task)(true, std::nullopt, response->reasonCode);
 }
 
 void PublishMQTT::sendFailure(void* context, MQTTAsync_failureData* response) {
-  auto send_finished_task = reinterpret_cast<std::packaged_task<void(bool, std::optional<int>, std::optional<MQTTReasonCodes>)>*>(context);
+  auto send_finished_task = reinterpret_cast<SendFinishedTask*>(context);
   (*send_finished_task)(false, response->code, std::nullopt);
 }
 
 void PublishMQTT::sendFailure5(void* context, MQTTAsync_failureData5* response) {
-  auto send_finished_task = reinterpret_cast<std::packaged_task<void(bool, std::optional<int>, std::optional<MQTTReasonCodes>)>*>(context);
+  auto send_finished_task = reinterpret_cast<SendFinishedTask*>(context);
   (*send_finished_task)(false, response->code, response->reasonCode);
 }
 

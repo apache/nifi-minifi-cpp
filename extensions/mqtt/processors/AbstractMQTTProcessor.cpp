@@ -25,6 +25,8 @@
 
 namespace org::apache::nifi::minifi::processors {
 
+using ConnectFinishedTask = std::packaged_task<void(MQTTAsync_successData*, MQTTAsync_successData5*, MQTTAsync_failureData*, MQTTAsync_failureData5*)>;
+
 void AbstractMQTTProcessor::onSchedule(const std::shared_ptr<core::ProcessContext> &context, const std::shared_ptr<core::ProcessSessionFactory>& /*factory*/) {
   if (auto value = context->getProperty(BrokerURI)) {
     uri_ = std::move(*value);
@@ -182,7 +184,7 @@ void AbstractMQTTProcessor::reconnect() {
   } else {
     conn_opts.cleansession = getCleanSession();
   }
-  std::packaged_task<void(MQTTAsync_successData*, MQTTAsync_successData5*, MQTTAsync_failureData*, MQTTAsync_failureData5*)> connect_finished_task(
+  ConnectFinishedTask connect_finished_task(
           [this] (MQTTAsync_successData* success_data, MQTTAsync_successData5* success_data_5, MQTTAsync_failureData* failure_data, MQTTAsync_failureData5* failure_data_5) {
             onConnectFinished(success_data, success_data_5, failure_data, failure_data_5);
           });
@@ -277,7 +279,7 @@ void AbstractMQTTProcessor::disconnect() {
   }
 
   MQTTAsync_disconnectOptions disconnect_options = MQTTAsync_disconnectOptions_initializer;
-  std::packaged_task<void(MQTTAsync_successData*, MQTTAsync_successData5*, MQTTAsync_failureData*, MQTTAsync_failureData5*)> disconnect_finished_task(
+  ConnectFinishedTask disconnect_finished_task(
           [this] (MQTTAsync_successData* success_data, MQTTAsync_successData5* success_data_5, MQTTAsync_failureData* failure_data, MQTTAsync_failureData5* failure_data_5) {
             onDisconnectFinished(success_data, success_data_5, failure_data, failure_data_5);
           });
@@ -359,22 +361,22 @@ void AbstractMQTTProcessor::connectionLost(void *context, char* cause) {
 
 
 void AbstractMQTTProcessor::connectionSuccess(void* context, MQTTAsync_successData* response) {
-  auto* task = reinterpret_cast<std::packaged_task<void(MQTTAsync_successData*, MQTTAsync_successData5*, MQTTAsync_failureData*, MQTTAsync_failureData5*)>*>(context);
+  auto* task = reinterpret_cast<ConnectFinishedTask*>(context);
   (*task)(response, nullptr, nullptr, nullptr);
 }
 
 void AbstractMQTTProcessor::connectionSuccess5(void* context, MQTTAsync_successData5* response) {
-  auto* task = reinterpret_cast<std::packaged_task<void(MQTTAsync_successData*, MQTTAsync_successData5*, MQTTAsync_failureData*, MQTTAsync_failureData5*)>*>(context);
+  auto* task = reinterpret_cast<ConnectFinishedTask*>(context);
   (*task)(nullptr, response, nullptr, nullptr);
 }
 
 void AbstractMQTTProcessor::connectionFailure(void* context, MQTTAsync_failureData* response) {
-  auto* task = reinterpret_cast<std::packaged_task<void(MQTTAsync_successData*, MQTTAsync_successData5*, MQTTAsync_failureData*, MQTTAsync_failureData5*)>*>(context);
+  auto* task = reinterpret_cast<ConnectFinishedTask*>(context);
   (*task)(nullptr, nullptr, response, nullptr);
 }
 
 void AbstractMQTTProcessor::connectionFailure5(void* context, MQTTAsync_failureData5* response) {
-  auto* task = reinterpret_cast<std::packaged_task<void(MQTTAsync_successData*, MQTTAsync_successData5*, MQTTAsync_failureData*, MQTTAsync_failureData5*)>*>(context);
+  auto* task = reinterpret_cast<ConnectFinishedTask*>(context);
   (*task)(nullptr, nullptr, nullptr, response);
 }
 

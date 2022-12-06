@@ -93,7 +93,7 @@ void ConsumeMQTT::onTriggerImpl(const std::shared_ptr<core::ProcessContext>& /*c
     std::shared_ptr<core::FlowFile> flow_file = session->create();
     WriteCallback write_callback(message, logger_);
     try {
-      session->write(flow_file, write_callback);
+      session->write(flow_file, std::ref(write_callback));
     } catch (const Exception& ex) {
       logger_->log_error("Error when processing message queue: %s", ex.what());
     }
@@ -290,14 +290,14 @@ void ConsumeMQTT::checkBrokerLimitsImpl() {
 
   if (maximum_session_expiry_interval_.has_value() && session_expiry_interval_ > maximum_session_expiry_interval_) {
     std::ostringstream os;
-    os << "Set Session Expiry Interval (" << session_expiry_interval_.count() <<" s) is longer then maximum supported by broker (" << maximum_session_expiry_interval_->count() << " s).";
+    os << "Set Session Expiry Interval (" << session_expiry_interval_.count() <<" s) is longer then the maximum supported by the broker (" << maximum_session_expiry_interval_->count() << " s).";
     throw Exception(PROCESS_SCHEDULE_EXCEPTION, os.str());
   }
 
   if (utils::StringUtils::startsWith(topic_, "$share/")) {
     if (mqtt_version_.value() == MqttVersions::V_5_0) {
       // shared topic are supported on MQTT 5, unless explicitly denied by broker
-      if (shared_subscription_available_.has_value() && !*shared_subscription_available_) {
+      if (shared_subscription_available_ == false) {
         std::ostringstream os;
         os << "Shared topic feature with topic \"" << topic_ << "\" is not supported by broker";
         throw Exception(PROCESS_SCHEDULE_EXCEPTION, os.str());
