@@ -38,7 +38,7 @@ using namespace std::literals::chrono_literals;
 
 class TailFileTestHarness : public IntegrationBase {
  public:
-  TailFileTestHarness() : IntegrationBase(2s) {
+  TailFileTestHarness() {
     dir = testController.createTempDirectory();
 
     statefile = dir + utils::file::get_separator();
