@@ -125,42 +125,25 @@ class FetchSFTPTestsFixture {
     IN_SOURCE
   };
 
-  void testFile(TestWhere where, const std::string& relative_path, const std::string& expected_content) {
-    std::filesystem::path result_file;
-    if (where == IN_DESTINATION) {
-      result_file = dst_dir / relative_path;
-    } else {
-      result_file = src_dir / "vfs" / relative_path;
-#ifndef WIN32
-      /* Workaround for mina-sshd setting the read file's permissions to 0000 */
-      REQUIRE(0 == chmod(result_file.string().c_str(), 0644));
-#endif
-    }
-    std::ifstream file(result_file);
-    REQUIRE(true == file.good());
+  void testFile(TestWhere where, const std::filesystem::path& relative_path, std::string_view expected_content) {
+    std::filesystem::path expected_path = where == IN_DESTINATION ? dst_dir / relative_path : src_dir / "vfs" / relative_path;
+    REQUIRE(std::filesystem::exists(expected_path));
+    std::filesystem::permissions(expected_path, static_cast<std::filesystem::perms>(0644));
+
+    std::ifstream file(expected_path);
+    REQUIRE(file.good());
     std::stringstream content;
     std::vector<char> buffer(1024U);
     while (file) {
       file.read(buffer.data(), buffer.size());
       content << std::string(buffer.data(), file.gcount());
     }
-    REQUIRE(expected_content == content.str());
+    CHECK(expected_content == content.str());
   }
 
   void testFileNotExists(TestWhere where, const std::string& relative_path) {
-    std::filesystem::path result_file;
-    if (where == IN_DESTINATION) {
-      result_file = dst_dir / relative_path;
-    } else {
-      result_file = src_dir / "vfs" / relative_path;
-#ifndef WIN32
-      /* Workaround for mina-sshd setting the read file's permissions to 0000 */
-      REQUIRE(-1 == chmod(result_file.string().c_str(), 0644));
-#endif
-    }
-    std::ifstream file(result_file);
-    REQUIRE(false == file.is_open());
-    REQUIRE(false == file.good());
+    std::filesystem::path expected_path = where == IN_DESTINATION ? dst_dir / relative_path : src_dir / "vfs" / relative_path;
+    CHECK(!std::filesystem::exists(expected_path));
   }
 
  protected:
@@ -234,7 +217,7 @@ TEST_CASE_METHOD(FetchSFTPTestsFixture, "FetchSFTP fetch non-readable file", "[F
   plan->setProperty(fetch_sftp, "Remote File", "nifi_test/tstFile.ext");
 
   createFile("nifi_test/tstFile.ext", "Test content 1");
-  REQUIRE(0 == chmod((src_dir / "vfs" / "nifi_test" / "tstFile.ext").string().c_str(), 0000));
+  std::filesystem::permissions(src_dir / "vfs" / "nifi_test" / "tstFile.ext", static_cast<std::filesystem::perms>(0000));
 
   testController.runSession(plan, true);
 
@@ -289,7 +272,7 @@ TEST_CASE_METHOD(FetchSFTPTestsFixture, "FetchSFTP Completion Strategy Delete Fi
 
   createFile("nifi_test/tstFile.ext", "Test content 1");
   /* By making the parent directory non-writable we make it impossible do delete the source file */
-  REQUIRE(0 == chmod((src_dir / "vfs" / "nifi_test").string().c_str(), 0500));
+  std::filesystem::permissions(src_dir / "vfs" / "nifi_test", static_cast<std::filesystem::perms>(0500));
 
   testController.runSession(plan, true);
 
@@ -305,7 +288,7 @@ TEST_CASE_METHOD(FetchSFTPTestsFixture, "FetchSFTP Completion Strategy Delete Fi
   REQUIRE(LogTestController::getInstance().contains("key:sftp.remote.port value:" + std::to_string(sftp_server->getPort())));
   REQUIRE(LogTestController::getInstance().contains("key:path value:nifi_test/"));
   REQUIRE(LogTestController::getInstance().contains("key:filename value:tstFile.ext"));
-  REQUIRE(0 == chmod((src_dir / "vfs" / "nifi_test").string().c_str(), 0755));
+  std::filesystem::permissions(src_dir / "vfs" / "nifi_test", static_cast<std::filesystem::perms>(0755));
 }
 #endif
 

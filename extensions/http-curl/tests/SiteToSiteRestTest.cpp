@@ -77,14 +77,14 @@ class SiteToSiteTestHarness : public HTTPIntegrationBase {
     LogTestController::getInstance().setDebug<core::ConfigurableComponent>();
 
     std::fstream file;
-    path_ = dir_ / "tstFile.ext";
-    file.open(path_, std::ios::out);
+    test_file_ = dir_ / "tstFile.ext";
+    file.open(test_file_, std::ios::out);
     file << "tempFile";
     file.close();
   }
 
   void cleanup() override {
-    std::filesystem::remove(path_);
+    std::filesystem::remove(test_file_);
     IntegrationBase::cleanup();
   }
 
@@ -101,7 +101,7 @@ class SiteToSiteTestHarness : public HTTPIntegrationBase {
  protected:
   bool isSecure;
   std::filesystem::path dir_;
-  std::filesystem::path path_;
+  std::filesystem::path test_file_;
   TestController test_controller_;
 };
 

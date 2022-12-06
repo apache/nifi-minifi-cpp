@@ -172,8 +172,9 @@ void GetFile::getSingleFile(core::ProcessSession& session, const std::filesystem
     session.write(flow_file, utils::FileReaderCallback{file_path});
     session.transfer(flow_file, Success);
     if (!request_.keepSourceFile) {
-      if (!std::filesystem::remove(file_path)) {
-        logger_->log_error("GetFile could not delete file '%s', error %d: %s", file_path.string(), errno, strerror(errno));
+      std::error_code remove_error;
+      if (!std::filesystem::remove(file_path, remove_error)) {
+        logger_->log_error("GetFile could not delete file '%s', error: %s", file_path.string(), remove_error.message());
       }
     }
   } catch (const utils::FileReaderCallbackIOError& io_error) {

@@ -216,7 +216,7 @@ TEST_CASE("GetFile PutFile dynamic attribute", "[expressionLanguageTestGetFilePu
   plan->setProperty(extract_text, minifi::processors::ExtractText::Attribute.getName(), "extracted_attr_name");
   plan->addProcessor("LogAttribute", "LogAttribute", core::Relationship("success", "description"), true);
   auto put_file = plan->addProcessor("PutFile", "PutFile", core::Relationship("success", "description"), true);
-  plan->setProperty(put_file, minifi::processors::PutFile::Directory.getName(), out_dir.string() + "/${extracted_attr_name}");
+  plan->setProperty(put_file, minifi::processors::PutFile::Directory.getName(), (out_dir / "${extracted_attr_name}").string());
   plan->setProperty(put_file, minifi::processors::PutFile::ConflictResolution.getName(), minifi::processors::PutFile::CONFLICT_RESOLUTION_STRATEGY_REPLACE);
   plan->setProperty(put_file, minifi::processors::PutFile::CreateDirs.getName(), "true");
 
@@ -1558,4 +1558,3 @@ TEST_CASE("resolve_user_id_test", "[resolve_user_id tests]") {
   REQUIRE(expr(expression::Parameters{flow_file_a}).asString().empty());
 }
 }
-

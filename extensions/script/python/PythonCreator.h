@@ -63,7 +63,7 @@ class PythonCreator : public minifi::core::CoreComponent {
     configure({pathListings.value()});
 
     for (const auto &path : classpaths_) {
-      const auto script_name = getScriptName(path);
+      const auto script_name = path.stem();
       const auto package = getPackage(pathListings.value(), path.string());
       std::string class_name = script_name.string();
       std::string full_name = "org.apache.nifi.minifi.processors." + script_name.string();
@@ -74,7 +74,7 @@ class PythonCreator : public minifi::core::CoreComponent {
       core::getClassLoader().registerClass(class_name, std::make_unique<PythonObjectFactory>(path.string(), class_name));
       registered_classes_.push_back(class_name);
       try {
-        registerScriptDescription(class_name, full_name, path.string(), script_name.string());
+        registerScriptDescription(class_name, full_name, path, script_name.string());
       } catch (const std::exception &err) {
         logger_->log_error("Cannot load %s: %s", script_name.string(), err.what());
       }
@@ -82,7 +82,7 @@ class PythonCreator : public minifi::core::CoreComponent {
   }
 
  private:
-  void registerScriptDescription(const std::string& class_name, const std::string& full_name, const std::string& path, const std::string& script_name) {
+  void registerScriptDescription(const std::string& class_name, const std::string& full_name, const std::filesystem::path& path, const std::string& script_name) {
     auto processor = core::ClassLoader::getDefaultClassLoader().instantiate<python::processors::ExecutePythonProcessor>(class_name, utils::IdGenerator::getIdGenerator()->generate());
     if (!processor) {
       logger_->log_error("Couldn't instantiate '%s' python processor", class_name);
@@ -90,7 +90,7 @@ class PythonCreator : public minifi::core::CoreComponent {
     }
     processor->initialize();
     minifi::BundleDetails details;
-    details.artifact = getFileName(path).string();
+    details.artifact = path.filename().string();
     details.version = minifi::AgentBuild::VERSION;
     details.group = "python";
 
@@ -134,14 +134,6 @@ class PythonCreator : public minifi::core::CoreComponent {
     }
     ranges::transform(python_package, python_package.begin(), ::tolower);
     return python_package;
-  }
-
-  std::filesystem::path getFileName(const std::filesystem::path& python_script) {
-    return std::filesystem::path(python_script).filename();
-  }
-
-  std::filesystem::path getScriptName(const std::filesystem::path& python_script) {
-    return std::filesystem::path(python_script).stem();
   }
 
   std::vector<std::string> registered_classes_;

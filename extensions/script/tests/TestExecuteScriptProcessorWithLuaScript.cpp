@@ -95,7 +95,7 @@ TEST_CASE("Lua: Test Log", "[executescriptLuaLog]") {
   )");
 
   auto getFileDir = testController.createTempDirectory();
-  plan->setProperty(getFile, minifi::processors::GetFile::Directory.getName(), getFileDir);
+  plan->setProperty(getFile, minifi::processors::GetFile::Directory.getName(), getFileDir.string());
 
   utils::putFileToDir(getFileDir, "tstFile.ext", "tempFile");
 
@@ -150,10 +150,10 @@ TEST_CASE("Lua: Test Read File", "[executescriptLuaRead]") {
   )");
 
   auto getFileDir = testController.createTempDirectory();
-  plan->setProperty(getFile, minifi::processors::GetFile::Directory.getName(), getFileDir);
+  plan->setProperty(getFile, minifi::processors::GetFile::Directory.getName(), getFileDir.string());
 
   auto putFileDir = testController.createTempDirectory();
-  plan->setProperty(putFile, minifi::processors::PutFile::Directory.getName(), putFileDir);
+  plan->setProperty(putFile, minifi::processors::PutFile::Directory.getName(), putFileDir.string());
 
   testController.runSession(plan, false);
 
@@ -236,10 +236,10 @@ TEST_CASE("Lua: Test Write File", "[executescriptLuaWrite]") {
   )");
 
   auto getFileDir = testController.createTempDirectory();
-  plan->setProperty(getFile, minifi::processors::GetFile::Directory.getName(), getFileDir);
+  plan->setProperty(getFile, minifi::processors::GetFile::Directory.getName(), getFileDir.string());
 
   auto putFileDir = testController.createTempDirectory();
-  plan->setProperty(putFile, minifi::processors::PutFile::Directory.getName(), putFileDir);
+  plan->setProperty(putFile, minifi::processors::PutFile::Directory.getName(), putFileDir.string());
 
   testController.runSession(plan, false);
 
@@ -314,7 +314,7 @@ TEST_CASE("Lua: Test Update Attribute", "[executescriptLuaUpdateAttribute]") {
   )");
 
   auto getFileDir = testController.createTempDirectory();
-  plan->setProperty(getFile, minifi::processors::GetFile::Directory.getName(), getFileDir);
+  plan->setProperty(getFile, minifi::processors::GetFile::Directory.getName(), getFileDir.string());
 
   utils::putFileToDir(getFileDir, "tstFile.ext", "tempFile");
 
@@ -416,7 +416,7 @@ TEST_CASE("Lua: Test Module Directory property", "[executescriptLuaModuleDirecto
       (SCRIPT_FILES_DIRECTORY / "foo_modules" / "foo.lua").string() + "," + (SCRIPT_FILES_DIRECTORY / "bar_modules").string());
 
   auto getFileDir = testController.createTempDirectory();
-  plan->setProperty(getFile, minifi::processors::GetFile::Directory.getName(), getFileDir);
+  plan->setProperty(getFile, minifi::processors::GetFile::Directory.getName(), getFileDir.string());
 
   utils::putFileToDir(getFileDir, "tstFile.ext", "tempFile");
 
@@ -446,7 +446,7 @@ TEST_CASE("Lua: Non existent script file should throw", "[executescriptLuaNonExi
   plan->setProperty(executeScript, minifi::processors::ExecuteScript::ScriptFile.getName(), "/tmp/non-existent-file");
 
   auto getFileDir = testController.createTempDirectory();
-  plan->setProperty(getFile, minifi::processors::GetFile::Directory.getName(), getFileDir);
+  plan->setProperty(getFile, minifi::processors::GetFile::Directory.getName(), getFileDir.string());
 
   utils::putFileToDir(getFileDir, "tstFile.ext", "tempFile");
 

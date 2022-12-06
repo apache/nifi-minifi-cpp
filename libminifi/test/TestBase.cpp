@@ -623,7 +623,7 @@ std::shared_ptr<TestPlan> TestController::createPlan(PlanConfig config) {
   if (!config.configuration) {
     config.configuration = std::make_shared<minifi::Configure>();
     config.configuration->set(minifi::Configure::nifi_state_management_provider_local_class_name, "UnorderedMapKeyValueStoreService");
-    config.configuration->set(minifi::Configure::nifi_dbcontent_repository_directory_default, createTempDirectory());
+    config.configuration->set(minifi::Configure::nifi_dbcontent_repository_directory_default, createTempDirectory().string());
   }
 
   if (!config.flow_file_repo)

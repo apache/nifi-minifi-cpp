@@ -96,8 +96,6 @@ TEST_CASE("TailFile reads the file until the first delimiter", "[simple]") {
   tmpfile << NEWLINE_FILE;
   tmpfile.close();
 
-  auto state_file_path = dir / STATE_FILE;
-
   plan->setProperty(tailfile, org::apache::nifi::minifi::processors::TailFile::FileName.getName(), temp_file_path.string());
   plan->setProperty(tailfile, org::apache::nifi::minifi::processors::TailFile::Delimiter.getName(), "\n");
 

@@ -34,6 +34,7 @@
 #include "core/ProcessSession.h"
 #include "core/WeakReference.h"
 #include "utils/gsl.h"
+#include "range/v3/algorithm/remove_if.hpp"
 
 namespace org::apache::nifi::minifi::jni {
 
@@ -228,8 +229,7 @@ class JniSession : public core::WeakReference {
   }
 
   bool prune() {
-    const auto check_empty_ff = [](const std::shared_ptr<JniFlowFile>& flow_file) { return flow_file->empty(); };
-    global_ff_objects_.erase(std::remove_if(global_ff_objects_.begin(), global_ff_objects_.end(), check_empty_ff), global_ff_objects_.end());
+    ranges::remove_if(global_ff_objects_, [](const std::shared_ptr<JniFlowFile>& flow_file) { return flow_file->empty(); });
     if (global_ff_objects_.empty()) {
       remove();
     }

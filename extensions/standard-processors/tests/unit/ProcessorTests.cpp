@@ -196,9 +196,7 @@ TEST_CASE("Test GetFile Ignore", "[getfileCreate3]") {
   REQUIRE(record == nullptr);
   REQUIRE(records.empty());
 
-  const std::filesystem::path hidden_file_name = [&] {
-    return dir / ".filewithoutanext";
-  }();
+  const std::filesystem::path hidden_file_name = dir / ".filewithoutanext";
   {
     std::ofstream file{ hidden_file_name };
     file << "tempFile";

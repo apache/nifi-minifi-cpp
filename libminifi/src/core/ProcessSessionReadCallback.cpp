@@ -29,31 +29,31 @@
 
 namespace org::apache::nifi::minifi::core {
 
-ProcessSessionReadCallback::ProcessSessionReadCallback(std::filesystem::path tmpFile,
-                                                       std::filesystem::path destFile,
+ProcessSessionReadCallback::ProcessSessionReadCallback(std::filesystem::path temp_file,
+                                                       std::filesystem::path dest_file,
                                                        std::shared_ptr<logging::Logger> logger)
     : logger_(std::move(logger)),
-    _tmpFileOs(tmpFile, std::ios::binary),
-    _tmpFile(std::move(tmpFile)),
-    _destFile(std::move(destFile)) {
+      tmp_file_os_(temp_file, std::ios::binary),
+      tmp_file_(std::move(temp_file)),
+      dest_file_(std::move(dest_file)) {
 }
 
 // Copy the entire file contents to the temporary file
 int64_t ProcessSessionReadCallback::operator()(const std::shared_ptr<io::InputStream>& stream) {
   // Copy file contents into tmp file
-  _writeSucceeded = false;
+  write_succeeded_ = false;
   size_t size = 0;
   std::array<std::byte, 8192> buffer{};
   do {
     const auto read = stream->read(buffer);
     if (io::isError(read)) return -1;
     if (read == 0) break;
-    if (!_tmpFileOs.write(reinterpret_cast<char*>(buffer.data()), read)) {
+    if (!tmp_file_os_.write(reinterpret_cast<char*>(buffer.data()), read)) {
       return -1;
     }
     size += read;
   } while (size < stream->size());
-  _writeSucceeded = true;
+        write_succeeded_ = true;
   return gsl::narrow<int64_t>(size);
 }
 
@@ -62,25 +62,25 @@ int64_t ProcessSessionReadCallback::operator()(const std::shared_ptr<io::InputSt
 bool ProcessSessionReadCallback::commit() {
   bool success = false;
 
-  logger_->log_debug("committing export operation to %s", _destFile.string());
+  logger_->log_debug("committing export operation to %s", dest_file_.string());
 
-  if (_writeSucceeded) {
-    if (!_tmpFileOs.flush()) {
+  if (write_succeeded_) {
+    if (!tmp_file_os_.flush()) {
       return false;
     }
-    _tmpFileOs.close();
+    tmp_file_os_.close();
 
     std::error_code rename_error;
-    std::filesystem::rename(_tmpFile, _destFile, rename_error);
+    std::filesystem::rename(tmp_file_, dest_file_, rename_error);
 
     if (rename_error) {
-      logger_->log_warn("commit export operation to %s failed because rename() call failed", _destFile.string());
+      logger_->log_warn("commit export operation to %s failed because rename() call failed", dest_file_.string());
     } else {
       success = true;
-      logger_->log_debug("commit export operation to %s succeeded", _destFile.string());
+      logger_->log_debug("commit export operation to %s succeeded", dest_file_.string());
     }
   } else {
-    logger_->log_error("commit export operation to %s failed because write failed", _destFile.string());
+    logger_->log_error("commit export operation to %s failed because write failed", dest_file_.string());
   }
   return success;
 }
@@ -88,10 +88,10 @@ bool ProcessSessionReadCallback::commit() {
 // Clean up resources
 ProcessSessionReadCallback::~ProcessSessionReadCallback() {
   // Close tmp file
-  _tmpFileOs.close();
+  tmp_file_os_.close();
 
   // Clean up tmp file, if necessary
-  std::filesystem::remove(_tmpFile);
+  std::filesystem::remove(tmp_file_);
 }
 
 }  // namespace org::apache::nifi::minifi::core

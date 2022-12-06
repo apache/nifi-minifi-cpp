@@ -143,9 +143,9 @@ std::filesystem::path determineMinifiHome(const std::shared_ptr<logging::Logger>
 
     auto minifi_home_without_bin = minifi_home.parent_path();
     auto bin_dir = minifi_home.filename();
-    if (!minifi_home_without_bin.empty() && (bin_dir == std::filesystem::path("bin") || bin_dir == (std::filesystem::path("bin")/""))) {
+    if (!minifi_home_without_bin.empty() && bin_dir == std::filesystem::path("bin")) {
       if (validHome(minifi_home_without_bin)) {
-        logger->log_info("%s is a valid %s, falling back to it.", minifi_home_without_bin.string());
+        logger->log_info("%s is a valid %s, falling back to it.", minifi_home_without_bin.string(), MINIFI_HOME_ENV_KEY);
         minifi_home_is_valid = true;
         minifi_home = std::move(minifi_home_without_bin);
       } else {

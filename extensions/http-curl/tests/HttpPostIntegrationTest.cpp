@@ -56,8 +56,8 @@ class HttpTestHarness : public HTTPIntegrationBase {
     LogTestController::getInstance().setDebug<minifi::TimerDrivenSchedulingAgent>();
     LogTestController::getInstance().setDebug<minifi::core::ProcessSession>();
     std::fstream file;
-    path_ = dir_ / "tstFile.ext";
-    file.open(path_, std::ios::out);
+    test_file_ = dir_ / "tstFile.ext";
+    file.open(test_file_, std::ios::out);
     file << "tempFile";
     file.close();
     configuration->set(org::apache::nifi::minifi::Configuration::nifi_flow_engine_threads, "8");
@@ -65,7 +65,7 @@ class HttpTestHarness : public HTTPIntegrationBase {
   }
 
   void cleanup() override {
-    std::filesystem::remove(path_);
+    std::filesystem::remove(test_file_);
     IntegrationBase::cleanup();
   }
 
@@ -79,7 +79,7 @@ class HttpTestHarness : public HTTPIntegrationBase {
 
  protected:
   std::filesystem::path dir_;
-  std::filesystem::path path_;
+  std::filesystem::path test_file_;
   TestController test_controller_;
 };
 

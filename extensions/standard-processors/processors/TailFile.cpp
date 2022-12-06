@@ -547,7 +547,7 @@ bool TailFile::getStateFromStateManager(std::map<std::filesystem::path, TailStat
           logger_->log_debug("Received path %s, file %s", file_path.parent_path().string(), file_path.filename().string());
           new_tail_states.emplace(current, TailState{file_path.parent_path(), file_path.filename(), position, last_read_time, checksum});
         } else {
-          new_tail_states.emplace(current, TailState{file_path.parent_path(), current, position, last_read_time, checksum});
+          new_tail_states.emplace(current, TailState{file_path.parent_path(), file_path, position, last_read_time, checksum});
         }
       } catch (...) {
         continue;

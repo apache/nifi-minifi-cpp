@@ -141,13 +141,13 @@ class SSLContextService : public core::controller::ControllerService {
 
   std::unique_ptr<SSLContext> createSSLContext();
 
-  const std::filesystem::path &getCertificateFile();
+  const std::filesystem::path& getCertificateFile();
 
-  const std::string &getPassphrase();
+  const std::string& getPassphrase();
 
-  const std::filesystem::path &getPrivateKeyFile();
+  const std::filesystem::path& getPrivateKeyFile();
 
-  const std::filesystem::path &getCACertificate();
+  const std::filesystem::path& getCACertificate();
 
   void yield() override {
   }

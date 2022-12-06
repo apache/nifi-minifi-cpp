@@ -41,14 +41,14 @@ class VerifyC2Server : public HTTPIntegrationBase {
     LogTestController::getInstance().setDebug<minifi::processors::InvokeHTTP>();
     LogTestController::getInstance().setDebug<minifi::core::ProcessSession>();
     std::fstream file;
-    path_ = dir_ / "tstFile.ext";
-    file.open(path_, std::ios::out);
+    test_file_ = dir_ / "tstFile.ext";
+    file.open(test_file_, std::ios::out);
     file << "tempFile";
     file.close();
   }
 
   void cleanup() override {
-    std::filesystem::remove(path_);
+    std::filesystem::remove(test_file_);
     IntegrationBase::cleanup();
   }
 
@@ -83,7 +83,7 @@ class VerifyC2Server : public HTTPIntegrationBase {
 
  protected:
   std::filesystem::path dir_;
-  std::filesystem::path path_;
+  std::filesystem::path test_file_;
   TestController testController;
 };
 

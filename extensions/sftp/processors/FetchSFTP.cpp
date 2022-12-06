@@ -87,11 +87,15 @@ void FetchSFTP::onTrigger(const std::shared_ptr<core::ProcessContext> &context, 
     return;
   }
 
-  std::string path_str;
-  context->getProperty(RemoteFile, path_str, flow_file);
-  auto remote_file = std::filesystem::path(path_str, std::filesystem::path::format::generic_format);
-  context->getProperty(MoveDestinationDirectory, path_str, flow_file);
-  auto move_destination_directory = std::filesystem::path(path_str, std::filesystem::path::format::generic_format);
+  std::filesystem::path remote_file;
+  if (auto remote_file_str = context->getProperty(RemoteFile, flow_file)) {
+    remote_file = std::filesystem::path(*remote_file_str, std::filesystem::path::format::generic_format);
+  }
+
+  std::filesystem::path move_destination_directory;
+  if (auto move_destination_directory_str = context->getProperty(MoveDestinationDirectory, flow_file)) {
+    move_destination_directory = std::filesystem::path(*move_destination_directory_str, std::filesystem::path::format::generic_format);
+  }
 
   /* Get SFTPClient from cache or create it */
   const SFTPProcessorBase::ConnectionCacheKey connection_cache_key = {common_properties.hostname,

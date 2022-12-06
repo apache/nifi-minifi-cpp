@@ -59,7 +59,7 @@ TEST_CASE("GenerateFlowFileTest", "[generateflowfiletest]") {
 
   auto lambda = [&file_contents](const std::filesystem::path& path, const std::filesystem::path& filename) -> bool {
     std::ifstream is(path / filename, std::ifstream::binary);
-    file_contents.emplace_back((std::istreambuf_iterator<char>(is)), std::istreambuf_iterator<char>());
+    file_contents.emplace_back(std::istreambuf_iterator<char>(is), std::istreambuf_iterator<char>());
     return true;
   };
 
@@ -188,7 +188,7 @@ TEST_CASE("GenerateFlowFileCustomTextTest", "[generateflowfiletest]") {
 
   auto lambda = [&file_contents](const std::filesystem::path& path, const std::filesystem::path& filename) -> bool {
     std::ifstream is(path / filename, std::ifstream::binary);
-    file_contents.emplace_back((std::istreambuf_iterator<char>(is)), std::istreambuf_iterator<char>());
+    file_contents.emplace_back(std::istreambuf_iterator<char>(is), std::istreambuf_iterator<char>());
     return true;
   };
 
@@ -225,7 +225,7 @@ TEST_CASE("GenerateFlowFileCustomTextEmptyTest", "[generateflowfiletest]") {
 
   auto lambda = [&file_contents](const std::filesystem::path& path, const std::filesystem::path& filename) -> bool {
     std::ifstream is(path / filename, std::ifstream::binary);
-    file_contents.emplace_back((std::istreambuf_iterator<char>(is)), std::istreambuf_iterator<char>());
+    file_contents.emplace_back(std::istreambuf_iterator<char>(is), std::istreambuf_iterator<char>());
     return true;
   };
 
