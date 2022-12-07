@@ -18,6 +18,7 @@
 
 #include "core/flow/StructuredConnectionParser.h"
 #include "core/flow/CheckRequiredField.h"
+#include "Funnel.h"
 
 namespace org::apache::nifi::minifi::core::flow {
 

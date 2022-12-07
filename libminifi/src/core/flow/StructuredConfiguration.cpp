@@ -28,6 +28,7 @@
 #include "Defaults.h"
 #include "utils/TimeUtil.h"
 #include "utils/RegexUtils.h"
+#include "Funnel.h"
 
 namespace org::apache::nifi::minifi::core::flow {
 
@@ -110,7 +111,7 @@ std::unique_ptr<core::ProcessGroup> StructuredConfiguration::parseProcessGroup(c
   }
   // parse connections last to give feedback if the source and/or destination processors
   // is not in the same process group or input/output port connections are not allowed
-  parseConnectionYaml(connectionsNode, group.get());
+  parseConnection(connectionsNode, group.get());
   return group;
 }
 
