@@ -51,7 +51,9 @@ class Configuration : public Properties {
   static constexpr const char *nifi_server_name = "nifi.server.name";
   static constexpr const char *nifi_configuration_class_name = "nifi.flow.configuration.class.name";
   static constexpr const char *nifi_flow_repository_class_name = "nifi.flowfile.repository.class.name";
+  static constexpr const char *nifi_flow_repository_rocksdb_compression = "nifi.flowfile.repository.rocksdb.compression";
   static constexpr const char *nifi_content_repository_class_name = "nifi.content.repository.class.name";
+  static constexpr const char *nifi_content_repository_rocksdb_compression = "nifi.content.repository.rocksdb.compression";
   static constexpr const char *nifi_provenance_repository_class_name = "nifi.provenance.repository.class.name";
   static constexpr const char *nifi_volatile_repository_options_flowfile_max_count = "nifi.volatile.repository.options.flowfile.max.count";
   static constexpr const char *nifi_volatile_repository_options_flowfile_max_bytes = "nifi.volatile.repository.options.flowfile.max.bytes";

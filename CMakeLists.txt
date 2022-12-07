@@ -214,6 +214,12 @@ else()
     message(VERBOSE "No custom malloc implementation")
 endif()
 
+if (NOT DISABLE_BZIP2 AND (NOT DISABLE_LIBARCHIVE OR (NOT DISABLE_ROCKSDB AND NOT WIN32)))
+    include(BundledBZip2)
+    use_bundled_bzip2(${CMAKE_SOURCE_DIR} ${CMAKE_BINARY_DIR})
+    list(APPEND CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/cmake/bzip2/dummy")
+endif()
+
 if(NOT WIN32)
     if (ENABLE_JNI)
         set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DENABLE_JNI")
