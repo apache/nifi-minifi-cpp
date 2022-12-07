@@ -79,6 +79,41 @@ TEST_CASE("Test log Levels change", "[ttl5]") {
   LogTestController::getInstance().reset();
 }
 
+TEST_CASE("Logger configured with an ID prints this ID in every log line", "[logger][id]") {
+  LogTestController::getInstance().setTrace<logging::Logger>();
+  const auto uuid = utils::IdGenerator::getIdGenerator()->generate();
+  std::shared_ptr<logging::Logger> logger = logging::LoggerFactory<logging::Logger>::getLogger(uuid);
+  logger->log_error("hello %s", "world");
+
+  CHECK(LogTestController::getInstance().contains("[org::apache::nifi::minifi::core::logging::Logger] [error] hello world (" + uuid.to_string() + ")"));
+  LogTestController::getInstance().reset();
+}
+
+TEST_CASE("Printing of the ID can be disabled in the config", "[logger][id][configuration]") {
+  auto properties = std::make_shared<logging::LoggerProperties>();
+
+  bool id_is_present{};
+  SECTION("Property not set") {
+    id_is_present = true;
+  }
+  SECTION("Property set to true") {
+    properties->set("logger.include.uuid", "true");
+    id_is_present = true;
+  }
+  SECTION("Property set to false") {
+    properties->set("logger.include.uuid", "false");
+    id_is_present = false;
+  }
+
+  const auto uuid = utils::IdGenerator::getIdGenerator()->generate();
+  std::shared_ptr<logging::Logger> logger = LogTestController::getInstance(properties)->getLogger<logging::Logger>(uuid);
+  logger->log_error("hello %s", "world");
+
+  CHECK(LogTestController::getInstance().contains("[org::apache::nifi::minifi::core::logging::Logger] [error] hello world"));
+  CHECK(id_is_present == LogTestController::getInstance().contains(uuid.to_string()));
+  LogTestController::getInstance().reset();
+}
+
 struct CStringConvertible {
   [[nodiscard]] const char* c_str() const {
     return data.c_str();

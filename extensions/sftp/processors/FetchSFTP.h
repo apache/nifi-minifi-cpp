@@ -93,8 +93,8 @@ class FetchSFTP : public SFTPProcessorBase {
 
  private:
   std::string completion_strategy_;
-  bool create_directory_;
-  bool disable_directory_listing_;
+  bool create_directory_ = false;
+  bool disable_directory_listing_ = false;
 };
 
 }  // namespace org::apache::nifi::minifi::processors

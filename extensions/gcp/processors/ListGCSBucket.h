@@ -30,7 +30,7 @@ namespace org::apache::nifi::minifi::extensions::gcp {
 class ListGCSBucket : public GCSProcessor {
  public:
   explicit ListGCSBucket(std::string name, const utils::Identifier& uuid = {})
-      : GCSProcessor(std::move(name), uuid, core::logging::LoggerFactory<ListGCSBucket>::getLogger()) {
+      : GCSProcessor(std::move(name), uuid, core::logging::LoggerFactory<ListGCSBucket>::getLogger(uuid)) {
   }
   ~ListGCSBucket() override = default;
 

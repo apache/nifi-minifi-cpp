@@ -47,9 +47,7 @@ namespace org::apache::nifi::minifi::processors {
 class CompressContent : public core::Processor {
  public:
   explicit CompressContent(std::string name, const utils::Identifier& uuid = {})
-    : core::Processor(std::move(name), uuid)
-    , updateFileName_(false)
-    , encapsulateInTar_(false) {
+    : core::Processor(std::move(name), uuid) {
   }
   ~CompressContent() override = default;
 
@@ -95,11 +93,10 @@ class CompressContent : public core::Processor {
     (USE_MIME_TYPE, "use mime.type attribute")
   )
 
- public:
   class GzipWriteCallback {
    public:
     GzipWriteCallback(CompressionMode compress_mode, int compress_level, std::shared_ptr<core::FlowFile> flow, std::shared_ptr<core::ProcessSession> session)
-      : compress_mode_(std::move(compress_mode))
+      : compress_mode_(compress_mode)
       , compress_level_(compress_level)
       , flow_(std::move(flow))
       , session_(std::move(session)) {
@@ -146,7 +143,6 @@ class CompressContent : public core::Processor {
     }
   };
 
- public:
   /**
    * Function that's executed when the processor is scheduled.
    * @param context process context.
@@ -167,12 +163,12 @@ class CompressContent : public core::Processor {
 
   void processFlowFile(const std::shared_ptr<core::FlowFile>& flowFile, const std::shared_ptr<core::ProcessSession>& session);
 
-  std::shared_ptr<core::logging::Logger> logger_ = core::logging::LoggerFactory<CompressContent>::getLogger();
+  std::shared_ptr<core::logging::Logger> logger_ = core::logging::LoggerFactory<CompressContent>::getLogger(uuid_);
   int compressLevel_{};
   CompressionMode compressMode_;
   ExtendedCompressionFormat compressFormat_;
-  bool updateFileName_;
-  bool encapsulateInTar_;
+  bool updateFileName_ = false;
+  bool encapsulateInTar_ = false;
   uint32_t batchSize_{1};
   static const std::map<std::string, io::CompressionFormat> compressionFormatMimeTypeMap_;
   static const std::map<io::CompressionFormat, std::string> fileExtension_;

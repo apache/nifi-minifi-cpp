@@ -72,7 +72,7 @@ class MotionDetector : public core::Processor {
  private:
   bool detectAndDraw(cv::Mat &frame);
 
-  std::shared_ptr<core::logging::Logger> logger_ = core::logging::LoggerFactory<MotionDetector>::getLogger();
+  std::shared_ptr<core::logging::Logger> logger_ = core::logging::LoggerFactory<MotionDetector>::getLogger(uuid_);
   std::mutex mutex_;
   cv::Mat background_;
   cv::Mat bg_img_;

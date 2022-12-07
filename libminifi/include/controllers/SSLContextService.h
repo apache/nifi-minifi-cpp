@@ -82,13 +82,13 @@ class SSLContextService : public core::controller::ControllerService {
   explicit SSLContextService(std::string name, const utils::Identifier &uuid = {})
       : ControllerService(std::move(name), uuid),
         initialized_(false),
-        logger_(core::logging::LoggerFactory<SSLContextService>::getLogger()) {
+        logger_(core::logging::LoggerFactory<SSLContextService>::getLogger(uuid_)) {
   }
 
   explicit SSLContextService(std::string name, const std::shared_ptr<Configure> &configuration)
       : ControllerService(std::move(name)),
         initialized_(false),
-        logger_(core::logging::LoggerFactory<SSLContextService>::getLogger()) {
+        logger_(core::logging::LoggerFactory<SSLContextService>::getLogger(uuid_)) {
     setConfiguration(configuration);
     initialize();
 
@@ -256,6 +256,5 @@ class SSLContextService : public core::controller::ControllerService {
 
   std::shared_ptr<core::logging::Logger> logger_;
 };
-typedef int (SSLContextService::*ptr)(char *, int, int, void *);
 
 }  // namespace org::apache::nifi::minifi::controllers

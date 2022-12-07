@@ -37,10 +37,7 @@ namespace org::apache::nifi::minifi::processors {
 class LogAttribute : public core::Processor {
  public:
   explicit LogAttribute(std::string name, const utils::Identifier& uuid = {})
-      : Processor(std::move(name), uuid),
-        flowfiles_to_log_(1),
-        hexencode_(false),
-        max_line_length_(80U) {
+      : Processor(std::move(name), uuid) {
   }
   ~LogAttribute() override = default;
 
@@ -84,8 +81,8 @@ class LogAttribute : public core::Processor {
     LogAttrLevelWarn,
     LogAttrLevelError
   };
-  // Convert log level from string to enum
-  bool logLevelStringToEnum(const std::string &logStr, LogAttrLevel &level) {
+
+  static bool logLevelStringToEnum(const std::string &logStr, LogAttrLevel &level) {
     if (logStr == "trace") {
       level = LogAttrLevelTrace;
       return true;
@@ -106,17 +103,15 @@ class LogAttribute : public core::Processor {
     }
   }
 
- public:
   void onSchedule(const std::shared_ptr<core::ProcessContext> &context, const std::shared_ptr<core::ProcessSessionFactory> &factory) override;
   void onTrigger(const std::shared_ptr<core::ProcessContext> &context, const std::shared_ptr<core::ProcessSession> &session) override;
   void initialize() override;
 
  private:
-  uint64_t flowfiles_to_log_;
-  bool hexencode_;
-  uint32_t max_line_length_;
-  // Logger
-  std::shared_ptr<core::logging::Logger> logger_ = core::logging::LoggerFactory<LogAttribute>::getLogger();
+  uint64_t flowfiles_to_log_{1};
+  bool hexencode_{false};
+  uint32_t max_line_length_{80};
+  std::shared_ptr<core::logging::Logger> logger_ = core::logging::LoggerFactory<LogAttribute>::getLogger(uuid_);
 };
 
 }  // namespace org::apache::nifi::minifi::processors

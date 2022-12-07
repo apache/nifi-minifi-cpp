@@ -75,7 +75,7 @@ class UnfocusArchiveEntry : public core::Processor {
   };
 
  private:
-  std::shared_ptr<Logger> logger_ = core::logging::LoggerFactory<UnfocusArchiveEntry>::getLogger();
+  std::shared_ptr<Logger> logger_ = core::logging::LoggerFactory<UnfocusArchiveEntry>::getLogger(uuid_);
 };
 
 }  // namespace org::apache::nifi::minifi::processors

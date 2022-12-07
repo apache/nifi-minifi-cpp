@@ -32,7 +32,7 @@ class TFConvertImageToTensor : public core::Processor {
  public:
   explicit TFConvertImageToTensor(const std::string &name, const utils::Identifier &uuid = {})
       : Processor(name, uuid),
-        logger_(logging::LoggerFactory<TFConvertImageToTensor>::getLogger()) {
+        logger_(logging::LoggerFactory<TFConvertImageToTensor>::getLogger(uuid_)) {
   }
 
   EXTENSIONAPI static constexpr const char* Description = "Converts the input image file into a tensor protobuf. The image will be resized to the given output tensor dimensions.";

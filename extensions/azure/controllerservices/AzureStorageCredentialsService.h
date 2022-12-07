@@ -82,7 +82,7 @@ class AzureStorageCredentialsService : public core::controller::ControllerServic
 
  private:
   storage::AzureStorageCredentials credentials_;
-  std::shared_ptr<core::logging::Logger> logger_ = core::logging::LoggerFactory<AzureStorageCredentialsService>::getLogger();
+  std::shared_ptr<core::logging::Logger> logger_ = core::logging::LoggerFactory<AzureStorageCredentialsService>::getLogger(uuid_);
 };
 
 }  // namespace org::apache::nifi::minifi::azure::controllers

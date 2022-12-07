@@ -17,8 +17,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#ifndef EXTENSIONS_STANDARD_PROCESSORS_PROCESSORS_APPENDHOSTINFO_H_
-#define EXTENSIONS_STANDARD_PROCESSORS_PROCESSORS_APPENDHOSTINFO_H_
+#pragma once
 
 #include <memory>
 #include <optional>
@@ -43,8 +42,7 @@ class AppendHostInfo : public core::Processor {
   static constexpr const char* REFRESH_POLICY_ON_SCHEDULE = "On schedule";
 
   explicit AppendHostInfo(std::string name, const utils::Identifier& uuid = {})
-      : core::Processor(std::move(name), uuid),
-        refresh_on_trigger_(false) {
+      : core::Processor(std::move(name), uuid) {
   }
   ~AppendHostInfo() override = default;
 
@@ -82,16 +80,14 @@ class AppendHostInfo : public core::Processor {
 
  private:
   std::shared_mutex shared_mutex_;
-  std::shared_ptr<core::logging::Logger> logger_ = core::logging::LoggerFactory<AppendHostInfo>::getLogger();
+  std::shared_ptr<core::logging::Logger> logger_ = core::logging::LoggerFactory<AppendHostInfo>::getLogger(uuid_);
   std::string hostname_attribute_name_;
   std::string ipaddress_attribute_name_;
   std::optional<std::regex> interface_name_filter_;
-  bool refresh_on_trigger_;
+  bool refresh_on_trigger_ = false;
 
   std::string hostname_;
   std::optional<std::string> ipaddresses_;
 };
 
 }  // namespace org::apache::nifi::minifi::processors
-
-#endif  // EXTENSIONS_STANDARD_PROCESSORS_PROCESSORS_APPENDHOSTINFO_H_

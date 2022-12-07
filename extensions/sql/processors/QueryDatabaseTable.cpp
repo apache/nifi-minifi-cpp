@@ -19,18 +19,12 @@
 
 #include <vector>
 #include <string>
-#include <memory>
 #include <algorithm>
-
-#include <soci/soci.h>
 
 #include "io/BufferStream.h"
 #include "core/ProcessContext.h"
 #include "core/ProcessSession.h"
-#include "core/Resource.h"
 #include "Exception.h"
-#include "data/JSONSQLWriter.h"
-#include "data/SQLRowsetProcessor.h"
 #include "data/MaxCollector.h"
 #include "utils/StringUtils.h"
 
@@ -45,7 +39,7 @@ const std::string QueryDatabaseTable::TABLENAME_KEY = "tablename";
 const std::string QueryDatabaseTable::MAXVALUE_KEY_PREFIX = "maxvalue.";
 
 QueryDatabaseTable::QueryDatabaseTable(std::string name, const utils::Identifier& uuid)
-  : SQLProcessor(std::move(name), uuid, core::logging::LoggerFactory<QueryDatabaseTable>::getLogger()) {
+  : SQLProcessor(std::move(name), uuid, core::logging::LoggerFactory<QueryDatabaseTable>::getLogger(uuid)) {
 }
 
 void QueryDatabaseTable::initialize() {

@@ -91,10 +91,13 @@ std::vector<std::string> LoggerProperties::get_keys_of_type(const std::string &t
 
 LoggerConfiguration::LoggerConfiguration()
     : root_namespace_(create_default_root()),
-      formatter_(std::make_shared<spdlog::pattern_formatter>(spdlog_default_pattern)),
-      shorten_names_(false) {
+      formatter_(std::make_shared<spdlog::pattern_formatter>(spdlog_default_pattern)) {
   controller_ = std::make_shared<LoggerControl>();
-  logger_ = std::make_shared<LoggerImpl>(core::getClassName<LoggerConfiguration>(), controller_, get_logger(nullptr, root_namespace_, core::getClassName<LoggerConfiguration>(), formatter_));
+  logger_ = std::make_shared<LoggerImpl>(
+      core::getClassName<LoggerConfiguration>(),
+      std::nullopt,
+      controller_,
+      get_logger(nullptr, root_namespace_, core::getClassName<LoggerConfiguration>(), formatter_));
   loggers.push_back(logger_);
 }
 
@@ -121,9 +124,12 @@ void LoggerConfiguration::initialize(const std::shared_ptr<LoggerProperties> &lo
   /**
    * There is no need to shorten names per spdlog sink as this is a per log instance.
    */
-  std::string shorten_names_str;
-  if (logger_properties->getString("spdlog.shorten_names", shorten_names_str)) {
-    shorten_names_ = utils::StringUtils::toBool(shorten_names_str).value_or(false);
+  if (const auto shorten_names_str = logger_properties->getString("spdlog.shorten_names")) {
+    shorten_names_ = utils::StringUtils::toBool(*shorten_names_str).value_or(false);
+  }
+
+  if (const auto include_uuid_str = logger_properties->getString("logger.include.uuid")) {
+    include_uuid_ = utils::StringUtils::toBool(*include_uuid_str).value_or(true);
   }
 
   formatter_ = std::make_shared<spdlog::pattern_formatter>(spdlog_pattern);
@@ -142,12 +148,12 @@ void LoggerConfiguration::initialize(const std::shared_ptr<LoggerProperties> &lo
   logger_->log_debug("Set following pattern on loggers: %s", spdlog_pattern);
 }
 
-std::shared_ptr<Logger> LoggerConfiguration::getLogger(const std::string &name) {
+std::shared_ptr<Logger> LoggerConfiguration::getLogger(const std::string& name, const std::optional<utils::Identifier>& id) {
   std::lock_guard<std::mutex> lock(mutex);
-  return getLogger(name, lock);
+  return getLogger(name, id, lock);
 }
 
-std::shared_ptr<Logger> LoggerConfiguration::getLogger(const std::string &name, const std::lock_guard<std::mutex>& /*lock*/) {
+std::shared_ptr<Logger> LoggerConfiguration::getLogger(const std::string& name, const std::optional<utils::Identifier>& id, const std::lock_guard<std::mutex>& /*lock*/) {
   std::string adjusted_name = name;
   const std::string clazz = "class ";
   auto haz_clazz = name.find(clazz);
@@ -157,7 +163,9 @@ std::shared_ptr<Logger> LoggerConfiguration::getLogger(const std::string &name, 
     utils::ClassUtils::shortenClassName(adjusted_name, adjusted_name);
   }
 
-  std::shared_ptr<LoggerImpl> result = std::make_shared<LoggerImpl>(adjusted_name, controller_, get_logger(logger_, root_namespace_, adjusted_name, formatter_));
+  const auto id_if_enabled = include_uuid_ ? id : std::nullopt;
+
+  std::shared_ptr<LoggerImpl> result = std::make_shared<LoggerImpl>(adjusted_name, id_if_enabled, controller_, get_logger(logger_, root_namespace_, adjusted_name, formatter_));
   loggers.push_back(result);
   return result;
 }
@@ -320,7 +328,7 @@ std::shared_ptr<internal::LoggerNamespace> LoggerConfiguration::create_default_r
 }
 
 void LoggerConfiguration::initializeCompression(const std::lock_guard<std::mutex>& lock, const std::shared_ptr<LoggerProperties>& properties) {
-  auto compression_sink = compression_manager_.initialize(properties, logger_, [&] (const std::string& name) {return getLogger(name, lock);});
+  auto compression_sink = compression_manager_.initialize(properties, logger_, [&] (const std::string& name) {return getLogger(name, std::nullopt, lock);});
   if (compression_sink) {
     root_namespace_->sinks.push_back(compression_sink);
     root_namespace_->exported_sinks.push_back(compression_sink);

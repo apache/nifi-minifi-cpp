@@ -134,7 +134,7 @@ class NetworkPrioritizerService : public core::controller::ControllerService, pu
 
  private:
   std::shared_ptr<utils::timeutils::Clock> clock_;
-  std::shared_ptr<core::logging::Logger> logger_ = core::logging::LoggerFactory<NetworkPrioritizerService>::getLogger();
+  std::shared_ptr<core::logging::Logger> logger_ = core::logging::LoggerFactory<NetworkPrioritizerService>::getLogger(uuid_);
 };
 
 }  // namespace org::apache::nifi::minifi::controllers

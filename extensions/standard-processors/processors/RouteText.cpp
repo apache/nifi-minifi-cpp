@@ -105,7 +105,7 @@ const core::Relationship RouteText::Unmatched("unmatched", "Segments that do not
 const core::Relationship RouteText::Matched("matched", "Segments that satisfy the required user-defined rules will be routed to this Relationship");
 
 RouteText::RouteText(std::string name, const utils::Identifier& uuid)
-    : core::Processor(std::move(name), uuid), logger_(core::logging::LoggerFactory<RouteText>::getLogger()) {}
+    : core::Processor(std::move(name), uuid), logger_(core::logging::LoggerFactory<RouteText>::getLogger(uuid)) {}
 
 void RouteText::initialize() {
   setSupportedProperties(properties());
@@ -144,7 +144,7 @@ class RouteText::ReadCallback {
     switch (segmentation_.value()) {
       case Segmentation::FULL_TEXT: {
         fn_({content, 0});
-        return content.length();
+        return gsl::narrow<int64_t>(content.length());
       }
       case Segmentation::PER_LINE: {
         // 1-based index as in nifi
@@ -164,7 +164,7 @@ class RouteText::ReadCallback {
           curr = next_line;
           ++segment_idx;
         }
-        return content.length();
+        return gsl::narrow<int64_t>(content.length());
       }
     }
     throw Exception(PROCESSOR_EXCEPTION, "Unknown segmentation strategy");

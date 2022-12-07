@@ -48,7 +48,7 @@ const core::Property KubernetesControllerService::ContainerNameFilter{
 
 KubernetesControllerService::KubernetesControllerService(const std::string& name, const utils::Identifier& uuid)
   : AttributeProviderService(name, uuid),
-    logger_{core::logging::LoggerFactory<KubernetesControllerService>::getLogger()} {
+    logger_{core::logging::LoggerFactory<KubernetesControllerService>::getLogger(uuid)} {
 }
 
 KubernetesControllerService::KubernetesControllerService(const std::string& name, const std::shared_ptr<Configure>& configuration)

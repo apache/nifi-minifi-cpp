@@ -47,9 +47,7 @@ class ExecuteProcess : public core::Processor {
  public:
   explicit ExecuteProcess(std::string name, const utils::Identifier& uuid = {})
       : Processor(std::move(name), uuid),
-        working_dir_("."),
-        redirect_error_stream_(false),
-        pid_(0) {
+        working_dir_(".") {
   }
   ~ExecuteProcess() override {
     if (pid_ > 0) {
@@ -99,15 +97,15 @@ class ExecuteProcess : public core::Processor {
   void readOutput(core::ProcessSession& session);
   bool writeToFlowFile(core::ProcessSession& session, std::shared_ptr<core::FlowFile>& flow_file, gsl::span<const char> buffer) const;
 
-  std::shared_ptr<core::logging::Logger> logger_ = core::logging::LoggerFactory<ExecuteProcess>::getLogger();
+  std::shared_ptr<core::logging::Logger> logger_ = core::logging::LoggerFactory<ExecuteProcess>::getLogger(uuid_);
   std::string command_;
   std::string command_argument_;
   std::filesystem::path working_dir_;
   std::chrono::milliseconds batch_duration_  = std::chrono::milliseconds(0);
-  bool redirect_error_stream_;
+  bool redirect_error_stream_ = false;
   std::string full_command_;
   int pipefd_[2]{};
-  pid_t pid_;
+  pid_t pid_{};
 };
 
 }  // namespace org::apache::nifi::minifi::processors

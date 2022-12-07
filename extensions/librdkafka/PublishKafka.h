@@ -123,7 +123,7 @@ class PublishKafka : public KafkaProcessorBase {
   static constexpr const char* KAFKA_KEY_ATTRIBUTE = "kafka.key";
 
   explicit PublishKafka(std::string name, const utils::Identifier& uuid = {})
-      : KafkaProcessorBase(std::move(name), uuid, core::logging::LoggerFactory<PublishKafka>::getLogger()) {
+      : KafkaProcessorBase(std::move(name), uuid, core::logging::LoggerFactory<PublishKafka>::getLogger(uuid)) {
   }
 
   ~PublishKafka() override = default;

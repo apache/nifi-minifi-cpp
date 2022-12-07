@@ -115,15 +115,15 @@ class PutFile : public core::Processor {
                const std::filesystem::path& tmpFile,
                const std::filesystem::path& destFile,
                const std::filesystem::path& destDir);
-  std::shared_ptr<core::logging::Logger> logger_ = core::logging::LoggerFactory<PutFile>::getLogger();
+  std::shared_ptr<core::logging::Logger> logger_ = core::logging::LoggerFactory<PutFile>::getLogger(uuid_);
   static std::shared_ptr<utils::IdGenerator> id_generator_;
 
 #ifndef WIN32
   class FilePermissions {
     static const uint32_t MINIMUM_INVALID_PERMISSIONS_VALUE = 1 << 9;
    public:
-    bool valid() { return permissions_ < MINIMUM_INVALID_PERMISSIONS_VALUE; }
-    uint32_t getValue() const { return permissions_; }
+    [[nodiscard]] bool valid() const { return permissions_ < MINIMUM_INVALID_PERMISSIONS_VALUE; }
+    [[nodiscard]] uint32_t getValue() const { return permissions_; }
     void setValue(uint32_t perms) { permissions_ = perms; }
    private:
     uint32_t permissions_ = MINIMUM_INVALID_PERMISSIONS_VALUE;

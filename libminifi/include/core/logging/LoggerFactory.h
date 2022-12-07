@@ -28,18 +28,19 @@ namespace org::apache::nifi::minifi::core::logging {
 
 class LoggerFactoryBase {
  public:
-  static std::shared_ptr<Logger> getAliasedLogger(const std::string &alias);
+  static std::shared_ptr<Logger> getAliasedLogger(const std::string& name, const std::optional<utils::Identifier>& id = {});
 };
 
 template<typename T>
 class LoggerFactory : public LoggerFactoryBase {
  public:
-  /**
-   * Gets an initialized logger for the template class.
-   */
   static std::shared_ptr<Logger> getLogger() {
     static std::shared_ptr<Logger> logger = getAliasedLogger(core::getClassName<T>());
     return logger;
+  }
+
+  static std::shared_ptr<Logger> getLogger(const utils::Identifier& uuid) {
+    return getAliasedLogger(core::getClassName<T>(), uuid);
   }
 };
 

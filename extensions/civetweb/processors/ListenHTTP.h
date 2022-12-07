@@ -43,8 +43,7 @@ class ListenHTTP : public core::Processor {
   using FlowFileBufferPair = std::pair<std::shared_ptr<FlowFileRecord>, std::unique_ptr<io::BufferStream>>;
 
   explicit ListenHTTP(std::string name, const utils::Identifier& uuid = {})
-      : Processor(std::move(name), uuid),
-        batch_size_(0) {
+      : Processor(std::move(name), uuid) {
     callbacks_.log_message = &logMessage;
     callbacks_.log_access = &logAccess;
   }
@@ -190,12 +189,12 @@ class ListenHTTP : public core::Processor {
   bool processIncomingFlowFile(core::ProcessSession &session);
   bool processRequestBuffer(core::ProcessSession &session);
 
-  std::shared_ptr<core::logging::Logger> logger_ = core::logging::LoggerFactory<ListenHTTP>::getLogger();
+  std::shared_ptr<core::logging::Logger> logger_ = core::logging::LoggerFactory<ListenHTTP>::getLogger(uuid_);
   CivetCallbacks callbacks_;
   std::unique_ptr<CivetServer> server_;
   std::unique_ptr<Handler> handler_;
   std::string listeningPort;
-  uint64_t batch_size_;
+  uint64_t batch_size_{0};
 };
 
 }  // namespace org::apache::nifi::minifi::processors

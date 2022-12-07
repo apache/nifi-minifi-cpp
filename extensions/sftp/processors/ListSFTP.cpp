@@ -37,7 +37,6 @@
 #include "utils/file/FileUtils.h"
 #include "core/FlowFile.h"
 #include "core/ProcessContext.h"
-#include "core/Relationship.h"
 #include "core/Resource.h"
 #include "io/BufferStream.h"
 #include "io/StreamFactory.h"
@@ -75,17 +74,8 @@ void ListSFTP::initialize() {
 }
 
 ListSFTP::ListSFTP(std::string name, const utils::Identifier& uuid /*= utils::Identifier()*/)
-    : SFTPProcessorBase(std::move(name), uuid)
-    , search_recursively_(false)
-    , follow_symlink_(false)
-    , ignore_dotted_files_(false)
-    , minimum_file_age_(0U)
-    , maximum_file_age_(0U)
-    , minimum_file_size_(0U)
-    , maximum_file_size_(0U)
-    , already_loaded_from_cache_(false)
-    , initial_listing_complete_(false) {
-  logger_ = core::logging::LoggerFactory<ListSFTP>::getLogger();
+    : SFTPProcessorBase(std::move(name), uuid) {
+  logger_ = core::logging::LoggerFactory<ListSFTP>::getLogger(uuid_);
 }
 
 ListSFTP::~ListSFTP() = default;
@@ -174,11 +164,6 @@ void ListSFTP::invalidateCache() {
   already_listed_entities_.clear();
 }
 
-ListSFTP::Child::Child()
-    :directory(false) {
-  memset(&attrs, 0x00, sizeof(attrs));
-}
-
 ListSFTP::Child::Child(const std::string& parent_path_, std::tuple<std::string /* filename */, std::string /* longentry */, LIBSSH2_SFTP_ATTRIBUTES /* attrs */>&& sftp_child) {
   parent_path = parent_path_;
   std::tie(filename, std::ignore, attrs) = std::move(sftp_child);
@@ -231,7 +216,7 @@ bool ListSFTP::filterFile(const std::string& parent_path, const std::string& fil
   }
 
   /* Age */
-  auto file_age = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now() - std::chrono::system_clock::from_time_t(attrs.mtime));
+  auto file_age = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now() - std::chrono::system_clock::from_time_t(gsl::narrow<time_t>(attrs.mtime)));
   if (file_age < minimum_file_age_) {
     logger_->log_debug("Ignoring \"%s/%s\" because it is younger than the Minimum File Age: %ld ms < %lu ms",
         parent_path.c_str(),

@@ -58,12 +58,11 @@ struct LoggerNamespace {
   std::map<std::string, std::shared_ptr<LoggerNamespace>> children;
 
   void forEachSink(const std::function<void(const std::shared_ptr<spdlog::sinks::sink>&)>& op) const;
-
-  LoggerNamespace()
-      : sinks(std::vector<std::shared_ptr<spdlog::sinks::sink>>()),
-        children(std::map<std::string, std::shared_ptr<LoggerNamespace>>()) {
-  }
 };
+
+inline std::optional<std::string> formatId(std::optional<utils::Identifier> opt_id) {
+  return opt_id | utils::map([](auto id) { return " (" + std::string(id.to_string()) + ")"; });
+}
 }  // namespace internal
 
 class LoggerConfiguration {
@@ -110,7 +109,7 @@ class LoggerConfiguration {
   /**
    * Can be used to get arbitrarily named Logger, LoggerFactory should be preferred within a class.
    */
-  std::shared_ptr<Logger> getLogger(const std::string &name);
+  std::shared_ptr<Logger> getLogger(const std::string& name, const std::optional<utils::Identifier>& id = {});
 
   static const char *spdlog_default_pattern;
 
@@ -120,7 +119,7 @@ class LoggerConfiguration {
                                                     const std::shared_ptr<spdlog::formatter>& formatter, bool remove_if_present = false);
 
  private:
-  std::shared_ptr<Logger> getLogger(const std::string& name, const std::lock_guard<std::mutex>& lock);
+  std::shared_ptr<Logger> getLogger(const std::string& name, const std::optional<utils::Identifier>& id, const std::lock_guard<std::mutex>& lock);
 
   void initializeCompression(const std::lock_guard<std::mutex>& lock, const std::shared_ptr<LoggerProperties>& properties);
 
@@ -133,16 +132,21 @@ class LoggerConfiguration {
 
   class LoggerImpl : public Logger {
    public:
-    explicit LoggerImpl(std::string name, const std::shared_ptr<LoggerControl> &controller, const std::shared_ptr<spdlog::logger> &delegate)
+    explicit LoggerImpl(std::string name, std::optional<utils::Identifier> id, const std::shared_ptr<LoggerControl> &controller, const std::shared_ptr<spdlog::logger> &delegate)
         : Logger(delegate, controller),
-          name(std::move(name)) {
+          name(std::move(name)),
+          id(internal::formatId(id)) {
     }
 
     void set_delegate(std::shared_ptr<spdlog::logger> delegate) {
       std::lock_guard<std::mutex> lock(mutex_);
       delegate_ = std::move(delegate);
     }
-    const std::string name;
+
+    std::optional<std::string> get_id() override { return id; }
+
+    std::string name;
+    std::optional<std::string> id;
   };
 
   static std::shared_ptr<spdlog::sinks::rotating_file_sink_mt> getRotatingFileSink(const std::string& appender_key, const std::shared_ptr<LoggerProperties>& properties);
@@ -156,7 +160,8 @@ class LoggerConfiguration {
   std::shared_ptr<LoggerImpl> logger_ = nullptr;
   std::shared_ptr<LoggerControl> controller_;
   std::unordered_set<std::shared_ptr<AlertSink>> alert_sinks_;
-  bool shorten_names_;
+  bool shorten_names_ = false;
+  bool include_uuid_ = true;
 };
 
 }  // namespace org::apache::nifi::minifi::core::logging

@@ -119,21 +119,21 @@ class ListSFTP : public SFTPProcessorBase {
   void onSchedule(const std::shared_ptr<core::ProcessContext> &context, const std::shared_ptr<core::ProcessSessionFactory> &sessionFactory) override;
 
  private:
-  core::CoreComponentStateManager* state_manager_;
+  core::CoreComponentStateManager* state_manager_{};
   std::string listing_strategy_;
-  bool search_recursively_;
-  bool follow_symlink_;
+  bool search_recursively_{};
+  bool follow_symlink_{};
   std::string file_filter_regex_;
   std::string path_filter_regex_;
   std::optional<utils::Regex> compiled_file_filter_regex_;
   std::optional<utils::Regex> compiled_path_filter_regex_;
-  bool ignore_dotted_files_;
+  bool ignore_dotted_files_{};
   std::string target_system_timestamp_precision_;
   std::string entity_tracking_initial_listing_target_;
-  std::chrono::milliseconds minimum_file_age_;
-  std::chrono::milliseconds maximum_file_age_;
-  uint64_t minimum_file_size_;
-  uint64_t maximum_file_size_;
+  std::chrono::milliseconds minimum_file_age_{};
+  std::chrono::milliseconds maximum_file_age_{};
+  uint64_t minimum_file_size_{};
+  uint64_t maximum_file_size_{};
 
   std::string last_listing_strategy_;
   std::string last_hostname_;
@@ -141,24 +141,24 @@ class ListSFTP : public SFTPProcessorBase {
   std::filesystem::path last_remote_path_;
 
   struct Child {
-    Child();
+    Child() = default;
     Child(const std::string& parent_path_, std::tuple<std::string /* filename */, std::string /* longentry */, LIBSSH2_SFTP_ATTRIBUTES /* attrs */>&& sftp_child);
     [[nodiscard]] std::string getPath() const;
 
-    bool directory;
+    bool directory{false};
     std::filesystem::path parent_path;
     std::filesystem::path filename;
-    LIBSSH2_SFTP_ATTRIBUTES attrs;
+    LIBSSH2_SFTP_ATTRIBUTES attrs{};
   };
 
-  bool already_loaded_from_cache_;
+  bool already_loaded_from_cache_{};
 
-  std::chrono::steady_clock::time_point last_run_time_;
+  std::chrono::steady_clock::time_point last_run_time_{};
   std::optional<std::chrono::system_clock::time_point> last_listed_latest_entry_timestamp_;
   std::optional<std::chrono::system_clock::time_point> last_processed_latest_entry_timestamp_;
   std::set<std::string> latest_identifiers_processed_;
 
-  bool initial_listing_complete_;
+  bool initial_listing_complete_{};
   struct ListedEntity {
     uint64_t timestamp;
     uint64_t size;

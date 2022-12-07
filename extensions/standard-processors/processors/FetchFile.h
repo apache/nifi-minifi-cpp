@@ -117,7 +117,7 @@ class FetchFile : public core::Processor {
   MoveConflictStrategyOption move_confict_strategy_;
   LogLevelOption log_level_when_file_not_found_;
   LogLevelOption log_level_when_permission_denied_;
-  std::shared_ptr<core::logging::Logger> logger_ = core::logging::LoggerFactory<FetchFile>::getLogger();
+  std::shared_ptr<core::logging::Logger> logger_ = core::logging::LoggerFactory<FetchFile>::getLogger(uuid_);
 };
 
 }  // namespace org::apache::nifi::minifi::processors

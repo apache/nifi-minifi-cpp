@@ -66,7 +66,7 @@ class KamikazeProcessor : public core::Processor {
 
  private:
   bool _throwInOnTrigger = false;
-  std::shared_ptr<core::logging::Logger> logger_ = core::logging::LoggerFactory<KamikazeProcessor>::getLogger();
+  std::shared_ptr<core::logging::Logger> logger_ = core::logging::LoggerFactory<KamikazeProcessor>::getLogger(uuid_);
 };
 
 }  // namespace org::apache::nifi::minifi::processors

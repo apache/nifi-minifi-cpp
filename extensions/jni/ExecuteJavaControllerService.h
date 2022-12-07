@@ -82,7 +82,7 @@ class ExecuteJavaControllerService : public ConfigurationContext, public std::en
 
     try {
       if (!onEnabledName.first.empty())
-        current_cs_class.callVoidMethod(env, clazzInstance, onEnabledName.first.c_str(), onEnabledName.second);
+        current_cs_class.callVoidMethod(env, clazzInstance, onEnabledName.first, onEnabledName.second);
     } catch (std::runtime_error &re) {
       // this is avoidable.
     }
@@ -133,7 +133,7 @@ class ExecuteJavaControllerService : public ConfigurationContext, public std::en
 
   std::string class_name_;
 
-  std::shared_ptr<core::logging::Logger> logger_ = core::logging::LoggerFactory<ExecuteJavaControllerService>::getLogger();
+  std::shared_ptr<core::logging::Logger> logger_ = core::logging::LoggerFactory<ExecuteJavaControllerService>::getLogger(uuid_);
 };
 
 }  // namespace org::apache::nifi::minifi::jni::controllers

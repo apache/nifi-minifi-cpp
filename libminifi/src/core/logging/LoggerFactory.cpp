@@ -21,8 +21,8 @@
 
 namespace org::apache::nifi::minifi::core::logging {
 
-std::shared_ptr<Logger> LoggerFactoryBase::getAliasedLogger(const std::string &alias) {
-  return LoggerConfiguration::getConfiguration().getLogger(alias);
+std::shared_ptr<Logger> LoggerFactoryBase::getAliasedLogger(const std::string& name, const std::optional<utils::Identifier>& id) {
+  return LoggerConfiguration::getConfiguration().getLogger(name, id);
 }
 
 }  // namespace org::apache::nifi::minifi::core::logging

@@ -72,8 +72,8 @@ class PutOPCProcessor : public BaseOPCProcessor {
   ADD_COMMON_VIRTUAL_FUNCTIONS_FOR_PROCESSORS
 
   explicit PutOPCProcessor(std::string name, const utils::Identifier& uuid = {})
-      : BaseOPCProcessor(std::move(name), uuid), nameSpaceIdx_(0), parentExists_(false) {
-    logger_ = core::logging::LoggerFactory<PutOPCProcessor>::getLogger();
+      : BaseOPCProcessor(std::move(name), uuid) {
+    logger_ = core::logging::LoggerFactory<PutOPCProcessor>::getLogger(uuid_);
   }
 
   void onSchedule(const std::shared_ptr<core::ProcessContext> &context, const std::shared_ptr<core::ProcessSessionFactory> &factory) override;

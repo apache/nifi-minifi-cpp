@@ -177,7 +177,7 @@ const core::Relationship ConsumeWindowsEventLog::Success("success", "Relationshi
 
 ConsumeWindowsEventLog::ConsumeWindowsEventLog(const std::string& name, const utils::Identifier& uuid)
   : core::Processor(name, uuid),
-    logger_(core::logging::LoggerFactory<ConsumeWindowsEventLog>::getLogger()) {
+    logger_(core::logging::LoggerFactory<ConsumeWindowsEventLog>::getLogger(uuid_)) {
   char buff[MAX_COMPUTERNAME_LENGTH + 1];
   DWORD size = sizeof(buff);
   if (GetComputerName(buff, &size)) {

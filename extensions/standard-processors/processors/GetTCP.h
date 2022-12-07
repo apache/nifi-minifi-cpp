@@ -66,10 +66,7 @@ class SocketAfterExecute : public utils::AfterExecute<int> {
     }
   }
   bool isCancelled(const int& /*result*/) override {
-    if (!running_)
-      return true;
-    else
-      return false;
+    return !running_;
   }
 
   std::chrono::milliseconds wait_time() override {
@@ -100,13 +97,7 @@ class DataHandler {
 class GetTCP : public core::Processor {
  public:
   explicit GetTCP(std::string name, const utils::Identifier& uuid = {})
-    : Processor(std::move(name), uuid),
-      running_(false),
-      stay_connected_(true),
-      concurrent_handlers_(2),
-      endOfMessageByte(static_cast<std::byte>(13)),
-      receive_buffer_size_(16 * 1024 * 1024),
-      connection_attempt_limit_(3) {
+    : Processor(std::move(name), uuid) {
   }
 
   ~GetTCP() override {
@@ -163,21 +154,21 @@ class GetTCP : public core::Processor {
 
  private:
   std::function<int()> f_ex;
-  std::atomic<bool> running_;
+  std::atomic<bool> running_{false};
   std::unique_ptr<DataHandler> handler_;
   std::vector<std::string> endpoints;
   std::map<std::string, std::future<int>*> live_clients_;
   moodycamel::ConcurrentQueue<std::unique_ptr<io::Socket>> socket_ring_buffer_;
-  bool stay_connected_;
-  uint16_t concurrent_handlers_;
-  std::byte endOfMessageByte;
+  bool stay_connected_{true};
+  uint16_t concurrent_handlers_{2};
+  std::byte endOfMessageByte{13};
   std::chrono::milliseconds reconnect_interval_{5000};
-  uint64_t receive_buffer_size_;
-  uint16_t connection_attempt_limit_;
+  uint64_t receive_buffer_size_{16 * 1024 * 1024};
+  uint16_t connection_attempt_limit_{3};
   // Mutex for ensuring clients are running
   std::mutex mutex_;
   std::shared_ptr<minifi::controllers::SSLContextService> ssl_service_;
-  std::shared_ptr<core::logging::Logger> logger_ = core::logging::LoggerFactory<GetTCP>::getLogger();
+  std::shared_ptr<core::logging::Logger> logger_ = core::logging::LoggerFactory<GetTCP>::getLogger(uuid_);
   utils::ThreadPool<int> client_thread_pool_;
 };
 

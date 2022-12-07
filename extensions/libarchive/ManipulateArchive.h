@@ -80,7 +80,7 @@ class ManipulateArchive : public core::Processor {
   void initialize() override;
 
  private:
-  std::shared_ptr<Logger> logger_ = core::logging::LoggerFactory<ManipulateArchive>::getLogger();
+  std::shared_ptr<Logger> logger_ = core::logging::LoggerFactory<ManipulateArchive>::getLogger(uuid_);
   std::string before_, after_, operation_, destination_, targetEntry_;
 };
 

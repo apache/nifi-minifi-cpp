@@ -18,27 +18,18 @@
 #include "PutSFTP.h"
 
 #include <memory>
-#include <algorithm>
-#include <cctype>
 #include <cstdint>
-#include <cstring>
 #include <iostream>
-#include <iterator>
 #include <limits>
-#include <map>
 #include <string>
 #include <utility>
-#include <vector>
 
-#include "utils/ByteArrayCallback.h"
 #include "core/FlowFile.h"
 #include "core/logging/Logger.h"
 #include "core/ProcessContext.h"
-#include "core/Relationship.h"
 #include "core/Resource.h"
 #include "io/BufferStream.h"
 #include "io/StreamFactory.h"
-#include "ResourceClaim.h"
 #include "utils/StringUtils.h"
 #include "utils/file/FileUtils.h"
 
@@ -57,7 +48,7 @@ PutSFTP::PutSFTP(std::string name, const utils::Identifier& uuid /*= utils::Iden
     batch_size_(0),
     reject_zero_byte_(false),
     dot_rename_(false) {
-  logger_ = core::logging::LoggerFactory<PutSFTP>::getLogger();
+  logger_ = core::logging::LoggerFactory<PutSFTP>::getLogger(uuid_);
 }
 
 PutSFTP::~PutSFTP() = default;
@@ -291,7 +282,7 @@ bool PutSFTP::processOne(const std::shared_ptr<core::ProcessContext> &context, c
       if (!client->putFile(target_path.generic_string(),
           *stream,
           conflict_resolution_ == CONFLICT_RESOLUTION_REPLACE /*overwrite*/,
-          stream->size() /*expected_size*/)) {
+          gsl::narrow<int64_t>(stream->size()) /*expected_size*/)) {
         throw utils::SFTPException{client->getLastError()};
       }
       return gsl::narrow<int64_t>(stream->size());
@@ -319,7 +310,7 @@ bool PutSFTP::processOne(const std::shared_ptr<core::ProcessContext> &context, c
       permissions_set ||
       remote_owner_set ||
       remote_group_set) {
-    utils::SFTPClient::SFTPAttributes attrs;
+    utils::SFTPClient::SFTPAttributes attrs{};
     attrs.flags = 0U;
     if (last_modified_) {
       /*

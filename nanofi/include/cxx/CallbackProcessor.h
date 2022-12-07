@@ -17,8 +17,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#ifndef __CALLBACK_PROCESSOR_H__
-#define __CALLBACK_PROCESSOR_H__
+#pragma once
 
 #include <stdio.h>
 #include <string>
@@ -73,9 +72,7 @@ class CallbackProcessor : public core::Processor {
   std::function<void(core::ProcessSession*, core::ProcessContext *context)> ontrigger_callback_;
   std::function<void(core::ProcessContext *context)> onschedule_callback_;
  private:
-  std::shared_ptr<core::logging::Logger> logger_{ core::logging::LoggerFactory<CallbackProcessor>::getLogger() };
+  std::shared_ptr<core::logging::Logger> logger_{ core::logging::LoggerFactory<CallbackProcessor>::getLogger(uuid_) };
 };
 
 }  // namespace org::apache::nifi::minifi::processors
-
-#endif

@@ -18,18 +18,12 @@
 #include "ExecuteSQL.h"
 
 #include <string>
-#include <memory>
+#include <utility>
 
-#include <soci/soci.h>
-
-#include "io/BufferStream.h"
 #include "io/StreamPipe.h"
 #include "core/ProcessContext.h"
 #include "core/ProcessSession.h"
-#include "core/Resource.h"
 #include "Exception.h"
-#include "data/JSONSQLWriter.h"
-#include "data/SQLRowsetProcessor.h"
 
 namespace org::apache::nifi::minifi::processors {
 
@@ -37,7 +31,7 @@ const std::string ExecuteSQL::RESULT_ROW_COUNT = "executesql.row.count";
 const std::string ExecuteSQL::INPUT_FLOW_FILE_UUID = "input.flowfile.uuid";
 
 ExecuteSQL::ExecuteSQL(std::string name, const utils::Identifier& uuid)
-  : SQLProcessor(std::move(name), uuid, core::logging::LoggerFactory<ExecuteSQL>::getLogger()) {
+  : SQLProcessor(std::move(name), uuid, core::logging::LoggerFactory<ExecuteSQL>::getLogger(uuid)) {
 }
 
 void ExecuteSQL::initialize() {

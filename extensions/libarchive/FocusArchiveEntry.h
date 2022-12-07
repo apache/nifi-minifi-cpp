@@ -76,7 +76,7 @@ class FocusArchiveEntry : public core::Processor {
   };
 
  private:
-  std::shared_ptr<core::logging::Logger> logger_ = core::logging::LoggerFactory<FocusArchiveEntry>::getLogger();
+  std::shared_ptr<core::logging::Logger> logger_ = core::logging::LoggerFactory<FocusArchiveEntry>::getLogger(uuid_);
   static std::shared_ptr<utils::IdGenerator> id_generator_;
 };
 

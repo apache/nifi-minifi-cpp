@@ -81,7 +81,7 @@ class CaptureRTSPFrame : public core::Processor {
   void notifyStop() override;
 
  private:
-  std::shared_ptr<core::logging::Logger> logger_ = core::logging::LoggerFactory<CaptureRTSPFrame>::getLogger();
+  std::shared_ptr<core::logging::Logger> logger_ = core::logging::LoggerFactory<CaptureRTSPFrame>::getLogger(uuid_);
   std::mutex mutex_;
   std::string rtsp_username_;
   std::string rtsp_password_;

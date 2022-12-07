@@ -15,12 +15,12 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#ifndef LIBMINIFI_INCLUDE_CORE_LOGGING_LOGGER_H_
-#define LIBMINIFI_INCLUDE_CORE_LOGGING_LOGGER_H_
+#pragma once
 
 #include <string>
 #include <mutex>
 #include <memory>
+#include <optional>
 #include <sstream>
 #include <utility>
 #include <iostream>
@@ -33,14 +33,9 @@
 #include "utils/SmallString.h"
 #include "utils/meta/detected.h"
 
-namespace org {
-namespace apache {
-namespace nifi {
-namespace minifi {
-namespace core {
-namespace logging {
+namespace org::apache::nifi::minifi::core::logging {
 
-#define LOG_BUFFER_SIZE 1024
+inline constexpr size_t LOG_BUFFER_SIZE = 1024;
 
 class LoggerControl {
  public:
@@ -83,29 +78,30 @@ std::string format_string(int max_size, char const* format_str, const Args& ...a
   if (result < 0) {
     return "Error while formatting log message";
   }
-  if (result <= LOG_BUFFER_SIZE) {
+  const auto buf_size = gsl::narrow<size_t>(result);
+  if (buf_size <= LOG_BUFFER_SIZE) {
     // static buffer was large enough
-    return std::string(buf, gsl::narrow<size_t>(result));
+    return {buf, buf_size};
   }
-  if (max_size >= 0 && max_size <= LOG_BUFFER_SIZE) {
+  if (max_size >= 0 && gsl::narrow<size_t>(max_size) <= LOG_BUFFER_SIZE) {
     // static buffer was already larger than allowed, use the filled buffer
-    return std::string(buf, LOG_BUFFER_SIZE);
+    return {buf, LOG_BUFFER_SIZE};
   }
   // try to use dynamic buffer
-  size_t dynamic_buffer_size = max_size < 0 ? gsl::narrow<size_t>(result) : gsl::narrow<size_t>(std::min(result, max_size));
+  size_t dynamic_buffer_size = max_size < 0 ? buf_size : gsl::narrow<size_t>(std::min(result, max_size));
   std::vector<char> buffer(dynamic_buffer_size + 1);  // extra '\0' character
   result = std::snprintf(buffer.data(), buffer.size(), format_str, conditional_convert(args)...);
   if (result < 0) {
     return "Error while formatting log message";
   }
-  return std::string(buffer.cbegin(), buffer.cend() - 1);  // -1 to not include the terminating '\0'
+  return {buffer.cbegin(), buffer.cend() - 1};  // -1 to not include the terminating '\0'
 }
 
 inline std::string format_string(int /*max_size*/, char const* format_str) {
   return format_str;
 }
 
-typedef enum {
+enum LOG_LEVEL {
   trace = 0,
   debug = 1,
   info = 2,
@@ -113,7 +109,7 @@ typedef enum {
   err = 4,
   critical = 5,
   off = 6
-} LOG_LEVEL;
+};
 
 class BaseLogger {
  public:
@@ -153,6 +149,9 @@ class LogBuilder {
 
 class Logger : public BaseLogger {
  public:
+  Logger(Logger const&) = delete;
+  Logger& operator=(Logger const&) = delete;
+
   /**
    * @brief Log error message
    * @param format format string ('man printf' for syntax)
@@ -207,15 +206,16 @@ class Logger : public BaseLogger {
     max_log_size_ = size;
   }
 
-  bool should_log(const LOG_LEVEL &level);
+  bool should_log(const LOG_LEVEL &level) override;
 
-  virtual void log_string(LOG_LEVEL level, std::string str);
+  void log_string(LOG_LEVEL level, std::string str) override;
+
+  virtual std::optional<std::string> get_id() = 0;
 
  protected:
   Logger(std::shared_ptr<spdlog::logger> delegate, std::shared_ptr<LoggerControl> controller);
 
   Logger(std::shared_ptr<spdlog::logger> delegate); // NOLINT
-
 
   std::shared_ptr<spdlog::logger> delegate_;
   std::shared_ptr<LoggerControl> controller_;
@@ -231,14 +231,14 @@ class Logger : public BaseLogger {
     if (!delegate_->should_log(level)) {
       return;
     }
-    const auto str = format_string(max_log_size_.load(), format, conditional_stringify(std::forward<Args>(args))...);
+    auto str = format_string(max_log_size_.load(), format, conditional_stringify(std::forward<Args>(args))...);
+    if (const auto id = get_id()) {
+      str = str + *id;
+    }
     delegate_->log(level, str);
   }
 
   std::atomic<int> max_log_size_{LOG_BUFFER_SIZE};
-
-  Logger(Logger const&);
-  Logger& operator=(Logger const&);
 };
 
 #define LOG_DEBUG(x) LogBuilder((x).get(), org::apache::nifi::minifi::core::logging::LOG_LEVEL::debug)
@@ -251,11 +251,4 @@ class Logger : public BaseLogger {
 
 #define LOG_WARN(x) LogBuilder((x).get(), org::apache::nifi::minifi::core::logging::LOG_LEVEL::warn)
 
-}  // namespace logging
-}  // namespace core
-}  // namespace minifi
-}  // namespace nifi
-}  // namespace apache
-}  // namespace org
-
-#endif  // LIBMINIFI_INCLUDE_CORE_LOGGING_LOGGER_H_
+}  // namespace org::apache::nifi::minifi::core::logging

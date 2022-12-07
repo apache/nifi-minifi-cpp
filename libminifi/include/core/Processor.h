@@ -247,7 +247,6 @@ class Processor : public Connectable, public ConfigurableComponent, public state
   mutable std::mutex mutex_;
   std::atomic<std::chrono::time_point<std::chrono::system_clock>> yield_expiration_{};
 
- private:
   static std::mutex& getGraphMutex() {
     static std::mutex mutex{};
     return mutex;

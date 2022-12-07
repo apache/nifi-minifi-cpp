@@ -39,8 +39,8 @@ namespace org::apache::nifi::minifi::processors {
 class FetchOPCProcessor : public BaseOPCProcessor {
  public:
   explicit FetchOPCProcessor(std::string name, const utils::Identifier& uuid = {})
-      : BaseOPCProcessor(std::move(name), uuid), nameSpaceIdx_(0), nodesFound_(0), variablesFound_(0), maxDepth_(0) {
-    logger_ = core::logging::LoggerFactory<FetchOPCProcessor>::getLogger();
+      : BaseOPCProcessor(std::move(name), uuid) {
+    logger_ = core::logging::LoggerFactory<FetchOPCProcessor>::getLogger(uuid_);
   }
 
   EXTENSIONAPI static constexpr const char* Description = "Fetches OPC-UA node";
@@ -82,12 +82,12 @@ class FetchOPCProcessor : public BaseOPCProcessor {
   void OPCData2FlowFile(const opc::NodeData& opcnode, const std::shared_ptr<core::ProcessContext> &context, const std::shared_ptr<core::ProcessSession> &session);
 
   std::string nodeID_;
-  int32_t nameSpaceIdx_;
-  opc::OPCNodeIDType idType_;
-  uint32_t nodesFound_;
-  uint32_t variablesFound_;
-  uint64_t maxDepth_;
-  bool lazy_mode_;
+  int32_t nameSpaceIdx_ = 0;
+  opc::OPCNodeIDType idType_{};
+  uint32_t nodesFound_ = 0;
+  uint32_t variablesFound_ = 0;
+  uint64_t maxDepth_ = 0;
+  bool lazy_mode_ = false;
 
  private:
   std::vector<UA_NodeId> translatedNodeIDs_;  // Only used when user provides path, path->nodeid translation is only done once

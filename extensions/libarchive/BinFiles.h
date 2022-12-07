@@ -24,6 +24,8 @@
 #include <string>
 #include <set>
 #include <map>
+#include <utility>
+
 #include "FlowFileRecord.h"
 #include "core/Processor.h"
 #include "core/ProcessSession.h"
@@ -42,13 +44,13 @@ class Bin {
   /*!
    * Create a new Bin. Note: this object is not thread safe
    */
-  explicit Bin(const uint64_t &minSize, const uint64_t &maxSize, const size_t &minEntries, const size_t & maxEntries, const std::string &fileCount, const std::string &groupId)
+  explicit Bin(const uint64_t &minSize, const uint64_t &maxSize, const size_t &minEntries, const size_t & maxEntries, std::string fileCount, std::string groupId)
       : minSize_(minSize),
         maxSize_(maxSize),
         maxEntries_(maxEntries),
         minEntries_(minEntries),
-        fileCount_(fileCount),
-        groupId_(groupId) {
+        fileCount_(std::move(fileCount)),
+        groupId_(std::move(groupId)) {
     queued_data_size_ = 0;
     creation_dated_ = std::chrono::system_clock::now();
     uuid_ = utils::IdGenerator::getIdGenerator()->generate();
@@ -73,7 +75,7 @@ class Bin {
     return queue_;
   }
   // offer the flowfile to the bin
-  bool offer(std::shared_ptr<core::FlowFile> flow) {
+  bool offer(const std::shared_ptr<core::FlowFile>& flow) {
     if (!fileCount_.empty()) {
       std::string value;
       if (flow->getAttribute(fileCount_, value)) {
@@ -243,7 +245,6 @@ class BinFiles : public core::Processor {
   EXTENSIONAPI static const char *SEGMENT_ORIGINAL_FILENAME;
   EXTENSIONAPI static const char *TAR_PERMISSIONS_ATTRIBUTE;
 
- public:
   void onSchedule(core::ProcessContext *context, core::ProcessSessionFactory *sessionFactory) override;
   void onTrigger(core::ProcessContext* /*context*/, core::ProcessSession* /*session*/) override {
   }
@@ -258,7 +259,7 @@ class BinFiles : public core::Processor {
   // Allows general pre-processing of a flow file before it is offered to a bin. This is called before getGroupId().
   virtual void preprocessFlowFile(core::ProcessContext *context, core::ProcessSession *session, const std::shared_ptr<core::FlowFile>& flow);
   // Returns a group ID representing a bin. This allows flow files to be binned into like groups
-  virtual std::string getGroupId(core::ProcessContext* /*context*/, std::shared_ptr<core::FlowFile> /*flow*/) {
+  virtual std::string getGroupId(core::ProcessContext* /*context*/, const std::shared_ptr<core::FlowFile>& /*flow*/) {
     return "";
   }
   // Processes a single bin.
@@ -273,7 +274,7 @@ class BinFiles : public core::Processor {
   BinManager binManager_;
 
  private:
-  std::shared_ptr<core::logging::Logger> logger_{core::logging::LoggerFactory<BinFiles>::getLogger()};
+  std::shared_ptr<core::logging::Logger> logger_{core::logging::LoggerFactory<BinFiles>::getLogger(uuid_)};
   uint32_t batchSize_{1};
   uint32_t maxBinCount_{100};
   core::FlowFileStore file_store_;

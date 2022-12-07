@@ -29,14 +29,14 @@ Connectable::Connectable(std::string name, const utils::Identifier &uuid)
     : CoreComponent(std::move(name), uuid),
       max_concurrent_tasks_(1),
       connectable_version_(nullptr),
-      logger_(logging::LoggerFactory<Connectable>::getLogger()) {
+      logger_(logging::LoggerFactory<Connectable>::getLogger(uuid_)) {
 }
 
 Connectable::Connectable(std::string name)
     : CoreComponent(std::move(name)),
       max_concurrent_tasks_(1),
       connectable_version_(nullptr),
-      logger_(logging::LoggerFactory<Connectable>::getLogger()) {
+      logger_(logging::LoggerFactory<Connectable>::getLogger(uuid_)) {
 }
 
 Connectable::~Connectable() = default;
