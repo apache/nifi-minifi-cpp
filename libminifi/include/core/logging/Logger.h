@@ -153,6 +153,9 @@ class LogBuilder {
 
 class Logger : public BaseLogger {
  public:
+  Logger(Logger const&) = delete;
+  Logger& operator=(Logger const&) = delete;
+
   /**
    * @brief Log error message
    * @param format format string ('man printf' for syntax)
@@ -216,7 +219,6 @@ class Logger : public BaseLogger {
 
   Logger(std::shared_ptr<spdlog::logger> delegate); // NOLINT
 
-
   std::shared_ptr<spdlog::logger> delegate_;
   std::shared_ptr<LoggerControl> controller_;
 
@@ -236,9 +238,6 @@ class Logger : public BaseLogger {
   }
 
   std::atomic<int> max_log_size_{LOG_BUFFER_SIZE};
-
-  Logger(Logger const&);
-  Logger& operator=(Logger const&);
 };
 
 #define LOG_DEBUG(x) LogBuilder((x).get(), org::apache::nifi::minifi::core::logging::LOG_LEVEL::debug)

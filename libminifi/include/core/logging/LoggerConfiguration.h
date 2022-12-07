@@ -58,11 +58,6 @@ struct LoggerNamespace {
   std::map<std::string, std::shared_ptr<LoggerNamespace>> children;
 
   void forEachSink(const std::function<void(const std::shared_ptr<spdlog::sinks::sink>&)>& op) const;
-
-  LoggerNamespace()
-      : sinks(std::vector<std::shared_ptr<spdlog::sinks::sink>>()),
-        children(std::map<std::string, std::shared_ptr<LoggerNamespace>>()) {
-  }
 };
 }  // namespace internal
 
