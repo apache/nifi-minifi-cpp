@@ -25,8 +25,6 @@
 
 namespace org::apache::nifi::minifi::processors {
 
-using ConnectFinishedTask = std::packaged_task<void(MQTTAsync_successData*, MQTTAsync_successData5*, MQTTAsync_failureData*, MQTTAsync_failureData5*)>;
-
 void AbstractMQTTProcessor::onSchedule(const std::shared_ptr<core::ProcessContext> &context, const std::shared_ptr<core::ProcessSessionFactory>& /*factory*/) {
   if (auto value = context->getProperty(BrokerURI)) {
     uri_ = std::move(*value);
@@ -157,57 +155,24 @@ void AbstractMQTTProcessor::reconnect() {
     return;
   }
 
-  MQTTAsync_connectOptions conn_opts;
-  MQTTProperties connect_props = MQTTProperties_initializer;
-  MQTTProperties will_props = MQTTProperties_initializer;
+  MQTTAsync_connectOptions connect_options;
+  MQTTProperties connect_properties = MQTTProperties_initializer;
+  MQTTProperties will_properties = MQTTProperties_initializer;
 
-  if (mqtt_version_.value() == MqttVersions::V_5_0) {
-    conn_opts = MQTTAsync_connectOptions_initializer5;
-    conn_opts.onSuccess5 = connectionSuccess5;
-    conn_opts.onFailure5 = connectionFailure5;
-    conn_opts.connectProperties = &connect_props;
-  } else {
-    conn_opts = MQTTAsync_connectOptions_initializer;
-    conn_opts.onSuccess = connectionSuccess;
-    conn_opts.onFailure = connectionFailure;
-  }
-
-  if (mqtt_version_.value() == MqttVersions::V_3_1_0) {
-    conn_opts.MQTTVersion = MQTTVERSION_3_1;
-  } else if (mqtt_version_.value() == MqttVersions::V_3_1_1) {
-    conn_opts.MQTTVersion = MQTTVERSION_3_1_1;
-  }
-
-  conn_opts.keepAliveInterval = gsl::narrow<int>(keep_alive_interval_.count());
-  if (mqtt_version_.value() == MqttVersions::V_5_0) {
-    setMqtt5ConnectOptions(conn_opts, connect_props, will_props);
-  } else {
-    conn_opts.cleansession = getCleanSession();
-  }
   ConnectFinishedTask connect_finished_task(
           [this] (MQTTAsync_successData* success_data, MQTTAsync_successData5* success_data_5, MQTTAsync_failureData* failure_data, MQTTAsync_failureData5* failure_data_5) {
             onConnectFinished(success_data, success_data_5, failure_data, failure_data_5);
           });
-  conn_opts.context = &connect_finished_task;
-  conn_opts.connectTimeout = gsl::narrow<int>(connection_timeout_.count());
-  if (!username_.empty()) {
-    conn_opts.username = username_.c_str();
-    conn_opts.password = password_.c_str();
-  }
-  if (sslOpts_) {
-    conn_opts.ssl = &*sslOpts_;
-  }
-  if (last_will_) {
-    conn_opts.will = &*last_will_;
-  }
+
+  setConnectOptions(connect_options, connect_properties, will_properties, connect_finished_task);
 
   logger_->log_info("Reconnecting to %s", uri_);
   if (MQTTAsync_isConnected(client_)) {
     logger_->log_debug("Already connected to %s, no need to reconnect", uri_);
     return;
   }
-  const int ret = MQTTAsync_connect(client_, &conn_opts);
-  MQTTProperties_free(&connect_props);
+  const int ret = MQTTAsync_connect(client_, &connect_options);
+  MQTTProperties_free(&connect_properties);
   if (ret != MQTTASYNC_SUCCESS) {
     logger_->log_error("MQTTAsync_connect failed to MQTT broker %s with error code [%d]", uri_, ret);
     return;
@@ -217,14 +182,54 @@ void AbstractMQTTProcessor::reconnect() {
   connect_finished_task.get_future().get();
 }
 
-void AbstractMQTTProcessor::setMqtt5ConnectOptions(MQTTAsync_connectOptions& conn_opts, MQTTProperties& connect_props, MQTTProperties& will_props) const {
-  conn_opts.cleanstart = getCleanStart();
+void AbstractMQTTProcessor::setConnectOptions(MQTTAsync_connectOptions& connect_options, MQTTProperties& connect_properties, MQTTProperties& will_properties, const ConnectFinishedTask& connect_finished_task) const {
+  if (mqtt_version_.value() == MqttVersions::V_5_0) {
+    setMqtt5ConnectOptions(connect_options, connect_properties, will_properties);
+  } else {
+    setMqtt3ConnectOptions(connect_options);
+  }
+
+  connect_options.context = const_cast<ConnectFinishedTask*>(&connect_finished_task);
+  connect_options.connectTimeout = gsl::narrow<int>(connection_timeout_.count());
+  connect_options.keepAliveInterval = gsl::narrow<int>(keep_alive_interval_.count());
+  if (!username_.empty()) {
+    connect_options.username = username_.c_str();
+    connect_options.password = password_.c_str();
+  }
+  if (sslOpts_) {
+    connect_options.ssl = const_cast<MQTTAsync_SSLOptions*>(&*sslOpts_);
+  }
+  if (last_will_) {
+    connect_options.will = const_cast<MQTTAsync_willOptions*>(&*last_will_);
+  }
+}
+
+void AbstractMQTTProcessor::setMqtt3ConnectOptions(MQTTAsync_connectOptions& connect_options) const {
+  connect_options = MQTTAsync_connectOptions_initializer;
+  connect_options.onSuccess = connectionSuccess;
+  connect_options.onFailure = connectionFailure;
+  connect_options.cleansession = getCleanSession();
+
+  if (mqtt_version_.value() == MqttVersions::V_3_1_0) {
+    connect_options.MQTTVersion = MQTTVERSION_3_1;
+  } else if (mqtt_version_.value() == MqttVersions::V_3_1_1) {
+    connect_options.MQTTVersion = MQTTVERSION_3_1_1;
+  }
+}
+
+void AbstractMQTTProcessor::setMqtt5ConnectOptions(MQTTAsync_connectOptions& connect_options, MQTTProperties& connect_properties, MQTTProperties& will_properties) const {
+  connect_options = MQTTAsync_connectOptions_initializer5;
+  connect_options.onSuccess5 = connectionSuccess5;
+  connect_options.onFailure5 = connectionFailure5;
+  connect_options.connectProperties = &connect_properties;
+
+  connect_options.cleanstart = getCleanStart();
 
   {
     MQTTProperty property;
     property.identifier = MQTTPROPERTY_CODE_SESSION_EXPIRY_INTERVAL;
     property.value.integer4 = gsl::narrow<int>(getSessionExpiryInterval().count());
-    MQTTProperties_add(&connect_props, &property);
+    MQTTProperties_add(&connect_properties, &property);
   }
 
   if (!last_will_content_type_.empty()) {
@@ -232,23 +237,21 @@ void AbstractMQTTProcessor::setMqtt5ConnectOptions(MQTTAsync_connectOptions& con
     property.identifier = MQTTPROPERTY_CODE_CONTENT_TYPE;
     property.value.data.len = last_will_content_type_.length();
     property.value.data.data = const_cast<char*>(last_will_content_type_.data());
-    MQTTProperties_add(&will_props, &property);
+    MQTTProperties_add(&will_properties, &property);
   }
 
-  conn_opts.willProperties = &will_props;
+  connect_options.willProperties = &will_properties;
 
-  setMqtt5ConnectOptionsImpl(connect_props);
+  setMqtt5ConnectOptionsImpl(connect_properties);
 }
 
 void AbstractMQTTProcessor::onTrigger(const std::shared_ptr<core::ProcessContext>& context, const std::shared_ptr<core::ProcessSession>& session) {
-  // read lock
   std::shared_lock client_lock{client_mutex_};
   if (client_ == nullptr) {
-    // we are shutting down
+    logger_->log_debug("Null-op in onTrigger, processor is shutting down.");
     return;
   }
 
-  // reconnect if needed
   reconnect();
 
   if (!MQTTAsync_isConnected(client_)) {

@@ -37,6 +37,10 @@ void PublishMQTT::initialize() {
 }
 
 void PublishMQTT::readProperties(const std::shared_ptr<core::ProcessContext>& context) {
+  if (!context->getProperty(Topic).has_value()) {
+    logger_->log_error("PublishMQTT: could not get Topic");
+  }
+
   if (const auto retain_opt = context->getProperty<bool>(Retain)) {
     retain_ = *retain_opt;
   }

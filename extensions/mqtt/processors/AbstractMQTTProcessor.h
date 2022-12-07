@@ -170,6 +170,8 @@ class AbstractMQTTProcessor : public core::Processor {
   std::optional<std::chrono::seconds> server_keep_alive_;
 
  private:
+  using ConnectFinishedTask = std::packaged_task<void(MQTTAsync_successData*, MQTTAsync_successData5*, MQTTAsync_failureData*, MQTTAsync_failureData5*)>;
+
   /**
    * Initializes local MQTT client and connects to broker.
    */
@@ -214,7 +216,9 @@ class AbstractMQTTProcessor : public core::Processor {
   virtual bool getCleanSession() const = 0;
   virtual bool getCleanStart() const = 0;
   virtual std::chrono::seconds getSessionExpiryInterval() const = 0;
-  void setMqtt5ConnectOptions(MQTTAsync_connectOptions& conn_opts, MQTTProperties& connect_props, MQTTProperties& will_props) const;
+  void setConnectOptions(MQTTAsync_connectOptions& connect_options, MQTTProperties& connect_properties, MQTTProperties& will_properties, const ConnectFinishedTask& connect_finished_task) const;
+  void setMqtt3ConnectOptions(MQTTAsync_connectOptions& connect_options) const;
+  void setMqtt5ConnectOptions(MQTTAsync_connectOptions& connect_options, MQTTProperties& connect_properties, MQTTProperties& will_properties) const;
   virtual void setMqtt5ConnectOptionsImpl(MQTTProperties& /*connect_props*/) const {
   }
 
