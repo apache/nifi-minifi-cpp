@@ -182,7 +182,8 @@ void AbstractMQTTProcessor::reconnect() {
   connect_finished_task.get_future().get();
 }
 
-void AbstractMQTTProcessor::setConnectOptions(MQTTAsync_connectOptions& connect_options, MQTTProperties& connect_properties, MQTTProperties& will_properties, const ConnectFinishedTask& connect_finished_task) const {
+void AbstractMQTTProcessor::setConnectOptions(MQTTAsync_connectOptions& connect_options, MQTTProperties& connect_properties,
+                                              MQTTProperties& will_properties, const ConnectFinishedTask& connect_finished_task) const {
   if (mqtt_version_.value() == MqttVersions::V_5_0) {
     setMqtt5ConnectOptions(connect_options, connect_properties, will_properties);
   } else {
