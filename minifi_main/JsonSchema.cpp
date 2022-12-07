@@ -147,6 +147,14 @@ static std::string buildSchema(const std::unordered_map<std::string, std::string
     "Funnels": {
       "type": "array",
       "items": {"$ref": "#/$defs/funnel"}
+    },
+    "Input Ports": {
+      "type": "array",
+      "items": {"$ref": "#/$defs/port"}
+    },
+    "Output Ports": {
+      "type": "array",
+      "items": {"$ref": "#/$defs/port"}
     }
   )";
 
@@ -203,12 +211,20 @@ static std::string buildSchema(const std::unordered_map<std::string, std::string
     },
     "remote_port": {
       "type": "object",
+      "required": ["name", "id", "Properties"],
       "properties": {
-        "required": ["name", "id", "Properties"],
         "name": {"type": "string"},
         "id": {"$ref": "#/$defs/uuid"},
         "max concurrent tasks": {"type": "integer"},
         )" + std::move(remote_port_props).str() +  R"(
+      }
+    },
+    "port": {
+      "type": "object",
+      "required": ["name", "id"],
+      "properties": {
+        "name": {"type": "string"},
+        "id": {"$ref": "#/$defs/uuid"}
       }
     },
     "time": {
