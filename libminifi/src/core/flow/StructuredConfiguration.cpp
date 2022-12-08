@@ -698,7 +698,7 @@ void StructuredConfiguration::parseSingleProperty(const std::string& property_na
       }
     }
   } else {
-    logger_->log_debug("Property %s with value %s set", propertyName, coercedValue.to_string());
+    logger_->log_debug("Property %s with value %s set", property_name, coercedValue.to_string());
   }
 }
 
