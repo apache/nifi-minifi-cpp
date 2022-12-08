@@ -26,10 +26,7 @@
 
 using namespace std::literals::chrono_literals;
 
-namespace org {
-namespace apache {
-namespace nifi {
-namespace minifi {
+namespace org::apache::nifi::minifi {
 
 void EventDrivenSchedulingAgent::schedule(core::Processor* processor) {
   if (!processor->hasIncomingConnections()) {
@@ -44,13 +41,9 @@ utils::TaskRescheduleInfo EventDrivenSchedulingAgent::run(core::Processor* proce
     auto start_time = std::chrono::steady_clock::now();
     // trigger processor until it has work to do, but no more than half a sec
     while (processor->isRunning() && (std::chrono::steady_clock::now() - start_time < time_slice_)) {
-      bool shouldYield = this->onTrigger(processor, processContext, sessionFactory);
+      this->onTrigger(processor, processContext, sessionFactory);
       if (processor->isYield()) {
-        // Honor the yield
         return utils::TaskRescheduleInfo::RetryIn(std::chrono::milliseconds(processor->getYieldTime()));
-      } else if (shouldYield) {
-        // No work to do or need to apply back pressure
-        return utils::TaskRescheduleInfo::RetryIn(this->bored_yield_duration_ > 0ms ? this->bored_yield_duration_ : 10ms);  // No work left to do, stand by
       }
     }
     return utils::TaskRescheduleInfo::RetryImmediately();  // Let's continue work as soon as a thread is available
@@ -58,7 +51,4 @@ utils::TaskRescheduleInfo EventDrivenSchedulingAgent::run(core::Processor* proce
   return utils::TaskRescheduleInfo::Done();
 }
 
-}  // namespace minifi
-}  // namespace nifi
-}  // namespace apache
-}  // namespace org
+}  // namespace org::apache::nifi::minifi

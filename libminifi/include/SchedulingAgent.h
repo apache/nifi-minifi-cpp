@@ -30,6 +30,7 @@
 #include <algorithm>
 #include <thread>
 #include "utils/CallBackTimer.h"
+#include "utils/expected.h"
 #include "utils/Monitors.h"
 #include "utils/TimeUtil.h"
 #include "utils/ThreadPool.h"
@@ -49,7 +50,6 @@
 
 namespace org::apache::nifi::minifi {
 
-// SchedulingAgent Class
 class SchedulingAgent {
  public:
   // Constructor
@@ -87,14 +87,15 @@ class SchedulingAgent {
     logger_->log_trace("Destroying scheduling agent");
   }
 
-  // onTrigger, return whether the yield is need
-  bool onTrigger(core::Processor* processor, const std::shared_ptr<core::ProcessContext> &processContext, const std::shared_ptr<core::ProcessSessionFactory> &sessionFactory);
-  // start
+  nonstd::expected<void, std::exception_ptr> onTrigger(core::Processor* processor,
+                                                       const std::shared_ptr<core::ProcessContext>& process_context,
+                                                       const std::shared_ptr<core::ProcessSessionFactory>& session_factory);
+
   void start() {
     running_ = true;
     thread_pool_.start();
   }
-  // stop
+
   virtual void stop() {
     running_ = false;
   }
@@ -110,13 +111,9 @@ class SchedulingAgent {
   SchedulingAgent &operator=(const SchedulingAgent &parent) = delete;
 
  protected:
-  // Mutex for protection
   std::mutex mutex_;
-  // Whether it is running
   std::atomic<bool> running_;
-  // AdministrativeYieldDuration
   std::chrono::milliseconds admin_yield_duration_;
-  // BoredYieldDuration
   std::chrono::milliseconds bored_yield_duration_;
 
   std::shared_ptr<Configure> configure_;
@@ -126,9 +123,7 @@ class SchedulingAgent {
   std::shared_ptr<core::Repository> flow_repo_;
 
   std::shared_ptr<core::ContentRepository> content_repo_;
-  // thread pool for components.
   utils::ThreadPool<utils::TaskRescheduleInfo> &thread_pool_;
-  // controller service provider reference
   gsl::not_null<core::controller::ControllerServiceProvider*> controller_service_provider_;
 
  private:
@@ -148,7 +143,6 @@ class SchedulingAgent {
     }
   };
 
-  // Logger
   std::shared_ptr<core::logging::Logger> logger_;
   mutable std::mutex watchdog_mtx_;  // used to protect the set below
   std::set<SchedulingInfo> scheduled_processors_;  // set was chosen to avoid iterator invalidation

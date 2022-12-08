@@ -19,35 +19,22 @@
  */
 #include "TimerDrivenSchedulingAgent.h"
 #include <chrono>
-#include <thread>
 #include <memory>
-#include <iostream>
-#include "core/Property.h"
 
 using namespace std::literals::chrono_literals;
 
-namespace org {
-namespace apache {
-namespace nifi {
-namespace minifi {
+namespace org::apache::nifi::minifi {
 
 utils::TaskRescheduleInfo TimerDrivenSchedulingAgent::run(core::Processor* processor, const std::shared_ptr<core::ProcessContext> &processContext,
                                          const std::shared_ptr<core::ProcessSessionFactory> &sessionFactory) {
   if (this->running_ && processor->isRunning()) {
-    bool shouldYield = this->onTrigger(processor, processContext, sessionFactory);
-    if (processor->isYield()) {
-      // Honor the yield
+    this->onTrigger(processor, processContext, sessionFactory);
+    if (processor->isYield())
       return utils::TaskRescheduleInfo::RetryIn(processor->getYieldTime());
-    } else if (shouldYield && this->bored_yield_duration_ > 0ms) {
-      // No work to do or need to apply back pressure
-      return utils::TaskRescheduleInfo::RetryIn(this->bored_yield_duration_);
-    }
+
     return utils::TaskRescheduleInfo::RetryIn(std::chrono::duration_cast<std::chrono::milliseconds>(processor->getSchedulingPeriodNano()));
   }
   return utils::TaskRescheduleInfo::Done();
 }
 
-} /* namespace minifi */
-} /* namespace nifi */
-} /* namespace apache */
-} /* namespace org */
+}  // namespace org::apache::nifi::minifi

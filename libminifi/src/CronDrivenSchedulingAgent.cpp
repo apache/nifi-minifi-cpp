@@ -52,19 +52,16 @@ utils::TaskRescheduleInfo CronDrivenSchedulingAgent::run(core::Processor* proces
     if (*next_to_last_trigger > current_time.get_local_time())
       return utils::TaskRescheduleInfo::RetryIn(ceil<milliseconds>(*next_to_last_trigger-current_time.get_local_time()));
 
-    last_exec_[uuid] = current_time.get_local_time();
-    bool shouldYield = this->onTrigger(processor, processContext, sessionFactory);
+    auto on_trigger_result = this->onTrigger(processor, processContext, sessionFactory);
 
-    if (processor->isYield()) {
+    if (on_trigger_result)
+      last_exec_[uuid] = current_time.get_local_time();
+
+    if (processor->isYield())
       return utils::TaskRescheduleInfo::RetryIn(processor->getYieldTime());
-    } else if (shouldYield && this->bored_yield_duration_ > 0ms) {
-      return utils::TaskRescheduleInfo::RetryIn(this->bored_yield_duration_);
-    }
 
-    auto next_trigger = schedules_.at(uuid).calculateNextTrigger(current_time.get_local_time());
-    if (!next_trigger)
-      return utils::TaskRescheduleInfo::Done();
-    return utils::TaskRescheduleInfo::RetryIn(ceil<milliseconds>(*next_trigger-current_time.get_local_time()));
+    if (auto next_trigger = schedules_.at(uuid).calculateNextTrigger(current_time.get_local_time()))
+      return utils::TaskRescheduleInfo::RetryIn(ceil<milliseconds>(*next_trigger-current_time.get_local_time()));
   }
   return utils::TaskRescheduleInfo::Done();
 }

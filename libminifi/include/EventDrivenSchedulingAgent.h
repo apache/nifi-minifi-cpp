@@ -17,8 +17,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#ifndef LIBMINIFI_INCLUDE_EVENTDRIVENSCHEDULINGAGENT_H_
-#define LIBMINIFI_INCLUDE_EVENTDRIVENSCHEDULINGAGENT_H_
+#pragma once
 
 #include <memory>
 #include <string>
@@ -31,18 +30,10 @@
 #include "core/ProcessSessionFactory.h"
 #include "ThreadedSchedulingAgent.h"
 
-namespace org {
-namespace apache {
-namespace nifi {
-namespace minifi {
+namespace org::apache::nifi::minifi {
 
-// EventDrivenSchedulingAgent Class
 class EventDrivenSchedulingAgent : public ThreadedSchedulingAgent {
  public:
-  // Constructor
-  /*!
-   * Create a new event driven scheduling agent.
-   */
   EventDrivenSchedulingAgent(const gsl::not_null<core::controller::ControllerServiceProvider*> controller_service_provider, std::shared_ptr<core::Repository> repo,
                              std::shared_ptr<core::Repository> flow_repo, std::shared_ptr<core::ContentRepository> content_repo, std::shared_ptr<Configure> configuration,
                              utils::ThreadPool<utils::TaskRescheduleInfo> &thread_pool)
@@ -54,23 +45,16 @@ class EventDrivenSchedulingAgent : public ThreadedSchedulingAgent {
     time_slice_ = std::chrono::milliseconds(slice);
   }
 
+  EventDrivenSchedulingAgent(const EventDrivenSchedulingAgent &parent) = delete;
+  EventDrivenSchedulingAgent& operator=(const EventDrivenSchedulingAgent &parent) = delete;
+
   void schedule(core::Processor* processor) override;
 
-  // Run function for the thread
   utils::TaskRescheduleInfo run(core::Processor* processor, const std::shared_ptr<core::ProcessContext> &processContext,
       const std::shared_ptr<core::ProcessSessionFactory> &sessionFactory) override;
 
  private:
-  // Prevent default copy constructor and assignment operation
-  // Only support pass by reference or pointer
-  EventDrivenSchedulingAgent(const EventDrivenSchedulingAgent &parent);
-  EventDrivenSchedulingAgent &operator=(const EventDrivenSchedulingAgent &parent);
-
   std::chrono::milliseconds time_slice_;
 };
 
-}  // namespace minifi
-}  // namespace nifi
-}  // namespace apache
-}  // namespace org
-#endif  // LIBMINIFI_INCLUDE_EVENTDRIVENSCHEDULINGAGENT_H_
+}  // namespace org::apache::nifi::minifi
