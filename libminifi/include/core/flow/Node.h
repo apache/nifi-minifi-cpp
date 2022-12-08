@@ -31,9 +31,9 @@ namespace org::apache::nifi::minifi::core::flow {
 class Node {
  public:
   struct Cursor {
-    int line;
-    int column;
-    int pos;
+    int line{0};
+    int column{0};
+    int pos{0};
   };
 
   class Iterator {

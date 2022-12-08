@@ -81,22 +81,22 @@ std::unique_ptr<core::ProcessGroup> StructuredConfiguration::createProcessGroup(
   return group;
 }
 
-std::unique_ptr<core::ProcessGroup> StructuredConfiguration::parseProcessGroup(const Node& headerNode, const Node& yamlNode, bool is_root) {
-  auto group = createProcessGroup(headerNode, is_root);
-  Node processorsNode = yamlNode[CONFIG_PROCESSORS_KEY];
-  Node connectionsNode = yamlNode[StructuredConnectionParser::CONFIG_CONNECTIONS_KEY];
-  Node funnelsNode = yamlNode[CONFIG_FUNNELS_KEY];
-  Node inputPortsNode = yamlNode[CONFIG_INPUT_PORTS_KEY];
-  Node outputPortsNode = yamlNode[CONFIG_OUTPUT_PORTS_KEY];
+std::unique_ptr<core::ProcessGroup> StructuredConfiguration::parseProcessGroup(const Node& header_node, const Node& node, bool is_root) {
+  auto group = createProcessGroup(header_node, is_root);
+  Node processorsNode = node[CONFIG_PROCESSORS_KEY];
+  Node connectionsNode = node[StructuredConnectionParser::CONFIG_CONNECTIONS_KEY];
+  Node funnelsNode = node[CONFIG_FUNNELS_KEY];
+  Node inputPortsNode = node[CONFIG_INPUT_PORTS_KEY];
+  Node outputPortsNode = node[CONFIG_OUTPUT_PORTS_KEY];
   Node remoteProcessingGroupsNode = [&] {
-    // assignment is not supported on invalid Yaml nodes
-    Node candidate = yamlNode[CONFIG_REMOTE_PROCESS_GROUP_KEY];
+    // assignment is not supported on invalid nodes
+    Node candidate = node[CONFIG_REMOTE_PROCESS_GROUP_KEY];
     if (candidate) {
       return candidate;
     }
-    return yamlNode[CONFIG_REMOTE_PROCESS_GROUP_KEY_V3];
+    return node[CONFIG_REMOTE_PROCESS_GROUP_KEY_V3];
   }();
-  Node childProcessGroupNodeSeq = yamlNode["Process Groups"];
+  Node childProcessGroupNodeSeq = node["Process Groups"];
 
   parseProcessorNode(processorsNode, group.get());
   parseRemoteProcessGroup(remoteProcessingGroupsNode, group.get());
@@ -115,14 +115,14 @@ std::unique_ptr<core::ProcessGroup> StructuredConfiguration::parseProcessGroup(c
   return group;
 }
 
-std::unique_ptr<core::ProcessGroup> StructuredConfiguration::getRootFrom(const Node& rootYamlNode) {
+std::unique_ptr<core::ProcessGroup> StructuredConfiguration::getRootFrom(const Node& root_node) {
   uuids_.clear();
-  Node controllerServiceNode = rootYamlNode[CONFIG_CONTROLLER_SERVICES_KEY];
-  Node provenanceReportNode = rootYamlNode[CONFIG_PROVENANCE_REPORT_KEY];
+  Node controllerServiceNode = root_node[CONFIG_CONTROLLER_SERVICES_KEY];
+  Node provenanceReportNode = root_node[CONFIG_PROVENANCE_REPORT_KEY];
 
   parseControllerServices(controllerServiceNode);
   // Create the root process group
-  std::unique_ptr<core::ProcessGroup> root = parseRootProcessGroup(rootYamlNode);
+  std::unique_ptr<core::ProcessGroup> root = parseRootProcessGroup(root_node);
   parseProvenanceReporting(provenanceReportNode, root.get());
 
   // set the controller services into the root group.
@@ -142,7 +142,7 @@ void StructuredConfiguration::parseProcessorNode(const Node& processors_node, co
   std::unique_ptr<core::Processor> processor;
 
   if (!parentGroup) {
-    logger_->log_error("parseProcessNodeYaml: no parent group exists");
+    logger_->log_error("parseProcessNode: no parent group exists");
     return;
   }
 
@@ -296,7 +296,7 @@ void StructuredConfiguration::parseRemoteProcessGroup(const Node& rpg_node_seq, 
   std::string id;
 
   if (!parentGroup) {
-    logger_->log_error("parseRemoteProcessGroupYaml: no parent group exists");
+    logger_->log_error("parseRemoteProcessGroup: no parent group exists");
     return;
   }
 
@@ -308,11 +308,11 @@ void StructuredConfiguration::parseRemoteProcessGroup(const Node& rpg_node_seq, 
     auto name = currRpgNode["name"].getString().value();
     id = getOrGenerateId(currRpgNode);
 
-    logger_->log_debug("parseRemoteProcessGroupYaml: name => [%s], id => [%s]", name, id);
+    logger_->log_debug("parseRemoteProcessGroup: name => [%s], id => [%s]", name, id);
 
     auto url = getOptionalField(currRpgNode, "url", "", CONFIG_REMOTE_PROCESS_GROUP_KEY);
 
-    logger_->log_debug("parseRemoteProcessGroupYaml: url => [%s]", url);
+    logger_->log_debug("parseRemoteProcessGroup: url => [%s]", url);
 
     uuid = id;
     auto group = createRemoteProcessGroup(name, uuid);
@@ -320,56 +320,56 @@ void StructuredConfiguration::parseRemoteProcessGroup(const Node& rpg_node_seq, 
 
     if (currRpgNode["yield period"]) {
       auto yieldPeriod = currRpgNode["yield period"].getString().value();
-      logger_->log_debug("parseRemoteProcessGroupYaml: yield period => [%s]", yieldPeriod);
+      logger_->log_debug("parseRemoteProcessGroup: yield period => [%s]", yieldPeriod);
 
       auto yield_period_value = utils::timeutils::StringToDuration<std::chrono::milliseconds>(yieldPeriod);
       if (yield_period_value.has_value() && group) {
-        logger_->log_debug("parseRemoteProcessGroupYaml: yieldPeriod => [%" PRId64 "] ms", yield_period_value->count());
+        logger_->log_debug("parseRemoteProcessGroup: yieldPeriod => [%" PRId64 "] ms", yield_period_value->count());
         group->setYieldPeriodMsec(*yield_period_value);
       }
     }
 
     if (currRpgNode["timeout"]) {
       auto timeout = currRpgNode["timeout"].getString().value();
-      logger_->log_debug("parseRemoteProcessGroupYaml: timeout => [%s]", timeout);
+      logger_->log_debug("parseRemoteProcessGroup: timeout => [%s]", timeout);
 
       auto timeout_value = utils::timeutils::StringToDuration<std::chrono::milliseconds>(timeout);
       if (timeout_value.has_value() && group) {
-        logger_->log_debug("parseRemoteProcessGroupYaml: timeoutValue => [%" PRId64 "] ms", timeout_value->count());
+        logger_->log_debug("parseRemoteProcessGroup: timeoutValue => [%" PRId64 "] ms", timeout_value->count());
         group->setTimeout(timeout_value->count());
       }
     }
 
     if (currRpgNode["local network interface"]) {
       auto interface = currRpgNode["local network interface"].getString().value();
-      logger_->log_debug("parseRemoteProcessGroupYaml: local network interface => [%s]", interface);
+      logger_->log_debug("parseRemoteProcessGroup: local network interface => [%s]", interface);
       group->setInterface(interface);
     }
 
     if (currRpgNode["transport protocol"]) {
       auto transport_protocol = currRpgNode["transport protocol"].getString().value();
-      logger_->log_debug("parseRemoteProcessGroupYaml: transport protocol => [%s]", transport_protocol);
+      logger_->log_debug("parseRemoteProcessGroup: transport protocol => [%s]", transport_protocol);
       if (transport_protocol == "HTTP") {
         group->setTransportProtocol(transport_protocol);
         if (currRpgNode["proxy host"]) {
           auto http_proxy_host = currRpgNode["proxy host"].getString().value();
-          logger_->log_debug("parseRemoteProcessGroupYaml: proxy host => [%s]", http_proxy_host);
+          logger_->log_debug("parseRemoteProcessGroup: proxy host => [%s]", http_proxy_host);
           group->setHttpProxyHost(http_proxy_host);
           if (currRpgNode["proxy user"]) {
             auto http_proxy_username = currRpgNode["proxy user"].getString().value();
-            logger_->log_debug("parseRemoteProcessGroupYaml: proxy user => [%s]", http_proxy_username);
+            logger_->log_debug("parseRemoteProcessGroup: proxy user => [%s]", http_proxy_username);
             group->setHttpProxyUserName(http_proxy_username);
           }
           if (currRpgNode["proxy password"]) {
             auto http_proxy_password = currRpgNode["proxy password"].getString().value();
-            logger_->log_debug("parseRemoteProcessGroupYaml: proxy password => [%s]", http_proxy_password);
+            logger_->log_debug("parseRemoteProcessGroup: proxy password => [%s]", http_proxy_password);
             group->setHttpProxyPassWord(http_proxy_password);
           }
           if (currRpgNode["proxy port"]) {
             auto http_proxy_port = currRpgNode["proxy port"].getIntegerAsString().value();
             int32_t port;
             if (core::Property::StringToInt(http_proxy_port, port)) {
-              logger_->log_debug("parseRemoteProcessGroupYaml: proxy port => [%d]", port);
+              logger_->log_debug("parseRemoteProcessGroup: proxy port => [%d]", port);
               group->setHttpProxyPort(port);
             }
           }
@@ -409,7 +409,7 @@ void StructuredConfiguration::parseProvenanceReporting(const Node& node, core::P
   utils::Identifier port_uuid;
 
   if (!parent_group) {
-    logger_->log_error("parseProvenanceReportingYaml: no parent group exists");
+    logger_->log_error("parseProvenanceReporting: no parent group exists");
     return;
   }
 
@@ -476,14 +476,14 @@ void StructuredConfiguration::parseProvenanceReporting(const Node& node, core::P
   parent_group->addProcessor(std::move(reportTask));
 }
 
-void StructuredConfiguration::parseControllerServices(const Node& controllerServicesNode) {
-  if (!controllerServicesNode || !controllerServicesNode.isSequence()) {
+void StructuredConfiguration::parseControllerServices(const Node& controller_services_node) {
+  if (!controller_services_node || !controller_services_node.isSequence()) {
     return;
   }
-  for (const auto& controllerServiceNode : controllerServicesNode) {
-    checkRequiredField(controllerServiceNode, "name", CONFIG_CONTROLLER_SERVICES_KEY);
+  for (const auto& service_node : controller_services_node) {
+    checkRequiredField(service_node, "name", CONFIG_CONTROLLER_SERVICES_KEY);
 
-    auto type = getRequiredField(controllerServiceNode, std::vector<std::string>{"class", "type"}, CONFIG_CONTROLLER_SERVICES_KEY);
+    auto type = getRequiredField(service_node, std::vector<std::string>{"class", "type"}, CONFIG_CONTROLLER_SERVICES_KEY);
     logger_->log_debug("Using type %s for controller service node", type);
 
     std::string fullType = type;
@@ -493,8 +493,8 @@ void StructuredConfiguration::parseControllerServices(const Node& controllerServ
       type = type.substr(lastOfIdx);
     }
 
-    auto name = controllerServiceNode["name"].getString().value();
-    auto id = getRequiredIdField(controllerServiceNode, CONFIG_CONTROLLER_SERVICES_KEY);
+    auto name = service_node["name"].getString().value();
+    auto id = getRequiredIdField(service_node, CONFIG_CONTROLLER_SERVICES_KEY);
 
     utils::Identifier uuid;
     uuid = id;
@@ -502,7 +502,7 @@ void StructuredConfiguration::parseControllerServices(const Node& controllerServ
     if (nullptr != controller_service_node) {
       logger_->log_debug("Created Controller Service with UUID %s and name %s", id, name);
       controller_service_node->initialize();
-      if (Node propertiesNode = controllerServiceNode["Properties"]) {
+      if (Node propertiesNode = service_node["Properties"]) {
         // we should propagate properties to the node and to the implementation
         parsePropertiesNode(propertiesNode, *controller_service_node, name, CONFIG_CONTROLLER_SERVICES_KEY);
         if (auto controllerServiceImpl = controller_service_node->getControllerServiceImplementation(); controllerServiceImpl) {
@@ -561,7 +561,7 @@ void StructuredConfiguration::parseConnection(const Node& connection_node_seq, c
   }
 }
 
-void StructuredConfiguration::parsePort(const Node& inputPortsObj, core::ProcessGroup* parent, sitetosite::TransferDirection direction) {
+void StructuredConfiguration::parsePort(const Node& port_node, core::ProcessGroup* parent, sitetosite::TransferDirection direction) {
   utils::Identifier uuid;
 
   if (!parent) {
@@ -570,11 +570,11 @@ void StructuredConfiguration::parsePort(const Node& inputPortsObj, core::Process
   }
 
   // Check for required fields
-  checkRequiredField(inputPortsObj, "name", CONFIG_REMOTE_PROCESS_GROUP_KEY);
-  auto nameStr = inputPortsObj["name"].getString().value();
-  auto portId = getRequiredIdField(inputPortsObj, CONFIG_REMOTE_PROCESS_GROUP_KEY,
+  checkRequiredField(port_node, "name", CONFIG_REMOTE_PROCESS_GROUP_KEY);
+  auto nameStr = port_node["name"].getString().value();
+  auto portId = getRequiredIdField(port_node, CONFIG_REMOTE_PROCESS_GROUP_KEY,
     "The field 'id' is required for "
-    "the port named '" + nameStr + "' in the YAML Config. If this port "
+    "the port named '" + nameStr + "' in the Flow Config. If this port "
     "is an input port for a NiFi Remote Process Group, the port "
     "id should match the corresponding id specified in the NiFi configuration. "
     "This is a UUID of the format XXXXXXXX-XXXX-XXXX-XXXX-XXXXXXXXXXXX.");
@@ -597,7 +597,7 @@ void StructuredConfiguration::parsePort(const Node& inputPortsObj, core::Process
   // else defaults to RAW
 
   // handle port properties
-  if (Node propertiesNode = inputPortsObj["Properties"]) {
+  if (Node propertiesNode = port_node["Properties"]) {
     parsePropertiesNode(propertiesNode, *port, nameStr, CONFIG_REMOTE_PROCESS_GROUP_KEY);
   }
 
@@ -606,7 +606,7 @@ void StructuredConfiguration::parsePort(const Node& inputPortsObj, core::Process
   parent->addProcessor(std::move(port));
   processor.setScheduledState(core::RUNNING);
 
-  if (auto tasksNode = inputPortsObj["max concurrent tasks"]) {
+  if (auto tasksNode = port_node["max concurrent tasks"]) {
     std::string rawMaxConcurrentTasks = tasksNode.getIntegerAsString().value();
     int32_t maxConcurrentTasks;
     if (core::Property::StringToInt(rawMaxConcurrentTasks, maxConcurrentTasks)) {
@@ -617,21 +617,21 @@ void StructuredConfiguration::parsePort(const Node& inputPortsObj, core::Process
   }
 }
 
-void StructuredConfiguration::parsePropertyValueSequence(const std::string& propertyName, const Node& propertyValueNode, core::ConfigurableComponent& component) {
-  for (const auto& nodeVal : propertyValueNode) {
+void StructuredConfiguration::parsePropertyValueSequence(const std::string& property_name, const Node& property_value_node, core::ConfigurableComponent& component) {
+  for (const auto& nodeVal : property_value_node) {
     if (nodeVal) {
       Node propertiesNode = nodeVal["value"];
       // must insert the sequence in differently.
       const auto rawValueString = propertiesNode.getString().value();
-      logger_->log_debug("Found %s=%s", propertyName, rawValueString);
-      if (!component.updateProperty(propertyName, rawValueString)) {
+      logger_->log_debug("Found %s=%s", property_name, rawValueString);
+      if (!component.updateProperty(property_name, rawValueString)) {
         auto proc = dynamic_cast<core::Connectable*>(&component);
         if (proc) {
-          logger_->log_warn("Received property %s with value %s but is not one of the properties for %s. Attempting to add as dynamic property.", propertyName, rawValueString, proc->getName());
-          if (!component.setDynamicProperty(propertyName, rawValueString)) {
-            logger_->log_warn("Unable to set the dynamic property %s with value %s", propertyName, rawValueString);
+          logger_->log_warn("Received property %s with value %s but is not one of the properties for %s. Attempting to add as dynamic property.", property_name, rawValueString, proc->getName());
+          if (!component.setDynamicProperty(property_name, rawValueString)) {
+            logger_->log_warn("Unable to set the dynamic property %s with value %s", property_name, rawValueString);
           } else {
-            logger_->log_warn("Dynamic property %s with value %s set", propertyName, rawValueString);
+            logger_->log_warn("Dynamic property %s with value %s set", property_name, rawValueString);
           }
         }
       }
@@ -639,14 +639,14 @@ void StructuredConfiguration::parsePropertyValueSequence(const std::string& prop
   }
 }
 
-PropertyValue StructuredConfiguration::getValidatedProcessorPropertyForDefaultTypeInfo(const core::Property& propertyFromProcessor, const Node& propertyValueNode) {
+PropertyValue StructuredConfiguration::getValidatedProcessorPropertyForDefaultTypeInfo(const core::Property& property_from_processor, const Node& property_value_node) {
   using state::response::Value;
   PropertyValue defaultValue;
-  defaultValue = propertyFromProcessor.getDefaultValue();
+  defaultValue = property_from_processor.getDefaultValue();
   const std::type_index defaultType = defaultValue.getTypeInfo();
   try {
     PropertyValue coercedValue = defaultValue;
-    auto int64_val = propertyValueNode.getInt64();
+    auto int64_val = property_value_node.getInt64();
     if (defaultType == Value::INT64_TYPE && int64_val) {
       coercedValue = gsl::narrow<int64_t>(int64_val.value());
     } else if (defaultType == Value::UINT64_TYPE && int64_val) {
@@ -655,46 +655,46 @@ PropertyValue StructuredConfiguration::getValidatedProcessorPropertyForDefaultTy
       coercedValue = gsl::narrow<uint32_t>(int64_val.value());
     } else if (defaultType == Value::INT_TYPE && int64_val) {
       coercedValue = gsl::narrow<int>(int64_val.value());
-    } else if (defaultType == Value::BOOL_TYPE && propertyValueNode.getBool()) {
-      coercedValue = propertyValueNode.getBool().value();
+    } else if (defaultType == Value::BOOL_TYPE && property_value_node.getBool()) {
+      coercedValue = property_value_node.getBool().value();
     } else {
-      coercedValue = propertyValueNode.getString().value();
+      coercedValue = property_value_node.getString().value();
     }
     return coercedValue;
   } catch (const std::exception& e) {
     logger_->log_error("Fetching property failed with an exception of %s", e.what());
-    logger_->log_error("Invalid conversion for field %s. Value %s", propertyFromProcessor.getName(), propertyValueNode.getDebugString());
+    logger_->log_error("Invalid conversion for field %s. Value %s", property_from_processor.getName(), property_value_node.getDebugString());
   } catch (...) {
-    logger_->log_error("Invalid conversion for field %s. Value %s", propertyFromProcessor.getName(), propertyValueNode.getDebugString());
+    logger_->log_error("Invalid conversion for field %s. Value %s", property_from_processor.getName(), property_value_node.getDebugString());
   }
   return defaultValue;
 }
 
-void StructuredConfiguration::parseSingleProperty(const std::string& propertyName, const Node& propertyValueNode, core::ConfigurableComponent& processor) {
-  core::Property myProp(propertyName, "", "");
-  processor.getProperty(propertyName, myProp);
-  const PropertyValue coercedValue = getValidatedProcessorPropertyForDefaultTypeInfo(myProp, propertyValueNode);
+void StructuredConfiguration::parseSingleProperty(const std::string& property_name, const Node& property_value_node, core::ConfigurableComponent& processor) {
+  core::Property myProp(property_name, "", "");
+  processor.getProperty(property_name, myProp);
+  const PropertyValue coercedValue = getValidatedProcessorPropertyForDefaultTypeInfo(myProp, property_value_node);
   bool property_set = false;
   try {
     property_set = processor.setProperty(myProp, coercedValue);
   } catch(const utils::internal::InvalidValueException&) {
     auto component = dynamic_cast<core::CoreComponent*>(&processor);
     if (component == nullptr) {
-      logger_->log_error("processor was not a CoreComponent for property '%s'", propertyName);
+      logger_->log_error("processor was not a CoreComponent for property '%s'", property_name);
     } else {
-      logger_->log_error("Invalid value was set for property '%s' creating component '%s'", propertyName, component->getName());
+      logger_->log_error("Invalid value was set for property '%s' creating component '%s'", property_name, component->getName());
     }
     throw;
   }
   if (!property_set) {
-    const auto rawValueString = propertyValueNode.getString().value();
+    const auto rawValueString = property_value_node.getString().value();
     auto proc = dynamic_cast<core::Connectable*>(&processor);
     if (proc) {
-      logger_->log_warn("Received property %s with value %s but is not one of the properties for %s. Attempting to add as dynamic property.", propertyName, rawValueString, proc->getName());
-      if (!processor.setDynamicProperty(propertyName, rawValueString)) {
-        logger_->log_warn("Unable to set the dynamic property %s with value %s", propertyName, rawValueString);
+      logger_->log_warn("Received property %s with value %s but is not one of the properties for %s. Attempting to add as dynamic property.", property_name, rawValueString, proc->getName());
+      if (!processor.setDynamicProperty(property_name, rawValueString)) {
+        logger_->log_warn("Unable to set the dynamic property %s with value %s", property_name, rawValueString);
       } else {
-        logger_->log_warn("Dynamic property %s with value %s set", propertyName, rawValueString);
+        logger_->log_warn("Dynamic property %s with value %s set", property_name, rawValueString);
       }
     }
   } else {
@@ -702,15 +702,15 @@ void StructuredConfiguration::parseSingleProperty(const std::string& propertyNam
   }
 }
 
-void StructuredConfiguration::parsePropertyNodeElement(const std::string& propertyName, const Node& propertyValueNode, core::ConfigurableComponent& processor) {
-  logger_->log_trace("Encountered %s", propertyName);
-  if (!propertyValueNode || propertyValueNode.isNull()) {
+void StructuredConfiguration::parsePropertyNodeElement(const std::string& property_name, const Node& property_value_node, core::ConfigurableComponent& processor) {
+  logger_->log_trace("Encountered %s", property_name);
+  if (!property_value_node || property_value_node.isNull()) {
     return;
   }
-  if (propertyValueNode.isSequence()) {
-    parsePropertyValueSequence(propertyName, propertyValueNode, processor);
+  if (property_value_node.isSequence()) {
+    parsePropertyValueSequence(property_name, property_value_node, processor);
   } else {
-    parseSingleProperty(propertyName, propertyValueNode, processor);
+    parseSingleProperty(property_name, property_value_node, processor);
   }
 }
 
@@ -728,7 +728,7 @@ void StructuredConfiguration::parsePropertiesNode(const Node& properties_node, c
 
 void StructuredConfiguration::parseFunnels(const Node& node, core::ProcessGroup* parent) {
   if (!parent) {
-    logger_->log_error("parseFunnelsYaml: no parent group was provided");
+    logger_->log_error("parseFunnels: no parent group was provided");
     return;
   }
   if (!node || !node.isSequence()) {
@@ -783,7 +783,7 @@ void StructuredConfiguration::parsePorts(const flow::Node& node, core::ProcessGr
 }
 
 
-void StructuredConfiguration::validateComponentProperties(ConfigurableComponent& component, const std::string &component_name, const std::string &yaml_section) const {
+void StructuredConfiguration::validateComponentProperties(ConfigurableComponent& component, const std::string &component_name, const std::string &section) const {
   const auto &component_properties = component.getProperties();
 
   // Validate required properties
@@ -791,10 +791,10 @@ void StructuredConfiguration::validateComponentProperties(ConfigurableComponent&
     if (prop_pair.second.getRequired()) {
       if (prop_pair.second.getValue().to_string().empty()) {
         std::string reason = utils::StringUtils::join_pack("required property '", prop_pair.second.getName(), "' is not set");
-        raiseComponentError(component_name, yaml_section, reason);
+        raiseComponentError(component_name, section, reason);
       } else if (!prop_pair.second.getValue().validate(prop_pair.first).valid()) {
         std::string reason = utils::StringUtils::join_pack("the value '", prop_pair.first, "' is not valid for property '", prop_pair.second.getName(), "'");
-        raiseComponentError(component_name, yaml_section, reason);
+        raiseComponentError(component_name, section, reason);
       }
     }
   }
@@ -811,7 +811,7 @@ void StructuredConfiguration::validateComponentProperties(ConfigurableComponent&
       if (component_properties.at(dep_prop_key).getValue().to_string().empty()) {
         std::string reason = utils::StringUtils::join_pack("property '", prop_pair.second.getName(),
             "' depends on property '", dep_prop_key, "' which is not set");
-        raiseComponentError(component_name, yaml_section, reason);
+        raiseComponentError(component_name, section, reason);
       }
     }
   }
@@ -829,7 +829,7 @@ void StructuredConfiguration::validateComponentProperties(ConfigurableComponent&
       if (utils::regexMatch(component_properties.at(excl_pair.first).getValue().to_string(), excl_expr)) {
         std::string reason = utils::StringUtils::join_pack("property '", prop_pair.second.getName(),
             "' must not be set when the value of property '", excl_pair.first, "' matches '", excl_pair.second, "'");
-        raiseComponentError(component_name, yaml_section, reason);
+        raiseComponentError(component_name, section, reason);
       }
     }
   }
@@ -842,7 +842,7 @@ void StructuredConfiguration::validateComponentProperties(ConfigurableComponent&
       utils::Regex prop_regex(prop_regex_str);
       if (!utils::regexMatch(prop_pair.second.getValue().to_string(), prop_regex)) {
         std::string reason = utils::StringUtils::join_pack("property '", prop_pair.second.getName(), "' does not match validation pattern '", prop_regex_str, "'");
-        raiseComponentError(component_name, yaml_section, reason);
+        raiseComponentError(component_name, section, reason);
       }
     }
   }
