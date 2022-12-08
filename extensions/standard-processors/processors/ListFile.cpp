@@ -18,7 +18,6 @@
 
 #include <filesystem>
 
-#include "utils/FileReaderCallback.h"
 #include "utils/StringUtils.h"
 #include "core/PropertyBuilder.h"
 #include "core/Resource.h"

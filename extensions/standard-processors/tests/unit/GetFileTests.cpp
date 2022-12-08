@@ -16,13 +16,12 @@
  * limitations under the License.
  */
 #include <utility>
-#include <memory>
 #include <string>
-#include <fstream>
 #include <filesystem>
 #include <chrono>
 
 #include "TestBase.h"
+#include "SingleProcessorTestController.h"
 #include "Catch.h"
 #include "LogAttribute.h"
 #include "GetFile.h"
@@ -30,10 +29,6 @@
 #include "utils/TestUtils.h"
 #include "unit/ProvenanceTestHelper.h"
 #include "Utils.h"
-
-#ifdef WIN32
-#include <fileapi.h>
-#endif
 
 using namespace std::literals::chrono_literals;
 
@@ -76,12 +71,12 @@ GetFileTestController::GetFileTestController()
   auto log_attr = test_plan_->addProcessor("LogAttribute", "Log", core::Relationship("success", "description"), true);
   test_plan_->setProperty(log_attr, minifi::processors::LogAttribute::FlowFilesToLog.getName(), "0");
 
-  utils::putFileToDir(temp_dir_.string(), input_file_name_, "The quick brown fox jumps over the lazy dog\n");
-  utils::putFileToDir(temp_dir_.string(), large_input_file_name_, "The quick brown fox jumps over the lazy dog who is 2 legit to quit\n");
-  utils::putFileToDir(temp_dir_.string(), hidden_input_file_name_, "But noone has ever seen it\n");
+  utils::putFileToDir(temp_dir_, input_file_name_, "The quick brown fox jumps over the lazy dog\n");
+  utils::putFileToDir(temp_dir_, large_input_file_name_, "The quick brown fox jumps over the lazy dog who is 2 legit to quit\n");
+  utils::putFileToDir(temp_dir_, hidden_input_file_name_, "But noone has ever seen it\n");
 
 #ifdef WIN32
-  const auto hide_file_err = minifi::test::utils::hide_file(getFullPath(hidden_input_file_name_).c_str());
+  const auto hide_file_err = minifi::test::utils::hide_file(getFullPath(hidden_input_file_name_));
   REQUIRE(!hide_file_err);
 #endif
 }
@@ -268,4 +263,33 @@ TEST_CASE("Test if GetFile honors PollInterval property when triggered multiple 
   }
 
   REQUIRE(std::chrono::steady_clock::now() - start_time >= 100ms);
+}
+
+TEST_CASE("GetFile sets attributes correctly") {
+  using minifi::processors::GetFile;
+
+  const auto get_file = std::make_shared<GetFile>("GetFile");
+  LogTestController::getInstance().setTrace<GetFile>();
+  minifi::test::SingleProcessorTestController test_controller(get_file);
+  std::filesystem::path dir = test_controller.createTempDirectory();
+  get_file->setProperty(GetFile::Directory, dir.string());
+  SECTION("File in subdirectory of input directory") {
+    std::filesystem::create_directories(dir / "a" / "b");
+    utils::putFileToDir(dir / "a" / "b", "alpha.txt", "The quick brown fox jumps over the lazy dog\n");
+    auto result = test_controller.trigger();
+    REQUIRE((result.contains(GetFile::Success) && result.at(GetFile::Success).size() == 1));
+    auto flow_file = result.at(GetFile::Success)[0];
+    CHECK(flow_file->getAttribute(minifi::core::SpecialFlowAttribute::PATH) == (std::filesystem::path("a") / "b" / "").string());
+    CHECK(flow_file->getAttribute(minifi::core::SpecialFlowAttribute::ABSOLUTE_PATH) == (dir / "a" / "b" / "").string());
+    CHECK(flow_file->getAttribute(minifi::core::SpecialFlowAttribute::FILENAME) == "alpha.txt");
+  }
+  SECTION("File directly in input directory") {
+    utils::putFileToDir(dir, "beta.txt", "The quick brown fox jumps over the lazy dog\n");
+    auto result = test_controller.trigger();
+    REQUIRE((result.contains(GetFile::Success) && result.at(GetFile::Success).size() == 1));
+    auto flow_file = result.at(GetFile::Success)[0];
+    CHECK(flow_file->getAttribute(minifi::core::SpecialFlowAttribute::PATH) == (std::filesystem::path(".") / "").string());
+    CHECK(flow_file->getAttribute(minifi::core::SpecialFlowAttribute::ABSOLUTE_PATH) == (dir / "").string());
+    CHECK(flow_file->getAttribute(minifi::core::SpecialFlowAttribute::FILENAME) == "beta.txt");
+  }
 }

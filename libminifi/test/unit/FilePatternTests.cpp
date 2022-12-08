@@ -153,9 +153,9 @@ TEST_CASE("Matching directory with exclusion") {
   //   |        |- file5.txt
   //   |- two
   //       |- file6.txt
-  minifi::utils::file::create_dir((root / "one" / "apple").string(), true);
-  minifi::utils::file::create_dir((root / "one" / "banana").string(), true);
-  minifi::utils::file::create_dir((root / "two").string(), true);
+  minifi::utils::file::create_dir(root / "one" / "apple", true);
+  minifi::utils::file::create_dir(root / "one" / "banana", true);
+  minifi::utils::file::create_dir(root / "two", true);
 
   auto file1 = root / "file1.txt";
   auto file2 = root / "one" / "file2.txt";
@@ -261,8 +261,8 @@ TEST_CASE("Check only relevant subdir contents") {
   //   |
   //   |- two
   //       |- file3.txt
-  minifi::utils::file::create_dir((root / "one").string(), true);
-  minifi::utils::file::create_dir((root / "two").string(), true);
+  minifi::utils::file::create_dir(root / "one", true);
+  minifi::utils::file::create_dir(root / "two", true);
 
   auto file1 = root / "file1.txt";
   auto file2 = root / "one" / "file2.txt";

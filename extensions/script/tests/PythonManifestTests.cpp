@@ -46,7 +46,7 @@ TEST_CASE("Python processor's description is part of the manifest") {
   TestControllerWithFlow controller(empty_flow, false /* DEFER FLOW SETUP */);
 
   auto python_dir = std::filesystem::path(controller.configuration_->getHome()) / "minifi-python";
-  utils::file::create_dir(python_dir.string());
+  utils::file::create_dir(python_dir);
   std::ofstream{python_dir / "MyPyProc.py"} <<
     "def describe(proc):\n"
     "  proc.setDescription('An amazing processor')\n";

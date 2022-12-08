@@ -17,15 +17,8 @@
  */
 #include "GetFile.h"
 
-#include <sys/stat.h>
-#include <sys/types.h>
-
-#include <cstring>
-#include <vector>
 #include <queue>
-#include <map>
 #include <memory>
-#include <regex>
 #include <string>
 
 #include "utils/StringUtils.h"
@@ -126,13 +119,14 @@ void GetFile::onSchedule(core::ProcessContext *context, core::ProcessSessionFact
     request_.fileFilter = value;
   }
 
-  if (!context->getProperty(Directory.getName(), value)) {
+  if (auto directory_str = context->getProperty(Directory)) {
+    if (!utils::file::is_directory(*directory_str)) {
+      throw Exception(PROCESS_SCHEDULE_EXCEPTION, "Input Directory \"" + value + "\" is not a directory");
+    }
+    request_.inputDirectory = *directory_str;
+  } else {
     throw Exception(PROCESS_SCHEDULE_EXCEPTION, "Input Directory property is missing");
   }
-  if (!utils::file::is_directory(value)) {
-    throw Exception(PROCESS_SCHEDULE_EXCEPTION, "Input Directory \"" + value + "\" is not a directory");
-  }
-  request_.inputDirectory = value;
 }
 
 void GetFile::onTrigger(core::ProcessContext* /*context*/, core::ProcessSession* session) {
@@ -164,9 +158,11 @@ void GetFile::getSingleFile(core::ProcessSession& session, const std::filesystem
   logger_->log_info("GetFile process %s", file_path.string());
   auto flow_file = session.create();
   gsl_Expects(flow_file);
+
   flow_file->setAttribute(core::SpecialFlowAttribute::FILENAME, file_path.filename().string());
-  flow_file->setAttribute(core::SpecialFlowAttribute::PATH, (file_path.parent_path() / "").string());
-  flow_file->addAttribute(core::SpecialFlowAttribute::ABSOLUTE_PATH, file_path.string());
+  flow_file->setAttribute(core::SpecialFlowAttribute::ABSOLUTE_PATH, std::filesystem::absolute(file_path.parent_path() / "").string());
+  auto relative_path = std::filesystem::relative(file_path.parent_path(), request_.inputDirectory);
+  flow_file->setAttribute(core::SpecialFlowAttribute::PATH, (relative_path / "").string());
 
   try {
     session.write(flow_file, utils::FileReaderCallback{file_path});

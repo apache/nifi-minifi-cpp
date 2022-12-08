@@ -1004,7 +1004,7 @@ void C2Agent::handleAssetUpdate(const C2ContentResponse& resp) {
 
   auto raw_data = std::move(file_response).moveRawData();
   // ensure directory exists for file
-  if (utils::file::create_dir(file_path.parent_path().string()) != 0) {
+  if (utils::file::create_dir(file_path.parent_path()) != 0) {
     send_error("Failed to create directory '" + file_path.parent_path().string() + "'");
     return;
   }

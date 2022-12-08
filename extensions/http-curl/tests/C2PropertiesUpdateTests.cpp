@@ -128,7 +128,7 @@ int main() {
 
   std::filesystem::path home_dir = tmp_dir.getPath();
 
-  utils::file::PathUtils::create_dir((home_dir / "conf").string());
+  utils::file::PathUtils::create_dir(home_dir / "conf");
   std::ofstream{home_dir / "conf/minifi.properties"} << properties_file;
   std::ofstream{home_dir / "conf/minifi-log.properties"} << log_properties_file;
   std::ofstream{home_dir / "conf/config.yml"} << empty_flow;

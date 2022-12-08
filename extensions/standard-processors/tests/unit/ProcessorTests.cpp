@@ -318,9 +318,9 @@ TEST_CASE("LogAttributeTest", "[getfileCreate3]") {
   records = plan->getProvenanceRecords();
   record = plan->getCurrentFlowFile();
 
-  REQUIRE(true == LogTestController::getInstance().contains("key:absolute.path value:" + path.string()));
-  REQUIRE(true == LogTestController::getInstance().contains("Size:8 Offset:0"));
-  REQUIRE(true == LogTestController::getInstance().contains("key:path value:" + dir.string()));
+  CHECK(true == LogTestController::getInstance().contains("key:absolute.path value:" + (dir / "").string()));
+  CHECK(true == LogTestController::getInstance().contains("Size:8 Offset:0"));
+  CHECK(true == LogTestController::getInstance().contains("key:path value:" + (std::filesystem::path(".") / "").string()));
   LogTestController::getInstance().reset();
 }
 
@@ -392,9 +392,9 @@ void testMultiplesLogAttribute(int fileCount, int flowsToLog, std::string verify
   records = plan->getProvenanceRecords();
   record = plan->getCurrentFlowFile();
 
-  REQUIRE(true == LogTestController::getInstance().contains("Size:8 Offset:0"));
-  REQUIRE(true == LogTestController::getInstance().contains("key:path value:" + dir.string()));
-  REQUIRE(true == LogTestController::getInstance().contains("Logged " + verifyStringFlowsLogged + " flow files"));
+  CHECK(true == LogTestController::getInstance().contains("Size:8 Offset:0"));
+  CHECK(true == LogTestController::getInstance().contains("key:path value:" + (std::filesystem::path(".") / "").string()));
+  CHECK(true == LogTestController::getInstance().contains("Logged " + verifyStringFlowsLogged + " flow files"));
   LogTestController::getInstance().reset();
 }
 

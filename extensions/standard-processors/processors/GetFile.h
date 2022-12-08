@@ -45,7 +45,7 @@ struct GetFileRequest {
   std::chrono::milliseconds pollInterval{0};
   uint64_t batchSize = 10;
   std::string fileFilter = ".*";
-  std::string inputDirectory;
+  std::filesystem::path inputDirectory;
 };
 
 class GetFileMetrics : public core::ProcessorMetrics {

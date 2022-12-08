@@ -20,8 +20,6 @@
 #include <utility>
 #include <memory>
 #include <string>
-#include <vector>
-#include <set>
 #include <fstream>
 
 #include "utils/file/FileUtils.h"
@@ -35,8 +33,6 @@
 #include "core/Core.h"
 #include "core/FlowFile.h"
 #include "core/Processor.h"
-#include "core/ProcessContext.h"
-#include "core/ProcessSession.h"
 #include "core/ProcessorNode.h"
 #include "core/reporting/SiteToSiteProvenanceReportingTask.h"
 #include "Exception.h"
@@ -87,15 +83,13 @@ TEST_CASE("PutFileTest", "[getfileputpfile]") {
 
   testController.runSession(plan, false);
 
-  records = plan->getProvenanceRecords();
-  record = plan->getCurrentFlowFile();
   testController.runSession(plan, false);
 
   std::filesystem::remove(path);
 
-  REQUIRE(true == LogTestController::getInstance().contains("key:absolute.path value:" + path.string()));
+  REQUIRE(true == LogTestController::getInstance().contains("key:absolute.path value:" + (dir / "").string()));
   REQUIRE(true == LogTestController::getInstance().contains("Size:8 Offset:0"));
-  REQUIRE(true == LogTestController::getInstance().contains("key:path value:" + dir.string()));
+  REQUIRE(true == LogTestController::getInstance().contains("key:path value:" + (std::filesystem::path(".") / "").string()));
   // verify that the fle was moved
   REQUIRE(false == std::ifstream(path).good());
   auto moved_path = putfiledir / "tstFile.ext";
@@ -155,15 +149,13 @@ TEST_CASE("PutFileTestFileExists", "[getfileputpfile]") {
 
   testController.runSession(plan, false);
 
-  records = plan->getProvenanceRecords();
-  record = plan->getCurrentFlowFile();
   testController.runSession(plan, false);
 
   std::filesystem::remove(path);
 
-  REQUIRE(true == LogTestController::getInstance().contains("key:absolute.path value:" + path.string()));
+  REQUIRE(true == LogTestController::getInstance().contains("key:absolute.path value:" + (dir / "").string()));
   REQUIRE(true == LogTestController::getInstance().contains("Size:8 Offset:0"));
-  REQUIRE(true == LogTestController::getInstance().contains("key:path value:" + dir.string()));
+  REQUIRE(true == LogTestController::getInstance().contains("key:path value:" + (std::filesystem::path(".") / "").string()));
   // verify that the fle was moved
   REQUIRE(false == std::ifstream(path).good());
   REQUIRE(true == std::ifstream(moved_path).good());
@@ -219,15 +211,13 @@ TEST_CASE("PutFileTestFileExistsIgnore", "[getfileputpfile]") {
 
   testController.runSession(plan, false);
 
-  records = plan->getProvenanceRecords();
-  record = plan->getCurrentFlowFile();
   testController.runSession(plan, false);
 
   std::filesystem::remove(path);
 
-  REQUIRE(true == LogTestController::getInstance().contains("key:absolute.path value:" + path.string()));
+  REQUIRE(true == LogTestController::getInstance().contains("key:absolute.path value:" + (dir / "").string() ));
   REQUIRE(true == LogTestController::getInstance().contains("Size:8 Offset:0"));
-  REQUIRE(true == LogTestController::getInstance().contains("key:path value:" + dir.string()));
+  REQUIRE(true == LogTestController::getInstance().contains("key:path value:" + (std::filesystem::path(".") / "").string()));
   // verify that the fle was moved
   REQUIRE(false == std::ifstream(path).good());
   REQUIRE(true == std::ifstream(moved_path).good());
@@ -283,15 +273,13 @@ TEST_CASE("PutFileTestFileExistsReplace", "[getfileputpfile]") {
 
   testController.runSession(plan, false);
 
-  records = plan->getProvenanceRecords();
-  record = plan->getCurrentFlowFile();
   testController.runSession(plan, false);
 
   std::filesystem::remove(path);
 
-  REQUIRE(true == LogTestController::getInstance().contains("key:absolute.path value:" + path.string()));
+  REQUIRE(true == LogTestController::getInstance().contains("key:absolute.path value:" + (dir / "").string()));
   REQUIRE(true == LogTestController::getInstance().contains("Size:8 Offset:0"));
-  REQUIRE(true == LogTestController::getInstance().contains("key:path value:" + dir.string()));
+  REQUIRE(true == LogTestController::getInstance().contains("key:path value:" + (std::filesystem::path(".") / "").string()));
   // verify that the fle was moved
   REQUIRE(false == std::ifstream(path).good());
   REQUIRE(true == std::ifstream(moved_path).good());
@@ -349,9 +337,9 @@ TEST_CASE("PutFileMaxFileCountTest", "[getfileputpfilemaxcount]") {
   testController.runSession(plan);
 
 
-  CHECK(LogTestController::getInstance().contains("key:absolute.path value:" + (dir / "tstFile0.ext").string()));
-  CHECK(LogTestController::getInstance().contains("Size:8 Offset:0"));
-  CHECK(LogTestController::getInstance().contains("key:path value:" + dir.string()));
+  REQUIRE(LogTestController::getInstance().contains("key:absolute.path value:" + (dir / "").string()));
+  REQUIRE(LogTestController::getInstance().contains("Size:8 Offset:0"));
+  REQUIRE(LogTestController::getInstance().contains("key:path value:" + (std::filesystem::path(".") / "").string()));
 
   // Only 1 of the 2 files should make it to the target dir
   // Non-deterministic, so let's just count them

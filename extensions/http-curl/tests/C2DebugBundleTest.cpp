@@ -146,7 +146,7 @@ int main() {
   C2DebugBundleHandler bundle_handler;
 
   std::filesystem::path home_dir = controller.createTempDirectory();
-  utils::file::PathUtils::create_dir((home_dir / "conf").string());
+  utils::file::PathUtils::create_dir(home_dir / "conf");
   std::ofstream{home_dir / "conf/minifi.properties", std::ios::binary} << properties_file;
   std::ofstream{home_dir / "conf/config.yml", std::ios::binary} << flow_config_file;
 
