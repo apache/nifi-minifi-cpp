@@ -16,13 +16,12 @@
  * limitations under the License.
  */
 #include <utility>
-#include <memory>
 #include <string>
-#include <fstream>
 #include <filesystem>
 #include <chrono>
 
 #include "TestBase.h"
+#include "SingleProcessorTestController.h"
 #include "Catch.h"
 #include "LogAttribute.h"
 #include "GetFile.h"
@@ -30,10 +29,6 @@
 #include "utils/TestUtils.h"
 #include "unit/ProvenanceTestHelper.h"
 #include "Utils.h"
-
-#ifdef WIN32
-#include <fileapi.h>
-#endif
 
 using namespace std::literals::chrono_literals;
 
@@ -81,7 +76,7 @@ GetFileTestController::GetFileTestController()
   utils::putFileToDir(temp_dir_.string(), hidden_input_file_name_, "But noone has ever seen it\n");
 
 #ifdef WIN32
-  const auto hide_file_err = minifi::test::utils::hide_file(getFullPath(hidden_input_file_name_).c_str());
+  const auto hide_file_err = minifi::test::utils::hide_file(getFullPath(hidden_input_file_name_));
   REQUIRE(!hide_file_err);
 #endif
 }
@@ -147,7 +142,7 @@ TEST_CASE("GetFile removes the source file if KeepSourceFile is false") {
 
   test_controller.runSession();
 
-  REQUIRE_FALSE(utils::file::exists(test_controller.getInputFilePath()));
+  REQUIRE_FALSE(utils::file::exists(test_controller.getInputFilePath().string()));
 }
 
 TEST_CASE("GetFile keeps the source file if KeepSourceFile is true") {
@@ -156,7 +151,7 @@ TEST_CASE("GetFile keeps the source file if KeepSourceFile is true") {
 
   test_controller.runSession();
 
-  REQUIRE(utils::file::exists(test_controller.getInputFilePath()));
+  REQUIRE(utils::file::exists(test_controller.getInputFilePath().string()));
 }
 
 TEST_CASE("Hidden files are read when IgnoreHiddenFile property is false", "[getFileProperty]") {
@@ -175,7 +170,7 @@ TEST_CASE("Check if subdirectories are ignored or not if Recurse property is set
   GetFileTestController test_controller;
 
   auto subdir_path = test_controller.getFullPath("subdir");
-  utils::file::FileUtils::create_dir(subdir_path);
+  utils::file::FileUtils::create_dir(subdir_path.string());
   utils::putFileToDir(subdir_path, "subfile.txt", "Some content in a subfile\n");
 
   SECTION("File in subdirectory is ignored when Recurse property set to false")  {
@@ -203,7 +198,7 @@ TEST_CASE("Only older files are read when MinAge property is set", "[getFileProp
   test_controller.setProperty(minifi::processors::GetFile::MinAge, "1 hour");
 
   const auto more_than_an_hour_ago = std::chrono::file_clock::now() - 65min;
-  utils::file::FileUtils::set_last_write_time(test_controller.getInputFilePath(), more_than_an_hour_ago);
+  utils::file::FileUtils::set_last_write_time(test_controller.getInputFilePath().string(), more_than_an_hour_ago);
 
   test_controller.runSession();
 
@@ -217,7 +212,7 @@ TEST_CASE("Only newer files are read when MaxAge property is set", "[getFileProp
   test_controller.setProperty(minifi::processors::GetFile::MaxAge, "1 hour");
 
   const auto more_than_an_hour_ago = std::chrono::file_clock::now() - 65min;
-  utils::file::FileUtils::set_last_write_time(test_controller.getInputFilePath(), more_than_an_hour_ago);
+  utils::file::FileUtils::set_last_write_time(test_controller.getInputFilePath().string(), more_than_an_hour_ago);
 
   test_controller.runSession();
 
@@ -268,4 +263,33 @@ TEST_CASE("Test if GetFile honors PollInterval property when triggered multiple 
   }
 
   REQUIRE(std::chrono::steady_clock::now() - start_time >= 100ms);
+}
+
+TEST_CASE("GetFile sets attributes correctly") {
+  using minifi::processors::GetFile;
+
+  const auto get_file = std::make_shared<GetFile>("GetFile");
+  LogTestController::getInstance().setTrace<GetFile>();
+  minifi::test::SingleProcessorTestController test_controller(get_file);
+  std::filesystem::path dir = test_controller.createTempDirectory();
+  get_file->setProperty(GetFile::Directory, dir.string());
+  SECTION("File in subdirectory of input directory") {
+    std::filesystem::create_directories(dir / "a" / "b");
+    utils::putFileToDir(dir / "a" / "b", "alpha.txt", "The quick brown fox jumps over the lazy dog\n");
+    auto result = test_controller.trigger();
+    REQUIRE((result.contains(GetFile::Success) && result.at(GetFile::Success).size() == 1));
+    auto flow_file = result.at(GetFile::Success)[0];
+    CHECK(flow_file->getAttribute(minifi::core::SpecialFlowAttribute::PATH) == (std::filesystem::path("a") / "b" / "").string());
+    CHECK(flow_file->getAttribute(minifi::core::SpecialFlowAttribute::ABSOLUTE_PATH) == (dir / "a" / "b" / "").string());
+    CHECK(flow_file->getAttribute(minifi::core::SpecialFlowAttribute::FILENAME) == "alpha.txt");
+  }
+  SECTION("File directly in input directory") {
+    utils::putFileToDir(dir, "beta.txt", "The quick brown fox jumps over the lazy dog\n");
+    auto result = test_controller.trigger();
+    REQUIRE((result.contains(GetFile::Success) && result.at(GetFile::Success).size() == 1));
+    auto flow_file = result.at(GetFile::Success)[0];
+    CHECK(flow_file->getAttribute(minifi::core::SpecialFlowAttribute::PATH) == (std::filesystem::path(".") / "").string());
+    CHECK(flow_file->getAttribute(minifi::core::SpecialFlowAttribute::ABSOLUTE_PATH) == (dir / "").string());
+    CHECK(flow_file->getAttribute(minifi::core::SpecialFlowAttribute::FILENAME) == "beta.txt");
+  }
 }

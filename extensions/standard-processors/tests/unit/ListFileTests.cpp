@@ -19,6 +19,7 @@
 #include <string>
 
 #include "TestBase.h"
+#include "SingleProcessorTestController.h"
 #include "Catch.h"
 #include "core/Property.h"
 #include "core/Processor.h"
@@ -215,6 +216,35 @@ TEST_CASE_METHOD(ListFileTestFixture, "Test listing hidden files", "[testListFil
   REQUIRE(verifyLogLinePresenceInPollTime(3s, "key:filename value:sub_file_one.txt"));
   REQUIRE(verifyLogLinePresenceInPollTime(3s, "key:filename value:sub_file_two.txt"));
   REQUIRE(verifyLogLinePresenceInPollTime(3s, "key:filename value:.hidden_file.txt"));
+}
+
+TEST_CASE("ListFile sets attributes correctly") {
+  using minifi::processors::ListFile;
+
+  const auto list_file = std::make_shared<ListFile>("GetFile");
+  LogTestController::getInstance().setTrace<ListFile>();
+  minifi::test::SingleProcessorTestController test_controller(list_file);
+  std::filesystem::path dir = test_controller.createTempDirectory();
+  list_file->setProperty(ListFile::InputDirectory, dir.string());
+  SECTION("File in subdirectory of input directory") {
+    std::filesystem::create_directories(dir / "a" / "b");
+    utils::putFileToDir(dir / "a" / "b", "alpha.txt", "The quick brown fox jumps over the lazy dog\n");
+    auto result = test_controller.trigger();
+    REQUIRE((result.contains(ListFile::Success) && result.at(ListFile::Success).size() == 1));
+    auto flow_file = result.at(ListFile::Success)[0];
+    CHECK(flow_file->getAttribute(minifi::core::SpecialFlowAttribute::PATH) == (std::filesystem::path("a") / "b" / "").string());
+    CHECK(flow_file->getAttribute(minifi::core::SpecialFlowAttribute::ABSOLUTE_PATH) == (dir / "a" / "b" / "").string());
+    CHECK(flow_file->getAttribute(minifi::core::SpecialFlowAttribute::FILENAME) == "alpha.txt");
+  }
+  SECTION("File directly in input directory") {
+    utils::putFileToDir(dir, "beta.txt", "The quick brown fox jumps over the lazy dog\n");
+    auto result = test_controller.trigger();
+    REQUIRE((result.contains(ListFile::Success) && result.at(ListFile::Success).size() == 1));
+    auto flow_file = result.at(ListFile::Success)[0];
+    CHECK(flow_file->getAttribute(minifi::core::SpecialFlowAttribute::PATH) == (std::filesystem::path(".") / "").string());
+    CHECK(flow_file->getAttribute(minifi::core::SpecialFlowAttribute::ABSOLUTE_PATH) == (dir / "").string());
+    CHECK(flow_file->getAttribute(minifi::core::SpecialFlowAttribute::FILENAME) == "beta.txt");
+  }
 }
 
 }  // namespace

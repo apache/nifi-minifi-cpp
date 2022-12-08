@@ -72,7 +72,7 @@ class AttributesToJSONTestFixture {
 
   void assertJSONAttributesFromFile(const std::unordered_map<std::string, std::optional<std::string>>& expected_attributes) {
     auto file_contents = getOutputFileContents();
-    REQUIRE(file_contents.size() == 1);
+    CHECK(file_contents.size() == 1);
     assertAttributes(expected_attributes, file_contents[0]);
   }
 
@@ -80,12 +80,12 @@ class AttributesToJSONTestFixture {
     rapidjson::Document root;
     rapidjson::ParseResult ok = root.Parse(output_json.c_str());
     REQUIRE(ok);
-    REQUIRE(root.MemberCount() == expected_attributes.size());
+    CHECK(root.MemberCount() == expected_attributes.size());
     for (const auto& [key, value] : expected_attributes) {
       if (value == std::nullopt) {
-        REQUIRE(root[key.c_str()].IsNull());
+        CHECK(root[key.c_str()].IsNull());
       } else {
-        REQUIRE(std::string(root[key.c_str()].GetString()) == value.value());
+        CHECK(std::string(root[key.c_str()].GetString()) == value.value());
       }
     }
   }
@@ -123,14 +123,14 @@ TEST_CASE_METHOD(AttributesToJSONTestFixture, "Move all attributes to a flowfile
   REQUIRE(file_contents[0] == TEST_FILE_CONTENT);
 
   const std::unordered_map<std::string, std::optional<std::string>> expected_attributes {
-    {"absolute.path", (dir_ / TEST_FILE_NAME).string()},
+    {"absolute.path", (dir_ / "").string()},
     {"empty_attribute", ""},
     {"filename", TEST_FILE_NAME},
     {"flow.id", "test"},
     {"my_attribute", "my_value"},
     {"my_attribute_1", "my_value_1"},
     {"other_attribute", "other_value"},
-    {"path", (dir_ / "").string()}
+    {"path", (std::filesystem::path(".") / "").string()}
   };
   assertJSONAttributesFromLog(expected_attributes);
 }
@@ -184,14 +184,14 @@ TEST_CASE_METHOD(AttributesToJSONTestFixture, "JSON attributes are written in fl
   test_controller_.runSession(plan_);
 
   const std::unordered_map<std::string, std::optional<std::string>> expected_attributes {
-    {"absolute.path", (dir_ / TEST_FILE_NAME).string()},
+    {"absolute.path", (dir_ / "").string()},
     {"empty_attribute", ""},
     {"filename", TEST_FILE_NAME},
     {"flow.id", "test"},
     {"my_attribute", "my_value"},
     {"my_attribute_1", "my_value_1"},
     {"other_attribute", "other_value"},
-    {"path", (dir_ / "").string()}
+    {"path", (std::filesystem::path(".") / "").string()}
   };
   assertJSONAttributesFromFile(expected_attributes);
 }
@@ -243,7 +243,7 @@ TEST_CASE_METHOD(AttributesToJSONTestFixture, "Attributes from attributes list a
     {"empty_attribute", ""},
     {"filename", TEST_FILE_NAME},
     {"my_attribute", "my_value"},
-    {"path", (dir_ / "").string()}
+    {"path", (std::filesystem::path(".") / "").string()}
   };
   assertJSONAttributesFromLog(expected_attributes);
 }
@@ -272,7 +272,7 @@ TEST_CASE_METHOD(AttributesToJSONTestFixture, "Core attributes are written if th
 
   const std::unordered_map<std::string, std::optional<std::string>> expected_attributes {
     {"filename", TEST_FILE_NAME},
-    {"path", (dir_ / "").string()},
+    {"path", (std::filesystem::path(".") / "").string()},
     {"my_attribute", "my_value"}
   };
   assertJSONAttributesFromLog(expected_attributes);
