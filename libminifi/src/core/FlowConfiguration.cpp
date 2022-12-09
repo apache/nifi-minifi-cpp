@@ -31,7 +31,7 @@ namespace org::apache::nifi::minifi::core {
 FlowConfiguration::FlowConfiguration(
     const std::shared_ptr<core::Repository>& /*repo*/, std::shared_ptr<core::Repository> flow_file_repo,
     std::shared_ptr<core::ContentRepository> content_repo, std::shared_ptr<io::StreamFactory> stream_factory,
-    const std::shared_ptr<Configure>& configuration, const std::optional<std::filesystem::path>& path,
+    std::shared_ptr<Configure> configuration, const std::optional<std::filesystem::path>& path,
     std::shared_ptr<utils::file::FileSystem> filesystem)
     : CoreComponent(core::getClassName<FlowConfiguration>()),
       flow_file_repo_(std::move(flow_file_repo)),
