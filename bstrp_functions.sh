@@ -380,7 +380,9 @@ show_supported_features() {
   echo "V. SQL Support..................$(print_feature_status SQL_ENABLED)"
   echo "W. Openwsman Support ...........$(print_feature_status OPENWSMAN_ENABLED)"
   echo "X. Azure Support ...............$(print_feature_status AZURE_ENABLED)"
-  echo "Y. Systemd Support .............$(print_feature_status SYSTEMD_ENABLED)"
+  if $LINUX; then
+    echo "Y. Systemd Support .............$(print_feature_status SYSTEMD_ENABLED)"
+  fi
   echo "Z. NanoFi Support ..............$(print_feature_status NANOFI_ENABLED)"
   echo "AA. Splunk Support .............$(print_feature_status SPLUNK_ENABLED)"
   echo "AB. Kubernetes Support .........$(print_feature_status KUBERNETES_ENABLED)"
@@ -430,7 +432,7 @@ read_feature_options(){
          ToggleFeature PYTHON_ENABLED
        else
          echo -e "${RED}Please ensure static linking is enabled for Python Support...${NO_COLOR}" && sleep 2
-   	   fi
+       fi
    	   ;;
     n) ToggleFeature COAP_ENABLED ;;
     o) ToggleFeature SFTP_ENABLED ;;
@@ -440,7 +442,7 @@ read_feature_options(){
     v) ToggleFeature SQL_ENABLED ;;
     w) ToggleFeature OPENWSMAN_ENABLED ;;
     x) ToggleFeature AZURE_ENABLED ;;
-    y) ToggleFeature SYSTEMD_ENABLED ;;
+    y) if $LINUX; then ToggleFeature SYSTEMD_ENABLED; fi ;;
     z) ToggleFeature NANOFI_ENABLED ;;
     aa) ToggleFeature SPLUNK_ENABLED ;;
     ab) ToggleFeature KUBERNETES_ENABLED ;;
