@@ -89,8 +89,7 @@ class JniFlowFile : public core::WeakReference {
 class JniByteInputStream {
  public:
   explicit JniByteInputStream(uint64_t size)
-      : buffer_(size),
-        read_size_(0) {
+      : buffer_(size) {
   }
   int64_t operator()(const std::shared_ptr<minifi::io::InputStream>& stream) {
     stream_ = stream;
@@ -134,7 +133,6 @@ class JniByteInputStream {
 
   std::shared_ptr<minifi::io::InputStream> stream_;
   std::vector<std::byte> buffer_;
-  uint64_t read_size_;
 };
 
 class JniInputStream : public core::WeakReference {
@@ -237,11 +235,7 @@ class JniSession : public core::WeakReference {
   }
   bool empty() const {
     std::lock_guard<std::mutex> guard(session_mutex_);
-    for (const auto& ff : global_ff_objects_) {
-      if (!ff->empty())
-        return false;
-    }
-    return true;
+    return std::ranges::all_of(global_ff_objects_, [](const auto& ff) -> bool { return ff->empty(); });
   }
 
  protected:
@@ -265,7 +259,7 @@ class JniSessionFactory : public core::WeakReference {
 
   void remove() override {
     std::lock_guard<std::mutex> guard(session_mutex_);
-    // remove all of the sessions
+    // remove all sessions
     // this should spark their destructor
     for (const auto& session : sessions_) {
       session->remove();
@@ -295,9 +289,7 @@ class JniSessionFactory : public core::WeakReference {
   JniSession *addSession(const std::shared_ptr<JniSession>& session) {
     std::lock_guard<std::mutex> guard(session_mutex_);
 
-    const auto check_empty = [](const std::shared_ptr<JniSession>& session) { return session->prune(); };
-
-    sessions_.erase(std::remove_if(sessions_.begin(), sessions_.end(), check_empty), sessions_.end());
+    ranges::remove_if(sessions_, [](const auto& session) { return session->prune(); });
 
     sessions_.push_back(session);
 
