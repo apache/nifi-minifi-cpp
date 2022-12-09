@@ -177,7 +177,7 @@ TEST_CASE_METHOD(ListSFTPTestsFixture, "ListSFTP list one file", "[ListSFTP][bas
 
 TEST_CASE_METHOD(ListSFTPTestsFixture, "ListSFTP public key authentication", "[ListSFTP][basic]") {
   plan->setProperty(list_sftp, "Remote File", "nifi_test/tstFile.ext");
-  plan->setProperty(list_sftp, "Private Key Path", get_sftp_test_dir() / "resources/id_rsa");
+  plan->setProperty(list_sftp, "Private Key Path", get_sftp_test_dir() / "resources" / "id_rsa");
   plan->setProperty(list_sftp, "Private Key Passphrase", "privatekeypassword");
 
   createFileWithModificationTimeDiff("nifi_test/tstFile.ext", "Test content 1");

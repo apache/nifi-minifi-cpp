@@ -187,13 +187,8 @@ class PutSFTPTestsFixture {
     REQUIRE(expected_gid == gid);
   }
 
-  size_t directoryContentCount(const std::string& dir) {
-    size_t count = 0U;
-    utils::file::list_dir(dir, [&count](const std::string&, const std::string&) {
-      count++;
-      return true;
-    }, testController.getLogger());
-    return count;
+  std::size_t directoryContentCount(const std::filesystem::path& dir) {
+    return (std::size_t)std::distance(std::filesystem::directory_iterator{dir}, std::filesystem::directory_iterator{});
   }
 
  protected:
@@ -240,7 +235,7 @@ TEST_CASE_METHOD(PutSFTPTestsFixture, "PutSFTP bad password", "[PutSFTP][authent
 }
 
 TEST_CASE_METHOD(PutSFTPTestsFixture, "PutSFTP public key authentication success", "[PutSFTP][authentication]") {
-  plan->setProperty(put, "Private Key Path", get_sftp_test_dir() / "resources/id_rsa");
+  plan->setProperty(put, "Private Key Path", get_sftp_test_dir() / "resources" / "id_rsa");
   plan->setProperty(put, "Private Key Passphrase", "privatekeypassword");
 
   createFile(src_dir, "tstFile.ext", "tempFile");
@@ -253,7 +248,7 @@ TEST_CASE_METHOD(PutSFTPTestsFixture, "PutSFTP public key authentication success
 
 TEST_CASE_METHOD(PutSFTPTestsFixture, "PutSFTP public key authentication bad passphrase", "[PutSFTP][authentication]") {
   plan->setProperty(put, "Password", "");
-  plan->setProperty(put, "Private Key Path", get_sftp_test_dir() / "resources/id_rsa");
+  plan->setProperty(put, "Private Key Path", get_sftp_test_dir() / "resources" / "id_rsa");
   plan->setProperty(put, "Private Key Passphrase", "badpassword");
 
   createFile(src_dir, "tstFile.ext", "tempFile");
@@ -269,7 +264,7 @@ TEST_CASE_METHOD(PutSFTPTestsFixture, "PutSFTP public key authentication bad pas
 }
 
 TEST_CASE_METHOD(PutSFTPTestsFixture, "PutSFTP public key authentication bad passphrase fallback to password", "[PutSFTP][authentication]") {
-  plan->setProperty(put, "Private Key Path", get_sftp_test_dir() / "resources/id_rsa");
+  plan->setProperty(put, "Private Key Path", get_sftp_test_dir() / "resources" / "id_rsa");
   plan->setProperty(put, "Private Key Passphrase", "badpassword");
 
   createFile(src_dir, "tstFile.ext", "tempFile");
@@ -282,7 +277,7 @@ TEST_CASE_METHOD(PutSFTPTestsFixture, "PutSFTP public key authentication bad pas
 }
 
 TEST_CASE_METHOD(PutSFTPTestsFixture, "PutSFTP host key checking success", "[PutSFTP][hostkey]") {
-  plan->setProperty(put, "Host Key File", get_sftp_test_dir() / "resources/known_hosts");
+  plan->setProperty(put, "Host Key File", get_sftp_test_dir() / "resources" / "known_hosts");
   plan->setProperty(put, "Strict Host Key Checking", "true");
 
   createFile(src_dir, "tstFile.ext", "tempFile");
@@ -296,7 +291,7 @@ TEST_CASE_METHOD(PutSFTPTestsFixture, "PutSFTP host key checking success", "[Put
 TEST_CASE_METHOD(PutSFTPTestsFixture, "PutSFTP host key checking missing strict", "[PutSFTP][hostkey]") {
   plan->setProperty(put, "Hostname", "127.0.0.1");
 
-  plan->setProperty(put, "Host Key File", get_sftp_test_dir() / "resources/known_hosts");
+  plan->setProperty(put, "Host Key File", get_sftp_test_dir() / "resources" / "known_hosts");
   plan->setProperty(put, "Strict Host Key Checking", "true");
 
   createFile(src_dir, "tstFile.ext", "tempFile");
@@ -314,7 +309,7 @@ TEST_CASE_METHOD(PutSFTPTestsFixture, "PutSFTP host key checking missing strict"
 TEST_CASE_METHOD(PutSFTPTestsFixture, "PutSFTP host key checking missing non-strict", "[PutSFTP][hostkey]") {
   plan->setProperty(put, "Hostname", "127.0.0.1");
 
-  plan->setProperty(put, "Host Key File", get_sftp_test_dir() / "resources/known_hosts");
+  plan->setProperty(put, "Host Key File", get_sftp_test_dir() / "resources" / "known_hosts");
   plan->setProperty(put, "Strict Host Key Checking", "false");
 
   createFile(src_dir, "tstFile.ext", "tempFile");
@@ -326,7 +321,7 @@ TEST_CASE_METHOD(PutSFTPTestsFixture, "PutSFTP host key checking missing non-str
 }
 
 TEST_CASE_METHOD(PutSFTPTestsFixture, "PutSFTP host key checking mismatch strict", "[PutSFTP][hostkey]") {
-  plan->setProperty(put, "Host Key File", get_sftp_test_dir() / "resources/known_hosts_mismatch");
+  plan->setProperty(put, "Host Key File", get_sftp_test_dir() / "resources" / "known_hosts_mismatch");
   plan->setProperty(put, "Strict Host Key Checking", "true");
 
   createFile(src_dir, "tstFile.ext", "tempFile");
@@ -358,7 +353,7 @@ TEST_CASE_METHOD(PutSFTPTestsFixture, "PutSFTP conflict resolution rename", "[Pu
   plan->setProperty(put, "Conflict Resolution", minifi::processors::PutSFTP::CONFLICT_RESOLUTION_RENAME);
 
   createFile(src_dir, "tstFile1.ext", "content 1");
-  REQUIRE(0 == utils::file::create_dir(dst_dir / "vfs/nifi_test"));
+  REQUIRE(0 == utils::file::create_dir(dst_dir / "vfs" / "nifi_test"));
   createFile(dst_dir / "vfs", "nifi_test/tstFile1.ext", "content 2");
 
   testController.runSession(plan, true);
@@ -372,7 +367,7 @@ TEST_CASE_METHOD(PutSFTPTestsFixture, "PutSFTP conflict resolution reject", "[Pu
   plan->setProperty(put, "Conflict Resolution", minifi::processors::PutSFTP::CONFLICT_RESOLUTION_REJECT);
 
   createFile(src_dir, "tstFile1.ext", "content 1");
-  REQUIRE(0 == utils::file::create_dir(dst_dir / "vfs/nifi_test"));
+  REQUIRE(0 == utils::file::create_dir(dst_dir / "vfs" / "nifi_test"));
   createFile(dst_dir / "vfs", "nifi_test/tstFile1.ext", "content 2");
 
   testController.runSession(plan, true);
@@ -385,7 +380,7 @@ TEST_CASE_METHOD(PutSFTPTestsFixture, "PutSFTP conflict resolution fail", "[PutS
   plan->setProperty(put, "Conflict Resolution", minifi::processors::PutSFTP::CONFLICT_RESOLUTION_FAIL);
 
   createFile(src_dir, "tstFile1.ext", "content 1");
-  REQUIRE(0 == utils::file::FileUtils::create_dir(dst_dir / "vfs/nifi_test"));
+  REQUIRE(0 == utils::file::FileUtils::create_dir(dst_dir / "vfs" / "nifi_test"));
   createFile(dst_dir / "vfs", "nifi_test/tstFile1.ext", "content 2");
 
   testController.runSession(plan, true);
@@ -398,7 +393,7 @@ TEST_CASE_METHOD(PutSFTPTestsFixture, "PutSFTP conflict resolution ignore", "[Pu
   plan->setProperty(put, "Conflict Resolution", minifi::processors::PutSFTP::CONFLICT_RESOLUTION_IGNORE);
 
   createFile(src_dir, "tstFile1.ext", "content 1");
-  REQUIRE(0 == utils::file::FileUtils::create_dir(dst_dir / "vfs/nifi_test"));
+  REQUIRE(0 == utils::file::FileUtils::create_dir(dst_dir / "vfs" / "nifi_test"));
   createFile(dst_dir / "vfs", "nifi_test/tstFile1.ext", "content 2");
 
   testController.runSession(plan, true);
@@ -412,7 +407,7 @@ TEST_CASE_METHOD(PutSFTPTestsFixture, "PutSFTP conflict resolution replace", "[P
   plan->setProperty(put, "Conflict Resolution", minifi::processors::PutSFTP::CONFLICT_RESOLUTION_REPLACE);
 
   createFile(src_dir, "tstFile1.ext", "content 1");
-  REQUIRE(0 == utils::file::FileUtils::create_dir(dst_dir / "vfs/nifi_test"));
+  REQUIRE(0 == utils::file::FileUtils::create_dir(dst_dir / "vfs" / "nifi_test"));
   createFile(dst_dir / "vfs", "nifi_test/tstFile1.ext", "content 2");
 
   testController.runSession(plan, true);
@@ -425,7 +420,7 @@ TEST_CASE_METHOD(PutSFTPTestsFixture, "PutSFTP conflict resolution none", "[PutS
   plan->setProperty(put, "Conflict Resolution", minifi::processors::PutSFTP::CONFLICT_RESOLUTION_NONE);
 
   createFile(src_dir, "tstFile1.ext", "content 1");
-  REQUIRE(0 == utils::file::FileUtils::create_dir(dst_dir / "vfs/nifi_test"));
+  REQUIRE(0 == utils::file::FileUtils::create_dir(dst_dir / "vfs" / "nifi_test"));
   createFile(dst_dir / "vfs", "nifi_test/tstFile1.ext", "content 2");
 
   testController.runSession(plan, true);
@@ -457,8 +452,8 @@ TEST_CASE_METHOD(PutSFTPTestsFixture, "PutSFTP conflict resolution with director
   }
 
   createFile(src_dir, "tstFile1.ext", "content 1");
-  REQUIRE(0 == utils::file::FileUtils::create_dir(dst_dir / "vfs/nifi_test"));
-  REQUIRE(0 == utils::file::FileUtils::create_dir(dst_dir / "vfs/nifi_test/tstFile1.ext"));
+  REQUIRE(0 == utils::file::FileUtils::create_dir(dst_dir / "vfs" / "nifi_test"));
+  REQUIRE(0 == utils::file::FileUtils::create_dir(dst_dir / "vfs" / "nifi_test" / "tstFile1.ext"));
 
   testController.runSession(plan, true);
 
@@ -567,7 +562,7 @@ TEST_CASE_METHOD(PutSFTPTestsFixture, "PutSFTP test dot rename", "[PutSFTP]") {
    * We create the would-be dot renamed file in the target, and because we don't overwrite temporary files,
    * if we really use a dot renamed temporary file, we should fail.
    */
-  REQUIRE(0 == utils::file::FileUtils::create_dir(dst_dir / "vfs/nifi_test"));
+  REQUIRE(0 == utils::file::FileUtils::create_dir(dst_dir / "vfs" / "nifi_test"));
   createFile(dst_dir / "vfs", "nifi_test/.tstFile1.ext", "");
 
   testController.runSession(plan, true);
@@ -599,7 +594,7 @@ TEST_CASE_METHOD(PutSFTPTestsFixture, "PutSFTP test temporary filename", "[PutSF
    * We create the would-be temporary file in the target, and because we don't overwrite temporary files,
    * if we really use the temporary file, we should fail.
    */
-  REQUIRE(0 == utils::file::FileUtils::create_dir(dst_dir / "vfs/nifi_test"));
+  REQUIRE(0 == utils::file::FileUtils::create_dir(dst_dir / "vfs" / "nifi_test"));
   createFile(dst_dir / "vfs", "nifi_test/tstFile1.ext.temp", "");
 
   testController.runSession(plan, true);
@@ -617,7 +612,7 @@ TEST_CASE_METHOD(PutSFTPTestsFixture, "PutSFTP test temporary file cleanup", "[P
   plan->setProperty(put, "Conflict Resolution", minifi::processors::PutSFTP::CONFLICT_RESOLUTION_NONE);
 
   createFile(src_dir, "tstFile1.ext", "content 1");
-  REQUIRE(0 == utils::file::FileUtils::create_dir(dst_dir / "vfs/nifi_test"));
+  REQUIRE(0 == utils::file::FileUtils::create_dir(dst_dir / "vfs" / "nifi_test"));
   createFile(dst_dir / "vfs", "nifi_test/tstFile1.ext", "content 2");
 
   testController.runSession(plan, true);
@@ -759,7 +754,7 @@ TEST_CASE_METHOD(PutSFTPTestsFixture, "PutSFTP batching two files in one batch",
 
   testController.runSession(plan, true);
 
-  REQUIRE(2U == directoryContentCount(std::string(dst_dir) + "/vfs/nifi_test"));
+  REQUIRE(2U == directoryContentCount(dst_dir / "vfs" / "nifi_test"));
 }
 
 TEST_CASE_METHOD(PutSFTPTestsFixture, "PutSFTP batching two files in two batches", "[PutSFTP][batching]") {
@@ -769,14 +764,14 @@ TEST_CASE_METHOD(PutSFTPTestsFixture, "PutSFTP batching two files in two batches
   createFile(src_dir, "tstFile2.ext", "content 2");
 
   testController.runSession(plan, true);
-  REQUIRE(1U == directoryContentCount(std::string(dst_dir) + "/vfs/nifi_test"));
+  REQUIRE(1U == directoryContentCount(dst_dir / "vfs" / "nifi_test"));
   plan->reset();
 
   createFile(src_dir, "tstFile1.ext", "content 1");
   createFile(src_dir, "tstFile2.ext", "content 2");
 
   testController.runSession(plan, true);
-  REQUIRE(2U == directoryContentCount(std::string(dst_dir) + "/vfs/nifi_test"));
+  REQUIRE(2U == directoryContentCount(dst_dir / "vfs" / "nifi_test"));
   plan->reset();
 }
 
