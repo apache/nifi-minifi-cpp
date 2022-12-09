@@ -63,7 +63,7 @@
 #include "FlowController.h"
 #include "AgentDocs.h"
 #include "MainHelper.h"
-#include "JsonSchema.h"
+#include "agent/JsonSchema.h"
 
 namespace minifi = org::apache::nifi::minifi;
 namespace core = minifi::core;

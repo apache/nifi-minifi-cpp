@@ -15,7 +15,7 @@
  * limitations under the License.
  */
 
-#include "JsonSchema.h"
+#include "agent/JsonSchema.h"
 
 #include <string>
 #include <unordered_map>
@@ -69,7 +69,7 @@ void writePropertySchema(const core::Property& prop, std::ostream& out) {
     const auto& type = def_value.getTypeInfo();
     // order is important as both DataSizeValue and TimePeriodValue's type_id is uint64_t
     if (std::dynamic_pointer_cast<core::DataSizeValue>(def_value.getValue())
-        || std::dynamic_pointer_cast<core::TimePeriodValue>(def_value.getValue())) { // NOLINT(bugprone-branch-clone)
+        || std::dynamic_pointer_cast<core::TimePeriodValue>(def_value.getValue())) {  // NOLINT(bugprone-branch-clone)
       // special value types
       out << R"(, "type": "string", "default": ")" << escape(def_value.to_string()) << "\"";
     } else if (type == state::response::Value::INT_TYPE
@@ -126,35 +126,35 @@ static std::string buildSchema(const std::unordered_map<std::string, std::string
   std::string process_group_properties = R"(
     "Processors": {
       "type": "array",
-      "items": {"$ref": "#/$defs/processor"}
+      "items": {"$ref": "#/definitions/processor"}
     },
     "Connections": {
       "type": "array",
-      "items": {"$ref": "#/$defs/connection"}
+      "items": {"$ref": "#/definitions/connection"}
     },
     "Controller Services": {
       "type": "array",
-      "items": {"$ref": "#/$defs/controller_service"}
+      "items": {"$ref": "#/definitions/controller_service"}
     },
     "Remote Process Groups": {
       "type": "array",
-      "items": {"$ref": "#/$defs/remote_process_group"}
+      "items": {"$ref": "#/definitions/remote_process_group"}
     },
     "Process Groups": {
       "type": "array",
-      "items": {"$ref": "#/$defs/simple_process_group"}
+      "items": {"$ref": "#/definitions/simple_process_group"}
     },
     "Funnels": {
       "type": "array",
-      "items": {"$ref": "#/$defs/funnel"}
+      "items": {"$ref": "#/definitions/funnel"}
     },
     "Input Ports": {
       "type": "array",
-      "items": {"$ref": "#/$defs/port"}
+      "items": {"$ref": "#/definitions/port"}
     },
     "Output Ports": {
       "type": "array",
-      "items": {"$ref": "#/$defs/port"}
+      "items": {"$ref": "#/definitions/port"}
     }
   )";
 
@@ -180,7 +180,7 @@ static std::string buildSchema(const std::unordered_map<std::string, std::string
       return std::move(common).str();
     };
 
-    cron_pattern << "(?i)^"
+    cron_pattern << "^"
       << "(" << makeCommon(secs) << ")"
       << " (" << makeCommon(mins) << ")"
       << " (" << makeCommon(hours) << ")"
@@ -189,13 +189,25 @@ static std::string buildSchema(const std::unordered_map<std::string, std::string
       << " (" << makeCommon(weekdays) << "|" << weekdays << "?L|" << weekdays << "#" << "[1-5]" << ")"
       << "( (" << makeCommon(years) << "))?"
       << "$";
+  }
 
+  // the schema specification does not allow case-insensitive regex
+  std::stringstream cron_pattern_case_insensitive;
+  for (char ch : cron_pattern.str()) {
+    if (std::isalpha(static_cast<unsigned char>(ch))) {
+      cron_pattern_case_insensitive << "["
+          << static_cast<char>(std::tolower(static_cast<unsigned char>(ch)))
+          << static_cast<char>(std::toupper(static_cast<unsigned char>(ch)))
+          << "]";
+    } else {
+      cron_pattern_case_insensitive << ch;
+    }
   }
 
   return prettifyJson(R"(
 {
   "$schema": "http://json-schema.org/draft-07/schema",
-  "$defs": {)" + std::move(all_rels).str() + R"(
+  "definitions": {)" + std::move(all_rels).str() + R"(
     "datasize": {
       "type": "string",
       "pattern": "^\\s*[0-9]+\\s*(B|K|M|G|T|P|KB|MB|GB|TB|PB)\\s*$"
@@ -207,14 +219,14 @@ static std::string buildSchema(const std::unordered_map<std::string, std::string
     },
     "cron_pattern": {
       "type": "string",
-      "pattern": ")" + std::move(cron_pattern).str() + R"("
+      "pattern": ")" + std::move(cron_pattern_case_insensitive).str() + R"("
     },
     "remote_port": {
       "type": "object",
       "required": ["name", "id", "Properties"],
       "properties": {
         "name": {"type": "string"},
-        "id": {"$ref": "#/$defs/uuid"},
+        "id": {"$ref": "#/definitions/uuid"},
         "max concurrent tasks": {"type": "integer"},
         )" + std::move(remote_port_props).str() +  R"(
       }
@@ -224,7 +236,7 @@ static std::string buildSchema(const std::unordered_map<std::string, std::string
       "required": ["name", "id"],
       "properties": {
         "name": {"type": "string"},
-        "id": {"$ref": "#/$defs/uuid"}
+        "id": {"$ref": "#/definitions/uuid"}
       }
     },
     "time": {
@@ -237,7 +249,7 @@ static std::string buildSchema(const std::unordered_map<std::string, std::string
       "properties": {
         "name": {"type": "string"},
         "class": {"type": "string"},
-        "id": {"$ref": "#/$defs/uuid"}
+        "id": {"$ref": "#/definitions/uuid"}
       }
     }, )" + controller_services + R"(]},
     "processor": {"allOf": [{
@@ -246,12 +258,12 @@ static std::string buildSchema(const std::unordered_map<std::string, std::string
       "additionalProperties": false,
       "properties": {
         "name": {"type": "string"},
-        "id": {"$ref": "#/$defs/uuid"},
+        "id": {"$ref": "#/definitions/uuid"},
         "class": {"type": "string"},
         "max concurrent tasks": {"type": "integer", "default": 1},
-        "penalization period": {"$ref": "#/$defs/time"},
-        "yield period": {"$ref": "#/$defs/time"},
-        "run duration nanos": {"$ref": "#/$defs/time"},
+        "penalization period": {"$ref": "#/definitions/time"},
+        "yield period": {"$ref": "#/definitions/time"},
+        "run duration nanos": {"$ref": "#/definitions/time"},
         "Properties": {},
         "scheduling strategy": {"enum": ["EVENT_DRIVEN", "TIMER_DRIVEN", "CRON_DRIVEN"]},
         "scheduling period": {},
@@ -267,10 +279,10 @@ static std::string buildSchema(const std::unordered_map<std::string, std::string
         "then": {"properties": {"scheduling period": false}}
       }, {
         "if": {"properties": {"scheduling strategy": {"const": "TIMER_DRIVEN"}}},
-        "then": {"required": ["scheduling period"], "properties": {"scheduling period": {"$ref": "#/$defs/time"}}}
+        "then": {"required": ["scheduling period"], "properties": {"scheduling period": {"$ref": "#/definitions/time"}}}
       }, {
         "if": {"properties": {"scheduling strategy": {"const": "CRON_DRIVEN"}}},
-        "then": {"required": ["scheduling period"], "properties": {"scheduling period": {"$ref": "#/$defs/cron_pattern"}}}
+        "then": {"required": ["scheduling period"], "properties": {"scheduling period": {"$ref": "#/definitions/cron_pattern"}}}
       })" + (!processors.empty() ? ", " : "") + processors + R"(]
     },
     "remote_process_group": {"allOf": [{
@@ -278,19 +290,19 @@ static std::string buildSchema(const std::unordered_map<std::string, std::string
       "required": ["name", "id", "Input Ports"],
       "properties": {
         "name": {"type": "string"},
-        "id": {"$ref": "#/$defs/uuid"},
+        "id": {"$ref": "#/definitions/uuid"},
         "url": {"type": "string"},
-        "yield period": {"$ref": "#/$defs/time"},
-        "timeout": {"$ref": "#/$defs/time"},
+        "yield period": {"$ref": "#/definitions/time"},
+        "timeout": {"$ref": "#/definitions/time"},
         "local network interface": {"type": "string"},
         "transport protocol": {"enum": ["HTTP", "RAW"]},
         "Input Ports": {
           "type": "array",
-          "items": {"$ref": "#/$defs/remote_port"}
+          "items": {"$ref": "#/definitions/remote_port"}
         },
         "Output Ports": {
           "type": "array",
-          "items": {"$ref": "#/$defs/remote_port"}
+          "items": {"$ref": "#/definitions/remote_port"}
         }
       }
     }, {
@@ -308,25 +320,25 @@ static std::string buildSchema(const std::unordered_map<std::string, std::string
       "required": ["name", "id", "source id", "source relationship names", "destination id"],
       "properties": {
         "name": {"type": "string"},
-        "id": {"$ref": "#/$defs/uuid"},
+        "id": {"$ref": "#/definitions/uuid"},
         "source name": {"type": "string"},
-        "source id": {"$ref": "#/$defs/uuid"},
+        "source id": {"$ref": "#/definitions/uuid"},
         "source relationship names": {
           "type": "array",
           "items": {"type": "string"}
         },
         "destination name": {"type": "string"},
-        "destination id": {"$ref": "#/$defs/uuid"},
+        "destination id": {"$ref": "#/definitions/uuid"},
         "max work queue size": {"type": "integer", "default": 10000},
-        "max work queue data size": {"$ref": "#/$defs/datasize", "default": "10 MB"},
-        "flowfile expiration": {"$ref": "#/$defs/time", "default": "0 ms"}
+        "max work queue data size": {"$ref": "#/definitions/datasize", "default": "10 MB"},
+        "flowfile expiration": {"$ref": "#/definitions/time", "default": "0 ms"}
       }
     },
     "funnel": {
       "type": "object",
-      "required": ["name"],
+      "required": ["id"],
       "properties": {
-        "id": {"$ref": "#/$defs/uuid"},
+        "id": {"$ref": "#/definitions/uuid"},
         "name": {"type": "string"}
       }
     },
@@ -337,7 +349,7 @@ static std::string buildSchema(const std::unordered_map<std::string, std::string
       "properties": {
         "name": {"type": "string"},
         "version": {"type": "integer"},
-        "onschedule retry interval": {"$ref": "#/$defs/time"},
+        "onschedule retry interval": {"$ref": "#/definitions/time"},
         )" + process_group_properties + R"(
       }
     },
@@ -350,15 +362,17 @@ static std::string buildSchema(const std::unordered_map<std::string, std::string
         "Flow Controller": {
           "type": "object",
           "required": ["name"],
-          "name": {"type": "string"},
-          "version": {"type": "integer"},
-          "onschedule retry interval": {"$ref": "#/$defs/time"}
+          "properties": {
+            "name": {"type": "string"},
+            "version": {"type": "integer"},
+            "onschedule retry interval": {"$ref": "#/definitions/time"}
+          }
         },
         )" + process_group_properties + R"(
       }
     }
   },
-  "$ref": "#/$defs/root_process_group"
+  "$ref": "#/definitions/root_process_group"
 }
 )");
 }
@@ -379,7 +393,7 @@ std::string generateJsonSchema() {
       schema << R"("max concurrent tasks": {"const": 1},)";
     }
 
-    schema << R"("auto-terminated relationships list": {"items": {"$ref": "#/$defs/relationships-)" << escape(proc.short_name_) << "\"}},";
+    schema << R"("auto-terminated relationships list": {"items": {"$ref": "#/definitions/relationships-)" << escape(proc.short_name_) << "\"}},";
     {
       std::stringstream rel_schema;
       rel_schema << R"({"anyOf": [)";

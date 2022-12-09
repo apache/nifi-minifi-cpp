@@ -610,6 +610,8 @@ registerTest("${TEST_DIR}/keyvalue-tests")
 
 registerTest("${TEST_DIR}/flow-tests")
 
+registerTest("${TEST_DIR}/schema-tests")
+
 if (NOT DISABLE_ROCKSDB AND NOT DISABLE_LIBARCHIVE)
     registerTest("${TEST_DIR}/persistence-tests")
 endif()

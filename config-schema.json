@@ -1,0 +1,2555 @@
+{
+    "$schema": "http://json-schema.org/draft-07/schema",
+    "definitions": {
+        "relationships-DummyProcessor": {
+            "anyOf": []
+        },
+        "relationships-ReadFromFlowFileTestProcessor": {
+            "anyOf": [
+                {
+                    "const": "success"
+                }
+            ]
+        },
+        "relationships-UpdateAttribute": {
+            "anyOf": [
+                {
+                    "const": "success"
+                },
+                {
+                    "const": "failure"
+                }
+            ]
+        },
+        "relationships-PutFile": {
+            "anyOf": [
+                {
+                    "const": "success"
+                },
+                {
+                    "const": "failure"
+                }
+            ]
+        },
+        "relationships-TailFile": {
+            "anyOf": [
+                {
+                    "const": "success"
+                }
+            ]
+        },
+        "relationships-RouteText": {
+            "anyOf": [
+                {
+                    "type": "string"
+                },
+                {
+                    "const": "original"
+                },
+                {
+                    "const": "unmatched"
+                },
+                {
+                    "const": "matched"
+                }
+            ]
+        },
+        "relationships-PutTCP": {
+            "anyOf": [
+                {
+                    "const": "success"
+                },
+                {
+                    "const": "failure"
+                }
+            ]
+        },
+        "relationships-RouteOnAttribute": {
+            "anyOf": [
+                {
+                    "type": "string"
+                },
+                {
+                    "const": "unmatched"
+                },
+                {
+                    "const": "failure"
+                }
+            ]
+        },
+        "relationships-ListenTCP": {
+            "anyOf": [
+                {
+                    "const": "success"
+                }
+            ]
+        },
+        "relationships-ReplaceText": {
+            "anyOf": [
+                {
+                    "const": "success"
+                },
+                {
+                    "const": "failure"
+                }
+            ]
+        },
+        "relationships-PutUDP": {
+            "anyOf": [
+                {
+                    "const": "success"
+                },
+                {
+                    "const": "failure"
+                }
+            ]
+        },
+        "relationships-LogAttribute": {
+            "anyOf": [
+                {
+                    "const": "success"
+                }
+            ]
+        },
+        "relationships-RetryFlowFile": {
+            "anyOf": [
+                {
+                    "const": "retry"
+                },
+                {
+                    "const": "retries_exceeded"
+                },
+                {
+                    "const": "failure"
+                }
+            ]
+        },
+        "relationships-ListenUDP": {
+            "anyOf": [
+                {
+                    "const": "success"
+                }
+            ]
+        },
+        "relationships-HashContent": {
+            "anyOf": [
+                {
+                    "const": "success"
+                },
+                {
+                    "const": "failure"
+                }
+            ]
+        },
+        "relationships-WriteToFlowFileTestProcessor": {
+            "anyOf": [
+                {
+                    "const": "success"
+                }
+            ]
+        },
+        "relationships-GetTCP": {
+            "anyOf": [
+                {
+                    "const": "success"
+                },
+                {
+                    "const": "partial"
+                }
+            ]
+        },
+        "relationships-GenerateFlowFile": {
+            "anyOf": [
+                {
+                    "const": "success"
+                }
+            ]
+        },
+        "relationships-ListenSyslog": {
+            "anyOf": [
+                {
+                    "const": "success"
+                },
+                {
+                    "const": "invalid"
+                }
+            ]
+        },
+        "relationships-GetFile": {
+            "anyOf": [
+                {
+                    "const": "success"
+                }
+            ]
+        },
+        "relationships-ExtractText": {
+            "anyOf": [
+                {
+                    "const": "success"
+                }
+            ]
+        },
+        "relationships-ListFile": {
+            "anyOf": [
+                {
+                    "const": "success"
+                }
+            ]
+        },
+        "relationships-StatefulProcessor": {
+            "anyOf": []
+        },
+        "relationships-AppendHostInfo": {
+            "anyOf": [
+                {
+                    "const": "success"
+                }
+            ]
+        },
+        "relationships-AttributesToJSON": {
+            "anyOf": [
+                {
+                    "const": "success"
+                }
+            ]
+        },
+        "relationships-ExecuteProcess": {
+            "anyOf": [
+                {
+                    "const": "success"
+                }
+            ]
+        },
+        "relationships-FetchFile": {
+            "anyOf": [
+                {
+                    "const": "success"
+                },
+                {
+                    "const": "not.found"
+                },
+                {
+                    "const": "permission.denied"
+                },
+                {
+                    "const": "failure"
+                }
+            ]
+        },
+        "relationships-DefragmentText": {
+            "anyOf": [
+                {
+                    "const": "success"
+                },
+                {
+                    "const": "failure"
+                }
+            ]
+        },
+        "datasize": {
+            "type": "string",
+            "pattern": "^\\s*[0-9]+\\s*(B|K|M|G|T|P|KB|MB|GB|TB|PB)\\s*$"
+        },
+        "uuid": {
+            "type": "string",
+            "pattern": "^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$",
+            "default": "00000000-0000-0000-0000-000000000000"
+        },
+        "cron_pattern": {
+            "type": "string",
+            "pattern": "^(\\*|\\?|([0-5]?[0-9])(,([0-5]?[0-9]))*|([0-5]?[0-9])-([0-5]?[0-9])|(\\*|([0-5]?[0-9]))/(-?[0-9]+)) (\\*|\\?|([0-5]?[0-9])(,([0-5]?[0-9]))*|([0-5]?[0-9])-([0-5]?[0-9])|(\\*|([0-5]?[0-9]))/(-?[0-9]+)) (\\*|\\?|(1?[0-9]|2[0-3])(,(1?[0-9]|2[0-3]))*|(1?[0-9]|2[0-3])-(1?[0-9]|2[0-3])|(\\*|(1?[0-9]|2[0-3]))/(-?[0-9]+)) (\\*|\\?|([1-2]?[0-9]|3[0-1])(,([1-2]?[0-9]|3[0-1]))*|([1-2]?[0-9]|3[0-1])-([1-2]?[0-9]|3[0-1])|(\\*|([1-2]?[0-9]|3[0-1]))/(-?[0-9]+)|LW|L|L-([1-2]?[0-9]|3[0-1])|([1-2]?[0-9]|3[0-1])W) (\\*|\\?|([0-9]|1[0-2]|jan|feb|mar|apr|may|jun|jul|aug|sep|oct|nov|dec)(,([0-9]|1[0-2]|jan|feb|mar|apr|may|jun|jul|aug|sep|oct|nov|dec))*|([0-9]|1[0-2]|jan|feb|mar|apr|may|jun|jul|aug|sep|oct|nov|dec)-([0-9]|1[0-2]|jan|feb|mar|apr|may|jun|jul|aug|sep|oct|nov|dec)|(\\*|([0-9]|1[0-2]|jan|feb|mar|apr|may|jun|jul|aug|sep|oct|nov|dec))/(-?[0-9]+)) (\\*|\\?|([0-7]|sun|mon|tue|wed|thu|fri|sat)(,([0-7]|sun|mon|tue|wed|thu|fri|sat))*|([0-7]|sun|mon|tue|wed|thu|fri|sat)-([0-7]|sun|mon|tue|wed|thu|fri|sat)|(\\*|([0-7]|sun|mon|tue|wed|thu|fri|sat))/(-?[0-9]+)|([0-7]|sun|mon|tue|wed|thu|fri|sat)?L|([0-7]|sun|mon|tue|wed|thu|fri|sat)#[1-5])( (\\*|\\?|([0-9]+)(,([0-9]+))*|([0-9]+)-([0-9]+)|(\\*|([0-9]+))/(-?[0-9]+)))?$"
+        },
+        "remote_port": {
+            "type": "object",
+            "required": [
+                "name",
+                "id",
+                "Properties"
+            ],
+            "properties": {
+                "name": {
+                    "type": "string"
+                },
+                "id": {
+                    "$ref": "#/definitions/uuid"
+                },
+                "max concurrent tasks": {
+                    "type": "integer"
+                },
+                "Properties": {
+                    "type": "object",
+                    "additionalProperties": false,
+                    "required": [],
+                    "properties": {
+                        "Host Name": {
+                            "description": "Remote Host Name.",
+                            "type": "string"
+                        },
+                        "SSL Context Service": {
+                            "description": "The SSL Context Service used to provide client certificate information for TLS/SSL (https) connections.",
+                            "type": "string"
+                        },
+                        "Port": {
+                            "description": "Remote Port",
+                            "type": "string"
+                        },
+                        "Port UUID": {
+                            "description": "Specifies remote NiFi Port UUID.",
+                            "type": "string"
+                        },
+                        "Idle Timeout": {
+                            "description": "Max idle time for remote service",
+                            "type": "string",
+                            "default": "15 s"
+                        }
+                    }
+                }
+            }
+        },
+        "port": {
+            "type": "object",
+            "required": [
+                "name",
+                "id"
+            ],
+            "properties": {
+                "name": {
+                    "type": "string"
+                },
+                "id": {
+                    "$ref": "#/definitions/uuid"
+                }
+            }
+        },
+        "time": {
+            "type": "string",
+            "pattern": "^\\s*[0-9]+\\s*(ns|nano|nanos|nanoseconds|nanosecond|us|micro|micros|microseconds|microsecond|msec|ms|millisecond|milliseconds|msecs|millis|milli|sec|s|second|seconds|secs|min|m|mins|minute|minutes|h|hr|hour|hrs|hours|d|day|days)\\s*$"
+        },
+        "controller_service": {
+            "allOf": [
+                {
+                    "type": "object",
+                    "required": [
+                        "name",
+                        "id",
+                        "class"
+                    ],
+                    "properties": {
+                        "name": {
+                            "type": "string"
+                        },
+                        "class": {
+                            "type": "string"
+                        },
+                        "id": {
+                            "$ref": "#/definitions/uuid"
+                        }
+                    }
+                },
+                {
+                    "if": {
+                        "properties": {
+                            "class": {
+                                "const": "UnorderedMapKeyValueStoreService"
+                            }
+                        }
+                    },
+                    "then": {
+                        "required": [
+                            "Properties"
+                        ],
+                        "properties": {
+                            "Properties": {
+                                "type": "object",
+                                "additionalProperties": false,
+                                "required": [],
+                                "properties": {
+                                    "Linked Services": {
+                                        "description": "Referenced Controller Services",
+                                        "type": "string"
+                                    }
+                                }
+                            }
+                        }
+                    }
+                },
+                {
+                    "if": {
+                        "properties": {
+                            "class": {
+                                "const": "UnorderedMapPersistableKeyValueStoreService"
+                            }
+                        }
+                    },
+                    "then": {
+                        "required": [
+                            "Properties"
+                        ],
+                        "properties": {
+                            "Properties": {
+                                "type": "object",
+                                "additionalProperties": false,
+                                "required": [
+                                    "File"
+                                ],
+                                "properties": {
+                                    "Linked Services": {
+                                        "description": "Referenced Controller Services",
+                                        "type": "string"
+                                    },
+                                    "Always Persist": {
+                                        "description": "Persist every change instead of persisting it periodically.",
+                                        "type": "boolean",
+                                        "default": false
+                                    },
+                                    "Auto Persistence Interval": {
+                                        "description": "The interval of the periodic task persisting all values. Only used if Always Persist is false. If set to 0 seconds, auto persistence will be disabled.",
+                                        "type": "string",
+                                        "default": "1 min"
+                                    },
+                                    "File": {
+                                        "description": "Path to a file to store state",
+                                        "type": "string"
+                                    }
+                                }
+                            }
+                        }
+                    }
+                },
+                {
+                    "if": {
+                        "properties": {
+                            "class": {
+                                "const": "LinuxPowerManagerService"
+                            }
+                        }
+                    },
+                    "then": {
+                        "required": [
+                            "Properties"
+                        ],
+                        "properties": {
+                            "Properties": {
+                                "type": "object",
+                                "additionalProperties": false,
+                                "required": [],
+                                "properties": {
+                                    "Battery Capacity Path": {
+                                        "description": "Path to the battery level",
+                                        "type": "string",
+                                        "default": "/sys/class/power_supply/BAT0/capacity"
+                                    },
+                                    "Battery Status Path": {
+                                        "description": "Path to the battery status ( Discharging/Battery )",
+                                        "type": "string",
+                                        "default": "/sys/class/power_supply/BAT0/status"
+                                    },
+                                    "Battery Status Discharge": {
+                                        "description": "Keyword to identify if battery is discharging",
+                                        "type": "string",
+                                        "default": "Discharging"
+                                    },
+                                    "Trigger Threshold": {
+                                        "description": "Battery threshold before which we consider a slow reduction. Should be a number from 1-100",
+                                        "type": "integer",
+                                        "default": 75
+                                    },
+                                    "Low Battery Threshold": {
+                                        "description": "Battery threshold before which we will aggressively reduce. Should be a number from 1-100",
+                                        "type": "integer",
+                                        "default": 50
+                                    },
+                                    "Wait Period": {
+                                        "description": "Decay between checking threshold and determining if a reduction is needed",
+                                        "type": "string",
+                                        "default": "100 ms"
+                                    }
+                                }
+                            }
+                        }
+                    }
+                },
+                {
+                    "if": {
+                        "properties": {
+                            "class": {
+                                "const": "NetworkPrioritizerService"
+                            }
+                        }
+                    },
+                    "then": {
+                        "required": [
+                            "Properties"
+                        ],
+                        "properties": {
+                            "Properties": {
+                                "type": "object",
+                                "additionalProperties": false,
+                                "required": [],
+                                "properties": {
+                                    "Network Controllers": {
+                                        "description": "Comma separated list of network controllers in order of priority for this prioritizer",
+                                        "type": "string"
+                                    },
+                                    "Max Throughput": {
+                                        "description": "Max throughput ( per second ) for these network controllers",
+                                        "type": "string",
+                                        "default": "1 MB"
+                                    },
+                                    "Max Payload": {
+                                        "description": "Maximum payload for these network controllers",
+                                        "type": "string",
+                                        "default": "1 GB"
+                                    },
+                                    "Verify Interfaces": {
+                                        "description": "Verify that interfaces are operational",
+                                        "type": "boolean",
+                                        "default": true
+                                    },
+                                    "Default Prioritizer": {
+                                        "description": "Sets this controller service as the default prioritizer for all comms",
+                                        "type": "boolean",
+                                        "default": false
+                                    }
+                                }
+                            }
+                        }
+                    }
+                },
+                {
+                    "if": {
+                        "properties": {
+                            "class": {
+                                "const": "SSLContextService"
+                            }
+                        }
+                    },
+                    "then": {
+                        "required": [
+                            "Properties"
+                        ],
+                        "properties": {
+                            "Properties": {
+                                "type": "object",
+                                "additionalProperties": false,
+                                "required": [],
+                                "properties": {
+                                    "Client Certificate": {
+                                        "description": "Client Certificate",
+                                        "type": "string"
+                                    },
+                                    "Private Key": {
+                                        "description": "Private Key file",
+                                        "type": "string"
+                                    },
+                                    "Passphrase": {
+                                        "description": "Client passphrase. Either a file or unencrypted text",
+                                        "type": "string"
+                                    },
+                                    "CA Certificate": {
+                                        "description": "CA certificate file",
+                                        "type": "string"
+                                    },
+                                    "Use System Cert Store": {
+                                        "description": "Whether to use the certificates in the OS's certificate store",
+                                        "type": "boolean",
+                                        "default": false
+                                    }
+                                }
+                            }
+                        }
+                    }
+                },
+                {
+                    "if": {
+                        "properties": {
+                            "class": {
+                                "const": "UpdatePolicyControllerService"
+                            }
+                        }
+                    },
+                    "then": {
+                        "required": [
+                            "Properties"
+                        ],
+                        "properties": {
+                            "Properties": {
+                                "type": "object",
+                                "additionalProperties": false,
+                                "required": [],
+                                "properties": {
+                                    "Allow All Properties": {
+                                        "description": "Allows all properties, which are also not disallowed, to be updated",
+                                        "type": "boolean",
+                                        "default": false
+                                    },
+                                    "Persist Updates": {
+                                        "description": "Property that dictates whether updates should persist after a restart",
+                                        "type": "boolean",
+                                        "default": false
+                                    },
+                                    "Allowed Properties": {
+                                        "description": "Properties for which we will allow updates",
+                                        "type": "string"
+                                    },
+                                    "Disallowed Properties": {
+                                        "description": "Properties for which we will not allow updates",
+                                        "type": "string"
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            ]
+        },
+        "processor": {
+            "allOf": [
+                {
+                    "type": "object",
+                    "required": [
+                        "name",
+                        "id",
+                        "class",
+                        "scheduling strategy"
+                    ],
+                    "additionalProperties": false,
+                    "properties": {
+                        "name": {
+                            "type": "string"
+                        },
+                        "id": {
+                            "$ref": "#/definitions/uuid"
+                        },
+                        "class": {
+                            "type": "string"
+                        },
+                        "max concurrent tasks": {
+                            "type": "integer",
+                            "default": 1
+                        },
+                        "penalization period": {
+                            "$ref": "#/definitions/time"
+                        },
+                        "yield period": {
+                            "$ref": "#/definitions/time"
+                        },
+                        "run duration nanos": {
+                            "$ref": "#/definitions/time"
+                        },
+                        "Properties": {},
+                        "scheduling strategy": {
+                            "enum": [
+                                "EVENT_DRIVEN",
+                                "TIMER_DRIVEN",
+                                "CRON_DRIVEN"
+                            ]
+                        },
+                        "scheduling period": {},
+                        "auto-terminated relationships list": {
+                            "type": "array",
+                            "items": {
+                                "type": "string"
+                            },
+                            "uniqueItems": true
+                        }
+                    }
+                },
+                {
+                    "if": {
+                        "properties": {
+                            "scheduling strategy": {
+                                "const": "EVENT_DRIVEN"
+                            }
+                        }
+                    },
+                    "then": {
+                        "properties": {
+                            "scheduling period": false
+                        }
+                    }
+                },
+                {
+                    "if": {
+                        "properties": {
+                            "scheduling strategy": {
+                                "const": "TIMER_DRIVEN"
+                            }
+                        }
+                    },
+                    "then": {
+                        "required": [
+                            "scheduling period"
+                        ],
+                        "properties": {
+                            "scheduling period": {
+                                "$ref": "#/definitions/time"
+                            }
+                        }
+                    }
+                },
+                {
+                    "if": {
+                        "properties": {
+                            "scheduling strategy": {
+                                "const": "CRON_DRIVEN"
+                            }
+                        }
+                    },
+                    "then": {
+                        "required": [
+                            "scheduling period"
+                        ],
+                        "properties": {
+                            "scheduling period": {
+                                "$ref": "#/definitions/cron_pattern"
+                            }
+                        }
+                    }
+                },
+                {
+                    "if": {
+                        "properties": {
+                            "class": {
+                                "const": "AppendHostInfo"
+                            }
+                        }
+                    },
+                    "then": {
+                        "required": [
+                            "Properties"
+                        ],
+                        "properties": {
+                            "auto-terminated relationships list": {
+                                "items": {
+                                    "$ref": "#/definitions/relationships-AppendHostInfo"
+                                }
+                            },
+                            "Properties": {
+                                "type": "object",
+                                "additionalProperties": false,
+                                "required": [],
+                                "properties": {
+                                    "Network Interface Filter": {
+                                        "description": "A regular expression to filter ip addresses based on the name of the network interface",
+                                        "type": "string"
+                                    },
+                                    "Hostname Attribute": {
+                                        "description": "Flowfile attribute used to record the agent's hostname",
+                                        "type": "string",
+                                        "default": "source.hostname"
+                                    },
+                                    "IP Attribute": {
+                                        "description": "Flowfile attribute used to record the agent's IP addresses in a comma separated list",
+                                        "type": "string",
+                                        "default": "source.ipv4"
+                                    },
+                                    "Refresh Policy": {
+                                        "description": "When to recalculate the host info",
+                                        "enum": [
+                                            "On every trigger",
+                                            "On schedule"
+                                        ],
+                                        "type": "string",
+                                        "default": "On schedule"
+                                    }
+                                }
+                            }
+                        }
+                    }
+                },
+                {
+                    "if": {
+                        "properties": {
+                            "class": {
+                                "const": "AttributesToJSON"
+                            }
+                        }
+                    },
+                    "then": {
+                        "required": [
+                            "Properties"
+                        ],
+                        "properties": {
+                            "auto-terminated relationships list": {
+                                "items": {
+                                    "$ref": "#/definitions/relationships-AttributesToJSON"
+                                }
+                            },
+                            "Properties": {
+                                "type": "object",
+                                "additionalProperties": false,
+                                "required": [],
+                                "properties": {
+                                    "Attributes List": {
+                                        "description": "Comma separated list of attributes to be included in the resulting JSON. If this value is left empty then all existing Attributes will be included. This list of attributes is case sensitive. If an attribute specified in the list is not found it will be be emitted to the resulting JSON with an empty string or NULL value.",
+                                        "type": "string"
+                                    },
+                                    "Attributes Regular Expression": {
+                                        "description": "Regular expression that will be evaluated against the flow file attributes to select the matching attributes. Both the matching attributes and the selected attributes from the Attributes List property will be written in the resulting JSON.",
+                                        "type": "string"
+                                    },
+                                    "Destination": {
+                                        "description": "Control if JSON value is written as a new flowfile attribute 'JSONAttributes' or written in the flowfile content. Writing to flowfile content will overwrite any existing flowfile content.",
+                                        "enum": [
+                                            "flowfile-attribute",
+                                            "flowfile-content"
+                                        ],
+                                        "type": "string",
+                                        "default": "flowfile-attribute"
+                                    },
+                                    "Include Core Attributes": {
+                                        "description": "Determines if the FlowFile core attributes which are contained in every FlowFile should be included in the final JSON value generated.",
+                                        "type": "boolean",
+                                        "default": true
+                                    },
+                                    "Null Value": {
+                                        "description": "If true a non existing selected attribute will be NULL in the resulting JSON. If false an empty string will be placed in the JSON.",
+                                        "type": "boolean",
+                                        "default": false
+                                    }
+                                }
+                            }
+                        }
+                    }
+                },
+                {
+                    "if": {
+                        "properties": {
+                            "class": {
+                                "const": "DefragmentText"
+                            }
+                        }
+                    },
+                    "then": {
+                        "required": [
+                            "Properties"
+                        ],
+                        "properties": {
+                            "max concurrent tasks": {
+                                "const": 1
+                            },
+                            "auto-terminated relationships list": {
+                                "items": {
+                                    "$ref": "#/definitions/relationships-DefragmentText"
+                                }
+                            },
+                            "Properties": {
+                                "type": "object",
+                                "additionalProperties": false,
+                                "required": [
+                                    "Pattern"
+                                ],
+                                "properties": {
+                                    "Pattern": {
+                                        "description": "A regular expression to match at the start or end of messages.",
+                                        "type": "string"
+                                    },
+                                    "Pattern Location": {
+                                        "description": "Whether the pattern is located at the start or at the end of the messages.",
+                                        "enum": [
+                                            "End of Message",
+                                            "Start of Message"
+                                        ],
+                                        "type": "string",
+                                        "default": "Start of Message"
+                                    },
+                                    "Max Buffer Age": {
+                                        "description": "The maximum age of the buffer after which it will be transferred to success when matching Start of Message patterns or to failure when matching End of Message patterns. Expected format is <duration> <time unit>",
+                                        "type": "string",
+                                        "default": "10 min"
+                                    },
+                                    "Max Buffer Size": {
+                                        "description": "The maximum buffer size, if the buffer exceeds this, it will be transferred to failure. Expected format is <size> <data unit>",
+                                        "type": "string"
+                                    }
+                                }
+                            }
+                        }
+                    }
+                },
+                {
+                    "if": {
+                        "properties": {
+                            "class": {
+                                "const": "ExecuteProcess"
+                            }
+                        }
+                    },
+                    "then": {
+                        "required": [
+                            "Properties"
+                        ],
+                        "properties": {
+                            "max concurrent tasks": {
+                                "const": 1
+                            },
+                            "auto-terminated relationships list": {
+                                "items": {
+                                    "$ref": "#/definitions/relationships-ExecuteProcess"
+                                }
+                            },
+                            "Properties": {
+                                "type": "object",
+                                "additionalProperties": false,
+                                "required": [],
+                                "properties": {
+                                    "Command": {
+                                        "description": "Specifies the command to be executed; if just the name of an executable is provided, it must be in the user's environment PATH.",
+                                        "type": "string"
+                                    },
+                                    "Command Arguments": {
+                                        "description": "The arguments to supply to the executable delimited by white space. White space can be escaped by enclosing it in double-quotes.",
+                                        "type": "string"
+                                    },
+                                    "Working Directory": {
+                                        "description": "The directory to use as the current working directory when executing the command",
+                                        "type": "string"
+                                    },
+                                    "Batch Duration": {
+                                        "description": "If the process is expected to be long-running and produce textual output, a batch duration can be specified.",
+                                        "type": "string",
+                                        "default": "0 sec"
+                                    },
+                                    "Redirect Error Stream": {
+                                        "description": "If true will redirect any error stream output of the process to the output stream.",
+                                        "type": "boolean",
+                                        "default": false
+                                    }
+                                }
+                            }
+                        }
+                    }
+                },
+                {
+                    "if": {
+                        "properties": {
+                            "class": {
+                                "const": "ExtractText"
+                            }
+                        }
+                    },
+                    "then": {
+                        "required": [
+                            "Properties"
+                        ],
+                        "properties": {
+                            "auto-terminated relationships list": {
+                                "items": {
+                                    "$ref": "#/definitions/relationships-ExtractText"
+                                }
+                            },
+                            "Properties": {
+                                "type": "object",
+                                "additionalProperties": true,
+                                "required": [],
+                                "properties": {
+                                    "Attribute": {
+                                        "description": "Attribute to set from content",
+                                        "type": "string"
+                                    },
+                                    "Size Limit": {
+                                        "description": "Maximum number of bytes to read into the attribute. 0 for no limit. Default is 2MB.",
+                                        "type": "integer",
+                                        "default": 2097152
+                                    },
+                                    "Regex Mode": {
+                                        "description": "Set this to extract parts of flowfile content using regular experssions in dynamic properties",
+                                        "type": "boolean",
+                                        "default": false
+                                    },
+                                    "Include Capture Group 0": {
+                                        "description": "Indicates that Capture Group 0 should be included as an attribute. Capture Group 0 represents the entirety of the regular expression match, is typically not used, and could have considerable length.",
+                                        "type": "boolean",
+                                        "default": true
+                                    },
+                                    "Enable Case-insensitive Matching": {
+                                        "description": "Indicates that two characters match even if they are in a different case. ",
+                                        "type": "boolean",
+                                        "default": false
+                                    },
+                                    "Maximum Capture Group Length": {
+                                        "description": "Specifies the maximum number of characters a given capture group value can have. Any characters beyond the max will be truncated.",
+                                        "type": "integer",
+                                        "default": 1024
+                                    },
+                                    "Enable repeating capture group": {
+                                        "description": "f set to true, every string matching the capture groups will be extracted. Otherwise, if the Regular Expression matches more than once, only the first match will be extracted.",
+                                        "type": "boolean",
+                                        "default": false
+                                    }
+                                }
+                            }
+                        }
+                    }
+                },
+                {
+                    "if": {
+                        "properties": {
+                            "class": {
+                                "const": "FetchFile"
+                            }
+                        }
+                    },
+                    "then": {
+                        "required": [
+                            "Properties"
+                        ],
+                        "properties": {
+                            "auto-terminated relationships list": {
+                                "items": {
+                                    "$ref": "#/definitions/relationships-FetchFile"
+                                }
+                            },
+                            "Properties": {
+                                "type": "object",
+                                "additionalProperties": false,
+                                "required": [],
+                                "properties": {
+                                    "File to Fetch": {
+                                        "description": "The fully-qualified filename of the file to fetch from the file system. If not defined the default ${absolute.path}/${filename} path is used.",
+                                        "type": "string"
+                                    },
+                                    "Completion Strategy": {
+                                        "description": "Specifies what to do with the original file on the file system once it has been pulled into MiNiFi",
+                                        "enum": [
+                                            "Delete File",
+                                            "Move File",
+                                            "None"
+                                        ],
+                                        "type": "string",
+                                        "default": "None"
+                                    },
+                                    "Move Destination Directory": {
+                                        "description": "The directory to move the original file to once it has been fetched from the file system. This property is ignored unless the Completion Strategy is set to \"Move File\". If the directory does not exist, it will be created.",
+                                        "type": "string"
+                                    },
+                                    "Move Conflict Strategy": {
+                                        "description": "If Completion Strategy is set to Move File and a file already exists in the destination directory with the same name, this property specifies how that naming conflict should be resolved",
+                                        "enum": [
+                                            "Fail",
+                                            "Keep Existing",
+                                            "Rename",
+                                            "Replace File"
+                                        ],
+                                        "type": "string",
+                                        "default": "Rename"
+                                    },
+                                    "Log level when file not found": {
+                                        "description": "Log level to use in case the file does not exist when the processor is triggered",
+                                        "enum": [
+                                            "DEBUG",
+                                            "ERROR",
+                                            "INFO",
+                                            "OFF",
+                                            "TRACE",
+                                            "WARN"
+                                        ],
+                                        "type": "string",
+                                        "default": "ERROR"
+                                    },
+                                    "Log level when permission denied": {
+                                        "description": "Log level to use in case agent does not have sufficient permissions to read the file",
+                                        "enum": [
+                                            "DEBUG",
+                                            "ERROR",
+                                            "INFO",
+                                            "OFF",
+                                            "TRACE",
+                                            "WARN"
+                                        ],
+                                        "type": "string",
+                                        "default": "ERROR"
+                                    }
+                                }
+                            }
+                        }
+                    }
+                },
+                {
+                    "if": {
+                        "properties": {
+                            "class": {
+                                "const": "GenerateFlowFile"
+                            }
+                        }
+                    },
+                    "then": {
+                        "required": [
+                            "Properties"
+                        ],
+                        "properties": {
+                            "auto-terminated relationships list": {
+                                "items": {
+                                    "$ref": "#/definitions/relationships-GenerateFlowFile"
+                                }
+                            },
+                            "Properties": {
+                                "type": "object",
+                                "additionalProperties": false,
+                                "required": [],
+                                "properties": {
+                                    "File Size": {
+                                        "description": "The size of the file that will be used",
+                                        "type": "string",
+                                        "default": "1 kB"
+                                    },
+                                    "Batch Size": {
+                                        "description": "The number of FlowFiles to be transferred in each invocation",
+                                        "type": "integer",
+                                        "default": 1
+                                    },
+                                    "Data Format": {
+                                        "description": "Specifies whether the data should be Text or Binary",
+                                        "enum": [
+                                            "Text",
+                                            "Binary"
+                                        ],
+                                        "type": "string",
+                                        "default": "Binary"
+                                    },
+                                    "Unique FlowFiles": {
+                                        "description": "If true, each FlowFile that is generated will be unique. If false, a random value will be generated and all FlowFiles",
+                                        "type": "boolean",
+                                        "default": true
+                                    },
+                                    "Custom Text": {
+                                        "description": "If Data Format is text and if Unique FlowFiles is false, then this custom text will be used as content of the generated FlowFiles and the File Size will be ignored. Finally, if Expression Language is used, evaluation will be performed only once per batch of generated FlowFiles",
+                                        "type": "string"
+                                    }
+                                }
+                            }
+                        }
+                    }
+                },
+                {
+                    "if": {
+                        "properties": {
+                            "class": {
+                                "const": "GetFile"
+                            }
+                        }
+                    },
+                    "then": {
+                        "required": [
+                            "Properties"
+                        ],
+                        "properties": {
+                            "auto-terminated relationships list": {
+                                "items": {
+                                    "$ref": "#/definitions/relationships-GetFile"
+                                }
+                            },
+                            "Properties": {
+                                "type": "object",
+                                "additionalProperties": false,
+                                "required": [
+                                    "Input Directory"
+                                ],
+                                "properties": {
+                                    "Input Directory": {
+                                        "description": "The input directory from which to pull files",
+                                        "type": "string"
+                                    },
+                                    "Recurse Subdirectories": {
+                                        "description": "Indicates whether or not to pull files from subdirectories",
+                                        "type": "boolean",
+                                        "default": true
+                                    },
+                                    "Keep Source File": {
+                                        "description": "If true, the file is not deleted after it has been copied to the Content Repository",
+                                        "type": "boolean",
+                                        "default": false
+                                    },
+                                    "Minimum File Age": {
+                                        "description": "The minimum age that a file must be in order to be pulled; any file younger than this amount of time (according to last modification date) will be ignored",
+                                        "type": "string",
+                                        "default": "0 sec"
+                                    },
+                                    "Maximum File Age": {
+                                        "description": "The maximum age that a file must be in order to be pulled; any file older than this amount of time (according to last modification date) will be ignored",
+                                        "type": "string",
+                                        "default": "0 sec"
+                                    },
+                                    "Minimum File Size": {
+                                        "description": "The minimum size that a file can be in order to be pulled",
+                                        "type": "string",
+                                        "default": "0 B"
+                                    },
+                                    "Maximum File Size": {
+                                        "description": "The maximum size that a file can be in order to be pulled",
+                                        "type": "string",
+                                        "default": "0 B"
+                                    },
+                                    "Ignore Hidden Files": {
+                                        "description": "Indicates whether or not hidden files should be ignored",
+                                        "type": "boolean",
+                                        "default": true
+                                    },
+                                    "Polling Interval": {
+                                        "description": "Indicates how long to wait before performing a directory listing",
+                                        "type": "string",
+                                        "default": "0 sec"
+                                    },
+                                    "Batch Size": {
+                                        "description": "The maximum number of files to pull in each iteration",
+                                        "type": "integer",
+                                        "default": 10
+                                    },
+                                    "File Filter": {
+                                        "description": "Only files whose names match the given regular expression will be picked up",
+                                        "type": "string",
+                                        "default": ".*"
+                                    }
+                                }
+                            }
+                        }
+                    }
+                },
+                {
+                    "if": {
+                        "properties": {
+                            "class": {
+                                "const": "GetTCP"
+                            }
+                        }
+                    },
+                    "then": {
+                        "required": [
+                            "Properties"
+                        ],
+                        "properties": {
+                            "auto-terminated relationships list": {
+                                "items": {
+                                    "$ref": "#/definitions/relationships-GetTCP"
+                                }
+                            },
+                            "Properties": {
+                                "type": "object",
+                                "additionalProperties": false,
+                                "required": [
+                                    "endpoint-list"
+                                ],
+                                "properties": {
+                                    "endpoint-list": {
+                                        "description": "A comma delimited list of the endpoints to connect to. The format should be <server_address>:<port>.",
+                                        "type": "string"
+                                    },
+                                    "concurrent-handler-count": {
+                                        "description": "Number of concurrent handlers for this session",
+                                        "type": "integer",
+                                        "default": 1
+                                    },
+                                    "reconnect-interval": {
+                                        "description": "The number of seconds to wait before attempting to reconnect to the endpoint.",
+                                        "type": "string",
+                                        "default": "5 s"
+                                    },
+                                    "Stay Connected": {
+                                        "description": "Determines if we keep the same socket despite having no data",
+                                        "type": "boolean",
+                                        "default": true
+                                    },
+                                    "receive-buffer-size": {
+                                        "description": "The size of the buffer to receive data in. Default 16384 (16MB).",
+                                        "type": "string",
+                                        "default": "16 MB"
+                                    },
+                                    "SSL Context Service": {
+                                        "description": "SSL Context Service Name",
+                                        "type": "string"
+                                    },
+                                    "connection-attempt-timeout": {
+                                        "description": "Maximum number of connection attempts before attempting backup hosts, if configured",
+                                        "type": "integer",
+                                        "default": 3
+                                    },
+                                    "end-of-message-byte": {
+                                        "description": "Byte value which denotes end of message. Must be specified as integer within the valid byte range  (-128 thru 127). For example, '13' = Carriage return and '10' = New line. Default '13'.",
+                                        "type": "string",
+                                        "default": "13"
+                                    }
+                                }
+                            }
+                        }
+                    }
+                },
+                {
+                    "if": {
+                        "properties": {
+                            "class": {
+                                "const": "HashContent"
+                            }
+                        }
+                    },
+                    "then": {
+                        "required": [
+                            "Properties"
+                        ],
+                        "properties": {
+                            "auto-terminated relationships list": {
+                                "items": {
+                                    "$ref": "#/definitions/relationships-HashContent"
+                                }
+                            },
+                            "Properties": {
+                                "type": "object",
+                                "additionalProperties": false,
+                                "required": [],
+                                "properties": {
+                                    "Hash Attribute": {
+                                        "description": "Attribute to store checksum to",
+                                        "type": "string",
+                                        "default": "Checksum"
+                                    },
+                                    "Hash Algorithm": {
+                                        "description": "Name of the algorithm used to generate checksum",
+                                        "type": "string",
+                                        "default": "SHA256"
+                                    },
+                                    "Fail on empty": {
+                                        "description": "Route to failure relationship in case of empty content",
+                                        "type": "boolean",
+                                        "default": false
+                                    }
+                                }
+                            }
+                        }
+                    }
+                },
+                {
+                    "if": {
+                        "properties": {
+                            "class": {
+                                "const": "ListFile"
+                            }
+                        }
+                    },
+                    "then": {
+                        "required": [
+                            "Properties"
+                        ],
+                        "properties": {
+                            "auto-terminated relationships list": {
+                                "items": {
+                                    "$ref": "#/definitions/relationships-ListFile"
+                                }
+                            },
+                            "Properties": {
+                                "type": "object",
+                                "additionalProperties": false,
+                                "required": [
+                                    "Input Directory"
+                                ],
+                                "properties": {
+                                    "Input Directory": {
+                                        "description": "The input directory from which files to pull files",
+                                        "type": "string"
+                                    },
+                                    "Recurse Subdirectories": {
+                                        "description": "Indicates whether to list files from subdirectories of the directory",
+                                        "type": "boolean",
+                                        "default": true
+                                    },
+                                    "File Filter": {
+                                        "description": "Only files whose names match the given regular expression will be picked up",
+                                        "type": "string"
+                                    },
+                                    "Path Filter": {
+                                        "description": "When Recurse Subdirectories is true, then only subdirectories whose path matches the given regular expression will be scanned",
+                                        "type": "string"
+                                    },
+                                    "Minimum File Age": {
+                                        "description": "The minimum age that a file must be in order to be pulled; any file younger than this amount of time (according to last modification date) will be ignored",
+                                        "type": "string",
+                                        "default": "0 sec"
+                                    },
+                                    "Maximum File Age": {
+                                        "description": "The maximum age that a file must be in order to be pulled; any file older than this amount of time (according to last modification date) will be ignored",
+                                        "type": "string"
+                                    },
+                                    "Minimum File Size": {
+                                        "description": "The minimum size that a file must be in order to be pulled",
+                                        "type": "string",
+                                        "default": "0 B"
+                                    },
+                                    "Maximum File Size": {
+                                        "description": "The maximum size that a file can be in order to be pulled",
+                                        "type": "string"
+                                    },
+                                    "Ignore Hidden Files": {
+                                        "description": "Indicates whether or not hidden files should be ignored",
+                                        "type": "boolean",
+                                        "default": true
+                                    }
+                                }
+                            }
+                        }
+                    }
+                },
+                {
+                    "if": {
+                        "properties": {
+                            "class": {
+                                "const": "ListenSyslog"
+                            }
+                        }
+                    },
+                    "then": {
+                        "required": [
+                            "Properties"
+                        ],
+                        "properties": {
+                            "auto-terminated relationships list": {
+                                "items": {
+                                    "$ref": "#/definitions/relationships-ListenSyslog"
+                                }
+                            },
+                            "Properties": {
+                                "type": "object",
+                                "additionalProperties": false,
+                                "required": [],
+                                "properties": {
+                                    "Listening Port": {
+                                        "description": "The port for Syslog communication. (Well-known ports (0-1023) require root access)",
+                                        "type": "integer",
+                                        "default": 514
+                                    },
+                                    "Protocol": {
+                                        "description": "The protocol for Syslog communication.",
+                                        "enum": [
+                                            "TCP",
+                                            "UDP"
+                                        ],
+                                        "type": "string",
+                                        "default": "UDP"
+                                    },
+                                    "Max Batch Size": {
+                                        "description": "The maximum number of Syslog events to process at a time.",
+                                        "type": "integer",
+                                        "default": 500
+                                    },
+                                    "Parse Messages": {
+                                        "description": "Indicates if the processor should parse the Syslog messages. If set to false, each outgoing FlowFile will only contain the sender, protocol, and port, and no additional attributes.",
+                                        "type": "boolean",
+                                        "default": false
+                                    },
+                                    "Max Size of Message Queue": {
+                                        "description": "Maximum number of Syslog messages allowed to be buffered before processing them when the processor is triggered. If the buffer is full, the message is ignored. If set to zero the buffer is unlimited.",
+                                        "type": "integer",
+                                        "default": 10000
+                                    },
+                                    "SSL Context Service": {
+                                        "description": "The Controller Service to use in order to obtain an SSL Context. If this property is set, messages will be received over a secure connection. This Property is only considered if the <Protocol> Property has a value of \"TCP\".",
+                                        "type": "string"
+                                    },
+                                    "Client Auth": {
+                                        "description": "The client authentication policy to use for the SSL Context. Only used if an SSL Context Service is provided.",
+                                        "enum": [
+                                            "NONE",
+                                            "REQUIRED",
+                                            "WANT"
+                                        ],
+                                        "type": "string",
+                                        "default": "NONE"
+                                    }
+                                }
+                            }
+                        }
+                    }
+                },
+                {
+                    "if": {
+                        "properties": {
+                            "class": {
+                                "const": "ListenTCP"
+                            }
+                        }
+                    },
+                    "then": {
+                        "required": [
+                            "Properties"
+                        ],
+                        "properties": {
+                            "auto-terminated relationships list": {
+                                "items": {
+                                    "$ref": "#/definitions/relationships-ListenTCP"
+                                }
+                            },
+                            "Properties": {
+                                "type": "object",
+                                "additionalProperties": false,
+                                "required": [
+                                    "Listening Port"
+                                ],
+                                "properties": {
+                                    "Listening Port": {
+                                        "description": "The port to listen on for communication.",
+                                        "type": "string"
+                                    },
+                                    "Max Batch Size": {
+                                        "description": "The maximum number of messages to process at a time.",
+                                        "type": "integer",
+                                        "default": 500
+                                    },
+                                    "Max Size of Message Queue": {
+                                        "description": "Maximum number of messages allowed to be buffered before processing them when the processor is triggered. If the buffer is full, the message is ignored. If set to zero the buffer is unlimited.",
+                                        "type": "integer",
+                                        "default": 10000
+                                    },
+                                    "SSL Context Service": {
+                                        "description": "The Controller Service to use in order to obtain an SSL Context. If this property is set, messages will be received over a secure connection.",
+                                        "type": "string"
+                                    },
+                                    "Client Auth": {
+                                        "description": "The client authentication policy to use for the SSL Context. Only used if an SSL Context Service is provided.",
+                                        "enum": [
+                                            "NONE",
+                                            "REQUIRED",
+                                            "WANT"
+                                        ],
+                                        "type": "string",
+                                        "default": "NONE"
+                                    }
+                                }
+                            }
+                        }
+                    }
+                },
+                {
+                    "if": {
+                        "properties": {
+                            "class": {
+                                "const": "ListenUDP"
+                            }
+                        }
+                    },
+                    "then": {
+                        "required": [
+                            "Properties"
+                        ],
+                        "properties": {
+                            "auto-terminated relationships list": {
+                                "items": {
+                                    "$ref": "#/definitions/relationships-ListenUDP"
+                                }
+                            },
+                            "Properties": {
+                                "type": "object",
+                                "additionalProperties": false,
+                                "required": [
+                                    "Listening Port"
+                                ],
+                                "properties": {
+                                    "Listening Port": {
+                                        "description": "The port to listen on for communication.",
+                                        "type": "string"
+                                    },
+                                    "Max Batch Size": {
+                                        "description": "The maximum number of messages to process at a time.",
+                                        "type": "integer",
+                                        "default": 500
+                                    },
+                                    "Max Size of Message Queue": {
+                                        "description": "Maximum number of messages allowed to be buffered before processing them when the processor is triggered. If the buffer is full, the message is ignored. If set to zero the buffer is unlimited.",
+                                        "type": "integer",
+                                        "default": 10000
+                                    }
+                                }
+                            }
+                        }
+                    }
+                },
+                {
+                    "if": {
+                        "properties": {
+                            "class": {
+                                "const": "LogAttribute"
+                            }
+                        }
+                    },
+                    "then": {
+                        "required": [
+                            "Properties"
+                        ],
+                        "properties": {
+                            "auto-terminated relationships list": {
+                                "items": {
+                                    "$ref": "#/definitions/relationships-LogAttribute"
+                                }
+                            },
+                            "Properties": {
+                                "type": "object",
+                                "additionalProperties": false,
+                                "required": [],
+                                "properties": {
+                                    "Log Level": {
+                                        "description": "The Log Level to use when logging the Attributes",
+                                        "enum": [
+                                            "debug",
+                                            "error",
+                                            "info",
+                                            "trace",
+                                            "warn"
+                                        ],
+                                        "type": "string"
+                                    },
+                                    "Attributes to Log": {
+                                        "description": "A comma-separated list of Attributes to Log. If not specified, all attributes will be logged.",
+                                        "type": "string"
+                                    },
+                                    "Attributes to Ignore": {
+                                        "description": "A comma-separated list of Attributes to ignore. If not specified, no attributes will be ignored.",
+                                        "type": "string"
+                                    },
+                                    "Log Payload": {
+                                        "description": "If true, the FlowFile's payload will be logged, in addition to its attributes.otherwise, just the Attributes will be logged",
+                                        "type": "boolean",
+                                        "default": false
+                                    },
+                                    "Hexencode Payload": {
+                                        "description": "If true, the FlowFile's payload will be logged in a hexencoded format",
+                                        "type": "boolean",
+                                        "default": false
+                                    },
+                                    "Maximum Payload Line Length": {
+                                        "description": "The logged payload will be broken into lines this long. 0 means no newlines will be added.",
+                                        "type": "integer",
+                                        "default": 0
+                                    },
+                                    "Log Prefix": {
+                                        "description": "Log prefix appended to the log lines. It helps to distinguish the output of multiple LogAttribute processors.",
+                                        "type": "string"
+                                    },
+                                    "FlowFiles To Log": {
+                                        "description": "Number of flow files to log. If set to zero all flow files will be logged. Please note that this may block other threads from running if not used judiciously.",
+                                        "type": "integer",
+                                        "default": 1
+                                    }
+                                }
+                            }
+                        }
+                    }
+                },
+                {
+                    "if": {
+                        "properties": {
+                            "class": {
+                                "const": "PutFile"
+                            }
+                        }
+                    },
+                    "then": {
+                        "required": [
+                            "Properties"
+                        ],
+                        "properties": {
+                            "auto-terminated relationships list": {
+                                "items": {
+                                    "$ref": "#/definitions/relationships-PutFile"
+                                }
+                            },
+                            "Properties": {
+                                "type": "object",
+                                "additionalProperties": false,
+                                "required": [],
+                                "properties": {
+                                    "Permissions": {
+                                        "description": "Sets the permissions on the output file to the value of this attribute. Must be an octal number (e.g. 644 or 0755). Not supported on Windows systems.",
+                                        "type": "string"
+                                    },
+                                    "Directory Permissions": {
+                                        "description": "Sets the permissions on the directories being created if 'Create Missing Directories' property is set. Must be an octal number (e.g. 644 or 0755). Not supported on Windows systems.",
+                                        "type": "string"
+                                    },
+                                    "Directory": {
+                                        "description": "The output directory to which to put files",
+                                        "type": "string",
+                                        "default": "."
+                                    },
+                                    "Conflict Resolution Strategy": {
+                                        "description": "Indicates what should happen when a file with the same name already exists in the output directory",
+                                        "enum": [
+                                            "fail",
+                                            "ignore",
+                                            "replace"
+                                        ],
+                                        "type": "string",
+                                        "default": "fail"
+                                    },
+                                    "Create Missing Directories": {
+                                        "description": "If true, then missing destination directories will be created. If false, flowfiles are penalized and sent to failure.",
+                                        "type": "boolean",
+                                        "default": true
+                                    },
+                                    "Maximum File Count": {
+                                        "description": "Specifies the maximum number of files that can exist in the output directory",
+                                        "type": "integer",
+                                        "default": -1
+                                    }
+                                }
+                            }
+                        }
+                    }
+                },
+                {
+                    "if": {
+                        "properties": {
+                            "class": {
+                                "const": "PutTCP"
+                            }
+                        }
+                    },
+                    "then": {
+                        "required": [
+                            "Properties"
+                        ],
+                        "properties": {
+                            "max concurrent tasks": {
+                                "const": 1
+                            },
+                            "auto-terminated relationships list": {
+                                "items": {
+                                    "$ref": "#/definitions/relationships-PutTCP"
+                                }
+                            },
+                            "Properties": {
+                                "type": "object",
+                                "additionalProperties": false,
+                                "required": [
+                                    "Port"
+                                ],
+                                "properties": {
+                                    "Hostname": {
+                                        "description": "The ip address or hostname of the destination.",
+                                        "type": "string",
+                                        "default": "localhost"
+                                    },
+                                    "Port": {
+                                        "description": "The port or service on the destination.",
+                                        "type": "string"
+                                    },
+                                    "Idle Connection Expiration": {
+                                        "description": "The amount of time a connection should be held open without being used before closing the connection. A value of 0 seconds will disable this feature.",
+                                        "type": "string",
+                                        "default": "15 seconds"
+                                    },
+                                    "Timeout": {
+                                        "description": "The timeout for connecting to and communicating with the destination.",
+                                        "type": "string",
+                                        "default": "15 seconds"
+                                    },
+                                    "Connection Per FlowFile": {
+                                        "description": "Specifies whether to send each FlowFile's content on an individual connection.",
+                                        "type": "boolean",
+                                        "default": false
+                                    },
+                                    "Outgoing Message Delimiter": {
+                                        "description": "Specifies the delimiter to use when sending messages out over the same TCP stream. The delimiter is appended to each FlowFile message that is transmitted over the stream so that the receiver can determine when one message ends and the next message begins. Users should ensure that the FlowFile content does not contain the delimiter character to avoid errors.",
+                                        "type": "string"
+                                    },
+                                    "SSL Context Service": {
+                                        "description": "The Controller Service to use in order to obtain an SSL Context. If this property is set, messages will be sent over a secure connection.",
+                                        "type": "string"
+                                    },
+                                    "Max Size of Socket Send Buffer": {
+                                        "description": "The maximum size of the socket send buffer that should be used. This is a suggestion to the Operating System to indicate how big the socket buffer should be.",
+                                        "type": "string"
+                                    }
+                                }
+                            }
+                        }
+                    }
+                },
+                {
+                    "if": {
+                        "properties": {
+                            "class": {
+                                "const": "PutUDP"
+                            }
+                        }
+                    },
+                    "then": {
+                        "required": [
+                            "Properties"
+                        ],
+                        "properties": {
+                            "max concurrent tasks": {
+                                "const": 1
+                            },
+                            "auto-terminated relationships list": {
+                                "items": {
+                                    "$ref": "#/definitions/relationships-PutUDP"
+                                }
+                            },
+                            "Properties": {
+                                "type": "object",
+                                "additionalProperties": false,
+                                "required": [
+                                    "Port"
+                                ],
+                                "properties": {
+                                    "Hostname": {
+                                        "description": "The ip address or hostname of the destination.",
+                                        "type": "string",
+                                        "default": "localhost"
+                                    },
+                                    "Port": {
+                                        "description": "The port on the destination. Can be a service name like ssh or http, as defined in /etc/services.",
+                                        "type": "string"
+                                    }
+                                }
+                            }
+                        }
+                    }
+                },
+                {
+                    "if": {
+                        "properties": {
+                            "class": {
+                                "const": "ReplaceText"
+                            }
+                        }
+                    },
+                    "then": {
+                        "required": [
+                            "Properties"
+                        ],
+                        "properties": {
+                            "auto-terminated relationships list": {
+                                "items": {
+                                    "$ref": "#/definitions/relationships-ReplaceText"
+                                }
+                            },
+                            "Properties": {
+                                "type": "object",
+                                "additionalProperties": false,
+                                "required": [
+                                    "Replacement Value"
+                                ],
+                                "properties": {
+                                    "Evaluation Mode": {
+                                        "description": "Run the 'Replacement Strategy' against each line separately (Line-by-Line) or against the whole input treated as a single string (Entire Text).",
+                                        "enum": [
+                                            "Entire text",
+                                            "Line-by-Line"
+                                        ],
+                                        "type": "string",
+                                        "default": "Line-by-Line"
+                                    },
+                                    "Line-by-Line Evaluation Mode": {
+                                        "description": "Run the 'Replacement Strategy' against each line separately (Line-by-Line) for All lines in the FlowFile, First Line (Header) only, Last Line (Footer) only, all Except the First Line (Header) or all Except the Last Line (Footer).",
+                                        "enum": [
+                                            "All",
+                                            "Except-First-Line",
+                                            "Except-Last-Line",
+                                            "First-Line",
+                                            "Last-Line"
+                                        ],
+                                        "type": "string",
+                                        "default": "All"
+                                    },
+                                    "Replacement Strategy": {
+                                        "description": "The strategy for how and what to replace within the FlowFile's text content. Substitute Variables replaces ${attribute_name} placeholders with the corresponding attribute's value (if an attribute is not found, the placeholder is kept as it was).",
+                                        "enum": [
+                                            "Always Replace",
+                                            "Append",
+                                            "Literal Replace",
+                                            "Prepend",
+                                            "Regex Replace",
+                                            "Substitute Variables"
+                                        ],
+                                        "type": "string",
+                                        "default": "Regex Replace"
+                                    },
+                                    "Search Value": {
+                                        "description": "The Search Value to search for in the FlowFile content. Only used for 'Literal Replace' and 'Regex Replace' matching strategies. Supports expression language except in Regex Replace mode.",
+                                        "type": "string"
+                                    },
+                                    "Replacement Value": {
+                                        "description": "The value to insert using the 'Replacement Strategy'. Using 'Regex Replace' back-references to Regular Expression capturing groups are supported: $& is the entire matched substring, $1, $2, ... are the matched capturing groups. Use $$1 for a literal $1. Back-references to non-existent capturing groups will be replaced by empty strings. Supports expression language except in Regex Replace mode.",
+                                        "type": "string"
+                                    }
+                                }
+                            }
+                        }
+                    }
+                },
+                {
+                    "if": {
+                        "properties": {
+                            "class": {
+                                "const": "RetryFlowFile"
+                            }
+                        }
+                    },
+                    "then": {
+                        "required": [
+                            "Properties"
+                        ],
+                        "properties": {
+                            "auto-terminated relationships list": {
+                                "items": {
+                                    "$ref": "#/definitions/relationships-RetryFlowFile"
+                                }
+                            },
+                            "Properties": {
+                                "type": "object",
+                                "additionalProperties": true,
+                                "required": [],
+                                "properties": {
+                                    "Retry Attribute": {
+                                        "description": "The name of the attribute that contains the current retry count for the FlowFile.WARNING: If the name matches an attribute already on the FlowFile that does not contain a numerical value, the processor will either overwrite that attribute with '1' or fail based on configuration.",
+                                        "type": "string",
+                                        "default": "flowfile.retries"
+                                    },
+                                    "Maximum Retries": {
+                                        "description": "The maximum number of times a FlowFile can be retried before being passed to the 'retries_exceeded' relationship.",
+                                        "type": "integer",
+                                        "default": 3
+                                    },
+                                    "Penalize Retries": {
+                                        "description": "If set to 'true', this Processor will penalize input FlowFiles before passing them to the 'retry' relationship. This does not apply to the 'retries_exceeded' relationship.",
+                                        "type": "boolean",
+                                        "default": true
+                                    },
+                                    "Fail on Non-numerical Overwrite": {
+                                        "description": "If the FlowFile already has the attribute defined in 'Retry Attribute' that is *not* a number, fail the FlowFile instead of resetting that value to '1'",
+                                        "type": "boolean",
+                                        "default": false
+                                    },
+                                    "Reuse Mode": {
+                                        "description": "Defines how the Processor behaves if the retry FlowFile has a different retry UUID than the instance that received the FlowFile. This generally means that the attribute was not reset after being successfully retried by a previous instance of this processor.",
+                                        "enum": [
+                                            "Fail on Reuse",
+                                            "Reset Reuse",
+                                            "Warn on Reuse"
+                                        ],
+                                        "type": "string",
+                                        "default": "Fail on Reuse"
+                                    }
+                                }
+                            }
+                        }
+                    }
+                },
+                {
+                    "if": {
+                        "properties": {
+                            "class": {
+                                "const": "RouteOnAttribute"
+                            }
+                        }
+                    },
+                    "then": {
+                        "required": [
+                            "Properties"
+                        ],
+                        "properties": {
+                            "auto-terminated relationships list": {
+                                "items": {
+                                    "$ref": "#/definitions/relationships-RouteOnAttribute"
+                                }
+                            },
+                            "Properties": {
+                                "type": "object",
+                                "additionalProperties": true,
+                                "required": [],
+                                "properties": {}
+                            }
+                        }
+                    }
+                },
+                {
+                    "if": {
+                        "properties": {
+                            "class": {
+                                "const": "RouteText"
+                            }
+                        }
+                    },
+                    "then": {
+                        "required": [
+                            "Properties"
+                        ],
+                        "properties": {
+                            "auto-terminated relationships list": {
+                                "items": {
+                                    "$ref": "#/definitions/relationships-RouteText"
+                                }
+                            },
+                            "Properties": {
+                                "type": "object",
+                                "additionalProperties": true,
+                                "required": [
+                                    "Matching Strategy"
+                                ],
+                                "properties": {
+                                    "Routing Strategy": {
+                                        "description": "Specifies how to determine which Relationship(s) to use when evaluating the segments of incoming text against the 'Matching Strategy' and user-defined properties. 'Dynamic Routing' routes to all the matching dynamic relationships (or 'unmatched' if none matches). 'Route On All' routes to 'matched' iff all dynamic relationships match. 'Route On Any' routes to 'matched' iff any of the dynamic relationships match. ",
+                                        "enum": [
+                                            "Dynamic Routing",
+                                            "Route On All",
+                                            "Route On Any"
+                                        ],
+                                        "type": "string",
+                                        "default": "Dynamic Routing"
+                                    },
+                                    "Matching Strategy": {
+                                        "description": "Specifies how to evaluate each segment of incoming text against the user-defined properties. Possible values are: 'Starts With', 'Ends With', 'Contains', 'Equals', 'Matches Regex', 'Contains Regex', 'Satisfies Expression'.",
+                                        "enum": [
+                                            "Contains",
+                                            "Contains Regex",
+                                            "Ends With",
+                                            "Equals",
+                                            "Matches Regex",
+                                            "Satisfies Expression",
+                                            "Starts With"
+                                        ],
+                                        "type": "string"
+                                    },
+                                    "Ignore Leading/Trailing Whitespace": {
+                                        "description": "Indicates whether or not the whitespace at the beginning and end should be ignored when evaluating a segment.",
+                                        "type": "boolean",
+                                        "default": true
+                                    },
+                                    "Ignore Case": {
+                                        "description": "If true, capitalization will not be taken into account when comparing values. E.g., matching against 'HELLO' or 'hello' will have the same result. This property is ignored if the 'Matching Strategy' is set to 'Satisfies Expression'.",
+                                        "type": "boolean",
+                                        "default": false
+                                    },
+                                    "Grouping Regular Expression": {
+                                        "description": "Specifies a Regular Expression to evaluate against each segment to determine which Group it should be placed in. The Regular Expression must have at least one Capturing Group that defines the segment's Group. If multiple Capturing Groups exist in the Regular Expression, the values from all Capturing Groups will be joined together with \", \". Two segments will not be placed into the same FlowFile unless they both have the same value for the Group (or neither matches the Regular Expression). For example, to group together all lines in a CSV File by the first column, we can set this value to \"(.*?),.*\" (and use \"Per Line\" segmentation). Two segments that have the same Group but different Relationships will never be placed into the same FlowFile.",
+                                        "type": "string"
+                                    },
+                                    "Grouping Fallback Value": {
+                                        "description": "If the 'Grouping Regular Expression' is specified and the matching fails, this value will be considered the group of the segment.",
+                                        "type": "string"
+                                    },
+                                    "Segmentation Strategy": {
+                                        "description": "Specifies what portions of the FlowFile content constitutes a single segment to be processed. 'Full Text' considers the whole content as a single segment, 'Per Line' considers each line of the content as a separate segment",
+                                        "enum": [
+                                            "Full Text",
+                                            "Per Line"
+                                        ],
+                                        "type": "string",
+                                        "default": "Per Line"
+                                    }
+                                }
+                            }
+                        }
+                    }
+                },
+                {
+                    "if": {
+                        "properties": {
+                            "class": {
+                                "const": "TailFile"
+                            }
+                        }
+                    },
+                    "then": {
+                        "required": [
+                            "Properties"
+                        ],
+                        "properties": {
+                            "max concurrent tasks": {
+                                "const": 1
+                            },
+                            "auto-terminated relationships list": {
+                                "items": {
+                                    "$ref": "#/definitions/relationships-TailFile"
+                                }
+                            },
+                            "Properties": {
+                                "type": "object",
+                                "additionalProperties": false,
+                                "required": [
+                                    "File to Tail"
+                                ],
+                                "properties": {
+                                    "File to Tail": {
+                                        "description": "Fully-qualified filename of the file that should be tailed when using single file mode, or a file regex when using multifile mode",
+                                        "type": "string"
+                                    },
+                                    "State File": {
+                                        "description": "DEPRECATED. Only use it for state migration from the legacy state file.",
+                                        "type": "string",
+                                        "default": "TailFileState"
+                                    },
+                                    "Input Delimiter": {
+                                        "description": "Specifies the character that should be used for delimiting the data being tailedfrom the incoming file. If none is specified, data will be ingested as it becomes available.",
+                                        "type": "string",
+                                        "default": "\n"
+                                    },
+                                    "tail-mode": {
+                                        "description": "Specifies the tail file mode. In 'Single file' mode only a single file will be watched. In 'Multiple file' mode a regex may be used. Note that in multiple file mode we will still continue to watch for rollover on the initial set of watched files. The Regex used to locate multiple files will be run during the schedule phrase. Note that if rotated files are matched by the regex, those files will be tailed.",
+                                        "enum": [
+                                            "Single file",
+                                            "Multiple file"
+                                        ],
+                                        "type": "string",
+                                        "default": "Single file"
+                                    },
+                                    "tail-base-directory": {
+                                        "description": "Base directory used to look for files to tail. This property is required when using Multiple file mode. Can contain expression language placeholders if Attribute Provider Service is set.",
+                                        "type": "string"
+                                    },
+                                    "Recursive lookup": {
+                                        "description": "When using Multiple file mode, this property determines whether files are tailed in child directories of the Base Directory or not.",
+                                        "type": "boolean",
+                                        "default": false
+                                    },
+                                    "Lookup frequency": {
+                                        "description": "When using Multiple file mode, this property specifies the minimum duration the processor will wait between looking for new files to tail in the Base Directory.",
+                                        "type": "string",
+                                        "default": "10 min"
+                                    },
+                                    "Rolling Filename Pattern": {
+                                        "description": "If the file to tail \"rolls over\" as would be the case with log files, this filename pattern will be used to identify files that have rolled over so MiNiFi can read the remaining of the rolled-over file and then continue with the new log file. This pattern supports the wildcard characters * and ?, it also supports the notation ${filename} to specify a pattern based on the name of the file (without extension), and will assume that the files that have rolled over live in the same directory as the file being tailed.",
+                                        "type": "string",
+                                        "default": "${filename}.*"
+                                    },
+                                    "Initial Start Position": {
+                                        "description": "When the Processor first begins to tail data, this property specifies where the Processor should begin reading data. Once data has been ingested from a file, the Processor will continue from the last point from which it has received data.\nBeginning of Time: Start with the oldest data that matches the Rolling Filename Pattern and then begin reading from the File to Tail.\nBeginning of File: Start with the beginning of the File to Tail. Do not ingest any data that has already been rolled over.\nCurrent Time: Start with the data at the end of the File to Tail. Do not ingest any data that has already been rolled over or any data in the File to Tail that has already been written.",
+                                        "enum": [
+                                            "Beginning of File",
+                                            "Beginning of Time",
+                                            "Current Time"
+                                        ],
+                                        "type": "string",
+                                        "default": "Beginning of File"
+                                    },
+                                    "Attribute Provider Service": {
+                                        "description": "Provides a list of key-value pair records which can be used in the Base Directory property using Expression Language. Requires Multiple file mode.",
+                                        "type": "string"
+                                    },
+                                    "Batch Size": {
+                                        "description": "Maximum number of flowfiles emitted in a single trigger. If set to 0 all new content will be processed.",
+                                        "type": "integer",
+                                        "default": 0
+                                    }
+                                }
+                            }
+                        }
+                    }
+                },
+                {
+                    "if": {
+                        "properties": {
+                            "class": {
+                                "const": "UpdateAttribute"
+                            }
+                        }
+                    },
+                    "then": {
+                        "required": [
+                            "Properties"
+                        ],
+                        "properties": {
+                            "auto-terminated relationships list": {
+                                "items": {
+                                    "$ref": "#/definitions/relationships-UpdateAttribute"
+                                }
+                            },
+                            "Properties": {
+                                "type": "object",
+                                "additionalProperties": true,
+                                "required": [],
+                                "properties": {}
+                            }
+                        }
+                    }
+                },
+                {
+                    "if": {
+                        "properties": {
+                            "class": {
+                                "const": "StatefulProcessor"
+                            }
+                        }
+                    },
+                    "then": {
+                        "required": [
+                            "Properties"
+                        ],
+                        "properties": {
+                            "auto-terminated relationships list": {
+                                "items": {
+                                    "$ref": "#/definitions/relationships-StatefulProcessor"
+                                }
+                            },
+                            "Properties": {
+                                "type": "object",
+                                "additionalProperties": false,
+                                "required": [],
+                                "properties": {}
+                            }
+                        }
+                    }
+                },
+                {
+                    "if": {
+                        "properties": {
+                            "class": {
+                                "const": "WriteToFlowFileTestProcessor"
+                            }
+                        }
+                    },
+                    "then": {
+                        "required": [
+                            "Properties"
+                        ],
+                        "properties": {
+                            "auto-terminated relationships list": {
+                                "items": {
+                                    "$ref": "#/definitions/relationships-WriteToFlowFileTestProcessor"
+                                }
+                            },
+                            "Properties": {
+                                "type": "object",
+                                "additionalProperties": false,
+                                "required": [],
+                                "properties": {}
+                            }
+                        }
+                    }
+                },
+                {
+                    "if": {
+                        "properties": {
+                            "class": {
+                                "const": "ReadFromFlowFileTestProcessor"
+                            }
+                        }
+                    },
+                    "then": {
+                        "required": [
+                            "Properties"
+                        ],
+                        "properties": {
+                            "auto-terminated relationships list": {
+                                "items": {
+                                    "$ref": "#/definitions/relationships-ReadFromFlowFileTestProcessor"
+                                }
+                            },
+                            "Properties": {
+                                "type": "object",
+                                "additionalProperties": false,
+                                "required": [],
+                                "properties": {}
+                            }
+                        }
+                    }
+                },
+                {
+                    "if": {
+                        "properties": {
+                            "class": {
+                                "const": "DummyProcessor"
+                            }
+                        }
+                    },
+                    "then": {
+                        "required": [
+                            "Properties"
+                        ],
+                        "properties": {
+                            "auto-terminated relationships list": {
+                                "items": {
+                                    "$ref": "#/definitions/relationships-DummyProcessor"
+                                }
+                            },
+                            "Properties": {
+                                "type": "object",
+                                "additionalProperties": false,
+                                "required": [],
+                                "properties": {}
+                            }
+                        }
+                    }
+                }
+            ]
+        },
+        "remote_process_group": {
+            "allOf": [
+                {
+                    "type": "object",
+                    "required": [
+                        "name",
+                        "id",
+                        "Input Ports"
+                    ],
+                    "properties": {
+                        "name": {
+                            "type": "string"
+                        },
+                        "id": {
+                            "$ref": "#/definitions/uuid"
+                        },
+                        "url": {
+                            "type": "string"
+                        },
+                        "yield period": {
+                            "$ref": "#/definitions/time"
+                        },
+                        "timeout": {
+                            "$ref": "#/definitions/time"
+                        },
+                        "local network interface": {
+                            "type": "string"
+                        },
+                        "transport protocol": {
+                            "enum": [
+                                "HTTP",
+                                "RAW"
+                            ]
+                        },
+                        "Input Ports": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/remote_port"
+                            }
+                        },
+                        "Output Ports": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/remote_port"
+                            }
+                        }
+                    }
+                },
+                {
+                    "if": {
+                        "properties": {
+                            "transport protocol": {
+                                "const": "HTTP"
+                            }
+                        }
+                    },
+                    "then": {
+                        "properties": {
+                            "proxy host": {
+                                "type": "string"
+                            },
+                            "proxy user": {
+                                "type": "string"
+                            },
+                            "proxy password": {
+                                "type": "string"
+                            },
+                            "proxy port": {
+                                "type": "integer"
+                            }
+                        }
+                    }
+                }
+            ]
+        },
+        "connection": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+                "name",
+                "id",
+                "source id",
+                "source relationship names",
+                "destination id"
+            ],
+            "properties": {
+                "name": {
+                    "type": "string"
+                },
+                "id": {
+                    "$ref": "#/definitions/uuid"
+                },
+                "source name": {
+                    "type": "string"
+                },
+                "source id": {
+                    "$ref": "#/definitions/uuid"
+                },
+                "source relationship names": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "destination name": {
+                    "type": "string"
+                },
+                "destination id": {
+                    "$ref": "#/definitions/uuid"
+                },
+                "max work queue size": {
+                    "type": "integer",
+                    "default": 10000
+                },
+                "max work queue data size": {
+                    "$ref": "#/definitions/datasize",
+                    "default": "10 MB"
+                },
+                "flowfile expiration": {
+                    "$ref": "#/definitions/time",
+                    "default": "0 ms"
+                }
+            }
+        },
+        "funnel": {
+            "type": "object",
+            "required": [
+                "name"
+            ],
+            "properties": {
+                "id": {
+                    "$ref": "#/definitions/uuid"
+                },
+                "name": {
+                    "type": "string"
+                }
+            }
+        },
+        "simple_process_group": {
+            "type": "object",
+            "required": [
+                "name"
+            ],
+            "additionalProperties": false,
+            "properties": {
+                "name": {
+                    "type": "string"
+                },
+                "version": {
+                    "type": "integer"
+                },
+                "onschedule retry interval": {
+                    "$ref": "#/definitions/time"
+                },
+                "Processors": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/processor"
+                    }
+                },
+                "Connections": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/connection"
+                    }
+                },
+                "Controller Services": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/controller_service"
+                    }
+                },
+                "Remote Process Groups": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/remote_process_group"
+                    }
+                },
+                "Process Groups": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/simple_process_group"
+                    }
+                },
+                "Funnels": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/funnel"
+                    }
+                },
+                "Input Ports": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/port"
+                    }
+                },
+                "Output Ports": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/port"
+                    }
+                }
+            }
+        },
+        "root_process_group": {
+            "type": "object",
+            "required": [
+                "Flow Controller"
+            ],
+            "additionalProperties": false,
+            "properties": {
+                "$schema": {
+                    "type": "string"
+                },
+                "Flow Controller": {
+                    "type": "object",
+                    "required": [
+                        "name"
+                    ],
+                    "name": {
+                        "type": "string"
+                    },
+                    "version": {
+                        "type": "integer"
+                    },
+                    "onschedule retry interval": {
+                        "$ref": "#/definitions/time"
+                    }
+                },
+                "Processors": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/processor"
+                    }
+                },
+                "Connections": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/connection"
+                    }
+                },
+                "Controller Services": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/controller_service"
+                    }
+                },
+                "Remote Process Groups": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/remote_process_group"
+                    }
+                },
+                "Process Groups": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/simple_process_group"
+                    }
+                },
+                "Funnels": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/funnel"
+                    }
+                },
+                "Input Ports": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/port"
+                    }
+                },
+                "Output Ports": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/port"
+                    }
+                }
+            }
+        }
+    },
+    "$ref": "#/definitions/root_process_group"
+}
