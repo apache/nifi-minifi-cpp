@@ -31,11 +31,7 @@
 #include "core/yaml/YamlConfiguration.h"
 #include "core/json/JsonConfiguration.h"
 
-namespace org {
-namespace apache {
-namespace nifi {
-namespace minifi {
-namespace core {
+namespace org::apache::nifi::minifi::core {
 
 std::unique_ptr<core::FlowConfiguration> createFlowConfiguration(const ConfigurationContext& ctx, const std::optional<std::string>& configuration_class_name, bool fail_safe) {
   std::string class_name_lc;
@@ -79,9 +75,4 @@ std::unique_ptr<core::FlowConfiguration> createFlowConfiguration(const Configura
   throw std::runtime_error("Support for the provided configuration class could not be found");
 }
 
-} /* namespace core */
-} /* namespace minifi */
-} /* namespace nifi */
-} /* namespace apache */
-} /* namespace org */
-
+}  // namespace org::apache::nifi::minifi::core

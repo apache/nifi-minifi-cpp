@@ -223,7 +223,7 @@ class StructuredConfiguration : public FlowConfiguration {
   PropertyValue getValidatedProcessorPropertyForDefaultTypeInfo(const core::Property& property_from_processor, const Node& property_value_node);
   void parsePropertyValueSequence(const std::string& property_name, const Node& property_value_node, core::ConfigurableComponent& component);
   void parseSingleProperty(const std::string& property_name, const Node& property_value_node, core::ConfigurableComponent& processor);
-  void parsePropertyNodeElement(const std::string& propertyName, const Node& property_value_node, core::ConfigurableComponent& processor);
+  void parsePropertyNodeElement(const std::string& property_name, const Node& property_value_node, core::ConfigurableComponent& processor);
   void addNewId(const std::string& uuid);
 
   /**
