@@ -163,7 +163,7 @@ export OS_MINOR
 OS_REVISION=$(echo "$EVR" | cut -d. -f3)
 export OS_REVISION
 
-if [[ "$(uname --operating-system)" =~ .*Linux.* ]]; then
+if [[ "$OSTYPE" =~ .*linux.* ]]; then
   LINUX=true
 else
   LINUX=false
