@@ -35,6 +35,7 @@
 #include "core/WeakReference.h"
 #include "utils/gsl.h"
 #include "range/v3/algorithm/remove_if.hpp"
+#include "range/v3/algorithm/all_of.hpp"
 
 namespace org::apache::nifi::minifi::jni {
 
@@ -235,7 +236,7 @@ class JniSession : public core::WeakReference {
   }
   bool empty() const {
     std::lock_guard<std::mutex> guard(session_mutex_);
-    return std::ranges::all_of(global_ff_objects_, [](const auto& ff) -> bool { return ff->empty(); });
+    return ranges::all_of(global_ff_objects_, [](const auto& ff) -> bool { return ff->empty(); });
   }
 
  protected:
