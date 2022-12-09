@@ -120,7 +120,7 @@ class ListThenFetchSFTPTestsFixture {
     plan->setProperty(list_sftp, "Minimum File Size", "0 B");
     plan->setProperty(list_sftp, "Target System Timestamp Precision", "Seconds");
     plan->setProperty(list_sftp, "Remote Path", "nifi_test/");
-    plan->setProperty(list_sftp, "State File", src_dir.string() + "/state");
+    plan->setProperty(list_sftp, "State File", (src_dir / "state").string());
 
     // Configure FetchSFTP processor
     plan->setProperty(fetch_sftp, "Hostname", "localhost");
@@ -139,7 +139,7 @@ class ListThenFetchSFTPTestsFixture {
     plan->setProperty(log_attribute, "FlowFiles To Log", "0");
 
     // Configure PutFile processor
-    plan->setProperty(put_file, "Directory", dst_dir.string() + "/${path}");
+    plan->setProperty(put_file, "Directory", (dst_dir / "${path}").string());
     plan->setProperty(put_file, "Conflict Resolution Strategy", minifi::processors::PutFile::CONFLICT_RESOLUTION_STRATEGY_FAIL);
     plan->setProperty(put_file, "Create Missing Directories", "true");
   }

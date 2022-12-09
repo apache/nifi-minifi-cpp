@@ -232,7 +232,7 @@ void withDefaultEnv(minifi::internal::Writable<rocksdb::DBOptions>& db_opts) {
 
 TEST_CASE_METHOD(RocksDBTest, "Error is logged if different encryption keys are used", "[rocksDBTest10]") {
   auto home_dir = createTempDirectory();
-  utils::file::FileUtils::create_dir((home_dir / "conf"));
+  utils::file::FileUtils::create_dir(home_dir / "conf");
   std::ofstream{home_dir / "conf" / "bootstrap.conf"}
     << "encryption.key.one=" << "805D7B95EF44DC27C87FFBC4DFDE376DAE604D55DB2C5496DEEF5236362DE62E" << "\n"
     << "encryption.key.two=" << "905D7B95EF44DC27C87FFBC4DFDE376DAE604D55DB2C5496DEEF5236362DE62E" << "\n";

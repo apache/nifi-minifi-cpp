@@ -75,7 +75,7 @@ TEST_CASE_METHOD(FFRepoFixture, "FlowFileRepository creates checkpoint and loads
     // pass
   }
   SECTION("With encryption") {
-    utils::file::FileUtils::create_dir((home_ / "conf"));
+    utils::file::FileUtils::create_dir(home_ / "conf");
     std::ofstream{home_ / "conf" / "bootstrap.conf"}
       << static_cast<const char*>(FlowFileRepository::ENCRYPTION_KEY_NAME) << "="
       << "805D7B95EF44DC27C87FFBC4DFDE376DAE604D55DB2C5496DEEF5236362DE62E"
