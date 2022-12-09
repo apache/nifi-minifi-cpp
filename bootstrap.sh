@@ -163,6 +163,12 @@ export OS_MINOR
 OS_REVISION=$(echo "$EVR" | cut -d. -f3)
 export OS_REVISION
 
+if [[ "$(uname --operating-system)" =~ .*Linux.* ]]; then
+  LINUX=true
+else
+  LINUX=false
+fi
+
 ### Verify the compiler version
 
 COMPILER_VERSION="0.0.0"
@@ -328,7 +334,9 @@ add_dependency OPC_ENABLED "mbedtls"
 
 add_option AZURE_ENABLED ${TRUE} "ENABLE_AZURE"
 
-add_option SYSTEMD_ENABLED ${TRUE} "ENABLE_SYSTEMD"
+if $LINUX; then
+  add_option SYSTEMD_ENABLED ${TRUE} "ENABLE_SYSTEMD"
+fi
 
 add_option NANOFI_ENABLED ${FALSE} "ENABLE_NANOFI"
 set_dependency PYTHON_ENABLED NANOFI_ENABLED
