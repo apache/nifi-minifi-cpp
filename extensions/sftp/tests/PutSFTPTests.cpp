@@ -18,7 +18,6 @@
 
 #include <sys/stat.h>
 #undef NDEBUG
-#include <cassert>
 #include <cstring>
 #include <utility>
 #include <chrono>
@@ -187,10 +186,6 @@ class PutSFTPTestsFixture {
     REQUIRE(expected_gid == gid);
   }
 
-  std::size_t directoryContentCount(const std::filesystem::path& dir) {
-    return (std::size_t)std::distance(std::filesystem::directory_iterator{dir}, std::filesystem::directory_iterator{});
-  }
-
  protected:
   TestController testController;
   std::filesystem::path src_dir = testController.createTempDirectory();
@@ -200,6 +195,12 @@ class PutSFTPTestsFixture {
   std::shared_ptr<core::Processor> get_file;
   std::shared_ptr<core::Processor> put;
 };
+
+namespace {
+std::size_t directoryContentCount(const std::filesystem::path& dir) {
+  return (std::size_t)std::distance(std::filesystem::directory_iterator{dir}, std::filesystem::directory_iterator{});
+}
+}  // namespace
 
 TEST_CASE_METHOD(PutSFTPTestsFixture, "PutSFTP put one file", "[PutSFTP][basic]") {
   createFile(src_dir, "tstFile.ext", "tempFile");
