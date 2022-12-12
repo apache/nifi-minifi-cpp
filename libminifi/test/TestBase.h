@@ -118,9 +118,9 @@ class LogTestController {
    * of changeable test formats
    */
   template<typename T>
-  std::shared_ptr<logging::Logger> getLogger() { return getLoggerByClassName(minifi::core::getClassName<T>()); }
+  std::shared_ptr<logging::Logger> getLogger(const std::optional<std::string>& id = {}) { return getLoggerByClassName(minifi::core::getClassName<T>(), id); }
 
-  std::shared_ptr<logging::Logger> getLoggerByClassName(const std::string& class_name);
+  std::shared_ptr<logging::Logger> getLoggerByClassName(const std::string& class_name, const std::optional<std::string>& id = {});
 
   template<typename T>
   void setLevel(spdlog::level::level_enum level) {
