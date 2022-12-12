@@ -23,6 +23,7 @@
 #include "../agent/JsonSchema.h"
 #include "nlohmann/json-schema.hpp"
 #include "utils/RegexUtils.h"
+#include "utils/StringUtils.h"
 
 struct JsonError {
   std::string path;
@@ -48,7 +49,7 @@ void extractExpectedErrors(nlohmann::json& node, const std::string& path, std::u
   }
   if (node.is_object() || node.is_array()) {
     for (auto& [key, val] : node.items()) {
-      extractExpectedErrors(val, path + "/" + key, errors);
+      extractExpectedErrors(val, utils::StringUtils::join_pack(path, "/", key), errors);
     }
   }
 }

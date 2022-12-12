@@ -61,7 +61,7 @@ void writePropertySchema(const core::Property& prop, std::ostream& out) {
     out << R"(, "enum": [)"
         << (values
             | ranges::views::transform([] (auto& val) {return '"' + escape(val.to_string()) + '"';})
-            | ranges::views::join(std::string{','})
+            | ranges::views::join(',')
             | ranges::to<std::string>())
         << "]";
   }
@@ -100,7 +100,7 @@ void writeProperties(const PropertyContainer& props, bool supports_dynamic, std:
         << (props
             | ranges::views::filter([] (auto& prop) {return prop.getRequired() && prop.getDefaultValue().empty();})
             | ranges::views::transform([] (auto& prop) {return '"' + escape(prop.getName()) + '"';})
-            | ranges::views::join(std::string{','})
+            | ranges::views::join(',')
             | ranges::to<std::string>())
         << "]";
 
