@@ -36,6 +36,7 @@
 namespace org::apache::nifi::minifi::docs {
 
 static std::string escape(std::string str) {
+  utils::StringUtils::replaceAll(str, "\\", "\\\\");
   utils::StringUtils::replaceAll(str, "\"", "\\\"");
   utils::StringUtils::replaceAll(str, "\n", "\\n");
   return str;
