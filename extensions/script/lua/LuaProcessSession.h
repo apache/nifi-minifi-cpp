@@ -39,6 +39,7 @@ class LuaProcessSession {
   void transfer(const std::shared_ptr<script::ScriptFlowFile> &flow_file, const core::Relationship& relationship);
   void read(const std::shared_ptr<script::ScriptFlowFile> &script_flow_file, sol::table input_stream_callback);
   void write(const std::shared_ptr<script::ScriptFlowFile> &flow_file, sol::table output_stream_callback);
+  void remove(const std::shared_ptr<script::ScriptFlowFile>& flow_file);
 
   /**
    * Sometimes we want to release shared pointers to core resources when
