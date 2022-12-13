@@ -58,7 +58,7 @@ FlowController::FlowController(std::shared_ptr<core::Repository> provenance_repo
       running_(false),
       updating_(false),
       initialized_(false),
-      thread_pool_(2, false, nullptr, "Flowcontroller threadpool") {
+      thread_pool_(5, false, nullptr, "Flowcontroller threadpool") {
   if (provenance_repo_ == nullptr)
     throw std::runtime_error("Provenance Repo should not be null");
   if (flow_file_repo_ == nullptr)
@@ -315,7 +315,7 @@ void FlowController::load(std::unique_ptr<core::ProcessGroup> root, bool reload)
 
     if (!thread_pool_.isRunning() || reload) {
       thread_pool_.shutdown();
-      thread_pool_.setMaxConcurrentTasks(configuration_->getInt(Configure::nifi_flow_engine_threads, 2));
+      thread_pool_.setMaxConcurrentTasks(configuration_->getInt(Configure::nifi_flow_engine_threads, 5));
       thread_pool_.setControllerServiceProvider(this);
       thread_pool_.start();
     }
