@@ -228,7 +228,6 @@ void ConsumeWindowsEventLog::onSchedule(const std::shared_ptr<core::ProcessConte
     throw Exception(PROCESSOR_EXCEPTION, "Failed to get StateManager");
   }
 
-  context->getProperty(IdentifierMatcher.getName(), regex_);
   context->getProperty(ResolveAsAttributes.getName(), resolve_as_attributes_);
   context->getProperty(IdentifierFunction.getName(), apply_identifier_function_);
   header_delimiter_ = context->getProperty(EventHeaderDelimiter);
@@ -569,6 +568,8 @@ nonstd::expected<std::string, std::string> ConsumeWindowsEventLog::renderEventAs
     }
     size = used;
     buf.reset((LPWSTR) malloc(size));
+    if (!buf)
+      return nonstd::make_unexpected("malloc failed");
     if (!EvtRender(nullptr, event_handle, EvtRenderEventXml, size, buf.get(), &used, &propertyCount)) {
       std::string error_message = std::format("EvtRender failed due to %s", utils::OsUtils::getWindowsErrorAsString(GetLastError()));
       return nonstd::make_unexpected(error_message);
@@ -604,6 +605,15 @@ nonstd::expected<EventRender, std::string> ConsumeWindowsEventLog::createEventRe
 
     auto& handler = getEventLogHandler(provider_name);
     auto event_message = handler.getEventMessage(hEvent);
+
+    if (event_message) {
+      for (const auto& map_entry : walker.getIdentifiers()) {
+        if (map_entry.first.empty() || map_entry.second.empty()) {
+          continue;
+        }
+        utils::StringUtils::replaceAll(*event_message, map_entry.first, map_entry.second);
+      }
+    }
 
     std::string_view payload_name = event_message ? "Message" : "Error";
 

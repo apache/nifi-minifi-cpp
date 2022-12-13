@@ -161,7 +161,7 @@ class WindowsEventLogMetadataImpl : public WindowsEventLogMetadata {
   void renderMetadata();
 
   std::string event_type_;
-  short event_type_index_;  // NOLINT short comes from WINDOWS API
+  short event_type_index_ = 0;  // NOLINT short comes from WINDOWS API
   std::string event_timestamp_str_;
   EVT_HANDLE event_ptr_;
   EVT_HANDLE metadata_ptr_;

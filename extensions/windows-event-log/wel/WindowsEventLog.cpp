@@ -34,8 +34,8 @@ std::string GetEventTimestampStr(uint64_t event_timestamp) {
   SYSTEMTIME st;
   FILETIME ft;
 
-  ft.dwHighDateTime = (DWORD)((event_timestamp >> 32) & 0xFFFFFFFF);
-  ft.dwLowDateTime = (DWORD)(event_timestamp & 0xFFFFFFFF);
+  ft.dwHighDateTime = (DWORD)((event_timestamp >> 32) & 0xFF'FF'FF'FF);
+  ft.dwLowDateTime = (DWORD)(event_timestamp & 0xFF'FF'FF'FF);
 
   FileTimeToSystemTime(&ft, &st);
   std::stringstream datestr;
@@ -178,6 +178,8 @@ nonstd::expected<std::string, DWORD> WindowsEventLogHandler::getEventMessage(EVT
 
   num_chars_in_buffer = num_chars_used;
   buffer.reset((LPWSTR) malloc(num_chars_in_buffer * sizeof(WCHAR)));
+  if (!buffer)
+    return nonstd::make_unexpected(ERROR_OUTOFMEMORY);
   if (EvtFormatMessage(metadata_provider_.get(), eventHandle, 0, 0, nullptr,
                        EvtFormatMessageEvent, num_chars_in_buffer,
                        buffer.get(), &num_chars_used))

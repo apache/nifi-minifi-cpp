@@ -112,7 +112,7 @@ class ConsumeWindowsEventLog : public core::Processor {
   void initialize() override;
   void notifyStop() override;
 
- protected:
+ private:
   void refreshTimeZoneData();
   void putEventRenderFlowFileToSession(const EventRender& eventRender, core::ProcessSession& session) const;
   wel::WindowsEventLogHandler& getEventLogHandler(const std::string& name);
