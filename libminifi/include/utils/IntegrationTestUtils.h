@@ -24,11 +24,7 @@
 
 #include "../../../libminifi/test/TestBase.h"
 
-namespace org {
-namespace apache {
-namespace nifi {
-namespace minifi {
-namespace utils {
+namespace org::apache::nifi::minifi::utils {
 
 template <class Rep, class Period, typename Fun>
 bool verifyEventHappenedInPollTime(
@@ -47,18 +43,11 @@ bool verifyEventHappenedInPollTime(
 
 template <class Rep, class Period, typename ...String>
 bool verifyLogLinePresenceInPollTime(const std::chrono::duration<Rep, Period>& wait_duration, String&&... patterns) {
-  // gcc before 4.9 does not support capturing parameter packs in lambdas: https://gcc.gnu.org/bugzilla/show_bug.cgi?id=41933
-  // Once we support gcc >= 4.9 only, this vector will no longer be necessary, we'll be able to iterate on the parameter pack directly.
-  std::vector<std::string> pattern_list{std::forward<String>(patterns)...};
-  auto check = [&] {
+  auto check = [&patterns...] {
     const std::string logs = LogTestController::getInstance().log_output.str();
-    return std::all_of(pattern_list.cbegin(), pattern_list.cend(), [&logs] (const std::string& pattern) { return logs.find(pattern) != std::string::npos; });
+    return ((logs.find(patterns) != std::string::npos) && ...);
   };
   return verifyEventHappenedInPollTime(wait_duration, check);
 }
 
-}  // namespace utils
-}  // namespace minifi
-}  // namespace nifi
-}  // namespace apache
-}  // namespace org
+}  // namespace org::apache::nifi::minifi::utils

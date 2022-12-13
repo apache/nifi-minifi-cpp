@@ -19,14 +19,11 @@
 #undef NDEBUG
 #include <cassert>
 #include <cstdio>
-#include <memory>
 #include <string>
 #include <iostream>
 
-#include "core/logging/Logger.h"
 #include "FlowController.h"
 #include "TestBase.h"
-#include "Catch.h"
 #include "processors/TailFile.h"
 #include "processors/LogAttribute.h"
 #include "state/ProcessorController.h"
@@ -38,7 +35,7 @@ using namespace std::literals::chrono_literals;
 
 class TailFileTestHarness : public IntegrationBase {
  public:
-  TailFileTestHarness() : IntegrationBase(2s) {
+  TailFileTestHarness() {
     dir = testController.createTempDirectory();
 
     statefile = dir + utils::file::get_separator();
@@ -67,7 +64,7 @@ class TailFileTestHarness : public IntegrationBase {
 
   void runAssertions() override {
     using org::apache::nifi::minifi::utils::verifyLogLinePresenceInPollTime;
-    assert(verifyLogLinePresenceInPollTime(std::chrono::milliseconds(wait_time_),
+    assert(verifyLogLinePresenceInPollTime(wait_time_,
         "5 flowfiles were received from TailFile input",
         "Looking for delimiter 0xA",
         "li\\ne5"));
