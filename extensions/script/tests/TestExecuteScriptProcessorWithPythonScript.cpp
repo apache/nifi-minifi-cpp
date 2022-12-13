@@ -20,6 +20,7 @@
 #include <string>
 #include <set>
 
+#include "SingleProcessorTestController.h"
 #include "TestBase.h"
 #include "Catch.h"
 
@@ -30,6 +31,8 @@
 #include "utils/file/FileUtils.h"
 #include "utils/file/PathUtils.h"
 #include "utils/TestUtils.h"
+
+namespace org::apache::nifi::minifi::processors::test {
 
 TEST_CASE("Script engine is not set", "[executescriptMisconfiguration]") {
   TestController test_controller;
@@ -407,3 +410,20 @@ TEST_CASE("Python: Non existent script file should throw", "[executescriptPython
 
   log_test_controller.reset();
 }
+
+TEST_CASE("Python can remove flowfiles", "[ExecuteScript]") {
+  const auto execute_script = std::make_shared<ExecuteScript>("ExecuteScript");
+
+  minifi::test::SingleProcessorTestController controller{execute_script};
+  LogTestController::getInstance().setTrace<minifi::processors::ExecuteScript>();
+  execute_script->setProperty(ExecuteScript::ScriptEngine, "python");
+  execute_script->setProperty(ExecuteScript::ScriptBody.getName(),
+      R"(
+        def onTrigger(context, session):
+          flow_file = session.get()
+          session.remove(flow_file);
+      )");
+  REQUIRE_NOTHROW(controller.trigger("hello"));
+}
+
+}  // namespace org::apache::nifi::minifi::processors::test
