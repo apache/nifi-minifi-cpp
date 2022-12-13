@@ -147,7 +147,6 @@ std::string OsUtils::userIdToUsername(const std::string &uid) {
           }
         }
         GlobalFree(windowsAccount);
-        if (dwwindowsDomainSize > 0)
         GlobalFree(windowsDomain);
       }
     }
