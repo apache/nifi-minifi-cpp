@@ -85,7 +85,7 @@ class PostElasticsearch : public core::Processor {
   std::string host_url_;
   std::shared_ptr<ElasticsearchCredentialsControllerService> credentials_service_;
   curl::HTTPClient client_;
-  std::shared_ptr<core::logging::Logger> logger_ = core::logging::LoggerFactory<PostElasticsearch>::getLogger();
+  std::shared_ptr<core::logging::Logger> logger_ = core::logging::LoggerFactory<PostElasticsearch>::getLogger(uuid_);
 };
 
 }  // namespace org::apache::nifi::minifi::extensions::elasticsearch

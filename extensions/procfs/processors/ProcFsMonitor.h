@@ -67,7 +67,6 @@ class ProcFsMonitor : public core::Processor {
 
   ADD_COMMON_VIRTUAL_FUNCTIONS_FOR_PROCESSORS
 
- public:
   void onSchedule(const std::shared_ptr<core::ProcessContext>& context, const std::shared_ptr<core::ProcessSessionFactory>& sessionFactory) override;
 
   void onTrigger(core::ProcessContext *context, core::ProcessSession *session) override;
@@ -124,7 +123,7 @@ class ProcFsMonitor : public core::Processor {
   ResultRelativeness result_relativeness_ = ResultRelativeness::ABSOLUTE;
 
   std::optional<uint8_t> decimal_places_;
-  std::shared_ptr<core::logging::Logger> logger_ = core::logging::LoggerFactory<ProcFsMonitor>::getLogger();
+  std::shared_ptr<core::logging::Logger> logger_ = core::logging::LoggerFactory<ProcFsMonitor>::getLogger(uuid_);
 
   ProcFs proc_fs_;
 

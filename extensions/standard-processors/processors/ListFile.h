@@ -99,7 +99,7 @@ class ListFile : public core::Processor {
   bool fileMatchesFilters(const ListedFile& listed_file);
   std::shared_ptr<core::FlowFile> createFlowFile(core::ProcessSession& session, const ListedFile& listed_file);
 
-  std::shared_ptr<core::logging::Logger> logger_ = core::logging::LoggerFactory<ListFile>::getLogger();
+  std::shared_ptr<core::logging::Logger> logger_ = core::logging::LoggerFactory<ListFile>::getLogger(uuid_);
   std::filesystem::path input_directory_;
   std::unique_ptr<minifi::utils::ListingStateManager> state_manager_;
   bool recurse_subdirectories_ = true;

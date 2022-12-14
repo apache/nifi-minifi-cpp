@@ -134,7 +134,7 @@ class ConsumeKafka : public KafkaProcessorBase {
   static constexpr const std::size_t METADATA_COMMUNICATIONS_TIMEOUT_MS{ 60000 };
 
   explicit ConsumeKafka(std::string name, const utils::Identifier& uuid = utils::Identifier()) :
-      KafkaProcessorBase(std::move(name), uuid, core::logging::LoggerFactory<ConsumeKafka>::getLogger()) {}
+      KafkaProcessorBase(std::move(name), uuid, core::logging::LoggerFactory<ConsumeKafka>::getLogger(uuid)) {}
 
   ~ConsumeKafka() override = default;
 
@@ -157,11 +157,10 @@ class ConsumeKafka : public KafkaProcessorBase {
   std::optional<std::vector<std::shared_ptr<FlowFileRecord>>> transform_pending_messages_into_flowfiles(core::ProcessSession& session) const;
   void process_pending_messages(core::ProcessSession& session);
 
- private:
   std::string kafka_brokers_;
   std::vector<std::string> topic_names_;
   std::string topic_name_format_;
-  bool honor_transactions_;
+  bool honor_transactions_{};
   std::string group_id_;
   std::string offset_reset_;
   std::string key_attribute_encoding_;
@@ -169,9 +168,9 @@ class ConsumeKafka : public KafkaProcessorBase {
   std::string message_header_encoding_;
   std::string duplicate_header_handling_;
   std::vector<std::string> headers_to_add_as_attributes_;
-  std::size_t max_poll_records_;
-  std::chrono::milliseconds max_poll_time_milliseconds_;
-  std::chrono::milliseconds session_timeout_milliseconds_;
+  std::size_t max_poll_records_{};
+  std::chrono::milliseconds max_poll_time_milliseconds_{};
+  std::chrono::milliseconds session_timeout_milliseconds_{};
 
   std::unique_ptr<rd_kafka_t, utils::rd_kafka_consumer_deleter> consumer_;
   std::unique_ptr<rd_kafka_conf_t, utils::rd_kafka_conf_deleter> conf_;
