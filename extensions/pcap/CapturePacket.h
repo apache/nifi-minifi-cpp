@@ -166,7 +166,7 @@ class CapturePacket : public core::Processor {
   std::unique_ptr<PacketMovers> mover;
   static std::atomic<int> num_;
   std::vector<pcpp::PcapLiveDevice*> device_list_;
-  std::shared_ptr<core::logging::Logger> logger_ = core::logging::LoggerFactory<CapturePacket>::getLogger();
+  std::shared_ptr<core::logging::Logger> logger_ = core::logging::LoggerFactory<CapturePacket>::getLogger(uuid_);
   static std::shared_ptr<utils::IdGenerator> id_generator_;
 };
 

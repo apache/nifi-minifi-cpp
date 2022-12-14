@@ -121,7 +121,7 @@ class ConsumeMQTT : public processors::AbstractMQTTProcessor {
 
   void checkProperties() override;
 
-  std::shared_ptr<core::logging::Logger> logger_ = core::logging::LoggerFactory<ConsumeMQTT>::getLogger();
+  std::shared_ptr<core::logging::Logger> logger_ = core::logging::LoggerFactory<ConsumeMQTT>::getLogger(uuid_);
   bool cleanSession_ = true;
   uint64_t maxQueueSize_;
   moodycamel::ConcurrentQueue<std::unique_ptr<MQTTAsync_message, MQTTMessageDeleter>> queue_;

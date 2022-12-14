@@ -170,8 +170,8 @@ class ArchiveMerge {
     FlowFileSerializer& serializer_;
 
     static la_ssize_t archive_write(struct archive* /*arch*/, void *context, const void *buff, size_t size) {
-      WriteCallback *callback = reinterpret_cast<WriteCallback *>(context);
-      uint8_t* data = reinterpret_cast<uint8_t*>(const_cast<void*>(buff));
+      auto* callback = reinterpret_cast<WriteCallback *>(context);
+      auto* data = reinterpret_cast<uint8_t*>(const_cast<void*>(buff));
       la_ssize_t totalWrote = 0;
       size_t remaining = size;
       while (remaining > 0) {
@@ -203,14 +203,14 @@ class ArchiveMerge {
       archive_write_set_bytes_per_block(arch, 0);
       archive_write_add_filter_none(arch);
       stream_ = stream;
-      archive_write_open(arch, this, NULL, archive_write, NULL);
+      archive_write_open(arch, this, nullptr, archive_write, nullptr);
 
-      for (auto flow : flows_) {
+      for (const auto& flow : flows_) {
         struct archive_entry *entry = archive_entry_new();
         std::string fileName;
         flow->getAttribute(core::SpecialFlowAttribute::FILENAME, fileName);
         archive_entry_set_pathname(entry, fileName.c_str());
-        archive_entry_set_size(entry, flow->getSize());
+        archive_entry_set_size(entry, gsl::narrow<la_int64_t>(flow->getSize()));
         archive_entry_set_mode(entry, S_IFREG | 0755);
         if (merge_type_ == merge_content_options::MERGE_FORMAT_TAR_VALUE) {
           std::string perm;
@@ -233,7 +233,7 @@ class ArchiveMerge {
 
       archive_write_close(arch);
       archive_write_free(arch);
-      return size_;
+      return gsl::narrow<int64_t>(size_);
     }
   };
 };
@@ -343,14 +343,14 @@ class MergeContent : public processors::BinFiles {
 
  protected:
   // Returns a group ID representing a bin. This allows flow files to be binned into like groups
-  std::string getGroupId(core::ProcessContext *context, std::shared_ptr<core::FlowFile> flow) override;
+  std::string getGroupId(core::ProcessContext *context, const std::shared_ptr<core::FlowFile>& flow) override;
   // check whether the defragment bin is validate
   static bool checkDefragment(std::unique_ptr<Bin> &bin);
 
  private:
   void validatePropertyOptions();
 
-  std::shared_ptr<core::logging::Logger> logger_ = core::logging::LoggerFactory<MergeContent>::getLogger();
+  std::shared_ptr<core::logging::Logger> logger_ = core::logging::LoggerFactory<MergeContent>::getLogger(uuid_);
   std::string mergeStrategy_;
   std::string mergeFormat_;
   std::string correlationAttributeName_;

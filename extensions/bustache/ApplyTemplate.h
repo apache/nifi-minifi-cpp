@@ -57,7 +57,7 @@ class ApplyTemplate : public core::Processor {
   void initialize() override;
 
  private:
-  std::shared_ptr<core::logging::Logger> logger_ = core::logging::LoggerFactory<ApplyTemplate>::getLogger();
+  std::shared_ptr<core::logging::Logger> logger_ = core::logging::LoggerFactory<ApplyTemplate>::getLogger(uuid_);
 };
 
 }  // namespace org::apache::nifi::minifi::processors

@@ -128,7 +128,7 @@ class PublishMQTT : public processors::AbstractMQTTProcessor {
   }
 
   bool retain_ = false;
-  std::shared_ptr<core::logging::Logger> logger_ = core::logging::LoggerFactory<PublishMQTT>::getLogger();
+  std::shared_ptr<core::logging::Logger> logger_ = core::logging::LoggerFactory<PublishMQTT>::getLogger(uuid_);
 };
 
 }  // namespace org::apache::nifi::minifi::processors

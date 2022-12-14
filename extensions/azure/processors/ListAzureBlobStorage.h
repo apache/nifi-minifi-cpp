@@ -65,7 +65,7 @@ class ListAzureBlobStorage final : public AzureBlobStorageProcessorBase {
   }
 
   explicit ListAzureBlobStorage(std::string name, std::unique_ptr<storage::BlobStorageClient> blob_storage_client, const minifi::utils::Identifier& uuid = minifi::utils::Identifier())
-    : AzureBlobStorageProcessorBase(std::move(name), uuid, core::logging::LoggerFactory<ListAzureBlobStorage>::getLogger(), std::move(blob_storage_client)) {
+    : AzureBlobStorageProcessorBase(std::move(name), uuid, core::logging::LoggerFactory<ListAzureBlobStorage>::getLogger(uuid), std::move(blob_storage_client)) {
   }
 
   void initialize() override;

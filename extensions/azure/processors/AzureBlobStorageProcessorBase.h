@@ -55,10 +55,6 @@ class AzureBlobStorageProcessorBase : public AzureStorageProcessorBase {
     });
   }
 
-  explicit AzureBlobStorageProcessorBase(std::string name, const minifi::utils::Identifier& uuid, const std::shared_ptr<core::logging::Logger>& logger)
-    : AzureBlobStorageProcessorBase(std::move(name), uuid, logger, nullptr) {
-  }
-
   void onSchedule(const std::shared_ptr<core::ProcessContext> &context, const std::shared_ptr<core::ProcessSessionFactory> &sessionFactory) override;
 
  protected:

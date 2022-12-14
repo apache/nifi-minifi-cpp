@@ -43,7 +43,7 @@ namespace org::apache::nifi::minifi::core {
 
 Processor::Processor(std::string name, std::shared_ptr<ProcessorMetrics> metrics)
     : Connectable(std::move(name)),
-      logger_(logging::LoggerFactory<Processor>::getLogger()),
+      logger_(logging::LoggerFactory<Processor>::getLogger(uuid_)),
       metrics_(metrics ? std::move(metrics) : std::make_shared<ProcessorMetrics>(*this)) {
   has_work_.store(false);
   // Setup the default values
@@ -62,7 +62,7 @@ Processor::Processor(std::string name, std::shared_ptr<ProcessorMetrics> metrics
 
 Processor::Processor(std::string name, const utils::Identifier& uuid, std::shared_ptr<ProcessorMetrics> metrics)
     : Connectable(std::move(name), uuid),
-      logger_(logging::LoggerFactory<Processor>::getLogger()),
+      logger_(logging::LoggerFactory<Processor>::getLogger(uuid_)),
       metrics_(metrics ? std::move(metrics) : std::make_shared<ProcessorMetrics>(*this)) {
   has_work_.store(false);
   // Setup the default values
