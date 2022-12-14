@@ -304,6 +304,8 @@ asio::awaitable<std::error_code> ConnectionHandler<SocketType>::send(const std::
   gsl::span<std::byte> buffer{data_chunk};
   while (stream_to_send->tell() < stream_to_send->size()) {
     size_t num_read = stream_to_send->read(buffer);
+    if (num_read == minifi::io::STREAM_ERROR)
+      co_return std::make_error_code(std::errc::io_error);
     auto [write_error, bytes_written] = co_await asyncOperationWithTimeout(asio::async_write(*socket_, asio::buffer(data_chunk, num_read), use_nothrow_awaitable), timeout_duration_);
     if (write_error)
       co_return write_error;

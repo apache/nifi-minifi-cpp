@@ -121,7 +121,7 @@ class PutTCPTestFixture {
 
   size_t getNumberOfActiveSessions(std::optional<uint16_t> port = std::nullopt) {
     if (auto session_aware_listener = dynamic_cast<CancellableTcpServer*>(getListener(port))) {
-      return session_aware_listener->getNumberOfSessions();  // There is always one inactive session waiting for a new connection
+      return session_aware_listener->getNumberOfSessions();
     }
     return -1;
   }
