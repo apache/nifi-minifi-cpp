@@ -32,6 +32,8 @@
 #include "core/FlowFile.h"
 #include "core/Resource.h"
 
+#include "range/v3/view.hpp"
+
 namespace org::apache::nifi::minifi::processors {
 
 const core::Property HashContent::HashAttribute("Hash Attribute", "Attribute to store checksum to", "Checksum");
@@ -50,7 +52,6 @@ void HashContent::onSchedule(core::ProcessContext *context, core::ProcessSession
   std::string value;
 
   attrKey_ = (context->getProperty(HashAttribute.getName(), value)) ? value : "Checksum";
-  algoName_ = (context->getProperty(HashAlgorithm.getName(), value)) ? value : "SHA256";
 
   if (context->getProperty(FailOnEmpty.getName(), value)) {
     failOnEmpty_ = utils::StringUtils::toBool(value).value_or(false);
@@ -58,10 +59,17 @@ void HashContent::onSchedule(core::ProcessContext *context, core::ProcessSession
     failOnEmpty_ = false;
   }
 
-  std::transform(algoName_.begin(), algoName_.end(), algoName_.begin(), ::toupper);
-
-  // Erase '-' to make sha-256 and sha-1 work, too
-  algoName_.erase(std::remove(algoName_.begin(), algoName_.end(), '-'), algoName_.end());
+  {
+    auto algo_name = (context->getProperty(HashAlgorithm.getName(), value)) ? value : "SHA256";
+    std::transform(algo_name.begin(), algo_name.end(), algo_name.begin(), ::toupper);
+    // Erase '-' to make sha-256 and sha-1 work, too
+    algo_name.erase(std::remove(algo_name.begin(), algo_name.end(), '-'), algo_name.end());
+    if (!HashAlgos.contains(algo_name)) {
+      const auto supported_algorithms = ranges::views::keys(HashAlgos) | ranges::views::join(std::string_view(", ")) | ranges::to<std::string>();
+      throw Exception(PROCESS_SCHEDULE_EXCEPTION, algo_name + " is not supported, supported algorithms are: " + supported_algorithms);
+    }
+    algorithm_ = HashAlgos.at(algo_name);
+  }
 }
 
 void HashContent::onTrigger(core::ProcessContext *, core::ProcessSession *session) {
@@ -80,11 +88,7 @@ void HashContent::onTrigger(core::ProcessContext *, core::ProcessSession *sessio
 
   logger_->log_trace("attempting read");
   session->read(flowFile, [&flowFile, this](const std::shared_ptr<io::InputStream>& stream) {
-    // This throws in case algo is not found, but that's fine
-    logger_->log_trace("Searching for %s", algoName_);
-    auto algo = HashAlgos.at(algoName_);
-
-    const auto& ret_val = algo(stream);
+    const auto& ret_val = algorithm_(stream);
 
     flowFile->setAttribute(attrKey_, ret_val.first);
 
