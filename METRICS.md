@@ -182,14 +182,16 @@ Regular expressions can also be used for requesting multiple processor metrics a
 
 There are general metrics that are available for all processors. Besides these metrics processors can implement additional metrics that are speicific to that processor.
 
-| Metric name                            | Labels                                       | Description                                                                         |
-|----------------------------------------|----------------------------------------------|-------------------------------------------------------------------------------------|
-| onTrigger_invocations                  | metric_class, processor_name, processor_uuid | The number of processor onTrigger calls                                             |
-| average_onTrigger_runtime_milliseconds | metric_class, processor_name, processor_uuid | The average runtime in milliseconds of the last 10 onTrigger calls of the processor |
-| last_onTrigger_runtime_milliseconds    | metric_class, processor_name, processor_uuid | The runtime in milliseconds of the last onTrigger call of the processor             |
-| transferred_flow_files                 | metric_class, processor_name, processor_uuid | Number of flow files transferred to a relationship                                  |
-| transferred_bytes                      | metric_class, processor_name, processor_uuid | Number of bytes transferred to a relationship                                       |
-| transferred_to_\<relationship\>        | metric_class, processor_name, processor_uuid | Number of flow files transferred to a specific relationship                         |
+| Metric name                                 | Labels                                       | Description                                                                              |
+|---------------------------------------------|----------------------------------------------|------------------------------------------------------------------------------------------|
+| onTrigger_invocations                       | metric_class, processor_name, processor_uuid | The number of processor onTrigger calls                                                  |
+| average_onTrigger_runtime_milliseconds      | metric_class, processor_name, processor_uuid | The average runtime in milliseconds of the last 10 onTrigger calls of the processor      |
+| last_onTrigger_runtime_milliseconds         | metric_class, processor_name, processor_uuid | The runtime in milliseconds of the last onTrigger call of the processor                  |
+| average_session_commit_runtime_milliseconds | metric_class, processor_name, processor_uuid | The average runtime in milliseconds of the last 10 session commit calls of the processor |
+| last_session_commit_runtime_milliseconds    | metric_class, processor_name, processor_uuid | The runtime in milliseconds of the last session commit call of the processor             |
+| transferred_flow_files                      | metric_class, processor_name, processor_uuid | Number of flow files transferred to a relationship                                       |
+| transferred_bytes                           | metric_class, processor_name, processor_uuid | Number of bytes transferred to a relationship                                            |
+| transferred_to_\<relationship\>             | metric_class, processor_name, processor_uuid | Number of flow files transferred to a specific relationship                              |
 
 | Label          | Description                                                            |
 |----------------|------------------------------------------------------------------------|

@@ -246,6 +246,38 @@ TEST_CASE("Test ProcessorMetrics", "[ProcessorMetrics]") {
   metrics.addLastOnTriggerRuntime(10ms);
   REQUIRE(metrics.getLastOnTriggerRuntime() == 10ms);
   REQUIRE(metrics.getAverageOnTriggerRuntime() == 37ms);
+
+  REQUIRE(metrics.getLastSessionCommitRuntime() == 0ms);
+  REQUIRE(metrics.getAverageSessionCommitRuntime() == 0ms);
+
+  metrics.addLastSessionCommitRuntime(10ms);
+  metrics.addLastSessionCommitRuntime(20ms);
+  metrics.addLastSessionCommitRuntime(30ms);
+
+  REQUIRE(metrics.getLastSessionCommitRuntime() == 30ms);
+  REQUIRE(metrics.getAverageSessionCommitRuntime() == 20ms);
+
+  for (auto i = 0; i < 7; ++i) {
+    metrics.addLastSessionCommitRuntime(50ms);
+  }
+  REQUIRE(metrics.getAverageSessionCommitRuntime() == 41ms);
+  REQUIRE(metrics.getLastSessionCommitRuntime() == 50ms);
+
+  for (auto i = 0; i < 3; ++i) {
+    metrics.addLastSessionCommitRuntime(50ms);
+  }
+  REQUIRE(metrics.getAverageSessionCommitRuntime() == 50ms);
+  REQUIRE(metrics.getLastSessionCommitRuntime() == 50ms);
+
+  for (auto i = 0; i < 10; ++i) {
+    metrics.addLastSessionCommitRuntime(40ms);
+  }
+  REQUIRE(metrics.getAverageSessionCommitRuntime() == 40ms);
+  REQUIRE(metrics.getLastSessionCommitRuntime() == 40ms);
+
+  metrics.addLastSessionCommitRuntime(10ms);
+  REQUIRE(metrics.getLastSessionCommitRuntime() == 10ms);
+  REQUIRE(metrics.getAverageSessionCommitRuntime() == 37ms);
 }
 
 }  // namespace org::apache::nifi::minifi::test
