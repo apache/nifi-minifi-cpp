@@ -41,7 +41,7 @@ class PutGCSObject : public GCSProcessor {
              (PUBLIC_READ_WRITE, "publicReadWrite"));
 
   explicit PutGCSObject(std::string name, const utils::Identifier& uuid = {})
-      : GCSProcessor(std::move(name), uuid, core::logging::LoggerFactory<PutGCSObject>::getLogger()) {
+      : GCSProcessor(std::move(name), uuid, core::logging::LoggerFactory<PutGCSObject>::getLogger(uuid)) {
   }
   ~PutGCSObject() override = default;
 

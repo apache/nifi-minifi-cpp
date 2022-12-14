@@ -26,7 +26,7 @@ namespace org::apache::nifi::minifi {
 
 class Funnel final : public ForwardingNode {
  public:
-  Funnel(std::string name, const utils::Identifier& uuid) : ForwardingNode(std::move(name), uuid, core::logging::LoggerFactory<Funnel>::getLogger()) {}
+  Funnel(std::string name, const utils::Identifier& uuid) : ForwardingNode(std::move(name), uuid, core::logging::LoggerFactory<Funnel>::getLogger(uuid)) {}
   explicit Funnel(std::string name) : ForwardingNode(std::move(name), core::logging::LoggerFactory<Funnel>::getLogger()) {}
 
   MINIFIAPI static constexpr core::annotation::Input InputRequirement = core::annotation::Input::INPUT_REQUIRED;

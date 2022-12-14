@@ -160,7 +160,7 @@ class InvokeHTTP : public core::Processor {
 
   InvalidHTTPHeaderFieldHandlingOption invalid_http_header_field_handling_strategy_;
 
-  std::shared_ptr<core::logging::Logger> logger_{core::logging::LoggerFactory<InvokeHTTP>::getLogger()};
+  std::shared_ptr<core::logging::Logger> logger_{core::logging::LoggerFactory<InvokeHTTP>::getLogger(uuid_)};
   std::shared_ptr<utils::ResourceQueue<extensions::curl::HTTPClient>> client_queue_;
 };
 

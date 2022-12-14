@@ -85,7 +85,7 @@ class ExtractText : public core::Processor {
   };
 
  private:
-  std::shared_ptr<core::logging::Logger> logger_ = core::logging::LoggerFactory<ExtractText>::getLogger();
+  std::shared_ptr<core::logging::Logger> logger_ = core::logging::LoggerFactory<ExtractText>::getLogger(uuid_);
 };
 
 }  // namespace org::apache::nifi::minifi::processors

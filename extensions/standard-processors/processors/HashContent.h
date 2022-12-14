@@ -57,7 +57,7 @@ namespace { // NOLINT
       ret = stream->read(buffer);
       if (ret > 0) {
         MD5_Update(&context, buffer.data(), ret);
-        ret_val.second += ret;
+        ret_val.second += gsl::narrow<int64_t>(ret);
       }
     } while (ret > 0);
 
@@ -81,7 +81,7 @@ namespace { // NOLINT
       ret = stream->read(buffer);
       if (ret > 0) {
         SHA1_Update(&context, buffer.data(), ret);
-        ret_val.second += ret;
+        ret_val.second += gsl::narrow<int64_t>(ret);
       }
     } while (ret > 0);
 
@@ -105,7 +105,7 @@ namespace { // NOLINT
       ret = stream->read(buffer);
       if (ret > 0) {
         SHA256_Update(&context, buffer.data(), ret);
-        ret_val.second += ret;
+        ret_val.second += gsl::narrow<int64_t>(ret);
       }
     } while (ret > 0);
 
@@ -160,7 +160,7 @@ class HashContent : public core::Processor {
   void initialize() override;
 
  private:
-  std::shared_ptr<core::logging::Logger> logger_ = core::logging::LoggerFactory<HashContent>::getLogger();
+  std::shared_ptr<core::logging::Logger> logger_ = core::logging::LoggerFactory<HashContent>::getLogger(uuid_);
   std::function<HashReturnType(const std::shared_ptr<io::InputStream>&)> algorithm_ = SHA256Hash;
   std::string attrKey_;
   bool failOnEmpty_{};

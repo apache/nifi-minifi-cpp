@@ -115,7 +115,7 @@ class ExecutePythonProcessor : public core::Processor {
   bool processor_initialized_;
   bool python_dynamic_;
 
-  std::shared_ptr<core::logging::Logger> logger_ = core::logging::LoggerFactory<ExecutePythonProcessor>::getLogger();
+  std::shared_ptr<core::logging::Logger> logger_ = core::logging::LoggerFactory<ExecutePythonProcessor>::getLogger(uuid_);
 
   std::string script_to_exec_;
   bool reload_on_script_change_;

@@ -69,7 +69,7 @@ class GetGPS : public core::Processor {
   std::string gpsdHost_;
   std::string gpsdPort_;
   int64_t gpsdWaitTime_;
-  std::shared_ptr<core::logging::Logger> logger_ = core::logging::LoggerFactory<GetGPS>::getLogger();
+  std::shared_ptr<core::logging::Logger> logger_ = core::logging::LoggerFactory<GetGPS>::getLogger(uuid_);
 };
 
 }  // namespace org::apache::nifi::minifi::processors

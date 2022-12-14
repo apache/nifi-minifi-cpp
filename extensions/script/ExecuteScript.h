@@ -115,7 +115,7 @@ class ExecuteScript : public core::Processor {
                  const std::shared_ptr<core::ProcessSession> &session) override;
 
  private:
-  std::shared_ptr<core::logging::Logger> logger_ = core::logging::LoggerFactory<ExecuteScript>::getLogger();
+  std::shared_ptr<core::logging::Logger> logger_ = core::logging::LoggerFactory<ExecuteScript>::getLogger(uuid_);
 
   ScriptEngineOption script_engine_;
   std::string script_file_;

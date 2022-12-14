@@ -74,7 +74,6 @@ class GenerateFlowFile : public core::Processor {
 
   EXTENSIONAPI static const char *DATA_FORMAT_TEXT;
 
- public:
   void onSchedule(const std::shared_ptr<core::ProcessContext> &context, const std::shared_ptr<core::ProcessSessionFactory> &sessionFactory) override;
   void onTrigger(core::ProcessContext *context, core::ProcessSession *session) override;
   void initialize() override;
@@ -88,7 +87,7 @@ class GenerateFlowFile : public core::Processor {
   bool textData_;
 
  private:
-  std::shared_ptr<core::logging::Logger> logger_ = core::logging::LoggerFactory<GenerateFlowFile>::getLogger();
+  std::shared_ptr<core::logging::Logger> logger_ = core::logging::LoggerFactory<GenerateFlowFile>::getLogger(uuid_);
 };
 
 }  // namespace org::apache::nifi::minifi::processors

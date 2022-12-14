@@ -94,7 +94,7 @@ class GetUSBCamera : public core::Processor {
                  core::ProcessSession *session) override;
   void initialize() override;
 
-  typedef struct {
+  struct CallbackData {
     core::ProcessContext *context;
     core::ProcessSessionFactory *session_factory;
     std::shared_ptr<core::logging::Logger> logger;
@@ -107,7 +107,7 @@ class GetUSBCamera : public core::Processor {
     uint32_t device_fps;
     double target_fps;
     std::chrono::steady_clock::time_point last_frame_time;
-  } CallbackData;
+  };
 
   static void onFrame(uvc_frame_t *frame, void *ptr);
 
@@ -127,11 +127,11 @@ class GetUSBCamera : public core::Processor {
   };
 
  private:
-  std::shared_ptr<core::logging::Logger> logger_ = core::logging::LoggerFactory<GetUSBCamera>::getLogger();
+  std::shared_ptr<core::logging::Logger> logger_ = core::logging::LoggerFactory<GetUSBCamera>::getLogger(uuid_);
   static std::shared_ptr<utils::IdGenerator> id_generator_;
 
   std::shared_ptr<std::thread> camera_thread_;
-  CallbackData cb_data_;
+  CallbackData cb_data_{};
 
   std::shared_ptr<std::mutex> png_write_mtx_;
   std::shared_ptr<std::recursive_mutex> dev_access_mtx_;
