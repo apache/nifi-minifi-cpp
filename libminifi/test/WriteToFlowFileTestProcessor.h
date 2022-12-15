@@ -51,7 +51,6 @@ class WriteToFlowFileTestProcessor : public core::Processor {
 
   ADD_COMMON_VIRTUAL_FUNCTIONS_FOR_PROCESSORS
 
- public:
   void onSchedule(core::ProcessContext *context, core::ProcessSessionFactory *sessionFactory) override;
   void onTrigger(core::ProcessContext *context, core::ProcessSession *session) override;
   void initialize() override;
@@ -66,7 +65,7 @@ class WriteToFlowFileTestProcessor : public core::Processor {
   }
 
  private:
-  std::shared_ptr<core::logging::Logger> logger_ = core::logging::LoggerFactory<WriteToFlowFileTestProcessor>::getLogger();
+  std::shared_ptr<core::logging::Logger> logger_ = core::logging::LoggerFactory<WriteToFlowFileTestProcessor>::getLogger(uuid_);
   std::string content_;
 };
 

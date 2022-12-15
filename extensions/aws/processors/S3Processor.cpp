@@ -18,7 +18,6 @@
 #include "S3Processor.h"
 
 #include <string>
-#include <set>
 #include <memory>
 #include <utility>
 
@@ -35,8 +34,8 @@ S3Processor::S3Processor(std::string name, const minifi::utils::Identifier& uuid
     logger_(std::move(logger)) {
 }
 
-S3Processor::S3Processor(const std::string& name, const minifi::utils::Identifier& uuid, std::shared_ptr<core::logging::Logger> logger, std::unique_ptr<aws::s3::S3RequestSender> s3_request_sender)
-  : core::Processor(name, uuid),
+S3Processor::S3Processor(std::string name, const minifi::utils::Identifier& uuid, std::shared_ptr<core::logging::Logger> logger, std::unique_ptr<aws::s3::S3RequestSender> s3_request_sender)
+  : core::Processor(std::move(name), uuid),
     logger_(std::move(logger)),
     s3_wrapper_(std::move(s3_request_sender)) {
 }

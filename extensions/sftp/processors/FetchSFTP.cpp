@@ -42,10 +42,8 @@ void FetchSFTP::initialize() {
 }
 
 FetchSFTP::FetchSFTP(std::string name, const utils::Identifier& uuid /*= utils::Identifier()*/)
-    : SFTPProcessorBase(std::move(name), uuid),
-      create_directory_(false),
-      disable_directory_listing_(false) {
-  logger_ = core::logging::LoggerFactory<FetchSFTP>::getLogger();
+    : SFTPProcessorBase(std::move(name), uuid) {
+  logger_ = core::logging::LoggerFactory<FetchSFTP>::getLogger(uuid_);
 }
 
 FetchSFTP::~FetchSFTP() = default;

@@ -56,7 +56,6 @@ class ReadFromFlowFileTestProcessor : public core::Processor {
 
   ADD_COMMON_VIRTUAL_FUNCTIONS_FOR_PROCESSORS
 
- public:
   void onSchedule(core::ProcessContext *context, core::ProcessSessionFactory *sessionFactory) override;
   void onTrigger(core::ProcessContext *context, core::ProcessSession *session) override;
   void initialize() override;
@@ -89,7 +88,7 @@ class ReadFromFlowFileTestProcessor : public core::Processor {
     std::map<std::string, std::string> attributes_;
   };
   bool clear_on_trigger_ = true;
-  std::shared_ptr<core::logging::Logger> logger_ = core::logging::LoggerFactory<ReadFromFlowFileTestProcessor>::getLogger();
+  std::shared_ptr<core::logging::Logger> logger_ = core::logging::LoggerFactory<ReadFromFlowFileTestProcessor>::getLogger(uuid_);
   std::vector<FlowFileData> flow_files_read_;
 };
 

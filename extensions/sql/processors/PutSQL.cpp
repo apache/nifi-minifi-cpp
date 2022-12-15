@@ -18,17 +18,17 @@
 #include "PutSQL.h"
 
 #include <string>
+#include <utility>
 
 #include "io/BufferStream.h"
 #include "core/ProcessContext.h"
 #include "core/ProcessSession.h"
-#include "core/Resource.h"
 #include "Exception.h"
 
 namespace org::apache::nifi::minifi::processors {
 
 PutSQL::PutSQL(std::string name, const utils::Identifier& uuid)
-  : SQLProcessor(std::move(name), uuid, core::logging::LoggerFactory<PutSQL>::getLogger()) {
+  : SQLProcessor(std::move(name), uuid, core::logging::LoggerFactory<PutSQL>::getLogger(uuid)) {
 }
 
 void PutSQL::initialize() {

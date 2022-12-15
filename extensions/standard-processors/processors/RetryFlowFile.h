@@ -103,7 +103,7 @@ class RetryFlowFile : public core::Processor {
   std::string reuse_mode_;
   std::vector<core::Property> exceeded_flowfile_attribute_keys_;
 
-  std::shared_ptr<core::logging::Logger> logger_ = core::logging::LoggerFactory<RetryFlowFile>::getLogger();
+  std::shared_ptr<core::logging::Logger> logger_ = core::logging::LoggerFactory<RetryFlowFile>::getLogger(uuid_);
 };
 
 }  // namespace org::apache::nifi::minifi::processors
