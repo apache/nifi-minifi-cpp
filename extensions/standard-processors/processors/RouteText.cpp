@@ -427,15 +427,11 @@ std::optional<std::string> RouteText::getGroup(const std::string_view& segment) 
   if (!utils::regexMatch(segment_str, match_result, group_regex_.value())) {
     return group_fallback_;
   }
-  // WARNING!! using a temporary std::string causes the omission of delimiters
-  // in the output on Windows
-  const std::string comma = ", ";
   // unused capturing groups default to empty string
   auto to_string = [] (const auto& submatch) -> std::string {return submatch;};
   return ranges::views::tail(match_result)  // only join the capture groups
     | ranges::views::transform(to_string)
-    | ranges::views::cache1
-    | ranges::views::join(comma)
+    | ranges::views::join(std::string_view(", "))
     | ranges::to<std::string>();
 }
 
