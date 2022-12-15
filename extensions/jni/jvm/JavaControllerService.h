@@ -155,7 +155,7 @@ class JavaControllerService : public core::controller::ControllerService, public
 
   JVMLoader *loader = nullptr;
 
-  std::shared_ptr<core::logging::Logger> logger_ = core::logging::LoggerFactory<JavaControllerService>::getLogger();
+  std::shared_ptr<core::logging::Logger> logger_ = core::logging::LoggerFactory<JavaControllerService>::getLogger(uuid_);
 };
 
 }  // namespace org::apache::nifi::minifi::jni::controllers

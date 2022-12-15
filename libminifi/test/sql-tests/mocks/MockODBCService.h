@@ -32,7 +32,7 @@ class MockODBCService : public DatabaseService {
  public:
   explicit MockODBCService(std::string name, utils::Identifier uuid = utils::Identifier())
     : DatabaseService(std::move(name), uuid),
-      logger_(logging::LoggerFactory<MockODBCService>::getLogger()) {
+      logger_(logging::LoggerFactory<MockODBCService>::getLogger(uuid)) {
     initialize();
   }
 

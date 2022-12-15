@@ -17,7 +17,9 @@
 #pragma once
 
 #include <memory>
+#include <string>
 #include <unordered_map>
+#include <utility>
 
 #include "core/logging/LoggerConfiguration.h"
 #include "core/controller/ControllerService.h"
@@ -69,7 +71,6 @@ class DatabaseService : public core::controller::ControllerService {
   virtual std::unique_ptr<sql::Connection> getConnection() const = 0;
 
  protected:
-
   void initializeProperties();
 
   // initialization mutex.
@@ -80,8 +81,7 @@ class DatabaseService : public core::controller::ControllerService {
   std::string connection_string_;
 
  private:
-
-  std::shared_ptr<core::logging::Logger> logger_ = core::logging::LoggerFactory<DatabaseService>::getLogger();
+  std::shared_ptr<core::logging::Logger> logger_ = core::logging::LoggerFactory<DatabaseService>::getLogger(uuid_);
 };
 
 }  // namespace org::apache::nifi::minifi::sql::controllers

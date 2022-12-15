@@ -80,6 +80,6 @@ class GCPCredentialsControllerService : public core::controller::ControllerServi
 
 
   std::shared_ptr<google::cloud::storage::oauth2::Credentials> credentials_;
-  std::shared_ptr<core::logging::Logger> logger_ = core::logging::LoggerFactory<GCPCredentialsControllerService>::getLogger();
+  std::shared_ptr<core::logging::Logger> logger_ = core::logging::LoggerFactory<GCPCredentialsControllerService>::getLogger(uuid_);
 };
 }  // namespace org::apache::nifi::minifi::extensions::gcp

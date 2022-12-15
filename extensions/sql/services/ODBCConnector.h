@@ -17,6 +17,10 @@
 
 #pragma once
 
+#include <memory>
+#include <string>
+#include <utility>
+
 #include "core/logging/LoggerConfiguration.h"
 #include "core/controller/ControllerService.h"
 
@@ -51,7 +55,7 @@ class ODBCService : public DatabaseService {
   std::unique_ptr<sql::Connection> getConnection() const override;
 
  private:
-  std::shared_ptr<core::logging::Logger> logger_ = core::logging::LoggerFactory<ODBCService>::getLogger();
+  std::shared_ptr<core::logging::Logger> logger_ = core::logging::LoggerFactory<ODBCService>::getLogger(uuid_);
 };
 
 }  // namespace org::apache::nifi::minifi::sql::controllers
