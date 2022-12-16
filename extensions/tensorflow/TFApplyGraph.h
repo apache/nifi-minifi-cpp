@@ -32,7 +32,7 @@ class TFApplyGraph : public core::Processor {
  public:
   explicit TFApplyGraph(const std::string &name, const utils::Identifier &uuid = {})
       : Processor(name, uuid),
-        logger_(logging::LoggerFactory<TFApplyGraph>::getLogger()) {
+        logger_(logging::LoggerFactory<TFApplyGraph>::getLogger(uuid_)) {
   }
 
   EXTENSIONAPI static constexpr const char* Description = "Applies a TensorFlow graph to the tensor protobuf supplied as input. The tensor is fed into the node specified by the Input Node property. "

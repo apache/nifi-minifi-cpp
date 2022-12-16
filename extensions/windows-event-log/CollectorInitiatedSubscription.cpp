@@ -160,7 +160,7 @@ const core::Property CollectorInitiatedSubscription::InactiveDurationToReconnect
 const core::Relationship CollectorInitiatedSubscription::Success("success", "Relationship for successfully consumed events.");
 
 CollectorInitiatedSubscription::CollectorInitiatedSubscription(const std::string& name, const utils::Identifier& uuid)
-  : core::Processor(name, uuid), logger_(core::logging::LoggerFactory<CollectorInitiatedSubscription>::getLogger()) {
+  : core::Processor(name, uuid), logger_(core::logging::LoggerFactory<CollectorInitiatedSubscription>::getLogger(uuid_)) {
   char buff[MAX_COMPUTERNAME_LENGTH + 1];
   DWORD size = sizeof(buff);
   if (GetComputerName(buff, &size)) {

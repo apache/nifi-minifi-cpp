@@ -57,7 +57,7 @@ class FetchAzureDataLakeStorage final : public AzureDataLakeStorageFileProcessor
   ADD_COMMON_VIRTUAL_FUNCTIONS_FOR_PROCESSORS
 
   explicit FetchAzureDataLakeStorage(std::string name, const minifi::utils::Identifier& uuid = minifi::utils::Identifier())
-    : AzureDataLakeStorageFileProcessorBase(std::move(name), uuid, core::logging::LoggerFactory<FetchAzureDataLakeStorage>::getLogger()) {
+    : AzureDataLakeStorageFileProcessorBase(std::move(name), uuid, core::logging::LoggerFactory<FetchAzureDataLakeStorage>::getLogger(uuid)) {
   }
 
   ~FetchAzureDataLakeStorage() override = default;

@@ -49,7 +49,7 @@ class DeleteAzureDataLakeStorage final : public AzureDataLakeStorageFileProcesso
   ADD_COMMON_VIRTUAL_FUNCTIONS_FOR_PROCESSORS
 
   explicit DeleteAzureDataLakeStorage(std::string name, const minifi::utils::Identifier& uuid = minifi::utils::Identifier())
-    : AzureDataLakeStorageFileProcessorBase(std::move(name), uuid, core::logging::LoggerFactory<DeleteAzureDataLakeStorage>::getLogger()) {
+    : AzureDataLakeStorageFileProcessorBase(std::move(name), uuid, core::logging::LoggerFactory<DeleteAzureDataLakeStorage>::getLogger(uuid)) {
   }
 
   ~DeleteAzureDataLakeStorage() override = default;
