@@ -177,7 +177,7 @@ TEST_CASE("TestingFailOnEmptyProperty", "[HashContentPropertiesCheck]") {
 TEST_CASE("Invalid hash algorithm throws in onSchedule", "[HashContent]") {
   auto hash_content = std::make_shared<HashContent>("HashContent");
   minifi::test::SingleProcessorTestController controller{hash_content};
-  hash_content->setProperty(HashContent::HashAlgorithm, "MyAlgo");
+  hash_content->setProperty(HashContent::HashAlgorithm, "My-Algo");
   REQUIRE_THROWS_WITH(controller.plan->scheduleProcessor(hash_content), "Process Schedule Operation: MYALGO is not supported, supported algorithms are: MD5, SHA1, SHA256");
 }
 

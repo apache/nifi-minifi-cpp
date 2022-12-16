@@ -49,15 +49,14 @@ void HashContent::initialize() {
 }
 
 void HashContent::onSchedule(core::ProcessContext *context, core::ProcessSessionFactory* /*sessionFactory*/) {
-
   context->getProperty(HashAttribute.getName(), attrKey_);
   context->getProperty(FailOnEmpty.getName(), failOnEmpty_);
 
   {
     std::string algo_name;
     context->getProperty(HashAlgorithm.getName(), algo_name);
-    algo_name = utils::StringUtils::toLower(algo_name);
-    algo_name = utils::StringUtils::replaceAll(algo_name, "-", "");
+    std::transform(algo_name.begin(), algo_name.end(), algo_name.begin(), ::toupper);
+    std::erase(algo_name, '-');
     if (!HashAlgos.contains(algo_name)) {
       const auto supported_algorithms = ranges::views::keys(HashAlgos) | ranges::views::join(std::string_view(", ")) | ranges::to<std::string>();
       throw Exception(PROCESS_SCHEDULE_EXCEPTION, algo_name + " is not supported, supported algorithms are: " + supported_algorithms);
