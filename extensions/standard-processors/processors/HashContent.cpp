@@ -49,21 +49,15 @@ void HashContent::initialize() {
 }
 
 void HashContent::onSchedule(core::ProcessContext *context, core::ProcessSessionFactory* /*sessionFactory*/) {
-  std::string value;
 
-  attrKey_ = (context->getProperty(HashAttribute.getName(), value)) ? value : "Checksum";
-
-  if (context->getProperty(FailOnEmpty.getName(), value)) {
-    failOnEmpty_ = utils::StringUtils::toBool(value).value_or(false);
-  } else {
-    failOnEmpty_ = false;
-  }
+  context->getProperty(HashAttribute.getName(), attrKey_);
+  context->getProperty(FailOnEmpty.getName(), failOnEmpty_);
 
   {
-    auto algo_name = (context->getProperty(HashAlgorithm.getName(), value)) ? value : "SHA256";
-    std::transform(algo_name.begin(), algo_name.end(), algo_name.begin(), ::toupper);
-    // Erase '-' to make sha-256 and sha-1 work, too
-    algo_name.erase(std::remove(algo_name.begin(), algo_name.end(), '-'), algo_name.end());
+    std::string algo_name;
+    context->getProperty(HashAlgorithm.getName(), algo_name);
+    algo_name = utils::StringUtils::toLower(algo_name);
+    algo_name = utils::StringUtils::replaceAll(algo_name, "-", "");
     if (!HashAlgos.contains(algo_name)) {
       const auto supported_algorithms = ranges::views::keys(HashAlgos) | ranges::views::join(std::string_view(", ")) | ranges::to<std::string>();
       throw Exception(PROCESS_SCHEDULE_EXCEPTION, algo_name + " is not supported, supported algorithms are: " + supported_algorithms);
