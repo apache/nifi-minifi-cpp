@@ -27,7 +27,6 @@
 #include <mutex>
 #include <string>
 #include <unordered_set>
-#include <utility>
 
 #include "spdlog/common.h"
 #include "spdlog/sinks/rotating_file_sink.h"
