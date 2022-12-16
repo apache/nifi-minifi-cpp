@@ -45,9 +45,6 @@ class EventDrivenSchedulingAgent : public ThreadedSchedulingAgent {
     time_slice_ = std::chrono::milliseconds(slice);
   }
 
-  EventDrivenSchedulingAgent(const EventDrivenSchedulingAgent &parent) = delete;
-  EventDrivenSchedulingAgent& operator=(const EventDrivenSchedulingAgent &parent) = delete;
-
   void schedule(core::Processor* processor) override;
 
   utils::TaskRescheduleInfo run(core::Processor* processor, const std::shared_ptr<core::ProcessContext> &processContext,

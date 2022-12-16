@@ -36,9 +36,6 @@ class TimerDrivenSchedulingAgent : public ThreadedSchedulingAgent {
       : ThreadedSchedulingAgent(controller_service_provider, repo, flow_repo, content_repo, configure, thread_pool) {
   }
 
-  TimerDrivenSchedulingAgent(const TimerDrivenSchedulingAgent &parent) = delete;
-  TimerDrivenSchedulingAgent &operator=(const TimerDrivenSchedulingAgent &parent) = delete;
-
   utils::TaskRescheduleInfo run(core::Processor* processor, const std::shared_ptr<core::ProcessContext> &processContext,
       const std::shared_ptr<core::ProcessSessionFactory> &sessionFactory) override;
 

@@ -45,8 +45,6 @@ class CronDrivenSchedulingAgent : public ThreadedSchedulingAgent {
       : ThreadedSchedulingAgent(controller_service_provider, std::move(repo), std::move(flow_repo), std::move(content_repo), std::move(configuration), thread_pool) {
   }
 
-  CronDrivenSchedulingAgent(const CronDrivenSchedulingAgent& parent) = delete;
-  CronDrivenSchedulingAgent& operator=(const CronDrivenSchedulingAgent& parent) = delete;
   ~CronDrivenSchedulingAgent() override = default;
 
   utils::TaskRescheduleInfo run(core::Processor *processor,
