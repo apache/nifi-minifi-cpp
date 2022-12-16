@@ -206,14 +206,14 @@ std::error_code sendMessagesViaSSL(const std::vector<std::string_view>& contents
 
 #ifdef WIN32
 inline std::error_code hide_file(const std::filesystem::path& file_name) {
-    const bool success = SetFileAttributesA(file_name.string().c_str(), FILE_ATTRIBUTE_HIDDEN);
-    if (!success) {
-      // note: All possible documented error codes from GetLastError are in [0;15999] at the time of writing.
-      // The below casting is safe in [0;std::numeric_limits<int>::max()], int max is guaranteed to be at least 32767
-      return { static_cast<int>(GetLastError()), std::system_category() };
-    }
-    return {};
+  const bool success = SetFileAttributesA(file_name.string().c_str(), FILE_ATTRIBUTE_HIDDEN);
+  if (!success) {
+    // note: All possible documented error codes from GetLastError are in [0;15999] at the time of writing.
+    // The below casting is safe in [0;std::numeric_limits<int>::max()], int max is guaranteed to be at least 32767
+    return { static_cast<int>(GetLastError()), std::system_category() };
   }
+  return {};
+}
 #endif /* WIN32 */
 
 template<class T>
