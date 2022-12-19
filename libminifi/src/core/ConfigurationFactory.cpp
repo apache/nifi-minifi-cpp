@@ -38,9 +38,9 @@ std::unique_ptr<core::FlowConfiguration> createFlowConfiguration(const Configura
   if (configuration_class_name) {
     class_name_lc = configuration_class_name.value();
   } else if (ctx.path) {
-    if (utils::StringUtils::endsWith(ctx.path.value(), ".yml")) {
+    if (utils::StringUtils::endsWith(ctx.path->string(), ".yml")) {
       class_name_lc = "yamlconfiguration";
-    } else if (utils::StringUtils::endsWith(ctx.path.value(), ".json")) {
+    } else if (utils::StringUtils::endsWith(ctx.path->string(), ".json")) {
       class_name_lc = "jsonconfiguration";
     } else {
       throw std::runtime_error("Could not infer config type from file path");

@@ -22,6 +22,7 @@
 #include <string>
 #include <utility>
 #include <vector>
+#include <filesystem>
 
 #include "core/Core.h"
 #include "Connection.h"
@@ -57,7 +58,7 @@ struct ConfigurationContext {
   std::shared_ptr<core::ContentRepository> content_repo;
   std::shared_ptr<io::StreamFactory> stream_factory;
   std::shared_ptr<Configure> configuration;
-  std::optional<std::string> path{std::nullopt};
+  std::optional<std::filesystem::path> path{std::nullopt};
   std::shared_ptr<utils::file::FileSystem> filesystem{std::make_shared<utils::file::FileSystem>()};
 };
 
