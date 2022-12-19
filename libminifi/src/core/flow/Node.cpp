@@ -1,4 +1,5 @@
 /**
+ *
  * Licensed to the Apache Software Foundation (ASF) under one or more
  * contributor license agreements.  See the NOTICE file distributed with
  * this work for additional information regarding copyright ownership.
@@ -15,11 +16,12 @@
  * limitations under the License.
  */
 
-#pragma once
+#include "core/flow/Node.h"
 
-const std::filesystem::path DEFAULT_NIFI_CONFIG_YML = std::filesystem::path("conf") / "config.yml";
-const std::filesystem::path DEFAULT_NIFI_CONFIG_JSON = std::filesystem::path("conf") / "config.json";
-const std::filesystem::path DEFAULT_NIFI_PROPERTIES_FILE = std::filesystem::path("conf") / "minifi.properties";
-const std::filesystem::path DEFAULT_LOG_PROPERTIES_FILE = std::filesystem::path("conf") / "minifi-log.properties";
-const std::filesystem::path DEFAULT_UID_PROPERTIES_FILE = std::filesystem::path("conf") / "minifi-uid.properties";
-const std::filesystem::path DEFAULT_BOOTSTRAP_FILE = std::filesystem::path("conf") / "bootstrap.conf";
+namespace org::apache::nifi::minifi::core::flow {
+
+Node::Iterator::Value Node::Iterator::operator*() const {
+  return impl_->operator*();
+}
+
+}  // namespace org::apache::nifi::minifi::core::flow

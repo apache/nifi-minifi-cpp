@@ -16,38 +16,36 @@
  * limitations under the License.
  */
 
-#ifndef LIBMINIFI_INCLUDE_CORE_CONFIGURATIONFACTORY_H_
-#define LIBMINIFI_INCLUDE_CORE_CONFIGURATIONFACTORY_H_
+#pragma once
 
 #include <memory>
 #include <optional>
 #include <string>
-#include <type_traits>
-#include <utility>
+#include <unordered_set>
 
-#include "FlowConfiguration.h"
+#include "core/FlowConfiguration.h"
+#include "core/logging/LoggerConfiguration.h"
+#include "core/ProcessorConfig.h"
+#include "Exception.h"
+#include "io/StreamFactory.h"
+#include "io/validation.h"
+#include "sitetosite/SiteToSite.h"
+#include "utils/Id.h"
+#include "utils/StringUtils.h"
+#include "utils/file/FileSystem.h"
+#include "core/flow/StructuredConfiguration.h"
 
-namespace org {
-namespace apache {
-namespace nifi {
-namespace minifi {
-namespace core {
+namespace org::apache::nifi::minifi::core {
 
-template<typename T>
-T* instantiate(ConfigurationContext ctx) {
-  return new T(std::move(ctx));
-}
+class JsonConfiguration : public flow::StructuredConfiguration {
+ public:
+  explicit JsonConfiguration(ConfigurationContext ctx);
 
-/**
- * Configuration factory is used to create a new FlowConfiguration
- * object.
- */
-std::unique_ptr<core::FlowConfiguration> createFlowConfiguration(const ConfigurationContext& ctx, const std::optional<std::string>& configuration_class_name, bool fail_safe = false);
+  ~JsonConfiguration() override = default;
 
-}  // namespace core
-}  // namespace minifi
-}  // namespace nifi
-}  // namespace apache
-}  // namespace org
+  std::unique_ptr<core::ProcessGroup> getRoot() override;
 
-#endif  // LIBMINIFI_INCLUDE_CORE_CONFIGURATIONFACTORY_H_
+  std::unique_ptr<core::ProcessGroup> getRootFromPayload(const std::string &json_config) override;
+};
+
+}  // namespace org::apache::nifi::minifi::core

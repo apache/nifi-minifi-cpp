@@ -22,6 +22,7 @@
 #include <string>
 #include <utility>
 #include <vector>
+#include <filesystem>
 
 #include "core/Core.h"
 #include "Connection.h"
@@ -51,6 +52,16 @@ class static_initializers {
 
 extern static_initializers &get_static_functions();
 
+struct ConfigurationContext {
+  std::shared_ptr<core::Repository> repo;
+  std::shared_ptr<core::Repository> flow_file_repo;
+  std::shared_ptr<core::ContentRepository> content_repo;
+  std::shared_ptr<io::StreamFactory> stream_factory;
+  std::shared_ptr<Configure> configuration;
+  std::optional<std::filesystem::path> path{std::nullopt};
+  std::shared_ptr<utils::file::FileSystem> filesystem{std::make_shared<utils::file::FileSystem>()};
+};
+
 /**
  * Purpose: Flow configuration defines the mechanism
  * by which we will configure our flow controller
@@ -61,10 +72,7 @@ class FlowConfiguration : public CoreComponent {
    * Constructor that will be used for configuring
    * the flow controller.
    */
-  explicit FlowConfiguration(const std::shared_ptr<core::Repository>& repo, std::shared_ptr<core::Repository> flow_file_repo,
-                             std::shared_ptr<core::ContentRepository> content_repo, std::shared_ptr<io::StreamFactory> stream_factory,
-                             std::shared_ptr<Configure> configuration, const std::optional<std::filesystem::path>& path,
-                             std::shared_ptr<utils::file::FileSystem> filesystem = std::make_shared<utils::file::FileSystem>());
+  explicit FlowConfiguration(ConfigurationContext ctx);
 
   ~FlowConfiguration() override;
 

@@ -29,48 +29,50 @@
 #include "io/StreamFactory.h"
 
 #include "core/yaml/YamlConfiguration.h"
+#include "core/json/JsonConfiguration.h"
 
-namespace org {
-namespace apache {
-namespace nifi {
-namespace minifi {
-namespace core {
+namespace org::apache::nifi::minifi::core {
 
-std::unique_ptr<core::FlowConfiguration> createFlowConfiguration(
-    std::shared_ptr<core::Repository> repo, std::shared_ptr<core::Repository> flow_file_repo,
-    std::shared_ptr<core::ContentRepository> content_repo, std::shared_ptr<Configure> configure,
-    std::shared_ptr<io::StreamFactory> stream_factory, const std::string& configuration_class_name,
-    const std::optional<std::string>& path, std::shared_ptr<utils::file::FileSystem> filesystem,
-    bool fail_safe) {
-  std::string class_name_lc = configuration_class_name;
+std::unique_ptr<core::FlowConfiguration> createFlowConfiguration(const ConfigurationContext& ctx, const std::optional<std::string>& configuration_class_name, bool fail_safe) {
+  std::string class_name_lc;
+  if (configuration_class_name) {
+    class_name_lc = configuration_class_name.value();
+  } else if (ctx.path) {
+    if (utils::StringUtils::endsWith(ctx.path->string(), ".yml")) {
+      class_name_lc = "yamlconfiguration";
+    } else if (utils::StringUtils::endsWith(ctx.path->string(), ".json")) {
+      class_name_lc = "jsonconfiguration";
+    } else {
+      throw std::runtime_error("Could not infer config type from file path");
+    }
+  } else {
+    throw std::runtime_error("Neither configuration class nor config file path has been specified");
+  }
+
   std::transform(class_name_lc.begin(), class_name_lc.end(), class_name_lc.begin(), ::tolower);
   try {
     if (class_name_lc == "flowconfiguration") {
       // load the base configuration.
-      return std::make_unique<core::FlowConfiguration>(repo, flow_file_repo, content_repo, stream_factory, configure, path, filesystem);
+      return std::make_unique<core::FlowConfiguration>(ctx);
     } else if (class_name_lc == "yamlconfiguration") {
       // only load if the class is defined.
-      return std::unique_ptr<core::FlowConfiguration>(instantiate<core::YamlConfiguration>(
-          repo, flow_file_repo, content_repo, stream_factory, configure, path, filesystem));
+      return std::unique_ptr<core::FlowConfiguration>(instantiate<core::YamlConfiguration>(ctx));
+    } else if (class_name_lc == "jsonconfiguration") {
+      return std::unique_ptr<core::JsonConfiguration>(instantiate<core::JsonConfiguration>(ctx));
     } else {
       if (fail_safe) {
-        return std::make_unique<core::FlowConfiguration>(repo, flow_file_repo, content_repo, stream_factory, configure, path, filesystem);
+        return std::make_unique<core::FlowConfiguration>(ctx);
       } else {
         throw std::runtime_error("Support for the provided configuration class could not be found");
       }
     }
   } catch (const std::runtime_error &) {
     if (fail_safe) {
-      return std::make_unique<core::FlowConfiguration>(repo, flow_file_repo, content_repo, stream_factory, configure, path, filesystem);
+      return std::make_unique<core::FlowConfiguration>(ctx);
     }
   }
 
   throw std::runtime_error("Support for the provided configuration class could not be found");
 }
 
-} /* namespace core */
-} /* namespace minifi */
-} /* namespace nifi */
-} /* namespace apache */
-} /* namespace org */
-
+}  // namespace org::apache::nifi::minifi::core

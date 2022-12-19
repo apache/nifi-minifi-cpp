@@ -63,7 +63,7 @@ class TestControllerWithFlow: public TestController{
     REQUIRE(content_repo->initialize(configuration_));
     std::shared_ptr<minifi::io::StreamFactory> stream_factory = minifi::io::StreamFactory::getInstance(configuration_);
 
-    auto flow = std::make_unique<core::YamlConfiguration>(prov_repo, ff_repo, content_repo, stream_factory, configuration_, yaml_path_.string());
+    auto flow = std::make_unique<core::YamlConfiguration>(core::ConfigurationContext{prov_repo, ff_repo, content_repo, stream_factory, configuration_, yaml_path_.string()});
     auto root = flow->getRoot();
     root_ = root.get();
     controller_ = std::make_shared<minifi::FlowController>(

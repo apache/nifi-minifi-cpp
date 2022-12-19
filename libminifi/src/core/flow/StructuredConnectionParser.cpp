@@ -16,22 +16,22 @@
  * limitations under the License.
  */
 
-#include "core/yaml/YamlConnectionParser.h"
-#include "core/yaml/CheckRequiredField.h"
+#include "core/flow/StructuredConnectionParser.h"
+#include "core/flow/CheckRequiredField.h"
 #include "Funnel.h"
 
-namespace org::apache::nifi::minifi::core::yaml {
+namespace org::apache::nifi::minifi::core::flow {
 
-void YamlConnectionParser::addNewRelationshipToConnection(const std::string& relationship_name, minifi::Connection& connection) const {
+void StructuredConnectionParser::addNewRelationshipToConnection(const std::string& relationship_name, minifi::Connection& connection) const {
   core::Relationship relationship(relationship_name, "");
   logger_->log_debug("parseConnection: relationship => [%s]", relationship_name);
   connection.addRelationship(relationship);
 }
 
-void YamlConnectionParser::addFunnelRelationshipToConnection(minifi::Connection& connection) const {
+void StructuredConnectionParser::addFunnelRelationshipToConnection(minifi::Connection& connection) const {
   utils::Identifier srcUUID;
   try {
-    srcUUID = getSourceUUIDFromYaml();
+    srcUUID = getSourceUUID();
   } catch(const std::exception&) {
     return;
   }
@@ -47,18 +47,18 @@ void YamlConnectionParser::addFunnelRelationshipToConnection(minifi::Connection&
   }
 }
 
-void YamlConnectionParser::configureConnectionSourceRelationshipsFromYaml(minifi::Connection& connection) const {
+void StructuredConnectionParser::configureConnectionSourceRelationships(minifi::Connection& connection) const {
   // Configure connection source
-  if (connectionNode_.as<YAML::Node>()["source relationship name"] && !connectionNode_["source relationship name"].as<std::string>().empty()) {
-    addNewRelationshipToConnection(connectionNode_["source relationship name"].as<std::string>(), connection);
-  } else if (connectionNode_.as<YAML::Node>()["source relationship names"]) {
+  if (connectionNode_["source relationship name"] && !connectionNode_["source relationship name"].getString().value().empty()) {
+    addNewRelationshipToConnection(connectionNode_["source relationship name"].getString().value(), connection);
+  } else if (connectionNode_["source relationship names"]) {
     auto relList = connectionNode_["source relationship names"];
-    if (relList.IsSequence() && relList.begin() != relList.end()) {
+    if (relList.isSequence() && !relList.empty()) {
       for (const auto &rel : relList) {
-        addNewRelationshipToConnection(rel.as<std::string>(), connection);
+        addNewRelationshipToConnection(rel.getString().value(), connection);
       }
-    } else if (!relList.IsSequence() && !relList.as<std::string>().empty()) {
-      addNewRelationshipToConnection(relList.as<std::string>(), connection);
+    } else if (!relList.isSequence() && !relList.getString().value().empty()) {
+      addNewRelationshipToConnection(relList.getString().value(), connection);
     } else {
       addFunnelRelationshipToConnection(connection);
     }
@@ -67,10 +67,9 @@ void YamlConnectionParser::configureConnectionSourceRelationshipsFromYaml(minifi
   }
 }
 
-uint64_t YamlConnectionParser::getWorkQueueSizeFromYaml() const {
-  const YAML::Node max_work_queue_data_size_node = connectionNode_["max work queue size"];
-  if (max_work_queue_data_size_node) {
-    auto max_work_queue_str = max_work_queue_data_size_node.as<std::string>();
+uint64_t StructuredConnectionParser::getWorkQueueSize() const {
+  if (auto max_work_queue_data_size_node = connectionNode_["max work queue size"]) {
+    std::string max_work_queue_str = max_work_queue_data_size_node.getIntegerAsString().value();
     uint64_t max_work_queue_size;
     if (core::Property::StringToInt(max_work_queue_str, max_work_queue_size)) {
       logger_->log_debug("Setting %" PRIu64 " as the max queue size.", max_work_queue_size);
@@ -81,10 +80,10 @@ uint64_t YamlConnectionParser::getWorkQueueSizeFromYaml() const {
   return 0;
 }
 
-uint64_t YamlConnectionParser::getWorkQueueDataSizeFromYaml() const {
-  const YAML::Node max_work_queue_data_size_node = connectionNode_["max work queue data size"];
+uint64_t StructuredConnectionParser::getWorkQueueDataSize() const {
+  const flow::Node max_work_queue_data_size_node = connectionNode_["max work queue data size"];
   if (max_work_queue_data_size_node) {
-    auto max_work_queue_str = max_work_queue_data_size_node.as<std::string>();
+    std::string max_work_queue_str = max_work_queue_data_size_node.getIntegerAsString().value();
     uint64_t max_work_queue_data_size = 0;
     if (core::Property::StringToInt(max_work_queue_str, max_work_queue_data_size)) {
       logger_->log_debug("Setting %" PRIu64 "as the max as the max queue data size.", max_work_queue_data_size);
@@ -95,10 +94,10 @@ uint64_t YamlConnectionParser::getWorkQueueDataSizeFromYaml() const {
   return 0;
 }
 
-uint64_t YamlConnectionParser::getSwapThresholdFromYaml() const {
-  const YAML::Node swap_threshold_node = connectionNode_["swap threshold"];
+uint64_t StructuredConnectionParser::getSwapThreshold() const {
+  const flow::Node swap_threshold_node = connectionNode_["swap threshold"];
   if (swap_threshold_node) {
-    auto swap_threshold_str = swap_threshold_node.as<std::string>();
+    auto swap_threshold_str = swap_threshold_node.getString().value();
     uint64_t swap_threshold;
     if (core::Property::StringToInt(swap_threshold_str, swap_threshold)) {
       logger_->log_debug("Setting %" PRIu64 " as the swap threshold.", swap_threshold);
@@ -109,20 +108,20 @@ uint64_t YamlConnectionParser::getSwapThresholdFromYaml() const {
   return 0;
 }
 
-utils::Identifier YamlConnectionParser::getSourceUUIDFromYaml() const {
-  const YAML::Node source_id_node = connectionNode_["source id"];
+utils::Identifier StructuredConnectionParser::getSourceUUID() const {
+  const flow::Node source_id_node = connectionNode_["source id"];
   if (source_id_node) {
-    const auto srcUUID = utils::Identifier::parse(source_id_node.as<std::string>());
+    const auto srcUUID = utils::Identifier::parse(source_id_node.getString().value());
     if (srcUUID) {
       logger_->log_debug("Using 'source id' to match source with same id for connection '%s': source id => [%s]", name_, srcUUID.value().to_string());
       return srcUUID.value();
     }
-    logger_->log_error("Invalid source id value: %s.", source_id_node.as<std::string>());
+    logger_->log_error("Invalid source id value: %s.", source_id_node.getString().value());
     throw std::invalid_argument("Invalid source id");
   }
   // if we don't have a source id, try to resolve using source name. config schema v2 will make this unnecessary
-  checkRequiredField(connectionNode_, "source name", CONFIG_YAML_CONNECTIONS_KEY);
-  const auto connectionSrcProcName = connectionNode_["source name"].as<std::string>();
+  checkRequiredField(connectionNode_, "source name", CONFIG_CONNECTIONS_KEY);
+  const auto connectionSrcProcName = connectionNode_["source name"].getString().value();
   const auto srcUUID = utils::Identifier::parse(connectionSrcProcName);
   if (srcUUID && parent_->findProcessorById(srcUUID.value(), ProcessGroup::Traverse::ExcludeChildren)) {
     // the source name is a remote port id, so use that as the source id
@@ -141,21 +140,21 @@ utils::Identifier YamlConnectionParser::getSourceUUIDFromYaml() const {
   throw std::invalid_argument(error_msg);
 }
 
-utils::Identifier YamlConnectionParser::getDestinationUUIDFromYaml() const {
-  const YAML::Node destination_id_node = connectionNode_["destination id"];
+utils::Identifier StructuredConnectionParser::getDestinationUUID() const {
+  const flow::Node destination_id_node = connectionNode_["destination id"];
   if (destination_id_node) {
-    const auto destUUID = utils::Identifier::parse(destination_id_node.as<std::string>());
+    const auto destUUID = utils::Identifier::parse(destination_id_node.getString().value());
     if (destUUID) {
       logger_->log_debug("Using 'destination id' to match destination with same id for connection '%s': destination id => [%s]", name_, destUUID.value().to_string());
       return destUUID.value();
     }
-    logger_->log_error("Invalid destination id value: %s.", destination_id_node.as<std::string>());
+    logger_->log_error("Invalid destination id value: %s.", destination_id_node.getString().value());
     throw std::invalid_argument("Invalid destination id");
   }
   // we use the same logic as above for resolving the source processor
   // for looking up the destination processor in absence of a processor id
-  checkRequiredField(connectionNode_, "destination name", CONFIG_YAML_CONNECTIONS_KEY);
-  auto connectionDestProcName = connectionNode_["destination name"].as<std::string>();
+  checkRequiredField(connectionNode_, "destination name", CONFIG_CONNECTIONS_KEY);
+  auto connectionDestProcName = connectionNode_["destination name"].getString().value();
   const auto destUUID = utils::Identifier::parse(connectionDestProcName);
   if (destUUID && parent_->findProcessorById(destUUID.value(), ProcessGroup::Traverse::ExcludeChildren)) {
     // the destination name is a remote port id, so use that as the dest id
@@ -174,14 +173,14 @@ utils::Identifier YamlConnectionParser::getDestinationUUIDFromYaml() const {
   throw std::invalid_argument(error_msg);
 }
 
-std::chrono::milliseconds YamlConnectionParser::getFlowFileExpirationFromYaml() const {
+std::chrono::milliseconds StructuredConnectionParser::getFlowFileExpiration() const {
   using namespace std::literals::chrono_literals;
-  const YAML::Node expiration_node = connectionNode_["flowfile expiration"];
+  const flow::Node expiration_node = connectionNode_["flowfile expiration"];
   if (!expiration_node) {
     logger_->log_debug("parseConnection: flowfile expiration is not set, assuming 0 (never expire)");
     return 0ms;
   }
-  auto expiration_duration = utils::timeutils::StringToDuration<std::chrono::milliseconds>(expiration_node.as<std::string>());
+  auto expiration_duration = utils::timeutils::StringToDuration<std::chrono::milliseconds>(expiration_node.getString().value());
   if (!expiration_duration.has_value()) {
     // We should throw here, but we do not.
     // The reason is that our parser only accepts time formats that consists of a number and
@@ -196,12 +195,12 @@ std::chrono::milliseconds YamlConnectionParser::getFlowFileExpirationFromYaml() 
   return *expiration_duration;
 }
 
-bool YamlConnectionParser::getDropEmptyFromYaml() const {
-  const YAML::Node drop_empty_node = connectionNode_["drop empty"];
+bool StructuredConnectionParser::getDropEmpty() const {
+  const flow::Node drop_empty_node = connectionNode_["drop empty"];
   if (drop_empty_node) {
-    return utils::StringUtils::toBool(drop_empty_node.as<std::string>()).value_or(false);
+    return utils::StringUtils::toBool(drop_empty_node.getString().value()).value_or(false);
   }
   return false;
 }
 
-}  // namespace org::apache::nifi::minifi::core::yaml
+}  // namespace org::apache::nifi::minifi::core::flow
