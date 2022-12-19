@@ -709,16 +709,10 @@ void ConsumeWindowsEventLog::putEventRenderFlowFileToSession(const EventRender& 
   };
 
   if (output_.xml) {
-    auto flowFile = session.create();
     logger_->log_trace("Writing rendered XML to a flow file");
-
-    for (const auto &fieldMapping : eventRender.matched_fields) {
-      if (!fieldMapping.second.empty()) {
-        session.putAttribute(flowFile, fieldMapping.first, fieldMapping.second);
-      }
-    }
-
-    commitFlowFile(flowFile, eventRender.xml, "application/xml");
+    auto flow_file = session.create();
+    addMatchedFieldsAsAttributes(eventRender, session, flow_file);
+    commitFlowFile(flow_file, eventRender.xml, "application/xml");
   }
 
   if (output_.plaintext) {
@@ -726,15 +720,19 @@ void ConsumeWindowsEventLog::putEventRenderFlowFileToSession(const EventRender& 
     commitFlowFile(session.create(), eventRender.plaintext, "text/plain");
   }
 
-  if (output_.json.type == JSONType::Raw) {
-    logger_->log_trace("Writing rendered raw JSON to a flow file");
-    commitFlowFile(session.create(), eventRender.json, "application/json");
-  } else if (output_.json.type == JSONType::Simple) {
-    logger_->log_trace("Writing rendered simple JSON to a flow file");
-    commitFlowFile(session.create(), eventRender.json, "application/json");
-  } else if (output_.json.type == JSONType::Flattened) {
-    logger_->log_trace("Writing rendered flattened JSON to a flow file");
-    commitFlowFile(session.create(), eventRender.json, "application/json");
+  if (output_.json.type != JSONType::None) {
+    logger_->log_trace("Writing rendered %s JSON to a flow file", output_.json.type.toString());
+    auto flow_file = session.create();
+    addMatchedFieldsAsAttributes(eventRender, session, flow_file);
+    commitFlowFile(flow_file, eventRender.json, "application/json");
+  }
+}
+
+void ConsumeWindowsEventLog::addMatchedFieldsAsAttributes(const EventRender& eventRender, core::ProcessSession& session, const std::shared_ptr<core::FlowFile>& flowFile) const {
+  for (const auto &fieldMapping : eventRender.matched_fields) {
+    if (!fieldMapping.second.empty()) {
+      session.putAttribute(flowFile, fieldMapping.first, fieldMapping.second);
+    }
   }
 }
 

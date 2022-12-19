@@ -42,6 +42,7 @@
 #include "FlowFileRecord.h"
 #include "concurrentqueue.h"
 #include "pugixml.hpp"
+#include "utils/Enum.h"
 #include "utils/Export.h"
 #include "utils/RegexUtils.h"
 
@@ -145,6 +146,8 @@ class ConsumeWindowsEventLog : public core::Processor {
                                                     const std::shared_ptr<core::ProcessSession>& session,
                                                     const EVT_HANDLE& event_query_results);
 
+  void addMatchedFieldsAsAttributes(const EventRender &eventRender, core::ProcessSession &session, const std::shared_ptr<core::FlowFile> &flowFile) const;
+
   std::shared_ptr<core::logging::Logger> logger_;
   core::StateManager* state_manager_{nullptr};
   wel::METADATA_NAMES header_names_;
@@ -161,7 +164,11 @@ class ConsumeWindowsEventLog : public core::Processor {
   std::map<std::string, wel::WindowsEventLogHandler> providers_;
   uint64_t batch_commit_size_{};
 
-  enum class JSONType { None, Raw, Simple, Flattened };
+  SMART_ENUM(JSONType,
+      (None, "None"),
+      (Raw, "Raw"),
+      (Simple, "Simple"),
+      (Flattened, "Flattened"))
 
   struct OutputFormat {
     bool xml{false};
