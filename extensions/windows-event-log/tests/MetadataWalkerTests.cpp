@@ -34,7 +34,7 @@ using XmlString = org::apache::nifi::minifi::wel::XmlString;
 
 namespace {
 
-std::string updateXmlMetadata(const std::string &xml, EVT_HANDLE metadata_ptr, EVT_HANDLE event_ptr, bool update_xml, bool resolve, std::optional<utils::Regex> regex = std::nullopt) {
+std::string updateXmlMetadata(const std::string &xml, EVT_HANDLE metadata_ptr, EVT_HANDLE event_ptr, bool update_xml, bool resolve, utils::Regex const* regex = nullptr) {
   WindowsEventLogMetadataImpl metadata{metadata_ptr, event_ptr};
   MetadataWalker walker(metadata, "", update_xml, resolve, regex);
 
@@ -89,8 +89,8 @@ TEST_CASE("MetadataWalker updates the Sid in the XML if both update_xml and reso
 
   SECTION("Resolve nobody") {
     std::string nobody = readFile("resources/withsids.xml");
-    std::optional<utils::Regex> regex = utils::Regex(".*Sid");
-    REQUIRE(updateXmlMetadata(xml, nullptr, nullptr, true, true, regex) == formatXml(nobody));
+    auto regex = utils::Regex(".*Sid");
+    REQUIRE(updateXmlMetadata(xml, nullptr, nullptr, true, true, &regex) == formatXml(nobody));
   }
 }
 
@@ -111,8 +111,8 @@ TEST_CASE("MetadataWalker will leave a Sid unchanged if it doesn't correspond to
 
   REQUIRE(updateXmlMetadata(xml, nullptr, nullptr, false, true) == formatXml(xml));
   REQUIRE(updateXmlMetadata(xml, nullptr, nullptr, true, true) == formatXml(xml));
-  std::optional<utils::Regex> regex = utils::Regex(".*Sid");
-  REQUIRE(updateXmlMetadata(xml, nullptr, nullptr, true, true, regex) == formatXml(xml));
+  auto regex = utils::Regex(".*Sid");
+  REQUIRE(updateXmlMetadata(xml, nullptr, nullptr, true, true, &regex) == formatXml(xml));
 }
 
 TEST_CASE("MetadataWalker can replace multiple Sids", "[updateXmlMetadata]") {
@@ -152,8 +152,8 @@ void extractMappingsTestHelper(const std::string &file_name,
   pugi::xml_parse_result result = doc.load_string(input_xml.c_str());
   CHECK(result);
 
-  std::optional<utils::Regex> regex = utils::Regex(".*Sid");
-  MetadataWalker walker(FakeWindowsEventLogMetadata{}, METADATA_WALKER_TESTS_LOG_NAME, update_xml, resolve, regex);
+  auto regex = utils::Regex(".*Sid");
+  MetadataWalker walker(FakeWindowsEventLogMetadata{}, METADATA_WALKER_TESTS_LOG_NAME, update_xml, resolve, &regex);
   doc.traverse(walker);
 
   CHECK(walker.getIdentifiers() == expected_identifiers);

@@ -455,7 +455,7 @@ wel::WindowsEventLogHandler& ConsumeWindowsEventLog::getEventLogHandler(const st
 
   auto opened_publisher_metadata_provider = EvtOpenPublisherMetadata(nullptr, widechar, nullptr, 0, 0);
   if (!opened_publisher_metadata_provider)
-    logger_->log_warn("EvtOpenPublisherMetadata failed due to %s", utils::OsUtils::getWindowsErrorAsString(GetLastError()));
+    logger_->log_warn("EvtOpenPublisherMetadata failed due to %s", utils::OsUtils::windowsErrorToErrorCode(GetLastError()).message());
   providers_[name] = wel::WindowsEventLogHandler(opened_publisher_metadata_provider);
   logger_->log_info("Handler not found for %s, creating. Number of cached handlers: %zu", name, providers_.size());
   return providers_[name];
@@ -559,11 +559,11 @@ nonstd::expected<std::string, std::string> ConsumeWindowsEventLog::renderEventAs
   if (!EvtRender(nullptr, event_handle, EvtRenderEventXml, size, buf.get(), &used, &propertyCount)) {
     DWORD last_error = GetLastError();
     if (ERROR_INSUFFICIENT_BUFFER != last_error) {
-      std::string error_message = std::format("EvtRender failed due to %s", utils::OsUtils::getWindowsErrorAsString(last_error));
+      std::string error_message = fmt::format("EvtRender failed due to %s", utils::OsUtils::windowsErrorToErrorCode(last_error).message());
       return nonstd::make_unexpected(error_message);
     }
     if (used > max_buffer_size_) {
-      std::string error_message = std::format("Dropping event because it couldn't be rendered within %" PRIu64 " bytes.", max_buffer_size_);
+      std::string error_message = fmt::format("Dropping event because it couldn't be rendered within %" PRIu64 " bytes.", max_buffer_size_);
       return nonstd::make_unexpected(error_message);
     }
     size = used;
@@ -571,7 +571,7 @@ nonstd::expected<std::string, std::string> ConsumeWindowsEventLog::renderEventAs
     if (!buf)
       return nonstd::make_unexpected("malloc failed");
     if (!EvtRender(nullptr, event_handle, EvtRenderEventXml, size, buf.get(), &used, &propertyCount)) {
-      std::string error_message = std::format("EvtRender failed due to %s", utils::OsUtils::getWindowsErrorAsString(GetLastError()));
+      std::string error_message = fmt::format("EvtRender failed due to %s", utils::OsUtils::windowsErrorToErrorCode(GetLastError()).message());
       return nonstd::make_unexpected(error_message);
     }
   }
@@ -593,7 +593,7 @@ nonstd::expected<EventRender, std::string> ConsumeWindowsEventLog::createEventRe
   // this is a well known path.
   std::string provider_name = doc.child("Event").child("System").child("Provider").attribute("Name").value();
   wel::WindowsEventLogMetadataImpl metadata{getEventLogHandler(provider_name).getMetadata(), hEvent};
-  wel::MetadataWalker walker{metadata, channel_, !resolve_as_attributes_, apply_identifier_function_, regex_};
+  wel::MetadataWalker walker{metadata, channel_, !resolve_as_attributes_, apply_identifier_function_, regex_ ? &*regex_ : nullptr};
 
   // resolve the event metadata
   doc.traverse(walker);
@@ -621,7 +621,7 @@ nonstd::expected<EventRender, std::string> ConsumeWindowsEventLog::createEventRe
     result.plaintext = log_header.getEventHeader([&walker](wel::METADATA metadata) { return walker.getMetadata(metadata); });
     result.plaintext += payload_name;
     result.plaintext += log_header.getDelimiterFor(payload_name.size());
-    result.plaintext += event_message.has_value() ? *event_message : utils::OsUtils::getWindowsErrorAsString(event_message.error());
+    result.plaintext += event_message.has_value() ? *event_message : event_message.error().message();
 
     logger_->log_trace("Finish writing in plain text");
   }

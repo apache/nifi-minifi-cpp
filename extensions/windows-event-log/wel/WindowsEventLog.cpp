@@ -18,6 +18,7 @@
 #include <winmeta.h>
 
 #include <algorithm>
+#include <chrono>
 #include <memory>
 #include <string>
 
@@ -30,27 +31,13 @@
 namespace org::apache::nifi::minifi::wel {
 
 namespace {
-std::string GetEventTimestampStr(uint64_t event_timestamp) {
-  SYSTEMTIME st;
-  FILETIME ft;
+std::string getEventTimestampStr(uint64_t event_timestamp) {
+  constexpr std::chrono::duration<int64_t> nt_to_unix_epoch{-11644473600};  // January 1, 1601 (NT epoch) - January 1, 1970 (Unix epoch):
 
-  ft.dwHighDateTime = (DWORD)((event_timestamp >> 32) & 0xFF'FF'FF'FF);
-  ft.dwLowDateTime = (DWORD)(event_timestamp & 0xFF'FF'FF'FF);
+  const std::chrono::duration<int64_t, std::ratio<1, 10'000'000>> event_timestamp_as_duration{event_timestamp};
+  const auto converted_timestamp = std::chrono::system_clock::time_point{event_timestamp_as_duration + nt_to_unix_epoch};
 
-  FileTimeToSystemTime(&ft, &st);
-  std::stringstream datestr;
-
-  std::string period = "AM";
-  auto hour = st.wHour;
-  if (hour >= 12 && hour < 24)
-    period = "PM";
-  if (hour > 12)
-    hour -= 12;
-  if (hour == 0)
-    hour = 12;
-  datestr << st.wMonth << "/" << st.wDay << "/" << st.wYear << " " << std::setfill('0') << std::setw(2) << hour << ":" << std::setfill('0')
-          << std::setw(2) << st.wMinute << ":" << std::setfill('0') << std::setw(2) << st.wSecond << " " << period;
-  return datestr.str();
+  return date::format("%m/%d/%Y %r %p", std::chrono::floor<std::chrono::milliseconds>(converted_timestamp));
 }
 }  // namespace
 
@@ -84,7 +71,7 @@ void WindowsEventLogMetadataImpl::renderMetadata() {
     }
   }
 
-  event_timestamp_str_ = GetEventTimestampStr(static_cast<PEVT_VARIANT>(rendered_values.get())[EvtSystemTimeCreated].FileTimeVal);
+  event_timestamp_str_ = getEventTimestampStr(static_cast<PEVT_VARIANT>(rendered_values.get())[EvtSystemTimeCreated].FileTimeVal);
 
   auto level = static_cast<PEVT_VARIANT>(rendered_values.get())[EvtSystemLevel];
   auto keyword = static_cast<PEVT_VARIANT>(rendered_values.get())[EvtSystemKeywords];
@@ -159,7 +146,7 @@ std::string WindowsEventLogMetadataImpl::getEventData(EVT_FORMAT_MESSAGE_FLAGS f
   return event_data;
 }
 
-nonstd::expected<std::string, DWORD> WindowsEventLogHandler::getEventMessage(EVT_HANDLE eventHandle) const {
+nonstd::expected<std::string, std::error_code> WindowsEventLogHandler::getEventMessage(EVT_HANDLE eventHandle) const {
   std::string returnValue;
   WCHAR stack_buffer[4096];
   DWORD num_chars_in_buffer = sizeof(stack_buffer) / sizeof(stack_buffer[0]);
@@ -174,17 +161,17 @@ nonstd::expected<std::string, DWORD> WindowsEventLogHandler::getEventMessage(EVT
   DWORD status = GetLastError();
 
   if (status != ERROR_INSUFFICIENT_BUFFER)
-    return nonstd::make_unexpected(status);
+    return nonstd::make_unexpected(utils::OsUtils::windowsErrorToErrorCode(status));
 
   num_chars_in_buffer = num_chars_used;
   buffer.reset((LPWSTR) malloc(num_chars_in_buffer * sizeof(WCHAR)));
   if (!buffer)
-    return nonstd::make_unexpected(ERROR_OUTOFMEMORY);
+    return nonstd::make_unexpected(utils::OsUtils::windowsErrorToErrorCode(ERROR_OUTOFMEMORY));
   if (EvtFormatMessage(metadata_provider_.get(), eventHandle, 0, 0, nullptr,
                        EvtFormatMessageEvent, num_chars_in_buffer,
                        buffer.get(), &num_chars_used))
     return to_string(buffer.get());
-  return nonstd::make_unexpected(GetLastError());
+  return nonstd::make_unexpected(utils::OsUtils::windowsErrorToErrorCode(GetLastError()));
 }
 
 namespace {

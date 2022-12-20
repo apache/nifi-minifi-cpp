@@ -50,7 +50,7 @@ namespace org::apache::nifi::minifi::wel {
  */
 class MetadataWalker : public pugi::xml_tree_walker {
  public:
-  MetadataWalker(const WindowsEventLogMetadata& windows_event_log_metadata, std::string log_name, bool update_xml, bool resolve, const std::optional<utils::Regex>& regex)
+  MetadataWalker(const WindowsEventLogMetadata& windows_event_log_metadata, std::string log_name, bool update_xml, bool resolve, utils::Regex const* regex)
       : windows_event_log_metadata_(windows_event_log_metadata),
         log_name_(std::move(log_name)),
         regex_(regex),
@@ -89,10 +89,10 @@ class MetadataWalker : public pugi::xml_tree_walker {
   void updateText(pugi::xml_node &node, const std::string &field_name, std::function<std::string(const std::string &)> &&fn);
 
   const WindowsEventLogMetadata& windows_event_log_metadata_;
-  std::string log_name_;
-  const std::optional<utils::Regex>& regex_;
-  bool update_xml_;
-  bool resolve_;
+  const std::string log_name_;
+  utils::Regex const * const regex_;
+  const bool update_xml_;
+  const bool resolve_;
   std::map<std::string, std::string> metadata_;
   std::map<std::string, std::string> fields_values_;
   std::map<std::string, std::string> replaced_identifiers_;

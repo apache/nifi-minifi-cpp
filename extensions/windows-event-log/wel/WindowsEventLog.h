@@ -72,7 +72,7 @@ class WindowsEventLogHandler {
   explicit WindowsEventLogHandler(EVT_HANDLE metadataProvider) : metadata_provider_(metadataProvider) {
   }
 
-  nonstd::expected<std::string, DWORD> getEventMessage(EVT_HANDLE eventHandle) const;
+  nonstd::expected<std::string, std::error_code> getEventMessage(EVT_HANDLE eventHandle) const;
 
   [[nodiscard]] EVT_HANDLE getMetadata() const;
 
