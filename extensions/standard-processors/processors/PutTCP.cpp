@@ -118,12 +118,12 @@ namespace {
 asio::ssl::context getSslContext(const std::shared_ptr<controllers::SSLContextService>& ssl_context_service) {
   gsl_Expects(ssl_context_service);
   asio::ssl::context ssl_context(asio::ssl::context::sslv23);
-  ssl_context.load_verify_file(ssl_context_service->getCACertificate());
+  ssl_context.load_verify_file(ssl_context_service->getCACertificate().string());
   ssl_context.set_verify_mode(asio::ssl::verify_peer);
   if (auto cert_file = ssl_context_service->getCertificateFile(); !cert_file.empty())
-    ssl_context.use_certificate_file(cert_file, asio::ssl::context::pem);
+    ssl_context.use_certificate_file(cert_file.string(), asio::ssl::context::pem);
   if (auto private_key_file = ssl_context_service->getPrivateKeyFile(); !private_key_file.empty())
-    ssl_context.use_private_key_file(private_key_file, asio::ssl::context::pem);
+    ssl_context.use_private_key_file(private_key_file.string(), asio::ssl::context::pem);
   ssl_context.set_password_callback([password = ssl_context_service->getPassphrase()](std::size_t&, asio::ssl::context_base::password_purpose&) { return password; });
   return ssl_context;
 }
