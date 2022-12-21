@@ -629,6 +629,8 @@ if (NOT DISABLE_ROCKSDB AND NOT DISABLE_LIBARCHIVE)
     registerTest("${TEST_DIR}/persistence-tests")
 endif()
 
+registerTest("minifi_main/tests")
+
 registerTest("encrypt-config/tests")
 
 include(BuildDocs)

@@ -50,8 +50,8 @@ class ConsumeJournald final : public core::Processor {
   static constexpr const char* JOURNAL_TYPE_SYSTEM = "System";
   static constexpr const char* JOURNAL_TYPE_BOTH = "Both";
 
-  EXTENSIONAPI static constexpr const char* Description = "Consume systemd-journald journal messages. Creates one flow file per message."
-      "Fields are mapped to attributes. Realtime timestamp is mapped to the 'timestamp' attribute.";
+  EXTENSIONAPI static constexpr const char* Description = "Consume systemd-journald journal messages. Creates one flow file per message. "
+      "Fields are mapped to attributes. Realtime timestamp is mapped to the 'timestamp' attribute. Available on Linux only.";
 
   EXTENSIONAPI static const core::Property BatchSize;
   EXTENSIONAPI static const core::Property PayloadFormat;

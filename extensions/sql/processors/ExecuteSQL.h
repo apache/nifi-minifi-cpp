@@ -35,7 +35,11 @@ class ExecuteSQL : public SQLProcessor, public FlowFileSource {
  public:
   explicit ExecuteSQL(std::string name, const utils::Identifier& uuid = {});
 
-  EXTENSIONAPI static constexpr const char* Description = "ExecuteSQL to execute SELECT statement via ODBC.";
+  EXTENSIONAPI static constexpr const char* Description = "Execute provided SQL query. "
+      "Query result rows will be outputted as new flow files with attribute keys equal to result column names and values equal to result values. "
+      "There will be one output FlowFile per result row. "
+      "This processor can be scheduled to run using the standard timer-based scheduling methods, or it can be triggered by an incoming FlowFile. "
+      "If it is triggered by an incoming FlowFile, then attributes of that FlowFile will be available when evaluating the query.";
 
   EXTENSIONAPI static const core::Property SQLSelectQuery;
   static auto properties() {

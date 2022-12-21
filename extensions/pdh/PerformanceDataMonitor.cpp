@@ -38,12 +38,12 @@ const core::Relationship PerformanceDataMonitor::Success("success", "All files a
 
 const core::Property PerformanceDataMonitor::PredefinedGroups(
     core::PropertyBuilder::createProperty("Predefined Groups")->
-    withDescription("Comma separated list from the allowable values, to monitor multiple common Windows Performance counters related to these groups")->
+    withDescription(R"(Comma separated list from the allowable values, to monitor multiple common Windows Performance counters related to these groups (e.g. "CPU,Network"))")->
     withDefaultValue("")->build());
 
 const core::Property PerformanceDataMonitor::CustomPDHCounters(
     core::PropertyBuilder::createProperty("Custom PDH Counters")->
-    withDescription("Comma separated list of Windows Performance Counters to monitor")->
+    withDescription(R"(Comma separated list of Windows Performance Counters to monitor (e.g. "\\System\\Threads,\\Process(*)\\ID Process"))")->
     withDefaultValue("")->build());
 
 const core::Property PerformanceDataMonitor::OutputFormatProperty(

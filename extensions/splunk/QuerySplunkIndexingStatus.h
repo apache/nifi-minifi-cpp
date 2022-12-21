@@ -40,7 +40,30 @@ class QuerySplunkIndexingStatus final : public SplunkHECProcessor {
   QuerySplunkIndexingStatus& operator=(QuerySplunkIndexingStatus&&) = delete;
   ~QuerySplunkIndexingStatus() override = default;
 
-  EXTENSIONAPI static constexpr const char* Description = "Queries Splunk server in order to acquire the status of indexing acknowledgement.";
+  EXTENSIONAPI static constexpr const char* Description =
+      "Queries the Splunk server in order to acquire the status of indexing acknowledgement."
+      "\n"
+      "This processor is responsible for polling Splunk server and determine if a Splunk event is acknowledged at the time of\n"
+      "execution. For more details about the HEC Index Acknowledgement please see\n"
+      "https://docs.splunk.com/Documentation/Splunk/LATEST/Data/AboutHECIDXAck.\n"
+      "\n"
+      "In order to work properly, the incoming flow files need to have the attributes \"splunk.acknowledgement.id\" and\n"
+      "\"splunk.responded.at\" filled properly. The flow file attribute \"splunk.acknowledgement.id\" should contain the \"ackId\"\n"
+      "which can be extracted from the response to the original Splunk put call. The flow file attribute \"splunk.responded.at\"\n"
+      "should contain the timestamp describing when the put call was answered by Splunk.\n"
+      "These required attributes are set by PutSplunkHTTP processor.\n"
+      "\n"
+      "Undetermined cases are normal in healthy environment as it is possible that minifi asks for indexing status before Splunk\n"
+      "finishes and acknowledges it. These cases are safe to retry, and it is suggested to loop \"undetermined\" relationship\n"
+      "back to the processor for later try. Flow files transferred into the \"Undetermined\" relationship are penalized.\n"
+      "\n"
+      "Please keep Splunk channel limitations in mind: there are multiple configuration parameters in Splunk which might have direct\n"
+      "effect on the performance and behaviour of the QuerySplunkIndexingStatus processor. For example \"max_number_of_acked_requests_pending_query\"\n"
+      "and \"max_number_of_acked_requests_pending_query_per_ack_channel\" might limit the amount of ackIDs Splunk stores.\n"
+      "\n"
+      "Also, it is suggested to execute the query in batches. The \"Maximum Query Size\" property might be used for fine tune\n"
+      "the maximum number of events the processor will query about in one API request. This serves as an upper limit for the\n"
+      "batch but the processor might execute the query with smaller number of undetermined events.\n";
 
   EXTENSIONAPI static const core::Property MaximumWaitingTime;
   EXTENSIONAPI static const core::Property MaxQuerySize;

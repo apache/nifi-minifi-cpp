@@ -34,7 +34,7 @@ namespace org::apache::nifi::minifi::aws::processors {
 
 class DeleteS3Object : public S3Processor {
  public:
-  EXTENSIONAPI static constexpr const char* Description = "This Processor deletes FlowFiles on an Amazon S3 Bucket.";
+  EXTENSIONAPI static constexpr const char* Description = "Deletes FlowFiles on an Amazon S3 Bucket. If attempting to delete a file that does not exist, FlowFile is routed to success.";
 
   static const core::Property ObjectKey;
   static const core::Property Version;

@@ -68,7 +68,9 @@ const core::Property ConsumeJournald::ProcessOldMessages = core::PropertyBuilder
     ->build();
 
 const core::Property ConsumeJournald::TimestampFormat = core::PropertyBuilder::createProperty("Timestamp Format")
-    ->withDescription("Format string to use when creating the timestamp attribute or writing messages in the syslog format.")
+    ->withDescription("Format string to use when creating the timestamp attribute or writing messages in the syslog format. "
+        "ISO/ISO 8601/ISO8601 are equivalent to \"%FT%T%Ez\". "
+        "See https://howardhinnant.github.io/date/date.html#to_stream_formatting for all flags.")
     ->withDefaultValue("%x %X %Z")
     ->isRequired(true)
     ->build();

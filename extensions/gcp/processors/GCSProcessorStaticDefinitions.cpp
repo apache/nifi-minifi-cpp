@@ -33,7 +33,7 @@ namespace org::apache::nifi::minifi::extensions::gcp {
 
 const core::Property GCSProcessor::GCPCredentials(
     core::PropertyBuilder::createProperty("GCP Credentials Provider Service")
-        ->withDescription("The Controller Service used to obtain Google Cloud Platform credentials.")
+        ->withDescription("The Controller Service used to obtain Google Cloud Platform credentials. Should be the name of a GCPCredentialsControllerService.")
         ->isRequired(true)
         ->asType<GCPCredentialsControllerService>()
         ->build());
