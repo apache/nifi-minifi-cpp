@@ -38,6 +38,10 @@ function(use_bundled_libxml2 SOURCE_DIR BINARY_DIR)
                 "-DCMAKE_INSTALL_PREFIX=${BINARY_DIR}/thirdparty/libxml2-install")
     endif()
 
+    if (CMAKE_VERSION VERSION_GREATER_EQUAL 3.24)
+        cmake_policy(SET CMP0135 OLD) # Restore the timestamps from the archive https://gitlab.kitware.com/cmake/cmake/-/issues/24003
+    endif()
+
     # Build project
     set(LIBXML2_URL ftp://xmlsoft.org/libxml2/libxml2-2.9.10.tar.gz https://ftp.osuosl.org/pub/blfs/conglomeration/libxml2/libxml2-2.9.10.tar.gz)
     set(LIBXML2_URL_HASH "SHA256=aafee193ffb8fe0c82d4afef6ef91972cbaf5feea100edc2f262750611b4be1f")

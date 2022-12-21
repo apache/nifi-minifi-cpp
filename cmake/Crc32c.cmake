@@ -16,22 +16,15 @@
 # specific language governing permissions and limitations
 # under the License.
 #
-
-if (NOT ENABLE_BUSTACHE)
-    return()
-endif()
-
-include(BundledBustache)
-use_bundled_bustache(${CMAKE_SOURCE_DIR} ${CMAKE_BINARY_DIR})
-
-include(${CMAKE_SOURCE_DIR}/extensions/ExtensionHeader.txt)
-
-file(GLOB SOURCES "*.cpp")
-
-add_library(minifi-bustache-extensions SHARED ${SOURCES})
-
-target_link_libraries(minifi-bustache-extensions ${LIBMINIFI})
-target_link_libraries(minifi-bustache-extensions BUSTACHE::libbustache)
-
-register_extension(minifi-bustache-extensions "BUSTACHE EXTENSIONS" BUSTACHE-EXTENSIONS "This enables bustache functionality including ApplyTemplate." "${TEST_DIR}/bustache-tests")
-register_extension_linter(minifi-bustache-extensions-linter)
+include(FetchContent)
+set(CRC32C_USE_GLOG OFF CACHE INTERNAL crc32c-glog-off)
+set(CRC32C_BUILD_TESTS OFF CACHE INTERNAL crc32c-gtest-off)
+set(CRC32C_BUILD_BENCHMARKS OFF CACHE INTERNAL crc32-benchmarks-off)
+set(CRC32C_INSTALL ON CACHE INTERNAL crc32-install-on)
+FetchContent_Declare(
+        crc32c
+        URL     https://github.com/google/crc32c/archive/refs/tags/1.1.1.tar.gz
+        URL_HASH SHA256=a6533f45b1670b5d59b38a514d82b09c6fb70cc1050467220216335e873074e8
+)
+FetchContent_MakeAvailable(crc32c)
+add_library(Crc32c::crc32c ALIAS crc32c)

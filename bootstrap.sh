@@ -194,11 +194,7 @@ else
   . "${script_directory}/linux.sh"
   if [[ "$OS" = Deb* ]]; then
     . "${script_directory}/debian.sh"
-  elif [[ "$OS" = Rasp* ]]; then
-    . "${script_directory}/aptitude.sh"
-  elif [[ "$OS" = Pop* ]]; then
-    . "${script_directory}/aptitude.sh"
-  elif [[ "$OS" = Ubuntu* ]]; then
+  elif [[ "$OS" = Ubuntu* || "$OS" = Rasp* || "$OS" = Pop* ]]; then
     . "${script_directory}/aptitude.sh"
   elif [[ "$OS" = *SUSE* ]]; then
     . "${script_directory}/suse.sh"
@@ -211,17 +207,11 @@ else
     fi
   elif [[ "$OS" = Red* ]]; then
     . "${script_directory}/rheldistro.sh"
-  elif [[ "$OS" = Amazon* ]]; then
-    . "${script_directory}/centos.sh"
-  elif [[ "$OS" = Rocky* ]]; then
-    . "${script_directory}/centos.sh"
-  elif [[ "$OS" = CentOS* ]]; then
+  elif [[ "$OS" = Amazon* || "$OS" = Alma* || "$OS" = Rocky* || "$OS" = CentOS* ]]; then
     . "${script_directory}/centos.sh"
   elif [[ "$OS" = Fedora* ]]; then
     . "${script_directory}/fedora.sh"
-  elif [[ "$OS" = Manjaro* ]]; then
-    . "${script_directory}/arch.sh"
-  elif [[ "$OS" = Arch* ]]; then
+  elif [[ "$OS" = Arch* || "$OS" = Manjaro* ]]; then
     . "${script_directory}/arch.sh"
   fi
 fi
