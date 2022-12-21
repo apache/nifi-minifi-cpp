@@ -20,6 +20,7 @@ get_toolset_name() {
     case "$OS_MAJOR" in
         7) TOOLSET_NAME=devtoolset-10 ;;
         8) TOOLSET_NAME=gcc-toolset-10 ;;
+        9) TOOLSET_NAME=gcc-toolset-12 ;;
     esac
 }
 

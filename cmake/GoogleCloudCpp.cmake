@@ -18,18 +18,7 @@
 #
 include(FetchContent)
 include(Abseil)
-
-set(CRC32C_USE_GLOG OFF CACHE INTERNAL crc32c-glog-off)
-set(CRC32C_BUILD_TESTS OFF CACHE INTERNAL crc32c-gtest-off)
-set(CRC32C_BUILD_BENCHMARKS OFF CACHE INTERNAL crc32-benchmarks-off)
-set(CRC32C_INSTALL ON CACHE INTERNAL crc32-install-on)
-FetchContent_Declare(
-        crc32c
-        URL     https://github.com/google/crc32c/archive/refs/tags/1.1.1.tar.gz
-        URL_HASH SHA256=a6533f45b1670b5d59b38a514d82b09c6fb70cc1050467220216335e873074e8
-)
-FetchContent_MakeAvailable(crc32c)
-add_library(Crc32c::crc32c ALIAS crc32c)
+include(Crc32c)
 
 set(PATCH_FILE_1 "${CMAKE_SOURCE_DIR}/thirdparty/google-cloud-cpp/remove-find_package.patch")
 set(PATCH_FILE_2 "${CMAKE_SOURCE_DIR}/thirdparty/google-cloud-cpp/nlohmann_lib_as_interface.patch")

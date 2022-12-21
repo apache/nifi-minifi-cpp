@@ -5,9 +5,9 @@
 # to you under the Apache License, Version 2.0 (the
 # "License"); you may not use this file except in compliance
 # with the License.  You may obtain a copy of the License at
-# 
+#
 #   http://www.apache.org/licenses/LICENSE-2.0
-# 
+#
 # Unless required by applicable law or agreed to in writing,
 # software distributed under the License is distributed on an
 # "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
@@ -31,20 +31,20 @@ find_path(LIBGPS_INCLUDE_DIR
     DOC "LIBGPS include header"
 )
 
-find_library(LIBGPS_LIBRARY 
+find_library(LIBGPS_LIBRARY
     NAMES libgps.so libgps.dylib
     PATHS /usr/local/lib /usr/lib/x86_64-linux-gnu /usr/lib/arm-linux-gnueabihf
     DOC "LIBGPS library"
 )
 
-find_library(LIBGPS_STATIC_LIBRARY 
+find_library(LIBGPS_STATIC_LIBRARY
     NAMES libgps.a
     PATHS /usr/local/lib /usr/lib/x86_64-linux-gnu /usr/lib/arm-linux-gnueabihf
     DOC "LIBGPS Static library"
 )
 
 include(FindPackageHandleStandardArgs)
-find_package_handle_standard_args(LIBGPS DEFAULT_MSG LIBGPS_INCLUDE_DIR LIBGPS_LIBRARY)
+find_package_handle_standard_args(LibGPS DEFAULT_MSG LIBGPS_INCLUDE_DIR LIBGPS_LIBRARY)
 
 if (LIBGPS_FOUND)
     set(LIBGPS_LIBRARIES ${LIBGPS_LIBRARY} )
