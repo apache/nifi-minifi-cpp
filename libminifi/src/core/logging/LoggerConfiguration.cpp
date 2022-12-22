@@ -148,12 +148,12 @@ void LoggerConfiguration::initialize(const std::shared_ptr<LoggerProperties> &lo
   logger_->log_debug("Set following pattern on loggers: %s", spdlog_pattern);
 }
 
-std::shared_ptr<Logger> LoggerConfiguration::getLogger(const std::string& name, const std::optional<std::string>& id) {
+std::shared_ptr<Logger> LoggerConfiguration::getLogger(const std::string& name, const std::optional<utils::Identifier>& id) {
   std::lock_guard<std::mutex> lock(mutex);
   return getLogger(name, id, lock);
 }
 
-std::shared_ptr<Logger> LoggerConfiguration::getLogger(const std::string& name, const std::optional<std::string>& id, const std::lock_guard<std::mutex>& /*lock*/) {
+std::shared_ptr<Logger> LoggerConfiguration::getLogger(const std::string& name, const std::optional<utils::Identifier>& id, const std::lock_guard<std::mutex>& /*lock*/) {
   std::string adjusted_name = name;
   const std::string clazz = "class ";
   auto haz_clazz = name.find(clazz);

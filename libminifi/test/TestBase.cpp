@@ -70,7 +70,7 @@ void LogTestController::setLevel(const std::string& name, spdlog::level::level_e
   logging::LoggerConfiguration::getSpdlogLogger(adjusted_name)->set_level(level);
 }
 
-std::shared_ptr<logging::Logger> LogTestController::getLoggerByClassName(const std::string& class_name, const std::optional<std::string>& id) {
+std::shared_ptr<logging::Logger> LogTestController::getLoggerByClassName(const std::string& class_name, const std::optional<utils::Identifier>& id) {
   return config ? config->getLogger(class_name, id) : logging::LoggerConfiguration::getConfiguration().getLogger(class_name, id);
 }
 

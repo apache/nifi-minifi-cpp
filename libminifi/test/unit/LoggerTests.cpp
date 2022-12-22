@@ -106,7 +106,7 @@ TEST_CASE("Printing of the ID can be disabled in the config", "[logger][id][conf
   }
 
   const auto uuid = utils::IdGenerator::getIdGenerator()->generate();
-  std::shared_ptr<logging::Logger> logger = LogTestController::getInstance(properties)->getLogger<logging::Logger>(std::string{uuid.to_string()});
+  std::shared_ptr<logging::Logger> logger = LogTestController::getInstance(properties)->getLogger<logging::Logger>(uuid);
   logger->log_error("hello %s", "world");
 
   CHECK(LogTestController::getInstance().contains("[org::apache::nifi::minifi::core::logging::Logger] [error] hello world"));
