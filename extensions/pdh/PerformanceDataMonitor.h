@@ -53,7 +53,9 @@ class PerformanceDataMonitor : public core::Processor {
 
   ~PerformanceDataMonitor() override;
 
-  EXTENSIONAPI static constexpr const char* Description = "This processor can create FlowFiles with various performance data through Performance Data Helper. (Windows only)";
+  EXTENSIONAPI static constexpr const char* Description =
+      "This Windows only processor can create FlowFiles populated with various performance data with the help of Windows Performance Counters. "
+      "Windows Performance Counters provide a high-level abstraction layer with a consistent interface for collecting various kinds of system data such as CPU, memory, and disk usage statistics.";
 
   EXTENSIONAPI static const core::Property PredefinedGroups;
   EXTENSIONAPI static const core::Property CustomPDHCounters;

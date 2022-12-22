@@ -44,7 +44,9 @@ class QueryDatabaseTable: public SQLProcessor, public FlowFileSource {
   EXTENSIONAPI static const std::string MAXVALUE_KEY_PREFIX;
   EXTENSIONAPI static const std::string InitialMaxValueDynamicPropertyPrefix;
 
-  EXTENSIONAPI static constexpr const char* Description = "QueryDatabaseTable to execute SELECT statement via ODBC.";
+  EXTENSIONAPI static constexpr const char* Description =
+      "Fetches all rows of a table, whose values in the specified Maximum-value Columns are larger than the previously-seen maxima. "
+      "If that property is not provided, all rows are returned. The rows are grouped according to the value of Max Rows Per Flow File property and formatted as JSON.";
 
   EXTENSIONAPI static const core::Property TableName;
   EXTENSIONAPI static const core::Property ColumnNames;
