@@ -69,15 +69,15 @@ void AgentDocs::generate(const std::filesystem::path& docsdir, std::ostream &gen
     outfile  << "In the list below, the names of required properties appear in bold. Any other properties (not in bold) are considered optional. "
         << "The table also indicates any default values, and whether a property supports the NiFi Expression Language.\n\n";
 
-    Table processors{{"Name", "Default Value", "Allowable Values", "Description"}};
+    Table properties{{"Name", "Default Value", "Allowable Values", "Description"}};
     for (const auto &prop : processor.second.class_properties_) {
-      processors.addRow({
+      properties.addRow({
           formatName(prop.getName(), prop.getRequired()),
           prop.getDefaultValue().to_string(),
           formatAllowableValues(prop.getAllowedValues()),
           formatDescription(prop.getDescription(), prop.supportsExpressionLanguage())});
     }
-    outfile << processors.toString();
+    outfile << properties.toString();
 
     outfile << "\n### Relationships\n\n";
     Table relationships{{"Name", "Description"}};
