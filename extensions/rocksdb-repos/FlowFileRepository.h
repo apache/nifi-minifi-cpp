@@ -23,13 +23,11 @@
 #include <list>
 
 #include "utils/file/FileUtils.h"
-#include "rocksdb/db.h"
 #include "rocksdb/options.h"
 #include "rocksdb/slice.h"
 #include "rocksdb/utilities/checkpoint.h"
 #include "core/Core.h"
 #include "core/logging/LoggerConfiguration.h"
-#include "core/ThreadedRepository.h"
 #include "Connection.h"
 #include "concurrentqueue.h"
 #include "database/RocksDatabase.h"
@@ -40,6 +38,7 @@
 #include "range/v3/algorithm/all_of.hpp"
 #include "utils/Literals.h"
 #include "utils/StoppableThread.h"
+#include "RocksDbRepository.h"
 
 namespace org::apache::nifi::minifi::core::repository {
 
@@ -53,13 +52,12 @@ constexpr auto FLOWFILE_CHECKPOINT_DIRECTORY = "./flowfile_checkpoint";
 constexpr auto MAX_FLOWFILE_REPOSITORY_STORAGE_SIZE = 10_MiB;
 constexpr auto MAX_FLOWFILE_REPOSITORY_ENTRY_LIFE_TIME = std::chrono::minutes(10);
 constexpr auto FLOWFILE_REPOSITORY_PURGE_PERIOD = std::chrono::seconds(2);
-constexpr auto FLOWFILE_REPOSITORY_RETRY_INTERVAL_INCREMENTS = std::chrono::milliseconds(500);
 
 /**
  * Flow File repository
  * Design: Extends Repository and implements the run function, using rocksdb as the primary substrate.
  */
-class FlowFileRepository : public ThreadedRepository, public SwapManager {
+class FlowFileRepository : public RocksDbRepository, public SwapManager {
   static constexpr std::chrono::milliseconds DEFAULT_COMPACTION_PERIOD = std::chrono::minutes{2};
 
   struct ExpiredFlowFileInfo {
@@ -79,8 +77,8 @@ class FlowFileRepository : public ThreadedRepository, public SwapManager {
                               std::chrono::milliseconds maxPartitionMillis = MAX_FLOWFILE_REPOSITORY_ENTRY_LIFE_TIME,
                               int64_t maxPartitionBytes = MAX_FLOWFILE_REPOSITORY_STORAGE_SIZE,
                               std::chrono::milliseconds purgePeriod = FLOWFILE_REPOSITORY_PURGE_PERIOD)
-    : ThreadedRepository(repo_name.length() > 0 ? std::move(repo_name) : core::getClassName<FlowFileRepository>(), std::move(directory), maxPartitionMillis, maxPartitionBytes, purgePeriod),
-      logger_(logging::LoggerFactory<FlowFileRepository>::getLogger()) {
+    : RocksDbRepository(repo_name.length() > 0 ? std::move(repo_name) : core::getClassName<FlowFileRepository>(),
+                        std::move(directory), maxPartitionMillis, maxPartitionBytes, purgePeriod, logging::LoggerFactory<FlowFileRepository>::getLogger()) {
   }
 
   ~FlowFileRepository() override {
@@ -95,18 +93,11 @@ class FlowFileRepository : public ThreadedRepository, public SwapManager {
     return false;
   }
 
-  void flush() override;
-
-  virtual void printStats();
-
-  bool initialize(const std::shared_ptr<Configure> &configure) override;
-
-  bool Put(const std::string& key, const uint8_t *buf, size_t bufLen) override;
-  bool MultiPut(const std::vector<std::pair<std::string, std::unique_ptr<minifi::io::BufferStream>>>& data) override;
   bool Delete(const std::string& key) override;
   bool Delete(const std::shared_ptr<core::CoreComponent>& item) override;
-  bool Get(const std::string &key, std::string &value) override;
 
+  void flush() override;
+  bool initialize(const std::shared_ptr<Configure> &configure) override;
   void loadComponent(const std::shared_ptr<core::ContentRepository> &content_repo) override;
   bool start() override;
   bool stop() override;
@@ -115,27 +106,17 @@ class FlowFileRepository : public ThreadedRepository, public SwapManager {
 
  private:
   void run() override;
+  void initialize_repository();
 
   void runCompaction();
   void setCompactionPeriod(const std::shared_ptr<Configure> &configure);
 
-  bool ExecuteWithRetry(const std::function<rocksdb::Status()>& operation);
-
-  void initialize_repository();
-
   void deserializeFlowFilesWithNoContentClaim(minifi::internal::OpenRocksDb& opendb, std::list<ExpiredFlowFileInfo>& flow_files);
-
-  std::thread& getThread() override {
-    return thread_;
-  }
 
   moodycamel::ConcurrentQueue<ExpiredFlowFileInfo> keys_to_delete_;
   std::shared_ptr<core::ContentRepository> content_repo_;
-  std::unique_ptr<minifi::internal::RocksDatabase> db_;
   std::unique_ptr<FlowFileLoader> swap_loader_;
-  std::shared_ptr<logging::Logger> logger_;
   std::shared_ptr<minifi::Configure> config_;
-  std::thread thread_;
 
   std::chrono::milliseconds compaction_period_;
   std::unique_ptr<utils::StoppableThread> compaction_thread_;

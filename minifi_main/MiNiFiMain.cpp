@@ -371,7 +371,8 @@ int main(int argc, char **argv) {
           .path = configure->get(minifi::Configure::nifi_flow_configuration_file),
           .filesystem = filesystem}, nifi_configuration_class_name);
 
-    auto metrics_publisher_store = std::make_unique<minifi::state::MetricsPublisherStore>(configure, prov_repo, flow_repo, flow_configuration);
+    std::vector<std::shared_ptr<core::RepositoryMetricsSource>> repo_metric_sources{prov_repo, flow_repo, content_repo};
+    auto metrics_publisher_store = std::make_unique<minifi::state::MetricsPublisherStore>(configure, repo_metric_sources, flow_configuration);
 
     const auto controller = std::make_unique<minifi::FlowController>(
       prov_repo, flow_repo, configure, std::move(flow_configuration), content_repo, std::move(metrics_publisher_store), filesystem, request_restart);

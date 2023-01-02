@@ -52,7 +52,7 @@ void verifyMaxKeyCount(const minifi::provenance::ProvenanceRepository& repo, uin
 
   for (int i = 0; i < 50; ++i) {
     std::this_thread::sleep_for(100ms);
-    k = std::min(k, repo.getKeyCount());
+    k = std::min(k, repo.getRepositoryEntryCount());
     if (k < keyCount) {
       break;
     }

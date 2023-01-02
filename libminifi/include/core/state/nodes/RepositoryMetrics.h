@@ -26,6 +26,7 @@
 
 #include "../nodes/MetricsBase.h"
 #include "Connection.h"
+#include "core/RepositoryMetricsSource.h"
 
 namespace org::apache::nifi::minifi::state::response {
 
@@ -54,33 +55,42 @@ class RepositoryMetrics : public ResponseNode {
     return "RepositoryMetrics";
   }
 
-  void addRepository(const std::shared_ptr<core::Repository> &repo) {
+  void addRepository(const std::shared_ptr<core::RepositoryMetricsSource> &repo) {
     if (nullptr != repo) {
-      repositories_.insert(std::make_pair(repo->getName(), repo));
+      repositories_.push_back(repo);
     }
   }
 
   std::vector<SerializedResponseNode> serialize() override {
     std::vector<SerializedResponseNode> serialized;
-    for (auto conn : repositories_) {
-      auto repo = conn.second;
+    for (const auto& repo : repositories_) {
       SerializedResponseNode parent;
-      parent.name = repo->getName();
-      SerializedResponseNode datasize;
-      datasize.name = "running";
-      datasize.value = repo->isRunning();
+      parent.name = repo->getRepositoryName();
+      SerializedResponseNode is_running;
+      is_running.name = "running";
+      is_running.value = repo->isRunning();
 
-      SerializedResponseNode datasizemax;
-      datasizemax.name = "full";
-      datasizemax.value = repo->isFull();
+      SerializedResponseNode is_full;
+      is_full.name = "full";
+      is_full.value = repo->isFull();
 
-      SerializedResponseNode queuesize;
-      queuesize.name = "size";
-      queuesize.value = std::to_string(repo->getRepoSize());
+      SerializedResponseNode repo_size;
+      repo_size.name = "size";
+      repo_size.value = std::to_string(repo->getRepositorySize());
 
-      parent.children.push_back(datasize);
-      parent.children.push_back(datasizemax);
-      parent.children.push_back(queuesize);
+      SerializedResponseNode max_repo_size;
+      max_repo_size.name = "maxSize";
+      max_repo_size.value = std::to_string(repo->getMaxRepositorySize());
+
+      SerializedResponseNode repo_entry_count;
+      repo_entry_count.name = "entryCount";
+      repo_entry_count.value = repo->getRepositoryEntryCount();
+
+      parent.children.push_back(is_running);
+      parent.children.push_back(is_full);
+      parent.children.push_back(repo_size);
+      parent.children.push_back(max_repo_size);
+      parent.children.push_back(repo_entry_count);
 
       serialized.push_back(parent);
     }
@@ -89,16 +99,18 @@ class RepositoryMetrics : public ResponseNode {
 
   std::vector<PublishedMetric> calculateMetrics() override {
     std::vector<PublishedMetric> metrics;
-    for (const auto& [_, repo] : repositories_) {
-      metrics.push_back({"is_running", (repo->isRunning() ? 1.0 : 0.0), {{"metric_class", getName()}, {"repository_name", repo->getName()}}});
-      metrics.push_back({"is_full", (repo->isFull() ? 1.0 : 0.0), {{"metric_class", getName()}, {"repository_name", repo->getName()}}});
-      metrics.push_back({"repository_size", static_cast<double>(repo->getRepoSize()), {{"metric_class", getName()}, {"repository_name", repo->getName()}}});
+    for (const auto& repo : repositories_) {
+      metrics.push_back({"is_running", (repo->isRunning() ? 1.0 : 0.0), {{"metric_class", getName()}, {"repository_name", repo->getRepositoryName()}}});
+      metrics.push_back({"is_full", (repo->isFull() ? 1.0 : 0.0), {{"metric_class", getName()}, {"repository_name", repo->getRepositoryName()}}});
+      metrics.push_back({"repository_size_bytes", static_cast<double>(repo->getRepositorySize()), {{"metric_class", getName()}, {"repository_name", repo->getRepositoryName()}}});
+      metrics.push_back({"max_repository_size_bytes", static_cast<double>(repo->getMaxRepositorySize()), {{"metric_class", getName()}, {"repository_name", repo->getRepositoryName()}}});
+      metrics.push_back({"repository_entry_count", static_cast<double>(repo->getRepositoryEntryCount()), {{"metric_class", getName()}, {"repository_name", repo->getRepositoryName()}}});
     }
     return metrics;
   }
 
  protected:
-  std::map<std::string, std::shared_ptr<core::Repository>> repositories_;
+  std::vector<std::shared_ptr<core::RepositoryMetricsSource>> repositories_;
 };
 
 }  // namespace org::apache::nifi::minifi::state::response

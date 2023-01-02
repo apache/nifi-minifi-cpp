@@ -24,6 +24,8 @@
 #include <optional>
 #include <string>
 #include <utility>
+#include <vector>
+
 #include "core/logging/Logger.h"
 #include "core/ProcessGroup.h"
 #include "core/yaml/YamlConfiguration.h"
@@ -195,7 +197,8 @@ void IntegrationBase::run(const std::optional<std::filesystem::path>& test_file_
       running = true;
     };
 
-    auto metrics_publisher_store = std::make_unique<minifi::state::MetricsPublisherStore>(configuration, test_repo, test_flow_repo, flow_config);
+    std::vector<std::shared_ptr<core::RepositoryMetricsSource>> repo_metric_sources{test_repo, test_flow_repo, content_repo};
+    auto metrics_publisher_store = std::make_unique<minifi::state::MetricsPublisherStore>(configuration, repo_metric_sources, flow_config);
     flowController_ = std::make_unique<minifi::FlowController>(test_repo, test_flow_repo, configuration,
       std::move(flow_config), content_repo, std::move(metrics_publisher_store), filesystem, request_restart);
     flowController_->load();

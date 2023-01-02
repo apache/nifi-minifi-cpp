@@ -21,6 +21,7 @@
 #include <string>
 #include <utility>
 #include <memory>
+#include <vector>
 
 #include "MetricsPublisher.h"
 #include "core/state/nodes/ResponseNodeLoader.h"
@@ -31,8 +32,8 @@ namespace org::apache::nifi::minifi::state {
 
 class MetricsPublisherStore {
  public:
-  MetricsPublisherStore(std::shared_ptr<Configure> configuration, std::shared_ptr<core::Repository> provenance_repo,
-    std::shared_ptr<core::Repository> flow_file_repo, std::shared_ptr<core::FlowConfiguration> flow_configuration);
+  MetricsPublisherStore(std::shared_ptr<Configure> configuration, const std::vector<std::shared_ptr<core::RepositoryMetricsSource>>& repository_metric_sources,
+    std::shared_ptr<core::FlowConfiguration> flow_configuration);
   void initialize(core::controller::ControllerServiceProvider* controller, state::StateMonitor* update_sink);
   void loadMetricNodes(core::ProcessGroup* root);
   void clearMetricNodes();

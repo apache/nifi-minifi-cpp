@@ -37,6 +37,7 @@ std::unique_ptr<core::ContentRepository> createContentRepository(const std::stri
     auto return_obj = core::ClassLoader::getDefaultClassLoader().instantiate<core::ContentRepository>(class_name_lc,
                                                                                                       class_name_lc);
     if (return_obj) {
+      return_obj->setName(repo_name);
       return return_obj;
     }
     if (class_name_lc == "volatilecontentrepository") {
@@ -66,6 +67,14 @@ class NoOpThreadedRepository : public core::ThreadedRepository {
 
   ~NoOpThreadedRepository() override {
     stop();
+  }
+
+  uint64_t getRepositorySize() const override {
+    return 0;
+  }
+
+  uint64_t getRepositoryEntryCount() const override {
+    return 0;
   }
 
  private:

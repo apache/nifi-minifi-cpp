@@ -21,6 +21,7 @@
 #include <memory>
 #include <string>
 #include <vector>
+#include <optional>
 #include "utils/gsl.h"
 
 #include "rocksdb/db.h"
@@ -70,6 +71,8 @@ class OpenRocksDb {
   rocksdb::Status RunCompaction();
 
   rocksdb::DB* get();
+
+  std::optional<uint64_t> getApproximateSizes() const;
 
  private:
   void handleResult(const rocksdb::Status& result);

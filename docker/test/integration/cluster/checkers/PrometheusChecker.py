@@ -47,8 +47,9 @@ class PrometheusChecker:
             raise Exception("Metric class '%s' verification is not implemented" % metric_class)
 
     def verify_repository_metrics(self):
-        label_list = [{'repository_name': 'provenance'}, {'repository_name': 'flowfile'}]
-        return all((self.verify_metrics_exist(['minifi_is_running', 'minifi_is_full', 'minifi_repository_size'], 'RepositoryMetrics', labels) for labels in label_list))
+        label_list = [{'repository_name': 'provenance'}, {'repository_name': 'flowfile'}, {'repository_name': 'content'}]
+        return all((self.verify_metrics_exist(['minifi_is_running', 'minifi_is_full', 'minifi_repository_size_bytes', 'minifi_max_repository_size_bytes', 'minifi_repository_entry_count'], 'RepositoryMetrics', labels) for labels in label_list)) and \
+            all((self.verify_metric_larger_than_zero('minifi_repository_size_bytes', 'RepositoryMetrics', labels) for labels in label_list[1:3]))
 
     def verify_queue_metrics(self):
         return self.verify_metrics_exist(['minifi_queue_data_size', 'minifi_queue_data_size_max', 'minifi_queue_size', 'minifi_queue_size_max'], 'QueueMetrics')
@@ -72,12 +73,22 @@ class PrometheusChecker:
         return self.verify_metrics_exist(['minifi_physical_mem', 'minifi_memory_usage', 'minifi_cpu_utilization'], 'DeviceInfoNode')
 
     def verify_agent_status_metrics(self):
-        label_list = [{'repository_name': 'provenance'}, {'repository_name': 'flowfile'}]
+        label_list = [{'repository_name': 'flowfile'}, {'repository_name': 'content'}]
         for labels in label_list:
             if not (self.verify_metric_exists('minifi_is_running', 'AgentStatus', labels)
                     and self.verify_metric_exists('minifi_is_full', 'AgentStatus', labels)
-                    and self.verify_metric_exists('minifi_repository_size', 'AgentStatus', labels)):
+                    and self.verify_metric_exists('minifi_max_repository_size_bytes', 'AgentStatus', labels)
+                    and self.verify_metric_larger_than_zero('minifi_repository_size_bytes', 'AgentStatus', labels)
+                    and self.verify_metric_exists('minifi_repository_entry_count', 'AgentStatus', labels)):
                 return False
+
+        # provenance repository is NoOpRepository by default which has zero size
+        if not (self.verify_metric_exists('minifi_is_running', 'AgentStatus', {'repository_name': 'provenance'})
+                and self.verify_metric_exists('minifi_is_full', 'AgentStatus', {'repository_name': 'provenance'})
+                and self.verify_metric_exists('minifi_max_repository_size_bytes', 'AgentStatus', {'repository_name': 'provenance'})
+                and self.verify_metric_exists('minifi_repository_size_bytes', 'AgentStatus', {'repository_name': 'provenance'})
+                and self.verify_metric_exists('minifi_repository_entry_count', 'AgentStatus', {'repository_name': 'provenance'})):
+            return False
         return self.verify_metric_exists('minifi_uptime_milliseconds', 'AgentStatus') and \
             self.verify_metric_exists('minifi_agent_memory_usage_bytes', 'AgentStatus') and \
             self.verify_metric_exists('minifi_agent_cpu_utilization', 'AgentStatus')

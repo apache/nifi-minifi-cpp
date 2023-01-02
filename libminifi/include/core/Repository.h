@@ -29,19 +29,20 @@
 #include <utility>
 #include <vector>
 
-#include "Core.h"
 #include "ResourceClaim.h"
 #include "core/Connectable.h"
 #include "core/ContentRepository.h"
 #include "core/Property.h"
 #include "core/SerializableComponent.h"
 #include "core/logging/LoggerFactory.h"
+#include "core/RepositoryMetricsSource.h"
 #include "properties/Configure.h"
 #include "utils/BackTrace.h"
 #include "SwapManager.h"
 #include "utils/Literals.h"
 #include "utils/StringUtils.h"
 #include "utils/TimeUtil.h"
+#include "core/Core.h"
 
 #ifndef WIN32
 #include <sys/stat.h>
@@ -54,7 +55,7 @@ constexpr auto MAX_REPOSITORY_STORAGE_SIZE = 10_MiB;
 constexpr auto MAX_REPOSITORY_ENTRY_LIFE_TIME = std::chrono::minutes(10);
 constexpr auto REPOSITORY_PURGE_PERIOD = std::chrono::milliseconds(2500);
 
-class Repository : public core::CoreComponent {
+class Repository : public core::CoreComponent, public core::RepositoryMetricsSource {
  public:
   explicit Repository(std::string repo_name = "Repository",
                       std::string directory = REPOSITORY_DIRECTORY,
@@ -62,20 +63,15 @@ class Repository : public core::CoreComponent {
                       int64_t maxPartitionBytes = MAX_REPOSITORY_STORAGE_SIZE,
                       std::chrono::milliseconds purgePeriod = REPOSITORY_PURGE_PERIOD)
     : core::CoreComponent(std::move(repo_name)),
-      directory_(std::move(directory)),
       max_partition_millis_(maxPartitionMillis),
       max_partition_bytes_(maxPartitionBytes),
       purge_period_(purgePeriod),
       repo_full_(false),
-      repo_size_(0),
+      directory_(std::move(directory)),
       logger_(logging::LoggerFactory<Repository>::getLogger()) {
   }
 
-  virtual bool isRunning() const {
-    return true;
-  }
-
-  virtual bool initialize(const std::shared_ptr<Configure>& /*configure*/) = 0;
+  virtual bool initialize(const std::shared_ptr<Configure> &configure) = 0;
   virtual bool start() = 0;
   virtual bool stop() = 0;
 
@@ -116,10 +112,6 @@ class Repository : public core::CoreComponent {
     return false;
   }
 
-  virtual bool isFull() {
-    return repo_full_;
-  }
-
   virtual bool getElements(std::vector<std::shared_ptr<core::SerializableComponent>>& /*store*/, size_t& /*max_size*/) {
     return true;
   }
@@ -129,12 +121,12 @@ class Repository : public core::CoreComponent {
   virtual void loadComponent(const std::shared_ptr<core::ContentRepository>& /*content_repo*/) {
   }
 
-  virtual uint64_t getRepoSize() const {
-    return repo_size_;
-  }
-
   std::string getDirectory() const {
     return directory_;
+  }
+
+  std::string getRepositoryName() const override {
+    return getName();
   }
 
   // Prevent default copy constructor and assignment operation
@@ -146,15 +138,13 @@ class Repository : public core::CoreComponent {
   std::map<std::string, core::Connectable*> containers_;
 
   std::map<std::string, core::Connectable*> connection_map_;
-  std::string directory_;
   // max db entry lifetime
   std::chrono::milliseconds max_partition_millis_;
   // max db size
   int64_t max_partition_bytes_;
   std::chrono::milliseconds purge_period_;
   std::atomic<bool> repo_full_;
-
-  std::atomic<uint64_t> repo_size_;
+  std::string directory_;
 
  private:
   std::shared_ptr<logging::Logger> logger_;

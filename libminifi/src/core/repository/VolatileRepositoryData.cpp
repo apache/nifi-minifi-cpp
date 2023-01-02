@@ -23,6 +23,7 @@ namespace org::apache::nifi::minifi::core::repository {
 
 VolatileRepositoryData::VolatileRepositoryData(uint32_t max_count, size_t max_size)
   : current_size(0),
+    current_entry_count(0),
     max_count(max_count),
     max_size(max_size) {
 }

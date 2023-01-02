@@ -21,10 +21,12 @@
 #include <memory>
 #include <string>
 #include <utility>
+#include <algorithm>
 
 #include "../ContentRepository.h"
 #include "properties/Configure.h"
 #include "core/logging/LoggerFactory.h"
+#include "utils/file/FileUtils.h"
 
 namespace org::apache::nifi::minifi::core::repository {
 
@@ -49,6 +51,18 @@ class FileSystemRepository : public core::ContentRepository {
   std::shared_ptr<ContentSession> createSession() override;
 
   void clearOrphans() override;
+
+  uint64_t getRepositorySize() const override {
+    return utils::file::path_size(directory_);
+  }
+
+  uint64_t getRepositoryEntryCount() const override {
+    auto dir_it = std::filesystem::recursive_directory_iterator(directory_, std::filesystem::directory_options::skip_permission_denied);
+    return std::count_if(
+      std::filesystem::begin(dir_it),
+      std::filesystem::end(dir_it),
+      [](auto& entry) { return entry.is_regular_file(); });
+  }
 
  protected:
   bool removeKey(const std::string& content_path) override;
