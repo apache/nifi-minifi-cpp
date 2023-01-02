@@ -122,4 +122,15 @@ rocksdb::DB* OpenRocksDb::get() {
   return impl_.get();
 }
 
+std::optional<uint64_t> OpenRocksDb::getApproximateSizes() const {
+  const rocksdb::SizeApproximationOptions options{ .include_memtables = true };
+  const rocksdb::Range range("", "~");
+  uint64_t value = 0;
+  auto status = impl_->GetApproximateSizes(options, column_->handle.get(), &range, 1, &value);
+  if (status.ok()) {
+    return value;
+  }
+  return std::nullopt;
+}
+
 }  // namespace org::apache::nifi::minifi::internal

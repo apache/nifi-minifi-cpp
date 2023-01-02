@@ -26,22 +26,20 @@
 #include "properties/Configure.h"
 #include "ResourceClaim.h"
 #include "StreamManager.h"
-#include "core/Core.h"
 #include "ContentSession.h"
+#include "core/RepositoryMetricsSource.h"
+#include "core/Core.h"
 
 namespace org::apache::nifi::minifi::core {
 
 /**
  * Content repository definition that extends StreamManager.
  */
-class ContentRepository : public StreamManager<minifi::ResourceClaim>, public utils::EnableSharedFromThis<ContentRepository>, public core::CoreComponent {
+class ContentRepository : public core::CoreComponent, public StreamManager<minifi::ResourceClaim>, public utils::EnableSharedFromThis<ContentRepository>, public core::RepositoryMetricsSource {
  public:
   explicit ContentRepository(std::string name, const utils::Identifier& uuid = {}) : core::CoreComponent(std::move(name), uuid) {}
   ~ContentRepository() override = default;
 
-  /**
-   * initialize this content repository using the provided configuration.
-   */
   virtual bool initialize(const std::shared_ptr<Configure> &configure) = 0;
 
   std::string getStoragePath() const override;
@@ -58,6 +56,10 @@ class ContentRepository : public StreamManager<minifi::ResourceClaim>, public ut
   virtual void stop() {}
 
   bool remove(const minifi::ResourceClaim &streamId) final;
+
+  std::string getRepositoryName() const override {
+    return getName();
+  }
 
  protected:
   void removeFromPurgeList();

@@ -135,7 +135,7 @@ int main(int argc, char **argv) {
 
   auto yaml_ptr = std::make_shared<core::YamlConfiguration>(core::ConfigurationContext{test_repo, content_repo, stream_factory, configuration, args.test_file});
 
-  auto metrics_publisher_store = std::make_unique<minifi::state::MetricsPublisherStore>(configuration, test_repo, test_flow_repo, yaml_ptr);
+  auto metrics_publisher_store = std::make_unique<minifi::state::MetricsPublisherStore>(configuration, test_repo, test_flow_repo, content_repo, yaml_ptr);
   std::shared_ptr<minifi::FlowController> controller = std::make_shared<minifi::FlowController>(test_repo, test_flow_repo, configuration,
       std::move(yaml_ptr), content_repo, std::move(metrics_publisher_store));
 

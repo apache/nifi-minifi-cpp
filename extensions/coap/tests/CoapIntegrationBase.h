@@ -72,7 +72,7 @@ class CoapIntegrationBase : public IntegrationBase {
 
     queryRootProcessGroup(pg);
 
-    auto metrics_publisher_store = std::make_unique<minifi::state::MetricsPublisherStore>(configuration, test_repo, test_flow_repo, yaml_ptr);
+    auto metrics_publisher_store = std::make_unique<minifi::state::MetricsPublisherStore>(configuration, test_repo, test_flow_repo, content_repo, yaml_ptr);
     auto controller = std::make_unique<minifi::FlowController>(test_repo, test_flow_repo, configuration, std::move(yaml_ptr), content_repo, std::move(metrics_publisher_store));
 
     controller->load();

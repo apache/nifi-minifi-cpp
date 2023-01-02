@@ -477,3 +477,42 @@ TEST_CASE("FileUtils::get_relative_path", "[TestGetRelativePath]") {
   REQUIRE(*FileUtils::get_relative_path(path, base_path / "") == std::filesystem::path("subdir") / "file.log");
   REQUIRE(*FileUtils::get_relative_path(base_path, base_path) == ".");
 }
+
+TEST_CASE("FileUtils::path_size", "[TestPathSize]") {
+  auto writeToFile = [](const std::filesystem::path& path) {
+    std::ofstream test_file_stream(path, std::ios::out | std::ios::binary);
+    test_file_stream << "foo\n";
+    test_file_stream.flush();
+  };
+
+  TestController test_controller;
+  REQUIRE(FileUtils::path_size({""}) == 0);
+  REQUIRE(FileUtils::path_size({"/random/non-existent/dir"}) == 0);
+
+  auto dir = test_controller.createTempDirectory();
+  REQUIRE(FileUtils::path_size(dir) == 0);
+
+  auto test_file = dir / "test_file.log";
+  writeToFile(test_file);
+
+  REQUIRE(FileUtils::path_size(test_file) == 4);
+  REQUIRE(FileUtils::path_size(dir) == 4);
+
+  auto subdir = dir / "subdir";
+  REQUIRE(utils::file::create_dir(subdir) == 0);
+
+  REQUIRE(FileUtils::path_size(dir) == 4);
+
+  auto subdir_test_file = subdir / "test_file2.log";
+  writeToFile(subdir_test_file);
+
+  REQUIRE(FileUtils::path_size(dir) == 8);
+
+  auto subsubdir = subdir / "subsubdir";
+  REQUIRE(utils::file::create_dir(subsubdir) == 0);
+
+  auto subsubdir_test_file = subsubdir / "test_file3.log";
+  writeToFile(subsubdir_test_file);
+
+  REQUIRE(FileUtils::path_size(dir) == 12);
+}

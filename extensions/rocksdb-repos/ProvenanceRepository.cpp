@@ -23,20 +23,6 @@
 
 namespace org::apache::nifi::minifi::provenance {
 
-void ProvenanceRepository::printStats() {
-  std::string key_count;
-  db_->GetProperty("rocksdb.estimate-num-keys", &key_count);
-
-  std::string table_readers;
-  db_->GetProperty("rocksdb.estimate-table-readers-mem", &table_readers);
-
-  std::string all_memtables;
-  db_->GetProperty("rocksdb.cur-size-all-mem-tables", &all_memtables);
-
-  logger_->log_info("Repository stats: key count: %s, table readers size: %s, all memory tables size: %s",
-                    key_count, table_readers, all_memtables);
-}
-
 void ProvenanceRepository::run() {
   size_t count = 0;
   while (isRunning()) {
@@ -66,64 +52,45 @@ bool ProvenanceRepository::initialize(const std::shared_ptr<org::apache::nifi::m
   }
   logger_->log_debug("MiNiFi Provenance Max Storage Time: [%" PRId64 "] ms",
                       int64_t{max_partition_millis_.count()});
-  rocksdb::Options options;
-  options.create_if_missing = true;
-  options.use_direct_io_for_flush_and_compaction = true;
-  options.use_direct_reads = true;
+
+  auto db_options = [] (minifi::internal::Writable<rocksdb::DBOptions>& db_opts) {
+    db_opts.set(&rocksdb::DBOptions::create_if_missing, true);
+    db_opts.set(&rocksdb::DBOptions::use_direct_io_for_flush_and_compaction, true);
+    db_opts.set(&rocksdb::DBOptions::use_direct_reads, true);
+  };
+
   // Rocksdb write buffers act as a log of database operation: grow till reaching the limit, serialized after
   // This shouldn't go above 16MB and the configured total size of the db should cap it as well
-  int64_t max_buffer_size = 16 << 20;
-  options.write_buffer_size = gsl::narrow<size_t>(std::min(max_buffer_size, max_partition_bytes_));
-  options.max_write_buffer_number = 4;
-  options.min_write_buffer_number_to_merge = 1;
+  auto cf_options = [this] (rocksdb::ColumnFamilyOptions& cf_opts) {
+    int64_t max_buffer_size = 16 << 20;
+    cf_opts.write_buffer_size = gsl::narrow<size_t>(std::min(max_buffer_size, max_partition_bytes_));
+    cf_opts.max_write_buffer_number = 4;
+    cf_opts.min_write_buffer_number_to_merge = 1;
 
-  options.compaction_style = rocksdb::CompactionStyle::kCompactionStyleFIFO;
-  options.compaction_options_fifo = rocksdb::CompactionOptionsFIFO(max_partition_bytes_, false);
-  if (max_partition_millis_ > std::chrono::milliseconds(0)) {
-    options.ttl = std::chrono::duration_cast<std::chrono::seconds>(max_partition_millis_).count();
-  }
+    cf_opts.compaction_style = rocksdb::CompactionStyle::kCompactionStyleFIFO;
+    cf_opts.compaction_options_fifo = rocksdb::CompactionOptionsFIFO(max_partition_bytes_, false);
+    if (max_partition_millis_ > std::chrono::milliseconds(0)) {
+      cf_opts.ttl = std::chrono::duration_cast<std::chrono::seconds>(max_partition_millis_).count();
+    }
+  };
 
-  logger_->log_info("Write buffer: %llu", options.write_buffer_size);
-  logger_->log_info("Max partition bytes: %llu", max_partition_bytes_);
-  logger_->log_info("Ttl: %llu", options.ttl);
-
-  rocksdb::DB* db;
-  rocksdb::Status status = rocksdb::DB::Open(options, directory_, &db);
-  if (status.ok()) {
+  db_ = minifi::internal::RocksDatabase::create(db_options, cf_options, directory_);
+  if (db_->open()) {
     logger_->log_debug("MiNiFi Provenance Repository database open %s success", directory_);
-    db_.reset(db);
   } else {
-    logger_->log_error("MiNiFi Provenance Repository database open %s failed: %s", directory_, status.ToString());
+    logger_->log_error("MiNiFi Provenance Repository database open %s failed", directory_);
     return false;
   }
 
   return true;
 }
 
-bool ProvenanceRepository::Put(const std::string& key, const uint8_t *buf, size_t bufLen) {
-  // persist to the DB
-  rocksdb::Slice value((const char *) buf, bufLen);
-  return db_->Put(rocksdb::WriteOptions(), key, value).ok();
-}
-
-bool ProvenanceRepository::MultiPut(const std::vector<std::pair<std::string, std::unique_ptr<minifi::io::BufferStream>>>& data) {
-  rocksdb::WriteBatch batch;
-  for (const auto &item : data) {
-    const auto buf = item.second->getBuffer().as_span<const char>();
-    rocksdb::Slice value(buf.data(), buf.size());
-    if (!batch.Put(item.first, value).ok()) {
-      return false;
-    }
-  }
-  return db_->Write(rocksdb::WriteOptions(), &batch).ok();
-}
-
-bool ProvenanceRepository::Get(const std::string &key, std::string &value) {
-  return db_->Get(rocksdb::ReadOptions(), key, &value).ok();
-}
-
 bool ProvenanceRepository::getElements(std::vector<std::shared_ptr<core::SerializableComponent>> &records, size_t &max_size) {
-  std::unique_ptr<rocksdb::Iterator> it(db_->NewIterator(rocksdb::ReadOptions()));
+  auto opendb = db_->open();
+  if (!opendb) {
+    return false;
+  }
+  std::unique_ptr<rocksdb::Iterator> it(opendb->NewIterator(rocksdb::ReadOptions()));
   size_t requested_batch = max_size;
   max_size = 0;
   for (it->SeekToFirst(); it->Valid(); it->Next()) {
@@ -145,9 +112,12 @@ void ProvenanceRepository::destroy() {
 }
 
 uint64_t ProvenanceRepository::getKeyCount() const {
+  auto opendb = db_->open();
+  if (!opendb) {
+    return 0;
+  }
   std::string key_count;
-  db_->GetProperty("rocksdb.estimate-num-keys", &key_count);
-
+  opendb->GetProperty("rocksdb.estimate-num-keys", &key_count);
   return std::stoull(key_count);
 }
 

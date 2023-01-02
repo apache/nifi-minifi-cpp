@@ -24,12 +24,12 @@
 #include "AtomicRepoEntries.h"
 #include "io/AtomicEntryStream.h"
 #include "../ContentRepository.h"
-#include "core/repository/VolatileRepository.h"
 #include "properties/Configure.h"
 #include "core/Connectable.h"
 #include "core/logging/LoggerFactory.h"
 #include "utils/GeneralUtils.h"
 #include "VolatileRepositoryData.h"
+#include "utils/Literals.h"
 
 namespace org::apache::nifi::minifi::core::repository {
 /**
@@ -56,6 +56,22 @@ class VolatileContentRepository : public core::ContentRepository {
       }
       master_list_.clear();
     }
+  }
+
+  uint64_t getRepositorySize() const override {
+    return repo_data_.getRepositorySize();
+  }
+
+  uint64_t getMaxRepositorySize() const override {
+    return repo_data_.getMaxRepositorySize();
+  }
+
+  uint64_t getRepositoryEntryCount() const override {
+    return master_list_.size();
+  }
+
+  bool isFull() const override {
+    return repo_data_.isFull();
   }
 
   /**

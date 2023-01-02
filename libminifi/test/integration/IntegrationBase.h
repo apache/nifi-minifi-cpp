@@ -195,7 +195,7 @@ void IntegrationBase::run(const std::optional<std::filesystem::path>& test_file_
       running = true;
     };
 
-    auto metrics_publisher_store = std::make_unique<minifi::state::MetricsPublisherStore>(configuration, test_repo, test_flow_repo, flow_config);
+    auto metrics_publisher_store = std::make_unique<minifi::state::MetricsPublisherStore>(configuration, test_repo, test_flow_repo, content_repo, flow_config);
     flowController_ = std::make_unique<minifi::FlowController>(test_repo, test_flow_repo, configuration,
       std::move(flow_config), content_repo, std::move(metrics_publisher_store), filesystem, request_restart);
     flowController_->load();

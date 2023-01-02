@@ -27,6 +27,7 @@
 #include "core/RepositoryFactory.h"
 #include "FlowFileRecord.h"
 #include "FlowFileRepository.h"
+#include "ProvenanceRepository.h"
 #include "provenance/Provenance.h"
 #include "properties/Configure.h"
 #include "../unit/ProvenanceTestHelper.h"
@@ -34,6 +35,9 @@
 #include "../Catch.h"
 #include "utils/gsl.h"
 #include "utils/IntegrationTestUtils.h"
+#include "core/repository/VolatileFlowFileRepository.h"
+#include "core/repository/VolatileProvenanceRepository.h"
+#include "DatabaseContentRepository.h"
 
 using namespace std::literals::chrono_literals;
 
@@ -513,6 +517,223 @@ TEST_CASE("FlowFileRepository synchronously pushes existing flow files") {
     REQUIRE(ff);
     REQUIRE(ff->getUUID() == ff_id);
   }
+}
+
+TEST_CASE("Test getting flow file repository size properties", "[TestGettingRepositorySize]") {
+  LogTestController::getInstance().setDebug<core::repository::FlowFileRepository>();
+  LogTestController::getInstance().setDebug<minifi::provenance::ProvenanceRepository>();
+  LogTestController::getInstance().setDebug<core::repository::VolatileFlowFileRepository>();
+  LogTestController::getInstance().setDebug<core::repository::VolatileProvenanceRepository>();
+  TestController testController;
+  auto dir = testController.createTempDirectory();
+
+  std::shared_ptr<core::Repository> repository;
+  auto expected_is_full = false;
+  uint64_t expected_max_repo_size = 0;
+  SECTION("FlowFileRepository") {
+    repository = std::make_shared<core::repository::FlowFileRepository>("ff", dir.string(), 0ms, 0, 1ms);
+  }
+
+  SECTION("ProvenanceRepository") {
+    repository = std::make_shared<minifi::provenance::ProvenanceRepository>("ff", dir.string(), 0ms, 0, 1ms);
+  }
+
+  SECTION("VolatileFlowFileRepository") {
+    repository = std::make_shared<core::repository::VolatileFlowFileRepository>("ff", dir.string(), 0ms, 10, 1ms);
+    expected_is_full = true;
+    expected_max_repo_size = 7;
+  }
+
+  SECTION("VolatileProvenanceRepository") {
+    repository = std::make_shared<core::repository::VolatileProvenanceRepository>("ff", dir.string(), 0ms, 10, 1ms);
+    expected_is_full = true;
+    expected_max_repo_size = 7;
+  }
+  auto configuration = std::make_shared<minifi::Configure>();
+  repository->initialize(configuration);
+
+  auto flow_file = std::make_shared<minifi::FlowFileRecord>();
+
+  for (auto i = 0; i < 100; ++i) {
+    flow_file->addAttribute("key" + std::to_string(i), "testattributevalue" + std::to_string(i));
+  }
+
+  auto original_size = repository->getRepositorySize();
+  using org::apache::nifi::minifi::utils::verifyEventHappenedInPollTime;
+  assert(verifyEventHappenedInPollTime(std::chrono::seconds(5), [&original_size, &repository] {
+      auto old_size = original_size;
+      original_size = repository->getRepositorySize();
+      return old_size == original_size;
+    },
+    std::chrono::milliseconds(50)));
+  REQUIRE(true == flow_file->Persist(repository));
+  auto flow_file_2 = std::make_shared<minifi::FlowFileRecord>();
+  REQUIRE(true == flow_file_2->Persist(repository));
+
+  repository->flush();
+  repository->stop();
+
+  auto new_size = repository->getRepositorySize();
+  assert(verifyEventHappenedInPollTime(std::chrono::seconds(5), [&new_size, &repository] {
+      auto old_size = new_size;
+      new_size = repository->getRepositorySize();
+      return old_size == new_size;
+    },
+    std::chrono::milliseconds(50)));
+  REQUIRE(new_size > original_size);
+  REQUIRE(expected_is_full == repository->isFull());
+  REQUIRE(expected_max_repo_size == repository->getMaxRepositorySize());
+  REQUIRE(2 == repository->getRepositoryEntryCount());
+}
+
+TEST_CASE("Test getting noop repository size properties", "[TestGettingRepositorySize]") {
+  TestController testController;
+  auto dir = testController.createTempDirectory();
+
+  auto repository = minifi::core::createRepository("NoOpRepository", "ff");
+
+  repository->initialize(std::make_shared<minifi::Configure>());
+
+  auto flow_file = std::make_shared<minifi::FlowFileRecord>();
+
+  flow_file->addAttribute("key", "testattributevalue");
+
+  repository->flush();
+  repository->stop();
+
+  REQUIRE(repository->getRepositorySize() == 0);
+  REQUIRE(!repository->isFull());
+  REQUIRE(repository->getMaxRepositorySize() == 0);
+  REQUIRE(repository->getRepositoryEntryCount() == 0);
+}
+
+TEST_CASE("Test getting content repository size properties", "[TestGettingRepositorySize]") {
+  LogTestController::getInstance().setDebug<core::ContentRepository>();
+  LogTestController::getInstance().setDebug<core::repository::FileSystemRepository>();
+  LogTestController::getInstance().setDebug<core::repository::VolatileContentRepository>();
+  LogTestController::getInstance().setDebug<core::repository::DatabaseContentRepository>();
+  TestController testController;
+  auto dir = testController.createTempDirectory();
+
+  auto repository = std::make_shared<core::repository::FlowFileRepository>("ff", dir.string(), 0ms, 0, 1ms);
+
+  auto content_repo_dir = testController.createTempDirectory();
+  auto configuration = std::make_shared<minifi::Configure>();
+  configuration->set(minifi::Configure::nifi_dbcontent_repository_directory_default, content_repo_dir.string());
+  std::string content = "content";
+  configuration->set(minifi::Configure::nifi_volatile_repository_options_content_max_bytes, std::to_string(content.size()));
+
+  std::shared_ptr<core::ContentRepository> content_repo;
+  auto expected_is_full = false;
+  uint64_t expected_max_repo_size = 0;
+  SECTION("FileSystemRepository") {
+    content_repo = std::make_shared<core::repository::FileSystemRepository>();
+  }
+
+  SECTION("VolatileContentRepository") {
+    content_repo = std::make_shared<core::repository::VolatileContentRepository>("content");
+    expected_is_full = true;
+    expected_max_repo_size = content.size();
+  }
+
+  SECTION("DatabaseContentRepository") {
+    content_repo = std::make_shared<core::repository::DatabaseContentRepository>();
+  }
+
+  content_repo->initialize(configuration);
+
+  repository->initialize(configuration);
+  repository->loadComponent(content_repo);
+  auto original_content_repo_size = content_repo->getRepositorySize();
+
+  auto flow_file = std::make_shared<minifi::FlowFileRecord>();
+
+  auto content_session = content_repo->createSession();
+  auto claim = content_session->create();
+  auto stream = content_session->write(claim);
+  stream->write(reinterpret_cast<const uint8_t*>(content.data()), content.size());
+  flow_file->setResourceClaim(claim);
+  flow_file->setSize(stream->size());
+  flow_file->setOffset(0);
+
+  stream->close();
+  content_session->commit();
+
+  repository->flush();
+  repository->stop();
+
+  using org::apache::nifi::minifi::utils::verifyEventHappenedInPollTime;
+  REQUIRE(verifyEventHappenedInPollTime(std::chrono::seconds(5), [&original_content_repo_size, &content_repo] {
+      auto new_content_repo_size = content_repo->getRepositorySize();
+      return new_content_repo_size > original_content_repo_size;
+    },
+    std::chrono::milliseconds(50)));
+
+  REQUIRE(expected_is_full == content_repo->isFull());
+  REQUIRE(expected_max_repo_size == content_repo->getMaxRepositorySize());
+  REQUIRE(1 == content_repo->getRepositoryEntryCount());
+}
+
+TEST_CASE("Flow file repositories can be stopped", "[TestRepoIsRunning]") {
+  LogTestController::getInstance().setDebug<core::repository::FlowFileRepository>();
+  LogTestController::getInstance().setDebug<minifi::provenance::ProvenanceRepository>();
+  LogTestController::getInstance().setDebug<core::repository::VolatileFlowFileRepository>();
+  LogTestController::getInstance().setDebug<core::repository::VolatileProvenanceRepository>();
+  TestController testController;
+  auto dir = testController.createTempDirectory();
+
+  std::shared_ptr<core::Repository> repository;
+  SECTION("FlowFileRepository") {
+    repository = std::make_shared<core::repository::FlowFileRepository>("ff", dir.string(), 0ms, 0, 1ms);
+  }
+
+  SECTION("ProvenanceRepository") {
+    repository = std::make_shared<minifi::provenance::ProvenanceRepository>("ff", dir.string(), 0ms, 0, 1ms);
+  }
+
+  SECTION("VolatileFlowFileRepository") {
+    repository = std::make_shared<core::repository::VolatileFlowFileRepository>("ff", dir.string(), 0ms, 10, 1ms);
+  }
+
+  SECTION("VolatileProvenanceRepository") {
+    repository = std::make_shared<core::repository::VolatileProvenanceRepository>("ff", dir.string(), 0ms, 10, 1ms);
+  }
+
+  SECTION("NoOpRepository") {
+    repository = minifi::core::createRepository("NoOpRepository", "ff");
+  }
+
+  repository->initialize(std::make_shared<minifi::Configure>());
+
+  REQUIRE(!repository->isRunning());
+  repository->start();
+  REQUIRE(repository->isRunning());
+  repository->stop();
+  REQUIRE(!repository->isRunning());
+}
+
+TEST_CASE("Content repositories are always running", "[TestRepoIsRunning]") {
+  LogTestController::getInstance().setDebug<core::ContentRepository>();
+  LogTestController::getInstance().setDebug<core::repository::FileSystemRepository>();
+  LogTestController::getInstance().setDebug<core::repository::VolatileContentRepository>();
+  LogTestController::getInstance().setDebug<core::repository::DatabaseContentRepository>();
+  TestController testController;
+  auto dir = testController.createTempDirectory();
+
+  std::shared_ptr<core::ContentRepository> content_repo;
+  SECTION("FileSystemRepository") {
+    content_repo = std::make_shared<core::repository::FileSystemRepository>();
+  }
+
+  SECTION("VolatileContentRepository") {
+    content_repo = std::make_shared<core::repository::VolatileContentRepository>("content");
+  }
+
+  SECTION("DatabaseContentRepository") {
+    content_repo = std::make_shared<core::repository::DatabaseContentRepository>();
+  }
+
+  REQUIRE(content_repo->isRunning());
 }
 
 }  // namespace

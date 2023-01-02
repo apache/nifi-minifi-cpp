@@ -16,8 +16,7 @@
  * limitations under the License.
  */
 
-#ifndef LIBMINIFI_INCLUDE_CORE_REPOSITORYFACTORY_H_
-#define LIBMINIFI_INCLUDE_CORE_REPOSITORYFACTORY_H_
+#pragma once
 
 #include <memory>
 #include <string>
@@ -45,5 +44,3 @@ std::unique_ptr<core::ContentRepository> createContentRepository(const std::stri
 std::unique_ptr<core::Repository> createRepository(const std::string& configuration_class_name, const std::string& repo_name = "");
 
 }  // namespace org::apache::nifi::minifi::core
-
-#endif  // LIBMINIFI_INCLUDE_CORE_REPOSITORYFACTORY_H_

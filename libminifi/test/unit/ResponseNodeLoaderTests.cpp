@@ -36,7 +36,7 @@ class ResponseNodeLoaderTestFixture {
       prov_repo_(std::make_shared<TestRepository>()),
       ff_repository_(std::make_shared<TestRepository>()),
       content_repo_(std::make_shared<minifi::core::repository::VolatileContentRepository>()),
-      response_node_loader_(configuration_, prov_repo_, ff_repository_, nullptr) {
+      response_node_loader_(configuration_, prov_repo_, ff_repository_, content_repo_, nullptr) {
     ff_repository_->initialize(configuration_);
     content_repo_->initialize(configuration_);
     auto uuid1 = addProcessor<minifi::processors::WriteToFlowFileTestProcessor>("WriteToFlowFileTestProcessor1");

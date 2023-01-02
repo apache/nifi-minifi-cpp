@@ -267,6 +267,25 @@ void DatabaseContentRepository::clearOrphans() {
   }
 }
 
+uint64_t DatabaseContentRepository::getRepositorySize() const {
+  return (utils::optional_from_ptr(db_.get()) |
+          utils::flatMap([](const auto& db) { return db->open(); }) |
+          utils::flatMap([](const auto& opendb) { return opendb.getApproximateSizes(); })).value_or(0);
+}
+
+uint64_t DatabaseContentRepository::getRepositoryEntryCount() const {
+  return (utils::optional_from_ptr(db_.get()) |
+          utils::flatMap([](const auto& db) { return db->open(); }) |
+          utils::flatMap([](auto&& opendb) -> std::optional<uint64_t> {
+              std::string key_count;
+              opendb.GetProperty("rocksdb.estimate-num-keys", &key_count);
+              if (!key_count.empty()) {
+                return std::stoull(key_count);
+              }
+              return std::nullopt;
+            })).value_or(0);
+}
+
 REGISTER_RESOURCE_AS(DatabaseContentRepository, InternalResource, ("DatabaseContentRepository", "databasecontentrepository"));
 
 }  // namespace org::apache::nifi::minifi::core::repository

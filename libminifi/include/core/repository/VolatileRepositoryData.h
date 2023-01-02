@@ -35,8 +35,26 @@ struct VolatileRepositoryData {
 
   void initialize(const std::shared_ptr<Configure> &configure, const std::string& repo_name);
   void clear();
+
+  uint64_t getRepositorySize() const {
+    return current_size;
+  }
+
+  uint64_t getMaxRepositorySize() const {
+    return max_size;
+  }
+
+  uint64_t getRepositoryEntryCount() const {
+    return current_entry_count;
+  }
+
+  bool isFull() const {
+    return current_size >= max_size;
+  }
+
   // current size of the volatile repo.
   std::atomic<size_t> current_size;
+  std::atomic<size_t> current_entry_count;
   // value vector that exists for non blocking iteration over
   // objects that store data for this repo instance.
   std::vector<AtomicEntry<std::string>*> value_vector;

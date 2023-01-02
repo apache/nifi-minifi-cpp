@@ -32,11 +32,12 @@
 
 namespace org::apache::nifi::minifi::state::response {
 
-ResponseNodeLoader::ResponseNodeLoader(std::shared_ptr<Configure> configuration, std::shared_ptr<core::Repository> provenance_repo,
-    std::shared_ptr<core::Repository> flow_file_repo, std::shared_ptr<core::FlowConfiguration> flow_configuration)
+ResponseNodeLoader::ResponseNodeLoader(std::shared_ptr<Configure> configuration, std::shared_ptr<core::RepositoryMetricsSource> provenance_repo,
+      std::shared_ptr<core::RepositoryMetricsSource> flow_file_repo, std::shared_ptr<core::RepositoryMetricsSource> content_repo, std::shared_ptr<core::FlowConfiguration> flow_configuration)
   : configuration_(std::move(configuration)),
     provenance_repo_(std::move(provenance_repo)),
     flow_file_repo_(std::move(flow_file_repo)),
+    content_repo_(std::move(content_repo)),
     flow_configuration_(std::move(flow_configuration)) {
 }
 
@@ -126,6 +127,7 @@ void ResponseNodeLoader::initializeRepositoryMetrics(const SharedResponseNode& r
   if (repository_metrics != nullptr) {
     repository_metrics->addRepository(provenance_repo_);
     repository_metrics->addRepository(flow_file_repo_);
+    repository_metrics->addRepository(content_repo_);
   }
 }
 
@@ -157,6 +159,7 @@ void ResponseNodeLoader::initializeAgentMonitor(const SharedResponseNode& respon
   if (monitor != nullptr) {
     monitor->addRepository(provenance_repo_);
     monitor->addRepository(flow_file_repo_);
+    monitor->addRepository(content_repo_);
     monitor->setStateMonitor(update_sink_);
   }
 }
@@ -178,6 +181,7 @@ void ResponseNodeLoader::initializeAgentStatus(const SharedResponseNode& respons
   if (agent_status != nullptr) {
     agent_status->addRepository(provenance_repo_);
     agent_status->addRepository(flow_file_repo_);
+    agent_status->addRepository(content_repo_);
     agent_status->setStateMonitor(update_sink_);
   }
 }

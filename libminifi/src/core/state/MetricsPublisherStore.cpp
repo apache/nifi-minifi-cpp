@@ -22,10 +22,11 @@
 
 namespace org::apache::nifi::minifi::state {
 
-MetricsPublisherStore::MetricsPublisherStore(std::shared_ptr<Configure> configuration, std::shared_ptr<core::Repository> provenance_repo,
-  std::shared_ptr<core::Repository> flow_file_repo, std::shared_ptr<core::FlowConfiguration> flow_configuration)
+MetricsPublisherStore::MetricsPublisherStore(std::shared_ptr<Configure> configuration, std::shared_ptr<core::RepositoryMetricsSource> provenance_repo,
+  std::shared_ptr<core::RepositoryMetricsSource> flow_file_repo, std::shared_ptr<core::RepositoryMetricsSource> content_repo, std::shared_ptr<core::FlowConfiguration> flow_configuration)
     : configuration_(configuration),
-      response_node_loader_(std::make_shared<response::ResponseNodeLoader>(std::move(configuration), std::move(provenance_repo), std::move(flow_file_repo), std::move(flow_configuration))) {
+      response_node_loader_(std::make_shared<response::ResponseNodeLoader>(
+        std::move(configuration), std::move(provenance_repo), std::move(flow_file_repo), std::move(content_repo), std::move(flow_configuration))) {
 }
 
 void MetricsPublisherStore::initialize(core::controller::ControllerServiceProvider* controller, state::StateMonitor* update_sink) {

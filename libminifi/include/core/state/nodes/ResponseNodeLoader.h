@@ -33,13 +33,14 @@
 #include "utils/gsl.h"
 #include "utils/Id.h"
 #include "utils/expected.h"
+#include "core/RepositoryMetricsSource.h"
 
 namespace org::apache::nifi::minifi::state::response {
 
 class ResponseNodeLoader {
  public:
-  ResponseNodeLoader(std::shared_ptr<Configure> configuration, std::shared_ptr<core::Repository> provenance_repo,
-    std::shared_ptr<core::Repository> flow_file_repo, std::shared_ptr<core::FlowConfiguration> flow_configuration);
+  ResponseNodeLoader(std::shared_ptr<Configure> configuration, std::shared_ptr<core::RepositoryMetricsSource> provenance_repo,
+    std::shared_ptr<core::RepositoryMetricsSource> flow_file_repo, std::shared_ptr<core::RepositoryMetricsSource> content_repo, std::shared_ptr<core::FlowConfiguration> flow_configuration);
 
   void setNewConfigRoot(core::ProcessGroup* root);
   void clearConfigRoot();
@@ -70,8 +71,9 @@ class ResponseNodeLoader {
   std::unordered_map<std::string, std::vector<SharedResponseNode>> component_metrics_;
   std::unordered_map<std::string, SharedResponseNode> system_metrics_;
   std::shared_ptr<Configure> configuration_;
-  std::shared_ptr<core::Repository> provenance_repo_;
-  std::shared_ptr<core::Repository> flow_file_repo_;
+  std::shared_ptr<core::RepositoryMetricsSource> provenance_repo_;
+  std::shared_ptr<core::RepositoryMetricsSource> flow_file_repo_;
+  std::shared_ptr<core::RepositoryMetricsSource> content_repo_;
   std::shared_ptr<core::FlowConfiguration> flow_configuration_;
   core::controller::ControllerServiceProvider* controller_{};
   state::StateMonitor* update_sink_{};

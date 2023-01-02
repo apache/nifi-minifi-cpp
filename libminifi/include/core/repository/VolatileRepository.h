@@ -81,8 +81,20 @@ class VolatileRepository : public core::ThreadedRepository {
    */
   bool Get(const std::string& key, std::string &value) override;
 
-  uint64_t getRepoSize() const override {
-    return repo_data_.current_size;
+  uint64_t getRepositorySize() const override {
+    return repo_data_.getRepositorySize();
+  }
+
+  uint64_t getMaxRepositorySize() const override {
+    return repo_data_.getMaxRepositorySize();
+  }
+
+  uint64_t getRepositoryEntryCount() const override {
+    return repo_data_.getRepositoryEntryCount();
+  }
+
+  bool isFull() const override {
+    return repo_data_.isFull();
   }
 
  protected:

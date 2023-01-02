@@ -71,6 +71,9 @@ bool VolatileRepository::Put(const std::string& key, const uint8_t *buf, size_t 
     }
   } while (!updated);
   repo_data_.current_size += size;
+  if (repo_data_.current_entry_count < repo_data_.max_count) {
+    ++repo_data_.current_entry_count;
+  }
 
   logger_->log_debug("VolatileRepository -- put %zu %" PRIu32, repo_data_.current_size.load(), current_index_.load());
   return true;
@@ -92,6 +95,7 @@ bool VolatileRepository::Delete(const std::string& key) {
     RepoValue<std::string> value;
     if (ent->getValue(key, value)) {
       repo_data_.current_size -= value.size();
+      --repo_data_.current_entry_count;
       logger_->log_debug("Delete and pushed into purge_list from volatile");
       emplace(value);
       return true;
@@ -102,10 +106,8 @@ bool VolatileRepository::Delete(const std::string& key) {
 
 bool VolatileRepository::Get(const std::string &key, std::string &value) {
   for (auto ent : repo_data_.value_vector) {
-    // let the destructor do the cleanup
     RepoValue<std::string> repo_value;
     if (ent->getValue(key, repo_value)) {
-      repo_data_.current_size -= value.size();
       repo_value.emplace(value);
       return true;
     }

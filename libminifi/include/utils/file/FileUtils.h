@@ -206,6 +206,20 @@ inline bool is_directory(const std::filesystem::path &path) {
   return false;
 }
 
+inline uint64_t path_size(const std::filesystem::path& path) {
+  uint64_t size = 0;
+  if (std::filesystem::is_regular_file(path)) {
+    return utils::file::file_size(path);
+  } else if (utils::file::is_directory(path)) {
+    for (const std::filesystem::directory_entry& entry : std::filesystem::recursive_directory_iterator(path, std::filesystem::directory_options::skip_permission_denied)) {
+      if (entry.is_regular_file()) {
+        size += entry.file_size();
+      }
+    }
+  }
+  return size;
+}
+
 inline bool exists(const std::filesystem::path &path) {
   std::error_code ec;
   bool result = std::filesystem::exists(path, ec);

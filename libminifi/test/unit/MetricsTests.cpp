@@ -110,7 +110,7 @@ TEST_CASE("RepositorymetricsHaveRepo", "[c2m4]") {
 
     REQUIRE("repo_name" == resp.name);
 
-    REQUIRE(3 == resp.children.size());
+    REQUIRE(5 == resp.children.size());
 
     minifi::state::response::SerializedResponseNode running = resp.children.at(0);
 
@@ -126,6 +126,15 @@ TEST_CASE("RepositorymetricsHaveRepo", "[c2m4]") {
 
     REQUIRE("size" == size.name);
     REQUIRE("0" == size.value);
+
+    minifi::state::response::SerializedResponseNode max_size = resp.children.at(3);
+
+    REQUIRE("maxSize" == max_size.name);
+    REQUIRE("0" == max_size.value.to_string());
+
+    minifi::state::response::SerializedResponseNode entry_count = resp.children.at(4);
+    REQUIRE("entryCount" == entry_count.name);
+    REQUIRE("0" == entry_count.value.to_string());
   }
 
   repo->start();
@@ -136,7 +145,7 @@ TEST_CASE("RepositorymetricsHaveRepo", "[c2m4]") {
 
     REQUIRE("repo_name" == resp.name);
 
-    REQUIRE(3 == resp.children.size());
+    REQUIRE(5 == resp.children.size());
 
     minifi::state::response::SerializedResponseNode running = resp.children.at(0);
 
@@ -152,33 +161,15 @@ TEST_CASE("RepositorymetricsHaveRepo", "[c2m4]") {
 
     REQUIRE("size" == size.name);
     REQUIRE("0" == size.value);
-  }
 
-  repo->setFull();
+    minifi::state::response::SerializedResponseNode max_size = resp.children.at(3);
 
-  {
-    REQUIRE(1 == metrics.serialize().size());
+    REQUIRE("maxSize" == max_size.name);
+    REQUIRE("0" == max_size.value.to_string());
 
-    minifi::state::response::SerializedResponseNode resp = metrics.serialize().at(0);
-
-    REQUIRE("repo_name" == resp.name);
-
-    REQUIRE(3 == resp.children.size());
-
-    minifi::state::response::SerializedResponseNode running = resp.children.at(0);
-
-    REQUIRE("running" == running.name);
-    REQUIRE("true" == running.value.to_string());
-
-    minifi::state::response::SerializedResponseNode full = resp.children.at(1);
-
-    REQUIRE("full" == full.name);
-    REQUIRE("true" == full.value.to_string());
-
-    minifi::state::response::SerializedResponseNode size = resp.children.at(2);
-
-    REQUIRE("size" == size.name);
-    REQUIRE("0" == size.value.to_string());
+    minifi::state::response::SerializedResponseNode entry_count = resp.children.at(4);
+    REQUIRE("entryCount" == entry_count.name);
+    REQUIRE("0" == entry_count.value.to_string());
   }
 
   repo->stop();
@@ -190,7 +181,7 @@ TEST_CASE("RepositorymetricsHaveRepo", "[c2m4]") {
 
     REQUIRE("repo_name" == resp.name);
 
-    REQUIRE(3 == resp.children.size());
+    REQUIRE(5 == resp.children.size());
 
     minifi::state::response::SerializedResponseNode running = resp.children.at(0);
 
@@ -200,12 +191,99 @@ TEST_CASE("RepositorymetricsHaveRepo", "[c2m4]") {
     minifi::state::response::SerializedResponseNode full = resp.children.at(1);
 
     REQUIRE("full" == full.name);
-    REQUIRE("true" == full.value);
+    REQUIRE("false" == full.value);
 
     minifi::state::response::SerializedResponseNode size = resp.children.at(2);
 
     REQUIRE("size" == size.name);
     REQUIRE("0" == size.value);
+
+    minifi::state::response::SerializedResponseNode max_size = resp.children.at(3);
+
+    REQUIRE("maxSize" == max_size.name);
+    REQUIRE("0" == max_size.value.to_string());
+
+    minifi::state::response::SerializedResponseNode entry_count = resp.children.at(4);
+    REQUIRE("entryCount" == entry_count.name);
+    REQUIRE("0" == entry_count.value.to_string());
+  }
+}
+
+TEST_CASE("VolatileRepositorymetricsCanBeFull", "[c2m4]") {
+  minifi::state::response::RepositoryMetrics metrics;
+
+  REQUIRE("RepositoryMetrics" == metrics.getName());
+
+  auto repo = std::make_shared<TestVolatileRepository>();
+
+  metrics.addRepository(repo);
+  {
+    REQUIRE(1 == metrics.serialize().size());
+
+    minifi::state::response::SerializedResponseNode resp = metrics.serialize().at(0);
+
+    REQUIRE("repo_name" == resp.name);
+
+    REQUIRE(5 == resp.children.size());
+
+    minifi::state::response::SerializedResponseNode running = resp.children.at(0);
+
+    REQUIRE("running" == running.name);
+    REQUIRE("false" == running.value.to_string());
+
+    minifi::state::response::SerializedResponseNode full = resp.children.at(1);
+
+    REQUIRE("full" == full.name);
+    REQUIRE("false" == full.value);
+
+    minifi::state::response::SerializedResponseNode size = resp.children.at(2);
+
+    REQUIRE("size" == size.name);
+    REQUIRE("0" == size.value);
+
+    minifi::state::response::SerializedResponseNode max_size = resp.children.at(3);
+
+    REQUIRE("maxSize" == max_size.name);
+    REQUIRE(std::to_string(static_cast<int64_t>(TEST_MAX_REPOSITORY_STORAGE_SIZE * 0.75)) == max_size.value.to_string());
+
+    minifi::state::response::SerializedResponseNode entry_count = resp.children.at(4);
+    REQUIRE("entryCount" == entry_count.name);
+    REQUIRE("0" == entry_count.value.to_string());
+  }
+
+  repo->setFull();
+
+  {
+    REQUIRE(1 == metrics.serialize().size());
+
+    minifi::state::response::SerializedResponseNode resp = metrics.serialize().at(0);
+
+    REQUIRE("repo_name" == resp.name);
+
+    REQUIRE(5 == resp.children.size());
+
+    minifi::state::response::SerializedResponseNode running = resp.children.at(0);
+
+    REQUIRE("running" == running.name);
+    REQUIRE("false" == running.value.to_string());
+
+    minifi::state::response::SerializedResponseNode full = resp.children.at(1);
+
+    REQUIRE("full" == full.name);
+    REQUIRE("true" == full.value.to_string());
+
+    minifi::state::response::SerializedResponseNode size = resp.children.at(2);
+
+    REQUIRE("size" == size.name);
+    REQUIRE(std::to_string(static_cast<int64_t>(TEST_MAX_REPOSITORY_STORAGE_SIZE * 0.75)) == size.value.to_string());
+
+    minifi::state::response::SerializedResponseNode max_size = resp.children.at(3);
+    REQUIRE("maxSize" == max_size.name);
+    REQUIRE(std::to_string(static_cast<int64_t>(TEST_MAX_REPOSITORY_STORAGE_SIZE * 0.75)) == max_size.value.to_string());
+
+    minifi::state::response::SerializedResponseNode entry_count = resp.children.at(4);
+    REQUIRE("entryCount" == entry_count.name);
+    REQUIRE("10000" == entry_count.value.to_string());
   }
 }
 

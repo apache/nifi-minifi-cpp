@@ -61,6 +61,7 @@
 #include "core/AgentIdentificationProvider.h"
 #include "utils/Export.h"
 #include "SupportedOperations.h"
+#include "core/RepositoryMetricsSource.h"
 
 namespace org::apache::nifi::minifi::state::response {
 
@@ -423,13 +424,13 @@ class AgentStatus : public StateMonitorNode {
     return "AgentStatus";
   }
 
-  void setRepositories(const std::map<std::string, std::shared_ptr<core::Repository>> &repositories) {
+  void setRepositories(const std::map<std::string, std::shared_ptr<core::RepositoryMetricsSource>> &repositories) {
     repositories_ = repositories;
   }
 
-  void addRepository(const std::shared_ptr<core::Repository> &repo) {
+  void addRepository(const std::shared_ptr<core::RepositoryMetricsSource> &repo) {
     if (nullptr != repo) {
-      repositories_.insert(std::make_pair(repo->getName(), repo));
+      repositories_.insert(std::make_pair(repo->getRepositoryName(), repo));
     }
   }
 
@@ -454,9 +455,11 @@ class AgentStatus : public StateMonitorNode {
   std::vector<PublishedMetric> calculateMetrics() override {
     std::vector<PublishedMetric> metrics;
     for (const auto& [_, repo] : repositories_) {
-      metrics.push_back({"is_running", (repo->isRunning() ? 1.0 : 0.0), {{"metric_class", getName()}, {"repository_name", repo->getName()}}});
-      metrics.push_back({"is_full", (repo->isFull() ? 1.0 : 0.0), {{"metric_class", getName()}, {"repository_name", repo->getName()}}});
-      metrics.push_back({"repository_size", static_cast<double>(repo->getRepoSize()), {{"metric_class", getName()}, {"repository_name", repo->getName()}}});
+      metrics.push_back({"is_running", (repo->isRunning() ? 1.0 : 0.0), {{"metric_class", getName()}, {"repository_name", repo->getRepositoryName()}}});
+      metrics.push_back({"is_full", (repo->isFull() ? 1.0 : 0.0), {{"metric_class", getName()}, {"repository_name", repo->getRepositoryName()}}});
+      metrics.push_back({"repository_size_bytes", static_cast<double>(repo->getRepositorySize()), {{"metric_class", getName()}, {"repository_name", repo->getRepositoryName()}}});
+      metrics.push_back({"max_repository_size_bytes", static_cast<double>(repo->getMaxRepositorySize()), {{"metric_class", getName()}, {"repository_name", repo->getRepositoryName()}}});
+      metrics.push_back({"repository_entry_count", static_cast<double>(repo->getRepositoryEntryCount()), {{"metric_class", getName()}, {"repository_name", repo->getRepositoryName()}}});
     }
     if (nullptr != monitor_) {
       auto uptime = monitor_->getUptime();
@@ -488,26 +491,36 @@ class AgentStatus : public StateMonitorNode {
     repositories.name = "repositories";
 
     for (const auto& repo : repositories_) {
-      SerializedResponseNode repoNode;
-      repoNode.collapsible = false;
-      repoNode.name = repo.first;
+      SerializedResponseNode repo_node;
+      repo_node.collapsible = false;
+      repo_node.name = repo.first;
 
-      SerializedResponseNode queuesize;
-      queuesize.name = "size";
-      queuesize.value = repo.second->getRepoSize();
+      SerializedResponseNode repo_size;
+      repo_size.name = "size";
+      repo_size.value = repo.second->getRepositorySize();
 
-      SerializedResponseNode isRunning;
-      isRunning.name = "running";
-      isRunning.value = repo.second->isRunning();
+      SerializedResponseNode max_repo_size;
+      max_repo_size.name = "maxSize";
+      max_repo_size.value = repo.second->getMaxRepositorySize();
 
-      SerializedResponseNode isFull;
-      isFull.name = "full";
-      isFull.value = repo.second->isFull();
+      SerializedResponseNode repo_entry_count;
+      repo_entry_count.name = "entryCount";
+      repo_entry_count.value = repo.second->getRepositoryEntryCount();
 
-      repoNode.children.push_back(queuesize);
-      repoNode.children.push_back(isRunning);
-      repoNode.children.push_back(isFull);
-      repositories.children.push_back(repoNode);
+      SerializedResponseNode is_running;
+      is_running.name = "running";
+      is_running.value = repo.second->isRunning();
+
+      SerializedResponseNode is_full;
+      is_full.name = "full";
+      is_full.value = repo.second->isFull();
+
+      repo_node.children.push_back(repo_size);
+      repo_node.children.push_back(max_repo_size);
+      repo_node.children.push_back(repo_entry_count);
+      repo_node.children.push_back(is_running);
+      repo_node.children.push_back(is_full);
+      repositories.children.push_back(repo_node);
     }
     return repositories;
   }
@@ -578,7 +591,7 @@ class AgentStatus : public StateMonitorNode {
     return resource_consumption;
   }
 
-  std::map<std::string, std::shared_ptr<core::Repository>> repositories_;
+  std::map<std::string, std::shared_ptr<core::RepositoryMetricsSource>> repositories_;
 
   MINIFIAPI static utils::ProcessCpuUsageTracker cpu_load_tracker_;
   MINIFIAPI static std::mutex cpu_load_tracker_mutex_;
@@ -608,9 +621,9 @@ class AgentMonitor {
   AgentMonitor()
       : monitor_(nullptr) {
   }
-  void addRepository(const std::shared_ptr<core::Repository> &repo) {
+  void addRepository(const std::shared_ptr<core::RepositoryMetricsSource> &repo) {
     if (nullptr != repo) {
-      repositories_.insert(std::make_pair(repo->getName(), repo));
+      repositories_.insert(std::make_pair(repo->getRepositoryName(), repo));
     }
   }
 
@@ -619,7 +632,7 @@ class AgentMonitor {
   }
 
  protected:
-  std::map<std::string, std::shared_ptr<core::Repository>> repositories_;
+  std::map<std::string, std::shared_ptr<core::RepositoryMetricsSource>> repositories_;
   state::StateMonitor* monitor_ = nullptr;
 };
 

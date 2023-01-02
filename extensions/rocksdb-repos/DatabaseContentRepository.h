@@ -74,6 +74,9 @@ class DatabaseContentRepository : public core::ContentRepository {
   void start() override;
   void stop() override;
 
+  uint64_t getRepositorySize() const override;
+  uint64_t getRepositoryEntryCount() const override;
+
  protected:
   bool removeKey(const std::string& content_path) override;
 
