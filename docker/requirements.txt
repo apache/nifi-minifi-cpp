@@ -6,6 +6,6 @@ confluent-kafka==1.7.0
 PyYAML==5.4.1
 m2crypto==0.38.0
 watchdog==2.1.2
-pyopenssl==21.0.0
+pyopenssl==23.0.0
 azure-storage-blob==12.9.0
 prometheus-api-client==0.5.0
