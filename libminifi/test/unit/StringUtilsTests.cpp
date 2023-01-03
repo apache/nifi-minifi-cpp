@@ -16,7 +16,6 @@
  * limitations under the License.
  */
 
-#include <algorithm>
 #include <cstdint>
 #include <list>
 #include <optional>
@@ -31,7 +30,6 @@
 
 using org::apache::nifi::minifi::utils::StringUtils;
 using utils::as_string;
-
 
 // NOLINTBEGIN(readability-container-size-empty)
 
@@ -157,20 +155,41 @@ TEST_CASE("StringUtils::replaceEnvironmentVariables works correctly", "[replaceE
 
 TEST_CASE("TestStringUtils::testJoin", "[test string join]") {
   std::set<std::string> strings = {"3", "2", "1"};
-  REQUIRE(StringUtils::join(",", strings) == "1,2,3");
+  CHECK(StringUtils::join(",", strings) == "1,2,3");
 
   std::wstring sep = L"é";
   std::vector<std::wstring> wstrings = {L"1", L"2"};
-  REQUIRE(StringUtils::join(sep, wstrings) == L"1é2");
+  CHECK(StringUtils::join(sep, wstrings) == L"1é2");
 
   std::list<uint64_t> ulist = {1, 2};
-  REQUIRE(StringUtils::join(sep, ulist) == L"1é2");
+  CHECK(StringUtils::join(sep, ulist) == L"1é2");
 
-  REQUIRE(StringUtils::join(">", ulist) == "1>2");
+  CHECK(StringUtils::join(">", ulist) == "1>2");
 
-  REQUIRE(StringUtils::join("", ulist) == "12");
+  CHECK(StringUtils::join("", ulist) == "12");
 
-  REQUIRE(StringUtils::join("this separator wont appear", std::vector<std::string>()) == "");
+  CHECK(StringUtils::join("this separator wont appear", std::vector<std::string>()) == "");
+}
+
+TEST_CASE("Test the join function with a projection", "[join][projection]") {
+  std::vector<std::string> fruits = { "APPLE", "OrAnGe" };
+  CHECK(StringUtils::join(", ", fruits, [](auto fruit) { return StringUtils::toLower(fruit); }) == "apple, orange");
+
+  std::set numbers_set = { 3, 2, 1 };
+  CHECK(StringUtils::join(", ", numbers_set, [](auto x) { return std::to_string(x); }) == "1, 2, 3");
+
+  std::wstring sep = L"é";
+  std::vector numbers_vector = { 1,  2 };
+  CHECK(StringUtils::join(sep, numbers_vector, [](auto x) { return std::to_wstring(x); }) == L"1é2");
+
+  std::list<uint64_t> numbers_list = { 1, 2, 3 };
+  CHECK(StringUtils::join(", ", numbers_list, [](auto x) { return std::to_string(x * x); }) == "1, 4, 9");
+
+  CHECK(StringUtils::join(std::string_view{"-"}, numbers_list, [](auto x) { return std::to_string(5 * x); }) == "5-10-15");
+
+  CHECK(StringUtils::join(std::string{}, numbers_list, [](auto x) { return '<' + std::to_string(x) + '>'; }) == "<1><2><3>");
+
+  CHECK(StringUtils::join("this separator wont appear", std::vector<int>{}, [](int) { return std::string_view{"foo"}; }) == "");
 }
 
 TEST_CASE("TestStringUtils::trim", "[test trim]") {
@@ -536,4 +555,5 @@ TEST_CASE("StringUtils::matchesSequence works correctly", "[matchesSequence]") {
   REQUIRE(StringUtils::matchesSequence("xxxabcxxxabcxxxdefxxx", {"abc", "abc", "def"}));
   REQUIRE(!StringUtils::matchesSequence("xxxabcxxxdefxxx", {"abc", "abc", "def"}));
 }
+
 // NOLINTEND(readability-container-size-empty)

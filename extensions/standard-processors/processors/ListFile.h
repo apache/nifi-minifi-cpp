@@ -67,6 +67,27 @@ class ListFile : public core::Processor {
   EXTENSIONAPI static const core::Relationship Success;
   static auto relationships() { return std::array{Success}; }
 
+  EXTENSIONAPI static const core::OutputAttribute Filename;
+  EXTENSIONAPI static const core::OutputAttribute Path;
+  EXTENSIONAPI static const core::OutputAttribute AbsolutePath;
+  EXTENSIONAPI static const core::OutputAttribute FileOwner;
+  EXTENSIONAPI static const core::OutputAttribute FileGroup;
+  EXTENSIONAPI static const core::OutputAttribute FileSize;
+  EXTENSIONAPI static const core::OutputAttribute FilePermissions;
+  EXTENSIONAPI static const core::OutputAttribute FileLastModifiedTime;
+  static auto outputAttributes() {
+    return std::array{
+        Filename,
+        Path,
+        AbsolutePath,
+        FileOwner,
+        FileGroup,
+        FileSize,
+        FilePermissions,
+        FileLastModifiedTime
+    };
+  }
+
   EXTENSIONAPI static constexpr bool SupportsDynamicProperties = false;
   EXTENSIONAPI static constexpr bool SupportsDynamicRelationships = false;
   EXTENSIONAPI static constexpr core::annotation::Input InputRequirement = core::annotation::Input::INPUT_FORBIDDEN;

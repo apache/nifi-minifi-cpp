@@ -81,6 +81,22 @@ const core::Property ListFile::IgnoreHiddenFiles(
 
 const core::Relationship ListFile::Success("success", "All FlowFiles that are received are routed to success");
 
+const core::OutputAttribute ListFile::Filename{"filename", { Success }, "The name of the file that was read from filesystem."};
+const core::OutputAttribute ListFile::Path{"path", { Success },
+    "The path is set to the relative path of the file's directory on filesystem compared to the Input Directory property. "
+    "For example, if Input Directory is set to /tmp, then files picked up from /tmp will have the path attribute set to \"./\". "
+    "If the Recurse Subdirectories property is set to true and a file is picked up from /tmp/abc/1/2/3, then the path attribute will be set to \"abc/1/2/3/\"."};
+const core::OutputAttribute ListFile::AbsolutePath{"absolute.path", { Success },
+    "The absolute.path is set to the absolute path of the file's directory on filesystem. "
+    "For example, if the Input Directory property is set to /tmp, then files picked up from /tmp will have the path attribute set to \"/tmp/\". "
+    "If the Recurse Subdirectories property is set to true and a file is picked up from /tmp/abc/1/2/3, then the path attribute will be set to \"/tmp/abc/1/2/3/\"."};
+const core::OutputAttribute ListFile::FileOwner{"file.owner", { Success }, "The user that owns the file in filesystem"};
+const core::OutputAttribute ListFile::FileGroup{"file.group", { Success }, "The group that owns the file in filesystem"};
+const core::OutputAttribute ListFile::FileSize{"file.size", { Success }, "The number of bytes in the file in filesystem"};
+const core::OutputAttribute ListFile::FilePermissions{"file.permissions", { Success },
+    "The permissions for the file in filesystem. This is formatted as 3 characters for the owner, 3 for the group, and 3 for other users. For example rw-rw-r--"};
+const core::OutputAttribute ListFile::FileLastModifiedTime{"file.lastModifiedTime", { Success }, "The timestamp of when the file in filesystem was last modified as 'yyyy-MM-dd'T'HH:mm:ssZ'"};
+
 void ListFile::initialize() {
   setSupportedProperties(properties());
   setSupportedRelationships(relationships());

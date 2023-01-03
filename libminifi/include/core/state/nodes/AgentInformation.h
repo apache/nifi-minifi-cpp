@@ -237,11 +237,11 @@ class ComponentManifest : public DeviceInformation {
 
         SerializedResponseNode dyn_prop;
         dyn_prop.name = "supportsDynamicProperties";
-        dyn_prop.value = group.dynamic_properties_;
+        dyn_prop.value = group.supports_dynamic_properties_;
 
         SerializedResponseNode dyn_relat;
         dyn_relat.name = "supportsDynamicRelationships";
-        dyn_relat.value = group.dynamic_relationships_;
+        dyn_relat.value = group.supports_dynamic_relationships_;
 
         // only for processors
         if (!group.class_relationships_.empty()) {

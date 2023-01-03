@@ -17,10 +17,10 @@
 
 #include "RouteText.h"
 
+#include <algorithm>
 #include <map>
 #include <vector>
 #include <utility>
-#include <algorithm>
 
 #include "core/ProcessSession.h"
 #include "core/PropertyBuilder.h"
@@ -31,7 +31,6 @@
 #include "range/v3/range/conversion.hpp"
 #include "range/v3/view/tail.hpp"
 #include "range/v3/view/join.hpp"
-#include "range/v3/view/cache1.hpp"
 #include "utils/ProcessorConfigUtils.h"
 #include "utils/OptionalUtils.h"
 #include "utils/Searcher.h"
@@ -103,6 +102,12 @@ const core::Relationship RouteText::Original("original", "The original input fil
 const core::Relationship RouteText::Unmatched("unmatched", "Segments that do not satisfy the required user-defined rules will be routed to this Relationship");
 
 const core::Relationship RouteText::Matched("matched", "Segments that satisfy the required user-defined rules will be routed to this Relationship");
+
+const core::OutputAttribute RouteText::Group("RouteText.Group", {},
+    "The value captured by all capturing groups in the 'Grouping Regular Expression' property. If this property is not set, this attribute will not be added.");
+
+const core::DynamicProperty RouteText::RelationshipToRouteTo("Relationship Name", "value to match against",
+    "Routes data that matches the value specified in the Dynamic Property Value to the Relationship specified in the Dynamic Property Key.", true);
 
 RouteText::RouteText(std::string name, const utils::Identifier& uuid)
     : core::Processor(std::move(name), uuid), logger_(core::logging::LoggerFactory<RouteText>::getLogger(uuid)) {}

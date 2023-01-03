@@ -17,28 +17,8 @@
 
 #include "agent/agent_docs.h"
 
-namespace org {
-namespace apache {
-namespace nifi {
-namespace minifi {
+namespace org::apache::nifi::minifi {
 
 std::map<std::string, Components> AgentDocs::class_mappings_;
 
-bool AgentDocs::getDescription(const std::string &feature, std::string &value) {
-  for (const auto& [module_name, module_classes] : class_mappings_) {
-    for (const auto& class_descriptions : {module_classes.processors_, module_classes.controller_services_, module_classes.other_components_}) {
-      for (const auto& class_description : class_descriptions) {
-        if (class_description.full_name_ == feature || class_description.short_name_ == feature) {
-          value = class_description.description_;
-          return true;
-        }
-      }
-    }
-  }
-  return false;
-}
-
-}  // namespace minifi
-}  // namespace nifi
-}  // namespace apache
-}  // namespace org
+}  // namespace org::apache::nifi::minifi

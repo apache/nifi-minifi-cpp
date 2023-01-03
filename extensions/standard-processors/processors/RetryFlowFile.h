@@ -75,7 +75,19 @@ class RetryFlowFile : public core::Processor {
     };
   }
 
+  EXTENSIONAPI static const core::OutputAttribute RetryOutputAttribute;
+  EXTENSIONAPI static const core::OutputAttribute RetryWithUuidOutputAttribute;
+  static auto outputAttributes() {
+    return std::array{
+      RetryOutputAttribute,
+      RetryWithUuidOutputAttribute
+    };
+  }
+
   EXTENSIONAPI static constexpr bool SupportsDynamicProperties = true;
+  EXTENSIONAPI static const core::DynamicProperty RetriesExceededAttribute;
+  static auto dynamicProperties() { return std::array{RetriesExceededAttribute}; }
+
   EXTENSIONAPI static constexpr bool SupportsDynamicRelationships = false;
   EXTENSIONAPI static constexpr core::annotation::Input InputRequirement = core::annotation::Input::INPUT_REQUIRED;
   EXTENSIONAPI static constexpr bool IsSingleThreaded = false;

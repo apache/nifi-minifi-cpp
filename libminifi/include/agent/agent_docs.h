@@ -1,4 +1,5 @@
-/*** Licensed to the Apache Software Foundation (ASF) under one or more
+/**
+ * Licensed to the Apache Software Foundation (ASF) under one or more
  * contributor license agreements.  See the NOTICE file distributed with
  * this work for additional information regarding copyright ownership.
  * The ASF licenses this file to You under the Apache License, Version 2.0
@@ -21,6 +22,8 @@
 #include <vector>
 
 #include "core/Annotation.h"
+#include "core/DynamicProperty.h"
+#include "core/OutputAttribute.h"
 #include "core/Property.h"
 #include "core/Relationship.h"
 #include "utils/Export.h"
@@ -38,9 +41,11 @@ struct ClassDescription {
   std::string full_name_{};
   std::string description_{};
   std::vector<core::Property> class_properties_{};
+  std::vector<core::DynamicProperty> dynamic_properties_{};
   std::vector<core::Relationship> class_relationships_{};
-  bool dynamic_properties_ = false;
-  bool dynamic_relationships_ = false;
+  std::vector<core::OutputAttribute> output_attributes_{};
+  bool supports_dynamic_properties_ = false;
+  bool supports_dynamic_relationships_ = false;
   std::string inputRequirement_{};
   bool isSingleThreaded_ = false;
 };
@@ -77,8 +82,6 @@ class AgentDocs {
     return class_mappings_;
   }
 
-  static bool getDescription(const std::string &feature, std::string &value);
-
   template<typename Class, ResourceType Type>
   static void createClassDescription(const std::string& group, const std::string& name) {
     Components& components = class_mappings_[group];
@@ -90,9 +93,11 @@ class AgentDocs {
         .full_name_ = detail::classNameWithDots<Class>(),
         .description_ = Class::Description,
         .class_properties_ = detail::toVector(Class::properties()),
+        .dynamic_properties_ = detail::toVector(Class::dynamicProperties()),
         .class_relationships_ = detail::toVector(Class::relationships()),
-        .dynamic_properties_ = Class::SupportsDynamicProperties,
-        .dynamic_relationships_ = Class::SupportsDynamicRelationships,
+        .output_attributes_ = detail::toVector(Class::outputAttributes()),
+        .supports_dynamic_properties_ = Class::SupportsDynamicProperties,
+        .supports_dynamic_relationships_ = Class::SupportsDynamicRelationships,
         .inputRequirement_ = toString(Class::InputRequirement),
         .isSingleThreaded_ = Class::IsSingleThreaded
       });
@@ -103,7 +108,7 @@ class AgentDocs {
         .full_name_ = detail::classNameWithDots<Class>(),
         .description_ = Class::Description,
         .class_properties_ = detail::toVector(Class::properties()),
-        .dynamic_properties_ = Class::SupportsDynamicProperties,
+        .supports_dynamic_properties_ = Class::SupportsDynamicProperties,
       });
     } else if constexpr (Type == ResourceType::InternalResource) {
       components.other_components_.push_back(ClassDescription{
@@ -111,7 +116,7 @@ class AgentDocs {
         .short_name_ = name,
         .full_name_ = detail::classNameWithDots<Class>(),
         .class_properties_ = detail::toVector(Class::properties()),
-        .dynamic_properties_ = Class::SupportsDynamicProperties,
+        .supports_dynamic_properties_ = Class::SupportsDynamicProperties,
       });
     } else if constexpr (Type == ResourceType::DescriptionOnly) {
       components.other_components_.push_back(ClassDescription{

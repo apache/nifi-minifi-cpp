@@ -120,6 +120,19 @@ class InvokeHTTP : public core::Processor {
     };
   }
 
+  EXTENSIONAPI static const core::OutputAttribute StatusCode;
+  EXTENSIONAPI static const core::OutputAttribute StatusMessage;
+  EXTENSIONAPI static const core::OutputAttribute RequestUrl;
+  EXTENSIONAPI static const core::OutputAttribute TxId;
+  static auto outputAttributes() {
+    return std::array{
+        StatusCode,
+        StatusMessage,
+        RequestUrl,
+        TxId
+    };
+  }
+
   EXTENSIONAPI static constexpr bool SupportsDynamicProperties = false;
   EXTENSIONAPI static constexpr bool SupportsDynamicRelationships = false;
   EXTENSIONAPI static constexpr core::annotation::Input InputRequirement = core::annotation::Input::INPUT_ALLOWED;

@@ -149,6 +149,13 @@ const core::Relationship InvokeHTTP::RelFailure("failure",
     "The original FlowFile will be routed on any type of connection failure, "
     "timeout or general exception. It will have new attributes detailing the request.");
 
+
+const core::OutputAttribute InvokeHTTP::StatusCode{STATUS_CODE, { Success, RelResponse, RelRetry, RelNoRetry }, "The status code that is returned"};
+const core::OutputAttribute InvokeHTTP::StatusMessage{STATUS_MESSAGE, { Success, RelResponse, RelRetry, RelNoRetry }, "The status message that is returned"};
+const core::OutputAttribute InvokeHTTP::RequestUrl{REQUEST_URL, { Success, RelResponse, RelRetry, RelNoRetry }, "The original request URL"};
+const core::OutputAttribute InvokeHTTP::TxId{TRANSACTION_ID, { Success, RelResponse, RelRetry, RelNoRetry }, "The transaction ID that is returned after reading the response"};
+
+
 void InvokeHTTP::initialize() {
   logger_->log_trace("Initializing InvokeHTTP");
   setSupportedProperties(properties());

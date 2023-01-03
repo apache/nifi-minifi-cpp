@@ -93,6 +93,10 @@ const core::Property QueryDatabaseTable::WhereClause(
 
 const core::Relationship QueryDatabaseTable::Success("success", "Successfully created FlowFile from SQL query result set.");
 
+const core::DynamicProperty QueryDatabaseTable::InitialMaxValue("initial.maxvalue.<max_value_column>", "Initial maximum value for the specified column",
+    "Specifies an initial max value for max value column(s). Properties should be added in the format `initial.maxvalue.<max_value_column>`. "
+    "This value is only used the first time the table is accessed (when a Maximum Value Column is specified).", true);
+
 REGISTER_RESOURCE(QueryDatabaseTable, Processor);
 
 

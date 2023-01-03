@@ -63,6 +63,41 @@ class ListenSyslog : public NetworkListenerProcessor {
   EXTENSIONAPI static const core::Relationship Invalid;
   static auto relationships() { return std::array{Success, Invalid}; }
 
+  EXTENSIONAPI static const core::OutputAttribute Protocol;
+  EXTENSIONAPI static const core::OutputAttribute PortOutputAttribute;
+  EXTENSIONAPI static const core::OutputAttribute Sender;
+  EXTENSIONAPI static const core::OutputAttribute Valid;
+  EXTENSIONAPI static const core::OutputAttribute Priority;
+  EXTENSIONAPI static const core::OutputAttribute Severity;
+  EXTENSIONAPI static const core::OutputAttribute Facility;
+  EXTENSIONAPI static const core::OutputAttribute Timestamp;
+  EXTENSIONAPI static const core::OutputAttribute Hostname;
+  EXTENSIONAPI static const core::OutputAttribute Msg;
+  EXTENSIONAPI static const core::OutputAttribute Version;
+  EXTENSIONAPI static const core::OutputAttribute AppName;
+  EXTENSIONAPI static const core::OutputAttribute ProcId;
+  EXTENSIONAPI static const core::OutputAttribute MsgId;
+  EXTENSIONAPI static const core::OutputAttribute StructuredData;
+  static auto outputAttributes() {
+    return std::array{
+        Protocol,
+        PortOutputAttribute,
+        Sender,
+        Valid,
+        Priority,
+        Severity,
+        Facility,
+        Timestamp,
+        Hostname,
+        Msg,
+        Version,
+        AppName,
+        ProcId,
+        MsgId,
+        StructuredData
+    };
+  }
+
   void initialize() override;
   void onSchedule(const std::shared_ptr<core::ProcessContext>& context, const std::shared_ptr<core::ProcessSessionFactory>& sessionFactory) override;
 

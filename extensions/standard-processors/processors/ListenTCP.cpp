@@ -61,6 +61,9 @@ const core::Property ListenTCP::ClientAuth(
 
 const core::Relationship ListenTCP::Success("success", "Messages received successfully will be sent out this relationship.");
 
+const core::OutputAttribute ListenTCP::PortOutputAttribute{"tcp.port", {}, "The sending port the messages were received."};
+const core::OutputAttribute ListenTCP::Sender{"tcp.sender", {}, "The sending host of the messages."};
+
 void ListenTCP::initialize() {
   setSupportedProperties(properties());
   setSupportedRelationships(relationships());

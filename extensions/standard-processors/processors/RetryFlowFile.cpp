@@ -21,11 +21,7 @@
 #include "core/PropertyValidation.h"
 #include "core/Resource.h"
 
-namespace org {
-namespace apache {
-namespace nifi {
-namespace minifi {
-namespace processors {
+namespace org::apache::nifi::minifi::processors {
 
 const core::Property RetryFlowFile::RetryAttribute(core::PropertyBuilder::createProperty("Retry Attribute")
     ->withDescription(
@@ -74,6 +70,14 @@ const core::Relationship RetryFlowFile::Failure("failure",
     "The processor is configured such that a non-numerical value on 'Retry Attribute' results in a failure instead of resetting "
     "that value to '1'. This will immediately terminate the limited feedback loop. Might also include when 'Maximum Retries' contains "
     " attribute expression language that does not resolve to an Integer.");
+
+const core::OutputAttribute RetryFlowFile::RetryOutputAttribute("Retry Attribute", {},
+    "User defined retry attribute is updated with the current retry count");
+const core::OutputAttribute RetryFlowFile::RetryWithUuidOutputAttribute("Retry Attribute .uuid", {},
+    "User defined retry attribute with .uuid suffix is updated with the UUID of the processor that retried the FlowFile last");
+
+const core::DynamicProperty RetryFlowFile::RetriesExceededAttribute("Exceeded FlowFile Attribute Key", "The value of the attribute added to the FlowFile",
+    "One or more dynamic properties can be used to add attributes to FlowFiles passed to the 'retries_exceeded' relationship.", true);
 
 void RetryFlowFile::initialize() {
   setSupportedProperties(properties());
@@ -174,8 +178,4 @@ void RetryFlowFile::setRetriesExceededAttributesOnFlowFile(core::ProcessContext*
 
 REGISTER_RESOURCE(RetryFlowFile, Processor);
 
-} /* namespace processors */
-} /* namespace minifi */
-} /* namespace nifi */
-} /* namespace apache */
-} /* namespace org */
+}  // namespace org::apache::nifi::minifi::processors

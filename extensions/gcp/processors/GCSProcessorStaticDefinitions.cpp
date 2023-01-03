@@ -17,6 +17,7 @@
 
 #include "DeleteGCSObject.h"
 #include "FetchGCSObject.h"
+#include "../GCPAttributes.h"
 #include "GCSProcessor.h"
 #include "ListGCSBucket.h"
 #include "PutGCSObject.h"
@@ -86,6 +87,10 @@ const core::Property DeleteGCSObject::EncryptionKey(
 const core::Relationship DeleteGCSObject::Success("success", "FlowFiles are routed to this relationship after a successful Google Cloud Storage operation.");
 const core::Relationship DeleteGCSObject::Failure("failure", "FlowFiles are routed to this relationship if the Google Cloud Storage operation fails.");
 
+const core::OutputAttribute DeleteGCSObject::Message{GCS_STATUS_MESSAGE, { Failure }, "The status message received from google cloud."};
+const core::OutputAttribute DeleteGCSObject::Reason{GCS_ERROR_REASON, { Failure }, "The description of the error occurred during operation."};
+const core::OutputAttribute DeleteGCSObject::Domain{GCS_ERROR_DOMAIN, { Failure }, "The domain of the error occurred during operation."};
+
 REGISTER_RESOURCE(DeleteGCSObject, Processor);
 
 
@@ -121,6 +126,10 @@ const core::Property FetchGCSObject::EncryptionKey(
 const core::Relationship FetchGCSObject::Success("success", "FlowFiles are routed to this relationship after a successful Google Cloud Storage operation.");
 const core::Relationship FetchGCSObject::Failure("failure", "FlowFiles are routed to this relationship if the Google Cloud Storage operation fails.");
 
+const core::OutputAttribute FetchGCSObject::Message{GCS_STATUS_MESSAGE, { Failure }, "The status message received from google cloud."};
+const core::OutputAttribute FetchGCSObject::Reason{GCS_ERROR_REASON, { Failure }, "The description of the error occurred during operation."};
+const core::OutputAttribute FetchGCSObject::Domain{GCS_ERROR_DOMAIN, { Failure }, "The domain of the error occurred during operation."};
+
 REGISTER_RESOURCE(FetchGCSObject, Processor);
 
 
@@ -140,6 +149,29 @@ const core::Property ListGCSBucket::ListAllVersions(
         ->build());
 
 const core::Relationship ListGCSBucket::Success("success", "FlowFiles are routed to this relationship after a successful Google Cloud Storage operation.");
+
+const core::OutputAttribute ListGCSBucket::BucketOutputAttribute{GCS_BUCKET_ATTR, { Success }, "Bucket of the object."};
+const core::OutputAttribute ListGCSBucket::Key{GCS_OBJECT_NAME_ATTR, { Success }, "Name of the object."};
+const core::OutputAttribute ListGCSBucket::Filename{"filename", { Success }, std::string{"Same as "} + GCS_OBJECT_NAME_ATTR};  // NOLINT
+const core::OutputAttribute ListGCSBucket::Size{GCS_SIZE_ATTR, { Success }, "Size of the object."};
+const core::OutputAttribute ListGCSBucket::Crc32c{GCS_CRC32C_ATTR, { Success }, "The CRC32C checksum of object's data, encoded in base64."};
+const core::OutputAttribute ListGCSBucket::Md5{GCS_MD5_ATTR, { Success }, "The MD5 hash of the object's data, encoded in base64."};
+const core::OutputAttribute ListGCSBucket::OwnerEntity{GCS_OWNER_ENTITY_ATTR, { Success }, "The owner entity, in the form \"user-emailAddress\"."};
+const core::OutputAttribute ListGCSBucket::OwnerEntityId{GCS_OWNER_ENTITY_ID_ATTR, { Success }, "The ID for the entity."};
+const core::OutputAttribute ListGCSBucket::ContentEncoding{GCS_CONTENT_ENCODING_ATTR, { Success }, "The content encoding of the object."};
+const core::OutputAttribute ListGCSBucket::ContentLanguage{GCS_CONTENT_LANGUAGE_ATTR, { Success }, "The content language of the object."};
+const core::OutputAttribute ListGCSBucket::ContentDisposition{GCS_CONTENT_DISPOSITION_ATTR, { Success }, "The data content disposition of the object."};
+const core::OutputAttribute ListGCSBucket::MediaLink{GCS_MEDIA_LINK_ATTR, { Success }, "The media download link to the object."};
+const core::OutputAttribute ListGCSBucket::SelfLink{GCS_SELF_LINK_ATTR, { Success }, "The link to this object."};
+const core::OutputAttribute ListGCSBucket::Etag{GCS_ETAG_ATTR, { Success }, "The HTTP 1.1 Entity tag for the object."};
+const core::OutputAttribute ListGCSBucket::GeneratedId{GCS_GENERATED_ID, { Success }, "The service-generated ID for the object."};
+const core::OutputAttribute ListGCSBucket::Generation{GCS_GENERATION, { Success }, "The content generation of this object. Used for object versioning."};
+const core::OutputAttribute ListGCSBucket::Metageneration{GCS_META_GENERATION, { Success }, "The metageneration of the object."};
+const core::OutputAttribute ListGCSBucket::CreateTime{GCS_CREATE_TIME_ATTR, { Success }, "Unix timestamp of the object's creation in milliseconds."};
+const core::OutputAttribute ListGCSBucket::UpdateTime{GCS_UPDATE_TIME_ATTR, { Success }, "Unix timestamp of the object's last modification in milliseconds."};
+const core::OutputAttribute ListGCSBucket::DeleteTime{GCS_DELETE_TIME_ATTR, { Success }, "Unix timestamp of the object's deletion in milliseconds."};
+const core::OutputAttribute ListGCSBucket::EncryptionAlgorithm{GCS_ENCRYPTION_ALGORITHM_ATTR, { Success }, "The algorithm used to encrypt the object."};
+const core::OutputAttribute ListGCSBucket::EncryptionSha256{GCS_ENCRYPTION_SHA256_ATTR, { Success }, "The SHA256 hash of the key used to encrypt the object."};
 
 REGISTER_RESOURCE(ListGCSBucket, Processor);
 
@@ -204,6 +236,31 @@ const core::Property PutGCSObject::OverwriteObject(
 
 const core::Relationship PutGCSObject::Success("success", "Files that have been successfully written to Google Cloud Storage are transferred to this relationship");
 const core::Relationship PutGCSObject::Failure("failure", "Files that could not be written to Google Cloud Storage for some reason are transferred to this relationship");
+
+const core::OutputAttribute PutGCSObject::Message{GCS_STATUS_MESSAGE, { Failure }, "The status message received from google cloud."};
+const core::OutputAttribute PutGCSObject::Reason{GCS_ERROR_REASON, { Failure }, "The description of the error occurred during upload."};
+const core::OutputAttribute PutGCSObject::Domain{GCS_ERROR_DOMAIN, { Failure }, "The domain of the error occurred during upload."};
+const core::OutputAttribute PutGCSObject::BucketOutputAttribute{GCS_BUCKET_ATTR, { Success }, "Bucket of the object."};
+const core::OutputAttribute PutGCSObject::KeyOutputAttribute{GCS_OBJECT_NAME_ATTR, { Success }, "Name of the object."};
+const core::OutputAttribute PutGCSObject::Size{GCS_SIZE_ATTR, { Success }, "Size of the object."};
+const core::OutputAttribute PutGCSObject::Crc32c{GCS_CRC32C_ATTR, { Success }, "The CRC32C checksum of object's data, encoded in base64."};
+const core::OutputAttribute PutGCSObject::Md5{GCS_MD5_ATTR, { Success }, "The MD5 hash of the object's data, encoded in base64."};
+const core::OutputAttribute PutGCSObject::OwnerEntity{GCS_OWNER_ENTITY_ATTR, { Success }, "The owner entity, in the form \"user-emailAddress\"."};
+const core::OutputAttribute PutGCSObject::OwnerEntityId{GCS_OWNER_ENTITY_ID_ATTR, { Success }, "The ID for the entity."};
+const core::OutputAttribute PutGCSObject::ContentEncoding{GCS_CONTENT_ENCODING_ATTR, { Success }, "The content encoding of the object."};
+const core::OutputAttribute PutGCSObject::ContentLanguage{GCS_CONTENT_LANGUAGE_ATTR, { Success }, "The content language of the object."};
+const core::OutputAttribute PutGCSObject::ContentDisposition{GCS_CONTENT_DISPOSITION_ATTR, { Success }, "The data content disposition of the object."};
+const core::OutputAttribute PutGCSObject::MediaLink{GCS_MEDIA_LINK_ATTR, { Success }, "The media download link to the object."};
+const core::OutputAttribute PutGCSObject::SelfLink{GCS_SELF_LINK_ATTR, { Success }, "The link to this object."};
+const core::OutputAttribute PutGCSObject::Etag{GCS_ETAG_ATTR, { Success }, "The HTTP 1.1 Entity tag for the object."};
+const core::OutputAttribute PutGCSObject::GeneratedId{GCS_GENERATED_ID, { Success }, "The service-generated ID for the object."};
+const core::OutputAttribute PutGCSObject::Generation{GCS_GENERATION, { Success }, "The content generation of this object. Used for object versioning."};
+const core::OutputAttribute PutGCSObject::Metageneration{GCS_META_GENERATION, { Success }, "The metageneration of the object."};
+const core::OutputAttribute PutGCSObject::CreateTime{GCS_CREATE_TIME_ATTR, { Success }, "Unix timestamp of the object's creation in milliseconds."};
+const core::OutputAttribute PutGCSObject::UpdateTime{GCS_UPDATE_TIME_ATTR, { Success }, "Unix timestamp of the object's last modification in milliseconds."};
+const core::OutputAttribute PutGCSObject::DeleteTime{GCS_DELETE_TIME_ATTR, { Success }, "Unix timestamp of the object's deletion in milliseconds."};
+const core::OutputAttribute PutGCSObject::EncryptionAlgorithm{GCS_ENCRYPTION_ALGORITHM_ATTR, { Success }, "The algorithm used to encrypt the object."};
+const core::OutputAttribute PutGCSObject::EncryptionSha256{GCS_ENCRYPTION_SHA256_ATTR, { Success }, "The SHA256 hash of the key used to encrypt the object."};
 
 REGISTER_RESOURCE(PutGCSObject, Processor);
 

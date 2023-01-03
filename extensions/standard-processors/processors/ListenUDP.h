@@ -46,6 +46,10 @@ class ListenUDP : public NetworkListenerProcessor {
   EXTENSIONAPI static const core::Relationship Success;
   static auto relationships() { return std::array{Success}; }
 
+  EXTENSIONAPI static const core::OutputAttribute PortOutputAttribute;
+  EXTENSIONAPI static const core::OutputAttribute Sender;
+  static auto outputAttributes() { return std::array{PortOutputAttribute, Sender}; }
+
   void initialize() override;
   void onSchedule(const std::shared_ptr<core::ProcessContext>& context, const std::shared_ptr<core::ProcessSessionFactory>& sessionFactory) override;
 
