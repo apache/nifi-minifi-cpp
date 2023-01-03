@@ -1,4 +1,5 @@
-/*** Licensed to the Apache Software Foundation (ASF) under one or more
+/**
+ * Licensed to the Apache Software Foundation (ASF) under one or more
  * contributor license agreements.  See the NOTICE file distributed with
  * this work for additional information regarding copyright ownership.
  * The ASF licenses this file to You under the Apache License, Version 2.0
@@ -21,6 +22,7 @@
 #include <vector>
 
 #include "core/Annotation.h"
+#include "core/OutputAttribute.h"
 #include "core/Property.h"
 #include "core/Relationship.h"
 #include "utils/Export.h"
@@ -39,6 +41,7 @@ struct ClassDescription {
   std::string description_{};
   std::vector<core::Property> class_properties_{};
   std::vector<core::Relationship> class_relationships_{};
+  std::vector<core::OutputAttribute> output_attributes_{};
   bool dynamic_properties_ = false;
   bool dynamic_relationships_ = false;
   std::string inputRequirement_{};
@@ -77,8 +80,6 @@ class AgentDocs {
     return class_mappings_;
   }
 
-  static bool getDescription(const std::string &feature, std::string &value);
-
   template<typename Class, ResourceType Type>
   static void createClassDescription(const std::string& group, const std::string& name) {
     Components& components = class_mappings_[group];
@@ -91,6 +92,7 @@ class AgentDocs {
         .description_ = Class::Description,
         .class_properties_ = detail::toVector(Class::properties()),
         .class_relationships_ = detail::toVector(Class::relationships()),
+        .output_attributes_ = detail::toVector(Class::outputAttributes()),
         .dynamic_properties_ = Class::SupportsDynamicProperties,
         .dynamic_relationships_ = Class::SupportsDynamicRelationships,
         .inputRequirement_ = toString(Class::InputRequirement),

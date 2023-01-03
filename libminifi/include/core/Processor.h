@@ -40,6 +40,7 @@
 #include "core/state/nodes/MetricsBase.h"
 #include "ProcessorMetrics.h"
 #include "utils/gsl.h"
+#include "OutputAttribute.h"
 
 #define ADD_GET_PROCESSOR_NAME \
   std::string getProcessorType() const override { \
@@ -224,6 +225,8 @@ class Processor : public Connectable, public ConfigurableComponent, public state
   state::response::SharedResponseNode getResponseNode() override {
     return metrics_;
   }
+
+  static std::array<OutputAttribute, 0> outputAttributes() { return {}; }
 
  protected:
   virtual void notifyStop() {

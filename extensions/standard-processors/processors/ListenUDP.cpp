@@ -48,6 +48,9 @@ const core::Property ListenUDP::MaxBatchSize(
 
 const core::Relationship ListenUDP::Success("success", "Messages received successfully will be sent out this relationship.");
 
+const core::OutputAttribute ListenUDP::PortOutputAttribute{"udp.port", {}, "The sending port the messages were received."};
+const core::OutputAttribute ListenUDP::Sender{"udp.sender", {}, "The sending host of the messages."};
+
 void ListenUDP::initialize() {
   setSupportedProperties(properties());
   setSupportedRelationships(relationships());

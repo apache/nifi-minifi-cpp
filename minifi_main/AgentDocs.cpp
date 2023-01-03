@@ -19,15 +19,53 @@
 
 #include <map>
 #include <iostream>
-#include <set>
 #include <string>
+#include <utility>
+#include <vector>
+
+#include "range/v3/action/transform.hpp"
+#include "range/v3/view/transform.hpp"
+#include "range/v3/view/join.hpp"
+#include "range/v3/range/conversion.hpp"
 
 #include "agent/agent_docs.h"
 #include "agent/agent_version.h"
 #include "core/Core.h"
-#include "range/v3/action/transform.hpp"
+#include "core/PropertyValue.h"
+#include "core/Relationship.h"
 #include "TableFormatter.h"
 #include "utils/file/FileUtils.h"
+#include "utils/StringUtils.h"
+
+namespace {
+
+namespace minifi = org::apache::nifi::minifi;
+
+std::string formatName(const std::string& name, bool is_required) {
+  if (is_required) {
+    return "**" + name + "**";
+  } else {
+    return name;
+  }
+}
+
+std::string formatAllowableValues(const std::vector<minifi::core::PropertyValue>& values) {
+  return values
+      | ranges::views::transform([](const auto& value) { return value.to_string(); })
+      | ranges::views::join(std::string_view{"<br/>"})
+      | ranges::to<std::string>();
+}
+
+std::string formatDescription(std::string description, bool supports_expression_language = false) {
+  org::apache::nifi::minifi::utils::StringUtils::replaceAll(description, "\n", "<br/>");
+  return supports_expression_language ? description + "<br/>**Supports Expression Language: true**" : description;
+}
+
+std::string formatListOfRelationships(const std::vector<minifi::core::Relationship>& relationships) {
+  return minifi::utils::StringUtils::join(", ", relationships, [](const auto& relationship) { return relationship.getName(); });
+}
+
+}  // namespace
 
 namespace org::apache::nifi::minifi::docs {
 
@@ -43,27 +81,17 @@ void AgentDocs::generate(const std::filesystem::path& docsdir, std::ostream &gen
   std::map<std::string, ClassDescription> processorSet;
   for (const auto &group : minifi::AgentBuild::getExtensions()) {
     struct Components descriptions = build_description_.getClassDescriptions(group);
-    for (const auto &processorName : descriptions.processors_) {
-      processorSet.insert(std::make_pair(extractClassName(processorName.full_name_), processorName));
+    for (const auto& processor_description : descriptions.processors_) {
+      processorSet.insert(std::make_pair(extractClassName(processor_description.full_name_), processor_description));
     }
   }
   for (const auto &processor : processorSet) {
     const auto& filename = docsdir / processor.first;
     std::ofstream outfile(filename);
 
-    {
-      std::string description;
-      bool foundDescription = minifi::AgentDocs::getDescription(processor.first, description);
-      if (!foundDescription) {
-        foundDescription = minifi::AgentDocs::getDescription(processor.second.full_name_, description);
-      }
-
-      outfile << "## " << processor.first << "\n\n";
-      if (foundDescription) {
-        outfile << "### Description\n\n";
-        outfile << description << '\n';
-      }
-    }
+    outfile << "## " << processor.first << "\n\n";
+    outfile << "### Description\n\n";
+    outfile << processor.second.description_ << '\n';
 
     outfile << "\n### Properties\n\n";
     outfile  << "In the list below, the names of required properties appear in bold. Any other properties (not in bold) are considered optional. "
@@ -77,14 +105,26 @@ void AgentDocs::generate(const std::filesystem::path& docsdir, std::ostream &gen
           formatAllowableValues(prop.getAllowedValues()),
           formatDescription(prop.getDescription(), prop.supportsExpressionLanguage())});
     }
-    outfile << properties.toString();
+    outfile << properties.toString() << '\n';
 
-    outfile << "\n### Relationships\n\n";
+    outfile << "### Relationships\n\n";
     Table relationships{{"Name", "Description"}};
     for (const auto &rel : processor.second.class_relationships_) {
       relationships.addRow({rel.getName(), formatDescription(rel.getDescription())});
     }
     outfile << relationships.toString() << '\n';
+
+    if (!processor.second.output_attributes_.empty()) {
+      outfile << "### Output Attributes\n\n";
+      Table output_attributes{{"Attribute", "Relationship", "Description"}};
+      for (const auto& output_attribute : processor.second.output_attributes_) {
+        output_attributes.addRow({
+            output_attribute.getName(),
+            formatListOfRelationships(output_attribute.getRelationships()),
+            formatDescription(output_attribute.getDescription())});
+      }
+      outfile << output_attributes.toString() << '\n';
+    }
   }
 
   std::map<std::string, std::filesystem::path> fileList;

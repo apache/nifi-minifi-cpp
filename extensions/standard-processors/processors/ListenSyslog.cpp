@@ -76,6 +76,21 @@ const core::Relationship ListenSyslog::Success("success", "Incoming messages tha
                                                           "When Parse Messages is set to false, all incoming message will be sent to this relationship.");
 const core::Relationship ListenSyslog::Invalid("invalid", "Incoming messages that do not match the expected format when parsing will be sent to this relationship.");
 
+const core::OutputAttribute ListenSyslog::Protocol{"syslog.protocol", {}, "The protocol over which the Syslog message was received."};
+const core::OutputAttribute ListenSyslog::PortOutputAttribute{"syslog.port", {}, "The port over which the Syslog message was received."};
+const core::OutputAttribute ListenSyslog::Sender{"syslog.sender", {}, "The hostname of the Syslog server that sent the message."};
+const core::OutputAttribute ListenSyslog::Valid{"syslog.valid", {}, "An indicator of whether this message matched the expected formats. (requirement: parsing enabled)"};
+const core::OutputAttribute ListenSyslog::Priority{"syslog.priority", {}, "The priority of the Syslog message. (requirement: parsed RFC5424/RFC3164)"};
+const core::OutputAttribute ListenSyslog::Severity{"syslog.severity", {}, "The severity of the Syslog message. (requirement: parsed RFC5424/RFC3164)"};
+const core::OutputAttribute ListenSyslog::Facility{"syslog.facility", {}, "The facility of the Syslog message. (requirement: parsed RFC5424/RFC3164)"};
+const core::OutputAttribute ListenSyslog::Timestamp{"syslog.timestamp", {}, "The timestamp of the Syslog message. (requirement: parsed RFC5424/RFC3164)"};
+const core::OutputAttribute ListenSyslog::Hostname{"syslog.hostname", {}, "The hostname of the Syslog message. (requirement: parsed RFC5424/RFC3164)"};
+const core::OutputAttribute ListenSyslog::Msg{"syslog.msg", {}, "The free-form message of the Syslog message. (requirement: parsed RFC5424/RFC3164)"};
+const core::OutputAttribute ListenSyslog::Version{"syslog.version", {}, "The version of the Syslog message. (requirement: parsed RFC5424)"};
+const core::OutputAttribute ListenSyslog::AppName{"syslog.app_name", {}, "The app name of the Syslog message. (requirement: parsed RFC5424)"};
+const core::OutputAttribute ListenSyslog::ProcId{"syslog.proc_id", {}, "The proc id of the Syslog message. (requirement: parsed RFC5424)"};
+const core::OutputAttribute ListenSyslog::MsgId{"syslog.msg_id", {}, "The message id of the Syslog message. (requirement: parsed RFC5424)"};
+const core::OutputAttribute ListenSyslog::StructuredData{"syslog.structured_data", {}, "The structured data of the Syslog message. (requirement: parsed RFC5424)"};
 
 const std::regex ListenSyslog::rfc5424_pattern_(
     R"(^<(?:(\d|\d{2}|1[1-8]\d|19[01]))>)"                                                                    // priority

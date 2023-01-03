@@ -17,9 +17,34 @@
 
 #include "TableFormatter.h"
 
+#include <algorithm>
+
 #include "range/v3/view/transform.hpp"
 #include "range/v3/view/join.hpp"
 #include "range/v3/range/conversion.hpp"
+
+#include "utils/gsl.h"
+
+namespace {
+
+std::string formatRow(const std::vector<std::string>& items, const std::vector<size_t>& widths) {
+  std::string result;
+  for (size_t i = 0; i < items.size(); ++i) {
+    size_t padding = widths[i] - items[i].length() + 1;
+    result.append("| ").append(items[i]).append(std::string(padding, ' '));
+  }
+  return result + "|\n";
+}
+
+std::string formatSeparator(const std::vector<size_t>& widths) {
+  std::string result = widths
+      | ranges::views::transform([](size_t width) { return std::string(width + 2, '-'); })
+      | ranges::views::join('|')
+      | ranges::to<std::string>();
+  return '|' + result + "|\n";
+}
+
+}  // namespace
 
 namespace org::apache::nifi::minifi::docs {
 
@@ -48,43 +73,6 @@ std::string Table::toString() const {
     result.append(formatRow(row, widths));
   }
   return result;
-}
-
-std::string formatName(const std::string& name, bool is_required) {
-  if (is_required) {
-    return "**" + name + "**";
-  } else {
-    return name;
-  }
-}
-
-std::string formatAllowableValues(const std::vector<org::apache::nifi::minifi::core::PropertyValue>& values) {
-  return values
-      | ranges::views::transform([](const auto& value) { return value.to_string(); })
-      | ranges::views::join(std::string_view{"<br/>"})
-      | ranges::to<std::string>();
-}
-
-std::string formatDescription(std::string description, bool supports_expression_language) {
-  org::apache::nifi::minifi::utils::StringUtils::replaceAll(description, "\n", "<br/>");
-  return supports_expression_language ? description + "<br/>**Supports Expression Language: true**" : description;
-}
-
-std::string formatSeparator(const std::vector<size_t>& widths) {
-  std::string result = widths
-      | ranges::views::transform([](size_t width) { return std::string(width + 2, '-'); })
-      | ranges::views::join('|')
-      | ranges::to<std::string>();
-  return '|' + result + "|\n";
-}
-
-std::string formatRow(const std::vector<std::string>& items, const std::vector<size_t>& widths) {
-  std::string result;
-  for (size_t i = 0; i < items.size(); ++i) {
-    size_t padding = widths[i] - items[i].length() + 1;
-    result.append("| ").append(items[i]).append(std::string(padding, ' '));
-  }
-  return result + "|\n";
 }
 
 }  // namespace org::apache::nifi::minifi::docs

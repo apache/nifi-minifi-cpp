@@ -72,6 +72,59 @@ class PutGCSObject : public GCSProcessor {
   EXTENSIONAPI static const core::Relationship Failure;
   static auto relationships() { return std::array{Success, Failure}; }
 
+  EXTENSIONAPI static const core::OutputAttribute Message;
+  EXTENSIONAPI static const core::OutputAttribute Reason;
+  EXTENSIONAPI static const core::OutputAttribute Domain;
+  EXTENSIONAPI static const core::OutputAttribute BucketOutputAttribute;
+  EXTENSIONAPI static const core::OutputAttribute KeyOutputAttribute;
+  EXTENSIONAPI static const core::OutputAttribute Size;
+  EXTENSIONAPI static const core::OutputAttribute Crc32c;
+  EXTENSIONAPI static const core::OutputAttribute Md5;
+  EXTENSIONAPI static const core::OutputAttribute OwnerEntity;
+  EXTENSIONAPI static const core::OutputAttribute OwnerEntityId;
+  EXTENSIONAPI static const core::OutputAttribute ContentEncoding;
+  EXTENSIONAPI static const core::OutputAttribute ContentLanguage;
+  EXTENSIONAPI static const core::OutputAttribute ContentDisposition;
+  EXTENSIONAPI static const core::OutputAttribute MediaLink;
+  EXTENSIONAPI static const core::OutputAttribute SelfLink;
+  EXTENSIONAPI static const core::OutputAttribute Etag;
+  EXTENSIONAPI static const core::OutputAttribute GeneratedId;
+  EXTENSIONAPI static const core::OutputAttribute Generation;
+  EXTENSIONAPI static const core::OutputAttribute Metageneration;
+  EXTENSIONAPI static const core::OutputAttribute CreateTime;
+  EXTENSIONAPI static const core::OutputAttribute UpdateTime;
+  EXTENSIONAPI static const core::OutputAttribute DeleteTime;
+  EXTENSIONAPI static const core::OutputAttribute EncryptionAlgorithm;
+  EXTENSIONAPI static const core::OutputAttribute EncryptionSha256;
+  static auto outputAttributes() {
+    return std::array{
+        Message,
+        Reason,
+        Domain,
+        BucketOutputAttribute,
+        KeyOutputAttribute,
+        Size,
+        Crc32c,
+        Md5,
+        OwnerEntity,
+        OwnerEntityId,
+        ContentEncoding,
+        ContentLanguage,
+        ContentDisposition,
+        MediaLink,
+        SelfLink,
+        Etag,
+        GeneratedId,
+        Generation,
+        Metageneration,
+        CreateTime,
+        UpdateTime,
+        DeleteTime,
+        EncryptionAlgorithm,
+        EncryptionSha256
+    };
+  }
+
   EXTENSIONAPI static constexpr bool SupportsDynamicProperties = false;
   EXTENSIONAPI static constexpr bool SupportsDynamicRelationships = false;
   EXTENSIONAPI static constexpr core::annotation::Input InputRequirement = core::annotation::Input::INPUT_REQUIRED;
