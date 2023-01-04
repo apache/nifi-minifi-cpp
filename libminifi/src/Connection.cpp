@@ -18,20 +18,15 @@
  * limitations under the License.
  */
 #include "Connection.h"
-#include <ctime>
 #include <vector>
-#include <queue>
 #include <memory>
 #include <string>
-#include <map>
 #include <set>
 #include <chrono>
 #include <thread>
-#include <iostream>
 #include <list>
 #include "core/FlowFile.h"
-#include "core/Processor.h"
-#include "core/logging/LoggerConfiguration.h"
+#include "core/Connectable.h"
 
 using namespace std::literals::chrono_literals;
 
@@ -85,17 +80,15 @@ bool Connection::isEmpty() const {
   return queue_.empty();
 }
 
-bool Connection::isFull() const {
+bool Connection::backpressureThresholdReached() const {
   std::lock_guard<std::mutex> lock(mutex_);
+  auto backpressure_size_threshold = backpressure_queue_size_threshold_.load();
+  auto backpressure_data_threshold = backpressure_queue_data_threshold.load();
 
-  if (max_queue_size_ <= 0 && max_data_queue_size_ <= 0)
-    // No back pressure setting
-    return false;
-
-  if (max_queue_size_ > 0 && queue_.size() >= max_queue_size_)
+  if (backpressure_size_threshold != 0 && queue_.size() >= backpressure_size_threshold)
     return true;
 
-  if (max_data_queue_size_ > 0 && queued_data_size_ >= max_data_queue_size_)
+  if (backpressure_data_threshold != 0 && queued_data_size_ >= backpressure_data_threshold)
     return true;
 
   return false;

@@ -58,7 +58,7 @@ class ResponseNodeLoaderTestFixture {
 
   void addConnection(const std::string& connection_name, const std::string& relationship_name, const minifi::utils::Identifier& src_uuid, const minifi::utils::Identifier& dst_uuid) {
     auto connection = std::make_unique<minifi::Connection>(ff_repository_, content_repo_, connection_name);
-    connection->setRelationship({relationship_name, "d"});
+    connection->addRelationship({relationship_name, "d"});
     connection->setDestinationUUID(src_uuid);
     connection->setSourceUUID(dst_uuid);
     root_->addConnection(std::move(connection));

@@ -291,7 +291,7 @@ TEST_CASE("Test FlowFile Restore", "[TestFFR6]") {
 
   core::Relationship inputRel{"Input", "dummy"};
   auto input = std::make_unique<minifi::Connection>(ff_repository, content_repo, "Input");
-  input->setRelationship(inputRel);
+  input->addRelationship(inputRel);
 
   auto root = std::make_unique<core::ProcessGroup>(core::ProcessGroupType::ROOT_PROCESS_GROUP, "root");
   auto inputPtr = input.get();

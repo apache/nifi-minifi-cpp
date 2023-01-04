@@ -77,7 +77,7 @@ uint64_t StructuredConnectionParser::getWorkQueueSize() const {
     }
     logger_->log_error("Invalid max queue size value: %s.", max_work_queue_str);
   }
-  return 0;
+  return Connection::DEFAULT_BACKPRESSURE_SIZE_THRESHOLD;
 }
 
 uint64_t StructuredConnectionParser::getWorkQueueDataSize() const {
@@ -91,7 +91,7 @@ uint64_t StructuredConnectionParser::getWorkQueueDataSize() const {
     }
     logger_->log_error("Invalid max queue data size value: %s.", max_work_queue_str);
   }
-  return 0;
+  return Connection::DEFAULT_BACKPRESSURE_DATA_THRESHOLD;
 }
 
 uint64_t StructuredConnectionParser::getSwapThreshold() const {

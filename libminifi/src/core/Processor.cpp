@@ -172,7 +172,7 @@ bool Processor::flowFilesOutGoingFull() const {
     std::set<Connectable*> existedConnection = connection_pair.second;
     const bool has_full_connection = std::any_of(begin(existedConnection), end(existedConnection), [](const Connectable* conn) {
       auto connection = dynamic_cast<const Connection*>(conn);
-      return connection && connection->isFull();
+      return connection && connection->backpressureThresholdReached();
     });
     if (has_full_connection) { return true; }
   }
@@ -308,12 +308,12 @@ bool Processor::isThrottledByBackpressure() const {
   bool isThrottledByOutgoing = ranges::any_of(outgoing_connections_, [](auto& name_connection_set_pair) {
     return ranges::any_of(name_connection_set_pair.second, [](auto& connectable) {
       auto connection = dynamic_cast<Connection*>(connectable);
-      return connection && connection->isFull();
+      return connection && connection->backpressureThresholdReached();
     });
   });
   bool isForcedByIncomingCycle = ranges::any_of(incoming_connections_, [](auto& connectable) {
     auto connection = dynamic_cast<Connection*>(connectable);
-    return connection && partOfCycle(connection) && connection->isFull();
+    return connection && partOfCycle(connection) && connection->backpressureThresholdReached();
   });
   return isThrottledByOutgoing && !isForcedByIncomingCycle;
 }
@@ -329,7 +329,7 @@ Connectable* Processor::pickIncomingConnection() {
     if (!connection) {
       continue;
     }
-    if (partOfCycle(connection) && connection->isFull()) {
+    if (partOfCycle(connection) && connection->backpressureThresholdReached()) {
       return inConn;
     }
   } while (incoming_connections_Iter != beginIt);

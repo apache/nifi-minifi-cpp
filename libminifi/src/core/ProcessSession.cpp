@@ -1130,7 +1130,7 @@ bool ProcessSession::outgoingConnectionsFull(const std::string& relationship) {
   Connection * connection = nullptr;
   for (const auto conn : connections) {
     connection = dynamic_cast<Connection*>(conn);
-    if (connection && connection->isFull()) {
+    if (connection && connection->backpressureThresholdReached()) {
       return true;
     }
   }

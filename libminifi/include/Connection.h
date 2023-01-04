@@ -27,6 +27,7 @@
 #include <mutex>
 #include <atomic>
 #include <algorithm>
+#include <utility>
 #include "core/Core.h"
 #include "core/Connectable.h"
 #include "core/logging/Logger.h"
@@ -52,86 +53,81 @@ class Connection : public core::Connectable {
                       const utils::Identifier &srcUUID, const utils::Identifier &destUUID);
   explicit Connection(std::shared_ptr<core::Repository> flow_repository, std::shared_ptr<core::ContentRepository> content_repo, std::shared_ptr<SwapManager> swap_manager,
                       std::string name, const utils::Identifier& uuid);
-  // Destructor
   ~Connection() override = default;
 
-  // Set Source Processor UUID
+  Connection(const Connection &parent) = delete;
+  Connection &operator=(const Connection &parent) = delete;
+
+  static constexpr uint64_t DEFAULT_BACKPRESSURE_SIZE_THRESHOLD = 10000;
+  static constexpr uint64_t DEFAULT_BACKPRESSURE_DATA_THRESHOLD = 10_MB;
+
   void setSourceUUID(const utils::Identifier &uuid) {
     src_uuid_ = uuid;
   }
-  // Set Destination Processor UUID
+
   void setDestinationUUID(const utils::Identifier &uuid) {
     dest_uuid_ = uuid;
   }
-  // Get Source Processor UUID
+
   utils::Identifier getSourceUUID() const {
     return src_uuid_;
   }
-  // Get Destination Processor UUID
+
   utils::Identifier getDestinationUUID() const {
     return dest_uuid_;
   }
 
-  // Set Connection Source Processor
   void setSource(core::Connectable* source) {
     source_connectable_ = source;
   }
-  // ! Get Connection Source Processor
+
   core::Connectable* getSource() const {
     return source_connectable_;
   }
-  // Set Connection Destination Processor
+
   void setDestination(core::Connectable* dest) {
     dest_connectable_ = dest;
   }
-  // ! Get Connection Destination Processor
-  core::Connectable* getDestination() {
+
+  core::Connectable* getDestination() const {
     return dest_connectable_;
   }
 
-  /**
-   * Deprecated function
-   * Please use addRelationship.
-   */
-  void setRelationship(core::Relationship relationship) {
-    relationships_.insert(relationship);
+  void addRelationship(core::Relationship relationship) {
+    relationships_.insert(std::move(relationship));
   }
 
-  // Set Connection relationship
-  void addRelationship(core::Relationship relationship) {
-    relationships_.insert(relationship);
-  }
-  // ! Get Connection relationship
   const std::set<core::Relationship> &getRelationships() const {
     return relationships_;
   }
-  // Set Max Queue Size
-  void setMaxQueueSize(uint64_t size) {
-    max_queue_size_ = size;
+
+  void setBackpressureSizeThreshold(uint64_t size) {
+    backpressure_queue_size_threshold_ = size;
   }
-  // Get Max Queue Size
-  uint64_t getMaxQueueSize() {
-    return max_queue_size_;
+
+  uint64_t getBackpressureSizeThreshold() const {
+    return backpressure_queue_size_threshold_;
   }
-  // Set Max Queue Data Size
-  void setMaxQueueDataSize(uint64_t size) {
-    max_data_queue_size_ = size;
+
+  void setBackpressureDataThreshold(uint64_t size) {
+    backpressure_queue_data_threshold = size;
   }
+
+  uint64_t getBackpressureDataThreshold() const {
+    return backpressure_queue_data_threshold;
+  }
+
   void setSwapThreshold(uint64_t size) {
     queue_.setTargetSize(size);
     queue_.setMinSize(size / 2);
     queue_.setMaxSize(size * 3 / 2);
   }
-  // Get Max Queue Data Size
-  uint64_t getMaxQueueDataSize() {
-    return max_data_queue_size_;
-  }
-  // Set Flow expiration duration in millisecond
+
   void setFlowExpirationDuration(std::chrono::milliseconds duration) {
     expired_duration_ = duration;
   }
-  // Get Flow expiration duration in millisecond
-  std::chrono::milliseconds getFlowExpirationDuration() {
+
+  std::chrono::milliseconds getFlowExpirationDuration() const {
     return expired_duration_;
   }
 
@@ -143,28 +139,25 @@ class Connection : public core::Connectable {
     return drop_empty_;
   }
 
-  // Check whether the queue is empty
   bool isEmpty() const;
-  // Check whether the queue is full to apply back pressure
-  bool isFull() const;
-  // Get queue size
-  uint64_t getQueueSize() {
+
+  bool backpressureThresholdReached() const;
+
+  uint64_t getQueueSize() const {
     std::lock_guard<std::mutex> lock(mutex_);
     return queue_.size();
   }
-  // Get queue data size
+
   uint64_t getQueueDataSize() {
     return queued_data_size_;
   }
 
-  // Put the flow file into queue
   void put(const std::shared_ptr<core::FlowFile>& flow) override;
 
-  // Put multiple flowfiles into the queue
   void multiPut(std::vector<std::shared_ptr<core::FlowFile>>& flows);
-  // Poll the flow file from queue, the expired flow file record also being returned
+
   std::shared_ptr<core::FlowFile> poll(std::set<std::shared_ptr<core::FlowFile>> &expiredFlowRecords);
-  // Drain the flow records
+
   void drain(bool delete_permanently);
 
   void yield() override {}
@@ -179,41 +172,22 @@ class Connection : public core::Connectable {
   }
 
  protected:
-  // Source Processor UUID
   utils::Identifier src_uuid_;
-  // Destination Processor UUID
   utils::Identifier dest_uuid_;
-  // Relationship for this connection
   std::set<core::Relationship> relationships_;
-  // Source Processor (ProcessNode/Port)
   core::Connectable* source_connectable_ = nullptr;
-  // Destination Processor (ProcessNode/Port)
   core::Connectable* dest_connectable_ = nullptr;
-  // Max queue size to apply back pressure
-  std::atomic<uint64_t> max_queue_size_ = 0;
-  // Max queue data size to apply back pressure
-  std::atomic<uint64_t> max_data_queue_size_ = 0;
-  // Flow File Expiration Duration in= MilliSeconds
+  std::atomic<uint64_t> backpressure_queue_size_threshold_ = DEFAULT_BACKPRESSURE_SIZE_THRESHOLD;
+  std::atomic<uint64_t> backpressure_queue_data_threshold = DEFAULT_BACKPRESSURE_DATA_THRESHOLD;
   std::atomic<std::chrono::milliseconds> expired_duration_ = std::chrono::milliseconds(0);
-  // flow file repository
   std::shared_ptr<core::Repository> flow_repository_;
-  // content repository reference.
   std::shared_ptr<core::ContentRepository> content_repo_;
 
  private:
   bool drop_empty_ = false;
-  // Mutex for protection
   mutable std::mutex mutex_;
-  // Queued data size
   std::atomic<uint64_t> queued_data_size_ = 0;
-  // Queue for the Flow File
   utils::FlowFileQueue queue_;
-  // flow repository
-  // Logger
   std::shared_ptr<core::logging::Logger> logger_ = core::logging::LoggerFactory<Connection>::getLogger();
-  // Prevent default copy constructor and assignment operation
-  // Only support pass by reference or pointer
-  Connection(const Connection &parent);
-  Connection &operator=(const Connection &parent);
 };
 }  // namespace org::apache::nifi::minifi

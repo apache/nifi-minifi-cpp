@@ -198,7 +198,7 @@ class FlowInformation : public FlowMonitor {
 
         SerializedResponseNode queuesizemax;
         queuesizemax.name = "sizeMax";
-        queuesizemax.value = queue.second->getMaxQueueSize();
+        queuesizemax.value = queue.second->getBackpressureSizeThreshold();
 
         SerializedResponseNode datasize;
         datasize.name = "dataSize";
@@ -206,7 +206,7 @@ class FlowInformation : public FlowMonitor {
         SerializedResponseNode datasizemax;
 
         datasizemax.name = "dataSizeMax";
-        datasizemax.value = queue.second->getMaxQueueDataSize();
+        datasizemax.value = queue.second->getBackpressureDataThreshold();
 
         repoNode.children.push_back(queuesize);
         repoNode.children.push_back(queuesizemax);
