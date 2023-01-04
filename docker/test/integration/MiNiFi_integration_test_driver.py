@@ -33,7 +33,7 @@ from minifi.validators.NoContentCheckFileNumberValidator import NoContentCheckFi
 from minifi.validators.NumFileRangeValidator import NumFileRangeValidator
 from minifi.validators.SingleJSONFileOutputValidator import SingleJSONFileOutputValidator
 
-from minifi.core.utils import decode_escaped_str
+from minifi.core.utils import decode_escaped_str, get_minifi_pid, get_peak_memory_usage
 
 
 class MiNiFi_integration_test:
@@ -313,7 +313,13 @@ class MiNiFi_integration_test:
         assert self.cluster.wait_for_processor_metric_on_prometheus(metric_class, timeout_seconds, processor_name)
 
     def check_minimum_peak_memory_usage(self, minimum_peak_memory_usage: int, timeout_seconds: int) -> None:
-        assert self.cluster.wait_for_peak_memory_usage(minimum_peak_memory_usage, timeout_seconds)
+        assert self.cluster.wait_for_peak_memory_usage_to_exceed(minimum_peak_memory_usage, timeout_seconds)
 
     def check_maximum_memory_usage(self, maximum_memory_usage: int, timeout_seconds: int) -> None:
-        assert self.cluster.wait_for_peak_memory_usage(maximum_memory_usage, timeout_seconds)
+        assert self.cluster.wait_for_memory_usage_to_drop_below(maximum_memory_usage, timeout_seconds)
+
+    def check_memory_usage_compared_to_peak(self, peak_multiplier: float, timeout_seconds: int) -> None:
+        peak_memory = get_peak_memory_usage(get_minifi_pid())
+        assert (peak_memory is not None)
+        assert (1.0 > peak_multiplier > 0.0)
+        assert self.cluster.wait_for_memory_usage_to_drop_below(peak_memory * peak_multiplier, timeout_seconds)

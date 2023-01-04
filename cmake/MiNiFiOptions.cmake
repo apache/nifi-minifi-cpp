@@ -123,8 +123,8 @@ add_minifi_option(ENABLE_TEST_PROCESSORS "Enables test processors" OFF)
 add_minifi_option(ENABLE_PROMETHEUS "Enables Prometheus support." OFF)
 add_minifi_option(DISABLE_JEMALLOC "Disables jemalloc." OFF)
 
-set_minifi_cache_variable(CUSTOM_MALLOC "" "Overwrite malloc implementation.")
-set_property(CACHE CUSTOM_MALLOC PROPERTY STRINGS "jemalloc" "mimalloc" "rpmalloc")
+set_minifi_cache_variable(CUSTOM_MALLOC OFF "Overwrite malloc implementation.")
+set_property(CACHE CUSTOM_MALLOC PROPERTY STRINGS "jemalloc" "mimalloc" "rpmalloc" OFF)
 
 if(CMAKE_SYSTEM_NAME STREQUAL "Linux")
     add_minifi_option(ENABLE_PROCFS "Enables the procfs extension." ON)

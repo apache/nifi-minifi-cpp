@@ -1005,3 +1005,8 @@ def step_impl(context, size: str, duration: str) -> None:
 @then(u'the memory usage of the agent is less than {size} in less than {duration}')
 def step_impl(context, size: str, duration: str) -> None:
     context.test.check_maximum_memory_usage(humanfriendly.parse_size(size), humanfriendly.parse_timespan(duration))
+
+
+@then(u'the memory usage of the agent decreases to {peak_usage_percent}% peak usage in less than {duration}')
+def step_impl(context, peak_usage_percent: str, duration: str) -> None:
+    context.test.check_memory_usage_compared_to_peak(float(peak_usage_percent) * 0.01, humanfriendly.parse_timespan(duration))
