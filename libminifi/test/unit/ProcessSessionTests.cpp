@@ -135,7 +135,7 @@ struct VolatileFlowFileRepositoryTestAccessor {
 
 class TestVolatileFlowFileRepository : public core::repository::VolatileFlowFileRepository {
  public:
-  explicit TestVolatileFlowFileRepository(const std::string& name) : core::SerializableComponent(name) {}
+  explicit TestVolatileFlowFileRepository(const std::string& name) : core::repository::VolatileFlowFileRepository(name) {}
 
   bool MultiPut(const std::vector<std::pair<std::string, std::unique_ptr<minifi::io::BufferStream>>>& data) override {
     auto flush_on_exit = gsl::finally([&] {VolatileFlowFileRepositoryTestAccessor::call_flush(*this);});

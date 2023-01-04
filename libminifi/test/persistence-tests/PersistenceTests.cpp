@@ -277,7 +277,6 @@ TEST_CASE("Persisted flowFiles are updated on modification", "[TestP1]") {
   LogTestController::getInstance().setTrace<minifi::ResourceClaim>();
   LogTestController::getInstance().setTrace<minifi::FlowFileRecord>();
   LogTestController::getInstance().setTrace<core::repository::FlowFileRepository>();
-  LogTestController::getInstance().setTrace<core::repository::VolatileRepository<minifi::ResourceClaim::Path>>();
   LogTestController::getInstance().setTrace<core::repository::DatabaseContentRepository>();
 
   auto dir = testController.createTempDirectory();

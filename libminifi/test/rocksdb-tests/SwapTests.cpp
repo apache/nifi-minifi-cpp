@@ -83,7 +83,6 @@ TEST_CASE("Connection will on-demand swap flow files") {
   LogTestController::getInstance().setTrace<minifi::utils::FlowFileQueue>();
   LogTestController::getInstance().setTrace<minifi::FlowFileLoader>();
   LogTestController::getInstance().setTrace<core::repository::FlowFileRepository>();
-  LogTestController::getInstance().setTrace<core::repository::VolatileRepository<minifi::ResourceClaim::Path>>();
 
   auto dir = testController.createTempDirectory();
 

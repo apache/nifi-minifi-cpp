@@ -15,8 +15,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#ifndef LIBMINIFI_INCLUDE_CORE_REPOSITORY_VOLATILEFLOWFILEREPOSITORY_H_
-#define LIBMINIFI_INCLUDE_CORE_REPOSITORY_VOLATILEFLOWFILEREPOSITORY_H_
+#pragma once
 
 #include <memory>
 #include <string>
@@ -28,18 +27,13 @@
 
 struct VolatileFlowFileRepositoryTestAccessor;
 
-namespace org {
-namespace apache {
-namespace nifi {
-namespace minifi {
-namespace core {
-namespace repository {
+namespace org::apache::nifi::minifi::core::repository {
 
 /**
  * Volatile flow file repository. keeps a running counter of the current location, freeing
  * those which we no longer hold.
  */
-class VolatileFlowFileRepository : public VolatileRepository<std::string, core::ThreadedRepository> {
+class VolatileFlowFileRepository : public VolatileRepository {
   friend struct ::VolatileFlowFileRepositoryTestAccessor;
 
  public:
@@ -48,10 +42,7 @@ class VolatileFlowFileRepository : public VolatileRepository<std::string, core::
                                       std::chrono::milliseconds maxPartitionMillis = MAX_REPOSITORY_ENTRY_LIFE_TIME,
                                       int64_t maxPartitionBytes = MAX_REPOSITORY_STORAGE_SIZE,
                                       std::chrono::milliseconds purgePeriod = REPOSITORY_PURGE_PERIOD)
-      : core::SerializableComponent(repo_name),
-        VolatileRepository(repo_name.length() > 0 ? repo_name : core::getClassName<VolatileRepository>(), "", maxPartitionMillis, maxPartitionBytes, purgePeriod) {
-    purge_required_ = true;
-    content_repo_ = nullptr;
+    : VolatileRepository(repo_name.length() > 0 ? repo_name : core::getClassName<VolatileRepository>(), "", maxPartitionMillis, maxPartitionBytes, purgePeriod) {
   }
 
   ~VolatileFlowFileRepository() override {
@@ -72,19 +63,20 @@ class VolatileFlowFileRepository : public VolatileRepository<std::string, core::
   }
 
   void flush() override {
-    if (purge_required_ && nullptr != content_repo_) {
-      std::lock_guard<std::mutex> lock(purge_mutex_);
-      for (auto purgeItem : purge_list_) {
-        utils::Identifier containerId;
-        auto eventRead = FlowFileRecord::DeSerialize(gsl::make_span(purgeItem).as_span<const std::byte>(), content_repo_, containerId);
-        if (eventRead) {
-          auto claim = eventRead->getResourceClaim();
-          if (claim) claim->decreaseFlowFileRecordOwnedCount();
-        }
-      }
-      purge_list_.resize(0);
-      purge_list_.clear();
+    if (!content_repo_) {
+      return;
     }
+    std::lock_guard<std::mutex> lock(purge_mutex_);
+    for (auto purgeItem : purge_list_) {
+      utils::Identifier containerId;
+      auto eventRead = FlowFileRecord::DeSerialize(gsl::make_span(purgeItem).as_span<const std::byte>(), content_repo_, containerId);
+      if (eventRead) {
+        auto claim = eventRead->getResourceClaim();
+        if (claim) claim->decreaseFlowFileRecordOwnedCount();
+      }
+    }
+    purge_list_.resize(0);
+    purge_list_.clear();
   }
 
   void loadComponent(const std::shared_ptr<core::ContentRepository> &content_repo) override {
@@ -101,11 +93,4 @@ class VolatileFlowFileRepository : public VolatileRepository<std::string, core::
   std::shared_ptr<core::ContentRepository> content_repo_;
   std::thread thread_;
 };
-}  // namespace repository
-}  // namespace core
-}  // namespace minifi
-}  // namespace nifi
-}  // namespace apache
-}  // namespace org
-
-#endif  // LIBMINIFI_INCLUDE_CORE_REPOSITORY_VOLATILEFLOWFILEREPOSITORY_H_
+}  // namespace org::apache::nifi::minifi::core::repository

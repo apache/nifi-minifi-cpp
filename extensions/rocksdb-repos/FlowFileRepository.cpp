@@ -256,6 +256,123 @@ void FlowFileRepository::loadComponent(const std::shared_ptr<core::ContentReposi
   initialize_repository();
 }
 
+bool FlowFileRepository::initialize(const std::shared_ptr<Configure> &configure) {
+  config_ = configure;
+  std::string value;
+
+  if (configure->get(Configure::nifi_flowfile_repository_directory_default, value) && !value.empty()) {
+    directory_ = value;
+  }
+  logger_->log_debug("NiFi FlowFile Repository Directory %s", directory_);
+
+  value.clear();
+  if (configure->get(Configure::nifi_flowfile_checkpoint_directory_default, value) && !value.empty()) {
+    checkpoint_dir_ = value;
+  }
+  logger_->log_debug("NiFi FlowFile Checkpoint Directory %s", checkpoint_dir_.string());
+
+  const auto encrypted_env = createEncryptingEnv(utils::crypto::EncryptionManager{configure->getHome()}, DbEncryptionOptions{directory_, ENCRYPTION_KEY_NAME});
+  logger_->log_info("Using %s FlowFileRepository", encrypted_env ? "encrypted" : "plaintext");
+
+  auto db_options = [encrypted_env] (minifi::internal::Writable<rocksdb::DBOptions>& options) {
+    options.set(&rocksdb::DBOptions::create_if_missing, true);
+    options.set(&rocksdb::DBOptions::use_direct_io_for_flush_and_compaction, true);
+    options.set(&rocksdb::DBOptions::use_direct_reads, true);
+    if (encrypted_env) {
+      options.set(&rocksdb::DBOptions::env, encrypted_env.get(), EncryptionEq{});
+    } else {
+      options.set(&rocksdb::DBOptions::env, rocksdb::Env::Default());
+    }
+  };
+
+  // Write buffers are used as db operation logs. When they get filled the events are merged and serialized.
+  // The default size is 64MB.
+  // In our case it's usually too much, causing sawtooth in memory consumption. (Consumes more than the whole MiniFi)
+  // To avoid DB write issues during heavy load it's recommended to have high number of buffer.
+  // Rocksdb's stall feature can also trigger in case the number of buffers is >= 3.
+  // The more buffers we have the more memory rocksdb can utilize without significant memory consumption under low load.
+  auto cf_options = [] (rocksdb::ColumnFamilyOptions& cf_opts) {
+    cf_opts.OptimizeForPointLookup(4);
+    cf_opts.write_buffer_size = 8ULL << 20U;
+    cf_opts.max_write_buffer_number = 20;
+    cf_opts.min_write_buffer_number_to_merge = 1;
+  };
+  db_ = minifi::internal::RocksDatabase::create(db_options, cf_options, directory_);
+  if (db_->open()) {
+    logger_->log_debug("NiFi FlowFile Repository database open %s success", directory_);
+    return true;
+  } else {
+    logger_->log_error("NiFi FlowFile Repository database open %s fail", directory_);
+    return false;
+  }
+}
+
+bool FlowFileRepository::Put(const std::string& key, const uint8_t *buf, size_t bufLen) {
+  // persistent to the DB
+  auto opendb = db_->open();
+  if (!opendb) {
+    return false;
+  }
+  rocksdb::Slice value((const char *) buf, bufLen);
+  auto operation = [&key, &value, &opendb]() { return opendb->Put(rocksdb::WriteOptions(), key, value); };
+  return ExecuteWithRetry(operation);
+}
+
+bool FlowFileRepository::MultiPut(const std::vector<std::pair<std::string, std::unique_ptr<minifi::io::BufferStream>>>& data) {
+  auto opendb = db_->open();
+  if (!opendb) {
+    return false;
+  }
+  auto batch = opendb->createWriteBatch();
+  for (const auto &item : data) {
+    const auto buf = item.second->getBuffer().as_span<const char>();
+    rocksdb::Slice value(buf.data(), buf.size());
+    if (!batch.Put(item.first, value).ok()) {
+      logger_->log_error("Failed to add item to batch operation");
+      return false;
+    }
+  }
+  auto operation = [&batch, &opendb]() { return opendb->Write(rocksdb::WriteOptions(), &batch); };
+  return ExecuteWithRetry(operation);
+}
+
+bool FlowFileRepository::Delete(const std::string& key) {
+  keys_to_delete.enqueue(key);
+  return true;
+}
+
+bool FlowFileRepository::Get(const std::string &key, std::string &value) {
+  auto opendb = db_->open();
+  if (!opendb) {
+    return false;
+  }
+  return opendb->Get(rocksdb::ReadOptions(), key, &value).ok();
+}
+
+bool FlowFileRepository::start() {
+  const bool ret = ThreadedRepository::start();
+  if (swap_loader_) {
+    swap_loader_->start();
+  }
+  return ret;
+}
+
+bool FlowFileRepository::stop() {
+  if (swap_loader_) {
+    swap_loader_->stop();
+  }
+  return ThreadedRepository::stop();
+}
+
+void FlowFileRepository::store(std::vector<std::shared_ptr<core::FlowFile>> flow_files) {
+  gsl_Expects(ranges::all_of(flow_files, &FlowFile::isStored));
+  // pass, flowfiles are already persisted in the repository
+}
+
+std::future<std::vector<std::shared_ptr<core::FlowFile>>> FlowFileRepository::load(std::vector<SwappedFlowFile> flow_files) {
+  return swap_loader_->load(std::move(flow_files));
+}
+
 REGISTER_RESOURCE_AS(FlowFileRepository, InternalResource, ("FlowFileRepository", "flowfilerepository"));
 
 }  // namespace org::apache::nifi::minifi::core::repository
