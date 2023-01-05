@@ -19,23 +19,18 @@
 #ifdef OPENSSL_SUPPORT
 
 #include <array>
-#include <fstream>
-#include <map>
 #include <memory>
 #include <utility>
 #include <string>
-#include <set>
 #include <iostream>
 
 #include "TestBase.h"
 #include "Catch.h"
+#include "SingleProcessorTestController.h"
 #include "TestUtils.h"
-#include "core/Core.h"
 #include "unit/ProvenanceTestHelper.h"
 
-#include "core/FlowFile.h"
 #include "core/Processor.h"
-#include "core/ProcessContext.h"
 #include "core/ProcessSession.h"
 #include "core/ProcessorNode.h"
 
@@ -53,6 +48,8 @@ const char* SHA256_ATTR = "SHA256Attr";
 const char* MD5_CHECKSUM = "4FE8A693C64F93F65C5FAF42DC49AB23";
 const char* SHA1_CHECKSUM = "03840DEB949D6CF0C0A624FA7EBA87FBDBCB7783";
 const char* SHA256_CHECKSUM = "66D5B2CC06203137F8A0E9714638DC1085C57A3F1FA26C8823AE5CF89AB26488";
+
+namespace org::apache::nifi::minifi::processors::test {
 
 TEST_CASE("Test Creation of HashContent", "[HashContentCreate]") {
   TestController testController;
@@ -172,4 +169,13 @@ TEST_CASE("TestingFailOnEmptyProperty", "[HashContentPropertiesCheck]") {
     REQUIRE(LogTestController::getInstance().contains("Failure as flow file is empty"));
   }
 }
+
+TEST_CASE("Invalid hash algorithm throws in onSchedule", "[HashContent]") {
+  auto hash_content = std::make_shared<HashContent>("HashContent");
+  minifi::test::SingleProcessorTestController controller{hash_content};
+  hash_content->setProperty(HashContent::HashAlgorithm, "My-Algo");
+  REQUIRE_THROWS_WITH(controller.plan->scheduleProcessor(hash_content), "Process Schedule Operation: MYALGO is not supported, supported algorithms are: MD5, SHA1, SHA256");
+}
+
+}  // namespace org::apache::nifi::minifi::processors::test
 #endif  // OPENSSL_SUPPORT

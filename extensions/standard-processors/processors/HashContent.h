@@ -161,7 +161,7 @@ class HashContent : public core::Processor {
 
  private:
   std::shared_ptr<core::logging::Logger> logger_ = core::logging::LoggerFactory<HashContent>::getLogger();
-  std::string algoName_;
+  std::function<HashReturnType(const std::shared_ptr<io::InputStream>&)> algorithm_ = SHA256Hash;
   std::string attrKey_;
   bool failOnEmpty_{};
 };
