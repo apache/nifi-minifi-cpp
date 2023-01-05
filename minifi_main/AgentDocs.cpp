@@ -107,6 +107,19 @@ void AgentDocs::generate(const std::filesystem::path& docsdir, std::ostream &gen
     }
     outfile << properties.toString() << '\n';
 
+    if (!processor.second.dynamic_properties_.empty()) {
+      outfile << "### Dynamic Properties\n\n";
+      Table dynamic_properties{{"Name", "Value", "Description"}};
+      for (const auto& dynamic_property : processor.second.dynamic_properties_) {
+        dynamic_properties.addRow({
+            formatName(dynamic_property.getName(), false),
+            dynamic_property.getValue(),
+            formatDescription(dynamic_property.getDescription(), dynamic_property.supportsExpressionLanguage())
+        });
+      }
+      outfile << dynamic_properties.toString() << '\n';
+    }
+
     outfile << "### Relationships\n\n";
     Table relationships{{"Name", "Description"}};
     for (const auto &rel : processor.second.class_relationships_) {

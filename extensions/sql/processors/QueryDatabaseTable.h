@@ -65,6 +65,9 @@ class QueryDatabaseTable: public SQLProcessor, public FlowFileSource {
   static auto relationships() { return std::array{Success}; }
 
   EXTENSIONAPI static constexpr bool SupportsDynamicProperties = true;
+  EXTENSIONAPI static const core::DynamicProperty InitialMaxValue;
+  static auto dynamicProperties() { return std::array{InitialMaxValue}; }
+
   EXTENSIONAPI static constexpr bool SupportsDynamicRelationships = false;
   EXTENSIONAPI static constexpr core::annotation::Input InputRequirement = core::annotation::Input::INPUT_FORBIDDEN;
   EXTENSIONAPI static constexpr bool IsSingleThreaded = true;

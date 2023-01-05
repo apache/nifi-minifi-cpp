@@ -85,6 +85,9 @@ class RetryFlowFile : public core::Processor {
   }
 
   EXTENSIONAPI static constexpr bool SupportsDynamicProperties = true;
+  EXTENSIONAPI static const core::DynamicProperty RetriesExceededAttribute;
+  static auto dynamicProperties() { return std::array{RetriesExceededAttribute}; }
+
   EXTENSIONAPI static constexpr bool SupportsDynamicRelationships = false;
   EXTENSIONAPI static constexpr core::annotation::Input InputRequirement = core::annotation::Input::INPUT_REQUIRED;
   EXTENSIONAPI static constexpr bool IsSingleThreaded = false;

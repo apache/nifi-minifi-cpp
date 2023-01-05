@@ -361,8 +361,8 @@ class NarClassLoader {
       }
 
       auto classDescription = getStringMethod("getDescription", jni_component_clazz, env, component);
-      description.dynamic_relationships_ = getBoolmethod("getDynamicRelationshipsSupported", jni_component_clazz, env, component);
-      description.dynamic_properties_ = getBoolmethod("getDynamicPropertiesSupported", jni_component_clazz, env, component);
+      description.supports_dynamic_relationships_ = getBoolmethod("getDynamicRelationshipsSupported", jni_component_clazz, env, component);
+      description.supports_dynamic_properties_ = getBoolmethod("getDynamicPropertiesSupported", jni_component_clazz, env, component);
 
       description.description_ = classDescription;
 

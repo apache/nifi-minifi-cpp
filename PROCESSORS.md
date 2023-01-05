@@ -2434,6 +2434,7 @@ In the list below, the names of required properties appear in bold. Any other pr
 ### Description
 
 Fetches all rows of a table, whose values in the specified Maximum-value Columns are larger than the previously-seen maxima. If that property is not provided, all rows are returned. The rows are grouped according to the value of Max Rows Per Flow File property and formatted as JSON.
+
 ### Properties
 
 In the list below, the names of required properties appear in bold. Any other properties (not in bold) are considered optional. The table also indicates any default values, and whether a property supports the NiFi Expression Language.
@@ -2448,17 +2449,17 @@ In the list below, the names of required properties appear in bold. Any other pr
 | Maximum-value Columns      |               |                      | A comma-separated list of column names. The processor will keep track of the maximum value for each column that has been returned since the processor started running. Using multiple columns implies an order to the column list, and each column's values are expected to increase more slowly than the previous columns' values. Thus, using multiple columns implies a hierarchical structure of columns, which is usually used for partitioning tables. This processor can be used to retrieve only those rows that have been added/updated since the last retrieval. Note that some ODBC types such as bit/boolean are not conducive to maintaining maximum value, so columns of these types should not be listed in this property, and will result in error(s) during processing. If no columns are provided, all rows from the table will be considered, which could have a performance impact. NOTE: It is important to use consistent max-value column names for a given table for incremental fetch to work properly. NOTE: Because of a limitation of database access library 'soci', which doesn't support milliseconds in it's 'dt_date', there is a possibility that flowfiles might have duplicated records, if a max-value column with 'dt_date' type has value with milliseconds.<br/>**Supports Expression Language: true** |
 | Where Clause               |               |                      | A custom clause to be added in the WHERE condition when building SQL queries.<br/>**Supports Expression Language: true**                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                       |
 
+### Dynamic Properties
+
+| Name                                | Value                                          | Description                                                                                                                                                                                                                                                                                 |
+|-------------------------------------|------------------------------------------------|---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| initial.maxvalue.<max_value_column> | Initial maximum value for the specified column | Specifies an initial max value for max value column(s). Properties should be added in the format `initial.maxvalue.<max_value_column>`. This value is only used the first time the table is accessed (when a Maximum Value Column is specified).<br/>**Supports Expression Language: true** |
+
 ### Relationships
 
 | Name    | Description                                              |
 |---------|----------------------------------------------------------|
 | success | Successfully created FlowFile from SQL query result set. |
-
-### Dynamic Properties:
-
-| Name                                | Value                                          | Description                                                                                                                                                                                                                                                                                 |
-|-------------------------------------|------------------------------------------------|---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
-| initial.maxvalue.<max_value_column> | Initial maximum value for the specified column | Specifies an initial max value for max value column(s). Properties should be added in the format `initial.maxvalue.<max_value_column>`. This value is only used the first time the table is accessed (when a Maximum Value Column is specified).<br/>**Supports Expression Language: true** |
 
 
 ## QuerySplunkIndexingStatus
@@ -2558,6 +2559,12 @@ In the list below, the names of required properties appear in bold. Any other pr
 | **Fail on Non-numerical Overwrite** | false            |                                                 | If the FlowFile already has the attribute defined in 'Retry Attribute' that is *not* a number, fail the FlowFile instead of resetting that value to '1'                                                                                                                                                                            |
 | **Reuse Mode**                      | Fail on Reuse    | Fail on Reuse<br/>Reset Reuse<br/>Warn on Reuse | Defines how the Processor behaves if the retry FlowFile has a different retry UUID than the instance that received the FlowFile. This generally means that the attribute was not reset after being successfully retried by a previous instance of this processor.                                                                  |
 
+### Dynamic Properties
+
+| Name                            | Value                                            | Description                                                                                                                                                         |
+|---------------------------------|--------------------------------------------------|---------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| Exceeded FlowFile Attribute Key | The value of the attribute added to the FlowFile | One or more dynamic properties can be used to add attributes to FlowFiles passed to the 'retries_exceeded' relationship.<br/>**Supports Expression Language: true** |
+
 ### Relationships
 
 | Name             | Description                                                                                                                                                                                                                                                                                                                     |
@@ -2565,12 +2572,6 @@ In the list below, the names of required properties appear in bold. Any other pr
 | retry            | Input FlowFile has not exceeded the configured maximum retry count, pass this relationship back to the input Processor to create a limited feedback loop.                                                                                                                                                                       |
 | retries_exceeded | Input FlowFile has exceeded the configured maximum retry count, do not pass this relationship back to the input Processor to terminate the limited feedback loop.                                                                                                                                                               |
 | failure          | The processor is configured such that a non-numerical value on 'Retry Attribute' results in a failure instead of resetting that value to '1'. This will immediately terminate the limited feedback loop. Might also include when 'Maximum Retries' contains  attribute expression language that does not resolve to an Integer. |
-
-### Dynamic Properties:
-
-| Name                            | Value                                            | Description                                                                                                                                                         |
-|---------------------------------|--------------------------------------------------|---------------------------------------------------------------------------------------------------------------------------------------------------------------------|
-| Exceeded FlowFile Attribute Key | The value of the attribute added to the FlowFile | One or more dynamic properties can be used to add attributes to FlowFiles passed to the 'retries_exceeded' relationship.<br/>**Supports Expression Language: true** |
 
 ### Output Attributes
 
@@ -2626,9 +2627,9 @@ In the list below, the names of required properties appear in bold. Any other pr
 
 ### Dynamic Properties
 
-| Name              | Value                  | Description                                                                                                                                                                     |
-|-------------------|------------------------|---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
-| Relationship Name | value to match against | Routes data that matches the value specified in the Dynamic Property Value to the Relationship specified in the Dynamic Property Key.<br>**Supports Expression Language: true** |
+| Name              | Value                  | Description                                                                                                                                                                      |
+|-------------------|------------------------|----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| Relationship Name | value to match against | Routes data that matches the value specified in the Dynamic Property Value to the Relationship specified in the Dynamic Property Key.<br/>**Supports Expression Language: true** |
 
 ### Relationships
 

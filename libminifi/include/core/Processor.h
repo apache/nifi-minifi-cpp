@@ -35,6 +35,7 @@
 #include "Connectable.h"
 #include "Core.h"
 #include "core/Annotation.h"
+#include "DynamicProperty.h"
 #include "Scheduling.h"
 #include "utils/TimeUtil.h"
 #include "core/state/nodes/MetricsBase.h"
@@ -225,6 +226,8 @@ class Processor : public Connectable, public ConfigurableComponent, public state
   state::response::SharedResponseNode getResponseNode() override {
     return metrics_;
   }
+
+  static std::array<DynamicProperty, 0> dynamicProperties() { return {}; }
 
   static std::array<OutputAttribute, 0> outputAttributes() { return {}; }
 

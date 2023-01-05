@@ -398,18 +398,18 @@ std::string generateJsonSchema() {
     {
       std::stringstream rel_schema;
       rel_schema << R"({"anyOf": [)";
-      if (proc.dynamic_relationships_) {
+      if (proc.supports_dynamic_relationships_) {
         rel_schema << R"({"type": "string"})";
       }
       for (size_t rel_idx = 0; rel_idx < proc.class_relationships_.size(); ++rel_idx) {
-        if (rel_idx != 0 || proc.dynamic_relationships_) rel_schema << ", ";
+        if (rel_idx != 0 || proc.supports_dynamic_relationships_) rel_schema << ", ";
         rel_schema << R"({"const": ")" << escape(proc.class_relationships_[rel_idx].getName()) << "\"}";
       }
       rel_schema << "]}";
       relationships[proc.short_name_] = std::move(rel_schema).str();
     }
 
-    writeProperties(proc.class_properties_, proc.dynamic_properties_, schema);
+    writeProperties(proc.class_properties_, proc.supports_dynamic_properties_, schema);
 
     schema << "}";  // "properties"
     schema << "}";  // "then"
@@ -428,7 +428,7 @@ std::string generateJsonSchema() {
         << R"("required": ["Properties"],)"
         << R"("properties": {)";
 
-    writeProperties(service.class_properties_, service.dynamic_properties_, schema);
+    writeProperties(service.class_properties_, service.supports_dynamic_properties_, schema);
 
     schema << "}";  // "properties"
     schema << "}";  // "then"
