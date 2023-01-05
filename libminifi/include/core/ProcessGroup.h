@@ -231,7 +231,7 @@ class ProcessGroup : public CoreComponent {
   void verify() const;
 
  protected:
-  void startProcessingProcessors(TimerDrivenSchedulingAgent& timeScheduler, EventDrivenSchedulingAgent& eventScheduler, CronDrivenSchedulingAgent& cronScheduler); // NOLINT
+  void startProcessingProcessors(TimerDrivenSchedulingAgent& timeScheduler, EventDrivenSchedulingAgent& eventScheduler, CronDrivenSchedulingAgent& cronScheduler);
 
   // version
   int config_version_;

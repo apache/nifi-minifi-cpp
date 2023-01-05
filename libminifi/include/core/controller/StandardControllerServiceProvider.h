@@ -78,7 +78,7 @@ class StandardControllerServiceProvider : public ControllerServiceProvider, publ
     for (auto service : controller_map_->getAllControllerServices()) {
       logger_->log_info("Enabling %s", service->getName());
       if (!service->canEnable()) {
-        logger_->log_warn("Service %s can not be enabled", service->getName());
+        logger_->log_warn("Service %s cannot be enabled", service->getName());
         continue;
       }
       if (!service->enable()) {

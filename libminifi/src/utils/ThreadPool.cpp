@@ -21,7 +21,18 @@
 namespace org::apache::nifi::minifi::utils {
 
 template<typename T>
-std::shared_ptr<core::logging::Logger> ThreadPool<T>::logger_ = core::logging::LoggerFactory<ThreadPool<T>>::getLogger();
+ThreadPool<T>::ThreadPool(int max_worker_threads, bool daemon_threads, core::controller::ControllerServiceProvider* controller_service_provider, std::string name)
+    : daemon_threads_(daemon_threads),
+      thread_reduction_count_(0),
+      max_worker_threads_(max_worker_threads),
+      adjust_threads_(false),
+      running_(false),
+      controller_service_provider_(controller_service_provider),
+      name_(std::move(name)),
+      logger_(core::logging::LoggerFactory<ThreadPool<T>>::getLogger()) {
+  current_workers_ = 0;
+  thread_manager_ = nullptr;
+}
 
 template<typename T>
 void ThreadPool<T>::run_tasks(std::shared_ptr<WorkerThread> thread) {
@@ -184,22 +195,28 @@ void ThreadPool<T>::manageWorkers() {
 }
 
 template<typename T>
+std::shared_ptr<controllers::ThreadManagementService> ThreadPool<T>::createThreadManager() const {
+  if (!controller_service_provider_) {
+    return nullptr;
+  }
+  auto service = controller_service_provider_->getControllerService("ThreadPoolManager");
+  if (!service) {
+    logger_->log_info("Could not find a ThreadPoolManager service");
+    return nullptr;
+  }
+  auto thread_manager_service = std::dynamic_pointer_cast<controllers::ThreadManagementService>(service);
+  if (!thread_manager_service) {
+    logger_->log_error("Found ThreadPoolManager, but it is not a ThreadManagementService");
+    return nullptr;
+  }
+  return thread_manager_service;
+}
+
+template<typename T>
 void ThreadPool<T>::start() {
   std::lock_guard<std::recursive_mutex> lock(manager_mutex_);
   if (!running_) {
-    thread_manager_.reset();
-    if (nullptr != controller_service_provider_) {
-      auto service = controller_service_provider_->getControllerService("ThreadPoolManager");
-      if (!service) {
-        logger_->log_info("Could not find a ThreadPoolManager service");
-      } else {
-        if (auto thread_manager_service = std::dynamic_pointer_cast<controllers::ThreadManagementService>(service)) {
-          thread_manager_ = thread_manager_service;
-        } else {
-          logger_->log_error("Found ThreadPoolManager, but it is not a ThreadManagementService");
-        }
-      }
-    }
+    thread_manager_ = createThreadManager();
 
     running_ = true;
     worker_queue_.start();
