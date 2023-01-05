@@ -25,7 +25,6 @@
 #include "io/ClientSocket.h"
 #include "core/Processor.h"
 #include "core/ClassLoader.h"
-#include "core/yaml/YamlConfiguration.h"
 
 TEST_CASE("Empty file", "[t1]") {
   minifi::c2::FileUpdateTrigger trigger("test");

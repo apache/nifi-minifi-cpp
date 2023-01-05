@@ -28,7 +28,6 @@
 #include "core/FlowFile.h"
 #include "unit/MockClasses.h"
 #include "unit/ProvenanceTestHelper.h"
-#include "core/yaml/YamlConfiguration.h"
 #include "core/Processor.h"
 #include "core/controller/ControllerServiceMap.h"
 #include "core/controller/StandardControllerServiceNode.h"
@@ -37,7 +36,7 @@ namespace ControllerServiceTests {
 
 TEST_CASE("Test ControllerServicesMap", "[cs1]") {
   core::controller::ControllerServiceMap map;
-  REQUIRE(0 == map.getAllControllerServices().size());
+  REQUIRE(map.getAllControllerServices().empty());
 
   std::shared_ptr<core::controller::ControllerService> service = std::make_shared<MockControllerService>();
   std::shared_ptr<core::controller::StandardControllerServiceNode> testNode = std::make_shared<core::controller::StandardControllerServiceNode>(service, "ID", std::make_shared<minifi::Configure>());
@@ -67,7 +66,7 @@ TEST_CASE("Test StandardControllerServiceNode nullPtr", "[cs1]") {
   FAIL("Should have encountered exception");
 }
 
-std::shared_ptr<core::controller::StandardControllerServiceNode> newCsNode(const std::string id) {
+std::shared_ptr<core::controller::StandardControllerServiceNode> newCsNode(const std::string& id) {
   std::shared_ptr<core::controller::ControllerService> service = std::make_shared<MockControllerService>();
   std::shared_ptr<core::controller::StandardControllerServiceNode> testNode = std::make_shared<core::controller::StandardControllerServiceNode>(service, id, std::make_shared<minifi::Configure>());
 

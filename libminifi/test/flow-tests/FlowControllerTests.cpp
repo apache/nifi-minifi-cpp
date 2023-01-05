@@ -32,7 +32,6 @@
 #include "../unit/ProvenanceTestHelper.h"
 #include "../TestBase.h"
 #include "../Catch.h"
-#include "YamlConfiguration.h"
 #include "CustomProcessors.h"
 #include "TestControllerWithFlow.h"
 #include "EmptyFlow.h"

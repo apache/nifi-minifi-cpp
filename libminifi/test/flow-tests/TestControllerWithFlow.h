@@ -24,10 +24,11 @@
 
 #include "FlowController.h"
 #include "unit/ProvenanceTestHelper.h"
+#include "core/yaml/YamlConfiguration.h"
 #include "repository/VolatileContentRepository.h"
 #include "CustomProcessors.h"
 
-class TestControllerWithFlow: public TestController{
+class TestControllerWithFlow: public TestController {
  public:
   explicit TestControllerWithFlow(const char* yamlConfigContent, bool setup_flow = true) {
     LogTestController::getInstance().setTrace<minifi::processors::TestProcessor>();
@@ -63,7 +64,7 @@ class TestControllerWithFlow: public TestController{
     REQUIRE(content_repo->initialize(configuration_));
     std::shared_ptr<minifi::io::StreamFactory> stream_factory = minifi::io::StreamFactory::getInstance(configuration_);
 
-    auto flow = std::make_unique<core::YamlConfiguration>(core::ConfigurationContext{prov_repo, ff_repo, content_repo, stream_factory, configuration_, yaml_path_.string()});
+    auto flow = std::make_unique<core::YamlConfiguration>(core::ConfigurationContext{ff_repo, content_repo, stream_factory, configuration_, yaml_path_.string()});
     auto root = flow->getRoot();
     root_ = root.get();
     controller_ = std::make_shared<minifi::FlowController>(

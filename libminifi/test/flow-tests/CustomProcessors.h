@@ -24,7 +24,6 @@
 #include <unordered_map>
 #include <utility>
 
-#include <YamlConfiguration.h>
 #include "core/Processor.h"
 #include "TestBase.h"
 #include "Catch.h"

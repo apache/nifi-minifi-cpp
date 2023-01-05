@@ -15,8 +15,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#ifndef LIBMINIFI_INCLUDE_CAPI_INSTANCE_H_
-#define LIBMINIFI_INCLUDE_CAPI_INSTANCE_H_
+#pragma once
 
 #include <memory>
 #include <type_traits>
@@ -38,17 +37,13 @@
 #include "core/ProcessSession.h"
 #include "core/ProcessSessionFactory.h"
 #include "core/controller/ControllerServiceProvider.h"
-#include "core/FlowConfiguration.h"
 #include "ReflexiveSession.h"
 #include "utils/ThreadPool.h"
 #include "core/state/UpdateController.h"
 #include "core/file_utils.h"
 #include "core/extension/ExtensionManager.h"
 
-namespace org {
-namespace apache {
-namespace nifi {
-namespace minifi {
+namespace org::apache::nifi::minifi {
 
 class ProcessorLink {
  public:
@@ -177,8 +172,4 @@ class Instance {
   utils::ThreadPool<utils::TaskRescheduleInfo> listener_thread_pool_;
 };
 
-} /* namespace minifi */
-} /* namespace nifi */
-} /* namespace apache */
-} /* namespace org */
-#endif /* LIBMINIFI_INCLUDE_CAPI_INSTANCE_H_ */
+}  // namespace org::apache::nifi::minifi

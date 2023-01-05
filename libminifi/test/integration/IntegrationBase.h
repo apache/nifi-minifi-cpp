@@ -174,7 +174,7 @@ void IntegrationBase::run(const std::optional<std::filesystem::path>& test_file_
       filesystem = std::make_shared<utils::file::FileSystem>();
     }
 
-    auto flow_config = std::make_unique<core::YamlConfiguration>(core::ConfigurationContext{test_repo, test_repo, content_repo, stream_factory, configuration, test_file_location, filesystem});
+    auto flow_config = std::make_unique<core::YamlConfiguration>(core::ConfigurationContext{test_repo, content_repo, stream_factory, configuration, test_file_location, filesystem});
 
     auto controller_service_provider = flow_config->getControllerServiceProvider();
     char state_dir_name_template[] = "/var/tmp/integrationstate.XXXXXX";

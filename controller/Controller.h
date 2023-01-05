@@ -15,8 +15,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#ifndef CONTROLLER_CONTROLLER_H_
-#define CONTROLLER_CONTROLLER_H_
+#pragma once
 
 #include <memory>
 
@@ -280,7 +279,7 @@ std::shared_ptr<org::apache::nifi::minifi::core::controller::ControllerService> 
   const auto stream_factory = org::apache::nifi::minifi::io::StreamFactory::getInstance(configuration);
 
   auto flow_configuration = org::apache::nifi::minifi::core::createFlowConfiguration(
-      org::apache::nifi::minifi::core::ConfigurationContext{prov_repo, flow_repo, content_repo, stream_factory, configuration}, nifi_configuration_class_name);
+      org::apache::nifi::minifi::core::ConfigurationContext{flow_repo, content_repo, stream_factory, configuration}, nifi_configuration_class_name);
 
   const auto controller = std::make_unique<org::apache::nifi::minifi::FlowController>(prov_repo, flow_repo, configuration, std::move(flow_configuration), content_repo);
   controller->load();
@@ -341,7 +340,7 @@ void printManifest(const std::shared_ptr<org::apache::nifi::minifi::Configure> &
   const auto stream_factory = org::apache::nifi::minifi::io::StreamFactory::getInstance(configuration);
 
   auto flow_configuration = org::apache::nifi::minifi::core::createFlowConfiguration(
-      org::apache::nifi::minifi::core::ConfigurationContext{prov_repo, flow_repo, content_repo, stream_factory, configuration}, nifi_configuration_class_name);
+      org::apache::nifi::minifi::core::ConfigurationContext{flow_repo, content_repo, stream_factory, configuration}, nifi_configuration_class_name);
 
   const auto controller = std::make_unique<org::apache::nifi::minifi::FlowController>(prov_repo, flow_repo, configuration, std::move(flow_configuration), content_repo, "manifest");
   controller->load();
@@ -349,5 +348,3 @@ void printManifest(const std::shared_ptr<org::apache::nifi::minifi::Configure> &
   std::this_thread::sleep_for(std::chrono::milliseconds(10000));
   controller->stop();
 }
-
-#endif /* CONTROLLER_CONTROLLER_H_ */

@@ -16,8 +16,7 @@
  * limitations under the License.
  */
 
-#ifndef LIBMINIFI_INCLUDE_CORE_CONFIGURATIONFACTORY_H_
-#define LIBMINIFI_INCLUDE_CORE_CONFIGURATIONFACTORY_H_
+#pragma once
 
 #include <memory>
 #include <optional>
@@ -27,11 +26,7 @@
 
 #include "FlowConfiguration.h"
 
-namespace org {
-namespace apache {
-namespace nifi {
-namespace minifi {
-namespace core {
+namespace org::apache::nifi::minifi::core {
 
 template<typename T>
 T* instantiate(ConfigurationContext ctx) {
@@ -44,10 +39,4 @@ T* instantiate(ConfigurationContext ctx) {
  */
 std::unique_ptr<core::FlowConfiguration> createFlowConfiguration(const ConfigurationContext& ctx, const std::optional<std::string>& configuration_class_name, bool fail_safe = false);
 
-}  // namespace core
-}  // namespace minifi
-}  // namespace nifi
-}  // namespace apache
-}  // namespace org
-
-#endif  // LIBMINIFI_INCLUDE_CORE_CONFIGURATIONFACTORY_H_
+}  // namespace org::apache::nifi::minifi::core
