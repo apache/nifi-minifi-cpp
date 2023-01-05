@@ -165,7 +165,7 @@ void GetFile::getSingleFile(core::ProcessSession& session, const std::filesystem
   flow_file->setAttribute(core::SpecialFlowAttribute::PATH, (relative_path / "").string());
 
   try {
-    session.write(flow_file, utils::FileReaderCallback{file_path.string()});
+    session.write(flow_file, utils::FileReaderCallback{file_path});
     session.transfer(flow_file, Success);
     if (!request_.keepSourceFile) {
       std::error_code remove_error;
@@ -253,7 +253,7 @@ void GetFile::performListing(const GetFileRequest &request) {
     }
     return isRunning();
   };
-  utils::file::list_dir(request.inputDirectory.string(), callback, logger_, request.recursive);
+  utils::file::list_dir(request.inputDirectory, callback, logger_, request.recursive);
 }
 
 REGISTER_RESOURCE(GetFile, Processor);

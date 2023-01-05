@@ -71,9 +71,9 @@ GetFileTestController::GetFileTestController()
   auto log_attr = test_plan_->addProcessor("LogAttribute", "Log", core::Relationship("success", "description"), true);
   test_plan_->setProperty(log_attr, minifi::processors::LogAttribute::FlowFilesToLog.getName(), "0");
 
-  utils::putFileToDir(temp_dir_.string(), input_file_name_, "The quick brown fox jumps over the lazy dog\n");
-  utils::putFileToDir(temp_dir_.string(), large_input_file_name_, "The quick brown fox jumps over the lazy dog who is 2 legit to quit\n");
-  utils::putFileToDir(temp_dir_.string(), hidden_input_file_name_, "But noone has ever seen it\n");
+  utils::putFileToDir(temp_dir_, input_file_name_, "The quick brown fox jumps over the lazy dog\n");
+  utils::putFileToDir(temp_dir_, large_input_file_name_, "The quick brown fox jumps over the lazy dog who is 2 legit to quit\n");
+  utils::putFileToDir(temp_dir_, hidden_input_file_name_, "But noone has ever seen it\n");
 
 #ifdef WIN32
   const auto hide_file_err = minifi::test::utils::hide_file(getFullPath(hidden_input_file_name_));
@@ -142,7 +142,7 @@ TEST_CASE("GetFile removes the source file if KeepSourceFile is false") {
 
   test_controller.runSession();
 
-  REQUIRE_FALSE(utils::file::exists(test_controller.getInputFilePath().string()));
+  REQUIRE_FALSE(utils::file::exists(test_controller.getInputFilePath()));
 }
 
 TEST_CASE("GetFile keeps the source file if KeepSourceFile is true") {
@@ -151,7 +151,7 @@ TEST_CASE("GetFile keeps the source file if KeepSourceFile is true") {
 
   test_controller.runSession();
 
-  REQUIRE(utils::file::exists(test_controller.getInputFilePath().string()));
+  REQUIRE(utils::file::exists(test_controller.getInputFilePath()));
 }
 
 TEST_CASE("Hidden files are read when IgnoreHiddenFile property is false", "[getFileProperty]") {
@@ -170,7 +170,7 @@ TEST_CASE("Check if subdirectories are ignored or not if Recurse property is set
   GetFileTestController test_controller;
 
   auto subdir_path = test_controller.getFullPath("subdir");
-  utils::file::FileUtils::create_dir(subdir_path.string());
+  utils::file::FileUtils::create_dir(subdir_path);
   utils::putFileToDir(subdir_path, "subfile.txt", "Some content in a subfile\n");
 
   SECTION("File in subdirectory is ignored when Recurse property set to false")  {
@@ -198,7 +198,7 @@ TEST_CASE("Only older files are read when MinAge property is set", "[getFileProp
   test_controller.setProperty(minifi::processors::GetFile::MinAge, "1 hour");
 
   const auto more_than_an_hour_ago = std::chrono::file_clock::now() - 65min;
-  utils::file::FileUtils::set_last_write_time(test_controller.getInputFilePath().string(), more_than_an_hour_ago);
+  utils::file::FileUtils::set_last_write_time(test_controller.getInputFilePath(), more_than_an_hour_ago);
 
   test_controller.runSession();
 
@@ -212,7 +212,7 @@ TEST_CASE("Only newer files are read when MaxAge property is set", "[getFileProp
   test_controller.setProperty(minifi::processors::GetFile::MaxAge, "1 hour");
 
   const auto more_than_an_hour_ago = std::chrono::file_clock::now() - 65min;
-  utils::file::FileUtils::set_last_write_time(test_controller.getInputFilePath().string(), more_than_an_hour_ago);
+  utils::file::FileUtils::set_last_write_time(test_controller.getInputFilePath(), more_than_an_hour_ago);
 
   test_controller.runSession();
 

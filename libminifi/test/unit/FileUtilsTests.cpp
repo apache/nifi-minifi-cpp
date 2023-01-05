@@ -471,9 +471,9 @@ TEST_CASE("FileUtils::get_relative_path", "[TestGetRelativePath]") {
   TestController test_controller;
   const auto base_path = test_controller.createTempDirectory();
   auto path = std::filesystem::path{"/random/non-existent/dir"};
-  REQUIRE(FileUtils::get_relative_path(path.string(), base_path) == std::nullopt);
+  REQUIRE(FileUtils::get_relative_path(path, base_path) == std::nullopt);
   path = std::filesystem::path{base_path} / "subdir" / "file.log";
-  REQUIRE(*FileUtils::get_relative_path(path.string(), base_path) == std::filesystem::path("subdir") / "file.log");
-  REQUIRE(*FileUtils::get_relative_path(path.string(), base_path / "") == std::filesystem::path("subdir") / "file.log");
+  REQUIRE(*FileUtils::get_relative_path(path, base_path) == std::filesystem::path("subdir") / "file.log");
+  REQUIRE(*FileUtils::get_relative_path(path, base_path / "") == std::filesystem::path("subdir") / "file.log");
   REQUIRE(*FileUtils::get_relative_path(base_path, base_path) == ".");
 }

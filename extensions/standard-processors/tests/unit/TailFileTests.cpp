@@ -61,7 +61,7 @@ static const std::string ADDITIONALY_CREATED_FILE_CONTENT = "additional file dat
 namespace {
 std::filesystem::path createTempFile(const std::filesystem::path& directory, const std::filesystem::path& file_name, const std::string& contents,
     std::ios_base::openmode open_mode = std::ios::out | std::ios::binary) {
-  if (!utils::file::exists(directory.string())) {
+  if (!utils::file::exists(directory)) {
     std::filesystem::create_directories(directory);
   }
   std::string full_file_name = (directory / file_name).string();
