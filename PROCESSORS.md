@@ -2572,12 +2572,12 @@ In the list below, the names of required properties appear in bold. Any other pr
 |---------------------------------|--------------------------------------------------|---------------------------------------------------------------------------------------------------------------------------------------------------------------------|
 | Exceeded FlowFile Attribute Key | The value of the attribute added to the FlowFile | One or more dynamic properties can be used to add attributes to FlowFiles passed to the 'retries_exceeded' relationship.<br/>**Supports Expression Language: true** |
 
-### Writes Attributes:
+### Output Attributes
 
-| Name                  | Description                                                                                      |
-|-----------------------|--------------------------------------------------------------------------------------------------|
-| Retry Attribute       | User defined retry attribute is updated with the current retry count                             |
-| Retry Attribute .uuid | User defined retry attribute with .uuid that determines what processor retried the FlowFile last |
+| Attribute             | Relationship | Description                                                                                                             |
+|-----------------------|--------------|-------------------------------------------------------------------------------------------------------------------------|
+| Retry Attribute       |              | User defined retry attribute is updated with the current retry count                                                    |
+| Retry Attribute .uuid |              | User defined retry attribute with .uuid suffix is updated with the UUID of the processor that retried the FlowFile last |
 
 
 ## RouteOnAttribute
@@ -2638,11 +2638,11 @@ In the list below, the names of required properties appear in bold. Any other pr
 | unmatched | Segments that do not satisfy the required user-defined rules will be routed to this Relationship |
 | matched   | Segments that satisfy the required user-defined rules will be routed to this Relationship        |
 
-### Writes Attributes
+### Output Attributes
 
-| Name            | Description                                                                                                                                              |
-|-----------------|----------------------------------------------------------------------------------------------------------------------------------------------------------|
-| RouteText.Group | The value captured by all capturing groups in the 'Grouping Regular Expression' property. If this property is not set, this attribute will not be added. |
+| Attribute       | Relationship | Description                                                                                                                                              |
+|-----------------|--------------|----------------------------------------------------------------------------------------------------------------------------------------------------------|
+| RouteText.Group |              | The value captured by all capturing groups in the 'Grouping Regular Expression' property. If this property is not set, this attribute will not be added. |
 
 
 ## SourceInitiatedSubscriptionListener

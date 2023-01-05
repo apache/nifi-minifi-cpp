@@ -67,6 +67,9 @@ class RouteText : public core::Processor {
     };
   }
 
+  EXTENSIONAPI static const core::OutputAttribute Group;
+  static auto outputAttributes() { return std::array{Group}; }
+
   EXTENSIONAPI static constexpr bool SupportsDynamicProperties = true;
   EXTENSIONAPI static constexpr bool SupportsDynamicRelationships = true;
   EXTENSIONAPI static constexpr core::annotation::Input InputRequirement = core::annotation::Input::INPUT_REQUIRED;

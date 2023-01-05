@@ -75,6 +75,11 @@ const core::Relationship RetryFlowFile::Failure("failure",
     "that value to '1'. This will immediately terminate the limited feedback loop. Might also include when 'Maximum Retries' contains "
     " attribute expression language that does not resolve to an Integer.");
 
+const core::OutputAttribute RetryFlowFile::RetryOutputAttribute("Retry Attribute", {},
+    "User defined retry attribute is updated with the current retry count");
+const core::OutputAttribute RetryFlowFile::RetryWithUuidOutputAttribute("Retry Attribute .uuid", {},
+    "User defined retry attribute with .uuid suffix is updated with the UUID of the processor that retried the FlowFile last");
+
 void RetryFlowFile::initialize() {
   setSupportedProperties(properties());
   setSupportedRelationships(relationships());
