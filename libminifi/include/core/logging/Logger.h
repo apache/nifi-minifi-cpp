@@ -63,8 +63,10 @@ using has_string_method = decltype(std::declval<const Arg&>().string());
 
 template<typename Arg>
 inline decltype(auto) conditional_stringify(Arg&& arg) {
-  if constexpr (utils::meta::is_detected_v<has_const_c_str_method, Arg> || std::is_scalar_v<std::decay_t<Arg>> || utils::meta::is_detected_v<has_string_method, Arg>) {
+  if constexpr (utils::meta::is_detected_v<has_const_c_str_method, Arg> || std::is_scalar_v<std::decay_t<Arg>>) {
     return std::forward<Arg>(arg);
+  } else if constexpr (utils::meta::is_detected_v<has_string_method, Arg>) {
+    return arg.string();
   } else if constexpr (std::is_invocable_v<Arg>) {
     return std::forward<Arg>(arg)();
   }
@@ -76,8 +78,6 @@ inline decltype(auto) conditional_convert(const Arg& val) {
     return val;
   } else if constexpr (std::is_same_v<decltype(std::declval<const Arg&>().c_str()), const char*>) {
     return val.c_str();
-  } else if constexpr (std::is_same_v<decltype(std::declval<const Arg&>().string()), std::string>) {
-    return val.string().c_str();
   }
 }
 
