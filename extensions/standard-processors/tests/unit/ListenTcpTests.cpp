@@ -30,6 +30,7 @@ using namespace std::literals::chrono_literals;
 namespace org::apache::nifi::minifi::test {
 
 using utils::CHECK_NO_ERROR;
+using utils::CHECK_ERROR;
 
 void check_for_attributes(core::FlowFile& flow_file, uint16_t port) {
   CHECK(std::to_string(port) == flow_file.getAttribute("tcp.port"));
@@ -223,6 +224,89 @@ TEST_CASE("Test ListenTCP with SSL connection", "[ListenTCP][NetworkListenerProc
   for (std::size_t i = 0; i < expected_successful_messages.size(); ++i) {
     CHECK(controller.plan->getContent(result.at(ListenTCP::Success)[i]) == expected_successful_messages[i]);
     check_for_attributes(*result.at(ListenTCP::Success)[i], port);
+  }
+}
+
+namespace {
+bool isSslMethodAvailable(asio::ssl::context::method method) {
+  try {
+    [[maybe_unused]] asio::ssl::context ctx(method);
+    return true;
+  } catch (const asio::system_error& err) {
+    if (err.code() == asio::error::invalid_argument) {
+      return false;
+    } else {
+      throw;
+    }
+  }
+}
+}  // namespace
+
+TEST_CASE("Test ListenTCP SSL/TLS compatibility", "[ListenTCP][NetworkListenerProcessor]") {
+  const auto listen_tcp = std::make_shared<ListenTCP>("ListenTCP");
+  SingleProcessorTestController controller{listen_tcp};
+  auto ssl_context_service = controller.plan->addController("SSLContextService", "SSLContextService");
+  LogTestController::getInstance().setTrace<ListenTCP>();
+  const auto executable_dir = minifi::utils::file::FileUtils::get_executable_dir();
+  REQUIRE(controller.plan->setProperty(ssl_context_service, controllers::SSLContextService::CACertificate.getName(), (executable_dir / "resources" / "ca_A.crt").string()));
+  REQUIRE(controller.plan->setProperty(ssl_context_service, controllers::SSLContextService::ClientCertificate.getName(), (executable_dir / "resources" / "localhost_by_A.pem").string()));
+  REQUIRE(controller.plan->setProperty(ssl_context_service, controllers::SSLContextService::PrivateKey.getName(), (executable_dir / "resources" / "localhost_by_A.pem").string()));
+  REQUIRE(controller.plan->setProperty(ssl_context_service, controllers::SSLContextService::Passphrase.getName(), "Password12"));
+  REQUIRE(controller.plan->setProperty(listen_tcp, ListenTCP::MaxBatchSize.getName(), "2"));
+  REQUIRE(controller.plan->setProperty(listen_tcp, ListenTCP::SSLContextService.getName(), "SSLContextService"));
+  REQUIRE(controller.plan->setProperty(listen_tcp, ListenTCP::ClientAuth.getName(), "REQUIRED"));
+
+  ssl_context_service->enable();
+  uint16_t port = utils::scheduleProcessorOnRandomPort(controller.plan, listen_tcp);
+  asio::ip::tcp::endpoint endpoint = asio::ip::tcp::endpoint(asio::ip::address_v4::loopback(), port);
+
+  minifi::utils::net::SslData ssl_data;
+  ssl_data.ca_loc = executable_dir / "resources" / "ca_A.crt";
+  ssl_data.cert_loc = executable_dir / "resources" / "localhost_by_A.pem";
+  ssl_data.key_loc = executable_dir / "resources" / "localhost_by_A.pem";
+  ssl_data.key_pw = "Password12";
+
+
+  asio::ssl::context::method client_method;
+  bool expected_to_work;
+
+  SECTION("sslv2 should be disabled") {
+    client_method = asio::ssl::context::method::sslv2_client;
+    expected_to_work = false;
+  }
+
+  SECTION("sslv3 should be disabled") {
+    client_method = asio::ssl::context::method::sslv3_client;
+    expected_to_work = false;
+  }
+
+  SECTION("tlsv11 should be disabled") {
+    client_method = asio::ssl::context::method::tlsv11_client;
+    expected_to_work = false;
+  }
+
+  SECTION("tlsv12 should be enabled") {
+    client_method = asio::ssl::context::method::tlsv12_client;
+    expected_to_work = true;
+  }
+
+  SECTION("tlsv13 should be enabled") {
+    client_method = asio::ssl::context::method::tlsv13_client;
+    expected_to_work = true;
+  }
+
+  if (!isSslMethodAvailable(client_method))
+    return;
+
+  auto send_result = utils::sendMessagesViaSSL({"message"}, endpoint, executable_dir / "resources" / "ca_A.crt", ssl_data, client_method);
+  if (expected_to_work) {
+    CHECK_NO_ERROR(send_result);
+    ProcessorTriggerResult result;
+    CHECK(controller.triggerUntil({{ListenTCP::Success, 1}}, result, 300ms, 50ms));
+  } else {
+    CHECK_ERROR(send_result);
+    ProcessorTriggerResult result;
+    CHECK_FALSE(controller.triggerUntil({{ListenTCP::Success, 1}}, result, 300ms, 50ms));
   }
 }
 

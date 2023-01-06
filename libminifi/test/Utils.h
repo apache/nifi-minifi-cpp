@@ -171,10 +171,11 @@ struct FlowFileQueueTestAccessor {
 };
 
 std::error_code sendMessagesViaSSL(const std::vector<std::string_view>& contents,
-                                   const asio::ip::tcp::endpoint& remote_endpoint,
-                                   const std::filesystem::path& ca_cert_path,
-                                   const std::optional<minifi::utils::net::SslData>& ssl_data = std::nullopt) {
-  asio::ssl::context ctx(asio::ssl::context::sslv23);
+    const asio::ip::tcp::endpoint& remote_endpoint,
+    const std::filesystem::path& ca_cert_path,
+    const std::optional<minifi::utils::net::SslData>& ssl_data = std::nullopt,
+    asio::ssl::context::method method = asio::ssl::context::tlsv12_client) {
+  asio::ssl::context ctx(method);
   ctx.load_verify_file(ca_cert_path.string());
   if (ssl_data) {
     ctx.set_verify_mode(asio::ssl::verify_peer);
@@ -241,7 +242,11 @@ uint16_t scheduleProcessorOnRandomPort(const std::shared_ptr<TestPlan>& test_pla
 }
 
 void CHECK_NO_ERROR(std::error_code error_code) {
-  CHECK_FALSE(error_code);
+  CHECK(std::error_code{}.message() == error_code.message());
+}
+
+void CHECK_ERROR(std::error_code error_code) {
+  CHECK_FALSE(std::error_code{}.message() == error_code.message());
 }
 
 }  // namespace org::apache::nifi::minifi::test::utils
