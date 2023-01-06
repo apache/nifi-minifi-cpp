@@ -64,7 +64,7 @@ class MockControllerService : public minifi::core::controller::ControllerService
   void yield() override {
   }
 
-  bool isRunning() override {
+  bool isRunning() const override {
     return true;
   }
 

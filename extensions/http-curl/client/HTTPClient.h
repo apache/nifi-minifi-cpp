@@ -171,7 +171,7 @@ class HTTPClient : public utils::BaseHTTPClient, public core::Connectable {
   /**
    * Determines if we are connected and operating
    */
-  bool isRunning() override {
+  bool isRunning() const override {
     return true;
   }
 

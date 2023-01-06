@@ -83,7 +83,7 @@ Processor::~Processor() {
   logger_->log_debug("Destroying processor %s with uuid %s", name_, getUUIDStr());
 }
 
-bool Processor::isRunning() {
+bool Processor::isRunning() const {
   return (state_ == RUNNING && active_tasks_ > 0);
 }
 

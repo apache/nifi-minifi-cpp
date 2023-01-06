@@ -58,7 +58,7 @@ void UpdatePolicyControllerService::initialize() {
 void UpdatePolicyControllerService::yield() {
 }
 
-bool UpdatePolicyControllerService::isRunning() {
+bool UpdatePolicyControllerService::isRunning() const {
   return getState() == core::controller::ControllerServiceState::ENABLED;
 }
 

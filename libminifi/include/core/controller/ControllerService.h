@@ -97,7 +97,7 @@ class ControllerService : public ConfigurableComponent, public Connectable {
     configuration_ = configuration;
   }
 
-  ControllerServiceState getState() {
+  ControllerServiceState getState() const {
     return current_state_.load();
   }
 
@@ -127,7 +127,7 @@ class ControllerService : public ConfigurableComponent, public Connectable {
  protected:
   std::vector<std::shared_ptr<controller::ControllerService> > linked_services_;
   std::shared_ptr<Configure> configuration_;
-  std::atomic<ControllerServiceState> current_state_;
+  mutable std::atomic<ControllerServiceState> current_state_;
   bool canEdit() override {
     return true;
   }

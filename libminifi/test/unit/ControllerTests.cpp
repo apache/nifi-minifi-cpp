@@ -58,7 +58,7 @@ class TestStateController : public minifi::state::StateController {
     return 0;
   }
 
-  bool isRunning() override {
+  bool isRunning() const override {
     return is_running;
   }
 
@@ -113,7 +113,7 @@ class TestUpdateSink : public minifi::state::StateMonitor {
     return 0;
   }
 
-  bool isRunning() override {
+  bool isRunning() const override {
     return is_running;
   }
 

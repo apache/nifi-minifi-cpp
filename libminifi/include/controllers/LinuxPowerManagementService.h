@@ -109,7 +109,7 @@ class LinuxPowerManagerService : public ThreadManagementService {
 
   void yield() override;
 
-  bool isRunning() override;
+  bool isRunning() const override;
 
   bool isWorkAvailable() override;
 

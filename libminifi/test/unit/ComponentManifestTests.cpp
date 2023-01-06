@@ -48,7 +48,7 @@ class ExampleService : public core::controller::ControllerService {
 
   bool canEdit() override { return false; }
   void yield() override {}
-  bool isRunning() override { return false; }
+  bool isRunning() const override { return false; }
   bool isWorkAvailable() override { return false; }
 };
 

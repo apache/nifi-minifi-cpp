@@ -30,7 +30,7 @@ class AttributeProviderService : public core::controller::ControllerService {
   using ControllerService::ControllerService;
 
   void yield() override {}
-  bool isRunning() override { return getState() == core::controller::ControllerServiceState::ENABLED; }
+  bool isRunning() const override { return getState() == core::controller::ControllerServiceState::ENABLED; }
   bool isWorkAvailable() override { return false; }
 
   using AttributeMap = std::unordered_map<std::string, std::string>;

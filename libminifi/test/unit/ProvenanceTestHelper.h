@@ -266,7 +266,7 @@ class TestFlowController : public org::apache::nifi::minifi::FlowController {
     stop();
   }
 
-  bool isRunning() override {
+  bool isRunning() const override {
     return true;
   }
 

@@ -129,7 +129,7 @@ class StateController : public Pausable {
    */
   virtual int16_t stop() = 0;
 
-  virtual bool isRunning() = 0;
+  virtual bool isRunning() const = 0;
 };
 
 /**

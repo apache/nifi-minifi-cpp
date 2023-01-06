@@ -75,7 +75,7 @@ class ThreadedRepository : public core::Repository, public core::TraceableResour
     return true;
   }
 
-  bool isRunning() override {
+  bool isRunning() const override {
     return running_state_.load() == RunningState::Running;
   }
 

@@ -66,7 +66,7 @@ class ExecuteJavaControllerService : public ConfigurationContext, public std::en
   void yield() override {
   }
 
-  bool isRunning() override {
+  bool isRunning() const override {
     return getState() == core::controller::ControllerServiceState::ENABLED;
   }
 

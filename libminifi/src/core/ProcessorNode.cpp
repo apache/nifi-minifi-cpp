@@ -32,7 +32,7 @@ bool ProcessorNode::isWorkAvailable() {
   return processor_->isWorkAvailable();
 }
 
-bool ProcessorNode::isRunning() {
+bool ProcessorNode::isRunning() const {
   return processor_->isRunning();
 }
 

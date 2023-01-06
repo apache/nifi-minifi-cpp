@@ -71,7 +71,7 @@ class ResponseNode : public core::Connectable, public PublishedMetricProvider {
   void yield() override {
   }
 
-  bool isRunning() override {
+  bool isRunning() const override {
     return true;
   }
 

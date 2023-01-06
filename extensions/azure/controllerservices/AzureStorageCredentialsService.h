@@ -70,7 +70,7 @@ class AzureStorageCredentialsService : public core::controller::ControllerServic
     return false;
   }
 
-  bool isRunning() override {
+  bool isRunning() const override {
     return getState() == core::controller::ControllerServiceState::ENABLED;
   }
 
