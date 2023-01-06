@@ -220,7 +220,7 @@ class ConnectionHandler : public ConnectionHandlerBase {
   [[nodiscard]] asio::awaitable<std::error_code> setupUsableSocket(asio::io_context& io_context);
   [[nodiscard]] bool hasUsableSocket() const {  return socket_ && socket_->lowest_layer().is_open(); }
 
-  asio::awaitable<std::error_code> establishNewConnection(const tcp::resolver::results_type& resolved_query, asio::io_context& io_context_);
+  asio::awaitable<std::error_code> establishNewConnection(const tcp::resolver::results_type& endpoints, asio::io_context& io_context_);
   asio::awaitable<std::error_code> send(const std::shared_ptr<io::InputStream>& stream_to_send, const std::vector<std::byte>& delimiter);
 
   SocketType createNewSocket(asio::io_context& io_context_);
@@ -250,10 +250,10 @@ SslSocket ConnectionHandler<SslSocket>::createNewSocket(asio::io_context& io_con
 }
 
 template<class SocketType>
-asio::awaitable<std::error_code> ConnectionHandler<SocketType>::establishNewConnection(const tcp::resolver::results_type& resolved_query, asio::io_context& io_context) {
+asio::awaitable<std::error_code> ConnectionHandler<SocketType>::establishNewConnection(const tcp::resolver::results_type& endpoints, asio::io_context& io_context) {
   auto socket = createNewSocket(io_context);
   std::error_code last_error;
-  for (const auto& endpoint : resolved_query) {
+  for (const auto& endpoint : endpoints) {
     auto [connection_error] = co_await asyncOperationWithTimeout(socket.lowest_layer().async_connect(endpoint, use_nothrow_awaitable), timeout_duration_);
     if (connection_error) {
       core::logging::LOG_DEBUG(logger_) << "Connecting to " << endpoint.endpoint() << " failed due to " << connection_error.message();
