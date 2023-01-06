@@ -96,17 +96,23 @@ TEST_CASE("resource returns when it goes out of scope", "[utils::ResourceQueue]"
 
 TEST_CASE("resource resets when it goes out of scope", "[utils::ResourceQueue]") {
   using std::chrono::steady_clock;
+  std::shared_ptr<core::logging::Logger> logger{core::logging::LoggerFactory<ResourceQueue<steady_clock::time_point>>::getLogger()};
+  LogTestController::getInstance().setTrace<ResourceQueue<steady_clock::time_point>>();
+  LogTestController::getInstance().clear();
   auto queue = utils::ResourceQueue<steady_clock::time_point>::create([]{ return std::make_unique<steady_clock::time_point>(steady_clock::time_point::min()); },
                                                                       std::nullopt,
-                                                                      [](steady_clock::time_point& resource){ resource = steady_clock::time_point::max();});
+                                                                      [](steady_clock::time_point& resource){ resource = steady_clock::time_point::min();},
+                                                                      logger);
   {
     auto resource = queue->getResource();
     CHECK(*resource == steady_clock::time_point::min());
     *resource = steady_clock::now();
   }
   {
+    CHECK(LogTestController::getInstance().matchesRegex("Returning .* resource", 0ms));
     auto resource = queue->getResource();
-    CHECK(*resource == steady_clock::time_point::max());
+    CHECK(*resource == steady_clock::time_point::min());
+    CHECK(LogTestController::getInstance().matchesRegex("Using available .* resource instance", 0ms));
   }
 }
 
@@ -115,5 +121,6 @@ TEST_CASE("queue destroyed before resource", "[utils::ResourceQueue]") {
   auto queue = utils::ResourceQueue<steady_clock::time_point>::create([]{ return std::make_unique<steady_clock::time_point>(steady_clock::time_point::min()); });
   auto resource = queue->getResource();
   REQUIRE_NOTHROW(queue.reset());
+  REQUIRE_NOTHROW(*resource);
 }
 }  // namespace org::apache::nifi::minifi::utils::testing
