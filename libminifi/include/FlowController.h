@@ -96,7 +96,7 @@ class FlowController : public core::controller::ForwardingControllerServiceProvi
   virtual void load(std::unique_ptr<core::ProcessGroup> root = nullptr, bool reload = false);
 
   // Whether the Flow Controller is start running
-  bool isRunning() override {
+  bool isRunning() const override {
     return running_.load() || updating_.load();
   }
 

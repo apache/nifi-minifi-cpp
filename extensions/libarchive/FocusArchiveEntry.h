@@ -64,7 +64,7 @@ class FocusArchiveEntry : public core::Processor {
    public:
     explicit ReadCallback(core::Processor*, utils::file::FileManager *file_man, ArchiveMetadata *archiveMetadata);
     int64_t operator()(const std::shared_ptr<io::InputStream>& stream) const;
-    bool isRunning() {return proc_->isRunning();}
+    bool isRunning() const {return proc_->isRunning();}
 
    private:
     utils::file::FileManager *file_man_;

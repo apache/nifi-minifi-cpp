@@ -261,7 +261,7 @@ class ProcessorNode : public ConfigurableComponent, public Connectable {
     return false;
   }
 
-  bool isRunning() override;
+  bool isRunning() const override;
 
   bool isWorkAvailable() override;
 

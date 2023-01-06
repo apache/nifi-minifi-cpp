@@ -174,7 +174,7 @@ class Connection : public core::Connectable {
     return queue_.isWorkAvailable();
   }
 
-  bool isRunning() override {
+  bool isRunning() const override {
     return true;
   }
 

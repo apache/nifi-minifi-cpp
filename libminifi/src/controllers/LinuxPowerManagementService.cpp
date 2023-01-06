@@ -167,7 +167,7 @@ void LinuxPowerManagerService::initialize() {
 void LinuxPowerManagerService::yield() {
 }
 
-bool LinuxPowerManagerService::isRunning() {
+bool LinuxPowerManagerService::isRunning() const {
   return getState() == core::controller::ControllerServiceState::ENABLED;
 }
 

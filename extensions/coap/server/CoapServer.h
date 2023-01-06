@@ -183,7 +183,7 @@ class CoapServer : public core::Connectable {
   /**
    * Determines if we are connected and operating
    */
-  virtual bool isRunning() {
+  virtual bool isRunning() const {
     return running_.load();
   }
 

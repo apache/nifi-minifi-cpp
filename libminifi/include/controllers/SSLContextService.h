@@ -152,7 +152,7 @@ class SSLContextService : public core::controller::ControllerService {
   void yield() override {
   }
 
-  bool isRunning() override {
+  bool isRunning() const override {
     return getState() == core::controller::ControllerServiceState::ENABLED;
   }
 

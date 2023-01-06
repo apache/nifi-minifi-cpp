@@ -57,7 +57,7 @@ class ElasticsearchCredentialsControllerService : public core::controller::Contr
     return false;
   }
 
-  bool isRunning() override {
+  bool isRunning() const override {
     return getState() == core::controller::ControllerServiceState::ENABLED;
   }
 

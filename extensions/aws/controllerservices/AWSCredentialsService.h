@@ -71,7 +71,7 @@ class AWSCredentialsService : public core::controller::ControllerService {
     return false;
   };
 
-  bool isRunning() override {
+  bool isRunning() const override {
     return getState() == core::controller::ControllerServiceState::ENABLED;
   }
 

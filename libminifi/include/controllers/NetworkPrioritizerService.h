@@ -84,7 +84,7 @@ class NetworkPrioritizerService : public core::controller::ControllerService, pu
 
   void yield() override;
 
-  bool isRunning() override;
+  bool isRunning() const override;
 
   bool isWorkAvailable() override;
 

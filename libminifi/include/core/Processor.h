@@ -82,7 +82,7 @@ class Processor : public Connectable, public ConfigurableComponent, public state
   Processor(const Processor& parent) = delete;
   Processor& operator=(const Processor& parent) = delete;
 
-  bool isRunning() override;
+  bool isRunning() const override;
 
   ~Processor() override;
 

@@ -83,7 +83,7 @@ class FileUpdateTrigger : public C2Trigger {
   /**
    * Determines if we are connected and operating
    */
-  bool isRunning() override {
+  bool isRunning() const override {
     return true;
   }
 

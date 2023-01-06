@@ -44,7 +44,7 @@ int16_t ProcessorController::stop() {
   return 0;
 }
 
-bool ProcessorController::isRunning() {
+bool ProcessorController::isRunning() const {
   return processor_->isRunning();
 }
 

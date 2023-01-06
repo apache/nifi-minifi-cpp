@@ -166,7 +166,7 @@ void NetworkPrioritizerService::reduce_tokens(uint32_t size) {
   }
 }
 
-bool NetworkPrioritizerService::isRunning() {
+bool NetworkPrioritizerService::isRunning() const {
   return getState() == core::controller::ControllerServiceState::ENABLED;
 }
 

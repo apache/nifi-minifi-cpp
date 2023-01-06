@@ -70,7 +70,7 @@ class UpdatePolicyControllerService : public core::controller::ControllerService
 
   void yield() override;
 
-  bool isRunning() override;
+  bool isRunning() const override;
 
   bool isWorkAvailable() override;
 

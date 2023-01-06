@@ -71,7 +71,7 @@ class JavaControllerService : public core::controller::ControllerService, public
   void yield() override {
   }
 
-  bool isRunning() override {
+  bool isRunning() const override {
     return getState() == core::controller::ControllerServiceState::ENABLED;
   }
 

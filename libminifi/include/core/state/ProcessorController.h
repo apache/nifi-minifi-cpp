@@ -56,7 +56,7 @@ class ProcessorController : public StateController {
    */
   int16_t stop() override;
 
-  bool isRunning() override;
+  bool isRunning() const override;
 
   int16_t pause() override;
 

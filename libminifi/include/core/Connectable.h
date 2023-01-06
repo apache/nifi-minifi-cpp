@@ -113,7 +113,7 @@ class Connectable : public CoreComponent {
   /**
    * Determines if we are connected and operating
    */
-  virtual bool isRunning() = 0;
+  virtual bool isRunning() const = 0;
 
   /**
    * Block until work is available on any input connection, or the given duration elapses
