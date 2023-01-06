@@ -35,7 +35,7 @@ ThreadPool<T>::ThreadPool(int max_worker_threads, bool daemon_threads, core::con
 }
 
 template<typename T>
-void ThreadPool<T>::run_tasks(std::shared_ptr<WorkerThread> thread) {
+void ThreadPool<T>::run_tasks(const std::shared_ptr<WorkerThread>& thread) {
   thread->is_running_ = true;
   while (running_.load()) {
     if (UNLIKELY(thread_reduction_count_ > 0)) {

@@ -342,7 +342,7 @@ class ThreadPool {
   /**
    * Runs worker tasks
    */
-  void run_tasks(std::shared_ptr<WorkerThread> thread);
+  void run_tasks(const std::shared_ptr<WorkerThread>& thread);
 
   void manage_delayed_queue();
 };
