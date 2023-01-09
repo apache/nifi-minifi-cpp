@@ -60,7 +60,7 @@ class FetchGCSObjectTests : public ::testing::Test {
 };
 
 TEST_F(FetchGCSObjectTests, MissingBucket) {
-  EXPECT_CALL(*fetch_gcs_object_->mock_client_, CreateResumableSession).Times(0);
+  EXPECT_CALL(*fetch_gcs_object_->mock_client_, CreateResumableUpload).Times(0);
   EXPECT_TRUE(test_controller_.plan->setProperty(fetch_gcs_object_, FetchGCSObject::Bucket.getName(), ""));
   const auto& result = test_controller_.trigger("hello world");
   EXPECT_EQ(0, result.at(FetchGCSObject::Success).size());

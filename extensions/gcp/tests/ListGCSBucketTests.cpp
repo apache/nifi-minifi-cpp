@@ -78,7 +78,7 @@ class ListGCSBucketTests : public ::testing::Test {
 };
 
 TEST_F(ListGCSBucketTests, MissingBucket) {
-  EXPECT_CALL(*list_gcs_bucket_->mock_client_, CreateResumableSession).Times(0);
+  EXPECT_CALL(*list_gcs_bucket_->mock_client_, CreateResumableUpload).Times(0);
   EXPECT_THROW(test_controller_.trigger(), utils::internal::RequiredPropertyMissingException);
 }
 

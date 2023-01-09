@@ -63,7 +63,7 @@ class DeleteGCSObjectTests : public ::testing::Test {
 };
 
 TEST_F(DeleteGCSObjectTests, MissingBucket) {
-  EXPECT_CALL(*delete_gcs_object_->mock_client_, CreateResumableSession).Times(0);
+  EXPECT_CALL(*delete_gcs_object_->mock_client_, CreateResumableUpload).Times(0);
   EXPECT_TRUE(test_controller_.plan->setProperty(delete_gcs_object_, DeleteGCSObject::Bucket.getName(), ""));
   const auto& result = test_controller_.trigger("hello world");
   EXPECT_EQ(0, result.at(DeleteGCSObject::Success).size());

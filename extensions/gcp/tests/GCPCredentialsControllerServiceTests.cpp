@@ -25,8 +25,8 @@
 #include "rapidjson/document.h"
 #include "rapidjson/stream.h"
 #include "rapidjson/writer.h"
-#include "google/cloud/internal/setenv.h"
 #include "DummyProcessor.h"
+#include "utils/Environment.h"
 
 using GCPCredentialsControllerService = org::apache::nifi::minifi::extensions::gcp::GCPCredentialsControllerService;
 
@@ -79,7 +79,7 @@ class GCPCredentialsTests : public ::testing::Test {
 };
 
 TEST_F(GCPCredentialsTests, DefaultGCPCredentialsWithoutEnv) {
-  google::cloud::internal::UnsetEnv("GOOGLE_APPLICATION_CREDENTIALS");
+  minifi::utils::Environment::unsetEnvironmentVariable("GOOGLE_APPLICATION_CREDENTIALS");
   plan_->setProperty(gcp_credentials_node_, GCPCredentialsControllerService::CredentialsLoc.getName(), toString(GCPCredentialsControllerService::CredentialsLocation::USE_DEFAULT_CREDENTIALS));
   ASSERT_NO_THROW(test_controller_.runSession(plan_));
   EXPECT_EQ(nullptr, gcp_credentials_->getCredentials());
@@ -89,7 +89,7 @@ TEST_F(GCPCredentialsTests, DefaultGCPCredentialsWithEnv) {
   auto temp_directory = test_controller_.createTempDirectory();
   auto path = create_mock_json_file(temp_directory);
   ASSERT_TRUE(path.has_value());
-  google::cloud::internal::SetEnv("GOOGLE_APPLICATION_CREDENTIALS", path->string());
+  minifi::utils::Environment::setEnvironmentVariable("GOOGLE_APPLICATION_CREDENTIALS", path->string().c_str());
   plan_->setProperty(gcp_credentials_node_, GCPCredentialsControllerService::CredentialsLoc.getName(), toString(GCPCredentialsControllerService::CredentialsLocation::USE_DEFAULT_CREDENTIALS));
   ASSERT_NO_THROW(test_controller_.runSession(plan_));
   EXPECT_NE(nullptr, gcp_credentials_->getCredentials());
