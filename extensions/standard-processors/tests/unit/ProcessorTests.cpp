@@ -48,6 +48,7 @@
 #include "utils/PropertyErrors.h"
 #include "utils/IntegrationTestUtils.h"
 #include "Utils.h"
+#include "io/BufferStream.h"
 
 TEST_CASE("Test Creation of GetFile", "[getfileCreate]") {
   TestController testController;
@@ -448,7 +449,8 @@ TEST_CASE("Test Find file", "[getfileCreate3]") {
 
   for (auto entry : repo->getRepoMap()) {
     minifi::provenance::ProvenanceEventRecord newRecord;
-    newRecord.DeSerialize(gsl::make_span(entry.second).as_span<const std::byte>());
+    minifi::io::BufferStream stream(gsl::make_span(entry.second).as_span<const std::byte>());
+    newRecord.deserialize(stream);
 
     bool found = false;
     for (const auto& provRec : records) {
@@ -475,7 +477,7 @@ TEST_CASE("Test Find file", "[getfileCreate3]") {
   processorReport->setScheduledState(core::ScheduledState::RUNNING);
   std::string jsonStr;
   std::size_t deserialized = 0;
-  repo->DeSerialize(recordsReport, deserialized);
+  repo->getElements(recordsReport, deserialized);
   std::function<void(const std::shared_ptr<core::ProcessContext> &, const std::shared_ptr<core::ProcessSession>&)> verifyReporter =
       [&](const std::shared_ptr<core::ProcessContext> &context, const std::shared_ptr<core::ProcessSession> &session) {
         taskReport->getJsonReport(context, session, recordsReport, jsonStr);

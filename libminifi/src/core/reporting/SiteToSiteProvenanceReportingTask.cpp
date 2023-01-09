@@ -17,8 +17,6 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
-
 #include <vector>
 #include <queue>
 #include <map>
@@ -164,8 +162,7 @@ void SiteToSiteProvenanceReportingTask::onTrigger(const std::shared_ptr<core::Pr
   logging::LOG_DEBUG(logger_) << "batch size " << batch_size_ << " records";
   size_t deserialized = batch_size_;
   std::shared_ptr<core::Repository> repo = context->getProvenanceRepository();
-  std::function<std::shared_ptr<core::SerializableComponent>()> constructor = []() {return std::make_shared<provenance::ProvenanceEventRecord>();};
-  if (!repo->DeSerialize(records, deserialized, constructor) && deserialized == 0) {
+  if (!repo->getElements(records, deserialized) && deserialized == 0) {
     return;
   }
   logging::LOG_DEBUG(logger_) << "Captured " << deserialized << " records";

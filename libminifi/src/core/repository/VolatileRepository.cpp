@@ -25,9 +25,6 @@
 
 namespace org::apache::nifi::minifi::core::repository {
 
-void VolatileRepository::loadComponent(const std::shared_ptr<core::ContentRepository>& /*content_repo*/) {
-}
-
 bool VolatileRepository::initialize(const std::shared_ptr<Configure> &configure) {
   repo_data_.initialize(configure, core::ThreadedRepository::getName());
 
@@ -114,47 +111,6 @@ bool VolatileRepository::Get(const std::string &key, std::string &value) {
     }
   }
   return false;
-}
-
-bool VolatileRepository::DeSerialize(std::vector<std::shared_ptr<core::SerializableComponent>> &store,
-                                     size_t &max_size, std::function<std::shared_ptr<core::SerializableComponent>()> lambda) {
-  size_t requested_batch = max_size;
-  max_size = 0;
-  for (auto ent : repo_data_.value_vector) {
-    // let the destructor do the cleanup
-    RepoValue<std::string> repo_value;
-
-    if (ent->getValue(repo_value)) {
-      std::shared_ptr<core::SerializableComponent> newComponent = lambda();
-      // we've taken ownership of this repo value
-      newComponent->DeSerialize(repo_value.getBuffer());
-      store.push_back(newComponent);
-      repo_data_.current_size -= repo_value.getBuffer().size();
-      if (max_size++ >= requested_batch) {
-        break;
-      }
-    }
-  }
-  return max_size > 0;
-}
-
-bool VolatileRepository::DeSerialize(std::vector<std::shared_ptr<core::SerializableComponent>> &store, size_t &max_size) {
-  logger_->log_debug("VolatileRepository -- DeSerialize %u", repo_data_.current_size.load());
-  max_size = 0;
-  for (auto ent : repo_data_.value_vector) {
-    // let the destructor do the cleanup
-    RepoValue<std::string> repo_value;
-
-    if (ent->getValue(repo_value)) {
-      // we've taken ownership of this repo value
-      store.at(max_size)->DeSerialize(repo_value.getBuffer());
-      repo_data_.current_size -= repo_value.getBuffer().size();
-      if (max_size++ >= store.size()) {
-        break;
-      }
-    }
-  }
-  return max_size > 0;
 }
 
 }  // namespace org::apache::nifi::minifi::core::repository

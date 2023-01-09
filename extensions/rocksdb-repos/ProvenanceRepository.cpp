@@ -122,54 +122,20 @@ bool ProvenanceRepository::Get(const std::string &key, std::string &value) {
   return db_->Get(rocksdb::ReadOptions(), key, &value).ok();
 }
 
-bool ProvenanceRepository::Serialize(const std::string &key, const uint8_t *buffer, const size_t bufferSize) {
-  return Put(key, buffer, bufferSize);
-}
-
-bool ProvenanceRepository::get(std::vector<std::shared_ptr<core::CoreComponent>> &store, size_t max_size) {
-  std::unique_ptr<rocksdb::Iterator> it(db_->NewIterator(rocksdb::ReadOptions()));
-  for (it->SeekToFirst(); it->Valid(); it->Next()) {
-    std::shared_ptr<ProvenanceEventRecord> eventRead = std::make_shared<ProvenanceEventRecord>();
-    std::string key = it->key().ToString();
-    if (store.size() >= max_size)
-      break;
-    if (eventRead->DeSerialize(gsl::make_span(it->value()).as_span<const std::byte>())) {
-      store.push_back(std::dynamic_pointer_cast<core::CoreComponent>(eventRead));
-    }
-  }
-  return true;
-}
-
-bool ProvenanceRepository::DeSerialize(std::vector<std::shared_ptr<core::SerializableComponent>> &records, size_t &max_size,
-                                       std::function<std::shared_ptr<core::SerializableComponent>()> lambda) {
+bool ProvenanceRepository::getElements(std::vector<std::shared_ptr<core::SerializableComponent>> &records, size_t &max_size) {
   std::unique_ptr<rocksdb::Iterator> it(db_->NewIterator(rocksdb::ReadOptions()));
   size_t requested_batch = max_size;
   max_size = 0;
   for (it->SeekToFirst(); it->Valid(); it->Next()) {
     if (max_size >= requested_batch)
       break;
-    std::shared_ptr<core::SerializableComponent> eventRead = lambda();
+    auto eventRead = std::make_shared<ProvenanceEventRecord>();
     std::string key = it->key().ToString();
-    if (eventRead->DeSerialize(gsl::make_span(it->value()).as_span<const std::byte>())) {
+    io::BufferStream stream(gsl::make_span(it->value()).as_span<const std::byte>());
+    if (eventRead->deserialize(stream)) {
       max_size++;
       records.push_back(eventRead);
     }
-  }
-  return max_size > 0;
-}
-
-bool ProvenanceRepository::DeSerialize(std::vector<std::shared_ptr<core::SerializableComponent>> &store, size_t &max_size) {
-  std::unique_ptr<rocksdb::Iterator> it(db_->NewIterator(rocksdb::ReadOptions()));
-  max_size = 0;
-  for (it->SeekToFirst(); it->Valid(); it->Next()) {
-    std::shared_ptr<ProvenanceEventRecord> eventRead = std::make_shared<ProvenanceEventRecord>();
-    std::string key = it->key().ToString();
-
-    if (store.at(max_size)->DeSerialize(gsl::make_span(it->value()).as_span<const std::byte>())) {
-      max_size++;
-    }
-    if (store.size() >= max_size)
-      break;
   }
   return max_size > 0;
 }
