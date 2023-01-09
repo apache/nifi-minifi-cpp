@@ -35,6 +35,7 @@
 #include "properties/Configure.h"
 #include "provenance/Provenance.h"
 #include "SwapManager.h"
+#include "io/BufferStream.h"
 
 using namespace std::literals::chrono_literals;
 
@@ -73,10 +74,6 @@ class TestRepositoryBase : public T_BaseRepository {
     return true;
   }
 
-  bool Serialize(const std::string &key, const uint8_t *buffer, const size_t bufferSize) override {
-    return Put(key, buffer, bufferSize);
-  }
-
   bool Delete(const std::string& key) override {
     std::lock_guard<std::mutex> lock{repository_results_mutex_};
     repository_results_.erase(key);
@@ -94,11 +91,7 @@ class TestRepositoryBase : public T_BaseRepository {
     }
   }
 
-  bool Serialize(std::vector<std::shared_ptr<org::apache::nifi::minifi::core::SerializableComponent>>& /*store*/, size_t /*max_size*/) override {
-    return false;
-  }
-
-  bool DeSerialize(std::vector<std::shared_ptr<org::apache::nifi::minifi::core::SerializableComponent>> &store, size_t &max_size) override {
+  bool getElements(std::vector<std::shared_ptr<org::apache::nifi::minifi::core::SerializableComponent>> &store, size_t &max_size) override {
     std::lock_guard<std::mutex> lock{repository_results_mutex_};
     max_size = 0;
     for (const auto &entry : repository_results_) {
@@ -106,25 +99,11 @@ class TestRepositoryBase : public T_BaseRepository {
         break;
       }
       const auto eventRead = store.at(max_size);
-      eventRead->DeSerialize(gsl::make_span(entry.second).template as_span<const std::byte>());
+      org::apache::nifi::minifi::io::BufferStream stream(gsl::make_span(entry.second).template as_span<const std::byte>());
+      eventRead->deserialize(stream);
       ++max_size;
     }
     return true;
-  }
-
-  bool Serialize(const std::shared_ptr<org::apache::nifi::minifi::core::SerializableComponent>& /*store*/) override {
-    return false;
-  }
-
-  bool DeSerialize(const std::shared_ptr<org::apache::nifi::minifi::core::SerializableComponent> &store) override {
-    std::string value;
-    Get(store->getUUIDStr(), value);
-    store->DeSerialize(gsl::make_span(value).as_span<const std::byte>());
-    return true;
-  }
-
-  bool DeSerialize(gsl::span<const std::byte>) override {
-    return false;
   }
 
   std::map<std::string, std::string> getRepoMap() const {
@@ -197,9 +176,6 @@ class TestFlowRepository : public org::apache::nifi::minifi::core::ThreadedRepos
     } else {
       return false;
     }
-  }
-
-  void loadComponent(const std::shared_ptr<org::apache::nifi::minifi::core::ContentRepository>& /*content_repo*/) override {
   }
 
  private:

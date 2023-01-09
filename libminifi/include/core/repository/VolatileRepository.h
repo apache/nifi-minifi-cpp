@@ -80,25 +80,6 @@ class VolatileRepository : public core::ThreadedRepository {
    * @return status of the get operation.
    */
   bool Get(const std::string& key, std::string &value) override;
-  /**
-   * Deserializes objects into store
-   * @param store vector in which we will store newly created objects.
-   * @param max_size size of objects deserialized
-   */
-  bool DeSerialize(std::vector<std::shared_ptr<core::SerializableComponent>> &store, size_t &max_size, std::function<std::shared_ptr<core::SerializableComponent>()> lambda) override;
-
-  /**
-   * Deserializes objects into a store that contains a fixed number of objects in which
-   * we will deserialize from this repo
-   * @param store precreated object vector
-   * @param max_size size of objects deserialized
-   */
-  bool DeSerialize(std::vector<std::shared_ptr<core::SerializableComponent>> &store, size_t &max_size) override;
-
-  /**
-   * Function to load this component.
-   */
-  void loadComponent(const std::shared_ptr<core::ContentRepository> &content_repo) override;
 
   uint64_t getRepoSize() const override {
     return repo_data_.current_size;

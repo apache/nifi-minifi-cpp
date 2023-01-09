@@ -15,28 +15,32 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#pragma once
-
-#include <string>
-#include <utility>
-
-#include "core/Core.h"
-#include "utils/gsl.h"
-#include "io/InputStream.h"
-#include "io/OutputStream.h"
+#include "core/Repository.h"
 
 namespace org::apache::nifi::minifi::core {
 
-class SerializableComponent : public core::CoreComponent {
- public:
-  explicit SerializableComponent(std::string name)
-    : core::CoreComponent(std::move(name)) {
+bool Repository::Delete(std::vector<std::shared_ptr<core::SerializableComponent>> &storedValues) {
+  bool found = true;
+  for (const auto& storedValue : storedValues) {
+    found &= Delete(storedValue->getName());
+  }
+  return found;
+}
+
+bool Repository::storeElement(const std::shared_ptr<core::SerializableComponent>& element) {
+  if (!element) {
+    return false;
   }
 
-  virtual ~SerializableComponent() = default;
+  org::apache::nifi::minifi::io::BufferStream stream;
 
-  virtual bool serialize(io::OutputStream& output_stream) = 0;
-  virtual bool deserialize(io::InputStream &input_stream) = 0;
-};
+  element->serialize(stream);
+
+  if (!Put(element->getUUIDStr(), const_cast<uint8_t*>(stream.getBuffer().as_span<const uint8_t>().data()), stream.size())) {
+    logger_->log_error("NiFi Provenance Store event %s size %llu fail", element->getUUIDStr(), stream.size());
+    return false;
+  }
+  return true;
+}
 
 }  // namespace org::apache::nifi::minifi::core

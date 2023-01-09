@@ -79,15 +79,10 @@ class ProvenanceRepository : public core::ThreadedRepository {
   }
 
   bool Get(const std::string &key, std::string &value) override;
-
-  bool Serialize(const std::string &key, const uint8_t *buffer, const size_t bufferSize) override;
-  bool DeSerialize(std::vector<std::shared_ptr<core::SerializableComponent>> &records, size_t &max_size,
-                   std::function<std::shared_ptr<core::SerializableComponent>()> lambda) override;
-  bool DeSerialize(std::vector<std::shared_ptr<core::SerializableComponent>> &store, size_t &max_size) override;
+  bool getElements(std::vector<std::shared_ptr<core::SerializableComponent>> &records, size_t &max_size) override;
 
   void destroy();
   uint64_t getKeyCount() const;
-  virtual bool get(std::vector<std::shared_ptr<core::CoreComponent>> &store, size_t max_size);
 
   // Prevent default copy constructor and assignment operation
   // Only support pass by reference or pointer
