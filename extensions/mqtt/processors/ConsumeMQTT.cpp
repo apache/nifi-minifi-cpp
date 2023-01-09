@@ -308,7 +308,7 @@ void ConsumeMQTT::checkBrokerLimitsImpl() {
   }
 }
 
-void ConsumeMQTT::setMqtt5ConnectOptionsImpl(MQTTProperties& connect_props) const {
+void ConsumeMQTT::setProcessorSpecificMqtt5ConnectOptions(MQTTProperties& connect_props) const {
   if (topic_alias_maximum_ > 0) {
     MQTTProperty property;
     property.identifier = MQTTPROPERTY_CODE_TOPIC_ALIAS_MAXIMUM;

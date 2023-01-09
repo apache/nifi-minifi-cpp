@@ -243,7 +243,7 @@ void AbstractMQTTProcessor::setMqtt5ConnectOptions(MQTTAsync_connectOptions& con
 
   connect_options.willProperties = &will_properties;
 
-  setMqtt5ConnectOptionsImpl(connect_properties);
+  setProcessorSpecificMqtt5ConnectOptions(connect_properties);
 }
 
 void AbstractMQTTProcessor::onTrigger(const std::shared_ptr<core::ProcessContext>& context, const std::shared_ptr<core::ProcessSession>& session) {

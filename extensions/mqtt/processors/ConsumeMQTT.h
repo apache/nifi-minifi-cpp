@@ -165,7 +165,7 @@ class ConsumeMQTT : public processors::AbstractMQTTProcessor {
    */
   void fillAttributeFromContentType(const SmartMessage& message, const std::shared_ptr<core::FlowFile>& flow_file, const std::shared_ptr<core::ProcessSession>& session) const;
 
-  void setMqtt5ConnectOptionsImpl(MQTTProperties& connect_props) const override;
+  void setProcessorSpecificMqtt5ConnectOptions(MQTTProperties& connect_props) const override;
 
   std::string topic_;
   bool clean_session_ = true;

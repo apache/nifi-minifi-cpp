@@ -219,7 +219,7 @@ class AbstractMQTTProcessor : public core::Processor {
   void setConnectOptions(MQTTAsync_connectOptions& connect_options, MQTTProperties& connect_properties, MQTTProperties& will_properties, const ConnectFinishedTask& connect_finished_task) const;
   void setMqtt3ConnectOptions(MQTTAsync_connectOptions& connect_options) const;
   void setMqtt5ConnectOptions(MQTTAsync_connectOptions& connect_options, MQTTProperties& connect_properties, MQTTProperties& will_properties) const;
-  virtual void setMqtt5ConnectOptionsImpl(MQTTProperties& /*connect_props*/) const {
+  virtual void setProcessorSpecificMqtt5ConnectOptions(MQTTProperties& /*connect_props*/) const {
   }
 
   // SSL
