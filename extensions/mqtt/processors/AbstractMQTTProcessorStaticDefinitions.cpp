@@ -66,7 +66,7 @@ const core::Property AbstractMQTTProcessor::LastWillQoS(
                 build());
 
 const core::Property AbstractMQTTProcessor::LastWillRetain("Last Will Retain", "Whether to retain the client's Last Will", "false");
-const core::Property AbstractMQTTProcessor::LastWillContentType("Last Will Content Type", "Content type of the client's Last Will. WARNING: MQTT 5.x only.", "");
+const core::Property AbstractMQTTProcessor::LastWillContentType("Last Will Content Type", "Content type of the client's Last Will. MQTT 5.x only.", "");
 
 const core::Property AbstractMQTTProcessor::MqttVersion(
         core::PropertyBuilder::createProperty("MQTT Version")->
@@ -84,13 +84,13 @@ const core::Property ConsumeMQTT::Topic(
                 build());
 
 const core::Property ConsumeMQTT::CleanSession("Clean Session", "Whether to start afresh rather than remembering previous subscriptions. "
-                                                                "Also make broker remember subscriptions after disconnected. WARNING: MQTT 3.x only.", "true");
-const core::Property ConsumeMQTT::CleanStart("Clean Start", "Whether to start afresh rather than remembering previous subscriptions. WARNING: MQTT 5.x only.", "true");
-const core::Property ConsumeMQTT::SessionExpiryInterval("Session Expiry Interval", "Time to delete session on broker after client is disconnected. WARNING: MQTT 5.x only.", "0 s");
+                                                                "Also make broker remember subscriptions after disconnected. MQTT 3.x only.", "true");
+const core::Property ConsumeMQTT::CleanStart("Clean Start", "Whether to start afresh rather than remembering previous subscriptions. MQTT 5.x only.", "true");
+const core::Property ConsumeMQTT::SessionExpiryInterval("Session Expiry Interval", "Time to delete session on broker after client is disconnected. MQTT 5.x only.", "0 s");
 const core::Property ConsumeMQTT::QueueBufferMaxMessage("Queue Max Message", "Maximum number of messages allowed on the received MQTT queue", "1000");
-const core::Property ConsumeMQTT::AttributeFromContentType("Attribute From Content Type", "Name of FlowFile attribute to be filled from content type of received message. WARNING: MQTT 5.x only.", "");
+const core::Property ConsumeMQTT::AttributeFromContentType("Attribute From Content Type", "Name of FlowFile attribute to be filled from content type of received message. MQTT 5.x only.", "");
 const core::Property ConsumeMQTT::TopicAliasMaximum("Maximum number of topic aliases to use. If set to 0, then topic aliases cannot be used. MQTT 5.x only.", "0");
-const core::Property ConsumeMQTT::ReceiveMaximum("Receive Maximum", "Maximum number of unacknowledged messages allowed. WARNING: MQTT 5.x only.", std::to_string(MQTT_MAX_RECEIVE_MAXIMUM));
+const core::Property ConsumeMQTT::ReceiveMaximum("Receive Maximum", "Maximum number of unacknowledged messages allowed. MQTT 5.x only.", std::to_string(MQTT_MAX_RECEIVE_MAXIMUM));
 
 const core::Relationship ConsumeMQTT::Success("success", "FlowFiles that are sent successfully to the destination are transferred to this relationship");
 
@@ -107,11 +107,11 @@ const core::Property PublishMQTT::Topic(
                 build());
 
 const core::Property PublishMQTT::Retain("Retain", "Retain published message in broker", "false");
-const core::Property PublishMQTT::MessageExpiryInterval("Message Expiry Interval", "Time while message is valid and will be forwarded by broker. WARNING: MQTT 5.x only.", "");
+const core::Property PublishMQTT::MessageExpiryInterval("Message Expiry Interval", "Time while message is valid and will be forwarded by broker. MQTT 5.x only.", "");
 
 const core::Property PublishMQTT::ContentType(
         core::PropertyBuilder::createProperty("Content Type")->
-                withDescription("Content type of the message. WARNING: MQTT 5.x only.")->
+                withDescription("Content type of the message. MQTT 5.x only.")->
                 supportsExpressionLanguage(true)->
                 build());
 
