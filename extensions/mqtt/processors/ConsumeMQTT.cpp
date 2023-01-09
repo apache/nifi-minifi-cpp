@@ -290,7 +290,7 @@ void ConsumeMQTT::checkBrokerLimitsImpl() {
 
   if (maximum_session_expiry_interval_.has_value() && session_expiry_interval_ > maximum_session_expiry_interval_) {
     std::ostringstream os;
-    os << "Set Session Expiry Interval (" << session_expiry_interval_.count() <<" s) is longer then the maximum supported by the broker (" << maximum_session_expiry_interval_->count() << " s).";
+    os << "Set Session Expiry Interval (" << session_expiry_interval_.count() <<" s) is longer than the maximum supported by the broker (" << maximum_session_expiry_interval_->count() << " s).";
     throw Exception(PROCESS_SCHEDULE_EXCEPTION, os.str());
   }
 
