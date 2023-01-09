@@ -19,7 +19,7 @@
 
 namespace org::apache::nifi::minifi::utils::net {
 
-asio::awaitable<void> TcpServer::listen() {
+asio::awaitable<void> TcpServer::doReceive() {
   asio::ip::tcp::acceptor acceptor(io_context_, asio::ip::tcp::endpoint(asio::ip::tcp::v6(), port_));
   if (port_ == 0)
     port_ = acceptor.local_endpoint().port();

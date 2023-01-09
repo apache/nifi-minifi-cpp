@@ -35,7 +35,7 @@ class UdpServer : public Server {
             std::shared_ptr<core::logging::Logger> logger);
 
  private:
-  asio::awaitable<void> listen() override;
+  asio::awaitable<void> doReceive() override;
 };
 
 }  // namespace org::apache::nifi::minifi::utils::net

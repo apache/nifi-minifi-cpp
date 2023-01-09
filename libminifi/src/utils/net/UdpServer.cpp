@@ -29,7 +29,7 @@ UdpServer::UdpServer(std::optional<size_t> max_queue_size,
     : Server(max_queue_size, port, std::move(logger)) {
 }
 
-asio::awaitable<void> UdpServer::listen() {
+asio::awaitable<void> UdpServer::doReceive() {
   asio::ip::udp::socket socket(io_context_, asio::ip::udp::endpoint(asio::ip::udp::v6(), port_));
   if (port_ == 0)
     port_ = socket.local_endpoint().port();

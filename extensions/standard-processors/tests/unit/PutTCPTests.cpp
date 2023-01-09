@@ -52,7 +52,7 @@ class CancellableTcpServer : public utils::net::TcpServer {
       io_context_.post([=]{timer->cancel();});
   }
 
-  asio::awaitable<void> listen() override {
+  asio::awaitable<void> doReceive() override {
     using asio::experimental::awaitable_operators::operator||;
 
     asio::ip::tcp::acceptor acceptor(io_context_, asio::ip::tcp::endpoint(asio::ip::tcp::v6(), port_));

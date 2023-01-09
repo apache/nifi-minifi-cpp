@@ -32,7 +32,7 @@ class TcpServer : public Server {
   }
 
  protected:
-  asio::awaitable<void> listen() override;
+  asio::awaitable<void> doReceive() override;
 
   asio::awaitable<void> insecureSession(asio::ip::tcp::socket socket);
   asio::awaitable<void> secureSession(asio::ip::tcp::socket socket);

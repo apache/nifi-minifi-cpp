@@ -52,7 +52,7 @@ struct Message {
 class Server {
  public:
   virtual void run() {
-    asio::co_spawn(io_context_, listen(), asio::detached);
+    asio::co_spawn(io_context_, doReceive(), asio::detached);
     io_context_.run();
   }
   virtual void reset() {
@@ -76,7 +76,7 @@ class Server {
   }
 
  protected:
-  virtual asio::awaitable<void> listen() = 0;
+  virtual asio::awaitable<void> doReceive() = 0;
   Server(std::optional<size_t> max_queue_size, uint16_t port, std::shared_ptr<core::logging::Logger> logger)
       : port_(port), max_queue_size_(max_queue_size), logger_(std::move(logger)) {}
 
