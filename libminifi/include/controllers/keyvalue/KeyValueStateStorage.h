@@ -29,6 +29,9 @@
 
 namespace org::apache::nifi::minifi::controllers {
 
+constexpr const char* ALWAYS_PERSIST_PROPERTY_NAME = "Always Persist";
+constexpr const char* AUTO_PERSISTENCE_INTERVAL_PROPERTY_NAME = "Auto Persistence Interval";
+
 class KeyValueStateStorage : public core::StateStorage, public core::controller::ControllerService {
  public:
   explicit KeyValueStateStorage(const std::string& name, const utils::Identifier& uuid = {});
@@ -38,7 +41,6 @@ class KeyValueStateStorage : public core::StateStorage, public core::controller:
 
   std::unique_ptr<core::StateManager> getStateManager(const utils::Identifier& uuid) override;
   std::unordered_map<utils::Identifier, core::StateManager::State> getAllStates() override;
-
 
   void yield() override {
   }

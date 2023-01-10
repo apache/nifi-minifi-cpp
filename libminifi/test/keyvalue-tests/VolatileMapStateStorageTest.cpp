@@ -21,14 +21,12 @@
 #include <string>
 #include "../TestBase.h"
 #include "../Catch.h"
+#include "controllers/keyvalue/AutoPersistor.h"
 #include "controllers/keyvalue/KeyValueStateStorage.h"
-#include "core/controller/ControllerService.h"
 #include "core/ProcessGroup.h"
 #include "core/yaml/YamlConfiguration.h"
 #include "unit/ProvenanceTestHelper.h"
 #include "repository/VolatileContentRepository.h"
-
-#include "Catch.h"
 
 namespace {
   std::string config_yaml; // NOLINT

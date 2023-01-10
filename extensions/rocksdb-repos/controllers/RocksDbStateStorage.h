@@ -41,14 +41,18 @@ class RocksDbStateStorage : public KeyValueStateStorage {
   ~RocksDbStateStorage() override;
 
   EXTENSIONAPI static constexpr const char* Description = "A state storage service implemented by RocksDB";
+
+  EXTENSIONAPI static const core::Property AlwaysPersist;
+  EXTENSIONAPI static const core::Property AutoPersistenceInterval;
   EXTENSIONAPI static const core::Property Directory;
   static auto properties() {
     return std::array{
-      AutoPersistor::AlwaysPersist,
-      AutoPersistor::AutoPersistenceInterval,
+      AlwaysPersist,
+      AutoPersistenceInterval,
       Directory
     };
   }
+
   EXTENSIONAPI static constexpr bool SupportsDynamicProperties = false;
   ADD_COMMON_VIRTUAL_FUNCTIONS_FOR_CONTROLLER_SERVICES
 

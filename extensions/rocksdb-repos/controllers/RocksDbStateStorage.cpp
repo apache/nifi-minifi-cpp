@@ -15,6 +15,7 @@
  * limitations under the License.
  */
 
+#include <cinttypes>
 #include <fstream>
 #include <utility>
 
@@ -26,6 +27,18 @@
 
 namespace org::apache::nifi::minifi::controllers {
 
+const core::Property RocksDbStateStorage::AlwaysPersist(
+    core::PropertyBuilder::createProperty(ALWAYS_PERSIST_PROPERTY_NAME)
+    ->withDescription("Persist every change instead of persisting it periodically.")
+    ->isRequired(false)
+    ->withDefaultValue<bool>(false)
+    ->build());
+const core::Property RocksDbStateStorage::AutoPersistenceInterval(
+    core::PropertyBuilder::createProperty(AUTO_PERSISTENCE_INTERVAL_PROPERTY_NAME)
+    ->withDescription("The interval of the periodic task persisting all values. Only used if Always Persist is false. If set to 0 seconds, auto persistence will be disabled.")
+    ->isRequired(false)
+    ->withDefaultValue<core::TimePeriodValue>("1 min")
+    ->build());
 const core::Property RocksDbStateStorage::Directory(
     core::PropertyBuilder::createProperty("Directory")
     ->withDescription("Path to a directory for the database")
@@ -51,12 +64,18 @@ void RocksDbStateStorage::onEnable() {
     return;
   }
 
-  auto_persistor_.start(*this, [this] { return persistNonVirtual(); });
+  const auto always_persist = getProperty<bool>(AlwaysPersist.getName()).value_or(false);
+  logger_->log_info("Always Persist property: %s", always_persist ? "true" : "false");
+
+  const auto auto_persistence_interval = getProperty<core::TimePeriodValue>(AutoPersistenceInterval.getName()).value_or(core::TimePeriodValue{}).getMilliseconds();
+  logger_->log_info("Auto Persistence Interval property: %" PRId64 " ms", auto_persistence_interval.count());
 
   if (!getProperty(Directory.getName(), directory_)) {
     logger_->log_error("Invalid or missing property: Directory");
     return;
   }
+
+  auto_persistor_.start(always_persist, auto_persistence_interval, [this] { return persistNonVirtual(); });
 
   db_.reset();
 

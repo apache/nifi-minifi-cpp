@@ -38,10 +38,7 @@ class AutoPersistor {
  public:
   virtual ~AutoPersistor();
 
-  MINIFIAPI static const core::Property AlwaysPersist;
-  MINIFIAPI static const core::Property AutoPersistenceInterval;
-
-  void start(const core::ConfigurableComponent& property_source, std::function<bool()> persist);
+  void start(bool always_persist, std::chrono::milliseconds auto_persistence_interval, std::function<bool()> persist);
   void stop();
 
   [[nodiscard]] bool isAlwaysPersisting() const {

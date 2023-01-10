@@ -17,6 +17,7 @@
 
 #include "PersistentMapStateStorage.h"
 
+#include <cinttypes>
 #include <fstream>
 #include <set>
 
@@ -50,6 +51,18 @@ namespace {
 
 namespace org::apache::nifi::minifi::controllers {
 
+const core::Property PersistentMapStateStorage::AlwaysPersist(
+    core::PropertyBuilder::createProperty(ALWAYS_PERSIST_PROPERTY_NAME)
+    ->withDescription("Persist every change instead of persisting it periodically.")
+    ->isRequired(false)
+    ->withDefaultValue<bool>(false)
+    ->build());
+const core::Property PersistentMapStateStorage::AutoPersistenceInterval(
+    core::PropertyBuilder::createProperty(AUTO_PERSISTENCE_INTERVAL_PROPERTY_NAME)
+    ->withDescription("The interval of the periodic task persisting all values. Only used if Always Persist is false. If set to 0 seconds, auto persistence will be disabled.")
+    ->isRequired(false)
+    ->withDefaultValue<core::TimePeriodValue>("1 min")
+    ->build());
 const core::Property PersistentMapStateStorage::File(
     core::PropertyBuilder::createProperty("File")
     ->withDescription("Path to a file to store state")
@@ -139,6 +152,12 @@ void PersistentMapStateStorage::onEnable() {
     return;
   }
 
+  const auto always_persist = getProperty<bool>(AlwaysPersist.getName()).value_or(false);
+  logger_->log_info("Always Persist property: %s", always_persist ? "true" : "false");
+
+  const auto auto_persistence_interval = getProperty<core::TimePeriodValue>(AutoPersistenceInterval.getName()).value_or(core::TimePeriodValue{}).getMilliseconds();
+  logger_->log_info("Auto Persistence Interval property: %" PRId64 " ms", auto_persistence_interval.count());
+
   if (!getProperty(File.getName(), file_)) {
     logger_->log_error("Invalid or missing property: File");
     return;
@@ -147,7 +166,7 @@ void PersistentMapStateStorage::onEnable() {
   /* We must not start the persistence thread until we attempted to load the state */
   load();
 
-  auto_persistor_.start(*this, [this] { return persistNonVirtual(); });
+  auto_persistor_.start(always_persist, auto_persistence_interval, [this] { return persistNonVirtual(); });
 
   logger_->log_trace("Enabled PersistentMapStateStorage");
 }

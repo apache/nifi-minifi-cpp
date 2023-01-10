@@ -39,14 +39,18 @@ class PersistentMapStateStorage : public VolatileMapStateStorage {
   ~PersistentMapStateStorage() override;
 
   EXTENSIONAPI static constexpr const char* Description = "A persistable state storage service implemented by a locked std::unordered_map<std::string, std::string> and persisted into a file";
+
+  EXTENSIONAPI static const core::Property AlwaysPersist;
+  EXTENSIONAPI static const core::Property AutoPersistenceInterval;
   EXTENSIONAPI static const core::Property File;
   static auto properties() {
     return std::array{
-      AutoPersistor::AlwaysPersist,
-      AutoPersistor::AutoPersistenceInterval,
+      AlwaysPersist,
+      AutoPersistenceInterval,
       File
     };
   }
+
   EXTENSIONAPI static constexpr bool SupportsDynamicProperties = false;
   ADD_COMMON_VIRTUAL_FUNCTIONS_FOR_CONTROLLER_SERVICES
 

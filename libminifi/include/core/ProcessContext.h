@@ -34,7 +34,7 @@
 #include "core/controller/ControllerServiceProvider.h"
 #include "core/controller/ControllerServiceLookup.h"
 #include "core/logging/LoggerFactory.h"
-#include "controllers/keyvalue/AutoPersistor.h"
+#include "controllers/keyvalue/KeyValueStateStorage.h"
 #include "ProcessorNode.h"
 #include "core/Repository.h"
 #include "core/FlowFile.h"
@@ -288,12 +288,10 @@ class ProcessContext : public controller::ControllerServiceLookup, public core::
       if (storage == nullptr) {
         return nullptr;
       }
-      if (!always_persist.empty() && !storage->setProperty(
-          controllers::AutoPersistor::AlwaysPersist, always_persist)) {
+      if (!always_persist.empty() && !storage->setProperty(controllers::ALWAYS_PERSIST_PROPERTY_NAME, always_persist)) {
         return nullptr;
       }
-      if (!auto_persistence_interval.empty() && !storage->setProperty(
-          controllers::AutoPersistor::AutoPersistenceInterval, auto_persistence_interval)) {
+      if (!auto_persistence_interval.empty() && !storage->setProperty(controllers::AUTO_PERSISTENCE_INTERVAL_PROPERTY_NAME, auto_persistence_interval)) {
         return nullptr;
       }
       for (const auto& extraProperty : extraProperties) {

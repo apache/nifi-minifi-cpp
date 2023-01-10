@@ -25,19 +25,6 @@ using namespace std::literals::chrono_literals;
 
 namespace org::apache::nifi::minifi::controllers {
 
-const core::Property AutoPersistor::AlwaysPersist(
-        core::PropertyBuilder::createProperty("Always Persist")
-                ->withDescription("Persist every change instead of persisting it periodically.")
-                ->isRequired(false)
-                ->withDefaultValue<bool>(false)
-                ->build());
-const core::Property AutoPersistor::AutoPersistenceInterval(
-        core::PropertyBuilder::createProperty("Auto Persistence Interval")
-                ->withDescription("The interval of the periodic task persisting all values. Only used if Always Persist is false. If set to 0 seconds, auto persistence will be disabled.")
-                ->isRequired(false)
-                ->withDefaultValue<core::TimePeriodValue>("1 min")
-                ->build());
-
 AutoPersistor::~AutoPersistor() {
   stop();
 }
@@ -52,24 +39,12 @@ void AutoPersistor::stop() {
   }
 }
 
-void AutoPersistor::start(const core::ConfigurableComponent& property_source, std::function<bool()> persist) {
+void AutoPersistor::start(bool always_persist, std::chrono::milliseconds auto_persistence_interval, std::function<bool()> persist) {
   std::unique_lock<std::mutex> lock(persisting_mutex_);
 
+  always_persist_ = always_persist;
+  auto_persistence_interval_ = auto_persistence_interval;
   persist_ = std::move(persist);
-
-  std::string value;
-  if (!property_source.getProperty(AlwaysPersist.getName(), value)) {
-    logger_->log_error("Always Persist attribute is missing or invalid");
-  } else {
-    always_persist_ = utils::StringUtils::toBool(value).value_or(false);
-  }
-
-  core::TimePeriodValue auto_persistence_interval;
-  if (!property_source.getProperty(AutoPersistenceInterval.getName(), auto_persistence_interval)) {
-    logger_->log_error("Auto Persistence Interval attribute is missing or invalid");
-  } else {
-    auto_persistence_interval_ = auto_persistence_interval.getMilliseconds();
-  }
 
   if (!always_persist_ && auto_persistence_interval_ != 0s) {
     if (!persisting_thread_.joinable()) {
