@@ -91,6 +91,7 @@ endif()
 SET(CATCH_MAIN_LIB catch_main)
 add_library(${CATCH_MAIN_LIB} STATIC "${TEST_DIR}/CatchMain.cpp")
 target_include_directories(${CATCH_MAIN_LIB} SYSTEM BEFORE PRIVATE "${CMAKE_SOURCE_DIR}/thirdparty/catch")
+target_link_libraries(${CATCH_MAIN_LIB} spdlog)  # for fmt
 
 SET(TEST_RESOURCES ${TEST_DIR}/resources)
 

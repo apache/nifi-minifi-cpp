@@ -29,8 +29,6 @@ using namespace std::literals::chrono_literals;
 
 namespace org::apache::nifi::minifi::test {
 
-using utils::CHECK_NO_ERROR;
-
 void check_for_attributes(core::FlowFile& flow_file, uint16_t port) {
   const auto local_addresses = {"127.0.0.1", "::ffff:127.0.0.1", "::1"};
   CHECK(std::to_string(port) == flow_file.getAttribute("udp.port"));
@@ -57,8 +55,8 @@ TEST_CASE("ListenUDP test multiple messages", "[ListenUDP][NetworkListenerProces
   }
 
   controller.plan->scheduleProcessor(listen_udp);
-  CHECK_NO_ERROR(utils::sendUdpDatagram({"test_message_1"}, endpoint));
-  CHECK_NO_ERROR(utils::sendUdpDatagram({"another_message"}, endpoint));
+  CHECK_THAT(utils::sendUdpDatagram({"test_message_1"}, endpoint), MatchesSuccess());
+  CHECK_THAT(utils::sendUdpDatagram({"another_message"}, endpoint), MatchesSuccess());
   ProcessorTriggerResult result;
   REQUIRE(controller.triggerUntil({{ListenUDP::Success, 2}}, result, 300ms, 50ms));
   CHECK(result.at(ListenUDP::Success).size() == 2);
@@ -103,7 +101,7 @@ TEST_CASE("ListenUDP max queue and max batch size test", "[ListenUDP][NetworkLis
 
   controller.plan->scheduleProcessor(listen_udp);
   for (auto i = 0; i < 100; ++i) {
-    CHECK_NO_ERROR(utils::sendUdpDatagram({"test_message"}, endpoint));
+    CHECK_THAT(utils::sendUdpDatagram({"test_message"}, endpoint), MatchesSuccess());
   }
 
   CHECK(utils::countLogOccurrencesUntil("Queue is full. UDP message ignored.", 50, 300ms, 50ms));

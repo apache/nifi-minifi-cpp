@@ -31,8 +31,6 @@ namespace org::apache::nifi::minifi::test {
 
 constexpr auto local_addresses = {"127.0.0.1", "::ffff:127.0.0.1", "::1"};
 
-using utils::CHECK_NO_ERROR;
-
 struct ValidRFC5424Message {
   constexpr ValidRFC5424Message(std::string_view message,
                                 std::string_view priority,
@@ -289,8 +287,8 @@ TEST_CASE("ListenSyslog without parsing test", "[ListenSyslog]") {
       endpoint = asio::ip::udp::endpoint(asio::ip::address_v6::loopback(), port);
     }
     protocol = "UDP";
-    CHECK_NO_ERROR(utils::sendUdpDatagram(rfc5424_logger_example_1, endpoint));
-    CHECK_NO_ERROR(utils::sendUdpDatagram(invalid_syslog, endpoint));
+    CHECK_THAT(utils::sendUdpDatagram(rfc5424_logger_example_1, endpoint), MatchesSuccess());
+    CHECK_THAT(utils::sendUdpDatagram(invalid_syslog, endpoint), MatchesSuccess());
   }
 
   SECTION("TCP") {
@@ -308,8 +306,8 @@ TEST_CASE("ListenSyslog without parsing test", "[ListenSyslog]") {
         return;
       endpoint = asio::ip::tcp::endpoint(asio::ip::address_v6::loopback(), port);
     }
-    CHECK_NO_ERROR(utils::sendMessagesViaTCP({rfc5424_logger_example_1}, endpoint));
-    CHECK_NO_ERROR(utils::sendMessagesViaTCP({invalid_syslog}, endpoint));
+    CHECK_THAT(utils::sendMessagesViaTCP({rfc5424_logger_example_1}, endpoint), MatchesSuccess());
+    CHECK_THAT(utils::sendMessagesViaTCP({invalid_syslog}, endpoint), MatchesSuccess());
   }
   std::unordered_map<core::Relationship, std::vector<std::shared_ptr<core::FlowFile>>> result;
   REQUIRE(controller.triggerUntil({{ListenSyslog::Success, 2}}, result, 300ms, 50ms));
@@ -346,18 +344,18 @@ TEST_CASE("ListenSyslog with parsing test", "[ListenSyslog][NetworkListenerProce
       endpoint = asio::ip::udp::endpoint(asio::ip::address_v6::loopback(), port);
     }
 
-    CHECK_NO_ERROR(utils::sendUdpDatagram(rfc5424_doc_example_1.unparsed_, endpoint));
-    CHECK_NO_ERROR(utils::sendUdpDatagram(rfc5424_doc_example_2.unparsed_, endpoint));
-    CHECK_NO_ERROR(utils::sendUdpDatagram(rfc5424_doc_example_3.unparsed_, endpoint));
-    CHECK_NO_ERROR(utils::sendUdpDatagram(rfc5424_doc_example_4.unparsed_, endpoint));
+    CHECK_THAT(utils::sendUdpDatagram(rfc5424_doc_example_1.unparsed_, endpoint), MatchesSuccess());
+    CHECK_THAT(utils::sendUdpDatagram(rfc5424_doc_example_2.unparsed_, endpoint), MatchesSuccess());
+    CHECK_THAT(utils::sendUdpDatagram(rfc5424_doc_example_3.unparsed_, endpoint), MatchesSuccess());
+    CHECK_THAT(utils::sendUdpDatagram(rfc5424_doc_example_4.unparsed_, endpoint), MatchesSuccess());
 
-    CHECK_NO_ERROR(utils::sendUdpDatagram(rfc3164_doc_example_1.unparsed_, endpoint));
-    CHECK_NO_ERROR(utils::sendUdpDatagram(rfc3164_doc_example_2.unparsed_, endpoint));
-    CHECK_NO_ERROR(utils::sendUdpDatagram(rfc3164_doc_example_3.unparsed_, endpoint));
-    CHECK_NO_ERROR(utils::sendUdpDatagram(rfc3164_doc_example_4.unparsed_, endpoint));
+    CHECK_THAT(utils::sendUdpDatagram(rfc3164_doc_example_1.unparsed_, endpoint), MatchesSuccess());
+    CHECK_THAT(utils::sendUdpDatagram(rfc3164_doc_example_2.unparsed_, endpoint), MatchesSuccess());
+    CHECK_THAT(utils::sendUdpDatagram(rfc3164_doc_example_3.unparsed_, endpoint), MatchesSuccess());
+    CHECK_THAT(utils::sendUdpDatagram(rfc3164_doc_example_4.unparsed_, endpoint), MatchesSuccess());
 
-    CHECK_NO_ERROR(utils::sendUdpDatagram(rfc5424_logger_example_1, endpoint));
-    CHECK_NO_ERROR(utils::sendUdpDatagram(invalid_syslog, endpoint));
+    CHECK_THAT(utils::sendUdpDatagram(rfc5424_logger_example_1, endpoint), MatchesSuccess());
+    CHECK_THAT(utils::sendUdpDatagram(invalid_syslog, endpoint), MatchesSuccess());
   }
 
   SECTION("TCP") {
@@ -376,18 +374,18 @@ TEST_CASE("ListenSyslog with parsing test", "[ListenSyslog][NetworkListenerProce
       endpoint = asio::ip::tcp::endpoint(asio::ip::address_v6::loopback(), port);
     }
 
-    CHECK_NO_ERROR(utils::sendMessagesViaTCP({rfc5424_doc_example_1.unparsed_,
+    CHECK_THAT(utils::sendMessagesViaTCP({rfc5424_doc_example_1.unparsed_,
                                            rfc5424_doc_example_2.unparsed_,
                                            rfc5424_doc_example_3.unparsed_,
-                                           rfc5424_doc_example_4.unparsed_}, endpoint));
+                                           rfc5424_doc_example_4.unparsed_}, endpoint), MatchesSuccess());
 
-    CHECK_NO_ERROR(utils::sendMessagesViaTCP({rfc3164_doc_example_1.unparsed_,
+    CHECK_THAT(utils::sendMessagesViaTCP({rfc3164_doc_example_1.unparsed_,
                                            rfc3164_doc_example_2.unparsed_,
                                            rfc3164_doc_example_3.unparsed_,
-                                           rfc3164_doc_example_4.unparsed_}, endpoint));
+                                           rfc3164_doc_example_4.unparsed_}, endpoint), MatchesSuccess());
 
-    CHECK_NO_ERROR(utils::sendMessagesViaTCP({rfc5424_logger_example_1}, endpoint));
-    CHECK_NO_ERROR(utils::sendMessagesViaTCP({invalid_syslog}, endpoint));
+    CHECK_THAT(utils::sendMessagesViaTCP({rfc5424_logger_example_1}, endpoint), MatchesSuccess());
+    CHECK_THAT(utils::sendMessagesViaTCP({invalid_syslog}, endpoint), MatchesSuccess());
   }
 
   std::unordered_map<core::Relationship, std::vector<std::shared_ptr<core::FlowFile>>> result;
@@ -474,7 +472,7 @@ TEST_CASE("ListenSyslog max queue and max batch size test", "[ListenSyslog][Netw
       endpoint = asio::ip::udp::endpoint(asio::ip::address_v6::loopback(), port);
     }
     for (auto i = 0; i < 100; ++i) {
-      CHECK_NO_ERROR(utils::sendUdpDatagram(rfc5424_doc_example_1.unparsed_, endpoint));
+      CHECK_THAT(utils::sendUdpDatagram(rfc5424_doc_example_1.unparsed_, endpoint), MatchesSuccess());
     }
     CHECK(utils::countLogOccurrencesUntil("Queue is full. UDP message ignored.", 50, 300ms, 50ms));
   }
@@ -493,7 +491,7 @@ TEST_CASE("ListenSyslog max queue and max batch size test", "[ListenSyslog][Netw
       endpoint = asio::ip::tcp::endpoint(asio::ip::address_v6::loopback(), port);
     }
     for (auto i = 0; i < 100; ++i) {
-      CHECK_NO_ERROR(utils::sendMessagesViaTCP({rfc5424_doc_example_1.unparsed_}, endpoint));
+      CHECK_THAT(utils::sendMessagesViaTCP({rfc5424_doc_example_1.unparsed_}, endpoint), MatchesSuccess());
     }
     CHECK(utils::countLogOccurrencesUntil("Queue is full. TCP message ignored.", 50, 300ms, 50ms));
   }
@@ -534,8 +532,8 @@ TEST_CASE("Test ListenSyslog via TCP with SSL connection", "[ListenSyslog][Netwo
     endpoint = asio::ip::tcp::endpoint(asio::ip::address_v6::loopback(), port);
   }
 
-  CHECK_NO_ERROR(utils::sendMessagesViaSSL({rfc5424_logger_example_1}, endpoint, (executable_dir / "resources" / "ca_A.crt").string()));
-  CHECK_NO_ERROR(utils::sendMessagesViaSSL({invalid_syslog}, endpoint, (executable_dir / "resources" / "ca_A.crt").string()));
+  CHECK_THAT(utils::sendMessagesViaSSL({rfc5424_logger_example_1}, endpoint, (executable_dir / "resources" / "ca_A.crt").string()), MatchesSuccess());
+  CHECK_THAT(utils::sendMessagesViaSSL({invalid_syslog}, endpoint, (executable_dir / "resources" / "ca_A.crt").string()), MatchesSuccess());
 
   std::unordered_map<core::Relationship, std::vector<std::shared_ptr<core::FlowFile>>> result;
   REQUIRE(controller.triggerUntil({{ListenSyslog::Success, 2}}, result, 300ms, 50ms));

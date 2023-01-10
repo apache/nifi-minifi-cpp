@@ -241,12 +241,4 @@ uint16_t scheduleProcessorOnRandomPort(const std::shared_ptr<TestPlan>& test_pla
   return port;
 }
 
-void CHECK_NO_ERROR(std::error_code error_code) {
-  CHECK(std::error_code{}.message() == error_code.message());
-}
-
-void CHECK_ERROR(std::error_code error_code) {
-  CHECK_FALSE(std::error_code{}.message() == error_code.message());
-}
-
 }  // namespace org::apache::nifi::minifi::test::utils

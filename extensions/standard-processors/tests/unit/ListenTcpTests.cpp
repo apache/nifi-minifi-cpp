@@ -29,9 +29,6 @@ using namespace std::literals::chrono_literals;
 
 namespace org::apache::nifi::minifi::test {
 
-using utils::CHECK_NO_ERROR;
-using utils::CHECK_ERROR;
-
 void check_for_attributes(core::FlowFile& flow_file, uint16_t port) {
   CHECK(std::to_string(port) == flow_file.getAttribute("tcp.port"));
   const auto local_addresses = {"127.0.0.1", "::ffff:127.0.0.1", "::1"};
@@ -55,8 +52,8 @@ TEST_CASE("ListenTCP test multiple messages", "[ListenTCP][NetworkListenerProces
     endpoint = asio::ip::tcp::endpoint(asio::ip::address_v6::loopback(), port);
   }
 
-  CHECK_NO_ERROR(utils::sendMessagesViaTCP({"test_message_1"}, endpoint));
-  CHECK_NO_ERROR(utils::sendMessagesViaTCP({"another_message"}, endpoint));
+  CHECK_THAT(utils::sendMessagesViaTCP({"test_message_1"}, endpoint), MatchesSuccess());
+  CHECK_THAT(utils::sendMessagesViaTCP({"another_message"}, endpoint), MatchesSuccess());
   ProcessorTriggerResult result;
   REQUIRE(controller.triggerUntil({{ListenTCP::Success, 2}}, result, 300s, 50ms));
   CHECK(controller.plan->getContent(result.at(ListenTCP::Success)[0]) == "test_message_1");
@@ -99,7 +96,7 @@ TEST_CASE("ListenTCP max queue and max batch size test", "[ListenTCP][NetworkLis
   LogTestController::getInstance().setWarn<ListenTCP>();
 
   for (auto i = 0; i < 100; ++i) {
-    CHECK_NO_ERROR(utils::sendMessagesViaTCP({"test_message"}, endpoint));
+    CHECK_THAT(utils::sendMessagesViaTCP({"test_message"}, endpoint), MatchesSuccess());
   }
 
   CHECK(utils::countLogOccurrencesUntil("Queue is full. TCP message ignored.", 50, 300ms, 50ms));
@@ -157,7 +154,7 @@ TEST_CASE("Test ListenTCP with SSL connection", "[ListenTCP][NetworkListenerProc
 
     expected_successful_messages = {"test_message_1", "another_message"};
     for (const auto& message: expected_successful_messages) {
-      CHECK_NO_ERROR(utils::sendMessagesViaSSL({message}, endpoint, executable_dir / "resources" / "ca_A.crt"));
+      CHECK_THAT(utils::sendMessagesViaSSL({message}, endpoint, executable_dir / "resources" / "ca_A.crt"), MatchesSuccess());
     }
   }
 
@@ -197,8 +194,7 @@ TEST_CASE("Test ListenTCP with SSL connection", "[ListenTCP][NetworkListenerProc
 
     expected_successful_messages = {"test_message_1", "another_message"};
     for (const auto& message : expected_successful_messages) {
-      auto send_error = utils::sendMessagesViaSSL({message}, endpoint, executable_dir / "resources" / "ca_A.crt", ssl_data);
-      CHECK_NO_ERROR(send_error);
+      CHECK_THAT(utils::sendMessagesViaSSL({message}, endpoint, executable_dir / "resources" / "ca_A.crt", ssl_data), MatchesSuccess());
     }
   }
 
@@ -300,11 +296,11 @@ TEST_CASE("Test ListenTCP SSL/TLS compatibility", "[ListenTCP][NetworkListenerPr
 
   auto send_result = utils::sendMessagesViaSSL({"message"}, endpoint, executable_dir / "resources" / "ca_A.crt", ssl_data, client_method);
   if (expected_to_work) {
-    CHECK_NO_ERROR(send_result);
+    CHECK_THAT(send_result, MatchesSuccess());
     ProcessorTriggerResult result;
     CHECK(controller.triggerUntil({{ListenTCP::Success, 1}}, result, 300ms, 50ms));
   } else {
-    CHECK_ERROR(send_result);
+    CHECK_THAT(send_result, MatchesError());
     ProcessorTriggerResult result;
     CHECK_FALSE(controller.triggerUntil({{ListenTCP::Success, 1}}, result, 300ms, 50ms));
   }
