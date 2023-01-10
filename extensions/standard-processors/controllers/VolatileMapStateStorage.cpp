@@ -35,70 +35,39 @@ VolatileMapStateStorage::VolatileMapStateStorage(const std::string& name, const 
   setConfiguration(configuration);
 }
 
-bool VolatileMapStateStorage::set(const std::string& key, const std::string& value) {
-  std::lock_guard<std::recursive_mutex> lock(mutex_);
-  map_[key] = value;
-  return true;
-}
-
-bool VolatileMapStateStorage::get(const std::string& key, std::string& value) {
-  std::lock_guard<std::recursive_mutex> lock(mutex_);
-  auto it = map_.find(key);
-  if (it == map_.end()) {
-    return false;
-  } else {
-    value = it->second;
-    return true;
-  }
-}
-
-bool VolatileMapStateStorage::get(std::unordered_map<std::string, std::string>& kvs) {
-  std::lock_guard<std::recursive_mutex> lock(mutex_);
-  kvs = map_;
-  return true;
-}
-
-bool VolatileMapStateStorage::remove(const std::string& key) {
-  std::lock_guard<std::recursive_mutex> lock(mutex_);
-  return map_.erase(key) == 1U;
-}
-
-bool VolatileMapStateStorage::clear() {
-  std::lock_guard<std::recursive_mutex> lock(mutex_);
-  map_.clear();
-  return true;
-}
-
 void VolatileMapStateStorage::initialize() {
   ControllerService::initialize();
   setSupportedProperties(properties());
 }
 
+bool VolatileMapStateStorage::set(const std::string& key, const std::string& value) {
+  std::lock_guard<std::mutex> lock(mutex_);
+  return storage_.set(key, value);
+}
+
+bool VolatileMapStateStorage::get(const std::string& key, std::string& value) {
+  std::lock_guard<std::mutex> lock(mutex_);
+  return storage_.get(key, value);
+}
+
+bool VolatileMapStateStorage::get(std::unordered_map<std::string, std::string>& kvs) {
+  std::lock_guard<std::mutex> lock(mutex_);
+  return storage_.get(kvs);
+}
+
+bool VolatileMapStateStorage::remove(const std::string& key) {
+  std::lock_guard<std::mutex> lock(mutex_);
+  return storage_.remove(key);
+}
+
+bool VolatileMapStateStorage::clear() {
+  std::lock_guard<std::mutex> lock(mutex_);
+  return storage_.clear();
+}
+
 bool VolatileMapStateStorage::update(const std::string& key, const std::function<bool(bool /*exists*/, std::string& /*value*/)>& update_func) {
-  std::lock_guard<std::recursive_mutex> lock(mutex_);
-  bool exists = false;
-  std::string value;
-  auto it = map_.find(key);
-  if (it != map_.end()) {
-    exists = true;
-    value = it->second;
-  }
-  try {
-    if (!update_func(exists, value)) {
-      return false;
-    }
-  } catch (const std::exception& e) {
-    logger_->log_error("update_func failed with an exception: %s", e.what());
-    return false;
-  } catch (...) {
-    logger_->log_error("update_func failed with an exception");
-    return false;
-  }
-  if (!exists) {
-    it = map_.emplace(key, "").first;
-  }
-  it->second = std::move(value);
-  return true;
+  std::lock_guard<std::mutex> lock(mutex_);
+  return storage_.update(key, update_func);
 }
 
 REGISTER_RESOURCE_AS(VolatileMapStateStorage, ControllerService, ("UnorderedMapKeyValueStoreService", "VolatileMapStateStorage"));

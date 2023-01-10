@@ -27,6 +27,7 @@
 #include "core/logging/Logger.h"
 #include "core/logging/LoggerConfiguration.h"
 #include "controllers/keyvalue/KeyValueStateStorage.h"
+#include "InMemoryKeyValueStorage.h"
 
 namespace org::apache::nifi::minifi::controllers {
 
@@ -42,22 +43,22 @@ class VolatileMapStateStorage : virtual public KeyValueStateStorage {
   EXTENSIONAPI static constexpr bool SupportsDynamicProperties = false;
   ADD_COMMON_VIRTUAL_FUNCTIONS_FOR_CONTROLLER_SERVICES
 
+  void initialize() override;
+
   bool set(const std::string& key, const std::string& value) override;
   bool get(const std::string& key, std::string& value) override;
   bool get(std::unordered_map<std::string, std::string>& kvs) override;
   bool remove(const std::string& key) override;
   bool clear() override;
-  void initialize() override;
   bool update(const std::string& key, const std::function<bool(bool /*exists*/, std::string& /*value*/)>& update_func) override;
+
   bool persist() override {
     return true;
   }
 
- protected:
-  std::unordered_map<std::string, std::string> map_;
-  std::recursive_mutex mutex_;
-
  private:
+  std::mutex mutex_;
+  InMemoryKeyValueStorage storage_;
   std::shared_ptr<core::logging::Logger> logger_ = core::logging::LoggerFactory<VolatileMapStateStorage>::getLogger();
 };
 

@@ -70,13 +70,11 @@ const core::Property PersistentMapStateStorage::File(
     ->build());
 
 PersistentMapStateStorage::PersistentMapStateStorage(const std::string& name, const utils::Identifier& uuid /*= utils::Identifier()*/)
-    : KeyValueStateStorage(name, uuid)
-    , VolatileMapStateStorage(name, uuid) {
+    : KeyValueStateStorage(name, uuid) {
 }
 
 PersistentMapStateStorage::PersistentMapStateStorage(const std::string& name, const std::shared_ptr<Configure> &configuration)
-    : KeyValueStateStorage(name)
-    , VolatileMapStateStorage(name) {
+    : KeyValueStateStorage(name) {
   setConfiguration(configuration);
 }
 
@@ -177,17 +175,27 @@ void PersistentMapStateStorage::notifyStop() {
 }
 
 bool PersistentMapStateStorage::set(const std::string& key, const std::string& value) {
-  std::lock_guard<std::recursive_mutex> lock(mutex_);
-  bool res = VolatileMapStateStorage::set(key, value);
+  std::lock_guard<std::mutex> lock(mutex_);
+  bool res = storage_.set(key, value);
   if (auto_persistor_.isAlwaysPersisting() && res) {
     return persist();
   }
   return res;
 }
 
+bool PersistentMapStateStorage::get(const std::string& key, std::string& value) {
+  std::lock_guard<std::mutex> lock(mutex_);
+  return storage_.get(key, value);
+}
+
+bool PersistentMapStateStorage::get(std::unordered_map<std::string, std::string>& kvs) {
+  std::lock_guard<std::mutex> lock(mutex_);
+  return storage_.get(kvs);
+}
+
 bool PersistentMapStateStorage::remove(const std::string& key) {
-  std::lock_guard<std::recursive_mutex> lock(mutex_);
-  bool res = VolatileMapStateStorage::remove(key);
+  std::lock_guard<std::mutex> lock(mutex_);
+  bool res = storage_.remove(key);
   if (auto_persistor_.isAlwaysPersisting() && res) {
     return persist();
   }
@@ -195,8 +203,8 @@ bool PersistentMapStateStorage::remove(const std::string& key) {
 }
 
 bool PersistentMapStateStorage::clear() {
-  std::lock_guard<std::recursive_mutex> lock(mutex_);
-  bool res = VolatileMapStateStorage::clear();
+  std::lock_guard<std::mutex> lock(mutex_);
+  bool res = storage_.clear();
   if (auto_persistor_.isAlwaysPersisting() && res) {
     return persist();
   }
@@ -204,8 +212,8 @@ bool PersistentMapStateStorage::clear() {
 }
 
 bool PersistentMapStateStorage::update(const std::string& key, const std::function<bool(bool /*exists*/, std::string& /*value*/)>& update_func) {
-  std::lock_guard<std::recursive_mutex> lock(mutex_);
-  bool res = VolatileMapStateStorage::update(key, update_func);
+  std::lock_guard<std::mutex> lock(mutex_);
+  bool res = storage_.update(key, update_func);
   if (auto_persistor_.isAlwaysPersisting() && res) {
     return persist();
   }
@@ -213,21 +221,28 @@ bool PersistentMapStateStorage::update(const std::string& key, const std::functi
 }
 
 bool PersistentMapStateStorage::persistNonVirtual() {
-  std::lock_guard<std::recursive_mutex> lock(mutex_);
+  std::lock_guard<std::mutex> lock(mutex_);
   std::ofstream ofs(file_);
   if (!ofs.is_open()) {
     logger_->log_error("Failed to open file \"%s\" to store state", file_.c_str());
     return false;
   }
+  std::unordered_map<std::string, std::string> storage_copy;
+  if (!storage_.get(storage_copy)) {
+    logger_->log_error("Could not read the contents of the in-memory storage");
+    return false;
+  }
+
   ofs << escape(FORMAT_VERSION_KEY) << "=" << escape(std::to_string(FORMAT_VERSION)) << "\n";
-  for (const auto& kv : map_) {
+
+  for (const auto& kv : storage_copy) {
     ofs << escape(kv.first) << "=" << escape(kv.second) << "\n";
   }
   return true;
 }
 
 bool PersistentMapStateStorage::load() {
-  std::lock_guard<std::recursive_mutex> lock(mutex_);
+  std::lock_guard<std::mutex> lock(mutex_);
   std::ifstream ifs(file_);
   if (!ifs.is_open()) {
     logger_->log_debug("Failed to open file \"%s\" to load state", file_.c_str());
@@ -257,7 +272,8 @@ bool PersistentMapStateStorage::load() {
         map[key] = value;
     }
   }
-  map_ = std::move(map);
+
+  storage_ = InMemoryKeyValueStorage{std::move(map)};
   logger_->log_debug("Loaded state from \"%s\"", file_.c_str());
   return true;
 }

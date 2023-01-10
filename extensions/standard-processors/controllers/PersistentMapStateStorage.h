@@ -23,15 +23,16 @@
 #include <utility>
 
 #include "controllers/keyvalue/AutoPersistor.h"
-#include "VolatileMapStateStorage.h"
 #include "core/Core.h"
 #include "properties/Configure.h"
+#include "InMemoryKeyValueStorage.h"
+#include "controllers/keyvalue/KeyValueStateStorage.h"
 #include "core/logging/Logger.h"
 #include "core/logging/LoggerConfiguration.h"
 
 namespace org::apache::nifi::minifi::controllers {
 
-class PersistentMapStateStorage : public VolatileMapStateStorage {
+class PersistentMapStateStorage : public KeyValueStateStorage {
  public:
   explicit PersistentMapStateStorage(const std::string& name, const utils::Identifier& uuid = {});
   explicit PersistentMapStateStorage(const std::string& name, const std::shared_ptr<Configure>& configuration);
@@ -59,9 +60,12 @@ class PersistentMapStateStorage : public VolatileMapStateStorage {
   void notifyStop() override;
 
   bool set(const std::string& key, const std::string& value) override;
+  bool get(const std::string& key, std::string& value) override;
+  bool get(std::unordered_map<std::string, std::string>& kvs) override;
   bool remove(const std::string& key) override;
   bool clear() override;
   bool update(const std::string& key, const std::function<bool(bool /*exists*/, std::string& /*value*/)>& update_func) override;
+
   bool persist() override {
     return persistNonVirtual();
   }
@@ -76,7 +80,9 @@ class PersistentMapStateStorage : public VolatileMapStateStorage {
   // non-virtual to allow calling in destructor
   bool persistNonVirtual();
 
+  std::mutex mutex_;
   std::string file_;
+  InMemoryKeyValueStorage storage_;
   AutoPersistor auto_persistor_;
   std::shared_ptr<core::logging::Logger> logger_ = core::logging::LoggerFactory<PersistentMapStateStorage>::getLogger();
 };
