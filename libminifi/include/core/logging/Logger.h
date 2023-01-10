@@ -26,7 +26,6 @@
 #include <iostream>
 #include <vector>
 #include <algorithm>
-#include <filesystem>
 
 #include "spdlog/common.h"
 #include "spdlog/logger.h"
@@ -59,14 +58,9 @@ template<typename Arg>
 using has_const_c_str_method = decltype(std::declval<const Arg&>().c_str());
 
 template<typename Arg>
-using has_string_method = decltype(std::declval<const Arg&>().string());
-
-template<typename Arg>
 inline decltype(auto) conditional_stringify(Arg&& arg) {
   if constexpr (utils::meta::is_detected_v<has_const_c_str_method, Arg> || std::is_scalar_v<std::decay_t<Arg>>) {
     return std::forward<Arg>(arg);
-  } else if constexpr (utils::meta::is_detected_v<has_string_method, Arg>) {
-    return arg.string();
   } else if constexpr (std::is_invocable_v<Arg>) {
     return std::forward<Arg>(arg)();
   }

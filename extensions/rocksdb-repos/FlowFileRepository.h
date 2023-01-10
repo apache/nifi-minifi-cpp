@@ -109,7 +109,7 @@ class FlowFileRepository : public ThreadedRepository, public SwapManager {
     if (configure->get(Configure::nifi_flowfile_checkpoint_directory_default, value) && !value.empty()) {
       checkpoint_dir_ = value;
     }
-    logger_->log_debug("NiFi FlowFile Checkpoint Directory %s", checkpoint_dir_);
+    logger_->log_debug("NiFi FlowFile Checkpoint Directory %s", checkpoint_dir_.string());
 
     const auto encrypted_env = createEncryptingEnv(utils::crypto::EncryptionManager{configure->getHome()}, DbEncryptionOptions{directory_, ENCRYPTION_KEY_NAME});
     logger_->log_info("Using %s FlowFileRepository", encrypted_env ? "encrypted" : "plaintext");
