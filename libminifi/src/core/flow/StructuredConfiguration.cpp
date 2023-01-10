@@ -34,12 +34,28 @@ namespace org::apache::nifi::minifi::core::flow {
 
 std::shared_ptr<utils::IdGenerator> StructuredConfiguration::id_generator_ = utils::IdGenerator::getIdGenerator();
 
+std::unique_ptr<core::ProcessGroup> StructuredConfiguration::getRoot() {
+  if (!config_path_) {
+    logger_->log_error("Cannot instantiate flow, no config file is set.");
+    throw Exception(ExceptionType::FLOW_EXCEPTION, "No config file specified");
+  }
+  const auto configuration = filesystem_->read(config_path_.value());
+  if (!configuration) {
+    // non-existence of flow config file is not a dealbreaker, the caller might fetch it from network
+    return nullptr;
+  }
+  return getRootFromPayload(configuration.value());
+}
+
 StructuredConfiguration::StructuredConfiguration(ConfigurationContext ctx, std::shared_ptr<logging::Logger> logger)
     : FlowConfiguration(std::move(ctx)),
       logger_(std::move(logger)) {}
 
 std::unique_ptr<core::ProcessGroup> StructuredConfiguration::parseRootProcessGroup(const Node& root_flow_node) {
   auto flow_controller_node = root_flow_node[CONFIG_FLOW_CONTROLLER_KEY];
+  if (!flow_controller_node) {
+    throw std::invalid_argument(utils::StringUtils::join_pack("Missing field '", CONFIG_FLOW_CONTROLLER_KEY, "'"));
+  }
   auto root_group = parseProcessGroup(flow_controller_node, root_flow_node, true);
   this->name_ = root_group->getName();
   return root_group;

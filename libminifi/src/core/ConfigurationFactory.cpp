@@ -29,7 +29,7 @@
 #include "io/StreamFactory.h"
 
 #include "core/yaml/YamlConfiguration.h"
-#include "core/json/JsonConfiguration.h"
+#include "core/flow/AdaptiveConfiguration.h"
 
 namespace org::apache::nifi::minifi::core {
 
@@ -38,13 +38,7 @@ std::unique_ptr<core::FlowConfiguration> createFlowConfiguration(const Configura
   if (configuration_class_name) {
     class_name_lc = configuration_class_name.value();
   } else if (ctx.path) {
-    if (utils::StringUtils::endsWith(ctx.path->string(), ".yml")) {
-      class_name_lc = "yamlconfiguration";
-    } else if (utils::StringUtils::endsWith(ctx.path->string(), ".json")) {
-      class_name_lc = "jsonconfiguration";
-    } else {
-      throw std::runtime_error("Could not infer config type from file path");
-    }
+    class_name_lc = "adaptiveconfiguration";
   } else {
     throw std::runtime_error("Neither configuration class nor config file path has been specified");
   }
@@ -57,8 +51,8 @@ std::unique_ptr<core::FlowConfiguration> createFlowConfiguration(const Configura
     } else if (class_name_lc == "yamlconfiguration") {
       // only load if the class is defined.
       return std::unique_ptr<core::FlowConfiguration>(instantiate<core::YamlConfiguration>(ctx));
-    } else if (class_name_lc == "jsonconfiguration") {
-      return std::unique_ptr<core::JsonConfiguration>(instantiate<core::JsonConfiguration>(ctx));
+    } else if (class_name_lc == "adaptiveconfiguration") {
+      return std::unique_ptr<core::flow::AdaptiveConfiguration>(instantiate<core::flow::AdaptiveConfiguration>(ctx));
     } else {
       if (fail_safe) {
         return std::make_unique<core::FlowConfiguration>(ctx);

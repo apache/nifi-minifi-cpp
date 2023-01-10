@@ -149,11 +149,11 @@ class YamlIterator : public flow::Node::Iterator::IteratorImpl {
   YAML::const_iterator it_;
 };
 
-flow::Node::Iterator YamlNode::begin() const {
+inline flow::Node::Iterator YamlNode::begin() const {
   return flow::Node::Iterator{std::make_unique<YamlIterator>(node_.begin())};
 }
 
-flow::Node::Iterator YamlNode::end() const {
+inline flow::Node::Iterator YamlNode::end() const {
   return flow::Node::Iterator{std::make_unique<YamlIterator>(node_.end())};
 }
 

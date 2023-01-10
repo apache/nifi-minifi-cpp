@@ -60,6 +60,8 @@ class StructuredConfiguration : public FlowConfiguration {
    */
   void validateComponentProperties(ConfigurableComponent& component, const std::string &component_name, const std::string &section) const;
 
+  std::unique_ptr<core::ProcessGroup> getRoot() override;
+
  protected:
   /**
    * Returns a shared pointer to a ProcessGroup object containing the
