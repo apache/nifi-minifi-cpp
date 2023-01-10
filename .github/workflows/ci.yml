@@ -21,10 +21,9 @@ jobs:
             macos-xcode-ccache-refs/heads/main-
       - id: install_dependencies
         run: |
-          brew update
-          brew reinstall wget
-          brew install --overwrite python@3.10 python@3.11
-          brew install ossp-uuid flex lua ccache sqliteodbc automake autoconf
+          # Skip brew update until https://github.com/actions/setup-python/issues/577 is fixed
+          # brew update
+          HOMEBREW_NO_AUTO_UPDATE=1 brew install ossp-uuid flex lua ccache sqliteodbc automake autoconf
       - id: setup_env
         name: setup enviroment
         run: |
