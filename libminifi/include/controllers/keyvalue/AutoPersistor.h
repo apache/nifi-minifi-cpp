@@ -36,7 +36,7 @@ namespace org::apache::nifi::minifi::controllers {
  */
 class AutoPersistor {
  public:
-  virtual ~AutoPersistor();
+  ~AutoPersistor();
 
   void start(bool always_persist, std::chrono::milliseconds auto_persistence_interval, std::function<bool()> persist);
   void stop();
