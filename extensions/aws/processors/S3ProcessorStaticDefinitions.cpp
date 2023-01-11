@@ -33,9 +33,10 @@ namespace org::apache::nifi::minifi::aws::processors {
 
 const std::set<std::string> S3Processor::REGIONS({region::AF_SOUTH_1, region::AP_EAST_1, region::AP_NORTHEAST_1,
   region::AP_NORTHEAST_2, region::AP_NORTHEAST_3, region::AP_SOUTH_1, region::AP_SOUTHEAST_1, region::AP_SOUTHEAST_2,
-  region::CA_CENTRAL_1, region::CN_NORTH_1, region::CN_NORTHWEST_1, region::EU_CENTRAL_1, region::EU_NORTH_1,
-  region::EU_SOUTH_1, region::EU_WEST_1, region::EU_WEST_2, region::EU_WEST_3, region::ME_SOUTH_1, region::SA_EAST_1,
-  region::US_EAST_1, region::US_EAST_2, region::US_GOV_EAST_1, region::US_GOV_WEST_1, region::US_WEST_1, region::US_WEST_2});
+  region::AP_SOUTHEAST_3, region::CA_CENTRAL_1, region::CN_NORTH_1, region::CN_NORTHWEST_1, region::EU_CENTRAL_1,
+  region::EU_NORTH_1, region::EU_SOUTH_1, region::EU_WEST_1, region::EU_WEST_2, region::EU_WEST_3, region::ME_CENTRAL_1,
+  region::ME_SOUTH_1, region::SA_EAST_1, region::US_EAST_1, region::US_EAST_2, region::US_GOV_EAST_1, region::US_GOV_WEST_1,
+  region::US_ISO_EAST_1, region::US_ISOB_EAST_1, region::US_ISO_WEST_1, region::US_WEST_1, region::US_WEST_2});
 
 const core::Property S3Processor::Bucket(
   core::PropertyBuilder::createProperty("Bucket")

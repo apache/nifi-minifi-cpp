@@ -21,18 +21,13 @@
 
 #include <aws/s3/S3Client.h>
 
-namespace org {
-namespace apache {
-namespace nifi {
-namespace minifi {
-namespace aws {
-namespace s3 {
+namespace org::apache::nifi::minifi::aws::s3 {
 
 std::optional<Aws::S3::Model::PutObjectResult> S3ClientRequestSender::sendPutObjectRequest(
     const Aws::S3::Model::PutObjectRequest& request,
     const Aws::Auth::AWSCredentials& credentials,
     const Aws::Client::ClientConfiguration& client_config) {
-  Aws::S3::S3Client s3_client(credentials, client_config);
+  Aws::S3::S3Client s3_client(credentials, client_config, Aws::Client::AWSAuthV4Signer::PayloadSigningPolicy::Never, true);
   auto outcome = s3_client.PutObject(request);
 
   if (outcome.IsSuccess()) {
@@ -48,7 +43,7 @@ bool S3ClientRequestSender::sendDeleteObjectRequest(
     const Aws::S3::Model::DeleteObjectRequest& request,
     const Aws::Auth::AWSCredentials& credentials,
     const Aws::Client::ClientConfiguration& client_config) {
-  Aws::S3::S3Client s3_client(credentials, client_config);
+  Aws::S3::S3Client s3_client(credentials, client_config, Aws::Client::AWSAuthV4Signer::PayloadSigningPolicy::Never, true);
   Aws::S3::Model::DeleteObjectOutcome outcome = s3_client.DeleteObject(request);
 
   if (outcome.IsSuccess()) {
@@ -67,7 +62,7 @@ std::optional<Aws::S3::Model::GetObjectResult> S3ClientRequestSender::sendGetObj
     const Aws::S3::Model::GetObjectRequest& request,
     const Aws::Auth::AWSCredentials& credentials,
     const Aws::Client::ClientConfiguration& client_config) {
-  Aws::S3::S3Client s3_client(credentials, client_config);
+  Aws::S3::S3Client s3_client(credentials, client_config, Aws::Client::AWSAuthV4Signer::PayloadSigningPolicy::Never, true);
   auto outcome = s3_client.GetObject(request);
 
   if (outcome.IsSuccess()) {
@@ -83,7 +78,7 @@ std::optional<Aws::S3::Model::ListObjectsV2Result> S3ClientRequestSender::sendLi
     const Aws::S3::Model::ListObjectsV2Request& request,
     const Aws::Auth::AWSCredentials& credentials,
     const Aws::Client::ClientConfiguration& client_config) {
-  Aws::S3::S3Client s3_client(credentials, client_config);
+  Aws::S3::S3Client s3_client(credentials, client_config, Aws::Client::AWSAuthV4Signer::PayloadSigningPolicy::Never, true);
   auto outcome = s3_client.ListObjectsV2(request);
 
   if (outcome.IsSuccess()) {
@@ -99,7 +94,7 @@ std::optional<Aws::S3::Model::ListObjectVersionsResult> S3ClientRequestSender::s
     const Aws::S3::Model::ListObjectVersionsRequest& request,
     const Aws::Auth::AWSCredentials& credentials,
     const Aws::Client::ClientConfiguration& client_config) {
-  Aws::S3::S3Client s3_client(credentials, client_config);
+  Aws::S3::S3Client s3_client(credentials, client_config, Aws::Client::AWSAuthV4Signer::PayloadSigningPolicy::Never, true);
   auto outcome = s3_client.ListObjectVersions(request);
 
   if (outcome.IsSuccess()) {
@@ -115,7 +110,7 @@ std::optional<Aws::S3::Model::GetObjectTaggingResult> S3ClientRequestSender::sen
     const Aws::S3::Model::GetObjectTaggingRequest& request,
     const Aws::Auth::AWSCredentials& credentials,
     const Aws::Client::ClientConfiguration& client_config) {
-  Aws::S3::S3Client s3_client(credentials, client_config);
+  Aws::S3::S3Client s3_client(credentials, client_config, Aws::Client::AWSAuthV4Signer::PayloadSigningPolicy::Never, true);
   auto outcome = s3_client.GetObjectTagging(request);
 
   if (outcome.IsSuccess()) {
@@ -131,7 +126,7 @@ std::optional<Aws::S3::Model::HeadObjectResult> S3ClientRequestSender::sendHeadO
     const Aws::S3::Model::HeadObjectRequest& request,
     const Aws::Auth::AWSCredentials& credentials,
     const Aws::Client::ClientConfiguration& client_config) {
-  Aws::S3::S3Client s3_client(credentials, client_config);
+  Aws::S3::S3Client s3_client(credentials, client_config, Aws::Client::AWSAuthV4Signer::PayloadSigningPolicy::Never, true);
   auto outcome = s3_client.HeadObject(request);
 
   if (outcome.IsSuccess()) {
@@ -143,9 +138,4 @@ std::optional<Aws::S3::Model::HeadObjectResult> S3ClientRequestSender::sendHeadO
   }
 }
 
-}  // namespace s3
-}  // namespace aws
-}  // namespace minifi
-}  // namespace nifi
-}  // namespace apache
-}  // namespace org
+}  // namespace org::apache::nifi::minifi::aws::s3

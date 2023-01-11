@@ -106,7 +106,7 @@ if (WIN32)
 endif()
 
 if (WIN32)
-    add_definitions(-DSERVICE_NAME="Apache NiFi MINiFi")
+    add_definitions(-DMINIFI_SERVICE_NAME="Apache NiFi MINiFi")
 endif()
 
 if (NOT PORTABLE)

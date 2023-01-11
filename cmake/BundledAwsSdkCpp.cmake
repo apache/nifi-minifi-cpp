@@ -19,10 +19,12 @@ function(use_bundled_libaws SOURCE_DIR BINARY_DIR)
     set(PATCH_FILE1 "${SOURCE_DIR}/thirdparty/aws-sdk-cpp/c++20-compilation-fixes.patch")
     set(PATCH_FILE2 "${SOURCE_DIR}/thirdparty/aws-sdk-cpp/dll-export-injection.patch")
     set(PATCH_FILE3 "${SOURCE_DIR}/thirdparty/aws-sdk-cpp/shutdown-fix.patch")
+    set(PATCH_FILE4 "${SOURCE_DIR}/thirdparty/aws-sdk-cpp/bundle-openssl.patch")
     set(AWS_SDK_CPP_PATCH_COMMAND ${Bash_EXECUTABLE} -c "set -x &&\
             (\"${Patch_EXECUTABLE}\" -p1 -R -s -f --dry-run -i \"${PATCH_FILE1}\" || \"${Patch_EXECUTABLE}\" -p1 -N -i \"${PATCH_FILE1}\") &&\
             (\"${Patch_EXECUTABLE}\" -p1 -R -s -f --dry-run -i \"${PATCH_FILE2}\" || \"${Patch_EXECUTABLE}\" -p1 -N -i \"${PATCH_FILE2}\") &&\
-            (\"${Patch_EXECUTABLE}\" -p1 -R -s -f --dry-run -i \"${PATCH_FILE3}\" || \"${Patch_EXECUTABLE}\" -p1 -N -i \"${PATCH_FILE3}\") ")
+            (\"${Patch_EXECUTABLE}\" -p1 -R -s -f --dry-run -i \"${PATCH_FILE3}\" || \"${Patch_EXECUTABLE}\" -p1 -N -i \"${PATCH_FILE3}\") &&\
+            (\"${Patch_EXECUTABLE}\" -p1 -R -s -f --dry-run -i \"${PATCH_FILE4}\" || \"${Patch_EXECUTABLE}\" -p1 -N -i \"${PATCH_FILE4}\") ")
 
     if (WIN32)
         set(LIBDIR "lib")
@@ -56,6 +58,7 @@ function(use_bundled_libaws SOURCE_DIR BINARY_DIR)
             "${LIBDIR}/${PREFIX}aws-c-auth.${SUFFIX}"
             "${LIBDIR}/${PREFIX}aws-c-cal.${SUFFIX}"
             "${LIBDIR}/${PREFIX}aws-c-compression.${SUFFIX}"
+            "${LIBDIR}/${PREFIX}aws-c-sdkutils.${SUFFIX}"
             "${LIBDIR}/${PREFIX}aws-cpp-sdk-core.${SUFFIX}"
             "${LIBDIR}/${PREFIX}aws-cpp-sdk-s3.${SUFFIX}")
 
@@ -80,7 +83,7 @@ function(use_bundled_libaws SOURCE_DIR BINARY_DIR)
     ExternalProject_Add(
             aws-sdk-cpp-external
             GIT_REPOSITORY "https://github.com/aws/aws-sdk-cpp.git"
-            GIT_TAG "1.9.65"
+            GIT_TAG "1.10.48"
             UPDATE_COMMAND git submodule update --init --recursive
             SOURCE_DIR "${BINARY_DIR}/thirdparty/aws-sdk-cpp-src"
             INSTALL_DIR "${BINARY_DIR}/thirdparty/libaws-install"
@@ -114,6 +117,7 @@ function(use_bundled_libaws SOURCE_DIR BINARY_DIR)
         set_target_properties(AWS::s2n PROPERTIES IMPORTED_LOCATION "${BINARY_DIR}/thirdparty/libaws-install/${LIBDIR}/${PREFIX}s2n.${SUFFIX}")
         add_dependencies(AWS::s2n aws-sdk-cpp-external)
         target_include_directories(AWS::s2n INTERFACE ${LIBAWS_INCLUDE_DIR})
+        target_link_libraries(AWS::s2n INTERFACE OpenSSL::Crypto)
     endif()
 
     add_library(AWS::aws-c-io STATIC IMPORTED)
@@ -167,11 +171,16 @@ function(use_bundled_libaws SOURCE_DIR BINARY_DIR)
     add_dependencies(AWS::aws-c-compression aws-sdk-cpp-external)
     target_include_directories(AWS::aws-c-compression INTERFACE ${LIBAWS_INCLUDE_DIR})
 
+    add_library(AWS::aws-c-sdkutils STATIC IMPORTED)
+    set_target_properties(AWS::aws-c-sdkutils PROPERTIES IMPORTED_LOCATION "${BINARY_DIR}/thirdparty/libaws-install/${LIBDIR}/${PREFIX}aws-c-sdkutils.${SUFFIX}")
+    add_dependencies(AWS::aws-c-sdkutils aws-sdk-cpp-external)
+    target_include_directories(AWS::aws-c-sdkutils INTERFACE ${LIBAWS_INCLUDE_DIR})
+
     add_library(AWS::aws-crt-cpp STATIC IMPORTED)
     set_target_properties(AWS::aws-crt-cpp PROPERTIES IMPORTED_LOCATION "${BINARY_DIR}/thirdparty/libaws-install/${LIBDIR}/${PREFIX}aws-crt-cpp.${SUFFIX}")
     add_dependencies(AWS::aws-crt-cpp aws-sdk-cpp-external)
     target_include_directories(AWS::aws-crt-cpp INTERFACE ${LIBAWS_INCLUDE_DIR})
-    target_link_libraries(AWS::aws-crt-cpp INTERFACE AWS::aws-c-io AWS::aws-c-s3 AWS::aws-c-mqtt AWS::aws-c-http AWS::aws-c-cal AWS::aws-c-compression)
+    target_link_libraries(AWS::aws-crt-cpp INTERFACE AWS::aws-c-io AWS::aws-c-s3 AWS::aws-c-mqtt AWS::aws-c-http AWS::aws-c-cal AWS::aws-c-compression AWS::aws-c-sdkutils)
 
     add_library(AWS::aws-cpp-sdk-core STATIC IMPORTED)
     set_target_properties(AWS::aws-cpp-sdk-core PROPERTIES IMPORTED_LOCATION "${BINARY_DIR}/thirdparty/libaws-install/${LIBDIR}/${PREFIX}aws-cpp-sdk-core.${SUFFIX}")
