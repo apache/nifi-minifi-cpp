@@ -278,6 +278,7 @@ bool PersistentMapStateStorage::load() {
   return true;
 }
 
+// TODO(fgerlits): old names are kept as aliases for backward compatibility; remove in version 1.0
 REGISTER_RESOURCE_AS(PersistentMapStateStorage, ControllerService, ("UnorderedMapPersistableKeyValueStoreService", "PersistentMapStateStorage"));
 
 }  // namespace org::apache::nifi::minifi::controllers

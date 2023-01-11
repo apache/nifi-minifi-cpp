@@ -70,6 +70,7 @@ bool VolatileMapStateStorage::update(const std::string& key, const std::function
   return storage_.update(key, update_func);
 }
 
+// TODO(fgerlits): old names are kept as aliases for backward compatibility; remove in version 1.0
 REGISTER_RESOURCE_AS(VolatileMapStateStorage, ControllerService, ("UnorderedMapKeyValueStoreService", "VolatileMapStateStorage"));
 
 }  // namespace org::apache::nifi::minifi::controllers
