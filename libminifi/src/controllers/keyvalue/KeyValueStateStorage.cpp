@@ -67,7 +67,7 @@ KeyValueStateStorage::KeyValueStateStorage(const std::string& name, const utils:
 }
 
 std::unique_ptr<core::StateManager> KeyValueStateStorage::getStateManager(const utils::Identifier& uuid) {
-  return std::make_unique<KeyValueStateManager>(uuid, this);
+  return std::make_unique<KeyValueStateManager>(uuid, gsl::make_not_null(this));
 }
 
 std::unordered_map<utils::Identifier, core::StateManager::State> KeyValueStateStorage::getAllStates() {

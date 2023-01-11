@@ -24,7 +24,7 @@ namespace org::apache::nifi::minifi::controllers {
 
 KeyValueStateManager::KeyValueStateManager(
         const utils::Identifier& id,
-        KeyValueStateStorage* storage)
+        gsl::not_null<KeyValueStateStorage*> storage)
     : StateManager(id),
       storage_(storage),
       transaction_in_progress_(false),

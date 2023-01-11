@@ -23,6 +23,7 @@
 
 #include "core/StateManager.h"
 #include "core/Core.h"
+#include "utils/gsl.h"
 
 namespace org::apache::nifi::minifi::controllers {
 
@@ -30,7 +31,7 @@ class KeyValueStateStorage;
 
 class KeyValueStateManager final : public core::StateManager {
  public:
-  KeyValueStateManager(const utils::Identifier& id, KeyValueStateStorage* storage);
+  KeyValueStateManager(const utils::Identifier& id, gsl::not_null<KeyValueStateStorage*> storage);
 
   bool set(const core::StateManager::State& kvs) override;
   bool get(core::StateManager::State& kvs) override;
@@ -49,7 +50,7 @@ class KeyValueStateManager final : public core::StateManager {
     CLEAR
   };
 
-  KeyValueStateStorage* storage_;
+  gsl::not_null<KeyValueStateStorage*> storage_;
   std::optional<core::StateManager::State> state_;
   bool transaction_in_progress_;
   ChangeType change_type_;
