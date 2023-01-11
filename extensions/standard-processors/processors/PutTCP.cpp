@@ -117,7 +117,8 @@ void PutTCP::notifyStop() {}
 namespace {
 asio::ssl::context getSslContext(const std::shared_ptr<controllers::SSLContextService>& ssl_context_service) {
   gsl_Expects(ssl_context_service);
-  asio::ssl::context ssl_context(asio::ssl::context::tlsv12_client);
+  asio::ssl::context ssl_context(asio::ssl::context::tls_client);
+  ssl_context.set_options(asio::ssl::context::no_tlsv1 | asio::ssl::context::no_tlsv1_1);
   ssl_context.load_verify_file(ssl_context_service->getCACertificate().string());
   ssl_context.set_verify_mode(asio::ssl::verify_peer);
   if (auto cert_file = ssl_context_service->getCertificateFile(); !cert_file.empty())

@@ -211,8 +211,7 @@ TEST_CASE("Test ListenTCP with SSL connection", "[ListenTCP][NetworkListenerProc
       endpoint = asio::ip::tcp::endpoint(asio::ip::address_v6::loopback(), port);
     }
 
-    auto send_error = utils::sendMessagesViaSSL({"test_message_1"}, endpoint, executable_dir / "resources" / "ca_A.crt");
-    CHECK(send_error);
+    CHECK_THAT(utils::sendMessagesViaSSL({"test_message_1"}, endpoint, executable_dir / "resources" / "ca_A.crt"), MatchesError());
   }
 
   ProcessorTriggerResult result;
