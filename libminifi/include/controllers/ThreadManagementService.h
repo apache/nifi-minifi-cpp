@@ -91,7 +91,7 @@ class ThreadManagementService : public core::controller::ControllerService {
   void yield() {
   }
 
-  bool isRunning() const {
+  bool isRunning() const override {
     return getState() == core::controller::ControllerServiceState::ENABLED;
   }
 
