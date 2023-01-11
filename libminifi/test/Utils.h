@@ -218,16 +218,13 @@ inline std::error_code hide_file(const std::filesystem::path& file_name) {
 #endif /* WIN32 */
 
 template<typename T>
-concept DerivedFromProcessor = std::derived_from<T, minifi::core::Processor>;  // NOLINT(readability/braces)
+concept NetworkingProcessor = std::derived_from<T, minifi::core::Processor>
+    && requires(T x) {
+      {T::Port} -> std::convertible_to<core::Property>;
+      {x.getPort()} -> std::convertible_to<uint16_t>;
+    };  // NOLINT(readability/braces)
 
-template<typename T>
-concept HasPortProperty = requires(T x) { {T::Port} -> std::convertible_to<core::Property>; };  // NOLINT(readability/braces)
-
-template<typename T>
-concept HasGetPortFn = requires(T x) { {x.getPort()} -> std::convertible_to<uint16_t>; };  // NOLINT(readability/braces)
-
-template<class T>
-requires DerivedFromProcessor<T> && HasPortProperty<T> && HasGetPortFn<T>
+template<NetworkingProcessor T>
 uint16_t scheduleProcessorOnRandomPort(const std::shared_ptr<TestPlan>& test_plan, const std::shared_ptr<T>& processor) {
   REQUIRE(processor->setProperty(T::Port, "0"));
   test_plan->scheduleProcessor(processor);
