@@ -97,9 +97,9 @@ struct PutObjectResult {
 };
 
 struct RequestParameters {
-  RequestParameters(Aws::Auth::AWSCredentials creds, Aws::Client::ClientConfiguration  config)
-    : credentials(std::move(creds))
-    , client_config(std::move(config)) {}
+  RequestParameters(Aws::Auth::AWSCredentials creds, Aws::Client::ClientConfiguration config)
+    : credentials(std::move(creds)),
+      client_config(std::move(config)) {}
   Aws::Auth::AWSCredentials credentials;
   Aws::Client::ClientConfiguration client_config;
 

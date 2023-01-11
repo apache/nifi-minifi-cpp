@@ -23,12 +23,7 @@
 
 #include "S3RequestSender.h"
 
-namespace org {
-namespace apache {
-namespace nifi {
-namespace minifi {
-namespace aws {
-namespace s3 {
+namespace org::apache::nifi::minifi::aws::s3 {
 
 class S3ClientRequestSender : public S3RequestSender {
  public:
@@ -62,9 +57,4 @@ class S3ClientRequestSender : public S3RequestSender {
     const Aws::Client::ClientConfiguration& client_config) override;
 };
 
-}  // namespace s3
-}  // namespace aws
-}  // namespace minifi
-}  // namespace nifi
-}  // namespace apache
-}  // namespace org
+}  // namespace org::apache::nifi::minifi::aws::s3

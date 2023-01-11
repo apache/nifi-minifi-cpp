@@ -1,26 +1,7 @@
-diff -ruN orig/aws-cpp-sdk-core/source/utils/crypto/bcrypt/CryptoImpl.cpp patched/aws-cpp-sdk-core/source/utils/crypto/bcrypt/CryptoImpl.cpp
---- orig/aws-cpp-sdk-core/source/utils/crypto/bcrypt/CryptoImpl.cpp	2021-08-03 20:29:03.231072140 +0200
-+++ patched/aws-cpp-sdk-core/source/utils/crypto/bcrypt/CryptoImpl.cpp	2021-08-03 20:30:21.510721218 +0200
-@@ -11,6 +11,7 @@
- #include <aws/core/utils/Outcome.h>
- #include <aws/core/utils/crypto/Hash.h>
- #include <aws/core/utils/HashingUtils.h>
-+#include <aws/core/utils/StringUtils.h>
- #include <atomic>
- #include <bcrypt.h>
- #include <winternl.h>
-@@ -126,7 +127,7 @@
-                 NTSTATUS status = BCryptOpenAlgorithmProvider(&m_algorithmHandle, algorithmName, MS_PRIMITIVE_PROVIDER, isHMAC ? BCRYPT_ALG_HANDLE_HMAC_FLAG : 0);
-                 if (!NT_SUCCESS(status))
-                 {
--                    AWS_LOGSTREAM_ERROR(logTag, "Failed initializing BCryptOpenAlgorithmProvider for " << algorithmName);
-+                    AWS_LOGSTREAM_ERROR(logTag, "Failed initializing BCryptOpenAlgorithmProvider for " << StringUtils::FromWString(algorithmName));
-                     return;
-                 }
- 
-diff -ruN orig/crt/aws-crt-cpp/include/aws/crt/StringView.h patched/crt/aws-crt-cpp/include/aws/crt/StringView.h
---- orig/crt/aws-crt-cpp/include/aws/crt/StringView.h	2021-08-03 20:29:04.615065881 +0200
-+++ patched/crt/aws-crt-cpp/include/aws/crt/StringView.h	2021-08-03 20:30:38.030647928 +0200
+diff --git a/crt/aws-crt-cpp/include/aws/crt/StringView.h b/crt/aws-crt-cpp/include/aws/crt/StringView.h
+index a0fec83..6d0b997 100644
+--- a/crt/aws-crt-cpp/include/aws/crt/StringView.h
++++ b/crt/aws-crt-cpp/include/aws/crt/StringView.h
 @@ -13,6 +13,7 @@
  #include <iterator>
  #include <limits>

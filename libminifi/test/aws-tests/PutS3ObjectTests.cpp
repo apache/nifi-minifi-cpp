@@ -154,7 +154,7 @@ TEST_CASE_METHOD(PutS3ObjectTestsFixture, "Set non-default client configuration"
   plan->setProperty(update_attribute, "test.contentType", "application/tar", true);
   plan->setProperty(s3_processor, "Content Type", "${test.contentType}");
   plan->setProperty(s3_processor, "Storage Class", "ReducedRedundancy");
-  plan->setProperty(s3_processor, "Region", minifi::aws::processors::region::US_EAST_1);
+  plan->setProperty(s3_processor, "Region", minifi::aws::processors::region::AP_SOUTHEAST_3);
   plan->setProperty(s3_processor, "Communications Timeout", "10 Sec");
   plan->setProperty(update_attribute, "test.endpoint", "http://localhost:1234", true);
   plan->setProperty(s3_processor, "Endpoint Override URL", "${test.endpoint}");
@@ -167,7 +167,7 @@ TEST_CASE_METHOD(PutS3ObjectTestsFixture, "Set non-default client configuration"
   REQUIRE(mock_s3_request_sender_ptr->put_object_request.GetContentType() == "application/tar");
   REQUIRE(mock_s3_request_sender_ptr->put_object_request.GetStorageClass() == Aws::S3::Model::StorageClass::REDUCED_REDUNDANCY);
   REQUIRE(mock_s3_request_sender_ptr->put_object_request.GetServerSideEncryption() == Aws::S3::Model::ServerSideEncryption::AES256);
-  REQUIRE(mock_s3_request_sender_ptr->getClientConfig().region == minifi::aws::processors::region::US_EAST_1);
+  REQUIRE(mock_s3_request_sender_ptr->getClientConfig().region == minifi::aws::processors::region::AP_SOUTHEAST_3);
   REQUIRE(mock_s3_request_sender_ptr->getClientConfig().connectTimeoutMs == 10000);
   REQUIRE(mock_s3_request_sender_ptr->getClientConfig().endpointOverride == "http://localhost:1234");
   REQUIRE(mock_s3_request_sender_ptr->getPutObjectRequestBody() == INPUT_DATA);

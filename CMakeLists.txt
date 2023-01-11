@@ -109,10 +109,6 @@ if (WIN32)
     add_compile_options(/W3 /utf-8)
 endif()
 
-if (WIN32)
-    add_definitions(-DSERVICE_NAME="Apache NiFi MINiFi")
-endif()
-
 if (NOT PORTABLE)
     if(MSVC)
         set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} /arch:AVX2")
