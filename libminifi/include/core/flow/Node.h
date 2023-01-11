@@ -25,6 +25,8 @@
 #include <memory>
 #include <utility>
 #include "nonstd/expected.hpp"
+#include "utils/StringUtils.h"
+#include "utils/gsl.h"
 
 namespace org::apache::nifi::minifi::core::flow {
 
@@ -37,6 +39,7 @@ class Node {
   };
 
   class Iterator {
+    friend class Node;
    public:
     class Value;
 
@@ -53,6 +56,7 @@ class Node {
 
     Iterator& operator++() {
       impl_->operator++();
+      ++idx_;
       return *this;
     }
 
@@ -75,6 +79,8 @@ class Node {
 
    private:
     std::unique_ptr<IteratorImpl> impl_;
+    std::string path_;
+    int idx_{0};
   };
 
   class NodeImpl {
@@ -97,6 +103,8 @@ class Node {
     virtual Node operator[](std::string_view key) const = 0;
 
     virtual std::optional<Cursor> getCursor() const = 0;
+
+    virtual Node createEmpty() const = 0;
 
     virtual ~NodeImpl() = default;
   };
@@ -121,14 +129,53 @@ class Node {
   size_t empty() const {
     return size() == 0;
   }
-  Iterator begin() const {return impl_->begin();}
-  Iterator end() const {return impl_->end();}
-  Node operator[](std::string_view key) const {return impl_->operator[](key);}
+  Iterator begin() const {
+    Iterator it = impl_->begin();
+    it.path_ = path_;
+    return it;
+  }
+  Iterator end() const {
+    Iterator it = impl_->end();
+    it.path_ = path_;
+    return it;
+  }
+  Node operator[](std::string_view key) const {
+    Node result = impl_->operator[](key);
+    result.path_ = utils::StringUtils::join_pack(path_, "/", key);
+    return result;
+  }
+
+  Node operator[](gsl::span<const std::string> keys) const {
+    if (keys.empty()) {
+      return impl_->createEmpty();
+    }
+    Node member;
+    for (auto& key : keys) {
+      for (auto& field : utils::StringUtils::split(key, "/")) {
+        member = *this;
+        if (key == ".") {
+          // pass: self
+        } else {
+          member = member[field];
+        }
+        if (!member) {
+          break;
+        }
+      }
+      if (member) {
+        return member;
+      }
+    }
+    return member;
+  }
+
+  std::string getPath() const {return path_;}
 
   std::optional<Cursor> getCursor() const {return impl_->getCursor();}
 
  private:
   std::shared_ptr<NodeImpl> impl_;
+  std::string path_;
 };
 
 class Node::Iterator::Value : public Node, public std::pair<Node, Node> {

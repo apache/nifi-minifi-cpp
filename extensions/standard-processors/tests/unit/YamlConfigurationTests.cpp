@@ -540,7 +540,7 @@ Processors:
   } catch (const std::exception &e) {
     caught_exception = true;
     REQUIRE("Unable to parse configuration file for component named 'XYZ' because required property "
-        "'Input Directory' is not set [in 'Processors' section of configuration file]" == std::string(e.what()));
+        "'Input Directory' is not set [in '/Processors/0/Properties' section of configuration file]" == std::string(e.what()));
   }
 
   REQUIRE(caught_exception);

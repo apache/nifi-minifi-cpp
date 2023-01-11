@@ -46,12 +46,12 @@ std::unique_ptr<core::ProcessGroup> AdaptiveConfiguration::getRootFromPayload(co
     rapidjson::ParseResult res = doc.Parse(payload.c_str(), payload.length());
     if (res) {
       logger_->log_debug("Processing configuration as json");
-      return getRootFrom(flow::Node{std::make_shared<JsonNode>(&doc)});
+      return getRootFrom(flow::Node{std::make_shared<JsonNode>(&doc)}, FlowSchema::getDefault());
     }
     logger_->log_debug("Could not parse configuration as json, trying yaml");
     YAML::Node rootYamlNode = YAML::Load(payload);
     flow::Node root{std::make_shared<YamlNode>(rootYamlNode)};
-    return getRootFrom(root);
+    return getRootFrom(root, FlowSchema::getDefault());
   } catch(...) {
     logger_->log_error("Invalid configuration file");
     throw;

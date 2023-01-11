@@ -49,6 +49,10 @@ class YamlNode : public flow::Node::NodeImpl {
     return node_.IsNull();
   }
 
+  flow::Node createEmpty() const override {
+    return flow::Node{std::make_shared<YamlNode>(YAML::Node{YAML::NodeType::Undefined})};
+  }
+
   nonstd::expected<std::string, std::exception_ptr> getString() const override {
     try {
       return node_.as<std::string>();

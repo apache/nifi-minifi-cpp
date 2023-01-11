@@ -46,6 +46,10 @@ class JsonNode : public flow::Node::NodeImpl {
     return node_ ? node_->IsNull() : false;
   }
 
+  flow::Node createEmpty() const override {
+    return flow::Node{std::make_shared<JsonNode>(nullptr)};
+  }
+
   nonstd::expected<std::string, std::exception_ptr> getString() const override {
     try {
       if (!node_) {
