@@ -85,14 +85,14 @@ class C2Protocol : public core::Connectable {
    */
   void waitForWork(uint64_t timeoutMs);
 
-  virtual void yield() {
+  void yield() override {
   }
 
   /**
    * Determines if work is available by this connectable
    * @return boolean if work is available.
    */
-  virtual bool isWorkAvailable() {
+  bool isWorkAvailable() override {
     return true;
   }
 
