@@ -54,7 +54,7 @@ struct MatchesSuccess : Catch::MatcherBase<std::error_code> {
   MatchesSuccess() = default;
 
   bool match(const std::error_code& err) const override {
-    return err == std::error_code{};
+    return err.value() == 0;
   }
 
   std::string describe() const override {
@@ -70,8 +70,8 @@ struct MatchesError : Catch::MatcherBase<std::error_code> {
 
   bool match(const std::error_code& err) const override {
     if (expected_error_)
-      return err == *expected_error_;
-    return err != std::error_code{};
+      return err.value() == expected_error_->value();
+    return err.value() != 0;
   }
 
   std::string describe() const override {
