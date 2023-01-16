@@ -229,14 +229,14 @@ void AbstractMQTTProcessor::setMqtt5ConnectOptions(MQTTAsync_connectOptions& con
   {
     MQTTProperty property;
     property.identifier = MQTTPROPERTY_CODE_SESSION_EXPIRY_INTERVAL;
-    property.value.integer4 = gsl::narrow<int>(getSessionExpiryInterval().count());
+    property.value.integer4 = gsl::narrow<unsigned int>(getSessionExpiryInterval().count());
     MQTTProperties_add(&connect_properties, &property);
   }
 
   if (!last_will_content_type_.empty()) {
     MQTTProperty property;
     property.identifier = MQTTPROPERTY_CODE_CONTENT_TYPE;
-    property.value.data.len = last_will_content_type_.length();
+    property.value.data.len = gsl::narrow<int>(last_will_content_type_.length());
     property.value.data.data = const_cast<char*>(last_will_content_type_.data());
     MQTTProperties_add(&will_properties, &property);
   }
