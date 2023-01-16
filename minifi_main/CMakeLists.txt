@@ -67,6 +67,9 @@ target_link_libraries(minifiexe spdlog libsodium gsl-lite ${LIBMINIFI})
 set_target_properties(minifiexe PROPERTIES RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/bin")
 set_target_properties(minifiexe PROPERTIES OUTPUT_NAME minifi)
 set_target_properties(minifiexe PROPERTIES ENABLE_EXPORTS True)
+if (WIN32)
+    target_compile_definitions(minifiexe PUBLIC SERVICE_NAME="Apache NiFi MINiFi")
+endif()
 
 if (NOT WIN32)
 add_custom_command(TARGET minifiexe POST_BUILD

@@ -38,7 +38,7 @@ static void OutputDebug(const char* format, ...) {
   va_start(args, format);
 
   char buf[256];
-  sprintf_s(buf, _countof(buf), "%s: %s", MINIFI_SERVICE_NAME, format);
+  sprintf_s(buf, _countof(buf), "%s: %s", SERVICE_NAME, format);
 
   char out[1024];
   StringCbVPrintfA(out, sizeof(out), buf, args);
@@ -57,7 +57,7 @@ void RunAsServiceIfNeeded() {
   static HANDLE s_hProcess;
   static HANDLE s_hEvent;
 
-  static char serviceNameMutable[] = MINIFI_SERVICE_NAME;
+  static char serviceNameMutable[] = SERVICE_NAME;
 
   static auto Log = []() {
     static std::shared_ptr<minifi::core::logging::Logger> s_logger = minifi::core::logging::LoggerConfiguration::getConfiguration().getLogger("service");
@@ -79,7 +79,7 @@ void RunAsServiceIfNeeded() {
         }
 
         s_statusHandle = RegisterServiceCtrlHandler(
-          MINIFI_SERVICE_NAME,
+          SERVICE_NAME,
           [](DWORD ctrlCode) {
             Log()->log_trace("ServiceCtrlHandler ctrlCode %d", ctrlCode);
 
