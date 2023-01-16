@@ -139,34 +139,38 @@ class Node {
     it.path_ = path_;
     return it;
   }
-  Node operator[](std::string_view key) const {
+
+  // considers @key to be a member of this node as is
+  Node getMember(std::string_view key) {
     Node result = impl_->operator[](key);
     result.path_ = utils::StringUtils::join_pack(path_, "/", key);
     return result;
   }
 
+  // considers @key to be a '/'-delimited access path
+  Node operator[](std::string_view key) const {
+    Node result = *this;
+    for (auto& field : utils::StringUtils::split(std::string{key}, "/")) {
+      if (key == ".") {
+        // pass: self
+      } else {
+        result = result.getMember(field);
+      }
+      if (!result) {
+        break;
+      }
+    }
+    return result;
+  }
+
+  // considers @keys to be a set of viable access paths, the first viable is returned
   Node operator[](gsl::span<const std::string> keys) const {
-    if (keys.empty()) {
-      return impl_->createEmpty();
-    }
-    Node member;
     for (auto& key : keys) {
-      for (auto& field : utils::StringUtils::split(key, "/")) {
-        member = *this;
-        if (key == ".") {
-          // pass: self
-        } else {
-          member = member[field];
-        }
-        if (!member) {
-          break;
-        }
-      }
-      if (member) {
-        return member;
+      if (Node result = (*this)[key]) {
+        return result;
       }
     }
-    return member;
+    return impl_->createEmpty();
   }
 
   std::string getPath() const {return path_;}

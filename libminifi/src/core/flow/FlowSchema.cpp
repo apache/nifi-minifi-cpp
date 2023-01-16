@@ -90,6 +90,7 @@ FlowSchema FlowSchema::getNiFiFlowJson() {
       .MAX_CONCURRENT_TASKS = {"concurrentlySchedulableTaskCount"},
       .PENALIZATION_PERIOD = {"penaltyDuration"},
       .PROC_YIELD_PERIOD = {"yieldDuration"},
+      // TODO(adebreceni): MINIFICPP-2033 since this is unused the mismatch between nano and milli is not an issue
       .RUNDURATION_NANOS = {"runDurationMillis"},
       .ONSCHEDULE_RETRY_INTERVAL = {},
 

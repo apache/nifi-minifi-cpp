@@ -97,6 +97,7 @@ class JsonNode : public flow::Node::NodeImpl {
       if (!node_) throw std::runtime_error("Cannot get string from invalid json value");
       if (node_->IsInt64()) return std::to_string(node_->GetInt64());
       if (node_->IsUint64()) return std::to_string(node_->GetUint64());
+      if (node_->IsString()) return std::string(node_->GetString(), node_->GetStringLength());
       throw std::runtime_error("Cannot get string from non-integer json value");
     } catch (...) {
       return nonstd::make_unexpected(std::current_exception());

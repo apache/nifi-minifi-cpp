@@ -45,8 +45,14 @@ std::unique_ptr<core::ProcessGroup> AdaptiveConfiguration::getRootFromPayload(co
     rapidjson::Document doc;
     rapidjson::ParseResult res = doc.Parse(payload.c_str(), payload.length());
     if (res) {
-      logger_->log_debug("Processing configuration as json");
-      return getRootFrom(flow::Node{std::make_shared<JsonNode>(&doc)}, FlowSchema::getDefault());
+      flow::Node root{std::make_shared<JsonNode>(&doc)};
+      if (root[FlowSchema::getDefault().FLOW_HEADER]) {
+        logger_->log_debug("Processing configuration as default json");
+        return getRootFrom(root, FlowSchema::getDefault());
+      } else {
+        logger_->log_debug("Processing configuration as nifi flow json");
+        return getRootFrom(root, FlowSchema::getNiFiFlowJson());
+      }
     }
     logger_->log_debug("Could not parse configuration as json, trying yaml");
     YAML::Node rootYamlNode = YAML::Load(payload);
