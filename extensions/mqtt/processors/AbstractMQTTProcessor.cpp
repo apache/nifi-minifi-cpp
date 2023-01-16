@@ -340,13 +340,13 @@ void AbstractMQTTProcessor::checkBrokerLimits() {
   try {
     if (server_keep_alive_.has_value() && server_keep_alive_ < keep_alive_interval_) {
       std::ostringstream os;
-      os << "Set Keep Alive Interval (" << keep_alive_interval_.count() << " s) is longer then maximum supported by broker (" << server_keep_alive_->count() << " s)";
+      os << "Set Keep Alive Interval (" << keep_alive_interval_.count() << " s) is longer than the maximum supported by the broker (" << server_keep_alive_->count() << " s)";
       throw minifi::Exception(ExceptionType::PROCESS_SCHEDULE_EXCEPTION, os.str());
     }
 
     if (maximum_qos_.has_value() && qos_.value() > maximum_qos_) {
       std::ostringstream os;
-      os << "Set QoS (" << qos_.value() << ") is higher than maximum supported by broker (" << *maximum_qos_ << ")";
+      os << "Set QoS (" << qos_.value() << ") is higher than the maximum supported by the broker (" << *maximum_qos_ << ")";
       throw minifi::Exception(ExceptionType::PROCESS_SCHEDULE_EXCEPTION, os.str());
     }
 
