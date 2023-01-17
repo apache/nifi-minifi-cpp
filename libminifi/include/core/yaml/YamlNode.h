@@ -85,6 +85,14 @@ class YamlNode : public flow::Node::NodeImpl {
     }
   }
 
+  nonstd::expected<std::string, std::exception_ptr> getScalarAsString() const override {
+    try {
+      return node_.as<std::string>();
+    } catch (...) {
+      return nonstd::make_unexpected(std::current_exception());
+    }
+  }
+
   std::string getDebugString() const override {
     if (!node_) return "<invalid>";
     if (node_.IsNull()) return "null";

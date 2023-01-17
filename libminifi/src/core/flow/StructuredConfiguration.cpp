@@ -666,7 +666,7 @@ PropertyValue StructuredConfiguration::getValidatedProcessorPropertyForDefaultTy
     } else if (defaultType == Value::BOOL_TYPE && property_value_node.getBool()) {
       coercedValue = property_value_node.getBool().value();
     } else {
-      coercedValue = property_value_node.getString().value();
+      coercedValue = property_value_node.getScalarAsString().value();
     }
     return coercedValue;
   } catch (const std::exception& e) {

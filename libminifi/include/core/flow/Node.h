@@ -94,6 +94,7 @@ class Node {
     virtual nonstd::expected<bool, std::exception_ptr> getBool() const = 0;
     virtual nonstd::expected<int64_t, std::exception_ptr> getInt64() const = 0;
     virtual nonstd::expected<std::string, std::exception_ptr> getIntegerAsString() const = 0;
+    virtual nonstd::expected<std::string, std::exception_ptr> getScalarAsString() const = 0;
 
     virtual std::string getDebugString() const = 0;
 
@@ -121,6 +122,7 @@ class Node {
   nonstd::expected<bool, std::exception_ptr> getBool() const {return impl_->getBool();}
   nonstd::expected<int64_t, std::exception_ptr> getInt64() const {return impl_->getInt64();}
   nonstd::expected<std::string, std::exception_ptr> getIntegerAsString() const {return impl_->getIntegerAsString();}
+  nonstd::expected<std::string, std::exception_ptr> getScalarAsString() const {return impl_->getScalarAsString();}
 
   // return a string representation of the node (need not to be deserializable)
   std::string getDebugString() const {return impl_->getDebugString();}

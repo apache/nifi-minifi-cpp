@@ -35,7 +35,8 @@ Feature: Sending data from MiNiFi-C++ to NiFi using S2S protocol
     Then a flowfile with the content "test" is placed in the monitored directory in less than 90 seconds
 
   Scenario: Zero length files are transfered between via s2s if the "drop empty" connection property is false
-    Given a GenerateFlowFile processor with the "File Size" property set to "0B"
+    Given a MiNiFi CPP server with yaml config
+    And a GenerateFlowFile processor with the "File Size" property set to "0B"
     And a RemoteProcessGroup node opened on "http://nifi:8080/nifi"
     And the "success" relationship of the GenerateFlowFile processor is connected to the input port on the RemoteProcessGroup
 

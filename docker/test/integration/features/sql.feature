@@ -33,7 +33,8 @@ Feature: Executing SQL operations from MiNiFi-C++
     Then the query "SELECT * FROM test_table WHERE int_col = 42" returns 1 rows in less than 120 seconds on the PostgreSQL server
 
   Scenario: A MiNiFi instance can query to test table with ExecuteSQL processor
-    Given a GenerateFlowFile processor with the "File Size" property set to "0B"
+    Given a MiNiFi CPP server with yaml config
+    And a GenerateFlowFile processor with the "File Size" property set to "0B"
     And a UpdateAttribute processor with the "sql.args.1.value" property set to "apple"
     And the "sql.args.2.value" property of the UpdateAttribute processor is set to "banana"
     And a ExecuteSQL processor with the "SQL select query" property set to "SELECT * FROM test_table WHERE text_col = ? OR text_col = ? ORDER BY int_col DESC"
