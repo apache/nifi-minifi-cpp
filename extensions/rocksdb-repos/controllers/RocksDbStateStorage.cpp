@@ -241,7 +241,6 @@ bool RocksDbStateStorage::persistNonVirtual() {
   return opendb->FlushWAL(true /*sync*/).ok();
 }
 
-// TODO(fgerlits): old names are kept as aliases for backward compatibility; remove in version 1.0
 REGISTER_RESOURCE_AS(RocksDbStateStorage, ControllerService, ("RocksDbPersistableKeyValueStoreService", "rocksdbpersistablekeyvaluestoreservice", "RocksDbStateStorage"));
 
 }  // namespace org::apache::nifi::minifi::controllers
