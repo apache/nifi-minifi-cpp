@@ -124,7 +124,7 @@ std::unique_ptr<core::ProcessGroup> StructuredConfiguration::parseProcessGroup(c
 std::unique_ptr<core::ProcessGroup> StructuredConfiguration::getRootFrom(const Node& root_node, FlowSchema schema) {
   schema_ = std::move(schema);
   uuids_.clear();
-  Node controllerServiceNode = root_node[schema_.CONTROLLER_SERVICES];
+  Node controllerServiceNode = root_node[schema_.ROOT_GROUP][schema_.CONTROLLER_SERVICES];
   Node provenanceReportNode = root_node[schema_.PROVENANCE_REPORTING];
 
   parseControllerServices(controllerServiceNode);
