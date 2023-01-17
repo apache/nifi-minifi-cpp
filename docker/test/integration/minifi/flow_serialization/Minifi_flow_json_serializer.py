@@ -122,7 +122,7 @@ class Minifi_flow_json_serializer:
                     'source': {'id': str(connectable.uuid)},
                     'destination': {'id': str(proc.uuid)}
                 })
-                if (all(str(connectable.uuid) != x['id'] for x in root['funnels'])):
+                if (all(str(connectable.uuid) != x['identifier'] for x in root['funnels'])):
                     root['connections'][-1]['selectedRelationships'] = [conn_name]
                 if proc not in visited:
                     self.serialize_node(proc, root, visited)
