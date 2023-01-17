@@ -18,28 +18,15 @@
 #pragma once
 
 #include <memory>
+#include <string>
 
-#include "nodes/ResponseNodeLoader.h"
-#include "properties/Configure.h"
-#include "core/Core.h"
+#include "MetricsPublisher.h"
+#include "utils/gsl.h"
 
 namespace org::apache::nifi::minifi::state {
 
-class MetricsPublisher : public core::CoreComponent {
- public:
-  using CoreComponent::CoreComponent;
-  virtual void initialize(const std::shared_ptr<Configure>& configuration, const std::shared_ptr<state::response::ResponseNodeLoader>& response_node_loader) {
-    gsl_Expects(configuration && response_node_loader);
-    configuration_ = configuration;
-    response_node_loader_ = response_node_loader;
-  }
-  virtual void clearMetricNodes() = 0;
-  virtual void loadMetricNodes() = 0;
-  virtual ~MetricsPublisher() = default;
-
- protected:
-  std::shared_ptr<Configure> configuration_;
-  std::shared_ptr<state::response::ResponseNodeLoader> response_node_loader_;
-};
+gsl::not_null<std::unique_ptr<MetricsPublisher>> createMetricsPublisher(const std::string& name, const std::shared_ptr<Configure>& configuration,
+  const std::shared_ptr<state::response::ResponseNodeLoader>& response_node_loader);
+std::unique_ptr<MetricsPublisher> createMetricsPublisher(const std::shared_ptr<Configure>& configuration, const std::shared_ptr<state::response::ResponseNodeLoader>& response_node_loader);
 
 }  // namespace org::apache::nifi::minifi::state

@@ -44,7 +44,7 @@ class ResponseNodeLoaderTestFixture {
     addConnection("Connection", "success", uuid1, uuid2);
     auto uuid3 = addProcessor<minifi::processors::ReadFromFlowFileTestProcessor>("ReadFromFlowFileTestProcessor");
     addConnection("Connection", "success", uuid2, uuid3);
-    response_node_loader_.initializeComponentMetrics(root_.get());
+    response_node_loader_.setNewConfigRoot(root_.get());
   }
 
  protected:
@@ -73,29 +73,29 @@ class ResponseNodeLoaderTestFixture {
 };
 
 TEST_CASE_METHOD(ResponseNodeLoaderTestFixture, "Load non-existent response node", "[responseNodeLoaderTest]") {
-  auto nodes = response_node_loader_.loadResponseNodes("NonExistentNode", root_.get());
+  auto nodes = response_node_loader_.loadResponseNodes("NonExistentNode");
   REQUIRE(nodes.empty());
 }
 
 TEST_CASE_METHOD(ResponseNodeLoaderTestFixture, "Load processor metrics node not part of the flow config", "[responseNodeLoaderTest]") {
-  auto nodes = response_node_loader_.loadResponseNodes("TailFileMetrics", root_.get());
+  auto nodes = response_node_loader_.loadResponseNodes("TailFileMetrics");
   REQUIRE(nodes.empty());
 }
 
 TEST_CASE_METHOD(ResponseNodeLoaderTestFixture, "Load system metrics node", "[responseNodeLoaderTest]") {
-  auto nodes = response_node_loader_.loadResponseNodes("QueueMetrics", root_.get());
+  auto nodes = response_node_loader_.loadResponseNodes("QueueMetrics");
   REQUIRE(nodes.size() == 1);
   REQUIRE(nodes[0]->getName() == "QueueMetrics");
 }
 
 TEST_CASE_METHOD(ResponseNodeLoaderTestFixture, "Load processor metrics node part of the flow config", "[responseNodeLoaderTest]") {
-  auto nodes = response_node_loader_.loadResponseNodes("ReadFromFlowFileTestProcessorMetrics", root_.get());
+  auto nodes = response_node_loader_.loadResponseNodes("ReadFromFlowFileTestProcessorMetrics");
   REQUIRE(nodes.size() == 1);
   REQUIRE(nodes[0]->getName() == "ReadFromFlowFileTestProcessorMetrics");
 }
 
 TEST_CASE_METHOD(ResponseNodeLoaderTestFixture, "Load multiple processor metrics nodes of the same type in a single flow", "[responseNodeLoaderTest]") {
-  auto nodes = response_node_loader_.loadResponseNodes("WriteToFlowFileTestProcessorMetrics", root_.get());
+  auto nodes = response_node_loader_.loadResponseNodes("WriteToFlowFileTestProcessorMetrics");
   REQUIRE(nodes.size() == 2);
   REQUIRE(nodes[0]->getName() == "WriteToFlowFileTestProcessorMetrics");
   REQUIRE(nodes[1]->getName() == "WriteToFlowFileTestProcessorMetrics");
@@ -103,7 +103,7 @@ TEST_CASE_METHOD(ResponseNodeLoaderTestFixture, "Load multiple processor metrics
 
 TEST_CASE_METHOD(ResponseNodeLoaderTestFixture, "Use regex to filter processor metrics", "[responseNodeLoaderTest]") {
   SECTION("Load all processor metrics with regex") {
-    auto nodes = response_node_loader_.loadResponseNodes("processorMetrics/.*", root_.get());
+    auto nodes = response_node_loader_.loadResponseNodes("processorMetrics/.*");
     std::unordered_map<std::string, uint32_t> metric_counts;
     REQUIRE(nodes.size() == 3);
     for (const auto& node : nodes) {
@@ -114,19 +114,19 @@ TEST_CASE_METHOD(ResponseNodeLoaderTestFixture, "Use regex to filter processor m
   }
 
   SECTION("Filter for a single processor") {
-    auto nodes = response_node_loader_.loadResponseNodes("processorMetrics/Read.*", root_.get());
+    auto nodes = response_node_loader_.loadResponseNodes("processorMetrics/Read.*");
     REQUIRE(nodes.size() == 1);
     REQUIRE(nodes[0]->getName() == "ReadFromFlowFileTestProcessorMetrics");
   }
 
   SECTION("Full match") {
-    auto nodes = response_node_loader_.loadResponseNodes("processorMetrics/ReadFromFlowFileTestProcessorMetrics", root_.get());
+    auto nodes = response_node_loader_.loadResponseNodes("processorMetrics/ReadFromFlowFileTestProcessorMetrics");
     REQUIRE(nodes.size() == 1);
     REQUIRE(nodes[0]->getName() == "ReadFromFlowFileTestProcessorMetrics");
   }
 
   SECTION("No partial match is allowed") {
-    auto nodes = response_node_loader_.loadResponseNodes("processorMetrics/Read", root_.get());
+    auto nodes = response_node_loader_.loadResponseNodes("processorMetrics/Read");
     REQUIRE(nodes.empty());
   }
 }

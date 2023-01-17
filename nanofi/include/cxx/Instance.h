@@ -101,7 +101,7 @@ class Instance {
       configure_->set(minifi::Configuration::nifi_c2_rest_url, server->url);
       configure_->set(minifi::Configuration::nifi_c2_rest_url_ack, server->ack_url);
     }
-    agent_ = std::make_shared<c2::C2CallbackAgent>(nullptr, nullptr, nullptr, configure_);
+    agent_ = std::make_shared<c2::C2CallbackAgent>(configure_);
     listener_thread_pool_.start();
     registerUpdateListener(agent_, 1000);
     agent_->setStopCallback(c1);

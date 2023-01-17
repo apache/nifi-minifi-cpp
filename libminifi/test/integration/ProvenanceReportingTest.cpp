@@ -59,9 +59,7 @@ int main(int argc, char **argv) {
   std::unique_ptr<core::FlowConfiguration> yaml_ptr = std::make_unique<core::YamlConfiguration>(
       core::ConfigurationContext{ test_repo, content_repo, stream_factory, configuration, test_file_location});
 
-  const auto controller = std::make_shared<minifi::FlowController>(
-      test_repo, test_flow_repo, configuration, std::move(yaml_ptr), content_repo, DEFAULT_ROOT_GROUP_NAME,
-      std::make_shared<utils::file::FileSystem>(), []{});
+  const auto controller = std::make_shared<minifi::FlowController>(test_repo, test_flow_repo, configuration, std::move(yaml_ptr), content_repo);
 
   core::YamlConfiguration yaml_config({test_repo, content_repo, stream_factory, configuration, test_file_location});
 

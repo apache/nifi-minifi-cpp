@@ -27,21 +27,19 @@
 namespace org::apache::nifi::minifi::extensions::prometheus {
 
 PrometheusMetricsPublisher::PrometheusMetricsPublisher(const std::string &name, const utils::Identifier &uuid, std::unique_ptr<MetricsExposer> exposer)
-  : CoreComponent(name, uuid),
+  : state::MetricsPublisher(name, uuid),
     exposer_(std::move(exposer)) {}
 
-void PrometheusMetricsPublisher::initialize(const std::shared_ptr<Configure>& configuration, state::response::ResponseNodeLoader& response_node_loader, core::ProcessGroup* root) {
-  gsl_Expects(configuration);
-  configuration_ = configuration;
-  response_node_loader_ = &response_node_loader;
+void PrometheusMetricsPublisher::initialize(const std::shared_ptr<Configure>& configuration, const std::shared_ptr<state::response::ResponseNodeLoader>& response_node_loader) {
+  state::MetricsPublisher::initialize(configuration, response_node_loader);
   if (!exposer_) {
     exposer_ = std::make_unique<PrometheusExposerWrapper>(readPort());
   }
   loadAgentIdentifier();
-  loadMetricNodes(root);
 }
 
 uint32_t PrometheusMetricsPublisher::readPort() {
+  gsl_Expects(configuration_);
   if (auto port = configuration_->get(Configuration::nifi_metrics_publisher_prometheus_metrics_publisher_port)) {
     return std::stoul(*port);
   }
@@ -58,9 +56,9 @@ void PrometheusMetricsPublisher::clearMetricNodes() {
   gauge_collections_.clear();
 }
 
-void PrometheusMetricsPublisher::loadMetricNodes(core::ProcessGroup* root) {
+void PrometheusMetricsPublisher::loadMetricNodes() {
   std::lock_guard<std::mutex> lock(registered_metrics_mutex_);
-  auto nodes = getMetricNodes(root);
+  auto nodes = getMetricNodes();
 
   for (const auto& metric_node : nodes) {
     logger_->log_debug("Registering metric node '%s'", metric_node->getName());
@@ -69,12 +67,13 @@ void PrometheusMetricsPublisher::loadMetricNodes(core::ProcessGroup* root) {
   }
 }
 
-std::vector<std::shared_ptr<state::response::ResponseNode>> PrometheusMetricsPublisher::getMetricNodes(core::ProcessGroup* root) {
-  std::vector<std::shared_ptr<state::response::ResponseNode>> nodes;
+std::vector<state::response::SharedResponseNode> PrometheusMetricsPublisher::getMetricNodes() {
+  gsl_Expects(response_node_loader_ && configuration_);
+  std::vector<state::response::SharedResponseNode> nodes;
   if (auto metric_classes_str = configuration_->get(minifi::Configuration::nifi_metrics_publisher_metrics)) {
     auto metric_classes = utils::StringUtils::split(*metric_classes_str, ",");
     for (const std::string& clazz : metric_classes) {
-      auto response_nodes = response_node_loader_->loadResponseNodes(clazz, root);
+      auto response_nodes = response_node_loader_->loadResponseNodes(clazz);
       if (response_nodes.empty()) {
         logger_->log_warn("Metric class '%s' could not be loaded.", clazz);
         continue;
@@ -86,6 +85,7 @@ std::vector<std::shared_ptr<state::response::ResponseNode>> PrometheusMetricsPub
 }
 
 void PrometheusMetricsPublisher::loadAgentIdentifier() {
+  gsl_Expects(configuration_);
   auto agent_identifier = configuration_->get(Configure::nifi_metrics_publisher_agent_identifier);
   if (agent_identifier && !agent_identifier->empty()) {
     agent_identifier_ = *agent_identifier;

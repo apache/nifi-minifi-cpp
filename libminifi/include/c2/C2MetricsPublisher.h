@@ -24,69 +24,48 @@
 #include <optional>
 #include <string>
 #include <vector>
-#include <unordered_set>
+#include <functional>
 
 #include "c2/C2Agent.h"
 #include "core/controller/ControllerServiceProvider.h"
 #include "properties/Configure.h"
 #include "core/logging/Logger.h"
 #include "core/state/nodes/MetricsBase.h"
-#include "core/Repository.h"
-#include "core/ContentRepository.h"
 #include "core/ProcessGroup.h"
-#include "core/Flow.h"
+#include "core/Core.h"
 #include "utils/file/FileSystem.h"
 #include "core/state/nodes/ResponseNodeLoader.h"
 #include "utils/Id.h"
+#include "core/state/MetricsPublisher.h"
 
 namespace org::apache::nifi::minifi::c2 {
 
-class C2Client : public core::Flow, public state::response::NodeReporter {
+class C2MetricsPublisher : public state::response::NodeReporter, public state::MetricsPublisher {
  public:
-  C2Client(
-      std::shared_ptr<Configure> configuration, std::shared_ptr<core::Repository> provenance_repo,
-      std::shared_ptr<core::Repository> flow_file_repo, std::shared_ptr<core::ContentRepository> content_repo,
-      std::unique_ptr<core::FlowConfiguration> flow_configuration, std::shared_ptr<utils::file::FileSystem> filesystem,
-      std::function<void()> request_restart,
-      std::shared_ptr<core::logging::Logger> logger = core::logging::LoggerFactory<C2Client>::getLogger());
+  using MetricsPublisher::MetricsPublisher;
 
-  void initialize(core::controller::ControllerServiceProvider *controller, state::Pausable *pause_handler, state::StateMonitor* update_sink);
+  MINIFIAPI static constexpr const char* Description = "Class that provides C2 metrics to the C2Agent";
+
   std::optional<state::response::NodeReporter::ReportedNode> getMetricsNode(const std::string& metrics_class) const override;
   std::vector<state::response::NodeReporter::ReportedNode> getHeartbeatNodes(bool include_manifest) const override;
+  state::response::NodeReporter::ReportedNode getAgentManifest() override;
 
-  void stopC2();
-  void initializeResponseNodes(core::ProcessGroup* root);
-  void clearResponseNodes();
-
- protected:
-  bool isC2Enabled() const;
-  std::optional<std::string> fetchFlow(const std::string& uri) const;
+  void clearMetricNodes() override;
+  void loadMetricNodes() override;
 
  private:
   void loadC2ResponseConfiguration(const std::string &prefix);
-  std::shared_ptr<state::response::ResponseNode> loadC2ResponseConfiguration(const std::string &prefix, std::shared_ptr<state::response::ResponseNode> prev_node);
-  void loadNodeClasses(const std::string& class_definitions, const std::shared_ptr<state::response::ResponseNode>& new_node);
+  state::response::SharedResponseNode loadC2ResponseConfiguration(const std::string &prefix, state::response::SharedResponseNode prev_node);
+  void loadNodeClasses(const std::string& class_definitions, const state::response::SharedResponseNode& new_node);
 
- protected:
-  std::shared_ptr<Configure> configuration_;
-  std::shared_ptr<utils::file::FileSystem> filesystem_;
-
- private:
-  std::unique_ptr<C2Agent> c2_agent_;
-  std::mutex initialization_mutex_;
-  bool initialized_ = false;
-  std::shared_ptr<core::logging::Logger> logger_;
   mutable std::mutex metrics_mutex_;
 
   // Name and response node value of the root response nodes defined in nifi.c2.root.classes and nifi.c2.root.class.definitions
   // In case a root class is defined to be a processor metric there can be multiple response nodes if the same processor is defined
   // multiple times in the flow
-  std::unordered_map<std::string, std::vector<std::shared_ptr<state::response::ResponseNode>>> root_response_nodes_;
+  std::unordered_map<std::string, std::vector<state::response::SharedResponseNode>> root_response_nodes_;
 
- protected:
-  std::atomic<bool> flow_update_{false};
-  std::function<void()> request_restart_;
-  state::response::ResponseNodeLoader response_node_loader_;
+  std::shared_ptr<core::logging::Logger> logger_ = core::logging::LoggerFactory<C2MetricsPublisher>::getLogger();
 };
 
 }  // namespace org::apache::nifi::minifi::c2

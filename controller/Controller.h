@@ -29,6 +29,8 @@
 #include "FlowController.h"
 #include "core/repository/VolatileContentRepository.h"
 #include "core/repository/VolatileFlowFileRepository.h"
+#include "core/state/MetricsPublisherFactory.h"
+#include "core/state/MetricsPublisherStore.h"
 
 /**
  * Sends a single argument comment
@@ -284,9 +286,10 @@ std::shared_ptr<org::apache::nifi::minifi::core::controller::ControllerService> 
   const auto stream_factory = org::apache::nifi::minifi::io::StreamFactory::getInstance(configuration);
 
   auto flow_configuration = org::apache::nifi::minifi::core::createFlowConfiguration(
-      org::apache::nifi::minifi::core::ConfigurationContext{flow_repo, content_repo, stream_factory, configuration}, nifi_configuration_class_name);
+    org::apache::nifi::minifi::core::ConfigurationContext{flow_repo, content_repo, stream_factory, configuration}, nifi_configuration_class_name);
 
-  const auto controller = std::make_unique<org::apache::nifi::minifi::FlowController>(prov_repo, flow_repo, configuration, std::move(flow_configuration), content_repo);
+  const auto controller = std::make_unique<org::apache::nifi::minifi::FlowController>(
+    prov_repo, flow_repo, configuration, std::move(flow_configuration), content_repo);
   controller->load();
   auto service = controller->getControllerService(service_name);
   if (service)
@@ -349,9 +352,10 @@ void printManifest(const std::shared_ptr<org::apache::nifi::minifi::Configure> &
   const auto stream_factory = org::apache::nifi::minifi::io::StreamFactory::getInstance(configuration);
 
   auto flow_configuration = org::apache::nifi::minifi::core::createFlowConfiguration(
-      org::apache::nifi::minifi::core::ConfigurationContext{flow_repo, content_repo, stream_factory, configuration}, nifi_configuration_class_name);
+    org::apache::nifi::minifi::core::ConfigurationContext{flow_repo, content_repo, stream_factory, configuration}, nifi_configuration_class_name);
 
-  const auto controller = std::make_unique<org::apache::nifi::minifi::FlowController>(prov_repo, flow_repo, configuration, std::move(flow_configuration), content_repo, "manifest");
+  const auto controller = std::make_unique<org::apache::nifi::minifi::FlowController>(
+    prov_repo, flow_repo, configuration, std::move(flow_configuration), content_repo);
   controller->load();
   controller->start();
   std::this_thread::sleep_for(std::chrono::milliseconds(10000));

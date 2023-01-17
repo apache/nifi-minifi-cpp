@@ -15,31 +15,20 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 #pragma once
 
+#include <string>
 #include <memory>
 
-#include "nodes/ResponseNodeLoader.h"
 #include "properties/Configure.h"
-#include "core/Core.h"
+#include "utils/StringUtils.h"
 
-namespace org::apache::nifi::minifi::state {
+namespace org::apache::nifi::minifi::c2 {
 
-class MetricsPublisher : public core::CoreComponent {
- public:
-  using CoreComponent::CoreComponent;
-  virtual void initialize(const std::shared_ptr<Configure>& configuration, const std::shared_ptr<state::response::ResponseNodeLoader>& response_node_loader) {
-    gsl_Expects(configuration && response_node_loader);
-    configuration_ = configuration;
-    response_node_loader_ = response_node_loader;
-  }
-  virtual void clearMetricNodes() = 0;
-  virtual void loadMetricNodes() = 0;
-  virtual ~MetricsPublisher() = default;
+inline constexpr const char* UPDATE_NAME = "C2UpdatePolicy";
+inline constexpr const char* C2_METRICS_PUBLISHER = "C2MetricsPublisher";
 
- protected:
-  std::shared_ptr<Configure> configuration_;
-  std::shared_ptr<state::response::ResponseNodeLoader> response_node_loader_;
-};
+bool isC2Enabled(const std::shared_ptr<Configure>& configuration);
 
-}  // namespace org::apache::nifi::minifi::state
+}  // namespace org::apache::nifi::minifi::c2

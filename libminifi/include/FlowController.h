@@ -47,7 +47,7 @@
 #include "core/state/nodes/FlowInformation.h"
 #include "core/state/nodes/MetricsBase.h"
 #include "core/state/UpdateController.h"
-#include "c2/C2Client.h"
+#include "c2/C2Agent.h"
 #include "CronDrivenSchedulingAgent.h"
 #include "EventDrivenSchedulingAgent.h"
 #include "FlowControlProtocol.h"
@@ -58,6 +58,8 @@
 #include "utils/file/FileSystem.h"
 #include "core/state/nodes/ResponseNodeLoader.h"
 #include "core/state/MetricsPublisher.h"
+#include "core/state/MetricsPublisherStore.h"
+#include "RootProcessGroupWrapper.h"
 
 namespace org::apache::nifi::minifi {
 
@@ -65,24 +67,12 @@ namespace state {
 class ProcessorController;
 }  // namespace state
 
-#define DEFAULT_ROOT_GROUP_NAME ""
-
-/**
- * Flow Controller class. Generally used by FlowController factory
- * as a singleton.
- */
-class FlowController : public core::controller::ForwardingControllerServiceProvider,  public state::StateMonitor, public c2::C2Client {
+class FlowController : public core::controller::ForwardingControllerServiceProvider,  public state::StateMonitor {
  public:
   FlowController(std::shared_ptr<core::Repository> provenance_repo, std::shared_ptr<core::Repository> flow_file_repo,
-                 std::shared_ptr<Configure> configure, std::unique_ptr<core::FlowConfiguration> flow_configuration,
-                 std::shared_ptr<core::ContentRepository> content_repo, const std::string& name = DEFAULT_ROOT_GROUP_NAME,
-                 std::shared_ptr<utils::file::FileSystem> filesystem = std::make_shared<utils::file::FileSystem>(),
-                 std::function<void()> request_restart = []{});
-
-  FlowController(std::shared_ptr<core::Repository> provenance_repo, std::shared_ptr<core::Repository> flow_file_repo,
-                 std::shared_ptr<Configure> configure, std::unique_ptr<core::FlowConfiguration> flow_configuration,
-                 std::shared_ptr<core::ContentRepository> content_repo, std::shared_ptr<utils::file::FileSystem> filesystem,
-                 std::function<void()> request_restart = []{});
+                 std::shared_ptr<Configure> configure, std::shared_ptr<core::FlowConfiguration> flow_configuration,
+                 std::shared_ptr<core::ContentRepository> content_repo, std::unique_ptr<state::MetricsPublisherStore> metrics_publisher_store = nullptr,
+                 std::shared_ptr<utils::file::FileSystem> filesystem = std::make_shared<utils::file::FileSystem>(), std::function<void()> request_restart = []{});
 
   ~FlowController() override;
 
@@ -90,7 +80,12 @@ class FlowController : public core::controller::ForwardingControllerServiceProvi
     return this->provenance_repo_;
   }
 
-  virtual void load(std::unique_ptr<core::ProcessGroup> root = nullptr, bool reload = false);
+  virtual void load(bool reload = false);
+
+  void load(std::unique_ptr<core::ProcessGroup> root, bool reload = false) {
+    root_wrapper_.setNewRoot(std::move(root));
+    load(reload);
+  }
 
   bool isRunning() const override {
     return running_.load() || updating_.load();
@@ -120,19 +115,8 @@ class FlowController : public core::controller::ForwardingControllerServiceProvi
   int16_t applyUpdate(const std::string& /*source*/, const std::shared_ptr<state::Update>&) override { return -1; }
   // Asynchronous function trigger unloading and wait for a period of time
   virtual void waitUnload(uint64_t timeToWaitMs);
-  // Unload the current flow, clean the root process group and all its children
-  virtual void unload();
   void updatePropertyValue(std::string processorName, std::string propertyName, std::string propertyValue) {
-    if (root_ != nullptr)
-      root_->updatePropertyValue(std::move(processorName), std::move(propertyName), std::move(propertyValue));
-  }
-
-  void setSerialNumber(std::string number) {
-    serial_number_ = std::move(number);
-  }
-
-  std::string getSerialNumber() {
-    return serial_number_;
+    root_wrapper_.updatePropertyValue(std::move(processorName), std::move(propertyName), std::move(propertyValue));
   }
 
   // validate and apply passing configuration payload
@@ -142,10 +126,7 @@ class FlowController : public core::controller::ForwardingControllerServiceProvi
   bool applyConfiguration(const std::string &source, const std::string &configurePayload, const std::optional<std::string>& flow_id = std::nullopt);
 
   std::string getName() const override {
-    if (root_ != nullptr)
-      return root_->getName();
-    else
-      return "";
+    return root_wrapper_.getName();
   }
 
   std::string getComponentName() const override {
@@ -153,28 +134,12 @@ class FlowController : public core::controller::ForwardingControllerServiceProvi
   }
 
   utils::Identifier getComponentUUID() const override {
-    if (!root_) {
-      return {};
-    }
-    return root_->getUUID();
+    return root_wrapper_.getComponentUUID();
   }
 
   virtual std::string getVersion() {
-    if (root_ != nullptr)
-      return std::to_string(root_->getVersion());
-    else
-      return "0";
+    return root_wrapper_.getVersion();
   }
-
-  utils::Identifier getControllerUUID() const override {
-    return getUUID();
-  }
-
-  /**
-   * Retrieves the agent manifest to be sent as a response to C2 DESCRIBE manifest
-   * @return the agent manifest response node
-   */
-  state::response::NodeReporter::ReportedNode getAgentManifest() override;
 
   uint64_t getUptime() override;
 
@@ -190,14 +155,12 @@ class FlowController : public core::controller::ForwardingControllerServiceProvi
    */
   std::unique_ptr<core::ProcessGroup> loadInitialFlow();
 
-  void loadMetricsPublisher();
-
- protected:
   void loadFlowRepo();
+  std::vector<state::StateController*> getAllComponents();
+  state::StateController* getComponent(const std::string& id_or_name);
+  gsl::not_null<std::unique_ptr<state::ProcessorController>> createController(core::Processor& processor);
+  std::unique_ptr<core::ProcessGroup> updateFromPayload(const std::string& url, const std::string& config_payload, const std::optional<std::string>& flow_id = std::nullopt);
 
-  std::optional<std::chrono::milliseconds> loadShutdownTimeoutFromConfiguration();
-
- private:
   template <typename T, typename = typename std::enable_if<std::is_base_of<SchedulingAgent, T>::value>::type>
   void conditionalReloadScheduler(std::unique_ptr<T>& scheduler, const bool condition) {
     if (condition) {
@@ -205,40 +168,27 @@ class FlowController : public core::controller::ForwardingControllerServiceProvi
     }
   }
 
- protected:
   std::recursive_mutex mutex_;
-
   std::atomic<bool> running_;
   std::atomic<bool> updating_;
-
   std::atomic<bool> initialized_;
   std::unique_ptr<TimerDrivenSchedulingAgent> timer_scheduler_;
   std::unique_ptr<EventDrivenSchedulingAgent> event_scheduler_;
   std::unique_ptr<CronDrivenSchedulingAgent> cron_scheduler_;
   std::unique_ptr<FlowControlProtocol> protocol_;
   std::chrono::steady_clock::time_point start_time_;
-
- private:
-  std::vector<state::StateController*> getAllComponents();
-
-  state::StateController* getComponent(const std::string& id_or_name);
-
-  state::StateController* getProcessorController(const std::string& id_or_name,
-      const std::function<gsl::not_null<std::unique_ptr<state::ProcessorController>>(core::Processor&)>& controllerFactory);
-
-  std::vector<state::StateController*> getAllProcessorControllers(
-          const std::function<gsl::not_null<std::unique_ptr<state::ProcessorController>>(core::Processor&)>& controllerFactory);
-
-  gsl::not_null<std::unique_ptr<state::ProcessorController>> createController(core::Processor& processor);
-
-  std::chrono::milliseconds shutdown_check_interval_{1000};
+  std::shared_ptr<Configure> configuration_;
+  std::shared_ptr<core::Repository> provenance_repo_;
+  std::shared_ptr<core::Repository> flow_file_repo_;
+  std::shared_ptr<core::ContentRepository> content_repo_;
+  std::shared_ptr<core::FlowConfiguration> flow_configuration_;
+  std::unique_ptr<state::MetricsPublisherStore> metrics_publisher_store_;
+  RootProcessGroupWrapper root_wrapper_;
+  std::unique_ptr<c2::C2Agent> c2_agent_{};
   std::shared_ptr<core::logging::Logger> logger_ = core::logging::LoggerFactory<FlowController>::getLogger();
-  std::string serial_number_;
 
   // Thread pool for schedulers
   utils::ThreadPool<utils::TaskRescheduleInfo> thread_pool_;
-  std::map<utils::Identifier, std::unique_ptr<state::ProcessorController>> processor_to_controller_;
-  std::unique_ptr<state::MetricsPublisher> metrics_publisher_;
 };
 
 }  // namespace org::apache::nifi::minifi

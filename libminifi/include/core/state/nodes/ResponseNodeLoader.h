@@ -32,41 +32,49 @@
 #include "core/FlowConfiguration.h"
 #include "utils/gsl.h"
 #include "utils/Id.h"
+#include "utils/expected.h"
 
 namespace org::apache::nifi::minifi::state::response {
 
 class ResponseNodeLoader {
  public:
   ResponseNodeLoader(std::shared_ptr<Configure> configuration, std::shared_ptr<core::Repository> provenance_repo,
-    std::shared_ptr<core::Repository> flow_file_repo, core::FlowConfiguration* flow_configuration);
-  void initializeComponentMetrics(core::ProcessGroup* root);
+    std::shared_ptr<core::Repository> flow_file_repo, std::shared_ptr<core::FlowConfiguration> flow_configuration);
+
+  void setNewConfigRoot(core::ProcessGroup* root);
+  void clearConfigRoot();
   void setControllerServiceProvider(core::controller::ControllerServiceProvider* controller);
   void setStateMonitor(state::StateMonitor* update_sink);
-  std::vector<std::shared_ptr<ResponseNode>> loadResponseNodes(const std::string& clazz, core::ProcessGroup* root) const;
+  std::vector<SharedResponseNode> loadResponseNodes(const std::string& clazz);
+  state::response::NodeReporter::ReportedNode getAgentManifest() const;
 
  private:
-  std::vector<std::shared_ptr<ResponseNode>> getComponentMetricsNodes(const std::string& metrics_class) const;
-  std::vector<std::shared_ptr<ResponseNode>> getResponseNodes(const std::string& clazz) const;
-  void initializeRepositoryMetrics(const std::shared_ptr<ResponseNode>& response_node) const;
-  static void initializeQueueMetrics(const std::shared_ptr<ResponseNode>& response_node, core::ProcessGroup* root);
-  void initializeAgentIdentifier(const std::shared_ptr<ResponseNode>& response_node) const;
-  void initializeAgentMonitor(const std::shared_ptr<ResponseNode>& response_node) const;
-  void initializeAgentNode(const std::shared_ptr<ResponseNode>& response_node) const;
-  void initializeAgentStatus(const std::shared_ptr<ResponseNode>& response_node) const;
-  void initializeConfigurationChecksums(const std::shared_ptr<ResponseNode>& response_node) const;
-  void initializeFlowMonitor(const std::shared_ptr<ResponseNode>& response_node, core::ProcessGroup* root) const;
-  std::vector<std::shared_ptr<ResponseNode>> getMatchingComponentMetricsNodes(const std::string& regex_str) const;
+  void initializeComponentMetrics();
+  std::vector<SharedResponseNode> getComponentMetricsNodes(const std::string& metrics_class) const;
+  nonstd::expected<SharedResponseNode, std::string> getSystemMetricsNode(const std::string& clazz);
+  std::vector<SharedResponseNode> getResponseNodes(const std::string& clazz);
+  void initializeRepositoryMetrics(const SharedResponseNode& response_node) const;
+  void initializeQueueMetrics(const SharedResponseNode& response_node) const;
+  void initializeAgentIdentifier(const SharedResponseNode& response_node) const;
+  void initializeAgentMonitor(const SharedResponseNode& response_node) const;
+  void initializeAgentNode(const SharedResponseNode& response_node) const;
+  void initializeAgentStatus(const SharedResponseNode& response_node) const;
+  void initializeConfigurationChecksums(const SharedResponseNode& response_node) const;
+  void initializeFlowMonitor(const SharedResponseNode& response_node) const;
+  std::vector<SharedResponseNode> getMatchingComponentMetricsNodes(const std::string& regex_str) const;
 
+  mutable std::mutex root_mutex_;
   mutable std::mutex component_metrics_mutex_;
-  std::unordered_map<std::string, std::vector<std::shared_ptr<ResponseNode>>> component_metrics_;
+  mutable std::mutex system_metrics_mutex_;
+  core::ProcessGroup* root_{};
+  std::unordered_map<std::string, std::vector<SharedResponseNode>> component_metrics_;
+  std::unordered_map<std::string, SharedResponseNode> system_metrics_;
   std::shared_ptr<Configure> configuration_;
   std::shared_ptr<core::Repository> provenance_repo_;
   std::shared_ptr<core::Repository> flow_file_repo_;
-  core::FlowConfiguration* flow_configuration_ = nullptr;
-  core::controller::ControllerServiceProvider* controller_ = nullptr;
-  state::StateMonitor* update_sink_ = nullptr;
-  std::mutex callback_mutex_;
-  std::map<utils::Identifier, std::function<void(core::ProcessGroup*)>> flow_change_callbacks_;
+  std::shared_ptr<core::FlowConfiguration> flow_configuration_;
+  core::controller::ControllerServiceProvider* controller_{};
+  state::StateMonitor* update_sink_{};
   std::shared_ptr<core::logging::Logger> logger_{core::logging::LoggerFactory<ResponseNodeLoader>::getLogger()};
 };
 

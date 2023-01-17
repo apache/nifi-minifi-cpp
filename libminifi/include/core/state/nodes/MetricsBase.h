@@ -31,6 +31,9 @@
 
 namespace org::apache::nifi::minifi::state::response {
 
+class ResponseNode;
+using SharedResponseNode = gsl::not_null<std::shared_ptr<ResponseNode>>;
+
 /**
  * Purpose: Defines a metric. Serialization is intended to be thread safe.
  */
@@ -53,18 +56,7 @@ class ResponseNode : public core::Connectable, public PublishedMetricProvider {
 
   ~ResponseNode() override = default;
 
-  static std::vector<state::response::SerializedResponseNode> serializeAndMergeResponseNodes(const std::vector<std::shared_ptr<ResponseNode>>& nodes) {
-    if (nodes.empty()) {
-      return {};
-    }
-
-    std::vector<state::response::SerializedResponseNode> result;
-    for (const auto& node: nodes) {
-      auto serialized = node->serialize();
-      result.insert(result.end(), serialized.begin(), serialized.end());
-    }
-    return result;
-  }
+  static std::vector<SerializedResponseNode> serializeAndMergeResponseNodes(const std::vector<SharedResponseNode>& nodes);
 
   virtual std::vector<SerializedResponseNode> serialize() = 0;
 
@@ -118,7 +110,7 @@ class ObjectNode : public ResponseNode {
       : ResponseNode(std::move(name), uuid) {
   }
 
-  void add_node(const std::shared_ptr<ResponseNode> &node) {
+  void add_node(const SharedResponseNode &node) {
     nodes_[node->getName()].push_back(node);
   }
 
@@ -126,30 +118,14 @@ class ObjectNode : public ResponseNode {
     return Connectable::getName();
   }
 
-  std::vector<SerializedResponseNode> serialize() override {
-    std::vector<SerializedResponseNode> serialized;
-    for (const auto& [name, nodes] : nodes_) {
-      if (nodes.empty()) {
-        continue;
-      }
-      SerializedResponseNode inner_node;
-      inner_node.name = nodes[0]->getName();
-      for (auto &embed : ResponseNode::serializeAndMergeResponseNodes(nodes)) {
-        if (!embed.empty() || embed.keep_empty) {
-          inner_node.children.push_back(std::move(embed));
-        }
-      }
-      serialized.push_back(std::move(inner_node));
-    }
-    return serialized;
-  }
+  std::vector<SerializedResponseNode> serialize() override;
 
   bool isEmpty() override {
     return nodes_.empty();
   }
 
  protected:
-  std::unordered_map<std::string, std::vector<std::shared_ptr<ResponseNode>>> nodes_;
+  std::unordered_map<std::string, std::vector<SharedResponseNode>> nodes_;
 };
 
 /**
@@ -159,7 +135,7 @@ class ObjectNode : public ResponseNode {
 class ResponseNodeSource {
  public:
   virtual ~ResponseNodeSource() = default;
-  virtual std::shared_ptr<ResponseNode> getResponseNodes() = 0;
+  virtual SharedResponseNode getResponseNode() = 0;
 };
 
 class NodeReporter {

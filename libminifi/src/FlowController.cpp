@@ -27,9 +27,7 @@
 #include <string>
 
 #include "FlowController.h"
-#include "core/state/nodes/AgentInformation.h"
 #include "core/state/ProcessorController.h"
-#include "c2/C2Agent.h"
 #include "core/ProcessGroup.h"
 #include "core/Core.h"
 #include "SchedulingAgent.h"
@@ -44,21 +42,26 @@
 #include "io/FileStream.h"
 #include "core/ClassLoader.h"
 #include "core/ThreadedRepository.h"
+#include "c2/C2MetricsPublisher.h"
 
 namespace org::apache::nifi::minifi {
 
 FlowController::FlowController(std::shared_ptr<core::Repository> provenance_repo, std::shared_ptr<core::Repository> flow_file_repo,
-                               std::shared_ptr<Configure> configure, std::unique_ptr<core::FlowConfiguration> flow_configuration,
-                               std::shared_ptr<core::ContentRepository> content_repo, const std::string& /*name*/,
+                               std::shared_ptr<Configure> configure, std::shared_ptr<core::FlowConfiguration> flow_configuration,
+                               std::shared_ptr<core::ContentRepository> content_repo, std::unique_ptr<state::MetricsPublisherStore> metrics_publisher_store,
                                std::shared_ptr<utils::file::FileSystem> filesystem, std::function<void()> request_restart)
     : core::controller::ForwardingControllerServiceProvider(core::getClassName<FlowController>()),
-      c2::C2Client(std::move(configure), std::move(provenance_repo), std::move(flow_file_repo),
-                   std::move(content_repo), std::move(flow_configuration), std::move(filesystem),
-                   std::move(request_restart), core::logging::LoggerFactory<c2::C2Client>::getLogger()),
       running_(false),
       updating_(false),
       initialized_(false),
-      thread_pool_(5, false, nullptr, "Flowcontroller threadpool") {
+      thread_pool_(5, false, nullptr, "Flowcontroller threadpool"),
+      configuration_(std::move(configure)),
+      provenance_repo_(std::move(provenance_repo)),
+      flow_file_repo_(std::move(flow_file_repo)),
+      content_repo_(std::move(content_repo)),
+      flow_configuration_(std::move(flow_configuration)),
+      metrics_publisher_store_(std::move(metrics_publisher_store)),
+      root_wrapper_(configuration_, metrics_publisher_store_.get()) {
   if (provenance_repo_ == nullptr)
     throw std::runtime_error("Provenance Repo should not be null");
   if (flow_file_repo_ == nullptr)
@@ -66,36 +69,29 @@ FlowController::FlowController(std::shared_ptr<core::Repository> provenance_repo
   if (configuration_ == nullptr) {
     throw std::runtime_error("Must supply a configuration.");
   }
-  running_ = false;
-  initialized_ = false;
 
-  protocol_ = std::make_unique<FlowControlProtocol>(this, configuration_);
-  response_node_loader_.setControllerServiceProvider(this);
-  response_node_loader_.setStateMonitor(this);
-}
-
-FlowController::FlowController(std::shared_ptr<core::Repository> provenance_repo, std::shared_ptr<core::Repository> flow_file_repo,
-                 std::shared_ptr<Configure> configure, std::unique_ptr<core::FlowConfiguration> flow_configuration,
-                 std::shared_ptr<core::ContentRepository> content_repo, std::shared_ptr<utils::file::FileSystem> filesystem,
-                 std::function<void()> request_restart)
-      : FlowController(std::move(provenance_repo), std::move(flow_file_repo), std::move(configure), std::move(flow_configuration),
-                       std::move(content_repo), DEFAULT_ROOT_GROUP_NAME, std::move(filesystem), std::move(request_restart)) {}
-
-std::optional<std::chrono::milliseconds> FlowController::loadShutdownTimeoutFromConfiguration() {
-  std::string shutdown_timeout_str;
-  if (configuration_->get(minifi::Configure::nifi_flowcontroller_drain_timeout, shutdown_timeout_str)) {
-    const auto time_from_config = core::TimePeriodValue::fromString(shutdown_timeout_str);
-    if (time_from_config) {
-      return { std::chrono::milliseconds{ time_from_config.value().getMilliseconds() }};
-    }
+  if (flow_configuration_) {
+    controller_service_provider_impl_ = flow_configuration_->getControllerServiceProvider();
   }
-  return std::nullopt;
+  protocol_ = std::make_unique<FlowControlProtocol>(this, configuration_);
+  if (metrics_publisher_store_) {
+    metrics_publisher_store_->initialize(this, this);
+  }
+
+  if (c2::isC2Enabled(configuration_)) {
+    std::shared_ptr<c2::C2MetricsPublisher> c2_metrics_publisher;
+    if (auto publisher = metrics_publisher_store_->getMetricsPublisher(c2::C2_METRICS_PUBLISHER).lock()) {
+      c2_metrics_publisher = std::dynamic_pointer_cast<c2::C2MetricsPublisher>(publisher);
+    }
+    c2_agent_ = std::make_unique<c2::C2Agent>(configuration_, c2_metrics_publisher, std::move(filesystem), std::move(request_restart));
+  }
 }
 
 FlowController::~FlowController() {
+  if (c2_agent_) {
+    c2_agent_->stop();
+  }
   stop();
-  stopC2();
-  unload();
   // TODO(adebreceni): are these here on purpose, so they are destroyed first?
   protocol_ = nullptr;
   flow_file_repo_ = nullptr;
@@ -106,7 +102,7 @@ FlowController::~FlowController() {
 bool FlowController::applyConfiguration(const std::string &source, const std::string &configurePayload, const std::optional<std::string>& flow_id) {
   std::unique_ptr<core::ProcessGroup> newRoot;
   try {
-    newRoot = flow_configuration_->updateFromPayload(source, configurePayload, flow_id);
+    newRoot = updateFromPayload(source, configurePayload, flow_id);
   } catch (const std::exception& ex) {
     logger_->log_error("Invalid configuration payload, type: %s, what: %s", typeid(ex).name(), ex.what());
     return false;
@@ -129,22 +125,11 @@ bool FlowController::applyConfiguration(const std::string &source, const std::st
   {
     std::lock_guard<std::recursive_mutex> flow_lock(mutex_);
     stop();
-    unload();
 
-    // prepare to accept the new controller service provider from flow_configuration_
-    clearControllerServices();
-
-    clearResponseNodes();
-    if (metrics_publisher_) {
-      metrics_publisher_->clearMetricNodes();
-    }
-    auto prevRoot = std::move(this->root_);
-    this->root_ = std::move(newRoot);
-    processor_to_controller_.clear();
+    root_wrapper_.setNewRoot(std::move(newRoot));
     initialized_ = false;
     try {
-      load(std::move(root_), true);
-      flow_update_ = true;
+      load(true);
       started = start() == 0;
     } catch (const std::exception& ex) {
       logger_->log_error("Caught exception while starting flow, type %s, what: %s", typeid(ex).name(), ex.what());
@@ -153,9 +138,11 @@ bool FlowController::applyConfiguration(const std::string &source, const std::st
     }
     if (!started) {
       logger_->log_error("Failed to start new flow, restarting previous flow");
-      load(std::move(prevRoot), true);
-      flow_update_ = true;
+      root_wrapper_.restoreBackup();
+      load(true);
       start();
+    } else {
+      root_wrapper_.clearBackup();
     }
   }
 
@@ -180,22 +167,7 @@ int16_t FlowController::stop() {
   if (running_) {
     // immediately indicate that we are not running
     logger_->log_info("Stop Flow Controller");
-    if (this->root_) {
-      // stop source processors first
-      this->root_->stopProcessing(*timer_scheduler_, *event_scheduler_, *cron_scheduler_, [] (const core::Processor* proc) -> bool {
-        return !proc->hasIncomingConnections();
-      });
-      // we enable C2 to progressively increase the timeout
-      // in case it sees that waiting for a little longer could
-      // allow the FlowFiles to be processed
-      auto shutdown_start = std::chrono::steady_clock::now();
-      while ((std::chrono::steady_clock::now() - shutdown_start) < loadShutdownTimeoutFromConfiguration().value_or(std::chrono::milliseconds{0}) &&
-          this->root_->getTotalFlowFileCount() != 0) {
-        std::this_thread::sleep_for(shutdown_check_interval_);
-      }
-      // shutdown all other processors as well
-      this->root_->stopProcessing(*timer_scheduler_, *event_scheduler_, *cron_scheduler_);
-    }
+    root_wrapper_.stopProcessing(*timer_scheduler_, *event_scheduler_, *cron_scheduler_);
     // stop after we've attempted to stop the processors.
     timer_scheduler_->stop();
     event_scheduler_->stop();
@@ -205,14 +177,13 @@ int16_t FlowController::stop() {
      * -Stopping the schedulers doesn't actually quit the onTrigger functions of processors
      * -They only guarantee that the processors are not scheduled anymore
      * -After the threadpool is stopped we can make sure that processors don't need repos and controllers anymore */
-    if (this->root_) {
-      this->root_->drainConnections();
-    }
+    root_wrapper_.drainConnections();
     this->flow_file_repo_->stop();
     this->provenance_repo_->stop();
     this->content_repo_->stop();
     // stop the ControllerServices
     disableAllControllerServices();
+    initialized_ = false;
     running_ = false;
   }
   return 0;
@@ -233,23 +204,11 @@ void FlowController::waitUnload(const uint64_t timeToWaitMs) {
     std::chrono::system_clock::time_point wait_time = std::chrono::system_clock::now() + std::chrono::milliseconds(timeToWaitMs);
 
     // create an asynchronous future.
-    std::future<void> unload_task = std::async(std::launch::async, [this]() {unload();});
+    std::future<void> unload_task = std::async(std::launch::async, [this]() {stop();});
 
     if (std::future_status::ready == unload_task.wait_until(wait_time)) {
       running_ = false;
     }
-  }
-}
-
-void FlowController::unload() {
-  std::lock_guard<std::recursive_mutex> flow_lock(mutex_);
-  if (running_) {
-    stop();
-  }
-  if (initialized_) {
-    logger_->log_info("Unload Flow Controller");
-    initialized_ = false;
-    name_ = "";
   }
 }
 
@@ -267,14 +226,17 @@ std::unique_ptr<core::ProcessGroup> FlowController::loadInitialFlow() {
   // ensure that C2 connection is up and running
   // since we don't have access to the flow definition, the C2 communication
   // won't be able to use the services defined there, e.g. SSLContextService
-  controller_service_provider_impl_ = flow_configuration_->getControllerServiceProvider();
-  C2Client::initialize(this, this, this);
-  auto opt_source = fetchFlow(*opt_flow_url);
+  if (!c2_agent_) {
+    return nullptr;
+  }
+  c2_agent_->initialize(this, this, this);
+  c2_agent_->start();
+  auto opt_source = c2_agent_->fetchFlow(*opt_flow_url);
   if (!opt_source) {
     logger_->log_error("Couldn't fetch flow configuration from C2 server");
     return nullptr;
   }
-  root = flow_configuration_->updateFromPayload(*opt_flow_url, *opt_source);
+  root = updateFromPayload(*opt_flow_url, *opt_source);
   if (root) {
     logger_->log_info("Successfully fetched valid flow configuration");
     if (!flow_configuration_->persist(*opt_source)) {
@@ -284,66 +246,57 @@ std::unique_ptr<core::ProcessGroup> FlowController::loadInitialFlow() {
   return root;
 }
 
-void FlowController::load(std::unique_ptr<core::ProcessGroup> root, bool reload) {
+void FlowController::load(bool reload) {
   std::lock_guard<std::recursive_mutex> flow_lock(mutex_);
   if (running_) {
     stop();
   }
-  if (!initialized_) {
-    if (reload) {
-      io::NetworkPrioritizerFactory::getInstance()->clearPrioritizer();
-    }
-
-    if (root) {
-      logger_->log_info("Load Flow Controller from provided root");
-      this->root_ = std::move(root);
-      processor_to_controller_.clear();
-    } else {
-      logger_->log_info("Instantiating new flow");
-      this->root_ = loadInitialFlow();
-    }
-
-    logger_->log_info("Loaded root processor Group");
-    logger_->log_info("Initializing timers");
-    controller_service_provider_impl_ = flow_configuration_->getControllerServiceProvider();
-    response_node_loader_.initializeComponentMetrics(root_.get());
-    initializeResponseNodes(root_.get());
-    if (metrics_publisher_) {
-      metrics_publisher_->loadMetricNodes(root_.get());
-    } else {
-      loadMetricsPublisher();
-    }
-
-    if (!thread_pool_.isRunning() || reload) {
-      thread_pool_.shutdown();
-      thread_pool_.setMaxConcurrentTasks(configuration_->getInt(Configure::nifi_flow_engine_threads, 5));
-      thread_pool_.setControllerServiceProvider(this);
-      thread_pool_.start();
-    }
-
-    conditionalReloadScheduler<TimerDrivenSchedulingAgent>(timer_scheduler_, !timer_scheduler_ || reload);
-    conditionalReloadScheduler<EventDrivenSchedulingAgent>(event_scheduler_, !event_scheduler_ || reload);
-    conditionalReloadScheduler<CronDrivenSchedulingAgent>(cron_scheduler_, !cron_scheduler_ || reload);
-
-    logger_->log_info("Loaded controller service provider");
-
-    /*
-     * Without reset we have to distinguish a fresh restart and a reload, to decide if we have to
-     * increment the claims' counter on behalf of the persisted instances.
-     * ResourceClaim::getStreamCount is not suitable as multiple persisted instances
-     * might have the same claim.
-     * e.g. without reset a streamCount of 3 could mean the following:
-     *  - it was a fresh restart and 3 instances of this claim have already been resurrected -> we must increment
-     *  - it was a reload and 3 instances have been persisted before the shutdown -> we must not increment
-     */
-    content_repo_->reset();
-    logger_->log_info("Reset content repository");
-
-    // Load Flow File from Repo
-    loadFlowRepo();
-    logger_->log_info("Loaded flow repository");
-    initialized_ = true;
+  if (reload) {
+    io::NetworkPrioritizerFactory::getInstance()->clearPrioritizer();
   }
+
+  if (!root_wrapper_.initialized()) {
+    logger_->log_info("Instantiating new flow");
+    root_wrapper_.setNewRoot(loadInitialFlow());
+    if (c2_agent_ && !c2_agent_->isControllerRunning()) {
+      // TODO(lordgamez): this initialization configures the C2 sender protocol (e.g. RESTSender) which may contain an SSL Context service from the flow config
+      // for SSL communication. This service may change on flow update and we should take care of the SSL Context Service change in the C2 Agent.
+      c2_agent_->initialize(this, this, this);
+      c2_agent_->start();
+    }
+  }
+
+  logger_->log_info("Loaded root processor Group");
+  logger_->log_info("Initializing timers");
+  if (!thread_pool_.isRunning() || reload) {
+    thread_pool_.shutdown();
+    thread_pool_.setMaxConcurrentTasks(configuration_->getInt(Configure::nifi_flow_engine_threads, 5));
+    thread_pool_.setControllerServiceProvider(this);
+    thread_pool_.start();
+  }
+
+  conditionalReloadScheduler<TimerDrivenSchedulingAgent>(timer_scheduler_, !timer_scheduler_ || reload);
+  conditionalReloadScheduler<EventDrivenSchedulingAgent>(event_scheduler_, !event_scheduler_ || reload);
+  conditionalReloadScheduler<CronDrivenSchedulingAgent>(cron_scheduler_, !cron_scheduler_ || reload);
+
+  logger_->log_info("Loaded controller service provider");
+
+  /*
+    * Without reset we have to distinguish a fresh restart and a reload, to decide if we have to
+    * increment the claims' counter on behalf of the persisted instances.
+    * ResourceClaim::getStreamCount is not suitable as multiple persisted instances
+    * might have the same claim.
+    * e.g. without reset a streamCount of 3 could mean the following:
+    *  - it was a fresh restart and 3 instances of this claim have already been resurrected -> we must increment
+    *  - it was a reload and 3 instances have been persisted before the shutdown -> we must not increment
+    */
+  content_repo_->reset();
+  logger_->log_info("Reset content repository");
+
+  // Load Flow File from Repo
+  loadFlowRepo();
+  logger_->log_info("Loaded flow repository");
+  initialized_ = true;
 }
 
 void FlowController::loadFlowRepo() {
@@ -351,10 +304,8 @@ void FlowController::loadFlowRepo() {
     logger_->log_debug("Getting connection map");
     std::map<std::string, core::Connectable*> connectionMap;
     std::map<std::string, core::Connectable*> containers;
-    if (this->root_ != nullptr) {
-      this->root_->getConnections(connectionMap);
-      this->root_->getFlowFileContainers(containers);
-    }
+    root_wrapper_.getConnections(connectionMap);
+    root_wrapper_.getFlowFileContainers(containers);
     flow_file_repo_->setConnectionMap(connectionMap);
     flow_file_repo_->setContainers(containers);
     flow_file_repo_->loadComponent(content_repo_);
@@ -368,31 +319,29 @@ int16_t FlowController::start() {
   if (!initialized_) {
     logger_->log_error("Can not start Flow Controller because it has not been initialized");
     return -1;
-  } else {
-    if (!running_) {
-      logger_->log_info("Starting Flow Controller");
-      enableAllControllerServices();
-      timer_scheduler_->start();
-      event_scheduler_->start();
-      cron_scheduler_->start();
+  } else if (!running_) {
+    logger_->log_info("Starting Flow Controller");
+    enableAllControllerServices();
+    timer_scheduler_->start();
+    event_scheduler_->start();
+    cron_scheduler_->start();
 
-      if (this->root_ != nullptr) {
-        start_time_ = std::chrono::steady_clock::now();
-        // watch out, this might immediately start the processors
-        // as the thread_pool_ is started in load()
-        this->root_->startProcessing(*timer_scheduler_, *event_scheduler_, *cron_scheduler_);
-      }
-      C2Client::initialize(this, this, this);
-      core::logging::LoggerConfiguration::getConfiguration().initializeAlertSinks(this, configuration_);
-      running_ = true;
-      this->protocol_->start();
-      this->content_repo_->start();
-      this->provenance_repo_->start();
-      this->flow_file_repo_->start();
-      logger_->log_info("Started Flow Controller");
+    // watch out, this might immediately start the processors
+    // as the thread_pool_ is started in load()
+    if (root_wrapper_.startProcessing(*timer_scheduler_, *event_scheduler_, *cron_scheduler_)) {
+      start_time_ = std::chrono::steady_clock::now();
     }
-    return 0;
+
+    core::logging::LoggerConfiguration::getConfiguration().initializeAlertSinks(this, configuration_);
+    running_ = true;
+    protocol_->start();
+    content_repo_->start();
+    provenance_repo_->start();
+    flow_file_repo_->start();
+    thread_pool_.start();
+    logger_->log_info("Started Flow Controller");
   }
+  return 0;
 }
 
 int16_t FlowController::pause() {
@@ -435,33 +384,8 @@ int16_t FlowController::applyUpdate(const std::string &source, const std::string
 }
 
 int16_t FlowController::clearConnection(const std::string &connection) {
-  if (root_ != nullptr) {
-    logger_->log_info("Attempting to clear connection %s", connection);
-    std::map<std::string, Connection*> connections;
-    root_->getConnections(connections);
-    auto conn = connections.find(connection);
-    if (conn != connections.end()) {
-      logger_->log_info("Clearing connection %s", connection);
-      conn->second->drain(true);
-    }
-  }
+  root_wrapper_.clearConnection(connection);
   return -1;
-}
-
-state::response::NodeReporter::ReportedNode FlowController::getAgentManifest() {
-  state::response::AgentInformation agentInfo("agentInfo");
-  agentInfo.setUpdatePolicyController(std::static_pointer_cast<controllers::UpdatePolicyControllerService>(getControllerService(c2::C2Agent::UPDATE_NAME)).get());
-  agentInfo.setAgentIdentificationProvider(configuration_);
-  agentInfo.setConfigurationReader([this](const std::string& key){
-    return configuration_->getRawValue(key);
-  });
-  agentInfo.setStateMonitor(this);
-  agentInfo.includeAgentStatus(false);
-  state::response::NodeReporter::ReportedNode reported_node;
-  reported_node.name = agentInfo.getName();
-  reported_node.is_array = agentInfo.isArray();
-  reported_node.serialized_nodes = agentInfo.serialize();
-  return reported_node;
 }
 
 void FlowController::executeOnAllComponents(std::function<void(state::StateController&)> func) {
@@ -487,8 +411,9 @@ void FlowController::executeOnComponent(const std::string &id_or_name, std::func
 }
 
 std::vector<state::StateController*> FlowController::getAllComponents() {
-  if (root_) {
-    return getAllProcessorControllers([this](core::Processor& p) { return createController(p); });
+  if (auto components = root_wrapper_.getAllProcessorControllers([this](core::Processor& p) { return createController(p); })) {
+    components->push_back(this);
+    return *components;
   }
 
   return {this};
@@ -497,8 +422,8 @@ std::vector<state::StateController*> FlowController::getAllComponents() {
 state::StateController* FlowController::getComponent(const std::string& id_or_name) {
   if (id_or_name == getUUIDStr() || id_or_name == "FlowController") {
     return this;
-  } else if (root_) {
-    return getProcessorController(id_or_name, [this](core::Processor& p) { return createController(p); });
+  } else if (auto controller = root_wrapper_.getProcessorController(id_or_name, [this](core::Processor& p) { return createController(p); })) {
+    return controller;
   }
 
   return nullptr;
@@ -550,55 +475,12 @@ std::map<std::string, std::unique_ptr<io::InputStream>> FlowController::getDebug
   return debug_info;
 }
 
-std::vector<state::StateController*> FlowController::getAllProcessorControllers(
-        const std::function<gsl::not_null<std::unique_ptr<state::ProcessorController>>(core::Processor&)>& controllerFactory) {
-  std::vector<state::StateController*> controllerVec{this};
-  std::vector<core::Processor*> processorVec;
-  root_->getAllProcessors(processorVec);
-
-  for (const auto& processor : processorVec) {
-    // reference to the existing or newly created controller
-    auto& controller = processor_to_controller_[processor->getUUID()];
-    if (!controller) {
-      controller = controllerFactory(*processor);
-    }
-    controllerVec.push_back(controller.get());
-  }
-
-  return controllerVec;
-}
-
-state::StateController* FlowController::getProcessorController(const std::string& id_or_name,
-    const std::function<gsl::not_null<std::unique_ptr<state::ProcessorController>>(core::Processor&)>& controllerFactory) {
-  return utils::Identifier::parse(id_or_name)
-      | utils::flatMap([this](utils::Identifier id) { return utils::optional_from_ptr(root_->findProcessorById(id)); })
-      | utils::orElse([this, &id_or_name] { return utils::optional_from_ptr(root_->findProcessorByName(id_or_name)); })
-      | utils::map([this, &controllerFactory](gsl::not_null<core::Processor*> proc) -> gsl::not_null<state::ProcessorController*> {
-        return utils::optional_from_ptr(processor_to_controller_[proc->getUUID()].get())
-            | utils::valueOrElse([this, proc, &controllerFactory] {
-              return gsl::make_not_null((processor_to_controller_[proc->getUUID()] = controllerFactory(*proc)).get());
-            });
-      })
-      | utils::valueOrElse([this, &id_or_name]() -> state::ProcessorController* {
-        logger_->log_error("Could not get processor controller for requested id/name \"%s\", because the processor was not found", id_or_name);
-        return nullptr;
-      });
-}
-
-void FlowController::loadMetricsPublisher() {
-  if (auto metrics_publisher_class = configuration_->get(minifi::Configure::nifi_metrics_publisher_class)) {
-    auto ptr = core::ClassLoader::getDefaultClassLoader().instantiate(*metrics_publisher_class, *metrics_publisher_class);
-    if (!ptr) {
-      logger_->log_error("Configured metrics publisher class \"%s\" could not be instantiated.", *metrics_publisher_class);
-      return;
-    }
-    metrics_publisher_ = utils::dynamic_unique_cast<state::MetricsPublisher>(std::move(ptr));
-    if (!metrics_publisher_) {
-      logger_->log_error("Configured metrics publisher class \"%s\" is not a metrics publisher.", *metrics_publisher_class);
-      return;
-    }
-    metrics_publisher_->initialize(configuration_, response_node_loader_, root_.get());
-  }
+std::unique_ptr<core::ProcessGroup> FlowController::updateFromPayload(const std::string& url, const std::string& config_payload, const std::optional<std::string>& flow_id) {
+  auto root = flow_configuration_->updateFromPayload(url, config_payload, flow_id);
+  // prepare to accept the new controller service provider from flow_configuration_
+  clearControllerServices();
+  controller_service_provider_impl_ = flow_configuration_->getControllerServiceProvider();
+  return root;
 }
 
 }  // namespace org::apache::nifi::minifi
