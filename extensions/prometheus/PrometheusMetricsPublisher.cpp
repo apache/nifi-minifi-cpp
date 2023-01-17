@@ -30,15 +30,14 @@ PrometheusMetricsPublisher::PrometheusMetricsPublisher(const std::string &name, 
   : CoreComponent(name, uuid),
     exposer_(std::move(exposer)) {}
 
-void PrometheusMetricsPublisher::initialize(const std::shared_ptr<Configure>& configuration, state::response::ResponseNodeLoader& response_node_loader, core::ProcessGroup* root) {
+void PrometheusMetricsPublisher::initialize(const std::shared_ptr<Configure>& configuration, const std::shared_ptr<state::response::ResponseNodeLoader>& response_node_loader) {
   gsl_Expects(configuration);
   configuration_ = configuration;
-  response_node_loader_ = &response_node_loader;
+  response_node_loader_ = response_node_loader;
   if (!exposer_) {
     exposer_ = std::make_unique<PrometheusExposerWrapper>(readPort());
   }
   loadAgentIdentifier();
-  loadMetricNodes(root);
 }
 
 uint32_t PrometheusMetricsPublisher::readPort() {
@@ -58,9 +57,9 @@ void PrometheusMetricsPublisher::clearMetricNodes() {
   gauge_collections_.clear();
 }
 
-void PrometheusMetricsPublisher::loadMetricNodes(core::ProcessGroup* root) {
+void PrometheusMetricsPublisher::loadMetricNodes() {
   std::lock_guard<std::mutex> lock(registered_metrics_mutex_);
-  auto nodes = getMetricNodes(root);
+  auto nodes = getMetricNodes();
 
   for (const auto& metric_node : nodes) {
     logger_->log_debug("Registering metric node '%s'", metric_node->getName());
@@ -69,12 +68,13 @@ void PrometheusMetricsPublisher::loadMetricNodes(core::ProcessGroup* root) {
   }
 }
 
-std::vector<std::shared_ptr<state::response::ResponseNode>> PrometheusMetricsPublisher::getMetricNodes(core::ProcessGroup* root) {
+std::vector<std::shared_ptr<state::response::ResponseNode>> PrometheusMetricsPublisher::getMetricNodes() {
+  gsl_Expects(response_node_loader_);
   std::vector<std::shared_ptr<state::response::ResponseNode>> nodes;
   if (auto metric_classes_str = configuration_->get(minifi::Configuration::nifi_metrics_publisher_metrics)) {
     auto metric_classes = utils::StringUtils::split(*metric_classes_str, ",");
     for (const std::string& clazz : metric_classes) {
-      auto response_nodes = response_node_loader_->loadResponseNodes(clazz, root);
+      auto response_nodes = response_node_loader_->loadResponseNodes(clazz);
       if (response_nodes.empty()) {
         logger_->log_warn("Metric class '%s' could not be loaded.", clazz);
         continue;

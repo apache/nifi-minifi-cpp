@@ -41,7 +41,6 @@ class VerifyEmptyC2Metric : public VerifyC2Base {
 
   void testSetup() override {
     LogTestController::getInstance().setTrace<c2::C2Agent>();
-    LogTestController::getInstance().setTrace<c2::C2Client>();
     LogTestController::getInstance().setDebug<c2::RESTSender>();
     LogTestController::getInstance().setDebug<FlowController>();
     LogTestController::getInstance().setOff<processors::GetTCP>();

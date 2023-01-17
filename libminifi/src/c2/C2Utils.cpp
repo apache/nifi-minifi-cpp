@@ -15,21 +15,14 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#pragma once
+#include "c2/C2Utils.h"
 
-#include <memory>
+namespace org::apache::nifi::minifi::c2 {
 
-#include "nodes/ResponseNodeLoader.h"
-#include "properties/Configure.h"
+bool isC2Enabled(const std::shared_ptr<Configure>& configuration) {
+  std::string c2_enable_str;
+  configuration->get(minifi::Configuration::nifi_c2_enable, "c2.enable", c2_enable_str);
+  return utils::StringUtils::toBool(c2_enable_str).value_or(false);
+}
 
-namespace org::apache::nifi::minifi::state {
-
-class MetricsPublisher {
- public:
-  virtual void initialize(const std::shared_ptr<Configure>&, const std::shared_ptr<state::response::ResponseNodeLoader>&) = 0;
-  virtual void clearMetricNodes() = 0;
-  virtual void loadMetricNodes() = 0;
-  virtual ~MetricsPublisher() = default;
-};
-
-}  // namespace org::apache::nifi::minifi::state
+}  // namespace org::apache::nifi::minifi::c2

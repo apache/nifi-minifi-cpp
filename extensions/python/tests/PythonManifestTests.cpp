@@ -24,6 +24,7 @@
 #include "Catch.h"
 #include "flow-tests/TestControllerWithFlow.h"
 #include "EmptyFlow.h"
+#include "c2/C2MetricsPublisher.h"
 
 using minifi::state::response::SerializedResponseNode;
 
@@ -58,13 +59,15 @@ TEST_CASE("Python processor's description is part of the manifest") {
     "  proc.addProperty('Prop1', 'A great property', 'banana', True, False)\n";
 
   controller.configuration_->set(minifi::Configuration::nifi_python_processor_dir, python_dir.string());
-  controller.configuration_->set(minifi::Configuration::nifi_extension_path, "*minifi-python-script*");
+  controller.configuration_->set(minifi::Configuration::nifi_extension_path, "*minifi-python-script*,*minifi-http-curl*");
 
   core::extension::ExtensionManager::get().initialize(controller.configuration_);
 
   controller.setupFlow();
 
-  auto agent_info = controller.controller_->getAgentManifest();
+  auto c2_metrics_publisher = std::static_pointer_cast<minifi::c2::C2MetricsPublisher>(controller.metrics_publisher_store_->getMetricsPublisher(minifi::c2::C2_METRICS_PUBLISHER).lock());
+
+  auto agent_info = c2_metrics_publisher->getAgentManifest();
 
   auto& manifest = getNode(agent_info.serialized_nodes, "agentManifest");
 

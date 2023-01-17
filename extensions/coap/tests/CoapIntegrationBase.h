@@ -64,7 +64,7 @@ class CoapIntegrationBase : public IntegrationBase {
     std::shared_ptr<core::ContentRepository> content_repo = std::make_shared<core::repository::VolatileContentRepository>();
     content_repo->initialize(configuration);
     std::shared_ptr<minifi::io::StreamFactory> stream_factory = minifi::io::StreamFactory::getInstance(configuration);
-    auto yaml_ptr = std::make_unique<core::YamlConfiguration>(core::ConfigurationContext{test_repo, content_repo, stream_factory, configuration, test_file_location});
+    auto yaml_ptr = std::make_shared<core::YamlConfiguration>(core::ConfigurationContext{test_repo, content_repo, stream_factory, configuration, test_file_location});
 
     core::YamlConfiguration yaml_config({test_repo, content_repo, stream_factory, configuration, test_file_location});
 
@@ -72,8 +72,8 @@ class CoapIntegrationBase : public IntegrationBase {
 
     queryRootProcessGroup(pg);
 
-    std::shared_ptr<minifi::FlowController> controller = std::make_shared<minifi::FlowController>(test_repo, test_flow_repo, configuration, std::move(yaml_ptr), content_repo, DEFAULT_ROOT_GROUP_NAME,
-      std::make_shared<utils::file::FileSystem>(), []{});
+    auto metrics_publisher_store = std::make_unique<minifi::state::MetricsPublisherStore>(configuration, test_repo, test_flow_repo, yaml_ptr);
+    auto controller = std::make_unique<minifi::FlowController>(test_repo, test_flow_repo, configuration, std::move(yaml_ptr), content_repo, std::move(metrics_publisher_store));
 
     controller->load();
     controller->start();
@@ -82,7 +82,6 @@ class CoapIntegrationBase : public IntegrationBase {
 
     shutdownBeforeFlowController();
     controller->waitUnload(wait_time_.count());
-    controller->stopC2();
 
     cleanup();
   }

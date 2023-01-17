@@ -42,13 +42,9 @@
 #include "utils/MinifiConcurrentQueue.h"
 #include "utils/ThreadPool.h"
 #include "utils/file/FileSystem.h"
+#include "C2Utils.h"
 
-namespace org {
-namespace apache {
-namespace nifi {
-namespace minifi {
-
-namespace c2 {
+namespace org::apache::nifi::minifi::c2 {
 
 /**
  * Purpose and Justification: C2 agent will be the mechanism that will abstract the protocol to do the work.
@@ -63,12 +59,8 @@ namespace c2 {
  */
 class C2Agent : public state::UpdateController {
  public:
-  static constexpr const char* UPDATE_NAME = "C2UpdatePolicy";
-
-  C2Agent(core::controller::ControllerServiceProvider *controller,
-          state::Pausable *pause_handler,
-          state::StateMonitor* updateSink,
-          std::shared_ptr<Configure> configuration,
+  C2Agent(std::shared_ptr<Configure> configuration,
+          std::weak_ptr<state::response::NodeReporter> node_reporter,
           std::shared_ptr<utils::file::FileSystem> filesystem,
           std::function<void()> request_restart);
 
@@ -76,8 +68,8 @@ class C2Agent : public state::UpdateController {
     delete protocol_.load();
   }
 
+  void initialize(core::controller::ControllerServiceProvider *controller, state::Pausable *pause_handler, state::StateMonitor* update_sink);
   void start() override;
-
   void stop() override;
 
   /**
@@ -230,7 +222,7 @@ class C2Agent : public state::UpdateController {
 
   std::vector<std::unique_ptr<C2Trigger>> triggers_;
 
-  std::atomic<C2Protocol*> protocol_;
+  std::atomic<C2Protocol*> protocol_{};
 
   std::shared_ptr<core::logging::Logger> logger_ = core::logging::LoggerFactory<C2Agent>::getLogger();
 
@@ -238,17 +230,14 @@ class C2Agent : public state::UpdateController {
 
   std::vector<utils::Identifier> task_ids_;
 
-  bool manifest_sent_;
+  bool manifest_sent_{false};
 
   const uint64_t C2RESPONSE_POLL_MS = 100;
 
+  std::weak_ptr<state::response::NodeReporter> node_reporter_;
   std::atomic<bool> restart_needed_ = false;
   std::function<void()> request_restart_;
 };
 
-}  // namespace c2
-}  // namespace minifi
-}  // namespace nifi
-}  // namespace apache
-}  // namespace org
+}  // namespace org::apache::nifi::minifi::c2
 

@@ -124,7 +124,7 @@ class FlowConfiguration : public CoreComponent {
     return nullptr;
   }
 
-  std::shared_ptr<core::controller::StandardControllerServiceProvider> &getControllerServiceProvider() {
+  std::shared_ptr<core::controller::StandardControllerServiceProvider> getControllerServiceProvider() const {
     return service_provider_;
   }
 

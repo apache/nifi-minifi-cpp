@@ -58,16 +58,16 @@ class StatefulIntegrationTest : public IntegrationBase {
   void updateProperties(minifi::FlowController& fc) override {
     /* This tests depends on a configuration that contains only one StatefulProcessor named statefulProcessor
      * (See TestStateTransactionality.yml)
-     * In this case there are two components in the flowcontroller: first is the controller itself,
-     * second is the processor that the test uses.
+     * In this case there are two components in the flowcontroller: first is the processor that the test uses,
+     * second is the controller itself.
      * Added here some assertions to make it clear. In case any of these fail without changing the corresponding yml file,
      * that most probably means a breaking change. */
     size_t controllerVecIdx = 0;
 
     fc.executeOnAllComponents([this, &controllerVecIdx](org::apache::nifi::minifi::state::StateController& component){
-      if (controllerVecIdx == 0) {
+      if (controllerVecIdx == 1) {
         assert(component.getComponentName() == "FlowController");
-      } else if (controllerVecIdx == 1) {
+      } else if (controllerVecIdx == 0) {
         assert(component.getComponentName() == "statefulProcessor");
         // set hooks
         const auto processController = dynamic_cast<ProcessorController*>(&component);

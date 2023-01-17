@@ -28,11 +28,11 @@
 #include "core/logging/LoggerConfiguration.h"
 #include "utils/file/FileUtils.h"
 #include "utils/file/FileManager.h"
+#include "c2/C2MetricsPublisher.h"
 namespace org::apache::nifi::minifi::c2 {
 
-C2CallbackAgent::C2CallbackAgent(core::controller::ControllerServiceProvider* controller, state::Pausable* pause_handler, state::StateMonitor* updateSink,
-                                 const std::shared_ptr<Configure> &configuration)
-    : C2Agent(controller, pause_handler, updateSink, configuration, std::make_shared<utils::file::FileSystem>(), []{}),
+C2CallbackAgent::C2CallbackAgent(const std::shared_ptr<Configure> &configuration)
+    : C2Agent(configuration, std::weak_ptr<C2MetricsPublisher>(), std::make_shared<utils::file::FileSystem>(), []{}),
       stop(nullptr) {
 }
 

@@ -15,8 +15,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#ifndef LIBMINIFI_INCLUDE_C2_C2CALLBACKAGENT_H_
-#define LIBMINIFI_INCLUDE_C2_C2CALLBACKAGENT_H_
+#pragma once
 
 #include <utility>
 #include <functional>
@@ -31,11 +30,7 @@
 #include "c2/C2Protocol.h"
 #include "io/validation.h"
 
-namespace org {
-namespace apache {
-namespace nifi {
-namespace minifi {
-namespace c2 {
+namespace org::apache::nifi::minifi::c2 {
 
 typedef int c2_ag_update_callback(char *);
 
@@ -46,11 +41,7 @@ typedef int c2_ag_start_callback(char *);
 class C2CallbackAgent : public c2::C2Agent {
  public:
 
-  explicit C2CallbackAgent(
-      core::controller::ControllerServiceProvider* controller,
-      state::Pausable* pause_handler,
-      state::StateMonitor* updateSink,
-      const std::shared_ptr<Configure> &configure);
+  explicit C2CallbackAgent(const std::shared_ptr<Configure> &configure);
 
   ~C2CallbackAgent() override = default;
 
@@ -72,11 +63,4 @@ class C2CallbackAgent : public c2::C2Agent {
   std::shared_ptr<core::logging::Logger> logger_ = core::logging::LoggerFactory<C2CallbackAgent>::getLogger();
 };
 
-} /* namesapce c2 */
-} /* namespace minifi */
-} /* namespace nifi */
-} /* namespace apache */
-} /* namespace org */
-
-
-#endif /* LIBMINIFI_INCLUDE_C2_C2CALLBACKAGENT_H_ */
+}  // namespace org::apache::nifi::minifi::c2

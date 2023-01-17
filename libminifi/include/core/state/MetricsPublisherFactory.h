@@ -18,18 +18,14 @@
 #pragma once
 
 #include <memory>
+#include <string>
 
-#include "nodes/ResponseNodeLoader.h"
-#include "properties/Configure.h"
+#include "MetricsPublisher.h"
 
 namespace org::apache::nifi::minifi::state {
 
-class MetricsPublisher {
- public:
-  virtual void initialize(const std::shared_ptr<Configure>&, const std::shared_ptr<state::response::ResponseNodeLoader>&) = 0;
-  virtual void clearMetricNodes() = 0;
-  virtual void loadMetricNodes() = 0;
-  virtual ~MetricsPublisher() = default;
-};
+std::unique_ptr<MetricsPublisher> createMetricsPublisher(const std::string& name, const std::shared_ptr<Configure>& configuration,
+  const std::shared_ptr<state::response::ResponseNodeLoader>& response_node_loader);
+std::unique_ptr<MetricsPublisher> createMetricsPublisher(const std::shared_ptr<Configure>& configuration, const std::shared_ptr<state::response::ResponseNodeLoader>& response_node_loader);
 
 }  // namespace org::apache::nifi::minifi::state

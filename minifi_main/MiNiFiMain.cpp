@@ -66,6 +66,10 @@
 #include "AgentDocs.h"
 #include "MainHelper.h"
 #include "agent/JsonSchema.h"
+#include "core/state/nodes/ResponseNodeLoader.h"
+#include "c2/C2Agent.h"
+#include "core/state/MetricsPublisherFactory.h"
+#include "core/state/MetricsPublisherStore.h"
 
 namespace minifi = org::apache::nifi::minifi;
 namespace core = minifi::core;
@@ -369,7 +373,7 @@ int main(int argc, char **argv) {
         should_encrypt_flow_config,
         utils::crypto::EncryptionProvider::create(minifiHome));
 
-    std::unique_ptr<core::FlowConfiguration> flow_configuration = core::createFlowConfiguration(
+    std::shared_ptr<core::FlowConfiguration> flow_configuration = core::createFlowConfiguration(
         core::ConfigurationContext{
           .flow_file_repo = flow_repo,
           .content_repo = content_repo,
@@ -378,8 +382,10 @@ int main(int argc, char **argv) {
           .path = configure->get(minifi::Configure::nifi_flow_configuration_file),
           .filesystem = filesystem}, nifi_configuration_class_name);
 
+    auto metrics_publisher_store = std::make_unique<minifi::state::MetricsPublisherStore>(configure, prov_repo, flow_repo, flow_configuration);
+
     const auto controller = std::make_unique<minifi::FlowController>(
-        prov_repo, flow_repo, configure, std::move(flow_configuration), content_repo, filesystem, request_restart);
+      prov_repo, flow_repo, configure, std::move(flow_configuration), content_repo, std::move(metrics_publisher_store), filesystem, request_restart);
 
     const bool disk_space_watchdog_enable = (configure->get(minifi::Configure::minifi_disk_space_watchdog_enable) | utils::map([](const std::string& v) { return v == "true"; })).value_or(true);
     std::unique_ptr<utils::CallBackTimer> disk_space_watchdog;
@@ -412,7 +418,6 @@ int main(int argc, char **argv) {
         disk_space_watchdog = std::make_unique<utils::CallBackTimer>(config.interval, [interval_switch, min_space, repo_paths, logger, &controller]() mutable {
           const auto stop = [&] {
             controller->stop();
-            controller->unload();
           };
           const auto restart = [&] {
             controller->load();
@@ -477,7 +482,6 @@ int main(int argc, char **argv) {
      * Trigger unload -- wait stop_wait_time
      */
     controller->waitUnload(stop_wait_time);
-    controller->stopC2();
     flow_repo = nullptr;
     prov_repo = nullptr;
   } while ([&] {

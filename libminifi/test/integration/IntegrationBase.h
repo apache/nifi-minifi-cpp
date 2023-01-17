@@ -36,6 +36,8 @@
 #include "controllers/SSLContextService.h"
 #include "HTTPUtils.h"
 #include "utils/FifoExecutor.h"
+#include "core/state/MetricsPublisherFactory.h"
+#include "c2/C2Utils.h"
 
 namespace minifi = org::apache::nifi::minifi;
 namespace core = minifi::core;
@@ -113,6 +115,7 @@ class IntegrationBase {
 
   void configureSecurity();
   std::shared_ptr<minifi::Configure> configuration;
+  std::unique_ptr<minifi::state::response::ResponseNodeLoader> response_node_loader_;
   std::unique_ptr<minifi::FlowController> flowController_;
   std::chrono::milliseconds wait_time_;
   std::string port, scheme;
@@ -174,7 +177,7 @@ void IntegrationBase::run(const std::optional<std::filesystem::path>& test_file_
       filesystem = std::make_shared<utils::file::FileSystem>();
     }
 
-    auto flow_config = std::make_unique<core::YamlConfiguration>(core::ConfigurationContext{test_repo, content_repo, stream_factory, configuration, test_file_location, filesystem});
+    auto flow_config = std::make_shared<core::YamlConfiguration>(core::ConfigurationContext{test_repo, content_repo, stream_factory, configuration, test_file_location, filesystem});
 
     auto controller_service_provider = flow_config->getControllerServiceProvider();
     char state_dir_name_template[] = "/var/tmp/integrationstate.XXXXXX";
@@ -191,8 +194,10 @@ void IntegrationBase::run(const std::optional<std::filesystem::path>& test_file_
       ++restart_requested_count_;
       running = true;
     };
-    flowController_ = std::make_unique<minifi::FlowController>(test_repo, test_flow_repo, configuration, std::move(flow_config), content_repo, DEFAULT_ROOT_GROUP_NAME,
-        std::make_shared<utils::file::FileSystem>(), request_restart);
+
+    auto metrics_publisher_store = std::make_unique<minifi::state::MetricsPublisherStore>(configuration, test_repo, test_flow_repo, flow_config);
+    flowController_ = std::make_unique<minifi::FlowController>(test_repo, test_flow_repo, configuration,
+      std::move(flow_config), content_repo, std::move(metrics_publisher_store), filesystem, request_restart);
     flowController_->load();
     updateProperties(*flowController_);
     flowController_->start();
@@ -209,8 +214,7 @@ void IntegrationBase::run(const std::optional<std::filesystem::path>& test_file_
       // Only stop servers if we're shutting down
       shutdownBeforeFlowController();
     }
-    flowController_->unload();
-    flowController_->stopC2();
+    flowController_->stop();
   }
 
   cleanup();

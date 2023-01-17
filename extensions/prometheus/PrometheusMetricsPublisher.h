@@ -37,20 +37,20 @@ class PrometheusMetricsPublisher : public core::CoreComponent, public state::Met
 
   EXTENSIONAPI static constexpr const char* Description = "HTTP server that exposes MiNiFi metrics for Prometheus to scrape";
 
-  void initialize(const std::shared_ptr<Configure>& configuration, state::response::ResponseNodeLoader& response_node_loader, core::ProcessGroup* root) override;
+  void initialize(const std::shared_ptr<Configure>& configuration, const std::shared_ptr<state::response::ResponseNodeLoader>& response_node_loader) override;
   void clearMetricNodes() override;
-  void loadMetricNodes(core::ProcessGroup* root) override;
+  void loadMetricNodes() override;
 
  private:
   uint32_t readPort();
-  std::vector<std::shared_ptr<state::response::ResponseNode>> getMetricNodes(core::ProcessGroup* root);
+  std::vector<std::shared_ptr<state::response::ResponseNode>> getMetricNodes();
   void loadAgentIdentifier();
 
   std::mutex registered_metrics_mutex_;
   std::vector<std::shared_ptr<PublishedMetricGaugeCollection>> gauge_collections_;
   std::unique_ptr<MetricsExposer> exposer_;
   std::shared_ptr<Configure> configuration_;
-  state::response::ResponseNodeLoader* response_node_loader_ = nullptr;
+  std::shared_ptr<state::response::ResponseNodeLoader> response_node_loader_;
   std::string agent_identifier_;
   std::shared_ptr<core::logging::Logger> logger_{core::logging::LoggerFactory<PrometheusMetricsPublisher>::getLogger()};
 };

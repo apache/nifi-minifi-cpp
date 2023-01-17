@@ -222,13 +222,12 @@ class TestFlowController : public org::apache::nifi::minifi::FlowController {
   TestFlowController(std::shared_ptr<org::apache::nifi::minifi::core::Repository> repo, std::shared_ptr<org::apache::nifi::minifi::core::Repository> flow_file_repo,
       const std::shared_ptr<org::apache::nifi::minifi::core::ContentRepository>& /*content_repo*/)
       :org::apache::nifi::minifi::FlowController(repo, flow_file_repo, std::make_shared<org::apache::nifi::minifi::Configure>(), nullptr,
-          std::make_shared<org::apache::nifi::minifi::core::repository::VolatileContentRepository>(), "",
-          std::make_shared<org::apache::nifi::minifi::utils::file::FileSystem>(), []{}) {
+          std::make_shared<org::apache::nifi::minifi::core::repository::VolatileContentRepository>()) {
   }
 
   ~TestFlowController() override = default;
 
-  void load(std::unique_ptr<org::apache::nifi::minifi::core::ProcessGroup> /*root*/ = nullptr, bool /*reload*/ = false) override {
+  void load(bool /*reload*/ = false) override {
   }
 
   int16_t start() override {
@@ -250,10 +249,6 @@ class TestFlowController : public org::apache::nifi::minifi::FlowController {
 
   int16_t resume() override {
     return -1;
-  }
-
-  void unload() override {
-    stop();
   }
 
   bool isRunning() const override {

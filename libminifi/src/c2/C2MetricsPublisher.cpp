@@ -19,7 +19,7 @@
 #include <filesystem>
 #include <memory>
 #include <map>
-#include "c2/C2Client.h"
+#include "c2/C2MetricsPublisher.h"
 #include "core/state/nodes/MetricsBase.h"
 #include "core/state/nodes/QueueMetrics.h"
 #include "core/state/nodes/AgentInformation.h"
@@ -35,77 +35,24 @@
 #include "utils/file/FileUtils.h"
 #include "utils/gsl.h"
 #include "utils/StringUtils.h"
+#include "core/Resource.h"
 
 namespace org::apache::nifi::minifi::c2 {
 
-C2Client::C2Client(
-    std::shared_ptr<Configure> configuration, std::shared_ptr<core::Repository> provenance_repo,
-    std::shared_ptr<core::Repository> flow_file_repo, std::shared_ptr<core::ContentRepository> content_repo,
-    std::unique_ptr<core::FlowConfiguration> flow_configuration, std::shared_ptr<utils::file::FileSystem> filesystem,
-    std::function<void()> request_restart, std::shared_ptr<core::logging::Logger> logger)
-    : core::Flow(std::move(provenance_repo), std::move(flow_file_repo), std::move(content_repo), std::move(flow_configuration)),
-      configuration_(std::move(configuration)),
-      filesystem_(std::move(filesystem)),
-      logger_(std::move(logger)),
-      request_restart_(std::move(request_restart)),
-      response_node_loader_(configuration_, provenance_repo_, flow_file_repo_, flow_configuration_.get()) {}
+C2MetricsPublisher::C2MetricsPublisher(const std::string &name, const utils::Identifier &uuid)
+  : core::CoreComponent(name, uuid) {}
 
-void C2Client::stopC2() {
-  if (c2_agent_) {
-    c2_agent_->stop();
-  }
+void C2MetricsPublisher::initialize(const std::shared_ptr<Configure>& configuration, const std::shared_ptr<state::response::ResponseNodeLoader>& response_node_loader) {
+  gsl_Expects(configuration);
+  configuration_ = configuration;
+  response_node_loader_ = response_node_loader;
 }
 
-bool C2Client::isC2Enabled() const {
-  std::string c2_enable_str;
-  configuration_->get(minifi::Configuration::nifi_c2_enable, "c2.enable", c2_enable_str);
-  return utils::StringUtils::toBool(c2_enable_str).value_or(false);
-}
-
-void C2Client::initialize(core::controller::ControllerServiceProvider *controller, state::Pausable *pause_handler, state::StateMonitor* update_sink) {
-  if (!isC2Enabled()) {
-    return;
-  }
-
-  if (!configuration_->getAgentClass()) {
-    logger_->log_info("Agent class is not predefined");
-  }
-
-  // Set a persistent fallback agent id. This is needed so that the C2 server can identify the same agent after a restart, even if nifi.c2.agent.identifier is not specified.
-  if (auto id = configuration_->get(Configuration::nifi_c2_agent_identifier_fallback)) {
-    configuration_->setFallbackAgentIdentifier(*id);
-  } else {
-    const auto agent_id = getControllerUUID().to_string();
-    configuration_->setFallbackAgentIdentifier(agent_id);
-    configuration_->set(Configuration::nifi_c2_agent_identifier_fallback, agent_id, PropertyChangeLifetime::PERSISTENT);
-  }
-
-  std::lock_guard<std::mutex> lock(initialization_mutex_);
-  if (initialized_ && !flow_update_) {
-    return;
-  }
-
-  if (!initialized_) {
-    initializeResponseNodes(root_.get());
-    // C2Agent is initialized once, meaning that a C2-triggered flow/configuration update
-    // might not be equal to a fresh restart
-    c2_agent_ = std::make_unique<c2::C2Agent>(controller, pause_handler, update_sink, configuration_, filesystem_, request_restart_);
-    c2_agent_->start();
-    initialized_ = true;
-  }
-}
-
-std::optional<std::string> C2Client::fetchFlow(const std::string& uri) const {
-  if (!c2_agent_) {
-    return {};
-  }
-  return c2_agent_->fetchFlow(uri);
-}
-
-void C2Client::loadNodeClasses(const std::string& class_definitions, const std::shared_ptr<state::response::ResponseNode>& new_node) {
+void C2MetricsPublisher::loadNodeClasses(const std::string& class_definitions, const std::shared_ptr<state::response::ResponseNode>& new_node) {
+  gsl_Expects(response_node_loader_);
   auto classes = utils::StringUtils::split(class_definitions, ",");
   for (const std::string& clazz : classes) {
-    auto response_nodes = response_node_loader_.loadResponseNodes(clazz, root_.get());
+    auto response_nodes = response_node_loader_->loadResponseNodes(clazz);
     if (response_nodes.empty()) {
       continue;
     }
@@ -115,7 +62,7 @@ void C2Client::loadNodeClasses(const std::string& class_definitions, const std::
   }
 }
 
-void C2Client::loadC2ResponseConfiguration(const std::string &prefix) {
+void C2MetricsPublisher::loadC2ResponseConfiguration(const std::string &prefix) {
   std::string class_definitions;
   if (!configuration_->get(prefix, class_definitions)) {
     return;
@@ -141,7 +88,7 @@ void C2Client::loadC2ResponseConfiguration(const std::string &prefix) {
         loadC2ResponseConfiguration(optionName, new_node);
       }
 
-      // We don't need to lock here, we already do it in the initializeResponseNodes member function
+      // We don't need to lock here, we already do it in the loadMetricNodes member function
       root_response_nodes_[name].push_back(new_node);
     } catch (const std::exception& ex) {
       logger_->log_error("Could not create metrics class %s, exception type: %s, what: %s", metricsClass, typeid(ex).name(), ex.what());
@@ -151,7 +98,8 @@ void C2Client::loadC2ResponseConfiguration(const std::string &prefix) {
   }
 }
 
-std::shared_ptr<state::response::ResponseNode> C2Client::loadC2ResponseConfiguration(const std::string &prefix, std::shared_ptr<state::response::ResponseNode> prev_node) {
+std::shared_ptr<state::response::ResponseNode> C2MetricsPublisher::loadC2ResponseConfiguration(const std::string &prefix,
+    std::shared_ptr<state::response::ResponseNode> prev_node) {
   std::string class_definitions;
   if (!configuration_->get(prefix, class_definitions)) {
     return prev_node;
@@ -198,7 +146,8 @@ std::shared_ptr<state::response::ResponseNode> C2Client::loadC2ResponseConfigura
   return prev_node;
 }
 
-std::optional<state::response::NodeReporter::ReportedNode> C2Client::getMetricsNode(const std::string& metrics_class) const {
+std::optional<state::response::NodeReporter::ReportedNode> C2MetricsPublisher::getMetricsNode(const std::string& metrics_class) const {
+  gsl_Expects(response_node_loader_);
   std::lock_guard<std::mutex> guard{metrics_mutex_};
   const auto createReportedNode = [](const std::vector<std::shared_ptr<state::response::ResponseNode>>& nodes) {
     gsl_Expects(!nodes.empty());
@@ -210,7 +159,7 @@ std::optional<state::response::NodeReporter::ReportedNode> C2Client::getMetricsN
   };
 
   if (!metrics_class.empty()) {
-    auto metrics_nodes = response_node_loader_.loadResponseNodes(metrics_class, root_.get());
+    auto metrics_nodes = response_node_loader_->loadResponseNodes(metrics_class);
     if (!metrics_nodes.empty()) {
       return createReportedNode(metrics_nodes);
     }
@@ -223,7 +172,7 @@ std::optional<state::response::NodeReporter::ReportedNode> C2Client::getMetricsN
   return std::nullopt;
 }
 
-std::vector<state::response::NodeReporter::ReportedNode> C2Client::getHeartbeatNodes(bool include_manifest) const {
+std::vector<state::response::NodeReporter::ReportedNode> C2MetricsPublisher::getHeartbeatNodes(bool include_manifest) const {
   std::string fullHb{"true"};
   configuration_->get(minifi::Configuration::nifi_c2_full_heartbeat, fullHb);
   const bool include = include_manifest || fullHb == "true";
@@ -249,7 +198,8 @@ std::vector<state::response::NodeReporter::ReportedNode> C2Client::getHeartbeatN
   return reported_nodes;
 }
 
-void C2Client::initializeResponseNodes(core::ProcessGroup* root) {
+void C2MetricsPublisher::loadMetricNodes() {
+  gsl_Expects(response_node_loader_);
   if (!root_response_nodes_.empty()) {
     return;
   }
@@ -259,7 +209,7 @@ void C2Client::initializeResponseNodes(core::ProcessGroup* root) {
     std::vector<std::string> classes = utils::StringUtils::split(class_csv, ",");
 
     for (const std::string& clazz : classes) {
-      auto response_nodes = response_node_loader_.loadResponseNodes(clazz, root);
+      auto response_nodes = response_node_loader_->loadResponseNodes(clazz);
       if (response_nodes.empty()) {
         continue;
       }
@@ -273,9 +223,16 @@ void C2Client::initializeResponseNodes(core::ProcessGroup* root) {
   loadC2ResponseConfiguration(Configuration::nifi_c2_root_class_definitions);
 }
 
-void C2Client::clearResponseNodes() {
+void C2MetricsPublisher::clearMetricNodes() {
   std::lock_guard<std::mutex> guard{metrics_mutex_};
   root_response_nodes_.clear();
 }
+
+state::response::NodeReporter::ReportedNode C2MetricsPublisher::getAgentManifest() {
+  gsl_Expects(response_node_loader_);
+  return response_node_loader_->getAgentManifest();
+}
+
+REGISTER_RESOURCE(C2MetricsPublisher, DescriptionOnly);
 
 }  // namespace org::apache::nifi::minifi::c2

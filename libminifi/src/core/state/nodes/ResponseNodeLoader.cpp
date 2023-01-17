@@ -25,33 +25,47 @@
 #include "core/state/nodes/QueueMetrics.h"
 #include "core/state/nodes/AgentInformation.h"
 #include "core/state/nodes/ConfigurationChecksums.h"
-#include "c2/C2Agent.h"
 #include "utils/gsl.h"
 #include "utils/RegexUtils.h"
 #include "utils/StringUtils.h"
+#include "c2/C2Utils.h"
 
 namespace org::apache::nifi::minifi::state::response {
 
 ResponseNodeLoader::ResponseNodeLoader(std::shared_ptr<Configure> configuration, std::shared_ptr<core::Repository> provenance_repo,
-    std::shared_ptr<core::Repository> flow_file_repo, core::FlowConfiguration* flow_configuration)
+    std::shared_ptr<core::Repository> flow_file_repo, std::shared_ptr<core::FlowConfiguration> flow_configuration)
   : configuration_(std::move(configuration)),
     provenance_repo_(std::move(provenance_repo)),
     flow_file_repo_(std::move(flow_file_repo)),
-    flow_configuration_(flow_configuration) {
+    flow_configuration_(std::move(flow_configuration)) {
 }
 
-void ResponseNodeLoader::initializeComponentMetrics(core::ProcessGroup* root) {
+void ResponseNodeLoader::clearConfigRoot() {
+  std::lock_guard<std::mutex> guard(root_mutex_);
+  root_ = nullptr;
+}
+
+void ResponseNodeLoader::setNewConfigRoot(core::ProcessGroup* root) {
+  {
+    std::lock_guard<std::mutex> guard(root_mutex_);
+    root_ = root;
+  }
+  initializeComponentMetrics();
+}
+
+void ResponseNodeLoader::initializeComponentMetrics() {
   {
     std::lock_guard<std::mutex> guard(component_metrics_mutex_);
     component_metrics_.clear();
   }
 
-  if (!root) {
+  std::lock_guard<std::mutex> guard(root_mutex_);
+  if (!root_) {
     return;
   }
 
   std::vector<core::Processor*> processors;
-  root->getAllProcessors(processors);
+  root_->getAllProcessors(processors);
   for (const auto processor : processors) {
     auto node_source = dynamic_cast<ResponseNodeSource*>(processor);
     if (node_source == nullptr) {
@@ -85,15 +99,16 @@ void ResponseNodeLoader::initializeRepositoryMetrics(const std::shared_ptr<Respo
   }
 }
 
-void ResponseNodeLoader::initializeQueueMetrics(const std::shared_ptr<ResponseNode>& response_node, core::ProcessGroup* root) {
-  if (!root) {
+void ResponseNodeLoader::initializeQueueMetrics(const std::shared_ptr<ResponseNode>& response_node) const {
+  std::lock_guard<std::mutex> guard(root_mutex_);
+  if (!root_) {
     return;
   }
 
   auto queue_metrics = dynamic_cast<QueueMetrics*>(response_node.get());
   if (queue_metrics != nullptr) {
     std::map<std::string, Connection*> connections;
-    root->getConnections(connections);
+    root_->getConnections(connections);
     for (const auto &con : connections) {
       queue_metrics->updateConnection(con.second);
     }
@@ -119,7 +134,7 @@ void ResponseNodeLoader::initializeAgentMonitor(const std::shared_ptr<ResponseNo
 void ResponseNodeLoader::initializeAgentNode(const std::shared_ptr<ResponseNode>& response_node) const {
   auto agent_node = dynamic_cast<state::response::AgentNode*>(response_node.get());
   if (agent_node != nullptr && controller_ != nullptr) {
-    agent_node->setUpdatePolicyController(std::static_pointer_cast<controllers::UpdatePolicyControllerService>(controller_->getControllerService(c2::C2Agent::UPDATE_NAME)).get());
+    agent_node->setUpdatePolicyController(std::static_pointer_cast<controllers::UpdatePolicyControllerService>(controller_->getControllerService(c2::UPDATE_NAME)).get());
   }
   if (agent_node != nullptr) {
     agent_node->setConfigurationReader([this](const std::string& key){
@@ -147,15 +162,16 @@ void ResponseNodeLoader::initializeConfigurationChecksums(const std::shared_ptr<
   }
 }
 
-void ResponseNodeLoader::initializeFlowMonitor(const std::shared_ptr<ResponseNode>& response_node, core::ProcessGroup* root) const {
+void ResponseNodeLoader::initializeFlowMonitor(const std::shared_ptr<ResponseNode>& response_node) const {
   auto flowMonitor = dynamic_cast<state::response::FlowMonitor*>(response_node.get());
   if (flowMonitor == nullptr) {
     return;
   }
 
   std::map<std::string, Connection*> connections;
-  if (root) {
-    root->getConnections(connections);
+  std::lock_guard<std::mutex> guard(root_mutex_);
+  if (root_) {
+    root_->getConnections(connections);
   }
 
   for (auto &con : connections) {
@@ -167,7 +183,7 @@ void ResponseNodeLoader::initializeFlowMonitor(const std::shared_ptr<ResponseNod
   }
 }
 
-std::vector<std::shared_ptr<ResponseNode>> ResponseNodeLoader::loadResponseNodes(const std::string& clazz, core::ProcessGroup* root) const {
+std::vector<std::shared_ptr<ResponseNode>> ResponseNodeLoader::loadResponseNodes(const std::string& clazz) const {
   auto response_nodes = getResponseNodes(clazz);
   if (response_nodes.empty()) {
     logger_->log_error("No metric defined for %s", clazz);
@@ -176,13 +192,13 @@ std::vector<std::shared_ptr<ResponseNode>> ResponseNodeLoader::loadResponseNodes
 
   for (const auto& response_node : response_nodes) {
     initializeRepositoryMetrics(response_node);
-    initializeQueueMetrics(response_node, root);
+    initializeQueueMetrics(response_node);
     initializeAgentIdentifier(response_node);
     initializeAgentMonitor(response_node);
     initializeAgentNode(response_node);
     initializeAgentStatus(response_node);
     initializeConfigurationChecksums(response_node);
-    initializeFlowMonitor(response_node, root);
+    initializeFlowMonitor(response_node);
   }
   return response_nodes;
 }
@@ -222,6 +238,26 @@ void ResponseNodeLoader::setControllerServiceProvider(core::controller::Controll
 
 void ResponseNodeLoader::setStateMonitor(state::StateMonitor* update_sink) {
   update_sink_ = update_sink;
+}
+
+state::response::NodeReporter::ReportedNode ResponseNodeLoader::getAgentManifest() {
+  state::response::AgentInformation agentInfo("agentInfo");
+  if (controller_) {
+    agentInfo.setUpdatePolicyController(std::static_pointer_cast<controllers::UpdatePolicyControllerService>(controller_->getControllerService(c2::UPDATE_NAME)).get());
+  }
+  agentInfo.setAgentIdentificationProvider(configuration_);
+  agentInfo.setConfigurationReader([this](const std::string& key){
+    return configuration_->getRawValue(key);
+  });
+  if (update_sink_) {
+    agentInfo.setStateMonitor(update_sink_);
+  }
+  agentInfo.includeAgentStatus(false);
+  state::response::NodeReporter::ReportedNode reported_node;
+  reported_node.name = agentInfo.getName();
+  reported_node.is_array = agentInfo.isArray();
+  reported_node.serialized_nodes = agentInfo.serialize();
+  return reported_node;
 }
 
 }  // namespace org::apache::nifi::minifi::state::response
