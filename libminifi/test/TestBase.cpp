@@ -235,14 +235,14 @@ std::shared_ptr<minifi::core::Processor> TestPlan::addProcessor(const std::share
   processor_mapping_[processor->getUUID()] = processor;
   if (!linkToPrevious) {
     if (!std::empty(relationships)) {
-      termination_ = relationships.front();
+      termination_ = *(relationships.begin());
     }
   } else {
     std::shared_ptr<minifi::core::Processor> last = processor_queue_.back();
     if (last == nullptr) {
       last = processor;
       if (!std::empty(relationships)) {
-        termination_ = relationships.front();
+        termination_ = *(relationships.begin());
       }
     }
     std::stringstream connection_name;
