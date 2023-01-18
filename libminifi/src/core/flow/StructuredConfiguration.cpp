@@ -695,7 +695,7 @@ void StructuredConfiguration::parseSingleProperty(const std::string& property_na
     throw;
   }
   if (!property_set) {
-    const auto rawValueString = property_value_node.getString().value();
+    const auto rawValueString = property_value_node.getScalarAsString().value();
     auto proc = dynamic_cast<core::Connectable*>(&processor);
     if (proc) {
       logger_->log_warn("Received property %s with value %s but is not one of the properties for %s. Attempting to add as dynamic property.", property_name, rawValueString, proc->getName());
