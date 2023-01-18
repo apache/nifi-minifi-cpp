@@ -60,9 +60,6 @@ class ExecuteSQL : public SQLProcessor, public FlowFileSource {
 
   EXTENSIONAPI static const std::string RESULT_ROW_COUNT;
   EXTENSIONAPI static const std::string INPUT_FLOW_FILE_UUID;
-
- private:
-  static const std::shared_ptr<core::logging::Logger> logger_;
 };
 
 }  // namespace org::apache::nifi::minifi::processors

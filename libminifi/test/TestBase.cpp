@@ -584,6 +584,7 @@ std::shared_ptr<minifi::core::ProcessContext> TestPlan::getCurrentContext() {
 }
 
 std::unique_ptr<minifi::Connection> TestPlan::buildFinalConnection(const std::shared_ptr<minifi::core::Processor>& processor, bool setDest) {
+  gsl_Expects(termination_);
   std::stringstream connection_name;
   connection_name << processor->getUUIDStr() << "-to-" << processor->getUUIDStr();
   auto connection = std::make_unique<minifi::Connection>(flow_repo_, content_repo_, connection_name.str());
