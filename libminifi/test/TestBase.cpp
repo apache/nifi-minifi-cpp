@@ -242,7 +242,7 @@ std::shared_ptr<minifi::core::Processor> TestPlan::addProcessor(const std::share
     if (last == nullptr) {
       last = processor;
       if (!std::empty(relationships)) {
-        termination_ = *(relationships.begin());
+        termination_ = relationships.front();
       }
     }
     std::stringstream connection_name;
