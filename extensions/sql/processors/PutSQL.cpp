@@ -28,8 +28,6 @@
 
 namespace org::apache::nifi::minifi::processors {
 
-std::shared_ptr<core::logging::Logger> PutSQL::logger_ = core::logging::LoggerFactory<PutSQL>::getLogger();
-
 PutSQL::PutSQL(std::string name, const utils::Identifier& uuid)
   : SQLProcessor(std::move(name), uuid, core::logging::LoggerFactory<PutSQL>::getLogger(uuid)) {
 }

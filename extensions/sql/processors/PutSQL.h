@@ -55,9 +55,6 @@ class PutSQL : public SQLProcessor {
   void processOnTrigger(core::ProcessContext& context, core::ProcessSession& session) override;
 
   void initialize() override;
-
- private:
-  static std::shared_ptr<core::logging::Logger> logger_;
 };
 
 }  // namespace org::apache::nifi::minifi::processors
