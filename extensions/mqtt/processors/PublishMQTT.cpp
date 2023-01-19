@@ -83,7 +83,7 @@ void PublishMQTT::onTriggerImpl(const std::shared_ptr<core::ProcessContext>& con
 }
 
 bool PublishMQTT::sendMessage(const std::vector<std::byte>& buffer, const std::string& topic, const std::string& content_type, const std::shared_ptr<core::FlowFile>& flow_file) {
-  static const unsigned max_packet_size = 268'435'455;
+  static constexpr size_t max_packet_size = 256_MiB - 1;
   if (buffer.size() > max_packet_size) {
     logger_->log_error("Sending message failed because MQTT limit maximum packet size [%u] is exceeded by FlowFile of [%zu]", std::to_string(max_packet_size), buffer.size());
     return false;
