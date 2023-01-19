@@ -63,21 +63,21 @@ class Container:
         return LogSource.FROM_DOCKER_CONTAINER
 
     def stop(self):
-        logging.info('Stopping minifi docker container "%s"...', self.name)
+        logging.info('Stopping docker container "%s"...', self.name)
         self.client.containers.get(self.name).stop()
-        logging.info('Successfully stopped minifi docker container "%s"', self.name)
+        logging.info('Successfully stopped docker container "%s"', self.name)
         self.deployed = False
 
     def kill(self):
-        logging.info('Killing minifi docker container "%s"...', self.name)
+        logging.info('Killing docker container "%s"...', self.name)
         self.client.containers.get(self.name).kill()
-        logging.info('Successfully killed minifi docker container "%s"', self.name)
+        logging.info('Successfully killed docker container "%s"', self.name)
         self.deployed = False
 
     def restart(self):
-        logging.info('Restarting minifi docker container "%s"...', self.name)
+        logging.info('Restarting docker container "%s"...', self.name)
         self.client.containers.get(self.name).restart()
-        logging.info('Successfully restarted minifi docker container "%s"', self.name)
+        logging.info('Successfully restarted docker container "%s"', self.name)
         self.deployed = True
 
     def get_startup_finished_log_entry(self):
