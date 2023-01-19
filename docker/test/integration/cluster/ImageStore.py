@@ -103,8 +103,7 @@ class ImageStore:
                     echo "Password = password" >> /etc/odbc.ini && \
                     echo "Database = postgres" >> /etc/odbc.ini
                 USER minificpp
-                """.format(base_image='apacheminificpp:' + MinifiContainer.MINIFI_VERSION,
-                           minifi_root=MinifiContainer.MINIFI_ROOT))
+                """.format(base_image='apacheminificpp:' + MinifiContainer.MINIFI_VERSION))
 
         return self.__build_image(dockerfile)
 
