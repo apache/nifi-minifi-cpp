@@ -68,7 +68,7 @@ class ContainerStore:
         if name is not None and name in self.containers:
             return self.containers[name]
 
-        if name is None and (engine == 'nifi' or engine == 'minifi-cpp' or engine == 'minifi-cpp-with-yaml-config'):
+        if name is None and (engine == 'nifi' or engine == 'minifi-cpp'):
             name = engine + '-' + str(uuid.uuid4())
             logging.info('Container name was not provided; using generated name \'%s\'', name)
 
