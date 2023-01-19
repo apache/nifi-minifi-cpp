@@ -18,6 +18,8 @@
 
 #pragma once
 
+#include <memory>
+
 #include "TestBase.h"
 #include "core/FlowConfiguration.h"
 #include "core/RepositoryFactory.h"

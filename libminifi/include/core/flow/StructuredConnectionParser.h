@@ -32,7 +32,8 @@ namespace org::apache::nifi::minifi::core::flow {
 
 class StructuredConnectionParser {
  public:
-  explicit StructuredConnectionParser(const Node& connectionNode, const std::string& name, gsl::not_null<core::ProcessGroup*> parent, const std::shared_ptr<logging::Logger>& logger, std::optional<FlowSchema> schema = std::nullopt) :
+  explicit StructuredConnectionParser(const Node& connectionNode, const std::string& name, gsl::not_null<core::ProcessGroup*> parent,
+                                      const std::shared_ptr<logging::Logger>& logger, std::optional<FlowSchema> schema = std::nullopt) :
       connectionNode_(connectionNode),
       name_(name),
       parent_(parent),

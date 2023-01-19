@@ -21,6 +21,7 @@
 #include <optional>
 #include <string>
 #include <unordered_set>
+#include <vector>
 
 #include "core/FlowConfiguration.h"
 #include "core/logging/LoggerConfiguration.h"

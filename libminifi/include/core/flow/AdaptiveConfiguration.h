@@ -17,6 +17,9 @@
  */
 #pragma once
 
+#include <string>
+#include <memory>
+
 #include "StructuredConfiguration.h"
 
 namespace org::apache::nifi::minifi::core::flow {
