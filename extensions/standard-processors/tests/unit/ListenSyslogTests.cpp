@@ -519,8 +519,8 @@ TEST_CASE("Test ListenSyslog via TCP with SSL connection", "[ListenSyslog][Netwo
     endpoint = asio::ip::tcp::endpoint(asio::ip::address_v6::loopback(), port);
   }
 
-  CHECK_THAT(utils::sendMessagesViaSSL({rfc5424_logger_example_1}, endpoint, (executable_dir / "resources" / "ca_A.crt").string()), MatchesSuccess());
-  CHECK_THAT(utils::sendMessagesViaSSL({invalid_syslog}, endpoint, (executable_dir / "resources" / "ca_A.crt").string()), MatchesSuccess());
+  CHECK_THAT(utils::sendMessagesViaSSL({rfc5424_logger_example_1}, endpoint, executable_dir / "resources" / "ca_A.crt"), MatchesSuccess());
+  CHECK_THAT(utils::sendMessagesViaSSL({invalid_syslog}, endpoint, executable_dir / "resources" / "ca_A.crt"), MatchesSuccess());
 
   std::unordered_map<core::Relationship, std::vector<std::shared_ptr<core::FlowFile>>> result;
   REQUIRE(controller.triggerUntil({{ListenSyslog::Success, 2}}, result, 300ms, 50ms));

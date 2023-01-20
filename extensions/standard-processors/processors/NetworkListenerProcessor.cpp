@@ -73,7 +73,7 @@ void NetworkListenerProcessor::startTcpServer(const core::ProcessContext& contex
       throw Exception(PROCESSOR_EXCEPTION, "SSL Context Service is set, but no valid SSL data was found!");
     }
     auto client_auth = utils::parseEnumProperty<utils::net::ClientAuthOption>(context, client_auth_property);
-    ssl_options.emplace(utils::net::SslServerOptions{std::move(*ssl_data), client_auth});
+    ssl_options.emplace(std::move(*ssl_data), client_auth);
   }
   server_ = std::make_unique<utils::net::TcpServer>(options.max_queue_size, options.port, logger_, ssl_options);
 

@@ -30,6 +30,7 @@
 #include "utils/net/AsioCoro.h"
 #include "utils/expected.h"
 #include "utils/StringUtils.h"
+#include "IntegrationTestUtils.h"
 
 using namespace std::literals::chrono_literals;
 
@@ -108,28 +109,28 @@ class PutTCPTestFixture {
   }
 
   void stopServers() {
-    for (auto& [port, server] : listeners_) {
-      auto& listener = server.listener_;
+    for (auto& [port, server] : servers_) {
+      auto& cancellable_server = server.cancellable_server;
       auto& server_thread = server.server_thread_;
-      if (listener)
-        listener->stop();
+      if (cancellable_server)
+        cancellable_server->stop();
       if (server_thread.joinable())
         server_thread.join();
-      listener.reset();
+      cancellable_server.reset();
     }
   }
 
   size_t getNumberOfActiveSessions(std::optional<uint16_t> port = std::nullopt) {
-    if (auto session_aware_listener = dynamic_cast<CancellableTcpServer*>(getListener(port))) {
-      return session_aware_listener->getNumberOfSessions();
+    if (auto cancellable_tcp_server = getServer(port)) {
+      return cancellable_tcp_server->getNumberOfSessions();
     }
     return -1;
   }
 
   void closeActiveConnections() {
-    for (auto& [port, server] : listeners_) {
-      if (auto session_aware_listener = dynamic_cast<CancellableTcpServer*>(getListener(port))) {
-        session_aware_listener->cancelEverything();
+    for (auto& [port, server] : servers_) {
+      if (auto cancellable_tcp_server = getServer(port)) {
+        cancellable_tcp_server->cancelEverything();
       }
     }
     std::this_thread::sleep_for(200ms);
@@ -150,7 +151,7 @@ class PutTCPTestFixture {
     auto start_time = std::chrono::system_clock::now();
     utils::net::Message result;
     while (start_time + timeout > std::chrono::system_clock::now()) {
-      if (getListener(port)->tryDequeue(result))
+      if (getServer(port)->tryDequeue(result))
         return result;
       std::this_thread::sleep_for(interval);
     }
@@ -185,7 +186,7 @@ class PutTCPTestFixture {
   uint16_t addTCPServer() {
     Server server;
     uint16_t port = server.startTCPServer(std::nullopt);
-    listeners_[port] = std::move(server);
+    servers_[port] = std::move(server);
     return port;
   }
 
@@ -193,7 +194,7 @@ class PutTCPTestFixture {
     auto ssl_server_options = utils::net::SslServerOptions{createSslDataForServer(), utils::net::ClientAuthOption::REQUIRED};
     Server server;
     uint16_t port = server.startTCPServer(ssl_server_options);
-    listeners_[port] = std::move(server);
+    servers_[port] = std::move(server);
     return port;
   }
 
@@ -206,15 +207,15 @@ class PutTCPTestFixture {
   }
 
   [[nodiscard]] uint16_t getSinglePort() const {
-    gsl_Expects(listeners_.size() == 1);
-    return listeners_.begin()->first;
+    gsl_Expects(servers_.size() == 1);
+    return servers_.begin()->first;
   }
 
  private:
-  utils::net::Server* getListener(std::optional<uint16_t> port) {
+  CancellableTcpServer* getServer(std::optional<uint16_t> port) {
     if (!port)
       port = getSinglePort();
-    return listeners_.at(*port).listener_.get();
+    return servers_.at(*port).cancellable_server.get();
   }
 
   const std::shared_ptr<PutTCP> put_tcp_ = std::make_shared<PutTCP>("PutTCP");
@@ -225,23 +226,17 @@ class PutTCPTestFixture {
     Server() = default;
 
     uint16_t startTCPServer(std::optional<utils::net::SslServerOptions> ssl_server_options) {
-      gsl_Expects(!listener_ && !server_thread_.joinable());
-      listener_ = std::make_unique<CancellableTcpServer>(std::nullopt, 0, core::logging::LoggerFactory<utils::net::Server>::getLogger(), std::move(ssl_server_options));
-      server_thread_ = std::thread([this]() { listener_->run(); });
-      uint16_t port = listener_->getPort();
-      auto deadline = std::chrono::steady_clock::now() + 200ms;
-      while (port == 0 && deadline > std::chrono::steady_clock::now()) {
-        std::this_thread::sleep_for(20ms);
-        port = listener_->getPort();
-      }
-      REQUIRE(port != 0);
-      return port;
+      gsl_Expects(!cancellable_server && !server_thread_.joinable());
+      cancellable_server = std::make_unique<CancellableTcpServer>(std::nullopt, 0, core::logging::LoggerFactory<utils::net::Server>::getLogger(), std::move(ssl_server_options));
+      server_thread_ = std::thread([this]() { cancellable_server->run(); });
+      REQUIRE(utils::verifyEventHappenedInPollTime(250ms, [this] { return cancellable_server->getPort() != 0; }, 20ms));
+      return cancellable_server->getPort();
     }
 
-    std::unique_ptr<utils::net::Server> listener_;
+    std::unique_ptr<CancellableTcpServer> cancellable_server;
     std::thread server_thread_;
   };
-  std::unordered_map<uint16_t, Server> listeners_;
+  std::unordered_map<uint16_t, Server> servers_;
 };
 
 void trigger_expect_success(PutTCPTestFixture& test_fixture, const std::string_view message, std::unordered_map<std::string, std::string> input_flow_file_attributes = {}) {

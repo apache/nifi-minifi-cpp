@@ -115,17 +115,16 @@ void PutTCP::initialize() {
 void PutTCP::notifyStop() {}
 
 namespace {
-asio::ssl::context getSslContext(const std::shared_ptr<controllers::SSLContextService>& ssl_context_service) {
-  gsl_Expects(ssl_context_service);
+asio::ssl::context getSslContext(const controllers::SSLContextService& ssl_context_service) {
   asio::ssl::context ssl_context(asio::ssl::context::tls_client);
   ssl_context.set_options(asio::ssl::context::no_tlsv1 | asio::ssl::context::no_tlsv1_1);
-  ssl_context.load_verify_file(ssl_context_service->getCACertificate().string());
+  ssl_context.load_verify_file(ssl_context_service.getCACertificate().string());
   ssl_context.set_verify_mode(asio::ssl::verify_peer);
-  if (auto cert_file = ssl_context_service->getCertificateFile(); !cert_file.empty())
+  if (const auto& cert_file = ssl_context_service.getCertificateFile(); !cert_file.empty())
     ssl_context.use_certificate_file(cert_file.string(), asio::ssl::context::pem);
-  if (auto private_key_file = ssl_context_service->getPrivateKeyFile(); !private_key_file.empty())
+  if (const auto& private_key_file = ssl_context_service.getPrivateKeyFile(); !private_key_file.empty())
     ssl_context.use_private_key_file(private_key_file.string(), asio::ssl::context::pem);
-  ssl_context.set_password_callback([password = ssl_context_service->getPassphrase()](std::size_t&, asio::ssl::context_base::password_purpose&) { return password; });
+  ssl_context.set_password_callback([password = ssl_context_service.getPassphrase()](std::size_t&, asio::ssl::context_base::password_purpose&) { return password; });
   return ssl_context;
 }
 }  // namespace
@@ -150,12 +149,17 @@ void PutTCP::onSchedule(core::ProcessContext* const context, core::ProcessSessio
   else
     timeout_duration_ = 15s;
 
+  if (context->getProperty<bool>(ConnectionPerFlowFile).value_or(false))
+    connections_.reset();
+  else
+    connections_.emplace();
+
   std::string context_name;
   ssl_context_.reset();
   if (context->getProperty(SSLContextService.getName(), context_name) && !IsNullOrEmpty(context_name)) {
     if (auto controller_service = context->getControllerService(context_name)) {
       if (auto ssl_context_service = std::dynamic_pointer_cast<minifi::controllers::SSLContextService>(context->getControllerService(context_name))) {
-        ssl_context_ = getSslContext(ssl_context_service);
+        ssl_context_ = getSslContext(*ssl_context_service);
       } else {
         logger_->log_error("%s is not a SSL Context Service", context_name);
       }
@@ -165,11 +169,6 @@ void PutTCP::onSchedule(core::ProcessContext* const context, core::ProcessSessio
   }
 
   delimiter_ = utils::span_to<std::vector>(gsl::make_span(context->getProperty(OutgoingMessageDelimiter).value_or(std::string{})).as_span<const std::byte>());
-
-  if (context->getProperty<bool>(ConnectionPerFlowFile).value_or(false))
-    connections_.reset();
-  else
-    connections_.emplace();
 
   if (auto max_size_of_socket_send_buffer = context->getProperty<core::DataSizeValue>(MaxSizeOfSocketSendBuffer))
     max_size_of_socket_send_buffer_ = max_size_of_socket_send_buffer->getValue();
@@ -195,7 +194,7 @@ class ConnectionHandler : public ConnectionHandlerBase {
                     std::chrono::milliseconds timeout,
                     std::shared_ptr<core::logging::Logger> logger,
                     std::optional<size_t> max_size_of_socket_send_buffer,
-                    std::optional<asio::ssl::context>& ssl_context)
+                    asio::ssl::context* ssl_context)
       : connection_id_(std::move(connection_id)),
         timeout_duration_(timeout),
         logger_(std::move(logger)),
@@ -235,7 +234,7 @@ class ConnectionHandler : public ConnectionHandlerBase {
   std::shared_ptr<core::logging::Logger> logger_;
   std::optional<size_t> max_size_of_socket_send_buffer_;
 
-  std::optional<asio::ssl::context>& ssl_context_;
+  asio::ssl::context* ssl_context_;
 };
 
 template<>
@@ -347,9 +346,9 @@ void PutTCP::onTrigger(core::ProcessContext* context, core::ProcessSession* cons
   std::shared_ptr<ConnectionHandlerBase> handler;
   if (!connections_ || !connections_->contains(connection_id)) {
     if (ssl_context_)
-      handler = std::make_shared<ConnectionHandler<SslSocket>>(connection_id, timeout_duration_, logger_, max_size_of_socket_send_buffer_, ssl_context_);
+      handler = std::make_shared<ConnectionHandler<SslSocket>>(connection_id, timeout_duration_, logger_, max_size_of_socket_send_buffer_, &*ssl_context_);
     else
-      handler = std::make_shared<ConnectionHandler<TcpSocket>>(connection_id, timeout_duration_, logger_, max_size_of_socket_send_buffer_, ssl_context_);
+      handler = std::make_shared<ConnectionHandler<TcpSocket>>(connection_id, timeout_duration_, logger_, max_size_of_socket_send_buffer_, nullptr);
     if (connections_)
       (*connections_)[connection_id] = handler;
   } else {

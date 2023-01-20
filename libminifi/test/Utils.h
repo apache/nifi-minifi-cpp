@@ -25,6 +25,7 @@
 #include "asio.hpp"
 #include "asio/ssl.hpp"
 #include "net/Ssl.h"
+#include "utils/IntegrationTestUtils.h"
 
 using namespace std::chrono_literals;
 
@@ -228,14 +229,8 @@ template<NetworkingProcessor T>
 uint16_t scheduleProcessorOnRandomPort(const std::shared_ptr<TestPlan>& test_plan, const std::shared_ptr<T>& processor) {
   REQUIRE(processor->setProperty(T::Port, "0"));
   test_plan->scheduleProcessor(processor);
-  uint16_t port = processor->getPort();
-  auto deadline = std::chrono::steady_clock::now() + 200ms;
-  while (port == 0 && deadline > std::chrono::steady_clock::now()) {
-    std::this_thread::sleep_for(20ms);
-    port = processor->getPort();
-  }
-  REQUIRE(port != 0);
-  return port;
+  REQUIRE(minifi::utils::verifyEventHappenedInPollTime(250ms, [&processor] { return processor->getPort() != 0; }, 20ms));
+  return processor->getPort();
 }
 
 }  // namespace org::apache::nifi::minifi::test::utils

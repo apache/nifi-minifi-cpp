@@ -44,7 +44,7 @@ struct StringMaker<std::nullopt_t> {
 template <>
 struct StringMaker<std::error_code> {
   static std::string convert(const std::error_code& error_code) {
-    return fmt::format("std::error_code(value:{}, message:{})", error_code.value(), error_code.message());
+    return fmt::format("std::error_code(category:{}, value:{}, message:{})", error_code.category().name(), error_code.value(), error_code.message());
   }
 };
 }  // namespace Catch
@@ -70,7 +70,7 @@ struct MatchesError : Catch::MatcherBase<std::error_code> {
 
   bool match(const std::error_code& err) const override {
     if (expected_error_)
-      return err.value() == expected_error_->value();
+      return err == *expected_error_;
     return err.value() != 0;
   }
 
