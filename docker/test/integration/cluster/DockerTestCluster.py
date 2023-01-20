@@ -96,7 +96,7 @@ class DockerTestCluster:
 
     def __wait_for_app_logs_impl(self, container_name, log_entry, timeout_seconds, count, use_regex):
         wait_start_time = time.perf_counter()
-        while (time.perf_counter() - wait_start_time) < timeout_seconds:
+        while True:
             logging.info('Waiting for app-logs `%s` in container `%s`', log_entry, container_name)
             status, logs = self.get_app_log(container_name)
             if logs is not None:
@@ -107,6 +107,8 @@ class DockerTestCluster:
             elif status == 'exited':
                 return False
             time.sleep(1)
+            if timeout_seconds < (time.perf_counter() - wait_start_time):
+                break
         return False
 
     def wait_for_app_logs_regex(self, container_name, log_entry, timeout_seconds, count=1):

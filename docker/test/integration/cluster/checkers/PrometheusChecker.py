@@ -22,18 +22,22 @@ class PrometheusChecker:
 
     def wait_for_metric_class_on_prometheus(self, metric_class, timeout_seconds):
         start_time = time.perf_counter()
-        while (time.perf_counter() - start_time) < timeout_seconds:
+        while True:
             if self.verify_metric_class(metric_class):
                 return True
             time.sleep(1)
+            if timeout_seconds < (time.perf_counter() - start_time):
+                break
         return False
 
     def wait_for_processor_metric_on_prometheus(self, metric_class, timeout_seconds, processor_name):
         start_time = time.perf_counter()
-        while (time.perf_counter() - start_time) < timeout_seconds:
+        while True:
             if self.verify_processor_metric(metric_class, processor_name):
                 return True
             time.sleep(1)
+            if timeout_seconds < (time.perf_counter() - start_time):
+                break
         return False
 
     def verify_processor_metric(self, metric_class, processor_name):

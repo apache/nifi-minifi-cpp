@@ -25,8 +25,10 @@ class PostgresChecker:
 
     def check_query_results(self, postgresql_container_name, query, number_of_rows, timeout_seconds):
         start_time = time.perf_counter()
-        while (time.perf_counter() - start_time) < timeout_seconds:
+        while True:
             if self.__query_postgres_server(postgresql_container_name, query, number_of_rows):
                 return True
             time.sleep(2)
+            if timeout_seconds < (time.perf_counter() - start_time):
+                break
         return False

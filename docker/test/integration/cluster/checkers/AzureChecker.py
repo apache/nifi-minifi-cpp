@@ -55,16 +55,20 @@ class AzureChecker:
 
     def check_azure_blob_and_snapshot_count(self, blob_and_snapshot_count, timeout_seconds):
         start_time = time.perf_counter()
-        while (time.perf_counter() - start_time) < timeout_seconds:
+        while True:
             if self.__get_blob_and_snapshot_count() == blob_and_snapshot_count:
                 return True
             time.sleep(1)
+            if timeout_seconds < (time.perf_counter() - start_time):
+                break
         return False
 
     def check_azure_blob_storage_is_empty(self, timeout_seconds):
         start_time = time.perf_counter()
-        while (time.perf_counter() - start_time) < timeout_seconds:
+        while True:
             if self.__get_blob_and_snapshot_count() == 0:
                 return True
             time.sleep(1)
+            if timeout_seconds < (time.perf_counter() - start_time):
+                break
         return False
