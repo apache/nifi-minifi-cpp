@@ -248,19 +248,6 @@ void check_parsed_attributes(const core::FlowFile& flow_file, const ValidRFC3164
   CHECK(original_message.msg_ == flow_file.getAttribute("syslog.msg"));
 }
 
-uint16_t schedule_on_random_port(SingleProcessorTestController& controller, const std::shared_ptr<ListenSyslog>& listen_syslog) {
-  REQUIRE(listen_syslog->setProperty(ListenSyslog::Port, "0"));
-  controller.plan->scheduleProcessor(listen_syslog);
-  uint16_t port = listen_syslog->getPort();
-  auto deadline = std::chrono::steady_clock::now() + 200ms;
-  while (port == 0 && deadline > std::chrono::steady_clock::now()) {
-    std::this_thread::sleep_for(20ms);
-    port = listen_syslog->getPort();
-  }
-  REQUIRE(port != 0);
-  return port;
-}
-
 TEST_CASE("ListenSyslog without parsing test", "[ListenSyslog]") {
   const auto listen_syslog = std::make_shared<ListenSyslog>("ListenSyslog");
 
@@ -275,7 +262,7 @@ TEST_CASE("ListenSyslog without parsing test", "[ListenSyslog]") {
     REQUIRE(listen_syslog->setProperty(ListenSyslog::ProtocolProperty, "UDP"));
     protocol = "UDP";
 
-    port = schedule_on_random_port(controller, listen_syslog);
+    port = utils::scheduleProcessorOnRandomPort(controller.plan, listen_syslog);
 
     asio::ip::udp::endpoint endpoint;
     SECTION("sending through IPv4", "[IPv4]") {
@@ -295,7 +282,7 @@ TEST_CASE("ListenSyslog without parsing test", "[ListenSyslog]") {
     REQUIRE(listen_syslog->setProperty(ListenSyslog::ProtocolProperty, "TCP"));
     protocol = "TCP";
 
-    port = schedule_on_random_port(controller, listen_syslog);
+    port = utils::scheduleProcessorOnRandomPort(controller.plan, listen_syslog);
 
     asio::ip::tcp::endpoint endpoint;
     SECTION("sending through IPv4", "[IPv4]") {
@@ -332,7 +319,7 @@ TEST_CASE("ListenSyslog with parsing test", "[ListenSyslog][NetworkListenerProce
     REQUIRE(listen_syslog->setProperty(ListenSyslog::ProtocolProperty, "UDP"));
     protocol = "UDP";
 
-    port = schedule_on_random_port(controller, listen_syslog);
+    port = utils::scheduleProcessorOnRandomPort(controller.plan, listen_syslog);
 
     asio::ip::udp::endpoint endpoint;
     SECTION("sending through IPv4", "[IPv4]") {
@@ -362,7 +349,7 @@ TEST_CASE("ListenSyslog with parsing test", "[ListenSyslog][NetworkListenerProce
     REQUIRE(listen_syslog->setProperty(ListenSyslog::ProtocolProperty, "TCP"));
     protocol = "TCP";
 
-    port = schedule_on_random_port(controller, listen_syslog);
+    port = utils::scheduleProcessorOnRandomPort(controller.plan, listen_syslog);
 
     asio::ip::tcp::endpoint endpoint;
     SECTION("sending through IPv4", "[IPv4]") {
@@ -460,7 +447,7 @@ TEST_CASE("ListenSyslog max queue and max batch size test", "[ListenSyslog][Netw
 
   SECTION("UDP") {
     REQUIRE(listen_syslog->setProperty(ListenSyslog::ProtocolProperty, "UDP"));
-    port = schedule_on_random_port(controller, listen_syslog);
+    port = utils::scheduleProcessorOnRandomPort(controller.plan, listen_syslog);
 
     asio::ip::udp::endpoint endpoint;
     SECTION("sending through IPv4", "[IPv4]") {
@@ -479,7 +466,7 @@ TEST_CASE("ListenSyslog max queue and max batch size test", "[ListenSyslog][Netw
 
   SECTION("TCP") {
     REQUIRE(listen_syslog->setProperty(ListenSyslog::ProtocolProperty, "TCP"));
-    port = schedule_on_random_port(controller, listen_syslog);
+    port = utils::scheduleProcessorOnRandomPort(controller.plan, listen_syslog);
 
     asio::ip::tcp::endpoint endpoint;
     SECTION("sending through IPv4", "[IPv4]") {
@@ -520,7 +507,7 @@ TEST_CASE("Test ListenSyslog via TCP with SSL connection", "[ListenSyslog][Netwo
   REQUIRE(listen_syslog->setProperty(ListenSyslog::ProtocolProperty, "TCP"));
   REQUIRE(listen_syslog->setProperty(ListenSyslog::SSLContextService, "SSLContextService"));
 
-  auto port = schedule_on_random_port(controller, listen_syslog);
+  auto port = utils::scheduleProcessorOnRandomPort(controller.plan, listen_syslog);
 
   asio::ip::tcp::endpoint endpoint;
   SECTION("sending through IPv4", "[IPv4]") {
