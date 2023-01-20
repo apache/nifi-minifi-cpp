@@ -129,7 +129,7 @@ TEST_CASE("NiFi flow json format is correctly parsed") {
   REQUIRE(funnel);
   REQUIRE(funnel->getUUIDStr() == "00000000-0000-0000-0000-000000000010");
 
-  //verify RPG input port
+  // verify RPG input port
   auto* port = dynamic_cast<minifi::RemoteProcessorGroupPort*>(flow->findProcessorByName("AmazingInputPort"));
   REQUIRE(port);
   REQUIRE(port->getUUIDStr() == "00000000-0000-0000-0000-000000000003");
