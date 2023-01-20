@@ -16,7 +16,7 @@
 # under the License.
 #
 
-ARG BASE_ALPINE_IMAGE="alpine:3.13"
+ARG BASE_ALPINE_IMAGE="alpine:3.16"
 
 # Build image
 FROM ${BASE_ALPINE_IMAGE} AS build
@@ -36,6 +36,7 @@ ARG DOCKER_SKIP_TESTS=ON
 RUN apk --no-cache add gcc \
   g++ \
   make \
+  bash \
   bison \
   flex \
   flex-dev \
@@ -55,7 +56,6 @@ RUN apk --no-cache add gcc \
   libusb-dev \
   gpsd-dev \
   python3-dev \
-  boost-dev \
   doxygen \
   ccache \
   lua-dev

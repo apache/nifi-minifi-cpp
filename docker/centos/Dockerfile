@@ -37,7 +37,7 @@ ENV MINIFI_HOME $MINIFI_BASE_DIR/nifi-minifi-cpp-$MINIFI_VERSION
 ENV USER minificpp
 
 # gpsd-devel is in EPEL
-RUN yum -y install epel-release && yum -y install java-1.8.0-openjdk java-1.8.0-openjdk-devel python36-devel sudo git which maven make libarchive boost-devel lua-devel libusbx-devel libpng-devel \
+RUN yum -y install epel-release && yum -y install java-1.8.0-openjdk java-1.8.0-openjdk-devel python36-devel sudo git which maven make libarchive lua-devel libusbx-devel libpng-devel \
     gpsd-devel libpcap-devel ccache ca-certificates
 
 RUN mkdir -p $MINIFI_BASE_DIR
@@ -57,7 +57,7 @@ USER ${USER}
 # Perform the build
 RUN cd $MINIFI_BASE_DIR && \
     cd build && \
-    source /opt/rh/devtoolset-10/enable && \
+    source /opt/rh/devtoolset-11/enable && \
     export PATH=/usr/lib64/ccache${PATH:+:${PATH}} && \
     cmake3 -DSTATIC_BUILD= -DSKIP_TESTS=${DOCKER_SKIP_TESTS} ${MINIFI_OPTIONS} -DAWS_ENABLE_UNITY_BUILD=OFF -DCMAKE_BUILD_TYPE="${CMAKE_BUILD_TYPE}" .. && \
     make -j "$(nproc)" package
