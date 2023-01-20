@@ -614,7 +614,7 @@ void StructuredConfiguration::parseRPGPort(const Node& port_node, core::ProcessG
   parent->addProcessor(std::move(port));
   processor.setScheduledState(core::RUNNING);
 
-  if (auto tasksNode = port_node["max concurrent tasks"]) {
+  if (auto tasksNode = port_node[schema_.MAX_CONCURRENT_TASKS]) {
     std::string rawMaxConcurrentTasks = tasksNode.getIntegerAsString().value();
     int32_t maxConcurrentTasks;
     if (core::Property::StringToInt(rawMaxConcurrentTasks, maxConcurrentTasks)) {

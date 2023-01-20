@@ -160,6 +160,10 @@ class RemoteProcessorGroupPort : public core::Processor {
     }
   }
 
+  std::vector<RPG> getInstances() const {
+    return nifi_instances_;
+  }
+
   void setHTTPProxy(const utils::HTTPProxy &proxy) {
     this->proxy_ = proxy;
   }
