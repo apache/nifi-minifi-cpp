@@ -13,10 +13,9 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 import logging
-import time
 from azure.storage.blob import BlobServiceClient
 from azure.core.exceptions import ResourceExistsError
-from utils import retry_check
+from utils import retry_check, wait_for
 
 
 class AzureChecker:
@@ -54,21 +53,7 @@ class AzureChecker:
         return len(list(container_client.list_blobs(include=['deleted'])))
 
     def check_azure_blob_and_snapshot_count(self, blob_and_snapshot_count, timeout_seconds):
-        start_time = time.perf_counter()
-        while True:
-            if self.__get_blob_and_snapshot_count() == blob_and_snapshot_count:
-                return True
-            time.sleep(1)
-            if timeout_seconds < (time.perf_counter() - start_time):
-                break
-        return False
+        return wait_for(lambda: self.__get_blob_and_snapshot_count() == blob_and_snapshot_count, timeout_seconds)
 
     def check_azure_blob_storage_is_empty(self, timeout_seconds):
-        start_time = time.perf_counter()
-        while True:
-            if self.__get_blob_and_snapshot_count() == 0:
-                return True
-            time.sleep(1)
-            if timeout_seconds < (time.perf_counter() - start_time):
-                break
-        return False
+        return wait_for(lambda: self.__get_blob_and_snapshot_count() == 0, timeout_seconds)

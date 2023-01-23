@@ -12,7 +12,7 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-import time
+from utils import wait_for
 
 
 class PostgresChecker:
@@ -24,11 +24,4 @@ class PostgresChecker:
         return code == 0 and str(number_of_rows) + " rows" in output
 
     def check_query_results(self, postgresql_container_name, query, number_of_rows, timeout_seconds):
-        start_time = time.perf_counter()
-        while True:
-            if self.__query_postgres_server(postgresql_container_name, query, number_of_rows):
-                return True
-            time.sleep(2)
-            if timeout_seconds < (time.perf_counter() - start_time):
-                break
-        return False
+        return wait_for(lambda: self.__query_postgres_server(postgresql_container_name, query, number_of_rows), timeout_seconds)

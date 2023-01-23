@@ -12,8 +12,8 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-import time
 from prometheus_api_client import PrometheusConnect
+from utils import wait_for
 
 
 class PrometheusChecker:
@@ -21,24 +21,10 @@ class PrometheusChecker:
         self.prometheus_client = PrometheusConnect(url="http://localhost:9090", disable_ssl=True)
 
     def wait_for_metric_class_on_prometheus(self, metric_class, timeout_seconds):
-        start_time = time.perf_counter()
-        while True:
-            if self.verify_metric_class(metric_class):
-                return True
-            time.sleep(1)
-            if timeout_seconds < (time.perf_counter() - start_time):
-                break
-        return False
+        return wait_for(lambda: self.verify_metric_class(metric_class), timeout_seconds)
 
     def wait_for_processor_metric_on_prometheus(self, metric_class, timeout_seconds, processor_name):
-        start_time = time.perf_counter()
-        while True:
-            if self.verify_processor_metric(metric_class, processor_name):
-                return True
-            time.sleep(1)
-            if timeout_seconds < (time.perf_counter() - start_time):
-                break
-        return False
+        return wait_for(lambda: self.verify_processor_metric(metric_class, processor_name), timeout_seconds)
 
     def verify_processor_metric(self, metric_class, processor_name):
         if metric_class == "GetFileMetrics":
