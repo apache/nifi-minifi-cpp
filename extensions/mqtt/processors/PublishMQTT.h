@@ -78,31 +78,18 @@ class PublishMQTT : public processors::AbstractMQTTProcessor {
    */
   class InFlightMessageCounter {
    public:
-    void setMqttVersion(const MqttVersions mqtt_version) {
-      mqtt_version_ = mqtt_version;
-    }
+    void setEnabled(bool status) { enabled_ = status; }
 
-    void setQoS(const MqttQoS qos) {
-      qos_ = qos;
-    }
-
-    void setMax(const uint16_t new_limit) {
-      limit_ = new_limit;
-    }
-
-    // increase on sending, wait if limit is reached
+    void setMax(uint16_t new_limit);
     void increase();
-
-    // decrease on success or failure, notify
     void decrease();
 
    private:
+    bool enabled_ = false;
     std::mutex mutex_;
     std::condition_variable cv_;
     uint16_t counter_{0};
     uint16_t limit_{MQTT_MAX_RECEIVE_MAXIMUM};
-    MqttVersions mqtt_version_;
-    MqttQoS qos_;
   };
 
   // MQTT static async callbacks, calling their notify with context being pointer to a packaged_task to notify()

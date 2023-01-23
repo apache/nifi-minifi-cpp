@@ -51,8 +51,7 @@ void PublishMQTT::readProperties(const std::shared_ptr<core::ProcessContext>& co
     logger_->log_debug("PublishMQTT: MessageExpiryInterval [%" PRId64 "] s", int64_t{message_expiry_interval_->count()});
   }
 
-  in_flight_message_counter_.setMqttVersion(mqtt_version_);
-  in_flight_message_counter_.setQoS(qos_);
+  in_flight_message_counter_.setEnabled(mqtt_version_ == MqttVersions::V_5_0 && qos_ != MqttQoS::LEVEL_0);
 }
 
 void PublishMQTT::onTriggerImpl(const std::shared_ptr<core::ProcessContext>& context, const std::shared_ptr<core::ProcessSession>& session) {
@@ -243,18 +242,38 @@ void PublishMQTT::addAttributesAsUserProperties(MQTTAsync_message& message, cons
   }
 }
 
+void PublishMQTT::InFlightMessageCounter::setMax(const uint16_t new_limit) {
+  if (!enabled_) {
+    return;
+  }
+
+  {
+    std::lock_guard lock{mutex_};
+    limit_ = new_limit;
+  }
+
+  cv_.notify_one();
+}
+
+// increase on sending, wait if limit is reached
 void PublishMQTT::InFlightMessageCounter::increase() {
-  if (mqtt_version_ != MqttVersions::V_5_0 || qos_ == MqttQoS::LEVEL_0) {
+  using namespace std::literals::chrono_literals;
+
+  if (!enabled_) {
     return;
   }
 
   std::unique_lock lock{mutex_};
-  cv_.wait(lock, [this] {return counter_ < limit_;});
+  const bool success = cv_.wait_for(lock, 5s, [this] { return counter_ < limit_; });
+  if (!success) {
+    throw minifi::Exception(ExceptionType::PROCESSOR_EXCEPTION, "Timed out while waiting for a free upload slot on the MQTT server");
+  }
   ++counter_;
 }
 
+// decrease on success or failure, notify
 void PublishMQTT::InFlightMessageCounter::decrease() {
-  if (mqtt_version_ != MqttVersions::V_5_0 || qos_ == MqttQoS::LEVEL_0) {
+  if (!enabled_) {
     return;
   }
 
