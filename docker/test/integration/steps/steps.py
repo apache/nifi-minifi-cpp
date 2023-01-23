@@ -999,12 +999,12 @@ def step_impl(context):
 # MiNiFi memory usage
 @then(u'the peak memory usage of the agent is more than {size} in less than {duration}')
 def step_impl(context, size: str, duration: str) -> None:
-    context.test.check_minimum_peak_memory_usage(humanfriendly.parse_size(size), humanfriendly.parse_timespan(duration))
+    context.test.check_if_peak_memory_usage_exceeded(humanfriendly.parse_size(size), humanfriendly.parse_timespan(duration))
 
 
 @then(u'the memory usage of the agent is less than {size} in less than {duration}')
 def step_impl(context, size: str, duration: str) -> None:
-    context.test.check_maximum_memory_usage(humanfriendly.parse_size(size), humanfriendly.parse_timespan(duration))
+    context.test.check_if_memory_usage_is_below(humanfriendly.parse_size(size), humanfriendly.parse_timespan(duration))
 
 
 @then(u'the memory usage of the agent decreases to {peak_usage_percent}% peak usage in less than {duration}')
