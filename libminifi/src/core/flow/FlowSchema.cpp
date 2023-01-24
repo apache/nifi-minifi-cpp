@@ -103,7 +103,8 @@ FlowSchema FlowSchema::getNiFiFlowJson() {
       .DESTINATION_ID = {"destination/id"},
       .DESTINATION_NAME = {"destination/name"},
       .FLOWFILE_EXPIRATION = {"flowFileExpiration"},
-      .DROP_EMPTY = {},
+      // contrary to nifi we support dropEmpty in flow json as well
+      .DROP_EMPTY = {"dropEmpty"},
       .SOURCE_RELATIONSHIP = {},
       .SOURCE_RELATIONSHIP_LIST = {"selectedRelationships"},
 
