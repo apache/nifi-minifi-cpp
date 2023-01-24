@@ -85,8 +85,8 @@ class DockerTestCluster:
     def enable_sql_in_minifi(self):
         self.container_store.enable_sql_in_minifi()
 
-    def set_json_in_minifi(self):
-        self.container_store.set_json_in_minifi()
+    def set_yaml_in_minifi(self):
+        self.container_store.set_yaml_in_minifi()
 
     def get_app_log(self, container_name):
         log_source = self.container_store.log_source(container_name)
