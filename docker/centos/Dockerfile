@@ -37,7 +37,7 @@ ENV MINIFI_HOME $MINIFI_BASE_DIR/nifi-minifi-cpp-$MINIFI_VERSION
 ENV USER minificpp
 
 # gpsd-devel is in EPEL
-RUN yum -y install epel-release && yum -y install java-1.8.0-openjdk java-1.8.0-openjdk-devel python36-devel sudo git which maven make libarchive lua-devel libusbx-devel libpng-devel \
+RUN yum -y install epel-release && yum -y install java-1.8.0-openjdk java-1.8.0-openjdk-devel python36-devel sudo git which maven make libarchive boost-devel lua-devel libusbx-devel libpng-devel \
     gpsd-devel libpcap-devel ccache ca-certificates
 
 RUN mkdir -p $MINIFI_BASE_DIR

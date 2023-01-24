@@ -56,6 +56,7 @@ RUN apk --no-cache add gcc \
   libusb-dev \
   gpsd-dev \
   python3-dev \
+  boost-dev \
   doxygen \
   ccache \
   lua-dev
