@@ -27,6 +27,12 @@
 #include "core/ProcessSession.h"
 #include "core/Resource.h"
 
+namespace {
+class RetriableError : public std::runtime_error {
+  using std::runtime_error::runtime_error;
+};
+}  // namespace
+
 namespace org::apache::nifi::minifi::processors {
 
 using SendFinishedTask = std::packaged_task<bool(bool, std::optional<int>, std::optional<MQTTReasonCodes>)>;
@@ -251,7 +257,6 @@ void PublishMQTT::InFlightMessageCounter::setMax(const uint16_t new_limit) {
     std::lock_guard lock{mutex_};
     limit_ = new_limit;
   }
-
   cv_.notify_one();
 }
 
@@ -266,7 +271,7 @@ void PublishMQTT::InFlightMessageCounter::increase() {
   std::unique_lock lock{mutex_};
   const bool success = cv_.wait_for(lock, 5s, [this] { return counter_ < limit_; });
   if (!success) {
-    throw minifi::Exception(ExceptionType::PROCESSOR_EXCEPTION, "Timed out while waiting for a free upload slot on the MQTT server");
+    throw RetriableError{"Timed out while waiting for a free upload slot on the MQTT server"};
   }
   ++counter_;
 }
