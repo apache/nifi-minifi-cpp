@@ -88,8 +88,8 @@ class SchedulingAgent {
   }
 
   nonstd::expected<void, std::exception_ptr> onTrigger(core::Processor* processor,
-                                                       const std::shared_ptr<core::ProcessContext>& process_context,
-                                                       const std::shared_ptr<core::ProcessSessionFactory>& session_factory);
+      const std::shared_ptr<core::ProcessContext>& process_context,
+      const std::shared_ptr<core::ProcessSessionFactory>& session_factory);
 
   void start() {
     running_ = true;
