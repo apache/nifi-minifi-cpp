@@ -1036,4 +1036,4 @@ def step_impl(context, peak_usage_percent: str, duration: str) -> None:
 
 @given(u'a MiNiFi CPP server with yaml config')
 def step_impl(context):
-    context.test.acquire_container("minifi-cpp-flow", "minifi-cpp").set_yaml_serializer()
+    context.test.set_json_in_minifi()

@@ -315,3 +315,6 @@ class MiNiFi_integration_test:
 
     def enable_sql_in_minifi(self):
         self.cluster.enable_sql_in_minifi()
+
+    def set_json_in_minifi(self):
+        self.cluster.set_json_in_minifi()

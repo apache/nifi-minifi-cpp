@@ -160,6 +160,9 @@ class ContainerStore:
     def enable_sql_in_minifi(self):
         self.minifi_options.enable_sql = True
 
+    def set_json_in_minifi(self):
+        self.minifi_options.config_format = "json"
+
     def get_startup_finished_log_entry(self, container_name):
         return self.containers[container_name].get_startup_finished_log_entry()
 
