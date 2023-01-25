@@ -22,6 +22,7 @@
 #include "TestBase.h"
 #include "Catch.h"
 #include "core/Core.h"
+#include "utils/OsUtils.h"
 #include "wel/MetadataWalker.h"
 #include "wel/XMLString.h"
 #include "pugixml.hpp"
@@ -36,7 +37,8 @@ namespace {
 
 std::string updateXmlMetadata(const std::string &xml, EVT_HANDLE metadata_ptr, EVT_HANDLE event_ptr, bool update_xml, bool resolve, utils::Regex const* regex = nullptr) {
   WindowsEventLogMetadataImpl metadata{metadata_ptr, event_ptr};
-  MetadataWalker walker(metadata, "", update_xml, resolve, regex);
+  auto user_id_to_username = [](const std::string& user_id) { return utils::OsUtils::userIdToUsername(user_id); };
+  MetadataWalker walker(metadata, "", update_xml, resolve, regex, user_id_to_username);
 
   pugi::xml_document doc;
   pugi::xml_parse_result result = doc.load_string(xml.c_str());
@@ -118,24 +120,13 @@ TEST_CASE("MetadataWalker will leave a Sid unchanged if it doesn't correspond to
 TEST_CASE("MetadataWalker can replace multiple Sids", "[updateXmlMetadata]") {
   std::string xml = readFile("resources/multiplesids.xml");
 
-  std::string programmaticallyResolved;
-
   pugi::xml_document doc;
   xml = updateXmlMetadata(xml, nullptr, nullptr, false, true);
   pugi::xml_parse_result result = doc.load_string(xml.c_str());
+  REQUIRE(result);
 
-  for (const auto &node : doc.child("Event").child("EventData").children()) {
-    auto name = node.attribute("Name").as_string();
-    if (utils::StringUtils::equalsIgnoreCase("GroupMembership", name)) {
-      programmaticallyResolved = node.text().get();
-      break;
-    }
-  }
-
-  std::string expected = "Nobody Everyone Null Authority";
-
-  // we are only testing mulitiple sid resolutions, not the resolution of other items.
-  REQUIRE(expected == programmaticallyResolved);
+  // we are only testing multiple sid resolutions, not the resolution of other items.
+  CHECK(std::string_view("Nobody Everyone Null Authority") == doc.select_node("Event/EventData/Data[@Name='GroupMembership']").node().text().get());
 }
 
 namespace {
@@ -150,10 +141,11 @@ void extractMappingsTestHelper(const std::string &file_name,
   REQUIRE(!input_xml.empty());
   pugi::xml_document doc;
   pugi::xml_parse_result result = doc.load_string(input_xml.c_str());
-  CHECK(result);
+  REQUIRE(result);
 
   auto regex = utils::Regex(".*Sid");
-  MetadataWalker walker(FakeWindowsEventLogMetadata{}, METADATA_WALKER_TESTS_LOG_NAME, update_xml, resolve, &regex);
+  auto user_id_to_username = [](const std::string& user_id) { return utils::OsUtils::userIdToUsername(user_id); };
+  MetadataWalker walker(FakeWindowsEventLogMetadata{}, METADATA_WALKER_TESTS_LOG_NAME, update_xml, resolve, &regex, user_id_to_username);
   doc.traverse(walker);
 
   CHECK(walker.getIdentifiers() == expected_identifiers);

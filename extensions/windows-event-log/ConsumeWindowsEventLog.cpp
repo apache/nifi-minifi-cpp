@@ -33,6 +33,7 @@
 #include <regex>
 #include <cinttypes>
 
+#include "wel/LookupCacher.h"
 #include "wel/MetadataWalker.h"
 #include "wel/XMLString.h"
 #include "wel/UnicodeConversion.h"
@@ -488,7 +489,7 @@ void ConsumeWindowsEventLog::substituteXMLPercentageItems(pugi::xml_document& do
       for (size_t numberPos = 0; std::string::npos != (numberPos = nodeText.find(percentages, numberPos));) {
         numberPos += percentages.size();
 
-        uint64_t number{};
+        DWORD number{};
         try {
           // Assumption - first character is not '0', otherwise not all digits will be replaced by 'value'.
           number = std::stoul(&nodeText[numberPos]);
@@ -593,7 +594,8 @@ nonstd::expected<EventRender, std::string> ConsumeWindowsEventLog::createEventRe
   // this is a well known path.
   std::string provider_name = doc.child("Event").child("System").child("Provider").attribute("Name").value();
   wel::WindowsEventLogMetadataImpl metadata{getEventLogHandler(provider_name).getMetadata(), hEvent};
-  wel::MetadataWalker walker{metadata, channel_, !resolve_as_attributes_, apply_identifier_function_, regex_ ? &*regex_ : nullptr};
+  static wel::LookupCacher user_id_to_username_{[](const std::string& user_id) { return utils::OsUtils::userIdToUsername(user_id); }};
+  wel::MetadataWalker walker{metadata, channel_, !resolve_as_attributes_, apply_identifier_function_, regex_ ? &*regex_ : nullptr, std::ref(user_id_to_username_)};
 
   // resolve the event metadata
   doc.traverse(walker);

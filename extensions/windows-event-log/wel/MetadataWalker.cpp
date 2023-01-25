@@ -16,7 +16,6 @@
  * limitations under the License.
  */
 
-#include <windows.h>
 #include <strsafe.h>
 
 #include <map>
@@ -39,7 +38,7 @@ bool MetadataWalker::for_each(pugi::xml_node &node) {
     for (pugi::xml_attribute attr : node.attributes())  {
       const auto idUpdate = [&](const std::string &input) {
         if (resolve_) {
-          auto resolved = utils::OsUtils::userIdToUsername(input);
+          auto resolved = user_id_to_username_fn_(input);
           replaced_identifiers_[input] = resolved;
           return resolved;
         }
@@ -61,7 +60,7 @@ bool MetadataWalker::for_each(pugi::xml_node &node) {
       std::string nodeText = node.text().get();
       std::vector<std::string> ids = getIdentifiers(nodeText);
       for (const auto &id : ids) {
-        auto  resolved = utils::OsUtils::userIdToUsername(id);
+        auto  resolved = user_id_to_username_fn_(id);
         std::string replacement = "%{" + id + "}";
         replaced_identifiers_[id] = resolved;
         replaced_identifiers_[replacement] = resolved;
