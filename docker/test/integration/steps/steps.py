@@ -636,7 +636,7 @@ def step_impl(context, container_name):
 
 @then("{duration} later")
 def step_impl(context, duration):
-    time.sleep(timeparse(duration))
+    time.sleep(humanfriendly.parse_timespan(duration))
 
 
 @when("content \"{content}\" is added to file \"{file_name}\" present in directory \"{path}\" {seconds:d} seconds later")
