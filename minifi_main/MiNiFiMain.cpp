@@ -133,9 +133,9 @@ int main(int argc, char **argv) {
 #ifdef WIN32
   RunAsServiceIfNeeded();
 
-  bool isStartedByService = false;
-  HANDLE terminationEventHandler = GetTerminationEventHandle(&isStartedByService);
-  if (terminationEventHandler == nullptr) {
+  auto [isStartedByService, terminationEventHandler] = GetTerminationEventHandle();
+  if (isStartedByService && !terminationEventHandler) {
+    std::cerr << "Fatal error: started by service, but could not create the termination event handler\n";
     return -1;
   }
 
@@ -150,9 +150,10 @@ int main(int argc, char **argv) {
 #ifdef WIN32
   if (isStartedByService) {
     if (!CreateServiceTerminationThread(logger, terminationEventHandler)) {
+      logger->log_error("Fatal error: started by service, but could not create the service termination thread");
       return -1;
     }
-  } else {
+  } else if (terminationEventHandler) {
     CloseHandle(terminationEventHandler);
   }
 #endif
@@ -258,7 +259,11 @@ int main(int argc, char **argv) {
 
     minifi::core::extension::ExtensionManager::get().initialize(configure);
 
-    if (argc >= 3 && std::string("docs") == argv[1]) {
+    if (argc >= 2 && std::string("docs") == argv[1]) {
+      if (argc == 2) {
+        std::cerr << "Usage: <minifiexe> docs <directory where to write individual doc files> <file where to write PROCESSORS.md>\n";
+        exit(1);
+      }
       if (utils::file::create_dir(argv[2]) != 0) {
         std::cerr << "Working directory doesn't exist and cannot be created: " << argv[2] << std::endl;
         exit(1);

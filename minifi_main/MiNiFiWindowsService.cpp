@@ -246,18 +246,10 @@ void RunAsServiceIfNeeded() {
   ExitProcess(0);
 }
 
-HANDLE GetTerminationEventHandle(bool* isStartedByService) {
-  *isStartedByService = true;
-  HANDLE hEvent = CreateEvent(0, TRUE, FALSE, SERVICE_TERMINATION_EVENT_NAME);
-  if (!hEvent) {
-    return nullptr;
-  }
+std::tuple<bool, HANDLE> GetTerminationEventHandle() {
+  HANDLE hEvent = CreateEvent(nullptr, TRUE, FALSE, SERVICE_TERMINATION_EVENT_NAME);
 
-  if (GetLastError() != ERROR_ALREADY_EXISTS) {
-    *isStartedByService = false;
-  }
-
-  return hEvent;
+  return std::make_tuple(GetLastError() == ERROR_ALREADY_EXISTS, hEvent);
 }
 
 bool CreateServiceTerminationThread(std::shared_ptr<minifi::core::logging::Logger> logger, HANDLE terminationEventHandle) {
