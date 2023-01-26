@@ -14,38 +14,38 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#include "Flow.h"
+#include "RootProcessGroupWrapper.h"
 
 namespace org::apache::nifi::minifi {
 
-void Flow::updatePropertyValue(const std::string& processor_name, const std::string& property_name, const std::string& property_value) {
+void RootProcessGroupWrapper::updatePropertyValue(const std::string& processor_name, const std::string& property_name, const std::string& property_value) {
   if (root_ != nullptr) {
     root_->updatePropertyValue(processor_name, property_name, property_value);
   }
 }
 
-std::string Flow::getName() const {
-  if (root_ != nullptr)
+std::string RootProcessGroupWrapper::getName() const {
+  if (root_ != nullptr) {
     return root_->getName();
-  else
-    return "";
+  }
+  return "";
 }
 
-utils::Identifier Flow::getComponentUUID() const {
+utils::Identifier RootProcessGroupWrapper::getComponentUUID() const {
   if (!root_) {
     return {};
   }
   return root_->getUUID();
 }
 
-std::string Flow::getVersion() {
-  if (root_ != nullptr)
+std::string RootProcessGroupWrapper::getVersion() const {
+  if (root_ != nullptr) {
     return std::to_string(root_->getVersion());
-  else
-    return "0";
+  }
+  return "0";
 }
 
-void Flow::setNewRoot(std::unique_ptr<core::ProcessGroup> new_root) {
+void RootProcessGroupWrapper::setNewRoot(std::unique_ptr<core::ProcessGroup> new_root) {
   if (!new_root) {
     logger_->log_error("New flow to be set was empty!");
     return;
@@ -57,13 +57,17 @@ void Flow::setNewRoot(std::unique_ptr<core::ProcessGroup> new_root) {
   if (metrics_publisher_store_) { metrics_publisher_store_->loadMetricNodes(root_.get()); }
 }
 
-void Flow::restoreBackup() {
+void RootProcessGroupWrapper::restoreBackup() {
   if (metrics_publisher_store_) { metrics_publisher_store_->clearMetricNodes(); }
   root_ = std::move(backup_root_);
   if (metrics_publisher_store_) { metrics_publisher_store_->loadMetricNodes(root_.get()); }
 }
 
-void Flow::stopProcessing(TimerDrivenSchedulingAgent& timer_scheduler,
+void RootProcessGroupWrapper::clearBackup() {
+  backup_root_ = nullptr;
+}
+
+void RootProcessGroupWrapper::stopProcessing(TimerDrivenSchedulingAgent& timer_scheduler,
                           EventDrivenSchedulingAgent& event_scheduler,
                           CronDrivenSchedulingAgent& cron_scheduler) {
   if (!root_) {
@@ -85,25 +89,25 @@ void Flow::stopProcessing(TimerDrivenSchedulingAgent& timer_scheduler,
   root_->stopProcessing(timer_scheduler, event_scheduler, cron_scheduler);
 }
 
-void Flow::drainConnections() {
+void RootProcessGroupWrapper::drainConnections() {
   if (root_) {
     root_->drainConnections();
   }
 }
 
-void Flow::getConnections(std::map<std::string, core::Connectable*>& connectionMap) {
+void RootProcessGroupWrapper::getConnections(std::map<std::string, core::Connectable*>& connectionMap) {
   if (root_) {
     root_->getConnections(connectionMap);
   }
 }
 
-void Flow::getFlowFileContainers(std::map<std::string, core::Connectable*>& containers) const {
+void RootProcessGroupWrapper::getFlowFileContainers(std::map<std::string, core::Connectable*>& containers) const {
   if (root_) {
     root_->getFlowFileContainers(containers);
   }
 }
 
-bool Flow::startProcessing(TimerDrivenSchedulingAgent& timer_scheduler,
+bool RootProcessGroupWrapper::startProcessing(TimerDrivenSchedulingAgent& timer_scheduler,
                            EventDrivenSchedulingAgent& event_scheduler,
                            CronDrivenSchedulingAgent& cron_scheduler) {
   if (!root_) {
@@ -114,7 +118,7 @@ bool Flow::startProcessing(TimerDrivenSchedulingAgent& timer_scheduler,
   return true;
 }
 
-void Flow::clearConnection(const std::string &connection) {
+void RootProcessGroupWrapper::clearConnection(const std::string &connection) {
   if (root_ == nullptr) {
     return;
   }
@@ -128,7 +132,7 @@ void Flow::clearConnection(const std::string &connection) {
   }
 }
 
-std::optional<std::vector<state::StateController*>> Flow::getAllProcessorControllers(
+std::optional<std::vector<state::StateController*>> RootProcessGroupWrapper::getAllProcessorControllers(
     const std::function<gsl::not_null<std::unique_ptr<state::ProcessorController>>(core::Processor&)>& controllerFactory) {
   if (!root_) {
     return std::nullopt;
@@ -149,7 +153,7 @@ std::optional<std::vector<state::StateController*>> Flow::getAllProcessorControl
   return controllerVec;
 }
 
-state::StateController* Flow::getProcessorController(const std::string& id_or_name,
+state::StateController* RootProcessGroupWrapper::getProcessorController(const std::string& id_or_name,
     const std::function<gsl::not_null<std::unique_ptr<state::ProcessorController>>(core::Processor&)>& controllerFactory) {
   if (!root_) {
     return nullptr;
@@ -170,7 +174,7 @@ state::StateController* Flow::getProcessorController(const std::string& id_or_na
     });
 }
 
-std::optional<std::chrono::milliseconds> Flow::loadShutdownTimeoutFromConfiguration() {
+std::optional<std::chrono::milliseconds> RootProcessGroupWrapper::loadShutdownTimeoutFromConfiguration() {
   std::string shutdown_timeout_str;
   if (configuration_->get(minifi::Configure::nifi_flowcontroller_drain_timeout, shutdown_timeout_str)) {
     const auto time_from_config = core::TimePeriodValue::fromString(shutdown_timeout_str);

@@ -46,7 +46,6 @@ class C2MetricsPublisher : public core::CoreComponent, public state::response::N
 
   MINIFIAPI static constexpr const char* Description = "Class that provides C2 metrics to the C2Agent";
 
-  void initialize(const std::shared_ptr<Configure>& configuration, const std::shared_ptr<state::response::ResponseNodeLoader>& response_node_loader) override;
   void startC2(core::controller::ControllerServiceProvider *controller, state::Pausable *pause_handler, state::StateMonitor* update_sink);
   std::optional<state::response::NodeReporter::ReportedNode> getMetricsNode(const std::string& metrics_class) const override;
   std::vector<state::response::NodeReporter::ReportedNode> getHeartbeatNodes(bool include_manifest) const override;
@@ -67,7 +66,6 @@ class C2MetricsPublisher : public core::CoreComponent, public state::response::N
   std::shared_ptr<state::response::ResponseNode> loadC2ResponseConfiguration(const std::string &prefix, std::shared_ptr<state::response::ResponseNode> prev_node);
   void loadNodeClasses(const std::string& class_definitions, const std::shared_ptr<state::response::ResponseNode>& new_node);
 
-  std::shared_ptr<Configure> configuration_;
   mutable std::mutex metrics_mutex_;
 
   // Name and response node value of the root response nodes defined in nifi.c2.root.classes and nifi.c2.root.class.definitions
@@ -75,7 +73,6 @@ class C2MetricsPublisher : public core::CoreComponent, public state::response::N
   // multiple times in the flow
   std::unordered_map<std::string, std::vector<std::shared_ptr<state::response::ResponseNode>>> root_response_nodes_;
 
-  std::shared_ptr<state::response::ResponseNodeLoader> response_node_loader_;
   std::shared_ptr<core::logging::Logger> logger_ = core::logging::LoggerFactory<C2MetricsPublisher>::getLogger();
 };
 

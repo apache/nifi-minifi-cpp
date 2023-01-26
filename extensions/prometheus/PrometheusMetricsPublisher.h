@@ -49,8 +49,6 @@ class PrometheusMetricsPublisher : public core::CoreComponent, public state::Met
   std::mutex registered_metrics_mutex_;
   std::vector<std::shared_ptr<PublishedMetricGaugeCollection>> gauge_collections_;
   std::unique_ptr<MetricsExposer> exposer_;
-  std::shared_ptr<Configure> configuration_;
-  std::shared_ptr<state::response::ResponseNodeLoader> response_node_loader_;
   std::string agent_identifier_;
   std::shared_ptr<core::logging::Logger> logger_{core::logging::LoggerFactory<PrometheusMetricsPublisher>::getLogger()};
 };

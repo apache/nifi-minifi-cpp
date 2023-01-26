@@ -28,6 +28,10 @@ namespace org::apache::nifi::minifi::state {
 
 class ConnectionStore {
  public:
+  const std::unordered_map<utils::Identifier, minifi::Connection*>& getConnections() {
+    return connections_;
+  }
+
   void updateConnection(minifi::Connection* connection) {
     if (nullptr != connection) {
       connections_[connection->getUUID()] = connection;
@@ -50,8 +54,6 @@ class ConnectionStore {
 
     return metrics;
   }
-
-  virtual ~ConnectionStore() = default;
 
  protected:
   std::unordered_map<utils::Identifier, minifi::Connection*> connections_;

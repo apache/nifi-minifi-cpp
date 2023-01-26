@@ -17,7 +17,7 @@
  */
 #pragma once
 
-#include <map>
+#include <unordered_map>
 #include <string>
 #include <utility>
 #include <memory>
@@ -49,7 +49,7 @@ class MetricsPublisherStore {
 
   std::shared_ptr<Configure> configuration_;
   gsl::not_null<std::shared_ptr<response::ResponseNodeLoader>> response_node_loader_;
-  std::map<std::string, gsl::not_null<std::shared_ptr<state::MetricsPublisher>>> metrics_publishers_;
+  std::unordered_map<std::string, gsl::not_null<std::shared_ptr<state::MetricsPublisher>>> metrics_publishers_;
 };
 
 }  // namespace org::apache::nifi::minifi::state

@@ -42,12 +42,6 @@ namespace org::apache::nifi::minifi::c2 {
 C2MetricsPublisher::C2MetricsPublisher(const std::string &name, const utils::Identifier &uuid)
   : core::CoreComponent(name, uuid) {}
 
-void C2MetricsPublisher::initialize(const std::shared_ptr<Configure>& configuration, const std::shared_ptr<state::response::ResponseNodeLoader>& response_node_loader) {
-  gsl_Expects(configuration);
-  configuration_ = configuration;
-  response_node_loader_ = response_node_loader;
-}
-
 void C2MetricsPublisher::loadNodeClasses(const std::string& class_definitions, const std::shared_ptr<state::response::ResponseNode>& new_node) {
   gsl_Expects(response_node_loader_);
   auto classes = utils::StringUtils::split(class_definitions, ",");
@@ -63,6 +57,7 @@ void C2MetricsPublisher::loadNodeClasses(const std::string& class_definitions, c
 }
 
 void C2MetricsPublisher::loadC2ResponseConfiguration(const std::string &prefix) {
+  gsl_Expects(configuration_);
   std::string class_definitions;
   if (!configuration_->get(prefix, class_definitions)) {
     return;
@@ -100,6 +95,7 @@ void C2MetricsPublisher::loadC2ResponseConfiguration(const std::string &prefix) 
 
 std::shared_ptr<state::response::ResponseNode> C2MetricsPublisher::loadC2ResponseConfiguration(const std::string &prefix,
     std::shared_ptr<state::response::ResponseNode> prev_node) {
+  gsl_Expects(configuration_);
   std::string class_definitions;
   if (!configuration_->get(prefix, class_definitions)) {
     return prev_node;
@@ -173,6 +169,7 @@ std::optional<state::response::NodeReporter::ReportedNode> C2MetricsPublisher::g
 }
 
 std::vector<state::response::NodeReporter::ReportedNode> C2MetricsPublisher::getHeartbeatNodes(bool include_manifest) const {
+  gsl_Expects(configuration_);
   std::string fullHb{"true"};
   configuration_->get(minifi::Configuration::nifi_c2_full_heartbeat, fullHb);
   const bool include = include_manifest || fullHb == "true";
@@ -199,7 +196,7 @@ std::vector<state::response::NodeReporter::ReportedNode> C2MetricsPublisher::get
 }
 
 void C2MetricsPublisher::loadMetricNodes() {
-  gsl_Expects(response_node_loader_);
+  gsl_Expects(response_node_loader_ && configuration_);
   if (!root_response_nodes_.empty()) {
     return;
   }

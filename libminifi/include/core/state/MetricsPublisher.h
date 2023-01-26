@@ -26,10 +26,18 @@ namespace org::apache::nifi::minifi::state {
 
 class MetricsPublisher {
  public:
-  virtual void initialize(const std::shared_ptr<Configure>&, const std::shared_ptr<state::response::ResponseNodeLoader>&) = 0;
+  virtual void initialize(const std::shared_ptr<Configure>& configuration, const std::shared_ptr<state::response::ResponseNodeLoader>& response_node_loader) {
+    gsl_Expects(configuration && response_node_loader);
+    configuration_ = configuration;
+    response_node_loader_ = response_node_loader;
+  }
   virtual void clearMetricNodes() = 0;
   virtual void loadMetricNodes() = 0;
   virtual ~MetricsPublisher() = default;
+
+ protected:
+  std::shared_ptr<Configure> configuration_;
+  std::shared_ptr<state::response::ResponseNodeLoader> response_node_loader_;
 };
 
 }  // namespace org::apache::nifi::minifi::state

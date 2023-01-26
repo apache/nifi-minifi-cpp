@@ -17,7 +17,7 @@
 #pragma once
 
 #include <memory>
-#include <map>
+#include <unordered_map>
 #include <string>
 #include <functional>
 #include <optional>
@@ -34,14 +34,14 @@
 
 namespace org::apache::nifi::minifi {
 
-class Flow {
+class RootProcessGroupWrapper {
  public:
-  explicit Flow(std::shared_ptr<Configure> configuration, state::MetricsPublisherStore* metrics_publisher_store = nullptr)
+  explicit RootProcessGroupWrapper(std::shared_ptr<Configure> configuration, state::MetricsPublisherStore* metrics_publisher_store = nullptr)
     : configuration_(std::move(configuration)),
       metrics_publisher_store_(metrics_publisher_store) {
   }
 
-  ~Flow() {
+  ~RootProcessGroupWrapper() {
     if (metrics_publisher_store_) {
       metrics_publisher_store_->clearMetricNodes();
     }
@@ -50,9 +50,10 @@ class Flow {
   void updatePropertyValue(const std::string& processor_name, const std::string& property_name, const std::string& property_value);
   std::string getName() const;
   utils::Identifier getComponentUUID() const;
-  std::string getVersion();
+  std::string getVersion() const;
   void setNewRoot(std::unique_ptr<core::ProcessGroup> new_root);
   void restoreBackup();
+  void clearBackup();
   void stopProcessing(TimerDrivenSchedulingAgent& timer_scheduler,
                       EventDrivenSchedulingAgent& event_scheduler,
                       CronDrivenSchedulingAgent& cron_scheduler);
@@ -81,9 +82,9 @@ class Flow {
   std::unique_ptr<core::ProcessGroup> root_;
   std::unique_ptr<core::ProcessGroup> backup_root_;
   state::MetricsPublisherStore* metrics_publisher_store_{};
-  std::map<utils::Identifier, std::unique_ptr<state::ProcessorController>> processor_to_controller_;
+  std::unordered_map<utils::Identifier, std::unique_ptr<state::ProcessorController>> processor_to_controller_;
   std::chrono::milliseconds shutdown_check_interval_{1000};
-  std::shared_ptr<core::logging::Logger> logger_ = core::logging::LoggerFactory<Flow>::getLogger();
+  std::shared_ptr<core::logging::Logger> logger_ = core::logging::LoggerFactory<RootProcessGroupWrapper>::getLogger();
 };
 
 }  // namespace org::apache::nifi::minifi

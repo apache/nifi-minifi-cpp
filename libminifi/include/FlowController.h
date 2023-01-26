@@ -59,7 +59,7 @@
 #include "core/state/nodes/ResponseNodeLoader.h"
 #include "core/state/MetricsPublisher.h"
 #include "core/state/MetricsPublisherStore.h"
-#include "Flow.h"
+#include "RootProcessGroupWrapper.h"
 
 namespace org::apache::nifi::minifi {
 
@@ -83,7 +83,7 @@ class FlowController : public core::controller::ForwardingControllerServiceProvi
   virtual void load(bool reload = false);
 
   void load(std::unique_ptr<core::ProcessGroup> root, bool reload = false) {
-    current_flow_.setNewRoot(std::move(root));
+    root_wrapper_.setNewRoot(std::move(root));
     load(reload);
   }
 
@@ -116,7 +116,7 @@ class FlowController : public core::controller::ForwardingControllerServiceProvi
   // Asynchronous function trigger unloading and wait for a period of time
   virtual void waitUnload(uint64_t timeToWaitMs);
   void updatePropertyValue(std::string processorName, std::string propertyName, std::string propertyValue) {
-    current_flow_.updatePropertyValue(std::move(processorName), std::move(propertyName), std::move(propertyValue));
+    root_wrapper_.updatePropertyValue(std::move(processorName), std::move(propertyName), std::move(propertyValue));
   }
 
   void setSerialNumber(std::string number) {
@@ -134,7 +134,7 @@ class FlowController : public core::controller::ForwardingControllerServiceProvi
   bool applyConfiguration(const std::string &source, const std::string &configurePayload, const std::optional<std::string>& flow_id = std::nullopt);
 
   std::string getName() const override {
-    return current_flow_.getName();
+    return root_wrapper_.getName();
   }
 
   std::string getComponentName() const override {
@@ -142,11 +142,11 @@ class FlowController : public core::controller::ForwardingControllerServiceProvi
   }
 
   utils::Identifier getComponentUUID() const override {
-    return current_flow_.getComponentUUID();
+    return root_wrapper_.getComponentUUID();
   }
 
   virtual std::string getVersion() {
-    return current_flow_.getVersion();
+    return root_wrapper_.getVersion();
   }
 
   uint64_t getUptime() override;
@@ -194,7 +194,7 @@ class FlowController : public core::controller::ForwardingControllerServiceProvi
   std::shared_ptr<core::ContentRepository> content_repo_;
   std::shared_ptr<core::FlowConfiguration> flow_configuration_;
   std::unique_ptr<state::MetricsPublisherStore> metrics_publisher_store_;
-  Flow current_flow_;
+  RootProcessGroupWrapper root_wrapper_;
   std::unique_ptr<c2::C2Agent> c2_agent_{};
 
   std::vector<state::StateController*> getAllComponents();
@@ -210,7 +210,6 @@ class FlowController : public core::controller::ForwardingControllerServiceProvi
 
   // Thread pool for schedulers
   utils::ThreadPool<utils::TaskRescheduleInfo> thread_pool_;
-  std::map<utils::Identifier, std::unique_ptr<state::ProcessorController>> processor_to_controller_;
 };
 
 }  // namespace org::apache::nifi::minifi

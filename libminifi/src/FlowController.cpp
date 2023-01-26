@@ -61,7 +61,7 @@ FlowController::FlowController(std::shared_ptr<core::Repository> provenance_repo
       content_repo_(std::move(content_repo)),
       flow_configuration_(std::move(flow_configuration)),
       metrics_publisher_store_(std::move(metrics_publisher_store)),
-      current_flow_(configuration_, metrics_publisher_store_.get()) {
+      root_wrapper_(configuration_, metrics_publisher_store_.get()) {
   if (provenance_repo_ == nullptr)
     throw std::runtime_error("Provenance Repo should not be null");
   if (flow_file_repo_ == nullptr)
@@ -126,7 +126,7 @@ bool FlowController::applyConfiguration(const std::string &source, const std::st
     std::lock_guard<std::recursive_mutex> flow_lock(mutex_);
     stop();
 
-    current_flow_.setNewRoot(std::move(newRoot));
+    root_wrapper_.setNewRoot(std::move(newRoot));
     initialized_ = false;
     try {
       load(true);
@@ -138,9 +138,11 @@ bool FlowController::applyConfiguration(const std::string &source, const std::st
     }
     if (!started) {
       logger_->log_error("Failed to start new flow, restarting previous flow");
-      current_flow_.restoreBackup();
+      root_wrapper_.restoreBackup();
       load(true);
       start();
+    } else {
+      root_wrapper_.clearBackup();
     }
   }
 
@@ -165,7 +167,7 @@ int16_t FlowController::stop() {
   if (running_) {
     // immediately indicate that we are not running
     logger_->log_info("Stop Flow Controller");
-    current_flow_.stopProcessing(*timer_scheduler_, *event_scheduler_, *cron_scheduler_);
+    root_wrapper_.stopProcessing(*timer_scheduler_, *event_scheduler_, *cron_scheduler_);
     // stop after we've attempted to stop the processors.
     timer_scheduler_->stop();
     event_scheduler_->stop();
@@ -175,7 +177,7 @@ int16_t FlowController::stop() {
      * -Stopping the schedulers doesn't actually quit the onTrigger functions of processors
      * -They only guarantee that the processors are not scheduled anymore
      * -After the threadpool is stopped we can make sure that processors don't need repos and controllers anymore */
-    current_flow_.drainConnections();
+    root_wrapper_.drainConnections();
     this->flow_file_repo_->stop();
     this->provenance_repo_->stop();
     this->content_repo_->stop();
@@ -253,9 +255,9 @@ void FlowController::load(bool reload) {
     io::NetworkPrioritizerFactory::getInstance()->clearPrioritizer();
   }
 
-  if (!current_flow_.initialized()) {
+  if (!root_wrapper_.initialized()) {
     logger_->log_info("Instantiating new flow");
-    current_flow_.setNewRoot(loadInitialFlow());
+    root_wrapper_.setNewRoot(loadInitialFlow());
     if (c2_agent_ && !c2_agent_->isControllerRunning()) {
       // TODO(lordgamez): this initialization configures the C2 sender protocol (e.g. RESTSender) which may contain an SSL Context service from the flow config
       // for SSL communication. This service may change on flow update and we should take care of the SSL Context Service change in the C2 Agent.
@@ -302,8 +304,8 @@ void FlowController::loadFlowRepo() {
     logger_->log_debug("Getting connection map");
     std::map<std::string, core::Connectable*> connectionMap;
     std::map<std::string, core::Connectable*> containers;
-    current_flow_.getConnections(connectionMap);
-    current_flow_.getFlowFileContainers(containers);
+    root_wrapper_.getConnections(connectionMap);
+    root_wrapper_.getFlowFileContainers(containers);
     flow_file_repo_->setConnectionMap(connectionMap);
     flow_file_repo_->setContainers(containers);
     flow_file_repo_->loadComponent(content_repo_);
@@ -326,7 +328,7 @@ int16_t FlowController::start() {
 
     // watch out, this might immediately start the processors
     // as the thread_pool_ is started in load()
-    if (current_flow_.startProcessing(*timer_scheduler_, *event_scheduler_, *cron_scheduler_)) {
+    if (root_wrapper_.startProcessing(*timer_scheduler_, *event_scheduler_, *cron_scheduler_)) {
       start_time_ = std::chrono::steady_clock::now();
     }
 
@@ -382,7 +384,7 @@ int16_t FlowController::applyUpdate(const std::string &source, const std::string
 }
 
 int16_t FlowController::clearConnection(const std::string &connection) {
-  current_flow_.clearConnection(connection);
+  root_wrapper_.clearConnection(connection);
   return -1;
 }
 
@@ -409,7 +411,7 @@ void FlowController::executeOnComponent(const std::string &id_or_name, std::func
 }
 
 std::vector<state::StateController*> FlowController::getAllComponents() {
-  if (auto components = current_flow_.getAllProcessorControllers([this](core::Processor& p) { return createController(p); })) {
+  if (auto components = root_wrapper_.getAllProcessorControllers([this](core::Processor& p) { return createController(p); })) {
     components->push_back(this);
     return *components;
   }
@@ -420,7 +422,7 @@ std::vector<state::StateController*> FlowController::getAllComponents() {
 state::StateController* FlowController::getComponent(const std::string& id_or_name) {
   if (id_or_name == getUUIDStr() || id_or_name == "FlowController") {
     return this;
-  } else if (auto controller = current_flow_.getProcessorController(id_or_name, [this](core::Processor& p) { return createController(p); })) {
+  } else if (auto controller = root_wrapper_.getProcessorController(id_or_name, [this](core::Processor& p) { return createController(p); })) {
     return controller;
   }
 

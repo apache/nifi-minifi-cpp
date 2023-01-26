@@ -33,18 +33,18 @@ namespace org::apache::nifi::minifi::state::response {
  * C2 server.
  *
  */
-class QueueMetrics : public ResponseNode, public ConnectionStore {
+class QueueMetrics : public ResponseNode {
  public:
   QueueMetrics(const std::string &name, const utils::Identifier &uuid)
-      : ResponseNode(name, uuid) {
+    : ResponseNode(name, uuid) {
   }
 
   QueueMetrics(const std::string &name) // NOLINT
-      : ResponseNode(name) {
+    : ResponseNode(name) {
   }
 
   QueueMetrics()
-      : ResponseNode("QueueMetrics") {
+    : ResponseNode("QueueMetrics") {
   }
 
   MINIFIAPI static constexpr const char* Description = "Metric node that defines queue metric information";
@@ -53,9 +53,13 @@ class QueueMetrics : public ResponseNode, public ConnectionStore {
     return "QueueMetrics";
   }
 
+  void updateConnection(minifi::Connection* connection) {
+    connection_store_.updateConnection(connection);
+  }
+
   std::vector<SerializedResponseNode> serialize() override {
     std::vector<SerializedResponseNode> serialized;
-    for (const auto& [_, connection] : connections_) {
+    for (const auto& [_, connection] : connection_store_.getConnections()) {
       SerializedResponseNode parent;
       parent.name = connection->getName();
       SerializedResponseNode datasize;
@@ -85,8 +89,11 @@ class QueueMetrics : public ResponseNode, public ConnectionStore {
   }
 
   std::vector<PublishedMetric> calculateMetrics() override {
-    return calculateConnectionMetrics("QueueMetrics");
+    return connection_store_.calculateConnectionMetrics("QueueMetrics");
   }
+
+ private:
+  ConnectionStore connection_store_;
 };
 
 }  // namespace org::apache::nifi::minifi::state::response

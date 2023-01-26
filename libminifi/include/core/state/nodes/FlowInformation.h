@@ -125,22 +125,27 @@ class FlowVersion : public DeviceInformation {
   std::shared_ptr<FlowIdentifier> identifier;
 };
 
-class FlowMonitor : public StateMonitorNode, public ConnectionStore {
+class FlowMonitor : public StateMonitorNode {
  public:
   FlowMonitor(std::string name, const utils::Identifier &uuid)
-      : StateMonitorNode(std::move(name), uuid) {
+    : StateMonitorNode(std::move(name), uuid) {
   }
 
   explicit FlowMonitor(std::string name)
-      : StateMonitorNode(std::move(name)) {
+    : StateMonitorNode(std::move(name)) {
   }
 
   void setFlowVersion(std::shared_ptr<state::response::FlowVersion> flow_version) {
     flow_version_ = std::move(flow_version);
   }
 
+  void updateConnection(minifi::Connection* connection) {
+    connection_store_.updateConnection(connection);
+  }
+
  protected:
   std::shared_ptr<state::response::FlowVersion> flow_version_;
+  ConnectionStore connection_store_;
 };
 
 /**
@@ -178,12 +183,13 @@ class FlowInformation : public FlowMonitor {
     serialized.push_back(fv);
     serialized.push_back(uri);
 
-    if (!connections_.empty()) {
+    const auto& connections = connection_store_.getConnections();
+    if (!connections.empty()) {
       SerializedResponseNode queues;
       queues.collapsible = false;
       queues.name = "queues";
 
-      for (auto &queue : connections_) {
+      for (const auto& queue : connections) {
         SerializedResponseNode repoNode;
         repoNode.collapsible = false;
         repoNode.name = queue.second->getName();
@@ -248,7 +254,7 @@ class FlowInformation : public FlowMonitor {
   }
 
   std::vector<PublishedMetric> calculateMetrics() override {
-    std::vector<PublishedMetric> metrics = calculateConnectionMetrics("FlowInformation");
+    std::vector<PublishedMetric> metrics = connection_store_.calculateConnectionMetrics("FlowInformation");
 
     if (nullptr != monitor_) {
       monitor_->executeOnAllComponents([&metrics](StateController& component){

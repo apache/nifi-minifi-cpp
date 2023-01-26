@@ -31,9 +31,7 @@ PrometheusMetricsPublisher::PrometheusMetricsPublisher(const std::string &name, 
     exposer_(std::move(exposer)) {}
 
 void PrometheusMetricsPublisher::initialize(const std::shared_ptr<Configure>& configuration, const std::shared_ptr<state::response::ResponseNodeLoader>& response_node_loader) {
-  gsl_Expects(configuration);
-  configuration_ = configuration;
-  response_node_loader_ = response_node_loader;
+  state::MetricsPublisher::initialize(configuration, response_node_loader);
   if (!exposer_) {
     exposer_ = std::make_unique<PrometheusExposerWrapper>(readPort());
   }
@@ -41,6 +39,7 @@ void PrometheusMetricsPublisher::initialize(const std::shared_ptr<Configure>& co
 }
 
 uint32_t PrometheusMetricsPublisher::readPort() {
+  gsl_Expects(configuration_);
   if (auto port = configuration_->get(Configuration::nifi_metrics_publisher_prometheus_metrics_publisher_port)) {
     return std::stoul(*port);
   }
@@ -69,7 +68,7 @@ void PrometheusMetricsPublisher::loadMetricNodes() {
 }
 
 std::vector<std::shared_ptr<state::response::ResponseNode>> PrometheusMetricsPublisher::getMetricNodes() {
-  gsl_Expects(response_node_loader_);
+  gsl_Expects(response_node_loader_ && configuration_);
   std::vector<std::shared_ptr<state::response::ResponseNode>> nodes;
   if (auto metric_classes_str = configuration_->get(minifi::Configuration::nifi_metrics_publisher_metrics)) {
     auto metric_classes = utils::StringUtils::split(*metric_classes_str, ",");
@@ -86,6 +85,7 @@ std::vector<std::shared_ptr<state::response::ResponseNode>> PrometheusMetricsPub
 }
 
 void PrometheusMetricsPublisher::loadAgentIdentifier() {
+  gsl_Expects(configuration_);
   auto agent_identifier = configuration_->get(Configure::nifi_metrics_publisher_agent_identifier);
   if (agent_identifier && !agent_identifier->empty()) {
     agent_identifier_ = *agent_identifier;
