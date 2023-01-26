@@ -67,9 +67,9 @@ void PrometheusMetricsPublisher::loadMetricNodes() {
   }
 }
 
-std::vector<std::shared_ptr<state::response::ResponseNode>> PrometheusMetricsPublisher::getMetricNodes() {
+std::vector<state::response::SharedResponseNode> PrometheusMetricsPublisher::getMetricNodes() {
   gsl_Expects(response_node_loader_ && configuration_);
-  std::vector<std::shared_ptr<state::response::ResponseNode>> nodes;
+  std::vector<state::response::SharedResponseNode> nodes;
   if (auto metric_classes_str = configuration_->get(minifi::Configuration::nifi_metrics_publisher_metrics)) {
     auto metric_classes = utils::StringUtils::split(*metric_classes_str, ",");
     for (const std::string& clazz : metric_classes) {

@@ -42,7 +42,7 @@ namespace org::apache::nifi::minifi::c2 {
 C2MetricsPublisher::C2MetricsPublisher(const std::string &name, const utils::Identifier &uuid)
   : core::CoreComponent(name, uuid) {}
 
-void C2MetricsPublisher::loadNodeClasses(const std::string& class_definitions, const std::shared_ptr<state::response::ResponseNode>& new_node) {
+void C2MetricsPublisher::loadNodeClasses(const std::string& class_definitions, const state::response::SharedResponseNode& new_node) {
   gsl_Expects(response_node_loader_);
   auto classes = utils::StringUtils::split(class_definitions, ",");
   for (const std::string& clazz : classes) {
@@ -51,7 +51,7 @@ void C2MetricsPublisher::loadNodeClasses(const std::string& class_definitions, c
       continue;
     }
     for (const auto& response_node : response_nodes) {
-      std::static_pointer_cast<state::response::ObjectNode>(new_node)->add_node(response_node);
+      static_cast<state::response::ObjectNode*>(new_node.get())->add_node(response_node);
     }
   }
 }
@@ -75,7 +75,7 @@ void C2MetricsPublisher::loadC2ResponseConfiguration(const std::string &prefix) 
       if (!configuration_->get(nameOption, name)) {
         continue;
       }
-      std::shared_ptr<state::response::ResponseNode> new_node = std::make_shared<state::response::ObjectNode>(name);
+      state::response::SharedResponseNode new_node = gsl::make_not_null(std::make_shared<state::response::ObjectNode>(name));
       if (configuration_->get(classOption, class_definitions)) {
         loadNodeClasses(class_definitions, new_node);
       } else {
@@ -93,8 +93,8 @@ void C2MetricsPublisher::loadC2ResponseConfiguration(const std::string &prefix) 
   }
 }
 
-std::shared_ptr<state::response::ResponseNode> C2MetricsPublisher::loadC2ResponseConfiguration(const std::string &prefix,
-    std::shared_ptr<state::response::ResponseNode> prev_node) {
+state::response::SharedResponseNode C2MetricsPublisher::loadC2ResponseConfiguration(const std::string &prefix,
+    state::response::SharedResponseNode prev_node) {
   gsl_Expects(configuration_);
   std::string class_definitions;
   if (!configuration_->get(prefix, class_definitions)) {
@@ -112,25 +112,23 @@ std::shared_ptr<state::response::ResponseNode> C2MetricsPublisher::loadC2Respons
       if (!configuration_->get(nameOption, name)) {
         continue;
       }
-      std::shared_ptr<state::response::ResponseNode> new_node = std::make_shared<state::response::ObjectNode>(name);
+      state::response::SharedResponseNode new_node = gsl::make_not_null(std::make_shared<state::response::ObjectNode>(name));
       if (name.find(',') != std::string::npos) {
         std::vector<std::string> sub_classes = utils::StringUtils::split(name, ",");
         for (const std::string& subClassStr : classes) {
           auto node = loadC2ResponseConfiguration(subClassStr, prev_node);
-          if (node != nullptr) {
-            std::static_pointer_cast<state::response::ObjectNode>(prev_node)->add_node(node);
-          }
+          static_cast<state::response::ObjectNode*>(prev_node.get())->add_node(node);
         }
       } else {
         if (configuration_->get(classOption, class_definitions)) {
           loadNodeClasses(class_definitions, new_node);
           if (!new_node->isEmpty()) {
-            std::static_pointer_cast<state::response::ObjectNode>(prev_node)->add_node(new_node);
+            static_cast<state::response::ObjectNode*>(prev_node.get())->add_node(new_node);
           }
         } else {
           std::string optionName = utils::StringUtils::join_pack(option, ".", name);
           auto sub_node = loadC2ResponseConfiguration(optionName, new_node);
-          std::static_pointer_cast<state::response::ObjectNode>(prev_node)->add_node(sub_node);
+          static_cast<state::response::ObjectNode*>(prev_node.get())->add_node(sub_node);
         }
       }
     } catch (const std::exception& ex) {
@@ -145,7 +143,7 @@ std::shared_ptr<state::response::ResponseNode> C2MetricsPublisher::loadC2Respons
 std::optional<state::response::NodeReporter::ReportedNode> C2MetricsPublisher::getMetricsNode(const std::string& metrics_class) const {
   gsl_Expects(response_node_loader_);
   std::lock_guard<std::mutex> guard{metrics_mutex_};
-  const auto createReportedNode = [](const std::vector<std::shared_ptr<state::response::ResponseNode>>& nodes) {
+  const auto createReportedNode = [](const std::vector<state::response::SharedResponseNode>& nodes) {
     gsl_Expects(!nodes.empty());
     state::response::NodeReporter::ReportedNode reported_node;
     reported_node.is_array = nodes[0]->isArray();
@@ -179,17 +177,15 @@ std::vector<state::response::NodeReporter::ReportedNode> C2MetricsPublisher::get
   reported_nodes.reserve(root_response_nodes_.size());
   for (const auto& [name, node_values] : root_response_nodes_) {
     for (const auto& node : node_values) {
-      auto identifier = std::dynamic_pointer_cast<state::response::AgentIdentifier>(node);
+      auto identifier = dynamic_cast<state::response::AgentIdentifier*>(node.get());
       if (identifier) {
         identifier->includeAgentManifest(include);
       }
-      if (node) {
-        state::response::NodeReporter::ReportedNode reported_node;
-        reported_node.name = node->getName();
-        reported_node.is_array = node->isArray();
-        reported_node.serialized_nodes = node->serialize();
-        reported_nodes.push_back(reported_node);
-      }
+      state::response::NodeReporter::ReportedNode reported_node;
+      reported_node.name = node->getName();
+      reported_node.is_array = node->isArray();
+      reported_node.serialized_nodes = node->serialize();
+      reported_nodes.push_back(reported_node);
     }
   }
   return reported_nodes;

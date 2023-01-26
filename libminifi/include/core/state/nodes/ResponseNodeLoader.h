@@ -44,27 +44,27 @@ class ResponseNodeLoader {
   void clearConfigRoot();
   void setControllerServiceProvider(core::controller::ControllerServiceProvider* controller);
   void setStateMonitor(state::StateMonitor* update_sink);
-  std::vector<std::shared_ptr<ResponseNode>> loadResponseNodes(const std::string& clazz) const;
+  std::vector<SharedResponseNode> loadResponseNodes(const std::string& clazz) const;
   state::response::NodeReporter::ReportedNode getAgentManifest();
 
  private:
   void initializeComponentMetrics();
-  std::vector<std::shared_ptr<ResponseNode>> getComponentMetricsNodes(const std::string& metrics_class) const;
-  std::vector<std::shared_ptr<ResponseNode>> getResponseNodes(const std::string& clazz) const;
-  void initializeRepositoryMetrics(const std::shared_ptr<ResponseNode>& response_node) const;
-  void initializeQueueMetrics(const std::shared_ptr<ResponseNode>& response_node) const;
-  void initializeAgentIdentifier(const std::shared_ptr<ResponseNode>& response_node) const;
-  void initializeAgentMonitor(const std::shared_ptr<ResponseNode>& response_node) const;
-  void initializeAgentNode(const std::shared_ptr<ResponseNode>& response_node) const;
-  void initializeAgentStatus(const std::shared_ptr<ResponseNode>& response_node) const;
-  void initializeConfigurationChecksums(const std::shared_ptr<ResponseNode>& response_node) const;
-  void initializeFlowMonitor(const std::shared_ptr<ResponseNode>& response_node) const;
-  std::vector<std::shared_ptr<ResponseNode>> getMatchingComponentMetricsNodes(const std::string& regex_str) const;
+  std::vector<SharedResponseNode> getComponentMetricsNodes(const std::string& metrics_class) const;
+  std::vector<SharedResponseNode> getResponseNodes(const std::string& clazz) const;
+  void initializeRepositoryMetrics(const SharedResponseNode& response_node) const;
+  void initializeQueueMetrics(const SharedResponseNode& response_node) const;
+  void initializeAgentIdentifier(const SharedResponseNode& response_node) const;
+  void initializeAgentMonitor(const SharedResponseNode& response_node) const;
+  void initializeAgentNode(const SharedResponseNode& response_node) const;
+  void initializeAgentStatus(const SharedResponseNode& response_node) const;
+  void initializeConfigurationChecksums(const SharedResponseNode& response_node) const;
+  void initializeFlowMonitor(const SharedResponseNode& response_node) const;
+  std::vector<SharedResponseNode> getMatchingComponentMetricsNodes(const std::string& regex_str) const;
 
   mutable std::mutex root_mutex_;
   mutable std::mutex component_metrics_mutex_;
   core::ProcessGroup* root_{};
-  std::unordered_map<std::string, std::vector<std::shared_ptr<ResponseNode>>> component_metrics_;
+  std::unordered_map<std::string, std::vector<SharedResponseNode>> component_metrics_;
   std::shared_ptr<Configure> configuration_;
   std::shared_ptr<core::Repository> provenance_repo_;
   std::shared_ptr<core::Repository> flow_file_repo_;

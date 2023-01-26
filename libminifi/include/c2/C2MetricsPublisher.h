@@ -63,15 +63,15 @@ class C2MetricsPublisher : public core::CoreComponent, public state::response::N
 
  private:
   void loadC2ResponseConfiguration(const std::string &prefix);
-  std::shared_ptr<state::response::ResponseNode> loadC2ResponseConfiguration(const std::string &prefix, std::shared_ptr<state::response::ResponseNode> prev_node);
-  void loadNodeClasses(const std::string& class_definitions, const std::shared_ptr<state::response::ResponseNode>& new_node);
+  state::response::SharedResponseNode loadC2ResponseConfiguration(const std::string &prefix, state::response::SharedResponseNode prev_node);
+  void loadNodeClasses(const std::string& class_definitions, const state::response::SharedResponseNode& new_node);
 
   mutable std::mutex metrics_mutex_;
 
   // Name and response node value of the root response nodes defined in nifi.c2.root.classes and nifi.c2.root.class.definitions
   // In case a root class is defined to be a processor metric there can be multiple response nodes if the same processor is defined
   // multiple times in the flow
-  std::unordered_map<std::string, std::vector<std::shared_ptr<state::response::ResponseNode>>> root_response_nodes_;
+  std::unordered_map<std::string, std::vector<state::response::SharedResponseNode>> root_response_nodes_;
 
   std::shared_ptr<core::logging::Logger> logger_ = core::logging::LoggerFactory<C2MetricsPublisher>::getLogger();
 };

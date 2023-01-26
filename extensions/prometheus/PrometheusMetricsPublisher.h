@@ -43,7 +43,7 @@ class PrometheusMetricsPublisher : public core::CoreComponent, public state::Met
 
  private:
   uint32_t readPort();
-  std::vector<std::shared_ptr<state::response::ResponseNode>> getMetricNodes();
+  std::vector<state::response::SharedResponseNode> getMetricNodes();
   void loadAgentIdentifier();
 
   std::mutex registered_metrics_mutex_;

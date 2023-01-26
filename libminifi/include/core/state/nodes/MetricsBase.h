@@ -37,28 +37,28 @@ namespace org::apache::nifi::minifi::state::response {
 class ResponseNode : public core::Connectable, public PublishedMetricProvider {
  public:
   ResponseNode()
-      : core::Connectable("metric"),
-        is_array_(false) {
+    : core::Connectable("metric"),
+      is_array_(false) {
   }
 
   explicit ResponseNode(std::string name)
-      : core::Connectable(std::move(name)),
-        is_array_(false) {
+    : core::Connectable(std::move(name)),
+      is_array_(false) {
   }
 
   ResponseNode(std::string name, const utils::Identifier& uuid)
-      : core::Connectable(std::move(name), uuid),
-        is_array_(false) {
+    : core::Connectable(std::move(name), uuid),
+      is_array_(false) {
   }
 
   ~ResponseNode() override = default;
 
-  static std::vector<state::response::SerializedResponseNode> serializeAndMergeResponseNodes(const std::vector<std::shared_ptr<ResponseNode>>& nodes) {
+  static std::vector<SerializedResponseNode> serializeAndMergeResponseNodes(const std::vector<gsl::not_null<std::shared_ptr<ResponseNode>>>& nodes) {
     if (nodes.empty()) {
       return {};
     }
 
-    std::vector<state::response::SerializedResponseNode> result;
+    std::vector<SerializedResponseNode> result;
     for (const auto& node: nodes) {
       auto serialized = node->serialize();
       result.insert(result.end(), serialized.begin(), serialized.end());
@@ -95,6 +95,8 @@ class ResponseNode : public core::Connectable, public PublishedMetricProvider {
   }
 };
 
+using SharedResponseNode = gsl::not_null<std::shared_ptr<ResponseNode>>;
+
 /**
  * Purpose: Defines a metric that
  */
@@ -118,7 +120,7 @@ class ObjectNode : public ResponseNode {
       : ResponseNode(std::move(name), uuid) {
   }
 
-  void add_node(const std::shared_ptr<ResponseNode> &node) {
+  void add_node(const SharedResponseNode &node) {
     nodes_[node->getName()].push_back(node);
   }
 
@@ -149,7 +151,7 @@ class ObjectNode : public ResponseNode {
   }
 
  protected:
-  std::unordered_map<std::string, std::vector<std::shared_ptr<ResponseNode>>> nodes_;
+  std::unordered_map<std::string, std::vector<SharedResponseNode>> nodes_;
 };
 
 /**
@@ -159,7 +161,7 @@ class ObjectNode : public ResponseNode {
 class ResponseNodeSource {
  public:
   virtual ~ResponseNodeSource() = default;
-  virtual std::shared_ptr<ResponseNode> getResponseNodes() = 0;
+  virtual SharedResponseNode getResponseNodes() = 0;
 };
 
 class NodeReporter {
