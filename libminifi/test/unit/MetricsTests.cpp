@@ -209,7 +209,7 @@ TEST_CASE("RepositorymetricsHaveRepo", "[c2m4]") {
   }
 }
 
-TEST_CASE("Test ProcessorMetrics", "[ProcessorMetrics]") {
+TEST_CASE("Test on trigger runtime processor metrics", "[ProcessorMetrics]") {
   DummyProcessor dummy_processor("dummy");
   minifi::core::ProcessorMetrics metrics(dummy_processor);
 
@@ -246,6 +246,13 @@ TEST_CASE("Test ProcessorMetrics", "[ProcessorMetrics]") {
   metrics.addLastOnTriggerRuntime(10ms);
   REQUIRE(metrics.getLastOnTriggerRuntime() == 10ms);
   REQUIRE(metrics.getAverageOnTriggerRuntime() == 37ms);
+}
+
+TEST_CASE("Test commit runtime processor metrics", "[ProcessorMetrics]") {
+  DummyProcessor dummy_processor("dummy");
+  minifi::core::ProcessorMetrics metrics(dummy_processor);
+
+  REQUIRE("DummyProcessorMetrics" == metrics.getName());
 
   REQUIRE(metrics.getLastSessionCommitRuntime() == 0ms);
   REQUIRE(metrics.getAverageSessionCommitRuntime() == 0ms);

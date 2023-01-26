@@ -125,10 +125,10 @@ std::chrono::milliseconds ProcessorMetrics::getLastSessionCommitRuntime() const 
 template<typename ValueType>
 requires Summable<ValueType> && DividableByInteger<ValueType>
 ValueType ProcessorMetrics::Averager<ValueType>::getAverage() const {
+  std::lock_guard<std::mutex> lock(average_value_mutex_);
   if (values_.empty()) {
     return {};
   }
-  std::lock_guard<std::mutex> lock(average_value_mutex_);
   return ranges::accumulate(values_, ValueType{}) / values_.size();
 }
 
