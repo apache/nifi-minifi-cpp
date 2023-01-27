@@ -20,12 +20,13 @@
 function(use_bundled_osspuuid SOURCE_DIR BINARY_DIR)
     message("Using bundled ossp-uuid")
 
-    # Define patch step
-    # if already applied, reverse application should succeed
-    set(PC ${Bash_EXECUTABLE} -c "set -x && (\"${Patch_EXECUTABLE}\" -p1 -N -i \"${SOURCE_DIR}/thirdparty/ossp-uuid/ossp-uuid-mac-fix.patch\" &&\
-            \"${Patch_EXECUTABLE}\" -p1 -N -i \"${SOURCE_DIR}/thirdparty/ossp-uuid/ossp-uuid-no-prog.patch\") ||\
-            (\"${Patch_EXECUTABLE}\" -p1 -R --dry-run -i \"${SOURCE_DIR}/thirdparty/ossp-uuid/ossp-uuid-mac-fix.patch\" &&\
-            \"${Patch_EXECUTABLE}\" -p1 -R --dry-run -i \"${SOURCE_DIR}/thirdparty/ossp-uuid/ossp-uuid-no-prog.patch\")")
+    set(PATCH_FILE1 "${SOURCE_DIR}/thirdparty/ossp-uuid/ossp-uuid-mac-fix.patch")
+    set(PATCH_FILE2 "${SOURCE_DIR}/thirdparty/ossp-uuid/ossp-uuid-no-prog.patch")
+    set(PATCH_FILE3 "${SOURCE_DIR}/thirdparty/ossp-uuid/ossp-uuid-update-config-guess.patch")
+    set(PC ${Bash_EXECUTABLE} -c "set -x &&\
+            (\"${Patch_EXECUTABLE}\" -p1 -R -s -f --dry-run -i \"${PATCH_FILE1}\" || \"${Patch_EXECUTABLE}\" -p1 -N -i \"${PATCH_FILE1}\") &&\
+            (\"${Patch_EXECUTABLE}\" -p1 -R -s -f --dry-run -i \"${PATCH_FILE2}\" || \"${Patch_EXECUTABLE}\" -p1 -N -i \"${PATCH_FILE2}\") &&\
+            (\"${Patch_EXECUTABLE}\" -p1 -R -s -f --dry-run -i \"${PATCH_FILE3}\" || \"${Patch_EXECUTABLE}\" -p1 -N -i \"${PATCH_FILE3}\") ")
 
     # Define byproducts
     set(BYPRODUCTS "lib/libuuid.a"
