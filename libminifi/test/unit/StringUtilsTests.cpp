@@ -18,7 +18,6 @@
 
 #include <algorithm>
 #include <cstdint>
-#include <cstdlib>
 #include <list>
 #include <optional>
 #include <random>
@@ -32,6 +31,9 @@
 
 using org::apache::nifi::minifi::utils::StringUtils;
 using utils::as_string;
+
+
+// NOLINTBEGIN(readability-container-size-empty)
 
 TEST_CASE("StringUtils::chomp works correctly", "[StringUtils][chomp]") {
   using pair_of = std::pair<std::string, std::string>;
@@ -388,30 +390,22 @@ TEST_CASE("TestStringUtils::testBase64Decode", "[test base64 decode]") {
   REQUIRE("oooooo" == StringUtils::from_base64("b29vb29v", as_string));
   REQUIRE("\xfb\xff\xbf" == StringUtils::from_base64("-_-_", as_string));
   REQUIRE("\xfb\xff\xbf" == StringUtils::from_base64("+/+/", as_string));
-  REQUIRE(std::string({   0,   16, -125,   16,
-                         81, -121,   32, -110,
-                       -117,   48,  -45, -113,
-                         65,   20, -109,   81,
-                         85, -105,   97, -106,
-                       -101,  113,  -41,  -97,
-                       -126,   24,  -93, -110,
-                         89,  -89,  -94, -102,
-                        -85,  -78,  -37,  -81,
-                        -61,   28,  -77,  -45,
-                         93,  -73,  -29,  -98,
-                        -69,  -13,  -33,  -65}) == StringUtils::from_base64("ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/", as_string));
-  REQUIRE(std::string({   0,   16, -125,   16,
-                         81, -121,   32, -110,
-                       -117,   48,  -45, -113,
-                         65,   20, -109,   81,
-                         85, -105,   97, -106,
-                       -101,  113,  -41,  -97,
-                       -126,   24,  -93, -110,
-                         89,  -89,  -94, -102,
-                        -85,  -78,  -37,  -81,
-                        -61,   28,  -77,  -45,
-                         93,  -73,  -29,  -98,
-                        -69,  -13,  -33,  -65}) == StringUtils::from_base64("ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-_", as_string));
+  std::string expected{
+      static_cast<char>(0), static_cast<char>(16), static_cast<char>(-125), static_cast<char>(16),
+      static_cast<char>(81), static_cast<char>(-121), static_cast<char>(32), static_cast<char>(-110),
+      static_cast<char>(-117), static_cast<char>(48), static_cast<char>(-45), static_cast<char>(-113),
+      static_cast<char>(65), static_cast<char>(20), static_cast<char>(-109), static_cast<char>(81),
+      static_cast<char>(85), static_cast<char>(-105), static_cast<char>(97), static_cast<char>(-106),
+      static_cast<char>(-101), static_cast<char>(113), static_cast<char>(-41), static_cast<char>(-97),
+      static_cast<char>(-126), static_cast<char>(24), static_cast<char>(-93), static_cast<char>(-110),
+      static_cast<char>(89), static_cast<char>(-89), static_cast<char>(-94), static_cast<char>(-102),
+      static_cast<char>(-85), static_cast<char>(-78), static_cast<char>(-37), static_cast<char>(-81),
+      static_cast<char>(-61), static_cast<char>(28), static_cast<char>(-77), static_cast<char>(-45),
+      static_cast<char>(93), static_cast<char>(-73), static_cast<char>(-29), static_cast<char>(-98),
+      static_cast<char>(-69), static_cast<char>(-13), static_cast<char>(-33), static_cast<char>(-65)};
+
+  REQUIRE(expected == StringUtils::from_base64("ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/", as_string));
+  REQUIRE(expected == StringUtils::from_base64("ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-_", as_string));
 
   REQUIRE("foobarbuzz" == StringUtils::from_base64("Zm9vYmFyYnV6eg==", as_string));
   REQUIRE("foobarbuzz"== StringUtils::from_base64("\r\nZm9vYmFyYnV6eg==", as_string));
@@ -542,3 +536,4 @@ TEST_CASE("StringUtils::matchesSequence works correctly", "[matchesSequence]") {
   REQUIRE(StringUtils::matchesSequence("xxxabcxxxabcxxxdefxxx", {"abc", "abc", "def"}));
   REQUIRE(!StringUtils::matchesSequence("xxxabcxxxdefxxx", {"abc", "abc", "def"}));
 }
+// NOLINTEND(readability-container-size-empty)
