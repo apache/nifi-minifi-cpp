@@ -41,8 +41,18 @@ ResponseNodeLoader::ResponseNodeLoader(std::shared_ptr<Configure> configuration,
 }
 
 void ResponseNodeLoader::clearConfigRoot() {
-  std::lock_guard<std::mutex> guard(root_mutex_);
-  root_ = nullptr;
+  {
+    std::lock_guard<std::mutex> guard(system_metrics_mutex_);
+    system_metrics_.clear();
+  }
+  {
+    std::lock_guard<std::mutex> guard(component_metrics_mutex_);
+    component_metrics_.clear();
+  }
+  {
+    std::lock_guard<std::mutex> guard(root_mutex_);
+    root_ = nullptr;
+  }
 }
 
 void ResponseNodeLoader::setNewConfigRoot(core::ProcessGroup* root) {
@@ -78,17 +88,32 @@ void ResponseNodeLoader::initializeComponentMetrics() {
   }
 }
 
-std::vector<SharedResponseNode> ResponseNodeLoader::getResponseNodes(const std::string& clazz) const {
-  std::shared_ptr<core::CoreComponent> ptr = core::ClassLoader::getDefaultClassLoader().instantiate(clazz, clazz);
-  if (ptr == nullptr) {
-    return getComponentMetricsNodes(clazz);
+nonstd::expected<SharedResponseNode, std::string> ResponseNodeLoader::getSystemMetricsNode(const std::string& clazz) {
+  std::lock_guard<std::mutex> guard(system_metrics_mutex_);
+  if (system_metrics_.contains(clazz)) {
+    return system_metrics_.at(clazz);
   }
+
+  std::shared_ptr ptr = core::ClassLoader::getDefaultClassLoader().instantiate(clazz, clazz);
   auto response_node = std::dynamic_pointer_cast<ResponseNode>(ptr);
   if (!response_node) {
-    logger_->log_error("Instantiated class '%s' is not a ResponseNode!", clazz);
+    return nonstd::make_unexpected("Instantiated class '" + clazz + "' is not a ResponseNode!");
+  }
+  system_metrics_.emplace(clazz, gsl::make_not_null(response_node));
+  return system_metrics_.at(clazz);
+}
+
+std::vector<SharedResponseNode> ResponseNodeLoader::getResponseNodes(const std::string& clazz) {
+  auto component_metrics = getComponentMetricsNodes(clazz);
+  if (!component_metrics.empty()) {
+    return component_metrics;
+  }
+  auto response_node = getSystemMetricsNode(clazz);
+  if (!response_node) {
+    logger_->log_error(response_node.error().c_str());
     return {};
   }
-  return {gsl::make_not_null(response_node)};
+  return {*response_node};
 }
 
 void ResponseNodeLoader::initializeRepositoryMetrics(const SharedResponseNode& response_node) const {
@@ -183,7 +208,7 @@ void ResponseNodeLoader::initializeFlowMonitor(const SharedResponseNode& respons
   }
 }
 
-std::vector<SharedResponseNode> ResponseNodeLoader::loadResponseNodes(const std::string& clazz) const {
+std::vector<SharedResponseNode> ResponseNodeLoader::loadResponseNodes(const std::string& clazz) {
   auto response_nodes = getResponseNodes(clazz);
   if (response_nodes.empty()) {
     logger_->log_error("No metric defined for %s", clazz);

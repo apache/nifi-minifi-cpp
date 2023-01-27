@@ -32,6 +32,7 @@
 #include "core/FlowConfiguration.h"
 #include "utils/gsl.h"
 #include "utils/Id.h"
+#include "utils/expected.h"
 
 namespace org::apache::nifi::minifi::state::response {
 
@@ -44,13 +45,14 @@ class ResponseNodeLoader {
   void clearConfigRoot();
   void setControllerServiceProvider(core::controller::ControllerServiceProvider* controller);
   void setStateMonitor(state::StateMonitor* update_sink);
-  std::vector<SharedResponseNode> loadResponseNodes(const std::string& clazz) const;
+  std::vector<SharedResponseNode> loadResponseNodes(const std::string& clazz);
   state::response::NodeReporter::ReportedNode getAgentManifest();
 
  private:
   void initializeComponentMetrics();
   std::vector<SharedResponseNode> getComponentMetricsNodes(const std::string& metrics_class) const;
-  std::vector<SharedResponseNode> getResponseNodes(const std::string& clazz) const;
+  nonstd::expected<SharedResponseNode, std::string> getSystemMetricsNode(const std::string& clazz);
+  std::vector<SharedResponseNode> getResponseNodes(const std::string& clazz);
   void initializeRepositoryMetrics(const SharedResponseNode& response_node) const;
   void initializeQueueMetrics(const SharedResponseNode& response_node) const;
   void initializeAgentIdentifier(const SharedResponseNode& response_node) const;
@@ -63,8 +65,10 @@ class ResponseNodeLoader {
 
   mutable std::mutex root_mutex_;
   mutable std::mutex component_metrics_mutex_;
+  mutable std::mutex system_metrics_mutex_;
   core::ProcessGroup* root_{};
   std::unordered_map<std::string, std::vector<SharedResponseNode>> component_metrics_;
+  std::unordered_map<std::string, SharedResponseNode> system_metrics_;
   std::shared_ptr<Configure> configuration_;
   std::shared_ptr<core::Repository> provenance_repo_;
   std::shared_ptr<core::Repository> flow_file_repo_;
