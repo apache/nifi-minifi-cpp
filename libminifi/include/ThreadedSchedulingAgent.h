@@ -17,8 +17,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#ifndef LIBMINIFI_INCLUDE_THREADEDSCHEDULINGAGENT_H_
-#define LIBMINIFI_INCLUDE_THREADEDSCHEDULINGAGENT_H_
+#pragma once
 
 #include <memory>
 #include <set>
@@ -31,10 +30,7 @@
 #include "core/ProcessContext.h"
 #include "SchedulingAgent.h"
 
-namespace org {
-namespace apache {
-namespace nifi {
-namespace minifi {
+namespace org::apache::nifi::minifi {
 
 /**
  * An abstract scheduling agent which creates and manages a pool of threads for
@@ -42,42 +38,26 @@ namespace minifi {
  */
 class ThreadedSchedulingAgent : public SchedulingAgent {
  public:
-  // Constructor
-  /*!
-   * Create a new threaded scheduling agent.
-   */
   ThreadedSchedulingAgent(const gsl::not_null<core::controller::ControllerServiceProvider*> controller_service_provider, std::shared_ptr<core::Repository> repo,
         std::shared_ptr<core::Repository> flow_repo, std::shared_ptr<core::ContentRepository> content_repo,
         std::shared_ptr<Configure> configuration,  utils::ThreadPool<utils::TaskRescheduleInfo> &thread_pool)
       : SchedulingAgent(controller_service_provider, repo, flow_repo, content_repo, configuration, thread_pool) {
   }
-  // Destructor
   ~ThreadedSchedulingAgent() override = default;
 
-  // Run function for the thread
   virtual utils::TaskRescheduleInfo run(core::Processor* processor, const std::shared_ptr<core::ProcessContext> &processContext,
                        const std::shared_ptr<core::ProcessSessionFactory> &sessionFactory) = 0;
 
  public:
-  // schedule, overwritten by different DrivenTimerDrivenSchedulingAgent
   void schedule(core::Processor* processor) override;
-  // unschedule, overwritten by different DrivenTimerDrivenSchedulingAgent
   void unschedule(core::Processor* processor) override;
 
   void stop() override;
 
  private:
-  // Prevent default copy constructor and assignment operation
-  // Only support pass by reference or pointer
-  ThreadedSchedulingAgent(const ThreadedSchedulingAgent &parent);
-  ThreadedSchedulingAgent &operator=(const ThreadedSchedulingAgent &parent);
   std::shared_ptr<core::logging::Logger> logger_ = core::logging::LoggerFactory<ThreadedSchedulingAgent>::getLogger();
 
   std::set<utils::Identifier> processors_running_;  // Set just for easy usage
 };
 
-}  // namespace minifi
-}  // namespace nifi
-}  // namespace apache
-}  // namespace org
-#endif  // LIBMINIFI_INCLUDE_THREADEDSCHEDULINGAGENT_H_
+}  // namespace org::apache::nifi::minifi
