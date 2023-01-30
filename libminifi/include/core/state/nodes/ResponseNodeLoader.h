@@ -46,7 +46,7 @@ class ResponseNodeLoader {
   void setControllerServiceProvider(core::controller::ControllerServiceProvider* controller);
   void setStateMonitor(state::StateMonitor* update_sink);
   std::vector<SharedResponseNode> loadResponseNodes(const std::string& clazz);
-  state::response::NodeReporter::ReportedNode getAgentManifest();
+  state::response::NodeReporter::ReportedNode getAgentManifest() const;
 
  private:
   void initializeComponentMetrics();

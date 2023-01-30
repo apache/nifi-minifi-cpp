@@ -46,11 +46,8 @@ class C2MetricsPublisher : public core::CoreComponent, public state::response::N
 
   MINIFIAPI static constexpr const char* Description = "Class that provides C2 metrics to the C2Agent";
 
-  void startC2(core::controller::ControllerServiceProvider *controller, state::Pausable *pause_handler, state::StateMonitor* update_sink);
   std::optional<state::response::NodeReporter::ReportedNode> getMetricsNode(const std::string& metrics_class) const override;
   std::vector<state::response::NodeReporter::ReportedNode> getHeartbeatNodes(bool include_manifest) const override;
-
-  void stopC2();
 
   /**
    * Retrieves the agent manifest to be sent as a response to C2 DESCRIBE manifest

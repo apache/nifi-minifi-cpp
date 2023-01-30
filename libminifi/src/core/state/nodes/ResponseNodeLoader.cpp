@@ -265,7 +265,7 @@ void ResponseNodeLoader::setStateMonitor(state::StateMonitor* update_sink) {
   update_sink_ = update_sink;
 }
 
-state::response::NodeReporter::ReportedNode ResponseNodeLoader::getAgentManifest() {
+state::response::NodeReporter::ReportedNode ResponseNodeLoader::getAgentManifest() const {
   state::response::AgentInformation agentInfo("agentInfo");
   if (controller_) {
     agentInfo.setUpdatePolicyController(std::static_pointer_cast<controllers::UpdatePolicyControllerService>(controller_->getControllerService(c2::UPDATE_NAME)).get());
