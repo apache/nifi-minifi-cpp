@@ -362,14 +362,14 @@ TEST_CASE("ListenSyslog with parsing test", "[ListenSyslog][NetworkListenerProce
     }
 
     CHECK_THAT(utils::sendMessagesViaTCP({rfc5424_doc_example_1.unparsed_,
-                                           rfc5424_doc_example_2.unparsed_,
-                                           rfc5424_doc_example_3.unparsed_,
-                                           rfc5424_doc_example_4.unparsed_}, endpoint), MatchesSuccess());
+                                          rfc5424_doc_example_2.unparsed_,
+                                          rfc5424_doc_example_3.unparsed_,
+                                          rfc5424_doc_example_4.unparsed_}, endpoint), MatchesSuccess());
 
     CHECK_THAT(utils::sendMessagesViaTCP({rfc3164_doc_example_1.unparsed_,
-                                           rfc3164_doc_example_2.unparsed_,
-                                           rfc3164_doc_example_3.unparsed_,
-                                           rfc3164_doc_example_4.unparsed_}, endpoint), MatchesSuccess());
+                                          rfc3164_doc_example_2.unparsed_,
+                                          rfc3164_doc_example_3.unparsed_,
+                                          rfc3164_doc_example_4.unparsed_}, endpoint), MatchesSuccess());
 
     CHECK_THAT(utils::sendMessagesViaTCP({rfc5424_logger_example_1}, endpoint), MatchesSuccess());
     CHECK_THAT(utils::sendMessagesViaTCP({invalid_syslog}, endpoint), MatchesSuccess());

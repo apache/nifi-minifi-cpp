@@ -54,12 +54,12 @@ class ConnectionId {
 }  // namespace org::apache::nifi::minifi::processors::detail
 
 namespace std {
-template <>
+template<>
 struct hash<org::apache::nifi::minifi::processors::detail::ConnectionId> {
   size_t operator()(const org::apache::nifi::minifi::processors::detail::ConnectionId& connection_id) const {
     return org::apache::nifi::minifi::utils::hash_combine(
         std::hash<std::string_view>{}(connection_id.getHostname()),
-        std::hash <std::string_view>{}(connection_id.getPort()));
+        std::hash<std::string_view>{}(connection_id.getPort()));
   }
 };
 }  // namespace std
@@ -73,13 +73,14 @@ class ConnectionHandlerBase {
   [[nodiscard]] virtual bool hasBeenUsed() const = 0;
   [[nodiscard]] virtual bool hasBeenUsedIn(std::chrono::milliseconds dur) const = 0;
   [[nodiscard]] virtual asio::awaitable<std::error_code> sendStreamWithDelimiter(const std::shared_ptr<io::InputStream>& stream_to_send,
-                                                                                 const std::vector<std::byte>& delimiter,
-                                                                                 asio::io_context& io_context) = 0;
+      const std::vector<std::byte>& delimiter,
+      asio::io_context& io_context) = 0;
 };
 
 class PutTCP final : public core::Processor {
  public:
-  EXTENSIONAPI static constexpr const char* Description = "The PutTCP processor receives a FlowFile and transmits the FlowFile content over a TCP connection to the configured TCP server. "
+  EXTENSIONAPI static constexpr const char* Description =
+      "The PutTCP processor receives a FlowFile and transmits the FlowFile content over a TCP connection to the configured TCP server. "
       "By default, the FlowFiles are transmitted over the same TCP connection. To assist the TCP server with determining message boundaries, "
       "an optional \"Outgoing Message Delimiter\" string can be configured which is appended to the end of each FlowFiles content when it is transmitted over the TCP connection. "
       "An optional \"Connection Per FlowFile\" parameter can be specified to change the behaviour so that each FlowFiles content is transmitted over a single TCP connection "
@@ -113,16 +114,17 @@ class PutTCP final : public core::Processor {
 
   void initialize() final;
   void notifyStop() final;
-  void onSchedule(core::ProcessContext*, core::ProcessSessionFactory *) final;
+  void onSchedule(core::ProcessContext*, core::ProcessSessionFactory*) final;
   void onTrigger(core::ProcessContext*, core::ProcessSession*) final;
 
  private:
   void removeExpiredConnections();
   void processFlowFile(std::shared_ptr<ConnectionHandlerBase>& connection_handler,
-                       core::ProcessSession& session,
-                       const std::shared_ptr<core::FlowFile>& flow_file);
+      core::ProcessSession& session,
+      const std::shared_ptr<core::FlowFile>& flow_file);
 
-  std::error_code sendFlowFileContent(std::shared_ptr<ConnectionHandlerBase>& connection_handler, const std::shared_ptr<io::InputStream>& flow_file_content_stream);
+  std::error_code sendFlowFileContent(std::shared_ptr<ConnectionHandlerBase>& connection_handler,
+      const std::shared_ptr<io::InputStream>& flow_file_content_stream);
 
   std::vector<std::byte> delimiter_;
   asio::io_context io_context_;

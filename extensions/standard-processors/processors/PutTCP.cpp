@@ -22,7 +22,6 @@
 #include "range/v3/range/conversion.hpp"
 
 #include "utils/gsl.h"
-#include "utils/expected.h"
 #include "core/ProcessContext.h"
 #include "core/ProcessSession.h"
 #include "core/PropertyBuilder.h"
@@ -204,7 +203,9 @@ class ConnectionHandler : public ConnectionHandlerBase {
 
   ~ConnectionHandler() override = default;
 
-  asio::awaitable<std::error_code> sendStreamWithDelimiter(const std::shared_ptr<io::InputStream>& stream_to_send, const std::vector<std::byte>& delimiter, asio::io_context& io_context_) override;
+  asio::awaitable<std::error_code> sendStreamWithDelimiter(const std::shared_ptr<io::InputStream>& stream_to_send,
+      const std::vector<std::byte>& delimiter,
+      asio::io_context& io_context_) override;
 
  private:
   [[nodiscard]] bool hasBeenUsedIn(std::chrono::milliseconds dur) const override {
@@ -218,7 +219,7 @@ class ConnectionHandler : public ConnectionHandlerBase {
 
   [[nodiscard]] bool hasBeenUsed() const override { return last_used_.has_value(); }
   [[nodiscard]] asio::awaitable<std::error_code> setupUsableSocket(asio::io_context& io_context);
-  [[nodiscard]] bool hasUsableSocket() const {  return socket_ && socket_->lowest_layer().is_open(); }
+  [[nodiscard]] bool hasUsableSocket() const { return socket_ && socket_->lowest_layer().is_open(); }
 
   asio::awaitable<std::error_code> establishNewConnection(const tcp::resolver::results_type& endpoints, asio::io_context& io_context_);
   asio::awaitable<std::error_code> send(const std::shared_ptr<io::InputStream>& stream_to_send, const std::vector<std::byte>& delimiter);
@@ -287,16 +288,15 @@ template<class SocketType>
 
 template<class SocketType>
 asio::awaitable<std::error_code> ConnectionHandler<SocketType>::sendStreamWithDelimiter(const std::shared_ptr<io::InputStream>& stream_to_send,
-                                                                                        const std::vector<std::byte>& delimiter,
-                                                                                        asio::io_context& io_context) {
+    const std::vector<std::byte>& delimiter,
+    asio::io_context& io_context) {
   if (auto connection_error = co_await setupUsableSocket(io_context))  // NOLINT
     co_return connection_error;
   co_return co_await send(stream_to_send, delimiter);
 }
 
 template<class SocketType>
-asio::awaitable<std::error_code> ConnectionHandler<SocketType>::send(const std::shared_ptr<io::InputStream>& stream_to_send,
-                                                                     const std::vector<std::byte>& delimiter) {
+asio::awaitable<std::error_code> ConnectionHandler<SocketType>::send(const std::shared_ptr<io::InputStream>& stream_to_send, const std::vector<std::byte>& delimiter) {
   gsl_Expects(hasUsableSocket());
 
   std::vector<std::byte> data_chunk;
@@ -369,7 +369,8 @@ void PutTCP::removeExpiredConnections() {
   }
 }
 
-std::error_code PutTCP::sendFlowFileContent(std::shared_ptr<ConnectionHandlerBase>& connection_handler, const std::shared_ptr<io::InputStream>& flow_file_content_stream) {
+std::error_code PutTCP::sendFlowFileContent(std::shared_ptr<ConnectionHandlerBase>& connection_handler,
+    const std::shared_ptr<io::InputStream>& flow_file_content_stream) {
   std::error_code operation_error;
   io_context_.restart();
   asio::co_spawn(io_context_,
@@ -382,8 +383,8 @@ std::error_code PutTCP::sendFlowFileContent(std::shared_ptr<ConnectionHandlerBas
 }
 
 void PutTCP::processFlowFile(std::shared_ptr<ConnectionHandlerBase>& connection_handler,
-                             core::ProcessSession& session,
-                             const std::shared_ptr<core::FlowFile>& flow_file) {
+    core::ProcessSession& session,
+    const std::shared_ptr<core::FlowFile>& flow_file) {
   auto flow_file_content_stream = session.getFlowFileContentStream(flow_file);
   if (!flow_file_content_stream) {
     session.transfer(flow_file, Failure);

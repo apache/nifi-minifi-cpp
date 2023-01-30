@@ -62,7 +62,7 @@ inline asio::awaitable<void> timeout(std::chrono::steady_clock::duration duratio
 
 template<class... Types>
 asio::awaitable<std::tuple<std::error_code, Types...>> asyncOperationWithTimeout(asio::awaitable<std::tuple<std::error_code, Types...>>&& async_operation,
-                                                                                 std::chrono::steady_clock::duration timeout_duration) {
+    std::chrono::steady_clock::duration timeout_duration) {
   using asio::experimental::awaitable_operators::operator||;
   auto operation_result = co_await(std::move(async_operation) || detail::timeout(timeout_duration));
   if (operation_result.index() == 1) {
