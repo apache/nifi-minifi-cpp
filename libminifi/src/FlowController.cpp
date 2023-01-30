@@ -43,6 +43,7 @@
 #include "core/ClassLoader.h"
 #include "core/ThreadedRepository.h"
 #include "c2/C2MetricsPublisher.h"
+#include "c2/ControllerSocketMetricsPublisher.h"
 
 namespace org::apache::nifi::minifi {
 
@@ -84,6 +85,14 @@ FlowController::FlowController(std::shared_ptr<core::Repository> provenance_repo
       c2_metrics_publisher = std::dynamic_pointer_cast<c2::C2MetricsPublisher>(publisher);
     }
     c2_agent_ = std::make_unique<c2::C2Agent>(configuration_, c2_metrics_publisher, std::move(filesystem), std::move(request_restart));
+  }
+
+  if (c2::isControllerSocketEnabled(configuration_)) {
+    std::shared_ptr<c2::ControllerSocketMetricsPublisher> controller_socket_metrics_publisher;
+    if (auto publisher = metrics_publisher_store_->getMetricsPublisher(c2::CONTROLLER_SOCKET_METRICS_PUBLISHER).lock()) {
+      controller_socket_metrics_publisher = std::dynamic_pointer_cast<c2::ControllerSocketMetricsPublisher>(publisher);
+    }
+    controller_socket_protocol_ = std::make_unique<c2::ControllerSocketProtocol>(this, this, configuration_, controller_socket_metrics_publisher);
   }
 }
 
@@ -323,6 +332,10 @@ int16_t FlowController::start() {
   } else if (!running_) {
     logger_->log_info("Starting Flow Controller");
     enableAllControllerServices();
+    if (controller_socket_protocol_) {
+      // Initialization is postponed after initializing the flow so the controller socket may load the SSL context defined in the flow configuration
+      controller_socket_protocol_->initialize();
+    }
     timer_scheduler_->start();
     event_scheduler_->start();
     cron_scheduler_->start();

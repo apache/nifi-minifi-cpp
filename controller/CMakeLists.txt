@@ -30,7 +30,7 @@ endif()
 include(CppVersion)
 set_cpp_version()
 
-set(MINIFI_CONTROLLER_SOURCES MiNiFiController.cpp ../minifi_main/MainHelper.cpp)
+set(MINIFI_CONTROLLER_SOURCES MiNiFiController.cpp Controller.cpp ../minifi_main/MainHelper.cpp)
 if (WIN32)
     set(EXECUTABLE_FILE_NAME "minificontroller.exe")
     set(EXECUTABLE_FILE_DESCRIPTION "${PRODUCT_NAME} controller")

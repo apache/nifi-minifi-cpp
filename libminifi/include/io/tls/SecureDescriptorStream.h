@@ -15,8 +15,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#ifndef LIBMINIFI_INCLUDE_IO_TLS_SECUREDESCRIPTORSTREAM_H_
-#define LIBMINIFI_INCLUDE_IO_TLS_SECUREDESCRIPTORSTREAM_H_
+#pragma once
 
 #include <openssl/err.h>
 #include <openssl/ssl.h>
@@ -36,11 +35,7 @@
 #include "io/BaseStream.h"
 #include "io/EndianCheck.h"
 
-namespace org {
-namespace apache {
-namespace nifi {
-namespace minifi {
-namespace io {
+namespace org::apache::nifi::minifi::io {
 
 /**
  * Purpose: File Stream Base stream extension. This is intended to be a thread safe access to
@@ -96,10 +91,4 @@ class SecureDescriptorStream : public io::BaseStream {
   std::shared_ptr<core::logging::Logger> logger_ = core::logging::LoggerFactory<SecureDescriptorStream>::getLogger();
 };
 
-}  // namespace io
-}  // namespace minifi
-}  // namespace nifi
-}  // namespace apache
-}  // namespace org
-
-#endif  // LIBMINIFI_INCLUDE_IO_TLS_SECUREDESCRIPTORSTREAM_H_
+}  // namespace org::apache::nifi::minifi::io

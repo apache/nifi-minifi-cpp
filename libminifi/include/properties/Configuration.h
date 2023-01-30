@@ -184,6 +184,13 @@ class Configuration : public Properties {
   static constexpr const char *nifi_metrics_publisher_prometheus_metrics_publisher_port = "nifi.metrics.publisher.PrometheusMetricsPublisher.port";
   static constexpr const char *nifi_metrics_publisher_metrics = "nifi.metrics.publisher.metrics";
 
+  // Controller socket options
+  static constexpr const char *controller_socket_enable = "controller.socket.enable";
+  static constexpr const char *controller_socket_local_any_interface = "controller.socket.local.any.interface";
+  static constexpr const char *controller_socket_host = "controller.socket.host";
+  static constexpr const char *controller_socket_port = "controller.socket.port";
+  static constexpr const char *controller_ssl_context_service = "controller.ssl.context.service";
+
   MINIFIAPI static const std::vector<core::ConfigurationProperty> CONFIGURATION_PROPERTIES;
   MINIFIAPI static const std::array<const char*, 2> DEFAULT_SENSITIVE_PROPERTIES;
 

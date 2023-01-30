@@ -25,11 +25,7 @@
 #include "io/validation.h"
 #include "utils/gsl.h"
 
-namespace org {
-namespace apache {
-namespace nifi {
-namespace minifi {
-namespace io {
+namespace org::apache::nifi::minifi::io {
 
 SecureDescriptorStream::SecureDescriptorStream(int fd, SSL *ssl)
     : fd_(fd), ssl_(ssl) {
@@ -80,15 +76,17 @@ size_t SecureDescriptorStream::read(gsl::span<std::byte> buf) {
   size_t total_read = 0;
   std::byte* writepos = buf.data();
   while (buf.size() > total_read) {
-    int status;
-    int sslStatus;
+    int status = 0;
+    int sslStatus = 0;
     do {
       const auto ssl_read_size = gsl::narrow<int>(std::min(buf.size() - total_read, gsl::narrow<size_t>(std::numeric_limits<int>::max())));
       status = SSL_read(ssl_, writepos, ssl_read_size);
-      sslStatus = SSL_get_error(ssl_, status);
-    } while (status < 0 && sslStatus == SSL_ERROR_WANT_READ);
+      if (status <= 0) {
+        sslStatus = SSL_get_error(ssl_, status);
+      }
+    } while (status <= 0 && sslStatus == SSL_ERROR_WANT_READ);
 
-    if (status < 0)
+    if (status <= 0)
       break;
 
     writepos += status;
@@ -98,9 +96,4 @@ size_t SecureDescriptorStream::read(gsl::span<std::byte> buf) {
   return total_read;
 }
 
-} /* namespace io */
-} /* namespace minifi */
-} /* namespace nifi */
-} /* namespace apache */
-} /* namespace org */
-
+}  // namespace org::apache::nifi::minifi::io

@@ -19,9 +19,9 @@
 
 #include <memory>
 
+#include "core/Core.h"
 #include "nodes/ResponseNodeLoader.h"
 #include "properties/Configure.h"
-#include "core/Core.h"
 
 namespace org::apache::nifi::minifi::state {
 

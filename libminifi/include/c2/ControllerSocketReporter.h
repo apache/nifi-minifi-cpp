@@ -1,5 +1,4 @@
 /**
- *
  * Licensed to the Apache Software Foundation (ASF) under one or more
  * contributor license agreements.  See the NOTICE file distributed with
  * this work for additional information regarding copyright ownership.
@@ -15,20 +14,26 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#include "c2/C2Utils.h"
+#pragma once
+
+#include <unordered_map>
+#include <unordered_set>
+#include <string>
 
 namespace org::apache::nifi::minifi::c2 {
 
-bool isC2Enabled(const std::shared_ptr<Configure>& configuration) {
-  std::string c2_enable_str;
-  configuration->get(minifi::Configuration::nifi_c2_enable, "c2.enable", c2_enable_str);
-  return utils::StringUtils::toBool(c2_enable_str).value_or(false);
-}
+class ControllerSocketReporter {
+ public:
+  struct QueueSize {
+    uint32_t queue_size{};
+    uint32_t queue_size_max{};
+  };
 
-bool isControllerSocketEnabled(const std::shared_ptr<Configure>& configuration) {
-  std::string controller_socket_enable_str;
-  configuration->get(minifi::Configuration::controller_socket_enable, controller_socket_enable_str);
-  return utils::StringUtils::toBool(controller_socket_enable_str).value_or(false);
-}
+  virtual std::unordered_map<std::string, QueueSize> getQueueSizes() = 0;
+  virtual std::unordered_set<std::string> getFullConnections() = 0;
+  virtual std::unordered_set<std::string> getConnections() = 0;
+  virtual std::string getAgentManifest() = 0;
+  virtual ~ControllerSocketReporter() = default;
+};
 
 }  // namespace org::apache::nifi::minifi::c2

@@ -145,7 +145,12 @@ const std::vector<core::ConfigurationProperty> Configuration::CONFIGURATION_PROP
   core::ConfigurationProperty{Configuration::nifi_metrics_publisher_agent_identifier},
   core::ConfigurationProperty{Configuration::nifi_metrics_publisher_class},
   core::ConfigurationProperty{Configuration::nifi_metrics_publisher_prometheus_metrics_publisher_port, gsl::make_not_null(core::StandardValidators::get().PORT_VALIDATOR.get())},
-  core::ConfigurationProperty{Configuration::nifi_metrics_publisher_metrics}
+  core::ConfigurationProperty{Configuration::nifi_metrics_publisher_metrics},
+  core::ConfigurationProperty{Configuration::controller_socket_enable, gsl::make_not_null(core::StandardValidators::get().BOOLEAN_VALIDATOR.get())},
+  core::ConfigurationProperty{Configuration::controller_socket_local_any_interface, gsl::make_not_null(core::StandardValidators::get().BOOLEAN_VALIDATOR.get())},
+  core::ConfigurationProperty{Configuration::controller_socket_host},
+  core::ConfigurationProperty{Configuration::controller_socket_port, gsl::make_not_null(core::StandardValidators::get().PORT_VALIDATOR.get())},
+  core::ConfigurationProperty{Configuration::controller_ssl_context_service}
 };
 
 const std::array<const char*, 2> Configuration::DEFAULT_SENSITIVE_PROPERTIES = {Configuration::nifi_security_client_pass_phrase,

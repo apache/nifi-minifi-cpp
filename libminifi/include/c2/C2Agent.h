@@ -80,6 +80,15 @@ class C2Agent : public state::UpdateController {
 
   std::optional<std::string> fetchFlow(const std::string& uri) const;
 
+  /**
+   * Serializes metrics into a payload.
+   * @parem parent_paylaod parent payload into which we insert the newly generated payload.
+   * @param name name of this metric
+   * @param metrics metrics to include.
+   */
+  static void serializeMetrics(C2Payload &metric_payload, const std::string &name, const std::vector<state::response::SerializedResponseNode> &metrics,
+    bool is_container = false, bool is_collapsible = true);
+
  protected:
   /**
    * Check the collection of triggers for any updates that need to be handled.
@@ -88,14 +97,6 @@ class C2Agent : public state::UpdateController {
   void checkTriggers();
 
   void configure(const std::shared_ptr<Configure> &configure, bool reconfigure = true);
-
-  /**
-   * Serializes metrics into a payload.
-   * @parem parent_paylaod parent payload into which we insert the newly generated payload.
-   * @param name name of this metric
-   * @param metrics metrics to include.
-   */
-  void serializeMetrics(C2Payload &metric_payload, const std::string &name, const std::vector<state::response::SerializedResponseNode> &metrics, bool is_container = false, bool is_collapsible = true);
 
   /**
    * Extract the payload

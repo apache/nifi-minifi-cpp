@@ -131,6 +131,7 @@ class SimpleSSLTestClient  {
   }
 
   ~SimpleSSLTestClient() {
+    SSL_shutdown(ssl_);
     SSL_free(ssl_);
 #ifdef WIN32
     closesocket(sfd_);
