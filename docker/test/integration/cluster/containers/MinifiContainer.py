@@ -65,7 +65,7 @@ class MinifiContainer(FlowContainer):
             config_file.write(test_flow_yaml.encode('utf-8'))
 
     def _create_properties(self):
-        properties_file_path = os.path.join(self.config_dir, 'minifi.properties')
+        properties_file_path = os.path.join(self.container_specific_config_dir, 'minifi.properties')
         with open(properties_file_path, 'a') as f:
             if self.options.enable_c2:
                 f.write("nifi.c2.enable=true\n")
@@ -82,6 +82,7 @@ class MinifiContainer(FlowContainer):
                 f.write("nifi.c2.rest.url.ack=https://minifi-c2-server:10090/c2/config/acknowledge\n")
                 f.write("nifi.c2.rest.ssl.context.service=SSLContextService\n")
                 f.write("nifi.c2.flow.base.url=https://minifi-c2-server:10090/c2/config/\n")
+                f.write("nifi.c2.root.classes=DeviceInfoNode,AgentInformation,FlowInformation\n")
                 f.write("nifi.c2.full.heartbeat=false\n")
                 f.write("nifi.c2.agent.class=minifi-test-class\n")
                 f.write("nifi.c2.agent.identifier=minifi-test-id\n")
@@ -99,9 +100,9 @@ class MinifiContainer(FlowContainer):
         self._create_config()
         self._create_properties()
 
-        self.vols[os.path.join(self.config_dir, 'minifi.properties')] = {"bind": os.path.join(MinifiContainer.MINIFI_ROOT, 'conf', 'minifi.properties'), "mode": "rw"}
+        self.vols[os.path.join(self.container_specific_config_dir, 'minifi.properties')] = {"bind": os.path.join(MinifiContainer.MINIFI_ROOT, 'conf', 'minifi.properties'), "mode": "rw"}
         self.vols[os.path.join(self.container_specific_config_dir, 'config.yml')] = {"bind": os.path.join(MinifiContainer.MINIFI_ROOT, 'conf', 'config.yml'), "mode": "rw"}
-        self.vols[os.path.join(self.config_dir, 'minifi-log.properties')] = {"bind": os.path.join(MinifiContainer.MINIFI_ROOT, 'conf', 'minifi-log.properties'), "mode": "rw"}
+        self.vols[os.path.join(self.container_specific_config_dir, 'minifi-log.properties')] = {"bind": os.path.join(MinifiContainer.MINIFI_ROOT, 'conf', 'minifi-log.properties'), "mode": "rw"}
 
     def deploy(self):
         if not self.set_deployed():
