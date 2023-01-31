@@ -49,8 +49,7 @@ RUN cd $MINIFI_BASE_DIR && \
 
 # Setup minificpp user
 RUN groupadd -g ${GID} ${USER} && useradd -g ${GID} ${USER} && \
-    chown -R ${USER}:${USER} ${MINIFI_BASE_DIR} && \
-    if [ -d "${MINIFI_BASE_DIR}/.ccache" ]; then mv ${MINIFI_BASE_DIR}/.ccache /home/${USER}/.ccache; fi
+    chown -R ${USER}:${USER} ${MINIFI_BASE_DIR}
 
 USER ${USER}
 
@@ -59,5 +58,6 @@ RUN cd $MINIFI_BASE_DIR && \
     cd build && \
     source /opt/rh/devtoolset-11/enable && \
     export PATH=/usr/lib64/ccache${PATH:+:${PATH}} && \
+    export CCACHE_DIR=${MINIFI_BASE_DIR}/.ccache && \
     cmake3 -DSTATIC_BUILD= -DSKIP_TESTS=${DOCKER_SKIP_TESTS} ${MINIFI_OPTIONS} -DAWS_ENABLE_UNITY_BUILD=OFF -DCMAKE_BUILD_TYPE="${CMAKE_BUILD_TYPE}" .. && \
     make -j "$(nproc)" package

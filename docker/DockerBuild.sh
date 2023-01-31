@@ -51,7 +51,7 @@ function dump_ccache() {
   docker_ccache_dump_location=$2
   container_id=$(docker run --rm -d "${ccache_source_image}" sh -c "while true; do sleep 1; done")
   mkdir -p "${docker_ccache_dump_location}"
-  docker cp "${container_id}:/home/minificpp/.ccache/." "${docker_ccache_dump_location}"
+  docker cp "${container_id}:/opt/minifi/.ccache/." "${docker_ccache_dump_location}"
   docker rm -f "${container_id}"
 }
 
