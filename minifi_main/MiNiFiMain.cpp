@@ -260,8 +260,9 @@ int main(int argc, char **argv) {
     minifi::core::extension::ExtensionManager::get().initialize(configure);
 
     if (argc >= 2 && std::string("docs") == argv[1]) {
-      if (argc == 2) {
-        std::cerr << "Usage: <minifiexe> docs <directory where to write individual doc files> <file where to write PROCESSORS.md>\n";
+      if (argc < 3 || argc > 4) {
+        std::cerr << "Usage: <minifiexe> docs <directory where to write individual doc files> [file where to write PROCESSORS.md]\n";
+        std::cerr << "    If no file name is given for PROCESSORS.md, it will be printed to stdout.\n";
         exit(1);
       }
       if (utils::file::create_dir(argv[2]) != 0) {
