@@ -155,7 +155,6 @@ void AbstractMQTTProcessor::reconnect() {
     return;
   }
 
-  MQTTAsync_connectOptions connect_options;
   MQTTProperties connect_properties = MQTTProperties_initializer;
   MQTTProperties will_properties = MQTTProperties_initializer;
 
@@ -164,13 +163,14 @@ void AbstractMQTTProcessor::reconnect() {
             onConnectFinished(success_data, success_data_5, failure_data, failure_data_5);
           });
 
-  setConnectOptions(connect_options, connect_properties, will_properties, connect_finished_task);
+  const MQTTAsync_connectOptions connect_options = createConnectOptions(connect_properties, will_properties, connect_finished_task);
 
   logger_->log_info("Reconnecting to %s", uri_);
   if (MQTTAsync_isConnected(client_)) {
     logger_->log_debug("Already connected to %s, no need to reconnect", uri_);
     return;
   }
+
   const int ret = MQTTAsync_connect(client_, &connect_options);
   MQTTProperties_free(&connect_properties);
   if (ret != MQTTASYNC_SUCCESS) {
@@ -182,13 +182,14 @@ void AbstractMQTTProcessor::reconnect() {
   connect_finished_task.get_future().get();
 }
 
-void AbstractMQTTProcessor::setConnectOptions(MQTTAsync_connectOptions& connect_options, MQTTProperties& connect_properties,
-                                              MQTTProperties& will_properties, const ConnectFinishedTask& connect_finished_task) const {
-  if (mqtt_version_.value() == MqttVersions::V_5_0) {
-    setMqtt5ConnectOptions(connect_options, connect_properties, will_properties);
-  } else {
-    setMqtt3ConnectOptions(connect_options);
-  }
+MQTTAsync_connectOptions AbstractMQTTProcessor::createConnectOptions(MQTTProperties& connect_properties, MQTTProperties& will_properties, const ConnectFinishedTask& connect_finished_task) const {
+  MQTTAsync_connectOptions connect_options = [this, &connect_properties, &will_properties] {
+    if (mqtt_version_.value() == MqttVersions::V_5_0) {
+      return createMqtt5ConnectOptions(connect_properties, will_properties);
+    } else {
+      return createMqtt3ConnectOptions();
+    }
+  }();
 
   connect_options.context = const_cast<ConnectFinishedTask*>(&connect_finished_task);
   connect_options.connectTimeout = gsl::narrow<int>(connection_timeout_.count());
@@ -203,10 +204,12 @@ void AbstractMQTTProcessor::setConnectOptions(MQTTAsync_connectOptions& connect_
   if (last_will_) {
     connect_options.will = const_cast<MQTTAsync_willOptions*>(&*last_will_);
   }
+
+  return connect_options;
 }
 
-void AbstractMQTTProcessor::setMqtt3ConnectOptions(MQTTAsync_connectOptions& connect_options) const {
-  connect_options = MQTTAsync_connectOptions_initializer;
+MQTTAsync_connectOptions AbstractMQTTProcessor::createMqtt3ConnectOptions() const {
+  MQTTAsync_connectOptions connect_options = MQTTAsync_connectOptions_initializer;
   connect_options.onSuccess = connectionSuccess;
   connect_options.onFailure = connectionFailure;
   connect_options.cleansession = getCleanSession();
@@ -216,10 +219,12 @@ void AbstractMQTTProcessor::setMqtt3ConnectOptions(MQTTAsync_connectOptions& con
   } else if (mqtt_version_.value() == MqttVersions::V_3_1_1) {
     connect_options.MQTTVersion = MQTTVERSION_3_1_1;
   }
+
+  return connect_options;
 }
 
-void AbstractMQTTProcessor::setMqtt5ConnectOptions(MQTTAsync_connectOptions& connect_options, MQTTProperties& connect_properties, MQTTProperties& will_properties) const {
-  connect_options = MQTTAsync_connectOptions_initializer5;
+MQTTAsync_connectOptions AbstractMQTTProcessor::createMqtt5ConnectOptions(MQTTProperties& connect_properties, MQTTProperties& will_properties) const {
+  MQTTAsync_connectOptions connect_options = MQTTAsync_connectOptions_initializer5;
   connect_options.onSuccess5 = connectionSuccess5;
   connect_options.onFailure5 = connectionFailure5;
   connect_options.connectProperties = &connect_properties;
@@ -244,6 +249,8 @@ void AbstractMQTTProcessor::setMqtt5ConnectOptions(MQTTAsync_connectOptions& con
   connect_options.willProperties = &will_properties;
 
   setProcessorSpecificMqtt5ConnectOptions(connect_properties);
+
+  return connect_options;
 }
 
 void AbstractMQTTProcessor::onTrigger(const std::shared_ptr<core::ProcessContext>& context, const std::shared_ptr<core::ProcessSession>& session) {

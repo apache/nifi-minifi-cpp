@@ -216,9 +216,9 @@ class AbstractMQTTProcessor : public core::Processor {
   virtual bool getCleanSession() const = 0;
   virtual bool getCleanStart() const = 0;
   virtual std::chrono::seconds getSessionExpiryInterval() const = 0;
-  void setConnectOptions(MQTTAsync_connectOptions& connect_options, MQTTProperties& connect_properties, MQTTProperties& will_properties, const ConnectFinishedTask& connect_finished_task) const;
-  void setMqtt3ConnectOptions(MQTTAsync_connectOptions& connect_options) const;
-  void setMqtt5ConnectOptions(MQTTAsync_connectOptions& connect_options, MQTTProperties& connect_properties, MQTTProperties& will_properties) const;
+  MQTTAsync_connectOptions createConnectOptions(MQTTProperties& connect_properties, MQTTProperties& will_properties, const ConnectFinishedTask& connect_finished_task) const;
+  MQTTAsync_connectOptions createMqtt3ConnectOptions() const;
+  MQTTAsync_connectOptions createMqtt5ConnectOptions(MQTTProperties& connect_properties, MQTTProperties& will_properties) const;
   virtual void setProcessorSpecificMqtt5ConnectOptions(MQTTProperties& /*connect_props*/) const {
   }
 
