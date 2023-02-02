@@ -182,7 +182,7 @@ void AbstractMQTTProcessor::reconnect() {
   connect_finished_task.get_future().get();
 }
 
-MQTTAsync_connectOptions AbstractMQTTProcessor::createConnectOptions(MQTTProperties& connect_properties, MQTTProperties& will_properties, const ConnectFinishedTask& connect_finished_task) const {
+MQTTAsync_connectOptions AbstractMQTTProcessor::createConnectOptions(MQTTProperties& connect_properties, MQTTProperties& will_properties, ConnectFinishedTask& connect_finished_task) {
   MQTTAsync_connectOptions connect_options = [this, &connect_properties, &will_properties] {
     if (mqtt_version_.value() == MqttVersions::V_5_0) {
       return createMqtt5ConnectOptions(connect_properties, will_properties);
@@ -191,7 +191,7 @@ MQTTAsync_connectOptions AbstractMQTTProcessor::createConnectOptions(MQTTPropert
     }
   }();
 
-  connect_options.context = const_cast<ConnectFinishedTask*>(&connect_finished_task);
+  connect_options.context = &connect_finished_task;
   connect_options.connectTimeout = gsl::narrow<int>(connection_timeout_.count());
   connect_options.keepAliveInterval = gsl::narrow<int>(keep_alive_interval_.count());
   if (!username_.empty()) {
@@ -199,10 +199,10 @@ MQTTAsync_connectOptions AbstractMQTTProcessor::createConnectOptions(MQTTPropert
     connect_options.password = password_.c_str();
   }
   if (sslOpts_) {
-    connect_options.ssl = const_cast<MQTTAsync_SSLOptions*>(&*sslOpts_);
+    connect_options.ssl = &*sslOpts_;
   }
   if (last_will_) {
-    connect_options.will = const_cast<MQTTAsync_willOptions*>(&*last_will_);
+    connect_options.will = &*last_will_;
   }
 
   return connect_options;
