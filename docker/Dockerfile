@@ -72,17 +72,16 @@ ENV MINIFI_VERSION ${MINIFI_VERSION}
 RUN addgroup -g ${GID} ${USER} && adduser -u ${UID} -D -G ${USER} -g "" ${USER} && \
     install -d -o ${USER} -g ${USER} ${MINIFI_BASE_DIR}
 COPY --chown=${USER}:${USER} . ${MINIFI_BASE_DIR}
-RUN if [ -d "${MINIFI_BASE_DIR}/.ccache" ]; then mv ${MINIFI_BASE_DIR}/.ccache /home/${USER}/.ccache; fi
 
 USER ${USER}
 
-ENV PATH /usr/lib/ccache/bin:${PATH}
 RUN mkdir ${MINIFI_BASE_DIR}/build
 WORKDIR ${MINIFI_BASE_DIR}/build
-RUN cmake -DSTATIC_BUILD= -DSKIP_TESTS=${DOCKER_SKIP_TESTS} ${MINIFI_OPTIONS} -DAWS_ENABLE_UNITY_BUILD=OFF -DCMAKE_BUILD_TYPE="${CMAKE_BUILD_TYPE}" .. && \
+RUN export PATH=/usr/lib64/ccache/bin${PATH:+:${PATH}} && \
+    export CCACHE_DIR=${MINIFI_BASE_DIR}/.ccache && \
+    cmake -DSTATIC_BUILD= -DSKIP_TESTS=${DOCKER_SKIP_TESTS} ${MINIFI_OPTIONS} -DAWS_ENABLE_UNITY_BUILD=OFF -DCMAKE_BUILD_TYPE="${CMAKE_BUILD_TYPE}" .. && \
     make -j "$(nproc)" package && \
     tar -xzvf "${MINIFI_BASE_DIR}/build/nifi-minifi-cpp-${MINIFI_VERSION}.tar.gz" -C "${MINIFI_BASE_DIR}"
-
 
 # Release image
 FROM ${BASE_ALPINE_IMAGE} AS release
