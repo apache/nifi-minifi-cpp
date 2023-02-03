@@ -124,3 +124,5 @@ if (EXISTS ${CMAKE_SOURCE_DIR}/docker/test/integration/features)
         docker-verify
         COMMAND ${CMAKE_SOURCE_DIR}/docker/DockerVerify.sh ${PROJECT_VERSION_MAJOR}.${PROJECT_VERSION_MINOR}.${PROJECT_VERSION_PATCH} ${ENABLED_BEHAVE_TESTS})
 endif()
+
+include(VerifyPythonCompatibility)
