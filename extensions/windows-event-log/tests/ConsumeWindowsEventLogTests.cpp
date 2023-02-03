@@ -246,6 +246,10 @@ TEST_CASE("ConsumeWindowsEventLog extracts some attributes by default", "[onTrig
     CHECK(test_plan->setProperty(cwel_processor, ConsumeWindowsEventLog ::OutputFormat.getName(), "JSON"));
   }
 
+  SECTION("Plaintext output") {
+    CHECK(test_plan->setProperty(cwel_processor, ConsumeWindowsEventLog ::OutputFormat.getName(), "Plaintext"));
+  }
+
   // 0th event, only to create a bookmark
   {
     reportEvent(APPLICATION_CHANNEL, "Event zero: this is in the past");
