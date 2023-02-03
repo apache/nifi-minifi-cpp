@@ -15,31 +15,30 @@
  * limitations under the License.
  */
 #pragma once
-
-#include "PythonBindings.h"
-#include "../core/Relationship.h"
+#include <memory>
+#include "../PythonBindings.h"
+#include "PythonProcessor.h"
 
 namespace org::apache::nifi::minifi::python {
 
-struct PyRelationship {
-  using Relationship = org::apache::nifi::minifi::core::Relationship;
-  using HeldType = Relationship;
+struct PyProcessor {
+  PyProcessor() {}
+  using HeldType = std::weak_ptr<PythonProcessor>;
 
   PyObject_HEAD
-  HeldType relationship_;
+  HeldType processor_;
 
-  static PyObject *newInstance(PyTypeObject *type, PyObject *args, PyObject *kwds);
-  static int init(PyRelationship *self, PyObject *args, PyObject *kwds);
-  static void dealloc(PyRelationship *self);
+  static int init(PyProcessor* self, PyObject* args, PyObject* kwds);
 
-  static PyObject *getName(PyRelationship *self, PyObject *args);
-  static PyObject *getDescription(PyRelationship *self, PyObject *args);
+  static PyObject* setSupportsDynamicProperties(PyProcessor* self, PyObject* args);
+  static PyObject* setDescription(PyProcessor* self, PyObject* args);
+  static PyObject* addProperty(PyProcessor* self, PyObject* args);
 
-  static PyTypeObject *typeObject();
+  static PyTypeObject* typeObject();
 };
 
 namespace object {
-template <>
-struct Converter<PyRelationship::HeldType> : public HolderTypeConverter<PyRelationship> {};
-}
-}  // namespace org::apache::nifi::minifi::python
+template<>
+struct Converter<PyProcessor::HeldType> : public HolderTypeConverter<PyProcessor> {};
+}  // namespace object
+}  //  namespace org::apache::nifi::minifi::python

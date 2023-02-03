@@ -27,25 +27,14 @@ namespace org::apache::nifi::minifi::script {
 
 class ScriptEngine {
  public:
-  /**
-   * Evaluates the given script string, storing the expression's result into res_var, if res_var is not empty.
-   * @param script
-   * @param res_var
-   */
-  virtual void eval(const std::string &script) = 0;
-
-  /**
-   * Evaluates the given script file, storing the expression's result into res_var, if res_var is not empty.
-   * @param script
-   * @param res_var
-   */
-  virtual void evalFile(const std::string &file_name) = 0;
+  virtual void eval(const std::string& script) = 0;
+  virtual void evalFile(const std::filesystem::path& file_name) = 0;
 
   void setModulePaths(std::vector<std::filesystem::path> module_paths) {
     module_paths_ = std::move(module_paths);
   }
 
-  virtual void onTrigger(const std::shared_ptr<core::ProcessContext> &context, const std::shared_ptr<core::ProcessSession> &session) = 0;
+  virtual void onTrigger(const std::shared_ptr<core::ProcessContext>& context, const std::shared_ptr<core::ProcessSession>& session) = 0;
 
   virtual ~ScriptEngine() = default;
 

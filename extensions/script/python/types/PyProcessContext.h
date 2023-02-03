@@ -16,28 +16,29 @@
  */
 #pragma once
 
-#include "../ScriptProcessContext.h"
-#include "PythonBindings.h"
+#include <memory>
+
+#include "../../ScriptProcessContext.h"
+#include "../PythonBindings.h"
 
 namespace org::apache::nifi::minifi::python {
 
 struct PyProcessContext {
+  PyProcessContext() {}
   using HeldType = std::weak_ptr<script::ScriptProcessContext>;
 
   PyObject_HEAD
   HeldType process_context_;
 
-  static PyObject *newInstance(PyTypeObject *type, PyObject *args, PyObject *kwds);
-  static int init(PyProcessContext *self, PyObject *args, PyObject *kwds);
-  static void dealloc(PyProcessContext *self);
+  static int init(PyProcessContext* self, PyObject* args, PyObject* kwds);
 
-  static PyObject *getProperty(PyProcessContext *self, PyObject *args);
+  static PyObject* getProperty(PyProcessContext* self, PyObject* args);
 
-  static PyTypeObject *typeObject();
+  static PyTypeObject* typeObject();
 };
 
 namespace object {
-template <>
+template<>
 struct Converter<PyProcessContext::HeldType> : public HolderTypeConverter<PyProcessContext> {};
 }  // namespace object
 }  // namespace org::apache::nifi::minifi::python

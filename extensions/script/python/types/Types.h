@@ -19,17 +19,13 @@
 
 #include <string>
 #include <optional>
+#include <utility>
 
-#include "Exception.h"
+#include "../PyException.h"
 
 namespace org::apache::nifi::minifi::python {
 
-/**
- * @brief Python object type
- * 
- * @tparam reference_type 
- */
-template <ReferenceType reference_type>
+template<ReferenceType reference_type>
 class Object : public ReferenceHolder<reference_type> {
  public:
   using Reference = ObjectReference<reference_type>;
@@ -38,12 +34,10 @@ class Object : public ReferenceHolder<reference_type> {
 
   explicit Object(Reference ref)
       : ReferenceHolder<reference_type>(std::move(ref)) {
-
   }
 
-  explicit Object(PyObject *object)
+  explicit Object(PyObject* object)
       : ReferenceHolder<reference_type>(object) {
-
   }
 
   OwnedReference getAttribute(std::string_view attribute_name) {
@@ -51,21 +45,17 @@ class Object : public ReferenceHolder<reference_type> {
   }
 };
 
-/**
- * @brief Helper methods to create Object instances
- * 
- */
 namespace object {
 
-template <typename T>
+template<typename T>
 struct Converter {};
 
-template <typename T>
+template<typename T>
 concept convertible = requires(T type) {
   { Converter<T>().from(std::forward<T>(type)) } -> std::same_as<OwnedObject>;
 };
 
-template <>
+template<>
 struct Converter<bool> {
   OwnedObject from(bool value) {
     if (value) {
@@ -77,92 +67,84 @@ struct Converter<bool> {
   }
 };
 
-template <>
-struct Converter<nullptr_t> {
-  OwnedObject from(nullptr_t) {
+template<>
+struct Converter<std::nullptr_t> {
+  OwnedObject from(std::nullptr_t) {
     Py_INCREF(Py_None);
     return OwnedObject(Py_None);
   }
 };
 
-template <>
+template<>
 struct Converter<std::string_view> {
   OwnedObject from(std::string_view value) {
     return OwnedObject(PyUnicode_FromStringAndSize(value.data(), value.length()));
   }
 };
 
-template <>
+template<>
 struct Converter<std::string> : public Converter<std::string_view> {};
 
-template <typename T>
-requires std::signed_integral<T> && (sizeof(T) <= sizeof(long))
+template<typename T> requires std::signed_integral<T> && (sizeof(T) <= sizeof(long))  // NOLINT(runtime/int)
 struct Converter<T> {
   OwnedObject from(T value) {
-    return OwnedObject(PyLong_FromLong(static_cast<long>(value)));
+    return OwnedObject(PyLong_FromLong(static_cast<long>(value)));  // NOLINT(runtime/int)
   }
 };
 
-template <typename T>
-requires std::unsigned_integral<T> && (sizeof(T) <= sizeof(unsigned long))
+template<typename T> requires std::unsigned_integral<T> && (sizeof(T) <= sizeof(unsigned long))  // NOLINT(runtime/int)
 struct Converter<T> {
   OwnedObject from(T value) {
-    return OwnedObject(PyLong_FromUnsignedLong(static_cast<unsigned long>(value)));
+    return OwnedObject(PyLong_FromUnsignedLong(static_cast<unsigned long>(value)));  // NOLINT(runtime/int)
   }
 };
 
-template <typename T>
-requires std::signed_integral<T> && (sizeof(T) > sizeof(long))
+template<typename T> requires std::signed_integral<T> && (sizeof(T) > sizeof(long))  // NOLINT(runtime/int)
 struct Converter<T> {
   OwnedObject from(T value) {
-    return OwnedObject(PyLong_FromLongLong(static_cast<long long>(value)));
+    return OwnedObject(PyLong_FromLongLong(static_cast<long long>(value)));  // NOLINT(runtime/int)
   }
 };
 
-template <typename T>
-requires std::unsigned_integral<T> && (sizeof(T) > sizeof(unsigned long))
+template<typename T> requires std::unsigned_integral<T> && (sizeof(T) > sizeof(unsigned long))  // NOLINT(runtime/int)
 struct Converter<T> {
   OwnedObject from(T value) {
-    return OwnedObject(PyLong_FromUnsignedLongLong(static_cast<unsigned long>(value)));
+    return OwnedObject(PyLong_FromUnsignedLongLong(static_cast<unsigned long>(value)));  // NOLINT(runtime/int)
   }
 };
 
-template <std::derived_from<OwnedReferenceHolder> T>
+template<std::derived_from<OwnedReferenceHolder> T>
 struct Converter<T> {
-  OwnedObject from(T &&ownedObject) {
+  OwnedObject from(T&& ownedObject) {
     return OwnedObject(ownedObject.releaseReference());
   }
 };
 
-template <holder_type T>
+template<holder_type T>
 struct HolderTypeConverter {
-  OwnedObject from(typename T::HeldType &&value) {
+  OwnedObject from(typename T::HeldType&& value) {
     auto typeObject = T::typeObject();
     return OwnedObject(PyObject_CallFunction(reinterpret_cast<PyObject*>(typeObject), "O&", &HolderTypeConverter::convertToCapsule, reinterpret_cast<void*>(&value)));
   }
 
-  static inline PyObject* convertToCapsule(void *ptr) {
+  static inline PyObject* convertToCapsule(void* ptr) {
     return PyCapsule_New(ptr, nullptr, nullptr);
   }
 };
 
-template <convertible T>
+template<convertible T>
 OwnedObject from(T value) {
   return Converter<T>().from(std::forward<T>(value));
 }
 
-template <convertible T>
+template<convertible T>
 PyObject* returnReference(T value) {
   return from(std::forward<T>(value)).releaseReference();
 }
-} // namespace object
+}  // namespace object
 
-/**
- * @brief Wrapper for Python "long" objects
- * 
- * @tparam reference_type 
- */
-template <ReferenceType reference_type>
+
+template<ReferenceType reference_type>
 class Long : public ReferenceHolder<reference_type> {
  public:
   using Reference = ObjectReference<reference_type>;
@@ -171,12 +153,10 @@ class Long : public ReferenceHolder<reference_type> {
 
   explicit Long(Reference ref)
       : ReferenceHolder<reference_type>(std::move(ref)) {
-
   }
 
-  explicit Long(PyObject *object)
+  explicit Long(PyObject* object)
       : ReferenceHolder<reference_type>(object) {
-
   }
 
   int64_t asInt64() {
@@ -184,12 +164,27 @@ class Long : public ReferenceHolder<reference_type> {
   }
 };
 
-/**
- * @brief Wrapper for Python "str" objects
- * 
- * @tparam reference_type 
- */
-template <ReferenceType reference_type>
+template<ReferenceType reference_type>
+class Bytes : public ReferenceHolder<reference_type> {
+ public:
+  using Reference = ObjectReference<reference_type>;
+
+  Bytes() = default;
+
+  explicit Bytes(Reference ref)
+      : ReferenceHolder<reference_type>(std::move(ref)) {
+  }
+
+  explicit Bytes(PyObject* object)
+      : ReferenceHolder<reference_type>(object) {
+  }
+
+  static OwnedBytes fromStringAndSize(std::string_view string) requires(reference_type == ReferenceType::OWNED) {
+    return OwnedBytes(PyBytes_FromStringAndSize(string.data(), string.length()));
+  }
+};
+
+template<ReferenceType reference_type>
 class Str : public ReferenceHolder<reference_type> {
  public:
   using Reference = ObjectReference<reference_type>;
@@ -198,33 +193,30 @@ class Str : public ReferenceHolder<reference_type> {
 
   explicit Str(Reference ref)
       : ReferenceHolder<reference_type>(std::move(ref)) {
-
   }
 
-  explicit Str(PyObject *object)
+  explicit Str(PyObject* object)
       : ReferenceHolder<reference_type>(object) {
-
-  }
-
-  std::string_view asUtf8() {
-    return PyUnicode_AsUTF8AndSize(this->ref_.get(), nullptr);
   }
 
   std::string toUtf8String() {
-    return std::string(asUtf8());
+    auto utf8coded_bytes = OwnedBytes(PyUnicode_AsUTF8String(this->ref_.get()));
+    return std::string(PyBytes_AsString(utf8coded_bytes.get()));
   }
 
-  static OwnedStr from(convertible_to_object auto object) requires (reference_type == ReferenceType::OWNED) {
+  static OwnedStr from(convertible_to_object auto object) requires(reference_type == ReferenceType::OWNED) {
     return OwnedStr(PyObject_Str(static_cast<PyObject*>(object)));
+  }
+
+  static BorrowedStr fromTuple(PyObject* tuple, Py_ssize_t location) requires(reference_type == ReferenceType::BORROWED) {
+    BorrowedStr string_from_tuple{PyTuple_GetItem(tuple, location)};
+    if (string_from_tuple.get() == nullptr)
+      throw PyException();
+    return string_from_tuple;
   }
 };
 
-/**
- * @brief Wrapper for Python "list" objects
- * 
- * @tparam reference_type 
- */
-template <ReferenceType reference_type>
+template<ReferenceType reference_type>
 class List : public ReferenceHolder<reference_type> {
  public:
   using Reference = ObjectReference<reference_type>;
@@ -233,12 +225,10 @@ class List : public ReferenceHolder<reference_type> {
 
   explicit List(Reference ref)
       : ReferenceHolder<reference_type>(std::move(ref)) {
-
   }
 
-  explicit List(PyObject *object)
+  explicit List(PyObject* object)
       : ReferenceHolder<reference_type>(object) {
-
   }
 
   size_t length() {
@@ -254,12 +244,8 @@ class List : public ReferenceHolder<reference_type> {
   }
 };
 
-/**
- * @brief Wrapper for Python "dict" objects
- * 
- * @tparam reference_type 
- */
-template <ReferenceType reference_type>
+
+template<ReferenceType reference_type>
 class Dict : public ReferenceHolder<reference_type> {
  public:
   using Reference = ObjectReference<reference_type>;
@@ -268,74 +254,40 @@ class Dict : public ReferenceHolder<reference_type> {
 
   explicit Dict(Reference ref)
       : ReferenceHolder<reference_type>(std::move(ref)) {
-
   }
 
-  explicit Dict(PyObject *object)
+  explicit Dict(PyObject* object)
       : ReferenceHolder<reference_type>(object) {
-
   }
 
-  static OwnedDict create() requires (reference_type == ReferenceType::OWNED) {
+  static OwnedDict create() requires(reference_type == ReferenceType::OWNED) {
     return OwnedDict(PyDict_New());
   }
 
-  template <object::convertible T>
+  template<object::convertible T>
   bool contains(T key) const {
     auto key_object = object::from(key);
     return PyDict_Contains(this->ref_.get(), key_object.get()) != 0;
   }
 
-  template <object::convertible T>
+  template<object::convertible T>
   void put(std::string_view key, T value) {
     PyDict_SetItemString(this->ref_.get(), key.data(), object::from(value).releaseReference());
   }
 
   std::optional<BorrowedReference> operator[](std::string_view key) {
     auto item = BorrowedReference(PyDict_GetItemString(this->ref_.get(), key.data()));
-    return item ? std::optional{ item } : std::nullopt;
+    return item ? std::optional{item} : std::nullopt;
   }
 };
 
-/**
- * @brief Wrapper for Python "bytes" objects
- * 
- * @tparam reference_type 
- */
-template <ReferenceType reference_type>
-class Bytes : public ReferenceHolder<reference_type> {
- public:
-  using Reference = ObjectReference<reference_type>;
-
-  Bytes() = default;
-
-  explicit Bytes(Reference ref)
-      : ReferenceHolder<reference_type>(std::move(ref)) {
-
-  }
-
-  explicit Bytes(PyObject *object)
-      : ReferenceHolder<reference_type>(object) {
-
-  }
-
-  static OwnedBytes fromStringAndSize(std::string_view string) requires (reference_type == ReferenceType::OWNED) {
-    return OwnedBytes(PyBytes_FromStringAndSize(string.data(), string.length()));
-  }
-};
-
-/**
- * @brief Helper methods for callable objects
- * 
- */
-namespace callable
-{
-template <ReferenceType reference_type>
+namespace callable {
+template<ReferenceType reference_type>
 ObjectReference<reference_type> argument(ObjectReference<reference_type> reference) {
   return reference;
 }
 
-static inline BorrowedReference argument(nullptr_t) {
+static inline BorrowedReference argument(std::nullptr_t) {
   return BorrowedReference(Py_None);
 }
 
@@ -343,64 +295,50 @@ static inline BorrowedReference argument(bool value) {
   return BorrowedReference(value ? Py_True : Py_False);
 }
 
-template <typename T>
+template<typename T>
 OwnedReference argument(T value) {
   return OwnedReference(object::from(std::forward<T>(value)).releaseReference());
 }
 
-} // namespace callable
+}  // namespace callable
 
-/**
- * @brief Wrapper for Python objects implementing the callable protocol
- * 
- * @tparam reference_type 
- */
-template <ReferenceType reference_type>
-class Callable : public ReferenceHolder<reference_type>{
+template<ReferenceType reference_type>
+class Callable : public ReferenceHolder<reference_type> {
  public:
   using Reference = ObjectReference<reference_type>;
 
   Callable() = default;
-  
+
   explicit Callable(Reference ref)
       : ReferenceHolder<reference_type>(std::move(ref)) {
-
   }
 
-  explicit Callable(PyObject *object)
+  explicit Callable(PyObject* object)
       : ReferenceHolder<reference_type>(object) {
-
   }
 
-  template <typename... Args>
-  OwnedReference operator()(Args &&...args) {
+  template<typename... Args>
+  OwnedReference operator()(Args&& ...args) {
     return OwnedReference(PyObject_CallFunctionObjArgs(this->ref_.get(), callable::argument(std::forward<Args>(args)).get()..., nullptr));
   }
 };
 
-/**
- * @brief Wrapper for Python modules
- * 
- * @tparam reference_type 
- */
-template <ReferenceType reference_type>
+template<ReferenceType reference_type>
 class Module : public ReferenceHolder<reference_type> {
  public:
   using Reference = ObjectReference<reference_type>;
 
   Module() = default;
-  
+
   explicit Module(Reference ref)
       : ReferenceHolder<reference_type>(std::move(ref)) {
-
   }
 
-  explicit Module(PyObject *object)
+  explicit Module(PyObject* object)
       : ReferenceHolder<reference_type>(object) {
-
   }
 
-  static OwnedModule import(std::string_view module_name) requires (reference_type == ReferenceType::OWNED) {
+  static OwnedModule import(std::string_view module_name) requires(reference_type == ReferenceType::OWNED) {
     return OwnedModule(PyImport_ImportModule(module_name.data()));
   }
 
@@ -409,4 +347,19 @@ class Module : public ReferenceHolder<reference_type> {
   }
 };
 
+template<class T>
+PyObject* newPythonAllocatedInstance(PyTypeObject* type, PyObject*, PyObject*) {
+  auto self = PyType_GenericAlloc(type, 0);
+  if (self == nullptr) {
+    return nullptr;
+  }
+
+  new (self) T();
+  return self;
+}
+
+template<class T>
+void pythonAllocatedInstanceDealloc(T* self) {
+  self->~T();
+}
 }  // namespace org::apache::nifi::minifi::python

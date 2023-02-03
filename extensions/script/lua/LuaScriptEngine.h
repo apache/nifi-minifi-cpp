@@ -37,8 +37,8 @@ class LuaScriptEngine : public script::ScriptEngine {
  public:
   LuaScriptEngine();
 
-  void eval(const std::string &script) override;
-  void evalFile(const std::string &file_name) override;
+  void eval(const std::string& script) override;
+  void evalFile(const std::filesystem::path& file_name) override;
 
   /**
    * Calls the given function, forwarding arbitrary provided parameters.
@@ -46,7 +46,7 @@ class LuaScriptEngine : public script::ScriptEngine {
    * @return
    */
   template<typename... Args>
-  void call(const std::string &fn_name, Args &&...args) {
+  void call(const std::string& fn_name, Args&& ...args) {
     sol::protected_function_result function_result{};
     try {
       sol::protected_function fn = lua_[fn_name.c_str()];
@@ -73,14 +73,12 @@ class LuaScriptEngine : public script::ScriptEngine {
       lua_session_->releaseCoreResources();
     }
 
-
    private:
     std::shared_ptr<script::ScriptProcessContext> script_context_;
     std::shared_ptr<LuaProcessSession> lua_session_;
   };
 
-  void onTrigger(const std::shared_ptr<core::ProcessContext> &context,
-      const std::shared_ptr<core::ProcessSession> &session) override {
+  void onTrigger(const std::shared_ptr<core::ProcessContext>& context, const std::shared_ptr<core::ProcessSession>& session) override {
     auto script_context = convert(context);
     auto lua_session = convert(session);
     TriggerSession trigger_session(script_context, lua_session);
@@ -88,20 +86,20 @@ class LuaScriptEngine : public script::ScriptEngine {
   }
 
   template<typename T>
-  void bind(const std::string &name, const T &value) {
+  void bind(const std::string& name, const T& value) {
     lua_[name.c_str()] = convert(value);
   }
 
   template<typename T>
-  T convert(const T &value) {
+  T convert(const T& value) {
     return value;
   }
 
-  static std::shared_ptr<script::ScriptProcessContext> convert(const std::shared_ptr<core::ProcessContext> &context) {
+  static std::shared_ptr<script::ScriptProcessContext> convert(const std::shared_ptr<core::ProcessContext>& context) {
     return std::make_shared<script::ScriptProcessContext>(context);
   }
 
-  static std::shared_ptr<LuaProcessSession> convert(const std::shared_ptr<core::ProcessSession> &session) {
+  static std::shared_ptr<LuaProcessSession> convert(const std::shared_ptr<core::ProcessSession>& session) {
     return std::make_shared<LuaProcessSession>(session);
   }
 

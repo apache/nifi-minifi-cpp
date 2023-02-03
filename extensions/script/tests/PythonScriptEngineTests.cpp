@@ -23,19 +23,21 @@
 namespace org::apache::nifi::minifi::test {
 
 TEST_CASE("PythonScriptEngine errors during eval", "[pythonscriptengineeval]") {
-  python::NewPythonScriptEngine engine;
+  python::PythonScriptEngine engine;
   REQUIRE_NOTHROW(engine.eval("print('foo')"));
-  REQUIRE_THROWS_MATCHES(engine.eval("shout('foo')"), script::ScriptException, utils::ExceptionSubStringMatcher<script::ScriptException>({"name 'shout' is not defined"}));
+  REQUIRE_THROWS_MATCHES(engine.eval("shout('foo')"), script::ScriptException, utils::ExceptionSubStringMatcher<script::ScriptException>({"NameError: name 'shout' is not defined"}));
+  REQUIRE_THROWS_MATCHES(engine.eval(" print('foo')"), script::ScriptException, utils::ExceptionSubStringMatcher<script::ScriptException>({"IndentationError: unexpected indent (<string>, line 2)"}));
 }
 
 TEST_CASE("GilScopedAcquire should lock threads properly", "[pythonscriptengineeval]") {
-  python::NewPythonScriptEngine engine;
+  python::PythonScriptEngine engine;
+
   for (int i = 0; i < 10; ++i) {
     DYNAMIC_SECTION("Iteration: " << i) {
       std::vector<std::string_view> messages;
       auto sleeping_thread = std::thread([&] {
-        using namespace std::chrono_literals;
-        python::GilScopedAcquire gil_lock;
+        using namespace std::literals::chrono_literals;
+        python::GlobalInterpreterLock gil_lock;
         messages.emplace_back("Before sleep");
         std::this_thread::sleep_for(100ms);
         messages.emplace_back("First thread");
@@ -43,7 +45,7 @@ TEST_CASE("GilScopedAcquire should lock threads properly", "[pythonscriptenginee
       std::this_thread::sleep_for(15ms);
 
       auto non_sleeping_thread = std::thread([&] {
-        python::GilScopedAcquire gil_lock;
+        python::GlobalInterpreterLock gil_lock;
         messages.emplace_back("Second thread");
       });
       non_sleeping_thread.join();
@@ -54,8 +56,9 @@ TEST_CASE("GilScopedAcquire should lock threads properly", "[pythonscriptenginee
 }
 
 TEST_CASE("PythonScriptEngine errors during call", "[luascriptenginecall]") {
-  python::NewPythonScriptEngine engine;
-  REQUIRE_NOTHROW(engine.eval(R"(def foo():
+  python::PythonScriptEngine engine;
+  REQUIRE_NOTHROW(engine.eval(R"(
+def foo():
   print('foo')
 
 def bar():

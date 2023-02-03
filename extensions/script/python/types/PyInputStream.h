@@ -17,29 +17,27 @@
  */
 
 #pragma once
+#include <memory>
 
-#include "PythonBindings.h"
+#include "../PythonBindings.h"
 #include "io/InputStream.h"
 
 namespace org::apache::nifi::minifi::python {
 
 struct PyInputStream {
-  using HeldType = std::weak_ptr<org::apache::nifi::minifi::io::InputStream>;
+  PyInputStream() {}
+  using HeldType = std::weak_ptr<io::InputStream>;
 
   PyObject_HEAD
   HeldType input_stream_;
 
-  static PyObject *newInstance(PyTypeObject *type, PyObject *args, PyObject *kwds);
-  static int init(PyInputStream *self, PyObject *args, PyObject *kwds);
-  static void dealloc(PyInputStream *self);
-
-  static PyObject *read(PyInputStream *self, PyObject *args);
-
-  static PyTypeObject *typeObject();
+  static int init(PyInputStream* self, PyObject* args, PyObject* kwds);
+  static PyObject* read(PyInputStream* self, PyObject* args);
+  static PyTypeObject* typeObject();
 };
 
 namespace object {
-template <>
+template<>
 struct Converter<PyInputStream::HeldType> : public HolderTypeConverter<PyInputStream> {};
 }
 }  // namespace org::apache::nifi::minifi::python

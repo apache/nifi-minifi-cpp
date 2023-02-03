@@ -74,7 +74,7 @@ void LuaScriptEngine::executeScriptWithAppendedModulePaths(std::string& script) 
   lua_.script(script, sol::script_throw_on_error);
 }
 
-void LuaScriptEngine::eval(const std::string &script) {
+void LuaScriptEngine::eval(const std::string& script) {
   try {
     if (!module_paths_.empty()) {
       auto appended_script = script;
@@ -87,14 +87,14 @@ void LuaScriptEngine::eval(const std::string &script) {
   }
 }
 
-void LuaScriptEngine::evalFile(const std::string &file_name) {
+void LuaScriptEngine::evalFile(const std::filesystem::path& file_name) {
   try {
     if (!module_paths_.empty()) {
       std::ifstream stream(file_name);
       std::string script((std::istreambuf_iterator<char>(stream)), std::istreambuf_iterator<char>());
       executeScriptWithAppendedModulePaths(script);
     } else {
-      lua_.script_file(file_name, sol::script_throw_on_error);
+      lua_.script_file(file_name.string(), sol::script_throw_on_error);
     }
   } catch (std::exception& e) {
     throw minifi::script::ScriptException(e.what());

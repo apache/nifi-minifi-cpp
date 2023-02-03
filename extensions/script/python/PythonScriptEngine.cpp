@@ -15,118 +15,87 @@
  * limitations under the License.
  */
 
-#include <memory>
 #include <string>
 #include <filesystem>
 #include <cstdio>
 
 #include "PythonScriptEngine.h"
 #include "PythonBindings.h"
-#include "PyProcessSession.h"
-#include "PyProcessContext.h"
-#include "PyProcessor.h"
+#include "types/PyProcessSession.h"
+#include "types/PyProcessContext.h"
+#include "types/PyProcessor.h"
 #include "utils/file/FileUtils.h"
 
 namespace org::apache::nifi::minifi::python {
 
-NewInterpreter* getNewInterpreter() {
-  static NewInterpreter interpreter;
-  return &interpreter;
-}
-
-GilScopedRelease::GilScopedRelease()
-    : thread_state_(PyEval_SaveThread()) {
-}
-
-GilScopedRelease::~GilScopedRelease() {
-  if (!thread_state_) {
-    return;
-  }
-  PyEval_RestoreThread(thread_state_);
-}
-
-GilScopedAcquire::GilScopedAcquire() {
-  thread_state_ = reinterpret_cast<PyThreadState*>(PyThread_tss_get(getNewInterpreter()->main_tss_));
-  if (!thread_state_) {
-    thread_state_ = PyGILState_GetThisThreadState();
-  }
-
-  if (!thread_state_) {
-    thread_state_ = PyThreadState_New(getNewInterpreter()->interpreter_state_);
-    thread_state_->gilstate_counter = 0;
-    PyThread_tss_set(getNewInterpreter()->main_tss_, thread_state_);
-  } else {
-    auto* threadDict = PyThreadState_GetDict();
-    if (threadDict != nullptr) {
-      release_ = (PyThreadState_Get() != thread_state_);
-    }
-  }
-
-  if (release_) {
-    PyEval_AcquireThread(thread_state_);
-  }
-
-  ++thread_state_->gilstate_counter;
-}
-
-GilScopedAcquire::~GilScopedAcquire() {
-  --thread_state_->gilstate_counter;
-  if (thread_state_->gilstate_counter == 0) {
-    PyThreadState_Clear(thread_state_);
-    PyThreadState_DeleteCurrent();
-    PyThread_tss_delete(getNewInterpreter()->main_tss_);
-    release_ = false;
-  }
-  if (release_) {
-    PyEval_SaveThread();
-  }
-}
-
-NewInterpreter::NewInterpreter() {
-  Py_Initialize();
-  PyInit_minifi_native();
-
-  // Create GIL/enable threads
-  PyEval_InitThreads();
-  
-  // Get the default thread state
-  thread_state_ = PyThreadState_Get();
-  interpreter_state_ = thread_state_->interp;
-  main_tss_ = PyThread_tss_alloc();
-  if (!main_tss_ || PyThread_tss_create(main_tss_)) {
-    throw std::runtime_error("Couldn't create Python interpreter's main thread's TSS");
-  }
-
-  PyThread_tss_set(main_tss_, thread_state_);
-
-  saved_thread_state_ = PyEval_SaveThread();
-}
-
-NewInterpreter::~NewInterpreter() {
-  PyEval_RestoreThread(saved_thread_state_);
-  PyThread_tss_free(main_tss_);
-  Py_Finalize();
-}
-
-Interpreter *getInterpreter() {
+Interpreter* getInterpreter() {
   static Interpreter interpreter;
   return &interpreter;
 }
 
-NewPythonScriptEngine::NewPythonScriptEngine() {
-  getNewInterpreter();
+GlobalInterpreterLock::GlobalInterpreterLock() {
+  gil_state_ = PyGILState_Ensure();
+}
 
-  GilScopedAcquire lock;
+GlobalInterpreterLock::~GlobalInterpreterLock() {
+  PyGILState_Release(gil_state_);
+}
+
+namespace {
+// PyEval_InitThreads might be marked deprecated (depending on the version of Python.h)
+// Python <= 3.6: This needs to be called manually after Py_Initialize to initialize threads
+// Python >= 3.7: Noop function since its functionality is included in Py_Initialize
+// Python >= 3.9: Marked as deprecated (still noop)
+// This can be removed if we drop the support for Python 3.6
+void initThreads() {
+#if defined(__clang__)
+  #pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wdeprecated-declarations"
+#elif defined(__GNUC__)
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
+#elif defined(WIN32)
+  #pragma warning(push)
+#pragma warning(disable: 4996)
+#endif
+  if (!PyEval_ThreadsInitialized())
+    PyEval_InitThreads();
+#if defined(__clang__)
+#pragma clang diagnostic pop
+#elif defined(__GNUC__)
+#pragma GCC diagnostic pop
+#elif defined(WIN32)
+#pragma warning(pop)
+#endif
+}
+}  // namespace
+
+Interpreter::Interpreter() {
+  Py_Initialize();
+  initThreads();
+  PyInit_minifi_native();
+  saved_thread_state_ = PyEval_SaveThread();
+}
+
+Interpreter::~Interpreter() {
+  PyEval_RestoreThread(saved_thread_state_);
+  Py_Finalize();
+}
+
+PythonScriptEngine::PythonScriptEngine() {
+  getInterpreter();
+
+  GlobalInterpreterLock lock;
   bindings_ = OwnedDict::create();
 }
 
-NewPythonScriptEngine::~NewPythonScriptEngine() {
-  GilScopedAcquire lock;
+PythonScriptEngine::~PythonScriptEngine() {
+  GlobalInterpreterLock lock;
   bindings_.resetReference();
 }
 
-void NewPythonScriptEngine::eval(const std::string& script) {
-  GilScopedAcquire gil;
+void PythonScriptEngine::eval(const std::string& script) {
+  GlobalInterpreterLock gil;
   try {
     evaluateModuleImports();
     evalInternal(script);
@@ -135,12 +104,21 @@ void NewPythonScriptEngine::eval(const std::string& script) {
   }
 }
 
-void NewPythonScriptEngine::evalFile(const std::string& fileName) {
-  GilScopedAcquire gil;
+void PythonScriptEngine::evalFile(const std::filesystem::path& file_name) {
+  GlobalInterpreterLock gil;
   try {
     evaluateModuleImports();
-    auto file = fopen(fileName.c_str(), "r");
-    const auto result = OwnedObject(PyRun_FileEx(file, fileName.c_str(), Py_file_input, bindings_.get(), bindings_.get(), 1));
+    std::ifstream file(file_name, std::ios::in);
+    if (!file.is_open()) {
+      throw minifi::script::ScriptException(fmt::format("Couldn't open {}", file_name.string()));
+    }
+    std::string content{std::istreambuf_iterator<char>(file), std::istreambuf_iterator<char>()};
+
+    auto compiled_string = OwnedObject(Py_CompileString(content.c_str(), file_name.string().c_str(), Py_file_input));
+    if (!compiled_string.get()) {
+      throw PyException();
+    }
+    const auto result = OwnedObject(PyEval_EvalCode(compiled_string.get(), bindings_.get(), bindings_.get()));
     if (!result.get()) {
       throw PyException();
     }
@@ -149,103 +127,53 @@ void NewPythonScriptEngine::evalFile(const std::string& fileName) {
   }
 }
 
-void NewPythonScriptEngine::onInitialize(core::Processor* proc) {
+void PythonScriptEngine::onInitialize(core::Processor* proc) {
   auto newproc = std::make_shared<python::PythonProcessor>(proc);
   call("onInitialize", std::weak_ptr(newproc));
 }
 
-void NewPythonScriptEngine::describe(core::Processor* proc) {
+void PythonScriptEngine::describe(core::Processor* proc) {
   auto newproc = std::make_shared<python::PythonProcessor>(proc);
   callRequiredFunction("describe", std::weak_ptr(newproc));
 }
 
-void NewPythonScriptEngine::onSchedule(const std::shared_ptr<core::ProcessContext> &context) {
+void PythonScriptEngine::onSchedule(const std::shared_ptr<core::ProcessContext> &context) {
   auto script_context = std::make_shared<script::ScriptProcessContext>(context);
   call("onSchedule", std::weak_ptr(script_context));
 }
 
-void NewPythonScriptEngine::onTrigger(const std::shared_ptr<core::ProcessContext> &context, const std::shared_ptr<core::ProcessSession> &session) {
+void PythonScriptEngine::onTrigger(const std::shared_ptr<core::ProcessContext> &context, const std::shared_ptr<core::ProcessSession> &session) {
   auto py_session = std::make_shared<python::PyProcessSession>(session);
   auto script_context = std::make_shared<script::ScriptProcessContext>(context);
   call("onTrigger", std::weak_ptr(script_context), std::weak_ptr(py_session));
 }
 
-void NewPythonScriptEngine::evalInternal(std::string_view script) {
+void PythonScriptEngine::evalInternal(std::string_view script) {
   const auto script_file = "# -*- coding: utf-8 -*-\n" + std::string(script);
-  const auto result = OwnedObject(PyRun_String(script_file.c_str(), Py_file_input, bindings_.get(), bindings_.get()));
+  auto compiled_string = OwnedObject(Py_CompileString(script_file.c_str(), "<string>", Py_file_input));
+  if (!compiled_string.get()) {
+    throw PyException();
+  }
+  const auto result = OwnedObject(PyEval_EvalCode(compiled_string.get(), bindings_.get(), bindings_.get()));
   if (!result.get()) {
     throw PyException();
   }
 }
 
-void NewPythonScriptEngine::evaluateModuleImports() {
+void PythonScriptEngine::evaluateModuleImports() {
+  bindings_.put("__builtins__", OwnedObject(PyImport_ImportModule("builtins")));
   if (module_paths_.empty()) {
     return;
   }
 
   evalInternal("import sys");
   for (const auto& module_path : module_paths_) {
-    if (std::filesystem::is_regular_file(std::filesystem::status(module_path))) {
-      std::string path;
-      std::string filename;
-      utils::file::getFileNameAndPath(module_path, path, filename);
-      evalInternal("sys.path.append(r'" + path + "')");
-    } else {
-      evalInternal("sys.path.append(r'" + module_path + "')");
-    }
-  }
-}
-
-
-PythonScriptEngine::PythonScriptEngine() {
-  getInterpreter();
-  py::gil_scoped_acquire gil { };
-  py::module::import("minifi_native");
-  bindings_ = std::make_unique<py::dict>();
-  (*bindings_) = py::globals().attr("copy")();
-}
-
-void PythonScriptEngine::evaluateModuleImports() {
-  if (module_paths_.empty()) {
-    return;
-  }
-
-  py::eval<py::eval_statements>("import sys", *bindings_, *bindings_);
-  for (const auto& module_path : module_paths_) {
     if (std::filesystem::is_regular_file(module_path)) {
-      py::eval<py::eval_statements>("sys.path.append(r'" + module_path.parent_path().string() + "')", *bindings_, *bindings_);
+      evalInternal("sys.path.append(r'" + module_path.parent_path().string() + "')");
     } else {
-      py::eval<py::eval_statements>("sys.path.append(r'" + module_path.string() + "')", *bindings_, *bindings_);
+      evalInternal("sys.path.append(r'" + module_path.string() + "')");
     }
   }
-}
-
-void PythonScriptEngine::eval(const std::string &script) {
-  py::gil_scoped_acquire gil { };
-  try {
-    evaluateModuleImports();
-    if (script[0] == '\n') {
-      py::eval<py::eval_statements>(py::module::import("textwrap").attr("dedent")(script), *bindings_, *bindings_);
-    } else {
-      py::eval<py::eval_statements>(script, *bindings_, *bindings_);
-    }
-  } catch (std::exception& e) {
-     throw minifi::script::ScriptException(e.what());
-  }
-}
-
-void PythonScriptEngine::evalFile(const std::string &file_name) {
-  py::gil_scoped_acquire gil { };
-  try {
-    evaluateModuleImports();
-    py::eval_file(file_name, *bindings_, *bindings_);
-  } catch (const std::exception &e) {
-    throw minifi::script::ScriptException(e.what());
-  }
-}
-
-void PythonScriptEngine::initialize() {
-  // getInterpreter();
 }
 
 }  // namespace org::apache::nifi::minifi::python

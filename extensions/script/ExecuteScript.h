@@ -1,7 +1,4 @@
 /**
- * @file ExecuteScript.h
- * ExecuteScript class declaration
- *
  * Licensed to the Apache Software Foundation (ASF) under one or more
  * contributor license agreements.  See the NOTICE file distributed with
  * this work for additional information regarding copyright ownership.
@@ -20,11 +17,11 @@
 
 #pragma once
 
+#include <concepts>
 #include <string>
 #include <memory>
 #include <utility>
 #include <optional>
-#include <concepts>
 
 #include "concurrentqueue.h"
 #include "core/Processor.h"
@@ -40,6 +37,8 @@
 
 #ifdef PYTHON_SUPPORT
 #include "python/PythonScriptEngine.h"
+#include "python/types/PyLogger.h"
+#include "python/types/PyRelationship.h"
 #endif  // PYTHON_SUPPORT
 
 namespace org::apache::nifi::minifi::processors {

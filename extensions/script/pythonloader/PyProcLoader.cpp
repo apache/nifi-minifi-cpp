@@ -27,7 +27,7 @@ static minifi::python::PythonCreator& getPythonCreator() {
 }
 
 static bool init(const std::shared_ptr<minifi::Configure>& config) {
-  // getPythonCreator().configure(config);
+  getPythonCreator().configure(config);
   return true;
 }
 
@@ -40,4 +40,3 @@ static void deinit() {
 extern "C" const int LOAD_MODULE_AS_GLOBAL = 1;
 
 REGISTER_EXTENSION("PythonExtension", init, deinit);
-

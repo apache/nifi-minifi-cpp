@@ -29,22 +29,24 @@ file(GLOB SOURCES  "ExecuteScript.cpp" "ScriptFlowFile.cpp" "ScriptProcessContex
 
 add_library(minifi-script-extensions SHARED ${SOURCES})
 
-target_link_libraries(minifi-script-extensions ${LIBMINIFI} Threads::Threads)
+target_link_libraries(minifi-script-extensions PRIVATE ${LIBMINIFI} Threads::Threads)
 
 if (NOT DISABLE_PYTHON_SCRIPTING)
-    find_package(PythonLibs 3.6 REQUIRED)
-
-    include(Pybind11)
+    include(GenericPython)
     add_definitions(-DPYTHON_SUPPORT)
+    target_compile_definitions(minifi-script-extensions PUBLIC Py_LIMITED_API=0x03060000)
+    target_compile_definitions(minifi-script-extensions PUBLIC PY_SSIZE_T_CLEAN)
 
-    file(GLOB PY_SOURCES  "python/*.cpp" "pythonloader/PyProcLoader.cpp")
+    file(GLOB PY_SOURCES  "python/*.cpp" "python/types/*.cpp" "pythonloader/PyProcLoader.cpp")
     target_sources(minifi-script-extensions PRIVATE ${PY_SOURCES})
-    target_link_libraries(minifi-script-extensions ${PYTHON_LIBRARIES})
-    target_link_libraries(minifi-script-extensions pybind11)
+    if (CMAKE_SYSTEM_NAME STREQUAL "Linux")
+        target_link_libraries(minifi-script-extensions PUBLIC -Wl,--no-as-needed ${Python_LIBRARIES} -Wl,--as-needed)
+    else()
+        target_link_libraries(minifi-script-extensions PUBLIC ${Python_LIBRARIES})
+    endif()
 
     target_include_directories(minifi-script-extensions PRIVATE python)
-    target_include_directories(minifi-script-extensions SYSTEM PRIVATE ${PYTHON_INCLUDE_DIR})
-    target_include_directories(minifi-script-extensions SYSTEM PRIVATE ../../thirdparty/pybind11/include)
+    target_include_directories(minifi-script-extensions PUBLIC ${Python_INCLUDE_DIRS})
 endif()
 
 if (ENABLE_LUA_SCRIPTING)
@@ -59,7 +61,7 @@ if (ENABLE_LUA_SCRIPTING)
     file(GLOB LUA_SOURCES  "lua/*.cpp")
     target_sources(minifi-script-extensions PRIVATE ${LUA_SOURCES})
 
-    target_link_libraries(minifi-script-extensions ${LUA_LIBRARIES} sol2)
+    target_link_libraries(minifi-script-extensions PUBLIC ${LUA_LIBRARIES} sol2)
     target_compile_features(minifi-script-extensions PUBLIC cxx_std_14)
 endif()
 

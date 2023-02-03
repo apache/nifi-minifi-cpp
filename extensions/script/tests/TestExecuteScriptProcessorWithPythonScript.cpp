@@ -94,21 +94,21 @@ TEST_CASE("Python: Test Read File", "[executescriptPythonRead]") {
   auto put_file = plan->addProcessor("PutFile", "putFile", core::Relationship("success", "description"), true);
 
   plan->setProperty(execute_script, minifi::processors::ExecuteScript::ScriptBody.getName(), R"(
-    import codecs
+import codecs
 
-    class ReadCallback(object):
-      def process(self, input_stream):
-        content = codecs.getreader('utf-8')(input_stream).read()
-        log.info('file content: %s' % content)
-        return len(content)
+class ReadCallback(object):
+  def process(self, input_stream):
+    content = codecs.getreader('utf-8')(input_stream).read()
+    log.info('file content: %s' % content)
+    return len(content)
 
-    def onTrigger(context, session):
-      flow_file = session.get()
+def onTrigger(context, session):
+  flow_file = session.get()
 
-      if flow_file is not None:
-        log.info('got flow file: %s' % flow_file.getAttribute('filename'))
-        session.read(flow_file, ReadCallback())
-        session.transfer(flow_file, REL_SUCCESS)
+  if flow_file is not None:
+    log.info('got flow file: %s' % flow_file.getAttribute('filename'))
+    session.read(flow_file, ReadCallback())
+    session.transfer(flow_file, REL_SUCCESS)
   )");
 
   auto get_file_dir = test_controller.createTempDirectory();
@@ -135,8 +135,6 @@ TEST_CASE("Python: Test Read File", "[executescriptPythonRead]") {
   test_controller.runSession(plan, false);
   test_controller.runSession(plan, false);
 
-  records = plan->getProvenanceRecords();
-  record = plan->getCurrentFlowFile();
   test_controller.runSession(plan, false);
 
   std::filesystem::remove(path);
@@ -177,18 +175,18 @@ TEST_CASE("Python: Test Write File", "[executescriptPythonWrite]") {
   auto putFile = plan->addProcessor("PutFile", "putFile", core::Relationship("success", "description"), true);
 
   plan->setProperty(execute_script, minifi::processors::ExecuteScript::ScriptBody.getName(), R"(
-    class WriteCallback(object):
-      def process(self, output_stream):
-        new_content = 'hello 2'.encode('utf-8')
-        output_stream.write(new_content)
-        return len(new_content)
+class WriteCallback(object):
+  def process(self, output_stream):
+    new_content = 'hello 2'.encode('utf-8')
+    output_stream.write(new_content)
+    return len(new_content)
 
-    def onTrigger(context, session):
-      flow_file = session.get()
-      if flow_file is not None:
-        log.info('got flow file: %s' % flow_file.getAttribute('filename'))
-        session.write(flow_file, WriteCallback())
-        session.transfer(flow_file, REL_SUCCESS)
+def onTrigger(context, session):
+  flow_file = session.get()
+  if flow_file is not None:
+    log.info('got flow file: %s' % flow_file.getAttribute('filename'))
+    session.write(flow_file, WriteCallback())
+    session.transfer(flow_file, REL_SUCCESS)
   )");
 
   auto get_file_dir = test_controller.createTempDirectory();
@@ -215,8 +213,6 @@ TEST_CASE("Python: Test Write File", "[executescriptPythonWrite]") {
   test_controller.runSession(plan, false);
   test_controller.runSession(plan, false);
 
-  records = plan->getProvenanceRecords();
-  record = plan->getCurrentFlowFile();
   test_controller.runSession(plan, false);
 
   std::filesystem::remove(path);
@@ -247,12 +243,12 @@ TEST_CASE("Python: Test Create", "[executescriptPythonCreate]") {
                                           "executeScript");
 
   plan->setProperty(executeScript, minifi::processors::ExecuteScript::ScriptBody.getName(), R"(
-    def onTrigger(context, session):
-      flow_file = session.create()
+def onTrigger(context, session):
+  flow_file = session.create()
 
-      if flow_file is not None:
-        log.info('created flow file: %s' % flow_file.getAttribute('filename'))
-        session.transfer(flow_file, REL_SUCCESS)
+  if flow_file is not None:
+    log.info('created flow file: %s' % flow_file.getAttribute('filename'))
+    session.transfer(flow_file, REL_SUCCESS)
   )");
 
   test_controller.runSession(plan, false);
@@ -282,16 +278,16 @@ TEST_CASE("Python: Test Update Attribute", "[executescriptPythonUpdateAttribute]
                                          true);
 
   plan->setProperty(executeScript, minifi::processors::ExecuteScript::ScriptBody.getName(), R"(
-    def onTrigger(context, session):
-      flow_file = session.get()
+def onTrigger(context, session):
+  flow_file = session.get()
 
-      if flow_file is not None:
-        log.info('got flow file: %s' % flow_file.getAttribute('filename'))
-        flow_file.addAttribute('test_attr', '1')
-        attr = flow_file.getAttribute('test_attr')
-        log.info('got flow file attr \'test_attr\': %s' % attr)
-        flow_file.updateAttribute('test_attr', str(int(attr) + 1))
-        session.transfer(flow_file, REL_SUCCESS)
+  if flow_file is not None:
+    log.info('got flow file: %s' % flow_file.getAttribute('filename'))
+    flow_file.addAttribute('test_attr', '1')
+    attr = flow_file.getAttribute('test_attr')
+    log.info('got flow file attr \'test_attr\': %s' % attr)
+    flow_file.updateAttribute('test_attr', str(int(attr) + 1))
+    session.transfer(flow_file, REL_SUCCESS)
   )");
 
   auto get_file_dir = test_controller.createTempDirectory();
@@ -328,9 +324,9 @@ TEST_CASE("Python: Test Get Context Property", "[executescriptPythonGetContextPr
                                          true);
 
   plan->setProperty(execute_script, minifi::processors::ExecuteScript::ScriptBody.getName(), R"(
-    def onTrigger(context, session):
-      script_engine = context.getProperty('Script Engine')
-      log.info('got Script Engine property: %s' % script_engine)
+def onTrigger(context, session):
+  script_engine = context.getProperty('Script Engine')
+  log.info('got Script Engine property: %s' % script_engine)
   )");
 
   auto get_file_dir = test_controller.createTempDirectory();
@@ -417,12 +413,10 @@ TEST_CASE("Python can remove flowfiles", "[ExecuteScript]") {
   minifi::test::SingleProcessorTestController controller{execute_script};
   LogTestController::getInstance().setTrace<minifi::processors::ExecuteScript>();
   execute_script->setProperty(ExecuteScript::ScriptEngine, "python");
-  execute_script->setProperty(ExecuteScript::ScriptBody.getName(),
-      R"(
-        def onTrigger(context, session):
-          flow_file = session.get()
-          session.remove(flow_file);
-      )");
+  execute_script->setProperty(ExecuteScript::ScriptBody.getName(), R"(
+def onTrigger(context, session):
+  flow_file = session.get()
+  session.remove(flow_file);)");
   REQUIRE_NOTHROW(controller.trigger("hello"));
 }
 

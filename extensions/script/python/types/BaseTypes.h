@@ -18,22 +18,23 @@
 #pragma once
 
 #include <concepts>
+#include <utility>
 
 #include "Python.h"
 
 namespace org::apache::nifi::minifi::python {
 
-template <typename T>
+template<typename T>
 concept convertible_to_object = requires {
-    static_cast<PyObject*>(std::declval<T>());
+  static_cast<PyObject*>(std::declval<T>());
 };
 
-template <typename T>
+template<typename T>
 concept custom_type = requires {
   { T::typeObject() } -> std::same_as<PyTypeObject*>;
 };
 
-template <typename T>
+template<typename T>
 concept holder_type = requires {
   typename T::HeldType;
 } && custom_type<T>;
@@ -43,29 +44,29 @@ enum class ReferenceType {
   OWNED,
 };
 
-template <ReferenceType reference_type>
+template<ReferenceType reference_type>
 struct ObjectReference {
   ObjectReference() = default;
 
   explicit ObjectReference(PyObject* object)
-    : object_(object) {
+      : object_(object) {
   }
 
   ~ObjectReference() {
     decrementRefCount();
   }
 
-  ObjectReference(const ObjectReference &that)
+  ObjectReference(const ObjectReference& that)
       : object_(that.object_) {
     incrementRefCount();
   }
 
-  ObjectReference(ObjectReference &&that)
+  ObjectReference(ObjectReference&& that)
       : object_(that.object_) {
     that.object_ = nullptr;
   }
 
-  ObjectReference& operator=(const ObjectReference &that) {
+  ObjectReference& operator=(const ObjectReference& that) {
     if (this == &that) {
       return *this;
     }
@@ -76,7 +77,7 @@ struct ObjectReference {
     return *this;
   }
 
-  ObjectReference& operator=(ObjectReference &&that) {
+  ObjectReference& operator=(ObjectReference&& that) {
     if (this == &that) {
       return *this;
     }
@@ -86,7 +87,7 @@ struct ObjectReference {
     return *this;
   }
 
-  ObjectReference& operator=(PyObject *object) {
+  ObjectReference& operator=(PyObject* object) {
     decrementRefCount();
     object_ = object;
     return *this;
@@ -100,24 +101,24 @@ struct ObjectReference {
     return object_;
   }
 
-  const PyObject *get() const {
+  const PyObject* get() const {
     return object_;
   }
 
-  PyObject *get() {
+  PyObject* get() {
     return object_;
   }
 
-  PyObject **asOutParameter() {
+  PyObject** asOutParameter() {
     return &object_;
   }
 
-  void reset() requires (reference_type == ReferenceType::OWNED) {
+  void reset() requires(reference_type == ReferenceType::OWNED) {
     decrementRefCount();
     object_ = nullptr;
   }
 
-  PyObject *release() {
+  PyObject* release() {
     auto returnedObject = object_;
     object_ = nullptr;
     return returnedObject;
@@ -136,13 +137,13 @@ struct ObjectReference {
     }
   }
 
-  PyObject *object_ = nullptr;
+  PyObject* object_ = nullptr;
 };
 
 using OwnedReference = ObjectReference<ReferenceType::OWNED>;
 using BorrowedReference = ObjectReference<ReferenceType::BORROWED>;
 
-template <ReferenceType reference_type>
+template<ReferenceType reference_type>
 class ReferenceHolder {
  public:
   using Reference = ObjectReference<reference_type>;
@@ -151,12 +152,10 @@ class ReferenceHolder {
 
   explicit ReferenceHolder(Reference ref)
       : ref_(std::move(ref)) {
-
   }
 
-  explicit ReferenceHolder(PyObject *object)
+  explicit ReferenceHolder(PyObject* object)
       : ref_(object) {
-
   }
 
   operator bool() {
@@ -167,19 +166,19 @@ class ReferenceHolder {
     return ref_.get();
   }
 
-  const PyObject *get() const {
+  const PyObject* get() const {
     return ref_.get();
   }
 
-  PyObject *get() {
+  PyObject* get() {
     return ref_.get();
   }
 
-  PyObject *releaseReference() {
+  PyObject* releaseReference() {
     return ref_.release();
   }
 
-  void resetReference() requires (reference_type == ReferenceType::OWNED) {
+  void resetReference() requires(reference_type == ReferenceType::OWNED) {
     ref_.reset();
   }
 
@@ -190,55 +189,55 @@ class ReferenceHolder {
 using OwnedReferenceHolder = ReferenceHolder<ReferenceType::OWNED>;
 using BorrowedReferenceHolder = ReferenceHolder<ReferenceType::BORROWED>;
 
-template <ReferenceType reference_type>
+template<ReferenceType reference_type>
 class Object;
 
 using OwnedObject = Object<ReferenceType::OWNED>;
 using BorrowedObject = Object<ReferenceType::BORROWED>;
 
-template <ReferenceType reference_type>
+template<ReferenceType reference_type>
 class Long;
 
 using OwnedLong = Long<ReferenceType::OWNED>;
 using BorrowedLong = Long<ReferenceType::BORROWED>;
 
-template <ReferenceType reference_type>
+template<ReferenceType reference_type>
 class Str;
 
 using OwnedStr = Str<ReferenceType::OWNED>;
 using BorrowedStr = Str<ReferenceType::BORROWED>;
 
-template <ReferenceType reference_type>
+template<ReferenceType reference_type>
 class List;
 
 using OwnedList = List<ReferenceType::OWNED>;
 using BorrowedList = List<ReferenceType::BORROWED>;
 
-template <ReferenceType reference_type>
+template<ReferenceType reference_type>
 class Dict;
 
 using OwnedDict = Dict<ReferenceType::OWNED>;
 using BorrowedDict = Dict<ReferenceType::BORROWED>;
 
-template <ReferenceType reference_type>
+template<ReferenceType reference_type>
 class Bytes;
 
 using OwnedBytes = Bytes<ReferenceType::OWNED>;
 using BorrowedBytes = Bytes<ReferenceType::BORROWED>;
 
-template <ReferenceType reference_type>
+template<ReferenceType reference_type>
 class Capsule;
 
 using OwnedCapsule = Capsule<ReferenceType::OWNED>;
 using BorrowedCapsule = Capsule<ReferenceType::BORROWED>;
 
-template <ReferenceType reference_type>
+template<ReferenceType reference_type>
 class Callable;
 
 using OwnedCallable = Callable<ReferenceType::OWNED>;
 using BorrowedCallable = Callable<ReferenceType::BORROWED>;
 
-template <ReferenceType reference_type>
+template<ReferenceType reference_type>
 class Module;
 
 using OwnedModule = Module<ReferenceType::OWNED>;

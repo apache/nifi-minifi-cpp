@@ -15,19 +15,14 @@
 # specific language governing permissions and limitations
 # under the License.
 
-include(FetchContent)
+find_package(Python 3.6 REQUIRED COMPONENTS Development Interpreter)
 
-FetchContent_Declare(pybind11_src
-    URL      https://github.com/pybind/pybind11/archive/refs/tags/v2.10.1.tar.gz
-    URL_HASH SHA256=111014b516b625083bef701df7880f78c2243835abdb263065b6b59b960b6bad
-)
-FetchContent_GetProperties(pybind11_src)
-if (NOT pybind11_src_POPULATED)
-    FetchContent_Populate(pybind11_src)
-    set(PYBIND11_INCLUDE_DIR "${pybind11_src_SOURCE_DIR}/include" CACHE STRING "" FORCE)
-    add_library(pybind11 INTERFACE IMPORTED)
-    target_sources(pybind11 INTERFACE ${PYBIND11_INCLUDE_DIR}/pybind11/pybind11.h)
-    target_include_directories(pybind11 SYSTEM INTERFACE ${PYBIND11_INCLUDE_DIR})
-    target_compile_features(pybind11 INTERFACE cxx_std_11)
-    #target_compile_definitions(pybind11 INTERFACE Py_LIMITED_API)
+if(WIN32)
+  set(Python_LIBRARIES ${Python_LIBRARY_DIRS}/python3.lib)
+else()
+  find_library(generic_lib_python NAMES libpython3.so)
+  if (NOT generic_lib_python STREQUAL generic_lib_python-NOTFOUND)
+    message(VERBOSE "Using generic python library at " ${generic_lib_python})
+    set(Python_LIBRARIES ${generic_lib_python})
+  endif()
 endif()

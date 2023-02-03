@@ -17,78 +17,69 @@
  */
 
 #include "PyOutputStream.h"
-#include "Exception.h"
+
+#include <string>
+
+#include "PyException.h"
 
 extern "C" {
 namespace org::apache::nifi::minifi::python {
 
 static PyMethodDef PyOutputStream_methods[] = {
-  { "write", (PyCFunction) PyOutputStream::write, METH_VARARGS, nullptr, },
-  { nullptr } /* Sentinel */
+    {"write", (PyCFunction) PyOutputStream::write, METH_VARARGS, nullptr},
+    {}  /* Sentinel */
 };
 
-static PyTypeObject PyOutputStreamType = {
-  PyVarObject_HEAD_INIT(nullptr, 0)
-  .tp_name = "minifi_native.OutputStream",
-  .tp_doc = nullptr,
-  .tp_basicsize = sizeof(PyOutputStream),
-  .tp_itemsize = 0,
-  .tp_flags = Py_TPFLAGS_DEFAULT,
-  .tp_new = PyOutputStream::newInstance,
-  .tp_init = reinterpret_cast<initproc>(PyOutputStream::init),
-  .tp_dealloc = reinterpret_cast<destructor>(PyOutputStream::dealloc),
-  .tp_methods = PyOutputStream_methods
+static PyType_Slot PyOutputStreamTypeSpecSlots[] = {
+    {Py_tp_dealloc, reinterpret_cast<void*>(pythonAllocatedInstanceDealloc<PyOutputStream>)},
+    {Py_tp_init, reinterpret_cast<void*>(PyOutputStream::init)},
+    {Py_tp_methods, reinterpret_cast<void*>(PyOutputStream_methods)},
+    {Py_tp_new, reinterpret_cast<void*>(newPythonAllocatedInstance<PyOutputStream>)},
+    {}  /* Sentinel */
 };
 
+static PyType_Spec PyOutputStreamTypeSpec{
+    .name = "minifi_native.OutputStream",
+    .basicsize = sizeof(PyOutputStream),
+    .itemsize = 0,
+    .flags = Py_TPFLAGS_DEFAULT,
+    .slots = PyOutputStreamTypeSpecSlots
+};
 
-PyObject *PyOutputStream::newInstance(PyTypeObject *type, PyObject *args, PyObject *kwds) {
-  auto self = reinterpret_cast<PyOutputStream*>(type->tp_alloc(type, 0));
-  if (self == nullptr) {
-    return nullptr;
-  }
-
-  self->output_stream_.reset();
-  return reinterpret_cast<PyObject*>(self);
-}
-
-int PyOutputStream::init(PyOutputStream *self, PyObject *args, PyObject *kwds) {
-  PyObject *weak_ptr_capsule = nullptr;
+int PyOutputStream::init(PyOutputStream* self, PyObject* args, PyObject*) {
+  PyObject* weak_ptr_capsule = nullptr;
   if (!PyArg_ParseTuple(args, "O", &weak_ptr_capsule)) {
     return -1;
   }
 
   auto output_stream = static_cast<HeldType*>(PyCapsule_GetPointer(weak_ptr_capsule, nullptr));
-  // Py_DECREF(weak_ptr_capsule);
   self->output_stream_ = *output_stream;
   return 0;
 }
 
-void PyOutputStream::dealloc(PyOutputStream *self) {
-  self->output_stream_.reset();
-}
-
-PyObject *PyOutputStream::write(PyOutputStream *self, PyObject *args) {
+PyObject* PyOutputStream::write(PyOutputStream* self, PyObject* args) {
   auto output_stream = self->output_stream_.lock();
   if (!output_stream) {
     PyErr_SetString(PyExc_AttributeError, "tried reading FlowFile outside 'on_trigger'");
     return nullptr;
   }
 
-  PyObject *bytes;
+  PyObject* bytes;
   if (!PyArg_ParseTuple(args, "S", &bytes)) {
     throw PyException();
   }
 
-  char *buffer = nullptr;
-  ssize_t length = 0;
+  char* buffer = nullptr;
+  Py_ssize_t length = 0;
   if (PyBytes_AsStringAndSize(bytes, &buffer, &length) == -1) {
     throw PyException();
   }
   return object::returnReference(output_stream->write(gsl::make_span(std::string(buffer, length)).as_span<const std::byte>()));
 }
 
-PyTypeObject *PyOutputStream::typeObject() {
-  return &PyOutputStreamType;
+PyTypeObject* PyOutputStream::typeObject() {
+  static OwnedObject PyOutputStreamType{PyType_FromSpec(&PyOutputStreamTypeSpec)};
+  return reinterpret_cast<PyTypeObject*>(PyOutputStreamType.get());
 }
 
 }  // namespace org::apache::nifi::minifi::python

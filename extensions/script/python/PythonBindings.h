@@ -21,11 +21,11 @@
 
 #pragma once
 
-#include "Types.h"
+#include "types/Types.h"
 
 namespace org::apache::nifi::minifi::python {
 
 PyMODINIT_FUNC
 PyInit_minifi_native(void);
 
-} // namespace org::apache::nifi::minifi::python
+}  // namespace org::apache::nifi::minifi::python

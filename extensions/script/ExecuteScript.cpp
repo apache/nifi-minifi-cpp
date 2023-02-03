@@ -63,10 +63,6 @@ ScriptEngineFactory::ScriptEngineFactory(const core::Relationship& success, cons
 void ExecuteScript::initialize() {
   setSupportedProperties(properties());
   setSupportedRelationships(relationships());
-
-#ifdef PYTHON_SUPPORT
-  python::PythonScriptEngine::initialize();
-#endif  // PYTHON_SUPPORT
 }
 
 void ExecuteScript::onSchedule(core::ProcessContext *context, core::ProcessSessionFactory* /*sessionFactory*/) {
@@ -77,7 +73,10 @@ void ExecuteScript::onSchedule(core::ProcessContext *context, core::ProcessSessi
   lua_script_engine_queue_ = utils::ResourceQueue<lua::LuaScriptEngine>::create(create_engine, getMaxConcurrentTasks(), std::nullopt, logger_);
 #endif  // LUA_SUPPORT
 #ifdef PYTHON_SUPPORT
-  python_script_engine_ = engine_factory_.createEngine<python::PythonScriptEngine>();
+  python_script_engine_ = std::make_unique<python::PythonScriptEngine>();
+  python_script_engine_->bind("log", std::weak_ptr<core::logging::Logger>(logger_));
+  python_script_engine_->bind("REL_SUCCESS", Success);
+  python_script_engine_->bind("REL_FAILURE", Failure);
 #endif  // PYTHON_SUPPORT
 
   script_engine_ = ScriptEngineOption::parse(utils::parsePropertyWithAllowableValuesOrThrow(*context, ScriptEngine.getName(), ScriptEngineOption::values()).c_str());

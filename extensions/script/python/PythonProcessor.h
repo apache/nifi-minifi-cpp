@@ -29,20 +29,15 @@ namespace processors {
 class ExecutePythonProcessor;
 }
 
-// namespace py = pybind11;
-
-/**
- * Defines a reference to the processor.
- */
 class PythonProcessor {
  public:
   explicit PythonProcessor(core::Processor* proc);
 
   void setSupportsDynamicProperties();
 
-  void setDescription(const std::string &desc);
+  void setDescription(const std::string& desc);
 
-  void addProperty(const std::string &name, const std::string &description, const std::string &defaultvalue, bool required, bool el);
+  void addProperty(const std::string& name, const std::string& description, const std::string& defaultvalue, bool required, bool el);
 
  private:
   python::processors::ExecutePythonProcessor* processor_;

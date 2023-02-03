@@ -15,21 +15,30 @@
  * limitations under the License.
  */
 #pragma once
-#include "BaseTypes.h"
-#include <stdexcept>
+
+#include "../PythonBindings.h"
+#include "core/Relationship.h"
 
 namespace org::apache::nifi::minifi::python {
 
-class PyException : public std::runtime_error {
- public:
-  PyException();
+struct PyRelationship {
+  PyRelationship() {}
 
- private:
-  static std::string exceptionString();
+  using HeldType = core::Relationship;
 
-  OwnedReference type_;
-  OwnedReference value_;
-  OwnedReference traceback_;
+  PyObject_HEAD
+  HeldType relationship_;
+
+  static int init(PyRelationship* self, PyObject* args, PyObject* kwds);
+
+  static PyObject* getName(PyRelationship* self, PyObject* args);
+  static PyObject* getDescription(PyRelationship* self, PyObject* args);
+
+  static PyTypeObject* typeObject();
 };
 
-} // namespace org::apache::nifi::minifi::python
+namespace object {
+template<>
+struct Converter<PyRelationship::HeldType> : public HolderTypeConverter<PyRelationship> {};
+}
+}  // namespace org::apache::nifi::minifi::python
