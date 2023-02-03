@@ -78,6 +78,7 @@ class ConsumeWindowsEventLog : public core::Processor {
   EXTENSIONAPI static const core::Property BatchCommitSize;
   EXTENSIONAPI static const core::Property BookmarkRootDirectory;
   EXTENSIONAPI static const core::Property ProcessOldEvents;
+  EXTENSIONAPI static const core::Property CacheUsernameLookups;
   static auto properties() {
     return std::array{
         Channel,
@@ -93,7 +94,8 @@ class ConsumeWindowsEventLog : public core::Processor {
         JSONFormat,
         BatchCommitSize,
         BookmarkRootDirectory,
-        ProcessOldEvents
+        ProcessOldEvents,
+        CacheUsernameLookups
     };
   }
 
@@ -120,6 +122,7 @@ class ConsumeWindowsEventLog : public core::Processor {
   void LogWindowsError(const std::string& error = "Error") const;
   nonstd::expected<EventRender, std::string> createEventRender(EVT_HANDLE eventHandle);
   void substituteXMLPercentageItems(pugi::xml_document& doc);
+  std::function<std::string(const std::string&)> userIdToUsernameFunction() const;
 
   nonstd::expected<std::string, std::string> renderEventAsXml(EVT_HANDLE event_handle);
 
@@ -131,7 +134,6 @@ class ConsumeWindowsEventLog : public core::Processor {
   static constexpr const char* JSONSimple = "Simple";
   static constexpr const char* JSONFlattened = "Flattened";
 
- private:
   struct TimeDiff {
     auto operator()() const {
       return int64_t{ std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::steady_clock::now() - time_).count() };
@@ -160,6 +162,7 @@ class ConsumeWindowsEventLog : public core::Processor {
   uint64_t max_buffer_size_{};
   std::map<std::string, wel::WindowsEventLogHandler> providers_;
   uint64_t batch_commit_size_{};
+  bool cache_username_lookups_ = true;
 
   enum class JSONType { None, Raw, Simple, Flattened };
 
