@@ -19,6 +19,7 @@
 
 #include <chrono>
 #include <functional>
+#include <mutex>
 #include <string>
 #include <unordered_map>
 #include <utility>
@@ -38,6 +39,7 @@ class LookupCacher {
     std::chrono::system_clock::time_point expiry;
   };
 
+  std::mutex mutex_;
   std::function<std::string(const std::string&)> lookup_function_;
   std::chrono::milliseconds lifetime_;
   std::unordered_map<std::string, CacheItem> cache_;

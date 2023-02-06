@@ -19,13 +19,18 @@
 namespace org::apache::nifi::minifi::wel {
 
 std::string LookupCacher::operator()(const std::string& key) {
-  const auto it = cache_.find(key);
-  if (it != cache_.end() && it->second.expiry > std::chrono::system_clock::now()) {
-    return it->second.value;
+  {
+    std::lock_guard<std::mutex> lock{mutex_};
+    const auto it = cache_.find(key);
+    if (it != cache_.end() && it->second.expiry > std::chrono::system_clock::now()) {
+      return it->second.value;
+    }
   }
 
   std::string value = lookup_function_(key);
-  cache_.insert_or_assign(it, key, CacheItem{value, std::chrono::system_clock::now() + lifetime_});
+
+  std::lock_guard<std::mutex> lock{mutex_};
+  cache_.insert_or_assign(key, CacheItem{value, std::chrono::system_clock::now() + lifetime_});
   return value;
 }
 
