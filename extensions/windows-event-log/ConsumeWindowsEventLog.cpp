@@ -720,7 +720,7 @@ void ConsumeWindowsEventLog::putEventRenderFlowFileToSession(const EventRender& 
     commitFlowFile(eventRender.plaintext, "text/plain");
   }
 
-  if (output_.json.type != JSONType::None) {
+  if (output_.json) {
     logger_->log_trace("Writing rendered %s JSON to a flow file", output_.json.type.toString());
     commitFlowFile(eventRender.json, "application/json");
   }
