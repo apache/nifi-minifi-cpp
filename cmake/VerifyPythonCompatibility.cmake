@@ -15,11 +15,7 @@
 # specific language governing permissions and limitations
 # under the License.
 
-if (NOT ENABLE_SCRIPTING)
-    return()
-endif()
-
-if (DISABLE_PYTHON_SCRIPTING)
+if (NOT ENABLE_PYTHON_SCRIPTING)
     return()
 endif()
 
@@ -67,21 +63,22 @@ function(ADD_VENV_TO_DOCKER TAG_PREFIX)
 endfunction()
 
 
-ADD_DOCKER_TARGET_FROM_CENTOS(debian:bullseye patched_bullseye "apt update \\&\\& apt install -y patchelf libpython3-dev python3-venv \\&\\& patchelf /opt/minifi/minifi-current/extensions/libminifi-script-extensions.so --replace-needed libpython3.so libpython3.9.so")
-ADD_DOCKER_TARGET_FROM_CENTOS(ubuntu:jammy patched_jammy "apt update \\&\\& apt install -y patchelf libpython3.10-dev python3.10-venv \\&\\& patchelf /opt/minifi/minifi-current/extensions/libminifi-script-extensions.so --replace-needed libpython3.so libpython3.10.so.1.0")
-ADD_DOCKER_TARGET_FROM_CENTOS(rockylinux:8 rocky8 "yum install -y python36")
-ADD_DOCKER_TARGET_FROM_CENTOS(rockylinux:9 rocky9 "yum install -y python39")
+ADD_DOCKER_TARGET_FROM_CENTOS(debian:bullseye patched_bullseye "apt update \\&\\& apt install -y patchelf libpython3-dev python3-venv \\&\\& patchelf /opt/minifi/minifi-current/extensions/libminifi-python-script-extension.so --replace-needed libpython3.so libpython3.9.so")
+ADD_DOCKER_TARGET_FROM_CENTOS(ubuntu:jammy patched_jammy "apt update \\&\\& apt install -y patchelf libpython3.10-dev python3.10-venv \\&\\& patchelf /opt/minifi/minifi-current/extensions/libminifi-python-script-extension.so --replace-needed libpython3.so libpython3.10.so.1.0")
+ADD_DOCKER_TARGET_FROM_CENTOS(rockylinux:8 rocky8 "yum install -y python3-libs")
+ADD_DOCKER_TARGET_FROM_CENTOS(rockylinux:9 rocky9 "yum install -y python3-libs")
 ADD_DOCKER_TARGET_FROM_CENTOS(ubuntu:jammy jammy "apt update \\&\\& apt install -y wget")
 ADD_CONDA_TO_DOCKER(jammy)
 ADD_VENV_TO_DOCKER(rocky9)
 
 if (EXISTS ${CMAKE_SOURCE_DIR}/docker/test/integration/features)
     set(PYTHON_TESTS "${PYTHON_TESTS};${CMAKE_SOURCE_DIR}/docker/test/integration/features/python.feature")
+    set(PYTHON_TESTS "${PYTHON_TESTS};${CMAKE_SOURCE_DIR}/docker/test/integration/features/python_script.feature")
     ADD_DOCKER_VERIFY(rocky8)
     ADD_DOCKER_VERIFY(rocky9)
     ADD_DOCKER_VERIFY(patched_jammy)
     ADD_DOCKER_VERIFY(patched_bullseye)
-    set(PYTHON_TESTS "${PYTHON_TESTS};${CMAKE_SOURCE_DIR}/docker/test/integration/features/python_in_virtual_environments.feature")
+    set(PYTHON_TESTS "${PYTHON_TESTS};${CMAKE_SOURCE_DIR}/docker/test/integration/features/python_with_modules.feature")
     ADD_DOCKER_VERIFY(conda_jammy)
     ADD_DOCKER_VERIFY(venv_rocky9)
 endif()

@@ -111,8 +111,8 @@ RUN addgroup -g ${GID} ${USER} && adduser -u ${UID} -D -G ${USER} -g "" ${USER} 
     if echo "$MINIFI_OPTIONS" | grep -q "ENABLE_PCAP=ON"; then apk add --no-cache libpcap; fi && \
     if echo "$MINIFI_OPTIONS" | grep -q "ENABLE_USB_CAMERA=ON"; then apk add --no-cache libpng libusb; fi && \
     if echo "$MINIFI_OPTIONS" | grep -q "ENABLE_OPENCV=ON" || echo "$MINIFI_OPTIONS" | grep -q "ENABLE_BUSTACHE=ON"; then apk add --no-cache boost; fi && \
-    if echo "$MINIFI_OPTIONS" | grep -q "ENABLE_SCRIPTING=ON" && echo "$MINIFI_OPTIONS" | grep -q "ENABLE_LUA_SCRIPTING=ON"; then apk add --no-cache lua; fi && \
-    if echo "$MINIFI_OPTIONS" | grep -q "ENABLE_SCRIPTING=ON" && echo "$MINIFI_OPTIONS" | grep -q "DISABLE_PYTHON_SCRIPTING=OFF"; then apk add --no-cache python3; fi
+    if echo "$MINIFI_OPTIONS" | grep -q "ENABLE_LUA_SCRIPTING=ON"; then apk add --no-cache lua; fi && \
+    if echo "$MINIFI_OPTIONS" | grep -q "ENABLE_PYTHON_SCRIPTING=ON"; then apk add --no-cache python3; fi
 
 # Copy built minifi distribution from builder
 COPY --from=build --chown=${USER}:${USER} ${MINIFI_VERSIONED_HOME} ${MINIFI_HOME}
