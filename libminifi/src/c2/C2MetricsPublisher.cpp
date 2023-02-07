@@ -39,9 +39,6 @@
 
 namespace org::apache::nifi::minifi::c2 {
 
-C2MetricsPublisher::C2MetricsPublisher(const std::string &name, const utils::Identifier &uuid)
-  : core::CoreComponent(name, uuid) {}
-
 void C2MetricsPublisher::loadNodeClasses(const std::string& class_definitions, const state::response::SharedResponseNode& new_node) {
   gsl_Expects(response_node_loader_);
   auto classes = utils::StringUtils::split(class_definitions, ",");

@@ -31,7 +31,7 @@
 
 namespace org::apache::nifi::minifi::extensions::prometheus {
 
-class PrometheusMetricsPublisher : public core::CoreComponent, public state::MetricsPublisher {
+class PrometheusMetricsPublisher : public state::MetricsPublisher {
  public:
   explicit PrometheusMetricsPublisher(const std::string &name, const utils::Identifier &uuid = {}, std::unique_ptr<MetricsExposer> exposer = nullptr);
 

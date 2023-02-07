@@ -40,9 +40,9 @@
 
 namespace org::apache::nifi::minifi::c2 {
 
-class C2MetricsPublisher : public core::CoreComponent, public state::response::NodeReporter, public state::MetricsPublisher {
+class C2MetricsPublisher : public state::response::NodeReporter, public state::MetricsPublisher {
  public:
-  explicit C2MetricsPublisher(const std::string &name, const utils::Identifier &uuid = {});
+  using MetricsPublisher::MetricsPublisher;
 
   MINIFIAPI static constexpr const char* Description = "Class that provides C2 metrics to the C2Agent";
 
