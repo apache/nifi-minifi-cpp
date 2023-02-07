@@ -31,7 +31,10 @@ struct VolatileRepositoryData {
   static const char *volatile_repo_max_bytes;
 
   VolatileRepositoryData(uint32_t max_count, size_t max_size);
+  ~VolatileRepositoryData();
+
   void initialize(const std::shared_ptr<Configure> &configure, const std::string& repo_name);
+  void clear();
   // current size of the volatile repo.
   std::atomic<size_t> current_size;
   // value vector that exists for non blocking iteration over

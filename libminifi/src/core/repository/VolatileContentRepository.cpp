@@ -48,10 +48,7 @@ bool VolatileContentRepository::initialize(const std::shared_ptr<Configure> &con
     }
   }
   if (!minimize_locking_) {
-    for (auto ent : repo_data_.value_vector) {
-      delete ent;
-    }
-    repo_data_.value_vector.clear();
+    repo_data_.clear();
   }
 
   return true;

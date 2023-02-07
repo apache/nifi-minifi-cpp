@@ -29,9 +29,6 @@ void VolatileRepository::loadComponent(const std::shared_ptr<core::ContentReposi
 }
 
 VolatileRepository::~VolatileRepository() {
-  for (auto ent : repo_data_.value_vector) {
-    delete ent;
-  }
 }
 
 bool VolatileRepository::initialize(const std::shared_ptr<Configure> &configure) {

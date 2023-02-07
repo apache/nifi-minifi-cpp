@@ -30,6 +30,17 @@ VolatileRepositoryData::VolatileRepositoryData(uint32_t max_count, size_t max_si
     max_size(max_size) {
 }
 
+VolatileRepositoryData::~VolatileRepositoryData() {
+  clear();
+}
+
+void VolatileRepositoryData::clear() {
+  for (auto ent : value_vector) {
+    delete ent;
+  }
+  value_vector.clear();
+}
+
 void VolatileRepositoryData::initialize(const std::shared_ptr<Configure> &configure, const std::string& repo_name) {
   if (configure != nullptr) {
     int64_t max_cnt = 0;
