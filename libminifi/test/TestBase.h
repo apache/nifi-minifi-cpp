@@ -323,7 +323,7 @@ class TestPlan {
   std::vector<std::shared_ptr<minifi::core::ProcessSession>> process_sessions_;
   std::vector<std::shared_ptr<minifi::core::ProcessSessionFactory>> factories_;  // Do not assume ordering
   std::vector<std::unique_ptr<minifi::Connection>> relationships_;
-  minifi::core::Relationship termination_;
+  std::optional<minifi::core::Relationship> termination_;
 
  private:
   std::shared_ptr<logging::Logger> logger_;

@@ -25,6 +25,7 @@
 #include "core/ProcessSession.h"
 #include "SQLProcessor.h"
 #include "utils/ArrayUtils.h"
+#include "core/logging/Logger.h"
 
 namespace org::apache::nifi::minifi::processors {
 
@@ -40,7 +41,8 @@ class PutSQL : public SQLProcessor {
   }
 
   EXTENSIONAPI static const core::Relationship Success;
-  static auto relationships() { return std::array{Success}; }
+  EXTENSIONAPI static const core::Relationship Failure;
+  static auto relationships() { return std::array{Success, Failure}; }
 
   EXTENSIONAPI static constexpr bool SupportsDynamicProperties = false;
   EXTENSIONAPI static constexpr bool SupportsDynamicRelationships = false;

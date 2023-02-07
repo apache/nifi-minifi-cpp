@@ -40,7 +40,7 @@ class SQLTestPlan {
  public:
   SQLTestPlan(TestController& controller, const std::string& connection_str, const std::string& sql_processor, std::initializer_list<core::Relationship> output_rels) {
     plan_ = controller.createPlan();
-    processor_ = plan_->addProcessor(sql_processor, sql_processor);
+    processor_ = plan_->addProcessor(sql_processor, sql_processor, {}, false);
     plan_->setProperty(processor_, "DB Controller Service", "ODBCService");
     input_ = plan_->addConnection({}, {"success", "d"}, processor_);
     for (const auto& output_rel : output_rels) {

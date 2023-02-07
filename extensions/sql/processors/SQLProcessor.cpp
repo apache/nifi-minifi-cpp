@@ -25,17 +25,19 @@
 #include "core/ProcessSession.h"
 #include "Exception.h"
 
-#include <soci/error.h>
-
 namespace org::apache::nifi::minifi::processors {
 
 void SQLProcessor::onSchedule(const std::shared_ptr<core::ProcessContext>& context, const std::shared_ptr<core::ProcessSessionFactory>& /*sessionFactory*/) {
   std::string controllerService;
   context->getProperty(DBControllerService.getName(), controllerService);
 
-  db_service_ = std::dynamic_pointer_cast<sql::controllers::DatabaseService>(context->getControllerService(controllerService));
-  if (!db_service_) {
-    throw minifi::Exception(PROCESSOR_EXCEPTION, "'" + DBControllerService.getName() + "' must be defined");
+  if (auto service = context->getControllerService(controllerService)) {
+    db_service_ = std::dynamic_pointer_cast<sql::controllers::DatabaseService>(service);
+    if (!db_service_) {
+      throw minifi::Exception(PROCESSOR_EXCEPTION, "'" + controllerService + "' is not a DatabaseService");
+    }
+  } else {
+    throw minifi::Exception(PROCESSOR_EXCEPTION, "Could not find controller service '" + controllerService + "'");
   }
 
   processOnSchedule(*context);
@@ -46,17 +48,14 @@ void SQLProcessor::onTrigger(const std::shared_ptr<core::ProcessContext>& contex
     if (!connection_) {
       connection_ = db_service_->getConnection();
     }
-    processOnTrigger(*context, *session);
-  } catch (const soci::soci_error& e) {
-    logger_->log_error("SQLProcessor: '%s'", e.what());
-    if (connection_) {
-      std::string exp;
-      if (!connection_->connected(exp)) {
-        logger_->log_error("SQLProcessor: Connection exception: %s", exp);
-        // try to reconnect next time
-        connection_.reset();
-      }
+    if (!connection_) {
+      throw sql::ConnectionError("Could not establish sql connection");
     }
+    processOnTrigger(*context, *session);
+  } catch (const sql::ConnectionError& ex) {
+    logger_->log_error("Connection error: %s", ex.what());
+    // try to reconnect next time
+    connection_.reset();
     throw;
   }
 }

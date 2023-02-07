@@ -22,12 +22,9 @@
 #include <string>
 #include <vector>
 #include <ctime>
+#include <stdexcept>
 
-namespace org {
-namespace apache {
-namespace nifi {
-namespace minifi {
-namespace sql {
+namespace org::apache::nifi::minifi::sql {
 
 enum class DataType {
   STRING,
@@ -62,6 +59,18 @@ class Rowset {
   virtual void next() = 0;
 };
 
+class ConnectionError : public std::runtime_error {
+ public:
+  using std::runtime_error::runtime_error;
+};
+// Indicates that the error might be caused by a malformed
+// query, constraint violation or something else that won't
+// fix itself on a retry.
+class StatementError : public std::runtime_error {
+ public:
+  using std::runtime_error::runtime_error;
+};
+
 class Statement {
  public:
   explicit Statement(const std::string &query)
@@ -92,9 +101,5 @@ class Connection {
   virtual std::unique_ptr<Session> getSession() const = 0;
 };
 
-} /* namespace sql */
-} /* namespace minifi */
-} /* namespace nifi */
-} /* namespace apache */
-} /* namespace org */
+}  // namespace org::apache::nifi::minifi::sql
 

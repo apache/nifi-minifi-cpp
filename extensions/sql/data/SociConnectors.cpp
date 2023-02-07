@@ -17,12 +17,9 @@
  */
 
 #include "SociConnectors.h"
+#include "logging/LoggerFactory.h"
 
-namespace org {
-namespace apache {
-namespace nifi {
-namespace minifi {
-namespace sql {
+namespace org::apache::nifi::minifi::sql {
 
 void SociRow::setIterator(const soci::rowset<soci::row>::iterator& iter) {
   current_ = iter;
@@ -114,13 +111,29 @@ void SociRowset::next() {
   current_row_.next();
 }
 
+SociStatement::SociStatement(soci::session &session, const std::string &query)
+    : Statement(query), session_(session), logger_(core::logging::LoggerFactory<SociStatement>::getLogger()) {}
+
 std::unique_ptr<Rowset> SociStatement::execute(const std::vector<std::string>& args) {
-  auto stmt = session_.prepare << query_;
-  for (auto& arg : args) {
-    // binds arguments to the prepared statement
-    stmt.operator,(soci::use(arg));
+  try {
+    auto stmt = session_.prepare << query_;
+    for (auto& arg : args) {
+      // binds arguments to the prepared statement
+      stmt.operator,(soci::use(arg));
+    }
+    return std::make_unique<SociRowset>(stmt);
+  } catch (const soci::soci_error& ex) {
+    logger_->log_error("Error while evaluating query, type: %s, what: %s", typeid(ex).name(), ex.what());
+    if (ex.get_error_category() == soci::soci_error::error_category::connection_error
+        || ex.get_error_category() == soci::soci_error::error_category::system_error) {
+      throw sql::ConnectionError(ex.get_error_message());
+    } else {
+      throw sql::StatementError(ex.get_error_message());
+    }
+  } catch (const std::exception& ex) {
+    logger_->log_error("Error while evaluating query, type: %s, what: %s", typeid(ex).name(), ex.what());
+    throw sql::StatementError(ex.what());
   }
-  return std::make_unique<SociRowset>(stmt);
 }
 
 void SociSession::begin() {
@@ -174,8 +187,4 @@ soci::connection_parameters ODBCConnection::getSessionParameters() const {
   return parameters;
 }
 
-} /* namespace sql */
-} /* namespace minifi */
-} /* namespace nifi */
-} /* namespace apache */
-} /* namespace org */
+}  // namespace org::apache::nifi::minifi::sql

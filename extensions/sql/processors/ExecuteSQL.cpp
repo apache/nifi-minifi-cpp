@@ -62,10 +62,22 @@ void ExecuteSQL::processOnTrigger(core::ProcessContext& context, core::ProcessSe
     query = to_string(session.readBuffer(input_flow_file));
   }
   if (query.empty()) {
+    logger_->log_error("Empty sql statement");
+    if (input_flow_file) {
+      session.transfer(input_flow_file, Failure);
+      return;
+    }
     throw Exception(PROCESSOR_EXCEPTION, "Empty SQL statement");
   }
 
-  auto row_set = connection_->prepareStatement(query)->execute(collectArguments(input_flow_file));
+  std::unique_ptr<sql::Rowset> row_set;
+  try {
+    row_set = connection_->prepareStatement(query)->execute(collectArguments(input_flow_file));
+  } catch (const sql::StatementError& ex) {
+    logger_->log_error("Error while executing sql statement: %s", ex.what());
+    session.transfer(input_flow_file, Failure);
+    return;
+  }
 
   sql::JSONSQLWriter json_writer{output_format_ == OutputType::JSONPretty};
   FlowFileGenerator flow_file_creator{session, json_writer};

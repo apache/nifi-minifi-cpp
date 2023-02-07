@@ -615,6 +615,7 @@ In the list below, the names of required properties appear in bold. Any other pr
 | Name    | Description                                              |
 |---------|----------------------------------------------------------|
 | success | Successfully created FlowFile from SQL query result set. |
+| failure | Flow files containing malformed sql statements           |
 
 
 ## ExecuteScript
@@ -2200,6 +2201,7 @@ In the list below, the names of required properties appear in bold. Any other pr
 | Name    | Description                                                              |
 |---------|--------------------------------------------------------------------------|
 | success | After a successful SQL update operation, the incoming FlowFile sent here |
+| failure | Flow files that contain malformed sql statements                         |
 
 
 ## PutTCP

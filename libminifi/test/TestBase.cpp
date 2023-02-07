@@ -234,12 +234,16 @@ std::shared_ptr<minifi::core::Processor> TestPlan::addProcessor(const std::share
   processor->setFlowIdentifier(flow_version_->getFlowIdentifier());
   processor_mapping_[processor->getUUID()] = processor;
   if (!linkToPrevious) {
-    termination_ = *(relationships.begin());
+    if (!std::empty(relationships)) {
+      termination_ = *(relationships.begin());
+    }
   } else {
     std::shared_ptr<minifi::core::Processor> last = processor_queue_.back();
     if (last == nullptr) {
       last = processor;
-      termination_ = *(relationships.begin());
+      if (!std::empty(relationships)) {
+        termination_ = *(relationships.begin());
+      }
     }
     std::stringstream connection_name;
     connection_name << last->getUUIDStr() << "-to-" << processor->getUUIDStr();
@@ -449,6 +453,21 @@ bool TestPlan::runProcessor(const std::shared_ptr<minifi::core::Processor>& proc
   return runProcessor(processor_location, verify);
 }
 
+class TestSessionFactory : public minifi::core::ProcessSessionFactory {
+  using SessionCallback = std::function<void(const std::shared_ptr<minifi::core::ProcessSession>&)>;
+ public:
+  TestSessionFactory(std::shared_ptr<minifi::core::ProcessContext> context, SessionCallback on_new_session)
+    : ProcessSessionFactory(std::move(context)), on_new_session_(std::move(on_new_session)) {}
+
+  std::shared_ptr<minifi::core::ProcessSession> createSession() override {
+    auto session = ProcessSessionFactory::createSession();
+    on_new_session_(session);
+    return session;
+  }
+
+  SessionCallback on_new_session_;
+};
+
 bool TestPlan::runProcessor(size_t target_location, const PreTriggerVerifier& verify) {
   if (!finalized) {
     finalize();
@@ -459,18 +478,23 @@ bool TestPlan::runProcessor(size_t target_location, const PreTriggerVerifier& ve
   std::shared_ptr<minifi::core::Processor> processor = processor_queue_.at(target_location);
   std::shared_ptr<minifi::core::ProcessContext> context = processor_contexts_.at(target_location);
   scheduleProcessor(processor, context);
-  const auto current_session = std::make_shared<minifi::core::ProcessSession>(context);
-  process_sessions_.push_back(current_session);
   current_flowfile_ = nullptr;
   processor->incrementActiveTasks();
   processor->setScheduledState(minifi::core::ScheduledState::RUNNING);
-  if (verify != nullptr) {
+
+  if (verify) {
+    auto current_session = std::make_shared<minifi::core::ProcessSession>(context);
+    process_sessions_.push_back(current_session);
     verify(context, current_session);
+    current_session->commit();
   } else {
+    auto session_factory = std::make_shared<TestSessionFactory>(context, [&] (auto current_session) {
+      process_sessions_.push_back(current_session);
+    });
     logger_->log_info("Running %s", processor->getName());
-    processor->onTrigger(context, current_session);
+    processor->onTrigger(context, session_factory);
   }
-  current_session->commit();
+
   return gsl::narrow<size_t>(target_location + 1) < processor_queue_.size();
 }
 
@@ -560,10 +584,11 @@ std::shared_ptr<minifi::core::ProcessContext> TestPlan::getCurrentContext() {
 }
 
 std::unique_ptr<minifi::Connection> TestPlan::buildFinalConnection(const std::shared_ptr<minifi::core::Processor>& processor, bool setDest) {
+  gsl_Expects(termination_);
   std::stringstream connection_name;
   connection_name << processor->getUUIDStr() << "-to-" << processor->getUUIDStr();
   auto connection = std::make_unique<minifi::Connection>(flow_repo_, content_repo_, connection_name.str());
-  connection->addRelationship(termination_);
+  connection->addRelationship(termination_.value());
 
   // link the connections so that we can test results at the end for this
   connection->setSource(processor.get());
@@ -581,11 +606,13 @@ std::unique_ptr<minifi::Connection> TestPlan::buildFinalConnection(const std::sh
 
 void TestPlan::finalize() {
   std::lock_guard<std::recursive_mutex> guard(mutex);
-  if (!relationships_.empty()) {
-    relationships_.push_back(buildFinalConnection(processor_queue_.back()));
-  } else {
-    for (const auto& processor : processor_queue_) {
-      relationships_.push_back(buildFinalConnection(processor, true));
+  if (termination_) {
+    if (!relationships_.empty()) {
+      relationships_.push_back(buildFinalConnection(processor_queue_.back()));
+    } else {
+      for (const auto& processor : processor_queue_) {
+        relationships_.push_back(buildFinalConnection(processor, true));
+      }
     }
   }
 

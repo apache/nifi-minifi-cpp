@@ -194,9 +194,46 @@ TEST_CASE("ExecuteSQL incoming flow file is malformed", "[ExecuteSQL6]") {
 
   auto plan = controller.createSQLPlan("ExecuteSQL", {{"success", "d"}, {"failure", "d"}});
 
-  auto input_file = plan->addInput({}, "not a valid sql statement");
+  std::shared_ptr<minifi::core::FlowFile> input_file;
+  SECTION("Invalid sql statement") {
+    input_file = plan->addInput({}, "not a valid sql statement");
+  }
+  SECTION("No such table") {
+    input_file = plan->addInput({}, "SELECT * FROM no_such_table;");
+  }
 
-  REQUIRE_THROWS(plan->run());
+  plan->run();
+
+  REQUIRE(plan->getOutputs({"success", "d"}).empty());
+  auto output = plan->getOutputs({"failure", "d"});
+  REQUIRE(output.size() == 1);
+  REQUIRE(output.at(0) == input_file);
+}
+
+TEST_CASE("ExecuteSQL select query is malformed", "[ExecuteSQL7]") {
+  SQLTestController controller;
+
+  auto plan = controller.createSQLPlan("ExecuteSQL", {{"success", "d"}, {"failure", "d"}});
+  plan->getSQLProcessor()->setProperty(minifi::processors::ExecuteSQL::SQLSelectQuery.getName(), "SELECT * FROM test_table WHERE int_col = ?;");
+
+  std::shared_ptr<minifi::core::FlowFile> input_file;
+  SECTION("Less than required arguments") {
+    input_file = plan->addInput({}, "ignored content");
+  }
+// TODO(MINIFICPP-2001):
+//  SECTION("More than required arguments") {
+//    input_file = plan->addInput({
+//      {"sql.args.1.value", "1"},
+//      {"sql.args.2.value", "2"}
+//    }, "ignored content");
+//  }
+
+  plan->run();
+
+  REQUIRE(plan->getOutputs({"success", "d"}).empty());
+  auto output = plan->getOutputs({"failure", "d"});
+  REQUIRE(output.size() == 1);
+  REQUIRE(output.at(0) == input_file);
 }
 
 }  // namespace org::apache::nifi::minifi::test
