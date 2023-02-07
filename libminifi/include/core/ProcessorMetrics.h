@@ -49,6 +49,10 @@ class ProcessorMetrics : public state::response::ResponseNode {
   std::chrono::milliseconds getLastOnTriggerRuntime() const;
   void addLastOnTriggerRuntime(std::chrono::milliseconds runtime);
 
+  std::chrono::milliseconds getAverageSessionCommitRuntime() const;
+  std::chrono::milliseconds getLastSessionCommitRuntime() const;
+  void addLastSessionCommitRuntime(std::chrono::milliseconds runtime);
+
   std::atomic<size_t> iterations{0};
   std::atomic<size_t> transferred_flow_files{0};
   std::atomic<uint64_t> transferred_bytes{0};
@@ -80,6 +84,7 @@ class ProcessorMetrics : public state::response::ResponseNode {
   std::unordered_map<std::string, size_t> transferred_relationships_;
   const Processor& source_processor_;
   Averager<std::chrono::milliseconds> on_trigger_runtime_averager_;
+  Averager<std::chrono::milliseconds> session_commit_runtime_averager_;
 };
 
 }  // namespace org::apache::nifi::minifi::core

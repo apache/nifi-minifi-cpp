@@ -26,7 +26,8 @@ namespace org::apache::nifi::minifi::core {
 
 ProcessorMetrics::ProcessorMetrics(const Processor& source_processor)
     : source_processor_(source_processor),
-      on_trigger_runtime_averager_(STORED_ON_TRIGGER_RUNTIME_COUNT) {
+      on_trigger_runtime_averager_(STORED_ON_TRIGGER_RUNTIME_COUNT),
+      session_commit_runtime_averager_(STORED_ON_TRIGGER_RUNTIME_COUNT) {
 }
 
 std::string ProcessorMetrics::getName() const {
@@ -46,6 +47,8 @@ std::vector<state::response::SerializedResponseNode> ProcessorMetrics::serialize
       {.name = "OnTriggerInvocations", .value = static_cast<uint32_t>(iterations.load())},
       {.name = "AverageOnTriggerRunTime", .value = static_cast<uint64_t>(getAverageOnTriggerRuntime().count())},
       {.name = "LastOnTriggerRunTime", .value = static_cast<uint64_t>(getLastOnTriggerRuntime().count())},
+      {.name = "AverageSessionCommitRunTime", .value = static_cast<uint64_t>(getAverageSessionCommitRuntime().count())},
+      {.name = "LastSessionCommitRunTime", .value = static_cast<uint64_t>(getLastSessionCommitRuntime().count())},
       {.name = "TransferredFlowFiles", .value = static_cast<uint32_t>(transferred_flow_files.load())},
       {.name = "TransferredBytes", .value = transferred_bytes.load()}
     }
@@ -73,6 +76,8 @@ std::vector<state::PublishedMetric> ProcessorMetrics::calculateMetrics() {
     {"onTrigger_invocations", static_cast<double>(iterations.load()), getCommonLabels()},
     {"average_onTrigger_runtime_milliseconds", static_cast<double>(getAverageOnTriggerRuntime().count()), getCommonLabels()},
     {"last_onTrigger_runtime_milliseconds", static_cast<double>(getLastOnTriggerRuntime().count()), getCommonLabels()},
+    {"average_session_commit_runtime_milliseconds", static_cast<double>(getAverageSessionCommitRuntime().count()), getCommonLabels()},
+    {"last_session_commit_runtime_milliseconds", static_cast<double>(getLastSessionCommitRuntime().count()), getCommonLabels()},
     {"transferred_flow_files", static_cast<double>(transferred_flow_files.load()), getCommonLabels()},
     {"transferred_bytes", static_cast<double>(transferred_bytes.load()), getCommonLabels()}
   };
@@ -105,14 +110,25 @@ std::chrono::milliseconds ProcessorMetrics::getLastOnTriggerRuntime() const {
   return on_trigger_runtime_averager_.getLastValue();
 }
 
+std::chrono::milliseconds ProcessorMetrics::getAverageSessionCommitRuntime() const {
+  return session_commit_runtime_averager_.getAverage();
+}
+
+void ProcessorMetrics::addLastSessionCommitRuntime(std::chrono::milliseconds runtime) {
+  session_commit_runtime_averager_.addValue(runtime);
+}
+
+std::chrono::milliseconds ProcessorMetrics::getLastSessionCommitRuntime() const {
+  return session_commit_runtime_averager_.getLastValue();
+}
 
 template<typename ValueType>
 requires Summable<ValueType> && DividableByInteger<ValueType>
 ValueType ProcessorMetrics::Averager<ValueType>::getAverage() const {
+  std::lock_guard<std::mutex> lock(average_value_mutex_);
   if (values_.empty()) {
     return {};
   }
-  std::lock_guard<std::mutex> lock(average_value_mutex_);
   return ranges::accumulate(values_, ValueType{}) / values_.size();
 }
 

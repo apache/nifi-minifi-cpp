@@ -187,10 +187,12 @@ void Processor::onTrigger(ProcessContext *context, ProcessSessionFactory *sessio
 
   try {
     // Call the virtual trigger function
-    const auto start = std::chrono::steady_clock::now();
+    auto start = std::chrono::steady_clock::now();
     onTrigger(context, session.get());
     metrics_->addLastOnTriggerRuntime(std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::steady_clock::now() - start));
+    start = std::chrono::steady_clock::now();
     session->commit();
+    metrics_->addLastSessionCommitRuntime(std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::steady_clock::now() - start));
   } catch (const std::exception& exception) {
     logger_->log_warn("Caught \"%s\" (%s) during Processor::onTrigger of processor: %s (%s)",
         exception.what(), typeid(exception).name(), getUUIDStr(), getName());
@@ -210,10 +212,12 @@ void Processor::onTrigger(const std::shared_ptr<ProcessContext> &context, const 
 
   try {
     // Call the virtual trigger function
-    const auto start = std::chrono::steady_clock::now();
+    auto start = std::chrono::steady_clock::now();
     onTrigger(context, session);
     metrics_->addLastOnTriggerRuntime(std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::steady_clock::now() - start));
+    start = std::chrono::steady_clock::now();
     session->commit();
+    metrics_->addLastSessionCommitRuntime(std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::steady_clock::now() - start));
   } catch (std::exception &exception) {
     logger_->log_warn("Caught \"%s\" (%s) during Processor::onTrigger of processor: %s (%s)",
         exception.what(), typeid(exception).name(), getUUIDStr(), getName());
