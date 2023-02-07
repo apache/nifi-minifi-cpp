@@ -20,10 +20,16 @@
 #ifdef WIN32
 
 #include <memory>
+
 #include "core/Core.h"
 
+struct GetTerminationEventHandleReturnType {
+  bool is_started_by_service;
+  HANDLE termination_event_handler;
+};
+
 void RunAsServiceIfNeeded();
-HANDLE GetTerminationEventHandle(bool* isStartedByService);
+GetTerminationEventHandleReturnType GetTerminationEventHandle();
 bool CreateServiceTerminationThread(std::shared_ptr<org::apache::nifi::minifi::core::logging::Logger> logger, HANDLE terminationEventHandle);
 
 #endif
