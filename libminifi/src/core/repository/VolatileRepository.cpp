@@ -28,9 +28,6 @@ namespace org::apache::nifi::minifi::core::repository {
 void VolatileRepository::loadComponent(const std::shared_ptr<core::ContentRepository>& /*content_repo*/) {
 }
 
-VolatileRepository::~VolatileRepository() {
-}
-
 bool VolatileRepository::initialize(const std::shared_ptr<Configure> &configure) {
   repo_data_.initialize(configure, core::ThreadedRepository::getName());
 

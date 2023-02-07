@@ -49,8 +49,6 @@ class VolatileRepository : public core::ThreadedRepository {
       logger_(logging::LoggerFactory<VolatileRepository>::getLogger()) {
   }
 
-  ~VolatileRepository() override;
-
   bool initialize(const std::shared_ptr<Configure> &configure) override;
 
   bool isNoop() const override {
