@@ -224,11 +224,11 @@ def step_impl(context, property_name, processor_name, attribute_key, attribute_v
     processor.set_property(property_name, filtering)
 
 
-@given("the scheduling period of the {processor_name} processor is set to \"{sceduling_period}\"")
-def step_impl(context, processor_name, sceduling_period):
+@given("the scheduling period of the {processor_name} processor is set to \"{scheduling_period}\"")
+def step_impl(context, processor_name, scheduling_period):
     processor = context.test.get_node_by_name(processor_name)
     processor.set_scheduling_strategy("TIMER_DRIVEN")
-    processor.set_scheduling_period(sceduling_period)
+    processor.set_scheduling_period(scheduling_period)
 
 
 @given("these processor properties are set")
@@ -632,6 +632,11 @@ def step_impl(context, container_name):
 @then("\"{container_name}\" flow is started")
 def step_impl(context, container_name):
     context.test.start(container_name)
+
+
+@then("{duration} later")
+def step_impl(context, duration):
+    time.sleep(humanfriendly.parse_timespan(duration))
 
 
 @when("content \"{content}\" is added to file \"{file_name}\" present in directory \"{path}\" {seconds:d} seconds later")

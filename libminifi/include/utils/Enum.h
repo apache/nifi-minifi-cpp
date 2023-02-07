@@ -39,6 +39,7 @@ namespace utils {
     constexpr Clazz(Type value = static_cast<Type>(-1)) : value_{value} {} \
     explicit Clazz(const std::string& str) : value_{parse(str.c_str()).value_} {} \
     explicit Clazz(const char* str) : value_{parse(str).value_} {} \
+    explicit Clazz(std::nullptr_t) = delete; \
    private: \
     Type value_; \
    public: \
@@ -127,7 +128,7 @@ namespace utils {
 #define SMART_ENUM(Clazz, ...) \
   struct Clazz { \
     using Base = ::org::apache::nifi::minifi::utils::EnumBase; \
-    enum Type { \
+    enum Type : int { \
       FOR_EACH(FIRST, COMMA, (__VA_ARGS__)) \
     }; \
     SMART_ENUM_BODY(Clazz, __VA_ARGS__) \
@@ -136,7 +137,7 @@ namespace utils {
 #define SMART_ENUM_EXTEND(Clazz, base, base_fields, ...) \
   struct Clazz { \
     using Base = base; \
-    enum Type { \
+    enum Type : int { \
       FOR_EACH(INCLUDE_BASE_FIELD, COMMA, base_fields), \
       FOR_EACH(FIRST, COMMA, (__VA_ARGS__)) \
     }; \

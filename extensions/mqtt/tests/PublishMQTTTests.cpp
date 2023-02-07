@@ -20,6 +20,8 @@
 #include "TestBase.h"
 #include "../processors/PublishMQTT.h"
 
+using namespace std::literals::chrono_literals;
+
 namespace {
 struct Fixture {
   Fixture() {
@@ -41,11 +43,32 @@ struct Fixture {
 TEST_CASE_METHOD(Fixture, "PublishMQTTTest_EmptyTopic", "[publishMQTTTest]") {
   publishMqttProcessor_->setProperty(minifi::processors::AbstractMQTTProcessor::BrokerURI, "127.0.0.1:1883");
   REQUIRE_THROWS_WITH(plan_->scheduleProcessor(publishMqttProcessor_), Catch::EndsWith("Required property is empty: Topic"));
-  LogTestController::getInstance().reset();
 }
 
 TEST_CASE_METHOD(Fixture, "PublishMQTTTest_EmptyBrokerURI", "[publishMQTTTest]") {
-  publishMqttProcessor_->setProperty(minifi::processors::AbstractMQTTProcessor::Topic, "mytopic");
+  publishMqttProcessor_->setProperty(minifi::processors::PublishMQTT::Topic, "mytopic");
   REQUIRE_THROWS_WITH(plan_->scheduleProcessor(publishMqttProcessor_), Catch::EndsWith("Required property is empty: Broker URI"));
-  LogTestController::getInstance().reset();
+}
+
+TEST_CASE_METHOD(Fixture, "PublishMQTTTest_EmptyClientID_V_3_1_0", "[publishMQTTTest]") {
+  publishMqttProcessor_->setProperty(minifi::processors::PublishMQTT::Topic, "mytopic");
+  publishMqttProcessor_->setProperty(minifi::processors::AbstractMQTTProcessor::BrokerURI, "127.0.0.1:1883");
+  publishMqttProcessor_->setProperty(minifi::processors::AbstractMQTTProcessor::MqttVersion, toString(minifi::processors::AbstractMQTTProcessor::MqttVersions::V_3_1_0));
+  REQUIRE_THROWS_WITH(plan_->scheduleProcessor(publishMqttProcessor_), Catch::EndsWith("MQTT 3.1.0 specification does not support empty client IDs"));
+}
+
+TEST_CASE_METHOD(Fixture, "PublishMQTTTest_EmptyClientID_V_3", "[publishMQTTTest]") {
+  publishMqttProcessor_->setProperty(minifi::processors::PublishMQTT::Topic, "mytopic");
+  publishMqttProcessor_->setProperty(minifi::processors::AbstractMQTTProcessor::BrokerURI, "127.0.0.1:1883");
+  publishMqttProcessor_->setProperty(minifi::processors::PublishMQTT::MessageExpiryInterval, "60 sec");
+  REQUIRE_NOTHROW(plan_->scheduleProcessor(publishMqttProcessor_));
+  REQUIRE(LogTestController::getInstance().contains("[warning] MQTT 3.x specification does not support Message Expiry Intervals. Property is not used.", 1s));
+}
+
+TEST_CASE_METHOD(Fixture, "PublishMQTTTest_ContentType_V_3", "[publishMQTTTest]") {
+  publishMqttProcessor_->setProperty(minifi::processors::PublishMQTT::Topic, "mytopic");
+  publishMqttProcessor_->setProperty(minifi::processors::AbstractMQTTProcessor::BrokerURI, "127.0.0.1:1883");
+  publishMqttProcessor_->setProperty(minifi::processors::PublishMQTT::ContentType, "text/plain");
+  REQUIRE_NOTHROW(plan_->scheduleProcessor(publishMqttProcessor_));
+  REQUIRE(LogTestController::getInstance().contains("[warning] MQTT 3.x specification does not support Content Types. Property is not used.", 1s));
 }

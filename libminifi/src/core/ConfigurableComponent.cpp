@@ -25,11 +25,7 @@
 #include "core/logging/LoggerConfiguration.h"
 #include "utils/gsl.h"
 
-namespace org {
-namespace apache {
-namespace nifi {
-namespace minifi {
-namespace core {
+namespace org::apache::nifi::minifi::core {
 
 ConfigurableComponent::ConfigurableComponent()
     : accept_all_properties_(false),
@@ -57,7 +53,7 @@ bool ConfigurableComponent::getProperty(const std::string &name, Property &prop)
  * @param value property value.
  * @return result of setting property.
  */
-bool ConfigurableComponent::setProperty(const std::string name, std::string value) {
+bool ConfigurableComponent::setProperty(const std::string& name, const std::string& value) {
   std::lock_guard<std::mutex> lock(configuration_mutex_);
   auto it = properties_.find(name);
 
@@ -114,7 +110,7 @@ bool ConfigurableComponent::updateProperty(const std::string &name, const std::s
  * @param value property value.
  * @return whether property was set or not
  */
-bool ConfigurableComponent::setProperty(const Property& prop, std::string value) {
+bool ConfigurableComponent::setProperty(const Property& prop, const std::string& value) {
   std::lock_guard<std::mutex> lock(configuration_mutex_);
   auto it = properties_.find(prop.getName());
 
@@ -185,7 +181,7 @@ void ConfigurableComponent::setSupportedProperties(gsl::span<const core::Propert
   }
 }
 
-bool ConfigurableComponent::getDynamicProperty(const std::string name, std::string &value) const {
+bool ConfigurableComponent::getDynamicProperty(const std::string& name, std::string &value) const {
   std::lock_guard<std::mutex> lock(configuration_mutex_);
 
   auto &&it = dynamic_properties_.find(name);
@@ -224,7 +220,7 @@ bool ConfigurableComponent::createDynamicProperty(const std::string &name, const
   return true;
 }
 
-bool ConfigurableComponent::setDynamicProperty(const std::string name, std::string value) {
+bool ConfigurableComponent::setDynamicProperty(const std::string& name, const std::string& value) {
   std::lock_guard<std::mutex> lock(configuration_mutex_);
   auto &&it = dynamic_properties_.find(name);
 
@@ -290,8 +286,9 @@ std::map<std::string, Property> ConfigurableComponent::getProperties() const {
   return result;
 }
 
-} /* namespace core */
-} /* namespace minifi */
-} /* namespace nifi */
-} /* namespace apache */
-} /* namespace org */
+bool ConfigurableComponent::isPropertyExplicitlySet(const Property& searched_prop) const {
+  Property prop;
+  return getProperty(searched_prop.getName(), prop) && !prop.getValues().empty();
+}
+
+}  // namespace org::apache::nifi::minifi::core

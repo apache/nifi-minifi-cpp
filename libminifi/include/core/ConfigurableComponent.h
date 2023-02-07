@@ -57,7 +57,7 @@ class ConfigurableComponent {
    * @return result of getting property.
    */
   template<typename T>
-  bool getProperty(const std::string name, T &value) const;
+  bool getProperty(const std::string& name, T &value) const;
 
   template<typename T = std::string>
   std::enable_if_t<std::is_default_constructible<T>::value, std::optional<T>>
@@ -81,7 +81,7 @@ class ConfigurableComponent {
    * @param value property value.
    * @return result of setting property.
    */
-  bool setProperty(const std::string name, std::string value);
+  bool setProperty(const std::string& name, const std::string& value);
 
   /**
    * Updates the Property from the key (name), adding value
@@ -94,7 +94,7 @@ class ConfigurableComponent {
    * @param value property value.
    * @return whether property was set or not
    */
-  bool setProperty(const Property& prop, std::string value);
+  bool setProperty(const Property& prop, const std::string& value);
 
   /**
      * Sets the property using the provided name
@@ -127,7 +127,7 @@ class ConfigurableComponent {
    * @param value
    * @return
    */
-  bool getDynamicProperty(const std::string name, std::string &value) const;
+  bool getDynamicProperty(const std::string& name, std::string &value) const;
 
   /**
    * Sets the value of a new dynamic property.
@@ -136,7 +136,7 @@ class ConfigurableComponent {
    * @param value
    * @return
    */
-  bool setDynamicProperty(const std::string name, std::string value);
+  bool setDynamicProperty(const std::string& name, const std::string& value);
 
   /**
    * Updates the value of an existing dynamic property.
@@ -173,6 +173,11 @@ class ConfigurableComponent {
    */
   std::map<std::string, Property> getProperties() const;
 
+  /**
+   * @return if property exists and is explicitly set, not just falling back to default value
+   */
+  bool isPropertyExplicitlySet(const Property&) const;
+
   virtual ~ConfigurableComponent();
 
   virtual void initialize() {
@@ -206,7 +211,7 @@ class ConfigurableComponent {
 };
 
 template<typename T>
-bool ConfigurableComponent::getProperty(const std::string name, T &value) const {
+bool ConfigurableComponent::getProperty(const std::string& name, T &value) const {
   std::lock_guard<std::mutex> lock(configuration_mutex_);
 
   const auto property_name_and_object = properties_.find(name);
