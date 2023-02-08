@@ -70,7 +70,7 @@ class ListFile : public core::Processor {
   EXTENSIONAPI static constexpr bool SupportsDynamicProperties = false;
   EXTENSIONAPI static constexpr bool SupportsDynamicRelationships = false;
   EXTENSIONAPI static constexpr core::annotation::Input InputRequirement = core::annotation::Input::INPUT_FORBIDDEN;
-  EXTENSIONAPI static constexpr bool IsSingleThreaded = false;
+  EXTENSIONAPI static constexpr bool IsSingleThreaded = true;
 
   ADD_COMMON_VIRTUAL_FUNCTIONS_FOR_PROCESSORS
 
