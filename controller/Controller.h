@@ -27,6 +27,8 @@
 #include "utils/gsl.h"
 #include "Exception.h"
 #include "FlowController.h"
+#include "core/repository/VolatileContentRepository.h"
+#include "core/repository/VolatileFlowFileRepository.h"
 
 /**
  * Sends a single argument comment
@@ -258,13 +260,16 @@ std::shared_ptr<org::apache::nifi::minifi::core::controller::ControllerService> 
   if (!flow_repo) {
     throw org::apache::nifi::minifi::Exception(org::apache::nifi::minifi::REPOSITORY_EXCEPTION, "Could not create flowfile repository");
   }
-
   flow_repo->initialize(configuration);
-
 
   configuration->get(org::apache::nifi::minifi::Configure::nifi_content_repository_class_name, content_repo_class);
 
   const std::shared_ptr content_repo = org::apache::nifi::minifi::core::createContentRepository(content_repo_class, true, "content");
+  const bool is_flow_repo_non_persistent = flow_repo->isNoop() || std::dynamic_pointer_cast<org::apache::nifi::minifi::core::repository::VolatileFlowFileRepository>(flow_repo) != nullptr;
+  const bool is_content_repo_non_persistent = std::dynamic_pointer_cast<org::apache::nifi::minifi::core::repository::VolatileContentRepository>(content_repo) != nullptr;
+  if (is_flow_repo_non_persistent != is_content_repo_non_persistent) {
+    throw org::apache::nifi::minifi::Exception(org::apache::nifi::minifi::REPOSITORY_EXCEPTION, "Both or neither of flowfile and content repositories must be persistent!");
+  }
 
   content_repo->initialize(configuration);
 
@@ -315,12 +320,16 @@ void printManifest(const std::shared_ptr<org::apache::nifi::minifi::Configure> &
   if (!flow_repo) {
     throw org::apache::nifi::minifi::Exception(org::apache::nifi::minifi::REPOSITORY_EXCEPTION, "Could not create flowfile repository");
   }
-
   flow_repo->initialize(configuration);
 
   configuration->get(org::apache::nifi::minifi::Configure::nifi_content_repository_class_name, content_repo_class);
 
   const std::shared_ptr content_repo = org::apache::nifi::minifi::core::createContentRepository(content_repo_class, true, "content");
+  const bool is_flow_repo_non_persistent = flow_repo->isNoop() || std::dynamic_pointer_cast<org::apache::nifi::minifi::core::repository::VolatileFlowFileRepository>(flow_repo) != nullptr;
+  const bool is_content_repo_non_persistent = std::dynamic_pointer_cast<org::apache::nifi::minifi::core::repository::VolatileContentRepository>(content_repo) != nullptr;
+  if (is_flow_repo_non_persistent != is_content_repo_non_persistent) {
+    throw org::apache::nifi::minifi::Exception(org::apache::nifi::minifi::REPOSITORY_EXCEPTION, "Both or neither of flowfile and content repositories must be persistent!");
+  }
 
   content_repo->initialize(configuration);
 
