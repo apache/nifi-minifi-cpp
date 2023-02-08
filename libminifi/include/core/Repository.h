@@ -98,7 +98,17 @@ class Repository : public core::CoreComponent {
     return true;
   }
 
-  virtual bool Delete(std::vector<std::shared_ptr<core::SerializableComponent>> &storedValues);
+  virtual bool Delete(const std::shared_ptr<core::CoreComponent>& item) {
+    return Delete(item->getUUIDStr());
+  }
+
+  virtual bool Delete(std::vector<std::shared_ptr<core::SerializableComponent>> &storedValues) {
+    bool found = true;
+    for (const auto& storedValue : storedValues) {
+      found &= Delete(storedValue->getName());
+    }
+    return found;
+  }
 
   void setConnectionMap(std::map<std::string, core::Connectable*> connectionMap) {
     connection_map_ = std::move(connectionMap);
