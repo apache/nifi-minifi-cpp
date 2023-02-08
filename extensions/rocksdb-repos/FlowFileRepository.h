@@ -20,6 +20,7 @@
 #include <vector>
 #include <string>
 #include <memory>
+#include <list>
 
 #include "utils/file/FileUtils.h"
 #include "rocksdb/db.h"
@@ -61,6 +62,11 @@ constexpr auto FLOWFILE_REPOSITORY_RETRY_INTERVAL_INCREMENTS = std::chrono::mill
 class FlowFileRepository : public ThreadedRepository, public SwapManager {
   static constexpr std::chrono::milliseconds DEFAULT_COMPACTION_PERIOD = std::chrono::minutes{2};
 
+  struct ExpiredFlowFileInfo {
+    std::string key;
+    std::shared_ptr<ResourceClaim> content{};
+  };
+
  public:
   static constexpr const char* ENCRYPTION_KEY_NAME = "nifi.flowfile.repository.encryption.key";
 
@@ -98,6 +104,7 @@ class FlowFileRepository : public ThreadedRepository, public SwapManager {
   bool Put(const std::string& key, const uint8_t *buf, size_t bufLen) override;
   bool MultiPut(const std::vector<std::pair<std::string, std::unique_ptr<minifi::io::BufferStream>>>& data) override;
   bool Delete(const std::string& key) override;
+  bool Delete(const std::shared_ptr<core::CoreComponent>& item) override;
   bool Get(const std::string &key, std::string &value) override;
 
   void loadComponent(const std::shared_ptr<core::ContentRepository> &content_repo) override;
@@ -116,11 +123,13 @@ class FlowFileRepository : public ThreadedRepository, public SwapManager {
 
   void initialize_repository();
 
+  void deserializeFlowFilesWithNoContentClaim(minifi::internal::OpenRocksDb& opendb, std::list<ExpiredFlowFileInfo>& flow_files);
+
   std::thread& getThread() override {
     return thread_;
   }
 
-  moodycamel::ConcurrentQueue<std::string> keys_to_delete;
+  moodycamel::ConcurrentQueue<ExpiredFlowFileInfo> keys_to_delete_;
   std::shared_ptr<core::ContentRepository> content_repo_;
   std::unique_ptr<minifi::internal::RocksDatabase> db_;
   std::unique_ptr<FlowFileLoader> swap_loader_;
