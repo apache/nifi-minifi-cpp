@@ -26,10 +26,10 @@
 
 namespace org::apache::nifi::minifi::core::repository {
 
-struct VolatileRepositoryData {
-  static const char *volatile_repo_max_count;
-  static const char *volatile_repo_max_bytes;
+static constexpr const char *VOLATILE_REPO_MAX_COUNT = "max.count";
+static constexpr const char *VOLATILE_REPO_MAX_BYTES = "max.bytes";
 
+struct VolatileRepositoryData {
   VolatileRepositoryData(uint32_t max_count, size_t max_size);
   ~VolatileRepositoryData();
 

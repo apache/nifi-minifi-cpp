@@ -21,9 +21,6 @@
 
 namespace org::apache::nifi::minifi::core::repository {
 
-const char *VolatileRepositoryData::volatile_repo_max_count = "max.count";
-const char *VolatileRepositoryData::volatile_repo_max_bytes = "max.bytes";
-
 VolatileRepositoryData::VolatileRepositoryData(uint32_t max_count, size_t max_size)
   : current_size(0),
     max_count(max_count),
@@ -45,7 +42,7 @@ void VolatileRepositoryData::initialize(const std::shared_ptr<Configure> &config
   if (configure != nullptr) {
     int64_t max_cnt = 0;
     std::stringstream strstream;
-    strstream << Configure::nifi_volatile_repository_options << repo_name << "." << volatile_repo_max_count;
+    strstream << Configure::nifi_volatile_repository_options << repo_name << "." << VOLATILE_REPO_MAX_COUNT;
     std::string value;
     if (configure->get(strstream.str(), value)) {
       if (core::Property::StringToInt(value, max_cnt)) {
@@ -56,7 +53,7 @@ void VolatileRepositoryData::initialize(const std::shared_ptr<Configure> &config
     strstream.str("");
     strstream.clear();
     int64_t max_bytes = 0;
-    strstream << Configure::nifi_volatile_repository_options << repo_name << "." << volatile_repo_max_bytes;
+    strstream << Configure::nifi_volatile_repository_options << repo_name << "." << VOLATILE_REPO_MAX_BYTES;
     if (configure->get(strstream.str(), value)) {
       if (core::Property::StringToInt(value, max_bytes)) {
         if (max_bytes <= 0) {
