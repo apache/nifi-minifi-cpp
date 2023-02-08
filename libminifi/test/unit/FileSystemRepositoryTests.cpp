@@ -28,6 +28,9 @@
 #include "../Catch.h"
 #include "utils/Literals.h"
 #include "core/repository/FileSystemRepository.h"
+#include "utils/IntegrationTestUtils.h"
+
+using namespace std::literals::chrono_literals;
 
 TEST_CASE("Test Physical memory usage", "[testphysicalmemoryusage]") {
   TestController controller;
@@ -47,7 +50,6 @@ TEST_CASE("Test Physical memory usage", "[testphysicalmemoryusage]") {
     stream->write(fragment.as_span<const std::byte>());
   }
 
-  const auto end_memory = utils::OsUtils::getCurrentProcessPhysicalMemoryUsage();
-
-  REQUIRE(gsl::narrow<size_t>(end_memory - start_memory) < 1_MB);
+  using org::apache::nifi::minifi::utils::verifyEventHappenedInPollTime;
+  REQUIRE(verifyEventHappenedInPollTime(5s, [&] { return gsl::narrow<size_t>(utils::OsUtils::getCurrentProcessPhysicalMemoryUsage() - start_memory) < 5_MB; }, 100ms));
 }
