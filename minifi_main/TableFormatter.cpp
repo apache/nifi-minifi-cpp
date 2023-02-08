@@ -28,7 +28,7 @@ void Table::addRow(std::vector<std::string> row) {
   rows_.push_back(std::move(row));
 }
 
-std::vector<size_t> Table::find_widths() const {
+std::vector<size_t> Table::findWidths() const {
   std::vector<size_t> widths(header_.size());
   for (size_t i = 0; i < header_.size(); ++i) {
     size_t width = header_[i].length();
@@ -41,7 +41,7 @@ std::vector<size_t> Table::find_widths() const {
 }
 
 std::string Table::toString() const {
-  std::vector<size_t> widths = find_widths();
+  std::vector<size_t> widths = findWidths();
   std::string result = formatRow(header_, widths);
   result.append(formatSeparator(widths));
   for (const auto& row : rows_) {

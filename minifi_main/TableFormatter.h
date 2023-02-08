@@ -32,7 +32,7 @@ class Table {
   [[nodiscard]] std::string toString() const;
 
  private:
-  [[nodiscard]] std::vector<size_t> find_widths() const;
+  [[nodiscard]] std::vector<size_t> findWidths() const;
 
   std::vector<std::string> header_;
   std::vector<std::vector<std::string>> rows_;
