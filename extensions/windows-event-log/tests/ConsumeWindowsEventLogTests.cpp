@@ -238,6 +238,18 @@ TEST_CASE("ConsumeWindowsEventLog extracts some attributes by default", "[onTrig
   auto logger_processor = test_plan->addProcessor("LogAttribute", "logger", Success, true);
   test_plan->setProperty(logger_processor, LogAttribute::FlowFilesToLog.getName(), "0");
 
+  SECTION("XML output") {
+    REQUIRE(test_plan->setProperty(cwel_processor, ConsumeWindowsEventLog::OutputFormat.getName(), "XML"));
+  }
+
+  SECTION("Json output") {
+    REQUIRE(test_plan->setProperty(cwel_processor, ConsumeWindowsEventLog::OutputFormat.getName(), "JSON"));
+  }
+
+  SECTION("Plaintext output") {
+    REQUIRE(test_plan->setProperty(cwel_processor, ConsumeWindowsEventLog::OutputFormat.getName(), "Plaintext"));
+  }
+
   // 0th event, only to create a bookmark
   {
     reportEvent(APPLICATION_CHANNEL, "Event zero: this is in the past");

@@ -629,10 +629,10 @@ nonstd::expected<EventRender, std::string> ConsumeWindowsEventLog::createEventRe
   if (output_.xml || output_.json) {
     substituteXMLPercentageItems(doc);
     logger_->log_trace("Finish substituting %% in XML");
+  }
 
-    if (resolve_as_attributes_) {
-      result.matched_fields = walker.getFieldValues();
-    }
+  if (resolve_as_attributes_) {
+    result.matched_fields = walker.getFieldValues();
   }
 
   if (output_.xml) {
@@ -699,42 +699,38 @@ void ConsumeWindowsEventLog::refreshTimeZoneData() {
 }
 
 void ConsumeWindowsEventLog::putEventRenderFlowFileToSession(const EventRender& eventRender, core::ProcessSession& session) const {
-  auto commitFlowFile = [&] (const std::shared_ptr<core::FlowFile>& flowFile, const std::string& content, const std::string& mimeType) {
-    session.writeBuffer(flowFile, content);
-    session.putAttribute(flowFile, core::SpecialFlowAttribute::MIME_TYPE, mimeType);
-    session.putAttribute(flowFile, "timezone.name", timezone_name_);
-    session.putAttribute(flowFile, "timezone.offset", timezone_offset_);
-    session.getProvenanceReporter()->receive(flowFile, provenanceUri_, getUUIDStr(), "Consume windows event logs", 0ms);
-    session.transfer(flowFile, Success);
+  auto commitFlowFile = [&] (const std::string& content, const std::string& mimeType) {
+    auto flow_file = session.create();
+    addMatchedFieldsAsAttributes(eventRender, session, flow_file);
+    session.writeBuffer(flow_file, content);
+    session.putAttribute(flow_file, core::SpecialFlowAttribute::MIME_TYPE, mimeType);
+    session.putAttribute(flow_file, "timezone.name", timezone_name_);
+    session.putAttribute(flow_file, "timezone.offset", timezone_offset_);
+    session.getProvenanceReporter()->receive(flow_file, provenanceUri_, getUUIDStr(), "Consume windows event logs", 0ms);
+    session.transfer(flow_file, Success);
   };
 
   if (output_.xml) {
-    auto flowFile = session.create();
     logger_->log_trace("Writing rendered XML to a flow file");
-
-    for (const auto &fieldMapping : eventRender.matched_fields) {
-      if (!fieldMapping.second.empty()) {
-        session.putAttribute(flowFile, fieldMapping.first, fieldMapping.second);
-      }
-    }
-
-    commitFlowFile(flowFile, eventRender.xml, "application/xml");
+    commitFlowFile(eventRender.xml, "application/xml");
   }
 
   if (output_.plaintext) {
     logger_->log_trace("Writing rendered plain text to a flow file");
-    commitFlowFile(session.create(), eventRender.plaintext, "text/plain");
+    commitFlowFile(eventRender.plaintext, "text/plain");
   }
 
-  if (output_.json.type == JSONType::Raw) {
-    logger_->log_trace("Writing rendered raw JSON to a flow file");
-    commitFlowFile(session.create(), eventRender.json, "application/json");
-  } else if (output_.json.type == JSONType::Simple) {
-    logger_->log_trace("Writing rendered simple JSON to a flow file");
-    commitFlowFile(session.create(), eventRender.json, "application/json");
-  } else if (output_.json.type == JSONType::Flattened) {
-    logger_->log_trace("Writing rendered flattened JSON to a flow file");
-    commitFlowFile(session.create(), eventRender.json, "application/json");
+  if (output_.json) {
+    logger_->log_trace("Writing rendered %s JSON to a flow file", output_.json.type.toString());
+    commitFlowFile(eventRender.json, "application/json");
+  }
+}
+
+void ConsumeWindowsEventLog::addMatchedFieldsAsAttributes(const EventRender& eventRender, core::ProcessSession& session, const std::shared_ptr<core::FlowFile>& flowFile) const {
+  for (const auto &fieldMapping : eventRender.matched_fields) {
+    if (!fieldMapping.second.empty()) {
+      session.putAttribute(flowFile, fieldMapping.first, fieldMapping.second);
+    }
   }
 }
 
