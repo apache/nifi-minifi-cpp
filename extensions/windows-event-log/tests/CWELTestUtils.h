@@ -69,7 +69,7 @@ class OutputFormatTestController : public TestController {
     }
 
     test_plan->reset();
-    LogTestController::resetStream(LogTestController::getInstance().log_output);
+    LogTestController::getInstance().clear();
 
 
     {

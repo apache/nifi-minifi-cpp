@@ -37,7 +37,7 @@ using namespace std::literals::chrono_literals;
 
 class HttpTestHarness : public HTTPIntegrationBase {
  public:
-  HttpTestHarness() : HTTPIntegrationBase(4s) {
+  HttpTestHarness() {
     dir_ = test_controller_.createTempDirectory();
   }
 

@@ -140,7 +140,7 @@ TEST_CASE_METHOD(ListFileTestFixture, "Test listing files only once with default
   REQUIRE(verifyLogLinePresenceInPollTime(3s, "key:file.lastModifiedTime value:" + *utils::file::FileUtils::get_last_modified_time_formatted_string(first_sub_file_abs_path_, FORMAT_STRING)));
   REQUIRE(verifyLogLinePresenceInPollTime(3s, "key:file.lastModifiedTime value:" + *utils::file::FileUtils::get_last_modified_time_formatted_string(second_sub_file_abs_path_, FORMAT_STRING)));
   plan_->reset();
-  LogTestController::getInstance().resetStream(LogTestController::getInstance().log_output);
+  LogTestController::getInstance().clear();
   test_controller_.runSession(plan_, true);
   REQUIRE_FALSE(LogTestController::getInstance().contains("key:file.size", 0s, 0ms));
 }

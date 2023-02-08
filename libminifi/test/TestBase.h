@@ -26,6 +26,7 @@
 #include <string>
 #include <utility>
 #include <vector>
+#include <mutex>
 
 #include "spdlog/common.h"
 
@@ -129,9 +130,7 @@ class LogTestController {
 
   void setLevelByClassName(spdlog::level::level_enum level, const std::string& class_name);
 
-  bool contains(const std::string &ending, std::chrono::milliseconds timeout = std::chrono::seconds(3), std::chrono::milliseconds sleep_interval = std::chrono::milliseconds(200)) const {
-    return contains(log_output, ending, timeout, sleep_interval);
-  }
+  bool contains(const std::string &ending, std::chrono::milliseconds timeout = std::chrono::seconds(3), std::chrono::milliseconds sleep_interval = std::chrono::milliseconds(200)) const;
 
   bool contains(const std::ostringstream &stream, const std::string &ending,
                 std::chrono::milliseconds timeout = std::chrono::seconds(3),
@@ -149,8 +148,11 @@ class LogTestController {
 
   static void resetStream(std::ostringstream &stream);
 
-  std::shared_ptr<std::ostringstream> log_output_ptr = std::make_shared<std::ostringstream>();
-  std::ostringstream& log_output = *log_output_ptr;
+  std::string getLogs() const {
+    std::lock_guard<std::mutex> guard(*log_output_mutex_);
+    gsl_Expects(log_output_ptr_);
+    return log_output_ptr_->str();
+  }
 
   std::shared_ptr<logging::Logger> logger_;
 
@@ -162,7 +164,10 @@ class LogTestController {
   explicit LogTestController(const std::shared_ptr<logging::LoggerProperties> &loggerProps);
 
   void setLevel(const std::string& name, spdlog::level::level_enum level);
+  bool contains(const std::function<std::string()>& log_string_getter, const std::string& ending, std::chrono::milliseconds timeout, std::chrono::milliseconds sleep_interval) const;
 
+  mutable std::shared_ptr<std::mutex> log_output_mutex_ = std::make_shared<std::mutex>();
+  std::shared_ptr<std::ostringstream> log_output_ptr_ = std::make_shared<std::ostringstream>();
   std::shared_ptr<logging::LoggerProperties> my_properties_;
   std::unique_ptr<logging::LoggerConfiguration> config;
   std::vector<std::string> modified_loggers;

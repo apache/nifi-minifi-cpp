@@ -54,7 +54,7 @@ class VerifyLogC2Heartbeat : public VerifyC2Base {
         std::chrono::milliseconds(wait_time_),
         "\"operation\": \"heartbeat\""));
 
-    const auto log = LogTestController::getInstance().log_output.str();
+    const auto log = LogTestController::getInstance().getLogs();
     auto types_in_heartbeat = log | ranges::views::split('\n')
         | ranges::views::transform([](auto&& rng) { return rng | ranges::to<std::string>; })
         | ranges::views::filter([](auto&& line) { return utils::StringUtils::startsWith(line, "                                \"type\":"); })

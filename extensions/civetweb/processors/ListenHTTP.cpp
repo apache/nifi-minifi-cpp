@@ -262,6 +262,7 @@ bool ListenHTTP::processIncomingFlowFile(core::ProcessSession &session) {
 
 /// @return Whether there was a request processed
 bool ListenHTTP::processRequestBuffer(core::ProcessSession& session) {
+  gsl_Expects(handler_);
   std::size_t flow_file_count = 0;
   for (; batch_size_ == 0 || batch_size_ > flow_file_count; ++flow_file_count) {
     FlowFileBufferPair flow_file_buffer_pair;

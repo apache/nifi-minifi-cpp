@@ -163,13 +163,13 @@ class RetryFlowFileTest {
   }
 
   static bool logContainsText(const std::string& pattern) {
-    const std::string logs = LogTestController::getInstance().log_output.str();
+    const std::string logs = LogTestController::getInstance().getLogs();
     return logs.find(pattern) != std::string::npos;
   }
 
   static bool flowfileWasPenalizedARetryflowfile() {
     std::regex re(R"(\[org::apache::nifi::minifi::core::ProcessSession\] \[info\] Penalizing [0-9a-z\-]+ for [0-9]*ms at retryflowfile)");
-    return std::regex_search(LogTestController::getInstance().log_output.str(), re);
+    return std::regex_search(LogTestController::getInstance().getLogs(), re);
   }
 
   static bool retryFlowfileWarnedForReuse() {

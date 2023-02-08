@@ -118,7 +118,7 @@ TEST_CASE_METHOD(ListAzureDataLakeStorageTestsFixture, "List all files every tim
   };
   run_assertions();
   plan_->reset();
-  LogTestController::getInstance().resetStream(LogTestController::getInstance().log_output);
+  LogTestController::getInstance().clear();
   test_controller_.runSession(plan_, true);
   run_assertions();
 }
@@ -147,7 +147,7 @@ TEST_CASE_METHOD(ListAzureDataLakeStorageTestsFixture, "Do not list same files t
   CHECK(verifyLogLinePresenceInPollTime(1s, "key:azure.lastModified value:" + mock_data_lake_storage_client_ptr_->ITEM1_LAST_MODIFIED + "\n"));
   CHECK(verifyLogLinePresenceInPollTime(1s, "key:azure.lastModified value:" + mock_data_lake_storage_client_ptr_->ITEM2_LAST_MODIFIED + "\n"));
   plan_->reset();
-  LogTestController::getInstance().resetStream(LogTestController::getInstance().log_output);
+  LogTestController::getInstance().clear();
   test_controller_.runSession(plan_, true);
   REQUIRE_FALSE(LogTestController::getInstance().contains("key:azure", 0s, 0ms));
 }

@@ -140,7 +140,7 @@ TEST_CASE("TailFile picks up the second line if a delimiter is written between r
   REQUIRE(LogTestController::getInstance().contains("key:filename value:minifi-tmpfile.0-13.txt"));
 
   plan->reset(true);  // start a new but with state file
-  LogTestController::getInstance().resetStream(LogTestController::getInstance().log_output);
+  LogTestController::getInstance().clear();
 
   std::ofstream appendStream;
   appendStream.open(temp_file_path, std::ios_base::app | std::ios_base::binary);
@@ -182,7 +182,7 @@ TEST_CASE("TailFile re-reads the file if the state is deleted between runs", "[s
   REQUIRE(LogTestController::getInstance().contains("key:filename value:minifi-tmpfile.0-13.txt"));
 
   plan->reset(true);  // start a new but with state file
-  LogTestController::getInstance().resetStream(LogTestController::getInstance().log_output);
+  LogTestController::getInstance().clear();
 
   plan->getProcessContextForProcessor(tailfile)->getStateManager()->clear();
 
@@ -230,7 +230,7 @@ TEST_CASE("TailFile picks up the state correctly if it is rewritten between runs
   // should stay the same
   for (int i = 0; i < 5; i++) {
     plan->reset(true);  // start a new but with state file
-    LogTestController::getInstance().resetStream(LogTestController::getInstance().log_output);
+    LogTestController::getInstance().clear();
 
     plan->getProcessContextForProcessor(tailfile)->getStateManager()->set({{"file.0.name", temp_file_path.filename().string()},
                                                                                    {"file.0.position", "14"},
@@ -392,7 +392,7 @@ TEST_CASE("TailFile picks up the new File to Tail if it is changed between runs"
     auto second_test_file = createTempFile(directory, "second.log", "my second log line\n");
     plan->setProperty(tail_file, org::apache::nifi::minifi::processors::TailFile::FileName.getName(), second_test_file.string());
     plan->reset(true);  // clear the memory, but keep the state file
-    LogTestController::getInstance().resetStream(LogTestController::getInstance().log_output);
+    LogTestController::getInstance().clear();
     testController.runSession(plan, true);
     REQUIRE(LogTestController::getInstance().contains("Logged 1 flow file"));
     REQUIRE(LogTestController::getInstance().contains("key:filename value:second.0-18.log"));
@@ -403,7 +403,7 @@ TEST_CASE("TailFile picks up the new File to Tail if it is changed between runs"
     auto second_test_file = createTempFile(directory, "second.log", "");
     plan->setProperty(tail_file, org::apache::nifi::minifi::processors::TailFile::FileName.getName(), second_test_file.string());
     plan->reset(true);  // clear the memory, but keep the state file
-    LogTestController::getInstance().resetStream(LogTestController::getInstance().log_output);
+    LogTestController::getInstance().clear();
     testController.runSession(plan, true);
     REQUIRE(LogTestController::getInstance().contains("Logged 0 flow files"));
   }
@@ -441,7 +441,7 @@ TEST_CASE("TailFile picks up the new File to Tail if it is changed between runs 
   SECTION("If a file no longer matches the new regex, then we stop tailing it") {
     plan->setProperty(tail_file, org::apache::nifi::minifi::processors::TailFile::FileName.getName(), "first\\.f.*\\.log");
     plan->reset(true);  // clear the memory, but keep the state file
-    LogTestController::getInstance().resetStream(LogTestController::getInstance().log_output);
+    LogTestController::getInstance().clear();
     testController.runSession(plan, true);
     REQUIRE(LogTestController::getInstance().contains("Logged 1 flow file"));
     REQUIRE(LogTestController::getInstance().contains("key:filename value:first.fruit.6-12.log"));
@@ -450,7 +450,7 @@ TEST_CASE("TailFile picks up the new File to Tail if it is changed between runs 
   SECTION("If a new file matches the new regex, we start tailing it") {
     plan->setProperty(tail_file, org::apache::nifi::minifi::processors::TailFile::FileName.getName(), ".*\\.fruit\\.log");
     plan->reset(true);  // clear the memory, but keep the state file
-    LogTestController::getInstance().resetStream(LogTestController::getInstance().log_output);
+    LogTestController::getInstance().clear();
     testController.runSession(plan, true);
     REQUIRE(LogTestController::getInstance().contains("Logged 2 flow file"));
     REQUIRE(LogTestController::getInstance().contains("key:filename value:first.fruit.6-12.log"));
@@ -527,7 +527,7 @@ TEST_CASE("TailFile picks up new files created between runs", "[multiple_file]")
   createTempFile(dir, "another.log", "some more content\n");
 
   plan->reset();
-  LogTestController::getInstance().resetStream(LogTestController::getInstance().log_output);
+  LogTestController::getInstance().clear();
 
   testController.runSession(plan, true);
   REQUIRE(LogTestController::getInstance().contains("Logged 1 flow file"));
@@ -563,7 +563,7 @@ TEST_CASE("TailFile can handle input files getting removed", "[multiple_file]") 
   REQUIRE(LogTestController::getInstance().contains("Logged 2 flow files"));
 
   plan->reset();
-  LogTestController::getInstance().resetStream(LogTestController::getInstance().log_output);
+  LogTestController::getInstance().clear();
 
   appendTempFile(dir, "one.log", "line two\nline three\nline four\n");
   std::filesystem::remove(dir / "two.log");
@@ -830,7 +830,7 @@ TEST_CASE("TailFile finds and finishes the renamed file and continues with the n
   new_in_file_stream.close();
 
   plan->reset();
-  LogTestController::getInstance().resetStream(LogTestController::getInstance().log_output);
+  LogTestController::getInstance().clear();
 
   plan->runNextProcessor();  // Tail
   plan->runNextProcessor();  // Log
@@ -891,7 +891,7 @@ TEST_CASE("TailFile finds and finishes multiple rotated files and continues with
   test_file_stream_2.close();
 
   plan->reset();
-  LogTestController::getInstance().resetStream(LogTestController::getInstance().log_output);
+  LogTestController::getInstance().clear();
 
   testController.runSession(plan, true);
 
@@ -936,7 +936,7 @@ TEST_CASE("TailFile ignores old rotated files", "[rotation]") {
   createTempFile(dir, "test.log", "line8\nline9\n");
 
   plan->reset();
-  LogTestController::getInstance().resetStream(LogTestController::getInstance().log_output);
+  LogTestController::getInstance().clear();
 
   testController.runSession(plan, true);
   REQUIRE(LogTestController::getInstance().contains("Logged 2 flow files"));
@@ -996,7 +996,7 @@ TEST_CASE("TailFile rotation works with multiple input files", "[rotation][multi
   appendTempFile(dir, "color.log", "turquoise\n");
 
   plan->reset();
-  LogTestController::getInstance().resetStream(LogTestController::getInstance().log_output);
+  LogTestController::getInstance().clear();
 
   testController.runSession(plan, true);
 
@@ -1063,7 +1063,7 @@ TEST_CASE("TailFile handles the Rolling Filename Pattern property correctly", "[
   createTempFile(dir, "other_rolled.log", "some stuff\none more line\n");  // same contents as test.rolled.log
 
   plan->reset();
-  LogTestController::getInstance().resetStream(LogTestController::getInstance().log_output);
+  LogTestController::getInstance().clear();
 
   testController.runSession(plan, true);
 
@@ -1104,7 +1104,7 @@ TEST_CASE("TailFile finds and finishes the renamed file and continues with the n
     REQUIRE(LogTestController::getInstance().contains("Logged 3 flow files"));
   }
 
-  LogTestController::getInstance().resetStream(LogTestController::getInstance().log_output);
+  LogTestController::getInstance().clear();
 
   std::this_thread::sleep_for(std::chrono::milliseconds(100));
 
@@ -1466,7 +1466,7 @@ TEST_CASE("TailFile interprets the lookup frequency property correctly", "[multi
     REQUIRE(LogTestController::getInstance().contains("Logged 1 flow files"));
 
     plan->reset();
-    LogTestController::getInstance().resetStream(LogTestController::getInstance().log_output);
+    LogTestController::getInstance().clear();
 
     createTempFile(directory, "test.blue.log", "sky\n");
     createTempFile(directory, "test.green.log", "grass\n");
@@ -1482,7 +1482,7 @@ TEST_CASE("TailFile interprets the lookup frequency property correctly", "[multi
     REQUIRE(LogTestController::getInstance().contains("Logged 1 flow files"));
 
     plan->reset();
-    LogTestController::getInstance().resetStream(LogTestController::getInstance().log_output);
+    LogTestController::getInstance().clear();
 
     createTempFile(directory, "test.blue.log", "sky\n");
     createTempFile(directory, "test.green.log", "grass\n");
@@ -1491,7 +1491,7 @@ TEST_CASE("TailFile interprets the lookup frequency property correctly", "[multi
     REQUIRE(LogTestController::getInstance().contains("Logged 0 flow files"));
 
     plan->reset();
-    LogTestController::getInstance().resetStream(LogTestController::getInstance().log_output);
+    LogTestController::getInstance().clear();
 
     std::this_thread::sleep_for(std::chrono::milliseconds(550));
     testController.runSession(plan, true);
@@ -1531,7 +1531,7 @@ TEST_CASE("TailFile reads from a single file when Initial Start Position is set"
     REQUIRE(LogTestController::getInstance().contains("Size:" + std::to_string(NEWLINE_FILE.find_first_of('\n') + 1) + " Offset:0"));
 
     plan->reset(true);
-    LogTestController::getInstance().resetStream(LogTestController::getInstance().log_output);
+    LogTestController::getInstance().clear();
 
     appendTempFile(dir, TMP_FILE, NEW_TAIL_DATA);
 
@@ -1551,7 +1551,7 @@ TEST_CASE("TailFile reads from a single file when Initial Start Position is set"
     REQUIRE(LogTestController::getInstance().contains("Size:" + std::to_string(ROLLED_OVER_TAIL_DATA.find_first_of('\n') + 1) + " Offset:0"));
 
     plan->reset(true);
-    LogTestController::getInstance().resetStream(LogTestController::getInstance().log_output);
+    LogTestController::getInstance().clear();
 
     appendTempFile(dir, TMP_FILE, NEW_TAIL_DATA);
 
@@ -1569,7 +1569,7 @@ TEST_CASE("TailFile reads from a single file when Initial Start Position is set"
     REQUIRE(LogTestController::getInstance().contains("Logged 0 flow files"));
 
     plan->reset(true);
-    LogTestController::getInstance().resetStream(LogTestController::getInstance().log_output);
+    LogTestController::getInstance().clear();
 
     appendTempFile(dir, TMP_FILE, NEW_TAIL_DATA);
 
@@ -1604,7 +1604,7 @@ TEST_CASE("TailFile reads from a single file when Initial Start Position is set 
   REQUIRE(LogTestController::getInstance().contains("Logged 0 flow files"));
 
   plan->reset(true);
-  LogTestController::getInstance().resetStream(LogTestController::getInstance().log_output);
+  LogTestController::getInstance().clear();
 
   const std::string DATA_IN_NEW_FILE = "data in new file\n";
   std::this_thread::sleep_for(std::chrono::milliseconds(100));  // make sure the new file gets newer modification time
@@ -1652,7 +1652,7 @@ TEST_CASE("TailFile reads multiple files when Initial Start Position is set", "[
     REQUIRE(LogTestController::getInstance().contains("Size:" + std::to_string(TMP_FILE_2_DATA.find_first_of('\n') + 1) + " Offset:0"));
 
     plan->reset(true);
-    LogTestController::getInstance().resetStream(LogTestController::getInstance().log_output);
+    LogTestController::getInstance().clear();
 
     createTempFile(dir, "minifi-tmpfile-3.txt", ADDITIONALY_CREATED_FILE_CONTENT);
     appendTempFile(dir, TMP_FILE, NEW_TAIL_DATA);
@@ -1675,7 +1675,7 @@ TEST_CASE("TailFile reads multiple files when Initial Start Position is set", "[
     REQUIRE(LogTestController::getInstance().contains("Size:" + std::to_string(TMP_FILE_2_DATA.find_first_of('\n') + 1) + " Offset:0"));
 
     plan->reset(true);
-    LogTestController::getInstance().resetStream(LogTestController::getInstance().log_output);
+    LogTestController::getInstance().clear();
 
     createTempFile(dir, "minifi-tmpfile-3.txt", ADDITIONALY_CREATED_FILE_CONTENT);
     appendTempFile(dir, TMP_FILE, NEW_TAIL_DATA);
@@ -1695,7 +1695,7 @@ TEST_CASE("TailFile reads multiple files when Initial Start Position is set", "[
     REQUIRE(LogTestController::getInstance().contains("Logged 0 flow files"));
 
     plan->reset(true);
-    LogTestController::getInstance().resetStream(LogTestController::getInstance().log_output);
+    LogTestController::getInstance().clear();
 
     createTempFile(dir, "minifi-tmpfile-3.txt", ADDITIONALY_CREATED_FILE_CONTENT);
     appendTempFile(dir, TMP_FILE, NEW_TAIL_DATA);

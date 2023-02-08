@@ -104,14 +104,14 @@ const std::unordered_map<std::string, std::string> exampleState{{"key1", "value1
 const std::unordered_map<std::string, std::string> exampleState2{{"key3", "value3"}, {"key4", "value4"}};
 
 auto standardLogChecker = [] {
-  const std::string logs = LogTestController::getInstance().log_output.str();
+  const std::string logs = LogTestController::getInstance().getLogs();
   const auto errorResult = utils::StringUtils::countOccurrences(logs, "[error]");
   const auto warningResult = utils::StringUtils::countOccurrences(logs, "[warning]");
   return errorResult.second == 0 && warningResult.second == 0;
 };
 
 auto commitAndRollbackWarnings = [] {
-  const std::string logs = LogTestController::getInstance().log_output.str();
+  const std::string logs = LogTestController::getInstance().getLogs();
   const auto errorResult = utils::StringUtils::countOccurrences(logs, "[error]");
   const auto commitWarningResult = utils::StringUtils::countOccurrences(logs, "[warning] Caught \"Process Session Operation: State manager commit failed.\"");
   const auto rollbackWarningFirst = utils::StringUtils::countOccurrences(logs, "[warning] Caught Exception during process session rollback");
@@ -120,7 +120,7 @@ auto commitAndRollbackWarnings = [] {
 };
 
 auto exceptionRollbackWarnings = [] {
-  const std::string logs = LogTestController::getInstance().log_output.str();
+  const std::string logs = LogTestController::getInstance().getLogs();
   const auto errorResult = utils::StringUtils::countOccurrences(logs, "[error]");
   const auto exceptionWarningResult = utils::StringUtils::countOccurrences(logs, "[warning] Caught \"Triggering rollback\"");
   const auto rollbackWarningResult = utils::StringUtils::countOccurrences(logs, "[warning] ProcessSession rollback for statefulProcessor executed");

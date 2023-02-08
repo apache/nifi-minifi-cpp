@@ -246,7 +246,7 @@ TEST_CASE_METHOD(ListAzureBlobStorageTestsFixture, "List all files every time", 
   };
   run_assertions();
   plan_->reset();
-  LogTestController::getInstance().resetStream(LogTestController::getInstance().log_output);
+  LogTestController::getInstance().clear();
   test_controller_.runSession(plan_, true);
   run_assertions();
 }
@@ -279,7 +279,7 @@ TEST_CASE_METHOD(ListAzureBlobStorageTestsFixture, "Do not list same files the s
   CHECK(verifyLogLinePresenceInPollTime(1s, "key:lang value:en-US"));
   CHECK(verifyLogLinePresenceInPollTime(1s, "key:lang value:de-DE"));
   plan_->reset();
-  LogTestController::getInstance().resetStream(LogTestController::getInstance().log_output);
+  LogTestController::getInstance().clear();
   test_controller_.runSession(plan_, true);
   REQUIRE_FALSE(LogTestController::getInstance().contains("key:azure", 0s, 0ms));
 }
