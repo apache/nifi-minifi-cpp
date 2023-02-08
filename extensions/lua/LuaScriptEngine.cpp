@@ -26,16 +26,17 @@
 
 namespace org::apache::nifi::minifi::extensions::lua {
 
+
 LuaScriptEngine::LuaScriptEngine() {
   lua_.open_libraries(sol::lib::base,
-                      sol::lib::os,
-                      sol::lib::coroutine,
-                      sol::lib::math,
-                      sol::lib::io,
-                      sol::lib::string,
-                      sol::lib::table,
-                      sol::lib::utf8,
-                      sol::lib::package);
+      sol::lib::os,
+      sol::lib::coroutine,
+      sol::lib::math,
+      sol::lib::io,
+      sol::lib::string,
+      sol::lib::table,
+      sol::lib::utf8,
+      sol::lib::package);
   lua_.new_usertype<core::logging::Logger>(
       "Logger",
       "info", &core::logging::Logger::log_info<>);
@@ -98,6 +99,39 @@ void LuaScriptEngine::evalFile(const std::filesystem::path& file_name) {
   } catch (std::exception& e) {
     throw LuaScriptException(e.what());
   }
+}
+
+void LuaScriptEngine::initialize(const core::Relationship& success, const core::Relationship& failure, const std::shared_ptr<core::logging::Logger>& logger) {
+  bind("log", logger);
+  bind("REL_SUCCESS", success);
+  bind("REL_FAILURE", failure);
+}
+
+namespace {
+class TriggerSession {
+ public:
+  TriggerSession(std::shared_ptr<LuaScriptProcessContext> script_context,
+      std::shared_ptr<LuaProcessSession> lua_session)
+      : script_context_(std::move(script_context)),
+      lua_session_(std::move(lua_session)) {
+  }
+
+  ~TriggerSession() {
+    script_context_->releaseProcessContext();
+    lua_session_->releaseCoreResources();
+  }
+
+ private:
+  std::shared_ptr<LuaScriptProcessContext> script_context_;
+  std::shared_ptr<LuaProcessSession> lua_session_;
+};
+}  // namespace
+
+void LuaScriptEngine::onTrigger(const std::shared_ptr<core::ProcessContext>& context, const std::shared_ptr<core::ProcessSession>& session) {
+auto script_context = convert(context);
+auto lua_session = convert(session);
+TriggerSession trigger_session(script_context, lua_session);
+call("onTrigger", script_context, lua_session);
 }
 
 }  // namespace org::apache::nifi::minifi::extensions::lua

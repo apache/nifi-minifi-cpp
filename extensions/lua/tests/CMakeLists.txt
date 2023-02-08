@@ -17,7 +17,7 @@
 # under the License.
 #
 
-file(GLOB EXECUTESCRIPT_LUA_TESTS "TestExecuteLuaScriptProcessor.cpp" "LuaScriptEngineTests.cpp")
+file(GLOB EXECUTESCRIPT_LUA_TESTS "LuaScriptEngineTests.cpp" "TestExecuteScriptProcessorWithLuaScript.cpp")
 
 SET(EXTENSIONS_TEST_COUNT 0)
 
@@ -28,7 +28,7 @@ FOREACH(testfile ${EXECUTESCRIPT_LUA_TESTS})
     target_include_directories(${testfilename} PRIVATE BEFORE "${CMAKE_SOURCE_DIR}/extensions/standard-processors")
     target_include_directories(${testfilename} PRIVATE BEFORE "${CMAKE_SOURCE_DIR}/libminifi/test/")
     target_include_directories(${testfilename} SYSTEM PRIVATE BEFORE "${SOL2_INCLUDE_DIR}")
-    target_link_libraries(${testfilename} minifi-lua-script-extension)
+    target_link_libraries(${testfilename} minifi-lua-script-extension minifi-script-extension)
     target_link_libraries(${testfilename} minifi-standard-processors)
     target_link_libraries(${testfilename} ${CATCH_MAIN_LIB})
     createTests("${testfilename}")

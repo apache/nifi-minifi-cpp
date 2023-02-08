@@ -17,29 +17,18 @@
 # under the License.
 #
 
-if (NOT (ENABLE_ALL OR ENABLE_LUA_SCRIPTING))
+if (NOT (ENABLE_LUA_SCRIPTING OR ENABLE_PYTHON_SCRIPTING))
     return()
 endif()
 
-include(Sol2)
-
 include(${CMAKE_SOURCE_DIR}/extensions/ExtensionHeader.txt)
 
-file(GLOB SOURCES  "*.cpp")
+file(GLOB SOURCES "*.cpp")
 
-add_library(minifi-lua-script-extension SHARED ${SOURCES})
+add_library(minifi-script-extension SHARED ${SOURCES})
 
-target_link_libraries(minifi-lua-script-extension PRIVATE ${LIBMINIFI} Threads::Threads)
+target_link_libraries(minifi-script-extension PRIVATE ${LIBMINIFI} Threads::Threads)
+target_include_directories(minifi-script-extension PRIVATE BEFORE "${CMAKE_SOURCE_DIR}/extensions/python")
 
-SET(CMAKE_FIND_PACKAGE_SORT_ORDER NATURAL)
-SET(CMAKE_FIND_PACKAGE_SORT_DIRECTION ASC)
-find_package(Lua 5.1 REQUIRED)
-
-target_include_directories(minifi-lua-script-extension PRIVATE lua)
-target_include_directories(minifi-lua-script-extension PUBLIC ${LUA_INCLUDE_DIR})
-
-target_link_libraries(minifi-lua-script-extension PUBLIC ${LUA_LIBRARIES} sol2)
-target_compile_features(minifi-lua-script-extension PUBLIC cxx_std_14)
-
-register_extension(minifi-lua-script-extension "LUA SCRIPTING EXTENSIONS" LUA-SCRIPTING-EXTENSIONS "This enables LUA scripting" "extensions/lua/tests")
-register_extension_linter(minifi-lua-script-extension-linter)
+register_extension(minifi-script-extension "SCRIPTING EXTENSIONS" SCRIPTING-EXTENSIONS "This enables scripting" "extensions/script/tests")
+register_extension_linter(minifi-script-extension-linter)

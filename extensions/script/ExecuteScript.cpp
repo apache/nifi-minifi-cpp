@@ -1,0 +1,99 @@
+/**
+ * @file ExecuteScript.cpp
+
+ * ExecuteScript class implementation
+ *
+ * Licensed to the Apache Software Foundation (ASF) under one or more
+ * contributor license agreements.  See the NOTICE file distributed with
+ * this work for additional information regarding copyright ownership.
+ * The ASF licenses this file to You under the Apache License, Version 2.0
+ * (the "License"); you may not use this file except in compliance with
+ * the License.  You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+#include "ExecuteScript.h"
+
+#include <memory>
+#include <vector>
+
+#include "core/PropertyBuilder.h"
+#include "core/Resource.h"
+#include "utils/ProcessorConfigUtils.h"
+#include "utils/StringUtils.h"
+#include "range/v3/range/conversion.hpp"
+
+namespace org::apache::nifi::minifi::processors {
+
+const core::Property ExecuteScript::ScriptEngine(
+  core::PropertyBuilder::createProperty("Script Engine")
+    ->withDescription(R"(The engine to execute scripts (python, lua))")
+    ->isRequired(true)
+    ->withAllowableValues(ScriptEngineOption::values())
+    ->withDefaultValue(toString(ScriptEngineOption::PYTHON))
+    ->build());
+const core::Property ExecuteScript::ScriptFile("Script File",
+    R"(Path to script file to execute. Only one of Script File or Script Body may be used)", "");
+const core::Property ExecuteScript::ScriptBody("Script Body",
+    R"(Body of script to execute. Only one of Script File or Script Body may be used)", "");
+const core::Property ExecuteScript::ModuleDirectory("Module Directory",
+    R"(Comma-separated list of paths to files and/or directories which contain modules required by the script)", "");
+
+const core::Relationship ExecuteScript::Success("success", "Script successes");
+const core::Relationship ExecuteScript::Failure("failure", "Script failures");
+
+void ExecuteScript::initialize() {
+  setSupportedProperties(properties());
+  setSupportedRelationships(relationships());
+}
+
+void ExecuteScript::onSchedule(core::ProcessContext *context, core::ProcessSessionFactory* /*sessionFactory*/) {
+  if (auto script_engine_prefix = context->getProperty(ScriptEngine)) {
+    std::transform(script_engine_prefix->begin(), ++script_engine_prefix->begin(), script_engine_prefix->begin(), ::toupper);
+    auto script_executor_name = *script_engine_prefix + "ScriptExecutor";
+    script_executor_ = core::ClassLoader::getDefaultClassLoader().instantiate<extensions::script::ScriptExecutor>(script_executor_name, script_executor_name);
+    if (!script_executor_) {
+      throw Exception(PROCESS_SCHEDULE_EXCEPTION, "Could not instantiate " + script_executor_name);
+    }
+  } else {
+    throw Exception(PROCESS_SCHEDULE_EXCEPTION, "Missing script engine name");
+  }
+
+
+  std::string script_file;
+  std::string script_body;
+  context->getProperty(ScriptFile.getName(), script_file);
+  context->getProperty(ScriptBody.getName(), script_body);
+  auto module_directory = context->getProperty(ModuleDirectory);
+
+  if (script_file.empty() && script_body.empty()) {
+    throw Exception(PROCESS_SCHEDULE_EXCEPTION, "Either Script Body or Script File must be defined");
+  }
+
+  if (!script_file.empty() && !script_body.empty()) {
+    throw Exception(PROCESS_SCHEDULE_EXCEPTION, "Only one of Script File or Script Body may be defined!");
+  }
+
+  if (!script_file.empty() && !std::filesystem::is_regular_file(std::filesystem::status(script_file))) {
+    throw Exception(PROCESS_SCHEDULE_EXCEPTION, "Script File set is not a regular file or does not exist: " + script_file);
+  }
+
+  script_executor_->initialize(std::move(script_file), std::move(script_body), std::move(module_directory), getMaxConcurrentTasks(), Success, Failure, logger_);
+}
+
+void ExecuteScript::onTrigger(const std::shared_ptr<core::ProcessContext>& context,
+                              const std::shared_ptr<core::ProcessSession>& session) {
+  gsl_Expects(script_executor_);
+  script_executor_->onTrigger(context, session);
+}
+
+REGISTER_RESOURCE(ExecuteScript, Processor);
+
+}  // namespace org::apache::nifi::minifi::processors

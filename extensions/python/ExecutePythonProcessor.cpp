@@ -172,9 +172,7 @@ std::unique_ptr<PythonScriptEngine> ExecutePythonProcessor::createScriptEngine()
   auto engine = std::make_unique<PythonScriptEngine>();
 
   python_logger_ = core::logging::LoggerFactory<ExecutePythonProcessor>::getAliasedLogger(getName());
-  engine->bind("log", std::weak_ptr(python_logger_));
-  engine->bind("REL_SUCCESS", Success);
-  engine->bind("REL_FAILURE", Failure);
+  engine->initialize(Success, Failure, python_logger_);
 
   return engine;
 }

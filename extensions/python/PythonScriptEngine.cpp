@@ -17,14 +17,14 @@
 
 #include <string>
 #include <filesystem>
-#include <cstdio>
 
 #include "PythonScriptEngine.h"
 #include "PythonBindings.h"
 #include "types/PyProcessSession.h"
 #include "types/PyProcessContext.h"
 #include "types/PyProcessor.h"
-#include "utils/file/FileUtils.h"
+#include "types/PyLogger.h"
+#include "types/PyRelationship.h"
 
 namespace org::apache::nifi::minifi::extensions::python {
 
@@ -146,6 +146,12 @@ void PythonScriptEngine::onTrigger(const std::shared_ptr<core::ProcessContext> &
   auto py_session = std::make_shared<python::PyProcessSession>(session);
   auto script_context = std::make_shared<PythonScriptProcessContext>(context);
   call("onTrigger", std::weak_ptr(script_context), std::weak_ptr(py_session));
+}
+
+void PythonScriptEngine::initialize(const core::Relationship& success, const core::Relationship& failure, const std::shared_ptr<core::logging::Logger>& logger) {
+  bind("log", std::weak_ptr<core::logging::Logger>(logger));
+  bind("REL_SUCCESS", success);
+  bind("REL_FAILURE", failure);
 }
 
 void PythonScriptEngine::evalInternal(std::string_view script) {

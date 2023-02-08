@@ -43,5 +43,5 @@ endif()
 target_include_directories(minifi-python-script-extension PRIVATE BEFORE "${CMAKE_SOURCE_DIR}/extensions/python")
 target_include_directories(minifi-python-script-extension PUBLIC ${Python_INCLUDE_DIRS})
 
-register_extension(minifi-python-script-extension "SCRIPTING EXTENSIONS" SCRIPTING-EXTENSIONS "This enables scripting" "extensions/python/tests")
+register_extension(minifi-python-script-extension "PYTHON SCRIPTING ENGINE" PYTHON-SCRIPTING-EXTENSIONS "This enables python script engine" "extensions/python/tests")
 register_extension_linter(minifi-python-script-extension-linter)

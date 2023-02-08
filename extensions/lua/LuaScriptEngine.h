@@ -40,16 +40,13 @@ class LuaScriptEngine {
 
   void eval(const std::string& script);
   void evalFile(const std::filesystem::path& file_name);
+  void onTrigger(const std::shared_ptr<core::ProcessContext>& context, const std::shared_ptr<core::ProcessSession>& session);
+  void initialize(const core::Relationship& success, const core::Relationship& failure, const std::shared_ptr<core::logging::Logger>& logger);
 
   void setModulePaths(std::vector<std::filesystem::path> module_paths) {
     module_paths_ = std::move(module_paths);
   }
 
-  /**
-   * Calls the given function, forwarding arbitrary provided parameters.
-   *
-   * @return
-   */
   template<typename... Args>
   void call(const std::string& fn_name, Args&& ...args) {
     sol::protected_function_result function_result{};
@@ -63,31 +60,6 @@ class LuaScriptEngine {
       sol::error err = function_result;
       throw LuaScriptException(err.what());
     }
-  }
-
-  class TriggerSession {
-   public:
-    TriggerSession(std::shared_ptr<LuaScriptProcessContext> script_context,
-                   std::shared_ptr<LuaProcessSession> lua_session)
-        : script_context_(std::move(script_context)),
-          lua_session_(std::move(lua_session)) {
-    }
-
-    ~TriggerSession() {
-      script_context_->releaseProcessContext();
-      lua_session_->releaseCoreResources();
-    }
-
-   private:
-    std::shared_ptr<LuaScriptProcessContext> script_context_;
-    std::shared_ptr<LuaProcessSession> lua_session_;
-  };
-
-  void onTrigger(const std::shared_ptr<core::ProcessContext>& context, const std::shared_ptr<core::ProcessSession>& session) {
-    auto script_context = convert(context);
-    auto lua_session = convert(session);
-    TriggerSession trigger_session(script_context, lua_session);
-    call("onTrigger", script_context, lua_session);
   }
 
   template<typename T>

@@ -18,6 +18,7 @@
 #pragma once
 
 #include <concepts>
+#include <algorithm>
 #include <string>
 #include <memory>
 #include <utility>
@@ -26,16 +27,21 @@
 #include "concurrentqueue.h"
 #include "core/Processor.h"
 
-#include "LuaScriptEngine.h"
-#include "LuaScriptProcessContext.h"
+#include "ScriptExecutor.h"
 #include "utils/Enum.h"
 #include "utils/ResourceQueue.h"
+#include "logging/LoggerFactory.h"
 
-namespace org::apache::nifi::minifi::extensions::lua {
+namespace org::apache::nifi::minifi::processors {
 
-class ExecuteLuaScript : public core::Processor {
+class ExecuteScript : public core::Processor {
  public:
-  explicit ExecuteLuaScript(std::string name, const utils::Identifier &uuid = {})
+  SMART_ENUM(ScriptEngineOption,
+    (LUA, "lua"),
+    (PYTHON, "python")
+  )
+
+  explicit ExecuteScript(std::string name, const utils::Identifier &uuid = {})
       : Processor(std::move(name), uuid) {
   }
 
@@ -46,14 +52,16 @@ class ExecuteLuaScript : public core::Processor {
       "if they wish, although there will be a script context per concurrent task of the processor. In order to, e.g., compute an arithmetic sum based on incoming flow file information, set the "
       "concurrent tasks to 1.";
 
+  EXTENSIONAPI static const core::Property ScriptEngine;
   EXTENSIONAPI static const core::Property ScriptFile;
   EXTENSIONAPI static const core::Property ScriptBody;
   EXTENSIONAPI static const core::Property ModuleDirectory;
   static auto properties() {
     return std::array{
-        ScriptFile,
-        ScriptBody,
-        ModuleDirectory
+      ScriptEngine,
+      ScriptFile,
+      ScriptBody,
+      ModuleDirectory
     };
   }
 
@@ -73,16 +81,12 @@ class ExecuteLuaScript : public core::Processor {
     logger_->log_error("onTrigger invocation with raw pointers is not implemented");
   }
   void onTrigger(const std::shared_ptr<core::ProcessContext> &context,
-      const std::shared_ptr<core::ProcessSession> &session) override;
+                 const std::shared_ptr<core::ProcessSession> &session) override;
 
  private:
-  std::shared_ptr<core::logging::Logger> logger_ = core::logging::LoggerFactory<ExecuteLuaScript>::getLogger(uuid_);
+  std::shared_ptr<core::logging::Logger> logger_ = core::logging::LoggerFactory<ExecuteScript>::getLogger(uuid_);
 
-  std::string script_file_;
-  std::string script_body_;
-  std::optional<std::string> module_directory_;
-
-  std::shared_ptr<utils::ResourceQueue<LuaScriptEngine>> lua_script_engine_queue_;
+  std::unique_ptr<extensions::script::ScriptExecutor> script_executor_;
 };
 
-}  // namespace org::apache::nifi::minifi::extensions::lua
+}  // namespace org::apache::nifi::minifi::processors

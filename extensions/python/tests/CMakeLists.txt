@@ -17,8 +17,8 @@
 # under the License.
 #
 
-file(GLOB EXECUTESCRIPT_PYTHON_TESTS  "TestExecutePythonScriptProcessor.cpp" "PythonScriptEngineTests.cpp" "PythonManifestTests.cpp")
-file(GLOB EXECUTEPYTHONPROCESSOR_UNIT_TESTS "ExecutePythonProcessorTests.cpp")
+file(GLOB EXECUTESCRIPT_PYTHON_TESTS "TestExecuteScriptProcessorWithPythonScript.cpp" "PythonScriptEngineTests.cpp")
+file(GLOB EXECUTEPYTHONPROCESSOR_UNIT_TESTS "ExecutePythonProcessorTests.cpp" "PythonManifestTests.cpp")
 file(GLOB PY_SOURCES  "python/*.cpp")
 include(GenericPython)
 
@@ -31,20 +31,18 @@ FOREACH(testfile ${EXECUTESCRIPT_PYTHON_TESTS})
     target_include_directories(${testfilename} PRIVATE BEFORE "${CMAKE_SOURCE_DIR}/extensions/standard-processors")
     target_include_directories(${testfilename} PRIVATE BEFORE "${CMAKE_SOURCE_DIR}/libminifi/test/")
     add_definitions(-DPYTHON_SUPPORT)
-    target_link_libraries(${testfilename} minifi-standard-processors minifi-python-script-extension ${CATCH_MAIN_LIB} Python::Python)
+    target_link_libraries(${testfilename} minifi-standard-processors minifi-python-script-extension minifi-script-extension ${CATCH_MAIN_LIB} Python::Python)
     createTests("${testfilename}")
     MATH(EXPR EXTENSIONS_TEST_COUNT "${EXTENSIONS_TEST_COUNT}+1")
     add_test(NAME "${testfilename}" COMMAND "${testfilename}" WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR})
 
-    # Copy test resources only once after the first build to be available for all test cases
     if(EXTENSIONS_TEST_COUNT EQUAL 1)
         add_custom_command(
-            TARGET "${testfilename}"
-            POST_BUILD
-            COMMAND ${CMAKE_COMMAND} -E copy_directory
-                    "${CMAKE_SOURCE_DIR}/extensions/python/tests/test_python_scripts"
-                    "$<TARGET_FILE_DIR:${testfilename}>/test_python_scripts"
-            )
+                TARGET "${testfilename}"
+                POST_BUILD
+                COMMAND ${CMAKE_COMMAND} -E copy_directory
+                "${CMAKE_SOURCE_DIR}/extensions/python/tests/test_python_scripts"
+                "$<TARGET_FILE_DIR:${testfilename}>/test_python_scripts")
     endif()
 ENDFOREACH()
 
@@ -65,18 +63,16 @@ FOREACH(testfile ${EXECUTEPYTHONPROCESSOR_UNIT_TESTS})
     target_link_libraries(${testfilename} ${CATCH_MAIN_LIB})
 
     createTests("${testfilename}")
-    add_test(NAME "${testfilename}" COMMAND "${testfilename}"  WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR})
     MATH(EXPR EXTENSIONS_TEST_COUNT "${EXTENSIONS_TEST_COUNT}+1")
+    add_test(NAME "${testfilename}" COMMAND "${testfilename}"  WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR})
 
-    # Copy test resources only once after the first build to be available for all test cases
     if(EXTENSIONS_TEST_COUNT EQUAL 1)
         add_custom_command(
-            TARGET "${testfilename}"
-            POST_BUILD
-            COMMAND ${CMAKE_COMMAND} -E copy_directory
-                    "${CMAKE_SOURCE_DIR}/extensions/python/tests/test_python_scripts"
-                    "$<TARGET_FILE_DIR:${testfilename}>/test_python_scripts"
-            )
+                TARGET "${testfilename}"
+                POST_BUILD
+                COMMAND ${CMAKE_COMMAND} -E copy_directory
+                "${CMAKE_SOURCE_DIR}/extensions/script/tests/test_python_scripts"
+                "$<TARGET_FILE_DIR:${testfilename}>/test_python_scripts")
     endif()
 ENDFOREACH()
 

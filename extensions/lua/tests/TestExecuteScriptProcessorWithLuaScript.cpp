@@ -19,67 +19,80 @@
 #include <filesystem>
 #include <memory>
 #include <string>
-#include <set>
 
 #include "SingleProcessorTestController.h"
 #include "TestBase.h"
 #include "Catch.h"
 
-#include "ExecuteLuaScript.h"
+#include "../../script/ExecuteScript.h"
 #include "processors/LogAttribute.h"
 #include "processors/GetFile.h"
 #include "processors/PutFile.h"
-#include "utils/file/FileUtils.h"
 #include "utils/TestUtils.h"
 
-namespace org::apache::nifi::minifi::extensions::lua::test {
+namespace org::apache::nifi::minifi::processors::test {
 
-TEST_CASE("Neither script body nor script file is set", "[executeLuaScriptMisconfiguration]") {
+TEST_CASE("Script engine is not set", "[executescriptMisconfiguration]") {
   TestController testController;
   auto plan = testController.createPlan();
 
-  auto executeLuaScript = plan->addProcessor("ExecuteLuaScript", "executeLuaScript");
+  auto executeScript = plan->addProcessor("ExecuteScript", "executeScript");
 
+  plan->setProperty(executeScript, ExecuteScript::ScriptEngine.getName(), "");
+  plan->setProperty(executeScript, ExecuteScript::ScriptFile.getName(), "/path/to/script.lua");
 
   REQUIRE_THROWS_AS(testController.runSession(plan, true), minifi::Exception);
 }
 
-TEST_CASE("Test both script body and script file set", "[executeLuaScriptMisconfiguration]") {
+TEST_CASE("Neither script body nor script file is set", "[executescriptMisconfiguration]") {
   TestController testController;
   auto plan = testController.createPlan();
 
-  auto executeLuaScript = plan->addProcessor("ExecuteLuaScript", "executeLuaScript");
+  auto executeScript = plan->addProcessor("ExecuteScript", "executeScript");
 
-  plan->setProperty(executeLuaScript, ExecuteLuaScript::ScriptFile.getName(), "/path/to/script.lua");
-  plan->setProperty(executeLuaScript, ExecuteLuaScript::ScriptBody.getName(), R"(
-    function onTrigger(context, session)
-      log:info('hello from lua')
-    end
+  plan->setProperty(executeScript, ExecuteScript::ScriptEngine.getName(), "lua");
+
+  REQUIRE_THROWS_AS(testController.runSession(plan, true), minifi::Exception);
+}
+
+TEST_CASE("Test both script body and script file set", "[executescriptMisconfiguration]") {
+  TestController testController;
+  auto plan = testController.createPlan();
+
+  auto executeScript = plan->addProcessor("ExecuteScript", "executeScript");
+
+  plan->setProperty(executeScript, ExecuteScript::ScriptEngine.getName(), "lua");
+  plan->setProperty(executeScript, ExecuteScript::ScriptFile.getName(), "/path/to/script.lua");
+  plan->setProperty(executeScript, ExecuteScript::ScriptBody.getName(), R"(
+function onTrigger(context, session)
+  log:info('hello from lua')
+end
   )");
 
   REQUIRE_THROWS_AS(testController.runSession(plan, true), minifi::Exception);
 }
 
-TEST_CASE("Lua: Test Log", "[executeLuaScriptLuaLog]") {
+TEST_CASE("Lua: Test Log", "[executescriptLuaLog]") {
   TestController testController;
 
   LogTestController &logTestController = LogTestController::getInstance();
   logTestController.setDebug<TestPlan>();
   logTestController.setDebug<minifi::processors::LogAttribute>();
-  logTestController.setDebug<ExecuteLuaScript>();
+  logTestController.setDebug<ExecuteScript>();
 
   auto plan = testController.createPlan();
 
   auto getFile = plan->addProcessor("GetFile", "getFile");
-  auto executeLuaScript = plan->addProcessor("ExecuteLuaScript",
-                                          "executeLuaScript",
+  auto executeScript = plan->addProcessor("ExecuteScript",
+                                          "executeScript",
                                           core::Relationship("success", "description"),
                                           true);
 
-  plan->setProperty(executeLuaScript, ExecuteLuaScript::ScriptBody.getName(), R"(
-    function onTrigger(context, session)
-      log:info('hello from lua')
-    end
+  plan->setProperty(executeScript, ExecuteScript::ScriptEngine.getName(), "lua");
+  plan->setProperty(executeScript, ExecuteScript::ScriptBody.getName(), R"(
+function onTrigger(context, session)
+  log:info('hello from lua')
+end
   )");
 
   auto getFileDir = testController.createTempDirectory();
@@ -91,18 +104,18 @@ TEST_CASE("Lua: Test Log", "[executeLuaScriptLuaLog]") {
   testController.runSession(plan, false);
 
   REQUIRE(LogTestController::getInstance().contains(
-      "[org::apache::nifi::minifi::extensions::lua::ExecuteLuaScript] [info] hello from lua"));
+      "[org::apache::nifi::minifi::processors::ExecuteScript] [info] hello from lua"));
 
   logTestController.reset();
 }
 
-TEST_CASE("Lua: Test Read File", "[executeLuaScriptLuaRead]") {
+TEST_CASE("Lua: Test Read File", "[executescriptLuaRead]") {
   TestController testController;
 
   LogTestController &logTestController = LogTestController::getInstance();
   logTestController.setDebug<TestPlan>();
   logTestController.setDebug<minifi::processors::LogAttribute>();
-  logTestController.setDebug<ExecuteLuaScript>();
+  logTestController.setDebug<ExecuteScript>();
 
   auto plan = testController.createPlan();
 
@@ -110,13 +123,14 @@ TEST_CASE("Lua: Test Read File", "[executeLuaScriptLuaRead]") {
   auto logAttribute = plan->addProcessor("LogAttribute", "logAttribute",
                                          core::Relationship("success", "description"),
                                          true);
-  auto executeLuaScript = plan->addProcessor("ExecuteLuaScript",
-                                          "executeLuaScript",
+  auto executeScript = plan->addProcessor("ExecuteScript",
+                                          "executeScript",
                                           core::Relationship("success", "description"),
                                           true);
   auto putFile = plan->addProcessor("PutFile", "putFile", core::Relationship("success", "description"), true);
 
-  plan->setProperty(executeLuaScript, ExecuteLuaScript::ScriptBody.getName(), R"(
+  plan->setProperty(executeScript, ExecuteScript::ScriptEngine.getName(), "lua");
+  plan->setProperty(executeScript, ExecuteScript::ScriptBody.getName(), R"(
     read_callback = {}
 
     function read_callback.process(self, input_stream)
@@ -181,13 +195,13 @@ TEST_CASE("Lua: Test Read File", "[executeLuaScriptLuaRead]") {
   logTestController.reset();
 }
 
-TEST_CASE("Lua: Test Write File", "[executeLuaScriptLuaWrite]") {
+TEST_CASE("Lua: Test Write File", "[executescriptLuaWrite]") {
   TestController testController;
 
   LogTestController &logTestController = LogTestController::getInstance();
   logTestController.setDebug<TestPlan>();
   logTestController.setDebug<minifi::processors::LogAttribute>();
-  logTestController.setDebug<ExecuteLuaScript>();
+  logTestController.setDebug<ExecuteScript>();
 
   auto plan = testController.createPlan();
 
@@ -195,13 +209,14 @@ TEST_CASE("Lua: Test Write File", "[executeLuaScriptLuaWrite]") {
   auto logAttribute = plan->addProcessor("LogAttribute", "logAttribute",
                                          core::Relationship("success", "description"),
                                          true);
-  auto executeLuaScript = plan->addProcessor("ExecuteLuaScript",
-                                          "executeLuaScript",
+  auto executeScript = plan->addProcessor("ExecuteScript",
+                                          "executeScript",
                                           core::Relationship("success", "description"),
                                           true);
   auto putFile = plan->addProcessor("PutFile", "putFile", core::Relationship("success", "description"), true);
 
-  plan->setProperty(executeLuaScript, ExecuteLuaScript::ScriptBody.getName(), R"(
+  plan->setProperty(executeScript, ExecuteScript::ScriptEngine.getName(), "lua");
+  plan->setProperty(executeScript, ExecuteScript::ScriptBody.getName(), R"(
     write_callback = {}
 
     function write_callback.process(self, output_stream)
@@ -264,26 +279,27 @@ TEST_CASE("Lua: Test Write File", "[executeLuaScriptLuaWrite]") {
   logTestController.reset();
 }
 
-TEST_CASE("Lua: Test Update Attribute", "[executeLuaScriptLuaUpdateAttribute]") {
+TEST_CASE("Lua: Test Update Attribute", "[executescriptLuaUpdateAttribute]") {
   TestController testController;
 
   LogTestController &logTestController = LogTestController::getInstance();
   logTestController.setDebug<TestPlan>();
   logTestController.setDebug<minifi::processors::LogAttribute>();
-  logTestController.setDebug<ExecuteLuaScript>();
+  logTestController.setDebug<ExecuteScript>();
 
   auto plan = testController.createPlan();
 
   auto getFile = plan->addProcessor("GetFile", "getFile");
-  auto executeLuaScript = plan->addProcessor("ExecuteLuaScript",
-                                          "executeLuaScript",
+  auto executeScript = plan->addProcessor("ExecuteScript",
+                                          "executeScript",
                                           core::Relationship("success", "description"),
                                           true);
   auto logAttribute = plan->addProcessor("LogAttribute", "logAttribute",
                                          core::Relationship("success", "description"),
                                          true);
 
-  plan->setProperty(executeLuaScript, ExecuteLuaScript::ScriptBody.getName(), R"(
+  plan->setProperty(executeScript, ExecuteScript::ScriptEngine.getName(), "lua");
+  plan->setProperty(executeScript, ExecuteScript::ScriptBody.getName(), R"(
     function onTrigger(context, session)
       flow_file = session:get()
 
@@ -312,19 +328,20 @@ TEST_CASE("Lua: Test Update Attribute", "[executeLuaScriptLuaUpdateAttribute]") 
   logTestController.reset();
 }
 
-TEST_CASE("Lua: Test Create", "[executeLuaScriptLuaCreate]") {
+TEST_CASE("Lua: Test Create", "[executescriptLuaCreate]") {
   TestController testController;
 
   LogTestController &logTestController = LogTestController::getInstance();
   logTestController.setDebug<TestPlan>();
-  logTestController.setDebug<ExecuteLuaScript>();
+  logTestController.setDebug<ExecuteScript>();
 
   auto plan = testController.createPlan();
 
-  auto executeLuaScript = plan->addProcessor("ExecuteLuaScript",
-                                          "executeLuaScript");
+  auto executeScript = plan->addProcessor("ExecuteScript",
+                                          "executeScript");
 
-  plan->setProperty(executeLuaScript, ExecuteLuaScript::ScriptBody.getName(), R"(
+  plan->setProperty(executeScript, ExecuteScript::ScriptEngine.getName(), "lua");
+  plan->setProperty(executeScript, ExecuteScript::ScriptBody.getName(), R"(
     function onTrigger(context, session)
       flow_file = session:create(nil)
 
@@ -342,19 +359,20 @@ TEST_CASE("Lua: Test Create", "[executeLuaScriptLuaCreate]") {
   logTestController.reset();
 }
 
-TEST_CASE("Lua: Test Require", "[executeLuaScriptLuaRequire]") {
+TEST_CASE("Lua: Test Require", "[executescriptLuaRequire]") {
   TestController testController;
 
   LogTestController &logTestController = LogTestController::getInstance();
   logTestController.setDebug<TestPlan>();
-  logTestController.setDebug<ExecuteLuaScript>();
+  logTestController.setDebug<ExecuteScript>();
 
   auto plan = testController.createPlan();
 
-  auto executeLuaScript = plan->addProcessor("ExecuteLuaScript",
-                                          "executeLuaScript");
+  auto executeScript = plan->addProcessor("ExecuteScript",
+                                          "executeScript");
 
-  plan->setProperty(executeLuaScript, ExecuteLuaScript::ScriptBody.getName(), R"(
+  plan->setProperty(executeScript, ExecuteScript::ScriptEngine.getName(), "lua");
+  plan->setProperty(executeScript, ExecuteScript::ScriptBody.getName(), R"(
     require 'os'
     require 'coroutine'
     require 'math'
@@ -376,25 +394,26 @@ TEST_CASE("Lua: Test Require", "[executeLuaScriptLuaRequire]") {
   logTestController.reset();
 }
 
-TEST_CASE("Lua: Test Module Directory property", "[executeLuaScriptLuaModuleDirectoryProperty]") {
+TEST_CASE("Lua: Test Module Directory property", "[executescriptLuaModuleDirectoryProperty]") {
   TestController testController;
 
   LogTestController &logTestController = LogTestController::getInstance();
   logTestController.setDebug<TestPlan>();
-  logTestController.setDebug<ExecuteLuaScript>();
+  logTestController.setDebug<ExecuteScript>();
 
   auto plan = testController.createPlan();
 
   auto getFile = plan->addProcessor("GetFile", "getFile");
-  auto executeLuaScript = plan->addProcessor("ExecuteLuaScript",
-                                          "executeLuaScript",
+  auto executeScript = plan->addProcessor("ExecuteScript",
+                                          "executeScript",
                                           core::Relationship("success", "description"),
                                           true);
 
   const auto SCRIPT_FILES_DIRECTORY = std::filesystem::path(__FILE__).parent_path() / "test_lua_scripts";
 
-  plan->setProperty(executeLuaScript, ExecuteLuaScript::ScriptFile.getName(), (SCRIPT_FILES_DIRECTORY / "foo_bar_processor.lua").string());
-  plan->setProperty(executeLuaScript, ExecuteLuaScript::ModuleDirectory.getName(),
+  plan->setProperty(executeScript, ExecuteScript::ScriptEngine.getName(), "lua");
+  plan->setProperty(executeScript, ExecuteScript::ScriptFile.getName(), (SCRIPT_FILES_DIRECTORY / "foo_bar_processor.lua").string());
+  plan->setProperty(executeScript, ExecuteScript::ModuleDirectory.getName(),
       (SCRIPT_FILES_DIRECTORY / "foo_modules" / "foo.lua").string() + "," + (SCRIPT_FILES_DIRECTORY / "bar_modules").string());
 
   auto getFileDir = testController.createTempDirectory();
@@ -409,22 +428,23 @@ TEST_CASE("Lua: Test Module Directory property", "[executeLuaScriptLuaModuleDire
   logTestController.reset();
 }
 
-TEST_CASE("Lua: Non existent script file should throw", "[executeLuaScriptLuaNonExistentScriptFile]") {
+TEST_CASE("Lua: Non existent script file should throw", "[executescriptLuaNonExistentScriptFile]") {
   TestController testController;
 
   LogTestController &logTestController = LogTestController::getInstance();
   logTestController.setDebug<TestPlan>();
-  logTestController.setDebug<ExecuteLuaScript>();
+  logTestController.setDebug<ExecuteScript>();
 
   auto plan = testController.createPlan();
 
   auto getFile = plan->addProcessor("GetFile", "getFile");
-  auto executeLuaScript = plan->addProcessor("ExecuteLuaScript",
-                                          "executeLuaScript",
+  auto executeScript = plan->addProcessor("ExecuteScript",
+                                          "executeScript",
                                           core::Relationship("success", "description"),
                                           true);
 
-  plan->setProperty(executeLuaScript, ExecuteLuaScript::ScriptFile.getName(), "/tmp/non-existent-file");
+  plan->setProperty(executeScript, ExecuteScript::ScriptEngine.getName(), "lua");
+  plan->setProperty(executeScript, ExecuteScript::ScriptFile.getName(), "/tmp/non-existent-file");
 
   auto getFileDir = testController.createTempDirectory();
   plan->setProperty(getFile, minifi::processors::GetFile::Directory.getName(), getFileDir.string());
@@ -436,12 +456,13 @@ TEST_CASE("Lua: Non existent script file should throw", "[executeLuaScriptLuaNon
   logTestController.reset();
 }
 
-TEST_CASE("Lua can remove flowfiles", "[ExecuteLuaScript]") {
-  const auto execute_script = std::make_shared<ExecuteLuaScript>("ExecuteLuaScript");
+TEST_CASE("Lua can remove flowfiles", "[ExecuteScript]") {
+  const auto execute_script = std::make_shared<ExecuteScript>("ExecuteScript");
 
   minifi::test::SingleProcessorTestController controller{execute_script};
-  LogTestController::getInstance().setTrace<ExecuteLuaScript>();
-  execute_script->setProperty(ExecuteLuaScript::ScriptBody.getName(),
+  LogTestController::getInstance().setTrace<ExecuteScript>();
+  execute_script->setProperty(ExecuteScript::ScriptEngine, "lua");
+  execute_script->setProperty(ExecuteScript::ScriptBody.getName(),
       R"(
         function onTrigger(context, session)
           flow_file = session:get()
@@ -451,4 +472,4 @@ TEST_CASE("Lua can remove flowfiles", "[ExecuteLuaScript]") {
   REQUIRE_NOTHROW(controller.trigger("hello"));
 }
 
-}  // namespace org::apache::nifi::minifi::extensions::lua::test
+}  // namespace org::apache::nifi::minifi::processors::test

@@ -17,8 +17,8 @@
 from ..core.Processor import Processor
 
 
-class ExecuteLuaScript(Processor):
+class ExecuteScript(Processor):
     def __init__(self):
-        super(ExecuteLuaScript, self).__init__(
-            'ExecuteLuaScript',
+        super(ExecuteScript, self).__init__(
+            'ExecuteScript',
             auto_terminate=['success', 'failure'])

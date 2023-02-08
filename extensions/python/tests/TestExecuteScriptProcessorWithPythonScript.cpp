@@ -18,13 +18,12 @@
 
 #include <memory>
 #include <string>
-#include <set>
 
 #include "SingleProcessorTestController.h"
 #include "TestBase.h"
 #include "Catch.h"
 
-#include "ExecutePythonScript.h"
+#include "../../script/ExecuteScript.h"
 #include "processors/LogAttribute.h"
 #include "processors/GetFile.h"
 #include "processors/PutFile.h"
@@ -32,14 +31,27 @@
 #include "utils/file/PathUtils.h"
 #include "utils/TestUtils.h"
 
-namespace org::apache::nifi::minifi::extensions::python::test {
+namespace org::apache::nifi::minifi::processors::test {
+
+TEST_CASE("Script engine is not set", "[executescriptMisconfiguration]") {
+  TestController test_controller;
+  auto plan = test_controller.createPlan();
+
+  auto execute_script = plan->addProcessor("ExecuteScript", "executeScript");
+
+  plan->setProperty(execute_script, ExecuteScript::ScriptEngine.getName(), "");
+  plan->setProperty(execute_script, ExecuteScript::ScriptFile.getName(), "/path/to/script.py");
+
+  REQUIRE_THROWS_AS(test_controller.runSession(plan, true), minifi::Exception);
+}
 
 TEST_CASE("Neither script body nor script file is set", "[executescriptMisconfiguration]") {
   TestController test_controller;
   auto plan = test_controller.createPlan();
 
-  auto execute_script = plan->addProcessor("ExecutePythonScript", "executeScript");
+  auto execute_script = plan->addProcessor("ExecuteScript", "executeScript");
 
+  plan->setProperty(execute_script, ExecuteScript::ScriptEngine.getName(), "python");
 
   REQUIRE_THROWS_AS(test_controller.runSession(plan, true), minifi::Exception);
 }
@@ -48,12 +60,13 @@ TEST_CASE("Test both script body and script file set", "[executescriptMisconfigu
   TestController test_controller;
   auto plan = test_controller.createPlan();
 
-  auto execute_script = plan->addProcessor("ExecutePythonScript", "executeScript");
+  auto execute_script = plan->addProcessor("ExecuteScript", "executeScript");
 
-  plan->setProperty(execute_script, ExecutePythonScript::ScriptFile.getName(), "/path/to/script.py");
-  plan->setProperty(execute_script, ExecutePythonScript::ScriptBody.getName(), R"(
-def onTrigger(context, session):
-  log.info('hello from python')
+  plan->setProperty(execute_script, ExecuteScript::ScriptEngine.getName(), "python");
+  plan->setProperty(execute_script, ExecuteScript::ScriptFile.getName(), "/path/to/script.py");
+  plan->setProperty(execute_script, ExecuteScript::ScriptBody.getName(), R"(
+    def onTrigger(context, session):
+      log.info('hello from python')
   )");
 
   REQUIRE_THROWS_AS(test_controller.runSession(plan, true), minifi::Exception);
@@ -65,7 +78,7 @@ TEST_CASE("Python: Test Read File", "[executescriptPythonRead]") {
   LogTestController& log_test_controller = LogTestController::getInstance();
   log_test_controller.setDebug<TestPlan>();
   log_test_controller.setDebug<minifi::processors::LogAttribute>();
-  log_test_controller.setDebug<ExecutePythonScript>();
+  log_test_controller.setDebug<ExecuteScript>();
 
   auto plan = test_controller.createPlan();
 
@@ -73,13 +86,13 @@ TEST_CASE("Python: Test Read File", "[executescriptPythonRead]") {
   auto log_attribute = plan->addProcessor("LogAttribute", "logAttribute",
                                          core::Relationship("success", "description"),
                                          true);
-  auto execute_script = plan->addProcessor("ExecutePythonScript",
+  auto execute_script = plan->addProcessor("ExecuteScript",
                                           "executeScript",
                                           core::Relationship("success", "description"),
                                           true);
   auto put_file = plan->addProcessor("PutFile", "putFile", core::Relationship("success", "description"), true);
 
-  plan->setProperty(execute_script, ExecutePythonScript::ScriptBody.getName(), R"(
+  plan->setProperty(execute_script, ExecuteScript::ScriptBody.getName(), R"(
 import codecs
 
 class ReadCallback(object):
@@ -146,7 +159,7 @@ TEST_CASE("Python: Test Write File", "[executescriptPythonWrite]") {
   LogTestController& log_test_controller = LogTestController::getInstance();
   log_test_controller.setDebug<TestPlan>();
   log_test_controller.setDebug<minifi::processors::LogAttribute>();
-  log_test_controller.setDebug<ExecutePythonScript>();
+  log_test_controller.setDebug<ExecuteScript>();
 
   auto plan = test_controller.createPlan();
 
@@ -154,13 +167,13 @@ TEST_CASE("Python: Test Write File", "[executescriptPythonWrite]") {
   auto log_attribute = plan->addProcessor("LogAttribute", "logAttribute",
                                          core::Relationship("success", "description"),
                                          true);
-  auto execute_script = plan->addProcessor("ExecutePythonScript",
+  auto execute_script = plan->addProcessor("ExecuteScript",
                                           "executeScript",
                                           core::Relationship("success", "description"),
                                           true);
   auto putFile = plan->addProcessor("PutFile", "putFile", core::Relationship("success", "description"), true);
 
-  plan->setProperty(execute_script, ExecutePythonScript::ScriptBody.getName(), R"(
+  plan->setProperty(execute_script, ExecuteScript::ScriptBody.getName(), R"(
 class WriteCallback(object):
   def process(self, output_stream):
     new_content = 'hello 2'.encode('utf-8')
@@ -221,14 +234,14 @@ TEST_CASE("Python: Test Create", "[executescriptPythonCreate]") {
 
   LogTestController& log_test_controller = LogTestController::getInstance();
   log_test_controller.setDebug<TestPlan>();
-  log_test_controller.setDebug<ExecutePythonScript>();
+  log_test_controller.setDebug<ExecuteScript>();
 
   auto plan = test_controller.createPlan();
 
-  auto executeScript = plan->addProcessor("ExecutePythonScript",
+  auto executeScript = plan->addProcessor("ExecuteScript",
                                           "executeScript");
 
-  plan->setProperty(executeScript, ExecutePythonScript::ScriptBody.getName(), R"(
+  plan->setProperty(executeScript, ExecuteScript::ScriptBody.getName(), R"(
 def onTrigger(context, session):
   flow_file = session.create()
 
@@ -250,12 +263,12 @@ TEST_CASE("Python: Test Update Attribute", "[executescriptPythonUpdateAttribute]
   LogTestController& log_test_controller = LogTestController::getInstance();
   log_test_controller.setDebug<TestPlan>();
   log_test_controller.setDebug<minifi::processors::LogAttribute>();
-  log_test_controller.setDebug<ExecutePythonScript>();
+  log_test_controller.setDebug<ExecuteScript>();
 
   auto plan = test_controller.createPlan();
 
   auto getFile = plan->addProcessor("GetFile", "getFile");
-  auto executeScript = plan->addProcessor("ExecutePythonScript",
+  auto executeScript = plan->addProcessor("ExecuteScript",
                                           "executeScript",
                                           core::Relationship("success", "description"),
                                           true);
@@ -263,7 +276,7 @@ TEST_CASE("Python: Test Update Attribute", "[executescriptPythonUpdateAttribute]
                                          core::Relationship("success", "description"),
                                          true);
 
-  plan->setProperty(executeScript, ExecutePythonScript::ScriptBody.getName(), R"(
+  plan->setProperty(executeScript, ExecuteScript::ScriptBody.getName(), R"(
 def onTrigger(context, session):
   flow_file = session.get()
 
@@ -296,12 +309,12 @@ TEST_CASE("Python: Test Get Context Property", "[executescriptPythonGetContextPr
   LogTestController& log_test_controller = LogTestController::getInstance();
   log_test_controller.setDebug<TestPlan>();
   log_test_controller.setDebug<minifi::processors::LogAttribute>();
-  log_test_controller.setDebug<ExecutePythonScript>();
+  log_test_controller.setDebug<ExecuteScript>();
 
   auto plan = test_controller.createPlan();
 
   auto get_file = plan->addProcessor("GetFile", "getFile");
-  auto execute_script = plan->addProcessor("ExecutePythonScript",
+  auto execute_script = plan->addProcessor("ExecuteScript",
                                           "executeScript",
                                           core::Relationship("success", "description"),
                                           true);
@@ -309,12 +322,10 @@ TEST_CASE("Python: Test Get Context Property", "[executescriptPythonGetContextPr
                                          core::Relationship("success", "description"),
                                          true);
 
-  const auto script_files_directory = std::filesystem::path(__FILE__).parent_path() / "test_python_scripts";
-  plan->setProperty(execute_script, ExecutePythonScript::ModuleDirectory.getName(), script_files_directory.string());
-  plan->setProperty(execute_script, ExecutePythonScript::ScriptBody.getName(), R"(
+  plan->setProperty(execute_script, ExecuteScript::ScriptBody.getName(), R"(
 def onTrigger(context, session):
-  script_files_directory = context.getProperty('Module Directory')
-  log.info('got Module Directory property: %s' % script_files_directory)
+  script_engine = context.getProperty('Script Engine')
+  log.info('got Script Engine property: %s' % script_engine)
   )");
 
   auto get_file_dir = test_controller.createTempDirectory();
@@ -326,7 +337,7 @@ def onTrigger(context, session):
   test_controller.runSession(plan, false);
   test_controller.runSession(plan, false);
 
-  REQUIRE(LogTestController::getInstance().contains("[info] got Module Directory property: " + script_files_directory.string()));
+  REQUIRE(LogTestController::getInstance().contains("[info] got Script Engine property: python"));
 
   log_test_controller.reset();
 }
@@ -338,21 +349,22 @@ TEST_CASE("Python: Test Module Directory property", "[executescriptPythonModuleD
 
   LogTestController& log_test_controller = LogTestController::getInstance();
   log_test_controller.setDebug<TestPlan>();
-  log_test_controller.setDebug<ExecutePythonScript>();
+  log_test_controller.setDebug<ExecuteScript>();
 
   const auto script_files_directory = std::filesystem::path(__FILE__).parent_path() / "test_python_scripts";
 
   auto plan = test_controller.createPlan();
 
   auto get_file = plan->addProcessor("GetFile", "getFile");
-  auto execute_script = plan->addProcessor("ExecutePythonScript",
+  auto execute_script = plan->addProcessor("ExecuteScript",
                                           "executeScript",
                                           core::Relationship("success", "description"),
                                           true);
 
-  plan->setProperty(execute_script, ExecutePythonScript::ScriptFile.getName(), (script_files_directory / "foo_bar_processor.py").string());
+  plan->setProperty(execute_script, ExecuteScript::ScriptEngine.getName(), "python");
+  plan->setProperty(execute_script, ExecuteScript::ScriptFile.getName(), (script_files_directory / "foo_bar_processor.py").string());
   plan->setProperty(execute_script,
-                    ExecutePythonScript::ModuleDirectory.getName(),
+                    ExecuteScript::ModuleDirectory.getName(),
                     (script_files_directory / "foo_modules" / "foo.py").string() + "," + (script_files_directory / "bar_modules").string());
 
   auto get_file_dir = test_controller.createTempDirectory();
@@ -372,17 +384,17 @@ TEST_CASE("Python: Non existent script file should throw", "[executescriptPython
 
   LogTestController& log_test_controller = LogTestController::getInstance();
   log_test_controller.setDebug<TestPlan>();
-  log_test_controller.setDebug<ExecutePythonScript>();
+  log_test_controller.setDebug<ExecuteScript>();
 
   auto plan = test_controller.createPlan();
 
   auto get_file = plan->addProcessor("GetFile", "getFile");
-  auto executeScript = plan->addProcessor("ExecutePythonScript",
+  auto executeScript = plan->addProcessor("ExecuteScript",
                                           "executeScript",
                                           core::Relationship("success", "description"),
                                           true);
 
-  plan->setProperty(executeScript, ExecutePythonScript::ScriptFile.getName(), "/tmp/non-existent-file");
+  plan->setProperty(executeScript, ExecuteScript::ScriptFile.getName(), "/tmp/non-existent-file");
 
   auto get_file_dir = test_controller.createTempDirectory();
   plan->setProperty(get_file, minifi::processors::GetFile::Directory.getName(), get_file_dir.string());
@@ -394,16 +406,17 @@ TEST_CASE("Python: Non existent script file should throw", "[executescriptPython
   log_test_controller.reset();
 }
 
-TEST_CASE("Python can remove flowfiles", "[ExecutePythonScript]") {
-  const auto execute_script = std::make_shared<ExecutePythonScript>("ExecutePythonScript");
+TEST_CASE("Python can remove flowfiles", "[ExecuteScript]") {
+  const auto execute_script = std::make_shared<ExecuteScript>("ExecuteScript");
 
   minifi::test::SingleProcessorTestController controller{execute_script};
-  LogTestController::getInstance().setTrace<ExecutePythonScript>();
-  execute_script->setProperty(ExecutePythonScript::ScriptBody.getName(), R"(
+  LogTestController::getInstance().setTrace<ExecuteScript>();
+  execute_script->setProperty(ExecuteScript::ScriptEngine, "python");
+  execute_script->setProperty(ExecuteScript::ScriptBody.getName(), R"(
 def onTrigger(context, session):
   flow_file = session.get()
   session.remove(flow_file);)");
   REQUIRE_NOTHROW(controller.trigger("hello"));
 }
 
-}  // namespace org::apache::nifi::minifi::extensions::python::test
+}  // namespace org::apache::nifi::minifi::processors::test
