@@ -218,6 +218,7 @@ bool FlowFileRepository::need_checkpoint(minifi::internal::OpenRocksDb& opendb) 
   return it->Valid();
 }
 void FlowFileRepository::initialize_repository() {
+  checkpoint_.reset();
   auto opendb = db_->open();
   if (!opendb) {
     logger_->log_trace("Couldn't open database, no way to checkpoint");
