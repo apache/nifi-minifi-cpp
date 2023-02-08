@@ -93,7 +93,7 @@ void PutUDP::onTrigger(core::ProcessContext* context, core::ProcessSession* cons
   }
 
   const auto data = session->readBuffer(flow_file);
-  if (data.status < 0) {
+  if (io::isError(data.status)) {
     session->transfer(flow_file, Failure);
     return;
   }

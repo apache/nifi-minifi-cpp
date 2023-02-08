@@ -23,8 +23,15 @@
 #include "core/ProcessContext.h"
 #include "core/Property.h"
 #include "core/logging/Logger.h"
+#include "utils/Enum.h"
 
 namespace org::apache::nifi::minifi::utils::net {
+
+SMART_ENUM(ClientAuthOption,
+    (NONE, "NONE"),
+    (WANT, "WANT"),
+    (REQUIRED, "REQUIRED")
+)
 
 struct SslData {
   std::filesystem::path ca_loc;
@@ -35,6 +42,15 @@ struct SslData {
   bool isValid() const {
     return !cert_loc.empty() && !key_loc.empty();
   }
+};
+
+struct SslServerOptions {
+  SslData cert_data;
+  ClientAuthOption client_auth_option;
+
+  SslServerOptions(SslData cert_data, ClientAuthOption client_auth_option)
+      : cert_data(cert_data),
+      client_auth_option(client_auth_option) {}
 };
 
 std::optional<utils::net::SslData> getSslData(const core::ProcessContext& context, const core::Property& ssl_prop, const std::shared_ptr<core::logging::Logger>& logger);

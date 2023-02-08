@@ -15,32 +15,39 @@
  * limitations under the License.
  */
 #include "utils/net/UdpServer.h"
+#include "asio/use_awaitable.hpp"
+#include "asio/detached.hpp"
+#include "utils/net/AsioCoro.h"
 
 namespace org::apache::nifi::minifi::utils::net {
+
+constexpr size_t MAX_UDP_PACKET_SIZE = 65535;
 
 UdpServer::UdpServer(std::optional<size_t> max_queue_size,
                      uint16_t port,
                      std::shared_ptr<core::logging::Logger> logger)
-    : Server(max_queue_size, std::move(logger)),
-      socket_(io_context_, asio::ip::udp::endpoint(asio::ip::udp::v6(), port)) {
-  doReceive();
+    : Server(max_queue_size, port, std::move(logger)) {
 }
 
+asio::awaitable<void> UdpServer::doReceive() {
+  asio::ip::udp::socket socket(io_context_, asio::ip::udp::endpoint(asio::ip::udp::v6(), port_));
+  if (port_ == 0)
+    port_ = socket.local_endpoint().port();
+  while (true) {
+    std::string buffer = std::string(MAX_UDP_PACKET_SIZE, {});
+    asio::ip::udp::endpoint sender_endpoint;
 
-void UdpServer::doReceive() {
-  buffer_.resize(MAX_UDP_PACKET_SIZE);
-  socket_.async_receive_from(asio::buffer(buffer_, MAX_UDP_PACKET_SIZE),
-                             sender_endpoint_,
-                             [this](std::error_code ec, std::size_t bytes_received) {
-                               if (!ec && bytes_received > 0) {
-                                 buffer_.resize(bytes_received);
-                                 if (!max_queue_size_ || max_queue_size_ > concurrent_queue_.size())
-                                   concurrent_queue_.enqueue(utils::net::Message(std::move(buffer_), IpProtocol::UDP, sender_endpoint_.address(), socket_.local_endpoint().port()));
-                                 else
-                                   logger_->log_warn("Queue is full. UDP message ignored.");
-                               }
-                               doReceive();
-                             });
+    auto [receive_error, bytes_received] = co_await socket.async_receive_from(asio::buffer(buffer, MAX_UDP_PACKET_SIZE), sender_endpoint, utils::net::use_nothrow_awaitable);
+    if (receive_error) {
+      logger_->log_warn("Error during receive: %s", receive_error.message());
+      continue;
+    }
+    buffer.resize(bytes_received);
+    if (!max_queue_size_ || max_queue_size_ > concurrent_queue_.size())
+      concurrent_queue_.enqueue(utils::net::Message(std::move(buffer), IpProtocol::UDP, sender_endpoint.address(), socket.local_endpoint().port()));
+    else
+      logger_->log_warn("Queue is full. UDP message ignored.");
+  }
 }
 
 }  // namespace org::apache::nifi::minifi::utils::net

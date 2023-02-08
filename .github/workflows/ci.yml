@@ -3,7 +3,7 @@ on: [push, pull_request, workflow_dispatch]
 jobs:
   macos_xcode:
     name: "macos-xcode"
-    runs-on: macos-11
+    runs-on: macos-12
     timeout-minutes: 180
     env:
       CCACHE_BASEDIR: ${{ GITHUB.WORKSPACE }}
@@ -29,8 +29,8 @@ jobs:
         run: |
           echo "PATH=/usr/lib/ccache:/usr/local/opt/ccache/bin:/usr/local/opt/ccache/libexec:$PATH" >> $GITHUB_ENV
           echo -e "127.0.0.1\t$HOSTNAME" | sudo tee -a /etc/hosts > /dev/null
-          # https://github.com/actions/virtual-environments/blob/main/images/macos/macos-11-Readme.md#xcode
-          sudo xcode-select -switch /Applications/Xcode_13.2.1.app
+          # https://github.com/actions/virtual-environments/blob/main/images/macos/macos-12-Readme.md#xcode
+          sudo xcode-select -switch /Applications/Xcode_14.0.1.app
       - name: build
         run: |
           export PATH="/usr/local/opt/flex/bin:$PATH"

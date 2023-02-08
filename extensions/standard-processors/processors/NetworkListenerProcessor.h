@@ -26,7 +26,6 @@
 #include "core/ProcessSession.h"
 #include "core/Property.h"
 #include "utils/net/Server.h"
-#include "utils/net/SslServer.h"
 
 namespace org::apache::nifi::minifi::processors {
 
@@ -49,6 +48,12 @@ class NetworkListenerProcessor : public core::Processor {
 
   void notifyStop() override {
     stopServer();
+  }
+
+  uint16_t getPort() {
+    if (server_)
+      return server_->getPort();
+    return 0;
   }
 
  protected:

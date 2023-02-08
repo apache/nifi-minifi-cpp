@@ -20,15 +20,15 @@
 #define CATCH_CONFIG_FAST_COMPILE
 #include <optional>
 #include <string>
+#include "spdlog/spdlog.h"
 #include "catch.hpp"
-
 
 namespace Catch {
 template<typename T>
 struct StringMaker<std::optional<T>> {
   static std::string convert(const std::optional<T>& val) {
     if (val) {
-      return "std::optional(" + StringMaker<T>::convert(val.value()) + ")";
+      return fmt::format("std::optional({})", StringMaker<T>::convert(val.value()));
     }
     return "std::nullopt";
   }
@@ -40,4 +40,46 @@ struct StringMaker<std::nullopt_t> {
     return "std::nullopt";
   }
 };
+
+template <>
+struct StringMaker<std::error_code> {
+  static std::string convert(const std::error_code& error_code) {
+    return fmt::format("std::error_code(category:{}, value:{}, message:{})", error_code.category().name(), error_code.value(), error_code.message());
+  }
+};
 }  // namespace Catch
+
+namespace org::apache::nifi::minifi::test {
+struct MatchesSuccess : Catch::MatcherBase<std::error_code> {
+  MatchesSuccess() = default;
+
+  bool match(const std::error_code& err) const override {
+    return err.value() == 0;
+  }
+
+  std::string describe() const override {
+    return fmt::format("== {}", Catch::StringMaker<std::error_code>::convert(std::error_code{}));
+  }
+};
+
+struct MatchesError : Catch::MatcherBase<std::error_code> {
+  explicit MatchesError(std::optional<std::error_code> expected_error = std::nullopt)
+      : Catch::MatcherBase<std::error_code>(),
+        expected_error_(expected_error) {
+  }
+
+  bool match(const std::error_code& err) const override {
+    if (expected_error_)
+      return err == *expected_error_;
+    return err.value() != 0;
+  }
+
+  std::string describe() const override {
+    if (expected_error_)
+      return fmt::format("== {}", Catch::StringMaker<std::error_code>::convert(*expected_error_));
+    return fmt::format("!= {}", Catch::StringMaker<std::error_code>::convert(std::error_code{}));
+  }
+ private:
+  std::optional<std::error_code> expected_error_;
+};
+}  // namespace org::apache::nifi::minifi::test

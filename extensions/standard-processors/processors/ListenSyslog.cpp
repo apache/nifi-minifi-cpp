@@ -22,6 +22,7 @@
 #include "core/PropertyBuilder.h"
 #include "core/Resource.h"
 #include "controllers/SSLContextService.h"
+#include "utils/net/Ssl.h"
 
 namespace org::apache::nifi::minifi::processors {
 
@@ -67,8 +68,8 @@ const core::Property ListenSyslog::SSLContextService(
 const core::Property ListenSyslog::ClientAuth(
     core::PropertyBuilder::createProperty("Client Auth")
       ->withDescription("The client authentication policy to use for the SSL Context. Only used if an SSL Context Service is provided.")
-      ->withDefaultValue<std::string>(toString(utils::net::SslServer::ClientAuthOption::NONE))
-      ->withAllowableValues<std::string>(utils::net::SslServer::ClientAuthOption::values())
+      ->withDefaultValue<std::string>(toString(utils::net::ClientAuthOption::NONE))
+      ->withAllowableValues<std::string>(utils::net::ClientAuthOption::values())
       ->build());
 
 const core::Relationship ListenSyslog::Success("success", "Incoming messages that match the expected format when parsing will be sent to this relationship. "

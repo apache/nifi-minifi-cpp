@@ -16,36 +16,30 @@
  */
 #pragma once
 
-#include <optional>
+#include <utility>
 #include <memory>
 
-#include "SessionHandlingServer.h"
+#include "Server.h"
+#include "Ssl.h"
 
 namespace org::apache::nifi::minifi::utils::net {
 
-class TcpSession : public std::enable_shared_from_this<TcpSession> {
+class TcpServer : public Server {
  public:
-  TcpSession(asio::io_context& io_context, utils::ConcurrentQueue<Message>& concurrent_queue, std::optional<size_t> max_queue_size, std::shared_ptr<core::logging::Logger> logger);
-  asio::ip::tcp::socket& getSocket();
-  void start();
-  void handleReadUntilNewLine(std::error_code error_code);
-
- private:
-  utils::ConcurrentQueue<Message>& concurrent_queue_;
-  std::optional<size_t> max_queue_size_;
-  asio::basic_streambuf<std::allocator<char>> buffer_;
-  asio::ip::tcp::socket socket_;
-  std::shared_ptr<core::logging::Logger> logger_;
-};
-
-class TcpServer : public SessionHandlingServer<TcpSession> {
- public:
-  TcpServer(std::optional<size_t> max_queue_size,
-            uint16_t port,
-            std::shared_ptr<core::logging::Logger> logger);
+  TcpServer(std::optional<size_t> max_queue_size_, uint16_t port, std::shared_ptr<core::logging::Logger> logger, std::optional<SslServerOptions> ssl_data)
+      : Server(max_queue_size_, port, std::move(logger)),
+        ssl_data_(std::move(ssl_data)) {
+  }
 
  protected:
-  std::shared_ptr<TcpSession> createSession() override;
+  asio::awaitable<void> doReceive() override;
+
+  asio::awaitable<void> insecureSession(asio::ip::tcp::socket socket);
+  asio::awaitable<void> secureSession(asio::ip::tcp::socket socket);
+
+  asio::awaitable<void> readLoop(auto& socket);
+
+  std::optional<SslServerOptions> ssl_data_;
 };
 
 }  // namespace org::apache::nifi::minifi::utils::net

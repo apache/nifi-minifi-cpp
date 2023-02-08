@@ -19,11 +19,13 @@
 #include <string>
 #include <utility>
 #include <vector>
+#include <memory>
 
 #include "rapidjson/document.h"
 #include "asio.hpp"
 #include "asio/ssl.hpp"
 #include "net/Ssl.h"
+#include "utils/IntegrationTestUtils.h"
 
 using namespace std::chrono_literals;
 
@@ -111,36 +113,39 @@ bool countLogOccurrencesUntil(const std::string& pattern,
   return false;
 }
 
-bool sendMessagesViaTCP(const std::vector<std::string_view>& contents, const asio::ip::tcp::endpoint& remote_endpoint) {
+std::error_code sendMessagesViaTCP(const std::vector<std::string_view>& contents, const asio::ip::tcp::endpoint& remote_endpoint) {
   asio::io_context io_context;
   asio::ip::tcp::socket socket(io_context);
-  socket.connect(remote_endpoint);
   std::error_code err;
+  socket.connect(remote_endpoint, err);
+  if (err)
+    return err;
   for (auto& content : contents) {
     std::string tcp_message(content);
     tcp_message += '\n';
     asio::write(socket, asio::buffer(tcp_message, tcp_message.size()), err);
-    if (err) {
-      return false;
-    }
+    if (err)
+      return err;
   }
-  return true;
+  return std::error_code();
 }
 
-bool sendUdpDatagram(const asio::const_buffer content, const asio::ip::udp::endpoint& remote_endpoint) {
+std::error_code sendUdpDatagram(const asio::const_buffer content, const asio::ip::udp::endpoint& remote_endpoint) {
   asio::io_context io_context;
   asio::ip::udp::socket socket(io_context);
-  socket.open(remote_endpoint.protocol());
   std::error_code err;
+  socket.open(remote_endpoint.protocol(), err);
+  if (err)
+    return err;
   socket.send_to(content, remote_endpoint, 0, err);
-  return !err;
+  return err;
 }
 
-bool sendUdpDatagram(const gsl::span<std::byte const> content, const asio::ip::udp::endpoint& remote_endpoint) {
+std::error_code sendUdpDatagram(const gsl::span<std::byte const> content, const asio::ip::udp::endpoint& remote_endpoint) {
   return sendUdpDatagram(asio::const_buffer(content.begin(), content.size()), remote_endpoint);
 }
 
-bool sendUdpDatagram(const std::string_view content, const asio::ip::udp::endpoint& remote_endpoint) {
+std::error_code sendUdpDatagram(const std::string_view content, const asio::ip::udp::endpoint& remote_endpoint) {
   return sendUdpDatagram(asio::buffer(content), remote_endpoint);
 }
 
@@ -166,11 +171,12 @@ struct FlowFileQueueTestAccessor {
   FIELD_ACCESSOR(queue_);
 };
 
-bool sendMessagesViaSSL(const std::vector<std::string_view>& contents,
-                        const asio::ip::tcp::endpoint& remote_endpoint,
-                        const std::filesystem::path& ca_cert_path,
-                        const std::optional<minifi::utils::net::SslData>& ssl_data = std::nullopt) {
-  asio::ssl::context ctx(asio::ssl::context::sslv23);
+std::error_code sendMessagesViaSSL(const std::vector<std::string_view>& contents,
+    const asio::ip::tcp::endpoint& remote_endpoint,
+    const std::filesystem::path& ca_cert_path,
+    const std::optional<minifi::utils::net::SslData>& ssl_data = std::nullopt,
+    asio::ssl::context::method method = asio::ssl::context::tlsv12_client) {
+  asio::ssl::context ctx(method);
   ctx.load_verify_file(ca_cert_path.string());
   if (ssl_data) {
     ctx.set_verify_mode(asio::ssl::verify_peer);
@@ -183,33 +189,48 @@ bool sendMessagesViaSSL(const std::vector<std::string_view>& contents,
   asio::error_code err;
   socket.lowest_layer().connect(remote_endpoint, err);
   if (err) {
-    return false;
+    return err;
   }
   socket.handshake(asio::ssl::stream_base::client, err);
   if (err) {
-    return false;
+    return err;
   }
   for (auto& content : contents) {
     std::string tcp_message(content);
     tcp_message += '\n';
     asio::write(socket, asio::buffer(tcp_message, tcp_message.size()), err);
     if (err) {
-      return false;
+      return err;
     }
   }
-  return true;
+  return std::error_code();
 }
 
 #ifdef WIN32
 inline std::error_code hide_file(const std::filesystem::path& file_name) {
-    const bool success = SetFileAttributesA(file_name.string().c_str(), FILE_ATTRIBUTE_HIDDEN);
-    if (!success) {
-      // note: All possible documented error codes from GetLastError are in [0;15999] at the time of writing.
-      // The below casting is safe in [0;std::numeric_limits<int>::max()], int max is guaranteed to be at least 32767
-      return { static_cast<int>(GetLastError()), std::system_category() };
-    }
-    return {};
+  const bool success = SetFileAttributesA(file_name.string().c_str(), FILE_ATTRIBUTE_HIDDEN);
+  if (!success) {
+    // note: All possible documented error codes from GetLastError are in [0;15999] at the time of writing.
+    // The below casting is safe in [0;std::numeric_limits<int>::max()], int max is guaranteed to be at least 32767
+    return { static_cast<int>(GetLastError()), std::system_category() };
   }
+  return {};
+}
 #endif /* WIN32 */
+
+template<typename T>
+concept NetworkingProcessor = std::derived_from<T, minifi::core::Processor>
+    && requires(T x) {
+      {T::Port} -> std::convertible_to<core::Property>;
+      {x.getPort()} -> std::convertible_to<uint16_t>;
+    };  // NOLINT(readability/braces)
+
+template<NetworkingProcessor T>
+uint16_t scheduleProcessorOnRandomPort(const std::shared_ptr<TestPlan>& test_plan, const std::shared_ptr<T>& processor) {
+  REQUIRE(processor->setProperty(T::Port, "0"));
+  test_plan->scheduleProcessor(processor);
+  REQUIRE(minifi::utils::verifyEventHappenedInPollTime(250ms, [&processor] { return processor->getPort() != 0; }, 20ms));
+  return processor->getPort();
+}
 
 }  // namespace org::apache::nifi::minifi::test::utils

@@ -19,14 +19,12 @@
 #include <optional>
 #include <memory>
 #include <string>
+#include <asio/awaitable.hpp>
 
 #include "Server.h"
 #include "utils/MinifiConcurrentQueue.h"
 #include "core/logging/Logger.h"
 #include "core/logging/LoggerConfiguration.h"
-#include "asio/ts/buffer.hpp"
-#include "asio/ts/internet.hpp"
-#include "asio/streambuf.hpp"
 
 namespace org::apache::nifi::minifi::utils::net {
 
@@ -37,13 +35,7 @@ class UdpServer : public Server {
             std::shared_ptr<core::logging::Logger> logger);
 
  private:
-  void doReceive();
-
-  asio::ip::udp::socket socket_;
-  asio::ip::udp::endpoint sender_endpoint_;
-  std::string buffer_;
-
-  static constexpr size_t MAX_UDP_PACKET_SIZE = 65535;
+  asio::awaitable<void> doReceive() override;
 };
 
 }  // namespace org::apache::nifi::minifi::utils::net

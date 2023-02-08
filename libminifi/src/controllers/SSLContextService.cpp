@@ -31,13 +31,11 @@
 #include <fstream>
 #include <memory>
 #include <string>
-#include <set>
 
 #include "core/PropertyBuilder.h"
 #include "core/Resource.h"
 #include "io/validation.h"
 #include "properties/Configure.h"
-#include "utils/gsl.h"
 #include "utils/tls/CertificateUtils.h"
 #include "utils/tls/TLSUtils.h"
 #include "utils/tls/DistinguishedName.h"
@@ -407,22 +405,22 @@ std::unique_ptr<SSLContext> SSLContextService::createSSLContext() {
 #endif
 }
 
-const std::filesystem::path &SSLContextService::getCertificateFile() {
+const std::filesystem::path &SSLContextService::getCertificateFile() const {
   std::lock_guard<std::mutex> lock(initialization_mutex_);
   return certificate_;
 }
 
-const std::string &SSLContextService::getPassphrase() {
+const std::string &SSLContextService::getPassphrase() const {
   std::lock_guard<std::mutex> lock(initialization_mutex_);
   return passphrase_;
 }
 
-const std::filesystem::path &SSLContextService::getPrivateKeyFile() {
+const std::filesystem::path &SSLContextService::getPrivateKeyFile() const {
   std::lock_guard<std::mutex> lock(initialization_mutex_);
   return private_key_;
 }
 
-const std::filesystem::path &SSLContextService::getCACertificate() {
+const std::filesystem::path &SSLContextService::getCACertificate() const {
   std::lock_guard<std::mutex> lock(initialization_mutex_);
   return ca_certificate_;
 }

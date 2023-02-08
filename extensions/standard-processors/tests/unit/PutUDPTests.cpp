@@ -47,23 +47,26 @@ std::optional<utils::net::Message> tryDequeueWithTimeout(utils::net::UdpServer& 
 
 TEST_CASE("PutUDP", "[putudp]") {
   const auto put_udp = std::make_shared<PutUDP>("PutUDP");
-  auto random_engine = std::mt19937{std::random_device{}()};  // NOLINT: "Missing space before {  [whitespace/braces] [5]"
-  // most systems use ports 32768 - 65535 as ephemeral ports, so avoid binding to those
-  const auto port = std::uniform_int_distribution<uint16_t>{10000, 32768 - 1}(random_engine);
 
   test::SingleProcessorTestController controller{put_udp};
   LogTestController::getInstance().setTrace<PutUDP>();
   LogTestController::getInstance().setTrace<core::ProcessContext>();
   put_udp->setProperty(PutUDP::Hostname, "${literal('localhost')}");
-  put_udp->setProperty(PutUDP::Port, utils::StringUtils::join_pack("${literal('", std::to_string(port), "')}"));
 
-  utils::net::UdpServer listener{std::nullopt, port, core::logging::LoggerFactory<utils::net::UdpServer>::getLogger()};
+  utils::net::UdpServer listener{std::nullopt, 0, core::logging::LoggerFactory<utils::net::UdpServer>::getLogger()};
 
   auto server_thread = std::thread([&listener]() { listener.run(); });
+  uint16_t port = listener.getPort();
+  auto deadline = std::chrono::steady_clock::now() + 200ms;
+  while (port == 0 && deadline > std::chrono::steady_clock::now()) {
+    std::this_thread::sleep_for(20ms);
+    port = listener.getPort();
+  }
   auto cleanup_server = gsl::finally([&]{
     listener.stop();
     server_thread.join();
   });
+  put_udp->setProperty(PutUDP::Port, utils::StringUtils::join_pack("${literal('", std::to_string(port), "')}"));
 
   {
     const char* const message = "first message: hello";

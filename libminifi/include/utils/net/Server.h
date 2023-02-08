@@ -26,7 +26,9 @@
 #include "core/logging/Logger.h"
 #include "asio/ts/buffer.hpp"
 #include "asio/ts/internet.hpp"
-#include "asio/streambuf.hpp"
+#include "asio/awaitable.hpp"
+#include "asio/co_spawn.hpp"
+#include "asio/detached.hpp"
 #include "IpProtocol.h"
 
 namespace org::apache::nifi::minifi::utils::net {
@@ -50,6 +52,7 @@ struct Message {
 class Server {
  public:
   virtual void run() {
+    asio::co_spawn(io_context_, doReceive(), asio::detached);
     io_context_.run();
   }
   virtual void reset() {
@@ -68,10 +71,16 @@ class Server {
     stop();
   }
 
- protected:
-  Server(std::optional<size_t> max_queue_size, std::shared_ptr<core::logging::Logger> logger)
-      : max_queue_size_(std::move(max_queue_size)), logger_(logger) {}
+  uint16_t getPort() const {
+    return port_;
+  }
 
+ protected:
+  virtual asio::awaitable<void> doReceive() = 0;
+  Server(std::optional<size_t> max_queue_size, uint16_t port, std::shared_ptr<core::logging::Logger> logger)
+      : port_(port), max_queue_size_(max_queue_size), logger_(std::move(logger)) {}
+
+  std::atomic<uint16_t> port_;
   utils::ConcurrentQueue<Message> concurrent_queue_;
   asio::io_context io_context_;
   std::optional<size_t> max_queue_size_;

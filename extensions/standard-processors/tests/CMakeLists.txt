@@ -17,6 +17,8 @@
 # under the License.
 #
 
+include(Coroutines)
+enable_coroutines()
 
 file(GLOB PROCESSOR_UNIT_TESTS  "unit/*.cpp")
 file(GLOB PROCESSOR_INTEGRATION_TESTS "integration/*.cpp")

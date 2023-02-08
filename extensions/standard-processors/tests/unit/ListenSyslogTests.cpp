@@ -29,7 +29,6 @@ using namespace std::literals::chrono_literals;
 
 namespace org::apache::nifi::minifi::test {
 
-constexpr uint64_t SYSLOG_PORT = 10255;
 constexpr auto local_addresses = {"127.0.0.1", "::ffff:127.0.0.1", "::1"};
 
 struct ValidRFC5424Message {
@@ -249,56 +248,61 @@ void check_parsed_attributes(const core::FlowFile& flow_file, const ValidRFC3164
   CHECK(original_message.msg_ == flow_file.getAttribute("syslog.msg"));
 }
 
-TEST_CASE("ListenSyslog without parsing test", "[ListenSyslog][NetworkListenerProcessor]") {
+TEST_CASE("ListenSyslog without parsing test", "[ListenSyslog]") {
   const auto listen_syslog = std::make_shared<ListenSyslog>("ListenSyslog");
 
   SingleProcessorTestController controller{listen_syslog};
   LogTestController::getInstance().setTrace<ListenSyslog>();
-  REQUIRE(listen_syslog->setProperty(ListenSyslog::Port, std::to_string(SYSLOG_PORT)));
   REQUIRE(listen_syslog->setProperty(ListenSyslog::MaxBatchSize, "2"));
   REQUIRE(listen_syslog->setProperty(ListenSyslog::ParseMessages, "false"));
   std::string protocol;
+  uint16_t port = 0;
 
   SECTION("UDP") {
+    REQUIRE(listen_syslog->setProperty(ListenSyslog::ProtocolProperty, "UDP"));
+    protocol = "UDP";
+
+    port = utils::scheduleProcessorOnRandomPort(controller.plan, listen_syslog);
+
     asio::ip::udp::endpoint endpoint;
     SECTION("sending through IPv4", "[IPv4]") {
-      endpoint = asio::ip::udp::endpoint(asio::ip::address_v4::loopback(), SYSLOG_PORT);
+      endpoint = asio::ip::udp::endpoint(asio::ip::address_v4::loopback(), port);
     }
     SECTION("sending through IPv6", "[IPv6]") {
       if (utils::isIPv6Disabled())
         return;
-      endpoint = asio::ip::udp::endpoint(asio::ip::address_v6::loopback(), SYSLOG_PORT);
+      endpoint = asio::ip::udp::endpoint(asio::ip::address_v6::loopback(), port);
     }
     protocol = "UDP";
-    REQUIRE(listen_syslog->setProperty(ListenSyslog::ProtocolProperty, "UDP"));
-    controller.plan->scheduleProcessor(listen_syslog);
-    utils::sendUdpDatagram(rfc5424_logger_example_1, endpoint);
-    utils::sendUdpDatagram(invalid_syslog, endpoint);
+    CHECK_THAT(utils::sendUdpDatagram(rfc5424_logger_example_1, endpoint), MatchesSuccess());
+    CHECK_THAT(utils::sendUdpDatagram(invalid_syslog, endpoint), MatchesSuccess());
   }
 
   SECTION("TCP") {
+    REQUIRE(listen_syslog->setProperty(ListenSyslog::ProtocolProperty, "TCP"));
+    protocol = "TCP";
+
+    port = utils::scheduleProcessorOnRandomPort(controller.plan, listen_syslog);
+
     asio::ip::tcp::endpoint endpoint;
     SECTION("sending through IPv4", "[IPv4]") {
-      endpoint = asio::ip::tcp::endpoint(asio::ip::address_v4::loopback(), SYSLOG_PORT);
+      endpoint = asio::ip::tcp::endpoint(asio::ip::address_v4::loopback(), port);
     }
     SECTION("sending through IPv6", "[IPv6]") {
       if (utils::isIPv6Disabled())
         return;
-      endpoint = asio::ip::tcp::endpoint(asio::ip::address_v6::loopback(), SYSLOG_PORT);
+      endpoint = asio::ip::tcp::endpoint(asio::ip::address_v6::loopback(), port);
     }
-    protocol = "TCP";
-    REQUIRE(listen_syslog->setProperty(ListenSyslog::ProtocolProperty, "TCP"));
-    controller.plan->scheduleProcessor(listen_syslog);
-    REQUIRE(utils::sendMessagesViaTCP({rfc5424_logger_example_1}, endpoint));
-    REQUIRE(utils::sendMessagesViaTCP({invalid_syslog}, endpoint));
+    CHECK_THAT(utils::sendMessagesViaTCP({rfc5424_logger_example_1}, endpoint), MatchesSuccess());
+    CHECK_THAT(utils::sendMessagesViaTCP({invalid_syslog}, endpoint), MatchesSuccess());
   }
   std::unordered_map<core::Relationship, std::vector<std::shared_ptr<core::FlowFile>>> result;
   REQUIRE(controller.triggerUntil({{ListenSyslog::Success, 2}}, result, 300ms, 50ms));
   CHECK(controller.plan->getContent(result.at(ListenSyslog::Success)[0]) == rfc5424_logger_example_1);
   CHECK(controller.plan->getContent(result.at(ListenSyslog::Success)[1]) == invalid_syslog);
 
-  check_for_only_basic_attributes(*result.at(ListenSyslog::Success)[0], SYSLOG_PORT, protocol);
-  check_for_only_basic_attributes(*result.at(ListenSyslog::Success)[1], SYSLOG_PORT, protocol);
+  check_for_only_basic_attributes(*result.at(ListenSyslog::Success)[0], port, protocol);
+  check_for_only_basic_attributes(*result.at(ListenSyslog::Success)[1], port, protocol);
 }
 
 TEST_CASE("ListenSyslog with parsing test", "[ListenSyslog][NetworkListenerProcessor]") {
@@ -306,75 +310,80 @@ TEST_CASE("ListenSyslog with parsing test", "[ListenSyslog][NetworkListenerProce
 
   SingleProcessorTestController controller{listen_syslog};
   LogTestController::getInstance().setTrace<ListenSyslog>();
-  REQUIRE(listen_syslog->setProperty(ListenSyslog::Port, std::to_string(SYSLOG_PORT)));
   REQUIRE(listen_syslog->setProperty(ListenSyslog::MaxBatchSize, "100"));
   REQUIRE(listen_syslog->setProperty(ListenSyslog::ParseMessages, "true"));
 
   std::string protocol;
+  uint16_t port = 0;
   SECTION("UDP") {
+    REQUIRE(listen_syslog->setProperty(ListenSyslog::ProtocolProperty, "UDP"));
+    protocol = "UDP";
+
+    port = utils::scheduleProcessorOnRandomPort(controller.plan, listen_syslog);
+
     asio::ip::udp::endpoint endpoint;
     SECTION("sending through IPv4", "[IPv4]") {
-      endpoint = asio::ip::udp::endpoint(asio::ip::address_v4::loopback(), SYSLOG_PORT);
+      endpoint = asio::ip::udp::endpoint(asio::ip::address_v4::loopback(), port);
     }
     SECTION("sending through IPv6", "[IPv6]") {
       if (utils::isIPv6Disabled())
         return;
-      endpoint = asio::ip::udp::endpoint(asio::ip::address_v6::loopback(), SYSLOG_PORT);
+      endpoint = asio::ip::udp::endpoint(asio::ip::address_v6::loopback(), port);
     }
-    protocol = "UDP";
-    REQUIRE(listen_syslog->setProperty(ListenSyslog::ProtocolProperty, "UDP"));
-    controller.plan->scheduleProcessor(listen_syslog);
-    std::this_thread::sleep_for(100ms);
-    utils::sendUdpDatagram(rfc5424_doc_example_1.unparsed_, endpoint);
-    utils::sendUdpDatagram(rfc5424_doc_example_2.unparsed_, endpoint);
-    utils::sendUdpDatagram(rfc5424_doc_example_3.unparsed_, endpoint);
-    utils::sendUdpDatagram(rfc5424_doc_example_4.unparsed_, endpoint);
 
-    utils::sendUdpDatagram(rfc3164_doc_example_1.unparsed_, endpoint);
-    utils::sendUdpDatagram(rfc3164_doc_example_2.unparsed_, endpoint);
-    utils::sendUdpDatagram(rfc3164_doc_example_3.unparsed_, endpoint);
-    utils::sendUdpDatagram(rfc3164_doc_example_4.unparsed_, endpoint);
+    CHECK_THAT(utils::sendUdpDatagram(rfc5424_doc_example_1.unparsed_, endpoint), MatchesSuccess());
+    CHECK_THAT(utils::sendUdpDatagram(rfc5424_doc_example_2.unparsed_, endpoint), MatchesSuccess());
+    CHECK_THAT(utils::sendUdpDatagram(rfc5424_doc_example_3.unparsed_, endpoint), MatchesSuccess());
+    CHECK_THAT(utils::sendUdpDatagram(rfc5424_doc_example_4.unparsed_, endpoint), MatchesSuccess());
 
-    utils::sendUdpDatagram(rfc5424_logger_example_1, endpoint);
-    utils::sendUdpDatagram(invalid_syslog, endpoint);
+    CHECK_THAT(utils::sendUdpDatagram(rfc3164_doc_example_1.unparsed_, endpoint), MatchesSuccess());
+    CHECK_THAT(utils::sendUdpDatagram(rfc3164_doc_example_2.unparsed_, endpoint), MatchesSuccess());
+    CHECK_THAT(utils::sendUdpDatagram(rfc3164_doc_example_3.unparsed_, endpoint), MatchesSuccess());
+    CHECK_THAT(utils::sendUdpDatagram(rfc3164_doc_example_4.unparsed_, endpoint), MatchesSuccess());
+
+    CHECK_THAT(utils::sendUdpDatagram(rfc5424_logger_example_1, endpoint), MatchesSuccess());
+    CHECK_THAT(utils::sendUdpDatagram(invalid_syslog, endpoint), MatchesSuccess());
   }
 
   SECTION("TCP") {
+    REQUIRE(listen_syslog->setProperty(ListenSyslog::ProtocolProperty, "TCP"));
+    protocol = "TCP";
+
+    port = utils::scheduleProcessorOnRandomPort(controller.plan, listen_syslog);
+
     asio::ip::tcp::endpoint endpoint;
     SECTION("sending through IPv4", "[IPv4]") {
-      endpoint = asio::ip::tcp::endpoint(asio::ip::address_v4::loopback(), SYSLOG_PORT);
+      endpoint = asio::ip::tcp::endpoint(asio::ip::address_v4::loopback(), port);
     }
     SECTION("sending through IPv6", "[IPv6]") {
       if (utils::isIPv6Disabled())
         return;
-      endpoint = asio::ip::tcp::endpoint(asio::ip::address_v6::loopback(), SYSLOG_PORT);
+      endpoint = asio::ip::tcp::endpoint(asio::ip::address_v6::loopback(), port);
     }
-    protocol = "TCP";
-    REQUIRE(listen_syslog->setProperty(ListenSyslog::ProtocolProperty, "TCP"));
-    controller.plan->scheduleProcessor(listen_syslog);
-    std::this_thread::sleep_for(100ms);
-    REQUIRE(utils::sendMessagesViaTCP({rfc5424_doc_example_1.unparsed_,
-                                       rfc5424_doc_example_2.unparsed_,
-                                       rfc5424_doc_example_3.unparsed_,
-                                       rfc5424_doc_example_4.unparsed_}, endpoint));
 
-    REQUIRE(utils::sendMessagesViaTCP({rfc3164_doc_example_1.unparsed_,
-                                       rfc3164_doc_example_2.unparsed_,
-                                       rfc3164_doc_example_3.unparsed_,
-                                       rfc3164_doc_example_4.unparsed_}, endpoint));
+    CHECK_THAT(utils::sendMessagesViaTCP({rfc5424_doc_example_1.unparsed_,
+                                          rfc5424_doc_example_2.unparsed_,
+                                          rfc5424_doc_example_3.unparsed_,
+                                          rfc5424_doc_example_4.unparsed_}, endpoint), MatchesSuccess());
 
-    REQUIRE(utils::sendMessagesViaTCP({rfc5424_logger_example_1}, endpoint));
-    REQUIRE(utils::sendMessagesViaTCP({invalid_syslog}, endpoint));
+    CHECK_THAT(utils::sendMessagesViaTCP({rfc3164_doc_example_1.unparsed_,
+                                          rfc3164_doc_example_2.unparsed_,
+                                          rfc3164_doc_example_3.unparsed_,
+                                          rfc3164_doc_example_4.unparsed_}, endpoint), MatchesSuccess());
+
+    CHECK_THAT(utils::sendMessagesViaTCP({rfc5424_logger_example_1}, endpoint), MatchesSuccess());
+    CHECK_THAT(utils::sendMessagesViaTCP({invalid_syslog}, endpoint), MatchesSuccess());
   }
 
   std::unordered_map<core::Relationship, std::vector<std::shared_ptr<core::FlowFile>>> result;
-  REQUIRE(controller.triggerUntil({{ListenSyslog::Success, 9}, {ListenSyslog::Invalid, 1}}, result, 300ms, 50ms));
+  REQUIRE(controller.triggerUntil({{ListenSyslog::Success, 9},
+                                   {ListenSyslog::Invalid, 1}}, result, 300ms, 50ms));
   REQUIRE(result.at(ListenSyslog::Success).size() == 9);
   REQUIRE(result.at(ListenSyslog::Invalid).size() == 1);
 
   std::unordered_map<std::string, core::FlowFile&> success_flow_files;
 
-  for (auto& flow_file : result.at(ListenSyslog::Success)) {
+  for (auto& flow_file: result.at(ListenSyslog::Success)) {
     success_flow_files.insert({controller.plan->getContent(flow_file), *flow_file});
   }
 
@@ -388,26 +397,25 @@ TEST_CASE("ListenSyslog with parsing test", "[ListenSyslog][NetworkListenerProce
   REQUIRE(success_flow_files.contains(std::string(rfc3164_doc_example_3.unparsed_)));
   REQUIRE(success_flow_files.contains(std::string(rfc3164_doc_example_4.unparsed_)));
 
-  check_parsed_attributes(success_flow_files.at(std::string(rfc5424_doc_example_1.unparsed_)), rfc5424_doc_example_1, SYSLOG_PORT, protocol);
-  check_parsed_attributes(success_flow_files.at(std::string(rfc5424_doc_example_2.unparsed_)), rfc5424_doc_example_2, SYSLOG_PORT, protocol);
-  check_parsed_attributes(success_flow_files.at(std::string(rfc5424_doc_example_3.unparsed_)), rfc5424_doc_example_3, SYSLOG_PORT, protocol);
-  check_parsed_attributes(success_flow_files.at(std::string(rfc5424_doc_example_4.unparsed_)), rfc5424_doc_example_4, SYSLOG_PORT, protocol);
+  check_parsed_attributes(success_flow_files.at(std::string(rfc5424_doc_example_1.unparsed_)), rfc5424_doc_example_1, port, protocol);
+  check_parsed_attributes(success_flow_files.at(std::string(rfc5424_doc_example_2.unparsed_)), rfc5424_doc_example_2, port, protocol);
+  check_parsed_attributes(success_flow_files.at(std::string(rfc5424_doc_example_3.unparsed_)), rfc5424_doc_example_3, port, protocol);
+  check_parsed_attributes(success_flow_files.at(std::string(rfc5424_doc_example_4.unparsed_)), rfc5424_doc_example_4, port, protocol);
 
-  check_parsed_attributes(success_flow_files.at(std::string(rfc3164_doc_example_1.unparsed_)), rfc3164_doc_example_1, SYSLOG_PORT, protocol);
-  check_parsed_attributes(success_flow_files.at(std::string(rfc3164_doc_example_2.unparsed_)), rfc3164_doc_example_2, SYSLOG_PORT, protocol);
-  check_parsed_attributes(success_flow_files.at(std::string(rfc3164_doc_example_3.unparsed_)), rfc3164_doc_example_3, SYSLOG_PORT, protocol);
-  check_parsed_attributes(success_flow_files.at(std::string(rfc3164_doc_example_4.unparsed_)), rfc3164_doc_example_4, SYSLOG_PORT, protocol);
+  check_parsed_attributes(success_flow_files.at(std::string(rfc3164_doc_example_1.unparsed_)), rfc3164_doc_example_1, port, protocol);
+  check_parsed_attributes(success_flow_files.at(std::string(rfc3164_doc_example_2.unparsed_)), rfc3164_doc_example_2, port, protocol);
+  check_parsed_attributes(success_flow_files.at(std::string(rfc3164_doc_example_3.unparsed_)), rfc3164_doc_example_3, port, protocol);
+  check_parsed_attributes(success_flow_files.at(std::string(rfc3164_doc_example_4.unparsed_)), rfc3164_doc_example_4, port, protocol);
 
   REQUIRE(success_flow_files.contains(std::string(rfc5424_logger_example_1)));
   CHECK(controller.plan->getContent(result.at(ListenSyslog::Invalid)[0]) == invalid_syslog);
 }
 
-
 TEST_CASE("ListenSyslog can be rescheduled", "[ListenSyslog][NetworkListenerProcessor]") {
   const auto listen_syslog = std::make_shared<ListenSyslog>("ListenSyslog");
   SingleProcessorTestController controller{listen_syslog};
   LogTestController::getInstance().setTrace<ListenSyslog>();
-  REQUIRE(listen_syslog->setProperty(ListenSyslog::Port, std::to_string(SYSLOG_PORT)));
+  REQUIRE(listen_syslog->setProperty(ListenSyslog::Port, "0"));
   REQUIRE(listen_syslog->setProperty(ListenSyslog::MaxBatchSize, "100"));
   REQUIRE(listen_syslog->setProperty(ListenSyslog::ParseMessages, "true"));
   SECTION("UDP") {
@@ -429,45 +437,48 @@ TEST_CASE("ListenSyslog max queue and max batch size test", "[ListenSyslog][Netw
   const auto listen_syslog = std::make_shared<ListenSyslog>("ListenSyslog");
 
   SingleProcessorTestController controller{listen_syslog};
-  REQUIRE(listen_syslog->setProperty(ListenSyslog::Port, std::to_string(SYSLOG_PORT)));
   REQUIRE(listen_syslog->setProperty(ListenSyslog::MaxBatchSize, "10"));
   REQUIRE(listen_syslog->setProperty(ListenSyslog::ParseMessages, "false"));
   REQUIRE(listen_syslog->setProperty(ListenSyslog::MaxQueueSize, "50"));
 
   LogTestController::getInstance().setWarn<ListenSyslog>();
 
+  uint16_t port = 0;
+
   SECTION("UDP") {
+    REQUIRE(listen_syslog->setProperty(ListenSyslog::ProtocolProperty, "UDP"));
+    port = utils::scheduleProcessorOnRandomPort(controller.plan, listen_syslog);
+
     asio::ip::udp::endpoint endpoint;
     SECTION("sending through IPv4", "[IPv4]") {
-      endpoint = asio::ip::udp::endpoint(asio::ip::address_v4::loopback(), SYSLOG_PORT);
+      endpoint = asio::ip::udp::endpoint(asio::ip::address_v4::loopback(), port);
     }
     SECTION("sending through IPv6", "[IPv6]") {
       if (utils::isIPv6Disabled())
         return;
-      endpoint = asio::ip::udp::endpoint(asio::ip::address_v6::loopback(), SYSLOG_PORT);
+      endpoint = asio::ip::udp::endpoint(asio::ip::address_v6::loopback(), port);
     }
-    REQUIRE(listen_syslog->setProperty(ListenSyslog::ProtocolProperty, "UDP"));
-    controller.plan->scheduleProcessor(listen_syslog);
     for (auto i = 0; i < 100; ++i) {
-      utils::sendUdpDatagram(rfc5424_doc_example_1.unparsed_, endpoint);
+      CHECK_THAT(utils::sendUdpDatagram(rfc5424_doc_example_1.unparsed_, endpoint), MatchesSuccess());
     }
     CHECK(utils::countLogOccurrencesUntil("Queue is full. UDP message ignored.", 50, 300ms, 50ms));
   }
 
   SECTION("TCP") {
+    REQUIRE(listen_syslog->setProperty(ListenSyslog::ProtocolProperty, "TCP"));
+    port = utils::scheduleProcessorOnRandomPort(controller.plan, listen_syslog);
+
     asio::ip::tcp::endpoint endpoint;
     SECTION("sending through IPv4", "[IPv4]") {
-      endpoint = asio::ip::tcp::endpoint(asio::ip::address_v4::loopback(), SYSLOG_PORT);
+      endpoint = asio::ip::tcp::endpoint(asio::ip::address_v4::loopback(), port);
     }
     SECTION("sending through IPv6", "[IPv6]") {
       if (utils::isIPv6Disabled())
         return;
-      endpoint = asio::ip::tcp::endpoint(asio::ip::address_v6::loopback(), SYSLOG_PORT);
+      endpoint = asio::ip::tcp::endpoint(asio::ip::address_v6::loopback(), port);
     }
-    REQUIRE(listen_syslog->setProperty(ListenSyslog::ProtocolProperty, "TCP"));
-    controller.plan->scheduleProcessor(listen_syslog);
     for (auto i = 0; i < 100; ++i) {
-      REQUIRE(utils::sendMessagesViaTCP({rfc5424_doc_example_1.unparsed_}, endpoint));
+      CHECK_THAT(utils::sendMessagesViaTCP({rfc5424_doc_example_1.unparsed_}, endpoint), MatchesSuccess());
     }
     CHECK(utils::countLogOccurrencesUntil("Queue is full. TCP message ignored.", 50, 300ms, 50ms));
   }
@@ -480,41 +491,44 @@ TEST_CASE("ListenSyslog max queue and max batch size test", "[ListenSyslog][Netw
 }
 
 TEST_CASE("Test ListenSyslog via TCP with SSL connection", "[ListenSyslog][NetworkListenerProcessor]") {
-  asio::ip::tcp::endpoint endpoint;
-  SECTION("sending through IPv4", "[IPv4]") {
-    endpoint = asio::ip::tcp::endpoint(asio::ip::address_v4::loopback(), SYSLOG_PORT);
-  }
-  SECTION("sending through IPv6", "[IPv6]") {
-    if (utils::isIPv6Disabled())
-      return;
-    endpoint = asio::ip::tcp::endpoint(asio::ip::address_v6::loopback(), SYSLOG_PORT);
-  }
   const auto listen_syslog = std::make_shared<ListenSyslog>("ListenSyslog");
-
   SingleProcessorTestController controller{listen_syslog};
+
   auto ssl_context_service = controller.plan->addController("SSLContextService", "SSLContextService");
   const auto executable_dir = minifi::utils::file::FileUtils::get_executable_dir();
   REQUIRE(controller.plan->setProperty(ssl_context_service, controllers::SSLContextService::CACertificate.getName(), (executable_dir / "resources" / "ca_A.crt").string()));
   REQUIRE(controller.plan->setProperty(ssl_context_service, controllers::SSLContextService::ClientCertificate.getName(), (executable_dir / "resources" / "localhost_by_A.pem").string()));
   REQUIRE(controller.plan->setProperty(ssl_context_service, controllers::SSLContextService::PrivateKey.getName(), (executable_dir / "resources" / "localhost_by_A.pem").string()));
+  ssl_context_service->enable();
+
   LogTestController::getInstance().setTrace<ListenSyslog>();
-  REQUIRE(listen_syslog->setProperty(ListenSyslog::Port, std::to_string(SYSLOG_PORT)));
   REQUIRE(listen_syslog->setProperty(ListenSyslog::MaxBatchSize, "2"));
   REQUIRE(listen_syslog->setProperty(ListenSyslog::ParseMessages, "false"));
   REQUIRE(listen_syslog->setProperty(ListenSyslog::ProtocolProperty, "TCP"));
   REQUIRE(listen_syslog->setProperty(ListenSyslog::SSLContextService, "SSLContextService"));
-  ssl_context_service->enable();
-  controller.plan->scheduleProcessor(listen_syslog);
-  REQUIRE(utils::sendMessagesViaSSL({rfc5424_logger_example_1}, endpoint, executable_dir / "resources" / "ca_A.crt"));
-  REQUIRE(utils::sendMessagesViaSSL({invalid_syslog}, endpoint, executable_dir / "resources" / "ca_A.crt"));
+
+  auto port = utils::scheduleProcessorOnRandomPort(controller.plan, listen_syslog);
+
+  asio::ip::tcp::endpoint endpoint;
+  SECTION("sending through IPv4", "[IPv4]") {
+    endpoint = asio::ip::tcp::endpoint(asio::ip::address_v4::loopback(), port);
+  }
+  SECTION("sending through IPv6", "[IPv6]") {
+    if (utils::isIPv6Disabled())
+      return;
+    endpoint = asio::ip::tcp::endpoint(asio::ip::address_v6::loopback(), port);
+  }
+
+  CHECK_THAT(utils::sendMessagesViaSSL({rfc5424_logger_example_1}, endpoint, executable_dir / "resources" / "ca_A.crt"), MatchesSuccess());
+  CHECK_THAT(utils::sendMessagesViaSSL({invalid_syslog}, endpoint, executable_dir / "resources" / "ca_A.crt"), MatchesSuccess());
 
   std::unordered_map<core::Relationship, std::vector<std::shared_ptr<core::FlowFile>>> result;
   REQUIRE(controller.triggerUntil({{ListenSyslog::Success, 2}}, result, 300ms, 50ms));
   CHECK(controller.plan->getContent(result.at(ListenSyslog::Success)[0]) == rfc5424_logger_example_1);
   CHECK(controller.plan->getContent(result.at(ListenSyslog::Success)[1]) == invalid_syslog);
 
-  check_for_only_basic_attributes(*result.at(ListenSyslog::Success)[0], SYSLOG_PORT, "TCP");
-  check_for_only_basic_attributes(*result.at(ListenSyslog::Success)[1], SYSLOG_PORT, "TCP");
+  check_for_only_basic_attributes(*result.at(ListenSyslog::Success)[0], port, "TCP");
+  check_for_only_basic_attributes(*result.at(ListenSyslog::Success)[1], port, "TCP");
 }
 
 }  // namespace org::apache::nifi::minifi::test
