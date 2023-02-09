@@ -20,6 +20,7 @@
 #include <memory>
 #include <string>
 #include <utility>
+#include <vector>
 
 #include "encryption/RocksDbEncryptionProvider.h"
 #include "RocksDbStream.h"
@@ -179,12 +180,12 @@ std::shared_ptr<io::BaseStream> DatabaseContentRepository::write(const minifi::R
   return std::make_shared<io::RocksDbStream>(claim.getContentFullPath(), gsl::make_not_null<minifi::internal::RocksDatabase*>(db_.get()), true, batch);
 }
 
-void DatabaseContentRepository::clearOrphans() {
+bool DatabaseContentRepository::clearOrphans() {
   if (!is_valid_ || !db_)
-    return;
+    return false;
   auto opendb = db_->open();
   if (!opendb) {
-    return;
+    return false;
   }
   std::vector<std::string> keys;
   auto it = opendb->NewIterator(rocksdb::ReadOptions());
@@ -197,20 +198,17 @@ void DatabaseContentRepository::clearOrphans() {
     }
   }
   auto batch = opendb->createWriteBatch();
-  std::vector<rocksdb::Slice> key_slices;
   for (auto& key : keys) {
-    key_slices.push_back(key);
+    batch.Delete(key);
   }
 
   rocksdb::Status status = opendb->Write(rocksdb::WriteOptions(), &batch);
 
-  if (status.ok()) {
-    logger_->log_debug("Deleted orphan contents");
-    return;
-  } else {
-    logger_->log_debug("Could not delete orphan contents");
-    return;
+  if (!status.ok()) {
+    logger_->log_debug("Could not delete orphan contents from rocksdb database: %s", status.ToString());
+    return false;
   }
+  return true;
 }
 
 REGISTER_RESOURCE_AS(DatabaseContentRepository, InternalResource, ("DatabaseContentRepository", "databasecontentrepository"));

@@ -438,4 +438,93 @@ TEST_CASE("Flush deleted flowfiles before shutdown", "[TestFFR7]") {
   }
 }
 
+TEST_CASE("FlowFileRepository triggers content repo orphan clear") {
+  LogTestController::getInstance().setDebug<core::ContentRepository>();
+  LogTestController::getInstance().setDebug<core::repository::FileSystemRepository>();
+  LogTestController::getInstance().setDebug<core::repository::FlowFileRepository>();
+  TestController testController;
+  auto ff_dir = testController.createTempDirectory();
+  auto content_dir = testController.createTempDirectory();
+
+  auto config = std::make_shared<minifi::Configure>();
+  config->set(minifi::Configure::nifi_flowfile_repository_directory_default, ff_dir.string());
+  config->set(minifi::Configure::nifi_dbcontent_repository_directory_default, content_dir.string());
+
+  {
+    auto content_repo = std::make_shared<core::repository::FileSystemRepository>();
+    REQUIRE(content_repo->initialize(config));
+    minifi::ResourceClaim claim(content_repo);
+    content_repo->write(claim)->write("hi");
+    // ensure that the content is not deleted during resource claim destruction
+    content_repo->incrementStreamCount(claim);
+  }
+
+  REQUIRE(utils::file::list_dir_all(content_dir, testController.getLogger()).size() == 1);
+
+  auto ff_repo = std::make_shared<core::repository::FlowFileRepository>();
+  REQUIRE(ff_repo->initialize(config));
+  auto content_repo = std::make_shared<core::repository::FileSystemRepository>();
+  REQUIRE(content_repo->initialize(config));
+
+  ff_repo->loadComponent(content_repo);
+
+  REQUIRE(utils::file::list_dir_all(content_dir, testController.getLogger()).empty());
+}
+
+TEST_CASE("FlowFileRepository synchronously pushes existing flow files") {
+  LogTestController::getInstance().setDebug<core::ContentRepository>();
+  LogTestController::getInstance().setDebug<core::repository::FileSystemRepository>();
+  LogTestController::getInstance().setDebug<core::repository::FlowFileRepository>();
+  TestController testController;
+  auto ff_dir = testController.createTempDirectory();
+  auto content_dir = testController.createTempDirectory();
+
+  auto config = std::make_shared<minifi::Configure>();
+  config->set(minifi::Configure::nifi_flowfile_repository_directory_default, ff_dir.string());
+  config->set(minifi::Configure::nifi_dbcontent_repository_directory_default, content_dir.string());
+
+
+  utils::Identifier ff_id;
+  auto connection_id = utils::IdGenerator::getIdGenerator()->generate();
+
+  {
+    auto ff_repo = std::make_shared<core::repository::FlowFileRepository>();
+    REQUIRE(ff_repo->initialize(config));
+    auto content_repo = std::make_shared<core::repository::FileSystemRepository>();
+    REQUIRE(content_repo->initialize(config));
+    auto conn = std::make_shared<minifi::Connection>(ff_repo, content_repo, "TestConnection", connection_id);
+
+    auto claim = std::make_shared<minifi::ResourceClaim>(content_repo);
+
+    std::vector<std::pair<std::string, std::unique_ptr<minifi::io::BufferStream>>> flow_data;
+    auto ff = std::make_shared<minifi::FlowFileRecord>();
+    ff_id = ff->getUUID();
+    ff->setConnection(conn.get());
+    content_repo->write(*claim)->write("hello");
+    ff->setResourceClaim(claim);
+    auto stream = std::make_unique<minifi::io::BufferStream>();
+    ff->Serialize(*stream);
+    flow_data.emplace_back(ff->getUUIDStr(), std::move(stream));
+
+    REQUIRE(ff_repo->MultiPut(flow_data));
+  }
+
+  {
+    auto ff_repo = std::make_shared<core::repository::FlowFileRepository>();
+    REQUIRE(ff_repo->initialize(config));
+    auto content_repo = std::make_shared<core::repository::FileSystemRepository>();
+    REQUIRE(content_repo->initialize(config));
+    auto conn = std::make_shared<minifi::Connection>(ff_repo, content_repo, "TestConnection", connection_id);
+
+    ff_repo->setConnectionMap({{connection_id.to_string(), conn.get()}});
+    ff_repo->loadComponent(content_repo);
+
+    std::set<std::shared_ptr<core::FlowFile>> expired;
+    std::shared_ptr<core::FlowFile> ff = conn->poll(expired);
+    REQUIRE(expired.empty());
+    REQUIRE(ff);
+    REQUIRE(ff->getUUID() == ff_id);
+  }
+}
+
 }  // namespace

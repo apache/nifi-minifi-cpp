@@ -67,7 +67,7 @@ class DatabaseContentRepository : public core::ContentRepository {
   bool remove(const minifi::ResourceClaim &claim) override;
   bool exists(const minifi::ResourceClaim &streamId) override;
 
-  void clearOrphans() override;
+  bool clearOrphans() override;
 
  private:
   std::shared_ptr<io::BaseStream> write(const minifi::ResourceClaim &claim, bool append, minifi::internal::WriteBatch* batch);

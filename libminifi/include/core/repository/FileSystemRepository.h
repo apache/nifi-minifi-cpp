@@ -49,7 +49,7 @@ class FileSystemRepository : public core::ContentRepository {
   bool remove(const minifi::ResourceClaim& claim) override;
   std::shared_ptr<ContentSession> createSession() override;
 
-  void clearOrphans() override;
+  bool clearOrphans() override;
 
  private:
   std::shared_ptr<logging::Logger> logger_;

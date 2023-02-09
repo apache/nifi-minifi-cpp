@@ -178,6 +178,12 @@ void FlowFileRepository::initialize_repository() {
       keys_to_delete.enqueue(key);
     }
   }
+  flush();
+  if (content_repo_->clearOrphans()) {
+    logger_->log_info("Deleted orphan contents");
+  } else {
+    logger_->log_error("Failed to delete orphan contents");
+  }
 }
 
 bool FlowFileRepository::ExecuteWithRetry(const std::function<rocksdb::Status()>& operation) {
@@ -193,47 +199,6 @@ bool FlowFileRepository::ExecuteWithRetry(const std::function<rocksdb::Status()>
     std::this_thread::sleep_for(waitTime);
   }
   return false;
-}
-
-/**
- * Returns True if there is data to interrogate.
- * @return true if our db has data stored.
- */
-bool FlowFileRepository::need_checkpoint(minifi::internal::OpenRocksDb& opendb) {
-  auto it = opendb.NewIterator(rocksdb::ReadOptions());
-  it->SeekToFirst();
-  return it->Valid();
-}
-void FlowFileRepository::initialize_repository() {
-  checkpoint_.reset();
-  auto opendb = db_->open();
-  if (!opendb) {
-    logger_->log_trace("Couldn't open database, no way to checkpoint");
-    return;
-  }
-  // first we need to establish a checkpoint iff it is needed.
-  if (!need_checkpoint(*opendb)) {
-    logger_->log_trace("Do not need checkpoint");
-    return;
-  }
-  // delete any previous copy
-  if (utils::file::delete_dir(checkpoint_dir_) < 0) {
-    logger_->log_error("Could not delete existing checkpoint directory '%s'", checkpoint_dir_.string());
-    return;
-  }
-  std::unique_ptr<rocksdb::Checkpoint> checkpoint;
-  rocksdb::Status checkpoint_status = opendb->NewCheckpoint(checkpoint);
-  if (!checkpoint_status.ok()) {
-    logger_->log_error("Could not create checkpoint object: %s", checkpoint_status.ToString());
-    return;
-  }
-  checkpoint_status = checkpoint->CreateCheckpoint(checkpoint_dir_.string());
-  if (!checkpoint_status.ok()) {
-    logger_->log_error("Could not initialize checkpoint: %s", checkpoint_status.ToString());
-    return;
-  }
-  checkpoint_ = std::move(checkpoint);
-  logger_->log_trace("Created checkpoint in directory '%s'", checkpoint_dir_.string());
 }
 
 void FlowFileRepository::loadComponent(const std::shared_ptr<core::ContentRepository> &content_repo) {
