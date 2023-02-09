@@ -51,6 +51,8 @@ class ContentRepository : public StreamManager<minifi::ResourceClaim>, public ut
   void incrementStreamCount(const minifi::ResourceClaim &streamId) override;
   StreamState decrementStreamCount(const minifi::ResourceClaim &streamId) override;
 
+  virtual void clearOrphans() = 0;
+
  protected:
   std::string directory_;
   std::mutex count_map_mutex_;

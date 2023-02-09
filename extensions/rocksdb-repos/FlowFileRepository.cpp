@@ -111,9 +111,6 @@ void FlowFileRepository::printStats() {
 
 void FlowFileRepository::run() {
   auto last = std::chrono::steady_clock::now();
-  if (isRunning()) {
-    prune_stored_flowfiles();
-  }
   while (isRunning()) {
     std::this_thread::sleep_for(purge_period_);
     flush();
@@ -126,38 +123,28 @@ void FlowFileRepository::run() {
   flush();
 }
 
-void FlowFileRepository::prune_stored_flowfiles() {
-  const auto encrypted_env = createEncryptingEnv(utils::crypto::EncryptionManager{config_->getHome()}, DbEncryptionOptions{checkpoint_dir_.string(), ENCRYPTION_KEY_NAME});
-  logger_->log_info("Using %s FlowFileRepository checkpoint", encrypted_env ? "encrypted" : "plaintext");
+bool FlowFileRepository::ExecuteWithRetry(const std::function<rocksdb::Status()>& operation) {
+  std::chrono::milliseconds waitTime = 0ms;
+  for (int i=0; i < 3; ++i) {
+    auto status = operation();
+    if (status.ok()) {
+      logger_->log_trace("Rocksdb operation executed successfully");
+      return true;
+    }
+    logger_->log_error("Rocksdb operation failed: %s", status.ToString());
+    waitTime += FLOWFILE_REPOSITORY_RETRY_INTERVAL_INCREMENTS;
+    std::this_thread::sleep_for(waitTime);
+  }
+  return false;
+}
 
-  auto set_db_opts = [encrypted_env] (minifi::internal::Writable<rocksdb::DBOptions>& db_opts) {
-    db_opts.set(&rocksdb::DBOptions::create_if_missing, true);
-    db_opts.set(&rocksdb::DBOptions::use_direct_io_for_flush_and_compaction, true);
-    db_opts.set(&rocksdb::DBOptions::use_direct_reads, true);
-    if (encrypted_env) {
-      db_opts.set(&rocksdb::DBOptions::env, encrypted_env.get(), EncryptionEq{});
-    } else {
-      db_opts.set(&rocksdb::DBOptions::env, rocksdb::Env::Default());
-    }
-  };
-  auto checkpointDB = minifi::internal::RocksDatabase::create(set_db_opts, {}, checkpoint_dir_.string(), minifi::internal::RocksDbMode::ReadOnly);
-  std::optional<minifi::internal::OpenRocksDb> opendb;
-  if (nullptr != checkpoint_) {
-    opendb = checkpointDB->open();
-    if (opendb) {
-      logger_->log_trace("Successfully opened checkpoint database at '%s'", checkpoint_dir_.string());
-    } else {
-      logger_->log_error("Couldn't open checkpoint database at '%s' using live database", checkpoint_dir_.string());
-      opendb = db_->open();
-    }
-    if (!opendb) {
-      logger_->log_trace("Could not open neither the checkpoint nor the live database.");
-      return;
-    }
-  } else {
-    logger_->log_trace("Could not open checkpoint as object doesn't exist. Likely not needed or file system error.");
+void FlowFileRepository::initialize_repository() {
+  auto opendb = db_->open();
+  if (!opendb) {
+    logger_->log_trace("Couldn't open database to load existing flow files");
     return;
   }
+  logger_->log_info("Reading existing flow files from database");
 
   auto it = opendb->NewIterator(rocksdb::ReadOptions());
   for (it->SeekToFirst(); it->Valid(); it->Next()) {

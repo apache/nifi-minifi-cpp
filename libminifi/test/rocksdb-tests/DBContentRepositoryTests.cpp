@@ -242,3 +242,13 @@ TEST_CASE("ProcessSession::append should append to the flowfile and set its size
 TEST_CASE("ProcessSession::read can read zero length flowfiles without crash (RocksDB)", "[zerolengthread]") {
   ContentRepositoryDependentTests::testReadFromZeroLengthFlowFile(std::make_shared<core::repository::DatabaseContentRepository>());
 }
+
+TEST_CASE("DBContentRepository can clear orphan entries") {
+  TestController testController;
+  auto dir = testController.createTempDirectory();
+  auto content_repo = std::make_shared<core::repository::DatabaseContentRepository>();
+
+  auto configuration = std::make_shared<org::apache::nifi::minifi::Configure>();
+  configuration->set(minifi::Configure::nifi_dbcontent_repository_directory_default, dir.string());
+  REQUIRE(content_repo->initialize(configuration));
+}

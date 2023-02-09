@@ -179,6 +179,40 @@ std::shared_ptr<io::BaseStream> DatabaseContentRepository::write(const minifi::R
   return std::make_shared<io::RocksDbStream>(claim.getContentFullPath(), gsl::make_not_null<minifi::internal::RocksDatabase*>(db_.get()), true, batch);
 }
 
+void DatabaseContentRepository::clearOrphans() {
+  if (!is_valid_ || !db_)
+    return;
+  auto opendb = db_->open();
+  if (!opendb) {
+    return;
+  }
+  std::vector<std::string> keys;
+  auto it = opendb->NewIterator(rocksdb::ReadOptions());
+  for (it->SeekToFirst(); it->Valid(); it->Next()) {
+    auto key = it->key().ToString();
+    auto claim_it = count_map_.find(key);
+    if (claim_it == count_map_.end() || claim_it->second == 0) {
+      logger_->log_debug("Deleting orphan resource %s", key);
+      keys.push_back(key);
+    }
+  }
+  auto batch = opendb->createWriteBatch();
+  std::vector<rocksdb::Slice> key_slices;
+  for (auto& key : keys) {
+    key_slices.push_back(key);
+  }
+
+  rocksdb::Status status = opendb->Write(rocksdb::WriteOptions(), &batch);
+
+  if (status.ok()) {
+    logger_->log_debug("Deleted orphan contents");
+    return;
+  } else {
+    logger_->log_debug("Could not delete orphan contents");
+    return;
+  }
+}
+
 REGISTER_RESOURCE_AS(DatabaseContentRepository, InternalResource, ("DatabaseContentRepository", "databasecontentrepository"));
 
 }  // namespace org::apache::nifi::minifi::core::repository

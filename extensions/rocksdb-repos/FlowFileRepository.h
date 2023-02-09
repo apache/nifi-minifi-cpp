@@ -112,23 +112,13 @@ class FlowFileRepository : public ThreadedRepository, public SwapManager {
 
   void initialize_repository();
 
-  /**
-   * Returns true if a checkpoint is needed at startup
-   * @return true if a checkpoint is needed.
-   */
-  static bool need_checkpoint(minifi::internal::OpenRocksDb& opendb);
-
-  void prune_stored_flowfiles();
-
   std::thread& getThread() override {
     return thread_;
   }
 
-  std::filesystem::path checkpoint_dir_;
   moodycamel::ConcurrentQueue<std::string> keys_to_delete;
   std::shared_ptr<core::ContentRepository> content_repo_;
   std::unique_ptr<minifi::internal::RocksDatabase> db_;
-  std::unique_ptr<rocksdb::Checkpoint> checkpoint_;
   std::unique_ptr<FlowFileLoader> swap_loader_;
   std::shared_ptr<logging::Logger> logger_;
   std::shared_ptr<minifi::Configure> config_;
