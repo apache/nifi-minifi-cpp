@@ -40,7 +40,7 @@ const core::Property AbstractMQTTProcessor::ClientID(
 
 const core::Property AbstractMQTTProcessor::QoS(
         core::PropertyBuilder::createProperty("Quality of Service")->
-                withDescription("The Quality of Service (QoS) of messages. Accepts values '0', '1' and '2'")->
+                withDescription("The Quality of Service (QoS) of messages.")->
                 withDefaultValue(toString(MqttQoS::LEVEL_0))->
                 withAllowableValues(MqttQoS::values())->
                 build());
@@ -60,7 +60,7 @@ const core::Property AbstractMQTTProcessor::LastWillMessage("Last Will Message",
 
 const core::Property AbstractMQTTProcessor::LastWillQoS(
         core::PropertyBuilder::createProperty("Last Will QoS")->
-                withDescription("The Quality of Service (QoS) to send the last will with. Accepts values '0', '1' and '2'")->
+                withDescription("The Quality of Service (QoS) to send the last will with.")->
                 withDefaultValue(toString(MqttQoS::LEVEL_0))->
                 withAllowableValues(MqttQoS::values())->
                 build());
@@ -70,7 +70,7 @@ const core::Property AbstractMQTTProcessor::LastWillContentType("Last Will Conte
 
 const core::Property AbstractMQTTProcessor::MqttVersion(
         core::PropertyBuilder::createProperty("MQTT Version")->
-                withDescription("The MQTT specification version when connecting to the broker. See the allowable value descriptions for more details.")->
+                withDescription("The MQTT specification version when connecting to the broker.")->
                 withDefaultValue(toString(MqttVersions::V_3X_AUTO))->
                 withAllowableValues(MqttVersions::values())->
                 build());
@@ -79,17 +79,17 @@ const core::Property AbstractMQTTProcessor::MqttVersion(
 
 const core::Property ConsumeMQTT::Topic(
         core::PropertyBuilder::createProperty("Topic")->
-                withDescription("The topic to subscribe to")->
+                withDescription("The topic to subscribe to.")->
                 isRequired(true)->
                 build());
 
 const core::Property ConsumeMQTT::CleanSession("Clean Session", "Whether to start afresh rather than remembering previous subscriptions. "
-                                                                "Also make broker remember subscriptions after disconnected. MQTT 3.x only.", "true");
+                                                                "If true, then make broker forget subscriptions after disconnected. MQTT 3.x only.", "true");
 const core::Property ConsumeMQTT::CleanStart("Clean Start", "Whether to start afresh rather than remembering previous subscriptions. MQTT 5.x only.", "true");
 const core::Property ConsumeMQTT::SessionExpiryInterval("Session Expiry Interval", "Time to delete session on broker after client is disconnected. MQTT 5.x only.", "0 s");
 const core::Property ConsumeMQTT::QueueBufferMaxMessage("Queue Max Message", "Maximum number of messages allowed on the received MQTT queue", "1000");
 const core::Property ConsumeMQTT::AttributeFromContentType("Attribute From Content Type", "Name of FlowFile attribute to be filled from content type of received message. MQTT 5.x only.", "");
-const core::Property ConsumeMQTT::TopicAliasMaximum("Maximum number of topic aliases to use. If set to 0, then topic aliases cannot be used. MQTT 5.x only.", "0");
+const core::Property ConsumeMQTT::TopicAliasMaximum("Topic Alias Maximum", "Maximum number of topic aliases to use. If set to 0, then topic aliases cannot be used. MQTT 5.x only.", "0");
 const core::Property ConsumeMQTT::ReceiveMaximum("Receive Maximum", "Maximum number of unacknowledged messages allowed. MQTT 5.x only.", std::to_string(MQTT_MAX_RECEIVE_MAXIMUM));
 
 const core::Relationship ConsumeMQTT::Success("success", "FlowFiles that are sent successfully to the destination are transferred to this relationship");
@@ -101,7 +101,7 @@ REGISTER_RESOURCE(ConsumeMQTT, Processor);
 
 const core::Property PublishMQTT::Topic(
         core::PropertyBuilder::createProperty("Topic")->
-                withDescription("The topic to publish to")->
+                withDescription("The topic to publish to.")->
                 isRequired(true)->
                 supportsExpressionLanguage(true)->
                 build());

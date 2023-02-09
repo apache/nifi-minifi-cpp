@@ -38,7 +38,10 @@ class RouteOnAttribute : public core::Processor {
       : core::Processor(std::move(name), uuid) {
   }
 
-  EXTENSIONAPI static constexpr const char* Description = "Routes FlowFiles based on their Attributes using the Attribute Expression Language.";
+  EXTENSIONAPI static constexpr const char* Description = "Routes FlowFiles based on their Attributes using the Attribute Expression Language.\n\n"
+      "Any number of user-defined dynamic properties can be added, which all support the Attribute Expression Language. Relationships matching the name of the properties will be added.\n"
+      "FlowFiles will be routed to all the relationships whose matching property evaluates to \"true\". "
+      "Unmatched FlowFiles will be routed to the \"unmatched\" relationship, while failed ones to \"failure\".";
 
   static auto properties() { return std::array<core::Property, 0>{}; }
 
