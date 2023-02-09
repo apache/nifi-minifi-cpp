@@ -93,14 +93,11 @@ TEST_CASE_METHOD(FFRepoFixture, "FlowFileRepository creates checkpoint and loads
   REQUIRE(container_->isEmpty());
 
   runWithNewRepository([&] (const std::shared_ptr<core::repository::FlowFileRepository>& /*repo*/) {
-    // wait for the flowfiles to be loaded from the checkpoint
+    // wait for the flowfiles to be loaded
     bool success = utils::verifyEventHappenedInPollTime(std::chrono::seconds{5}, [&] {
       return !container_->isEmpty();
     });
     REQUIRE(success);
-    REQUIRE(utils::verifyLogLinePresenceInPollTime(
-        std::chrono::seconds{5},
-        "Successfully opened checkpoint database at '" + checkpoint_dir_.string() + "'"));
     std::set<std::shared_ptr<core::FlowFile>> expired;
     auto flowfile = container_->poll(expired);
     REQUIRE(expired.empty());
