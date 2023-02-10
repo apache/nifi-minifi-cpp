@@ -549,8 +549,8 @@ void StructuredConfiguration::parseConnection(const Node& connection_node_seq, c
     logger_->log_debug("Created connection with UUID %s and name %s", id, name);
     const StructuredConnectionParser connectionParser(connection_node, name, gsl::not_null<core::ProcessGroup*>{ parent }, logger_);
     connectionParser.configureConnectionSourceRelationships(*connection);
-    connection->setBackpressureSizeThreshold(connectionParser.getWorkQueueSize());
-    connection->setBackpressureDataThreshold(connectionParser.getWorkQueueDataSize());
+    connection->setBackpressureThresholdCount(connectionParser.getWorkQueueSize());
+    connection->setBackpressureThresholdDataSize(connectionParser.getWorkQueueDataSize());
     connection->setSwapThreshold(connectionParser.getSwapThreshold());
     connection->setSourceUUID(connectionParser.getSourceUUID());
     connection->setDestinationUUID(connectionParser.getDestinationUUID());

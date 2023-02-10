@@ -82,13 +82,13 @@ bool Connection::isEmpty() const {
 
 bool Connection::backpressureThresholdReached() const {
   std::lock_guard<std::mutex> lock(mutex_);
-  auto backpressure_size_threshold = backpressure_queue_size_threshold_.load();
-  auto backpressure_data_threshold = backpressure_queue_data_threshold.load();
+  auto backpressure_threshold_count = backpressure_threshold_count_.load();
+  auto backpressure_threshold_data_size = backpressure_threshold_data_size_.load();
 
-  if (backpressure_size_threshold != 0 && queue_.size() >= backpressure_size_threshold)
+  if (backpressure_threshold_count != 0 && queue_.size() >= backpressure_threshold_count)
     return true;
 
-  if (backpressure_data_threshold != 0 && queued_data_size_ >= backpressure_data_threshold)
+  if (backpressure_threshold_data_size != 0 && queued_data_size_ >= backpressure_threshold_data_size)
     return true;
 
   return false;

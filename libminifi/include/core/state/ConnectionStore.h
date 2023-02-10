@@ -40,11 +40,11 @@ class ConnectionStore {
     for (const auto& [_, connection] : connections_) {
       metrics.push_back({"queue_data_size", static_cast<double>(connection->getQueueDataSize()),
         {{"connection_uuid", connection->getUUIDStr()}, {"connection_name", connection->getName()}, {"metric_class", metric_class}}});
-      metrics.push_back({"queue_data_size_max", static_cast<double>(connection->getBackpressureDataThreshold()),
+      metrics.push_back({"queue_data_size_max", static_cast<double>(connection->getBackpressureThresholdDataSize()),
         {{"connection_uuid", connection->getUUIDStr()}, {"connection_name", connection->getName()}, {"metric_class", metric_class}}});
       metrics.push_back({"queue_size", static_cast<double>(connection->getQueueSize()),
         {{"connection_uuid", connection->getUUIDStr()}, {"connection_name", connection->getName()}, {"metric_class", metric_class}}});
-      metrics.push_back({"queue_size_max", static_cast<double>(connection->getBackpressureSizeThreshold()),
+      metrics.push_back({"queue_size_max", static_cast<double>(connection->getBackpressureThresholdCount()),
         {{"connection_uuid", connection->getUUIDStr()}, {"connection_name", connection->getName()}, {"metric_class", metric_class}}});
     }
 

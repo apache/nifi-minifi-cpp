@@ -245,7 +245,7 @@ TEST_CASE("TestConnectionFull", "[ConnectionFull]") {
   std::shared_ptr<TestRepository> repo = std::static_pointer_cast<TestRepository>(test_repo);
 
   std::shared_ptr<minifi::Connection> connection = std::make_shared<minifi::Connection>(test_repo, content_repo, "GFF2Connection");
-  connection->setBackpressureSizeThreshold(5);
+  connection->setBackpressureThresholdCount(5);
   connection->addRelationship(core::Relationship("success", "description"));
 
 

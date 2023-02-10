@@ -93,21 +93,21 @@ TEST_CASE("Connection backpressure tests", "[Connection]") {
   const auto id_generator = utils::IdGenerator::getIdGenerator();
   const auto connection = std::make_shared<minifi::Connection>(flow_repo, content_repo, "test_connection", id_generator->generate(), id_generator->generate(), id_generator->generate());
 
-  CHECK(connection->getBackpressureDataThreshold() == minifi::Connection::DEFAULT_BACKPRESSURE_DATA_THRESHOLD);
-  CHECK(connection->getBackpressureSizeThreshold() == minifi::Connection::DEFAULT_BACKPRESSURE_SIZE_THRESHOLD);
+  CHECK(connection->getBackpressureThresholdDataSize() == minifi::Connection::DEFAULT_BACKPRESSURE_THRESHOLD_DATA_SIZE);
+  CHECK(connection->getBackpressureThresholdCount() == minifi::Connection::DEFAULT_BACKPRESSURE_THRESHOLD_COUNT);
 
   SECTION("The number of flowfiles can be limited") {
-    connection->setBackpressureSizeThreshold(2);
+    connection->setBackpressureThresholdCount(2);
     CHECK_FALSE(connection->backpressureThresholdReached());
     connection->put(std::make_shared<core::FlowFile>());
     CHECK_FALSE(connection->backpressureThresholdReached());
     connection->put(std::make_shared<core::FlowFile>());
     CHECK(connection->backpressureThresholdReached());
-    connection->setBackpressureSizeThreshold(0);
+    connection->setBackpressureThresholdCount(0);
     CHECK_FALSE(connection->backpressureThresholdReached());
   }
   SECTION("The size of the data can be limited") {
-    connection->setBackpressureDataThreshold(3_KB);
+    connection->setBackpressureThresholdDataSize(3_KB);
     CHECK_FALSE(connection->backpressureThresholdReached());
     {
       auto flow_file = std::make_shared<core::FlowFile>();
@@ -121,7 +121,7 @@ TEST_CASE("Connection backpressure tests", "[Connection]") {
       connection->put(flow_file);
     }
     CHECK(connection->backpressureThresholdReached());
-    connection->setBackpressureDataThreshold(0);
+    connection->setBackpressureThresholdDataSize(0);
     CHECK_FALSE(connection->backpressureThresholdReached());
   }
 }

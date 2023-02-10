@@ -58,8 +58,8 @@ class Connection : public core::Connectable {
   Connection(const Connection &parent) = delete;
   Connection &operator=(const Connection &parent) = delete;
 
-  static constexpr uint64_t DEFAULT_BACKPRESSURE_SIZE_THRESHOLD = 10000;
-  static constexpr uint64_t DEFAULT_BACKPRESSURE_DATA_THRESHOLD = 10_MB;
+  static constexpr uint64_t DEFAULT_BACKPRESSURE_THRESHOLD_COUNT = 10000;
+  static constexpr uint64_t DEFAULT_BACKPRESSURE_THRESHOLD_DATA_SIZE = 10_MB;
 
   void setSourceUUID(const utils::Identifier &uuid) {
     src_uuid_ = uuid;
@@ -101,20 +101,20 @@ class Connection : public core::Connectable {
     return relationships_;
   }
 
-  void setBackpressureSizeThreshold(uint64_t size) {
-    backpressure_queue_size_threshold_ = size;
+  void setBackpressureThresholdCount(uint64_t size) {
+    backpressure_threshold_count_ = size;
   }
 
-  uint64_t getBackpressureSizeThreshold() const {
-    return backpressure_queue_size_threshold_;
+  uint64_t getBackpressureThresholdCount() const {
+    return backpressure_threshold_count_;
   }
 
-  void setBackpressureDataThreshold(uint64_t size) {
-    backpressure_queue_data_threshold = size;
+  void setBackpressureThresholdDataSize(uint64_t size) {
+    backpressure_threshold_data_size_ = size;
   }
 
-  uint64_t getBackpressureDataThreshold() const {
-    return backpressure_queue_data_threshold;
+  uint64_t getBackpressureThresholdDataSize() const {
+    return backpressure_threshold_data_size_;
   }
 
   void setSwapThreshold(uint64_t size) {
@@ -177,8 +177,8 @@ class Connection : public core::Connectable {
   std::set<core::Relationship> relationships_;
   core::Connectable* source_connectable_ = nullptr;
   core::Connectable* dest_connectable_ = nullptr;
-  std::atomic<uint64_t> backpressure_queue_size_threshold_ = DEFAULT_BACKPRESSURE_SIZE_THRESHOLD;
-  std::atomic<uint64_t> backpressure_queue_data_threshold = DEFAULT_BACKPRESSURE_DATA_THRESHOLD;
+  std::atomic<uint64_t> backpressure_threshold_count_ = DEFAULT_BACKPRESSURE_THRESHOLD_COUNT;
+  std::atomic<uint64_t> backpressure_threshold_data_size_ = DEFAULT_BACKPRESSURE_THRESHOLD_DATA_SIZE;
   std::atomic<std::chrono::milliseconds> expired_duration_ = std::chrono::milliseconds(0);
   std::shared_ptr<core::Repository> flow_repository_;
   std::shared_ptr<core::ContentRepository> content_repo_;

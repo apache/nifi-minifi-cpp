@@ -64,7 +64,7 @@ class QueueMetrics : public ResponseNode, public ConnectionStore {
 
       SerializedResponseNode datasizemax;
       datasizemax.name = "datasizemax";
-      datasizemax.value = std::to_string(connection->getBackpressureDataThreshold());
+      datasizemax.value = std::to_string(connection->getBackpressureThresholdDataSize());
 
       SerializedResponseNode queuesize;
       queuesize.name = "queued";
@@ -72,7 +72,7 @@ class QueueMetrics : public ResponseNode, public ConnectionStore {
 
       SerializedResponseNode queuesizemax;
       queuesizemax.name = "queuedmax";
-      queuesizemax.value = std::to_string(connection->getBackpressureSizeThreshold());
+      queuesizemax.value = std::to_string(connection->getBackpressureThresholdCount());
 
       parent.children.push_back(datasize);
       parent.children.push_back(datasizemax);
