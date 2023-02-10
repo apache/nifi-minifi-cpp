@@ -35,7 +35,7 @@ class LuaScriptExecutor : public script::ScriptExecutor {
   void onTrigger(const std::shared_ptr<core::ProcessContext> &context, const std::shared_ptr<core::ProcessSession> &session) override;
   void initialize(std::filesystem::path script_file,
       std::string script_body,
-      std::optional<std::filesystem::path> module_directory,
+      std::optional<std::string> module_directory,
       size_t max_concurrent_engines,
       const core::Relationship& success,
       const core::Relationship& failure,

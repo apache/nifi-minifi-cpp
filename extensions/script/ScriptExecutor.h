@@ -34,27 +34,15 @@ class ScriptExecutor : public minifi::core::CoreComponent {
   virtual void onTrigger(const std::shared_ptr<core::ProcessContext> &context, const std::shared_ptr<core::ProcessSession> &session) = 0;
   virtual void initialize(std::filesystem::path script_file,
       std::string script_body,
-      std::optional<std::filesystem::path> module_directory,
+      std::optional<std::string> module_directory,
       size_t max_concurrent_engines,
       const core::Relationship& success,
       const core::Relationship& failure,
       std::shared_ptr<core::logging::Logger> logger) = 0;
 
  protected:
-  void setScriptFile(std::filesystem::path script_file) {
-    script_file_ = std::move(script_file);
-  }
-
-  void setScriptBody(std::string script_body) {
-    script_body_ = std::move(script_body);
-  }
-
-  void setModuleDirectory(std::optional<std::filesystem::path> module_directory) {
-    module_directory_ = std::move(module_directory);
-  }
-
   std::filesystem::path script_file_;
   std::string script_body_;
-  std::optional<std::filesystem::path> module_directory_;
+  std::optional<std::string> module_directory_;
 };
 }  // namespace org::apache::nifi::minifi::extensions::script
