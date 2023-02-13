@@ -768,7 +768,7 @@ void ConsumeWindowsEventLog::LogWindowsError(const std::string& error) const {
 }
 
 std::function<std::string(const std::string&)> ConsumeWindowsEventLog::userIdToUsernameFunction() const {
-  static constexpr auto lookup = [](const std::string& user_id) { return utils::OsUtils::userIdToUsername(user_id); };
+  static constexpr auto lookup = &utils::OsUtils::userIdToUsername;
   if (cache_username_lookups_) {
     static auto cached_lookup = wel::LookupCacher{lookup};
     return std::ref(cached_lookup);
