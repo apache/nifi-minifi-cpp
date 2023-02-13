@@ -40,6 +40,7 @@ TEST_CASE("Test Physical memory usage", "[testphysicalmemoryusage]") {
   config->set(minifi::Configure::nifi_dbcontent_repository_directory_default, dir.string());
   REQUIRE(fs_repo->initialize(config));
   const auto start_memory = utils::OsUtils::getCurrentProcessPhysicalMemoryUsage();
+  REQUIRE(start_memory > 0);
 
   auto content_session = fs_repo->createSession();
   auto resource_id = content_session->create();
@@ -51,5 +52,9 @@ TEST_CASE("Test Physical memory usage", "[testphysicalmemoryusage]") {
   }
 
   using org::apache::nifi::minifi::utils::verifyEventHappenedInPollTime;
-  REQUIRE(verifyEventHappenedInPollTime(5s, [&] { return gsl::narrow<size_t>(utils::OsUtils::getCurrentProcessPhysicalMemoryUsage() - start_memory) < 5_MB; }, 100ms));
+  CHECK(verifyEventHappenedInPollTime(5s, [&] {
+      const auto end_memory = utils::OsUtils::getCurrentProcessPhysicalMemoryUsage();
+      REQUIRE(end_memory > 0);
+      return end_memory < start_memory + int64_t{5_MB};
+    }, 100ms));
 }
