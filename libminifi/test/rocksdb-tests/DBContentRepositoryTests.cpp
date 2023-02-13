@@ -244,7 +244,7 @@ TEST_CASE("ProcessSession::read can read zero length flowfiles without crash (Ro
 }
 
 size_t getDbSize(std::filesystem::path dir) {
-  auto db = minifi::internal::RocksDatabase::create({}, {}, dir);
+  auto db = minifi::internal::RocksDatabase::create({}, {}, dir.string());
   auto opendb = db->open();
   REQUIRE(opendb);
 
