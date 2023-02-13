@@ -49,9 +49,9 @@ void StructuredConnectionParser::addFunnelRelationshipToConnection(minifi::Conne
 
 void StructuredConnectionParser::configureConnectionSourceRelationships(minifi::Connection& connection) const {
   // Configure connection source
-  if (connectionNode_[schema_.SOURCE_RELATIONSHIP] && !connectionNode_[schema_.SOURCE_RELATIONSHIP].getString().value().empty()) {
-    addNewRelationshipToConnection(connectionNode_[schema_.SOURCE_RELATIONSHIP].getString().value(), connection);
-  } else if (auto relList = connectionNode_[schema_.SOURCE_RELATIONSHIP_LIST]) {
+  if (connectionNode_[schema_.source_relationship] && !connectionNode_[schema_.source_relationship].getString().value().empty()) {
+    addNewRelationshipToConnection(connectionNode_[schema_.source_relationship].getString().value(), connection);
+  } else if (auto relList = connectionNode_[schema_.source_relationship_list]) {
     if (relList.isSequence() && !relList.empty()) {
       for (const auto &rel : relList) {
         addNewRelationshipToConnection(rel.getString().value(), connection);
@@ -67,7 +67,7 @@ void StructuredConnectionParser::configureConnectionSourceRelationships(minifi::
 }
 
 uint64_t StructuredConnectionParser::getWorkQueueSize() const {
-  if (auto max_work_queue_data_size_node = connectionNode_[schema_.MAX_QUEUE_SIZE]) {
+  if (auto max_work_queue_data_size_node = connectionNode_[schema_.max_queue_size]) {
     std::string max_work_queue_str = max_work_queue_data_size_node.getIntegerAsString().value();
     uint64_t max_work_queue_size;
     if (core::Property::StringToInt(max_work_queue_str, max_work_queue_size)) {
@@ -80,7 +80,7 @@ uint64_t StructuredConnectionParser::getWorkQueueSize() const {
 }
 
 uint64_t StructuredConnectionParser::getWorkQueueDataSize() const {
-  const flow::Node max_work_queue_data_size_node = connectionNode_[schema_.MAX_QUEUE_DATA_SIZE];
+  const flow::Node max_work_queue_data_size_node = connectionNode_[schema_.max_queue_data_size];
   if (max_work_queue_data_size_node) {
     std::string max_work_queue_str = max_work_queue_data_size_node.getIntegerAsString().value();
     uint64_t max_work_queue_data_size = 0;
@@ -94,7 +94,7 @@ uint64_t StructuredConnectionParser::getWorkQueueDataSize() const {
 }
 
 uint64_t StructuredConnectionParser::getSwapThreshold() const {
-  const flow::Node swap_threshold_node = connectionNode_[schema_.SWAP_THRESHOLD];
+  const flow::Node swap_threshold_node = connectionNode_[schema_.swap_threshold];
   if (swap_threshold_node) {
     auto swap_threshold_str = swap_threshold_node.getString().value();
     uint64_t swap_threshold;
@@ -108,7 +108,7 @@ uint64_t StructuredConnectionParser::getSwapThreshold() const {
 }
 
 utils::Identifier StructuredConnectionParser::getSourceUUID() const {
-  const flow::Node source_id_node = connectionNode_[schema_.SOURCE_ID];
+  const flow::Node source_id_node = connectionNode_[schema_.source_id];
   if (source_id_node) {
     const auto srcUUID = utils::Identifier::parse(source_id_node.getString().value());
     if (srcUUID) {
@@ -119,8 +119,8 @@ utils::Identifier StructuredConnectionParser::getSourceUUID() const {
     throw std::invalid_argument("Invalid source id");
   }
   // if we don't have a source id, try to resolve using source name. config schema v2 will make this unnecessary
-  checkRequiredField(connectionNode_, schema_.SOURCE_NAME);
-  const auto connectionSrcProcName = connectionNode_[schema_.SOURCE_NAME].getString().value();
+  checkRequiredField(connectionNode_, schema_.source_name);
+  const auto connectionSrcProcName = connectionNode_[schema_.source_name].getString().value();
   const auto srcUUID = utils::Identifier::parse(connectionSrcProcName);
   if (srcUUID && parent_->findProcessorById(srcUUID.value(), ProcessGroup::Traverse::ExcludeChildren)) {
     // the source name is a remote port id, so use that as the source id
@@ -140,7 +140,7 @@ utils::Identifier StructuredConnectionParser::getSourceUUID() const {
 }
 
 utils::Identifier StructuredConnectionParser::getDestinationUUID() const {
-  const flow::Node destination_id_node = connectionNode_[schema_.DESTINATION_ID];
+  const flow::Node destination_id_node = connectionNode_[schema_.destination_id];
   if (destination_id_node) {
     const auto destUUID = utils::Identifier::parse(destination_id_node.getString().value());
     if (destUUID) {
@@ -152,8 +152,8 @@ utils::Identifier StructuredConnectionParser::getDestinationUUID() const {
   }
   // we use the same logic as above for resolving the source processor
   // for looking up the destination processor in absence of a processor id
-  checkRequiredField(connectionNode_, schema_.DESTINATION_NAME);
-  auto connectionDestProcName = connectionNode_[schema_.DESTINATION_NAME].getString().value();
+  checkRequiredField(connectionNode_, schema_.destination_name);
+  auto connectionDestProcName = connectionNode_[schema_.destination_name].getString().value();
   const auto destUUID = utils::Identifier::parse(connectionDestProcName);
   if (destUUID && parent_->findProcessorById(destUUID.value(), ProcessGroup::Traverse::ExcludeChildren)) {
     // the destination name is a remote port id, so use that as the dest id
@@ -174,7 +174,7 @@ utils::Identifier StructuredConnectionParser::getDestinationUUID() const {
 
 std::chrono::milliseconds StructuredConnectionParser::getFlowFileExpiration() const {
   using namespace std::literals::chrono_literals;
-  const flow::Node expiration_node = connectionNode_[schema_.FLOWFILE_EXPIRATION];
+  const flow::Node expiration_node = connectionNode_[schema_.flowfile_expiration];
   if (!expiration_node) {
     logger_->log_debug("parseConnection: flowfile expiration is not set, assuming 0 (never expire)");
     return 0ms;
@@ -195,7 +195,7 @@ std::chrono::milliseconds StructuredConnectionParser::getFlowFileExpiration() co
 }
 
 bool StructuredConnectionParser::getDropEmpty() const {
-  const flow::Node drop_empty_node = connectionNode_[schema_.DROP_EMPTY];
+  const flow::Node drop_empty_node = connectionNode_[schema_.drop_empty];
   if (drop_empty_node) {
     return utils::StringUtils::toBool(drop_empty_node.getString().value()).value_or(false);
   }

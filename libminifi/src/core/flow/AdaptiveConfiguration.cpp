@@ -46,7 +46,7 @@ std::unique_ptr<core::ProcessGroup> AdaptiveConfiguration::getRootFromPayload(co
     rapidjson::ParseResult res = doc.Parse(payload.c_str(), payload.length());
     if (res) {
       flow::Node root{std::make_shared<JsonNode>(&doc)};
-      if (root[FlowSchema::getDefault().FLOW_HEADER]) {
+      if (root[FlowSchema::getDefault().flow_header]) {
         logger_->log_debug("Processing configuration as default json");
         return getRootFrom(root, FlowSchema::getDefault());
       } else {
