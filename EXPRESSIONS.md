@@ -224,6 +224,7 @@ token, filename.
 - [`hostname`](#hostname)
 - [`UUID`](#uuid)
 - [`literal`](#literal)
+- [`reverseLookup`](#reverseLookup)
 
 ### Evaluating Multiple Attributes
 
@@ -1589,6 +1590,31 @@ to evaluate additional functions against.
 **Examples**: `${literal(2):gt(1)}` returns true.  `${literal(
 ${allMatchingAttributes('a.*'):count()} ):gt(3)}` returns true if there are
 more than 3 attributes whose names begin with the letter a.
+
+### reverseLookup
+
+**Description**: Performs a reverse DNS lookup on an ip address, and returns the corresponding hostname.
+
+**Subject Type**: No subject
+
+**Arguments**:
+
+| Argument                      | Description                                                                                                                  |
+|-------------------------------|------------------------------------------------------------------------------------------------------------------------------|
+| IP address                    | The ip address to perform the reverse DNS lookup on.                                                                         |
+| Timeout duration milliseconds | Optional parameter that specifies the timeout duration of the operation in milliseconds. If not specified, defaults to 5000. |
+
+
+**Return Type**: String
+
+**Examples**:
+
+| Expression                                      | Value        |
+|-------------------------------------------------|--------------|
+| `${reverseLookup('127.0.0.1')}`                 | `localhost`  |
+| `${reverseLookup('::1')}`                       | `localhost`  |
+| `${reverseLookup('2001:4860:4860::8888'), 100}` | `dns.google` |
+
 
 ## Evaluating Multiple Attributes
 
