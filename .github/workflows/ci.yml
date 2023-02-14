@@ -37,11 +37,28 @@ jobs:
           export LDFLAGS="-L/usr/local/opt/flex/lib"
           export CPPFLAGS="-I/usr/local/opt/flex/include"
           # CPPFLAGS are not recognized by cmake, so we have to force them to CFLAGS and CXXFLAGS to have flex 2.6 working
-          ./bootstrap.sh -e -t && cd build  && cmake -DCMAKE_BUILD_TYPE=Release -DCI_BUILD=ON -DCMAKE_C_FLAGS="${CPPFLAGS} ${CFLAGS}" -DCMAKE_CXX_FLAGS="${CPPFLAGS} ${CXXFLAGS}" -DENABLE_PYTHON_SCRIPTING=ON -DENABLE_LUA_SCRIPTING=ON -DENABLE_SQL=ON -DUSE_REAL_ODBC_TEST_DRIVER=ON -DENABLE_AZURE=ON -DENABLE_GCP=ON -DCMAKE_VERBOSE_MAKEFILE=ON -DCMAKE_RULE_MESSAGES=OFF -DSTRICT_GSL_CHECKS=AUDIT -DFAIL_ON_WARNINGS=ON .. && cmake --build . --parallel 4
+          ./bootstrap.sh -e -t && cd build  && cmake -DCMAKE_BUILD_TYPE=RelWithDebInfo -DCI_BUILD=ON -DCMAKE_C_FLAGS="${CPPFLAGS} ${CFLAGS}" -DCMAKE_CXX_FLAGS="${CPPFLAGS} ${CXXFLAGS}" -DENABLE_PYTHON_SCRIPTING=ON -DENABLE_LUA_SCRIPTING=ON -DENABLE_SQL=ON -DUSE_REAL_ODBC_TEST_DRIVER=ON -DENABLE_AZURE=ON -DENABLE_GCP=ON -DCMAKE_VERBOSE_MAKEFILE=ON -DCMAKE_RULE_MESSAGES=OFF -DSTRICT_GSL_CHECKS=AUDIT -DFAIL_ON_WARNINGS=ON .. && cmake --build . --parallel 4
       - name: test
-        run: cd build && make test ARGS="--timeout 300 -j4 --output-on-failure"
+        id: test
+        run: |
+          ulimit -c unlimited
+          cd build && make test ARGS="--timeout 300 -j4 --output-on-failure"
       - name: linter
         run: cd build && make -j4 linter
+      - name: check-cores
+        if: ${{ failure() && steps.test.conclusion == 'failure' }}
+        run: |
+          if [ "$(ls -A /cores)" ]; then echo "CORES_EXIST=true" >> $GITHUB_ENV; fi
+      - uses: actions/upload-artifact@v3.1.2
+        if: ${{ failure() && env.CORES_EXIST == 'true' }}
+        with:
+          name: macos-coredumps
+          path: /cores
+      - uses: actions/upload-artifact@v3.1.2
+        if: ${{ failure() && env.CORES_EXIST == 'true' }}
+        with:
+          name: macos-binaries
+          path: build/bin
   windows_VS2019:
     name: "windows-2019"
     runs-on: windows-2019
@@ -103,11 +120,28 @@ jobs:
           cd build
           export CC=gcc-11
           export CXX=g++-11
-          cmake -DUSE_SHARED_LIBS=ON -DCMAKE_BUILD_TYPE=Release -DCI_BUILD=ON -DSTRICT_GSL_CHECKS=AUDIT -DFAIL_ON_WARNINGS=ON -DENABLE_SQL=OFF -DENABLE_LIBRDKAFKA=OFF -DENABLE_AWS=OFF \
+          cmake -DUSE_SHARED_LIBS=ON -DCMAKE_BUILD_TYPE=RelWithDebInfo -DCI_BUILD=ON -DSTRICT_GSL_CHECKS=AUDIT -DFAIL_ON_WARNINGS=ON -DENABLE_SQL=OFF -DENABLE_LIBRDKAFKA=OFF -DENABLE_AWS=OFF \
               -DENABLE_AZURE=OFF -DENABLE_SPLUNK=OFF -DENABLE_GCP=OFF -DENABLE_PROCFS=OFF -DENABLE_BUSTACHE=ON -DENABLE_PCAP=ON -DENABLE_JNI=ON -DENABLE_SFTP=ON ..
           make -j$(nproc) VERBOSE=1
       - name: test
-        run: cd build && make test ARGS="--timeout 300 -j2 --output-on-failure"
+        id: test
+        run: |
+          ulimit -c unlimited
+          cd build && make test ARGS="--timeout 300 -j8 --output-on-failure"
+      - name: check-cores
+        if: ${{ failure() && steps.test.conclusion == 'failure' }}
+        run: |
+          if [ "$(ls -A /var/lib/apport/coredump/)" ]; then echo "CORES_EXIST=true" >> $GITHUB_ENV; fi
+      - uses: actions/upload-artifact@v3.1.2
+        if: ${{ failure() && env.CORES_EXIST == 'true' }}
+        with:
+          name: ubuntu-coredumps
+          path: /var/lib/apport/coredump/
+      - uses: actions/upload-artifact@v3.1.2
+        if: ${{ failure() && env.CORES_EXIST == 'true' }}
+        with:
+          name: ubuntu-binaries
+          path: build/bin
   ubuntu_20_04_clang:
     name: "ubuntu-20.04-clang"
     runs-on: ubuntu-20.04
@@ -142,14 +176,17 @@ jobs:
           export CXX=clang++-14
           export CXXFLAGS="${CXXFLAGS} -stdlib=libc++"
           export LDFLAGS="${LDFLAGS} -stdlib=libc++"
-          cmake -DUSE_SHARED_LIBS=ON -DCMAKE_BUILD_TYPE=Release -DCI_BUILD=ON -DSTRICT_GSL_CHECKS=AUDIT -DFAIL_ON_WARNINGS=ON -DENABLE_AWS=ON -DENABLE_AZURE=ON -DENABLE_BUSTACHE=ON -DENABLE_COAP=ON \
+          cmake -DUSE_SHARED_LIBS=ON -DCMAKE_BUILD_TYPE=RelWithDebInfo -DCI_BUILD=ON -DSTRICT_GSL_CHECKS=AUDIT -DFAIL_ON_WARNINGS=ON -DENABLE_AWS=ON -DENABLE_AZURE=ON -DENABLE_BUSTACHE=ON -DENABLE_COAP=ON \
               -DENABLE_ENCRYPT_CONFIG=ON -DENABLE_GPS=ON -DENABLE_LIBRDKAFKA=ON -DENABLE_MQTT=ON -DENABLE_NANOFI=ON -DENABLE_OPC=ON -DENABLE_OPENCV=ON \
               -DENABLE_OPENWSMAN=ON -DENABLE_OPS=ON -DENABLE_PCAP=ON -DENABLE_SENSORS=ON -DENABLE_SQL=ON -DENABLE_SYSTEMD=ON -DENABLE_TENSORFLOW=OFF \
               -DENABLE_USB_CAMERA=ON -DENABLE_PYTHON_SCRIPTING=ON -DENABLE_LUA_SCRIPTING=ON -DENABLE_KUBERNETES=ON -DENABLE_GCP=ON -DENABLE_PROCFS=ON -DENABLE_PROMETHEUS=ON -DENABLE_ELASTICSEARCH=ON \
               -DCMAKE_EXPORT_COMPILE_COMMANDS=ON ..
           cmake --build . --parallel $(nproc)
       - name: test
-        run: cd build && make test ARGS="--timeout 300 -j8 --output-on-failure"
+        id: test
+        run: |
+          ulimit -c unlimited
+          cd build && make test ARGS="--timeout 300 -j8 --output-on-failure"
       - name: linter
         run: cd build && make -j$(nproc) linter
       - name: shellcheck
@@ -173,6 +210,20 @@ jobs:
           sed -i -e 's/\/usr\/lib\/ccache\/clang-14/\/lib\/llvm-14\/bin\/clang/g' build/compile_commands.json
 
           ./run_clang_tidy.sh "${FILES}"
+      - name: check-cores
+        if: ${{ failure() && steps.test.conclusion == 'failure' }}
+        run: |
+          if [ "$(ls -A /var/lib/apport/coredump/)" ]; then echo "CORES_EXIST=true" >> $GITHUB_ENV; fi
+      - uses: actions/upload-artifact@v3.1.2
+        if: ${{ failure() && env.CORES_EXIST == 'true' }}
+        with:
+          name: ubuntu-clang-coredumps
+          path: /var/lib/apport/coredump/
+      - uses: actions/upload-artifact@v3.1.2
+        if: ${{ failure() && env.CORES_EXIST == 'true' }}
+        with:
+          name: ubuntu-clang-binaries
+          path: build/bin
   centos:
     name: "centos"
     runs-on: ubuntu-20.04
@@ -196,13 +247,36 @@ jobs:
       - id: build
         run: |
           if [ -d ~/.ccache ]; then mv ~/.ccache .; fi
-          mkdir build && cd build && cmake -DUSE_SHARED_LIBS=ON -DCI_BUILD=ON -DSTRICT_GSL_CHECKS=AUDIT -DFAIL_ON_WARNINGS=ON -DENABLE_AWS=ON -DENABLE_AZURE=ON \
+          mkdir build && cd build && cmake -DUSE_SHARED_LIBS=ON -DCI_BUILD=ON -DCMAKE_BUILD_TYPE=Release -DSTRICT_GSL_CHECKS=AUDIT -DFAIL_ON_WARNINGS=ON -DENABLE_AWS=ON -DENABLE_AZURE=ON \
               -DENABLE_COAP=ON -DENABLE_ENCRYPT_CONFIG=ON -DENABLE_GPS=ON -DENABLE_LIBRDKAFKA=ON -DENABLE_MQTT=ON -DENABLE_NANOFI=ON -DENABLE_OPC=ON \
               -DENABLE_OPENCV=ON -DENABLE_OPENWSMAN=ON -DENABLE_OPS=ON -DENABLE_SENSORS=ON -DENABLE_SQL=ON -DENABLE_SYSTEMD=ON \
               -DENABLE_USB_CAMERA=ON -DENABLE_PYTHON_SCRIPTING=ON -DENABLE_LUA_SCRIPTING=ON -DENABLE_KUBERNETES=ON -DENABLE_GCP=ON -DENABLE_PROCFS=ON -DENABLE_PROMETHEUS=ON \
               -DENABLE_ELASTICSEARCH=ON -DDOCKER_SKIP_TESTS=OFF -DDOCKER_BUILD_ONLY=ON -DDOCKER_CCACHE_DUMP_LOCATION=$HOME/.ccache .. && make centos-test
       - id: test
-        run: docker run --rm apacheminificpp:$(docker images | grep apacheminificpp | grep centos | awk '{print $2}' | head -1) bash -c 'cd /opt/minifi/build && make test ARGS="--timeout 300 -j8 --output-on-failure"'
+        run: |
+          ulimit -c unlimited
+          echo '/cores/core.%e.%p' | sudo tee /proc/sys/kernel/core_pattern
+          sudo mkdir /cores
+          sudo chmod 777 /cores
+          docker run --name centos-test --init --ulimit core=-1 --mount type=bind,source=/cores,target=/cores apacheminificpp:$(docker images | grep apacheminificpp | grep centos | awk '{print $2}') bash -c 'cd /opt/minifi/build && make test ARGS="--timeout 300 -j8 --output-on-failure"'
+      - name: check-cores
+        if: ${{ failure() && steps.test.conclusion == 'failure' }}
+        run: |
+          if [ "$(ls -A /cores)" ]; then
+            echo "CORES_EXIST=true" >> $GITHUB_ENV;
+            docker cp centos-test:/opt/minifi/build/bin /tmp
+            sudo chmod -R 777 /cores
+          fi
+      - uses: actions/upload-artifact@v3.1.2
+        if: ${{ failure() && env.CORES_EXIST == 'true' }}
+        with:
+          name: centos-crashes
+          path: /cores
+      - uses: actions/upload-artifact@v3.1.2
+        if: ${{ failure() && env.CORES_EXIST == 'true' }}
+        with:
+          name: centos-binaries
+          path: /tmp/bin
   docker_integration_tests:
     name: "Docker integration tests"
     runs-on: ubuntu-20.04

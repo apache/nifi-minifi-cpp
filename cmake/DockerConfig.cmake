@@ -26,6 +26,7 @@ add_custom_target(
         -c DOCKER_BASE_IMAGE=${DOCKER_BASE_IMAGE}
         -c DOCKER_CCACHE_DUMP_LOCATION=${DOCKER_CCACHE_DUMP_LOCATION}
         -c DOCKER_SKIP_TESTS=${DOCKER_SKIP_TESTS}
+        -c CMAKE_BUILD_TYPE=${CMAKE_BUILD_TYPE}
         -c BUILD_NUMBER=${BUILD_NUMBER}
     WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}/docker/)
 
@@ -47,6 +48,7 @@ add_custom_target(
         -c DOCKER_BASE_IMAGE=${DOCKER_BASE_IMAGE}
         -c DOCKER_SKIP_TESTS=${DOCKER_SKIP_TESTS}
         -c BUILD_NUMBER=${BUILD_NUMBER}
+        -c CMAKE_BUILD_TYPE=${CMAKE_BUILD_TYPE}
     WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}/docker/)
 
 add_custom_target(
@@ -61,6 +63,7 @@ add_custom_target(
         -c BUILD_NUMBER=${BUILD_NUMBER}
         -c DOCKER_CCACHE_DUMP_LOCATION=${DOCKER_CCACHE_DUMP_LOCATION}
         -c DOCKER_SKIP_TESTS=${DOCKER_SKIP_TESTS}
+        -c CMAKE_BUILD_TYPE=${CMAKE_BUILD_TYPE}
     WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}/docker/)
 
 add_custom_target(
@@ -86,6 +89,7 @@ add_custom_target(
         -l ${CMAKE_BINARY_DIR}
         -d fedora
         -c BUILD_NUMBER=${BUILD_NUMBER}
+        -c CMAKE_BUILD_TYPE=${CMAKE_BUILD_TYPE}
     WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}/docker/)
 
 add_custom_target(
@@ -98,6 +102,7 @@ add_custom_target(
         -l ${CMAKE_BINARY_DIR}
         -d bionic
         -c BUILD_NUMBER=${BUILD_NUMBER}
+        -c CMAKE_BUILD_TYPE=${CMAKE_BUILD_TYPE}
     WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}/docker/)
 
 add_custom_target(
@@ -110,6 +115,7 @@ add_custom_target(
         -l ${CMAKE_BINARY_DIR}
         -d focal
         -c BUILD_NUMBER=${BUILD_NUMBER}
+        -c CMAKE_BUILD_TYPE=${CMAKE_BUILD_TYPE}
     WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}/docker/)
 
 if (EXISTS ${CMAKE_SOURCE_DIR}/docker/test/integration/features)
