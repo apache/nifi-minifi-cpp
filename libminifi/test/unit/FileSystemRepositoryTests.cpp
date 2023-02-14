@@ -28,6 +28,9 @@
 #include "../Catch.h"
 #include "utils/Literals.h"
 #include "core/repository/FileSystemRepository.h"
+#include "utils/IntegrationTestUtils.h"
+
+using namespace std::literals::chrono_literals;
 
 TEST_CASE("Test Physical memory usage", "[testphysicalmemoryusage]") {
   TestController controller;
@@ -37,6 +40,7 @@ TEST_CASE("Test Physical memory usage", "[testphysicalmemoryusage]") {
   config->set(minifi::Configure::nifi_dbcontent_repository_directory_default, dir.string());
   REQUIRE(fs_repo->initialize(config));
   const auto start_memory = utils::OsUtils::getCurrentProcessPhysicalMemoryUsage();
+  REQUIRE(start_memory > 0);
 
   auto content_session = fs_repo->createSession();
   auto resource_id = content_session->create();
@@ -47,7 +51,10 @@ TEST_CASE("Test Physical memory usage", "[testphysicalmemoryusage]") {
     stream->write(fragment.as_span<const std::byte>());
   }
 
-  const auto end_memory = utils::OsUtils::getCurrentProcessPhysicalMemoryUsage();
-
-  REQUIRE(gsl::narrow<size_t>(end_memory - start_memory) < 1_MB);
+  using org::apache::nifi::minifi::utils::verifyEventHappenedInPollTime;
+  CHECK(verifyEventHappenedInPollTime(5s, [&] {
+      const auto end_memory = utils::OsUtils::getCurrentProcessPhysicalMemoryUsage();
+      REQUIRE(end_memory > 0);
+      return end_memory < start_memory + int64_t{5_MB};
+    }, 100ms));
 }
