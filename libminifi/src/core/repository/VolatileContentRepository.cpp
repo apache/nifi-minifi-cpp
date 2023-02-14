@@ -34,7 +34,10 @@ namespace org::apache::nifi::minifi::core::repository {
 const char *VolatileContentRepository::minimal_locking = "minimal.locking";
 
 bool VolatileContentRepository::initialize(const std::shared_ptr<Configure> &configure) {
-  VolatileRepository::initialize(configure);
+  repo_data_.initialize(configure, getName());
+
+  logging::LOG_INFO(logger_) << "Resizing repo_data_.value_vector for " << getName() << " count is " << repo_data_.max_count;
+  logging::LOG_INFO(logger_) << "Using a maximum size for " << getName() << " of  " << repo_data_.max_size;
 
   if (configure != nullptr) {
     std::string value;
@@ -45,10 +48,7 @@ bool VolatileContentRepository::initialize(const std::shared_ptr<Configure> &con
     }
   }
   if (!minimize_locking_) {
-    for (auto ent : value_vector_) {
-      delete ent;
-    }
-    value_vector_.clear();
+    repo_data_.clear();
   }
 
   return true;
@@ -71,7 +71,7 @@ std::shared_ptr<io::BaseStream> VolatileContentRepository::write(const minifi::R
 
   int size = 0;
   if (LIKELY(minimize_locking_ == true)) {
-    for (auto ent : value_vector_) {
+    for (auto ent : repo_data_.value_vector) {
       if (ent->testAndSetKey(claim.getContentFullPath())) {
         std::lock_guard<std::mutex> lock(map_mutex_);
         master_list_[claim.getContentFullPath()] = ent;
@@ -86,7 +86,7 @@ std::shared_ptr<io::BaseStream> VolatileContentRepository::write(const minifi::R
     if (claim_check != master_list_.end()) {
       return std::make_shared<io::AtomicEntryStream<ResourceClaim::Path>>(claim.getContentFullPath(), claim_check->second);
     } else {
-      auto *ent = new AtomicEntry<ResourceClaim::Path>(&current_size_, &max_size_);
+      auto *ent = new AtomicEntry<ResourceClaim::Path>(&repo_data_.current_size, &repo_data_.max_size);
       if (ent->testAndSetKey(claim.getContentFullPath())) {
         master_list_[claim.getContentFullPath()] = ent;
         return std::make_shared<io::AtomicEntryStream<ResourceClaim::Path>>(claim.getContentFullPath(), ent);
@@ -149,7 +149,7 @@ bool VolatileContentRepository::remove(const minifi::ResourceClaim &claim) {
       auto size = claim_item->second->getLength();
       delete claim_item->second;
       master_list_.erase(claim.getContentFullPath());
-      current_size_ -= size;
+      repo_data_.current_size -= size;
     }
     return true;
   }

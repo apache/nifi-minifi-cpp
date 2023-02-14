@@ -361,9 +361,9 @@ TEST_CASE("Flush deleted flowfiles before shutdown", "[TestFFR7]") {
   class TestFlowFileRepository: public core::repository::FlowFileRepository{
    public:
     explicit TestFlowFileRepository(const std::string& name)
-        : core::SerializableComponent(name),
-          FlowFileRepository(name, REPOTEST_FLOWFILE_CHECKPOINT_DIR, core::repository::FLOWFILE_REPOSITORY_DIRECTORY,
-                             10min, core::repository::MAX_FLOWFILE_REPOSITORY_STORAGE_SIZE, 1ms) {}
+      : FlowFileRepository(name, REPOTEST_FLOWFILE_CHECKPOINT_DIR, core::repository::FLOWFILE_REPOSITORY_DIRECTORY,
+                           10min, core::repository::MAX_FLOWFILE_REPOSITORY_STORAGE_SIZE, 1ms) {}
+
     void flush() override {
       FlowFileRepository::flush();
       if (onFlush_) {

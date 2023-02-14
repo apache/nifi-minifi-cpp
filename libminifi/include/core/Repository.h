@@ -17,8 +17,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#ifndef LIBMINIFI_INCLUDE_CORE_REPOSITORY_H_
-#define LIBMINIFI_INCLUDE_CORE_REPOSITORY_H_
+#pragma once
 
 #include <atomic>
 #include <cstdint>
@@ -55,21 +54,21 @@ constexpr auto MAX_REPOSITORY_STORAGE_SIZE = 10_MiB;
 constexpr auto MAX_REPOSITORY_ENTRY_LIFE_TIME = std::chrono::minutes(10);
 constexpr auto REPOSITORY_PURGE_PERIOD = std::chrono::milliseconds(2500);
 
-class Repository : public virtual core::SerializableComponent {
+class Repository : public core::SerializableComponent {
  public:
   explicit Repository(std::string repo_name = "Repository",
-             std::string directory = REPOSITORY_DIRECTORY,
-             std::chrono::milliseconds maxPartitionMillis = MAX_REPOSITORY_ENTRY_LIFE_TIME,
-             int64_t maxPartitionBytes = MAX_REPOSITORY_STORAGE_SIZE,
-             std::chrono::milliseconds purgePeriod = REPOSITORY_PURGE_PERIOD)
-      : core::SerializableComponent(std::move(repo_name)),
-        directory_(std::move(directory)),
-        max_partition_millis_(maxPartitionMillis),
-        max_partition_bytes_(maxPartitionBytes),
-        purge_period_(purgePeriod),
-        repo_full_(false),
-        repo_size_(0),
-        logger_(logging::LoggerFactory<Repository>::getLogger()) {
+                      std::string directory = REPOSITORY_DIRECTORY,
+                      std::chrono::milliseconds maxPartitionMillis = MAX_REPOSITORY_ENTRY_LIFE_TIME,
+                      int64_t maxPartitionBytes = MAX_REPOSITORY_STORAGE_SIZE,
+                      std::chrono::milliseconds purgePeriod = REPOSITORY_PURGE_PERIOD)
+    : core::SerializableComponent(std::move(repo_name)),
+      directory_(std::move(directory)),
+      max_partition_millis_(maxPartitionMillis),
+      max_partition_bytes_(maxPartitionBytes),
+      purge_period_(purgePeriod),
+      repo_full_(false),
+      repo_size_(0),
+      logger_(logging::LoggerFactory<Repository>::getLogger()) {
   }
 
   virtual bool initialize(const std::shared_ptr<Configure>& /*configure*/) = 0;
@@ -117,7 +116,6 @@ class Repository : public virtual core::SerializableComponent {
     return false;
   }
 
-  // whether the repo is full
   virtual bool isFull() {
     return repo_full_;
   }
@@ -164,23 +162,14 @@ class Repository : public virtual core::SerializableComponent {
     return true;
   }
 
-  /**
-   * Base implementation returns true;
-   */
   bool Serialize(const std::shared_ptr<core::SerializableComponent>& /*store*/) override {
     return true;
   }
 
-  /**
-   * Base implementation returns true;
-   */
   bool DeSerialize(const std::shared_ptr<core::SerializableComponent>& /*store*/) override {
     return true;
   }
 
-  /**
-   * Base implementation returns true;
-   */
   bool DeSerialize(gsl::span<const std::byte>) override {
     return true;
   }
@@ -215,7 +204,6 @@ class Repository : public virtual core::SerializableComponent {
   // max db size
   int64_t max_partition_bytes_;
   std::chrono::milliseconds purge_period_;
-  // whether to stop accepting provenance event
   std::atomic<bool> repo_full_;
 
   std::atomic<uint64_t> repo_size_;
@@ -225,4 +213,3 @@ class Repository : public virtual core::SerializableComponent {
 };
 
 }  // namespace org::apache::nifi::minifi::core
-#endif  // LIBMINIFI_INCLUDE_CORE_REPOSITORY_H_

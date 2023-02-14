@@ -42,8 +42,7 @@ template <typename T_BaseRepository>
 class TestRepositoryBase : public T_BaseRepository {
  public:
   TestRepositoryBase()
-      : org::apache::nifi::minifi::core::SerializableComponent("repo_name"),
-        T_BaseRepository("repo_name", "./dir", 1s, 100, 0ms) {
+    : T_BaseRepository("repo_name", "./dir", 1s, 100, 0ms) {
   }
 
   bool initialize(const std::shared_ptr<org::apache::nifi::minifi::Configure> &) override {
@@ -140,10 +139,6 @@ class TestRepositoryBase : public T_BaseRepository {
 
 class TestRepository : public TestRepositoryBase<org::apache::nifi::minifi::core::Repository> {
  public:
-  TestRepository()
-    : org::apache::nifi::minifi::core::SerializableComponent("repo_name") {
-  }
-
   bool start() override {
     return true;
   }
@@ -155,10 +150,6 @@ class TestRepository : public TestRepositoryBase<org::apache::nifi::minifi::core
 
 class TestThreadedRepository : public TestRepositoryBase<org::apache::nifi::minifi::core::ThreadedRepository> {
  public:
-  TestThreadedRepository()
-    : org::apache::nifi::minifi::core::SerializableComponent("repo_name") {
-  }
-
   ~TestThreadedRepository() override {
     stop();
   }
@@ -178,8 +169,7 @@ class TestThreadedRepository : public TestRepositoryBase<org::apache::nifi::mini
 class TestFlowRepository : public org::apache::nifi::minifi::core::ThreadedRepository {
  public:
   TestFlowRepository()
-      : org::apache::nifi::minifi::core::SerializableComponent("ff"),
-        org::apache::nifi::minifi::core::ThreadedRepository("ff", "./dir", 1s, 100, 0ms) {
+    : org::apache::nifi::minifi::core::ThreadedRepository("ff", "./dir", 1s, 100, 0ms) {
   }
 
   bool initialize(const std::shared_ptr<org::apache::nifi::minifi::Configure> &) override {

@@ -20,22 +20,22 @@
 #include <map>
 #include <memory>
 #include <string>
+#include <utility>
 
 #include "properties/Configure.h"
 #include "ResourceClaim.h"
-#include "io/BufferStream.h"
 #include "StreamManager.h"
-#include "core/Connectable.h"
+#include "core/Core.h"
 #include "ContentSession.h"
-#include "utils/GeneralUtils.h"
 
 namespace org::apache::nifi::minifi::core {
 
 /**
  * Content repository definition that extends StreamManager.
  */
-class ContentRepository : public StreamManager<minifi::ResourceClaim>, public utils::EnableSharedFromThis<ContentRepository> {
+class ContentRepository : public StreamManager<minifi::ResourceClaim>, public utils::EnableSharedFromThis<ContentRepository>, public core::CoreComponent {
  public:
+  explicit ContentRepository(std::string name, const utils::Identifier& uuid = {}) : core::CoreComponent(std::move(name), uuid) {}
   ~ContentRepository() override = default;
 
   /**
@@ -44,22 +44,16 @@ class ContentRepository : public StreamManager<minifi::ResourceClaim>, public ut
   virtual bool initialize(const std::shared_ptr<Configure> &configure) = 0;
 
   std::string getStoragePath() const override;
-
   virtual std::shared_ptr<ContentSession> createSession();
-
   void reset();
 
   uint32_t getStreamCount(const minifi::ResourceClaim &streamId) override;
-
   void incrementStreamCount(const minifi::ResourceClaim &streamId) override;
-
   StreamState decrementStreamCount(const minifi::ResourceClaim &streamId) override;
 
  protected:
   std::string directory_;
-
   std::mutex count_map_mutex_;
-
   std::map<std::string, uint32_t> count_map_;
 };
 

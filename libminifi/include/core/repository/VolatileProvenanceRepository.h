@@ -15,30 +15,23 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#ifndef LIBMINIFI_INCLUDE_CORE_REPOSITORY_VOLATILEPROVENANCEREPOSITORY_H_
-#define LIBMINIFI_INCLUDE_CORE_REPOSITORY_VOLATILEPROVENANCEREPOSITORY_H_
+#pragma once
 
 #include <string>
 
 #include "VolatileRepository.h"
 #include "core/ThreadedRepository.h"
 
-namespace org {
-namespace apache {
-namespace nifi {
-namespace minifi {
-namespace core {
-namespace repository {
+namespace org::apache::nifi::minifi::core::repository {
 
-class VolatileProvenanceRepository : public VolatileRepository<std::string, core::ThreadedRepository> {
+class VolatileProvenanceRepository : public VolatileRepository {
  public:
   explicit VolatileProvenanceRepository(std::string repo_name = "",
                                         std::string /*dir*/ = REPOSITORY_DIRECTORY,
                                         std::chrono::milliseconds maxPartitionMillis = MAX_REPOSITORY_ENTRY_LIFE_TIME,
                                         int64_t maxPartitionBytes = MAX_REPOSITORY_STORAGE_SIZE,
                                         std::chrono::milliseconds purgePeriod = REPOSITORY_PURGE_PERIOD)
-      : core::SerializableComponent(repo_name), VolatileRepository(repo_name.length() > 0 ? repo_name : core::getClassName<VolatileRepository>(), "", maxPartitionMillis, maxPartitionBytes, purgePeriod) { // NOLINT
-    purge_required_ = false;
+    : VolatileRepository(repo_name.length() > 0 ? repo_name : core::getClassName<VolatileRepository>(), "", maxPartitionMillis, maxPartitionBytes, purgePeriod) {
   }
 
   ~VolatileProvenanceRepository() override {
@@ -60,11 +53,4 @@ class VolatileProvenanceRepository : public VolatileRepository<std::string, core
   std::thread thread_;
 };
 
-}  // namespace repository
-}  // namespace core
-}  // namespace minifi
-}  // namespace nifi
-}  // namespace apache
-}  // namespace org
-
-#endif  // LIBMINIFI_INCLUDE_CORE_REPOSITORY_VOLATILEPROVENANCEREPOSITORY_H_
+}  // namespace org::apache::nifi::minifi::core::repository

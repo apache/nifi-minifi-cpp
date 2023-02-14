@@ -22,31 +22,24 @@
 #include <string>
 #include <utility>
 
-#include "core/Core.h"
 #include "../ContentRepository.h"
 #include "properties/Configure.h"
 #include "core/logging/LoggerFactory.h"
 
 namespace org::apache::nifi::minifi::core::repository {
 
-/**
- * FileSystemRepository is a content repository that stores data onto the local file system.
- */
-class FileSystemRepository : public core::ContentRepository, public core::CoreComponent {
+class FileSystemRepository : public core::ContentRepository {
  public:
   explicit FileSystemRepository(std::string name = getClassName<FileSystemRepository>())
-      : core::CoreComponent(std::move(name)),
-        logger_(logging::LoggerFactory<FileSystemRepository>::getLogger()) {
+    : core::ContentRepository(std::move(name)),
+      logger_(logging::LoggerFactory<FileSystemRepository>::getLogger()) {
   }
 
   ~FileSystemRepository() override = default;
 
   bool initialize(const std::shared_ptr<minifi::Configure>& configuration) override;
-
   bool exists(const minifi::ResourceClaim& streamId) override;
-
   std::shared_ptr<io::BaseStream> write(const minifi::ResourceClaim& claim, bool append = false) override;
-
   std::shared_ptr<io::BaseStream> read(const minifi::ResourceClaim& claim) override;
 
   bool close(const minifi::ResourceClaim& claim) override {
@@ -54,7 +47,6 @@ class FileSystemRepository : public core::ContentRepository, public core::CoreCo
   }
 
   bool remove(const minifi::ResourceClaim& claim) override;
-
   std::shared_ptr<ContentSession> createSession() override;
 
  private:

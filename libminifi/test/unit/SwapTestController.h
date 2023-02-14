@@ -55,9 +55,6 @@ struct SwapEvent {
 
 class SwappingFlowFileTestRepo : public TestFlowRepository, public minifi::SwapManager {
  public:
-  SwappingFlowFileTestRepo()
-      : core::SerializableComponent("ff") {}
-
   void store(std::vector<std::shared_ptr<core::FlowFile>> flow_files) override {
     std::vector<minifi::SwappedFlowFile> ids;
     for (const auto& ff : flow_files) {

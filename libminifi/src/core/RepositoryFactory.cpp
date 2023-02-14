@@ -30,8 +30,7 @@ using namespace std::literals::chrono_literals;
 
 namespace org::apache::nifi::minifi::core {
 
-std::unique_ptr<core::ContentRepository>
-createContentRepository(const std::string& configuration_class_name, bool fail_safe, const std::string& repo_name) {
+std::unique_ptr<core::ContentRepository> createContentRepository(const std::string& configuration_class_name, bool fail_safe, const std::string& repo_name) {
   std::string class_name_lc = configuration_class_name;
   std::transform(class_name_lc.begin(), class_name_lc.end(), class_name_lc.begin(), ::tolower);
   try {
@@ -62,8 +61,7 @@ createContentRepository(const std::string& configuration_class_name, bool fail_s
 class NoOpThreadedRepository : public core::ThreadedRepository {
  public:
   explicit NoOpThreadedRepository(std::string repo_name)
-          : core::SerializableComponent(repo_name),
-            ThreadedRepository(std::move(repo_name)) {
+    : ThreadedRepository(std::move(repo_name)) {
   }
 
   ~NoOpThreadedRepository() override {
