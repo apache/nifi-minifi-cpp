@@ -71,7 +71,7 @@ class Repository : public core::CoreComponent {
       logger_(logging::LoggerFactory<Repository>::getLogger()) {
   }
 
-  virtual bool isRunning() {
+  virtual bool isRunning() const {
     return true;
   }
 
