@@ -180,11 +180,7 @@ void FlowFileRepository::initialize_repository() {
     }
   }
   flush();
-  if (content_repo_->clearOrphans()) {
-    logger_->log_info("Deleted orphan contents");
-  } else {
-    logger_->log_error("Failed to delete orphan contents");
-  }
+  content_repo_->clearOrphans();
 }
 
 void FlowFileRepository::loadComponent(const std::shared_ptr<core::ContentRepository> &content_repo) {

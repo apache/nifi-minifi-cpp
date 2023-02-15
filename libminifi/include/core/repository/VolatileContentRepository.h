@@ -94,9 +94,8 @@ class VolatileContentRepository : public core::ContentRepository {
    */
   bool remove(const minifi::ResourceClaim &claim) override;
 
-  bool clearOrphans() override {
+  void clearOrphans() override {
     // there are no persisted orphans to delete
-    return true;
   }
 
  private:

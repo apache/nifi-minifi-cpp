@@ -51,7 +51,7 @@ class ContentRepository : public StreamManager<minifi::ResourceClaim>, public ut
   void incrementStreamCount(const minifi::ResourceClaim &streamId) override;
   StreamState decrementStreamCount(const minifi::ResourceClaim &streamId) override;
 
-  virtual bool clearOrphans() = 0;
+  virtual void clearOrphans() = 0;
 
  protected:
   std::string directory_;

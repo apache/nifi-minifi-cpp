@@ -59,7 +59,7 @@ std::shared_ptr<ContentSession> FileSystemRepository::createSession() {
   return std::make_shared<ForwardingContentSession>(sharedFromThis());
 }
 
-bool FileSystemRepository::clearOrphans() {
+void FileSystemRepository::clearOrphans() {
   std::lock_guard<std::mutex> lock(count_map_mutex_);
   utils::file::list_dir(directory_, [&] (auto& /*dir*/, auto& filename) {
     auto path = directory_ +  "/" + filename.string();
@@ -70,7 +70,6 @@ bool FileSystemRepository::clearOrphans() {
     }
     return true;
   }, logger_, false);
-  return true;
 }
 
 }  // namespace org::apache::nifi::minifi::core::repository

@@ -276,7 +276,7 @@ TEST_CASE("DBContentRepository can clear orphan entries") {
   {
     auto content_repo = std::make_shared<core::repository::DatabaseContentRepository>();
     REQUIRE(content_repo->initialize(configuration));
-    REQUIRE(content_repo->clearOrphans());
+    content_repo->clearOrphans();
   }
 
   REQUIRE(getDbSize(dir) == 0);

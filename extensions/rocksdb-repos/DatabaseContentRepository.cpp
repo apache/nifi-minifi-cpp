@@ -180,12 +180,15 @@ std::shared_ptr<io::BaseStream> DatabaseContentRepository::write(const minifi::R
   return std::make_shared<io::RocksDbStream>(claim.getContentFullPath(), gsl::make_not_null<minifi::internal::RocksDatabase*>(db_.get()), true, batch);
 }
 
-bool DatabaseContentRepository::clearOrphans() {
-  if (!is_valid_ || !db_)
-    return false;
+void DatabaseContentRepository::clearOrphans() {
+  if (!is_valid_ || !db_) {
+    logger_->log_error("Cannot delete orphan content entries, repository is invalid");
+    return;
+  }
   auto opendb = db_->open();
   if (!opendb) {
-    return false;
+    logger_->log_error("Cannot delete orphan content entries, could not open repository");
+    return;
   }
   std::vector<std::string> keys_to_be_deleted;
   auto it = opendb->NewIterator(rocksdb::ReadOptions());
@@ -206,9 +209,7 @@ bool DatabaseContentRepository::clearOrphans() {
 
   if (!status.ok()) {
     logger_->log_error("Could not delete orphan contents from rocksdb database: %s", status.ToString());
-    return false;
   }
-  return true;
 }
 
 REGISTER_RESOURCE_AS(DatabaseContentRepository, InternalResource, ("DatabaseContentRepository", "databasecontentrepository"));
