@@ -187,25 +187,25 @@ bool DatabaseContentRepository::clearOrphans() {
   if (!opendb) {
     return false;
   }
-  std::vector<std::string> keys;
+  std::vector<std::string> keys_to_be_deleted;
   auto it = opendb->NewIterator(rocksdb::ReadOptions());
   for (it->SeekToFirst(); it->Valid(); it->Next()) {
     auto key = it->key().ToString();
     auto claim_it = count_map_.find(key);
     if (claim_it == count_map_.end() || claim_it->second == 0) {
-      logger_->log_debug("Deleting orphan resource %s", key);
-      keys.push_back(key);
+      logger_->log_error("Deleting orphan resource %s", key);
+      keys_to_be_deleted.push_back(key);
     }
   }
   auto batch = opendb->createWriteBatch();
-  for (auto& key : keys) {
+  for (auto& key : keys_to_be_deleted) {
     batch.Delete(key);
   }
 
   rocksdb::Status status = opendb->Write(rocksdb::WriteOptions(), &batch);
 
   if (!status.ok()) {
-    logger_->log_debug("Could not delete orphan contents from rocksdb database: %s", status.ToString());
+    logger_->log_error("Could not delete orphan contents from rocksdb database: %s", status.ToString());
     return false;
   }
   return true;

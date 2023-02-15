@@ -124,16 +124,17 @@ void FlowFileRepository::run() {
 }
 
 bool FlowFileRepository::ExecuteWithRetry(const std::function<rocksdb::Status()>& operation) {
-  std::chrono::milliseconds waitTime = 0ms;
-  for (int i=0; i < 3; ++i) {
+  constexpr int RETRY_COUNT = 3;
+  std::chrono::milliseconds wait_time = 0ms;
+  for (int i=0; i < RETRY_COUNT; ++i) {
     auto status = operation();
     if (status.ok()) {
       logger_->log_trace("Rocksdb operation executed successfully");
       return true;
     }
     logger_->log_error("Rocksdb operation failed: %s", status.ToString());
-    waitTime += FLOWFILE_REPOSITORY_RETRY_INTERVAL_INCREMENTS;
-    std::this_thread::sleep_for(waitTime);
+    wait_time += FLOWFILE_REPOSITORY_RETRY_INTERVAL_INCREMENTS;
+    std::this_thread::sleep_for(wait_time);
   }
   return false;
 }
