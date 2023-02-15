@@ -82,7 +82,7 @@ void ResponseNodeLoader::initializeComponentMetrics() {
       continue;
     }
     // we have a metrics source.
-    auto metric = node_source->getResponseNodes();
+    auto metric = node_source->getResponseNode();
     std::lock_guard<std::mutex> guard(component_metrics_mutex_);
     component_metrics_[metric->getName()].push_back(metric);
   }

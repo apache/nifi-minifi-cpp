@@ -36,15 +36,15 @@ namespace org::apache::nifi::minifi::state::response {
 class QueueMetrics : public ResponseNode {
  public:
   QueueMetrics(const std::string &name, const utils::Identifier &uuid)
-    : ResponseNode(name, uuid) {
+     : ResponseNode(name, uuid) {
   }
 
   QueueMetrics(const std::string &name) // NOLINT
-    : ResponseNode(name) {
+      : ResponseNode(name) {
   }
 
   QueueMetrics()
-    : ResponseNode("QueueMetrics") {
+     : ResponseNode("QueueMetrics") {
   }
 
   MINIFIAPI static constexpr const char* Description = "Metric node that defines queue metric information";

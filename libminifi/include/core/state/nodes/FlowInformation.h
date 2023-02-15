@@ -128,11 +128,11 @@ class FlowVersion : public DeviceInformation {
 class FlowMonitor : public StateMonitorNode {
  public:
   FlowMonitor(std::string name, const utils::Identifier &uuid)
-    : StateMonitorNode(std::move(name), uuid) {
+      : StateMonitorNode(std::move(name), uuid) {
   }
 
   explicit FlowMonitor(std::string name)
-    : StateMonitorNode(std::move(name)) {
+      : StateMonitorNode(std::move(name)) {
   }
 
   void setFlowVersion(std::shared_ptr<state::response::FlowVersion> flow_version) {

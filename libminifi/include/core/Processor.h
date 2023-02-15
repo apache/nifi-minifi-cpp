@@ -221,7 +221,7 @@ class Processor : public Connectable, public ConfigurableComponent, public state
 
   virtual annotation::Input getInputRequirement() const = 0;
 
-  state::response::SharedResponseNode getResponseNodes() override {
+  state::response::SharedResponseNode getResponseNode() override {
     return metrics_;
   }
 

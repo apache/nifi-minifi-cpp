@@ -31,40 +31,32 @@
 
 namespace org::apache::nifi::minifi::state::response {
 
+class ResponseNode;
+using SharedResponseNode = gsl::not_null<std::shared_ptr<ResponseNode>>;
+
 /**
  * Purpose: Defines a metric. Serialization is intended to be thread safe.
  */
 class ResponseNode : public core::Connectable, public PublishedMetricProvider {
  public:
   ResponseNode()
-    : core::Connectable("metric"),
-      is_array_(false) {
+      : core::Connectable("metric"),
+        is_array_(false) {
   }
 
   explicit ResponseNode(std::string name)
-    : core::Connectable(std::move(name)),
-      is_array_(false) {
+      : core::Connectable(std::move(name)),
+        is_array_(false) {
   }
 
   ResponseNode(std::string name, const utils::Identifier& uuid)
-    : core::Connectable(std::move(name), uuid),
-      is_array_(false) {
+      : core::Connectable(std::move(name), uuid),
+        is_array_(false) {
   }
 
   ~ResponseNode() override = default;
 
-  static std::vector<SerializedResponseNode> serializeAndMergeResponseNodes(const std::vector<gsl::not_null<std::shared_ptr<ResponseNode>>>& nodes) {
-    if (nodes.empty()) {
-      return {};
-    }
-
-    std::vector<SerializedResponseNode> result;
-    for (const auto& node: nodes) {
-      auto serialized = node->serialize();
-      result.insert(result.end(), serialized.begin(), serialized.end());
-    }
-    return result;
-  }
+  static std::vector<SerializedResponseNode> serializeAndMergeResponseNodes(const std::vector<SharedResponseNode>& nodes);
 
   virtual std::vector<SerializedResponseNode> serialize() = 0;
 
@@ -94,8 +86,6 @@ class ResponseNode : public core::Connectable, public PublishedMetricProvider {
     is_array_ = array;
   }
 };
-
-using SharedResponseNode = gsl::not_null<std::shared_ptr<ResponseNode>>;
 
 /**
  * Purpose: Defines a metric that
@@ -128,23 +118,7 @@ class ObjectNode : public ResponseNode {
     return Connectable::getName();
   }
 
-  std::vector<SerializedResponseNode> serialize() override {
-    std::vector<SerializedResponseNode> serialized;
-    for (const auto& [name, nodes] : nodes_) {
-      if (nodes.empty()) {
-        continue;
-      }
-      SerializedResponseNode inner_node;
-      inner_node.name = nodes[0]->getName();
-      for (auto &embed : ResponseNode::serializeAndMergeResponseNodes(nodes)) {
-        if (!embed.empty() || embed.keep_empty) {
-          inner_node.children.push_back(std::move(embed));
-        }
-      }
-      serialized.push_back(std::move(inner_node));
-    }
-    return serialized;
-  }
+  std::vector<SerializedResponseNode> serialize() override;
 
   bool isEmpty() override {
     return nodes_.empty();
@@ -161,7 +135,7 @@ class ObjectNode : public ResponseNode {
 class ResponseNodeSource {
  public:
   virtual ~ResponseNodeSource() = default;
-  virtual SharedResponseNode getResponseNodes() = 0;
+  virtual SharedResponseNode getResponseNode() = 0;
 };
 
 class NodeReporter {
