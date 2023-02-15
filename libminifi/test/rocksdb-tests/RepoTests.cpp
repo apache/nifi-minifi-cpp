@@ -39,12 +39,6 @@ using namespace std::literals::chrono_literals;
 
 namespace {
 
-#ifdef WIN32
-const std::string REPOTEST_FLOWFILE_CHECKPOINT_DIR = ".\\repotest_flowfile_checkpoint";
-#else
-const std::string REPOTEST_FLOWFILE_CHECKPOINT_DIR = "./repotest_flowfile_checkpoint";
-#endif
-
 namespace {
 class TestProcessor : public minifi::core::Processor {
  public:
@@ -72,7 +66,7 @@ TEST_CASE("Test Repo Empty Value Attribute", "[TestFFR1]") {
   LogTestController::getInstance().setDebug<core::repository::FlowFileRepository>();
   TestController testController;
   auto dir = testController.createTempDirectory();
-  std::shared_ptr<core::repository::FlowFileRepository> repository = std::make_shared<core::repository::FlowFileRepository>("ff", REPOTEST_FLOWFILE_CHECKPOINT_DIR, dir.string(), 0ms, 0, 1ms);
+  std::shared_ptr<core::repository::FlowFileRepository> repository = std::make_shared<core::repository::FlowFileRepository>("ff", dir.string(), 0ms, 0, 1ms);
 
   repository->initialize(std::make_shared<minifi::Configure>());
 
@@ -94,7 +88,7 @@ TEST_CASE("Test Repo Empty Key Attribute ", "[TestFFR2]") {
   LogTestController::getInstance().setDebug<core::repository::FlowFileRepository>();
   TestController testController;
   auto dir = testController.createTempDirectory();
-  std::shared_ptr<core::repository::FlowFileRepository> repository = std::make_shared<core::repository::FlowFileRepository>("ff", REPOTEST_FLOWFILE_CHECKPOINT_DIR, dir.string(), 0ms, 0, 1ms);
+  std::shared_ptr<core::repository::FlowFileRepository> repository = std::make_shared<core::repository::FlowFileRepository>("ff", dir.string(), 0ms, 0, 1ms);
 
   repository->initialize(std::make_shared<minifi::Configure>());
   std::shared_ptr<core::ContentRepository> content_repo = std::make_shared<core::repository::VolatileContentRepository>();
@@ -117,7 +111,7 @@ TEST_CASE("Test Repo Key Attribute Verify ", "[TestFFR3]") {
   LogTestController::getInstance().setDebug<core::repository::FlowFileRepository>();
   TestController testController;
   auto dir = testController.createTempDirectory();
-  std::shared_ptr<core::repository::FlowFileRepository> repository = std::make_shared<core::repository::FlowFileRepository>("ff", REPOTEST_FLOWFILE_CHECKPOINT_DIR, dir.string(), 0ms, 0, 1ms);
+  std::shared_ptr<core::repository::FlowFileRepository> repository = std::make_shared<core::repository::FlowFileRepository>("ff", dir.string(), 0ms, 0, 1ms);
 
   repository->initialize(std::make_shared<org::apache::nifi::minifi::Configure>());
 
@@ -167,7 +161,7 @@ TEST_CASE("Test Delete Content ", "[TestFFR4]") {
 
   auto dir = testController.createTempDirectory();
 
-  std::shared_ptr<core::repository::FlowFileRepository> repository = std::make_shared<core::repository::FlowFileRepository>("ff", REPOTEST_FLOWFILE_CHECKPOINT_DIR, dir.string(), 0ms, 0, 1ms);
+  std::shared_ptr<core::repository::FlowFileRepository> repository = std::make_shared<core::repository::FlowFileRepository>("ff", dir.string(), 0ms, 0, 1ms);
 
   std::fstream file;
   file.open(dir / "tstFile.ext", std::ios::out);
@@ -219,7 +213,7 @@ TEST_CASE("Test Validate Checkpoint ", "[TestFFR5]") {
 
   auto dir = testController.createTempDirectory();
 
-  std::shared_ptr<core::repository::FlowFileRepository> repository = std::make_shared<core::repository::FlowFileRepository>("ff", REPOTEST_FLOWFILE_CHECKPOINT_DIR, dir.string(), 0ms, 0, 1ms);
+  std::shared_ptr<core::repository::FlowFileRepository> repository = std::make_shared<core::repository::FlowFileRepository>("ff", dir.string(), 0ms, 0, 1ms);
 
   std::fstream file;
   file.open(dir / "tstFile.ext", std::ios::out);
@@ -284,7 +278,7 @@ TEST_CASE("Test FlowFile Restore", "[TestFFR6]") {
   config->set(minifi::Configure::nifi_flowfile_repository_directory_default, (dir / "flowfile_repository").string());
 
   std::shared_ptr<core::Repository> prov_repo = std::make_shared<TestThreadedRepository>();
-  auto ff_repository = std::make_shared<core::repository::FlowFileRepository>("flowFileRepository", REPOTEST_FLOWFILE_CHECKPOINT_DIR);
+  auto ff_repository = std::make_shared<core::repository::FlowFileRepository>("flowFileRepository");
   std::shared_ptr<core::ContentRepository> content_repo = std::make_shared<core::repository::FileSystemRepository>();
   ff_repository->initialize(config);
   content_repo->initialize(config);

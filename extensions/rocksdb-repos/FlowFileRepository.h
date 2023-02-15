@@ -66,13 +66,11 @@ class FlowFileRepository : public ThreadedRepository, public SwapManager {
   }
 
   explicit FlowFileRepository(const std::string& repo_name = "",
-                              std::filesystem::path checkpoint_dir = FLOWFILE_CHECKPOINT_DIRECTORY,
                               std::string directory = FLOWFILE_REPOSITORY_DIRECTORY,
                               std::chrono::milliseconds maxPartitionMillis = MAX_FLOWFILE_REPOSITORY_ENTRY_LIFE_TIME,
                               int64_t maxPartitionBytes = MAX_FLOWFILE_REPOSITORY_STORAGE_SIZE,
                               std::chrono::milliseconds purgePeriod = FLOWFILE_REPOSITORY_PURGE_PERIOD)
     : ThreadedRepository(repo_name.length() > 0 ? std::move(repo_name) : core::getClassName<FlowFileRepository>(), std::move(directory), maxPartitionMillis, maxPartitionBytes, purgePeriod),
-      checkpoint_dir_(std::move(checkpoint_dir)),
       logger_(logging::LoggerFactory<FlowFileRepository>::getLogger()) {
   }
 
