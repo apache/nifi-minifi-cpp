@@ -77,8 +77,6 @@ TEST_CASE("Test Repo Empty Value Attribute", "[TestFFR1]") {
 
   REQUIRE(true == file->Persist(repository));
 
-  utils::file::FileUtils::delete_dir(REPOTEST_FLOWFILE_CHECKPOINT_DIR, true);
-
   repository->stop();
 }
 
@@ -99,8 +97,6 @@ TEST_CASE("Test Repo Empty Key Attribute ", "[TestFFR2]") {
   file->addAttribute("", "hasdgasdgjsdgasgdsgsadaskgasd");
 
   REQUIRE(true == file->Persist(repository));
-
-  utils::file::FileUtils::delete_dir(REPOTEST_FLOWFILE_CHECKPOINT_DIR, true);
 
   repository->stop();
 }
@@ -148,8 +144,6 @@ TEST_CASE("Test Repo Key Attribute Verify ", "[TestFFR3]") {
 
   REQUIRE(record2->getAttribute("keyB", value));
   REQUIRE(value.empty());
-
-  utils::file::FileUtils::delete_dir(REPOTEST_FLOWFILE_CHECKPOINT_DIR, true);
 }
 
 TEST_CASE("Test Delete Content ", "[TestFFR4]") {
@@ -197,14 +191,11 @@ TEST_CASE("Test Delete Content ", "[TestFFR4]") {
   std::ifstream fileopen(dir / "tstFile.ext", std::ios::in);
   REQUIRE(!fileopen.good());
 
-  utils::file::FileUtils::delete_dir(REPOTEST_FLOWFILE_CHECKPOINT_DIR, true);
-
   LogTestController::getInstance().reset();
 }
 
 TEST_CASE("Test Validate Checkpoint ", "[TestFFR5]") {
   TestController testController;
-  utils::file::FileUtils::delete_dir(REPOTEST_FLOWFILE_CHECKPOINT_DIR, true);
 
   LogTestController::getInstance().setDebug<core::ContentRepository>();
   LogTestController::getInstance().setTrace<core::repository::FileSystemRepository>();
@@ -257,8 +248,6 @@ TEST_CASE("Test Validate Checkpoint ", "[TestFFR5]") {
 
   std::ifstream fileopen(dir / "tstFile.ext", std::ios::in);
   REQUIRE(fileopen.fail());
-
-  utils::file::FileUtils::delete_dir(REPOTEST_FLOWFILE_CHECKPOINT_DIR, true);
 
   LogTestController::getInstance().reset();
 }
@@ -355,7 +344,7 @@ TEST_CASE("Flush deleted flowfiles before shutdown", "[TestFFR7]") {
   class TestFlowFileRepository: public core::repository::FlowFileRepository{
    public:
     explicit TestFlowFileRepository(const std::string& name)
-      : FlowFileRepository(name, REPOTEST_FLOWFILE_CHECKPOINT_DIR, core::repository::FLOWFILE_REPOSITORY_DIRECTORY,
+      : FlowFileRepository(name, core::repository::FLOWFILE_REPOSITORY_DIRECTORY,
                            10min, core::repository::MAX_FLOWFILE_REPOSITORY_STORAGE_SIZE, 1ms) {}
 
     void flush() override {
