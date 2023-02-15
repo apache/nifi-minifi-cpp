@@ -41,6 +41,6 @@ if(WIN32)
     target_compile_definitions(minifi-aws INTERFACE "AWS_S3_API=__declspec(dllimport)")
 endif()
 
-register_extension(minifi-aws "AWS EXTENSIONS" AWS-EXTENSIONS "This enables AWS support" "${TEST_DIR}/aws-tests")
+register_extension(minifi-aws "AWS EXTENSIONS" AWS-EXTENSIONS "This enables AWS support" "extensions/aws/tests")
 
 register_extension_linter(minifi-aws-extensions-linter)
