@@ -200,12 +200,6 @@ bool FlowFileRepository::initialize(const std::shared_ptr<Configure> &configure)
   }
   logger_->log_debug("NiFi FlowFile Repository Directory %s", directory_);
 
-  value.clear();
-  if (configure->get(Configure::nifi_flowfile_checkpoint_directory_default, value) && !value.empty()) {
-    checkpoint_dir_ = value;
-  }
-  logger_->log_debug("NiFi FlowFile Checkpoint Directory %s", checkpoint_dir_.string());
-
   const auto encrypted_env = createEncryptingEnv(utils::crypto::EncryptionManager{configure->getHome()}, DbEncryptionOptions{directory_, ENCRYPTION_KEY_NAME});
   logger_->log_info("Using %s FlowFileRepository", encrypted_env ? "encrypted" : "plaintext");
 
