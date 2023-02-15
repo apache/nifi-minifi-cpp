@@ -78,7 +78,7 @@ class ConsumeWindowsEventLog : public core::Processor {
   EXTENSIONAPI static const core::Property BatchCommitSize;
   EXTENSIONAPI static const core::Property BookmarkRootDirectory;
   EXTENSIONAPI static const core::Property ProcessOldEvents;
-  EXTENSIONAPI static const core::Property CacheUsernameLookups;
+  EXTENSIONAPI static const core::Property CacheSidLookups;
   static auto properties() {
     return std::array{
         Channel,
@@ -95,7 +95,7 @@ class ConsumeWindowsEventLog : public core::Processor {
         BatchCommitSize,
         BookmarkRootDirectory,
         ProcessOldEvents,
-        CacheUsernameLookups
+        CacheSidLookups
     };
   }
 
@@ -162,7 +162,7 @@ class ConsumeWindowsEventLog : public core::Processor {
   uint64_t max_buffer_size_{};
   std::map<std::string, wel::WindowsEventLogHandler> providers_;
   uint64_t batch_commit_size_{};
-  bool cache_username_lookups_ = true;
+  bool cache_sid_lookups_ = true;
 
   enum class JSONType { None, Raw, Simple, Flattened };
 

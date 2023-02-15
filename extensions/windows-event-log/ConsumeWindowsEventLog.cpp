@@ -174,11 +174,11 @@ const core::Property ConsumeWindowsEventLog::ProcessOldEvents(
   withDescription("This property defines if old events (which are created before first time server is started) should be processed.")->
   build());
 
-const core::Property ConsumeWindowsEventLog::CacheUsernameLookups(
-    core::PropertyBuilder::createProperty("Cache Username Lookups")->
+const core::Property ConsumeWindowsEventLog::CacheSidLookups(
+    core::PropertyBuilder::createProperty("Cache SID Lookups")->
         isRequired(false)->
         withDefaultValue<bool>(true)->
-        withDescription("Determines whether SID to username lookups are cached in memory")->
+        withDescription("Determines whether SID to name lookups are cached in memory")->
         build());
 
 const core::Relationship ConsumeWindowsEventLog::Success("success", "Relationship for successfully consumed events.");
@@ -332,8 +332,8 @@ void ConsumeWindowsEventLog::onSchedule(const std::shared_ptr<core::ProcessConte
   context->getProperty(MaxBufferSize.getName(), max_buffer_size_);
   logger_->log_debug("ConsumeWindowsEventLog: MaxBufferSize %" PRIu64, max_buffer_size_);
 
-  context->getProperty(CacheUsernameLookups.getName(), cache_username_lookups_);
-  logger_->log_debug("ConsumeWindowsEventLog: will%s cache SID to username lookups", cache_username_lookups_ ? "" : " not");
+  context->getProperty(CacheSidLookups.getName(), cache_sid_lookups_);
+  logger_->log_debug("ConsumeWindowsEventLog: will%s cache SID to name lookups", cache_sid_lookups_ ? "" : " not");
 
   provenanceUri_ = "winlog://" + computerName_ + "/" + channel_ + "?" + query;
   logger_->log_trace("Successfully configured CWEL");
@@ -769,7 +769,7 @@ void ConsumeWindowsEventLog::LogWindowsError(const std::string& error) const {
 
 std::function<std::string(const std::string&)> ConsumeWindowsEventLog::userIdToUsernameFunction() const {
   static constexpr auto lookup = &utils::OsUtils::userIdToUsername;
-  if (cache_username_lookups_) {
+  if (cache_sid_lookups_) {
     static auto cached_lookup = wel::LookupCacher{lookup};
     return std::ref(cached_lookup);
   } else {
