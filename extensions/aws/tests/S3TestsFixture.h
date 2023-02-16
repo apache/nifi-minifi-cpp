@@ -25,8 +25,8 @@
 #include <string>
 
 #include "core/Processor.h"
-#include "../TestBase.h"
-#include "../Catch.h"
+#include "TestBase.h"
+#include "Catch.h"
 #include "processors/GetFile.h"
 #include "processors/LogAttribute.h"
 #include "processors/UpdateAttribute.h"

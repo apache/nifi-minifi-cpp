@@ -18,6 +18,7 @@
 #
 
 file(GLOB AWS_INTEGRATION_TESTS  "*.cpp")
+include(BundledAwsSdkCpp)
 
 SET(AWS_TEST_COUNT 0)
 FOREACH(testfile ${AWS_INTEGRATION_TESTS})
@@ -28,11 +29,13 @@ FOREACH(testfile ${AWS_INTEGRATION_TESTS})
     target_include_directories(${testfilename} PRIVATE BEFORE "${CMAKE_SOURCE_DIR}/extensions/aws/s3")
     target_include_directories(${testfilename} PRIVATE BEFORE "${CMAKE_SOURCE_DIR}/extensions/aws/processors")
     target_include_directories(${testfilename} PRIVATE BEFORE "${CMAKE_SOURCE_DIR}/extensions/expression-language")
+    target_include_directories(${testfilename} BEFORE PRIVATE "${CMAKE_SOURCE_DIR}/libminifi/test")
     createTests("${testfilename}")
     target_link_libraries(${testfilename} ${CATCH_MAIN_LIB})
     target_link_libraries(${testfilename} minifi-aws)
     target_link_libraries(${testfilename} minifi-standard-processors)
     target_link_libraries(${testfilename} minifi-expression-language-extensions)
+    target_link_libraries(${testfilename} ${LIBAWS_LIBRARIES})
     MATH(EXPR AWS_TEST_COUNT "${AWS_TEST_COUNT}+1")
     add_test(NAME "${testfilename}" COMMAND "${testfilename}" WORKING_DIRECTORY ${TEST_DIR})
 ENDFOREACH()
