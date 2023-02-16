@@ -58,8 +58,8 @@ class Connection : public core::Connectable {
   Connection(const Connection &parent) = delete;
   Connection &operator=(const Connection &parent) = delete;
 
-  static constexpr uint64_t DEFAULT_BACKPRESSURE_THRESHOLD_COUNT = 10000;
-  static constexpr uint64_t DEFAULT_BACKPRESSURE_THRESHOLD_DATA_SIZE = 10_MB;
+  static constexpr uint64_t DEFAULT_BACKPRESSURE_THRESHOLD_COUNT = 2000;
+  static constexpr uint64_t DEFAULT_BACKPRESSURE_THRESHOLD_DATA_SIZE = 100_MB;
 
   void setSourceUUID(const utils::Identifier &uuid) {
     src_uuid_ = uuid;
