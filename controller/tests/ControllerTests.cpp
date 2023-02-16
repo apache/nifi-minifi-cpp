@@ -152,6 +152,7 @@ class TestUpdateSink : public minifi::state::StateMonitor {
   }
 
   int16_t applyUpdate(const std::string& /*source*/, const std::shared_ptr<minifi::state::Update>& /*updateController*/) override {
+    update_calls++;
     return 0;
   }
 
