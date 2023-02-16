@@ -1281,8 +1281,8 @@ TEST_CASE("Full Hostname", "[expressionFullHostname]") {
   REQUIRE(!expr(expression::Parameters{ flow_file_a }).asString().empty());
 }
 
-TEST_CASE("Reverse lookup with valid ip", "[ExpressionLanguage][reverseLookup]") {
-  auto expr = expression::compile("${reverseLookup(${ip_addr})}");
+TEST_CASE("Reverse DNS lookup with valid ip", "[ExpressionLanguage][reverseDnsLookup]") {
+  auto expr = expression::compile("${reverseDnsLookup(${ip_addr})}");
 
   auto flow_file_a = std::make_shared<core::FlowFile>();
   std::string expected_hostname;
@@ -1313,8 +1313,8 @@ TEST_CASE("Reverse lookup with valid ip", "[ExpressionLanguage][reverseLookup]")
   REQUIRE(expr(expression::Parameters{ flow_file_a }).asString() ==  expected_hostname);
 }
 
-TEST_CASE("Reverse lookup with invalid ip", "[ExpressionLanguage][reverseLookup]") {
-  auto expr = expression::compile("${reverseLookup(${ip_addr})}");
+TEST_CASE("Reverse DNS lookup with invalid ip", "[ExpressionLanguage][reverseDnsLookup]") {
+  auto expr = expression::compile("${reverseDnsLookup(${ip_addr})}");
 
   auto flow_file_a = std::make_shared<core::FlowFile>();
   flow_file_a->addAttribute("ip_addr", "banana");
@@ -1322,8 +1322,8 @@ TEST_CASE("Reverse lookup with invalid ip", "[ExpressionLanguage][reverseLookup]
   REQUIRE_THROWS_AS(expr(expression::Parameters{flow_file_a}), std::runtime_error);
 }
 
-TEST_CASE("Reverse lookup with invalid timeout parameter", "[ExpressionLanguage][reverseLookup]") {
-  auto expr = expression::compile("${reverseLookup(${ip_addr}, ${timeout})}");
+TEST_CASE("Reverse DNS lookup with invalid timeout parameter", "[ExpressionLanguage][reverseDnsLookup]") {
+  auto expr = expression::compile("${reverseDnsLookup(${ip_addr}, ${timeout})}");
 
   auto flow_file_a = std::make_shared<core::FlowFile>();
   flow_file_a->addAttribute("ip_addr", "192.0.2.1");
@@ -1332,9 +1332,9 @@ TEST_CASE("Reverse lookup with invalid timeout parameter", "[ExpressionLanguage]
   REQUIRE_THROWS_AS(expr(expression::Parameters{ flow_file_a }), std::invalid_argument);
 }
 
-TEST_CASE("Reverse lookup with valid timeout parameter", "[ExpressionLanguage][reverseLookup]") {
-  auto reverse_lookup_expr_500ms = expression::compile("${reverseLookup(${ip_addr}, 500)}");
-  auto reverse_lookup_expr_0ms = expression::compile("${reverseLookup(${ip_addr}, 0)}");  // 0ms to make sure it times out
+TEST_CASE("Reverse DNS lookup with valid timeout parameter", "[ExpressionLanguage][reverseDnsLookup]") {
+  auto reverse_lookup_expr_500ms = expression::compile("${reverseDnsLookup(${ip_addr}, 500)}");
+  auto reverse_lookup_expr_0ms = expression::compile("${reverseDnsLookup(${ip_addr}, 0)}");  // 0ms to make sure it times out
 
   auto flow_file_a = std::make_shared<core::FlowFile>();
   std::string expected_hostname;

@@ -224,7 +224,7 @@ token, filename.
 - [`hostname`](#hostname)
 - [`UUID`](#uuid)
 - [`literal`](#literal)
-- [`reverseLookup`](#reverseLookup)
+- [`reverseDnsLookup`](#reversednslookup)
 
 ### Evaluating Multiple Attributes
 
@@ -1591,7 +1591,7 @@ to evaluate additional functions against.
 ${allMatchingAttributes('a.*'):count()} ):gt(3)}` returns true if there are
 more than 3 attributes whose names begin with the letter a.
 
-### reverseLookup
+### reverseDnsLookup
 
 **Description**: Performs a reverse DNS lookup on an ip address, and returns the corresponding hostname.
 
@@ -1609,11 +1609,11 @@ more than 3 attributes whose names begin with the letter a.
 
 **Examples**:
 
-| Expression                                      | Value        |
-|-------------------------------------------------|--------------|
-| `${reverseLookup('127.0.0.1')}`                 | `localhost`  |
-| `${reverseLookup('::1')}`                       | `localhost`  |
-| `${reverseLookup('2001:4860:4860::8888'), 100}` | `dns.google` |
+| Expression                                         | Value        |
+|----------------------------------------------------|--------------|
+| `${reverseDnsLookup('127.0.0.1')}`                 | `localhost`  |
+| `${reverseDnsLookup('::1')}`                       | `localhost`  |
+| `${reverseDnsLookup('2001:4860:4860::8888'), 100}` | `dns.google` |
 
 
 ## Evaluating Multiple Attributes

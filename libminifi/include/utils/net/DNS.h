@@ -47,6 +47,6 @@ inline auto resolveHost(const uint16_t port, const IpProtocol proto = IpProtocol
 
 nonstd::expected<asio::ip::address, std::error_code> addressFromString(std::string_view ip_address_str);
 
-nonstd::expected<std::string, std::error_code> reverseLookup(const asio::ip::address& ip_address, std::chrono::steady_clock::duration timeout = std::chrono::seconds(5));
+nonstd::expected<std::string, std::error_code> reverseDnsLookup(const asio::ip::address& ip_address, std::chrono::steady_clock::duration timeout = std::chrono::seconds(5));
 
 }  // namespace org::apache::nifi::minifi::utils::net

@@ -103,20 +103,20 @@ nonstd::expected<asio::ip::address, std::error_code> addressFromString(const std
 }
 
 namespace {
-asio::awaitable<std::tuple<std::error_code, asio::ip::basic_resolver<asio::ip::udp>::results_type>> asyncReverseLookup(const asio::ip::address& ip_address,
+asio::awaitable<std::tuple<std::error_code, asio::ip::basic_resolver<asio::ip::udp>::results_type>> asyncReverseDnsLookup(const asio::ip::address& ip_address,
     std::chrono::steady_clock::duration timeout_duration) {
   asio::ip::basic_resolver<asio::ip::udp> resolver(co_await asio::this_coro::executor);
   co_return co_await asyncOperationWithTimeout(resolver.async_resolve({ip_address, 0}, use_nothrow_awaitable), timeout_duration);
 }
 }  // namespace
 
-nonstd::expected<std::string, std::error_code> reverseLookup(const asio::ip::address& ip_address, std::chrono::steady_clock::duration timeout_duration) {
+nonstd::expected<std::string, std::error_code> reverseDnsLookup(const asio::ip::address& ip_address, std::chrono::steady_clock::duration timeout_duration) {
   asio::io_context io_context;
 
   std::error_code resolve_error;
   asio::ip::basic_resolver<asio::ip::udp>::results_type results;
 
-  co_spawn(io_context, asyncReverseLookup(ip_address, timeout_duration), [&resolve_error, &results](const std::exception_ptr&, const auto& resolve_results) {
+  co_spawn(io_context, asyncReverseDnsLookup(ip_address, timeout_duration), [&resolve_error, &results](const std::exception_ptr&, const auto& resolve_results) {
     resolve_error = std::get<std::error_code>(resolve_results);
     results = std::get<asio::ip::basic_resolver<asio::ip::udp>::results_type>(resolve_results);
   });

@@ -187,7 +187,7 @@ Value expr_ip(const std::vector<Value>& /*args*/) {
   return {};
 }
 
-Value expr_reverseLookup(const std::vector<Value>& args) {
+Value expr_reverseDnsLookup(const std::vector<Value>& args) {
   std::string ip_address_str = args[0].asString();
 
   std::chrono::steady_clock::duration timeout_duration = 5s;
@@ -196,7 +196,7 @@ Value expr_reverseLookup(const std::vector<Value>& args) {
   }
 
   return utils::net::addressFromString(ip_address_str)
-      | utils::flatMap([timeout_duration](const auto& ip_address) { return utils::net::reverseLookup(ip_address, timeout_duration);})
+      | utils::flatMap([timeout_duration](const auto& ip_address) { return utils::net::reverseDnsLookup(ip_address, timeout_duration);})
       | utils::map([](const auto& hostname)-> Value { return Value(hostname); })
       | utils::valueOrElse([&](std::error_code error_code) { throw std::runtime_error(error_code.message());});
 }
@@ -1357,8 +1357,8 @@ Expression make_dynamic_function(const std::string &function_name, const std::ve
     return make_dynamic_function_incomplete<resolve_user_id>(function_name, args, 0);
   } else if (function_name == "ip") {
     return make_dynamic_function_incomplete<expr_ip>(function_name, args, 0);
-  } else if (function_name == "reverseLookup") {
-    return make_dynamic_function_incomplete<expr_reverseLookup>(function_name, args, 1);
+  } else if (function_name == "reverseDnsLookup") {
+    return make_dynamic_function_incomplete<expr_reverseDnsLookup>(function_name, args, 1);
   } else if (function_name == "UUID") {
     return make_dynamic_function_incomplete<expr_uuid>(function_name, args, 0);
   } else if (function_name == "toUpper") {
