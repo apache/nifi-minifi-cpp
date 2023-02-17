@@ -23,7 +23,7 @@
 #include <Windows.h>
 #include <winevt.h>
 #include <codecvt>
-
+#include <functional>
 #include <map>
 #include <sstream>
 #include <string>
@@ -34,7 +34,6 @@
 #include "core/Core.h"
 #include "core/Processor.h"
 #include "core/ProcessSession.h"
-#include "utils/OsUtils.h"
 #include "FlowFileRecord.h"
 #include "WindowsEventLog.h"
 
@@ -50,12 +49,14 @@ namespace org::apache::nifi::minifi::wel {
  */
 class MetadataWalker : public pugi::xml_tree_walker {
  public:
-  MetadataWalker(const WindowsEventLogMetadata& windows_event_log_metadata, std::string log_name, bool update_xml, bool resolve, utils::Regex const* regex)
+  MetadataWalker(const WindowsEventLogMetadata& windows_event_log_metadata, std::string log_name, bool update_xml, bool resolve, utils::Regex const* regex,
+      std::function<std::string(std::string)> user_id_to_username_fn)
       : windows_event_log_metadata_(windows_event_log_metadata),
         log_name_(std::move(log_name)),
         regex_(regex),
         update_xml_(update_xml),
-        resolve_(resolve) {
+        resolve_(resolve),
+        user_id_to_username_fn_(std::move(user_id_to_username_fn)) {
   }
 
   /**
@@ -93,6 +94,7 @@ class MetadataWalker : public pugi::xml_tree_walker {
   utils::Regex const * const regex_;
   const bool update_xml_;
   const bool resolve_;
+  std::function<std::string(const std::string&)> user_id_to_username_fn_;
   std::map<std::string, std::string> metadata_;
   std::map<std::string, std::string> fields_values_;
   std::map<std::string, std::string> replaced_identifiers_;

@@ -33,6 +33,7 @@
 #include <regex>
 #include <cinttypes>
 
+#include "wel/LookupCacher.h"
 #include "wel/MetadataWalker.h"
 #include "wel/XMLString.h"
 #include "wel/UnicodeConversion.h"
@@ -172,6 +173,13 @@ const core::Property ConsumeWindowsEventLog::ProcessOldEvents(
   withDefaultValue<bool>(false)->
   withDescription("This property defines if old events (which are created before first time server is started) should be processed.")->
   build());
+
+const core::Property ConsumeWindowsEventLog::CacheSidLookups(
+    core::PropertyBuilder::createProperty("Cache SID Lookups")->
+        isRequired(false)->
+        withDefaultValue<bool>(true)->
+        withDescription("Determines whether SID to name lookups are cached in memory")->
+        build());
 
 const core::Relationship ConsumeWindowsEventLog::Success("success", "Relationship for successfully consumed events.");
 
@@ -323,6 +331,9 @@ void ConsumeWindowsEventLog::onSchedule(const std::shared_ptr<core::ProcessConte
 
   context->getProperty(MaxBufferSize.getName(), max_buffer_size_);
   logger_->log_debug("ConsumeWindowsEventLog: MaxBufferSize %" PRIu64, max_buffer_size_);
+
+  context->getProperty(CacheSidLookups.getName(), cache_sid_lookups_);
+  logger_->log_debug("ConsumeWindowsEventLog: will%s cache SID to name lookups", cache_sid_lookups_ ? "" : " not");
 
   provenanceUri_ = "winlog://" + computerName_ + "/" + channel_ + "?" + query;
   logger_->log_trace("Successfully configured CWEL");
@@ -488,7 +499,7 @@ void ConsumeWindowsEventLog::substituteXMLPercentageItems(pugi::xml_document& do
       for (size_t numberPos = 0; std::string::npos != (numberPos = nodeText.find(percentages, numberPos));) {
         numberPos += percentages.size();
 
-        uint64_t number{};
+        DWORD number{};
         try {
           // Assumption - first character is not '0', otherwise not all digits will be replaced by 'value'.
           number = std::stoul(&nodeText[numberPos]);
@@ -593,7 +604,7 @@ nonstd::expected<EventRender, std::string> ConsumeWindowsEventLog::createEventRe
   // this is a well known path.
   std::string provider_name = doc.child("Event").child("System").child("Provider").attribute("Name").value();
   wel::WindowsEventLogMetadataImpl metadata{getEventLogHandler(provider_name).getMetadata(), hEvent};
-  wel::MetadataWalker walker{metadata, channel_, !resolve_as_attributes_, apply_identifier_function_, regex_ ? &*regex_ : nullptr};
+  wel::MetadataWalker walker{metadata, channel_, !resolve_as_attributes_, apply_identifier_function_, regex_ ? &*regex_ : nullptr, userIdToUsernameFunction()};
 
   // resolve the event metadata
   doc.traverse(walker);
@@ -750,6 +761,16 @@ void ConsumeWindowsEventLog::LogWindowsError(const std::string& error) const {
   logger_->log_error((error + " %x: %s\n").c_str(), static_cast<int>(error_id), reinterpret_cast<char *>(lpMsg));
 
   LocalFree(lpMsg);
+}
+
+std::function<std::string(const std::string&)> ConsumeWindowsEventLog::userIdToUsernameFunction() const {
+  static constexpr auto lookup = &utils::OsUtils::userIdToUsername;
+  if (cache_sid_lookups_) {
+    static auto cached_lookup = wel::LookupCacher{lookup};
+    return std::ref(cached_lookup);
+  } else {
+    return lookup;
+  }
 }
 
 REGISTER_RESOURCE(ConsumeWindowsEventLog, Processor);

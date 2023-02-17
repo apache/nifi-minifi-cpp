@@ -97,7 +97,8 @@ TEST_CASE("ConsumeWindowsEventLog properties work with default values", "[create
     ConsumeWindowsEventLog::OutputFormat,
     ConsumeWindowsEventLog::BatchCommitSize,
     ConsumeWindowsEventLog::BookmarkRootDirectory,  // TODO(fgerlits): obsolete, see definition; remove in a later release
-    ConsumeWindowsEventLog::ProcessOldEvents
+    ConsumeWindowsEventLog::ProcessOldEvents,
+    ConsumeWindowsEventLog::CacheSidLookups
   };
   for (const core::Property& property : properties_required_or_with_default_value) {
     if (!LogTestController::getInstance().contains("property name " + property.getName() + " value ")) {
