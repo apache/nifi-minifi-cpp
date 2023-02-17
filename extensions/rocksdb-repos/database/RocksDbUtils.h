@@ -15,19 +15,20 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
 #pragma once
 
 #include <functional>
 #include <algorithm>
-#include "rocksdb/db.h"
-#include "utils/GeneralUtils.h"
+#include <optional>
+#include <memory>
+#include <string>
 
-namespace org {
-namespace apache {
-namespace nifi {
-namespace minifi {
-namespace internal {
+#include "rocksdb/db.h"
+#include "rocksdb/options.h"
+#include "utils/GeneralUtils.h"
+#include "properties/Configure.h"
+
+namespace org::apache::nifi::minifi::internal {
 
 enum class RocksDbMode {
   ReadOnly,
@@ -69,8 +70,6 @@ class Writable {
 using DBOptionsPatch = std::function<void(Writable<rocksdb::DBOptions>&)>;
 using ColumnFamilyOptionsPatch = std::function<void(rocksdb::ColumnFamilyOptions&)>;
 
-}  // namespace internal
-}  // namespace minifi
-}  // namespace nifi
-}  // namespace apache
-}  // namespace org
+std::optional<rocksdb::CompressionType> readConfiguredCompressionType(const std::shared_ptr<Configure> &configuration, const std::string& config_key);
+
+}  // namespace org::apache::nifi::minifi::internal

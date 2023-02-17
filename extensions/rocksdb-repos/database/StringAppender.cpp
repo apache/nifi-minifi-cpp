@@ -39,7 +39,7 @@ bool StringAppender::Merge(const rocksdb::Slice& /*key*/, const rocksdb::Slice* 
   return true;
 }
 
-static auto string_appender_registrar = rocksdb::ObjectLibrary::Default()->Register<StringAppender>(
+static auto string_appender_registrar = rocksdb::ObjectLibrary::Default()->AddFactory<StringAppender>(
     "StringAppender",
     [] (const std::string& /* uri */, std::unique_ptr<StringAppender>* out, std::string* /* errmsg */) {
       *out = std::make_unique<StringAppender>();

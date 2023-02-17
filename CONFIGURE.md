@@ -162,6 +162,15 @@ folder. You may specify your own path in place of these defaults.
     nifi.flowfile.repository.directory.default=${MINIFI_HOME}/flowfile_repository
     nifi.database.content.repository.directory.default=${MINIFI_HOME}/content_repository
 
+### Configuring compression for rocksdb database
+
+Rocksdb has an option to set compression type for its database to use less disk space.
+If content repository or flow file repository is set to use the rocksdb database as their storage, then we have the option to compress those repositories. On Unix operating systems `zlib`, `bzip2`, `zstd`, `lz4` and `lz4hc` compression types and on Windows `xpress` compression type is supported by MiNiFi C++. If the property is set to `auto` then `xpress` will be used on Windows, `zstd` on Unix operating systems. These options can be set in the minifi.properies file with the following properties:
+
+     in minifi.properties
+     nifi.flowfile.repository.rocksdb.compression=zlib
+     nifi.content.repository.rocksdb.compression=auto
+
 #### Shared database
 
 It is also possible to use a single database to store multiple repositories with the `minifidb://` scheme.

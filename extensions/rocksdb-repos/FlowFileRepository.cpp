@@ -220,11 +220,14 @@ bool FlowFileRepository::initialize(const std::shared_ptr<Configure> &configure)
   // To avoid DB write issues during heavy load it's recommended to have high number of buffer.
   // Rocksdb's stall feature can also trigger in case the number of buffers is >= 3.
   // The more buffers we have the more memory rocksdb can utilize without significant memory consumption under low load.
-  auto cf_options = [] (rocksdb::ColumnFamilyOptions& cf_opts) {
+  auto cf_options = [&configure] (rocksdb::ColumnFamilyOptions& cf_opts) {
     cf_opts.OptimizeForPointLookup(4);
     cf_opts.write_buffer_size = 8ULL << 20U;
     cf_opts.max_write_buffer_number = 20;
     cf_opts.min_write_buffer_number_to_merge = 1;
+    if (auto compression_type = minifi::internal::readConfiguredCompressionType(configure, Configure::nifi_flow_repository_rocksdb_compression)) {
+      cf_opts.compression = *compression_type;
+    }
   };
   db_ = minifi::internal::RocksDatabase::create(db_options, cf_options, directory_);
   if (db_->open()) {

@@ -18,6 +18,14 @@
 function(use_bundled_rocksdb SOURCE_DIR BINARY_DIR)
     message("Using bundled RocksDB")
 
+    if (NOT WIN32)
+        include(Zstd)
+        list(APPEND CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/cmake/zstd/dummy")
+
+        include(LZ4)
+        list(APPEND CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/cmake/lz4/dummy")
+    endif()
+
     # Define byproducts
     if (WIN32)
         set(BYPRODUCT "lib/rocksdb.lib")
@@ -43,18 +51,29 @@ function(use_bundled_rocksdb SOURCE_DIR BINARY_DIR)
         list(APPEND ROCKSDB_CMAKE_ARGS -DPORTABLE=ON)
     endif()
     if(WIN32)
-        list(APPEND ROCKSDB_CMAKE_ARGS -DROCKSDB_INSTALL_ON_WINDOWS=ON)
+        list(APPEND ROCKSDB_CMAKE_ARGS
+                -DROCKSDB_INSTALL_ON_WINDOWS=ON
+                -DWITH_XPRESS=ON)
+    else()
+        list(APPEND ROCKSDB_CMAKE_ARGS
+                -DWITH_ZLIB=ON
+                -DWITH_BZ2=ON
+                -DWITH_ZSTD=ON
+                -DWITH_LZ4=ON)
     endif()
+
+    append_third_party_passthrough_args(ROCKSDB_CMAKE_ARGS "${ROCKSDB_CMAKE_ARGS}")
 
     # Build project
     ExternalProject_Add(
             rocksdb-external
-            URL "https://github.com/facebook/rocksdb/archive/refs/tags/v6.29.5.tar.gz"
-            URL_HASH "SHA256=ddbf84791f0980c0bbce3902feb93a2c7006f6f53bfd798926143e31d4d756f0"
+            URL "https://github.com/facebook/rocksdb/archive/refs/tags/v7.7.3.tar.gz"
+            URL_HASH "SHA256=b8ac9784a342b2e314c821f6d701148912215666ac5e9bdbccd93cf3767cb611"
             SOURCE_DIR "${BINARY_DIR}/thirdparty/rocksdb-src"
             CMAKE_ARGS ${ROCKSDB_CMAKE_ARGS}
             BUILD_BYPRODUCTS "${BINARY_DIR}/thirdparty/rocksdb-install/${BYPRODUCT}"
             EXCLUDE_FROM_ALL TRUE
+            LIST_SEPARATOR % # This is needed for passing semicolon-separated lists
     )
 
     # Set variables
@@ -66,11 +85,17 @@ function(use_bundled_rocksdb SOURCE_DIR BINARY_DIR)
     # Create imported targets
     add_library(RocksDB::RocksDB STATIC IMPORTED)
     set_target_properties(RocksDB::RocksDB PROPERTIES IMPORTED_LOCATION "${ROCKSDB_LIBRARY}")
+    if (NOT WIN32)
+        add_dependencies(rocksdb-external ZLIB::ZLIB BZip2::BZip2 zstd::zstd lz4::lz4)
+    endif()
     add_dependencies(RocksDB::RocksDB rocksdb-external)
     file(MAKE_DIRECTORY ${ROCKSDB_INCLUDE_DIR})
-    set_property(TARGET RocksDB::RocksDB APPEND PROPERTY INTERFACE_INCLUDE_DIRECTORIES ${ROCKSDB_INCLUDE_DIR})
+    target_include_directories(RocksDB::RocksDB INTERFACE ${ROCKSDB_INCLUDE_DIR})
     set_property(TARGET RocksDB::RocksDB APPEND PROPERTY INTERFACE_LINK_LIBRARIES Threads::Threads)
+    target_link_libraries(RocksDB::RocksDB INTERFACE Threads::Threads)
     if(WIN32)
-        set_property(TARGET RocksDB::RocksDB APPEND PROPERTY INTERFACE_LINK_LIBRARIES Rpcrt4.lib)
+        target_link_libraries(RocksDB::RocksDB INTERFACE Rpcrt4.lib Cabinet.lib)
+    else()
+        target_link_libraries(RocksDB::RocksDB INTERFACE ZLIB::ZLIB BZip2::BZip2 zstd::zstd lz4::lz4)
     endif()
 endfunction(use_bundled_rocksdb)

@@ -53,10 +53,13 @@ bool DatabaseContentRepository::initialize(const std::shared_ptr<minifi::Configu
       db_opts.set(&rocksdb::DBOptions::env, rocksdb::Env::Default());
     }
   };
-  auto set_cf_opts = [] (rocksdb::ColumnFamilyOptions& cf_opts){
+  auto set_cf_opts = [&configuration] (rocksdb::ColumnFamilyOptions& cf_opts) {
     cf_opts.OptimizeForPointLookup(4);
     cf_opts.merge_operator = std::make_shared<StringAppender>();
     cf_opts.max_successive_merges = 0;
+    if (auto compression_type = minifi::internal::readConfiguredCompressionType(configuration, Configure::nifi_content_repository_rocksdb_compression)) {
+      cf_opts.compression = *compression_type;
+    }
   };
   db_ = minifi::internal::RocksDatabase::create(set_db_opts, set_cf_opts, directory_);
   if (db_->open()) {
