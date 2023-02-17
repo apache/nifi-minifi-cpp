@@ -46,6 +46,10 @@ class JsonNode : public flow::Node::NodeImpl {
     return node_ ? node_->IsNull() : false;
   }
 
+  flow::Node createEmpty() const override {
+    return flow::Node{std::make_shared<JsonNode>(nullptr)};
+  }
+
   nonstd::expected<std::string, std::exception_ptr> getString() const override {
     try {
       if (!node_) {
@@ -93,7 +97,22 @@ class JsonNode : public flow::Node::NodeImpl {
       if (!node_) throw std::runtime_error("Cannot get string from invalid json value");
       if (node_->IsInt64()) return std::to_string(node_->GetInt64());
       if (node_->IsUint64()) return std::to_string(node_->GetUint64());
+      if (node_->IsString()) return std::string(node_->GetString(), node_->GetStringLength());
       throw std::runtime_error("Cannot get string from non-integer json value");
+    } catch (...) {
+      return nonstd::make_unexpected(std::current_exception());
+    }
+  }
+
+  nonstd::expected<std::string, std::exception_ptr> getScalarAsString() const override {
+    try {
+      if (!node_) throw std::runtime_error("Cannot get string from invalid json value");
+      if (node_->IsBool()) return node_->GetBool() ? "true" : "false";
+      if (node_->IsInt64()) return std::to_string(node_->GetInt64());
+      if (node_->IsUint64()) return std::to_string(node_->GetUint64());
+      if (node_->IsString()) return std::string(node_->GetString(), node_->GetStringLength());
+      if (node_->IsDouble()) return std::to_string(node_->GetDouble());
+      throw std::runtime_error("Cannot convert non-scalar json value to string");
     } catch (...) {
       return nonstd::make_unexpected(std::current_exception());
     }

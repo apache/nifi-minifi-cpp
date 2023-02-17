@@ -29,7 +29,8 @@ Feature: MiNiFi can execute Lua and Python scripts
     Then the Minifi logs contain the following message: "Sleeping forever" 3 times after 5 seconds
 
   Scenario: ExecuteScript should only allow one Python script running at a time
-    Given a GenerateFlowFile processor with the "File Size" property set to "0B"
+    Given a MiNiFi CPP server with yaml config
+    And a GenerateFlowFile processor with the "File Size" property set to "0B"
     And the scheduling period of the GenerateFlowFile processor is set to "500 ms"
     And a ExecuteScript processor with the "Script File" property set to "/tmp/resources/python/sleep_forever.py"
     And the "Script Engine" property of the ExecuteScript processor is set to "python"

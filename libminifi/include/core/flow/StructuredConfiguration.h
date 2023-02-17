@@ -21,6 +21,7 @@
 #include <optional>
 #include <string>
 #include <unordered_set>
+#include <vector>
 
 #include "core/FlowConfiguration.h"
 #include "core/logging/LoggerConfiguration.h"
@@ -33,18 +34,9 @@
 #include "utils/StringUtils.h"
 #include "utils/file/FileSystem.h"
 #include "core/flow/Node.h"
+#include "FlowSchema.h"
 
 namespace org::apache::nifi::minifi::core::flow {
-
-static constexpr char const* CONFIG_FLOW_CONTROLLER_KEY = "Flow Controller";
-static constexpr char const* CONFIG_PROCESSORS_KEY = "Processors";
-static constexpr char const* CONFIG_CONTROLLER_SERVICES_KEY = "Controller Services";
-static constexpr char const* CONFIG_REMOTE_PROCESS_GROUP_KEY = "Remote Processing Groups";
-static constexpr char const* CONFIG_REMOTE_PROCESS_GROUP_KEY_V3 = "Remote Process Groups";
-static constexpr char const* CONFIG_PROVENANCE_REPORT_KEY = "Provenance Reporting";
-static constexpr char const* CONFIG_FUNNELS_KEY = "Funnels";
-static constexpr char const* CONFIG_INPUT_PORTS_KEY = "Input Ports";
-static constexpr char const* CONFIG_OUTPUT_PORTS_KEY = "Output Ports";
 
 class StructuredConfiguration : public FlowConfiguration {
  public:
@@ -60,6 +52,8 @@ class StructuredConfiguration : public FlowConfiguration {
    */
   void validateComponentProperties(ConfigurableComponent& component, const std::string &component_name, const std::string &section) const;
 
+  std::unique_ptr<core::ProcessGroup> getRoot() override;
+
  protected:
   /**
    * Returns a shared pointer to a ProcessGroup object containing the
@@ -70,7 +64,7 @@ class StructuredConfiguration : public FlowConfiguration {
    * @return             the root ProcessGroup node of the flow
    *                       configuration tree
    */
-  std::unique_ptr<core::ProcessGroup> getRootFrom(const Node& root_node);
+  std::unique_ptr<core::ProcessGroup> getRootFrom(const Node& root_node, FlowSchema schema);
 
   std::unique_ptr<core::ProcessGroup> createProcessGroup(const Node& node, bool is_root = false);
 
@@ -99,7 +93,7 @@ class StructuredConfiguration : public FlowConfiguration {
    * @param parent    the parent ProcessGroup for the port
    * @param direction the TransferDirection of the port
    */
-  void parsePort(const Node& port_node, core::ProcessGroup* parent, sitetosite::TransferDirection direction);
+  void parseRPGPort(const Node& port_node, core::ProcessGroup* parent, sitetosite::TransferDirection direction);
 
   /**
    * Parses the root level node for the flow configuration and
@@ -155,7 +149,7 @@ class StructuredConfiguration : public FlowConfiguration {
    * @param properties_node the Node containing the properties
    * @param processor      the Processor to which to add the resulting properties
    */
-  void parsePropertiesNode(const Node& properties_node, core::ConfigurableComponent& component, const std::string& component_name, const std::string& section);
+  void parsePropertiesNode(const Node& properties_node, core::ConfigurableComponent& component, const std::string& component_name);
 
   /**
    * Parses the Funnels section of a configuration.
@@ -195,9 +189,9 @@ class StructuredConfiguration : public FlowConfiguration {
    *                   is optional and defaults to 'id'
    * @return         the parsed or generated UUID string
    */
-  std::string getOrGenerateId(const Node& node, const std::string& id_field = "id");
+  std::string getOrGenerateId(const Node& node);
 
-  std::string getRequiredIdField(const Node& node, std::string_view section = "", std::string_view error_message = "");
+  std::string getRequiredIdField(const Node& node, std::string_view error_message = "");
 
   /**
    * This is a helper function for getting an optional value, if it exists.
@@ -213,7 +207,9 @@ class StructuredConfiguration : public FlowConfiguration {
    *                       the optional field is missing. If not provided,
    *                       a default info message will be generated.
    */
-  std::string getOptionalField(const Node& node, const std::string& field_name, const std::string& default_value, const std::string& section = "", const std::string& info_message = "");
+  std::string getOptionalField(const Node& node, const std::vector<std::string>& field_name, const std::string& default_value, const std::string& info_message = "");
+
+  FlowSchema schema_;
 
   static std::shared_ptr<utils::IdGenerator> id_generator_;
   std::unordered_set<std::string> uuids_;

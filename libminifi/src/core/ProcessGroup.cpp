@@ -33,6 +33,8 @@ using namespace std::literals::chrono_literals;
 
 namespace org::apache::nifi::minifi::core {
 
+constexpr int DEFAULT_ONSCHEDULE_RETRY_INTERVAL_MS = 30000;
+
 std::shared_ptr<utils::IdGenerator> ProcessGroup::id_generator_ = utils::IdGenerator::getIdGenerator();
 
 ProcessGroup::ProcessGroup(ProcessGroupType type, std::string name, const utils::Identifier& uuid)
@@ -54,7 +56,7 @@ ProcessGroup::ProcessGroup(ProcessGroupType type, std::string name, const utils:
   if (parent_process_group_ != nullptr) {
     onschedule_retry_msec_ = parent_process_group_->getOnScheduleRetryPeriod();
   } else {
-    onschedule_retry_msec_ = ONSCHEDULE_RETRY_INTERVAL;
+    onschedule_retry_msec_ = DEFAULT_ONSCHEDULE_RETRY_INTERVAL_MS;
   }
   transmitting_ = false;
   transport_protocol_ = "RAW";
@@ -69,7 +71,7 @@ ProcessGroup::ProcessGroup(ProcessGroupType type, std::string name)
       parent_process_group_(nullptr),
       logger_(logging::LoggerFactory<ProcessGroup>::getLogger()) {
   yield_period_msec_ = 0ms;
-  onschedule_retry_msec_ = ONSCHEDULE_RETRY_INTERVAL;
+  onschedule_retry_msec_ = DEFAULT_ONSCHEDULE_RETRY_INTERVAL_MS;
   transmitting_ = false;
   transport_protocol_ = "RAW";
 

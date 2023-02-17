@@ -27,7 +27,7 @@
 namespace org::apache::nifi::minifi::core::flow {
 
 bool isFieldPresent(const Node &node, std::string_view field_name);
-std::string buildErrorMessage(const Node &node, const std::vector<std::string> &alternate_field_names, std::string_view section = "");
+std::string buildErrorMessage(const Node &node, const std::vector<std::string> &alternate_field_names);
 
 /**
  * This is a helper function for verifying the existence of a required
@@ -47,8 +47,8 @@ std::string buildErrorMessage(const Node &node, const std::vector<std::string> &
  * @throws std::invalid_argument if the required field 'field_name' is
  *                               not present in 'node'
  */
-void checkRequiredField(const Node &node, std::string_view field_name, std::string_view section = "", std::string_view error_message = "");
+void checkRequiredField(const Node &node, const std::vector<std::string>& field_name, std::string_view error_message = "");
 
-std::string getRequiredField(const Node &node, const std::vector<std::string> &alternate_names, std::string_view section, std::string_view error_message = {});
+std::string getRequiredField(const Node &node, const std::vector<std::string> &alternate_names, std::string_view error_message = {});
 
 }  // namespace org::apache::nifi::minifi::core::flow

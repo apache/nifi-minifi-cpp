@@ -49,7 +49,7 @@ class SchedulingDefaults : public DeviceInformation {
 
     SerializedResponseNode defaultSchedulingStrategy;
     defaultSchedulingStrategy.name = "defaultSchedulingStrategy";
-    defaultSchedulingStrategy.value = DEFAULT_SCHEDULING_STRATEGY;
+    defaultSchedulingStrategy.value = core::DEFAULT_SCHEDULING_STRATEGY;
 
     schedulingDefaults.children.push_back(defaultSchedulingStrategy);
 
@@ -67,7 +67,7 @@ class SchedulingDefaults : public DeviceInformation {
 
     SerializedResponseNode defaultMaxConcurrentTasks;
     defaultMaxConcurrentTasks.name = "defaultMaxConcurrentTasks";
-    defaultMaxConcurrentTasks.value = DEFAULT_MAX_CONCURRENT_TASKS;
+    defaultMaxConcurrentTasks.value = core::DEFAULT_MAX_CONCURRENT_TASKS;
 
     schedulingDefaults.children.push_back(defaultMaxConcurrentTasks);
 

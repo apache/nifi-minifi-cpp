@@ -15,37 +15,20 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
 #pragma once
 
-#include <memory>
-#include <optional>
 #include <string>
-#include <unordered_set>
+#include <memory>
 
-#include "core/FlowConfiguration.h"
-#include "core/logging/LoggerConfiguration.h"
-#include "core/ProcessorConfig.h"
-#include "Exception.h"
-#include "io/StreamFactory.h"
-#include "io/validation.h"
-#include "sitetosite/SiteToSite.h"
-#include "utils/Id.h"
-#include "utils/StringUtils.h"
-#include "utils/file/FileSystem.h"
-#include "core/flow/StructuredConfiguration.h"
+#include "StructuredConfiguration.h"
 
-namespace org::apache::nifi::minifi::core {
+namespace org::apache::nifi::minifi::core::flow {
 
-class JsonConfiguration : public flow::StructuredConfiguration {
+class AdaptiveConfiguration : public StructuredConfiguration {
  public:
-  explicit JsonConfiguration(ConfigurationContext ctx);
+  explicit AdaptiveConfiguration(ConfigurationContext ctx);
 
-  ~JsonConfiguration() override = default;
-
-  std::unique_ptr<core::ProcessGroup> getRoot() override;
-
-  std::unique_ptr<core::ProcessGroup> getRootFromPayload(const std::string &json_config) override;
+  std::unique_ptr<core::ProcessGroup> getRootFromPayload(const std::string &payload) override;
 };
 
-}  // namespace org::apache::nifi::minifi::core
+}  // namespace org::apache::nifi::minifi::core::flow

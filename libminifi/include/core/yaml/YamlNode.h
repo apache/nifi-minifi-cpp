@@ -49,6 +49,10 @@ class YamlNode : public flow::Node::NodeImpl {
     return node_.IsNull();
   }
 
+  flow::Node createEmpty() const override {
+    return flow::Node{std::make_shared<YamlNode>(YAML::Node{YAML::NodeType::Undefined})};
+  }
+
   nonstd::expected<std::string, std::exception_ptr> getString() const override {
     try {
       return node_.as<std::string>();
@@ -74,6 +78,14 @@ class YamlNode : public flow::Node::NodeImpl {
   }
 
   nonstd::expected<std::string, std::exception_ptr> getIntegerAsString() const override {
+    try {
+      return node_.as<std::string>();
+    } catch (...) {
+      return nonstd::make_unexpected(std::current_exception());
+    }
+  }
+
+  nonstd::expected<std::string, std::exception_ptr> getScalarAsString() const override {
     try {
       return node_.as<std::string>();
     } catch (...) {
@@ -149,11 +161,11 @@ class YamlIterator : public flow::Node::Iterator::IteratorImpl {
   YAML::const_iterator it_;
 };
 
-flow::Node::Iterator YamlNode::begin() const {
+inline flow::Node::Iterator YamlNode::begin() const {
   return flow::Node::Iterator{std::make_unique<YamlIterator>(node_.begin())};
 }
 
-flow::Node::Iterator YamlNode::end() const {
+inline flow::Node::Iterator YamlNode::end() const {
   return flow::Node::Iterator{std::make_unique<YamlIterator>(node_.end())};
 }
 

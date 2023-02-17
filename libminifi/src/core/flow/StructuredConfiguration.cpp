@@ -34,13 +34,26 @@ namespace org::apache::nifi::minifi::core::flow {
 
 std::shared_ptr<utils::IdGenerator> StructuredConfiguration::id_generator_ = utils::IdGenerator::getIdGenerator();
 
+std::unique_ptr<core::ProcessGroup> StructuredConfiguration::getRoot() {
+  if (!config_path_) {
+    logger_->log_error("Cannot instantiate flow, no config file is set.");
+    throw Exception(ExceptionType::FLOW_EXCEPTION, "No config file specified");
+  }
+  const auto configuration = filesystem_->read(config_path_.value());
+  if (!configuration) {
+    // non-existence of flow config file is not a dealbreaker, the caller might fetch it from network
+    return nullptr;
+  }
+  return getRootFromPayload(configuration.value());
+}
+
 StructuredConfiguration::StructuredConfiguration(ConfigurationContext ctx, std::shared_ptr<logging::Logger> logger)
     : FlowConfiguration(std::move(ctx)),
       logger_(std::move(logger)) {}
 
 std::unique_ptr<core::ProcessGroup> StructuredConfiguration::parseRootProcessGroup(const Node& root_flow_node) {
-  auto flow_controller_node = root_flow_node[CONFIG_FLOW_CONTROLLER_KEY];
-  auto root_group = parseProcessGroup(flow_controller_node, root_flow_node, true);
+  checkRequiredField(root_flow_node, schema_.flow_header);
+  auto root_group = parseProcessGroup(root_flow_node[schema_.flow_header], root_flow_node[schema_.root_group], true);
   this->name_ = root_group->getName();
   return root_group;
 }
@@ -48,15 +61,15 @@ std::unique_ptr<core::ProcessGroup> StructuredConfiguration::parseRootProcessGro
 std::unique_ptr<core::ProcessGroup> StructuredConfiguration::createProcessGroup(const Node& node, bool is_root) {
   int version = 0;
 
-  checkRequiredField(node, "name", CONFIG_REMOTE_PROCESS_GROUP_KEY);
-  auto flowName = node["name"].getString().value();
+  checkRequiredField(node, schema_.name);
+  auto flowName = node[schema_.name].getString().value();
 
   utils::Identifier uuid;
   // assignment throws on invalid uuid
   uuid = getOrGenerateId(node);
 
-  if (node["version"]) {
-    version = gsl::narrow<int>(node["version"].getInt64().value());
+  if (node[schema_.process_group_version]) {
+    version = gsl::narrow<int>(node[schema_.process_group_version].getInt64().value());
   }
 
   logger_->log_debug("parseRootProcessGroup: id => [%s], name => [%s]", uuid.to_string(), flowName);
@@ -67,8 +80,8 @@ std::unique_ptr<core::ProcessGroup> StructuredConfiguration::createProcessGroup(
     group = FlowConfiguration::createSimpleProcessGroup(flowName, uuid, version);
   }
 
-  if (node["onschedule retry interval"]) {
-    auto onScheduleRetryPeriod = node["onschedule retry interval"].getString().value();
+  if (node[schema_.onschedule_retry_interval]) {
+    auto onScheduleRetryPeriod = node[schema_.onschedule_retry_interval].getString().value();
     logger_->log_debug("parseRootProcessGroup: onschedule retry period => [%s]", onScheduleRetryPeriod);
 
     auto on_schedule_retry_period_value = utils::timeutils::StringToDuration<std::chrono::milliseconds>(onScheduleRetryPeriod);
@@ -83,20 +96,13 @@ std::unique_ptr<core::ProcessGroup> StructuredConfiguration::createProcessGroup(
 
 std::unique_ptr<core::ProcessGroup> StructuredConfiguration::parseProcessGroup(const Node& header_node, const Node& node, bool is_root) {
   auto group = createProcessGroup(header_node, is_root);
-  Node processorsNode = node[CONFIG_PROCESSORS_KEY];
-  Node connectionsNode = node[StructuredConnectionParser::CONFIG_CONNECTIONS_KEY];
-  Node funnelsNode = node[CONFIG_FUNNELS_KEY];
-  Node inputPortsNode = node[CONFIG_INPUT_PORTS_KEY];
-  Node outputPortsNode = node[CONFIG_OUTPUT_PORTS_KEY];
-  Node remoteProcessingGroupsNode = [&] {
-    // assignment is not supported on invalid nodes
-    Node candidate = node[CONFIG_REMOTE_PROCESS_GROUP_KEY];
-    if (candidate) {
-      return candidate;
-    }
-    return node[CONFIG_REMOTE_PROCESS_GROUP_KEY_V3];
-  }();
-  Node childProcessGroupNodeSeq = node["Process Groups"];
+  Node processorsNode = node[schema_.processors];
+  Node connectionsNode = node[schema_.connections];
+  Node funnelsNode = node[schema_.funnels];
+  Node inputPortsNode = node[schema_.input_ports];
+  Node outputPortsNode = node[schema_.output_ports];
+  Node remoteProcessingGroupsNode = node[schema_.remote_process_group];
+  Node childProcessGroupNodeSeq = node[schema_.process_groups];
 
   parseProcessorNode(processorsNode, group.get());
   parseRemoteProcessGroup(remoteProcessingGroupsNode, group.get());
@@ -115,10 +121,11 @@ std::unique_ptr<core::ProcessGroup> StructuredConfiguration::parseProcessGroup(c
   return group;
 }
 
-std::unique_ptr<core::ProcessGroup> StructuredConfiguration::getRootFrom(const Node& root_node) {
+std::unique_ptr<core::ProcessGroup> StructuredConfiguration::getRootFrom(const Node& root_node, FlowSchema schema) {
+  schema_ = std::move(schema);
   uuids_.clear();
-  Node controllerServiceNode = root_node[CONFIG_CONTROLLER_SERVICES_KEY];
-  Node provenanceReportNode = root_node[CONFIG_PROVENANCE_REPORT_KEY];
+  Node controllerServiceNode = root_node[schema_.root_group][schema_.controller_services];
+  Node provenanceReportNode = root_node[schema_.provenance_reporting];
 
   parseControllerServices(controllerServiceNode);
   // Create the root process group
@@ -157,14 +164,14 @@ void StructuredConfiguration::parseProcessorNode(const Node& processors_node, co
   for (const auto& procNode : processors_node) {
     core::ProcessorConfig procCfg;
 
-    checkRequiredField(procNode, "name", CONFIG_PROCESSORS_KEY);
-    procCfg.name = procNode["name"].getString().value();
+    checkRequiredField(procNode, schema_.name);
+    procCfg.name = procNode[schema_.name].getString().value();
     procCfg.id = getOrGenerateId(procNode);
 
     uuid = procCfg.id;
     logger_->log_debug("parseProcessorNode: name => [%s] id => [%s]", procCfg.name, procCfg.id);
-    checkRequiredField(procNode, "class", CONFIG_PROCESSORS_KEY);
-    procCfg.javaClass = procNode["class"].getString().value();
+    checkRequiredField(procNode, schema_.type);
+    procCfg.javaClass = procNode[schema_.type].getString().value();
     logger_->log_debug("parseProcessorNode: class => [%s]", procCfg.javaClass);
 
     // Determine the processor name only from the Java class
@@ -187,36 +194,35 @@ void StructuredConfiguration::parseProcessorNode(const Node& processors_node, co
 
     processor->setFlowIdentifier(flow_version_->getFlowIdentifier());
 
-    procCfg.schedulingStrategy = getOptionalField(procNode, "scheduling strategy", DEFAULT_SCHEDULING_STRATEGY, CONFIG_PROCESSORS_KEY);
+    procCfg.schedulingStrategy = getOptionalField(procNode, schema_.scheduling_strategy, DEFAULT_SCHEDULING_STRATEGY);
     logger_->log_debug("parseProcessorNode: scheduling strategy => [%s]", procCfg.schedulingStrategy);
 
-    procCfg.schedulingPeriod = getOptionalField(procNode, "scheduling period", DEFAULT_SCHEDULING_PERIOD_STR, CONFIG_PROCESSORS_KEY);
+    procCfg.schedulingPeriod = getOptionalField(procNode, schema_.scheduling_period, DEFAULT_SCHEDULING_PERIOD_STR);
 
     logger_->log_debug("parseProcessorNode: scheduling period => [%s]", procCfg.schedulingPeriod);
 
-    if (auto tasksNode = procNode["max concurrent tasks"]) {
+    if (auto tasksNode = procNode[schema_.max_concurrent_tasks]) {
       procCfg.maxConcurrentTasks = tasksNode.getIntegerAsString().value();
       logger_->log_debug("parseProcessorNode: max concurrent tasks => [%s]", procCfg.maxConcurrentTasks);
     }
 
-    if (procNode["penalization period"]) {
-      procCfg.penalizationPeriod = procNode["penalization period"].getString().value();
+    if (auto penalizationNode = procNode[schema_.penalization_period]) {
+      procCfg.penalizationPeriod = penalizationNode.getString().value();
       logger_->log_debug("parseProcessorNode: penalization period => [%s]", procCfg.penalizationPeriod);
     }
 
-    if (procNode["yield period"]) {
-      procCfg.yieldPeriod = procNode["yield period"].getString().value();
+    if (auto yieldNode = procNode[schema_.proc_yield_period]) {
+      procCfg.yieldPeriod = yieldNode.getString().value();
       logger_->log_debug("parseProcessorNode: yield period => [%s]", procCfg.yieldPeriod);
     }
 
-    if (auto runNode = procNode["run duration nanos"]) {
+    if (auto runNode = procNode[schema_.runduration_nanos]) {
       procCfg.runDurationNanos = runNode.getIntegerAsString().value();
       logger_->log_debug("parseProcessorNode: run duration nanos => [%s]", procCfg.runDurationNanos);
     }
 
     // handle auto-terminated relationships
-    if (procNode["auto-terminated relationships list"]) {
-      Node autoTerminatedSequence = procNode["auto-terminated relationships list"];
+    if (Node autoTerminatedSequence = procNode[schema_.autoterminated_rels]) {
       std::vector<std::string> rawAutoTerminatedRelationshipValues;
       if (autoTerminatedSequence.isSequence() && autoTerminatedSequence.size() > 0) {
         for (const auto& autoTerminatedRel : autoTerminatedSequence) {
@@ -227,9 +233,8 @@ void StructuredConfiguration::parseProcessorNode(const Node& processors_node, co
     }
 
     // handle processor properties
-    if (procNode["Properties"]) {
-      Node propertiesNode = procNode["Properties"];
-      parsePropertiesNode(propertiesNode, *processor, procCfg.name, CONFIG_PROCESSORS_KEY);
+    if (Node propertiesNode = procNode[schema_.processor_properties]) {
+      parsePropertiesNode(propertiesNode, *processor, procCfg.name);
     }
 
     // Take care of scheduling
@@ -304,13 +309,13 @@ void StructuredConfiguration::parseRemoteProcessGroup(const Node& rpg_node_seq, 
     return;
   }
   for (const auto& currRpgNode : rpg_node_seq) {
-    checkRequiredField(currRpgNode, "name", CONFIG_REMOTE_PROCESS_GROUP_KEY);
-    auto name = currRpgNode["name"].getString().value();
+    checkRequiredField(currRpgNode, schema_.name);
+    auto name = currRpgNode[schema_.name].getString().value();
     id = getOrGenerateId(currRpgNode);
 
     logger_->log_debug("parseRemoteProcessGroup: name => [%s], id => [%s]", name, id);
 
-    auto url = getOptionalField(currRpgNode, "url", "", CONFIG_REMOTE_PROCESS_GROUP_KEY);
+    auto url = getOptionalField(currRpgNode, schema_.rpg_url, "");
 
     logger_->log_debug("parseRemoteProcessGroup: url => [%s]", url);
 
@@ -318,8 +323,8 @@ void StructuredConfiguration::parseRemoteProcessGroup(const Node& rpg_node_seq, 
     auto group = createRemoteProcessGroup(name, uuid);
     group->setParent(parentGroup);
 
-    if (currRpgNode["yield period"]) {
-      auto yieldPeriod = currRpgNode["yield period"].getString().value();
+    if (currRpgNode[schema_.rpg_yield_period]) {
+      auto yieldPeriod = currRpgNode[schema_.rpg_yield_period].getString().value();
       logger_->log_debug("parseRemoteProcessGroup: yield period => [%s]", yieldPeriod);
 
       auto yield_period_value = utils::timeutils::StringToDuration<std::chrono::milliseconds>(yieldPeriod);
@@ -329,8 +334,8 @@ void StructuredConfiguration::parseRemoteProcessGroup(const Node& rpg_node_seq, 
       }
     }
 
-    if (currRpgNode["timeout"]) {
-      auto timeout = currRpgNode["timeout"].getString().value();
+    if (currRpgNode[schema_.rpg_timeout]) {
+      auto timeout = currRpgNode[schema_.rpg_timeout].getString().value();
       logger_->log_debug("parseRemoteProcessGroup: timeout => [%s]", timeout);
 
       auto timeout_value = utils::timeutils::StringToDuration<std::chrono::milliseconds>(timeout);
@@ -340,33 +345,33 @@ void StructuredConfiguration::parseRemoteProcessGroup(const Node& rpg_node_seq, 
       }
     }
 
-    if (currRpgNode["local network interface"]) {
-      auto interface = currRpgNode["local network interface"].getString().value();
+    if (currRpgNode[schema_.rpg_local_network_interface]) {
+      auto interface = currRpgNode[schema_.rpg_local_network_interface].getString().value();
       logger_->log_debug("parseRemoteProcessGroup: local network interface => [%s]", interface);
       group->setInterface(interface);
     }
 
-    if (currRpgNode["transport protocol"]) {
-      auto transport_protocol = currRpgNode["transport protocol"].getString().value();
+    if (currRpgNode[schema_.rpg_transport_protocol]) {
+      auto transport_protocol = currRpgNode[schema_.rpg_transport_protocol].getString().value();
       logger_->log_debug("parseRemoteProcessGroup: transport protocol => [%s]", transport_protocol);
       if (transport_protocol == "HTTP") {
         group->setTransportProtocol(transport_protocol);
-        if (currRpgNode["proxy host"]) {
-          auto http_proxy_host = currRpgNode["proxy host"].getString().value();
+        if (currRpgNode[schema_.rpg_proxy_host]) {
+          auto http_proxy_host = currRpgNode[schema_.rpg_proxy_host].getString().value();
           logger_->log_debug("parseRemoteProcessGroup: proxy host => [%s]", http_proxy_host);
           group->setHttpProxyHost(http_proxy_host);
-          if (currRpgNode["proxy user"]) {
-            auto http_proxy_username = currRpgNode["proxy user"].getString().value();
+          if (currRpgNode[schema_.rpg_proxy_user]) {
+            auto http_proxy_username = currRpgNode[schema_.rpg_proxy_user].getString().value();
             logger_->log_debug("parseRemoteProcessGroup: proxy user => [%s]", http_proxy_username);
             group->setHttpProxyUserName(http_proxy_username);
           }
-          if (currRpgNode["proxy password"]) {
-            auto http_proxy_password = currRpgNode["proxy password"].getString().value();
+          if (currRpgNode[schema_.rpg_proxy_password]) {
+            auto http_proxy_password = currRpgNode[schema_.rpg_proxy_password].getString().value();
             logger_->log_debug("parseRemoteProcessGroup: proxy password => [%s]", http_proxy_password);
             group->setHttpProxyPassWord(http_proxy_password);
           }
-          if (currRpgNode["proxy port"]) {
-            auto http_proxy_port = currRpgNode["proxy port"].getIntegerAsString().value();
+          if (currRpgNode[schema_.rpg_proxy_port]) {
+            auto http_proxy_port = currRpgNode[schema_.rpg_proxy_port].getIntegerAsString().value();
             int32_t port;
             if (core::Property::StringToInt(http_proxy_port, port)) {
               logger_->log_debug("parseRemoteProcessGroup: proxy port => [%d]", port);
@@ -386,19 +391,19 @@ void StructuredConfiguration::parseRemoteProcessGroup(const Node& rpg_node_seq, 
     group->setTransmitting(true);
     group->setURL(url);
 
-    checkRequiredField(currRpgNode, "Input Ports", CONFIG_REMOTE_PROCESS_GROUP_KEY);
-    auto inputPorts = currRpgNode["Input Ports"];
+    checkRequiredField(currRpgNode, schema_.rpg_input_ports);
+    auto inputPorts = currRpgNode[schema_.rpg_input_ports];
     if (inputPorts && inputPorts.isSequence()) {
       for (const auto& currPort : inputPorts) {
-        parsePort(currPort, group.get(), sitetosite::SEND);
+        parseRPGPort(currPort, group.get(), sitetosite::SEND);
       }  // for node
     }
-    auto outputPorts = currRpgNode["Output Ports"];
+    auto outputPorts = currRpgNode[schema_.rpg_output_ports];
     if (outputPorts && outputPorts.isSequence()) {
       for (const auto& currPort : outputPorts) {
         logger_->log_debug("Got a current port, iterating...");
 
-        parsePort(currPort, group.get(), sitetosite::RECEIVE);
+        parseRPGPort(currPort, group.get(), sitetosite::RECEIVE);
       }  // for node
     }
     parentGroup->addProcessGroup(std::move(group));
@@ -420,10 +425,10 @@ void StructuredConfiguration::parseProvenanceReporting(const Node& node, core::P
 
   auto reportTask = createProvenanceReportTask();
 
-  checkRequiredField(node, "scheduling strategy", CONFIG_PROVENANCE_REPORT_KEY);
-  auto schedulingStrategyStr = node["scheduling strategy"].getString().value();
-  checkRequiredField(node, "scheduling period", CONFIG_PROVENANCE_REPORT_KEY);
-  auto schedulingPeriodStr = node["scheduling period"].getString().value();
+  checkRequiredField(node, schema_.scheduling_strategy);
+  auto schedulingStrategyStr = node[schema_.scheduling_strategy].getString().value();
+  checkRequiredField(node, schema_.scheduling_period);
+  auto schedulingPeriodStr = node[schema_.scheduling_period].getString().value();
 
   if (auto scheduling_period = utils::timeutils::StringToDuration<std::chrono::nanoseconds>(schedulingPeriodStr)) {
     logger_->log_debug("ProvenanceReportingTask schedulingPeriod %" PRId64 " ns", scheduling_period->count());
@@ -456,10 +461,10 @@ void StructuredConfiguration::parseProvenanceReporting(const Node& node, core::P
       logger_->log_debug("ProvenanceReportingTask URL %s", urlStr);
     }
   }
-  checkRequiredField(node, "port uuid", CONFIG_PROVENANCE_REPORT_KEY);
-  auto portUUIDStr = node["port uuid"].getString().value();
-  checkRequiredField(node, "batch size", CONFIG_PROVENANCE_REPORT_KEY);
-  auto batchSizeStr = node["batch size"].getString().value();
+  checkRequiredField(node, schema_.provenance_reporting_port_uuid);
+  auto portUUIDStr = node[schema_.provenance_reporting_port_uuid].getString().value();
+  checkRequiredField(node, schema_.provenance_reporting_batch_size);
+  auto batchSizeStr = node[schema_.provenance_reporting_batch_size].getString().value();
 
   logger_->log_debug("ProvenanceReportingTask port uuid %s", portUUIDStr);
   port_uuid = portUUIDStr;
@@ -481,9 +486,9 @@ void StructuredConfiguration::parseControllerServices(const Node& controller_ser
     return;
   }
   for (const auto& service_node : controller_services_node) {
-    checkRequiredField(service_node, "name", CONFIG_CONTROLLER_SERVICES_KEY);
+    checkRequiredField(service_node, schema_.name);
 
-    auto type = getRequiredField(service_node, std::vector<std::string>{"class", "type"}, CONFIG_CONTROLLER_SERVICES_KEY);
+    auto type = getRequiredField(service_node, schema_.type);
     logger_->log_debug("Using type %s for controller service node", type);
 
     std::string fullType = type;
@@ -493,8 +498,8 @@ void StructuredConfiguration::parseControllerServices(const Node& controller_ser
       type = type.substr(lastOfIdx);
     }
 
-    auto name = service_node["name"].getString().value();
-    auto id = getRequiredIdField(service_node, CONFIG_CONTROLLER_SERVICES_KEY);
+    auto name = service_node[schema_.name].getString().value();
+    auto id = getRequiredIdField(service_node);
 
     utils::Identifier uuid;
     uuid = id;
@@ -502,11 +507,11 @@ void StructuredConfiguration::parseControllerServices(const Node& controller_ser
     if (nullptr != controller_service_node) {
       logger_->log_debug("Created Controller Service with UUID %s and name %s", id, name);
       controller_service_node->initialize();
-      if (Node propertiesNode = service_node["Properties"]) {
+      if (Node propertiesNode = service_node[schema_.controller_service_properties]) {
         // we should propagate properties to the node and to the implementation
-        parsePropertiesNode(propertiesNode, *controller_service_node, name, CONFIG_CONTROLLER_SERVICES_KEY);
+        parsePropertiesNode(propertiesNode, *controller_service_node, name);
         if (auto controllerServiceImpl = controller_service_node->getControllerServiceImplementation(); controllerServiceImpl) {
-          parsePropertiesNode(propertiesNode, *controllerServiceImpl, name, CONFIG_CONTROLLER_SERVICES_KEY);
+          parsePropertiesNode(propertiesNode, *controllerServiceImpl, name);
         }
       }
     } else {
@@ -538,7 +543,7 @@ void StructuredConfiguration::parseConnection(const Node& connection_node_seq, c
 
     // Default name to be same as ID
     // If name is specified in configuration, use the value
-    const auto name = connection_node["name"].getString().value_or(id);
+    const auto name = connection_node[schema_.name].getString().value_or(id);
 
     const auto uuid = utils::Identifier::parse(id) | utils::orElse([this] {
       logger_->log_debug("Incorrect connection UUID format.");
@@ -547,7 +552,7 @@ void StructuredConfiguration::parseConnection(const Node& connection_node_seq, c
 
     auto connection = createConnection(name, uuid.value());
     logger_->log_debug("Created connection with UUID %s and name %s", id, name);
-    const StructuredConnectionParser connectionParser(connection_node, name, gsl::not_null<core::ProcessGroup*>{ parent }, logger_);
+    const StructuredConnectionParser connectionParser(connection_node, name, gsl::not_null<core::ProcessGroup*>{ parent }, logger_, schema_);
     connectionParser.configureConnectionSourceRelationships(*connection);
     connection->setMaxQueueSize(connectionParser.getWorkQueueSize());
     connection->setMaxQueueDataSize(connectionParser.getWorkQueueDataSize());
@@ -561,7 +566,7 @@ void StructuredConfiguration::parseConnection(const Node& connection_node_seq, c
   }
 }
 
-void StructuredConfiguration::parsePort(const Node& port_node, core::ProcessGroup* parent, sitetosite::TransferDirection direction) {
+void StructuredConfiguration::parseRPGPort(const Node& port_node, core::ProcessGroup* parent, sitetosite::TransferDirection direction) {
   utils::Identifier uuid;
 
   if (!parent) {
@@ -570,9 +575,9 @@ void StructuredConfiguration::parsePort(const Node& port_node, core::ProcessGrou
   }
 
   // Check for required fields
-  checkRequiredField(port_node, "name", CONFIG_REMOTE_PROCESS_GROUP_KEY);
-  auto nameStr = port_node["name"].getString().value();
-  auto portId = getRequiredIdField(port_node, CONFIG_REMOTE_PROCESS_GROUP_KEY,
+  checkRequiredField(port_node, schema_.name);
+  auto nameStr = port_node[schema_.name].getString().value();
+  auto portId = getRequiredIdField(port_node,
     "The field 'id' is required for "
     "the port named '" + nameStr + "' in the Flow Config. If this port "
     "is an input port for a NiFi Remote Process Group, the port "
@@ -597,8 +602,11 @@ void StructuredConfiguration::parsePort(const Node& port_node, core::ProcessGrou
   // else defaults to RAW
 
   // handle port properties
-  if (Node propertiesNode = port_node["Properties"]) {
-    parsePropertiesNode(propertiesNode, *port, nameStr, CONFIG_REMOTE_PROCESS_GROUP_KEY);
+  if (Node propertiesNode = port_node[schema_.rpg_port_properties]) {
+    parsePropertiesNode(propertiesNode, *port, nameStr);
+  } else {
+    parsePropertyNodeElement(minifi::RemoteProcessorGroupPort::portUUID.getName(), port_node[schema_.rpg_port_target_id], *port);
+    validateComponentProperties(*port, nameStr, port_node.getPath());
   }
 
   // add processor to parent
@@ -606,7 +614,7 @@ void StructuredConfiguration::parsePort(const Node& port_node, core::ProcessGrou
   parent->addProcessor(std::move(port));
   processor.setScheduledState(core::RUNNING);
 
-  if (auto tasksNode = port_node["max concurrent tasks"]) {
+  if (auto tasksNode = port_node[schema_.max_concurrent_tasks]) {
     std::string rawMaxConcurrentTasks = tasksNode.getIntegerAsString().value();
     int32_t maxConcurrentTasks;
     if (core::Property::StringToInt(rawMaxConcurrentTasks, maxConcurrentTasks)) {
@@ -658,7 +666,7 @@ PropertyValue StructuredConfiguration::getValidatedProcessorPropertyForDefaultTy
     } else if (defaultType == Value::BOOL_TYPE && property_value_node.getBool()) {
       coercedValue = property_value_node.getBool().value();
     } else {
-      coercedValue = property_value_node.getString().value();
+      coercedValue = property_value_node.getScalarAsString().value();
     }
     return coercedValue;
   } catch (const std::exception& e) {
@@ -687,7 +695,7 @@ void StructuredConfiguration::parseSingleProperty(const std::string& property_na
     throw;
   }
   if (!property_set) {
-    const auto rawValueString = property_value_node.getString().value();
+    const auto rawValueString = property_value_node.getScalarAsString().value();
     auto proc = dynamic_cast<core::Connectable*>(&processor);
     if (proc) {
       logger_->log_warn("Received property %s with value %s but is not one of the properties for %s. Attempting to add as dynamic property.", property_name, rawValueString, proc->getName());
@@ -714,7 +722,7 @@ void StructuredConfiguration::parsePropertyNodeElement(const std::string& proper
   }
 }
 
-void StructuredConfiguration::parsePropertiesNode(const Node& properties_node, core::ConfigurableComponent& component, const std::string& component_name, const std::string& section) {
+void StructuredConfiguration::parsePropertiesNode(const Node& properties_node, core::ConfigurableComponent& component, const std::string& component_name) {
   // Treat generically as a node so we can perform inspection on entries to ensure they are populated
   logger_->log_trace("Entered %s", component_name);
   for (const auto& property_node : properties_node) {
@@ -723,7 +731,7 @@ void StructuredConfiguration::parsePropertiesNode(const Node& properties_node, c
     parsePropertyNodeElement(propertyName, propertyValueNode, component);
   }
 
-  validateComponentProperties(component, component_name, section);
+  validateComponentProperties(component, component_name, properties_node.getPath());
 }
 
 void StructuredConfiguration::parseFunnels(const Node& node, core::ProcessGroup* parent) {
@@ -739,7 +747,7 @@ void StructuredConfiguration::parseFunnels(const Node& node, core::ProcessGroup*
     std::string id = getOrGenerateId(funnel_node);
 
     // Default name to be same as ID
-    const auto name = funnel_node["name"].getString().value_or(id);
+    const auto name = funnel_node[schema_.name].getString().value_or(id);
 
     const auto uuid = utils::Identifier::parse(id) | utils::orElse([this] {
       logger_->log_debug("Incorrect funnel UUID format.");
@@ -767,7 +775,7 @@ void StructuredConfiguration::parsePorts(const flow::Node& node, core::ProcessGr
     std::string id = getOrGenerateId(port_node);
 
     // Default name to be same as ID
-    const auto name = port_node["name"].getString().value_or(id);
+    const auto name = port_node[schema_.name].getString().value_or(id);
 
     const auto uuid = utils::Identifier::parse(id) | utils::orElse([this] {
       logger_->log_debug("Incorrect port UUID format.");
@@ -861,14 +869,14 @@ void StructuredConfiguration::raiseComponentError(const std::string &component_n
   throw std::invalid_argument(err_msg);
 }
 
-std::string StructuredConfiguration::getOrGenerateId(const Node& node, const std::string& id_field) {
-  if (node[id_field]) {
-    if (auto opt_id_str = node[id_field].getString()) {
+std::string StructuredConfiguration::getOrGenerateId(const Node& node) {
+  if (node[schema_.identifier]) {
+    if (auto opt_id_str = node[schema_.identifier].getString()) {
       auto id = opt_id_str.value();
       addNewId(id);
       return id;
     }
-    throw std::invalid_argument("getOrGenerateId: idField '" + id_field + "' is expected to contain string.");
+    throw std::invalid_argument("getOrGenerateId: idField '" + utils::StringUtils::join(",", schema_.identifier) + "' is expected to contain string.");
   }
 
   auto id = id_generator_->generate().to_string();
@@ -876,27 +884,24 @@ std::string StructuredConfiguration::getOrGenerateId(const Node& node, const std
   return id;
 }
 
-std::string StructuredConfiguration::getRequiredIdField(const Node& node, std::string_view section, std::string_view error_message) {
-  checkRequiredField(node, "id", section, error_message);
-  auto id = node["id"].getString().value();
+std::string StructuredConfiguration::getRequiredIdField(const Node& node, std::string_view error_message) {
+  checkRequiredField(node, schema_.identifier, error_message);
+  auto id = node[schema_.identifier].getString().value();
   addNewId(id);
   return id;
 }
 
-std::string StructuredConfiguration::getOptionalField(const Node& node, const std::string& field_name, const std::string& default_value, const std::string& section,
-                                               const std::string& info_message) {
+std::string StructuredConfiguration::getOptionalField(const Node& node, const std::vector<std::string>& field_name, const std::string& default_value, const std::string& info_message) {
   std::string infoMessage = info_message;
   auto result = node[field_name];
   if (!result) {
     if (infoMessage.empty()) {
       // Build a helpful info message for the user to inform them that a default is being used
-      infoMessage =
-          node["name"] ?
-              "Using default value for optional field '" + field_name + "' in component named '" + node["name"].getString().value() + "'" :
-              "Using default value for optional field '" + field_name + "' ";
-      if (!section.empty()) {
-        infoMessage += " [in '" + section + "' section of configuration file]: ";
+      infoMessage = "Using default value for optional field '" + utils::StringUtils::join(",", field_name) + "'";
+      if (auto name = node["name"]) {
+        infoMessage += "' in component named '" + name.getString().value() + "'";
       }
+      infoMessage += " [in '" + node.getPath() + "' section of configuration file]: ";
 
       infoMessage += default_value;
     }

@@ -25,6 +25,8 @@
 #include <memory>
 #include <utility>
 #include "nonstd/expected.hpp"
+#include "utils/StringUtils.h"
+#include "utils/gsl.h"
 
 namespace org::apache::nifi::minifi::core::flow {
 
@@ -37,6 +39,7 @@ class Node {
   };
 
   class Iterator {
+    friend class Node;
    public:
     class Value;
 
@@ -53,6 +56,7 @@ class Node {
 
     Iterator& operator++() {
       impl_->operator++();
+      ++idx_;
       return *this;
     }
 
@@ -75,6 +79,8 @@ class Node {
 
    private:
     std::unique_ptr<IteratorImpl> impl_;
+    std::string path_;
+    int idx_{0};
   };
 
   class NodeImpl {
@@ -88,6 +94,7 @@ class Node {
     virtual nonstd::expected<bool, std::exception_ptr> getBool() const = 0;
     virtual nonstd::expected<int64_t, std::exception_ptr> getInt64() const = 0;
     virtual nonstd::expected<std::string, std::exception_ptr> getIntegerAsString() const = 0;
+    virtual nonstd::expected<std::string, std::exception_ptr> getScalarAsString() const = 0;
 
     virtual std::string getDebugString() const = 0;
 
@@ -97,6 +104,8 @@ class Node {
     virtual Node operator[](std::string_view key) const = 0;
 
     virtual std::optional<Cursor> getCursor() const = 0;
+
+    virtual Node createEmpty() const = 0;
 
     virtual ~NodeImpl() = default;
   };
@@ -113,6 +122,7 @@ class Node {
   nonstd::expected<bool, std::exception_ptr> getBool() const {return impl_->getBool();}
   nonstd::expected<int64_t, std::exception_ptr> getInt64() const {return impl_->getInt64();}
   nonstd::expected<std::string, std::exception_ptr> getIntegerAsString() const {return impl_->getIntegerAsString();}
+  nonstd::expected<std::string, std::exception_ptr> getScalarAsString() const {return impl_->getScalarAsString();}
 
   // return a string representation of the node (need not to be deserializable)
   std::string getDebugString() const {return impl_->getDebugString();}
@@ -121,14 +131,57 @@ class Node {
   size_t empty() const {
     return size() == 0;
   }
-  Iterator begin() const {return impl_->begin();}
-  Iterator end() const {return impl_->end();}
-  Node operator[](std::string_view key) const {return impl_->operator[](key);}
+  Iterator begin() const {
+    Iterator it = impl_->begin();
+    it.path_ = path_;
+    return it;
+  }
+  Iterator end() const {
+    Iterator it = impl_->end();
+    it.path_ = path_;
+    return it;
+  }
+
+  // considers @key to be a member of this node as is
+  Node getMember(std::string_view key) {
+    Node result = impl_->operator[](key);
+    result.path_ = utils::StringUtils::join_pack(path_, "/", key);
+    return result;
+  }
+
+  // considers @key to be a '/'-delimited access path
+  Node operator[](std::string_view key) const {
+    Node result = *this;
+    for (auto& field : utils::StringUtils::split(std::string{key}, "/")) {
+      if (key == ".") {
+        // pass: self
+      } else {
+        result = result.getMember(field);
+      }
+      if (!result) {
+        break;
+      }
+    }
+    return result;
+  }
+
+  // considers @keys to be a set of viable access paths, the first viable is returned
+  Node operator[](gsl::span<const std::string> keys) const {
+    for (auto& key : keys) {
+      if (Node result = (*this)[key]) {
+        return result;
+      }
+    }
+    return impl_->createEmpty();
+  }
+
+  std::string getPath() const {return path_;}
 
   std::optional<Cursor> getCursor() const {return impl_->getCursor();}
 
  private:
   std::shared_ptr<NodeImpl> impl_;
+  std::string path_;
 };
 
 class Node::Iterator::Value : public Node, public std::pair<Node, Node> {

@@ -162,6 +162,7 @@ C2Payload RESTSender::sendPayload(const std::string& url, const Direction direct
   if (payload.getOperation() == Operation::TRANSFER) {
     auto read = std::make_unique<utils::HTTPReadCallback>(std::numeric_limits<size_t>::max());
     client.setReadCallback(std::move(read));
+    client.setRequestHeader("Accept", "application/vnd.minifi-c2+json;version=1, text/yml");
   } else {
     // Due to a bug in MiNiFi C2 the Accept header is not handled properly thus we need to exclude it to be compatible
     // TODO(lordgamez): The header should be re-added when the issue in MiNiFi C2 is fixed: https://issues.apache.org/jira/browse/NIFI-10535

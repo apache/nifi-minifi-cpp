@@ -46,15 +46,6 @@ class YamlConfiguration : public flow::StructuredConfiguration {
 
   /**
    * Returns a shared pointer to a ProcessGroup object containing the
-   * flow configuration.
-   *
-   * @return               the root ProcessGroup node of the flow
-   *                        configuration tree
-   */
-  std::unique_ptr<core::ProcessGroup> getRoot() override;
-
-  /**
-   * Returns a shared pointer to a ProcessGroup object containing the
    * flow configuration. The yamlConfigStream argument must point to
    * an input stream for the raw YAML configuration.
    *

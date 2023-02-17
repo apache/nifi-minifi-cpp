@@ -21,6 +21,7 @@ import shutil
 import copy
 from .FlowContainer import FlowContainer
 from minifi.flow_serialization.Minifi_flow_yaml_serializer import Minifi_flow_yaml_serializer
+from minifi.flow_serialization.Minifi_flow_json_serializer import Minifi_flow_json_serializer
 
 
 class MinifiOptions:
@@ -30,6 +31,7 @@ class MinifiOptions:
         self.enable_provenance = False
         self.enable_prometheus = False
         self.enable_sql = False
+        self.config_format = "json"
 
 
 class MinifiContainer(FlowContainer):
@@ -58,7 +60,12 @@ class MinifiContainer(FlowContainer):
         return "Starting Flow Controller"
 
     def _create_config(self):
-        serializer = Minifi_flow_yaml_serializer()
+        if self.options.config_format == "yaml":
+            serializer = Minifi_flow_yaml_serializer()
+        elif self.options.config_format == "json":
+            serializer = Minifi_flow_json_serializer()
+        else:
+            assert False, "Invalid flow configuration format: {}".format(self.options.config_format)
         test_flow_yaml = serializer.serialize(self.start_nodes, self.controllers)
         logging.info('Using generated flow config yml:\n%s', test_flow_yaml)
         with open(os.path.join(self.container_specific_config_dir, "config.yml"), 'wb') as config_file:

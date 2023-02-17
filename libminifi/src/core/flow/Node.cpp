@@ -21,7 +21,15 @@
 namespace org::apache::nifi::minifi::core::flow {
 
 Node::Iterator::Value Node::Iterator::operator*() const {
-  return impl_->operator*();
+  Value value = impl_->operator*();
+  if (value) {
+    // sequence iterator
+    value.path_ = utils::StringUtils::join_pack(path_, "/", std::to_string(idx_));
+  } else if (value.second) {
+    // map iterator
+    value.second.path_ = utils::StringUtils::join_pack(path_, "/", value.first.getString().value());
+  }
+  return value;
 }
 
 }  // namespace org::apache::nifi::minifi::core::flow

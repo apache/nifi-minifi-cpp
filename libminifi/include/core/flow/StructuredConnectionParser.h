@@ -26,18 +26,19 @@
 
 #include "core/flow/Node.h"
 #include "utils/gsl.h"
+#include "core/flow/FlowSchema.h"
 
 namespace org::apache::nifi::minifi::core::flow {
 
 class StructuredConnectionParser {
  public:
-  static constexpr const char* CONFIG_CONNECTIONS_KEY{ "Connections" };
-
-  explicit StructuredConnectionParser(const Node& connectionNode, const std::string& name, gsl::not_null<core::ProcessGroup*> parent, const std::shared_ptr<logging::Logger>& logger) :
+  explicit StructuredConnectionParser(const Node& connectionNode, const std::string& name, gsl::not_null<core::ProcessGroup*> parent,
+                                      const std::shared_ptr<logging::Logger>& logger, std::optional<FlowSchema> schema = std::nullopt) :
       connectionNode_(connectionNode),
       name_(name),
       parent_(parent),
-      logger_(logger) {
+      logger_(logger),
+      schema_(schema.value_or(FlowSchema::getDefault())) {
     if (!connectionNode.isMap()) {
       throw std::logic_error("Connection node is not a map");
     }
@@ -60,6 +61,7 @@ class StructuredConnectionParser {
   const std::string& name_;
   gsl::not_null<core::ProcessGroup*> parent_;
   const std::shared_ptr<logging::Logger> logger_;
+  const FlowSchema schema_;
 };
 
 }  // namespace org::apache::nifi::minifi::core::flow

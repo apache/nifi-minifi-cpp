@@ -40,31 +40,11 @@ YamlConfiguration::YamlConfiguration(ConfigurationContext ctx)
         })(),
         logging::LoggerFactory<YamlConfiguration>::getLogger()) {}
 
-std::unique_ptr<core::ProcessGroup> YamlConfiguration::getRoot() {
-  if (!config_path_) {
-    logger_->log_error("Cannot instantiate flow, no config file is set.");
-    throw Exception(ExceptionType::FLOW_EXCEPTION, "No config file specified");
-  }
-  const auto configuration = filesystem_->read(config_path_.value());
-  if (!configuration) {
-  // non-existence of flow config file is not a dealbreaker, the caller might fetch it from network
-  return nullptr;
-  }
-  try {
-    YAML::Node rootYamlNode = YAML::Load(configuration.value());
-    flow::Node root{std::make_shared<YamlNode>(rootYamlNode)};
-    return getRootFrom(root);
-  } catch(...) {
-    logger_->log_error("Invalid yaml configuration file");
-    throw;
-  }
-}
-
 std::unique_ptr<core::ProcessGroup> YamlConfiguration::getYamlRoot(std::istream &yamlConfigStream) {
   try {
     YAML::Node rootYamlNode = YAML::Load(yamlConfigStream);
     flow::Node root{std::make_shared<YamlNode>(rootYamlNode)};
-    return getRootFrom(root);
+    return getRootFrom(root, flow::FlowSchema::getDefault());
   } catch (const YAML::ParserException &pe) {
     logger_->log_error(pe.what());
     throw;
@@ -75,7 +55,7 @@ std::unique_ptr<core::ProcessGroup> YamlConfiguration::getRootFromPayload(const 
   try {
     YAML::Node rootYamlNode = YAML::Load(yamlConfigPayload);
     flow::Node root{std::make_shared<YamlNode>(rootYamlNode)};
-    return getRootFrom(root);
+    return getRootFrom(root, flow::FlowSchema::getDefault());
   } catch (const YAML::ParserException &pe) {
     logger_->log_error(pe.what());
     throw;

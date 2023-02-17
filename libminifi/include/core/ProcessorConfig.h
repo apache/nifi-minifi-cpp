@@ -30,11 +30,11 @@ namespace minifi {
 namespace core {
 
 
-#define DEFAULT_SCHEDULING_STRATEGY "TIMER_DRIVEN"
-#define DEFAULT_SCHEDULING_PERIOD_STR "1 sec"
+constexpr const char* DEFAULT_SCHEDULING_STRATEGY{"TIMER_DRIVEN"};
+constexpr const char* DEFAULT_SCHEDULING_PERIOD_STR{"1 sec"};
 constexpr std::chrono::milliseconds DEFAULT_SCHEDULING_PERIOD_MILLIS{1000};
 constexpr std::chrono::nanoseconds DEFAULT_RUN_DURATION{0};
-#define DEFAULT_MAX_CONCURRENT_TASKS 1
+constexpr int DEFAULT_MAX_CONCURRENT_TASKS{1};
 constexpr std::chrono::seconds DEFAULT_YIELD_PERIOD_SECONDS{1};
 constexpr std::chrono::seconds DEFAULT_PENALIZATION_PERIOD{30};
 

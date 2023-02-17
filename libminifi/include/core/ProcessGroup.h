@@ -60,8 +60,6 @@ enum ProcessGroupType {
   REMOTE_PROCESS_GROUP,
 };
 
-#define ONSCHEDULE_RETRY_INTERVAL 30000  // millisecs
-
 class ProcessGroup : public CoreComponent {
   friend struct ::ProcessGroupTestAccessor;
  public:
