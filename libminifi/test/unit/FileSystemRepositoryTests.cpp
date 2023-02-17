@@ -58,3 +58,27 @@ TEST_CASE("Test Physical memory usage", "[testphysicalmemoryusage]") {
       return end_memory < start_memory + int64_t{5_MB};
     }, 100ms));
 }
+
+TEST_CASE("FileSystemRepository can clear orphan entries") {
+  TestController testController;
+  auto dir = testController.createTempDirectory();
+  auto configuration = std::make_shared<org::apache::nifi::minifi::Configure>();
+  configuration->set(minifi::Configure::nifi_dbcontent_repository_directory_default, dir.string());
+  {
+    auto content_repo = std::make_shared<core::repository::FileSystemRepository>();
+    REQUIRE(content_repo->initialize(configuration));
+
+    minifi::ResourceClaim claim(content_repo);
+    content_repo->write(claim)->write("hi");
+    // ensure that the content is not deleted during resource claim destruction
+    content_repo->incrementStreamCount(claim);
+  }
+
+  REQUIRE(utils::file::list_dir_all(dir, testController.getLogger()).size() == 1);
+
+  auto content_repo = std::make_shared<core::repository::FileSystemRepository>();
+  REQUIRE(content_repo->initialize(configuration));
+  content_repo->clearOrphans();
+
+  REQUIRE(utils::file::list_dir_all(dir, testController.getLogger()).empty());
+}

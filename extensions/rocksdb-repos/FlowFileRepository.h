@@ -66,13 +66,11 @@ class FlowFileRepository : public ThreadedRepository, public SwapManager {
   }
 
   explicit FlowFileRepository(const std::string& repo_name = "",
-                              std::filesystem::path checkpoint_dir = FLOWFILE_CHECKPOINT_DIRECTORY,
                               std::string directory = FLOWFILE_REPOSITORY_DIRECTORY,
                               std::chrono::milliseconds maxPartitionMillis = MAX_FLOWFILE_REPOSITORY_ENTRY_LIFE_TIME,
                               int64_t maxPartitionBytes = MAX_FLOWFILE_REPOSITORY_STORAGE_SIZE,
                               std::chrono::milliseconds purgePeriod = FLOWFILE_REPOSITORY_PURGE_PERIOD)
     : ThreadedRepository(repo_name.length() > 0 ? std::move(repo_name) : core::getClassName<FlowFileRepository>(), std::move(directory), maxPartitionMillis, maxPartitionBytes, purgePeriod),
-      checkpoint_dir_(std::move(checkpoint_dir)),
       logger_(logging::LoggerFactory<FlowFileRepository>::getLogger()) {
   }
 
@@ -112,23 +110,13 @@ class FlowFileRepository : public ThreadedRepository, public SwapManager {
 
   void initialize_repository();
 
-  /**
-   * Returns true if a checkpoint is needed at startup
-   * @return true if a checkpoint is needed.
-   */
-  static bool need_checkpoint(minifi::internal::OpenRocksDb& opendb);
-
-  void prune_stored_flowfiles();
-
   std::thread& getThread() override {
     return thread_;
   }
 
-  std::filesystem::path checkpoint_dir_;
   moodycamel::ConcurrentQueue<std::string> keys_to_delete;
   std::shared_ptr<core::ContentRepository> content_repo_;
   std::unique_ptr<minifi::internal::RocksDatabase> db_;
-  std::unique_ptr<rocksdb::Checkpoint> checkpoint_;
   std::unique_ptr<FlowFileLoader> swap_loader_;
   std::shared_ptr<logging::Logger> logger_;
   std::shared_ptr<minifi::Configure> config_;

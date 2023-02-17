@@ -94,6 +94,10 @@ class VolatileContentRepository : public core::ContentRepository {
    */
   bool remove(const minifi::ResourceClaim &claim) override;
 
+  void clearOrphans() override {
+    // there are no persisted orphans to delete
+  }
+
  private:
   VolatileRepositoryData repo_data_;
   bool minimize_locking_;

@@ -33,7 +33,6 @@ class FFRepoFixture : public TestController {
     LogTestController::getInstance().setTrace<FlowFileRepository>();
     home_ = createTempDirectory();
     repo_dir_ = home_ / "flowfile_repo";
-    checkpoint_dir_ = home_ / "checkpoint_dir";
     config_ = std::make_shared<minifi::Configure>();
     config_->setHome(home_);
     container_ = std::make_unique<minifi::Connection>(nullptr, nullptr, "container");
@@ -50,7 +49,7 @@ class FFRepoFixture : public TestController {
 
   template<typename Fn>
   void runWithNewRepository(Fn&& fn) {
-    auto repository = std::make_shared<FlowFileRepository>("ff", checkpoint_dir_, repo_dir_.string());
+    auto repository = std::make_shared<FlowFileRepository>("ff", repo_dir_.string());
     repository->initialize(config_);
     std::map<std::string, core::Connectable*> container_map;
     container_map[container_->getUUIDStr()] = container_.get();
@@ -65,7 +64,6 @@ class FFRepoFixture : public TestController {
   std::unique_ptr<minifi::Connection> container_;
   std::filesystem::path home_;
   std::filesystem::path repo_dir_;
-  std::filesystem::path checkpoint_dir_;
   std::shared_ptr<minifi::Configure> config_;
   std::shared_ptr<core::repository::VolatileContentRepository> content_repo_;
 };
@@ -93,14 +91,11 @@ TEST_CASE_METHOD(FFRepoFixture, "FlowFileRepository creates checkpoint and loads
   REQUIRE(container_->isEmpty());
 
   runWithNewRepository([&] (const std::shared_ptr<core::repository::FlowFileRepository>& /*repo*/) {
-    // wait for the flowfiles to be loaded from the checkpoint
+    // wait for the flowfiles to be loaded
     bool success = utils::verifyEventHappenedInPollTime(std::chrono::seconds{5}, [&] {
       return !container_->isEmpty();
     });
     REQUIRE(success);
-    REQUIRE(utils::verifyLogLinePresenceInPollTime(
-        std::chrono::seconds{5},
-        "Successfully opened checkpoint database at '" + checkpoint_dir_.string() + "'"));
     std::set<std::shared_ptr<core::FlowFile>> expired;
     auto flowfile = container_->poll(expired);
     REQUIRE(expired.empty());

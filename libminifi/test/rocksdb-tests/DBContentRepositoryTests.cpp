@@ -242,3 +242,42 @@ TEST_CASE("ProcessSession::append should append to the flowfile and set its size
 TEST_CASE("ProcessSession::read can read zero length flowfiles without crash (RocksDB)", "[zerolengthread]") {
   ContentRepositoryDependentTests::testReadFromZeroLengthFlowFile(std::make_shared<core::repository::DatabaseContentRepository>());
 }
+
+size_t getDbSize(const std::filesystem::path& dir) {
+  auto db = minifi::internal::RocksDatabase::create({}, {}, dir.string());
+  auto opendb = db->open();
+  REQUIRE(opendb);
+
+  size_t count = 0;
+  auto it = opendb->NewIterator({});
+  for (it->SeekToFirst(); it->Valid(); it->Next()) {
+    ++count;
+  }
+  return count;
+}
+
+TEST_CASE("DBContentRepository can clear orphan entries") {
+  TestController testController;
+  auto dir = testController.createTempDirectory();
+  auto configuration = std::make_shared<org::apache::nifi::minifi::Configure>();
+  configuration->set(minifi::Configure::nifi_dbcontent_repository_directory_default, dir.string());
+  {
+    auto content_repo = std::make_shared<core::repository::DatabaseContentRepository>();
+    REQUIRE(content_repo->initialize(configuration));
+
+    minifi::ResourceClaim claim(content_repo);
+    content_repo->write(claim)->write("hi");
+    // ensure that the content is not deleted during resource claim destruction
+    content_repo->incrementStreamCount(claim);
+  }
+
+  REQUIRE(getDbSize(dir) == 1);
+
+  {
+    auto content_repo = std::make_shared<core::repository::DatabaseContentRepository>();
+    REQUIRE(content_repo->initialize(configuration));
+    content_repo->clearOrphans();
+  }
+
+  REQUIRE(getDbSize(dir) == 0);
+}

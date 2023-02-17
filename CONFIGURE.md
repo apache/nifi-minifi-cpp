@@ -160,7 +160,6 @@ folder. You may specify your own path in place of these defaults.
     in minifi.properties
     nifi.provenance.repository.directory.default=${MINIFI_HOME}/provenance_repository
     nifi.flowfile.repository.directory.default=${MINIFI_HOME}/flowfile_repository
-    nifi.flowfile.checkpoint.directory.default=${MINIFI_HOME}/flowfile_checkpoint
     nifi.database.content.repository.directory.default=${MINIFI_HOME}/content_repository
 
 #### Shared database

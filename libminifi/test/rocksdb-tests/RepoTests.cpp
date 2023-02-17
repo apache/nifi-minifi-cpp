@@ -39,12 +39,6 @@ using namespace std::literals::chrono_literals;
 
 namespace {
 
-#ifdef WIN32
-const std::string REPOTEST_FLOWFILE_CHECKPOINT_DIR = ".\\repotest_flowfile_checkpoint";
-#else
-const std::string REPOTEST_FLOWFILE_CHECKPOINT_DIR = "./repotest_flowfile_checkpoint";
-#endif
-
 namespace {
 class TestProcessor : public minifi::core::Processor {
  public:
@@ -72,7 +66,7 @@ TEST_CASE("Test Repo Empty Value Attribute", "[TestFFR1]") {
   LogTestController::getInstance().setDebug<core::repository::FlowFileRepository>();
   TestController testController;
   auto dir = testController.createTempDirectory();
-  std::shared_ptr<core::repository::FlowFileRepository> repository = std::make_shared<core::repository::FlowFileRepository>("ff", REPOTEST_FLOWFILE_CHECKPOINT_DIR, dir.string(), 0ms, 0, 1ms);
+  std::shared_ptr<core::repository::FlowFileRepository> repository = std::make_shared<core::repository::FlowFileRepository>("ff", dir.string(), 0ms, 0, 1ms);
 
   repository->initialize(std::make_shared<minifi::Configure>());
 
@@ -83,8 +77,6 @@ TEST_CASE("Test Repo Empty Value Attribute", "[TestFFR1]") {
 
   REQUIRE(true == file->Persist(repository));
 
-  utils::file::FileUtils::delete_dir(REPOTEST_FLOWFILE_CHECKPOINT_DIR, true);
-
   repository->stop();
 }
 
@@ -94,7 +86,7 @@ TEST_CASE("Test Repo Empty Key Attribute ", "[TestFFR2]") {
   LogTestController::getInstance().setDebug<core::repository::FlowFileRepository>();
   TestController testController;
   auto dir = testController.createTempDirectory();
-  std::shared_ptr<core::repository::FlowFileRepository> repository = std::make_shared<core::repository::FlowFileRepository>("ff", REPOTEST_FLOWFILE_CHECKPOINT_DIR, dir.string(), 0ms, 0, 1ms);
+  std::shared_ptr<core::repository::FlowFileRepository> repository = std::make_shared<core::repository::FlowFileRepository>("ff", dir.string(), 0ms, 0, 1ms);
 
   repository->initialize(std::make_shared<minifi::Configure>());
   std::shared_ptr<core::ContentRepository> content_repo = std::make_shared<core::repository::VolatileContentRepository>();
@@ -106,8 +98,6 @@ TEST_CASE("Test Repo Empty Key Attribute ", "[TestFFR2]") {
 
   REQUIRE(true == file->Persist(repository));
 
-  utils::file::FileUtils::delete_dir(REPOTEST_FLOWFILE_CHECKPOINT_DIR, true);
-
   repository->stop();
 }
 
@@ -117,7 +107,7 @@ TEST_CASE("Test Repo Key Attribute Verify ", "[TestFFR3]") {
   LogTestController::getInstance().setDebug<core::repository::FlowFileRepository>();
   TestController testController;
   auto dir = testController.createTempDirectory();
-  std::shared_ptr<core::repository::FlowFileRepository> repository = std::make_shared<core::repository::FlowFileRepository>("ff", REPOTEST_FLOWFILE_CHECKPOINT_DIR, dir.string(), 0ms, 0, 1ms);
+  std::shared_ptr<core::repository::FlowFileRepository> repository = std::make_shared<core::repository::FlowFileRepository>("ff", dir.string(), 0ms, 0, 1ms);
 
   repository->initialize(std::make_shared<org::apache::nifi::minifi::Configure>());
 
@@ -154,8 +144,6 @@ TEST_CASE("Test Repo Key Attribute Verify ", "[TestFFR3]") {
 
   REQUIRE(record2->getAttribute("keyB", value));
   REQUIRE(value.empty());
-
-  utils::file::FileUtils::delete_dir(REPOTEST_FLOWFILE_CHECKPOINT_DIR, true);
 }
 
 TEST_CASE("Test Delete Content ", "[TestFFR4]") {
@@ -167,7 +155,7 @@ TEST_CASE("Test Delete Content ", "[TestFFR4]") {
 
   auto dir = testController.createTempDirectory();
 
-  std::shared_ptr<core::repository::FlowFileRepository> repository = std::make_shared<core::repository::FlowFileRepository>("ff", REPOTEST_FLOWFILE_CHECKPOINT_DIR, dir.string(), 0ms, 0, 1ms);
+  std::shared_ptr<core::repository::FlowFileRepository> repository = std::make_shared<core::repository::FlowFileRepository>("ff", dir.string(), 0ms, 0, 1ms);
 
   std::fstream file;
   file.open(dir / "tstFile.ext", std::ios::out);
@@ -203,14 +191,11 @@ TEST_CASE("Test Delete Content ", "[TestFFR4]") {
   std::ifstream fileopen(dir / "tstFile.ext", std::ios::in);
   REQUIRE(!fileopen.good());
 
-  utils::file::FileUtils::delete_dir(REPOTEST_FLOWFILE_CHECKPOINT_DIR, true);
-
   LogTestController::getInstance().reset();
 }
 
 TEST_CASE("Test Validate Checkpoint ", "[TestFFR5]") {
   TestController testController;
-  utils::file::FileUtils::delete_dir(REPOTEST_FLOWFILE_CHECKPOINT_DIR, true);
 
   LogTestController::getInstance().setDebug<core::ContentRepository>();
   LogTestController::getInstance().setTrace<core::repository::FileSystemRepository>();
@@ -219,7 +204,7 @@ TEST_CASE("Test Validate Checkpoint ", "[TestFFR5]") {
 
   auto dir = testController.createTempDirectory();
 
-  std::shared_ptr<core::repository::FlowFileRepository> repository = std::make_shared<core::repository::FlowFileRepository>("ff", REPOTEST_FLOWFILE_CHECKPOINT_DIR, dir.string(), 0ms, 0, 1ms);
+  std::shared_ptr<core::repository::FlowFileRepository> repository = std::make_shared<core::repository::FlowFileRepository>("ff", dir.string(), 0ms, 0, 1ms);
 
   std::fstream file;
   file.open(dir / "tstFile.ext", std::ios::out);
@@ -264,8 +249,6 @@ TEST_CASE("Test Validate Checkpoint ", "[TestFFR5]") {
   std::ifstream fileopen(dir / "tstFile.ext", std::ios::in);
   REQUIRE(fileopen.fail());
 
-  utils::file::FileUtils::delete_dir(REPOTEST_FLOWFILE_CHECKPOINT_DIR, true);
-
   LogTestController::getInstance().reset();
 }
 
@@ -284,7 +267,7 @@ TEST_CASE("Test FlowFile Restore", "[TestFFR6]") {
   config->set(minifi::Configure::nifi_flowfile_repository_directory_default, (dir / "flowfile_repository").string());
 
   std::shared_ptr<core::Repository> prov_repo = std::make_shared<TestThreadedRepository>();
-  auto ff_repository = std::make_shared<core::repository::FlowFileRepository>("flowFileRepository", REPOTEST_FLOWFILE_CHECKPOINT_DIR);
+  auto ff_repository = std::make_shared<core::repository::FlowFileRepository>("flowFileRepository");
   std::shared_ptr<core::ContentRepository> content_repo = std::make_shared<core::repository::FileSystemRepository>();
   ff_repository->initialize(config);
   content_repo->initialize(config);
@@ -361,7 +344,7 @@ TEST_CASE("Flush deleted flowfiles before shutdown", "[TestFFR7]") {
   class TestFlowFileRepository: public core::repository::FlowFileRepository{
    public:
     explicit TestFlowFileRepository(const std::string& name)
-      : FlowFileRepository(name, REPOTEST_FLOWFILE_CHECKPOINT_DIR, core::repository::FLOWFILE_REPOSITORY_DIRECTORY,
+      : FlowFileRepository(name, core::repository::FLOWFILE_REPOSITORY_DIRECTORY,
                            10min, core::repository::MAX_FLOWFILE_REPOSITORY_STORAGE_SIZE, 1ms) {}
 
     void flush() override {
@@ -435,6 +418,95 @@ TEST_CASE("Flush deleted flowfiles before shutdown", "[TestFFR7]") {
     std::this_thread::sleep_for(std::chrono::milliseconds(100));
     using org::apache::nifi::minifi::utils::verifyEventHappenedInPollTime;
     assert(verifyEventHappenedInPollTime(std::chrono::seconds(1), [&connection]{ return connection->getQueueSize() == 50; }, std::chrono::milliseconds(50)));
+  }
+}
+
+TEST_CASE("FlowFileRepository triggers content repo orphan clear") {
+  LogTestController::getInstance().setDebug<core::ContentRepository>();
+  LogTestController::getInstance().setDebug<core::repository::FileSystemRepository>();
+  LogTestController::getInstance().setDebug<core::repository::FlowFileRepository>();
+  TestController testController;
+  auto ff_dir = testController.createTempDirectory();
+  auto content_dir = testController.createTempDirectory();
+
+  auto config = std::make_shared<minifi::Configure>();
+  config->set(minifi::Configure::nifi_flowfile_repository_directory_default, ff_dir.string());
+  config->set(minifi::Configure::nifi_dbcontent_repository_directory_default, content_dir.string());
+
+  {
+    auto content_repo = std::make_shared<core::repository::FileSystemRepository>();
+    REQUIRE(content_repo->initialize(config));
+    minifi::ResourceClaim claim(content_repo);
+    content_repo->write(claim)->write("hi");
+    // ensure that the content is not deleted during resource claim destruction
+    content_repo->incrementStreamCount(claim);
+  }
+
+  REQUIRE(utils::file::list_dir_all(content_dir, testController.getLogger()).size() == 1);
+
+  auto ff_repo = std::make_shared<core::repository::FlowFileRepository>();
+  REQUIRE(ff_repo->initialize(config));
+  auto content_repo = std::make_shared<core::repository::FileSystemRepository>();
+  REQUIRE(content_repo->initialize(config));
+
+  ff_repo->loadComponent(content_repo);
+
+  REQUIRE(utils::file::list_dir_all(content_dir, testController.getLogger()).empty());
+}
+
+TEST_CASE("FlowFileRepository synchronously pushes existing flow files") {
+  LogTestController::getInstance().setDebug<core::ContentRepository>();
+  LogTestController::getInstance().setDebug<core::repository::FileSystemRepository>();
+  LogTestController::getInstance().setDebug<core::repository::FlowFileRepository>();
+  TestController testController;
+  auto ff_dir = testController.createTempDirectory();
+  auto content_dir = testController.createTempDirectory();
+
+  auto config = std::make_shared<minifi::Configure>();
+  config->set(minifi::Configure::nifi_flowfile_repository_directory_default, ff_dir.string());
+  config->set(minifi::Configure::nifi_dbcontent_repository_directory_default, content_dir.string());
+
+
+  utils::Identifier ff_id;
+  auto connection_id = utils::IdGenerator::getIdGenerator()->generate();
+
+  {
+    auto ff_repo = std::make_shared<core::repository::FlowFileRepository>();
+    REQUIRE(ff_repo->initialize(config));
+    auto content_repo = std::make_shared<core::repository::FileSystemRepository>();
+    REQUIRE(content_repo->initialize(config));
+    auto conn = std::make_shared<minifi::Connection>(ff_repo, content_repo, "TestConnection", connection_id);
+
+    auto claim = std::make_shared<minifi::ResourceClaim>(content_repo);
+
+    std::vector<std::pair<std::string, std::unique_ptr<minifi::io::BufferStream>>> flow_data;
+    auto ff = std::make_shared<minifi::FlowFileRecord>();
+    ff_id = ff->getUUID();
+    ff->setConnection(conn.get());
+    content_repo->write(*claim)->write("hello");
+    ff->setResourceClaim(claim);
+    auto stream = std::make_unique<minifi::io::BufferStream>();
+    ff->Serialize(*stream);
+    flow_data.emplace_back(ff->getUUIDStr(), std::move(stream));
+
+    REQUIRE(ff_repo->MultiPut(flow_data));
+  }
+
+  {
+    auto ff_repo = std::make_shared<core::repository::FlowFileRepository>();
+    REQUIRE(ff_repo->initialize(config));
+    auto content_repo = std::make_shared<core::repository::FileSystemRepository>();
+    REQUIRE(content_repo->initialize(config));
+    auto conn = std::make_shared<minifi::Connection>(ff_repo, content_repo, "TestConnection", connection_id);
+
+    ff_repo->setConnectionMap({{connection_id.to_string(), conn.get()}});
+    ff_repo->loadComponent(content_repo);
+
+    std::set<std::shared_ptr<core::FlowFile>> expired;
+    std::shared_ptr<core::FlowFile> ff = conn->poll(expired);
+    REQUIRE(expired.empty());
+    REQUIRE(ff);
+    REQUIRE(ff->getUUID() == ff_id);
   }
 }
 
