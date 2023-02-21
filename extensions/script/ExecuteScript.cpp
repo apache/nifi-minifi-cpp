@@ -55,12 +55,12 @@ void ExecuteScript::initialize() {
 }
 
 void ExecuteScript::onSchedule(core::ProcessContext *context, core::ProcessSessionFactory* /*sessionFactory*/) {
-  if (auto script_engine_prefix = context->getProperty(ScriptEngine)) {
+  if (auto script_engine_prefix = context->getProperty(ScriptEngine); script_engine_prefix && !script_engine_prefix->empty()) {
     std::transform(script_engine_prefix->begin(), ++script_engine_prefix->begin(), script_engine_prefix->begin(), ::toupper);
     auto script_executor_name = *script_engine_prefix + "ScriptExecutor";
     script_executor_ = core::ClassLoader::getDefaultClassLoader().instantiate<extensions::script::ScriptExecutor>(script_executor_name, script_executor_name);
     if (!script_executor_) {
-      throw Exception(PROCESS_SCHEDULE_EXCEPTION, "Could not instantiate " + script_executor_name);
+      throw Exception(PROCESS_SCHEDULE_EXCEPTION, "Could not instantiate: " + script_executor_name + ". Make sure that the " + *script_engine_prefix + " scripting extension is loaded");
     }
   } else {
     throw Exception(PROCESS_SCHEDULE_EXCEPTION, "Missing script engine name");

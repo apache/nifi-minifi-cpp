@@ -17,5 +17,19 @@
 # under the License.
 #
 
-# The ExecuteScript tests are in lua/python folders
-return()
+file(GLOB EXECUTE_SCRIPT_TESTS  "*.cpp")
+
+SET(EXECUTE_SCRIPT_TEST_COUNT 0)
+FOREACH(testfile ${EXECUTE_SCRIPT_TESTS})
+    get_filename_component(testfilename "${testfile}" NAME_WE)
+    add_executable("${testfilename}" "${testfile}")
+    target_include_directories(${testfilename} PRIVATE BEFORE "${CMAKE_SOURCE_DIR}/extensions/script")
+    target_include_directories(${testfilename} PRIVATE BEFORE "${CMAKE_SOURCE_DIR}/libminifi/test/")
+
+    createTests("${testfilename}")
+    target_link_libraries(${testfilename} ${CATCH_MAIN_LIB})
+    target_link_libraries(${testfilename} minifi-script-extension)
+    MATH(EXPR EXECUTE_SCRIPT_TEST_COUNT "${EXECUTE_SCRIPT_TEST_COUNT}+1")
+    add_test(NAME "${testfilename}" COMMAND "${testfilename}" WORKING_DIRECTORY ${TEST_DIR})
+ENDFOREACH()
+message("-- Finished building ${EXECUTE_SCRIPT_TEST_COUNT} ExecuteScript related test file(s)...")

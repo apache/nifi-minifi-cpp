@@ -20,11 +20,10 @@
 - [DeleteAzureDataLakeStorage](#deleteazuredatalakestorage)
 - [DeleteGCSObject](#deletegcsobject)
 - [DeleteS3Object](#deletes3object)
-- [ExecuteLuaScript](#executeluascript)
 - [ExecuteProcess](#executeprocess)
 - [ExecutePythonProcessor](#executepythonprocessor)
-- [ExecutePythonScript](#executepythonscript)
 - [ExecuteSQL](#executesql)
+- [ExecuteScript](#executescript)
 - [ExtractText](#extracttext)
 - [FetchAzureBlobStorage](#fetchazureblobstorage)
 - [FetchAzureDataLakeStorage](#fetchazuredatalakestorage)
@@ -563,22 +562,6 @@ In the list below, the names of required properties appear in bold. Any other pr
 | success | FlowFiles are routed to success relationship |
 
 
-## ExecuteLuaScript
-
-### Description
-
-Executes a lua script given the flow file and a process session. The script is responsible for handling the incoming flow file (transfer to SUCCESS or remove, e.g.) as well as any flow files created by the script. If the handling is incomplete or incorrect, the session will be rolled back. Scripts must define an onTrigger function which accepts NiFi Context and Property objects. For efficiency, scripts are executed once when the processor is run, then the onTrigger method is called for each incoming flowfile. This enables scripts to keep state if they wish, although there will be a script context per concurrent task of the processor. In order to, e.g., compute an arithmetic sum based on incoming flow file information, set the concurrent tasks to 1.
-### Properties
-
-In the list below, the names of required properties appear in bold. Any other properties (not in bold) are considered optional. The table also indicates any default values, and whether a property supports the NiFi Expression Language.
-
-| Name                 | Default Value | Allowable Values | Description                                                                                            |
-|----------------------|---------------|------------------|--------------------------------------------------------------------------------------------------------|
-| Module Directory     |               |                  | Comma-separated list of paths to files and/or directories which contain modules required by the script |
-| Script Body          |               |                  | Body of script to execute. Only one of Script File or Script Body may be used                          |
-| Script File          |               |                  | Path to script file to execute. Only one of Script File or Script Body may be used                     |
-
-
 ## ExecuteProcess
 
 ### Description
@@ -626,29 +609,6 @@ In the list below, the names of required properties appear in bold. Any other pr
 | success | Script successes |
 
 
-## ExecutePythonScript
-
-### Description
-
-Executes a python script given the flow file and a process session. The script is responsible for handling the incoming flow file (transfer to SUCCESS or remove, e.g.) as well as any flow files created by the script. If the handling is incomplete or incorrect, the session will be rolled back. Scripts must define an onTrigger function which accepts NiFi Context and Property objects. For efficiency, scripts are executed once when the processor is run, then the onTrigger method is called for each incoming flowfile. This enables scripts to keep state if they wish, although there will be a script context per concurrent task of the processor. In order to, e.g., compute an arithmetic sum based on incoming flow file information, set the concurrent tasks to 1.
-### Properties
-
-In the list below, the names of required properties appear in bold. Any other properties (not in bold) are considered optional. The table also indicates any default values, and whether a property supports the NiFi Expression Language.
-
-| Name                 | Default Value | Allowable Values | Description                                                                                            |
-|----------------------|---------------|------------------|--------------------------------------------------------------------------------------------------------|
-| Module Directory     |               |                  | Comma-separated list of paths to files and/or directories which contain modules required by the script |
-| Script Body          |               |                  | Body of script to execute. Only one of Script File or Script Body may be used                          |
-| Script File          |               |                  | Path to script file to execute. Only one of Script File or Script Body may be used                     |
-
-### Relationships
-
-| Name    | Description      |
-|---------|------------------|
-| failure | Script failures  |
-| success | Script successes |
-
-
 ## ExecuteSQL
 
 ### Description
@@ -670,6 +630,30 @@ In the list below, the names of required properties appear in bold. Any other pr
 |---------|----------------------------------------------------------|
 | success | Successfully created FlowFile from SQL query result set. |
 | failure | Flow files containing malformed sql statements           |
+
+
+## ExecuteScript
+
+### Description
+
+Executes a script given the flow file and a process session. The script is responsible for handling the incoming flow file (transfer to SUCCESS or remove, e.g.) as well as any flow files created by the script. If the handling is incomplete or incorrect, the session will be rolled back. Scripts must define an onTrigger function which accepts NiFi Context and Property objects. For efficiency, scripts are executed once when the processor is run, then the onTrigger method is called for each incoming flowfile. This enables scripts to keep state if they wish, although there will be a script context per concurrent task of the processor. In order to, e.g., compute an arithmetic sum based on incoming flow file information, set the concurrent tasks to 1.
+### Properties
+
+In the list below, the names of required properties appear in bold. Any other properties (not in bold) are considered optional. The table also indicates any default values, and whether a property supports the NiFi Expression Language.
+
+| Name                 | Default Value | Allowable Values | Description                                                                                            |
+|----------------------|---------------|------------------|--------------------------------------------------------------------------------------------------------|
+| Module Directory     |               |                  | Comma-separated list of paths to files and/or directories which contain modules required by the script |
+| Script Body          |               |                  | Body of script to execute. Only one of Script File or Script Body may be used                          |
+| **Script Engine**    | python        | python<br>lua    | The engine to execute scripts (python, lua)                                                            |
+| Script File          |               |                  | Path to script file to execute. Only one of Script File or Script Body may be used                     |
+
+### Relationships
+
+| Name    | Description      |
+|---------|------------------|
+| failure | Script failures  |
+| success | Script successes |
 
 
 ## ExtractText
