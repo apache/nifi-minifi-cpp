@@ -69,21 +69,26 @@ void ResponseNodeLoader::initializeComponentMetrics() {
     component_metrics_.clear();
   }
 
-  std::lock_guard<std::mutex> guard(root_mutex_);
-  if (!root_) {
-    return;
+  std::vector<SharedResponseNode> metrics;
+  {
+    std::lock_guard<std::mutex> guard(root_mutex_);
+    if (!root_) {
+      return;
+    }
+
+    std::vector<core::Processor*> processors;
+    root_->getAllProcessors(processors);
+    for (const auto processor : processors) {
+      auto node_source = dynamic_cast<ResponseNodeSource*>(processor);
+      if (node_source == nullptr) {
+        continue;
+      }
+      metrics.push_back(node_source->getResponseNode());
+    }
   }
 
-  std::vector<core::Processor*> processors;
-  root_->getAllProcessors(processors);
-  for (const auto processor : processors) {
-    auto node_source = dynamic_cast<ResponseNodeSource*>(processor);
-    if (node_source == nullptr) {
-      continue;
-    }
-    // we have a metrics source.
-    auto metric = node_source->getResponseNode();
-    std::lock_guard<std::mutex> guard(component_metrics_mutex_);
+  std::lock_guard<std::mutex> guard(component_metrics_mutex_);
+  for (const auto& metric : metrics) {
     component_metrics_[metric->getName()].push_back(metric);
   }
 }
