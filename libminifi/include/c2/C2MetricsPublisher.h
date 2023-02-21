@@ -48,11 +48,6 @@ class C2MetricsPublisher : public state::response::NodeReporter, public state::M
 
   std::optional<state::response::NodeReporter::ReportedNode> getMetricsNode(const std::string& metrics_class) const override;
   std::vector<state::response::NodeReporter::ReportedNode> getHeartbeatNodes(bool include_manifest) const override;
-
-  /**
-   * Retrieves the agent manifest to be sent as a response to C2 DESCRIBE manifest
-   * @return the agent manifest response node
-   */
   state::response::NodeReporter::ReportedNode getAgentManifest() override;
 
   void clearMetricNodes() override;

@@ -21,10 +21,11 @@
 #include <string>
 
 #include "MetricsPublisher.h"
+#include "utils/gsl.h"
 
 namespace org::apache::nifi::minifi::state {
 
-std::unique_ptr<MetricsPublisher> createMetricsPublisher(const std::string& name, const std::shared_ptr<Configure>& configuration,
+gsl::not_null<std::unique_ptr<MetricsPublisher>> createMetricsPublisher(const std::string& name, const std::shared_ptr<Configure>& configuration,
   const std::shared_ptr<state::response::ResponseNodeLoader>& response_node_loader);
 std::unique_ptr<MetricsPublisher> createMetricsPublisher(const std::shared_ptr<Configure>& configuration, const std::shared_ptr<state::response::ResponseNodeLoader>& response_node_loader);
 

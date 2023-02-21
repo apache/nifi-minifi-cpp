@@ -231,14 +231,13 @@ class TestFlowController : public org::apache::nifi::minifi::FlowController {
   }
 
   int16_t start() override {
-    running_.store(true);
     return 0;
   }
 
   int16_t stop() override {
-    running_.store(false);
     return 0;
   }
+
   void waitUnload(const uint64_t /*timeToWaitMs*/) override {
     stop();
   }

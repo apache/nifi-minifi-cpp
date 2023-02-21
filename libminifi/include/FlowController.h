@@ -119,14 +119,6 @@ class FlowController : public core::controller::ForwardingControllerServiceProvi
     root_wrapper_.updatePropertyValue(std::move(processorName), std::move(propertyName), std::move(propertyValue));
   }
 
-  void setSerialNumber(std::string number) {
-    serial_number_ = std::move(number);
-  }
-
-  std::string getSerialNumber() {
-    return serial_number_;
-  }
-
   // validate and apply passing configuration payload
   // first it will validate the payload with the current root node config for flowController
   // like FlowController id/name is the same and new version is greater than the current version
@@ -163,10 +155,12 @@ class FlowController : public core::controller::ForwardingControllerServiceProvi
    */
   std::unique_ptr<core::ProcessGroup> loadInitialFlow();
 
- protected:
   void loadFlowRepo();
+  std::vector<state::StateController*> getAllComponents();
+  state::StateController* getComponent(const std::string& id_or_name);
+  gsl::not_null<std::unique_ptr<state::ProcessorController>> createController(core::Processor& processor);
+  std::unique_ptr<core::ProcessGroup> updateFromPayload(const std::string& url, const std::string& config_payload, const std::optional<std::string>& flow_id = std::nullopt);
 
- private:
   template <typename T, typename = typename std::enable_if<std::is_base_of<SchedulingAgent, T>::value>::type>
   void conditionalReloadScheduler(std::unique_ptr<T>& scheduler, const bool condition) {
     if (condition) {
@@ -174,20 +168,15 @@ class FlowController : public core::controller::ForwardingControllerServiceProvi
     }
   }
 
- protected:
   std::recursive_mutex mutex_;
-
   std::atomic<bool> running_;
   std::atomic<bool> updating_;
-
   std::atomic<bool> initialized_;
   std::unique_ptr<TimerDrivenSchedulingAgent> timer_scheduler_;
   std::unique_ptr<EventDrivenSchedulingAgent> event_scheduler_;
   std::unique_ptr<CronDrivenSchedulingAgent> cron_scheduler_;
   std::unique_ptr<FlowControlProtocol> protocol_;
   std::chrono::steady_clock::time_point start_time_;
-
- protected:
   std::shared_ptr<Configure> configuration_;
   std::shared_ptr<core::Repository> provenance_repo_;
   std::shared_ptr<core::Repository> flow_file_repo_;
@@ -196,17 +185,7 @@ class FlowController : public core::controller::ForwardingControllerServiceProvi
   std::unique_ptr<state::MetricsPublisherStore> metrics_publisher_store_;
   RootProcessGroupWrapper root_wrapper_;
   std::unique_ptr<c2::C2Agent> c2_agent_{};
-
-  std::vector<state::StateController*> getAllComponents();
-
-  state::StateController* getComponent(const std::string& id_or_name);
-
-  gsl::not_null<std::unique_ptr<state::ProcessorController>> createController(core::Processor& processor);
-
-  std::unique_ptr<core::ProcessGroup> updateFromPayload(const std::string& url, const std::string& config_payload, const std::optional<std::string>& flow_id = std::nullopt);
-
   std::shared_ptr<core::logging::Logger> logger_ = core::logging::LoggerFactory<FlowController>::getLogger();
-  std::string serial_number_;
 
   // Thread pool for schedulers
   utils::ThreadPool<utils::TaskRescheduleInfo> thread_pool_;

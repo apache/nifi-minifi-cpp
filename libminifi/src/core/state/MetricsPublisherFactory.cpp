@@ -19,7 +19,7 @@
 
 namespace org::apache::nifi::minifi::state {
 
-std::unique_ptr<MetricsPublisher> createMetricsPublisher(const std::string& name, const std::shared_ptr<Configure>& configuration,
+gsl::not_null<std::unique_ptr<MetricsPublisher>> createMetricsPublisher(const std::string& name, const std::shared_ptr<Configure>& configuration,
     const std::shared_ptr<state::response::ResponseNodeLoader>& response_node_loader) {
   auto ptr = core::ClassLoader::getDefaultClassLoader().instantiate(name, name);
   if (!ptr) {
@@ -28,11 +28,11 @@ std::unique_ptr<MetricsPublisher> createMetricsPublisher(const std::string& name
 
   auto metrics_publisher = utils::dynamic_unique_cast<MetricsPublisher>(std::move(ptr));
   if (!metrics_publisher) {
-    throw std::runtime_error("Configured metrics publisher class \"" + name + "\" could not be instantiated.");
+    throw std::runtime_error("Configured metrics publisher class \"" + name + "\" is not a MetricsPublisher.");
   }
 
   metrics_publisher->initialize(configuration, response_node_loader);
-  return metrics_publisher;
+  return gsl::make_not_null(std::move(metrics_publisher));
 }
 
 std::unique_ptr<MetricsPublisher> createMetricsPublisher(const std::shared_ptr<Configure>& configuration, const std::shared_ptr<state::response::ResponseNodeLoader>& response_node_loader) {

@@ -32,10 +32,8 @@ void MetricsPublisherStore::initialize(core::controller::ControllerServiceProvid
   response_node_loader_->setControllerServiceProvider(controller);
   response_node_loader_->setStateMonitor(update_sink);
   if (minifi::c2::isC2Enabled(configuration_)) {
-    std::shared_ptr c2_metrics_publisher = minifi::state::createMetricsPublisher(c2::C2_METRICS_PUBLISHER, configuration_, response_node_loader_);
-    if (c2_metrics_publisher) {
-      addMetricsPublisher(c2::C2_METRICS_PUBLISHER, std::move(c2_metrics_publisher));
-    }
+    gsl::not_null<std::shared_ptr<state::MetricsPublisher>> c2_metrics_publisher = minifi::state::createMetricsPublisher(c2::C2_METRICS_PUBLISHER, configuration_, response_node_loader_);
+    addMetricsPublisher(c2::C2_METRICS_PUBLISHER, std::move(c2_metrics_publisher));
   }
 
   std::shared_ptr metrics_publisher = minifi::state::createMetricsPublisher(configuration_, response_node_loader_);

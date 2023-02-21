@@ -26,8 +26,8 @@
 
 namespace org::apache::nifi::minifi::c2 {
 
-static constexpr const char* UPDATE_NAME = "C2UpdatePolicy";
-static constexpr const char* C2_METRICS_PUBLISHER = "C2MetricsPublisher";
+inline constexpr const char* UPDATE_NAME = "C2UpdatePolicy";
+inline constexpr const char* C2_METRICS_PUBLISHER = "C2MetricsPublisher";
 
 bool isC2Enabled(const std::shared_ptr<Configure>& configuration);
 
