@@ -29,7 +29,7 @@
 namespace org::apache::nifi::minifi::extensions::python {
 extern "C" {
 
-struct PyModuleDef minifiModule = {
+struct PyModuleDef minifi_module = {
   .m_base = PyModuleDef_HEAD_INIT,
   .m_name = "minifi_native",    // name of module
   .m_doc = nullptr,             // module documentation, may be NULL
@@ -60,8 +60,8 @@ PyInit_minifi_native(void) {
     }
   }
 
-  auto minifiModuleInstance = PyModule_Create(&minifiModule);
-  if (minifiModuleInstance == nullptr) {
+  auto minifi_module_instance = PyModule_Create(&minifi_module);
+  if (minifi_module_instance == nullptr) {
       return nullptr;
   }
 
@@ -69,18 +69,18 @@ PyInit_minifi_native(void) {
     Py_INCREF(type.first);
   }
   const auto result = std::all_of(std::begin(types), std::end(types), [&](std::pair<PyTypeObject*, std::string_view> type) {
-    return PyModule_AddObject(minifiModuleInstance, type.second.data(), reinterpret_cast<PyObject*>(type.first)) == 0;
+    return PyModule_AddObject(minifi_module_instance, type.second.data(), reinterpret_cast<PyObject*>(type.first)) == 0;
   });
 
   if (!result) {
     for (auto type : types) {
       Py_DECREF(type.first);
     }
-    Py_DECREF(minifiModuleInstance);
+    Py_DECREF(minifi_module_instance);
     return nullptr;
   }
 
-  return minifiModuleInstance;
+  return minifi_module_instance;
 }
 
 }  // extern "C"
