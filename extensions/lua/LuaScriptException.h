@@ -24,17 +24,8 @@
 
 namespace org::apache::nifi::minifi::extensions::lua {
 
-class LuaScriptException : public std::exception {
+class LuaScriptException : public std::runtime_error {
  public:
-  explicit LuaScriptException(std::string error) : error_(std::move(error)) {}
-
-  virtual ~LuaScriptException() noexcept = default;
-
-  virtual const char * what() const noexcept {
-    return error_.c_str();
-  }
-
- private:
-  std::string error_;
+  explicit LuaScriptException(const std::string& error) : std::runtime_error(error) {}
 };
 }  // namespace org::apache::nifi::minifi::extensions::lua

@@ -25,17 +25,8 @@
 #include <stdexcept>
 
 namespace org::apache::nifi::minifi::extensions::python {
-class PythonScriptException : public std::exception {
+class PythonScriptException : public std::runtime_error {
  public:
-  explicit PythonScriptException(std::string error) : error_(std::move(error)) {}
-
-  virtual ~PythonScriptException() noexcept = default;
-
-  virtual const char * what() const noexcept {
-    return error_.c_str();
-  }
-
- private:
-  std::string error_;
+  explicit PythonScriptException(const std::string& error) : std::runtime_error(error) {}
 };
 }  // namespace org::apache::nifi::minifi::extensions::python
