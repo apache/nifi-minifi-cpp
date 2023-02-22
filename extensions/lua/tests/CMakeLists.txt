@@ -17,7 +17,7 @@
 # under the License.
 #
 
-file(GLOB EXECUTESCRIPT_LUA_TESTS "LuaScriptEngineTests.cpp" "TestExecuteScriptProcessorWithLuaScript.cpp")
+file(GLOB EXECUTESCRIPT_LUA_TESTS "*.cpp")
 
 SET(EXTENSIONS_TEST_COUNT 0)
 
