@@ -17,7 +17,7 @@ global i
 i = 0
 
 
-class WriteReverseStringCallback:
+class WriteCallback:
     def __init__(self, content):
         self.content = content
 
@@ -38,5 +38,5 @@ def onTrigger(context, session):
     global i
     i = i + 1
     flow_file = session.create()
-    session.write(flow_file, WriteReverseStringCallback(str(i)))
+    session.write(flow_file, WriteCallback(str(i)))
     session.transfer(flow_file, REL_SUCCESS)
