@@ -20,6 +20,7 @@
 #include <memory>
 #include <utility>
 #include <string>
+#include <variant>
 
 #include "Core.h"
 #include "ProcessContext.h"
@@ -41,8 +42,7 @@ class ScriptExecutor : public minifi::core::CoreComponent {
       std::shared_ptr<core::logging::Logger> logger) = 0;
 
  protected:
-  std::filesystem::path script_file_;
-  std::string script_body_;
+  std::variant<std::filesystem::path, std::string> script_to_run_;
   std::optional<std::string> module_directory_;
 };
 }  // namespace org::apache::nifi::minifi::extensions::script

@@ -28,18 +28,16 @@ LuaScriptExecutor::LuaScriptExecutor(std::string name, const utils::Identifier& 
 
 void LuaScriptExecutor::onTrigger(const std::shared_ptr<core::ProcessContext>& context, const std::shared_ptr<core::ProcessSession>& session) {
   auto lua_script_engine = lua_script_engine_queue_->getResource();
+  gsl_Expects(std::holds_alternative<std::filesystem::path>(script_to_run_) || std::holds_alternative<std::string>(script_to_run_));
 
   if (module_directory_) {
     lua_script_engine->setModulePaths(utils::StringUtils::splitAndTrimRemovingEmpty(*module_directory_, ",") | ranges::to<std::vector<std::filesystem::path>>());
   }
 
-  if (!script_body_.empty()) {
-    lua_script_engine->eval(script_body_);
-  } else if (!script_file_.empty()) {
-    lua_script_engine->evalFile(script_file_);
-  } else {
-    throw std::runtime_error("Neither Script Body nor Script File is available to execute");
-  }
+  if (std::holds_alternative<std::filesystem::path>(script_to_run_))
+    lua_script_engine->evalFile(std::get<std::filesystem::path>(script_to_run_));
+  else
+    lua_script_engine->eval(std::get<std::string>(script_to_run_));
 
   lua_script_engine->onTrigger(context, session);
 }
@@ -51,8 +49,16 @@ void LuaScriptExecutor::initialize(std::filesystem::path script_file,
     const core::Relationship& success,
     const core::Relationship& failure,
     std::shared_ptr<core::logging::Logger> logger) {
-  script_file_ = std::move(script_file);
-  script_body_ = std::move(script_body);
+  if (script_file.empty() == script_body.empty())
+    throw std::runtime_error("Exactly one of these must be non-zero: ScriptBody, ScriptFile");
+
+  if (!script_file.empty()) {
+    script_to_run_.emplace<std::filesystem::path>(std::move(script_file));
+  }
+  if (!script_body.empty()) {
+    script_to_run_.emplace<std::string>(std::move(script_body));
+  }
+
   module_directory_ = std::move(module_directory);
 
   auto create_engine = [=]() -> std::unique_ptr<LuaScriptEngine> {

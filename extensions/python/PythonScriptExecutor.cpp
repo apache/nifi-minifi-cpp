@@ -31,21 +31,17 @@ PythonScriptExecutor::PythonScriptExecutor(std::string name, const utils::Identi
 
 
 void PythonScriptExecutor::onTrigger(const std::shared_ptr<core::ProcessContext>& context, const std::shared_ptr<core::ProcessSession>& session) {
-  if (python_script_engine_ == nullptr) {
-    throw std::runtime_error("No script engine available");
-  }
+  gsl_Expects(python_script_engine_);
+  gsl_Expects(std::holds_alternative<std::filesystem::path>(script_to_run_) || std::holds_alternative<std::string>(script_to_run_));
 
   if (module_directory_) {
     python_script_engine_->setModulePaths(utils::StringUtils::splitAndTrimRemovingEmpty(*module_directory_, ",") | ranges::to<std::vector<std::filesystem::path>>());
   }
 
-  if (!script_body_.empty()) {
-    python_script_engine_->eval(script_body_);
-  } else if (!script_file_.empty()) {
-    python_script_engine_->evalFile(script_file_);
-  } else {
-    throw std::runtime_error("Neither Script Body nor Script File is available to execute");
-  }
+  if (std::holds_alternative<std::filesystem::path>(script_to_run_))
+    python_script_engine_->evalFile(std::get<std::filesystem::path>(script_to_run_));
+  else
+    python_script_engine_->eval(std::get<std::string>(script_to_run_));
 
   python_script_engine_->onTrigger(context, session);
 }
@@ -57,8 +53,15 @@ void PythonScriptExecutor::initialize(std::filesystem::path script_file,
     const core::Relationship& success,
     const core::Relationship& failure,
     std::shared_ptr<core::logging::Logger> logger) {
-  script_file_ = std::move(script_file);
-  script_body_ = std::move(script_body);
+  if (script_file.empty() == script_body.empty())
+    throw std::runtime_error("Exactly one of these must be non-zero: ScriptBody, ScriptFile");
+
+  if (!script_file.empty()) {
+    script_to_run_.emplace<std::filesystem::path>(std::move(script_file));
+  }
+  if (!script_body.empty()) {
+    script_to_run_.emplace<std::string>(std::move(script_body));
+  }
   module_directory_ = std::move(module_directory);
 
   python_script_engine_ = std::make_unique<python::PythonScriptEngine>();
