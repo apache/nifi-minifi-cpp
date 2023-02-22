@@ -19,18 +19,18 @@ set -e
 
 die()
 {
-	local _ret="${2:-1}"
-	test "${_PRINT_HELP:-no}" = yes && print_help >&2
-	echo "$1" >&2
-	exit "${_ret}"
+  local _ret="${2:-1}"
+  test "${_PRINT_HELP:-no}" = yes && print_help >&2
+  echo "$1" >&2
+  exit "${_ret}"
 }
 
 
 begins_with_short_option()
 {
-	local first_option all_short_options='h'
-	first_option="${1:0:1}"
-	test "$all_short_options" = "${all_short_options/$first_option/}" && return 1 || return 0
+  local first_option all_short_options='h'
+  first_option="${1:0:1}"
+  test "$all_short_options" = "${all_short_options/$first_option/}" && return 1 || return 0
 }
 
 _positionals=()
@@ -40,73 +40,73 @@ _arg_image_tag_prefix=
 
 print_help()
 {
-	printf '%s\n' "Runs the provided behave tests in a containerized environment"
-	printf 'Usage: %s [--image-tag-prefix <arg>] [-h|--help] <minifi_version> <feature_path-1> [<feature_path-2>] ... [<feature_path-n>] ...\n' "$0"
-	printf '\t%s\n' "<minifi_version>: the version of minifi"
-	printf '\t%s\n' "<feature_path>: feature files to run"
-	printf '\t%s\n' "--image-tag-prefix: optional prefix to the docker tag (no default)"
-	printf '\t%s\n' "-h, --help: Prints help"
+  printf '%s\n' "Runs the provided behave tests in a containerized environment"
+  printf 'Usage: %s [--image-tag-prefix <arg>] [-h|--help] <minifi_version> <feature_path-1> [<feature_path-2>] ... [<feature_path-n>] ...\n' "$0"
+  printf '\t%s\n' "<minifi_version>: the version of minifi"
+  printf '\t%s\n' "<feature_path>: feature files to run"
+  printf '\t%s\n' "--image-tag-prefix: optional prefix to the docker tag (no default)"
+  printf '\t%s\n' "-h, --help: Prints help"
 }
 
 
 parse_commandline()
 {
-	_positionals_count=0
-	while test $# -gt 0
-	do
-		_key="$1"
-		case "$_key" in
-			--image-tag-prefix)
-				test $# -lt 2 && die "Missing value for the optional argument '$_key'." 1
-				_arg_image_tag_prefix="$2"
-				shift
-				;;
-			--image-tag-prefix=*)
-				_arg_image_tag_prefix="${_key##--image-tag-prefix=}"
-				;;
-			-h|--help)
-				print_help
-				exit 0
-				;;
-			-h*)
-				print_help
-				exit 0
-				;;
-			*)
-				_last_positional="$1"
-				_positionals+=("$_last_positional")
-				_positionals_count=$((_positionals_count + 1))
-				;;
-		esac
-		shift
-	done
+  _positionals_count=0
+  while test $# -gt 0
+  do
+    _key="$1"
+    case "$_key" in
+      --image-tag-prefix)
+        test $# -lt 2 && die "Missing value for the optional argument '$_key'." 1
+        _arg_image_tag_prefix="$2"
+        shift
+        ;;
+      --image-tag-prefix=*)
+        _arg_image_tag_prefix="${_key##--image-tag-prefix=}"
+        ;;
+      -h|--help)
+        print_help
+        exit 0
+        ;;
+      -h*)
+        print_help
+        exit 0
+        ;;
+      *)
+        _last_positional="$1"
+        _positionals+=("$_last_positional")
+        _positionals_count=$((_positionals_count + 1))
+        ;;
+    esac
+    shift
+  done
 }
 
 
 handle_passed_args_count()
 {
-	local _required_args_string="'minifi_version' and 'feature_path'"
-	test "${_positionals_count}" -ge 2 || _PRINT_HELP=yes die "FATAL ERROR: Not enough positional arguments - we require at least 2 (namely: $_required_args_string), but got only ${_positionals_count}." 1
+  local _required_args_string="'minifi_version' and 'feature_path'"
+  test "${_positionals_count}" -ge 2 || _PRINT_HELP=yes die "FATAL ERROR: Not enough positional arguments - we require at least 2 (namely: $_required_args_string), but got only ${_positionals_count}." 1
 }
 
 
 assign_positional_args()
 {
-	local _positional_name _shift_for=$1
-	_positional_names="_arg_minifi_version _arg_feature_path "
-	_our_args=$((${#_positionals[@]} - 2))
-	for ((ii = 0; ii < _our_args; ii++))
-	do
-		_positional_names="$_positional_names _arg_feature_path[$((ii + 1))]"
-	done
+  local _positional_name _shift_for=$1
+  _positional_names="_arg_minifi_version _arg_feature_path "
+  _our_args=$((${#_positionals[@]} - 2))
+  for ((ii = 0; ii < _our_args; ii++))
+  do
+    _positional_names="$_positional_names _arg_feature_path[$((ii + 1))]"
+  done
 
-	shift "$_shift_for"
-	for _positional_name in ${_positional_names}
-	do
-		test $# -gt 0 || break
-		eval "$_positional_name=\${1}" || die "Error during argument parsing." 1
-		shift
-	done
+  shift "$_shift_for"
+  for _positional_name in ${_positional_names}
+  do
+    test $# -gt 0 || break
+    eval "$_positional_name=\${1}" || die "Error during argument parsing." 1
+    shift
+  done
 }
 
 parse_commandline "$@"
