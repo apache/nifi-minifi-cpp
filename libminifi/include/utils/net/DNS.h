@@ -20,7 +20,6 @@
 #include <string>
 #include <string_view>
 #include <system_error>
-#include <vector>
 #include "nonstd/expected.hpp"
 #include "utils/gsl.h"
 #include "IpProtocol.h"
