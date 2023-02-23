@@ -54,7 +54,7 @@ PyInit_minifi_native(void) {
     std::make_pair(PyOutputStream::typeObject(), "OutputStream")
   };
 
-  for (auto type : types) {
+  for (const auto& type : types) {
     if (PyType_Ready(type.first) < 0) {
       return nullptr;
     }
@@ -65,7 +65,7 @@ PyInit_minifi_native(void) {
       return nullptr;
   }
 
-  for (auto type : types) {
+  for (const auto& type : types) {
     Py_INCREF(type.first);
   }
   const auto result = std::all_of(std::begin(types), std::end(types), [&](std::pair<PyTypeObject*, std::string_view> type) {
@@ -73,7 +73,7 @@ PyInit_minifi_native(void) {
   });
 
   if (!result) {
-    for (auto type : types) {
+    for (const auto& type : types) {
       Py_DECREF(type.first);
     }
     Py_DECREF(minifi_module_instance);
