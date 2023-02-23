@@ -27,11 +27,12 @@ ENV MINIFI_HOME ${MINIFI_BASE_DIR}/minifi-current
 
 USER root
 
-RUN wget https://repo.anaconda.com/archive/Anaconda3-2022.10-Linux-x86_64.sh -P /tmp
-RUN bash /tmp/Anaconda3-2022.10-Linux-x86_64.sh -b -p /opt/conda
-RUN chown -R ${USER}:${USER} /opt/conda
-RUN mkdir /home/${USER}
-RUN chown -R ${USER}:${USER} /home/${USER}
+RUN wget https://repo.anaconda.com/archive/Anaconda3-2022.10-Linux-x86_64.sh -P /tmp \
+    && echo "e7ecbccbc197ebd7e1f211c59df2e37bc6959d081f2235d387e08c9026666acd /tmp/Anaconda3-2022.10-Linux-x86_64.sh" | sha256sum -c \
+    && bash /tmp/Anaconda3-2022.10-Linux-x86_64.sh -b -p /opt/conda  \
+    && chown -R ${USER}:${USER} /opt/conda \
+    && mkdir /home/${USER}  \
+    && chown -R ${USER}:${USER} /home/${USER}
 
 USER ${USER}
 

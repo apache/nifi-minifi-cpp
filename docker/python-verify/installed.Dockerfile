@@ -36,8 +36,8 @@ RUN groupadd -g ${GID} ${USER} && useradd -g ${GID} ${USER} && \
     install -d -o ${USER} -g ${USER} ${MINIFI_BASE_DIR} && ln -s ${MINIFI_VERSIONED_HOME} ${MINIFI_HOME}
 
 ADD ${ARCHIVE_LOCATION} ${MINIFI_BASE_DIR}
-RUN chown -R ${USER}:${USER} /opt/minifi
-RUN /bin/bash -c "${INSTALL_PACKAGE_CMD}"
+RUN chown -R ${USER}:${USER} /opt/minifi  \
+    && /bin/bash -c "${INSTALL_PACKAGE_CMD}"
 
 USER ${USER}
 WORKDIR ${MINIFI_HOME}
