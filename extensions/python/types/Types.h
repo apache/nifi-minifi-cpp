@@ -53,7 +53,7 @@ struct Converter {};
 template<typename T>
 concept convertible = requires(T type) {
   { Converter<T>().from(std::forward<T>(type)) } -> std::same_as<OwnedObject>;
-};
+};  // NOLINT(readability/braces)
 
 template<>
 struct Converter<bool> {
