@@ -72,7 +72,7 @@ PyObject* PyScriptFlowFile::getAttribute(PyScriptFlowFile* self, PyObject* args)
   if (!PyArg_ParseTuple(args, "s", &attribute)) {
     throw PyException();
   }
-  return object::returnReference(flow_file->getAttribute(std::string(attribute)));
+  return object::returnReference(flow_file->getAttribute(std::string(attribute)).value_or(""));
 }
 
 PyObject* PyScriptFlowFile::addAttribute(PyScriptFlowFile* self, PyObject* args) {

@@ -21,7 +21,6 @@
 #include <memory>
 
 #include "core/ProcessSession.h"
-#include "../PythonScriptFlowFile.h"
 #include "../PythonBindings.h"
 
 namespace org::apache::nifi::minifi::extensions::python {
@@ -30,15 +29,15 @@ class PyProcessSession {
  public:
   explicit PyProcessSession(std::shared_ptr<core::ProcessSession> session);
 
-  std::shared_ptr<PythonScriptFlowFile> get();
-  std::shared_ptr<PythonScriptFlowFile> create(const std::shared_ptr<PythonScriptFlowFile>& flow_file);
-  void transfer(const std::shared_ptr<PythonScriptFlowFile>& flow_file, const core::Relationship& relationship);
-  void read(const std::shared_ptr<PythonScriptFlowFile>& flow_file, BorrowedObject input_stream_callback);
-  void write(const std::shared_ptr<PythonScriptFlowFile>& flow_file, BorrowedObject output_stream_callback);
-  void remove(const std::shared_ptr<PythonScriptFlowFile>& flow_file);
+  std::shared_ptr<core::FlowFile> get();
+  std::shared_ptr<core::FlowFile> create(const std::shared_ptr<core::FlowFile>& flow_file = nullptr);
+  void transfer(const std::shared_ptr<core::FlowFile>& flow_file, const core::Relationship& relationship);
+  void read(const std::shared_ptr<core::FlowFile>& flow_file, BorrowedObject input_stream_callback);
+  void write(const std::shared_ptr<core::FlowFile>& flow_file, BorrowedObject output_stream_callback);
+  void remove(const std::shared_ptr<core::FlowFile>& flow_file);
 
  private:
-  std::vector<std::shared_ptr<PythonScriptFlowFile>> flow_files_;
+  std::vector<std::shared_ptr<core::FlowFile>> flow_files_;
   std::shared_ptr<core::ProcessSession> session_;
 };
 

@@ -18,13 +18,13 @@
 
 #include <memory>
 #include "../PythonBindings.h"
-#include "../PythonScriptFlowFile.h"
+#include "core/FlowFile.h"
 
 namespace org::apache::nifi::minifi::extensions::python {
 
 struct PyScriptFlowFile {
   PyScriptFlowFile() {}
-  using HeldType = std::weak_ptr<PythonScriptFlowFile>;
+  using HeldType = std::weak_ptr<core::FlowFile>;
   static constexpr const char* HeldTypeName = "PyScriptFlowFile::HeldType";
 
   PyObject_HEAD

@@ -33,7 +33,7 @@ PyProcessSession::PyProcessSession(std::shared_ptr<core::ProcessSession> session
     : session_(std::move(session)) {
 }
 
-std::shared_ptr<PythonScriptFlowFile> PyProcessSession::get() {
+std::shared_ptr<core::FlowFile> PyProcessSession::get() {
   if (!session_) {
     throw std::runtime_error("Access of ProcessSession after it has been released");
   }
@@ -44,19 +44,16 @@ std::shared_ptr<PythonScriptFlowFile> PyProcessSession::get() {
     return nullptr;
   }
 
-  auto result = std::make_shared<PythonScriptFlowFile>(flow_file);
-  flow_files_.push_back(result);
+  flow_files_.push_back(flow_file);
 
-  return result;
+  return flow_file;
 }
 
-void PyProcessSession::transfer(const std::shared_ptr<PythonScriptFlowFile>& script_flow_file,
+void PyProcessSession::transfer(const std::shared_ptr<core::FlowFile>& flow_file,
                                 const core::Relationship& relationship) {
   if (!session_) {
     throw std::runtime_error("Access of ProcessSession after it has been released");
   }
-
-  auto flow_file = script_flow_file->getFlowFile();
 
   if (!flow_file) {
     throw std::runtime_error("Access of FlowFile after it has been released");
@@ -65,12 +62,10 @@ void PyProcessSession::transfer(const std::shared_ptr<PythonScriptFlowFile>& scr
   session_->transfer(flow_file, relationship);
 }
 
-void PyProcessSession::read(const std::shared_ptr<PythonScriptFlowFile>& script_flow_file, BorrowedObject input_stream_callback) {
+void PyProcessSession::read(const std::shared_ptr<core::FlowFile>& flow_file, BorrowedObject input_stream_callback) {
   if (!session_) {
     throw std::runtime_error("Access of ProcessSession after it has been released");
   }
-
-  auto flow_file = script_flow_file->getFlowFile();
 
   if (!flow_file) {
     throw std::runtime_error("Access of FlowFile after it has been released");
@@ -81,12 +76,10 @@ void PyProcessSession::read(const std::shared_ptr<PythonScriptFlowFile>& script_
   });
 }
 
-void PyProcessSession::write(const std::shared_ptr<PythonScriptFlowFile>& script_flow_file, BorrowedObject output_stream_callback) {
+void PyProcessSession::write(const std::shared_ptr<core::FlowFile>& flow_file, BorrowedObject output_stream_callback) {
   if (!session_) {
     throw std::runtime_error("Access of ProcessSession after it has been released");
   }
-
-  auto flow_file = script_flow_file->getFlowFile();
 
   if (!flow_file) {
     throw std::runtime_error("Access of FlowFile after it has been released");
@@ -97,30 +90,24 @@ void PyProcessSession::write(const std::shared_ptr<PythonScriptFlowFile>& script
   });
 }
 
-std::shared_ptr<PythonScriptFlowFile> PyProcessSession::create(const std::shared_ptr<PythonScriptFlowFile>& flow_file) {
+std::shared_ptr<core::FlowFile> PyProcessSession::create(const std::shared_ptr<core::FlowFile>& flow_file) {
   if (!session_) {
     throw std::runtime_error("Access of ProcessSession after it has been released");
   }
 
-  std::shared_ptr<PythonScriptFlowFile> result;
-
-  if (flow_file == nullptr) {
-    result = std::make_shared<PythonScriptFlowFile>(session_->create());
-  } else {
-    result = std::make_shared<PythonScriptFlowFile>(session_->create(flow_file->getFlowFile()));
-  }
+  auto result = session_->create(flow_file);
 
   flow_files_.push_back(result);
   return result;
 }
 
-void PyProcessSession::remove(const std::shared_ptr<PythonScriptFlowFile>& flow_file) {
+void PyProcessSession::remove(const std::shared_ptr<core::FlowFile>& flow_file) {
   if (!session_) {
     throw std::runtime_error("Access of ProcessSession after it has been released");
   }
-  std::shared_ptr<PythonScriptFlowFile> result;
+  std::shared_ptr<core::FlowFile> result;
 
-  session_->remove(flow_file->getFlowFile());
+  session_->remove(flow_file);
   ranges::remove_if(flow_files_, [&flow_file](const auto& ff)-> bool { return ff == flow_file; });
 }
 
