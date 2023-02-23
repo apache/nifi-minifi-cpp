@@ -23,12 +23,12 @@
 
 #include <memory>
 #include <vector>
+#include <unordered_map>
 
 #include "core/PropertyBuilder.h"
 #include "core/Resource.h"
 #include "utils/ProcessorConfigUtils.h"
 #include "utils/StringUtils.h"
-#include "range/v3/range/conversion.hpp"
 
 namespace org::apache::nifi::minifi::processors {
 
@@ -55,15 +55,16 @@ void ExecuteScript::initialize() {
 }
 
 void ExecuteScript::onSchedule(core::ProcessContext *context, core::ProcessSessionFactory* /*sessionFactory*/) {
-  if (auto script_engine_prefix = context->getProperty(ScriptEngine); script_engine_prefix && !script_engine_prefix->empty()) {
-    std::transform(script_engine_prefix->begin(), ++script_engine_prefix->begin(), script_engine_prefix->begin(), ::toupper);
-    auto script_executor_name = *script_engine_prefix + "ScriptExecutor";
-    script_executor_ = core::ClassLoader::getDefaultClassLoader().instantiate<extensions::script::ScriptExecutor>(script_executor_name, script_executor_name);
+  static const std::unordered_map<std::string_view, std::string> executor_class_names = {{"lua", "LuaScriptExecutor"}, {"python", "PythonScriptExecutor"}};
+
+  if (auto script_engine_prefix = context->getProperty(ScriptEngine); script_engine_prefix && executor_class_names.contains(*script_engine_prefix)) {
+    const auto& executor_class_name = executor_class_names.at(*script_engine_prefix);
+    script_executor_ = core::ClassLoader::getDefaultClassLoader().instantiate<extensions::script::ScriptExecutor>(executor_class_name, executor_class_name);
     if (!script_executor_) {
-      throw Exception(PROCESS_SCHEDULE_EXCEPTION, "Could not instantiate: " + script_executor_name + ". Make sure that the " + *script_engine_prefix + " scripting extension is loaded");
+      throw Exception(PROCESS_SCHEDULE_EXCEPTION, "Could not instantiate: " + executor_class_name + ". Make sure that the " + *script_engine_prefix + " scripting extension is loaded");
     }
   } else {
-    throw Exception(PROCESS_SCHEDULE_EXCEPTION, "Missing script engine name");
+    throw Exception(PROCESS_SCHEDULE_EXCEPTION, "Missing or invalid script engine name");
   }
 
 
