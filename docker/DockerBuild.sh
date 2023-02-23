@@ -160,10 +160,13 @@ BUILD_ARGS+=("--build-arg" "UID=${UID_ARG}"
             "--build-arg" "DUMP_LOCATION=${DUMP_LOCATION}"
             "--build-arg" "DISTRO_NAME=${DISTRO_NAME}"
             "--build-arg" "DOCKER_SKIP_TESTS=${DOCKER_SKIP_TESTS}")
+if [ -n "${DUMP_LOCATION}" ]; then
+  BUILD_ARGS+=("--build-arg" "DOCKER_MAKE_COMMAND=package")
+fi
 
 if [ -n "${DISTRO_NAME}" ]; then
-  echo DOCKER_BUILDKIT=0 docker build "${BUILD_ARGS[@]}" -f "${DOCKERFILE}" -t apacheminificpp:"${TAG}" ..
-  DOCKER_BUILDKIT=0 docker build "${BUILD_ARGS[@]}" -f "${DOCKERFILE}" -t apacheminificpp:"${TAG}" ..
+  echo DOCKER_BUILDKIT=1 docker build "${BUILD_ARGS[@]}" -f "${DOCKERFILE}" -t apacheminificpp:"${TAG}" ..
+  DOCKER_BUILDKIT=1 docker build "${BUILD_ARGS[@]}" -f "${DOCKERFILE}" -t apacheminificpp:"${TAG}" ..
 
   if [ -n "${DOCKER_CCACHE_DUMP_LOCATION}" ]; then
     dump_ccache "apacheminificpp:${TAG}" "${DOCKER_CCACHE_DUMP_LOCATION}"
