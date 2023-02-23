@@ -83,7 +83,6 @@ class PythonCreator : public minifi::core::CoreComponent {
 
  private:
   void registerScriptDescription(const std::string& class_name, const std::string& full_name, const std::filesystem::path& path, const std::string& script_name) {
-    GlobalInterpreterLock gil_lock;
     auto processor = core::ClassLoader::getDefaultClassLoader().instantiate<python::processors::ExecutePythonProcessor>(class_name, utils::IdGenerator::getIdGenerator()->generate());
     if (!processor) {
       logger_->log_error("Couldn't instantiate '%s' python processor", class_name);
