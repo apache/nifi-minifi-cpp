@@ -74,7 +74,7 @@ PyObject* PyOutputStream::write(PyOutputStream* self, PyObject* args) {
   if (PyBytes_AsStringAndSize(bytes, &buffer, &length) == -1) {
     throw PyException();
   }
-  return object::returnReference(output_stream->write(gsl::make_span(std::string(buffer, length)).as_span<const std::byte>()));
+  return object::returnReference(output_stream->write(gsl::make_span(buffer, length).as_span<const std::byte>()));
 }
 
 PyTypeObject* PyOutputStream::typeObject() {
