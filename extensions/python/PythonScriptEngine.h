@@ -54,19 +54,22 @@ class GlobalInterpreterLock {
   PyGILState_STATE gil_state_;
 };
 
-struct Interpreter {
+class Interpreter {
   Interpreter();
   ~Interpreter();
+
+ public:
+  static Interpreter* getInterpreter();
 
   Interpreter(const Interpreter& other) = delete;
   Interpreter(Interpreter&& other) = delete;
   Interpreter& operator=(const Interpreter& other) = delete;
   Interpreter& operator=(Interpreter&& other) = delete;
 
+ public:
   PyThreadState* saved_thread_state_ = nullptr;
 };
 
-Interpreter* getInterpreter();
 
 #if defined(__GNUC__) || defined(__GNUG__)
 class __attribute__((visibility("default"))) PythonScriptEngine {

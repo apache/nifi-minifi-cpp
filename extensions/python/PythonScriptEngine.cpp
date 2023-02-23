@@ -28,7 +28,7 @@
 
 namespace org::apache::nifi::minifi::extensions::python {
 
-Interpreter* getInterpreter() {
+Interpreter* Interpreter::getInterpreter() {
   static Interpreter interpreter;
   return &interpreter;
 }
@@ -83,7 +83,7 @@ Interpreter::~Interpreter() {
 }
 
 PythonScriptEngine::PythonScriptEngine() {
-  getInterpreter();
+  Interpreter::getInterpreter();
 
   GlobalInterpreterLock lock;
   bindings_ = OwnedDict::create();
