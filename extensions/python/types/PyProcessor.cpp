@@ -52,8 +52,10 @@ int PyProcessor::init(PyProcessor* self, PyObject* args, PyObject*) {
     return -1;
   }
 
-  auto processor = static_cast<HeldType*>(PyCapsule_GetPointer(weak_ptr_capsule, nullptr));
-  self->processor_ = *processor;
+  auto processor = PyCapsule_GetPointer(weak_ptr_capsule, HeldTypeName);
+  if (!processor)
+    throw PyException();
+  self->processor_ = *static_cast<HeldType*>(processor);
   return 0;
 }
 

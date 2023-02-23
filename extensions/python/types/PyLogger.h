@@ -26,6 +26,7 @@ namespace org::apache::nifi::minifi::extensions::python {
 struct PyLogger {
   PyLogger() {}
   using HeldType = std::weak_ptr<minifi::core::logging::Logger>;
+  static constexpr const char* HeldTypeName = "PyLogger::HeldType";
 
   PyObject_HEAD
   HeldType logger_;

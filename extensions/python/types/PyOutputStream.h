@@ -28,6 +28,7 @@ namespace org::apache::nifi::minifi::extensions::python {
 struct PyOutputStream {
   PyOutputStream() {}
   using HeldType = std::weak_ptr<org::apache::nifi::minifi::io::OutputStream>;
+  static constexpr const char* HeldTypeName = "PyOutputStream::HeldType";
 
   PyObject_HEAD
   HeldType output_stream_;

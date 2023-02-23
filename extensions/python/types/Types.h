@@ -128,7 +128,7 @@ struct HolderTypeConverter {
   }
 
   static inline PyObject* convertToCapsule(void* ptr) {
-    return PyCapsule_New(ptr, nullptr, nullptr);
+    return PyCapsule_New(ptr, T::HeldTypeName, nullptr);
   }
 };
 

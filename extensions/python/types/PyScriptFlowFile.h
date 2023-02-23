@@ -25,6 +25,7 @@ namespace org::apache::nifi::minifi::extensions::python {
 struct PyScriptFlowFile {
   PyScriptFlowFile() {}
   using HeldType = std::weak_ptr<PythonScriptFlowFile>;
+  static constexpr const char* HeldTypeName = "PyScriptFlowFile::HeldType";
 
   PyObject_HEAD
   HeldType script_flow_file_;

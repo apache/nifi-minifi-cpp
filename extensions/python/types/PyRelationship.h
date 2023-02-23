@@ -25,6 +25,7 @@ struct PyRelationship {
   PyRelationship() {}
 
   using HeldType = core::Relationship;
+  static constexpr const char* HeldTypeName = "PyRelationship::HeldType";
 
   PyObject_HEAD
   HeldType relationship_;

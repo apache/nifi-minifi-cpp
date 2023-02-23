@@ -52,8 +52,10 @@ int PyLogger::init(PyLogger* self, PyObject* args, PyObject*) {
     return -1;
   }
 
-  auto weak_ptr = static_cast<std::weak_ptr<minifi::core::logging::Logger>*>(PyCapsule_GetPointer(weak_ptr_capsule, nullptr));
-  self->logger_ = *weak_ptr;
+  auto weak_ptr = PyCapsule_GetPointer(weak_ptr_capsule, HeldTypeName);
+  if (!weak_ptr)
+    throw PyException();
+  self->logger_ = *static_cast<HeldType*>(weak_ptr);
   return 0;
 }
 

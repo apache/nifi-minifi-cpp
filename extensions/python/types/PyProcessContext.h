@@ -26,6 +26,7 @@ namespace org::apache::nifi::minifi::extensions::python {
 struct PyProcessContext {
   PyProcessContext() {}
   using HeldType = std::weak_ptr<PythonScriptProcessContext>;
+  static constexpr const char* HeldTypeName = "PyProcessContext::HeldType";
 
   PyObject_HEAD
   HeldType process_context_;

@@ -27,6 +27,7 @@ namespace org::apache::nifi::minifi::extensions::python {
 struct PyInputStream {
   PyInputStream() {}
   using HeldType = std::weak_ptr<io::InputStream>;
+  static constexpr const char* HeldTypeName = "PyInputStream::HeldType";
 
   PyObject_HEAD
   HeldType input_stream_;

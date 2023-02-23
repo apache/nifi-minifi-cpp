@@ -45,6 +45,7 @@ class PyProcessSession {
 struct PyProcessSessionObject {
   PyProcessSessionObject() {}
   using HeldType = std::weak_ptr<PyProcessSession>;
+  static constexpr const char* HeldTypeName = "PyProcessSessionObject::HeldType";
 
   PyObject_HEAD
   HeldType process_session_;

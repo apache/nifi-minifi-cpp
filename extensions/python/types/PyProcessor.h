@@ -24,6 +24,7 @@ namespace org::apache::nifi::minifi::extensions::python {
 struct PyProcessor {
   PyProcessor() {}
   using HeldType = std::weak_ptr<PythonProcessor>;
+  static constexpr const char* HeldTypeName = "PythonProcessor::HeldType";
 
   PyObject_HEAD
   HeldType processor_;

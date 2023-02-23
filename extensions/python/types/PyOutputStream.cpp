@@ -52,8 +52,10 @@ int PyOutputStream::init(PyOutputStream* self, PyObject* args, PyObject*) {
     return -1;
   }
 
-  auto output_stream = static_cast<HeldType*>(PyCapsule_GetPointer(weak_ptr_capsule, nullptr));
-  self->output_stream_ = *output_stream;
+  auto output_stream = PyCapsule_GetPointer(weak_ptr_capsule, HeldTypeName);
+  if (!output_stream)
+    throw PyException();
+  self->output_stream_ = *static_cast<HeldType*>(output_stream);
   return 0;
 }
 

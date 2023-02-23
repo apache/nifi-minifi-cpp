@@ -158,8 +158,10 @@ int PyProcessSessionObject::init(PyProcessSessionObject* self, PyObject* args, P
     return -1;
   }
 
-  auto process_session = static_cast<std::weak_ptr<PyProcessSession>*>(PyCapsule_GetPointer(weak_ptr_capsule, nullptr));
-  self->process_session_ = *process_session;
+  auto process_session = PyCapsule_GetPointer(weak_ptr_capsule, HeldTypeName);
+  if (!process_session)
+    throw PyException();
+  self->process_session_ = *static_cast<std::weak_ptr<PyProcessSession>*>(process_session);
   return 0;
 }
 
