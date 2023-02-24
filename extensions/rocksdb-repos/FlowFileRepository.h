@@ -58,6 +58,8 @@ constexpr auto FLOWFILE_REPOSITORY_RETRY_INTERVAL_INCREMENTS = std::chrono::mill
  * Design: Extends Repository and implements the run function, using rocksdb as the primary substrate.
  */
 class FlowFileRepository : public ThreadedRepository, public SwapManager {
+  static constexpr std::chrono::milliseconds DEFAULT_COMPACTION_PERIOD = std::chrono::seconds{120};
+
  public:
   static constexpr const char* ENCRYPTION_KEY_NAME = "nifi.flowfile.repository.encryption.key";
 
@@ -106,6 +108,8 @@ class FlowFileRepository : public ThreadedRepository, public SwapManager {
  private:
   void run() override;
 
+  void runCompaction(std::stop_token stop_token);
+
   bool ExecuteWithRetry(const std::function<rocksdb::Status()>& operation);
 
   void initialize_repository();
@@ -121,6 +125,9 @@ class FlowFileRepository : public ThreadedRepository, public SwapManager {
   std::shared_ptr<logging::Logger> logger_;
   std::shared_ptr<minifi::Configure> config_;
   std::thread thread_;
+
+  std::chrono::milliseconds compaction_period_;
+  std::jthread compaction_thread_;
 };
 
 }  // namespace org::apache::nifi::minifi::core::repository

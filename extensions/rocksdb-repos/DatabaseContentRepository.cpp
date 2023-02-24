@@ -42,6 +42,21 @@ bool DatabaseContentRepository::initialize(const std::shared_ptr<minifi::Configu
   const auto encrypted_env = createEncryptingEnv(utils::crypto::EncryptionManager{configuration->getHome()}, DbEncryptionOptions{directory_, ENCRYPTION_KEY_NAME});
   logger_->log_info("Using %s DatabaseContentRepository", encrypted_env ? "encrypted" : "plaintext");
 
+  compaction_period_ = DEFAULT_COMPACTION_PERIOD;
+  if (auto compaction_period_str = configuration->get(Configure::nifi_dbcontent_repository_compaction_period)) {
+    if (auto compaction_period = TimePeriodValue::fromString(compaction_period_str.value())) {
+      compaction_period_ = compaction_period->getMilliseconds();
+      if (compaction_period_.count() == 0) {
+        logger_->log_warn("Setting '%s' to 0 disables forced compaction", Configure::nifi_dbcontent_repository_compaction_period);
+      }
+    } else {
+      logger_->log_error("Malformed property '%s', expected time period, using default", Configure::nifi_dbcontent_repository_compaction_period);
+    }
+  } else {
+    logger_->log_info("Using default compaction period");
+  }
+
+
   auto set_db_opts = [encrypted_env] (minifi::internal::Writable<rocksdb::DBOptions>& db_opts) {
     db_opts.set(&rocksdb::DBOptions::create_if_missing, true);
     db_opts.set(&rocksdb::DBOptions::use_direct_io_for_flush_and_compaction, true);
@@ -72,14 +87,37 @@ bool DatabaseContentRepository::initialize(const std::shared_ptr<minifi::Configu
   return is_valid_;
 }
 
+void DatabaseContentRepository::runCompaction(std::stop_token stop_token) {
+  while (!stop_token.stop_requested()) {
+    if (auto opendb = db_->open()) {
+      auto status = opendb->RunCompaction();
+      logger_->log_trace("Compaction triggered: %s", status.ToString());
+    } else {
+      logger_->log_error("Failed to open database for compaction");
+    }
+    std::this_thread::sleep_for(compaction_period_);
+  }
+}
+
+void DatabaseContentRepository::start() {
+  if (compaction_period_.count() != 0) {
+    compaction_thread_ = std::jthread([this] (std::stop_token stop_req) {
+      runCompaction(stop_req);
+    });
+  }
+}
+
 void DatabaseContentRepository::stop() {
   if (db_) {
     auto opendb = db_->open();
     if (opendb) {
       opendb->FlushWAL(true);
     }
+    compaction_thread_.request_stop();
+    if (compaction_thread_.joinable()) {
+      compaction_thread_.join();
+    }
   }
-  db_.reset();
 }
 
 DatabaseContentRepository::Session::Session(std::shared_ptr<ContentRepository> repository) : BufferedContentSession(std::move(repository)) {}

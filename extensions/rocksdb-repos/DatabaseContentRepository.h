@@ -37,6 +37,8 @@ class DatabaseContentRepository : public core::ContentRepository {
     void commit() override;
   };
 
+  static constexpr std::chrono::milliseconds DEFAULT_COMPACTION_PERIOD = std::chrono::seconds{120};
+
  public:
   static constexpr const char* ENCRYPTION_KEY_NAME = "nifi.database.content.repository.encryption.key";
 
@@ -56,7 +58,6 @@ class DatabaseContentRepository : public core::ContentRepository {
 
   std::shared_ptr<ContentSession> createSession() override;
   bool initialize(const std::shared_ptr<minifi::Configure> &configuration) override;
-  void stop();
   std::shared_ptr<io::BaseStream> write(const minifi::ResourceClaim &claim, bool append = false) override;
   std::shared_ptr<io::BaseStream> read(const minifi::ResourceClaim &claim) override;
 
@@ -69,12 +70,20 @@ class DatabaseContentRepository : public core::ContentRepository {
 
   void clearOrphans() override;
 
+  void start() override;
+  void stop() override;
+
  private:
   std::shared_ptr<io::BaseStream> write(const minifi::ResourceClaim &claim, bool append, minifi::internal::WriteBatch* batch);
+
+  void runCompaction(std::stop_token stop_token);
 
   bool is_valid_;
   std::unique_ptr<minifi::internal::RocksDatabase> db_;
   std::shared_ptr<logging::Logger> logger_;
+
+  std::chrono::milliseconds compaction_period_{DEFAULT_COMPACTION_PERIOD};
+  std::jthread compaction_thread_;
 };
 
 }  // namespace org::apache::nifi::minifi::core::repository

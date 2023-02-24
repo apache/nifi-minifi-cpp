@@ -69,6 +69,11 @@ class Configuration : public Properties {
   static constexpr const char *nifi_provenance_repository_directory_default = "nifi.provenance.repository.directory.default";
   static constexpr const char *nifi_flowfile_repository_directory_default = "nifi.flowfile.repository.directory.default";
   static constexpr const char *nifi_dbcontent_repository_directory_default = "nifi.database.content.repository.directory.default";
+
+  // these are internal properties related to the rocksdb backend
+  static constexpr const char *nifi_flowfile_repository_compaction_period = "nifi.flowfile.repository.compaction.period";
+  static constexpr const char *nifi_dbcontent_repository_compaction_period = "nifi.database.content.repository.compaction.period";
+
   static constexpr const char *nifi_remote_input_secure = "nifi.remote.input.secure";
   static constexpr const char *nifi_security_need_ClientAuth = "nifi.security.need.ClientAuth";
   static constexpr const char *nifi_sensitive_props_additional_keys = "nifi.sensitive.props.additional.keys";

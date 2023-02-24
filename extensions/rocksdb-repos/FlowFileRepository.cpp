@@ -200,6 +200,20 @@ bool FlowFileRepository::initialize(const std::shared_ptr<Configure> &configure)
   }
   logger_->log_debug("NiFi FlowFile Repository Directory %s", directory_);
 
+  compaction_period_ = DEFAULT_COMPACTION_PERIOD;
+  if (auto compaction_period_str = configure->get(Configure::nifi_flowfile_repository_compaction_period)) {
+    if (auto compaction_period = TimePeriodValue::fromString(compaction_period_str.value())) {
+      compaction_period_ = compaction_period->getMilliseconds();
+      if (compaction_period_.count() == 0) {
+        logger_->log_warn("Setting '%s' to 0 disables forced compaction", Configure::nifi_dbcontent_repository_compaction_period);
+      }
+    } else {
+      logger_->log_error("Malformed property '%s', expected time period, using default", Configure::nifi_flowfile_repository_compaction_period);
+    }
+  } else {
+    logger_->log_info("Using default compaction period");
+  }
+
   const auto encrypted_env = createEncryptingEnv(utils::crypto::EncryptionManager{configure->getHome()}, DbEncryptionOptions{directory_, ENCRYPTION_KEY_NAME});
   logger_->log_info("Using %s FlowFileRepository", encrypted_env ? "encrypted" : "plaintext");
 
@@ -281,15 +295,36 @@ bool FlowFileRepository::Get(const std::string &key, std::string &value) {
   return opendb->Get(rocksdb::ReadOptions(), key, &value).ok();
 }
 
+void FlowFileRepository::runCompaction(std::stop_token stop_token) {
+  while (!stop_token.stop_requested()) {
+    if (auto opendb = db_->open()) {
+      auto status = opendb->RunCompaction();
+      logger_->log_trace("Compaction triggered: %s", status.ToString());
+    } else {
+      logger_->log_error("Failed to open database for compaction");
+    }
+    std::this_thread::sleep_for(compaction_period_);
+  }
+}
+
 bool FlowFileRepository::start() {
   const bool ret = ThreadedRepository::start();
   if (swap_loader_) {
     swap_loader_->start();
   }
+  if (compaction_period_.count() != 0) {
+    compaction_thread_ = std::jthread([&] (std::stop_token stop_token) {
+      runCompaction(stop_token);
+    });
+  }
   return ret;
 }
 
 bool FlowFileRepository::stop() {
+  compaction_thread_.request_stop();
+  if (compaction_thread_.joinable()) {
+    compaction_thread_.join();
+  }
   if (swap_loader_) {
     swap_loader_->stop();
   }

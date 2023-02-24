@@ -210,6 +210,7 @@ int16_t FlowController::stop() {
     }
     this->flow_file_repo_->stop();
     this->provenance_repo_->stop();
+    this->content_repo_->stop();
     // stop the ControllerServices
     disableAllControllerServices();
     running_ = false;
@@ -385,6 +386,7 @@ int16_t FlowController::start() {
       core::logging::LoggerConfiguration::getConfiguration().initializeAlertSinks(this, configuration_);
       running_ = true;
       this->protocol_->start();
+      this->content_repo_->start();
       this->provenance_repo_->start();
       this->flow_file_repo_->start();
       logger_->log_info("Started Flow Controller");

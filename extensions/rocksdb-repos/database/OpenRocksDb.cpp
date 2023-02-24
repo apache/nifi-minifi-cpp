@@ -95,6 +95,14 @@ rocksdb::Status OpenRocksDb::FlushWAL(bool sync) {
   return result;
 }
 
+rocksdb::Status OpenRocksDb::RunCompaction() {
+  rocksdb::Status result = impl_->CompactRange(rocksdb::CompactRangeOptions{
+    .bottommost_level_compaction = rocksdb::BottommostLevelCompaction::kForce
+  }, nullptr, nullptr);
+  handleResult(result);
+  return result;
+}
+
 void OpenRocksDb::handleResult(const rocksdb::Status& result) {
   if (result == rocksdb::Status::NoSpace()) {
     db_->invalidate();

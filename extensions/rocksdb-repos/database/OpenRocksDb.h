@@ -71,6 +71,8 @@ class OpenRocksDb {
 
   rocksdb::Status FlushWAL(bool sync);
 
+  rocksdb::Status RunCompaction();
+
   rocksdb::DB* get();
 
  private:

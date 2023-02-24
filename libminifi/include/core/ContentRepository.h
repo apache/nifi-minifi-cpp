@@ -53,6 +53,9 @@ class ContentRepository : public StreamManager<minifi::ResourceClaim>, public ut
 
   virtual void clearOrphans() = 0;
 
+  virtual void start() {}
+  virtual void stop() {}
+
  protected:
   std::string directory_;
   std::mutex count_map_mutex_;
