@@ -19,9 +19,6 @@ ARG BASE_IMAGE
 FROM ${BASE_IMAGE} as base_image
 LABEL maintainer="Apache NiFi <dev@nifi.apache.org>"
 
-ARG MINIFI_VERSION
-ARG ARCHIVE_LOCATION
-ARG INSTALL_PACKAGE_CMD
 
 ENV USER minificpp
 

@@ -44,7 +44,6 @@ function(ADD_CONDA_TO_DOCKER TAG_PREFIX)
     add_custom_target(
             conda_${TAG_PREFIX}_docker_from_centos_build
             COMMAND DOCKER_BUILDKIT=1 docker build
-            --build-arg MINIFI_VERSION=${MINIFI_VERSION_STR}
             --build-arg BASE_IMAGE=apacheminificpp:${TAG_PREFIX}-${MINIFI_VERSION_STR}
             -t apacheminificpp:conda_${TAG_PREFIX}-${MINIFI_VERSION_STR}
             -f ${CMAKE_SOURCE_DIR}/docker/python-verify/conda.Dockerfile
@@ -55,7 +54,6 @@ function(ADD_VENV_TO_DOCKER TAG_PREFIX)
     add_custom_target(
             venv_${TAG_PREFIX}_docker_from_centos_build
             COMMAND DOCKER_BUILDKIT=1 docker build
-            --build-arg MINIFI_VERSION=${MINIFI_VERSION_STR}
             --build-arg BASE_IMAGE=apacheminificpp:${TAG_PREFIX}-${MINIFI_VERSION_STR}
             -t apacheminificpp:venv_${TAG_PREFIX}-${MINIFI_VERSION_STR}
             -f ${CMAKE_SOURCE_DIR}/docker/python-verify/venv.Dockerfile
