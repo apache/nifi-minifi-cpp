@@ -30,7 +30,6 @@
 #include "core/ProcessSession.h"
 #include "core/Processor.h"
 
-#include "PythonScriptProcessContext.h"
 #include "PythonProcessor.h"
 #include "types/PyProcessSession.h"
 #include "PythonScriptException.h"

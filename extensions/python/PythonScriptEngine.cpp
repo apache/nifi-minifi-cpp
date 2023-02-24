@@ -138,14 +138,12 @@ void PythonScriptEngine::describe(core::Processor* proc) {
 }
 
 void PythonScriptEngine::onSchedule(const std::shared_ptr<core::ProcessContext> &context) {
-  auto script_context = std::make_shared<PythonScriptProcessContext>(context);
-  call("onSchedule", std::weak_ptr(script_context));
+  call("onSchedule", std::weak_ptr(context));
 }
 
 void PythonScriptEngine::onTrigger(const std::shared_ptr<core::ProcessContext> &context, const std::shared_ptr<core::ProcessSession> &session) {
   auto py_session = std::make_shared<python::PyProcessSession>(session);
-  auto script_context = std::make_shared<PythonScriptProcessContext>(context);
-  call("onTrigger", std::weak_ptr(script_context), std::weak_ptr(py_session));
+  call("onTrigger", std::weak_ptr(context), std::weak_ptr(py_session));
 }
 
 void PythonScriptEngine::initialize(const core::Relationship& success, const core::Relationship& failure, const std::shared_ptr<core::logging::Logger>& logger) {

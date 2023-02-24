@@ -18,14 +18,14 @@
 
 #include <memory>
 
-#include "../PythonScriptProcessContext.h"
+#include "core/ProcessContext.h"
 #include "../PythonBindings.h"
 
 namespace org::apache::nifi::minifi::extensions::python {
 
 struct PyProcessContext {
   PyProcessContext() {}
-  using HeldType = std::weak_ptr<PythonScriptProcessContext>;
+  using HeldType = std::weak_ptr<core::ProcessContext>;
   static constexpr const char* HeldTypeName = "PyProcessContext::HeldType";
 
   PyObject_HEAD

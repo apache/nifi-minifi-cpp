@@ -67,7 +67,9 @@ PyObject* PyProcessContext::getProperty(PyProcessContext* self, PyObject* args) 
   if (!PyArg_ParseTuple(args, "s", &property)) {
     throw PyException();
   }
-  return object::returnReference(context->getProperty(std::string(property)));
+  std::string value;
+  context->getProperty(property, value);
+  return object::returnReference(value);
 }
 
 PyTypeObject* PyProcessContext::typeObject() {
