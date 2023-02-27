@@ -30,6 +30,7 @@
 #include "FlowFileRecord.h"
 #include "utils/gsl.h"
 #include "core/Resource.h"
+#include "utils/ThreadUtils.h"
 
 using namespace std::literals::chrono_literals;
 
@@ -303,7 +304,7 @@ void FlowFileRepository::runCompaction(std::stop_token stop_token) {
     } else {
       logger_->log_error("Failed to open database for compaction");
     }
-    std::this_thread::sleep_for(compaction_period_);
+    utils::sleep_for(stop_token, compaction_period_);
   }
 }
 
@@ -314,7 +315,7 @@ bool FlowFileRepository::start() {
   }
   if (compaction_period_.count() != 0) {
     compaction_thread_ = std::jthread([&] (std::stop_token stop_token) {
-      runCompaction(stop_token);
+      runCompaction(std::move(stop_token));
     });
   }
   return ret;

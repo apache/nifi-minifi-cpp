@@ -29,6 +29,7 @@
 #include "database/RocksDbUtils.h"
 #include "database/StringAppender.h"
 #include "core/Resource.h"
+#include "utils/ThreadUtils.h"
 
 namespace org::apache::nifi::minifi::core::repository {
 
@@ -95,14 +96,14 @@ void DatabaseContentRepository::runCompaction(std::stop_token stop_token) {
     } else {
       logger_->log_error("Failed to open database for compaction");
     }
-    std::this_thread::sleep_for(compaction_period_);
+    utils::sleep_for(stop_token, compaction_period_);
   }
 }
 
 void DatabaseContentRepository::start() {
   if (compaction_period_.count() != 0) {
     compaction_thread_ = std::jthread([this] (std::stop_token stop_req) {
-      runCompaction(stop_req);
+      runCompaction(std::move(stop_req));
     });
   }
 }
@@ -118,6 +119,11 @@ void DatabaseContentRepository::stop() {
       compaction_thread_.join();
     }
   }
+}
+
+void DatabaseContentRepository::deinitialize() {
+  stop();
+  db_.reset();
 }
 
 DatabaseContentRepository::Session::Session(std::shared_ptr<ContentRepository> repository) : BufferedContentSession(std::move(repository)) {}

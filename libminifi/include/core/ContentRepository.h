@@ -55,6 +55,7 @@ class ContentRepository : public StreamManager<minifi::ResourceClaim>, public ut
 
   virtual void start() {}
   virtual void stop() {}
+  virtual void deinitialize() {}
 
  protected:
   std::string directory_;

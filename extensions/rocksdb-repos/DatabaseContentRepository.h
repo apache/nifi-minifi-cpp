@@ -19,6 +19,7 @@
 #include <memory>
 #include <string>
 #include <utility>
+#include <thread>
 
 #include "core/ContentRepository.h"
 #include "core/BufferedContentSession.h"
@@ -49,7 +50,7 @@ class DatabaseContentRepository : public core::ContentRepository {
       logger_(logging::LoggerFactory<DatabaseContentRepository>::getLogger()) {
   }
   ~DatabaseContentRepository() override {
-    stop();
+    deinitialize();
   }
 
   static auto properties() { return std::array<core::Property, 0>{}; }
@@ -72,6 +73,7 @@ class DatabaseContentRepository : public core::ContentRepository {
 
   void start() override;
   void stop() override;
+  void deinitialize() override;
 
  private:
   std::shared_ptr<io::BaseStream> write(const minifi::ResourceClaim &claim, bool append, minifi::internal::WriteBatch* batch);
