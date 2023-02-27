@@ -166,10 +166,17 @@ TEST_CASE_METHOD(ListFileTestFixture, "Test listing files matching the File Filt
 TEST_CASE_METHOD(ListFileTestFixture, "Test listing files matching the Path Filter pattern", "[testListFile]") {
   plan_->setProperty(list_file_processor_, "Path Filter", "first.*");
   test_controller_.runSession(plan_);
-  REQUIRE(verifyLogLinePresenceInPollTime(3s, "key:filename value:standard_file.log"));
-  REQUIRE(verifyLogLinePresenceInPollTime(3s, "key:filename value:empty_file.txt"));
-  REQUIRE(verifyLogLinePresenceInPollTime(3s, "key:filename value:sub_file_one.txt"));
-  REQUIRE(LogTestController::getInstance().countOccurrences("key:filename value:sub_file_two.txt") == 0);
+  CHECK(verifyLogLinePresenceInPollTime(3s, "key:filename value:sub_file_one.txt"));
+  CHECK(LogTestController::getInstance().countOccurrences("key:filename value:") == 1);
+}
+
+TEST_CASE_METHOD(ListFileTestFixture, "Test listing files matching the Path Filter pattern when the pattern also matches .", "[testListFile]") {
+  plan_->setProperty(list_file_processor_, "Path Filter", "second.*|\\.");
+  test_controller_.runSession(plan_);
+  CHECK(verifyLogLinePresenceInPollTime(3s, "key:filename value:standard_file.log"));
+  CHECK(verifyLogLinePresenceInPollTime(3s, "key:filename value:empty_file.txt"));
+  CHECK(verifyLogLinePresenceInPollTime(3s, "key:filename value:sub_file_two.txt"));
+  CHECK(LogTestController::getInstance().countOccurrences("key:filename value:") == 3);
 }
 
 TEST_CASE_METHOD(ListFileTestFixture, "Test listing files with restriction on the minimum file age", "[testListFile]") {

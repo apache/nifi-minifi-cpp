@@ -101,12 +101,13 @@ void ListFile::onSchedule(const std::shared_ptr<core::ProcessContext> &context, 
   }
 
   context->getProperty(RecurseSubdirectories.getName(), recurse_subdirectories_);
+
   std::string value;
   if (context->getProperty(FileFilter.getName(), value) && !value.empty()) {
     file_filter_ = std::regex(value);
   }
 
-  if (context->getProperty(PathFilter.getName(), value) && !value.empty()) {
+  if (recurse_subdirectories_ && context->getProperty(PathFilter.getName(), value) && !value.empty()) {
     path_filter_ = std::regex(value);
   }
 
@@ -147,7 +148,7 @@ bool ListFile::fileMatchesFilters(const ListedFile& listed_file) {
 
   if (path_filter_) {
     const auto relative_path = std::filesystem::relative(listed_file.full_file_path.parent_path(), input_directory_);
-    if (relative_path != "." && !std::regex_match(relative_path.string(), *path_filter_)) {
+    if (!std::regex_match(relative_path.string(), *path_filter_)) {
       logger_->log_debug("Relative path '%s' does not match path filter so file '%s' will not be listed", relative_path.string(), listed_file.full_file_path.string());
       return false;
     }
