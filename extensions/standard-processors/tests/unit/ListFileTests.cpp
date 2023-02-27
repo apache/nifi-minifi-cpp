@@ -221,7 +221,7 @@ TEST_CASE_METHOD(ListFileTestFixture, "Test listing hidden files", "[testListFil
 TEST_CASE("ListFile sets attributes correctly") {
   using minifi::processors::ListFile;
 
-  const auto list_file = std::make_shared<ListFile>("GetFile");
+  const auto list_file = std::make_shared<ListFile>("ListFile");
   LogTestController::getInstance().setTrace<ListFile>();
   minifi::test::SingleProcessorTestController test_controller(list_file);
   std::filesystem::path dir = test_controller.createTempDirectory();
@@ -247,4 +247,25 @@ TEST_CASE("ListFile sets attributes correctly") {
   }
 }
 
+TEST_CASE("If a second file with the same modification time shows up later, then it will get listed") {
+  using minifi::processors::ListFile;
+
+  const auto list_file = std::make_shared<ListFile>("ListFile");
+  minifi::test::SingleProcessorTestController test_controller(list_file);
+
+  const auto input_dir = test_controller.createTempDirectory();
+  list_file->setProperty(ListFile::InputDirectory, input_dir.string());
+
+  const auto common_timestamp = std::chrono::file_clock::now();
+
+  const auto file_one = utils::putFileToDir(input_dir, "file_one.txt", "When I was one, I had just begun.");
+  std::filesystem::last_write_time(file_one, common_timestamp);
+  const auto result_one = test_controller.trigger();
+  CHECK(result_one.at(ListFile::Success).size() == 1);
+
+  const auto file_two = utils::putFileToDir(input_dir, "file_two.txt", "When I was two, I was nearly new.");
+  std::filesystem::last_write_time(file_two, common_timestamp);
+  const auto result_two = test_controller.trigger();
+  CHECK(result_two.at(ListFile::Success).size() == 1);
+}
 }  // namespace

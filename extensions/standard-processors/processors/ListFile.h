@@ -85,7 +85,7 @@ class ListFile : public core::Processor {
     }
 
     [[nodiscard]] std::string getKey() const override {
-      return absolute_path.string();
+      return full_file_path.string();
     }
 
     std::filesystem::path filename;
