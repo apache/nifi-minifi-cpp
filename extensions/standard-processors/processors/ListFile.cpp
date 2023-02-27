@@ -94,7 +94,6 @@ void ListFile::onSchedule(const std::shared_ptr<core::ProcessContext> &context, 
   }
   state_manager_ = std::make_unique<minifi::utils::ListingStateManager>(state_manager);
 
-  std::string input_directory_str;
   if (auto input_directory_str = context->getProperty(InputDirectory); !input_directory_str || input_directory_str->empty()) {
     throw Exception(PROCESS_SCHEDULE_EXCEPTION, "Input Directory property missing or invalid");
   } else {
