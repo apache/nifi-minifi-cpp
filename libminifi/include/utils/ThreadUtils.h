@@ -18,7 +18,7 @@
 #pragma once
 
 #include <chrono>
-#include <thread>
+#include <stop_token>
 
 namespace org::apache::nifi::minifi::utils {
 
