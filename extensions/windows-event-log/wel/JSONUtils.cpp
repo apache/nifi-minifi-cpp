@@ -18,17 +18,13 @@
 #include "JSONUtils.h"
 
 #include <algorithm>
-#include <numeric>
-#include <vector>
 #include <string>
-#include <functional>
 
 #include <pugixml.hpp>
 
 #include "rapidjson/document.h"
 #include "rapidjson/writer.h"
 #include "rapidjson/stringbuffer.h"
-#include "rapidjson/prettywriter.h"
 
 #include "utils/gsl.h"
 
