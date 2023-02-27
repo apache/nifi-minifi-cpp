@@ -42,7 +42,7 @@ class ScriptExecutor : public minifi::core::CoreComponent {
       std::shared_ptr<core::logging::Logger> logger) = 0;
 
  protected:
-  std::variant<std::filesystem::path, std::string> script_to_run_;
+  std::variant<std::monostate, std::filesystem::path, std::string> script_to_run_;
   std::optional<std::string> module_directory_;
 };
 }  // namespace org::apache::nifi::minifi::extensions::script
