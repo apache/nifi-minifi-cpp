@@ -81,19 +81,15 @@ class ListFile : public core::Processor {
  private:
   struct ListedFile : public utils::ListedObject {
     [[nodiscard]] std::chrono::time_point<std::chrono::system_clock> getLastModified() const override {
-      return std::chrono::time_point_cast<std::chrono::milliseconds>(utils::file::FileUtils::to_sys(last_modified_time));
+      return last_modified_time;
     }
 
     [[nodiscard]] std::string getKey() const override {
       return full_file_path.string();
     }
 
-    std::filesystem::path filename;
-    std::filesystem::path absolute_path;
-    std::filesystem::file_time_type last_modified_time;
-    std::filesystem::path relative_path;
+    std::chrono::time_point<std::chrono::system_clock> last_modified_time;
     std::filesystem::path full_file_path;
-    uint64_t file_size = 0;
   };
 
   bool fileMatchesFilters(const ListedFile& listed_file);

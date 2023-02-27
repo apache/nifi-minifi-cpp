@@ -126,13 +126,22 @@ inline std::optional<std::filesystem::file_time_type> last_write_time(const std:
   return std::nullopt;
 }
 
-inline std::optional<std::string> format_time(const std::filesystem::file_time_type& time, const std::string& format) {
-  auto last_write_time_t = to_time_t(time);
+inline std::optional<std::string> format_time(const time_t& time, const std::string& format) {
   std::array<char, 128U> result{};
-  if (std::strftime(result.data(), result.size(), format.c_str(), gmtime(&last_write_time_t)) != 0) {
+  if (std::strftime(result.data(), result.size(), format.c_str(), gmtime(&time)) != 0) {
     return std::string(result.data());
   }
   return std::nullopt;
+}
+
+inline std::optional<std::string> format_time(const std::chrono::system_clock::time_point& time, const std::string& format) {
+  auto as_time_t = std::chrono::system_clock::to_time_t(time);
+  return format_time(as_time_t, format);
+}
+
+inline std::optional<std::string> format_time(const std::filesystem::file_time_type& time, const std::string& format) {
+  auto as_time_t = to_time_t(time);
+  return format_time(as_time_t, format);
 }
 
 inline std::optional<std::string> get_last_modified_time_formatted_string(const std::filesystem::path& path, const std::string& format_string) {

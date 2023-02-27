@@ -136,35 +136,49 @@ bool ListFile::fileMatchesFilters(const ListedFile& listed_file) {
     return false;
   }
 
-  if (file_filter_ && !std::regex_match(listed_file.filename.string(), *file_filter_)) {
-    logger_->log_debug("File '%s' does not match file filter so it will not be listed", listed_file.full_file_path.string());
-    return false;
+  if (file_filter_) {
+    const auto file_name = listed_file.full_file_path.filename();
+
+    if (!std::regex_match(file_name.string(), *file_filter_)) {
+      logger_->log_debug("File '%s' does not match file filter so it will not be listed", listed_file.full_file_path.string());
+      return false;
+    }
   }
 
-  if (path_filter_ && listed_file.relative_path != "." && !std::regex_match(listed_file.relative_path.string(), *path_filter_)) {
-    logger_->log_debug("Relative path '%s' does not match path filter so file '%s' will not be listed", listed_file.relative_path.string(), listed_file.full_file_path.string());
-    return false;
+  if (path_filter_) {
+    const auto relative_path = std::filesystem::relative(listed_file.full_file_path.parent_path(), input_directory_);
+    if (relative_path != "." && !std::regex_match(relative_path.string(), *path_filter_)) {
+      logger_->log_debug("Relative path '%s' does not match path filter so file '%s' will not be listed", relative_path.string(), listed_file.full_file_path.string());
+      return false;
+    }
   }
 
-  auto file_age = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now() - listed_file.getLastModified());
-  if (minimum_file_age_ && file_age < *minimum_file_age_) {
-    logger_->log_debug("File '%s' does not meet the minimum file age requirement so it will not be listed", listed_file.full_file_path.string());
-    return false;
+  if (minimum_file_age_ || maximum_file_age_) {
+    const auto file_age = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now() - listed_file.getLastModified());
+
+    if (minimum_file_age_ && file_age < *minimum_file_age_) {
+      logger_->log_debug("File '%s' does not meet the minimum file age requirement so it will not be listed", listed_file.full_file_path.string());
+      return false;
+    }
+
+    if (maximum_file_age_ && file_age > *maximum_file_age_) {
+      logger_->log_debug("File '%s' does not meet the maximum file age requirement so it will not be listed", listed_file.full_file_path.string());
+      return false;
+    }
   }
 
-  if (maximum_file_age_ && file_age > *maximum_file_age_) {
-    logger_->log_debug("File '%s' does not meet the maximum file age requirement so it will not be listed", listed_file.full_file_path.string());
-    return false;
-  }
+  if (minimum_file_size_ || maximum_file_size_) {
+    const auto file_size = utils::file::file_size(listed_file.full_file_path);
 
-  if (minimum_file_size_ && listed_file.file_size < *minimum_file_size_) {
-    logger_->log_debug("File '%s' does not meet the minimum file size requirement so it will not be listed", listed_file.full_file_path.string());
-    return false;
-  }
+    if (minimum_file_size_ && file_size < *minimum_file_size_) {
+      logger_->log_debug("File '%s' does not meet the minimum file size requirement so it will not be listed", listed_file.full_file_path.string());
+      return false;
+    }
 
-  if (maximum_file_size_ && *maximum_file_size_ < listed_file.file_size) {
-    logger_->log_debug("File '%s' does not meet the maximum file size requirement so it will not be listed", listed_file.full_file_path.string());
-    return false;
+    if (maximum_file_size_ && *maximum_file_size_ < file_size) {
+      logger_->log_debug("File '%s' does not meet the maximum file size requirement so it will not be listed", listed_file.full_file_path.string());
+      return false;
+    }
   }
 
   return true;
@@ -172,12 +186,15 @@ bool ListFile::fileMatchesFilters(const ListedFile& listed_file) {
 
 std::shared_ptr<core::FlowFile> ListFile::createFlowFile(core::ProcessSession& session, const ListedFile& listed_file) {
   auto flow_file = session.create();
-  session.putAttribute(flow_file, core::SpecialFlowAttribute::FILENAME, listed_file.filename.string());
-  session.putAttribute(flow_file, core::SpecialFlowAttribute::ABSOLUTE_PATH, listed_file.absolute_path.string());
-  session.putAttribute(flow_file, core::SpecialFlowAttribute::PATH, listed_file.relative_path == "." ?
-    (std::filesystem::path(".") / "").string() : (listed_file.relative_path / "").string());
-  session.putAttribute(flow_file, "file.size", std::to_string(listed_file.file_size));
-  if (auto last_modified_str = utils::file::FileUtils::get_last_modified_time_formatted_string(listed_file.full_file_path, "%Y-%m-%dT%H:%M:%SZ")) {
+  session.putAttribute(flow_file, core::SpecialFlowAttribute::FILENAME, listed_file.full_file_path.filename().string());
+  session.putAttribute(flow_file, core::SpecialFlowAttribute::ABSOLUTE_PATH, (listed_file.full_file_path.parent_path() / "").string());
+
+  auto relative_path = std::filesystem::relative(listed_file.full_file_path.parent_path(), input_directory_);
+  session.putAttribute(flow_file, core::SpecialFlowAttribute::PATH, (relative_path / "").string());
+
+  const auto file_size = utils::file::file_size(listed_file.full_file_path);
+  session.putAttribute(flow_file, "file.size", std::to_string(file_size));
+  if (auto last_modified_str = utils::file::format_time(listed_file.last_modified_time, "%Y-%m-%dT%H:%M:%SZ")) {
     session.putAttribute(flow_file, "file.lastModifiedTime", *last_modified_str);
   } else {
     session.putAttribute(flow_file, "file.lastModifiedTime", "");
@@ -224,27 +241,19 @@ void ListFile::onTrigger(const std::shared_ptr<core::ProcessContext> &context, c
   for (const auto& [path, filename] : file_list) {
     ListedFile listed_file;
     listed_file.full_file_path = path / filename;
-    listed_file.absolute_path = path / "";
-    if (auto relative_path = utils::file::FileUtils::get_relative_path(path, input_directory_)) {
-      listed_file.relative_path = *relative_path;
+    if (auto last_modified_time = utils::file::last_write_time(listed_file.full_file_path)) {
+      listed_file.last_modified_time = std::chrono::time_point_cast<std::chrono::milliseconds>(utils::file::to_sys(*last_modified_time));
     } else {
-      logger_->log_warn("Failed to get group of file '%s' to input directory '%s'", listed_file.full_file_path.string(), input_directory_.string());
-    }
-    listed_file.file_size = utils::file::FileUtils::file_size(listed_file.full_file_path);
-    listed_file.filename = filename;
-    if (auto last_modified_time = utils::file::FileUtils::last_write_time(listed_file.full_file_path)) {
-      listed_file.last_modified_time = *last_modified_time;
-    } else {
-      logger_->log_error("Could not get last modification time of file '%s'", listed_file.full_file_path.string());
-      continue;
-    }
-
-    if (!fileMatchesFilters(listed_file)) {
+      logger_->log_warn("Could not get last modification time of file '%s'", listed_file.full_file_path.string());
       continue;
     }
 
     if (stored_listing_state.wasObjectListedAlready(listed_file)) {
       logger_->log_debug("File '%s' was already listed.", listed_file.full_file_path.string());
+      continue;
+    }
+
+    if (!fileMatchesFilters(listed_file)) {
       continue;
     }
 
