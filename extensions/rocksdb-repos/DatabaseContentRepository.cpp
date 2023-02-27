@@ -29,7 +29,6 @@
 #include "database/RocksDbUtils.h"
 #include "database/StringAppender.h"
 #include "core/Resource.h"
-#include "utils/ThreadUtils.h"
 
 namespace org::apache::nifi::minifi::core::repository {
 
@@ -88,22 +87,24 @@ bool DatabaseContentRepository::initialize(const std::shared_ptr<minifi::Configu
   return is_valid_;
 }
 
-void DatabaseContentRepository::runCompaction(std::stop_token stop_token) {
-  while (!stop_token.stop_requested()) {
+void DatabaseContentRepository::runCompaction() {
+  do {
     if (auto opendb = db_->open()) {
       auto status = opendb->RunCompaction();
       logger_->log_trace("Compaction triggered: %s", status.ToString());
     } else {
       logger_->log_error("Failed to open database for compaction");
     }
-    utils::sleep_for(stop_token, compaction_period_);
-  }
+  } while (!utils::StoppableThread::wait_stop_requested(compaction_period_));
 }
 
 void DatabaseContentRepository::start() {
+  if (!db_ || !is_valid_) {
+    return;
+  }
   if (compaction_period_.count() != 0) {
-    compaction_thread_ = std::jthread([this] (std::stop_token stop_req) {
-      runCompaction(std::move(stop_req));
+    compaction_thread_ = std::make_unique<utils::StoppableThread>([this] () {
+      runCompaction();
     });
   }
 }
@@ -114,10 +115,7 @@ void DatabaseContentRepository::stop() {
     if (opendb) {
       opendb->FlushWAL(true);
     }
-    compaction_thread_.request_stop();
-    if (compaction_thread_.joinable()) {
-      compaction_thread_.join();
-    }
+    compaction_thread_.reset();
   }
 }
 

@@ -30,7 +30,6 @@
 #include "FlowFileRecord.h"
 #include "utils/gsl.h"
 #include "core/Resource.h"
-#include "utils/ThreadUtils.h"
 
 using namespace std::literals::chrono_literals;
 
@@ -296,16 +295,15 @@ bool FlowFileRepository::Get(const std::string &key, std::string &value) {
   return opendb->Get(rocksdb::ReadOptions(), key, &value).ok();
 }
 
-void FlowFileRepository::runCompaction(std::stop_token stop_token) {
-  while (!stop_token.stop_requested()) {
+void FlowFileRepository::runCompaction() {
+  do {
     if (auto opendb = db_->open()) {
       auto status = opendb->RunCompaction();
       logger_->log_trace("Compaction triggered: %s", status.ToString());
     } else {
       logger_->log_error("Failed to open database for compaction");
     }
-    utils::sleep_for(stop_token, compaction_period_);
-  }
+  } while (!utils::StoppableThread::wait_stop_requested(compaction_period_));
 }
 
 bool FlowFileRepository::start() {
@@ -314,18 +312,15 @@ bool FlowFileRepository::start() {
     swap_loader_->start();
   }
   if (compaction_period_.count() != 0) {
-    compaction_thread_ = std::jthread([&] (std::stop_token stop_token) {
-      runCompaction(std::move(stop_token));
+    compaction_thread_ = std::make_unique<utils::StoppableThread>([this] () {
+      runCompaction();
     });
   }
   return ret;
 }
 
 bool FlowFileRepository::stop() {
-  compaction_thread_.request_stop();
-  if (compaction_thread_.joinable()) {
-    compaction_thread_.join();
-  }
+  compaction_thread_.reset();
   if (swap_loader_) {
     swap_loader_->stop();
   }

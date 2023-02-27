@@ -15,13 +15,25 @@
  * limitations under the License.
  */
 
-#pragma once
-
-#include <chrono>
-#include <stop_token>
+#include "utils/StoppableThread.h"
+#include "utils/gsl.h"
 
 namespace org::apache::nifi::minifi::utils {
 
-void sleep_for(std::stop_token& stop_token, std::chrono::milliseconds time);
+static thread_local StoppableThread* current_thread;
+
+StoppableThread::StoppableThread(std::function<void()> fn) {
+  thread_ = std::thread{[fn, this] {
+    current_thread = this;
+    fn();
+  }};
+}
+
+bool StoppableThread::wait_stop_requested(std::chrono::milliseconds time) {
+  gsl_Expects(current_thread);
+  std::unique_lock lock(current_thread->mtx_);
+  // wait_for returns false if the predicate is still false, i.e. the thread is running
+  return current_thread->cv_.wait_for(lock, time, [&] {return !current_thread->running_;});
+}
 
 }  // namespace org::apache::nifi::minifi::utils

@@ -15,24 +15,46 @@
  * limitations under the License.
  */
 
-#include "utils/ThreadUtils.h"
+#pragma once
+
+#include <mutex>
+#include <thread>
 #include <condition_variable>
+#include <atomic>
+#include <functional>
 
 namespace org::apache::nifi::minifi::utils {
 
-namespace {
-
-class NoopLock {
+// mimics some aspects of std::jthread
+// unfortunately clang's jthread support is lacking
+// TODO(adebreceni): replace this with std::jthread
+class StoppableThread {
  public:
-  void lock() {}
-  void unlock() {}
+  explicit StoppableThread(std::function<void()> fn);
+
+  void stopWait() {
+    running_ = false;
+    {
+      std::unique_lock lock(mtx_);
+      cv_.notify_all();
+    }
+    if (thread_.joinable()) {
+      thread_.join();
+    }
+  }
+
+  ~StoppableThread() {
+    stopWait();
+  }
+
+  // return true if stop was requested
+  static bool wait_stop_requested(std::chrono::milliseconds time);
+
+ private:
+  std::atomic_bool running_{true};
+  std::mutex mtx_;
+  std::condition_variable cv_;
+  std::thread thread_;
 };
-
-}  // namespace
-
-void sleep_for(std::stop_token& stop_token, std::chrono::milliseconds time) {
-  NoopLock lock;
-  std::condition_variable_any{}.wait_for(lock, stop_token, time, [&] {return stop_token.stop_requested();});
-}
 
 }  // namespace org::apache::nifi::minifi::utils

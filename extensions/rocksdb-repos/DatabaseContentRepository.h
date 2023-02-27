@@ -27,6 +27,7 @@
 #include "core/Property.h"
 #include "database/RocksDatabase.h"
 #include "properties/Configure.h"
+#include "utils/StoppableThread.h"
 
 namespace org::apache::nifi::minifi::core::repository {
 
@@ -78,14 +79,14 @@ class DatabaseContentRepository : public core::ContentRepository {
  private:
   std::shared_ptr<io::BaseStream> write(const minifi::ResourceClaim &claim, bool append, minifi::internal::WriteBatch* batch);
 
-  void runCompaction(std::stop_token stop_token);
+  void runCompaction();
 
   bool is_valid_;
   std::unique_ptr<minifi::internal::RocksDatabase> db_;
   std::shared_ptr<logging::Logger> logger_;
 
   std::chrono::milliseconds compaction_period_{DEFAULT_COMPACTION_PERIOD};
-  std::jthread compaction_thread_;
+  std::unique_ptr<utils::StoppableThread> compaction_thread_;
 };
 
 }  // namespace org::apache::nifi::minifi::core::repository

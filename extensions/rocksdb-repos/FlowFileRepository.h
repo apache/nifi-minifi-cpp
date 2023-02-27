@@ -38,6 +38,7 @@
 #include "FlowFileLoader.h"
 #include "range/v3/algorithm/all_of.hpp"
 #include "utils/Literals.h"
+#include "utils/StoppableThread.h"
 
 namespace org::apache::nifi::minifi::core::repository {
 
@@ -108,7 +109,7 @@ class FlowFileRepository : public ThreadedRepository, public SwapManager {
  private:
   void run() override;
 
-  void runCompaction(std::stop_token stop_token);
+  void runCompaction();
 
   bool ExecuteWithRetry(const std::function<rocksdb::Status()>& operation);
 
@@ -127,7 +128,7 @@ class FlowFileRepository : public ThreadedRepository, public SwapManager {
   std::thread thread_;
 
   std::chrono::milliseconds compaction_period_;
-  std::jthread compaction_thread_;
+  std::unique_ptr<utils::StoppableThread> compaction_thread_;
 };
 
 }  // namespace org::apache::nifi::minifi::core::repository
