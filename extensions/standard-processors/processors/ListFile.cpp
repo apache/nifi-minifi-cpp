@@ -245,7 +245,7 @@ void ListFile::onTrigger(const std::shared_ptr<core::ProcessContext> &context, c
       listed_file.last_modified_time = std::chrono::time_point_cast<std::chrono::milliseconds>(utils::file::to_sys(*last_modified_time));
     } else {
       logger_->log_warn("Could not get last modification time of file '%s'", listed_file.full_file_path.string());
-      continue;
+      listed_file.last_modified_time = {};
     }
 
     if (stored_listing_state.wasObjectListedAlready(listed_file)) {
