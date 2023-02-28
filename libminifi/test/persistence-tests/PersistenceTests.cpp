@@ -77,7 +77,7 @@ struct TestFlow{
     auto input = std::make_unique<Connection>(ff_repository, content_repo, "Input", inputConnUUID());
     {
       input_ = input.get();
-      input->setRelationship({"input", "d"});
+      input->addRelationship({"input", "d"});
       input->setDestinationUUID(mainProcUUID());
       input->setSourceUUID(inputProcUUID());
       inputProcessor->addConnection(input.get());
@@ -87,7 +87,7 @@ struct TestFlow{
     auto output = std::make_unique<Connection>(ff_repository, content_repo, "Output", outputConnUUID());
     {
       output_ = output.get();
-      output->setRelationship(relationshipToOutput);
+      output->addRelationship(relationshipToOutput);
       output->setSourceUUID(mainProcUUID());
     }
 

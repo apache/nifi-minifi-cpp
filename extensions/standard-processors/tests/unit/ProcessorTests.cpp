@@ -245,7 +245,7 @@ TEST_CASE("TestConnectionFull", "[ConnectionFull]") {
   std::shared_ptr<TestRepository> repo = std::static_pointer_cast<TestRepository>(test_repo);
 
   std::shared_ptr<minifi::Connection> connection = std::make_shared<minifi::Connection>(test_repo, content_repo, "GFF2Connection");
-  connection->setMaxQueueSize(5);
+  connection->setBackpressureThresholdCount(5);
   connection->addRelationship(core::Relationship("success", "description"));
 
 
@@ -270,8 +270,8 @@ TEST_CASE("TestConnectionFull", "[ConnectionFull]") {
 
   auto session = std::make_shared<core::ProcessSession>(context);
 
-  REQUIRE(session->outgoingConnectionsFull("success") == false);
-  REQUIRE(connection->isFull() == false);
+  CHECK_FALSE(session->outgoingConnectionsFull("success"));
+  CHECK_FALSE(connection->backpressureThresholdReached());
 
   processor->incrementActiveTasks();
   processor->setScheduledState(core::ScheduledState::RUNNING);
@@ -279,8 +279,8 @@ TEST_CASE("TestConnectionFull", "[ConnectionFull]") {
 
   session->commit();
 
-  REQUIRE(connection->isFull());
-  REQUIRE(session->outgoingConnectionsFull("success"));
+  CHECK(connection->backpressureThresholdReached());
+  CHECK(session->outgoingConnectionsFull("success"));
 }
 
 TEST_CASE("LogAttributeTest", "[getfileCreate3]") {

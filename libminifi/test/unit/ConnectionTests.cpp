@@ -84,3 +84,44 @@ TEST_CASE("Connection::poll() works correctly", "[poll]") {
     REQUIRE(nullptr == connection->poll(expired_flow_files));
   }
 }
+
+TEST_CASE("Connection backpressure tests", "[Connection]") {
+  const auto flow_repo = std::make_shared<TestRepository>();
+  const auto content_repo = std::make_shared<core::repository::VolatileContentRepository>();
+  content_repo->initialize(std::make_shared<minifi::Configure>());
+
+  const auto id_generator = utils::IdGenerator::getIdGenerator();
+  const auto connection = std::make_shared<minifi::Connection>(flow_repo, content_repo, "test_connection", id_generator->generate(), id_generator->generate(), id_generator->generate());
+
+  CHECK(connection->getBackpressureThresholdDataSize() == minifi::Connection::DEFAULT_BACKPRESSURE_THRESHOLD_DATA_SIZE);
+  CHECK(connection->getBackpressureThresholdCount() == minifi::Connection::DEFAULT_BACKPRESSURE_THRESHOLD_COUNT);
+
+  SECTION("The number of flowfiles can be limited") {
+    connection->setBackpressureThresholdCount(2);
+    CHECK_FALSE(connection->backpressureThresholdReached());
+    connection->put(std::make_shared<core::FlowFile>());
+    CHECK_FALSE(connection->backpressureThresholdReached());
+    connection->put(std::make_shared<core::FlowFile>());
+    CHECK(connection->backpressureThresholdReached());
+    connection->setBackpressureThresholdCount(0);
+    CHECK_FALSE(connection->backpressureThresholdReached());
+  }
+  SECTION("The size of the data can be limited") {
+    connection->setBackpressureThresholdDataSize(3_KB);
+    CHECK_FALSE(connection->backpressureThresholdReached());
+    {
+      auto flow_file = std::make_shared<core::FlowFile>();
+      flow_file->setSize(2_KB);
+      connection->put(flow_file);
+    }
+    CHECK_FALSE(connection->backpressureThresholdReached());
+    {
+      auto flow_file = std::make_shared<core::FlowFile>();
+      flow_file->setSize(2_KB);
+      connection->put(flow_file);
+    }
+    CHECK(connection->backpressureThresholdReached());
+    connection->setBackpressureThresholdDataSize(0);
+    CHECK_FALSE(connection->backpressureThresholdReached());
+  }
+}

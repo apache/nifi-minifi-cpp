@@ -53,8 +53,8 @@ TEST_CASE("QueueMetricsTestConnections", "[c2m3]") {
 
   auto connection = std::make_unique<minifi::Connection>(repo, content_repo, "testconnection");
 
-  connection->setMaxQueueDataSize(1024);
-  connection->setMaxQueueSize(1024);
+  connection->setBackpressureThresholdDataSize(1024);
+  connection->setBackpressureThresholdCount(1024);
 
   metrics.updateConnection(connection.get());
 

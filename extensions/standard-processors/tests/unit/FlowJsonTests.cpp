@@ -150,8 +150,8 @@ TEST_CASE("NiFi flow json format is correctly parsed") {
   REQUIRE(connection1->getSource() == proc);
   REQUIRE(connection1->getDestination() == funnel);
   REQUIRE(connection1->getRelationships() == (std::set<core::Relationship>{{"a", ""}, {"b", ""}}));
-  REQUIRE(connection1->getMaxQueueSize() == 7);
-  REQUIRE(connection1->getMaxQueueDataSize() == 11_KiB);
+  REQUIRE(connection1->getBackpressureThresholdCount() == 7);
+  REQUIRE(connection1->getBackpressureThresholdDataSize() == 11_KiB);
   REQUIRE(13s == connection1->getFlowExpirationDuration());
 
   auto connection2 = connection_map.at("00000000-0000-0000-0000-000000000008");
