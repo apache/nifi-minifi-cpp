@@ -23,7 +23,7 @@ namespace org::apache::nifi::minifi::utils {
 static thread_local StoppableThread* current_thread;
 
 StoppableThread::StoppableThread(std::function<void()> fn) {
-  thread_ = std::thread{[fn, this] {
+  thread_ = std::thread{[fn = std::move(fn), this] {
     current_thread = this;
     fn();
   }};
