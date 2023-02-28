@@ -41,6 +41,7 @@
 #include "Catch.h"
 #include "unit/ProvenanceTestHelper.h"
 #include "date/tz.h"
+#include "Utils.h"
 
 namespace expression = org::apache::nifi::minifi::expression;
 
@@ -1278,6 +1279,69 @@ TEST_CASE("Full Hostname", "[expressionFullHostname]") {
 
   auto flow_file_a = std::make_shared<core::FlowFile>();
   REQUIRE(!expr(expression::Parameters{ flow_file_a }).asString().empty());
+}
+
+TEST_CASE("Reverse DNS lookup with valid ip", "[ExpressionLanguage][reverseDnsLookup]") {
+  auto expr = expression::compile("${reverseDnsLookup(${ip_addr})}");
+
+  auto flow_file_a = std::make_shared<core::FlowFile>();
+  std::string expected_hostname;
+  SECTION("dns.google IPv4") {
+    flow_file_a->addAttribute("ip_addr", "8.8.8.8");
+    expected_hostname = "dns.google";
+  }
+
+  SECTION("dns.google IPv6") {
+    if (minifi::test::utils::isIPv6Disabled())
+      return;
+    flow_file_a->addAttribute("ip_addr", "2001:4860:4860::8888");
+    expected_hostname = "dns.google";
+  }
+
+  SECTION("Unresolvable address IPv4") {
+    flow_file_a->addAttribute("ip_addr", "192.0.2.0");
+    expected_hostname = "192.0.2.0";
+  }
+
+  SECTION("Unresolvable address IPv6") {
+    if (minifi::test::utils::isIPv6Disabled())
+      return;
+    flow_file_a->addAttribute("ip_addr", "2001:db8::");
+    expected_hostname = "2001:db8::";
+  }
+
+  REQUIRE(expr(expression::Parameters{ flow_file_a }).asString() ==  expected_hostname);
+}
+
+TEST_CASE("Reverse DNS lookup with invalid ip", "[ExpressionLanguage][reverseDnsLookup]") {
+  auto expr = expression::compile("${reverseDnsLookup(${ip_addr})}");
+
+  auto flow_file_a = std::make_shared<core::FlowFile>();
+  flow_file_a->addAttribute("ip_addr", "banana");
+
+  REQUIRE_THROWS_AS(expr(expression::Parameters{flow_file_a}), std::runtime_error);
+}
+
+TEST_CASE("Reverse DNS lookup with invalid timeout parameter", "[ExpressionLanguage][reverseDnsLookup]") {
+  auto expr = expression::compile("${reverseDnsLookup(${ip_addr}, ${timeout})}");
+
+  auto flow_file_a = std::make_shared<core::FlowFile>();
+  flow_file_a->addAttribute("ip_addr", "192.0.2.1");
+  flow_file_a->addAttribute("timeout", "strawberry");
+
+  REQUIRE_THROWS_AS(expr(expression::Parameters{ flow_file_a }), std::invalid_argument);
+}
+
+TEST_CASE("Reverse DNS lookup with valid timeout parameter", "[ExpressionLanguage][reverseDnsLookup]") {
+  auto reverse_lookup_expr_500ms = expression::compile("${reverseDnsLookup(${ip_addr}, 500)}");
+  auto reverse_lookup_expr_0ms = expression::compile("${reverseDnsLookup(${ip_addr}, 0)}");  // 0ms to make sure it times out
+
+  auto flow_file_a = std::make_shared<core::FlowFile>();
+  std::string expected_hostname;
+  flow_file_a->addAttribute("ip_addr", "192.0.2.1");
+
+  REQUIRE_THROWS_AS(reverse_lookup_expr_0ms(expression::Parameters{flow_file_a}), std::runtime_error);
+  REQUIRE_NOTHROW(reverse_lookup_expr_500ms(expression::Parameters{ flow_file_a }));
 }
 
 TEST_CASE("UUID", "[expressionUuid]") {

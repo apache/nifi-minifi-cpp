@@ -15,6 +15,7 @@
  * limitations under the License.
  */
 #pragma once
+#include <chrono>
 #include <memory>
 #include <string>
 #include <string_view>
@@ -22,6 +23,7 @@
 #include "nonstd/expected.hpp"
 #include "utils/gsl.h"
 #include "IpProtocol.h"
+#include "asio/ip/address.hpp"
 
 struct addrinfo;
 
@@ -41,4 +43,9 @@ inline auto resolveHost(const char* const hostname, const uint16_t port, const I
 inline auto resolveHost(const uint16_t port, const IpProtocol proto = IpProtocol::TCP, const bool need_canonname = false) {
   return resolveHost(nullptr, port, proto, need_canonname);
 }
+
+nonstd::expected<asio::ip::address, std::error_code> addressFromString(std::string_view ip_address_str);
+
+nonstd::expected<std::string, std::error_code> reverseDnsLookup(const asio::ip::address& ip_address, std::chrono::steady_clock::duration timeout = std::chrono::seconds(5));
+
 }  // namespace org::apache::nifi::minifi::utils::net
