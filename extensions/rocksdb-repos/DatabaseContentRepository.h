@@ -51,7 +51,7 @@ class DatabaseContentRepository : public core::ContentRepository {
       logger_(logging::LoggerFactory<DatabaseContentRepository>::getLogger()) {
   }
   ~DatabaseContentRepository() override {
-    deinitialize();
+    stop();
   }
 
   static auto properties() { return std::array<core::Property, 0>{}; }
@@ -74,7 +74,9 @@ class DatabaseContentRepository : public core::ContentRepository {
 
   void start() override;
   void stop() override;
-  void deinitialize() override;
+
+  // test-only utility
+  void test_deinitialize();
 
  private:
   std::shared_ptr<io::BaseStream> write(const minifi::ResourceClaim &claim, bool append, minifi::internal::WriteBatch* batch);

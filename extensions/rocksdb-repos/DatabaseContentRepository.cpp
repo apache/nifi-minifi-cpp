@@ -119,7 +119,7 @@ void DatabaseContentRepository::stop() {
   }
 }
 
-void DatabaseContentRepository::deinitialize() {
+void DatabaseContentRepository::test_deinitialize() {
   stop();
   db_.reset();
 }

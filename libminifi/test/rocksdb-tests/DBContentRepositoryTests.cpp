@@ -46,7 +46,7 @@ TEST_CASE("Write Claim", "[TestDBCR1]") {
 
   stream->close();
 
-  content_repo->deinitialize();
+  content_repo->test_deinitialize();
   // reclaim the memory
   content_repo = nullptr;
 
@@ -86,7 +86,7 @@ TEST_CASE("Delete Claim", "[TestDBCR2]") {
 
   stream->close();
 
-  content_repo->deinitialize();
+  content_repo->test_deinitialize();
 
   // reclaim the memory
   content_repo = nullptr;
@@ -123,7 +123,7 @@ TEST_CASE("Test Empty Claim", "[TestDBCR3]") {
 
   stream->close();
 
-  content_repo->deinitialize();
+  content_repo->test_deinitialize();
 
   // reclaim the memory
   content_repo = nullptr;
@@ -159,7 +159,7 @@ TEST_CASE("Delete NonExistent Claim", "[TestDBCR4]") {
 
   stream->close();
 
-  content_repo->deinitialize();
+  content_repo->test_deinitialize();
 
   // reclaim the memory
   content_repo = nullptr;
@@ -199,7 +199,7 @@ TEST_CASE("Delete Remove Count Claim", "[TestDBCR5]") {
 
   stream->close();
 
-  content_repo->deinitialize();
+  content_repo->test_deinitialize();
 
   // reclaim the memory
   content_repo = nullptr;
