@@ -186,4 +186,4 @@ std::string jsonToString(const rapidjson::Document& doc) {
   doc.Accept(writer);
   return buffer.GetString();
 }
-} // namespace org::apache::nifi::minifi::wel
+}  // namespace org::apache::nifi::minifi::wel
