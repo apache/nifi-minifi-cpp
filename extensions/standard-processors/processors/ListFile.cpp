@@ -238,8 +238,7 @@ void ListFile::onTrigger(const std::shared_ptr<core::ProcessContext> &context, c
   auto latest_listing_state = stored_listing_state;
   uint32_t files_listed = 0;
 
-  auto file_list = utils::file::FileUtils::list_dir_all(input_directory_, logger_, recurse_subdirectories_);
-  for (const auto& [path, filename] : file_list) {
+  auto process_files = [&](const std::filesystem::path& path, const std::filesystem::path& filename) {
     ListedFile listed_file;
     listed_file.full_file_path = path / filename;
     if (auto last_modified_time = utils::file::last_write_time(listed_file.full_file_path)) {
@@ -251,18 +250,20 @@ void ListFile::onTrigger(const std::shared_ptr<core::ProcessContext> &context, c
 
     if (stored_listing_state.wasObjectListedAlready(listed_file)) {
       logger_->log_debug("File '%s' was already listed.", listed_file.full_file_path.string());
-      continue;
+      return true;
     }
 
     if (!fileMatchesFilters(listed_file)) {
-      continue;
+      return true;
     }
 
     auto flow_file = createFlowFile(*session, listed_file);
     session->transfer(flow_file, Success);
     ++files_listed;
     latest_listing_state.updateState(listed_file);
-  }
+    return true;
+  };
+  utils::file::list_dir(input_directory_, process_files, logger_, recurse_subdirectories_);
 
   state_manager_->storeState(latest_listing_state);
 
