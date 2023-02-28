@@ -390,19 +390,19 @@ TEST_CASE("TestStringUtils::testBase64Decode", "[test base64 decode]") {
   REQUIRE("oooooo" == StringUtils::from_base64("b29vb29v", as_string));
   REQUIRE("\xfb\xff\xbf" == StringUtils::from_base64("-_-_", as_string));
   REQUIRE("\xfb\xff\xbf" == StringUtils::from_base64("+/+/", as_string));
-  std::string expected{
-      static_cast<char>(0), static_cast<char>(16), static_cast<char>(-125), static_cast<char>(16),
-      static_cast<char>(81), static_cast<char>(-121), static_cast<char>(32), static_cast<char>(-110),
-      static_cast<char>(-117), static_cast<char>(48), static_cast<char>(-45), static_cast<char>(-113),
-      static_cast<char>(65), static_cast<char>(20), static_cast<char>(-109), static_cast<char>(81),
-      static_cast<char>(85), static_cast<char>(-105), static_cast<char>(97), static_cast<char>(-106),
-      static_cast<char>(-101), static_cast<char>(113), static_cast<char>(-41), static_cast<char>(-97),
-      static_cast<char>(-126), static_cast<char>(24), static_cast<char>(-93), static_cast<char>(-110),
-      static_cast<char>(89), static_cast<char>(-89), static_cast<char>(-94), static_cast<char>(-102),
-      static_cast<char>(-85), static_cast<char>(-78), static_cast<char>(-37), static_cast<char>(-81),
-      static_cast<char>(-61), static_cast<char>(28), static_cast<char>(-77), static_cast<char>(-45),
-      static_cast<char>(93), static_cast<char>(-73), static_cast<char>(-29), static_cast<char>(-98),
-      static_cast<char>(-69), static_cast<char>(-13), static_cast<char>(-33), static_cast<char>(-65)};
+  std::string expected = {
+      '\x00', '\x10', '\x83', '\x10',
+      '\x51', '\x87', '\x20', '\x92',
+      '\x8b', '\x30', '\xd3', '\x8f',
+      '\x41', '\x14', '\x93', '\x51',
+      '\x55', '\x97', '\x61', '\x96',
+      '\x9b', '\x71', '\xd7', '\x9f',
+      '\x82', '\x18', '\xa3', '\x92',
+      '\x59', '\xa7', '\xa2', '\x9a',
+      '\xab', '\xb2', '\xdb', '\xaf',
+      '\xc3', '\x1c', '\xb3', '\xd3',
+      '\x5d', '\xb7', '\xe3', '\x9e',
+      '\xbb', '\xf3', '\xdf', '\xbf'};
 
   REQUIRE(expected == StringUtils::from_base64("ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/", as_string));
   REQUIRE(expected == StringUtils::from_base64("ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-_", as_string));
