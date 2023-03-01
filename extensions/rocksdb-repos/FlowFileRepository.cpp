@@ -243,14 +243,14 @@ bool FlowFileRepository::initialize(const std::shared_ptr<Configure> &configure)
 
 void FlowFileRepository::setCompactionPeriod(const std::shared_ptr<Configure> &configure) {
   compaction_period_ = DEFAULT_COMPACTION_PERIOD;
-  if (auto compaction_period_str = configure->get(Configure::nifi_flowfile_repository_compaction_period)) {
+  if (auto compaction_period_str = configure->get(Configure::nifi_flowfile_repository_rocksdb_compaction_period)) {
     if (auto compaction_period = TimePeriodValue::fromString(compaction_period_str.value())) {
       compaction_period_ = compaction_period->getMilliseconds();
       if (compaction_period_.count() == 0) {
-        logger_->log_warn("Setting '%s' to 0 disables forced compaction", Configure::nifi_dbcontent_repository_compaction_period);
+        logger_->log_warn("Setting '%s' to 0 disables forced compaction", Configure::nifi_flowfile_repository_rocksdb_compaction_period);
       }
     } else {
-      logger_->log_error("Malformed property '%s', expected time period, using default", Configure::nifi_flowfile_repository_compaction_period);
+      logger_->log_error("Malformed property '%s', expected time period, using default", Configure::nifi_flowfile_repository_rocksdb_compaction_period);
     }
   } else {
     logger_->log_debug("Using default compaction period of %" PRId64 " ms", int64_t{compaction_period_.count()});

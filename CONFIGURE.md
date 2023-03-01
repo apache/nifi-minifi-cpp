@@ -171,6 +171,15 @@ If content repository or flow file repository is set to use the rocksdb database
      nifi.flowfile.repository.rocksdb.compression=zlib
      nifi.content.repository.rocksdb.compression=auto
 
+
+### Configuring compaction for rocksdb database
+
+Rocksdb has an option to run compaction at specific intervals not just when needed.
+
+     in minifi.properties
+     nifi.flowfile.repository.rocksdb.compaction.period=2 min
+     nifi.database.content.repository.rocksdb.compaction.period=2 min
+
 #### Shared database
 
 It is also possible to use a single database to store multiple repositories with the `minifidb://` scheme.

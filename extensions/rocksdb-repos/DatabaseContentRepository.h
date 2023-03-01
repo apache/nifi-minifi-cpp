@@ -39,7 +39,7 @@ class DatabaseContentRepository : public core::ContentRepository {
     void commit() override;
   };
 
-  static constexpr std::chrono::milliseconds DEFAULT_COMPACTION_PERIOD = std::chrono::seconds{120};
+  static constexpr std::chrono::milliseconds DEFAULT_COMPACTION_PERIOD = std::chrono::minutes{2};
 
  public:
   static constexpr const char* ENCRYPTION_KEY_NAME = "nifi.database.content.repository.encryption.key";
