@@ -43,20 +43,7 @@ bool DatabaseContentRepository::initialize(const std::shared_ptr<minifi::Configu
   const auto encrypted_env = createEncryptingEnv(utils::crypto::EncryptionManager{configuration->getHome()}, DbEncryptionOptions{directory_, ENCRYPTION_KEY_NAME});
   logger_->log_info("Using %s DatabaseContentRepository", encrypted_env ? "encrypted" : "plaintext");
 
-  compaction_period_ = DEFAULT_COMPACTION_PERIOD;
-  if (auto compaction_period_str = configuration->get(Configure::nifi_dbcontent_repository_compaction_period)) {
-    if (auto compaction_period = TimePeriodValue::fromString(compaction_period_str.value())) {
-      compaction_period_ = compaction_period->getMilliseconds();
-      if (compaction_period_.count() == 0) {
-        logger_->log_warn("Setting '%s' to 0 disables forced compaction", Configure::nifi_dbcontent_repository_compaction_period);
-      }
-    } else {
-      logger_->log_error("Malformed property '%s', expected time period, using default", Configure::nifi_dbcontent_repository_compaction_period);
-    }
-  } else {
-    logger_->log_debug("Using default compaction period of %" PRId64 " ms", int64_t{compaction_period_.count()});
-  }
-
+  setCompactionPeriod(configuration);
 
   auto set_db_opts = [encrypted_env] (minifi::internal::Writable<rocksdb::DBOptions>& db_opts) {
     db_opts.set(&rocksdb::DBOptions::create_if_missing, true);
@@ -88,6 +75,22 @@ bool DatabaseContentRepository::initialize(const std::shared_ptr<minifi::Configu
   return is_valid_;
 }
 
+void DatabaseContentRepository::setCompactionPeriod(const std::shared_ptr<minifi::Configure> &configuration) {
+  compaction_period_ = DEFAULT_COMPACTION_PERIOD;
+  if (auto compaction_period_str = configuration->get(Configure::nifi_dbcontent_repository_compaction_period)) {
+    if (auto compaction_period = TimePeriodValue::fromString(compaction_period_str.value())) {
+      compaction_period_ = compaction_period->getMilliseconds();
+      if (compaction_period_.count() == 0) {
+        logger_->log_warn("Setting '%s' to 0 disables forced compaction", Configure::nifi_dbcontent_repository_compaction_period);
+      }
+    } else {
+      logger_->log_error("Malformed property '%s', expected time period, using default", Configure::nifi_dbcontent_repository_compaction_period);
+    }
+  } else {
+    logger_->log_debug("Using default compaction period of %" PRId64 " ms", int64_t{compaction_period_.count()});
+  }
+}
+
 void DatabaseContentRepository::runCompaction() {
   do {
     if (auto opendb = db_->open()) {
@@ -96,7 +99,7 @@ void DatabaseContentRepository::runCompaction() {
     } else {
       logger_->log_error("Failed to open database for compaction");
     }
-  } while (!utils::StoppableThread::wait_stop_requested(compaction_period_));
+  } while (!utils::StoppableThread::waitForStopRequest(compaction_period_));
 }
 
 void DatabaseContentRepository::start() {
@@ -118,11 +121,6 @@ void DatabaseContentRepository::stop() {
     }
     compaction_thread_.reset();
   }
-}
-
-void DatabaseContentRepository::test_deinitialize() {
-  stop();
-  db_.reset();
 }
 
 DatabaseContentRepository::Session::Session(std::shared_ptr<ContentRepository> repository) : BufferedContentSession(std::move(repository)) {}

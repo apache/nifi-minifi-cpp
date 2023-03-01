@@ -48,7 +48,7 @@ class StoppableThread {
   }
 
   // return true if stop was requested
-  static bool wait_stop_requested(std::chrono::milliseconds time);
+  static bool waitForStopRequest(std::chrono::milliseconds time);
 
  private:
   std::atomic_bool running_{true};

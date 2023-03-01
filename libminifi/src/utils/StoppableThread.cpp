@@ -29,7 +29,7 @@ StoppableThread::StoppableThread(std::function<void()> fn) {
   }};
 }
 
-bool StoppableThread::wait_stop_requested(std::chrono::milliseconds time) {
+bool StoppableThread::waitForStopRequest(std::chrono::milliseconds time) {
   gsl_Expects(current_thread);
   std::unique_lock lock(current_thread->mtx_);
   // wait_for returns false if the predicate is still false, i.e. the thread is running

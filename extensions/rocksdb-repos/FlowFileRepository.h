@@ -110,6 +110,7 @@ class FlowFileRepository : public ThreadedRepository, public SwapManager {
   void run() override;
 
   void runCompaction();
+  void setCompactionPeriod(const std::shared_ptr<Configure> &configure);
 
   bool ExecuteWithRetry(const std::function<rocksdb::Status()>& operation);
 

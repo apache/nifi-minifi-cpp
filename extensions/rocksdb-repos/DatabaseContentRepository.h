@@ -75,13 +75,11 @@ class DatabaseContentRepository : public core::ContentRepository {
   void start() override;
   void stop() override;
 
-  // test-only utility
-  void test_deinitialize();
-
- private:
+ protected:
   std::shared_ptr<io::BaseStream> write(const minifi::ResourceClaim &claim, bool append, minifi::internal::WriteBatch* batch);
 
   void runCompaction();
+  void setCompactionPeriod(const std::shared_ptr<minifi::Configure> &configuration);
 
   bool is_valid_;
   std::unique_ptr<minifi::internal::RocksDatabase> db_;

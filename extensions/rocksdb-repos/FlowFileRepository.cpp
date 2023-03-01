@@ -200,19 +200,7 @@ bool FlowFileRepository::initialize(const std::shared_ptr<Configure> &configure)
   }
   logger_->log_debug("NiFi FlowFile Repository Directory %s", directory_);
 
-  compaction_period_ = DEFAULT_COMPACTION_PERIOD;
-  if (auto compaction_period_str = configure->get(Configure::nifi_flowfile_repository_compaction_period)) {
-    if (auto compaction_period = TimePeriodValue::fromString(compaction_period_str.value())) {
-      compaction_period_ = compaction_period->getMilliseconds();
-      if (compaction_period_.count() == 0) {
-        logger_->log_warn("Setting '%s' to 0 disables forced compaction", Configure::nifi_dbcontent_repository_compaction_period);
-      }
-    } else {
-      logger_->log_error("Malformed property '%s', expected time period, using default", Configure::nifi_flowfile_repository_compaction_period);
-    }
-  } else {
-    logger_->log_debug("Using default compaction period of %" PRId64 " ms", int64_t{compaction_period_.count()});
-  }
+  setCompactionPeriod(configure);
 
   const auto encrypted_env = createEncryptingEnv(utils::crypto::EncryptionManager{configure->getHome()}, DbEncryptionOptions{directory_, ENCRYPTION_KEY_NAME});
   logger_->log_info("Using %s FlowFileRepository", encrypted_env ? "encrypted" : "plaintext");
@@ -250,6 +238,22 @@ bool FlowFileRepository::initialize(const std::shared_ptr<Configure> &configure)
   } else {
     logger_->log_error("NiFi FlowFile Repository database open %s fail", directory_);
     return false;
+  }
+}
+
+void FlowFileRepository::setCompactionPeriod(const std::shared_ptr<Configure> &configure) {
+  compaction_period_ = DEFAULT_COMPACTION_PERIOD;
+  if (auto compaction_period_str = configure->get(Configure::nifi_flowfile_repository_compaction_period)) {
+    if (auto compaction_period = TimePeriodValue::fromString(compaction_period_str.value())) {
+      compaction_period_ = compaction_period->getMilliseconds();
+      if (compaction_period_.count() == 0) {
+        logger_->log_warn("Setting '%s' to 0 disables forced compaction", Configure::nifi_dbcontent_repository_compaction_period);
+      }
+    } else {
+      logger_->log_error("Malformed property '%s', expected time period, using default", Configure::nifi_flowfile_repository_compaction_period);
+    }
+  } else {
+    logger_->log_debug("Using default compaction period of %" PRId64 " ms", int64_t{compaction_period_.count()});
   }
 }
 
@@ -303,7 +307,7 @@ void FlowFileRepository::runCompaction() {
     } else {
       logger_->log_error("Failed to open database for compaction");
     }
-  } while (!utils::StoppableThread::wait_stop_requested(compaction_period_));
+  } while (!utils::StoppableThread::waitForStopRequest(compaction_period_));
 }
 
 bool FlowFileRepository::start() {
