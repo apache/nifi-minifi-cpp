@@ -60,8 +60,19 @@ void ContentRepository::incrementStreamCount(const minifi::ResourceClaim &stream
   }
 }
 
+void ContentRepository::removeFromPurgeList() {
+  for (auto it = purge_list_.begin(); it != purge_list_.end();) {
+    if (removeKey(*it)) {
+      purge_list_.erase(it++);
+    } else {
+      ++it;
+    }
+  }
+}
+
 ContentRepository::StreamState ContentRepository::decrementStreamCount(const minifi::ResourceClaim &streamId) {
   std::lock_guard<std::mutex> lock(count_map_mutex_);
+  removeFromPurgeList();
   const std::string str = streamId.getContentFullPath();
   auto count = count_map_.find(str);
   if (count != count_map_.end() && count->second > 1) {
@@ -69,7 +80,9 @@ ContentRepository::StreamState ContentRepository::decrementStreamCount(const min
     return StreamState::Alive;
   } else {
     count_map_.erase(str);
-    remove(streamId);
+    if (!remove(streamId)) {
+      purge_list_.push_back(streamId.getContentFullPath());
+    }
     return StreamState::Deleted;
   }
 }

@@ -156,20 +156,26 @@ bool DatabaseContentRepository::exists(const minifi::ResourceClaim &streamId) {
   }
 }
 
-bool DatabaseContentRepository::remove(const minifi::ResourceClaim &claim) {
-  if (!is_valid_ || !db_)
+bool DatabaseContentRepository::removeKey(const std::string& content_path) {
+  if (!is_valid_ || !db_) {
+    logger_->log_error("DB is not valid, could not delete %s", content_path);
     return false;
+  }
   auto opendb = db_->open();
   if (!opendb) {
+    logger_->log_error("Could not open DB, did not delete %s", content_path);
     return false;
   }
   rocksdb::Status status;
-  status = opendb->Delete(rocksdb::WriteOptions(), claim.getContentFullPath());
+  status = opendb->Delete(rocksdb::WriteOptions(), content_path);
   if (status.ok()) {
-    logger_->log_debug("Deleting resource %s", claim.getContentFullPath());
+    logger_->log_debug("Deleting resource %s", content_path);
+    return true;
+  } else if (status.IsNotFound()) {
+    logger_->log_debug("Resource %s was not found", content_path);
     return true;
   } else {
-    logger_->log_debug("Attempted, but could not delete %s", claim.getContentFullPath());
+    logger_->log_error("Attempted, but could not delete %s", content_path);
     return false;
   }
 }

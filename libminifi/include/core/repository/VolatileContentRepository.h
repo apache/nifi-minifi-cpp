@@ -88,15 +88,16 @@ class VolatileContentRepository : public core::ContentRepository {
     return remove(claim);
   }
 
+  void clearOrphans() override {
+    // there are no persisted orphans to delete
+  }
+
+ protected:
   /**
    * Closes the claim.
    * @return whether or not the claim is associated with content stored in volatile memory.
    */
-  bool remove(const minifi::ResourceClaim &claim) override;
-
-  void clearOrphans() override {
-    // there are no persisted orphans to delete
-  }
+  bool removeKey(const std::string& content_path) override;
 
  private:
   VolatileRepositoryData repo_data_;

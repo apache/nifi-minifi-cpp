@@ -19,6 +19,7 @@
 #include "core/repository/FileSystemRepository.h"
 #include <memory>
 #include <string>
+#include <filesystem>
 #include "io/FileStream.h"
 #include "utils/file/FileUtils.h"
 #include "core/ForwardingContentSession.h"
@@ -49,9 +50,23 @@ std::shared_ptr<io::BaseStream> FileSystemRepository::read(const minifi::Resourc
   return std::make_shared<io::FileStream>(claim.getContentFullPath(), 0, false);
 }
 
-bool FileSystemRepository::remove(const minifi::ResourceClaim& claim) {
-  logger_->log_debug("Deleting resource %s", claim.getContentFullPath());
-  std::remove(claim.getContentFullPath().c_str());
+bool FileSystemRepository::removeKey(const std::string& content_path) {
+  logger_->log_debug("Deleting resource %s", content_path);
+  std::error_code ec;
+  auto result = std::filesystem::exists(content_path, ec);
+  if (ec) {
+    logger_->log_error("Deleting %s from content repository failed with the following error: %s", content_path, ec.message());
+    return false;
+  }
+  if (!result) {
+    logger_->log_debug("Content path %s does not exist, no need to delete it", content_path);
+    return true;
+  }
+  ec.clear();
+  if (!std::filesystem::remove(content_path, ec)) {
+    logger_->log_error("Deleting %s from content repository failed with the following error: %s", content_path, ec.message());
+    return false;
+  }
   return true;
 }
 
