@@ -22,11 +22,7 @@
 #include "ColumnHandle.h"
 #include "RocksDbInstance.h"
 
-namespace org {
-namespace apache {
-namespace nifi {
-namespace minifi {
-namespace internal {
+namespace org::apache::nifi::minifi::internal {
 
 OpenRocksDb::OpenRocksDb(RocksDbInstance& db, gsl::not_null<std::shared_ptr<rocksdb::DB>> impl, gsl::not_null<std::shared_ptr<ColumnHandle>> column)
     : db_(&db), impl_(std::move(impl)), column_(std::move(column)) {}
@@ -126,8 +122,4 @@ rocksdb::DB* OpenRocksDb::get() {
   return impl_.get();
 }
 
-}  // namespace internal
-}  // namespace minifi
-}  // namespace nifi
-}  // namespace apache
-}  // namespace org
+}  // namespace org::apache::nifi::minifi::internal
