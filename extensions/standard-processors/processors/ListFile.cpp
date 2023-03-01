@@ -19,6 +19,7 @@
 #include <filesystem>
 
 #include "utils/StringUtils.h"
+#include "utils/TimeUtil.h"
 #include "core/PropertyBuilder.h"
 #include "core/Resource.h"
 
@@ -193,14 +194,8 @@ std::shared_ptr<core::FlowFile> ListFile::createFlowFile(core::ProcessSession& s
   auto relative_path = std::filesystem::relative(listed_file.full_file_path.parent_path(), input_directory_);
   session.putAttribute(flow_file, core::SpecialFlowAttribute::PATH, (relative_path / "").string());
 
-  const auto file_size = utils::file::file_size(listed_file.full_file_path);
-  session.putAttribute(flow_file, "file.size", std::to_string(file_size));
-  if (auto last_modified_str = utils::file::format_time(listed_file.last_modified_time, "%Y-%m-%dT%H:%M:%SZ")) {
-    session.putAttribute(flow_file, "file.lastModifiedTime", *last_modified_str);
-  } else {
-    session.putAttribute(flow_file, "file.lastModifiedTime", "");
-    logger_->log_warn("Could not get last modification time of file '%s'", listed_file.full_file_path.string());
-  }
+  session.putAttribute(flow_file, "file.size", std::to_string(utils::file::file_size(listed_file.full_file_path)));
+  session.putAttribute(flow_file, "file.lastModifiedTime", utils::timeutils::getDateTimeStr(std::chrono::time_point_cast<std::chrono::seconds>(listed_file.last_modified_time)));
 
   if (auto permission_string = utils::file::FileUtils::get_permission_string(listed_file.full_file_path)) {
     session.putAttribute(flow_file, "file.permissions", *permission_string);
