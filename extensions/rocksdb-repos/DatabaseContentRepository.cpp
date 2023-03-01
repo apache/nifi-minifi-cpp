@@ -21,6 +21,7 @@
 #include <string>
 #include <utility>
 #include <vector>
+#include <cinttypes>
 
 #include "encryption/RocksDbEncryptionProvider.h"
 #include "RocksDbStream.h"
@@ -53,7 +54,7 @@ bool DatabaseContentRepository::initialize(const std::shared_ptr<minifi::Configu
       logger_->log_error("Malformed property '%s', expected time period, using default", Configure::nifi_dbcontent_repository_compaction_period);
     }
   } else {
-    logger_->log_info("Using default compaction period");
+    logger_->log_debug("Using default compaction period of %" PRId64 " ms", int64_t{compaction_period_.count()});
   }
 
 

@@ -211,7 +211,7 @@ bool FlowFileRepository::initialize(const std::shared_ptr<Configure> &configure)
       logger_->log_error("Malformed property '%s', expected time period, using default", Configure::nifi_flowfile_repository_compaction_period);
     }
   } else {
-    logger_->log_info("Using default compaction period");
+    logger_->log_debug("Using default compaction period of %" PRId64 " ms", int64_t{compaction_period_.count()});
   }
 
   const auto encrypted_env = createEncryptingEnv(utils::crypto::EncryptionManager{configure->getHome()}, DbEncryptionOptions{directory_, ENCRYPTION_KEY_NAME});
