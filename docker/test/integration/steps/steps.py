@@ -762,6 +762,11 @@ def step_impl(context, content, duration):
     context.test.check_for_single_json_file_with_content_generated(content, humanfriendly.parse_timespan(duration))
 
 
+@then("at least one flowfile's content match the following regex: \"{regex}\" in less than {duration}")
+def step_impl(context, regex: str, duration: str):
+    context.test.check_for_at_least_one_file_with_matching_content(regex, humanfriendly.parse_timespan(duration))
+
+
 @then("at least one flowfile with the content \"{content}\" is placed in the monitored directory in less than {duration}")
 @then("at least one flowfile with the content '{content}' is placed in the monitored directory in less than {duration}")
 def step_impl(context, content, duration):

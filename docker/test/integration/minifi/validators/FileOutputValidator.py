@@ -16,6 +16,7 @@
 
 import logging
 import os
+import re
 
 from os import listdir
 from os.path import join
@@ -27,6 +28,22 @@ from .OutputValidator import OutputValidator
 class FileOutputValidator(OutputValidator):
     def set_output_dir(self, output_dir):
         self.output_dir = output_dir
+
+    @staticmethod
+    def num_files_matching_regex_in_dir(dir_path: str, expected_content_regex: str):
+        listing = listdir(dir_path)
+        if not listing:
+            return 0
+        files_of_matching_content_found = 0
+        for file_name in listing:
+            full_path = join(dir_path, file_name)
+            if not os.path.isfile(full_path) or is_temporary_output_file(full_path):
+                continue
+            with open(full_path, 'r') as out_file:
+                content = out_file.read()
+                if re.search(expected_content_regex, content):
+                    files_of_matching_content_found += 1
+        return files_of_matching_content_found
 
     @staticmethod
     def num_files_matching_content_in_dir(dir_path, expected_content):
