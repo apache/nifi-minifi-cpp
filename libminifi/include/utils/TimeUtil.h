@@ -115,6 +115,8 @@ inline std::optional<std::chrono::sys_seconds> parseDateTimeStr(const std::strin
   return tp;
 }
 
+std::optional<std::chrono::system_clock::time_point> parseRfc3339(const std::string& str);
+
 inline std::string getDateTimeStr(std::chrono::sys_seconds tp) {
   return date::format("%Y-%m-%dT%H:%M:%SZ", tp);
 }
