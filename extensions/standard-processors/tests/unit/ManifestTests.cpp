@@ -16,17 +16,15 @@
  * limitations under the License.
  */
 
+#define EXTENSION_LIST "*minifi-system*, *minifi-standard-processors*"
+
 #include <memory>
 #include "core/state/nodes/DeviceInformation.h"
 #include "core/state/nodes/AgentInformation.h"
 #include "TestBase.h"
 #include "Catch.h"
+#include "range/v3/algorithm/contains.hpp"
 #include "range/v3/algorithm/find_if.hpp"
-
-// Include some processor headers to make sure they are part of the manifest
-#include "HashContent.h"
-#include "GetFile.h"
-#include "TailFile.h"
 
 TEST_CASE("Test Required", "[required]") {
   minifi::state::response::ComponentManifest manifest("minifi-standard-processors");
@@ -64,7 +62,7 @@ TEST_CASE("Test Required", "[required]") {
 }
 
 TEST_CASE("Test Valid Regex", "[validRegex]") {
-  minifi::state::response::ComponentManifest manifest("minifi-test-processors");
+  minifi::state::response::ComponentManifest manifest("minifi-standard-processors");
   auto serialized = manifest.serialize();
   REQUIRE(serialized.size() > 0);
   const auto &resp = serialized[0];
@@ -202,4 +200,26 @@ TEST_CASE("Test operatingSystem Defaults", "[opsys]") {
   REQUIRE(!proc_0.value.empty());
   std::set<std::string> expected({"Linux", "Windows", "Mac OSX", "Unix"});
   REQUIRE(expected.find(proc_0.value.to_string()) != std::end(expected));
+}
+
+namespace {
+std::vector<std::string> listExtensionsInManifest(minifi::state::response::AgentManifest& manifest) {
+  std::vector<std::string> extensions;
+  const auto serialized = manifest.serialize();
+  for (const auto& node : serialized) {
+    if ("bundles" != node.name) { continue; }
+    for (const auto& subnode : node.children) {
+      if ("artifact" != subnode.name) { continue; }
+      extensions.push_back(subnode.value.to_string());
+    }
+  }
+  return extensions;
+}
+}  // namespace
+
+TEST_CASE("Compiled but not loaded extensions are not included in the manifest") {
+  minifi::state::response::AgentManifest manifest("minifi-system");
+  const auto extensions = listExtensionsInManifest(manifest);
+  CHECK(ranges::contains(extensions, "minifi-standard-processors"));
+  CHECK_FALSE(ranges::contains(extensions, "minifi-test-processors"));
 }

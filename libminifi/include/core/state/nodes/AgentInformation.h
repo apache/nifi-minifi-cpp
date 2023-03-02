@@ -352,6 +352,14 @@ class Bundles : public DeviceInformation {
       SerializedResponseNode bundle;
       bundle.name = "bundles";
 
+      ComponentManifest component_manifest(group);
+      const auto components = component_manifest.serialize();
+      gsl_Expects(components.size() == 1);
+      if (components[0].children.empty()) {
+        continue;
+      }
+      bundle.children.push_back(components[0]);
+
       SerializedResponseNode bgroup;
       bgroup.name = "group";
       bgroup.value = GROUP_STR;
@@ -366,11 +374,6 @@ class Bundles : public DeviceInformation {
       bundle.children.push_back(artifact);
       bundle.children.push_back(version);
 
-      ComponentManifest compMan(group);
-      // serialize the component information.
-      for (auto component : compMan.serialize()) {
-        bundle.children.push_back(component);
-      }
       serialized.push_back(bundle);
     }
 
