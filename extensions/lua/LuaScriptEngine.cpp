@@ -128,10 +128,10 @@ class TriggerSession {
 }  // namespace
 
 void LuaScriptEngine::onTrigger(const std::shared_ptr<core::ProcessContext>& context, const std::shared_ptr<core::ProcessSession>& session) {
-auto script_context = convert(context);
-auto lua_session = convert(session);
-TriggerSession trigger_session(script_context, lua_session);
-call("onTrigger", script_context, lua_session);
+  auto script_context = convert(context);
+  auto lua_session = convert(session);
+  TriggerSession trigger_session(script_context, lua_session);
+  call("onTrigger", script_context, lua_session);
 }
 
 }  // namespace org::apache::nifi::minifi::extensions::lua
