@@ -65,6 +65,19 @@ add_custom_target(
     WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}/docker/)
 
 add_custom_target(
+    centos-test
+    COMMAND ${CMAKE_SOURCE_DIR}/docker/DockerBuild.sh
+        -u 1000
+        -g 1000
+        -v ${PROJECT_VERSION_MAJOR}.${PROJECT_VERSION_MINOR}.${PROJECT_VERSION_PATCH}
+        -o ${MINIFI_DOCKER_OPTIONS_STR}
+        -d centos
+        -c BUILD_NUMBER=${BUILD_NUMBER}
+        -c DOCKER_CCACHE_DUMP_LOCATION=${DOCKER_CCACHE_DUMP_LOCATION}
+        -c DOCKER_SKIP_TESTS=OFF
+    WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}/docker/)
+
+add_custom_target(
     fedora
     COMMAND ${CMAKE_SOURCE_DIR}/docker/DockerBuild.sh
         -u 1000

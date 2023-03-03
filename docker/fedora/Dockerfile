@@ -21,6 +21,7 @@ FROM fedora:34 AS build_deps
 LABEL maintainer="Apache NiFi <dev@nifi.apache.org>"
 
 ARG MINIFI_VERSION
+ARG DOCKER_MAKE_TARGET="all"
 
 # Install the system dependencies needed for a build
 
@@ -51,5 +52,5 @@ RUN cd $MINIFI_BASE_DIR \
 	&& mkdir build \
 	&& cd build \
     && cmake3 -DSTATIC_BUILD= -DSKIP_TESTS=true ${MINIFI_OPTIONS} -DAWS_ENABLE_UNITY_BUILD=OFF -DCMAKE_BUILD_TYPE="${CMAKE_BUILD_TYPE}" .. \
-    && make -j "$(nproc)" package
+    && make -j "$(nproc)" ${DOCKER_MAKE_TARGET}
 
