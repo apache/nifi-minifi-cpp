@@ -44,7 +44,7 @@ bool verifyEventHappenedInPollTime(
 template <class Rep, class Period, typename ...String>
 bool verifyLogLinePresenceInPollTime(const std::chrono::duration<Rep, Period>& wait_duration, String&&... patterns) {
   auto check = [&patterns...] {
-    const std::string logs = LogTestController::getInstance().log_output.str();
+    const std::string logs = LogTestController::getInstance().getLogs();
     return ((logs.find(patterns) != std::string::npos) && ...);
   };
   return verifyEventHappenedInPollTime(wait_duration, check);

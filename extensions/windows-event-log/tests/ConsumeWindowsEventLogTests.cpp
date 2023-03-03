@@ -152,7 +152,7 @@ TEST_CASE("ConsumeWindowsEventLog can consume new events", "[onTrigger]") {
   // later runs will start with a bookmark saved in the state manager
 
   test_plan->reset();
-  LogTestController::resetStream(LogTestController::getInstance().log_output);
+  LogTestController::getInstance().clear();
 
   SECTION("Read one event") {
     reportEvent(APPLICATION_CHANNEL, "Event one");
@@ -198,7 +198,7 @@ TEST_CASE("ConsumeWindowsEventLog bookmarking works", "[onTrigger]") {
   CHECK(LogTestController::getInstance().contains("processed 0 Events"));
 
   test_plan->reset();
-  LogTestController::resetStream(LogTestController::getInstance().log_output);
+  LogTestController::getInstance().clear();
 
   SECTION("Read in one go") {
     reportEvent(APPLICATION_CHANNEL, "Event one");
@@ -219,7 +219,7 @@ TEST_CASE("ConsumeWindowsEventLog bookmarking works", "[onTrigger]") {
     reportEvent(APPLICATION_CHANNEL, "Event three");
 
     test_plan->reset();
-    LogTestController::resetStream(LogTestController::getInstance().log_output);
+    LogTestController::getInstance().clear();
 
     TestController::runSession(test_plan);
     CHECK(LogTestController::getInstance().contains("processed 2 Events"));
@@ -259,7 +259,7 @@ TEST_CASE("ConsumeWindowsEventLog extracts some attributes by default", "[onTrig
   }
 
   test_plan->reset();
-  LogTestController::resetStream(LogTestController::getInstance().log_output);
+  LogTestController::getInstance().clear();
 
   // 1st event, on Info level
   {
@@ -272,7 +272,7 @@ TEST_CASE("ConsumeWindowsEventLog extracts some attributes by default", "[onTrig
   }
 
   test_plan->reset();
-  LogTestController::resetStream(LogTestController::getInstance().log_output);
+  LogTestController::getInstance().clear();
 
   // 2st event, on Warning level
   {
@@ -308,7 +308,7 @@ void outputFormatSetterTestHelper(const std::string &output_format, int expected
   }
 
   test_plan->reset();
-  LogTestController::resetStream(LogTestController::getInstance().log_output);
+  LogTestController::getInstance().clear();
 
   {
     reportEvent(APPLICATION_CHANNEL, "Event one");
@@ -442,7 +442,7 @@ void batchCommitSizeTestHelper(std::size_t num_events_read, std::size_t batch_co
   }
 
   test_plan->reset();
-  LogTestController::resetStream(LogTestController::getInstance().log_output);
+  LogTestController::getInstance().clear();
 
   auto generate_events = [](const std::size_t event_count) {
     std::vector<std::string> events;

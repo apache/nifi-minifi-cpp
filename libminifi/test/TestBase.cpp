@@ -92,6 +92,14 @@ void LogTestController::setLevelByClassName(spdlog::level::level_enum level, con
 }
 
 bool LogTestController::contains(const std::ostringstream& stream, const std::string& ending, std::chrono::milliseconds timeout, std::chrono::milliseconds sleep_interval) const {
+  return contains([&stream](){ return stream.str(); }, ending, timeout, sleep_interval);
+}
+
+bool LogTestController::contains(const std::string& ending, std::chrono::milliseconds timeout, std::chrono::milliseconds sleep_interval) const {
+  return contains([this](){ return getLogs(); }, ending, timeout, sleep_interval);
+}
+
+bool LogTestController::contains(const std::function<std::string()>& log_string_getter, const std::string& ending, std::chrono::milliseconds timeout, std::chrono::milliseconds sleep_interval) const {
   if (ending.length() == 0) {
     return false;
   }
@@ -99,7 +107,7 @@ bool LogTestController::contains(const std::ostringstream& stream, const std::st
   bool found = false;
   bool timed_out = false;
   do {
-    std::string str = stream.str();
+    std::string str = log_string_getter();
     found = (str.find(ending) != std::string::npos);
     auto now = std::chrono::steady_clock::now();
     timed_out = (now - start > timeout);
@@ -122,7 +130,7 @@ std::optional<std::smatch> LogTestController::matchesRegex(const std::string& re
   std::regex matcher_regex(regex_str);
   std::smatch match;
   do {
-    std::string str = log_output.str();
+    std::string str = getLogs();
     found = std::regex_search(str, match, matcher_regex);
     auto now = std::chrono::steady_clock::now();
     timed_out = (now - start > timeout);
@@ -136,7 +144,7 @@ std::optional<std::smatch> LogTestController::matchesRegex(const std::string& re
 }
 
 int LogTestController::countOccurrences(const std::string& pattern) const {
-  return minifi::utils::StringUtils::countOccurrences(log_output.str(), pattern).second;
+  return minifi::utils::StringUtils::countOccurrences(getLogs(), pattern).second;
 }
 
 void LogTestController::reset() {
@@ -150,7 +158,9 @@ void LogTestController::reset() {
 }
 
 void LogTestController::clear() {
-  resetStream(log_output);
+  std::lock_guard<std::mutex> guard(*log_output_mutex_);
+  gsl_Expects(log_output_ptr_);
+  resetStream(*log_output_ptr_);
 }
 
 void LogTestController::resetStream(std::ostringstream& stream) {
@@ -159,6 +169,7 @@ void LogTestController::resetStream(std::ostringstream& stream) {
 }
 
 LogTestController::LogTestController(const std::shared_ptr<logging::LoggerProperties>& loggerProps) {
+  gsl_Expects(log_output_ptr_);
   my_properties_ = loggerProps;
   bool initMain = false;
   if (nullptr == my_properties_) {
@@ -169,7 +180,7 @@ LogTestController::LogTestController(const std::shared_ptr<logging::LoggerProper
   my_properties_->set("logger." + minifi::core::getClassName<LogTestController>(), "INFO");
   my_properties_->set("logger." + minifi::core::getClassName<logging::LoggerConfiguration>(), "INFO");
   std::shared_ptr<spdlog::sinks::dist_sink_mt> dist_sink = std::make_shared<spdlog::sinks::dist_sink_mt>();
-  dist_sink->add_sink(std::make_shared<StringStreamSink>(log_output_ptr, true));
+  dist_sink->add_sink(std::make_shared<StringStreamSink>(log_output_ptr_, log_output_mutex_, true));
   dist_sink->add_sink(std::make_shared<spdlog::sinks::stderr_sink_mt>());
   my_properties_->add_sink("ostream", dist_sink);
   if (initMain) {
