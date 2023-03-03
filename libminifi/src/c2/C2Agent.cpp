@@ -842,7 +842,7 @@ std::optional<std::string> C2Agent::fetchFlow(const std::string& uri) const {
     return std::nullopt;
   }
 
-  C2Payload &&response = protocol_.load()->fetch(resolved_url.value(), update_sink_->getSupportedConfigurationFormats());
+  C2Payload response = protocol_.load()->fetch(resolved_url.value(), update_sink_->getSupportedConfigurationFormats());
 
   return response.getRawDataAsString();
 }
