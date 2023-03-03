@@ -33,6 +33,7 @@ def onInitialize(processor):
     processor.setSupportsDynamicProperties()
 
 
+
 def onTrigger(context, session):
     flow_file = session.create()
     mu = 0
