@@ -158,7 +158,9 @@ PyObject* PyProcessSessionObject::get(PyProcessSessionObject* self, PyObject*) {
     PyErr_SetString(PyExc_AttributeError, "tried reading process session outside 'on_trigger'");
     return nullptr;
   }
-  return object::returnReference(std::weak_ptr(session->get()));
+  if (auto flow_file = session->get())
+    return object::returnReference(std::weak_ptr(flow_file));
+  return object::returnReference(nullptr);
 }
 
 PyObject* PyProcessSessionObject::create(PyProcessSessionObject* self, PyObject*) {
@@ -167,7 +169,10 @@ PyObject* PyProcessSessionObject::create(PyProcessSessionObject* self, PyObject*
     PyErr_SetString(PyExc_AttributeError, "tried reading process session outside 'on_trigger'");
     return nullptr;
   }
-  return object::returnReference(std::weak_ptr(session->create(nullptr)));
+
+  if (auto flow_file = session->create(nullptr))
+    return object::returnReference(std::weak_ptr(flow_file));
+  return object::returnReference(nullptr);
 }
 
 PyObject* PyProcessSessionObject::remove(PyProcessSessionObject* self, PyObject* args) {

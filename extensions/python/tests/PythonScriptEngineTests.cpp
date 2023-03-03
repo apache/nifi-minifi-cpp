@@ -15,6 +15,7 @@
  * limitations under the License.
  */
 
+#include <barrier>
 #include "TestBase.h"
 #include "Catch.h"
 #include "Utils.h"
@@ -37,14 +38,16 @@ TEST_CASE("GilScopedAcquire should lock threads properly", "[pythonscriptenginee
   for (int i = 0; i < 10; ++i) {
     DYNAMIC_SECTION("Iteration: " << i) {
       std::vector<std::string_view> messages;
+      std::barrier sync{2};
       auto sleeping_thread = std::thread([&] {
         using namespace std::literals::chrono_literals;
         python::GlobalInterpreterLock gil_lock;
+        std::ignore = sync.arrive();
         messages.emplace_back("Before sleep");
         std::this_thread::sleep_for(100ms);
         messages.emplace_back("First thread");
       });
-      std::this_thread::sleep_for(15ms);
+      sync.arrive_and_wait();
 
       auto non_sleeping_thread = std::thread([&] {
         python::GlobalInterpreterLock gil_lock;

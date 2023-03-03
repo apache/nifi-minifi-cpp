@@ -25,198 +25,134 @@
 #include "Catch.h"
 
 #include "../../script/ExecuteScript.h"
-#include "processors/LogAttribute.h"
-#include "processors/GetFile.h"
-#include "processors/PutFile.h"
-#include "utils/TestUtils.h"
+#include "utils/file/FileUtils.h"
+#include "utils/file/PathUtils.h"
 
 namespace org::apache::nifi::minifi::processors::test {
 
 TEST_CASE("Script engine is not set", "[executescriptMisconfiguration]") {
-  TestController testController;
-  auto plan = testController.createPlan();
+  TestController test_controller;
+  auto plan = test_controller.createPlan();
 
-  auto executeScript = plan->addProcessor("ExecuteScript", "executeScript");
+  auto execute_script = plan->addProcessor("ExecuteScript", "executeScript");
 
-  plan->setProperty(executeScript, ExecuteScript::ScriptEngine.getName(), "");
-  plan->setProperty(executeScript, ExecuteScript::ScriptFile.getName(), "/path/to/script.lua");
+  plan->setProperty(execute_script, ExecuteScript::ScriptEngine.getName(), "");
+  plan->setProperty(execute_script, ExecuteScript::ScriptFile.getName(), "/path/to/script.lua");
 
-  REQUIRE_THROWS_AS(testController.runSession(plan, true), minifi::Exception);
+  REQUIRE_THROWS_AS(test_controller.runSession(plan, true), minifi::Exception);
 }
 
 TEST_CASE("Neither script body nor script file is set", "[executescriptMisconfiguration]") {
-  TestController testController;
-  auto plan = testController.createPlan();
+  TestController test_controller;
+  auto plan = test_controller.createPlan();
 
-  auto executeScript = plan->addProcessor("ExecuteScript", "executeScript");
+  auto execute_script = plan->addProcessor("ExecuteScript", "executeScript");
 
-  plan->setProperty(executeScript, ExecuteScript::ScriptEngine.getName(), "lua");
+  plan->setProperty(execute_script, ExecuteScript::ScriptEngine.getName(), "lua");
 
-  REQUIRE_THROWS_AS(testController.runSession(plan, true), minifi::Exception);
+  REQUIRE_THROWS_AS(test_controller.runSession(plan, true), minifi::Exception);
 }
 
 TEST_CASE("Test both script body and script file set", "[executescriptMisconfiguration]") {
-  TestController testController;
-  auto plan = testController.createPlan();
+  TestController test_controller;
+  auto plan = test_controller.createPlan();
 
-  auto executeScript = plan->addProcessor("ExecuteScript", "executeScript");
+  auto execute_script = plan->addProcessor("ExecuteScript", "executeScript");
 
-  plan->setProperty(executeScript, ExecuteScript::ScriptEngine.getName(), "lua");
-  plan->setProperty(executeScript, ExecuteScript::ScriptFile.getName(), "/path/to/script.lua");
-  plan->setProperty(executeScript, ExecuteScript::ScriptBody.getName(), R"(
+  plan->setProperty(execute_script, ExecuteScript::ScriptEngine.getName(), "lua");
+  plan->setProperty(execute_script, ExecuteScript::ScriptFile.getName(), "/path/to/script.lua");
+  plan->setProperty(execute_script, ExecuteScript::ScriptBody.getName(), R"(
 function onTrigger(context, session)
   log:info('hello from lua')
 end
   )");
 
-  REQUIRE_THROWS_AS(testController.runSession(plan, true), minifi::Exception);
+  REQUIRE_THROWS_AS(test_controller.runSession(plan, true), minifi::Exception);
 }
 
+TEST_CASE("Lua: Test session get should return None if there are no flowfiles in the incoming connections") {
+  const auto execute_script = std::make_shared<ExecuteScript>("ExecuteScript");
+
+  minifi::test::SingleProcessorTestController controller{execute_script};
+  LogTestController::getInstance().setTrace<ExecuteScript>();
+
+  execute_script->setProperty(ExecuteScript::ScriptEngine, "lua");
+  execute_script->setProperty(ExecuteScript::ScriptBody, R"(
+function onTrigger(context, session)
+  flow_file = session:get()
+
+  if flow_file ~= nil then
+    error("Didn't expect flow_file")
+  end
+end
+  )");
+  auto result = controller.trigger();
+  REQUIRE(result.at(ExecuteScript::Success).empty());
+  REQUIRE(result.at(ExecuteScript::Failure).empty());
+}
+
+
 TEST_CASE("Lua: Test Log", "[executescriptLuaLog]") {
-  TestController testController;
+  LogTestController::getInstance().reset();
+  const auto execute_script = std::make_shared<ExecuteScript>("ExecuteScript");
 
-  LogTestController &logTestController = LogTestController::getInstance();
-  logTestController.setDebug<TestPlan>();
-  logTestController.setDebug<minifi::processors::LogAttribute>();
-  logTestController.setDebug<ExecuteScript>();
+  minifi::test::SingleProcessorTestController controller{execute_script};
+  LogTestController::getInstance().setTrace<ExecuteScript>();
 
-  auto plan = testController.createPlan();
-
-  auto getFile = plan->addProcessor("GetFile", "getFile");
-  auto executeScript = plan->addProcessor("ExecuteScript",
-                                          "executeScript",
-                                          core::Relationship("success", "description"),
-                                          true);
-
-  plan->setProperty(executeScript, ExecuteScript::ScriptEngine.getName(), "lua");
-  plan->setProperty(executeScript, ExecuteScript::ScriptBody.getName(), R"(
+  execute_script->setProperty(ExecuteScript::ScriptEngine, "lua");
+  execute_script->setProperty(ExecuteScript::ScriptBody, R"(
 function onTrigger(context, session)
   log:info('hello from lua')
 end
   )");
 
-  auto getFileDir = testController.createTempDirectory();
-  plan->setProperty(getFile, minifi::processors::GetFile::Directory.getName(), getFileDir.string());
+  auto result = controller.trigger();
+  REQUIRE(result.at(ExecuteScript::Success).empty());
+  REQUIRE(result.at(ExecuteScript::Failure).empty());
 
-  utils::putFileToDir(getFileDir, "tstFile.ext", "tempFile");
-
-  testController.runSession(plan, false);
-  testController.runSession(plan, false);
-
-  REQUIRE(LogTestController::getInstance().contains(
-      "[org::apache::nifi::minifi::processors::ExecuteScript] [info] hello from lua"));
-
-  logTestController.reset();
+  REQUIRE(LogTestController::getInstance().contains("[org::apache::nifi::minifi::processors::ExecuteScript] [info] hello from lua"));
 }
 
 TEST_CASE("Lua: Test Read File", "[executescriptLuaRead]") {
-  TestController testController;
+  const auto execute_script = std::make_shared<ExecuteScript>("ExecuteScript");
 
-  LogTestController &logTestController = LogTestController::getInstance();
-  logTestController.setDebug<TestPlan>();
-  logTestController.setDebug<minifi::processors::LogAttribute>();
-  logTestController.setDebug<ExecuteScript>();
+  minifi::test::SingleProcessorTestController controller{execute_script};
+  LogTestController::getInstance().setTrace<ExecuteScript>();
 
-  auto plan = testController.createPlan();
+  execute_script->setProperty(ExecuteScript::ScriptEngine, "lua");
+  execute_script->setProperty(ExecuteScript::ScriptBody, R"(
+read_callback = {}
 
-  auto getFile = plan->addProcessor("GetFile", "getFile");
-  auto logAttribute = plan->addProcessor("LogAttribute", "logAttribute",
-                                         core::Relationship("success", "description"),
-                                         true);
-  auto executeScript = plan->addProcessor("ExecuteScript",
-                                          "executeScript",
-                                          core::Relationship("success", "description"),
-                                          true);
-  auto putFile = plan->addProcessor("PutFile", "putFile", core::Relationship("success", "description"), true);
+function read_callback.process(self, input_stream)
+    content = input_stream:read(0)
+    log:info('file content: ' .. content)
+    return #content
+end
 
-  plan->setProperty(executeScript, ExecuteScript::ScriptEngine.getName(), "lua");
-  plan->setProperty(executeScript, ExecuteScript::ScriptBody.getName(), R"(
-    read_callback = {}
+function onTrigger(context, session)
+  flow_file = session:get()
 
-    function read_callback.process(self, input_stream)
-        content = input_stream:read(0)
-        log:info('file content: ' .. content)
-        return #content
-    end
-
-    function onTrigger(context, session)
-      flow_file = session:get()
-
-      if flow_file ~= nil then
-        log:info('got flow file: ' .. flow_file:getAttribute('filename'))
-        session:read(flow_file, read_callback)
-        session:transfer(flow_file, REL_SUCCESS)
-      end
-    end
+  if flow_file ~= nil then
+    log:info('got flow file: ' .. flow_file:getAttribute('filename'))
+    session:read(flow_file, read_callback)
+    session:transfer(flow_file, REL_SUCCESS)
+  end
+end
   )");
 
-  auto getFileDir = testController.createTempDirectory();
-  plan->setProperty(getFile, minifi::processors::GetFile::Directory.getName(), getFileDir.string());
-
-  auto putFileDir = testController.createTempDirectory();
-  plan->setProperty(putFile, minifi::processors::PutFile::Directory.getName(), putFileDir.string());
-
-  testController.runSession(plan, false);
-
-  auto records = plan->getProvenanceRecords();
-  std::shared_ptr<core::FlowFile> record = plan->getCurrentFlowFile();
-  REQUIRE(record == nullptr);
-  REQUIRE(records.empty());
-
-  std::fstream file;
-  auto path = getFileDir / "tstFile.ext";
-  file.open(path, std::ios::out);
-  file << "tempFile";
-  file.close();
-  plan->reset();
-
-  testController.runSession(plan, false);
-  testController.runSession(plan, false);
-  testController.runSession(plan, false);
-
-  records = plan->getProvenanceRecords();
-  record = plan->getCurrentFlowFile();
-  testController.runSession(plan, false);
-
-  std::filesystem::remove(path);
-
-  REQUIRE(logTestController.contains("[info] file content: tempFile"));
-
-  // Verify that file content was preserved
-  REQUIRE(!std::ifstream(path).good());
-  auto moved_file = putFileDir / "tstFile.ext";
-  REQUIRE(std::ifstream(moved_file).good());
-
-  file.open(moved_file, std::ios::in);
-  std::string contents((std::istreambuf_iterator<char>(file)),
-                       std::istreambuf_iterator<char>());
-  REQUIRE("tempFile" == contents);
-  file.close();
-  logTestController.reset();
+  auto result = controller.trigger("tempFile");
+  REQUIRE(result.at(ExecuteScript::Success).size() == 1);
+  CHECK(controller.plan->getContent(result.at(ExecuteScript::Success)[0]) == "tempFile");
 }
 
 TEST_CASE("Lua: Test Write File", "[executescriptLuaWrite]") {
-  TestController testController;
+  const auto execute_script = std::make_shared<ExecuteScript>("ExecuteScript");
 
-  LogTestController &logTestController = LogTestController::getInstance();
-  logTestController.setDebug<TestPlan>();
-  logTestController.setDebug<minifi::processors::LogAttribute>();
-  logTestController.setDebug<ExecuteScript>();
+  minifi::test::SingleProcessorTestController controller{execute_script};
+  LogTestController::getInstance().setTrace<ExecuteScript>();
 
-  auto plan = testController.createPlan();
-
-  auto getFile = plan->addProcessor("GetFile", "getFile");
-  auto logAttribute = plan->addProcessor("LogAttribute", "logAttribute",
-                                         core::Relationship("success", "description"),
-                                         true);
-  auto executeScript = plan->addProcessor("ExecuteScript",
-                                          "executeScript",
-                                          core::Relationship("success", "description"),
-                                          true);
-  auto putFile = plan->addProcessor("PutFile", "putFile", core::Relationship("success", "description"), true);
-
-  plan->setProperty(executeScript, ExecuteScript::ScriptEngine.getName(), "lua");
-  plan->setProperty(executeScript, ExecuteScript::ScriptBody.getName(), R"(
+  execute_script->setProperty(ExecuteScript::ScriptEngine, "lua");
+  execute_script->setProperty(ExecuteScript::ScriptBody, R"(
     write_callback = {}
 
     function write_callback.process(self, output_stream)
@@ -236,127 +172,65 @@ TEST_CASE("Lua: Test Write File", "[executescriptLuaWrite]") {
     end
   )");
 
-  auto getFileDir = testController.createTempDirectory();
-  plan->setProperty(getFile, minifi::processors::GetFile::Directory.getName(), getFileDir.string());
 
-  auto putFileDir = testController.createTempDirectory();
-  plan->setProperty(putFile, minifi::processors::PutFile::Directory.getName(), putFileDir.string());
-
-  testController.runSession(plan, false);
-
-  auto records = plan->getProvenanceRecords();
-  std::shared_ptr<core::FlowFile> record = plan->getCurrentFlowFile();
-  REQUIRE(record == nullptr);
-  REQUIRE(records.empty());
-
-  std::fstream file;
-  auto path = getFileDir / "tstFile.ext";
-  file.open(path, std::ios::out);
-  file << "tempFile";
-  file.close();
-  plan->reset();
-
-  testController.runSession(plan, false);
-  testController.runSession(plan, false);
-  testController.runSession(plan, false);
-
-  records = plan->getProvenanceRecords();
-  record = plan->getCurrentFlowFile();
-  testController.runSession(plan, false);
-
-  std::filesystem::remove(path);
-
-  // Verify new content was written
-  REQUIRE(!std::ifstream(path).good());
-  auto moved_file = putFileDir / "tstFile.ext";
-  REQUIRE(std::ifstream(moved_file).good());
-
-  file.open(moved_file, std::ios::in);
-  std::string contents((std::istreambuf_iterator<char>(file)),
-                       std::istreambuf_iterator<char>());
-  REQUIRE("hello 2" == contents);
-  file.close();
-  logTestController.reset();
-}
-
-TEST_CASE("Lua: Test Update Attribute", "[executescriptLuaUpdateAttribute]") {
-  TestController testController;
-
-  LogTestController &logTestController = LogTestController::getInstance();
-  logTestController.setDebug<TestPlan>();
-  logTestController.setDebug<minifi::processors::LogAttribute>();
-  logTestController.setDebug<ExecuteScript>();
-
-  auto plan = testController.createPlan();
-
-  auto getFile = plan->addProcessor("GetFile", "getFile");
-  auto executeScript = plan->addProcessor("ExecuteScript",
-                                          "executeScript",
-                                          core::Relationship("success", "description"),
-                                          true);
-  auto logAttribute = plan->addProcessor("LogAttribute", "logAttribute",
-                                         core::Relationship("success", "description"),
-                                         true);
-
-  plan->setProperty(executeScript, ExecuteScript::ScriptEngine.getName(), "lua");
-  plan->setProperty(executeScript, ExecuteScript::ScriptBody.getName(), R"(
-    function onTrigger(context, session)
-      flow_file = session:get()
-
-      if flow_file ~= nil then
-        log:info('got flow file: ' .. flow_file:getAttribute('filename'))
-        flow_file:addAttribute('test_attr', '1')
-        attr = flow_file:getAttribute('test_attr')
-        log:info('got flow file attr \'test_attr\': ' .. attr)
-        flow_file:updateAttribute('test_attr', tostring(attr + 1))
-        session:transfer(flow_file, REL_SUCCESS)
-      end
-    end
-  )");
-
-  auto getFileDir = testController.createTempDirectory();
-  plan->setProperty(getFile, minifi::processors::GetFile::Directory.getName(), getFileDir.string());
-
-  utils::putFileToDir(getFileDir, "tstFile.ext", "tempFile");
-
-  REQUIRE_NOTHROW(testController.runSession(plan, false));
-  REQUIRE_NOTHROW(testController.runSession(plan, false));
-  REQUIRE_NOTHROW(testController.runSession(plan, false));
-
-  REQUIRE(LogTestController::getInstance().contains("key:test_attr value:2"));
-
-  logTestController.reset();
+  auto result = controller.trigger("tempFile");
+  REQUIRE(result.at(ExecuteScript::Success).size() == 1);
+  CHECK(controller.plan->getContent(result.at(ExecuteScript::Success)[0]) == "hello 2");
 }
 
 TEST_CASE("Lua: Test Create", "[executescriptLuaCreate]") {
-  TestController testController;
+  LogTestController::getInstance().reset();
+  const auto execute_script = std::make_shared<ExecuteScript>("ExecuteScript");
 
-  LogTestController &logTestController = LogTestController::getInstance();
-  logTestController.setDebug<TestPlan>();
-  logTestController.setDebug<ExecuteScript>();
+  minifi::test::SingleProcessorTestController controller{execute_script};
+  LogTestController::getInstance().setTrace<ExecuteScript>();
 
-  auto plan = testController.createPlan();
+  execute_script->setProperty(ExecuteScript::ScriptEngine, "lua");
+  execute_script->setProperty(ExecuteScript::ScriptBody, R"(
+function onTrigger(context, session)
+  flow_file = session:create(nil)
 
-  auto executeScript = plan->addProcessor("ExecuteScript",
-                                          "executeScript");
-
-  plan->setProperty(executeScript, ExecuteScript::ScriptEngine.getName(), "lua");
-  plan->setProperty(executeScript, ExecuteScript::ScriptBody.getName(), R"(
-    function onTrigger(context, session)
-      flow_file = session:create(nil)
-
-      if flow_file ~= nil then
-        log:info('created flow file: ' .. flow_file:getAttribute('filename'))
-        session:transfer(flow_file, REL_SUCCESS)
-      end
-    end
+  if flow_file ~= nil then
+    log:info('created flow file: ' .. flow_file:getAttribute('filename'))
+    session:transfer(flow_file, REL_SUCCESS)
+  end
+end
   )");
 
-  testController.runSession(plan, false);
 
+  auto result = controller.trigger();
+  REQUIRE(result.at(ExecuteScript::Success).size() == 1);
+  REQUIRE(result.at(ExecuteScript::Failure).empty());
   REQUIRE(LogTestController::getInstance().contains("[info] created flow file:"));
+}
 
-  logTestController.reset();
+TEST_CASE("Lua: Test Update Attribute", "[executescriptLuaUpdateAttribute]") {
+  LogTestController::getInstance().reset();
+  const auto execute_script = std::make_shared<ExecuteScript>("ExecuteScript");
+
+  minifi::test::SingleProcessorTestController controller{execute_script};
+  LogTestController::getInstance().setTrace<ExecuteScript>();
+
+  execute_script->setProperty(ExecuteScript::ScriptEngine, "lua");
+  execute_script->setProperty(ExecuteScript::ScriptBody, R"(
+function onTrigger(context, session)
+  flow_file = session:get()
+
+  if flow_file ~= nil then
+    log:info('got flow file: ' .. flow_file:getAttribute('filename'))
+    flow_file:addAttribute('test_attr', '1')
+    attr = tonumber(flow_file:getAttribute('test_attr'))
+    log:info('got flow file attr \'test_attr\': ' .. tostring(attr))
+    flow_file:updateAttribute('test_attr', tostring(attr + 1))
+    session:transfer(flow_file, REL_SUCCESS)
+  end
+end
+  )");
+
+  auto result = controller.trigger("tempFile");
+  REQUIRE(result.at(ExecuteScript::Success).size() == 1);
+  CHECK(controller.plan->getContent(result.at(ExecuteScript::Success)[0]) == "tempFile");
+  CHECK(result.at(ExecuteScript::Success)[0]->getAttribute("test_attr") == "2");
 }
 
 TEST_CASE("Lua: Test Require", "[executescriptLuaRequire]") {
@@ -368,8 +242,7 @@ TEST_CASE("Lua: Test Require", "[executescriptLuaRequire]") {
 
   auto plan = testController.createPlan();
 
-  auto executeScript = plan->addProcessor("ExecuteScript",
-                                          "executeScript");
+  auto executeScript = plan->addProcessor("ExecuteScript", "executeScript");
 
   plan->setProperty(executeScript, ExecuteScript::ScriptEngine.getName(), "lua");
   plan->setProperty(executeScript, ExecuteScript::ScriptBody.getName(), R"(
@@ -395,65 +268,37 @@ TEST_CASE("Lua: Test Require", "[executescriptLuaRequire]") {
 }
 
 TEST_CASE("Lua: Test Module Directory property", "[executescriptLuaModuleDirectoryProperty]") {
-  TestController testController;
+  using org::apache::nifi::minifi::utils::file::get_executable_dir;
 
-  LogTestController &logTestController = LogTestController::getInstance();
-  logTestController.setDebug<TestPlan>();
-  logTestController.setDebug<ExecuteScript>();
+  const auto execute_script = std::make_shared<ExecuteScript>("ExecuteScript");
 
-  auto plan = testController.createPlan();
+  minifi::test::SingleProcessorTestController controller{execute_script};
+  LogTestController::getInstance().setTrace<ExecuteScript>();
 
-  auto getFile = plan->addProcessor("GetFile", "getFile");
-  auto executeScript = plan->addProcessor("ExecuteScript",
-                                          "executeScript",
-                                          core::Relationship("success", "description"),
-                                          true);
+  const auto script_files_directory = std::filesystem::path(__FILE__).parent_path() / "test_lua_scripts";
 
-  const auto SCRIPT_FILES_DIRECTORY = std::filesystem::path(__FILE__).parent_path() / "test_lua_scripts";
 
-  plan->setProperty(executeScript, ExecuteScript::ScriptEngine.getName(), "lua");
-  plan->setProperty(executeScript, ExecuteScript::ScriptFile.getName(), (SCRIPT_FILES_DIRECTORY / "foo_bar_processor.lua").string());
-  plan->setProperty(executeScript, ExecuteScript::ModuleDirectory.getName(),
-      (SCRIPT_FILES_DIRECTORY / "foo_modules" / "foo.lua").string() + "," + (SCRIPT_FILES_DIRECTORY / "bar_modules").string());
+  execute_script->setProperty(ExecuteScript::ScriptEngine, "lua");
+  execute_script->setProperty(ExecuteScript::ScriptFile, (script_files_directory / "foo_bar_processor.lua").string());
+  execute_script->setProperty(ExecuteScript::ModuleDirectory, (script_files_directory / "foo_modules" / "foo.lua").string() + "," + (script_files_directory / "bar_modules").string());
 
-  auto getFileDir = testController.createTempDirectory();
-  plan->setProperty(getFile, minifi::processors::GetFile::Directory.getName(), getFileDir.string());
-
-  utils::putFileToDir(getFileDir, "tstFile.ext", "tempFile");
-
-  testController.runSession(plan, true);
+  auto result = controller.trigger("tempFile");
+  REQUIRE(result.at(ExecuteScript::Success).size() == 1);
+  REQUIRE(result.at(ExecuteScript::Failure).empty());
 
   REQUIRE(LogTestController::getInstance().contains("foobar"));
-
-  logTestController.reset();
 }
 
 TEST_CASE("Lua: Non existent script file should throw", "[executescriptLuaNonExistentScriptFile]") {
-  TestController testController;
+  const auto execute_script = std::make_shared<ExecuteScript>("ExecuteScript");
 
-  LogTestController &logTestController = LogTestController::getInstance();
-  logTestController.setDebug<TestPlan>();
-  logTestController.setDebug<ExecuteScript>();
+  minifi::test::SingleProcessorTestController controller{execute_script};
+  LogTestController::getInstance().setTrace<ExecuteScript>();
 
-  auto plan = testController.createPlan();
+  execute_script->setProperty(ExecuteScript::ScriptEngine, "lua");
+  execute_script->setProperty(ExecuteScript::ScriptFile, "/tmp/non-existent-file");
 
-  auto getFile = plan->addProcessor("GetFile", "getFile");
-  auto executeScript = plan->addProcessor("ExecuteScript",
-                                          "executeScript",
-                                          core::Relationship("success", "description"),
-                                          true);
-
-  plan->setProperty(executeScript, ExecuteScript::ScriptEngine.getName(), "lua");
-  plan->setProperty(executeScript, ExecuteScript::ScriptFile.getName(), "/tmp/non-existent-file");
-
-  auto getFileDir = testController.createTempDirectory();
-  plan->setProperty(getFile, minifi::processors::GetFile::Directory.getName(), getFileDir.string());
-
-  utils::putFileToDir(getFileDir, "tstFile.ext", "tempFile");
-
-  REQUIRE_THROWS_AS(testController.runSession(plan), minifi::Exception);
-
-  logTestController.reset();
+  REQUIRE_THROWS_AS(controller.trigger("tempFile"), minifi::Exception);
 }
 
 TEST_CASE("Lua can remove flowfiles", "[ExecuteScript]") {
