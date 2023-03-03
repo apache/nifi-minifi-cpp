@@ -166,10 +166,17 @@ TEST_CASE_METHOD(ListFileTestFixture, "Test listing files matching the File Filt
 TEST_CASE_METHOD(ListFileTestFixture, "Test listing files matching the Path Filter pattern", "[testListFile]") {
   plan_->setProperty(list_file_processor_, "Path Filter", "first.*");
   test_controller_.runSession(plan_);
-  REQUIRE(verifyLogLinePresenceInPollTime(3s, "key:filename value:standard_file.log"));
-  REQUIRE(verifyLogLinePresenceInPollTime(3s, "key:filename value:empty_file.txt"));
-  REQUIRE(verifyLogLinePresenceInPollTime(3s, "key:filename value:sub_file_one.txt"));
-  REQUIRE(LogTestController::getInstance().countOccurrences("key:filename value:sub_file_two.txt") == 0);
+  CHECK(verifyLogLinePresenceInPollTime(3s, "key:filename value:sub_file_one.txt"));
+  CHECK(LogTestController::getInstance().countOccurrences("key:filename value:") == 1);
+}
+
+TEST_CASE_METHOD(ListFileTestFixture, "Test listing files matching the Path Filter pattern when the pattern also matches .", "[testListFile]") {
+  plan_->setProperty(list_file_processor_, "Path Filter", "second.*|\\.");
+  test_controller_.runSession(plan_);
+  CHECK(verifyLogLinePresenceInPollTime(3s, "key:filename value:standard_file.log"));
+  CHECK(verifyLogLinePresenceInPollTime(3s, "key:filename value:empty_file.txt"));
+  CHECK(verifyLogLinePresenceInPollTime(3s, "key:filename value:sub_file_two.txt"));
+  CHECK(LogTestController::getInstance().countOccurrences("key:filename value:") == 3);
 }
 
 TEST_CASE_METHOD(ListFileTestFixture, "Test listing files with restriction on the minimum file age", "[testListFile]") {
@@ -221,7 +228,7 @@ TEST_CASE_METHOD(ListFileTestFixture, "Test listing hidden files", "[testListFil
 TEST_CASE("ListFile sets attributes correctly") {
   using minifi::processors::ListFile;
 
-  const auto list_file = std::make_shared<ListFile>("GetFile");
+  const auto list_file = std::make_shared<ListFile>("ListFile");
   LogTestController::getInstance().setTrace<ListFile>();
   minifi::test::SingleProcessorTestController test_controller(list_file);
   std::filesystem::path dir = test_controller.createTempDirectory();
@@ -247,4 +254,25 @@ TEST_CASE("ListFile sets attributes correctly") {
   }
 }
 
+TEST_CASE("If a second file with the same modification time shows up later, then it will get listed") {
+  using minifi::processors::ListFile;
+
+  const auto list_file = std::make_shared<ListFile>("ListFile");
+  minifi::test::SingleProcessorTestController test_controller(list_file);
+
+  const auto input_dir = test_controller.createTempDirectory();
+  list_file->setProperty(ListFile::InputDirectory, input_dir.string());
+
+  const auto common_timestamp = std::chrono::file_clock::now();
+
+  const auto file_one = utils::putFileToDir(input_dir, "file_one.txt", "When I was one, I had just begun.");
+  std::filesystem::last_write_time(file_one, common_timestamp);
+  const auto result_one = test_controller.trigger();
+  CHECK(result_one.at(ListFile::Success).size() == 1);
+
+  const auto file_two = utils::putFileToDir(input_dir, "file_two.txt", "When I was two, I was nearly new.");
+  std::filesystem::last_write_time(file_two, common_timestamp);
+  const auto result_two = test_controller.trigger();
+  CHECK(result_two.at(ListFile::Success).size() == 1);
+}
 }  // namespace
