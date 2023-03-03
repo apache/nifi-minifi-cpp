@@ -59,24 +59,24 @@ rapidjson::Value xmlDocumentToJSON(const pugi::xml_node& node, rapidjson::Docume
   return children;
 }
 
-void simplifiedGenericXmlToJson(const pugi::xml_node& node, rapidjson::Value& val, rapidjson::Document& doc, bool flatten = false) {
-  gsl_Expects(node.type() == pugi::xml_node_type::node_element);
-  for (const auto& attr : node.attributes()) {
+void simplifiedGenericXmlToJson(const pugi::xml_node& source_node, rapidjson::Value& output_value, rapidjson::Document& allocator_source_document, bool flatten = false) {
+  gsl_Expects(source_node.type() == pugi::xml_node_type::node_element);
+  for (const auto& attr : source_node.attributes()) {
     if (attr.name() == std::string_view{"xmlns"}) {
       continue;  // skip xmlns attribute, because it's metadata
     }
-    val.AddMember(rapidjson::StringRef(attr.name()), rapidjson::StringRef(attr.value()), doc.GetAllocator());
+    output_value.AddMember(rapidjson::StringRef(attr.name()), rapidjson::StringRef(attr.value()), allocator_source_document.GetAllocator());
   }
-  for (const auto& child: node.children()) {
+  for (const auto& child: source_node.children()) {
     if (child.type() == pugi::xml_node_type::node_element) {
       const auto is_pcdata = [](const pugi::xml_node& node) { return node.type() == pugi::xml_node_type::node_pcdata; };
       if (std::all_of(child.children().begin(), child.children().end(), is_pcdata)) {
         // all children are pcdata (text): leaf node
-        val.AddMember(rapidjson::StringRef(child.name()), rapidjson::StringRef(child.text().get()), doc.GetAllocator());
+        output_value.AddMember(rapidjson::StringRef(child.name()), rapidjson::StringRef(child.text().get()), allocator_source_document.GetAllocator());
       } else {
         // there are non-text children: recurse further
-        auto& child_val = flatten ? val : val.AddMember(rapidjson::StringRef(child.name()), rapidjson::kObjectType, doc.GetAllocator())[child.name()];
-        simplifiedGenericXmlToJson(child, child_val, doc, flatten);
+        auto& child_val = flatten ? output_value : output_value.AddMember(rapidjson::StringRef(child.name()), rapidjson::kObjectType, allocator_source_document.GetAllocator())[child.name()];
+        simplifiedGenericXmlToJson(child, child_val, allocator_source_document, flatten);
       }
     }
   }
