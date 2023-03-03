@@ -27,6 +27,7 @@
 #include "core/yaml/YamlConfiguration.h"
 #include "unit/ProvenanceTestHelper.h"
 #include "repository/VolatileContentRepository.h"
+#include "utils/file/FileUtils.h"
 
 namespace {
   std::string config_yaml; // NOLINT
@@ -77,6 +78,7 @@ class VolatileMapStateStorageTestFixture {
   }
 
   virtual ~VolatileMapStateStorageTestFixture() {
+    std::filesystem::current_path(minifi::utils::file::get_executable_dir());
     LogTestController::getInstance().reset();
   }
 

@@ -15,7 +15,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
+#undef NDEBUG
 #pragma once
 
 #include <chrono>
@@ -188,7 +188,7 @@ class TempDirectory {
 
   ~TempDirectory() {
     if (is_owner_) {
-      minifi::utils::file::FileUtils::delete_dir(path_, true);
+      assert(minifi::utils::file::FileUtils::delete_dir(path_, true) == 0);
     }
   }
 

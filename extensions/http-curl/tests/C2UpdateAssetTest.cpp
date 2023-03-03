@@ -26,6 +26,7 @@
 #include "HTTPHandlers.h"
 #include "utils/IntegrationTestUtils.h"
 #include "utils/Environment.h"
+#include "utils/file/FileUtils.h"
 
 class FileProvider : public ServerAwareHandler {
  public:
@@ -257,4 +258,6 @@ int main() {
       assert(false);
     }
   }
+
+  std::filesystem::current_path(minifi::utils::file::get_executable_dir());
 }

@@ -480,6 +480,8 @@ inline std::optional<std::string> get_file_owner(const std::filesystem::path& fi
     return std::nullopt;
   }
 
+  auto close_file_handle = gsl::finally([&file_handle] { CloseHandle(file_handle); });
+
   // Get the owner SID of the file.
   return_code = GetSecurityInfo(
     file_handle,
