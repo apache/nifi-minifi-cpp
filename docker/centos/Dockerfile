@@ -29,7 +29,7 @@ ARG GID=1000
 ARG MINIFI_OPTIONS=""
 ARG CMAKE_BUILD_TYPE=Release
 ARG DOCKER_SKIP_TESTS=ON
-ARG DOCKER_MAKE_COMMAND=""
+ARG DOCKER_MAKE_TARGET="all"
 
 # Install the system dependencies needed for a build
 
@@ -68,4 +68,4 @@ RUN cd $MINIFI_BASE_DIR && \
     export PATH=/usr/lib64/ccache${PATH:+:${PATH}} && \
     export CCACHE_DIR=${MINIFI_BASE_DIR}/.ccache && \
     cmake3 -DSTATIC_BUILD= -DSKIP_TESTS=${DOCKER_SKIP_TESTS} ${MINIFI_OPTIONS} -DAWS_ENABLE_UNITY_BUILD=OFF -DCMAKE_BUILD_TYPE="${CMAKE_BUILD_TYPE}" .. && \
-    make -j "$(nproc)" ${DOCKER_MAKE_COMMAND}
+    make -j "$(nproc)" ${DOCKER_MAKE_TARGET}

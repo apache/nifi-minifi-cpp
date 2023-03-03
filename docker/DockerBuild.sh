@@ -161,7 +161,7 @@ BUILD_ARGS+=("--build-arg" "UID=${UID_ARG}"
             "--build-arg" "DISTRO_NAME=${DISTRO_NAME}"
             "--build-arg" "DOCKER_SKIP_TESTS=${DOCKER_SKIP_TESTS}")
 if [ -n "${DUMP_LOCATION}" ]; then
-  BUILD_ARGS+=("--build-arg" "DOCKER_MAKE_COMMAND=package")
+  BUILD_ARGS+=("--build-arg" "DOCKER_MAKE_TARGET=package")
 fi
 
 if [ -n "${DISTRO_NAME}" ]; then
