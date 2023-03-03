@@ -32,7 +32,7 @@ class StoppableThread {
  public:
   explicit StoppableThread(std::function<void()> fn);
 
-  void stopWait() {
+  void stopAndJoin() {
     running_ = false;
     {
       std::unique_lock lock(mtx_);
@@ -44,7 +44,7 @@ class StoppableThread {
   }
 
   ~StoppableThread() {
-    stopWait();
+    stopAndJoin();
   }
 
   // return true if stop was requested
