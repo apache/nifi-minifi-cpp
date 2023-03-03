@@ -56,7 +56,7 @@ Feature: MiNiFi can use python processors in its flows
 
   Scenario: Native python processors can be stateful
     Given a CountingProcessor processor
-    And the scheduling period of the CountingProcessor processor is set to "1 sec"
+    And the scheduling period of the CountingProcessor processor is set to "10 ms"
     And a PutFile processor with the "Directory" property set to "/tmp/output"
     And the "success" relationship of the CountingProcessor processor is connected to the PutFile
 
