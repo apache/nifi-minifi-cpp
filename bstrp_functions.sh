@@ -370,8 +370,8 @@ show_supported_features() {
   echo "I. GPS support .................$(print_feature_status GPS_ENABLED)"
   echo "J. TensorFlow Support ..........$(print_feature_status TENSORFLOW_ENABLED)"
   echo "K. Bustache Support ............$(print_feature_status BUSTACHE_ENABLED)"
-  echo "L. MQTT Support ................$(print_feature_status MQTT_ENABLED)"
-  echo "M. Lua Scripting Support .......$(print_feature_status LUA_SCRIPTING_ENABLED)"
+  echo "L. Lua Scripting Support .......$(print_feature_status LUA_SCRIPTING_ENABLED)"
+  echo "M. MQTT Support ................$(print_feature_status MQTT_ENABLED)"
   echo "N. COAP Support ................$(print_feature_status COAP_ENABLED)"
   echo "O. SFTP Support ................$(print_feature_status SFTP_ENABLED)"
   echo "S. AWS Support .................$(print_feature_status AWS_ENABLED)"
@@ -427,8 +427,8 @@ read_feature_options(){
     i) ToggleFeature GPS_ENABLED ;;
     j) ToggleFeature TENSORFLOW_ENABLED ;;
     k) ToggleFeature BUSTACHE_ENABLED ;;
-    l) ToggleFeature MQTT_ENABLED ;;
-    m) ToggleFeature LUA_SCRIPTING_ENABLED ;;
+    l) ToggleFeature LUA_SCRIPTING_ENABLED ;;
+    m) ToggleFeature MQTT_ENABLED ;;
     n) ToggleFeature COAP_ENABLED ;;
     o) ToggleFeature SFTP_ENABLED ;;
     s) ToggleFeature AWS_ENABLED ;;

@@ -337,8 +337,8 @@ sudo brew install libpcap
     I. GPS support .................Disabled
     J. TensorFlow Support ..........Disabled
     K. Bustache Support ............Disabled
-    L. MQTT Support ................Disabled
-    M. Lua Scripting Support .......Disabled
+    L. Lua Scripting Support .......Disabled
+    M. MQTT Support ................Disabled
     N. COAP Support ................Disabled
     O. SFTP Support ................Disabled
     S. AWS Support .................Enabled
