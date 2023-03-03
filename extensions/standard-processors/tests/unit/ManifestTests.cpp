@@ -29,9 +29,9 @@
 TEST_CASE("Test Required", "[required]") {
   minifi::state::response::ComponentManifest manifest("minifi-standard-processors");
   auto serialized = manifest.serialize();
-  REQUIRE(serialized.size() > 0);
+  REQUIRE_FALSE(serialized.empty());
   const auto &resp = serialized[0];
-  REQUIRE(resp.children.size() > 0);
+  REQUIRE_FALSE(resp.children.empty());
   size_t processorIndex = resp.children.size();
   for (size_t i = 0; i < resp.children.size(); ++i) {
     if (resp.children[i].name == "processors") {
@@ -47,7 +47,7 @@ TEST_CASE("Test Required", "[required]") {
   });
   REQUIRE(get_file_it != processors.children.end());
 
-  REQUIRE(get_file_it->children.size() > 0);
+  REQUIRE_FALSE(get_file_it->children.empty());
   const auto& get_file_property_descriptors = get_file_it->children[0];
   const auto batch_size_property_it = ranges::find_if(get_file_property_descriptors.children, [](const auto& property) {
     return property.name == "Batch Size";
@@ -64,15 +64,15 @@ TEST_CASE("Test Required", "[required]") {
 TEST_CASE("Test Valid Regex", "[validRegex]") {
   minifi::state::response::ComponentManifest manifest("minifi-standard-processors");
   auto serialized = manifest.serialize();
-  REQUIRE(serialized.size() > 0);
+  REQUIRE_FALSE(serialized.empty());
   const auto &resp = serialized[0];
-  REQUIRE(resp.children.size() > 0);
+  REQUIRE_FALSE(resp.children.empty());
   const auto &processors = resp.children[0];
-  REQUIRE(processors.children.size() > 0);
+  REQUIRE_FALSE(processors.children.empty());
   const auto &proc_0 = processors.children[0];
-  REQUIRE(proc_0.children.size() > 0);
+  REQUIRE_FALSE(proc_0.children.empty());
   const auto &prop_descriptors = proc_0.children[0];
-  REQUIRE(prop_descriptors.children.size() > 0);
+  REQUIRE_FALSE(prop_descriptors.children.empty());
   const auto &prop_0 = prop_descriptors.children[0];
   REQUIRE(prop_0.children.size() >= 3);
   const auto &df = prop_0.children[3];
@@ -88,11 +88,11 @@ TEST_CASE("Test Valid Regex", "[validRegex]") {
 TEST_CASE("Test Relationships", "[rel1]") {
   minifi::state::response::ComponentManifest manifest("minifi-standard-processors");
   auto serialized = manifest.serialize();
-  REQUIRE(serialized.size() > 0);
+  REQUIRE_FALSE(serialized.empty());
   const auto &resp = serialized[0];
-  REQUIRE(resp.children.size() > 0);
+  REQUIRE_FALSE(resp.children.empty());
   const auto &processors = resp.children[0];
-  REQUIRE(processors.children.size() > 0);
+  REQUIRE_FALSE(processors.children.empty());
   minifi::state::response::SerializedResponseNode proc_0;
   for (const auto& node : processors.children) {
     if ("org.apache.nifi.minifi.processors.PutFile" == node.name) {
@@ -110,7 +110,7 @@ TEST_CASE("Test Relationships", "[rel1]") {
   REQUIRE(isSingleThreaded.value.getValue()->getTypeIndex() == org::apache::nifi::minifi::state::response::Value::BOOL_TYPE);
   REQUIRE(isSingleThreaded.value.to_string() == "false");
 
-  REQUIRE(proc_0.children.size() > 0);
+  REQUIRE_FALSE(proc_0.children.empty());
   const auto& relationships = proc_0.children[3];
   REQUIRE("supportedRelationships" == relationships.name);
   // this is because they are now nested
@@ -127,11 +127,11 @@ TEST_CASE("Test Relationships", "[rel1]") {
 TEST_CASE("Test Dependent", "[dependent]") {
   minifi::state::response::ComponentManifest manifest("minifi-standard-processors");
   auto serialized = manifest.serialize();
-  REQUIRE(serialized.size() > 0);
+  REQUIRE_FALSE(serialized.empty());
   const auto &resp = serialized[0];
-  REQUIRE(resp.children.size() > 0);
+  REQUIRE_FALSE(resp.children.empty());
   const auto &processors = resp.children[0];
-  REQUIRE(processors.children.size() > 0);
+  REQUIRE_FALSE(processors.children.empty());
   minifi::state::response::SerializedResponseNode proc_0;
   for (const auto &node : processors.children) {
     if ("org.apache.nifi.minifi.processors.PutFile" == node.name) {
@@ -139,9 +139,9 @@ TEST_CASE("Test Dependent", "[dependent]") {
     }
   }
 #ifndef WIN32
-  REQUIRE(proc_0.children.size() > 0);
+  REQUIRE_FALSE(proc_0.children.empty());
   const auto &prop_descriptors = proc_0.children[0];
-  REQUIRE(prop_descriptors.children.size() > 0);
+  REQUIRE_FALSE(prop_descriptors.children.empty());
   const auto &prop_0 = prop_descriptors.children[1];
   REQUIRE(prop_0.children.size() >= 3);
   REQUIRE("required" == prop_0.children[3].name);
@@ -155,7 +155,7 @@ TEST_CASE("Test Dependent", "[dependent]") {
 TEST_CASE("Test Scheduling Defaults", "[schedDef]") {
   minifi::state::response::AgentManifest manifest("minifi-system");
   auto serialized = manifest.serialize();
-  REQUIRE(serialized.size() > 0);
+  REQUIRE_FALSE(serialized.empty());
   minifi::state::response::SerializedResponseNode proc_0;
   for (const auto &node : serialized) {
     if ("schedulingDefaults" == node.name) {
@@ -185,7 +185,7 @@ TEST_CASE("Test Scheduling Defaults", "[schedDef]") {
 TEST_CASE("Test operatingSystem Defaults", "[opsys]") {
   minifi::state::response::DeviceInfoNode manifest("minifi-system");
   auto serialized = manifest.serialize();
-  REQUIRE(serialized.size() > 0);
+  REQUIRE_FALSE(serialized.empty());
   minifi::state::response::SerializedResponseNode proc_0;
   for (const auto &node : serialized) {
     if ("systemInfo" == node.name) {
