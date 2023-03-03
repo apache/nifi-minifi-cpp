@@ -54,7 +54,7 @@ class ContentRepository : public StreamManager<minifi::ResourceClaim>, public ut
 
   virtual void clearOrphans() = 0;
 
-  bool remove(const minifi::ResourceClaim &streamId) final override;
+  bool remove(const minifi::ResourceClaim &streamId) final;
 
  protected:
   void removeFromPurgeList();
