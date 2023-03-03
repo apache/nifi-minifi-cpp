@@ -55,13 +55,16 @@ void ExecuteScript::initialize() {
 }
 
 void ExecuteScript::onSchedule(core::ProcessContext *context, core::ProcessSessionFactory* /*sessionFactory*/) {
-  static const std::unordered_map<std::string_view, std::string> executor_class_names = {{"lua", "LuaScriptExecutor"}, {"python", "PythonScriptExecutor"}};
-
-  if (auto script_engine_prefix = context->getProperty(ScriptEngine); script_engine_prefix && executor_class_names.contains(*script_engine_prefix)) {
-    const auto& executor_class_name = executor_class_names.at(*script_engine_prefix);
+  const auto executor_class_lookup = [](const std::string_view script_engine_prefix) -> const char* {
+    if (script_engine_prefix == "lua") return "LuaScriptExecutor";
+    if (script_engine_prefix == "python") return "PythonScriptExecutor";
+    return nullptr;
+  };
+  if (const auto script_engine_prefix = context->getProperty(ScriptEngine); script_engine_prefix && executor_class_lookup(*script_engine_prefix)) {
+    const char* const executor_class_name = executor_class_lookup(*script_engine_prefix);
     script_executor_ = core::ClassLoader::getDefaultClassLoader().instantiate<extensions::script::ScriptExecutor>(executor_class_name, executor_class_name);
     if (!script_executor_) {
-      throw Exception(PROCESS_SCHEDULE_EXCEPTION, "Could not instantiate: " + executor_class_name + ". Make sure that the " + *script_engine_prefix + " scripting extension is loaded");
+      throw Exception(PROCESS_SCHEDULE_EXCEPTION, "Could not instantiate: " + std::string(executor_class_name) + ". Make sure that the " + *script_engine_prefix + " scripting extension is loaded");
     }
   } else {
     throw Exception(PROCESS_SCHEDULE_EXCEPTION, "Missing or invalid script engine name");

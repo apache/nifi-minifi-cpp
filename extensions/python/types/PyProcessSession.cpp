@@ -108,7 +108,7 @@ void PyProcessSession::remove(const std::shared_ptr<core::FlowFile>& flow_file) 
   std::shared_ptr<core::FlowFile> result;
 
   session_->remove(flow_file);
-  ranges::remove_if(flow_files_, [&flow_file](const auto& ff)-> bool { return ff == flow_file; });
+  flow_files_.erase(ranges::remove_if(flow_files_, [&flow_file](const auto& ff)-> bool { return ff == flow_file; }), flow_files_.end());
 }
 
 extern "C" {
