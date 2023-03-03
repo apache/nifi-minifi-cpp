@@ -54,9 +54,7 @@ class ContentRepository : public StreamManager<minifi::ResourceClaim>, public ut
 
   virtual void clearOrphans() = 0;
 
-  bool remove(const minifi::ResourceClaim &streamId) override {
-    return removeKey(streamId.getContentFullPath());
-  }
+  bool remove(const minifi::ResourceClaim &streamId) final override;
 
  protected:
   void removeFromPurgeList();
@@ -64,6 +62,7 @@ class ContentRepository : public StreamManager<minifi::ResourceClaim>, public ut
 
   std::string directory_;
   std::mutex count_map_mutex_;
+  std::mutex purge_list_mutex_;
   std::map<std::string, uint32_t> count_map_;
   std::list<std::string> purge_list_;
 };

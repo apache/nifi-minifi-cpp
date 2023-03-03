@@ -75,13 +75,24 @@ std::shared_ptr<ContentSession> FileSystemRepository::createSession() {
 }
 
 void FileSystemRepository::clearOrphans() {
-  std::lock_guard<std::mutex> lock(count_map_mutex_);
   utils::file::list_dir(directory_, [&] (auto& /*dir*/, auto& filename) {
     auto path = directory_ +  "/" + filename.string();
-    auto it = count_map_.find(path);
-    if (it == count_map_.end() || it->second == 0) {
+    bool is_orphan = false;
+    {
+      std::lock_guard<std::mutex> lock(count_map_mutex_);
+      auto it = count_map_.find(path);
+      is_orphan = it == count_map_.end() || it->second == 0;
+    }
+    if (is_orphan) {
       logger_->log_debug("Deleting orphan resource %s", path);
-      std::remove(path.c_str());
+      std::error_code ec;
+      if (!std::filesystem::remove(path, ec)) {
+        {
+          std::lock_guard<std::mutex> lock(purge_list_mutex_);
+          purge_list_.push_back(path);
+        }
+        logger_->log_error("Deleting %s from content repository failed with the following error: %s", path, ec.message());
+      }
     }
     return true;
   }, logger_, false);

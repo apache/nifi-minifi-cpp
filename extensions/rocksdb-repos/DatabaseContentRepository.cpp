@@ -203,6 +203,7 @@ void DatabaseContentRepository::clearOrphans() {
   auto it = opendb->NewIterator(rocksdb::ReadOptions());
   for (it->SeekToFirst(); it->Valid(); it->Next()) {
     auto key = it->key().ToString();
+    std::lock_guard<std::mutex> lock(count_map_mutex_);
     auto claim_it = count_map_.find(key);
     if (claim_it == count_map_.end() || claim_it->second == 0) {
       logger_->log_error("Deleting orphan resource %s", key);
@@ -218,6 +219,10 @@ void DatabaseContentRepository::clearOrphans() {
 
   if (!status.ok()) {
     logger_->log_error("Could not delete orphan contents from rocksdb database: %s", status.ToString());
+    std::lock_guard<std::mutex> lock(purge_list_mutex_);
+    for (const auto& key : keys_to_be_deleted) {
+      purge_list_.push_back(key);
+    }
   }
 }
 
