@@ -16,7 +16,7 @@
 import numpy as np
 
 
-class WriteReverseStringCallback:
+class WriteCallback:
     def __init__(self, content):
         self.content = content
 
@@ -38,5 +38,5 @@ def onTrigger(context, session):
     mu = 0
     sigma = 0.1
     s = np.random.normal(mu, sigma, 1)
-    session.write(flow_file, WriteReverseStringCallback(str(s[0])))
+    session.write(flow_file, WriteCallback(str(s[0])))
     session.transfer(flow_file, REL_SUCCESS)
