@@ -201,7 +201,7 @@ Value expr_reverseDnsLookup(const std::vector<Value>& args) {
       | utils::flatMap([timeout_duration](const auto& ip_address) { return utils::net::reverseDnsLookup(ip_address, timeout_duration);})
       | utils::map([](const auto& hostname)-> Value { return Value(hostname); })
       | utils::valueOrElse([&](std::error_code error_code) {
-        if (error_code == asio::error::timed_out) {
+        if (error_code.value() == asio::error::timed_out) {
           core::logging::LoggerFactory<Expression>::getLogger()->log_warn("reverseDnsLookup timed out");
           return Value(ip_address_str);
         }
