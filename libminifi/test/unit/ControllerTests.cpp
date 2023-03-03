@@ -152,6 +152,10 @@ class TestUpdateSink : public minifi::state::StateMonitor {
     return 0;
   }
 
+  std::vector<std::string> getSupportedConfigurationFormats() const override {
+    return {};
+  }
+
   /**
    * Apply an update with the provided string.
    *

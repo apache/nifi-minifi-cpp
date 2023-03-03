@@ -18,6 +18,8 @@
 
 #include <string>
 #include <memory>
+#include <vector>
+#include <optional>
 
 #include "c2/C2Protocol.h"
 #include "c2/protocols/RESTProtocol.h"
@@ -50,12 +52,15 @@ class RESTSender : public RESTProtocol, public C2Protocol {
 
   C2Payload consumePayload(const C2Payload &payload, Direction direction, bool async) override;
 
+  C2Payload fetch(const std::string& url, const std::vector<std::string>& accepted_formats, bool async) override;
+
   void update(const std::shared_ptr<Configure> &configure) override;
 
   void initialize(core::controller::ControllerServiceProvider* controller, const std::shared_ptr<Configure> &configure) override;
 
  protected:
-  C2Payload sendPayload(const std::string& url, const Direction direction, const C2Payload &payload, std::optional<std::string> data);
+  C2Payload sendPayload(const std::string& url, const Direction direction, const C2Payload &payload, std::optional<std::string> data,
+                        const std::optional<std::vector<std::string>>& accepted_formats = std::nullopt);
 
   /**
    * Initializes the SSLContextService onto the HTTP client if one is needed

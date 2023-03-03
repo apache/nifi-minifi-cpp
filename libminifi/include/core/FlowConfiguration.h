@@ -96,6 +96,10 @@ class FlowConfiguration : public CoreComponent {
     return flow_version_;
   }
 
+  virtual std::vector<std::string> getSupportedFormats() const {
+    return {};
+  }
+
   std::shared_ptr<Configure> getConfiguration() {  // cannot be const as getters mutate the underlying map
     return configuration_;
   }

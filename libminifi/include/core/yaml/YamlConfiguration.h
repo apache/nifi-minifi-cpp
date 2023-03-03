@@ -21,6 +21,7 @@
 #include <optional>
 #include <string>
 #include <unordered_set>
+#include <vector>
 
 #include "core/FlowConfiguration.h"
 #include "core/logging/LoggerFactory.h"
@@ -43,6 +44,10 @@ class YamlConfiguration : public flow::StructuredConfiguration {
   explicit YamlConfiguration(ConfigurationContext ctx);
 
   ~YamlConfiguration() override = default;
+
+  std::vector<std::string> getSupportedFormats() const override {
+    return {"text/yml"};
+  }
 
   /**
    * Returns a shared pointer to a ProcessGroup object containing the
