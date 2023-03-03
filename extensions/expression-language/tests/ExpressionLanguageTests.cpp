@@ -1333,15 +1333,24 @@ TEST_CASE("Reverse DNS lookup with invalid timeout parameter", "[ExpressionLangu
 }
 
 TEST_CASE("Reverse DNS lookup with valid timeout parameter", "[ExpressionLanguage][reverseDnsLookup]") {
-  auto reverse_lookup_expr_500ms = expression::compile("${reverseDnsLookup(${ip_addr}, 500)}");
-  auto reverse_lookup_expr_0ms = expression::compile("${reverseDnsLookup(${ip_addr}, 0)}");  // 0ms to make sure it times out
+  LogTestController::getInstance().setWarn<expression::Expression>();
+  LogTestController::getInstance().clear();
 
   auto flow_file_a = std::make_shared<core::FlowFile>();
   std::string expected_hostname;
-  flow_file_a->addAttribute("ip_addr", "192.0.2.1");
+  flow_file_a->addAttribute("ip_addr", "8.8.8.8");
 
-  REQUIRE_THROWS_AS(reverse_lookup_expr_0ms(expression::Parameters{flow_file_a}), std::runtime_error);
-  REQUIRE_NOTHROW(reverse_lookup_expr_500ms(expression::Parameters{ flow_file_a }));
+  SECTION("Should timeout") {
+    auto reverse_lookup_expr_0ms = expression::compile("${reverseDnsLookup(${ip_addr}, 0)}");
+    REQUIRE_NOTHROW(reverse_lookup_expr_0ms(expression::Parameters{flow_file_a}).asString() == "8.8.8.8");
+    CHECK(LogTestController::getInstance().contains("reverseDnsLookup timed out", 0ms));
+  }
+
+  SECTION("Shouldn't timeout") {
+    auto reverse_lookup_expr_500ms = expression::compile("${reverseDnsLookup(${ip_addr}, 500)}");
+    REQUIRE_NOTHROW(reverse_lookup_expr_500ms(expression::Parameters{flow_file_a}).asString() == "dns.google");
+    CHECK_FALSE(LogTestController::getInstance().contains("reverseDnsLookup timed out", 0ms));
+  }
 }
 
 TEST_CASE("UUID", "[expressionUuid]") {
