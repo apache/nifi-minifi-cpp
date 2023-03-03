@@ -163,7 +163,7 @@ C2Payload RESTSender::sendPayload(const std::string& url, const Direction direct
   if (payload.getOperation() == Operation::TRANSFER) {
     auto read = std::make_unique<utils::HTTPReadCallback>(std::numeric_limits<size_t>::max());
     client.setReadCallback(std::move(read));
-    if (accepted_formats) {
+    if (accepted_formats && !accepted_formats->empty()) {
       client.setRequestHeader("Accept", utils::StringUtils::join(", ", accepted_formats.value()));
     }
   } else {
