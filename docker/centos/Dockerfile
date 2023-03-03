@@ -47,8 +47,8 @@ RUN yum -y install epel-release && yum -y install sudo git which make libarchive
     if echo "$MINIFI_OPTIONS" | grep -q "ENABLE_PCAP=ON"; then yum -y install libpcap-devel; fi && \
     if echo "$MINIFI_OPTIONS" | grep -q "ENABLE_USB_CAMERA=ON"; then yum -y install libpng-devel libusbx-devel; fi && \
     if echo "$MINIFI_OPTIONS" | grep -q "ENABLE_OPENCV=ON" || echo "$MINIFI_OPTIONS" | grep -q "ENABLE_BUSTACHE=ON"; then yum -y install boost-devel; fi && \
-    if echo "$MINIFI_OPTIONS" | grep -q "ENABLE_SCRIPTING=ON" && echo "$MINIFI_OPTIONS" | grep -q "ENABLE_LUA_SCRIPTING=ON"; then yum -y install lua-devel; fi && \
-    if echo "$MINIFI_OPTIONS" | grep -q "ENABLE_SCRIPTING=ON" && echo "$MINIFI_OPTIONS" | grep -q "DISABLE_PYTHON_SCRIPTING=OFF"; then yum -y install python36-devel; fi && \
+    if echo "$MINIFI_OPTIONS" | grep -q "ENABLE_LUA_SCRIPTING=ON"; then yum -y install lua-devel; fi && \
+    if echo "$MINIFI_OPTIONS" | grep -q "ENABLE_PYTHON_SCRIPTING=ON"; then yum -y install python36-devel; fi && \
     if echo "$MINIFI_OPTIONS" | grep -q "ENABLE_SFTP=ON" && [ "${DOCKER_SKIP_TESTS}" == "OFF" ]; then yum -y install java-1.8.0-openjdk maven; fi
 
 RUN cd $MINIFI_BASE_DIR && \
