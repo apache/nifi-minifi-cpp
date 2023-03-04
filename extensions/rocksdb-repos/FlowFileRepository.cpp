@@ -200,6 +200,8 @@ bool FlowFileRepository::initialize(const std::shared_ptr<Configure> &configure)
   }
   logger_->log_debug("NiFi FlowFile Repository Directory %s", directory_);
 
+  setCompactionPeriod(configure);
+
   const auto encrypted_env = createEncryptingEnv(utils::crypto::EncryptionManager{configure->getHome()}, DbEncryptionOptions{directory_, ENCRYPTION_KEY_NAME});
   logger_->log_info("Using %s FlowFileRepository", encrypted_env ? "encrypted" : "plaintext");
 
@@ -236,6 +238,22 @@ bool FlowFileRepository::initialize(const std::shared_ptr<Configure> &configure)
   } else {
     logger_->log_error("NiFi FlowFile Repository database open %s fail", directory_);
     return false;
+  }
+}
+
+void FlowFileRepository::setCompactionPeriod(const std::shared_ptr<Configure> &configure) {
+  compaction_period_ = DEFAULT_COMPACTION_PERIOD;
+  if (auto compaction_period_str = configure->get(Configure::nifi_flowfile_repository_rocksdb_compaction_period)) {
+    if (auto compaction_period = TimePeriodValue::fromString(compaction_period_str.value())) {
+      compaction_period_ = compaction_period->getMilliseconds();
+      if (compaction_period_.count() == 0) {
+        logger_->log_warn("Setting '%s' to 0 disables forced compaction", Configure::nifi_flowfile_repository_rocksdb_compaction_period);
+      }
+    } else {
+      logger_->log_error("Malformed property '%s', expected time period, using default", Configure::nifi_flowfile_repository_rocksdb_compaction_period);
+    }
+  } else {
+    logger_->log_debug("Using default compaction period of %" PRId64 " ms", int64_t{compaction_period_.count()});
   }
 }
 
@@ -281,15 +299,32 @@ bool FlowFileRepository::Get(const std::string &key, std::string &value) {
   return opendb->Get(rocksdb::ReadOptions(), key, &value).ok();
 }
 
+void FlowFileRepository::runCompaction() {
+  do {
+    if (auto opendb = db_->open()) {
+      auto status = opendb->RunCompaction();
+      logger_->log_trace("Compaction triggered: %s", status.ToString());
+    } else {
+      logger_->log_error("Failed to open database for compaction");
+    }
+  } while (!utils::StoppableThread::waitForStopRequest(compaction_period_));
+}
+
 bool FlowFileRepository::start() {
   const bool ret = ThreadedRepository::start();
   if (swap_loader_) {
     swap_loader_->start();
   }
+  if (compaction_period_.count() != 0) {
+    compaction_thread_ = std::make_unique<utils::StoppableThread>([this] () {
+      runCompaction();
+    });
+  }
   return ret;
 }
 
 bool FlowFileRepository::stop() {
+  compaction_thread_.reset();
   if (swap_loader_) {
     swap_loader_->stop();
   }

@@ -19,6 +19,7 @@
 #include <memory>
 #include <string>
 #include <utility>
+#include <thread>
 
 #include "core/ContentRepository.h"
 #include "core/BufferedContentSession.h"
@@ -26,6 +27,7 @@
 #include "core/Property.h"
 #include "database/RocksDatabase.h"
 #include "properties/Configure.h"
+#include "utils/StoppableThread.h"
 
 namespace org::apache::nifi::minifi::core::repository {
 
@@ -36,6 +38,8 @@ class DatabaseContentRepository : public core::ContentRepository {
 
     void commit() override;
   };
+
+  static constexpr std::chrono::milliseconds DEFAULT_COMPACTION_PERIOD = std::chrono::minutes{2};
 
  public:
   static constexpr const char* ENCRYPTION_KEY_NAME = "nifi.database.content.repository.encryption.key";
@@ -56,7 +60,6 @@ class DatabaseContentRepository : public core::ContentRepository {
 
   std::shared_ptr<ContentSession> createSession() override;
   bool initialize(const std::shared_ptr<minifi::Configure> &configuration) override;
-  void stop();
   std::shared_ptr<io::BaseStream> write(const minifi::ResourceClaim &claim, bool append = false) override;
   std::shared_ptr<io::BaseStream> read(const minifi::ResourceClaim &claim) override;
 
@@ -69,12 +72,21 @@ class DatabaseContentRepository : public core::ContentRepository {
 
   void clearOrphans() override;
 
- private:
+  void start() override;
+  void stop() override;
+
+ protected:
   std::shared_ptr<io::BaseStream> write(const minifi::ResourceClaim &claim, bool append, minifi::internal::WriteBatch* batch);
+
+  void runCompaction();
+  void setCompactionPeriod(const std::shared_ptr<minifi::Configure> &configuration);
 
   bool is_valid_;
   std::unique_ptr<minifi::internal::RocksDatabase> db_;
   std::shared_ptr<logging::Logger> logger_;
+
+  std::chrono::milliseconds compaction_period_{DEFAULT_COMPACTION_PERIOD};
+  std::unique_ptr<utils::StoppableThread> compaction_thread_;
 };
 
 }  // namespace org::apache::nifi::minifi::core::repository

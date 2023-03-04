@@ -27,11 +27,7 @@
 #include "rocksdb/utilities/checkpoint.h"
 #include "WriteBatch.h"
 
-namespace org {
-namespace apache {
-namespace nifi {
-namespace minifi {
-namespace internal {
+namespace org::apache::nifi::minifi::internal {
 
 class RocksDbInstance;
 struct ColumnHandle;
@@ -71,6 +67,8 @@ class OpenRocksDb {
 
   rocksdb::Status FlushWAL(bool sync);
 
+  rocksdb::Status RunCompaction();
+
   rocksdb::DB* get();
 
  private:
@@ -82,8 +80,4 @@ class OpenRocksDb {
   gsl::not_null<std::shared_ptr<ColumnHandle>> column_;
 };
 
-}  // namespace internal
-}  // namespace minifi
-}  // namespace nifi
-}  // namespace apache
-}  // namespace org
+}  // namespace org::apache::nifi::minifi::internal
