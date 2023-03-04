@@ -419,6 +419,10 @@ int16_t FlowController::resume() {
   return 0;
 }
 
+std::vector<std::string> FlowController::getSupportedConfigurationFormats() const {
+  return flow_configuration_->getSupportedFormats();
+}
+
 int16_t FlowController::applyUpdate(const std::string &source, const std::string &configuration, bool persist, const std::optional<std::string>& flow_id) {
   if (applyConfiguration(source, configuration, flow_id)) {
     if (persist) {

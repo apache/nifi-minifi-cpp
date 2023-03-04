@@ -19,6 +19,7 @@
 
 #include <string>
 #include <memory>
+#include <vector>
 
 #include "StructuredConfiguration.h"
 
@@ -27,6 +28,10 @@ namespace org::apache::nifi::minifi::core::flow {
 class AdaptiveConfiguration : public StructuredConfiguration {
  public:
   explicit AdaptiveConfiguration(ConfigurationContext ctx);
+
+  std::vector<std::string> getSupportedFormats() const override {
+    return {"application/vnd.minifi-c2+json;version=1", "text/yml"};
+  }
 
   std::unique_ptr<core::ProcessGroup> getRootFromPayload(const std::string &payload) override;
 };

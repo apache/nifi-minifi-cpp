@@ -115,6 +115,8 @@ class FlowController : public core::controller::ForwardingControllerServiceProvi
 
   int16_t clearConnection(const std::string &connection) override;
 
+  std::vector<std::string> getSupportedConfigurationFormats() const override;
+
   int16_t applyUpdate(const std::string& /*source*/, const std::shared_ptr<state::Update>&) override { return -1; }
   // Asynchronous function trigger unloading and wait for a period of time
   virtual void waitUnload(uint64_t timeToWaitMs);

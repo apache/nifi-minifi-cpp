@@ -842,8 +842,7 @@ std::optional<std::string> C2Agent::fetchFlow(const std::string& uri) const {
     return std::nullopt;
   }
 
-  C2Payload payload(Operation::TRANSFER, true);
-  C2Payload &&response = protocol_.load()->consumePayload(resolved_url.value(), payload, RECEIVE, false);
+  C2Payload response = protocol_.load()->fetch(resolved_url.value(), update_sink_->getSupportedConfigurationFormats());
 
   return response.getRawDataAsString();
 }
@@ -995,7 +994,7 @@ void C2Agent::handleAssetUpdate(const C2ContentResponse& resp) {
     return;
   }
 
-  C2Payload file_response = protocol_.load()->consumePayload(url, C2Payload(Operation::TRANSFER, true), RECEIVE, false);
+  C2Payload file_response = protocol_.load()->fetch(url);
 
   if (file_response.getStatus().getState() != state::UpdateState::READ_COMPLETE) {
     send_error("Failed to fetch asset from '" + url + "'");
