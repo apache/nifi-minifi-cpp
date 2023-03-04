@@ -21,6 +21,7 @@
 #include <memory>
 #include <string>
 #include <utility>
+#include <list>
 
 #include "properties/Configure.h"
 #include "ResourceClaim.h"
@@ -56,10 +57,17 @@ class ContentRepository : public StreamManager<minifi::ResourceClaim>, public ut
   virtual void start() {}
   virtual void stop() {}
 
+  bool remove(const minifi::ResourceClaim &streamId) final;
+
  protected:
+  void removeFromPurgeList();
+  virtual bool removeKey(const std::string& content_path) = 0;
+
   std::string directory_;
   std::mutex count_map_mutex_;
+  std::mutex purge_list_mutex_;
   std::map<std::string, uint32_t> count_map_;
+  std::list<std::string> purge_list_;
 };
 
 }  // namespace org::apache::nifi::minifi::core

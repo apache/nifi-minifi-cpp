@@ -19,6 +19,7 @@
 #include "core/repository/FileSystemRepository.h"
 #include <memory>
 #include <string>
+#include <filesystem>
 #include "io/FileStream.h"
 #include "utils/file/FileUtils.h"
 #include "core/ForwardingContentSession.h"
@@ -49,9 +50,23 @@ std::shared_ptr<io::BaseStream> FileSystemRepository::read(const minifi::Resourc
   return std::make_shared<io::FileStream>(claim.getContentFullPath(), 0, false);
 }
 
-bool FileSystemRepository::remove(const minifi::ResourceClaim& claim) {
-  logger_->log_debug("Deleting resource %s", claim.getContentFullPath());
-  std::remove(claim.getContentFullPath().c_str());
+bool FileSystemRepository::removeKey(const std::string& content_path) {
+  logger_->log_debug("Deleting resource %s", content_path);
+  std::error_code ec;
+  auto result = std::filesystem::exists(content_path, ec);
+  if (ec) {
+    logger_->log_error("Deleting %s from content repository failed with the following error: %s", content_path, ec.message());
+    return false;
+  }
+  if (!result) {
+    logger_->log_debug("Content path %s does not exist, no need to delete it", content_path);
+    return true;
+  }
+  ec.clear();
+  if (!std::filesystem::remove(content_path, ec)) {
+    logger_->log_error("Deleting %s from content repository failed with the following error: %s", content_path, ec.message());
+    return false;
+  }
   return true;
 }
 
@@ -60,13 +75,24 @@ std::shared_ptr<ContentSession> FileSystemRepository::createSession() {
 }
 
 void FileSystemRepository::clearOrphans() {
-  std::lock_guard<std::mutex> lock(count_map_mutex_);
   utils::file::list_dir(directory_, [&] (auto& /*dir*/, auto& filename) {
     auto path = directory_ +  "/" + filename.string();
-    auto it = count_map_.find(path);
-    if (it == count_map_.end() || it->second == 0) {
+    bool is_orphan = false;
+    {
+      std::lock_guard<std::mutex> lock(count_map_mutex_);
+      auto it = count_map_.find(path);
+      is_orphan = it == count_map_.end() || it->second == 0;
+    }
+    if (is_orphan) {
       logger_->log_debug("Deleting orphan resource %s", path);
-      std::remove(path.c_str());
+      std::error_code ec;
+      if (!std::filesystem::remove(path, ec)) {
+        {
+          std::lock_guard<std::mutex> lock(purge_list_mutex_);
+          purge_list_.push_back(path);
+        }
+        logger_->log_error("Deleting %s from content repository failed with the following error: %s", path, ec.message());
+      }
     }
     return true;
   }, logger_, false);

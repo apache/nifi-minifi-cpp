@@ -197,20 +197,26 @@ bool DatabaseContentRepository::exists(const minifi::ResourceClaim &streamId) {
   }
 }
 
-bool DatabaseContentRepository::remove(const minifi::ResourceClaim &claim) {
-  if (!is_valid_ || !db_)
+bool DatabaseContentRepository::removeKey(const std::string& content_path) {
+  if (!is_valid_ || !db_) {
+    logger_->log_error("DB is not valid, could not delete %s", content_path);
     return false;
+  }
   auto opendb = db_->open();
   if (!opendb) {
+    logger_->log_error("Could not open DB, did not delete %s", content_path);
     return false;
   }
   rocksdb::Status status;
-  status = opendb->Delete(rocksdb::WriteOptions(), claim.getContentFullPath());
+  status = opendb->Delete(rocksdb::WriteOptions(), content_path);
   if (status.ok()) {
-    logger_->log_debug("Deleting resource %s", claim.getContentFullPath());
+    logger_->log_debug("Deleting resource %s", content_path);
+    return true;
+  } else if (status.IsNotFound()) {
+    logger_->log_debug("Resource %s was not found", content_path);
     return true;
   } else {
-    logger_->log_debug("Attempted, but could not delete %s", claim.getContentFullPath());
+    logger_->log_error("Attempted, but could not delete %s", content_path);
     return false;
   }
 }
@@ -238,6 +244,7 @@ void DatabaseContentRepository::clearOrphans() {
   auto it = opendb->NewIterator(rocksdb::ReadOptions());
   for (it->SeekToFirst(); it->Valid(); it->Next()) {
     auto key = it->key().ToString();
+    std::lock_guard<std::mutex> lock(count_map_mutex_);
     auto claim_it = count_map_.find(key);
     if (claim_it == count_map_.end() || claim_it->second == 0) {
       logger_->log_error("Deleting orphan resource %s", key);
@@ -253,6 +260,10 @@ void DatabaseContentRepository::clearOrphans() {
 
   if (!status.ok()) {
     logger_->log_error("Could not delete orphan contents from rocksdb database: %s", status.ToString());
+    std::lock_guard<std::mutex> lock(purge_list_mutex_);
+    for (const auto& key : keys_to_be_deleted) {
+      purge_list_.push_back(key);
+    }
   }
 }
 

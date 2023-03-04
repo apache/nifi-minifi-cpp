@@ -46,10 +46,12 @@ class FileSystemRepository : public core::ContentRepository {
     return remove(claim);
   }
 
-  bool remove(const minifi::ResourceClaim& claim) override;
   std::shared_ptr<ContentSession> createSession() override;
 
   void clearOrphans() override;
+
+ protected:
+  bool removeKey(const std::string& content_path) override;
 
  private:
   std::shared_ptr<logging::Logger> logger_;
