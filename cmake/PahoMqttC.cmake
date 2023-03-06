@@ -28,10 +28,15 @@ else()
     set(PAHO_WITH_SSL ON CACHE BOOL "" FORCE)
 endif()
 
+set(PATCH_FILE "${CMAKE_SOURCE_DIR}/thirdparty/paho-mqtt/cmake-openssl.patch")
+set(PC ${Bash_EXECUTABLE}  -c "set -x &&\
+        (\\\"${Patch_EXECUTABLE}\\\" -p1 -R -s -f --dry-run -i \\\"${PATCH_FILE}\\\" || \\\"${Patch_EXECUTABLE}\\\" -p1 -N -i \\\"${PATCH_FILE}\\\")")
+
 FetchContent_Declare(
     paho.mqtt.c-external
     URL "https://github.com/eclipse/paho.mqtt.c/archive/refs/tags/v1.3.9.tar.gz"
     URL_HASH "SHA256=386c9b5fa1cf6d0d516db12d57fd8f6a410dd0fdc5e9a2da870aae437a2535ed"
+    PATCH_COMMAND "${PC}"
 )
 
 FetchContent_MakeAvailable(paho.mqtt.c-external)

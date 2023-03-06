@@ -68,6 +68,7 @@ After the build directory it will take optional parameters modifying the CMake c
 | /O | Enables OpenCV |
 | /PDH | Enables Performance Monitor |
 | /PR | Enables Prometheus |
+| /MQTT | Enables MQTT |
 | /RO | Use real ODBC driver in tests instead of mock SQL driver |
 | /M | Creates installer with merge modules |
 | /64 | Creates 64-bit build instead of a 32-bit one |
