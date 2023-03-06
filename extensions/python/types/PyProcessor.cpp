@@ -96,7 +96,7 @@ bool getBoolFromTuple(PyObject* tuple, Py_ssize_t location) {
     return true;
   if (object == Py_False)
     return false;
-  throw std::invalid_argument(fmt::format("{} is expected to be Py_True({}) or Py_False({})", fmt::ptr(object), fmt::ptr(Py_True), fmt::ptr(Py_False)));
+  throw std::invalid_argument("Expected to get Py_True or Py_False, but got something else");
 }
 }  // namespace
 
