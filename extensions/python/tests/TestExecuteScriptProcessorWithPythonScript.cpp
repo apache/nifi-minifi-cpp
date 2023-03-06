@@ -256,8 +256,10 @@ TEST_CASE("Python can remove flowfiles", "[ExecuteScript]") {
   execute_script->setProperty(ExecuteScript::ScriptBody, R"(
 def onTrigger(context, session):
   flow_file = session.get()
-  session.remove(flow_file);)");
-  REQUIRE_NOTHROW(controller.trigger("hello"));
+  session.remove(flow_file))");
+  auto result = controller.trigger("hello");
+  REQUIRE(result.at(ExecuteScript::Success).empty());
+  REQUIRE(result.at(ExecuteScript::Failure).empty());
 }
 
 }  // namespace org::apache::nifi::minifi::processors::test

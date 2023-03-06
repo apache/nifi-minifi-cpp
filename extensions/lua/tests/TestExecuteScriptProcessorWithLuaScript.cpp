@@ -314,7 +314,9 @@ TEST_CASE("Lua can remove flowfiles", "[ExecuteScript]") {
           session:remove(flow_file)
         end
       )");
-  REQUIRE_NOTHROW(controller.trigger("hello"));
+  auto result = controller.trigger("hello");
+  REQUIRE(result.at(ExecuteScript::Success).empty());
+  REQUIRE(result.at(ExecuteScript::Failure).empty());
 }
 
 }  // namespace org::apache::nifi::minifi::processors::test
