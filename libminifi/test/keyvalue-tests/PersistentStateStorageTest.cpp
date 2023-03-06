@@ -32,6 +32,7 @@
 #include "controllers/keyvalue/AutoPersistor.h"
 #include "unit/ProvenanceTestHelper.h"
 #include "repository/VolatileContentRepository.h"
+#include "utils/file/FileUtils.h"
 
 static std::string config_yaml; // NOLINT
 
@@ -70,6 +71,7 @@ class PersistentStateStorageTestsFixture {
 
   virtual ~PersistentStateStorageTestsFixture() {
     LogTestController::getInstance().reset();
+    std::filesystem::current_path(minifi::utils::file::get_executable_dir());
   }
 
   void loadYaml() {
@@ -108,6 +110,7 @@ class PersistentStateStorageTestsFixture {
   }
 
  protected:
+  TestController testController;
   std::shared_ptr<minifi::Configure> configuration;
   std::shared_ptr<core::Repository> test_repo;
   std::shared_ptr<core::Repository> test_flow_repo;
@@ -119,8 +122,6 @@ class PersistentStateStorageTestsFixture {
 
   std::shared_ptr<core::controller::ControllerServiceNode> persistable_key_value_store_service_node;
   std::shared_ptr<minifi::controllers::KeyValueStateStorage> controller;
-
-  TestController testController;
 };
 
 

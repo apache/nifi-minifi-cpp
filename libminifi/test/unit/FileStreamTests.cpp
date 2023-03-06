@@ -280,6 +280,7 @@ TEST_CASE("Opening file without permission creates error logs") {
   minifi::io::FileStream stream(path_to_permissionless_file, 0, true);  // write_enabled, because permissionless file only means read-only on Windows
   REQUIRE(test_controller.getLog().getInstance().contains("Error opening file", std::chrono::seconds(0)));
   REQUIRE(test_controller.getLog().getInstance().contains("Permission denied", std::chrono::seconds(0)));
+  utils::file::FileUtils::set_permissions(path_to_permissionless_file, 0777);
 }
 
 TEST_CASE("Readonly filestream write test") {
