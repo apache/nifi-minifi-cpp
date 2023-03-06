@@ -39,7 +39,7 @@ class ScriptExecutor : public minifi::core::CoreComponent {
       size_t max_concurrent_engines,
       const core::Relationship& success,
       const core::Relationship& failure,
-      std::shared_ptr<core::logging::Logger> logger) = 0;
+      const std::shared_ptr<core::logging::Logger>& logger) = 0;
 
  protected:
   std::variant<std::monostate, std::filesystem::path, std::string> script_to_run_;

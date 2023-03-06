@@ -39,7 +39,7 @@ class LuaScriptExecutor : public script::ScriptExecutor {
       size_t max_concurrent_engines,
       const core::Relationship& success,
       const core::Relationship& failure,
-      std::shared_ptr<core::logging::Logger> logger) override;
+      const std::shared_ptr<core::logging::Logger>& logger) override;
 
 
   static auto properties() { return std::array<core::Property, 0>{}; }
