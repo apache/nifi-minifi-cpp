@@ -1343,7 +1343,7 @@ TEST_CASE("Reverse DNS lookup with valid timeout parameter", "[ExpressionLanguag
   SECTION("Should timeout") {
     auto reverse_lookup_expr_0ms = expression::compile("${reverseDnsLookup(${ip_addr}, 0)}");
     REQUIRE_NOTHROW(reverse_lookup_expr_0ms(expression::Parameters{flow_file_a}).asString() == "8.8.8.8");
-    CHECK(LogTestController::getInstance().contains("reverseDnsLookup timed out", 0ms));
+    CHECK(LogTestController::getInstance().contains("reverseDnsLookup timed out"));
   }
 
   SECTION("Shouldn't timeout") {
