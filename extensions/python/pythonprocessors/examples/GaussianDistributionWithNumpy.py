@@ -30,8 +30,7 @@ def describe(processor):
 
 
 def onInitialize(processor):
-    processor.setSupportsDynamicProperties()
-
+    pass
 
 
 def onTrigger(context, session):
