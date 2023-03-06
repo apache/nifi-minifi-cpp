@@ -82,6 +82,7 @@ struct ObjectReference {
       return *this;
     }
 
+    decrementRefCount();
     object_ = that.object_;
     that.object_ = nullptr;
     return *this;
