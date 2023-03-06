@@ -25,6 +25,7 @@
 #include "core/Property.h"
 #include "utils/Enum.h"
 #include "core/logging/LoggerConfiguration.h"
+#include "utils/LogUtils.h"
 
 namespace org::apache::nifi::minifi::processors {
 
@@ -41,15 +42,6 @@ class FetchFile : public core::Processor {
     (REPLACE_FILE, "Replace File"),
     (KEEP_EXISTING, "Keep Existing"),
     (FAIL, "Fail")
-  )
-
-  SMART_ENUM(LogLevelOption,
-    (LOGGING_TRACE, "TRACE"),
-    (LOGGING_DEBUG, "DEBUG"),
-    (LOGGING_INFO, "INFO"),
-    (LOGGING_WARN, "WARN"),
-    (LOGGING_ERROR, "ERROR"),
-    (LOGGING_OFF, "OFF")
   )
 
   explicit FetchFile(std::string name, const utils::Identifier& uuid = {})
@@ -101,9 +93,6 @@ class FetchFile : public core::Processor {
   void onTrigger(const std::shared_ptr<core::ProcessContext> &context, const std::shared_ptr<core::ProcessSession> &session) override;
 
  private:
-  template<typename... Args>
-  void logWithLevel(LogLevelOption log_level, Args&&... args) const;
-
   static std::filesystem::path getFileToFetch(core::ProcessContext& context, const std::shared_ptr<core::FlowFile>& flow_file);
   std::filesystem::path getMoveAbsolutePath(const std::filesystem::path& file_name) const;
   bool moveDestinationConflicts(const std::filesystem::path& file_name) const;
@@ -115,8 +104,8 @@ class FetchFile : public core::Processor {
   std::filesystem::path move_destination_directory_;
   CompletionStrategyOption completion_strategy_;
   MoveConflictStrategyOption move_confict_strategy_;
-  LogLevelOption log_level_when_file_not_found_;
-  LogLevelOption log_level_when_permission_denied_;
+  utils::LogUtils::LogLevelOption log_level_when_file_not_found_;
+  utils::LogUtils::LogLevelOption log_level_when_permission_denied_;
   std::shared_ptr<core::logging::Logger> logger_ = core::logging::LoggerFactory<FetchFile>::getLogger(uuid_);
 };
 

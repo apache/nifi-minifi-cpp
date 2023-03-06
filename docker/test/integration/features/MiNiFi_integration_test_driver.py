@@ -388,3 +388,6 @@ class MiNiFi_integration_test:
 
     def manifest_can_be_retrieved_through_minifi_controller(self, container_name: str):
         assert self.cluster.manifest_can_be_retrieved_through_minifi_controller(container_name) or self.cluster.log_app_output()
+
+    def enable_log_metrics_publisher_in_minifi(self):
+        self.cluster.enable_log_metrics_publisher_in_minifi()

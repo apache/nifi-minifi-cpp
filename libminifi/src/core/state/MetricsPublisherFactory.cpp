@@ -17,6 +17,8 @@
  */
 #include "core/state/MetricsPublisherFactory.h"
 
+#include "utils/StringUtils.h"
+
 namespace org::apache::nifi::minifi::state {
 
 gsl::not_null<std::unique_ptr<MetricsPublisher>> createMetricsPublisher(const std::string& name, const std::shared_ptr<Configure>& configuration,
@@ -35,11 +37,18 @@ gsl::not_null<std::unique_ptr<MetricsPublisher>> createMetricsPublisher(const st
   return gsl::make_not_null(std::move(metrics_publisher));
 }
 
-std::unique_ptr<MetricsPublisher> createMetricsPublisher(const std::shared_ptr<Configure>& configuration, const std::shared_ptr<state::response::ResponseNodeLoader>& response_node_loader) {
-  if (auto metrics_publisher_class = configuration->get(minifi::Configure::nifi_metrics_publisher_class)) {
-    return createMetricsPublisher(*metrics_publisher_class, configuration, response_node_loader);
+std::vector<gsl::not_null<std::unique_ptr<MetricsPublisher>>> createMetricsPublishers(
+    const std::shared_ptr<Configure>& configuration, const std::shared_ptr<state::response::ResponseNodeLoader>& response_node_loader) {
+  if (auto metrics_publisher_class_str = configuration->get(minifi::Configure::nifi_metrics_publisher_class)) {
+    std::vector<gsl::not_null<std::unique_ptr<MetricsPublisher>>> publishers;
+    auto publisher_classes = minifi::utils::StringUtils::split(*metrics_publisher_class_str, ",");
+    publishers.reserve(publisher_classes.size());
+    for (const auto& publisher_class : publisher_classes) {
+      publishers.push_back(createMetricsPublisher(publisher_class, configuration, response_node_loader));
+    }
+    return publishers;
   }
-  return nullptr;
+  return {};
 }
 
 }  // namespace org::apache::nifi::minifi::state
