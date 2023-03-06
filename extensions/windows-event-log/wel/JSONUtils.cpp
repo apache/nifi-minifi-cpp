@@ -17,27 +17,19 @@
 
 #include "JSONUtils.h"
 
-#include <vector>
+#include <algorithm>
 #include <string>
-#include <functional>
 
 #include <pugixml.hpp>
 
 #include "rapidjson/document.h"
 #include "rapidjson/writer.h"
 #include "rapidjson/stringbuffer.h"
-#include "rapidjson/prettywriter.h"
 
 #include "utils/gsl.h"
 
-namespace org {
-namespace apache {
-namespace nifi {
-namespace minifi {
-namespace wel {
-
+namespace org::apache::nifi::minifi::wel {
 namespace {
-
 rapidjson::Value xmlElementToJSON(const pugi::xml_node& node, rapidjson::Document& doc) {
   gsl_Expects(node.type() == pugi::xml_node_type::node_element);
   rapidjson::Value object(rapidjson::kObjectType);
@@ -65,6 +57,29 @@ rapidjson::Value xmlDocumentToJSON(const pugi::xml_node& node, rapidjson::Docume
     }
   }
   return children;
+}
+
+void simplifiedGenericXmlToJson(const pugi::xml_node& source_node, rapidjson::Value& output_value, rapidjson::Document& allocator_source_document, bool flatten = false) {
+  gsl_Expects(source_node.type() == pugi::xml_node_type::node_element);
+  for (const auto& attr : source_node.attributes()) {
+    if (attr.name() == std::string_view{"xmlns"}) {
+      continue;  // skip xmlns attribute, because it's metadata
+    }
+    output_value.AddMember(rapidjson::StringRef(attr.name()), rapidjson::StringRef(attr.value()), allocator_source_document.GetAllocator());
+  }
+  for (const auto& child: source_node.children()) {
+    if (child.type() == pugi::xml_node_type::node_element) {
+      const auto is_pcdata = [](const pugi::xml_node& node) { return node.type() == pugi::xml_node_type::node_pcdata; };
+      if (std::all_of(child.children().begin(), child.children().end(), is_pcdata)) {
+        // all children are pcdata (text): leaf node
+        output_value.AddMember(rapidjson::StringRef(child.name()), rapidjson::StringRef(child.text().get()), allocator_source_document.GetAllocator());
+      } else {
+        // there are non-text children: recurse further
+        auto& child_val = flatten ? output_value : output_value.AddMember(rapidjson::StringRef(child.name()), rapidjson::kObjectType, allocator_source_document.GetAllocator())[child.name()];
+        simplifiedGenericXmlToJson(child, child_val, allocator_source_document, flatten);
+      }
+    }
+  }
 }
 
 rapidjson::Document toJSONImpl(const pugi::xml_node& root, bool flatten) {
@@ -101,7 +116,10 @@ rapidjson::Document toJSONImpl(const pugi::xml_node& root, bool flatten) {
     {
       auto correlation_xml = system_xml.child("Correlation");
       auto& correlation = flatten ? doc : system.AddMember("Correlation", rapidjson::kObjectType, doc.GetAllocator())["Correlation"];
-      correlation.AddMember("ActivityID", rapidjson::StringRef(correlation_xml.attribute("ActivityID").value()), doc.GetAllocator());
+      const auto activity_id = correlation_xml.attribute("ActivityID");
+      if (!activity_id.empty()) {
+        correlation.AddMember("ActivityID", rapidjson::StringRef(activity_id.value()), doc.GetAllocator());
+      }
     }
 
     {
@@ -135,6 +153,12 @@ rapidjson::Document toJSONImpl(const pugi::xml_node& root, bool flatten) {
     }
   }
 
+  const auto userdata_xml = event_xml.child("UserData");
+  if (!userdata_xml.empty()) {
+    auto& userdata = flatten ? doc : doc.AddMember("UserData", rapidjson::kObjectType, doc.GetAllocator())["UserData"];
+    simplifiedGenericXmlToJson(userdata_xml, userdata, doc, flatten);
+  }
+
   return doc;
 }
 
@@ -162,9 +186,4 @@ std::string jsonToString(const rapidjson::Document& doc) {
   doc.Accept(writer);
   return buffer.GetString();
 }
-
-}  // namespace wel
-}  // namespace minifi
-}  // namespace nifi
-}  // namespace apache
-}  // namespace org
+}  // namespace org::apache::nifi::minifi::wel

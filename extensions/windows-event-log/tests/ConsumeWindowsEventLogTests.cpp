@@ -27,6 +27,7 @@
 #include "CWELTestUtils.h"
 #include "Utils.h"
 #include "../wel/UniqueEvtHandle.h"
+#include "../wel/JSONUtils.h"
 #include "utils/Deleters.h"
 
 using ConsumeWindowsEventLog = org::apache::nifi::minifi::processors::ConsumeWindowsEventLog;
@@ -467,6 +468,70 @@ TEST_CASE("ConsumeWindowsEventLog batch commit size works", "[onTrigger]") {
   batchCommitSizeTestHelper(5, 4, 4);
   batchCommitSizeTestHelper(5, 1, 1);
   batchCommitSizeTestHelper(5, 0, 5);
+}
+
+TEST_CASE("ConsumeWindowsEventLog Simple JSON works with UserData", "[cwel][json][userdata]") {
+  using org::apache::nifi::minifi::wel::jsonToString;
+  using org::apache::nifi::minifi::wel::toSimpleJSON;
+  using org::apache::nifi::minifi::wel::toFlattenedJSON;
+  const auto event_xml = R"(
+<Event xmlns="http://schemas.microsoft.com/win/2004/08/events/event">
+  <System>
+    <Provider Name="Microsoft-Windows-AppLocker" Guid="CBDA4DBF-8D5D-4F69-9578-BE14AA540D22">
+    </Provider>
+    <EventID>8002</EventID>
+    <Version>0</Version>
+    <Level>4</Level>
+    <Task>0</Task>
+    <Opcode>0</Opcode>
+    <Keywords>0x8000000000000000</Keywords>
+    <TimeCreated SystemTime="2023-02-06T16:58:09.008534Z">
+    </TimeCreated>
+    <EventRecordID>46</EventRecordID>
+    <Correlation>
+    </Correlation>
+    <Execution ProcessID="1234" ThreadID="1235">
+    </Execution>
+    <Channel>Microsoft-Windows-AppLocker/EXE and DLL</Channel>
+    <Computer>example.local</Computer>
+    <Security UserID="S-1-1-0">
+    </Security>
+  </System>
+  <UserData>
+    <RuleAndFileData xmlns="http://schemas.microsoft.com/schemas/event/Microsoft.Windows/1.0.0.0">
+      <PolicyNameLength>3</PolicyNameLength>
+      <PolicyName>EXE</PolicyName>
+      <RuleNameLength>9</RuleNameLength>
+      <RuleName>All files</RuleName>
+      <RuleSddlLength>48</RuleSddlLength>
+      <RuleSddl>D:(XA;;FX;;;S-1-1-0;(APPID://PATH Contains &quot;*&quot;))</RuleSddl>
+      <TargetUser>S-1-1-0</TargetUser>
+      <TargetProcessId>1234</TargetProcessId>
+      <FilePathLength>22</FilePathLength>
+      <FilePath>%SYSTEM32%\CSCRIPT.EXE</FilePath>
+      <FileHashLength>0</FileHashLength>
+      <FileHash></FileHash>
+      <FqbnLength>1</FqbnLength>
+      <Fqbn>-</Fqbn>
+      <Parent foo="bar"><Child/></Parent>
+      <Leaf foo="bar"></Leaf>
+      <AltLeaf foo="bar"/>
+    </RuleAndFileData>
+  </UserData>
+</Event>
+)";
+  pugi::xml_document doc;
+  REQUIRE(doc.load_string(event_xml));
+  SECTION("simple") {
+    const auto simple_json = jsonToString(toSimpleJSON(doc));
+    const auto expected_json = R"json({"System":{"Provider":{"Name":"Microsoft-Windows-AppLocker","Guid":"CBDA4DBF-8D5D-4F69-9578-BE14AA540D22"},"EventID":"8002","Version":"0","Level":"4","Task":"0","Opcode":"0","Keywords":"0x8000000000000000","TimeCreated":{"SystemTime":"2023-02-06T16:58:09.008534Z"},"EventRecordID":"46","Correlation":{},"Execution":{"ProcessID":"1234","ThreadID":"1235"},"Channel":"Microsoft-Windows-AppLocker/EXE and DLL","Computer":"example.local"},"EventData":[],"UserData":{"RuleAndFileData":{"PolicyNameLength":"3","PolicyName":"EXE","RuleNameLength":"9","RuleName":"All files","RuleSddlLength":"48","RuleSddl":"D:(XA;;FX;;;S-1-1-0;(APPID://PATH Contains \"*\"))","TargetUser":"S-1-1-0","TargetProcessId":"1234","FilePathLength":"22","FilePath":"%SYSTEM32%\\CSCRIPT.EXE","FileHashLength":"0","FileHash":"","FqbnLength":"1","Fqbn":"-","Parent":{"foo":"bar","Child":""},"Leaf":"","AltLeaf":""}}})json";  // NOLINT(whitespace/line_length): long raw string, impractical to split
+    CHECK(expected_json == simple_json);
+  }
+  SECTION("flattened") {
+    const auto flattened_json = jsonToString(toFlattenedJSON(doc));
+    const auto expected_json = R"json({"Name":"Microsoft-Windows-AppLocker","Guid":"CBDA4DBF-8D5D-4F69-9578-BE14AA540D22","EventID":"8002","Version":"0","Level":"4","Task":"0","Opcode":"0","Keywords":"0x8000000000000000","SystemTime":"2023-02-06T16:58:09.008534Z","EventRecordID":"46","ProcessID":"1234","ThreadID":"1235","Channel":"Microsoft-Windows-AppLocker/EXE and DLL","Computer":"example.local","EventData":[],"PolicyNameLength":"3","PolicyName":"EXE","RuleNameLength":"9","RuleName":"All files","RuleSddlLength":"48","RuleSddl":"D:(XA;;FX;;;S-1-1-0;(APPID://PATH Contains \"*\"))","TargetUser":"S-1-1-0","TargetProcessId":"1234","FilePathLength":"22","FilePath":"%SYSTEM32%\\CSCRIPT.EXE","FileHashLength":"0","FileHash":"","FqbnLength":"1","Fqbn":"-","foo":"bar","Child":"","Leaf":"","AltLeaf":""})json";  // NOLINT(whitespace/line_length): long raw string, impractical to split
+    CHECK(expected_json == flattened_json);
+  }
 }
 
 }  // namespace org::apache::nifi::minifi::test
