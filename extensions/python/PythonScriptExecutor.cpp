@@ -54,7 +54,7 @@ void PythonScriptExecutor::initialize(std::filesystem::path script_file,
     const core::Relationship& failure,
     std::shared_ptr<core::logging::Logger> logger) {
   if (script_file.empty() == script_body.empty())
-    throw std::runtime_error("Exactly one of these must be non-zero: ScriptBody, ScriptFile");
+    throw std::runtime_error("Exactly one of these must be non-empty: ScriptBody, ScriptFile");
 
   if (!script_file.empty()) {
     script_to_run_.emplace<std::filesystem::path>(std::move(script_file));
