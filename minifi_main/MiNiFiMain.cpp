@@ -232,7 +232,7 @@ int main(int argc, char **argv) {
     std::string graceful_shutdown_seconds;
     std::string prov_repo_class = "provenancerepository";
     std::string flow_repo_class = "flowfilerepository";
-    std::string nifi_configuration_class_name = "adaptiveconfiguration";
+    std::string nifi_configuration_class_name = "yamlconfiguration";
     std::string content_repo_class = "filesystemrepository";
 
     auto log_properties = std::make_shared<core::logging::LoggerProperties>();
