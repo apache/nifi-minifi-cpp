@@ -68,7 +68,7 @@
           "value": "OFF"
         },
         {
-          "name": "ENABLE_SCRIPTING",
+          "name": "ENABLE_PYTHON_SCRIPTING",
           "value": "OFF"
         },
         {

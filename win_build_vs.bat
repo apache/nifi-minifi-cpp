@@ -42,7 +42,7 @@ set enable_opc=OFF
 set enable_openwsman=OFF
 set enable_ops=OFF
 set enable_pcap=OFF
-set enable_scripting=OFF
+set enable_python_scripting=OFF
 set enable_sensors=OFF
 set enable_tensorflow=OFF
 set enable_usb_camera=OFF
@@ -61,45 +61,45 @@ set arg_counter=0
 for %%x in (%*) do (
     set /A arg_counter+=1
     echo %%~x
-    if [%%~x] EQU [/T]           set skiptests=ON
-    if [%%~x] EQU [/R]           set skiptestrun=ON
-    if [%%~x] EQU [/P]           set cpack=ON
-    if [%%~x] EQU [/K]           set build_kafka=ON
-    if [%%~x] EQU [/J]           set build_JNI=ON
-    if [%%~x] EQU [/S]           set build_SQL=ON
-    if [%%~x] EQU [/C]           set build_coap=ON
-    if [%%~x] EQU [/A]           set build_AWS=ON
-    if [%%~x] EQU [/SFTP]        set build_SFTP=ON
-    if [%%~x] EQU [/PDH]         set build_PDH=ON
-    if [%%~x] EQU [/SPLUNK]      set build_SPLUNK=ON
-    if [%%~x] EQU [/GCP]         set build_GCP=ON
-    if [%%~x] EQU [/ELASTIC]     set build_ELASTIC=ON
-    if [%%~x] EQU [/M]           set installer_merge_modules=ON
-    if [%%~x] EQU [/Z]           set build_azure=ON
-    if [%%~x] EQU [/N]           set build_nanofi=ON
-    if [%%~x] EQU [/O]           set build_opencv=ON
-    if [%%~x] EQU [/PR]          set build_prometheus=ON
-    if [%%~x] EQU [/BUSTACHE]    set enable_bustache=ON
-    if [%%~x] EQU [/COAP]        set enable_coap=ON
+    if [%%~x] EQU [/T]                set skiptests=ON
+    if [%%~x] EQU [/R]                set skiptestrun=ON
+    if [%%~x] EQU [/P]                set cpack=ON
+    if [%%~x] EQU [/K]                set build_kafka=ON
+    if [%%~x] EQU [/J]                set build_JNI=ON
+    if [%%~x] EQU [/S]                set build_SQL=ON
+    if [%%~x] EQU [/C]                set build_coap=ON
+    if [%%~x] EQU [/A]                set build_AWS=ON
+    if [%%~x] EQU [/SFTP]             set build_SFTP=ON
+    if [%%~x] EQU [/PDH]              set build_PDH=ON
+    if [%%~x] EQU [/SPLUNK]           set build_SPLUNK=ON
+    if [%%~x] EQU [/GCP]              set build_GCP=ON
+    if [%%~x] EQU [/ELASTIC]          set build_ELASTIC=ON
+    if [%%~x] EQU [/M]                set installer_merge_modules=ON
+    if [%%~x] EQU [/Z]                set build_azure=ON
+    if [%%~x] EQU [/N]                set build_nanofi=ON
+    if [%%~x] EQU [/O]                set build_opencv=ON
+    if [%%~x] EQU [/PR]               set build_prometheus=ON
+    if [%%~x] EQU [/BUSTACHE]         set enable_bustache=ON
+    if [%%~x] EQU [/COAP]             set enable_coap=ON
     if [%%~x] EQU [/ENCRYPT_CONFIG]   set enable_encrypt_config=ON
-    if [%%~x] EQU [/GPS]         set enable_gps=ON
+    if [%%~x] EQU [/GPS]              set enable_gps=ON
     if [%%~x] EQU [/LUA_SCRIPTING]    set enable_lua_scripting=ON
-    if [%%~x] EQU [/MQTT]        set enable_mqtt=ON
-    if [%%~x] EQU [/OPC]         set enable_opc=ON
-    if [%%~x] EQU [/OPENWSMAN]   set enable_openwsman=ON
-    if [%%~x] EQU [/OPS]         set enable_ops=ON
-    if [%%~x] EQU [/PCAP]        set enable_pcap=ON
-    if [%%~x] EQU [/SCRIPTING]   set enable_scripting=ON
-    if [%%~x] EQU [/SENSORS]     set enable_sensors=ON
-    if [%%~x] EQU [/TENSORFLOW]  set enable_tensorflow=ON
-    if [%%~x] EQU [/USB_CAMERA]  set enable_usb_camera=ON
-    if [%%~x] EQU [/64]          set build_platform=x64
-    if [%%~x] EQU [/D]           set cmake_build_type=RelWithDebInfo
-    if [%%~x] EQU [/DD]          set cmake_build_type=Debug
-    if [%%~x] EQU [/CI]          set "strict_gsl_checks=-DSTRICT_GSL_CHECKS=AUDIT" & set test_custom_wel_provider=ON
-    if [%%~x] EQU [/NONFREEUCRT] set "redist=-DMSI_REDISTRIBUTE_UCRT_NONASL=ON"
-    if [%%~x] EQU [/RO]          set real_odbc=ON
-    if [%%~x] EQU [/NINJA]       set generator="Ninja"
+    if [%%~x] EQU [/MQTT]             set enable_mqtt=ON
+    if [%%~x] EQU [/OPC]              set enable_opc=ON
+    if [%%~x] EQU [/OPENWSMAN]        set enable_openwsman=ON
+    if [%%~x] EQU [/OPS]              set enable_ops=ON
+    if [%%~x] EQU [/PCAP]             set enable_pcap=ON
+    if [%%~x] EQU [/PYTHON_SCRIPTING] set enable_python_scripting=ON
+    if [%%~x] EQU [/SENSORS]          set enable_sensors=ON
+    if [%%~x] EQU [/TENSORFLOW]       set enable_tensorflow=ON
+    if [%%~x] EQU [/USB_CAMERA]       set enable_usb_camera=ON
+    if [%%~x] EQU [/64]               set build_platform=x64
+    if [%%~x] EQU [/D]                set cmake_build_type=RelWithDebInfo
+    if [%%~x] EQU [/DD]               set cmake_build_type=Debug
+    if [%%~x] EQU [/CI]               set "strict_gsl_checks=-DSTRICT_GSL_CHECKS=AUDIT" & set test_custom_wel_provider=ON
+    if [%%~x] EQU [/NONFREEUCRT]      set "redist=-DMSI_REDISTRIBUTE_UCRT_NONASL=ON"
+    if [%%~x] EQU [/RO]               set real_odbc=ON
+    if [%%~x] EQU [/NINJA]            set generator="Ninja"
 )
 
 mkdir %builddir%
@@ -119,7 +119,7 @@ cmake -G %generator% %build_platform_cmd% -DINSTALLER_MERGE_MODULES=%installer_m
         -DENABLE_NANOFI=%build_nanofi% -DENABLE_OPENCV=%build_opencv% -DENABLE_PROMETHEUS=%build_prometheus% -DENABLE_ELASTICSEARCH=%build_ELASTIC% -DUSE_SHARED_LIBS=OFF -DDISABLE_CONTROLLER=ON  ^
         -DENABLE_BUSTACHE=%enable_bustache% -DENABLE_COAP=%enable_coap% -DENABLE_ENCRYPT_CONFIG=%enable_encrypt_config% -DENABLE_GPS=%enable_gps% -DENABLE_LUA_SCRIPTING=%enable_lua_scripting% ^
         -DENABLE_MQTT=%enable_mqtt% -DENABLE_OPC=%enable_opc% -DENABLE_OPENWSMAN=%enable_openwsman% -DENABLE_OPS=%enable_ops% -DENABLE_PCAP=%enable_pcap% ^
-        -DENABLE_SCRIPTING=%enable_scripting% -DENABLE_SENSORS=%enable_sensors% -DENABLE_TENSORFLOW=%enable_tensorflow% -DENABLE_USB_CAMERA=%enable_usb_camera% ^
+        -DENABLE_PYTHON_SCRIPTING=%enable_python_scripting% -DENABLE_SENSORS=%enable_sensors% -DENABLE_TENSORFLOW=%enable_tensorflow% -DENABLE_USB_CAMERA=%enable_usb_camera% ^
         -DBUILD_ROCKSDB=ON -DFORCE_WINDOWS=ON -DUSE_SYSTEM_UUID=OFF -DDISABLE_LIBARCHIVE=OFF -DENABLE_WEL=ON -DFAIL_ON_WARNINGS=OFF -DSKIP_TESTS=%skiptests% ^
         %strict_gsl_checks% %redist% %EXTRA_CMAKE_ARGUMENTS% "%scriptdir%" && %buildcmd%
 IF %ERRORLEVEL% NEQ 0 EXIT /b %ERRORLEVEL%

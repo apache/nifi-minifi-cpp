@@ -17,17 +17,106 @@
 
 set -e
 
-if [[ $# -lt 2 ]]; then
-  echo "Usage:"
-  echo "  ./DockerVerify.sh <MINIFI_VERSION> <FEATURE_PATH>"
-  exit 1
-fi
+die()
+{
+  local _ret="${2:-1}"
+  test "${_PRINT_HELP:-no}" = yes && print_help >&2
+  echo "$1" >&2
+  exit "${_ret}"
+}
+
+_positionals=()
+_arg_feature_path=('' )
+_arg_image_tag_prefix=
+
+
+print_help()
+{
+  printf '%s\n' "Runs the provided behave tests in a containerized environment"
+  printf 'Usage: %s [--image-tag-prefix <arg>] [-h|--help] <minifi_version> <feature_path-1> [<feature_path-2>] ... [<feature_path-n>] ...\n' "$0"
+  printf '\t%s\n' "<minifi_version>: the version of minifi"
+  printf '\t%s\n' "<feature_path>: feature files to run"
+  printf '\t%s\n' "--image-tag-prefix: optional prefix to the docker tag (no default)"
+  printf '\t%s\n' "-h, --help: Prints help"
+}
+
+
+parse_commandline()
+{
+  _positionals_count=0
+  while test $# -gt 0
+  do
+    _key="$1"
+    case "$_key" in
+      --image-tag-prefix)
+        test $# -lt 2 && die "Missing value for the optional argument '$_key'." 1
+        _arg_image_tag_prefix="$2"
+        shift
+        ;;
+      --image-tag-prefix=*)
+        _arg_image_tag_prefix="${_key##--image-tag-prefix=}"
+        ;;
+      -h|--help)
+        print_help
+        exit 0
+        ;;
+      -h*)
+        print_help
+        exit 0
+        ;;
+      *)
+        _last_positional="$1"
+        _positionals+=("$_last_positional")
+        _positionals_count=$((_positionals_count + 1))
+        ;;
+    esac
+    shift
+  done
+}
+
+
+handle_passed_args_count()
+{
+  local _required_args_string="'minifi_version' and 'feature_path'"
+  test "${_positionals_count}" -ge 2 || _PRINT_HELP=yes die "FATAL ERROR: Not enough positional arguments - we require at least 2 (namely: $_required_args_string), but got only ${_positionals_count}." 1
+}
+
+
+assign_positional_args()
+{
+  local _positional_name _shift_for=$1
+  _positional_names="_arg_minifi_version _arg_feature_path "
+  _our_args=$((${#_positionals[@]} - 2))
+  for ((ii = 0; ii < _our_args; ii++))
+  do
+    _positional_names="$_positional_names _arg_feature_path[$((ii + 1))]"
+  done
+
+  shift "$_shift_for"
+  for _positional_name in ${_positional_names}
+  do
+    test $# -gt 0 || break
+    eval "$_positional_name=\${1}" || die "Error during argument parsing." 1
+    shift
+  done
+}
+
+parse_commandline "$@"
+handle_passed_args_count
+assign_positional_args 1 "${_positionals[@]}"
 
 docker_dir="$( cd "${0%/*}" && pwd )"
 
-export MINIFI_VERSION=$1
+# shellcheck disable=SC2154
+export MINIFI_VERSION=${_arg_minifi_version}
+if test -z "$_arg_image_tag_prefix"
+then
+  export MINIFI_TAG_PREFIX=""
+else
+  export MINIFI_TAG_PREFIX=${_arg_image_tag_prefix}-
+fi
 
-# Create virutal environment for testing
+# Create virtual environment for testing
 if [[ ! -d ./test-env-py3 ]]; then
   echo "Creating virtual environment in ./test-env-py3" 1>&2
   virtualenv --python=python3 ./test-env-py3
@@ -74,4 +163,4 @@ BEHAVE_OPTS=(-f pretty --logging-level INFO --logging-clear-handlers)
 # behave "${BEHAVE_OPTS[@]}" "features/file_system_operations.feature" -n "Get and put operations run in a simple flow"
 cd "${docker_dir}/test/integration"
 exec
-  behave "${BEHAVE_OPTS[@]}" "${@:2}"
+  behave "${BEHAVE_OPTS[@]}" "${_arg_feature_path[@]}"

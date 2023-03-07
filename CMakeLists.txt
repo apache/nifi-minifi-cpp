@@ -380,14 +380,6 @@ if (NOT DISABLE_CURL AND NOT DISABLE_CONTROLLER)
 endif()
 
 
-if (NOT DISABLE_CURL AND ENABLE_PYTHON AND NOT WIN32)
-    if (ENABLE_NANOFI)
-        add_subdirectory(python/library)
-    else()
-        message(FATAL_ERROR "Nanofi, a dependency of the python extension is disabled, therefore Python extension cannot be enabled.")
-    endif()
-endif()
-
 get_property(selected_extensions GLOBAL PROPERTY EXTENSION-OPTIONS)
 
 if (WIN32)
@@ -534,7 +526,7 @@ if (NOT WIN32)
         DESTINATION conf
         COMPONENT bin)
 
-    install(DIRECTORY extensions/pythonprocessors/
+    install(DIRECTORY extensions/python/pythonprocessors/
         DESTINATION minifi-python
         COMPONENT bin)
 

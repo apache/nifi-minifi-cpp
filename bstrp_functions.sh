@@ -362,7 +362,7 @@ show_supported_features() {
   echo "A. Persistent Repositories .....$(print_feature_status ROCKSDB_ENABLED)"
   echo "B. libcurl features ............$(print_feature_status HTTP_CURL_ENABLED)"
   echo "C. libarchive features .........$(print_feature_status LIBARCHIVE_ENABLED)"
-  echo "D. Execute Script support ......$(print_feature_status EXECUTE_SCRIPT_ENABLED)"
+  echo "D. Python Scripting support ....$(print_feature_status PYTHON_SCRIPTING_ENABLED)"
   echo "E. Expression Language support .$(print_feature_status EXPRESSION_LANGUAGE_ENABLED)"
   echo "F. Kafka support ...............$(print_feature_status KAFKA_ENABLED)"
   echo "G. PCAP support ................$(print_feature_status PCAP_ENABLED)"
@@ -370,8 +370,8 @@ show_supported_features() {
   echo "I. GPS support .................$(print_feature_status GPS_ENABLED)"
   echo "J. TensorFlow Support ..........$(print_feature_status TENSORFLOW_ENABLED)"
   echo "K. Bustache Support ............$(print_feature_status BUSTACHE_ENABLED)"
-  echo "L. MQTT Support ................$(print_feature_status MQTT_ENABLED)"
-  echo "M. Python Support ..............$(print_feature_status PYTHON_ENABLED)"
+  echo "L. Lua Scripting Support .......$(print_feature_status LUA_SCRIPTING_ENABLED)"
+  echo "M. MQTT Support ................$(print_feature_status MQTT_ENABLED)"
   echo "N. COAP Support ................$(print_feature_status COAP_ENABLED)"
   echo "O. SFTP Support ................$(print_feature_status SFTP_ENABLED)"
   echo "S. AWS Support .................$(print_feature_status AWS_ENABLED)"
@@ -419,7 +419,7 @@ read_feature_options(){
     a) ToggleFeature ROCKSDB_ENABLED ;;
     b) ToggleFeature HTTP_CURL_ENABLED ;;
     c) ToggleFeature LIBARCHIVE_ENABLED ;;
-    d) ToggleFeature EXECUTE_SCRIPT_ENABLED ;;
+    d) ToggleFeature PYTHON_SCRIPTING_ENABLED ;;
     e) ToggleFeature EXPRESSION_LANGUAGE_ENABLED ;;
     f) ToggleFeature KAFKA_ENABLED ;;
     g) ToggleFeature PCAP_ENABLED ;;
@@ -427,13 +427,8 @@ read_feature_options(){
     i) ToggleFeature GPS_ENABLED ;;
     j) ToggleFeature TENSORFLOW_ENABLED ;;
     k) ToggleFeature BUSTACHE_ENABLED ;;
-    l) ToggleFeature MQTT_ENABLED ;;
-    m) if [ "$USE_SHARED_LIBS" = "${TRUE}" ]; then
-         ToggleFeature PYTHON_ENABLED
-       else
-         echo -e "${RED}Please ensure static linking is enabled for Python Support...${NO_COLOR}" && sleep 2
-       fi
-   	   ;;
+    l) ToggleFeature LUA_SCRIPTING_ENABLED ;;
+    m) ToggleFeature MQTT_ENABLED ;;
     n) ToggleFeature COAP_ENABLED ;;
     o) ToggleFeature SFTP_ENABLED ;;
     s) ToggleFeature AWS_ENABLED ;;
@@ -453,12 +448,7 @@ read_feature_options(){
     1) ToggleFeature TESTS_ENABLED ;;
     2) EnableAllFeatures ;;
     3) ToggleFeature JNI_ENABLED;;
-    4) if [ "$PYTHON_ENABLED" = "${FALSE}" ]; then
-         ToggleFeature USE_SHARED_LIBS
-       else
-         echo -e "${RED}Python support must be disabled before changing this value...${NO_COLOR}" && sleep 2
-   	   fi
-       ;;
+    4) ToggleFeature USE_SHARED_LIBS;;
     5) ToggleMultiOption BUILD_PROFILE;;
     6) ToggleFeature ASAN_ENABLED;;
     7) ToggleFeature FAIL_ON_WARNINGS;;
@@ -471,4 +461,3 @@ read_feature_options(){
     *) echo -e "${RED}Please enter an option A-Z or AA-AF or 1-7...${NO_COLOR}" && sleep 2
   esac
 }
-

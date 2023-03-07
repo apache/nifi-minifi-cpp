@@ -1,0 +1,140 @@
+name: "MiNiFi-CPP Verify Python Compatibility"
+on: [workflow_dispatch]
+jobs:
+  centos-build:
+    name: "Build centos"
+    runs-on: ubuntu-22.04
+    timeout-minutes: 180
+    steps:
+      - id: checkout
+        uses: actions/checkout@v3
+      - id: cache
+        uses: actions/cache@v3
+        with:
+          path: ~/.ccache
+          key: centos-build-with-python-ccache-${{github.ref}}-${{github.sha}}
+          restore-keys: |
+            centos-build-with-python-ccache-${{github.ref}}-
+            centos-build-with-python-ccache-refs/heads/main-
+      - id: install_deps
+        run: |
+          sudo apt update
+          sudo apt install -y ccache cmake
+          echo "PATH=/usr/lib/ccache:$PATH" >> $GITHUB_ENV
+      - id: build
+        run: |
+          if [ -d ~/.ccache ]; then mv ~/.ccache .; fi
+          mkdir build && cd build && cmake -DENABLE_PYTHON_SCRIPTING=ON -DDOCKER_BUILD_ONLY=ON -DDOCKER_CCACHE_DUMP_LOCATION=$HOME/.ccache .. && make centos
+      - uses: actions/upload-artifact@v3
+        with:
+          name: minifi-tar
+          path: build/nifi-minifi-cpp-*-bin-centos.tar.gz
+          if-no-files-found: error
+  rocky-linux8:
+    name: "Python tests on Rocky Linux 8"
+    runs-on: ubuntu-20.04
+    timeout-minutes: 180
+    needs: centos-build
+    steps:
+      - id: checkout
+        uses: actions/checkout@v3
+      - uses: actions/download-artifact@v3
+        with:
+          name: minifi-tar
+          path: build
+      - id: install_deps
+        run: |
+          sudo apt update
+          sudo apt install -y python3-virtualenv
+      - run: cd build && cmake -DENABLE_PYTHON_SCRIPTING=ON -DDOCKER_BUILD_ONLY=ON .. \
+                && make rocky8_docker_from_centos_build && make docker-verify-python-rocky8
+  rocky-linux9:
+    name: "Python tests on Rocky Linux 9"
+    runs-on: ubuntu-20.04
+    timeout-minutes: 180
+    needs: centos-build
+    steps:
+      - id: checkout
+        uses: actions/checkout@v3
+      - uses: actions/download-artifact@v3
+        with:
+          name: minifi-tar
+          path: build
+      - id: install_deps
+        run: |
+          sudo apt update
+          sudo apt install -y python3-virtualenv
+      - run: cd build && cmake -DENABLE_PYTHON_SCRIPTING=ON -DDOCKER_BUILD_ONLY=ON .. \
+          && make rocky9_docker_from_centos_build && make docker-verify-python-rocky9
+  patched-jammy:
+    name: "Python tests on patchelf-ed Ubuntu 22.04"
+    runs-on: ubuntu-20.04
+    timeout-minutes: 180
+    needs: centos-build
+    steps:
+      - id: checkout
+        uses: actions/checkout@v3
+      - uses: actions/download-artifact@v3
+        with:
+          name: minifi-tar
+          path: build
+      - id: install_deps
+        run: |
+          sudo apt update
+          sudo apt install -y python3-virtualenv
+      - run: cd build && cmake -DENABLE_PYTHON_SCRIPTING=ON -DDOCKER_BUILD_ONLY=ON .. \
+          && make patched_jammy_docker_from_centos_build && make docker-verify-python-patched_jammy
+  patched-bullseye:
+    name: "Python tests on patchelf-ed Debian Bullseye"
+    runs-on: ubuntu-20.04
+    timeout-minutes: 180
+    needs: centos-build
+    steps:
+      - id: checkout
+        uses: actions/checkout@v3
+      - uses: actions/download-artifact@v3
+        with:
+          name: minifi-tar
+          path: build
+      - id: install_deps
+        run: |
+          sudo apt update
+          sudo apt install -y python3-virtualenv
+      - run: cd build && cmake -DENABLE_PYTHON_SCRIPTING=ON -DDOCKER_BUILD_ONLY=ON .. \
+          && make patched_bullseye_docker_from_centos_build && make docker-verify-python-patched_bullseye
+  conda_jammy:
+    name: "Python tests on Ubuntu 22.04 with anaconda"
+    runs-on: ubuntu-20.04
+    timeout-minutes: 180
+    needs: centos-build
+    steps:
+      - id: checkout
+        uses: actions/checkout@v3
+      - uses: actions/download-artifact@v3
+        with:
+          name: minifi-tar
+          path: build
+      - id: install_deps
+        run: |
+          sudo apt update
+          sudo apt install -y python3-virtualenv
+      - run: cd build && cmake -DENABLE_PYTHON_SCRIPTING=ON -DDOCKER_BUILD_ONLY=ON .. \
+          && make jammy_docker_from_centos_build && make conda_jammy_docker_from_centos_build && make docker-verify-python-conda_jammy
+  venv_rock9:
+    name: "Python tests on Rocky Linux 9 with virtual environment"
+    runs-on: ubuntu-20.04
+    timeout-minutes: 180
+    needs: centos-build
+    steps:
+      - id: checkout
+        uses: actions/checkout@v3
+      - uses: actions/download-artifact@v3
+        with:
+          name: minifi-tar
+          path: build
+      - id: install_deps
+        run: |
+          sudo apt update
+          sudo apt install -y python3-virtualenv
+      - run: cd build && cmake -DENABLE_PYTHON_SCRIPTING=ON -DDOCKER_BUILD_ONLY=ON .. \
+          && make rocky9_docker_from_centos_build && make venv_rocky9_docker_from_centos_build && make docker-verify-python-venv_rocky9

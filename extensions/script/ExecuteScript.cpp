@@ -19,21 +19,16 @@
  * limitations under the License.
  */
 
-#include <memory>
-#include <utility>
-
-#ifdef PYTHON_SUPPORT
-#include <PythonScriptEngine.h>
-#endif  // PYTHON_SUPPORT
-
-#include <vector>
-
 #include "ExecuteScript.h"
+
+#include <memory>
+#include <vector>
+#include <unordered_map>
+
 #include "core/PropertyBuilder.h"
 #include "core/Resource.h"
 #include "utils/ProcessorConfigUtils.h"
 #include "utils/StringUtils.h"
-#include "range/v3/range/conversion.hpp"
 
 namespace org::apache::nifi::minifi::processors {
 
@@ -54,94 +49,53 @@ const core::Property ExecuteScript::ModuleDirectory("Module Directory",
 const core::Relationship ExecuteScript::Success("success", "Script successes");
 const core::Relationship ExecuteScript::Failure("failure", "Script failures");
 
-ScriptEngineFactory::ScriptEngineFactory(const core::Relationship& success, const core::Relationship& failure, std::shared_ptr<core::logging::Logger> logger)
-  : success_(success),
-    failure_(failure),
-    logger_(std::move(logger)) {
-}
-
 void ExecuteScript::initialize() {
   setSupportedProperties(properties());
   setSupportedRelationships(relationships());
-
-#ifdef PYTHON_SUPPORT
-  python::PythonScriptEngine::initialize();
-#endif  // PYTHON_SUPPORT
 }
 
 void ExecuteScript::onSchedule(core::ProcessContext *context, core::ProcessSessionFactory* /*sessionFactory*/) {
-#ifdef LUA_SUPPORT
-  auto create_engine = [this]() -> std::unique_ptr<lua::LuaScriptEngine> {
-    return engine_factory_.createEngine<lua::LuaScriptEngine>();
+  const auto executor_class_lookup = [](const std::string_view script_engine_prefix) -> const char* {
+    if (script_engine_prefix == "lua") return "LuaScriptExecutor";
+    if (script_engine_prefix == "python") return "PythonScriptExecutor";
+    return nullptr;
   };
-  lua_script_engine_queue_ = utils::ResourceQueue<lua::LuaScriptEngine>::create(create_engine, getMaxConcurrentTasks(), std::nullopt, logger_);
-#endif  // LUA_SUPPORT
-#ifdef PYTHON_SUPPORT
-  python_script_engine_ = engine_factory_.createEngine<python::PythonScriptEngine>();
-#endif  // PYTHON_SUPPORT
+  if (const auto script_engine_prefix = context->getProperty(ScriptEngine); script_engine_prefix && executor_class_lookup(*script_engine_prefix)) {
+    const char* const executor_class_name = executor_class_lookup(*script_engine_prefix);
+    script_executor_ = core::ClassLoader::getDefaultClassLoader().instantiate<extensions::script::ScriptExecutor>(executor_class_name, executor_class_name);
+    if (!script_executor_) {
+      throw Exception(PROCESS_SCHEDULE_EXCEPTION, "Could not instantiate: " + std::string(executor_class_name) + ". Make sure that the " + *script_engine_prefix + " scripting extension is loaded");
+    }
+  } else {
+    throw Exception(PROCESS_SCHEDULE_EXCEPTION, "Missing or invalid script engine name");
+  }
 
-  script_engine_ = ScriptEngineOption::parse(utils::parsePropertyWithAllowableValuesOrThrow(*context, ScriptEngine.getName(), ScriptEngineOption::values()).c_str());
 
-  context->getProperty(ScriptFile.getName(), script_file_);
-  context->getProperty(ScriptBody.getName(), script_body_);
-  module_directory_ = context->getProperty(ModuleDirectory);
+  std::string script_file;
+  std::string script_body;
+  context->getProperty(ScriptFile.getName(), script_file);
+  context->getProperty(ScriptBody.getName(), script_body);
+  auto module_directory = context->getProperty(ModuleDirectory);
 
-  if (script_file_.empty() && script_body_.empty()) {
+  if (script_file.empty() && script_body.empty()) {
     throw Exception(PROCESS_SCHEDULE_EXCEPTION, "Either Script Body or Script File must be defined");
   }
 
-  if (!script_file_.empty() && !script_body_.empty()) {
+  if (!script_file.empty() && !script_body.empty()) {
     throw Exception(PROCESS_SCHEDULE_EXCEPTION, "Only one of Script File or Script Body may be defined!");
   }
 
-  if (!script_file_.empty() && !std::filesystem::is_regular_file(std::filesystem::status(script_file_))) {
-    throw Exception(PROCESS_SCHEDULE_EXCEPTION, "Script File set is not a regular file or does not exist: " + script_file_);
+  if (!script_file.empty() && !std::filesystem::is_regular_file(std::filesystem::status(script_file))) {
+    throw Exception(PROCESS_SCHEDULE_EXCEPTION, "Script File set is not a regular file or does not exist: " + script_file);
   }
+
+  script_executor_->initialize(std::move(script_file), std::move(script_body), std::move(module_directory), getMaxConcurrentTasks(), Success, Failure, logger_);
 }
 
-void ExecuteScript::onTrigger(const std::shared_ptr<core::ProcessContext> &context,
-                              const std::shared_ptr<core::ProcessSession> &session) {
-  script::ScriptEngine* engine = nullptr;
-
-#ifdef LUA_SUPPORT
-  std::optional<utils::ResourceQueue<lua::LuaScriptEngine>::ResourceWrapper> lua_script_engine;
-#endif
-
-  if (script_engine_ == ScriptEngineOption::PYTHON) {
-#ifdef PYTHON_SUPPORT
-    gsl_Expects(python_script_engine_);
-    engine = python_script_engine_.get();
-#else
-    throw std::runtime_error("Python support is disabled in this build.");
-#endif  // PYTHON_SUPPORT
-  } else if (script_engine_ == ScriptEngineOption::LUA) {
-#ifdef LUA_SUPPORT
-    gsl_Expects(lua_script_engine_queue_);
-
-    lua_script_engine.emplace(lua_script_engine_queue_->getResource());
-    engine = lua_script_engine->get();
-#else
-    throw std::runtime_error("Lua support is disabled in this build.");
-#endif  // LUA_SUPPORT
-  }
-
-  if (engine == nullptr) {
-    throw std::runtime_error("No script engine available");
-  }
-
-  if (module_directory_) {
-    engine->setModulePaths(utils::StringUtils::splitAndTrimRemovingEmpty(*module_directory_, ",") | ranges::to<std::vector<std::filesystem::path>>());
-  }
-
-  if (!script_body_.empty()) {
-    engine->eval(script_body_);
-  } else if (!script_file_.empty()) {
-    engine->evalFile(script_file_);
-  } else {
-    throw std::runtime_error("Neither Script Body nor Script File is available to execute");
-  }
-
-  engine->onTrigger(context, session);
+void ExecuteScript::onTrigger(const std::shared_ptr<core::ProcessContext>& context,
+                              const std::shared_ptr<core::ProcessSession>& session) {
+  gsl_Expects(script_executor_);
+  script_executor_->onTrigger(context, session);
 }
 
 REGISTER_RESOURCE(ExecuteScript, Processor);

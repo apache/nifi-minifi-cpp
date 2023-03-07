@@ -35,12 +35,11 @@ class MinifiOptions:
 
 
 class MinifiContainer(FlowContainer):
+    MINIFI_TAG_PREFIX = os.environ['MINIFI_TAG_PREFIX']
     MINIFI_VERSION = os.environ['MINIFI_VERSION']
     MINIFI_ROOT = '/opt/minifi/nifi-minifi-cpp-' + MINIFI_VERSION
 
     def __init__(self, config_dir, options, name, vols, network, image_store, command=None):
-        if not command:
-            command = ["/bin/sh", "-c", "/opt/minifi/minifi-current/bin/minifi.sh run"]
         self.options = options
 
         super().__init__(config_dir, name, 'minifi-cpp', copy.copy(vols), network, image_store, command)
@@ -121,7 +120,7 @@ class MinifiContainer(FlowContainer):
         if self.options.enable_sql:
             image = self.image_store.get_image('minifi-cpp-sql')
         else:
-            image = 'apacheminificpp:' + MinifiContainer.MINIFI_VERSION
+            image = 'apacheminificpp:' + MinifiContainer.MINIFI_TAG_PREFIX + MinifiContainer.MINIFI_VERSION
 
         self.client.containers.run(
             image,
