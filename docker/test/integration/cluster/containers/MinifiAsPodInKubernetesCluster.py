@@ -49,6 +49,7 @@ class MinifiAsPodInKubernetesCluster(MinifiContainer):
         logging.info('Setting up container: %s', self.name)
 
         self._create_config()
+        self._create_properties()
         self.kubernetes_proxy.create_helper_objects()
         self.kubernetes_proxy.load_docker_image(MinifiAsPodInKubernetesCluster.MINIFI_IMAGE_NAME, MinifiAsPodInKubernetesCluster.MINIFI_IMAGE_TAG)
         self.kubernetes_proxy.create_minifi_pod()
