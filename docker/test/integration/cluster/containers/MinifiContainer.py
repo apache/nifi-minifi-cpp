@@ -103,6 +103,9 @@ class MinifiContainer(FlowContainer):
                 f.write("nifi.metrics.publisher.PrometheusMetricsPublisher.port=9936\n")
                 f.write("nifi.metrics.publisher.metrics=RepositoryMetrics,QueueMetrics,PutFileMetrics,processorMetrics/Get.*,FlowInformation,DeviceInfoNode,AgentStatus\n")
 
+            if self.options.config_format == "json":
+                f.write("nifi.flow.configuration.class.name=adaptiveconfiguration\n")
+
     def _setup_config(self):
         self._create_config()
         self._create_properties()
