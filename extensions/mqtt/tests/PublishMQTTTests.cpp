@@ -16,6 +16,8 @@
  * limitations under the License.
  */
 
+#include "range/v3/algorithm/find_if.hpp"
+
 #include "Catch.h"
 #include "TestBase.h"
 #include "../processors/PublishMQTT.h"
@@ -71,4 +73,24 @@ TEST_CASE_METHOD(Fixture, "PublishMQTTTest_ContentType_V_3", "[publishMQTTTest]"
   publishMqttProcessor_->setProperty(minifi::processors::PublishMQTT::ContentType, "text/plain");
   REQUIRE_NOTHROW(plan_->scheduleProcessor(publishMqttProcessor_));
   REQUIRE(LogTestController::getInstance().contains("[warning] MQTT 3.x specification does not support Content Types. Property is not used.", 1s));
+}
+
+TEST_CASE_METHOD(Fixture, "PublishMQTT can publish the number of in-flight messages as a metric") {
+  const auto node = publishMqttProcessor_->getResponseNodes();
+  REQUIRE(node);
+
+  SECTION("heartbeat metric") {
+    const auto serialized_nodes = minifi::state::response::ResponseNode::serializeAndMergeResponseNodes({node});
+    REQUIRE_FALSE(serialized_nodes.empty());
+    const auto it = ranges::find_if(serialized_nodes[0].children, [](const auto& metric) { return metric.name == "InFlightMessageCount"; });
+    REQUIRE(it != serialized_nodes[0].children.end());
+    CHECK(it->value == "0");
+  }
+
+  SECTION("Prometheus metric") {
+    const auto metrics = node->calculateMetrics();
+    const auto it = ranges::find_if(metrics, [](const auto& metric) { return metric.name == "in_flight_message_count"; });
+    REQUIRE(it != metrics.end());
+    CHECK(it->value == 0.0);
+  }
 }

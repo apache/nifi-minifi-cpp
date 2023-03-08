@@ -36,8 +36,8 @@ static constexpr const char* const MQTT_SECURITY_PROTOCOL_SSL = "ssl";
 
 class AbstractMQTTProcessor : public core::Processor {
  public:
-  explicit AbstractMQTTProcessor(std::string name, const utils::Identifier& uuid = {})
-      : core::Processor(std::move(name), uuid) {
+  explicit AbstractMQTTProcessor(std::string name, const utils::Identifier& uuid = {}, std::shared_ptr<core::ProcessorMetrics> metrics = {})
+      : core::Processor(std::move(name), uuid, std::move(metrics)) {
   }
 
   ~AbstractMQTTProcessor() override {
