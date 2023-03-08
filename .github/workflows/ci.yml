@@ -41,7 +41,7 @@ jobs:
       - name: test
         id: test
         run: |
-          ulimit -c unlimited
+          ulimit -c 1024000
           cd build && make test ARGS="--timeout 300 -j4 --output-on-failure"
       - name: linter
         run: cd build && make -j4 linter
@@ -126,7 +126,7 @@ jobs:
       - name: test
         id: test
         run: |
-          ulimit -c unlimited
+          ulimit -c 1024000
           cd build && make test ARGS="--timeout 300 -j8 --output-on-failure"
       - name: check-cores
         if: ${{ failure() && steps.test.conclusion == 'failure' }}
@@ -185,7 +185,7 @@ jobs:
       - name: test
         id: test
         run: |
-          ulimit -c unlimited
+          ulimit -c 1024000
           cd build && make test ARGS="--timeout 300 -j8 --output-on-failure"
       - name: linter
         run: cd build && make -j$(nproc) linter
@@ -254,11 +254,11 @@ jobs:
               -DENABLE_ELASTICSEARCH=ON -DDOCKER_SKIP_TESTS=OFF -DDOCKER_BUILD_ONLY=ON -DDOCKER_CCACHE_DUMP_LOCATION=$HOME/.ccache .. && make centos-test
       - id: test
         run: |
-          ulimit -c unlimited
+          ulimit -c 1024000
           echo '/cores/core.%e.%p' | sudo tee /proc/sys/kernel/core_pattern
           sudo mkdir /cores
           sudo chmod 777 /cores
-          docker run --name centos-test --init --ulimit core=-1 --mount type=bind,source=/cores,target=/cores apacheminificpp:$(docker images | grep apacheminificpp | grep centos | awk '{print $2}') bash -c 'cd /opt/minifi/build && make test ARGS="--timeout 300 -j8 --output-on-failure"'
+          docker run --name centos-test --init --ulimit core=1024000 --mount type=bind,source=/cores,target=/cores apacheminificpp:$(docker images | grep apacheminificpp | grep centos | awk '{print $2}') bash -c 'cd /opt/minifi/build && make test ARGS="--timeout 300 -j8 --output-on-failure"'
       - name: check-cores
         if: ${{ failure() && steps.test.conclusion == 'failure' }}
         run: |
