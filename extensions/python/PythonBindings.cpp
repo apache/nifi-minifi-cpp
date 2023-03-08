@@ -25,6 +25,7 @@
 #include "types/PyRelationship.h"
 #include "types/PyInputStream.h"
 #include "types/PyOutputStream.h"
+#include "types/PyStateManager.h"
 
 namespace org::apache::nifi::minifi::extensions::python {
 extern "C" {
@@ -43,7 +44,7 @@ struct PyModuleDef minifi_module = {
 
 PyMODINIT_FUNC
 PyInit_minifi_native(void) {
-  const std::array<std::pair<PyTypeObject*, std::string_view>, 8> types = {
+  const std::array<std::pair<PyTypeObject*, std::string_view>, 9> types = {
     std::make_pair(PyLogger::typeObject(), "Logger"),
     std::make_pair(PyProcessSessionObject::typeObject(), "ProcessSession"),
     std::make_pair(PyProcessContext::typeObject(), "ProcessContext"),
@@ -51,7 +52,8 @@ PyInit_minifi_native(void) {
     std::make_pair(PyScriptFlowFile::typeObject(), "FlowFile"),
     std::make_pair(PyRelationship::typeObject(), "Relationship"),
     std::make_pair(PyInputStream::typeObject(), "InputStream"),
-    std::make_pair(PyOutputStream::typeObject(), "OutputStream")
+    std::make_pair(PyOutputStream::typeObject(), "OutputStream"),
+    std::make_pair(PyStateManager::typeObject(), "StateManager")
   };
 
   for (const auto& type : types) {

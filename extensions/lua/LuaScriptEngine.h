@@ -72,14 +72,6 @@ class LuaScriptEngine {
     return value;
   }
 
-  static std::shared_ptr<LuaScriptProcessContext> convert(const std::shared_ptr<core::ProcessContext>& context) {
-    return std::make_shared<LuaScriptProcessContext>(context);
-  }
-
-  static std::shared_ptr<LuaProcessSession> convert(const std::shared_ptr<core::ProcessSession>& session) {
-    return std::make_shared<LuaProcessSession>(session);
-  }
-
  private:
   void executeScriptWithAppendedModulePaths(std::string& script);
 

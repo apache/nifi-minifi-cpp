@@ -16,6 +16,7 @@ a * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  */
 
 #include "PyProcessContext.h"
+#include "PyStateManager.h"
 #include <string>
 #include "PyException.h"
 
@@ -24,6 +25,7 @@ namespace org::apache::nifi::minifi::extensions::python {
 
 static PyMethodDef PyProcessContext_methods[] = {
     {"getProperty", (PyCFunction) PyProcessContext::getProperty, METH_VARARGS, nullptr},
+    {"getStateManager", (PyCFunction) PyProcessContext::getStateManager, METH_VARARGS, nullptr},
     {}  /* Sentinel */
 };
 
@@ -70,6 +72,16 @@ PyObject* PyProcessContext::getProperty(PyProcessContext* self, PyObject* args) 
   std::string value;
   context->getProperty(property, value);
   return object::returnReference(value);
+}
+
+PyObject* PyProcessContext::getStateManager(PyProcessContext* self, PyObject*) {
+  auto context = self->process_context_.lock();
+  if (!context) {
+    PyErr_SetString(PyExc_AttributeError, "tried reading process context outside 'on_trigger'");
+    return nullptr;
+  }
+
+  return object::returnReference(context->getStateManager());
 }
 
 PyTypeObject* PyProcessContext::typeObject() {

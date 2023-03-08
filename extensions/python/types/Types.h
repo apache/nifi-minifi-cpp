@@ -279,6 +279,13 @@ class Dict : public ReferenceHolder<reference_type> {
     auto item = BorrowedReference(PyDict_GetItemString(this->ref_.get(), key.data()));
     return item ? std::optional{item} : std::nullopt;
   }
+
+  static BorrowedDict fromTuple(PyObject* tuple, Py_ssize_t location) requires(reference_type == ReferenceType::BORROWED) {
+    BorrowedDict dict_from_tuple{PyTuple_GetItem(tuple, location)};
+    if (dict_from_tuple.get() == nullptr)
+      throw PyException();
+    return dict_from_tuple;
+  }
 };
 
 namespace callable {

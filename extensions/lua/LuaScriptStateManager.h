@@ -21,22 +21,20 @@
 #include <string>
 #include <memory>
 
-#include "core/ProcessSession.h"
-#include "LuaScriptStateManager.h"
+#include "sol/sol.hpp"
+#include "core/StateManager.h"
 
 namespace org::apache::nifi::minifi::extensions::lua {
 
-class LuaScriptProcessContext {
+class LuaScriptStateManager {
  public:
-  explicit LuaScriptProcessContext(std::shared_ptr<core::ProcessContext> context, sol::state* sol_state);
+  explicit LuaScriptStateManager(core::StateManager* state_manager, sol::state* sol_state) : state_manager_(state_manager), sol_state_(sol_state) {}
 
-  std::string getProperty(const std::string &name);
-  void releaseProcessContext();
-
-  LuaScriptStateManager getStateManager();
+  bool set(const sol::table& core_component_state_lua);
+  sol::optional<sol::table> get();
 
  private:
-  std::shared_ptr<core::ProcessContext> context_;
+  core::StateManager* state_manager_;
   sol::state* sol_state_;
 };
 
