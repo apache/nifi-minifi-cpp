@@ -41,49 +41,17 @@ void FlowFileRepository::flush() {
     return;
   }
   auto batch = opendb->createWriteBatch();
-  rocksdb::ReadOptions options;
 
   std::list<ExpiredFlowFileInfo> flow_files;
 
-  while (keys_to_delete.size_approx() > 0) {
+  while (keys_to_delete_.size_approx() > 0) {
     ExpiredFlowFileInfo info;
-    if (keys_to_delete.try_dequeue(info)) {
+    if (keys_to_delete_.try_dequeue(info)) {
       flow_files.push_back(std::move(info));
     }
   }
 
-  {
-    // deserialize flow files with missing content claim
-    std::vector<rocksdb::Slice> keys;
-    std::vector<std::list<ExpiredFlowFileInfo>::iterator> key_positions;
-    for (auto it = flow_files.begin(); it != flow_files.end(); ++it) {
-      if (!it->content) {
-        keys.push_back(it->key);
-        key_positions.push_back(it);
-      }
-    }
-    if (!keys.empty()) {
-      std::vector<std::string> values;
-      auto multistatus = opendb->MultiGet(options, keys, &values);
-
-      for (size_t i = 0; i < keys.size() && i < values.size() && i < multistatus.size(); ++i) {
-        if (!multistatus[i].ok()) {
-          logger_->log_error("Failed to read key from rocksdb: %s! DB is most probably in an inconsistent state!", keys[i].data());
-          flow_files.erase(key_positions.at(i));
-          continue;
-        }
-
-        utils::Identifier containerId;
-        auto flow_file = FlowFileRecord::DeSerialize(gsl::make_span(values[i]).as_span<const std::byte>(), content_repo_, containerId);
-        if (flow_file) {
-          gsl_Expects(flow_file->getUUIDStr() == key_positions.at(i)->key);
-          key_positions.at(i)->content = flow_file->getResourceClaim();
-        } else {
-          logger_->log_error("Could not deserialize flow file %s", key_positions.at(i)->key);
-        }
-      }
-    }
-  }
+  deserializeFlowFilesWithNoContentClaim(opendb.value(), flow_files);
 
   for (auto& ff : flow_files) {
     batch.Delete(ff.key);
@@ -93,8 +61,8 @@ void FlowFileRepository::flush() {
   auto operation = [&batch, &opendb]() { return opendb->Write(rocksdb::WriteOptions(), &batch); };
 
   if (!ExecuteWithRetry(operation)) {
-    for (const auto& ff : flow_files) {
-      keys_to_delete.enqueue(ff);  // Push back the values that we could get but couldn't delete
+    for (auto&& ff : flow_files) {
+      keys_to_delete_.enqueue(std::move(ff));
     }
     return;  // Stop here - don't delete from content repo while we have records in FF repo
   }
@@ -103,6 +71,39 @@ void FlowFileRepository::flush() {
     for (auto& ff : flow_files) {
       if (ff.content) {
         ff.content->decreaseFlowFileRecordOwnedCount();
+      }
+    }
+  }
+}
+
+void FlowFileRepository::deserializeFlowFilesWithNoContentClaim(minifi::internal::OpenRocksDb& opendb, std::list<ExpiredFlowFileInfo>& flow_files) {
+  std::vector<rocksdb::Slice> keys;
+  std::vector<std::list<ExpiredFlowFileInfo>::iterator> key_positions;
+  for (auto it = flow_files.begin(); it != flow_files.end(); ++it) {
+    if (!it->content) {
+      keys.push_back(it->key);
+      key_positions.push_back(it);
+    }
+  }
+  if (!keys.empty()) {
+    std::vector<std::string> values;
+    auto multistatus = opendb.MultiGet(rocksdb::ReadOptions{}, keys, &values);
+    gsl_Expects(keys.size() == values.size() && values.size() == multistatus.size());
+
+    for (size_t i = 0; i < keys.size(); ++i) {
+      if (!multistatus[i].ok()) {
+        logger_->log_error("Failed to read key from rocksdb: %s! DB is most probably in an inconsistent state!", keys[i].data());
+        flow_files.erase(key_positions.at(i));
+        continue;
+      }
+
+      utils::Identifier container_id;
+      auto flow_file = FlowFileRecord::DeSerialize(gsl::make_span(values[i]).as_span<const std::byte>(), content_repo_, container_id);
+      if (flow_file) {
+        gsl_Expects(flow_file->getUUIDStr() == key_positions.at(i)->key);
+        key_positions.at(i)->content = flow_file->getResourceClaim();
+      } else {
+        logger_->log_error("Could not deserialize flow file %s", key_positions.at(i)->key);
       }
     }
   }
@@ -166,34 +167,34 @@ void FlowFileRepository::initialize_repository() {
 
   auto it = opendb->NewIterator(rocksdb::ReadOptions());
   for (it->SeekToFirst(); it->Valid(); it->Next()) {
-    utils::Identifier containerId;
-    auto eventRead = FlowFileRecord::DeSerialize(gsl::make_span(it->value()).as_span<const std::byte>(), content_repo_, containerId);
+    utils::Identifier container_id;
+    auto eventRead = FlowFileRecord::DeSerialize(gsl::make_span(it->value()).as_span<const std::byte>(), content_repo_, container_id);
     std::string key = it->key().ToString();
     if (eventRead) {
       // on behalf of the just resurrected persisted instance
       auto claim = eventRead->getResourceClaim();
       if (claim) claim->increaseFlowFileRecordOwnedCount();
       bool found = false;
-      auto search = containers_.find(containerId.to_string());
+      auto search = containers_.find(container_id.to_string());
       found = (search != containers_.end());
       if (!found) {
         // for backward compatibility
-        search = connection_map_.find(containerId.to_string());
+        search = connection_map_.find(container_id.to_string());
         found = (search != connection_map_.end());
       }
       if (found) {
-        logger_->log_debug("Found connection for %s, path %s ", containerId.to_string(), eventRead->getContentFullPath());
+        logger_->log_debug("Found connection for %s, path %s ", container_id.to_string(), eventRead->getContentFullPath());
         eventRead->setStoredToRepository(true);
         // we found the connection for the persistent flowFile
         // even if a processor immediately marks it for deletion, flush only happens after prune_stored_flowfiles
         search->second->restore(eventRead);
       } else {
-        logger_->log_warn("Could not find connection for %s, path %s ", containerId.to_string(), eventRead->getContentFullPath());
-        keys_to_delete.enqueue({.key = key, .content = eventRead->getResourceClaim()});
+        logger_->log_warn("Could not find connection for %s, path %s ", container_id.to_string(), eventRead->getContentFullPath());
+        keys_to_delete_.enqueue({.key = key, .content = eventRead->getResourceClaim()});
       }
     } else {
       // failed to deserialize FlowFile, cannot clear claim
-      keys_to_delete.enqueue({.key = key});
+      keys_to_delete_.enqueue({.key = key});
     }
   }
   flush();
@@ -304,7 +305,7 @@ bool FlowFileRepository::MultiPut(const std::vector<std::pair<std::string, std::
 }
 
 bool FlowFileRepository::Delete(const std::string& key) {
-  keys_to_delete.enqueue({.key = key});
+  keys_to_delete_.enqueue({.key = key});
   return true;
 }
 
@@ -359,9 +360,9 @@ std::future<std::vector<std::shared_ptr<core::FlowFile>>> FlowFileRepository::lo
 
 bool FlowFileRepository::Delete(const std::shared_ptr<core::CoreComponent>& item) {
   if (auto ff = std::dynamic_pointer_cast<core::FlowFile>(item)) {
-    keys_to_delete.enqueue({.key = item->getUUIDStr(), .content = ff->getResourceClaim()});
+    keys_to_delete_.enqueue({.key = item->getUUIDStr(), .content = ff->getResourceClaim()});
   } else {
-    keys_to_delete.enqueue({.key = item->getUUIDStr()});
+    keys_to_delete_.enqueue({.key = item->getUUIDStr()});
   }
   return true;
 }

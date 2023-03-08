@@ -20,6 +20,7 @@
 #include <vector>
 #include <string>
 #include <memory>
+#include <list>
 
 #include "utils/file/FileUtils.h"
 #include "rocksdb/db.h"
@@ -122,11 +123,13 @@ class FlowFileRepository : public ThreadedRepository, public SwapManager {
 
   void initialize_repository();
 
+  void deserializeFlowFilesWithNoContentClaim(minifi::internal::OpenRocksDb& opendb, std::list<ExpiredFlowFileInfo>& flow_files);
+
   std::thread& getThread() override {
     return thread_;
   }
 
-  moodycamel::ConcurrentQueue<ExpiredFlowFileInfo> keys_to_delete;
+  moodycamel::ConcurrentQueue<ExpiredFlowFileInfo> keys_to_delete_;
   std::shared_ptr<core::ContentRepository> content_repo_;
   std::unique_ptr<minifi::internal::RocksDatabase> db_;
   std::unique_ptr<FlowFileLoader> swap_loader_;
