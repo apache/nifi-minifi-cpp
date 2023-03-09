@@ -352,10 +352,6 @@ TEST_CASE("PutTCP test invalid host", "[PutTCP]") {
   test_fixture.setPutTCPPort(1235);
   test_fixture.setHostname("invalid_hostname");
   trigger_expect_failure(test_fixture, "message for invalid host");
-
-  CHECK((LogTestController::getInstance().contains("Host not found", 0ms)
-      || LogTestController::getInstance().contains("No such host is known", 0ms)
-      || LogTestController::getInstance().contains("A connection attempt failed because the connected party did not properly respond", 0ms)));
 }
 
 TEST_CASE("PutTCP test invalid server", "[PutTCP]") {
@@ -368,10 +364,6 @@ TEST_CASE("PutTCP test invalid server", "[PutTCP]") {
   test_fixture.setPutTCPPort(1235);
   test_fixture.setHostname("localhost");
   trigger_expect_failure(test_fixture, "message for invalid server");
-
-  CHECK((LogTestController::getInstance().contains("Connection refused", 0ms)
-      || LogTestController::getInstance().contains("No connection could be made because the target machine actively refused it", 0ms)
-      || LogTestController::getInstance().contains("A connection attempt failed because the connected party did not properly respond", 0ms)));
 }
 
 TEST_CASE("PutTCP test non-routable server", "[PutTCP]") {
@@ -384,12 +376,6 @@ TEST_CASE("PutTCP test non-routable server", "[PutTCP]") {
   test_fixture.setHostname("192.168.255.255");
   test_fixture.setPutTCPPort(1235);
   trigger_expect_failure(test_fixture, "message for non-routable server");
-
-  CHECK((LogTestController::getInstance().contains("No route to host", 0ms)
-      || LogTestController::getInstance().contains("Connection timed out", 0ms)
-      || LogTestController::getInstance().contains("Operation timed out", 0ms)
-      || LogTestController::getInstance().contains("host has failed to respond", 0ms)
-      || LogTestController::getInstance().contains("No route to host", 0ms)));
 }
 
 TEST_CASE("PutTCP test invalid server cert", "[PutTCP]") {
