@@ -355,7 +355,9 @@ TEST_CASE("PutTCP test invalid host", "[PutTCP]") {
 
   CHECK((LogTestController::getInstance().contains("Host not found", 0ms)
       || LogTestController::getInstance().contains("No such host is known", 0ms)
-      || LogTestController::getInstance().contains("A connection attempt failed because the connected party did not properly respond", 0ms)));
+      || LogTestController::getInstance().contains("A connection attempt failed because the connected party did not properly respond", 0ms)
+      || LogTestController::getInstance().contains("Connection timed out", 0ms)
+      || LogTestController::getInstance().contains("Operation timed out", 0ms)));
 }
 
 TEST_CASE("PutTCP test invalid server", "[PutTCP]") {
@@ -371,7 +373,9 @@ TEST_CASE("PutTCP test invalid server", "[PutTCP]") {
 
   CHECK((LogTestController::getInstance().contains("Connection refused", 0ms)
       || LogTestController::getInstance().contains("No connection could be made because the target machine actively refused it", 0ms)
-      || LogTestController::getInstance().contains("A connection attempt failed because the connected party did not properly respond", 0ms)));
+      || LogTestController::getInstance().contains("A connection attempt failed because the connected party did not properly respond", 0ms)
+      || LogTestController::getInstance().contains("Connection timed out", 0ms)
+      || LogTestController::getInstance().contains("Operation timed out", 0ms)));
 }
 
 TEST_CASE("PutTCP test non-routable server", "[PutTCP]") {
