@@ -560,7 +560,7 @@ TEST_CASE("Test getting flow file repository size properties", "[TestGettingRepo
 
   auto original_size = repository->getRepositorySize();
   using org::apache::nifi::minifi::utils::verifyEventHappenedInPollTime;
-  assert(verifyEventHappenedInPollTime(std::chrono::seconds(5), [&original_size, &repository] {
+  REQUIRE(verifyEventHappenedInPollTime(std::chrono::seconds(5), [&original_size, &repository] {
       auto old_size = original_size;
       original_size = repository->getRepositorySize();
       return old_size == original_size;
@@ -574,7 +574,7 @@ TEST_CASE("Test getting flow file repository size properties", "[TestGettingRepo
   repository->stop();
 
   auto new_size = repository->getRepositorySize();
-  assert(verifyEventHappenedInPollTime(std::chrono::seconds(5), [&new_size, &repository] {
+  REQUIRE(verifyEventHappenedInPollTime(std::chrono::seconds(5), [&new_size, &repository] {
       auto old_size = new_size;
       new_size = repository->getRepositorySize();
       return old_size == new_size;

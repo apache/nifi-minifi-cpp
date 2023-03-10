@@ -124,7 +124,9 @@ rocksdb::DB* OpenRocksDb::get() {
 
 std::optional<uint64_t> OpenRocksDb::getApproximateSizes() const {
   const rocksdb::SizeApproximationOptions options{ .include_memtables = true };
-  const rocksdb::Range range("", std::string(1, static_cast<char>(127)));
+  std::string del_char_str(1, static_cast<char>(127));
+  std::string empty_str;
+  const rocksdb::Range range(empty_str, del_char_str);
   uint64_t value = 0;
   auto status = impl_->GetApproximateSizes(options, column_->handle.get(), &range, 1, &value);
   if (status.ok()) {
