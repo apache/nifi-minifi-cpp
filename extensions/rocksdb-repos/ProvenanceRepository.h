@@ -74,7 +74,6 @@ class ProvenanceRepository : public core::repository::RocksDbRepository {
   bool getElements(std::vector<std::shared_ptr<core::SerializableComponent>> &records, size_t &max_size) override;
 
   void destroy();
-  uint64_t getKeyCount() const;
 
   // Prevent default copy constructor and assignment operation
   // Only support pass by reference or pointer

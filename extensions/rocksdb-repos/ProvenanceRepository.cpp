@@ -111,16 +111,6 @@ void ProvenanceRepository::destroy() {
   db_.reset();
 }
 
-uint64_t ProvenanceRepository::getKeyCount() const {
-  auto opendb = db_->open();
-  if (!opendb) {
-    return 0;
-  }
-  std::string key_count;
-  opendb->GetProperty("rocksdb.estimate-num-keys", &key_count);
-  return std::stoull(key_count);
-}
-
 REGISTER_RESOURCE_AS(ProvenanceRepository, InternalResource, ("ProvenanceRepository", "provenancerepository"));
 
 }  // namespace org::apache::nifi::minifi::provenance
