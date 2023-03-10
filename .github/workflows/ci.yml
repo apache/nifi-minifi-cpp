@@ -247,6 +247,7 @@ jobs:
       - id: build
         run: |
           if [ -d ~/.ccache ]; then mv ~/.ccache .; fi
+          # centos build can run out of the github runners' disk space if built with RelWithDebInfo so we keep the Release build here
           mkdir build && cd build && cmake -DUSE_SHARED_LIBS=ON -DCI_BUILD=ON -DCMAKE_BUILD_TYPE=Release -DSTRICT_GSL_CHECKS=AUDIT -DFAIL_ON_WARNINGS=ON -DENABLE_AWS=ON -DENABLE_AZURE=ON \
               -DENABLE_COAP=ON -DENABLE_ENCRYPT_CONFIG=ON -DENABLE_GPS=ON -DENABLE_LIBRDKAFKA=ON -DENABLE_MQTT=ON -DENABLE_NANOFI=ON -DENABLE_OPC=ON \
               -DENABLE_OPENCV=ON -DENABLE_OPENWSMAN=ON -DENABLE_OPS=ON -DENABLE_SENSORS=ON -DENABLE_SQL=ON -DENABLE_SYSTEMD=ON \
