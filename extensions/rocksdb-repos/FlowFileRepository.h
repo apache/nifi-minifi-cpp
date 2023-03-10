@@ -113,10 +113,8 @@ class FlowFileRepository : public RocksDbRepository, public SwapManager {
 
   void deserializeFlowFilesWithNoContentClaim(minifi::internal::OpenRocksDb& opendb, std::list<ExpiredFlowFileInfo>& flow_files);
 
-  std::filesystem::path checkpoint_dir_;
   moodycamel::ConcurrentQueue<ExpiredFlowFileInfo> keys_to_delete_;
   std::shared_ptr<core::ContentRepository> content_repo_;
-  std::unique_ptr<rocksdb::Checkpoint> checkpoint_;
   std::unique_ptr<FlowFileLoader> swap_loader_;
   std::shared_ptr<minifi::Configure> config_;
 
