@@ -37,10 +37,9 @@ void MetricsPublisherStore::initialize(core::controller::ControllerServiceProvid
   }
 
   if (minifi::c2::isControllerSocketEnabled(configuration_)) {
-    std::shared_ptr controller_socket_metrics_publisher = minifi::state::createMetricsPublisher(c2::CONTROLLER_SOCKET_METRICS_PUBLISHER, configuration_, response_node_loader_);
-    if (controller_socket_metrics_publisher) {
-      addMetricsPublisher(c2::CONTROLLER_SOCKET_METRICS_PUBLISHER, std::move(controller_socket_metrics_publisher));
-    }
+    gsl::not_null<std::shared_ptr<state::MetricsPublisher>> controller_socket_metrics_publisher =
+      minifi::state::createMetricsPublisher(c2::CONTROLLER_SOCKET_METRICS_PUBLISHER, configuration_, response_node_loader_);
+    addMetricsPublisher(c2::CONTROLLER_SOCKET_METRICS_PUBLISHER, std::move(controller_socket_metrics_publisher));
   }
 
   std::shared_ptr metrics_publisher = minifi::state::createMetricsPublisher(configuration_, response_node_loader_);
