@@ -43,9 +43,6 @@ class DockerTestCluster:
         self.splunk_checker = SplunkChecker(self.container_communicator)
         self.prometheus_checker = PrometheusChecker()
 
-    def __del__(self):
-        self.cleanup()
-
     def cleanup(self):
         self.container_store.cleanup()
 

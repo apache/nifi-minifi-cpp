@@ -33,9 +33,6 @@ class Container:
         self.client = docker.from_env()
         self.deployed = False
 
-    def __del__(self):
-        self.cleanup()
-
     def cleanup(self):
         logging.info('Cleaning up container: %s', self.name)
         try:

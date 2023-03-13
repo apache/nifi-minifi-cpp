@@ -48,9 +48,6 @@ class MiNiFi_integration_test:
         self.docker_directory_bindings = context.directory_bindings
         self.cluster.set_directory_bindings(self.docker_directory_bindings.get_directory_bindings(self.test_id), self.docker_directory_bindings.get_data_directories(self.test_id))
 
-    def __del__(self):
-        self.cleanup()
-
     def cleanup(self):
         self.cluster.cleanup()
 
