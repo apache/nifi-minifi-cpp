@@ -36,7 +36,7 @@ void checkSerializedValue(const std::vector<org::apache::nifi::minifi::state::re
   auto it = ranges::find_if(children, [&](const auto& child) { return child.name == name; });
   REQUIRE(it != children.end());
   REQUIRE(expected_value == it->value.to_string());
-};
+}
 
 TEST_CASE("QueueMetricsTestNoConnections", "[c2m2]") {
   minifi::state::response::QueueMetrics metrics;

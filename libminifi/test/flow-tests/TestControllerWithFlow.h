@@ -21,6 +21,7 @@
 #include <string>
 #include <memory>
 #include <utility>
+#include <vector>
 
 #include "FlowController.h"
 #include "unit/ProvenanceTestHelper.h"
@@ -68,7 +69,8 @@ class TestControllerWithFlow: public TestController {
     auto flow = std::make_shared<core::YamlConfiguration>(core::ConfigurationContext{ff_repo, content_repo, stream_factory, configuration_, yaml_path_.string()});
     auto root = flow->getRoot();
     root_ = root.get();
-    auto metrics_publisher_store = std::make_unique<minifi::state::MetricsPublisherStore>(configuration_, prov_repo, ff_repo, content_repo, flow);
+    std::vector<std::shared_ptr<core::RepositoryMetricsSource>> repo_metric_sources{prov_repo, ff_repo, content_repo};
+    auto metrics_publisher_store = std::make_unique<minifi::state::MetricsPublisherStore>(configuration_, repo_metric_sources, flow);
     metrics_publisher_store_ = metrics_publisher_store.get();
     controller_ = std::make_shared<minifi::FlowController>(prov_repo, ff_repo, configuration_, std::move(flow), content_repo, std::move(metrics_publisher_store));
     controller_->load(std::move(root));

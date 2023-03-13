@@ -32,13 +32,11 @@
 
 namespace org::apache::nifi::minifi::state::response {
 
-ResponseNodeLoader::ResponseNodeLoader(std::shared_ptr<Configure> configuration, std::shared_ptr<core::RepositoryMetricsSource> provenance_repo,
-      std::shared_ptr<core::RepositoryMetricsSource> flow_file_repo, std::shared_ptr<core::RepositoryMetricsSource> content_repo, std::shared_ptr<core::FlowConfiguration> flow_configuration)
-  : configuration_(std::move(configuration)),
-    provenance_repo_(std::move(provenance_repo)),
-    flow_file_repo_(std::move(flow_file_repo)),
-    content_repo_(std::move(content_repo)),
-    flow_configuration_(std::move(flow_configuration)) {
+ResponseNodeLoader::ResponseNodeLoader(std::shared_ptr<Configure> configuration, const std::vector<std::shared_ptr<core::RepositoryMetricsSource>>& repository_metric_sources,
+  std::shared_ptr<core::FlowConfiguration> flow_configuration)
+    : configuration_(std::move(configuration)),
+      repository_metric_sources_(repository_metric_sources),
+      flow_configuration_(std::move(flow_configuration)) {
 }
 
 void ResponseNodeLoader::clearConfigRoot() {
@@ -125,9 +123,9 @@ std::vector<SharedResponseNode> ResponseNodeLoader::getResponseNodes(const std::
 void ResponseNodeLoader::initializeRepositoryMetrics(const SharedResponseNode& response_node) const {
   auto repository_metrics = dynamic_cast<RepositoryMetrics*>(response_node.get());
   if (repository_metrics != nullptr) {
-    repository_metrics->addRepository(provenance_repo_);
-    repository_metrics->addRepository(flow_file_repo_);
-    repository_metrics->addRepository(content_repo_);
+    for (const auto& repo : repository_metric_sources_) {
+      repository_metrics->addRepository(repo);
+    }
   }
 }
 
@@ -157,9 +155,9 @@ void ResponseNodeLoader::initializeAgentIdentifier(const SharedResponseNode& res
 void ResponseNodeLoader::initializeAgentMonitor(const SharedResponseNode& response_node) const {
   auto monitor = dynamic_cast<state::response::AgentMonitor*>(response_node.get());
   if (monitor != nullptr) {
-    monitor->addRepository(provenance_repo_);
-    monitor->addRepository(flow_file_repo_);
-    monitor->addRepository(content_repo_);
+    for (const auto& repo : repository_metric_sources_) {
+      monitor->addRepository(repo);
+    }
     monitor->setStateMonitor(update_sink_);
   }
 }
@@ -179,9 +177,9 @@ void ResponseNodeLoader::initializeAgentNode(const SharedResponseNode& response_
 void ResponseNodeLoader::initializeAgentStatus(const SharedResponseNode& response_node) const {
   auto agent_status = dynamic_cast<state::response::AgentStatus*>(response_node.get());
   if (agent_status != nullptr) {
-    agent_status->addRepository(provenance_repo_);
-    agent_status->addRepository(flow_file_repo_);
-    agent_status->addRepository(content_repo_);
+    for (const auto& repo : repository_metric_sources_) {
+      agent_status->addRepository(repo);
+    }
     agent_status->setStateMonitor(update_sink_);
   }
 }

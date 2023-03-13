@@ -53,7 +53,8 @@ class PrometheusPublisherTestFixture {
       provenance_repo_(core::createRepository("provenancerepository")),
       flow_file_repo_(core::createRepository("flowfilerepository")),
       content_repo_(core::createContentRepository("volatilecontentrepository")),
-      response_node_loader_(std::make_shared<state::response::ResponseNodeLoader>(configuration_, provenance_repo_, flow_file_repo_, content_repo_, nullptr)) {
+      response_node_loader_(std::make_shared<state::response::ResponseNodeLoader>(configuration_,
+        std::vector<std::shared_ptr<core::RepositoryMetricsSource>>{provenance_repo_, flow_file_repo_, content_repo_}, nullptr)) {
     std::unique_ptr<DummyMetricsExposer> dummy_exposer;
     if (user_dummy_exposer) {
       dummy_exposer = std::make_unique<DummyMetricsExposer>();
@@ -64,8 +65,8 @@ class PrometheusPublisherTestFixture {
 
  protected:
   std::shared_ptr<Configure> configuration_;
-  std::shared_ptr<core::Repository> provenance_repo_;
-  std::shared_ptr<core::Repository> flow_file_repo_;
+  std::shared_ptr<core::RepositoryMetricsSource> provenance_repo_;
+  std::shared_ptr<core::RepositoryMetricsSource> flow_file_repo_;
   std::shared_ptr<core::RepositoryMetricsSource> content_repo_;
   std::shared_ptr<state::response::ResponseNodeLoader> response_node_loader_;
   std::unique_ptr<PrometheusMetricsPublisher> publisher_;
