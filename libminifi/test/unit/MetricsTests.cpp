@@ -26,16 +26,22 @@
 #include "repository/VolatileContentRepository.h"
 #include "ProvenanceTestHelper.h"
 #include "../DummyProcessor.h"
+#include "range/v3/algorithm/find_if.hpp"
 
 using namespace std::literals::chrono_literals;
 
 namespace org::apache::nifi::minifi::test {
 
+void checkSerializedValue(const std::vector<org::apache::nifi::minifi::state::response::SerializedResponseNode>& children, const std::string& name, const std::string& expected_value) {
+  auto it = ranges::find_if(children, [&](const auto& child) { return child.name == name; });
+  REQUIRE(it != children.end());
+  REQUIRE(expected_value == it->value.to_string());
+};
+
 TEST_CASE("QueueMetricsTestNoConnections", "[c2m2]") {
   minifi::state::response::QueueMetrics metrics;
 
   REQUIRE("QueueMetrics" == metrics.getName());
-
   REQUIRE(metrics.serialize().empty());
 }
 
@@ -58,40 +64,24 @@ TEST_CASE("QueueMetricsTestConnections", "[c2m3]") {
 
   metrics.updateConnection(connection.get());
 
-  REQUIRE(1 == metrics.serialize().size());
+  auto seialized_metrics = metrics.serialize();
+  REQUIRE(1 == seialized_metrics.size());
 
   minifi::state::response::SerializedResponseNode resp = metrics.serialize().at(0);
 
   REQUIRE("testconnection" == resp.name);
-
   REQUIRE(4 == resp.children.size());
 
-  minifi::state::response::SerializedResponseNode datasize = resp.children.at(0);
-
-  REQUIRE("datasize" == datasize.name);
-  REQUIRE("0" == datasize.value.to_string());
-
-  minifi::state::response::SerializedResponseNode datasizemax = resp.children.at(1);
-
-  REQUIRE("datasizemax" == datasizemax.name);
-  REQUIRE("1024" == datasizemax.value);
-
-  minifi::state::response::SerializedResponseNode queued = resp.children.at(2);
-
-  REQUIRE("queued" == queued.name);
-  REQUIRE("0" == queued.value.to_string());
-
-  minifi::state::response::SerializedResponseNode queuedmax = resp.children.at(3);
-
-  REQUIRE("queuedmax" == queuedmax.name);
-  REQUIRE("1024" == queuedmax.value.to_string());
+  checkSerializedValue(resp.children, "datasize", "0");
+  checkSerializedValue(resp.children, "datasizemax", "1024");
+  checkSerializedValue(resp.children, "queued", "0");
+  checkSerializedValue(resp.children, "queuedmax", "1024");
 }
 
 TEST_CASE("RepositorymetricsNoRepo", "[c2m4]") {
   minifi::state::response::RepositoryMetrics metrics;
 
   REQUIRE("RepositoryMetrics" == metrics.getName());
-
   REQUIRE(metrics.serialize().empty());
 }
 
@@ -109,32 +99,13 @@ TEST_CASE("RepositorymetricsHaveRepo", "[c2m4]") {
     minifi::state::response::SerializedResponseNode resp = metrics.serialize().at(0);
 
     REQUIRE("repo_name" == resp.name);
-
     REQUIRE(5 == resp.children.size());
 
-    minifi::state::response::SerializedResponseNode running = resp.children.at(0);
-
-    REQUIRE("running" == running.name);
-    REQUIRE("false" == running.value.to_string());
-
-    minifi::state::response::SerializedResponseNode full = resp.children.at(1);
-
-    REQUIRE("full" == full.name);
-    REQUIRE("false" == full.value);
-
-    minifi::state::response::SerializedResponseNode size = resp.children.at(2);
-
-    REQUIRE("size" == size.name);
-    REQUIRE("0" == size.value);
-
-    minifi::state::response::SerializedResponseNode max_size = resp.children.at(3);
-
-    REQUIRE("maxSize" == max_size.name);
-    REQUIRE("0" == max_size.value.to_string());
-
-    minifi::state::response::SerializedResponseNode entry_count = resp.children.at(4);
-    REQUIRE("entryCount" == entry_count.name);
-    REQUIRE("0" == entry_count.value.to_string());
+    checkSerializedValue(resp.children, "running", "false");
+    checkSerializedValue(resp.children, "full", "false");
+    checkSerializedValue(resp.children, "size", "0");
+    checkSerializedValue(resp.children, "maxSize", "0");
+    checkSerializedValue(resp.children, "entryCount", "0");
   }
 
   repo->start();
@@ -144,32 +115,13 @@ TEST_CASE("RepositorymetricsHaveRepo", "[c2m4]") {
     minifi::state::response::SerializedResponseNode resp = metrics.serialize().at(0);
 
     REQUIRE("repo_name" == resp.name);
-
     REQUIRE(5 == resp.children.size());
 
-    minifi::state::response::SerializedResponseNode running = resp.children.at(0);
-
-    REQUIRE("running" == running.name);
-    REQUIRE("true" == running.value.to_string());
-
-    minifi::state::response::SerializedResponseNode full = resp.children.at(1);
-
-    REQUIRE("full" == full.name);
-    REQUIRE("false" == full.value);
-
-    minifi::state::response::SerializedResponseNode size = resp.children.at(2);
-
-    REQUIRE("size" == size.name);
-    REQUIRE("0" == size.value);
-
-    minifi::state::response::SerializedResponseNode max_size = resp.children.at(3);
-
-    REQUIRE("maxSize" == max_size.name);
-    REQUIRE("0" == max_size.value.to_string());
-
-    minifi::state::response::SerializedResponseNode entry_count = resp.children.at(4);
-    REQUIRE("entryCount" == entry_count.name);
-    REQUIRE("0" == entry_count.value.to_string());
+    checkSerializedValue(resp.children, "running", "true");
+    checkSerializedValue(resp.children, "full", "false");
+    checkSerializedValue(resp.children, "size", "0");
+    checkSerializedValue(resp.children, "maxSize", "0");
+    checkSerializedValue(resp.children, "entryCount", "0");
   }
 
   repo->stop();
@@ -180,32 +132,13 @@ TEST_CASE("RepositorymetricsHaveRepo", "[c2m4]") {
     minifi::state::response::SerializedResponseNode resp = metrics.serialize().at(0);
 
     REQUIRE("repo_name" == resp.name);
-
     REQUIRE(5 == resp.children.size());
 
-    minifi::state::response::SerializedResponseNode running = resp.children.at(0);
-
-    REQUIRE("running" == running.name);
-    REQUIRE("false" == running.value.to_string());
-
-    minifi::state::response::SerializedResponseNode full = resp.children.at(1);
-
-    REQUIRE("full" == full.name);
-    REQUIRE("false" == full.value);
-
-    minifi::state::response::SerializedResponseNode size = resp.children.at(2);
-
-    REQUIRE("size" == size.name);
-    REQUIRE("0" == size.value);
-
-    minifi::state::response::SerializedResponseNode max_size = resp.children.at(3);
-
-    REQUIRE("maxSize" == max_size.name);
-    REQUIRE("0" == max_size.value.to_string());
-
-    minifi::state::response::SerializedResponseNode entry_count = resp.children.at(4);
-    REQUIRE("entryCount" == entry_count.name);
-    REQUIRE("0" == entry_count.value.to_string());
+    checkSerializedValue(resp.children, "running", "false");
+    checkSerializedValue(resp.children, "full", "false");
+    checkSerializedValue(resp.children, "size", "0");
+    checkSerializedValue(resp.children, "maxSize", "0");
+    checkSerializedValue(resp.children, "entryCount", "0");
   }
 }
 
@@ -223,32 +156,13 @@ TEST_CASE("VolatileRepositorymetricsCanBeFull", "[c2m4]") {
     minifi::state::response::SerializedResponseNode resp = metrics.serialize().at(0);
 
     REQUIRE("repo_name" == resp.name);
-
     REQUIRE(5 == resp.children.size());
 
-    minifi::state::response::SerializedResponseNode running = resp.children.at(0);
-
-    REQUIRE("running" == running.name);
-    REQUIRE("false" == running.value.to_string());
-
-    minifi::state::response::SerializedResponseNode full = resp.children.at(1);
-
-    REQUIRE("full" == full.name);
-    REQUIRE("false" == full.value);
-
-    minifi::state::response::SerializedResponseNode size = resp.children.at(2);
-
-    REQUIRE("size" == size.name);
-    REQUIRE("0" == size.value);
-
-    minifi::state::response::SerializedResponseNode max_size = resp.children.at(3);
-
-    REQUIRE("maxSize" == max_size.name);
-    REQUIRE(std::to_string(static_cast<int64_t>(TEST_MAX_REPOSITORY_STORAGE_SIZE * 0.75)) == max_size.value.to_string());
-
-    minifi::state::response::SerializedResponseNode entry_count = resp.children.at(4);
-    REQUIRE("entryCount" == entry_count.name);
-    REQUIRE("0" == entry_count.value.to_string());
+    checkSerializedValue(resp.children, "running", "false");
+    checkSerializedValue(resp.children, "full", "false");
+    checkSerializedValue(resp.children, "size", "0");
+    checkSerializedValue(resp.children, "maxSize", std::to_string(static_cast<int64_t>(TEST_MAX_REPOSITORY_STORAGE_SIZE * 0.75)));
+    checkSerializedValue(resp.children, "entryCount", "0");
   }
 
   repo->setFull();
@@ -259,31 +173,13 @@ TEST_CASE("VolatileRepositorymetricsCanBeFull", "[c2m4]") {
     minifi::state::response::SerializedResponseNode resp = metrics.serialize().at(0);
 
     REQUIRE("repo_name" == resp.name);
-
     REQUIRE(5 == resp.children.size());
 
-    minifi::state::response::SerializedResponseNode running = resp.children.at(0);
-
-    REQUIRE("running" == running.name);
-    REQUIRE("false" == running.value.to_string());
-
-    minifi::state::response::SerializedResponseNode full = resp.children.at(1);
-
-    REQUIRE("full" == full.name);
-    REQUIRE("true" == full.value.to_string());
-
-    minifi::state::response::SerializedResponseNode size = resp.children.at(2);
-
-    REQUIRE("size" == size.name);
-    REQUIRE(std::to_string(static_cast<int64_t>(TEST_MAX_REPOSITORY_STORAGE_SIZE * 0.75)) == size.value.to_string());
-
-    minifi::state::response::SerializedResponseNode max_size = resp.children.at(3);
-    REQUIRE("maxSize" == max_size.name);
-    REQUIRE(std::to_string(static_cast<int64_t>(TEST_MAX_REPOSITORY_STORAGE_SIZE * 0.75)) == max_size.value.to_string());
-
-    minifi::state::response::SerializedResponseNode entry_count = resp.children.at(4);
-    REQUIRE("entryCount" == entry_count.name);
-    REQUIRE("10000" == entry_count.value.to_string());
+    checkSerializedValue(resp.children, "running", "false");
+    checkSerializedValue(resp.children, "full", "true");
+    checkSerializedValue(resp.children, "size", std::to_string(static_cast<int64_t>(TEST_MAX_REPOSITORY_STORAGE_SIZE * 0.75)));
+    checkSerializedValue(resp.children, "maxSize", std::to_string(static_cast<int64_t>(TEST_MAX_REPOSITORY_STORAGE_SIZE * 0.75)));
+    checkSerializedValue(resp.children, "entryCount", "10000");
   }
 }
 
