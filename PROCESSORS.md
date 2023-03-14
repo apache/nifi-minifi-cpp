@@ -737,7 +737,7 @@ In the list below, the names of required properties appear in bold. Any other pr
 
 ### Description
 
-ExecuteSQL to execute SELECT statement via ODBC.
+Execute provided SQL query. Query result rows will be outputted as new flow files with attribute keys equal to result column names and values equal to result values. There will be one output FlowFile per result row. This processor can be scheduled to run using the standard timer-based scheduling methods, or it can be triggered by an incoming FlowFile. If it is triggered by an incoming FlowFile, then attributes of that FlowFile will be available when evaluating the query.
 
 ### Properties
 
