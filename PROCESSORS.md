@@ -337,14 +337,14 @@ Consume systemd-journald journal messages. Creates one flow file per message. Fi
 
 In the list below, the names of required properties appear in bold. Any other properties (not in bold) are considered optional. The table also indicates any default values, and whether a property supports the NiFi Expression Language.
 
-| Name                     | Default Value | Allowable Values         | Description                                                                                                     |
-|--------------------------|---------------|--------------------------|-----------------------------------------------------------------------------------------------------------------|
-| **Batch Size**           | 1000          |                          | The maximum number of entries processed in a single execution.                                                  |
-| **Payload Format**       | Syslog        | Raw<br/>Syslog           | Configures flow file content formatting. Raw: only the message. Syslog: similar to syslog or journalctl output. |
-| **Include Timestamp**    | true          |                          | Include message timestamp in the 'timestamp' attribute.                                                         |
-| **Journal Type**         | System        | Both<br/>System<br/>User | Type of journal to consume.                                                                                     |
-| **Process Old Messages** | false         |                          | Process events created before the first usage (schedule) of the processor instance.                             |
-| **Timestamp Format**     | %x %X %Z      |                          | Format string to use when creating the timestamp attribute or writing messages in the syslog format.            |
+| Name                     | Default Value | Allowable Values         | Description                                                                                                                                                                                                                                    |
+|--------------------------|---------------|--------------------------|------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| **Batch Size**           | 1000          |                          | The maximum number of entries processed in a single execution.                                                                                                                                                                                 |
+| **Payload Format**       | Syslog        | Raw<br/>Syslog           | Configures flow file content formatting. Raw: only the message. Syslog: similar to syslog or journalctl output.                                                                                                                                |
+| **Include Timestamp**    | true          |                          | Include message timestamp in the 'timestamp' attribute.                                                                                                                                                                                        |
+| **Journal Type**         | System        | Both<br/>System<br/>User | Type of journal to consume.                                                                                                                                                                                                                    |
+| **Process Old Messages** | false         |                          | Process events created before the first usage (schedule) of the processor instance.                                                                                                                                                            |
+| **Timestamp Format**     | %x %X %Z      |                          | Format string to use when creating the timestamp attribute or writing messages in the syslog format. ISO/ISO 8601/ISO8601 are equivalent to "%FT%T%Ez". See https://howardhinnant.github.io/date/date.html#to_stream_formatting for all flags. |
 
 ### Relationships
 
