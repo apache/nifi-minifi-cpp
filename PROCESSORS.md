@@ -576,7 +576,7 @@ In the list below, the names of required properties appear in bold. Any other pr
 
 | Name                                 | Default Value | Allowable Values | Description                                                                                                                                      |
 |--------------------------------------|---------------|------------------|--------------------------------------------------------------------------------------------------------------------------------------------------|
-| **GCP Credentials Provider Service** |               |                  | The Controller Service used to obtain Google Cloud Platform credentials.                                                                         |
+| **GCP Credentials Provider Service** |               |                  | The Controller Service used to obtain Google Cloud Platform credentials. Should be the name of a GCPCredentialsControllerService.                |
 | **Number of retries**                | 6             |                  | How many retry attempts should be made before routing to the failure relationship.                                                               |
 | Endpoint Override URL                |               |                  | Overrides the default Google Cloud Storage endpoints<br/>**Supports Expression Language: true**                                                  |
 | Bucket                               | ${gcs.bucket} |                  | Bucket of the object.<br/>**Supports Expression Language: true**                                                                                 |
@@ -590,7 +590,6 @@ In the list below, the names of required properties appear in bold. Any other pr
 |---------|----------------------------------------------------------------------------------------------|
 | success | FlowFiles are routed to this relationship after a successful Google Cloud Storage operation. |
 | failure | FlowFiles are routed to this relationship if the Google Cloud Storage operation fails.       |
-
 
 ### Output Attributes
 
@@ -887,7 +886,7 @@ In the list below, the names of required properties appear in bold. Any other pr
 
 | Name                                 | Default Value | Allowable Values | Description                                                                                                                                      |
 |--------------------------------------|---------------|------------------|--------------------------------------------------------------------------------------------------------------------------------------------------|
-| **GCP Credentials Provider Service** |               |                  | The Controller Service used to obtain Google Cloud Platform credentials.                                                                         |
+| **GCP Credentials Provider Service** |               |                  | The Controller Service used to obtain Google Cloud Platform credentials. Should be the name of a GCPCredentialsControllerService.                |
 | **Number of retries**                | 6             |                  | How many retry attempts should be made before routing to the failure relationship.                                                               |
 | Endpoint Override URL                |               |                  | Overrides the default Google Cloud Storage endpoints<br/>**Supports Expression Language: true**                                                  |
 | Bucket                               | ${gcs.bucket} |                  | Bucket of the object.<br/>**Supports Expression Language: true**                                                                                 |
@@ -1512,13 +1511,13 @@ Retrieves a listing of objects from an GCS bucket. For each object that is liste
 
 In the list below, the names of required properties appear in bold. Any other properties (not in bold) are considered optional. The table also indicates any default values, and whether a property supports the NiFi Expression Language.
 
-| Name                                 | Default Value | Allowable Values | Description                                                                                     |
-|--------------------------------------|---------------|------------------|-------------------------------------------------------------------------------------------------|
-| **GCP Credentials Provider Service** |               |                  | The Controller Service used to obtain Google Cloud Platform credentials.                        |
-| **Number of retries**                | 6             |                  | How many retry attempts should be made before routing to the failure relationship.              |
-| Endpoint Override URL                |               |                  | Overrides the default Google Cloud Storage endpoints<br/>**Supports Expression Language: true** |
-| **Bucket**                           |               |                  | Bucket of the object.<br/>**Supports Expression Language: true**                                |
-| List all versions                    | false         |                  | Set this option to `true` to get all the previous versions separately.                          |
+| Name                                 | Default Value | Allowable Values | Description                                                                                                                       |
+|--------------------------------------|---------------|------------------|-----------------------------------------------------------------------------------------------------------------------------------|
+| **GCP Credentials Provider Service** |               |                  | The Controller Service used to obtain Google Cloud Platform credentials. Should be the name of a GCPCredentialsControllerService. |
+| **Number of retries**                | 6             |                  | How many retry attempts should be made before routing to the failure relationship.                                                |
+| Endpoint Override URL                |               |                  | Overrides the default Google Cloud Storage endpoints<br/>**Supports Expression Language: true**                                   |
+| **Bucket**                           |               |                  | Bucket of the object.<br/>**Supports Expression Language: true**                                                                  |
+| List all versions                    | false         |                  | Set this option to `true` to get all the previous versions separately.                                                            |
 
 ### Relationships
 
@@ -2130,7 +2129,7 @@ In the list below, the names of required properties appear in bold. Any other pr
 
 | Name                                 | Default Value | Allowable Values                                                                                                                   | Description                                                                                                                              |
 |--------------------------------------|---------------|------------------------------------------------------------------------------------------------------------------------------------|------------------------------------------------------------------------------------------------------------------------------------------|
-| **GCP Credentials Provider Service** |               |                                                                                                                                    | The Controller Service used to obtain Google Cloud Platform credentials.                                                                 |
+| **GCP Credentials Provider Service** |               |                                                                                                                                    | The Controller Service used to obtain Google Cloud Platform credentials. Should be the name of a GCPCredentialsControllerService.        |
 | **Number of retries**                | 6             |                                                                                                                                    | How many retry attempts should be made before routing to the failure relationship.                                                       |
 | Endpoint Override URL                |               |                                                                                                                                    | Overrides the default Google Cloud Storage endpoints<br/>**Supports Expression Language: true**                                          |
 | Bucket                               | ${gcs.bucket} |                                                                                                                                    | Bucket of the object.<br/>**Supports Expression Language: true**                                                                         |
