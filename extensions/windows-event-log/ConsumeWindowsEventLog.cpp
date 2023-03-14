@@ -149,7 +149,7 @@ const core::Property ConsumeWindowsEventLog::JSONFormat(
   core::PropertyBuilder::createProperty("JSON Format")->
   isRequired(true)->
   withDefaultValue(JSONSimple)->
-  withAllowableValues<std::string>({JSONSimple, JSONFlattened, JSONRaw})->
+  withAllowableValue<std::string>(JSONSimple)->withAllowableValue(JSONRaw)->withAllowableValue(JSONFlattened)->
   withDescription("Set the json format type. Only applicable if Output Format is set to 'JSON'")->
   build());
 
