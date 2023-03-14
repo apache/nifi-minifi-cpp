@@ -39,7 +39,7 @@ namespace org::apache::nifi::minifi::state::response {
 
 class ResponseNodeLoader {
  public:
-  ResponseNodeLoader(std::shared_ptr<Configure> configuration, const std::vector<std::shared_ptr<core::RepositoryMetricsSource>>& repository_metric_sources,
+  ResponseNodeLoader(std::shared_ptr<Configure> configuration, std::vector<std::shared_ptr<core::RepositoryMetricsSource>> repository_metric_sources,
     std::shared_ptr<core::FlowConfiguration> flow_configuration);
 
   void setNewConfigRoot(core::ProcessGroup* root);

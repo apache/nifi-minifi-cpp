@@ -32,10 +32,10 @@
 
 namespace org::apache::nifi::minifi::state::response {
 
-ResponseNodeLoader::ResponseNodeLoader(std::shared_ptr<Configure> configuration, const std::vector<std::shared_ptr<core::RepositoryMetricsSource>>& repository_metric_sources,
+ResponseNodeLoader::ResponseNodeLoader(std::shared_ptr<Configure> configuration, std::vector<std::shared_ptr<core::RepositoryMetricsSource>> repository_metric_sources,
   std::shared_ptr<core::FlowConfiguration> flow_configuration)
     : configuration_(std::move(configuration)),
-      repository_metric_sources_(repository_metric_sources),
+      repository_metric_sources_(std::move(repository_metric_sources)),
       flow_configuration_(std::move(flow_configuration)) {
 }
 
