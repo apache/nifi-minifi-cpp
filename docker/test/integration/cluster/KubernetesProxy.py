@@ -35,9 +35,6 @@ class KubernetesProxy:
         self.__download_kind()
         self.docker_client = docker.from_env()
 
-    def __del__(self):
-        self.cleanup()
-
     def cleanup(self):
         if os.path.exists(self.kind_binary_path):
             subprocess.run([self.kind_binary_path, 'delete', 'cluster'])

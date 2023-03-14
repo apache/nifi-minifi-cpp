@@ -29,9 +29,6 @@ class ImageStore:
         self.images = dict()
         self.test_dir = os.environ['TEST_DIRECTORY']  # Based on DockerVerify.sh
 
-    def __del__(self):
-        self.cleanup()
-
     def cleanup(self):
         # Clean up images
         for image in self.images.values():

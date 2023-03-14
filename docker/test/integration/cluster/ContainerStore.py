@@ -46,9 +46,6 @@ class ContainerStore:
         self.image_store = image_store
         self.kubernetes_proxy = kubernetes_proxy
 
-    def __del__(self):
-        self.cleanup()
-
     def cleanup(self):
         for container in self.containers.values():
             container.cleanup()
