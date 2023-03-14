@@ -141,7 +141,7 @@ const core::Property ConsumeKafka::MessageHeaderEncoding(core::PropertyBuilder::
 const core::Property ConsumeKafka::HeadersToAddAsAttributes(core::PropertyBuilder::createProperty("Headers To Add As Attributes")
   ->withDescription("A comma separated list to match against all message headers. Any message header whose name matches an item from the list will be added to the FlowFile "
       "as an Attribute. If not specified, no Header values will be added as FlowFile attributes. The behaviour on when multiple headers of the same name are present is set using "
-      "the DuplicateHeaderHandling attribute.")
+      "the Duplicate Header Handling attribute.")
   ->build());
 
 const core::Property ConsumeKafka::DuplicateHeaderHandling(core::PropertyBuilder::createProperty("Duplicate Header Handling")
