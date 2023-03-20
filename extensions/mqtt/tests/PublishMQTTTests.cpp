@@ -76,8 +76,7 @@ TEST_CASE_METHOD(Fixture, "PublishMQTTTest_ContentType_V_3", "[publishMQTTTest]"
 }
 
 TEST_CASE_METHOD(Fixture, "PublishMQTT can publish the number of in-flight messages as a metric") {
-  const auto node = publishMqttProcessor_->getResponseNodes();
-  REQUIRE(node);
+  const auto node = publishMqttProcessor_->getResponseNode();
 
   SECTION("heartbeat metric") {
     const auto serialized_nodes = minifi::state::response::ResponseNode::serializeAndMergeResponseNodes({node});
