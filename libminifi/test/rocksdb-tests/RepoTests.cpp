@@ -344,7 +344,7 @@ TEST_CASE("Flush deleted flowfiles before shutdown", "[TestFFR7]") {
    public:
     explicit TestFlowFileRepository(const std::string& name)
       : FlowFileRepository(name, core::repository::FLOWFILE_REPOSITORY_DIRECTORY,
-                           10min, core::repository::MAX_FLOWFILE_REPOSITORY_STORAGE_SIZE, 1ms) {}
+                           10min, core::repository::MAX_FLOWFILE_REPOSITORY_STORAGE_SIZE, 50ms) {}
 
     void flush() override {
       FlowFileRepository::flush();
@@ -367,11 +367,12 @@ TEST_CASE("Flush deleted flowfiles before shutdown", "[TestFFR7]") {
   std::map<std::string, core::Connectable*> connectionMap{{connection->getUUIDStr(), connection.get()}};
   // initialize repository
   {
+    std::mutex flush_counter_mutex;
+    int flush_counter{0};
+    std::atomic<bool> stop{false};
+
     std::shared_ptr<TestFlowFileRepository> ff_repository = std::make_shared<TestFlowFileRepository>("flowFileRepository");
 
-    std::atomic<int> flush_counter{0};
-
-    std::atomic<bool> stop{false};
     std::thread shutdown{[&] {
       while (!stop.load()) {
         std::this_thread::sleep_for(std::chrono::milliseconds{10});
@@ -380,8 +381,11 @@ TEST_CASE("Flush deleted flowfiles before shutdown", "[TestFFR7]") {
     }};
 
     ff_repository->onFlush_ = [&] {
-      if (++flush_counter != 1) {
-        return;
+      {
+        std::lock_guard<std::mutex> lock(flush_counter_mutex);
+        if (++flush_counter != 1) {
+          return;
+        }
       }
 
       for (int keyIdx = 0; keyIdx < 100; ++keyIdx) {
@@ -404,7 +408,9 @@ TEST_CASE("Flush deleted flowfiles before shutdown", "[TestFFR7]") {
     ff_repository->loadComponent(content_repo);
     ff_repository->start();
 
-    shutdown.join();
+    if (shutdown.joinable()) {
+      shutdown.join();
+    }
   }
 
   // check if the deleted flowfiles are indeed deleted
