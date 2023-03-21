@@ -309,7 +309,7 @@ jobs:
           cmake ${DOCKER_CMAKE_FLAGS} ..
           make docker
       - name: Save docker image
-        run: cd build && docker save -o minifi_docker.tar apacheminificpp:0.13.0
+        run: cd build && docker save -o minifi_docker.tar apacheminificpp:$(grep CMAKE_PROJECT_VERSION:STATIC CMakeCache.txt | cut -d "=" -f2)
       - name: Upload artifact
         uses: actions/upload-artifact@v3
         with:
