@@ -44,17 +44,17 @@ struct PyModuleDef minifi_module = {
 
 PyMODINIT_FUNC
 PyInit_minifi_native(void) {
-  const std::array<std::pair<PyTypeObject*, std::string_view>, 9> types = {
-    std::make_pair(PyLogger::typeObject(), "Logger"),
-    std::make_pair(PyProcessSessionObject::typeObject(), "ProcessSession"),
-    std::make_pair(PyProcessContext::typeObject(), "ProcessContext"),
-    std::make_pair(PyProcessor::typeObject(), "Processor"),
-    std::make_pair(PyScriptFlowFile::typeObject(), "FlowFile"),
-    std::make_pair(PyRelationship::typeObject(), "Relationship"),
-    std::make_pair(PyInputStream::typeObject(), "InputStream"),
-    std::make_pair(PyOutputStream::typeObject(), "OutputStream"),
-    std::make_pair(PyStateManager::typeObject(), "StateManager")
-  };
+  const std::array types = std::to_array<std::pair<PyTypeObject*, std::string_view>>({
+      std::make_pair(PyLogger::typeObject(), "Logger"),
+      std::make_pair(PyProcessSessionObject::typeObject(), "ProcessSession"),
+      std::make_pair(PyProcessContext::typeObject(), "ProcessContext"),
+      std::make_pair(PyProcessor::typeObject(), "Processor"),
+      std::make_pair(PyScriptFlowFile::typeObject(), "FlowFile"),
+      std::make_pair(PyRelationship::typeObject(), "Relationship"),
+      std::make_pair(PyInputStream::typeObject(), "InputStream"),
+      std::make_pair(PyOutputStream::typeObject(), "OutputStream"),
+      std::make_pair(PyStateManager::typeObject(), "StateManager")
+  });
 
   for (const auto& type : types) {
     if (PyType_Ready(type.first) < 0) {

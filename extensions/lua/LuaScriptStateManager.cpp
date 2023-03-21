@@ -28,8 +28,8 @@ core::StateManager::State from_lua(const sol::table& lua_state) {
   return cpp_state;
 }
 
-sol::table to_lua(const core::StateManager::State& cpp_state, sol::state* sol_state) {
-  auto lua_state = sol::table(sol_state->lua_state(), sol::create);
+sol::table to_lua(const core::StateManager::State& cpp_state, sol::state& sol_state) {
+  auto lua_state = sol::table(sol_state.lua_state(), sol::create);
   for (const auto& [cpp_state_key, cpp_state_value] : cpp_state)
     lua_state[cpp_state_key] = cpp_state_value;
   return lua_state;

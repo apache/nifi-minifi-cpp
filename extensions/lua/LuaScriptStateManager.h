@@ -28,14 +28,14 @@ namespace org::apache::nifi::minifi::extensions::lua {
 
 class LuaScriptStateManager {
  public:
-  explicit LuaScriptStateManager(core::StateManager* state_manager, sol::state* sol_state) : state_manager_(state_manager), sol_state_(sol_state) {}
+  explicit LuaScriptStateManager(core::StateManager* state_manager, sol::state& sol_state) : state_manager_(state_manager), sol_state_(sol_state) {}
 
   bool set(const sol::table& core_component_state_lua);
   sol::optional<sol::table> get();
 
  private:
   core::StateManager* state_manager_;
-  sol::state* sol_state_;
+  sol::state& sol_state_;
 };
 
 }  // namespace org::apache::nifi::minifi::extensions::lua

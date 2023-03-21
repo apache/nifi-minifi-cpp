@@ -28,7 +28,7 @@ namespace org::apache::nifi::minifi::extensions::lua {
 
 class LuaScriptProcessContext {
  public:
-  explicit LuaScriptProcessContext(std::shared_ptr<core::ProcessContext> context, sol::state* sol_state);
+  explicit LuaScriptProcessContext(std::shared_ptr<core::ProcessContext> context, sol::state& sol_state);
 
   std::string getProperty(const std::string &name);
   void releaseProcessContext();
@@ -37,7 +37,7 @@ class LuaScriptProcessContext {
 
  private:
   std::shared_ptr<core::ProcessContext> context_;
-  sol::state* sol_state_;
+  sol::state& sol_state_;
 };
 
 }  // namespace org::apache::nifi::minifi::extensions::lua

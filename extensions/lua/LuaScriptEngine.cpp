@@ -135,7 +135,7 @@ class TriggerSession {
 }  // namespace
 
 void LuaScriptEngine::onTrigger(const std::shared_ptr<core::ProcessContext>& context, const std::shared_ptr<core::ProcessSession>& session) {
-  auto script_context = std::make_shared<LuaScriptProcessContext>(context, &lua_);
+  auto script_context = std::make_shared<LuaScriptProcessContext>(context, lua_);
   auto lua_session = std::make_shared<LuaProcessSession>(session);
   TriggerSession trigger_session(script_context, lua_session);
   call("onTrigger", script_context, lua_session);
