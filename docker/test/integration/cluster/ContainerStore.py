@@ -154,6 +154,9 @@ class ContainerStore:
     def fetch_flow_config_from_c2_url_in_minifi(self):
         self.minifi_options.use_flow_config_from_url = True
 
+    def set_ssl_context_properties_in_minifi(self):
+        self.minifi_options.set_ssl_context_properties = True
+
     def enable_prometheus_in_minifi(self):
         self.minifi_options.enable_prometheus = True
 

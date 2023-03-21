@@ -33,6 +33,7 @@ class MinifiOptions:
         self.enable_sql = False
         self.config_format = "json"
         self.use_flow_config_from_url = False
+        self.set_ssl_context_properties = False
 
 
 class MinifiContainer(FlowContainer):
@@ -93,6 +94,13 @@ class MinifiContainer(FlowContainer):
                 f.write("nifi.c2.full.heartbeat=false\n")
                 f.write("nifi.c2.agent.class=minifi-test-class\n")
                 f.write("nifi.c2.agent.identifier=minifi-test-id\n")
+
+            if self.options.set_ssl_context_properties:
+                f.write("nifi.remote.input.secure=true\n")
+                f.write("nifi.security.client.certificate=/tmp/resources/minifi-c2-server-ssl/minifi-cpp-flow.crt\n")
+                f.write("nifi.security.client.private.key=/tmp/resources/minifi-c2-server-ssl/minifi-cpp-flow.key\n")
+                f.write("nifi.security.client.pass.phrase=abcdefgh\n")
+                f.write("nifi.security.client.ca.certificate=/tmp/resources/minifi-c2-server-ssl/root-ca.pem\n")
 
             if not self.options.enable_provenance:
                 f.write("nifi.provenance.repository.class.name=NoOpRepository\n")
