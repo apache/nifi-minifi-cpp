@@ -263,6 +263,7 @@ int main(int argc, char **argv) {
     configure->setHome(minifiHome);
     configure->loadConfigureFile(DEFAULT_NIFI_PROPERTIES_FILE);
 
+    configure->commitChanges();
     minifi::core::extension::ExtensionManager::get().initialize(configure);
 
     if (argc >= 2 && std::string("docs") == argv[1]) {

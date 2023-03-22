@@ -25,7 +25,7 @@ namespace org::apache::nifi::minifi::test {
 TEST_CASE("Configuration can merge lists of property names", "[mergeProperties]") {
   using vector = std::vector<std::string>;
 
-  REQUIRE(Configuration::mergeProperties(vector{}, vector{}) == vector{});
+  REQUIRE(Configuration::mergeProperties(vector{}, vector{}) == vector{});  // NOLINT(readability-container-size-empty)
 
   REQUIRE(Configuration::mergeProperties(vector{"a"}, vector{}) == vector{"a"});
   REQUIRE(Configuration::mergeProperties(vector{"a"}, vector{"a"}) == vector{"a"});
@@ -51,6 +51,48 @@ TEST_CASE("Configuration can validate values to be assigned to specific properti
   REQUIRE_FALSE(Configuration::validatePropertyValue(Configuration::nifi_flow_configuration_encrypt, "invalid.value"));
   REQUIRE(Configuration::validatePropertyValue(Configuration::nifi_flow_configuration_encrypt, "true"));
   REQUIRE(Configuration::validatePropertyValue("random.property", "random_value"));
+}
+
+
+TEST_CASE("Configuration can fix misconfigured timeperiod<->integer validated properties") {
+  auto properties_path = std::filesystem::temp_directory_path() /  "test.properties";
+
+  {
+    std::ofstream properties_file(properties_path);
+    properties_file << "nifi.c2.agent.heartbeat.period=1min" << std::endl;
+    properties_file << "nifi.administrative.yield.duration=30000" << std::endl;
+    properties_file.close();
+  }
+  auto properties_file_time_after_creation = std::filesystem::last_write_time(properties_path);
+  const std::shared_ptr<minifi::Configure> configure = std::make_shared<minifi::Configure>();
+
+  configure->loadConfigureFile(properties_path);
+  CHECK(configure->get("nifi.c2.agent.heartbeat.period") == "60000");
+  CHECK(configure->get("nifi.administrative.yield.duration") == "30000 ms");
+
+  {
+    CHECK(properties_file_time_after_creation == std::filesystem::last_write_time(properties_path));
+    std::ifstream properties_file(properties_path);
+    std::string first_line;
+    std::string second_line;
+    CHECK(std::getline(properties_file, first_line));
+    CHECK(std::getline(properties_file, second_line));
+    CHECK(first_line == "nifi.c2.agent.heartbeat.period=1min");
+    CHECK(second_line == "nifi.administrative.yield.duration=30000");
+  }
+
+  CHECK(configure->commitChanges());
+
+  {
+    CHECK(properties_file_time_after_creation <= std::filesystem::last_write_time(properties_path));
+    std::ifstream properties_file(properties_path);
+    std::string first_line;
+    std::string second_line;
+    CHECK(std::getline(properties_file, first_line));
+    CHECK(std::getline(properties_file, second_line));
+    CHECK(first_line == "nifi.c2.agent.heartbeat.period=60000");
+    CHECK(second_line == "nifi.administrative.yield.duration=30000 ms");
+  }
 }
 
 }  // namespace org::apache::nifi::minifi::test

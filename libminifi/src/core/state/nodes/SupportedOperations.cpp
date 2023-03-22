@@ -65,17 +65,17 @@ void SupportedOperations::addProperty(SerializedResponseNode& properties, const 
 
 SupportedOperations::Metadata SupportedOperations::buildUpdatePropertiesMetadata() const {
   std::vector<std::unordered_map<std::string, std::string>> supported_config_updates;
-  for (const auto& config_property : Configuration::CONFIGURATION_PROPERTIES) {
+  for (const auto& [config_property_name, config_property_validator] : Configuration::CONFIGURATION_PROPERTIES) {
     auto sensitive_properties = Configuration::getSensitiveProperties(configuration_reader_);
-    if (ranges::find(sensitive_properties, config_property.name) != ranges::end(sensitive_properties)) {
+    if (ranges::find(sensitive_properties, config_property_name) != ranges::end(sensitive_properties)) {
       continue;
     }
-    if (!update_policy_controller_ || update_policy_controller_->canUpdate(std::string(config_property.name))) {
+    if (!update_policy_controller_ || update_policy_controller_->canUpdate(std::string(config_property_name))) {
       std::unordered_map<std::string, std::string> property;
-      property.emplace("propertyName", config_property.name);
-      property.emplace("validator", config_property.validator->getName());
+      property.emplace("propertyName", config_property_name);
+      property.emplace("validator", config_property_validator->getName());
       if (configuration_reader_) {
-        if (auto property_value = configuration_reader_(std::string(config_property.name))) {
+        if (auto property_value = configuration_reader_(std::string(config_property_name))) {
           property.emplace("propertyValue", *property_value);
         }
       }

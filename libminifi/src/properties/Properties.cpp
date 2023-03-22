@@ -24,6 +24,7 @@
 #include "utils/file/PathUtils.h"
 #include "core/logging/LoggerConfiguration.h"
 #include "properties/PropertiesFile.h"
+#include "properties/Configuration.h"
 
 namespace org::apache::nifi::minifi {
 
@@ -62,6 +63,46 @@ int Properties::getInt(const std::string &key, int default_value) const {
   return it != properties_.end() ? std::stoi(it->second.active_value) : default_value;
 }
 
+namespace {
+void ensureTimePeriodValidatedPropertyHasExplicitUnit(const core::PropertyValidator* const validator, std::string& persisted_value, std::string& value, bool& need_to_persist_new_value) {
+  if (validator != core::StandardValidators::get().TIME_PERIOD_VALIDATOR.get())
+    return;
+  if (value.empty() || !std::all_of(value.begin(), value.end(), ::isdigit))
+    return;
+
+  value += " ms";
+  persisted_value = value;
+  need_to_persist_new_value = true;
+}
+
+bool integerValidatedProperty(const core::PropertyValidator* const validator) {
+  return validator == core::StandardValidators::get().INTEGER_VALIDATOR.get()
+      || validator == core::StandardValidators::get().UNSIGNED_INT_VALIDATOR.get()
+      || validator == core::StandardValidators::get().LONG_VALIDATOR.get()
+      || validator == core::StandardValidators::get().UNSIGNED_LONG_VALIDATOR.get();
+}
+
+void ensureIntegerValidatedPropertyHasNoUnit(const core::PropertyValidator* const validator, std::string& persisted_value, std::string& value, bool& need_to_persist_new_value) {
+  if (!integerValidatedProperty(validator))
+    return;
+
+  if (auto parsed_time = utils::timeutils::StringToDuration<std::chrono::milliseconds>(value)) {
+    value = fmt::format("{}", parsed_time->count());
+    persisted_value = value;
+    need_to_persist_new_value = true;
+  }
+}
+
+void formatConfigurationProperty(std::string_view key, std::string& persisted_value, std::string& value, bool& need_to_persist_new_value) {
+  auto configuration_property = Configuration::CONFIGURATION_PROPERTIES.find(key);
+  if (configuration_property == Configuration::CONFIGURATION_PROPERTIES.end())
+    return;
+
+  ensureTimePeriodValidatedPropertyHasExplicitUnit(configuration_property->second, persisted_value, value, need_to_persist_new_value);
+  ensureIntegerValidatedPropertyHasNoUnit(configuration_property->second, persisted_value, value, need_to_persist_new_value);
+}
+}  // namespace
+
 // Load Configure File
 void Properties::loadConfigureFile(const std::filesystem::path& configuration_file) {
   std::lock_guard<std::mutex> lock(mutex_);
@@ -87,13 +128,17 @@ void Properties::loadConfigureFile(const std::filesystem::path& configuration_fi
     return;
   }
   properties_.clear();
+  dirty_ = false;
   for (const auto& line : PropertiesFile{file}) {
+    auto key = line.getKey();
     auto persisted_value = line.getValue();
     auto value = utils::StringUtils::replaceEnvironmentVariables(persisted_value);
-    properties_[line.getKey()] = {persisted_value, value, false};
+    bool need_to_persist_new_value = false;
+    formatConfigurationProperty(key, persisted_value, value, need_to_persist_new_value);
+    dirty_ |= need_to_persist_new_value;
+    properties_[key] = {persisted_value, value, need_to_persist_new_value};
   }
   checksum_calculator_.setFileLocation(properties_file_);
-  dirty_ = false;
 }
 
 std::filesystem::path Properties::getFilePath() const {

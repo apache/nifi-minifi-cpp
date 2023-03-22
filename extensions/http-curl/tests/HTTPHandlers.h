@@ -556,18 +556,18 @@ class HeartbeatHandler : public ServerAwareHandler {
         std::vector<std::unordered_map<std::string, std::string>> config_properties;
         const auto prop_reader = [this](const std::string& sensitive_props) { return configuration_->getString(sensitive_props); };
         const auto sensitive_props = minifi::Configuration::getSensitiveProperties(prop_reader);
-        for (const auto& property : minifi::Configuration::CONFIGURATION_PROPERTIES) {
-          if (ranges::find(sensitive_props, property.name) != ranges::end(sensitive_props)) {
+        for (const auto& [property_name, property_validator] : minifi::Configuration::CONFIGURATION_PROPERTIES) {
+          if (ranges::find(sensitive_props, property_name) != ranges::end(sensitive_props)) {
             continue;
           }
 
           std::unordered_map<std::string, std::string> config_property;
-          if (ranges::find(disallowed_properties, property.name) == ranges::end(disallowed_properties)) {
-            config_property.emplace("propertyName", property.name);
-            if (auto value = configuration_->getRawValue(std::string(property.name))) {
+          if (ranges::find(disallowed_properties, property_name) == ranges::end(disallowed_properties)) {
+            config_property.emplace("propertyName", property_name);
+            if (auto value = configuration_->getRawValue(std::string(property_name))) {
               config_property.emplace("propertyValue", *value);
             }
-            config_property.emplace("validator", property.validator->getName());
+            config_property.emplace("validator", property_validator->getName());
             config_properties.push_back(config_property);
           }
         }
