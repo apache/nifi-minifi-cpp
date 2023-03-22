@@ -21,13 +21,17 @@ namespace org::apache::nifi::minifi::state::response {
 
 RepositoryMetricsSourceStore::RepositoryMetricsSourceStore(std::string name) : name_(std::move(name)) {}
 
+void RepositoryMetricsSourceStore::setRepositories(const std::vector<std::shared_ptr<core::RepositoryMetricsSource>> &repositories) {
+  repositories_ = repositories;
+}
+
 void RepositoryMetricsSourceStore::addRepository(const std::shared_ptr<core::RepositoryMetricsSource> &repo) {
   if (nullptr != repo) {
     repositories_.push_back(repo);
   }
 }
 
-std::vector<SerializedResponseNode> RepositoryMetricsSourceStore::serialize() {
+std::vector<SerializedResponseNode> RepositoryMetricsSourceStore::serialize() const {
   std::vector<SerializedResponseNode> serialized;
   for (const auto& repo : repositories_) {
     SerializedResponseNode parent;
@@ -42,11 +46,11 @@ std::vector<SerializedResponseNode> RepositoryMetricsSourceStore::serialize() {
 
     SerializedResponseNode repo_size;
     repo_size.name = "size";
-    repo_size.value = std::to_string(repo->getRepositorySize());
+    repo_size.value = repo->getRepositorySize();
 
     SerializedResponseNode max_repo_size;
     max_repo_size.name = "maxSize";
-    max_repo_size.value = std::to_string(repo->getMaxRepositorySize());
+    max_repo_size.value = repo->getMaxRepositorySize();
 
     SerializedResponseNode repo_entry_count;
     repo_entry_count.name = "entryCount";
@@ -77,7 +81,7 @@ std::vector<SerializedResponseNode> RepositoryMetricsSourceStore::serialize() {
   return serialized;
 }
 
-std::vector<PublishedMetric> RepositoryMetricsSourceStore::calculateMetrics() {
+std::vector<PublishedMetric> RepositoryMetricsSourceStore::calculateMetrics() const {
   std::vector<PublishedMetric> metrics;
   for (const auto& repo : repositories_) {
     metrics.push_back({"is_running", (repo->isRunning() ? 1.0 : 0.0), {{"metric_class", name_}, {"repository_name", repo->getRepositoryName()}}});

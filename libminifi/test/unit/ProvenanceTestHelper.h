@@ -178,7 +178,7 @@ class TestThreadedRepository : public TestRepositoryBase<org::apache::nifi::mini
 
 class TestRocksDbRepository : public TestThreadedRepository {
  public:
-  std::optional<RocksDbStats> getRocksDbStats() override {
+  std::optional<RocksDbStats> getRocksDbStats() const override {
     return RocksDbStats {
       .table_readers_size = 100,
       .all_memory_tables_size = 200

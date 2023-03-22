@@ -47,7 +47,7 @@ class RepositoryMetricsSource {
     return true;
   }
 
-  virtual std::optional<RocksDbStats> getRocksDbStats() {
+  virtual std::optional<RocksDbStats> getRocksDbStats() const {
     return std::nullopt;
   }
 };

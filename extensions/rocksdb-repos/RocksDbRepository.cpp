@@ -20,7 +20,7 @@ using namespace std::literals::chrono_literals;
 
 namespace org::apache::nifi::minifi::core::repository {
 
-std::optional<RepositoryMetricsSource::RocksDbStats> RocksDbRepository::getRocksDbStats() {
+std::optional<RepositoryMetricsSource::RocksDbStats> RocksDbRepository::getRocksDbStats() const {
   RocksDbStats stats;
   auto opendb = db_->open();
   if (!opendb) {

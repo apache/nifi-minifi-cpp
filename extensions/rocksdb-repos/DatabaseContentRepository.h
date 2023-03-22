@@ -76,7 +76,7 @@ class DatabaseContentRepository : public core::ContentRepository {
 
   uint64_t getRepositorySize() const override;
   uint64_t getRepositoryEntryCount() const override;
-  std::optional<RepositoryMetricsSource::RocksDbStats> getRocksDbStats() override;
+  std::optional<RepositoryMetricsSource::RocksDbStats> getRocksDbStats() const override;
 
  protected:
   bool removeKey(const std::string& content_path) override;

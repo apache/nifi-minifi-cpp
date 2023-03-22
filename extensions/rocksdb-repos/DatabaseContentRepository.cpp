@@ -286,7 +286,7 @@ uint64_t DatabaseContentRepository::getRepositoryEntryCount() const {
             })).value_or(0);
 }
 
-std::optional<RepositoryMetricsSource::RocksDbStats> DatabaseContentRepository::getRocksDbStats() {
+std::optional<RepositoryMetricsSource::RocksDbStats> DatabaseContentRepository::getRocksDbStats() const {
   RocksDbStats stats;
   auto opendb = db_->open();
   if (!opendb) {
