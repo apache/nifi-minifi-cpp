@@ -90,7 +90,19 @@ TEST_CASE("RepositorymetricsHaveRepo", "[c2m4]") {
 
   REQUIRE("RepositoryMetrics" == metrics.getName());
 
-  auto repo = std::make_shared<TestThreadedRepository>();
+  std::shared_ptr<TestThreadedRepository> repo;
+  size_t expected_metric_count{};
+
+  SECTION("Non-RocksDB repository") {
+    repo = std::make_shared<TestThreadedRepository>();
+    expected_metric_count = 5;
+  }
+
+  SECTION("RocksDB repository") {
+    repo = std::make_shared<TestRocksDbRepository>();
+    expected_metric_count = 7;
+  }
+
 
   metrics.addRepository(repo);
   {
@@ -99,13 +111,17 @@ TEST_CASE("RepositorymetricsHaveRepo", "[c2m4]") {
     minifi::state::response::SerializedResponseNode resp = metrics.serialize().at(0);
 
     REQUIRE("repo_name" == resp.name);
-    REQUIRE(5 == resp.children.size());
+    REQUIRE(expected_metric_count == resp.children.size());
 
     checkSerializedValue(resp.children, "running", "false");
     checkSerializedValue(resp.children, "full", "false");
     checkSerializedValue(resp.children, "size", "0");
     checkSerializedValue(resp.children, "maxSize", "0");
     checkSerializedValue(resp.children, "entryCount", "0");
+    if (expected_metric_count > 5) {
+      checkSerializedValue(resp.children, "rocksDbTableReadersSize", "100");
+      checkSerializedValue(resp.children, "rocksDbAllMemoryTablesSize", "200");
+    }
   }
 
   repo->start();
@@ -115,13 +131,17 @@ TEST_CASE("RepositorymetricsHaveRepo", "[c2m4]") {
     minifi::state::response::SerializedResponseNode resp = metrics.serialize().at(0);
 
     REQUIRE("repo_name" == resp.name);
-    REQUIRE(5 == resp.children.size());
+    REQUIRE(expected_metric_count == resp.children.size());
 
     checkSerializedValue(resp.children, "running", "true");
     checkSerializedValue(resp.children, "full", "false");
     checkSerializedValue(resp.children, "size", "0");
     checkSerializedValue(resp.children, "maxSize", "0");
     checkSerializedValue(resp.children, "entryCount", "0");
+    if (expected_metric_count > 5) {
+      checkSerializedValue(resp.children, "rocksDbTableReadersSize", "100");
+      checkSerializedValue(resp.children, "rocksDbAllMemoryTablesSize", "200");
+    }
   }
 
   repo->stop();
@@ -132,13 +152,17 @@ TEST_CASE("RepositorymetricsHaveRepo", "[c2m4]") {
     minifi::state::response::SerializedResponseNode resp = metrics.serialize().at(0);
 
     REQUIRE("repo_name" == resp.name);
-    REQUIRE(5 == resp.children.size());
+    REQUIRE(expected_metric_count == resp.children.size());
 
     checkSerializedValue(resp.children, "running", "false");
     checkSerializedValue(resp.children, "full", "false");
     checkSerializedValue(resp.children, "size", "0");
     checkSerializedValue(resp.children, "maxSize", "0");
     checkSerializedValue(resp.children, "entryCount", "0");
+    if (expected_metric_count > 5) {
+      checkSerializedValue(resp.children, "rocksDbTableReadersSize", "100");
+      checkSerializedValue(resp.children, "rocksDbAllMemoryTablesSize", "200");
+    }
   }
 }
 

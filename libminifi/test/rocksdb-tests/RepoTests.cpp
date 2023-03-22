@@ -21,6 +21,7 @@
 #include <memory>
 #include <string>
 #include <thread>
+#include <optional>
 
 #include "core/Core.h"
 #include "core/repository/AtomicRepoEntries.h"
@@ -530,12 +531,15 @@ TEST_CASE("Test getting flow file repository size properties", "[TestGettingRepo
   std::shared_ptr<core::Repository> repository;
   auto expected_is_full = false;
   uint64_t expected_max_repo_size = 0;
+  bool expected_rocksdb_stats = false;
   SECTION("FlowFileRepository") {
     repository = std::make_shared<core::repository::FlowFileRepository>("ff", dir.string(), 0ms, 0, 1ms);
+    expected_rocksdb_stats = true;
   }
 
   SECTION("ProvenanceRepository") {
     repository = std::make_shared<minifi::provenance::ProvenanceRepository>("ff", dir.string(), 0ms, 0, 1ms);
+    expected_rocksdb_stats = true;
   }
 
   SECTION("VolatileFlowFileRepository") {
@@ -584,6 +588,11 @@ TEST_CASE("Test getting flow file repository size properties", "[TestGettingRepo
   REQUIRE(expected_is_full == repository->isFull());
   REQUIRE(expected_max_repo_size == repository->getMaxRepositorySize());
   REQUIRE(2 == repository->getRepositoryEntryCount());
+  auto rocksdb_stats = repository->getRocksDbStats();
+  REQUIRE(expected_rocksdb_stats == (rocksdb_stats != std::nullopt));
+  if (rocksdb_stats) {
+    REQUIRE(rocksdb_stats->all_memory_tables_size > 0);
+  }
 }
 
 TEST_CASE("Test getting noop repository size properties", "[TestGettingRepositorySize]") {
@@ -626,6 +635,7 @@ TEST_CASE("Test getting content repository size properties", "[TestGettingReposi
   std::shared_ptr<core::ContentRepository> content_repo;
   auto expected_is_full = false;
   uint64_t expected_max_repo_size = 0;
+  bool expected_rocksdb_stats = false;
   SECTION("FileSystemRepository") {
     content_repo = std::make_shared<core::repository::FileSystemRepository>();
   }
@@ -638,6 +648,7 @@ TEST_CASE("Test getting content repository size properties", "[TestGettingReposi
 
   SECTION("DatabaseContentRepository") {
     content_repo = std::make_shared<core::repository::DatabaseContentRepository>();
+    expected_rocksdb_stats = true;
   }
 
   content_repo->initialize(configuration);
@@ -672,6 +683,11 @@ TEST_CASE("Test getting content repository size properties", "[TestGettingReposi
   REQUIRE(expected_is_full == content_repo->isFull());
   REQUIRE(expected_max_repo_size == content_repo->getMaxRepositorySize());
   REQUIRE(1 == content_repo->getRepositoryEntryCount());
+  auto rocksdb_stats = content_repo->getRocksDbStats();
+  REQUIRE(expected_rocksdb_stats == (rocksdb_stats != std::nullopt));
+  if (rocksdb_stats) {
+    REQUIRE(rocksdb_stats->all_memory_tables_size > 0);
+  }
 }
 
 TEST_CASE("Flow file repositories can be stopped", "[TestRepoIsRunning]") {

@@ -92,6 +92,20 @@ class RepositoryMetrics : public ResponseNode {
       parent.children.push_back(max_repo_size);
       parent.children.push_back(repo_entry_count);
 
+      auto rocksdb_stats = repo->getRocksDbStats();
+      if (rocksdb_stats) {
+        SerializedResponseNode rocksdb_table_readers_size;
+        rocksdb_table_readers_size.name = "rocksDbTableReadersSize";
+        rocksdb_table_readers_size.value = rocksdb_stats->table_readers_size;
+
+        SerializedResponseNode rocksdb_all_memory_tables_size;
+        rocksdb_all_memory_tables_size.name = "rocksDbAllMemoryTablesSize";
+        rocksdb_all_memory_tables_size.value = rocksdb_stats->all_memory_tables_size;
+
+        parent.children.push_back(rocksdb_table_readers_size);
+        parent.children.push_back(rocksdb_all_memory_tables_size);
+      }
+
       serialized.push_back(parent);
     }
     return serialized;
@@ -105,6 +119,13 @@ class RepositoryMetrics : public ResponseNode {
       metrics.push_back({"repository_size_bytes", static_cast<double>(repo->getRepositorySize()), {{"metric_class", getName()}, {"repository_name", repo->getRepositoryName()}}});
       metrics.push_back({"max_repository_size_bytes", static_cast<double>(repo->getMaxRepositorySize()), {{"metric_class", getName()}, {"repository_name", repo->getRepositoryName()}}});
       metrics.push_back({"repository_entry_count", static_cast<double>(repo->getRepositoryEntryCount()), {{"metric_class", getName()}, {"repository_name", repo->getRepositoryName()}}});
+      auto rocksdb_stats = repo->getRocksDbStats();
+      if (rocksdb_stats) {
+        metrics.push_back({"rocksdb_table_readers_size_bytes", static_cast<double>(rocksdb_stats->table_readers_size),
+          {{"metric_class", getName()}, {"repository_name", repo->getRepositoryName()}}});
+        metrics.push_back({"rocksdb_all_memory_tables_size_bytes", static_cast<double>(rocksdb_stats->all_memory_tables_size),
+          {{"metric_class", getName()}, {"repository_name", repo->getRepositoryName()}}});
+      }
     }
     return metrics;
   }

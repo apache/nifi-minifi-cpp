@@ -20,22 +20,22 @@ using namespace std::literals::chrono_literals;
 
 namespace org::apache::nifi::minifi::core::repository {
 
-void RocksDbRepository::printStats() {
+std::optional<RepositoryMetricsSource::RocksDbStats> RocksDbRepository::getRocksDbStats() {
+  RocksDbStats stats;
   auto opendb = db_->open();
   if (!opendb) {
-    return;
+    return stats;
   }
-  std::string key_count;
-  opendb->GetProperty("rocksdb.estimate-num-keys", &key_count);
 
   std::string table_readers;
   opendb->GetProperty("rocksdb.estimate-table-readers-mem", &table_readers);
+  stats.table_readers_size = std::stoull(table_readers);
 
   std::string all_memtables;
   opendb->GetProperty("rocksdb.cur-size-all-mem-tables", &all_memtables);
+  stats.all_memory_tables_size = std::stoull(all_memtables);
 
-  logger_->log_info("Repository stats: key count: %s, table readers size: %s, all memory tables size: %s",
-      key_count, table_readers, all_memtables);
+  return stats;
 }
 
 bool RocksDbRepository::ExecuteWithRetry(const std::function<rocksdb::Status()>& operation) {

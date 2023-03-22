@@ -286,6 +286,24 @@ uint64_t DatabaseContentRepository::getRepositoryEntryCount() const {
             })).value_or(0);
 }
 
+std::optional<RepositoryMetricsSource::RocksDbStats> DatabaseContentRepository::getRocksDbStats() {
+  RocksDbStats stats;
+  auto opendb = db_->open();
+  if (!opendb) {
+    return stats;
+  }
+
+  std::string table_readers;
+  opendb->GetProperty("rocksdb.estimate-table-readers-mem", &table_readers);
+  stats.table_readers_size = std::stoull(table_readers);
+
+  std::string all_memtables;
+  opendb->GetProperty("rocksdb.cur-size-all-mem-tables", &all_memtables);
+  stats.all_memory_tables_size = std::stoull(all_memtables);
+
+  return stats;
+}
+
 REGISTER_RESOURCE_AS(DatabaseContentRepository, InternalResource, ("DatabaseContentRepository", "databasecontentrepository"));
 
 }  // namespace org::apache::nifi::minifi::core::repository

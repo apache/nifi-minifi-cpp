@@ -176,6 +176,16 @@ class TestThreadedRepository : public TestRepositoryBase<org::apache::nifi::mini
   std::thread thread_;
 };
 
+class TestRocksDbRepository : public TestThreadedRepository {
+ public:
+  std::optional<RocksDbStats> getRocksDbStats() override {
+    return RocksDbStats {
+      .table_readers_size = 100,
+      .all_memory_tables_size = 200
+    };
+  }
+};
+
 class TestFlowRepository : public org::apache::nifi::minifi::core::ThreadedRepository {
  public:
   TestFlowRepository()
