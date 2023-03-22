@@ -15,41 +15,29 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
 #pragma once
 
+#include <memory>
 #include <string>
-#include <optional>
+#include <utility>
+#include <vector>
 
-namespace org::apache::nifi::minifi::core {
+#include "core/RepositoryMetricsSource.h"
+#include "core/state/Value.h"
+#include "core/state/PublishedMetricProvider.h"
 
-class RepositoryMetricsSource {
+namespace org::apache::nifi::minifi::state::response {
+
+class RepositoryMetricsSourceStore {
  public:
-  struct RocksDbStats {
-    uint64_t table_readers_size{};
-    uint64_t all_memory_tables_size{};
-  };
+  RepositoryMetricsSourceStore(std::string name);
+  void addRepository(const std::shared_ptr<core::RepositoryMetricsSource> &repo);
+  std::vector<SerializedResponseNode> serialize();
+  std::vector<PublishedMetric> calculateMetrics();
 
-  virtual ~RepositoryMetricsSource() = default;
-  virtual uint64_t getRepositorySize() const = 0;
-  virtual uint64_t getRepositoryEntryCount() const = 0;
-  virtual std::string getRepositoryName() const = 0;
-
-  virtual uint64_t getMaxRepositorySize() const {
-    return 0;
-  }
-
-  virtual bool isFull() const {
-    return false;
-  }
-
-  virtual bool isRunning() const {
-    return true;
-  }
-
-  virtual std::optional<RocksDbStats> getRocksDbStats() {
-    return std::nullopt;
-  }
+ private:
+  std::string name_;
+  std::vector<std::shared_ptr<core::RepositoryMetricsSource>> repositories_;
 };
 
-}  // namespace org::apache::nifi::minifi::core
+}  // namespace org::apache::nifi::minifi::state::response
