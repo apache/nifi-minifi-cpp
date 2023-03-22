@@ -46,7 +46,7 @@ class RocksDbRepository : public ThreadedRepository {
 
   uint64_t getRepositorySize() const override;
   uint64_t getRepositoryEntryCount() const override;
-  void printStats();
+  std::optional<RocksDbStats> getRocksDbStats() const override;
 
  protected:
   bool ExecuteWithRetry(const std::function<rocksdb::Status()>& operation);

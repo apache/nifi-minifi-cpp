@@ -27,6 +27,8 @@
 #include "rocksdb/db.h"
 #include "rocksdb/utilities/checkpoint.h"
 #include "WriteBatch.h"
+#include "core/RepositoryMetricsSource.h"
+#include "core/logging/LoggerConfiguration.h"
 
 namespace org::apache::nifi::minifi::internal {
 
@@ -73,6 +75,7 @@ class OpenRocksDb {
   rocksdb::DB* get();
 
   std::optional<uint64_t> getApproximateSizes() const;
+  minifi::core::RepositoryMetricsSource::RocksDbStats getStats();
 
  private:
   void handleResult(const rocksdb::Status& result);
@@ -81,6 +84,7 @@ class OpenRocksDb {
   gsl::not_null<RocksDbInstance*> db_;
   gsl::not_null<std::shared_ptr<rocksdb::DB>> impl_;
   gsl::not_null<std::shared_ptr<ColumnHandle>> column_;
+  std::shared_ptr<minifi::core::logging::Logger> logger_{minifi::core::logging::LoggerFactory<OpenRocksDb>::getLogger()};
 };
 
 }  // namespace org::apache::nifi::minifi::internal

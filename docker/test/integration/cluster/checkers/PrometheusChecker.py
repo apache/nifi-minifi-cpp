@@ -48,8 +48,10 @@ class PrometheusChecker:
 
     def verify_repository_metrics(self):
         label_list = [{'repository_name': 'provenance'}, {'repository_name': 'flowfile'}, {'repository_name': 'content'}]
+        # Only flowfile and content repositories are using rocksdb by default, so rocksdb specific metrics are only present there
         return all((self.verify_metrics_exist(['minifi_is_running', 'minifi_is_full', 'minifi_repository_size_bytes', 'minifi_max_repository_size_bytes', 'minifi_repository_entry_count'], 'RepositoryMetrics', labels) for labels in label_list)) and \
-            all((self.verify_metric_larger_than_zero('minifi_repository_size_bytes', 'RepositoryMetrics', labels) for labels in label_list[1:3]))
+            all((self.verify_metric_larger_than_zero('minifi_repository_size_bytes', 'RepositoryMetrics', labels) for labels in label_list[1:3])) and \
+            all((self.verify_metrics_exist(['minifi_rocksdb_table_readers_size_bytes', 'minifi_rocksdb_all_memory_tables_size_bytes'], 'RepositoryMetrics', labels) for labels in label_list[1:3]))
 
     def verify_queue_metrics(self):
         return self.verify_metrics_exist(['minifi_queue_data_size', 'minifi_queue_data_size_max', 'minifi_queue_size', 'minifi_queue_size_max'], 'QueueMetrics')
@@ -74,12 +76,15 @@ class PrometheusChecker:
 
     def verify_agent_status_metrics(self):
         label_list = [{'repository_name': 'flowfile'}, {'repository_name': 'content'}]
+        # Only flowfile and content repositories are using rocksdb by default, so rocksdb specific metrics are only present there
         for labels in label_list:
             if not (self.verify_metric_exists('minifi_is_running', 'AgentStatus', labels)
                     and self.verify_metric_exists('minifi_is_full', 'AgentStatus', labels)
                     and self.verify_metric_exists('minifi_max_repository_size_bytes', 'AgentStatus', labels)
                     and self.verify_metric_larger_than_zero('minifi_repository_size_bytes', 'AgentStatus', labels)
-                    and self.verify_metric_exists('minifi_repository_entry_count', 'AgentStatus', labels)):
+                    and self.verify_metric_exists('minifi_repository_entry_count', 'AgentStatus', labels)
+                    and self.verify_metric_exists('minifi_rocksdb_table_readers_size_bytes', 'AgentStatus', labels)
+                    and self.verify_metric_exists('minifi_rocksdb_all_memory_tables_size_bytes', 'AgentStatus', labels)):
                 return False
 
         # provenance repository is NoOpRepository by default which has zero size

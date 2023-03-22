@@ -135,4 +135,25 @@ std::optional<uint64_t> OpenRocksDb::getApproximateSizes() const {
   return std::nullopt;
 }
 
+minifi::core::RepositoryMetricsSource::RocksDbStats OpenRocksDb::getStats() {
+  minifi::core::RepositoryMetricsSource::RocksDbStats stats;
+  std::string table_readers;
+  GetProperty("rocksdb.estimate-table-readers-mem", &table_readers);
+  try {
+    stats.table_readers_size = std::stoull(table_readers);
+  } catch (const std::exception&) {
+    logger_->log_warn("Could not retrieve valid 'rocksdb.estimate-table-readers-mem' property value from rocksdb content repository!");
+  }
+
+  std::string all_memtables;
+  GetProperty("rocksdb.cur-size-all-mem-tables", &all_memtables);
+  try {
+    stats.all_memory_tables_size = std::stoull(all_memtables);
+  } catch (const std::exception&) {
+    logger_->log_warn("Could not retrieve valid 'rocksdb.cur-size-all-mem-tables' property value from rocksdb content repository!");
+  }
+
+  return stats;
+}
+
 }  // namespace org::apache::nifi::minifi::internal

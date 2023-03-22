@@ -61,7 +61,7 @@
 #include "core/AgentIdentificationProvider.h"
 #include "utils/Export.h"
 #include "SupportedOperations.h"
-#include "core/RepositoryMetricsSource.h"
+#include "RepositoryMetricsSourceStore.h"
 
 namespace org::apache::nifi::minifi::state::response {
 
@@ -411,11 +411,18 @@ class Bundles : public DeviceInformation {
 class AgentStatus : public StateMonitorNode {
  public:
   AgentStatus(std::string name, const utils::Identifier& uuid)
-      : StateMonitorNode(std::move(name), uuid) {
+      : StateMonitorNode(std::move(name), uuid),
+        repository_metrics_source_store_(getName()) {
   }
 
   explicit AgentStatus(std::string name)
-      : StateMonitorNode(std::move(name)) {
+      : StateMonitorNode(std::move(name)),
+        repository_metrics_source_store_(getName()) {
+  }
+
+  explicit AgentStatus(std::string name, std::string parent_metrics_name)
+      : StateMonitorNode(std::move(name)),
+        repository_metrics_source_store_(std::move(parent_metrics_name)) {
   }
 
   MINIFIAPI static constexpr const char* Description = "Metric node that defines current agent status including repository, component and resource usage information.";
@@ -424,14 +431,12 @@ class AgentStatus : public StateMonitorNode {
     return "AgentStatus";
   }
 
-  void setRepositories(const std::map<std::string, std::shared_ptr<core::RepositoryMetricsSource>> &repositories) {
-    repositories_ = repositories;
+  void setRepositories(const std::vector<std::shared_ptr<core::RepositoryMetricsSource>> &repositories) {
+    repository_metrics_source_store_.setRepositories(repositories);
   }
 
   void addRepository(const std::shared_ptr<core::RepositoryMetricsSource> &repo) {
-    if (nullptr != repo) {
-      repositories_.insert(std::make_pair(repo->getRepositoryName(), repo));
-    }
+    repository_metrics_source_store_.addRepository(repo);
   }
 
   std::vector<SerializedResponseNode> serialize() override {
@@ -453,14 +458,7 @@ class AgentStatus : public StateMonitorNode {
   }
 
   std::vector<PublishedMetric> calculateMetrics() override {
-    std::vector<PublishedMetric> metrics;
-    for (const auto& [_, repo] : repositories_) {
-      metrics.push_back({"is_running", (repo->isRunning() ? 1.0 : 0.0), {{"metric_class", getName()}, {"repository_name", repo->getRepositoryName()}}});
-      metrics.push_back({"is_full", (repo->isFull() ? 1.0 : 0.0), {{"metric_class", getName()}, {"repository_name", repo->getRepositoryName()}}});
-      metrics.push_back({"repository_size_bytes", static_cast<double>(repo->getRepositorySize()), {{"metric_class", getName()}, {"repository_name", repo->getRepositoryName()}}});
-      metrics.push_back({"max_repository_size_bytes", static_cast<double>(repo->getMaxRepositorySize()), {{"metric_class", getName()}, {"repository_name", repo->getRepositoryName()}}});
-      metrics.push_back({"repository_entry_count", static_cast<double>(repo->getRepositoryEntryCount()), {{"metric_class", getName()}, {"repository_name", repo->getRepositoryName()}}});
-    }
+    auto metrics = repository_metrics_source_store_.calculateMetrics();
     if (nullptr != monitor_) {
       auto uptime = monitor_->getUptime();
       metrics.push_back({"uptime_milliseconds", static_cast<double>(uptime), {{"metric_class", getName()}}});
@@ -487,41 +485,8 @@ class AgentStatus : public StateMonitorNode {
  protected:
   SerializedResponseNode serializeRepositories() const {
     SerializedResponseNode repositories;
-
     repositories.name = "repositories";
-
-    for (const auto& repo : repositories_) {
-      SerializedResponseNode repo_node;
-      repo_node.collapsible = false;
-      repo_node.name = repo.first;
-
-      SerializedResponseNode repo_size;
-      repo_size.name = "size";
-      repo_size.value = repo.second->getRepositorySize();
-
-      SerializedResponseNode max_repo_size;
-      max_repo_size.name = "maxSize";
-      max_repo_size.value = repo.second->getMaxRepositorySize();
-
-      SerializedResponseNode repo_entry_count;
-      repo_entry_count.name = "entryCount";
-      repo_entry_count.value = repo.second->getRepositoryEntryCount();
-
-      SerializedResponseNode is_running;
-      is_running.name = "running";
-      is_running.value = repo.second->isRunning();
-
-      SerializedResponseNode is_full;
-      is_full.name = "full";
-      is_full.value = repo.second->isFull();
-
-      repo_node.children.push_back(repo_size);
-      repo_node.children.push_back(max_repo_size);
-      repo_node.children.push_back(repo_entry_count);
-      repo_node.children.push_back(is_running);
-      repo_node.children.push_back(is_full);
-      repositories.children.push_back(repo_node);
-    }
+    repositories.children = repository_metrics_source_store_.serialize();
     return repositories;
   }
 
@@ -591,7 +556,7 @@ class AgentStatus : public StateMonitorNode {
     return resource_consumption;
   }
 
-  std::map<std::string, std::shared_ptr<core::RepositoryMetricsSource>> repositories_;
+  RepositoryMetricsSourceStore repository_metrics_source_store_;
 
   MINIFIAPI static utils::ProcessCpuUsageTracker cpu_load_tracker_;
   MINIFIAPI static std::mutex cpu_load_tracker_mutex_;
@@ -623,7 +588,7 @@ class AgentMonitor {
   }
   void addRepository(const std::shared_ptr<core::RepositoryMetricsSource> &repo) {
     if (nullptr != repo) {
-      repositories_.insert(std::make_pair(repo->getRepositoryName(), repo));
+      repositories_.push_back(repo);
     }
   }
 
@@ -632,7 +597,7 @@ class AgentMonitor {
   }
 
  protected:
-  std::map<std::string, std::shared_ptr<core::RepositoryMetricsSource>> repositories_;
+  std::vector<std::shared_ptr<core::RepositoryMetricsSource>> repositories_;
   state::StateMonitor* monitor_ = nullptr;
 };
 
@@ -762,7 +727,7 @@ class AgentNode : public DeviceInformation, public AgentMonitor, public AgentIde
   std::vector<SerializedResponseNode> getAgentStatus() const {
     std::vector<SerializedResponseNode> serialized;
 
-    AgentStatus status("status");
+    AgentStatus status("status", getName());
     status.setRepositories(repositories_);
     status.setStateMonitor(monitor_);
 

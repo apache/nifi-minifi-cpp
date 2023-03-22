@@ -23,19 +23,6 @@
 
 namespace org::apache::nifi::minifi::provenance {
 
-void ProvenanceRepository::run() {
-  size_t count = 0;
-  while (isRunning()) {
-    std::this_thread::sleep_for(std::chrono::seconds(1));
-    count++;
-    // Hack, to be removed in scope of https://issues.apache.org/jira/browse/MINIFICPP-1145
-    count = count % 30;
-    if (count == 0) {
-      printStats();
-    }
-  }
-}
-
 bool ProvenanceRepository::initialize(const std::shared_ptr<org::apache::nifi::minifi::Configure> &config) {
   std::string value;
   if (config->get(Configure::nifi_provenance_repository_directory_default, value) && !value.empty()) {

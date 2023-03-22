@@ -112,15 +112,9 @@ void FlowFileRepository::deserializeFlowFilesWithNoContentClaim(minifi::internal
 }
 
 void FlowFileRepository::run() {
-  auto last = std::chrono::steady_clock::now();
   while (isRunning()) {
     std::this_thread::sleep_for(purge_period_);
     flush();
-    auto now = std::chrono::steady_clock::now();
-    if ((now-last) > std::chrono::seconds(30)) {
-      printStats();
-      last = now;
-    }
   }
   flush();
 }

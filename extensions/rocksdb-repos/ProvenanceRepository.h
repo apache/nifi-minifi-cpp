@@ -83,7 +83,7 @@ class ProvenanceRepository : public core::repository::RocksDbRepository {
 
  private:
   // Run function for the thread
-  void run() override;
+  void run() override {};
 };
 
 }  // namespace org::apache::nifi::minifi::provenance

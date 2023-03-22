@@ -286,6 +286,15 @@ uint64_t DatabaseContentRepository::getRepositoryEntryCount() const {
             })).value_or(0);
 }
 
+std::optional<RepositoryMetricsSource::RocksDbStats> DatabaseContentRepository::getRocksDbStats() const {
+  auto opendb = db_->open();
+  if (!opendb) {
+    return RocksDbStats{};
+  }
+
+  return opendb->getStats();
+}
+
 REGISTER_RESOURCE_AS(DatabaseContentRepository, InternalResource, ("DatabaseContentRepository", "databasecontentrepository"));
 
 }  // namespace org::apache::nifi::minifi::core::repository

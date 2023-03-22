@@ -38,6 +38,8 @@ class LogPublisherTestFixture {
       response_node_loader_(std::make_shared<state::response::ResponseNodeLoader>(configuration_,
         std::vector<std::shared_ptr<core::RepositoryMetricsSource>>{provenance_repo_, flow_file_repo_}, nullptr)),
       publisher_("LogMetricsPublisher") {
+    provenance_repo_->initialize(configuration_);
+    flow_file_repo_->initialize(configuration_);
   }
 
  protected:
@@ -89,14 +91,18 @@ TEST_CASE_METHOD(LogPublisherTestFixture, "Verify multiple metric nodes in logs"
                 "full": "false",
                 "size": "0",
                 "maxSize": "0",
-                "entryCount": "0"
+                "entryCount": "0",
+                "rocksDbTableReadersSize": "0",
+                "rocksDbAllMemoryTablesSize": "2048"
             },
             "flowfilerepository": {
                 "running": "false",
                 "full": "false",
                 "size": "0",
                 "maxSize": "0",
-                "entryCount": "0"
+                "entryCount": "0",
+                "rocksDbTableReadersSize": "0",
+                "rocksDbAllMemoryTablesSize": "2048"
             }
         },
         "deviceInfo": {
@@ -119,14 +125,18 @@ TEST_CASE_METHOD(LogPublisherTestFixture, "Verify reloading different metrics", 
                 "full": "false",
                 "size": "0",
                 "maxSize": "0",
-                "entryCount": "0"
+                "entryCount": "0",
+                "rocksDbTableReadersSize": "0",
+                "rocksDbAllMemoryTablesSize": "2048"
             },
             "flowfilerepository": {
                 "running": "false",
                 "full": "false",
                 "size": "0",
                 "maxSize": "0",
-                "entryCount": "0"
+                "entryCount": "0",
+                "rocksDbTableReadersSize": "0",
+                "rocksDbAllMemoryTablesSize": "2048"
             }
         }
     }
@@ -168,14 +178,18 @@ TEST_CASE_METHOD(LogPublisherTestFixture, "Verify generic and publisher specific
                 "full": "false",
                 "size": "0",
                 "maxSize": "0",
-                "entryCount": "0"
+                "entryCount": "0",
+                "rocksDbTableReadersSize": "0",
+                "rocksDbAllMemoryTablesSize": "2048"
             },
             "flowfilerepository": {
                 "running": "false",
                 "full": "false",
                 "size": "0",
                 "maxSize": "0",
-                "entryCount": "0"
+                "entryCount": "0",
+                "rocksDbTableReadersSize": "0",
+                "rocksDbAllMemoryTablesSize": "2048"
             }
         }
     }
@@ -199,14 +213,18 @@ TEST_CASE_METHOD(LogPublisherTestFixture, "Verify changing log level property fo
                 "full": "false",
                 "size": "0",
                 "maxSize": "0",
-                "entryCount": "0"
+                "entryCount": "0",
+                "rocksDbTableReadersSize": "0",
+                "rocksDbAllMemoryTablesSize": "2048"
             },
             "flowfilerepository": {
                 "running": "false",
                 "full": "false",
                 "size": "0",
                 "maxSize": "0",
-                "entryCount": "0"
+                "entryCount": "0",
+                "rocksDbTableReadersSize": "0",
+                "rocksDbAllMemoryTablesSize": "2048"
             }
         }
     }
