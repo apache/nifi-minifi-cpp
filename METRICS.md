@@ -143,13 +143,15 @@ QueueMetrics is a system level metric that reports queue metrics for every conne
 
 RepositoryMetrics is a system level metric that reports metrics for the registered repositories (by default flowfile, content, and provenance repositories)
 
-| Metric name               | Labels          | Description                                     |
-|---------------------------|-----------------|-------------------------------------------------|
-| is_running                | repository_name | Is the repository running (1 or 0)              |
-| is_full                   | repository_name | Is the repository full (1 or 0)                 |
-| repository_size_bytes     | repository_name | Current size of the repository                  |
-| max_repository_size_bytes | repository_name | Maximum size of the repository (0 if unlimited) |
-| repository_entry_count    | repository_name | Current number of entries in the repository     |
+| Metric name                          | Labels          | Description                                                                                                      |
+|--------------------------------------|-----------------|------------------------------------------------------------------------------------------------------------------|
+| is_running                           | repository_name | Is the repository running (1 or 0)                                                                               |
+| is_full                              | repository_name | Is the repository full (1 or 0)                                                                                  |
+| repository_size_bytes                | repository_name | Current size of the repository                                                                                   |
+| max_repository_size_bytes            | repository_name | Maximum size of the repository (0 if unlimited)                                                                  |
+| repository_entry_count               | repository_name | Current number of entries in the repository                                                                      |
+| rocksdb_table_readers_size_bytes     | repository_name | RocksDB's estimated memory used for reading SST tables (only present if repository uses RocksDB)                 |
+| rocksdb_all_memory_tables_size_bytes | repository_name | RocksDB's approximate size of active and unflushed immutable memtables (only present if repository uses RocksDB) |
 
 | Label                    | Description                                                                                                                           |
 |--------------------------|---------------------------------------------------------------------------------------------------------------------------------------|
@@ -188,17 +190,19 @@ FlowInformation is a system level metric that reports component and queue relate
 
 AgentStatus is a system level metric that defines current agent status including repository, component and resource usage information.
 
-| Metric name               | Labels                         | Description                                                                                                |
-|---------------------------|--------------------------------|------------------------------------------------------------------------------------------------------------|
-| is_running                | repository_name                | Is the repository running (1 or 0)                                                                         |
-| is_full                   | repository_name                | Is the repository full (1 or 0)                                                                            |
-| repository_size_bytes     | repository_name                | Current size of the repository                                                                             |
-| max_repository_size_bytes | repository_name                | Maximum size of the repository (0 if unlimited)                                                            |
-| repository_entry_count    | repository_name                | Current number of entries in the repository                                                                |
-| uptime_milliseconds       | -                              | Agent uptime in milliseconds                                                                               |
-| is_running                | component_uuid, component_name | Check if the component is running (1 or 0)                                                                 |
-| agent_memory_usage_bytes  | -                              | Memory used by the agent process in bytes                                                                  |
-| agent_cpu_utilization     | -                              | CPU utilization of the agent process (between 0 and 1). In case of a query error the returned value is -1. |
+| Metric name                          | Labels                         | Description                                                                                                      |
+|--------------------------------------|--------------------------------|------------------------------------------------------------------------------------------------------------------|
+| is_running                           | repository_name                | Is the repository running (1 or 0)                                                                               |
+| is_full                              | repository_name                | Is the repository full (1 or 0)                                                                                  |
+| repository_size_bytes                | repository_name                | Current size of the repository                                                                                   |
+| max_repository_size_bytes            | repository_name                | Maximum size of the repository (0 if unlimited)                                                                  |
+| repository_entry_count               | repository_name                | Current number of entries in the repository                                                                      |
+| rocksdb_table_readers_size_bytes     | repository_name                | RocksDB's estimated memory used for reading SST tables (only present if repository uses RocksDB)                 |
+| rocksdb_all_memory_tables_size_bytes | repository_name                | RocksDB's approximate size of active and unflushed immutable memtables (only present if repository uses RocksDB) |
+| uptime_milliseconds                  | -                              | Agent uptime in milliseconds                                                                                     |
+| is_running                           | component_uuid, component_name | Check if the component is running (1 or 0)                                                                       |
+| agent_memory_usage_bytes             | -                              | Memory used by the agent process in bytes                                                                        |
+| agent_cpu_utilization                | -                              | CPU utilization of the agent process (between 0 and 1). In case of a query error the returned value is -1.       |
 
 | Label           | Description                                              |
 |-----------------|----------------------------------------------------------|
