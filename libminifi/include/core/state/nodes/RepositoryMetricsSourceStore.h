@@ -30,7 +30,7 @@ namespace org::apache::nifi::minifi::state::response {
 
 class RepositoryMetricsSourceStore {
  public:
-  RepositoryMetricsSourceStore(std::string name);
+  explicit RepositoryMetricsSourceStore(std::string name);
   void setRepositories(const std::vector<std::shared_ptr<core::RepositoryMetricsSource>> &repositories);
   void addRepository(const std::shared_ptr<core::RepositoryMetricsSource> &repo);
   std::vector<SerializedResponseNode> serialize() const;
