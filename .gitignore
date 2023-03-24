@@ -77,6 +77,7 @@ __pycache__/
 /.ccls-cache
 /.vscode
 .ccache
+*profraw
 
 # generated files from WEL test
 extensions/windows-event-log/tests/custom-provider/unit-test-provider.cs

@@ -147,6 +147,11 @@ if (ASAN_BUILD)
     set(CMAKE_SHARED_LINKER_FLAGS "${CMAKE_SHARED_LINKER_FLAGS} ${ASAN_FLAGS}")
 endif()
 
+if (ENABLE_COVERAGE)
+    include(CodeCoverage)
+    append_coverage_compiler_flags()
+endif()
+
 #### Third party dependencies ####
 
 # Define function for passing dependencies
@@ -681,3 +686,15 @@ add_custom_target(
     COMMAND java -jar ${CMAKE_SOURCE_DIR}/thirdparty/apache-rat/apache-rat-0.13/apache-rat-0.13.jar -E ${CMAKE_SOURCE_DIR}/thirdparty/apache-rat/.rat-excludes -d ${CMAKE_SOURCE_DIR} | grep -B 1 -A 15 Summary )
 
 feature_summary(WHAT ALL FILENAME ${CMAKE_BINARY_DIR}/all.log)
+
+if (ENABLE_COVERAGE)
+    set(GCOVR_ADDITIONAL_ARGS --gcov-ignore-parse-errors=negative_hits.warn --gcov-ignore-errors=no_working_dir_found)
+    setup_target_for_coverage_gcovr_html(
+        NAME coverage
+        EXCLUDE "build/*" "cmake/*" "minifi_main/*" "nanofi/*" "thirdparty/*" "libminifi/test/*" "extensions/http-curl/tests/*" "encrypt-config/tests/*" "extensions/aws/tests/*"
+            "extensions/civetweb/tests/*" "extensions/coap/tests/*" "extensions/elasticsearch/tests/*" "extensions/expression-language/tests/*" "extensions/gcp/tests/*" "extensions/kubernetes/tests/*"
+            "extensions/librdkafka/tests/*" "extensions/lua/tests/*" "extensions/mqtt/tests/*" "extensions/opencv/tests/*" "extensions/procfs/tests/*" "extensions/prometheus/tests/*" "extensions/script/tests/*"
+            "extensions/sftp/tests/*" "extensions/splunk/tests/*" "extensions/standard-processors/tests/*" "extensions/systemd/tests/*" "extensions/test-processors/*" "libminifi/include/utils/IntegrationTestUtils.h"
+            "libminifi/include/utils/TestUtils.h" "controller/MiNiFiController.cpp"
+    )
+endif()

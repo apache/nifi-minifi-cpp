@@ -185,7 +185,10 @@ jobs:
           echo "deb http://apt.llvm.org/focal/ llvm-toolchain-focal-14 main" | sudo tee -a /etc/apt/sources.list
           echo "deb-src http://apt.llvm.org/focal/ llvm-toolchain-focal-14 main" | sudo tee -a /etc/apt/sources.list
           sudo apt update
-          sudo apt install -y ccache libfl-dev libpcap-dev libboost-all-dev openjdk-8-jdk maven libusb-1.0-0-dev libpng-dev libgps-dev clang-14 clang-tidy-14 libc++-14-dev libc++abi-14-dev libsqliteodbc lua5.3 liblua5.3-dev flake8
+          # libclang-rt-14-dev has to be installed separately as it is missing on ubuntu 20.04, it can be removed on ubuntu 22.04 https://groups.google.com/g/linux.debian.bugs.dist/c/jFEvS84SakQ
+          sudo apt install -y ccache libfl-dev libpcap-dev libboost-all-dev openjdk-8-jdk maven libusb-1.0-0-dev libpng-dev libgps-dev clang-14 libclang-rt-14-dev clang-tidy-14 libc++-14-dev libc++abi-14-dev libsqliteodbc lua5.3 liblua5.3-dev flake8 libatomic1
+          sudo ln -s /usr/bin/llvm-cov-14 /usr/bin/llvm-cov
+          pip3 install gcovr
           echo "PATH=/usr/lib/ccache:$PATH" >> $GITHUB_ENV
           echo -e "127.0.0.1\t$HOSTNAME" | sudo tee -a /etc/hosts > /dev/null
       - name: build
@@ -196,11 +199,11 @@ jobs:
           cd build
           export CXXFLAGS="${CXXFLAGS} -stdlib=libc++"
           export LDFLAGS="${LDFLAGS} -stdlib=libc++"
-          cmake -DUSE_SHARED_LIBS=ON -DCMAKE_BUILD_TYPE=RelWithDebInfo -DCI_BUILD=ON -DSTRICT_GSL_CHECKS=AUDIT -DFAIL_ON_WARNINGS=ON -DENABLE_AWS=ON -DENABLE_AZURE=ON -DENABLE_BUSTACHE=ON -DENABLE_COAP=ON \
+          cmake -DUSE_SHARED_LIBS=ON -DCMAKE_BUILD_TYPE=Debug -DCI_BUILD=ON -DSTRICT_GSL_CHECKS=AUDIT -DFAIL_ON_WARNINGS=ON -DENABLE_AWS=ON -DENABLE_AZURE=ON -DENABLE_BUSTACHE=ON -DENABLE_COAP=ON \
               -DENABLE_ENCRYPT_CONFIG=ON -DENABLE_GPS=ON -DENABLE_LIBRDKAFKA=ON -DENABLE_MQTT=ON -DENABLE_NANOFI=ON -DENABLE_OPC=ON -DENABLE_OPENCV=ON \
               -DENABLE_OPENWSMAN=ON -DENABLE_OPS=ON -DENABLE_PCAP=ON -DENABLE_SENSORS=ON -DENABLE_SFTP=ON -DENABLE_SQL=ON -DENABLE_SYSTEMD=ON -DENABLE_TENSORFLOW=OFF \
               -DENABLE_USB_CAMERA=ON -DENABLE_PYTHON_SCRIPTING=ON -DENABLE_LUA_SCRIPTING=ON -DENABLE_KUBERNETES=ON -DENABLE_GCP=ON -DENABLE_PROCFS=ON -DENABLE_PROMETHEUS=ON -DENABLE_ELASTICSEARCH=ON \
-              -DCMAKE_EXPORT_COMPILE_COMMANDS=ON ..
+              -DCMAKE_EXPORT_COMPILE_COMMANDS=ON -DENABLE_COVERAGE=ON ..
           cmake --build . --parallel $(nproc)
       - name: test
         id: test
@@ -214,6 +217,14 @@ jobs:
         run: cd build && make shellcheck
       - id: flake8_check
         run: cd build && make flake8
+      - id: coverage
+        run: |
+          cd build && make coverage
+      - uses: actions/upload-artifact@v3
+        with:
+          name: coverage
+          path: build/coverage
+          if-no-files-found: error
       - id: files
         uses: Ana06/get-changed-files@v2.2.0
         continue-on-error: true
