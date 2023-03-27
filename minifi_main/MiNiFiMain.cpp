@@ -241,7 +241,9 @@ int main(int argc, char **argv) {
 
     auto log_properties = std::make_shared<core::logging::LoggerProperties>();
     log_properties->setHome(minifiHome);
-    log_properties->loadConfigureFile(DEFAULT_LOG_PROPERTIES_FILE);
+    log_properties->loadConfigureFile(DEFAULT_LOG_PROPERTIES_FILE, "nifi.log.");
+    log_properties->commitChanges();
+
     core::logging::LoggerConfiguration::getConfiguration().initialize(log_properties);
 
     std::shared_ptr<minifi::Properties> uid_properties = std::make_shared<minifi::Properties>("UID properties");

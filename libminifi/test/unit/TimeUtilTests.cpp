@@ -131,37 +131,37 @@ TEST_CASE("Test string to duration conversion", "[timedurationtests]") {
   CHECK(one_hour.value() == 1h);
   CHECK(one_hour.value() == 3600s);
 
-  REQUIRE(StringToDuration<std::chrono::milliseconds>("1 hour"));
-  REQUIRE(StringToDuration<std::chrono::seconds>("102             hours") == 102h);
-  REQUIRE(StringToDuration<std::chrono::days>("102             hours") == std::chrono::days(4));
-  REQUIRE(StringToDuration<std::chrono::milliseconds>("5 ns") == 0ms);
+  CHECK(StringToDuration<std::chrono::milliseconds>("1 hour"));
+  CHECK(StringToDuration<std::chrono::seconds>("102             hours") == 102h);
+  CHECK(StringToDuration<std::chrono::days>("102             hours") == std::chrono::days(4));
+  CHECK(StringToDuration<std::chrono::milliseconds>("5 ns") == 0ms);
 
-  REQUIRE(StringToDuration<std::chrono::seconds>("1d") == std::chrono::days(1));
-  REQUIRE(StringToDuration<std::chrono::seconds>("10 days") == std::chrono::days(10));
-  REQUIRE(StringToDuration<std::chrono::seconds>("100ms") == 0ms);
-  REQUIRE(StringToDuration<std::chrono::seconds>("20 us") == 0s);
-  REQUIRE(StringToDuration<std::chrono::seconds>("1ns") == 0ns);
-  REQUIRE(StringToDuration<std::chrono::seconds>("1min") == 1min);
-  REQUIRE(StringToDuration<std::chrono::seconds>("1 hour") == 1h);
-  REQUIRE(StringToDuration<std::chrono::seconds>("100 SEC") == 100s);
-  REQUIRE(StringToDuration<std::chrono::seconds>("10 ms") == 0ms);
-  REQUIRE(StringToDuration<std::chrono::seconds>("100 ns") == 0ns);
-  REQUIRE(StringToDuration<std::chrono::seconds>("1 minute") == 1min);
+  CHECK(StringToDuration<std::chrono::seconds>("1d") == std::chrono::days(1));
+  CHECK(StringToDuration<std::chrono::seconds>("10 days") == std::chrono::days(10));
+  CHECK(StringToDuration<std::chrono::seconds>("100ms") == 0ms);
+  CHECK(StringToDuration<std::chrono::seconds>("20 us") == 0s);
+  CHECK(StringToDuration<std::chrono::seconds>("1ns") == 0ns);
+  CHECK(StringToDuration<std::chrono::seconds>("1min") == 1min);
+  CHECK(StringToDuration<std::chrono::seconds>("1 hour") == 1h);
+  CHECK(StringToDuration<std::chrono::seconds>("100 SEC") == 100s);
+  CHECK(StringToDuration<std::chrono::seconds>("10 ms") == 0ms);
+  CHECK(StringToDuration<std::chrono::seconds>("100 ns") == 0ns);
+  CHECK(StringToDuration<std::chrono::seconds>("1 minute") == 1min);
 
-  REQUIRE(StringToDuration<std::chrono::nanoseconds>("1d") == std::chrono::days(1));
-  REQUIRE(StringToDuration<std::chrono::nanoseconds>("10 days") == std::chrono::days(10));
-  REQUIRE(StringToDuration<std::chrono::nanoseconds>("100ms") == 100ms);
-  REQUIRE(StringToDuration<std::chrono::nanoseconds>("20 us") == 20us);
-  REQUIRE(StringToDuration<std::chrono::nanoseconds>("1ns") == 1ns);
-  REQUIRE(StringToDuration<std::chrono::nanoseconds>("1min") == 1min);
-  REQUIRE(StringToDuration<std::chrono::nanoseconds>("1 hour") == 1h);
-  REQUIRE(StringToDuration<std::chrono::nanoseconds>("100 SEC") == 100s);
-  REQUIRE(StringToDuration<std::chrono::nanoseconds>("10 ms") == 10ms);
-  REQUIRE(StringToDuration<std::chrono::nanoseconds>("100 ns") == 100ns);
-  REQUIRE(StringToDuration<std::chrono::nanoseconds>("1 minute") == 1min);
+  CHECK(StringToDuration<std::chrono::nanoseconds>("1d") == std::chrono::days(1));
+  CHECK(StringToDuration<std::chrono::nanoseconds>("10 days") == std::chrono::days(10));
+  CHECK(StringToDuration<std::chrono::nanoseconds>("100ms") == 100ms);
+  CHECK(StringToDuration<std::chrono::nanoseconds>("20 us") == 20us);
+  CHECK(StringToDuration<std::chrono::nanoseconds>("1ns") == 1ns);
+  CHECK(StringToDuration<std::chrono::nanoseconds>("1min") == 1min);
+  CHECK(StringToDuration<std::chrono::nanoseconds>("1 hour") == 1h);
+  CHECK(StringToDuration<std::chrono::nanoseconds>("100 SEC") == 100s);
+  CHECK(StringToDuration<std::chrono::nanoseconds>("10 ms") == 10ms);
+  CHECK(StringToDuration<std::chrono::nanoseconds>("100 ns") == 100ns);
+  CHECK(StringToDuration<std::chrono::nanoseconds>("1 minute") == 1min);
 
-  REQUIRE_FALSE(StringToDuration<std::chrono::seconds>("5 apples") == 1s);
-  REQUIRE_FALSE(StringToDuration<std::chrono::seconds>("1 year") == 1s);
+  CHECK(StringToDuration<std::chrono::seconds>("5 apples") == std::nullopt);
+  CHECK(StringToDuration<std::chrono::seconds>("1 year") == std::nullopt);
 }
 
 namespace {

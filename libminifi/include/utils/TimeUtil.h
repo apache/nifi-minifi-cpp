@@ -32,6 +32,8 @@
 #include <condition_variable>
 #include <memory>
 
+#include "StringUtils.h"
+
 // libc++ doesn't define operator<=> on durations, and apparently the operator rewrite rules don't automagically make one
 #if defined(_LIBCPP_VERSION) && _LIBCPP_VERSION < 16000
 #include <compare>
@@ -203,36 +205,13 @@ std::optional<TargetDuration> cast_to_matching_unit(std::string& unit, const int
   ((result = cast_if_unit_matches<TargetDuration, T>(unit, value)) || ...);
   return result;
 }
-
-inline bool get_unit_and_value(const std::string& input, std::string& unit, int64_t& value) {
-  const char* begin = input.c_str();
-  char *end;
-  errno = 0;
-  value = std::strtoll(begin, &end, 0);
-  if (end == begin || errno == ERANGE) {
-    return false;
-  }
-
-  if (end[0] == '\0') {
-    return false;
-  }
-
-  while (*end == ' ') {
-    // Skip the spaces
-    end++;
-  }
-  unit = std::string(end);
-  std::transform(unit.begin(), unit.end(), unit.begin(), ::tolower);
-  return true;
-}
-
 }  // namespace details
 
 template<class TargetDuration>
 std::optional<TargetDuration> StringToDuration(const std::string& input) {
   std::string unit;
   int64_t value;
-  if (!details::get_unit_and_value(input, unit, value))
+  if (!StringUtils::splitToUnitAndValue(input, unit, value))
     return std::nullopt;
 
   return details::cast_to_matching_unit<TargetDuration,

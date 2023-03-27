@@ -64,6 +64,14 @@ int Properties::getInt(const std::string &key, int default_value) const {
 }
 
 namespace {
+const core::PropertyValidator* getValidator(const std::string& key, const std::string& prefix) {
+  auto configuration_property = Configuration::CONFIGURATION_PROPERTIES.find(prefix + key);
+
+  if (configuration_property != Configuration::CONFIGURATION_PROPERTIES.end())
+    return configuration_property->second;
+  return nullptr;
+}
+
 void ensureTimePeriodValidatedPropertyHasExplicitUnit(const core::PropertyValidator* const validator, std::string& persisted_value, std::string& value, bool& need_to_persist_new_value) {
   if (validator != core::StandardValidators::get().TIME_PERIOD_VALIDATOR.get())
     return;
@@ -75,11 +83,33 @@ void ensureTimePeriodValidatedPropertyHasExplicitUnit(const core::PropertyValida
   need_to_persist_new_value = true;
 }
 
+void ensureDataSizeValidatedPropertyHasExplicitUnit(const core::PropertyValidator* const validator, std::string& persisted_value, std::string& value, bool& need_to_persist_new_value) {
+  if (validator != core::StandardValidators::get().DATA_SIZE_VALIDATOR.get())
+    return;
+  if (value.empty() || !std::all_of(value.begin(), value.end(), ::isdigit))
+    return;
+
+  value += " B";
+  persisted_value = value;
+  need_to_persist_new_value = true;
+}
+
 bool integerValidatedProperty(const core::PropertyValidator* const validator) {
   return validator == core::StandardValidators::get().INTEGER_VALIDATOR.get()
       || validator == core::StandardValidators::get().UNSIGNED_INT_VALIDATOR.get()
       || validator == core::StandardValidators::get().LONG_VALIDATOR.get()
       || validator == core::StandardValidators::get().UNSIGNED_LONG_VALIDATOR.get();
+}
+
+std::optional<uint64_t> stringToDataSize(std::string_view input) {
+  int64_t value;
+  std::string unit_str;
+  if (!utils::StringUtils::splitToUnitAndValue(input, unit_str, value))
+    return std::nullopt;
+  if (auto unit_multiplier = core::DataSizeValue::getUnitMultiplier(unit_str)) {
+    return value * *unit_multiplier;
+  }
+  return std::nullopt;
 }
 
 void ensureIntegerValidatedPropertyHasNoUnit(const core::PropertyValidator* const validator, std::string& persisted_value, std::string& value, bool& need_to_persist_new_value) {
@@ -91,20 +121,26 @@ void ensureIntegerValidatedPropertyHasNoUnit(const core::PropertyValidator* cons
     persisted_value = value;
     need_to_persist_new_value = true;
   }
+
+  if (auto parsed_data_size = stringToDataSize(value)) {
+    value = fmt::format("{}", *parsed_data_size);
+    persisted_value = value;
+    need_to_persist_new_value = true;
+  }
 }
 
-void formatConfigurationProperty(std::string_view key, std::string& persisted_value, std::string& value, bool& need_to_persist_new_value) {
-  auto configuration_property = Configuration::CONFIGURATION_PROPERTIES.find(key);
-  if (configuration_property == Configuration::CONFIGURATION_PROPERTIES.end())
+void formatConfigurationProperty(const core::PropertyValidator* const validator, std::string& persisted_value, std::string& value, bool& need_to_persist_new_value) {
+  if (!validator)
     return;
 
-  ensureTimePeriodValidatedPropertyHasExplicitUnit(configuration_property->second, persisted_value, value, need_to_persist_new_value);
-  ensureIntegerValidatedPropertyHasNoUnit(configuration_property->second, persisted_value, value, need_to_persist_new_value);
+  ensureTimePeriodValidatedPropertyHasExplicitUnit(validator, persisted_value, value, need_to_persist_new_value);
+  ensureDataSizeValidatedPropertyHasExplicitUnit(validator, persisted_value, value, need_to_persist_new_value);
+  ensureIntegerValidatedPropertyHasNoUnit(validator, persisted_value, value, need_to_persist_new_value);
 }
 }  // namespace
 
 // Load Configure File
-void Properties::loadConfigureFile(const std::filesystem::path& configuration_file) {
+void Properties::loadConfigureFile(const std::filesystem::path& configuration_file, const std::string_view prefix) {
   std::lock_guard<std::mutex> lock(mutex_);
   if (configuration_file.empty()) {
     logger_->log_error("Configuration file path for %s is empty!", getName());
@@ -134,7 +170,7 @@ void Properties::loadConfigureFile(const std::filesystem::path& configuration_fi
     auto persisted_value = line.getValue();
     auto value = utils::StringUtils::replaceEnvironmentVariables(persisted_value);
     bool need_to_persist_new_value = false;
-    formatConfigurationProperty(key, persisted_value, value, need_to_persist_new_value);
+    formatConfigurationProperty(getValidator(key, std::string(prefix)), persisted_value, value, need_to_persist_new_value);
     dirty_ |= need_to_persist_new_value;
     properties_[key] = {persisted_value, value, need_to_persist_new_value};
   }

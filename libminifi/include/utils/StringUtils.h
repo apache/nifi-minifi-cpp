@@ -480,7 +480,7 @@ class StringUtils {
    */
   static bool matchesSequence(std::string_view str, const std::vector<std::string>& patterns);
 
- private:
+  static bool splitToUnitAndValue(std::string_view input, std::string& unit, int64_t& value);
 };
 
 }  // namespace org::apache::nifi::minifi::utils

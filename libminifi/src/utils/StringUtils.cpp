@@ -510,4 +510,26 @@ bool StringUtils::matchesSequence(std::string_view str, const std::vector<std::s
   return true;
 }
 
+bool StringUtils::splitToUnitAndValue(std::string_view input, std::string& unit, int64_t& value) {
+  const char* begin = input.data();
+  char *end;
+  errno = 0;
+  value = std::strtoll(begin, &end, 0);
+  if (end == begin || errno == ERANGE) {
+    return false;
+  }
+
+  if (end[0] == '\0') {
+    return false;
+  }
+
+  while (*end == ' ') {
+    // Skip the spaces
+    end++;
+  }
+  unit = std::string(end);
+  std::transform(unit.begin(), unit.end(), unit.begin(), ::tolower);
+  return true;
+}
+
 }  // namespace org::apache::nifi::minifi::utils
