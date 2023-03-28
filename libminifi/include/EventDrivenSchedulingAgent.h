@@ -38,11 +38,15 @@ class EventDrivenSchedulingAgent : public ThreadedSchedulingAgent {
                              std::shared_ptr<core::Repository> flow_repo, std::shared_ptr<core::ContentRepository> content_repo, std::shared_ptr<Configure> configuration,
                              utils::ThreadPool<utils::TaskRescheduleInfo> &thread_pool)
       : ThreadedSchedulingAgent(controller_service_provider, repo, flow_repo, content_repo, configuration, thread_pool) {
-    int slice = configuration->getInt(Configure::nifi_flow_engine_event_driven_time_slice, DEFAULT_TIME_SLICE_MS);
-    if (slice < 10 || 1000 < slice) {
+    using namespace std::literals::chrono_literals;
+
+    time_slice_ = configuration->get(Configure::nifi_flow_engine_event_driven_time_slice)
+        | utils::flatMap(utils::timeutils::StringToDuration<std::chrono::milliseconds>)
+        | utils::valueOrElse([] { return std::chrono::milliseconds(DEFAULT_TIME_SLICE_MS);});
+
+    if (time_slice_ < 10ms || 1000ms < time_slice_) {
       throw Exception(FLOW_EXCEPTION, std::string(Configure::nifi_flow_engine_event_driven_time_slice) + " is out of reasonable range!");
     }
-    time_slice_ = std::chrono::milliseconds(slice);
   }
 
   void schedule(core::Processor* processor) override;

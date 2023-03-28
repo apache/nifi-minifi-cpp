@@ -28,7 +28,7 @@ const std::unordered_map<std::string_view, gsl::not_null<core::PropertyValidator
   {Configuration::nifi_flow_configuration_file_backup_update, gsl::make_not_null(core::StandardValidators::get().BOOLEAN_VALIDATOR.get())},
   {Configuration::nifi_flow_engine_threads, gsl::make_not_null(core::StandardValidators::get().UNSIGNED_INT_VALIDATOR.get())},
   {Configuration::nifi_flow_engine_alert_period, gsl::make_not_null(core::StandardValidators::get().TIME_PERIOD_VALIDATOR.get())},
-  {Configuration::nifi_flow_engine_event_driven_time_slice, gsl::make_not_null(core::StandardValidators::get().UNSIGNED_INT_VALIDATOR.get())},
+  {Configuration::nifi_flow_engine_event_driven_time_slice, gsl::make_not_null(core::StandardValidators::get().TIME_PERIOD_VALIDATOR.get())},
   {Configuration::nifi_administrative_yield_duration, gsl::make_not_null(core::StandardValidators::get().TIME_PERIOD_VALIDATOR.get())},
   {Configuration::nifi_bored_yield_duration, gsl::make_not_null(core::StandardValidators::get().TIME_PERIOD_VALIDATOR.get())},
   {Configuration::nifi_graceful_shutdown_seconds, gsl::make_not_null(core::StandardValidators::get().UNSIGNED_INT_VALIDATOR.get())},
