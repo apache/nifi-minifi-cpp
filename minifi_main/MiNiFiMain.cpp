@@ -378,7 +378,10 @@ int main(int argc, char **argv) {
     const auto controller = std::make_unique<minifi::FlowController>(
       prov_repo, flow_repo, configure, std::move(flow_configuration), content_repo, std::move(metrics_publisher_store), filesystem, request_restart);
 
-    const bool disk_space_watchdog_enable = (configure->get(minifi::Configure::minifi_disk_space_watchdog_enable) | utils::map([](const std::string& v) { return v == "true"; })).value_or(true);
+    const bool disk_space_watchdog_enable = configure->get(minifi::Configure::minifi_disk_space_watchdog_enable)
+        | utils::flatMap(utils::StringUtils::toBool)
+        | utils::valueOrElse([] { return true; });
+
     std::unique_ptr<utils::CallBackTimer> disk_space_watchdog;
     if (disk_space_watchdog_enable) {
       try {
