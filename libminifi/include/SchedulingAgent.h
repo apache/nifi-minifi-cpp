@@ -64,11 +64,14 @@ class SchedulingAgent {
         content_repo_(content_repo),
         thread_pool_(thread_pool),
         controller_service_provider_(controller_service_provider),
-        logger_(core::logging::LoggerFactory<SchedulingAgent>::getLogger()),
-        alert_time_(configuration->getInt(Configure::nifi_flow_engine_alert_period, SCHEDULING_WATCHDOG_DEFAULT_ALERT_PERIOD_MS)) {
+        logger_(core::logging::LoggerFactory<SchedulingAgent>::getLogger()) {
     running_ = false;
     repo_ = repo;
     flow_repo_ = flow_repo;
+
+    alert_time_ = configuration->get(Configure::nifi_flow_engine_alert_period)
+        | utils::flatMap(utils::timeutils::StringToDuration<std::chrono::milliseconds>)
+        | utils::valueOrElse([] { return std::chrono::milliseconds(SCHEDULING_WATCHDOG_DEFAULT_ALERT_PERIOD_MS);});
 
     if (alert_time_ > std::chrono::milliseconds(0)) {
       std::function<void(void)> f = std::bind(&SchedulingAgent::watchDogFunc, this);
