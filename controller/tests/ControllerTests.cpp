@@ -20,6 +20,8 @@
 #include <utility>
 #include <string>
 #include <filesystem>
+#include "range/v3/algorithm/find.hpp"
+
 #include "TestBase.h"
 #include "Catch.h"
 #include "io/ClientSocket.h"
@@ -30,7 +32,7 @@
 #include "c2/ControllerSocketMetricsPublisher.h"
 #include "core/controller/ControllerServiceProvider.h"
 #include "controllers/SSLContextService.h"
-
+#include "utils/StringUtils.h"
 #include "state/UpdateController.h"
 
 using namespace std::literals::chrono_literals;
@@ -273,7 +275,7 @@ TEST_CASE("TestWindows", "[test1]") {
   std::cout << "Controller Tests are not supported on windows";
 }
 #else
-TEST_CASE_METHOD(ControllerTestFixture, "TestGet", "[test1]") {
+TEST_CASE_METHOD(ControllerTestFixture, "Test listComponents", "[test1]") {
   SECTION("With SSL from service provider") {
     setConnectionType(ControllerTestFixture::ConnectionType::SSL_FROM_SERVICE_PROVIDER);
   }
@@ -305,7 +307,7 @@ TEST_CASE_METHOD(ControllerTestFixture, "TestGet", "[test1]") {
   std::stringstream ss;
   minifi::controller::listComponents(std::move(socket), ss);
 
-  REQUIRE(ss.str().find("TestStateController") != std::string::npos);
+  REQUIRE(ss.str() == "Components:\nTestStateController, running: false\n");
 }
 
 TEST_CASE_METHOD(ControllerTestFixture, "TestClear", "[test1]") {
@@ -448,12 +450,19 @@ TEST_CASE_METHOD(ControllerTestFixture, "Test connection getters", "[test1]") {
   connection_stream.str(std::string());
   socket = createSocket();
   minifi::controller::listConnections(std::move(socket), connection_stream);
-  CHECK(connection_stream.str() == "Connection Names:\ncon2\ncon1\n");
+  auto lines = minifi::utils::StringUtils::splitRemovingEmpty(connection_stream.str(), "\n");
+  CHECK(lines.size() == 3);
+  CHECK(ranges::find(lines, "Connection Names:") != ranges::end(lines));
+  CHECK(ranges::find(lines, "con1") != ranges::end(lines));
+  CHECK(ranges::find(lines, "con2") != ranges::end(lines));
 
   connection_stream.str(std::string());
   socket = createSocket();
   minifi::controller::listConnections(std::move(socket), connection_stream, false);
-  CHECK(connection_stream.str() == "con2\ncon1\n");
+  lines = minifi::utils::StringUtils::splitRemovingEmpty(connection_stream.str(), "\n");
+  CHECK(lines.size() == 2);
+  CHECK(ranges::find(lines, "con1") != ranges::end(lines));
+  CHECK(ranges::find(lines, "con2") != ranges::end(lines));
 }
 
 TEST_CASE_METHOD(ControllerTestFixture, "Test manifest getter", "[test1]") {

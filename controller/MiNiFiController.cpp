@@ -26,6 +26,7 @@
 #include "core/extension/ExtensionManager.h"
 #include "io/StreamFactory.h"
 #include "core/ConfigurationFactory.h"
+#include "Exception.h"
 
 #include "cxxopts.hpp"
 
@@ -33,7 +34,7 @@ namespace minifi = org::apache::nifi::minifi;
 
 std::shared_ptr<minifi::core::controller::ControllerService> getControllerService(const std::shared_ptr<minifi::Configure> &configuration,
     const std::string &service_name, const std::string& minifi_home) {
-  std::string nifi_configuration_class_name = "yamlconfiguration";
+  std::string nifi_configuration_class_name = "adaptiveconfiguration";
 
   minifi::core::extension::ExtensionManager::get().initialize(configuration);
 
@@ -57,10 +58,13 @@ std::shared_ptr<minifi::controllers::SSLContextService> getSSLContextService(con
   std::shared_ptr<minifi::controllers::SSLContextService> secure_context;
   std::string context_name;
   // if the user wishes to use a controller service we need to instantiate the flow
-  if (configuration->get(minifi::Configure::controller_ssl_context_service, context_name)) {
+  if (configuration->get(minifi::Configure::controller_ssl_context_service, context_name) && !context_name.empty()) {
     const auto service = getControllerService(configuration, context_name, minifi_home);
     if (nullptr != service) {
       secure_context = std::dynamic_pointer_cast<minifi::controllers::SSLContextService>(service);
+    }
+    if (secure_context == nullptr) {
+      throw minifi::Exception(minifi::GENERAL_EXCEPTION, "SSL Context was set, but the context name '" + context_name + "' could not be found");
     }
   }
 
@@ -94,7 +98,13 @@ int main(int argc, char **argv) {
   log_properties->loadConfigureFile(DEFAULT_LOG_PROPERTIES_FILE);
   minifi::core::logging::LoggerConfiguration::getConfiguration().initialize(log_properties);
 
-  auto secure_context = getSSLContextService(configuration, minifi_home);
+  std::shared_ptr<minifi::controllers::SSLContextService> secure_context;
+  try {
+    secure_context = getSSLContextService(configuration, minifi_home);
+  } catch(const minifi::Exception& ex) {
+    logger->log_error(ex.what());
+    exit(1);
+  }
   auto stream_factory_ = minifi::io::StreamFactory::getInstance(configuration);
 
   std::string host = "localhost";
