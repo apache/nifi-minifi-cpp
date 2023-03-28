@@ -72,7 +72,7 @@ int main(int argc, char **argv) {
 
   assert(verifyLogLinePresenceInPollTime(std::chrono::milliseconds(std::chrono::seconds(2)), "Add processor SiteToSiteProvenanceReportingTask into process group MiNiFi Flow"));
 
-  controller->waitUnload(60000);
+  controller->waitUnload(60s);
   LogTestController::getInstance().reset();
   rmdir("./content_repository");
   rmdir("/tmp/aljs39/");

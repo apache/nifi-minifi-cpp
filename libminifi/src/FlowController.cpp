@@ -208,10 +208,10 @@ int16_t FlowController::stop() {
  * @param timeToWaitMs Maximum time to wait before manually
  * marking running as false.
  */
-void FlowController::waitUnload(const uint64_t timeToWaitMs) {
+void FlowController::waitUnload(const std::chrono::milliseconds time_to_wait) {
   if (running_) {
     // use the current time and increment with the provided argument.
-    std::chrono::system_clock::time_point wait_time = std::chrono::system_clock::now() + std::chrono::milliseconds(timeToWaitMs);
+    std::chrono::system_clock::time_point wait_time = std::chrono::system_clock::now() + time_to_wait;
 
     // create an asynchronous future.
     std::future<void> unload_task = std::async(std::launch::async, [this]() {stop();});

@@ -231,8 +231,6 @@ int main(int argc, char **argv) {
       return -1;
     }
 
-    uint16_t stop_wait_time = STOP_WAIT_TIME_MS;
-
     std::string graceful_shutdown_seconds;
     std::string prov_repo_class = "provenancerepository";
     std::string flow_repo_class = "flowfilerepository";
@@ -311,20 +309,10 @@ int main(int argc, char **argv) {
       std::exit(0);
     }
 
-    if (configure->get(minifi::Configure::nifi_graceful_shutdown_seconds, graceful_shutdown_seconds)) {
-      try {
-        stop_wait_time = std::stoi(graceful_shutdown_seconds);
-      }
-      catch (const std::out_of_range& e) {
-        logger->log_error("%s is out of range. %s", minifi::Configure::nifi_graceful_shutdown_seconds, e.what());
-      }
-      catch (const std::invalid_argument& e) {
-        logger->log_error("%s contains an invalid argument set. %s", minifi::Configure::nifi_graceful_shutdown_seconds, e.what());
-      }
-    } else {
-      logger->log_debug("%s not set, defaulting to %d", minifi::Configure::nifi_graceful_shutdown_seconds,
-          STOP_WAIT_TIME_MS);
-    }
+    std::chrono::milliseconds stop_wait_time = configure->get(minifi::Configure::nifi_graceful_shutdown_seconds)
+        | utils::flatMap(utils::timeutils::StringToDuration<std::chrono::milliseconds>)
+        | utils::valueOrElse([] { return std::chrono::milliseconds(STOP_WAIT_TIME_MS);});
+
 
     configure->get(minifi::Configure::nifi_provenance_repository_class_name, prov_repo_class);
     // Create repos for flow record and provenance

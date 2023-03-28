@@ -31,7 +31,7 @@ const std::unordered_map<std::string_view, gsl::not_null<core::PropertyValidator
   {Configuration::nifi_flow_engine_event_driven_time_slice, gsl::make_not_null(core::StandardValidators::get().TIME_PERIOD_VALIDATOR.get())},
   {Configuration::nifi_administrative_yield_duration, gsl::make_not_null(core::StandardValidators::get().TIME_PERIOD_VALIDATOR.get())},
   {Configuration::nifi_bored_yield_duration, gsl::make_not_null(core::StandardValidators::get().TIME_PERIOD_VALIDATOR.get())},
-  {Configuration::nifi_graceful_shutdown_seconds, gsl::make_not_null(core::StandardValidators::get().UNSIGNED_INT_VALIDATOR.get())},
+  {Configuration::nifi_graceful_shutdown_seconds, gsl::make_not_null(core::StandardValidators::get().TIME_PERIOD_VALIDATOR.get())},
   {Configuration::nifi_flowcontroller_drain_timeout, gsl::make_not_null(core::StandardValidators::get().TIME_PERIOD_VALIDATOR.get())},
   {Configuration::nifi_server_name, gsl::make_not_null(core::StandardValidators::get().VALID_VALIDATOR.get())},
   {Configuration::nifi_configuration_class_name, gsl::make_not_null(core::StandardValidators::get().VALID_VALIDATOR.get())},
