@@ -44,7 +44,7 @@ class ControllerSocketMetricsPublisher : public state::MetricsPublisher, public 
 
  protected:
   c2::HeartbeatJsonSerializer heartbeat_json_serializer_;
-  std::recursive_mutex queue_metrics_node_mutex_;
+  std::mutex queue_metrics_node_mutex_;
   std::shared_ptr<state::response::ResponseNode> queue_metrics_node_;
   std::shared_ptr<core::logging::Logger> logger_ = core::logging::LoggerFactory<ControllerSocketMetricsPublisher>::getLogger();
 };

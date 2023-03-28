@@ -22,7 +22,7 @@
 namespace org::apache::nifi::minifi::c2 {
 
 std::unordered_map<std::string, ControllerSocketReporter::QueueSize> ControllerSocketMetricsPublisher::getQueueSizes() {
-  std::lock_guard<std::recursive_mutex> guard(queue_metrics_node_mutex_);
+  std::lock_guard<std::mutex> guard(queue_metrics_node_mutex_);
   std::unordered_map<std::string, QueueSize> sizes;
   if (!queue_metrics_node_) {
     return sizes;
@@ -39,11 +39,7 @@ std::unordered_map<std::string, ControllerSocketReporter::QueueSize> ControllerS
 }
 
 std::unordered_set<std::string> ControllerSocketMetricsPublisher::getFullConnections() {
-  std::lock_guard<std::recursive_mutex> guard(queue_metrics_node_mutex_);
   std::unordered_set<std::string> full_connections;
-  if (!queue_metrics_node_) {
-    return full_connections;
-  }
   auto queues = getQueueSizes();
   for (const auto& [name, queue] : queues) {
     if (queue.queue_size_max == 0) {
@@ -57,7 +53,7 @@ std::unordered_set<std::string> ControllerSocketMetricsPublisher::getFullConnect
 }
 
 std::unordered_set<std::string> ControllerSocketMetricsPublisher::getConnections() {
-  std::lock_guard<std::recursive_mutex> guard(queue_metrics_node_mutex_);
+  std::lock_guard<std::mutex> guard(queue_metrics_node_mutex_);
   std::unordered_set<std::string> connections;
   if (!queue_metrics_node_) {
     return connections;
@@ -78,12 +74,12 @@ std::string ControllerSocketMetricsPublisher::getAgentManifest() {
 }
 
 void ControllerSocketMetricsPublisher::clearMetricNodes() {
-  std::lock_guard<std::recursive_mutex> guard(queue_metrics_node_mutex_);
+  std::lock_guard<std::mutex> guard(queue_metrics_node_mutex_);
   queue_metrics_node_.reset();
 }
 
 void ControllerSocketMetricsPublisher::loadMetricNodes() {
-  std::lock_guard<std::recursive_mutex> guard(queue_metrics_node_mutex_);
+  std::lock_guard<std::mutex> guard(queue_metrics_node_mutex_);
   gsl_Expects(response_node_loader_);
   auto nodes = response_node_loader_->loadResponseNodes("QueueMetrics");
   if (!nodes.empty()) {
