@@ -240,7 +240,6 @@ int main(int argc, char **argv) {
     auto log_properties = std::make_shared<core::logging::LoggerProperties>();
     log_properties->setHome(minifiHome);
     log_properties->loadConfigureFile(DEFAULT_LOG_PROPERTIES_FILE, "nifi.log.");
-    log_properties->commitChanges();
 
     core::logging::LoggerConfiguration::getConfiguration().initialize(log_properties);
 
@@ -263,7 +262,6 @@ int main(int argc, char **argv) {
     configure->setHome(minifiHome);
     configure->loadConfigureFile(DEFAULT_NIFI_PROPERTIES_FILE);
 
-    configure->commitChanges();
     minifi::core::extension::ExtensionManager::get().initialize(configure);
 
     if (argc >= 2 && std::string("docs") == argv[1]) {

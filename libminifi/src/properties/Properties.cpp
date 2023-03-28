@@ -64,34 +64,30 @@ int Properties::getInt(const std::string &key, int default_value) const {
 }
 
 namespace {
-const core::PropertyValidator* getValidator(const std::string& key, const std::string& prefix) {
-  auto configuration_property = Configuration::CONFIGURATION_PROPERTIES.find(prefix + key);
+const core::PropertyValidator* getValidator(const std::string& lookup_value) {
+  auto configuration_property = Configuration::CONFIGURATION_PROPERTIES.find(lookup_value);
 
   if (configuration_property != Configuration::CONFIGURATION_PROPERTIES.end())
     return configuration_property->second;
   return nullptr;
 }
 
-void ensureTimePeriodValidatedPropertyHasExplicitUnit(const core::PropertyValidator* const validator, std::string& persisted_value, std::string& value, bool& need_to_persist_new_value) {
+std::optional<std::string> ensureTimePeriodValidatedPropertyHasExplicitUnit(const core::PropertyValidator* const validator, std::string& value) {
   if (validator != core::StandardValidators::get().TIME_PERIOD_VALIDATOR.get())
-    return;
+    return std::nullopt;
   if (value.empty() || !std::all_of(value.begin(), value.end(), ::isdigit))
-    return;
+    return std::nullopt;
 
-  value += " ms";
-  persisted_value = value;
-  need_to_persist_new_value = true;
+  return value + " ms";
 }
 
-void ensureDataSizeValidatedPropertyHasExplicitUnit(const core::PropertyValidator* const validator, std::string& persisted_value, std::string& value, bool& need_to_persist_new_value) {
+std::optional<std::string> ensureDataSizeValidatedPropertyHasExplicitUnit(const core::PropertyValidator* const validator, std::string& value) {
   if (validator != core::StandardValidators::get().DATA_SIZE_VALIDATOR.get())
-    return;
+    return std::nullopt;
   if (value.empty() || !std::all_of(value.begin(), value.end(), ::isdigit))
-    return;
+    return std::nullopt;
 
-  value += " B";
-  persisted_value = value;
-  need_to_persist_new_value = true;
+  return value + " B";
 }
 
 bool integerValidatedProperty(const core::PropertyValidator* const validator) {
@@ -112,34 +108,54 @@ std::optional<uint64_t> stringToDataSize(std::string_view input) {
   return std::nullopt;
 }
 
-void ensureIntegerValidatedPropertyHasNoUnit(const core::PropertyValidator* const validator, std::string& persisted_value, std::string& value, bool& need_to_persist_new_value) {
+std::optional<std::string> ensureIntegerValidatedPropertyHasNoUnit(const core::PropertyValidator* const validator, std::string& value) {
   if (!integerValidatedProperty(validator))
-    return;
+    return std::nullopt;
 
   if (auto parsed_time = utils::timeutils::StringToDuration<std::chrono::milliseconds>(value)) {
-    value = fmt::format("{}", parsed_time->count());
-    persisted_value = value;
-    need_to_persist_new_value = true;
+    return fmt::format("{}", parsed_time->count());
   }
 
   if (auto parsed_data_size = stringToDataSize(value)) {
-    value = fmt::format("{}", *parsed_data_size);
-    persisted_value = value;
-    need_to_persist_new_value = true;
+    return fmt::format("{}", *parsed_data_size);
   }
+
+  return std::nullopt;
 }
 
-void formatConfigurationProperty(const core::PropertyValidator* const validator, std::string& persisted_value, std::string& value, bool& need_to_persist_new_value) {
+void fixValidatedProperty(const std::string& property_name,
+    std::string& persisted_value,
+    std::string& value,
+    bool& needs_to_persist_new_value,
+    core::logging::Logger& logger) {
+  auto validator = getValidator(property_name);
   if (!validator)
     return;
 
-  ensureTimePeriodValidatedPropertyHasExplicitUnit(validator, persisted_value, value, need_to_persist_new_value);
-  ensureDataSizeValidatedPropertyHasExplicitUnit(validator, persisted_value, value, need_to_persist_new_value);
-  ensureIntegerValidatedPropertyHasNoUnit(validator, persisted_value, value, need_to_persist_new_value);
+  auto fixed_property_value = ensureTimePeriodValidatedPropertyHasExplicitUnit(validator, value)
+      | utils::valueOrElse([&] { return ensureDataSizeValidatedPropertyHasExplicitUnit(validator, value);})
+      | utils::valueOrElse([&] { return ensureIntegerValidatedPropertyHasNoUnit(validator, value);});
+
+  if (!fixed_property_value) {
+    return;
+  }
+
+  if (persisted_value == value) {
+    logger.log_info("Changed validated property from %s to %s, this change will be persisted",  value, *fixed_property_value);
+    value = *fixed_property_value;
+    persisted_value = value;
+    needs_to_persist_new_value = true;
+  } else {
+    logger.log_info("Changed validated property from %s to %s, this change won't be persisted", value, *fixed_property_value);
+    value = *fixed_property_value;
+    needs_to_persist_new_value = false;
+  }
 }
 }  // namespace
 
 // Load Configure File
+// If the loaded property is time-period or data-size validated and it has no explicit units ms or B will be appended.
+// If the loaded property is integer validated and it has some explicit unit(time-period or data-size) it will be converted to ms/B and its unit cut off
 void Properties::loadConfigureFile(const std::filesystem::path& configuration_file, const std::string_view prefix) {
   std::lock_guard<std::mutex> lock(mutex_);
   if (configuration_file.empty()) {
@@ -170,8 +186,8 @@ void Properties::loadConfigureFile(const std::filesystem::path& configuration_fi
     auto persisted_value = line.getValue();
     auto value = utils::StringUtils::replaceEnvironmentVariables(persisted_value);
     bool need_to_persist_new_value = false;
-    formatConfigurationProperty(getValidator(key, std::string(prefix)), persisted_value, value, need_to_persist_new_value);
-    dirty_ |= need_to_persist_new_value;
+    fixValidatedProperty(std::string(prefix) + key, persisted_value, value, need_to_persist_new_value, *logger_);
+    dirty_ = dirty_ || need_to_persist_new_value;
     properties_[key] = {persisted_value, value, need_to_persist_new_value};
   }
   checksum_calculator_.setFileLocation(properties_file_);
