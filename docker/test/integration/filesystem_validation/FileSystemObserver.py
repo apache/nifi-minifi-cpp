@@ -56,7 +56,7 @@ class FileSystemObserver(object):
             while True:
                 # Note: The timing on Event.wait() is inaccurate
                 self.done_event.wait(timeout_seconds - time.perf_counter() + wait_start_time)
-                if self.done_event.isSet():
+                if self.done_event.is_set():
                     self.done_event.clear()
                     if max_files and max_files <= self.event_handler.get_num_files_created():
                         return output_validator.validate()
