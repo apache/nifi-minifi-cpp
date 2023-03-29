@@ -295,11 +295,19 @@ std::optional<RepositoryMetricsSource::RocksDbStats> DatabaseContentRepository::
 
   std::string table_readers;
   opendb->GetProperty("rocksdb.estimate-table-readers-mem", &table_readers);
-  stats.table_readers_size = std::stoull(table_readers);
+  try {
+    stats.table_readers_size = std::stoull(table_readers);
+  } catch (const std::exception&) {
+    logger_->log_error("Could not retrieve valid 'rocksdb.estimate-table-readers-mem' property value from rocksdb content repository!");
+  }
 
   std::string all_memtables;
   opendb->GetProperty("rocksdb.cur-size-all-mem-tables", &all_memtables);
-  stats.all_memory_tables_size = std::stoull(all_memtables);
+  try {
+    stats.all_memory_tables_size = std::stoull(all_memtables);
+  } catch (const std::exception&) {
+    logger_->log_error("Could not retrieve valid 'rocksdb.cur-size-all-mem-tables' property value from rocksdb content repository!");
+  }
 
   return stats;
 }
