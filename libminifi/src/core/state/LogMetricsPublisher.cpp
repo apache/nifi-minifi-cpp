@@ -51,7 +51,7 @@ void LogMetricsPublisher::logMetrics() {
         parent_node.children.push_back(metric_response_node);
       }
     }
-    utils::LogUtils::logWithLevel(logger_, log_level_, parent_node.to_string().c_str());
+    utils::LogUtils::logWithLevel(logger_, log_level_, parent_node.to_pretty_string().c_str());
   } while (!utils::StoppableThread::waitForStopRequest(logging_interval_));
 }
 

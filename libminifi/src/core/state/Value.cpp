@@ -21,7 +21,7 @@
 #include <utility>
 #include <string>
 #include "rapidjson/document.h"
-#include "rapidjson/writer.h"
+#include "rapidjson/prettywriter.h"
 #include "rapidjson/stringbuffer.h"
 
 namespace org::apache::nifi::minifi::state::response {
@@ -78,14 +78,19 @@ rapidjson::Value nodeToJson(const SerializedResponseNode& node, rapidjson::Memor
 }
 }  // namespace
 
+template<typename Writer>
 std::string SerializedResponseNode::to_string() const {
   rapidjson::Document doc;
   doc.SetObject();
   doc.AddMember(rapidjson::Value(name.c_str(), doc.GetAllocator()), nodeToJson(*this, doc.GetAllocator()), doc.GetAllocator());
   rapidjson::StringBuffer buf;
-  rapidjson::Writer<rapidjson::StringBuffer> writer{buf};
+  Writer writer{buf};
   doc.Accept(writer);
   return buf.GetString();
+}
+
+std::string SerializedResponseNode::to_pretty_string() const {
+  return to_string<rapidjson::PrettyWriter<rapidjson::StringBuffer>>();
 }
 }  // namespace org::apache::nifi::minifi::state::response
 

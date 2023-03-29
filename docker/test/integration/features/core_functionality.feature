@@ -75,4 +75,12 @@ Feature: Core flow functionalities
     Given a GenerateFlowFile processor
     And log metrics publisher is enabled in MiNiFi
     When all instances start up
-    Then the Minifi logs contain the following message: '{"LogMetrics":{"RepositoryMetrics":{"flowfile":{"running":"true","full":"false","size":"0"},"provenance":{"running":"true","full":"false","size":"0"}}}}' in less than 30 seconds
+    Then the Minifi logs contain the following message: '[info] {' in less than 30 seconds
+    And the Minifi logs contain the following message: '    "LogMetrics": {' in less than 2 seconds
+    And the Minifi logs contain the following message: '        "RepositoryMetrics": {' in less than 2 seconds
+    And the Minifi logs contain the following message: '            "flowfile": {' in less than 2 seconds
+    And the Minifi logs contain the following message: '                "running": "true",' in less than 2 seconds
+    And the Minifi logs contain the following message: '                "full": "false",' in less than 2 seconds
+    And the Minifi logs contain the following message: '                "size": "0"' in less than 2 seconds
+    And the Minifi logs contain the following message: '            },' in less than 2 seconds
+    And the Minifi logs contain the following message: '            "provenance": {' in less than 2 seconds
