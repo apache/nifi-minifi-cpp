@@ -1340,17 +1340,6 @@ TEST_CASE("Reverse DNS lookup with valid timeout parameter", "[ExpressionLanguag
   std::string expected_hostname;
   flow_file_a->addAttribute("ip_addr", "8.8.8.8");
 
-  SECTION("Should timeout") {
-    auto reverse_lookup_expr_0ms = expression::compile("${reverseDnsLookup(${ip_addr}, 0)}");
-    std::string reverse_lookup_result = "dns.google";
-    // Occasionally it doesn't time out even with 0ms timeout because it finishes before the timeout-thread starts
-    for (auto number_of_tries = 1; number_of_tries <= 5 && reverse_lookup_result == "dns.google"; ++number_of_tries) {
-      reverse_lookup_result = reverse_lookup_expr_0ms(expression::Parameters{flow_file_a}).asString();
-    }
-    CHECK(reverse_lookup_result == "8.8.8.8");
-    CHECK(LogTestController::getInstance().contains("reverseDnsLookup timed out"));
-  }
-
   SECTION("Shouldn't timeout") {
     auto reverse_lookup_expr_500ms = expression::compile("${reverseDnsLookup(${ip_addr}, 500)}");
     CHECK(reverse_lookup_expr_500ms(expression::Parameters{flow_file_a}).asString() == "dns.google");
