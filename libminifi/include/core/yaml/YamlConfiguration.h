@@ -46,7 +46,7 @@ class YamlConfiguration : public flow::StructuredConfiguration {
   ~YamlConfiguration() override = default;
 
   std::vector<std::string> getSupportedFormats() const override {
-    return {"text/yml"};
+    return {"text/yml", "application/vnd.minifi-c2+yaml;version=2"};
   }
 
   /**
