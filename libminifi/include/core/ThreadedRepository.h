@@ -80,6 +80,8 @@ class ThreadedRepository : public core::Repository, public core::TraceableResour
   }
 
   BackTrace getTraces() override {
+    // If the thread is joinable then it is finished, we cannot interrupt and collect its stack traces
+    // It can occur with an empty run() implementation like the NoOpThreadedRepository where the stack trace is unavailable
     if (getThread().joinable()) {
       return {};
     }

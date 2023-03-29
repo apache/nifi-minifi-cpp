@@ -46,8 +46,7 @@ std::shared_ptr<minifi::core::controller::ControllerService> getControllerServic
       .content_repo = nullptr,
       .stream_factory = stream_factory,
       .configuration = configuration,
-      .path = configuration->get(minifi::Configure::nifi_flow_configuration_file),
-      .filesystem = nullptr},
+      .path = configuration->get(minifi::Configure::nifi_flow_configuration_file)},
     nifi_configuration_class_name);
 
   auto root = flow_configuration->getRoot();
