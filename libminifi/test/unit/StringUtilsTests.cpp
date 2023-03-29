@@ -556,4 +556,24 @@ TEST_CASE("StringUtils::matchesSequence works correctly", "[matchesSequence]") {
   REQUIRE(!StringUtils::matchesSequence("xxxabcxxxdefxxx", {"abc", "abc", "def"}));
 }
 
+TEST_CASE("StringUtils::splitToUnitAndValue tests") {
+  int64_t value;
+  std::string unit_str;
+  SECTION("Simple case") {
+    CHECK(StringUtils::splitToUnitAndValue("1 horse", unit_str, value));
+    CHECK(value == 1);
+    CHECK(unit_str == "horse");
+  }
+
+  SECTION("Additional whitespace in the middle") {
+    CHECK(StringUtils::splitToUnitAndValue("100    hOrSe", unit_str, value));
+    CHECK(value == 100);
+    CHECK(unit_str == "hOrSe");
+  }
+
+  SECTION("Invalid value") {
+    CHECK_FALSE(StringUtils::splitToUnitAndValue("one horse", unit_str, value));
+  }
+}
+
 // NOLINTEND(readability-container-size-empty)

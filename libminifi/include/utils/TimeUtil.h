@@ -214,6 +214,8 @@ std::optional<TargetDuration> StringToDuration(const std::string& input) {
   if (!StringUtils::splitToUnitAndValue(input, unit, value))
     return std::nullopt;
 
+  std::transform(unit.begin(), unit.end(), unit.begin(), ::tolower);
+
   return details::cast_to_matching_unit<TargetDuration,
     std::chrono::nanoseconds,
     std::chrono::microseconds,

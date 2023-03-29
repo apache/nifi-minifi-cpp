@@ -16,6 +16,7 @@
  */
 
 #include <limits>
+#include <charconv>
 
 #include "range/v3/view/transform.hpp"
 #include "range/v3/range/conversion.hpp"
@@ -512,23 +513,17 @@ bool StringUtils::matchesSequence(std::string_view str, const std::vector<std::s
 
 bool StringUtils::splitToUnitAndValue(std::string_view input, std::string& unit, int64_t& value) {
   const char* begin = input.data();
-  char *end;
-  errno = 0;
-  value = std::strtoll(begin, &end, 0);
-  if (end == begin || errno == ERANGE) {
+  const char* end = begin + input.size();
+  auto [ptr, ec] = std::from_chars(begin, end, value);
+  if (ptr == begin || ec != std::errc()) {
     return false;
   }
 
-  if (end[0] == '\0') {
-    return false;
-  }
-
-  while (*end == ' ') {
+  while (ptr != end && *ptr == ' ') {
     // Skip the spaces
-    end++;
+    ptr++;
   }
-  unit = std::string(end);
-  std::transform(unit.begin(), unit.end(), unit.begin(), ::tolower);
+  unit = std::string(ptr, end);
   return true;
 }
 
