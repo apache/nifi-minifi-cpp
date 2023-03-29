@@ -15,7 +15,7 @@
 # specific language governing permissions and limitations
 # under the License.
 
-if (NOT ENABLE_KUBERNETES)
+if (WIN32 OR NOT ENABLE_KUBERNETES)
     return()
 endif()
 
