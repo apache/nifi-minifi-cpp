@@ -80,6 +80,9 @@ class ThreadedRepository : public core::Repository, public core::TraceableResour
   }
 
   BackTrace getTraces() override {
+    if (getThread().joinable()) {
+      return {};
+    }
     return TraceResolver::getResolver().getBackTrace(getName(), getThread().native_handle());
   }
 

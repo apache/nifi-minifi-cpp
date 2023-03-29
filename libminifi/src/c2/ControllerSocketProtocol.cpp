@@ -21,6 +21,7 @@
 #include <utility>
 #include <vector>
 #include <string>
+#include <sstream>
 
 #include "utils/gsl.h"
 #include "utils/StringUtils.h"
@@ -239,6 +240,32 @@ void ControllerSocketProtocol::writeManifestResponse(io::BaseStream *stream) {
   stream->write(resp.getBuffer());
 }
 
+std::string ControllerSocketProtocol::getJstack() {
+  if (!update_sink_->isRunning()) {
+    return {};
+  }
+  std::stringstream result;
+  const auto traces = update_sink_->getTraces();
+  for (const auto& trace : traces) {
+    for (const auto& line : trace.getTraces()) {
+      result << trace.getName() << " -- " << line << "\n";
+    }
+  }
+  return result.str();
+}
+
+void ControllerSocketProtocol::writeJstackResponse(io::BaseStream *stream) {
+  io::BufferStream resp;
+  uint8_t op = Operation::DESCRIBE;
+  resp.write(&op, 1);
+  std::string jstack_response;
+  if (auto controller_socket_reporter = controller_socket_reporter_.lock()) {
+    jstack_response = getJstack();
+  }
+  resp.write(jstack_response, true);
+  stream->write(resp.getBuffer());
+}
+
 void ControllerSocketProtocol::handleDescribe(io::BaseStream *stream) {
   std::string what;
   const auto size = stream->read(what);
@@ -256,6 +283,8 @@ void ControllerSocketProtocol::handleDescribe(io::BaseStream *stream) {
     writeGetFullResponse(stream);
   } else if (what == "manifest") {
     writeManifestResponse(stream);
+  } else if (what == "jstack") {
+    writeJstackResponse(stream);
   } else {
     logger_->log_error("Unknown C2 describe parameter: %s", what);
   }

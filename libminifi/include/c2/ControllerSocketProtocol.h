@@ -17,6 +17,7 @@
 #pragma once
 
 #include <memory>
+#include <string>
 
 #include "io/StreamFactory.h"
 #include "io/BaseStream.h"
@@ -48,8 +49,10 @@ class ControllerSocketProtocol {
   void writeConnectionsResponse(io::BaseStream *stream);
   void writeGetFullResponse(io::BaseStream *stream);
   void writeManifestResponse(io::BaseStream *stream);
+  void writeJstackResponse(io::BaseStream *stream);
   void handleDescribe(io::BaseStream *stream);
   void handleCommand(io::BaseStream *stream);
+  std::string getJstack();
 
   core::controller::ControllerServiceProvider* controller_{};
   state::StateMonitor* update_sink_{};

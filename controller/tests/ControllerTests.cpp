@@ -79,6 +79,16 @@ class TestStateController : public minifi::state::StateController {
   std::atomic<bool> is_running;
 };
 
+class TestBackTrace : public BackTrace {
+ public:
+  using BackTrace::BackTrace;
+  void addTraceLines(uint32_t line_count) {
+    for (uint32_t i = 1; i <= line_count; ++i) {
+      addLine("bt line " + std::to_string(i) + " for " + getName());
+    }
+  }
+};
+
 class TestUpdateSink : public minifi::state::StateMonitor {
  public:
   explicit TestUpdateSink(std::shared_ptr<StateController> controller)
@@ -128,6 +138,12 @@ class TestUpdateSink : public minifi::state::StateMonitor {
   }
   std::vector<BackTrace> getTraces() override {
     std::vector<BackTrace> traces;
+    TestBackTrace trace1("trace1");
+    trace1.addTraceLines(2);
+    traces.push_back(trace1);
+    TestBackTrace trace2("trace2");
+    trace2.addTraceLines(3);
+    traces.push_back(trace2);
     return traces;
   }
 
@@ -271,11 +287,11 @@ class ControllerTestFixture {
 };
 
 #ifdef WIN32
-TEST_CASE("TestWindows", "[test1]") {
+TEST_CASE("TestWindows", "[controllerTests]") {
   std::cout << "Controller Tests are not supported on windows";
 }
 #else
-TEST_CASE_METHOD(ControllerTestFixture, "Test listComponents", "[test1]") {
+TEST_CASE_METHOD(ControllerTestFixture, "Test listComponents", "[controllerTests]") {
   SECTION("With SSL from service provider") {
     setConnectionType(ControllerTestFixture::ConnectionType::SSL_FROM_SERVICE_PROVIDER);
   }
@@ -310,7 +326,7 @@ TEST_CASE_METHOD(ControllerTestFixture, "Test listComponents", "[test1]") {
   REQUIRE(ss.str() == "Components:\nTestStateController, running: false\n");
 }
 
-TEST_CASE_METHOD(ControllerTestFixture, "TestClear", "[test1]") {
+TEST_CASE_METHOD(ControllerTestFixture, "TestClear", "[controllerTests]") {
   SECTION("With SSL from service provider") {
     setConnectionType(ControllerTestFixture::ConnectionType::SSL_FROM_SERVICE_PROVIDER);
   }
@@ -347,7 +363,7 @@ TEST_CASE_METHOD(ControllerTestFixture, "TestClear", "[test1]") {
   REQUIRE(verifyEventHappenedInPollTime(500ms, [&] { return 3 == update_sink_->clear_calls; }, 20ms));
 }
 
-TEST_CASE_METHOD(ControllerTestFixture, "TestUpdate", "[test1]") {
+TEST_CASE_METHOD(ControllerTestFixture, "TestUpdate", "[controllerTests]") {
   SECTION("With SSL from service provider") {
     setConnectionType(ControllerTestFixture::ConnectionType::SSL_FROM_SERVICE_PROVIDER);
   }
@@ -379,7 +395,7 @@ TEST_CASE_METHOD(ControllerTestFixture, "TestUpdate", "[test1]") {
   REQUIRE(0 == update_sink_->clear_calls);
 }
 
-TEST_CASE_METHOD(ControllerTestFixture, "Test connection getters on empty flow", "[test1]") {
+TEST_CASE_METHOD(ControllerTestFixture, "Test connection getters on empty flow", "[controllerTests]") {
   SECTION("With SSL from service provider") {
     setConnectionType(ControllerTestFixture::ConnectionType::SSL_FROM_SERVICE_PROVIDER);
   }
@@ -416,7 +432,7 @@ TEST_CASE_METHOD(ControllerTestFixture, "Test connection getters on empty flow",
   CHECK(connection_stream.str().empty());
 }
 
-TEST_CASE_METHOD(ControllerTestFixture, "Test connection getters", "[test1]") {
+TEST_CASE_METHOD(ControllerTestFixture, "Test connection getters", "[controllerTests]") {
   SECTION("With SSL from service provider") {
     setConnectionType(ControllerTestFixture::ConnectionType::SSL_FROM_SERVICE_PROVIDER);
   }
@@ -465,7 +481,7 @@ TEST_CASE_METHOD(ControllerTestFixture, "Test connection getters", "[test1]") {
   CHECK(ranges::find(lines, "con2") != ranges::end(lines));
 }
 
-TEST_CASE_METHOD(ControllerTestFixture, "Test manifest getter", "[test1]") {
+TEST_CASE_METHOD(ControllerTestFixture, "Test manifest getter", "[controllerTests]") {
   SECTION("With SSL from service provider") {
     setConnectionType(ControllerTestFixture::ConnectionType::SSL_FROM_SERVICE_PROVIDER);
   }
@@ -487,6 +503,35 @@ TEST_CASE_METHOD(ControllerTestFixture, "Test manifest getter", "[test1]") {
   auto socket = createSocket();
   minifi::controller::printManifest(std::move(socket), manifest_stream);
   REQUIRE(manifest_stream.str().find("\"agentType\": \"cpp\",") != std::string::npos);
+}
+
+TEST_CASE_METHOD(ControllerTestFixture, "Test jstack getter", "[controllerTests]") {
+  SECTION("With SSL from service provider") {
+    setConnectionType(ControllerTestFixture::ConnectionType::SSL_FROM_SERVICE_PROVIDER);
+  }
+
+  SECTION("With SSL from properties") {
+    setConnectionType(ControllerTestFixture::ConnectionType::SSL_FROM_CONFIGURATION);
+  }
+
+  SECTION("Without SSL") {
+    setConnectionType(ControllerTestFixture::ConnectionType::UNSECURE);
+  }
+
+  auto reporter = std::make_shared<minifi::c2::ControllerSocketMetricsPublisher>("ControllerSocketMetricsPublisher");
+  auto response_node_loader = std::make_shared<minifi::state::response::ResponseNodeLoader>(configuration_, nullptr, nullptr, nullptr);
+  reporter->initialize(configuration_, response_node_loader);
+  initalizeControllerSocket(reporter);
+
+  std::stringstream jstack_stream;
+  auto socket = createSocket();
+  minifi::controller::getJstacks(std::move(socket), jstack_stream);
+  std::string expected_trace = "trace1 -- bt line 1 for trace1\n"
+    "trace1 -- bt line 2 for trace1\n"
+    "trace2 -- bt line 1 for trace2\n"
+    "trace2 -- bt line 2 for trace2\n"
+    "trace2 -- bt line 3 for trace2\n\n";
+  REQUIRE(jstack_stream.str() == expected_trace);
 }
 #endif
 

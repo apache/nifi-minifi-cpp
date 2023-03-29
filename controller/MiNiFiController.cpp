@@ -126,6 +126,7 @@ int main(int argc, char **argv) {
   ("getsize", "Reports the size of the associated connection queue", cxxopts::value<std::vector<std::string>>())
   ("updateflow", "Updates the flow of the agent using the provided flow file", cxxopts::value<std::string>())
   ("getfull", "Reports a list of full connections")
+  ("jstack", "Returns backtraces from the agent")
   ("manifest", "Generates a manifest for the current binary")
   ("noheaders", "Removes headers from output streams");
 
@@ -235,6 +236,12 @@ int main(int argc, char **argv) {
     if (result.count("manifest") > 0) {
       auto socket = secure_context != nullptr ? stream_factory_->createSecureSocket(host, port, secure_context) : stream_factory_->createSocket(host, port);
       if (minifi::controller::printManifest(std::move(socket), std::cout) < 0)
+        std::cout << "Could not connect to remote host " << host << ":" << port << std::endl;
+    }
+
+    if (result.count("jstack") > 0) {
+      auto socket = secure_context != nullptr ? stream_factory_->createSecureSocket(host, port, secure_context) : stream_factory_->createSocket(host, port);
+      if (minifi::controller::getJstacks(std::move(socket), std::cout) < 0)
         std::cout << "Could not connect to remote host " << host << ":" << port << std::endl;
     }
   } catch (const std::exception &exc) {

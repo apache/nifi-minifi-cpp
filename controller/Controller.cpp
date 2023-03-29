@@ -193,4 +193,22 @@ int printManifest(std::unique_ptr<io::Socket> socket, std::ostream &out) {
   return 0;
 }
 
+int getJstacks(std::unique_ptr<io::Socket> socket, std::ostream &out) {
+  if (socket->initialize() < 0) {
+    return -1;
+  }
+  io::BufferStream stream;
+  uint8_t op = c2::Operation::DESCRIBE;
+  stream.write(&op, 1);
+  stream.write("jstack");
+  if (io::isError(socket->write(stream.getBuffer()))) {
+    return -1;
+  }
+  socket->read(op);
+  std::string manifest;
+  socket->read(manifest, true);
+  out << manifest << std::endl;
+  return 0;
+}
+
 }  // namespace org::apache::nifi::minifi::controller

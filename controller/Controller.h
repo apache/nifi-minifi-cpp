@@ -75,4 +75,6 @@ int listComponents(std::unique_ptr<io::Socket> socket, std::ostream &out, bool s
 int listConnections(std::unique_ptr<io::Socket> socket, std::ostream &out, bool show_header = true);
 int printManifest(std::unique_ptr<io::Socket> socket, std::ostream &out);
 
+int getJstacks(std::unique_ptr<io::Socket> socket, std::ostream &out);
+
 }  // namespace org::apache::nifi::minifi::controller
