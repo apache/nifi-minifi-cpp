@@ -35,7 +35,7 @@ namespace org::apache::nifi::minifi::c2 {
  */
 class ControllerSocketProtocol {
  public:
-  ControllerSocketProtocol(core::controller::ControllerServiceProvider* controller, state::StateMonitor* update_sink,
+  ControllerSocketProtocol(core::controller::ControllerServiceProvider& controller, state::StateMonitor& update_sink,
     std::shared_ptr<Configure> configuration, const std::shared_ptr<ControllerSocketReporter>& controller_socket_reporter);
   void initialize();
 
@@ -54,8 +54,8 @@ class ControllerSocketProtocol {
   void handleCommand(io::BaseStream *stream);
   std::string getJstack();
 
-  core::controller::ControllerServiceProvider* controller_{};
-  state::StateMonitor* update_sink_{};
+  core::controller::ControllerServiceProvider& controller_;
+  state::StateMonitor& update_sink_;
   std::unique_ptr<io::BaseServerSocket> server_socket_;
   std::shared_ptr<minifi::io::StreamFactory> stream_factory_;
   std::weak_ptr<ControllerSocketReporter> controller_socket_reporter_;

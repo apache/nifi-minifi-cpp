@@ -212,7 +212,7 @@ class TestControllerServiceProvider : public core::controller::ControllerService
       ssl_context_service_(std::move(ssl_context_service)) {
   }
   std::shared_ptr<core::controller::ControllerService> getControllerService(const std::string&) const override {
-    return ssl_context_service_;
+    return is_ssl_ ? ssl_context_service_ : nullptr;
   }
 
   std::shared_ptr<core::controller::ControllerServiceNode> createControllerService(const std::string&, const std::string&, const std::string&, bool) override {
@@ -225,7 +225,12 @@ class TestControllerServiceProvider : public core::controller::ControllerService
   void disableAllControllerServices() override {
   }
 
+  void setSsl() {
+    is_ssl_ = true;
+  }
+
  private:
+  bool is_ssl_{};
   std::shared_ptr<controllers::SSLContextService> ssl_context_service_;
 };
 
@@ -258,8 +263,10 @@ class ControllerTestFixture {
     if (connection_type_ == ConnectionType::SSL_FROM_CONFIGURATION) {
       configuration_->set(minifi::Configure::nifi_remote_input_secure, "true");
     }
-    controller_socket_protocol_ = std::make_unique<minifi::c2::ControllerSocketProtocol>(
-      connection_type_ == ConnectionType::SSL_FROM_SERVICE_PROVIDER ? controller_service_provider_.get() : nullptr, update_sink_.get(), configuration_, reporter);
+    controller_socket_protocol_ = std::make_unique<minifi::c2::ControllerSocketProtocol>(*controller_service_provider_, *update_sink_, configuration_, reporter);
+    if (connection_type_ == ConnectionType::SSL_FROM_SERVICE_PROVIDER) {
+      controller_service_provider_->setSsl();
+    }
     controller_socket_protocol_->initialize();
   }
 

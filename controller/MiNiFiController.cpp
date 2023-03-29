@@ -33,7 +33,7 @@
 namespace minifi = org::apache::nifi::minifi;
 
 std::shared_ptr<minifi::core::controller::ControllerService> getControllerService(const std::shared_ptr<minifi::Configure> &configuration,
-    const std::string &service_name, const std::string& minifi_home) {
+    const std::string &service_name) {
   std::string nifi_configuration_class_name = "adaptiveconfiguration";
 
   minifi::core::extension::ExtensionManager::get().initialize(configuration);
@@ -41,7 +41,14 @@ std::shared_ptr<minifi::core::controller::ControllerService> getControllerServic
   configuration->get(minifi::Configure::nifi_configuration_class_name, nifi_configuration_class_name);
   const auto stream_factory = minifi::io::StreamFactory::getInstance(configuration);
   auto flow_configuration = minifi::core::createFlowConfiguration(
-    minifi::core::ConfigurationContext{nullptr, nullptr, stream_factory, configuration, std::filesystem::path(minifi_home) / "conf" / "config.yml"}, nifi_configuration_class_name);
+    minifi::core::ConfigurationContext{
+      .flow_file_repo = nullptr,
+      .content_repo = nullptr,
+      .stream_factory = stream_factory,
+      .configuration = configuration,
+      .path = configuration->get(minifi::Configure::nifi_flow_configuration_file),
+      .filesystem = nullptr},
+    nifi_configuration_class_name);
 
   auto root = flow_configuration->getRoot();
   if (!root) {
@@ -54,12 +61,12 @@ std::shared_ptr<minifi::core::controller::ControllerService> getControllerServic
   return controller->getControllerServiceImplementation();
 }
 
-std::shared_ptr<minifi::controllers::SSLContextService> getSSLContextService(const std::shared_ptr<minifi::Configure>& configuration, const std::string& minifi_home) {
+std::shared_ptr<minifi::controllers::SSLContextService> getSSLContextService(const std::shared_ptr<minifi::Configure>& configuration) {
   std::shared_ptr<minifi::controllers::SSLContextService> secure_context;
   std::string context_name;
   // if the user wishes to use a controller service we need to instantiate the flow
   if (configuration->get(minifi::Configure::controller_ssl_context_service, context_name) && !context_name.empty()) {
-    const auto service = getControllerService(configuration, context_name, minifi_home);
+    const auto service = getControllerService(configuration, context_name);
     if (nullptr != service) {
       secure_context = std::dynamic_pointer_cast<minifi::controllers::SSLContextService>(service);
     }
@@ -100,7 +107,7 @@ int main(int argc, char **argv) {
 
   std::shared_ptr<minifi::controllers::SSLContextService> secure_context;
   try {
-    secure_context = getSSLContextService(configuration, minifi_home);
+    secure_context = getSSLContextService(configuration);
   } catch(const minifi::Exception& ex) {
     logger->log_error(ex.what());
     exit(1);

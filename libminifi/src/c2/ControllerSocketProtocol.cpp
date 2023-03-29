@@ -30,7 +30,7 @@
 
 namespace org::apache::nifi::minifi::c2 {
 
-ControllerSocketProtocol::ControllerSocketProtocol(core::controller::ControllerServiceProvider* controller, state::StateMonitor* update_sink,
+ControllerSocketProtocol::ControllerSocketProtocol(core::controller::ControllerServiceProvider& controller, state::StateMonitor& update_sink,
     std::shared_ptr<Configure> configuration, const std::shared_ptr<ControllerSocketReporter>& controller_socket_reporter)
       : controller_(controller),
         update_sink_(update_sink),
@@ -43,8 +43,8 @@ ControllerSocketProtocol::ControllerSocketProtocol(core::controller::ControllerS
 void ControllerSocketProtocol::initialize() {
   std::shared_ptr<minifi::controllers::SSLContextService> secure_context;
   std::string context_name;
-  if (controller_ && configuration_->get(Configure::controller_ssl_context_service, context_name)) {
-    std::shared_ptr<core::controller::ControllerService> service = controller_->getControllerService(context_name);
+  if (configuration_->get(Configure::controller_ssl_context_service, context_name)) {
+    std::shared_ptr<core::controller::ControllerService> service = controller_.getControllerService(context_name);
     if (nullptr != service) {
       secure_context = std::static_pointer_cast<minifi::controllers::SSLContextService>(service);
     }
@@ -86,7 +86,7 @@ void ControllerSocketProtocol::initialize() {
     }
 
     auto check = [this]() -> bool {
-      return update_sink_->isRunning();
+      return update_sink_.isRunning();
     };
 
     auto handler = [this](io::BaseStream *stream) {
@@ -100,7 +100,7 @@ void ControllerSocketProtocol::handleStart(io::BaseStream *stream) {
   std::string component_str;
   const auto size = stream->read(component_str);
   if (!io::isError(size)) {
-    update_sink_->executeOnComponent(component_str, [](state::StateController& component) {
+    update_sink_.executeOnComponent(component_str, [](state::StateController& component) {
       component.start();
     });
   } else {
@@ -112,7 +112,7 @@ void ControllerSocketProtocol::handleStop(io::BaseStream *stream) {
   std::string component_str;
   const auto size = stream->read(component_str);
   if (!io::isError(size)) {
-    update_sink_->executeOnComponent(component_str, [](state::StateController& component) {
+    update_sink_.executeOnComponent(component_str, [](state::StateController& component) {
       component.stop();
     });
   } else {
@@ -124,7 +124,7 @@ void ControllerSocketProtocol::handleClear(io::BaseStream *stream) {
   std::string connection;
   const auto size = stream->read(connection);
   if (!io::isError(size)) {
-    update_sink_->clearConnection(connection);
+    update_sink_.clearConnection(connection);
   }
 }
 
@@ -149,7 +149,7 @@ void ControllerSocketProtocol::handleUpdate(io::BaseStream *stream) {
     std::ifstream tf(ff_loc);
     std::string flow_configuration((std::istreambuf_iterator<char>(tf)),
         std::istreambuf_iterator<char>());
-    update_sink_->applyUpdate("ControllerSocketProtocol", flow_configuration);
+    update_sink_.applyUpdate("ControllerSocketProtocol", flow_configuration);
   }
 }
 
@@ -179,7 +179,7 @@ void ControllerSocketProtocol::writeQueueSizesResponse(io::BaseStream *stream) {
 
 void ControllerSocketProtocol::writeComponentsResponse(io::BaseStream *stream) {
   std::vector<std::pair<std::string, bool>> components;
-  update_sink_->executeOnAllComponents([&components](state::StateController& component){
+  update_sink_.executeOnAllComponents([&components](state::StateController& component){
     components.emplace_back(component.getComponentName(), component.isRunning());
   });
   io::BufferStream resp;
@@ -241,11 +241,11 @@ void ControllerSocketProtocol::writeManifestResponse(io::BaseStream *stream) {
 }
 
 std::string ControllerSocketProtocol::getJstack() {
-  if (!update_sink_->isRunning()) {
+  if (!update_sink_.isRunning()) {
     return {};
   }
   std::stringstream result;
-  const auto traces = update_sink_->getTraces();
+  const auto traces = update_sink_.getTraces();
   for (const auto& trace : traces) {
     for (const auto& line : trace.getTraces()) {
       result << trace.getName() << " -- " << line << "\n";
