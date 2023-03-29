@@ -112,7 +112,7 @@ bool SFTPProcessorBase::parseCommonPropertiesOnTrigger(const std::shared_ptr<cor
     logger_->log_error("Port attribute is missing or invalid");
     return false;
   } else {
-    int port_tmp;
+    int port_tmp = 0;
     if (!core::Property::StringToInt(value, port_tmp) ||
         port_tmp <= std::numeric_limits<uint16_t>::min() ||
         port_tmp > std::numeric_limits<uint16_t>::max()) {
@@ -132,7 +132,7 @@ bool SFTPProcessorBase::parseCommonPropertiesOnTrigger(const std::shared_ptr<cor
   context->getProperty(Password, common_properties.password, flow_file);
   context->getProperty(ProxyHost, common_properties.proxy_host, flow_file);
   if (context->getProperty(ProxyPort, value, flow_file) && !value.empty()) {
-    int port_tmp;
+    int port_tmp = 0;
     if (!core::Property::StringToInt(value, port_tmp) ||
         port_tmp <= std::numeric_limits<uint16_t>::min() ||
         port_tmp > std::numeric_limits<uint16_t>::max()) {
