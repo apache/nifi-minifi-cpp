@@ -77,6 +77,11 @@ class MiNiFi_integration_test:
         self.cluster.deploy_container('opensearch')
         assert self.cluster.wait_for_container_startup_to_finish('opensearch')
 
+    def start_minifi_c2_server(self):
+        self.cluster.acquire_container("minifi-c2-server", "minifi-c2-server")
+        self.cluster.deploy_container('minifi-c2-server')
+        assert self.cluster.wait_for_container_startup_to_finish('minifi-c2-server')
+
     def start(self, container_name=None):
         if container_name is not None:
             logging.info("Starting container %s", container_name)
@@ -309,6 +314,9 @@ class MiNiFi_integration_test:
 
     def enable_c2_with_ssl_in_minifi(self):
         self.cluster.enable_c2_with_ssl_in_minifi()
+
+    def fetch_flow_config_from_c2_url_in_minifi(self):
+        self.cluster.fetch_flow_config_from_c2_url_in_minifi()
 
     def enable_prometheus_in_minifi(self):
         self.cluster.enable_prometheus_in_minifi()

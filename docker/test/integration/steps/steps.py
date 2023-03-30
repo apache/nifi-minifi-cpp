@@ -1013,6 +1013,11 @@ def step_impl(context):
     context.test.acquire_container("minifi-c2-server", "minifi-c2-server")
 
 
+@given(u'a MiNiFi C2 server is started')
+def step_impl(context):
+    context.test.start_minifi_c2_server()
+
+
 @then("the MiNiFi C2 server logs contain the following message: \"{log_message}\" in less than {duration}")
 def step_impl(context, log_message, duration):
     context.test.check_container_log_contents("minifi-c2-server", log_message, humanfriendly.parse_timespan(duration))
@@ -1026,6 +1031,12 @@ def step_impl(context, log_message, duration):
 @given(u'a MiNiFi C2 server is set up with SSL')
 def step_impl(context):
     context.test.acquire_container("minifi-c2-server", "minifi-c2-server-ssl")
+
+
+@given(u'flow configuration path is set up in flow url property')
+def step_impl(context):
+    context.test.acquire_container("minifi-cpp-flow", "minifi-cpp")
+    context.test.fetch_flow_config_from_c2_url_in_minifi()
 
 
 # MiNiFi memory usage
