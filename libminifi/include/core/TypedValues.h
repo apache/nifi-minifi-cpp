@@ -110,7 +110,7 @@ class DataSizeValue : public TransformableValue, public state::response::UInt64V
       : state::response::UInt64Value(0) {
   }
 
-  static std::optional<uint64_t> getUnitMultiplier(std::string unit_str) {
+  static std::optional<int64_t> getUnitMultiplier(std::string unit_str) {
     // TODO(adebreceni): this mapping is to preserve backwards compatibility,
     //  we should entertain the idea of moving to standardized units in
     //  the configuration (i.e. K = 1000, Ki = 1024)
@@ -119,16 +119,13 @@ class DataSizeValue : public TransformableValue, public state::response::UInt64V
         {"K", 1_KB}, {"M", 1_MB}, {"G", 1_GB}, {"T", 1_TB}, {"P", 1_PB},
         {"KB", 1_KiB}, {"MB", 1_MiB}, {"GB", 1_GiB}, {"TB", 1_TiB}, {"PB", 1_PiB},
     };
-    std::transform(unit_str.begin(), unit_str.end(), unit_str.begin(), ::toupper);
-    auto unit_multiplier_it = unit_map.find(unit_str);
-    if (unit_multiplier_it == unit_map.end())
-      return std::nullopt;
-    return unit_multiplier_it->second;
+    unit_str = utils::StringUtils::toUpper(unit_str);
+
+    return unit_map.contains(unit_str) ? std::optional(unit_map.at(unit_str)) : std::nullopt;
   }
 
   // Convert String to Integer
-  template<typename T, typename std::enable_if<
-      std::is_integral<T>::value>::type* = nullptr>
+  template<std::integral T>
   static bool StringToInt(const std::string &input, T &output) {
     int64_t value;
     std::string unit_str;

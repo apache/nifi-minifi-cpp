@@ -211,10 +211,11 @@ template<class TargetDuration>
 std::optional<TargetDuration> StringToDuration(const std::string& input) {
   std::string unit;
   int64_t value;
-  if (!StringUtils::splitToUnitAndValue(input, unit, value))
+  if (!StringUtils::splitToValueAndUnit(input, value, unit))
     return std::nullopt;
 
-  std::transform(unit.begin(), unit.end(), unit.begin(), ::tolower);
+
+  unit = utils::StringUtils::toLower(unit);
 
   return details::cast_to_matching_unit<TargetDuration,
     std::chrono::nanoseconds,

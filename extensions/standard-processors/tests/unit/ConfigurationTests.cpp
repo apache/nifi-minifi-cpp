@@ -135,7 +135,7 @@ TEST_CASE("Configuration can fix misconfigured datasize<->integer validated prop
 }
 
 
-TEST_CASE("Configuration misconfigured validated properties with in environmental variables") {
+TEST_CASE("Configuration can fix misconfigured validated properties within environmental variables") {
   LogTestController::getInstance().setInfo<minifi::Configure>();
   LogTestController::getInstance().setInfo<minifi::Properties>();
   auto properties_path = std::filesystem::temp_directory_path() /  "test.properties";

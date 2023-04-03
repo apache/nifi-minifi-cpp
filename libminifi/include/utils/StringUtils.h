@@ -35,6 +35,8 @@
 #include "utils/FailurePolicy.h"
 #include "utils/gsl.h"
 #include "utils/meta/detected.h"
+#include "range/v3/view/transform.hpp"
+#include "range/v3/range/conversion.hpp"
 
 // libc++ doesn't define operator<=> on strings, and apparently the operator rewrite rules don't automagically make one
 #if defined(_LIBCPP_VERSION) && _LIBCPP_VERSION < 16000
@@ -88,7 +90,15 @@ class StringUtils {
    */
   static std::optional<bool> toBool(const std::string& input);
 
-  static std::string toLower(std::string_view str);
+  static inline std::string toLower(std::string_view str) {
+    const auto tolower = [](auto c) { return std::tolower(static_cast<unsigned char>(c)); };
+    return str | ranges::views::transform(tolower) | ranges::to<std::string>();
+  }
+
+  static inline std::string toUpper(std::string_view str)  {
+    const auto toupper = [](auto c) { return std::toupper(static_cast<unsigned char>(c)); };
+    return str | ranges::views::transform(toupper) | ranges::to<std::string>();
+  }
 
   /**
    * Strips the line ending (\n or \r\n) from the end of the input line.
@@ -480,7 +490,7 @@ class StringUtils {
    */
   static bool matchesSequence(std::string_view str, const std::vector<std::string>& patterns);
 
-  static bool splitToUnitAndValue(std::string_view input, std::string& unit, int64_t& value);
+  static bool splitToValueAndUnit(std::string_view input, int64_t& value, std::string& unit);
 };
 
 }  // namespace org::apache::nifi::minifi::utils

@@ -45,17 +45,13 @@
 #include "core/controller/ControllerServiceProvider.h"
 #include "core/controller/ControllerServiceNode.h"
 
-#define SCHEDULING_WATCHDOG_CHECK_PERIOD_MS 1000  // msec
-#define SCHEDULING_WATCHDOG_DEFAULT_ALERT_PERIOD_MS 5000  // msec
+constexpr std::chrono::milliseconds SCHEDULING_WATCHDOG_CHECK_PERIOD = std::chrono::seconds(1);
+constexpr std::chrono::milliseconds SCHEDULING_WATCHDOG_DEFAULT_ALERT_PERIOD = std::chrono::seconds(5);
 
 namespace org::apache::nifi::minifi {
 
 class SchedulingAgent {
  public:
-  // Constructor
-  /*!
-   * Create a new scheduling agent.
-   */
   SchedulingAgent(const gsl::not_null<core::controller::ControllerServiceProvider*> controller_service_provider, std::shared_ptr<core::Repository> repo, std::shared_ptr<core::Repository> flow_repo,
                   std::shared_ptr<core::ContentRepository> content_repo, std::shared_ptr<Configure> configuration, utils::ThreadPool<utils::TaskRescheduleInfo> &thread_pool)
       : admin_yield_duration_(),
@@ -71,11 +67,11 @@ class SchedulingAgent {
 
     alert_time_ = configuration->get(Configure::nifi_flow_engine_alert_period)
         | utils::flatMap(utils::timeutils::StringToDuration<std::chrono::milliseconds>)
-        | utils::valueOrElse([] { return std::chrono::milliseconds(SCHEDULING_WATCHDOG_DEFAULT_ALERT_PERIOD_MS);});
+        | utils::valueOrElse([] { return SCHEDULING_WATCHDOG_DEFAULT_ALERT_PERIOD; });
 
     if (alert_time_ > std::chrono::milliseconds(0)) {
       std::function<void(void)> f = std::bind(&SchedulingAgent::watchDogFunc, this);
-      watchDogTimer_.reset(new utils::CallBackTimer(std::chrono::milliseconds(SCHEDULING_WATCHDOG_CHECK_PERIOD_MS), f));
+      watchDogTimer_.reset(new utils::CallBackTimer(SCHEDULING_WATCHDOG_CHECK_PERIOD, f));
       watchDogTimer_->start();
     }
 

@@ -21,8 +21,9 @@
 
 #include <memory>
 #include <string>
+#include <chrono>
 
-#define DEFAULT_TIME_SLICE_MS 500
+constexpr auto DEFAULT_TIME_SLICE = std::chrono::milliseconds(500);
 
 #include "core/logging/Logger.h"
 #include "core/Processor.h"
@@ -42,7 +43,7 @@ class EventDrivenSchedulingAgent : public ThreadedSchedulingAgent {
 
     time_slice_ = configuration->get(Configure::nifi_flow_engine_event_driven_time_slice)
         | utils::flatMap(utils::timeutils::StringToDuration<std::chrono::milliseconds>)
-        | utils::valueOrElse([] { return std::chrono::milliseconds(DEFAULT_TIME_SLICE_MS);});
+        | utils::valueOrElse([] { return DEFAULT_TIME_SLICE; });
 
     if (time_slice_ < 10ms || 1000ms < time_slice_) {
       throw Exception(FLOW_EXCEPTION, std::string(Configure::nifi_flow_engine_event_driven_time_slice) + " is out of reasonable range!");

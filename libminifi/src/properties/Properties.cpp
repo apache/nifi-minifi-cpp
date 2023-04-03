@@ -75,7 +75,7 @@ const core::PropertyValidator* getValidator(const std::string& lookup_value) {
 std::optional<std::string> ensureTimePeriodValidatedPropertyHasExplicitUnit(const core::PropertyValidator* const validator, std::string& value) {
   if (validator != core::StandardValidators::get().TIME_PERIOD_VALIDATOR.get())
     return std::nullopt;
-  if (value.empty() || !std::all_of(value.begin(), value.end(), ::isdigit))
+  if (value.empty() || !std::all_of(value.begin(), value.end(), [](unsigned char c){ return ::isdigit(c); }))
     return std::nullopt;
 
   return value + " ms";
@@ -84,7 +84,7 @@ std::optional<std::string> ensureTimePeriodValidatedPropertyHasExplicitUnit(cons
 std::optional<std::string> ensureDataSizeValidatedPropertyHasExplicitUnit(const core::PropertyValidator* const validator, std::string& value) {
   if (validator != core::StandardValidators::get().DATA_SIZE_VALIDATOR.get())
     return std::nullopt;
-  if (value.empty() || !std::all_of(value.begin(), value.end(), ::isdigit))
+  if (value.empty() || !std::all_of(value.begin(), value.end(), [](unsigned char c){ return ::isdigit(c); }))
     return std::nullopt;
 
   return value + " B";
@@ -97,11 +97,13 @@ bool integerValidatedProperty(const core::PropertyValidator* const validator) {
       || validator == core::StandardValidators::get().UNSIGNED_LONG_VALIDATOR.get();
 }
 
-std::optional<uint64_t> stringToDataSize(std::string_view input) {
+std::optional<int64_t> stringToDataSize(std::string_view input) {
   int64_t value;
   std::string unit_str;
-  if (!utils::StringUtils::splitToUnitAndValue(input, unit_str, value))
+  if (!utils::StringUtils::splitToValueAndUnit(input, value, unit_str)) {
     return std::nullopt;
+  }
+
   if (auto unit_multiplier = core::DataSizeValue::getUnitMultiplier(unit_str)) {
     return value * *unit_multiplier;
   }
@@ -109,8 +111,9 @@ std::optional<uint64_t> stringToDataSize(std::string_view input) {
 }
 
 std::optional<std::string> ensureIntegerValidatedPropertyHasNoUnit(const core::PropertyValidator* const validator, std::string& value) {
-  if (!integerValidatedProperty(validator))
+  if (!integerValidatedProperty(validator)) {
     return std::nullopt;
+  }
 
   if (auto parsed_time = utils::timeutils::StringToDuration<std::chrono::milliseconds>(value)) {
     return fmt::format("{}", parsed_time->count());
@@ -156,7 +159,7 @@ void fixValidatedProperty(const std::string& property_name,
 // Load Configure File
 // If the loaded property is time-period or data-size validated and it has no explicit units ms or B will be appended.
 // If the loaded property is integer validated and it has some explicit unit(time-period or data-size) it will be converted to ms/B and its unit cut off
-void Properties::loadConfigureFile(const std::filesystem::path& configuration_file, const std::string_view prefix) {
+void Properties::loadConfigureFile(const std::filesystem::path& configuration_file, std::string_view prefix) {
   std::lock_guard<std::mutex> lock(mutex_);
   if (configuration_file.empty()) {
     logger_->log_error("Configuration file path for %s is empty!", getName());

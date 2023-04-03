@@ -190,7 +190,7 @@ void C2Agent::configure(const std::shared_ptr<Configure> &configure, bool reconf
     if (!reconfigure)
       heart_beat_period_ = 3s;
   }
-  logger_->log_debug("Using %u ms as the heartbeat period", heart_beat_period_.count());
+  logger_->log_debug("Using %" PRId64 " ms as the heartbeat period", heart_beat_period_.count());
 
   std::string heartbeat_reporters;
   if (configure->get(Configuration::nifi_c2_agent_heartbeat_reporter_classes, "c2.agent.heartbeat.reporter.classes", heartbeat_reporters)) {

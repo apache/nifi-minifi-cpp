@@ -18,9 +18,6 @@
 #include <limits>
 #include <charconv>
 
-#include "range/v3/view/transform.hpp"
-#include "range/v3/range/conversion.hpp"
-
 #include "utils/Environment.h"
 #include "utils/GeneralUtils.h"
 #include "utils/StringUtils.h"
@@ -38,11 +35,6 @@ std::optional<bool> StringUtils::toBool(const std::string& input) {
     return false;
   }
   return std::nullopt;
-}
-
-std::string StringUtils::toLower(std::string_view str) {
-  const auto tolower = [](auto c) { return std::tolower(static_cast<unsigned char>(c)); };
-  return str | views::transform(tolower) | ranges::to<std::string>();
 }
 
 std::pair<std::string, std::string> StringUtils::chomp(const std::string& input_line) {
@@ -511,9 +503,9 @@ bool StringUtils::matchesSequence(std::string_view str, const std::vector<std::s
   return true;
 }
 
-bool StringUtils::splitToUnitAndValue(std::string_view input, std::string& unit, int64_t& value) {
-  const char* begin = input.data();
-  const char* end = begin + input.size();
+bool StringUtils::splitToValueAndUnit(std::string_view input, int64_t& value, std::string& unit) {
+  const char* begin = std::begin(input);
+  const char* end = std::end(input);
   auto [ptr, ec] = std::from_chars(begin, end, value);
   if (ptr == begin || ec != std::errc()) {
     return false;

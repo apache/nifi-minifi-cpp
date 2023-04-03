@@ -42,7 +42,7 @@
 #include "c2/C2Payload.h"
 #include "core/PropertyBuilder.h"
 #include "properties/Configuration.h"
-#include "range/v3/algorithm/find.hpp"
+#include "range/v3/algorithm/contains.hpp"
 
 static std::atomic<int> transaction_id;
 static std::atomic<int> transaction_id_output;
@@ -557,12 +557,12 @@ class HeartbeatHandler : public ServerAwareHandler {
         const auto prop_reader = [this](const std::string& sensitive_props) { return configuration_->getString(sensitive_props); };
         const auto sensitive_props = minifi::Configuration::getSensitiveProperties(prop_reader);
         for (const auto& [property_name, property_validator] : minifi::Configuration::CONFIGURATION_PROPERTIES) {
-          if (ranges::find(sensitive_props, property_name) != ranges::end(sensitive_props)) {
+          if (ranges::contains(sensitive_props, property_name)) {
             continue;
           }
 
           std::unordered_map<std::string, std::string> config_property;
-          if (ranges::find(disallowed_properties, property_name) == ranges::end(disallowed_properties)) {
+          if (!ranges::contains(disallowed_properties, property_name)) {
             config_property.emplace("propertyName", property_name);
             if (auto value = configuration_->getRawValue(std::string(property_name))) {
               config_property.emplace("propertyValue", *value);
