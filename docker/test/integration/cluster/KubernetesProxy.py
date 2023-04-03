@@ -22,6 +22,7 @@ import re
 import stat
 import subprocess
 import time
+import platform
 from textwrap import dedent
 
 
@@ -40,8 +41,16 @@ class KubernetesProxy:
             subprocess.run([self.kind_binary_path, 'delete', 'cluster'])
 
     def __download_kind(self):
+        is_x86 = platform.machine() in ("i386", "AMD64", "x86_64")
+        download_link = 'https://kind.sigs.k8s.io/dl/v0.18.0/kind-linux-amd64'
+        if not is_x86:
+            if 'Linux' in platform.system():
+                download_link = 'https://kind.sigs.k8s.io/dl/v0.18.0/kind-linux-arm64'
+            else:
+                download_link = 'https://kind.sigs.k8s.io/dl/v0.18.0/kind-darwin-arm64'
+
         if not os.path.exists(self.kind_binary_path):
-            if subprocess.run(['curl', '-Lo', self.kind_binary_path, 'https://kind.sigs.k8s.io/dl/v0.11.1/kind-linux-amd64']).returncode != 0:
+            if subprocess.run(['curl', '-Lo', self.kind_binary_path, download_link]).returncode != 0:
                 raise Exception("Could not download kind")
             os.chmod(self.kind_binary_path, stat.S_IXUSR)
 

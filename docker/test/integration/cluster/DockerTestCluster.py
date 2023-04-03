@@ -199,7 +199,7 @@ class DockerTestCluster:
         return self.segfault
 
     def wait_for_kafka_consumer_to_be_registered(self, kafka_container_name):
-        return self.wait_for_app_logs(kafka_container_name, "Assignment received from leader for group docker_test_group", 60)
+        return self.wait_for_app_logs_regex(kafka_container_name, "Assignment received from leader.*for group docker_test_group", 60)
 
     def wait_for_metric_class_on_prometheus(self, metric_class, timeout_seconds):
         return self.prometheus_checker.wait_for_metric_class_on_prometheus(metric_class, timeout_seconds)
