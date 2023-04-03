@@ -136,7 +136,7 @@ const std::unordered_map<std::string_view, gsl::not_null<core::PropertyValidator
   {Configuration::nifi_log_alert_url, gsl::make_not_null(core::StandardValidators::get().VALID_VALIDATOR.get())},
   {Configuration::nifi_log_alert_ssl_context_service, gsl::make_not_null(core::StandardValidators::get().VALID_VALIDATOR.get())},
   {Configuration::nifi_log_alert_batch_size, gsl::make_not_null(core::StandardValidators::get().VALID_VALIDATOR.get())},
-  {Configuration::nifi_log_alert_flush_period, gsl::make_not_null(core::StandardValidators::get().VALID_VALIDATOR.get())},
+  {Configuration::nifi_log_alert_flush_period, gsl::make_not_null(core::StandardValidators::get().TIME_PERIOD_VALIDATOR.get())},
   {Configuration::nifi_log_alert_filter, gsl::make_not_null(core::StandardValidators::get().VALID_VALIDATOR.get())},
   {Configuration::nifi_log_alert_rate_limit, gsl::make_not_null(core::StandardValidators::get().VALID_VALIDATOR.get())},
   {Configuration::nifi_log_alert_buffer_limit, gsl::make_not_null(core::StandardValidators::get().VALID_VALIDATOR.get())},
