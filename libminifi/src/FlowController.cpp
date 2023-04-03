@@ -152,6 +152,7 @@ bool FlowController::applyConfiguration(const std::string &source, const std::st
     auto flowVersion = flow_configuration_->getFlowVersion();
     if (flowVersion) {
       logger_->log_debug("Setting flow id to %s", flowVersion->getFlowId());
+      logger_->log_debug("Setting flow url to %s", flowVersion->getFlowIdentifier()->getRegistryUrl());
       configuration_->set(Configure::nifi_c2_flow_id, flowVersion->getFlowId());
       configuration_->set(Configure::nifi_c2_flow_url, flowVersion->getFlowIdentifier()->getRegistryUrl());
     } else {
@@ -389,7 +390,7 @@ int16_t FlowController::clearConnection(const std::string &connection) {
 }
 
 void FlowController::executeOnAllComponents(std::function<void(state::StateController&)> func) {
-  if (updating_) {
+  if (updating_ || !initialized_) {
     return;
   }
   std::lock_guard<std::recursive_mutex> lock(mutex_);
@@ -399,7 +400,7 @@ void FlowController::executeOnAllComponents(std::function<void(state::StateContr
 }
 
 void FlowController::executeOnComponent(const std::string &id_or_name, std::function<void(state::StateController&)> func) {
-  if (updating_) {
+  if (updating_ || !initialized_) {
     return;
   }
   std::lock_guard<std::recursive_mutex> lock(mutex_);

@@ -32,6 +32,7 @@ class MinifiOptions:
         self.enable_prometheus = False
         self.enable_sql = False
         self.config_format = "json"
+        self.use_flow_config_from_url = False
 
 
 class MinifiContainer(FlowContainer):
@@ -102,12 +103,16 @@ class MinifiContainer(FlowContainer):
                 f.write("nifi.metrics.publisher.PrometheusMetricsPublisher.port=9936\n")
                 f.write("nifi.metrics.publisher.metrics=RepositoryMetrics,QueueMetrics,PutFileMetrics,processorMetrics/Get.*,FlowInformation,DeviceInfoNode,AgentStatus\n")
 
+            if self.options.use_flow_config_from_url:
+                f.write("nifi.c2.flow.url=http://minifi-c2-server:10090/c2/config?class=minifi-test-class\n")
+
     def _setup_config(self):
-        self._create_config()
         self._create_properties()
+        if not self.options.use_flow_config_from_url:
+            self._create_config()
+            self.vols[os.path.join(self.container_specific_config_dir, 'config.yml')] = {"bind": os.path.join(MinifiContainer.MINIFI_ROOT, 'conf', 'config.yml'), "mode": "rw"}
 
         self.vols[os.path.join(self.container_specific_config_dir, 'minifi.properties')] = {"bind": os.path.join(MinifiContainer.MINIFI_ROOT, 'conf', 'minifi.properties'), "mode": "rw"}
-        self.vols[os.path.join(self.container_specific_config_dir, 'config.yml')] = {"bind": os.path.join(MinifiContainer.MINIFI_ROOT, 'conf', 'config.yml'), "mode": "rw"}
         self.vols[os.path.join(self.container_specific_config_dir, 'minifi-log.properties')] = {"bind": os.path.join(MinifiContainer.MINIFI_ROOT, 'conf', 'minifi-log.properties'), "mode": "rw"}
 
     def deploy(self):
@@ -121,6 +126,9 @@ class MinifiContainer(FlowContainer):
             image = self.image_store.get_image('minifi-cpp-sql')
         else:
             image = 'apacheminificpp:' + MinifiContainer.MINIFI_TAG_PREFIX + MinifiContainer.MINIFI_VERSION
+
+        if self.options.use_flow_config_from_url:
+            self.command = ["/bin/sh", "-c", "rm " + MinifiContainer.MINIFI_ROOT + "/conf/config.yml && ./bin/minifi.sh run"]
 
         self.client.containers.run(
             image,
