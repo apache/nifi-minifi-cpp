@@ -92,12 +92,12 @@ function(use_bundled_opencv SOURCE_DIR BINARY_DIR)
             "-DWITH_GTK=OFF"
             "-DWITH_IPP=OFF"
             "-DWITH_JASPER=OFF"
-            "-DWITH_OPENEXR=OFF"
             "-DWITH_ITT=OFF"
             "-DWITH_OPENEXR=OFF"
             "-DWITH_WEBP=OFF"
             "-DWITH_OPENJPEG=OFF"
             "-DWITH_TIFF=OFF"
+            "-DWITH_CAROTENE=OFF"
             "-DCMAKE_CXX_STANDARD=17"  # OpenCV fails to build in C++20 mode on Clang-14
     )
 
