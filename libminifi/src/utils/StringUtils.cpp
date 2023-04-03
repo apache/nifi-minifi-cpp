@@ -24,8 +24,6 @@
 
 namespace org::apache::nifi::minifi::utils {
 
-namespace views = ranges::views;
-
 std::optional<bool> StringUtils::toBool(const std::string& input) {
   std::string trimmed = trim(input);
   if (equalsIgnoreCase(trimmed, "true")) {
@@ -504,8 +502,8 @@ bool StringUtils::matchesSequence(std::string_view str, const std::vector<std::s
 }
 
 bool StringUtils::splitToValueAndUnit(std::string_view input, int64_t& value, std::string& unit) {
-  const char* begin = std::begin(input);
-  const char* end = std::end(input);
+  const char* begin = input.data();
+  const char* end = begin + input.size();
   auto [ptr, ec] = std::from_chars(begin, end, value);
   if (ptr == begin || ec != std::errc()) {
     return false;
