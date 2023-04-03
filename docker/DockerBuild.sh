@@ -30,6 +30,7 @@ DISTRO_NAME=
 BUILD_NUMBER=
 DOCKER_CCACHE_DUMP_LOCATION=
 DOCKER_SKIP_TESTS=ON
+CMAKE_BUILD_TYPE=Release
 
 function usage {
   echo "Usage: ./DockerBuild.sh -v <MINIFI_VERSION> [additional options]"
@@ -100,6 +101,8 @@ while [[ $# -gt 0 ]]; do
         DOCKER_CCACHE_DUMP_LOCATION="${ARR[1]}"
       elif [ "${ARR[0]}" == "DOCKER_SKIP_TESTS" ]; then
         DOCKER_SKIP_TESTS="${ARR[1]}"
+      elif [ "${ARR[0]}" == "CMAKE_BUILD_TYPE" ]; then
+        CMAKE_BUILD_TYPE="${ARR[1]}"
       else
         BUILD_ARGS+=("--build-arg" "${ARR[0]}=${ARR[1]}")
       fi
@@ -159,7 +162,8 @@ BUILD_ARGS+=("--build-arg" "UID=${UID_ARG}"
             "--build-arg" "MINIFI_VERSION=${MINIFI_VERSION}"
             "--build-arg" "DUMP_LOCATION=${DUMP_LOCATION}"
             "--build-arg" "DISTRO_NAME=${DISTRO_NAME}"
-            "--build-arg" "DOCKER_SKIP_TESTS=${DOCKER_SKIP_TESTS}")
+            "--build-arg" "DOCKER_SKIP_TESTS=${DOCKER_SKIP_TESTS}"
+            "--build-arg" "CMAKE_BUILD_TYPE=${CMAKE_BUILD_TYPE}")
 if [ -n "${DUMP_LOCATION}" ]; then
   BUILD_ARGS+=("--build-arg" "DOCKER_MAKE_TARGET=package")
 fi
