@@ -37,6 +37,7 @@
 #include "utils/meta/detected.h"
 #include "range/v3/view/transform.hpp"
 #include "range/v3/range/conversion.hpp"
+#include "range/v3/view/join.hpp"
 
 // libc++ doesn't define operator<=> on strings, and apparently the operator rewrite rules don't automagically make one
 #if defined(_LIBCPP_VERSION) && _LIBCPP_VERSION < 16000
@@ -46,10 +47,6 @@ constexpr std::strong_ordering operator<=>(const std::string& lhs, const std::st
   return lhs.compare(rhs) <=> 0;
 }
 #endif
-
-#include "range/v3/view/transform.hpp"
-#include "range/v3/view/join.hpp"
-#include "range/v3/range/conversion.hpp"
 
 namespace org::apache::nifi::minifi::utils {
 
