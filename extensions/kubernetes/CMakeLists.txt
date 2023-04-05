@@ -15,7 +15,7 @@
 # specific language governing permissions and limitations
 # under the License.
 
-if (WIN32 OR NOT ENABLE_KUBERNETES)
+if (NOT (CMAKE_SYSTEM_NAME STREQUAL "Linux" AND ENABLE_KUBERNETES))
     return()
 endif()
 
