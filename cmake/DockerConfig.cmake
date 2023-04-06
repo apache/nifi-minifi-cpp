@@ -43,6 +43,8 @@ add_custom_target(
              -DENABLE_AZURE=ON
              -DDISABLE_CONTROLLER=ON
              -DENABLE_PROMETHEUS=ON
+             -DENABLE_MQTT=OFF
+             -DENABLE_ELASTICSEARCH=OFF
              -DENABLE_LUA_SCRIPTING=OFF
              -DENABLE_PYTHON_SCRIPTING=OFF
              -DENABLE_ENCRYPT_CONFIG=OFF \"
