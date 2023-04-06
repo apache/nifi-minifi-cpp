@@ -142,12 +142,9 @@ TEST_CASE("Configuration can fix misconfigured validated properties within envir
 
   CHECK(minifi::utils::Environment::setEnvironmentVariable("SOME_VARIABLE", "4000"));
 
-  {
-    std::ofstream properties_file(properties_path);
-    properties_file << "compression.cached.log.max.size=${SOME_VARIABLE}" << std::endl;
-    properties_file << "compression.compressed.log.max.size=3000" << std::endl;
-    properties_file.close();
-  }
+  std::ofstream{properties_path}
+      << "compression.cached.log.max.size=${SOME_VARIABLE}\n"
+      << "compression.compressed.log.max.size=3000\n";
   auto properties_file_time_after_creation = std::filesystem::last_write_time(properties_path);
   const std::shared_ptr<minifi::Configure> configure = std::make_shared<minifi::Configure>();
 
