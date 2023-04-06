@@ -34,7 +34,7 @@ const core::Property SplunkHECProcessor::Hostname(core::PropertyBuilder::createP
 
 const core::Property SplunkHECProcessor::Port(core::PropertyBuilder::createProperty("Port")
     ->withDescription("The HTTP Event Collector HTTP Port Number.")
-    ->withDefaultValue<int>(8088, core::StandardValidators::get().PORT_VALIDATOR)->isRequired(true)->build());
+    ->withDefaultValue<int>(8088, core::StandardValidators::PORT_VALIDATOR)->isRequired(true)->build());
 
 const core::Property SplunkHECProcessor::Token(core::PropertyBuilder::createProperty("Token")
     ->withDescription("HTTP Event Collector token starting with the string Splunk. For example \'Splunk 1234578-abcd-1234-abcd-1234abcd\'")

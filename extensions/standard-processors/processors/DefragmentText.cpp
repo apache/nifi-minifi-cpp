@@ -49,7 +49,7 @@ const core::Property DefragmentText::PatternLoc(
 const core::Property DefragmentText::MaxBufferSize(
     core::PropertyBuilder::createProperty("Max Buffer Size")
         ->withDescription("The maximum buffer size, if the buffer exceeds this, it will be transferred to failure. Expected format is <size> <data unit>")
-        ->withType(core::StandardValidators::get().DATA_SIZE_VALIDATOR)->build());
+        ->withType(core::StandardValidators::DATA_SIZE_VALIDATOR)->build());
 
 const core::Property DefragmentText::MaxBufferAge(
     core::PropertyBuilder::createProperty("Max Buffer Age")->

@@ -68,25 +68,31 @@ class PropertyBuilder : public std::enable_shared_from_this<PropertyBuilder> {
   }
 
   template<typename T>
-  std::shared_ptr<PropertyBuilder> withDefaultValue(const T &df, const std::shared_ptr<PropertyValidator> &validator = nullptr) {
+  std::shared_ptr<PropertyBuilder> withDefaultValue(const T &df) {
     prop.default_value_ = df;
 
-    if (validator != nullptr) {
-      prop.default_value_.setValidator(gsl::make_not_null(validator));
-      prop.validator_ = gsl::make_not_null(validator);
-    } else {
-      prop.validator_ = StandardValidators::getValidator(prop.default_value_.getValue());
-      prop.default_value_.setValidator(prop.validator_);
-    }
+    prop.validator_ = StandardValidators::getValidator(prop.default_value_.getValue());
+    prop.default_value_.setValidator(*prop.validator_);
+
     // inspect the type and add a validator to this.
     // there may be cases in which the validator is typed differently
     // and a validator can be added for this.
     return shared_from_this();
   }
 
-  std::shared_ptr<PropertyBuilder> withType(const std::shared_ptr<PropertyValidator> &validator) {
-    prop.validator_ = gsl::make_not_null(validator);
-    prop.default_value_.setValidator(gsl::make_not_null(validator));
+  template<typename T>
+  std::shared_ptr<PropertyBuilder> withDefaultValue(const T &df, const PropertyValidator& validator) {
+    prop.default_value_ = df;
+
+    prop.default_value_.setValidator(validator);
+    prop.validator_ = gsl::make_not_null(&validator);
+
+    return shared_from_this();
+  }
+
+  std::shared_ptr<PropertyBuilder> withType(const PropertyValidator& validator) {
+    prop.validator_ = gsl::make_not_null(&validator);
+    prop.default_value_.setValidator(validator);
     return shared_from_this();
   }
 
@@ -105,11 +111,11 @@ class PropertyBuilder : public std::enable_shared_from_this<PropertyBuilder> {
   }
 
   template<typename T>
-  std::shared_ptr<PropertyBuilder> withDefaultValue(const std::string &df) {
-    prop.default_value_.operator=<T>(df);
+  std::shared_ptr<PropertyBuilder> withDefaultValue(std::string_view df) {
+    prop.default_value_.operator=<T>(std::string{df});
 
     prop.validator_ = StandardValidators::getValidator(prop.default_value_.getValue());
-    prop.default_value_.setValidator(prop.validator_);
+    prop.default_value_.setValidator(*prop.validator_);
 
     // inspect the type and add a validator to this.
     // there may be cases in which the validator is typed differently
@@ -156,7 +162,12 @@ class ConstrainedProperty : public std::enable_shared_from_this<ConstrainedPrope
     return this->shared_from_this();
   }
 
-  std::shared_ptr<ConstrainedProperty<T>> withDefaultValue(const T &df, const std::shared_ptr<PropertyValidator> &validator = nullptr) {
+  std::shared_ptr<ConstrainedProperty<T>> withDefaultValue(const T &df) {
+    builder_->withDefaultValue(df);
+    return this->shared_from_this();
+  }
+
+  std::shared_ptr<ConstrainedProperty<T>> withDefaultValue(const T &df, const PropertyValidator& validator) {
     builder_->withDefaultValue(df, validator);
     return this->shared_from_this();
   }

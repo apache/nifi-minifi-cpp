@@ -24,6 +24,7 @@
 #include <vector>
 
 #include "KafkaProcessorBase.h"
+#include "PropertyValidation.h"
 #include "core/logging/LoggerConfiguration.h"
 #include "io/StreamPipe.h"
 #include "rdkafka.h"
@@ -38,8 +39,7 @@ class FlowFileRecord;
 namespace core {
 class ConsumeKafkaMaxPollTimeValidator : public TimePeriodValidator {
  public:
-  explicit ConsumeKafkaMaxPollTimeValidator(const std::string &name);
-  ~ConsumeKafkaMaxPollTimeValidator() override = default;
+  constexpr ~ConsumeKafkaMaxPollTimeValidator() override { }  // NOLINT see comment at grandparent
 
   [[nodiscard]] ValidationResult validate(const std::string& subject, const std::string& input) const override;
 };

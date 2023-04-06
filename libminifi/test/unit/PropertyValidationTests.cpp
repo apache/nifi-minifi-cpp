@@ -220,8 +220,9 @@ TEST_CASE("Property Change notification gets called even on erroneous assignment
 }
 
 TEST_CASE("Correctly Typed Property With Invalid Validation") {
+  LongValidator my_validator{0, 10};
   auto prop = PropertyBuilder::createProperty("prop")
-      ->withDefaultValue<int64_t>(5, std::make_shared<LongValidator>("myValidator", 0, 10))
+      ->withDefaultValue<int64_t>(5, my_validator)
       ->build();
   TestConfigurableComponent component;
   component.setSupportedProperties(std::array{prop});
@@ -262,7 +263,7 @@ TEST_CASE("TimePeriodValue Property without validator") {
 
 TEST_CASE("Validating listener port property") {
   auto prop = core::PropertyBuilder::createProperty("Port")
-        ->withType(core::StandardValidators::get().LISTEN_PORT_VALIDATOR)
+        ->withType(core::StandardValidators::LISTEN_PORT_VALIDATOR)
         ->build();
   REQUIRE_NOTHROW(prop.setValue("1234"));
   REQUIRE_THROWS_AS(prop.setValue("banana"), InvalidValueException);

@@ -27,7 +27,7 @@ namespace org::apache::nifi::minifi::processors {
 const core::Property ListenTCP::Port(
     core::PropertyBuilder::createProperty("Listening Port")
         ->withDescription("The port to listen on for communication.")
-        ->withType(core::StandardValidators::get().LISTEN_PORT_VALIDATOR)
+        ->withType(core::StandardValidators::LISTEN_PORT_VALIDATOR)
         ->isRequired(true)
         ->build());
 

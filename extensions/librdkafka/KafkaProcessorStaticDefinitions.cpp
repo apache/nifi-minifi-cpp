@@ -74,7 +74,7 @@ const core::Property KafkaProcessorBase::Password(
 
 const core::Property ConsumeKafka::KafkaBrokers(core::PropertyBuilder::createProperty("Kafka Brokers")
   ->withDescription("A comma-separated list of known Kafka Brokers in the format <host>:<port>.")
-  ->withDefaultValue("localhost:9092", core::StandardValidators::get().NON_BLANK_VALIDATOR)
+  ->withDefaultValue("localhost:9092", core::StandardValidators::NON_BLANK_VALIDATOR)
   ->supportsExpressionLanguage(true)
   ->isRequired(true)
   ->build());
@@ -160,10 +160,12 @@ const core::Property ConsumeKafka::MaxPollRecords(core::PropertyBuilder::createP
   ->withDefaultValue<unsigned int>(DEFAULT_MAX_POLL_RECORDS)
   ->build());
 
+constexpr core::ConsumeKafkaMaxPollTimeValidator CONSUME_KAFKA_MAX_POLL_TIME_VALIDATOR;
+
 const core::Property ConsumeKafka::MaxPollTime(core::PropertyBuilder::createProperty("Max Poll Time")
   ->withDescription("Specifies the maximum amount of time the consumer can use for polling data from the brokers. "
       "Polling is a blocking operation, so the upper limit of this value is specified in 4 seconds.")
-  ->withDefaultValue(DEFAULT_MAX_POLL_TIME, std::make_shared<core::ConsumeKafkaMaxPollTimeValidator>(std::string("ConsumeKafkaMaxPollTimeValidator")))
+  ->withDefaultValue(DEFAULT_MAX_POLL_TIME, CONSUME_KAFKA_MAX_POLL_TIME_VALIDATOR)
   ->isRequired(true)
   ->build());
 

@@ -34,7 +34,7 @@ const core::Property BinFiles::MinSize(
 const core::Property BinFiles::MaxSize(
     core::PropertyBuilder::createProperty("Maximum Group Size")
     ->withDescription("The maximum size for the bundle. If not specified, there is no maximum.")
-    ->withType(core::StandardValidators::get().UNSIGNED_LONG_VALIDATOR)->build());
+    ->withType(core::StandardValidators::UNSIGNED_LONG_VALIDATOR)->build());
 const core::Property BinFiles::MinEntries(
     core::PropertyBuilder::createProperty("Minimum Number of Entries")
     ->withDescription("The minimum number of files to include in a bundle")
@@ -42,11 +42,11 @@ const core::Property BinFiles::MinEntries(
 const core::Property BinFiles::MaxEntries(
     core::PropertyBuilder::createProperty("Maximum Number of Entries")
     ->withDescription("The maximum number of files to include in a bundle. If not specified, there is no maximum.")
-    ->withType(core::StandardValidators::get().UNSIGNED_INT_VALIDATOR)->build());
+    ->withType(core::StandardValidators::UNSIGNED_INT_VALIDATOR)->build());
 const core::Property BinFiles::MaxBinAge(
     core::PropertyBuilder::createProperty("Max Bin Age")
     ->withDescription("The maximum age of a Bin that will trigger a Bin to be complete. Expected format is <duration> <time unit>")
-    ->withType(core::StandardValidators::get().TIME_PERIOD_VALIDATOR)->build());
+    ->withType(core::StandardValidators::TIME_PERIOD_VALIDATOR)->build());
 const core::Property BinFiles::MaxBinCount(
     core::PropertyBuilder::createProperty("Maximum number of Bins")
     ->withDescription("Specifies the maximum number of bins that can be held in memory at any one time")

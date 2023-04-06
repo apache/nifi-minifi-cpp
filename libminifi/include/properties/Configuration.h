@@ -192,7 +192,7 @@ class Configuration : public Properties {
   static constexpr const char *controller_socket_port = "controller.socket.port";
   static constexpr const char *controller_ssl_context_service = "controller.ssl.context.service";
 
-  MINIFIAPI static const std::unordered_map<std::string_view, gsl::not_null<core::PropertyValidator*>> CONFIGURATION_PROPERTIES;
+  MINIFIAPI static const std::unordered_map<std::string_view, gsl::not_null<const core::PropertyValidator*>> CONFIGURATION_PROPERTIES;
   MINIFIAPI static const std::array<const char*, 2> DEFAULT_SENSITIVE_PROPERTIES;
 
   static std::vector<std::string> mergeProperties(std::vector<std::string> properties,
