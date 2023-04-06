@@ -60,12 +60,9 @@ TEST_CASE("Configuration can fix misconfigured timeperiod<->integer validated pr
 
   auto properties_path = std::filesystem::temp_directory_path() /  "test.properties";
 
-  {
-    std::ofstream properties_file(properties_path);
-    properties_file << "nifi.c2.agent.heartbeat.period=1min" << std::endl;
-    properties_file << "nifi.administrative.yield.duration=30000" << std::endl;
-    properties_file.close();
-  }
+  std::ofstream{properties_path}
+      << "nifi.c2.agent.heartbeat.period=1min\n"
+      << "nifi.administrative.yield.duration=30000\n";
   auto properties_file_time_after_creation = std::filesystem::last_write_time(properties_path);
   const std::shared_ptr<minifi::Configure> configure = std::make_shared<minifi::Configure>();
 
