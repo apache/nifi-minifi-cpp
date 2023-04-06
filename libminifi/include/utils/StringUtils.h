@@ -87,14 +87,16 @@ class StringUtils {
    */
   static std::optional<bool> toBool(const std::string& input);
 
-  static inline std::string toLower(std::string_view str) {
+  static inline std::string toLower(std::string str) {
     const auto tolower = [](auto c) { return std::tolower(static_cast<unsigned char>(c)); };
-    return str | ranges::views::transform(tolower) | ranges::to<std::string>();
+    std::transform(std::begin(str), std::end(str), std::begin(str), tolower);
+    return str;
   }
 
-  static inline std::string toUpper(std::string_view str)  {
+  static inline std::string toUpper(std::string str)  {
     const auto toupper = [](auto c) { return std::toupper(static_cast<unsigned char>(c)); };
-    return str | ranges::views::transform(toupper) | ranges::to<std::string>();
+    std::transform(std::begin(str), std::end(str), std::begin(str), toupper);
+    return str;
   }
 
   /**
