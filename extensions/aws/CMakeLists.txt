@@ -33,7 +33,9 @@ add_library(minifi-aws SHARED ${SOURCES})
 
 target_link_libraries(minifi-aws PUBLIC ${LIBMINIFI} Threads::Threads)
 
+target_wholearchive_library_private(minifi-aws AWS::aws-checksums)
 target_wholearchive_library_private(minifi-aws AWS::aws-cpp-sdk-s3)
+
 get_target_property(AWS_SDK_INCLUDE_DIRS AWS::aws-cpp-sdk-s3 INTERFACE_INCLUDE_DIRECTORIES)
 target_include_directories(minifi-aws INTERFACE ${AWS_SDK_INCLUDE_DIRS})
 if(WIN32)
