@@ -47,7 +47,7 @@ add_minifi_option(OPENSSL_OFF "Disables OpenSSL" OFF)
 add_minifi_option(ENABLE_OPS "Enable Operations/zlib Tools" ON)
 add_minifi_option(ENABLE_JNI "Instructs the build system to enable the JNI extension" OFF)
 add_minifi_option(ENABLE_OPENCV "Instructs the build system to enable the OpenCV extension" OFF)
-add_minifi_option(ENABLE_OPC "Instructs the build system to enable the OPC extension" OFF)
+add_minifi_option(ENABLE_OPC "Instructs the build system to enable the OPC extension" ON)
 add_minifi_option(ENABLE_NANOFI "Instructs the build system to enable nanofi library" OFF)
 add_minifi_option(BUILD_SHARED_LIBS "Build yaml cpp shared lib" OFF)
 
