@@ -69,8 +69,8 @@ class ResourceConsumptionInHeartbeatHandler : public HeartbeatHandler {
       assert(system_info["cpuUtilization"].GetDouble() <= 1.0);
     }
 
-    assert(system_info.HasMember("machinearch"));
-    assert(system_info["machinearch"].GetStringLength() > 0);
+    assert(system_info.HasMember("machineArch"));
+    assert(system_info["machineArch"].GetStringLength() > 0);
   }
 
   static void verifyProcessResourceConsumption(const rapidjson::Document& root, bool firstCall) {
