@@ -43,6 +43,8 @@
 #include "core/PropertyBuilder.h"
 #include "properties/Configuration.h"
 #include "range/v3/algorithm/contains.hpp"
+#include "range/v3/view/filter.hpp"
+#include "range/v3/view/view.hpp"
 
 static std::atomic<int> transaction_id;
 static std::atomic<int> transaction_id_output;
@@ -556,20 +558,19 @@ class HeartbeatHandler : public ServerAwareHandler {
         std::vector<std::unordered_map<std::string, std::string>> config_properties;
         const auto prop_reader = [this](const std::string& sensitive_props) { return configuration_->getString(sensitive_props); };
         const auto sensitive_props = minifi::Configuration::getSensitiveProperties(prop_reader);
-        for (const auto& [property_name, property_validator] : minifi::Configuration::CONFIGURATION_PROPERTIES) {
-          if (ranges::contains(sensitive_props, property_name)) {
-            continue;
-          }
 
+        auto allowed_not_sensitive_configuration_properties = minifi::Configuration::CONFIGURATION_PROPERTIES | ranges::views::filter([&](const auto& configuration_property) {
+          const auto& configuration_property_name = configuration_property.first;
+          return !ranges::contains(sensitive_props, configuration_property_name) && !ranges::contains(disallowed_properties, configuration_property_name);
+        });
+        for (const auto& [property_name, property_validator] : allowed_not_sensitive_configuration_properties) {
           std::unordered_map<std::string, std::string> config_property;
-          if (!ranges::contains(disallowed_properties, property_name)) {
-            config_property.emplace("propertyName", property_name);
-            if (auto value = configuration_->getRawValue(std::string(property_name))) {
-              config_property.emplace("propertyValue", *value);
-            }
-            config_property.emplace("validator", property_validator->getName());
-            config_properties.push_back(config_property);
+          config_property.emplace("propertyName", property_name);
+          if (auto value = configuration_->getRawValue(std::string(property_name))) {
+            config_property.emplace("propertyValue", *value);
           }
+          config_property.emplace("validator", property_validator->getName());
+          config_properties.push_back(config_property);
         }
         Metadata metadata;
         metadata.emplace("availableProperties", config_properties);

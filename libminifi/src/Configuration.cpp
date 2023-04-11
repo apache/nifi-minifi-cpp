@@ -184,12 +184,10 @@ std::vector<std::string> Configuration::getSensitiveProperties(const std::functi
 }
 
 bool Configuration::validatePropertyValue(const std::string& property_name, const std::string& property_value) {
-  for (const auto& [config_property_name, config_property_validator]: Configuration::CONFIGURATION_PROPERTIES) {
-    if (config_property_name == property_name) {
-      return config_property_validator->validate(property_name, property_value).valid();
-    }
-  }
-  return true;
+  if (!Configuration::CONFIGURATION_PROPERTIES.contains(property_name))
+    return true;
+
+  return Configuration::CONFIGURATION_PROPERTIES.at(property_name)->validate(property_name, property_value).valid();
 }
 
 }  // namespace org::apache::nifi::minifi
