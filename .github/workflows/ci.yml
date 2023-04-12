@@ -218,9 +218,11 @@ jobs:
       - id: flake8_check
         run: cd build && make flake8
       - id: coverage
+        if: github.ref == 'refs/heads/main' && github.event_name == 'push'
         run: |
           cd build && make coverage
       - uses: actions/upload-artifact@v3
+        if: github.ref == 'refs/heads/main' && github.event_name == 'push'
         with:
           name: coverage
           path: build/coverage
