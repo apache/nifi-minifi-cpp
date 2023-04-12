@@ -188,7 +188,7 @@ bool Configuration::validatePropertyValue(const std::string& property_name, cons
   if (validator == std::end(Configuration::CONFIGURATION_PROPERTIES))
     return true;
 
-  return (*validator)->validate(property_name, property_value).valid();
+  return validator->second->validate(property_name, property_value).valid();
 }
 
 }  // namespace org::apache::nifi::minifi
