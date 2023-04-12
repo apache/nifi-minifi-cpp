@@ -18,6 +18,7 @@
 
 #undef NDEBUG
 #include <functional>
+#include <utility>
 
 #include "TestBase.h"
 #include "Catch.h"
@@ -119,7 +120,7 @@ class VerifyResourceConsumptionInHeartbeat : public VerifyC2Base {
   }
 
   void setEventToWaitFor(std::function<bool()> event_to_wait_for) {
-    event_to_wait_for_ = event_to_wait_for;
+    event_to_wait_for_ = std::move(event_to_wait_for);
   }
 
   std::function<bool()> event_to_wait_for_;
