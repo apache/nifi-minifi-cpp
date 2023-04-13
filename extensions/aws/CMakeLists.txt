@@ -34,7 +34,7 @@ add_library(minifi-aws SHARED ${SOURCES})
 target_link_libraries(minifi-aws PUBLIC ${LIBMINIFI} Threads::Threads)
 
 target_wholearchive_library_private(minifi-aws AWS::aws-cpp-sdk-s3)
-if(NOT CMAKE_SYSTEM_PROCESSOR MATCHES "(x86)|(X86)")
+if(CMAKE_SYSTEM_PROCESSOR MATCHES "(arm64)|(ARM64)|(aarch64)|(armv8)")
     target_wholearchive_library_private(minifi-aws AWS::aws-checksums)
 endif()
 get_target_property(AWS_SDK_INCLUDE_DIRS AWS::aws-cpp-sdk-s3 INTERFACE_INCLUDE_DIRECTORIES)
