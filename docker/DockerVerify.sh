@@ -28,12 +28,13 @@ die()
 _positionals=()
 _arg_feature_path=('' )
 _arg_image_tag_prefix=
+_enable_test_processors=OFF
 
 
 print_help()
 {
   printf '%s\n' "Runs the provided behave tests in a containerized environment"
-  printf 'Usage: %s [--image-tag-prefix <arg>] [-h|--help] <minifi_version> <feature_path-1> [<feature_path-2>] ... [<feature_path-n>] ...\n' "$0"
+  printf 'Usage: %s [--image-tag-prefix <arg>] [--enable_test_processors <ON|OFF>] [-h|--help] <minifi_version> <feature_path-1> [<feature_path-2>] ... [<feature_path-n>] ...\n' "$0"
   printf '\t%s\n' "<minifi_version>: the version of minifi"
   printf '\t%s\n' "<feature_path>: feature files to run"
   printf '\t%s\n' "--image-tag-prefix: optional prefix to the docker tag (no default)"
@@ -55,6 +56,14 @@ parse_commandline()
         ;;
       --image-tag-prefix=*)
         _arg_image_tag_prefix="${_key##--image-tag-prefix=}"
+        ;;
+      --enable_test_processors)
+        test $# -lt 2 && die "Missing value for the optional argument '$_key'." 1
+        _enable_test_processors="$2"
+        shift
+        ;;
+      --enable_test_processors=*)
+        _enable_test_processors="${_key##--enable_test_processors=}"
         ;;
       -h|--help)
         print_help
@@ -157,6 +166,11 @@ export TEST_DIRECTORY
 
 # Add --no-logcapture to see logs interleaved with the test output
 BEHAVE_OPTS=(-f pretty --logging-level INFO --logging-clear-handlers)
+if [[ "${_enable_test_processors}" == "ON" ]]; then
+  BEHAVE_OPTS+=(--define "test_processors=ON")
+else
+  BEHAVE_OPTS+=(--define "test_processors=OFF")
+fi
 
 # Specify feature or scenario to run a specific test e.g.:
 # behave "${BEHAVE_OPTS[@]}" "features/file_system_operations.feature"
