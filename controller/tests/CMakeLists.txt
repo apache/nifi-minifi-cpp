@@ -16,6 +16,11 @@
 # specific language governing permissions and limitations
 # under the License.
 
+# Controller Tests are not supported on windows
+if (WIN32)
+    return()
+endif()
+
 file(GLOB CONTROLLER_TESTS  "*.cpp")
 
 file(GLOB CONTROLLER_SOURCES  "${CMAKE_SOURCE_DIR}/controller/*.cpp")

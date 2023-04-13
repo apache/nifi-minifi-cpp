@@ -122,19 +122,19 @@ int main(int argc, char **argv) {
   options.positional_help("[optional args]").show_positional_help();
 
   options.add_options()
-  ("h,help", "Shows Help")
-  ("host", "Specifies connecting host name", cxxopts::value<std::string>())
-  ("port", "Specifies connecting host port", cxxopts::value<int>())
-  ("stop", "Shuts down the provided component", cxxopts::value<std::vector<std::string>>())
-  ("start", "Starts provided component", cxxopts::value<std::vector<std::string>>())
-  ("l,list", "Provides a list of connections or processors", cxxopts::value<std::string>())
-  ("c,clear", "Clears the associated connection queue", cxxopts::value<std::vector<std::string>>())
-  ("getsize", "Reports the size of the associated connection queue", cxxopts::value<std::vector<std::string>>())
-  ("updateflow", "Updates the flow of the agent using the provided flow file", cxxopts::value<std::string>())
-  ("getfull", "Reports a list of full connections")
-  ("jstack", "Returns backtraces from the agent")
-  ("manifest", "Generates a manifest for the current binary")
-  ("noheaders", "Removes headers from output streams");
+      ("h,help", "Shows Help")
+      ("host", "Specifies connecting host name", cxxopts::value<std::string>())
+      ("port", "Specifies connecting host port", cxxopts::value<int>())
+      ("stop", "Shuts down the provided component", cxxopts::value<std::vector<std::string>>())
+      ("start", "Starts provided component", cxxopts::value<std::vector<std::string>>())
+      ("l,list", "Provides a list of connections or processors", cxxopts::value<std::string>())
+      ("c,clear", "Clears the associated connection queue", cxxopts::value<std::vector<std::string>>())
+      ("getsize", "Reports the size of the associated connection queue", cxxopts::value<std::vector<std::string>>())
+      ("updateflow", "Updates the flow of the agent using the provided flow file", cxxopts::value<std::string>())
+      ("getfull", "Reports a list of full connections")
+      ("jstack", "Returns backtraces from the agent")
+      ("manifest", "Generates a manifest for the current binary")
+      ("noheaders", "Removes headers from output streams");
 
   bool show_headers = true;
 

@@ -293,11 +293,6 @@ class ControllerTestFixture {
   std::unique_ptr<TestControllerServiceProvider> controller_service_provider_;
 };
 
-#ifdef WIN32
-TEST_CASE("TestWindows", "[controllerTests]") {
-  std::cout << "Controller Tests are not supported on windows";
-}
-#else
 TEST_CASE_METHOD(ControllerTestFixture, "Test listComponents", "[controllerTests]") {
   SECTION("With SSL from service provider") {
     setConnectionType(ControllerTestFixture::ConnectionType::SSL_FROM_SERVICE_PROVIDER);
@@ -313,24 +308,28 @@ TEST_CASE_METHOD(ControllerTestFixture, "Test listComponents", "[controllerTests
 
   initalizeControllerSocket();
 
-  auto socket = createSocket();
-
-  minifi::controller::startComponent(std::move(socket), "TestStateController");
+  {
+    auto socket = createSocket();
+    minifi::controller::startComponent(std::move(socket), "TestStateController");
+  }
 
   using org::apache::nifi::minifi::utils::verifyEventHappenedInPollTime;
   REQUIRE(verifyEventHappenedInPollTime(500ms, [&] { return controller_->isRunning(); }, 20ms));
 
-  socket = createSocket();
-
-  minifi::controller::stopComponent(std::move(socket), "TestStateController");
+  {
+    auto socket = createSocket();
+    minifi::controller::stopComponent(std::move(socket), "TestStateController");
+  }
 
   REQUIRE(verifyEventHappenedInPollTime(500ms, [&] { return !controller_->isRunning(); }, 20ms));
 
-  socket = createSocket();
-  std::stringstream ss;
-  minifi::controller::listComponents(std::move(socket), ss);
+  {
+    auto socket = createSocket();
+    std::stringstream ss;
+    minifi::controller::listComponents(std::move(socket), ss);
 
-  REQUIRE(ss.str() == "Components:\nTestStateController, running: false\n");
+    REQUIRE(ss.str() == "Components:\nTestStateController, running: false\n");
+  }
 }
 
 TEST_CASE_METHOD(ControllerTestFixture, "TestClear", "[controllerTests]") {
@@ -348,24 +347,18 @@ TEST_CASE_METHOD(ControllerTestFixture, "TestClear", "[controllerTests]") {
 
   initalizeControllerSocket();
 
-  auto socket = createSocket();
-
-  minifi::controller::startComponent(std::move(socket), "TestStateController");
+  {
+    auto socket = createSocket();
+    minifi::controller::startComponent(std::move(socket), "TestStateController");
+  }
 
   using org::apache::nifi::minifi::utils::verifyEventHappenedInPollTime;
   REQUIRE(verifyEventHappenedInPollTime(500ms, [&] { return controller_->isRunning(); }, 20ms));
 
-  socket = createSocket();
-
-  minifi::controller::clearConnection(std::move(socket), "connection");
-
-  socket = createSocket();
-
-  minifi::controller::clearConnection(std::move(socket), "connection");
-
-  socket = createSocket();
-
-  minifi::controller::clearConnection(std::move(socket), "connection");
+  for (auto i = 0; i < 3; ++i) {
+    auto socket = createSocket();
+    minifi::controller::clearConnection(std::move(socket), "connection");
+  }
 
   REQUIRE(verifyEventHappenedInPollTime(500ms, [&] { return 3 == update_sink_->clear_calls; }, 20ms));
 }
@@ -385,18 +378,20 @@ TEST_CASE_METHOD(ControllerTestFixture, "TestUpdate", "[controllerTests]") {
 
   initalizeControllerSocket();
 
-  auto socket = createSocket();
-
-  minifi::controller::startComponent(std::move(socket), "TestStateController");
+  {
+    auto socket = createSocket();
+    minifi::controller::startComponent(std::move(socket), "TestStateController");
+  }
 
   using org::apache::nifi::minifi::utils::verifyEventHappenedInPollTime;
   REQUIRE(verifyEventHappenedInPollTime(500ms, [&] { return controller_->isRunning(); }, 20ms));
 
   std::stringstream ss;
 
-  socket = createSocket();
-
-  minifi::controller::updateFlow(std::move(socket), ss, "connection");
+  {
+    auto socket = createSocket();
+    minifi::controller::updateFlow(std::move(socket), ss, "connection");
+  }
 
   REQUIRE(verifyEventHappenedInPollTime(500ms, [&] { return 1 == update_sink_->update_calls; }, 20ms));
   REQUIRE(0 == update_sink_->clear_calls);
@@ -417,26 +412,33 @@ TEST_CASE_METHOD(ControllerTestFixture, "Test connection getters on empty flow",
 
   initalizeControllerSocket();
 
-  auto socket = createSocket();
+  {
+    auto socket = createSocket();
+    std::stringstream connection_stream;
+    minifi::controller::getConnectionSize(std::move(socket), connection_stream, "con1");
+    CHECK(connection_stream.str() == "Size/Max of con1 not found\n");
+  }
 
-  std::stringstream connection_stream;
-  minifi::controller::getConnectionSize(std::move(socket), connection_stream, "con1");
-  CHECK(connection_stream.str() == "Size/Max of con1 not found\n");
+  {
+    std::stringstream connection_stream;
+    auto socket = createSocket();
+    minifi::controller::getFullConnections(std::move(socket), connection_stream);
+    CHECK(connection_stream.str() == "0 are full\n");
+  }
 
-  connection_stream.str(std::string());
-  socket = createSocket();
-  minifi::controller::getFullConnections(std::move(socket), connection_stream);
-  CHECK(connection_stream.str() == "0 are full\n");
+  {
+    std::stringstream connection_stream;
+    auto socket = createSocket();
+    minifi::controller::listConnections(std::move(socket), connection_stream);
+    CHECK(connection_stream.str() == "Connection Names:\n");
+  }
 
-  connection_stream.str(std::string());
-  socket = createSocket();
-  minifi::controller::listConnections(std::move(socket), connection_stream);
-  CHECK(connection_stream.str() == "Connection Names:\n");
-
-  connection_stream.str(std::string());
-  socket = createSocket();
-  minifi::controller::listConnections(std::move(socket), connection_stream, false);
-  CHECK(connection_stream.str().empty());
+  {
+    std::stringstream connection_stream;
+    auto socket = createSocket();
+    minifi::controller::listConnections(std::move(socket), connection_stream, false);
+    CHECK(connection_stream.str().empty());
+  }
 }
 
 TEST_CASE_METHOD(ControllerTestFixture, "Test connection getters", "[controllerTests]") {
@@ -455,37 +457,47 @@ TEST_CASE_METHOD(ControllerTestFixture, "Test connection getters", "[controllerT
   auto reporter = std::make_shared<TestControllerSocketReporter>();
   initalizeControllerSocket(reporter);
 
-  std::stringstream connection_stream;
-  auto socket = createSocket();
-  minifi::controller::getConnectionSize(std::move(socket), connection_stream, "conn");
-  CHECK(connection_stream.str() == "Size/Max of conn not found\n");
+  {
+    std::stringstream connection_stream;
+    auto socket = createSocket();
+    minifi::controller::getConnectionSize(std::move(socket), connection_stream, "conn");
+    CHECK(connection_stream.str() == "Size/Max of conn not found\n");
+  }
 
-  connection_stream.str(std::string());
-  socket = createSocket();
-  minifi::controller::getConnectionSize(std::move(socket), connection_stream, "con1");
-  CHECK(connection_stream.str() == "Size/Max of con1 1 / 2\n");
+  {
+    std::stringstream connection_stream;
+    auto socket = createSocket();
+    minifi::controller::getConnectionSize(std::move(socket), connection_stream, "con1");
+    CHECK(connection_stream.str() == "Size/Max of con1 1 / 2\n");
+  }
 
-  connection_stream.str(std::string());
-  socket = createSocket();
-  minifi::controller::getFullConnections(std::move(socket), connection_stream);
-  CHECK(connection_stream.str() == "1 are full\ncon2 is full\n");
+  {
+    std::stringstream connection_stream;
+    auto socket = createSocket();
+    minifi::controller::getFullConnections(std::move(socket), connection_stream);
+    CHECK(connection_stream.str() == "1 are full\ncon2 is full\n");
+  }
 
-  connection_stream.str(std::string());
-  socket = createSocket();
-  minifi::controller::listConnections(std::move(socket), connection_stream);
-  auto lines = minifi::utils::StringUtils::splitRemovingEmpty(connection_stream.str(), "\n");
-  CHECK(lines.size() == 3);
-  CHECK(ranges::find(lines, "Connection Names:") != ranges::end(lines));
-  CHECK(ranges::find(lines, "con1") != ranges::end(lines));
-  CHECK(ranges::find(lines, "con2") != ranges::end(lines));
+  {
+    std::stringstream connection_stream;
+    auto socket = createSocket();
+    minifi::controller::listConnections(std::move(socket), connection_stream);
+    auto lines = minifi::utils::StringUtils::splitRemovingEmpty(connection_stream.str(), "\n");
+    CHECK(lines.size() == 3);
+    CHECK(ranges::find(lines, "Connection Names:") != ranges::end(lines));
+    CHECK(ranges::find(lines, "con1") != ranges::end(lines));
+    CHECK(ranges::find(lines, "con2") != ranges::end(lines));
+  }
 
-  connection_stream.str(std::string());
-  socket = createSocket();
-  minifi::controller::listConnections(std::move(socket), connection_stream, false);
-  lines = minifi::utils::StringUtils::splitRemovingEmpty(connection_stream.str(), "\n");
-  CHECK(lines.size() == 2);
-  CHECK(ranges::find(lines, "con1") != ranges::end(lines));
-  CHECK(ranges::find(lines, "con2") != ranges::end(lines));
+  {
+    std::stringstream connection_stream;
+    auto socket = createSocket();
+    minifi::controller::listConnections(std::move(socket), connection_stream, false);
+    auto lines = minifi::utils::StringUtils::splitRemovingEmpty(connection_stream.str(), "\n");
+    CHECK(lines.size() == 2);
+    CHECK(ranges::find(lines, "con1") != ranges::end(lines));
+    CHECK(ranges::find(lines, "con2") != ranges::end(lines));
+  }
 }
 
 TEST_CASE_METHOD(ControllerTestFixture, "Test manifest getter", "[controllerTests]") {
@@ -540,6 +552,5 @@ TEST_CASE_METHOD(ControllerTestFixture, "Test jstack getter", "[controllerTests]
     "trace2 -- bt line 3 for trace2\n\n";
   REQUIRE(jstack_stream.str() == expected_trace);
 }
-#endif
 
 }  // namespace org::apache::nifi::minifi::test
