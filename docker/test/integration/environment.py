@@ -33,12 +33,16 @@ def before_scenario(context, scenario):
         scenario.skip("Marked with @skip")
         return
 
+    if "requires_test_processors" in scenario.effective_tags and context.config.userdata.get('test_processors') != "ON":
+        scenario.skip("Test processors are not available, skipping test scenario")
+        return
+
     logging.info("Integration test setup at {time:%H:%M:%S.%f}".format(time=datetime.datetime.now()))
     context.test = MiNiFi_integration_test(context)
 
 
 def after_scenario(context, scenario):
-    if "skip" in scenario.effective_tags:
+    if scenario.status == "skipped":
         logging.info("Scenario was skipped, no need for clean up.")
         return
 
