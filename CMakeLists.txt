@@ -633,13 +633,15 @@ registerTest("minifi_main/tests")
 
 registerTest("encrypt-config/tests")
 
+registerTest("controller/tests")
+
 include(BuildDocs)
 
 
 # Create a custom build target that will run the linter.
 # Directories have their separate linter targets to be able to use better parallelization
 get_property(extensions GLOBAL PROPERTY EXTENSION-LINTERS)
-set(root_linted_dirs libminifi/include libminifi/src libminifi/test encrypt-config)
+set(root_linted_dirs libminifi/include libminifi/src libminifi/test encrypt-config controller)
 list(TRANSFORM root_linted_dirs PREPEND ${CMAKE_SOURCE_DIR}/)
 
 set(linted_dir_counter 1)

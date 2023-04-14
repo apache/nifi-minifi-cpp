@@ -34,6 +34,7 @@
 #include "core/logging/LoggerConfiguration.h"
 #include "utils/gsl.h"
 #include "utils/tls/TLSUtils.h"
+#include "utils/file/FileUtils.h"
 
 namespace org::apache::nifi::minifi::io {
 
@@ -147,6 +148,7 @@ TLSSocket::~TLSSocket() {
 
 void TLSSocket::close() {
   if (ssl_ != nullptr) {
+    SSL_shutdown(ssl_);
     SSL_free(ssl_);
     ssl_ = nullptr;
   }
@@ -245,15 +247,16 @@ int16_t TLSSocket::initialize(bool blocking) {
 }
 
 void TLSSocket::close_ssl(int fd) {
-  FD_CLR(fd, &total_list_);  // add to master set
+  FD_CLR(fd, &total_list_);  // clear from master set
   if (UNLIKELY(listeners_ > 0)) {
     std::lock_guard<std::mutex> lock(ssl_mutex_);
     auto fd_ssl = ssl_map_[fd];
     if (nullptr != fd_ssl) {
+      SSL_shutdown(fd_ssl);
       SSL_free(fd_ssl);
       ssl_map_[fd] = nullptr;
-      close();
     }
+    utils::net::close_socket(fd);
   }
 }
 
@@ -297,10 +300,10 @@ int16_t TLSSocket::select_descriptor(const uint16_t msec) {
       }
       auto ssl = SSL_new(context_->getContext());
       SSL_set_fd(ssl, newfd);
+      ssl_map_[newfd] = ssl;
       auto accept_value = SSL_accept(ssl);
-      if (accept_value != -1) {
+      if (accept_value > 0) {
         logger_->log_trace("Accepted on %d", newfd);
-        ssl_map_[newfd] = ssl;
         return newfd;
       }
       int ssl_err = SSL_get_error(ssl, accept_value);

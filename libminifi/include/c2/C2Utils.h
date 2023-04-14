@@ -28,7 +28,9 @@ namespace org::apache::nifi::minifi::c2 {
 
 inline constexpr const char* UPDATE_NAME = "C2UpdatePolicy";
 inline constexpr const char* C2_METRICS_PUBLISHER = "C2MetricsPublisher";
+inline constexpr const char* CONTROLLER_SOCKET_METRICS_PUBLISHER = "ControllerSocketMetricsPublisher";
 
 bool isC2Enabled(const std::shared_ptr<Configure>& configuration);
+bool isControllerSocketEnabled(const std::shared_ptr<Configure>& configuration);
 
 }  // namespace org::apache::nifi::minifi::c2

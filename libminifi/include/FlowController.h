@@ -60,6 +60,7 @@
 #include "core/state/MetricsPublisher.h"
 #include "core/state/MetricsPublisherStore.h"
 #include "RootProcessGroupWrapper.h"
+#include "c2/ControllerSocketProtocol.h"
 
 namespace org::apache::nifi::minifi {
 
@@ -185,6 +186,7 @@ class FlowController : public core::controller::ForwardingControllerServiceProvi
   std::unique_ptr<state::MetricsPublisherStore> metrics_publisher_store_;
   RootProcessGroupWrapper root_wrapper_;
   std::unique_ptr<c2::C2Agent> c2_agent_{};
+  std::unique_ptr<c2::ControllerSocketProtocol> controller_socket_protocol_;
   std::shared_ptr<core::logging::Logger> logger_ = core::logging::LoggerFactory<FlowController>::getLogger();
 
   // Thread pool for schedulers

@@ -16,15 +16,16 @@
  */
 #pragma once
 
-#include <map>
 #include <memory>
 #include <string>
-#include <utility>
-#include <vector>
 
-#include "HeartbeatReporter.h"
 #include "io/StreamFactory.h"
+#include "io/BaseStream.h"
+#include "io/ServerSocket.h"
 #include "core/logging/LoggerConfiguration.h"
+#include "core/state/nodes/StateMonitor.h"
+#include "core/controller/ControllerServiceProvider.h"
+#include "ControllerSocketReporter.h"
 
 namespace org::apache::nifi::minifi::c2 {
 
@@ -32,50 +33,33 @@ namespace org::apache::nifi::minifi::c2 {
  * Purpose: Creates a reporter that can handle basic c2 operations for a localized environment
  * through a simple TCP socket.
  */
-class ControllerSocketProtocol : public HeartbeatReporter {
+class ControllerSocketProtocol {
  public:
-  ControllerSocketProtocol(std::string name, const utils::Identifier& uuid = {}) // NOLINT
-      : HeartbeatReporter(std::move(name), uuid) {
-  }
-
-  MINIFIAPI static constexpr const char* Description = "Creates a reporter that can handle basic c2 operations for a localized environment through a simple TCP socket.";
-
-  /**
-   * Initialize the socket protocol.
-   * @param controller controller service provider.
-   * @param updateSink update mechanism that will be used to stop/clear elements
-   * @param configuration configuration class.
-   */
-  void initialize(core::controller::ControllerServiceProvider* controller, state::StateMonitor* updateSink,
-                          const std::shared_ptr<Configure> &configuration) override;
-
-  /**
-   * Handles the heartbeat
-   * @param payload incoming payload. From this function we only care about queue metrics.
-   */
-  int16_t heartbeat(const C2Payload &payload) override;
-
- protected:
-  /**
-   * Parses content from the content response.
-   */
-  void parse_content(const std::vector<C2ContentResponse> &content);
-
-  std::mutex controller_mutex_;
-
-  std::map<std::string, bool> queue_full_;
-
-  std::map<std::string, uint64_t> queue_size_;
-
-  std::map<std::string, uint64_t> queue_max_;
-
-  std::map<std::string, bool> component_map_;
-
-  std::unique_ptr<io::BaseServerSocket> server_socket_;
-
-  std::shared_ptr<minifi::io::StreamFactory> stream_factory_;
+  ControllerSocketProtocol(core::controller::ControllerServiceProvider& controller, state::StateMonitor& update_sink,
+    std::shared_ptr<Configure> configuration, const std::shared_ptr<ControllerSocketReporter>& controller_socket_reporter);
+  void initialize();
 
  private:
+  void handleStart(io::BaseStream *stream);
+  void handleStop(io::BaseStream *stream);
+  void handleClear(io::BaseStream *stream);
+  void handleUpdate(io::BaseStream *stream);
+  void writeQueueSizesResponse(io::BaseStream *stream);
+  void writeComponentsResponse(io::BaseStream *stream);
+  void writeConnectionsResponse(io::BaseStream *stream);
+  void writeGetFullResponse(io::BaseStream *stream);
+  void writeManifestResponse(io::BaseStream *stream);
+  void writeJstackResponse(io::BaseStream *stream);
+  void handleDescribe(io::BaseStream *stream);
+  void handleCommand(io::BaseStream *stream);
+  std::string getJstack();
+
+  core::controller::ControllerServiceProvider& controller_;
+  state::StateMonitor& update_sink_;
+  std::unique_ptr<io::BaseServerSocket> server_socket_;
+  std::shared_ptr<minifi::io::StreamFactory> stream_factory_;
+  std::weak_ptr<ControllerSocketReporter> controller_socket_reporter_;
+  std::shared_ptr<Configure> configuration_;
   std::shared_ptr<core::logging::Logger> logger_ = core::logging::LoggerFactory<ControllerSocketProtocol>::getLogger();
 };
 

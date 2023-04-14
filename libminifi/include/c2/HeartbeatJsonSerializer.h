@@ -29,12 +29,11 @@ namespace org::apache::nifi::minifi::c2 {
 class HeartbeatJsonSerializer {
  public:
   virtual std::string serializeJsonRootPayload(const C2Payload& payload);
+  virtual ~HeartbeatJsonSerializer() = default;
 
  protected:
   virtual rapidjson::Value serializeJsonPayload(const C2Payload& payload, rapidjson::Document::AllocatorType& alloc);
   virtual void serializeNestedPayload(rapidjson::Value& target, const C2Payload& payload, rapidjson::Document::AllocatorType& alloc);
-
-  virtual ~HeartbeatJsonSerializer() = default;
 };
 
 }  // namespace org::apache::nifi::minifi::c2

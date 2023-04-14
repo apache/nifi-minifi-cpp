@@ -74,8 +74,8 @@ void TLSServerSocket::registerCallback(std::function<bool()> accept_function, st
         if (ssl != nullptr) {
           io::SecureDescriptorStream stream(fd, ssl);
           handler(&stream);
-          close_fd(fd);
         }
+        close_fd(fd);
       }
     }
   };

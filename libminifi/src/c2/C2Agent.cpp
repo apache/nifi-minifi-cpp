@@ -29,7 +29,6 @@
 #include <utility>
 #include <vector>
 
-#include "c2/ControllerSocketProtocol.h"
 #include "core/ProcessContext.h"
 #include "core/StateManager.h"
 #include "core/state/UpdateController.h"
@@ -220,15 +219,6 @@ void C2Agent::configure(const std::shared_ptr<Configure> &configure, bool reconf
         triggers_.push_back(std::move(trigger_obj));
       }
     }
-  }
-
-  std::string base_reporter = "ControllerSocketProtocol";
-  auto heartbeat_reporter_obj = core::ClassLoader::getDefaultClassLoader().instantiate<HeartbeatReporter>(base_reporter, base_reporter);
-  if (heartbeat_reporter_obj == nullptr) {
-    logger_->log_error("Could not instantiate %s", base_reporter);
-  } else {
-    heartbeat_reporter_obj->initialize(controller_, update_sink_, configuration_);
-    heartbeat_protocols_.push_back(std::move(heartbeat_reporter_obj));
   }
 }
 
