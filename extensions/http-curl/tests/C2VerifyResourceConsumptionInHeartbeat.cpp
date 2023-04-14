@@ -18,6 +18,7 @@
 
 #undef NDEBUG
 #include <functional>
+#include <utility>
 
 #include "TestBase.h"
 #include "Catch.h"
@@ -69,8 +70,8 @@ class ResourceConsumptionInHeartbeatHandler : public HeartbeatHandler {
       assert(system_info["cpuUtilization"].GetDouble() <= 1.0);
     }
 
-    assert(system_info.HasMember("machinearch"));
-    assert(system_info["machinearch"].GetStringLength() > 0);
+    assert(system_info.HasMember("machineArch"));
+    assert(system_info["machineArch"].GetStringLength() > 0);
   }
 
   static void verifyProcessResourceConsumption(const rapidjson::Document& root, bool firstCall) {
@@ -119,7 +120,7 @@ class VerifyResourceConsumptionInHeartbeat : public VerifyC2Base {
   }
 
   void setEventToWaitFor(std::function<bool()> event_to_wait_for) {
-    event_to_wait_for_ = event_to_wait_for;
+    event_to_wait_for_ = std::move(event_to_wait_for);
   }
 
   std::function<bool()> event_to_wait_for_;

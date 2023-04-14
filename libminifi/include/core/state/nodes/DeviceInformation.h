@@ -386,7 +386,7 @@ class DeviceInfoNode : public DeviceInformation {
 
   SerializedResponseNode serializeArchitectureInformation() const {
     SerializedResponseNode arch;
-    arch.name = "machinearch";
+    arch.name = "machineArch";
     arch.value = utils::OsUtils::getMachineArchitecture();
     return arch;
   }
