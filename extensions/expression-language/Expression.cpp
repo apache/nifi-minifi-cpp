@@ -633,35 +633,46 @@ Value expr_escapeCsv(const std::vector<Value> &args) {
 }
 
 Value expr_format(const std::vector<Value> &args) {
-  std::chrono::milliseconds dur(args[0].asUnsignedLong());
-  std::chrono::system_clock::time_point dt(dur);
-  auto zone = date::current_zone();
-  if (args.size() > 2) {
-    zone = date::locate_zone(args[2].asString());
-  }
-  auto t = date::make_zoned(zone, dt);
-  std::stringstream result_s;
-  result_s << date::format(args[1].asString(), t);
-  return Value(result_s.str());
+  using std::chrono::milliseconds;
+
+  date::sys_time<milliseconds> utc_time_point{milliseconds(args[0].asUnsignedLong())};
+  auto format_string = args[1].asString();
+  auto zone = args.size() > 2 ? date::locate_zone(args[2].asString()) : date::current_zone();
+
+  auto zoned_time_point = date::make_zoned(zone, utc_time_point);
+  std::ostringstream result_stream;
+  result_stream << date::format(args[1].asString(), zoned_time_point);
+  return Value(result_stream.str());
 }
 
 Value expr_toDate(const std::vector<Value> &args) {
-  auto arg_0 = args[0].asString();
-  std::istringstream arg_s { arg_0 };
-  date::sys_time<std::chrono::milliseconds> t;
-  date::from_stream(arg_s, args[1].asString().c_str(), t);
-  auto zone = date::current_zone();
-  if (args.size() > 2) {
-    zone = date::locate_zone(args[2].asString());
+  using std::chrono::milliseconds;
+  auto input_string = args[0].asString();
+
+  if (args.size() == 1) {
+    if (auto parsed_rfc3339 = org::apache::nifi::minifi::utils::timeutils::parseRfc3339(input_string))
+      return Value(int64_t{std::chrono::duration_cast<milliseconds>(parsed_rfc3339->time_since_epoch()).count()});
+    else
+      throw std::runtime_error(fmt::format("Failed to parse \"{}\" as an RFC3339 formatted datetime", input_string));
   }
-  auto utc = date::locate_zone("UTC");
-  auto utct = date::make_zoned(utc, t);
-  auto zt = date::make_zoned(zone, utct.get_local_time());
-  return Value(int64_t{std::chrono::duration_cast<std::chrono::milliseconds>(zt.get_sys_time().time_since_epoch()).count()});
+  auto format_string = args[1].asString();
+  auto zone = args.size() > 2 ? date::locate_zone(args[2].asString()) : date::current_zone();
+
+  std::istringstream input_stream{ input_string };
+  date::sys_time<milliseconds> time_point;
+  date::from_stream(input_stream, format_string.c_str(), time_point);
+  if (input_stream.fail() || (input_stream.peek() && !input_stream.eof()))
+    throw std::runtime_error(fmt::format(R"(Failed to parse "{}", with "{}" format)", input_string, format_string));
+
+  auto utc_zone = date::locate_zone("UTC");
+  auto utc_time_point = date::make_zoned(utc_zone, time_point);
+  auto zoned_time_point = date::make_zoned(zone, utc_time_point.get_local_time());
+  return Value(int64_t{std::chrono::duration_cast<milliseconds>(zoned_time_point.get_sys_time().time_since_epoch()).count()});
 }
 
 Value expr_now(const std::vector<Value>& /*args*/) {
-  return Value(int64_t{std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now().time_since_epoch()).count()});
+  using std::chrono::milliseconds;
+  return Value(int64_t{std::chrono::duration_cast<milliseconds>(std::chrono::system_clock::now().time_since_epoch()).count()});
 }
 
 Value expr_unescapeCsv(const std::vector<Value> &args) {
@@ -1510,7 +1521,7 @@ Expression make_dynamic_function(const std::string &function_name, const std::ve
   } else if (function_name == "format") {
     return make_dynamic_function_incomplete<expr_format>(function_name, args, 1);
   } else if (function_name == "toDate") {
-    return make_dynamic_function_incomplete<expr_toDate>(function_name, args, 1);
+    return make_dynamic_function_incomplete<expr_toDate>(function_name, args, 0);
   } else if (function_name == "now") {
     return make_dynamic_function_incomplete<expr_now>(function_name, args, 0);
   } else {

@@ -254,3 +254,60 @@ TEST_CASE("Test roundToNextSecond", "[roundingTests]") {
   CHECK(parseLocalTimePoint("2022-06-21 11:00:01") == roundToNextSecond(parseLocalTimePoint("2022-06-21 11:00:00")));
   CHECK(parseLocalTimePoint("2022-07-21 12:12:01") == roundToNextSecond(parseLocalTimePoint("2022-07-21 12:12:00")));
 }
+
+TEST_CASE("Parse RFC3339", "[parseRfc3339]") {
+  using date::sys_days;
+  using org::apache::nifi::minifi::utils::timeutils::parseRfc3339;
+  using namespace date::literals;
+  using namespace std::literals::chrono_literals;
+
+  auto expected_second = sys_days(2023_y / 03 / 01) + 19h + 04min + 55s;
+  auto expected_tenth_second = sys_days(2023_y / 03 / 01) + 19h + 04min + 55s + 100ms;
+  auto expected_milli_second = sys_days(2023_y / 03 / 01) + 19h + 04min + 55s + 190ms;
+  auto expected_micro_second = sys_days(2023_y / 03 / 01) + 19h + 04min + 55s + 190999us;
+
+  CHECK(parseRfc3339("2023-03-01T19:04:55Z") == expected_second);
+  CHECK(parseRfc3339("2023-03-01T19:04:55.1Z") == expected_tenth_second);
+  CHECK(parseRfc3339("2023-03-01T19:04:55.19Z") == expected_milli_second);
+  CHECK(parseRfc3339("2023-03-01T19:04:55.190Z") == expected_milli_second);
+  CHECK(parseRfc3339("2023-03-01T19:04:55.190999Z") == expected_micro_second);
+  CHECK(parseRfc3339("2023-03-01t19:04:55z") == expected_second);
+  CHECK(parseRfc3339("2023-03-01t19:04:55.190z") == expected_milli_second);
+  CHECK(parseRfc3339("2023-03-01T20:04:55+01:00") == expected_second);
+  CHECK(parseRfc3339("2023-03-01T20:04:55.190+01:00") == expected_milli_second);
+  CHECK(parseRfc3339("2023-03-01T20:04:55.190999+01:00") == expected_micro_second);
+  CHECK(parseRfc3339("2023-03-01 20:04:55+01:00") == expected_second);
+  CHECK(parseRfc3339("2023-03-01 20:04:55.1+01:00") == expected_tenth_second);
+  CHECK(parseRfc3339("2023-03-01 20:04:55.19+01:00") == expected_milli_second);
+  CHECK(parseRfc3339("2023-03-01 20:04:55.190+01:00") == expected_milli_second);
+  CHECK(parseRfc3339("2023-03-01 20:04:55.190999+01:00") == expected_micro_second);
+  CHECK(parseRfc3339("2023-03-01 19:04:55Z") == expected_second);
+  CHECK(parseRfc3339("2023-03-01_19:04:55Z") == expected_second);
+  CHECK(parseRfc3339("2023-03-01 19:04:55z") == expected_second);
+  CHECK(parseRfc3339("2023-03-01_19:04:55z") == expected_second);
+  CHECK(parseRfc3339("2023-03-01 19:04:55.1Z") == expected_tenth_second);
+  CHECK(parseRfc3339("2023-03-01 19:04:55.19Z") == expected_milli_second);
+  CHECK(parseRfc3339("2023-03-01 19:04:55.190Z") == expected_milli_second);
+  CHECK(parseRfc3339("2023-03-01_19:04:55.190Z") == expected_milli_second);
+  CHECK(parseRfc3339("2023-03-01 19:04:55.190999Z") == expected_micro_second);
+  CHECK(parseRfc3339("2023-03-01_19:04:55.190999Z") == expected_micro_second);
+  CHECK(parseRfc3339("2023-03-01 19:04:55.190z") == expected_milli_second);
+  CHECK(parseRfc3339("2023-03-01_19:04:55.190z") == expected_milli_second);
+  CHECK(parseRfc3339("2023-03-01 19:04:55.190999z") == expected_micro_second);
+  CHECK(parseRfc3339("2023-03-01_19:04:55.190999z") == expected_micro_second);
+  CHECK(parseRfc3339("2023-03-01 19:04:55-00:00") == expected_second);
+  CHECK(parseRfc3339("2023-03-01 19:04:55.190-00:00") == expected_milli_second);
+  CHECK(parseRfc3339("2023-03-01T19:04:55-00:00") == expected_second);
+  CHECK(parseRfc3339("2023-03-01T19:04:55.190-00:00") == expected_milli_second);
+  CHECK(parseRfc3339("2023-03-02T03:49:55+08:45") == expected_second);
+  CHECK(parseRfc3339("2023-03-01T19:04:55+00:00") == expected_second);
+  CHECK(parseRfc3339("2023-03-01T19:04:55.190+00:00") == expected_milli_second);
+  CHECK(parseRfc3339("2023-03-01T18:04:55-01:00") == expected_second);
+
+  CHECK_FALSE(parseRfc3339("2023-03-01T19:04:55Zbanana"));
+  CHECK_FALSE(parseRfc3339("2023-03-01T19:04:55"));
+  CHECK_FALSE(parseRfc3339("2023-03-01T19:04:55T"));
+  CHECK_FALSE(parseRfc3339("2023-03-01T19:04:55Z "));
+  CHECK_FALSE(parseRfc3339(" 2023-03-01T19:04:55Z"));
+  CHECK_FALSE(parseRfc3339("2023-03-01"));
+}

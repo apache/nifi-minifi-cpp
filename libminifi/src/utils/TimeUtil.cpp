@@ -16,9 +16,11 @@
  */
 
 #include "utils/TimeUtil.h"
+#include "range/v3/algorithm/contains.hpp"
 
 namespace org::apache::nifi::minifi::utils::timeutils {
 
+using namespace std::literals::chrono_literals;
 static std::mutex global_clock_mtx;
 static std::shared_ptr<SteadyClock> global_clock{std::make_shared<SteadyClock>()};
 
@@ -31,6 +33,38 @@ std::shared_ptr<SteadyClock> getClock() {
 void setClock(std::shared_ptr<SteadyClock> clock) {
   std::lock_guard lock(global_clock_mtx);
   global_clock = std::move(clock);
+}
+
+std::optional<std::chrono::system_clock::time_point> parseRfc3339(const std::string& str) {
+  std::istringstream stream(str);
+  date::year_month_day date_part;
+  date::from_stream(stream, "%F", date_part);
+
+  if (stream.fail())
+    return std::nullopt;
+
+  constexpr std::string_view accepted_delimiters = "tT_ ";
+  char delimiter_char;
+  stream.get(delimiter_char);
+
+  if (stream.fail() || !ranges::contains(accepted_delimiters, delimiter_char))
+    return std::nullopt;
+
+  std::chrono::system_clock::duration time_part;
+  std::chrono::minutes offset = 0min;
+  if (str.ends_with('Z') || str.ends_with('z')) {
+    date::from_stream(stream, "%T", time_part);
+    if (stream.fail())
+      return std::nullopt;
+    stream.get();
+  } else {
+    date::from_stream(stream, "%T%Ez", time_part, {}, &offset);
+  }
+
+  if (stream.fail() || (stream.peek() && !stream.eof()))
+    return std::nullopt;
+
+  return date::sys_days(date_part) + time_part - offset;
 }
 
 }  // namespace org::apache::nifi::minifi::utils::timeutils
