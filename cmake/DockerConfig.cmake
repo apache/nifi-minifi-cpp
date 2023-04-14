@@ -122,6 +122,21 @@ add_custom_target(
         -c CMAKE_BUILD_TYPE=${CMAKE_BUILD_TYPE}
     WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}/docker/)
 
+add_custom_target(
+    rockylinux
+    COMMAND ${CMAKE_SOURCE_DIR}/docker/DockerBuild.sh
+        -u 1000
+        -g 1000
+        -v ${PROJECT_VERSION_MAJOR}.${PROJECT_VERSION_MINOR}.${PROJECT_VERSION_PATCH}
+        -o ${MINIFI_DOCKER_OPTIONS_STR}
+        -l ${CMAKE_BINARY_DIR}
+        -d rockylinux
+        -c BUILD_NUMBER=${BUILD_NUMBER}
+        -c DOCKER_CCACHE_DUMP_LOCATION=${DOCKER_CCACHE_DUMP_LOCATION}
+        -c DOCKER_SKIP_TESTS=${DOCKER_SKIP_TESTS}
+        -c CMAKE_BUILD_TYPE=${CMAKE_BUILD_TYPE}
+    WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}/docker/)
+
 if (EXISTS ${CMAKE_SOURCE_DIR}/docker/test/integration/features)
     add_subdirectory(${CMAKE_SOURCE_DIR}/docker/test/integration/features)
 
