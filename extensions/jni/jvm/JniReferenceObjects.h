@@ -104,7 +104,7 @@ class JniByteInputStream {
     }
 
     // seek to offset
-    auto remaining = gsl::narrow<uint64_t>(size);
+    auto remaining = gsl::narrow<size_t>(size);
     int writtenOffset = 0;
     int read = 0;
     do {
@@ -128,8 +128,8 @@ class JniByteInputStream {
     return read;
   }
 
-  int64_t read(uint8_t &arr) {
-    return stream_->read(arr);
+  int64_t read(uint8_t &arr) const {
+    return gsl::narrow<int64_t>(stream_->read(arr));
   }
 
   std::shared_ptr<minifi::io::InputStream> stream_;
