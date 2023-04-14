@@ -262,4 +262,30 @@ def onTrigger(context, session):
   REQUIRE(result.at(ExecuteScript::Failure).empty());
 }
 
+TEST_CASE("Python can store states in StateManager", "[ExecuteScript]") {
+  const auto execute_script = std::make_shared<ExecuteScript>("ExecuteScript");
+
+  minifi::test::SingleProcessorTestController controller{execute_script};
+  LogTestController::getInstance().setTrace<minifi::processors::ExecuteScript>();
+  execute_script->setProperty(ExecuteScript::ScriptEngine, "python");
+  execute_script->setProperty(ExecuteScript::ScriptBody.getName(),
+      R"(
+def onTrigger(context, session):
+  state_manager = context.getStateManager()
+  state = state_manager.get()
+  if state is None:
+    state = {}
+    state['python_trigger_count'] = 0
+  python_trigger_count = state['python_trigger_count']
+  log.info('python_trigger_count: ' + str(python_trigger_count))
+  state['python_trigger_count'] =str(int(python_trigger_count) + 1)
+  state_manager.set(state)
+)");
+
+  for (size_t i = 0; i < 4; ++i) {
+    controller.trigger();
+    CHECK(LogTestController::getInstance().contains(fmt::format("python_trigger_count: {}", i)));
+  }
+}
+
 }  // namespace org::apache::nifi::minifi::processors::test

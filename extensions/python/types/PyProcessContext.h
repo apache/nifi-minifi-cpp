@@ -34,6 +34,7 @@ struct PyProcessContext {
   static int init(PyProcessContext* self, PyObject* args, PyObject* kwds);
 
   static PyObject* getProperty(PyProcessContext* self, PyObject* args);
+  static PyObject* getStateManager(PyProcessContext* self, PyObject* args);
 
   static PyTypeObject* typeObject();
 };

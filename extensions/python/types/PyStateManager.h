@@ -1,5 +1,4 @@
 /**
- *
  * Licensed to the Apache Software Foundation (ASF) under one or more
  * contributor license agreements.  See the NOTICE file distributed with
  * this work for additional information regarding copyright ownership.
@@ -15,31 +14,33 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+#pragma once
 
 #include <memory>
-#include <string>
-#include <utility>
 
-#include "LuaScriptProcessContext.h"
+#include "core/StateManager.h"
+#include "../PythonBindings.h"
 
-namespace org::apache::nifi::minifi::extensions::lua {
+namespace org::apache::nifi::minifi::extensions::python {
 
-LuaScriptProcessContext::LuaScriptProcessContext(std::shared_ptr<core::ProcessContext> context, sol::state& sol_state)
-    : context_(std::move(context)), sol_state_(sol_state) {
-}
+struct PyStateManager {
+  PyStateManager() {}
+  using HeldType = core::StateManager*;
+  static constexpr const char* HeldTypeName = "PyStateManager::HeldType";
 
-std::string LuaScriptProcessContext::getProperty(const std::string &name) {
-  std::string value;
-  context_->getProperty(name, value);
-  return value;
-}
+  PyObject_HEAD
+  HeldType state_manager_;
 
-void LuaScriptProcessContext::releaseProcessContext() {
-  context_.reset();
-}
+  static int init(PyStateManager* self, PyObject* args, PyObject* kwds);
 
-LuaScriptStateManager LuaScriptProcessContext::getStateManager() {
-  return LuaScriptStateManager(context_->getStateManager(), sol_state_);
-}
+  static PyObject* set(PyStateManager* self, PyObject* args);
+  static PyObject* get(PyStateManager* self, PyObject* args);
 
-}  // namespace org::apache::nifi::minifi::extensions::lua
+  static PyTypeObject* typeObject();
+};
+
+namespace object {
+template<>
+struct Converter<PyStateManager::HeldType> : public HolderTypeConverter<PyStateManager> {};
+}  // namespace object
+}  // namespace org::apache::nifi::minifi::extensions::python

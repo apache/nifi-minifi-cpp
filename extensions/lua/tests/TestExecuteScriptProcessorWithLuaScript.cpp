@@ -319,4 +319,32 @@ TEST_CASE("Lua can remove flowfiles", "[ExecuteScript]") {
   REQUIRE(result.at(ExecuteScript::Failure).empty());
 }
 
+TEST_CASE("Lua can store states in StateManager", "[ExecuteScript]") {
+  const auto execute_script = std::make_shared<ExecuteScript>("ExecuteScript");
+
+  minifi::test::SingleProcessorTestController controller{execute_script};
+  LogTestController::getInstance().setTrace<minifi::processors::ExecuteScript>();
+  execute_script->setProperty(ExecuteScript::ScriptEngine, "lua");
+  execute_script->setProperty(ExecuteScript::ScriptBody.getName(),
+      R"(
+        function onTrigger(context, session)
+          state_manager = context:getStateManager()
+          state = state_manager:get()
+          if state == nil then
+            state = {}
+            state['lua_trigger_count'] = 0
+          end
+          lua_trigger_count = state['lua_trigger_count']
+          log:info('lua_trigger_count: ' .. lua_trigger_count)
+          state['lua_trigger_count'] = tostring(tonumber(lua_trigger_count) + 1)
+          state_manager:set(state)
+        end
+      )");
+
+  for (size_t i = 0; i < 4; ++i) {
+    controller.trigger();
+    CHECK(LogTestController::getInstance().contains(fmt::format("lua_trigger_count: {}", i)));
+  }
+}
+
 }  // namespace org::apache::nifi::minifi::processors::test

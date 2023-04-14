@@ -16,30 +16,26 @@
  * limitations under the License.
  */
 
-#include <memory>
-#include <string>
-#include <utility>
+#pragma once
 
-#include "LuaScriptProcessContext.h"
+#include <string>
+#include <memory>
+
+#include "sol/sol.hpp"
+#include "core/StateManager.h"
 
 namespace org::apache::nifi::minifi::extensions::lua {
 
-LuaScriptProcessContext::LuaScriptProcessContext(std::shared_ptr<core::ProcessContext> context, sol::state& sol_state)
-    : context_(std::move(context)), sol_state_(sol_state) {
-}
+class LuaScriptStateManager {
+ public:
+  explicit LuaScriptStateManager(core::StateManager* state_manager, sol::state& sol_state) : state_manager_(state_manager), sol_state_(sol_state) {}
 
-std::string LuaScriptProcessContext::getProperty(const std::string &name) {
-  std::string value;
-  context_->getProperty(name, value);
-  return value;
-}
+  bool set(const sol::table& core_component_state_lua);
+  sol::optional<sol::table> get();
 
-void LuaScriptProcessContext::releaseProcessContext() {
-  context_.reset();
-}
-
-LuaScriptStateManager LuaScriptProcessContext::getStateManager() {
-  return LuaScriptStateManager(context_->getStateManager(), sol_state_);
-}
+ private:
+  core::StateManager* state_manager_;
+  sol::state& sol_state_;
+};
 
 }  // namespace org::apache::nifi::minifi::extensions::lua
