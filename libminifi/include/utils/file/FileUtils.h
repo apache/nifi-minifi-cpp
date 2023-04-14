@@ -85,7 +85,9 @@ namespace FileUtils = ::org::apache::nifi::minifi::utils::file;
 
 time_t to_time_t(std::filesystem::file_time_type time);
 
-std::chrono::system_clock::time_point to_sys(std::filesystem::file_time_type time);
+std::chrono::system_clock::time_point to_sys(std::filesystem::file_time_type file_time);
+
+std::filesystem::file_time_type from_sys(std::chrono::system_clock::time_point sys_time);
 
 inline int64_t delete_dir(const std::filesystem::path& path, bool delete_files_recursively = true) {
   // Empty path is interpreted as the root of the current partition on Windows, which should not be allowed
