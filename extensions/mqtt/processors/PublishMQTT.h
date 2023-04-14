@@ -38,7 +38,7 @@ namespace org::apache::nifi::minifi::processors {
 class PublishMQTT : public processors::AbstractMQTTProcessor {
  public:
   explicit PublishMQTT(std::string name, const utils::Identifier& uuid = {})
-      : processors::AbstractMQTTProcessor(std::move(name), uuid) {
+      : processors::AbstractMQTTProcessor(std::move(name), uuid, std::make_shared<PublishMQTTMetrics>(*this, in_flight_message_counter_)) {
   }
 
   EXTENSIONAPI static constexpr const char* Description = "PublishMQTT serializes FlowFile content as an MQTT payload, sending the message to the configured topic and broker.";
@@ -84,12 +84,24 @@ class PublishMQTT : public processors::AbstractMQTTProcessor {
     void increase();
     void decrease();
 
+    uint16_t getCounter() const;
+
    private:
     bool enabled_ = false;
-    std::mutex mutex_;
+    mutable std::mutex mutex_;
     std::condition_variable cv_;
     uint16_t counter_{0};
     uint16_t limit_{MQTT_MAX_RECEIVE_MAXIMUM};
+  };
+
+  class PublishMQTTMetrics : public core::ProcessorMetrics {
+   public:
+    PublishMQTTMetrics(const core::Processor& source_processor, const InFlightMessageCounter& in_flight_message_counter);
+    std::vector<state::response::SerializedResponseNode> serialize() override;
+    std::vector<state::PublishedMetric> calculateMetrics() override;
+
+   private:
+    gsl::not_null<const InFlightMessageCounter*> in_flight_message_counter_;
   };
 
   // MQTT static async callbacks, calling their notify with context being pointer to a packaged_task to notify()
