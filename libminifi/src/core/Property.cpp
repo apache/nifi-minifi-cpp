@@ -17,11 +17,8 @@
  */
 
 #include "core/Property.h"
-namespace org {
-namespace apache {
-namespace nifi {
-namespace minifi {
-namespace core {
+
+namespace org::apache::nifi::minifi::core {
 
 std::string Property::getName() const {
   return name_;
@@ -58,8 +55,8 @@ std::string Property::getValidRegex() const {
   return valid_regex_;
 }
 
-std::shared_ptr<PropertyValidator> Property::getValidator() const {
-  return validator_;
+const PropertyValidator& Property::getValidator() const {
+  return *validator_;
 }
 
 std::vector<std::string> Property::getValues() {
@@ -93,8 +90,4 @@ std::vector<std::pair<std::string, std::string>> Property::getExclusiveOfPropert
   return exclusive_of_properties_;
 }
 
-} /* namespace core */
-} /* namespace minifi */
-} /* namespace nifi */
-} /* namespace apache */
-} /* namespace org */
+}  // namespace org::apache::nifi::minifi::core

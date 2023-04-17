@@ -33,10 +33,6 @@ namespace org::apache::nifi::minifi {
 namespace core {
 // The upper limit for Max Poll Time is 4 seconds. This is because Watchdog would potentially start
 // reporting issues with the processor health otherwise
-ConsumeKafkaMaxPollTimeValidator::ConsumeKafkaMaxPollTimeValidator(const std::string &name)
-  : TimePeriodValidator(name) {
-}
-
 ValidationResult ConsumeKafkaMaxPollTimeValidator::validate(const std::string& subject, const std::string& input) const {
   auto parsed_value = utils::timeutils::StringToDuration<std::chrono::milliseconds>(input);
   return ValidationResult::Builder::createBuilder().withSubject(subject).withInput(input).isValid(

@@ -74,16 +74,12 @@ class PropertyValue : public state::response::ValueNode {
   PropertyValue(const PropertyValue &o) = default;
   PropertyValue(PropertyValue &&o) noexcept = default;
 
-  void setValidator(const gsl::not_null<std::shared_ptr<PropertyValidator>> &val) {
-    validator_ = val;
-  }
-
-  std::shared_ptr<PropertyValidator> getValidator() const {
-    return *validator_;
+  void setValidator(const PropertyValidator& validator) {
+    cached_value_validator_ = validator;
   }
 
   ValidationResult validate(const std::string &subject) const {
-    return validator_.validate(subject, getValue());
+    return cached_value_validator_.validate(subject, getValue());
   }
 
   operator uint64_t() const {
@@ -136,7 +132,7 @@ class PropertyValue : public state::response::ValueNode {
    */
   template<typename T>
   auto operator=(const T ref) -> typename std::enable_if<std::is_same<T, std::string>::value, PropertyValue&>::type {
-    validator_.invalidateCachedResult();
+    cached_value_validator_.invalidateCachedResult();
     return WithAssignmentGuard(ref, [&] () -> PropertyValue& {
       if (value_ == nullptr) {
         type_id = std::type_index(typeid(T));
@@ -166,7 +162,7 @@ class PropertyValue : public state::response::ValueNode {
   std::is_same<T, uint64_t >::value ||
   std::is_same<T, int64_t >::value ||
   std::is_same<T, bool >::value, PropertyValue&>::type {
-    validator_.invalidateCachedResult();
+    cached_value_validator_.invalidateCachedResult();
     if (value_ == nullptr) {
       type_id = std::type_index(typeid(T));
       value_ = minifi::state::response::createValue(ref);
@@ -200,7 +196,7 @@ class PropertyValue : public state::response::ValueNode {
   auto operator=(const std::string &ref) -> typename std::enable_if<
   std::is_same<T, DataSizeValue >::value ||
   std::is_same<T, TimePeriodValue >::value, PropertyValue&>::type {
-    validator_.invalidateCachedResult();
+    cached_value_validator_.invalidateCachedResult();
     return WithAssignmentGuard(ref, [&] () -> PropertyValue& {
       value_ = std::make_shared<T>(ref);
       type_id = value_->getTypeIndex();
@@ -241,7 +237,7 @@ class PropertyValue : public state::response::ValueNode {
 
  protected:
   std::type_index type_id;
-  CachedValueValidator validator_;
+  CachedValueValidator cached_value_validator_;
 };
 
 inline std::string conditional_conversion(const PropertyValue &v) {

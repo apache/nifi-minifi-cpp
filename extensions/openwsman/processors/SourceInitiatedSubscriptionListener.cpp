@@ -75,7 +75,7 @@ const core::Property SourceInitiatedSubscriptionListener::ListenHostname(
         ->isRequired(true)->build());
 const core::Property SourceInitiatedSubscriptionListener::ListenPort(
     core::PropertyBuilder::createProperty("Listen Port")->withDescription("The port to listen on.")
-        ->isRequired(true)->withDefaultValue<int64_t>(5986, core::StandardValidators::get().LISTEN_PORT_VALIDATOR)->build());
+        ->isRequired(true)->withDefaultValue<int64_t>(5986, core::StandardValidators::LISTEN_PORT_VALIDATOR)->build());
 const core::Property SourceInitiatedSubscriptionListener::SubscriptionManagerPath(
     core::PropertyBuilder::createProperty("Subscription Manager Path")->withDescription("The URI path that will be used for the WEC Subscription Manager endpoint.")
         ->isRequired(true)->withDefaultValue("/wsman/SubscriptionManager/WEC")->build());

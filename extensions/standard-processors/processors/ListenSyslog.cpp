@@ -30,7 +30,7 @@ const core::Property ListenSyslog::Port(
     core::PropertyBuilder::createProperty("Listening Port")
         ->withDescription("The port for Syslog communication. (Well-known ports (0-1023) require root access)")
         ->isRequired(true)
-        ->withDefaultValue<int>(514, core::StandardValidators::get().LISTEN_PORT_VALIDATOR)->build());
+        ->withDefaultValue<int>(514, core::StandardValidators::LISTEN_PORT_VALIDATOR)->build());
 
 const core::Property ListenSyslog::ProtocolProperty(
     core::PropertyBuilder::createProperty("Protocol")

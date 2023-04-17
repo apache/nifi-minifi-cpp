@@ -122,11 +122,7 @@ class ComponentManifest : public DeviceInformation {
 
             SerializedResponseNode validatorName;
             validatorName.name = "validator";
-            if (prop.getValidator()) {
-              validatorName.value = prop.getValidator()->getName();
-            } else {
-              validatorName.value = "VALID";
-            }
+            validatorName.value = std::string{prop.getValidator().getName()};
 
             SerializedResponseNode supportsExpressionLanguageScope;
             supportsExpressionLanguageScope.name = "expressionLanguageScope";

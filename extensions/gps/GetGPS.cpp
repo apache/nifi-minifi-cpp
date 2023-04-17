@@ -37,17 +37,13 @@
 #include "core/PropertyValidation.h"
 #include "core/Resource.h"
 
-namespace org {
-namespace apache {
-namespace nifi {
-namespace minifi {
-namespace processors {
+namespace org::apache::nifi::minifi::processors {
 
 const core::Relationship GetGPS::Success("success", "All files are routed to success");
 
 const core::Property GetGPS::GPSDHost(core::PropertyBuilder::createProperty("GPSD Host")->withDescription("The host running the GPSD daemon")->withDefaultValue<std::string>("localhost")->build());
 const core::Property GetGPS::GPSDPort(
-    core::PropertyBuilder::createProperty("GPSD Port")->withDescription("The GPSD daemon port")->withDefaultValue<int64_t>(2947, core::StandardValidators::get().PORT_VALIDATOR)->build());
+    core::PropertyBuilder::createProperty("GPSD Port")->withDescription("The GPSD daemon port")->withDefaultValue<int64_t>(2947, core::StandardValidators::PORT_VALIDATOR)->build());
 const core::Property GetGPS::GPSDWaitTime(
     core::PropertyBuilder::createProperty("GPSD Wait Time")->withDescription("Timeout value for waiting for data from the GPSD instance")->withDefaultValue<uint64_t>(50000000)->build());
 
@@ -83,7 +79,7 @@ void GetGPS::onTrigger(const std::shared_ptr<core::ProcessContext>& /*context*/,
   try {
     gpsmm gps_rec(gpsdHost_.c_str(), gpsdPort_.c_str());
 
-    if (gps_rec.stream(WATCH_ENABLE | WATCH_JSON) == NULL) {
+    if (gps_rec.stream(WATCH_ENABLE | WATCH_JSON) == nullptr) {
       logger_->log_error("No GPSD running.");
       return;
     }
@@ -94,7 +90,7 @@ void GetGPS::onTrigger(const std::shared_ptr<core::ProcessContext>& /*context*/,
       if (!gps_rec.waiting(gpsdWaitTime_))
         continue;
 
-      if ((gpsdata = gps_rec.read()) == NULL) {
+      if ((gpsdata = gps_rec.read()) == nullptr) {
         logger_->log_error("Read error");
         return;
       } else {
@@ -146,8 +142,4 @@ void GetGPS::onTrigger(const std::shared_ptr<core::ProcessContext>& /*context*/,
 
 REGISTER_RESOURCE(GetGPS, Processor);
 
-} /* namespace processors */
-} /* namespace minifi */
-} /* namespace nifi */
-} /* namespace apache */
-} /* namespace org */
+}  // namespace org::apache::nifi::minifi::processors

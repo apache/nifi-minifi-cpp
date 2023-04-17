@@ -96,7 +96,7 @@ class Property {
   std::string getDisplayName() const;
   std::vector<std::string> getAllowedTypes() const;
   std::string getDescription() const;
-  std::shared_ptr<PropertyValidator> getValidator() const;
+  const PropertyValidator& getValidator() const;
   const PropertyValue &getValue() const;
   bool getRequired() const;
   bool supportsExpressionLanguage() const;
@@ -118,7 +118,7 @@ class Property {
       values_.push_back(default_value_);
     }
     PropertyValue& vn = values_.back();
-    vn.setValidator(validator_);
+    vn.setValidator(*validator_);
     vn = value;
     ValidationResult result = vn.validate(name_);
     if (!result.valid()) {
@@ -134,7 +134,7 @@ class Property {
       values_.push_back(newValue);
     }
     PropertyValue& vn = values_.back();
-    vn.setValidator(validator_);
+    vn.setValidator(*validator_);
     ValidationResult result = vn.validate(name_);
     if (!result.valid()) {
       throw utils::internal::InvalidValueException(name_ + " value validation failed");
@@ -240,7 +240,7 @@ class Property {
       validator_ = StandardValidators::getValidator(ret.getValue());
     } else {
       ret = value;
-      validator_ = StandardValidators::get().VALID_VALIDATOR;
+      validator_ = gsl::make_not_null(&StandardValidators::VALID_VALIDATOR);
     }
     return ret;
   }
@@ -254,7 +254,7 @@ class Property {
   bool is_collection_;
   PropertyValue default_value_;
   std::vector<PropertyValue> values_;
-  gsl::not_null<std::shared_ptr<PropertyValidator>> validator_{StandardValidators::get().VALID_VALIDATOR};
+  gsl::not_null<const PropertyValidator*> validator_{&StandardValidators::VALID_VALIDATOR};
   std::string display_name_;
   std::vector<PropertyValue> allowed_values_;
   // types represents the allowable types for this property
