@@ -326,10 +326,7 @@ TEST_CASE("ConsumeWindowsEventLog output format can be set", "[create][output_fo
   outputFormatSetterTestHelper("XML", 1);
   outputFormatSetterTestHelper("Plaintext", 1);
   outputFormatSetterTestHelper("Both", 2);
-
-  // NOTE(fgerlits): this may be a bug, as I would expect this to throw in onSchedule(),
-  // but it starts merrily, just does not write flow files in either format
-  outputFormatSetterTestHelper("InvalidValue", 0);
+  REQUIRE_THROWS(outputFormatSetterTestHelper("InvalidValue", 0));
 }
 
 TEST_CASE("ConsumeWindowsEventLog prints events in plain text correctly", "[onTrigger]") {
