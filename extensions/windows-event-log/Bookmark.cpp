@@ -30,7 +30,7 @@
 namespace org::apache::nifi::minifi::processors {
 static const std::string BOOKMARK_KEY = "bookmark";
 
-Bookmark::Bookmark(const std::wstring& channel,
+Bookmark::Bookmark(const wel::EventPath& path,
     const std::wstring& query,
     const std::filesystem::path& bookmarkRootDir,
     const utils::Identifier& uuid,
@@ -80,7 +80,7 @@ Bookmark::Bookmark(const std::wstring& channel,
     return;
   }
 
-  const auto hEventResults = unique_evt_handle{ EvtQuery(nullptr, channel.c_str(), query.c_str(), EvtQueryChannelPath) };
+  const auto hEventResults = unique_evt_handle{ EvtQuery(nullptr, path.value.c_str(), query.c_str(), path.getQueryFlags()) };
   if (!hEventResults) {
     LOG_LAST_ERROR(EvtQuery);
     return;

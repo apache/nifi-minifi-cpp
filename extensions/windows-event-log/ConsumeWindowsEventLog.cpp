@@ -64,9 +64,16 @@ const int EVT_NEXT_TIMEOUT_MS = 500;
 
 const core::Property ConsumeWindowsEventLog::Channel(
   core::PropertyBuilder::createProperty("Channel")->
-  isRequired(true)->
+  isRequired(false)->
   withDefaultValue("System")->
   withDescription("The Windows Event Log Channel to listen to.")->
+  supportsExpressionLanguage(true)->
+  build());
+
+const core::Property ConsumeWindowsEventLog::LogFilePath(
+  core::PropertyBuilder::createProperty("Log File Path")->
+  isRequired(false)->
+  withDescription("The absolute path to a file containing Windows Event Logs.")->
   supportsExpressionLanguage(true)->
   build());
 
@@ -282,12 +289,25 @@ void ConsumeWindowsEventLog::onSchedule(const std::shared_ptr<core::ProcessConte
     }
   }
 
-  context->getProperty(Channel.getName(), channel_);
-  wstrChannel_ = std::wstring(channel_.begin(), channel_.end());
+  {
+    auto channel = context->getProperty(Channel);
+    auto file = context->getProperty(LogFilePath);
+
+    if ((channel && file) || (!channel && !file)) {
+      throw Exception(PROCESS_SCHEDULE_EXCEPTION, "Exactly one of the properties '" + Channel.getName() + "' and '" + LogFilePath.getName() + "' should be specified");
+    }
+
+    if (channel) {
+      path_ = wel::EventPath::Channel(std::wstring(channel->begin(), channel->end()));
+    }
+    if (file) {
+      path_ = wel::EventPath::File(std::wstring(file->begin(), file->end()));
+    }
+  }
 
   std::string query;
   context->getProperty(Query.getName(), query);
-  wstrQuery_ = std::wstring(query.begin(), query.end());
+  wstr_query_ = std::wstring(query.begin(), query.end());
 
   bool processOldEvents{};
   context->getProperty(ProcessOldEvents.getName(), processOldEvents);
@@ -299,7 +319,7 @@ void ConsumeWindowsEventLog::onSchedule(const std::shared_ptr<core::ProcessConte
       logger_->log_error("State Directory is empty");
       throw Exception(PROCESS_SCHEDULE_EXCEPTION, "State Directory is empty");
     }
-    bookmark_ = std::make_unique<Bookmark>(wstrChannel_, wstrQuery_, bookmarkDir, getUUID(), processOldEvents, state_manager_, logger_);
+    bookmark_ = std::make_unique<Bookmark>(path_, wstr_query_, bookmarkDir, getUUID(), processOldEvents, state_manager_, logger_);
     if (!*bookmark_) {
       bookmark_.reset();
       throw Exception(PROCESS_SCHEDULE_EXCEPTION, "Bookmark is empty");
@@ -396,14 +416,14 @@ void ConsumeWindowsEventLog::onTrigger(const std::shared_ptr<core::ProcessContex
     logger_->log_debug("processed %zu Events in %"  PRId64 " ms", processed_event_count, time_diff());
   });
 
-  wel::unique_evt_handle event_query_results{EvtQuery(nullptr, wstrChannel_.c_str(), wstrQuery_.c_str(), EvtQueryChannelPath)};
+  wel::unique_evt_handle event_query_results{EvtQuery(nullptr, path_.value.c_str(), wstr_query_.c_str(), path_.getQueryFlags())};
   if (!event_query_results) {
     LOG_LAST_ERROR(EvtQuery);
     context->yield();
     return;
   }
 
-  logger_->log_trace("Retrieved results in Channel: %ls with Query: %ls", wstrChannel_.c_str(), wstrQuery_.c_str());
+  logger_->log_trace("Retrieved results in Channel: %ls with Query: %ls", path_.value.c_str(), wstr_query_.c_str());
 
   auto bookmark_handle = bookmark_->getBookmarkHandleFromXML();
   if (!bookmark_handle) {

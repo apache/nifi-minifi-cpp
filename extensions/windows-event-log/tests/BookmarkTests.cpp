@@ -42,7 +42,7 @@ std::unique_ptr<Bookmark> createBookmark(TestPlan &test_plan,
                                          const utils::Identifier &uuid,
                                          core::StateManager* state_manager) {
   const auto logger = test_plan.getLogger();
-  return std::make_unique<Bookmark>(channel, L"*", "", uuid, false, state_manager, logger);
+  return std::make_unique<Bookmark>(minifi::wel::EventPath::Channel(channel), L"*", "", uuid, false, state_manager, logger);
 }
 
 void reportEvent(const std::wstring& channel, const char* message) {

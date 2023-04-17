@@ -39,6 +39,7 @@
 #include "core/ProcessSession.h"
 #include "utils/OsUtils.h"
 #include "wel/WindowsEventLog.h"
+#include "wel/EventPath.h"
 #include "FlowFileRecord.h"
 #include "concurrentqueue.h"
 #include "pugixml.hpp"
@@ -66,6 +67,7 @@ class ConsumeWindowsEventLog : public core::Processor {
   EXTENSIONAPI static constexpr const char* Description = "Windows Event Log Subscribe Callback to receive FlowFiles from Events on Windows.";
 
   EXTENSIONAPI static const core::Property Channel;
+  EXTENSIONAPI static const core::Property LogFilePath;
   EXTENSIONAPI static const core::Property Query;
   EXTENSIONAPI static const core::Property MaxBufferSize;
   EXTENSIONAPI static const core::Property InactiveDurationToReconnect;
@@ -83,6 +85,7 @@ class ConsumeWindowsEventLog : public core::Processor {
   static auto properties() {
     return std::array{
         Channel,
+        LogFilePath,
         Query,
         MaxBufferSize,
         InactiveDurationToReconnect,
@@ -146,9 +149,8 @@ class ConsumeWindowsEventLog : public core::Processor {
   core::StateManager* state_manager_{nullptr};
   wel::METADATA_NAMES header_names_;
   std::optional<std::string> header_delimiter_;
-  std::string channel_;
-  std::wstring wstrChannel_;
-  std::wstring wstrQuery_;
+  wel::EventPath path_;
+  std::wstring wstr_query_;
   std::optional<utils::Regex> regex_;
   bool resolve_as_attributes_{false};
   bool apply_identifier_function_{false};
