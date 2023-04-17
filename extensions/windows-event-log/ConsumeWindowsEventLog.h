@@ -127,14 +127,6 @@ class ConsumeWindowsEventLog : public core::Processor {
 
   nonstd::expected<std::string, std::string> renderEventAsXml(EVT_HANDLE event_handle);
 
-  static constexpr const char* XML = "XML";
-  static constexpr const char* Both = "Both";
-  static constexpr const char* Plaintext = "Plaintext";
-  static constexpr const char* JSON = "JSON";
-  static constexpr const char* JSONRaw = "Raw";
-  static constexpr const char* JSONSimple = "Simple";
-  static constexpr const char* JSONFlattened = "Flattened";
-
   struct TimeDiff {
     auto operator()() const {
       return int64_t{ std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::steady_clock::now() - time_).count() };
@@ -167,23 +159,21 @@ class ConsumeWindowsEventLog : public core::Processor {
   uint64_t batch_commit_size_{};
   bool cache_sid_lookups_ = true;
 
-  SMART_ENUM(JSONType,
-      (None, "None"),
-      (Raw, "Raw"),
-      (Simple, "Simple"),
-      (Flattened, "Flattened"))
+  SMART_ENUM(OutputFormatT,
+    (XML, "XML"),
+    (BOTH, "Both"),
+    (PLAINTEXT, "Plaintext"),
+    (JSON, "JSON")
+  );
 
-  struct OutputFormat {
-    bool xml{false};
-    bool plaintext{false};
-    struct JSON {
-      JSONType type{JSONType::None};
+  SMART_ENUM(JsonFormatT,
+    (RAW, "Raw"),
+    (SIMPLE, "Simple"),
+    (FLATTENED, "Flattened")
+  );
 
-      explicit operator bool() const noexcept {
-        return type != JSONType::None;
-      }
-    } json;
-  } output_;
+  OutputFormatT output_format_;
+  JsonFormatT json_format_;
 
   std::unique_ptr<Bookmark> bookmark_;
   std::mutex on_trigger_mutex_;
