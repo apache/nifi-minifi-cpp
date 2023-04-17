@@ -207,17 +207,6 @@ class ConstrainedProperty : public std::enable_shared_from_this<ConstrainedPrope
   friend class PropertyBuilder;
 };
 
-struct ConfigurationProperty {
-  explicit ConfigurationProperty(std::string_view name,
-      gsl::not_null<PropertyValidator*> validator = gsl::make_not_null(StandardValidators::get().VALID_VALIDATOR.get()))
-    : name(name),
-      validator(validator) {
-  }
-
-  std::string_view name;
-  gsl::not_null<PropertyValidator*> validator;
-};
-
 }  // namespace core
 }  // namespace minifi
 }  // namespace nifi

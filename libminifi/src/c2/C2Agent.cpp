@@ -179,17 +179,18 @@ void C2Agent::configure(const std::shared_ptr<Configure> &configure, bool reconf
     try {
       if (auto heartbeat_period_ms = utils::timeutils::StringToDuration<std::chrono::milliseconds>(heartbeat_period)) {
         heart_beat_period_ = *heartbeat_period_ms;
-        logger_->log_debug("Using %u ms as the heartbeat period", heart_beat_period_.count());
       } else {
         heart_beat_period_ = std::chrono::milliseconds(std::stoi(heartbeat_period));
       }
     } catch (const std::invalid_argument &) {
+      logger_->log_error("Invalid heartbeat period: %s", heartbeat_period);
       heart_beat_period_ = 3s;
     }
   } else {
     if (!reconfigure)
       heart_beat_period_ = 3s;
   }
+  logger_->log_debug("Using %" PRId64 " ms as the heartbeat period", heart_beat_period_.count());
 
   std::string heartbeat_reporters;
   if (configure->get(Configuration::nifi_c2_agent_heartbeat_reporter_classes, "c2.agent.heartbeat.reporter.classes", heartbeat_reporters)) {

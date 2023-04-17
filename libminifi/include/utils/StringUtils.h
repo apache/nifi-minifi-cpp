@@ -35,6 +35,9 @@
 #include "utils/FailurePolicy.h"
 #include "utils/gsl.h"
 #include "utils/meta/detected.h"
+#include "range/v3/view/transform.hpp"
+#include "range/v3/range/conversion.hpp"
+#include "range/v3/view/join.hpp"
 
 // libc++ doesn't define operator<=> on strings, and apparently the operator rewrite rules don't automagically make one
 #if defined(_LIBCPP_VERSION) && _LIBCPP_VERSION < 16000
@@ -44,10 +47,6 @@ constexpr std::strong_ordering operator<=>(const std::string& lhs, const std::st
   return lhs.compare(rhs) <=> 0;
 }
 #endif
-
-#include "range/v3/view/transform.hpp"
-#include "range/v3/view/join.hpp"
-#include "range/v3/range/conversion.hpp"
 
 namespace org::apache::nifi::minifi::utils {
 
@@ -88,7 +87,17 @@ class StringUtils {
    */
   static std::optional<bool> toBool(const std::string& input);
 
-  static std::string toLower(std::string_view str);
+  static inline std::string toLower(std::string str) {
+    const auto tolower = [](auto c) { return std::tolower(static_cast<unsigned char>(c)); };
+    std::transform(std::begin(str), std::end(str), std::begin(str), tolower);
+    return str;
+  }
+
+  static inline std::string toUpper(std::string str)  {
+    const auto toupper = [](auto c) { return std::toupper(static_cast<unsigned char>(c)); };
+    std::transform(std::begin(str), std::end(str), std::begin(str), toupper);
+    return str;
+  }
 
   /**
    * Strips the line ending (\n or \r\n) from the end of the input line.
@@ -480,7 +489,7 @@ class StringUtils {
    */
   static bool matchesSequence(std::string_view str, const std::vector<std::string>& patterns);
 
- private:
+  static bool splitToValueAndUnit(std::string_view input, int64_t& value, std::string& unit);
 };
 
 }  // namespace org::apache::nifi::minifi::utils

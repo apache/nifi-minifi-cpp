@@ -18,7 +18,9 @@
 #include "core/state/nodes/SupportedOperations.h"
 #include "core/PropertyBuilder.h"
 #include "core/Resource.h"
-#include "range/v3/algorithm/find.hpp"
+#include "range/v3/algorithm/contains.hpp"
+#include "range/v3/view/filter.hpp"
+#include "range/v3/view/view.hpp"
 
 namespace org::apache::nifi::minifi::state::response {
 
@@ -65,22 +67,23 @@ void SupportedOperations::addProperty(SerializedResponseNode& properties, const 
 
 SupportedOperations::Metadata SupportedOperations::buildUpdatePropertiesMetadata() const {
   std::vector<std::unordered_map<std::string, std::string>> supported_config_updates;
-  for (const auto& config_property : Configuration::CONFIGURATION_PROPERTIES) {
-    auto sensitive_properties = Configuration::getSensitiveProperties(configuration_reader_);
-    if (ranges::find(sensitive_properties, config_property.name) != ranges::end(sensitive_properties)) {
-      continue;
-    }
-    if (!update_policy_controller_ || update_policy_controller_->canUpdate(std::string(config_property.name))) {
-      std::unordered_map<std::string, std::string> property;
-      property.emplace("propertyName", config_property.name);
-      property.emplace("validator", config_property.validator->getName());
-      if (configuration_reader_) {
-        if (auto property_value = configuration_reader_(std::string(config_property.name))) {
-          property.emplace("propertyValue", *property_value);
-        }
+  auto sensitive_properties = Configuration::getSensitiveProperties(configuration_reader_);
+  auto updatable_not_sensitive_configuration_properties = minifi::Configuration::CONFIGURATION_PROPERTIES | ranges::views::filter([&](const auto& configuration_property) {
+    const auto& configuration_property_name = configuration_property.first;
+    return !ranges::contains(sensitive_properties, configuration_property_name)
+        && (!update_policy_controller_ || update_policy_controller_->canUpdate(std::string(configuration_property_name)));
+  });
+
+  for (const auto& [config_property_name, config_property_validator] : updatable_not_sensitive_configuration_properties) {
+    std::unordered_map<std::string, std::string> property;
+    property.emplace("propertyName", config_property_name);
+    property.emplace("validator", config_property_validator->getName());
+    if (configuration_reader_) {
+      if (auto property_value = configuration_reader_(std::string(config_property_name))) {
+        property.emplace("propertyValue", *property_value);
       }
-      supported_config_updates.push_back(property);
     }
+    supported_config_updates.push_back(property);
   }
   Metadata available_properties;
   available_properties.emplace("availableProperties", supported_config_updates);

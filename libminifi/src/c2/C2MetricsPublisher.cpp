@@ -165,9 +165,11 @@ std::optional<state::response::NodeReporter::ReportedNode> C2MetricsPublisher::g
 
 std::vector<state::response::NodeReporter::ReportedNode> C2MetricsPublisher::getHeartbeatNodes(bool include_manifest) const {
   gsl_Expects(configuration_);
-  std::string fullHb{"true"};
-  configuration_->get(minifi::Configuration::nifi_c2_full_heartbeat, fullHb);
-  const bool include = include_manifest || fullHb == "true";
+  bool full_heartbeat = configuration_->get(minifi::Configuration::nifi_c2_full_heartbeat)
+      | utils::flatMap(utils::StringUtils::toBool)
+      | utils::valueOrElse([] {return true;});
+
+  bool include = include_manifest || full_heartbeat;
 
   std::vector<state::response::NodeReporter::ReportedNode> reported_nodes;
   std::lock_guard<std::mutex> guard{metrics_mutex_};

@@ -18,6 +18,7 @@
 #pragma once
 
 #include <vector>
+#include <unordered_map>
 #include <string>
 
 #include "properties/Properties.h"
@@ -27,7 +28,7 @@
 namespace org::apache::nifi::minifi {
 
 namespace core {
-  struct ConfigurationProperty;
+class PropertyValidator;
 }
 
 class Configuration : public Properties {
@@ -191,7 +192,7 @@ class Configuration : public Properties {
   static constexpr const char *controller_socket_port = "controller.socket.port";
   static constexpr const char *controller_ssl_context_service = "controller.ssl.context.service";
 
-  MINIFIAPI static const std::vector<core::ConfigurationProperty> CONFIGURATION_PROPERTIES;
+  MINIFIAPI static const std::unordered_map<std::string_view, gsl::not_null<core::PropertyValidator*>> CONFIGURATION_PROPERTIES;
   MINIFIAPI static const std::array<const char*, 2> DEFAULT_SENSITIVE_PROPERTIES;
 
   static std::vector<std::string> mergeProperties(std::vector<std::string> properties,

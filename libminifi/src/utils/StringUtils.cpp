@@ -16,17 +16,13 @@
  */
 
 #include <limits>
-
-#include "range/v3/view/transform.hpp"
-#include "range/v3/range/conversion.hpp"
+#include <charconv>
 
 #include "utils/Environment.h"
 #include "utils/GeneralUtils.h"
 #include "utils/StringUtils.h"
 
 namespace org::apache::nifi::minifi::utils {
-
-namespace views = ranges::views;
 
 std::optional<bool> StringUtils::toBool(const std::string& input) {
   std::string trimmed = trim(input);
@@ -37,11 +33,6 @@ std::optional<bool> StringUtils::toBool(const std::string& input) {
     return false;
   }
   return std::nullopt;
-}
-
-std::string StringUtils::toLower(std::string_view str) {
-  const auto tolower = [](auto c) { return std::tolower(static_cast<unsigned char>(c)); };
-  return str | views::transform(tolower) | ranges::to<std::string>();
 }
 
 std::pair<std::string, std::string> StringUtils::chomp(const std::string& input_line) {
@@ -507,6 +498,22 @@ bool StringUtils::matchesSequence(std::string_view str, const std::vector<std::s
     pos += pattern.size();
   }
 
+  return true;
+}
+
+bool StringUtils::splitToValueAndUnit(std::string_view input, int64_t& value, std::string& unit) {
+  const char* begin = input.data();
+  const char* end = begin + input.size();
+  auto [ptr, ec] = std::from_chars(begin, end, value);
+  if (ptr == begin || ec != std::errc()) {
+    return false;
+  }
+
+  while (ptr != end && *ptr == ' ') {
+    // Skip the spaces
+    ptr++;
+  }
+  unit = std::string(ptr, end);
   return true;
 }
 

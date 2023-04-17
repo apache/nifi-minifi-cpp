@@ -556,4 +556,42 @@ TEST_CASE("StringUtils::matchesSequence works correctly", "[matchesSequence]") {
   REQUIRE(!StringUtils::matchesSequence("xxxabcxxxdefxxx", {"abc", "abc", "def"}));
 }
 
+TEST_CASE("StringUtils::toLower and toUpper tests") {
+  CHECK(StringUtils::toUpper("Lorem ipsum dolor sit amet") == "LOREM IPSUM DOLOR SIT AMET");
+  CHECK(StringUtils::toLower("Lorem ipsum dolor sit amet") == "lorem ipsum dolor sit amet");
+
+  CHECK(StringUtils::toUpper("SuSpenDISse") == "SUSPENDISSE");
+  CHECK(StringUtils::toLower("SuSpenDISse") == "suspendisse");
+}
+
+TEST_CASE("StringUtils::splitToValueAndUnit tests") {
+  int64_t value;
+  std::string unit_str;
+  SECTION("Simple case") {
+    CHECK(StringUtils::splitToValueAndUnit("1 horse", value, unit_str));
+    CHECK(value == 1);
+    CHECK(unit_str == "horse");
+  }
+
+  SECTION("Without whitespace") {
+    CHECK(StringUtils::splitToValueAndUnit("112KiB", value, unit_str));
+    CHECK(value == 112);
+    CHECK(unit_str == "KiB");
+  }
+
+  SECTION("Additional whitespace in the middle") {
+    CHECK(StringUtils::splitToValueAndUnit("100    hOrSe", value, unit_str));
+    CHECK(value == 100);
+    CHECK(unit_str == "hOrSe");
+  }
+
+  SECTION("Invalid value") {
+    CHECK_FALSE(StringUtils::splitToValueAndUnit("one horse", value, unit_str));
+  }
+
+  SECTION("Empty string") {
+    CHECK_FALSE(StringUtils::splitToValueAndUnit("", value, unit_str));
+  }
+}
+
 // NOLINTEND(readability-container-size-empty)

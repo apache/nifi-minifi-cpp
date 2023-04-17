@@ -231,8 +231,6 @@ int main(int argc, char **argv) {
       return -1;
     }
 
-    uint16_t stop_wait_time = STOP_WAIT_TIME_MS;
-
     std::string graceful_shutdown_seconds;
     std::string prov_repo_class = "provenancerepository";
     std::string flow_repo_class = "flowfilerepository";
@@ -241,7 +239,8 @@ int main(int argc, char **argv) {
 
     auto log_properties = std::make_shared<core::logging::LoggerProperties>();
     log_properties->setHome(minifiHome);
-    log_properties->loadConfigureFile(DEFAULT_LOG_PROPERTIES_FILE);
+    log_properties->loadConfigureFile(DEFAULT_LOG_PROPERTIES_FILE, "nifi.log.");
+
     core::logging::LoggerConfiguration::getConfiguration().initialize(log_properties);
 
     std::shared_ptr<minifi::Properties> uid_properties = std::make_shared<minifi::Properties>("UID properties");
@@ -308,20 +307,10 @@ int main(int argc, char **argv) {
       std::exit(0);
     }
 
-    if (configure->get(minifi::Configure::nifi_graceful_shutdown_seconds, graceful_shutdown_seconds)) {
-      try {
-        stop_wait_time = std::stoi(graceful_shutdown_seconds);
-      }
-      catch (const std::out_of_range& e) {
-        logger->log_error("%s is out of range. %s", minifi::Configure::nifi_graceful_shutdown_seconds, e.what());
-      }
-      catch (const std::invalid_argument& e) {
-        logger->log_error("%s contains an invalid argument set. %s", minifi::Configure::nifi_graceful_shutdown_seconds, e.what());
-      }
-    } else {
-      logger->log_debug("%s not set, defaulting to %d", minifi::Configure::nifi_graceful_shutdown_seconds,
-          STOP_WAIT_TIME_MS);
-    }
+    std::chrono::milliseconds stop_wait_time = configure->get(minifi::Configure::nifi_graceful_shutdown_seconds)
+        | utils::flatMap(utils::timeutils::StringToDuration<std::chrono::milliseconds>)
+        | utils::valueOrElse([] { return std::chrono::milliseconds(STOP_WAIT_TIME_MS);});
+
 
     configure->get(minifi::Configure::nifi_provenance_repository_class_name, prov_repo_class);
     // Create repos for flow record and provenance
@@ -387,7 +376,10 @@ int main(int argc, char **argv) {
     const auto controller = std::make_unique<minifi::FlowController>(
       prov_repo, flow_repo, configure, std::move(flow_configuration), content_repo, std::move(metrics_publisher_store), filesystem, request_restart);
 
-    const bool disk_space_watchdog_enable = (configure->get(minifi::Configure::minifi_disk_space_watchdog_enable) | utils::map([](const std::string& v) { return v == "true"; })).value_or(true);
+    const bool disk_space_watchdog_enable = configure->get(minifi::Configure::minifi_disk_space_watchdog_enable)
+        | utils::flatMap(utils::StringUtils::toBool)
+        | utils::valueOrElse([] { return true; });
+
     std::unique_ptr<utils::CallBackTimer> disk_space_watchdog;
     if (disk_space_watchdog_enable) {
       try {

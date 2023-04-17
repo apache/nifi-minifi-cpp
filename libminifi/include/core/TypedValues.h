@@ -110,20 +110,23 @@ class DataSizeValue : public TransformableValue, public state::response::UInt64V
       : state::response::UInt64Value(0) {
   }
 
-
-  // Convert String to Integer
-  template<typename T, typename std::enable_if<
-      std::is_integral<T>::value>::type* = nullptr>
-  static bool StringToInt(const std::string &input, T &output) {
+  static std::optional<int64_t> getUnitMultiplier(std::string unit_str) {
     // TODO(adebreceni): this mapping is to preserve backwards compatibility,
     //  we should entertain the idea of moving to standardized units in
     //  the configuration (i.e. K = 1000, Ki = 1024)
     static std::map<std::string, int64_t> unit_map{
-      {"B", 1},
-      {"K", 1_KB}, {"M", 1_MB}, {"G", 1_GB}, {"T", 1_TB}, {"P", 1_PB},
-      {"KB", 1_KiB}, {"MB", 1_MiB}, {"GB", 1_GiB}, {"TB", 1_TiB}, {"PB", 1_PiB},
+        {"B", 1},
+        {"K", 1_KB}, {"M", 1_MB}, {"G", 1_GB}, {"T", 1_TB}, {"P", 1_PB},
+        {"KB", 1_KiB}, {"MB", 1_MiB}, {"GB", 1_GiB}, {"TB", 1_TiB}, {"PB", 1_PiB},
     };
+    unit_str = utils::StringUtils::toUpper(unit_str);
 
+    return unit_map.contains(unit_str) ? std::optional(unit_map.at(unit_str)) : std::nullopt;
+  }
+
+  // Convert String to Integer
+  template<std::integral T>
+  static bool StringToInt(const std::string &input, T &output) {
     int64_t value;
     std::string unit_str;
     try {
@@ -133,14 +136,11 @@ class DataSizeValue : public TransformableValue, public state::response::UInt64V
     }
 
     if (!unit_str.empty()) {
-      std::transform(unit_str.begin(), unit_str.end(), unit_str.begin(), ::toupper);
-      auto multiplierIt = unit_map.find(unit_str);
-      if (multiplierIt == unit_map.end()) {
+      if (auto unit_multiplier = getUnitMultiplier(unit_str)) {
+        value *= *unit_multiplier;
+      } else {
         getLogger()->log_warn("Unrecognized data unit: '%s', in the future this will constitute as an error", unit_str);
         // backwards compatibility
-        // return false;
-      } else {
-        value *= multiplierIt->second;
       }
     }
 

@@ -214,7 +214,7 @@ class TestFlowController : public org::apache::nifi::minifi::FlowController {
     return 0;
   }
 
-  void waitUnload(const uint64_t /*timeToWaitMs*/) override {
+  void waitUnload(const std::chrono::milliseconds /*time_to_wait*/) override {
     stop();
   }
 

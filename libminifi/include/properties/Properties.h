@@ -113,7 +113,7 @@ class Properties {
    * Load configure file
    * @param fileName path of the configuration file RELATIVE to MINIFI_HOME set by setHome()
    */
-  void loadConfigureFile(const std::filesystem::path& configuration_file);
+  void loadConfigureFile(const std::filesystem::path& configuration_file, std::string_view prefix = "");
 
   // Set the determined MINIFI_HOME
   void setHome(std::filesystem::path minifiHome) {

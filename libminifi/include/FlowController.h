@@ -115,7 +115,7 @@ class FlowController : public core::controller::ForwardingControllerServiceProvi
 
   int16_t applyUpdate(const std::string& /*source*/, const std::shared_ptr<state::Update>&) override { return -1; }
   // Asynchronous function trigger unloading and wait for a period of time
-  virtual void waitUnload(uint64_t timeToWaitMs);
+  virtual void waitUnload(const std::chrono::milliseconds time_to_wait);
   void updatePropertyValue(std::string processorName, std::string propertyName, std::string propertyValue) {
     root_wrapper_.updatePropertyValue(std::move(processorName), std::move(propertyName), std::move(propertyValue));
   }

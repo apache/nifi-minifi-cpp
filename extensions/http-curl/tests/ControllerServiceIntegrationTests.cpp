@@ -127,6 +127,6 @@ int main(int argc, char **argv) {
 //  }
 //  assert(verifyEventHappenedInPollTime(std::chrono::seconds(2), checkCsIdEnabledMatchesDisabledFlag));
 
-  controller->waitUnload(60000);
+  controller->waitUnload(60s);
   return 0;
 }
