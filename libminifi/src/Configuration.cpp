@@ -148,9 +148,9 @@ const std::unordered_map<std::string_view, gsl::not_null<core::PropertyValidator
   {Configuration::nifi_metrics_publisher_metrics, gsl::make_not_null(core::StandardValidators::get().VALID_VALIDATOR.get())},
   {Configuration::controller_socket_enable, gsl::make_not_null(core::StandardValidators::get().BOOLEAN_VALIDATOR.get())},
   {Configuration::controller_socket_local_any_interface, gsl::make_not_null(core::StandardValidators::get().BOOLEAN_VALIDATOR.get())},
-  {Configuration::controller_socket_host,gsl::make_not_null(core::StandardValidators::get().VALID_VALIDATOR.get())},
+  {Configuration::controller_socket_host, gsl::make_not_null(core::StandardValidators::get().VALID_VALIDATOR.get())},
   {Configuration::controller_socket_port, gsl::make_not_null(core::StandardValidators::get().PORT_VALIDATOR.get())},
-  {Configuration::controller_ssl_context_service,gsl::make_not_null(core::StandardValidators::get().VALID_VALIDATOR.get())}
+  {Configuration::controller_ssl_context_service, gsl::make_not_null(core::StandardValidators::get().VALID_VALIDATOR.get())}
 };
 
 const std::array<const char*, 2> Configuration::DEFAULT_SENSITIVE_PROPERTIES = {Configuration::nifi_security_client_pass_phrase,
