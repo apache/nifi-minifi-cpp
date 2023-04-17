@@ -30,6 +30,7 @@
 #include "Catch.h"
 #include "utils/TestUtils.h"
 #include "utils/file/FileUtils.h"
+#include "utils/gsl.h"
 
 core::Relationship Success{"success", "Everything is fine"};
 
@@ -94,3 +95,12 @@ class OutputFormatTestController : public TestController {
   std::string output_format_;
   std::optional<std::string> json_format_;
 };
+
+void generateLogFile(const std::wstring& channel, const std::filesystem::path& path) {
+  HANDLE event_log = OpenEventLog(NULL, std::string(channel.begin(), channel.end()).c_str());
+  auto guard = gsl::finally([&] {CloseEventLog(event_log);});
+
+  if (!EvtExportLog(NULL, channel.c_str(), L"*", path.wstring().c_str(), EvtExportLogChannelPath)) {
+    throw std::system_error{gsl::narrow<int>(GetLastError()), std::system_category(), "Failed to export logs"};
+  }
+}

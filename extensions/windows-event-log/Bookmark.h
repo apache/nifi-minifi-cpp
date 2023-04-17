@@ -29,6 +29,7 @@
 #include "wel/UniqueEvtHandle.h"
 #include "logging/Logger.h"
 #include "utils/expected.h"
+#include "wel/EventPath.h"
 
 namespace org::apache::nifi::minifi::processors {
 
@@ -36,7 +37,7 @@ namespace org::apache::nifi::minifi::processors {
 
 class Bookmark {
  public:
-  Bookmark(const std::wstring& channel,
+  Bookmark(const wel::EventPath& path,
       const std::wstring& query,
       const std::filesystem::path& bookmarkRootDir,
       const utils::Identifier& uuid,

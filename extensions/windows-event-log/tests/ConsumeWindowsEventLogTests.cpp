@@ -65,6 +65,28 @@ class SimpleFormatTestController : public OutputFormatTestController {
   }
 };
 
+class LogFileTestController : public OutputFormatTestController {
+ public:
+  LogFileTestController(): OutputFormatTestController("", "*", "JSON", "Simple") {
+    log_file_ = createTempDirectory() / "cwel-events.evtx";
+    channel_ = "SavedLog:" + log_file_.string();
+  }
+
+ protected:
+  void dispatchBookmarkEvent() override {
+    reportEvent(APPLICATION_CHANNEL, "Event zero from file: this is in the past");
+    generateLogFile(std::wstring{APPLICATION_CHANNEL.begin(), APPLICATION_CHANNEL.end()}, log_file_);
+  }
+  void dispatchCollectedEvent() override {
+    reportEvent(APPLICATION_CHANNEL, "Event one from file");
+    std::filesystem::remove(log_file_);
+    generateLogFile(std::wstring{APPLICATION_CHANNEL.begin(), APPLICATION_CHANNEL.end()}, log_file_);
+    reportEvent(APPLICATION_CHANNEL, "Event not processed after log file export");
+  }
+
+  std::filesystem::path log_file_;
+};
+
 }  // namespace
 
 TEST_CASE("ConsumeWindowsEventLog constructor works", "[create]") {
@@ -525,6 +547,25 @@ TEST_CASE("ConsumeWindowsEventLog Simple JSON works with UserData", "[cwel][json
     const auto expected_json = R"json({"Name":"Microsoft-Windows-AppLocker","Guid":"CBDA4DBF-8D5D-4F69-9578-BE14AA540D22","EventID":"8002","Version":"0","Level":"4","Task":"0","Opcode":"0","Keywords":"0x8000000000000000","SystemTime":"2023-02-06T16:58:09.008534Z","EventRecordID":"46","ProcessID":"1234","ThreadID":"1235","Channel":"Microsoft-Windows-AppLocker/EXE and DLL","Computer":"example.local","UserData.RuleAndFileData.PolicyNameLength":"3","UserData.RuleAndFileData.PolicyName":"EXE","UserData.RuleAndFileData.RuleNameLength":"9","UserData.RuleAndFileData.RuleName":"All files","UserData.RuleAndFileData.RuleSddlLength":"48","UserData.RuleAndFileData.RuleSddl":"D:(XA;;FX;;;S-1-1-0;(APPID://PATH Contains \"*\"))","UserData.RuleAndFileData.TargetUser":"S-1-1-0","UserData.RuleAndFileData.TargetProcessId":"1234","UserData.RuleAndFileData.FilePathLength":"22","UserData.RuleAndFileData.FilePath":"%SYSTEM32%\\CSCRIPT.EXE","UserData.RuleAndFileData.FileHashLength":"0","UserData.RuleAndFileData.FileHash":"","UserData.RuleAndFileData.FqbnLength":"1","UserData.RuleAndFileData.Fqbn":"-","UserData.RuleAndFileData.Parent.foo":"bar","UserData.RuleAndFileData.Parent.Child":"","UserData.RuleAndFileData.Leaf":"","UserData.RuleAndFileData.AltLeaf":""})json";  // NOLINT(whitespace/line_length): long raw string, impractical to split
     CHECK(expected_json == flattened_json);
   }
+}
+
+TEST_CASE("ConsumeWindowsEventLog can process events from a log file", "[cwel][logfile]") {
+  std::string event = LogFileTestController{}.run();
+  utils::verifyJSON(event, R"json(
+    {
+      "System": {
+        "Provider": {
+          "Name": "Application"
+        },
+        "Channel": "Application"
+      },
+      "EventData": [{
+          "Type": "Data",
+          "Content": "Event one from file",
+          "Name": ""
+      }]
+    }
+  )json");
 }
 
 }  // namespace org::apache::nifi::minifi::test

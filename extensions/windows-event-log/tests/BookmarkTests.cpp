@@ -24,6 +24,7 @@
 #include "Catch.h"
 #include "utils/gsl.h"
 #include "wel/UniqueEvtHandle.h"
+#include "CWELTestUtils.h"
 
 using Bookmark = org::apache::nifi::minifi::processors::Bookmark;
 using unique_evt_handle = org::apache::nifi::minifi::wel::unique_evt_handle;
@@ -42,7 +43,8 @@ std::unique_ptr<Bookmark> createBookmark(TestPlan &test_plan,
                                          const utils::Identifier &uuid,
                                          core::StateManager* state_manager) {
   const auto logger = test_plan.getLogger();
-  return std::make_unique<Bookmark>(channel, L"*", "", uuid, false, state_manager, logger);
+
+  return std::make_unique<Bookmark>(minifi::wel::EventPath{channel}, L"*", "", uuid, false, state_manager, logger);
 }
 
 void reportEvent(const std::wstring& channel, const char* message) {
@@ -112,6 +114,32 @@ TEST_CASE("Bookmark constructor works", "[create]") {
                       L"  <Bookmark Channel='Application' RecordId='\\d+' IsCurrent='true'/>\r\n"
                       L"</BookmarkList>"};
   REQUIRE(std::regex_match(bookmarkAsXml(bookmark), pattern));
+}
+
+TEST_CASE("Bookmark constructor works for log file path", "[create]") {
+  TestController test_controller;
+  std::filesystem::path log_file = test_controller.createTempDirectory() / "events.evtx";
+  std::shared_ptr<TestPlan> test_plan = test_controller.createPlan();
+  LogTestController::getInstance().setTrace<TestPlan>();
+
+  reportEvent(APPLICATION_CHANNEL, "Publish an event to make sure the event log is not empty");
+  generateLogFile(APPLICATION_CHANNEL, log_file);
+
+
+  const utils::Identifier uuid = IdGenerator::getIdGenerator()->generate();
+  auto state_manager = test_plan->getStateStorage()->getStateManager(uuid);
+  std::unique_ptr<Bookmark> bookmark = createBookmark(*test_plan, L"SavedLog:" + log_file.wstring(), uuid, state_manager.get());
+  REQUIRE(bookmark);
+  REQUIRE(*bookmark);
+
+  std::string log_file_str = log_file.string();
+  utils::StringUtils::replaceAll(log_file_str, "\\", "\\\\");
+
+  std::wstring pattern{L"<BookmarkList Direction='backward'>\r\n"};
+  pattern += L"  <Bookmark Channel='" + std::wstring(log_file_str.begin(), log_file_str.end()) + L"' RecordId='\\d+' IsCurrent='true'/>\r\n";
+  pattern += L"</BookmarkList>";
+
+  REQUIRE(std::regex_match(bookmarkAsXml(bookmark), std::wregex{pattern}));
 }
 
 TEST_CASE("Bookmark is restored from the state", "[create][state]") {
