@@ -268,7 +268,7 @@ void ConsumeWindowsEventLog::onSchedule(const std::shared_ptr<core::ProcessConte
   }
 
   output_format_ = utils::parseEnumProperty<OutputFormatT>(*context, OutputFormat);
-  json_format_ = utils::parseEnumProperty<JsonFormatT>(*context, JsonFormat);
+  json_format_ = utils::parseEnumProperty<JsonFormatT>(*context, JSONFormat);
 
   if (output_format_ != OutputFormatT::PLAINTEXT && !hMsobjsDll_) {
     char systemDir[MAX_PATH];
