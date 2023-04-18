@@ -42,8 +42,12 @@ add_custom_target(
              -DENABLE_AWS=ON
              -DENABLE_AZURE=ON
              -DDISABLE_CONTROLLER=ON
+             -DENABLE_PROMETHEUS=ON
+             -DENABLE_MQTT=OFF
+             -DENABLE_ELASTICSEARCH=OFF
              -DENABLE_LUA_SCRIPTING=OFF
              -DENABLE_PYTHON_SCRIPTING=OFF
+	     -DENABLE_OPC=OFF
              -DENABLE_ENCRYPT_CONFIG=OFF \"
         -c DOCKER_BASE_IMAGE=${DOCKER_BASE_IMAGE}
         -c DOCKER_SKIP_TESTS=${DOCKER_SKIP_TESTS}
