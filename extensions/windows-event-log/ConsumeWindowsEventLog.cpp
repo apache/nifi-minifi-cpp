@@ -138,19 +138,19 @@ const core::Property ConsumeWindowsEventLog::EventHeader(
       "EVENTID,TASK_CATEGORY,LEVEL,KEYWORDS,USER,COMPUTER, and EVENT_TYPE. Eliminating fields will remove them from the header.")->
   build());
 
-const core::Property ConsumeWindowsEventLog::OutputFormat(
+const core::Property ConsumeWindowsEventLog::OutputFormatProperty(
   core::PropertyBuilder::createProperty("Output Format")->
   isRequired(true)->
-  withDefaultValue(toString(OutputFormatT::BOTH))->
-  withAllowableValues(OutputFormatT::values())->
+  withDefaultValue(toString(OutputFormat::BOTH))->
+  withAllowableValues(OutputFormat::values())->
   withDescription("Set the output format type. In case \'Both\' is selected the processor generates two flow files for every event captured in format XML and Plaintext")->
   build());
 
-const core::Property ConsumeWindowsEventLog::JSONFormat(
+const core::Property ConsumeWindowsEventLog::JsonFormatProperty(
   core::PropertyBuilder::createProperty("JSON Format")->
   isRequired(true)->
-  withDefaultValue(toString(JsonFormatT::SIMPLE))->
-  withAllowableValues(JsonFormatT::values())->
+  withDefaultValue(toString(JsonFormat::SIMPLE))->
+  withAllowableValues(JsonFormat::values())->
   withDescription("Set the json format type. Only applicable if Output Format is set to 'JSON'")->
   build());
 
@@ -267,10 +267,10 @@ void ConsumeWindowsEventLog::onSchedule(const std::shared_ptr<core::ProcessConte
     regex_.emplace(*identifier_matcher);
   }
 
-  output_format_ = utils::parseEnumProperty<OutputFormatT>(*context, OutputFormat);
-  json_format_ = utils::parseEnumProperty<JsonFormatT>(*context, JSONFormat);
+  output_format_ = utils::parseEnumProperty<OutputFormat>(*context, OutputFormatProperty);
+  json_format_ = utils::parseEnumProperty<JsonFormat>(*context, JsonFormatProperty);
 
-  if (output_format_ != OutputFormatT::PLAINTEXT && !hMsobjsDll_) {
+  if (output_format_ != OutputFormat::PLAINTEXT && !hMsobjsDll_) {
     char systemDir[MAX_PATH];
     if (GetSystemDirectory(systemDir, sizeof(systemDir))) {
       hMsobjsDll_ = LoadLibrary((systemDir + std::string("\\msobjs.dll")).c_str());
@@ -588,7 +588,7 @@ nonstd::expected<EventRender, std::string> ConsumeWindowsEventLog::createEventRe
 
   logger_->log_trace("Finish doc traversing, performing writing...");
 
-  if (output_format_ == OutputFormatT::PLAINTEXT || output_format_ == OutputFormatT::BOTH) {
+  if (output_format_ == OutputFormat::PLAINTEXT || output_format_ == OutputFormat::BOTH) {
     logger_->log_trace("Writing event in plain text");
 
     auto& handler = getEventLogHandler(provider_name);
@@ -614,7 +614,7 @@ nonstd::expected<EventRender, std::string> ConsumeWindowsEventLog::createEventRe
     logger_->log_trace("Finish writing in plain text");
   }
 
-  if (output_format_ != OutputFormatT::PLAINTEXT) {
+  if (output_format_ != OutputFormat::PLAINTEXT) {
     substituteXMLPercentageItems(doc);
     logger_->log_trace("Finish substituting %% in XML");
   }
@@ -623,7 +623,7 @@ nonstd::expected<EventRender, std::string> ConsumeWindowsEventLog::createEventRe
     result.matched_fields = walker.getFieldValues();
   }
 
-  if (output_format_ == OutputFormatT::XML || output_format_ == OutputFormatT::BOTH) {
+  if (output_format_ == OutputFormat::XML || output_format_ == OutputFormat::BOTH) {
     logger_->log_trace("Writing event in XML");
 
     wel::XmlString writer;
@@ -634,21 +634,21 @@ nonstd::expected<EventRender, std::string> ConsumeWindowsEventLog::createEventRe
     logger_->log_trace("Finish writing in XML");
   }
 
-  if (output_format_ == OutputFormatT::JSON) {
+  if (output_format_ == OutputFormat::JSON) {
     switch (json_format_.value()) {
-      case JsonFormatT::RAW: {
+      case JsonFormat::RAW: {
         logger_->log_trace("Writing event in raw JSON");
         result.json = wel::jsonToString(wel::toRawJSON(doc));
         logger_->log_trace("Finish writing in raw JSON");
         break;
       }
-      case JsonFormatT::SIMPLE: {
+      case JsonFormat::SIMPLE: {
         logger_->log_trace("Writing event in simple JSON");
         result.json = wel::jsonToString(wel::toSimpleJSON(doc));
         logger_->log_trace("Finish writing in simple JSON");
         break;
       }
-      case JsonFormatT::FLATTENED: {
+      case JsonFormat::FLATTENED: {
         logger_->log_trace("Writing event in flattened JSON");
         result.json = wel::jsonToString(wel::toFlattenedJSON(doc));
         logger_->log_trace("Finish writing in flattened JSON");
@@ -710,17 +710,17 @@ void ConsumeWindowsEventLog::putEventRenderFlowFileToSession(const EventRender& 
     session.transfer(flow_file, Success);
   };
 
-  if (output_format_ == OutputFormatT::XML || output_format_ == OutputFormatT::BOTH) {
+  if (output_format_ == OutputFormat::XML || output_format_ == OutputFormat::BOTH) {
     logger_->log_trace("Writing rendered XML to a flow file");
     commitFlowFile(eventRender.xml, "application/xml");
   }
 
-  if (output_format_ == OutputFormatT::PLAINTEXT || output_format_ == OutputFormatT::BOTH) {
+  if (output_format_ == OutputFormat::PLAINTEXT || output_format_ == OutputFormat::BOTH) {
     logger_->log_trace("Writing rendered plain text to a flow file");
     commitFlowFile(eventRender.plaintext, "text/plain");
   }
 
-  if (output_format_ == OutputFormatT::JSON) {
+  if (output_format_ == OutputFormat::JSON) {
     logger_->log_trace("Writing rendered %s JSON to a flow file", json_format_.toString());
     commitFlowFile(eventRender.json, "application/json");
   }

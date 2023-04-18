@@ -74,8 +74,8 @@ class ConsumeWindowsEventLog : public core::Processor {
   EXTENSIONAPI static const core::Property ResolveAsAttributes;
   EXTENSIONAPI static const core::Property EventHeaderDelimiter;
   EXTENSIONAPI static const core::Property EventHeader;
-  EXTENSIONAPI static const core::Property OutputFormat;
-  EXTENSIONAPI static const core::Property JSONFormat;
+  EXTENSIONAPI static const core::Property OutputFormatProperty;
+  EXTENSIONAPI static const core::Property JsonFormatProperty;
   EXTENSIONAPI static const core::Property BatchCommitSize;
   EXTENSIONAPI static const core::Property BookmarkRootDirectory;
   EXTENSIONAPI static const core::Property ProcessOldEvents;
@@ -91,8 +91,8 @@ class ConsumeWindowsEventLog : public core::Processor {
         ResolveAsAttributes,
         EventHeaderDelimiter,
         EventHeader,
-        OutputFormat,
-        JSONFormat,
+        OutputFormatProperty,
+        JsonFormatProperty,
         BatchCommitSize,
         BookmarkRootDirectory,
         ProcessOldEvents,
@@ -159,21 +159,21 @@ class ConsumeWindowsEventLog : public core::Processor {
   uint64_t batch_commit_size_{};
   bool cache_sid_lookups_ = true;
 
-  SMART_ENUM(OutputFormatT,
+  SMART_ENUM(OutputFormat,
     (XML, "XML"),
     (BOTH, "Both"),
     (PLAINTEXT, "Plaintext"),
     (JSON, "JSON")
   )
 
-  SMART_ENUM(JsonFormatT,
+  SMART_ENUM(JsonFormat,
     (RAW, "Raw"),
     (SIMPLE, "Simple"),
     (FLATTENED, "Flattened")
   )
 
-  OutputFormatT output_format_;
-  JsonFormatT json_format_;
+  OutputFormat output_format_;
+  JsonFormat json_format_;
 
   std::unique_ptr<Bookmark> bookmark_;
   std::mutex on_trigger_mutex_;
