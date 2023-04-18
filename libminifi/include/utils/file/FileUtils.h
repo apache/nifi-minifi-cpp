@@ -83,8 +83,6 @@ namespace org::apache::nifi::minifi::utils::file {
 
 namespace FileUtils = ::org::apache::nifi::minifi::utils::file;
 
-time_t to_time_t(std::filesystem::file_time_type time);
-
 std::chrono::system_clock::time_point to_sys(std::filesystem::file_time_type file_time);
 
 std::filesystem::file_time_type from_sys(std::chrono::system_clock::time_point sys_time);
@@ -126,19 +124,6 @@ inline std::optional<std::filesystem::file_time_type> last_write_time(const std:
     return result;
   }
   return std::nullopt;
-}
-
-inline std::optional<std::string> format_time(const std::filesystem::file_time_type& time, const std::string& format) {
-  auto last_write_time_t = to_time_t(time);
-  std::array<char, 128U> result{};
-  if (std::strftime(result.data(), result.size(), format.c_str(), gmtime(&last_write_time_t)) != 0) {
-    return std::string(result.data());
-  }
-  return std::nullopt;
-}
-
-inline std::optional<std::string> get_last_modified_time_formatted_string(const std::filesystem::path& path, const std::string& format_string) {
-  return utils::file::last_write_time(path) | utils::flatMap([format_string](auto time) { return format_time(time, format_string); });
 }
 
 inline bool set_last_write_time(const std::filesystem::path& path, std::filesystem::file_time_type new_time) {

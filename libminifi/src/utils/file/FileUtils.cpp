@@ -66,14 +66,6 @@ bool contains(const std::filesystem::path& file_path, std::string_view text_to_s
   return std::search(view.begin(), view.end(), searcher) != view.end();
 }
 
-time_t to_time_t(std::filesystem::file_time_type file_time) {
-#if defined(_LIBCPP_VERSION) && _LIBCPP_VERSION < 14000
-  return std::chrono::file_clock::to_time_t(file_time);
-#else
-  return std::chrono::system_clock::to_time_t(to_sys(file_time));
-#endif
-}
-
 std::chrono::system_clock::time_point to_sys(std::filesystem::file_time_type file_time) {
   using namespace std::chrono;  // NOLINT(build/namespaces)
 #if defined(WIN32) || (defined(_LIBCPP_VERSION) && (_LIBCPP_VERSION < 14000))
