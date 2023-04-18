@@ -128,8 +128,11 @@ class JniByteInputStream {
     return read;
   }
 
-  int64_t read(uint8_t &arr) const {
-    return gsl::narrow<int64_t>(stream_->read(arr));
+  int64_t read(uint8_t& value) const {
+    auto read_result = stream_->read(value);
+    if (io::isError(read_result))
+      return -1;
+    return gsl::narrow<int64_t>(read_result);
   }
 
   std::shared_ptr<minifi::io::InputStream> stream_;
@@ -153,9 +156,9 @@ class JniInputStream : public core::WeakReference {
     }
   }
 
-  int64_t read(uint8_t &arr) {
+  int64_t read(uint8_t& value) {
     if (!removed_) {
-      return jbi_->read(arr);
+      return jbi_->read(value);
     }
     return -1;
   }
