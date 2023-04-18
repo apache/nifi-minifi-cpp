@@ -95,7 +95,7 @@ TEST_CASE("ConsumeWindowsEventLog properties work with default values", "[create
     ConsumeWindowsEventLog::IdentifierFunction,
     ConsumeWindowsEventLog::ResolveAsAttributes,
     ConsumeWindowsEventLog::EventHeader,
-    ConsumeWindowsEventLog::OutputFormat,
+    ConsumeWindowsEventLog::OutputFormatProperty,
     ConsumeWindowsEventLog::BatchCommitSize,
     ConsumeWindowsEventLog::BookmarkRootDirectory,  // TODO(fgerlits): obsolete, see definition; remove in a later release
     ConsumeWindowsEventLog::ProcessOldEvents,
@@ -241,15 +241,15 @@ TEST_CASE("ConsumeWindowsEventLog extracts some attributes by default", "[onTrig
   test_plan->setProperty(logger_processor, LogAttribute::FlowFilesToLog.getName(), "0");
 
   SECTION("XML output") {
-    REQUIRE(test_plan->setProperty(cwel_processor, ConsumeWindowsEventLog::OutputFormat.getName(), "XML"));
+    REQUIRE(test_plan->setProperty(cwel_processor, ConsumeWindowsEventLog::OutputFormatProperty.getName(), "XML"));
   }
 
   SECTION("Json output") {
-    REQUIRE(test_plan->setProperty(cwel_processor, ConsumeWindowsEventLog::OutputFormat.getName(), "JSON"));
+    REQUIRE(test_plan->setProperty(cwel_processor, ConsumeWindowsEventLog::OutputFormatProperty.getName(), "JSON"));
   }
 
   SECTION("Plaintext output") {
-    REQUIRE(test_plan->setProperty(cwel_processor, ConsumeWindowsEventLog::OutputFormat.getName(), "Plaintext"));
+    REQUIRE(test_plan->setProperty(cwel_processor, ConsumeWindowsEventLog::OutputFormatProperty.getName(), "Plaintext"));
   }
 
   // 0th event, only to create a bookmark
@@ -297,7 +297,7 @@ void outputFormatSetterTestHelper(const std::string &output_format, int expected
   auto cwel_processor = test_plan->addProcessor("ConsumeWindowsEventLog", "cwel");
   test_plan->setProperty(cwel_processor, ConsumeWindowsEventLog::Channel.getName(), APPLICATION_CHANNEL);
   test_plan->setProperty(cwel_processor, ConsumeWindowsEventLog::Query.getName(), QUERY);
-  test_plan->setProperty(cwel_processor, ConsumeWindowsEventLog::OutputFormat.getName(), output_format);
+  test_plan->setProperty(cwel_processor, ConsumeWindowsEventLog::OutputFormatProperty.getName(), output_format);
 
   auto logger_processor = test_plan->addProcessor("LogAttribute", "logger", Success, true);
   test_plan->setProperty(logger_processor, LogAttribute::FlowFilesToLog.getName(), "0");
@@ -326,10 +326,7 @@ TEST_CASE("ConsumeWindowsEventLog output format can be set", "[create][output_fo
   outputFormatSetterTestHelper("XML", 1);
   outputFormatSetterTestHelper("Plaintext", 1);
   outputFormatSetterTestHelper("Both", 2);
-
-  // NOTE(fgerlits): this may be a bug, as I would expect this to throw in onSchedule(),
-  // but it starts merrily, just does not write flow files in either format
-  outputFormatSetterTestHelper("InvalidValue", 0);
+  REQUIRE_THROWS(outputFormatSetterTestHelper("InvalidValue", 0));
 }
 
 TEST_CASE("ConsumeWindowsEventLog prints events in plain text correctly", "[onTrigger]") {
@@ -433,7 +430,7 @@ void batchCommitSizeTestHelper(std::size_t num_events_read, std::size_t batch_co
   auto cwel_processor = test_plan->addProcessor("ConsumeWindowsEventLog", "cwel");
   test_plan->setProperty(cwel_processor, ConsumeWindowsEventLog::Channel.getName(), APPLICATION_CHANNEL);
   test_plan->setProperty(cwel_processor, ConsumeWindowsEventLog::Query.getName(), QUERY);
-  test_plan->setProperty(cwel_processor, ConsumeWindowsEventLog::OutputFormat.getName(), "XML");
+  test_plan->setProperty(cwel_processor, ConsumeWindowsEventLog::OutputFormatProperty.getName(), "XML");
   test_plan->setProperty(cwel_processor, ConsumeWindowsEventLog::BatchCommitSize.getName(), std::to_string(batch_commit_size));
 
   {

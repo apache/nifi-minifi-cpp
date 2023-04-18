@@ -74,8 +74,8 @@ class ConsumeWindowsEventLog : public core::Processor {
   EXTENSIONAPI static const core::Property ResolveAsAttributes;
   EXTENSIONAPI static const core::Property EventHeaderDelimiter;
   EXTENSIONAPI static const core::Property EventHeader;
-  EXTENSIONAPI static const core::Property OutputFormat;
-  EXTENSIONAPI static const core::Property JSONFormat;
+  EXTENSIONAPI static const core::Property OutputFormatProperty;
+  EXTENSIONAPI static const core::Property JsonFormatProperty;
   EXTENSIONAPI static const core::Property BatchCommitSize;
   EXTENSIONAPI static const core::Property BookmarkRootDirectory;
   EXTENSIONAPI static const core::Property ProcessOldEvents;
@@ -91,8 +91,8 @@ class ConsumeWindowsEventLog : public core::Processor {
         ResolveAsAttributes,
         EventHeaderDelimiter,
         EventHeader,
-        OutputFormat,
-        JSONFormat,
+        OutputFormatProperty,
+        JsonFormatProperty,
         BatchCommitSize,
         BookmarkRootDirectory,
         ProcessOldEvents,
@@ -127,14 +127,6 @@ class ConsumeWindowsEventLog : public core::Processor {
 
   nonstd::expected<std::string, std::string> renderEventAsXml(EVT_HANDLE event_handle);
 
-  static constexpr const char* XML = "XML";
-  static constexpr const char* Both = "Both";
-  static constexpr const char* Plaintext = "Plaintext";
-  static constexpr const char* JSON = "JSON";
-  static constexpr const char* JSONRaw = "Raw";
-  static constexpr const char* JSONSimple = "Simple";
-  static constexpr const char* JSONFlattened = "Flattened";
-
   struct TimeDiff {
     auto operator()() const {
       return int64_t{ std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::steady_clock::now() - time_).count() };
@@ -167,23 +159,21 @@ class ConsumeWindowsEventLog : public core::Processor {
   uint64_t batch_commit_size_{};
   bool cache_sid_lookups_ = true;
 
-  SMART_ENUM(JSONType,
-      (None, "None"),
-      (Raw, "Raw"),
-      (Simple, "Simple"),
-      (Flattened, "Flattened"))
+  SMART_ENUM(OutputFormat,
+    (XML, "XML"),
+    (BOTH, "Both"),
+    (PLAINTEXT, "Plaintext"),
+    (JSON, "JSON")
+  )
 
-  struct OutputFormat {
-    bool xml{false};
-    bool plaintext{false};
-    struct JSON {
-      JSONType type{JSONType::None};
+  SMART_ENUM(JsonFormat,
+    (RAW, "Raw"),
+    (SIMPLE, "Simple"),
+    (FLATTENED, "Flattened")
+  )
 
-      explicit operator bool() const noexcept {
-        return type != JSONType::None;
-      }
-    } json;
-  } output_;
+  OutputFormat output_format_;
+  JsonFormat json_format_;
 
   std::unique_ptr<Bookmark> bookmark_;
   std::mutex on_trigger_mutex_;
