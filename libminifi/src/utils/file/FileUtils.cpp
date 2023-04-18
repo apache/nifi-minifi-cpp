@@ -75,22 +75,20 @@ time_t to_time_t(std::filesystem::file_time_type file_time) {
 }
 
 std::chrono::system_clock::time_point to_sys(std::filesystem::file_time_type file_time) {
-#if defined(WIN32)
-  return std::chrono::clock_cast<std::chrono::system_clock>(file_time);
-#elif defined(_LIBCPP_VERSION) && (_LIBCPP_VERSION < 14000)
-  return std::chrono::system_clock::from_time_t(std::chrono::file_clock::to_time_t(file_time));
+  using namespace std::chrono;  // NOLINT(build/namespaces)
+#if defined(WIN32) || (defined(_LIBCPP_VERSION) && (_LIBCPP_VERSION < 14000))
+  return system_clock::now() + duration_cast<system_clock::duration>(file_time - file_clock::now());
 #else
-  return std::chrono::time_point_cast<std::chrono::system_clock::duration>(std::chrono::file_clock::to_sys(file_time));
+  return time_point_cast<system_clock::duration>(file_clock::to_sys(file_time));
 #endif
 }
 
 std::filesystem::file_time_type from_sys(std::chrono::system_clock::time_point sys_time) {
-#if defined(WIN32)
-  return std::chrono::clock_cast<std::chrono::file_clock>(sys_time);
-#elif defined(_LIBCPP_VERSION) && (_LIBCPP_VERSION < 14000)
-  return std::chrono::file_clock::from_time_t(std::chrono::system_clock::to_time_t(sys_time));
+  using namespace std::chrono;  // NOLINT(build/namespaces)
+#if defined(WIN32) || (defined(_LIBCPP_VERSION) && (_LIBCPP_VERSION < 14000))
+  return file_clock::now() + duration_cast<file_clock::duration>(sys_time - system_clock::now());
 #else
-  return std::chrono::file_clock::from_sys(sys_time);
+  return time_point_cast<file_clock::duration>(file_clock::from_sys(sys_time));
 #endif
 }
 
