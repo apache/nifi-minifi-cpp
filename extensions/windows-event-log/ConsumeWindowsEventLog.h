@@ -164,13 +164,13 @@ class ConsumeWindowsEventLog : public core::Processor {
     (BOTH, "Both"),
     (PLAINTEXT, "Plaintext"),
     (JSON, "JSON")
-  );
+  )
 
   SMART_ENUM(JsonFormatT,
     (RAW, "Raw"),
     (SIMPLE, "Simple"),
     (FLATTENED, "Flattened")
-  );
+  )
 
   OutputFormatT output_format_;
   JsonFormatT json_format_;
