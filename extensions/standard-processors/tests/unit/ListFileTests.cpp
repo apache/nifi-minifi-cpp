@@ -105,7 +105,7 @@ TEST_CASE_METHOD(ListFileTestFixture, "Input Directory is empty", "[testListFile
 }
 
 std::string get_last_modified_time_formatted_string(const std::filesystem::path& path) {
-  return date::format("%Y-%m-%dT%H:%M:%SZ", std::chrono::time_point_cast<std::chrono::seconds>(utils::file::to_sys(*utils::file::last_write_time(path))));
+  return utils::timeutils::getDateTimeStr(std::chrono::time_point_cast<std::chrono::seconds>(utils::file::to_sys(*utils::file::last_write_time(path))));
 }
 
 TEST_CASE_METHOD(ListFileTestFixture, "Test listing files only once with default parameters", "[testListFile]") {

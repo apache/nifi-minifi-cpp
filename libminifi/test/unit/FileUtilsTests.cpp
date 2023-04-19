@@ -520,9 +520,9 @@ TEST_CASE("FileUtils::path_size", "[TestPathSize]") {
 TEST_CASE("file_clock to system_clock conversion tests") {
   using namespace std::chrono;
 
-  static_assert(system_clock::duration::period::num == file_clock::duration::period::num);
-  constexpr auto lowest_den = system_clock::period::den < file_clock::period::den ? system_clock::period::den : file_clock::period::den;
-  using LeastPreciseDurationType = duration<std::common_type_t<system_clock::duration::rep, file_clock::duration::rep>, std::ratio<system_clock::duration::period::num, lowest_den>>;
+  static_assert(system_clock::period::num == file_clock::period::num);
+  constexpr auto lowest_den = std::min(file_clock::period::den, system_clock::period::den);
+  using LeastPreciseDurationType = duration<std::common_type_t<system_clock::duration::rep, file_clock::duration::rep>, std::ratio<system_clock::period::num, lowest_den>>;
 
   {
     system_clock::time_point system_now = system_clock::now();
