@@ -164,10 +164,6 @@ rapidjson::Document toJSONImpl(const pugi::xml_node& root, bool flatten) {
           key = utils::StringUtils::join_pack(key, ".", name_attr);
         }
 
-        if (auto type = event_data_child.name(); strlen(type) > 0) {
-          key = utils::StringUtils::join_pack(key, ".", type);
-        }
-
         doc.AddMember(rapidjson::Value(createUniqueKey(key, doc), doc.GetAllocator()).Move(), rapidjson::StringRef(event_data_child.text().get()), doc.GetAllocator());
       }
     } else {

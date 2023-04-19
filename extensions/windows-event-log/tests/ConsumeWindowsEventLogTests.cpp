@@ -393,7 +393,7 @@ TEST_CASE("ConsumeWindowsEventLog prints events in JSON::Flattened correctly", "
     {
       "Name": "Application",
       "Channel": "Application",
-      "EventData.Data": "Event one"
+      "EventData": "Event one"
     }
   )json");
 }

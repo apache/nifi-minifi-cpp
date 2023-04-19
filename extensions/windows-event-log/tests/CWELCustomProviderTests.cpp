@@ -172,10 +172,10 @@ TEST_CASE("ConsumeWindowsEventLog prints events in JSON::Flattened correctly cus
     {
       "Name": ")" + CUSTOM_PROVIDER_NAME + R"(",
       "Channel": ")" + CUSTOM_CHANNEL /* Channel is not overwritten by data named "Channel" */ + R"(",
-      "EventData.param1.Data": "Actual event",
-      "EventData.param2.Data": "Second",
-      "EventData.Channel.Data": "Third",
-      "EventData.Binary": "0901"
+      "EventData.param1": "Actual event",
+      "EventData.param2": "Second",
+      "EventData.Channel": "Third",
+      "EventData": "0901"
     }
   )");
 }
