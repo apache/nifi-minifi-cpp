@@ -136,6 +136,7 @@ TEST_CASE_METHOD(PutS3ObjectTestsFixture, "Check default client configuration", 
   REQUIRE(mock_s3_request_sender_ptr->getClientConfig().proxyUserName.empty());
   REQUIRE(mock_s3_request_sender_ptr->getClientConfig().proxyPassword.empty());
   REQUIRE(mock_s3_request_sender_ptr->getPutObjectRequestBody() == INPUT_DATA);
+  REQUIRE(mock_s3_request_sender_ptr->getUserVirtualAddressing());
 }
 
 TEST_CASE_METHOD(PutS3ObjectTestsFixture, "Check default client configuration with empty result", "[awsS3ClientConfig]") {
@@ -171,6 +172,7 @@ TEST_CASE_METHOD(PutS3ObjectTestsFixture, "Set non-default client configuration"
   REQUIRE(mock_s3_request_sender_ptr->getClientConfig().connectTimeoutMs == 10000);
   REQUIRE(mock_s3_request_sender_ptr->getClientConfig().endpointOverride == "http://localhost:1234");
   REQUIRE(mock_s3_request_sender_ptr->getPutObjectRequestBody() == INPUT_DATA);
+  REQUIRE(mock_s3_request_sender_ptr->getUserVirtualAddressing());
 }
 
 TEST_CASE_METHOD(PutS3ObjectTestsFixture, "Test single user metadata", "[awsS3MetaData]") {
@@ -216,6 +218,13 @@ TEST_CASE_METHOD(PutS3ObjectTestsFixture, "Test access control setting", "[awsS3
   REQUIRE(mock_s3_request_sender_ptr->put_object_request.GetGrantReadACP() == "id=myuserid789, id=otheruser");
   REQUIRE(mock_s3_request_sender_ptr->put_object_request.GetGrantWriteACP() == "emailAddress=\"myuser3@example.com\"");
   REQUIRE(mock_s3_request_sender_ptr->put_object_request.GetACL() == Aws::S3::Model::ObjectCannedACL::public_read_write);
+}
+
+TEST_CASE_METHOD(PutS3ObjectTestsFixture, "Test path style access property", "[awsS3PathStyleAccess]") {
+  setRequiredProperties();
+  plan->setProperty(s3_processor, "Use Path Style Access", "true");
+  test_controller.runSession(plan, true);
+  REQUIRE(!mock_s3_request_sender_ptr->getUserVirtualAddressing());
 }
 
 }  // namespace

@@ -73,6 +73,11 @@ void PutS3Object::onSchedule(const std::shared_ptr<core::ProcessContext> &contex
   }
   logger_->log_debug("PutS3Object: Server Side Encryption [%s]", server_side_encryption_);
 
+  bool use_path_style_access = false;
+  if (context->getProperty(UsePathStyleAccess.getName(), use_path_style_access)) {
+    use_virtual_addressing_ = !use_path_style_access;
+  }
+
   fillUserMetadata(context);
 }
 
@@ -152,6 +157,8 @@ std::optional<aws::s3::PutObjectRequestParameters> PutS3Object::buildPutS3Reques
   if (!setAccessControl(context, flow_file, params)) {
     return std::nullopt;
   }
+
+  params.use_virtual_addressing = use_virtual_addressing_;
   return params;
 }
 

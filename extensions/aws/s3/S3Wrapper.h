@@ -126,6 +126,7 @@ struct PutObjectRequestParameters : public RequestParameters {
   std::string read_acl_user_list;
   std::string write_acl_user_list;
   std::string canned_acl;
+  bool use_virtual_addressing = true;
 };
 
 struct DeleteObjectRequestParameters : public RequestParameters {

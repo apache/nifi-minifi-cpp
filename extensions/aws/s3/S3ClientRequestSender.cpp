@@ -26,8 +26,9 @@ namespace org::apache::nifi::minifi::aws::s3 {
 std::optional<Aws::S3::Model::PutObjectResult> S3ClientRequestSender::sendPutObjectRequest(
     const Aws::S3::Model::PutObjectRequest& request,
     const Aws::Auth::AWSCredentials& credentials,
-    const Aws::Client::ClientConfiguration& client_config) {
-  Aws::S3::S3Client s3_client(credentials, client_config, Aws::Client::AWSAuthV4Signer::PayloadSigningPolicy::Never, true);
+    const Aws::Client::ClientConfiguration& client_config,
+    bool use_virtual_addressing) {
+  Aws::S3::S3Client s3_client(credentials, client_config, Aws::Client::AWSAuthV4Signer::PayloadSigningPolicy::Never, use_virtual_addressing);
   auto outcome = s3_client.PutObject(request);
 
   if (outcome.IsSuccess()) {

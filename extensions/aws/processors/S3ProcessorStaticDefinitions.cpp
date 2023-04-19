@@ -265,6 +265,14 @@ const core::Property PutS3Object::ServerSideEncryption(
     ->withAllowableValues<std::string>(PutS3Object::SERVER_SIDE_ENCRYPTIONS)
     ->withDescription("Specifies the algorithm used for server side encryption.")
     ->build());
+const core::Property PutS3Object::UsePathStyleAccess(
+    core::PropertyBuilder::createProperty("Use Path Style Access")
+    ->withDescription("Path-style access can be enforced by setting this property to true. Set it to true if your endpoint does not support "
+                      "virtual-hosted-style requests, only path-style requests.")
+    ->withDefaultValue<bool>(false)
+    ->isRequired(true)
+    ->build());
+
 
 const core::Relationship PutS3Object::Success("success", "FlowFiles are routed to success relationship");
 const core::Relationship PutS3Object::Failure("failure", "FlowFiles are routed to failure relationship");
