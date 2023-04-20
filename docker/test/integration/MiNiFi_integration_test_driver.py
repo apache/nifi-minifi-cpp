@@ -318,6 +318,9 @@ class MiNiFi_integration_test:
     def fetch_flow_config_from_c2_url_in_minifi(self):
         self.cluster.fetch_flow_config_from_c2_url_in_minifi()
 
+    def set_ssl_context_properties_in_minifi(self):
+        self.cluster.set_ssl_context_properties_in_minifi()
+
     def enable_prometheus_in_minifi(self):
         self.cluster.enable_prometheus_in_minifi()
 

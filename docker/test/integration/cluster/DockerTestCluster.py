@@ -79,6 +79,9 @@ class DockerTestCluster:
     def fetch_flow_config_from_c2_url_in_minifi(self):
         self.container_store.fetch_flow_config_from_c2_url_in_minifi()
 
+    def set_ssl_context_properties_in_minifi(self):
+        self.container_store.set_ssl_context_properties_in_minifi()
+
     def enable_prometheus_in_minifi(self):
         self.container_store.enable_prometheus_in_minifi()
 

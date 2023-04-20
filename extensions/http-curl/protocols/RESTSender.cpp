@@ -50,6 +50,13 @@ void RESTSender::initialize(core::controller::ControllerServiceProvider* control
         ssl_context_service_ = std::static_pointer_cast<minifi::controllers::SSLContextService>(service);
       }
     }
+    if (nullptr == ssl_context_service_) {
+      std::string ssl_context_str;
+      if (configure->get(Configure::nifi_remote_input_secure, ssl_context_str) && org::apache::nifi::minifi::utils::StringUtils::toBool(ssl_context_str).value_or(false)) {
+        ssl_context_service_ = std::make_shared<minifi::controllers::SSLContextService>("RESTSenderSSL", configure);
+        ssl_context_service_->onEnable();
+      }
+    }
     if (auto req_encoding_str = configure->get(Configuration::nifi_c2_rest_request_encoding)) {
       if (auto req_encoding = RequestEncoding::parse(req_encoding_str->c_str(), RequestEncoding{}, false)) {
         logger_->log_debug("Using request encoding '%s'", req_encoding.toString());
