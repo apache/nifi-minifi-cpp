@@ -64,16 +64,9 @@ const int EVT_NEXT_TIMEOUT_MS = 500;
 
 const core::Property ConsumeWindowsEventLog::Channel(
   core::PropertyBuilder::createProperty("Channel")->
-  isRequired(false)->
+  isRequired(true)->
   withDefaultValue("System")->
   withDescription("The Windows Event Log Channel to listen to.")->
-  supportsExpressionLanguage(true)->
-  build());
-
-const core::Property ConsumeWindowsEventLog::LogFilePath(
-  core::PropertyBuilder::createProperty("Log File Path")->
-  isRequired(false)->
-  withDescription("The absolute path to a file containing Windows Event Logs.")->
   supportsExpressionLanguage(true)->
   build());
 
@@ -289,20 +282,11 @@ void ConsumeWindowsEventLog::onSchedule(const std::shared_ptr<core::ProcessConte
     }
   }
 
-  {
-    auto channel = context->getProperty(Channel);
-    auto file = context->getProperty(LogFilePath);
-
-    if ((channel && file) || (!channel && !file)) {
-      throw Exception(PROCESS_SCHEDULE_EXCEPTION, "Exactly one of the properties '" + Channel.getName() + "' and '" + LogFilePath.getName() + "' should be specified");
-    }
-
-    if (channel) {
-      path_ = wel::EventPath::Channel(std::wstring(channel->begin(), channel->end()));
-    }
-    if (file) {
-      path_ = wel::EventPath::File(std::wstring(file->begin(), file->end()));
-    }
+  path_ = wel::EventPath{context->getProperty(Channel).value()};
+  if (path_.kind() == wel::EventPath::Kind::FILE) {
+    logger_->log_debug("Using saved log file as log source");
+  } else {
+    logger_->log_debug("Using channel as log source");
   }
 
   std::string query;
@@ -332,7 +316,7 @@ void ConsumeWindowsEventLog::onSchedule(const std::shared_ptr<core::ProcessConte
   context->getProperty(CacheSidLookups.getName(), cache_sid_lookups_);
   logger_->log_debug("ConsumeWindowsEventLog: will%s cache SID to name lookups", cache_sid_lookups_ ? "" : " not");
 
-  provenanceUri_ = "winlog://" + computerName_ + "/" + channel_ + "?" + query;
+  provenanceUri_ = "winlog://" + computerName_ + "/" + path_.str() + "?" + query;
   logger_->log_trace("Successfully configured CWEL");
 }
 
@@ -416,14 +400,14 @@ void ConsumeWindowsEventLog::onTrigger(const std::shared_ptr<core::ProcessContex
     logger_->log_debug("processed %zu Events in %"  PRId64 " ms", processed_event_count, time_diff());
   });
 
-  wel::unique_evt_handle event_query_results{EvtQuery(nullptr, path_.value.c_str(), wstr_query_.c_str(), path_.getQueryFlags())};
+  wel::unique_evt_handle event_query_results{EvtQuery(nullptr, path_.wstr().c_str(), wstr_query_.c_str(), path_.getQueryFlags())};
   if (!event_query_results) {
     LOG_LAST_ERROR(EvtQuery);
     context->yield();
     return;
   }
 
-  logger_->log_trace("Retrieved results in Channel: %ls with Query: %ls", path_.value.c_str(), wstr_query_.c_str());
+  logger_->log_trace("Retrieved results in Channel: %ls with Query: %ls", path_.wstr().c_str(), wstr_query_.c_str());
 
   auto bookmark_handle = bookmark_->getBookmarkHandleFromXML();
   if (!bookmark_handle) {
@@ -601,7 +585,7 @@ nonstd::expected<EventRender, std::string> ConsumeWindowsEventLog::createEventRe
   // this is a well known path.
   std::string provider_name = doc.child("Event").child("System").child("Provider").attribute("Name").value();
   wel::WindowsEventLogMetadataImpl metadata{getEventLogHandler(provider_name).getMetadata(), hEvent};
-  wel::MetadataWalker walker{metadata, channel_, !resolve_as_attributes_, apply_identifier_function_, regex_ ? &*regex_ : nullptr, userIdToUsernameFunction()};
+  wel::MetadataWalker walker{metadata, path_.str(), !resolve_as_attributes_, apply_identifier_function_, regex_ ? &*regex_ : nullptr, userIdToUsernameFunction()};
 
   // resolve the event metadata
   doc.traverse(walker);

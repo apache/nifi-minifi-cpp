@@ -80,7 +80,7 @@ Bookmark::Bookmark(const wel::EventPath& path,
     return;
   }
 
-  const auto hEventResults = unique_evt_handle{ EvtQuery(nullptr, path.value.c_str(), query.c_str(), path.getQueryFlags()) };
+  const auto hEventResults = unique_evt_handle{ EvtQuery(nullptr, path.wstr().c_str(), query.c_str(), path.getQueryFlags()) };
   if (!hEventResults) {
     LOG_LAST_ERROR(EvtQuery);
     return;

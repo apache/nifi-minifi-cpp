@@ -67,7 +67,6 @@ class ConsumeWindowsEventLog : public core::Processor {
   EXTENSIONAPI static constexpr const char* Description = "Windows Event Log Subscribe Callback to receive FlowFiles from Events on Windows.";
 
   EXTENSIONAPI static const core::Property Channel;
-  EXTENSIONAPI static const core::Property LogFilePath;
   EXTENSIONAPI static const core::Property Query;
   EXTENSIONAPI static const core::Property MaxBufferSize;
   EXTENSIONAPI static const core::Property InactiveDurationToReconnect;
@@ -85,7 +84,6 @@ class ConsumeWindowsEventLog : public core::Processor {
   static auto properties() {
     return std::array{
         Channel,
-        LogFilePath,
         Query,
         MaxBufferSize,
         InactiveDurationToReconnect,

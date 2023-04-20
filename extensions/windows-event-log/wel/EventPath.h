@@ -16,33 +16,35 @@
  * limitations under the License.
  */
 
+#pragma once
+
 #include <string>
 #include <windows.h>
+#include <winevt.h>
 
 namespace org::apache::nifi::minifi::wel {
 
-struct EventPath {
-  std::wstring value;
+class EventPath {
+ public:
   enum class Kind {
     CHANNEL,
     FILE
-  } kind{Kind::CHANNEL};
+  };
 
-  static EventPath Channel(std::wstring value) {
-    return {.value = std::move(value), .kind = Kind::CHANNEL};
-  }
+  EventPath() = default;
+  explicit EventPath(std::wstring wstr);
+  explicit EventPath(std::string str);
+  const std::wstring& wstr() const;
+  const std::string& str() const;
+  EVT_QUERY_FLAGS getQueryFlags() const;
+  Kind kind() const;
 
-  static EventPath File(std::wstring value) {
-    return {.value = std::move(value), .kind = Kind::FILE};
-  }
+ private:
 
-  EVT_QUERY_FLAGS getQueryFlags() const {
-    switch (kind) {
-    case Kind::CHANNEL: return EvtQueryChannelPath;
-    case Kind::FILE: return EvtQueryFilePath;
-    default: gsl_Assert(false);
-  }
-  }
+  std::string str_;
+  std::wstring wstr_;
+
+  Kind kind_{Kind::CHANNEL};
 };
 
 }  // namespace org::apache::nifi::minifi::wel

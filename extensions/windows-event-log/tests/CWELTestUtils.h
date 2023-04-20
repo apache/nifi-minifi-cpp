@@ -94,3 +94,13 @@ class OutputFormatTestController : public TestController {
   std::string output_format_;
   std::optional<std::string> json_format_;
 };
+
+void generateLogFile(const std::wstring& channel, const std::filesystem::path& path) {
+  HANDLE hEventLog = OpenEventLog(NULL, std::string(channel.begin(), channel.end()).c_str());
+
+  if (!EvtExportLog(NULL, channel.c_str(), L"*", path.wstring().c_str(), EvtExportLogChannelPath)) {
+    throw std::runtime_error("Failed to export logs: " + std::system_category().message(GetLastError()));
+  }
+
+  CloseEventLog(hEventLog);
+}
