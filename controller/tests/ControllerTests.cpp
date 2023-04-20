@@ -514,7 +514,7 @@ TEST_CASE_METHOD(ControllerTestFixture, "Test manifest getter", "[controllerTest
   }
 
   auto reporter = std::make_shared<minifi::c2::ControllerSocketMetricsPublisher>("ControllerSocketMetricsPublisher");
-  auto response_node_loader = std::make_shared<minifi::state::response::ResponseNodeLoader>(configuration_, nullptr, nullptr, nullptr);
+  auto response_node_loader = std::make_shared<minifi::state::response::ResponseNodeLoader>(configuration_, std::vector<std::shared_ptr<core::RepositoryMetricsSource>>{}, nullptr);
   reporter->initialize(configuration_, response_node_loader);
   initalizeControllerSocket(reporter);
 
@@ -538,7 +538,7 @@ TEST_CASE_METHOD(ControllerTestFixture, "Test jstack getter", "[controllerTests]
   }
 
   auto reporter = std::make_shared<minifi::c2::ControllerSocketMetricsPublisher>("ControllerSocketMetricsPublisher");
-  auto response_node_loader = std::make_shared<minifi::state::response::ResponseNodeLoader>(configuration_, nullptr, nullptr, nullptr);
+  auto response_node_loader = std::make_shared<minifi::state::response::ResponseNodeLoader>(configuration_, std::vector<std::shared_ptr<core::RepositoryMetricsSource>>{}, nullptr);
   reporter->initialize(configuration_, response_node_loader);
   initalizeControllerSocket(reporter);
 
