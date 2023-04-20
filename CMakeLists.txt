@@ -24,7 +24,7 @@ if (CMAKE_VERSION VERSION_GREATER_EQUAL 3.24)
     cmake_policy(SET CMP0135 NEW) # policy to set the timestamps of extracted contents to the time of extraction
 endif()
 
-project(nifi-minifi-cpp VERSION 0.14.0)
+project(nifi-minifi-cpp VERSION 0.15.0)
 set(PROJECT_NAME "nifi-minifi-cpp")
 
 # Optional build number for linux distribution targets' tar.gz output
