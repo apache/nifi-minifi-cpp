@@ -168,14 +168,14 @@ rapidjson::Document toJSONImpl(const pugi::xml_node& root, bool flatten) {
         doc.AddMember(rapidjson::Value(createUniqueKey(key, doc), doc.GetAllocator()).Move(), rapidjson::StringRef(event_data_child.text().get()), doc.GetAllocator());
       }
     } else {
-      auto& event_data = doc.AddMember("EventData", rapidjson::kArrayType, doc.GetAllocator());
+      doc.AddMember("EventData", rapidjson::kArrayType, doc.GetAllocator());
       for (const auto& event_data_child : eventData_xml.children()) {
         auto name_attr = event_data_child.attribute("Name");
         rapidjson::Value item(rapidjson::kObjectType);
         item.AddMember("Name", rapidjson::StringRef(name_attr.value()), doc.GetAllocator());
         item.AddMember("Content", rapidjson::StringRef(event_data_child.text().get()), doc.GetAllocator());
         item.AddMember("Type", rapidjson::StringRef(event_data_child.name()), doc.GetAllocator());
-        doc["EventData"].PushBack(item, doc.GetAllocator());
+        doc["EventData"].PushBack(item, doc.GetAllocator());  // we need to re-query EventData because a reference to it wouldn't be stable
       }
     }
   }
