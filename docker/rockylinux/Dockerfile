@@ -44,7 +44,7 @@ RUN dnf -y install epel-release && dnf -y install sudo git which make libarchive
     if echo "$MINIFI_OPTIONS" | grep -q "ENABLE_PCAP=ON"; then dnf -y install libpcap-devel; fi && \
     if echo "$MINIFI_OPTIONS" | grep -q "ENABLE_USB_CAMERA=ON"; then dnf -y install libpng-devel libusbx-devel; fi && \
     if echo "$MINIFI_OPTIONS" | grep -q "ENABLE_OPENCV=ON" || echo "$MINIFI_OPTIONS" | grep -q "ENABLE_BUSTACHE=ON"; then dnf -y install boost-devel; fi && \
-    if echo "$MINIFI_OPTIONS" | grep -q "ENABLE_LUA_SCRIPTING=ON"; then dnf --enablerepo=powertools install lua-devel; fi && \
+    if echo "$MINIFI_OPTIONS" | grep -q "ENABLE_LUA_SCRIPTING=ON"; then dnf -y --enablerepo=powertools install lua-devel; fi && \
     if echo "$MINIFI_OPTIONS" | grep -q "ENABLE_PYTHON_SCRIPTING=ON"; then dnf -y install python3-devel; fi && \
     if echo "$MINIFI_OPTIONS" | grep -q "ENABLE_SFTP=ON" && [ "${DOCKER_SKIP_TESTS}" == "OFF" ]; then dnf -y install java-1.8.0-openjdk maven; fi
 
