@@ -390,11 +390,7 @@ TEST_CASE("ConsumeWindowsEventLog prints events in JSON::Flattened correctly", "
     {
       "Name": "Application",
       "Channel": "Application",
-      "EventData": [{
-          "Type": "Data",
-          "Content": "Event one",
-          "Name": ""
-      }]
+      "EventData": "Event one"
     }
   )json");
 }
@@ -526,7 +522,7 @@ TEST_CASE("ConsumeWindowsEventLog Simple JSON works with UserData", "[cwel][json
   }
   SECTION("flattened") {
     const auto flattened_json = jsonToString(toFlattenedJSON(doc));
-    const auto expected_json = R"json({"Name":"Microsoft-Windows-AppLocker","Guid":"CBDA4DBF-8D5D-4F69-9578-BE14AA540D22","EventID":"8002","Version":"0","Level":"4","Task":"0","Opcode":"0","Keywords":"0x8000000000000000","SystemTime":"2023-02-06T16:58:09.008534Z","EventRecordID":"46","ProcessID":"1234","ThreadID":"1235","Channel":"Microsoft-Windows-AppLocker/EXE and DLL","Computer":"example.local","EventData":[],"PolicyNameLength":"3","PolicyName":"EXE","RuleNameLength":"9","RuleName":"All files","RuleSddlLength":"48","RuleSddl":"D:(XA;;FX;;;S-1-1-0;(APPID://PATH Contains \"*\"))","TargetUser":"S-1-1-0","TargetProcessId":"1234","FilePathLength":"22","FilePath":"%SYSTEM32%\\CSCRIPT.EXE","FileHashLength":"0","FileHash":"","FqbnLength":"1","Fqbn":"-","foo":"bar","Child":"","Leaf":"","AltLeaf":""})json";  // NOLINT(whitespace/line_length): long raw string, impractical to split
+    const auto expected_json = R"json({"Name":"Microsoft-Windows-AppLocker","Guid":"CBDA4DBF-8D5D-4F69-9578-BE14AA540D22","EventID":"8002","Version":"0","Level":"4","Task":"0","Opcode":"0","Keywords":"0x8000000000000000","SystemTime":"2023-02-06T16:58:09.008534Z","EventRecordID":"46","ProcessID":"1234","ThreadID":"1235","Channel":"Microsoft-Windows-AppLocker/EXE and DLL","Computer":"example.local","UserData.RuleAndFileData.PolicyNameLength":"3","UserData.RuleAndFileData.PolicyName":"EXE","UserData.RuleAndFileData.RuleNameLength":"9","UserData.RuleAndFileData.RuleName":"All files","UserData.RuleAndFileData.RuleSddlLength":"48","UserData.RuleAndFileData.RuleSddl":"D:(XA;;FX;;;S-1-1-0;(APPID://PATH Contains \"*\"))","UserData.RuleAndFileData.TargetUser":"S-1-1-0","UserData.RuleAndFileData.TargetProcessId":"1234","UserData.RuleAndFileData.FilePathLength":"22","UserData.RuleAndFileData.FilePath":"%SYSTEM32%\\CSCRIPT.EXE","UserData.RuleAndFileData.FileHashLength":"0","UserData.RuleAndFileData.FileHash":"","UserData.RuleAndFileData.FqbnLength":"1","UserData.RuleAndFileData.Fqbn":"-","UserData.RuleAndFileData.Parent.foo":"bar","UserData.RuleAndFileData.Parent.Child":"","UserData.RuleAndFileData.Leaf":"","UserData.RuleAndFileData.AltLeaf":""})json";  // NOLINT(whitespace/line_length): long raw string, impractical to split
     CHECK(expected_json == flattened_json);
   }
 }
