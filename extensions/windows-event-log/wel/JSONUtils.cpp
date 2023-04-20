@@ -65,11 +65,12 @@ void simplifiedGenericXmlToJson(const pugi::xml_node& source_node,
     rapidjson::Document::AllocatorType& allocator,
     std::optional<std::string> prefix_for_flat_structure) {
   gsl_Expects(source_node.type() == pugi::xml_node_type::node_element);
+  const bool is_flattened = prefix_for_flat_structure.has_value();
   for (const auto& attr : source_node.attributes()) {
     if (attr.name() == std::string_view{"xmlns"}) {
       continue;  // skip xmlns attribute, because it's metadata
     }
-    if (!prefix_for_flat_structure) {
+    if (!is_flattened) {
       output_value.AddMember(rapidjson::StringRef(attr.name()), rapidjson::StringRef(attr.value()), allocator);
     } else {
       output_value.AddMember(rapidjson::Value(*prefix_for_flat_structure + attr.name(), allocator).Move(), rapidjson::StringRef(attr.value()), allocator);
@@ -80,15 +81,15 @@ void simplifiedGenericXmlToJson(const pugi::xml_node& source_node,
       const auto is_pcdata = [](const pugi::xml_node& node) { return node.type() == pugi::xml_node_type::node_pcdata; };
       if (std::all_of(child.children().begin(), child.children().end(), is_pcdata)) {
         // all children are pcdata (text): leaf node
-        if (!prefix_for_flat_structure) {
+        if (!is_flattened) {
           output_value.AddMember(rapidjson::StringRef(child.name()), rapidjson::StringRef(child.text().get()), allocator);
         } else {
           output_value.AddMember(rapidjson::Value(*prefix_for_flat_structure + child.name(), allocator).Move(), rapidjson::StringRef(child.text().get()), allocator);
         }
       } else {
         // there are non-text children: recurse further
-        auto& child_val = prefix_for_flat_structure ? output_value : output_value.AddMember(rapidjson::StringRef(child.name()), rapidjson::kObjectType, allocator)[child.name()];
-        auto new_prefix = prefix_for_flat_structure ? std::optional(*prefix_for_flat_structure + child.name() + ".") : std::nullopt;
+        auto& child_val = is_flattened ? output_value : output_value.AddMember(rapidjson::StringRef(child.name()), rapidjson::kObjectType, allocator)[child.name()];
+        auto new_prefix = is_flattened ? std::optional(*prefix_for_flat_structure + child.name() + ".") : std::nullopt;
         simplifiedGenericXmlToJson(child, child_val, allocator, new_prefix);
       }
     }
