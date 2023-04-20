@@ -252,7 +252,7 @@ class MockS3RequestSender : public minifi::aws::s3::S3RequestSender {
     return client_config_;
   }
 
-  bool getUserVirtualAddressing() const {
+  bool getUseVirtualAddressing() const {
     return use_virtual_addressing_;
   }
 

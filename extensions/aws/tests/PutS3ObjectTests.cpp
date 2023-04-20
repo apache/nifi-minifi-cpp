@@ -136,7 +136,7 @@ TEST_CASE_METHOD(PutS3ObjectTestsFixture, "Check default client configuration", 
   REQUIRE(mock_s3_request_sender_ptr->getClientConfig().proxyUserName.empty());
   REQUIRE(mock_s3_request_sender_ptr->getClientConfig().proxyPassword.empty());
   REQUIRE(mock_s3_request_sender_ptr->getPutObjectRequestBody() == INPUT_DATA);
-  REQUIRE(mock_s3_request_sender_ptr->getUserVirtualAddressing());
+  REQUIRE(mock_s3_request_sender_ptr->getUseVirtualAddressing());
 }
 
 TEST_CASE_METHOD(PutS3ObjectTestsFixture, "Check default client configuration with empty result", "[awsS3ClientConfig]") {
@@ -172,7 +172,7 @@ TEST_CASE_METHOD(PutS3ObjectTestsFixture, "Set non-default client configuration"
   REQUIRE(mock_s3_request_sender_ptr->getClientConfig().connectTimeoutMs == 10000);
   REQUIRE(mock_s3_request_sender_ptr->getClientConfig().endpointOverride == "http://localhost:1234");
   REQUIRE(mock_s3_request_sender_ptr->getPutObjectRequestBody() == INPUT_DATA);
-  REQUIRE(mock_s3_request_sender_ptr->getUserVirtualAddressing());
+  REQUIRE(mock_s3_request_sender_ptr->getUseVirtualAddressing());
 }
 
 TEST_CASE_METHOD(PutS3ObjectTestsFixture, "Test single user metadata", "[awsS3MetaData]") {
@@ -224,7 +224,7 @@ TEST_CASE_METHOD(PutS3ObjectTestsFixture, "Test path style access property", "[a
   setRequiredProperties();
   plan->setProperty(s3_processor, "Use Path Style Access", "true");
   test_controller.runSession(plan, true);
-  REQUIRE(!mock_s3_request_sender_ptr->getUserVirtualAddressing());
+  REQUIRE(!mock_s3_request_sender_ptr->getUseVirtualAddressing());
 }
 
 }  // namespace
