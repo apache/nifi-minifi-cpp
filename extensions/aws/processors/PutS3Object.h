@@ -58,6 +58,7 @@ class PutS3Object : public S3Processor {
   static const core::Property ReadACLUserList;
   static const core::Property WriteACLUserList;
   static const core::Property CannedACL;
+  static const core::Property UsePathStyleAccess;
   static auto properties() {
     return minifi::utils::array_cat(S3Processor::properties(), std::array{
       ObjectKey,
@@ -68,7 +69,8 @@ class PutS3Object : public S3Processor {
       ReadPermissionUserList,
       ReadACLUserList,
       WriteACLUserList,
-      CannedACL
+      CannedACL,
+      UsePathStyleAccess
     });
   }
 
@@ -161,6 +163,7 @@ class PutS3Object : public S3Processor {
   std::map<std::string, std::string> user_metadata_map_;
   std::string storage_class_;
   std::string server_side_encryption_;
+  bool use_virtual_addressing_ = true;
 };
 
 }  // namespace org::apache::nifi::minifi::aws::processors

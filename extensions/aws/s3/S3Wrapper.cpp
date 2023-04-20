@@ -90,7 +90,7 @@ std::optional<PutObjectResult> S3Wrapper::putObject(const PutObjectRequestParame
   request.SetGrantWriteACP(put_object_params.write_acl_user_list);
   setCannedAcl(request, put_object_params.canned_acl);
 
-  auto aws_result = request_sender_->sendPutObjectRequest(request, put_object_params.credentials, put_object_params.client_config);
+  auto aws_result = request_sender_->sendPutObjectRequest(request, put_object_params.credentials, put_object_params.client_config, put_object_params.use_virtual_addressing);
   if (!aws_result) {
     return std::nullopt;
   }

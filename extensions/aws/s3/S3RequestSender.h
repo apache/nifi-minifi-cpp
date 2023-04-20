@@ -62,7 +62,8 @@ class S3RequestSender {
   virtual std::optional<Aws::S3::Model::PutObjectResult> sendPutObjectRequest(
     const Aws::S3::Model::PutObjectRequest& request,
     const Aws::Auth::AWSCredentials& credentials,
-    const Aws::Client::ClientConfiguration& client_config) = 0;
+    const Aws::Client::ClientConfiguration& client_config,
+    bool use_virtual_addressing) = 0;
   virtual bool sendDeleteObjectRequest(
     const Aws::S3::Model::DeleteObjectRequest& request,
     const Aws::Auth::AWSCredentials& credentials,

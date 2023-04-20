@@ -94,10 +94,12 @@ class MockS3RequestSender : public minifi::aws::s3::S3RequestSender {
   std::optional<Aws::S3::Model::PutObjectResult> sendPutObjectRequest(
       const Aws::S3::Model::PutObjectRequest& request,
       const Aws::Auth::AWSCredentials& credentials,
-      const Aws::Client::ClientConfiguration& client_config) override {
+      const Aws::Client::ClientConfiguration& client_config,
+      bool use_virtual_addressing) override {
     put_object_request = request;
     credentials_ = credentials;
     client_config_ = client_config;
+    use_virtual_addressing_ = use_virtual_addressing;
 
     Aws::S3::Model::PutObjectResult put_s3_result;
     if (!return_empty_result_) {
@@ -250,6 +252,10 @@ class MockS3RequestSender : public minifi::aws::s3::S3RequestSender {
     return client_config_;
   }
 
+  bool getUseVirtualAddressing() const {
+    return use_virtual_addressing_;
+  }
+
   std::string getPutObjectRequestBody() const {
     std::istreambuf_iterator<char> buf_it;
     return std::string(std::istreambuf_iterator<char>(*put_object_request.GetBody()), buf_it);
@@ -291,4 +297,5 @@ class MockS3RequestSender : public minifi::aws::s3::S3RequestSender {
   bool is_listing_truncated_ = false;
   Aws::Auth::AWSCredentials credentials_;
   Aws::Client::ClientConfiguration client_config_;
+  bool use_virtual_addressing_ = true;
 };
