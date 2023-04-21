@@ -85,26 +85,27 @@ void FlowFileRepository::deserializeFlowFilesWithNoContentClaim(minifi::internal
       key_positions.push_back(it);
     }
   }
-  if (!keys.empty()) {
-    std::vector<std::string> values;
-    auto multistatus = opendb.MultiGet(rocksdb::ReadOptions{}, keys, &values);
-    gsl_Expects(keys.size() == values.size() && values.size() == multistatus.size());
+  if (keys.empty()) {
+    return;
+  }
+  std::vector<std::string> values;
+  auto multistatus = opendb.MultiGet(rocksdb::ReadOptions{}, keys, &values);
+  gsl_Expects(keys.size() == values.size() && values.size() == multistatus.size());
 
-    for (size_t i = 0; i < keys.size(); ++i) {
-      if (!multistatus[i].ok()) {
-        logger_->log_error("Failed to read key from rocksdb: %s! DB is most probably in an inconsistent state!", keys[i].data());
-        flow_files.erase(key_positions.at(i));
-        continue;
-      }
+  for (size_t i = 0; i < keys.size(); ++i) {
+    if (!multistatus[i].ok()) {
+      logger_->log_error("Failed to read key from rocksdb: %s! DB is most probably in an inconsistent state!", keys[i].data());
+      flow_files.erase(key_positions.at(i));
+      continue;
+    }
 
-      utils::Identifier container_id;
-      auto flow_file = FlowFileRecord::DeSerialize(gsl::make_span(values[i]).as_span<const std::byte>(), content_repo_, container_id);
-      if (flow_file) {
-        gsl_Expects(flow_file->getUUIDStr() == key_positions.at(i)->key);
-        key_positions.at(i)->content = flow_file->getResourceClaim();
-      } else {
-        logger_->log_error("Could not deserialize flow file %s", key_positions.at(i)->key);
-      }
+    utils::Identifier container_id;
+    auto flow_file = FlowFileRecord::DeSerialize(gsl::make_span(values[i]).as_span<const std::byte>(), content_repo_, container_id);
+    if (flow_file) {
+      gsl_Expects(flow_file->getUUIDStr() == key_positions.at(i)->key);
+      key_positions.at(i)->content = flow_file->getResourceClaim();
+    } else {
+      logger_->log_error("Could not deserialize flow file %s", key_positions.at(i)->key);
     }
   }
 }

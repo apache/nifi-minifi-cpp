@@ -102,13 +102,7 @@ class Repository : public core::CoreComponent {
     return Delete(item->getUUIDStr());
   }
 
-  virtual bool Delete(std::vector<std::shared_ptr<core::SerializableComponent>> &storedValues) {
-    bool found = true;
-    for (const auto& storedValue : storedValues) {
-      found &= Delete(storedValue->getName());
-    }
-    return found;
-  }
+  virtual bool Delete(std::vector<std::shared_ptr<core::SerializableComponent>> &storedValues);
 
   void setConnectionMap(std::map<std::string, core::Connectable*> connectionMap) {
     connection_map_ = std::move(connectionMap);
