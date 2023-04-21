@@ -134,9 +134,9 @@ TEST_CASE("Bookmark constructor works for log file path", "[create]") {
 
   std::string log_file_str = log_file.string();
   utils::StringUtils::replaceAll(log_file_str, "\\", "\\\\");
-  
+
   std::wstring pattern{L"<BookmarkList Direction='backward'>\r\n"};
-  pattern += L"  <Bookmark Channel='" + std::wstring{log_file_str.begin(), log_file_str.end()} + L"' RecordId='\\d+' IsCurrent='true'/>\r\n";
+  pattern += L"  <Bookmark Channel='" + std::wstring(log_file_str.begin(), log_file_str.end()) + L"' RecordId='\\d+' IsCurrent='true'/>\r\n";
   pattern += L"</BookmarkList>";
 
   REQUIRE(std::regex_match(bookmarkAsXml(bookmark), std::wregex{pattern}));

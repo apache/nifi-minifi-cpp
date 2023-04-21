@@ -17,6 +17,7 @@
  */
 
 #include "EventPath.h"
+#include <utility>
 #include "utils/StringUtils.h"
 
 namespace org::apache::nifi::minifi::wel {

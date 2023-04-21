@@ -18,9 +18,9 @@
 
 #pragma once
 
-#include <string>
 #include <windows.h>
 #include <winevt.h>
+#include <string>
 
 namespace org::apache::nifi::minifi::wel {
 
@@ -40,7 +40,6 @@ class EventPath {
   Kind kind() const;
 
  private:
-
   std::string str_;
   std::wstring wstr_;
 
