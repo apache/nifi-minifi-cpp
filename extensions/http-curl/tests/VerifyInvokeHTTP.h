@@ -55,7 +55,7 @@ class VerifyInvokeHTTP : public HTTPIntegrationBase {
       throw std::logic_error("Url is already set");
     }
     std::string port, scheme, path;
-    parse_http_components(url, port, scheme, path);
+    minifi::utils::parse_http_components(url, port, scheme, path);
     path_ = path;
     HTTPIntegrationBase::setUrl(url, handler);
   }

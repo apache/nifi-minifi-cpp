@@ -95,7 +95,7 @@ class PeerResponder : public ServerAwareHandler {
   explicit PeerResponder(std::string base_url) {
     (void)base_url;  // unused in release builds
     std::string scheme;
-    assert(parse_http_components(base_url, port, scheme, path));
+    assert(minifi::utils::parse_http_components(base_url, port, scheme, path));
   }
 
   bool handleGet(CivetServer* /*server*/, struct mg_connection *conn) override {

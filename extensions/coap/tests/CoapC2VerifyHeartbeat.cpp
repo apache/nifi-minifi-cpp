@@ -104,7 +104,7 @@ class VerifyCoAPServer : public CoapIntegrationBase {
     std::string scheme;
     std::string path;
 
-    parse_http_components(url, port, scheme, path);
+    minifi::utils::parse_http_components(url, port, scheme, path);
     uint16_t newport = std::stoi(port) + 2;
     auto new_port_str = std::to_string(newport);
 

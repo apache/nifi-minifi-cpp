@@ -94,7 +94,7 @@ class CoapIntegrationBase : public IntegrationBase {
 
 void CoapIntegrationBase::setUrl(std::string url, CivetHandler *handler) {
   std::string path;
-  parse_http_components(url, port, scheme, path);
+  minifi::utils::parse_http_components(url, port, scheme, path);
   CivetCallbacks callback{};
   if (url.find("localhost") != std::string::npos) {
     if (server != nullptr) {

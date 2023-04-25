@@ -267,7 +267,7 @@ cmd_args parse_cmdline_args_with_url(int argc, char ** argv) {
 #ifdef WIN32
     if (url.find("localhost") != std::string::npos) {
       std::string port, scheme, path;
-      parse_http_components(url, port, scheme, path);
+      minifi::utils::parse_http_components(url, port, scheme, path);
       url = scheme + "://" + org::apache::nifi::minifi::io::Socket::getMyHostName() + ":" + port +  path;
     }
 #endif

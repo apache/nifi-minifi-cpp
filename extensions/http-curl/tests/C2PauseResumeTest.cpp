@@ -154,7 +154,7 @@ int main(int argc, char **argv) {
   std::string scheme;
   std::string path;
   std::unique_ptr<TestServer> server;
-  parse_http_components(url, port, scheme, path);
+  minifi::utils::parse_http_components(url, port, scheme, path);
   server = std::make_unique<TestServer>(port, path, &responder);
 
   harness.setUrl(args.url, &responder);

@@ -16,13 +16,16 @@
  * limitations under the License.
  */
 
-#ifndef LIBMINIFI_INCLUDE_UTILS_HTTPUTILS_H_
-#define LIBMINIFI_INCLUDE_UTILS_HTTPUTILS_H_
+#pragma once
 
 #include <string>
+#include <optional>
+#include <filesystem>
 
 #include "io/ClientSocket.h"
 #include "utils/RegexUtils.h"
+
+namespace org::apache::nifi::minifi::utils {
 
 /**
 This function, unfortunately, assumes that we're parsing http components of a local host. On windows this is problematic
@@ -49,4 +52,6 @@ inline bool parse_http_components(const std::string &url, std::string &port, std
   return false;
 }
 
-#endif  // LIBMINIFI_INCLUDE_UTILS_HTTPUTILS_H_
+std::optional<std::filesystem::path> getDefaultCAPath();
+
+}  // namespace org::apache::nifi::minifi::utils

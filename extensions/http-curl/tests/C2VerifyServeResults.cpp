@@ -72,7 +72,7 @@ class VerifyC2Server : public HTTPIntegrationBase {
     std::string port;
     std::string scheme;
     std::string path;
-    parse_http_components(url, port, scheme, path);
+    minifi::utils::parse_http_components(url, port, scheme, path);
     configuration->set(org::apache::nifi::minifi::Configuration::nifi_c2_enable, "true");
     configuration->set(org::apache::nifi::minifi::Configuration::nifi_c2_agent_class, "test");
     configuration->set(org::apache::nifi::minifi::Configuration::nifi_c2_agent_heartbeat_reporter_classes, "RESTReceiver");
