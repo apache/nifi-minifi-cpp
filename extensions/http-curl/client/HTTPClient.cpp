@@ -30,6 +30,7 @@
 #include "utils/RegexUtils.h"
 #include "range/v3/algorithm/all_of.hpp"
 #include "range/v3/action/transform.hpp"
+#include "utils/HTTPUtils.h"
 
 using namespace std::literals::chrono_literals;
 
@@ -418,7 +419,7 @@ void HTTPClient::configure_secure_connection() {
     curl_easy_setopt(http_session_.get(), CURLOPT_CAINFO, nullptr);
     curl_easy_setopt(http_session_.get(), CURLOPT_CAPATH, nullptr);
   } else {
-    static const auto default_ca_path = getDefaultCAPath();
+    static const auto default_ca_path = utils::getDefaultCAPath();
 
     if (default_ca_path)
       logger_->log_debug("Using CA certificate file \"%s\"", default_ca_path->string());
@@ -467,25 +468,6 @@ std::string HTTPClient::replaceInvalidCharactersInHttpHeaderFieldName(std::strin
       return (ch >= 33 && ch <= 126 && ch != ':') ? ch : '-';
   });
   return field_name;
-}
-
-std::optional<std::filesystem::path> HTTPClient::getDefaultCAPath() {
-#ifndef WIN32
-  const std::vector<std::filesystem::path> possible_ca_paths = {
-      "/etc/ssl/certs/ca-certificates.crt",
-      "/etc/pki/tls/certs/ca-bundle.crt",
-      "/usr/share/ssl/certs/ca-bundle.crt",
-      "/usr/local/share/certs/ca-root-nss.crt",
-      "/etc/ssl/cert.pem"
-  };
-
-  for (const auto& possible_ca_path : possible_ca_paths) {
-    if (std::filesystem::exists(possible_ca_path)) {
-      return possible_ca_path;
-    }
-  }
-#endif
-  return std::nullopt;
 }
 
 void HTTPClient::CurlEasyCleanup::operator()(CURL* curl) const {

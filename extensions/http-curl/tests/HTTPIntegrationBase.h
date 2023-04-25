@@ -80,7 +80,7 @@ class HTTPIntegrationBase : public IntegrationBase {
 
 void HTTPIntegrationBase::setUrl(const std::string &url, ServerAwareHandler *handler) {
   std::string url_port, url_scheme, url_path;
-  parse_http_components(url, url_port, url_scheme, url_path);
+  minifi::utils::parse_http_components(url, url_port, url_scheme, url_path);
   if (server) {
     if (url_port != "0" && url_port != port) {
       throw std::logic_error("Inconsistent port requirements");

@@ -26,6 +26,7 @@
 #include "AWSCredentialsService.h"
 #include "properties/Properties.h"
 #include "utils/StringUtils.h"
+#include "utils/HTTPUtils.h"
 
 namespace org::apache::nifi::minifi::aws::processors {
 
@@ -122,6 +123,11 @@ void S3Processor::onSchedule(const std::shared_ptr<core::ProcessContext>& contex
     client_config_->connectTimeoutMs = gsl::narrow<int64_t>(communications_timeout->getMilliseconds().count());
   } else {
     throw Exception(PROCESS_SCHEDULE_EXCEPTION, "Communications Timeout missing or invalid");
+  }
+
+  static const auto default_ca_path = minifi::utils::getDefaultCAPath();
+  if (default_ca_path) {
+    client_config_->caFile = default_ca_path->string();
   }
 }
 
