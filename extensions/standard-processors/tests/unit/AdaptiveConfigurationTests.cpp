@@ -20,6 +20,9 @@
 #include "Catch.h"
 #include "ConfigurationTestController.h"
 #include "core/flow/AdaptiveConfiguration.h"
+#include "utils/IntegrationTestUtils.h"
+
+using namespace std::chrono_literals;
 
 TEST_CASE("Adaptive configuration can parse JSON") {
   ConfigurationTestController controller;
@@ -63,4 +66,30 @@ Connections: []
   auto root = config.getRootFromPayload(yaml_config);
 
   REQUIRE(root->findProcessorByName("Proc1"));
+}
+
+TEST_CASE("Adaptive configuration logs json parse errors") {
+  ConfigurationTestController controller;
+
+  const char* json_config = R"(
+    {
+      "Flow Controller": {"name
+      "Processors": [
+        {
+          "id": "00000000-0000-0000-0000-000000000001",
+          "class": "DummyProcessor",
+          "name": "Proc1"
+        }
+      ],
+      "Connections": []
+    }
+  )";
+
+  core::flow::AdaptiveConfiguration config{controller.getContext()};
+
+  REQUIRE_THROWS(config.getRootFromPayload(json_config));
+
+  REQUIRE(utils::verifyLogLinePresenceInPollTime(0s, "[debug] Could not parse configuration as json, trying yaml"));
+  REQUIRE(utils::verifyLogLinePresenceInPollTime(0s, "[error] Configuration file is not valid json: Invalid encoding in string. (38)"));
+  REQUIRE(utils::verifyLogLinePresenceInPollTime(0s, "[error] Configuration file is not valid yaml: yaml-cpp: error at line 3, column 27: end of map flow not found"));
 }

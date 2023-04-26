@@ -14,17 +14,14 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#ifndef LIBMINIFI_INCLUDE_UTILS_GSL_H_
-#define LIBMINIFI_INCLUDE_UTILS_GSL_H_
+
+#pragma once
 
 #include <type_traits>
 
 #include <gsl-lite/gsl-lite.hpp>
 
-namespace org {
-namespace apache {
-namespace nifi {
-namespace minifi {
+namespace org::apache::nifi::minifi {
 
 namespace gsl = ::gsl_lite;
 
@@ -55,9 +52,4 @@ template<typename T>
 inline constexpr bool is_not_null_v = is_not_null<T>::value;
 }  // namespace utils
 
-}  // namespace minifi
-}  // namespace nifi
-}  // namespace apache
-}  // namespace org
-
-#endif  // LIBMINIFI_INCLUDE_UTILS_GSL_H_
+}  // namespace org::apache::nifi::minifi

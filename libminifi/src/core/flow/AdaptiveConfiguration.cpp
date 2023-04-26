@@ -24,6 +24,7 @@
 #include "yaml-cpp/yaml.h"
 #include "utils/file/FileUtils.h"
 #include "Defaults.h"
+#include "rapidjson/error/en.h"
 
 namespace org::apache::nifi::minifi::core::flow {
 
@@ -41,25 +42,27 @@ AdaptiveConfiguration::AdaptiveConfiguration(ConfigurationContext ctx)
       logging::LoggerFactory<AdaptiveConfiguration>::getLogger()) {}
 
 std::unique_ptr<core::ProcessGroup> AdaptiveConfiguration::getRootFromPayload(const std::string &payload) {
-  try {
-    rapidjson::Document doc;
-    rapidjson::ParseResult res = doc.Parse(payload.c_str(), payload.length());
-    if (res) {
-      flow::Node root{std::make_shared<JsonNode>(&doc)};
-      if (root[FlowSchema::getDefault().flow_header]) {
-        logger_->log_debug("Processing configuration as default json");
-        return getRootFrom(root, FlowSchema::getDefault());
-      } else {
-        logger_->log_debug("Processing configuration as nifi flow json");
-        return getRootFrom(root, FlowSchema::getNiFiFlowJson());
-      }
+  rapidjson::Document doc;
+  rapidjson::ParseResult res = doc.Parse(payload.c_str(), payload.length());
+  if (res) {
+    flow::Node root{std::make_shared<JsonNode>(&doc)};
+    if (root[FlowSchema::getDefault().flow_header]) {
+      logger_->log_debug("Processing configuration as default json");
+      return getRootFrom(root, FlowSchema::getDefault());
+    } else {
+      logger_->log_debug("Processing configuration as nifi flow json");
+      return getRootFrom(root, FlowSchema::getNiFiFlowJson());
     }
-    logger_->log_debug("Could not parse configuration as json, trying yaml");
+  }
+  logger_->log_debug("Could not parse configuration as json, trying yaml");
+
+  try {
     YAML::Node rootYamlNode = YAML::Load(payload);
     flow::Node root{std::make_shared<YamlNode>(rootYamlNode)};
     return getRootFrom(root, FlowSchema::getDefault());
-  } catch(...) {
-    logger_->log_error("Invalid configuration file");
+  } catch (const YAML::ParserException& ex) {
+    logger_->log_error("Configuration file is not valid json: %s (%zu)", rapidjson::GetParseError_En(res.Code()), gsl::narrow<size_t>(res.Offset()));
+    logger_->log_error("Configuration file is not valid yaml: %s", ex.what());
     throw;
   }
 }

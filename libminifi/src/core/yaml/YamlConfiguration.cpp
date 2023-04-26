@@ -46,7 +46,7 @@ std::unique_ptr<core::ProcessGroup> YamlConfiguration::getYamlRoot(std::istream 
     flow::Node root{std::make_shared<YamlNode>(rootYamlNode)};
     return getRootFrom(root, flow::FlowSchema::getDefault());
   } catch (const YAML::ParserException &pe) {
-    logger_->log_error(pe.what());
+    logger_->log_error("Configuration is not valid yaml: %s", pe.what());
     throw;
   }
 }
@@ -57,7 +57,7 @@ std::unique_ptr<core::ProcessGroup> YamlConfiguration::getRootFromPayload(const 
     flow::Node root{std::make_shared<YamlNode>(rootYamlNode)};
     return getRootFrom(root, flow::FlowSchema::getDefault());
   } catch (const YAML::ParserException &pe) {
-    logger_->log_error(pe.what());
+    logger_->log_error("Configuration is not valid yaml: %s", pe.what());
     throw;
   }
 }
