@@ -141,8 +141,7 @@ Provenance Reporting:
     batch size: 1000;
         )";
 
-    std::istringstream configYamlStream(CONFIG_YAML_WITHOUT_IDS);
-    std::unique_ptr<core::ProcessGroup> rootFlowConfig = yamlConfig.getYamlRoot(configYamlStream);
+    std::unique_ptr<core::ProcessGroup> rootFlowConfig = yamlConfig.getRootFromPayload(CONFIG_YAML_WITHOUT_IDS);
 
     REQUIRE(rootFlowConfig);
     REQUIRE(rootFlowConfig->findProcessorByName("TailFile"));
@@ -190,8 +189,7 @@ Remote Processing Groups:
             use compression: false
       )";
 
-    std::istringstream configYamlStream(CONFIG_YAML_NO_RPG_PORT_ID);
-    REQUIRE_THROWS_AS(yamlConfig.getYamlRoot(configYamlStream), std::invalid_argument);
+    REQUIRE_THROWS_AS(yamlConfig.getRootFromPayload(CONFIG_YAML_NO_RPG_PORT_ID), std::invalid_argument);
   }
 
   SECTION("Validated YAML property failure throws exception and logs invalid attribute name") {
@@ -212,8 +210,7 @@ Remote Processing Groups: []
 Provenance Reporting:
       )";
 
-    std::istringstream configYamlStream(CONFIG_YAML_EMPTY_RETRY_ATTRIBUTE);
-    REQUIRE_THROWS_AS(yamlConfig.getYamlRoot(configYamlStream), utils::internal::InvalidValueException);
+    REQUIRE_THROWS_AS(yamlConfig.getRootFromPayload(CONFIG_YAML_EMPTY_RETRY_ATTRIBUTE), utils::internal::InvalidValueException);
     REQUIRE(LogTestController::getInstance().contains("Invalid value was set for property 'Retry Attribute' creating component 'RetryFlowFile'"));
   }
 }
@@ -334,9 +331,8 @@ Remote Process Groups:
   Output Ports: []
 NiFi Properties Overrides: {}
       )";
-  std::istringstream configYamlStream(TEST_CONFIG_YAML);
 
-  REQUIRE_THROWS_AS(yamlConfig.getYamlRoot(configYamlStream), minifi::Exception);
+  REQUIRE_THROWS_AS(yamlConfig.getRootFromPayload(TEST_CONFIG_YAML), minifi::Exception);
 }
 
 TEST_CASE("Test YAML v3 Config Processing", "[YamlConfiguration3]") {
@@ -456,7 +452,7 @@ Remote Process Groups:
 NiFi Properties Overrides: {}
       )";
   std::istringstream configYamlStream(TEST_CONFIG_YAML);
-  std::unique_ptr<core::ProcessGroup> rootFlowConfig = yamlConfig.getYamlRoot(configYamlStream);
+  std::unique_ptr<core::ProcessGroup> rootFlowConfig = yamlConfig.getRootFromPayload(TEST_CONFIG_YAML);
 
   REQUIRE(rootFlowConfig);
   REQUIRE(rootFlowConfig->findProcessorByName("TailFile"));
@@ -499,7 +495,7 @@ Processors:
      Dynamic Property: Bad
       )";
   std::istringstream configYamlStream(TEST_CONFIG_YAML);
-  std::unique_ptr<core::ProcessGroup> rootFlowConfig = yamlConfig.getYamlRoot(configYamlStream);
+  std::unique_ptr<core::ProcessGroup> rootFlowConfig = yamlConfig.getRootFromPayload(TEST_CONFIG_YAML);
 
   REQUIRE(rootFlowConfig);
   REQUIRE(rootFlowConfig->findProcessorByName("GenerateFlowFile"));
@@ -526,11 +522,10 @@ Processors:
     Input Directory: ""
     Batch Size: 1
       )";
-  std::istringstream configYamlStream(TEST_CONFIG_YAML);
   bool caught_exception = false;
 
   try {
-    std::unique_ptr<core::ProcessGroup> rootFlowConfig = yamlConfig.getYamlRoot(configYamlStream);
+    std::unique_ptr<core::ProcessGroup> rootFlowConfig = yamlConfig.getRootFromPayload(TEST_CONFIG_YAML);
 
     REQUIRE(rootFlowConfig);
     REQUIRE(rootFlowConfig->findProcessorByName("GetFile"));
@@ -561,8 +556,7 @@ Processors:
     Input Directory: "/"
     Batch Size: 1
       )";
-  std::istringstream configYamlStream(TEST_CONFIG_YAML);
-  std::unique_ptr<core::ProcessGroup> rootFlowConfig = yamlConfig.getYamlRoot(configYamlStream);
+  std::unique_ptr<core::ProcessGroup> rootFlowConfig = yamlConfig.getRootFromPayload(TEST_CONFIG_YAML);
 
   REQUIRE(rootFlowConfig);
   REQUIRE(rootFlowConfig->findProcessorByName("XYZ"));
@@ -755,8 +749,7 @@ Connections:
 Remote Process Groups: []
     )";
 
-  std::istringstream configYamlStream(CONFIG_YAML_WITH_FUNNEL);
-  std::unique_ptr<core::ProcessGroup> rootFlowConfig = yamlConfig.getYamlRoot(configYamlStream);
+  std::unique_ptr<core::ProcessGroup> rootFlowConfig = yamlConfig.getRootFromPayload(CONFIG_YAML_WITH_FUNNEL);
 
   REQUIRE(rootFlowConfig);
   REQUIRE(rootFlowConfig->findProcessorByName("GenerateFlowFile1"));
@@ -826,8 +819,7 @@ TEST_CASE("Test UUID duplication checks", "[YamlConfiguration]") {
 
       auto config_old = config_yaml;
       utils::StringUtils::replaceAll(config_yaml, std::string("00000000-0000-0000-0000-00000000000") + i, "99999999-9999-9999-9999-999999999999");
-      std::istringstream config_yaml_stream(config_yaml);
-      REQUIRE_THROWS_WITH(yaml_config.getYamlRoot(config_yaml_stream), "General Operation: UUID 99999999-9999-9999-9999-999999999999 is duplicated in the flow configuration");
+      REQUIRE_THROWS_WITH(yaml_config.getRootFromPayload(config_yaml), "General Operation: UUID 99999999-9999-9999-9999-999999999999 is duplicated in the flow configuration");
     }
   }
 }
