@@ -58,6 +58,7 @@ class DockerTestDirectoryBindings:
         shutil.copytree(test_dir + "/resources/elasticsearch/certs", self.data_directories[self.test_id]["resources_dir"] + "/elasticsearch")
         shutil.copytree(test_dir + "/resources/opensearch/certs", self.data_directories[self.test_id]["resources_dir"] + "/opensearch")
         shutil.copytree(test_dir + "/resources/minifi-c2-server-ssl/certs", self.data_directories[self.test_id]["resources_dir"] + "/minifi-c2-server-ssl")
+        shutil.copytree(test_dir + "/resources/minifi-controller", self.data_directories[self.test_id]["resources_dir"] + "/minifi-controller")
         shutil.copytree(test_dir + "/resources/minifi", self.data_directories[self.test_id]["minifi_config_dir"], dirs_exist_ok=True)
 
     def get_data_directories(self, test_id):

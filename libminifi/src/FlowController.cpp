@@ -53,7 +53,6 @@ FlowController::FlowController(std::shared_ptr<core::Repository> provenance_repo
                                std::shared_ptr<utils::file::FileSystem> filesystem, std::function<void()> request_restart)
     : core::controller::ForwardingControllerServiceProvider(core::getClassName<FlowController>()),
       running_(false),
-      updating_(false),
       initialized_(false),
       thread_pool_(5, false, nullptr, "Flowcontroller threadpool"),
       configuration_(std::move(configure)),
@@ -128,7 +127,7 @@ bool FlowController::applyConfiguration(const std::string &source, const std::st
 
   logger_->log_info("Starting to reload Flow Controller with flow control name %s, version %d", newRoot->getName(), newRoot->getVersion());
 
-  updating_ = true;
+  updating_.beginUpdate();
   bool started = false;
 
   {
@@ -155,7 +154,7 @@ bool FlowController::applyConfiguration(const std::string &source, const std::st
     }
   }
 
-  updating_ = false;
+  updating_.endUpdate();
 
   if (started) {
     auto flowVersion = flow_configuration_->getFlowVersion();
@@ -193,7 +192,6 @@ int16_t FlowController::stop() {
     this->content_repo_->stop();
     // stop the ControllerServices
     disableAllControllerServices();
-    initialized_ = false;
     running_ = false;
   }
   return 0;
@@ -265,6 +263,7 @@ void FlowController::load(bool reload) {
     io::NetworkPrioritizerFactory::getInstance()->clearPrioritizer();
   }
 
+  updating_.beginUpdate();
   if (!root_wrapper_.initialized()) {
     logger_->log_info("Instantiating new flow");
     root_wrapper_.setNewRoot(loadInitialFlow());
@@ -275,6 +274,7 @@ void FlowController::load(bool reload) {
       c2_agent_->start();
     }
   }
+  updating_.endUpdate();
 
   logger_->log_info("Loaded root processor Group");
   logger_->log_info("Initializing timers");
@@ -333,7 +333,7 @@ int16_t FlowController::start() {
     logger_->log_info("Starting Flow Controller");
     enableAllControllerServices();
     if (controller_socket_protocol_) {
-      // Initialization is postponed after initializing the flow so the controller socket may load the SSL context defined in the flow configuration
+      // Initialization is postponed after controller services are enabled so the controller socket may load the SSL context defined in the flow configuration
       controller_socket_protocol_->initialize();
     }
     timer_scheduler_->start();
@@ -403,7 +403,7 @@ int16_t FlowController::clearConnection(const std::string &connection) {
 }
 
 void FlowController::executeOnAllComponents(std::function<void(state::StateController&)> func) {
-  if (updating_ || !initialized_) {
+  if (updating_.isUpdating()) {
     return;
   }
   std::lock_guard<std::recursive_mutex> lock(mutex_);
@@ -413,7 +413,7 @@ void FlowController::executeOnAllComponents(std::function<void(state::StateContr
 }
 
 void FlowController::executeOnComponent(const std::string &id_or_name, std::function<void(state::StateController&)> func) {
-  if (updating_ || !initialized_) {
+  if (updating_.isUpdating()) {
     return;
   }
   std::lock_guard<std::recursive_mutex> lock(mutex_);

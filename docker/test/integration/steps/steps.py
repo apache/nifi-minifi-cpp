@@ -1064,3 +1064,109 @@ def step_impl(context, peak_usage_percent: str, duration: str) -> None:
 @given(u'a MiNiFi CPP server with yaml config')
 def step_impl(context):
     context.test.set_yaml_in_minifi()
+
+
+# MiNiFi controller
+@given(u'controller socket properties are set up')
+def step_impl(context):
+    context.test.set_controller_socket_properties_in_minifi()
+
+
+@when(u'MiNiFi config is updated through MiNiFi controller in the \"{minifi_container_name}\" flow')
+def step_impl(context, minifi_container_name: str):
+    context.test.update_flow_config_through_controller(minifi_container_name)
+
+
+@when(u'MiNiFi config is updated through MiNiFi controller')
+def step_impl(context):
+    context.execute_steps("""when MiNiFi config is updated through MiNiFi controller in the \"{minifi_container_name}\" flow""".format(minifi_container_name="minifi-cpp-flow"))
+
+
+@then(u'the updated config is persisted in the \"{minifi_container_name}\" flow')
+def step_impl(context, minifi_container_name: str):
+    context.test.check_minifi_controller_updated_config_is_persisted(minifi_container_name)
+
+
+@then(u'the updated config is persisted')
+def step_impl(context):
+    context.execute_steps("""then the updated config is persisted in the \"{minifi_container_name}\" flow""".format(minifi_container_name="minifi-cpp-flow"))
+
+
+@when(u'the {component} component is stopped through MiNiFi controller in the \"{minifi_container_name}\" flow')
+def step_impl(context, minifi_container_name: str, component: str):
+    context.test.stop_component_through_controller(component, minifi_container_name)
+
+
+@when(u'the {component} component is stopped through MiNiFi controller')
+def step_impl(context, component: str):
+    context.execute_steps("""when the {component} component is stopped through MiNiFi controller in the \"{minifi_container_name}\" flow""".format(component=component, minifi_container_name="minifi-cpp-flow"))
+
+
+@when(u'the {component} component is started through MiNiFi controller in the \"{minifi_container_name}\" flow')
+def step_impl(context, minifi_container_name: str, component: str):
+    context.test.start_component_through_controller(component, minifi_container_name)
+
+
+@when(u'the {component} component is started through MiNiFi controller')
+def step_impl(context, component: str):
+    context.execute_steps("""when the {component} component is started through MiNiFi controller in the \"{minifi_container_name}\" flow""".format(component=component, minifi_container_name="minifi-cpp-flow"))
+
+
+@then(u'the {component} component is not running in the \"{minifi_container_name}\" flow')
+def step_impl(context, component: str, minifi_container_name: str):
+    context.test.check_component_not_running_through_controller(component, minifi_container_name)
+
+
+@then(u'the {component} component is not running')
+def step_impl(context, component: str):
+    context.execute_steps("""then the {component} component is not running in the \"{minifi_container_name}\" flow""".format(component=component, minifi_container_name="minifi-cpp-flow"))
+
+
+@then(u'the {component} component is running in the \"{minifi_container_name}\" flow')
+def step_impl(context, component: str, minifi_container_name: str):
+    context.test.check_component_running_through_controller(component, minifi_container_name)
+
+
+@then(u'the {component} component is running')
+def step_impl(context, component: str):
+    context.execute_steps("""then the {component} component is running in the \"{minifi_container_name}\" flow""".format(component=component, minifi_container_name="minifi-cpp-flow"))
+
+
+@then(u'connection \"{connection}\" can be seen through MiNiFi controller in the \"{minifi_container_name}\" flow')
+def step_impl(context, connection: str, minifi_container_name: str):
+    context.test.connection_found_through_controller(connection, minifi_container_name)
+
+
+@then(u'connection \"{connection}\" can be seen through MiNiFi controller')
+def step_impl(context, connection: str):
+    context.execute_steps("""then connection \"{connection}\" can be seen through MiNiFi controller in the \"{minifi_container_name}\" flow""".format(connection=connection, minifi_container_name="minifi-cpp-flow"))
+
+
+@then(u'{connection_count:d} connections can be seen full through MiNiFi controller in the \"{minifi_container_name}\" flow')
+def step_impl(context, connection_count: int, minifi_container_name: str):
+    context.test.check_connections_full_through_controller(connection_count, minifi_container_name)
+
+
+@then(u'{connection_count:d} connections can be seen full through MiNiFi controller')
+def step_impl(context, connection_count: int):
+    context.execute_steps("""then {connection_count:d} connections can be seen full through MiNiFi controller in the \"{minifi_container_name}\" flow""".format(connection_count=connection_count, minifi_container_name="minifi-cpp-flow"))
+
+
+@then(u'connection \"{connection}\" has {size:d} size and {max_size:d} max size through MiNiFi controller in the \"{minifi_container_name}\" flow')
+def step_impl(context, connection: str, size: int, max_size: int, minifi_container_name: str):
+    context.test.check_connection_size_through_controller(connection, size, max_size, minifi_container_name)
+
+
+@then(u'connection \"{connection}\" has {size:d} size and {max_size:d} max size through MiNiFi controller')
+def step_impl(context, connection: str, size: int, max_size: int):
+    context.execute_steps("""then connection \"{connection}\" has {size:d} size and {max_size:d} max size through MiNiFi controller in the \"{minifi_container_name}\" flow""".format(connection=connection, size=size, max_size=max_size, minifi_container_name="minifi-cpp-flow"))
+
+
+@then(u'manifest can be retrieved through MiNiFi controller in the \"{minifi_container_name}\" flow')
+def step_impl(context, minifi_container_name: str):
+    context.test.manifest_can_be_retrieved_through_minifi_controller(minifi_container_name)
+
+
+@then(u'manifest can be retrieved through MiNiFi controller')
+def step_impl(context):
+    context.execute_steps("""then manifest can be retrieved through MiNiFi controller in the \"{minifi_container_name}\" flow""".format(minifi_container_name="minifi-cpp-flow"))

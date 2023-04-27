@@ -34,6 +34,7 @@ class MinifiOptions:
         self.config_format = "json"
         self.use_flow_config_from_url = False
         self.set_ssl_context_properties = False
+        self.enable_controller_socket = False
 
 
 class MinifiContainer(FlowContainer):
@@ -46,6 +47,7 @@ class MinifiContainer(FlowContainer):
 
         super().__init__(config_dir, name, 'minifi-cpp', copy.copy(vols), network, image_store, command)
         self.container_specific_config_dir = self._create_container_config_dir(self.config_dir)
+        os.chmod(self.container_specific_config_dir, 0o777)
 
     def _create_container_config_dir(self, config_dir):
         container_config_dir = os.path.join(config_dir, str(uuid.uuid4()))
@@ -69,8 +71,10 @@ class MinifiContainer(FlowContainer):
             assert False, "Invalid flow configuration format: {}".format(self.options.config_format)
         test_flow_yaml = serializer.serialize(self.start_nodes, self.controllers)
         logging.info('Using generated flow config yml:\n%s', test_flow_yaml)
-        with open(os.path.join(self.container_specific_config_dir, "config.yml"), 'wb') as config_file:
+        absolute_flow_config_path = os.path.join(self.container_specific_config_dir, "config.yml")
+        with open(absolute_flow_config_path, 'wb') as config_file:
             config_file.write(test_flow_yaml.encode('utf-8'))
+        os.chmod(absolute_flow_config_path, 0o777)
 
     def _create_properties(self):
         properties_file_path = os.path.join(self.container_specific_config_dir, 'minifi.properties')
@@ -113,6 +117,12 @@ class MinifiContainer(FlowContainer):
 
             if self.options.use_flow_config_from_url:
                 f.write("nifi.c2.flow.url=http://minifi-c2-server:10090/c2/config?class=minifi-test-class\n")
+
+            if self.options.enable_controller_socket:
+                f.write("controller.socket.enable=true\n")
+                f.write("controller.socket.host=localhost\n")
+                f.write("controller.socket.port=9998\n")
+                f.write("controller.socket.local.any.interface=false\n")
 
     def _setup_config(self):
         self._create_properties()

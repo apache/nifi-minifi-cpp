@@ -332,3 +332,36 @@ class MiNiFi_integration_test:
 
     def set_yaml_in_minifi(self):
         self.cluster.set_yaml_in_minifi()
+
+    def set_controller_socket_properties_in_minifi(self):
+        self.cluster.set_controller_socket_properties_in_minifi()
+
+    def update_flow_config_through_controller(self, container_name: str):
+        self.cluster.update_flow_config_through_controller(container_name)
+
+    def check_minifi_controller_updated_config_is_persisted(self, container_name: str):
+        assert self.cluster.check_minifi_controller_updated_config_is_persisted(container_name) or self.cluster.log_app_output()
+
+    def stop_component_through_controller(self, component: str, container_name: str):
+        self.cluster.stop_component_through_controller(component, container_name)
+
+    def start_component_through_controller(self, component: str, container_name: str):
+        self.cluster.start_component_through_controller(component, container_name)
+
+    def check_component_not_running_through_controller(self, component: str, container_name: str):
+        assert self.cluster.check_component_not_running_through_controller(component, container_name) or self.cluster.log_app_output()
+
+    def check_component_running_through_controller(self, component: str, container_name: str):
+        assert self.cluster.check_component_running_through_controller(component, container_name) or self.cluster.log_app_output()
+
+    def connection_found_through_controller(self, connection: str, container_name: str):
+        assert self.cluster.connection_found_through_controller(connection, container_name) or self.cluster.log_app_output()
+
+    def check_connections_full_through_controller(self, connection_count: int, container_name: str):
+        assert self.cluster.check_connections_full_through_controller(connection_count, container_name) or self.cluster.log_app_output()
+
+    def check_connection_size_through_controller(self, connection: str, size: int, max_size: int, container_name: str):
+        assert self.cluster.check_connection_size_through_controller(connection, size, max_size, container_name) or self.cluster.log_app_output()
+
+    def manifest_can_be_retrieved_through_minifi_controller(self, container_name: str):
+        assert self.cluster.manifest_can_be_retrieved_through_minifi_controller(container_name) or self.cluster.log_app_output()

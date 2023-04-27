@@ -18,6 +18,10 @@
 
 #include <memory>
 #include <string>
+#include <condition_variable>
+#include <thread>
+#include <mutex>
+#include <atomic>
 
 #include "io/StreamFactory.h"
 #include "io/BaseStream.h"
@@ -26,6 +30,7 @@
 #include "core/state/nodes/StateMonitor.h"
 #include "core/controller/ControllerServiceProvider.h"
 #include "ControllerSocketReporter.h"
+#include "concurrentqueue.h"
 
 namespace org::apache::nifi::minifi::c2 {
 
@@ -61,6 +66,46 @@ class ControllerSocketProtocol {
   std::weak_ptr<ControllerSocketReporter> controller_socket_reporter_;
   std::shared_ptr<Configure> configuration_;
   std::shared_ptr<core::logging::Logger> logger_ = core::logging::LoggerFactory<ControllerSocketProtocol>::getLogger();
+  std::mutex initialization_mutex_;
+
+  // Some commands need to restart the controller socket to reinitialize the socket with new data for example new SSL data in case of a flow update
+  // These commands are handled on a separate thread, and while these commands are handled other incoming commands are dropped
+  class SocketRestartCommandProcessor {
+   public:
+    explicit SocketRestartCommandProcessor(state::StateMonitor& update_sink_);
+    ~SocketRestartCommandProcessor();
+
+    enum class Command {
+      FLOW_UPDATE,
+      START
+    };
+
+    struct CommandData {
+      Command command;
+      std::string data;
+    };
+
+    void enqueue(const CommandData& command_data) {
+      is_socket_restarting_ = true;
+      command_queue_.enqueue(command_data);
+      command_queue_condition_variable_.notify_all();
+    }
+
+    bool isSocketRestarting() const {
+      return is_socket_restarting_;
+    }
+
+   private:
+    mutable std::atomic_bool is_socket_restarting_ = false;
+    state::StateMonitor& update_sink_;
+    std::thread command_processor_thread_;
+    std::mutex cv_mutex_;
+    std::condition_variable command_queue_condition_variable_;
+    std::atomic_bool running_ = true;
+    moodycamel::ConcurrentQueue<CommandData> command_queue_;
+  };
+
+  SocketRestartCommandProcessor socket_restart_processor_;
 };
 
 }  // namespace org::apache::nifi::minifi::c2

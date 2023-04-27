@@ -19,6 +19,7 @@ import re
 from .LogSource import LogSource
 from .ContainerStore import ContainerStore
 from .DockerCommunicator import DockerCommunicator
+from .MinifiControllerExecutor import MinifiControllerExecutor
 from .checkers.AwsChecker import AwsChecker
 from .checkers.AzureChecker import AzureChecker
 from .checkers.ElasticSearchChecker import ElasticSearchChecker
@@ -26,7 +27,7 @@ from .checkers.GcsChecker import GcsChecker
 from .checkers.PostgresChecker import PostgresChecker
 from .checkers.PrometheusChecker import PrometheusChecker
 from .checkers.SplunkChecker import SplunkChecker
-from utils import get_peak_memory_usage, get_minifi_pid, get_memory_usage
+from utils import get_peak_memory_usage, get_minifi_pid, get_memory_usage, retry_check
 
 
 class DockerTestCluster:
@@ -42,6 +43,7 @@ class DockerTestCluster:
         self.postgres_checker = PostgresChecker(self.container_communicator)
         self.splunk_checker = SplunkChecker(self.container_communicator)
         self.prometheus_checker = PrometheusChecker()
+        self.minifi_controller_executor = MinifiControllerExecutor(self.container_communicator)
 
     def cleanup(self):
         self.container_store.cleanup()
@@ -90,6 +92,9 @@ class DockerTestCluster:
 
     def set_yaml_in_minifi(self):
         self.container_store.set_yaml_in_minifi()
+
+    def set_controller_socket_properties_in_minifi(self):
+        self.container_store.set_controller_socket_properties_in_minifi()
 
     def get_app_log(self, container_name):
         log_source = self.container_store.log_source(container_name)
@@ -271,3 +276,41 @@ class DockerTestCluster:
             time.sleep(1)
         logging.warning(f"Memory usage ({current_memory_usage}) is more than the maximum asserted memory usage ({max_memory_usage})")
         return False
+
+    def update_flow_config_through_controller(self, container_name: str):
+        self.minifi_controller_executor.update_flow(container_name)
+
+    @retry_check(10, 1)
+    def check_minifi_controller_updated_config_is_persisted(self, container_name: str) -> bool:
+        return self.minifi_controller_executor.updated_config_is_persisted(container_name)
+
+    def stop_component_through_controller(self, component: str, container_name: str):
+        self.minifi_controller_executor.stop_component(component, container_name)
+
+    def start_component_through_controller(self, component: str, container_name: str):
+        self.minifi_controller_executor.start_component(component, container_name)
+
+    @retry_check(10, 1)
+    def check_component_not_running_through_controller(self, component: str, container_name: str) -> bool:
+        return not self.minifi_controller_executor.is_component_running(component, container_name)
+
+    @retry_check(10, 1)
+    def check_component_running_through_controller(self, component: str, container_name: str) -> bool:
+        return self.minifi_controller_executor.is_component_running(component, container_name)
+
+    @retry_check(10, 1)
+    def connection_found_through_controller(self, connection: str, container_name: str) -> bool:
+        return connection in self.minifi_controller_executor.get_connections(container_name)
+
+    @retry_check(10, 1)
+    def check_connections_full_through_controller(self, connection_count: int, container_name: str) -> bool:
+        return self.minifi_controller_executor.get_full_connection_count(container_name) == connection_count
+
+    @retry_check(10, 1)
+    def check_connection_size_through_controller(self, connection: str, size: int, max_size: int, container_name: str) -> bool:
+        return self.minifi_controller_executor.get_connection_size(connection, container_name) == (size, max_size)
+
+    @retry_check(10, 1000)
+    def manifest_can_be_retrieved_through_minifi_controller(self, container_name: str) -> bool:
+        manifest = self.minifi_controller_executor.get_manifest(container_name)
+        return '"agentManifest": {' in manifest and '"componentManifest": {' in manifest and '"agentType": "cpp"' in manifest
