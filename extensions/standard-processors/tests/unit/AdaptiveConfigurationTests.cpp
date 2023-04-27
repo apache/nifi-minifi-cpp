@@ -22,7 +22,7 @@
 #include "core/flow/AdaptiveConfiguration.h"
 #include "utils/IntegrationTestUtils.h"
 
-using namespace std::chrono_literals;
+using namespace std::literals::chrono_literals;
 
 TEST_CASE("Adaptive configuration can parse JSON") {
   ConfigurationTestController controller;
