@@ -112,7 +112,7 @@ RepositoryMetrics is a system level metric that reports metrics for the register
 
 | Label                    | Description                                                                                                                           |
 |--------------------------|---------------------------------------------------------------------------------------------------------------------------------------|
-| repository_name          | Name of the reported repository. There are three repositories present with the following names: `flowile`, `content` and `provenance` |
+| repository_name          | Name of the reported repository. There are three repositories present with the following names: `flowfile`, `content` and `provenance` |
 
 ### DeviceInfoNode
 

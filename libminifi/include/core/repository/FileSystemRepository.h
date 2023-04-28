@@ -53,11 +53,11 @@ class FileSystemRepository : public core::ContentRepository {
   void clearOrphans() override;
 
   uint64_t getRepositorySize() const override {
-    return utils::file::FileUtils::path_size(directory_);
+    return utils::file::path_size(directory_);
   }
 
   uint64_t getRepositoryEntryCount() const override {
-    auto dir_it = std::filesystem::directory_iterator(directory_);
+    auto dir_it = std::filesystem::recursive_directory_iterator(directory_, std::filesystem::directory_options::skip_permission_denied);
     return std::count_if(
       std::filesystem::begin(dir_it),
       std::filesystem::end(dir_it),
