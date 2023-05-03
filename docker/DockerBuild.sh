@@ -31,12 +31,16 @@ BUILD_NUMBER=
 DOCKER_CCACHE_DUMP_LOCATION=
 DOCKER_SKIP_TESTS=ON
 CMAKE_BUILD_TYPE=Release
+PLATFORMS=
+PUSH_OR_LOAD="--load"
+TAGS=()
+MULTI_ARCH=no
 
 function usage {
   echo "Usage: ./DockerBuild.sh -v <MINIFI_VERSION> [additional options]"
   echo "Options:"
   echo "-v, --minifi-version  Minifi version number to be used (required)"
-  echo "-t, --tag             Additional prefix added to the image tag"
+  echo "-p, --prefix          Additional prefix added to the image tag"
   echo "-u, --uid             User id to be used in the Docker image (default: 1000)"
   echo "-g, --gid             Group id to be used in the Docker image (default: 1000)"
   echo "-d, --distro-name     Linux distribution build to be used for alternative builds (bionic|focal|fedora|centos)"
@@ -50,7 +54,7 @@ function usage {
 function dump_ccache() {
   ccache_source_image=$1
   docker_ccache_dump_location=$2
-  container_id=$(docker run --rm -d "${ccache_source_image}" sh -c "while true; do sleep 1; done")
+  container_id=$(docker create "${ccache_source_image}")
   mkdir -p "${docker_ccache_dump_location}"
   docker cp "${container_id}:/opt/minifi/.ccache/." "${docker_ccache_dump_location}"
   docker rm -f "${container_id}"
@@ -103,6 +107,12 @@ while [[ $# -gt 0 ]]; do
         DOCKER_SKIP_TESTS="${ARR[1]}"
       elif [ "${ARR[0]}" == "CMAKE_BUILD_TYPE" ]; then
         CMAKE_BUILD_TYPE="${ARR[1]}"
+      elif [ "${ARR[0]}" == "DOCKER_PLATFORMS" ] && [ -n "${ARR[1]}" ]; then
+        PLATFORMS="--platform ${ARR[1]}"
+      elif [ "${ARR[0]}" == "DOCKER_PUSH" ] && [ "${ARR[1]}" == "ON" ]; then
+        PUSH_OR_LOAD="--push"
+      elif [ "${ARR[0]}" == "DOCKER_TAGS" ] && [ -n "${ARR[1]}" ]; then
+        IFS=', ' read -r -a TAGS <<< "${ARR[1]}"
       else
         BUILD_ARGS+=("--build-arg" "${ARR[0]}=${ARR[1]}")
       fi
@@ -129,6 +139,25 @@ if [ -z "${MINIFI_VERSION}" ]; then
   usage
 fi
 
+if [[ "${PLATFORMS}" == *,* ]]; then
+  MULTI_ARCH=yes
+fi
+
+if { [ -n "${DUMP_LOCATION}" ] || [ -n "${DOCKER_CCACHE_DUMP_LOCATION}" ]; } && [ "${PUSH_OR_LOAD}" == "--push" ]; then
+  echo "Error: Cannot save ccache dump or binaries locally when pushing image to remote registry. Turn DOCKER_PUSH flag OFF if you want to build binaries on docker."
+  exit 1
+fi
+
+if { [ -n "${DUMP_LOCATION}" ] || [ -n "${DOCKER_CCACHE_DUMP_LOCATION}" ]; } && [ "${MULTI_ARCH}" == "yes" ]; then
+  echo "Error: Cannot save ccache dump or binaries locally when using multi-arch image. Change DOCKER_PLATFORMS option to a single architecture if you want to build binaries on docker."
+  exit 1
+fi
+
+if [ "${MULTI_ARCH}" == "yes" ] && [ "${PUSH_OR_LOAD}" == "--load" ]; then
+  echo "Error: Multi-arch image cannot be locally built. Either change DOCKER_PLATFORMS flag to a single architecture or turn DOCKER_PUSH flag ON."
+  exit 1
+fi
+
 echo "NiFi-MiNiFi-CPP Version: ${MINIFI_VERSION}"
 
 if [ -n "${DISTRO_NAME}" ]; then
@@ -137,53 +166,68 @@ else
   DOCKERFILE="Dockerfile"
 fi
 
-TAG=""
-if [ -n "${IMAGE_TAG}" ]; then
-  TAG="${IMAGE_TAG}-"
-fi
-if [ -n "${DISTRO_NAME}" ]; then
-  TAG="${TAG}${DISTRO_NAME}-"
-fi
-TAG="${TAG}${MINIFI_VERSION}"
-if [ -n "${BUILD_NUMBER}" ]; then
-  TAG="${TAG}-${BUILD_NUMBER}"
-fi
+if [ ${#TAGS[@]} -eq 0 ]; then
+  TAG="apacheminificpp:"
+  if [ -n "${IMAGE_TAG}" ]; then
+    TAG="${TAG}${IMAGE_TAG}-"
+  fi
+  if [ -n "${DISTRO_NAME}" ]; then
+    TAG="${TAG}${DISTRO_NAME}-"
+  fi
+  TAG="${TAG}${MINIFI_VERSION}"
+  if [ -n "${BUILD_NUMBER}" ]; then
+    TAG="${TAG}-${BUILD_NUMBER}"
+  fi
 
-TARGZ_TAG="bin"
-if [ -n "${DISTRO_NAME}" ]; then
-  TARGZ_TAG="${TARGZ_TAG}-${DISTRO_NAME}"
-fi
-if [ -n "${BUILD_NUMBER}" ]; then
-  TARGZ_TAG="${TARGZ_TAG}-${BUILD_NUMBER}"
+  TAGS+=("${TAG}")
+
+  TARGZ_TAG="bin"
+  if [ -n "${DISTRO_NAME}" ]; then
+    TARGZ_TAG="${TARGZ_TAG}-${DISTRO_NAME}"
+  fi
+  if [ -n "${BUILD_NUMBER}" ]; then
+    TARGZ_TAG="${TARGZ_TAG}-${BUILD_NUMBER}"
+  fi
 fi
 
 BUILD_ARGS+=("--build-arg" "UID=${UID_ARG}"
-            "--build-arg" "GID=${GID_ARG}"
-            "--build-arg" "MINIFI_VERSION=${MINIFI_VERSION}"
-            "--build-arg" "DUMP_LOCATION=${DUMP_LOCATION}"
-            "--build-arg" "DISTRO_NAME=${DISTRO_NAME}"
-            "--build-arg" "DOCKER_SKIP_TESTS=${DOCKER_SKIP_TESTS}"
-            "--build-arg" "CMAKE_BUILD_TYPE=${CMAKE_BUILD_TYPE}")
+             "--build-arg" "GID=${GID_ARG}"
+             "--build-arg" "MINIFI_VERSION=${MINIFI_VERSION}"
+             "--build-arg" "DUMP_LOCATION=${DUMP_LOCATION}"
+             "--build-arg" "DISTRO_NAME=${DISTRO_NAME}"
+             "--build-arg" "DOCKER_SKIP_TESTS=${DOCKER_SKIP_TESTS}"
+             "--build-arg" "CMAKE_BUILD_TYPE=${CMAKE_BUILD_TYPE}")
 if [ -n "${DUMP_LOCATION}" ]; then
   BUILD_ARGS+=("--build-arg" "DOCKER_MAKE_TARGET=package")
 fi
 
+TAGGING_CMD=""
+for t in "${TAGS[@]}"; do
+  TAGGING_CMD="${TAGGING_CMD} -t ${t}"
+done
+
 if [ -n "${DISTRO_NAME}" ]; then
-  echo DOCKER_BUILDKIT=1 docker build "${BUILD_ARGS[@]}" -f "${DOCKERFILE}" -t apacheminificpp:"${TAG}" ..
-  DOCKER_BUILDKIT=1 docker build "${BUILD_ARGS[@]}" -f "${DOCKERFILE}" -t apacheminificpp:"${TAG}" ..
+  # shellcheck disable=SC2086
+  echo docker buildx build "${BUILD_ARGS[@]}" -f "${DOCKERFILE}" ${PLATFORMS} ${PUSH_OR_LOAD} ${TAGGING_CMD} ..
+  # shellcheck disable=SC2086
+  docker buildx build "${BUILD_ARGS[@]}" -f "${DOCKERFILE}" ${PLATFORMS} ${PUSH_OR_LOAD} ${TAGGING_CMD} ..
 
   if [ -n "${DOCKER_CCACHE_DUMP_LOCATION}" ]; then
-    dump_ccache "apacheminificpp:${TAG}" "${DOCKER_CCACHE_DUMP_LOCATION}"
+    dump_ccache "${TAG[0]}" "${DOCKER_CCACHE_DUMP_LOCATION}"
   fi
 else
   if [ -n "${DOCKER_CCACHE_DUMP_LOCATION}" ]; then
-    DOCKER_BUILDKIT=1 docker build "${BUILD_ARGS[@]}" -f "${DOCKERFILE}" --target build -t minifi_build ..
+    docker buildx build "${BUILD_ARGS[@]}" -f "${DOCKERFILE}" --target build -t minifi_build ..
     dump_ccache "minifi_build" "${DOCKER_CCACHE_DUMP_LOCATION}"
   fi
-  echo DOCKER_BUILDKIT=1 docker build "${BUILD_ARGS[@]}" -f "${DOCKERFILE}" -t apacheminificpp:"${TAG}" ..
-  DOCKER_BUILDKIT=1 docker build "${BUILD_ARGS[@]}" -f "${DOCKERFILE}" -t apacheminificpp:"${TAG}" ..
+  # shellcheck disable=SC2086
+  echo docker buildx build "${BUILD_ARGS[@]}" -f "${DOCKERFILE}" ${PLATFORMS} ${PUSH_OR_LOAD} ${TAGGING_CMD} ..
+  # shellcheck disable=SC2086
+  docker buildx build "${BUILD_ARGS[@]}" -f "${DOCKERFILE}" ${PLATFORMS} ${PUSH_OR_LOAD} ${TAGGING_CMD} ..
 fi
 
 if [ -n "${DUMP_LOCATION}" ]; then
-  docker run --rm --entrypoint cat "apacheminificpp:${TAG}" "/opt/minifi/build/nifi-minifi-cpp-${MINIFI_VERSION}.tar.gz" >"${DUMP_LOCATION}/nifi-minifi-cpp-${MINIFI_VERSION}-${TARGZ_TAG}.tar.gz"
+  container_id=$(docker create "${TAG}")
+  docker cp "${container_id}:/opt/minifi/build/nifi-minifi-cpp-${MINIFI_VERSION}.tar.gz" "${DUMP_LOCATION}/nifi-minifi-cpp-${MINIFI_VERSION}-${TARGZ_TAG}.tar.gz"
+  docker rm -f "${container_id}"
 fi

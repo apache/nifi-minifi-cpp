@@ -28,6 +28,9 @@ add_custom_target(
         -c DOCKER_SKIP_TESTS=${DOCKER_SKIP_TESTS}
         -c CMAKE_BUILD_TYPE=${CMAKE_BUILD_TYPE}
         -c BUILD_NUMBER=${BUILD_NUMBER}
+        -c DOCKER_PLATFORMS=${DOCKER_PLATFORMS}
+        -c DOCKER_PUSH=${DOCKER_PUSH}
+        -c DOCKER_TAGS=${DOCKER_TAGS}
     WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}/docker/)
 
 # Create minimal docker image
@@ -36,7 +39,7 @@ add_custom_target(
     COMMAND ${CMAKE_SOURCE_DIR}/docker/DockerBuild.sh
         -u 1000
         -g 1000
-        -t minimal
+        -p minimal
         -v ${PROJECT_VERSION_MAJOR}.${PROJECT_VERSION_MINOR}.${PROJECT_VERSION_PATCH}
         -o \"-DENABLE_LIBRDKAFKA=ON
              -DENABLE_AWS=ON
@@ -47,12 +50,15 @@ add_custom_target(
              -DENABLE_ELASTICSEARCH=OFF
              -DENABLE_LUA_SCRIPTING=OFF
              -DENABLE_PYTHON_SCRIPTING=OFF
-	     -DENABLE_OPC=OFF
+             -DENABLE_OPC=OFF
              -DENABLE_ENCRYPT_CONFIG=OFF \"
         -c DOCKER_BASE_IMAGE=${DOCKER_BASE_IMAGE}
         -c DOCKER_SKIP_TESTS=${DOCKER_SKIP_TESTS}
         -c BUILD_NUMBER=${BUILD_NUMBER}
         -c CMAKE_BUILD_TYPE=${CMAKE_BUILD_TYPE}
+        -c DOCKER_PLATFORMS=${DOCKER_PLATFORMS}
+        -c DOCKER_PUSH=${DOCKER_PUSH}
+        -c DOCKER_TAGS=${DOCKER_TAGS}
     WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}/docker/)
 
 add_custom_target(
@@ -68,6 +74,9 @@ add_custom_target(
         -c DOCKER_CCACHE_DUMP_LOCATION=${DOCKER_CCACHE_DUMP_LOCATION}
         -c DOCKER_SKIP_TESTS=${DOCKER_SKIP_TESTS}
         -c CMAKE_BUILD_TYPE=${CMAKE_BUILD_TYPE}
+        -c DOCKER_PLATFORMS=${DOCKER_PLATFORMS}
+        -c DOCKER_PUSH=${DOCKER_PUSH}
+        -c DOCKER_TAGS=${DOCKER_TAGS}
     WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}/docker/)
 
 add_custom_target(
@@ -81,6 +90,9 @@ add_custom_target(
         -c BUILD_NUMBER=${BUILD_NUMBER}
         -c DOCKER_CCACHE_DUMP_LOCATION=${DOCKER_CCACHE_DUMP_LOCATION}
         -c DOCKER_SKIP_TESTS=OFF
+        -c DOCKER_PLATFORMS=${DOCKER_PLATFORMS}
+        -c DOCKER_PUSH=${DOCKER_PUSH}
+        -c DOCKER_TAGS=${DOCKER_TAGS}
     WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}/docker/)
 
 add_custom_target(
@@ -94,6 +106,9 @@ add_custom_target(
         -d fedora
         -c BUILD_NUMBER=${BUILD_NUMBER}
         -c CMAKE_BUILD_TYPE=${CMAKE_BUILD_TYPE}
+        -c DOCKER_PLATFORMS=${DOCKER_PLATFORMS}
+        -c DOCKER_PUSH=${DOCKER_PUSH}
+        -c DOCKER_TAGS=${DOCKER_TAGS}
     WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}/docker/)
 
 add_custom_target(
@@ -107,6 +122,9 @@ add_custom_target(
         -d bionic
         -c BUILD_NUMBER=${BUILD_NUMBER}
         -c CMAKE_BUILD_TYPE=${CMAKE_BUILD_TYPE}
+        -c DOCKER_PLATFORMS=${DOCKER_PLATFORMS}
+        -c DOCKER_PUSH=${DOCKER_PUSH}
+        -c DOCKER_TAGS=${DOCKER_TAGS}
     WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}/docker/)
 
 add_custom_target(
@@ -120,6 +138,9 @@ add_custom_target(
         -d focal
         -c BUILD_NUMBER=${BUILD_NUMBER}
         -c CMAKE_BUILD_TYPE=${CMAKE_BUILD_TYPE}
+        -c DOCKER_PLATFORMS=${DOCKER_PLATFORMS}
+        -c DOCKER_PUSH=${DOCKER_PUSH}
+        -c DOCKER_TAGS=${DOCKER_TAGS}
     WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}/docker/)
 
 add_custom_target(
@@ -135,6 +156,9 @@ add_custom_target(
         -c DOCKER_CCACHE_DUMP_LOCATION=${DOCKER_CCACHE_DUMP_LOCATION}
         -c DOCKER_SKIP_TESTS=${DOCKER_SKIP_TESTS}
         -c CMAKE_BUILD_TYPE=${CMAKE_BUILD_TYPE}
+        -c DOCKER_PLATFORMS=${DOCKER_PLATFORMS}
+        -c DOCKER_PUSH=${DOCKER_PUSH}
+        -c DOCKER_TAGS=${DOCKER_TAGS}
     WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}/docker/)
 
 if (EXISTS ${CMAKE_SOURCE_DIR}/docker/test/integration/features)
