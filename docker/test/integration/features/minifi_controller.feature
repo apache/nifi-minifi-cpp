@@ -37,7 +37,7 @@ Feature: MiNiFi Controller functionalities
     Then the GenerateFlowFile component is not running
     And the FlowController component is running
 
-  Scenario: FlowController can be stopped and restarted
+  Scenario: If FlowController is stopped all other components are stopped
     Given a GenerateFlowFile processor
     And a file with the content "test" is present in "/tmp/input"
     And controller socket properties are set up
@@ -45,6 +45,16 @@ Feature: MiNiFi Controller functionalities
     And the FlowController component is stopped through MiNiFi controller
     And the FlowController component is started through MiNiFi controller
     Then the GenerateFlowFile component is not running
+    And the FlowController component is not running
+
+  Scenario: FlowController can be stopped and restarted
+    Given a GenerateFlowFile processor
+    And a file with the content "test" is present in "/tmp/input"
+    And controller socket properties are set up
+    When all instances start up
+    And the FlowController component is stopped through MiNiFi controller
+    And the FlowController component is started through MiNiFi controller
+    Then the GenerateFlowFile component is running
     And the FlowController component is running
 
   Scenario: Queue state can be queried
