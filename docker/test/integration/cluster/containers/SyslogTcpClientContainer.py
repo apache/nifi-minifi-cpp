@@ -17,8 +17,8 @@ from .Container import Container
 
 
 class SyslogTcpClientContainer(Container):
-    def __init__(self, name, vols, network, image_store, command=None):
-        super().__init__(name, 'syslog-tcp-client', vols, network, image_store, command)
+    def __init__(self, feature_context, name, vols, network, image_store, command=None):
+        super().__init__(feature_context, name, 'syslog-tcp-client', vols, network, image_store, command)
 
     def get_startup_finished_log_entry(self):
         return "Syslog TCP client started"
@@ -33,5 +33,6 @@ class SyslogTcpClientContainer(Container):
             detach=True,
             name=self.name,
             network=self.network.name,
-            entrypoint='/bin/bash -c "echo Syslog TCP client started; while true; do logger --tcp -n minifi-cpp-flow -P 514 sample_log; sleep 1; done"')
+            entrypoint='/bin/bash -c "echo Syslog TCP client started; while true; do logger --tcp -n '
+                       f'minifi-cpp-flow-{self.feature_context.id} -P 514 sample_log; sleep 1; done"')
         logging.info('Added container \'%s\'', self.name)

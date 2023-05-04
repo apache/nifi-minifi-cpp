@@ -13,6 +13,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+@ENABLE_LIBRDKAFKA
 Feature: Sending data to using Kafka streaming platform using PublishKafka
   In order to send data to a Kafka stream
   As a user of MiNiFi
@@ -31,16 +32,16 @@ Feature: Sending data to using Kafka streaming platform using PublishKafka
       | UpdateAttribute | kafka_message_key      | unique_message_key_123                |
     And a PublishKafka processor set up to communicate with a kafka broker instance
     And these processor properties are set:
-      | processor name | property name          | property value                         |
-      | PublishKafka   | Topic Name             | test                                   |
-      | PublishKafka   | Delivery Guarantee     | ${kafka_require_num_acks}              |
-      | PublishKafka   | Request Timeout        | 12 s                                   |
-      | PublishKafka   | Message Timeout        | 13 s                                   |
-      | PublishKafka   | Known Brokers          | kafka-broker:${literal(9000):plus(92)} |
-      | PublishKafka   | Client Name            | client_no_${literal(6):multiply(7)}    |
-      | PublishKafka   | Kafka Key              | ${kafka_message_key}                   |
-      | PublishKafka   | retry.backoff.ms       | ${literal(2):multiply(25):multiply(3)} |
-      | PublishKafka   | Message Key Field      | kafka.key                              |
+      | processor name | property name          | property value                                        |
+      | PublishKafka   | Topic Name             | test                                                  |
+      | PublishKafka   | Delivery Guarantee     | ${kafka_require_num_acks}                             |
+      | PublishKafka   | Request Timeout        | 12 s                                                  |
+      | PublishKafka   | Message Timeout        | 13 s                                                  |
+      | PublishKafka   | Known Brokers          | kafka-broker-${feature_id}:${literal(9000):plus(92)}  |
+      | PublishKafka   | Client Name            | client_no_${literal(6):multiply(7)}                   |
+      | PublishKafka   | Kafka Key              | ${kafka_message_key}                                  |
+      | PublishKafka   | retry.backoff.ms       | ${literal(2):multiply(25):multiply(3)}                |
+      | PublishKafka   | Message Key Field      | kafka.key                                             |
     And a PutFile processor with the "Directory" property set to "/tmp/output"
     And the "success" relationship of the GetFile processor is connected to the UpdateAttribute
     And the "success" relationship of the UpdateAttribute processor is connected to the PublishKafka
@@ -54,7 +55,7 @@ Feature: Sending data to using Kafka streaming platform using PublishKafka
     And the Minifi logs contain the following message: "PublishKafka: request.required.acks [1]" in less than 10 seconds
     And the Minifi logs contain the following message: "PublishKafka: request.timeout.ms [12000]" in less than 10 seconds
     And the Minifi logs contain the following message: "PublishKafka: message.timeout.ms [13000]" in less than 10 seconds
-    And the Minifi logs contain the following message: "PublishKafka: bootstrap.servers [kafka-broker:9092]" in less than 10 seconds
+    And the Minifi logs contain the following message: "PublishKafka: bootstrap.servers [kafka-broker-${feature_id}:9092]" in less than 10 seconds
     And the Minifi logs contain the following message: "PublishKafka: client.id [client_no_42]" in less than 10 seconds
     And the Minifi logs contain the following message: "PublishKafka: Message Key [unique_message_key_123]" in less than 10 seconds
     And the Minifi logs contain the following message: "PublishKafka: DynamicProperty: [retry.backoff.ms] -> [150]" in less than 10 seconds
@@ -76,20 +77,19 @@ Feature: Sending data to using Kafka streaming platform using PublishKafka
     And a file with the content "test" is present in "/tmp/input"
     And a PublishKafka processor set up to communicate with a kafka broker instance
     And these processor properties are set:
-      | processor name | property name          | property value                             |
-      | PublishKafka   | Client Name            | LMN                                        |
-      | PublishKafka   | Known Brokers          | kafka-broker:9093                          |
-      | PublishKafka   | Topic Name             | test                                       |
-      | PublishKafka   | Batch Size             | 10                                         |
-      | PublishKafka   | Compress Codec         | none                                       |
-      | PublishKafka   | Delivery Guarantee     | 1                                          |
-      | PublishKafka   | Request Timeout        | 10 sec                                     |
-      | PublishKafka   | Message Timeout        | 12 sec                                     |
-      | PublishKafka   | Security CA            | /tmp/resources/certs/ca-cert               |
-      | PublishKafka   | Security Cert          | /tmp/resources/certs/client_cert.pem |
-      | PublishKafka   | Security Pass Phrase   | abcdefgh                                   |
-      | PublishKafka   | Security Private Key   | /tmp/resources/certs/client_cert.key |
-      | PublishKafka   | Security Protocol      | ssl                                        |
+      | processor name | property name          | property value                                   |
+      | PublishKafka   | Client Name            | LMN                                              |
+      | PublishKafka   | Known Brokers          | kafka-broker-${feature_id}:9093                  |
+      | PublishKafka   | Topic Name             | test                                             |
+      | PublishKafka   | Batch Size             | 10                                               |
+      | PublishKafka   | Compress Codec         | none                                             |
+      | PublishKafka   | Delivery Guarantee     | 1                                                |
+      | PublishKafka   | Request Timeout        | 10 sec                                           |
+      | PublishKafka   | Message Timeout        | 12 sec                                           |
+      | PublishKafka   | Security CA            | /tmp/resources/root_ca.crt                       |
+      | PublishKafka   | Security Cert          | /tmp/resources/minifi_client.crt                 |
+      | PublishKafka   | Security Private Key   | /tmp/resources/minifi_client.key                 |
+      | PublishKafka   | Security Protocol      | ssl                                              |
     And a PutFile processor with the "Directory" property set to "/tmp/output"
     And the "success" relationship of the GetFile processor is connected to the PublishKafka
     And the "success" relationship of the PublishKafka processor is connected to the PutFile
@@ -111,7 +111,7 @@ Feature: Sending data to using Kafka streaming platform using PublishKafka
       | PublishKafka   | Topic Name             | test                                   |
       | PublishKafka   | Request Timeout        | 10 sec                                 |
       | PublishKafka   | Message Timeout        | 12 sec                                 |
-      | PublishKafka   | Known Brokers          | kafka-broker:9094                      |
+      | PublishKafka   | Known Brokers          | kafka-broker-${feature_id}:9094        |
       | PublishKafka   | Client Name            | LMN                                    |
       | PublishKafka   | Security Protocol      | sasl_plaintext                         |
       | PublishKafka   | SASL Mechanism         | PLAIN                                  |
@@ -131,23 +131,22 @@ Feature: Sending data to using Kafka streaming platform using PublishKafka
     And a file with the content "test" is present in "/tmp/input"
     And a PublishKafka processor set up to communicate with a kafka broker instance
     And these processor properties are set:
-      | processor name | property name          | property value                             |
-      | PublishKafka   | Client Name            | LMN                                        |
-      | PublishKafka   | Known Brokers          | kafka-broker:9095                          |
-      | PublishKafka   | Topic Name             | test                                       |
-      | PublishKafka   | Batch Size             | 10                                         |
-      | PublishKafka   | Compress Codec         | none                                       |
-      | PublishKafka   | Delivery Guarantee     | 1                                          |
-      | PublishKafka   | Request Timeout        | 10 sec                                     |
-      | PublishKafka   | Message Timeout        | 12 sec                                     |
-      | PublishKafka   | Security CA            | /tmp/resources/certs/ca-cert               |
-      | PublishKafka   | Security Cert          | /tmp/resources/certs/client_cert.pem |
-      | PublishKafka   | Security Pass Phrase   | abcdefgh                                   |
-      | PublishKafka   | Security Private Key   | /tmp/resources/certs/client_cert.key |
-      | PublishKafka   | Security Protocol      | sasl_ssl                                   |
-      | PublishKafka   | SASL Mechanism         | PLAIN                                      |
-      | PublishKafka   | Username               | alice                                      |
-      | PublishKafka   | Password               | alice-secret                               |
+      | processor name | property name          | property value                                  |
+      | PublishKafka   | Client Name            | LMN                                             |
+      | PublishKafka   | Known Brokers          | kafka-broker-${feature_id}:9095                 |
+      | PublishKafka   | Topic Name             | test                                            |
+      | PublishKafka   | Batch Size             | 10                                              |
+      | PublishKafka   | Compress Codec         | none                                            |
+      | PublishKafka   | Delivery Guarantee     | 1                                               |
+      | PublishKafka   | Request Timeout        | 10 sec                                          |
+      | PublishKafka   | Message Timeout        | 12 sec                                          |
+      | PublishKafka   | Security CA            | /tmp/resources/root_ca.crt                      |
+      | PublishKafka   | Security Cert          | /tmp/resources/minifi_client.crt                |
+      | PublishKafka   | Security Private Key   | /tmp/resources/minifi_client.key                |
+      | PublishKafka   | Security Protocol      | sasl_ssl                                        |
+      | PublishKafka   | SASL Mechanism         | PLAIN                                           |
+      | PublishKafka   | Username               | alice                                           |
+      | PublishKafka   | Password               | alice-secret                                    |
     And a PutFile processor with the "Directory" property set to "/tmp/output"
     And the "success" relationship of the GetFile processor is connected to the PublishKafka
     And the "success" relationship of the PublishKafka processor is connected to the PutFile
@@ -164,7 +163,7 @@ Feature: Sending data to using Kafka streaming platform using PublishKafka
     And these processor properties are set:
       | processor name | property name          | property value                             |
       | PublishKafka   | Client Name            | LMN                                        |
-      | PublishKafka   | Known Brokers          | kafka-broker:9095                          |
+      | PublishKafka   | Known Brokers          | kafka-broker-${feature_id}:9095            |
       | PublishKafka   | Topic Name             | test                                       |
       | PublishKafka   | Batch Size             | 10                                         |
       | PublishKafka   | Compress Codec         | none                                       |
@@ -192,7 +191,7 @@ Feature: Sending data to using Kafka streaming platform using PublishKafka
     And these processor properties are set:
       | processor name | property name          | property value                             |
       | PublishKafka   | Client Name            | LMN                                        |
-      | PublishKafka   | Known Brokers          | kafka-broker:9093                          |
+      | PublishKafka   | Known Brokers          | kafka-broker-${feature_id}:9093            |
       | PublishKafka   | Topic Name             | test                                       |
       | PublishKafka   | Batch Size             | 10                                         |
       | PublishKafka   | Compress Codec         | none                                       |
@@ -291,7 +290,7 @@ Feature: Sending data to using Kafka streaming platform using PublishKafka
 
   Examples: Key attribute encoding values
     | message 1            | message 2                     | key attribute encoding |
-    | The Odyssey          | Ὅμηρος                        | (not set)              |
+    | The Odyssey          | Ὅμηρος                       | (not set)              |
     | Lolita               | Владимир Владимирович Набоков | utf-8                  |
     | Crime and Punishment | Фёдор Михайлович Достоевский  | hex                    |
     | Paradise Lost        | John Milton                   | hEX                    |
@@ -412,7 +411,7 @@ Feature: Sending data to using Kafka streaming platform using PublishKafka
     Given a ConsumeKafka processor set up in a "kafka-consumer-flow" flow
     And these processor properties are set:
       | processor name | property name        | property value                             |
-      | ConsumeKafka   | Kafka Brokers        | kafka-broker:9093                          |
+      | ConsumeKafka   | Kafka Brokers        | kafka-broker-${feature_id}:9093            |
       | ConsumeKafka   | Security Protocol    | ssl                                        |
     And a PutFile processor with the "Directory" property set to "/tmp/output" in the "kafka-consumer-flow" flow
     And an ssl context service set up for ConsumeKafka
@@ -430,7 +429,7 @@ Feature: Sending data to using Kafka streaming platform using PublishKafka
     Given a ConsumeKafka processor set up in a "kafka-consumer-flow" flow
     And these processor properties are set:
       | processor name | property name        | property value                             |
-      | ConsumeKafka   | Kafka Brokers        | kafka-broker:9095                          |
+      | ConsumeKafka   | Kafka Brokers        | kafka-broker-${feature_id}:9095            |
       | ConsumeKafka   | Security Protocol    | sasl_ssl                                   |
       | ConsumeKafka   | SASL Mechanism       | PLAIN                                      |
       | ConsumeKafka   | Username             | alice                                      |
@@ -453,7 +452,7 @@ Feature: Sending data to using Kafka streaming platform using PublishKafka
     And the "success" relationship of the ConsumeKafka processor is connected to the PutFile
     And these processor properties are set:
       | processor name | property name        | property value                             |
-      | ConsumeKafka   | Kafka Brokers        | kafka-broker:9094                          |
+      | ConsumeKafka   | Kafka Brokers        | kafka-broker-${feature_id}:9094            |
       | ConsumeKafka   | Security Protocol    | sasl_plaintext                             |
       | ConsumeKafka   | SASL Mechanism       | PLAIN                                      |
       | ConsumeKafka   | Username             | alice                                      |

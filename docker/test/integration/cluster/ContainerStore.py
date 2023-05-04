@@ -12,8 +12,8 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-import uuid
 import logging
+import shortuuid
 from .containers.MinifiContainer import MinifiOptions
 from .containers.MinifiContainer import MinifiContainer
 from .containers.NifiContainer import NifiContainer
@@ -35,16 +35,23 @@ from .containers.MinifiAsPodInKubernetesCluster import MinifiAsPodInKubernetesCl
 from .containers.TcpClientContainer import TcpClientContainer
 from .containers.PrometheusContainer import PrometheusContainer
 from .containers.MinifiC2ServerContainer import MinifiC2ServerContainer
+from .FeatureContext import FeatureContext
 
 
 class ContainerStore:
-    def __init__(self, network, image_store, kubernetes_proxy):
+    def __init__(self, network, image_store, kubernetes_proxy, feature_id):
+        self.feature_id = feature_id
         self.minifi_options = MinifiOptions()
         self.containers = {}
         self.data_directories = {}
         self.network = network
         self.image_store = image_store
         self.kubernetes_proxy = kubernetes_proxy
+
+    def get_container_name_with_postfix(self, container_name: str):
+        if not container_name.endswith(self.feature_id):
+            return container_name + "-" + self.feature_id
+        return container_name
 
     def cleanup(self):
         for container in self.containers.values():
@@ -61,82 +68,228 @@ class ContainerStore:
         for container in self.containers.values():
             container.vols = self.vols
 
-    def acquire_container(self, name, engine='minifi-cpp', command=None):
-        if name is not None and name in self.containers:
-            return self.containers[name]
+    def acquire_container(self, context, container_name: str, engine='minifi-cpp', command=None):
+        container_name = self.get_container_name_with_postfix(container_name)
+        if container_name is not None and container_name in self.containers:
+            return self.containers[container_name]
 
-        if name is None and (engine == 'nifi' or engine == 'minifi-cpp'):
-            name = engine + '-' + str(uuid.uuid4())
-            logging.info('Container name was not provided; using generated name \'%s\'', name)
+        if container_name is None and (engine == 'nifi' or engine == 'minifi-cpp'):
+            container_name = engine + '-' + shortuuid.uuid()
+            logging.info('Container name was not provided; using generated name \'%s\'', container_name)
+
+        feature_context = FeatureContext(feature_id=context.feature_id,
+                                         root_ca_cert=context.test.root_ca_cert,
+                                         root_ca_key=context.test.root_ca_key)
 
         if engine == 'nifi':
-            return self.containers.setdefault(name, NifiContainer(self.data_directories["nifi_config_dir"], name, self.vols, self.network, self.image_store, command))
+            return self.containers.setdefault(container_name,
+                                              NifiContainer(feature_context=feature_context,
+                                                            config_dir=self.data_directories["nifi_config_dir"],
+                                                            name=container_name,
+                                                            vols=self.vols,
+                                                            network=self.network,
+                                                            image_store=self.image_store,
+                                                            command=command))
         elif engine == 'minifi-cpp':
-            return self.containers.setdefault(name, MinifiContainer(self.data_directories["minifi_config_dir"], self.minifi_options, name, self.vols, self.network, self.image_store, command))
+            return self.containers.setdefault(container_name,
+                                              MinifiContainer(feature_context=feature_context,
+                                                              config_dir=self.data_directories["minifi_config_dir"],
+                                                              options=self.minifi_options,
+                                                              name=container_name,
+                                                              vols=self.vols,
+                                                              network=self.network,
+                                                              image_store=self.image_store,
+                                                              command=command))
         elif engine == 'kubernetes':
-            return self.containers.setdefault(name, MinifiAsPodInKubernetesCluster(self.kubernetes_proxy, self.data_directories["kubernetes_config_dir"], self.minifi_options, name, self.vols, self.network, self.image_store, command))
+            return self.containers.setdefault(container_name,
+                                              MinifiAsPodInKubernetesCluster(feature_context=feature_context,
+                                                                             kubernetes_proxy=self.kubernetes_proxy,
+                                                                             config_dir=self.data_directories["kubernetes_config_dir"],
+                                                                             minifi_options=self.minifi_options,
+                                                                             name=container_name,
+                                                                             vols=self.vols,
+                                                                             network=self.network,
+                                                                             image_store=self.image_store,
+                                                                             command=command))
         elif engine == 'kafka-broker':
-            if 'zookeeper' not in self.containers:
-                self.containers.setdefault('zookeeper', ZookeeperContainer('zookeeper', self.vols, self.network, self.image_store, command))
-            return self.containers.setdefault(name, KafkaBrokerContainer(name, self.vols, self.network, self.image_store, command))
+            zookeeper_name = self.get_container_name_with_postfix('zookeeper')
+            if zookeeper_name not in self.containers:
+                self.containers.setdefault(zookeeper_name,
+                                           ZookeeperContainer(feature_context=feature_context,
+                                                              name=zookeeper_name,
+                                                              vols=self.vols,
+                                                              network=self.network,
+                                                              image_store=self.image_store,
+                                                              command=command))
+            return self.containers.setdefault(container_name,
+                                              KafkaBrokerContainer(feature_context=feature_context,
+                                                                   name=container_name,
+                                                                   vols=self.vols,
+                                                                   network=self.network,
+                                                                   image_store=self.image_store,
+                                                                   command=command))
         elif engine == 'http-proxy':
-            return self.containers.setdefault(name, HttpProxyContainer(name, self.vols, self.network, self.image_store, command))
+            return self.containers.setdefault(container_name,
+                                              HttpProxyContainer(feature_context=feature_context,
+                                                                 name=container_name,
+                                                                 vols=self.vols,
+                                                                 network=self.network,
+                                                                 image_store=self.image_store,
+                                                                 command=command))
         elif engine == 's3-server':
-            return self.containers.setdefault(name, S3ServerContainer(name, self.vols, self.network, self.image_store, command))
+            return self.containers.setdefault(container_name,
+                                              S3ServerContainer(feature_context=feature_context,
+                                                                name=container_name,
+                                                                vols=self.vols,
+                                                                network=self.network,
+                                                                image_store=self.image_store,
+                                                                command=command))
         elif engine == 'azure-storage-server':
-            return self.containers.setdefault(name, AzureStorageServerContainer(name, self.vols, self.network, self.image_store, command))
+            return self.containers.setdefault(container_name,
+                                              AzureStorageServerContainer(feature_context=feature_context,
+                                                                          name=container_name,
+                                                                          vols=self.vols,
+                                                                          network=self.network,
+                                                                          image_store=self.image_store,
+                                                                          command=command))
         elif engine == 'fake-gcs-server':
-            return self.containers.setdefault(name, FakeGcsServerContainer(name, self.vols, self.network, self.image_store, command))
+            return self.containers.setdefault(container_name,
+                                              FakeGcsServerContainer(feature_context=feature_context,
+                                                                     name=container_name,
+                                                                     vols=self.vols,
+                                                                     network=self.network,
+                                                                     image_store=self.image_store,
+                                                                     command=command))
         elif engine == 'postgresql-server':
-            return self.containers.setdefault(name, PostgreSQLServerContainer(name, self.vols, self.network, self.image_store, command))
+            return self.containers.setdefault(container_name,
+                                              PostgreSQLServerContainer(feature_context=feature_context,
+                                                                        name=container_name,
+                                                                        vols=self.vols,
+                                                                        network=self.network,
+                                                                        image_store=self.image_store,
+                                                                        command=command))
         elif engine == 'mqtt-broker':
-            return self.containers.setdefault(name, MqttBrokerContainer(name, self.vols, self.network, self.image_store, command))
+            return self.containers.setdefault(container_name,
+                                              MqttBrokerContainer(feature_context=feature_context,
+                                                                  name=container_name,
+                                                                  vols=self.vols,
+                                                                  network=self.network,
+                                                                  image_store=self.image_store,
+                                                                  command=command))
         elif engine == 'opcua-server':
-            return self.containers.setdefault(name, OPCUAServerContainer(name, self.vols, self.network, self.image_store, command))
+            return self.containers.setdefault(container_name,
+                                              OPCUAServerContainer(feature_context=feature_context,
+                                                                   name=container_name,
+                                                                   vols=self.vols,
+                                                                   network=self.network,
+                                                                   image_store=self.image_store,
+                                                                   command=command))
         elif engine == 'splunk':
-            return self.containers.setdefault(name, SplunkContainer(name, self.vols, self.network, self.image_store, command))
+            return self.containers.setdefault(container_name,
+                                              SplunkContainer(feature_context=feature_context,
+                                                              name=container_name,
+                                                              vols=self.vols,
+                                                              network=self.network,
+                                                              image_store=self.image_store,
+                                                              command=command))
         elif engine == 'elasticsearch':
-            return self.containers.setdefault(name, ElasticsearchContainer(name, self.vols, self.network, self.image_store, command))
+            return self.containers.setdefault(container_name,
+                                              ElasticsearchContainer(feature_context=feature_context,
+                                                                     name=container_name,
+                                                                     vols=self.vols,
+                                                                     network=self.network,
+                                                                     image_store=self.image_store,
+                                                                     command=command))
         elif engine == 'opensearch':
-            return self.containers.setdefault(name, OpensearchContainer(name, self.vols, self.network, self.image_store, command))
+            return self.containers.setdefault(container_name,
+                                              OpensearchContainer(feature_context=feature_context,
+                                                                  name=container_name,
+                                                                  vols=self.vols,
+                                                                  network=self.network,
+                                                                  image_store=self.image_store,
+                                                                  command=command))
         elif engine == "syslog-udp-client":
-            return self.containers.setdefault(name, SyslogUdpClientContainer(name, self.vols, self.network, self.image_store, command))
+            return self.containers.setdefault(container_name,
+                                              SyslogUdpClientContainer(
+                                                  feature_context=feature_context,
+                                                  name=container_name,
+                                                  vols=self.vols,
+                                                  network=self.network,
+                                                  image_store=self.image_store,
+                                                  command=command))
         elif engine == "syslog-tcp-client":
-            return self.containers.setdefault(name, SyslogTcpClientContainer(name, self.vols, self.network, self.image_store, command))
+            return self.containers.setdefault(container_name,
+                                              SyslogTcpClientContainer(
+                                                  feature_context=feature_context,
+                                                  name=container_name,
+                                                  vols=self.vols,
+                                                  network=self.network,
+                                                  image_store=self.image_store,
+                                                  command=command))
         elif engine == "tcp-client":
-            return self.containers.setdefault(name, TcpClientContainer(name, self.vols, self.network, self.image_store, command))
+            return self.containers.setdefault(container_name,
+                                              TcpClientContainer(feature_context=feature_context,
+                                                                 name=container_name,
+                                                                 vols=self.vols,
+                                                                 network=self.network,
+                                                                 image_store=self.image_store,
+                                                                 command=command))
         elif engine == "prometheus":
-            return self.containers.setdefault(name, PrometheusContainer(name, self.vols, self.network, self.image_store, command))
+            return self.containers.setdefault(container_name,
+                                              PrometheusContainer(feature_context=feature_context,
+                                                                  name=container_name,
+                                                                  vols=self.vols,
+                                                                  network=self.network,
+                                                                  image_store=self.image_store,
+                                                                  command=command))
         elif engine == "minifi-c2-server":
-            return self.containers.setdefault(name, MinifiC2ServerContainer(name, self.vols, self.network, self.image_store, command))
+            return self.containers.setdefault(container_name,
+                                              MinifiC2ServerContainer(feature_context=feature_context,
+                                                                      name=container_name,
+                                                                      vols=self.vols,
+                                                                      network=self.network,
+                                                                      image_store=self.image_store,
+                                                                      command=command,
+                                                                      ssl=False))
         elif engine == "minifi-c2-server-ssl":
-            return self.containers.setdefault(name, MinifiC2ServerContainer(name, self.vols, self.network, self.image_store, command, ssl=True))
+            return self.containers.setdefault(container_name,
+                                              MinifiC2ServerContainer(feature_context=feature_context,
+                                                                      name=container_name,
+                                                                      vols=self.vols,
+                                                                      network=self.network,
+                                                                      image_store=self.image_store,
+                                                                      command=command,
+                                                                      ssl=True))
         else:
             raise Exception('invalid flow engine: \'%s\'' % engine)
 
-    def deploy_container(self, name):
-        if name is None or name not in self.containers:
-            raise Exception('Invalid container to deploy: \'%s\'' % name)
+    def deploy_container(self, container_name: str):
+        container_name = self.get_container_name_with_postfix(container_name)
+        if container_name is None or container_name not in self.containers:
+            raise Exception('Invalid container to deploy: \'%s\'' % container_name)
 
-        self.containers[name].deploy()
+        self.containers[container_name].deploy()
 
     def deploy_all(self):
         for container in self.containers.values():
             container.deploy()
 
     def stop_container(self, container_name):
+        container_name = self.get_container_name_with_postfix(container_name)
         if container_name not in self.containers:
             logging.error('Could not stop container because it is not found: \'%s\'', container_name)
             return
         self.containers[container_name].stop()
 
     def kill_container(self, container_name):
+        container_name = self.get_container_name_with_postfix(container_name)
         if container_name not in self.containers:
             logging.error('Could not kill container because it is not found: \'%s\'', container_name)
             return
         self.containers[container_name].kill()
 
     def restart_container(self, container_name):
+        container_name = self.get_container_name_with_postfix(container_name)
         if container_name not in self.containers:
             logging.error('Could not restart container because it is not found: \'%s\'', container_name)
             return
@@ -170,12 +323,15 @@ class ContainerStore:
         self.minifi_options.enable_controller_socket = True
 
     def get_startup_finished_log_entry(self, container_name):
+        container_name = self.get_container_name_with_postfix(container_name)
         return self.containers[container_name].get_startup_finished_log_entry()
 
     def log_source(self, container_name):
+        container_name = self.get_container_name_with_postfix(container_name)
         return self.containers[container_name].log_source()
 
     def get_app_log(self, container_name):
+        container_name = self.get_container_name_with_postfix(container_name)
         return self.containers[container_name].get_app_log()
 
     def get_container_names(self, engine=None):

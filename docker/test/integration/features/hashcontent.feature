@@ -13,6 +13,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+@CORE
 Feature: Hash value is added to Flowfiles by HashContent processor
   In order to avoid duplication of content of Flowfiles
   As a user of MiNiFi

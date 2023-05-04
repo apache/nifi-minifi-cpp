@@ -13,6 +13,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+@CORE
 Feature: Sending data using InvokeHTTP to a receiver using ListenHTTP
   In order to send and receive data via HTTP
   As a user of MiNiFi
@@ -25,7 +26,7 @@ Feature: Sending data using InvokeHTTP to a receiver using ListenHTTP
     Given a GetFile processor with the "Input Directory" property set to "/tmp/input"
     And the "Keep Source File" property of the GetFile processor is set to "true"
     And a file with the content "test" is present in "/tmp/input"
-    And a InvokeHTTP processor with the "Remote URL" property set to "http://secondary:8080/contentListener"
+    And a InvokeHTTP processor with the "Remote URL" property set to "http://secondary-${feature_id}:8080/contentListener"
     And the "HTTP Method" property of the InvokeHTTP processor is set to "POST"
     And the "success" relationship of the GetFile processor is connected to the InvokeHTTP
 
@@ -40,14 +41,14 @@ Feature: Sending data using InvokeHTTP to a receiver using ListenHTTP
     Given a GetFile processor with the "Input Directory" property set to "/tmp/input"
     And the "Keep Source File" property of the GetFile processor is set to "true"
     And a file with the content "test" is present in "/tmp/input"
-    And a InvokeHTTP processor with the "Remote URL" property set to "http://minifi-listen:8080/contentListener"
+    And a InvokeHTTP processor with the "Remote URL" property set to "http://minifi-listen-${feature_id}:8080/contentListener"
     And these processor properties are set to match the http proxy:
-      | processor name | property name             | property value |
-      | InvokeHTTP     | HTTP Method               | POST           |
-      | InvokeHTTP     | Proxy Host                | http-proxy     |
-      | InvokeHTTP     | Proxy Port                | 3128           |
-      | InvokeHTTP     | invokehttp-proxy-username | admin          |
-      | InvokeHTTP     | invokehttp-proxy-password | test101        |
+      | processor name | property name             | property value                   |
+      | InvokeHTTP     | HTTP Method               | POST                             |
+      | InvokeHTTP     | Proxy Host                | http-proxy-${feature_id}         |
+      | InvokeHTTP     | Proxy Port                | 3128                             |
+      | InvokeHTTP     | invokehttp-proxy-username | admin                            |
+      | InvokeHTTP     | invokehttp-proxy-password | test101                          |
     And the "success" relationship of the GetFile processor is connected to the InvokeHTTP
 
     And a http proxy server is set up accordingly
@@ -58,14 +59,14 @@ Feature: Sending data using InvokeHTTP to a receiver using ListenHTTP
 
     When all instances start up
     Then at least one flowfile with the content "test" is placed in the monitored directory in less than 120 seconds
-    And no errors were generated on the http-proxy regarding "http://minifi-listen:8080/contentListener"
+    And no errors were generated on the http-proxy regarding "http://minifi-listen-${feature_id}:8080/contentListener"
 
   Scenario: A MiNiFi instance and transfers hashed data to another MiNiFi instance
     Given a GetFile processor with the "Input Directory" property set to "/tmp/input"
     And the "Keep Source File" property of the GetFile processor is set to "true"
     And a file with the content "test" is present in "/tmp/input"
     And a HashContent processor with the "Hash Attribute" property set to "hash"
-    And a InvokeHTTP processor with the "Remote URL" property set to "http://secondary:8080/contentListener"
+    And a InvokeHTTP processor with the "Remote URL" property set to "http://secondary-${feature_id}:8080/contentListener"
     And the "HTTP Method" property of the InvokeHTTP processor is set to "POST"
     And the "success" relationship of the GetFile processor is connected to the HashContent
     And the "success" relationship of the HashContent processor is connected to the InvokeHTTP
@@ -81,7 +82,7 @@ Feature: Sending data using InvokeHTTP to a receiver using ListenHTTP
     Given a GetFile processor with the "Input Directory" property set to "/tmp/input"
     And the "Keep Source File" property of the GetFile processor is set to "true"
     And a file with the content "test" is present in "/tmp/input"
-    And a InvokeHTTP processor with the "Remote URL" property set to "http://secondary:8080/contentListener"
+    And a InvokeHTTP processor with the "Remote URL" property set to "http://secondary-${feature_id}:8080/contentListener"
     And the "HTTP Method" property of the InvokeHTTP processor is set to "POST"
     And the "Send Message Body" property of the InvokeHTTP processor is set to "false"
     And the "success" relationship of the GetFile processor is connected to the InvokeHTTP
@@ -97,7 +98,7 @@ Feature: Sending data using InvokeHTTP to a receiver using ListenHTTP
     Given a GetFile processor with the "Input Directory" property set to "/tmp/input"
     And the "Keep Source File" property of the GetFile processor is set to "true"
     And a file with the content "test" is present in "/tmp/input"
-    And a InvokeHTTP processor with the "Remote URL" property set to "http://nifi:8081/contentListener"
+    And a InvokeHTTP processor with the "Remote URL" property set to "http://nifi-${feature_id}:8081/contentListener"
     And the "HTTP Method" property of the InvokeHTTP processor is set to "POST"
     And the "success" relationship of the GetFile processor is connected to the InvokeHTTP
 

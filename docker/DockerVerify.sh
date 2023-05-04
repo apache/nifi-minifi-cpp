@@ -26,18 +26,19 @@ die()
 }
 
 _positionals=()
-_arg_feature_path=('' )
 _arg_image_tag_prefix=
-_enable_test_processors=OFF
-
+_arg_tags_to_exclude=
+_arg_parallel_processes=3
 
 print_help()
 {
   printf '%s\n' "Runs the provided behave tests in a containerized environment"
-  printf 'Usage: %s [--image-tag-prefix <arg>] [--enable_test_processors <ON|OFF>] [-h|--help] <minifi_version> <feature_path-1> [<feature_path-2>] ... [<feature_path-n>] ...\n' "$0"
+  printf 'Usage: %s [--image-tag-prefix <arg>] [-h|--help] <minifi_version> <feature_path-1> [<feature_path-2>] ... [<feature_path-n>] ...\n' "$0"
   printf '\t%s\n' "<minifi_version>: the version of minifi"
-  printf '\t%s\n' "<feature_path>: feature files to run"
+  printf '\t%s\n' "<tags_to_run>: include these tags"
+  printf '\t%s\n' "--tags_to_exclude: optional tags that should be skipped (no default)"
   printf '\t%s\n' "--image-tag-prefix: optional prefix to the docker tag (no default)"
+  printf '\t%s\n' "--parallel_processes: optional argument that specifies the number of parallel processes that can be executed simultaneously. (default: 3)"
   printf '\t%s\n' "-h, --help: Prints help"
 }
 
@@ -57,13 +58,21 @@ parse_commandline()
       --image-tag-prefix=*)
         _arg_image_tag_prefix="${_key##--image-tag-prefix=}"
         ;;
-      --enable_test_processors)
+      --tags_to_exclude)
         test $# -lt 2 && die "Missing value for the optional argument '$_key'." 1
-        _enable_test_processors="$2"
+        _arg_tags_to_exclude="$2"
         shift
         ;;
-      --enable_test_processors=*)
-        _enable_test_processors="${_key##--enable_test_processors=}"
+      --tags_to_exclude=*)
+        _arg_tags_to_exclude="${_key##--tags_to_exclude=}"
+        ;;
+      --parallel_processes)
+        test $# -lt 2 && die "Missing value for the optional argument '$_key'." 1
+        _arg_parallel_processes="$2"
+        shift
+        ;;
+      --parallel_processes=*)
+        _arg_parallel_processes="${_key##--parallel_processes=}"
         ;;
       -h|--help)
         print_help
@@ -86,7 +95,7 @@ parse_commandline()
 
 handle_passed_args_count()
 {
-  local _required_args_string="'minifi_version' and 'feature_path'"
+  local _required_args_string="'minifi_version' and 'tags_to_run'"
   test "${_positionals_count}" -ge 2 || _PRINT_HELP=yes die "FATAL ERROR: Not enough positional arguments - we require at least 2 (namely: $_required_args_string), but got only ${_positionals_count}." 1
 }
 
@@ -94,12 +103,7 @@ handle_passed_args_count()
 assign_positional_args()
 {
   local _positional_name _shift_for=$1
-  _positional_names="_arg_minifi_version _arg_feature_path "
-  _our_args=$((${#_positionals[@]} - 2))
-  for ((ii = 0; ii < _our_args; ii++))
-  do
-    _positional_names="$_positional_names _arg_feature_path[$((ii + 1))]"
-  done
+  _positional_names="_arg_minifi_version _arg_tags_to_run "
 
   shift "$_shift_for"
   for _positional_name in ${_positional_names}
@@ -165,16 +169,19 @@ TEST_DIRECTORY="${docker_dir}/test/integration"
 export TEST_DIRECTORY
 
 # Add --no-logcapture to see logs interleaved with the test output
-BEHAVE_OPTS=(-f pretty --logging-level INFO --logging-clear-handlers)
-if [[ "${_enable_test_processors}" == "ON" ]]; then
-  BEHAVE_OPTS+=(--define "test_processors=ON")
-else
-  BEHAVE_OPTS+=(--define "test_processors=OFF")
+BEHAVE_OPTS=(--logging-level INFO --parallel-processes "${_arg_parallel_processes}" --parallel-scheme feature -o "${PWD}/behavex_output" -t "${_arg_tags_to_run}")
+if ! test -z "${_arg_tags_to_exclude}"
+then
+  IFS=','
+  read -ra splits <<< "${_arg_tags_to_exclude}"
+  for split in "${splits[@]}"
+  do
+      BEHAVE_OPTS=("${BEHAVE_OPTS[@]}" -t "~${split}")
+  done
 fi
 
-# Specify feature or scenario to run a specific test e.g.:
-# behave "${BEHAVE_OPTS[@]}" "features/file_system_operations.feature"
-# behave "${BEHAVE_OPTS[@]}" "features/file_system_operations.feature" -n "Get and put operations run in a simple flow"
+echo "${BEHAVE_OPTS[@]}"
+
 cd "${docker_dir}/test/integration"
 exec
-  behave "${BEHAVE_OPTS[@]}" "${_arg_feature_path[@]}"
+  behavex "${BEHAVE_OPTS[@]}"

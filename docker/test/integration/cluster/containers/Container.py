@@ -18,10 +18,12 @@ import docker
 import logging
 
 from ..LogSource import LogSource
+from ..FeatureContext import FeatureContext
 
 
 class Container:
-    def __init__(self, name, engine, vols, network, image_store, command):
+    def __init__(self, feature_context: FeatureContext, name, engine, vols, network, image_store, command):
+        self.feature_context = feature_context
         self.name = name
         self.engine = engine
         self.vols = vols

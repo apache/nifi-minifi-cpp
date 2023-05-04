@@ -45,24 +45,10 @@ class ImageStore:
             image = self.__build_http_proxy_image()
         elif container_engine == "postgresql-server":
             image = self.__build_postgresql_server_image()
-        elif container_engine == "kafka-broker":
-            image = self.__build_kafka_broker_image()
         elif container_engine == "mqtt-broker":
             image = self.__build_mqtt_broker_image()
         elif container_engine == "splunk":
             image = self.__build_splunk_image()
-        elif container_engine == "tcp-client":
-            image = self.__build_tcp_client_image()
-        elif container_engine == "prometheus":
-            image = self.__build_prometheus_image()
-        elif container_engine == "elasticsearch":
-            image = self.__build_elasticsearch_image()
-        elif container_engine == "opensearch":
-            image = self.__build_opensearch_image()
-        elif container_engine == "minifi-c2-server":
-            image = self.__build_minifi_c2_image()
-        elif container_engine == "minifi-c2-server-ssl":
-            image = self.__build_minifi_c2_ssl_image()
         else:
             raise Exception("There is no associated image for " + container_engine)
 
@@ -136,9 +122,6 @@ class ImageStore:
                 """.format(base_image='postgres:13.2'))
         return self.__build_image(dockerfile)
 
-    def __build_kafka_broker_image(self):
-        return self.__build_image_by_path(self.test_dir + "/resources/kafka_broker", 'minifi-kafka')
-
     def __build_mqtt_broker_image(self):
         dockerfile = dedent("""\
             FROM {base_image}
@@ -150,30 +133,6 @@ class ImageStore:
 
     def __build_splunk_image(self):
         return self.__build_image_by_path(self.test_dir + "/resources/splunk-hec", 'minifi-splunk')
-
-    def __build_tcp_client_image(self):
-        dockerfile = dedent("""\
-            FROM {base_image}
-            RUN apk add netcat-openbsd
-            CMD ["/bin/sh", "-c", "echo TCP client container started; while true; do echo test_tcp_message | nc minifi-cpp-flow 10254; sleep 1; done"]
-            """.format(base_image='alpine:3.13'))
-
-        return self.__build_image(dockerfile)
-
-    def __build_prometheus_image(self):
-        return self.__build_image_by_path(self.test_dir + "/resources/prometheus", 'minifi-prometheus')
-
-    def __build_elasticsearch_image(self):
-        return self.__build_image_by_path(self.test_dir + "/resources/elasticsearch", 'elasticsearch')
-
-    def __build_opensearch_image(self):
-        return self.__build_image_by_path(self.test_dir + "/resources/opensearch", 'opensearch')
-
-    def __build_minifi_c2_image(self):
-        return self.__build_image_by_path(self.test_dir + "/resources/minifi-c2-server", 'minifi-c2-server')
-
-    def __build_minifi_c2_ssl_image(self):
-        return self.__build_image_by_path(self.test_dir + "/resources/minifi-c2-server-ssl", 'minifi-c2-server')
 
     def __build_image(self, dockerfile, context_files=[]):
         conf_dockerfile_buffer = BytesIO()

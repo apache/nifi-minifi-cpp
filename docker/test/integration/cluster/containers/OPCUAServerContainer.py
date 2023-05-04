@@ -19,8 +19,8 @@ from .Container import Container
 
 
 class OPCUAServerContainer(Container):
-    def __init__(self, name, vols, network, image_store, command=None):
-        super().__init__(name, 'opcua-server', vols, network, image_store, command)
+    def __init__(self, feature_context, name, vols, network, image_store, command=None):
+        super().__init__(feature_context, name, 'opcua-server', vols, network, image_store, command)
 
     def get_startup_finished_log_entry(self):
         return "TCP network layer listening on"
@@ -35,6 +35,5 @@ class OPCUAServerContainer(Container):
             detach=True,
             name=self.name,
             network=self.network.name,
-            ports={'4840/tcp': 4840},
             entrypoint=self.command)
         logging.info('Added container \'%s\'', self.name)

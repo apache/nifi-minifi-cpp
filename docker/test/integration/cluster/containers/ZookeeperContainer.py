@@ -19,8 +19,8 @@ from .Container import Container
 
 
 class ZookeeperContainer(Container):
-    def __init__(self, name, vols, network, image_store, command):
-        super().__init__(name, 'zookeeper', vols, network, image_store, command)
+    def __init__(self, feature_context, name, vols, network, image_store, command):
+        super().__init__(feature_context, name, 'zookeeper', vols, network, image_store, command)
 
     def get_startup_finished_log_entry(self):
         return "binding to port"
@@ -31,9 +31,9 @@ class ZookeeperContainer(Container):
 
         logging.info('Creating and running zookeeper docker container...')
         self.client.containers.run(
-            "zookeeper:3.8.1",
+            image="zookeeper:3.8.1",
             detach=True,
-            name='zookeeper',
+            name=self.name,
             network=self.network.name,
             ports={'2181/tcp': 2181},
             entrypoint=self.command)

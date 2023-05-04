@@ -13,6 +13,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+@ENABLE_AWS
 Feature: Sending data from MiNiFi-C++ to an AWS server
   In order to transfer data to interact with AWS servers
   As a user of MiNiFi
@@ -42,11 +43,11 @@ Feature: Sending data from MiNiFi-C++ to an AWS server
     And a file with the content "LH_O#L|FD<FASD{FO#@$#$%^ \"#\"$L%:\"@#$L\":test_data#$#%#$%?{\"F{" is present in "/tmp/input"
     And a PutS3Object processor set up to communicate with an s3 server
     And these processor properties are set to match the http proxy:
-    | processor name  | property name  | property value |
-    | PutS3Object     | Proxy Host     | http-proxy     |
-    | PutS3Object     | Proxy Port     | 3128           |
-    | PutS3Object     | Proxy Username | admin          |
-    | PutS3Object     | Proxy Password | test101        |
+    | processor name  | property name  | property value                  |
+    | PutS3Object     | Proxy Host     | http-proxy-${feature_id}        |
+    | PutS3Object     | Proxy Port     | 3128                            |
+    | PutS3Object     | Proxy Username | admin                           |
+    | PutS3Object     | Proxy Password | test101                         |
     And a PutFile processor with the "Directory" property set to "/tmp/output"
     And the "success" relationship of the GetFile processor is connected to the PutS3Object
     And the "success" relationship of the PutS3Object processor is connected to the PutFile
@@ -58,7 +59,7 @@ Feature: Sending data from MiNiFi-C++ to an AWS server
     Then a flowfile with the content "test" is placed in the monitored directory in less than 150 seconds
     And the object on the s3 server is "LH_O#L|FD<FASD{FO#@$#$%^ \"#\"$L%:\"@#$L\":test_data#$#%#$%?{\"F{"
     And the object content type on the s3 server is "application/octet-stream" and the object metadata matches use metadata
-    And no errors were generated on the http-proxy regarding "http://s3-server:9090/test_bucket/test_object_key"
+    And no errors were generated on the http-proxy regarding "http://s3-server-${feature_id}:9090/test_bucket/test_object_key"
 
   Scenario: A MiNiFi instance can remove s3 bucket objects
     Given a GetFile processor with the "Input Directory" property set to "/tmp/input"
@@ -101,11 +102,11 @@ Feature: Sending data from MiNiFi-C++ to an AWS server
     And a DeleteS3Object processor set up to communicate with the same s3 server
     And a PutFile processor with the "Directory" property set to "/tmp/output"
     And these processor properties are set to match the http proxy:
-      | processor name  | property name  | property value |
-      | DeleteS3Object     | Proxy Host     | http-proxy     |
-      | DeleteS3Object     | Proxy Port     | 3128           |
-      | DeleteS3Object     | Proxy Username | admin          |
-      | DeleteS3Object     | Proxy Password | test101        |
+      | processor name  | property name  | property value                  |
+      | DeleteS3Object  | Proxy Host     | http-proxy-${feature_id}        |
+      | DeleteS3Object  | Proxy Port     | 3128                            |
+      | DeleteS3Object  | Proxy Username | admin                           |
+      | DeleteS3Object  | Proxy Password | test101                         |
     And the processors are connected up as described here:
       | source name    | relationship name | destination name |
       | GetFile        | success           | PutS3Object      |
@@ -119,7 +120,7 @@ Feature: Sending data from MiNiFi-C++ to an AWS server
 
     Then a flowfile with the content "test" is placed in the monitored directory in less than 150 seconds
     And the object bucket on the s3 server is empty
-    And no errors were generated on the http-proxy regarding "http://s3-server:9090/test_bucket/test_object_key"
+    And no errors were generated on the http-proxy regarding "http://s3-server-${feature_id}:9090/test_bucket/test_object_key"
 
   Scenario: A MiNiFi instance can download s3 bucket objects directly
     Given a GetFile processor with the "Input Directory" property set to "/tmp/input"
@@ -150,11 +151,11 @@ Feature: Sending data from MiNiFi-C++ to an AWS server
     Given a GenerateFlowFile processor with the "File Size" property set to "1 kB" in a "secondary" flow
     And a FetchS3Object processor set up to communicate with the same s3 server
     And these processor properties are set to match the http proxy:
-      | processor name | property name  | property value |
-      | FetchS3Object  | Proxy Host     | http-proxy     |
-      | FetchS3Object  | Proxy Port     | 3128           |
-      | FetchS3Object  | Proxy Username | admin          |
-      | FetchS3Object  | Proxy Password | test101        |
+      | processor name | property name  | property value                  |
+      | FetchS3Object  | Proxy Host     | http-proxy-${feature_id}        |
+      | FetchS3Object  | Proxy Port     | 3128                            |
+      | FetchS3Object  | Proxy Username | admin                           |
+      | FetchS3Object  | Proxy Password | test101                         |
     And a PutFile processor with the "Directory" property set to "/tmp/output"
     And the processors are connected up as described here:
       | source name      | relationship name | destination name |
@@ -167,7 +168,7 @@ Feature: Sending data from MiNiFi-C++ to an AWS server
     When all instances start up
 
     Then a flowfile with the content "test" is placed in the monitored directory in less than 150 seconds
-    And no errors were generated on the http-proxy regarding "http://s3-server:9090/test_bucket/test_object_key"
+    And no errors were generated on the http-proxy regarding "http://s3-server-${feature_id}:9090/test_bucket/test_object_key"
 
   Scenario: A MiNiFi instance can list an S3 bucket directly
     Given a GetFile processor with the "Input Directory" property set to "/tmp/input"
@@ -197,11 +198,11 @@ Feature: Sending data from MiNiFi-C++ to an AWS server
 
     Given a ListS3 processor in the "secondary" flow
     And these processor properties are set to match the http proxy:
-      | processor name | property name  | property value |
-      | ListS3         | Proxy Host     | http-proxy     |
-      | ListS3         | Proxy Port     | 3128           |
-      | ListS3         | Proxy Username | admin          |
-      | ListS3         | Proxy Password | test101        |
+      | processor name | property name  | property value                  |
+      | ListS3         | Proxy Host     | http-proxy-${feature_id}        |
+      | ListS3         | Proxy Port     | 3128                            |
+      | ListS3         | Proxy Username | admin                           |
+      | ListS3         | Proxy Password | test101                         |
     And a PutFile processor with the "Directory" property set to "/tmp/output"
     And the "success" relationship of the ListS3 processor is connected to the PutFile
 
@@ -211,4 +212,4 @@ Feature: Sending data from MiNiFi-C++ to an AWS server
     When all instances start up
 
     Then 1 flowfile is placed in the monitored directory in 120 seconds
-    And no errors were generated on the http-proxy regarding "http://s3-server:9090/test_bucket"
+    And no errors were generated on the http-proxy regarding "http://s3-server-${feature_id}:9090/test_bucket"

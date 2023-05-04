@@ -12,17 +12,10 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-from ..core.Processor import Processor
 
 
-class PutGCSObject(Processor):
-    def __init__(self, context):
-        super(PutGCSObject, self).__init__(
-            context=context,
-            clazz='PutGCSObject',
-            properties={
-                'Bucket': 'test-bucket',
-                'Endpoint Override URL': f'fake-gcs-server-{context.feature_id}:4443',
-                'Number of retries': 2
-            },
-            auto_terminate=["success", "failure"])
+class FeatureContext:
+    def __init__(self, feature_id, root_ca_cert, root_ca_key):
+        self.id = feature_id
+        self.root_ca_cert = root_ca_cert
+        self.root_ca_key = root_ca_key

@@ -18,12 +18,14 @@ from ..core.Processor import Processor
 
 
 class AzureBlobStorageProcessorBase(Processor):
-    def __init__(self, name, additional_properties={}, schedule={"scheduling strategy": "TIMER_DRIVEN"}):
+    def __init__(self, context, clazz, additional_properties={}, schedule={"scheduling strategy": "TIMER_DRIVEN"}):
+        hostname = f"http://azure-storage-server-{context.feature_id}"
         super(AzureBlobStorageProcessorBase, self).__init__(
-            name,
+            context=context,
+            clazz=clazz,
             properties={
                 'Container Name': 'test-container',
-                'Connection String': 'DefaultEndpointsProtocol=http;AccountName=devstoreaccount1;AccountKey=Eby8vdM02xNOcqFlqUwJPLlmEtlCDXJ1OUzFT50uSRZ6IFsuFq2UVErCz4I6tq/K1SZFPTOtr/KBHBeksoGMGw==;BlobEndpoint=http://azure-storage-server:10000/devstoreaccount1;QueueEndpoint=http://azure-storage-server:10001/devstoreaccount1;',
+                'Connection String': 'DefaultEndpointsProtocol=http;AccountName=devstoreaccount1;AccountKey=Eby8vdM02xNOcqFlqUwJPLlmEtlCDXJ1OUzFT50uSRZ6IFsuFq2UVErCz4I6tq/K1SZFPTOtr/KBHBeksoGMGw==;BlobEndpoint={hostname}:10000/devstoreaccount1;QueueEndpoint={hostname}:10001/devstoreaccount1;'.format(hostname=hostname),
                 'Blob': 'test-blob',
                 **additional_properties
             },

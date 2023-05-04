@@ -18,9 +18,10 @@ from ..core.Processor import Processor
 
 
 class GetFile(Processor):
-    def __init__(self, input_dir="/tmp/input", schedule={'scheduling period': '2 sec'}):
+    def __init__(self, context, input_dir="/tmp/input", schedule={'scheduling period': '2 sec'}):
         super(GetFile, self).__init__(
-            'GetFile',
+            context=context,
+            clazz='GetFile',
             properties={
                 'Input Directory': input_dir,
             },

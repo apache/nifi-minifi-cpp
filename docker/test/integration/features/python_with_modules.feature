@@ -13,6 +13,8 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+@ENABLE_PYTHON_SCRIPTING
+@NEEDS_NUMPY
 Feature: MiNiFi can use python modules
   Background:
     Given the content of "/tmp/output" is monitored

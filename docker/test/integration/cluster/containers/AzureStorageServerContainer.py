@@ -19,8 +19,8 @@ from .Container import Container
 
 
 class AzureStorageServerContainer(Container):
-    def __init__(self, name, vols, network, image_store, command=None):
-        super().__init__(name, 'azure-storage-server', vols, network, image_store, command)
+    def __init__(self, feature_context, name, vols, network, image_store, command=None):
+        super().__init__(feature_context, name, 'azure-storage-server', vols, network, image_store, command)
 
     def get_startup_finished_log_entry(self):
         return "Azurite Queue service is successfully listening at"

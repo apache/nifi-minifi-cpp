@@ -18,7 +18,8 @@ from ..core.Processor import Processor
 
 
 class QueryDatabaseTable(Processor):
-    def __init__(self):
+    def __init__(self, context):
         super(QueryDatabaseTable, self).__init__(
-            'QueryDatabaseTable',
+            context=context,
+            clazz='QueryDatabaseTable',
             auto_terminate=['success'])

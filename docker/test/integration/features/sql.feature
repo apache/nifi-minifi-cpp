@@ -13,6 +13,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+@ENABLE_SQL
 Feature: Executing SQL operations from MiNiFi-C++
   As a user of MiNiFi
   I need to have ExecuteSQL, QueryDatabaseTable and PutSQL processors

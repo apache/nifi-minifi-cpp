@@ -19,8 +19,8 @@ from .Container import Container
 
 
 class SplunkContainer(Container):
-    def __init__(self, name, vols, network, image_store, command=None):
-        super().__init__(name, 'splunk', vols, network, image_store, command)
+    def __init__(self, feature_context, name, vols, network, image_store, command=None):
+        super().__init__(feature_context, name, 'splunk', vols, network, image_store, command)
 
     def get_startup_finished_log_entry(self):
         return "Ansible playbook complete, will begin streaming splunkd_stderr.log"

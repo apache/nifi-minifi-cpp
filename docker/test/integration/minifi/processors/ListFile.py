@@ -18,8 +18,9 @@ from ..core.Processor import Processor
 
 
 class ListFile(Processor):
-    def __init__(self, schedule={'scheduling period': '2 sec'}):
+    def __init__(self, context, schedule={'scheduling period': '2 sec'}):
         super(ListFile, self).__init__(
-            'ListFile',
+            context=context,
+            clazz='ListFile',
             schedule=schedule,
             auto_terminate=['success'])

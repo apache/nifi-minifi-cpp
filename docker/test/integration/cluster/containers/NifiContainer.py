@@ -26,13 +26,13 @@ class NifiContainer(FlowContainer):
     NIFI_VERSION = '1.20.0'
     NIFI_ROOT = '/opt/nifi/nifi-' + NIFI_VERSION
 
-    def __init__(self, config_dir, name, vols, network, image_store, command=None):
+    def __init__(self, feature_context, config_dir, name, vols, network, image_store, command=None):
         if not command:
             entry_command = (r"sed -i -e 's/^\(nifi.remote.input.host\)=.*/\1={name}/' {nifi_root}/conf/nifi.properties && "
                              r"sed -i -e 's/^\(nifi.sensitive.props.key\)=.*/\1=secret_key_12345/' {nifi_root}/conf/nifi.properties && "
                              r"cp /tmp/nifi_config/flow.xml.gz {nifi_root}/conf && /opt/nifi/scripts/start.sh").format(name=name, nifi_root=NifiContainer.NIFI_ROOT)
             command = ["/bin/sh", "-c", entry_command]
-        super().__init__(config_dir, name, 'nifi', vols, network, image_store, command)
+        super().__init__(feature_context, config_dir, name, 'nifi', vols, network, image_store, command)
 
     def get_startup_finished_log_entry(self):
         return "Starting Flow Controller"

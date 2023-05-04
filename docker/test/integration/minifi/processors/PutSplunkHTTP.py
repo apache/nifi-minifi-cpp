@@ -18,9 +18,10 @@ from ..core.Processor import Processor
 
 
 class PutSplunkHTTP(Processor):
-    def __init__(self, schedule={'scheduling strategy': 'EVENT_DRIVEN'}):
+    def __init__(self, context, schedule={'scheduling strategy': 'EVENT_DRIVEN'}):
         super(PutSplunkHTTP, self).__init__(
-            'PutSplunkHTTP',
+            context=context,
+            clazz='PutSplunkHTTP',
             properties={
                 'Hostname': 'splunk',
                 'Port': '8088',

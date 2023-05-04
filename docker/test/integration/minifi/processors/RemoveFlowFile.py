@@ -18,5 +18,7 @@ from ..core.Processor import Processor
 
 
 class RemoveFlowFile(Processor):
-    def __init__(self):
-        super(RemoveFlowFile, self).__init__('RemoveFlowFile', class_prefix='org.apache.nifi.minifi.processors.examples.')
+    def __init__(self, context):
+        super(RemoveFlowFile, self).__init__(context=context,
+                                             clazz='RemoveFlowFile',
+                                             class_prefix='org.apache.nifi.minifi.processors.examples.')

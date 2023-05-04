@@ -18,7 +18,7 @@ from ..core.Processor import Processor
 
 
 class ListenHTTP(Processor):
-    def __init__(self, cert=None, schedule=None):
+    def __init__(self, context, cert=None, schedule=None):
         properties = {}
 
         if cert is not None:
@@ -26,7 +26,8 @@ class ListenHTTP(Processor):
             properties['SSL Verify Peer'] = 'no'
 
         super(ListenHTTP, self).__init__(
-            'ListenHTTP',
+            context=context,
+            clazz='ListenHTTP',
             properties=properties,
             auto_terminate=['success'],
             schedule=schedule)

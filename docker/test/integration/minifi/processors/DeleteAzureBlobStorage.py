@@ -18,7 +18,8 @@ from .AzureBlobStorageProcessorBase import AzureBlobStorageProcessorBase
 
 
 class DeleteAzureBlobStorage(AzureBlobStorageProcessorBase):
-    def __init__(self):
+    def __init__(self, context):
         super(DeleteAzureBlobStorage, self).__init__(
-            'DeleteAzureBlobStorage',
+            context=context,
+            clazz='DeleteAzureBlobStorage',
             schedule={"scheduling strategy": "EVENT_DRIVEN"})

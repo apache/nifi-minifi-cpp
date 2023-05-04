@@ -18,8 +18,11 @@ import logging
 import time
 import uuid
 
+import OpenSSL.crypto
+
 from pydoc import locate
 
+from ssl_utils.SSL_cert_utils import make_ca, make_client_cert
 from minifi.core.InputPort import InputPort
 
 from cluster.DockerTestCluster import DockerTestCluster
@@ -37,9 +40,9 @@ from utils import decode_escaped_str, get_minifi_pid, get_peak_memory_usage
 
 
 class MiNiFi_integration_test:
-    def __init__(self, context):
-        self.test_id = context.test_id
-        self.cluster = DockerTestCluster(context)
+    def __init__(self, context, feature_id: str):
+        self.feature_id = feature_id
+        self.cluster = DockerTestCluster(context, feature_id=feature_id)
 
         self.connectable_nodes = []
         # Remote process groups are not connectables
@@ -47,38 +50,58 @@ class MiNiFi_integration_test:
         self.file_system_observer = None
 
         self.docker_directory_bindings = context.directory_bindings
-        self.cluster.set_directory_bindings(self.docker_directory_bindings.get_directory_bindings(self.test_id), self.docker_directory_bindings.get_data_directories(self.test_id))
+        self.cluster.set_directory_bindings(self.docker_directory_bindings.get_directory_bindings(self.feature_id), self.docker_directory_bindings.get_data_directories(self.feature_id))
+        self.root_ca_cert, self.root_ca_key = make_ca("root CA")
+
+        minifi_client_cert, minifi_client_key = make_client_cert(common_name=f"minifi-cpp-flow-{self.feature_id}",
+                                                                 ca_cert=self.root_ca_cert,
+                                                                 ca_key=self.root_ca_key)
+        self.put_test_resource('root_ca.crt',
+                               OpenSSL.crypto.dump_certificate(type=OpenSSL.crypto.FILETYPE_PEM,
+                                                               cert=self.root_ca_cert))
+
+        self.put_test_resource('minifi_client.crt',
+                               OpenSSL.crypto.dump_certificate(type=OpenSSL.crypto.FILETYPE_PEM,
+                                                               cert=minifi_client_cert))
+        self.put_test_resource('minifi_client.key',
+                               OpenSSL.crypto.dump_privatekey(type=OpenSSL.crypto.FILETYPE_PEM,
+                                                              pkey=minifi_client_key))
+
+    def get_container_name_with_postfix(self, container_name: str):
+        return self.cluster.container_store.get_container_name_with_postfix(container_name)
 
     def cleanup(self):
         self.cluster.cleanup()
+        if self.file_system_observer:
+            self.file_system_observer.observer.unschedule_all()
 
-    def acquire_container(self, name, engine='minifi-cpp', command=None):
-        return self.cluster.acquire_container(name, engine, command)
+    def acquire_container(self, context, name, engine='minifi-cpp', command=None):
+        return self.cluster.acquire_container(context=context, name=name, engine=engine, command=command)
 
-    def start_kafka_broker(self):
-        self.cluster.acquire_container('kafka-broker', 'kafka-broker')
-        self.cluster.deploy_container('zookeeper')
-        self.cluster.deploy_container('kafka-broker')
+    def start_kafka_broker(self, context):
+        self.cluster.acquire_container(context=context, name='kafka-broker', engine='kafka-broker')
+        self.cluster.deploy_container(name='zookeeper')
+        self.cluster.deploy_container(name='kafka-broker')
         assert self.cluster.wait_for_container_startup_to_finish('kafka-broker')
 
-    def start_splunk(self):
-        self.cluster.acquire_container('splunk', 'splunk')
-        self.cluster.deploy_container('splunk')
+    def start_splunk(self, context):
+        self.cluster.acquire_container(context=context, name='splunk', engine='splunk')
+        self.cluster.deploy_container(name='splunk')
         assert self.cluster.wait_for_container_startup_to_finish('splunk')
         assert self.cluster.enable_splunk_hec_indexer('splunk', 'splunk_hec_token')
 
-    def start_elasticsearch(self):
-        self.cluster.acquire_container('elasticsearch', 'elasticsearch')
+    def start_elasticsearch(self, context):
+        self.cluster.acquire_container(context=context, name='elasticsearch', engine='elasticsearch')
         self.cluster.deploy_container('elasticsearch')
         assert self.cluster.wait_for_container_startup_to_finish('elasticsearch')
 
-    def start_opensearch(self):
-        self.cluster.acquire_container('opensearch', 'opensearch')
+    def start_opensearch(self, context):
+        self.cluster.acquire_container(context=context, name='opensearch', engine='opensearch')
         self.cluster.deploy_container('opensearch')
         assert self.cluster.wait_for_container_startup_to_finish('opensearch')
 
-    def start_minifi_c2_server(self):
-        self.cluster.acquire_container("minifi-c2-server", "minifi-c2-server")
+    def start_minifi_c2_server(self, context):
+        self.cluster.acquire_container(context=context, name="minifi-c2-server", engine="minifi-c2-server")
         self.cluster.deploy_container('minifi-c2-server')
         assert self.cluster.wait_for_container_startup_to_finish('minifi-c2-server')
 
@@ -147,13 +170,13 @@ class MiNiFi_integration_test:
         if file_name is None:
             file_name = str(uuid.uuid4())
         test_data = decode_escaped_str(test_data)
-        self.docker_directory_bindings.put_file_to_docker_path(self.test_id, path, file_name, test_data.encode('utf-8'))
+        self.docker_directory_bindings.put_file_to_docker_path(self.feature_id, path, file_name, test_data.encode('utf-8'))
 
     def put_test_resource(self, file_name, contents):
-        self.docker_directory_bindings.put_test_resource(self.test_id, file_name, contents)
+        self.docker_directory_bindings.put_test_resource(self.feature_id, file_name, contents)
 
     def rm_out_child(self):
-        self.docker_directory_bindings.rm_out_child(self.test_id)
+        self.docker_directory_bindings.rm_out_child(self.feature_id)
 
     def add_file_system_observer(self, file_system_observer):
         self.file_system_observer = file_system_observer

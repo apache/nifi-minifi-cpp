@@ -16,13 +16,13 @@ from ..core.Processor import Processor
 
 
 class FetchGCSObject(Processor):
-    def __init__(
-            self):
+    def __init__(self, context):
         super(FetchGCSObject, self).__init__(
-            'FetchGCSObject',
+            context=context,
+            clazz='FetchGCSObject',
             properties={
                 'Bucket': 'test-bucket',
-                'Endpoint Override URL': 'fake-gcs-server:4443',
+                'Endpoint Override URL': f'fake-gcs-server-{context.feature_id}:4443',
                 'Number of retries': 2
             },
             auto_terminate=["success", "failure"])

@@ -13,6 +13,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+@ENABLE_OPCUA
 Feature: Putting and fetching data to OPC UA server
   In order to send and fetch data from an OPC UA server
   As a user of MiNiFi
@@ -28,20 +29,20 @@ Feature: Putting and fetching data to OPC UA server
     And a FetchOPCProcessor processor in the "fetch-opc-ua-node" flow
     And a PutFile processor with the "Directory" property set to "/tmp/output" in the "fetch-opc-ua-node" flow
     And these processor properties are set:
-      | processor name    | property name               | property value                  |
-      | PutOPCProcessor   | Parent node ID              | 85                              |
-      | PutOPCProcessor   | Parent node ID type         | Int                             |
-      | PutOPCProcessor   | Target node ID              | 9999                            |
-      | PutOPCProcessor   | Target node ID type         | Int                             |
-      | PutOPCProcessor   | Target node namespace index | 1                               |
-      | PutOPCProcessor   | Value type                  | <Value Type>                    |
-      | PutOPCProcessor   | OPC server endpoint         | opc.tcp://opcua-server:4840/    |
-      | PutOPCProcessor   | Target node browse name     | testnodename                    |
-      | FetchOPCProcessor | Node ID                     | 9999                            |
-      | FetchOPCProcessor | Node ID type                | Int                             |
-      | FetchOPCProcessor | Namespace index             | 1                               |
-      | FetchOPCProcessor | OPC server endpoint         | opc.tcp://opcua-server:4840/    |
-      | FetchOPCProcessor | Max depth                   | 1                               |
+      | processor name    | property name               | property value                                    |
+      | PutOPCProcessor   | Parent node ID              | 85                                                |
+      | PutOPCProcessor   | Parent node ID type         | Int                                               |
+      | PutOPCProcessor   | Target node ID              | 9999                                              |
+      | PutOPCProcessor   | Target node ID type         | Int                                               |
+      | PutOPCProcessor   | Target node namespace index | 1                                                 |
+      | PutOPCProcessor   | Value type                  | <Value Type>                                      |
+      | PutOPCProcessor   | OPC server endpoint         | opc.tcp://opcua-server-${feature_id}:4840/        |
+      | PutOPCProcessor   | Target node browse name     | testnodename                                      |
+      | FetchOPCProcessor | Node ID                     | 9999                                              |
+      | FetchOPCProcessor | Node ID type                | Int                                               |
+      | FetchOPCProcessor | Namespace index             | 1                                                 |
+      | FetchOPCProcessor | OPC server endpoint         | opc.tcp://opcua-server-${feature_id}:4840/        |
+      | FetchOPCProcessor | Max depth                   | 1                                                 |
 
     And the "success" relationship of the GetFile processor is connected to the PutOPCProcessor
     And the "success" relationship of the FetchOPCProcessor processor is connected to the PutFile
@@ -65,20 +66,20 @@ Feature: Putting and fetching data to OPC UA server
     And a FetchOPCProcessor processor in the "fetch-opc-ua-node" flow
     And a PutFile processor with the "Directory" property set to "/tmp/output" in the "fetch-opc-ua-node" flow
     And these processor properties are set:
-      | processor name    | property name               | property value                  |
-      | PutOPCProcessor   | Parent node ID              | 85                              |
-      | PutOPCProcessor   | Parent node ID type         | Int                             |
-      | PutOPCProcessor   | Target node ID              | <Node ID>                       |
-      | PutOPCProcessor   | Target node ID type         | <Node ID Type>                  |
-      | PutOPCProcessor   | Target node namespace index | 1                               |
-      | PutOPCProcessor   | Value type                  | <Value Type>                    |
-      | PutOPCProcessor   | OPC server endpoint         | opc.tcp://opcua-server:4840/    |
-      | PutOPCProcessor   | Target node browse name     | testnodename                    |
-      | FetchOPCProcessor | Node ID                     | <Node ID>                       |
-      | FetchOPCProcessor | Node ID type                | <Node ID Type>                  |
-      | FetchOPCProcessor | Namespace index             | 1                               |
-      | FetchOPCProcessor | OPC server endpoint         | opc.tcp://opcua-server:4840/    |
-      | FetchOPCProcessor | Max depth                   | 1                               |
+      | processor name    | property name               | property value                                    |
+      | PutOPCProcessor   | Parent node ID              | 85                                                |
+      | PutOPCProcessor   | Parent node ID type         | Int                                               |
+      | PutOPCProcessor   | Target node ID              | <Node ID>                                         |
+      | PutOPCProcessor   | Target node ID type         | <Node ID Type>                                    |
+      | PutOPCProcessor   | Target node namespace index | 1                                                 |
+      | PutOPCProcessor   | Value type                  | <Value Type>                                      |
+      | PutOPCProcessor   | OPC server endpoint         | opc.tcp://opcua-server-${feature_id}:4840/        |
+      | PutOPCProcessor   | Target node browse name     | testnodename                                      |
+      | FetchOPCProcessor | Node ID                     | <Node ID>                                         |
+      | FetchOPCProcessor | Node ID type                | <Node ID Type>                                    |
+      | FetchOPCProcessor | Namespace index             | 1                                                 |
+      | FetchOPCProcessor | OPC server endpoint         | opc.tcp://opcua-server-${feature_id}:4840/        |
+      | FetchOPCProcessor | Max depth                   | 1                                                 |
 
     And the "success" relationship of the GetFile processor is connected to the PutOPCProcessor
     And the "success" relationship of the FetchOPCProcessor processor is connected to the PutFile
@@ -105,26 +106,26 @@ Feature: Putting and fetching data to OPC UA server
     And a FetchOPCProcessor processor in the "fetch-opc-ua-node" flow
     And a PutFile processor with the "Directory" property set to "/tmp/output" in the "fetch-opc-ua-node" flow
     And these processor properties are set:
-      | processor name    | property name               | property value                             |
-      | PutOPCProcessor   | Parent node ID              | 85                                         |
-      | PutOPCProcessor   | Parent node ID type         | Int                                        |
-      | PutOPCProcessor   | Target node ID              | 9999                                       |
-      | PutOPCProcessor   | Target node ID type         | Int                                        |
-      | PutOPCProcessor   | Target node namespace index | 1                                          |
-      | PutOPCProcessor   | Value type                  | String                                     |
-      | PutOPCProcessor   | OPC server endpoint         | opc.tcp://opcua-server:4840/               |
-      | PutOPCProcessor   | Target node browse name     | testnodename                               |
-      | PutOPCProcessor   | Certificate path            | /tmp/resources/opcua/opcua_client_cert.der |
-      | PutOPCProcessor   | Key path                    | /tmp/resources/opcua/opcua_client_key.der  |
-      | PutOPCProcessor   | Application URI             | urn:open62541.server.application           |
-      | FetchOPCProcessor | Node ID                     | 9999                                       |
-      | FetchOPCProcessor | Node ID type                | Int                                        |
-      | FetchOPCProcessor | Namespace index             | 1                                          |
-      | FetchOPCProcessor | OPC server endpoint         | opc.tcp://opcua-server:4840/               |
-      | FetchOPCProcessor | Max depth                   | 1                                          |
-      | FetchOPCProcessor | Certificate path            | /tmp/resources/opcua/opcua_client_cert.der |
-      | FetchOPCProcessor | Key path                    | /tmp/resources/opcua/opcua_client_key.der  |
-      | FetchOPCProcessor | Application URI             | urn:open62541.server.application           |
+      | processor name    | property name               | property value                                    |
+      | PutOPCProcessor   | Parent node ID              | 85                                                |
+      | PutOPCProcessor   | Parent node ID type         | Int                                               |
+      | PutOPCProcessor   | Target node ID              | 9999                                              |
+      | PutOPCProcessor   | Target node ID type         | Int                                               |
+      | PutOPCProcessor   | Target node namespace index | 1                                                 |
+      | PutOPCProcessor   | Value type                  | String                                            |
+      | PutOPCProcessor   | OPC server endpoint         | opc.tcp://opcua-server-${feature_id}:4840/        |
+      | PutOPCProcessor   | Target node browse name     | testnodename                                      |
+      | PutOPCProcessor   | Certificate path            | /tmp/resources/opcua/opcua_client_cert.der        |
+      | PutOPCProcessor   | Key path                    | /tmp/resources/opcua/opcua_client_key.der         |
+      | PutOPCProcessor   | Application URI             | urn:open62541.server.application                  |
+      | FetchOPCProcessor | Node ID                     | 9999                                              |
+      | FetchOPCProcessor | Node ID type                | Int                                               |
+      | FetchOPCProcessor | Namespace index             | 1                                                 |
+      | FetchOPCProcessor | OPC server endpoint         | opc.tcp://opcua-server-${feature_id}:4840/        |
+      | FetchOPCProcessor | Max depth                   | 1                                                 |
+      | FetchOPCProcessor | Certificate path            | /tmp/resources/opcua/opcua_client_cert.der        |
+      | FetchOPCProcessor | Key path                    | /tmp/resources/opcua/opcua_client_key.der         |
+      | FetchOPCProcessor | Application URI             | urn:open62541.server.application                  |
 
     And the "success" relationship of the GetFile processor is connected to the PutOPCProcessor
     And the "success" relationship of the FetchOPCProcessor processor is connected to the PutFile
@@ -142,24 +143,24 @@ Feature: Putting and fetching data to OPC UA server
     And a FetchOPCProcessor processor in the "fetch-opc-ua-node" flow
     And a PutFile processor with the "Directory" property set to "/tmp/output" in the "fetch-opc-ua-node" flow
     And these processor properties are set:
-      | processor name    | property name               | property value                |
-      | PutOPCProcessor   | Parent node ID              | 85                            |
-      | PutOPCProcessor   | Parent node ID type         | Int                           |
-      | PutOPCProcessor   | Target node ID              | 9999                          |
-      | PutOPCProcessor   | Target node ID type         | Int                           |
-      | PutOPCProcessor   | Target node namespace index | 1                             |
-      | PutOPCProcessor   | Value type                  | String                        |
-      | PutOPCProcessor   | OPC server endpoint         | opc.tcp://opcua-server:4840/  |
-      | PutOPCProcessor   | Target node browse name     | testnodename                  |
-      | PutOPCProcessor   | Username                    | peter                         |
-      | PutOPCProcessor   | Password                    | peter123                      |
-      | FetchOPCProcessor | Node ID                     | 9999                          |
-      | FetchOPCProcessor | Node ID type                | Int                           |
-      | FetchOPCProcessor | Namespace index             | 1                             |
-      | FetchOPCProcessor | OPC server endpoint         | opc.tcp://opcua-server:4840/  |
-      | FetchOPCProcessor | Max depth                   | 1                             |
-      | FetchOPCProcessor | Username                    | peter                         |
-      | FetchOPCProcessor | Password                    | peter123                      |
+      | processor name    | property name               | property value                                    |
+      | PutOPCProcessor   | Parent node ID              | 85                                                |
+      | PutOPCProcessor   | Parent node ID type         | Int                                               |
+      | PutOPCProcessor   | Target node ID              | 9999                                              |
+      | PutOPCProcessor   | Target node ID type         | Int                                               |
+      | PutOPCProcessor   | Target node namespace index | 1                                                 |
+      | PutOPCProcessor   | Value type                  | String                                            |
+      | PutOPCProcessor   | OPC server endpoint         | opc.tcp://opcua-server-${feature_id}:4840/        |
+      | PutOPCProcessor   | Target node browse name     | testnodename                                      |
+      | PutOPCProcessor   | Username                    | peter                                             |
+      | PutOPCProcessor   | Password                    | peter123                                          |
+      | FetchOPCProcessor | Node ID                     | 9999                                              |
+      | FetchOPCProcessor | Node ID type                | Int                                               |
+      | FetchOPCProcessor | Namespace index             | 1                                                 |
+      | FetchOPCProcessor | OPC server endpoint         | opc.tcp://opcua-server-${feature_id}:4840/        |
+      | FetchOPCProcessor | Max depth                   | 1                                                 |
+      | FetchOPCProcessor | Username                    | peter                                             |
+      | FetchOPCProcessor | Password                    | peter123                                          |
 
     And the "success" relationship of the GetFile processor is connected to the PutOPCProcessor
     And the "success" relationship of the FetchOPCProcessor processor is connected to the PutFile

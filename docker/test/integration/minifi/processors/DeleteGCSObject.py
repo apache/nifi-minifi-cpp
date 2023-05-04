@@ -16,13 +16,13 @@ from ..core.Processor import Processor
 
 
 class DeleteGCSObject(Processor):
-    def __init__(
-            self):
+    def __init__(self, context):
         super(DeleteGCSObject, self).__init__(
-            'DeleteGCSObject',
+            context=context,
+            clazz='DeleteGCSObject',
             properties={
                 'Bucket': 'test-bucket',
-                'Endpoint Override URL': 'fake-gcs-server:4443',
+                'Endpoint Override URL': f'fake-gcs-server-{context.feature_id}:4443',
                 'Number of retries': 2
             },
             auto_terminate=["success", "failure"])

@@ -18,10 +18,10 @@ from ..core.Processor import Processor
 
 
 class QuerySplunkIndexingStatus(Processor):
-    def __init__(self, schedule={'scheduling strategy': 'EVENT_DRIVEN',
-                                 'penalization period': '1 sec'}):
+    def __init__(self, context, schedule={'scheduling strategy': 'EVENT_DRIVEN', 'penalization period': '1 sec'}):
         super(QuerySplunkIndexingStatus, self).__init__(
-            'QuerySplunkIndexingStatus',
+            context=context,
+            clazz='QuerySplunkIndexingStatus',
             properties={
                 'Hostname': 'splunk',
                 'Port': '8088',

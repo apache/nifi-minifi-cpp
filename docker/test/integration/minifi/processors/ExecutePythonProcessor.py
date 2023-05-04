@@ -18,7 +18,8 @@ from ..core.Processor import Processor
 
 
 class ExecutePythonProcessor(Processor):
-    def __init__(self):
+    def __init__(self, context):
         super(ExecutePythonProcessor, self).__init__(
-            'ExecutePythonProcessor',
+            context=context,
+            clazz='ExecutePythonProcessor',
             auto_terminate=['success'])

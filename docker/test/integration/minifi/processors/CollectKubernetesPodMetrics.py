@@ -18,7 +18,8 @@ from ..core.Processor import Processor
 
 
 class CollectKubernetesPodMetrics(Processor):
-    def __init__(self, schedule={'scheduling strategy': 'TIMER_DRIVEN', 'scheduling period': '1 second'}):
+    def __init__(self, context, schedule={'scheduling strategy': 'TIMER_DRIVEN', 'scheduling period': '1 second'}):
         super(CollectKubernetesPodMetrics, self).__init__(
-            'CollectKubernetesPodMetrics',
+            context=context,
+            clazz='CollectKubernetesPodMetrics',
             schedule=schedule)

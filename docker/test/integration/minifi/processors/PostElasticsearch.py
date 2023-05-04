@@ -18,11 +18,12 @@ from ..core.Processor import Processor
 
 
 class PostElasticsearch(Processor):
-    def __init__(self, schedule={'scheduling strategy': 'EVENT_DRIVEN'}):
+    def __init__(self, context, schedule={'scheduling strategy': 'EVENT_DRIVEN'}):
         super(PostElasticsearch, self).__init__(
-            'PostElasticsearch',
+            context=context,
+            clazz='PostElasticsearch',
             properties={
-                'Hosts': 'https://elasticsearch:9200',
+                'Hosts': f'https://elasticsearch-{context.feature_id}:9200',
                 'Index': 'test',
                 'Identifier': '${filename}'
             },

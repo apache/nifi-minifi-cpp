@@ -18,11 +18,12 @@ from ..core.Processor import Processor
 
 
 class PublishMQTT(Processor):
-    def __init__(self, schedule={'scheduling strategy': 'EVENT_DRIVEN'}):
+    def __init__(self, context, schedule={'scheduling strategy': 'EVENT_DRIVEN'}):
         super(PublishMQTT, self).__init__(
-            'PublishMQTT',
+            context=context,
+            clazz='PublishMQTT',
             properties={
-                'Broker URI': 'mqtt-broker:1883',
+                'Broker URI': f'mqtt-broker-{context.feature_id}:1883',
                 'Topic': 'testtopic',
                 'Client ID': 'publisher-client'},
             auto_terminate=['success', 'failure'],

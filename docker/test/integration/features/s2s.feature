@@ -13,6 +13,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+@CORE
 Feature: Sending data from MiNiFi-C++ to NiFi using S2S protocol
   In order to transfer data inbetween NiFi and MiNiFi flows
   As a user of MiNiFi
@@ -24,7 +25,7 @@ Feature: Sending data from MiNiFi-C++ to NiFi using S2S protocol
   Scenario: A MiNiFi instance produces and transfers data to a NiFi instance via s2s
     Given a GetFile processor with the "Input Directory" property set to "/tmp/input"
     And a file with the content "test" is present in "/tmp/input"
-    And a RemoteProcessGroup node opened on "http://nifi:8080/nifi"
+    And a RemoteProcessGroup node opened on "http://nifi-${feature_id}:8080/nifi"
     And the "success" relationship of the GetFile processor is connected to the input port on the RemoteProcessGroup
 
     And a NiFi flow receiving data from a RemoteProcessGroup "from-minifi" on port 8080
@@ -37,7 +38,7 @@ Feature: Sending data from MiNiFi-C++ to NiFi using S2S protocol
   Scenario: Zero length files are transfered between via s2s if the "drop empty" connection property is false
     Given a MiNiFi CPP server with yaml config
     And a GenerateFlowFile processor with the "File Size" property set to "0B"
-    And a RemoteProcessGroup node opened on "http://nifi:8080/nifi"
+    And a RemoteProcessGroup node opened on "http://nifi-${feature_id}:8080/nifi"
     And the "success" relationship of the GenerateFlowFile processor is connected to the input port on the RemoteProcessGroup
 
     And a NiFi flow receiving data from a RemoteProcessGroup "from-minifi" on port 8080
@@ -51,7 +52,7 @@ Feature: Sending data from MiNiFi-C++ to NiFi using S2S protocol
     # "drop empty" is only supported with yaml config
     Given a MiNiFi CPP server with yaml config
     And a GenerateFlowFile processor with the "File Size" property set to "0B"
-    And a RemoteProcessGroup node opened on "http://nifi:8080/nifi"
+    And a RemoteProcessGroup node opened on "http://nifi-${feature_id}:8080/nifi"
     And the "success" relationship of the GenerateFlowFile processor is connected to the input port on the RemoteProcessGroup
     And the connection going to the RemoteProcessGroup has "drop empty" set
 

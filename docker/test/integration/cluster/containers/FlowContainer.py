@@ -18,8 +18,14 @@ from .Container import Container
 
 
 class FlowContainer(Container):
-    def __init__(self, config_dir, name, engine, vols, network, image_store, command):
-        super().__init__(name, engine, vols, network, image_store, command)
+    def __init__(self, feature_context, config_dir, name, engine, vols, network, image_store, command):
+        super().__init__(feature_context=feature_context,
+                         name=name,
+                         engine=engine,
+                         vols=vols,
+                         network=network,
+                         image_store=image_store,
+                         command=command)
         self.start_nodes = []
         self.config_dir = config_dir
         self.controllers = []

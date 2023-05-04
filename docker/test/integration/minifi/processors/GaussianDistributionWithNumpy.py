@@ -18,5 +18,7 @@ from ..core.Processor import Processor
 
 
 class GaussianDistributionWithNumpy(Processor):
-    def __init__(self):
-        super(GaussianDistributionWithNumpy, self).__init__('GaussianDistributionWithNumpy', class_prefix='org.apache.nifi.minifi.processors.examples.')
+    def __init__(self, context):
+        super(GaussianDistributionWithNumpy, self).__init__(context=context,
+                                                            clazz='GaussianDistributionWithNumpy',
+                                                            class_prefix='org.apache.nifi.minifi.processors.examples.')

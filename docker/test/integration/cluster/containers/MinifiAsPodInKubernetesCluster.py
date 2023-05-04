@@ -27,11 +27,18 @@ class MinifiAsPodInKubernetesCluster(MinifiContainer):
     MINIFI_IMAGE_NAME = 'apacheminificpp'
     MINIFI_IMAGE_TAG = 'docker_test'
 
-    def __init__(self, kubernetes_proxy, config_dir, minifi_options, name, vols, network, image_store, command=None):
+    def __init__(self, feature_context, kubernetes_proxy, config_dir, minifi_options, name, vols, network, image_store, command=None):
         test_dir = os.environ['TEST_DIRECTORY']
         shutil.copy(os.path.join(test_dir, os.pardir, os.pardir, os.pardir, 'conf', 'minifi.properties'), config_dir)
         shutil.copy(os.path.join(test_dir, 'resources', 'kubernetes', 'minifi-conf', 'minifi-log.properties'), config_dir)
-        super().__init__(config_dir, minifi_options, name, vols, network, image_store, command)
+        super().__init__(feature_context=feature_context,
+                         config_dir=config_dir,
+                         options=minifi_options,
+                         name=name,
+                         vols=vols,
+                         network=network,
+                         image_store=image_store,
+                         command=command)
 
         self.kubernetes_proxy = kubernetes_proxy
 

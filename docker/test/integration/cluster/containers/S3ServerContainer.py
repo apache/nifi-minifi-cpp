@@ -19,8 +19,8 @@ from .Container import Container
 
 
 class S3ServerContainer(Container):
-    def __init__(self, name, vols, network, image_store, command):
-        super().__init__(name, 's3-server', vols, network, image_store, command)
+    def __init__(self, feature_context, name, vols, network, image_store, command):
+        super().__init__(feature_context, name, 's3-server', vols, network, image_store, command)
 
     def get_startup_finished_log_entry(self):
         return "Started S3MockApplication"
@@ -35,7 +35,6 @@ class S3ServerContainer(Container):
             detach=True,
             name=self.name,
             network=self.network.name,
-            ports={'9090/tcp': 9090, '9191/tcp': 9191},
             environment=["initialBuckets=test_bucket"],
             entrypoint=self.command)
         logging.info('Added container \'%s\'', self.name)
