@@ -18,8 +18,9 @@ from ..core.Processor import Processor
 
 
 class FetchFile(Processor):
-    def __init__(self):
+    def __init__(self, context):
         super(FetchFile, self).__init__(
-            'FetchFile',
+            context=context,
+            clazz='FetchFile',
             schedule={"scheduling strategy": "EVENT_DRIVEN"},
             auto_terminate=['success'])

@@ -18,7 +18,8 @@ from .AzureBlobStorageProcessorBase import AzureBlobStorageProcessorBase
 
 
 class FetchAzureBlobStorage(AzureBlobStorageProcessorBase):
-    def __init__(self):
+    def __init__(self, context):
         super(FetchAzureBlobStorage, self).__init__(
-            'FetchAzureBlobStorage',
+            context=context,
+            clazz='FetchAzureBlobStorage',
             schedule={"scheduling strategy": "EVENT_DRIVEN"})

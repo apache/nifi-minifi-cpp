@@ -48,8 +48,8 @@
           "value": "OFF"
         },
         {
-          "name": "DISABLE_CONTROLLER",
-          "value": "ON"
+          "name": "ENABLE_CONTROLLER",
+          "value": "OFF"
         },
         {
           "name": "BUILD_ROCKSDB",

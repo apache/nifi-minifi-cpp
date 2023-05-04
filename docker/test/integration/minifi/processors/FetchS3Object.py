@@ -19,18 +19,20 @@ from ..core.Processor import Processor
 
 class FetchS3Object(Processor):
     def __init__(self,
+                 context,
                  proxy_host='',
                  proxy_port='',
                  proxy_username='',
                  proxy_password=''):
         super(FetchS3Object, self).__init__(
-            'FetchS3Object',
+            context=context,
+            clazz='FetchS3Object',
             properties={
                 'Object Key': 'test_object_key',
                 'Bucket': 'test_bucket',
                 'Access Key': 'test_access_key',
                 'Secret Key': 'test_secret',
-                'Endpoint Override URL': "http://s3-server:9090",
+                'Endpoint Override URL': f"http://s3-server-{context.feature_id}:9090",
                 'Proxy Host': proxy_host,
                 'Proxy Port': proxy_port,
                 'Proxy Username': proxy_username,

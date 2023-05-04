@@ -13,6 +13,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+@CORE
 Feature: DefragmentText can defragment fragmented data from TailFile
   Background:
     Given the content of "/tmp/output" is monitored

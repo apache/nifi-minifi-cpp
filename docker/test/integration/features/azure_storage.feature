@@ -13,6 +13,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+@ENABLE_AZURE
 Feature: Sending data from MiNiFi-C++ to an Azure storage server
   In order to transfer data to interact with Azure servers
   As a user of MiNiFi

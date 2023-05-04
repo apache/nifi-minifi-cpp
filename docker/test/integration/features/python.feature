@@ -13,6 +13,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+@ENABLE_PYTHON_SCRIPTING
 Feature: MiNiFi can use python processors in its flows
   Background:
     Given the content of "/tmp/output" is monitored

@@ -13,6 +13,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+@CORE
 Feature: Changing flowfile contents using the ReplaceText processor
   Background:
     Given the content of "/tmp/output" is monitored

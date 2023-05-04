@@ -18,11 +18,12 @@ from ..core.Processor import Processor
 
 
 class ConsumeKafka(Processor):
-    def __init__(self, schedule=None):
+    def __init__(self, context, schedule=None):
         super(ConsumeKafka, self).__init__(
-            "ConsumeKafka",
+            context=context,
+            clazz="ConsumeKafka",
             properties={
-                "Kafka Brokers": "kafka-broker:9092",
+                "Kafka Brokers": f"kafka-broker-{context.feature_id}:9092",
                 "Topic Names": "ConsumeKafkaTest",
                 "Topic Name Format": "Names",
                 "Honor Transactions": "true",

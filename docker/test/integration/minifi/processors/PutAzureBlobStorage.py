@@ -18,7 +18,8 @@ from .AzureBlobStorageProcessorBase import AzureBlobStorageProcessorBase
 
 
 class PutAzureBlobStorage(AzureBlobStorageProcessorBase):
-    def __init__(self):
+    def __init__(self, context):
         super(PutAzureBlobStorage, self).__init__(
-            'PutAzureBlobStorage',
-            {'Create Container': 'true'})
+            context=context,
+            clazz='PutAzureBlobStorage',
+            additional_properties={'Create Container': 'true'})

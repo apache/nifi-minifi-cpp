@@ -18,9 +18,10 @@ from ..core.Processor import Processor
 
 
 class RouteOnAttribute(Processor):
-    def __init__(self, schedule={'scheduling strategy': 'EVENT_DRIVEN'}):
+    def __init__(self, context, schedule={'scheduling strategy': 'EVENT_DRIVEN'}):
         super(RouteOnAttribute, self).__init__(
-            'RouteOnAttribute',
+            context=context,
+            clazz='RouteOnAttribute',
             properties={},
             schedule=schedule,
             auto_terminate=['unmatched', "failure"])

@@ -18,7 +18,8 @@ from ..core.Processor import Processor
 
 
 class FetchOPCProcessor(Processor):
-    def __init__(self):
+    def __init__(self, context):
         super(FetchOPCProcessor, self).__init__(
-            'FetchOPCProcessor',
+            context=context,
+            clazz='FetchOPCProcessor',
             auto_terminate=['success', 'failure'])

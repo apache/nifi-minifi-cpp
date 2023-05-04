@@ -14,6 +14,7 @@
 # limitations under the License.
 
 @requires.kubernetes.cluster
+@ENABLE_KUBERNETES
 Feature: TailFile can collect logs from Kubernetes pods
 
   Background:

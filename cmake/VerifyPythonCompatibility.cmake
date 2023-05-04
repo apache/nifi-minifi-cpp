@@ -34,10 +34,16 @@ function(ADD_DOCKER_TARGET_FROM_CENTOS BASE_IMAGE TAG_PREFIX INSTALL_PACKAGE_CMD
             ${CMAKE_BINARY_DIR})
 endfunction()
 
-function(ADD_DOCKER_VERIFY TAG_PREFIX)
-    add_custom_target(
-            docker-verify-python-${TAG_PREFIX}
-            COMMAND ${CMAKE_SOURCE_DIR}/docker/DockerVerify.sh --image-tag-prefix ${TAG_PREFIX} ${MINIFI_VERSION_STR} ${PYTHON_TESTS})
+function(ADD_DOCKER_VERIFY_PYTHON TAG_PREFIX HAS_MODULES)
+    if (HAS_MODULES)
+        add_custom_target(
+                docker-verify-python-${TAG_PREFIX}
+                COMMAND ${CMAKE_SOURCE_DIR}/docker/DockerVerify.sh --image-tag-prefix ${TAG_PREFIX} ${MINIFI_VERSION_STR} ENABLE_PYTHON_SCRIPTING)
+    else()
+        add_custom_target(
+                docker-verify-python-${TAG_PREFIX}
+                COMMAND ${CMAKE_SOURCE_DIR}/docker/DockerVerify.sh --image-tag-prefix ${TAG_PREFIX} ${MINIFI_VERSION_STR} ENABLE_PYTHON_SCRIPTING --tags_to_exclude NEEDS_NUMPY)
+    endif()
 endfunction()
 
 function(ADD_CONDA_TO_DOCKER TAG_PREFIX)
@@ -70,13 +76,10 @@ ADD_CONDA_TO_DOCKER(jammy)
 ADD_VENV_TO_DOCKER(rocky9)
 
 if (EXISTS ${CMAKE_SOURCE_DIR}/docker/test/integration/features)
-    set(PYTHON_TESTS "${PYTHON_TESTS};${CMAKE_SOURCE_DIR}/docker/test/integration/features/python.feature")
-    set(PYTHON_TESTS "${PYTHON_TESTS};${CMAKE_SOURCE_DIR}/docker/test/integration/features/python_script.feature")
-    ADD_DOCKER_VERIFY(rocky8)
-    ADD_DOCKER_VERIFY(rocky9)
-    ADD_DOCKER_VERIFY(patched_jammy)
-    ADD_DOCKER_VERIFY(patched_bullseye)
-    set(PYTHON_TESTS "${PYTHON_TESTS};${CMAKE_SOURCE_DIR}/docker/test/integration/features/python_with_modules.feature")
-    ADD_DOCKER_VERIFY(conda_jammy)
-    ADD_DOCKER_VERIFY(venv_rocky9)
+    ADD_DOCKER_VERIFY_PYTHON(rocky8 FALSE)
+    ADD_DOCKER_VERIFY_PYTHON(rocky9 FALSE)
+    ADD_DOCKER_VERIFY_PYTHON(patched_jammy FALSE)
+    ADD_DOCKER_VERIFY_PYTHON(patched_bullseye FALSE)
+    ADD_DOCKER_VERIFY_PYTHON(conda_jammy TRUE)
+    ADD_DOCKER_VERIFY_PYTHON(venv_rocky9 TRUE)
 endif()

@@ -13,6 +13,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+@CORE
 Feature: Minifi C++ can act as a syslog listener
 
   Background:

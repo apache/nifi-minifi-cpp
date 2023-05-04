@@ -13,6 +13,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+@ENABLE_PYTHON_SCRIPTING
 Feature: MiNiFi can execute Python scripts
   Background:
     Given the content of "/tmp/output" is monitored

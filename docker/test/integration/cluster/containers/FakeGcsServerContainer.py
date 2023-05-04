@@ -18,8 +18,8 @@ from .Container import Container
 
 
 class FakeGcsServerContainer(Container):
-    def __init__(self, name, vols, network, image_store, command=None):
-        super().__init__(name, 'fake-gcs-server', vols, network, image_store, command)
+    def __init__(self, context, name, vols, network, image_store, command=None):
+        super().__init__(context, name, 'fake-gcs-server', vols, network, image_store, command)
 
     def get_startup_finished_log_entry(self):
         return "server started at http"
@@ -35,7 +35,6 @@ class FakeGcsServerContainer(Container):
             name=self.name,
             network=self.network.name,
             entrypoint=self.command,
-            ports={'4443/tcp': 4443},
             volumes=[os.environ['TEST_DIRECTORY'] + "/resources/fake-gcs-server-data:/data"],
-            command='-scheme http -host fake-gcs-server')
+            command=f'-scheme http -host fake-gcs-server-{self.context.feature_id}')
         logging.info('Added container \'%s\'', self.name)

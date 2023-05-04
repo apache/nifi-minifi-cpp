@@ -1,4 +1,6 @@
-behave==1.2.6
+pyjks==20.0.0
+shortuuid==1.0.11
+behavex==2.0.1
 docker==5.0.0
 kafka-python==2.0.2
 confluent-kafka==1.7.0

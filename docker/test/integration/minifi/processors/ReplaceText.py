@@ -18,9 +18,10 @@ from ..core.Processor import Processor
 
 
 class ReplaceText(Processor):
-    def __init__(self):
+    def __init__(self, context):
         super(ReplaceText, self).__init__(
-            'ReplaceText',
+            context=context,
+            clazz='ReplaceText',
             properties={},
             schedule={'scheduling strategy': 'EVENT_DRIVEN'},
             auto_terminate=['success', 'failure'])

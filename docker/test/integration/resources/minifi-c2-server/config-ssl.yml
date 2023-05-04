@@ -33,11 +33,11 @@ Controller Services:
     class: SSLContextService
     Properties:
       Client Certificate:
-        - value: /tmp/resources/minifi-c2-server-ssl/minifi-cpp-flow.crt
+        - value: /tmp/resources/minifi-cpp-flow.crt
       Private Key:
-        - value: /tmp/resources/minifi-c2-server-ssl/minifi-cpp-flow.key
+        - value: /tmp/resources/minifi-cpp-flow.key
       Passphrase:
         - value: abcdefgh
       CA Certificate:
-        - value: /tmp/resources/minifi-c2-server-ssl/root-ca.pem
+        - value: /tmp/resources/root_ca.crt
 Remote Process Groups: []

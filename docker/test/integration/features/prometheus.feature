@@ -13,6 +13,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+@ENABLE_PROMETHEUS
 Feature: MiNiFi can publish metrics to Prometheus server
 
   Background:

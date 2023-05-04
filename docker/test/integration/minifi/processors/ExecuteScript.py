@@ -18,7 +18,8 @@ from ..core.Processor import Processor
 
 
 class ExecuteScript(Processor):
-    def __init__(self):
+    def __init__(self, context):
         super(ExecuteScript, self).__init__(
-            'ExecuteScript',
+            context=context,
+            clazz='ExecuteScript',
             auto_terminate=['success', 'failure'])

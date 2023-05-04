@@ -378,7 +378,7 @@ if (ENABLE_ENCRYPT_CONFIG)
     add_subdirectory(encrypt-config)
 endif()
 
-if (NOT DISABLE_CURL AND NOT DISABLE_CONTROLLER)
+if (NOT DISABLE_CURL AND ENABLE_CONTROLLER)
     add_subdirectory(controller)
 endif()
 

@@ -13,6 +13,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+@ENABLE_MQTT
 Feature: Sending data to MQTT streaming platform using PublishMQTT
   In order to send and receive data via MQTT
   As a user of MiNiFi

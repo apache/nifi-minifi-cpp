@@ -18,5 +18,5 @@ from ..core.Processor import Processor
 
 
 class AttributesToJSON(Processor):
-    def __init__(self):
-        super(AttributesToJSON, self).__init__('AttributesToJSON')
+    def __init__(self, context):
+        super(AttributesToJSON, self).__init__(context=context, clazz='AttributesToJSON')

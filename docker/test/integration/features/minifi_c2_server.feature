@@ -13,6 +13,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+@CORE
 Feature: MiNiFi can communicate with Apache NiFi MiNiFi C2 server
 
   Background:

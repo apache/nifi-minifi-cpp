@@ -18,8 +18,9 @@ from ..core.Processor import Processor
 
 
 class RouteText(Processor):
-    def __init__(self, schedule={'scheduling strategy': 'EVENT_DRIVEN'}):
+    def __init__(self, context, schedule={'scheduling strategy': 'EVENT_DRIVEN'}):
         super(RouteText, self).__init__(
-            'RouteText',
+            context=context,
+            clazz='RouteText',
             schedule=schedule,
             auto_terminate=['unmatched', "matched", "original"])

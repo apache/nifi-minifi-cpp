@@ -21,7 +21,8 @@ from ..LogSource import LogSource
 
 
 class Container:
-    def __init__(self, name, engine, vols, network, image_store, command):
+    def __init__(self, context, name, engine, vols, network, image_store, command):
+        self.context = context
         self.name = name
         self.engine = engine
         self.vols = vols

@@ -14,6 +14,7 @@
 # limitations under the License.
 
 @x86_x64_only
+@ENABLE_SPLUNK
 Feature: Sending data to Splunk HEC using PutSplunkHTTP
 
   Background:
@@ -34,8 +35,8 @@ Feature: Sending data to Splunk HEC using PutSplunkHTTP
     And the "success" relationship of the PutSplunkHTTP processor is connected to the QuerySplunkIndexingStatus
     And the "undetermined" relationship of the QuerySplunkIndexingStatus processor is connected to the QuerySplunkIndexingStatus
     And the "acknowledged" relationship of the QuerySplunkIndexingStatus processor is connected to the PutFile
-    And the "Hostname" property of the PutSplunkHTTP processor is set to "http://splunk"
-    And the "Hostname" property of the QuerySplunkIndexingStatus processor is set to "http://splunk"
+    And the "Hostname" property of the PutSplunkHTTP processor is set to "http://splunk-${feature_id}"
+    And the "Hostname" property of the QuerySplunkIndexingStatus processor is set to "http://splunk-${feature_id}"
 
     When both instances start up
     Then a flowfile with the content "foobar" is placed in the monitored directory in less than 20 seconds
@@ -58,8 +59,8 @@ Feature: Sending data to Splunk HEC using PutSplunkHTTP
     And the "undetermined" relationship of the QuerySplunkIndexingStatus processor is connected to the QuerySplunkIndexingStatus
     And the "acknowledged" relationship of the QuerySplunkIndexingStatus processor is connected to the PutFile
     And SSL is enabled for the Splunk HEC and the SSL context service is set up for PutSplunkHTTP and QuerySplunkIndexingStatus
-    And the "Hostname" property of the PutSplunkHTTP processor is set to "https://splunk"
-    And the "Hostname" property of the QuerySplunkIndexingStatus processor is set to "https://splunk"
+    And the "Hostname" property of the PutSplunkHTTP processor is set to "https://splunk-${feature_id}"
+    And the "Hostname" property of the QuerySplunkIndexingStatus processor is set to "https://splunk-${feature_id}"
 
     When both instances start up
     Then a flowfile with the content "foobar" is placed in the monitored directory in less than 20 seconds

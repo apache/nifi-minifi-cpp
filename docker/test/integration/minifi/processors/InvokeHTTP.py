@@ -20,6 +20,7 @@ from ..core.Processor import Processor
 class InvokeHTTP(Processor):
     def __init__(
             self,
+            context,
             ssl_context_service=None,
             schedule={'scheduling strategy': 'EVENT_DRIVEN'}):
         properties = {
@@ -36,7 +37,8 @@ class InvokeHTTP(Processor):
             controller_services.append(ssl_context_service)
 
         super(InvokeHTTP, self).__init__(
-            'InvokeHTTP',
+            context=context,
+            clazz='InvokeHTTP',
             properties=properties,
             controller_services=controller_services,
             auto_terminate=['success', 'response', 'retry', 'failure', 'no retry'],

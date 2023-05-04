@@ -19,6 +19,7 @@ from .Connectable import Connectable
 
 class Processor(Connectable):
     def __init__(self,
+                 context,
                  clazz,
                  properties=None,
                  schedule=None,
@@ -30,6 +31,8 @@ class Processor(Connectable):
 
         super(Processor, self).__init__(name=name,
                                         auto_terminate=auto_terminate)
+
+        self.context = context
         self.class_prefix = class_prefix
 
         if controller_services is None:
@@ -42,6 +45,7 @@ class Processor(Connectable):
             properties = {}
 
         self.clazz = clazz
+
         self.properties = properties
         self.controller_services = controller_services
         self.max_concurrent_tasks = max_concurrent_tasks

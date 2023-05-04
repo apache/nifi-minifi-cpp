@@ -329,7 +329,7 @@ jobs:
           name: minifi_docker
           path: build/minifi_docker.tar
   docker_tests_q1:
-    name: "Docker integration tests 1/4"
+    name: "Docker integration tests"
     needs: docker_build
     runs-on: ubuntu-20.04
     timeout-minutes: 180
@@ -357,94 +357,21 @@ jobs:
           sudo apt install -y python3-virtualenv
       - id: test
         name: Docker Verify
-        run: cd build && make docker-verify-q1
-  docker_tests_q2:
-    name: "Docker integration tests 2/4"
-    needs: docker_build
-    runs-on: ubuntu-20.04
-    timeout-minutes: 180
-    steps:
-      - id: checkout
-        uses: actions/checkout@v3
-      - id: run_cmake
-        name: Run CMake
-        run: |
-          mkdir build
-          cd build
-          cmake ${DOCKER_CMAKE_FLAGS} ..
-      - name: Download artifact
-        uses: actions/download-artifact@v3
+        working-directory: ./build
+        run: make docker-verify
+      - name: Test Reporter
+        if: always()
+        uses: phoenix-actions/test-reporting@v12
         with:
-          name: minifi_docker
-          path: build
-      - name: Load Docker image
-        run: |
-          docker load --input ./build/minifi_docker.tar
-      - id: install_deps
-        name: Install dependencies for Docker Verify
-        run: |
-          sudo apt update
-          sudo apt install -y python3-virtualenv
-      - id: test
-        name: Docker Verify
-        run: cd build && make docker-verify-q2
-  docker_tests_q3:
-    name: "Docker integration tests 3/4"
-    needs: docker_build
-    runs-on: ubuntu-20.04
-    timeout-minutes: 180
-    steps:
-      - id: checkout
-        uses: actions/checkout@v3
-      - id: run_cmake
-        name: Run CMake
-        run: |
-          mkdir build
-          cd build
-          cmake ${DOCKER_CMAKE_FLAGS} ..
-      - name: Download artifact
-        uses: actions/download-artifact@v3
+          name: Docker integration tests
+          path: build/behavex_output/behave/*.xml
+          reporter: java-junit
+          output-to: 'step-summary'
+          list-tests: 'failed'
+          list-suites: 'failed'
+      - name: Upload artifact
+        if: failure()
+        uses: actions/upload-artifact@v3
         with:
-          name: minifi_docker
-          path: build
-      - name: Load Docker image
-        run: |
-          docker load --input ./build/minifi_docker.tar
-      - id: install_deps
-        name: Install dependencies for Docker Verify
-        run: |
-          sudo apt update
-          sudo apt install -y python3-virtualenv
-      - id: test
-        name: Docker Verify
-        run: cd build && make docker-verify-q3
-  docker_tests_q4:
-    name: "Docker integration tests 4/4"
-    needs: docker_build
-    runs-on: ubuntu-20.04
-    timeout-minutes: 180
-    steps:
-      - id: checkout
-        uses: actions/checkout@v3
-      - id: run_cmake
-        name: Run CMake
-        run: |
-          mkdir build
-          cd build
-          cmake ${DOCKER_CMAKE_FLAGS} ..
-      - name: Download artifact
-        uses: actions/download-artifact@v3
-        with:
-          name: minifi_docker
-          path: build
-      - name: Load Docker image
-        run: |
-          docker load --input ./build/minifi_docker.tar
-      - id: install_deps
-        name: Install dependencies for Docker Verify
-        run: |
-          sudo apt update
-          sudo apt install -y python3-virtualenv
-      - id: test
-        name: Docker Verify
-        run: cd build && make docker-verify-q4
+          name: behavex_output
+          path: build/behavex_output

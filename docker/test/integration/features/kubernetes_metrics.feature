@@ -14,6 +14,7 @@
 # limitations under the License.
 
 @requires.kubernetes.cluster
+@ENABLE_KUBERNETES
 Feature: Minifi can collect metrics from Kubernetes pods
 
   Background:

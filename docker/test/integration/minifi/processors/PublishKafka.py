@@ -18,12 +18,13 @@ from ..core.Processor import Processor
 
 
 class PublishKafka(Processor):
-    def __init__(self, schedule={'scheduling strategy': 'EVENT_DRIVEN'}):
+    def __init__(self, context, schedule={'scheduling strategy': 'EVENT_DRIVEN'}):
         super(PublishKafka, self).__init__(
-            'PublishKafka',
+            context=context,
+            clazz='PublishKafka',
             properties={
                 'Client Name': 'nghiaxlee',
-                'Known Brokers': 'kafka-broker:9092',
+                'Known Brokers': f'kafka-broker-{context.feature_id}:9092',
                 'Topic Name': 'test',
                 'Batch Size': '10',
                 'Compress Codec': 'none',

@@ -18,5 +18,7 @@ from ..core.Processor import Processor
 
 
 class MoveContentToJson(Processor):
-    def __init__(self):
-        super(MoveContentToJson, self).__init__('MoveContentToJson', class_prefix='org.apache.nifi.minifi.processors.examples.')
+    def __init__(self, context):
+        super(MoveContentToJson, self).__init__(context=context,
+                                                clazz='MoveContentToJson',
+                                                class_prefix='org.apache.nifi.minifi.processors.examples.')
