@@ -69,7 +69,13 @@ bool contains(const std::filesystem::path& file_path, std::string_view text_to_s
 std::chrono::system_clock::time_point to_sys(std::filesystem::file_time_type file_time) {
   using namespace std::chrono;  // NOLINT(build/namespaces)
 #if defined(WIN32)
-  return utc_clock::to_sys(file_clock::to_utc(file_time));
+  // workaround for https://github.com/microsoft/STL/issues/2446
+  // clock_cast can fail on older windows versions
+  constexpr file_clock::duration clock_epoch_diff{std::filesystem::__std_fs_file_time_epoch_adjustment};
+  return system_clock::time_point(file_time.time_since_epoch() - clock_epoch_diff);
+#elif(defined(_LIBCPP_VERSION) && (_LIBCPP_VERSION < 14000))
+  // relies on file_clock and system_clock having the same epoch
+  return system_clock::time_point(duration_cast<system_clock::duration>(file_time.time_since_epoch()));
 #else
   return time_point_cast<system_clock::duration>(file_clock::to_sys(file_time));
 #endif
@@ -78,7 +84,13 @@ std::chrono::system_clock::time_point to_sys(std::filesystem::file_time_type fil
 std::filesystem::file_time_type from_sys(std::chrono::system_clock::time_point sys_time) {
   using namespace std::chrono;  // NOLINT(build/namespaces)
 #if defined(WIN32)
-  return file_clock::from_utc(utc_clock::from_sys(sys_time));
+  // workaround for https://github.com/microsoft/STL/issues/2446
+  // clock_cast can fail on older windows versions
+  constexpr file_clock::duration clock_epoch_diff{std::filesystem::__std_fs_file_time_epoch_adjustment};
+  return file_clock::time_point(sys_time.time_since_epoch() + clock_epoch_diff);
+#elif(defined(_LIBCPP_VERSION) && (_LIBCPP_VERSION < 14000))
+  // relies on file_clock and system_clock having the same epoch
+  return file_clock::time_point(duration_cast<file_clock::duration>(sys_time.time_since_epoch()));
 #else
   return time_point_cast<file_clock::duration>(file_clock::from_sys(sys_time));
 #endif

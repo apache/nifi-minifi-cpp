@@ -539,4 +539,15 @@ TEST_CASE("file_clock to system_clock conversion tests") {
 
     CHECK(time_point_cast<LeastPreciseDurationType>(file_now).time_since_epoch().count() == time_point_cast<LeastPreciseDurationType>(double_converted_file_now).time_since_epoch().count());
   }
+
+  {
+    system_clock::time_point system_now = system_clock::now();
+    file_clock::time_point file_now = file_clock ::now();
+
+    file_clock::time_point converted_system_now = FileUtils::from_sys(system_now);
+    system_clock::time_point converted_file_now = FileUtils::to_sys(file_now);
+
+    CHECK(system_now-converted_file_now < 10ms);
+    CHECK(file_now-converted_system_now < 10ms);
+  }
 }
