@@ -150,30 +150,14 @@ class FlowController : public core::controller::ForwardingControllerServiceProvi
 
  private:
   class UpdateState {
-    class UpdateLock;
    public:
-    UpdateLock getUpdateLock() { return UpdateLock(*this); }
     bool isUpdating() const { return update_block_count_ > 0; }
-
-   private:
-    class UpdateLock {
-     public:
-      UpdateLock(UpdateState& update_state) : update_state_(update_state) {
-        update_state_.beginUpdate();
-      }
-
-      ~UpdateLock() {
-        update_state_.endUpdate();
-      }
-     private:
-      UpdateState& update_state_;
-    };
-
-    friend class UpdateLock;
-
     void beginUpdate() { ++update_block_count_; }
     void endUpdate() { --update_block_count_; }
+    void lock() { beginUpdate(); }
+    void unlock() { endUpdate(); }
 
+   private:
     std::atomic<uint32_t> update_block_count_;
   };
 

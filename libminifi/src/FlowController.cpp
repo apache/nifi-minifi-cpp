@@ -129,29 +129,27 @@ bool FlowController::applyConfiguration(const std::string &source, const std::st
 
   bool started = false;
   {
-    auto update_lock = updating_.getUpdateLock();
-    {
-      std::lock_guard<std::recursive_mutex> flow_lock(mutex_);
-      stop();
+    std::scoped_lock<UpdateState> update_lock(updating_);
+    std::lock_guard<std::recursive_mutex> flow_lock(mutex_);
+    stop();
 
-      root_wrapper_.setNewRoot(std::move(newRoot));
-      initialized_ = false;
-      try {
-        load(true);
-        started = start() == 0;
-      } catch (const std::exception& ex) {
-        logger_->log_error("Caught exception while starting flow, type %s, what: %s", typeid(ex).name(), ex.what());
-      } catch (...) {
-        logger_->log_error("Caught unknown exception while starting flow, type %s", getCurrentExceptionTypeName());
-      }
-      if (!started) {
-        logger_->log_error("Failed to start new flow, restarting previous flow");
-        root_wrapper_.restoreBackup();
-        load(true);
-        start();
-      } else {
-        root_wrapper_.clearBackup();
-      }
+    root_wrapper_.setNewRoot(std::move(newRoot));
+    initialized_ = false;
+    try {
+      load(true);
+      started = start() == 0;
+    } catch (const std::exception& ex) {
+      logger_->log_error("Caught exception while starting flow, type %s, what: %s", typeid(ex).name(), ex.what());
+    } catch (...) {
+      logger_->log_error("Caught unknown exception while starting flow, type %s", getCurrentExceptionTypeName());
+    }
+    if (!started) {
+      logger_->log_error("Failed to start new flow, restarting previous flow");
+      root_wrapper_.restoreBackup();
+      load(true);
+      start();
+    } else {
+      root_wrapper_.clearBackup();
     }
   }
 
@@ -263,7 +261,7 @@ void FlowController::load(bool reload) {
   }
 
   {
-    auto update_lock = updating_.getUpdateLock();
+    std::scoped_lock<UpdateState> update_lock(updating_);
     if (!root_wrapper_.initialized()) {
       logger_->log_info("Instantiating new flow");
       root_wrapper_.setNewRoot(loadInitialFlow());
