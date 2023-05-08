@@ -127,34 +127,33 @@ bool FlowController::applyConfiguration(const std::string &source, const std::st
 
   logger_->log_info("Starting to reload Flow Controller with flow control name %s, version %d", newRoot->getName(), newRoot->getVersion());
 
-  updating_.beginUpdate();
   bool started = false;
-
   {
-    std::lock_guard<std::recursive_mutex> flow_lock(mutex_);
-    stop();
+    auto update_lock = updating_.getUpdateLock();
+    {
+      std::lock_guard<std::recursive_mutex> flow_lock(mutex_);
+      stop();
 
-    root_wrapper_.setNewRoot(std::move(newRoot));
-    initialized_ = false;
-    try {
-      load(true);
-      started = start() == 0;
-    } catch (const std::exception& ex) {
-      logger_->log_error("Caught exception while starting flow, type %s, what: %s", typeid(ex).name(), ex.what());
-    } catch (...) {
-      logger_->log_error("Caught unknown exception while starting flow, type %s", getCurrentExceptionTypeName());
-    }
-    if (!started) {
-      logger_->log_error("Failed to start new flow, restarting previous flow");
-      root_wrapper_.restoreBackup();
-      load(true);
-      start();
-    } else {
-      root_wrapper_.clearBackup();
+      root_wrapper_.setNewRoot(std::move(newRoot));
+      initialized_ = false;
+      try {
+        load(true);
+        started = start() == 0;
+      } catch (const std::exception& ex) {
+        logger_->log_error("Caught exception while starting flow, type %s, what: %s", typeid(ex).name(), ex.what());
+      } catch (...) {
+        logger_->log_error("Caught unknown exception while starting flow, type %s", getCurrentExceptionTypeName());
+      }
+      if (!started) {
+        logger_->log_error("Failed to start new flow, restarting previous flow");
+        root_wrapper_.restoreBackup();
+        load(true);
+        start();
+      } else {
+        root_wrapper_.clearBackup();
+      }
     }
   }
-
-  updating_.endUpdate();
 
   if (started) {
     auto flowVersion = flow_configuration_->getFlowVersion();
@@ -263,18 +262,19 @@ void FlowController::load(bool reload) {
     io::NetworkPrioritizerFactory::getInstance()->clearPrioritizer();
   }
 
-  updating_.beginUpdate();
-  if (!root_wrapper_.initialized()) {
-    logger_->log_info("Instantiating new flow");
-    root_wrapper_.setNewRoot(loadInitialFlow());
-    if (c2_agent_ && !c2_agent_->isControllerRunning()) {
-      // TODO(lordgamez): this initialization configures the C2 sender protocol (e.g. RESTSender) which may contain an SSL Context service from the flow config
-      // for SSL communication. This service may change on flow update and we should take care of the SSL Context Service change in the C2 Agent.
-      c2_agent_->initialize(this, this, this);
-      c2_agent_->start();
+  {
+    auto update_lock = updating_.getUpdateLock();
+    if (!root_wrapper_.initialized()) {
+      logger_->log_info("Instantiating new flow");
+      root_wrapper_.setNewRoot(loadInitialFlow());
+      if (c2_agent_ && !c2_agent_->isControllerRunning()) {
+        // TODO(lordgamez): this initialization configures the C2 sender protocol (e.g. RESTSender) which may contain an SSL Context service from the flow config
+        // for SSL communication. This service may change on flow update and we should take care of the SSL Context Service change in the C2 Agent.
+        c2_agent_->initialize(this, this, this);
+        c2_agent_->start();
+      }
     }
   }
-  updating_.endUpdate();
 
   logger_->log_info("Loaded root processor Group");
   logger_->log_info("Initializing timers");
