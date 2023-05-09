@@ -541,13 +541,17 @@ TEST_CASE("file_clock to system_clock conversion tests") {
   }
 
   {
-    system_clock::time_point system_now = system_clock::now();
-    file_clock::time_point file_now = file_clock ::now();
+    // t0 <= t1
+    auto sys_time_t0 = system_clock::now();
+    auto file_time_t1 = file_clock ::now();
 
-    file_clock::time_point converted_system_now = FileUtils::from_sys(system_now);
-    system_clock::time_point converted_file_now = FileUtils::to_sys(file_now);
+    auto file_time_from_t0 = FileUtils::from_sys(sys_time_t0);
+    auto sys_time_from_t1 = FileUtils::to_sys(file_time_t1);
 
-    CHECK(system_now-converted_file_now < 10ms);
-    CHECK(file_now-converted_system_now < 10ms);
+    CHECK(0ms <= sys_time_from_t1-sys_time_t0);
+    CHECK(sys_time_from_t1-sys_time_t0 < 10ms);
+
+    CHECK(0ms <= file_time_t1-file_time_from_t0);
+    CHECK(file_time_t1-file_time_from_t0 < 10ms);
   }
 }
