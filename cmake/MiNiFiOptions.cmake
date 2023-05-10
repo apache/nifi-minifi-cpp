@@ -92,7 +92,7 @@ if(CMAKE_SYSTEM_NAME STREQUAL "Linux")
     add_minifi_option(ENABLE_SYSTEMD "Enables the systemd extension." ON)
 endif()
 
-add_minifi_option(DISABLE_EXPRESSION_LANGUAGE "Disables expression language." OFF)
+add_minifi_option(ENABLE_EXPRESSION_LANGUAGE "Enables expression language." ON)
 add_minifi_option(DISABLE_CIVET "Disables CivetWeb components." OFF)
 add_minifi_option(DISABLE_ROCKSDB "Disables the RocksDB extension." OFF)
 add_minifi_option(DISABLE_LIBARCHIVE "Disables the lib archive extensions." OFF)

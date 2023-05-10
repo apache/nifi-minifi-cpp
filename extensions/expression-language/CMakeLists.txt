@@ -17,7 +17,7 @@
 # under the License.
 #
 
-if (DISABLE_EXPRESSION_LANGUAGE)
+if (NOT ENABLE_EXPRESSION_LANGUAGE)
     return()
 endif()
 
