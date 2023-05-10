@@ -17,7 +17,7 @@
 # under the License.
 #
 
-if (NOT ENABLE_CURL OR DISABLE_CIVET)
+if (NOT ENABLE_CURL OR NOT ENABLE_CIVET)
     return()
 endif()
 

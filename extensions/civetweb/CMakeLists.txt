@@ -17,7 +17,7 @@
 # under the License.
 #
 
-if (DISABLE_CIVET)
+if (NOT ENABLE_CIVET)
     return()
 endif()
 
