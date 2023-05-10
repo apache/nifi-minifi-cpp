@@ -246,7 +246,7 @@ if(NOT WIN32)
 endif()
 
 # OpenSSL
-if (NOT OPENSSL_OFF)
+if (MINIFI_OPENSSL)
     include(BundledOpenSSL)
     use_openssl("${CMAKE_CURRENT_SOURCE_DIR}" "${CMAKE_CURRENT_BINARY_DIR}")
     list(APPEND CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/cmake/ssl")

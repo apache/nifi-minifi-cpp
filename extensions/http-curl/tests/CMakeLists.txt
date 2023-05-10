@@ -77,7 +77,7 @@ add_test(NAME C2DescribeCoreComponentStateTest COMMAND C2DescribeCoreComponentSt
 add_test(NAME C2FailedUpdateTest COMMAND C2FailedUpdateTest "${TEST_RESOURCES}/TestHTTPGet.yml" "${TEST_RESOURCES}/" "${TEST_RESOURCES}/TestBad.yml")
 add_test(NAME C2NullConfiguration COMMAND C2NullConfiguration "${TEST_RESOURCES}/TestNull.yml"  "${TEST_RESOURCES}/")
 add_test(NAME C2RequestClassTest COMMAND C2RequestClassTest)
-if (NOT OPENSSL_OFF)
+if (MINIFI_OPENSSL)
     add_test(NAME VerifyInvokeHTTPGetTestSecure COMMAND VerifyInvokeHTTPGetTest "${TEST_RESOURCES}/TestHTTPGetSecure.yml"  "${TEST_RESOURCES}/")
     add_test(NAME C2VerifyHeartbeatAndStopSecure COMMAND C2VerifyHeartbeatAndStop "${TEST_RESOURCES}/C2VerifyHeartbeatAndStopSecure.yml" "${TEST_RESOURCES}/")
     add_test(NAME C2VerifyLightweightHeartbeatAndStopSecure COMMAND C2VerifyLightweightHeartbeatAndStop "${TEST_RESOURCES}/C2VerifyHeartbeatAndStopSecure.yml" "${TEST_RESOURCES}/")

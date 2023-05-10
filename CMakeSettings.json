@@ -36,8 +36,8 @@
           "value": "OFF"
         },
         {
-          "name": "OPENSSL_OFF",
-          "value": "OFF"
+          "name": "MINIFI_OPENSSL",
+          "value": "ON"
         },
         {
           "name": "ENABLE_COAP",

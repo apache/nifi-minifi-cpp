@@ -121,7 +121,7 @@ FOREACH(testfile ${UNIT_TESTS})
 ENDFOREACH()
 message("-- Finished building ${UNIT_TEST_COUNT} unit test file(s)...")
 
-if (NOT OPENSSL_OFF)
+if (MINIFI_OPENSSL)
     SET(UNIT_TEST_COUNT 0)
     FOREACH(testfile ${TLS_UNIT_TESTS})
         get_filename_component(testfilename "${testfile}" NAME_WE)

@@ -51,7 +51,7 @@ function(use_bundled_curl SOURCE_DIR BINARY_DIR)
             -DUSE_LIBIDN2=OFF
             -DCURL_USE_LIBPSL=OFF
             )
-    if (OPENSSL_OFF)
+    if (NOT MINIFI_OPENSSL)
         list(APPEND CURL_CMAKE_ARGS -DCURL_USE_OPENSSL=OFF)
     else()
         list(APPEND CURL_CMAKE_ARGS -DCURL_USE_OPENSSL=ON)
@@ -74,7 +74,7 @@ function(use_bundled_curl SOURCE_DIR BINARY_DIR)
 
     # Set dependencies
     add_dependencies(curl-external ZLIB::ZLIB)
-    if (NOT OPENSSL_OFF)
+    if (MINIFI_OPENSSL)
         add_dependencies(curl-external OpenSSL::SSL OpenSSL::Crypto)
     endif()
 
@@ -102,7 +102,7 @@ function(use_bundled_curl SOURCE_DIR BINARY_DIR)
         target_link_libraries(CURL::libcurl INTERFACE "-framework SystemConfiguration")
         target_link_libraries(CURL::libcurl INTERFACE "-framework CoreServices")
     endif()
-    if (NOT OPENSSL_OFF)
+    if (MINIFI_OPENSSL)
         target_link_libraries(CURL::libcurl INTERFACE OpenSSL::SSL OpenSSL::Crypto)
     endif()
 endfunction(use_bundled_curl SOURCE_DIR BINARY_DIR)

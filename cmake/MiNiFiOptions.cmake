@@ -44,7 +44,7 @@ add_minifi_option(PORTABLE "Instructs the compiler to remove architecture specif
 add_minifi_option(USE_SHARED_LIBS "Builds using shared libraries" ON)
 add_minifi_dependent_option(STATIC_BUILD "Attempts to statically link as many dependencies as possible." ON "NOT USE_SHARED_LIBS" OFF)
 add_minifi_option(LIBC_STATIC "Instructs the build system to statically link libstdc++ and glibc into minifiexe. Experiemental" OFF)
-add_minifi_option(OPENSSL_OFF "Disables OpenSSL" OFF)
+add_minifi_option(MINIFI_OPENSSL "Enables OpenSSL" ON)
 add_minifi_option(ENABLE_OPS "Enable Operations/zlib Tools" ON)
 add_minifi_option(ENABLE_JNI "Instructs the build system to enable the JNI extension" OFF)
 add_minifi_option(ENABLE_OPENCV "Instructs the build system to enable the OpenCV extension" OFF)
