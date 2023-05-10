@@ -258,7 +258,7 @@ add_cmake_option PORTABLE_BUILD ${TRUE}
 add_cmake_option DEBUG_SYMBOLS ${FALSE}
 add_cmake_option BUILD_ROCKSDB ${TRUE}
 ## uses the source from the third party directory
-add_option ROCKSDB_ENABLED ${TRUE} "DISABLE_ROCKSDB"
+add_option ROCKSDB_ENABLED ${TRUE} "ENABLE_ROCKSDB"
 ## need libcurl installed
 add_option HTTP_CURL_ENABLED ${TRUE} "ENABLE_CURL"
 

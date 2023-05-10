@@ -46,7 +46,7 @@ if (NOT SKIP_TESTS AND Java_FOUND AND Maven_FOUND AND ENABLE_EXPRESSION_LANGUAGE
         target_link_libraries(${testfilename} minifi-sftp)
         target_link_libraries(${testfilename} minifi-expression-language-extensions)
         target_link_libraries(${testfilename} minifi-standard-processors)
-        if (NOT DISABLE_ROCKSDB)
+        if (ENABLE_ROCKSDB)
             target_link_libraries(${testfilename} minifi-rocksdb-repos)
         endif()
 

@@ -94,7 +94,7 @@ endif()
 
 add_minifi_option(ENABLE_EXPRESSION_LANGUAGE "Enables expression language." ON)
 add_minifi_option(ENABLE_CIVET "Enables CivetWeb components." ON)
-add_minifi_option(DISABLE_ROCKSDB "Disables the RocksDB extension." OFF)
+add_minifi_option(ENABLE_ROCKSDB "Disables the RocksDB extension." OFF)
 add_minifi_option(DISABLE_LIBARCHIVE "Disables the lib archive extensions." OFF)
 add_minifi_option(DISABLE_LZMA "Disables the liblzma build" OFF)
 add_minifi_option(DISABLE_BZIP2 "Disables the bzip2 build" OFF)
