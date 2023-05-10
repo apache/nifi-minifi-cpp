@@ -64,8 +64,8 @@
           "value": "OFF"
         },
         {
-          "name": "DISABLE_LIBARCHIVE",
-          "value": "OFF"
+          "name": "ENABLE_LIBARCHIVE",
+          "value": "ON"
         },
         {
           "name": "ENABLE_PYTHON_SCRIPTING",

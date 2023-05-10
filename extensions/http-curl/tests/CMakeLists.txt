@@ -99,7 +99,7 @@ add_test(NAME VerifyInvokeHTTPPostTest COMMAND VerifyInvokeHTTPPostTest "${TEST_
 add_test(NAME AbsoluteTimeoutTest COMMAND AbsoluteTimeoutTest)
 add_test(NAME C2PauseResumeTest COMMAND C2PauseResumeTest "${TEST_RESOURCES}/C2PauseResumeTest.yml")
 add_test(NAME C2LogHeartbeatTest COMMAND C2LogHeartbeatTest)
-if (NOT DISABLE_LIBARCHIVE)
+if (ENABLE_LIBARCHIVE)
     add_test(NAME C2DebugBundleTest COMMAND C2DebugBundleTest)
 endif()
 add_test(NAME C2PropertiesUpdateTests COMMAND C2PropertiesUpdateTests)

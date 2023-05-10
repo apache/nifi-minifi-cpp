@@ -222,7 +222,7 @@ else()
     message(VERBOSE "No custom malloc implementation")
 endif()
 
-if (NOT DISABLE_BZIP2 AND (NOT DISABLE_LIBARCHIVE OR (ENABLE_ROCKSDB AND NOT WIN32)))
+if (NOT DISABLE_BZIP2 AND (ENABLE_LIBARCHIVE OR (ENABLE_ROCKSDB AND NOT WIN32)))
     include(BundledBZip2)
     use_bundled_bzip2(${CMAKE_SOURCE_DIR} ${CMAKE_BINARY_DIR})
     list(APPEND CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/cmake/bzip2/dummy")
@@ -652,7 +652,7 @@ registerTest("${TEST_DIR}/flow-tests")
 
 registerTest("${TEST_DIR}/schema-tests")
 
-if (ENABLE_ROCKSDB AND NOT DISABLE_LIBARCHIVE)
+if (ENABLE_ROCKSDB AND ENABLE_LIBARCHIVE)
     registerTest("${TEST_DIR}/persistence-tests")
 endif()
 
