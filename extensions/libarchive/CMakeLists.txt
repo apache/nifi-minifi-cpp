@@ -21,7 +21,7 @@ if (NOT ENABLE_LIBARCHIVE)
     return()
 endif()
 
-if (NOT DISABLE_LZMA)
+if (ENABLE_LZMA)
     include(BundledLibLZMA)
     use_bundled_liblzma(${CMAKE_SOURCE_DIR} ${CMAKE_BINARY_DIR})
     list(APPEND CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/cmake/liblzma/dummy")
