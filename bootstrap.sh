@@ -260,7 +260,7 @@ add_cmake_option BUILD_ROCKSDB ${TRUE}
 ## uses the source from the third party directory
 add_option ROCKSDB_ENABLED ${TRUE} "DISABLE_ROCKSDB"
 ## need libcurl installed
-add_option HTTP_CURL_ENABLED ${TRUE} "DISABLE_CURL"
+add_option HTTP_CURL_ENABLED ${TRUE} "ENABLE_CURL"
 
 # third party directory
 add_option LIBARCHIVE_ENABLED ${TRUE} "DISABLE_LIBARCHIVE"

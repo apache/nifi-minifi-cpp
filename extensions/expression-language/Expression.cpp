@@ -35,7 +35,7 @@
 #include "expression/Expression.h"
 #include "utils/RegexUtils.h"
 
-#ifndef DISABLE_CURL
+#ifdef ENABLE_CURL
 #ifdef WIN32
 #pragma comment(lib, "wldap32.lib" )
 #pragma comment(lib, "crypt32.lib" )
@@ -702,7 +702,7 @@ Value expr_unescapeCsv(const std::vector<Value> &args) {
 }
 
 Value expr_urlEncode(const std::vector<Value> &args) {
-#ifndef DISABLE_CURL
+#ifdef ENABLE_CURL
   auto arg_0 = args[0].asString();
   CURL *curl = curl_easy_init();
   if (curl != nullptr) {
@@ -725,7 +725,7 @@ Value expr_urlEncode(const std::vector<Value> &args) {
 }
 
 Value expr_urlDecode(const std::vector<Value> &args) {
-#ifndef DISABLE_CURL
+#ifdef ENABLE_CURL
   auto arg_0 = args[0].asString();
   CURL *curl = curl_easy_init();
   if (curl != nullptr) {

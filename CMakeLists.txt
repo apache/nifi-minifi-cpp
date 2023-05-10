@@ -269,12 +269,11 @@ add_library(ut INTERFACE)
 target_include_directories(ut SYSTEM INTERFACE "${CMAKE_CURRENT_SOURCE_DIR}/thirdparty/ut")
 
 # cURL
-if(NOT DISABLE_CURL)
+if(ENABLE_CURL)
     include(BundledLibcURL)
     use_bundled_curl(${CMAKE_CURRENT_SOURCE_DIR} ${CMAKE_CURRENT_BINARY_DIR})
     list(APPEND CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/cmake/curl/dummy")
-else()
-    list(APPEND MINIFI_CPP_COMPILE_DEFINITIONS DISABLE_CURL)
+    list(APPEND MINIFI_CPP_COMPILE_DEFINITIONS ENABLE_CURL)
 endif()
 
 # spdlog
@@ -357,7 +356,7 @@ include(Extensions)
 
 add_subdirectory(libminifi)
 
-if ((ENABLE_OPENWSMAN AND NOT DISABLE_CIVET AND NOT DISABLE_CURL) OR ENABLE_ALL OR ENABLE_AZURE)
+if ((ENABLE_OPENWSMAN AND NOT DISABLE_CIVET AND ENABLE_CURL) OR ENABLE_ALL OR ENABLE_AZURE)
     include(BundledLibXml2)
     use_bundled_libxml2(${CMAKE_CURRENT_SOURCE_DIR} ${CMAKE_CURRENT_BINARY_DIR})
     list(APPEND CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/cmake/libxml2/dummy")
@@ -387,7 +386,7 @@ if (ENABLE_ENCRYPT_CONFIG)
     add_subdirectory(encrypt-config)
 endif()
 
-if (NOT DISABLE_CURL AND ENABLE_CONTROLLER)
+if (ENABLE_CURL AND ENABLE_CONTROLLER)
     add_subdirectory(controller)
 endif()
 

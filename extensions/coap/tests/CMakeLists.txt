@@ -21,7 +21,7 @@ file(GLOB COAP_INTEGRATION_TESTS "*.cpp")
 
 SET(CURL_INT_TEST_COUNT 0)
 
-if (NOT DISABLE_CURL)
+if (ENABLE_CURL)
     FOREACH(testfile ${COAP_INTEGRATION_TESTS})
         get_filename_component(testfilename "${testfile}" NAME_WE)
         add_minifi_executable("${testfilename}" "${testfile}")

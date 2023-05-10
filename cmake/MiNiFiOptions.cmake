@@ -54,7 +54,7 @@ add_minifi_option(BUILD_SHARED_LIBS "Build yaml cpp shared lib" OFF)
 
 add_minifi_option(BUILD_ROCKSDB "Instructs the build system to use RocksDB from the third party directory" ON)
 add_minifi_option(FORCE_WINDOWS "Instructs the build system to force Windows builds when WIN32 is specified" OFF)
-add_minifi_option(DISABLE_CURL "Disables libCurl Properties." OFF)
+add_minifi_option(ENABLE_CURL "Enables libCurl Properties." ON)
 
 add_minifi_option(USE_GOLD_LINKER "Use Gold Linker" OFF)
 add_minifi_option(INSTALLER_MERGE_MODULES "Creates installer with merge modules" OFF)
