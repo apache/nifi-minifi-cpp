@@ -24,7 +24,7 @@ set -euo pipefail
 UID_ARG=1000
 GID_ARG=1000
 MINIFI_VERSION=
-IMAGE_TAG=
+PREFIX=
 DUMP_LOCATION=
 DISTRO_NAME=
 BUILD_NUMBER=
@@ -79,8 +79,8 @@ while [[ $# -gt 0 ]]; do
     shift
     shift
     ;;
-  -t | --tag)
-    IMAGE_TAG="$2"
+  -p | --prefix)
+    PREFIX="$2"
     shift
     shift
     ;;
@@ -168,8 +168,8 @@ fi
 
 if [ ${#TAGS[@]} -eq 0 ]; then
   TAG="apacheminificpp:"
-  if [ -n "${IMAGE_TAG}" ]; then
-    TAG="${TAG}${IMAGE_TAG}-"
+  if [ -n "${PREFIX}" ]; then
+    TAG="${TAG}${PREFIX}-"
   fi
   if [ -n "${DISTRO_NAME}" ]; then
     TAG="${TAG}${DISTRO_NAME}-"
