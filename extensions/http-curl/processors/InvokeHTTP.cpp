@@ -369,6 +369,7 @@ void InvokeHTTP::onTriggerWithClient(const std::shared_ptr<core::ProcessContext>
         client.setRequestHeader("Content-Length", "0");
       } else if (!use_chunked_encoding_) {
         client.setRequestHeader("Content-Length", std::to_string(flow_file->getSize()));
+        client.setPostSize(flow_file->getSize());
       }
     } else {
       logger_->log_error("InvokeHTTP -- no resource claim");

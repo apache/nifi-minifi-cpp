@@ -31,6 +31,7 @@
 #include "range/v3/algorithm/all_of.hpp"
 #include "range/v3/action/transform.hpp"
 #include "utils/HTTPUtils.h"
+#include "utils/Literals.h"
 
 using namespace std::literals::chrono_literals;
 
@@ -234,12 +235,16 @@ std::string HTTPClient::escape(std::string string_to_escape) {
 }
 
 void HTTPClient::setPostFields(const std::string& input) {
-  curl_easy_setopt(http_session_.get(), CURLOPT_POSTFIELDSIZE, input.length());
+  setPostSize(input.length());
   curl_easy_setopt(http_session_.get(), CURLOPT_COPYPOSTFIELDS, input.c_str());
 }
 
 void HTTPClient::setPostSize(size_t size) {
-  curl_easy_setopt(http_session_.get(), CURLOPT_POSTFIELDSIZE, size);
+  if (size > 2_GB) {
+    curl_easy_setopt(http_session_.get(), CURLOPT_POSTFIELDSIZE_LARGE, size);
+  } else {
+    curl_easy_setopt(http_session_.get(), CURLOPT_POSTFIELDSIZE, size);
+  }
 }
 
 void HTTPClient::setHTTPProxy(const utils::HTTPProxy &proxy) {
