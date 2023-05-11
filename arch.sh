@@ -27,8 +27,11 @@ add_os_flags() {
 bootstrap_cmake(){
     sudo pacman -S --noconfirm cmake
 }
+bootstrap_compiler(){
+    sudo pacman -S --noconfirm gcc
+}
 build_deps(){
-    COMMAND="sudo pacman -S --noconfirm --needed cmake gcc zlib openssl util-linux"
+    COMMAND="sudo pacman -S --noconfirm --needed cmake zlib openssl util-linux make patch which pkgconf"
 
     INSTALLED=()
     INSTALLED+=("bzip2")

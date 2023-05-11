@@ -17,5 +17,5 @@
 # under the License.
 verify_gcc_enable(){
   #feature="$1"
-  { [ "$COMPILER_MAJOR" -eq 8 ] && [ "$COMPILER_MINOR" -ge 2 ] || [ "$COMPILER_MAJOR" -gt 8 ]; } && echo true || echo false
+  [ "$COMPILER_MAJOR" -ge 11 ] && echo true || echo false
 }

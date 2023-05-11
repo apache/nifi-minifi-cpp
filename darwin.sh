@@ -61,6 +61,9 @@ install_bison() {
 bootstrap_cmake(){
     brew install cmake
 }
+bootstrap_compiler() {
+    :
+}
 build_deps(){
 
     COMMAND="brew install cmake"

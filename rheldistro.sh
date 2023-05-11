@@ -71,13 +71,16 @@ bootstrap_cmake(){
   sudo yum -y install epel-release-latest-7.noarch.rpm
   sudo yum -y install cmake3
 }
+bootstrap_compiler() {
+  sudo yum -y install gcc gcc-c++
+}
 build_deps(){
 # Install epel-release so that cmake3 will be available for installation
   sudo yum -y install wget
   wget https://dl.fedoraproject.org/pub/epel/epel-release-latest-7.noarch.rpm
   sudo yum -y install epel-release-latest-7.noarch.rpm
 
-  COMMAND="sudo yum install cmake3 gcc gcc-c++ libuuid libuuid-devel"
+  COMMAND="sudo yum install cmake3 libuuid libuuid-devel"
   INSTALLED=()
   INSTALLED+=("bzip2-devel")
   for option in "${OPTIONS[@]}" ; do
