@@ -25,18 +25,20 @@ add_os_flags() {
   :
 }
 bootstrap_cmake(){
-  sudo bash -c 'source /etc/os-release; grep "$VERSION_CODENAME-backports" /etc/apt/sources.list &>/dev/null || echo "deb http://deb.debian.org/debian $VERSION_CODENAME-backports main" >> /etc/apt/sources.list'
-  sudo apt-get -y update
   if [ "$VERSION_CODENAME" = buster ]; then
+    sudo bash -c 'source /etc/os-release; grep "$VERSION_CODENAME-backports" /etc/apt/sources.list &>/dev/null || echo "deb http://deb.debian.org/debian $VERSION_CODENAME-backports main" >> /etc/apt/sources.list'
+    sudo apt-get -y update
     sudo apt-get -t buster-backports install -y cmake
   else
+    sudo apt-get -y update
     sudo apt-get install -y cmake
   fi
 }
+bootstrap_compiler(){
+  sudo apt-get -y install build-essential
+}
 build_deps(){
   sudo apt-get -y update
-  ## need to account for debian
-  sudo apt-get install -y libssl1.0-dev > /dev/null
   RETVAL=$?
   if [ "$RETVAL" -ne "0" ]; then
     sudo apt-get install -y libssl-dev > /dev/null
@@ -85,6 +87,8 @@ build_deps(){
             INSTALLED+=("liblzma-dev")
           elif [ "$FOUND_VALUE" = "libssh2" ]; then
             INSTALLED+=("libssh2-1-dev")
+          elif [ "$FOUND_VALUE" = "boost" ]; then
+            INSTALLED+=("libboost-dev")
           fi
         fi
       done

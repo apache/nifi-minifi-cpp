@@ -169,25 +169,6 @@ else
   LINUX=false
 fi
 
-### Verify the compiler version
-
-COMPILER_VERSION="0.0.0"
-
-COMPILER_COMMAND=""
-
-if [ -x "$(command -v g++)" ]; then
-  COMPILER_COMMAND="g++"
-  COMPILER_VERSION=$(${COMPILER_COMMAND} -dumpversion)
-fi
-
-COMPILER_MAJOR=$(echo "$COMPILER_VERSION" | cut -d. -f1)
-export COMPILER_MAJOR
-COMPILER_MINOR=$(echo "$COMPILER_VERSION" | cut -d. -f2)
-export COMPILER_MINOR
-COMPILER_REVISION=$(echo "$COMPILER_VERSION" | cut -d. -f3)
-export COMPILER_REVISION
-
-
 if [[ "$OS" = "Darwin" ]]; then
   . "${script_directory}/darwin.sh"
 else
@@ -215,10 +196,34 @@ else
     . "${script_directory}/arch.sh"
   fi
 fi
+
+### Verify the compiler version
+COMPILER_VERSION="0.0.0"
+COMPILER_COMMAND="${CXX:-g++}"
+
+if [ -z "$(command -v "$COMPILER_COMMAND")" ]; then
+  COMPILER_COMMAND=g++
+fi
+if [ -z "$(command -v "$COMPILER_COMMAND")" ]; then
+  echo "Couldn't find compiler, attempting to install GCC"
+  bootstrap_compiler
+fi
+if [ -x "$(command -v "${COMPILER_COMMAND}")" ]; then
+  COMPILER_VERSION=$(${COMPILER_COMMAND} -dumpversion)
+else
+  echo "Couldn't find compiler, please install one, or set CXX appropriately" 1>&2
+  exit 1
+fi
+
+COMPILER_MAJOR=$(echo "$COMPILER_VERSION" | cut -d. -f1)
+export COMPILER_MAJOR
+COMPILER_MINOR=$(echo "$COMPILER_VERSION" | cut -d. -f2)
+export COMPILER_MINOR
+COMPILER_REVISION=$(echo "$COMPILER_VERSION" | cut -d. -f3)
+export COMPILER_REVISION
+
 ### verify the cmake version
-
 CMAKE_COMMAND=""
-
 if [ -x "$(command -v cmake3)" ]; then
   CMAKE_COMMAND="cmake3"
 elif [ -x "$(command -v cmake)" ]; then
@@ -251,6 +256,7 @@ if [ "$CMAKE_MAJOR" -lt "$CMAKE_GLOBAL_MIN_VERSION_MAJOR" ] ||
   exit
 fi
 
+
 add_cmake_option PORTABLE_BUILD ${TRUE}
 add_cmake_option DEBUG_SYMBOLS ${FALSE}
 add_cmake_option BUILD_ROCKSDB ${TRUE}
@@ -264,7 +270,9 @@ add_option LIBARCHIVE_ENABLED ${TRUE} "DISABLE_LIBARCHIVE"
 add_dependency LIBARCHIVE_ENABLED "libarchive"
 
 add_option PYTHON_SCRIPTING_ENABLED ${FALSE} "ENABLE_PYTHON_SCRIPTING"
+add_dependency PYTHON_SCRIPTING_ENABLED "python"
 add_option LUA_SCRIPTING_ENABLED ${FALSE} "ENABLE_LUA_SCRIPTING"
+add_dependency LUA_SCRIPTING_ENABLED "lua"
 
 add_option EXPRESSION_LANGUAGE_ENABLED ${TRUE} "DISABLE_EXPRESSION_LANGUAGE"
 add_dependency EXPRESSION_LANGUAGE_ENABLED "bison"

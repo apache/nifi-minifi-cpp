@@ -41,14 +41,16 @@ bootstrap_cmake(){
     fi
     sudo apt-get -y install cmake
 }
-build_deps(){
-    ## need to account for debian
+bootstrap_compiler() {
     compiler_pkgs="gcc g++"
     if [[ "$OS" = Ubuntu* && "$OS_MAJOR" -lt 22 ]]; then
         sudo add-apt-repository -y ppa:ubuntu-toolchain-r/test
         compiler_pkgs="gcc-11 g++-11"
     fi
-    COMMAND="sudo apt-get -y install cmake $compiler_pkgs zlib1g-dev libssl-dev uuid uuid-dev"
+    sudo apt-get -y install $compiler_pkgs
+}
+build_deps(){
+    COMMAND="sudo apt-get -y install zlib1g-dev libssl-dev uuid uuid-dev"
 
     export DEBIAN_FRONTEND=noninteractive
     INSTALLED=()
@@ -97,6 +99,8 @@ build_deps(){
                         INSTALLED+=("libgps-dev")
                     elif [ "$FOUND_VALUE" = "libarchive" ]; then
                         INSTALLED+=("liblzma-dev")
+                    elif [ "$FOUND_VALUE" = "boost" ]; then
+                        INSTALLED+=("libboost-dev")
                     fi
                 fi
             done

@@ -48,9 +48,6 @@ install_bison() {
     fi
   fi
   if [ "$BISON_INSTALLED" = "false" ]; then
-    ## ensure that the toolchain is installed
-    INSTALL_BASE="sudo zypper in -y gcc gcc-c++"
-    ${INSTALL_BASE}
     wget https://ftp.gnu.org/gnu/bison/bison-3.0.4.tar.xz
     tar xvf bison-3.0.4.tar.xz
     pushd bison-3.0.4 || exit 1
@@ -64,10 +61,12 @@ install_bison() {
 bootstrap_cmake(){
   sudo zypper in -y cmake
 }
+bootstrap_compiler() {
+  sudo zypper in -y gcc gcc-c++
+}
 build_deps(){
-# Install epel-release so that cmake3 will be available for installation
-
-  COMMAND="sudo zypper in -y gcc gcc-c++ libuuid1 libuuid-devel"
+  # Install epel-release so that cmake3 will be available for installation
+  COMMAND="sudo zypper in -y libuuid1 libuuid-devel"
   INSTALLED=()
   INSTALLED+=("libbz2-devel")
   for option in "${OPTIONS[@]}" ; do

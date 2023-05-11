@@ -64,22 +64,19 @@ bootstrap_cmake(){
             ;;
         *) install_pkgs cmake ;;
     esac
-    extra_bootstrap_flags=""
-    if [ "$NO_PROMPT" = "true" ]; then extra_bootstrap_flags="$extra_bootstrap_flags -n"; fi
+}
+
+bootstrap_compiler() {
     get_toolset_name
     if [ -n "$TOOLSET_NAME" ]; then
         install_pkgs centos-release-scl
-        scl enable $TOOLSET_NAME "bash ./bootstrap.sh $extra_bootstrap_flags"
-    else
-        # cli flags splitting is intentional
-        # shellcheck disable=SC2086
-        bash ./bootstrap.sh $extra_bootstrap_flags
+        install_pkgs "$TOOLSET_NAME"
     fi
+    source "/opt/rh/$TOOLSET_NAME/enable"
 }
 
 build_deps() {
-    get_toolset_name
-    COMMAND="install_pkgs libuuid libuuid-devel libtool patch epel-release $TOOLSET_NAME"
+    COMMAND="install_pkgs libuuid libuuid-devel libtool patch epel-release"
     INSTALLED=()
     for option in "${OPTIONS[@]}" ; do
         option_value="${!option}"
@@ -111,6 +108,7 @@ build_deps() {
                         INSTALLED+=("python36-devel")
                     elif [ "$FOUND_VALUE" = "lua" ]; then
                         INSTALLED+=("lua-libs")
+                        INSTALLED+=("lua-devel")
                     elif [ "$FOUND_VALUE" = "gpsd" ]; then
                         INSTALLED+=("gpsd-devel")
                     elif [ "$FOUND_VALUE" = "libarchive" ]; then
@@ -118,6 +116,8 @@ build_deps() {
                         INSTALLED+=("bzip2-devel")
                     elif [ "$FOUND_VALUE" = "libssh2" ]; then
                         INSTALLED+=("libssh2-devel")
+                    elif [ "$FOUND_VALUE" = "boost" ]; then
+                        INSTALLED+=("boost-devel")
                     fi
                 fi
             done
