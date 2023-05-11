@@ -109,8 +109,10 @@ while [[ $# -gt 0 ]]; do
         CMAKE_BUILD_TYPE="${ARR[1]}"
       elif [ "${ARR[0]}" == "DOCKER_PLATFORMS" ] && [ -n "${ARR[1]}" ]; then
         PLATFORMS="--platform ${ARR[1]}"
-      elif [ "${ARR[0]}" == "DOCKER_PUSH" ] && [ "${ARR[1]}" == "ON" ]; then
-        PUSH_OR_LOAD="--push"
+      elif [ "${ARR[0]}" == "DOCKER_PUSH" ]; then
+        if [ "${ARR[1]}" == "ON" ]; then
+          PUSH_OR_LOAD="--push"
+        fi
       elif [ "${ARR[0]}" == "DOCKER_TAGS" ] && [ -n "${ARR[1]}" ]; then
         IFS=', ' read -r -a TAGS <<< "${ARR[1]}"
       else
