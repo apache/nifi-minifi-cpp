@@ -47,6 +47,7 @@ bootstrap_compiler() {
         sudo add-apt-repository -y ppa:ubuntu-toolchain-r/test
         compiler_pkgs="gcc-11 g++-11"
     fi
+    # shellcheck disable=SC2086
     sudo apt-get -y install $compiler_pkgs
 }
 build_deps(){

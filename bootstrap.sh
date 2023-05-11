@@ -202,9 +202,6 @@ COMPILER_VERSION="0.0.0"
 COMPILER_COMMAND="${CXX:-g++}"
 
 if [ -z "$(command -v "$COMPILER_COMMAND")" ]; then
-  COMPILER_COMMAND=g++
-fi
-if [ -z "$(command -v "$COMPILER_COMMAND")" ]; then
   echo "Couldn't find compiler, attempting to install GCC"
   bootstrap_compiler
 fi

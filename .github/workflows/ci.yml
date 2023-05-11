@@ -121,10 +121,10 @@ jobs:
           echo -e "127.0.0.1\t$HOSTNAME" | sudo tee -a /etc/hosts > /dev/null
       - name: build
         run: |
-          ./bootstrap.sh -e -t
-          cd build
           export CC=gcc-11
           export CXX=g++-11
+          ./bootstrap.sh -e -t
+          cd build
           cmake -DUSE_SHARED_LIBS=ON -DCMAKE_BUILD_TYPE=Release -DCI_BUILD=ON -DSTRICT_GSL_CHECKS=AUDIT -DFAIL_ON_WARNINGS=ON -DENABLE_SQL=OFF -DENABLE_LIBRDKAFKA=OFF -DENABLE_AWS=OFF \
               -DENABLE_AZURE=OFF -DENABLE_SPLUNK=OFF -DENABLE_GCP=OFF -DENABLE_PROCFS=OFF -DENABLE_BUSTACHE=ON -DENABLE_PCAP=ON -DENABLE_JNI=ON -DENABLE_SFTP=ON  \
               -DENABLE_LUA_SCRIPTING=OFF -DENABLE_PYTHON_SCRIPTING=OFF -DENABLE_MQTT=OFF -DENABLE_ELASTICSEARCH=OFF -DENABLE_KUBERNETES=OFF -DENABLE_OPC=OFF ..
@@ -177,10 +177,10 @@ jobs:
           echo -e "127.0.0.1\t$HOSTNAME" | sudo tee -a /etc/hosts > /dev/null
       - name: build
         run: |
-          ./bootstrap.sh -e -t
-          cd build
           export CC=clang-14
           export CXX=clang++-14
+          ./bootstrap.sh -e -t
+          cd build
           export CXXFLAGS="${CXXFLAGS} -stdlib=libc++"
           export LDFLAGS="${LDFLAGS} -stdlib=libc++"
           cmake -DUSE_SHARED_LIBS=ON -DCMAKE_BUILD_TYPE=RelWithDebInfo -DCI_BUILD=ON -DSTRICT_GSL_CHECKS=AUDIT -DFAIL_ON_WARNINGS=ON -DENABLE_AWS=ON -DENABLE_AZURE=ON -DENABLE_BUSTACHE=ON -DENABLE_COAP=ON \
