@@ -161,7 +161,7 @@ Provenance Reporting:
     rootFlowConfig->getConnections(connectionMap);
     REQUIRE(2 == connectionMap.size());
     // This is a map of UUID->Connection, and we don't know UUID, so just going to loop over it
-    for (auto it : connectionMap) {
+    for (const auto& it : connectionMap) {
       REQUIRE(it.second);
       REQUIRE(!it.second->getUUIDStr().empty());
       REQUIRE(it.second->getDestination());
@@ -476,7 +476,7 @@ NiFi Properties Overrides: {}
   rootFlowConfig->getConnections(connectionMap);
   REQUIRE(2 == connectionMap.size());
 
-  for (auto it : connectionMap) {
+  for (const auto& it : connectionMap) {
     REQUIRE(it.second);
     REQUIRE(!it.second->getUUIDStr().empty());
     REQUIRE(it.second->getDestination());
@@ -767,7 +767,7 @@ Remote Process Groups: []
   std::map<std::string, minifi::Connection*> connectionMap;
   rootFlowConfig->getConnections(connectionMap);
   REQUIRE(6 == connectionMap.size());
-  for (auto it : connectionMap) {
+  for (const auto& it : connectionMap) {
     REQUIRE(it.second);
     REQUIRE(!it.second->getUUIDStr().empty());
     REQUIRE(it.second->getDestination());
