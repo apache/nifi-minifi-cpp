@@ -68,7 +68,11 @@ macro(register_extension extension-name extension-display-name extension-guard d
         if("${CMAKE_CXX_COMPILER_ID}" STREQUAL "GNU")
             target_link_options(${extension-name} PRIVATE "-Wl,--disable-new-dtags")
         endif()
-        set_target_properties(${extension-name} PROPERTIES INSTALL_RPATH "$ORIGIN")
+        if (APPLE)
+            set_target_properties(${extension-name} PROPERTIES INSTALL_RPATH "@loader_path")
+        else()
+            set_target_properties(${extension-name} PROPERTIES INSTALL_RPATH "$ORIGIN")
+        endif()
         install(TARGETS ${extension-name} LIBRARY DESTINATION extensions COMPONENT ${component-name})
     endif()
 
