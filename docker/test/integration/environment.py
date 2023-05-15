@@ -19,6 +19,7 @@ import datetime
 import sys
 import uuid
 import os
+import platform
 sys.path.append('../minifi')
 
 from MiNiFi_integration_test_driver import MiNiFi_integration_test  # noqa: E402
@@ -73,3 +74,10 @@ def after_tag(context, tag):
     if tag == "requires.kubernetes.cluster" and context.kubernetes_proxy:
         context.kubernetes_proxy.cleanup()
         context.kubernetes_proxy = None
+
+
+def before_feature(context, feature):
+    if "x86_x64_only" in feature.tags:
+        is_x86 = platform.machine() in ("i386", "AMD64", "x86_64")
+        if not is_x86:
+            feature.skip("This feature is only x86/x64 compatible")

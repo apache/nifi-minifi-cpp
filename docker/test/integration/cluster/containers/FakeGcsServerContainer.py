@@ -30,7 +30,7 @@ class FakeGcsServerContainer(Container):
 
         logging.info('Creating and running google cloud storage server docker container...')
         self.client.containers.run(
-            "fsouza/fake-gcs-server:latest",
+            "fsouza/fake-gcs-server:1.44.1",
             detach=True,
             name=self.name,
             network=self.network.name,

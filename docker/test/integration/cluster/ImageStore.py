@@ -109,13 +109,12 @@ class ImageStore:
                 FROM {base_image}
                 RUN apt -y update && apt install -y apache2-utils
                 RUN htpasswd -b -c /etc/squid/.squid_users {proxy_username} {proxy_password}
-                RUN echo 'auth_param basic program /usr/lib/squid3/basic_ncsa_auth /etc/squid/.squid_users'  > /etc/squid/squid.conf && \
+                RUN echo 'auth_param basic program /usr/lib/squid/basic_ncsa_auth /etc/squid/.squid_users'  > /etc/squid/squid.conf && \
                     echo 'auth_param basic realm proxy' >> /etc/squid/squid.conf && \
                     echo 'acl authenticated proxy_auth REQUIRED' >> /etc/squid/squid.conf && \
                     echo 'http_access allow authenticated' >> /etc/squid/squid.conf && \
                     echo 'http_port {proxy_port}' >> /etc/squid/squid.conf
-                ENTRYPOINT ["/sbin/entrypoint.sh"]
-                """.format(base_image='sameersbn/squid:3.5.27-2', proxy_username='admin', proxy_password='test101', proxy_port='3128'))
+                """.format(base_image='ubuntu/squid:5.6-22.10_beta', proxy_username='admin', proxy_password='test101', proxy_port='3128'))
 
         return self.__build_image(dockerfile)
 
