@@ -451,7 +451,6 @@ Remote Process Groups:
   Output Ports: []
 NiFi Properties Overrides: {}
       )";
-  std::istringstream configYamlStream(TEST_CONFIG_YAML);
   std::unique_ptr<core::ProcessGroup> rootFlowConfig = yamlConfig.getRootFromPayload(TEST_CONFIG_YAML);
 
   REQUIRE(rootFlowConfig);
@@ -494,7 +493,6 @@ Processors:
   Properties:
      Dynamic Property: Bad
       )";
-  std::istringstream configYamlStream(TEST_CONFIG_YAML);
   std::unique_ptr<core::ProcessGroup> rootFlowConfig = yamlConfig.getRootFromPayload(TEST_CONFIG_YAML);
 
   REQUIRE(rootFlowConfig);
