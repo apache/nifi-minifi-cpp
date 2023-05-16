@@ -48,6 +48,7 @@ cmake-build-debug
 *flowfile_checkpoint
 build
 /*build*
+!win_build_vs.bat
 bt_state
 target
 thirdparty/**/*.o

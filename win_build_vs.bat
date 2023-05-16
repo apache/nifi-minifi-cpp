@@ -117,14 +117,14 @@ if [%generator%] EQU ["Ninja"] (
     set "build_platform_cmd=-A %build_platform%"
 )
 echo on
-cmake -G %generator% %build_platform_cmd% -DINSTALLER_MERGE_MODULES=%installer_merge_modules% -DTEST_CUSTOM_WEL_PROVIDER=%test_custom_wel_provider% -DENABLE_SQL=%enable_sql% -DUSE_REAL_ODBC_TEST_DRIVER=%real_odbc% ^
+cmake -G %generator% %build_platform_cmd% -DINSTALLER_MERGE_MODULES=%installer_merge_modules% -DTEST_CUSTOM_WEL_PROVIDER=%test_custom_wel_provider% -DENABLE_SQL=%enable_sql% -DMINIFI_USE_REAL_ODBC_TEST_DRIVER=%real_odbc% ^
         -DCMAKE_BUILD_TYPE_INIT=%cmake_build_type% -DCMAKE_BUILD_TYPE=%cmake_build_type% -DWIN32=WIN32 -DENABLE_LIBRDKAFKA=%enable_kafka% -DENABLE_JNI=%enable_jni% -DMINIFI_OPENSSL=ON ^
         -DENABLE_COAP=%enable_coap% -DENABLE_AWS=%enable_aws% -DENABLE_PDH=%enable_pdh% -DENABLE_AZURE=%enable_azure% -DENABLE_SFTP=%enable_sftp% -DENABLE_SPLUNK=%enable_splunk% -DENABLE_GCP=%enable_gcp% ^
         -DENABLE_NANOFI=%enable_nanofi% -DENABLE_OPENCV=%enable_opencv% -DENABLE_PROMETHEUS=%enable_prometheus% -DENABLE_ELASTICSEARCH=%enable_elastic% -DUSE_SHARED_LIBS=OFF -DENABLE_CONTROLLER=OFF  ^
         -DENABLE_BUSTACHE=%enable_bustache% -DENABLE_ENCRYPT_CONFIG=%enable_encrypt_config% -DENABLE_LUA_SCRIPTING=%enable_lua_scripting% -DENABLE_SMB=%enable_smb% ^
         -DENABLE_MQTT=%enable_mqtt% -DENABLE_OPC=%enable_opc% -DENABLE_OPENWSMAN=%enable_openwsman% -DENABLE_OPS=%enable_ops% -DENABLE_PCAP=%enable_pcap% ^
         -DENABLE_PYTHON_SCRIPTING=%enable_python_scripting% -DENABLE_SENSORS=%enable_sensors% -DENABLE_USB_CAMERA=%enable_usb_camera% -DENABLE_GRAFANA_LOKI=%enable_grafana_loki% ^
-        -DBUILD_ROCKSDB=ON -DFORCE_WINDOWS=ON -DUSE_SYSTEM_UUID=OFF -DENABLE_LIBARCHIVE=ON -DENABLE_WEL=ON -DFAIL_ON_WARNINGS=OFF -DSKIP_TESTS=%skiptests% ^
+        -DBUILD_ROCKSDB=ON -DUSE_SYSTEM_UUID=OFF -DENABLE_LIBARCHIVE=ON -DENABLE_WEL=ON -DMINIFI_FAIL_ON_WARNINGS=OFF -DSKIP_TESTS=%skiptests% ^
         %strict_gsl_checks% %redist% %sccache_arg% %EXTRA_CMAKE_ARGUMENTS% "%scriptdir%" && %buildcmd%
 IF %ERRORLEVEL% NEQ 0 EXIT /b %ERRORLEVEL%
 if [%cpack%] EQU [ON] (

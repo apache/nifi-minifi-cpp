@@ -1,7 +1,7 @@
 name: "MiNiFi-CPP CI"
 on: [push, pull_request, workflow_dispatch]
 env:
-  DOCKER_CMAKE_FLAGS: -DDOCKER_VERIFY_THREAD=3 -DUSE_SHARED_LIBS= -DSTRICT_GSL_CHECKS=AUDIT -DCI_BUILD=ON -DDISABLE_JEMALLOC=ON -DENABLE_AWS=ON -DENABLE_LIBRDKAFKA=ON -DENABLE_MQTT=ON -DENABLE_AZURE=ON -DENABLE_SQL=ON \
+  DOCKER_CMAKE_FLAGS: -DDOCKER_VERIFY_THREAD=3 -DUSE_SHARED_LIBS= -DSTRICT_GSL_CHECKS=AUDIT -DCI_BUILD=ON -DENABLE_AWS=ON -DENABLE_LIBRDKAFKA=ON -DENABLE_MQTT=ON -DENABLE_AZURE=ON -DENABLE_SQL=ON \
     -DENABLE_SPLUNK=ON -DENABLE_GCP=ON -DENABLE_OPC=ON -DENABLE_PYTHON_SCRIPTING=ON -DENABLE_LUA_SCRIPTING=ON -DENABLE_KUBERNETES=ON -DENABLE_TEST_PROCESSORS=ON -DENABLE_PROMETHEUS=ON \
     -DENABLE_ELASTICSEARCH=OFF -DENABLE_GRAFANA_LOKI=ON -DDOCKER_BUILD_ONLY=ON
   SCCACHE_GHA_ENABLE: true
@@ -11,6 +11,60 @@ jobs:
     name: "macos-xcode"
     runs-on: macos-13
     timeout-minutes: 180
+    env:
+      MACOS_MINIFI_OPTIONS: >-
+        -DCMAKE_BUILD_TYPE=Release
+        -DCI_BUILD=ON
+        -DCUSTOM_MALLOC=OFF
+        -DDOCKER_BUILD_ONLY=OFF
+        -DDOCKER_PUSH=OFF
+        -DDOCKER_SKIP_TESTS=ON
+        -DENABLE_ALL=OFF
+        -DENABLE_AWS=ON
+        -DENABLE_AZURE=ON
+        -DENABLE_BUSTACHE=OFF
+        -DENABLE_BZIP2=ON
+        -DENABLE_CIVET=ON
+        -DENABLE_COAP=OFF
+        -DENABLE_CONTROLLER=ON
+        -DENABLE_CURL=ON
+        -DENABLE_ELASTICSEARCH=ON
+        -DENABLE_ENCRYPT_CONFIG=ON
+        -DENABLE_EXPRESSION_LANGUAGE=ON
+        -DENABLE_GCP=ON
+        -DENABLE_GPS=OFF
+        -DENABLE_JNI=OFF
+        -DENABLE_KUBERNETES=ON
+        -DENABLE_LIBARCHIVE=ON
+        -DENABLE_LIBRDKAFKA=ON
+        -DENABLE_LUA_SCRIPTING=ON
+        -DENABLE_LZMA=ON
+        -DENABLE_MQTT=ON
+        -DENABLE_NANOFI=OFF
+        -DENABLE_OPC=ON
+        -DENABLE_OPENCV=ON
+        -DENABLE_OPENWSMAN=OFF
+        -DENABLE_OPS=ON
+        -DENABLE_PCAP=OFF
+        -DENABLE_PROMETHEUS=ON
+        -DENABLE_PYTHON_SCRIPTING=ON
+        -DENABLE_ROCKSDB=ON
+        -DENABLE_SENSORS=OFF
+        -DENABLE_SFTP=OFF
+        -DENABLE_SPLUNK=ON
+        -DENABLE_SQL=ON
+        -DENABLE_TEST_PROCESSORS=OFF
+        -DENABLE_USB_CAMERA=OFF
+        -DFORCE_COLORED_OUTPUT=OFF
+        -DLIBC_STATIC=OFF
+        -DMINIFI_ADVANCED_ASAN_BUILD=OFF
+        -DMINIFI_ADVANCED_CODE_COVERAGE=OFF
+        -DMINIFI_FAIL_ON_WARNINGS=OFF
+        -DMINIFI_OPENSSL=ON
+        -DMINIFI_USE_REAL_ODBC_TEST_DRIVER=ON
+        -DPORTABLE=ON
+        -DSKIP_TESTS=OFF
+        -DUSE_SHARED_LIBS=ON
     steps:
       - id: checkout
         uses: actions/checkout@v4
@@ -26,7 +80,7 @@ jobs:
         run: |
           # Skip brew update until https://github.com/actions/setup-python/issues/577 is fixed
           # brew update
-          HOMEBREW_NO_AUTO_UPDATE=1 brew install ossp-uuid flex lua ccache sqliteodbc automake autoconf ninja
+          HOMEBREW_NO_AUTO_UPDATE=1 brew install ossp-uuid bison flex lua ccache sqliteodbc automake autoconf ninja
       - id: setup_env
         name: setup enviroment
         run: |
@@ -36,11 +90,11 @@ jobs:
           echo -e "127.0.0.1\t$HOSTNAME" | sudo tee -a /etc/hosts > /dev/null
       - name: build
         run: |
-          export PATH="/usr/local/opt/flex/bin:$PATH"
-          export LDFLAGS="-L/usr/local/opt/flex/lib"
+          export PATH="/usr/local/opt/flex/bin:/usr/local/opt/bison/bin:$PATH"
+          export LDFLAGS="-L/usr/local/opt/flex/lib,-L/usr/local/opt/bison/lib"
           export CPPFLAGS="-I/usr/local/opt/flex/include"
-          # CPPFLAGS are not recognized by cmake, so we have to force them to CFLAGS and CXXFLAGS to have flex 2.6 working
-          ./bootstrap.sh -e -t && cd build  && cmake -G Ninja -DCMAKE_BUILD_TYPE=Release -DCI_BUILD=ON -DCMAKE_C_FLAGS="${CPPFLAGS} ${CFLAGS}" -DCMAKE_CXX_FLAGS="${CPPFLAGS} ${CXXFLAGS}" -DENABLE_PYTHON_SCRIPTING=ON -DENABLE_LUA_SCRIPTING=ON -DENABLE_SQL=ON -DUSE_REAL_ODBC_TEST_DRIVER=ON -DENABLE_AZURE=ON -DENABLE_GCP=ON -DENABLE_OPENCV=ON -DCMAKE_VERBOSE_MAKEFILE=ON -DCMAKE_RULE_MESSAGES=OFF -DSTRICT_GSL_CHECKS=AUDIT -DFAIL_ON_WARNINGS=ON .. && cmake --build . --parallel 4
+          python -m venv venv && source venv/bin/activate && pip install -r requirements.txt && python main.py --noninteractive --skip_compiler_install --cmake_options="-DCMAKE_C_FLAGS=${CPPFLAGS} ${CFLAGS} -DCMAKE_CXX_FLAGS=${CPPFLAGS} ${CXXFLAGS}" --minifi_options="${MACOS_MINIFI_OPTIONS}"
+        working-directory: bootstrap
       - name: cache save
         uses: actions/cache/save@v4
         if: always()
@@ -52,9 +106,11 @@ jobs:
         run: |
           # Set core file size limit to unlimited
           ulimit -c unlimited
-          cd build && ctest -j4 --output-on-failure --timeout 300
+          ctest -j4 --output-on-failure --timeout 300
+        working-directory: build
       - name: linter
-        run: cd build && ninja linter
+        run: ninja linter
+        working-directory: build
       - name: check-cores
         if: ${{ failure() && steps.test.conclusion == 'failure' }}
         run: |
@@ -75,12 +131,72 @@ jobs:
     timeout-minutes: 240
     env:
       LUA_DIR: D:\a\nifi-minifi-cpp\nifi-minifi-cpp\.lua
+      WINDOWS_MINIFI_OPTIONS: >-
+        -DCMAKE_BUILD_TYPE=Release
+        -DBUILD_ROCKSDB=ON
+        -DBUILD_SHARED_LIBS=OFF
+        -DCI_BUILD=ON
+        -DCUSTOM_MALLOC=OFF
+        -DDOCKER_BUILD_ONLY=OFF
+        -DDOCKER_PUSH=OFF
+        -DDOCKER_SKIP_TESTS=ON
+        -DENABLE_ALL=OFF
+        -DENABLE_AWS=ON
+        -DENABLE_AZURE=ON
+        -DENABLE_BUSTACHE=OFF
+        -DENABLE_BZIP2=ON
+        -DENABLE_CIVET=ON
+        -DENABLE_COAP=OFF
+        -DENABLE_CONTROLLER=OFF
+        -DENABLE_COVERAGE=
+        -DENABLE_CURL=ON
+        -DENABLE_ELASTICSEARCH=ON
+        -DENABLE_ENCRYPT_CONFIG=ON
+        -DENABLE_EXPRESSION_LANGUAGE=ON
+        -DENABLE_GCP=ON
+        -DENABLE_GPS=OFF
+        -DENABLE_GRAFANA_LOKI=ON
+        -DENABLE_JNI=OFF
+        -DENABLE_KUBERNETES=ON
+        -DENABLE_LIBARCHIVE=ON
+        -DENABLE_LIBRDKAFKA=ON
+        -DENABLE_LUA_SCRIPTING=OFF
+        -DENABLE_LZMA=ON
+        -DENABLE_MQTT=ON
+        -DENABLE_NANOFI=ON
+        -DENABLE_OPC=ON
+        -DENABLE_OPENCV=OFF
+        -DENABLE_OPENWSMAN=OFF
+        -DENABLE_OPS=ON
+        -DENABLE_PCAP=OFF
+        -DENABLE_PDH=ON
+        -DENABLE_PROMETHEUS=ON
+        -DENABLE_PYTHON_SCRIPTING=ON
+        -DENABLE_ROCKSDB=ON
+        -DENABLE_SENSORS=OFF
+        -DENABLE_SFTP=OFF
+        -DENABLE_SMB=ON
+        -DENABLE_SPLUNK=ON
+        -DENABLE_SQL=ON
+        -DENABLE_TEST_PROCESSORS=OFF
+        -DENABLE_USB_CAMERA=OFF
+        -DENABLE_WEL=ON
+        -DFORCE_COLORED_OUTPUT=ON
+        -DINSTALLER_MERGE_MODULES=OFF
+        -DMINIFI_FAIL_ON_WARNINGS=OFF
+        -DMINIFI_OPENSSL=ON
+        -DMSI_REDISTRIBUTE_UCRT_NONASL=OFF
+        -DPORTABLE=ON
+        -DSKIP_TESTS=OFF
+        -DSTATIC_BUILD=ON
+        -DMINIFI_USE_REAL_ODBC_TEST_DRIVER=ON
+        -DUSE_SHARED_LIBS=OFF
     steps:
       - name: Support longpaths
         run: git config --system core.longpaths true
-      - id: checkout
+      - name: Checkout project
         uses: actions/checkout@v4
-      - name: sccache cache restore
+      - name: Restore cache
         uses: actions/cache/restore@v4
         with:
           path: ~/AppData/Local/Mozilla/sccache/cache
@@ -91,49 +207,98 @@ jobs:
             ${{ runner.os }}-2022-sccache
       - name: Run sccache-cache
         uses: mozilla-actions/sccache-action@v0.0.4
-      - name: Install ninja-build tool
-        uses: seanmiddleditch/gha-setup-ninja@v4
       - name: Set up Python
-        uses: actions/setup-python@v5
-        with:
-          python-version: '3.11'
-      - name: Set up Lua
-        uses: xpol/setup-lua@v0.3
-      - name: Set up NASM for OpenSSL
-        uses: ilammy/setup-nasm@v1
-      - id: install-sqliteodbc-driver
+        run: choco -y install python & refreshenv
+        shell: cmd
+      - name: Install sqliteodbc driver
         run: |
           Invoke-WebRequest -Uri "http://www.ch-werner.de/sqliteodbc/sqliteodbc_w64.exe" -OutFile "sqliteodbc_w64.exe"
           if ((Get-FileHash 'sqliteodbc_w64.exe').Hash -ne "a4804e4f54f42c721df1323c5fcac101a8c7a577e7f20979227324ceab572d51") {Write "Hash mismatch"; Exit 1}
           Start-Process -FilePath ".\sqliteodbc_w64.exe" -ArgumentList "/S" -Wait
         shell: powershell
-      - id: remove-strawberry-perl-tool-executables
+      - name: Install NASM
         run: |
-          # Remove conflicting Strawberry Perl executables like patch.exe and cmcldeps.exe (More information in the note under System Requirements in README.md)
-          Remove-Item -Path "C:\Strawberry\c\bin" -Recurse -Force
-        shell: pwsh
+          choco install nasm -y
+        shell: cmd
+      - name: Add NASM and sccache to path
+        run: '[Environment]::SetEnvironmentVariable("PATH", [Environment]::GetEnvironmentVariable("PATH", [EnvironmentVariableTarget]::Machine) + ";C:\Program Files\NASM;C:\hostedtoolcache\windows\sccache\0.7.4\x64\", [EnvironmentVariableTarget]::Machine);'
+        shell: powershell
       - name: build
         run: |
-          for /f "usebackq delims=" %%i in (`vswhere.exe -latest -property installationPath`) do if exist "%%i\Common7\Tools\vsdevcmd.bat" call "%%i\Common7\Tools\vsdevcmd.bat" -arch=x64 -host_arch=x64
-          win_build_vs.bat ..\b /64 /CI /PDH /R /N /LOKI /RO /SCCACHE /NINJA
-          sccache --show-stats
+          python -m venv venv & venv\Scripts\activate & pip install -r requirements.txt & python main.py --noninteractive --skip_compiler_install --minifi_options="%WINDOWS_MINIFI_OPTIONS%" --cmake_options="-DCMAKE_C_COMPILER_LAUNCHER=sccache -DCMAKE_CXX_COMPILER_LAUNCHER=sccache"
         shell: cmd
-      - name: sccache cache save
+        working-directory: bootstrap
+      - name: Save cache
         uses: actions/cache/save@v4
         if: always()
         with:
           path: ~/AppData/Local/Mozilla/sccache/cache
           key: ${{ runner.os }}-2022-sccache-${{ github.ref }}-${{ github.sha }}
-      - name: test
-        run: cd ..\b && ctest --timeout 300 --parallel %NUMBER_OF_PROCESSORS% -C Release --output-on-failure
+      - name: Run tests
+        run: ctest --timeout 300 --parallel %NUMBER_OF_PROCESSORS% -C Release --output-on-failure
         shell: cmd
-      - name: linter
-        run: cd ..\b && cmake --build . --target linter --config Release -j 8
+        working-directory: ./build
+      - name: Run linter
+        run: cmake --build . --target linter --config Release -j 8
         shell: cmd
+        working-directory: ./build
   ubuntu_20_04:
     name: "ubuntu-20.04"
     runs-on: ubuntu-20.04
     timeout-minutes: 120
+    env:
+      UBUNTU_GCC_MINIFI_OPTIONS: >-
+        -DCMAKE_BUILD_TYPE=Release
+        -DCI_BUILD=OFF
+        -DCUSTOM_MALLOC=OFF
+        -DDOCKER_BUILD_ONLY=OFF
+        -DDOCKER_PUSH=OFF
+        -DDOCKER_SKIP_TESTS=ON
+        -DENABLE_ALL=OFF
+        -DENABLE_AWS=OFF
+        -DENABLE_AZURE=OFF
+        -DENABLE_BUSTACHE=ON
+        -DENABLE_BZIP2=ON
+        -DENABLE_CIVET=ON
+        -DENABLE_COAP=OFF
+        -DENABLE_CONTROLLER=ON
+        -DENABLE_CURL=ON
+        -DENABLE_ELASTICSEARCH=OFF
+        -DENABLE_ENCRYPT_CONFIG=ON
+        -DENABLE_EXPRESSION_LANGUAGE=ON
+        -DENABLE_GCP=OFF
+        -DENABLE_GPS=OFF
+        -DENABLE_JNI=ON
+        -DENABLE_KUBERNETES=OFF
+        -DENABLE_LIBARCHIVE=ON
+        -DENABLE_LIBRDKAFKA=OFF
+        -DENABLE_LUA_SCRIPTING=OFF
+        -DENABLE_LZMA=ON
+        -DENABLE_MQTT=OFF
+        -DENABLE_NANOFI=OFF
+        -DENABLE_OPC=OFF
+        -DENABLE_OPENCV=OFF
+        -DENABLE_OPENWSMAN=OFF
+        -DENABLE_OPS=ON
+        -DENABLE_PCAP=ON
+        -DENABLE_PROCFS=OFF
+        -DENABLE_PROMETHEUS=ON
+        -DENABLE_PYTHON_SCRIPTING=OFF
+        -DENABLE_ROCKSDB=ON
+        -DENABLE_SENSORS=OFF
+        -DENABLE_SFTP=ON
+        -DENABLE_SPLUNK=OFF
+        -DENABLE_SQL=OFF
+        -DENABLE_SYSTEMD=ON
+        -DENABLE_TEST_PROCESSORS=OFF
+        -DENABLE_USB_CAMERA=OFF
+        -DFORCE_COLORED_OUTPUT=ON
+        -DMINIFI_FAIL_ON_WARNINGS=ON
+        -DMINIFI_OPENSSL=ON
+        -DPORTABLE=ON
+        -DSKIP_TESTS=OFF
+        -DMINIFI_USE_REAL_ODBC_TEST_DRIVER=OFF
+        -DUSE_SHARED_LIBS=ON
     steps:
       - id: checkout
         uses: actions/checkout@v4
@@ -148,19 +313,15 @@ jobs:
       - id: install_deps
         run: |
           sudo apt update
-          sudo apt install -y ccache libfl-dev libpcap-dev
+          sudo apt install -y ccache libfl-dev libpcap-dev python3 python3-venv
           echo "PATH=/usr/lib/ccache:$PATH" >> $GITHUB_ENV
           echo -e "127.0.0.1\t$HOSTNAME" | sudo tee -a /etc/hosts > /dev/null
       - name: build
         run: |
-          export CC=gcc-11
-          export CXX=g++-11
-          ./bootstrap.sh -e -t
-          cd build
-          cmake -DUSE_SHARED_LIBS=ON -DCMAKE_BUILD_TYPE=Release -DCI_BUILD=ON -DSTRICT_GSL_CHECKS=AUDIT -DFAIL_ON_WARNINGS=ON -DENABLE_SQL=OFF -DENABLE_LIBRDKAFKA=OFF -DENABLE_AWS=OFF \
-              -DENABLE_AZURE=OFF -DENABLE_SPLUNK=OFF -DENABLE_GCP=OFF -DENABLE_PROCFS=OFF -DENABLE_BUSTACHE=ON -DENABLE_PCAP=ON -DENABLE_JNI=ON -DENABLE_SFTP=ON  \
-              -DENABLE_LUA_SCRIPTING=OFF -DENABLE_PYTHON_SCRIPTING=OFF -DENABLE_MQTT=OFF -DENABLE_ELASTICSEARCH=OFF -DENABLE_KUBERNETES=OFF -DENABLE_OPC=OFF ..
-          make -j$(nproc) VERBOSE=1
+          python3 -m venv venv && source venv/bin/activate \
+            && pip install -r requirements.txt \
+            && python main.py --noninteractive --minifi_options="${UBUNTU_GCC_MINIFI_OPTIONS}" --cmake_options="-DSTRICT_GSL_CHECKS=AUDIT"
+        working-directory: bootstrap
       - name: cache save
         uses: actions/cache/save@v4
         if: always()
@@ -172,7 +333,8 @@ jobs:
         run: |
           # Set core file size limit to unlimited
           ulimit -c unlimited
-          cd build && make test ARGS="--timeout 300 -j8 --output-on-failure"
+          ctest -j$(nproc) --output-on-failure
+        working-directory: build
       - name: check-cores
         if: ${{ failure() && steps.test.conclusion == 'failure' }}
         run: |
@@ -191,6 +353,60 @@ jobs:
     name: "ubuntu-22.04-clang"
     runs-on: ubuntu-22.04
     timeout-minutes: 240
+    env:
+      UBUNTU_CLANG_MINIFI_OPTIONS: >-
+        -DCMAKE_BUILD_TYPE=RelWithDebInfo
+        -DCI_BUILD=OFF
+        -DCUSTOM_MALLOC=OFF
+        -DDOCKER_BUILD_ONLY=OFF
+        -DDOCKER_PUSH=OFF
+        -DDOCKER_SKIP_TESTS=ON
+        -DENABLE_ALL=OFF
+        -DENABLE_AWS=ON
+        -DENABLE_AZURE=ON
+        -DENABLE_BUSTACHE=ON
+        -DENABLE_BZIP2=ON
+        -DENABLE_CIVET=ON
+        -DENABLE_COAP=ON
+        -DENABLE_CONTROLLER=ON
+        -DENABLE_CURL=ON
+        -DENABLE_ELASTICSEARCH=ON
+        -DENABLE_ENCRYPT_CONFIG=ON
+        -DENABLE_EXPRESSION_LANGUAGE=ON
+        -DENABLE_GCP=ON
+        -DENABLE_GPS=ON
+        -DENABLE_GRAFANA_LOKI=ON
+        -DENABLE_JNI=OFF
+        -DENABLE_KUBERNETES=ON
+        -DENABLE_LIBARCHIVE=ON
+        -DENABLE_LIBRDKAFKA=ON
+        -DENABLE_LUA_SCRIPTING=ON
+        -DENABLE_LZMA=ON
+        -DENABLE_MQTT=ON
+        -DENABLE_NANOFI=ON
+        -DENABLE_OPC=ON
+        -DENABLE_OPENCV=ON
+        -DENABLE_OPENWSMAN=ON
+        -DENABLE_OPS=ON
+        -DENABLE_PCAP=ON
+        -DENABLE_PROCFS=ON
+        -DENABLE_PROMETHEUS=ON
+        -DENABLE_PYTHON_SCRIPTING=ON
+        -DENABLE_ROCKSDB=ON
+        -DENABLE_SENSORS=ON
+        -DENABLE_SFTP=ON
+        -DENABLE_SPLUNK=ON
+        -DENABLE_SQL=ON
+        -DENABLE_SYSTEMD=ON
+        -DENABLE_TEST_PROCESSORS=OFF
+        -DENABLE_USB_CAMERA=ON
+        -DFORCE_COLORED_OUTPUT=ON
+        -DMINIFI_FAIL_ON_WARNINGS=ON
+        -DMINIFI_OPENSSL=ON
+        -DPORTABLE=ON
+        -DSKIP_TESTS=OFF
+        -DMINIFI_USE_REAL_ODBC_TEST_DRIVER=OFF
+        -DUSE_SHARED_LIBS=ON
     steps:
       - id: checkout
         uses: actions/checkout@v4
@@ -225,18 +441,10 @@ jobs:
           sudo rm -rf "$AGENT_TOOLSDIRECTORY"
       - name: build
         run: |
-          export CC=clang-16
-          export CXX=clang++-16
-          ./bootstrap.sh -e -t
-          cd build
-          export CXXFLAGS="${CXXFLAGS} -stdlib=libc++"
-          export LDFLAGS="${LDFLAGS} -stdlib=libc++"
-          cmake -DUSE_SHARED_LIBS=ON -DCMAKE_BUILD_TYPE=RelWithDebInfo -DCI_BUILD=ON -DSTRICT_GSL_CHECKS=AUDIT -DFAIL_ON_WARNINGS=ON -DENABLE_AWS=ON -DENABLE_AZURE=ON -DENABLE_BUSTACHE=ON -DENABLE_COAP=ON \
-              -DENABLE_ENCRYPT_CONFIG=ON -DENABLE_GPS=ON -DENABLE_LIBRDKAFKA=ON -DENABLE_MQTT=ON -DENABLE_NANOFI=ON -DENABLE_OPC=ON -DENABLE_OPENCV=ON \
-              -DENABLE_OPENWSMAN=ON -DENABLE_OPS=ON -DENABLE_PCAP=ON -DENABLE_SENSORS=ON -DENABLE_SFTP=ON -DENABLE_SQL=ON -DENABLE_SYSTEMD=ON \
-              -DENABLE_USB_CAMERA=ON -DENABLE_PYTHON_SCRIPTING=ON -DENABLE_LUA_SCRIPTING=ON -DENABLE_KUBERNETES=ON -DENABLE_GCP=ON -DENABLE_PROCFS=ON -DENABLE_PROMETHEUS=ON -DENABLE_ELASTICSEARCH=ON \
-              -DENABLE_GRAFANA_LOKI=ON -DCMAKE_EXPORT_COMPILE_COMMANDS=ON ..
-          cmake --build . --parallel $(nproc)
+          python3 -m venv venv && source venv/bin/activate \
+            && pip install -r requirements.txt \
+            && python main.py --noninteractive --skip_compiler_install --cmake_options="-DCMAKE_C_COMPILER=clang-16 -DCMAKE_CXX_COMPILER=clang++-16 -DSTRICT_GSL_CHECKS=AUDIT -DCMAKE_EXPORT_COMPILE_COMMANDS=ON" --minifi_options="${UBUNTU_CLANG_MINIFI_OPTIONS}"
+        working-directory: bootstrap
       - id: cache_save
         uses: actions/cache/save@v4
         if: always()
@@ -248,13 +456,17 @@ jobs:
         run: |
           # Set core file size limit to unlimited
           ulimit -c unlimited
-          cd build && make test ARGS="--timeout 300 -j8 --output-on-failure"
+          ctest -j$(nproc) --output-on-failure
+        working-directory: build
       - name: linter
-        run: cd build && make -j$(nproc) linter
+        run: cmake --build . --target linter
+        working-directory: ./build
       - name: shellcheck
-        run: cd build && make shellcheck
+        run: cmake --build . --target shellcheck
+        working-directory: ./build
       - id: flake8_check
-        run: cd build && make flake8
+        run: cmake --build . --target flake8
+        working-directory: ./build
       - id: files
         uses: Ana06/get-changed-files@v2.3.0
         continue-on-error: true
@@ -321,7 +533,7 @@ jobs:
       - id: build
         run: |
           # centos build can run out of the github runners' disk space if built with RelWithDebInfo so we keep the Release build here
-          mkdir build && cd build && cmake -DUSE_SHARED_LIBS=ON -DCI_BUILD=ON -DCMAKE_BUILD_TYPE=Release -DSTRICT_GSL_CHECKS=AUDIT -DFAIL_ON_WARNINGS=ON -DENABLE_AWS=ON -DENABLE_AZURE=ON \
+          mkdir build && cd build && cmake -DUSE_SHARED_LIBS=ON -DCI_BUILD=ON -DCMAKE_BUILD_TYPE=Release -DSTRICT_GSL_CHECKS=AUDIT -DMINIFI_FAIL_ON_WARNINGS=ON -DENABLE_AWS=ON -DENABLE_AZURE=ON \
               -DENABLE_COAP=ON -DENABLE_ENCRYPT_CONFIG=ON -DENABLE_GPS=ON -DENABLE_LIBRDKAFKA=ON -DENABLE_MQTT=ON -DENABLE_NANOFI=ON -DENABLE_OPC=ON \
               -DENABLE_OPENCV=ON -DENABLE_OPENWSMAN=ON -DENABLE_OPS=ON -DENABLE_SENSORS=ON -DENABLE_SQL=ON -DENABLE_SYSTEMD=ON \
               -DENABLE_USB_CAMERA=ON -DENABLE_PYTHON_SCRIPTING=ON -DENABLE_LUA_SCRIPTING=ON -DENABLE_KUBERNETES=ON -DENABLE_GCP=ON -DENABLE_PROCFS=ON -DENABLE_PROMETHEUS=ON \

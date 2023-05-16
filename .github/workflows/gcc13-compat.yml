@@ -31,7 +31,7 @@ jobs:
           export CXX=g++-13
           ./bootstrap.sh -e -t
           cd build
-          cmake -DUSE_SHARED_LIBS=ON -DCMAKE_BUILD_TYPE=Release -DCI_BUILD=ON -DSTRICT_GSL_CHECKS=AUDIT -DFAIL_ON_WARNINGS=ON -DENABLE_ALL=ON ..
+          cmake -DUSE_SHARED_LIBS=ON -DCMAKE_BUILD_TYPE=Release -DCI_BUILD=ON -DSTRICT_GSL_CHECKS=AUDIT -DMINIFI_FAIL_ON_WARNINGS=ON -DENABLE_ALL=ON ..
           make -j$(nproc) VERBOSE=1
       - name: test
         id: test

@@ -30,7 +30,7 @@
 #include "Catch.h"
 #include "processors/SQLProcessor.h"
 
-#ifdef USE_REAL_ODBC_TEST_DRIVER
+#ifdef MINIFI_USE_REAL_ODBC_TEST_DRIVER
 static const std::string ODBC_SERVICE = "ODBCService";
 #else
 #include "mocks/MockODBCService.h"

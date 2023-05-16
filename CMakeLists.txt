@@ -75,8 +75,8 @@ if (${FORCE_COLORED_OUTPUT})
     endif()
 endif()
 
-if (USE_REAL_ODBC_TEST_DRIVER)
-    add_definitions("-DUSE_REAL_ODBC_TEST_DRIVER")
+if (MINIFI_USE_REAL_ODBC_TEST_DRIVER)
+    add_definitions("-DMINIFI_USE_REAL_ODBC_TEST_DRIVER")
 endif()
 
 # Use ccache if present
@@ -128,7 +128,7 @@ message("THREADS_HAVE_PTHREAD_ARG is ${THREADS_HAVE_PTHREAD_ARG}")
 set(CMAKE_POSITION_INDEPENDENT_CODE ON)
 
 # Use ASAN if instructed
-if (ASAN_BUILD)
+if (MINIFI_ADVANCED_ASAN_BUILD)
     set(ASAN_FLAGS "-g -fsanitize=address -fsanitize-address-use-after-scope -fno-omit-frame-pointer")
     set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} ${ASAN_FLAGS}")
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${ASAN_FLAGS}")
@@ -136,7 +136,7 @@ if (ASAN_BUILD)
     set(CMAKE_SHARED_LINKER_FLAGS "${CMAKE_SHARED_LINKER_FLAGS} ${ASAN_FLAGS}")
 endif()
 
-if (ENABLE_COVERAGE)
+if (MINIFI_ADVANCED_CODE_COVERAGE)
     include(CodeCoverage)
     append_coverage_compiler_flags()
 endif()
@@ -315,12 +315,12 @@ include(MagicEnum)
 # Setup warning flags
 if(MSVC)
     list(APPEND MINIFI_CPP_COMPILE_OPTIONS /W3)
-    if(FAIL_ON_WARNINGS)
+    if(MINIFI_FAIL_ON_WARNINGS)
         list(APPEND MINIFI_CPP_COMPILE_OPTIONS /WX)
     endif()
 else()
     list(APPEND MINIFI_CPP_COMPILE_OPTIONS -Wall -Wextra)
-    if(FAIL_ON_WARNINGS)
+    if(MINIFI_FAIL_ON_WARNINGS)
         list(APPEND MINIFI_CPP_COMPILE_OPTIONS -Werror)
         # -Wrestrict may cause build failure in GCC 12  https://gcc.gnu.org/bugzilla/show_bug.cgi?id=104336
         if ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "GNU")
@@ -697,7 +697,7 @@ add_custom_target(
 
 feature_summary(WHAT ALL FILENAME ${CMAKE_BINARY_DIR}/all.log)
 
-if (ENABLE_COVERAGE)
+if (MINIFI_ADVANCED_CODE_COVERAGE)
     set(GCOVR_ADDITIONAL_ARGS --gcov-ignore-parse-errors=negative_hits.warn --gcov-ignore-errors=no_working_dir_found)
     setup_target_for_coverage_gcovr_html(
         NAME coverage

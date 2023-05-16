@@ -305,8 +305,40 @@ sudo brew install libpcap
 
 ### Bootstrapping
 
-- MiNiFi C++ offers a bootstrap script in the root of our github repo that will bootstrap the cmake and build process for you without the need to install dependencies yourself. To use this
-  process, please run the command `bootstrap.sh` from the root of the MiNiFi C++ source tree.
+MiNiFi C++ offers bootstrap scripts that will bootstrap the cmake and build process for you without the need to install dependencies yourself.
+
+#### Python based bootstrapping (recommended)
+##### Linux
+Prerequisites:
+- [python](https://docs.python.org/)
+- [venv](https://docs.python.org/3/library/venv.html)
+
+```bash
+./bootstrap/py_bootstrap.sh
+```
+
+#### macOS
+Prerequisites:
+- [python](https://docs.python.org/)
+- [venv](https://docs.python.org/3/library/venv.html)
+- [Homebrew](https://brew.sh/)
+```bash
+./bootstrap/py_bootstrap.sh
+```
+
+#### Windows
+Prerequisites:
+- [python](https://docs.python.org/)
+- [venv](https://docs.python.org/3/library/venv.html)
+- [chocolatey](https://chocolatey.org/)
+```dos
+.\bootstrap\py_bootstrap.bat
+```
+
+This will set up a virtual environment in the bootstrap folder, and guide you through the build process.
+
+#### Shell based bootstrapping (linux and macOS)
+- Please run the command `bootstrap.sh` from the root of the MiNiFi C++ source tree.
 
 - Per the table, below, you will be presented with a menu guided bootstrap process. You may enable and disable extensions ( further defined below ). Once you are finished selecting the features
   you wish to build, enter P to continue with the process. CMAKE dependencies will be resolved for your distro. You may enter command line options -n to force yes to all prompts

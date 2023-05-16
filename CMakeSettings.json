@@ -56,10 +56,6 @@
           "value": "ON"
         },
         {
-          "name": "FORCE_WINDOWS",
-          "value": "ON"
-        },
-        {
           "name": "USE_SYSTEM_UUID",
           "value": "OFF"
         },
@@ -76,7 +72,7 @@
           "value": "TRUE"
         },
         {
-          "name": "FAIL_ON_WARNINGS",
+          "name": "MINIFI_FAIL_ON_WARNINGS",
           "value": "OFF"
         },
         {
