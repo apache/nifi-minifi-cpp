@@ -18,6 +18,7 @@
 #include "utils/FileMutex.h"
 
 #include <optional>
+#include <cstring>
 #include "utils/gsl.h"
 
 template<typename T>
