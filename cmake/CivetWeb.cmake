@@ -26,8 +26,8 @@ set(CIVETWEB_ALLOW_WARNINGS "ON" CACHE STRING "" FORCE)
 set(CIVETWEB_ENABLE_ASAN "OFF" CACHE STRING "" FORCE)
 
 FetchContent_Declare(civetweb
-    GIT_REPOSITORY "https://github.com/civetweb/civetweb.git"
-    GIT_TAG "4447b6501d5c568b4c6c0940eac801ec690b2250" # commit containing fix for MSVC issue https://github.com/civetweb/civetweb/issues/1024
+    URL      https://github.com/civetweb/civetweb/archive/refs/tags/v1.16.tar.gz
+    URL_HASH SHA256=f0e471c1bf4e7804a6cfb41ea9d13e7d623b2bcc7bc1e2a4dd54951a24d60285
 )
 
 FetchContent_MakeAvailable(civetweb)
