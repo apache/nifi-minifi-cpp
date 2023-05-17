@@ -202,8 +202,6 @@ int main(int argc, char **argv) {
     logger->log_error("Failed to change working directory to MINIFI_HOME (%s)", minifiHome.string());
     return -1;
   }
-  const auto flow_controller_semaphore_path = "/MiNiFiMain";
-  const auto process_semaphore_path = "/MiNiFiProc";
 
   process_running.test_and_set();
 
