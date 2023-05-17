@@ -62,6 +62,7 @@
 #include "utils/file/PathUtils.h"
 #include "utils/file/FileUtils.h"
 #include "utils/Environment.h"
+#include "utils/FileMutex.h"
 #include "FlowController.h"
 #include "AgentDocs.h"
 #include "MainHelper.h"
@@ -196,6 +197,14 @@ int main(int argc, char **argv) {
   if (minifiHome.empty()) {
     // determineMinifiHome already logged everything we need
     return -1;
+  }
+  utils::FileMutex minifi_home_mtx(minifiHome / "LOCK");
+  std::unique_lock minifi_home_lock(minifi_home_mtx, std::defer_lock);
+  try {
+    minifi_home_lock.lock();
+  } catch (const std::exception& ex) {
+    logger->log_error("Could not acquire LOCK for minifi home '%s', maybe another minifi instance is running: %s", minifiHome.string(), ex.what());
+    std::exit(1);
   }
   // chdir to MINIFI_HOME
   std::error_code current_path_error;

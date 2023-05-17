@@ -35,10 +35,7 @@ static T& getOsHandle(std::array<std::byte, 24>& file_handle) {
 
 namespace org::apache::nifi::minifi::utils {
 
-FileMutex::FileMutex(std::filesystem::path path) {
-  path_ = std::move(path);
-
-}
+FileMutex::FileMutex(std::filesystem::path path): path_(std::move(path)) {}
 
 void FileMutex::lock() {
   std::lock_guard guard(mtx_);
@@ -65,6 +62,8 @@ void FileMutex::unlock() {
 
 namespace org::apache::nifi::minifi::utils {
 
+FileMutex::FileMutex(std::filesystem::path path): path_(std::move(path)) {}
+
 void FileMutex::lock() {
   std::lock_guard guard(mtx_);
   int flags = O_RDWR | O_CREAT;
@@ -77,12 +76,8 @@ void FileMutex::lock() {
   }
 
   errno = 0;
-  struct flock f;
-  memset(&f, 0, sizeof(f));
+  struct flock f{};
   f.l_type = F_WRLCK;
-  f.l_whence = SEEK_SET;
-  f.l_start = 0;
-  f.l_len = 0;
   int value = fcntl(fd, F_SETLK, &f);
   if (value == -1) {
     std::string err_str = "Failed to lock file '" + path_.string() + "': " + std::strerror(errno);
@@ -96,12 +91,8 @@ void FileMutex::lock() {
 void FileMutex::unlock() {
   std::lock_guard guard(mtx_);
   errno = 0;
-  struct flock f;
-  memset(&f, 0, sizeof(f));
+  struct flock f{};
   f.l_type = F_UNLCK;
-  f.l_whence = SEEK_SET;
-  f.l_start = 0;
-  f.l_len = 0;
   int value = fcntl(getOsHandle<int>(file_handle_), F_SETLK, &f);
   if (value == -1) {
     std::string err_str = "Failed to unlock file '" + path_.string() + "': " + std::strerror(errno);
