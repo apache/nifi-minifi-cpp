@@ -16,11 +16,11 @@
  */
 
 #undef NDEBUG
+#include <cassert>
+#include <cstdlib>
 #include "utils/FileMutex.h"
 #include "utils/file/FileUtils.h"
 #include "../TestBase.h"
-#include <cassert>
-#include <cstdlib>
 
 namespace minifi = org::apache::nifi::minifi;
 

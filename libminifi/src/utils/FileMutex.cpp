@@ -17,13 +17,11 @@
 
 #include "utils/FileMutex.h"
 
-#include <optional>
-#include <cstring>
 #include "utils/gsl.h"
 
 template<typename T>
 static T& getOsHandle(std::array<std::byte, 24>& file_handle) {
-  void* ptr = (void*)file_handle.data();
+  void* ptr = reinterpret_cast<void*>(file_handle.data());
   size_t size = file_handle.size();
   void* result = std::align(alignof(T), sizeof(T), ptr, size);
   gsl_Assert(result);
@@ -60,6 +58,7 @@ void FileMutex::unlock() {
 
 #include <fcntl.h>
 #include <unistd.h>
+#include <cstring>
 
 namespace org::apache::nifi::minifi::utils {
 
