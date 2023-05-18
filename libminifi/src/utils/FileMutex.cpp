@@ -44,12 +44,12 @@ void FileMutex::lock() {
     throw std::runtime_error("Failed to open file '" + path_.string() + "' to be locked: " + utils::OsUtils::windowsErrorToErrorCode(GetLastError()).message());
   }
 
-  getOsHandle<HANDLE>(data_) = handle;
+  getOsHandle<HANDLE>(file_handle_) = handle;
 }
 
 void FileMutex::unlock() {
   std::lock_guard guard(mtx_);
-  CloseHandle(*cast<HANDLE>(data_));
+  CloseHandle(getOsHandle<HANDLE>(file_handle_) = handle;);
 }
 
 }  // namespace org::apache::nifi::minifi::utils
