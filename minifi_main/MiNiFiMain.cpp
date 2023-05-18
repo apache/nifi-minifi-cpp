@@ -208,7 +208,7 @@ int main(int argc, char **argv) {
   std::atomic<bool> restart_token{false};
   const auto request_restart = [&] {
     if (!restart_token.exchange(true)) {
-      // only do sem_post if a restart is not already in progress (the flag was unset before the exchange)
+      // only trigger if a restart is not already in progress (the flag was unset before the exchange)
       flow_controller_running.clear();
       flow_controller_running.notify_all();
       logger->log_info("Initiating restart...");
