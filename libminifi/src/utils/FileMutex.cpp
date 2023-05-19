@@ -49,7 +49,7 @@ void FileMutex::lock() {
 
 void FileMutex::unlock() {
   std::lock_guard guard(mtx_);
-  CloseHandle(getOsHandle<HANDLE>(file_handle_) = handle;);
+  CloseHandle(getOsHandle<HANDLE>(file_handle_));
 }
 
 }  // namespace org::apache::nifi::minifi::utils
