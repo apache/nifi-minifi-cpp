@@ -35,7 +35,8 @@ class LogPublisherTestFixture {
     : configuration_(std::make_shared<Configure>()),
       provenance_repo_(core::createRepository("provenancerepository", "provenancerepository")),
       flow_file_repo_(core::createRepository("flowfilerepository", "flowfilerepository")),
-      response_node_loader_(std::make_shared<state::response::ResponseNodeLoader>(configuration_, provenance_repo_, flow_file_repo_, nullptr)),
+      response_node_loader_(std::make_shared<state::response::ResponseNodeLoader>(configuration_,
+        std::vector<std::shared_ptr<core::RepositoryMetricsSource>>{provenance_repo_, flow_file_repo_}, nullptr)),
       publisher_("LogMetricsPublisher") {
   }
 
@@ -83,15 +84,19 @@ TEST_CASE_METHOD(LogPublisherTestFixture, "Verify multiple metric nodes in logs"
   std::string expected_log = R"([info] {
     "LogMetrics": {
         "RepositoryMetrics": {
-            "flowfilerepository": {
-                "running": "false",
-                "full": "false",
-                "size": "0"
-            },
             "provenancerepository": {
                 "running": "false",
                 "full": "false",
-                "size": "0"
+                "size": "0",
+                "maxSize": "0",
+                "entryCount": "0"
+            },
+            "flowfilerepository": {
+                "running": "false",
+                "full": "false",
+                "size": "0",
+                "maxSize": "0",
+                "entryCount": "0"
             }
         },
         "deviceInfo": {
@@ -109,15 +114,19 @@ TEST_CASE_METHOD(LogPublisherTestFixture, "Verify reloading different metrics", 
   std::string expected_log = R"([info] {
     "LogMetrics": {
         "RepositoryMetrics": {
-            "flowfilerepository": {
-                "running": "false",
-                "full": "false",
-                "size": "0"
-            },
             "provenancerepository": {
                 "running": "false",
                 "full": "false",
-                "size": "0"
+                "size": "0",
+                "maxSize": "0",
+                "entryCount": "0"
+            },
+            "flowfilerepository": {
+                "running": "false",
+                "full": "false",
+                "size": "0",
+                "maxSize": "0",
+                "entryCount": "0"
             }
         }
     }
@@ -154,15 +163,19 @@ TEST_CASE_METHOD(LogPublisherTestFixture, "Verify generic and publisher specific
   std::string expected_log = R"([info] {
     "LogMetrics": {
         "RepositoryMetrics": {
-            "flowfilerepository": {
-                "running": "false",
-                "full": "false",
-                "size": "0"
-            },
             "provenancerepository": {
                 "running": "false",
                 "full": "false",
-                "size": "0"
+                "size": "0",
+                "maxSize": "0",
+                "entryCount": "0"
+            },
+            "flowfilerepository": {
+                "running": "false",
+                "full": "false",
+                "size": "0",
+                "maxSize": "0",
+                "entryCount": "0"
             }
         }
     }
@@ -181,15 +194,19 @@ TEST_CASE_METHOD(LogPublisherTestFixture, "Verify changing log level property fo
   std::string expected_log = R"([debug] {
     "LogMetrics": {
         "RepositoryMetrics": {
-            "flowfilerepository": {
-                "running": "false",
-                "full": "false",
-                "size": "0"
-            },
             "provenancerepository": {
                 "running": "false",
                 "full": "false",
-                "size": "0"
+                "size": "0",
+                "maxSize": "0",
+                "entryCount": "0"
+            },
+            "flowfilerepository": {
+                "running": "false",
+                "full": "false",
+                "size": "0",
+                "maxSize": "0",
+                "entryCount": "0"
             }
         }
     }
