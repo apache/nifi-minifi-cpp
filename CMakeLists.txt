@@ -33,6 +33,8 @@ set(BUILD_NUMBER "" CACHE STRING "Build number")
 # Base Alpine image to be used in the Docker build instead of the default Alpine image
 set(DOCKER_BASE_IMAGE "" CACHE STRING "Docker build Alpine base image")
 set(DOCKER_CCACHE_DUMP_LOCATION "" CACHE STRING "Directory to dump ccache to after docker build for later reuse")
+set(DOCKER_PLATFORMS "" CACHE STRING "Build platforms for docker image build")
+set(DOCKER_TAGS "" CACHE STRING "Comma separated tags to override default docker build image:tag pairs with")
 
 include(CMakeDependentOption)
 include(CheckIncludeFile)

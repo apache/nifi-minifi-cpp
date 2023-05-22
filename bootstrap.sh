@@ -151,7 +151,7 @@ elif [ -f /etc/SUSE-release ]; then
   OS=$(tr '\n' ' ' < /etc/SUSE-release | sed s/VERSION.*//)
 elif [ -f /etc/redhat-release ]; then
   # Older Red Hat, CentOS, etc.
-  ...
+  echo "Unsupported old release!"
 else
   OS=$(uname -s)
   VER=$(uname -r)
