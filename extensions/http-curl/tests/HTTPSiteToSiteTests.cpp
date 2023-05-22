@@ -77,7 +77,7 @@ class SiteToSiteTestHarness : public HTTPIntegrationBase {
 struct test_profile {
   [[nodiscard]] bool allFalse() const {
     return !flow_url_broken && !transaction_url_broken &&
-      !empty_transaction_url && !no_delete && !invalid_checksum;
+      !empty_transaction_url && !invalid_checksum;
   }
   // tests for a broken flow file url
   bool flow_url_broken{false};
@@ -85,8 +85,6 @@ struct test_profile {
   bool transaction_url_broken{false};
   // Location will be absent within the
   bool empty_transaction_url{false};
-  // delete url is not supported.
-  bool no_delete{false};
   // invalid checksum error
   bool invalid_checksum{false};
 };
@@ -151,15 +149,13 @@ void run_variance(const std::string& test_file_location, bool isSecure, const st
   harness.setUrl(flow_url, flowResponder);
   harness.setUrl(flow_output_url, flowOutputResponder);
 
-  if (!profile.no_delete) {
-    std::string delete_url = transaction_url + "/" + transaction_id;
-    auto *deleteResponse = new DeleteTransactionResponder(delete_url, "201 OK", 12);
-    harness.setUrl(delete_url, deleteResponse);
+  std::string delete_url = transaction_url + "/" + transaction_id;
+  auto *deleteResponse = new DeleteTransactionResponder(delete_url, "201 OK", 12);
+  harness.setUrl(delete_url, deleteResponse);
 
-    std::string delete_output_url = transaction_output_url + "/" + transaction_output_id;
-    auto *deleteOutputResponse = new DeleteTransactionResponder(delete_output_url, "201 OK", producedFlows);
-    harness.setUrl(delete_output_url, deleteOutputResponse);
-  }
+  std::string delete_output_url = transaction_output_url + "/" + transaction_output_id;
+  auto *deleteOutputResponse = new DeleteTransactionResponder(delete_output_url, "201 OK", producedFlows);
+  harness.setUrl(delete_output_url, deleteOutputResponse);
 
   harness.run(test_file_location);
 
@@ -180,8 +176,6 @@ void run_variance(const std::string& test_file_location, bool isSecure, const st
     assertStr.str(std::string());
     assertStr << "Site2Site delete transaction " << transaction_id;
     assert(LogTestController::getInstance().contains(assertStr.str()));
-  } else if (profile.no_delete) {
-    assert(LogTestController::getInstance().contains("Received 401 response code from delete"));
   } else {
     assertStr << "Site2Site transaction " << transaction_id << " peer unknown respond code 254";
     assert(LogTestController::getInstance().contains(assertStr.str()));
@@ -215,12 +209,6 @@ int main(int argc, char **argv) {
   {
     struct test_profile profile;
     profile.transaction_url_broken = true;
-    run_variance(args.test_file, isSecure, args.url, profile);
-  }
-
-  {
-    struct test_profile profile;
-    profile.no_delete = true;
     run_variance(args.test_file, isSecure, args.url, profile);
   }
 
