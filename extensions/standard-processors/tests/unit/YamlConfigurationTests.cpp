@@ -29,6 +29,7 @@
 #include "utils/TestUtils.h"
 #include "utils/StringUtils.h"
 #include "ConfigurationTestController.h"
+#include "utils/IntegrationTestUtils.h"
 
 using namespace std::literals::chrono_literals;
 
@@ -160,7 +161,7 @@ Provenance Reporting:
     rootFlowConfig->getConnections(connectionMap);
     REQUIRE(2 == connectionMap.size());
     // This is a map of UUID->Connection, and we don't know UUID, so just going to loop over it
-    for (auto it : connectionMap) {
+    for (const auto& it : connectionMap) {
       REQUIRE(it.second);
       REQUIRE(!it.second->getUUIDStr().empty());
       REQUIRE(it.second->getDestination());
@@ -475,7 +476,7 @@ NiFi Properties Overrides: {}
   rootFlowConfig->getConnections(connectionMap);
   REQUIRE(2 == connectionMap.size());
 
-  for (auto it : connectionMap) {
+  for (const auto& it : connectionMap) {
     REQUIRE(it.second);
     REQUIRE(!it.second->getUUIDStr().empty());
     REQUIRE(it.second->getDestination());
@@ -766,7 +767,7 @@ Remote Process Groups: []
   std::map<std::string, minifi::Connection*> connectionMap;
   rootFlowConfig->getConnections(connectionMap);
   REQUIRE(6 == connectionMap.size());
-  for (auto it : connectionMap) {
+  for (const auto& it : connectionMap) {
     REQUIRE(it.second);
     REQUIRE(!it.second->getUUIDStr().empty());
     REQUIRE(it.second->getDestination());
@@ -830,4 +831,11 @@ TEST_CASE("Test UUID duplication checks", "[YamlConfiguration]") {
       REQUIRE_THROWS_WITH(yaml_config.getYamlRoot(config_yaml_stream), "General Operation: UUID 99999999-9999-9999-9999-999999999999 is duplicated in the flow configuration");
     }
   }
+}
+
+TEST_CASE("Configuration is not valid yaml", "[YamlConfiguration]") {
+  ConfigurationTestController test_controller;
+  core::YamlConfiguration yaml_config(test_controller.getContext());
+  REQUIRE_THROWS(yaml_config.getRootFromPayload("}"));
+  REQUIRE(utils::verifyLogLinePresenceInPollTime(0s, "Configuration is not valid yaml"));
 }

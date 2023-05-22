@@ -122,25 +122,30 @@ std::unique_ptr<core::ProcessGroup> StructuredConfiguration::parseProcessGroup(c
 }
 
 std::unique_ptr<core::ProcessGroup> StructuredConfiguration::getRootFrom(const Node& root_node, FlowSchema schema) {
-  schema_ = std::move(schema);
-  uuids_.clear();
-  Node controllerServiceNode = root_node[schema_.root_group][schema_.controller_services];
-  Node provenanceReportNode = root_node[schema_.provenance_reporting];
+  try {
+    schema_ = std::move(schema);
+    uuids_.clear();
+    Node controllerServiceNode = root_node[schema_.root_group][schema_.controller_services];
+    Node provenanceReportNode = root_node[schema_.provenance_reporting];
 
-  parseControllerServices(controllerServiceNode);
-  // Create the root process group
-  std::unique_ptr<core::ProcessGroup> root = parseRootProcessGroup(root_node);
-  parseProvenanceReporting(provenanceReportNode, root.get());
+    parseControllerServices(controllerServiceNode);
+    // Create the root process group
+    std::unique_ptr<core::ProcessGroup> root = parseRootProcessGroup(root_node);
+    parseProvenanceReporting(provenanceReportNode, root.get());
 
-  // set the controller services into the root group.
-  for (const auto& controller_service : controller_services_->getAllControllerServices()) {
-    root->addControllerService(controller_service->getName(), controller_service);
-    root->addControllerService(controller_service->getUUIDStr(), controller_service);
+    // set the controller services into the root group.
+    for (const auto& controller_service : controller_services_->getAllControllerServices()) {
+      root->addControllerService(controller_service->getName(), controller_service);
+      root->addControllerService(controller_service->getUUIDStr(), controller_service);
+    }
+
+    root->verify();
+
+    return root;
+  } catch (const std::exception& ex) {
+    logger_->log_error("Error while processing configuration file: %s", ex.what());
+    throw;
   }
-
-  root->verify();
-
-  return root;
 }
 
 void StructuredConfiguration::parseProcessorNode(const Node& processors_node, core::ProcessGroup* parentGroup) {
