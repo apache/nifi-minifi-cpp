@@ -70,10 +70,7 @@ TEST_CASE_METHOD(LogPublisherTestFixture, "Verify empty metrics if no valid metr
   publisher_.initialize(configuration_, response_node_loader_);
   publisher_.loadMetricNodes();
   using org::apache::nifi::minifi::utils::verifyLogLinePresenceInPollTime;
-  std::string expected_log = R"([info] {
-    "LogMetrics": {}
-})";
-  REQUIRE(verifyLogLinePresenceInPollTime(5s, expected_log));
+  REQUIRE(verifyLogLinePresenceInPollTime(5s, "LogMetricsPublisher is configured without any valid metrics!"));
 }
 
 TEST_CASE_METHOD(LogPublisherTestFixture, "Verify multiple metric nodes in logs", "[LogMetricsPublisher]") {
@@ -126,13 +123,7 @@ TEST_CASE_METHOD(LogPublisherTestFixture, "Verify reloading different metrics", 
     }
 })";
   REQUIRE(verifyLogLinePresenceInPollTime(5s, expected_log));
-  LogTestController::getInstance().reset();
-  LogTestController::getInstance().setTrace<minifi::state::LogMetricsPublisher>();
   publisher_.clearMetricNodes();
-  expected_log = R"([info] {
-    "LogMetrics": {}
-})";
-  REQUIRE(verifyLogLinePresenceInPollTime(5s, expected_log));
   LogTestController::getInstance().reset();
   LogTestController::getInstance().setTrace<minifi::state::LogMetricsPublisher>();
   configuration_->set(Configure::nifi_metrics_publisher_metrics, "DeviceInfoNode");

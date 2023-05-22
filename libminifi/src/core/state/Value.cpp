@@ -20,9 +20,7 @@
 #include <openssl/sha.h>
 #include <utility>
 #include <string>
-#include "rapidjson/document.h"
 #include "rapidjson/prettywriter.h"
-#include "rapidjson/stringbuffer.h"
 
 namespace org::apache::nifi::minifi::state::response {
 
@@ -56,8 +54,7 @@ std::string hashResponseNodes(const std::vector<SerializedResponseNode>& nodes) 
   return utils::StringUtils::to_hex(digest, true /*uppercase*/);
 }
 
-namespace {
-rapidjson::Value nodeToJson(const SerializedResponseNode& node, rapidjson::MemoryPoolAllocator<rapidjson::CrtAllocator>& alloc) {
+rapidjson::Value SerializedResponseNode::nodeToJson(const SerializedResponseNode& node, rapidjson::MemoryPoolAllocator<rapidjson::CrtAllocator>& alloc) {
   if (node.value.empty()) {
     if (node.array) {
       rapidjson::Value result(rapidjson::kArrayType);
@@ -75,18 +72,6 @@ rapidjson::Value nodeToJson(const SerializedResponseNode& node, rapidjson::Memor
   } else {
     return {node.value.to_string().c_str(), alloc};
   }
-}
-}  // namespace
-
-template<typename Writer>
-std::string SerializedResponseNode::to_string() const {
-  rapidjson::Document doc;
-  doc.SetObject();
-  doc.AddMember(rapidjson::Value(name.c_str(), doc.GetAllocator()), nodeToJson(*this, doc.GetAllocator()), doc.GetAllocator());
-  rapidjson::StringBuffer buf;
-  Writer writer{buf};
-  doc.Accept(writer);
-  return buf.GetString();
 }
 
 std::string SerializedResponseNode::to_pretty_string() const {

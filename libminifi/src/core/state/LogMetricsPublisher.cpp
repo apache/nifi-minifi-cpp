@@ -33,7 +33,6 @@ void LogMetricsPublisher::initialize(const std::shared_ptr<Configure>& configura
   state::MetricsPublisher::initialize(configuration, response_node_loader);
   readLoggingInterval();
   readLogLevel();
-  metrics_logger_thread_ = std::make_unique<utils::StoppableThread>([this] { logMetrics(); });
 }
 
 void LogMetricsPublisher::logMetrics() {
@@ -83,9 +82,15 @@ void LogMetricsPublisher::readLogLevel() {
 }
 
 void LogMetricsPublisher::clearMetricNodes() {
-  std::lock_guard<std::mutex> lock(response_node_mutex_);
-  logger_->log_debug("Clearing all metric nodes.");
-  response_nodes_.clear();
+  {
+    std::lock_guard<std::mutex> lock(response_node_mutex_);
+    logger_->log_debug("Clearing all metric nodes.");
+    response_nodes_.clear();
+  }
+  if (metrics_logger_thread_) {
+    metrics_logger_thread_->stopAndJoin();
+    metrics_logger_thread_.reset();
+  }
 }
 
 void LogMetricsPublisher::loadMetricNodes() {
@@ -94,6 +99,7 @@ void LogMetricsPublisher::loadMetricNodes() {
   if (!metric_classes_str || metric_classes_str->empty()) {
     metric_classes_str = configuration_->get(minifi::Configuration::nifi_metrics_publisher_metrics);
   }
+  bool response_nodes_empty = true;
   if (metric_classes_str && !metric_classes_str->empty()) {
     auto metric_classes = utils::StringUtils::split(*metric_classes_str, ",");
     std::lock_guard<std::mutex> lock(response_node_mutex_);
@@ -105,6 +111,16 @@ void LogMetricsPublisher::loadMetricNodes() {
       }
       response_nodes_.insert(response_nodes_.end(), loaded_response_nodes.begin(), loaded_response_nodes.end());
     }
+    response_nodes_empty = response_nodes_.empty();
+  }
+  if (response_nodes_empty) {
+    logger_->log_warn("LogMetricsPublisher is configured without any valid metrics!");
+  }
+  if (response_nodes_empty && metrics_logger_thread_) {
+    metrics_logger_thread_->stopAndJoin();
+    metrics_logger_thread_.reset();
+  } else if (!response_nodes_empty && !metrics_logger_thread_) {
+    metrics_logger_thread_ = std::make_unique<utils::StoppableThread>([this] { logMetrics(); });
   }
 }
 

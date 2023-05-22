@@ -44,7 +44,7 @@ void MetricsPublisherStore::initialize(core::controller::ControllerServiceProvid
 
   for (auto&& publisher : minifi::state::createMetricsPublishers(configuration_, response_node_loader_)) {
     auto name = publisher->getName();
-    addMetricsPublisher(name, std::move(publisher));
+    addMetricsPublisher(std::move(name), std::move(publisher));
   }
 
   loadMetricNodes(nullptr);
