@@ -43,7 +43,6 @@ Feature: MiNiFi Controller functionalities
     And controller socket properties are set up
     When all instances start up
     And the FlowController component is stopped through MiNiFi controller
-    And the FlowController component is started through MiNiFi controller
     Then the GenerateFlowFile component is not running
     And the FlowController component is not running
 

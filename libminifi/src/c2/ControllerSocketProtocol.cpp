@@ -32,15 +32,11 @@ namespace org::apache::nifi::minifi::c2 {
 
 ControllerSocketProtocol::SocketRestartCommandProcessor::SocketRestartCommandProcessor(state::StateMonitor& update_sink) :
     update_sink_(update_sink) {
+  command_queue_.start();
   command_processor_thread_ = std::thread([this] {
     while (running_) {
-      std::unique_lock<std::mutex> lock(cv_mutex_);
-      command_queue_condition_variable_.wait(lock);
-      if (!running_) {
-        break;
-      }
       CommandData command_data;
-      while (command_queue_.try_dequeue(command_data)) {
+      if (command_queue_.dequeueWait(command_data)) {
         if (command_data.command == Command::FLOW_UPDATE) {
           update_sink_.applyUpdate("ControllerSocketProtocol", command_data.data, true);
         } else if (command_data.command == Command::START) {
@@ -56,7 +52,7 @@ ControllerSocketProtocol::SocketRestartCommandProcessor::SocketRestartCommandPro
 
 ControllerSocketProtocol::SocketRestartCommandProcessor::~SocketRestartCommandProcessor() {
   running_ = false;
-  command_queue_condition_variable_.notify_all();
+  command_queue_.stop();
   if (command_processor_thread_.joinable()) {
     command_processor_thread_.join();
   }

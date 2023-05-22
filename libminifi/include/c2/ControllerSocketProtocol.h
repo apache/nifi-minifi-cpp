@@ -30,7 +30,7 @@
 #include "core/state/nodes/StateMonitor.h"
 #include "core/controller/ControllerServiceProvider.h"
 #include "ControllerSocketReporter.h"
-#include "concurrentqueue.h"
+#include "utils/MinifiConcurrentQueue.h"
 
 namespace org::apache::nifi::minifi::c2 {
 
@@ -88,7 +88,6 @@ class ControllerSocketProtocol {
     void enqueue(const CommandData& command_data) {
       is_socket_restarting_ = true;
       command_queue_.enqueue(command_data);
-      command_queue_condition_variable_.notify_all();
     }
 
     bool isSocketRestarting() const {
@@ -99,10 +98,8 @@ class ControllerSocketProtocol {
     mutable std::atomic_bool is_socket_restarting_ = false;
     state::StateMonitor& update_sink_;
     std::thread command_processor_thread_;
-    std::mutex cv_mutex_;
-    std::condition_variable command_queue_condition_variable_;
     std::atomic_bool running_ = true;
-    moodycamel::ConcurrentQueue<CommandData> command_queue_;
+    utils::ConditionConcurrentQueue<CommandData> command_queue_;
   };
 
   SocketRestartCommandProcessor socket_restart_processor_;
