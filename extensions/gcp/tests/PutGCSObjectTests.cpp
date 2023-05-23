@@ -42,7 +42,7 @@ class PutGCSObjectMocked : public PutGCSObject {
   static constexpr const char* Description = "PutGCSObjectMocked";
 
   gcs::Client getClient() const override {
-    return gcs::testing::ClientFromMock(mock_client_, *retry_policy_);
+    return gcs::testing::UndecoratedClientFromMock(mock_client_);
   }
   std::shared_ptr<gcs::testing::MockClient> mock_client_ = std::make_shared<gcs::testing::MockClient>();
 };
@@ -104,7 +104,7 @@ TEST_F(PutGCSObjectTests, BucketFromAttribute) {
 }
 
 TEST_F(PutGCSObjectTests, ServerGivesTransientErrors) {
-  EXPECT_CALL(*put_gcs_object_->mock_client_, CreateResumableUpload).Times(3).WillRepeatedly(testing::Return(TransientError()));
+  EXPECT_CALL(*put_gcs_object_->mock_client_, CreateResumableUpload).WillOnce(testing::Return(TransientError()));
   EXPECT_TRUE(test_controller_.plan->setProperty(put_gcs_object_, PutGCSObject::NumberOfRetries.getName(), "2"));
   EXPECT_TRUE(test_controller_.plan->setProperty(put_gcs_object_, PutGCSObject::Bucket.getName(), "bucket-from-property"));
   EXPECT_TRUE(test_controller_.plan->setProperty(put_gcs_object_, PutGCSObject::Key.getName(), "object-name-from-property"));

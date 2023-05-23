@@ -63,6 +63,22 @@ std::optional<std::filesystem::path> create_mock_json_file(const std::filesystem
   p.close();
   return path;
 }
+
+void setGoogleEnvironmentCredentials(char const* value) {
+#ifdef WIN32
+    _putenv_s("GOOGLE_APPLICATION_CREDENTIALS", value);
+#else
+  setenv("GOOGLE_APPLICATION_CREDENTIALS", value, 1);
+#endif
+}
+
+void unsetGoogleEnvironmentCredentials() {
+#ifdef _WIN32
+  (void)_putenv_s("GOOGLE_APPLICATION_CREDENTIALS", "");
+#else
+  unsetenv("GOOGLE_APPLICATION_CREDENTIALS");
+#endif
+}
 }  // namespace
 
 class GCPCredentialsTests : public ::testing::Test {
@@ -79,7 +95,7 @@ class GCPCredentialsTests : public ::testing::Test {
 };
 
 TEST_F(GCPCredentialsTests, DefaultGCPCredentialsWithoutEnv) {
-  minifi::utils::Environment::unsetEnvironmentVariable("GOOGLE_APPLICATION_CREDENTIALS");
+  unsetGoogleEnvironmentCredentials();
   plan_->setProperty(gcp_credentials_node_, GCPCredentialsControllerService::CredentialsLoc.getName(), toString(GCPCredentialsControllerService::CredentialsLocation::USE_DEFAULT_CREDENTIALS));
   ASSERT_NO_THROW(test_controller_.runSession(plan_));
   EXPECT_EQ(nullptr, gcp_credentials_->getCredentials());
@@ -89,7 +105,7 @@ TEST_F(GCPCredentialsTests, DefaultGCPCredentialsWithEnv) {
   auto temp_directory = test_controller_.createTempDirectory();
   auto path = create_mock_json_file(temp_directory);
   ASSERT_TRUE(path.has_value());
-  minifi::utils::Environment::setEnvironmentVariable("GOOGLE_APPLICATION_CREDENTIALS", path->string().c_str());
+  setGoogleEnvironmentCredentials(path->string().c_str());
   plan_->setProperty(gcp_credentials_node_, GCPCredentialsControllerService::CredentialsLoc.getName(), toString(GCPCredentialsControllerService::CredentialsLocation::USE_DEFAULT_CREDENTIALS));
   ASSERT_NO_THROW(test_controller_.runSession(plan_));
   EXPECT_NE(nullptr, gcp_credentials_->getCredentials());

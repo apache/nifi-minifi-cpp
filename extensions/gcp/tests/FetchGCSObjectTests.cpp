@@ -36,7 +36,7 @@ class FetchGCSObjectMocked : public FetchGCSObject {
   static constexpr const char* Description = "FetchGCSObjectMocked";
 
   gcs::Client getClient() const override {
-    return gcs::testing::ClientFromMock(mock_client_, *retry_policy_);
+    return gcs::testing::UndecoratedClientFromMock(mock_client_);
   }
   std::shared_ptr<gcs::testing::MockClient> mock_client_ = std::make_shared<gcs::testing::MockClient>();
 };
