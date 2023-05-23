@@ -49,15 +49,17 @@ namespace {
 // Due to https://gcc.gnu.org/bugzilla/show_bug.cgi?id=78714
 // the month parsing with '%b' and the weekday parsing with '%a' is case-sensitive in gcc11
 // This has been fixed in gcc12.2
-std::stringstream getCaseInsensitiveStream(const std::string& str) {
+std::stringstream getCaseInsensitiveCStream(const std::string& str) {
 #if defined(__GNUC__) && (__GNUC__ < 12 || (__GNUC__ == 12 && __GNUC_MINOR__ < 2))
   auto patched_str = StringUtils::toLower(str);
   if (!patched_str.empty())
     patched_str[0] = static_cast<char>(std::toupper(static_cast<unsigned char>(patched_str[0])));
-  return std::stringstream{patched_str};
+  auto stream = std::stringstream{patched_str};
 #else
-  return std::stringstream{str};
+  auto stream = std::stringstream{str};
 #endif
+  stream.imbue(std::locale::classic());
+  return stream;
 }
 
 
@@ -114,9 +116,8 @@ day parse<day>(const std::string& day_str) {
 
 template <>
 month parse<month>(const std::string& month_str) {
-  std::stringstream stream = getCaseInsensitiveStream(month_str);
+  std::stringstream stream = getCaseInsensitiveCStream(month_str);
 
-  stream.imbue(std::locale("en_US.UTF-8"));
   month parsed_month{};
   if (month_str.size() > 2) {
     from_stream(stream, "%b", parsed_month);
@@ -133,7 +134,7 @@ month parse<month>(const std::string& month_str) {
 
 template <>
 weekday parse<weekday>(const std::string& weekday_str) {
-  std::stringstream stream = getCaseInsensitiveStream(weekday_str);
+  std::stringstream stream = getCaseInsensitiveCStream(weekday_str);
 
   if (weekday_str.size() > 2) {
     weekday parsed_weekday{};
