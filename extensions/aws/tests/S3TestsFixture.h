@@ -126,7 +126,7 @@ template<typename T>
 class FlowProcessorS3TestsFixture : public S3TestsFixture<T> {
  public:
   const std::string INPUT_FILENAME = "input_data.log";
-  const std::string INPUT_DATA = "input_data";
+  const std::string INPUT_DATA = "This data is has a length of 37 bytes";
 
   FlowProcessorS3TestsFixture() {
     LogTestController::getInstance().setTrace<minifi::processors::GetFile>();

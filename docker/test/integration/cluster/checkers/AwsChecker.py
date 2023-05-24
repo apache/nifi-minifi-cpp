@@ -30,6 +30,20 @@ class AwsChecker:
         return code == 0 and file_data == test_data
 
     @retry_check()
+    def check_s3_server_multipart_object_data(self, container_name: str, test_data: str, number_of_parts: int):
+        (code, output) = self.container_communicator.execute_command(container_name, ["find", "/s3mockroot/test_bucket", "-mindepth", "2", "-maxdepth", "2", "-type", "d"])
+        if code != 0:
+            return False
+        multipart_concatenated_data = ""
+        s3_multipart_object_dir = output.strip()
+        for i in range(1, number_of_parts + 1):
+            (code, file_data) = self.container_communicator.execute_command(container_name, ["cat", s3_multipart_object_dir + "/" + str(i) + ".part"])
+            if code != 0:
+                return False
+            multipart_concatenated_data += file_data
+        return code == 0 and multipart_concatenated_data == test_data
+
+    @retry_check()
     def check_s3_server_object_metadata(self, container_name, content_type="application/octet-stream", metadata=dict()):
         (code, output) = self.container_communicator.execute_command(container_name, ["find", "/s3mockroot/test_bucket", "-mindepth", "1", "-maxdepth", "1", "-type", "d"])
         if code != 0:

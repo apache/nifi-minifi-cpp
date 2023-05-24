@@ -47,8 +47,8 @@ class PutS3Object : public S3Processor {
   static constexpr auto STORAGE_CLASSES = minifi::utils::getKeys(minifi::aws::s3::STORAGE_CLASS_MAP);
   static constexpr auto SERVER_SIDE_ENCRYPTIONS = minifi::utils::getKeys(minifi::aws::s3::SERVER_SIDE_ENCRYPTION_MAP);
 
-  EXTENSIONAPI static constexpr const char* Description = "Puts FlowFiles to an Amazon S3 Bucket. The upload uses the PutS3Object method. "
-      "The PutS3Object method send the file in a single synchronous call, but it has a 5GB size limit. Larger files sent using the multipart upload methods are currently not supported. "
+  EXTENSIONAPI static constexpr const char* Description = "Puts FlowFiles to an Amazon S3 Bucket. The upload uses either the PutS3Object method or the PutS3MultipartUpload method. "
+      "The PutS3Object method sends the file in a single synchronous call, but it has a 5GB size limit. Larger files are sent using the PutS3MultipartUpload method. "
       "The AWS libraries select an endpoint URL based on the AWS region, but this can be overridden with the 'Endpoint Override URL' property for use with other S3-compatible endpoints. "
       "The S3 API specifies that the maximum file size for a PutS3Object upload is 5GB.";
 
@@ -106,6 +106,29 @@ class PutS3Object : public S3Processor {
       .withDefaultValue("false")
       .isRequired(true)
       .build();
+  EXTENSIONAPI static constexpr auto MultipartThreshold = core::PropertyDefinitionBuilder<>::createProperty("Multipart Threshold")
+        .withDescription("Specifies the file size threshold for switch from the PutS3Object API to the PutS3MultipartUpload API. "
+                         "Flow files bigger than this limit will be sent using the multipart process. The valid range is 5MB to 5GB.")
+        .withDefaultValue<core::DataSizeValue>("5 GB")
+        .isRequired(true)
+        .build();
+  EXTENSIONAPI static constexpr auto MultipartPartSize = core::PropertyDefinitionBuilder<>::createProperty("Multipart Part Size")
+        .withDescription("Specifies the part size for use when the PutS3Multipart Upload API is used. "
+                          "Flow files will be broken into chunks of this size for the upload process, but the last part sent can be smaller since it is not padded. The valid range is 5MB to 5GB.")
+        .withDefaultValue<core::DataSizeValue>("5 GB")
+        .isRequired(true)
+        .build();
+  EXTENSIONAPI static constexpr auto MultipartUploadAgeOffInterval = core::PropertyDefinitionBuilder<>::createProperty("Multipart Upload AgeOff Interval")
+        .withDescription("Specifies the interval at which existing multipart uploads in AWS S3 will be evaluated for ageoff. "
+                          "When processor is triggered it will initiate the ageoff evaluation if this interval has been exceeded.")
+        .withDefaultValue<core::TimePeriodValue>("60 min")
+        .isRequired(true)
+        .build();
+  EXTENSIONAPI static constexpr auto MultipartUploadMaxAgeThreshold = core::PropertyDefinitionBuilder<>::createProperty("Multipart Upload Max Age Threshold")
+        .withDescription("Specifies the maximum age for existing multipart uploads in AWS S3. When the ageoff process occurs, any upload older than this threshold will be aborted.")
+        .withDefaultValue<core::TimePeriodValue>("7 days")
+        .isRequired(true)
+        .build();
   EXTENSIONAPI static constexpr auto Properties = minifi::utils::array_cat(S3Processor::Properties, std::array<core::PropertyReference, 10>{
       ObjectKey,
       ContentType,
@@ -116,7 +139,11 @@ class PutS3Object : public S3Processor {
       ReadACLUserList,
       WriteACLUserList,
       CannedACL,
-      UsePathStyleAccess
+      UsePathStyleAccess,
+      MultipartThreshold,
+      MultipartPartSize,
+      MultipartUploadAgeOffInterval,
+      MultipartUploadMaxAgeThreshold
   });
 
 
@@ -143,52 +170,59 @@ class PutS3Object : public S3Processor {
 
   class ReadCallback {
    public:
-    static constexpr uint64_t MAX_SIZE = 5_GiB;
-    static constexpr uint64_t BUFFER_SIZE = 4_KiB;
-
-    ReadCallback(uint64_t flow_size, const minifi::aws::s3::PutObjectRequestParameters& options, aws::s3::S3Wrapper& s3_wrapper)
-      : flow_size_(flow_size)
-      , options_(options)
-      , s3_wrapper_(s3_wrapper) {
+    ReadCallback(uint64_t flow_size, const minifi::aws::s3::PutObjectRequestParameters& options, aws::s3::S3Wrapper& s3_wrapper,
+          uint64_t multipart_threshold, uint64_t multipart_size, core::logging::Logger& logger)
+      : flow_size_(flow_size),
+        options_(options),
+        s3_wrapper_(s3_wrapper),
+        multipart_threshold_(multipart_threshold),
+        multipart_size_(multipart_size),
+        logger_(logger) {
     }
 
     int64_t operator()(const std::shared_ptr<io::InputStream>& stream) {
-      if (flow_size_ > MAX_SIZE) {
+      try {
+        if (flow_size_ <= multipart_threshold_) {
+          logger_.log_info("Uploading S3 Object '%s' in a single upload", options_.object_key);
+          result_ = s3_wrapper_.putObject(options_, stream, flow_size_);
+          return gsl::narrow<int64_t>(flow_size_);
+        } else {
+          logger_.log_info("S3 Object '%s' passes the multipart threshold, uploading it in multiple parts", options_.object_key);
+          result_ = s3_wrapper_.putObjectMultipart(options_, stream, flow_size_, multipart_size_);
+          return gsl::narrow<int64_t>(flow_size_);
+        }
+      } catch(const aws::s3::StreamReadException& ex) {
+        logger_.log_error("Error occurred while uploading to S3: %s", ex.what());
         return -1;
       }
-      std::vector<std::byte> buffer;
-      buffer.resize(BUFFER_SIZE);
-      auto data_stream = std::make_shared<std::stringstream>();
-      read_size_ = 0;
-      while (read_size_ < flow_size_) {
-        const auto next_read_size = (std::min)(flow_size_ - read_size_, BUFFER_SIZE);
-        const auto read_ret = stream->read(std::span(buffer).subspan(0, next_read_size));
-        if (io::isError(read_ret)) {
-          return -1;
-        }
-        if (read_ret > 0) {
-          data_stream->write(reinterpret_cast<char*>(buffer.data()), gsl::narrow<std::streamsize>(next_read_size));
-          read_size_ += read_ret;
-        } else {
-          break;
-        }
-      }
-      result_ = s3_wrapper_.putObject(options_, data_stream);
-      return gsl::narrow<int64_t>(read_size_);
     }
 
     uint64_t flow_size_;
     const minifi::aws::s3::PutObjectRequestParameters& options_;
     aws::s3::S3Wrapper& s3_wrapper_;
+    uint64_t multipart_threshold_;
+    uint64_t multipart_size_;
     uint64_t read_size_ = 0;
     std::optional<minifi::aws::s3::PutObjectResult> result_;
+    core::logging::Logger& logger_;
   };
 
- private:
+ protected:
+  static constexpr uint64_t MIN_PART_SIZE = 5_MiB;
+  static constexpr uint64_t MAX_UPLOAD_SIZE = 5_GiB;
+
   friend class ::S3TestsFixture<PutS3Object>;
 
   explicit PutS3Object(const std::string& name, const minifi::utils::Identifier& uuid, std::unique_ptr<aws::s3::S3RequestSender> s3_request_sender)
     : S3Processor(name, uuid, core::logging::LoggerFactory<PutS3Object>::getLogger(uuid), std::move(s3_request_sender)) {
+  }
+
+  virtual uint64_t getMinPartSize() const {
+    return MIN_PART_SIZE;
+  }
+
+  virtual uint64_t getMaxUploadSize() const {
+    return MAX_UPLOAD_SIZE;
   }
 
   void fillUserMetadata(const std::shared_ptr<core::ProcessContext> &context);
@@ -210,6 +244,8 @@ class PutS3Object : public S3Processor {
   std::string storage_class_;
   std::string server_side_encryption_;
   bool use_virtual_addressing_ = true;
+  uint64_t multipart_threshold_{};
+  uint64_t multipart_size_{};
 };
 
 }  // namespace org::apache::nifi::minifi::aws::processors

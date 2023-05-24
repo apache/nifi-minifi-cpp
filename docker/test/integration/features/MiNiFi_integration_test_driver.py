@@ -248,6 +248,9 @@ class MiNiFi_integration_test:
     def check_s3_server_object_data(self, s3_container_name, object_data):
         assert self.cluster.check_s3_server_object_data(s3_container_name, object_data) or self.cluster.log_app_output()
 
+    def check_s3_server_multipart_object_data(self, s3_container_name: str, object_data: str, number_of_parts: int):
+        assert self.cluster.check_s3_server_multipart_object_data(s3_container_name, object_data, number_of_parts) or self.cluster.log_app_output()
+
     def check_s3_server_object_metadata(self, s3_container_name, content_type):
         assert self.cluster.check_s3_server_object_metadata(s3_container_name, content_type) or self.cluster.log_app_output()
 

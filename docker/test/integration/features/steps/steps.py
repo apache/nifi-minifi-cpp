@@ -859,6 +859,11 @@ def step_impl(context, object_data):
     context.test.check_s3_server_object_data("s3-server", object_data)
 
 
+@then("the object on the s3 server is \"{object_data}\" in {number_of_parts:d} parts")
+def step_impl(context, object_data, number_of_parts):
+    context.test.check_s3_server_multipart_object_data("s3-server", object_data, number_of_parts)
+
+
 @then("the object content type on the s3 server is \"{content_type}\" and the object metadata matches use metadata")
 def step_impl(context, content_type):
     context.test.check_s3_server_object_metadata("s3-server", content_type)

@@ -39,16 +39,17 @@
 #include "aws/s3/model/GetObjectTaggingResult.h"
 #include "aws/s3/model/HeadObjectRequest.h"
 #include "aws/s3/model/HeadObjectResult.h"
+#include "aws/s3/model/CreateMultipartUploadRequest.h"
+#include "aws/s3/model/CreateMultipartUploadResult.h"
+#include "aws/s3/model/UploadPartRequest.h"
+#include "aws/s3/model/UploadPartResult.h"
+#include "aws/s3/model/CompleteMultipartUploadRequest.h"
+#include "aws/s3/model/CompleteMultipartUploadResult.h"
 #include "core/logging/Logger.h"
 #include "core/logging/LoggerConfiguration.h"
 #include "utils/AWSInitializer.h"
 
-namespace org {
-namespace apache {
-namespace nifi {
-namespace minifi {
-namespace aws {
-namespace s3 {
+namespace org::apache::nifi::minifi::aws::s3 {
 
 struct ProxyOptions {
   std::string host;
@@ -88,6 +89,21 @@ class S3RequestSender {
     const Aws::S3::Model::HeadObjectRequest& request,
     const Aws::Auth::AWSCredentials& credentials,
     const Aws::Client::ClientConfiguration& client_config) = 0;
+  virtual std::optional<Aws::S3::Model::CreateMultipartUploadResult> sendCreateMultipartUploadRequest(
+    const Aws::S3::Model::CreateMultipartUploadRequest& request,
+    const Aws::Auth::AWSCredentials& credentials,
+    const Aws::Client::ClientConfiguration& client_config,
+    bool use_virtual_addressing) = 0;
+  virtual std::optional<Aws::S3::Model::UploadPartResult> sendUploadPartRequest(
+    const Aws::S3::Model::UploadPartRequest& request,
+    const Aws::Auth::AWSCredentials& credentials,
+    const Aws::Client::ClientConfiguration& client_config,
+    bool use_virtual_addressing) = 0;
+  virtual std::optional<Aws::S3::Model::CompleteMultipartUploadResult> sendCompleteMultipartUploadRequest(
+    const Aws::S3::Model::CompleteMultipartUploadRequest& request,
+    const Aws::Auth::AWSCredentials& credentials,
+    const Aws::Client::ClientConfiguration& client_config,
+    bool use_virtual_addressing) = 0;
   virtual ~S3RequestSender() = default;
 
  protected:
@@ -95,9 +111,4 @@ class S3RequestSender {
   std::shared_ptr<minifi::core::logging::Logger> logger_{minifi::core::logging::LoggerFactory<S3RequestSender>::getLogger()};
 };
 
-}  // namespace s3
-}  // namespace aws
-}  // namespace minifi
-}  // namespace nifi
-}  // namespace apache
-}  // namespace org
+}  // namespace org::apache::nifi::minifi::aws::s3

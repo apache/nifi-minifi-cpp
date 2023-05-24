@@ -139,4 +139,56 @@ std::optional<Aws::S3::Model::HeadObjectResult> S3ClientRequestSender::sendHeadO
   }
 }
 
+std::optional<Aws::S3::Model::CreateMultipartUploadResult> S3ClientRequestSender::sendCreateMultipartUploadRequest(
+    const Aws::S3::Model::CreateMultipartUploadRequest& request,
+    const Aws::Auth::AWSCredentials& credentials,
+    const Aws::Client::ClientConfiguration& client_config,
+    bool use_virtual_addressing) {
+  Aws::S3::S3Client s3_client(credentials, client_config, Aws::Client::AWSAuthV4Signer::PayloadSigningPolicy::Never, use_virtual_addressing);
+  auto outcome = s3_client.CreateMultipartUpload(request);
+
+  if (outcome.IsSuccess()) {
+    logger_->log_debug("CreateMultipartUpload successful for key '%s' from bucket '%s'", request.GetKey(), request.GetBucket());
+    return outcome.GetResultWithOwnership();
+  } else {
+    logger_->log_error("CreateMultipartUpload failed for key '%s' from bucket '%s' with the following: '%s'", request.GetKey(), request.GetBucket(), outcome.GetError().GetMessage());
+    return std::nullopt;
+  }
+}
+
+std::optional<Aws::S3::Model::UploadPartResult> S3ClientRequestSender::sendUploadPartRequest(
+    const Aws::S3::Model::UploadPartRequest& request,
+    const Aws::Auth::AWSCredentials& credentials,
+    const Aws::Client::ClientConfiguration& client_config,
+    bool use_virtual_addressing) {
+  Aws::S3::S3Client s3_client(credentials, client_config, Aws::Client::AWSAuthV4Signer::PayloadSigningPolicy::Never, use_virtual_addressing);
+  auto outcome = s3_client.UploadPart(request);
+
+  if (outcome.IsSuccess()) {
+    logger_->log_debug("UploadPart successful for key '%s' from bucket '%s' with part number %d", request.GetKey(), request.GetBucket(), request.GetPartNumber());
+    return outcome.GetResultWithOwnership();
+  } else {
+    logger_->log_error("UploadPart failed for key '%s' from bucket '%s' with part number %d with the following: '%s'",
+      request.GetKey(), request.GetBucket(), request.GetPartNumber(), outcome.GetError().GetMessage());
+    return std::nullopt;
+  }
+}
+
+std::optional<Aws::S3::Model::CompleteMultipartUploadResult> S3ClientRequestSender::sendCompleteMultipartUploadRequest(
+    const Aws::S3::Model::CompleteMultipartUploadRequest& request,
+    const Aws::Auth::AWSCredentials& credentials,
+    const Aws::Client::ClientConfiguration& client_config,
+    bool use_virtual_addressing) {
+  Aws::S3::S3Client s3_client(credentials, client_config, Aws::Client::AWSAuthV4Signer::PayloadSigningPolicy::Never, use_virtual_addressing);
+  auto outcome = s3_client.CompleteMultipartUpload(request);
+
+  if (outcome.IsSuccess()) {
+    logger_->log_debug("CompleteMultipartUpload successful for key '%s' from bucket '%s'", request.GetKey(), request.GetBucket());
+    return outcome.GetResultWithOwnership();
+  } else {
+    logger_->log_error("CompleteMultipartUpload failed for key '%s' from bucket '%s' with the following: '%s'", request.GetKey(), request.GetBucket(), outcome.GetError().GetMessage());
+    return std::nullopt;
+  }
+}
+
 }  // namespace org::apache::nifi::minifi::aws::s3

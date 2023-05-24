@@ -76,6 +76,17 @@ void PutS3Object::onSchedule(const std::shared_ptr<core::ProcessContext> &contex
     use_virtual_addressing_ = !*use_path_style_access;
   }
 
+  context->getProperty(MultipartThreshold.getName(), multipart_threshold_);
+  if (multipart_threshold_ > getMaxUploadSize() || multipart_threshold_ < getMinPartSize()) {
+    throw Exception(PROCESS_SCHEDULE_EXCEPTION, "Multipart Threshold is not between the valid 5MB and 5GB range!");
+  }
+  logger_->log_debug("PutS3Object: Multipart Threshold %" PRIu64, multipart_threshold_);
+  context->getProperty(MultipartPartSize.getName(), multipart_size_);
+  if (multipart_size_ > getMaxUploadSize() || multipart_size_ < getMinPartSize()) {
+    throw Exception(PROCESS_SCHEDULE_EXCEPTION, "Multipart Part Size is not between the valid 5MB and 5GB range!");
+  }
+  logger_->log_debug("PutS3Object: Multipart Size %" PRIu64, multipart_size_);
+
   fillUserMetadata(context);
 }
 
@@ -206,7 +217,7 @@ void PutS3Object::onTrigger(const std::shared_ptr<core::ProcessContext> &context
     return;
   }
 
-  PutS3Object::ReadCallback callback(flow_file->getSize(), *put_s3_request_params, s3_wrapper_);
+  PutS3Object::ReadCallback callback(flow_file->getSize(), *put_s3_request_params, s3_wrapper_, multipart_threshold_, multipart_size_, *logger_);
   session->read(flow_file, std::ref(callback));
   if (!callback.result_.has_value()) {
     logger_->log_error("Failed to upload S3 object to bucket '%s'", put_s3_request_params->bucket);

@@ -56,6 +56,21 @@ class S3ClientRequestSender : public S3RequestSender {
     const Aws::S3::Model::HeadObjectRequest& request,
     const Aws::Auth::AWSCredentials& credentials,
     const Aws::Client::ClientConfiguration& client_config) override;
+  std::optional<Aws::S3::Model::CreateMultipartUploadResult> sendCreateMultipartUploadRequest(
+    const Aws::S3::Model::CreateMultipartUploadRequest& request,
+    const Aws::Auth::AWSCredentials& credentials,
+    const Aws::Client::ClientConfiguration& client_config,
+    bool use_virtual_addressing) override;
+  std::optional<Aws::S3::Model::UploadPartResult> sendUploadPartRequest(
+    const Aws::S3::Model::UploadPartRequest& request,
+    const Aws::Auth::AWSCredentials& credentials,
+    const Aws::Client::ClientConfiguration& client_config,
+    bool use_virtual_addressing) override;
+  std::optional<Aws::S3::Model::CompleteMultipartUploadResult> sendCompleteMultipartUploadRequest(
+    const Aws::S3::Model::CompleteMultipartUploadRequest& request,
+    const Aws::Auth::AWSCredentials& credentials,
+    const Aws::Client::ClientConfiguration& client_config,
+    bool use_virtual_addressing) override;
 };
 
 }  // namespace org::apache::nifi::minifi::aws::s3
