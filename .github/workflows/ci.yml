@@ -4,6 +4,7 @@ env:
   DOCKER_CMAKE_FLAGS: -DUSE_SHARED_LIBS= -DSTRICT_GSL_CHECKS=AUDIT -DCI_BUILD=ON -DDISABLE_JEMALLOC=ON -DENABLE_AWS=ON -DENABLE_LIBRDKAFKA=ON -DENABLE_MQTT=ON -DENABLE_AZURE=ON -DENABLE_SQL=ON \
     -DENABLE_SPLUNK=ON -DENABLE_GCP=ON -DENABLE_OPC=ON -DENABLE_PYTHON_SCRIPTING=ON -DENABLE_LUA_SCRIPTING=ON -DENABLE_KUBERNETES=ON -DENABLE_TEST_PROCESSORS=ON -DENABLE_PROMETHEUS=ON \
     -DENABLE_ELASTICSEARCH=OFF -DDOCKER_BUILD_ONLY=ON -DDOCKER_CCACHE_DUMP_LOCATION=$HOME/.ccache
+  SCCACHE_GHA_ENABLE: true
 jobs:
   macos_xcode:
     name: "macos-xcode"
@@ -73,8 +74,19 @@ jobs:
         run: git config --system core.longpaths true
       - id: checkout
         uses: actions/checkout@v3
-      - name: Set up MSBuild
-        uses: microsoft/setup-msbuild@v1.1
+      - name: Run sccache-cache
+        uses: mozilla-actions/sccache-action@v0.0.3
+      - name: sccache cache
+        uses: actions/cache@v3
+        with:
+          path: ~/AppData/Local/Mozilla/sccache/cache
+          key: ${{ runner.os }}-sccache-${{ github.ref }}-${{ github.sha }}
+          restore-keys: |
+            ${{ runner.os }}-sccache-${{ github.ref }}
+            ${{ runner.os }}-sccache-refs/heads/main
+            ${{ runner.os }}-sccache
+      - name: Install ninja-build tool
+        uses: seanmiddleditch/gha-setup-ninja@v3
       - name: Set up Python
         uses: actions/setup-python@v4
         with:
@@ -88,15 +100,15 @@ jobs:
         shell: powershell
       - name: build
         run: |
-          PATH %PATH%;C:\Program Files (x86)\Windows Kits\10\bin\10.0.19041.0\x64
-          PATH %PATH%;C:\Program Files (x86)\Microsoft Visual Studio\2019\Enterprise\MSBuild\Current\Bin\Roslyn
-          win_build_vs.bat ..\b /64 /CI /S /A /PDH /SPLUNK /GCP /ELASTIC /K /L /R /Z /N /RO /PR /PYTHON_SCRIPTING /LUA_SCRIPTING /MQTT
+          for /f "usebackq delims=" %%i in (`vswhere.exe -latest -property installationPath`) do if exist "%%i\Common7\Tools\vsdevcmd.bat" call "%%i\Common7\Tools\vsdevcmd.bat" -arch=x64 -host_arch=x64
+          win_build_vs.bat ..\b /64 /CI /S /A /PDH /SPLUNK /GCP /ELASTIC /K /L /R /Z /N /RO /PR /PYTHON_SCRIPTING /LUA_SCRIPTING /MQTT /SCCACHE /NINJA
+          sccache --show-stats
         shell: cmd
       - name: test
         run: cd ..\b && ctest --timeout 300 --parallel %NUMBER_OF_PROCESSORS% -C Release --output-on-failure
         shell: cmd
       - name: linter
-        run: cd ..\b && msbuild /verbosity:quiet -maxCpuCount linter.vcxproj
+        run: cd ..\b && cmake --build . --target linter --config Release -j 8
         shell: cmd
   ubuntu_20_04:
     name: "ubuntu-20.04"
