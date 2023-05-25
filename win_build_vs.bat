@@ -56,6 +56,7 @@ set build_nanofi=OFF
 set build_opencv=OFF
 set build_prometheus=OFF
 set real_odbc=OFF
+set sccache_arg=
 
 set arg_counter=0
 for %%x in (%*) do (
@@ -100,6 +101,7 @@ for %%x in (%*) do (
     if [%%~x] EQU [/NONFREEUCRT]      set "redist=-DMSI_REDISTRIBUTE_UCRT_NONASL=ON"
     if [%%~x] EQU [/RO]               set real_odbc=ON
     if [%%~x] EQU [/NINJA]            set generator="Ninja"
+    if [%%~x] EQU [/SCCACHE]          set "sccache_arg=-DCMAKE_C_COMPILER_LAUNCHER=sccache -DCMAKE_CXX_COMPILER_LAUNCHER=sccache"
 )
 
 mkdir %builddir%
@@ -121,7 +123,7 @@ cmake -G %generator% %build_platform_cmd% -DINSTALLER_MERGE_MODULES=%installer_m
         -DENABLE_MQTT=%enable_mqtt% -DENABLE_OPC=%enable_opc% -DENABLE_OPENWSMAN=%enable_openwsman% -DENABLE_OPS=%enable_ops% -DENABLE_PCAP=%enable_pcap% ^
         -DENABLE_PYTHON_SCRIPTING=%enable_python_scripting% -DENABLE_SENSORS=%enable_sensors% -DENABLE_TENSORFLOW=%enable_tensorflow% -DENABLE_USB_CAMERA=%enable_usb_camera% ^
         -DBUILD_ROCKSDB=ON -DFORCE_WINDOWS=ON -DUSE_SYSTEM_UUID=OFF -DDISABLE_LIBARCHIVE=OFF -DENABLE_WEL=ON -DFAIL_ON_WARNINGS=OFF -DSKIP_TESTS=%skiptests% ^
-        %strict_gsl_checks% %redist% %EXTRA_CMAKE_ARGUMENTS% "%scriptdir%" && %buildcmd%
+        %strict_gsl_checks% %redist% %sccache_arg% %EXTRA_CMAKE_ARGUMENTS% "%scriptdir%" && %buildcmd%
 IF %ERRORLEVEL% NEQ 0 EXIT /b %ERRORLEVEL%
 if [%cpack%] EQU [ON] (
     cpack -C %cmake_build_type%
