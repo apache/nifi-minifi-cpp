@@ -372,26 +372,26 @@ void Processor::setMaxConcurrentTasks(const uint8_t tasks) {
 }
 
 void Processor::yield() {
-  yield_expiration_ = std::chrono::system_clock::now() + yield_period_msec_.load();
+  yield_expiration_ = std::chrono::steady_clock::now() + yield_period_msec_.load();
 }
 
 void Processor::yield(std::chrono::milliseconds delta_time) {
-  yield_expiration_ = std::chrono::system_clock::now() + delta_time;
+  yield_expiration_ = std::chrono::steady_clock::now() + delta_time;
 }
 
 bool Processor::isYield() {
-  return yield_expiration_.load() >= std::chrono::system_clock::now();
+  return getYieldTime() > 0ms;
 }
 
 void Processor::clearYield() {
-  yield_expiration_ = std::chrono::system_clock::time_point();
+  yield_expiration_ = std::chrono::steady_clock::time_point();
 }
 
 std::chrono::milliseconds Processor::getYieldTime() const {
   auto yield_expiration = yield_expiration_.load();
-  auto current_time = std::chrono::system_clock::now();
+  auto current_time = std::chrono::steady_clock::now();
   if (yield_expiration > current_time)
-    return std::chrono::duration_cast<std::chrono::milliseconds>(yield_expiration - current_time);
+    return std::chrono::ceil<std::chrono::milliseconds>(yield_expiration - current_time);
   else
     return 0ms;
 }

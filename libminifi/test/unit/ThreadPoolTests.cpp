@@ -23,6 +23,8 @@
 #include "../Catch.h"
 #include "utils/ThreadPool.h"
 
+using namespace std::literals::chrono_literals;
+
 bool function() {
   return true;
 }
@@ -45,13 +47,8 @@ class WorkerNumberExecutions : public utils::AfterExecute<int> {
     return false;
   }
 
-  [[nodiscard]] int getRuns() const {
-    return runs;
-  }
-
   std::chrono::milliseconds wait_time() override {
-    // wait 50ms
-    return std::chrono::milliseconds(50);
+    return 50ms;
   }
 
  protected:
@@ -84,7 +81,33 @@ TEST_CASE("ThreadPoolTest2", "[TPT2]") {
   utils::Worker<int> functor(f_ex, "id", std::move(after_execute));
   pool.start();
   std::future<int> fut;
-  pool.execute(std::move(functor), fut);  // NOLINT(bugprone-use-after-move)
+  pool.execute(std::move(functor), fut);
   fut.wait();
   REQUIRE(20 == fut.get());
+}
+
+TEST_CASE("Worker wait time should be relative to the last run") {
+  std::mutex cv_m;
+  std::condition_variable cv;
+  std::vector<std::chrono::steady_clock::time_point> worker_execution_time_points;
+  utils::ThreadPool<int> pool(1);
+  std::unique_ptr<utils::AfterExecute<int>> after_execute = std::unique_ptr<utils::AfterExecute<int>>(new WorkerNumberExecutions(100));
+  utils::Worker<int> worker([&]()->int {
+    {
+      std::unique_lock lock(cv_m);
+      worker_execution_time_points.push_back(std::chrono::steady_clock::now());
+    }
+    cv.notify_all();
+    return 1;
+  }, "id", std::move(after_execute));
+  std::this_thread::sleep_for(60ms);  // Pre-waiting should not matter
+
+  std::future<int> irrelevant_future;
+  pool.execute(std::move(worker), irrelevant_future);
+  pool.start();
+
+  std::unique_lock lock(cv_m);
+  cv.wait(lock, [&]() {return worker_execution_time_points.size() >= 2;});
+  REQUIRE(worker_execution_time_points.size() >= 2);
+  CHECK(worker_execution_time_points[1] - worker_execution_time_points[0] >= 50ms);
 }
