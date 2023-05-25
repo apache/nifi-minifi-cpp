@@ -101,7 +101,7 @@ jobs:
         run: cd ..\b && ctest --timeout 300 --parallel %NUMBER_OF_PROCESSORS% -C Release --output-on-failure
         shell: cmd
       - name: linter
-        run: cd ..\b && msbuild /verbosity:quiet -maxCpuCount linter.vcxproj
+        run: cd ..\b && cmake --build . --target linter --config Release -j 8
         shell: cmd
   ubuntu_20_04:
     name: "ubuntu-20.04"
