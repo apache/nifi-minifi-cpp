@@ -227,7 +227,7 @@ class C2Agent : public state::UpdateController {
 
   std::shared_ptr<core::logging::Logger> logger_ = core::logging::LoggerFactory<C2Agent>::getLogger();
 
-  utils::ThreadPool<utils::TaskRescheduleInfo> thread_pool_;
+  utils::ThreadPool thread_pool_;
 
   std::vector<utils::Identifier> task_ids_;
 

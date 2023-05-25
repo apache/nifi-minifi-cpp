@@ -200,7 +200,7 @@ class FlowController : public core::controller::ForwardingControllerServiceProvi
   std::shared_ptr<core::logging::Logger> logger_ = core::logging::LoggerFactory<FlowController>::getLogger();
 
   // Thread pool for schedulers
-  utils::ThreadPool<utils::TaskRescheduleInfo> thread_pool_;
+  utils::ThreadPool thread_pool_;
 };
 
 }  // namespace org::apache::nifi::minifi

@@ -176,6 +176,7 @@ class Processor : public Connectable, public ConfigurableComponent, public state
 
   void clearYield();
 
+  std::chrono::steady_clock::time_point getYieldExpirationTime() const { return yield_expiration_; }
   std::chrono::steady_clock::duration getYieldTime() const;
   // Whether flow file queue full in any of the outgoing connection
   bool flowFilesOutGoingFull() const;

@@ -53,7 +53,7 @@ namespace org::apache::nifi::minifi {
 class SchedulingAgent {
  public:
   SchedulingAgent(const gsl::not_null<core::controller::ControllerServiceProvider*> controller_service_provider, std::shared_ptr<core::Repository> repo, std::shared_ptr<core::Repository> flow_repo,
-                  std::shared_ptr<core::ContentRepository> content_repo, std::shared_ptr<Configure> configuration, utils::ThreadPool<utils::TaskRescheduleInfo> &thread_pool)
+                  std::shared_ptr<core::ContentRepository> content_repo, std::shared_ptr<Configure> configuration, utils::ThreadPool& thread_pool)
       : admin_yield_duration_(),
         bored_yield_duration_(0),
         configure_(configuration),
@@ -122,7 +122,7 @@ class SchedulingAgent {
   std::shared_ptr<core::Repository> flow_repo_;
 
   std::shared_ptr<core::ContentRepository> content_repo_;
-  utils::ThreadPool<utils::TaskRescheduleInfo> &thread_pool_;
+  utils::ThreadPool& thread_pool_;
   gsl::not_null<core::controller::ControllerServiceProvider*> controller_service_provider_;
 
  private:

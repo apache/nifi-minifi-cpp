@@ -41,11 +41,11 @@ FlowFileLoader::~FlowFileLoader() {
 std::future<FlowFileLoader::FlowFilePtrVec> FlowFileLoader::load(std::vector<SwappedFlowFile> flow_files) {
   auto promise = std::make_shared<std::promise<FlowFilePtrVec>>();
   std::future<FlowFilePtrVec> future = promise->get_future();
-  utils::Worker<utils::TaskRescheduleInfo> task{[this, flow_files = std::move(flow_files), promise = std::move(promise)] {
+  utils::Worker task{[this, flow_files = std::move(flow_files), promise = std::move(promise)] {
       return loadImpl(flow_files, promise);
     },
-    "",  // doesn't matter that tasks alias by name, as we never actually query their status or stop a single task
-    std::make_unique<utils::ComplexMonitor>()};
+    ""};  // doesn't matter that tasks alias by name, as we never actually query their status or stop a single task
+
   // the dummy_future is for the return value of the Worker's lambda, rerunning this lambda
   // depends on run_determinant + result
   // we could create a custom run_determinant to instead determine if/when it should be rerun

@@ -43,7 +43,7 @@ utils::TaskRescheduleInfo EventDrivenSchedulingAgent::run(core::Processor* proce
     while (processor->isRunning() && (std::chrono::steady_clock::now() - start_time < time_slice_)) {
       this->onTrigger(processor, processContext, sessionFactory);
       if (processor->isYield()) {
-        return utils::TaskRescheduleInfo::RetryIn(processor->getYieldTime());
+        return utils::TaskRescheduleInfo::RetryAfter(processor->getYieldExpirationTime());
       }
     }
     return utils::TaskRescheduleInfo::RetryImmediately();  // Let's continue work as soon as a thread is available

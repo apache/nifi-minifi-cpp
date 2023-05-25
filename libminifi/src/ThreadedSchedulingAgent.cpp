@@ -34,17 +34,13 @@
 #include "core/ProcessorNode.h"
 #include "core/ProcessContext.h"
 #include "core/ProcessContextBuilder.h"
-#include "core/ProcessSession.h"
 #include "core/ProcessSessionFactory.h"
 #include "utils/ValueParser.h"
 
 using namespace std::literals::chrono_literals;
 
 
-namespace org {
-namespace apache {
-namespace nifi {
-namespace minifi {
+namespace org::apache::nifi::minifi {
 
 void ThreadedSchedulingAgent::schedule(core::Processor* processor) {
   std::lock_guard<std::mutex> lock(mutex_);
@@ -103,12 +99,8 @@ void ThreadedSchedulingAgent::schedule(core::Processor* processor) {
       return agent->run(processor, processContext, sessionFactory);
     };
 
-    // create a functor that will be submitted to the thread pool.
-    utils::Worker<utils::TaskRescheduleInfo> functor(f_ex, processor->getUUIDStr(), std::make_unique<utils::ComplexMonitor>());
-    // move the functor into the thread pool. While a future is returned
-    // we aren't terribly concerned with the result.
     std::future<utils::TaskRescheduleInfo> future;
-    thread_pool_.execute(std::move(functor), future);
+    thread_pool_.execute(utils::Worker{f_ex, processor->getUUIDStr()}, future);
   }
   logger_->log_debug("Scheduled thread %d concurrent workers for for process %s", processor->getMaxConcurrentTasks(), processor->getName());
   processors_running_.insert(processor->getUUID());
@@ -141,7 +133,4 @@ void ThreadedSchedulingAgent::unschedule(core::Processor* processor) {
   processors_running_.erase(processor->getUUID());
 }
 
-} /* namespace minifi */
-} /* namespace nifi */
-} /* namespace apache */
-} /* namespace org */
+}  // namespace org::apache::nifi::minifi
