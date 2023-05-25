@@ -58,7 +58,7 @@ C2Agent::C2Agent(std::shared_ptr<Configure> configuration,
       configuration_(std::move(configuration)),
       node_reporter_(std::move(node_reporter)),
       filesystem_(std::move(filesystem)),
-      thread_pool_(2, false, nullptr, "C2 threadpool"),
+      thread_pool_(2, nullptr, "C2 threadpool"),
       request_restart_(std::move(request_restart)),
       last_run_(std::chrono::steady_clock::now()) {
   if (!configuration_->getAgentClass()) {
@@ -102,9 +102,8 @@ void C2Agent::start() {
   for (const auto& function : functions_) {
     utils::Identifier uuid = utils::IdGenerator::getIdGenerator()->generate();
     task_ids_.push_back(uuid);
-    utils::Worker<utils::TaskRescheduleInfo> functor(function, uuid.to_string(), std::make_unique<utils::ComplexMonitor>());
     std::future<utils::TaskRescheduleInfo> future;
-    thread_pool_.execute(std::move(functor), future);
+    thread_pool_.execute(utils::Worker{function, uuid.to_string()}, future);
   }
   controller_running_ = true;
   thread_pool_.start();

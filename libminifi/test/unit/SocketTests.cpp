@@ -27,8 +27,12 @@
 #include "../Catch.h"
 #include "io/StreamFactory.h"
 #include "io/Sockets.h"
-#include "utils/ThreadPool.h"
 #include "properties/Configuration.h"
+
+#include <asio/thread_pool.hpp>
+#include <asio/awaitable.hpp>
+#include <asio/co_spawn.hpp>
+#include <asio/use_future.hpp>
 
 namespace minifi = org::apache::nifi::minifi;
 namespace io = minifi::io;
@@ -163,7 +167,7 @@ TEST_CASE("TestSocketWriteTestAfterClose", "[TestSocket7]") {
 #ifdef OPENSSL_SUPPORT
 std::atomic<uint8_t> counter;
 std::mt19937_64 seed { std::random_device { }() };
-bool createSocket() {
+asio::awaitable<bool> createSocket() {
   counter++;
   std::shared_ptr<minifi::Configure> configuration = std::make_shared<minifi::Configure>();
 
@@ -175,57 +179,43 @@ bool createSocket() {
     socketA->initialize();
   }
 
-  return true;
+  co_return true;
 }
-/**
- * MINIFI-320 was created to address reallocations within TLSContext
- * This test will create 20 threads that attempt to create contexts
- * to ensure we no longer see the segfaults.
- */
+
 TEST_CASE("TestTLSContextCreation", "[TestSocket8]") {
-  utils::ThreadPool<bool> pool(20, true);
+  constexpr size_t number_of_threads = 20;
+  asio::thread_pool pool(number_of_threads);
 
   std::vector<std::future<bool>> futures;
-  for (int i = 0; i < 20; i++) {
-    std::function<bool()> f_ex = createSocket;
-    utils::Worker<bool> functor(f_ex, "id");
-    std::future<bool> fut;
-    pool.execute(std::move(functor), fut);  // NOLINT(bugprone-use-after-move)
-    futures.push_back(std::move(fut));
+  futures.reserve(number_of_threads);
+  for (size_t i = 0; i < number_of_threads; i++) {
+    futures.push_back(asio::co_spawn(pool, createSocket(), asio::use_future));
   }
-  pool.start();
+  pool.join();
   for (auto &&future : futures) {
-    future.wait();
+    CHECK(future.valid());
   }
 
-  REQUIRE(20 == counter.load());
+  REQUIRE(number_of_threads == counter.load());
 }
 
-/**
- * MINIFI-329 was created in regards to an option existing but not
- * being properly evaluated.
- */
 TEST_CASE("TestTLSContextCreation2", "[TestSocket9]") {
   std::shared_ptr<minifi::Configure> configure = std::make_shared<minifi::Configure>();
   configure->set(minifi::Configuration::nifi_remote_input_secure, "false");
   auto factory = io::StreamFactory::getInstance(configure);
   std::string host = Socket::getMyHostName();
   Socket *socket = factory->createSocket(host, 10001).release();
-  io::TLSSocket *tls = dynamic_cast<io::TLSSocket*>(socket);
+  auto *tls = dynamic_cast<io::TLSSocket*>(socket);
   REQUIRE(tls == nullptr);
 }
 
-/**
- * MINIFI-329 was created in regards to an option existing but not
- * being properly evaluated.
- */
 TEST_CASE("TestTLSContextCreationNullptr", "[TestSocket10]") {
   std::shared_ptr<minifi::Configure> configure = std::make_shared<minifi::Configure>();
   configure->set(minifi::Configuration::nifi_remote_input_secure, "false");
   auto factory = io::StreamFactory::getInstance(configure);
   std::string host = Socket::getMyHostName();
   io::Socket *socket = factory->createSecureSocket(host, 10001, nullptr).release();
-  io::TLSSocket *tls = dynamic_cast<minifi::io::TLSSocket*>(socket);
+  auto *tls = dynamic_cast<minifi::io::TLSSocket*>(socket);
   REQUIRE(tls == nullptr);
 }
 #endif  // OPENSSL_SUPPORT

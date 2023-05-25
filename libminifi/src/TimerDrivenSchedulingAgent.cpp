@@ -31,7 +31,7 @@ utils::TaskRescheduleInfo TimerDrivenSchedulingAgent::run(core::Processor* proce
     auto trigger_start_time = std::chrono::steady_clock::now();
     this->onTrigger(processor, processContext, sessionFactory);
     if (processor->isYield())
-      return utils::TaskRescheduleInfo::RetryIn(processor->getYieldTime());
+      return utils::TaskRescheduleInfo::RetryAfter(processor->getYieldExpirationTime());
 
     return utils::TaskRescheduleInfo::RetryAfter(trigger_start_time + processor->getSchedulingPeriod());
   }

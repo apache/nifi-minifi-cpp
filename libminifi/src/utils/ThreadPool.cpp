@@ -16,28 +16,24 @@
  */
 
 #include "utils/ThreadPool.h"
-#include "core/state/UpdateController.h"
 
 using namespace std::literals::chrono_literals;
 
 namespace org::apache::nifi::minifi::utils {
 
-template<typename T>
-ThreadPool<T>::ThreadPool(int max_worker_threads, bool daemon_threads, core::controller::ControllerServiceProvider* controller_service_provider, std::string name)
-    : daemon_threads_(daemon_threads),
-      thread_reduction_count_(0),
+ThreadPool::ThreadPool(int max_worker_threads, core::controller::ControllerServiceProvider* controller_service_provider, std::string name)
+    : thread_reduction_count_(0),
       max_worker_threads_(max_worker_threads),
       adjust_threads_(false),
       running_(false),
       controller_service_provider_(controller_service_provider),
       name_(std::move(name)),
-      logger_(core::logging::LoggerFactory<ThreadPool<T>>::getLogger()) {
+      logger_(core::logging::LoggerFactory<ThreadPool>::getLogger()) {
   current_workers_ = 0;
   thread_manager_ = nullptr;
 }
 
-template<typename T>
-void ThreadPool<T>::run_tasks(const std::shared_ptr<WorkerThread>& thread) {
+void ThreadPool::run_tasks(const std::shared_ptr<WorkerThread>& thread) {
   thread->is_running_ = true;
   while (running_.load()) {
     if (UNLIKELY(thread_reduction_count_ > 0)) {
@@ -50,7 +46,7 @@ void ThreadPool<T>::run_tasks(const std::shared_ptr<WorkerThread>& thread) {
       }
     }
 
-    Worker<T> task;
+    Worker task;
     if (worker_queue_.dequeueWait(task)) {
       {
         std::unique_lock<std::mutex> lock(worker_queue_mutex_);
@@ -101,15 +97,14 @@ void ThreadPool<T>::run_tasks(const std::shared_ptr<WorkerThread>& thread) {
   current_workers_--;
 }
 
-template<typename T>
-void ThreadPool<T>::manage_delayed_queue() {
+void ThreadPool::manage_delayed_queue() {
   while (running_) {
     std::unique_lock<std::mutex> lock(worker_queue_mutex_);
 
     // Put the tasks ready to run in the worker queue
     while (!delayed_worker_queue_.empty() && delayed_worker_queue_.top().getNextExecutionTime() <= std::chrono::steady_clock::now()) {
       // I'm very sorry for this - committee must has been seriously drunk when the interface of prio queue was submitted.
-      Worker<T> task = std::move(const_cast<Worker<T>&>(delayed_worker_queue_.top()));
+      Worker task = std::move(const_cast<Worker&>(delayed_worker_queue_.top()));
       delayed_worker_queue_.pop();
       worker_queue_.enqueue(std::move(task));
     }
@@ -122,30 +117,25 @@ void ThreadPool<T>::manage_delayed_queue() {
   }
 }
 
-template<typename T>
-void ThreadPool<T>::execute(Worker<T> &&task, std::future<T> &future) {
+void ThreadPool::execute(Worker &&task, std::future<utils::TaskRescheduleInfo> &future) {
   {
     std::unique_lock<std::mutex> lock(worker_queue_mutex_);
     task_status_[task.getIdentifier()] = true;
   }
-  future = std::move(task.getPromise()->get_future());
+  future = task.getPromise()->get_future();
   worker_queue_.enqueue(std::move(task));
 }
 
-template<typename T>
-void ThreadPool<T>::manageWorkers() {
-  for (int i = 0; i < max_worker_threads_; i++) {
-    std::stringstream thread_name;
-    thread_name << name_ << " #" << i;
-    auto worker_thread = std::make_shared<WorkerThread>(thread_name.str());
-    worker_thread->thread_ = createThread([this, worker_thread] { run_tasks(worker_thread); });
-    thread_queue_.push_back(worker_thread);
-    current_workers_++;
-  }
-
-  if (daemon_threads_) {
-    for (auto &thread : thread_queue_) {
-      thread->thread_.detach();
+void ThreadPool::manageWorkers() {
+  {
+    std::unique_lock<std::mutex> lock(worker_queue_mutex_);
+    for (int i = 0; i < max_worker_threads_; i++) {
+      std::stringstream thread_name;
+      thread_name << name_ << " #" << i;
+      auto worker_thread = std::make_shared<WorkerThread>(thread_name.str());
+      worker_thread->thread_ = createThread([this, worker_thread] { run_tasks(worker_thread); });
+      thread_queue_.push_back(worker_thread);
+      current_workers_++;
     }
   }
 
@@ -171,9 +161,6 @@ void ThreadPool<T>::manageWorkers() {
           std::unique_lock<std::mutex> worker_queue_lock(worker_queue_mutex_);
           auto worker_thread = std::make_shared<WorkerThread>();
           worker_thread->thread_ = createThread([this, worker_thread] { run_tasks(worker_thread); });
-          if (daemon_threads_) {
-            worker_thread->thread_.detach();
-          }
           thread_queue_.push_back(worker_thread);
           current_workers_++;
         }
@@ -195,8 +182,7 @@ void ThreadPool<T>::manageWorkers() {
   }
 }
 
-template<typename T>
-std::shared_ptr<controllers::ThreadManagementService> ThreadPool<T>::createThreadManager() const {
+std::shared_ptr<controllers::ThreadManagementService> ThreadPool::createThreadManager() const {
   if (!controller_service_provider_) {
     return nullptr;
   }
@@ -213,8 +199,7 @@ std::shared_ptr<controllers::ThreadManagementService> ThreadPool<T>::createThrea
   return thread_manager_service;
 }
 
-template<typename T>
-void ThreadPool<T>::start() {
+void ThreadPool::start() {
   std::lock_guard<std::recursive_mutex> lock(manager_mutex_);
   if (!running_) {
     thread_manager_ = createThreadManager();
@@ -224,22 +209,21 @@ void ThreadPool<T>::start() {
     manager_thread_ = std::thread(&ThreadPool::manageWorkers, this);
 
     std::lock_guard<std::mutex> quee_lock(worker_queue_mutex_);
-    delayed_scheduler_thread_ = std::thread(&ThreadPool<T>::manage_delayed_queue, this);
+    delayed_scheduler_thread_ = std::thread(&ThreadPool::manage_delayed_queue, this);
   }
 }
 
-template<typename T>
-void ThreadPool<T>::stopTasks(const TaskId &identifier) {
+void ThreadPool::stopTasks(const TaskId &identifier) {
   std::unique_lock<std::mutex> lock(worker_queue_mutex_);
   task_status_[identifier] = false;
 
   // remove tasks belonging to identifier from worker_queue_
-  worker_queue_.remove([&] (const Worker<T>& worker) { return worker.getIdentifier() == identifier; });
+  worker_queue_.remove([&] (const Worker& worker) { return worker.getIdentifier() == identifier; });
 
   // also remove from delayed_worker_queue_
   decltype(delayed_worker_queue_) new_delayed_worker_queue;
   while (!delayed_worker_queue_.empty()) {
-    Worker<T> task = std::move(const_cast<Worker<T>&>(delayed_worker_queue_.top()));
+    Worker task = std::move(const_cast<Worker&>(delayed_worker_queue_.top()));
     delayed_worker_queue_.pop();
     if (task.getIdentifier() != identifier) {
       new_delayed_worker_queue.push(std::move(task));
@@ -254,22 +238,19 @@ void ThreadPool<T>::stopTasks(const TaskId &identifier) {
   });
 }
 
-template<typename T>
-void ThreadPool<T>::resume() {
+void ThreadPool::resume() {
   if (!worker_queue_.isRunning()) {
     worker_queue_.start();
   }
 }
 
-template<typename T>
-void ThreadPool<T>::pause() {
+void ThreadPool::pause() {
   if (worker_queue_.isRunning()) {
     worker_queue_.stop();
   }
 }
 
-template<typename T>
-void ThreadPool<T>::shutdown() {
+void ThreadPool::shutdown() {
   if (running_.load()) {
     std::lock_guard<std::recursive_mutex> lock(manager_mutex_);
     running_.store(false);
@@ -306,10 +287,5 @@ void ThreadPool<T>::shutdown() {
     worker_queue_.clear();
   }
 }
-
-template class utils::ThreadPool<utils::TaskRescheduleInfo>;
-template class utils::ThreadPool<int>;
-template class utils::ThreadPool<bool>;
-template class utils::ThreadPool<state::Update>;
 
 }  // namespace org::apache::nifi::minifi::utils

@@ -50,27 +50,17 @@ using TaskId = std::string;
  * purpose: Provides a wrapper for the functor
  * and returns a future based on the template argument.
  */
-template<typename T>
 class Worker {
  public:
-  explicit Worker(const std::function<T()> &task, const TaskId &identifier, std::unique_ptr<AfterExecute<T>> run_determinant)
-      : identifier_(identifier),
+  explicit Worker(const std::function<TaskRescheduleInfo()> &task, TaskId identifier)
+      : identifier_(std::move(identifier)),
         next_exec_time_(std::chrono::steady_clock::now()),
-        task(task),
-        run_determinant_(std::move(run_determinant)) {
-    promise = std::make_shared<std::promise<T>>();
+        task(task) {
+    promise = std::make_shared<std::promise<TaskRescheduleInfo>>();
   }
 
-  explicit Worker(const std::function<T()> &task, const TaskId &identifier)
-      : identifier_(identifier),
-        next_exec_time_(std::chrono::steady_clock::now()),
-        task(task),
-        run_determinant_(nullptr) {
-    promise = std::make_shared<std::promise<T>>();
-  }
-
-  explicit Worker(const TaskId& identifier = {})
-      : identifier_(identifier),
+  explicit Worker(TaskId  identifier = {})
+      : identifier_(std::move(identifier)),
         next_exec_time_(std::chrono::steady_clock::now()) {
   }
 
@@ -89,49 +79,39 @@ class Worker {
    *   true == run again
    */
   virtual bool run() {
-    T result = task();
-    if (run_determinant_ == nullptr || (run_determinant_->isFinished(result) || run_determinant_->isCancelled(result))) {
+    TaskRescheduleInfo result = task();
+    if (result.isFinished()) {
       promise->set_value(result);
       return false;
     }
-    next_exec_time_ = std::max(next_exec_time_, std::chrono::steady_clock::now() + run_determinant_->wait_time());
+
+    next_exec_time_ = result.getNextExecutionTime();
     return true;
   }
 
-  virtual void setIdentifier(const TaskId& identifier) {
-    identifier_ = identifier;
-  }
-
-  virtual std::chrono::steady_clock::time_point getNextExecutionTime() const {
+  [[nodiscard]] virtual std::chrono::steady_clock::time_point getNextExecutionTime() const {
     return next_exec_time_;
   }
 
-  std::shared_ptr<std::promise<T>> getPromise() const;
+  [[nodiscard]] std::shared_ptr<std::promise<TaskRescheduleInfo>> getPromise() const { return promise; }
 
-  const TaskId &getIdentifier() const {
+  [[nodiscard]] const TaskId &getIdentifier() const {
     return identifier_;
   }
 
  protected:
   TaskId identifier_;
   std::chrono::steady_clock::time_point next_exec_time_;
-  std::function<T()> task;
-  std::unique_ptr<AfterExecute<T>> run_determinant_;
-  std::shared_ptr<std::promise<T>> promise;
+  std::function<TaskRescheduleInfo()> task;
+  std::shared_ptr<std::promise<TaskRescheduleInfo>> promise;
 };
 
-template<typename T>
 class DelayedTaskComparator {
  public:
-  bool operator()(Worker<T> &a, Worker<T> &b) {
+  bool operator()(Worker &a, Worker &b) {
     return a.getNextExecutionTime() > b.getNextExecutionTime();
   }
 };
-
-template<typename T>
-std::shared_ptr<std::promise<T>> Worker<T>::getPromise() const {
-  return promise;
-}
 
 class WorkerThread {
  public:
@@ -155,16 +135,15 @@ class WorkerThread {
  * ThreadPoolExecutor
  * Design: Locked control over a manager thread that controls the worker threads
  */
-template<typename T>
 class ThreadPool {
  public:
-  ThreadPool(int max_worker_threads = 2, bool daemon_threads = false,
+  ThreadPool(int max_worker_threads = 2,
              core::controller::ControllerServiceProvider* controller_service_provider = nullptr, std::string name = "NamelessPool");
 
-  ThreadPool(const ThreadPool<T> &other) = delete;
-  ThreadPool<T>& operator=(const ThreadPool<T> &other) = delete;
-  ThreadPool(ThreadPool<T> &&other) = delete;
-  ThreadPool<T>& operator=(ThreadPool<T> &&other) = delete;
+  ThreadPool(const ThreadPool &other) = delete;
+  ThreadPool& operator=(const ThreadPool &other) = delete;
+  ThreadPool(ThreadPool &&other) = delete;
+  ThreadPool& operator=(ThreadPool &&other) = delete;
 
   ~ThreadPool() {
     shutdown();
@@ -177,7 +156,7 @@ class ThreadPool {
    * the worker task
    * @param future future to move new promise to
    */
-  void execute(Worker<T> &&task, std::future<T> &future);
+  void execute(Worker &&task, std::future<TaskRescheduleInfo> &future);
 
   /**
    * attempts to stop tasks with the provided identifier.
@@ -286,59 +265,32 @@ class ThreadPool {
     }
   }
 
-// determines if threads are detached
-  bool daemon_threads_;
   std::atomic<int> thread_reduction_count_;
-// max worker threads
   int max_worker_threads_;
-// current worker tasks.
   std::atomic<int> current_workers_;
-// thread queue
   std::vector<std::shared_ptr<WorkerThread>> thread_queue_;
-// manager thread
   std::thread manager_thread_;
-// the thread responsible for putting delayed tasks to the worker queue when they had to be put
   std::thread delayed_scheduler_thread_;
-// conditional that's used to adjust the threads
   std::atomic<bool> adjust_threads_;
-// atomic running boolean
   std::atomic<bool> running_;
-// controller service provider
   core::controller::ControllerServiceProvider* controller_service_provider_;
-// integrated power manager
   std::shared_ptr<controllers::ThreadManagementService> thread_manager_;
-  // thread queue for the recently deceased threads.
   ConcurrentQueue<std::shared_ptr<WorkerThread>> deceased_thread_queue_;
-// worker queue of worker objects
-  ConditionConcurrentQueue<Worker<T>> worker_queue_;
-  std::priority_queue<Worker<T>, std::vector<Worker<T>>, DelayedTaskComparator<T>> delayed_worker_queue_;
-// mutex to  protect task status and delayed queue
+  ConditionConcurrentQueue<Worker> worker_queue_;
+  std::priority_queue<Worker, std::vector<Worker>, DelayedTaskComparator> delayed_worker_queue_;
   std::mutex worker_queue_mutex_;
-// notification for new delayed tasks that's before the current ones
   std::condition_variable delayed_task_available_;
-// map to identify if a task should be
   std::map<TaskId, bool> task_status_;
-// manager mutex
   std::recursive_mutex manager_mutex_;
-  // thread pool name
   std::string name_;
-  // count of running tasks by ID
   std::unordered_map<TaskId, uint32_t> running_task_count_by_id_;
-  // variable to signal task running completion
   std::condition_variable task_run_complete_;
 
   std::shared_ptr<core::logging::Logger> logger_;
 
-  /**
-   * Call for the manager to start worker threads
-   */
+
   void manageWorkers();
-
-  /**
-   * Runs worker tasks
-   */
   void run_tasks(const std::shared_ptr<WorkerThread>& thread);
-
   void manage_delayed_queue();
 };
 

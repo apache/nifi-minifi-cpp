@@ -41,7 +41,7 @@ class CronDrivenSchedulingAgent : public ThreadedSchedulingAgent {
                             std::shared_ptr<core::Repository> flow_repo,
                             std::shared_ptr<core::ContentRepository> content_repo,
                             std::shared_ptr<Configure> configuration,
-                            utils::ThreadPool<utils::TaskRescheduleInfo>& thread_pool)
+                            utils::ThreadPool& thread_pool)
       : ThreadedSchedulingAgent(controller_service_provider, std::move(repo), std::move(flow_repo), std::move(content_repo), std::move(configuration), thread_pool) {
   }
 

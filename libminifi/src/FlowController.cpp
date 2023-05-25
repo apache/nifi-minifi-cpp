@@ -54,7 +54,7 @@ FlowController::FlowController(std::shared_ptr<core::Repository> provenance_repo
     : core::controller::ForwardingControllerServiceProvider(core::className<FlowController>()),
       running_(false),
       initialized_(false),
-      thread_pool_(5, false, nullptr, "Flowcontroller threadpool"),
+      thread_pool_(5, nullptr, "Flowcontroller threadpool"),
       configuration_(std::move(configure)),
       provenance_repo_(std::move(provenance_repo)),
       flow_file_repo_(std::move(flow_file_repo)),

@@ -32,7 +32,6 @@ utils::TaskRescheduleInfo CronDrivenSchedulingAgent::run(core::Processor* proces
   using namespace std::literals::chrono_literals;
   using std::chrono::ceil;
   using std::chrono::seconds;
-  using std::chrono::milliseconds;
   using std::chrono::time_point_cast;
   using std::chrono::system_clock;
 
@@ -58,7 +57,7 @@ utils::TaskRescheduleInfo CronDrivenSchedulingAgent::run(core::Processor* proces
       last_exec_[uuid] = current_time.get_local_time();
 
     if (processor->isYield())
-      return utils::TaskRescheduleInfo::RetryIn(processor->getYieldTime());
+      return utils::TaskRescheduleInfo::RetryAfter(processor->getYieldExpirationTime());
 
     if (auto next_trigger = schedules_.at(uuid).calculateNextTrigger(current_time.get_local_time()))
       return utils::TaskRescheduleInfo::RetryIn(*next_trigger-current_time.get_local_time());

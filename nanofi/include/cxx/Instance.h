@@ -148,9 +148,8 @@ class Instance {
     // run all functions independently
 
     for (auto function : functions) {
-      utils::Worker<utils::TaskRescheduleInfo> functor(function, "listeners");
       std::future<utils::TaskRescheduleInfo> future;
-      listener_thread_pool_.execute(std::move(functor), future);
+      listener_thread_pool_.execute(utils::Worker{function, "listeners"}, future);
     }
   }
 
@@ -169,7 +168,7 @@ class Instance {
   std::string url_;
   std::shared_ptr<Configure> configure_;
 
-  utils::ThreadPool<utils::TaskRescheduleInfo> listener_thread_pool_;
+  utils::ThreadPool listener_thread_pool_;
 };
 
 }  // namespace org::apache::nifi::minifi
