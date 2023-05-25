@@ -78,6 +78,8 @@ jobs:
         uses: mozilla-actions/sccache-action@v0.0.3
       - name: Set up MSBuild
         uses: microsoft/setup-msbuild@v1.1
+      - name: Install ninja-build tool
+        uses: seanmiddleditch/gha-setup-ninja@v3
       - name: Set up Python
         uses: actions/setup-python@v4
         with:
@@ -93,7 +95,7 @@ jobs:
         run: |
           PATH %PATH%;C:\Program Files (x86)\Windows Kits\10\bin\10.0.19041.0\x64
           PATH %PATH%;C:\Program Files (x86)\Microsoft Visual Studio\2019\Enterprise\MSBuild\Current\Bin\Roslyn
-          win_build_vs.bat ..\b /64 /CI /S /A /PDH /SPLUNK /GCP /ELASTIC /K /L /R /Z /N /RO /PR /PYTHON_SCRIPTING /LUA_SCRIPTING /MQTT /SCCACHE
+          win_build_vs.bat ..\b /64 /CI /S /A /PDH /SPLUNK /GCP /ELASTIC /K /L /R /Z /N /RO /PR /PYTHON_SCRIPTING /LUA_SCRIPTING /MQTT /SCCACHE /NINJA
         shell: cmd
       - name: test
         run: cd ..\b && ctest --timeout 300 --parallel %NUMBER_OF_PROCESSORS% -C Release --output-on-failure
