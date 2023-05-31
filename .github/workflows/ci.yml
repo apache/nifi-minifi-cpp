@@ -84,7 +84,7 @@ jobs:
       - id: install-sqliteodbc-driver
         run: |
           Invoke-WebRequest -Uri "http://www.ch-werner.de/sqliteodbc/sqliteodbc_w64.exe" -OutFile "sqliteodbc_w64.exe"
-          if ((Get-FileHash 'sqliteodbc_w64.exe').Hash -ne "bd93e8450bcbd4ae16894e06ecb1b8572d6a01448df5b8dd2964eb6d3d302db8") Fail "Hash mismatch"
+          if ((Get-FileHash 'sqliteodbc_w64.exe').Hash -ne "bd93e8450bcbd4ae16894e06ecb1b8572d6a01448df5b8dd2964eb6d3d302db8") {Fail "Hash mismatch"}
           ./sqliteodbc_w64.exe /S
         shell: powershell
       - name: build
