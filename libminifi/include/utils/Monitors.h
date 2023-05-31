@@ -20,6 +20,9 @@
 #include <algorithm>
 #include <atomic>
 #include <chrono>
+#if defined(WIN32)
+#include <future>  // This is required to work around a VS2017 bug, see the details below
+#endif
 
 namespace org::apache::nifi::minifi::utils {
 
@@ -65,6 +68,14 @@ struct TaskRescheduleInfo {
   static TaskRescheduleInfo RetryImmediately() {
     return {false, std::chrono::steady_clock::duration(0)};
   }
+
+#if defined(WIN32)
+// https://developercommunity.visualstudio.com/content/problem/60897/c-shared-state-futuresstate-default-constructs-the.html
+// Because of this bug we need to have this object default constructible, which makes no sense otherwise. Hack.
+ private:
+  TaskRescheduleInfo() : wait_time_(std::chrono::steady_clock::duration(0)), finished_(true) {}
+  friend class std::_Associated_state<TaskRescheduleInfo>;
+#endif
 };
 
 class ComplexMonitor : public utils::AfterExecute<TaskRescheduleInfo> {
