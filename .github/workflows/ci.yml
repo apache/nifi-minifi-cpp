@@ -81,8 +81,6 @@ jobs:
         with:
           path: ~/AppData/Local/Mozilla/sccache/cache
           key: ${{ runner.os }}-sccache
-      - name: Set up MSBuild
-        uses: microsoft/setup-msbuild@v1.1
       - name: Install ninja-build tool
         uses: seanmiddleditch/gha-setup-ninja@v3
       - name: Set up Python
