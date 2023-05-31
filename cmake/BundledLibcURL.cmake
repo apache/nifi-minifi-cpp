@@ -17,10 +17,9 @@
 
 function(use_bundled_curl SOURCE_DIR BINARY_DIR)
     # Define patch step
-    if (WIN32)
-        set(PC "PATCH_COMMAND ./buildconf.bat")
-    endif()
-
+    set(PATCH_FILE "${SOURCE_DIR}/thirdparty/curl/module-path.patch")
+    set(PC ${Bash_EXECUTABLE} -c "set -x && \
+            (\"${Patch_EXECUTABLE}\" -p1 -R -s -f --dry-run -i \"${PATCH_FILE}\" || \"${Patch_EXECUTABLE}\" -p1 -N -i \"${PATCH_FILE}\")")
     # Define byproducts
     if (WIN32)
         set(BYPRODUCT "lib/libcurl.lib")
@@ -40,7 +39,7 @@ function(use_bundled_curl SOURCE_DIR BINARY_DIR)
             -DHTTP_ONLY=ON
             -DCURL_DISABLE_CRYPTO_AUTH=ON
             -DCURL_CA_PATH=none
-            -DCMAKE_USE_LIBSSH2=OFF
+            -DCURL_USE_LIBSSH2=OFF
             -DCMAKE_DEBUG_POSTFIX=
             -DHAVE_GLIBC_STRERROR_R=1
             -DHAVE_GLIBC_STRERROR_R__TRYRUN_OUTPUT=""
@@ -51,9 +50,9 @@ function(use_bundled_curl SOURCE_DIR BINARY_DIR)
             -DHAVE_FSETXATTR_5__TRYRUN_OUTPUT=""
             )
     if (OPENSSL_OFF)
-        list(APPEND CURL_CMAKE_ARGS -DCMAKE_USE_OPENSSL=OFF)
+        list(APPEND CURL_CMAKE_ARGS -DCURL_USE_OPENSSL=OFF)
     else()
-        list(APPEND CURL_CMAKE_ARGS -DCMAKE_USE_OPENSSL=ON)
+        list(APPEND CURL_CMAKE_ARGS -DCURL_USE_OPENSSL=ON)
     endif()
 
     append_third_party_passthrough_args(CURL_CMAKE_ARGS "${CURL_CMAKE_ARGS}")
@@ -61,12 +60,12 @@ function(use_bundled_curl SOURCE_DIR BINARY_DIR)
     # Build project
     ExternalProject_Add(
             curl-external
-            URL "https://github.com/curl/curl/releases/download/curl-7_64_0/curl-7.64.0.tar.gz"
-            URL_HASH "SHA256=cb90d2eb74d4e358c1ed1489f8e3af96b50ea4374ad71f143fa4595e998d81b5"
+            URL "https://github.com/curl/curl/releases/download/curl-8_1_0/curl-8.1.0.tar.gz"
+            URL_HASH "SHA256=15c00ae8d1b535ac7a7629224d36e564ce9c296698b9297bf854dd38abf226aa"
             SOURCE_DIR "${BINARY_DIR}/thirdparty/curl-src"
             LIST_SEPARATOR % # This is needed for passing semicolon-separated lists
             CMAKE_ARGS ${CURL_CMAKE_ARGS}
-            ${PC}
+            PATCH_COMMAND ${PC}
             BUILD_BYPRODUCTS "${BINARY_DIR}/thirdparty/curl-install/${BYPRODUCT}"
             EXCLUDE_FROM_ALL TRUE
     )
@@ -94,9 +93,13 @@ function(use_bundled_curl SOURCE_DIR BINARY_DIR)
     add_library(CURL::libcurl STATIC IMPORTED)
     set_target_properties(CURL::libcurl PROPERTIES IMPORTED_LOCATION "${CURL_LIBRARY}")
     add_dependencies(CURL::libcurl curl-external)
-    set_property(TARGET CURL::libcurl APPEND PROPERTY INTERFACE_INCLUDE_DIRECTORIES ${CURL_INCLUDE_DIRS})
-    set_property(TARGET CURL::libcurl APPEND PROPERTY INTERFACE_LINK_LIBRARIES ZLIB::ZLIB Threads::Threads)
+    target_include_directories(CURL::libcurl INTERFACE ${CURL_INCLUDE_DIRS})
+    target_link_libraries(CURL::libcurl INTERFACE ZLIB::ZLIB Threads::Threads)
+    if (APPLE)
+        target_link_libraries(CURL::libcurl INTERFACE "-framework CoreFoundation")
+        target_link_libraries(CURL::libcurl INTERFACE "-framework SystemConfiguration")
+    endif()
     if (NOT OPENSSL_OFF)
-        set_property(TARGET CURL::libcurl APPEND PROPERTY INTERFACE_LINK_LIBRARIES OpenSSL::SSL OpenSSL::Crypto)
+        target_link_libraries(CURL::libcurl INTERFACE OpenSSL::SSL OpenSSL::Crypto)
     endif()
 endfunction(use_bundled_curl SOURCE_DIR BINARY_DIR)

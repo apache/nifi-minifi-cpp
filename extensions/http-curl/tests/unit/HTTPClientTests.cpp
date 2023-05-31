@@ -24,6 +24,7 @@
 #include "client/HTTPClient.h"
 #include "CivetServer.h"
 #include "ConnectionCountingServer.h"
+#include "utils/BaseHTTPClient.h"
 
 using namespace std::literals::chrono_literals;
 
@@ -126,10 +127,22 @@ TEST_CASE("HTTPClient should be reusable", "[basic]") {
   client.setKeepAliveProbe(KeepAliveProbeData{2s, 2s});
   client.initialize("GET", "http://localhost:" + keep_alive_server_.getPort() + "/method", nullptr);
 
-  std::vector<std::string> methods = {"GET", "GET", "POST", "GET", "GET", "POST", "POST", "POST"};
+  std::vector<std::string> methods = {"GET", "GET", "PUT", "GET", "GET", "POST", "POST", "PUT"};
   uint64_t request_number = 0;
   for (const auto& method: methods) {
     client.set_request_method(method);
+    if (method != "GET") {
+      auto callback = std::make_unique<org::apache::nifi::minifi::utils::HTTPUploadByteArrayInputCallback>();
+      std::string content = R"({ "content": "a" })";
+      callback->write(content);
+      client.setRequestHeader("Content-Length", std::to_string(content.size()));
+      client.setContentType("application/json");
+      client.setUploadCallback(std::move(callback));
+    } else {
+      client.setRequestHeader("Content-Length", std::to_string(0));
+      client.setUploadCallback(nullptr);
+    }
+
     REQUIRE(client.submit());
     const auto& headers = client.getResponseHeaderMap();
     REQUIRE(headers.contains("Response-number"));

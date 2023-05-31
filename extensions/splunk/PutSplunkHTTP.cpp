@@ -102,6 +102,7 @@ void setFlowFileAsPayload(core::ProcessSession& session,
   session.read(flow_file, std::ref(*payload));
   payload->pos = 0;
   client.setRequestHeader("Content-Length", std::to_string(flow_file->getSize()));
+  client.setPostSize(flow_file->getSize());
 
   client.setUploadCallback(std::move(payload));
 
