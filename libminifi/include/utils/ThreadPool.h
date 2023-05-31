@@ -106,7 +106,6 @@ class Worker {
     return next_exec_time_;
   }
 
-
   std::shared_ptr<std::promise<T>> getPromise() const;
 
   const TaskId &getIdentifier() const {
