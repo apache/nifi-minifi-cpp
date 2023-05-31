@@ -551,7 +551,6 @@ TEST_CASE("ConsumeWindowsEventLog Simple JSON works with UserData", "[cwel][json
 
 TEST_CASE("ConsumeWindowsEventLog can process events from a log file", "[cwel][logfile]") {
   std::string event = LogFileTestController{}.run();
-  std::cout << "Event: " << event << std::endl;
   utils::verifyJSON(event, R"json(
     {
       "System": {

@@ -53,7 +53,6 @@ EVT_QUERY_FLAGS EventPath::getQueryFlags() const {
   switch (kind_) {
     case Kind::CHANNEL: return EvtQueryChannelPath;
     case Kind::FILE: return EvtQueryFilePath;
-    default: gsl_Assert(false);
   }
 }
 

@@ -66,7 +66,7 @@ const core::Property ConsumeWindowsEventLog::Channel(
   core::PropertyBuilder::createProperty("Channel")->
   isRequired(true)->
   withDefaultValue("System")->
-  withDescription("The Windows Event Log Channel to listen to.")->
+  withDescription("The Windows Event Log Channel to listen to. In order to process logs from a log file use the format 'SavedLog:<file path>'.")->
   supportsExpressionLanguage(true)->
   build());
 
