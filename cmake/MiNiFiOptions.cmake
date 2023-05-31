@@ -121,6 +121,8 @@ add_minifi_option(ENABLE_KUBERNETES "Enables the Kubernetes extensions." ON)
 add_minifi_option(ENABLE_TEST_PROCESSORS "Enables test processors" OFF)
 add_minifi_option(ENABLE_PROMETHEUS "Enables Prometheus support." ON)
 add_minifi_option(DISABLE_JEMALLOC "Disables jemalloc." OFF)
+add_minifi_option(DISABLE_CURL "Disables curl." OFF)
+add_minifi_option(DISABLE_CONTROLLER "Disables build of MiNiFi controller binary." OFF)
 
 set_minifi_cache_variable(CUSTOM_MALLOC OFF "Overwrite malloc implementation.")
 set_property(CACHE CUSTOM_MALLOC PROPERTY STRINGS "jemalloc" "mimalloc" "rpmalloc" OFF)

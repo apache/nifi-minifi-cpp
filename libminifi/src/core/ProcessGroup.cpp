@@ -133,6 +133,7 @@ void ProcessGroup::startProcessingProcessors(TimerDrivenSchedulingAgent& timeSch
   for (const auto processor : failed_processors_) {
     try {
       logger_->log_debug("Starting %s", processor->getName());
+      processor->setScheduledState(core::ScheduledState::RUNNING);
       switch (processor->getSchedulingStrategy()) {
         case TIMER_DRIVEN:
           timeScheduler.schedule(processor);
@@ -147,10 +148,12 @@ void ProcessGroup::startProcessingProcessors(TimerDrivenSchedulingAgent& timeSch
     }
     catch (const std::exception &e) {
       logger_->log_error("Failed to start processor %s (%s): %s", processor->getUUIDStr(), processor->getName(), e.what());
+      processor->setScheduledState(core::ScheduledState::STOPPED);
       failed_processors.insert(processor);
     }
     catch (...) {
       logger_->log_error("Failed to start processor %s (%s)", processor->getUUIDStr(), processor->getName());
+      processor->setScheduledState(core::ScheduledState::STOPPED);
       failed_processors.insert(processor);
     }
   }

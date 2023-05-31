@@ -166,6 +166,9 @@ class ContainerStore:
     def set_yaml_in_minifi(self):
         self.minifi_options.config_format = "yaml"
 
+    def set_controller_socket_properties_in_minifi(self):
+        self.minifi_options.enable_controller_socket = True
+
     def get_startup_finished_log_entry(self, container_name):
         return self.containers[container_name].get_startup_finished_log_entry()
 

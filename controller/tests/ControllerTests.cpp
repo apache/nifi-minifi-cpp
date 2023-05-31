@@ -314,14 +314,14 @@ TEST_CASE_METHOD(ControllerTestFixture, "Test listComponents", "[controllerTests
   }
 
   using org::apache::nifi::minifi::utils::verifyEventHappenedInPollTime;
-  REQUIRE(verifyEventHappenedInPollTime(500ms, [&] { return controller_->isRunning(); }, 20ms));
+  REQUIRE(verifyEventHappenedInPollTime(5s, [&] { return controller_->isRunning(); }, 20ms));
 
   {
     auto socket = createSocket();
     minifi::controller::stopComponent(std::move(socket), "TestStateController");
   }
 
-  REQUIRE(verifyEventHappenedInPollTime(500ms, [&] { return !controller_->isRunning(); }, 20ms));
+  REQUIRE(verifyEventHappenedInPollTime(5s, [&] { return !controller_->isRunning(); }, 20ms));
 
   {
     auto socket = createSocket();
@@ -353,14 +353,14 @@ TEST_CASE_METHOD(ControllerTestFixture, "TestClear", "[controllerTests]") {
   }
 
   using org::apache::nifi::minifi::utils::verifyEventHappenedInPollTime;
-  REQUIRE(verifyEventHappenedInPollTime(500ms, [&] { return controller_->isRunning(); }, 20ms));
+  REQUIRE(verifyEventHappenedInPollTime(5s, [&] { return controller_->isRunning(); }, 20ms));
 
   for (auto i = 0; i < 3; ++i) {
     auto socket = createSocket();
     minifi::controller::clearConnection(std::move(socket), "connection");
   }
 
-  REQUIRE(verifyEventHappenedInPollTime(500ms, [&] { return 3 == update_sink_->clear_calls; }, 20ms));
+  REQUIRE(verifyEventHappenedInPollTime(5s, [&] { return 3 == update_sink_->clear_calls; }, 20ms));
 }
 
 TEST_CASE_METHOD(ControllerTestFixture, "TestUpdate", "[controllerTests]") {
@@ -384,7 +384,7 @@ TEST_CASE_METHOD(ControllerTestFixture, "TestUpdate", "[controllerTests]") {
   }
 
   using org::apache::nifi::minifi::utils::verifyEventHappenedInPollTime;
-  REQUIRE(verifyEventHappenedInPollTime(500ms, [&] { return controller_->isRunning(); }, 20ms));
+  REQUIRE(verifyEventHappenedInPollTime(5s, [&] { return controller_->isRunning(); }, 20ms));
 
   std::stringstream ss;
 
@@ -393,7 +393,7 @@ TEST_CASE_METHOD(ControllerTestFixture, "TestUpdate", "[controllerTests]") {
     minifi::controller::updateFlow(std::move(socket), ss, "connection");
   }
 
-  REQUIRE(verifyEventHappenedInPollTime(500ms, [&] { return 1 == update_sink_->update_calls; }, 20ms));
+  REQUIRE(verifyEventHappenedInPollTime(5s, [&] { return 1 == update_sink_->update_calls; }, 20ms));
   REQUIRE(0 == update_sink_->clear_calls);
 }
 

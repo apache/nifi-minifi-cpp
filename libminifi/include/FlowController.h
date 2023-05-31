@@ -89,7 +89,7 @@ class FlowController : public core::controller::ForwardingControllerServiceProvi
   }
 
   bool isRunning() const override {
-    return running_.load() || updating_.load();
+    return running_.load() || updating_.isUpdating();
   }
 
   virtual bool isInitialized() {
@@ -149,6 +149,18 @@ class FlowController : public core::controller::ForwardingControllerServiceProvi
   std::map<std::string, std::unique_ptr<io::InputStream>> getDebugInfo() override;
 
  private:
+  class UpdateState {
+   public:
+    bool isUpdating() const { return update_block_count_ > 0; }
+    void beginUpdate() { ++update_block_count_; }
+    void endUpdate() { --update_block_count_; }
+    void lock() { beginUpdate(); }
+    void unlock() { endUpdate(); }
+
+   private:
+    std::atomic<uint32_t> update_block_count_;
+  };
+
   /**
    * Loads the flow as specified in the flow config file or if not present
    * tries to fetch it from the C2 server (if enabled).
@@ -171,7 +183,7 @@ class FlowController : public core::controller::ForwardingControllerServiceProvi
 
   std::recursive_mutex mutex_;
   std::atomic<bool> running_;
-  std::atomic<bool> updating_;
+  UpdateState updating_;
   std::atomic<bool> initialized_;
   std::unique_ptr<TimerDrivenSchedulingAgent> timer_scheduler_;
   std::unique_ptr<EventDrivenSchedulingAgent> event_scheduler_;

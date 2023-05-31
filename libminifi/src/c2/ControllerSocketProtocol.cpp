@@ -30,17 +30,47 @@
 
 namespace org::apache::nifi::minifi::c2 {
 
+ControllerSocketProtocol::SocketRestartCommandProcessor::SocketRestartCommandProcessor(state::StateMonitor& update_sink) :
+    update_sink_(update_sink) {
+  command_queue_.start();
+  command_processor_thread_ = std::thread([this] {
+    while (running_) {
+      CommandData command_data;
+      if (command_queue_.dequeueWait(command_data)) {
+        if (command_data.command == Command::FLOW_UPDATE) {
+          update_sink_.applyUpdate("ControllerSocketProtocol", command_data.data, true);
+        } else if (command_data.command == Command::START) {
+          update_sink_.executeOnComponent(command_data.data, [](state::StateController& component) {
+            component.start();
+          });
+        }
+      }
+      is_socket_restarting_ = false;
+    }
+  });
+}
+
+ControllerSocketProtocol::SocketRestartCommandProcessor::~SocketRestartCommandProcessor() {
+  running_ = false;
+  command_queue_.stop();
+  if (command_processor_thread_.joinable()) {
+    command_processor_thread_.join();
+  }
+}
+
 ControllerSocketProtocol::ControllerSocketProtocol(core::controller::ControllerServiceProvider& controller, state::StateMonitor& update_sink,
     std::shared_ptr<Configure> configuration, const std::shared_ptr<ControllerSocketReporter>& controller_socket_reporter)
       : controller_(controller),
         update_sink_(update_sink),
         controller_socket_reporter_(controller_socket_reporter),
-        configuration_(std::move(configuration)) {
+        configuration_(std::move(configuration)),
+        socket_restart_processor_(update_sink_) {
   gsl_Expects(configuration_);
   stream_factory_ = minifi::io::StreamFactory::getInstance(configuration_);
 }
 
 void ControllerSocketProtocol::initialize() {
+  std::unique_lock<std::mutex> lock(initialization_mutex_);
   std::shared_ptr<minifi::controllers::SSLContextService> secure_context;
   std::string context_name;
   if (configuration_->get(Configure::controller_ssl_context_service, context_name)) {
@@ -100,9 +130,14 @@ void ControllerSocketProtocol::handleStart(io::BaseStream *stream) {
   std::string component_str;
   const auto size = stream->read(component_str);
   if (!io::isError(size)) {
-    update_sink_.executeOnComponent(component_str, [](state::StateController& component) {
-      component.start();
-    });
+    if (component_str == "FlowController") {
+      // Starting flow controller resets socket
+      socket_restart_processor_.enqueue({SocketRestartCommandProcessor::Command::START, component_str});
+    } else {
+      update_sink_.executeOnComponent(component_str, [](state::StateController& component) {
+        component.start();
+      });
+    }
   } else {
     logger_->log_debug("Connection broke");
   }
@@ -149,7 +184,7 @@ void ControllerSocketProtocol::handleUpdate(io::BaseStream *stream) {
     std::ifstream tf(ff_loc);
     std::string flow_configuration((std::istreambuf_iterator<char>(tf)),
         std::istreambuf_iterator<char>());
-    update_sink_.applyUpdate("ControllerSocketProtocol", flow_configuration);
+    socket_restart_processor_.enqueue({SocketRestartCommandProcessor::Command::FLOW_UPDATE, flow_configuration});
   }
 }
 
@@ -179,7 +214,7 @@ void ControllerSocketProtocol::writeQueueSizesResponse(io::BaseStream *stream) {
 
 void ControllerSocketProtocol::writeComponentsResponse(io::BaseStream *stream) {
   std::vector<std::pair<std::string, bool>> components;
-  update_sink_.executeOnAllComponents([&components](state::StateController& component){
+  update_sink_.executeOnAllComponents([&components](state::StateController& component) {
     components.emplace_back(component.getComponentName(), component.isRunning());
   });
   io::BufferStream resp;
@@ -296,6 +331,12 @@ void ControllerSocketProtocol::handleCommand(io::BaseStream *stream) {
     logger_->log_debug("Connection broke");
     return;
   }
+
+  if (socket_restart_processor_.isSocketRestarting()) {
+    logger_->log_debug("Socket restarting, dropping command");
+    return;
+  }
+
   switch (head) {
     case Operation::START:
       handleStart(stream);
