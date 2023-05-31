@@ -26,6 +26,7 @@
 #include <string>
 #include <utility>
 #include <vector>
+#include <chrono>
 
 #include "core/PropertyDefinition.h"
 #include "core/PropertyDefinitionBuilder.h"
@@ -238,6 +239,7 @@ class PutS3Object : public S3Processor {
     const std::shared_ptr<core::ProcessContext> &context,
     const std::shared_ptr<core::FlowFile> &flow_file,
     const CommonProperties &common_properties) const;
+  void ageOffMultipartUploads(const CommonProperties &common_properties);
 
   std::string user_metadata_;
   std::map<std::string, std::string> user_metadata_map_;
@@ -246,6 +248,9 @@ class PutS3Object : public S3Processor {
   bool use_virtual_addressing_ = true;
   uint64_t multipart_threshold_{};
   uint64_t multipart_size_{};
+  std::chrono::milliseconds multipart_upload_ageoff_interval_;
+  std::chrono::milliseconds multipart_upload_max_age_threshold_;
+  std::chrono::time_point<std::chrono::system_clock> last_ageoff_time_;
 };
 
 }  // namespace org::apache::nifi::minifi::aws::processors

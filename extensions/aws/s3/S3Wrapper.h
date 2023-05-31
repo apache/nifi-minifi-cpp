@@ -196,6 +196,28 @@ struct ListedObjectAttributes : public minifi::utils::ListedObject {
 using HeadObjectRequestParameters = GetObjectRequestParameters;
 using GetObjectTagsParameters = DeleteObjectRequestParameters;
 
+struct ListMultipartUploadsRequestParameters : public RequestParameters {
+  ListMultipartUploadsRequestParameters(const Aws::Auth::AWSCredentials& creds, const Aws::Client::ClientConfiguration& config)
+    : RequestParameters(creds, config) {}
+  std::string bucket;
+  std::chrono::milliseconds upload_max_age;
+  bool use_virtual_addressing = true;
+};
+
+struct MultipartUpload {
+  std::string key;
+  std::string upload_id;
+};
+
+struct AbortMultipartUploadRequestParameters : public RequestParameters {
+  AbortMultipartUploadRequestParameters(const Aws::Auth::AWSCredentials& creds, const Aws::Client::ClientConfiguration& config)
+    : RequestParameters(creds, config) {}
+  std::string bucket;
+  std::string key;
+  std::string upload_id;
+  bool use_virtual_addressing = true;
+};
+
 class StreamReadException : public Exception {
  public:
   explicit StreamReadException(const std::string& error) : Exception(GENERAL_EXCEPTION, error) {}
@@ -215,6 +237,8 @@ class S3Wrapper {
   std::optional<std::vector<ListedObjectAttributes>> listBucket(const ListRequestParameters& params);
   std::optional<std::map<std::string, std::string>> getObjectTags(const GetObjectTagsParameters& params);
   std::optional<HeadObjectResult> headObject(const HeadObjectRequestParameters& head_object_params);
+  std::optional<std::vector<MultipartUpload>> listAgedOffMultipartUploads(const ListMultipartUploadsRequestParameters& params);
+  bool abortMultipartUpload(const AbortMultipartUploadRequestParameters& params);
 
   virtual ~S3Wrapper() = default;
 
@@ -239,6 +263,7 @@ class S3Wrapper {
   void addListResults(const Aws::Vector<Aws::S3::Model::ObjectVersion>& content, uint64_t min_object_age, std::vector<ListedObjectAttributes>& listed_objects);
   void addListResults(const Aws::Vector<Aws::S3::Model::Object>& content, uint64_t min_object_age, std::vector<ListedObjectAttributes>& listed_objects);
   std::shared_ptr<Aws::StringStream> readFlowFileStream(const std::shared_ptr<io::InputStream>& stream, uint64_t read_limit, uint64_t& read_size_out);
+  void addListMultipartUploadResults(const Aws::Vector<Aws::S3::Model::MultipartUpload>& uploads, std::chrono::milliseconds max_upload_age, std::vector<MultipartUpload>& filtered_uploads);
 
   template<typename ListRequest>
   ListRequest createListRequest(const ListRequestParameters& params);

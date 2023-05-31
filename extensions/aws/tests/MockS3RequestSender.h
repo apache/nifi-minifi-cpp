@@ -293,6 +293,45 @@ class MockS3RequestSender : public minifi::aws::s3::S3RequestSender {
     return std::make_optional(std::move(result));
   }
 
+  std::optional<Aws::S3::Model::ListMultipartUploadsResult> sendListMultipartUploadsRequest(
+      const Aws::S3::Model::ListMultipartUploadsRequest& request,
+      const Aws::Auth::AWSCredentials& credentials,
+      const Aws::Client::ClientConfiguration& client_config,
+      bool use_virtual_addressing) override {
+    list_multipart_upload_request = request;
+    credentials_ = credentials;
+    client_config_ = client_config;
+    use_virtual_addressing_ = use_virtual_addressing;
+    Aws::S3::Model::ListMultipartUploadsResult result;
+    Aws::Vector<Aws::S3::Model::MultipartUpload> uploads;
+    Aws::S3::Model::MultipartUpload upload1;
+    upload1.SetKey("recent_key");
+    upload1.SetUploadId("upload1");
+    upload1.SetInitiated(Aws::Utils::DateTime::CurrentTimeMillis());
+    uploads.push_back(upload1);
+
+    Aws::S3::Model::MultipartUpload upload2;
+    upload2.SetKey("old_key");
+    upload2.SetUploadId("upload2");
+    upload2.SetInitiated(Aws::Utils::DateTime("1980-05-31T15:55:55Z", Aws::Utils::DateFormat::AutoDetect));
+    uploads.push_back(upload2);
+    result.SetUploads(uploads);
+    return std::make_optional(std::move(result));
+  }
+
+  bool sendAbortMultipartUploadRequest(
+      const Aws::S3::Model::AbortMultipartUploadRequest& request,
+      const Aws::Auth::AWSCredentials& credentials,
+      const Aws::Client::ClientConfiguration& client_config,
+      bool use_virtual_addressing) override {
+    abort_multipart_upload_requests.push_back(request);
+    credentials_ = credentials;
+    client_config_ = client_config;
+    use_virtual_addressing_ = use_virtual_addressing;
+    Aws::S3::Model::AbortMultipartUploadResult result;
+    return true;
+  }
+
   Aws::Auth::AWSCredentials getCredentials() const {
     return credentials_;
   }
@@ -345,6 +384,8 @@ class MockS3RequestSender : public minifi::aws::s3::S3RequestSender {
   Aws::S3::Model::CreateMultipartUploadRequest create_multipart_upload_request;
   std::vector<Aws::S3::Model::UploadPartRequest> upload_part_requests;
   Aws::S3::Model::CompleteMultipartUploadRequest complete_multipart_upload_request;
+  Aws::S3::Model::ListMultipartUploadsRequest list_multipart_upload_request;
+  std::vector<Aws::S3::Model::AbortMultipartUploadRequest> abort_multipart_upload_requests;
 
  private:
   std::vector<Aws::S3::Model::ObjectVersion> listed_versions_;

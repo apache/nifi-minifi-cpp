@@ -347,4 +347,15 @@ TEST_CASE_METHOD(PutS3ObjectUploadLimitChangedTestsFixture, "Test multipart uplo
   }
 }
 
+TEST_CASE_METHOD(PutS3ObjectTestsFixture, "Test ageoff functionality aborting obselete multipart uploads", "[awsS3MultipartUpload]") {
+  setRequiredProperties();
+  plan->setProperty(s3_processor, "Multipart Upload AgeOff Interval", "1 sec");
+  plan->setProperty(s3_processor, "Multipart Upload Max Age Threshold", "365 days");
+  test_controller.runSession(plan);
+  REQUIRE(mock_s3_request_sender_ptr->abort_multipart_upload_requests.size() == 1);
+  CHECK(mock_s3_request_sender_ptr->abort_multipart_upload_requests[0].GetBucket() == S3_BUCKET);
+  CHECK(mock_s3_request_sender_ptr->abort_multipart_upload_requests[0].GetKey() == "old_key");
+  CHECK(mock_s3_request_sender_ptr->abort_multipart_upload_requests[0].GetUploadId() == "upload2");
+}
+
 }  // namespace

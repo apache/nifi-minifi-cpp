@@ -87,6 +87,13 @@ void PutS3Object::onSchedule(const std::shared_ptr<core::ProcessContext> &contex
   }
   logger_->log_debug("PutS3Object: Multipart Size %" PRIu64, multipart_size_);
 
+
+  multipart_upload_ageoff_interval_ = minifi::utils::getRequiredPropertyOrThrow<core::TimePeriodValue>(*context, MultipartUploadAgeOffInterval.getName()).getMilliseconds();
+  logger_->log_debug("PutS3Object: Multipart Upload Ageoff Interval %" PRIu64 " ms", multipart_upload_ageoff_interval_.count());
+
+  multipart_upload_max_age_threshold_ = minifi::utils::getRequiredPropertyOrThrow<core::TimePeriodValue>(*context, MultipartUploadMaxAgeThreshold.getName()).getMilliseconds();
+  logger_->log_debug("PutS3Object: Multipart Upload Ageoff Interval %" PRIu64 " ms", multipart_upload_max_age_threshold_.count());
+
   fillUserMetadata(context);
 }
 
@@ -197,6 +204,33 @@ void PutS3Object::setAttributes(
   }
 }
 
+void PutS3Object::ageOffMultipartUploads(const CommonProperties &common_properties) {
+  const auto now = std::chrono::system_clock::now();
+  if (now - last_ageoff_time_ < multipart_upload_ageoff_interval_) {
+    return;
+  }
+
+  aws::s3::ListMultipartUploadsRequestParameters list_params(common_properties.credentials, *client_config_);
+  list_params.setClientConfig(common_properties.proxy, common_properties.endpoint_override_url);
+  list_params.bucket = common_properties.bucket;
+  list_params.upload_max_age = multipart_upload_max_age_threshold_;
+  list_params.use_virtual_addressing = use_virtual_addressing_;
+  auto aged_off_uploads_in_progress = s3_wrapper_.listAgedOffMultipartUploads(list_params);
+  if (!aged_off_uploads_in_progress) {
+    return;
+  }
+
+  for (const auto& upload : *aged_off_uploads_in_progress) {
+    aws::s3::AbortMultipartUploadRequestParameters abort_params(common_properties.credentials, *client_config_);
+    abort_params.setClientConfig(common_properties.proxy, common_properties.endpoint_override_url);
+    abort_params.bucket = common_properties.bucket;
+    abort_params.key = upload.key;
+    abort_params.upload_id = upload.upload_id;
+    abort_params.use_virtual_addressing = use_virtual_addressing_;
+    s3_wrapper_.abortMultipartUpload(abort_params);
+  }
+}
+
 void PutS3Object::onTrigger(const std::shared_ptr<core::ProcessContext> &context, const std::shared_ptr<core::ProcessSession> &session) {
   logger_->log_trace("PutS3Object onTrigger");
   std::shared_ptr<core::FlowFile> flow_file = session->get();
@@ -210,6 +244,8 @@ void PutS3Object::onTrigger(const std::shared_ptr<core::ProcessContext> &context
     session->transfer(flow_file, Failure);
     return;
   }
+
+  ageOffMultipartUploads(*common_properties);
 
   auto put_s3_request_params = buildPutS3RequestParams(context, flow_file, *common_properties);
   if (!put_s3_request_params) {

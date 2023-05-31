@@ -45,6 +45,10 @@
 #include "aws/s3/model/UploadPartResult.h"
 #include "aws/s3/model/CompleteMultipartUploadRequest.h"
 #include "aws/s3/model/CompleteMultipartUploadResult.h"
+#include "aws/s3/model/ListMultipartUploadsRequest.h"
+#include "aws/s3/model/ListMultipartUploadsResult.h"
+#include "aws/s3/model/AbortMultipartUploadRequest.h"
+#include "aws/s3/model/AbortMultipartUploadResult.h"
 #include "core/logging/Logger.h"
 #include "core/logging/LoggerConfiguration.h"
 #include "utils/AWSInitializer.h"
@@ -101,6 +105,16 @@ class S3RequestSender {
     bool use_virtual_addressing) = 0;
   virtual std::optional<Aws::S3::Model::CompleteMultipartUploadResult> sendCompleteMultipartUploadRequest(
     const Aws::S3::Model::CompleteMultipartUploadRequest& request,
+    const Aws::Auth::AWSCredentials& credentials,
+    const Aws::Client::ClientConfiguration& client_config,
+    bool use_virtual_addressing) = 0;
+  virtual std::optional<Aws::S3::Model::ListMultipartUploadsResult> sendListMultipartUploadsRequest(
+    const Aws::S3::Model::ListMultipartUploadsRequest& request,
+    const Aws::Auth::AWSCredentials& credentials,
+    const Aws::Client::ClientConfiguration& client_config,
+    bool use_virtual_addressing) = 0;
+  virtual bool sendAbortMultipartUploadRequest(
+    const Aws::S3::Model::AbortMultipartUploadRequest& request,
     const Aws::Auth::AWSCredentials& credentials,
     const Aws::Client::ClientConfiguration& client_config,
     bool use_virtual_addressing) = 0;

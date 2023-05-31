@@ -412,4 +412,49 @@ FetchObjectResult S3Wrapper::fillFetchObjectResult(const GetObjectRequestParamet
   return result;
 }
 
+void S3Wrapper::addListMultipartUploadResults(const Aws::Vector<Aws::S3::Model::MultipartUpload>& uploads, std::chrono::milliseconds max_upload_age, std::vector<MultipartUpload>& filtered_uploads) {
+  const auto now = Aws::Utils::DateTime::Now();
+  for (const auto& upload : uploads) {
+    if (now - upload.GetInitiated() <= max_upload_age) {
+      logger_->log_debug("Multipart upload with key '%s' and upload id '%s' did not age off yet", upload.GetKey(), upload.GetUploadId());
+      continue;
+    }
+
+    logger_->log_info("Multipart upload with key '%s' and upload id '%s' older than age limit, marked for abortion", upload .GetKey(), upload.GetUploadId());
+    MultipartUpload filtered_upload;
+    filtered_upload.key = upload.GetKey();
+    filtered_upload.upload_id = upload.GetUploadId();
+    filtered_uploads.push_back(filtered_upload);
+  }
+}
+
+std::optional<std::vector<MultipartUpload>> S3Wrapper::listAgedOffMultipartUploads(const ListMultipartUploadsRequestParameters& params) {
+  std::vector<MultipartUpload> result;
+  std::optional<Aws::S3::Model::ListMultipartUploadsResult> aws_result;
+  Aws::S3::Model::ListMultipartUploadsRequest request;
+  request.SetBucket(params.bucket);
+  do {
+    aws_result = request_sender_->sendListMultipartUploadsRequest(request, params.credentials, params.client_config, params.use_virtual_addressing);
+    if (!aws_result) {
+      return std::nullopt;
+    }
+    const auto& uploads = aws_result->GetUploads();
+    logger_->log_debug("AWS S3 List operation returned %zu multipart uploads. This result is%s truncated.", uploads.size(), aws_result->GetIsTruncated() ? "" : " not");
+    addListMultipartUploadResults(uploads, params.upload_max_age, result);
+    if (aws_result->GetIsTruncated()) {
+      request.SetKeyMarker(aws_result->GetNextKeyMarker());
+    }
+  } while (aws_result->GetIsTruncated());
+
+  return result;
+}
+
+bool S3Wrapper::abortMultipartUpload(const AbortMultipartUploadRequestParameters& params) {
+  Aws::S3::Model::AbortMultipartUploadRequest request;
+  request.SetBucket(params.bucket);
+  request.SetKey(params.key);
+  request.SetUploadId(params.upload_id);
+  return request_sender_->sendAbortMultipartUploadRequest(request, params.credentials, params.client_config, params.use_virtual_addressing);
+}
+
 }  // namespace org::apache::nifi::minifi::aws::s3
