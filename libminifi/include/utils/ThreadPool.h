@@ -106,10 +106,6 @@ class Worker {
     return next_exec_time_;
   }
 
-  virtual std::chrono::milliseconds getWaitTime() const {
-    return run_determinant_->wait_time();
-  }
-
 
   std::shared_ptr<std::promise<T>> getPromise() const;
 

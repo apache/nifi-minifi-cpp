@@ -26,7 +26,6 @@
 #include "TailFile.h"
 #include "TestBase.h"
 #include "Catch.h"
-#include "utils/TestUtils.h"
 #include "utils/StringUtils.h"
 #include "ConfigurationTestController.h"
 #include "utils/IntegrationTestUtils.h"
@@ -151,9 +150,9 @@ Provenance Reporting:
     REQUIRE(!rootFlowConfig->findProcessorByName("TailFile")->getUUIDStr().empty());
     REQUIRE(1 == rootFlowConfig->findProcessorByName("TailFile")->getMaxConcurrentTasks());
     REQUIRE(core::SchedulingStrategy::TIMER_DRIVEN == rootFlowConfig->findProcessorByName("TailFile")->getSchedulingStrategy());
-    REQUIRE(1s == rootFlowConfig->findProcessorByName("TailFile")->getSchedulingPeriodNano());
+    REQUIRE(1s == rootFlowConfig->findProcessorByName("TailFile")->getSchedulingPeriod());
     REQUIRE(30s == rootFlowConfig->findProcessorByName("TailFile")->getPenalizationPeriod());
-    REQUIRE(1s == rootFlowConfig->findProcessorByName("TailFile")->getYieldPeriodMsec());
+    REQUIRE(1s == rootFlowConfig->findProcessorByName("TailFile")->getYieldPeriod());
     REQUIRE(0s == rootFlowConfig->findProcessorByName("TailFile")->getRunDurationNano());
 
     std::map<std::string, minifi::Connection*> connectionMap;
@@ -462,9 +461,9 @@ NiFi Properties Overrides: {}
   REQUIRE(1 == rootFlowConfig->findProcessorByName("TailFile")->getMaxConcurrentTasks());
   REQUIRE(core::SchedulingStrategy::TIMER_DRIVEN == rootFlowConfig->findProcessorByName("TailFile")->getSchedulingStrategy());
   REQUIRE(1 == rootFlowConfig->findProcessorByName("TailFile")->getMaxConcurrentTasks());
-  REQUIRE(1s == rootFlowConfig->findProcessorByName("TailFile")->getSchedulingPeriodNano());
+  REQUIRE(1s == rootFlowConfig->findProcessorByName("TailFile")->getSchedulingPeriod());
   REQUIRE(30s == rootFlowConfig->findProcessorByName("TailFile")->getPenalizationPeriod());
-  REQUIRE(1s == rootFlowConfig->findProcessorByName("TailFile")->getYieldPeriodMsec());
+  REQUIRE(1s == rootFlowConfig->findProcessorByName("TailFile")->getYieldPeriod());
   REQUIRE(0s == rootFlowConfig->findProcessorByName("TailFile")->getRunDurationNano());
 
   std::map<std::string, minifi::Connection*> connectionMap;
@@ -816,7 +815,6 @@ TEST_CASE("Test UUID duplication checks", "[YamlConfiguration]") {
               class: SSLContextService
             )";
 
-      auto config_old = config_yaml;
       utils::StringUtils::replaceAll(config_yaml, std::string("00000000-0000-0000-0000-00000000000") + i, "99999999-9999-9999-9999-999999999999");
       REQUIRE_THROWS_WITH(yaml_config.getRootFromPayload(config_yaml), "General Operation: UUID 99999999-9999-9999-9999-999999999999 is duplicated in the flow configuration");
     }

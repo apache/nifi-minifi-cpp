@@ -25,9 +25,7 @@
 #include "utils/Monitors.h"
 #include "utils/ThreadPool.h"
 
-bool function() {
-  return true;
-}
+using namespace std::literals::chrono_literals;
 
 class WorkerNumberExecutions : public utils::AfterExecute<int> {
  public:
@@ -35,9 +33,9 @@ class WorkerNumberExecutions : public utils::AfterExecute<int> {
       : tasks(tasks) {
   }
 
-  explicit WorkerNumberExecutions(WorkerNumberExecutions && other) noexcept
+  WorkerNumberExecutions(WorkerNumberExecutions && other) noexcept
       : runs(other.runs),
-        tasks(other.tasks) {
+      tasks(other.tasks) {
   }
 
   bool isFinished(const int &result) override {
@@ -47,13 +45,8 @@ class WorkerNumberExecutions : public utils::AfterExecute<int> {
     return false;
   }
 
-  [[nodiscard]] int getRuns() const {
-    return runs;
-  }
-
-  std::chrono::milliseconds wait_time() override {
-    // wait 50ms
-    return std::chrono::milliseconds(50);
+  std::chrono::steady_clock::duration wait_time() override {
+    return 50ms;
   }
 
  protected:
@@ -68,30 +61,21 @@ TEST_CASE("BT1", "[TPT1]") {
 #endif
 }
 
-std::atomic<int> counter;
-
-int counterFunction() {
-  std::this_thread::sleep_for(std::chrono::milliseconds(150));
-  return ++counter;
-}
-
 TEST_CASE("BT2", "[TPT2]") {
-  counter = 0;
+  std::atomic<int> counter = 0;
   utils::ThreadPool<int> pool(4);
   pool.start();
   std::this_thread::sleep_for(std::chrono::milliseconds(150));
   for (int i = 0; i < 3; i++) {
-    std::function<int()> f_ex = counterFunction;
     std::unique_ptr<utils::AfterExecute<int>> after_execute = std::unique_ptr<utils::AfterExecute<int>>(new WorkerNumberExecutions(5));
-    utils::Worker<int> functor(f_ex, "id", std::move(after_execute));
+    utils::Worker<int> functor([&counter]() { return ++counter; }, "id", std::move(after_execute));
 
     std::future<int> fut;
     pool.execute(std::move(functor), fut);  // NOLINT(bugprone-use-after-move)
   }
 
-  std::function<int()> f_ex = counterFunction;
   std::unique_ptr<utils::AfterExecute<int>> after_execute = std::unique_ptr<utils::AfterExecute<int>>(new WorkerNumberExecutions(5));
-  utils::Worker<int> functor(f_ex, "id", std::move(after_execute));
+  utils::Worker<int> functor([&counter]() { return ++counter; }, "id", std::move(after_execute));
 
   std::future<int> fut;
   pool.execute(std::move(functor), fut);  // NOLINT(bugprone-use-after-move)

@@ -25,10 +25,6 @@
 
 using namespace std::literals::chrono_literals;
 
-bool function() {
-  return true;
-}
-
 class WorkerNumberExecutions : public utils::AfterExecute<int> {
  public:
   explicit WorkerNumberExecutions(int tasks)
@@ -47,7 +43,7 @@ class WorkerNumberExecutions : public utils::AfterExecute<int> {
     return false;
   }
 
-  std::chrono::milliseconds wait_time() override {
+  std::chrono::steady_clock::duration wait_time() override {
     return 50ms;
   }
 
@@ -58,8 +54,7 @@ class WorkerNumberExecutions : public utils::AfterExecute<int> {
 
 TEST_CASE("ThreadPoolTest1", "[TPT1]") {
   utils::ThreadPool<bool> pool(5);
-  std::function<bool()> f_ex = function;
-  utils::Worker<bool> functor(f_ex, "id");
+  utils::Worker<bool> functor([](){ return true; }, "id");
   pool.start();
   std::future<bool> fut;
   pool.execute(std::move(functor), fut);  // NOLINT(bugprone-use-after-move)
@@ -67,18 +62,11 @@ TEST_CASE("ThreadPoolTest1", "[TPT1]") {
   REQUIRE(true == fut.get());
 }
 
-std::atomic<int> counter;
-
-int counterFunction() {
-  return ++counter;
-}
-
 TEST_CASE("ThreadPoolTest2", "[TPT2]") {
-  counter = 0;
+  std::atomic<int> counter = 0;
   utils::ThreadPool<int> pool(5);
-  std::function<int()> f_ex = counterFunction;
   std::unique_ptr<utils::AfterExecute<int>> after_execute = std::unique_ptr<utils::AfterExecute<int>>(new WorkerNumberExecutions(20));
-  utils::Worker<int> functor(f_ex, "id", std::move(after_execute));
+  utils::Worker<int> functor([&counter]() { return ++counter; }, "id", std::move(after_execute));
   pool.start();
   std::future<int> fut;
   pool.execute(std::move(functor), fut);

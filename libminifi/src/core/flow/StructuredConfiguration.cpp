@@ -247,7 +247,7 @@ void StructuredConfiguration::parseProcessorNode(const Node& processors_node, co
     if (procCfg.schedulingStrategy == "TIMER_DRIVEN" || procCfg.schedulingStrategy == "EVENT_DRIVEN") {
       if (auto scheduling_period = utils::timeutils::StringToDuration<std::chrono::nanoseconds>(procCfg.schedulingPeriod)) {
         logger_->log_debug("convert: parseProcessorNode: schedulingPeriod => [%" PRId64 "] ns", scheduling_period->count());
-        processor->setSchedulingPeriodNano(*scheduling_period);
+        processor->setSchedulingPeriod(*scheduling_period);
       }
     } else {
       processor->setCronPeriod(procCfg.schedulingPeriod);
@@ -437,7 +437,7 @@ void StructuredConfiguration::parseProvenanceReporting(const Node& node, core::P
 
   if (auto scheduling_period = utils::timeutils::StringToDuration<std::chrono::nanoseconds>(schedulingPeriodStr)) {
     logger_->log_debug("ProvenanceReportingTask schedulingPeriod %" PRId64 " ns", scheduling_period->count());
-    reportTask->setSchedulingPeriodNano(*scheduling_period);
+    reportTask->setSchedulingPeriod(*scheduling_period);
   }
 
   if (schedulingStrategyStr == "TIMER_DRIVEN") {

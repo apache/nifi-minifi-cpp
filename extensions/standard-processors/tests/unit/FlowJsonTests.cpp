@@ -21,12 +21,9 @@
 #include <chrono>
 #include "core/repository/VolatileContentRepository.h"
 #include "core/ProcessGroup.h"
-#include "core/RepositoryFactory.h"
 #include "core/yaml/YamlConfiguration.h"
 #include "TailFile.h"
-#include "TestBase.h"
 #include "Catch.h"
-#include "utils/TestUtils.h"
 #include "utils/StringUtils.h"
 #include "ConfigurationTestController.h"
 #include "Funnel.h"
@@ -115,9 +112,9 @@ TEST_CASE("NiFi flow json format is correctly parsed") {
   REQUIRE(proc->getUUIDStr() == "00000000-0000-0000-0000-000000000001");
   REQUIRE(15 == proc->getMaxConcurrentTasks());
   REQUIRE(core::SchedulingStrategy::TIMER_DRIVEN == proc->getSchedulingStrategy());
-  REQUIRE(3s == proc->getSchedulingPeriodNano());
+  REQUIRE(3s == proc->getSchedulingPeriod());
   REQUIRE(12s == proc->getPenalizationPeriod());
-  REQUIRE(4s == proc->getYieldPeriodMsec());
+  REQUIRE(4s == proc->getYieldPeriod());
   REQUIRE(proc->isAutoTerminated({"one", ""}));
   REQUIRE(proc->isAutoTerminated({"two", ""}));
   REQUIRE_FALSE(proc->isAutoTerminated({"three", ""}));

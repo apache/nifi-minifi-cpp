@@ -71,8 +71,7 @@ class ProcessContext;
 class ProcessSession;
 class ProcessSessionFactory;
 
-// Minimum scheduling period in Nano Second
-constexpr std::chrono::nanoseconds MINIMUM_SCHEDULING_NANOS{30000};
+constexpr std::chrono::microseconds MINIMUM_SCHEDULING_PERIOD{30};
 
 #define BUILDING_DLL 1
 
@@ -102,12 +101,12 @@ class Processor : public Connectable, public ConfigurableComponent, public state
     return strategy_;
   }
 
-  void setSchedulingPeriodNano(std::chrono::nanoseconds period) {
-    scheduling_period_nano_ = std::max(MINIMUM_SCHEDULING_NANOS, period);
+  void setSchedulingPeriod(std::chrono::steady_clock::duration period) {
+    scheduling_period_ = std::max(std::chrono::steady_clock::duration(MINIMUM_SCHEDULING_PERIOD), period);
   }
 
-  std::chrono::nanoseconds getSchedulingPeriodNano() const {
-    return scheduling_period_nano_;
+  std::chrono::steady_clock::duration getSchedulingPeriod() const {
+    return scheduling_period_;
   }
 
   void setCronPeriod(const std::string &period) {
@@ -118,20 +117,20 @@ class Processor : public Connectable, public ConfigurableComponent, public state
     return cron_period_;
   }
 
-  void setRunDurationNano(std::chrono::nanoseconds period) {
-    run_duration_nano_ = period;
+  void setRunDurationNano(std::chrono::steady_clock::duration period) {
+    run_duration_ = period;
   }
 
-  std::chrono::nanoseconds getRunDurationNano() const {
-    return (run_duration_nano_);
+  std::chrono::steady_clock::duration getRunDurationNano() const {
+    return (run_duration_);
   }
 
   void setYieldPeriodMsec(std::chrono::milliseconds period) {
-    yield_period_msec_ = period;
+    yield_period_ = period;
   }
 
-  std::chrono::milliseconds getYieldPeriodMsec() const {
-    return yield_period_msec_;
+  std::chrono::steady_clock::duration getYieldPeriod() const {
+    return yield_period_;
   }
 
   void setPenalizationPeriod(std::chrono::milliseconds period) {
@@ -171,13 +170,13 @@ class Processor : public Connectable, public ConfigurableComponent, public state
 
   void yield() override;
 
-  void yield(std::chrono::milliseconds delta_time);
+  void yield(std::chrono::steady_clock::duration delta_time);
 
   virtual bool isYield();
 
   void clearYield();
 
-  std::chrono::milliseconds getYieldTime() const;
+  std::chrono::steady_clock::duration getYieldTime() const;
   // Whether flow file queue full in any of the outgoing connection
   bool flowFilesOutGoingFull() const;
 
@@ -239,9 +238,9 @@ class Processor : public Connectable, public ConfigurableComponent, public state
 
   std::atomic<ScheduledState> state_;
 
-  std::atomic<std::chrono::nanoseconds> scheduling_period_nano_;
-  std::atomic<std::chrono::nanoseconds> run_duration_nano_;
-  std::atomic<std::chrono::milliseconds> yield_period_msec_;
+  std::atomic<std::chrono::steady_clock::duration> scheduling_period_;
+  std::atomic<std::chrono::steady_clock::duration> run_duration_;
+  std::atomic<std::chrono::steady_clock::duration> yield_period_;
 
   std::atomic<uint8_t> active_tasks_;
   std::atomic<bool> _triggerWhenEmpty;

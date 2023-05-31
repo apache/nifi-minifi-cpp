@@ -69,7 +69,7 @@ class SocketAfterExecute : public utils::AfterExecute<int> {
     return !running_;
   }
 
-  std::chrono::milliseconds wait_time() override {
+  std::chrono::steady_clock::duration wait_time() override {
     // wait 500ms
     return std::chrono::milliseconds(500);
   }

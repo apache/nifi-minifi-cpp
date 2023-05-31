@@ -39,11 +39,11 @@ utils::TaskRescheduleInfo EventDrivenSchedulingAgent::run(core::Processor* proce
                                          const std::shared_ptr<core::ProcessSessionFactory> &sessionFactory) {
   if (this->running_) {
     auto start_time = std::chrono::steady_clock::now();
-    // trigger processor until it has work to do, but no more than half a sec
+    // trigger processor until it has work to do, but no more than the configured nifi.flow.engine.event.driven.time.slice
     while (processor->isRunning() && (std::chrono::steady_clock::now() - start_time < time_slice_)) {
       this->onTrigger(processor, processContext, sessionFactory);
       if (processor->isYield()) {
-        return utils::TaskRescheduleInfo::RetryIn(std::chrono::milliseconds(processor->getYieldTime()));
+        return utils::TaskRescheduleInfo::RetryIn(processor->getYieldTime());
       }
     }
     return utils::TaskRescheduleInfo::RetryImmediately();  // Let's continue work as soon as a thread is available
