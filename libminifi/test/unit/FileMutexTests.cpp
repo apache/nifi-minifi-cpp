@@ -35,11 +35,19 @@ int main(int argc, char* argv[]) {
   TestController controller;
   auto lock_file = controller.createTempDirectory() / "LOCK";
 
-  std::cout << "Locking file the first time '" << lock_file << "'" << std::endl;
   minifi::utils::FileMutex mtx{lock_file};
-  std::unique_lock lock{mtx};
+  {
+    std::cout << "Locking file the first time '" << lock_file << "'" << std::endl;
+    std::unique_lock lock{mtx};
 
-  int second_lock = std::system((utils::file::get_executable_path().string() + " " + lock_file.string()).c_str());
+    int second_lock = std::system((utils::file::get_executable_path().string() + " " + lock_file.string()).c_str());  // NOLINT
 
-  assert(second_lock != 0);
+    assert(second_lock != 0);
+  }
+  // unlocked file the other process can lock now
+  {
+    int second_lock = std::system((utils::file::get_executable_path().string() + " " + lock_file.string()).c_str());  // NOLINT
+
+    assert(second_lock == 0);
+  }
 }
