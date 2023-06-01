@@ -207,6 +207,7 @@ void PutS3Object::setAttributes(
 void PutS3Object::ageOffMultipartUploads(const CommonProperties &common_properties) {
   const auto now = std::chrono::system_clock::now();
   if (now - last_ageoff_time_ < multipart_upload_ageoff_interval_) {
+    logger_->log_debug("Multipart Upload Age off interval still in progress, not checking obsolete multipart uploads.");
     return;
   }
 
@@ -217,9 +218,11 @@ void PutS3Object::ageOffMultipartUploads(const CommonProperties &common_properti
   list_params.use_virtual_addressing = use_virtual_addressing_;
   auto aged_off_uploads_in_progress = s3_wrapper_.listAgedOffMultipartUploads(list_params);
   if (!aged_off_uploads_in_progress) {
+    logger_->log_error("Listing aged off multipart uploads failed!");
     return;
   }
 
+  size_t aborted = 0;
   for (const auto& upload : *aged_off_uploads_in_progress) {
     aws::s3::AbortMultipartUploadRequestParameters abort_params(common_properties.credentials, *client_config_);
     abort_params.setClientConfig(common_properties.proxy, common_properties.endpoint_override_url);
@@ -227,7 +230,12 @@ void PutS3Object::ageOffMultipartUploads(const CommonProperties &common_properti
     abort_params.key = upload.key;
     abort_params.upload_id = upload.upload_id;
     abort_params.use_virtual_addressing = use_virtual_addressing_;
-    s3_wrapper_.abortMultipartUpload(abort_params);
+    if (!s3_wrapper_.abortMultipartUpload(abort_params)) {
+       logger_->log_error("Failed to abort multipart upload with key '%s' and upload id '%s' in bucket '%s'", abort_params.key, abort_params.upload_id, abort_params.bucket);
+    }
+  }
+  if (aborted > 0) {
+    logger_->log_info("Aborted %d pending multipart upload jobs in bucket '%s'", aborted, common_properties.bucket);
   }
 }
 

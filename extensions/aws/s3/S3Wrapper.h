@@ -243,6 +243,11 @@ class S3Wrapper {
   virtual ~S3Wrapper() = default;
 
  private:
+  struct UploadPartsResult {
+    std::string upload_id;
+    std::vector<std::string> part_etags;
+  };
+
   static Expiration getExpiration(const std::string& expiration);
 
   template<typename RequestType>
@@ -255,15 +260,64 @@ class S3Wrapper {
     logger_->log_debug("Setting AWS canned ACL [%s]", canned_acl);
     request.SetACL(it->second);
   }
+
+  template<typename RequestType>
+  RequestType createPutObjectRequest(const PutObjectRequestParameters& put_object_params) {
+    auto request = RequestType{}
+      .WithBucket(put_object_params.bucket);
+      .WithKey(put_object_params.object_key);
+      .WithStorageClass(minifi::utils::at(STORAGE_CLASS_MAP, put_object_params.storage_class));
+    if (!put_object_params.server_side_encryption.empty() && put_object_params.server_side_encryption != "None") {
+      request.SetServerSideEncryption(minifi::utils::at(SERVER_SIDE_ENCRYPTION_MAP, put_object_params.server_side_encryption));
+    }
+    if (!put_object_params.content_type.empty()) {
+      request.SetContentType(put_object_params.content_type);
+    }
+    if (!put_object_params.user_metadata_map.empty()) {
+      request.SetMetadata(put_object_params.user_metadata_map);
+    }
+    if (!put_object_params.fullcontrol_user_list.empty()) {
+      request.SetGrantFullControl(put_object_params.fullcontrol_user_list);
+    }
+    if (!put_object_params.read_permission_user_list.empty()) {
+      request.SetGrantRead(put_object_params.read_permission_user_list);
+    }
+    if (!put_object_params.read_acl_user_list.empty()) {
+      request.SetGrantReadACP(put_object_params.read_acl_user_list);
+    }
+    if (!put_object_params.write_acl_user_list.empty()) {
+      request.SetGrantWriteACP(put_object_params.write_acl_user_list);
+    }
+    setCannedAcl(request, put_object_params.canned_acl);
+    return request;
+  }
+
+  template<typename ResultType>
+  PutObjectResult createPutObjectResult(const ResultType& upload_result) {
+    PutObjectResult put_object_result;
+    // Etags are returned by AWS in quoted form that should be removed
+    put_object_result.etag = minifi::utils::StringUtils::removeFramingCharacters(upload_result.GetETag(), '"');
+    put_object_result.version = upload_result.GetVersionId();
+
+    // GetExpiration returns a string pair with a date and a ruleid in 'expiry-date=\"<DATE>\", rule-id=\"<RULEID>\"' format
+    // s3.expiration only needs the date member of this pair
+    put_object_result.expiration = getExpiration(upload_result.GetExpiration()).expiration_time;
+    put_object_result.ssealgorithm = getEncryptionString(upload_result.GetServerSideEncryption());
+    return put_object_result;
+  }
+
   static int64_t writeFetchedBody(Aws::IOStream& source, int64_t data_size, io::OutputStream& output);
   static std::string getEncryptionString(Aws::S3::Model::ServerSideEncryption encryption);
+  static std::shared_ptr<Aws::StringStream> readFlowFileStream(const std::shared_ptr<io::InputStream>& stream, uint64_t read_limit, uint64_t& read_size_out);
 
   std::optional<std::vector<ListedObjectAttributes>> listVersions(const ListRequestParameters& params);
   std::optional<std::vector<ListedObjectAttributes>> listObjects(const ListRequestParameters& params);
   void addListResults(const Aws::Vector<Aws::S3::Model::ObjectVersion>& content, uint64_t min_object_age, std::vector<ListedObjectAttributes>& listed_objects);
   void addListResults(const Aws::Vector<Aws::S3::Model::Object>& content, uint64_t min_object_age, std::vector<ListedObjectAttributes>& listed_objects);
-  std::shared_ptr<Aws::StringStream> readFlowFileStream(const std::shared_ptr<io::InputStream>& stream, uint64_t read_limit, uint64_t& read_size_out);
   void addListMultipartUploadResults(const Aws::Vector<Aws::S3::Model::MultipartUpload>& uploads, std::chrono::milliseconds max_upload_age, std::vector<MultipartUpload>& filtered_uploads);
+  std::optional<UploadPartsResult> uploadParts(const PutObjectRequestParameters& put_object_params, const std::shared_ptr<io::InputStream>& stream,
+    uint64_t flow_size, uint64_t multipart_size, const std::string& upload_id);
+  std::optional<Aws::S3::Model::CompleteMultipartUploadResult> completeMultipartUpload(const PutObjectRequestParameters& put_object_params, const UploadPartsResult& upload_parts_result);
 
   template<typename ListRequest>
   ListRequest createListRequest(const ListRequestParameters& params);

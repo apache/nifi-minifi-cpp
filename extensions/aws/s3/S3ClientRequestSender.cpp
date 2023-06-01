@@ -148,10 +148,10 @@ std::optional<Aws::S3::Model::CreateMultipartUploadResult> S3ClientRequestSender
   auto outcome = s3_client.CreateMultipartUpload(request);
 
   if (outcome.IsSuccess()) {
-    logger_->log_debug("CreateMultipartUpload successful for key '%s' from bucket '%s'", request.GetKey(), request.GetBucket());
+    logger_->log_debug("CreateMultipartUpload successful for key '%s' and bucket '%s'", request.GetKey(), request.GetBucket());
     return outcome.GetResultWithOwnership();
   } else {
-    logger_->log_error("CreateMultipartUpload failed for key '%s' from bucket '%s' with the following: '%s'", request.GetKey(), request.GetBucket(), outcome.GetError().GetMessage());
+    logger_->log_error("CreateMultipartUpload failed for key '%s' and bucket '%s' with the following: '%s'", request.GetKey(), request.GetBucket(), outcome.GetError().GetMessage());
     return std::nullopt;
   }
 }

@@ -92,73 +92,23 @@ std::shared_ptr<Aws::StringStream> S3Wrapper::readFlowFileStream(const std::shar
 std::optional<PutObjectResult> S3Wrapper::putObject(const PutObjectRequestParameters& put_object_params, const std::shared_ptr<io::InputStream>& stream, uint64_t flow_size) {
   uint64_t read_size{};
   auto data_stream = readFlowFileStream(stream, flow_size, read_size);
-
-  Aws::S3::Model::PutObjectRequest request;
-  request.SetBucket(put_object_params.bucket);
-  request.SetKey(put_object_params.object_key);
+  auto request = createPutObjectRequest<Aws::S3::Model::PutObjectRequest>(put_object_params);
   request.SetBody(data_stream);
-  request.SetStorageClass(minifi::utils::at(STORAGE_CLASS_MAP, put_object_params.storage_class));
-  if (!put_object_params.server_side_encryption.empty() && put_object_params.server_side_encryption != "None") {
-    request.SetServerSideEncryption(minifi::utils::at(SERVER_SIDE_ENCRYPTION_MAP, put_object_params.server_side_encryption));
-  }
-  if (!put_object_params.content_type.empty()) {
-    request.SetContentType(put_object_params.content_type);
-  }
-  if (!put_object_params.user_metadata_map.empty()) {
-    request.SetMetadata(put_object_params.user_metadata_map);
-  }
-  if (!put_object_params.fullcontrol_user_list.empty()) {
-    request.SetGrantFullControl(put_object_params.fullcontrol_user_list);
-  }
-  if (!put_object_params.read_permission_user_list.empty()) {
-    request.SetGrantRead(put_object_params.read_permission_user_list);
-  }
-  if (!put_object_params.read_acl_user_list.empty()) {
-    request.SetGrantReadACP(put_object_params.read_acl_user_list);
-  }
-  if (!put_object_params.write_acl_user_list.empty()) {
-    request.SetGrantWriteACP(put_object_params.write_acl_user_list);
-  }
-  setCannedAcl(request, put_object_params.canned_acl);
 
   auto aws_result = request_sender_->sendPutObjectRequest(request, put_object_params.credentials, put_object_params.client_config, put_object_params.use_virtual_addressing);
   if (!aws_result) {
     return std::nullopt;
   }
 
-  PutObjectResult result;
-  // Etags are returned by AWS in quoted form that should be removed
-  result.etag = minifi::utils::StringUtils::removeFramingCharacters(aws_result->GetETag(), '"');
-  result.version = aws_result->GetVersionId();
-
-  // GetExpiration returns a string pair with a date and a ruleid in 'expiry-date=\"<DATE>\", rule-id=\"<RULEID>\"' format
-  // s3.expiration only needs the date member of this pair
-  result.expiration = getExpiration(aws_result->GetExpiration()).expiration_time;
-  result.ssealgorithm = getEncryptionString(aws_result->GetServerSideEncryption());
-  return result;
+  return createPutObjectResult(*aws_result);
 }
 
-std::optional<PutObjectResult> S3Wrapper::putObjectMultipart(const PutObjectRequestParameters& put_object_params, const std::shared_ptr<io::InputStream>& stream,
-    uint64_t flow_size, uint64_t multipart_size) {
-  Aws::S3::Model::CreateMultipartUploadRequest request;
-  request.SetBucket(put_object_params.bucket);
-  request.SetKey(put_object_params.object_key);
-  request.SetStorageClass(STORAGE_CLASS_MAP.at(put_object_params.storage_class));
-  request.SetServerSideEncryption(SERVER_SIDE_ENCRYPTION_MAP.at(put_object_params.server_side_encryption));
-  request.SetContentType(put_object_params.content_type);
-  request.SetMetadata(put_object_params.user_metadata_map);
-  request.SetGrantFullControl(put_object_params.fullcontrol_user_list);
-  request.SetGrantRead(put_object_params.read_permission_user_list);
-  request.SetGrantReadACP(put_object_params.read_acl_user_list);
-  request.SetGrantWriteACP(put_object_params.write_acl_user_list);
-  setCannedAcl(request, put_object_params.canned_acl);
-  auto create_multipart_result = request_sender_->sendCreateMultipartUploadRequest(request, put_object_params.credentials, put_object_params.client_config, put_object_params.use_virtual_addressing);
-  if (!create_multipart_result) {
-    return std::nullopt;
-  }
-
+std::optional<S3Wrapper::UploadPartsResult> S3Wrapper::uploadParts(const PutObjectRequestParameters& put_object_params, const std::shared_ptr<io::InputStream>& stream,
+    uint64_t flow_size, uint64_t multipart_size, const std::string& upload_id) {
   size_t part_count = flow_size % multipart_size == 0 ? flow_size / multipart_size : flow_size / multipart_size + 1;
-  std::vector<std::string> part_etags;
+  logger_->log_info("Uploading S3 object with key '%s' in '%d' parts with part size %" PRIu64, put_object_params.object_key, part_count, multipart_size);
+  S3Wrapper::UploadPartsResult result;
+  result.upload_id = upload_id;
   size_t total_read = 0;
   for (size_t i = 1; i <= part_count; ++i) {
     uint64_t read_size{};
@@ -168,10 +118,10 @@ std::optional<PutObjectResult> S3Wrapper::putObjectMultipart(const PutObjectRequ
     total_read += read_size;
 
     Aws::S3::Model::UploadPartRequest upload_part_request;
-    upload_part_request.SetBucket(put_object_params.bucket);
-    upload_part_request.SetKey(put_object_params.object_key);
-    upload_part_request.SetPartNumber(i);
-    upload_part_request.SetUploadId(create_multipart_result->GetUploadId());
+    upload_part_request.WithBucket(put_object_params.bucket)
+      .WithKey(put_object_params.object_key)
+      .WithPartNumber(i)
+      .WithUploadId(upload_id);
     upload_part_request.SetBody(stream_ptr);
 
     Aws::Utils::ByteBuffer part_md5(Aws::Utils::HashingUtils::CalculateMD5(*stream_ptr));
@@ -179,49 +129,50 @@ std::optional<PutObjectResult> S3Wrapper::putObjectMultipart(const PutObjectRequ
 
     auto upload_part_result = request_sender_->sendUploadPartRequest(upload_part_request, put_object_params.credentials, put_object_params.client_config, put_object_params.use_virtual_addressing);
     if (!upload_part_result) {
+      logger_->log_error("Failed to upload part %d of S3 object with key '%s'", i, put_object_params.object_key);
       return std::nullopt;
     }
-    part_etags.push_back(upload_part_result->GetETag());
+    result.part_etags.push_back(upload_part_result->GetETag());
+    logger_->log_info("Uploaded part %d of S3 object with key '%s'", i, put_object_params.object_key);
   }
 
+  return result;
+}
+
+std::optional<Aws::S3::Model::CompleteMultipartUploadResult> S3Wrapper::completeMultipartUpload(const PutObjectRequestParameters& put_object_params,
+    const S3Wrapper::UploadPartsResult& upload_parts_result) {
   Aws::S3::Model::CompleteMultipartUploadRequest complete_multipart_upload_request;
-  complete_multipart_upload_request.SetBucket(put_object_params.bucket);
-  complete_multipart_upload_request.SetKey(create_multipart_result->GetKey());
-  complete_multipart_upload_request.SetUploadId(create_multipart_result->GetUploadId());
+  complete_multipart_upload_request.WithBucket(put_object_params.bucket)
+    .WithKey(put_object_params.object_key)
+    .WithUploadId(upload_parts_result.upload_id);
 
   Aws::S3::Model::CompletedMultipartUpload completed_multipart_upload;
-  for (size_t i = 0; i < part_count; ++i) {
+  for (size_t i = 0; i < upload_parts_result.part_etags.size(); ++i) {
     Aws::S3::Model::CompletedPart part;
-    part.SetETag(part_etags[i]);
-    part.SetPartNumber(i + 1);
+    part.WithETag(upload_parts_result.part_etags[i])
+      .WithPartNumber(i + 1);
     completed_multipart_upload.AddParts(part);
   }
 
-  complete_multipart_upload_request.WithMultipartUpload(completed_multipart_upload);
+  complete_multipart_upload_request.SetMultipartUpload(completed_multipart_upload);
 
-  auto complete_multipart_upload_result =
-    request_sender_->sendCompleteMultipartUploadRequest(complete_multipart_upload_request, put_object_params.credentials, put_object_params.client_config, put_object_params.use_virtual_addressing);
+  return request_sender_->sendCompleteMultipartUploadRequest(complete_multipart_upload_request, put_object_params.credentials,
+    put_object_params.client_config, put_object_params.use_virtual_addressing);
+}
 
-  if (!complete_multipart_upload_result) {
-    return std::nullopt;
-  }
-
-  PutObjectResult result;
-  // Etags are returned by AWS in quoted form that should be removed
-  result.etag = minifi::utils::StringUtils::removeFramingCharacters(complete_multipart_upload_result->GetETag(), '"');
-  result.version = complete_multipart_upload_result->GetVersionId();
-
-  // GetExpiration returns a string pair with a date and a ruleid in 'expiry-date=\"<DATE>\", rule-id=\"<RULEID>\"' format
-  // s3.expiration only needs the date member of this pair
-  result.expiration = getExpiration(complete_multipart_upload_result->GetExpiration()).expiration_time;
-  result.ssealgorithm = getEncryptionString(complete_multipart_upload_result->GetServerSideEncryption());
-  return result;
+std::optional<PutObjectResult> S3Wrapper::putObjectMultipart(const PutObjectRequestParameters& put_object_params, const std::shared_ptr<io::InputStream>& stream,
+    uint64_t flow_size, uint64_t multipart_size) {
+  auto request = createPutObjectRequest<Aws::S3::Model::CreateMultipartUploadRequest>(put_object_params);
+  return request_sender_->sendCreateMultipartUploadRequest(request, put_object_params.credentials, put_object_params.client_config, put_object_params.use_virtual_addressing)
+    | minifi::utils::flatMap([&, this](const auto& create_multipart_result) { return uploadParts(put_object_params, stream, flow_size, multipart_size, create_multipart_result.GetUploadId()); })
+    | minifi::utils::flatMap([&, this](const auto& upload_parts_result) { return completeMultipartUpload(put_object_params, upload_parts_result); })
+    | minifi::utils::map([this](const auto& complete_multipart_upload_result) { return createPutObjectResult(complete_multipart_upload_result); });
 }
 
 bool S3Wrapper::deleteObject(const DeleteObjectRequestParameters& params) {
   Aws::S3::Model::DeleteObjectRequest request;
-  request.SetBucket(params.bucket);
-  request.SetKey(params.object_key);
+  request.WithBucket(params.bucket)
+    .WithKey(params.object_key);
   if (!params.version.empty()) {
     request.SetVersionId(params.version);
   }
@@ -307,8 +258,8 @@ std::optional<std::vector<ListedObjectAttributes>> S3Wrapper::listVersions(const
     logger_->log_debug("AWS S3 List operation returned %zu versions. This result is%s truncated.", versions.size(), aws_result->GetIsTruncated() ? "" : " not");
     addListResults(versions, params.min_object_age, attribute_list);
     if (aws_result->GetIsTruncated()) {
-      request.SetKeyMarker(aws_result->GetNextKeyMarker());
-      request.SetVersionIdMarker(aws_result->GetNextVersionIdMarker());
+      request.WithKeyMarker(aws_result->GetNextKeyMarker())
+        .WithVersionIdMarker(aws_result->GetNextVersionIdMarker());
     }
   } while (aws_result->GetIsTruncated());
 
@@ -345,8 +296,8 @@ std::optional<std::vector<ListedObjectAttributes>> S3Wrapper::listBucket(const L
 
 std::optional<std::map<std::string, std::string>> S3Wrapper::getObjectTags(const GetObjectTagsParameters& params) {
   Aws::S3::Model::GetObjectTaggingRequest request;
-  request.SetBucket(params.bucket);
-  request.SetKey(params.object_key);
+  request.WithBucket(params.bucket)
+    .WithKey(params.object_key);
   if (!params.version.empty()) {
     request.SetVersionId(params.version);
   }
@@ -373,6 +324,7 @@ std::optional<HeadObjectResult> S3Wrapper::headObject(const HeadObjectRequestPar
 template<typename ListRequest>
 ListRequest S3Wrapper::createListRequest(const ListRequestParameters& params) {
   ListRequest request;
+<<<<<<< HEAD
   request.SetBucket(params.bucket);
   if (!params.delimiter.empty()) {
     request.SetDelimiter(params.delimiter);
@@ -380,14 +332,19 @@ ListRequest S3Wrapper::createListRequest(const ListRequestParameters& params) {
   if (!params.prefix.empty()) {
     request.SetPrefix(params.prefix);
   }
+=======
+  request.WithBucket(params.bucket)
+    .WithDelimiter(params.delimiter)
+    .WithPrefix(params.prefix);
+>>>>>>> 646190315 (Refactor S3 changes)
   return request;
 }
 
 template<typename FetchObjectRequest>
 FetchObjectRequest S3Wrapper::createFetchObjectRequest(const GetObjectRequestParameters& get_object_params) {
   FetchObjectRequest request;
-  request.SetBucket(get_object_params.bucket);
-  request.SetKey(get_object_params.object_key);
+  request.WithBucket(get_object_params.bucket)
+    .WithKey(get_object_params.object_key);
   if (!get_object_params.version.empty()) {
     request.SetVersionId(get_object_params.version);
   }
@@ -451,9 +408,9 @@ std::optional<std::vector<MultipartUpload>> S3Wrapper::listAgedOffMultipartUploa
 
 bool S3Wrapper::abortMultipartUpload(const AbortMultipartUploadRequestParameters& params) {
   Aws::S3::Model::AbortMultipartUploadRequest request;
-  request.SetBucket(params.bucket);
-  request.SetKey(params.key);
-  request.SetUploadId(params.upload_id);
+  request.WithBucket(params.bucket)
+    .WithKey(params.key)
+    .WithUploadId(params.upload_id);
   return request_sender_->sendAbortMultipartUploadRequest(request, params.credentials, params.client_config, params.use_virtual_addressing);
 }
 

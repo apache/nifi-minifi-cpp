@@ -189,6 +189,20 @@ inline bool unit_matches<std::chrono::days>(const std::string& unit) {
   return unit == "d" || unit == "day" || unit == "days";
 }
 
+template<>
+inline bool unit_matches<std::chrono::weeks>(const std::string& unit) {
+  return unit == "w" || unit == "week" || unit == "weeks";
+}
+
+template<>
+inline bool unit_matches<std::chrono::months>(const std::string& unit) {
+  return unit == "mon" || unit == "month" || unit == "months";
+}
+
+template<>
+inline bool unit_matches<std::chrono::years>(const std::string& unit) {
+  return unit == "y" || unit == "year" || unit == "years";
+}
 
 template<class TargetDuration, class SourceDuration>
 std::optional<TargetDuration> cast_if_unit_matches(const std::string& unit, const int64_t value) {
@@ -224,7 +238,10 @@ std::optional<TargetDuration> StringToDuration(const std::string& input) {
     std::chrono::seconds,
     std::chrono::minutes,
     std::chrono::hours,
-    std::chrono::days>(unit, value);
+    std::chrono::days,
+    std::chrono::weeks,
+    std::chrono::months,
+    std::chrono::years>(unit, value);
 }
 
 inline date::local_seconds roundToNextYear(date::local_seconds tp) {
