@@ -75,27 +75,26 @@ TEST_CASE("ThreadPoolTest2", "[TPT2]") {
 }
 
 TEST_CASE("Worker wait time should be relative to the last run") {
-  std::mutex cv_m;
-  std::condition_variable cv;
   std::vector<std::chrono::steady_clock::time_point> worker_execution_time_points;
-  utils::ThreadPool<int> pool(1);
-  std::unique_ptr<utils::AfterExecute<int>> after_execute = std::unique_ptr<utils::AfterExecute<int>>(new WorkerNumberExecutions(100));
-  utils::Worker<int> worker([&]()->int {
-    {
-      std::unique_lock lock(cv_m);
-      worker_execution_time_points.push_back(std::chrono::steady_clock::now());
+  utils::ThreadPool<utils::TaskRescheduleInfo> pool(1);
+  auto wait_time_between_tasks = 10ms;
+  utils::Worker<utils::TaskRescheduleInfo> worker([&]()->utils::TaskRescheduleInfo {
+    worker_execution_time_points.push_back(std::chrono::steady_clock::now());
+    if (worker_execution_time_points.size() == 2) {
+      return utils::TaskRescheduleInfo::Done();
+    } else {
+      return utils::TaskRescheduleInfo::RetryIn(wait_time_between_tasks);
     }
-    cv.notify_all();
-    return 1;
-  }, "id", std::move(after_execute));
-  std::this_thread::sleep_for(60ms);  // Pre-waiting should not matter
+  }, "id", std::make_unique<utils::ComplexMonitor>());
+  std::this_thread::sleep_for(wait_time_between_tasks + 1ms);  // Pre-waiting should not matter
 
-  std::future<int> irrelevant_future;
-  pool.execute(std::move(worker), irrelevant_future);
+  std::future<utils::TaskRescheduleInfo> task_future;
+  pool.execute(std::move(worker), task_future);
   pool.start();
 
-  std::unique_lock lock(cv_m);
-  cv.wait(lock, [&]() {return worker_execution_time_points.size() >= 2;});
-  REQUIRE(worker_execution_time_points.size() >= 2);
-  CHECK(worker_execution_time_points[1] - worker_execution_time_points[0] >= 50ms);
+  auto final_task_reschedule_info = task_future.get();
+
+  CHECK(final_task_reschedule_info.finished_);
+  REQUIRE(worker_execution_time_points.size() == 2);
+  CHECK(worker_execution_time_points[1] - worker_execution_time_points[0] >= wait_time_between_tasks);
 }
