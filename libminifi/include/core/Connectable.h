@@ -54,13 +54,13 @@ class Connectable : public CoreComponent {
   Connectable& operator=(const Connectable &other) = delete;
   Connectable& operator=(Connectable&& other) = delete;
 
-  void setSupportedRelationships(gsl::span<const core::Relationship> relationships);
+  void setSupportedRelationships(std::span<const core::Relationship> relationships);
 
   bool isSupportedRelationship(const Relationship &relationship);
 
   std::vector<Relationship> getSupportedRelationships() const;
 
-  void setAutoTerminatedRelationships(gsl::span<const core::Relationship> relationships);
+  void setAutoTerminatedRelationships(std::span<const core::Relationship> relationships);
 
   bool isAutoTerminated(const Relationship &relationship);
 

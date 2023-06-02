@@ -177,7 +177,7 @@ void ConsumeJournald::onTrigger(core::ProcessContext* const context, core::Proce
   state_manager_->set({{"cursor", std::move(cursor_and_messages.first)}});
 }
 
-std::optional<gsl::span<const char>> ConsumeJournald::enumerateJournalEntry(libwrapper::Journal& journal) {
+std::optional<std::span<const char>> ConsumeJournald::enumerateJournalEntry(libwrapper::Journal& journal) {
   const void* data_ptr{};
   size_t data_length{};
   const auto status_code = journal.enumerateData(&data_ptr, &data_length);
@@ -190,7 +190,7 @@ std::optional<gsl::span<const char>> ConsumeJournald::enumerateJournalEntry(libw
 }
 
 std::optional<ConsumeJournald::journal_field> ConsumeJournald::getNextField(libwrapper::Journal& journal) {
-  return enumerateJournalEntry(journal) | utils::map([](gsl::span<const char> field) {
+  return enumerateJournalEntry(journal) | utils::map([](std::span<const char> field) {
     const auto eq_pos = std::find(std::begin(field), std::end(field), '=');
     gsl_Ensures(eq_pos != std::end(field) && "field string must contain an equals sign");
     const auto eq_idx = gsl::narrow<size_t>(eq_pos - std::begin(field));

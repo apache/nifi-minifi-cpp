@@ -59,7 +59,7 @@ AzureDataLakeStorage::AzureDataLakeStorage(std::unique_ptr<DataLakeStorageClient
   : data_lake_storage_client_(data_lake_storage_client ? std::move(data_lake_storage_client) : std::make_unique<AzureDataLakeStorageClient>()) {
 }
 
-UploadDataLakeStorageResult AzureDataLakeStorage::uploadFile(const PutAzureDataLakeStorageParameters& params, gsl::span<const std::byte> buffer) {
+UploadDataLakeStorageResult AzureDataLakeStorage::uploadFile(const PutAzureDataLakeStorageParameters& params, std::span<const std::byte> buffer) {
   UploadDataLakeStorageResult result;
   logger_->log_debug("Uploading file '%s/%s' to Azure Data Lake Storage filesystem '%s'", params.directory_name, params.filename, params.file_system_name);
   try {

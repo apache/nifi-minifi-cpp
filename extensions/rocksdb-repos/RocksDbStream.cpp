@@ -78,7 +78,7 @@ size_t RocksDbStream::write(const uint8_t *value, size_t size) {
   }
 }
 
-size_t RocksDbStream::read(gsl::span<std::byte> buf) {
+size_t RocksDbStream::read(std::span<std::byte> buf) {
   // The check have to be in this order for RocksDBStreamTest "Read zero bytes" to succeed
   if (!exists_) return STREAM_ERROR;
   if (buf.empty()) return 0;

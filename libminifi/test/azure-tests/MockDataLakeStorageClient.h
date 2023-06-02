@@ -41,8 +41,9 @@ class MockDataLakeStorageClient : public org::apache::nifi::minifi::azure::stora
     return create_file_;
   }
 
-  std::string uploadFile(const org::apache::nifi::minifi::azure::storage::PutAzureDataLakeStorageParameters& params, gsl::span<const std::byte> buffer) override {
-    input_data_ = org::apache::nifi::minifi::utils::span_to<std::string>(buffer.as_span<const char>());
+  std::string uploadFile(const org::apache::nifi::minifi::azure::storage::PutAzureDataLakeStorageParameters& params, std::span<const std::byte> buffer) override {
+    namespace utils = org::apache::nifi::minifi::utils;
+    input_data_ = utils::span_to<std::string>(utils::as_span<const char>(buffer));
     put_params_ = params;
 
     if (upload_fails_) {

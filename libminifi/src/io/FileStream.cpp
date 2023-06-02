@@ -135,7 +135,7 @@ size_t FileStream::write(const uint8_t *value, size_t size) {
   return size;
 }
 
-size_t FileStream::read(gsl::span<std::byte> buf) {
+size_t FileStream::read(std::span<std::byte> buf) {
   if (buf.empty()) { return 0; }
   std::lock_guard<std::mutex> lock(file_lock_);
   if (file_stream_ == nullptr || !file_stream_->is_open()) {

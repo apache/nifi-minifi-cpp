@@ -65,8 +65,7 @@ class TestRepositoryBase : public T_BaseRepository {
 
   bool MultiPut(const std::vector<std::pair<std::string, std::unique_ptr<org::apache::nifi::minifi::io::BufferStream>>>& data) override {
     for (const auto& item : data) {
-      const auto buf = item.second->getBuffer().as_span<const uint8_t>();
-      if (!Put(item.first, buf.data(), buf.size())) {
+      if (!Put(item.first, reinterpret_cast<const uint8_t*>(item.second->getBuffer().data()), item.second->size())) {
         return false;
       }
     }

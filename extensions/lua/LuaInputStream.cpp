@@ -48,7 +48,7 @@ std::string LuaInputStream::read(size_t len) {
   //     0 <= n < s.size()."
   //
   // http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2012/n3337.pdf
-  const auto read = stream_->read(gsl::make_span(buffer).as_span<std::byte>());
+  const auto read = stream_->read(as_writable_bytes(std::span(buffer)));
   if (!io::isError(read) && read != len) {
     buffer.resize(read);
   }

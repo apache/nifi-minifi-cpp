@@ -71,7 +71,7 @@ TEST_CASE("LineByLineInputOutputStreamCallback can process a stream line by line
 
   LineByLineInputOutputStreamCallback line_by_line_input_output_stream_callback{line_processor};
   line_by_line_input_output_stream_callback(input_stream, output_stream);
-  const auto output_data = utils::span_to<std::string>(output_stream->getBuffer().as_span<const char>());
+  const auto output_data = utils::span_to<std::string>(utils::as_span<const char>(output_stream->getBuffer()));
   CHECK(output_data == expected_output);
 }
 
@@ -92,7 +92,7 @@ TEST_CASE("LineByLineInputOutputStreamCallback can handle Windows line endings",
 
   LineByLineInputOutputStreamCallback line_by_line_input_output_stream_callback{line_processor};
   line_by_line_input_output_stream_callback(input_stream, output_stream);
-  const auto output_data = utils::span_to<std::string>(output_stream->getBuffer().as_span<const char>());
+  const auto output_data = utils::span_to<std::string>(utils::as_span<const char>(output_stream->getBuffer()));
   CHECK(output_data == expected_output);
 }
 

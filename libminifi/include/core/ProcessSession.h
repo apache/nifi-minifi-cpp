@@ -103,13 +103,13 @@ class ProcessSession : public ReferenceContainer {
   // Read and write the flow file at the same time (eg. for processing it line by line)
   int64_t readWrite(const std::shared_ptr<core::FlowFile> &flow, const io::InputOutputStreamCallback& callback);
   // Replace content with buffer
-  void writeBuffer(const std::shared_ptr<core::FlowFile>& flow_file, gsl::span<const char> buffer);
-  void writeBuffer(const std::shared_ptr<core::FlowFile>& flow_file, gsl::span<const std::byte> buffer);
+  void writeBuffer(const std::shared_ptr<core::FlowFile>& flow_file, std::span<const char> buffer);
+  void writeBuffer(const std::shared_ptr<core::FlowFile>& flow_file, std::span<const std::byte> buffer);
   // Execute the given write/append callback against the content
   void append(const std::shared_ptr<core::FlowFile> &flow, const io::OutputStreamCallback& callback);
   // Append buffer to content
-  void appendBuffer(const std::shared_ptr<core::FlowFile>& flow, gsl::span<const char> buffer);
-  void appendBuffer(const std::shared_ptr<core::FlowFile>& flow, gsl::span<const std::byte> buffer);
+  void appendBuffer(const std::shared_ptr<core::FlowFile>& flow, std::span<const char> buffer);
+  void appendBuffer(const std::shared_ptr<core::FlowFile>& flow, std::span<const std::byte> buffer);
   // Penalize the flow
   void penalize(const std::shared_ptr<core::FlowFile> &flow);
 

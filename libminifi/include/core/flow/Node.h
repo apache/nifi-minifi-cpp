@@ -166,7 +166,7 @@ class Node {
   }
 
   // considers @keys to be a set of viable access paths, the first viable is returned
-  Node operator[](gsl::span<const std::string> keys) const {
+  Node operator[](std::span<const std::string> keys) const {
     for (auto& key : keys) {
       if (Node result = (*this)[key]) {
         return result;

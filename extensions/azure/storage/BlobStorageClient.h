@@ -66,7 +66,7 @@ struct ListAzureBlobStorageParameters : public AzureBlobStorageParameters {
 class BlobStorageClient {
  public:
   virtual bool createContainerIfNotExists(const PutAzureBlobStorageParameters& params) = 0;
-  virtual Azure::Storage::Blobs::Models::UploadBlockBlobResult uploadBlob(const PutAzureBlobStorageParameters& params, gsl::span<const std::byte> buffer) = 0;
+  virtual Azure::Storage::Blobs::Models::UploadBlockBlobResult uploadBlob(const PutAzureBlobStorageParameters& params, std::span<const std::byte> buffer) = 0;
   virtual std::string getUrl(const AzureBlobStorageParameters& params) = 0;
   virtual bool deleteBlob(const DeleteAzureBlobStorageParameters& params) = 0;
   virtual std::unique_ptr<io::InputStream> fetchBlob(const FetchAzureBlobStorageParameters& params) = 0;

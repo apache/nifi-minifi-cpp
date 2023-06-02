@@ -140,7 +140,7 @@ C2Payload RESTSender::sendPayload(const std::string& url, const Direction direct
         io::BufferStream compressed_payload;
         bool compression_success = [&] {
           io::ZlibCompressStream compressor(gsl::make_not_null(&compressed_payload), io::ZlibCompressionFormat::GZIP, Z_BEST_COMPRESSION);
-          auto ret = compressor.write(gsl::span<const char>(data.value()).as_span<const std::byte>());
+          auto ret = compressor.write(as_bytes(std::span(data.value())));
           if (ret != data->length()) {
             return false;
           }

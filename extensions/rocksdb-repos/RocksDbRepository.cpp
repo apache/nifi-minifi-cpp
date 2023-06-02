@@ -71,7 +71,7 @@ bool RocksDbRepository::MultiPut(const std::vector<std::pair<std::string, std::u
   }
   auto batch = opendb->createWriteBatch();
   for (const auto &item : data) {
-    const auto buf = item.second->getBuffer().as_span<const char>();
+    const auto buf = utils::as_span<const char>(item.second->getBuffer());
     rocksdb::Slice value(buf.data(), buf.size());
     if (!batch.Put(item.first, value).ok()) {
       logger_->log_error("Failed to add item to batch operation");

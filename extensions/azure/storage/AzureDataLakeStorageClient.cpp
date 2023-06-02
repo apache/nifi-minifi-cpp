@@ -70,9 +70,9 @@ bool AzureDataLakeStorageClient::createFile(const PutAzureDataLakeStorageParamet
   return response.Value.Created;
 }
 
-std::string AzureDataLakeStorageClient::uploadFile(const PutAzureDataLakeStorageParameters& params, gsl::span<const std::byte> buffer) {
+std::string AzureDataLakeStorageClient::uploadFile(const PutAzureDataLakeStorageParameters& params, std::span<const std::byte> buffer) {
   auto file_client = getFileClient(params);
-  file_client.UploadFrom(buffer.as_span<const uint8_t>().data(), buffer.size());
+  file_client.UploadFrom(minifi::utils::as_span<const uint8_t>(buffer).data(), buffer.size());
   return file_client.GetUrl();
 }
 

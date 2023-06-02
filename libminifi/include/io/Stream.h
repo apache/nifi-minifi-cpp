@@ -19,6 +19,7 @@
 #pragma once
 
 #include "utils/gsl.h"
+#include <span>
 
 namespace org::apache::nifi::minifi::io {
 
@@ -48,7 +49,7 @@ class Stream {
     return 1;
   }
 
-  [[nodiscard]] virtual gsl::span<const std::byte> getBuffer() const {
+  [[nodiscard]] virtual std::span<const std::byte> getBuffer() const {
     throw std::runtime_error("Not a buffered stream");
   }
 

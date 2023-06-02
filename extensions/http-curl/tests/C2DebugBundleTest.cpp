@@ -168,7 +168,7 @@ int main() {
     while (auto info = decompressor->nextEntry()) {
       std::string file_content;
       file_content.resize(info->size);
-      assert(decompressor->read(gsl::make_span(file_content).as_span<std::byte>()) ==
+      assert(decompressor->read(as_writable_bytes(std::span(file_content))) ==
               file_content.length());
       archive_content[info->filename] = std::move(file_content);
     }
@@ -182,7 +182,7 @@ int main() {
     }
     std::string log_text;
     log_text.resize(log_stream->size());
-    log_stream->read(gsl::make_span(log_text).as_span<std::byte>());
+    log_stream->read(as_writable_bytes(std::span(log_text)));
     assert(log_text.find("Tis but a scratch") != std::string::npos);
     return true;
   });

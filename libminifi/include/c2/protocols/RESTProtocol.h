@@ -43,7 +43,7 @@ class RESTProtocol : public HeartbeatJsonSerializer {
  protected:
   void initialize(core::controller::ControllerServiceProvider* controller, const std::shared_ptr<Configure> &configure);
   void serializeNestedPayload(rapidjson::Value& target, const C2Payload& payload, rapidjson::Document::AllocatorType& alloc) override;
-  static C2Payload parseJsonResponse(const C2Payload &payload, gsl::span<const std::byte> response);
+  static C2Payload parseJsonResponse(const C2Payload &payload, std::span<const std::byte> response);
 
  private:
   bool containsPayload(const C2Payload &o);

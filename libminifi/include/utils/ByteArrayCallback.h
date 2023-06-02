@@ -51,7 +51,7 @@ class ByteInputCallback {
   virtual void seek(size_t) { }
 
   virtual void write(std::string content) {
-    vec = utils::span_to<std::vector>(gsl::make_span(content).as_span<std::byte>());
+    vec = utils::span_to<std::vector>(as_bytes(std::span(content)));
   }
 
   void setBuffer(std::vector<std::byte> data) {

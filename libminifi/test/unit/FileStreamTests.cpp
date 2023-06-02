@@ -228,7 +228,7 @@ TEST_CASE("Read zero bytes") {
   auto dir = testController.createTempDirectory();
   minifi::io::FileStream stream(dir / "test.txt", 0, true);
   std::byte fake_buffer[1];
-  REQUIRE(stream.read(gsl::make_span(fake_buffer).subspan(0, 0)) == 0);
+  REQUIRE(stream.read(std::span(fake_buffer).subspan(0, 0)) == 0);
 }
 
 TEST_CASE("Non-existing file read/write test") {

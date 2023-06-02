@@ -318,7 +318,7 @@ std::vector<std::byte> StringUtils::from_hex(std::string_view hex) {
   return decoded;
 }
 
-size_t StringUtils::to_hex(char* hex, gsl::span<const std::byte> data_to_be_transformed, bool uppercase) {
+size_t StringUtils::to_hex(char* hex, std::span<const std::byte> data_to_be_transformed, bool uppercase) {
   if (data_to_be_transformed.size() > std::numeric_limits<size_t>::max() / 2) {
     throw std::length_error("Data is too large to be hexencoded");
   }
@@ -329,7 +329,7 @@ size_t StringUtils::to_hex(char* hex, gsl::span<const std::byte> data_to_be_tran
   return data_to_be_transformed.size() * 2;
 }
 
-std::string StringUtils::to_hex(gsl::span<const std::byte> data_to_be_transformed, bool uppercase /*= false*/) {
+std::string StringUtils::to_hex(std::span<const std::byte> data_to_be_transformed, bool uppercase /*= false*/) {
   if (data_to_be_transformed.size() > (std::numeric_limits<size_t>::max() / 2 - 1)) {
     throw std::length_error("Data is too large to be hexencoded");
   }
@@ -418,7 +418,7 @@ std::vector<std::byte> StringUtils::from_base64(const std::string_view base64) {
   return decoded;
 }
 
-size_t StringUtils::to_base64(char* base64, const gsl::span<const std::byte> raw_data, bool url, bool padded) {
+size_t StringUtils::to_base64(char* base64, const std::span<const std::byte> raw_data, bool url, bool padded) {
   gsl_Expects(base64);
   if (raw_data.size() > std::numeric_limits<size_t>::max() * 3 / 4 - 3) {
     throw std::length_error("Data is too large to be base64 encoded");
@@ -452,7 +452,7 @@ size_t StringUtils::to_base64(char* base64, const gsl::span<const std::byte> raw
   return base64_length;
 }
 
-std::string StringUtils::to_base64(const gsl::span<const std::byte> raw_data, bool url /*= false*/, bool padded /*= true*/) {
+std::string StringUtils::to_base64(const std::span<const std::byte> raw_data, bool url /*= false*/, bool padded /*= true*/) {
   std::string buf;
   buf.resize((raw_data.size() / 3 + 1) * 4);
   size_t base64_length = to_base64(buf.data(), raw_data, url, padded);
@@ -461,7 +461,7 @@ std::string StringUtils::to_base64(const gsl::span<const std::byte> raw_data, bo
   return buf;
 }
 
-std::string StringUtils::escapeUnprintableBytes(gsl::span<const std::byte> data) {
+std::string StringUtils::escapeUnprintableBytes(std::span<const std::byte> data) {
   constexpr const char* hex_digits = "0123456789abcdef";
   std::string result;
   for (auto byte : data) {

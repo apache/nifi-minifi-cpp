@@ -65,7 +65,7 @@ std::optional<EntryInfo> ReadArchiveStreamImpl::nextEntry() {
   return EntryInfo{archive_entry_pathname(entry), entry_size_.value()};
 }
 
-size_t ReadArchiveStreamImpl::read(const gsl::span<std::byte> out_buffer) {
+size_t ReadArchiveStreamImpl::read(const std::span<std::byte> out_buffer) {
   if (!arch_ || !entry_size_) {
     return STREAM_ERROR;
   }

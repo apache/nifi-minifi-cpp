@@ -104,7 +104,7 @@ class ConsumeJournald final : public core::Processor {
     std::chrono::system_clock::time_point timestamp;
   };
 
-  static std::optional<gsl::span<const char>> enumerateJournalEntry(libwrapper::Journal&);
+  static std::optional<std::span<const char>> enumerateJournalEntry(libwrapper::Journal&);
   static std::optional<journal_field> getNextField(libwrapper::Journal&);
   std::future<std::pair<std::string, std::vector<journal_message>>> getCursorAndMessageBatch();
   std::string formatSyslogMessage(const journal_message&) const;

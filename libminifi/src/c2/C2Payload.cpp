@@ -72,7 +72,7 @@ void C2Payload::setRawData(const std::vector<char> &data) {
   setRawData(gsl::make_span(data).as_span<const std::byte>());
 }
 
-void C2Payload::setRawData(gsl::span<const std::byte> data) {
+void C2Payload::setRawData(std::span<const std::byte> data) {
   raw_data_.reserve(raw_data_.size() + data.size());
   raw_data_.insert(std::end(raw_data_), std::begin(data), std::end(data));
 }

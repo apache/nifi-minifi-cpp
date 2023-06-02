@@ -50,10 +50,10 @@ class CompressedHeartbeatHandler : public HeartbeatHandler {
     minifi::io::BufferStream output;
     {
       minifi::io::ZlibDecompressStream decompressor(gsl::make_not_null(&output));
-      auto ret = decompressor.write(gsl::span<const char>(payload).as_span<const std::byte>());
+      auto ret = decompressor.write(as_bytes(std::span(payload)));
       assert(ret == payload.size());
     }
-    auto str_span = output.getBuffer().as_span<const char>();
+    auto str_span = utils::as_span<const char>(output.getBuffer());
     return {str_span.data(), str_span.size()};
   }
 

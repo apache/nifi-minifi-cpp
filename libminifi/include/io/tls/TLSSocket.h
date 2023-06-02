@@ -131,14 +131,14 @@ class TLSSocket : public Socket {
   using Socket::read;
   using Socket::write;
 
-  size_t read(gsl::span<std::byte> buf, bool retrieve_all_bytes) override;
+  size_t read(std::span<std::byte> buf, bool retrieve_all_bytes) override;
 
   /**
    * Reads data and places it into buf
    * @param buf buffer in which we extract data
    * @param buflen
    */
-  size_t read(gsl::span<std::byte> buf) override;
+  size_t read(std::span<std::byte> buf) override;
 
   /**
    * Write value to the stream using uint8_t ptr

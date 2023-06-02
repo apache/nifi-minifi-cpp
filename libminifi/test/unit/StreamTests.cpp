@@ -76,7 +76,7 @@ TEST_CASE("TestWrite1", "[testwrite]") {
   auto base = std::make_shared<minifi::io::BufferStream>();
   base->write((uint64_t)0x0102030405060708);
   std::string bytes(8, '\0');
-  REQUIRE(8 == base->read(gsl::make_span(bytes).as_span<std::byte>()));
+  REQUIRE(8 == base->read(as_writable_bytes(std::span(bytes))));
   REQUIRE(bytes == "\x01\x02\x03\x04\x05\x06\x07\x08");
 }
 
@@ -102,5 +102,5 @@ TEST_CASE("StreamSliceTest1", "[teststreamslice]") {
   REQUIRE(stream_slice->read(buffer2) == 4);
   buffer2.resize(4);
   REQUIRE(buffer == buffer2);
-  REQUIRE(utils::span_to<std::vector>(gsl::make_span(buffer).as_span<uint8_t>()) == std::vector<uint8_t>({3, 4, 5, 6}));
+  REQUIRE(utils::span_to<std::vector>(utils::as_span<uint8_t>(std::span(buffer))) == std::vector<uint8_t>({3, 4, 5, 6}));
 }

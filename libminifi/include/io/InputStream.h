@@ -39,7 +39,7 @@ class InputStream : public virtual Stream {
    * @param len length to read
    * @return resulting read size or STREAM_ERROR on error or static_cast<size_t>(-2) on EAGAIN
    **/
-  virtual size_t read(gsl::span<std::byte> out_buffer) = 0;
+  virtual size_t read(std::span<std::byte> out_buffer) = 0;
 
   /**
    * Read string from stream. Use isError (Stream.h) to check for errors.

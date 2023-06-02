@@ -71,7 +71,7 @@ size_t SecureDescriptorStream::write(const uint8_t *value, size_t size) {
   return size;
 }
 
-size_t SecureDescriptorStream::read(gsl::span<std::byte> buf) {
+size_t SecureDescriptorStream::read(std::span<std::byte> buf) {
   if (buf.empty()) { return 0; }
   size_t total_read = 0;
   std::byte* writepos = buf.data();

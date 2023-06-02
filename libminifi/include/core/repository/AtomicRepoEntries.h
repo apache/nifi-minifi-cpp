@@ -29,6 +29,7 @@
 #include <string>
 #include <utility>
 #include <vector>
+#include <span>
 
 #include "utils/gsl.h"
 
@@ -115,7 +116,7 @@ noexcept      : key_(std::move(other.key_)),
 
       [[nodiscard]] size_t size() const noexcept { return buffer_.size(); }
 
-      [[nodiscard]] gsl::span<const std::byte> getBuffer() const {
+      [[nodiscard]] std::span<const std::byte> getBuffer() const {
         return buffer_;
       }
 
@@ -131,7 +132,7 @@ noexcept      : key_(std::move(other.key_)),
        * Appends data to the end of buffer.
        * @param data data to add to buffer_
        */
-      void append(gsl::span<const std::byte> data) {
+      void append(std::span<const std::byte> data) {
         buffer_.insert(buffer_.end(), std::begin(data), std::end(data));
       }
 
@@ -390,7 +391,7 @@ class AtomicEntry {
    * Appends buffer onto this atomic entry if key matches
    * the current RepoValue's key.
    */
-  bool insert(const T key, gsl::span<const std::byte> buffer) {
+  bool insert(const T key, std::span<const std::byte> buffer) {
     try_lock();
 
     if (!has_value_) {

@@ -943,7 +943,7 @@ void C2Agent::handleAssetUpdate(const C2ContentResponse& resp) {
   auto send_error = [&] (std::string_view error) {
     logger_->log_error("%s", std::string(error));
     C2Payload response(Operation::ACKNOWLEDGE, state::UpdateState::SET_ERROR, resp.ident, true);
-    response.setRawData(gsl::span<const char>(error).as_span<const std::byte>());
+    response.setRawData(as_bytes(std::span(error)));
     enqueue_c2_response(std::move(response));
   };
   std::filesystem::path asset_dir = std::filesystem::path(configuration_->getHome()) / "asset";

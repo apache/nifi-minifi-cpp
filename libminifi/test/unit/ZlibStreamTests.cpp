@@ -75,7 +75,7 @@ TEST_CASE("gzip compression and decompression", "[basic]") {
   decompressStream.write(compressBuffer.getBuffer());
 
   REQUIRE(decompressStream.isFinished());
-  REQUIRE(original == utils::span_to<std::string>(decompressBuffer.getBuffer().as_span<const char>()));
+  REQUIRE(original == utils::span_to<std::string>(utils::as_span<const char>(decompressBuffer.getBuffer())));
 }
 
 TEST_CASE("gzip compression and decompression pipeline", "[basic]") {
@@ -114,5 +114,5 @@ TEST_CASE("gzip compression and decompression pipeline", "[basic]") {
   compressStream.close();
 
   REQUIRE(decompressStream.isFinished());
-  REQUIRE(original == utils::span_to<std::string>(output.getBuffer().as_span<const char>()));
+  REQUIRE(original == utils::span_to<std::string>(utils::as_span<const char>(output.getBuffer())));
 }

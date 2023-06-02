@@ -85,7 +85,7 @@ class HttpStreamingCallback final : public utils::HTTPUploadByteArrayInputCallba
   }
 
   void write(std::string content) override {
-    (void) processInner(utils::span_to<std::vector>(gsl::make_span(content).as_span<std::byte>()));
+    (void) processInner(utils::span_to<std::vector>(as_bytes(std::span(content))));
   }
 
   std::byte* getBuffer(size_t pos) override {

@@ -54,7 +54,7 @@ class CoapResponse {
   CoapResponse(CoapResponse &&other) = default;
   ~CoapResponse() = default;
 
-  [[nodiscard]] gsl::span<const std::byte> getData() const noexcept {
+  [[nodiscard]] std::span<const std::byte> getData() const noexcept {
     return data_;
   }
 

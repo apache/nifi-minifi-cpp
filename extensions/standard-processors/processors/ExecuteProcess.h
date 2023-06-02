@@ -95,7 +95,7 @@ class ExecuteProcess : public core::Processor {
   void collectChildProcessOutput(core::ProcessSession& session);
   void readOutputInBatches(core::ProcessSession& session);
   void readOutput(core::ProcessSession& session);
-  bool writeToFlowFile(core::ProcessSession& session, std::shared_ptr<core::FlowFile>& flow_file, gsl::span<const char> buffer) const;
+  bool writeToFlowFile(core::ProcessSession& session, std::shared_ptr<core::FlowFile>& flow_file, std::span<const char> buffer) const;
 
   std::shared_ptr<core::logging::Logger> logger_ = core::logging::LoggerFactory<ExecuteProcess>::getLogger(uuid_);
   std::string command_;

@@ -67,7 +67,7 @@ void LineByLineInputOutputStreamCallback::readLine() {
   if (end_of_line != input_.end()) { ++end_of_line; }
 
   current_line_ = next_line_;
-  next_line_ = utils::span_to<std::string>(gsl::make_span(&*current_pos_, &*end_of_line).as_span<char>());
+  next_line_ = utils::span_to<std::string>(utils::as_span<char>(std::span(&*current_pos_, &*end_of_line)));
   current_pos_ = end_of_line;
 }
 

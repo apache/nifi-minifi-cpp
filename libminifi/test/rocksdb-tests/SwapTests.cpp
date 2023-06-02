@@ -57,7 +57,7 @@ class OutputProcessor : public core::Processor {
     auto ff = session->create();
     ff->addAttribute("index", id);
     session->write(ff, [&] (const std::shared_ptr<minifi::io::OutputStream>& output) -> int64_t {
-      auto ret = output->write(gsl::span<const char>(id.data(), id.size()).as_span<const std::byte>());
+      auto ret = output->write(as_bytes(std::span<const char>(id.data(), id.size())));
       if (minifi::io::isError(ret)) {
         return -1;
       }

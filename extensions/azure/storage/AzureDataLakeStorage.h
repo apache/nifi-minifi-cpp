@@ -67,7 +67,7 @@ class AzureDataLakeStorage {
  public:
   explicit AzureDataLakeStorage(std::unique_ptr<DataLakeStorageClient> data_lake_storage_client = nullptr);
 
-  storage::UploadDataLakeStorageResult uploadFile(const storage::PutAzureDataLakeStorageParameters& params, gsl::span<const std::byte> buffer);
+  storage::UploadDataLakeStorageResult uploadFile(const storage::PutAzureDataLakeStorageParameters& params, std::span<const std::byte> buffer);
   bool deleteFile(const storage::DeleteAzureDataLakeStorageParameters& params);
   std::optional<uint64_t> fetchFile(const FetchAzureDataLakeStorageParameters& params, io::OutputStream& stream);
   std::optional<ListDataLakeStorageResult> listDirectory(const ListAzureDataLakeStorageParameters& params);
