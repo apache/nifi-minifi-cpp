@@ -109,7 +109,7 @@ class JniByteInputStream {
     int read = 0;
     do {
       // JNI takes size as int, there's not much we can do here to support 2GB+ sizes
-      int actual = static_cast<int>(stream_->read(gsl::make_span(buffer_).subspan(0, std::min(remaining, buffer_.size()))));
+      int actual = static_cast<int>(stream_->read(std::span(buffer_).subspan(0, std::min(remaining, buffer_.size()))));
       if (actual <= 0) {
         if (read == 0) {
           stream_ = nullptr;

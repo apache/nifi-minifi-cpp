@@ -64,7 +64,7 @@ class AzureBlobStorage {
  public:
   explicit AzureBlobStorage(std::unique_ptr<BlobStorageClient> blob_storage_client = nullptr);
   std::optional<bool> createContainerIfNotExists(const PutAzureBlobStorageParameters& params);
-  std::optional<UploadBlobResult> uploadBlob(const PutAzureBlobStorageParameters& params, gsl::span<const std::byte> buffer);
+  std::optional<UploadBlobResult> uploadBlob(const PutAzureBlobStorageParameters& params, std::span<const std::byte> buffer);
   bool deleteBlob(const DeleteAzureBlobStorageParameters& params);
   std::optional<uint64_t> fetchBlob(const FetchAzureBlobStorageParameters& params, io::OutputStream& stream);
   std::optional<ListContainerResult> listContainer(const ListAzureBlobStorageParameters& params);

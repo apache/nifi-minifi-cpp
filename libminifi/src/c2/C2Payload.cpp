@@ -22,11 +22,7 @@
 #include <string>
 #include "utils/StringUtils.h"
 
-namespace org {
-namespace apache {
-namespace nifi {
-namespace minifi {
-namespace c2 {
+namespace org::apache::nifi::minifi::c2 {
 
 C2Payload::C2Payload(Operation op, std::string identifier, bool isRaw)
     : C2Payload(op, state::UpdateState::FULLY_APPLIED, std::move(identifier), isRaw) {
@@ -72,7 +68,7 @@ void C2Payload::setRawData(const std::vector<char> &data) {
   setRawData(gsl::make_span(data).as_span<const std::byte>());
 }
 
-void C2Payload::setRawData(gsl::span<const std::byte> data) {
+void C2Payload::setRawData(std::span<const std::byte> data) {
   raw_data_.reserve(raw_data_.size() + data.size());
   raw_data_.insert(std::end(raw_data_), std::begin(data), std::end(data));
 }
@@ -147,8 +143,4 @@ std::ostream& operator<<(std::ostream& out, const AnnotatedValue& val) {
   return out;
 }
 
-} /* namespace c2 */
-} /* namespace minifi */
-} /* namespace nifi */
-} /* namespace apache */
-} /* namespace org */
+}  // namespace org::apache::nifi::minifi::c2

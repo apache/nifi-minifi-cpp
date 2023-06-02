@@ -50,8 +50,8 @@ class Aes256EcbCipher {
   static constexpr size_t KEY_SIZE = 32;
 
   explicit Aes256EcbCipher(Bytes encryption_key);
-  void encrypt(gsl::span<unsigned char /*, BLOCK_SIZE*/> data) const;
-  void decrypt(gsl::span<unsigned char /*, BLOCK_SIZE*/> data) const;
+  void encrypt(std::span<unsigned char, BLOCK_SIZE> data) const;
+  void decrypt(std::span<unsigned char, BLOCK_SIZE> data) const;
 
   static Bytes generateKey();
 

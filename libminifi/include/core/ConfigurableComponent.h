@@ -104,7 +104,7 @@ class ConfigurableComponent {
      */
   bool setProperty(const Property& prop, PropertyValue &value);
 
-  void setSupportedProperties(gsl::span<const core::Property> properties);
+  void setSupportedProperties(std::span<const core::Property> properties);
 
   /**
    * Gets whether or not this processor supports dynamic properties.

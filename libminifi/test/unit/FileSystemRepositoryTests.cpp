@@ -61,9 +61,9 @@ TEST_CASE("Test Physical memory usage", "[testphysicalmemoryusage]") {
   auto resource_id = content_session->create();
   auto stream = content_session->write(resource_id);
   size_t file_size = 20_MB;
-  gsl::span<const char> fragment = "well, hello there";
+  std::span<const char> fragment = "well, hello there";
   for (size_t i = 0; i < file_size / fragment.size() + 1; ++i) {
-    stream->write(fragment.as_span<const std::byte>());
+    stream->write(as_bytes(fragment));
   }
 
   using org::apache::nifi::minifi::utils::verifyEventHappenedInPollTime;

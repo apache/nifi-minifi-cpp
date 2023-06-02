@@ -468,7 +468,7 @@ size_t Socket::write(const uint8_t *value, size_t size) {
   return bytes;
 }
 
-size_t Socket::read(gsl::span<std::byte> buf, bool retrieve_all_bytes) {
+size_t Socket::read(std::span<std::byte> buf, bool retrieve_all_bytes) {
   size_t total_read = 0;
   while (!buf.empty()) {
     int16_t fd = select_descriptor(1000);

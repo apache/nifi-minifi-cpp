@@ -137,7 +137,7 @@ class Socket : public BaseStream {
    * @param buflen
    * @param retrieve_all_bytes determines if we should read all bytes before returning
    */
-  size_t read(gsl::span<std::byte> buf) override {
+  size_t read(std::span<std::byte> buf) override {
     return read(buf, true);
   }
 
@@ -147,7 +147,7 @@ class Socket : public BaseStream {
    * @param buflen
    * @param retrieve_all_bytes determines if we should read all bytes before returning
    */
-  virtual size_t read(gsl::span<std::byte> buf, bool retrieve_all_bytes);
+  virtual size_t read(std::span<std::byte> buf, bool retrieve_all_bytes);
 
  protected:
   /**

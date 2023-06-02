@@ -168,7 +168,7 @@ bool ConfigurableComponent::setProperty(const Property& prop, PropertyValue &val
   }
 }
 
-void ConfigurableComponent::setSupportedProperties(gsl::span<const core::Property> properties) {
+void ConfigurableComponent::setSupportedProperties(std::span<const core::Property> properties) {
   if (!canEdit()) {
     return;
   }

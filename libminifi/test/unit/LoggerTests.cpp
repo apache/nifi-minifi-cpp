@@ -26,6 +26,7 @@
 #include "io/ZlibStream.h"
 #include "StreamPipe.h"
 #include "utils/IntegrationTestUtils.h"
+#include "utils/span.h"
 
 using namespace std::literals::chrono_literals;
 
@@ -193,7 +194,7 @@ std::string decompress(const std::shared_ptr<InputStream>& input) {
   auto decompressor = std::make_shared<ZlibDecompressStream>(gsl::make_not_null(output.get()));
   minifi::internal::pipe(*input, *decompressor);
   decompressor->close();
-  return utils::span_to<std::string>(output->getBuffer().as_span<const char>());
+  return utils::span_to<std::string>(utils::as_span<const char>(output->getBuffer()));
 }
 
 TEST_CASE("Test Compression", "[ttl9]") {

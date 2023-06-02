@@ -58,7 +58,7 @@ class FlowFileRecord : public core::FlowFile {
   //! Serialize and Persistent to the repository
   bool Persist(const std::shared_ptr<core::Repository>& flowRepository);
 
-  static std::shared_ptr<FlowFileRecord> DeSerialize(gsl::span<const std::byte> buffer, const std::shared_ptr<core::ContentRepository> &content_repo, utils::Identifier &container) {
+  static std::shared_ptr<FlowFileRecord> DeSerialize(std::span<const std::byte> buffer, const std::shared_ptr<core::ContentRepository> &content_repo, utils::Identifier &container) {
     io::BufferStream inStream{buffer};
     return DeSerialize(inStream, content_repo, container);
   }

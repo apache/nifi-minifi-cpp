@@ -23,12 +23,7 @@
 #include "openssl/rand.h"
 #include "core/logging/LoggerConfiguration.h"
 
-namespace org {
-namespace apache {
-namespace nifi {
-namespace minifi {
-namespace utils {
-namespace crypto {
+namespace org::apache::nifi::minifi::utils::crypto {
 
 using EVP_CIPHER_CTX_ptr = std::unique_ptr<EVP_CIPHER_CTX, decltype(&EVP_CIPHER_CTX_free)>;
 
@@ -54,7 +49,7 @@ Bytes Aes256EcbCipher::generateKey() {
   return utils::crypto::randomBytes(KEY_SIZE);
 }
 
-void Aes256EcbCipher::encrypt(gsl::span<unsigned char /*, BLOCK_SIZE*/> data) const {
+void Aes256EcbCipher::encrypt(std::span<unsigned char, BLOCK_SIZE> data) const {
   gsl_Expects(data.size() == BLOCK_SIZE);
   EVP_CIPHER_CTX_ptr ctx(EVP_CIPHER_CTX_new(), EVP_CIPHER_CTX_free);
   if (!ctx) {
@@ -74,12 +69,12 @@ void Aes256EcbCipher::encrypt(gsl::span<unsigned char /*, BLOCK_SIZE*/> data) co
   int ciphertext_len = 0;
   int len;
 
-  if (1 != EVP_EncryptUpdate(ctx.get(), data.begin(), &len, data.begin(), data.size())) {
+  if (1 != EVP_EncryptUpdate(ctx.get(), data.data(), &len, data.data(), data.size())) {
     handleOpenSSLError("Could not update cipher content");
   }
   ciphertext_len += len;
 
-  if (1 != EVP_EncryptFinal_ex(ctx.get(), data.begin() + len, &len)) {
+  if (1 != EVP_EncryptFinal_ex(ctx.get(), data.data() + len, &len)) {
     handleOpenSSLError("Could not finalize encryption");
   }
   ciphertext_len += len;
@@ -87,7 +82,7 @@ void Aes256EcbCipher::encrypt(gsl::span<unsigned char /*, BLOCK_SIZE*/> data) co
   gsl_Expects(ciphertext_len == BLOCK_SIZE);
 }
 
-void Aes256EcbCipher::decrypt(gsl::span<unsigned char /*, BLOCK_SIZE*/> data) const {
+void Aes256EcbCipher::decrypt(std::span<unsigned char, BLOCK_SIZE> data) const {
   gsl_Expects(data.size() == BLOCK_SIZE);
   EVP_CIPHER_CTX_ptr ctx(EVP_CIPHER_CTX_new(), EVP_CIPHER_CTX_free);
   if (!ctx) {
@@ -106,12 +101,12 @@ void Aes256EcbCipher::decrypt(gsl::span<unsigned char /*, BLOCK_SIZE*/> data) co
   int plaintext_len = 0;
   int len;
 
-  if (1 != EVP_DecryptUpdate(ctx.get(), data.begin(), &len, data.begin(), data.size())) {
+  if (1 != EVP_DecryptUpdate(ctx.get(), data.data(), &len, data.data(), data.size())) {
     handleOpenSSLError("Could not update cipher content");
   }
   plaintext_len += len;
 
-  if (1 != EVP_DecryptFinal_ex(ctx.get(), data.begin() + len, &len)) {
+  if (1 != EVP_DecryptFinal_ex(ctx.get(), data.data() + len, &len)) {
     handleOpenSSLError("Could not finalize decryption");
   }
   plaintext_len += len;
@@ -125,9 +120,4 @@ bool Aes256EcbCipher::operator==(const Aes256EcbCipher &other) const {
   return CRYPTO_memcmp(encryption_key_.data(), other.encryption_key_.data(), KEY_SIZE) == 0;
 }
 
-}  // namespace crypto
-}  // namespace utils
-}  // namespace minifi
-}  // namespace nifi
-}  // namespace apache
-}  // namespace org
+}  // namespace org::apache::nifi::minifi::utils::crypto

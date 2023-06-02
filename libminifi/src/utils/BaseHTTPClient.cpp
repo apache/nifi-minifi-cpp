@@ -250,8 +250,8 @@ size_t HTTPUploadByteArrayInputCallback::setPosition(int64_t offset) {
 size_t HTTPUploadStreamContentsCallback::getDataChunk(char *data, size_t size) {
   logger_->log_trace("HTTPUploadStreamContentsCallback is asked for up to %zu bytes", size);
 
-  gsl::span<char> buffer{data, size};
-  size_t num_read = input_stream_->read(buffer.as_span<std::byte>());
+  std::span<char> buffer{data, size};
+  size_t num_read = input_stream_->read(as_writable_bytes(buffer));
 
   if (io::isError(num_read)) {
     logger_->log_error("Error reading the input stream in HTTPUploadStreamContentsCallback");

@@ -57,7 +57,7 @@ class ReadCallback {
   int64_t operator()(const std::shared_ptr<minifi::io::InputStream>& stream) {
     int64_t total_read = 0;
     do {
-      const auto ret = stream->read(gsl::make_span(buffer_).subspan(read_size_));
+      const auto ret = stream->read(std::span(buffer_).subspan(read_size_));
       if (ret == 0) break;
       if (minifi::io::isError(ret)) return -1;
       read_size_ += gsl::narrow<size_t>(ret);

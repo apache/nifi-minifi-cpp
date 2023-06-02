@@ -43,7 +43,7 @@ class CivetStream : public io::InputStream {
    * @param buf buffer in which we extract data
    * @param buflen
    */
-  size_t read(gsl::span<std::byte> buf) override {
+  size_t read(std::span<std::byte> buf) override {
     const auto ret = mg_read(conn, buf.data(), buf.size());
     if (ret < 0) return STREAM_ERROR;
     return gsl::narrow<size_t>(ret);

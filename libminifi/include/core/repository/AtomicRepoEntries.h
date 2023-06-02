@@ -15,9 +15,10 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#ifndef LIBMINIFI_INCLUDE_CORE_REPOSITORY_ATOMICREPOENTRIES_H_
-#define LIBMINIFI_INCLUDE_CORE_REPOSITORY_ATOMICREPOENTRIES_H_
 
+#pragma once
+
+#include <span>
 #include <atomic>
 #include <chrono>
 #include <cstddef>
@@ -115,7 +116,7 @@ noexcept      : key_(std::move(other.key_)),
 
       [[nodiscard]] size_t size() const noexcept { return buffer_.size(); }
 
-      [[nodiscard]] gsl::span<const std::byte> getBuffer() const {
+      [[nodiscard]] std::span<const std::byte> getBuffer() const {
         return buffer_;
       }
 
@@ -131,7 +132,7 @@ noexcept      : key_(std::move(other.key_)),
        * Appends data to the end of buffer.
        * @param data data to add to buffer_
        */
-      void append(gsl::span<const std::byte> data) {
+      void append(std::span<const std::byte> data) {
         buffer_.insert(buffer_.end(), std::begin(data), std::end(data));
       }
 
@@ -390,7 +391,7 @@ class AtomicEntry {
    * Appends buffer onto this atomic entry if key matches
    * the current RepoValue's key.
    */
-  bool insert(const T key, gsl::span<const std::byte> buffer) {
+  bool insert(const T key, std::span<const std::byte> buffer) {
     try_lock();
 
     if (!has_value_) {
@@ -453,5 +454,3 @@ class AtomicEntry {
 };
 
 }  // namespace org::apache::nifi::minifi::core::repository
-
-#endif  // LIBMINIFI_INCLUDE_CORE_REPOSITORY_ATOMICREPOENTRIES_H_

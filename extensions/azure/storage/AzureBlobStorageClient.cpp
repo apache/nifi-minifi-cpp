@@ -26,6 +26,7 @@
 #include "azure/storage/blobs/blob_options.hpp"
 
 #include "utils/AzureSdkLogger.h"
+#include "utils/span.h"
 
 namespace org::apache::nifi::minifi::azure::storage {
 
@@ -40,8 +41,8 @@ class AzureBlobStorageInputStream : public io::InputStream {
     return result_.BodyStream->Length();
   }
 
-  size_t read(gsl::span<std::byte> buffer) override {
-    const auto uint8_t_view = buffer.as_span<uint8_t>();
+  size_t read(std::span<std::byte> buffer) override {
+    const auto uint8_t_view = minifi::utils::as_span<uint8_t>(buffer);
     return result_.BodyStream->Read(uint8_t_view.data(), uint8_t_view.size());
   }
 
@@ -71,7 +72,7 @@ bool AzureBlobStorageClient::createContainerIfNotExists(const PutAzureBlobStorag
   return container_client->CreateIfNotExists().Value.Created;
 }
 
-Azure::Storage::Blobs::Models::UploadBlockBlobResult AzureBlobStorageClient::uploadBlob(const PutAzureBlobStorageParameters& params, gsl::span<const std::byte> buffer) {
+Azure::Storage::Blobs::Models::UploadBlockBlobResult AzureBlobStorageClient::uploadBlob(const PutAzureBlobStorageParameters& params, std::span<const std::byte> buffer) {
   auto container_client = createClient(params.credentials, params.container_name);
   auto blob_client = container_client->GetBlockBlobClient(params.blob_name);
   return blob_client.UploadFrom(reinterpret_cast<const uint8_t*>(buffer.data()), buffer.size()).Value;

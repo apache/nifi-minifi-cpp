@@ -75,9 +75,9 @@ TEST_CASE_METHOD(RocksDBStreamTest, "Read zero bytes") {
   minifi::io::RocksDbStream stream("one", gsl::make_not_null(db.get()));
 
   std::byte fake_buffer[1];
-  REQUIRE(stream.read(gsl::make_span(fake_buffer).subspan(0, 0)) == 0);
+  REQUIRE(stream.read(std::span(fake_buffer).subspan(0, 0)) == 0);
 
   minifi::io::RocksDbStream nonExistingStream("two", gsl::make_not_null(db.get()));
 
-  REQUIRE(minifi::io::isError(nonExistingStream.read(gsl::make_span(fake_buffer).subspan(0, 0))));
+  REQUIRE(minifi::io::isError(nonExistingStream.read(std::span(fake_buffer).subspan(0, 0))));
 }

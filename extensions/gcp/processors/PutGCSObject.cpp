@@ -40,7 +40,7 @@ class UploadToGCSCallback {
   int64_t operator()(const std::shared_ptr<io::InputStream>& stream) {
     std::string content;
     content.resize(stream->size());
-    const auto read_ret = stream->read(gsl::make_span(content).as_span<std::byte>());
+    const auto read_ret = stream->read(as_writable_bytes(std::span(content)));
     if (io::isError(read_ret)) {
       return -1;
     }

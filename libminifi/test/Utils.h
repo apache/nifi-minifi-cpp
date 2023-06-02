@@ -141,8 +141,8 @@ std::error_code sendUdpDatagram(const asio::const_buffer content, const asio::ip
   return err;
 }
 
-std::error_code sendUdpDatagram(const gsl::span<std::byte const> content, const asio::ip::udp::endpoint& remote_endpoint) {
-  return sendUdpDatagram(asio::const_buffer(content.begin(), content.size()), remote_endpoint);
+std::error_code sendUdpDatagram(const std::span<std::byte const> content, const asio::ip::udp::endpoint& remote_endpoint) {
+  return sendUdpDatagram(asio::const_buffer(content.data(), content.size()), remote_endpoint);
 }
 
 std::error_code sendUdpDatagram(const std::string_view content, const asio::ip::udp::endpoint& remote_endpoint) {

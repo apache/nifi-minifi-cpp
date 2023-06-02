@@ -41,6 +41,7 @@
 #include "serialization/PayloadSerializer.h"
 #include "../Utils.h"
 #include "utils/gsl.h"
+#include "utils/span.h"
 
 std::string FLOW_FILE;
 std::string EXPECT_MERGE_CONTENT_FIRST;
@@ -88,7 +89,7 @@ class FixedBuffer {
     REQUIRE(size_ + len <= capacity_);
     int total_read = 0;
     do {
-      const size_t ret{input.read(gsl::make_span(end(), len).as_span<std::byte>())};
+      const size_t ret{input.read(as_writable_bytes(std::span(end(), len)))};
       if (ret == 0) break;
       if (minifi::io::isError(ret)) return -1;
       size_ += ret;
@@ -111,7 +112,7 @@ std::vector<FixedBuffer> read_archives(const FixedBuffer& input) {
   class ArchiveEntryReader {
    public:
     explicit ArchiveEntryReader(archive* arch) : arch(arch) {}
-    size_t read(gsl::span<std::byte> out_buffer) {
+    size_t read(std::span<std::byte> out_buffer) {
       const auto ret = archive_read_data(arch, out_buffer.data(), out_buffer.size());
       return ret < 0 ? minifi::io::STREAM_ERROR : gsl::narrow<size_t>(ret);
     }
@@ -752,7 +753,7 @@ TEST_CASE("FlowFile serialization", "[testFlowFileSerialization]") {
   }
   writeString(footer, result);
 
-  const auto expected = utils::span_to<std::string>(result->getBuffer().as_span<const char>());
+  const auto expected = utils::span_to<std::string>(utils::as_span<const char>(result->getBuffer()));
 
   auto factory = std::make_shared<core::ProcessSessionFactory>(context);
   merge_content_processor->onSchedule(context, factory);

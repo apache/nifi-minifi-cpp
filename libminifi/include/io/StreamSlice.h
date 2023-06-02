@@ -35,7 +35,7 @@ class StreamSlice : public InputStream {
 
   // from InputStream
   size_t size() const override { return slice_size_; }
-  size_t read(gsl::span<std::byte> out_buffer) override;
+  size_t read(std::span<std::byte> out_buffer) override;
 
   // from Stream
   void close() override { stream_->close(); }
@@ -43,7 +43,7 @@ class StreamSlice : public InputStream {
 
   void seek(size_t offset) override;
   [[nodiscard]] size_t tell() const override;
-  [[nodiscard]] gsl::span<const std::byte> getBuffer() const override;
+  [[nodiscard]] std::span<const std::byte> getBuffer() const override;
 
  private:
   std::shared_ptr<io::InputStream> stream_;

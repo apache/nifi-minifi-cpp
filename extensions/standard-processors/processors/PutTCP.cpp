@@ -167,7 +167,8 @@ void PutTCP::onSchedule(core::ProcessContext* const context, core::ProcessSessio
     }
   }
 
-  delimiter_ = utils::span_to<std::vector>(gsl::make_span(context->getProperty(OutgoingMessageDelimiter).value_or(std::string{})).as_span<const std::byte>());
+  const auto delimiter_str = context->getProperty(OutgoingMessageDelimiter).value_or(std::string{});
+  delimiter_ = utils::span_to<std::vector>(as_bytes(std::span(delimiter_str)));
 
   if (auto max_size_of_socket_send_buffer = context->getProperty<core::DataSizeValue>(MaxSizeOfSocketSendBuffer))
     max_size_of_socket_send_buffer_ = max_size_of_socket_send_buffer->getValue();
@@ -301,7 +302,7 @@ asio::awaitable<std::error_code> ConnectionHandler<SocketType>::send(const std::
 
   std::vector<std::byte> data_chunk;
   data_chunk.resize(chunk_size);
-  gsl::span<std::byte> buffer{data_chunk};
+  std::span<std::byte> buffer{data_chunk};
   while (stream_to_send->tell() < stream_to_send->size()) {
     size_t num_read = stream_to_send->read(buffer);
     if (io::isError(num_read))

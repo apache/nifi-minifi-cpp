@@ -29,6 +29,7 @@
 #include "DataLakeStorageClient.h"
 #include "core/logging/Logger.h"
 #include "core/logging/LoggerConfiguration.h"
+#include "utils/span.h"
 
 namespace org::apache::nifi::minifi::azure::storage {
 
@@ -49,7 +50,7 @@ class AzureDataLakeStorageClient : public DataLakeStorageClient {
    * @param buffer Buffer containing the data to be uploaded
    * @return URI of the file uploaded
    */
-  std::string uploadFile(const PutAzureDataLakeStorageParameters& params, gsl::span<const std::byte> buffer) override;
+  std::string uploadFile(const PutAzureDataLakeStorageParameters& params, std::span<const std::byte> buffer) override;
 
   /**
    * Deletes a file on the Azure Data Lake Storage
@@ -83,8 +84,8 @@ class AzureDataLakeStorageClient : public DataLakeStorageClient {
       return result_.Body->Length();
     }
 
-    size_t read(gsl::span<std::byte> out_buffer) override {
-      return result_.Body->Read(out_buffer.as_span<uint8_t>().data(), out_buffer.size());
+    size_t read(std::span<std::byte> out_buffer) override {
+      return result_.Body->Read(utils::as_span<uint8_t>(out_buffer).data(), out_buffer.size());
     }
 
    private:

@@ -116,7 +116,7 @@ class PutS3Object : public S3Processor {
       read_size_ = 0;
       while (read_size_ < flow_size_) {
         const auto next_read_size = (std::min)(flow_size_ - read_size_, BUFFER_SIZE);
-        const auto read_ret = stream->read(gsl::make_span(buffer).subspan(0, next_read_size));
+        const auto read_ret = stream->read(std::span(buffer).subspan(0, next_read_size));
         if (io::isError(read_ret)) {
           return -1;
         }

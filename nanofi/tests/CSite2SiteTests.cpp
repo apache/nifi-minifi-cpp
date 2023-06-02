@@ -134,7 +134,7 @@ void accept_transfer(minifi::io::BaseStream* stream, const std::string& crcstr, 
 void sunny_path_bootstrap(minifi::io::BaseStream* stream, TransferState& transfer_state, S2SReceivedData& s2s_data) {
   // Verify the magic string
   s2s_data.magic_string.resize(4);
-  stream->read(gsl::make_span(s2s_data.magic_string).as_span<std::byte>());
+  stream->read(as_writable_bytes(std::span(s2s_data.magic_string)));
   uint8_t success = 0x14;
   stream->write(&success, 1);
   send_response_code(stream, 0x1);
@@ -145,7 +145,7 @@ void sunny_path_bootstrap(minifi::io::BaseStream* stream, TransferState& transfe
   size_t read_len = 0;
   std::array<std::byte, 1000> handshake_data{};
   while (!found_codec) {
-    const auto actual_len = stream->read(gsl::make_span(handshake_data).subspan(read_len));
+    const auto actual_len = stream->read(std::span(handshake_data).subspan(read_len));
     if(actual_len == 0 || minifi::io::isError(actual_len)) {
       continue;
     }

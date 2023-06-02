@@ -41,7 +41,7 @@ Connectable::Connectable(std::string name)
 
 Connectable::~Connectable() = default;
 
-void Connectable::setSupportedRelationships(gsl::span<const core::Relationship> relationships) {
+void Connectable::setSupportedRelationships(std::span<const core::Relationship> relationships) {
   if (isRunning()) {
     logger_->log_warn("Can not set processor supported relationship while the process %s is running", name_);
     return;
@@ -74,7 +74,7 @@ bool Connectable::isSupportedRelationship(const core::Relationship &relationship
   return relationships_.contains(relationship.getName());
 }
 
-void Connectable::setAutoTerminatedRelationships(gsl::span<const core::Relationship> relationships) {
+void Connectable::setAutoTerminatedRelationships(std::span<const core::Relationship> relationships) {
   if (isRunning()) {
     logger_->log_warn("Can not set processor auto terminated relationship while the process %s is running", name_);
     return;

@@ -117,7 +117,7 @@ int64_t ExtractText::ReadCallback::operator()(const std::shared_ptr<io::InputStr
   while (read_size < size_limit) {
     // Don't read more than config limit or the size of the buffer
     const auto length = std::min(size_limit - read_size, buffer.size());
-    const auto ret = stream->read(gsl::make_span(buffer).subspan(0, length));
+    const auto ret = stream->read(std::span(buffer).subspan(0, length));
 
     if (io::isError(ret)) {
       return -1;  // Stream error

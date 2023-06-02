@@ -22,6 +22,7 @@
 #include "utils/IntegrationTestUtils.h"
 #include "repository/VolatileContentRepository.h"
 #include "FlowFileRecord.h"
+#include "utils/span.h"
 
 using core::repository::FlowFileRepository;
 
@@ -43,7 +44,7 @@ class FFRepoFixture : public TestController {
   static void putFlowFile(const std::shared_ptr<minifi::FlowFileRecord>& flowfile, const std::shared_ptr<core::repository::FlowFileRepository>& repo) {
     minifi::io::BufferStream buffer;
     flowfile->Serialize(buffer);
-    const auto buf = buffer.getBuffer().as_span<const uint8_t>();
+    const auto buf = utils::as_span<const uint8_t>(buffer.getBuffer());
     REQUIRE(repo->Put(flowfile->getUUIDStr(), buf.data(), buf.size()));
   }
 

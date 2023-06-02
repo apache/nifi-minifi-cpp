@@ -72,7 +72,7 @@ size_t HttpStream::write(const uint8_t* value, size_t size) {
   return size;
 }
 
-size_t HttpStream::read(gsl::span<std::byte> buf) {
+size_t HttpStream::read(std::span<std::byte> buf) {
   if (buf.empty()) { return 0; }
   if (!IsNullOrEmpty(buf)) {
     if (!started_) {

@@ -47,7 +47,7 @@ class OutputStream : public virtual Stream {
    **/
   virtual size_t write(const uint8_t *value, size_t len) = 0;
 
-  size_t write(const gsl::span<const std::byte> buffer) {
+  size_t write(const std::span<const std::byte> buffer) {
     return write(reinterpret_cast<const uint8_t*>(buffer.data()), buffer.size());
   }
 

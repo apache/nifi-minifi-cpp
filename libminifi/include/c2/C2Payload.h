@@ -29,6 +29,7 @@
 #include "core/state/UpdateController.h"
 #include "utils/Enum.h"
 #include "utils/gsl.h"
+#include "utils/span.h"
 
 namespace org {
 namespace apache {
@@ -200,13 +201,16 @@ class C2Payload : public state::Update {
    */
   void setRawData(const std::string&);
   void setRawData(const std::vector<char>&);
-  void setRawData(gsl::span<const std::byte>);
+  void setRawData(std::span<const std::byte>);
 
   /**
    * Returns raw data.
    */
   [[nodiscard]] std::vector<std::byte> getRawData() const noexcept { return raw_data_; }
-  [[nodiscard]] std::string getRawDataAsString() const { return utils::span_to<std::string>(gsl::make_span(getRawData()).as_span<const char>()); }
+  [[nodiscard]] std::string getRawDataAsString() const {
+    const auto raw_data = getRawData();
+    return utils::span_to<std::string>(utils::as_span<const char>(std::span(raw_data)));
+  }
   [[nodiscard]] std::vector<std::byte> moveRawData() && {return std::move(raw_data_);}
 
   /**

@@ -26,7 +26,7 @@ StreamSlice::StreamSlice(std::shared_ptr<io::InputStream> stream, size_t offset,
     throw std::invalid_argument("StreamSlice is bigger than the Stream");
 }
 
-size_t StreamSlice::read(gsl::span<std::byte> out_buffer) {
+size_t StreamSlice::read(std::span<std::byte> out_buffer) {
   const size_t max_size = std::min(out_buffer.size(), size() - tell());
   return stream_->read(out_buffer.subspan(0, max_size));
 }
@@ -39,7 +39,7 @@ size_t StreamSlice::tell() const {
   return stream_->tell() - slice_offset_;
 }
 
-gsl::span<const std::byte> StreamSlice::getBuffer() const {
+std::span<const std::byte> StreamSlice::getBuffer() const {
   return stream_->getBuffer().subspan(slice_offset_, slice_size_);
 }
 

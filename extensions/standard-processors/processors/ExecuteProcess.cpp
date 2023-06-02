@@ -162,7 +162,7 @@ void ExecuteProcess::readOutputInBatches(core::ProcessSession& session) {
   }
 }
 
-bool ExecuteProcess::writeToFlowFile(core::ProcessSession& session, std::shared_ptr<core::FlowFile>& flow_file, gsl::span<const char> buffer) const {
+bool ExecuteProcess::writeToFlowFile(core::ProcessSession& session, std::shared_ptr<core::FlowFile>& flow_file, std::span<const char> buffer) const {
   if (!flow_file) {
     flow_file = session.create();
     if (!flow_file) {

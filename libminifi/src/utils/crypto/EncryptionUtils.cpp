@@ -23,20 +23,16 @@
 #include <string>
 
 #include "utils/StringUtils.h"
+#include "utils/span.h"
 
-namespace org {
-namespace apache {
-namespace nifi {
-namespace minifi {
-namespace utils {
-namespace crypto {
+namespace org::apache::nifi::minifi::utils::crypto {
 
 Bytes stringToBytes(const std::string& text) {
-  return utils::span_to<std::vector>(gsl::make_span(text).as_span<const Bytes::value_type>());
+  return utils::span_to<std::vector>(utils::as_span<const Bytes::value_type>(std::span(text)));
 }
 
 std::string bytesToString(const Bytes& bytes) {
-  return utils::span_to<std::string>(gsl::make_span(bytes).as_span<const char>());
+  return utils::span_to<std::string>(utils::as_span<const char>(std::span(bytes)));
 }
 
 Bytes generateKey() {
@@ -135,9 +131,4 @@ bool isEncrypted(const std::string& input) {
   }
 }
 
-}  // namespace crypto
-}  // namespace utils
-}  // namespace minifi
-}  // namespace nifi
-}  // namespace apache
-}  // namespace org
+}  // namespace org::apache::nifi::minifi::utils::crypto

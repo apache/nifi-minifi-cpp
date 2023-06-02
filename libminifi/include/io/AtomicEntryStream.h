@@ -80,7 +80,7 @@ class AtomicEntryStream : public BaseStream {
    * @param buf buffer in which we extract data
    * @param buflen
    */
-  size_t read(gsl::span<std::byte> buf) override;
+  size_t read(std::span<std::byte> buf) override;
 
   /**
    * writes value to stream
@@ -132,7 +132,7 @@ size_t AtomicEntryStream<T>::write(const uint8_t *value, size_t size) {
 }
 
 template<typename T>
-size_t AtomicEntryStream<T>::read(gsl::span<std::byte> buf) {
+size_t AtomicEntryStream<T>::read(std::span<std::byte> buf) {
   if (buf.empty()) {
     return 0;
   }

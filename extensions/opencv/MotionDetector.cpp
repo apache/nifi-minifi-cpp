@@ -155,7 +155,7 @@ void MotionDetector::onTrigger(const std::shared_ptr<core::ProcessContext> &cont
   session->read(flow_file, [&frame](const std::shared_ptr<io::InputStream>& input_stream) -> int64_t {
     std::vector<uchar> image_buf;
     image_buf.resize(input_stream->size());
-    const auto ret = input_stream->read(gsl::make_span(image_buf).as_span<std::byte>());
+    const auto ret = input_stream->read(as_writable_bytes(std::span(image_buf)));
     if (io::isError(ret) || ret != input_stream->size()) {
       throw std::runtime_error("ImageReadCallback failed to fully read flow file input stream");
     }

@@ -35,7 +35,7 @@ class BufferStream : public BaseStream {
  public:
   BufferStream() = default;
 
-  explicit BufferStream(gsl::span<const std::byte> buf) {
+  explicit BufferStream(std::span<const std::byte> buf) {
     write(buf);
   }
 
@@ -56,7 +56,7 @@ class BufferStream : public BaseStream {
 
   size_t write(const uint8_t* value, size_t size) final;
 
-  size_t read(gsl::span<std::byte> buffer) override;
+  size_t read(std::span<std::byte> buffer) override;
 
   int initialize() override {
     buffer_.clear();
@@ -78,7 +78,7 @@ class BufferStream : public BaseStream {
    * Returns the underlying buffer
    * @return vector's array
    **/
-  [[nodiscard]] gsl::span<const std::byte> getBuffer() const override {
+  [[nodiscard]] std::span<const std::byte> getBuffer() const override {
     return buffer_;
   }
 

@@ -62,7 +62,7 @@ class SiteToSiteResponder : public minifi::io::BaseStream {
    * @param len length to read
    * @return resulting read size
    **/
-  size_t read(gsl::span<std::byte> out_buffer) override {
+  size_t read(std::span<std::byte> out_buffer) override {
     return server_responses_.read(out_buffer);
   }
 };

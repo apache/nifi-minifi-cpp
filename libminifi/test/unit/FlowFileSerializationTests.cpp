@@ -25,6 +25,7 @@
 #include "../TestBase.h"
 #include "../Catch.h"
 #include "utils/gsl.h"
+#include "utils/span.h"
 #include "FlowFile.h"
 #include "FlowFileRecord.h"
 
@@ -50,7 +51,7 @@ TEST_CASE("Payload Serializer", "[testPayload]") {
     return cb(contentStream);
   });
   serializer.serialize(flowFile, result);
-  const auto serialized = utils::span_to<std::string>(result->getBuffer().as_span<const char>());
+  const auto serialized = utils::span_to<std::string>(utils::as_span<const char>(result->getBuffer()));
   REQUIRE(serialized == content);
 }
 
@@ -70,7 +71,7 @@ TEST_CASE("FFv3 Serializer", "[testFFv3]") {
     return cb(contentStream);
   });
   serializer.serialize(flowFile, result);
-  const auto serialized = utils::span_to<std::string>(result->getBuffer().as_span<const char>());
+  const auto serialized = utils::span_to<std::string>(utils::as_span<const char>(result->getBuffer()));
 
   std::string expected = "NiFiFF3";
   expected += std::string("\x00\x02", 2);  // number of attributes
