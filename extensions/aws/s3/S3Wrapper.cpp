@@ -133,7 +133,7 @@ std::optional<S3Wrapper::UploadPartsResult> S3Wrapper::uploadParts(const PutObje
       return std::nullopt;
     }
     result.part_etags.push_back(upload_part_result->GetETag());
-    logger_->log_info("Uploaded part %d of S3 object with key '%s'", i, put_object_params.object_key);
+    logger_->log_info("Uploaded part %d of %d S3 object with key '%s'", i, part_count, put_object_params.object_key);
   }
 
   return result;

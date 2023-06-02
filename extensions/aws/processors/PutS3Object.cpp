@@ -92,7 +92,7 @@ void PutS3Object::onSchedule(const std::shared_ptr<core::ProcessContext> &contex
   logger_->log_debug("PutS3Object: Multipart Upload Ageoff Interval %" PRIu64 " ms", multipart_upload_ageoff_interval_.count());
 
   multipart_upload_max_age_threshold_ = minifi::utils::getRequiredPropertyOrThrow<core::TimePeriodValue>(*context, MultipartUploadMaxAgeThreshold.getName()).getMilliseconds();
-  logger_->log_debug("PutS3Object: Multipart Upload Ageoff Interval %" PRIu64 " ms", multipart_upload_max_age_threshold_.count());
+  logger_->log_debug("PutS3Object: Multipart Upload Max Age Threshold %" PRIu64 " ms", multipart_upload_max_age_threshold_.count());
 
   fillUserMetadata(context);
 }
@@ -211,6 +211,7 @@ void PutS3Object::ageOffMultipartUploads(const CommonProperties &common_properti
     return;
   }
 
+  logger_->log_trace("Listing aged off multipart uploads still in progress.");
   aws::s3::ListMultipartUploadsRequestParameters list_params(common_properties.credentials, *client_config_);
   list_params.setClientConfig(common_properties.proxy, common_properties.endpoint_override_url);
   list_params.bucket = common_properties.bucket;
@@ -222,6 +223,7 @@ void PutS3Object::ageOffMultipartUploads(const CommonProperties &common_properti
     return;
   }
 
+  logger_->log_info("Found %d aged off pending multipart upload jobs in bucket '%s'", aged_off_uploads_in_progress->size(), common_properties.bucket);
   size_t aborted = 0;
   for (const auto& upload : *aged_off_uploads_in_progress) {
     aws::s3::AbortMultipartUploadRequestParameters abort_params(common_properties.credentials, *client_config_);
@@ -232,7 +234,9 @@ void PutS3Object::ageOffMultipartUploads(const CommonProperties &common_properti
     abort_params.use_virtual_addressing = use_virtual_addressing_;
     if (!s3_wrapper_.abortMultipartUpload(abort_params)) {
        logger_->log_error("Failed to abort multipart upload with key '%s' and upload id '%s' in bucket '%s'", abort_params.key, abort_params.upload_id, abort_params.bucket);
+       continue;
     }
+    ++aborted;
   }
   if (aborted > 0) {
     logger_->log_info("Aborted %d pending multipart upload jobs in bucket '%s'", aborted, common_properties.bucket);
