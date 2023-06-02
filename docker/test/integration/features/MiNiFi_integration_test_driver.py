@@ -48,6 +48,7 @@ class MiNiFi_integration_test:
         # Remote process groups are not connectables
         self.remote_process_groups = []
         self.file_system_observer = None
+        self.test_file_hash = None
 
         self.docker_directory_bindings = context.directory_bindings
         self.cluster.set_directory_bindings(self.docker_directory_bindings.get_directory_bindings(self.feature_id), self.docker_directory_bindings.get_data_directories(self.feature_id))
@@ -178,6 +179,11 @@ class MiNiFi_integration_test:
         test_data = decode_escaped_str(test_data)
         self.docker_directory_bindings.put_file_to_docker_path(self.feature_id, path, file_name, test_data.encode('utf-8'))
 
+    def add_random_test_data(self, path: str, size: int, file_name: str = None):
+        if file_name is None:
+            file_name = str(uuid.uuid4())
+        self.test_file_hash = self.docker_directory_bindings.put_random_file_to_docker_path(self.test_id, path, file_name, size)
+
     def put_test_resource(self, file_name, contents):
         self.docker_directory_bindings.put_test_resource(self.feature_id, file_name, contents)
 
@@ -248,8 +254,8 @@ class MiNiFi_integration_test:
     def check_s3_server_object_data(self, s3_container_name, object_data):
         assert self.cluster.check_s3_server_object_data(s3_container_name, object_data) or self.cluster.log_app_output()
 
-    def check_s3_server_multipart_object_data(self, s3_container_name: str, object_data: str, number_of_parts: int):
-        assert self.cluster.check_s3_server_multipart_object_data(s3_container_name, object_data, number_of_parts) or self.cluster.log_app_output()
+    def check_s3_server_large_object_data(self, s3_container_name: str):
+        assert self.cluster.check_s3_server_object_hash(s3_container_name, self.test_file_hash) or self.cluster.log_app_output()
 
     def check_s3_server_object_metadata(self, s3_container_name, content_type):
         assert self.cluster.check_s3_server_object_metadata(s3_container_name, content_type) or self.cluster.log_app_output()

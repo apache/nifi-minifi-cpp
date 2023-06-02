@@ -17,6 +17,7 @@
 import logging
 import os
 import shutil
+import hashlib
 
 
 class DockerTestDirectoryBindings:
@@ -133,6 +134,22 @@ class DockerTestDirectoryBindings:
     def put_file_to_docker_path(self, feature_id, path, file_name, contents):
         file_abs_path = os.path.join(self.docker_path_to_local_path(feature_id, path), file_name)
         self.put_file_contents(file_abs_path, contents)
+
+    @staticmethod
+    def generate_md5_hash(file_path):
+        with open(file_path, 'rb') as file:
+            md5_hash = hashlib.md5()
+            for chunk in iter(lambda: file.read(4096), b''):
+                md5_hash.update(chunk)
+
+        return md5_hash.hexdigest()
+
+    def put_random_file_to_docker_path(self, test_id: str, path: str, file_name: str, file_size: int):
+        file_abs_path = os.path.join(self.docker_path_to_local_path(test_id, path), file_name)
+        with open(file_abs_path, 'wb') as test_input_file:
+            test_input_file.write(os.urandom(file_size))
+        os.chmod(file_abs_path, 0o0777)
+        return self.generate_md5_hash(file_abs_path)
 
     def rm_out_child(self, feature_id, dir):
         child = os.path.join(self.data_directories[feature_id]["output_dir"], dir)

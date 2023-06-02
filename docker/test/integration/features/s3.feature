@@ -217,22 +217,22 @@ Feature: Sending data from MiNiFi-C++ to an AWS server
 
   Scenario: A MiNiFi instance transfers data in multiple parts to s3
     Given a GetFile processor with the "Input Directory" property set to "/tmp/input"
-    And a file with the content "This is a large text file with long content" is present in "/tmp/input"
+    And a file with 16MB content is present in "/tmp/input"
     And a PutS3Object processor set up to communicate with an s3 server
-    And the "Multipart Threshold" property of the PutS3Object processor is set to "20 B"
-    And the "Multipart Part Size" property of the PutS3Object processor is set to "10 B"
+    And the "Multipart Threshold" property of the PutS3Object processor is set to "5 MB"
+    And the "Multipart Part Size" property of the PutS3Object processor is set to "5 MB"
     And the "success" relationship of the GetFile processor is connected to the PutS3Object
     And a s3 server is set up in correspondence with the PutS3Object
     When all instances start up
-    Then the object on the s3 server is "This is a large text file with long content" in 5 parts
+    Then the object on the s3 server is present and matches the original hash
     And the Minifi logs contain the following message: "passes the multipart threshold, uploading it in multiple parts" in less than 10 seconds
 
   Scenario: A MiNiFi instance can use multipart upload through http proxy to s3
     Given a GetFile processor with the "Input Directory" property set to "/tmp/input"
-    And a file with the content "This is a large text file with long content" is present in "/tmp/input"
+    And a file with 6MB content is present in "/tmp/input"
     And a PutS3Object processor set up to communicate with an s3 server
-    And the "Multipart Threshold" property of the PutS3Object processor is set to "20 B"
-    And the "Multipart Part Size" property of the PutS3Object processor is set to "10 B"
+    And the "Multipart Threshold" property of the PutS3Object processor is set to "5 MB"
+    And the "Multipart Part Size" property of the PutS3Object processor is set to "5 MB"
     And these processor properties are set to match the http proxy:
     | processor name  | property name  | property value |
     | PutS3Object     | Proxy Host     | http-proxy     |
@@ -245,6 +245,6 @@ Feature: Sending data from MiNiFi-C++ to an AWS server
     And the http proxy server is set up
     When all instances start up
 
-    Then the object on the s3 server is "This is a large text file with long content" in 5 parts
+    Then the object on the s3 server is present and matches the original hash
     And the Minifi logs contain the following message: "passes the multipart threshold, uploading it in multiple parts" in less than 10 seconds
     And no errors were generated on the http-proxy regarding "http://s3-server-${feature_id}:9090/test_bucket/test_object_key"

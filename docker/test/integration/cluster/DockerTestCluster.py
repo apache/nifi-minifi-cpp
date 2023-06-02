@@ -158,8 +158,8 @@ class DockerTestCluster:
         container_name = self.container_store.get_container_name_with_postfix(container_name)
         return self.aws_checker.check_s3_server_object_data(container_name, test_data)
 
-    def check_s3_server_multipart_object_data(self, container_name: str, test_data: str, number_of_parts: int):
-        return self.aws_checker.check_s3_server_multipart_object_data(container_name, test_data, number_of_parts)
+    def check_s3_server_object_hash(self, container_name: str, expected_file_hash: str):
+        return self.aws_checker.check_s3_server_object_hash(container_name, expected_file_hash)
 
     def check_s3_server_object_metadata(self, container_name, content_type="application/octet-stream", metadata=dict()):
         container_name = self.container_store.get_container_name_with_postfix(container_name)
