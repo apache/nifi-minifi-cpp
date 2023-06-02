@@ -34,12 +34,12 @@ class LogMetricsPublisher : public MetricsPublisher {
  public:
   using MetricsPublisher::MetricsPublisher;
 
-  MINIFIAPI static constexpr const char* Description = "HTTP server that exposes MiNiFi metrics for Prometheus to scrape";
+  MINIFIAPI static constexpr const char* Description = "Serializes all the configured metrics into a json output and writes the json to the MiNiFi logs periodically";
 
   void initialize(const std::shared_ptr<Configure>& configuration, const std::shared_ptr<state::response::ResponseNodeLoader>& response_node_loader) override;
   void clearMetricNodes() override;
   void loadMetricNodes() override;
-  ~LogMetricsPublisher();
+  ~LogMetricsPublisher() override;
 
  private:
   void readLoggingInterval();
@@ -49,7 +49,7 @@ class LogMetricsPublisher : public MetricsPublisher {
   std::unique_ptr<utils::StoppableThread> metrics_logger_thread_;
   utils::LogUtils::LogLevelOption log_level_ = utils::LogUtils::LogLevelOption::LOGGING_INFO;
   std::chrono::milliseconds logging_interval_;
-  std::mutex response_node_mutex_;
+  std::mutex response_nodes_mutex_;
   std::vector<state::response::SharedResponseNode> response_nodes_;
   std::shared_ptr<core::logging::Logger> logger_{core::logging::LoggerFactory<LogMetricsPublisher>::getLogger()};
 };

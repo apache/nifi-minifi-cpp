@@ -40,7 +40,7 @@ void LogMetricsPublisher::logMetrics() {
     response::SerializedResponseNode parent_node;
     parent_node.name = "LogMetrics";
     {
-      std::lock_guard<std::mutex> lock(response_node_mutex_);
+      std::lock_guard<std::mutex> lock(response_nodes_mutex_);
       for (const auto& response_node : response_nodes_) {
         response::SerializedResponseNode metric_response_node;
         metric_response_node.name = response_node->getName();
@@ -62,7 +62,7 @@ void LogMetricsPublisher::readLoggingInterval() {
       logger_->log_info("Metric logging interval is set to %lld milliseconds", logging_interval_.count());
       return;
     } else {
-      logger_->log_error("Configured logging interval is invalid!");
+      logger_->log_error("Configured logging interval '%s' is invalid!", logging_interval_str.value());
     }
   }
 
@@ -72,8 +72,8 @@ void LogMetricsPublisher::readLoggingInterval() {
 void LogMetricsPublisher::readLogLevel() {
   gsl_Expects(configuration_);
   if (auto log_level_str = configuration_->get(Configure::nifi_metrics_publisher_log_metrics_log_level)) {
-    std::transform(log_level_str->begin(), log_level_str->end(), log_level_str->begin(), ::toupper);
-    log_level_ = utils::LogUtils::LogLevelOption::parse(log_level_str->c_str(), utils::LogUtils::LogLevelOption::LOGGING_INFO);
+    auto full_caps_log_level_str = utils::StringUtils::toUpper(*log_level_str);
+    log_level_ = utils::LogUtils::LogLevelOption::parse(full_caps_log_level_str.c_str(), utils::LogUtils::LogLevelOption::LOGGING_INFO);
     logger_->log_info("Metric log level is set to %s", log_level_.toString());
     return;
   }
@@ -83,7 +83,7 @@ void LogMetricsPublisher::readLogLevel() {
 
 void LogMetricsPublisher::clearMetricNodes() {
   {
-    std::lock_guard<std::mutex> lock(response_node_mutex_);
+    std::lock_guard<std::mutex> lock(response_nodes_mutex_);
     logger_->log_debug("Clearing all metric nodes.");
     response_nodes_.clear();
   }
@@ -102,7 +102,7 @@ void LogMetricsPublisher::loadMetricNodes() {
   bool response_nodes_empty = true;
   if (metric_classes_str && !metric_classes_str->empty()) {
     auto metric_classes = utils::StringUtils::split(*metric_classes_str, ",");
-    std::lock_guard<std::mutex> lock(response_node_mutex_);
+    std::lock_guard<std::mutex> lock(response_nodes_mutex_);
     for (const std::string& clazz : metric_classes) {
       auto loaded_response_nodes = response_node_loader_->loadResponseNodes(clazz);
       if (loaded_response_nodes.empty()) {

@@ -44,7 +44,7 @@ Aside from the publisher exposed metrics, metrics are also sent through C2 proto
 
 Currently LogMetricsPublisher and PrometheusMetricsPublisher are available that can be configured as metrics publishers. C2 metrics are published through C2 specific properties, see [C2 documentation](C2.md) for more information on that.
 
-The LogMetricsPublisher serializes all the configured metrics into a json output and writes the json to the MiNiFi logs periodically. LogMetricsPublisher follows the conventions of the C2 metrics, and all information is present in those metrics, including string data, is present in the log metrics as well. An example log entry may look like the following:
+The LogMetricsPublisher serializes all the configured metrics into a json output and writes the json to the MiNiFi logs periodically. LogMetricsPublisher follows the conventions of the C2 metrics, and all information that is present in those metrics, including string data, is present in the log metrics as well. An example log entry may look like the following:
 
     [2023-03-09 15:04:32.268] [org::apache::nifi::minifi::state::LogMetricsPublisher] [info] {"LogMetrics":{"RepositoryMetrics":{"flowfile":{"running":"true","full":"false","size":"0"},"provenance":{"running":"true","full":"false","size":"0"}}}}
 
@@ -96,7 +96,7 @@ Optionally LogMetricsPublisher can be configured which log level should the publ
 
 ### PrometheusMetricsPublisher
 
-To use the PrometheusMetricsPublisher a port should also be configured where the metrics will be available to be scraped from:
+PrometheusMetricsPublisher requires a port to be configured where the metrics will be available to be scraped from:
 
     # in minifi.properties
 
