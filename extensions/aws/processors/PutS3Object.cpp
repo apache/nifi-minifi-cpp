@@ -241,6 +241,7 @@ void PutS3Object::ageOffMultipartUploads(const CommonProperties &common_properti
   if (aborted > 0) {
     logger_->log_info("Aborted %d pending multipart upload jobs in bucket '%s'", aborted, common_properties.bucket);
   }
+  last_ageoff_time_ = now;
 }
 
 void PutS3Object::onTrigger(const std::shared_ptr<core::ProcessContext> &context, const std::shared_ptr<core::ProcessSession> &session) {
