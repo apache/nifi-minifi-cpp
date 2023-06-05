@@ -17,8 +17,8 @@
 
 #pragma once
 
-#include <type_traits>
 #include <span>
+#include <type_traits>
 
 #include <gsl-lite/gsl-lite.hpp>
 

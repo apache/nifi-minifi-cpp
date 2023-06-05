@@ -18,6 +18,7 @@
 #ifndef LIBMINIFI_INCLUDE_CORE_REPOSITORY_ATOMICREPOENTRIES_H_
 #define LIBMINIFI_INCLUDE_CORE_REPOSITORY_ATOMICREPOENTRIES_H_
 
+#include <span>
 #include <atomic>
 #include <chrono>
 #include <cstddef>
@@ -29,7 +30,6 @@
 #include <string>
 #include <utility>
 #include <vector>
-#include <span>
 
 #include "utils/gsl.h"
 

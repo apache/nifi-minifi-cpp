@@ -242,7 +242,7 @@ minifi::c2::C2Payload CoapProtocol::serialize(const minifi::c2::C2Payload &paylo
   size_t bsize = stream.size();
 
   CoapMessage msg;
-  msg.data_ = const_cast<uint8_t *>(stream.getBuffer().as_span<const uint8_t>().data());
+  msg.data_ = const_cast<uint8_t *>(utils::as_span<const uint8_t>(stream.getBuffer()).data());
   msg.size_ = bsize;
 
   coap::controllers::CoapResponse message = coap_service_->sendPayload(COAP_REQUEST_POST, endpoint, &msg);

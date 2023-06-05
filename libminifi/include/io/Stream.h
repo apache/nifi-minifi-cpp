@@ -18,8 +18,8 @@
 
 #pragma once
 
-#include "utils/gsl.h"
 #include <span>
+#include "utils/gsl.h"
 
 namespace org::apache::nifi::minifi::io {
 
