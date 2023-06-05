@@ -289,7 +289,25 @@ TEST_CASE_METHOD(PutS3ObjectUploadLimitChangedTestsFixture, "Test multipart uplo
   plan->setProperty(update_attribute, "test.endpoint", "http://localhost:1234", true);
   plan->setProperty(s3_processor, "Endpoint Override URL", "${test.endpoint}");
   plan->setProperty(s3_processor, "Server Side Encryption", "AES256");
-  test_controller.runSession(plan);
+
+  SECTION("Successful upload on first try") {
+    test_controller.runSession(plan);
+  }
+
+  SECTION("Successful upload on second try continuing the first multipart upload") {
+    auto log_failure = plan->addProcessor(
+      "LogAttribute",
+      "LogFailure",
+      core::Relationship("failure", "d"));
+    plan->addConnection(s3_processor, core::Relationship("failure", "d"), log_failure);
+    log_failure->setAutoTerminatedRelationships(std::array{core::Relationship("success", "d")});
+    mock_s3_request_sender_ptr->failOnPartOnce(3);
+    test_controller.runSession(plan);
+    CHECK(verifyLogLinePresenceInPollTime(std::chrono::seconds(3), "Failed to upload part 3 of 4"));
+    plan->reset();
+    LogTestController::getInstance().clear();
+    test_controller.runSession(plan);
+  }
 
   CHECK(verifyLogLinePresenceInPollTime(std::chrono::seconds(3), "key:s3.version value:" + S3_VERSION_1));
   CHECK(verifyLogLinePresenceInPollTime(std::chrono::seconds(3), "key:s3.etag value:" + S3_ETAG_UNQUOTED));
@@ -343,7 +361,7 @@ TEST_CASE_METHOD(PutS3ObjectUploadLimitChangedTestsFixture, "Test multipart uplo
   REQUIRE(parts.size() == 4);
   for (size_t i = 0; i < parts.size(); ++i) {
     CHECK(parts[i].GetPartNumber() == static_cast<int>(i + 1));
-    CHECK(parts[i].GetETag() == "etag" + std::to_string(i));
+    CHECK(parts[i].GetETag() == "etag" + std::to_string(i + 1));
   }
 }
 

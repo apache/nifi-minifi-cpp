@@ -264,6 +264,10 @@ class MockS3RequestSender : public minifi::aws::s3::S3RequestSender {
       const Aws::Auth::AWSCredentials& credentials,
       const Aws::Client::ClientConfiguration& client_config,
       bool use_virtual_addressing) override {
+    if (etag_counter_ == fail_on_part_) {
+      fail_on_part_ = 0;
+      return std::nullopt;
+    }
     upload_part_requests.push_back(request);
     credentials_ = credentials;
     client_config_ = client_config;
@@ -374,6 +378,10 @@ class MockS3RequestSender : public minifi::aws::s3::S3RequestSender {
     is_listing_truncated_ = is_listing_truncated;
   }
 
+  void failOnPartOnce(uint32_t fail_on_part) {
+    fail_on_part_ = fail_on_part;
+  }
+
   Aws::S3::Model::PutObjectRequest put_object_request;
   Aws::S3::Model::DeleteObjectRequest delete_object_request;
   Aws::S3::Model::GetObjectRequest get_object_request;
@@ -396,5 +404,6 @@ class MockS3RequestSender : public minifi::aws::s3::S3RequestSender {
   Aws::Auth::AWSCredentials credentials_;
   Aws::Client::ClientConfiguration client_config_;
   bool use_virtual_addressing_ = true;
-  uint32_t etag_counter_ = 0;
+  uint32_t etag_counter_ = 1;
+  uint32_t fail_on_part_ = 0;
 };

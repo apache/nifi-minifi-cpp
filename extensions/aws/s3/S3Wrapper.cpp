@@ -104,16 +104,20 @@ std::optional<PutObjectResult> S3Wrapper::putObject(const PutObjectRequestParame
 }
 
 std::optional<S3Wrapper::UploadPartsResult> S3Wrapper::uploadParts(const PutObjectRequestParameters& put_object_params, const std::shared_ptr<io::InputStream>& stream,
-    uint64_t flow_size, uint64_t multipart_size, const std::string& upload_id) {
-  size_t part_count = flow_size % multipart_size == 0 ? flow_size / multipart_size : flow_size / multipart_size + 1;
-  logger_->log_info("Uploading S3 object with key '%s' in '%d' parts with part size %" PRIu64, put_object_params.object_key, part_count, multipart_size);
+    MultipartUploadState upload_state) {
+  stream->seek(upload_state.uploaded_size);
+  auto flow_size = upload_state.full_size - upload_state.uploaded_size;
+  size_t part_count = flow_size % upload_state.part_size == 0 ? flow_size / upload_state.part_size : flow_size / upload_state.part_size + 1;
   S3Wrapper::UploadPartsResult result;
-  result.upload_id = upload_id;
+  result.upload_id = upload_state.upload_id;
+  result.part_etags = upload_state.uploaded_etags;
   size_t total_read = 0;
-  for (size_t i = 1; i <= part_count; ++i) {
+  size_t start_part = upload_state.uploaded_parts + 1;
+  size_t last_part = start_part + part_count - 1;
+  for (size_t i = start_part; i <= last_part; ++i) {
     uint64_t read_size{};
     const auto remaining = flow_size - total_read;
-    const auto next_read_size = remaining < multipart_size ? remaining : multipart_size;
+    const auto next_read_size = remaining < upload_state.part_size ? remaining : upload_state.part_size;
     auto stream_ptr = readFlowFileStream(stream, next_read_size, read_size);
     total_read += read_size;
 
@@ -121,7 +125,7 @@ std::optional<S3Wrapper::UploadPartsResult> S3Wrapper::uploadParts(const PutObje
     upload_part_request.WithBucket(put_object_params.bucket)
       .WithKey(put_object_params.object_key)
       .WithPartNumber(i)
-      .WithUploadId(upload_id);
+      .WithUploadId(upload_state.upload_id);
     upload_part_request.SetBody(stream_ptr);
 
     Aws::Utils::ByteBuffer part_md5(Aws::Utils::HashingUtils::CalculateMD5(*stream_ptr));
@@ -129,13 +133,18 @@ std::optional<S3Wrapper::UploadPartsResult> S3Wrapper::uploadParts(const PutObje
 
     auto upload_part_result = request_sender_->sendUploadPartRequest(upload_part_request, put_object_params.credentials, put_object_params.client_config, put_object_params.use_virtual_addressing);
     if (!upload_part_result) {
-      logger_->log_error("Failed to upload part %d of S3 object with key '%s'", i, put_object_params.object_key);
+      logger_->log_error("Failed to upload part %d of %d of S3 object with key '%s'", i, last_part, put_object_params.object_key);
       return std::nullopt;
     }
     result.part_etags.push_back(upload_part_result->GetETag());
-    logger_->log_info("Uploaded part %d of %d S3 object with key '%s'", i, part_count, put_object_params.object_key);
+    upload_state.uploaded_etags.push_back(upload_part_result->GetETag());
+    upload_state.uploaded_parts += 1;
+    upload_state.uploaded_size += read_size;
+    multipart_upload_storage_->storeState(put_object_params.bucket, put_object_params.object_key, upload_state);
+    logger_->log_info("Uploaded part %d of %d S3 object with key '%s'", i, last_part, put_object_params.object_key);
   }
 
+  multipart_upload_storage_->removeState(put_object_params.bucket, put_object_params.object_key);
   return result;
 }
 
@@ -160,13 +169,36 @@ std::optional<Aws::S3::Model::CompleteMultipartUploadResult> S3Wrapper::complete
     put_object_params.client_config, put_object_params.use_virtual_addressing);
 }
 
+bool S3Wrapper::multipartUploadExistsInS3(const PutObjectRequestParameters& put_object_params) {
+  ListMultipartUploadsRequestParameters params(put_object_params.credentials, put_object_params.client_config);
+  params.bucket = put_object_params.bucket;
+  auto pending_uploads = listMultipartUploads(params);
+  if (!pending_uploads) {
+    return false;
+  }
+  for (const auto& upload : *pending_uploads) {
+    if (upload.key == put_object_params.object_key) {
+      return true;
+    }
+  }
+  return false;
+}
+
 std::optional<PutObjectResult> S3Wrapper::putObjectMultipart(const PutObjectRequestParameters& put_object_params, const std::shared_ptr<io::InputStream>& stream,
     uint64_t flow_size, uint64_t multipart_size) {
-  auto request = createPutObjectRequest<Aws::S3::Model::CreateMultipartUploadRequest>(put_object_params);
-  return request_sender_->sendCreateMultipartUploadRequest(request, put_object_params.credentials, put_object_params.client_config, put_object_params.use_virtual_addressing)
-    | minifi::utils::flatMap([&, this](const auto& create_multipart_result) { return uploadParts(put_object_params, stream, flow_size, multipart_size, create_multipart_result.GetUploadId()); })
-    | minifi::utils::flatMap([&, this](const auto& upload_parts_result) { return completeMultipartUpload(put_object_params, upload_parts_result); })
-    | minifi::utils::map([this](const auto& complete_multipart_upload_result) { return createPutObjectResult(complete_multipart_upload_result); });
+  gsl_Expects(multipart_upload_storage_);
+  if (auto upload_state = multipart_upload_storage_->getState(put_object_params.bucket, put_object_params.object_key)) {
+    return uploadParts(put_object_params, stream, std::move(*upload_state))
+      | minifi::utils::flatMap([&, this](const auto& upload_parts_result) { return completeMultipartUpload(put_object_params, upload_parts_result); })
+      | minifi::utils::map([this](const auto& complete_multipart_upload_result) { return createPutObjectResult(complete_multipart_upload_result); });
+  } else {
+    auto request = createPutObjectRequest<Aws::S3::Model::CreateMultipartUploadRequest>(put_object_params);
+    return request_sender_->sendCreateMultipartUploadRequest(request, put_object_params.credentials, put_object_params.client_config, put_object_params.use_virtual_addressing)
+      | minifi::utils::flatMap([&, this](const auto& create_multipart_result) { return uploadParts(put_object_params, stream,
+          MultipartUploadState{create_multipart_result.GetUploadId(), multipart_size, flow_size, Aws::Utils::DateTime::Now()}); })
+      | minifi::utils::flatMap([&, this](const auto& upload_parts_result) { return completeMultipartUpload(put_object_params, upload_parts_result); })
+      | minifi::utils::map([this](const auto& complete_multipart_upload_result) { return createPutObjectResult(complete_multipart_upload_result); });
+  }
 }
 
 bool S3Wrapper::deleteObject(const DeleteObjectRequestParameters& params) {
@@ -385,7 +417,7 @@ void S3Wrapper::addListMultipartUploadResults(const Aws::Vector<Aws::S3::Model::
   }
 }
 
-std::optional<std::vector<MultipartUpload>> S3Wrapper::listAgedOffMultipartUploads(const ListMultipartUploadsRequestParameters& params) {
+std::optional<std::vector<MultipartUpload>> S3Wrapper::listMultipartUploads(const ListMultipartUploadsRequestParameters& params) {
   std::vector<MultipartUpload> result;
   std::optional<Aws::S3::Model::ListMultipartUploadsResult> aws_result;
   Aws::S3::Model::ListMultipartUploadsRequest request;
@@ -412,6 +444,10 @@ bool S3Wrapper::abortMultipartUpload(const AbortMultipartUploadRequestParameters
     .WithKey(params.key)
     .WithUploadId(params.upload_id);
   return request_sender_->sendAbortMultipartUploadRequest(request, params.credentials, params.client_config, params.use_virtual_addressing);
+}
+
+void S3Wrapper::initailizeMultipartUploadStateStorage(gsl::not_null<minifi::core::StateManager*> state_manager) {
+  multipart_upload_storage_ = std::make_unique<MultipartUploadStateStorage>(state_manager);
 }
 
 }  // namespace org::apache::nifi::minifi::aws::s3

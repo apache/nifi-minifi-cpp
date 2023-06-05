@@ -95,6 +95,12 @@ void PutS3Object::onSchedule(const std::shared_ptr<core::ProcessContext> &contex
   logger_->log_debug("PutS3Object: Multipart Upload Max Age Threshold %" PRIu64 " ms", multipart_upload_max_age_threshold_.count());
 
   fillUserMetadata(context);
+
+  auto state_manager = context->getStateManager();
+  if (state_manager == nullptr) {
+    throw Exception(PROCESSOR_EXCEPTION, "Failed to get StateManager");
+  }
+  s3_wrapper_.initailizeMultipartUploadStateStorage(gsl::make_not_null(state_manager));
 }
 
 std::string PutS3Object::parseAccessControlList(const std::string &comma_separated_list) {
@@ -217,7 +223,7 @@ void PutS3Object::ageOffMultipartUploads(const CommonProperties &common_properti
   list_params.bucket = common_properties.bucket;
   list_params.upload_max_age = multipart_upload_max_age_threshold_;
   list_params.use_virtual_addressing = use_virtual_addressing_;
-  auto aged_off_uploads_in_progress = s3_wrapper_.listAgedOffMultipartUploads(list_params);
+  auto aged_off_uploads_in_progress = s3_wrapper_.listMultipartUploads(list_params);
   if (!aged_off_uploads_in_progress) {
     logger_->log_error("Listing aged off multipart uploads failed!");
     return;
