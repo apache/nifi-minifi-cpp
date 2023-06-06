@@ -21,11 +21,11 @@ verify_enable_platform(){
     verify_gcc_enable "$feature"
 }
 add_os_flags() {
-    CC=gcc
-    CXX=g++
+    CC=${CC:-gcc}
+    CXX=${CXX:-g++}
     if [[ "$OS" = Ubuntu* && "$OS_MAJOR" -lt 22 ]]; then
-        CC=gcc-11
-        CXX=g++-11
+        CC=${CC:-gcc-11}
+        CXX=${CXX:-g++-11}
     fi
     export CC
     export CXX
