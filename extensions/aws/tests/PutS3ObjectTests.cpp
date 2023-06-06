@@ -268,6 +268,8 @@ TEST_CASE_METHOD(PutS3ObjectUploadLimitChangedTestsFixture, "Test multipart uplo
   setRequiredProperties();
   plan->setProperty(s3_processor, "Multipart Threshold", "35 B");
   plan->setProperty(s3_processor, "Multipart Part Size", "10 B");
+  auto temp_dir = test_controller.createTempDirectory();
+  plan->setProperty(s3_processor, "Temporary Directory Multipart State", temp_dir.string());
 
   plan->setProperty(update_attribute, "s3.permissions.full.users", "myuserid123, myuser@example.com", true);
   plan->setProperty(s3_processor, "FullControl User List", "${s3.permissions.full.users}");
@@ -369,11 +371,43 @@ TEST_CASE_METHOD(PutS3ObjectTestsFixture, "Test ageoff functionality aborting ob
   setRequiredProperties();
   plan->setProperty(s3_processor, "Multipart Upload AgeOff Interval", "1 sec");
   plan->setProperty(s3_processor, "Multipart Upload Max Age Threshold", "2 years");
+  auto temp_dir = test_controller.createTempDirectory();
+  plan->setProperty(s3_processor, "Temporary Directory Multipart State", temp_dir.string());
   test_controller.runSession(plan);
   REQUIRE(mock_s3_request_sender_ptr->abort_multipart_upload_requests.size() == 1);
   CHECK(mock_s3_request_sender_ptr->abort_multipart_upload_requests[0].GetBucket() == S3_BUCKET);
   CHECK(mock_s3_request_sender_ptr->abort_multipart_upload_requests[0].GetKey() == "old_key");
   CHECK(mock_s3_request_sender_ptr->abort_multipart_upload_requests[0].GetUploadId() == "upload2");
+}
+
+TEST_CASE_METHOD(PutS3ObjectUploadLimitChangedTestsFixture, "Local state is not kept after successful upload", "[awsS3MultipartUpload]") {
+  setRequiredProperties();
+  plan->setProperty(s3_processor, "Multipart Threshold", "35 B");
+  plan->setProperty(s3_processor, "Multipart Part Size", "10 B");
+  auto temp_dir = test_controller.createTempDirectory();
+  plan->setProperty(s3_processor, "Temporary Directory Multipart State", temp_dir.string());
+  auto log_failure = plan->addProcessor(
+    "LogAttribute",
+    "LogFailure",
+    core::Relationship("failure", "d"));
+  plan->addConnection(s3_processor, core::Relationship("failure", "d"), log_failure);
+  log_failure->setAutoTerminatedRelationships(std::array{core::Relationship("success", "d")});
+  mock_s3_request_sender_ptr->failOnPartOnce(3);
+  test_controller.runSession(plan);
+  CHECK(verifyLogLinePresenceInPollTime(std::chrono::seconds(3), "Failed to upload part 3 of 4"));
+  plan->reset();
+  LogTestController::getInstance().clear();
+  test_controller.runSession(plan);
+  plan->reset();
+  LogTestController::getInstance().clear();
+  test_controller.runSession(plan);
+
+  const auto& parts = mock_s3_request_sender_ptr->complete_multipart_upload_request.GetMultipartUpload().GetParts();
+  REQUIRE(parts.size() == 4);
+  for (size_t i = 0; i < parts.size(); ++i) {
+    CHECK(parts[i].GetPartNumber() == static_cast<int>(i + 1));
+    CHECK(parts[i].GetETag() == "etag" + std::to_string(4 + i + 1));  // The second successful upload contains different parts
+  }
 }
 
 }  // namespace

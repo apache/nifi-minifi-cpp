@@ -100,7 +100,12 @@ void PutS3Object::onSchedule(const std::shared_ptr<core::ProcessContext> &contex
   if (state_manager == nullptr) {
     throw Exception(PROCESSOR_EXCEPTION, "Failed to get StateManager");
   }
-  s3_wrapper_.initailizeMultipartUploadStateStorage(gsl::make_not_null(state_manager));
+
+  std::string multipart_temp_dir;
+  context->getProperty(TemporaryDirectoryMultipartState.getName(), multipart_temp_dir);
+
+
+  s3_wrapper_.initailizeMultipartUploadStateStorage(multipart_temp_dir, getUUIDStr());
 }
 
 std::string PutS3Object::parseAccessControlList(const std::string &comma_separated_list) {
@@ -247,6 +252,7 @@ void PutS3Object::ageOffMultipartUploads(const CommonProperties &common_properti
   if (aborted > 0) {
     logger_->log_info("Aborted %d pending multipart upload jobs in bucket '%s'", aborted, common_properties.bucket);
   }
+  // ageOffLocalS3MultipartUploadStates();
   last_ageoff_time_ = now;
 }
 

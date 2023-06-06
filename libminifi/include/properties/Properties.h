@@ -58,6 +58,10 @@ class Properties {
     std::lock_guard<std::mutex> lock(mutex_);
     properties_.clear();
   }
+  void remove(const std::string& key) {
+    std::lock_guard<std::mutex> lock(mutex_);
+    properties_.erase(key);
+  }
   void set(const std::string& key, const std::string& value) {
     set(key, value, PropertyChangeLifetime::PERSISTENT);
   }
@@ -111,9 +115,15 @@ class Properties {
 
   /**
    * Load configure file
-   * @param fileName path of the configuration file RELATIVE to MINIFI_HOME set by setHome()
+   * @param configuration_file path of the configuration file RELATIVE to MINIFI_HOME set by setHome()
    */
   void loadConfigureFile(const std::filesystem::path& configuration_file, std::string_view prefix = "");
+
+  /**
+   * Load configure file
+   * @param file_path absolute path of the property file
+   */
+  void loadFile(const std::filesystem::path& file_path, std::string_view prefix = "");
 
   // Set the determined MINIFI_HOME
   void setHome(std::filesystem::path minifiHome) {

@@ -36,6 +36,8 @@
 #include "MockS3RequestSender.h"
 #include "utils/TestUtils.h"
 #include "AWSCredentialsProvider.h"
+#include "s3/MultipartUploadStateStorage.h"
+#include "s3/S3Wrapper.h"
 
 template<typename T>
 class S3TestsFixture {
@@ -51,6 +53,8 @@ class S3TestsFixture {
     LogTestController::getInstance().setDebug<minifi::processors::LogAttribute>();
     LogTestController::getInstance().setTrace<T>();
     LogTestController::getInstance().setDebug<minifi::aws::AWSCredentialsProvider>();
+    LogTestController::getInstance().setDebug<minifi::aws::s3::MultipartUploadStateStorage>();
+    LogTestController::getInstance().setDebug<minifi::aws::s3::S3Wrapper>();
 
     // Build MiNiFi processing graph
     plan = test_controller.createPlan();

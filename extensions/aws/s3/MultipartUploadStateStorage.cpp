@@ -22,69 +22,94 @@
 
 namespace org::apache::nifi::minifi::aws::s3 {
 
+MultipartUploadStateStorage::MultipartUploadStateStorage(const std::string& state_directory, std::string state_id)
+    : state_id_(std::move(state_id)),
+      state_(state_id_ + "-s3-multipart-upload-state.properties") {
+  if (state_directory.empty()) {
+    char format[] = "/var/tmp/nifi-minifi-cpp.s3-multipart-upload.XXXXXX";
+    state_file_path_ = minifi::utils::file::FileUtils::create_temp_directory(format);
+  } else {
+    state_file_path_ = std::filesystem::path(state_directory) / std::string(state_id_ + "-s3-multipart-upload-state.properties");
+    if (!std::filesystem::exists(state_file_path_)) {
+      std::filesystem::create_directories(state_file_path_.parent_path());
+      std::ofstream ofs(state_file_path_);
+      ofs.close();
+    } else {
+      state_.loadFile(state_file_path_);
+    }
+  }
+}
+
 void MultipartUploadStateStorage::storeState(const std::string& bucket, const std::string& key, const MultipartUploadState& state) {
-  std::unordered_map<std::string, std::string> stored_state;
-  state_manager_->get(stored_state);
+  state_.loadFile(state_file_path_);
   std::string state_key = bucket + "/" + key;
-  stored_state[state_key + ".upload_id"] = state.upload_id;
-  stored_state[state_key + ".upload_time"] = std::to_string(state.upload_time.Millis());
-  stored_state[state_key + ".uploaded_parts"] = std::to_string(state.uploaded_parts);
-  stored_state[state_key + ".uploaded_size"] = std::to_string(state.uploaded_size);
-  stored_state[state_key + ".part_size"] = std::to_string(state.part_size);
-  stored_state[state_key + ".full_size"] = std::to_string(state.full_size);
-  stored_state[state_key + ".uploaded_etags"] = minifi::utils::StringUtils::join(";", state.uploaded_etags);
-  state_manager_->set(stored_state);
-  state_manager_->persist();
+  state_.set(state_key + ".upload_id", state.upload_id);
+  state_.set(state_key + ".upload_time", std::to_string(state.upload_time.Millis()));
+  state_.set(state_key + ".uploaded_parts", std::to_string(state.uploaded_parts));
+  state_.set(state_key + ".uploaded_size", std::to_string(state.uploaded_size));
+  state_.set(state_key + ".part_size", std::to_string(state.part_size));
+  state_.set(state_key + ".full_size", std::to_string(state.full_size));
+  state_.set(state_key + ".uploaded_etags", minifi::utils::StringUtils::join(";", state.uploaded_etags));
+  state_.commitChanges();
+  logger_->log_debug("Updated multipart upload state with key %s", state_key);
 }
 
 std::optional<MultipartUploadState> MultipartUploadStateStorage::getState(const std::string& bucket, const std::string& key) const {
-  std::unordered_map<std::string, std::string> state_map;
-  if (!state_manager_->get(state_map)) {
-    logger_->log_warn("No previous multipart upload state was associated with this processor.");
-    return std::nullopt;
-  }
   std::string state_key = bucket + "/" + key;
-  if (!state_map.contains(state_key + ".upload_id")) {
-    logger_->log_warn("Multipart upload state was not found for key '%s'", state_key);
+  if (!state_.has(state_key + ".upload_id")) {
+    logger_->log_warn("Failed to get state: Multipart upload state was not found for key '%s'", state_key);
     return std::nullopt;
   }
 
   MultipartUploadState state;
-  state.upload_id = state_map[state_key + ".upload_id"];
+  state_.getString(state_key + ".upload_id", state.upload_id);
 
   int64_t stored_upload_time = 0;
-  core::Property::StringToInt(state_map[state_key + ".upload_time"], stored_upload_time);
-  state.upload_time = Aws::Utils::DateTime(stored_upload_time);
+  std::string value;
+  if (state_.getString(state_key + ".upload_time", value)) {
+    core::Property::StringToInt(value, stored_upload_time);
+    state.upload_time = Aws::Utils::DateTime(stored_upload_time);
+  }
 
-  core::Property::StringToInt(state_map[state_key + ".uploaded_parts"], state.uploaded_parts);
-  core::Property::StringToInt(state_map[state_key + ".uploaded_size"], state.uploaded_size);
-  core::Property::StringToInt(state_map[state_key + ".part_size"], state.part_size);
-  core::Property::StringToInt(state_map[state_key + ".full_size"], state.full_size);
-  state.uploaded_etags = minifi::utils::StringUtils::splitAndTrimRemovingEmpty(state_map[state_key + ".uploaded_etags"], ";");
+  if (state_.getString(state_key + ".uploaded_parts", value)) {
+    core::Property::StringToInt(value, state.uploaded_parts);
+  }
+
+  if (state_.getString(state_key + ".uploaded_size", value)) {
+    core::Property::StringToInt(value, state.uploaded_size);
+  }
+
+  if (state_.getString(state_key + ".part_size", value)) {
+    core::Property::StringToInt(value, state.part_size);
+  }
+
+  if (state_.getString(state_key + ".full_size", value)) {
+    core::Property::StringToInt(value, state.full_size);
+  }
+
+  if (state_.getString(state_key + ".uploaded_etags", value)) {
+    state.uploaded_etags = minifi::utils::StringUtils::splitAndTrimRemovingEmpty(value, ";");
+  }
   return state;
 }
 
 void MultipartUploadStateStorage::removeState(const std::string& bucket, const std::string& key) {
-  std::unordered_map<std::string, std::string> state_map;
-  if (!state_manager_->get(state_map)) {
-    logger_->log_warn("No previous multipart upload state was associated with this processor.");
-    return;
-  }
+  state_.loadFile(state_file_path_);
   std::string state_key = bucket + "/" + key;
-  if (!state_map.contains(state_key + ".upload_id")) {
-    logger_->log_warn("Multipart upload state was not found for key '%s'", state_key);
+  if (!state_.has(state_key + ".upload_id")) {
+    logger_->log_warn("Failed to remove state: Multipart upload state was not found for key '%s'", state_key);
     return;
   }
 
-  state_map.erase(state_key + ".upload_id");
-  state_map.erase(state_key + ".upload_time");
-  state_map.erase(state_key + ".uploaded_parts");
-  state_map.erase(state_key + ".uploaded_size");
-  state_map.erase(state_key + ".part_size");
-  state_map.erase(state_key + ".full_size");
-  state_map.erase(state_key + ".uploaded_etags");
-  state_manager_->set(state_map);
-  state_manager_->persist();
+  state_.remove(state_key + ".upload_id");
+  state_.remove(state_key + ".upload_time");
+  state_.remove(state_key + ".uploaded_parts");
+  state_.remove(state_key + ".uploaded_size");
+  state_.remove(state_key + ".part_size");
+  state_.remove(state_key + ".full_size");
+  state_.remove(state_key + ".uploaded_etags");
+  state_.commitChanges();
+  logger_->log_debug("Removed multipart upload state with key %s", state_key);
 }
 
 }  // namespace org::apache::nifi::minifi::aws::s3

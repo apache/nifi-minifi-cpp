@@ -188,10 +188,12 @@ std::optional<PutObjectResult> S3Wrapper::putObjectMultipart(const PutObjectRequ
     uint64_t flow_size, uint64_t multipart_size) {
   gsl_Expects(multipart_upload_storage_);
   if (auto upload_state = multipart_upload_storage_->getState(put_object_params.bucket, put_object_params.object_key)) {
+    logger_->log_info("Found previous multipart upload state for %s in bucket %s, continuing upload", put_object_params.object_key, put_object_params.bucket);
     return uploadParts(put_object_params, stream, std::move(*upload_state))
       | minifi::utils::flatMap([&, this](const auto& upload_parts_result) { return completeMultipartUpload(put_object_params, upload_parts_result); })
       | minifi::utils::map([this](const auto& complete_multipart_upload_result) { return createPutObjectResult(complete_multipart_upload_result); });
   } else {
+    logger_->log_debug("No previous multipart upload state was found for %s in bucket %s", put_object_params.object_key, put_object_params.bucket);
     auto request = createPutObjectRequest<Aws::S3::Model::CreateMultipartUploadRequest>(put_object_params);
     return request_sender_->sendCreateMultipartUploadRequest(request, put_object_params.credentials, put_object_params.client_config, put_object_params.use_virtual_addressing)
       | minifi::utils::flatMap([&, this](const auto& create_multipart_result) { return uploadParts(put_object_params, stream,
@@ -446,8 +448,8 @@ bool S3Wrapper::abortMultipartUpload(const AbortMultipartUploadRequestParameters
   return request_sender_->sendAbortMultipartUploadRequest(request, params.credentials, params.client_config, params.use_virtual_addressing);
 }
 
-void S3Wrapper::initailizeMultipartUploadStateStorage(gsl::not_null<minifi::core::StateManager*> state_manager) {
-  multipart_upload_storage_ = std::make_unique<MultipartUploadStateStorage>(state_manager);
+void S3Wrapper::initailizeMultipartUploadStateStorage(const std::string& multipart_temp_dir, const std::string& state_id) {
+  multipart_upload_storage_ = std::make_unique<MultipartUploadStateStorage>(multipart_temp_dir, state_id);
 }
 
 }  // namespace org::apache::nifi::minifi::aws::s3

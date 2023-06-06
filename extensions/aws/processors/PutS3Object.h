@@ -119,13 +119,13 @@ class PutS3Object : public S3Processor {
         .build();
   EXTENSIONAPI static constexpr auto MultipartPartSize = core::PropertyDefinitionBuilder<>::createProperty("Multipart Part Size")
         .withDescription("Specifies the part size for use when the PutS3Multipart Upload API is used. "
-                          "Flow files will be broken into chunks of this size for the upload process, but the last part sent can be smaller since it is not padded. The valid range is 5MB to 5GB.")
+                         "Flow files will be broken into chunks of this size for the upload process, but the last part sent can be smaller since it is not padded. The valid range is 5MB to 5GB.")
         .withDefaultValue<core::DataSizeValue>("5 GB")
         .isRequired(true)
         .build();
   EXTENSIONAPI static constexpr auto MultipartUploadAgeOffInterval = core::PropertyDefinitionBuilder<>::createProperty("Multipart Upload AgeOff Interval")
         .withDescription("Specifies the interval at which existing multipart uploads in AWS S3 will be evaluated for ageoff. "
-                          "When processor is triggered it will initiate the ageoff evaluation if this interval has been exceeded.")
+                         "When processor is triggered it will initiate the ageoff evaluation if this interval has been exceeded.")
         .withDefaultValue<core::TimePeriodValue>("60 min")
         .isRequired(true)
         .build();
@@ -134,6 +134,10 @@ class PutS3Object : public S3Processor {
         .withDefaultValue<core::TimePeriodValue>("7 days")
         .isRequired(true)
         .build();
+  EXTENSIONAPI static constexpr auto TemporaryDirectoryMultipartState = core::PropertyDefinitionBuilder<>::createProperty("Temporary Directory Multipart State")
+      .withDescription("Directory in which, for multipart uploads, the processor will locally save the state tracking the upload ID and parts uploaded which must both be provided to complete "
+                       "the upload. If left empty, a temporary directory will be created.")
+      ->build();
   EXTENSIONAPI static constexpr auto Properties = minifi::utils::array_cat(S3Processor::Properties, std::array<core::PropertyReference, 10>{
       ObjectKey,
       ContentType,
@@ -148,7 +152,8 @@ class PutS3Object : public S3Processor {
       MultipartThreshold,
       MultipartPartSize,
       MultipartUploadAgeOffInterval,
-      MultipartUploadMaxAgeThreshold
+      MultipartUploadMaxAgeThreshold,
+      TemporaryDirectoryMultipartState
   });
 
 

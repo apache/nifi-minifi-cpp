@@ -160,22 +160,31 @@ void fixValidatedProperty(const std::string& property_name,
 // If the loaded property is time-period or data-size validated and it has no explicit units ms or B will be appended.
 // If the loaded property is integer validated and it has some explicit unit(time-period or data-size) it will be converted to ms/B and its unit cut off
 void Properties::loadConfigureFile(const std::filesystem::path& configuration_file, std::string_view prefix) {
-  std::lock_guard<std::mutex> lock(mutex_);
   if (configuration_file.empty()) {
     logger_->log_error("Configuration file path for %s is empty!", getName());
     return;
   }
 
+  loadFile(getHome() / configuration_file, prefix);
+}
+
+void Properties::loadFile(const std::filesystem::path& file_path, std::string_view prefix) {
+  std::lock_guard<std::mutex> lock(mutex_);
+  if (file_path.empty()) {
+    logger_->log_error("Property file path for %s is empty!", getName());
+    return;
+  }
+
   std::error_code ec;
-  properties_file_ = std::filesystem::canonical(getHome() / configuration_file, ec);
+  properties_file_ = file_path;
 
   if (ec.value() != 0) {
-    logger_->log_warn("Configuration file '%s' does not exist, so it could not be loaded.", configuration_file.string());
+    logger_->log_warn("Configuration file '%s' does not exist, so it could not be loaded.", file_path.string());
     return;
   }
 
   logger_->log_info("Using configuration file to load configuration for %s from %s (located at %s)",
-                    getName().c_str(), configuration_file.string(), properties_file_.string());
+                    getName().c_str(), file_path.string(), properties_file_.string());
 
   std::ifstream file(properties_file_, std::ifstream::in);
   if (!file.good()) {

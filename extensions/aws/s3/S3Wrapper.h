@@ -240,7 +240,7 @@ class S3Wrapper {
   std::optional<HeadObjectResult> headObject(const HeadObjectRequestParameters& head_object_params);
   std::optional<std::vector<MultipartUpload>> listMultipartUploads(const ListMultipartUploadsRequestParameters& params);
   bool abortMultipartUpload(const AbortMultipartUploadRequestParameters& params);
-  void initailizeMultipartUploadStateStorage(gsl::not_null<minifi::core::StateManager*> state_manager);
+  void initailizeMultipartUploadStateStorage(const std::string& multipart_temp_dir, const std::string& state_id);
 
   virtual ~S3Wrapper() = default;
 

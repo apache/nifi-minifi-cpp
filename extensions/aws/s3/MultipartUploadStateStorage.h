@@ -21,11 +21,15 @@
 #include <string>
 #include <vector>
 #include <memory>
+#include <filesystem>
+#include <fstream>
 
 #include "core/StateManager.h"
 #include "core/logging/Logger.h"
 #include "core/logging/LoggerConfiguration.h"
 #include "aws/core/utils/DateTime.h"
+#include "properties/Properties.h"
+#include "utils/file/FileUtils.h"
 
 namespace org::apache::nifi::minifi::aws::s3 {
 
@@ -49,16 +53,16 @@ struct MultipartUploadState {
 
 class MultipartUploadStateStorage {
  public:
-  explicit MultipartUploadStateStorage(gsl::not_null<core::StateManager*> state_manager)
-    : state_manager_(state_manager) {
-  }
+  explicit MultipartUploadStateStorage(const std::string& state_directory, std::string state_id);
 
   void storeState(const std::string& bucket, const std::string& key, const MultipartUploadState& state);
   std::optional<MultipartUploadState> getState(const std::string& bucket, const std::string& key) const;
   void removeState(const std::string& bucket, const std::string& key);
 
  private:
-  gsl::not_null<core::StateManager*> state_manager_;
+  std::string state_id_;
+  std::filesystem::path state_file_path_;
+  minifi::Properties state_;
   std::shared_ptr<core::logging::Logger> logger_{core::logging::LoggerFactory<MultipartUploadStateStorage>::getLogger()};
 };
 
