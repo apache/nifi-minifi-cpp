@@ -23,12 +23,13 @@
 #include <memory>
 #include <filesystem>
 #include <fstream>
+#include <mutex>
+#include <unordered_map>
 
 #include "core/StateManager.h"
 #include "core/logging/Logger.h"
 #include "core/logging/LoggerConfiguration.h"
 #include "aws/core/utils/DateTime.h"
-#include "properties/Properties.h"
 #include "utils/file/FileUtils.h"
 
 namespace org::apache::nifi::minifi::aws::s3 {
@@ -61,8 +62,13 @@ class MultipartUploadStateStorage {
   void removeAgedStates(std::chrono::milliseconds multipart_upload_max_age_threshold);
 
  private:
+  void loadFile();
+  void commitChanges();
+  void removeKey(const std::string& state_key);
+
+  mutable std::mutex state_mutex_;
   std::filesystem::path state_file_path_;
-  minifi::Properties state_;
+  std::unordered_map<std::string, std::string> state_;
   std::shared_ptr<core::logging::Logger> logger_{core::logging::LoggerFactory<MultipartUploadStateStorage>::getLogger()};
 };
 

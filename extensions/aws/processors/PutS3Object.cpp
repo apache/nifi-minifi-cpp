@@ -96,11 +96,6 @@ void PutS3Object::onSchedule(const std::shared_ptr<core::ProcessContext> &contex
 
   fillUserMetadata(context);
 
-  auto state_manager = context->getStateManager();
-  if (state_manager == nullptr) {
-    throw Exception(PROCESSOR_EXCEPTION, "Failed to get StateManager");
-  }
-
   std::string multipart_temp_dir;
   context->getProperty(TemporaryDirectoryMultipartState.getName(), multipart_temp_dir);
 
@@ -237,6 +232,7 @@ void PutS3Object::ageOffMultipartUploads(const CommonProperties &common_properti
   logger_->log_info("Found %d aged off pending multipart upload jobs in bucket '%s'", aged_off_uploads_in_progress->size(), common_properties.bucket);
   size_t aborted = 0;
   for (const auto& upload : *aged_off_uploads_in_progress) {
+    logger_->log_info("Aborting multipart upload with key '%s' and upload id '%s' in bucket '%s'", upload.key, upload.upload_id, common_properties.bucket);
     aws::s3::AbortMultipartUploadRequestParameters abort_params(common_properties.credentials, *client_config_);
     abort_params.setClientConfig(common_properties.proxy, common_properties.endpoint_override_url);
     abort_params.bucket = common_properties.bucket;

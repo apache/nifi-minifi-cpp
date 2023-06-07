@@ -24,7 +24,7 @@ namespace org::apache::nifi::minifi::test {
 class MultipartUploadStateStorageTestFixture {
  public:
   MultipartUploadStateStorageTestFixture()
-    : upload_storage_(test_controller.createTempDirectory(), "test_id") {
+    : upload_storage_(test_controller.createTempDirectory().string(), "test_id") {
   }
 
  protected:

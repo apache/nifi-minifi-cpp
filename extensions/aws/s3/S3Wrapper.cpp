@@ -422,7 +422,6 @@ void S3Wrapper::addListMultipartUploadResults(const Aws::Vector<Aws::S3::Model::
       continue;
     }
 
-    logger_->log_info("Multipart upload with key '%s' and upload id '%s' older than age limit, marked for abortion", upload .GetKey(), upload.GetUploadId());
     MultipartUpload filtered_upload;
     filtered_upload.key = upload.GetKey();
     filtered_upload.upload_id = upload.GetUploadId();
