@@ -101,6 +101,6 @@ void generateLogFile(const std::wstring& channel, const std::filesystem::path& p
   auto guard = gsl::finally([&] {CloseEventLog(event_log);});
 
   if (!EvtExportLog(NULL, channel.c_str(), L"*", path.wstring().c_str(), EvtExportLogChannelPath)) {
-    throw std::system_error{gsl:narrow<int>(GetLastError()), std::system_category(), "Failed to export logs"};
+    throw std::system_error{gsl::narrow<int>(GetLastError()), std::system_category(), "Failed to export logs"};
   }
 }
