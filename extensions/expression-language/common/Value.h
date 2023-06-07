@@ -15,247 +15,141 @@
  * limitations under the License.
  */
 
-#include <string>
-#include <sstream>
 #include <iomanip>
 #include <limits>
-#include <algorithm>
+#include <string>
+#include <sstream>
 #include <utility>
+#include <variant>
+#include "utils/GeneralUtils.h"
+#include "utils/StringUtils.h"
 
 #pragma once
 
-namespace org {
-namespace apache {
-namespace nifi {
-namespace minifi {
-namespace expression {
-
+namespace org::apache::nifi::minifi::expression {
 
 /**
- * Represents an expression value, which can be one of multiple types or NULL
+ * Represents an expression value, which can be one of multiple types or NULL (represented as variant with monostate as null)
  */
 class Value {
  public:
-  /**
-   * Construct a default (NULL) value
-   */
+  /// Construct a default (NULL) value
   Value() = default;
 
-  /**
-   * Construct a string value
-   */
-  explicit Value(std::string val) {
-    setString(std::move(val));
+  /// Construct with the specified value
+  explicit Value(std::string val) :value_{std::move(val)} {}
+  explicit Value(bool val) :value_{val} {}
+  explicit Value(uint64_t val) :value_{val} {}
+  explicit Value(int64_t val) :value_{val} {}
+  explicit Value(long double val) :value_{val} {}
+
+  [[nodiscard]] bool isNull() const { return holds_alternative<std::monostate>(value_); }
+
+  [[nodiscard]] bool isDecimal() const {
+    return std::visit(utils::overloaded{
+      [](long double) { return true; },
+      [](const std::string& string_val) {
+        return string_val.find('.') != string_val.npos ||
+            string_val.find('e') != string_val.npos ||
+            string_val.find('E') != string_val.npos;
+      },
+      [](const auto&) { return false; }
+    }, value_);
   }
 
-  /**
-   * Construct a boolean value
-   */
-  explicit Value(bool val) {
-    setBoolean(val);
+  void setSignedLong(int64_t val) { value_ = val; }
+  void setUnsignedLong(uint64_t val) { value_ = val; }
+  void setLongDouble(long double val) { value_ = val; }
+  void setBoolean(bool val) { value_ = val; }
+  void setString(std::string val) { value_ = std::move(val); }
+
+  [[nodiscard]] std::string asString() const {
+    return std::visit<std::string>(utils::overloaded{
+      [](const std::string& str) { return str; },
+      [](bool b) -> std::string { return b ? "true" : "false"; },
+      [](int64_t i) { return std::to_string(i); },
+      [](uint64_t i) { return std::to_string(i); },
+      [](long double d) {
+        std::stringstream ss;
+        ss << std::fixed << std::setprecision(std::numeric_limits<double>::digits10)
+           << d;
+        auto result = ss.str();
+        result.erase(result.find_last_not_of('0') + 1, std::string::npos);
+
+        if (result.find('.') == result.length() - 1) {
+          result.erase(result.length() - 1, std::string::npos);
+        }
+
+        return result;
+      },
+      [](std::monostate) { return std::string{}; }
+    }, value_);
   }
 
-  /**
-   * Construct an unsigned long value
-   */
-  explicit Value(uint64_t val) {
-    setUnsignedLong(val);
+  [[nodiscard]] uint64_t asUnsignedLong() const {
+    return std::visit<uint64_t>(utils::overloaded{
+      [](uint64_t i) { return i; },
+      [](int64_t i) { return gsl::narrow_cast<uint64_t>(i); },
+      [](long double d) { return static_cast<uint64_t>(d); },
+      [](const std::string& str) -> uint64_t {
+        const auto stoull_ = [](const std::string& s) { return std::stoull(s); };
+        return strParse<uint64_t>(stoull_, 0, "Value::asUnsignedLong", str);
+      },
+      [](auto) { return uint64_t{0}; }
+    }, value_);
   }
 
-  /**
-   * Construct a signed long value
-   */
-  explicit Value(int64_t val) {
-    setSignedLong(val);
+  [[nodiscard]] int64_t asSignedLong() const {
+    return std::visit<int64_t>(utils::overloaded{
+      [](int64_t i) { return i; },
+      [](uint64_t i) { return gsl::narrow_cast<int64_t>(i); },
+      [](long double d) { return static_cast<int64_t>(d); },
+      [](const std::string& str) -> int64_t {
+        const auto stoll_ = [](const std::string& s) { return std::stoll(s); };
+        return strParse<int64_t>(stoll_, 0, "Value::asSignedLong", str);
+      },
+      [](auto) { return int64_t{0}; }
+    }, value_);
   }
 
-  /**
-   * Construct a long double value
-   */
-  explicit Value(long double val) {
-    setLongDouble(val);
+  [[nodiscard]] long double asLongDouble() const {
+    return std::visit<long double>(utils::overloaded{
+      [](long double d) { return d; },
+      [](int64_t i) { return static_cast<long double>(i); },
+      [](uint64_t i) { return static_cast<long double>(i); },
+      [](const std::string& str) -> long double {
+        const auto stold_ = [](const std::string& s) { return std::stold(s); };
+        return strParse<long double>(stold_, 0.0, "Value::asLongDouble", str);
+      },
+      [](auto) -> long double { return 0.0; }
+    }, value_);
   }
 
-  bool isNull() const {
-    return is_null_;
-  }
-
-  bool isString() const {
-    return is_string_;
-  }
-
-  bool isDecimal() const {
-    if (is_long_double_) {
-      return true;
-    } else if (is_string_ && (string_val_.find('.') != string_val_.npos ||
-        string_val_.find('e') != string_val_.npos ||
-        string_val_.find('E') != string_val_.npos)) {
-      return true;
-    } else {
-      return false;
-    }
-  }
-
-  void setSignedLong(int64_t val) {
-    is_null_ = false;
-    is_bool_ = false;
-    is_signed_long_ = true;
-    is_unsigned_long_ = false;
-    is_long_double_ = false;
-    is_string_ = false;
-    signed_long_val_ = val;
-  }
-
-  void setUnsignedLong(uint64_t val) {
-    is_null_ = false;
-    is_bool_ = false;
-    is_signed_long_ = false;
-    is_unsigned_long_ = true;
-    is_long_double_ = false;
-    is_string_ = false;
-    unsigned_long_val_ = val;
-  }
-
-  void setLongDouble(long double val) {
-    is_null_ = false;
-    is_bool_ = false;
-    is_signed_long_ = false;
-    is_unsigned_long_ = false;
-    is_long_double_ = true;
-    is_string_ = false;
-    long_double_val_ = val;
-  }
-
-  void setBoolean(bool val) {
-    is_null_ = false;
-    is_bool_ = true;
-    is_signed_long_ = false;
-    is_unsigned_long_ = false;
-    is_long_double_ = false;
-    is_string_ = false;
-    bool_val_ = val;
-  }
-
-  void setString(std::string val) {
-    is_null_ = false;
-    is_bool_ = false;
-    is_signed_long_ = false;
-    is_unsigned_long_ = false;
-    is_long_double_ = false;
-    is_string_ = true;
-    string_val_ = std::move(val);
-  }
-
-  std::string asString() const {
-    if (is_string_) {
-      return string_val_;
-    } else if (is_bool_) {
-      if (bool_val_) {
-        return "true";
-      } else {
-        return "false";
-      }
-    } else if (is_signed_long_) {
-      return std::to_string(signed_long_val_);
-    } else if (is_unsigned_long_) {
-      return std::to_string(unsigned_long_val_);
-    } else if (is_long_double_) {
-      std::stringstream ss;
-      ss << std::fixed << std::setprecision(std::numeric_limits<double>::digits10)
-         << long_double_val_;
-      auto result = ss.str();
-      result.erase(result.find_last_not_of('0') + 1, std::string::npos);
-
-      if (result.find('.') == result.length() - 1) {
-        result.erase(result.length() - 1, std::string::npos);
-      }
-
-      return result;
-    } else {
-      return "";
-    }
-  }
-
-  uint64_t asUnsignedLong() const {
-    if (is_unsigned_long_) {
-      return unsigned_long_val_;
-    } else if (is_string_) {
-      return string_val_.empty() ? 0 : std::stoull(string_val_);
-    } else if (is_signed_long_) {
-      return signed_long_val_;
-    } else if (is_long_double_) {
-      return static_cast<uint64_t >(long_double_val_);
-    } else {
-      return 0;
-    }
-  }
-
-  int64_t asSignedLong() const {
-    if (is_signed_long_) {
-      return signed_long_val_;
-    } else if (is_unsigned_long_) {
-      return unsigned_long_val_;
-    } else if (is_string_) {
-      return string_val_.empty() ? 0 : std::stoll(string_val_);
-    } else if (is_long_double_) {
-      return static_cast<int64_t >(long_double_val_);
-    } else {
-      return 0;
-    }
-  }
-
-  long double asLongDouble() const {
-    if (is_signed_long_) {
-      return static_cast<long double>(signed_long_val_);
-    } else if (is_unsigned_long_) {
-      return static_cast<long double>(unsigned_long_val_);
-    } else if (is_long_double_) {
-      return long_double_val_;
-    } else if (is_string_) {
-      return string_val_.empty() ? 0 : std::stold(string_val_);
-    } else {
-      return 0.0;
-    }
-  }
-
-  bool asBoolean() const {
-    if (is_bool_) {
-      return bool_val_;
-    }
-    if (is_signed_long_) {
-      return signed_long_val_ != 0;
-    } else if (is_unsigned_long_) {
-      return unsigned_long_val_ != 0;
-    } else if (is_long_double_) {
-      return long_double_val_ != 0.0;
-    } else if (is_string_) {
-      std::string bool_str = string_val_;
-      std::transform(bool_str.begin(), bool_str.end(), bool_str.begin(), ::tolower);
-      std:: istringstream bools(bool_str);
-      bool bool_val;
-      bools >> std::boolalpha >> bool_val;
-      return bool_val;
-    } else {
-      return false;
-    }
+  [[nodiscard]] bool asBoolean() const {
+    return std::visit(utils::overloaded{
+      [](bool b) { return b; },
+      [](int64_t i) { return i != 0; },
+      [](uint64_t i) { return i != 0; },
+      [](long double d) { return d != 0.0; },
+      [](const std::string& str) { return utils::StringUtils::toBool(str).value_or(false); },
+      [](auto) { return false; }
+    }, value_);
   }
 
  private:
-  bool is_null_ = true;
-  bool is_string_ = false;
-  bool is_bool_ = false;
-  bool is_unsigned_long_ = false;
-  bool is_signed_long_ = false;
-  bool is_long_double_ = false;
-  bool bool_val_ = false;
-  uint64_t unsigned_long_val_ = 0;
-  int64_t signed_long_val_ = 0;
-  long double long_double_val_ = 0.0;
-  std::string string_val_ = "";
+  template<typename T>
+  static T strParse(std::regular_invocable<std::string> auto const& conversion_function, T default_value, std::string_view context, const std::string& value) {
+    if (value.empty()) return default_value;
+    try {
+      return std::invoke(conversion_function, value);
+    } catch (const std::invalid_argument& ex) {
+      throw std::invalid_argument{utils::StringUtils::join_pack(context, " failed to parse \"", value, "\": invalid argument")};
+    } catch (const std::out_of_range& ex) {
+      throw std::out_of_range{utils::StringUtils::join_pack(context, " failed to parse \"", value, "\": out of range")};
+    }
+  }
+
+  std::variant<std::monostate, bool, uint64_t, int64_t, long double, std::string> value_;
 };
 
-} /* namespace expression */
-} /* namespace minifi */
-} /* namespace nifi */
-} /* namespace apache */
-} /* namespace org */
+}  // namespace org::apache::nifi::minifi::expression

@@ -908,6 +908,44 @@ TEST_CASE("GT3", "[expressionGT3]") {
   REQUIRE("false" == expr(expression::Parameters{ flow_file_a }).asString());
 }
 
+// using :gt() to test string to integer parsing code
+TEST_CASE("GT4 Value parsing errors", "[expressionGT4][outofrange]") {
+  const char* test_str;
+  const char* expected_substr;
+  SECTION("integer out of range") {
+    // 2 ^ 64, the smallest positive integer that's not representable even in uint64_t
+    test_str = "18446744073709551616";
+    expected_substr = "out of range";
+  }
+  SECTION("integer invalid") {
+    test_str = "banana1337";
+    expected_substr = "invalid argument";
+  }
+  SECTION("floating point out of range") {
+    // largest IEEE754 quad precision float normal number times 10 (bumped the exponent by one)
+    test_str = "1.1897314953572317650857593266280070162e+4933";
+    expected_substr = "out of range";
+  }
+  SECTION("floating point invalid") {
+    test_str = "app.le+1337";
+    expected_substr = "invalid argument";
+  }
+  REQUIRE(test_str);
+  REQUIRE(expected_substr);
+  const auto expr = expression::compile("${attr1:gt(13.37)}");
+  auto flow_file = std::make_shared<core::FlowFile>();
+  flow_file->addAttribute("attr1", test_str);
+  try {
+    const auto result = expr(expression::Parameters{flow_file}).asString();
+    REQUIRE(false);
+  } catch (const std::exception& ex) {
+    const std::string message = ex.what();
+    // The exception message should be helpful enough to contain the problem description, and the problematic value
+    CHECK(message.find(expected_substr) != std::string::npos);
+    CHECK(message.find(test_str) != std::string::npos);
+  }
+}
+
 TEST_CASE("GE", "[expressionGE]") {
   auto expr = expression::compile("${attr:plus(5):ge(6)}");
 
