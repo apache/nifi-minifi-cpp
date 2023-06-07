@@ -16,6 +16,9 @@
 # under the License.
 
 set(PROJECT_VERSION_STR ${PROJECT_VERSION_MAJOR}.${PROJECT_VERSION_MINOR}.${PROJECT_VERSION_PATCH})
+include(ProcessorCount)
+ProcessorCount(PROCESSOR_COUNT)
+set(DOCKER_VERIFY_THREADS "${PROCESSOR_COUNT}" CACHE STRING "Number of threads that docker-verify can utilize")
 
 # Create a custom build target called "docker" that will invoke DockerBuild.sh and create the NiFi-MiNiFi-CPP Docker image
 add_custom_target(
@@ -178,7 +181,7 @@ if (EXISTS ${CMAKE_SOURCE_DIR}/docker/test/integration/features)
 
     add_custom_target(
         docker-verify
-        COMMAND ${CMAKE_SOURCE_DIR}/docker/DockerVerify.sh ${PROJECT_VERSION_STR} ${ENABLED_TAGS} --tags_to_exclude=${DISABLED_TAGS})
+        COMMAND ${CMAKE_SOURCE_DIR}/docker/DockerVerify.sh ${PROJECT_VERSION_STR} ${ENABLED_TAGS} --tags_to_exclude=${DISABLED_TAGS} --parallel_processes=${DOCKER_VERIFY_THREADS})
 endif()
 
 include(VerifyPythonCompatibility)

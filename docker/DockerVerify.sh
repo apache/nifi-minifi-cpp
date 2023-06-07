@@ -38,7 +38,7 @@ print_help()
   printf '\t%s\n' "<tags_to_run>: include these tags"
   printf '\t%s\n' "--tags_to_exclude: optional tags that should be skipped (no default)"
   printf '\t%s\n' "--image-tag-prefix: optional prefix to the docker tag (no default)"
-  printf '\t%s\n' "--parallel-processes: optional argument Specifies the number of parallel processes that can be executed simultaneously. (default: 3)"
+  printf '\t%s\n' "--parallel_processes: optional argument that specifies the number of parallel processes that can be executed simultaneously. (default: 3)"
   printf '\t%s\n' "-h, --help: Prints help"
 }
 
