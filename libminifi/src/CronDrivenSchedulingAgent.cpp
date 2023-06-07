@@ -50,7 +50,7 @@ utils::TaskRescheduleInfo CronDrivenSchedulingAgent::run(core::Processor* proces
       return utils::TaskRescheduleInfo::Done();
 
     if (*next_to_last_trigger > current_time.get_local_time())
-      return utils::TaskRescheduleInfo::RetryIn(ceil<milliseconds>(*next_to_last_trigger-current_time.get_local_time()));
+      return utils::TaskRescheduleInfo::RetryIn(*next_to_last_trigger-current_time.get_local_time());
 
     auto on_trigger_result = this->onTrigger(processor, processContext, sessionFactory);
 
@@ -61,7 +61,7 @@ utils::TaskRescheduleInfo CronDrivenSchedulingAgent::run(core::Processor* proces
       return utils::TaskRescheduleInfo::RetryIn(processor->getYieldTime());
 
     if (auto next_trigger = schedules_.at(uuid).calculateNextTrigger(current_time.get_local_time()))
-      return utils::TaskRescheduleInfo::RetryIn(ceil<milliseconds>(*next_trigger-current_time.get_local_time()));
+      return utils::TaskRescheduleInfo::RetryIn(*next_trigger-current_time.get_local_time());
   }
   return utils::TaskRescheduleInfo::Done();
 }

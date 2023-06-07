@@ -33,8 +33,7 @@ utils::TaskRescheduleInfo TimerDrivenSchedulingAgent::run(core::Processor* proce
     if (processor->isYield())
       return utils::TaskRescheduleInfo::RetryIn(processor->getYieldTime());
 
-    auto next_execution_time_point = trigger_start_time + processor->getSchedulingPeriod();
-    return utils::TaskRescheduleInfo::RetryIn(next_execution_time_point - std::chrono::steady_clock::now());
+    return utils::TaskRescheduleInfo::RetryAfter(trigger_start_time + processor->getSchedulingPeriod());
   }
   return utils::TaskRescheduleInfo::Done();
 }

@@ -23,6 +23,7 @@
 #if defined(WIN32)
 #include <future>  // This is required to work around a VS2017 bug, see the details below
 #endif
+#include "utils/gsl.h"
 
 namespace org::apache::nifi::minifi::utils {
 
@@ -52,7 +53,9 @@ class AfterExecute {
 
 struct TaskRescheduleInfo {
   TaskRescheduleInfo(bool result, std::chrono::steady_clock::duration wait_time)
-    : wait_time_(std::max(wait_time, std::chrono::steady_clock::duration(0))), finished_(result) {}
+    : wait_time_(wait_time), finished_(result) {
+    gsl_Expects(wait_time >= std::chrono::milliseconds(0));
+  }
 
   std::chrono::steady_clock::duration wait_time_;
   bool finished_;
@@ -62,6 +65,11 @@ struct TaskRescheduleInfo {
   }
 
   static TaskRescheduleInfo RetryIn(std::chrono::steady_clock::duration interval) {
+    return {false, interval};
+  }
+
+  static TaskRescheduleInfo RetryAfter(std::chrono::steady_clock::time_point time_point) {
+    auto interval = std::max(time_point - std::chrono::steady_clock::now(), std::chrono::steady_clock::duration(0));
     return {false, interval};
   }
 
