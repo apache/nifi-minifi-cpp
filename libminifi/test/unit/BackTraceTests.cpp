@@ -24,59 +24,76 @@
 #include "utils/BackTrace.h"
 #include "utils/Monitors.h"
 #include "utils/ThreadPool.h"
-#include "range/v3/algorithm/any_of.hpp"
 
 using namespace std::literals::chrono_literals;
+
+class WorkerNumberExecutions : public utils::AfterExecute<int> {
+ public:
+  explicit WorkerNumberExecutions(int tasks)
+      : tasks(tasks) {
+  }
+
+  WorkerNumberExecutions(WorkerNumberExecutions && other) noexcept
+      : runs(other.runs),
+      tasks(other.tasks) {
+  }
+
+  bool isFinished(const int &result) override {
+    return result <= 0 || ++runs >= tasks;
+  }
+  bool isCancelled(const int& /*result*/) override {
+    return false;
+  }
+
+  std::chrono::steady_clock::duration wait_time() override {
+    return 50ms;
+  }
+
+ protected:
+  int runs{0};
+  int tasks;
+};
 
 TEST_CASE("BT1", "[TPT1]") {
   const BackTrace trace = TraceResolver::getResolver().getBackTrace("BT1");
 #ifdef HAS_EXECINFO
-  CHECK(!trace.getTraces().empty());
+  REQUIRE(!trace.getTraces().empty());
 #endif
 }
-
-void inner_function(std::atomic_flag& ready_to_check, std::atomic_flag& checking_done) {
-  ready_to_check.test_and_set();
-  ready_to_check.notify_all();
-  checking_done.wait(false);
-}
-
-void outer_function(std::atomic_flag& ready_to_check, std::atomic_flag& checking_done) {
-  inner_function(ready_to_check, checking_done);
-}
-
 
 TEST_CASE("BT2", "[TPT2]") {
-  std::atomic_flag ready_for_checking = ATOMIC_FLAG_INIT;
-  std::atomic_flag done_with_checking = ATOMIC_FLAG_INIT;
-
-  constexpr std::string_view thread_pool_name = "Winnie the pool";
-  constexpr size_t number_of_worker_threads = 3;
-  utils::ThreadPool<utils::TaskRescheduleInfo> pool(number_of_worker_threads, false, nullptr, thread_pool_name.data());
-  utils::Worker<utils::TaskRescheduleInfo> worker([&]() -> utils::TaskRescheduleInfo {
-    outer_function(ready_for_checking, done_with_checking);
-    return utils::TaskRescheduleInfo::Done();
-  }, "id");
-  std::future<utils::TaskRescheduleInfo> future;
-  pool.execute(std::move(worker), future);
-
+  std::atomic<int> counter = 0;
+  utils::ThreadPool<int> pool(4);
   pool.start();
-  {
-    ready_for_checking.wait(false);
-    std::vector<BackTrace> traces = pool.getTraces();
-    CHECK(traces.size() == number_of_worker_threads);
-    for (const auto &trace : traces) {
-      CHECK(trace.getName().starts_with(thread_pool_name));
-    }
-#ifdef HAS_EXECINFO
-    auto first_worker_trace = traces.front();
-    CHECK(first_worker_trace.getName().ends_with("#0"));
-    CHECK(ranges::any_of(first_worker_trace.getTraces(), [](const std::string& trace_line) { return trace_line.find("inner_function") != trace_line.npos; }));
-    CHECK(ranges::any_of(first_worker_trace.getTraces(), [](const std::string& trace_line) { return trace_line.find("outer_function") != trace_line.npos; }));
-    done_with_checking.test_and_set();
-    done_with_checking.notify_all();
-#endif
+  std::this_thread::sleep_for(std::chrono::milliseconds(150));
+  for (int i = 0; i < 3; i++) {
+    std::unique_ptr<utils::AfterExecute<int>> after_execute = std::unique_ptr<utils::AfterExecute<int>>(new WorkerNumberExecutions(5));
+    utils::Worker<int> functor([&counter]() { return ++counter; }, "id", std::move(after_execute));
 
+    std::future<int> fut;
+    pool.execute(std::move(functor), fut);  // NOLINT(bugprone-use-after-move)
   }
-  future.wait();
+
+  std::unique_ptr<utils::AfterExecute<int>> after_execute = std::unique_ptr<utils::AfterExecute<int>>(new WorkerNumberExecutions(5));
+  utils::Worker<int> functor([&counter]() { return ++counter; }, "id", std::move(after_execute));
+
+  std::future<int> fut;
+  pool.execute(std::move(functor), fut);  // NOLINT(bugprone-use-after-move)
+
+  std::vector<BackTrace> traces = pool.getTraces();
+  for (const auto &trace : traces) {
+    std::cerr << "Thread name: " << trace.getName() << std::endl;
+    const auto &trace_strings = trace.getTraces();
+#ifdef HAS_EXECINFO
+    REQUIRE(trace_strings.size() > 2);
+    for (const auto& trace_string : trace_strings) {
+      std::cerr << " - " << trace_string << std::endl;
+    }
+    if (trace_strings.at(0).find("sleep_for") != std::string::npos) {
+      REQUIRE(trace_strings.at(1).find("counterFunction") != std::string::npos);
+    }
+#endif
+  }
+  fut.wait();
 }
+
