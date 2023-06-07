@@ -26,11 +26,7 @@
 
 #include "core/Resource.h"
 
-namespace org {
-namespace apache {
-namespace nifi {
-namespace minifi {
-namespace processors {
+namespace org::apache::nifi::minifi::processors {
 
 const core::Relationship RouteOnAttribute::Unmatched("unmatched", "Files which do not match any expression are routed here");
 const core::Relationship RouteOnAttribute::Failure("failure", "Failed files are transferred to failure");
@@ -86,7 +82,7 @@ void RouteOnAttribute::onTrigger(core::ProcessContext *context, core::ProcessSes
       session->remove(flow_file);
     }
   } catch (const std::exception &e) {
-    logger_->log_error("Caught exception while updating attributes: %s", e.what());
+    logger_->log_error("Caught exception while updating attributes: type: %s, what: %s", typeid(e).name(), e.what());
     session->transfer(flow_file, Failure);
     yield();
   }
@@ -94,8 +90,4 @@ void RouteOnAttribute::onTrigger(core::ProcessContext *context, core::ProcessSes
 
 REGISTER_RESOURCE(RouteOnAttribute, Processor);
 
-} /* namespace processors */
-} /* namespace minifi */
-} /* namespace nifi */
-} /* namespace apache */
-} /* namespace org */
+}  // namespace org::apache::nifi::minifi::processors

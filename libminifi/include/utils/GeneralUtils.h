@@ -118,4 +118,12 @@ using remove_cvref_t = typename std::remove_cv<typename std::remove_reference<T>
 
 inline constexpr bool implies(bool a, bool b) noexcept { return !a || b; }
 
+template<typename... Funcs>
+struct overloaded : Funcs... {
+  using Funcs::operator()...;
+};
+// deduction guide. Shouldn't be necessary since C++20, but Clang doesn't implement "Class template argument deduction for aggregates" yet
+template<typename... Funcs>
+overloaded(Funcs...) -> overloaded<Funcs...>;
+
 }  // namespace org::apache::nifi::minifi::utils
