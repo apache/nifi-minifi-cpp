@@ -94,7 +94,7 @@ BOOL WINAPI consoleSignalHandler(DWORD signal) {
   if (signal == CTRL_C_EVENT || signal == CTRL_BREAK_EVENT) {
     flow_controller_running.clear();
     flow_controller_running.notify_all();
-    process_running.wait(false);
+    process_running.wait(true);
     return TRUE;
   }
   return FALSE;
