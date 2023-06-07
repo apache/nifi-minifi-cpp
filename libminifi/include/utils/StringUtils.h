@@ -32,6 +32,7 @@
   #include <cwctype>
   #include <cctype>
 #endif
+#include "utils/expected.h"
 #include "utils/FailurePolicy.h"
 #include "utils/gsl.h"
 #include "utils/span.h"
@@ -493,6 +494,10 @@ class StringUtils {
   static bool matchesSequence(std::string_view str, const std::vector<std::string>& patterns);
 
   static bool splitToValueAndUnit(std::string_view input, int64_t& value, std::string& unit);
+
+  struct ParseError {};
+
+  static nonstd::expected<std::optional<char>, ParseError> parseCharacter(const std::string &input);
 };
 
 }  // namespace org::apache::nifi::minifi::utils

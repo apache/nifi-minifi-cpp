@@ -31,38 +31,11 @@
 
 #include "utils/expected.h"
 #include "utils/StringUtils.h"  // for string <=> on libc++
+#include "utils/net/AsioSocketUtils.h"
 
 #include <asio/io_context.hpp>
 #include <asio/awaitable.hpp>
 #include <asio/ssl/context.hpp>
-
-namespace org::apache::nifi::minifi::processors::detail {
-
-class ConnectionId {
- public:
-  ConnectionId(std::string hostname, std::string port) : hostname_(std::move(hostname)), port_(std::move(port)) {}
-
-  auto operator<=>(const ConnectionId&) const = default;
-
-  [[nodiscard]] std::string_view getHostname() const { return hostname_; }
-  [[nodiscard]] std::string_view getPort() const { return port_; }
-
- private:
-  std::string hostname_;
-  std::string port_;
-};
-}  // namespace org::apache::nifi::minifi::processors::detail
-
-namespace std {
-template<>
-struct hash<org::apache::nifi::minifi::processors::detail::ConnectionId> {
-  size_t operator()(const org::apache::nifi::minifi::processors::detail::ConnectionId& connection_id) const {
-    return org::apache::nifi::minifi::utils::hash_combine(
-        std::hash<std::string_view>{}(connection_id.getHostname()),
-        std::hash<std::string_view>{}(connection_id.getPort()));
-  }
-};
-}  // namespace std
 
 namespace org::apache::nifi::minifi::processors {
 class ConnectionHandlerBase {
@@ -128,7 +101,7 @@ class PutTCP final : public core::Processor {
 
   std::vector<std::byte> delimiter_;
   asio::io_context io_context_;
-  std::optional<std::unordered_map<detail::ConnectionId, std::shared_ptr<ConnectionHandlerBase>>> connections_;
+  std::optional<std::unordered_map<utils::net::ConnectionId, std::shared_ptr<ConnectionHandlerBase>>> connections_;
   std::optional<std::chrono::milliseconds> idle_connection_expiration_;
   std::optional<size_t> max_size_of_socket_send_buffer_;
   std::chrono::milliseconds timeout_duration_ = std::chrono::seconds(15);

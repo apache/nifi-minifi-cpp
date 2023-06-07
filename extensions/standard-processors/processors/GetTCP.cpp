@@ -17,275 +17,312 @@
  */
 #include "GetTCP.h"
 
-#ifndef WIN32
-#include <dirent.h>
-#endif
-#include <cinttypes>
-#include <future>
 #include <memory>
-#include <mutex>
 #include <thread>
-#include <utility>
-#include <vector>
 #include <string>
 
-#include "io/ClientSocket.h"
+#include <asio/read_until.hpp>
+#include <asio/detached.hpp>
+#include "utils/net/AsioCoro.h"
 #include "io/StreamFactory.h"
 #include "utils/gsl.h"
 #include "utils/StringUtils.h"
-#include "utils/TimeUtil.h"
 #include "core/ProcessContext.h"
 #include "core/ProcessSession.h"
 #include "core/ProcessSessionFactory.h"
 #include "core/PropertyBuilder.h"
 #include "core/Resource.h"
 
+using namespace std::literals::chrono_literals;
+
 namespace org::apache::nifi::minifi::processors {
 
-const char *DataHandler::SOURCE_ENDPOINT_ATTRIBUTE = "source.endpoint";
-
 const core::Property GetTCP::EndpointList(
-    core::PropertyBuilder::createProperty("endpoint-list")->withDescription("A comma delimited list of the endpoints to connect to. The format should be <server_address>:<port>.")->isRequired(true)
-        ->build());
-
-const core::Property GetTCP::ConcurrentHandlers(
-    core::PropertyBuilder::createProperty("concurrent-handler-count")->withDescription("Number of concurrent handlers for this session")->withDefaultValue<int>(1)->build());
-
-const core::Property GetTCP::ReconnectInterval(
-    core::PropertyBuilder::createProperty("reconnect-interval")->withDescription("The number of seconds to wait before attempting to reconnect to the endpoint.")
-        ->withDefaultValue<core::TimePeriodValue>("5 s")->build());
-
-const core::Property GetTCP::ReceiveBufferSize(
-    core::PropertyBuilder::createProperty("receive-buffer-size")->withDescription("The size of the buffer to receive data in. Default 16384 (16MB).")->withDefaultValue<core::DataSizeValue>("16 MB")
-        ->build());
+    core::PropertyBuilder::createProperty("Endpoint List")
+      ->withDescription("A comma delimited list of the endpoints to connect to. The format should be <server_address>:<port>.")
+      ->isRequired(true)->build());
 
 const core::Property GetTCP::SSLContextService(
-    core::PropertyBuilder::createProperty("SSL Context Service")->withDescription("SSL Context Service Name")->asType<minifi::controllers::SSLContextService>()->build());
+    core::PropertyBuilder::createProperty("SSL Context Service")
+      ->withDescription("SSL Context Service Name")
+      ->asType<minifi::controllers::SSLContextService>()->build());
 
-const core::Property GetTCP::StayConnected(
-    core::PropertyBuilder::createProperty("Stay Connected")->withDescription("Determines if we keep the same socket despite having no data")->withDefaultValue<bool>(true)->build());
+const core::Property GetTCP::MessageDelimiter(
+    core::PropertyBuilder::createProperty("Message Delimiter")->withDescription(
+        "Character that denotes the end of the message.")
+        ->withDefaultValue("\\n")->build());
 
-const core::Property GetTCP::ConnectionAttemptLimit(
-    core::PropertyBuilder::createProperty("connection-attempt-timeout")->withDescription("Maximum number of connection attempts before attempting backup hosts, if configured")->withDefaultValue<int>(
-        3)->build());
+const core::Property GetTCP::MaxQueueSize(
+    core::PropertyBuilder::createProperty("Max Size of Message Queue")
+        ->withDescription("Maximum number of messages allowed to be buffered before processing them when the processor is triggered. "
+                          "If the buffer is full, the message is ignored. If set to zero the buffer is unlimited.")
+        ->withDefaultValue<uint64_t>(10000)
+        ->isRequired(true)
+        ->build());
 
-const core::Property GetTCP::EndOfMessageByte(
-    core::PropertyBuilder::createProperty("end-of-message-byte")->withDescription(
-        "Byte value which denotes end of message. Must be specified as integer within the valid byte range  (-128 thru 127). For example, '13' = Carriage return and '10' = New line. Default '13'.")
-        ->withDefaultValue("13")->build());
+const core::Property GetTCP::MaxBatchSize(
+    core::PropertyBuilder::createProperty("Max Batch Size")
+        ->withDescription("The maximum number of messages to process at a time.")
+        ->withDefaultValue<uint64_t>(500)
+        ->isRequired(true)
+        ->build());
+
+const core::Property GetTCP::MaxMessageSize(
+    core::PropertyBuilder::createProperty("Maximum Message Size")
+      ->withDescription("Optional size of the buffer to receive data in.")->build());
+
+const core::Property GetTCP::Timeout = core::PropertyBuilder::createProperty("Timeout")
+    ->withDescription("The timeout for connecting to and communicating with the destination.")
+    ->withDefaultValue<core::TimePeriodValue>("1s")
+    ->isRequired(true)
+    ->supportsExpressionLanguage(true)
+    ->build();
+
+const core::Property GetTCP::ReconnectInterval = core::PropertyBuilder::createProperty("Reconnection Interval")
+    ->withDescription("The duration to wait before attempting to reconnect to the endpoints.")
+    ->withDefaultValue<core::TimePeriodValue>("1 min")
+    ->isRequired(true)
+    ->supportsExpressionLanguage(true)
+    ->build();
 
 const core::Relationship GetTCP::Success("success", "All files are routed to success");
 const core::Relationship GetTCP::Partial("partial", "Indicates an incomplete message as a result of encountering the end of message byte trigger");
 
-int16_t DataHandler::handle(const std::string& source, uint8_t *message, size_t size, bool partial) {
-  std::shared_ptr<core::ProcessSession> my_session = sessionFactory_->createSession();
-  std::shared_ptr<core::FlowFile> flowFile = my_session->create();
+const core::OutputAttribute GetTCP::SourceEndpoint{"source.endpoint", {Success, Partial}, "The address of the source endpoint the message came from"};
 
-  my_session->writeBuffer(flowFile, gsl::make_span(reinterpret_cast<const std::byte*>(message), size));
-
-  my_session->putAttribute(flowFile, SOURCE_ENDPOINT_ATTRIBUTE, source);
-
-  if (partial) {
-    my_session->transfer(flowFile, GetTCP::Partial);
-  } else {
-    my_session->transfer(flowFile, GetTCP::Success);
-  }
-
-  my_session->commit();
-
-  return 0;
-}
 void GetTCP::initialize() {
   setSupportedProperties(properties());
   setSupportedRelationships(relationships());
 }
 
-void GetTCP::onSchedule(const std::shared_ptr<core::ProcessContext> &context, const std::shared_ptr<core::ProcessSessionFactory> &sessionFactory) {
-  std::string value;
-  if (context->getProperty(EndpointList.getName(), value)) {
-    endpoints = utils::StringUtils::split(value, ",");
-  }
 
-  int handlers = 0;
-  if (context->getProperty(ConcurrentHandlers.getName(), handlers)) {
-    concurrent_handlers_ = handlers;
-  }
-
-  stay_connected_ = true;
-  if (context->getProperty(StayConnected.getName(), value)) {
-    stay_connected_ = utils::StringUtils::toBool(value).value_or(true);
-  }
-
-  int connects = 0;
-  if (context->getProperty(ConnectionAttemptLimit.getName(), connects)) {
-    connection_attempt_limit_ = connects;
-  }
-  context->getProperty(ReceiveBufferSize.getName(), receive_buffer_size_);
-
-  if (context->getProperty(EndOfMessageByte.getName(), value)) {
-    logger_->log_trace("EOM is passed in as %s", value);
-    int64_t byteValue = 0;
-    core::Property::StringToInt(value, byteValue);
-    endOfMessageByte = static_cast<std::byte>(byteValue & 0xFF);
-  }
-
-  logger_->log_trace("EOM is defined as %i", static_cast<int>(endOfMessageByte));
-
-  if (auto reconnect_interval = context->getProperty<core::TimePeriodValue>(ReconnectInterval)) {
-    reconnect_interval_ = reconnect_interval->getMilliseconds();
-    logger_->log_debug("Reconnect interval is %" PRId64 " ms", reconnect_interval_.count());
-  } else {
-    logger_->log_debug("Reconnect interval using default value of %" PRId64 " ms", reconnect_interval_.count());
-  }
-
-  handler_ = std::make_unique<DataHandler>(sessionFactory);
-
-  f_ex = [&] {
-    std::unique_ptr<io::Socket> socket_ptr;
-    // reuse the byte buffer.
-      std::vector<std::byte> buffer;
-      int reconnects = 0;
-      do {
-        if ( socket_ring_buffer_.try_dequeue(socket_ptr) ) {
-          buffer.resize(receive_buffer_size_);
-          const auto size_read = socket_ptr->read(buffer, false);
-          if (!io::isError(size_read)) {
-            if (size_read != 0) {
-              // determine cut location
-              size_t startLoc = 0;
-              for (size_t i = 0; i < size_read; i++) {
-                if (buffer.at(i) == endOfMessageByte && i > 0) {
-                  if (i-startLoc > 0) {
-                    handler_->handle(socket_ptr->getHostname(), reinterpret_cast<uint8_t*>(buffer.data())+startLoc, (i-startLoc), true);
-                  }
-                  startLoc = i;
-                }
-              }
-              if (startLoc > 0) {
-                logger_->log_trace("Starting at %i, ending at %i", startLoc, size_read);
-                if (size_read-startLoc > 0) {
-                  handler_->handle(socket_ptr->getHostname(), reinterpret_cast<uint8_t*>(buffer.data())+startLoc, (size_read-startLoc), true);
-                }
-              } else {
-                logger_->log_trace("Handling at %i, ending at %i", startLoc, size_read);
-                if (size_read > 0) {
-                  handler_->handle(socket_ptr->getHostname(), reinterpret_cast<uint8_t*>(buffer.data()), size_read, false);
-                }
-              }
-              reconnects = 0;
-            }
-            socket_ring_buffer_.enqueue(std::move(socket_ptr));
-          } else if (size_read == static_cast<size_t>(-2) && stay_connected_) {
-            if (++reconnects > connection_attempt_limit_) {
-              logger_->log_info("Too many reconnects, exiting thread");
-              socket_ptr->close();
-              return -1;
-            }
-            logger_->log_info("Sleeping for %" PRId64 " msec before attempting to reconnect", int64_t{reconnect_interval_.count()});
-            std::this_thread::sleep_for(reconnect_interval_);
-            socket_ring_buffer_.enqueue(std::move(socket_ptr));
-          } else {
-            socket_ptr->close();
-            std::this_thread::sleep_for(reconnect_interval_);
-            logger_->log_info("Read response returned a -1 from socket, exiting thread");
-            return -1;
-          }
-        } else {
-          std::this_thread::sleep_for(reconnect_interval_);
-          logger_->log_info("Could not use socket, exiting thread");
-          return -1;
-        }
-      }while (running_);
-      logger_->log_debug("Ending private thread");
-      return 0;
-    };
-
-  if (context->getProperty(SSLContextService.getName(), value)) {
-    std::shared_ptr<core::controller::ControllerService> service = context->getControllerService(value);
-    if (nullptr != service) {
-      ssl_service_ = std::static_pointer_cast<minifi::controllers::SSLContextService>(service);
+std::vector<utils::net::ConnectionId> GetTCP::parseEndpointList(core::ProcessContext& context) {
+  std::vector<utils::net::ConnectionId> connections_to_make;
+  if (auto endpoint_list_str = context.getProperty(EndpointList)) {
+    for (const auto& endpoint_str : utils::StringUtils::splitAndTrim(*endpoint_list_str, ",")) {
+      auto hostname_service_pair = utils::StringUtils::splitAndTrim(endpoint_str, ":");
+      if (hostname_service_pair.size() != 2) {
+        logger_->log_error("%s endpoint is invalid, expected {hostname}:{service} format", endpoint_str);
+        continue;
+      }
+      connections_to_make.emplace_back(hostname_service_pair[0], hostname_service_pair[1]);
     }
   }
+  if (connections_to_make.empty())
+    throw Exception(PROCESS_SCHEDULE_EXCEPTION, fmt::format("No valid endpoint in {} property", EndpointList.getName()));
 
-  client_thread_pool_.setMaxConcurrentTasks(concurrent_handlers_);
-  client_thread_pool_.start();
+  return connections_to_make;
+}
 
-  running_ = true;
+char GetTCP::parseDelimiter(core::ProcessContext& context) {
+  char delimiter = '\n';
+  if (auto delimiter_str = context.getProperty(GetTCP::MessageDelimiter)) {
+    auto parsed_delimiter = utils::StringUtils::parseCharacter(*delimiter_str);
+    if (!parsed_delimiter || !parsed_delimiter->has_value())
+      throw Exception(PROCESS_SCHEDULE_EXCEPTION, fmt::format("Invalid delimiter: {} (it must be a single (escaped or not) character", *delimiter_str));
+    delimiter = **parsed_delimiter;
+  }
+  return delimiter;
+}
+
+std::optional<asio::ssl::context> GetTCP::parseSSLContext(core::ProcessContext& context) {
+  std::optional<asio::ssl::context> ssl_context;
+  if (auto context_name = context.getProperty(SSLContextService)) {
+    if (auto controller_service = context.getControllerService(*context_name)) {
+      if (auto ssl_context_service = std::dynamic_pointer_cast<minifi::controllers::SSLContextService>(context.getControllerService(*context_name))) {
+        ssl_context = utils::net::getSslContext(*ssl_context_service);
+      } else {
+        throw Exception(PROCESS_SCHEDULE_EXCEPTION, *context_name + " is not an SSL Context Service");
+      }
+    } else {
+      throw Exception(PROCESS_SCHEDULE_EXCEPTION, "Invalid controller service: " + *context_name);
+    }
+  }
+  return ssl_context;
+}
+
+uint64_t GetTCP::parseMaxBatchSize(core::ProcessContext& context) {
+  if (auto max_batch_size = context.getProperty<uint64_t>(MaxBatchSize)) {
+    if (*max_batch_size == 0) {
+      throw Exception(PROCESS_SCHEDULE_EXCEPTION, fmt::format("{} should be non-zero.", MaxBatchSize.getName()));
+    }
+    return *max_batch_size;
+  }
+  return MaxBatchSize.getDefaultValue();
+}
+
+void GetTCP::onSchedule(const std::shared_ptr<core::ProcessContext>& context, const std::shared_ptr<core::ProcessSessionFactory>&) {
+  gsl_Expects(context);
+
+  auto connections_to_make = parseEndpointList(*context);
+  auto delimiter = parseDelimiter(*context);
+  auto ssl_context = parseSSLContext(*context);
+
+  std::optional<size_t> max_queue_size = context->getProperty<uint64_t>(MaxQueueSize);
+  std::optional<size_t> max_message_size = context->getProperty<uint64_t>(MaxMessageSize);
+
+
+  asio::steady_timer::duration timeout_duration = 1s;
+  if (auto timeout_value = context->getProperty<core::TimePeriodValue>(Timeout)) {
+    timeout_duration = timeout_value->getMilliseconds();
+  }
+
+  asio::steady_timer::duration reconnection_interval = 1min;
+  if (auto reconnect_interval_value = context->getProperty<core::TimePeriodValue>(ReconnectInterval)) {
+    reconnection_interval = reconnect_interval_value->getMilliseconds();
+  }
+
+
+  client_.emplace(delimiter, timeout_duration, reconnection_interval, std::move(ssl_context), max_queue_size, max_message_size, std::move(connections_to_make), logger_);
+  client_thread_ = std::thread([this]() { client_->run(); });  // NOLINT
+
+  max_batch_size_ = parseMaxBatchSize(*context);
 }
 
 void GetTCP::notifyStop() {
-  running_ = false;
-  // await threads to shutdown.
-  client_thread_pool_.shutdown();
-  std::unique_ptr<io::Socket> socket_ptr;
-  while (socket_ring_buffer_.size_approx() > 0) {
-    socket_ring_buffer_.try_dequeue(socket_ptr);
+  if (client_)
+    client_->stop();
+}
+
+void GetTCP::transferAsFlowFile(const utils::net::Message& message, core::ProcessSession& session) {
+  auto flow_file = session.create();
+  session.writeBuffer(flow_file, message.message_data);
+  flow_file->setAttribute(GetTCP::SourceEndpoint.getName(), fmt::format("{}:{}", message.sender_address.to_string(), std::to_string(message.server_port)));
+  if (message.is_partial)
+    session.transfer(flow_file, Partial);
+  else
+    session.transfer(flow_file, Success);
+}
+
+void GetTCP::onTrigger(const std::shared_ptr<core::ProcessContext>&, const std::shared_ptr<core::ProcessSession>& session) {
+  gsl_Expects(session && max_batch_size_ > 0);
+  size_t logs_processed = 0;
+  while (!client_->queueEmpty() && logs_processed < max_batch_size_) {
+    utils::net::Message received_message;
+    if (!client_->tryDequeue(received_message))
+      break;
+    transferAsFlowFile(received_message, *session);
+    ++logs_processed;
   }
 }
-void GetTCP::onTrigger(const std::shared_ptr<core::ProcessContext> &context, const std::shared_ptr<core::ProcessSession>& /*session*/) {
-  // Perform directory list
-  std::lock_guard<std::mutex> lock(mutex_);
-  // check if the futures are valid. If they've terminated remove it from the map.
 
-  for (auto &initEndpoint : endpoints) {
-    std::vector<std::string> hostAndPort = utils::StringUtils::split(initEndpoint, ":");
-    auto realizedHost = hostAndPort.at(0);
-#ifdef WIN32
-    if ("localhost" == realizedHost) {
-      realizedHost = org::apache::nifi::minifi::io::Socket::getMyHostName();
+GetTCP::TcpClient::TcpClient(char delimiter,
+    asio::steady_timer::duration timeout_duration,
+    asio::steady_timer::duration reconnection_interval,
+    std::optional<asio::ssl::context> ssl_context,
+    std::optional<size_t> max_queue_size,
+    std::optional<size_t> max_message_size,
+    std::vector<utils::net::ConnectionId> connections,
+    std::shared_ptr<core::logging::Logger> logger)
+    : delimiter_(delimiter),
+      timeout_duration_(timeout_duration),
+      reconnection_interval_(reconnection_interval),
+      ssl_context_(std::move(ssl_context)),
+      max_queue_size_(max_queue_size),
+      max_message_size_(max_message_size),
+      connections_(std::move(connections)),
+      logger_(std::move(logger)) {
+}
+
+GetTCP::TcpClient::~TcpClient() {
+  stop();
+}
+
+
+void GetTCP::TcpClient::run() {
+  gsl_Expects(!connections_.empty());
+  for (const auto& connection_id : connections_) {
+    asio::co_spawn(io_context_, doReceiveFrom(connection_id), asio::detached);  // NOLINT
+  }
+  io_context_.run();
+}
+
+void GetTCP::TcpClient::stop() {
+  io_context_.stop();
+}
+
+bool GetTCP::TcpClient::queueEmpty() const {
+  return concurrent_queue_.empty();
+}
+
+bool GetTCP::TcpClient::tryDequeue(utils::net::Message& received_message) {
+  return concurrent_queue_.tryDequeue(received_message);
+}
+
+asio::awaitable<std::error_code> GetTCP::TcpClient::readLoop(auto& socket) {
+  std::string read_message;
+  bool previous_didnt_end_with_delimiter = false;
+  bool current_doesnt_end_with_delimiter = false;
+  while (true) {
+    {
+      previous_didnt_end_with_delimiter = current_doesnt_end_with_delimiter;
+      current_doesnt_end_with_delimiter = false;
     }
-#endif
-    if (hostAndPort.size() != 2) {
+    auto dynamic_buffer = max_message_size_ ? asio::dynamic_buffer(read_message, *max_message_size_) : asio::dynamic_buffer(read_message);
+    auto [read_error, bytes_read] = co_await asio::async_read_until(socket, dynamic_buffer, delimiter_, utils::net::use_nothrow_awaitable);  // NOLINT
+
+    if (*max_message_size_ && read_error == asio::error::not_found) {
+      current_doesnt_end_with_delimiter = true;
+      bytes_read = *max_message_size_;
+    } else if (read_error) {
+      logger_->log_error("Error during read %s", read_error.message());
+      co_return read_error;
+    }
+
+    if (bytes_read == 0)
+      continue;
+
+    if (!max_queue_size_ || max_queue_size_ > concurrent_queue_.size()) {
+      utils::net::Message message{read_message.substr(0, bytes_read), utils::net::IpProtocol::TCP, socket.lowest_layer().remote_endpoint().address(), socket.lowest_layer().remote_endpoint().port()};
+      if (previous_didnt_end_with_delimiter || current_doesnt_end_with_delimiter)
+        message.is_partial = true;
+      concurrent_queue_.enqueue(std::move(message));
+    } else {
+      logger_->log_warn("Queue is full. TCP message ignored.");
+    }
+    read_message.erase(0, bytes_read);
+  }
+}
+
+template<class SocketType>
+asio::awaitable<std::error_code> GetTCP::TcpClient::doReceiveFromEndpoint(const asio::ip::tcp::endpoint& endpoint, SocketType& socket) {
+  auto [connection_error] = co_await utils::net::asyncOperationWithTimeout(socket.lowest_layer().async_connect(endpoint, utils::net::use_nothrow_awaitable), timeout_duration_);  // NOLINT
+  if (connection_error)
+    co_return connection_error;
+  auto [handshake_error] = co_await utils::net::handshake<SocketType>(socket, timeout_duration_);
+  if (handshake_error)
+    co_return handshake_error;
+  co_return co_await readLoop(socket);
+}
+
+asio::awaitable<void> GetTCP::TcpClient::doReceiveFrom(const utils::net::ConnectionId& connection_id) {
+  while (true) {
+    asio::ip::tcp::resolver resolver(io_context_);
+    auto [resolve_error, resolve_result] = co_await utils::net::asyncOperationWithTimeout(  // NOLINT
+        resolver.async_resolve(connection_id.getHostname(), connection_id.getService(), utils::net::use_nothrow_awaitable), timeout_duration_);
+    if (resolve_error) {
+      logger_->log_error("Error during resolution: %s", resolve_error.message());
+      co_await utils::net::async_wait(reconnection_interval_);
       continue;
     }
 
-    auto portStr = hostAndPort.at(1);
-    auto endpoint = utils::StringUtils::join_pack(realizedHost, ":", portStr);
-
-    auto endPointFuture = live_clients_.find(endpoint);
-    // does not exist
-    if (endPointFuture == live_clients_.end()) {
-      logger_->log_info("creating endpoint for %s", endpoint);
-      if (hostAndPort.size() == 2) {
-        logger_->log_debug("Opening another socket to %s:%s is secure %d", realizedHost, portStr, (ssl_service_ != nullptr));
-        std::unique_ptr<io::Socket> socket =
-            ssl_service_ != nullptr ? stream_factory_->createSecureSocket(realizedHost, std::stoi(portStr), ssl_service_) : stream_factory_->createSocket(realizedHost, std::stoi(portStr));
-        if (!socket) {
-          logger_->log_error("Could not create socket during initialization for %s", endpoint);
+    std::error_code last_error;
+    for (const auto& endpoint : resolve_result) {
+      if (ssl_context_) {
+        utils::net::SslSocket ssl_socket{io_context_, *ssl_context_};
+        last_error = co_await doReceiveFromEndpoint<utils::net::SslSocket>(endpoint, ssl_socket);
+        if (last_error)
           continue;
-        }
-        socket->setNonBlocking();
-        if (socket->initialize() != -1) {
-          logger_->log_debug("Enqueueing socket into ring buffer %s:%s", realizedHost, portStr);
-          socket_ring_buffer_.enqueue(std::move(socket));
-        } else {
-          logger_->log_error("Could not create socket during initialization for %s", endpoint);
+      } else {
+        utils::net::TcpSocket tcp_socket(io_context_);
+        last_error = co_await doReceiveFromEndpoint<utils::net::TcpSocket>(endpoint, tcp_socket);
+        if (last_error)
           continue;
-        }
-      } else {
-        logger_->log_error("Could not create socket for %s", endpoint);
-      }
-      auto* future = new std::future<int>();
-      std::unique_ptr<utils::AfterExecute<int>> after_execute = std::unique_ptr<utils::AfterExecute<int>>(new SocketAfterExecute(running_, endpoint, &live_clients_, &mutex_));
-      utils::Worker<int> functor(f_ex, "workers", std::move(after_execute));
-      client_thread_pool_.execute(std::move(functor), *future);
-      live_clients_[endpoint] = future;
-    } else {
-      if (!endPointFuture->second->valid()) {
-        delete endPointFuture->second;
-        auto* future = new std::future<int>();
-        std::unique_ptr<utils::AfterExecute<int>> after_execute = std::unique_ptr<utils::AfterExecute<int>>(new SocketAfterExecute(running_, endpoint, &live_clients_, &mutex_));
-        utils::Worker<int> functor(f_ex, "workers", std::move(after_execute));
-        client_thread_pool_.execute(std::move(functor), *future);
-        live_clients_[endpoint] = future;
-      } else {
-        logger_->log_debug("Thread still running for %s", endPointFuture->first);
-        // we have a thread corresponding to this.
       }
     }
+    logger_->log_error("Error connecting to %s:%s due to %s", connection_id.getHostname().data(), connection_id.getService().data(), last_error.message());
+    co_await utils::net::async_wait(reconnection_interval_);
   }
-  logger_->log_debug("Updating endpoint");
-  context->yield();
 }
 
 REGISTER_RESOURCE(GetTCP, Processor);

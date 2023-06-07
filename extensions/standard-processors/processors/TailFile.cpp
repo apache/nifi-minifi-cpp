@@ -49,6 +49,7 @@
 #include "core/PropertyBuilder.h"
 #include "core/Resource.h"
 #include "utils/RegexUtils.h"
+#include "utils/expected.h"
 
 namespace org::apache::nifi::minifi::processors {
 
@@ -170,19 +171,6 @@ uint64_t readOptionalUint64(const Container &container, const Key &key) {
     return std::stoull(it->second);
   } else {
     return 0;
-  }
-}
-
-// the delimiter is the first character of the input, allowing some escape sequences
-std::string parseDelimiter(const std::string &input) {
-  if (input.empty()) return "";
-  if (input[0] != '\\') return std::string{ input[0] };
-  if (input.size() == std::size_t{1}) return "\\";
-  switch (input[1]) {
-    case 'r': return "\r";
-    case 't': return "\t";
-    case 'n': return "\n";
-    default: return std::string{ input[1] };
   }
 }
 
@@ -326,6 +314,19 @@ class WholeFileReaderCallback {
   std::ifstream input_stream_;
   std::shared_ptr<core::logging::Logger> logger_ = core::logging::LoggerFactory<TailFile>::getLogger();
 };
+
+// This is for backwards compatibility only, as it will accept any string as Input Delimiter while only use the first character from it, which can be confusing
+std::optional<char> getDelimiterOld(const std::string& delimiter_str) {
+  if (delimiter_str.empty()) return std::nullopt;
+  if (delimiter_str[0] != '\\') return delimiter_str[0];
+  if (delimiter_str.size() == 1) return '\\';
+  switch (delimiter_str[1]) {
+    case 'r': return '\r';
+    case 't': return '\t';
+    case 'n': return '\n';
+    default: return delimiter_str[1];
+  }
+}
 }  // namespace
 
 void TailFile::initialize() {
@@ -343,10 +344,14 @@ void TailFile::onSchedule(const std::shared_ptr<core::ProcessContext> &context, 
     throw Exception(PROCESSOR_EXCEPTION, "Failed to get StateManager");
   }
 
-  std::string value;
-
-  if (context->getProperty(Delimiter.getName(), value)) {
-    delimiter_ = parseDelimiter(value);
+  if (auto delimiter_str = context->getProperty(Delimiter)) {
+    if (auto parsed_delimiter = utils::StringUtils::parseCharacter(*delimiter_str)) {
+      delimiter_ = *parsed_delimiter;
+    } else {
+      logger_->log_error("Invalid %s: \"%s\" (it should be a single character, whether escaped or not). Using the first character as the %s",
+          TailFile::Delimiter.getName(), *delimiter_str, TailFile::Delimiter.getName());
+      delimiter_ = getDelimiterOld(*delimiter_str);
+    }
   }
 
   std::string file_name_str;
@@ -788,12 +793,11 @@ void TailFile::processSingleFile(const std::shared_ptr<core::ProcessSession> &se
   if (extension.starts_with('.'))
     extension.erase(extension.begin());
 
-  if (!delimiter_.empty()) {
-    char delim = delimiter_[0];
-    logger_->log_trace("Looking for delimiter 0x%X", delim);
+  if (delimiter_) {
+    logger_->log_trace("Looking for delimiter 0x%X", *delimiter_);
 
     std::size_t num_flow_files = 0;
-    FileReaderCallback file_reader{full_file_name, state.position_, delim, state.checksum_};
+    FileReaderCallback file_reader{full_file_name, state.position_, *delimiter_, state.checksum_};
     TailState state_copy{state};
 
     while (file_reader.hasMoreToRead() && (!batch_size_ || *batch_size_ > num_flow_files)) {

@@ -32,10 +32,8 @@ Processors:
       auto-terminated relationships list:
       Properties:
           SSL Context Service: SSLContextService
-          endpoint-list: localhost:18776
-          end-of-message-byte: d
-          reconnect-interval: 100ms
-          connection-attempt-timeout: 2000
+          Endpoint List: localhost:18776
+          Message Delimiter: \r
     - name: LogAttribute
       id: 2438e3c8-015a-1000-79ca-83af40ec1992
       class: org.apache.nifi.processors.standard.LogAttribute

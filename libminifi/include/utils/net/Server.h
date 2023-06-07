@@ -25,29 +25,12 @@
 #include "utils/MinifiConcurrentQueue.h"
 #include "core/logging/Logger.h"
 #include "asio/ts/buffer.hpp"
-#include "asio/ts/internet.hpp"
 #include "asio/awaitable.hpp"
 #include "asio/co_spawn.hpp"
 #include "asio/detached.hpp"
-#include "IpProtocol.h"
+#include "Message.h"
 
 namespace org::apache::nifi::minifi::utils::net {
-
-struct Message {
- public:
-  Message() = default;
-  Message(std::string message_data, IpProtocol protocol, asio::ip::address sender_address, asio::ip::port_type server_port)
-    : message_data(std::move(message_data)),
-      protocol(protocol),
-      server_port(server_port),
-      sender_address(std::move(sender_address)) {
-  }
-
-  std::string message_data;
-  IpProtocol protocol;
-  asio::ip::port_type server_port;
-  asio::ip::address sender_address;
-};
 
 class Server {
  public:
