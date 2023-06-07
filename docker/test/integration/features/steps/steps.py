@@ -792,7 +792,7 @@ def step_impl(context, content, duration):
 @then("{num_flowfiles} flowfiles are placed in the monitored directory in less than {duration}")
 def step_impl(context, num_flowfiles, duration):
     if num_flowfiles == 0:
-        context.execute_steps("""no files are placed in the monitored directory in {duration} of running time""".format(duration=duration))
+        context.execute_steps(f"no files are placed in the monitored directory in {duration} of running time")
         return
     context.test.check_for_num_files_generated(int(num_flowfiles), humanfriendly.parse_timespan(duration))
 
@@ -1098,7 +1098,7 @@ def step_impl(context, minifi_container_name: str):
 
 @when(u'MiNiFi config is updated through MiNiFi controller')
 def step_impl(context):
-    context.execute_steps("""when MiNiFi config is updated through MiNiFi controller in the \"{minifi_container_name}\" flow""".format(minifi_container_name="minifi-cpp-flow"))
+    context.execute_steps(f"when MiNiFi config is updated through MiNiFi controller in the \"minifi-cpp-flow-{context.feature_id}\" flow")
 
 
 @then(u'the updated config is persisted in the \"{minifi_container_name}\" flow')
@@ -1108,7 +1108,7 @@ def step_impl(context, minifi_container_name: str):
 
 @then(u'the updated config is persisted')
 def step_impl(context):
-    context.execute_steps("""then the updated config is persisted in the \"{minifi_container_name}\" flow""".format(minifi_container_name="minifi-cpp-flow"))
+    context.execute_steps(f"then the updated config is persisted in the \"minifi-cpp-flow-{context.feature_id}\" flow")
 
 
 @when(u'the {component} component is stopped through MiNiFi controller in the \"{minifi_container_name}\" flow')
@@ -1118,7 +1118,7 @@ def step_impl(context, minifi_container_name: str, component: str):
 
 @when(u'the {component} component is stopped through MiNiFi controller')
 def step_impl(context, component: str):
-    context.execute_steps("""when the {component} component is stopped through MiNiFi controller in the \"{minifi_container_name}\" flow""".format(component=component, minifi_container_name="minifi-cpp-flow"))
+    context.execute_steps(f"when the {component} component is stopped through MiNiFi controller in the \"minifi-cpp-flow-{context.feature_id}\" flow")
 
 
 @when(u'the {component} component is started through MiNiFi controller in the \"{minifi_container_name}\" flow')
@@ -1128,7 +1128,7 @@ def step_impl(context, minifi_container_name: str, component: str):
 
 @when(u'the {component} component is started through MiNiFi controller')
 def step_impl(context, component: str):
-    context.execute_steps("""when the {component} component is started through MiNiFi controller in the \"{minifi_container_name}\" flow""".format(component=component, minifi_container_name="minifi-cpp-flow"))
+    context.execute_steps(f"when the {component} component is started through MiNiFi controller in the \"minifi-cpp-flow-{context.feature_id}\" flow")
 
 
 @then(u'the {component} component is not running in the \"{minifi_container_name}\" flow')
@@ -1138,7 +1138,7 @@ def step_impl(context, component: str, minifi_container_name: str):
 
 @then(u'the {component} component is not running')
 def step_impl(context, component: str):
-    context.execute_steps("""then the {component} component is not running in the \"{minifi_container_name}\" flow""".format(component=component, minifi_container_name="minifi-cpp-flow"))
+    context.execute_steps(f"then the {component} component is not running in the \"minifi-cpp-flow-{context.feature_id}\" flow")
 
 
 @then(u'the {component} component is running in the \"{minifi_container_name}\" flow')
@@ -1148,7 +1148,7 @@ def step_impl(context, component: str, minifi_container_name: str):
 
 @then(u'the {component} component is running')
 def step_impl(context, component: str):
-    context.execute_steps("""then the {component} component is running in the \"{minifi_container_name}\" flow""".format(component=component, minifi_container_name="minifi-cpp-flow"))
+    context.execute_steps(f"then the {component} component is running in the \"minifi-cpp-flow-{context.feature_id}\" flow")
 
 
 @then(u'connection \"{connection}\" can be seen through MiNiFi controller in the \"{minifi_container_name}\" flow')
@@ -1158,7 +1158,7 @@ def step_impl(context, connection: str, minifi_container_name: str):
 
 @then(u'connection \"{connection}\" can be seen through MiNiFi controller')
 def step_impl(context, connection: str):
-    context.execute_steps("""then connection \"{connection}\" can be seen through MiNiFi controller in the \"{minifi_container_name}\" flow""".format(connection=connection, minifi_container_name="minifi-cpp-flow"))
+    context.execute_steps(f"then connection \"{connection}\" can be seen through MiNiFi controller in the \"minifi-cpp-flow-{context.feature_id}\" flow")
 
 
 @then(u'{connection_count:d} connections can be seen full through MiNiFi controller in the \"{minifi_container_name}\" flow')
@@ -1168,7 +1168,7 @@ def step_impl(context, connection_count: int, minifi_container_name: str):
 
 @then(u'{connection_count:d} connections can be seen full through MiNiFi controller')
 def step_impl(context, connection_count: int):
-    context.execute_steps("""then {connection_count:d} connections can be seen full through MiNiFi controller in the \"{minifi_container_name}\" flow""".format(connection_count=connection_count, minifi_container_name="minifi-cpp-flow"))
+    context.execute_steps(f"then {connection_count:d} connections can be seen full through MiNiFi controller in the \"minifi-cpp-flow-{context.feature_id}\" flow")
 
 
 @then(u'connection \"{connection}\" has {size:d} size and {max_size:d} max size through MiNiFi controller in the \"{minifi_container_name}\" flow')
@@ -1178,7 +1178,7 @@ def step_impl(context, connection: str, size: int, max_size: int, minifi_contain
 
 @then(u'connection \"{connection}\" has {size:d} size and {max_size:d} max size through MiNiFi controller')
 def step_impl(context, connection: str, size: int, max_size: int):
-    context.execute_steps("""then connection \"{connection}\" has {size:d} size and {max_size:d} max size through MiNiFi controller in the \"{minifi_container_name}\" flow""".format(connection=connection, size=size, max_size=max_size, minifi_container_name="minifi-cpp-flow"))
+    context.execute_steps(f"then connection \"{connection}\" has {size:d} size and {max_size:d} max size through MiNiFi controller in the \"minifi-cpp-flow-{context.feature_id}\" flow")
 
 
 @then(u'manifest can be retrieved through MiNiFi controller in the \"{minifi_container_name}\" flow')
@@ -1188,4 +1188,4 @@ def step_impl(context, minifi_container_name: str):
 
 @then(u'manifest can be retrieved through MiNiFi controller')
 def step_impl(context):
-    context.execute_steps("""then manifest can be retrieved through MiNiFi controller in the \"{minifi_container_name}\" flow""".format(minifi_container_name="minifi-cpp-flow"))
+    context.execute_steps(f"then manifest can be retrieved through MiNiFi controller in the \"minifi-cpp-flow-{context.feature_id}\" flow")

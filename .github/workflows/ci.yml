@@ -367,6 +367,7 @@ jobs:
           path: build/behavex_output/behave/*.xml
           reporter: java-junit
           output-to: 'step-summary'
+          only-summary: 'true'
           list-tests: 'failed'
           list-suites: 'failed'
       - name: Upload artifact
