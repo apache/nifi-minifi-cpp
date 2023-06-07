@@ -48,7 +48,7 @@ struct MultipartUploadState {
   Aws::Utils::DateTime upload_time;
   std::vector<std::string> uploaded_etags;
 
-  auto operator<=>(const MultipartUploadState&) const = default;
+  bool operator==(const MultipartUploadState&) const = default;
 };
 
 class MultipartUploadStateStorage {
