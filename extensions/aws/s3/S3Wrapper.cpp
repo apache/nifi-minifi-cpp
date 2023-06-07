@@ -31,6 +31,7 @@
 #include "utils/gsl.h"
 #include "utils/RegexUtils.h"
 #include "aws/core/utils/HashingUtils.h"
+#include "range/v3/algorithm/find_if.hpp"
 
 namespace org::apache::nifi::minifi::aws::s3 {
 
@@ -106,14 +107,14 @@ std::optional<PutObjectResult> S3Wrapper::putObject(const PutObjectRequestParame
 std::optional<S3Wrapper::UploadPartsResult> S3Wrapper::uploadParts(const PutObjectRequestParameters& put_object_params, const std::shared_ptr<io::InputStream>& stream,
     MultipartUploadState upload_state) {
   stream->seek(upload_state.uploaded_size);
-  auto flow_size = upload_state.full_size - upload_state.uploaded_size;
-  size_t part_count = flow_size % upload_state.part_size == 0 ? flow_size / upload_state.part_size : flow_size / upload_state.part_size + 1;
   S3Wrapper::UploadPartsResult result;
   result.upload_id = upload_state.upload_id;
   result.part_etags = upload_state.uploaded_etags;
+  const auto flow_size = upload_state.full_size - upload_state.uploaded_size;
+  const size_t part_count = flow_size % upload_state.part_size == 0 ? flow_size / upload_state.part_size : flow_size / upload_state.part_size + 1;
   size_t total_read = 0;
-  size_t start_part = upload_state.uploaded_parts + 1;
-  size_t last_part = start_part + part_count - 1;
+  const size_t start_part = upload_state.uploaded_parts + 1;
+  const size_t last_part = start_part + part_count - 1;
   for (size_t i = start_part; i <= last_part; ++i) {
     uint64_t read_size{};
     const auto remaining = flow_size - total_read;
@@ -176,12 +177,8 @@ bool S3Wrapper::multipartUploadExistsInS3(const PutObjectRequestParameters& put_
   if (!pending_uploads) {
     return false;
   }
-  for (const auto& upload : *pending_uploads) {
-    if (upload.key == put_object_params.object_key) {
-      return true;
-    }
-  }
-  return false;
+
+  return ranges::find_if(*pending_uploads, [&](const auto& upload) { return upload.key == put_object_params.object_key; }) != pending_uploads->end();
 }
 
 std::optional<MultipartUploadState> S3Wrapper::getMultipartUploadState(const PutObjectRequestParameters& put_object_params) {

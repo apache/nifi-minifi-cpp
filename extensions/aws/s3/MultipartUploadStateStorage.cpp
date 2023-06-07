@@ -118,21 +118,27 @@ void MultipartUploadStateStorage::removeAgedStates(std::chrono::milliseconds mul
   auto age_off_time = Aws::Utils::DateTime::Now() - multipart_upload_max_age_threshold;
 
   for (const auto& property_key : property_keys) {
-    if (minifi::utils::StringUtils::endsWith(property_key, ".upload_time")) {
-      std::string value;
-      if (state_.getString(property_key, value)) {
-        int64_t stored_upload_time;
-        core::Property::StringToInt(value, stored_upload_time);
-        auto upload_time = Aws::Utils::DateTime(stored_upload_time);
-        if (upload_time < age_off_time) {
-          auto state_key = minifi::utils::StringUtils::split(property_key, ".")[0];
-          auto bucket_and_object_key = minifi::utils::StringUtils::split(state_key, "/");
-          auto& bucket = bucket_and_object_key[0];
-          auto& object_key = bucket_and_object_key[1];
-          logger_->log_info("Removing local aged off multipart upload with key '%s' in bucket '%s'", object_key, bucket);
-          removeState(bucket, object_key);
-        }
-      }
+    if (!minifi::utils::StringUtils::endsWith(property_key, ".upload_time")) {
+      continue;
+    }
+    std::string value;
+    if (!state_.getString(property_key, value)) {
+      logger_->log_error("Could not retrieve value for multipart upload cache key '%s'", property_key);
+      continue;
+    }
+    int64_t stored_upload_time{};
+    if (!core::Property::StringToInt(value, stored_upload_time)) {
+      logger_->log_error("Multipart upload cache key '%s' has invalid value '%s'", property_key, value);
+      continue;
+    }
+    auto upload_time = Aws::Utils::DateTime(stored_upload_time);
+    if (upload_time < age_off_time) {
+      auto state_key = minifi::utils::StringUtils::split(property_key, ".")[0];
+      auto bucket_and_object_key = minifi::utils::StringUtils::split(state_key, "/");
+      auto& bucket = bucket_and_object_key[0];
+      auto& object_key = bucket_and_object_key[1];
+      logger_->log_info("Removing local aged off multipart upload with key '%s' in bucket '%s'", object_key, bucket);
+      removeState(bucket, object_key);
     }
   }
 }
