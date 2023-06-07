@@ -34,10 +34,10 @@ class EventPath {
   EventPath() = default;
   explicit EventPath(std::wstring wstr);
   explicit EventPath(std::string str);
-  const std::wstring& wstr() const;
-  const std::string& str() const;
-  EVT_QUERY_FLAGS getQueryFlags() const;
-  Kind kind() const;
+  constexpr const std::wstring& wstr() const noexcept;
+  constexpr const std::string& str() const noexcept;
+  constexpr EVT_QUERY_FLAGS getQueryFlags() const noexcept;
+  constexpr Kind kind() const noexcept;
 
  private:
   std::string str_;

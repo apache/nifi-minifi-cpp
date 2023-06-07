@@ -97,10 +97,9 @@ class OutputFormatTestController : public TestController {
 
 void generateLogFile(const std::wstring& channel, const std::filesystem::path& path) {
   HANDLE event_log = OpenEventLog(NULL, std::string(channel.begin(), channel.end()).c_str());
+  auto guard = gsl::finally([&] {CloseEventLog(event_log);});
 
   if (!EvtExportLog(NULL, channel.c_str(), L"*", path.wstring().c_str(), EvtExportLogChannelPath)) {
     throw std::system_error{gsl:narrow<int>(GetLastError()), std::system_category(), "Failed to export logs"};
   }
-
-  CloseEventLog(event_log);
 }

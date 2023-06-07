@@ -37,19 +37,19 @@ EventPath::EventPath(std::string str) {
 }
 
 
-const std::wstring& EventPath::wstr() const {
+constexpr const std::wstring& EventPath::wstr() const noexcept {
   return wstr_;
 }
 
-const std::string& EventPath::str() const {
+constexpr const std::string& EventPath::str() const noexcept {
   return str_;
 }
 
-EventPath::Kind EventPath::kind() const {
+constexpr EventPath::Kind EventPath::kind() const noexcept {
   return kind_;
 }
 
-EVT_QUERY_FLAGS EventPath::getQueryFlags() const {
+constexpr EVT_QUERY_FLAGS EventPath::getQueryFlags() const noexcept {
   switch (kind_) {
     case Kind::CHANNEL: return EvtQueryChannelPath;
     case Kind::FILE: return EvtQueryFilePath;
