@@ -182,9 +182,6 @@ fi
 
 echo "${BEHAVE_OPTS[@]}"
 
-# Specify feature or scenario to run a specific test e.g.:
-# behave "${BEHAVE_OPTS[@]}" "features/file_system_operations.feature"
-# behave "${BEHAVE_OPTS[@]}" "features/file_system_operations.feature" -n "Get and put operations run in a simple flow"
 cd "${docker_dir}/test/integration"
 exec
   behavex "${BEHAVE_OPTS[@]}"

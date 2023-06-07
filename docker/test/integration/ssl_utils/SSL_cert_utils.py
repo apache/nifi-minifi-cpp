@@ -110,7 +110,7 @@ def make_ca(common_name):
     return ca_cert, ca_key
 
 
-def _make_cert(common_name, ca_cert, ca_key, extended_key_usage = None):
+def _make_cert(common_name, ca_cert, ca_key, extended_key_usage=None):
     key = crypto.PKey()
     key.generate_key(crypto.TYPE_RSA, 2048)
 

@@ -19,8 +19,8 @@ from .Container import Container
 
 
 class HttpProxyContainer(Container):
-    def __init__(self, context, name, vols, network, image_store, command=None):
-        super().__init__(context, name, 'http-proxy', vols, network, image_store, command)
+    def __init__(self, feature_context, name, vols, network, image_store, command=None):
+        super().__init__(feature_context, name, 'http-proxy', vols, network, image_store, command)
 
     def get_startup_finished_log_entry(self):
         return "Accepting HTTP Socket connections at"

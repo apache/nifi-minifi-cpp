@@ -20,8 +20,8 @@ from .Container import Container
 
 
 class PrometheusContainer(Container):
-    def __init__(self, context, name, vols, network, image_store, command=None):
-        super().__init__(context, name, 'prometheus', vols, network, image_store, command)
+    def __init__(self, feature_context, name, vols, network, image_store, command=None):
+        super().__init__(feature_context, name, 'prometheus', vols, network, image_store, command)
         prometheus_yml_content = """
 global:
   scrape_interval: 2s
@@ -30,7 +30,7 @@ scrape_configs:
   - job_name: "minifi"
     static_configs:
       - targets: ["minifi-cpp-flow-{feature_id}:9936"]
-""".format(feature_id=self.context.feature_id)
+""".format(feature_id=self.feature_context.id)
         self.yaml_file = tempfile.NamedTemporaryFile(delete=False)
         self.yaml_file.write(prometheus_yml_content.encode())
         self.yaml_file.close()

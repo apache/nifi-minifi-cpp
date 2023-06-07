@@ -43,10 +43,10 @@ class MinifiContainer(FlowContainer):
     MINIFI_VERSION = os.environ['MINIFI_VERSION']
     MINIFI_ROOT = '/opt/minifi/nifi-minifi-cpp-' + MINIFI_VERSION
 
-    def __init__(self, context, config_dir, options, name, vols, network, image_store, command=None):
+    def __init__(self, feature_context, config_dir, options, name, vols, network, image_store, command=None):
         self.options = options
 
-        super().__init__(context=context,
+        super().__init__(feature_context=feature_context,
                          config_dir=config_dir,
                          name=name,
                          engine='minifi-cpp',
@@ -89,19 +89,19 @@ class MinifiContainer(FlowContainer):
         with open(properties_file_path, 'a') as f:
             if self.options.enable_c2:
                 f.write("nifi.c2.enable=true\n")
-                f.write(f"nifi.c2.rest.url=http://minifi-c2-server-{self.context.feature_id}:10090/c2/config/heartbeat\n")
-                f.write(f"nifi.c2.rest.url.ack=http://minifi-c2-server-{self.context.feature_id}:10090/c2/config/acknowledge\n")
-                f.write(f"nifi.c2.flow.base.url=http://minifi-c2-server-{self.context.feature_id}:10090/c2/config/\n")
+                f.write(f"nifi.c2.rest.url=http://minifi-c2-server-{self.feature_context.id}:10090/c2/config/heartbeat\n")
+                f.write(f"nifi.c2.rest.url.ack=http://minifi-c2-server-{self.feature_context.id}:10090/c2/config/acknowledge\n")
+                f.write(f"nifi.c2.flow.base.url=http://minifi-c2-server-{self.feature_context.id}:10090/c2/config/\n")
                 f.write("nifi.c2.root.classes=DeviceInfoNode,AgentInformation,FlowInformation\n")
                 f.write("nifi.c2.full.heartbeat=false\n")
                 f.write("nifi.c2.agent.class=minifi-test-class\n")
                 f.write("nifi.c2.agent.identifier=minifi-test-id\n")
             elif self.options.enable_c2_with_ssl:
                 f.write("nifi.c2.enable=true\n")
-                f.write(f"nifi.c2.rest.url=https://minifi-c2-server-{self.context.feature_id}:10090/c2/config/heartbeat\n")
-                f.write(f"nifi.c2.rest.url.ack=https://minifi-c2-server-{self.context.feature_id}:10090/c2/config/acknowledge\n")
-                f.write("nifi.c2.rest.ssl.context.service=SSLContextService\n")
-                f.write(f"nifi.c2.flow.base.url=https://minifi-c2-server-{self.context.feature_id}:10090/c2/config/\n")
+                f.write(f"nifi.c2.rest.url=https://minifi-c2-server-{self.feature_context.id}:10090/c2/config/heartbeat\n")
+                f.write(f"nifi.c2.rest.url.ack=https://minifi-c2-server-{self.feature_context.id}:10090/c2/config/acknowledge\n")
+                f.write("nifi.c2.rest.ssl.feature_context.service=SSLContextService\n")
+                f.write(f"nifi.c2.flow.base.url=https://minifi-c2-server-{self.feature_context.id}:10090/c2/config/\n")
                 f.write("nifi.c2.root.classes=DeviceInfoNode,AgentInformation,FlowInformation\n")
                 f.write("nifi.c2.full.heartbeat=false\n")
                 f.write("nifi.c2.agent.class=minifi-test-class\n")
@@ -124,7 +124,7 @@ class MinifiContainer(FlowContainer):
                 f.write("nifi.metrics.publisher.metrics=RepositoryMetrics,QueueMetrics,PutFileMetrics,processorMetrics/Get.*,FlowInformation,DeviceInfoNode,AgentStatus\n")
 
             if self.options.use_flow_config_from_url:
-                f.write(f"nifi.c2.flow.url=http://minifi-c2-server-{self.context.feature_id}:10090/c2/config?class=minifi-test-class\n")
+                f.write(f"nifi.c2.flow.url=http://minifi-c2-server-{self.feature_context.id}:10090/c2/config?class=minifi-test-class\n")
 
             if self.options.enable_controller_socket:
                 f.write("controller.socket.enable=true\n")

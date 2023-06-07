@@ -26,10 +26,10 @@ from ssl_utils.SSL_cert_utils import make_server_cert
 
 
 class KafkaBrokerContainer(Container):
-    def __init__(self, context, name, vols, network, image_store, command=None):
-        super().__init__(context, name, 'kafka-broker', vols, network, image_store, command)
+    def __init__(self, feature_context, name, vols, network, image_store, command=None):
+        super().__init__(feature_context, name, 'kafka-broker', vols, network, image_store, command)
 
-        kafka_cert, kafka_key = make_server_cert(f"kafka-broker-{context.feature_id}", context.test.root_ca_cert, context.test.root_ca_key)
+        kafka_cert, kafka_key = make_server_cert(f"kafka-broker-{feature_context.id}", feature_context.root_ca_cert, feature_context.root_ca_key)
 
         pke = jks.PrivateKeyEntry.new('kafka-broker-cert', [crypto.dump_certificate(crypto.FILETYPE_ASN1, kafka_cert)], crypto.dump_privatekey(crypto.FILETYPE_ASN1, kafka_key), 'rsa_raw')
         server_keystore = jks.KeyStore.new('jks', [pke])
@@ -39,13 +39,13 @@ class KafkaBrokerContainer(Container):
         self.server_keystore_file.close()
 
         self.server_truststore_file = tempfile.NamedTemporaryFile(delete=False)
-        self.server_truststore_file.write(crypto.dump_certificate(crypto.FILETYPE_PEM, context.test.root_ca_cert))
+        self.server_truststore_file.write(crypto.dump_certificate(crypto.FILETYPE_PEM, feature_context.root_ca_cert))
         self.server_truststore_file.close()
 
         self.server_properties_file = tempfile.NamedTemporaryFile(delete=False)
         with open(os.environ['TEST_DIRECTORY'] + "/resources/kafka_broker/conf/server.properties") as server_properties_file:
             server_properties_content = server_properties_file.read()
-            patched_server_properties_content = server_properties_content.replace("kafka-broker", f"kafka-broker-{context.feature_id}")
+            patched_server_properties_content = server_properties_content.replace("kafka-broker", f"kafka-broker-{feature_context.id}")
             self.server_properties_file.write(patched_server_properties_content.encode())
             self.server_properties_file.close()
             os.chmod(self.server_properties_file.name, 0o644)

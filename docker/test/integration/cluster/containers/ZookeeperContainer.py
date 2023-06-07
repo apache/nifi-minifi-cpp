@@ -19,8 +19,8 @@ from .Container import Container
 
 
 class ZookeeperContainer(Container):
-    def __init__(self, context, name, vols, network, image_store, command):
-        super().__init__(context, name, 'zookeeper', vols, network, image_store, command)
+    def __init__(self, feature_context, name, vols, network, image_store, command):
+        super().__init__(feature_context, name, 'zookeeper', vols, network, image_store, command)
 
     def get_startup_finished_log_entry(self):
         return "binding to port"

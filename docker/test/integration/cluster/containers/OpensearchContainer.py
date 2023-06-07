@@ -26,12 +26,12 @@ from ssl_utils.SSL_cert_utils import make_server_cert
 
 
 class OpensearchContainer(Container):
-    def __init__(self, context, name, vols, network, image_store, command=None):
-        super().__init__(context, name, 'opensearch', vols, network, image_store, command)
-        cert, key = make_server_cert(f"opensearch-{context.feature_id}", context.test.root_ca_cert, context.test.root_ca_key)
+    def __init__(self, feature_context, name, vols, network, image_store, command=None):
+        super().__init__(feature_context, name, 'opensearch', vols, network, image_store, command)
+        cert, key = make_server_cert(f"opensearch-{feature_context.id}", feature_context.root_ca_cert, feature_context.root_ca_key)
 
         self.root_ca_file = tempfile.NamedTemporaryFile(delete=False)
-        self.root_ca_file.write(OpenSSL.crypto.dump_certificate(type=OpenSSL.crypto.FILETYPE_PEM, cert=context.test.root_ca_cert))
+        self.root_ca_file.write(OpenSSL.crypto.dump_certificate(type=OpenSSL.crypto.FILETYPE_PEM, cert=feature_context.root_ca_cert))
         self.root_ca_file.close()
         os.chmod(self.root_ca_file.name, 0o644)
 

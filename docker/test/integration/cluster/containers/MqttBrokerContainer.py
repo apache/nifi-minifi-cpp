@@ -19,8 +19,8 @@ from .Container import Container
 
 
 class MqttBrokerContainer(Container):
-    def __init__(self, context, name, vols, network, image_store, command=None):
-        super().__init__(context, name, 'mqtt-broker', vols, network, image_store, command)
+    def __init__(self, feature_context, name, vols, network, image_store, command=None):
+        super().__init__(feature_context, name, 'mqtt-broker', vols, network, image_store, command)
 
     def get_startup_finished_log_entry(self):
         return "mosquitto version [0-9\\.]+ running"

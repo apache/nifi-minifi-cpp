@@ -25,13 +25,13 @@ from ssl_utils.SSL_cert_utils import make_server_cert, make_cert_without_extende
 
 
 class ElasticsearchContainer(Container):
-    def __init__(self, context, name, vols, network, image_store, command=None):
-        super().__init__(context, name, 'elasticsearch', vols, network, image_store, command)
-        http_cert, http_key = make_server_cert(f"elasticsearch-{context.feature_id}", context.test.root_ca_cert, context.test.root_ca_key)
-        transport_cert, transport_key = make_cert_without_extended_usage("127.0.0.1", context.test.root_ca_cert, context.test.root_ca_key)
+    def __init__(self, feature_context, name, vols, network, image_store, command=None):
+        super().__init__(feature_context, name, 'elasticsearch', vols, network, image_store, command)
+        http_cert, http_key = make_server_cert(f"elasticsearch-{feature_context.id}", feature_context.root_ca_cert, feature_context.root_ca_key)
+        transport_cert, transport_key = make_cert_without_extended_usage("127.0.0.1", feature_context.root_ca_cert, feature_context.root_ca_key)
 
         self.root_ca_file = tempfile.NamedTemporaryFile(delete=False)
-        self.root_ca_file.write(OpenSSL.crypto.dump_certificate(type=OpenSSL.crypto.FILETYPE_PEM, cert=context.test.root_ca_cert))
+        self.root_ca_file.write(OpenSSL.crypto.dump_certificate(type=OpenSSL.crypto.FILETYPE_PEM, cert=feature_context.root_ca_cert))
         self.root_ca_file.close()
         os.chmod(self.root_ca_file.name, 0o644)
 

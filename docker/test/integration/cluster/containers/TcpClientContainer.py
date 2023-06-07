@@ -17,8 +17,8 @@ from .Container import Container
 
 
 class TcpClientContainer(Container):
-    def __init__(self, context, name, vols, network, image_store, command=None):
-        super().__init__(context, name, 'tcp-client', vols, network, image_store, command)
+    def __init__(self, feature_context, name, vols, network, image_store, command=None):
+        super().__init__(feature_context, name, 'tcp-client', vols, network, image_store, command)
 
     def get_startup_finished_log_entry(self):
         return "TCP client container started"
@@ -35,5 +35,5 @@ class TcpClientContainer(Container):
             network=self.network.name,
             entrypoint='/bin/sh',
             command="-c 'apk add netcat-openbsd && echo TCP client container started; while true; do echo "
-                    f"test_tcp_message | nc minifi-cpp-flow-{self.context.feature_id} 10254; sleep 1; done'")
+                    f"test_tcp_message | nc minifi-cpp-flow-{self.feature_context.id} 10254; sleep 1; done'")
         logging.info('Added container \'%s\'', self.name)

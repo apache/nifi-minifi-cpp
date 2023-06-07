@@ -17,8 +17,8 @@ from .Container import Container
 
 
 class SyslogUdpClientContainer(Container):
-    def __init__(self, context, name, vols, network, image_store, command=None):
-        super().__init__(context, name, 'syslog-udp-client', vols, network, image_store, command)
+    def __init__(self, feature_context, name, vols, network, image_store, command=None):
+        super().__init__(feature_context, name, 'syslog-udp-client', vols, network, image_store, command)
 
     def get_startup_finished_log_entry(self):
         return "Syslog UDP client started"
@@ -34,5 +34,5 @@ class SyslogUdpClientContainer(Container):
             name=self.name,
             network=self.network.name,
             entrypoint='/bin/bash -c "echo Syslog UDP client started; while true; do logger --udp -n '
-                       f'minifi-cpp-flow-{self.context.feature_id} -P 514 sample_log; sleep 1; done"')
+                       f'minifi-cpp-flow-{self.feature_context.id} -P 514 sample_log; sleep 1; done"')
         logging.info('Added container \'%s\'', self.name)

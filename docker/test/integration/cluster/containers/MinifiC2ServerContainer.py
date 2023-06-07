@@ -24,12 +24,12 @@ from ssl_utils.SSL_cert_utils import make_server_cert
 
 
 class MinifiC2ServerContainer(Container):
-    def __init__(self, context, name, vols, network, image_store, command=None, ssl=False):
+    def __init__(self, feature_context, name, vols, network, image_store, command=None, ssl=False):
         engine = "minifi-c2-server-ssl" if ssl else "minifi-c2-server"
-        super().__init__(context, name, engine, vols, network, image_store, command)
+        super().__init__(feature_context, name, engine, vols, network, image_store, command)
         self.ssl = ssl
         if ssl:
-            c2_cert, c2_key = make_server_cert(f"minifi-c2-server-{context.feature_id}", context.test.root_ca_cert, context.test.root_ca_key)
+            c2_cert, c2_key = make_server_cert(f"minifi-c2-server-{feature_context.id}", feature_context.root_ca_cert, feature_context.root_ca_key)
             pke = jks.PrivateKeyEntry.new('c2-server-cert', [crypto.dump_certificate(crypto.FILETYPE_ASN1, c2_cert)], crypto.dump_privatekey(crypto.FILETYPE_ASN1, c2_key), 'rsa_raw')
             server_keystore = jks.KeyStore.new('jks', [pke])
             self.server_keystore_file = tempfile.NamedTemporaryFile(delete=False)
@@ -38,8 +38,8 @@ class MinifiC2ServerContainer(Container):
 
             self.server_truststore_file = tempfile.NamedTemporaryFile(delete=False)
             pkcs12 = crypto.PKCS12()
-            pkcs12.set_privatekey(context.test.root_ca_key)
-            pkcs12.set_certificate(context.test.root_ca_cert)
+            pkcs12.set_privatekey(feature_context.root_ca_key)
+            pkcs12.set_certificate(feature_context.root_ca_cert)
             pkcs12_data = pkcs12.export(passphrase="abcdefgh")
             self.server_truststore_file.write(pkcs12_data)
             self.server_truststore_file.close()
@@ -49,7 +49,7 @@ class MinifiC2ServerContainer(Container):
             authorities_file_content = """
 CN=minifi-cpp-flow-{feature_id}:
   - CLASS_MINIFI_CPP
-""".format(feature_id=self.context.feature_id)
+""".format(feature_id=self.feature_context.id)
             self.authorities_file.write(authorities_file_content.encode())
             self.authorities_file.close()
             os.chmod(self.authorities_file.name, 0o644)
