@@ -184,10 +184,23 @@ bool S3Wrapper::multipartUploadExistsInS3(const PutObjectRequestParameters& put_
   return false;
 }
 
+std::optional<MultipartUploadState> S3Wrapper::getMultipartUploadState(const PutObjectRequestParameters& put_object_params) {
+  auto upload_state = multipart_upload_storage_->getState(put_object_params.bucket, put_object_params.object_key);
+  if (!upload_state) {
+    return std::nullopt;
+  }
+  if (!multipartUploadExistsInS3(put_object_params)) {
+    logger_->log_info("Local upload state for object '%s' in bucket '%s' not found in S3, removing it from local cache.", put_object_params.object_key, put_object_params.bucket);
+    multipart_upload_storage_->removeState(put_object_params.bucket, put_object_params.object_key);
+    return std::nullopt;
+  }
+  return upload_state;
+}
+
 std::optional<PutObjectResult> S3Wrapper::putObjectMultipart(const PutObjectRequestParameters& put_object_params, const std::shared_ptr<io::InputStream>& stream,
     uint64_t flow_size, uint64_t multipart_size) {
   gsl_Expects(multipart_upload_storage_);
-  if (auto upload_state = multipart_upload_storage_->getState(put_object_params.bucket, put_object_params.object_key)) {
+  if (auto upload_state = getMultipartUploadState(put_object_params)) {
     logger_->log_info("Found previous multipart upload state for %s in bucket %s, continuing upload", put_object_params.object_key, put_object_params.bucket);
     return uploadParts(put_object_params, stream, std::move(*upload_state))
       | minifi::utils::flatMap([&, this](const auto& upload_parts_result) { return completeMultipartUpload(put_object_params, upload_parts_result); })
@@ -403,11 +416,12 @@ FetchObjectResult S3Wrapper::fillFetchObjectResult(const GetObjectRequestParamet
   return result;
 }
 
-void S3Wrapper::addListMultipartUploadResults(const Aws::Vector<Aws::S3::Model::MultipartUpload>& uploads, std::chrono::milliseconds max_upload_age, std::vector<MultipartUpload>& filtered_uploads) {
+void S3Wrapper::addListMultipartUploadResults(const Aws::Vector<Aws::S3::Model::MultipartUpload>& uploads, std::optional<std::chrono::milliseconds> max_upload_age,
+    std::vector<MultipartUpload>& filtered_uploads) {
   const auto now = Aws::Utils::DateTime::Now();
   for (const auto& upload : uploads) {
-    if (now - upload.GetInitiated() <= max_upload_age) {
-      logger_->log_debug("Multipart upload with key '%s' and upload id '%s' did not age off yet", upload.GetKey(), upload.GetUploadId());
+    if (max_upload_age && now - upload.GetInitiated() <= *max_upload_age) {
+      logger_->log_debug("Multipart upload with key '%s' and upload id '%s' did not meet the age limit", upload.GetKey(), upload.GetUploadId());
       continue;
     }
 

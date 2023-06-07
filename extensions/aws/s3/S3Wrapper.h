@@ -201,7 +201,7 @@ struct ListMultipartUploadsRequestParameters : public RequestParameters {
   ListMultipartUploadsRequestParameters(const Aws::Auth::AWSCredentials& creds, const Aws::Client::ClientConfiguration& config)
     : RequestParameters(creds, config) {}
   std::string bucket;
-  std::chrono::milliseconds upload_max_age;
+  std::optional<std::chrono::milliseconds> upload_max_age;
   bool use_virtual_addressing = true;
 };
 
@@ -316,10 +316,12 @@ class S3Wrapper {
   std::optional<std::vector<ListedObjectAttributes>> listObjects(const ListRequestParameters& params);
   void addListResults(const Aws::Vector<Aws::S3::Model::ObjectVersion>& content, uint64_t min_object_age, std::vector<ListedObjectAttributes>& listed_objects);
   void addListResults(const Aws::Vector<Aws::S3::Model::Object>& content, uint64_t min_object_age, std::vector<ListedObjectAttributes>& listed_objects);
-  void addListMultipartUploadResults(const Aws::Vector<Aws::S3::Model::MultipartUpload>& uploads, std::chrono::milliseconds max_upload_age, std::vector<MultipartUpload>& filtered_uploads);
+  void addListMultipartUploadResults(const Aws::Vector<Aws::S3::Model::MultipartUpload>& uploads, std::optional<std::chrono::milliseconds> max_upload_age,
+    std::vector<MultipartUpload>& filtered_uploads);
   std::optional<UploadPartsResult> uploadParts(const PutObjectRequestParameters& put_object_params, const std::shared_ptr<io::InputStream>& stream, MultipartUploadState upload_state);
   std::optional<Aws::S3::Model::CompleteMultipartUploadResult> completeMultipartUpload(const PutObjectRequestParameters& put_object_params, const UploadPartsResult& upload_parts_result);
   bool multipartUploadExistsInS3(const PutObjectRequestParameters& put_object_params);
+  std::optional<MultipartUploadState> getMultipartUploadState(const PutObjectRequestParameters& put_object_params);
 
   template<typename ListRequest>
   ListRequest createListRequest(const ListRequestParameters& params);

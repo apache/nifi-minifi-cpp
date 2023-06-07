@@ -309,7 +309,7 @@ class MockS3RequestSender : public minifi::aws::s3::S3RequestSender {
     Aws::S3::Model::ListMultipartUploadsResult result;
     Aws::Vector<Aws::S3::Model::MultipartUpload> uploads;
     Aws::S3::Model::MultipartUpload upload1;
-    upload1.SetKey("recent_key");
+    upload1.SetKey("resumable_key");
     upload1.SetUploadId("upload1");
     upload1.SetInitiated(Aws::Utils::DateTime::CurrentTimeMillis());
     uploads.push_back(upload1);

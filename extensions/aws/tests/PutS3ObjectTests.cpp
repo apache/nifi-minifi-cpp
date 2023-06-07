@@ -292,11 +292,15 @@ TEST_CASE_METHOD(PutS3ObjectUploadLimitChangedTestsFixture, "Test multipart uplo
   plan->setProperty(s3_processor, "Endpoint Override URL", "${test.endpoint}");
   plan->setProperty(s3_processor, "Server Side Encryption", "AES256");
 
+  std::string object_key;
   SECTION("Successful upload on first try") {
+    object_key = INPUT_FILENAME;
     test_controller.runSession(plan);
   }
 
   SECTION("Successful upload on second try continuing the first multipart upload") {
+    plan->setProperty(s3_processor, "Object Key", "resumable_key");
+    object_key = "resumable_key";
     auto log_failure = plan->addProcessor(
       "LogAttribute",
       "LogFailure",
@@ -316,7 +320,7 @@ TEST_CASE_METHOD(PutS3ObjectUploadLimitChangedTestsFixture, "Test multipart uplo
   CHECK(verifyLogLinePresenceInPollTime(std::chrono::seconds(3), "key:s3.expiration value:" + S3_EXPIRATION_DATE));
   CHECK(verifyLogLinePresenceInPollTime(std::chrono::seconds(3), "key:s3.sseAlgorithm value:" + S3_SSEALGORITHM_STR));
   CHECK(verifyLogLinePresenceInPollTime(std::chrono::seconds(3), "key:s3.bucket value:testBucket"));
-  CHECK(verifyLogLinePresenceInPollTime(std::chrono::seconds(3), "key:s3.key value:" + INPUT_FILENAME));
+  CHECK(verifyLogLinePresenceInPollTime(std::chrono::seconds(3), "key:s3.key value:" + object_key));
   CHECK(verifyLogLinePresenceInPollTime(std::chrono::seconds(3), "key:s3.contenttype value:application/tar"));
   CHECK(verifyLogLinePresenceInPollTime(std::chrono::seconds(3), "key:s3.permissions.cannedacl value:PublicReadWrite"));
   CHECK(verifyLogLinePresenceInPollTime(std::chrono::seconds(3), "key:s3.permissions.full.users value:myuserid123, myuser@example.com"));
@@ -332,7 +336,7 @@ TEST_CASE_METHOD(PutS3ObjectUploadLimitChangedTestsFixture, "Test multipart uplo
   CHECK(mock_s3_request_sender_ptr->getClientConfig().proxyPassword.empty());
   CHECK(mock_s3_request_sender_ptr->getUseVirtualAddressing());
   CHECK(mock_s3_request_sender_ptr->create_multipart_upload_request.GetBucket() == S3_BUCKET);
-  CHECK(mock_s3_request_sender_ptr->create_multipart_upload_request.GetKey() == INPUT_FILENAME);
+  CHECK(mock_s3_request_sender_ptr->create_multipart_upload_request.GetKey() == object_key);
   CHECK(mock_s3_request_sender_ptr->create_multipart_upload_request.GetGrantFullControl() == "id=myuserid123, emailAddress=\"myuser@example.com\"");
   CHECK(mock_s3_request_sender_ptr->create_multipart_upload_request.GetGrantRead() == "id=myuserid456, emailAddress=\"myuser2@example.com\"");
   CHECK(mock_s3_request_sender_ptr->create_multipart_upload_request.GetGrantReadACP() == "id=myuserid789, id=otheruser");
@@ -348,7 +352,7 @@ TEST_CASE_METHOD(PutS3ObjectUploadLimitChangedTestsFixture, "Test multipart uplo
   for (size_t i = 0; i < mock_s3_request_sender_ptr->upload_part_requests.size(); ++i) {
     const auto& upload_part_request = mock_s3_request_sender_ptr->upload_part_requests[i];
     CHECK(upload_part_request.GetBucket() == S3_BUCKET);
-    CHECK(upload_part_request.GetKey() == INPUT_FILENAME);
+    CHECK(upload_part_request.GetKey() == object_key);
     CHECK(upload_part_request.GetPartNumber() == static_cast<int>(i + 1));
     CHECK(upload_part_request.GetUploadId() == S3_UPLOAD_ID);
   }
@@ -384,6 +388,7 @@ TEST_CASE_METHOD(PutS3ObjectUploadLimitChangedTestsFixture, "Local state is not 
   setRequiredProperties();
   plan->setProperty(s3_processor, "Multipart Threshold", "35 B");
   plan->setProperty(s3_processor, "Multipart Part Size", "10 B");
+  plan->setProperty(s3_processor, "Object Key", "resumable_key");
   auto temp_dir = test_controller.createTempDirectory();
   plan->setProperty(s3_processor, "Temporary Directory Multipart State", temp_dir.string());
   auto log_failure = plan->addProcessor(
@@ -407,6 +412,34 @@ TEST_CASE_METHOD(PutS3ObjectUploadLimitChangedTestsFixture, "Local state is not 
   for (size_t i = 0; i < parts.size(); ++i) {
     CHECK(parts[i].GetPartNumber() == static_cast<int>(i + 1));
     CHECK(parts[i].GetETag() == "etag" + std::to_string(4 + i + 1));  // The second successful upload contains different parts
+  }
+}
+
+TEST_CASE_METHOD(PutS3ObjectUploadLimitChangedTestsFixture, "Do not continue multipart upload that only exists in local cache but not in S3", "[awsS3MultipartUpload]") {
+  setRequiredProperties();
+  plan->setProperty(s3_processor, "Multipart Threshold", "35 B");
+  plan->setProperty(s3_processor, "Multipart Part Size", "10 B");
+  plan->setProperty(s3_processor, "Object Key", "non_resumable_key");
+  auto temp_dir = test_controller.createTempDirectory();
+  plan->setProperty(s3_processor, "Temporary Directory Multipart State", temp_dir.string());
+  auto log_failure = plan->addProcessor(
+    "LogAttribute",
+    "LogFailure",
+    core::Relationship("failure", "d"));
+  plan->addConnection(s3_processor, core::Relationship("failure", "d"), log_failure);
+  log_failure->setAutoTerminatedRelationships(std::array{core::Relationship("success", "d")});
+  mock_s3_request_sender_ptr->failOnPartOnce(3);
+  test_controller.runSession(plan);
+  CHECK(verifyLogLinePresenceInPollTime(std::chrono::seconds(3), "Failed to upload part 3 of 4"));
+  plan->reset();
+  LogTestController::getInstance().clear();
+  test_controller.runSession(plan);
+
+  const auto& parts = mock_s3_request_sender_ptr->complete_multipart_upload_request.GetMultipartUpload().GetParts();
+  REQUIRE(parts.size() == 4);
+  for (size_t i = 0; i < parts.size(); ++i) {
+    CHECK(parts[i].GetPartNumber() == static_cast<int>(i + 1));
+    CHECK(parts[i].GetETag() == "etag" + std::to_string(2 + i + 1));  // The second successful upload contains different parts
   }
 }
 
