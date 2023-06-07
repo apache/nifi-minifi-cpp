@@ -110,7 +110,7 @@ def make_ca(common_name):
     return ca_cert, ca_key
 
 
-def _make_cert(common_name, ca_cert, ca_key, is_server_auth=True, is_client_auth=True):
+def _make_cert(common_name, ca_cert, ca_key, extended_key_usage = None):
     key = crypto.PKey()
     key.generate_key(crypto.TYPE_RSA, 2048)
 
@@ -129,10 +129,8 @@ def _make_cert(common_name, ca_cert, ca_key, is_server_auth=True, is_client_auth
     extensions = [crypto.X509Extension(b"authorityKeyIdentifier", False, b"keyid:always", issuer=ca_cert),
                   crypto.X509Extension(b"keyUsage", False, b"digitalSignature")]
 
-    if is_server_auth:
-        extensions.append(crypto.X509Extension(b"extendedKeyUsage", False, b"serverAuth"))
-    if is_client_auth:
-        extensions.append(crypto.X509Extension(b"extendedKeyUsage", False, b"clientAuth"))
+    if extended_key_usage:
+        extensions.append(crypto.X509Extension(b"extendedKeyUsage", False, extended_key_usage))
 
     cert.add_extensions(extensions)
 
@@ -148,12 +146,12 @@ def _make_cert(common_name, ca_cert, ca_key, is_server_auth=True, is_client_auth
 
 
 def make_client_cert(common_name, ca_cert, ca_key):
-    return _make_cert(common_name=common_name, ca_cert=ca_cert, ca_key=ca_key, is_server_auth=False, is_client_auth=True)
+    return _make_cert(common_name=common_name, ca_cert=ca_cert, ca_key=ca_key, extended_key_usage=b"clientAuth")
 
 
 def make_server_cert(common_name, ca_cert, ca_key):
-    return _make_cert(common_name=common_name, ca_cert=ca_cert, ca_key=ca_key, is_server_auth=True, is_client_auth=False)
+    return _make_cert(common_name=common_name, ca_cert=ca_cert, ca_key=ca_key, extended_key_usage=b"serverAuth")
 
 
 def make_cert_without_extended_usage(common_name, ca_cert, ca_key):
-    return _make_cert(common_name=common_name, ca_cert=ca_cert, ca_key=ca_key, is_server_auth=False, is_client_auth=False)
+    return _make_cert(common_name=common_name, ca_cert=ca_cert, ca_key=ca_key, extended_key_usage=None)
