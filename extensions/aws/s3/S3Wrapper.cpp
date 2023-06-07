@@ -466,4 +466,8 @@ void S3Wrapper::initailizeMultipartUploadStateStorage(const std::string& multipa
   multipart_upload_storage_ = std::make_unique<MultipartUploadStateStorage>(multipart_temp_dir, state_id);
 }
 
+void S3Wrapper::ageOffLocalS3MultipartUploadStates(std::chrono::milliseconds multipart_upload_max_age_threshold) {
+  multipart_upload_storage_->removeAgedStates(multipart_upload_max_age_threshold);
+}
+
 }  // namespace org::apache::nifi::minifi::aws::s3

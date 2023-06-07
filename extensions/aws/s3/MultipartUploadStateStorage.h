@@ -53,14 +53,14 @@ struct MultipartUploadState {
 
 class MultipartUploadStateStorage {
  public:
-  explicit MultipartUploadStateStorage(const std::string& state_directory, std::string state_id);
+  MultipartUploadStateStorage(const std::string& state_directory, const std::string& state_id);
 
   void storeState(const std::string& bucket, const std::string& key, const MultipartUploadState& state);
   std::optional<MultipartUploadState> getState(const std::string& bucket, const std::string& key) const;
   void removeState(const std::string& bucket, const std::string& key);
+  void removeAgedStates(std::chrono::milliseconds multipart_upload_max_age_threshold);
 
  private:
-  std::string state_id_;
   std::filesystem::path state_file_path_;
   minifi::Properties state_;
   std::shared_ptr<core::logging::Logger> logger_{core::logging::LoggerFactory<MultipartUploadStateStorage>::getLogger()};

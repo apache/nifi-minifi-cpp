@@ -114,4 +114,28 @@ TEST_CASE_METHOD(MultipartUploadStateStorageTestFixture, "Remove state", "[s3Sta
   REQUIRE(*upload_storage_.getState("test_bucket", "key2") == state3);
 }
 
+TEST_CASE_METHOD(MultipartUploadStateStorageTestFixture, "Remove aged off state", "[s3StateStorage]") {
+  minifi::aws::s3::MultipartUploadState state1;
+  state1.upload_id = "id1";
+  state1.uploaded_parts = 3;
+  state1.uploaded_size = 150_MiB;
+  state1.part_size = 50_MiB;
+  state1.full_size = 200_MiB;
+  state1.upload_time = Aws::Utils::DateTime(Aws::Utils::DateTime::CurrentTimeMillis()) - std::chrono::minutes(10);
+  state1.uploaded_etags = {"etag1", "etag2", "etag3"};
+  upload_storage_.storeState("test_bucket", "key1", state1);
+  minifi::aws::s3::MultipartUploadState state2;
+  state2.upload_id = "id2";
+  state2.uploaded_parts = 2;
+  state2.uploaded_size = 100_MiB;
+  state2.part_size = 50_MiB;
+  state2.full_size = 200_MiB;
+  state2.upload_time = Aws::Utils::DateTime::CurrentTimeMillis();
+  state2.uploaded_etags = {"etag4", "etag5"};
+  upload_storage_.storeState("test_bucket", "key2", state2);
+  upload_storage_.removeAgedStates(std::chrono::milliseconds(10));
+  REQUIRE(upload_storage_.getState("test_bucket", "key1") == std::nullopt);
+  REQUIRE(upload_storage_.getState("test_bucket", "key2") == state2);
+}
+
 }  // namespace org::apache::nifi::minifi::test

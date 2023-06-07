@@ -252,7 +252,7 @@ void PutS3Object::ageOffMultipartUploads(const CommonProperties &common_properti
   if (aborted > 0) {
     logger_->log_info("Aborted %d pending multipart upload jobs in bucket '%s'", aborted, common_properties.bucket);
   }
-  // ageOffLocalS3MultipartUploadStates();
+  s3_wrapper_.ageOffLocalS3MultipartUploadStates(multipart_upload_max_age_threshold_);
   last_ageoff_time_ = now;
 }
 

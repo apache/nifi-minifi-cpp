@@ -22,14 +22,13 @@
 
 namespace org::apache::nifi::minifi::aws::s3 {
 
-MultipartUploadStateStorage::MultipartUploadStateStorage(const std::string& state_directory, std::string state_id)
-    : state_id_(std::move(state_id)),
-      state_(state_id_ + "-s3-multipart-upload-state.properties") {
+MultipartUploadStateStorage::MultipartUploadStateStorage(const std::string& state_directory, const std::string& state_id)
+    : state_(state_id + "-s3-multipart-upload-state.properties") {
   if (state_directory.empty()) {
     char format[] = "/var/tmp/nifi-minifi-cpp.s3-multipart-upload.XXXXXX";
     state_file_path_ = minifi::utils::file::FileUtils::create_temp_directory(format);
   } else {
-    state_file_path_ = std::filesystem::path(state_directory) / std::string(state_id_ + "-s3-multipart-upload-state.properties");
+    state_file_path_ = std::filesystem::path(state_directory) / std::string(state_id + "-s3-multipart-upload-state.properties");
     if (!std::filesystem::exists(state_file_path_)) {
       std::filesystem::create_directories(state_file_path_.parent_path());
       std::ofstream ofs(state_file_path_);
@@ -110,6 +109,32 @@ void MultipartUploadStateStorage::removeState(const std::string& bucket, const s
   state_.remove(state_key + ".uploaded_etags");
   state_.commitChanges();
   logger_->log_debug("Removed multipart upload state with key %s", state_key);
+}
+
+void MultipartUploadStateStorage::removeAgedStates(std::chrono::milliseconds multipart_upload_max_age_threshold) {
+  state_.loadFile(state_file_path_);
+
+  auto property_keys = state_.getConfiguredKeys();
+  auto age_off_time = Aws::Utils::DateTime::Now() - multipart_upload_max_age_threshold;
+
+  for (const auto& property_key : property_keys) {
+    if (minifi::utils::StringUtils::endsWith(property_key, ".upload_time")) {
+      std::string value;
+      if (state_.getString(property_key, value)) {
+        int64_t stored_upload_time;
+        core::Property::StringToInt(value, stored_upload_time);
+        auto upload_time = Aws::Utils::DateTime(stored_upload_time);
+        if (upload_time < age_off_time) {
+          auto state_key = minifi::utils::StringUtils::split(property_key, ".")[0];
+          auto bucket_and_object_key = minifi::utils::StringUtils::split(state_key, "/");
+          auto& bucket = bucket_and_object_key[0];
+          auto& object_key = bucket_and_object_key[1];
+          logger_->log_info("Removing local aged off multipart upload with key '%s' in bucket '%s'", object_key, bucket);
+          removeState(bucket, object_key);
+        }
+      }
+    }
+  }
 }
 
 }  // namespace org::apache::nifi::minifi::aws::s3
