@@ -30,6 +30,7 @@
 #include "Catch.h"
 #include "utils/TestUtils.h"
 #include "utils/file/FileUtils.h"
+#include "utils/gsl.h"
 
 core::Relationship Success{"success", "Everything is fine"};
 
