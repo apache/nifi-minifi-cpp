@@ -1136,16 +1136,16 @@ Establishes a TCP Server that defines and retrieves one or more byte messages fr
 
 In the list below, the names of required properties appear in bold. Any other properties (not in bold) are considered optional. The table also indicates any default values, and whether a property supports the NiFi Expression Language.
 
-| Name                       | Default Value | Allowable Values | Description                                                                                                                                                                                |
-|----------------------------|---------------|------------------|--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
-| **endpoint-list**          |               |                  | A comma delimited list of the endpoints to connect to. The format should be <server_address>:<port>.                                                                                       |
-| concurrent-handler-count   | 1             |                  | Number of concurrent handlers for this session                                                                                                                                             |
-| reconnect-interval         | 5 s           |                  | The number of seconds to wait before attempting to reconnect to the endpoint.                                                                                                              |
-| Stay Connected             | true          |                  | Determines if we keep the same socket despite having no data                                                                                                                               |
-| receive-buffer-size        | 16 MB         |                  | The size of the buffer to receive data in. Default 16384 (16MB).                                                                                                                           |
-| SSL Context Service        |               |                  | SSL Context Service Name                                                                                                                                                                   |
-| connection-attempt-timeout | 3             |                  | Maximum number of connection attempts before attempting backup hosts, if configured                                                                                                        |
-| end-of-message-byte        | 13            |                  | Byte value which denotes end of message. Must be specified as integer within the valid byte range  (-128 thru 127). For example, '13' = Carriage return and '10' = New line. Default '13'. |
+| Name                          | Default Value | Allowable Values | Description                                                                                                                                                                                      |
+|-------------------------------|---------------|------------------|--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| **Endpoint List**             |               |                  | A comma delimited list of the endpoints to connect to. The format should be <server_address>:<port>.                                                                                             |
+| SSL Context Service           |               |                  | SSL Context Service Name                                                                                                                                                                         |
+| Message Delimiter             | \n            |                  | Character that denotes the end of the message.                                                                                                                                                   |
+| **Max Size of Message Queue** | 10000         |                  | Maximum number of messages allowed to be buffered before processing them when the processor is triggered. If the buffer is full, the message is ignored. If set to zero the buffer is unlimited. |
+| Maximum Message Size          |               |                  | Optional size of the buffer to receive data in.                                                                                                                                                  |
+| **Max Batch Size**            | 500           |                  | The maximum number of messages to process at a time.                                                                                                                                             |
+| **Timeout**                   | 1s            |                  | The timeout for connecting to and communicating with the destination.<br/>**Supports Expression Language: true**                                                                                 |
+| **Reconnection Interval**     | 1 min         |                  | The duration to wait before attempting to reconnect to the endpoints.<br/>**Supports Expression Language: true**                                                                                 |
 
 ### Relationships
 
@@ -2779,5 +2779,3 @@ In the list below, the names of required properties appear in bold. Any other pr
 |---------|-----------------------------------------|
 | success | All files are routed to success         |
 | failure | Failed files are transferred to failure |
-
-

@@ -34,6 +34,7 @@
 #endif
 #include "utils/FailurePolicy.h"
 #include "utils/gsl.h"
+#include "utils/expected.h"
 #include "utils/meta/detected.h"
 #include "range/v3/view/transform.hpp"
 #include "range/v3/range/conversion.hpp"
@@ -490,6 +491,10 @@ class StringUtils {
   static bool matchesSequence(std::string_view str, const std::vector<std::string>& patterns);
 
   static bool splitToValueAndUnit(std::string_view input, int64_t& value, std::string& unit);
+
+  struct ParseError {};
+
+  static nonstd::expected<std::optional<char>, ParseError> parseCharacter(const std::string &input);
 };
 
 }  // namespace org::apache::nifi::minifi::utils

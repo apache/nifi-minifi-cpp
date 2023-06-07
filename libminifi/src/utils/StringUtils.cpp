@@ -517,4 +517,24 @@ bool StringUtils::splitToValueAndUnit(std::string_view input, int64_t& value, st
   return true;
 }
 
+nonstd::expected<std::optional<char>, StringUtils::ParseError> StringUtils::parseCharacter(const std::string &input) {
+  if (input.empty()) { return std::nullopt; }
+  if (input.size() == 1) { return input[0]; }
+
+  if (input.size() == 2 && input.starts_with('\\')) {
+    switch (input[1]) {
+      case '0': return '\0';  // Null
+      case 'a': return '\a';  // Bell
+      case 'b': return '\b';  // Backspace
+      case 't': return '\t';  // Horizontal Tab
+      case 'n': return '\n';  // Line Feed
+      case 'v': return '\v';  // Vertical Tab
+      case 'f': return '\f';  // Form Feed
+      case 'r': return '\r';  // Carriage Return
+      default: return input[1];
+    }
+  }
+  return nonstd::make_unexpected(ParseError{});
+}
+
 }  // namespace org::apache::nifi::minifi::utils

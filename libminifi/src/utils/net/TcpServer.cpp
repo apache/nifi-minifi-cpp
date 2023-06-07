@@ -16,6 +16,9 @@
  */
 #include "utils/net/TcpServer.h"
 #include "utils/net/AsioCoro.h"
+#include "utils/net/AsioSocketUtils.h"
+
+using namespace std::literals::chrono_literals;
 
 namespace org::apache::nifi::minifi::utils::net {
 
@@ -27,7 +30,8 @@ asio::awaitable<void> TcpServer::doReceive() {
     auto [accept_error, socket] = co_await acceptor.async_accept(use_nothrow_awaitable);
     if (accept_error) {
       logger_->log_error("Error during accepting new connection: %s", accept_error.message());
-      break;
+      co_await utils::net::async_wait(1s);
+      continue;
     }
     if (ssl_data_)
       co_spawn(io_context_, secureSession(std::move(socket)), asio::detached);

@@ -31,8 +31,8 @@ Processors:
       run duration nanos: 0
       auto-terminated relationships list:
       Properties:
-          endpoint-list: localhost:8776
-          end-of-message-byte: d
+          Endpoint List: localhost:8776
+          Message Delimiter: \r
           reconnect-interval: 100ms
           connection-attempt-timeout: 2000
     - name: LogAttribute

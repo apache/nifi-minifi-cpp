@@ -23,6 +23,8 @@
 #include <utility>
 #include <vector>
 #include <atomic>
+#include <asio/io_context.hpp>
+#include "utils/Literals.h"
 
 #include "../core/state/nodes/MetricsBase.h"
 #include "FlowFileRecord.h"
@@ -36,63 +38,10 @@
 #include "controllers/SSLContextService.h"
 #include "utils/gsl.h"
 #include "utils/Export.h"
+#include "utils/net/AsioSocketUtils.h"
+#include "utils/net/Message.h"
 
 namespace org::apache::nifi::minifi::processors {
-
-class SocketAfterExecute : public utils::AfterExecute<int> {
- public:
-  explicit SocketAfterExecute(std::atomic<bool> &running, std::string endpoint, std::map<std::string, std::future<int>*> *list, std::mutex *mutex)
-      : running_(running.load()),
-        endpoint_(std::move(endpoint)),
-        mutex_(mutex),
-        list_(list) {
-  }
-
-  SocketAfterExecute(const SocketAfterExecute&) = delete;
-  SocketAfterExecute(SocketAfterExecute&&) = delete;
-
-  SocketAfterExecute& operator=(const SocketAfterExecute&) = delete;
-  SocketAfterExecute& operator=(SocketAfterExecute&&) = delete;
-
-  ~SocketAfterExecute() override = default;
-
-  bool isFinished(const int &result) override {
-    if (result == -1 || result == 0 || !running_) {
-      std::lock_guard<std::mutex> lock(*mutex_);
-      list_->erase(endpoint_);
-      return true;
-    } else {
-      return false;
-    }
-  }
-  bool isCancelled(const int& /*result*/) override {
-    return !running_;
-  }
-
-  std::chrono::steady_clock::duration wait_time() override {
-    // wait 500ms
-    return std::chrono::milliseconds(500);
-  }
-
- protected:
-  std::atomic<bool> running_;
-  std::string endpoint_;
-  std::mutex *mutex_;
-  std::map<std::string, std::future<int>*> *list_;
-};
-
-class DataHandler {
- public:
-  DataHandler(std::shared_ptr<core::ProcessSessionFactory> sessionFactory) // NOLINT
-      : sessionFactory_(std::move(sessionFactory)) {
-  }
-  static const char *SOURCE_ENDPOINT_ATTRIBUTE;
-
-  int16_t handle(const std::string& source, uint8_t *message, size_t size, bool partial);
-
- private:
-  std::shared_ptr<core::ProcessSessionFactory> sessionFactory_;
-};
 
 class GetTCP : public core::Processor {
  public:
@@ -101,30 +50,35 @@ class GetTCP : public core::Processor {
   }
 
   ~GetTCP() override {
-    // thread pool must be shut down first before members it is using are destructed, otherwise segfault is possible
-    client_thread_pool_.shutdown();
+    if (client_) {
+      client_->stop();
+    }
+    if (client_thread_.joinable()) {
+      client_thread_.join();
+    }
+    client_.reset();
   }
 
   EXTENSIONAPI static constexpr const char* Description = "Establishes a TCP Server that defines and retrieves one or more byte messages from clients";
 
   EXTENSIONAPI static const core::Property EndpointList;
-  EXTENSIONAPI static const core::Property ConcurrentHandlers;
-  EXTENSIONAPI static const core::Property ReconnectInterval;
-  EXTENSIONAPI static const core::Property StayConnected;
-  EXTENSIONAPI static const core::Property ReceiveBufferSize;
   EXTENSIONAPI static const core::Property SSLContextService;
-  EXTENSIONAPI static const core::Property ConnectionAttemptLimit;
-  EXTENSIONAPI static const core::Property EndOfMessageByte;
+  EXTENSIONAPI static const core::Property MessageDelimiter;
+  EXTENSIONAPI static const core::Property MaxQueueSize;
+  EXTENSIONAPI static const core::Property MaxMessageSize;
+  EXTENSIONAPI static const core::Property MaxBatchSize;
+  EXTENSIONAPI static const core::Property Timeout;
+  EXTENSIONAPI static const core::Property ReconnectInterval;
   static auto properties() {
     return std::array{
       EndpointList,
-      ConcurrentHandlers,
-      ReconnectInterval,
-      StayConnected,
-      ReceiveBufferSize,
       SSLContextService,
-      ConnectionAttemptLimit,
-      EndOfMessageByte
+      MessageDelimiter,
+      MaxQueueSize,
+      MaxMessageSize,
+      MaxBatchSize,
+      Timeout,
+      ReconnectInterval
     };
   }
 
@@ -148,28 +102,55 @@ class GetTCP : public core::Processor {
     throw std::logic_error{"GetTCP::onTrigger(ProcessContext*, ProcessSession*) is unimplemented"};
   }
   void initialize() override;
-
- protected:
   void notifyStop() override;
 
  private:
-  std::function<int()> f_ex;
-  std::atomic<bool> running_{false};
-  std::unique_ptr<DataHandler> handler_;
-  std::vector<std::string> endpoints;
-  std::map<std::string, std::future<int>*> live_clients_;
-  moodycamel::ConcurrentQueue<std::unique_ptr<io::Socket>> socket_ring_buffer_;
-  bool stay_connected_{true};
-  uint16_t concurrent_handlers_{2};
-  std::byte endOfMessageByte{13};
-  std::chrono::milliseconds reconnect_interval_{5000};
-  uint64_t receive_buffer_size_{16 * 1024 * 1024};
-  uint16_t connection_attempt_limit_{3};
-  // Mutex for ensuring clients are running
-  std::mutex mutex_;
-  std::shared_ptr<minifi::controllers::SSLContextService> ssl_service_;
+  static void transferAsFlowFile(const utils::net::Message& message, core::ProcessSession& session);
+
+  class TcpClient {
+   public:
+    TcpClient(char delimiter,
+        asio::steady_timer::duration timeout_duration,
+        asio::steady_timer::duration reconnection_interval,
+        std::optional<asio::ssl::context> ssl_context,
+        std::optional<size_t> max_queue_size,
+        std::optional<size_t> max_message_size,
+        std::vector<utils::net::ConnectionId> connections,
+        std::shared_ptr<core::logging::Logger> logger);
+
+    ~TcpClient();
+
+    void run();
+    void stop();
+
+    bool queueEmpty() const;
+    bool tryDequeue(utils::net::Message& received_message);
+
+   private:
+    asio::awaitable<void> doReceiveFrom(const utils::net::ConnectionId& connection_id);
+
+    template<class SocketType>
+    asio::awaitable<std::error_code> doReceiveFromEndpoint(const asio::ip::tcp::endpoint& endpoint, SocketType& socket);
+
+    asio::awaitable<std::error_code> readLoop(auto& socket);
+
+    utils::ConcurrentQueue<utils::net::Message> concurrent_queue_;
+    asio::io_context io_context_;
+
+    char delimiter_;
+    asio::steady_timer::duration timeout_duration_;
+    asio::steady_timer::duration reconnection_interval_;
+    std::optional<asio::ssl::context> ssl_context_;
+    std::optional<size_t> max_queue_size_;
+    std::optional<size_t> max_message_size_;
+    std::vector<utils::net::ConnectionId> connections_;
+    std::shared_ptr<core::logging::Logger> logger_;
+  };
+
+  std::optional<TcpClient> client_;
+  size_t max_batch_size_{500};
+  std::thread client_thread_;
   std::shared_ptr<core::logging::Logger> logger_ = core::logging::LoggerFactory<GetTCP>::getLogger(uuid_);
-  utils::ThreadPool<int> client_thread_pool_;
 };
 
 }  // namespace org::apache::nifi::minifi::processors

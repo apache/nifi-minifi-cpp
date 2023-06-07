@@ -77,7 +77,7 @@ class SecureSocketTest : public IntegrationBase {
 
   void runAssertions() override {
     using org::apache::nifi::minifi::utils::verifyLogLinePresenceInPollTime;
-    assert(verifyLogLinePresenceInPollTime(std::chrono::milliseconds(wait_time_), "SSL socket connect success"));
+    assert(verifyLogLinePresenceInPollTime(std::chrono::milliseconds(wait_time_), "Accepted on"));
     isRunning_ = false;
     server_socket_.reset();
     assert(verifyLogLinePresenceInPollTime(std::chrono::milliseconds(wait_time_), "send succeed 20"));

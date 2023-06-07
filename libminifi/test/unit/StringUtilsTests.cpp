@@ -594,4 +594,19 @@ TEST_CASE("StringUtils::splitToValueAndUnit tests") {
   }
 }
 
+TEST_CASE("StringUtils::parseCharacter tests") {
+  CHECK(StringUtils::parseCharacter("a") == 'a');
+  CHECK(StringUtils::parseCharacter("\\n") == '\n');
+  CHECK(StringUtils::parseCharacter("\\t") == '\t');
+  CHECK(StringUtils::parseCharacter("\\r") == '\r');
+  CHECK(StringUtils::parseCharacter("\\s") == 's');
+  CHECK(StringUtils::parseCharacter("\\'") == '\'');
+  CHECK(StringUtils::parseCharacter("\\") == '\\');
+  CHECK(StringUtils::parseCharacter("\\?") == '\?');
+
+  CHECK_FALSE(StringUtils::parseCharacter("abc").has_value());
+  CHECK_FALSE(StringUtils::parseCharacter("\\nd").has_value());
+  CHECK(StringUtils::parseCharacter("") == std::nullopt);
+}
+
 // NOLINTEND(readability-container-size-empty)

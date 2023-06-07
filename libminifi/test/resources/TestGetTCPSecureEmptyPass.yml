@@ -32,8 +32,8 @@ Processors:
       auto-terminated relationships list:
       Properties:
           SSL Context Service: SSLContextService
-          endpoint-list: localhost:29776
-          end-of-message-byte: d
+          Endpoint List: localhost:29776
+          Message Delimiter: \r
           reconnect-interval: 100ms
           connection-attempt-timeout: 2000
     - name: LogAttribute
