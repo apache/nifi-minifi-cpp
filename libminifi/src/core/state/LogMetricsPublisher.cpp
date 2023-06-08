@@ -59,7 +59,7 @@ void LogMetricsPublisher::readLoggingInterval() {
   if (auto logging_interval_str = configuration_->get(Configure::nifi_metrics_publisher_log_metrics_logging_interval)) {
     if (auto logging_interval = minifi::core::TimePeriodValue::fromString(logging_interval_str.value())) {
       logging_interval_ = logging_interval->getMilliseconds();
-      logger_->log_info("Metric logging interval is set to %lld milliseconds", logging_interval_.count());
+      logger_->log_info("Metric logging interval is set to %" PRId64 " milliseconds", int64_t{logging_interval_.count()});
       return;
     } else {
       logger_->log_error("Configured logging interval '%s' is invalid!", logging_interval_str.value());
@@ -72,8 +72,7 @@ void LogMetricsPublisher::readLoggingInterval() {
 void LogMetricsPublisher::readLogLevel() {
   gsl_Expects(configuration_);
   if (auto log_level_str = configuration_->get(Configure::nifi_metrics_publisher_log_metrics_log_level)) {
-    auto full_caps_log_level_str = utils::StringUtils::toUpper(*log_level_str);
-    log_level_ = utils::LogUtils::LogLevelOption::parse(full_caps_log_level_str.c_str(), utils::LogUtils::LogLevelOption::LOGGING_INFO);
+    log_level_ = utils::LogUtils::LogLevelOption::parse(log_level_str->c_str(), utils::LogUtils::LogLevelOption::LOGGING_INFO, false);
     logger_->log_info("Metric log level is set to %s", log_level_.toString());
     return;
   }
@@ -99,7 +98,6 @@ void LogMetricsPublisher::loadMetricNodes() {
   if (!metric_classes_str || metric_classes_str->empty()) {
     metric_classes_str = configuration_->get(minifi::Configuration::nifi_metrics_publisher_metrics);
   }
-  bool response_nodes_empty = true;
   if (metric_classes_str && !metric_classes_str->empty()) {
     auto metric_classes = utils::StringUtils::split(*metric_classes_str, ",");
     std::lock_guard<std::mutex> lock(response_nodes_mutex_);
@@ -111,15 +109,14 @@ void LogMetricsPublisher::loadMetricNodes() {
       }
       response_nodes_.insert(response_nodes_.end(), loaded_response_nodes.begin(), loaded_response_nodes.end());
     }
-    response_nodes_empty = response_nodes_.empty();
   }
-  if (response_nodes_empty) {
+  if (response_nodes_.empty()) {
     logger_->log_warn("LogMetricsPublisher is configured without any valid metrics!");
   }
-  if (response_nodes_empty && metrics_logger_thread_) {
+  if (response_nodes_.empty() && metrics_logger_thread_) {
     metrics_logger_thread_->stopAndJoin();
     metrics_logger_thread_.reset();
-  } else if (!response_nodes_empty && !metrics_logger_thread_) {
+  } else if (!response_nodes_.empty() && !metrics_logger_thread_) {
     metrics_logger_thread_ = std::make_unique<utils::StoppableThread>([this] { logMetrics(); });
   }
 }
