@@ -21,6 +21,7 @@
 #include <openssl/err.h>
 #include <openssl/ssl.h>
 #include <openssl/x509v3.h>
+#include <openssl/bio.h>
 #ifdef WIN32
 #pragma comment(lib, "crypt32.lib")
 #pragma comment(lib, "Ws2_32.lib")
@@ -122,7 +123,20 @@ bool is_valid_and_readable_path(const std::filesystem::path& path_to_be_tested) 
 std::string getCertName(const utils::tls::X509_unique_ptr& cert) {
   const size_t BUFFER_SIZE = 256;
   char name_buffer[BUFFER_SIZE];
-  X509_NAME_oneline(X509_get_subject_name(cert.get()), name_buffer, BUFFER_SIZE);
+
+  BIO* bio = BIO_new(BIO_s_mem());
+  if (!bio) {
+    return {};
+  }
+  const auto guard = gsl::finally([&bio]() {
+    BIO_free(bio);
+  });
+
+  X509_NAME_print_ex(bio, X509_get_subject_name(cert.get()), 0, XN_FLAG_ONELINE);
+
+  int length = BIO_read(bio, name_buffer, BUFFER_SIZE - 1);
+  name_buffer[length] = '\0';
+
   return name_buffer;
 }
 #endif
@@ -181,7 +195,7 @@ bool SSLContextService::configure_ssl_context(SSL_CTX *ctx) {
     }
   }
 
-  SSL_CTX_set_options(ctx, SSL_OP_NO_TLSv1_3);
+  SSL_CTX_set_max_proto_version(ctx, TLS1_2_VERSION);
 
   return true;
 }

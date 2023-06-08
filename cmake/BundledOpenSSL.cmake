@@ -28,6 +28,7 @@ function(use_openssl SOURCE_DIR BINARY_DIR)
     set(BYPRODUCT_PREFIX "lib" CACHE STRING "" FORCE)
     if (WIN32)
         set(BYPRODUCT_SUFFIX ".lib" CACHE STRING "" FORCE)
+    # Due to OpenSSL 3's static linking issue on x86 MacOS platform we make an exception to build a shared library instead
     elseif (APPLE AND (CMAKE_SYSTEM_PROCESSOR MATCHES "x86_64|amd64|AMD64"))
         set(BYPRODUCT_SUFFIX ".dylib" CACHE STRING "" FORCE)
     else()

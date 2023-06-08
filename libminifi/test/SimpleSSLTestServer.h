@@ -50,12 +50,13 @@ class SimpleSSLTestServer  {
   };
 
  public:
-  SimpleSSLTestServer(uint64_t disable_version, int port, const std::filesystem::path& key_dir)
+  SimpleSSLTestServer(uint64_t version, int port, const std::filesystem::path& key_dir)
       : port_(port), had_connection_(false) {
     static SocketInitializer socket_initializer{};
     minifi::io::OpenSSLInitializer::getInstance();
     ctx_ = SSL_CTX_new(TLS_server_method());
-    SSL_CTX_set_options(ctx_, disable_version);
+    SSL_CTX_set_min_proto_version(ctx_, version);
+    SSL_CTX_set_max_proto_version(ctx_, version);
     configureContext(key_dir);
     socket_descriptor_ = createSocket(port_);
   }
