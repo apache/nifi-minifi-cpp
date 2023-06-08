@@ -191,12 +191,12 @@ inline bool unit_matches<std::chrono::days>(const std::string& unit) {
 
 template<>
 inline bool unit_matches<std::chrono::weeks>(const std::string& unit) {
-  return unit == "w" || unit == "week" || unit == "weeks";
+  return unit == "w" || unit == "wk" || unit == "wks" || unit == "week" || unit == "weeks";
 }
 
 template<>
 inline bool unit_matches<std::chrono::months>(const std::string& unit) {
-  return unit == "mon" || unit == "month" || unit == "months";
+  return unit == "month" || unit == "months";
 }
 
 template<>

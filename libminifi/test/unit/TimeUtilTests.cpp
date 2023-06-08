@@ -150,7 +150,6 @@ TEST_CASE("Test string to duration conversion", "[timedurationtests]") {
   CHECK(StringToDuration<std::chrono::seconds>("1 minute") == 1min);
   CHECK(StringToDuration<std::chrono::seconds>("1 w") == std::chrono::weeks(1));
   CHECK(StringToDuration<std::chrono::seconds>("3 weeks") == std::chrono::weeks(3));
-  CHECK(StringToDuration<std::chrono::seconds>("1 mon") == std::chrono::months(1));
   CHECK(StringToDuration<std::chrono::seconds>("2 months") == std::chrono::months(2));
   CHECK(StringToDuration<std::chrono::seconds>("1 y") == std::chrono::years(1));
   CHECK(StringToDuration<std::chrono::seconds>("2 years") == std::chrono::years(2));
@@ -168,7 +167,6 @@ TEST_CASE("Test string to duration conversion", "[timedurationtests]") {
   CHECK(StringToDuration<std::chrono::nanoseconds>("1 minute") == 1min);
   CHECK(StringToDuration<std::chrono::nanoseconds>("1 w") == std::chrono::weeks(1));
   CHECK(StringToDuration<std::chrono::nanoseconds>("3 weeks") == std::chrono::weeks(3));
-  CHECK(StringToDuration<std::chrono::nanoseconds>("1 mon") == std::chrono::months(1));
   CHECK(StringToDuration<std::chrono::nanoseconds>("2 months") == std::chrono::months(2));
   CHECK(StringToDuration<std::chrono::nanoseconds>("1 y") == std::chrono::years(1));
   CHECK(StringToDuration<std::chrono::nanoseconds>("2 years") == std::chrono::years(2));
