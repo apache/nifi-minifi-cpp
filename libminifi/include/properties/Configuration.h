@@ -188,6 +188,8 @@ class Configuration : public Properties {
   static constexpr const char *nifi_metrics_publisher_log_metrics_logging_interval = "nifi.metrics.publisher.LogMetricsPublisher.logging.interval";
   static constexpr const char *nifi_metrics_publisher_log_metrics_log_level = "nifi.metrics.publisher.LogMetricsPublisher.log.level";
   static constexpr const char *nifi_metrics_publisher_metrics = "nifi.metrics.publisher.metrics";
+  static constexpr const char *nifi_metrics_publisher_prometheus_metrics_publisher_certificate = "nifi.metrics.publisher.PrometheusMetricsPublisher.certificate";
+  static constexpr const char *nifi_metrics_publisher_prometheus_metrics_publisher_ca_certificate = "nifi.metrics.publisher.PrometheusMetricsPublisher.ca.certificate";
 
   // Controller socket options
   static constexpr const char *controller_socket_enable = "controller.socket.enable";

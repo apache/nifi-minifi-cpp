@@ -22,7 +22,7 @@ import OpenSSL.crypto
 
 from pydoc import locate
 
-from ssl_utils.SSL_cert_utils import make_ca, make_client_cert
+from ssl_utils.SSL_cert_utils import make_ca, make_cert_without_extended_usage
 from minifi.core.InputPort import InputPort
 
 from cluster.DockerTestCluster import DockerTestCluster
@@ -53,9 +53,9 @@ class MiNiFi_integration_test:
         self.cluster.set_directory_bindings(self.docker_directory_bindings.get_directory_bindings(self.feature_id), self.docker_directory_bindings.get_data_directories(self.feature_id))
         self.root_ca_cert, self.root_ca_key = make_ca("root CA")
 
-        minifi_client_cert, minifi_client_key = make_client_cert(common_name=f"minifi-cpp-flow-{self.feature_id}",
-                                                                 ca_cert=self.root_ca_cert,
-                                                                 ca_key=self.root_ca_key)
+        minifi_client_cert, minifi_client_key = make_cert_without_extended_usage(common_name=f"minifi-cpp-flow-{self.feature_id}",
+                                                                                 ca_cert=self.root_ca_cert,
+                                                                                 ca_key=self.root_ca_key)
         self.put_test_resource('root_ca.crt',
                                OpenSSL.crypto.dump_certificate(type=OpenSSL.crypto.FILETYPE_PEM,
                                                                cert=self.root_ca_cert))
@@ -66,6 +66,12 @@ class MiNiFi_integration_test:
         self.put_test_resource('minifi_client.key',
                                OpenSSL.crypto.dump_privatekey(type=OpenSSL.crypto.FILETYPE_PEM,
                                                               pkey=minifi_client_key))
+
+        self.put_test_resource('minifi_merged_cert.crt',
+                               OpenSSL.crypto.dump_certificate(type=OpenSSL.crypto.FILETYPE_PEM,
+                                                               cert=minifi_client_cert)
+                               + OpenSSL.crypto.dump_privatekey(type=OpenSSL.crypto.FILETYPE_PEM,
+                                                                pkey=minifi_client_key))
 
     def get_container_name_with_postfix(self, container_name: str):
         return self.cluster.container_store.get_container_name_with_postfix(container_name)
@@ -347,6 +353,9 @@ class MiNiFi_integration_test:
     def enable_prometheus_in_minifi(self):
         self.cluster.enable_prometheus_in_minifi()
 
+    def enable_prometheus_with_ssl_in_minifi(self):
+        self.cluster.enable_prometheus_with_ssl_in_minifi()
+
     def enable_splunk_hec_ssl(self, container_name, splunk_cert_pem, splunk_key_pem, root_ca_cert_pem):
         self.cluster.enable_splunk_hec_ssl(container_name, splunk_cert_pem, splunk_key_pem, root_ca_cert_pem)
 
@@ -391,3 +400,6 @@ class MiNiFi_integration_test:
 
     def enable_log_metrics_publisher_in_minifi(self):
         self.cluster.enable_log_metrics_publisher_in_minifi()
+
+    def enable_ssl_in_prometheus_checker(self):
+        self.cluster.enable_ssl_in_prometheus_checker()

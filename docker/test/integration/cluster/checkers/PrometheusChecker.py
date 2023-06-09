@@ -18,7 +18,16 @@ from utils import wait_for
 
 class PrometheusChecker:
     def __init__(self):
-        self.prometheus_client = PrometheusConnect(url="http://localhost:9090", disable_ssl=True)
+        self.use_ssl = False
+
+    def enable_ssl(self):
+        self.use_ssl = True
+
+    def _getClient(self):
+        if self.use_ssl:
+            return PrometheusConnect(url="https://localhost:9090", disable_ssl=True)
+        else:
+            return PrometheusConnect(url="http://localhost:9090", disable_ssl=True)
 
     def wait_for_metric_class_on_prometheus(self, metric_class, timeout_seconds):
         return wait_for(lambda: self.verify_metric_class(metric_class), timeout_seconds)
@@ -101,14 +110,14 @@ class PrometheusChecker:
     def verify_metric_exists(self, metric_name, metric_class, labels={}):
         labels['metric_class'] = metric_class
         labels['agent_identifier'] = "Agent1"
-        return len(self.prometheus_client.get_current_metric_value(metric_name=metric_name, label_config=labels)) > 0
+        return len(self._getClient().get_current_metric_value(metric_name=metric_name, label_config=labels)) > 0
 
     def verify_metrics_exist(self, metric_names, metric_class, labels={}):
         return all((self.verify_metric_exists(metric_name, metric_class, labels) for metric_name in metric_names))
 
     def verify_metric_larger_than_zero(self, metric_name, metric_class, labels={}):
         labels['metric_class'] = metric_class
-        result = self.prometheus_client.get_current_metric_value(metric_name=metric_name, label_config=labels)
+        result = self._getClient().get_current_metric_value(metric_name=metric_name, label_config=labels)
         return len(result) > 0 and int(result[0]['value'][1]) > 0
 
     def verify_metrics_larger_than_zero(self, metric_names, metric_class, labels={}):

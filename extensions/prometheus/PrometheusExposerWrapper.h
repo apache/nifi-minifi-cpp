@@ -17,21 +17,32 @@
 #pragma once
 
 #include <memory>
+#include <string>
+#include <vector>
 
 #include "MetricsExposer.h"
 #include "prometheus/exposer.h"
 #include "core/logging/Logger.h"
 #include "core/logging/LoggerConfiguration.h"
+#include "controllers/SSLContextService.h"
 
 namespace org::apache::nifi::minifi::extensions::prometheus {
 
+struct PrometheusExposerConfig {
+  uint32_t port;
+  std::optional<std::string> certificate;
+  std::optional<std::string> ca_certificate;
+};
+
 class PrometheusExposerWrapper : public MetricsExposer {
  public:
-  explicit PrometheusExposerWrapper(uint32_t port);
+  explicit PrometheusExposerWrapper(const PrometheusExposerConfig& config);
   void registerMetric(const std::shared_ptr<PublishedMetricGaugeCollection>& metric) override;
   void removeMetric(const std::shared_ptr<PublishedMetricGaugeCollection>& metric) override;
 
  private:
+  static std::vector<std::string> parseExposerConfig(const PrometheusExposerConfig& config);
+
   ::prometheus::Exposer exposer_;
   std::shared_ptr<core::logging::Logger> logger_{core::logging::LoggerFactory<PrometheusExposerWrapper>::getLogger()};
 };

@@ -16,13 +16,65 @@ import logging
 import os
 import tempfile
 import docker.types
+
 from .Container import Container
+from OpenSSL import crypto
+from ssl_utils.SSL_cert_utils import make_cert_without_extended_usage
 
 
 class PrometheusContainer(Container):
-    def __init__(self, feature_context, name, vols, network, image_store, command=None):
-        super().__init__(feature_context, name, 'prometheus', vols, network, image_store, command)
-        prometheus_yml_content = """
+    def __init__(self, feature_context, name, vols, network, image_store, command=None, ssl=False):
+        engine = "prometheus-ssl" if ssl else "prometheus"
+        super().__init__(feature_context, name, engine, vols, network, image_store, command)
+        self.ssl = ssl
+        if ssl:
+            prometheus_cert, prometheus_key = make_cert_without_extended_usage(f"prometheus-{feature_context.id}", feature_context.root_ca_cert, feature_context.root_ca_key)
+
+            self.root_ca_file = tempfile.NamedTemporaryFile(delete=False)
+            self.root_ca_file.write(crypto.dump_certificate(type=crypto.FILETYPE_PEM, cert=feature_context.root_ca_cert))
+            self.root_ca_file.close()
+            os.chmod(self.root_ca_file.name, 0o644)
+
+            self.prometheus_cert_file = tempfile.NamedTemporaryFile(delete=False)
+            self.prometheus_cert_file.write(crypto.dump_certificate(type=crypto.FILETYPE_PEM, cert=prometheus_cert))
+            self.prometheus_cert_file.close()
+            os.chmod(self.prometheus_cert_file.name, 0o644)
+
+            self.prometheus_key_file = tempfile.NamedTemporaryFile(delete=False)
+            self.prometheus_key_file.write(crypto.dump_privatekey(type=crypto.FILETYPE_PEM, pkey=prometheus_key))
+            self.prometheus_key_file.close()
+            os.chmod(self.prometheus_key_file.name, 0o644)
+
+            prometheus_yml_content = """
+global:
+  scrape_interval: 2s
+  evaluation_interval: 15s
+scrape_configs:
+  - job_name: "minifi"
+    static_configs:
+      - targets: ["minifi-cpp-flow-{feature_id}:9936"]
+    scheme: https
+    tls_config:
+      ca_file: /etc/prometheus/certs/root-ca.pem
+      cert_file: /etc/prometheus/certs/prometheus.crt
+      key_file: /etc/prometheus/certs/prometheus.key
+""".format(feature_id=self.feature_context.id)
+            self.yaml_file = tempfile.NamedTemporaryFile(delete=False)
+            self.yaml_file.write(prometheus_yml_content.encode())
+            self.yaml_file.close()
+            os.chmod(self.yaml_file.name, 0o644)
+
+            prometheus_web_config_content = """
+tls_server_config:
+  cert_file: /etc/prometheus/certs/prometheus.crt
+  key_file: /etc/prometheus/certs/prometheus.key
+"""
+            self.web_config_file = tempfile.NamedTemporaryFile(delete=False)
+            self.web_config_file.write(prometheus_web_config_content.encode())
+            self.web_config_file.close()
+            os.chmod(self.web_config_file.name, 0o644)
+        else:
+            prometheus_yml_content = """
 global:
   scrape_interval: 2s
   evaluation_interval: 15s
@@ -45,15 +97,39 @@ scrape_configs:
 
         logging.info('Creating and running Prometheus docker container...')
 
+        mounts = [docker.types.Mount(
+            type='bind',
+            source=self.yaml_file.name,
+            target='/etc/prometheus/prometheus.yml'
+        )]
+
+        if self.ssl:
+            mounts.append(docker.types.Mount(
+                type='bind',
+                source=self.web_config_file.name,
+                target='/etc/prometheus/web-config.yml'
+            ))
+            mounts.append(docker.types.Mount(
+                type='bind',
+                source=self.root_ca_file.name,
+                target='/etc/prometheus/certs/root-ca.pem'
+            ))
+            mounts.append(docker.types.Mount(
+                type='bind',
+                source=self.prometheus_cert_file.name,
+                target='/etc/prometheus/certs/prometheus.crt'
+            ))
+            mounts.append(docker.types.Mount(
+                type='bind',
+                source=self.prometheus_key_file.name,
+                target='/etc/prometheus/certs/prometheus.key'
+            ))
+
         self.client.containers.run(
             image="prom/prometheus:v2.35.0",
             detach=True,
             name=self.name,
             network=self.network.name,
             ports={'9090/tcp': 9090},
-            mounts=[docker.types.Mount(
-                type='bind',
-                source=self.yaml_file.name,
-                target='/etc/prometheus/prometheus.yml'
-            )],
+            mounts=mounts,
             entrypoint=self.command)

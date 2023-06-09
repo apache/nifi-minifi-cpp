@@ -27,7 +27,7 @@
 #include "core/logging/Logger.h"
 #include "core/logging/LoggerConfiguration.h"
 #include "utils/Id.h"
-#include "MetricsExposer.h"
+#include "PrometheusExposerWrapper.h"
 
 namespace org::apache::nifi::minifi::extensions::prometheus {
 
@@ -42,8 +42,8 @@ class PrometheusMetricsPublisher : public state::MetricsPublisher {
   void loadMetricNodes() override;
 
  private:
-  uint32_t readPort();
-  std::vector<state::response::SharedResponseNode> getMetricNodes();
+  PrometheusExposerConfig readExposerConfig() const;
+  std::vector<state::response::SharedResponseNode> getMetricNodes() const;
   void loadAgentIdentifier();
 
   std::mutex registered_metrics_mutex_;
