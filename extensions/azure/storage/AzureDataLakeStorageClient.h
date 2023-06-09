@@ -29,6 +29,7 @@
 #include "DataLakeStorageClient.h"
 #include "core/logging/Logger.h"
 #include "core/logging/LoggerConfiguration.h"
+#include "utils/span.h"
 
 namespace org::apache::nifi::minifi::azure::storage {
 

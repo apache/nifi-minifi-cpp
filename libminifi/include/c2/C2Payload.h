@@ -29,6 +29,7 @@
 #include "core/state/UpdateController.h"
 #include "utils/Enum.h"
 #include "utils/gsl.h"
+#include "utils/span.h"
 
 namespace org {
 namespace apache {

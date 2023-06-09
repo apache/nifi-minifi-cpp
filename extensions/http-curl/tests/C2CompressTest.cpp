@@ -35,6 +35,7 @@
 #include "range/v3/view/transform.hpp"
 #include "utils/IntegrationTestUtils.h"
 #include "utils/StringUtils.h"
+#include "utils/span.h"
 #include "properties/Configuration.h"
 #include "io/ZlibStream.h"
 

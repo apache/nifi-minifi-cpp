@@ -24,6 +24,7 @@
 #include "io/ZlibStream.h"
 #include "utils/gsl.h"
 #include "utils/StringUtils.h"
+#include "utils/span.h"
 
 namespace io = org::apache::nifi::minifi::io;
 

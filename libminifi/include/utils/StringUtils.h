@@ -34,6 +34,7 @@
 #endif
 #include "utils/FailurePolicy.h"
 #include "utils/gsl.h"
+#include "utils/span.h"
 #include "utils/meta/detected.h"
 #include "range/v3/view/transform.hpp"
 #include "range/v3/range/conversion.hpp"

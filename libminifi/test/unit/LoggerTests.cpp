@@ -26,6 +26,7 @@
 #include "io/ZlibStream.h"
 #include "StreamPipe.h"
 #include "utils/IntegrationTestUtils.h"
+#include "utils/span.h"
 
 using namespace std::literals::chrono_literals;
 

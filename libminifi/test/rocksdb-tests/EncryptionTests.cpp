@@ -22,6 +22,7 @@
 #include "utils/IntegrationTestUtils.h"
 #include "repository/VolatileContentRepository.h"
 #include "FlowFileRecord.h"
+#include "utils/span.h"
 
 using core::repository::FlowFileRepository;
 

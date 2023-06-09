@@ -15,6 +15,7 @@
  * limitations under the License.
  */
 #include "RocksDbRepository.h"
+#include "utils/span.h"
 
 using namespace std::literals::chrono_literals;
 

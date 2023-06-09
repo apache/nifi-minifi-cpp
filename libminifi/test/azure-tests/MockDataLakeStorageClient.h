@@ -26,6 +26,7 @@
 
 #include "storage/DataLakeStorageClient.h"
 #include "io/BufferStream.h"
+#include "utils/span.h"
 
 class MockDataLakeStorageClient : public org::apache::nifi::minifi::azure::storage::DataLakeStorageClient {
  public:

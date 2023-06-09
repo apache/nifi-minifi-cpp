@@ -26,6 +26,7 @@
 #include "azure/storage/blobs/blob_options.hpp"
 
 #include "utils/AzureSdkLogger.h"
+#include "utils/span.h"
 
 namespace org::apache::nifi::minifi::azure::storage {
 

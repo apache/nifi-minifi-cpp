@@ -25,6 +25,7 @@
 
 #include "storage/BlobStorageClient.h"
 #include "azure/core/io/body_stream.hpp"
+#include "utils/span.h"
 
 class MockBlobStorage : public minifi::azure::storage::BlobStorageClient {
  public:

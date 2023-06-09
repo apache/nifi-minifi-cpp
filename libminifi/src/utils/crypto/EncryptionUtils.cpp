@@ -23,6 +23,7 @@
 #include <string>
 
 #include "utils/StringUtils.h"
+#include "utils/span.h"
 
 namespace org {
 namespace apache {

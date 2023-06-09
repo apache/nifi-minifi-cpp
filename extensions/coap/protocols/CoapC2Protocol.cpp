@@ -22,6 +22,7 @@
 #include "io/OutputStream.h"
 #include "core/Resource.h"
 #include "utils/gsl.h"
+#include "utils/span.h"
 
 namespace org::apache::nifi::minifi::coap::c2 {
 

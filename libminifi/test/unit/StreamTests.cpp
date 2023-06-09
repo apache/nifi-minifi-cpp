@@ -27,6 +27,7 @@
 #include "../Catch.h"
 #include "io/BaseStream.h"
 #include "io/StreamSlice.h"
+#include "utils/span.h"
 
 TEST_CASE("TestReadData", "[testread]") {
   auto base = std::make_shared<minifi::io::BufferStream>();

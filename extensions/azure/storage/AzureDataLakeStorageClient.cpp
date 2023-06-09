@@ -27,6 +27,7 @@
 #include "azure/identity.hpp"
 
 #include "utils/AzureSdkLogger.h"
+#include "utils/span.h"
 
 namespace org::apache::nifi::minifi::azure::storage {
 

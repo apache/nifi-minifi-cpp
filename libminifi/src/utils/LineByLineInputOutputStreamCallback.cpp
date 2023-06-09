@@ -18,6 +18,7 @@
 #include "utils/LineByLineInputOutputStreamCallback.h"
 
 #include "utils/gsl.h"
+#include "utils/span.h"
 
 namespace org::apache::nifi::minifi::utils {
 
@@ -67,7 +68,7 @@ void LineByLineInputOutputStreamCallback::readLine() {
   if (end_of_line != input_.end()) { ++end_of_line; }
 
   current_line_ = next_line_;
-  next_line_ = utils::span_to<std::string>(utils::as_span<char>(std::span(&*current_pos_, &*end_of_line)));
+  next_line_ = utils::span_to<std::string>(utils::as_span<char>(std::span(current_pos_, end_of_line)));
   current_pos_ = end_of_line;
 }
 

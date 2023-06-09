@@ -35,6 +35,7 @@
 #include "core/extension/ExtensionManager.h"
 #include "utils/Id.h"
 #include "utils/StringUtils.h"
+#include "utils/span.h"
 #include "LogUtils.h"
 
 #include "spdlog/spdlog.h"
@@ -645,7 +646,7 @@ std::string TestPlan::getContent(const minifi::core::FlowFile& file) const {
   auto content_stream = content_repo_->read(*content_claim);
   auto output_stream = std::make_shared<minifi::io::BufferStream>();
   minifi::InputStreamPipe{*output_stream}(content_stream);
-  return std::string{reinterpret_cast<const char*>(output_stream->getBuffer().data()), output_stream->size()};
+  return utils::span_to<std::string>(utils::as_span<const char>(output_stream->getBuffer()));
 }
 
 TestController::TestController()

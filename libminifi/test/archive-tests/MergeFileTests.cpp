@@ -41,6 +41,7 @@
 #include "serialization/PayloadSerializer.h"
 #include "../Utils.h"
 #include "utils/gsl.h"
+#include "utils/span.h"
 
 std::string FLOW_FILE;
 std::string EXPECT_MERGE_CONTENT_FIRST;
