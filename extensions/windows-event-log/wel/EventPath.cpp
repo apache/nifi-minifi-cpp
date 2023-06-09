@@ -36,24 +36,4 @@ EventPath::EventPath(std::string str) {
   wstr_ = std::wstring(str_.begin(), str_.end());
 }
 
-
-constexpr const std::wstring& EventPath::wstr() const noexcept {
-  return wstr_;
-}
-
-constexpr const std::string& EventPath::str() const noexcept {
-  return str_;
-}
-
-constexpr EventPath::Kind EventPath::kind() const noexcept {
-  return kind_;
-}
-
-constexpr EVT_QUERY_FLAGS EventPath::getQueryFlags() const noexcept {
-  switch (kind_) {
-    case Kind::CHANNEL: return EvtQueryChannelPath;
-    case Kind::FILE: return EvtQueryFilePath;
-  }
-}
-
 }  // namespace org::apache::nifi::minifi::wel
