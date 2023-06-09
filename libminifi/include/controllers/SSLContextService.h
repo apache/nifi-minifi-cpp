@@ -158,6 +158,13 @@ class SSLContextService : public core::controller::ControllerService {
   }
 
 #ifdef OPENSSL_SUPPORT
+  void setMinTlsVersion(long min_version) {  // NOLINT(runtime/int) long due to SSL lib API
+    minimum_tls_version_ = min_version;
+  }
+
+  void setMaxTlsVersion(long max_version) {  // NOLINT(runtime/int) long due to SSL lib API
+    maximum_tls_version_ = max_version;
+  }
   bool configure_ssl_context(SSL_CTX *ctx);
 #endif
 
@@ -247,6 +254,8 @@ class SSLContextService : public core::controller::ControllerService {
   bool useClientCertificate(PCCERT_CONTEXT certificate, ClientCertCallback cb) const;
   bool useServerCertificate(PCCERT_CONTEXT certificate, ServerCertCallback cb) const;
 #endif  // WIN32
+  long minimum_tls_version_ = -1;  // NOLINT(runtime/int) long due to SSL lib API
+  long maximum_tls_version_ = -1;  // NOLINT(runtime/int) long due to SSL lib API
 #endif  // OPENSSL_SUPPORT
 
   void verifyCertificateExpiration();

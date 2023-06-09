@@ -195,7 +195,18 @@ bool SSLContextService::configure_ssl_context(SSL_CTX *ctx) {
     }
   }
 
-  SSL_CTX_set_max_proto_version(ctx, TLS1_2_VERSION);
+  // Security level set to 0 for backwards compatibility to support TLS versions below v1.2
+  SSL_CTX_set_security_level(ctx, 0);
+
+  if (minimum_tls_version_ != -1) {
+    SSL_CTX_set_min_proto_version(ctx, minimum_tls_version_);
+  }
+
+  if (maximum_tls_version_ != -1) {
+    SSL_CTX_set_max_proto_version(ctx, maximum_tls_version_);
+  } else {
+    SSL_CTX_set_max_proto_version(ctx, TLS1_2_VERSION);
+  }
 
   return true;
 }
