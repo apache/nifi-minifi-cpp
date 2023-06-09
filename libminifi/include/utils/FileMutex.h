@@ -21,11 +21,18 @@
 #include <array>
 #include <mutex>
 
+#ifdef WIN32
+#include <windows.h>
+#endif
+
 namespace org::apache::nifi::minifi::utils {
 
 class FileMutex {
  public:
   explicit FileMutex(std::filesystem::path path);
+  ~FileMutex() {
+    gsl_Expects(!file_handle_.has_value());
+  }
 
   FileMutex(const FileMutex&) = delete;
   FileMutex(FileMutex&&) = delete;
@@ -39,7 +46,11 @@ class FileMutex {
   std::filesystem::path path_;
 
   std::mutex mtx_;
-  std::array<std::byte, 24> file_handle_;
+#ifdef WIN32
+  std::optional<HANDLE> file_handle_;
+#else
+  std::optional<int> file_handle_;
+#endif
 };
 
 }  // namespace org::apache::nifi::minifi::utils

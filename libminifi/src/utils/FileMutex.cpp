@@ -19,17 +19,7 @@
 
 #include "utils/gsl.h"
 
-template<typename T>
-static T& getOsHandle(std::array<std::byte, 24>& file_handle) {
-  void* ptr = reinterpret_cast<void*>(file_handle.data());
-  size_t size = file_handle.size();
-  void* result = std::align(alignof(T), sizeof(T), ptr, size);
-  gsl_Assert(result);
-  return *reinterpret_cast<T*>(result);
-}
-
 #ifdef WIN32
-#include <windows.h>
 #include "utils/OsUtils.h"
 
 namespace org::apache::nifi::minifi::utils {
@@ -38,18 +28,21 @@ FileMutex::FileMutex(std::filesystem::path path): path_(std::move(path)) {}
 
 void FileMutex::lock() {
   std::lock_guard guard(mtx_);
+  gsl_Expects(!file_handle_.has_value());
   HANDLE handle = CreateFileA(path_.string().c_str(), (GENERIC_READ | GENERIC_WRITE), 0, NULL, CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL);
 
   if (handle == INVALID_HANDLE_VALUE) {
     throw std::runtime_error("Failed to open file '" + path_.string() + "' to be locked: " + utils::OsUtils::windowsErrorToErrorCode(GetLastError()).message());
   }
 
-  getOsHandle<HANDLE>(file_handle_) = handle;
+  file_handle_ = handle;
 }
 
 void FileMutex::unlock() {
   std::lock_guard guard(mtx_);
-  CloseHandle(getOsHandle<HANDLE>(file_handle_));
+  gsl_Expects(file_handle_.has_value());
+  CloseHandle(file_handle_.value());
+  file_handle_.reset();
 }
 
 }  // namespace org::apache::nifi::minifi::utils
@@ -66,6 +59,7 @@ FileMutex::FileMutex(std::filesystem::path path): path_(std::move(path)) {}
 
 void FileMutex::lock() {
   std::lock_guard guard(mtx_);
+  gsl_Expects(!file_handle_.has_value());
   int flags = O_RDWR | O_CREAT;
 #ifdef O_CLOEXEC
   flags |= O_CLOEXEC;
@@ -76,30 +70,33 @@ void FileMutex::lock() {
   }
 
   errno = 0;
-  struct flock f{};
-  f.l_type = F_WRLCK;
-  int value = fcntl(fd, F_SETLK, &f);
+  struct flock file_lock_info{};
+  file_lock_info.l_type = F_WRLCK;
+  int value = fcntl(fd, F_SETLK, &file_lock_info);
   if (value == -1) {
     std::string err_str = "Failed to lock file '" + path_.string() + "': " + std::strerror(errno);
     close(fd);
     throw std::runtime_error(err_str);
   }
 
-  getOsHandle<int>(file_handle_) = fd;
+  file_handle_ = fd;
 }
 
 void FileMutex::unlock() {
   std::lock_guard guard(mtx_);
+  gsl_Expects(file_handle_.has_value());
+  auto file_guard = gsl::finally([&] {
+    close(file_handle_.value());
+    file_handle_.reset();
+  });
   errno = 0;
-  struct flock f{};
-  f.l_type = F_UNLCK;
-  int value = fcntl(getOsHandle<int>(file_handle_), F_SETLK, &f);
+  struct flock file_lock_info{};
+  file_lock_info.l_type = F_UNLCK;
+  int value = fcntl(file_handle_.value(), F_SETLK, &file_lock_info);
   if (value == -1) {
     std::string err_str = "Failed to unlock file '" + path_.string() + "': " + std::strerror(errno);
-    close(getOsHandle<int>(file_handle_));
     throw std::runtime_error(err_str);
   }
-  close(getOsHandle<int>(file_handle_));
 }
 
 }  // namespace org::apache::nifi::minifi::utils
