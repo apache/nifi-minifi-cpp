@@ -15,7 +15,9 @@
 # specific language governing permissions and limitations
 # under the License.
 #
-FROM rockylinux:8
+ARG BASE_ROCKYLINUX_IMAGE="rockylinux:8"
+
+FROM ${BASE_ROCKYLINUX_IMAGE} AS build
 LABEL maintainer="Apache NiFi <dev@nifi.apache.org>"
 
 ARG MINIFI_VERSION

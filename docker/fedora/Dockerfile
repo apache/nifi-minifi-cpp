@@ -17,7 +17,9 @@
 #
 
 # First stage: the build environment
-FROM fedora:34 AS build_deps
+ARG BASE_FEDORA_IMAGE="fedora:34"
+
+FROM ${BASE_FEDORA_IMAGE} AS build
 LABEL maintainer="Apache NiFi <dev@nifi.apache.org>"
 
 ARG MINIFI_VERSION

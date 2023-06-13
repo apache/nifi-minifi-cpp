@@ -17,7 +17,9 @@
 #
 
 # First stage: the build environment
-FROM ubuntu:focal AS build_deps
+ARG BASE_FOCAL_IMAGE="ubuntu:focal"
+
+FROM ${BASE_FOCAL_IMAGE} AS build
 LABEL maintainer="Apache NiFi <dev@nifi.apache.org>"
 
 ARG MINIFI_VERSION

@@ -17,7 +17,9 @@
 #
 
 # First stage: the build environment
-FROM ubuntu:bionic AS build_deps
+ARG BASE_BIONIC_IMAGE="ubuntu:bionic"
+
+FROM ${BASE_BIONIC_IMAGE} AS build
 LABEL maintainer="Apache NiFi <dev@nifi.apache.org>"
 
 ARG MINIFI_VERSION
