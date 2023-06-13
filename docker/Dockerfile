@@ -16,10 +16,10 @@
 # under the License.
 #
 
-ARG BASE_ALPINE_IMAGE="alpine:3.16"
+ARG BASE_IMAGE="alpine:3.16"
 
 # Build image
-FROM ${BASE_ALPINE_IMAGE} AS build
+FROM ${BASE_IMAGE} AS build
 LABEL maintainer="Apache NiFi <dev@nifi.apache.org>"
 
 ARG MINIFI_VERSION
@@ -84,7 +84,7 @@ RUN export PATH=/usr/lib64/ccache/bin${PATH:+:${PATH}} && \
     tar -xzvf "${MINIFI_BASE_DIR}/build/nifi-minifi-cpp-${MINIFI_VERSION}.tar.gz" -C "${MINIFI_BASE_DIR}"
 
 # Release image
-FROM ${BASE_ALPINE_IMAGE} AS release
+FROM ${BASE_IMAGE} AS release
 LABEL maintainer="Apache NiFi <dev@nifi.apache.org>"
 
 ARG UID=1000

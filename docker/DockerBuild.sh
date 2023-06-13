@@ -35,7 +35,6 @@ PLATFORMS=
 PUSH_OR_LOAD="--load"
 TAGS=()
 MULTI_ARCH=no
-DOCKER_BASE_IMAGE=
 
 function usage {
   echo "Usage: ./DockerBuild.sh -v <MINIFI_VERSION> [additional options]"
@@ -101,7 +100,7 @@ while [[ $# -gt 0 ]]; do
       if [ "${ARR[0]}" == "BUILD_NUMBER" ]; then
         BUILD_NUMBER="${ARR[1]}"
       elif [ "${ARR[0]}" == "DOCKER_BASE_IMAGE" ]; then
-        DOCKER_BASE_IMAGE="${ARR[1]}"
+        BUILD_ARGS+=("--build-arg" "BASE_IMAGE=${ARR[1]}")
       elif [ "${ARR[0]}" == "DOCKER_CCACHE_DUMP_LOCATION" ]; then
         DOCKER_CCACHE_DUMP_LOCATION="${ARR[1]}"
       elif [ "${ARR[0]}" == "DOCKER_SKIP_TESTS" ]; then
@@ -167,22 +166,6 @@ if [ -n "${DISTRO_NAME}" ]; then
   DOCKERFILE="${DISTRO_NAME}/Dockerfile"
 else
   DOCKERFILE="Dockerfile"
-fi
-
-if [ -n "${DOCKER_BASE_IMAGE}" ]; then
-  if [ -z "${DISTRO_NAME}" ]; then
-    BUILD_ARGS+=("--build-arg" "BASE_ALPINE_IMAGE=${DOCKER_BASE_IMAGE}")
-  elif [ "${DISTRO_NAME}" == "bionic" ]; then
-    BUILD_ARGS+=("--build-arg" "BASE_BIONIC_IMAGE=${DOCKER_BASE_IMAGE}")
-  elif [ "${DISTRO_NAME}" == "centos" ]; then
-    BUILD_ARGS+=("--build-arg" "BASE_CENTOS_IMAGE=${DOCKER_BASE_IMAGE}")
-  elif [ "${DISTRO_NAME}" == "fedora" ]; then
-    BUILD_ARGS+=("--build-arg" "BASE_FEDORA_IMAGE=${DOCKER_BASE_IMAGE}")
-  elif [ "${DISTRO_NAME}" == "focal" ]; then
-    BUILD_ARGS+=("--build-arg" "BASE_FOCAL_IMAGE=${DOCKER_BASE_IMAGE}")
-  elif [ "${DISTRO_NAME}" == "rockylinux" ]; then
-    BUILD_ARGS+=("--build-arg" "BASE_ROCKYLINUX_IMAGE=${DOCKER_BASE_IMAGE}")
-  fi
 fi
 
 if [ ${#TAGS[@]} -eq 0 ]; then
