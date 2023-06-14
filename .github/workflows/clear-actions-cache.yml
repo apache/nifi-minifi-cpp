@@ -1,0 +1,18 @@
+name: "MiNiFi-CPP Github Actions Cache Eviction"
+on:
+  schedule:
+    - cron: '*/30 * * * *'
+  workflow_dispatch:
+jobs:
+  ubuntu_20_04:
+    name: "ubuntu-20.04"
+    runs-on: ubuntu-20.04
+    steps:
+      - id: checkout
+        uses: actions/checkout@v3
+      - name: clear cache
+        run: |
+          python3 -m venv github_env
+          source github_env/bin/activate
+          pip install -r github_scripts/requirements.txt
+          python3 github_scripts/github_actions_cache_cleanup.py -t ${{github.token}} -r ${{github.repository}}
