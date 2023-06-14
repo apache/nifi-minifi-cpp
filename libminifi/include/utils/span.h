@@ -39,6 +39,7 @@ Container<detail::remove_cvref_t<T>> span_to(std::span<T> span) {
   return span_to<Container<detail::remove_cvref_t<T>>>(span);
 }
 
+// WARNING! check type aliasing rules for safe usage
 template<typename T, typename U>
 std::span<T> as_span(std::span<U> value) {
   return std::span{reinterpret_cast<T*>(value.data()), value.size_bytes() / sizeof(T)};
