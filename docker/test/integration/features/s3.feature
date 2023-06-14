@@ -234,11 +234,11 @@ Feature: Sending data from MiNiFi-C++ to an AWS server
     And the "Multipart Threshold" property of the PutS3Object processor is set to "5 MB"
     And the "Multipart Part Size" property of the PutS3Object processor is set to "5 MB"
     And these processor properties are set to match the http proxy:
-    | processor name  | property name  | property value |
-    | PutS3Object     | Proxy Host     | http-proxy     |
-    | PutS3Object     | Proxy Port     | 3128           |
-    | PutS3Object     | Proxy Username | admin          |
-    | PutS3Object     | Proxy Password | test101        |
+    | processor name  | property name  | property value           |
+    | PutS3Object     | Proxy Host     | http-proxy-${feature_id} |
+    | PutS3Object     | Proxy Port     | 3128                     |
+    | PutS3Object     | Proxy Username | admin                    |
+    | PutS3Object     | Proxy Password | test101                  |
     And the "success" relationship of the GetFile processor is connected to the PutS3Object
 
     And a s3 server is set up in correspondence with the PutS3Object

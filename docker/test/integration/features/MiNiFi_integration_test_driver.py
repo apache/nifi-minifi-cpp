@@ -182,7 +182,7 @@ class MiNiFi_integration_test:
     def add_random_test_data(self, path: str, size: int, file_name: str = None):
         if file_name is None:
             file_name = str(uuid.uuid4())
-        self.test_file_hash = self.docker_directory_bindings.put_random_file_to_docker_path(self.test_id, path, file_name, size)
+        self.test_file_hash = self.docker_directory_bindings.put_random_file_to_docker_path(self.feature_id, path, file_name, size)
 
     def put_test_resource(self, file_name, contents):
         self.docker_directory_bindings.put_test_resource(self.feature_id, file_name, contents)
