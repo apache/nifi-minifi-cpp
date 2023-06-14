@@ -54,7 +54,7 @@ Bytes Aes256EcbCipher::generateKey() {
   return utils::crypto::randomBytes(KEY_SIZE);
 }
 
-void Aes256EcbCipher::encrypt(std::span<unsigned char /*, BLOCK_SIZE*/> data) const {
+void Aes256EcbCipher::encrypt(std::span<unsigned char, BLOCK_SIZE> data) const {
   gsl_Expects(data.size() == BLOCK_SIZE);
   EVP_CIPHER_CTX_ptr ctx(EVP_CIPHER_CTX_new(), EVP_CIPHER_CTX_free);
   if (!ctx) {
@@ -87,7 +87,7 @@ void Aes256EcbCipher::encrypt(std::span<unsigned char /*, BLOCK_SIZE*/> data) co
   gsl_Expects(ciphertext_len == BLOCK_SIZE);
 }
 
-void Aes256EcbCipher::decrypt(std::span<unsigned char /*, BLOCK_SIZE*/> data) const {
+void Aes256EcbCipher::decrypt(std::span<unsigned char, BLOCK_SIZE> data) const {
   gsl_Expects(data.size() == BLOCK_SIZE);
   EVP_CIPHER_CTX_ptr ctx(EVP_CIPHER_CTX_new(), EVP_CIPHER_CTX_free);
   if (!ctx) {
