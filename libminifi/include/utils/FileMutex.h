@@ -20,6 +20,8 @@
 #include <filesystem>
 #include <array>
 #include <mutex>
+#include <optional>
+#include "utils/gsl.h"
 
 #ifdef WIN32
 #include <windows.h>
