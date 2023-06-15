@@ -31,59 +31,27 @@
 #endif
 #include "utils/file/FileUtils.h"
 #include "utils/gsl.h"
-#include "core/PropertyBuilder.h"
 #include "core/Resource.h"
 
 namespace org::apache::nifi::minifi::processors {
 
 std::shared_ptr<utils::IdGenerator> PutFile::id_generator_ = utils::IdGenerator::getIdGenerator();
 
-#ifndef WIN32
-const core::Property PutFile::Permissions(
-    core::PropertyBuilder::createProperty("Permissions")
-      ->withDescription("Sets the permissions on the output file to the value of this attribute. "
-                        "Must be an octal number (e.g. 644 or 0755). Not supported on Windows systems.")
-      ->build());
-const core::Property PutFile::DirectoryPermissions(
-    core::PropertyBuilder::createProperty("Directory Permissions")
-      ->withDescription("Sets the permissions on the directories being created if 'Create Missing Directories' property is set. "
-                        "Must be an octal number (e.g. 644 or 0755). Not supported on Windows systems.")
-      ->build());
-#endif
-
-const core::Property PutFile::Directory(
-    core::PropertyBuilder::createProperty("Directory")->withDescription("The output directory to which to put files")->supportsExpressionLanguage(true)->withDefaultValue(".")->build());
-
-const core::Property PutFile::ConflictResolution(
-    core::PropertyBuilder::createProperty("Conflict Resolution Strategy")->withDescription("Indicates what should happen when a file with the same name already exists in the output directory")
-        ->withAllowableValue<std::string>(CONFLICT_RESOLUTION_STRATEGY_FAIL)->withAllowableValue(CONFLICT_RESOLUTION_STRATEGY_IGNORE)->withAllowableValue(CONFLICT_RESOLUTION_STRATEGY_REPLACE)
-        ->withDefaultValue(CONFLICT_RESOLUTION_STRATEGY_FAIL)->build());
-
-const core::Property PutFile::CreateDirs("Create Missing Directories", "If true, then missing destination directories will be created. "
-                                   "If false, flowfiles are penalized and sent to failure.",
-                                   "true", true, "", { "Directory" }, { });
-
-const core::Property PutFile::MaxDestFiles(
-    core::PropertyBuilder::createProperty("Maximum File Count")->withDescription("Specifies the maximum number of files that can exist in the output directory")->withDefaultValue<int>(-1)->build());
-
-const core::Relationship PutFile::Success("success", "All files are routed to success");
-const core::Relationship PutFile::Failure("failure", "Failed files (conflict, write failure, etc.) are transferred to failure");
-
 void PutFile::initialize() {
-  setSupportedProperties(properties());
-  setSupportedRelationships(relationships());
+  setSupportedProperties(Properties);
+  setSupportedRelationships(Relationships);
 }
 
 void PutFile::onSchedule(core::ProcessContext *context, core::ProcessSessionFactory* /*sessionFactory*/) {
-  if (!context->getProperty(ConflictResolution.getName(), conflict_resolution_)) {
+  if (!context->getProperty(ConflictResolution, conflict_resolution_)) {
     logger_->log_error("Conflict Resolution Strategy attribute is missing or invalid");
   }
 
   std::string value;
-  context->getProperty(CreateDirs.getName(), value);
+  context->getProperty(CreateDirs, value);
   try_mkdirs_ = utils::StringUtils::toBool(value).value_or(true);
 
-  if (context->getProperty(MaxDestFiles.getName(), value)) {
+  if (context->getProperty(MaxDestFiles, value)) {
     core::Property::StringToInt(value, max_dest_files_);
   }
 
@@ -224,7 +192,7 @@ bool PutFile::putFile(core::ProcessSession *session,
 #ifndef WIN32
 void PutFile::getPermissions(core::ProcessContext *context) {
   std::string permissions_str;
-  context->getProperty(Permissions.getName(), permissions_str);
+  context->getProperty(Permissions, permissions_str);
   if (permissions_str.empty()) {
     return;
   }
@@ -242,7 +210,7 @@ void PutFile::getPermissions(core::ProcessContext *context) {
 
 void PutFile::getDirectoryPermissions(core::ProcessContext *context) {
   std::string dir_permissions_str;
-  context->getProperty(DirectoryPermissions.getName(), dir_permissions_str);
+  context->getProperty(DirectoryPermissions, dir_permissions_str);
   if (dir_permissions_str.empty()) {
     return;
   }

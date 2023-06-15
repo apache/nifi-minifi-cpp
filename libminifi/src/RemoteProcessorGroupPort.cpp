@@ -41,7 +41,6 @@
 #include "core/logging/Logger.h"
 #include "core/ProcessContext.h"
 #include "core/ProcessorNode.h"
-#include "core/PropertyBuilder.h"
 #include "core/Relationship.h"
 #include "utils/BaseHTTPClient.h"
 
@@ -52,16 +51,6 @@ using namespace std::literals::chrono_literals;
 namespace org::apache::nifi::minifi {
 
 const char *RemoteProcessorGroupPort::RPG_SSL_CONTEXT_SERVICE_NAME = "RemoteProcessorGroupPortSSLContextService";
-
-const core::Property RemoteProcessorGroupPort::hostName("Host Name", "Remote Host Name.", "");
-const core::Property RemoteProcessorGroupPort::SSLContext("SSL Context Service", "The SSL Context Service used to provide client certificate information for TLS/SSL (https) connections.", "");
-const core::Property RemoteProcessorGroupPort::port("Port", "Remote Port", "");
-const core::Property RemoteProcessorGroupPort::portUUID("Port UUID", "Specifies remote NiFi Port UUID.", "");
-const core::Property RemoteProcessorGroupPort::idleTimeout(
-            core::PropertyBuilder::createProperty("Idle Timeout")->withDescription("Max idle time for remote service")->isRequired(false)
-                    ->withDefaultValue<core::TimePeriodValue>("15 s")->build());
-
-const core::Relationship RemoteProcessorGroupPort::relation;
 
 std::unique_ptr<sitetosite::SiteToSiteClient> RemoteProcessorGroupPort::getNextProtocol(bool create = true) {
   std::unique_ptr<sitetosite::SiteToSiteClient> nextProtocol = nullptr;
@@ -119,20 +108,20 @@ void RemoteProcessorGroupPort::returnProtocol(std::unique_ptr<sitetosite::SiteTo
 }
 
 void RemoteProcessorGroupPort::initialize() {
-  setSupportedProperties(properties());
-  setSupportedRelationships(relationships());
+  setSupportedProperties(Properties);
+  setSupportedRelationships(Relationships);
 
   logger_->log_trace("Finished initialization");
 }
 
 void RemoteProcessorGroupPort::onSchedule(const std::shared_ptr<core::ProcessContext> &context, const std::shared_ptr<core::ProcessSessionFactory>& /*sessionFactory*/) {
   std::string value;
-  if (context->getProperty(portUUID.getName(), value) && !value.empty()) {
+  if (context->getProperty(portUUID, value) && !value.empty()) {
     protocol_uuid_ = value;
   }
 
   std::string context_name;
-  if (!context->getProperty(SSLContext.getName(), context_name) || IsNullOrEmpty(context_name)) {
+  if (!context->getProperty(SSLContext, context_name) || IsNullOrEmpty(context_name)) {
     context_name = RPG_SSL_CONTEXT_SERVICE_NAME;
   }
   std::shared_ptr<core::controller::ControllerService> service = context->getControllerService(context_name);
@@ -149,8 +138,9 @@ void RemoteProcessorGroupPort::onSchedule(const std::shared_ptr<core::ProcessCon
     if (auto idle_timeout = context->getProperty<core::TimePeriodValue>(idleTimeout)) {
       idle_timeout_ = idle_timeout->getMilliseconds();
     } else {
-      logger_->log_debug("%s attribute is invalid, so default value of %s will be used", idleTimeout.getName(), idleTimeout.getDefaultValue());
-      idle_timeout_ = core::TimePeriodValue(idleTimeout.getDefaultValue().to_string()).getMilliseconds();
+      static_assert(idleTimeout.default_value);
+      logger_->log_debug("%s attribute is invalid, so default value of %s will be used", std::string(idleTimeout.name), std::string(*idleTimeout.default_value));
+      idle_timeout_ = core::TimePeriodValue(std::string(*idleTimeout.default_value)).getMilliseconds();
     }
   }
 
@@ -169,8 +159,8 @@ void RemoteProcessorGroupPort::onSchedule(const std::shared_ptr<core::ProcessCon
     std::string portStr;
     int configured_port = -1;
     // place hostname/port into the log message if we have it
-    context->getProperty(hostName.getName(), host);
-    context->getProperty(port.getName(), portStr);
+    context->getProperty(hostName, host);
+    context->getProperty(port, portStr);
     if (!host.empty() && !portStr.empty() && !portStr.empty() && core::Property::StringToInt(portStr, configured_port)) {
       nifi_instances_.push_back({ host, configured_port, "" });
       bypass_rest_api_ = true;

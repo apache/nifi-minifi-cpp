@@ -28,7 +28,11 @@
 #include "Processor.h"
 #include "utils/Export.h"
 #include "controllers/SSLContextService.h"
-
+#include "core/Core.h"
+#include "core/PropertyDefinition.h"
+#include "core/PropertyDefinitionBuilder.h"
+#include "core/PropertyType.h"
+#include "core/RelationshipDefinition.h"
 #include "utils/expected.h"
 #include "utils/StringUtils.h"  // for string <=> on libc++
 #include "utils/net/AsioSocketUtils.h"
@@ -58,20 +62,71 @@ class PutTCP final : public core::Processor {
       "an optional \"Outgoing Message Delimiter\" string can be configured which is appended to the end of each FlowFiles content when it is transmitted over the TCP connection. "
       "An optional \"Connection Per FlowFile\" parameter can be specified to change the behaviour so that each FlowFiles content is transmitted over a single TCP connection "
       "which is closed after the FlowFile has been sent.";
-  EXTENSIONAPI static const core::Property Hostname;
-  EXTENSIONAPI static const core::Property Port;
-  EXTENSIONAPI static const core::Property IdleConnectionExpiration;
-  EXTENSIONAPI static const core::Property Timeout;
-  EXTENSIONAPI static const core::Property ConnectionPerFlowFile;
-  EXTENSIONAPI static const core::Property OutgoingMessageDelimiter;
-  EXTENSIONAPI static const core::Property SSLContextService;
-  EXTENSIONAPI static const core::Property MaxSizeOfSocketSendBuffer;
 
-  static auto properties() { return std::array{Hostname, Port, IdleConnectionExpiration, Timeout, ConnectionPerFlowFile, OutgoingMessageDelimiter, SSLContextService, MaxSizeOfSocketSendBuffer}; }
+EXTENSIONAPI static constexpr auto Hostname = core::PropertyDefinitionBuilder<>::createProperty("Hostname")
+    .withDescription("The ip address or hostname of the destination.")
+    .withDefaultValue("localhost")
+    .isRequired(true)
+    .supportsExpressionLanguage(true)
+    .build();
+EXTENSIONAPI static constexpr auto Port = core::PropertyDefinitionBuilder<>::createProperty("Port")
+    .withDescription("The port or service on the destination.")
+    .isRequired(true)
+    .supportsExpressionLanguage(true)
+    .build();
+EXTENSIONAPI static constexpr auto IdleConnectionExpiration = core::PropertyDefinitionBuilder<>::createProperty("Idle Connection Expiration")
+    .withDescription("The amount of time a connection should be held open without being used before closing the connection. A value of 0 seconds will disable this feature.")
+    .withPropertyType(core::StandardPropertyTypes::TIME_PERIOD_TYPE)
+    .withDefaultValue("15 seconds")
+    .isRequired(true)
+    .supportsExpressionLanguage(true)
+    .build();
+EXTENSIONAPI static constexpr auto Timeout = core::PropertyDefinitionBuilder<>::createProperty("Timeout")
+    .withDescription("The timeout for connecting to and communicating with the destination.")
+    .withPropertyType(core::StandardPropertyTypes::TIME_PERIOD_TYPE)
+    .withDefaultValue("15 seconds")
+    .isRequired(true)
+    .supportsExpressionLanguage(true)
+    .build();
+EXTENSIONAPI static constexpr auto ConnectionPerFlowFile = core::PropertyDefinitionBuilder<>::createProperty("Connection Per FlowFile")
+    .withDescription("Specifies whether to send each FlowFile's content on an individual connection.")
+    .withPropertyType(core::StandardPropertyTypes::BOOLEAN_TYPE)
+    .withDefaultValue("false")
+    .isRequired(true)
+    .supportsExpressionLanguage(false)
+    .build();
+EXTENSIONAPI static constexpr auto OutgoingMessageDelimiter = core::PropertyDefinitionBuilder<>::createProperty("Outgoing Message Delimiter")
+    .withDescription("Specifies the delimiter to use when sending messages out over the same TCP stream. "
+        "The delimiter is appended to each FlowFile message that is transmitted over the stream so that the receiver can determine when one message ends and the next message begins. "
+        "Users should ensure that the FlowFile content does not contain the delimiter character to avoid errors.")
+    .isRequired(false)
+    .supportsExpressionLanguage(true)
+    .build();
+EXTENSIONAPI static constexpr auto SSLContextService = core::PropertyDefinitionBuilder<0, 1>::createProperty("SSL Context Service")
+    .withDescription("The Controller Service to use in order to obtain an SSL Context. If this property is set, messages will be sent over a secure connection.")
+    .isRequired(false)
+    .withAllowedTypes({core::className<minifi::controllers::SSLContextService>()})
+    .build();
+EXTENSIONAPI static constexpr auto MaxSizeOfSocketSendBuffer = core::PropertyDefinitionBuilder<>::createProperty("Max Size of Socket Send Buffer")
+    .withDescription("The maximum size of the socket send buffer that should be used. This is a suggestion to the Operating System to indicate how big the socket buffer should be.")
+    .isRequired(false)
+    .withPropertyType(core::StandardPropertyTypes::DATA_SIZE_TYPE)
+    .build();
+  EXTENSIONAPI static constexpr auto Properties = std::array<core::PropertyReference, 8>{
+      Hostname,
+      Port,
+      IdleConnectionExpiration,
+      Timeout,
+      ConnectionPerFlowFile,
+      OutgoingMessageDelimiter,
+      SSLContextService,
+      MaxSizeOfSocketSendBuffer
+  };
 
-  EXTENSIONAPI static const core::Relationship Success;
-  EXTENSIONAPI static const core::Relationship Failure;
-  static auto relationships() { return std::array{Success, Failure}; }
+
+  EXTENSIONAPI static constexpr auto Success = core::RelationshipDefinition{"success", "FlowFiles that are sent to the destination are sent out this relationship."};
+  EXTENSIONAPI static constexpr auto Failure = core::RelationshipDefinition{"failure", "FlowFiles that encountered IO errors are send out this relationship."};
+  EXTENSIONAPI static constexpr auto Relationships = std::array{Success, Failure};
 
   EXTENSIONAPI static constexpr bool SupportsDynamicProperties = false;
   EXTENSIONAPI static constexpr bool SupportsDynamicRelationships = false;

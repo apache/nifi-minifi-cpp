@@ -23,82 +23,24 @@
 #include "utils/ProcessorConfigUtils.h"
 #include "utils/FileReaderCallback.h"
 #include "utils/file/FileUtils.h"
-#include "core/PropertyBuilder.h"
 #include "core/Resource.h"
 
 namespace org::apache::nifi::minifi::processors {
 
-const core::Property FetchFile::FileToFetch(
-    core::PropertyBuilder::createProperty("File to Fetch")
-      ->withDescription("The fully-qualified filename of the file to fetch from the file system. If not defined the default ${absolute.path}/${filename} path is used.")
-      ->supportsExpressionLanguage(true)
-      ->build());
-
-const core::Property FetchFile::CompletionStrategy(
-    core::PropertyBuilder::createProperty("Completion Strategy")
-      ->withDescription("Specifies what to do with the original file on the file system once it has been pulled into MiNiFi")
-      ->withDefaultValue<std::string>(toString(CompletionStrategyOption::NONE))
-      ->withAllowableValues<std::string>(CompletionStrategyOption::values())
-      ->isRequired(true)
-      ->build());
-
-const core::Property FetchFile::MoveDestinationDirectory(
-    core::PropertyBuilder::createProperty("Move Destination Directory")
-      ->withDescription("The directory to move the original file to once it has been fetched from the file system. "
-                        "This property is ignored unless the Completion Strategy is set to \"Move File\". If the directory does not exist, it will be created.")
-      ->supportsExpressionLanguage(true)
-      ->build());
-
-const core::Property FetchFile::MoveConflictStrategy(
-    core::PropertyBuilder::createProperty("Move Conflict Strategy")
-      ->withDescription("If Completion Strategy is set to Move File and a file already exists in the destination directory with the same name, "
-                        "this property specifies how that naming conflict should be resolved")
-      ->withDefaultValue<std::string>(toString(MoveConflictStrategyOption::RENAME))
-      ->withAllowableValues<std::string>(MoveConflictStrategyOption::values())
-      ->isRequired(true)
-      ->build());
-
-const core::Property FetchFile::LogLevelWhenFileNotFound(
-    core::PropertyBuilder::createProperty("Log level when file not found")
-      ->withDescription("Log level to use in case the file does not exist when the processor is triggered")
-      ->withDefaultValue<std::string>(toString(utils::LogUtils::LogLevelOption::LOGGING_ERROR))
-      ->withAllowableValues<std::string>(utils::LogUtils::LogLevelOption::values())
-      ->isRequired(true)
-      ->build());
-
-const core::Property FetchFile::LogLevelWhenPermissionDenied(
-    core::PropertyBuilder::createProperty("Log level when permission denied")
-      ->withDescription("Log level to use in case agent does not have sufficient permissions to read the file")
-      ->withDefaultValue<std::string>(toString(utils::LogUtils::LogLevelOption::LOGGING_ERROR))
-      ->withAllowableValues<std::string>(utils::LogUtils::LogLevelOption::values())
-      ->isRequired(true)
-      ->build());
-
-const core::Relationship FetchFile::Success("success", "Any FlowFile that is successfully fetched from the file system will be transferred to this Relationship.");
-const core::Relationship FetchFile::NotFound(
-  "not.found",
-  "Any FlowFile that could not be fetched from the file system because the file could not be found will be transferred to this Relationship.");
-const core::Relationship FetchFile::PermissionDenied(
-  "permission.denied",
-  "Any FlowFile that could not be fetched from the file system due to the user running MiNiFi not having sufficient permissions will be transferred to this Relationship.");
-const core::Relationship FetchFile::Failure(
-  "failure",
-  "Any FlowFile that could not be fetched from the file system for any reason other than insufficient permissions or the file not existing will be transferred to this Relationship.");
-
 void FetchFile::initialize() {
-  setSupportedProperties(properties());
-  setSupportedRelationships(relationships());
+  setSupportedProperties(Properties);
+  setSupportedRelationships(Relationships);
 }
 
 void FetchFile::onSchedule(const std::shared_ptr<core::ProcessContext> &context, const std::shared_ptr<core::ProcessSessionFactory> &/*sessionFactory*/) {
   gsl_Expects(context);
-  completion_strategy_ = utils::parseEnumProperty<CompletionStrategyOption>(*context, CompletionStrategy);
+  completion_strategy_ = utils::parseEnumProperty<fetch_file::CompletionStrategyOption>(*context, CompletionStrategy);
   std::string move_destination_dir;
-  context->getProperty(MoveDestinationDirectory.getName(), move_destination_dir);
-  if (completion_strategy_ == CompletionStrategyOption::MOVE_FILE && move_destination_dir.empty()) {
+  context->getProperty(MoveDestinationDirectory, move_destination_dir);
+  if (completion_strategy_ == fetch_file::CompletionStrategyOption::MOVE_FILE && move_destination_dir.empty()) {
     throw Exception(PROCESS_SCHEDULE_EXCEPTION, "Move Destination Directory is required when Completion Strategy is set to Move File");
   }
-  move_confict_strategy_ = utils::parseEnumProperty<MoveConflictStrategyOption>(*context, MoveConflictStrategy);
+  move_confict_strategy_ = utils::parseEnumProperty<fetch_file::MoveConflictStrategyOption>(*context, MoveConflictStrategy);
   log_level_when_file_not_found_ = utils::parseEnumProperty<utils::LogUtils::LogLevelOption>(*context, LogLevelWhenFileNotFound);
   log_level_when_permission_denied_ = utils::parseEnumProperty<utils::LogUtils::LogLevelOption>(*context, LogLevelWhenPermissionDenied);
 }
@@ -125,7 +67,7 @@ bool FetchFile::moveDestinationConflicts(const std::filesystem::path& file_name)
 }
 
 bool FetchFile::moveWouldFailWithDestinationConflict(const std::filesystem::path& file_name) const {
-  if (completion_strategy_ != CompletionStrategyOption::MOVE_FILE || move_confict_strategy_ != MoveConflictStrategyOption::FAIL) {
+  if (completion_strategy_ != fetch_file::CompletionStrategyOption::MOVE_FILE || move_confict_strategy_ != fetch_file::MoveConflictStrategyOption::FAIL) {
     return false;
   }
 
@@ -133,15 +75,15 @@ bool FetchFile::moveWouldFailWithDestinationConflict(const std::filesystem::path
 }
 
 void FetchFile::executeMoveConflictStrategy(const std::filesystem::path& file_to_fetch_path, const std::filesystem::path& file_name) {
-  if (move_confict_strategy_ == MoveConflictStrategyOption::REPLACE_FILE) {
+  if (move_confict_strategy_ == fetch_file::MoveConflictStrategyOption::REPLACE_FILE) {
     auto moved_path = getMoveAbsolutePath(file_name);
     logger_->log_debug("Due to conflict replacing file '%s' by the Move Completion Strategy", moved_path.string());
     std::filesystem::rename(file_to_fetch_path, moved_path);
-  } else if (move_confict_strategy_ == MoveConflictStrategyOption::RENAME) {
+  } else if (move_confict_strategy_ == fetch_file::MoveConflictStrategyOption::RENAME) {
     std::filesystem::path generated_filename{utils::IdGenerator::getIdGenerator()->generate().to_string().view()};
     logger_->log_debug("Due to conflict file '%s' is moved with generated name '%s' by the Move Completion Strategy", file_to_fetch_path.string(), generated_filename.string());
     std::filesystem::rename(file_to_fetch_path, getMoveAbsolutePath(generated_filename));
-  } else if (move_confict_strategy_ == MoveConflictStrategyOption::KEEP_EXISTING) {
+  } else if (move_confict_strategy_ == fetch_file::MoveConflictStrategyOption::KEEP_EXISTING) {
     logger_->log_debug("Due to conflict file '%s' is deleted by the Move Completion Strategy", file_to_fetch_path.string());
     std::filesystem::remove(file_to_fetch_path);
   }
@@ -163,9 +105,9 @@ void FetchFile::processMoveCompletion(const std::filesystem::path& file_to_fetch
 
 void FetchFile::executeCompletionStrategy(const std::filesystem::path& file_to_fetch_path, const std::filesystem::path& file_name) {
   try {
-    if (completion_strategy_ == CompletionStrategyOption::MOVE_FILE) {
+    if (completion_strategy_ == fetch_file::CompletionStrategyOption::MOVE_FILE) {
       processMoveCompletion(file_to_fetch_path, file_name);
-    } else if (completion_strategy_ == CompletionStrategyOption::DELETE_FILE) {
+    } else if (completion_strategy_ == fetch_file::CompletionStrategyOption::DELETE_FILE) {
       logger_->log_debug("File '%s' is deleted by the Delete Completion Strategy", file_to_fetch_path.string());
       std::filesystem::remove(file_to_fetch_path);
     }

@@ -20,6 +20,7 @@
 
 #include <memory>
 #include <string>
+#include <string_view>
 
 #include "core/ProcessGroup.h"
 #include "core/logging/LoggerFactory.h"
@@ -54,7 +55,7 @@ class StructuredConnectionParser {
   [[nodiscard]] bool getDropEmpty() const;
 
  private:
-  void addNewRelationshipToConnection(const std::string& relationship_name, minifi::Connection& connection) const;
+  void addNewRelationshipToConnection(std::string_view relationship_name, minifi::Connection& connection) const;
   void addFunnelRelationshipToConnection(minifi::Connection& connection) const;
 
   const Node& connectionNode_;

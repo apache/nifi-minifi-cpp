@@ -19,17 +19,13 @@
 #include <memory>
 #include <string>
 
-namespace org {
-namespace apache {
-namespace nifi {
-namespace minifi {
-namespace core {
+namespace org::apache::nifi::minifi::core {
 
-bool ProcessContextExpr::getProperty(const Property &property, std::string &value, const std::shared_ptr<FlowFile> &flow_file) {
-  if (!property.supportsExpressionLanguage()) {
-    return ProcessContext::getProperty(property.getName(), value);
+bool ProcessContextExpr::getProperty(bool supports_expression_language, std::string_view property_name, std::string& value, const std::shared_ptr<FlowFile>& flow_file) {
+  if (!supports_expression_language) {
+    return ProcessContext::getProperty(property_name, value);
   }
-  auto name = property.getName();
+  std::string name{property_name};
   if (expressions_.find(name) == expressions_.end()) {
     std::string expression_str;
     if (!ProcessContext::getProperty(name, expression_str)) {
@@ -44,6 +40,14 @@ bool ProcessContextExpr::getProperty(const Property &property, std::string &valu
   value = expressions_[name](p).asString();
   logger_->log_debug(R"(expression "%s" of property "%s" evaluated to: %s)", expression_strs_[name], name, value);
   return true;
+}
+
+bool ProcessContextExpr::getProperty(const Property& property, std::string& value, const std::shared_ptr<FlowFile>& flow_file) {
+  return getProperty(property.supportsExpressionLanguage(), property.getName(), value, flow_file);
+}
+
+bool ProcessContextExpr::getProperty(const PropertyReference& property, std::string& value, const std::shared_ptr<FlowFile>& flow_file) {
+  return getProperty(property.supports_expression_language, property.name, value, flow_file);
 }
 
 bool ProcessContextExpr::getDynamicProperty(const Property &property, std::string &value, const std::shared_ptr<FlowFile> &flow_file) {
@@ -75,8 +79,4 @@ bool ProcessContextExpr::setDynamicProperty(const std::string& property, std::st
   return ProcessContext::setDynamicProperty(property, value);
 }
 
-} /* namespace core */
-} /* namespace minifi */
-} /* namespace nifi */
-} /* namespace apache */
-} /* namespace org */
+}  // namespace org::apache::nifi::minifi::core

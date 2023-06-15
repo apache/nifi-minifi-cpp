@@ -135,8 +135,8 @@ void routeFlowFilesBasedOnIndexingStatus(core::ProcessSession& session,
 }  // namespace
 
 void QuerySplunkIndexingStatus::initialize() {
-  setSupportedProperties(properties());
-  setSupportedRelationships(relationships());
+  setSupportedProperties(Properties);
+  setSupportedRelationships(Relationships);
 }
 
 void QuerySplunkIndexingStatus::onSchedule(const std::shared_ptr<core::ProcessContext>& context, const std::shared_ptr<core::ProcessSessionFactory>& sessionFactory) {
@@ -147,7 +147,7 @@ void QuerySplunkIndexingStatus::onSchedule(const std::shared_ptr<core::ProcessCo
     max_age_ = max_age->getMilliseconds();
   }
 
-  context->getProperty(MaxQuerySize.getName(), batch_size_);
+  context->getProperty(MaxQuerySize, batch_size_);
   initializeClient(client_, getNetworkLocation().append(getEndpoint()), getSSLContextService(*context));
 }
 
@@ -162,5 +162,7 @@ void QuerySplunkIndexingStatus::onTrigger(const std::shared_ptr<core::ProcessCon
   getIndexingStatusFromSplunk(client_, undetermined_flow_files);
   routeFlowFilesBasedOnIndexingStatus(*session, undetermined_flow_files, max_age_);
 }
+
+REGISTER_RESOURCE(QuerySplunkIndexingStatus, Processor);
 
 }  // namespace org::apache::nifi::minifi::extensions::splunk

@@ -56,7 +56,7 @@ class ProcessContextBuilder : public core::CoreComponent, public std::enable_sha
 
   ~ProcessContextBuilder() override = default;
 
-  static auto properties() { return std::array<core::Property, 0>{}; }
+  MINIFIAPI static constexpr auto Properties = std::array<core::PropertyReference, 0>{};
   MINIFIAPI static constexpr bool SupportsDynamicProperties = false;
   MINIFIAPI static constexpr bool SupportsDynamicRelationships = false;
 

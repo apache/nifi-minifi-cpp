@@ -23,7 +23,6 @@ extern "C" {
 #include "api/CoreV1API.h"
 }
 
-#include "core/PropertyBuilder.h"
 #include "core/Resource.h"
 #include "core/logging/LoggerConfiguration.h"
 #include "Exception.h"
@@ -31,20 +30,6 @@ extern "C" {
 #include "utils/StringUtils.h"
 
 namespace org::apache::nifi::minifi::controllers {
-
-const core::Property KubernetesControllerService::NamespaceFilter{
-    core::PropertyBuilder::createProperty("Namespace Filter")
-        ->withDescription("Limit the output to pods in namespaces which match this regular expression")
-        ->withDefaultValue<std::string>("default")
-        ->build()};
-const core::Property KubernetesControllerService::PodNameFilter{
-    core::PropertyBuilder::createProperty("Pod Name Filter")
-        ->withDescription("If present, limit the output to pods the name of which matches this regular expression")
-        ->build()};
-const core::Property KubernetesControllerService::ContainerNameFilter{
-    core::PropertyBuilder::createProperty("Container Name Filter")
-        ->withDescription("If present, limit the output to containers the name of which matches this regular expression")
-        ->build()};
 
 KubernetesControllerService::KubernetesControllerService(const std::string& name, const utils::Identifier& uuid)
   : AttributeProviderService(name, uuid),
@@ -62,7 +47,7 @@ void KubernetesControllerService::initialize() {
   if (initialized_) { return; }
 
   ControllerService::initialize();
-  setSupportedProperties(properties());
+  setSupportedProperties(Properties);
   initialized_ = true;
 }
 
@@ -74,17 +59,17 @@ void KubernetesControllerService::onEnable() {
   }
 
   std::string namespace_filter;
-  if (getProperty(NamespaceFilter.getName(), namespace_filter) && !namespace_filter.empty()) {
+  if (getProperty(NamespaceFilter, namespace_filter) && !namespace_filter.empty()) {
     namespace_filter_ = utils::Regex{namespace_filter};
   }
 
   std::string pod_name_filter;
-  if (getProperty(PodNameFilter.getName(), pod_name_filter) && !pod_name_filter.empty()) {
+  if (getProperty(PodNameFilter, pod_name_filter) && !pod_name_filter.empty()) {
     pod_name_filter_ = utils::Regex{pod_name_filter};
   }
 
   std::string container_name_filter;
-  if (getProperty(ContainerNameFilter.getName(), container_name_filter) && !container_name_filter.empty()) {
+  if (getProperty(ContainerNameFilter, container_name_filter) && !container_name_filter.empty()) {
     container_name_filter_ = utils::Regex{container_name_filter};
   }
 }

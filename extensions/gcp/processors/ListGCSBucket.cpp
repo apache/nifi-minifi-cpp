@@ -27,15 +27,15 @@ namespace gcs = ::google::cloud::storage;
 
 namespace org::apache::nifi::minifi::extensions::gcp {
 void ListGCSBucket::initialize() {
-  setSupportedProperties(properties());
-  setSupportedRelationships(relationships());
+  setSupportedProperties(Properties);
+  setSupportedRelationships(Relationships);
 }
 
 
 void ListGCSBucket::onSchedule(const std::shared_ptr<core::ProcessContext>& context, const std::shared_ptr<core::ProcessSessionFactory>& session_factory) {
   GCSProcessor::onSchedule(context, session_factory);
   gsl_Expects(context);
-  context->getProperty(Bucket.getName(), bucket_);
+  context->getProperty(Bucket, bucket_);
 }
 
 void ListGCSBucket::onTrigger(const std::shared_ptr<core::ProcessContext>& context, const std::shared_ptr<core::ProcessSession>& session) {
@@ -56,4 +56,7 @@ void ListGCSBucket::onTrigger(const std::shared_ptr<core::ProcessContext>& conte
     }
   }
 }
+
+REGISTER_RESOURCE(ListGCSBucket, Processor);
+
 }  // namespace org::apache::nifi::minifi::extensions::gcp

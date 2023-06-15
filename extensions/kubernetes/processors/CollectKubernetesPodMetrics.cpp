@@ -18,7 +18,6 @@
 
 #include "core/ProcessContext.h"
 #include "core/ProcessSession.h"
-#include "core/PropertyBuilder.h"
 #include "core/Resource.h"
 #include "../ContainerInfo.h"
 #include "../MetricsApi.h"
@@ -26,17 +25,9 @@
 
 namespace org::apache::nifi::minifi::processors {
 
-const core::Property CollectKubernetesPodMetrics::KubernetesControllerService{
-    core::PropertyBuilder::createProperty("Kubernetes Controller Service")
-    ->withDescription("Controller service which provides Kubernetes functionality")
-    ->isRequired(true)
-    ->build()};
-
-const core::Relationship CollectKubernetesPodMetrics::Success("success", "All flow files produced are routed to Success.");
-
 void CollectKubernetesPodMetrics::initialize() {
-  setSupportedProperties(properties());
-  setSupportedRelationships(relationships());
+  setSupportedProperties(Properties);
+  setSupportedRelationships(Relationships);
 }
 
 void CollectKubernetesPodMetrics::onSchedule(const std::shared_ptr<core::ProcessContext>& context, const std::shared_ptr<core::ProcessSessionFactory>&) {
@@ -44,7 +35,7 @@ void CollectKubernetesPodMetrics::onSchedule(const std::shared_ptr<core::Process
 
   const auto controller_service_name = context->getProperty(KubernetesControllerService);
   if (!controller_service_name || controller_service_name->empty()) {
-    throw minifi::Exception{ExceptionType::PROCESS_SCHEDULE_EXCEPTION, utils::StringUtils::join_pack("Missing '", KubernetesControllerService.getName(), "' property")};
+    throw minifi::Exception{ExceptionType::PROCESS_SCHEDULE_EXCEPTION, utils::StringUtils::join_pack("Missing '", KubernetesControllerService.name, "' property")};
   }
 
   std::shared_ptr<core::controller::ControllerService> controller_service = context->getControllerService(*controller_service_name);

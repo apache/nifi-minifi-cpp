@@ -20,10 +20,8 @@
 
 namespace org::apache::nifi::minifi {
 
-const core::Relationship ForwardingNode::Success("success", "FlowFiles are routed to success relationship");
-
 void ForwardingNode::initialize() {
-  setSupportedRelationships(relationships());
+  setSupportedRelationships(Relationships);
 }
 
 void ForwardingNode::onTrigger(const std::shared_ptr<core::ProcessContext>& /*context*/, const std::shared_ptr<core::ProcessSession>& session) {

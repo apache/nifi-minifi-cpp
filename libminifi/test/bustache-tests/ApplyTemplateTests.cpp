@@ -79,17 +79,17 @@ TEST_CASE("Test usage of ApplyTemplate", "[ApplyTemplateTest]") {
     REQUIRE_FALSE(put_file_destination_dir.empty());
 
     std::shared_ptr<core::Processor> getfile = plan->addProcessor("GetFile", "getFile");
-    plan->setProperty(getfile, org::apache::nifi::minifi::processors::GetFile::Directory.getName(), get_file_source_dir);
-    plan->setProperty(getfile, org::apache::nifi::minifi::processors::GetFile::KeepSourceFile.getName(), "true");
+    plan->setProperty(getfile, org::apache::nifi::minifi::processors::GetFile::Directory, get_file_source_dir);
+    plan->setProperty(getfile, org::apache::nifi::minifi::processors::GetFile::KeepSourceFile, "true");
 
     std::shared_ptr<core::Processor> maprocessor = plan->addProcessor("ExtractText", "testExtractText", core::Relationship("success", "description"), true);
-    plan->setProperty(maprocessor, org::apache::nifi::minifi::processors::ExtractText::Attribute.getName(), TEST_ATTR);
+    plan->setProperty(maprocessor, org::apache::nifi::minifi::processors::ExtractText::Attribute, TEST_ATTR);
 
     std::shared_ptr<core::Processor> atprocessor = plan->addProcessor("ApplyTemplate", "testApplyTemplate", core::Relationship("success", "description"), true);
 
     std::shared_ptr<core::Processor> putfile = plan->addProcessor("PutFile", "putfile", core::Relationship("success", "description"), true);
-    plan->setProperty(putfile, org::apache::nifi::minifi::processors::PutFile::Directory.getName(), put_file_destination_dir);
-    plan->setProperty(putfile, org::apache::nifi::minifi::processors::PutFile::ConflictResolution.getName(),
+    plan->setProperty(putfile, org::apache::nifi::minifi::processors::PutFile::Directory, put_file_destination_dir);
+    plan->setProperty(putfile, org::apache::nifi::minifi::processors::PutFile::ConflictResolution,
                       org::apache::nifi::minifi::processors::PutFile::CONFLICT_RESOLUTION_STRATEGY_REPLACE);
 
     // Write attribute value to file for GetFile->ExtractText
@@ -112,7 +112,7 @@ TEST_CASE("Test usage of ApplyTemplate", "[ApplyTemplateTest]") {
     template_file << TEMPLATE;
     template_file.close();
 
-    plan->setProperty(atprocessor, org::apache::nifi::minifi::processors::ApplyTemplate::Template.getName(), template_path);
+    plan->setProperty(atprocessor, org::apache::nifi::minifi::processors::ApplyTemplate::Template, template_path);
 
     // Run processor chain
     plan->runNextProcessor();  // GetFile

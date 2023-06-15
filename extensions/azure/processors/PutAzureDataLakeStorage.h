@@ -26,6 +26,8 @@
 
 #include "AzureDataLakeStorageFileProcessorBase.h"
 #include "io/StreamPipe.h"
+#include "core/PropertyDefinitionBuilder.h"
+#include "core/RelationshipDefinition.h"
 #include "utils/ArrayUtils.h"
 #include "utils/Enum.h"
 #include "utils/Export.h"
@@ -33,20 +35,31 @@
 template<typename AzureDataLakeStorageProcessor>
 class AzureDataLakeStorageTestsFixture;
 
-namespace org::apache::nifi::minifi::azure::processors {
+namespace org::apache::nifi::minifi::azure {
+
+SMART_ENUM(FileExistsResolutionStrategy,
+  (FAIL_FLOW, "fail"),
+  (REPLACE_FILE, "replace"),
+  (IGNORE_REQUEST, "ignore")
+)
+
+namespace processors {
 
 class PutAzureDataLakeStorage final : public AzureDataLakeStorageFileProcessorBase {
  public:
-  EXTENSIONAPI static constexpr const char* Description = "Puts content into an Azure Data Lake Storage Gen 2";
+  EXTENSIONAPI static constexpr const char *Description = "Puts content into an Azure Data Lake Storage Gen 2";
 
-  EXTENSIONAPI static const core::Property ConflictResolutionStrategy;
-  static auto properties() {
-    return utils::array_cat(AzureDataLakeStorageFileProcessorBase::properties(), std::array{ConflictResolutionStrategy});
-  }
+  EXTENSIONAPI static constexpr auto ConflictResolutionStrategy = core::PropertyDefinitionBuilder<azure::FileExistsResolutionStrategy::length>::createProperty("Conflict Resolution Strategy")
+      .withDescription("Indicates what should happen when a file with the same name already exists in the output directory.")
+      .isRequired(true)
+      .withDefaultValue(toStringView(azure::FileExistsResolutionStrategy::FAIL_FLOW))
+      .withAllowedValues(azure::FileExistsResolutionStrategy::values)
+      .build();
+  EXTENSIONAPI static constexpr auto Properties = utils::array_cat(AzureDataLakeStorageFileProcessorBase::Properties, std::array<core::PropertyReference, 1>{ConflictResolutionStrategy});
 
-  EXTENSIONAPI static const core::Relationship Success;
-  EXTENSIONAPI static const core::Relationship Failure;
-  static auto relationships() { return std::array{Success, Failure}; }
+  EXTENSIONAPI static constexpr auto Success = core::RelationshipDefinition{"success", "Files that have been successfully written to Azure storage are transferred to this relationship"};
+  EXTENSIONAPI static constexpr auto Failure = core::RelationshipDefinition{"failure", "Files that could not be written to Azure storage for some reason are transferred to this relationship"};
+  EXTENSIONAPI static constexpr auto Relationships = std::array{Success, Failure};
 
   EXTENSIONAPI static constexpr bool SupportsDynamicProperties = false;
   EXTENSIONAPI static constexpr bool SupportsDynamicRelationships = false;
@@ -55,14 +68,8 @@ class PutAzureDataLakeStorage final : public AzureDataLakeStorageFileProcessorBa
 
   ADD_COMMON_VIRTUAL_FUNCTIONS_FOR_PROCESSORS
 
-  SMART_ENUM(FileExistsResolutionStrategy,
-    (FAIL_FLOW, "fail"),
-    (REPLACE_FILE, "replace"),
-    (IGNORE_REQUEST, "ignore")
-  )
-
-  explicit PutAzureDataLakeStorage(std::string name, const minifi::utils::Identifier& uuid = minifi::utils::Identifier())
-    : PutAzureDataLakeStorage(std::move(name), uuid, nullptr) {
+  explicit PutAzureDataLakeStorage(std::string name, const minifi::utils::Identifier &uuid = minifi::utils::Identifier())
+      : PutAzureDataLakeStorage(std::move(name), uuid, nullptr) {
   }
 
   void initialize() override;
@@ -74,8 +81,8 @@ class PutAzureDataLakeStorage final : public AzureDataLakeStorageFileProcessorBa
 
   class ReadCallback {
    public:
-    ReadCallback(uint64_t flow_size, storage::AzureDataLakeStorage& azure_data_lake_storage, const storage::PutAzureDataLakeStorageParameters& params, std::shared_ptr<core::logging::Logger> logger);
-    int64_t operator()(const std::shared_ptr<io::InputStream>& stream);
+    ReadCallback(uint64_t flow_size, storage::AzureDataLakeStorage &azure_data_lake_storage, const storage::PutAzureDataLakeStorageParameters &params, std::shared_ptr<core::logging::Logger> logger);
+    int64_t operator()(const std::shared_ptr<io::InputStream> &stream);
 
     [[nodiscard]] storage::UploadDataLakeStorageResult getResult() const {
       return result_;
@@ -83,19 +90,20 @@ class PutAzureDataLakeStorage final : public AzureDataLakeStorageFileProcessorBa
 
    private:
     uint64_t flow_size_;
-    storage::AzureDataLakeStorage& azure_data_lake_storage_;
-    const storage::PutAzureDataLakeStorageParameters& params_;
+    storage::AzureDataLakeStorage &azure_data_lake_storage_;
+    const storage::PutAzureDataLakeStorageParameters &params_;
     storage::UploadDataLakeStorageResult result_;
     std::shared_ptr<core::logging::Logger> logger_;
   };
 
-  explicit PutAzureDataLakeStorage(std::string name, const minifi::utils::Identifier& uuid, std::unique_ptr<storage::DataLakeStorageClient> data_lake_storage_client)
-    : AzureDataLakeStorageFileProcessorBase(std::move(name), uuid, core::logging::LoggerFactory<PutAzureDataLakeStorage>::getLogger(), std::move(data_lake_storage_client)) {
+  explicit PutAzureDataLakeStorage(std::string name, const minifi::utils::Identifier &uuid, std::unique_ptr<storage::DataLakeStorageClient> data_lake_storage_client)
+      : AzureDataLakeStorageFileProcessorBase(std::move(name), uuid, core::logging::LoggerFactory<PutAzureDataLakeStorage>::getLogger(), std::move(data_lake_storage_client)) {
   }
 
-  std::optional<storage::PutAzureDataLakeStorageParameters> buildUploadParameters(core::ProcessContext& context, const std::shared_ptr<core::FlowFile>& flow_file);
+  std::optional<storage::PutAzureDataLakeStorageParameters> buildUploadParameters(core::ProcessContext &context, const std::shared_ptr<core::FlowFile> &flow_file);
 
-  FileExistsResolutionStrategy conflict_resolution_strategy_;
+  azure::FileExistsResolutionStrategy conflict_resolution_strategy_;
 };
 
-}  // namespace org::apache::nifi::minifi::azure::processors
+}  // namespace processors
+}  // namespace org::apache::nifi::minifi::azure

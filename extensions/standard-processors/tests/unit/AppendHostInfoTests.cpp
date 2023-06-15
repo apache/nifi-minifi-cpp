@@ -48,7 +48,7 @@ TEST_CASE("AppendHostInfoTestWithUnmatchableRegex", "[appendhostinfotestunmatcha
   std::shared_ptr<core::Processor> append_host_info = plan->addProcessor("AppendHostInfo", "append_host_info", core::Relationship("success", "description"), true);
   std::shared_ptr<core::Processor> log_attribute = plan->addProcessor("LogAttribute", "log_attributes", core::Relationship("success", "description"), true);
 
-  plan->setProperty(append_host_info, AppendHostInfo::InterfaceNameFilter.getName(), "\b");
+  plan->setProperty(append_host_info, AppendHostInfo::InterfaceNameFilter, "\b");
 
   testController.runSession(plan);
 
@@ -66,7 +66,7 @@ TEST_CASE("AppendHostInfoTestCanFilterOutLoopbackInterfacesWithRegex", "[appendh
   std::shared_ptr<core::Processor> append_host_info = plan->addProcessor("AppendHostInfo", "append_host_info", core::Relationship("success", "description"), true);
   std::shared_ptr<core::Processor> log_attribute = plan->addProcessor("LogAttribute", "log_attributes", core::Relationship("success", "description"), true);
 
-  plan->setProperty(append_host_info, AppendHostInfo::InterfaceNameFilter.getName(), "(?!Loopback|lo).*?");  // set up the regex to accept everything except interfaces starting with Loopback or lo
+  plan->setProperty(append_host_info, AppendHostInfo::InterfaceNameFilter, "(?!Loopback|lo).*?");  // set up the regex to accept everything except interfaces starting with Loopback or lo
 
   testController.runSession(plan);
 

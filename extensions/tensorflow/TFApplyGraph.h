@@ -19,10 +19,14 @@
 
 #include <atomic>
 
-#include <core/Resource.h>
-#include <core/Processor.h>
-#include <tensorflow/core/public/session.h>
-#include <concurrentqueue.h>
+#include "core/Resource.h"
+#include "core/Processor.h"
+#include "core/logging/LoggerFactory.h"
+#include "core/PropertyDefinition.h"
+#include "core/PropertyDefinitionBuilder.h"
+#include "core/RelationshipDefinition.h"
+#include "tensorflow/core/public/session.h"
+#include "concurrentqueue.h"
 #include "io/InputStream.h"
 #include "io/OutputStream.h"
 
@@ -32,32 +36,35 @@ class TFApplyGraph : public core::Processor {
  public:
   explicit TFApplyGraph(const std::string &name, const utils::Identifier &uuid = {})
       : Processor(name, uuid),
-        logger_(logging::LoggerFactory<TFApplyGraph>::getLogger(uuid_)) {
+        logger_(core::logging::LoggerFactory<TFApplyGraph>::getLogger(uuid_)) {
   }
 
   EXTENSIONAPI static constexpr const char* Description = "Applies a TensorFlow graph to the tensor protobuf supplied as input. The tensor is fed into the node specified by the Input Node property. "
     "The output FlowFile is a tensor protobuf extracted from the node specified by the Output Node property. TensorFlow graphs are read dynamically by feeding a graph "
     "protobuf to the processor with the tf.type property set to graph.";
 
-  EXTENSIONAPI static const core::Property InputNode;
-  EXTENSIONAPI static const core::Property OutputNode;
-  static auto properties() {
-    return std::array{
+  EXTENSIONAPI static constexpr auto InputNode = core::PropertyDefinitionBuilder<>::createProperty("Input Node")
+      .withDescription("The node of the TensorFlow graph to feed tensor inputs to")
+      .withDefaultValue("")
+      .build();
+  EXTENSIONAPI static constexpr auto OutputNode = core::PropertyDefinitionBuilder<>::createProperty("Output Node")
+      .withDescription("The node of the TensorFlow graph to read tensor outputs from")
+      .withDefaultValue("")
+      .build();
+  EXTENSIONAPI static constexpr auto Properties = std::array<core::PropertyReference, 2>{
       InputNode,
       OutputNode
-    };
-  }
+  };
 
-  EXTENSIONAPI static const core::Relationship Success;
-  EXTENSIONAPI static const core::Relationship Retry;
-  EXTENSIONAPI static const core::Relationship Failure;
-  static auto relationships() {
-    return std::array{
+
+  EXTENSIONAPI static constexpr auto Success = core::RelationshipDefinition{"success", "Successful graph application outputs"};
+  EXTENSIONAPI static constexpr auto Retry = core::RelationshipDefinition{"retry", "Inputs which fail graph application but may work if sent again"};
+  EXTENSIONAPI static constexpr auto Failure = core::RelationshipDefinition{"failure", "Failures which will not work if retried"};
+  EXTENSIONAPI static constexpr auto Relationships = std::array{
       Success,
       Retry,
       Failure
-    };
-  }
+  };
 
   EXTENSIONAPI static constexpr bool SupportsDynamicProperties = false;
   EXTENSIONAPI static constexpr bool SupportsDynamicRelationships = false;
@@ -116,7 +123,7 @@ class TFApplyGraph : public core::Processor {
   };
 
  private:
-  std::shared_ptr<logging::Logger> logger_;
+  std::shared_ptr<core::logging::Logger> logger_;
   std::string input_node_;
   std::string output_node_;
   std::shared_ptr<tensorflow::GraphDef> graph_def_;

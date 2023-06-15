@@ -31,7 +31,6 @@
 #include "core/ProcessContext.h"
 #include "core/ProcessSession.h"
 #include "core/ProcessSessionFactory.h"
-#include "core/PropertyBuilder.h"
 #include "core/Resource.h"
 #include "utils/gsl.h"
 #include "utils/OptionalUtils.h"
@@ -56,109 +55,6 @@ std::wstring to_wstring(const std::string& utf8_string) {
 }
 }  // namespace
 
-const core::Property CollectorInitiatedSubscription::SubscriptionName =
-    core::PropertyBuilder::createProperty("Subscription Name")->
-        isRequired(true)->
-        withDescription("The name of the subscription. The value provided for this parameter should be unique within the computer's scope.")->
-        supportsExpressionLanguage(true)->
-        build();
-
-const core::Property CollectorInitiatedSubscription::SubscriptionDescription =
-    core::PropertyBuilder::createProperty("Subscription Description")->
-        isRequired(true)->
-        withDescription("A description of the subscription.")->
-        supportsExpressionLanguage(true)->
-        build();
-
-const core::Property CollectorInitiatedSubscription::SourceAddress =
-    core::PropertyBuilder::createProperty("Source Address")->
-        isRequired(true)->
-        withDescription("The IP address or fully qualified domain name (FQDN) of the local or remote computer (event source) from which the events are collected.")->
-        supportsExpressionLanguage(true)->
-        build();
-
-const core::Property CollectorInitiatedSubscription::SourceUserName =
-    core::PropertyBuilder::createProperty("Source User Name")->
-        isRequired(true)->
-        withDescription("The user name, which is used by the remote computer (event source) to authenticate the user.")->
-        supportsExpressionLanguage(true)->
-        build();
-
-const core::Property CollectorInitiatedSubscription::SourcePassword =
-    core::PropertyBuilder::createProperty("Source Password")->
-        isRequired(true)->
-        withDescription("The password, which is used by the remote computer (event source) to authenticate the user.")->
-        supportsExpressionLanguage(true)->
-        build();
-
-const core::Property CollectorInitiatedSubscription::SourceChannels =
-    core::PropertyBuilder::createProperty("Source Channels")->
-        isRequired(true)->
-        withDescription("The Windows Event Log Channels (on domain computer(s)) from which events are transferred.")->
-        supportsExpressionLanguage(true)->
-        build();
-
-const core::Property CollectorInitiatedSubscription::MaxDeliveryItems =
-    core::PropertyBuilder::createProperty("Max Delivery Items")->
-        isRequired(true)->
-        withDefaultValue<core::DataSizeValue>("1000")->
-        withDescription("Determines the maximum number of items that will forwarded from an event source for each request.")->
-        build();
-
-const core::Property CollectorInitiatedSubscription::DeliveryMaxLatencyTime =
-    core::PropertyBuilder::createProperty("Delivery MaxLatency Time")->
-        isRequired(true)->
-        withDefaultValue<core::TimePeriodValue>("10 min")->
-        withDescription("How long, in milliseconds, the event source should wait before sending events.")->
-        build();
-
-const core::Property CollectorInitiatedSubscription::HeartbeatInterval =
-    core::PropertyBuilder::createProperty("Heartbeat Interval")->
-        isRequired(true)->
-        withDefaultValue<core::TimePeriodValue>("10 min")->
-        withDescription(
-        "Time interval, in milliseconds, which is observed between the sent heartbeat messages."
-        " The event collector uses this property to determine the interval between queries to the event source.")->
-        build();
-
-const core::Property CollectorInitiatedSubscription::Channel =
-    core::PropertyBuilder::createProperty("Channel")->
-        isRequired(true)->
-        withDefaultValue("ForwardedEvents")->
-        withDescription("The Windows Event Log Channel (on local machine) to which events are transferred.")->
-        supportsExpressionLanguage(true)->
-        build();
-
-const core::Property CollectorInitiatedSubscription::Query =
-    core::PropertyBuilder::createProperty("Query")->
-        isRequired(true)->
-        withDefaultValue("*")->
-        withDescription("XPath Query to filter events. (See https://msdn.microsoft.com/en-us/library/windows/desktop/dd996910(v=vs.85).aspx for examples.)")->
-        supportsExpressionLanguage(true)->
-        build();
-
-const core::Property CollectorInitiatedSubscription::MaxBufferSize =
-    core::PropertyBuilder::createProperty("Max Buffer Size")->
-        isRequired(true)->
-        withDefaultValue<core::DataSizeValue>("1 MB")->
-        withDescription(
-        "The individual Event Log XMLs are rendered to a buffer."
-        " This specifies the maximum size in bytes that the buffer will be allowed to grow to. (Limiting the maximum size of an individual Event XML.)")->
-        build();
-
-const core::Property CollectorInitiatedSubscription::InactiveDurationToReconnect =
-    core::PropertyBuilder::createProperty("Inactive Duration To Reconnect")->
-        isRequired(true)->
-        withDefaultValue<core::TimePeriodValue>("10 min")->
-        withDescription(
-        "If no new event logs are processed for the specified time period,"
-        " this processor will try reconnecting to recover from a state where any further messages cannot be consumed."
-        " Such situation can happen if Windows Event Log service is restarted, or ERROR_EVT_QUERY_RESULT_STALE (15011) is returned."
-        " Setting no duration, e.g. '0 ms' disables auto-reconnection.")->
-        build();
-
-const core::Relationship CollectorInitiatedSubscription::Success("success", "Relationship for successfully consumed events.");
-
 CollectorInitiatedSubscription::CollectorInitiatedSubscription(const std::string& name, const utils::Identifier& uuid)
   : core::Processor(name, uuid), logger_(core::logging::LoggerFactory<CollectorInitiatedSubscription>::getLogger(uuid_)) {
   char buff[MAX_COMPUTERNAME_LENGTH + 1];
@@ -171,8 +67,8 @@ CollectorInitiatedSubscription::CollectorInitiatedSubscription(const std::string
 }
 
 void CollectorInitiatedSubscription::initialize() {
-  setSupportedProperties(properties());
-  setSupportedRelationships(relationships());
+  setSupportedProperties(Properties);
+  setSupportedRelationships(Relationships);
 }
 
 void CollectorInitiatedSubscription::onSchedule(const std::shared_ptr<core::ProcessContext> &context, const std::shared_ptr<core::ProcessSessionFactory> &sessionFactory) {

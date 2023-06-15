@@ -26,7 +26,6 @@
 #include "utils/TimeUtil.h"
 #include "core/ProcessContext.h"
 #include "core/ProcessSession.h"
-#include "core/PropertyBuilder.h"
 #include "core/Resource.h"
 #include "core/TypedValues.h"
 #include "utils/FileReaderCallback.h"
@@ -36,62 +35,20 @@ using namespace std::literals::chrono_literals;
 
 namespace org::apache::nifi::minifi::processors {
 
-const core::Property GetFile::BatchSize(
-    core::PropertyBuilder::createProperty("Batch Size")->withDescription("The maximum number of files to pull in each iteration")->withDefaultValue<uint32_t>(10)->build());
-
-const core::Property GetFile::Directory(
-    core::PropertyBuilder::createProperty("Input Directory")->withDescription("The input directory from which to pull files")->isRequired(true)->supportsExpressionLanguage(true)
-        ->build());
-
-const core::Property GetFile::IgnoreHiddenFile(
-    core::PropertyBuilder::createProperty("Ignore Hidden Files")->withDescription("Indicates whether or not hidden files should be ignored")->withDefaultValue<bool>(true)->build());
-
-const core::Property GetFile::KeepSourceFile(
-    core::PropertyBuilder::createProperty("Keep Source File")->withDescription("If true, the file is not deleted after it has been copied to the Content Repository")->withDefaultValue<bool>(false)
-        ->build());
-
-const core::Property GetFile::MaxAge(
-    core::PropertyBuilder::createProperty("Maximum File Age")->withDescription("The maximum age that a file must be in order to be pulled;"
-                                                                               " any file older than this amount of time (according to last modification date) will be ignored")
-        ->withDefaultValue<core::TimePeriodValue>("0 sec")->build());
-
-const core::Property GetFile::MinAge(
-    core::PropertyBuilder::createProperty("Minimum File Age")->withDescription("The minimum age that a file must be in order to be pulled;"
-                                                                               " any file younger than this amount of time (according to last modification date) will be ignored")
-        ->withDefaultValue<core::TimePeriodValue>("0 sec")->build());
-
-const core::Property GetFile::MaxSize(
-    core::PropertyBuilder::createProperty("Maximum File Size")->withDescription("The maximum size that a file can be in order to be pulled")->withDefaultValue<core::DataSizeValue>("0 B")->build());
-
-const core::Property GetFile::MinSize(
-    core::PropertyBuilder::createProperty("Minimum File Size")->withDescription("The minimum size that a file can be in order to be pulled")->withDefaultValue<core::DataSizeValue>("0 B")->build());
-
-const core::Property GetFile::PollInterval(
-    core::PropertyBuilder::createProperty("Polling Interval")->withDescription("Indicates how long to wait before performing a directory listing")->withDefaultValue<core::TimePeriodValue>("0 sec")
-        ->build());
-
-const core::Property GetFile::Recurse(
-    core::PropertyBuilder::createProperty("Recurse Subdirectories")->withDescription("Indicates whether or not to pull files from subdirectories")->withDefaultValue<bool>(true)->build());
-
-const core::Property GetFile::FileFilter(
-    core::PropertyBuilder::createProperty("File Filter")->withDescription("Only files whose names match the given regular expression will be picked up")->withDefaultValue(".*")->build());
-
-const core::Relationship GetFile::Success("success", "All files are routed to success");
-
 void GetFile::initialize() {
-  setSupportedProperties(properties());
-  setSupportedRelationships(relationships());
+  setSupportedProperties(Properties);
+  setSupportedRelationships(Relationships);
 }
 
 void GetFile::onSchedule(core::ProcessContext *context, core::ProcessSessionFactory* /*sessionFactory*/) {
   std::string value;
-  if (context->getProperty(BatchSize.getName(), value)) {
+  if (context->getProperty(BatchSize, value)) {
     core::Property::StringToInt(value, request_.batchSize);
   }
-  if (context->getProperty(IgnoreHiddenFile.getName(), value)) {
+  if (context->getProperty(IgnoreHiddenFile, value)) {
     request_.ignoreHiddenFile = org::apache::nifi::minifi::utils::StringUtils::toBool(value).value_or(true);
   }
-  if (context->getProperty(KeepSourceFile.getName(), value)) {
+  if (context->getProperty(KeepSourceFile, value)) {
     request_.keepSourceFile = org::apache::nifi::minifi::utils::StringUtils::toBool(value).value_or(false);
   }
 
@@ -100,10 +57,10 @@ void GetFile::onSchedule(core::ProcessContext *context, core::ProcessSessionFact
   if (auto min_age = context->getProperty<core::TimePeriodValue>(MinAge))
     request_.minAge = min_age->getMilliseconds();
 
-  if (context->getProperty(MaxSize.getName(), value)) {
+  if (context->getProperty(MaxSize, value)) {
     core::Property::StringToInt(value, request_.maxSize);
   }
-  if (context->getProperty(MinSize.getName(), value)) {
+  if (context->getProperty(MinSize, value)) {
     core::Property::StringToInt(value, request_.minSize);
   }
 
@@ -111,11 +68,11 @@ void GetFile::onSchedule(core::ProcessContext *context, core::ProcessSessionFact
     request_.pollInterval = poll_interval->getMilliseconds();
   }
 
-  if (context->getProperty(Recurse.getName(), value)) {
+  if (context->getProperty(Recurse, value)) {
     request_.recursive = org::apache::nifi::minifi::utils::StringUtils::toBool(value).value_or(true);
   }
 
-  if (context->getProperty(FileFilter.getName(), value)) {
+  if (context->getProperty(FileFilter, value)) {
     request_.fileFilter = value;
   }
 

@@ -35,11 +35,11 @@ class DeleteAzureDataLakeStorage final : public AzureDataLakeStorageFileProcesso
  public:
   EXTENSIONAPI static constexpr const char* Description = "Deletes the provided file from Azure Data Lake Storage";
 
-  static auto properties() { return AzureDataLakeStorageFileProcessorBase::properties(); }
+  EXTENSIONAPI static constexpr auto Properties = AzureDataLakeStorageFileProcessorBase::Properties;
 
-  EXTENSIONAPI static const core::Relationship Success;
-  EXTENSIONAPI static const core::Relationship Failure;
-  static auto relationships() { return std::array{Success, Failure}; }
+  EXTENSIONAPI static constexpr auto Success = core::RelationshipDefinition{"success", "If file deletion from Azure storage succeeds the flowfile is transferred to this relationship"};
+  EXTENSIONAPI static constexpr auto Failure = core::RelationshipDefinition{"failure", "If file deletion from Azure storage fails the flowfile is transferred to this relationship"};
+  EXTENSIONAPI static constexpr auto Relationships = std::array{Success, Failure};
 
   EXTENSIONAPI static constexpr bool SupportsDynamicProperties = false;
   EXTENSIONAPI static constexpr bool SupportsDynamicRelationships = false;

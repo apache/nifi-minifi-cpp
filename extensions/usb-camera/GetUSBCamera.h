@@ -30,6 +30,9 @@
 #include "FlowFileRecord.h"
 #include "core/Processor.h"
 #include "core/ProcessSession.h"
+#include "core/PropertyDefinition.h"
+#include "core/PropertyDefinitionBuilder.h"
+#include "core/RelationshipDefinition.h"
 #include "core/Core.h"
 #include "core/logging/LoggerConfiguration.h"
 
@@ -58,15 +61,32 @@ class GetUSBCamera : public core::Processor {
   EXTENSIONAPI static constexpr const char* Description = "Gets images from USB Video Class (UVC)-compatible devices. "
       "Outputs one flow file per frame at the rate specified by the FPS property in the format specified by the Format property.";
 
-  EXTENSIONAPI static const core::Property FPS;
-  EXTENSIONAPI static const core::Property Width;
-  EXTENSIONAPI static const core::Property Height;
-  EXTENSIONAPI static const core::Property Format;
-  EXTENSIONAPI static const core::Property VendorID;
-  EXTENSIONAPI static const core::Property ProductID;
-  EXTENSIONAPI static const core::Property SerialNo;
-  static auto properties() {
-    return std::array{
+  EXTENSIONAPI static constexpr auto FPS = core::PropertyDefinitionBuilder<>::createProperty("FPS")
+      .withDescription("Frames per second to capture from USB camera")
+      .withDefaultValue("1")
+      .build();
+  EXTENSIONAPI static constexpr auto Width = core::PropertyDefinitionBuilder<>::createProperty("Width")
+      .withDescription("Target width of image to capture from USB camera")
+      .build();
+  EXTENSIONAPI static constexpr auto Height = core::PropertyDefinitionBuilder<>::createProperty("Height")
+      .withDescription("Target height of image to capture from USB camera")
+      .build();
+  EXTENSIONAPI static constexpr auto Format = core::PropertyDefinitionBuilder<>::createProperty("Format")
+      .withDescription("Frame format (currently only PNG and RAW are supported; RAW is a binary pixel buffer of RGB values)")
+      .withDefaultValue("PNG")
+      .build();
+  EXTENSIONAPI static constexpr auto VendorID = core::PropertyDefinitionBuilder<>::createProperty("USB Vendor ID")
+      .withDescription("USB Vendor ID of camera device, in hexadecimal format")
+      .withDefaultValue("0x0")
+      .build();
+  EXTENSIONAPI static constexpr auto ProductID = core::PropertyDefinitionBuilder<>::createProperty("USB Product ID")
+      .withDescription("USB Product ID of camera device, in hexadecimal format")
+      .withDefaultValue("0x0")
+      .build();
+  EXTENSIONAPI static constexpr auto SerialNo = core::PropertyDefinitionBuilder<>::createProperty("USB Serial No.")
+      .withDescription("USB Serial No. of camera device")
+      .build();
+  EXTENSIONAPI static constexpr auto Properties = std::array<core::PropertyReference, 7>{
       FPS,
       Width,
       Height,
@@ -74,12 +94,12 @@ class GetUSBCamera : public core::Processor {
       VendorID,
       ProductID,
       SerialNo
-    };
-  }
+  };
 
-  EXTENSIONAPI static const core::Relationship Success;
-  EXTENSIONAPI static const core::Relationship Failure;
-  static auto relationships() { return std::array{Success, Failure}; }
+
+  EXTENSIONAPI static constexpr auto Success = core::RelationshipDefinition{"success", "Sucessfully captured images sent here"};
+  EXTENSIONAPI static constexpr auto Failure = core::RelationshipDefinition{"failure", "Failures sent here"};
+  EXTENSIONAPI static constexpr auto Relationships = std::array{Success, Failure};
 
   EXTENSIONAPI static constexpr bool SupportsDynamicProperties = false;
   EXTENSIONAPI static constexpr bool SupportsDynamicRelationships = false;

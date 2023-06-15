@@ -30,8 +30,8 @@
 namespace org::apache::nifi::minifi::processors {
 
 void ConsumeMQTT::initialize() {
-  setSupportedProperties(properties());
-  setSupportedRelationships(relationships());
+  setSupportedProperties(Properties);
+  setSupportedRelationships(Relationships);
 }
 
 void ConsumeMQTT::enqueueReceivedMQTTMsg(SmartMessage message) {
@@ -102,8 +102,8 @@ void ConsumeMQTT::onTriggerImpl(const std::shared_ptr<core::ProcessContext>& /*c
       session->remove(flow_file);
     } else {
       putUserPropertiesAsAttributes(message, flow_file, session);
-      session->putAttribute(flow_file, MQTT_BROKER_ATTRIBUTE, uri_);
-      session->putAttribute(flow_file, MQTT_TOPIC_ATTRIBUTE, message.topic);
+      session->putAttribute(flow_file, std::string(BrokerOutputAttribute.name), uri_);
+      session->putAttribute(flow_file, std::string(TopicOutputAttribute.name), message.topic);
       fillAttributeFromContentType(message, flow_file, session);
       logger_->log_debug("ConsumeMQTT processing success for the flow with UUID %s topic %s", flow_file->getUUIDStr(), message.topic);
       session->transfer(flow_file, Success);
@@ -139,7 +139,7 @@ int64_t ConsumeMQTT::WriteCallback::operator() (const std::shared_ptr<io::Output
 }
 
 void ConsumeMQTT::putUserPropertiesAsAttributes(const SmartMessage& message, const std::shared_ptr<core::FlowFile>& flow_file, const std::shared_ptr<core::ProcessSession>& session) const {
-  if (mqtt_version_.value() != MqttVersions::V_5_0) {
+  if (mqtt_version_.value() != mqtt::MqttVersions::V_5_0) {
     return;
   }
 
@@ -153,7 +153,7 @@ void ConsumeMQTT::putUserPropertiesAsAttributes(const SmartMessage& message, con
 }
 
 void ConsumeMQTT::fillAttributeFromContentType(const SmartMessage& message, const std::shared_ptr<core::FlowFile>& flow_file, const std::shared_ptr<core::ProcessSession>& session) const {
-  if (mqtt_version_.value() != MqttVersions::V_5_0 || attribute_from_content_type_.empty()) {
+  if (mqtt_version_.value() != mqtt::MqttVersions::V_5_0 || attribute_from_content_type_.empty()) {
     return;
   }
 
@@ -170,7 +170,7 @@ void ConsumeMQTT::startupClient() {
   MQTTAsync_responseOptions response_options = MQTTAsync_responseOptions_initializer;
   response_options.context = this;
 
-  if (mqtt_version_.value() == MqttVersions::V_5_0) {
+  if (mqtt_version_.value() == mqtt::MqttVersions::V_5_0) {
     response_options.onSuccess5 = subscriptionSuccess5;
     response_options.onFailure5 = subscriptionFailure5;
   } else {
@@ -187,7 +187,7 @@ void ConsumeMQTT::startupClient() {
 }
 
 void ConsumeMQTT::onMessageReceived(SmartMessage smart_message) {
-  if (mqtt_version_ == MqttVersions::V_5_0) {
+  if (mqtt_version_ == mqtt::MqttVersions::V_5_0) {
     resolveTopicFromAlias(smart_message);
   }
 
@@ -232,7 +232,7 @@ void ConsumeMQTT::resolveTopicFromAlias(SmartMessage& smart_message) {
 }
 
 void ConsumeMQTT::checkProperties() {
-  if (mqtt_version_ == MqttVersions::V_3_1_0 || mqtt_version_ == MqttVersions::V_3_1_1 || mqtt_version_ == MqttVersions::V_3X_AUTO) {
+  if (mqtt_version_ == mqtt::MqttVersions::V_3_1_0 || mqtt_version_ == mqtt::MqttVersions::V_3_1_1 || mqtt_version_ == mqtt::MqttVersions::V_3X_AUTO) {
     if (isPropertyExplicitlySet(CleanStart)) {
       logger_->log_warn("MQTT 3.x specification does not support Clean Start. Property is not used.");
     }
@@ -250,12 +250,12 @@ void ConsumeMQTT::checkProperties() {
     }
   }
 
-  if (mqtt_version_.value() == MqttVersions::V_5_0 && isPropertyExplicitlySet(CleanSession)) {
+  if (mqtt_version_.value() == mqtt::MqttVersions::V_5_0 && isPropertyExplicitlySet(CleanSession)) {
     logger_->log_warn("MQTT 5.0 specification does not support Clean Session. Property is not used.");
   }
 
   if (clientID_.empty()) {
-    if (mqtt_version_.value() == MqttVersions::V_5_0) {
+    if (mqtt_version_.value() == mqtt::MqttVersions::V_5_0) {
       if (session_expiry_interval_ > std::chrono::seconds(0)) {
         throw Exception(PROCESS_SCHEDULE_EXCEPTION, "Processor must have a Client ID for durable (Session Expiry Interval > 0) sessions");
       }
@@ -264,8 +264,8 @@ void ConsumeMQTT::checkProperties() {
     }
   }
 
-  if (qos_ == MqttQoS::LEVEL_0) {
-    if (mqtt_version_.value() == MqttVersions::V_5_0) {
+  if (qos_ == mqtt::MqttQoS::LEVEL_0) {
+    if (mqtt_version_.value() == mqtt::MqttVersions::V_5_0) {
       if (session_expiry_interval_ > std::chrono::seconds(0)) {
         logger_->log_warn("Messages are not preserved during client disconnection "
                           "by the broker when QoS is less than 1 for durable (Session Expiry Interval > 0) sessions. Only subscriptions are preserved.");
@@ -295,7 +295,7 @@ void ConsumeMQTT::checkBrokerLimitsImpl() {
   }
 
   if (utils::StringUtils::startsWith(topic_, "$share/")) {
-    if (mqtt_version_.value() == MqttVersions::V_5_0) {
+    if (mqtt_version_.value() == mqtt::MqttVersions::V_5_0) {
       // shared topic are supported on MQTT 5, unless explicitly denied by broker
       if (shared_subscription_available_ == false) {
         std::ostringstream os;
@@ -362,5 +362,7 @@ void ConsumeMQTT::onSubscriptionFailure5(MQTTAsync_failureData5* response) {
   }
   logger_->log_error("Reason code for subscription failure: %d: %s", response->reasonCode, MQTTReasonCode_toString(response->reasonCode));
 }
+
+REGISTER_RESOURCE(ConsumeMQTT, Processor);
 
 }  // namespace org::apache::nifi::minifi::processors

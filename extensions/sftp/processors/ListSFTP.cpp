@@ -46,11 +46,6 @@ using namespace std::literals::chrono_literals;
 
 namespace org::apache::nifi::minifi::processors {
 
-const std::map<std::string, uint64_t> ListSFTP::LISTING_LAG_MAP = {
-  {ListSFTP::TARGET_SYSTEM_TIMESTAMP_PRECISION_SECONDS, 1000},
-  {ListSFTP::TARGET_SYSTEM_TIMESTAMP_PRECISION_MINUTES, 60000},
-};
-
 namespace {
 uint64_t toUnixTime(const std::optional<std::chrono::system_clock::time_point> time_point) {
   if (!time_point)
@@ -69,8 +64,8 @@ std::optional<std::chrono::system_clock::time_point> fromUnixTime(const uint64_t
 void ListSFTP::initialize() {
   logger_->log_trace("Initializing FetchSFTP");
 
-  setSupportedProperties(properties());
-  setSupportedRelationships(relationships());
+  setSupportedProperties(Properties);
+  setSupportedRelationships(Relationships);
 }
 
 ListSFTP::ListSFTP(std::string name, const utils::Identifier& uuid /*= utils::Identifier()*/)
@@ -89,42 +84,42 @@ void ListSFTP::onSchedule(const std::shared_ptr<core::ProcessContext> &context, 
   }
 
   std::string value;
-  context->getProperty(ListingStrategy.getName(), listing_strategy_);
+  context->getProperty(ListingStrategy, listing_strategy_);
   if (!last_listing_strategy_.empty() && last_listing_strategy_ != listing_strategy_) {
     invalidateCache();
   }
   last_listing_strategy_ = listing_strategy_;
-  if (!context->getProperty(SearchRecursively.getName(), value)) {
+  if (!context->getProperty(SearchRecursively, value)) {
     logger_->log_error("Search Recursively attribute is missing or invalid");
   } else {
     search_recursively_ = utils::StringUtils::toBool(value).value_or(false);
   }
-  if (!context->getProperty(FollowSymlink.getName(), value)) {
+  if (!context->getProperty(FollowSymlink, value)) {
     logger_->log_error("Follow symlink attribute is missing or invalid");
   } else {
     follow_symlink_ = utils::StringUtils::toBool(value).value_or(false);
   }
-  if (context->getProperty(FileFilterRegex.getName(), file_filter_regex_) && !file_filter_regex_.empty()) {
+  if (context->getProperty(FileFilterRegex, file_filter_regex_) && !file_filter_regex_.empty()) {
     try {
       compiled_file_filter_regex_ = utils::Regex(file_filter_regex_);
     } catch (const Exception &e) {
       logger_->log_error("Failed to compile File Filter Regex \"%s\"", file_filter_regex_.c_str());
     }
   }
-  if (context->getProperty(PathFilterRegex.getName(), path_filter_regex_) && !path_filter_regex_.empty()) {
+  if (context->getProperty(PathFilterRegex, path_filter_regex_) && !path_filter_regex_.empty()) {
     try {
       compiled_path_filter_regex_ = utils::Regex(path_filter_regex_);
     } catch (const Exception &e) {
       logger_->log_error("Failed to compile Path Filter Regex \"%s\"", path_filter_regex_.c_str());
     }
   }
-  if (!context->getProperty(IgnoreDottedFiles.getName(), value)) {
+  if (!context->getProperty(IgnoreDottedFiles, value)) {
     logger_->log_error("Ignore Dotted Files attribute is missing or invalid");
   } else {
     ignore_dotted_files_ = utils::StringUtils::toBool(value).value_or(true);
   }
-  context->getProperty(TargetSystemTimestampPrecision.getName(), target_system_timestamp_precision_);
-  context->getProperty(EntityTrackingInitialListingTarget.getName(), entity_tracking_initial_listing_target_);
+  context->getProperty(TargetSystemTimestampPrecision, target_system_timestamp_precision_);
+  context->getProperty(EntityTrackingInitialListingTarget, entity_tracking_initial_listing_target_);
 
   if (auto minimum_file_age = context->getProperty<core::TimePeriodValue>(MinimumFileAge)) {
     minimum_file_age_ = minimum_file_age->getMilliseconds();
@@ -138,10 +133,10 @@ void ListSFTP::onSchedule(const std::shared_ptr<core::ProcessContext> &context, 
     logger_->log_error("Maximum File Age attribute is missing or invalid");
   }
 
-  if (!context->getProperty(MinimumFileSize.getName(), minimum_file_size_)) {
+  if (!context->getProperty(MinimumFileSize, minimum_file_size_)) {
     logger_->log_error("Minimum File Size attribute is invalid");
   }
-  if (context->getProperty(MaximumFileSize.getName(), value)) {
+  if (context->getProperty(MaximumFileSize, value)) {
     if (!core::DataSizeValue::StringToInt(value, maximum_file_size_)) {
       logger_->log_error("Maximum File Size attribute is invalid");
     }
@@ -506,7 +501,7 @@ void ListSFTP::listByTrackingTimestamps(
        */
       remote_system_timestamp_precision = TARGET_SYSTEM_TIMESTAMP_PRECISION_SECONDS;
     }
-    std::chrono::milliseconds listing_lag{LISTING_LAG_MAP.at(remote_system_timestamp_precision)};
+    std::chrono::milliseconds listing_lag{utils::at(LISTING_LAG_MAP, remote_system_timestamp_precision)};
     logger_->log_debug("The listing lag is %lu ms", listing_lag.count());
 
     /* If the latest listing time is equal to the last listing time, there are no entries with a newer timestamp than previously seen */
@@ -817,7 +812,7 @@ void ListSFTP::onTrigger(const std::shared_ptr<core::ProcessContext> &context, c
   }
 
   std::string remote_path_str;
-  context->getProperty(RemotePath.getName(), remote_path_str);
+  context->getProperty(RemotePath, remote_path_str);
   /* Remove trailing slashes */
   while (remote_path_str.size() > 1 && remote_path_str.ends_with('/')) {
     remote_path_str.pop_back();
@@ -826,7 +821,7 @@ void ListSFTP::onTrigger(const std::shared_ptr<core::ProcessContext> &context, c
 
   std::string value;
   std::chrono::milliseconds entity_tracking_time_window = 3h;  /* The default is 3 hours */
-  if (context->getProperty(EntityTrackingTimeWindow.getName(), value)) {
+  if (context->getProperty(EntityTrackingTimeWindow, value)) {
     if (auto parsed_entity_time_window = utils::timeutils::StringToDuration<std::chrono::milliseconds>(value)) {
       entity_tracking_time_window = parsed_entity_time_window.value();
     } else {
@@ -921,5 +916,7 @@ void ListSFTP::onTrigger(const std::shared_ptr<core::ProcessContext> &context, c
 
   put_connection_back_to_cache();
 }
+
+REGISTER_RESOURCE(ListSFTP, Processor);
 
 }  // namespace org::apache::nifi::minifi::processors

@@ -32,8 +32,8 @@
 namespace org::apache::nifi::minifi::processors {
 
 void MergeContent::initialize() {
-  setSupportedProperties(properties());
-  setSupportedRelationships(relationships());
+  setSupportedProperties(Properties);
+  setSupportedRelationships(Relationships);
 }
 
 std::string MergeContent::readContent(const std::string& path) {
@@ -52,15 +52,15 @@ std::string MergeContent::readContent(const std::string& path) {
 void MergeContent::onSchedule(core::ProcessContext *context, core::ProcessSessionFactory *sessionFactory) {
   BinFiles::onSchedule(context, sessionFactory);
 
-  context->getProperty(MergeStrategy.getName(), mergeStrategy_);
-  context->getProperty(MergeFormat.getName(), mergeFormat_);
-  context->getProperty(CorrelationAttributeName.getName(), correlationAttributeName_);
-  context->getProperty(DelimiterStrategy.getName(), delimiterStrategy_);
-  context->getProperty(Header.getName(), header_);
-  context->getProperty(Footer.getName(), footer_);
-  context->getProperty(Demarcator.getName(), demarcator_);
-  context->getProperty(KeepPath.getName(), keepPath_);
-  context->getProperty(AttributeStrategy.getName(), attributeStrategy_);
+  context->getProperty(MergeStrategy, mergeStrategy_);
+  context->getProperty(MergeFormat, mergeFormat_);
+  context->getProperty(CorrelationAttributeName, correlationAttributeName_);
+  context->getProperty(DelimiterStrategy, delimiterStrategy_);
+  context->getProperty(Header, header_);
+  context->getProperty(Footer, footer_);
+  context->getProperty(Demarcator, demarcator_);
+  context->getProperty(KeepPath, keepPath_);
+  context->getProperty(AttributeStrategy, attributeStrategy_);
 
   validatePropertyOptions();
 
@@ -362,5 +362,7 @@ void KeepAllUniqueAttributesMerger::processFlowFile(const std::shared_ptr<core::
     }
   }
 }
+
+REGISTER_RESOURCE(MergeContent, Processor);
 
 }  // namespace org::apache::nifi::minifi::processors

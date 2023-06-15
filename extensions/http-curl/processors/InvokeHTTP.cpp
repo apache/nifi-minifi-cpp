@@ -27,7 +27,6 @@
 
 #include "core/FlowFile.h"
 #include "core/ProcessContext.h"
-#include "core/PropertyBuilder.h"
 #include "core/Relationship.h"
 #include "core/Resource.h"
 #include "io/BufferStream.h"
@@ -43,123 +42,10 @@ namespace org::apache::nifi::minifi::processors {
 
 std::string InvokeHTTP::DefaultContentType = "application/octet-stream";
 
-const core::Property InvokeHTTP::Method("HTTP Method",
-    "HTTP request method (GET, POST, PUT, PATCH, DELETE, HEAD, OPTIONS). Arbitrary methods are also supported. Methods other than POST, PUT and PATCH will be sent without a message body.",
-    "GET");
-const core::Property InvokeHTTP::URL(
-    core::PropertyBuilder::createProperty("Remote URL")->withDescription("Remote URL which will be connected to, including scheme, host, port, path.")->isRequired(false)->supportsExpressionLanguage(
-        true)->build());
-
-const core::Property InvokeHTTP::ConnectTimeout(
-    core::PropertyBuilder::createProperty("Connection Timeout")->withDescription("Max wait time for connection to remote service")->isRequired(false)
-        ->withDefaultValue<core::TimePeriodValue>("5 s")->build());
-
-const core::Property InvokeHTTP::ReadTimeout(
-    core::PropertyBuilder::createProperty("Read Timeout")->withDescription("Max wait time for response from remote service")->isRequired(false)
-        ->withDefaultValue<core::TimePeriodValue>("15 s")->build());
-
-const core::Property InvokeHTTP::DateHeader(
-    core::PropertyBuilder::createProperty("Include Date Header")->withDescription("Include an RFC-2616 Date header in the request.")->isRequired(false)->withDefaultValue<bool>(true)->build());
-
-const core::Property InvokeHTTP::FollowRedirects(
-    core::PropertyBuilder::createProperty("Follow Redirects")
-        ->withDescription("Follow HTTP redirects issued by remote server.")
-        ->withDefaultValue<bool>(true)
-        ->build());
-const core::Property InvokeHTTP::AttributesToSend("Attributes to Send",
-    "Regular expression that defines which attributes to send as HTTP headers in the request. If not defined, no attributes are sent as headers.",
-    "");
-const core::Property InvokeHTTP::SSLContext(
-    core::PropertyBuilder::createProperty("SSL Context Service")->withDescription(
-        "The SSL Context Service used to provide client certificate "
-        "information for TLS/SSL (https) connections.")
-        ->isRequired(false)
-        ->withExclusiveProperty("Remote URL", "^http:.*$")
-        ->asType<minifi::controllers::SSLContextService>()->build());
-const core::Property InvokeHTTP::ProxyHost("Proxy Host", "The fully qualified hostname or IP address of the proxy server", "");
-const core::Property InvokeHTTP::ProxyPort(
-    core::PropertyBuilder::createProperty("Proxy Port")->withDescription("The port of the proxy server")
-        ->isRequired(false)->build());
-const core::Property InvokeHTTP::ProxyUsername(
-    core::PropertyBuilder::createProperty("invokehttp-proxy-username", "Proxy Username")->withDescription("Username to set when authenticating against proxy")->isRequired(false)->build());
-const core::Property InvokeHTTP::ProxyPassword(
-    core::PropertyBuilder::createProperty("invokehttp-proxy-password", "Proxy Password")->withDescription("Password to set when authenticating against proxy")->isRequired(false)->build());
-const core::Property InvokeHTTP::ContentType("Content-type",
-    "The Content-Type to specify for when content is being transmitted through a PUT, "
-    "POST or PATCH. In the case of an empty value after evaluating an expression language expression, "
-    "Content-Type defaults to",
-    "application/octet-stream");
-const core::Property InvokeHTTP::SendBody(
-    core::PropertyBuilder::createProperty("send-message-body", "Send Body")
-        ->withDescription("DEPRECATED. Only kept for backwards compatibility, no functionality is included.")
-        ->withDefaultValue<bool>(true)
-        ->build());
-const core::Property InvokeHTTP::SendMessageBody(
-    core::PropertyBuilder::createProperty("Send Message Body")
-        ->withDescription("If true, sends the HTTP message body on POST/PUT/PATCH requests (default). "
-                          "If false, suppresses the message body and content-type header for these requests.")
-        ->withDefaultValue<bool>(true)
-        ->build());
-const core::Property InvokeHTTP::UseChunkedEncoding("Use Chunked Encoding",
-    "When POST'ing, PUT'ing or PATCH'ing content set this property to true in order to not pass the 'Content-length' header"
-    " and instead send 'Transfer-Encoding' with a value of 'chunked'."
-    " This will enable the data transfer mechanism which was introduced in HTTP 1.1 to pass data of unknown lengths in chunks.",
-    "false");
-const core::Property InvokeHTTP::PutResponseBodyInAttribute("Put Response Body in Attribute",
-    "If set, the response body received back will be put into an attribute of the original "
-    "FlowFile instead of a separate FlowFile. "
-    "The attribute key to put to is determined by evaluating value of this property. ",
-    "");
-const core::Property InvokeHTTP::AlwaysOutputResponse("Always Output Response",
-    "Will force a response FlowFile to be generated and routed to the 'Response' relationship regardless of what the server status code received is ",
-    "false");
-const core::Property InvokeHTTP::PenalizeOnNoRetry("Penalize on \"No Retry\"",
-    "Enabling this property will penalize FlowFiles that are routed to the \"No Retry\" relationship.",
-    "false");
-
-const core::Property InvokeHTTP::DisablePeerVerification("Disable Peer Verification", "Disables peer verification for the SSL session", "false");
-
-const core::Property InvokeHTTP::InvalidHTTPHeaderFieldHandlingStrategy(
-    core::PropertyBuilder::createProperty("Invalid HTTP Header Field Handling Strategy")
-        ->withDescription("Indicates what should happen when an attribute's name is not a valid HTTP header field name. "
-                          "Options: transform - invalid characters are replaced, fail - flow file is transferred to failure, drop - drops invalid attributes from HTTP message")
-        ->isRequired(true)
-        ->withDefaultValue<std::string>(toString(InvalidHTTPHeaderFieldHandlingOption::TRANSFORM))
-        ->withAllowableValues<std::string>(InvalidHTTPHeaderFieldHandlingOption::values())
-        ->build());
-
-
-const core::Relationship InvokeHTTP::Success("success",
-    "The original FlowFile will be routed upon success (2xx status codes). It will have new attributes detailing the success of the request.");
-
-const core::Relationship InvokeHTTP::RelResponse("response",
-    "A Response FlowFile will be routed upon success (2xx status codes). "
-    "If the 'Always Output Response' property is true then the response will be sent "
-    "to this relationship regardless of the status code received.");
-
-const core::Relationship InvokeHTTP::RelRetry("retry",
-    "The original FlowFile will be routed on any status code that can be retried "
-    "(5xx status codes). It will have new attributes detailing the request.");
-
-const core::Relationship InvokeHTTP::RelNoRetry("no retry",
-    "The original FlowFile will be routed on any status code that should NOT "
-    "be retried (1xx, 3xx, 4xx status codes). It will have new attributes detailing the request.");
-
-const core::Relationship InvokeHTTP::RelFailure("failure",
-    "The original FlowFile will be routed on any type of connection failure, "
-    "timeout or general exception. It will have new attributes detailing the request.");
-
-
-const core::OutputAttribute InvokeHTTP::StatusCode{STATUS_CODE, { Success, RelResponse, RelRetry, RelNoRetry }, "The status code that is returned"};
-const core::OutputAttribute InvokeHTTP::StatusMessage{STATUS_MESSAGE, { Success, RelResponse, RelRetry, RelNoRetry }, "The status message that is returned"};
-const core::OutputAttribute InvokeHTTP::RequestUrl{REQUEST_URL, { Success, RelResponse, RelRetry, RelNoRetry }, "The original request URL"};
-const core::OutputAttribute InvokeHTTP::TxId{TRANSACTION_ID, { Success, RelResponse, RelRetry, RelNoRetry }, "The transaction ID that is returned after reading the response"};
-
-
 void InvokeHTTP::initialize() {
   logger_->log_trace("Initializing InvokeHTTP");
-  setSupportedProperties(properties());
-  setSupportedRelationships(relationships());
+  setSupportedProperties(Properties);
+  setSupportedRelationships(Relationships);
 }
 
 namespace {
@@ -173,13 +59,13 @@ void setupClientTimeouts(extensions::curl::HTTPClient& client, const core::Proce
 
 void setupClientProxy(extensions::curl::HTTPClient& client, const core::ProcessContext& context) {
   utils::HTTPProxy proxy = {};
-  context.getProperty(InvokeHTTP::ProxyHost.getName(), proxy.host);
+  context.getProperty(InvokeHTTP::ProxyHost, proxy.host);
   std::string port_str;
-  if (context.getProperty(InvokeHTTP::ProxyPort.getName(), port_str) && !port_str.empty()) {
+  if (context.getProperty(InvokeHTTP::ProxyPort, port_str) && !port_str.empty()) {
     core::Property::StringToInt(port_str, proxy.port);
   }
-  context.getProperty(InvokeHTTP::ProxyUsername.getName(), proxy.username);
-  context.getProperty(InvokeHTTP::ProxyPassword.getName(), proxy.password);
+  context.getProperty(InvokeHTTP::ProxyUsername, proxy.username);
+  context.getProperty(InvokeHTTP::ProxyPassword, proxy.password);
 
   client.setHTTPProxy(proxy);
 }
@@ -210,22 +96,22 @@ void setupClientTransferEncoding(extensions::curl::HTTPClient& client, bool use_
 }  // namespace
 
 void InvokeHTTP::setupMembersFromProperties(const core::ProcessContext& context) {
-  context.getProperty(SendMessageBody.getName(), send_message_body_);
+  context.getProperty(SendMessageBody, send_message_body_);
 
   attributes_to_send_ = context.getProperty(AttributesToSend)
                         | utils::filter([](const std::string& s) { return !s.empty(); })  // avoid compiling an empty string to regex
                         | utils::map([](const std::string& regex_str) { return utils::Regex{regex_str}; })
-                        | utils::orElse([this] { logger_->log_debug("%s is missing, so the default value will be used", AttributesToSend.getName()); });
+                        | utils::orElse([this] { logger_->log_debug("%s is missing, so the default value will be used", std::string{AttributesToSend.name}); });
 
 
   always_output_response_ = context.getProperty<bool>(AlwaysOutputResponse).value_or(false);
   penalize_no_retry_ = context.getProperty<bool>(PenalizeOnNoRetry).value_or(false);
 
-  invalid_http_header_field_handling_strategy_ = utils::parseEnumProperty<InvalidHTTPHeaderFieldHandlingOption>(context, InvalidHTTPHeaderFieldHandlingStrategy);
+  invalid_http_header_field_handling_strategy_ = utils::parseEnumProperty<invoke_http::InvalidHTTPHeaderFieldHandlingOption>(context, InvalidHTTPHeaderFieldHandlingStrategy);
 
   put_response_body_in_attribute_ = context.getProperty(PutResponseBodyInAttribute);
   if (put_response_body_in_attribute_ && put_response_body_in_attribute_->empty()) {
-    logger_->log_warn("%s is set to an empty string", PutResponseBodyInAttribute.getName());
+    logger_->log_warn("%s is set to an empty string", std::string{PutResponseBodyInAttribute.name});
     put_response_body_in_attribute_.reset();
   }
 
@@ -235,11 +121,11 @@ void InvokeHTTP::setupMembersFromProperties(const core::ProcessContext& context)
 
 std::unique_ptr<minifi::extensions::curl::HTTPClient> InvokeHTTP::createHTTPClientFromPropertiesAndMembers(const core::ProcessContext& context) const {
   std::string method;
-  if (!context.getProperty(Method.getName(), method))
+  if (!context.getProperty(Method, method))
     throw Exception(PROCESS_SCHEDULE_EXCEPTION, "Method property missing or invalid");
 
   std::string url;
-  if (!context.getProperty(URL.getName(), url))
+  if (!context.getProperty(URL, url))
     throw Exception(PROCESS_SCHEDULE_EXCEPTION, "URL property missing or invalid");
 
   std::shared_ptr<minifi::controllers::SSLContextService> ssl_context_service;
@@ -301,16 +187,16 @@ bool InvokeHTTP::appendHeaders(const core::FlowFile& flow_file, /*std::invocable
   ranges::viewable_range auto matching_attributes = original_attributes
       | ranges::views::filter([this](const auto& key) { return utils::regexMatch(key, *attributes_to_send_); }, key_fn);
   switch (invalid_http_header_field_handling_strategy_.value()) {
-    case InvalidHTTPHeaderFieldHandlingOption::FAIL:
+    case invoke_http::InvalidHTTPHeaderFieldHandlingOption::FAIL:
       if (ranges::any_of(matching_attributes, std::not_fn(&extensions::curl::HTTPClient::isValidHttpHeaderField), key_fn)) return false;
       for (const auto& header: matching_attributes) append_header(header.first, header.second);
       return true;
-    case InvalidHTTPHeaderFieldHandlingOption::DROP:
+    case invoke_http::InvalidHTTPHeaderFieldHandlingOption::DROP:
       for (const auto& header: matching_attributes | ranges::views::filter(&extensions::curl::HTTPClient::isValidHttpHeaderField, key_fn)) {
         append_header(header.first, header.second);
       }
       return true;
-    case InvalidHTTPHeaderFieldHandlingOption::TRANSFORM:
+    case invoke_http::InvalidHTTPHeaderFieldHandlingOption::TRANSFORM:
       for (const auto& header: matching_attributes) {
         append_header(extensions::curl::HTTPClient::replaceInvalidCharactersInHttpHeaderFieldName(header.first), header.second);
       }
@@ -400,11 +286,10 @@ void InvokeHTTP::onTriggerWithClient(const std::shared_ptr<core::ProcessContext>
 
     int64_t http_code = client.getResponseCode();
     const char* content_type = client.getContentType();
-    flow_file->addAttribute(STATUS_CODE, std::to_string(http_code));
-    if (!response_headers.empty())
-      flow_file->addAttribute(STATUS_MESSAGE, response_headers.at(0));
-    flow_file->addAttribute(REQUEST_URL, client.getURL());
-    flow_file->addAttribute(TRANSACTION_ID, transaction_id);
+    flow_file->addAttribute(std::string(STATUS_CODE), std::to_string(http_code));
+    if (!response_headers.empty()) { flow_file->addAttribute(std::string(STATUS_MESSAGE), response_headers.at(0)); }
+    flow_file->addAttribute(std::string(REQUEST_URL), client.getURL());
+    flow_file->addAttribute(std::string(TRANSACTION_ID), transaction_id);
 
     bool is_success = ((http_code / 100) == 2);
 
@@ -422,11 +307,10 @@ void InvokeHTTP::onTriggerWithClient(const std::shared_ptr<core::ProcessContext>
         // if content type isn't returned we should return application/octet-stream
         // as per RFC 2046 -- 4.5.1
         response_flow->addAttribute(core::SpecialFlowAttribute::MIME_TYPE, content_type ? std::string(content_type) : DefaultContentType);
-        response_flow->addAttribute(STATUS_CODE, std::to_string(http_code));
-        if (!response_headers.empty())
-          response_flow->addAttribute(STATUS_MESSAGE, response_headers.at(0));
-        response_flow->addAttribute(REQUEST_URL, client.getURL());
-        response_flow->addAttribute(TRANSACTION_ID, transaction_id);
+        response_flow->addAttribute(std::string(STATUS_CODE), std::to_string(http_code));
+        if (!response_headers.empty()) { response_flow->addAttribute(std::string(STATUS_MESSAGE), response_headers.at(0)); }
+        response_flow->addAttribute(std::string(REQUEST_URL), client.getURL());
+        response_flow->addAttribute(std::string(TRANSACTION_ID), transaction_id);
         io::BufferStream stream(gsl::make_span(response_body).as_span<const std::byte>());
         // need an import from the data stream.
         session->importFrom(stream, response_flow);

@@ -24,8 +24,11 @@
 #include <vector>
 
 #include "FlowFileRecord.h"
+#include "RelationshipDefinition.h"
 #include "core/Processor.h"
+#include "RelationshipDefinition.h"
 #include "core/ProcessSession.h"
+#include "core/PropertyDefinitionBuilder.h"
 #include "core/Core.h"
 #include "core/Property.h"
 #include "core/logging/LoggerConfiguration.h"
@@ -43,23 +46,32 @@ class PublishMQTT : public processors::AbstractMQTTProcessor {
 
   EXTENSIONAPI static constexpr const char* Description = "PublishMQTT serializes FlowFile content as an MQTT payload, sending the message to the configured topic and broker.";
 
-  EXTENSIONAPI static const core::Property Topic;
-  EXTENSIONAPI static const core::Property Retain;
-  EXTENSIONAPI static const core::Property MessageExpiryInterval;
-  EXTENSIONAPI static const core::Property ContentType;
-
-  static auto properties() {
-    return utils::array_cat(AbstractMQTTProcessor::basicProperties(), std::array{
+  EXTENSIONAPI static constexpr auto Topic = core::PropertyDefinitionBuilder<>::createProperty("Topic")
+      .withDescription("The topic to publish to.")
+      .isRequired(true)
+      .supportsExpressionLanguage(true)
+      .build();
+  EXTENSIONAPI static constexpr auto Retain = core::PropertyDefinitionBuilder<>::createProperty("Retain")
+      .withDescription("Retain published message in broker")
+      .withDefaultValue("false")
+      .build();
+  EXTENSIONAPI static constexpr auto MessageExpiryInterval = core::PropertyDefinitionBuilder<>::createProperty("Message Expiry Interval")
+      .withDescription("Time while message is valid and will be forwarded by broker. MQTT 5.x only.")
+      .build();
+  EXTENSIONAPI static constexpr auto ContentType = core::PropertyDefinitionBuilder<>::createProperty("Content Type")
+      .withDescription("Content type of the message. MQTT 5.x only.")
+      .supportsExpressionLanguage(true)
+      .build();
+  EXTENSIONAPI static constexpr auto Properties = utils::array_cat(AbstractMQTTProcessor::BasicProperties, std::array<core::PropertyReference, 4>{
       Topic,
       Retain,
       MessageExpiryInterval,
       ContentType
-    }, AbstractMQTTProcessor::advancedProperties());
-  }
+  }, AbstractMQTTProcessor::AdvancedProperties);
 
-  EXTENSIONAPI static const core::Relationship Success;
-  EXTENSIONAPI static const core::Relationship Failure;
-  static auto relationships() { return std::array{Success, Failure}; }
+  EXTENSIONAPI static constexpr auto Success = core::RelationshipDefinition{"success", "FlowFiles that are sent successfully to the destination are transferred to this relationship"};
+  EXTENSIONAPI static constexpr auto Failure = core::RelationshipDefinition{"failure", "FlowFiles that failed to be sent to the destination are transferred to this relationship"};
+  EXTENSIONAPI static constexpr auto Relationships = std::array{Success, Failure};
 
   EXTENSIONAPI static constexpr bool SupportsDynamicProperties = false;
   EXTENSIONAPI static constexpr bool SupportsDynamicRelationships = false;

@@ -71,7 +71,7 @@ TEST_CASE_METHOD(DeleteS3ObjectTestsFixture, "Test required property not set", "
 
   SECTION("Test no object key is set") {
     setRequiredProperties();
-    plan->setProperty(update_attribute, "filename", "", true);
+    plan->setDynamicProperty(update_attribute, "filename", "");
   }
 
   SECTION("Test region is empty") {
@@ -100,7 +100,7 @@ TEST_CASE_METHOD(DeleteS3ObjectTestsFixture, "Test success case with default val
 
 TEST_CASE_METHOD(DeleteS3ObjectTestsFixture, "Test version setting", "[awsS3DeleteWithVersion]") {
   setRequiredProperties();
-  plan->setProperty(update_attribute, "s3.version", "v1", true);
+  plan->setDynamicProperty(update_attribute, "s3.version", "v1");
   plan->setProperty(s3_processor, "Version", "${s3.version}");
   test_controller.runSession(plan, true);
   REQUIRE(mock_s3_request_sender_ptr->delete_object_request.GetVersionId() == "v1");
@@ -112,7 +112,7 @@ TEST_CASE_METHOD(DeleteS3ObjectTestsFixture, "Test optional client configuration
   setRequiredProperties();
   plan->setProperty(s3_processor, "Region", minifi::aws::processors::region::US_EAST_1);
   plan->setProperty(s3_processor, "Communications Timeout", "10 Sec");
-  plan->setProperty(update_attribute, "test.endpoint", "http://localhost:1234", true);
+  plan->setDynamicProperty(update_attribute, "test.endpoint", "http://localhost:1234");
   plan->setProperty(s3_processor, "Endpoint Override URL", "${test.endpoint}");
   test_controller.runSession(plan, true);
   REQUIRE(mock_s3_request_sender_ptr->getClientConfig().region == minifi::aws::processors::region::US_EAST_1);

@@ -17,21 +17,19 @@
  */
 #pragma once
 
+#include <algorithm>
 #include <memory>
 #include <string>
 #include <utility>
 #include <vector>
 
-#include "PropertyValue.h"
+#include "core/PropertyDefinition.h"
+#include "core/PropertyValue.h"
+#include "range/v3/view/transform.hpp"
+#include "range/v3/range/conversion.hpp"
 #include "utils/gsl.h"
 
-namespace org {
-namespace apache {
-namespace nifi {
-namespace minifi {
-namespace core {
-
-class PropertyBuilder;
+namespace org::apache::nifi::minifi::core {
 
 class Property {
  public:
@@ -41,12 +39,11 @@ class Property {
    * as they will get coerced to the bool true and false, causing
    * further overwrites to inherit the bool validator.
    */
-  Property(std::string name, std::string description, const std::string& value, bool is_required, std::string valid_regex, std::vector<std::string> dependent_properties,
+  Property(std::string name, std::string description, const std::string& value, bool is_required, std::vector<std::string> dependent_properties,
            std::vector<std::pair<std::string, std::string>> exclusive_of_properties)
       : name_(std::move(name)),
         description_(std::move(description)),
         is_required_(is_required),
-        valid_regex_(std::move(valid_regex)),
         dependent_properties_(std::move(dependent_properties)),
         exclusive_of_properties_(std::move(exclusive_of_properties)),
         is_collection_(false),
@@ -72,6 +69,8 @@ class Property {
         is_collection_(true),
         supports_el_(false),
         is_transient_(false) {}
+
+  explicit Property(const PropertyReference& compile_time_property);
 
   Property(Property &&other) = default;
 
@@ -100,7 +99,6 @@ class Property {
   const PropertyValue &getValue() const;
   bool getRequired() const;
   bool supportsExpressionLanguage() const;
-  std::string getValidRegex() const;
   std::vector<std::string> getDependentProperties() const;
   std::vector<std::pair<std::string, std::string>> getExclusiveOfProperties() const;
   std::vector<std::string> getValues();
@@ -121,7 +119,7 @@ class Property {
     vn.setValidator(*validator_);
     vn = value;
     ValidationResult result = vn.validate(name_);
-    if (!result.valid()) {
+    if (!result.valid) {
       throw utils::internal::InvalidValueException(name_ + " value validation failed");
     }
   }
@@ -136,7 +134,7 @@ class Property {
     PropertyValue& vn = values_.back();
     vn.setValidator(*validator_);
     ValidationResult result = vn.validate(name_);
-    if (!result.valid()) {
+    if (!result.valid) {
       throw utils::internal::InvalidValueException(name_ + " value validation failed");
     }
   }
@@ -237,10 +235,10 @@ class Property {
       bool val;
       std::istringstream(value) >> std::boolalpha >> val;
       ret = val;
-      validator_ = StandardValidators::getValidator(ret.getValue());
+      validator_ = StandardPropertyTypes::getValidator(ret.getValue());
     } else {
       ret = value;
-      validator_ = gsl::make_not_null(&StandardValidators::VALID_VALIDATOR);
+      validator_ = gsl::make_not_null(&StandardPropertyTypes::VALID_TYPE);
     }
     return ret;
   }
@@ -248,13 +246,12 @@ class Property {
   std::string name_;
   std::string description_;
   bool is_required_;
-  std::string valid_regex_;
   std::vector<std::string> dependent_properties_;
   std::vector<std::pair<std::string, std::string>> exclusive_of_properties_;
   bool is_collection_;
+  gsl::not_null<const PropertyValidator*> validator_{&StandardPropertyTypes::VALID_TYPE};
   PropertyValue default_value_;
   std::vector<PropertyValue> values_;
-  gsl::not_null<const PropertyValidator*> validator_{&StandardValidators::VALID_VALIDATOR};
   std::string display_name_;
   std::vector<PropertyValue> allowed_values_;
   // types represents the allowable types for this property
@@ -262,13 +259,6 @@ class Property {
   std::vector<std::string> types_;
   bool supports_el_;
   bool is_transient_;
-
- private:
-  friend class PropertyBuilder;
 };
 
-}  // namespace core
-}  // namespace minifi
-}  // namespace nifi
-}  // namespace apache
-}  // namespace org
+}  // namespace org::apache::nifi::minifi::core

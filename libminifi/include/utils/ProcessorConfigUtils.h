@@ -24,26 +24,22 @@
 
 #include "core/ProcessContext.h"
 
-namespace org {
-namespace apache {
-namespace nifi {
-namespace minifi {
-namespace utils {
+namespace org::apache::nifi::minifi::utils {
 
 template<typename PropertyType = std::string>
-PropertyType getRequiredPropertyOrThrow(const core::ProcessContext& context, const std::string& property_name) {
+PropertyType getRequiredPropertyOrThrow(const core::ProcessContext& context, std::string_view property_name) {
   PropertyType value;
   if (!context.getProperty(property_name, value)) {
-    throw std::runtime_error(property_name + " property missing or invalid");
+    throw std::runtime_error(std::string(property_name) + " property missing or invalid");
   }
   return value;
 }
 
-std::vector<std::string> listFromCommaSeparatedProperty(const core::ProcessContext& context, const std::string& property_name);
-std::vector<std::string> listFromRequiredCommaSeparatedProperty(const core::ProcessContext& context, const std::string& property_name);
-bool parseBooleanPropertyOrThrow(const core::ProcessContext& context, const std::string& property_name);
-std::chrono::milliseconds parseTimePropertyMSOrThrow(const core::ProcessContext& context, const std::string& property_name);
-std::string parsePropertyWithAllowableValuesOrThrow(const core::ProcessContext& context, const std::string& property_name, const std::set<std::string>& allowable_values);
+std::vector<std::string> listFromCommaSeparatedProperty(const core::ProcessContext& context, std::string_view property_name);
+std::vector<std::string> listFromRequiredCommaSeparatedProperty(const core::ProcessContext& context, std::string_view property_name);
+bool parseBooleanPropertyOrThrow(const core::ProcessContext& context, std::string_view property_name);
+std::chrono::milliseconds parseTimePropertyMSOrThrow(const core::ProcessContext& context, std::string_view property_name);
+std::string parsePropertyWithAllowableValuesOrThrow(const core::ProcessContext& context, std::string_view property_name, std::span<const std::string_view> allowable_values);
 
 template<typename T>
 T parseEnumProperty(const core::ProcessContext& context, const core::Property& prop) {
@@ -58,8 +54,17 @@ T parseEnumProperty(const core::ProcessContext& context, const core::Property& p
   return result;
 }
 
-}  // namespace utils
-}  // namespace minifi
-}  // namespace nifi
-}  // namespace apache
-}  // namespace org
+template<typename T>
+T parseEnumProperty(const core::ProcessContext& context, const core::PropertyReference& prop) {
+  std::string value;
+  if (!context.getProperty(prop.name, value)) {
+    throw Exception(PROCESS_SCHEDULE_EXCEPTION, "Property '" + std::string(prop.name) + "' is missing");
+  }
+  T result = T::parse(value.c_str(), T{});
+  if (!result) {
+    throw Exception(PROCESS_SCHEDULE_EXCEPTION, "Property '" + std::string(prop.name) + "' has invalid value: '" + value + "'");
+  }
+  return result;
+}
+
+}  // namespace org::apache::nifi::minifi::utils

@@ -26,6 +26,8 @@
 #include <utility>
 
 #include "core/Property.h"
+#include "core/PropertyDefinition.h"
+#include "core/PropertyType.h"
 #include "core/logging/Logger.h"
 #include "storage/AzureBlobStorage.h"
 #include "AzureStorageProcessorBase.h"
@@ -36,15 +38,39 @@ namespace org::apache::nifi::minifi::azure::processors {
 
 class AzureBlobStorageProcessorBase : public AzureStorageProcessorBase {
  public:
-  EXTENSIONAPI static const core::Property ContainerName;
-  EXTENSIONAPI static const core::Property StorageAccountName;
-  EXTENSIONAPI static const core::Property StorageAccountKey;
-  EXTENSIONAPI static const core::Property SASToken;
-  EXTENSIONAPI static const core::Property CommonStorageAccountEndpointSuffix;
-  EXTENSIONAPI static const core::Property ConnectionString;
-  EXTENSIONAPI static const core::Property UseManagedIdentityCredentials;
-  static auto properties() {
-    return utils::array_cat(AzureStorageProcessorBase::properties(), std::array{
+  EXTENSIONAPI static constexpr auto ContainerName = core::PropertyDefinitionBuilder<>::createProperty("Container Name")
+      .withDescription("Name of the Azure Storage container. In case of PutAzureBlobStorage processor, container can be created if it does not exist.")
+      .supportsExpressionLanguage(true)
+      .isRequired(true)
+      .build();
+  EXTENSIONAPI static constexpr auto StorageAccountName = core::PropertyDefinitionBuilder<>::createProperty("Storage Account Name")
+      .withDescription("The storage account name.")
+      .supportsExpressionLanguage(true)
+      .build();
+  EXTENSIONAPI static constexpr auto StorageAccountKey = core::PropertyDefinitionBuilder<>::createProperty("Storage Account Key")
+      .withDescription("The storage account key. This is an admin-like password providing access to every container in this account. "
+          "It is recommended one uses Shared Access Signature (SAS) token instead for fine-grained control with policies.")
+      .supportsExpressionLanguage(true)
+      .build();
+  EXTENSIONAPI static constexpr auto SASToken = core::PropertyDefinitionBuilder<>::createProperty("SAS Token")
+      .withDescription("Shared Access Signature token. Specify either SAS Token (recommended) or Storage Account Key together with Storage Account Name if Managed Identity is not used.")
+      .supportsExpressionLanguage(true).build();
+  EXTENSIONAPI static constexpr auto CommonStorageAccountEndpointSuffix = core::PropertyDefinitionBuilder<>::createProperty("Common Storage Account Endpoint Suffix")
+      .withDescription("Storage accounts in public Azure always use a common FQDN suffix. Override this endpoint suffix with a "
+          "different suffix in certain circumstances (like Azure Stack or non-public Azure regions). ")
+      .supportsExpressionLanguage(true)
+      .build();
+  EXTENSIONAPI static constexpr auto ConnectionString = core::PropertyDefinitionBuilder<>::createProperty("Connection String")
+      .withDescription("Connection string used to connect to Azure Storage service. This overrides all other set credential properties if Managed Identity is not used.")
+      .supportsExpressionLanguage(true)
+      .build();
+  EXTENSIONAPI static constexpr auto UseManagedIdentityCredentials = core::PropertyDefinitionBuilder<>::createProperty("Use Managed Identity Credentials")
+      .withDescription("If true Managed Identity credentials will be used together with the Storage Account Name for authentication.")
+      .isRequired(true)
+      .withPropertyType(core::StandardPropertyTypes::BOOLEAN_TYPE)
+      .withDefaultValue("false")
+      .build();
+  EXTENSIONAPI static constexpr auto Properties = utils::array_cat(AzureStorageProcessorBase::Properties, std::array<core::PropertyReference, 7>{
       ContainerName,
       StorageAccountName,
       StorageAccountKey,
@@ -52,8 +78,8 @@ class AzureBlobStorageProcessorBase : public AzureStorageProcessorBase {
       CommonStorageAccountEndpointSuffix,
       ConnectionString,
       UseManagedIdentityCredentials
-    });
-  }
+  });
+
 
   void onSchedule(const std::shared_ptr<core::ProcessContext> &context, const std::shared_ptr<core::ProcessSessionFactory> &sessionFactory) override;
 

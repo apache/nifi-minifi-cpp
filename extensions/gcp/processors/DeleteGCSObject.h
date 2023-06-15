@@ -21,8 +21,12 @@
 #include <string>
 #include <utility>
 
+#include "../GCPAttributes.h"
 #include "GCSProcessor.h"
 #include "core/logging/LoggerConfiguration.h"
+#include "core/OutputAttributeDefinition.h"
+#include "core/PropertyDefinition.h"
+#include "core/PropertyDefinitionBuilder.h"
 #include "utils/ArrayUtils.h"
 
 namespace org::apache::nifi::minifi::extensions::gcp {
@@ -36,27 +40,41 @@ class DeleteGCSObject : public GCSProcessor {
 
   EXTENSIONAPI static constexpr const char* Description = "Deletes an object from a Google Cloud Bucket.";
 
-  EXTENSIONAPI static const core::Property Bucket;
-  EXTENSIONAPI static const core::Property Key;
-  EXTENSIONAPI static const core::Property EncryptionKey;
-  EXTENSIONAPI static const core::Property ObjectGeneration;
-  static auto properties() {
-    return utils::array_cat(GCSProcessor::properties(), std::array{
+  EXTENSIONAPI static constexpr auto Bucket = core::PropertyDefinitionBuilder<>::createProperty("Bucket")
+        .withDescription("Bucket of the object.")
+        .withDefaultValue("${gcs.bucket}")
+        .supportsExpressionLanguage(true)
+        .build();
+  EXTENSIONAPI static constexpr auto Key = core::PropertyDefinitionBuilder<>::createProperty("Key")
+        .withDescription("Name of the object.")
+        .withDefaultValue("${filename}")
+        .supportsExpressionLanguage(true)
+        .build();
+  EXTENSIONAPI static constexpr auto EncryptionKey = core::PropertyDefinitionBuilder<>::createProperty("Server Side Encryption Key")
+        .withDescription("The AES256 Encryption Key (encoded in base64) for server-side decryption of the object.")
+        .isRequired(false)
+        .supportsExpressionLanguage(true)
+        .build();
+  EXTENSIONAPI static constexpr auto ObjectGeneration = core::PropertyDefinitionBuilder<>::createProperty("Object Generation")
+        .withDescription("The generation of the Object to download. If left empty, then it will download the latest generation.")
+        .supportsExpressionLanguage(true)
+        .build();
+  EXTENSIONAPI static constexpr auto Properties = utils::array_cat(GCSProcessor::Properties, std::array<core::PropertyReference, 4>{
       Bucket,
       Key,
       EncryptionKey,
       ObjectGeneration
-    });
-  }
+  });
 
-  EXTENSIONAPI static const core::Relationship Success;
-  EXTENSIONAPI static const core::Relationship Failure;
-  static auto relationships() { return std::array{Success, Failure}; }
 
-  EXTENSIONAPI static const core::OutputAttribute Message;
-  EXTENSIONAPI static const core::OutputAttribute Reason;
-  EXTENSIONAPI static const core::OutputAttribute Domain;
-  static auto outputAttributes() { return std::array{Message, Reason, Domain}; }
+  EXTENSIONAPI static constexpr auto Success = core::RelationshipDefinition{"success", "FlowFiles are routed to this relationship after a successful Google Cloud Storage operation."};
+  EXTENSIONAPI static constexpr auto Failure = core::RelationshipDefinition{"failure", "FlowFiles are routed to this relationship if the Google Cloud Storage operation fails."};
+  EXTENSIONAPI static constexpr auto Relationships = std::array{Success, Failure};
+
+  EXTENSIONAPI static constexpr auto Message = core::OutputAttributeDefinition<>{GCS_STATUS_MESSAGE, { Failure }, "The status message received from google cloud."};
+  EXTENSIONAPI static constexpr auto Reason = core::OutputAttributeDefinition<>{GCS_ERROR_REASON, { Failure }, "The description of the error occurred during operation."};
+  EXTENSIONAPI static constexpr auto Domain = core::OutputAttributeDefinition<>{GCS_ERROR_DOMAIN, { Failure }, "The domain of the error occurred during operation."};
+  EXTENSIONAPI static constexpr auto OutputAttributes = std::array<core::OutputAttributeReference, 3>{Message, Reason, Domain};
 
   EXTENSIONAPI static constexpr bool SupportsDynamicProperties = false;
   EXTENSIONAPI static constexpr bool SupportsDynamicRelationships = false;

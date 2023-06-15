@@ -102,7 +102,7 @@ class SecureSocketTest : public IntegrationBase {
     configuration->set(org::apache::nifi::minifi::Configuration::nifi_security_client_ca_certificate, path);
     configuration->set(org::apache::nifi::minifi::Configuration::nifi_c2_enable, "false");
     std::string endpoint;
-    inv->getProperty(minifi::processors::GetTCP::EndpointList.getName(), endpoint);
+    inv->getProperty(minifi::processors::GetTCP::EndpointList, endpoint);
     auto endpoints = utils::StringUtils::split(endpoint, ",");
     assert(1 == endpoints.size());
     auto hostAndPort = utils::StringUtils::split(endpoint, ":");

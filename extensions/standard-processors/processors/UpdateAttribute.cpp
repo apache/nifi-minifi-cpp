@@ -23,21 +23,14 @@
 #include <memory>
 #include <string>
 
-#include "core/PropertyBuilder.h"
+#include "core/PropertyDefinitionBuilder.h"
 #include "core/Resource.h"
 
-namespace org {
-namespace apache {
-namespace nifi {
-namespace minifi {
-namespace processors {
-
-const core::Relationship UpdateAttribute::Success("success", "All files are routed to success");
-const core::Relationship UpdateAttribute::Failure("failure", "Failed files are transferred to failure");
+namespace org::apache::nifi::minifi::processors {
 
 void UpdateAttribute::initialize() {
-  setSupportedProperties(properties());
-  setSupportedRelationships(relationships());
+  setSupportedProperties(Properties);
+  setSupportedRelationships(Relationships);
 }
 
 void UpdateAttribute::onSchedule(core::ProcessContext *context, core::ProcessSessionFactory* /*sessionFactory*/) {
@@ -46,7 +39,7 @@ void UpdateAttribute::onSchedule(core::ProcessContext *context, core::ProcessSes
   logger_->log_info("UpdateAttribute registering %d keys", dynamic_prop_keys.size());
 
   for (const auto &key : dynamic_prop_keys) {
-    attributes_.emplace_back(core::PropertyBuilder::createProperty(key)->withDescription("auto generated")->supportsExpressionLanguage(true)->build());
+    attributes_.emplace_back(core::PropertyDefinitionBuilder<>::createProperty(key).withDescription("auto generated").supportsExpressionLanguage(true).build());
     logger_->log_info("UpdateAttribute registered attribute '%s'", key);
   }
 }
@@ -76,8 +69,4 @@ void UpdateAttribute::onTrigger(core::ProcessContext *context, core::ProcessSess
 
 REGISTER_RESOURCE(UpdateAttribute, Processor);
 
-} /* namespace processors */
-} /* namespace minifi */
-} /* namespace nifi */
-} /* namespace apache */
-} /* namespace org */
+}  // namespace org::apache::nifi::minifi::processors

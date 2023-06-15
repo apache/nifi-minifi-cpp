@@ -18,46 +18,20 @@
 
 #include "ExecuteJavaControllerService.h"
 
-#include <regex>
 #include <memory>
-#include <algorithm>
-#include <cctype>
-#include <cstdint>
-#include <cstring>
-#include <iostream>
 #include <iterator>
-#include <map>
 #include <string>
-#include <utility>
-#include <vector>
 
-#include "core/FlowFile.h"
-#include "core/logging/Logger.h"
-#include "core/ProcessContext.h"
-#include "core/PropertyBuilder.h"
-#include "core/Relationship.h"
 #include "core/Resource.h"
-#include "ResourceClaim.h"
-#include "utils/StringUtils.h"
-#include "utils/ByteArrayCallback.h"
-#include "jvm/JniMethod.h"
 
-namespace org {
-namespace apache {
-namespace nifi {
-namespace minifi {
-namespace jni {
-namespace controllers {
-
-const core::Property ExecuteJavaControllerService::NiFiControllerService(
-    core::PropertyBuilder::createProperty("NiFi Controller Service")->withDescription("Name of NiFi Controller Service to load and run")->isRequired(true)->withDefaultValue<std::string>("")->build());
+namespace org::apache::nifi::minifi::jni::controllers {
 
 void ExecuteJavaControllerService::initialize() {
   logger_->log_info("Initializing ExecuteJavaControllerService");
 
   std::string existingValue;
-  getProperty(NiFiControllerService.getName(), existingValue);
-  setSupportedProperties(std::array{NiFiControllerService});
+  getProperty(NiFiControllerService, existingValue);
+  setSupportedProperties(Properties);
   setAcceptAllProperties();
 
   if (!existingValue.empty()) {
@@ -75,7 +49,7 @@ void ExecuteJavaControllerService::onEnable() {
   if (serv_cs == nullptr)
     throw std::runtime_error("Could not load controller service");
 
-  if (!getProperty(NiFiControllerService.getName(), class_name_)) {
+  if (!getProperty(NiFiControllerService, class_name_)) {
     throw std::runtime_error("NiFi Controller Service must be defined");
   }
 
@@ -104,10 +78,4 @@ void ExecuteJavaControllerService::onEnable() {
 
 REGISTER_RESOURCE(ExecuteJavaControllerService, ControllerService);
 
-} /* namespace controllers */
-} /* namespace jni */
-} /* namespace minifi */
-} /* namespace nifi */
-} /* namespace apache */
-} /* namespace org */
-
+}  // namespace org::apache::nifi::minifi::jni::controllers

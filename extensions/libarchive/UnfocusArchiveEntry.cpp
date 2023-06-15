@@ -36,11 +36,9 @@
 
 namespace org::apache::nifi::minifi::processors {
 
-const core::Relationship UnfocusArchiveEntry::Success("success", "success operational on the flow record");
-
 void UnfocusArchiveEntry::initialize() {
-  setSupportedProperties(properties());
-  setSupportedRelationships(relationships());
+  setSupportedProperties(Properties);
+  setSupportedRelationships(Relationships);
 }
 
 void UnfocusArchiveEntry::onTrigger(core::ProcessContext *context, core::ProcessSession *session) {

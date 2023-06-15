@@ -1,5 +1,4 @@
 /**
- *
  * Licensed to the Apache Software Foundation (ASF) under one or more
  * contributor license agreements.  See the NOTICE file distributed with
  * this work for additional information regarding copyright ownership.
@@ -34,7 +33,6 @@
 #include "core/FlowFile.h"
 #include "core/logging/Logger.h"
 #include "core/ProcessContext.h"
-#include "core/PropertyBuilder.h"
 #include "core/Relationship.h"
 #include "core/Resource.h"
 #include "ResourceClaim.h"
@@ -45,26 +43,18 @@
 
 namespace org::apache::nifi::minifi::jni::processors {
 
-core::Property ExecuteJavaProcessor::JVMControllerService(core::PropertyBuilder::createProperty("JVM Controller Service")
-    ->withDescription("Name of controller service defined within this flow")
-    ->isRequired(false)->withDefaultValue<std::string>("")->build());
-
-core::Property ExecuteJavaProcessor::NiFiProcessor(core::PropertyBuilder::createProperty("NiFi Processor")
-    ->withDescription("Name of NiFi processor to load and run")
-    ->isRequired(true)->withDefaultValue<std::string>("")->build());
-
-core::Relationship ExecuteJavaProcessor::Success("success", "All files are routed to success");
-
 void ExecuteJavaProcessor::initialize() {
   logger_->log_info("Initializing ExecuteJavaClass");
-  setSupportedProperties(properties());
+  setSupportedProperties(Properties);
   setAcceptAllProperties();
-  setSupportedRelationships(relationships());
+  setSupportedRelationships(Relationships);
 }
 
 void ExecuteJavaProcessor::onSchedule(const std::shared_ptr<core::ProcessContext>& context, const std::shared_ptr<core::ProcessSessionFactory>& /*sessionFactory*/) {
+  gsl_Expects(context);
+
   std::string controller_service_name;
-  if (getProperty(JVMControllerService.getName(), controller_service_name)) {
+  if (context->getProperty(JVMControllerService, controller_service_name)) {
     auto cs = context->getControllerService(controller_service_name);
     if (cs == nullptr) {
       auto serv_cs = JVMLoader::getInstance()->getBaseServicer();
@@ -82,7 +72,7 @@ void ExecuteJavaProcessor::onSchedule(const std::shared_ptr<core::ProcessContext
       throw std::runtime_error("Could not load controller service");
   }
 
-  if (!getProperty(NiFiProcessor.getName(), class_name_)) {
+  if (!context->getProperty(NiFiProcessor, class_name_)) {
     throw std::runtime_error("NiFi Processor must be defined");
   }
 

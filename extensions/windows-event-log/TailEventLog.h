@@ -26,6 +26,9 @@
 #include "FlowFileRecord.h"
 #include "core/Processor.h"
 #include "core/ProcessSession.h"
+#include "core/PropertyDefinition.h"
+#include "core/PropertyDefinitionBuilder.h"
+#include "core/RelationshipDefinition.h"
 
 namespace org {
 namespace apache {
@@ -46,17 +49,21 @@ class TailEventLog : public core::Processor {
 
   EXTENSIONAPI static constexpr const char* Description = "Windows event log reader that functions as a stateful tail of the provided windows event log name";
 
-  EXTENSIONAPI static const core::Property LogSourceFileName;
-  EXTENSIONAPI static const core::Property MaxEventsPerFlowFile;
-  static auto properties() {
-    return std::array{
+  EXTENSIONAPI static constexpr auto LogSourceFileName = core::PropertyDefinitionBuilder<>::createProperty("Log Source")
+      .withDescription("Log Source from which to read events")
+      .build();
+  EXTENSIONAPI static constexpr auto MaxEventsPerFlowFile = core::PropertyDefinitionBuilder<>::createProperty("Max Events Per FlowFile")
+      .withDescription("Events per flow file")
+      .withDefaultValue("1")
+      .build();
+  EXTENSIONAPI static constexpr auto Properties = std::array<core::PropertyReference, 2>{
       LogSourceFileName,
       MaxEventsPerFlowFile
-    };
-  }
+  };
 
-  EXTENSIONAPI static const core::Relationship Success;
-  static auto relationships() { return std::array{Success}; }
+
+  EXTENSIONAPI static constexpr auto Success = core::RelationshipDefinition{"success", "All files, containing log events, are routed to success"};
+  EXTENSIONAPI static constexpr auto Relationships = std::array{Success};
 
   EXTENSIONAPI static constexpr bool SupportsDynamicProperties = false;
   EXTENSIONAPI static constexpr bool SupportsDynamicRelationships = false;

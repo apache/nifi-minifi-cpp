@@ -24,9 +24,9 @@ namespace {
 using FetchAzureBlobStorageTestsFixture = AzureBlobStorageTestsFixture<minifi::azure::processors::FetchAzureBlobStorage>;
 
 TEST_CASE_METHOD(FetchAzureBlobStorageTestsFixture, "Test credentials settings", "[azureStorageCredentials]") {
-  plan_->setProperty(update_attribute_processor_, "test.container", CONTAINER_NAME, true);
+  plan_->setDynamicProperty(update_attribute_processor_, "test.container", CONTAINER_NAME);
   plan_->setProperty(azure_blob_storage_processor_, "Container Name", "${test.container}");
-  plan_->setProperty(update_attribute_processor_, "test.blob", BLOB_NAME, true);
+  plan_->setDynamicProperty(update_attribute_processor_, "test.blob", BLOB_NAME);
   plan_->setProperty(azure_blob_storage_processor_, "Blob", "${test.blob}");
 
   SECTION("No credentials are set") {
@@ -60,9 +60,9 @@ TEST_CASE_METHOD(FetchAzureBlobStorageTestsFixture, "Test credentials settings",
   }
 
   SECTION("Account name and key set in properties") {
-    plan_->setProperty(update_attribute_processor_, "test.account_name", STORAGE_ACCOUNT_NAME, true);
+    plan_->setDynamicProperty(update_attribute_processor_, "test.account_name", STORAGE_ACCOUNT_NAME);
     plan_->setProperty(azure_blob_storage_processor_, "Storage Account Name", "${test.account_name}");
-    plan_->setProperty(update_attribute_processor_, "test.account_key", STORAGE_ACCOUNT_KEY, true);
+    plan_->setDynamicProperty(update_attribute_processor_, "test.account_key", STORAGE_ACCOUNT_KEY);
     plan_->setProperty(azure_blob_storage_processor_, "Storage Account Key", "${test.account_key}");
     test_controller_.runSession(plan_, true);
     auto passed_params = mock_blob_storage_ptr_->getPassedFetchParams();
@@ -70,9 +70,9 @@ TEST_CASE_METHOD(FetchAzureBlobStorageTestsFixture, "Test credentials settings",
   }
 
   SECTION("Account name and SAS token set in properties") {
-    plan_->setProperty(update_attribute_processor_, "test.account_name", STORAGE_ACCOUNT_NAME, true);
+    plan_->setDynamicProperty(update_attribute_processor_, "test.account_name", STORAGE_ACCOUNT_NAME);
     plan_->setProperty(azure_blob_storage_processor_, "Storage Account Name", "${test.account_name}");
-    plan_->setProperty(update_attribute_processor_, "test.sas_token", SAS_TOKEN, true);
+    plan_->setDynamicProperty(update_attribute_processor_, "test.sas_token", SAS_TOKEN);
     plan_->setProperty(azure_blob_storage_processor_, "SAS Token", "${test.sas_token}");
     test_controller_.runSession(plan_, true);
     auto passed_params = mock_blob_storage_ptr_->getPassedFetchParams();
@@ -80,9 +80,9 @@ TEST_CASE_METHOD(FetchAzureBlobStorageTestsFixture, "Test credentials settings",
   }
 
   SECTION("Account name and SAS token with question mark set in properties") {
-    plan_->setProperty(update_attribute_processor_, "test.account_name", STORAGE_ACCOUNT_NAME, true);
+    plan_->setDynamicProperty(update_attribute_processor_, "test.account_name", STORAGE_ACCOUNT_NAME);
     plan_->setProperty(azure_blob_storage_processor_, "Storage Account Name", "${test.account_name}");
-    plan_->setProperty(update_attribute_processor_, "test.sas_token", "?" + SAS_TOKEN, true);
+    plan_->setDynamicProperty(update_attribute_processor_, "test.sas_token", "?" + SAS_TOKEN);
     plan_->setProperty(azure_blob_storage_processor_, "SAS Token", "${test.sas_token}");
     test_controller_.runSession(plan_, true);
     auto passed_params = mock_blob_storage_ptr_->getPassedFetchParams();
@@ -90,11 +90,11 @@ TEST_CASE_METHOD(FetchAzureBlobStorageTestsFixture, "Test credentials settings",
   }
 
   SECTION("Endpoint suffix overriden") {
-    plan_->setProperty(update_attribute_processor_, "test.account_name", STORAGE_ACCOUNT_NAME, true);
+    plan_->setDynamicProperty(update_attribute_processor_, "test.account_name", STORAGE_ACCOUNT_NAME);
     plan_->setProperty(azure_blob_storage_processor_, "Storage Account Name", "${test.account_name}");
-    plan_->setProperty(update_attribute_processor_, "test.account_key", STORAGE_ACCOUNT_KEY, true);
+    plan_->setDynamicProperty(update_attribute_processor_, "test.account_key", STORAGE_ACCOUNT_KEY);
     plan_->setProperty(azure_blob_storage_processor_, "Storage Account Key", "${test.account_key}");
-    plan_->setProperty(update_attribute_processor_, "test.endpoint_suffix", ENDPOINT_SUFFIX, true);
+    plan_->setDynamicProperty(update_attribute_processor_, "test.endpoint_suffix", ENDPOINT_SUFFIX);
     plan_->setProperty(azure_blob_storage_processor_, "Common Storage Account Endpoint Suffix", "${test.endpoint_suffix}");
     test_controller_.runSession(plan_, true);
     auto passed_params = mock_blob_storage_ptr_->getPassedFetchParams();
@@ -102,7 +102,7 @@ TEST_CASE_METHOD(FetchAzureBlobStorageTestsFixture, "Test credentials settings",
   }
 
   SECTION("Use connection string") {
-    plan_->setProperty(update_attribute_processor_, "test.connection_string", CONNECTION_STRING, true);
+    plan_->setDynamicProperty(update_attribute_processor_, "test.connection_string", CONNECTION_STRING);
     plan_->setProperty(azure_blob_storage_processor_, "Connection String", "${test.connection_string}");
     test_controller_.runSession(plan_, true);
     auto passed_params = mock_blob_storage_ptr_->getPassedFetchParams();
@@ -110,11 +110,11 @@ TEST_CASE_METHOD(FetchAzureBlobStorageTestsFixture, "Test credentials settings",
   }
 
   SECTION("Overriding credentials with connection string") {
-    plan_->setProperty(update_attribute_processor_, "test.account_name", STORAGE_ACCOUNT_NAME, true);
+    plan_->setDynamicProperty(update_attribute_processor_, "test.account_name", STORAGE_ACCOUNT_NAME);
     plan_->setProperty(azure_blob_storage_processor_, "Storage Account Name", "${test.account_name}");
-    plan_->setProperty(update_attribute_processor_, "test.account_key", STORAGE_ACCOUNT_KEY, true);
+    plan_->setDynamicProperty(update_attribute_processor_, "test.account_key", STORAGE_ACCOUNT_KEY);
     plan_->setProperty(azure_blob_storage_processor_, "Storage Account Key", "${test.account_key}");
-    plan_->setProperty(update_attribute_processor_, "test.connection_string", CONNECTION_STRING, true);
+    plan_->setDynamicProperty(update_attribute_processor_, "test.connection_string", CONNECTION_STRING);
     plan_->setProperty(azure_blob_storage_processor_, "Connection String", "${test.connection_string}");
     test_controller_.runSession(plan_, true);
     auto passed_params = mock_blob_storage_ptr_->getPassedFetchParams();
@@ -122,7 +122,7 @@ TEST_CASE_METHOD(FetchAzureBlobStorageTestsFixture, "Test credentials settings",
   }
 
   SECTION("Connection string is empty after substituting it from expression language") {
-    plan_->setProperty(update_attribute_processor_, "test.connection_string", "", true);
+    plan_->setDynamicProperty(update_attribute_processor_, "test.connection_string", "");
     plan_->setProperty(azure_blob_storage_processor_, "Connection String", "${test.connection_string}");
     test_controller_.runSession(plan_, true);
     auto failed_flowfiles = getFailedFlowFileContents();
@@ -134,7 +134,7 @@ TEST_CASE_METHOD(FetchAzureBlobStorageTestsFixture, "Test credentials settings",
     plan_->setProperty(azure_blob_storage_processor_, "Storage Account Name", STORAGE_ACCOUNT_NAME);
     plan_->setProperty(azure_blob_storage_processor_, "Use Managed Identity Credentials", "true");
     test_controller_.runSession(plan_, true);
-    CHECK(getFailedFlowFileContents().size() == 0);
+    CHECK(getFailedFlowFileContents().empty());
     auto passed_params = mock_blob_storage_ptr_->getPassedFetchParams();
     CHECK(passed_params.credentials.buildConnectionString().empty());
     CHECK(passed_params.credentials.getStorageAccountName() == STORAGE_ACCOUNT_NAME);
@@ -149,7 +149,7 @@ TEST_CASE_METHOD(FetchAzureBlobStorageTestsFixture, "Test credentials settings",
     plan_->setProperty(azure_storage_cred_service, "Common Storage Account Endpoint Suffix", "core.chinacloudapi.cn");
     plan_->setProperty(azure_blob_storage_processor_, "Azure Storage Credentials Service", "AzureStorageCredentialsService");
     test_controller_.runSession(plan_, true);
-    CHECK(getFailedFlowFileContents().size() == 0);
+    CHECK(getFailedFlowFileContents().empty());
     auto passed_params = mock_blob_storage_ptr_->getPassedFetchParams();
     CHECK(passed_params.credentials.buildConnectionString().empty());
     CHECK(passed_params.credentials.getStorageAccountName() == STORAGE_ACCOUNT_NAME);
@@ -162,11 +162,11 @@ TEST_CASE_METHOD(FetchAzureBlobStorageTestsFixture, "Test credentials settings",
     plan_->setProperty(azure_storage_cred_service, "Storage Account Name", STORAGE_ACCOUNT_NAME);
     plan_->setProperty(azure_storage_cred_service, "Storage Account Key", STORAGE_ACCOUNT_KEY);
     plan_->setProperty(azure_blob_storage_processor_, "Azure Storage Credentials Service", "AzureStorageCredentialsService");
-    plan_->setProperty(update_attribute_processor_, "test.account_name", STORAGE_ACCOUNT_NAME, true);
+    plan_->setDynamicProperty(update_attribute_processor_, "test.account_name", STORAGE_ACCOUNT_NAME);
     plan_->setProperty(azure_blob_storage_processor_, "Storage Account Name", "${test.account_name}");
-    plan_->setProperty(update_attribute_processor_, "test.account_key", STORAGE_ACCOUNT_KEY, true);
+    plan_->setDynamicProperty(update_attribute_processor_, "test.account_key", STORAGE_ACCOUNT_KEY);
     plan_->setProperty(azure_blob_storage_processor_, "Storage Account Key", "${test.account_key}");
-    plan_->setProperty(update_attribute_processor_, "test.connection_string", CONNECTION_STRING, true);
+    plan_->setDynamicProperty(update_attribute_processor_, "test.connection_string", CONNECTION_STRING);
     plan_->setProperty(azure_blob_storage_processor_, "Connection String", "${test.connection_string}");
     test_controller_.runSession(plan_, true);
     auto passed_params = mock_blob_storage_ptr_->getPassedFetchParams();
@@ -177,9 +177,9 @@ TEST_CASE_METHOD(FetchAzureBlobStorageTestsFixture, "Test credentials settings",
     auto azure_storage_cred_service = plan_->addController("AzureStorageCredentialsService", "AzureStorageCredentialsService");
     plan_->setProperty(azure_storage_cred_service, "Storage Account Name", STORAGE_ACCOUNT_NAME);
     plan_->setProperty(azure_blob_storage_processor_, "Azure Storage Credentials Service", "AzureStorageCredentialsService");
-    plan_->setProperty(update_attribute_processor_, "test.account_name", STORAGE_ACCOUNT_NAME, true);
+    plan_->setDynamicProperty(update_attribute_processor_, "test.account_name", STORAGE_ACCOUNT_NAME);
     plan_->setProperty(azure_blob_storage_processor_, "Storage Account Name", "${test.account_name}");
-    plan_->setProperty(update_attribute_processor_, "test.account_key", STORAGE_ACCOUNT_KEY, true);
+    plan_->setDynamicProperty(update_attribute_processor_, "test.account_key", STORAGE_ACCOUNT_KEY);
     plan_->setProperty(azure_blob_storage_processor_, "Storage Account Key", "${test.account_key}");
     test_controller_.runSession(plan_, true);
     auto passed_params = mock_blob_storage_ptr_->getPassedFetchParams();
@@ -194,9 +194,9 @@ TEST_CASE_METHOD(FetchAzureBlobStorageTestsFixture, "Test credentials settings",
     plan_->setProperty(azure_storage_cred_service, "Storage Account Name", STORAGE_ACCOUNT_NAME);
     plan_->setProperty(azure_storage_cred_service, "Storage Account Key", STORAGE_ACCOUNT_KEY);
     plan_->setProperty(azure_blob_storage_processor_, "Azure Storage Credentials Service", "invalid_name");
-    plan_->setProperty(update_attribute_processor_, "test.account_name", STORAGE_ACCOUNT_NAME, true);
+    plan_->setDynamicProperty(update_attribute_processor_, "test.account_name", STORAGE_ACCOUNT_NAME);
     plan_->setProperty(azure_blob_storage_processor_, "Storage Account Name", "${test.account_name}");
-    plan_->setProperty(update_attribute_processor_, "test.account_key", STORAGE_ACCOUNT_KEY, true);
+    plan_->setDynamicProperty(update_attribute_processor_, "test.account_key", STORAGE_ACCOUNT_KEY);
     plan_->setProperty(azure_blob_storage_processor_, "Storage Account Key", "${test.account_key}");
     test_controller_.runSession(plan_, true);
     auto passed_params = mock_blob_storage_ptr_->getPassedFetchParams();
@@ -208,18 +208,18 @@ TEST_CASE_METHOD(FetchAzureBlobStorageTestsFixture, "Test credentials settings",
 }
 
 TEST_CASE_METHOD(FetchAzureBlobStorageTestsFixture, "Test Azure blob fetch failure in case Blob is not set and filename is empty", "[azureBlobStorageFetch]") {
-  plan_->setProperty(update_attribute_processor_, "test.container", CONTAINER_NAME, true);
+  plan_->setDynamicProperty(update_attribute_processor_, "test.container", CONTAINER_NAME);
   plan_->setProperty(azure_blob_storage_processor_, "Container Name", "${test.container}");
-  plan_->setProperty(update_attribute_processor_, "filename", "", true);
+  plan_->setDynamicProperty(update_attribute_processor_, "filename", "");
   setDefaultCredentials();
   test_controller_.runSession(plan_, true);
   REQUIRE(LogTestController::getInstance().contains("Blob is not set and default 'filename' attribute could not be found!"));
 }
 
 TEST_CASE_METHOD(FetchAzureBlobStorageTestsFixture, "Fetch full blob succeeds", "[azureBlobStorageFetch]") {
-  plan_->setProperty(update_attribute_processor_, "test.container", CONTAINER_NAME, true);
+  plan_->setDynamicProperty(update_attribute_processor_, "test.container", CONTAINER_NAME);
   plan_->setProperty(azure_blob_storage_processor_, "Container Name", "${test.container}");
-  plan_->setProperty(update_attribute_processor_, "test.blob", BLOB_NAME, true);
+  plan_->setDynamicProperty(update_attribute_processor_, "test.blob", BLOB_NAME);
   plan_->setProperty(azure_blob_storage_processor_, "Blob", "${test.blob}");
   setDefaultCredentials();
   test_controller_.runSession(plan_, true);
@@ -228,17 +228,17 @@ TEST_CASE_METHOD(FetchAzureBlobStorageTestsFixture, "Fetch full blob succeeds", 
   CHECK(passed_params.blob_name == BLOB_NAME);
   CHECK(passed_params.range_start == std::nullopt);
   CHECK(passed_params.range_length == std::nullopt);
-  CHECK(getFailedFlowFileContents().size() == 0);
+  CHECK(getFailedFlowFileContents().empty());
   auto success_contents = getSuccessfulFlowFileContents();
   REQUIRE(success_contents.size() == 1);
   REQUIRE(success_contents[0] == mock_blob_storage_ptr_->FETCHED_DATA);
 }
 
 TEST_CASE_METHOD(FetchAzureBlobStorageTestsFixture, "Fetch a range of the blob succeeds", "[azureBlobStorageFetch]") {
-  plan_->setProperty(update_attribute_processor_, "test.container", CONTAINER_NAME, true);
-  plan_->setProperty(azure_blob_storage_processor_, minifi::azure::processors::FetchAzureBlobStorage::ContainerName.getName(), "${test.container}");
-  plan_->setProperty(azure_blob_storage_processor_, minifi::azure::processors::FetchAzureBlobStorage::RangeStart.getName(), "5");
-  plan_->setProperty(azure_blob_storage_processor_, minifi::azure::processors::FetchAzureBlobStorage::RangeLength.getName(), "10");
+  plan_->setDynamicProperty(update_attribute_processor_, "test.container", CONTAINER_NAME);
+  plan_->setProperty(azure_blob_storage_processor_, minifi::azure::processors::FetchAzureBlobStorage::ContainerName, "${test.container}");
+  plan_->setProperty(azure_blob_storage_processor_, minifi::azure::processors::FetchAzureBlobStorage::RangeStart, "5");
+  plan_->setProperty(azure_blob_storage_processor_, minifi::azure::processors::FetchAzureBlobStorage::RangeLength, "10");
   setDefaultCredentials();
   test_controller_.runSession(plan_, true);
   auto passed_params = mock_blob_storage_ptr_->getPassedFetchParams();
@@ -246,18 +246,18 @@ TEST_CASE_METHOD(FetchAzureBlobStorageTestsFixture, "Fetch a range of the blob s
   CHECK(passed_params.blob_name == GET_FILE_NAME);
   CHECK(*passed_params.range_start == 5);
   CHECK(*passed_params.range_length == 10);
-  CHECK(getFailedFlowFileContents().size() == 0);
+  CHECK(getFailedFlowFileContents().empty());
   auto success_contents = getSuccessfulFlowFileContents();
   REQUIRE(success_contents.size() == 1);
   REQUIRE(success_contents[0] == mock_blob_storage_ptr_->FETCHED_DATA.substr(5, 10));
 }
 
 TEST_CASE_METHOD(FetchAzureBlobStorageTestsFixture, "Fetch full file fails", "[azureBlobStorageFetch]") {
-  plan_->setProperty(azure_blob_storage_processor_, minifi::azure::processors::FetchAzureBlobStorage::ContainerName.getName(), CONTAINER_NAME);
+  plan_->setProperty(azure_blob_storage_processor_, minifi::azure::processors::FetchAzureBlobStorage::ContainerName, CONTAINER_NAME);
   setDefaultCredentials();
   mock_blob_storage_ptr_->setFetchFailure(true);
   test_controller_.runSession(plan_, true);
-  REQUIRE(getSuccessfulFlowFileContents().size() == 0);
+  REQUIRE(getSuccessfulFlowFileContents().empty());
   auto failed_contents = getFailedFlowFileContents();
   REQUIRE(failed_contents.size() == 1);
   REQUIRE(failed_contents[0] == TEST_DATA);

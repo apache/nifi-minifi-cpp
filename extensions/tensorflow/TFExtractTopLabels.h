@@ -37,12 +37,12 @@ class TFExtractTopLabels : public core::Processor {
 
   EXTENSIONAPI static constexpr const char* Description = "Extracts the top 5 labels for categorical inference models";
 
-  static auto properties() { return std::array<core::Property, 0>{}; }
+  EXTENSIONAPI static constexpr auto Properties = std::array<core::PropertyReference, 0>{};
 
   EXTENSIONAPI static const core::Relationship Success;
   EXTENSIONAPI static const core::Relationship Retry;
   EXTENSIONAPI static const core::Relationship Failure;
-  static auto relationships() { return std::array{Success, Retry, Failure}; }
+  EXTENSIONAPI static constexpr auto Relationships = std::array{Success, Retry, Failure};
 
   EXTENSIONAPI static constexpr bool SupportsDynamicProperties = false;
   EXTENSIONAPI static constexpr bool SupportsDynamicRelationships = false;

@@ -71,12 +71,12 @@ void SFTPProcessorBase::notifyStop() {
 
 void SFTPProcessorBase::parseCommonPropertiesOnSchedule(const std::shared_ptr<core::ProcessContext>& context) {
   std::string value;
-  if (!context->getProperty(StrictHostKeyChecking.getName(), value)) {
+  if (!context->getProperty(StrictHostKeyChecking, value)) {
     logger_->log_error("Strict Host Key Checking attribute is missing or invalid");
   } else {
     strict_host_checking_ = utils::StringUtils::toBool(value).value_or(false);
   }
-  context->getProperty(HostKeyFile.getName(), host_key_file_);
+  context->getProperty(HostKeyFile, host_key_file_);
   if (auto connection_timeout = context->getProperty<core::TimePeriodValue>(ConnectionTimeout)) {
     connection_timeout_ = connection_timeout->getMilliseconds();
   } else {
@@ -89,12 +89,12 @@ void SFTPProcessorBase::parseCommonPropertiesOnSchedule(const std::shared_ptr<co
     logger_->log_error("Data Timeout attribute is missing or invalid");
   }
 
-  if (!context->getProperty(SendKeepaliveOnTimeout.getName(), value)) {
+  if (!context->getProperty(SendKeepaliveOnTimeout, value)) {
     logger_->log_error("Send Keep Alive On Timeout attribute is missing or invalid");
   } else {
     use_keepalive_on_timeout_ = utils::StringUtils::toBool(value).value_or(true);
   }
-  context->getProperty(ProxyType.getName(), proxy_type_);
+  context->getProperty(ProxyType, proxy_type_);
 }
 
 SFTPProcessorBase::CommonProperties::CommonProperties()

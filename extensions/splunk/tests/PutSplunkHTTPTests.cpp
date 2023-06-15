@@ -21,6 +21,7 @@
 #include "Catch.h"
 #include "ReadFromFlowFileTestProcessor.h"
 #include "WriteToFlowFileTestProcessor.h"
+#include "core/Relationship.h"
 #include "processors/UpdateAttribute.h"
 #include "MockSplunkHEC.h"
 
@@ -44,13 +45,13 @@ TEST_CASE("PutSplunkHTTP tests", "[putsplunkhttp]") {
   plan->addConnection(put_splunk_http, PutSplunkHTTP::Success, read_from_success);
   plan->addConnection(put_splunk_http, PutSplunkHTTP::Failure, read_from_failure);
 
-  read_from_success->setAutoTerminatedRelationships(std::array{ReadFromFlowFileTestProcessor::Success});
-  read_from_failure->setAutoTerminatedRelationships(std::array{ReadFromFlowFileTestProcessor::Success});
+  read_from_success->setAutoTerminatedRelationships(std::array<core::Relationship, 1>{ReadFromFlowFileTestProcessor::Success});
+  read_from_failure->setAutoTerminatedRelationships(std::array<core::Relationship, 1>{ReadFromFlowFileTestProcessor::Success});
 
-  plan->setProperty(put_splunk_http, PutSplunkHTTP::Hostname.getName(), "localhost");
-  plan->setProperty(put_splunk_http, PutSplunkHTTP::Port.getName(), mock_splunk_hec.getPort());
-  plan->setProperty(put_splunk_http, PutSplunkHTTP::Token.getName(), MockSplunkHEC::TOKEN);
-  plan->setProperty(put_splunk_http, PutSplunkHTTP::SplunkRequestChannel.getName(), "a12254b4-f481-435d-896d-3b6033eabe58");
+  plan->setProperty(put_splunk_http, PutSplunkHTTP::Hostname, "localhost");
+  plan->setProperty(put_splunk_http, PutSplunkHTTP::Port, mock_splunk_hec.getPort());
+  plan->setProperty(put_splunk_http, PutSplunkHTTP::Token, MockSplunkHEC::TOKEN);
+  plan->setProperty(put_splunk_http, PutSplunkHTTP::SplunkRequestChannel, "a12254b4-f481-435d-896d-3b6033eabe58");
 
   write_to_flow_file->setContent("foobar");
 
@@ -69,10 +70,10 @@ TEST_CASE("PutSplunkHTTP tests", "[putsplunkhttp]") {
   }
 
   SECTION("Happy path with query arguments") {
-    plan->setProperty(put_splunk_http, PutSplunkHTTP::Source.getName(), "foo");
-    plan->setProperty(put_splunk_http, PutSplunkHTTP::SourceType.getName(), "bar");
-    plan->setProperty(put_splunk_http, PutSplunkHTTP::Host.getName(), "baz");
-    plan->setProperty(put_splunk_http, PutSplunkHTTP::Index.getName(), "qux");
+    plan->setProperty(put_splunk_http, PutSplunkHTTP::Source, "foo");
+    plan->setProperty(put_splunk_http, PutSplunkHTTP::SourceType, "bar");
+    plan->setProperty(put_splunk_http, PutSplunkHTTP::Host, "baz");
+    plan->setProperty(put_splunk_http, PutSplunkHTTP::Index, "qux");
     mock_splunk_hec.setAssertions([](const struct mg_request_info *request_info) {
       std::string query_string = request_info->query_string;
       CHECK(!query_string.empty());
@@ -93,7 +94,7 @@ TEST_CASE("PutSplunkHTTP tests", "[putsplunkhttp]") {
 
   SECTION("Invalid Token") {
     constexpr const char* invalid_token = "Splunk 00000000-0000-0000-0000-000000000000";
-    plan->setProperty(put_splunk_http, PutSplunkHTTP::Token.getName(), invalid_token);
+    plan->setProperty(put_splunk_http, PutSplunkHTTP::Token, invalid_token);
     test_controller.runSession(plan);
     CHECK(read_from_failure->numberOfFlowFilesRead() == 1);
     CHECK(read_from_success->numberOfFlowFilesRead() == 0);
@@ -133,12 +134,12 @@ TEST_CASE("PutSplunkHTTP content type tests", "[putsplunkhttpcontenttype]") {
 
   plan->addConnection(write_to_flow_file, WriteToFlowFileTestProcessor::Success, update_attribute);
   plan->addConnection(update_attribute, UpdateAttribute::Success, put_splunk_http);
-  put_splunk_http->setAutoTerminatedRelationships(std::array{PutSplunkHTTP::Success, PutSplunkHTTP::Failure});
+  put_splunk_http->setAutoTerminatedRelationships(std::array<core::Relationship, 2>{PutSplunkHTTP::Success, PutSplunkHTTP::Failure});
 
-  plan->setProperty(put_splunk_http, PutSplunkHTTP::Hostname.getName(), "localhost");
-  plan->setProperty(put_splunk_http, PutSplunkHTTP::Port.getName(), mock_splunk_hec.getPort());
-  plan->setProperty(put_splunk_http, PutSplunkHTTP::Token.getName(), MockSplunkHEC::TOKEN);
-  plan->setProperty(put_splunk_http, PutSplunkHTTP::SplunkRequestChannel.getName(), "a12254b4-f481-435d-896d-3b6033eabe58");
+  plan->setProperty(put_splunk_http, PutSplunkHTTP::Hostname, "localhost");
+  plan->setProperty(put_splunk_http, PutSplunkHTTP::Port, mock_splunk_hec.getPort());
+  plan->setProperty(put_splunk_http, PutSplunkHTTP::Token, MockSplunkHEC::TOKEN);
+  plan->setProperty(put_splunk_http, PutSplunkHTTP::SplunkRequestChannel, "a12254b4-f481-435d-896d-3b6033eabe58");
 
   write_to_flow_file->setContent("foobar");
 
@@ -148,20 +149,20 @@ TEST_CASE("PutSplunkHTTP content type tests", "[putsplunkhttpcontenttype]") {
   }
 
   SECTION("Content Type with Processor Property") {
-    plan->setProperty(put_splunk_http, PutSplunkHTTP::ContentType.getName(), "from_property");
+    plan->setProperty(put_splunk_http, PutSplunkHTTP::ContentType, "from_property");
     mock_splunk_hec.setAssertions(ContentTypeValidator("from_property"));
     test_controller.runSession(plan);
   }
 
   SECTION("Content Type with FlowFile Attribute") {
-    plan->setProperty(update_attribute, "mime.type", "from_attribute", true);
+    plan->setDynamicProperty(update_attribute, "mime.type", "from_attribute");
     mock_splunk_hec.setAssertions(ContentTypeValidator("from_attribute"));
     test_controller.runSession(plan);
   }
 
   SECTION("Content Type with Property and Attribute") {
-    plan->setProperty(update_attribute, "mime.type", "from_attribute", true);
-    plan->setProperty(put_splunk_http, PutSplunkHTTP::ContentType.getName(), "from_property");
+    plan->setDynamicProperty(update_attribute, "mime.type", "from_attribute");
+    plan->setProperty(put_splunk_http, PutSplunkHTTP::ContentType, "from_property");
     mock_splunk_hec.setAssertions(ContentTypeValidator("from_property"));
     test_controller.runSession(plan);
   }

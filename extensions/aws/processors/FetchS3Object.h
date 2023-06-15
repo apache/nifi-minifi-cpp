@@ -24,6 +24,9 @@
 #include <utility>
 #include <vector>
 
+#include "core/PropertyDefinition.h"
+#include "core/PropertyDefinitionBuilder.h"
+#include "core/PropertyType.h"
 #include "io/StreamPipe.h"
 #include "S3Processor.h"
 #include "utils/ArrayUtils.h"
@@ -38,20 +41,31 @@ class FetchS3Object : public S3Processor {
  public:
   EXTENSIONAPI static constexpr const char* Description = "This Processor retrieves the contents of an S3 Object and writes it to the content of a FlowFile.";
 
-  static const core::Property ObjectKey;
-  static const core::Property Version;
-  static const core::Property RequesterPays;
-  static auto properties() {
-    return minifi::utils::array_cat(S3Processor::properties(), std::array{
+  EXTENSIONAPI static constexpr auto ObjectKey = core::PropertyDefinitionBuilder<>::createProperty("Object Key")
+      .withDescription("The key of the S3 object. If none is given the filename attribute will be used by default.")
+      .supportsExpressionLanguage(true)
+      .build();
+  EXTENSIONAPI static constexpr auto Version = core::PropertyDefinitionBuilder<>::createProperty("Version")
+      .withDescription("The Version of the Object to download")
+      .supportsExpressionLanguage(true)
+      .build();
+  EXTENSIONAPI static constexpr auto RequesterPays = core::PropertyDefinitionBuilder<>::createProperty("Requester Pays")
+      .isRequired(true)
+      .withPropertyType(core::StandardPropertyTypes::BOOLEAN_TYPE)
+      .withDefaultValue("false")
+      .withDescription("If true, indicates that the requester consents to pay any charges associated with retrieving "
+          "objects from the S3 bucket. This sets the 'x-amz-request-payer' header to 'requester'.")
+      .build();
+  EXTENSIONAPI static constexpr auto Properties = minifi::utils::array_cat(S3Processor::Properties, std::array<core::PropertyReference, 3>{
       ObjectKey,
       Version,
       RequesterPays
-    });
-  }
+  });
 
-  EXTENSIONAPI static const core::Relationship Success;
-  EXTENSIONAPI static const core::Relationship Failure;
-  static auto relationships() { return std::array{Success, Failure}; }
+
+  EXTENSIONAPI static constexpr auto Success = core::RelationshipDefinition{"success", "FlowFiles are routed to success relationship"};
+  EXTENSIONAPI static constexpr auto Failure = core::RelationshipDefinition{"failure", "FlowFiles are routed to failure relationship"};
+  EXTENSIONAPI static constexpr auto Relationships = std::array{Success, Failure};
 
   EXTENSIONAPI static constexpr bool SupportsDynamicProperties = true;
   EXTENSIONAPI static constexpr bool SupportsDynamicRelationships = false;

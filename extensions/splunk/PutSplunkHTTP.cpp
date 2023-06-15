@@ -36,8 +36,8 @@
 namespace org::apache::nifi::minifi::extensions::splunk {
 
 void PutSplunkHTTP::initialize() {
-  setSupportedProperties(properties());
-  setSupportedRelationships(relationships());
+  setSupportedProperties(Properties);
+  setSupportedRelationships(Relationships);
 }
 
 namespace {
@@ -147,5 +147,7 @@ void PutSplunkHTTP::onTrigger(const std::shared_ptr<core::ProcessContext>& conte
 
   session->transfer(flow_file, success ? Success : Failure);
 }
+
+REGISTER_RESOURCE(PutSplunkHTTP, Processor);
 
 }  // namespace org::apache::nifi::minifi::extensions::splunk

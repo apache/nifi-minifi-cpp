@@ -37,8 +37,8 @@ namespace org::apache::nifi::minifi::processors {
 void FetchSFTP::initialize() {
   logger_->log_trace("Initializing FetchSFTP");
 
-  setSupportedProperties(properties());
-  setSupportedRelationships(relationships());
+  setSupportedProperties(Properties);
+  setSupportedRelationships(Relationships);
 }
 
 FetchSFTP::FetchSFTP(std::string name, const utils::Identifier& uuid /*= utils::Identifier()*/)
@@ -52,18 +52,18 @@ void FetchSFTP::onSchedule(const std::shared_ptr<core::ProcessContext> &context,
   parseCommonPropertiesOnSchedule(context);
 
   std::string value;
-  context->getProperty(CompletionStrategy.getName(), completion_strategy_);
-  if (!context->getProperty(CreateDirectory.getName(), value)) {
+  context->getProperty(CompletionStrategy, completion_strategy_);
+  if (!context->getProperty(CreateDirectory, value)) {
     logger_->log_error("Create Directory attribute is missing or invalid");
   } else {
     create_directory_ = utils::StringUtils::toBool(value).value_or(false);
   }
-  if (!context->getProperty(DisableDirectoryListing.getName(), value)) {
+  if (!context->getProperty(DisableDirectoryListing, value)) {
     logger_->log_error("Disable Directory Listing attribute is missing or invalid");
   } else {
     disable_directory_listing_ = utils::StringUtils::toBool(value).value_or(false);
   }
-  if (!context->getProperty(UseCompression.getName(), value)) {
+  if (!context->getProperty(UseCompression, value)) {
     logger_->log_error("Use Compression attribute is missing or invalid");
   } else {
     use_compression_ = utils::StringUtils::toBool(value).value_or(false);
@@ -188,5 +188,7 @@ void FetchSFTP::onTrigger(const std::shared_ptr<core::ProcessContext> &context, 
   session->transfer(flow_file, Success);
   put_connection_back_to_cache();
 }
+
+REGISTER_RESOURCE(FetchSFTP, Processor);
 
 }  // namespace org::apache::nifi::minifi::processors

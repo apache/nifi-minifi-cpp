@@ -56,7 +56,7 @@ std::error_code get_last_ssl_error_code() {
 #ifdef WIN32
 WindowsCertStore::WindowsCertStore(const WindowsCertStoreLocation& loc, const std::string& cert_store) {
   store_ptr_ = CertOpenStore(CERT_STORE_PROV_SYSTEM_A, 0, NULL,
-                             CERT_STORE_OPEN_EXISTING_FLAG | CERT_STORE_READONLY_FLAG | loc.getBitfieldValue(),
+                             CERT_STORE_OPEN_EXISTING_FLAG | CERT_STORE_READONLY_FLAG | loc.location_bitfield_value,
                              cert_store.data());
 
   if (!store_ptr_) {

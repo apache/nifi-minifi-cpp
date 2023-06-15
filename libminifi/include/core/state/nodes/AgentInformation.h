@@ -123,7 +123,7 @@ class ComponentManifest : public DeviceInformation {
 
             SerializedResponseNode validatorName;
             validatorName.name = "validator";
-            validatorName.value = std::string{prop.getValidator().getName()};
+            validatorName.value = std::string{prop.getValidator().getValidatorName()};
 
             SerializedResponseNode supportsExpressionLanguageScope;
             supportsExpressionLanguageScope.name = "expressionLanguageScope";
@@ -132,10 +132,6 @@ class ComponentManifest : public DeviceInformation {
             SerializedResponseNode descriptorRequired;
             descriptorRequired.name = "required";
             descriptorRequired.value = prop.getRequired();
-
-            SerializedResponseNode descriptorValidRegex;
-            descriptorValidRegex.name = "validRegex";
-            descriptorValidRegex.value = prop.getValidRegex();
 
             SerializedResponseNode descriptorDefaultValue;
             descriptorDefaultValue.name = "defaultValue";
@@ -199,7 +195,6 @@ class ComponentManifest : public DeviceInformation {
             child.children.push_back(descriptorRequired);
             child.children.push_back(supportsExpressionLanguageScope);
             child.children.push_back(descriptorDefaultValue);
-            child.children.push_back(descriptorValidRegex);
             child.children.push_back(descriptorDependentProperties);
             child.children.push_back(descriptorExclusiveOfProperties);
 

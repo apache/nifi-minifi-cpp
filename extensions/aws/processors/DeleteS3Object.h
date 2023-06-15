@@ -23,9 +23,12 @@
 #include <string>
 #include <utility>
 
+#include "core/PropertyDefinition.h"
+#include "core/PropertyDefinitionBuilder.h"
 #include "S3Processor.h"
 #include "utils/ArrayUtils.h"
 #include "utils/GeneralUtils.h"
+
 
 template<typename T>
 class S3TestsFixture;
@@ -36,18 +39,23 @@ class DeleteS3Object : public S3Processor {
  public:
   EXTENSIONAPI static constexpr const char* Description = "Deletes FlowFiles on an Amazon S3 Bucket. If attempting to delete a file that does not exist, FlowFile is routed to success.";
 
-  static const core::Property ObjectKey;
-  static const core::Property Version;
-  static auto properties() {
-    return minifi::utils::array_cat(S3Processor::properties(), std::array{
+  EXTENSIONAPI static constexpr auto ObjectKey = core::PropertyDefinitionBuilder<>::createProperty("Object Key")
+    .withDescription("The key of the S3 object. If none is given the filename attribute will be used by default.")
+    .supportsExpressionLanguage(true)
+    .build();
+  EXTENSIONAPI static constexpr auto Version = core::PropertyDefinitionBuilder<>::createProperty("Version")
+    .withDescription("The Version of the Object to delete")
+    .supportsExpressionLanguage(true)
+    .build();
+  EXTENSIONAPI static constexpr auto Properties = minifi::utils::array_cat(S3Processor::Properties, std::array<core::PropertyReference, 2>{
       ObjectKey,
       Version
-    });
-  }
+  });
 
-  EXTENSIONAPI static const core::Relationship Success;
-  EXTENSIONAPI static const core::Relationship Failure;
-  static auto relationships() { return std::array{Success, Failure}; }
+
+  EXTENSIONAPI static constexpr auto Success = core::RelationshipDefinition{"success", "FlowFiles are routed to success relationship"};
+  EXTENSIONAPI static constexpr auto Failure = core::RelationshipDefinition{"failure", "FlowFiles are routed to failure relationship"};
+  EXTENSIONAPI static constexpr auto Relationships = std::array{Success, Failure};
 
   EXTENSIONAPI static constexpr bool SupportsDynamicProperties = true;
   EXTENSIONAPI static constexpr bool SupportsDynamicRelationships = false;

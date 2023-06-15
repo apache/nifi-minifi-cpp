@@ -1,4 +1,3 @@
-
 /**
  *
  * Licensed to the Apache Software Foundation (ASF) under one or more
@@ -109,8 +108,7 @@ TEST_CASE_METHOD(FetchFileTestFixture, "FileToFetch property set to a non-existe
 
 #ifndef WIN32
 TEST_CASE_METHOD(FetchFileTestFixture, "Permission denied to read file", "[testFetchFile]") {
-  fetch_file_processor_->setProperty(org::apache::nifi::minifi::processors::FetchFile::FileToFetch,
-    input_dir_ / permission_denied_file_name_);
+  fetch_file_processor_->setProperty(org::apache::nifi::minifi::processors::FetchFile::FileToFetch, (input_dir_ / permission_denied_file_name_).string());
   fetch_file_processor_->setProperty(org::apache::nifi::minifi::processors::FetchFile::LogLevelWhenPermissionDenied, "WARN");
   const auto result = test_controller_->trigger("", attributes_);
   auto file_contents = result.at(minifi::processors::FetchFile::PermissionDenied);
@@ -256,7 +254,7 @@ TEST_CASE_METHOD(FetchFileTestFixture, "Move completion strategy failure due to 
   auto move_dir = test_controller_->createTempDirectory();
   utils::file::FileUtils::set_permissions(move_dir, 0);
   fetch_file_processor_->setProperty(org::apache::nifi::minifi::processors::FetchFile::CompletionStrategy, "Move File");
-  fetch_file_processor_->setProperty(org::apache::nifi::minifi::processors::FetchFile::MoveDestinationDirectory, move_dir);
+  fetch_file_processor_->setProperty(org::apache::nifi::minifi::processors::FetchFile::MoveDestinationDirectory, move_dir.string());
   const auto result = test_controller_->trigger("", attributes_);
   auto file_contents = result.at(minifi::processors::FetchFile::Success);
   REQUIRE(file_contents.size() == 1);

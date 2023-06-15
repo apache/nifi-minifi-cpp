@@ -38,8 +38,8 @@ namespace org::apache::nifi::minifi::processors {
 using SendFinishedTask = std::packaged_task<bool(bool, std::optional<int>, std::optional<MQTTReasonCodes>)>;
 
 void PublishMQTT::initialize() {
-  setSupportedProperties(properties());
-  setSupportedRelationships(relationships());
+  setSupportedProperties(Properties);
+  setSupportedRelationships(Relationships);
 }
 
 void PublishMQTT::readProperties(const std::shared_ptr<core::ProcessContext>& context) {
@@ -57,7 +57,7 @@ void PublishMQTT::readProperties(const std::shared_ptr<core::ProcessContext>& co
     logger_->log_debug("PublishMQTT: MessageExpiryInterval [%" PRId64 "] s", int64_t{message_expiry_interval_->count()});
   }
 
-  in_flight_message_counter_.setEnabled(mqtt_version_ == MqttVersions::V_5_0 && qos_ != MqttQoS::LEVEL_0);
+  in_flight_message_counter_.setEnabled(mqtt_version_ == mqtt::MqttVersions::V_5_0 && qos_ != mqtt::MqttQoS::LEVEL_0);
 }
 
 void PublishMQTT::onTriggerImpl(const std::shared_ptr<core::ProcessContext>& context, const std::shared_ptr<core::ProcessSession>& session) {
@@ -109,7 +109,7 @@ bool PublishMQTT::sendMessage(const std::vector<std::byte>& buffer, const std::s
   setMqtt5Properties(message_to_publish, content_type, flow_file);
 
   MQTTAsync_responseOptions response_options = MQTTAsync_responseOptions_initializer;
-  if (mqtt_version_ == MqttVersions::V_5_0) {
+  if (mqtt_version_ == mqtt::MqttVersions::V_5_0) {
     response_options.onSuccess5 = sendSuccess5;
     response_options.onFailure5 = sendFailure5;
   } else {
@@ -138,7 +138,7 @@ bool PublishMQTT::sendMessage(const std::vector<std::byte>& buffer, const std::s
 }
 
 void PublishMQTT::checkProperties() {
-  if ((mqtt_version_ == MqttVersions::V_3_1_0 || mqtt_version_ == MqttVersions::V_3_1_1 || mqtt_version_ == MqttVersions::V_3X_AUTO)) {
+  if ((mqtt_version_ == mqtt::MqttVersions::V_3_1_0 || mqtt_version_ == mqtt::MqttVersions::V_3_1_1 || mqtt_version_ == mqtt::MqttVersions::V_3X_AUTO)) {
     if (isPropertyExplicitlySet(MessageExpiryInterval)) {
       logger_->log_warn("MQTT 3.x specification does not support Message Expiry Intervals. Property is not used.");
     }
@@ -209,7 +209,7 @@ std::string PublishMQTT::getContentType(const std::shared_ptr<core::ProcessConte
 }
 
 void PublishMQTT::setMqtt5Properties(MQTTAsync_message& message, const std::string& content_type, const std::shared_ptr<core::FlowFile>& flow_file) const {
-  if (mqtt_version_ != MqttVersions::V_5_0) {
+  if (mqtt_version_ != mqtt::MqttVersions::V_5_0) {
     return;
   }
 
@@ -315,4 +315,7 @@ std::vector<state::PublishedMetric> PublishMQTT::PublishMQTTMetrics::calculateMe
   metrics.push_back({"in_flight_message_count", static_cast<double>(in_flight_message_counter_->getCounter()), getCommonLabels()});
   return metrics;
 }
+
+REGISTER_RESOURCE(PublishMQTT, Processor);
+
 }  // namespace org::apache::nifi::minifi::processors

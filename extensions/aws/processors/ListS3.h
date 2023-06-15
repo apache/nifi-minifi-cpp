@@ -24,6 +24,9 @@
 #include <tuple>
 #include <memory>
 
+#include "core/PropertyDefinition.h"
+#include "core/PropertyDefinitionBuilder.h"
+#include "core/PropertyType.h"
 #include "S3Processor.h"
 #include "utils/ArrayUtils.h"
 
@@ -33,15 +36,44 @@ class ListS3 : public S3Processor {
  public:
   EXTENSIONAPI static constexpr const char* Description = "This Processor retrieves a listing of objects from an Amazon S3 bucket.";
 
-  EXTENSIONAPI static const core::Property Delimiter;
-  EXTENSIONAPI static const core::Property Prefix;
-  EXTENSIONAPI static const core::Property UseVersions;
-  EXTENSIONAPI static const core::Property MinimumObjectAge;
-  EXTENSIONAPI static const core::Property WriteObjectTags;
-  EXTENSIONAPI static const core::Property WriteUserMetadata;
-  EXTENSIONAPI static const core::Property RequesterPays;
-  static auto properties() {
-    return minifi::utils::array_cat(S3Processor::properties(), std::array{
+  EXTENSIONAPI static constexpr auto Delimiter = core::PropertyDefinitionBuilder<>::createProperty("Delimiter")
+      .withDescription("The string used to delimit directories within the bucket. Please consult the AWS documentation for the correct use of this field.")
+      .build();
+  EXTENSIONAPI static constexpr auto Prefix = core::PropertyDefinitionBuilder<>::createProperty("Prefix")
+      .withDescription("The prefix used to filter the object list. In most cases, it should end with a forward slash ('/').")
+      .build();
+  EXTENSIONAPI static constexpr auto UseVersions = core::PropertyDefinitionBuilder<>::createProperty("Use Versions")
+      .withDescription("Specifies whether to use S3 versions, if applicable. If false, only the latest version of each object will be returned.")
+      .isRequired(true)
+      .withPropertyType(core::StandardPropertyTypes::BOOLEAN_TYPE)
+      .withDefaultValue("false")
+      .build();
+  EXTENSIONAPI static constexpr auto MinimumObjectAge = core::PropertyDefinitionBuilder<>::createProperty("Minimum Object Age")
+      .withDescription("The minimum age that an S3 object must be in order to be considered; any object younger than this amount of time (according to last modification date) will be ignored.")
+      .isRequired(true)
+      .withPropertyType(core::StandardPropertyTypes::TIME_PERIOD_TYPE)
+      .withDefaultValue("0 sec")
+      .build();
+  EXTENSIONAPI static constexpr auto WriteObjectTags = core::PropertyDefinitionBuilder<>::createProperty("Write Object Tags")
+      .withDescription("If set to 'true', the tags associated with the S3 object will be written as FlowFile attributes.")
+      .isRequired(true)
+      .withPropertyType(core::StandardPropertyTypes::BOOLEAN_TYPE)
+      .withDefaultValue("false")
+      .build();
+  EXTENSIONAPI static constexpr auto WriteUserMetadata = core::PropertyDefinitionBuilder<>::createProperty("Write User Metadata")
+      .isRequired(true)
+      .withDescription("If set to 'true', the user defined metadata associated with the S3 object will be added to FlowFile attributes/records.")
+      .withPropertyType(core::StandardPropertyTypes::BOOLEAN_TYPE)
+      .withDefaultValue("false")
+      .build();
+  EXTENSIONAPI static constexpr auto RequesterPays = core::PropertyDefinitionBuilder<>::createProperty("Requester Pays")
+      .isRequired(true)
+      .withPropertyType(core::StandardPropertyTypes::BOOLEAN_TYPE)
+      .withDefaultValue("false")
+      .withDescription("If true, indicates that the requester consents to pay any charges associated with listing the S3 bucket. This sets the 'x-amz-request-payer' header to 'requester'. "
+          "Note that this setting is only used if Write User Metadata is true.")
+      .build();
+  EXTENSIONAPI static constexpr auto Properties = minifi::utils::array_cat(S3Processor::Properties, std::array<core::PropertyReference, 7>{
       Delimiter,
       Prefix,
       UseVersions,
@@ -49,11 +81,11 @@ class ListS3 : public S3Processor {
       WriteObjectTags,
       WriteUserMetadata,
       RequesterPays
-    });
-  }
+  });
 
-  EXTENSIONAPI static const core::Relationship Success;
-  static auto relationships() { return std::array{Success}; }
+
+  EXTENSIONAPI static constexpr auto Success = core::RelationshipDefinition{"success", "FlowFiles are routed to success relationship"};
+  EXTENSIONAPI static constexpr auto Relationships = std::array{Success};
 
   EXTENSIONAPI static constexpr bool SupportsDynamicProperties = true;
   EXTENSIONAPI static constexpr bool SupportsDynamicRelationships = false;

@@ -64,7 +64,7 @@ TEST_CASE_METHOD(Fixture, "ConsumeMQTTTest_DurableSessionWithoutID_V_5", "[consu
   consumeMqttProcessor_->setProperty(minifi::processors::AbstractMQTTProcessor::BrokerURI, "127.0.0.1:1883");
   consumeMqttProcessor_->setProperty(minifi::processors::ConsumeMQTT::Topic, "mytopic");
   consumeMqttProcessor_->setProperty(minifi::processors::AbstractMQTTProcessor::QoS, "1");
-  consumeMqttProcessor_->setProperty(minifi::processors::AbstractMQTTProcessor::MqttVersion, toString(minifi::processors::AbstractMQTTProcessor::MqttVersions::V_5_0));
+  consumeMqttProcessor_->setProperty(minifi::processors::AbstractMQTTProcessor::MqttVersion, toString(minifi::processors::mqtt::MqttVersions::V_5_0));
   consumeMqttProcessor_->setProperty(minifi::processors::ConsumeMQTT::SessionExpiryInterval, "1 h");
 
   REQUIRE_THROWS_WITH(plan_->scheduleProcessor(consumeMqttProcessor_),
@@ -101,7 +101,7 @@ TEST_CASE_METHOD(Fixture, "ConsumeMQTTTest_DurableSessionWithID_V_5", "[consumeM
   consumeMqttProcessor_->setProperty(minifi::processors::AbstractMQTTProcessor::ClientID, "subscriber");
   consumeMqttProcessor_->setProperty(minifi::processors::ConsumeMQTT::Topic, "mytopic");
   consumeMqttProcessor_->setProperty(minifi::processors::AbstractMQTTProcessor::QoS, "1");
-  consumeMqttProcessor_->setProperty(minifi::processors::AbstractMQTTProcessor::MqttVersion, toString(minifi::processors::AbstractMQTTProcessor::MqttVersions::V_5_0));
+  consumeMqttProcessor_->setProperty(minifi::processors::AbstractMQTTProcessor::MqttVersion, toString(minifi::processors::mqtt::MqttVersions::V_5_0));
   consumeMqttProcessor_->setProperty(minifi::processors::ConsumeMQTT::SessionExpiryInterval, "1 h");
 
   REQUIRE_NOTHROW(plan_->scheduleProcessor(consumeMqttProcessor_));
@@ -114,7 +114,7 @@ TEST_CASE_METHOD(Fixture, "ConsumeMQTTTest_DurableSessionWithQoS0_V_5", "[consum
   consumeMqttProcessor_->setProperty(minifi::processors::AbstractMQTTProcessor::ClientID, "subscriber");
   consumeMqttProcessor_->setProperty(minifi::processors::ConsumeMQTT::Topic, "mytopic");
   consumeMqttProcessor_->setProperty(minifi::processors::AbstractMQTTProcessor::QoS, "0");
-  consumeMqttProcessor_->setProperty(minifi::processors::AbstractMQTTProcessor::MqttVersion, toString(minifi::processors::AbstractMQTTProcessor::MqttVersions::V_5_0));
+  consumeMqttProcessor_->setProperty(minifi::processors::AbstractMQTTProcessor::MqttVersion, toString(minifi::processors::mqtt::MqttVersions::V_5_0));
   consumeMqttProcessor_->setProperty(minifi::processors::ConsumeMQTT::SessionExpiryInterval, "1 h");
 
   REQUIRE_NOTHROW(plan_->scheduleProcessor(consumeMqttProcessor_));
@@ -126,7 +126,7 @@ TEST_CASE_METHOD(Fixture, "ConsumeMQTTTest_DurableSessionWithQoS0_V_5", "[consum
 TEST_CASE_METHOD(Fixture, "ConsumeMQTTTest_EmptyClientID_V_3_1_0", "[consumeMQTTTest]") {
   consumeMqttProcessor_->setProperty(minifi::processors::ConsumeMQTT::Topic, "mytopic");
   consumeMqttProcessor_->setProperty(minifi::processors::AbstractMQTTProcessor::BrokerURI, "127.0.0.1:1883");
-  consumeMqttProcessor_->setProperty(minifi::processors::AbstractMQTTProcessor::MqttVersion, toString(minifi::processors::AbstractMQTTProcessor::MqttVersions::V_3_1_0));
+  consumeMqttProcessor_->setProperty(minifi::processors::AbstractMQTTProcessor::MqttVersion, toString(minifi::processors::mqtt::MqttVersions::V_3_1_0));
   REQUIRE_THROWS_WITH(plan_->scheduleProcessor(consumeMqttProcessor_), Catch::EndsWith("MQTT 3.1.0 specification does not support empty client IDs"));
 }
 
@@ -151,7 +151,7 @@ TEST_CASE_METHOD(Fixture, "ConsumeMQTTTest_SessionExpiryInterval_V_3", "[consume
 TEST_CASE_METHOD(Fixture, "ConsumeMQTTTest_CleanSession_V_5", "[consumeMQTTTest]") {
   consumeMqttProcessor_->setProperty(minifi::processors::AbstractMQTTProcessor::BrokerURI, "127.0.0.1:1883");
   consumeMqttProcessor_->setProperty(minifi::processors::ConsumeMQTT::Topic, "mytopic");
-  consumeMqttProcessor_->setProperty(minifi::processors::AbstractMQTTProcessor::MqttVersion, toString(minifi::processors::AbstractMQTTProcessor::MqttVersions::V_5_0));
+  consumeMqttProcessor_->setProperty(minifi::processors::AbstractMQTTProcessor::MqttVersion, toString(minifi::processors::mqtt::MqttVersions::V_5_0));
   consumeMqttProcessor_->setProperty(minifi::processors::ConsumeMQTT::SessionExpiryInterval, "0 s");
   consumeMqttProcessor_->setProperty(minifi::processors::ConsumeMQTT::CleanSession, "true");
 

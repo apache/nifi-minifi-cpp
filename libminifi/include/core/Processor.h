@@ -41,7 +41,7 @@
 #include "core/state/nodes/MetricsBase.h"
 #include "ProcessorMetrics.h"
 #include "utils/gsl.h"
-#include "OutputAttribute.h"
+#include "OutputAttributeDefinition.h"
 
 #define ADD_GET_PROCESSOR_NAME \
   std::string getProcessorType() const override { \
@@ -226,9 +226,9 @@ class Processor : public Connectable, public ConfigurableComponent, public state
     return metrics_;
   }
 
-  static std::array<DynamicProperty, 0> dynamicProperties() { return {}; }
+  static constexpr auto DynamicProperties = std::array<DynamicProperty, 0>{};
 
-  static std::array<OutputAttribute, 0> outputAttributes() { return {}; }
+  static constexpr auto OutputAttributes = std::array<OutputAttributeReference, 0>{};
 
  protected:
   virtual void notifyStop() {

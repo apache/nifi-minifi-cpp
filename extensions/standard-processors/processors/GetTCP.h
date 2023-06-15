@@ -1,5 +1,4 @@
 /**
- *
  * Licensed to the Apache Software Foundation (ASF) under one or more
  * contributor license agreements.  See the NOTICE file distributed with
  * this work for additional information regarding copyright ownership.
@@ -17,6 +16,7 @@
  */
 #pragma once
 
+#include <array>
 #include <map>
 #include <memory>
 #include <string>
@@ -28,8 +28,12 @@
 
 #include "../core/state/nodes/MetricsBase.h"
 #include "FlowFileRecord.h"
+#include "core/OutputAttributeDefinition.h"
 #include "core/Processor.h"
 #include "core/ProcessSession.h"
+#include "core/PropertyDefinition.h"
+#include "core/PropertyDefinitionBuilder.h"
+#include "core/PropertyType.h"
 #include "core/Core.h"
 #include "concurrentqueue.h"
 #include "io/ClientSocket.h"
@@ -61,16 +65,49 @@ class GetTCP : public core::Processor {
 
   EXTENSIONAPI static constexpr const char* Description = "Establishes a TCP Server that defines and retrieves one or more byte messages from clients";
 
-  EXTENSIONAPI static const core::Property EndpointList;
-  EXTENSIONAPI static const core::Property SSLContextService;
-  EXTENSIONAPI static const core::Property MessageDelimiter;
-  EXTENSIONAPI static const core::Property MaxQueueSize;
-  EXTENSIONAPI static const core::Property MaxMessageSize;
-  EXTENSIONAPI static const core::Property MaxBatchSize;
-  EXTENSIONAPI static const core::Property Timeout;
-  EXTENSIONAPI static const core::Property ReconnectInterval;
-  static auto properties() {
-    return std::array{
+  EXTENSIONAPI static constexpr auto EndpointList = core::PropertyDefinitionBuilder<>::createProperty("Endpoint List")
+      .withDescription("A comma delimited list of the endpoints to connect to. The format should be <server_address>:<port>.")
+      .isRequired(true)
+      .build();
+  EXTENSIONAPI static constexpr auto SSLContextService = core::PropertyDefinitionBuilder<0, 1>::createProperty("SSL Context Service")
+      .withDescription("SSL Context Service Name")
+      .withAllowedTypes({core::className<minifi::controllers::SSLContextService>()})
+      .build();
+  EXTENSIONAPI static constexpr auto MessageDelimiter = core::PropertyDefinitionBuilder<>::createProperty("Message Delimiter")
+      .withDescription("Character that denotes the end of the message.")
+      .withDefaultValue("\\n")
+      .build();
+  EXTENSIONAPI static constexpr auto MaxQueueSize = core::PropertyDefinitionBuilder<>::createProperty("Max Size of Message Queue")
+      .withDescription("Maximum number of messages allowed to be buffered before processing them when the processor is triggered. "
+          "If the buffer is full, the message is ignored. If set to zero the buffer is unlimited.")
+      .withPropertyType(core::StandardPropertyTypes::UNSIGNED_LONG_TYPE)
+      .withDefaultValue("10000")
+      .isRequired(true)
+      .build();
+  EXTENSIONAPI static constexpr auto MaxBatchSize = core::PropertyDefinitionBuilder<>::createProperty("Max Batch Size")
+      .withDescription("The maximum number of messages to process at a time.")
+      .withPropertyType(core::StandardPropertyTypes::UNSIGNED_LONG_TYPE)
+      .withDefaultValue("500")
+      .isRequired(true)
+      .build();
+  EXTENSIONAPI static constexpr auto MaxMessageSize = core::PropertyDefinitionBuilder<>::createProperty("Maximum Message Size")
+      .withDescription("Optional size of the buffer to receive data in.")
+      .build();
+  EXTENSIONAPI static constexpr auto Timeout = core::PropertyDefinitionBuilder<>::createProperty("Timeout")
+      .withDescription("The timeout for connecting to and communicating with the destination.")
+      .withPropertyType(core::StandardPropertyTypes::TIME_PERIOD_TYPE)
+      .withDefaultValue("1s")
+      .isRequired(true)
+      .supportsExpressionLanguage(true)
+      .build();
+  EXTENSIONAPI static constexpr auto ReconnectInterval = core::PropertyDefinitionBuilder<>::createProperty("Reconnection Interval")
+      .withDescription("The duration to wait before attempting to reconnect to the endpoints.")
+      .withPropertyType(core::StandardPropertyTypes::TIME_PERIOD_TYPE)
+      .withDefaultValue("1 min")
+      .isRequired(true)
+      .supportsExpressionLanguage(true)
+      .build();
+  EXTENSIONAPI static constexpr auto Properties = std::array<core::PropertyReference, 8>{
       EndpointList,
       SSLContextService,
       MessageDelimiter,
@@ -79,21 +116,19 @@ class GetTCP : public core::Processor {
       MaxBatchSize,
       Timeout,
       ReconnectInterval
-    };
-  }
+  };
 
-  EXTENSIONAPI static const core::Relationship Success;
-  EXTENSIONAPI static const core::Relationship Partial;
-  static auto relationships() { return std::array{Success, Partial}; }
+  EXTENSIONAPI static constexpr auto Success = core::RelationshipDefinition{"success", "All files are routed to success"};
+  EXTENSIONAPI static constexpr auto Partial = core::RelationshipDefinition{"partial", "Indicates an incomplete message as a result of encountering the end of message byte trigger"};
+  EXTENSIONAPI static constexpr auto Relationships = std::array{Success, Partial};
 
   EXTENSIONAPI static constexpr bool SupportsDynamicProperties = false;
   EXTENSIONAPI static constexpr bool SupportsDynamicRelationships = false;
   EXTENSIONAPI static constexpr core::annotation::Input InputRequirement = core::annotation::Input::INPUT_ALLOWED;
   EXTENSIONAPI static constexpr bool IsSingleThreaded = false;
 
-  EXTENSIONAPI static const core::OutputAttribute SourceEndpoint;
-
-  static auto outputAttributes() { return std::array{SourceEndpoint}; }
+  EXTENSIONAPI static constexpr auto SourceEndpoint = core::OutputAttributeDefinition<2>{"source.endpoint", {Success, Partial}, "The address of the source endpoint the message came from"};
+  EXTENSIONAPI static constexpr auto OutputAttributes = std::array<core::OutputAttributeReference, 1>{SourceEndpoint};
 
   ADD_COMMON_VIRTUAL_FUNCTIONS_FOR_PROCESSORS
 

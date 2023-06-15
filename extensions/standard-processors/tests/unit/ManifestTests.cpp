@@ -74,15 +74,13 @@ TEST_CASE("Test Valid Regex", "[validRegex]") {
   const auto &prop_descriptors = proc_0.children[0];
   REQUIRE_FALSE(prop_descriptors.children.empty());
   const auto &prop_0 = prop_descriptors.children[0];
-  REQUIRE(prop_0.children.size() >= 3);
+  REQUIRE(prop_0.children.size() >= 6);
   const auto &df = prop_0.children[3];
   REQUIRE("required" == df.name);
   const auto &prop_0_els = prop_0.children[4];
   REQUIRE("expressionLanguageScope" == prop_0_els.name);
   const auto &prop_0_valid_regex = prop_0.children[5];
   REQUIRE("defaultValue" == prop_0_valid_regex.name);
-  const auto &prop_0_defv = prop_0.children[6];
-  REQUIRE("validRegex" == prop_0_defv.name);
 }
 
 TEST_CASE("Test Relationships", "[rel1]") {

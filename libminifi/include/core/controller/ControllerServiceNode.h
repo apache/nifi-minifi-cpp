@@ -15,8 +15,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#ifndef LIBMINIFI_INCLUDE_CORE_CONTROLLER_CONTROLLERSERVICENODE_H_
-#define LIBMINIFI_INCLUDE_CORE_CONTROLLER_CONTROLLERSERVICENODE_H_
+#pragma once
 
 #include <memory>
 #include <string>
@@ -26,6 +25,8 @@
 #include "core/Core.h"
 #include "core/ConfigurableComponent.h"
 #include "core/logging/Logger.h"
+#include "core/PropertyDefinition.h"
+#include "core/PropertyDefinitionBuilder.h"
 #include "properties/Configure.h"
 #include "ControllerService.h"
 #include "io/validation.h"
@@ -57,8 +58,8 @@ class ControllerServiceNode : public CoreComponent, public ConfigurableComponent
 
   void initialize() override {
     controller_service_->initialize();
-    setSupportedProperties(std::array{
-      Property{"Linked Services", "Referenced Controller Services"}
+    setSupportedProperties(std::array<PropertyReference, 1>{
+      PropertyDefinitionBuilder<>::createProperty("Linked Services").withDescription("Referenced Controller Services").build()
     });
   }
 
@@ -127,5 +128,3 @@ class ControllerServiceNode : public CoreComponent, public ConfigurableComponent
 };
 
 }  // namespace org::apache::nifi::minifi::core::controller
-
-#endif  // LIBMINIFI_INCLUDE_CORE_CONTROLLER_CONTROLLERSERVICENODE_H_

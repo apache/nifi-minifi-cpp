@@ -16,7 +16,6 @@
  * limitations under the License.
  */
 
-#include <map>
 #include <string>
 #include <algorithm>
 #include <memory>
@@ -25,6 +24,7 @@
 #include "../TestBase.h"
 #include "../Catch.h"
 #include "ArchiveTests.h"
+#include "core/PropertyDefinition.h"
 #include "processors/GetFile.h"
 #include "processors/LogAttribute.h"
 #include "processors/PutFile.h"
@@ -43,7 +43,7 @@ const char* MODIFY_SRC = FILE_NAMES[0];
 const char* ORDER_ANCHOR = FILE_NAMES[1];
 const char* MODIFY_DEST = "modified";
 
-using PROP_MAP_T = std::map<std::string, std::string>;
+using PROP_MAP_T = std::vector<std::pair<core::PropertyReference, std::string>>;
 
 bool run_archive_test(OrderedTestArchive& input_archive, const OrderedTestArchive& output_archive, const PROP_MAP_T& properties, bool check_attributes = true) {
     TestController testController;
@@ -69,8 +69,8 @@ bool run_archive_test(OrderedTestArchive& input_archive, const OrderedTestArchiv
     REQUIRE(!dir2.empty());
 
     std::shared_ptr<core::Processor> getfile = plan->addProcessor("GetFile", "getfileCreate2");
-    plan->setProperty(getfile, org::apache::nifi::minifi::processors::GetFile::Directory.getName(), dir1.string());
-    plan->setProperty(getfile, org::apache::nifi::minifi::processors::GetFile::KeepSourceFile.getName(), "true");
+    plan->setProperty(getfile, org::apache::nifi::minifi::processors::GetFile::Directory, dir1.string());
+    plan->setProperty(getfile, org::apache::nifi::minifi::processors::GetFile::KeepSourceFile, "true");
 
     std::shared_ptr<core::Processor> maprocessor = plan->addProcessor("ManipulateArchive", "testManipulateArchive", core::Relationship("success", "description"), true);
 
@@ -79,8 +79,8 @@ bool run_archive_test(OrderedTestArchive& input_archive, const OrderedTestArchiv
     }
 
     std::shared_ptr<core::Processor> putfile2 = plan->addProcessor("PutFile", "PutFile2", core::Relationship("success", "description"), true);
-    plan->setProperty(putfile2, org::apache::nifi::minifi::processors::PutFile::Directory.getName(), dir2.string());
-    plan->setProperty(putfile2, org::apache::nifi::minifi::processors::PutFile::ConflictResolution.getName(),
+    plan->setProperty(putfile2, org::apache::nifi::minifi::processors::PutFile::Directory, dir2.string());
+    plan->setProperty(putfile2, org::apache::nifi::minifi::processors::PutFile::ConflictResolution,
                       org::apache::nifi::minifi::processors::PutFile::CONFLICT_RESOLUTION_STRATEGY_REPLACE);
 
     auto archive_path_1 = dir1 / TEST_ARCHIVE_NAME;
@@ -118,8 +118,8 @@ TEST_CASE("Test ManipulateArchive Touch", "[testManipulateArchiveTouch]") {
     TAE_MAP_T test_archive_map = build_test_archive_map(NUM_FILES, FILE_NAMES, FILE_CONTENT);
 
     PROP_MAP_T properties {
-      {org::apache::nifi::minifi::processors::ManipulateArchive::Destination.getName(), MODIFY_DEST},
-      {org::apache::nifi::minifi::processors::ManipulateArchive::Operation.getName(),
+      {org::apache::nifi::minifi::processors::ManipulateArchive::Destination, MODIFY_DEST},
+      {org::apache::nifi::minifi::processors::ManipulateArchive::Operation,
        org::apache::nifi::minifi::processors::ManipulateArchive::OPERATION_TOUCH}
     };
 
@@ -141,9 +141,9 @@ TEST_CASE("Test ManipulateArchive Copy", "[testManipulateArchiveCopy]") {
     TAE_MAP_T test_archive_map = build_test_archive_map(NUM_FILES, FILE_NAMES, FILE_CONTENT);
 
     PROP_MAP_T properties {
-      {org::apache::nifi::minifi::processors::ManipulateArchive::Target.getName(), MODIFY_SRC},
-      {org::apache::nifi::minifi::processors::ManipulateArchive::Destination.getName(), MODIFY_DEST},
-      {org::apache::nifi::minifi::processors::ManipulateArchive::Operation.getName(),
+      {org::apache::nifi::minifi::processors::ManipulateArchive::Target, MODIFY_SRC},
+      {org::apache::nifi::minifi::processors::ManipulateArchive::Destination, MODIFY_DEST},
+      {org::apache::nifi::minifi::processors::ManipulateArchive::Operation,
        org::apache::nifi::minifi::processors::ManipulateArchive::OPERATION_COPY}
     };
 
@@ -157,9 +157,9 @@ TEST_CASE("Test ManipulateArchive Move", "[testManipulateArchiveMove]") {
     TAE_MAP_T test_archive_map = build_test_archive_map(NUM_FILES, FILE_NAMES, FILE_CONTENT);
 
     PROP_MAP_T properties {
-      {org::apache::nifi::minifi::processors::ManipulateArchive::Target.getName(), MODIFY_SRC},
-      {org::apache::nifi::minifi::processors::ManipulateArchive::Destination.getName(), MODIFY_DEST},
-      {org::apache::nifi::minifi::processors::ManipulateArchive::Operation.getName(),
+      {org::apache::nifi::minifi::processors::ManipulateArchive::Target, MODIFY_SRC},
+      {org::apache::nifi::minifi::processors::ManipulateArchive::Destination, MODIFY_DEST},
+      {org::apache::nifi::minifi::processors::ManipulateArchive::Operation,
        org::apache::nifi::minifi::processors::ManipulateArchive::OPERATION_MOVE}
     };
 
@@ -178,8 +178,8 @@ TEST_CASE("Test ManipulateArchive Remove", "[testManipulateArchiveRemove]") {
     TAE_MAP_T test_archive_map = build_test_archive_map(NUM_FILES, FILE_NAMES, FILE_CONTENT);
 
     PROP_MAP_T properties {
-      {org::apache::nifi::minifi::processors::ManipulateArchive::Target.getName(), MODIFY_SRC},
-      {org::apache::nifi::minifi::processors::ManipulateArchive::Operation.getName(),
+      {org::apache::nifi::minifi::processors::ManipulateArchive::Target, MODIFY_SRC},
+      {org::apache::nifi::minifi::processors::ManipulateArchive::Operation,
        org::apache::nifi::minifi::processors::ManipulateArchive::OPERATION_REMOVE}
     };
 
@@ -195,10 +195,10 @@ TEST_CASE("Test ManipulateArchive Ordered Touch (before)", "[testManipulateArchi
     OrderedTestArchive test_archive = build_ordered_test_archive(NUM_FILES, FILE_NAMES, FILE_CONTENT);
 
     PROP_MAP_T properties {
-      {org::apache::nifi::minifi::processors::ManipulateArchive::Destination.getName(), MODIFY_DEST},
-      {org::apache::nifi::minifi::processors::ManipulateArchive::Operation.getName(),
+      {org::apache::nifi::minifi::processors::ManipulateArchive::Destination, MODIFY_DEST},
+      {org::apache::nifi::minifi::processors::ManipulateArchive::Operation,
        org::apache::nifi::minifi::processors::ManipulateArchive::OPERATION_TOUCH},
-      {org::apache::nifi::minifi::processors::ManipulateArchive::Before.getName(), ORDER_ANCHOR}
+      {org::apache::nifi::minifi::processors::ManipulateArchive::Before, ORDER_ANCHOR}
     };
 
     // The other attributes aren't checked, so we can leave them uninitialized
@@ -222,11 +222,11 @@ TEST_CASE("Test ManipulateArchive Ordered Copy (before)", "[testManipulateArchiv
     OrderedTestArchive test_archive = build_ordered_test_archive(NUM_FILES, FILE_NAMES, FILE_CONTENT);
 
     PROP_MAP_T properties {
-      {org::apache::nifi::minifi::processors::ManipulateArchive::Target.getName(), MODIFY_SRC},
-      {org::apache::nifi::minifi::processors::ManipulateArchive::Destination.getName(), MODIFY_DEST},
-      {org::apache::nifi::minifi::processors::ManipulateArchive::Operation.getName(),
+      {org::apache::nifi::minifi::processors::ManipulateArchive::Target, MODIFY_SRC},
+      {org::apache::nifi::minifi::processors::ManipulateArchive::Destination, MODIFY_DEST},
+      {org::apache::nifi::minifi::processors::ManipulateArchive::Operation,
        org::apache::nifi::minifi::processors::ManipulateArchive::OPERATION_COPY},
-      {org::apache::nifi::minifi::processors::ManipulateArchive::Before.getName(), ORDER_ANCHOR}
+      {org::apache::nifi::minifi::processors::ManipulateArchive::Before, ORDER_ANCHOR}
     };
 
     OrderedTestArchive mod_archive = test_archive;
@@ -241,11 +241,11 @@ TEST_CASE("Test ManipulateArchive Ordered Move (before)", "[testManipulateArchiv
     OrderedTestArchive test_archive = build_ordered_test_archive(NUM_FILES, FILE_NAMES, FILE_CONTENT);
 
     PROP_MAP_T properties {
-      {org::apache::nifi::minifi::processors::ManipulateArchive::Target.getName(), MODIFY_SRC},
-      {org::apache::nifi::minifi::processors::ManipulateArchive::Destination.getName(), MODIFY_DEST},
-      {org::apache::nifi::minifi::processors::ManipulateArchive::Operation.getName(),
+      {org::apache::nifi::minifi::processors::ManipulateArchive::Target, MODIFY_SRC},
+      {org::apache::nifi::minifi::processors::ManipulateArchive::Destination, MODIFY_DEST},
+      {org::apache::nifi::minifi::processors::ManipulateArchive::Operation,
        org::apache::nifi::minifi::processors::ManipulateArchive::OPERATION_MOVE},
-      {org::apache::nifi::minifi::processors::ManipulateArchive::Before.getName(), ORDER_ANCHOR}
+      {org::apache::nifi::minifi::processors::ManipulateArchive::Before, ORDER_ANCHOR}
     };
 
     OrderedTestArchive mod_archive = test_archive;
@@ -269,10 +269,10 @@ TEST_CASE("Test ManipulateArchive Ordered Touch (after)", "[testManipulateArchiv
     OrderedTestArchive test_archive = build_ordered_test_archive(NUM_FILES, FILE_NAMES, FILE_CONTENT);
 
     PROP_MAP_T properties {
-      {org::apache::nifi::minifi::processors::ManipulateArchive::Destination.getName(), MODIFY_DEST},
-      {org::apache::nifi::minifi::processors::ManipulateArchive::Operation.getName(),
+      {org::apache::nifi::minifi::processors::ManipulateArchive::Destination, MODIFY_DEST},
+      {org::apache::nifi::minifi::processors::ManipulateArchive::Operation,
        org::apache::nifi::minifi::processors::ManipulateArchive::OPERATION_TOUCH},
-      {org::apache::nifi::minifi::processors::ManipulateArchive::After.getName(), ORDER_ANCHOR}
+      {org::apache::nifi::minifi::processors::ManipulateArchive::After, ORDER_ANCHOR}
     };
 
     // The other attributes aren't checked, so we can leave them uninitialized
@@ -297,11 +297,11 @@ TEST_CASE("Test ManipulateArchive Ordered Copy (after)", "[testManipulateArchive
     OrderedTestArchive test_archive = build_ordered_test_archive(NUM_FILES, FILE_NAMES, FILE_CONTENT);
 
     PROP_MAP_T properties {
-      {org::apache::nifi::minifi::processors::ManipulateArchive::Target.getName(), MODIFY_SRC},
-      {org::apache::nifi::minifi::processors::ManipulateArchive::Destination.getName(), MODIFY_DEST},
-      {org::apache::nifi::minifi::processors::ManipulateArchive::Operation.getName(),
+      {org::apache::nifi::minifi::processors::ManipulateArchive::Target, MODIFY_SRC},
+      {org::apache::nifi::minifi::processors::ManipulateArchive::Destination, MODIFY_DEST},
+      {org::apache::nifi::minifi::processors::ManipulateArchive::Operation,
        org::apache::nifi::minifi::processors::ManipulateArchive::OPERATION_COPY},
-      {org::apache::nifi::minifi::processors::ManipulateArchive::After.getName(), ORDER_ANCHOR}
+      {org::apache::nifi::minifi::processors::ManipulateArchive::After, ORDER_ANCHOR}
     };
 
     OrderedTestArchive mod_archive = test_archive;
@@ -317,11 +317,11 @@ TEST_CASE("Test ManipulateArchive Ordered Move (after)", "[testManipulateArchive
     OrderedTestArchive test_archive = build_ordered_test_archive(NUM_FILES, FILE_NAMES, FILE_CONTENT);
 
     PROP_MAP_T properties {
-      {org::apache::nifi::minifi::processors::ManipulateArchive::Target.getName(), MODIFY_SRC},
-      {org::apache::nifi::minifi::processors::ManipulateArchive::Destination.getName(), MODIFY_DEST},
-      {org::apache::nifi::minifi::processors::ManipulateArchive::Operation.getName(),
+      {org::apache::nifi::minifi::processors::ManipulateArchive::Target, MODIFY_SRC},
+      {org::apache::nifi::minifi::processors::ManipulateArchive::Destination, MODIFY_DEST},
+      {org::apache::nifi::minifi::processors::ManipulateArchive::Operation,
        org::apache::nifi::minifi::processors::ManipulateArchive::OPERATION_MOVE},
-      {org::apache::nifi::minifi::processors::ManipulateArchive::After.getName(), ORDER_ANCHOR}
+      {org::apache::nifi::minifi::processors::ManipulateArchive::After, ORDER_ANCHOR}
     };
 
     OrderedTestArchive mod_archive = test_archive;

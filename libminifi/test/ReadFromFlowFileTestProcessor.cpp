@@ -21,10 +21,8 @@
 
 namespace org::apache::nifi::minifi::processors {
 
-const core::Relationship ReadFromFlowFileTestProcessor::Success("success", "success operational on the flow record");
-
 void ReadFromFlowFileTestProcessor::initialize() {
-  setSupportedRelationships(relationships());
+  setSupportedRelationships(Relationships);
 }
 
 void ReadFromFlowFileTestProcessor::onSchedule(core::ProcessContext*, core::ProcessSessionFactory*) {
@@ -53,21 +51,20 @@ ReadFromFlowFileTestProcessor::FlowFileData::FlowFileData(core::ProcessSession* 
 }
 
 bool ReadFromFlowFileTestProcessor::readFlowFileWithContent(const std::string& content) const {
-  return std::find_if(flow_files_read_.begin(), flow_files_read_.end(), [&content](FlowFileData flow_file_data){ return flow_file_data.content_ == content; }) != flow_files_read_.end();
+  return std::find_if(flow_files_read_.begin(), flow_files_read_.end(), [&content](const FlowFileData& flow_file_data){ return flow_file_data.content_ == content; }) != flow_files_read_.end();
 }
 
 bool ReadFromFlowFileTestProcessor::readFlowFileWithAttribute(const std::string& key) const {
   return std::find_if(flow_files_read_.begin(),
-                      flow_files_read_.end(),
-                      [&key](FlowFileData flow_file_data) { return flow_file_data.attributes_.contains(key); }) != flow_files_read_.end();
+      flow_files_read_.end(),
+      [&key](const FlowFileData& flow_file_data) { return flow_file_data.attributes_.contains(key); }) != flow_files_read_.end();
 }
 
 bool ReadFromFlowFileTestProcessor::readFlowFileWithAttribute(const std::string& key, const std::string& value) const {
   return std::find_if(flow_files_read_.begin(),
-                      flow_files_read_.end(),
-                      [&key, &value](FlowFileData flow_file_data) { return flow_file_data.attributes_.contains(key) && flow_file_data.attributes_.at(key) == value; }) != flow_files_read_.end();
+      flow_files_read_.end(),
+      [&key, &value](const FlowFileData& flow_file_data) { return flow_file_data.attributes_.contains(key) && flow_file_data.attributes_.at(key) == value; }) != flow_files_read_.end();
 }
-
 
 REGISTER_RESOURCE(ReadFromFlowFileTestProcessor, Processor);
 

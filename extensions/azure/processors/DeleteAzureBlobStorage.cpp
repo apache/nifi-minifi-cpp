@@ -27,8 +27,8 @@
 namespace org::apache::nifi::minifi::azure::processors {
 
 void DeleteAzureBlobStorage::initialize() {
-  setSupportedProperties(properties());
-  setSupportedRelationships(relationships());
+  setSupportedProperties(Properties);
+  setSupportedRelationships(Relationships);
 }
 
 void DeleteAzureBlobStorage::onSchedule(const std::shared_ptr<core::ProcessContext>& context, const std::shared_ptr<core::ProcessSessionFactory>& session_factory) {
@@ -70,5 +70,7 @@ void DeleteAzureBlobStorage::onTrigger(const std::shared_ptr<core::ProcessContex
     session->transfer(flow_file, Failure);
   }
 }
+
+REGISTER_RESOURCE(DeleteAzureBlobStorage, Processor);
 
 }  // namespace org::apache::nifi::minifi::azure::processors

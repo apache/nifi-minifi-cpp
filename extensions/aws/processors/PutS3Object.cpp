@@ -18,9 +18,7 @@
 #include "PutS3Object.h"
 
 #include <string>
-#include <set>
 #include <memory>
-#include <utility>
 
 #include "AWSCredentialsService.h"
 #include "properties/Properties.h"
@@ -29,12 +27,13 @@
 #include "core/ProcessContext.h"
 #include "core/ProcessSession.h"
 #include "core/Resource.h"
+#include "range/v3/algorithm/contains.hpp"
 
 namespace org::apache::nifi::minifi::aws::processors {
 
 void PutS3Object::initialize() {
-  setSupportedProperties(properties());
-  setSupportedRelationships(relationships());
+  setSupportedProperties(Properties);
+  setSupportedRelationships(Relationships);
 }
 
 void PutS3Object::fillUserMetadata(const std::shared_ptr<core::ProcessContext> &context) {
@@ -59,16 +58,16 @@ void PutS3Object::fillUserMetadata(const std::shared_ptr<core::ProcessContext> &
 void PutS3Object::onSchedule(const std::shared_ptr<core::ProcessContext> &context, const std::shared_ptr<core::ProcessSessionFactory> &sessionFactory) {
   S3Processor::onSchedule(context, sessionFactory);
 
-  if (!context->getProperty(StorageClass.getName(), storage_class_)
+  if (!context->getProperty(StorageClass, storage_class_)
       || storage_class_.empty()
-      || STORAGE_CLASSES.find(storage_class_) == STORAGE_CLASSES.end()) {
+      || !ranges::contains(STORAGE_CLASSES, storage_class_)) {
     throw Exception(PROCESS_SCHEDULE_EXCEPTION, "Storage Class property missing or invalid");
   }
   logger_->log_debug("PutS3Object: Storage Class [%s]", storage_class_);
 
-  if (!context->getProperty(ServerSideEncryption.getName(), server_side_encryption_)
+  if (!context->getProperty(ServerSideEncryption, server_side_encryption_)
       || server_side_encryption_.empty()
-      || SERVER_SIDE_ENCRYPTIONS.find(server_side_encryption_) == SERVER_SIDE_ENCRYPTIONS.end()) {
+      || !ranges::contains(SERVER_SIDE_ENCRYPTIONS, server_side_encryption_)) {
     throw Exception(PROCESS_SCHEDULE_EXCEPTION, "Server Side Encryption property missing or invalid");
   }
   logger_->log_debug("PutS3Object: Server Side Encryption [%s]", server_side_encryption_);
@@ -98,7 +97,7 @@ bool PutS3Object::setCannedAcl(
     const std::shared_ptr<core::FlowFile> &flow_file,
     aws::s3::PutObjectRequestParameters &put_s3_request_params) const {
   context->getProperty(CannedACL, put_s3_request_params.canned_acl, flow_file);
-  if (!put_s3_request_params.canned_acl.empty() && CANNED_ACLS.find(put_s3_request_params.canned_acl) == CANNED_ACLS.end()) {
+  if (!put_s3_request_params.canned_acl.empty() && !ranges::contains(CANNED_ACLS, put_s3_request_params.canned_acl)) {
     logger_->log_error("Canned ACL is invalid!");
     return false;
   }
@@ -218,5 +217,7 @@ void PutS3Object::onTrigger(const std::shared_ptr<core::ProcessContext> &context
     session->transfer(flow_file, Success);
   }
 }
+
+REGISTER_RESOURCE(PutS3Object, Processor);
 
 }  // namespace org::apache::nifi::minifi::aws::processors

@@ -23,6 +23,7 @@
 #include "io/BufferStream.h"
 #include "core/ProcessContext.h"
 #include "core/ProcessSession.h"
+#include "core/Resource.h"
 #include "Exception.h"
 #include "core/logging/LoggerFactory.h"
 
@@ -33,8 +34,8 @@ PutSQL::PutSQL(std::string name, const utils::Identifier& uuid)
 }
 
 void PutSQL::initialize() {
-  setSupportedProperties(properties());
-  setSupportedRelationships(relationships());
+  setSupportedProperties(Properties);
+  setSupportedRelationships(Relationships);
 }
 
 void PutSQL::processOnSchedule(core::ProcessContext& context) {
@@ -64,5 +65,7 @@ void PutSQL::processOnTrigger(core::ProcessContext& context, core::ProcessSessio
     session.transfer(flow_file, Failure);
   }
 }
+
+REGISTER_RESOURCE(PutSQL, Processor);
 
 }  // namespace org::apache::nifi::minifi::processors

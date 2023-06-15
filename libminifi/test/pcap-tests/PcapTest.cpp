@@ -64,8 +64,8 @@ class PcapTestHarness : public IntegrationBase {
       auto proccontroller = dynamic_cast<minifi::state::ProcessorController*>(&component);
       if (proccontroller) {
         auto& processor = proccontroller->getProcessor();
-        processor.setProperty(minifi::processors::CapturePacket::BaseDir.getName(), dir);
-        processor.setProperty(minifi::processors::CapturePacket::NetworkControllers.getName(), ".*");
+        processor.setProperty(minifi::processors::CapturePacket::BaseDir, dir);
+        processor.setProperty(minifi::processors::CapturePacket::NetworkControllers, ".*");
       }
     });
   }

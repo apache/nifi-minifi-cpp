@@ -70,7 +70,7 @@ class VerifyC2Server : public HTTPIntegrationBase {
 
     assert(inv != nullptr);
     std::string url;
-    inv->getProperty(processors::InvokeHTTP::URL.getName(), url);
+    inv->getProperty(processors::InvokeHTTP::URL, url);
 
     std::string port;
     std::string scheme;

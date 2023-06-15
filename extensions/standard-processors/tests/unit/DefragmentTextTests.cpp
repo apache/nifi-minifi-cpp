@@ -32,6 +32,7 @@ using ReadFromFlowFileTestProcessor = org::apache::nifi::minifi::processors::Rea
 using UpdateAttribute = org::apache::nifi::minifi::processors::UpdateAttribute;
 using DefragmentText = org::apache::nifi::minifi::processors::DefragmentText;
 namespace textfragmentutils = org::apache::nifi::minifi::processors::textfragmentutils;
+namespace defragment_text = org::apache::nifi::minifi::processors::defragment_text;
 
 TEST_CASE("DefragmentText Single source tests", "[defragmenttextsinglesource]") {
   TestController testController;
@@ -46,8 +47,8 @@ TEST_CASE("DefragmentText Single source tests", "[defragmenttextsinglesource]") 
   plan->addConnection(defrag_text_flow_files, DefragmentText::Success, read_from_success_relationship);
   plan->addConnection(defrag_text_flow_files, DefragmentText::Failure, read_from_failure_relationship);
 
-  read_from_success_relationship->setAutoTerminatedRelationships(std::array{ReadFromFlowFileTestProcessor::Success});
-  read_from_failure_relationship->setAutoTerminatedRelationships(std::array{ReadFromFlowFileTestProcessor::Success});
+  read_from_success_relationship->setAutoTerminatedRelationships(std::array<core::Relationship, 1>{ReadFromFlowFileTestProcessor::Success});
+  read_from_failure_relationship->setAutoTerminatedRelationships(std::array<core::Relationship, 1>{ReadFromFlowFileTestProcessor::Success});
 
 
   SECTION("Throws on empty pattern") {
@@ -55,14 +56,14 @@ TEST_CASE("DefragmentText Single source tests", "[defragmenttextsinglesource]") 
   }
 
   SECTION("Throws on invalid pattern") {
-    plan->setProperty(defrag_text_flow_files, DefragmentText::Pattern.getName(), "\"[a-b][a\"");
+    plan->setProperty(defrag_text_flow_files, DefragmentText::Pattern, "\"[a-b][a\"");
 
     REQUIRE_THROWS(testController.runSession(plan));
   }
 
   SECTION("Single line messages starting with pattern") {
-    plan->setProperty(defrag_text_flow_files, DefragmentText::Pattern.getName(), "<[0-9]+>");
-    plan->setProperty(defrag_text_flow_files, DefragmentText::PatternLoc.getName(), toString(DefragmentText::PatternLocation::START_OF_MESSAGE));
+    plan->setProperty(defrag_text_flow_files, DefragmentText::Pattern, "<[0-9]+>");
+    plan->setProperty(defrag_text_flow_files, DefragmentText::PatternLoc, toString(defragment_text::PatternLocation::START_OF_MESSAGE));
 
     write_to_flow_file->setContent("<1> Foo");
     testController.runSession(plan);
@@ -78,8 +79,8 @@ TEST_CASE("DefragmentText Single source tests", "[defragmenttextsinglesource]") 
   }
 
   SECTION("Single line messages ending with pattern") {
-    plan->setProperty(defrag_text_flow_files, DefragmentText::Pattern.getName(), "<[0-9]+>");
-    plan->setProperty(defrag_text_flow_files, DefragmentText::PatternLoc.getName(), toString(DefragmentText::PatternLocation::END_OF_MESSAGE));
+    plan->setProperty(defrag_text_flow_files, DefragmentText::Pattern, "<[0-9]+>");
+    plan->setProperty(defrag_text_flow_files, DefragmentText::PatternLoc, toString(defragment_text::PatternLocation::END_OF_MESSAGE));
 
     write_to_flow_file->setContent("Foo <1>");
     testController.runSession(plan);
@@ -95,8 +96,8 @@ TEST_CASE("DefragmentText Single source tests", "[defragmenttextsinglesource]") 
   }
 
   SECTION("Multiline matching start of messages") {
-    plan->setProperty(defrag_text_flow_files, DefragmentText::Pattern.getName(), "<[0-9]+>");
-    plan->setProperty(defrag_text_flow_files, DefragmentText::PatternLoc.getName(), toString(DefragmentText::PatternLocation::START_OF_MESSAGE));
+    plan->setProperty(defrag_text_flow_files, DefragmentText::Pattern, "<[0-9]+>");
+    plan->setProperty(defrag_text_flow_files, DefragmentText::PatternLoc, toString(defragment_text::PatternLocation::START_OF_MESSAGE));
 
     write_to_flow_file->setContent("apple<1> banana<2> cherry<3> dragon ");
     testController.runSession(plan);
@@ -109,8 +110,8 @@ TEST_CASE("DefragmentText Single source tests", "[defragmenttextsinglesource]") 
   }
 
   SECTION("Multiline matching end of messages") {
-    plan->setProperty(defrag_text_flow_files, DefragmentText::Pattern.getName(), "<[0-9]+>");
-    plan->setProperty(defrag_text_flow_files, DefragmentText::PatternLoc.getName(), toString(DefragmentText::PatternLocation::END_OF_MESSAGE));
+    plan->setProperty(defrag_text_flow_files, DefragmentText::Pattern, "<[0-9]+>");
+    plan->setProperty(defrag_text_flow_files, DefragmentText::PatternLoc, toString(defragment_text::PatternLocation::END_OF_MESSAGE));
 
     write_to_flow_file->setContent("apple<1> banana<2> cherry<3> dragon ");
     testController.runSession(plan);
@@ -123,8 +124,8 @@ TEST_CASE("DefragmentText Single source tests", "[defragmenttextsinglesource]") 
   }
 
   SECTION("Timeout test Start of Line") {
-    plan->setProperty(defrag_text_flow_files, DefragmentText::Pattern.getName(), "<[0-9]+>");
-    plan->setProperty(defrag_text_flow_files, DefragmentText::MaxBufferAge.getName(), "100 ms");
+    plan->setProperty(defrag_text_flow_files, DefragmentText::Pattern, "<[0-9]+>");
+    plan->setProperty(defrag_text_flow_files, DefragmentText::MaxBufferAge, "100 ms");
 
     write_to_flow_file->setContent("Message");
     testController.runSession(plan);
@@ -138,9 +139,9 @@ TEST_CASE("DefragmentText Single source tests", "[defragmenttextsinglesource]") 
   }
 
   SECTION("Timeout test Start of Line") {
-    plan->setProperty(defrag_text_flow_files, DefragmentText::Pattern.getName(), "<[0-9]+>");
-    plan->setProperty(defrag_text_flow_files, DefragmentText::PatternLoc.getName(), toString(DefragmentText::PatternLocation::START_OF_MESSAGE));
-    plan->setProperty(defrag_text_flow_files, DefragmentText::MaxBufferAge.getName(), "100 ms");
+    plan->setProperty(defrag_text_flow_files, DefragmentText::Pattern, "<[0-9]+>");
+    plan->setProperty(defrag_text_flow_files, DefragmentText::PatternLoc, toString(defragment_text::PatternLocation::START_OF_MESSAGE));
+    plan->setProperty(defrag_text_flow_files, DefragmentText::MaxBufferAge, "100 ms");
 
     write_to_flow_file->setContent("Message");
     testController.runSession(plan);
@@ -154,9 +155,9 @@ TEST_CASE("DefragmentText Single source tests", "[defragmenttextsinglesource]") 
   }
 
   SECTION("Timeout test Start of Line") {
-    plan->setProperty(defrag_text_flow_files, DefragmentText::Pattern.getName(), "<[0-9]+>");
-    plan->setProperty(defrag_text_flow_files, DefragmentText::PatternLoc.getName(), toString(DefragmentText::PatternLocation::END_OF_MESSAGE));
-    plan->setProperty(defrag_text_flow_files, DefragmentText::MaxBufferAge.getName(), "100 ms");
+    plan->setProperty(defrag_text_flow_files, DefragmentText::Pattern, "<[0-9]+>");
+    plan->setProperty(defrag_text_flow_files, DefragmentText::PatternLoc, toString(defragment_text::PatternLocation::END_OF_MESSAGE));
+    plan->setProperty(defrag_text_flow_files, DefragmentText::MaxBufferAge, "100 ms");
 
     write_to_flow_file->setContent("Message");
     testController.runSession(plan);
@@ -170,8 +171,8 @@ TEST_CASE("DefragmentText Single source tests", "[defragmenttextsinglesource]") 
   }
 
   SECTION("Timeout test without enough time") {
-    plan->setProperty(defrag_text_flow_files, DefragmentText::Pattern.getName(), "<[0-9]+>");
-    plan->setProperty(defrag_text_flow_files, DefragmentText::MaxBufferAge.getName(), "1 h");
+    plan->setProperty(defrag_text_flow_files, DefragmentText::Pattern, "<[0-9]+>");
+    plan->setProperty(defrag_text_flow_files, DefragmentText::MaxBufferAge, "1 h");
 
     write_to_flow_file->setContent("Message");
     testController.runSession(plan);
@@ -187,8 +188,8 @@ TEST_CASE("DefragmentText Single source tests", "[defragmenttextsinglesource]") 
   }
 
   SECTION("Max Buffer test") {
-    plan->setProperty(defrag_text_flow_files, DefragmentText::MaxBufferSize.getName(), "100 B");
-    plan->setProperty(defrag_text_flow_files, DefragmentText::Pattern.getName(), "<[0-9]+>");
+    plan->setProperty(defrag_text_flow_files, DefragmentText::MaxBufferSize, "100 B");
+    plan->setProperty(defrag_text_flow_files, DefragmentText::Pattern, "<[0-9]+>");
 
     write_to_flow_file->setContent("Message");
     testController.runSession(plan);
@@ -203,8 +204,8 @@ TEST_CASE("DefragmentText Single source tests", "[defragmenttextsinglesource]") 
   }
 
   SECTION("Max Buffer test without overflow") {
-    plan->setProperty(defrag_text_flow_files, DefragmentText::MaxBufferSize.getName(), "100 MB");
-    plan->setProperty(defrag_text_flow_files, DefragmentText::Pattern.getName(), "<[0-9]+>");
+    plan->setProperty(defrag_text_flow_files, DefragmentText::MaxBufferSize, "100 MB");
+    plan->setProperty(defrag_text_flow_files, DefragmentText::Pattern, "<[0-9]+>");
 
     write_to_flow_file->setContent("Message");
     testController.runSession(plan);
@@ -239,13 +240,13 @@ TEST_CASE("DefragmentTextMultipleSources", "[defragmenttextinvalidsources]") {
 
   read_from_failure_relationship->disableClearOnTrigger();
   read_from_success_relationship->disableClearOnTrigger();
-  read_from_failure_relationship->setAutoTerminatedRelationships(std::array{ReadFromFlowFileTestProcessor::Success});
-  read_from_success_relationship->setAutoTerminatedRelationships(std::array{ReadFromFlowFileTestProcessor::Success});
-  plan->setProperty(defrag_text_flow_files, DefragmentText::Pattern.getName(), "%");
+  read_from_failure_relationship->setAutoTerminatedRelationships(std::array<core::Relationship, 1>{ReadFromFlowFileTestProcessor::Success});
+  read_from_success_relationship->setAutoTerminatedRelationships(std::array<core::Relationship, 1>{ReadFromFlowFileTestProcessor::Success});
+  plan->setProperty(defrag_text_flow_files, DefragmentText::Pattern, "%");
 
   SECTION("Multiple Sources with different fragment attributes") {
-    plan->setProperty(update_ff_1, core::SpecialFlowAttribute::ABSOLUTE_PATH, "input_1", true);
-    plan->setProperty(update_ff_2, core::SpecialFlowAttribute::ABSOLUTE_PATH, "input_2", true);
+    plan->setDynamicProperty(update_ff_1, core::SpecialFlowAttribute::ABSOLUTE_PATH, "input_1");
+    plan->setDynamicProperty(update_ff_2, core::SpecialFlowAttribute::ABSOLUTE_PATH, "input_2");
 
     input_1->setContent("abc%def");
     input_2->setContent("ABC%DEF");
@@ -276,8 +277,8 @@ TEST_CASE("DefragmentTextMultipleSources", "[defragmenttextinvalidsources]") {
   }
 
   SECTION("Multiple Sources with same fragment attributes mix up") {
-    plan->setProperty(update_ff_1, core::SpecialFlowAttribute::ABSOLUTE_PATH, "input", true);
-    plan->setProperty(update_ff_2, core::SpecialFlowAttribute::ABSOLUTE_PATH, "input", true);
+    plan->setDynamicProperty(update_ff_1, core::SpecialFlowAttribute::ABSOLUTE_PATH, "input");
+    plan->setDynamicProperty(update_ff_2, core::SpecialFlowAttribute::ABSOLUTE_PATH, "input");
 
     input_1->setContent("abc%def");
     input_2->setContent("ABC%DEF");
@@ -313,9 +314,9 @@ TEST_CASE("DefragmentTextMultipleSources", "[defragmenttextinvalidsources]") {
 class FragmentGenerator : public core::Processor {
  public:
   static constexpr const char* Description = "FragmentGenerator (only for testing purposes)";
-  static auto properties() { return std::array<core::Property, 0>{}; }
-  static inline const core::Relationship Success{"success", "success operational on the flow record"};
-  static auto relationships() { return std::array{Success}; }
+  static constexpr auto Properties = std::array<core::PropertyReference, 0>{};
+  static constexpr auto Success = core::RelationshipDefinition{"success", "success operational on the flow record"};
+  static constexpr auto Relationships = std::array{Success};
   static constexpr bool SupportsDynamicProperties = false;
   static constexpr bool SupportsDynamicRelationships = false;
   static constexpr core::annotation::Input InputRequirement = core::annotation::Input::INPUT_ALLOWED;
@@ -343,7 +344,7 @@ class FragmentGenerator : public core::Processor {
       session->transfer(flow_file, Success);
     }
   }
-  void initialize() override { setSupportedRelationships(std::array{Success});}
+  void initialize() override { setSupportedRelationships(Relationships); }
 
   void setFragments(std::vector<std::string>&& fragments) {fragment_contents_ = std::move(fragments);}
   void setBatchSize(const size_t batch_size) {batch_size_ = batch_size;}
@@ -384,9 +385,9 @@ TEST_CASE("DefragmentText with offset attributes", "[defragmenttextoffsetattribu
 
   read_from_failure_relationship->disableClearOnTrigger();
   read_from_success_relationship->disableClearOnTrigger();
-  read_from_failure_relationship->setAutoTerminatedRelationships(std::array{ReadFromFlowFileTestProcessor::Success});
-  read_from_success_relationship->setAutoTerminatedRelationships(std::array{ReadFromFlowFileTestProcessor::Success});
-  plan->setProperty(defrag_text_flow_files, DefragmentText::Pattern.getName(), "%");
+  read_from_failure_relationship->setAutoTerminatedRelationships(std::array<core::Relationship, 1>{ReadFromFlowFileTestProcessor::Success});
+  read_from_success_relationship->setAutoTerminatedRelationships(std::array<core::Relationship, 1>{ReadFromFlowFileTestProcessor::Success});
+  plan->setProperty(defrag_text_flow_files, DefragmentText::Pattern, "%");
   input_1->setBaseNameAttribute("input_1");
   input_2->setBaseNameAttribute("input_2");
   input_1->setPostNameAttribute("log");

@@ -62,8 +62,8 @@ TEST_CASE("PutFileTest", "[getfileputpfile]") {
 
   const auto dir = testController.createTempDirectory();
   const auto putfiledir = testController.createTempDirectory();
-  plan->setProperty(getfile, org::apache::nifi::minifi::processors::GetFile::Directory.getName(), dir.string());
-  plan->setProperty(putfile, org::apache::nifi::minifi::processors::PutFile::Directory.getName(), putfiledir.string());
+  plan->setProperty(getfile, org::apache::nifi::minifi::processors::GetFile::Directory, dir.string());
+  plan->setProperty(putfile, org::apache::nifi::minifi::processors::PutFile::Directory, putfiledir.string());
 
   testController.runSession(plan, false);
 
@@ -122,8 +122,8 @@ TEST_CASE("PutFileTestFileExists", "[getfileputpfile]") {
 
   const auto dir = testController.createTempDirectory();
   const auto put_file_dir = testController.createTempDirectory();
-  plan->setProperty(getfile, org::apache::nifi::minifi::processors::GetFile::Directory.getName(), dir.string());
-  plan->setProperty(putfile, org::apache::nifi::minifi::processors::PutFile::Directory.getName(), put_file_dir.string());
+  plan->setProperty(getfile, org::apache::nifi::minifi::processors::GetFile::Directory, dir.string());
+  plan->setProperty(putfile, org::apache::nifi::minifi::processors::PutFile::Directory, put_file_dir.string());
 
   testController.runSession(plan, false);
 
@@ -181,9 +181,9 @@ TEST_CASE("PutFileTestFileExistsIgnore", "[getfileputpfile]") {
 
   const auto dir = testController.createTempDirectory();
   const auto put_file_dir = testController.createTempDirectory();
-  plan->setProperty(getfile, org::apache::nifi::minifi::processors::GetFile::Directory.getName(), dir.string());
-  plan->setProperty(putfile, org::apache::nifi::minifi::processors::PutFile::Directory.getName(), put_file_dir.string());
-  plan->setProperty(putfile, org::apache::nifi::minifi::processors::PutFile::ConflictResolution.getName(), "ignore");
+  plan->setProperty(getfile, org::apache::nifi::minifi::processors::GetFile::Directory, dir.string());
+  plan->setProperty(putfile, org::apache::nifi::minifi::processors::PutFile::Directory, put_file_dir.string());
+  plan->setProperty(putfile, org::apache::nifi::minifi::processors::PutFile::ConflictResolution, "ignore");
 
   testController.runSession(plan, false);
 
@@ -243,9 +243,9 @@ TEST_CASE("PutFileTestFileExistsReplace", "[getfileputpfile]") {
 
   const auto dir = testController.createTempDirectory();
   const auto put_file_dir = testController.createTempDirectory();
-  plan->setProperty(getfile, org::apache::nifi::minifi::processors::GetFile::Directory.getName(), dir.string());
-  plan->setProperty(putfile, org::apache::nifi::minifi::processors::PutFile::Directory.getName(), put_file_dir.string());
-  plan->setProperty(putfile, org::apache::nifi::minifi::processors::PutFile::ConflictResolution.getName(), "replace");
+  plan->setProperty(getfile, org::apache::nifi::minifi::processors::GetFile::Directory, dir.string());
+  plan->setProperty(putfile, org::apache::nifi::minifi::processors::PutFile::Directory, put_file_dir.string());
+  plan->setProperty(putfile, org::apache::nifi::minifi::processors::PutFile::ConflictResolution, "replace");
 
   testController.runSession(plan, false);
 
@@ -313,10 +313,10 @@ TEST_CASE("PutFileMaxFileCountTest", "[getfileputpfilemaxcount]") {
 
   const auto dir = testController.createTempDirectory();
   const auto putfiledir = testController.createTempDirectory();
-  plan->setProperty(getfile, org::apache::nifi::minifi::processors::GetFile::Directory.getName(), dir.string());
-  plan->setProperty(getfile, org::apache::nifi::minifi::processors::GetFile::BatchSize.getName(), "1");
-  plan->setProperty(putfile, org::apache::nifi::minifi::processors::PutFile::Directory.getName(), putfiledir.string());
-  plan->setProperty(putfile, org::apache::nifi::minifi::processors::PutFile::MaxDestFiles.getName(), "1");
+  plan->setProperty(getfile, org::apache::nifi::minifi::processors::GetFile::Directory, dir.string());
+  plan->setProperty(getfile, org::apache::nifi::minifi::processors::GetFile::BatchSize, "1");
+  plan->setProperty(putfile, org::apache::nifi::minifi::processors::PutFile::Directory, putfiledir.string());
+  plan->setProperty(putfile, org::apache::nifi::minifi::processors::PutFile::MaxDestFiles, "1");
 
 
 
@@ -377,8 +377,8 @@ TEST_CASE("PutFileEmptyTest", "[EmptyFilePutTest]") {
   const auto dir = testController.createTempDirectory();
   const auto putfiledir = testController.createTempDirectory();
 
-  plan->setProperty(getfile, org::apache::nifi::minifi::processors::GetFile::Directory.getName(), dir.string());
-  plan->setProperty(putfile, org::apache::nifi::minifi::processors::PutFile::Directory.getName(), putfiledir.string());
+  plan->setProperty(getfile, org::apache::nifi::minifi::processors::GetFile::Directory, dir.string());
+  plan->setProperty(putfile, org::apache::nifi::minifi::processors::PutFile::Directory, putfiledir.string());
 
   std::ofstream of(dir / "tstFile.ext");
   of.close();
@@ -410,10 +410,10 @@ TEST_CASE("TestPutFilePermissions", "[PutFilePermissions]") {
   const auto dir = testController.createTempDirectory();
   const auto putfiledir = testController.createTempDirectory() / "test_dir";
 
-  plan->setProperty(getfile, org::apache::nifi::minifi::processors::GetFile::Directory.getName(), dir);
-  plan->setProperty(putfile, org::apache::nifi::minifi::processors::PutFile::Directory.getName(), putfiledir);
-  plan->setProperty(putfile, org::apache::nifi::minifi::processors::PutFile::Permissions.getName(), "644");
-  plan->setProperty(putfile, org::apache::nifi::minifi::processors::PutFile::DirectoryPermissions.getName(), "0777");
+  plan->setProperty(getfile, org::apache::nifi::minifi::processors::GetFile::Directory, dir.string());
+  plan->setProperty(putfile, org::apache::nifi::minifi::processors::PutFile::Directory, putfiledir.string());
+  plan->setProperty(putfile, org::apache::nifi::minifi::processors::PutFile::Permissions, "644");
+  plan->setProperty(putfile, org::apache::nifi::minifi::processors::PutFile::DirectoryPermissions, "0777");
 
   std::fstream file;
   file.open(dir / "tstFile.ext", std::ios::out);
@@ -449,11 +449,11 @@ TEST_CASE("PutFileCreateDirectoryTest", "[PutFileProperties]") {
   // Defining a subdirectory
   auto putfiledir = testController.createTempDirectory() / "test_dir";
 
-  plan->setProperty(putfile, org::apache::nifi::minifi::processors::PutFile::Directory.getName(), putfiledir);
-  plan->setProperty(getfile, org::apache::nifi::minifi::processors::GetFile::Directory.getName(), dir);
+  plan->setProperty(putfile, org::apache::nifi::minifi::processors::PutFile::Directory, putfiledir.string());
+  plan->setProperty(getfile, org::apache::nifi::minifi::processors::GetFile::Directory, dir.string());
 
   SECTION("with an empty file and create directory property set to true") {
-    plan->setProperty(putfile, org::apache::nifi::minifi::processors::PutFile::CreateDirs.getName(), "true");
+    plan->setProperty(putfile, org::apache::nifi::minifi::processors::PutFile::CreateDirs, "true");
 
     std::ofstream of(dir / "tstFile.ext");
     of.close();
@@ -467,7 +467,7 @@ TEST_CASE("PutFileCreateDirectoryTest", "[PutFileProperties]") {
   }
 
   SECTION("with an empty file and create directory property set to false") {
-    plan->setProperty(putfile, org::apache::nifi::minifi::processors::PutFile::CreateDirs.getName(), "false");
+    plan->setProperty(putfile, org::apache::nifi::minifi::processors::PutFile::CreateDirs, "false");
     putfile->setAutoTerminatedRelationships(std::array{core::Relationship("failure", "description")});
 
     std::ofstream of(dir / "tstFile.ext");
@@ -484,7 +484,7 @@ TEST_CASE("PutFileCreateDirectoryTest", "[PutFileProperties]") {
   }
 
   SECTION("with a non-empty file and create directory property set to true") {
-    plan->setProperty(putfile, org::apache::nifi::minifi::processors::PutFile::CreateDirs.getName(), "true");
+    plan->setProperty(putfile, org::apache::nifi::minifi::processors::PutFile::CreateDirs, "true");
 
     std::ofstream of(dir / "tstFile.ext");
     of << "tempFile";
@@ -499,7 +499,7 @@ TEST_CASE("PutFileCreateDirectoryTest", "[PutFileProperties]") {
   }
 
   SECTION("with a non-empty file and create directory property set to false") {
-    plan->setProperty(putfile, org::apache::nifi::minifi::processors::PutFile::CreateDirs.getName(), "false");
+    plan->setProperty(putfile, org::apache::nifi::minifi::processors::PutFile::CreateDirs, "false");
     putfile->setAutoTerminatedRelationships(std::array{core::Relationship("failure", "description")});
 
     std::ofstream of(dir / "tstFile.ext");

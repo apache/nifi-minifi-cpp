@@ -101,7 +101,7 @@ class PutSFTPTestsFixture {
           true);
 
     // Configure GetFile processor
-    plan->setProperty(get_file, "Input Directory", src_dir);
+    plan->setProperty(get_file, "Input Directory", src_dir.string());
 
     // Configure PutSFTP processor
     plan->setProperty(put, "Hostname", "localhost");
@@ -235,7 +235,7 @@ TEST_CASE_METHOD(PutSFTPTestsFixture, "PutSFTP bad password", "[PutSFTP][authent
 }
 
 TEST_CASE_METHOD(PutSFTPTestsFixture, "PutSFTP public key authentication success", "[PutSFTP][authentication]") {
-  plan->setProperty(put, "Private Key Path", get_sftp_test_dir() / "resources" / "id_rsa");
+  plan->setProperty(put, "Private Key Path", (get_sftp_test_dir() / "resources" / "id_rsa").string());
   plan->setProperty(put, "Private Key Passphrase", "privatekeypassword");
 
   createFile(src_dir, "tstFile.ext", "tempFile");
@@ -248,7 +248,7 @@ TEST_CASE_METHOD(PutSFTPTestsFixture, "PutSFTP public key authentication success
 
 TEST_CASE_METHOD(PutSFTPTestsFixture, "PutSFTP public key authentication bad passphrase", "[PutSFTP][authentication]") {
   plan->setProperty(put, "Password", "");
-  plan->setProperty(put, "Private Key Path", get_sftp_test_dir() / "resources" / "id_rsa");
+  plan->setProperty(put, "Private Key Path", (get_sftp_test_dir() / "resources" / "id_rsa").string());
   plan->setProperty(put, "Private Key Passphrase", "badpassword");
 
   createFile(src_dir, "tstFile.ext", "tempFile");
@@ -264,7 +264,7 @@ TEST_CASE_METHOD(PutSFTPTestsFixture, "PutSFTP public key authentication bad pas
 }
 
 TEST_CASE_METHOD(PutSFTPTestsFixture, "PutSFTP public key authentication bad passphrase fallback to password", "[PutSFTP][authentication]") {
-  plan->setProperty(put, "Private Key Path", get_sftp_test_dir() / "resources" / "id_rsa");
+  plan->setProperty(put, "Private Key Path", (get_sftp_test_dir() / "resources" / "id_rsa").string());
   plan->setProperty(put, "Private Key Passphrase", "badpassword");
 
   createFile(src_dir, "tstFile.ext", "tempFile");
@@ -277,7 +277,7 @@ TEST_CASE_METHOD(PutSFTPTestsFixture, "PutSFTP public key authentication bad pas
 }
 
 TEST_CASE_METHOD(PutSFTPTestsFixture, "PutSFTP host key checking success", "[PutSFTP][hostkey]") {
-  plan->setProperty(put, "Host Key File", get_sftp_test_dir() / "resources" / "known_hosts");
+  plan->setProperty(put, "Host Key File", (get_sftp_test_dir() / "resources" / "known_hosts").string());
   plan->setProperty(put, "Strict Host Key Checking", "true");
 
   createFile(src_dir, "tstFile.ext", "tempFile");
@@ -291,7 +291,7 @@ TEST_CASE_METHOD(PutSFTPTestsFixture, "PutSFTP host key checking success", "[Put
 TEST_CASE_METHOD(PutSFTPTestsFixture, "PutSFTP host key checking missing strict", "[PutSFTP][hostkey]") {
   plan->setProperty(put, "Hostname", "127.0.0.1");
 
-  plan->setProperty(put, "Host Key File", get_sftp_test_dir() / "resources" / "known_hosts");
+  plan->setProperty(put, "Host Key File", (get_sftp_test_dir() / "resources" / "known_hosts").string());
   plan->setProperty(put, "Strict Host Key Checking", "true");
 
   createFile(src_dir, "tstFile.ext", "tempFile");
@@ -309,7 +309,7 @@ TEST_CASE_METHOD(PutSFTPTestsFixture, "PutSFTP host key checking missing strict"
 TEST_CASE_METHOD(PutSFTPTestsFixture, "PutSFTP host key checking missing non-strict", "[PutSFTP][hostkey]") {
   plan->setProperty(put, "Hostname", "127.0.0.1");
 
-  plan->setProperty(put, "Host Key File", get_sftp_test_dir() / "resources" / "known_hosts");
+  plan->setProperty(put, "Host Key File", (get_sftp_test_dir() / "resources" / "known_hosts").string());
   plan->setProperty(put, "Strict Host Key Checking", "false");
 
   createFile(src_dir, "tstFile.ext", "tempFile");
@@ -321,7 +321,7 @@ TEST_CASE_METHOD(PutSFTPTestsFixture, "PutSFTP host key checking missing non-str
 }
 
 TEST_CASE_METHOD(PutSFTPTestsFixture, "PutSFTP host key checking mismatch strict", "[PutSFTP][hostkey]") {
-  plan->setProperty(put, "Host Key File", get_sftp_test_dir() / "resources" / "known_hosts_mismatch");
+  plan->setProperty(put, "Host Key File", (get_sftp_test_dir() / "resources" / "known_hosts_mismatch").string());
   plan->setProperty(put, "Strict Host Key Checking", "true");
 
   createFile(src_dir, "tstFile.ext", "tempFile");
@@ -700,7 +700,7 @@ TEST_CASE_METHOD(PutSFTPTestsFixture, "PutSFTP connection caching reaches limit"
 
   // Configure GetFile processor
   plan->setProperty(get_file, "Batch Size", "1");
-  plan->setProperty(get_file, "Input Directory", src_dir);
+  plan->setProperty(get_file, "Input Directory", src_dir.string());
 
   // Configure ExtractText processor
   plan->setProperty(extract_text, "Attribute", "port_num");
@@ -830,21 +830,21 @@ TEST_CASE_METHOD(PutSFTPTestsFixture, "PutSFTP expression language test", "[PutS
       true);
 
   // Configure GetFile processor
-  plan->setProperty(get_file, "Input Directory", src_dir);
+  plan->setProperty(get_file, "Input Directory", src_dir.string());
 
   // Configure UpdateAttribute processor
-  plan->setProperty(update_attribute, "attr_Hostname", "localhost", true /*dynamic*/);
-  plan->setProperty(update_attribute, "attr_Port", std::to_string(sftp_server->getPort()), true /*dynamic*/);
-  plan->setProperty(update_attribute, "attr_Username", "nifiuser", true /*dynamic*/);
-  plan->setProperty(update_attribute, "attr_Password", "nifipassword", true /*dynamic*/);
-  plan->setProperty(update_attribute, "attr_Private Key Path", get_sftp_test_dir() / "resources/id_rsa", true /*dynamic*/);
-  plan->setProperty(update_attribute, "attr_Private Key Passphrase", "privatekeypassword", true /*dynamic*/);
-  plan->setProperty(update_attribute, "attr_Remote Path", "nifi_test/", true /*dynamic*/);
-  plan->setProperty(update_attribute, "attr_Temporary Filename", "tempfile", true /*dynamic*/);
-  plan->setProperty(update_attribute, "attr_Last Modified Time", "2065-01-24T05:20:00Z", true /*dynamic*/);
-  plan->setProperty(update_attribute, "attr_Permissions", "rw-------", true /*dynamic*/);
-  plan->setProperty(update_attribute, "attr_Remote Owner", "1234", true /*dynamic*/);
-  plan->setProperty(update_attribute, "attr_Remote Group", "5678", true /*dynamic*/);
+  plan->setDynamicProperty(update_attribute, "attr_Hostname", "localhost");
+  plan->setDynamicProperty(update_attribute, "attr_Port", std::to_string(sftp_server->getPort()));
+  plan->setDynamicProperty(update_attribute, "attr_Username", "nifiuser");
+  plan->setDynamicProperty(update_attribute, "attr_Password", "nifipassword");
+  plan->setDynamicProperty(update_attribute, "attr_Private Key Path", (get_sftp_test_dir() / "resources/id_rsa").string());
+  plan->setDynamicProperty(update_attribute, "attr_Private Key Passphrase", "privatekeypassword");
+  plan->setDynamicProperty(update_attribute, "attr_Remote Path", "nifi_test/");
+  plan->setDynamicProperty(update_attribute, "attr_Temporary Filename", "tempfile");
+  plan->setDynamicProperty(update_attribute, "attr_Last Modified Time", "2065-01-24T05:20:00Z");
+  plan->setDynamicProperty(update_attribute, "attr_Permissions", "rw-------");
+  plan->setDynamicProperty(update_attribute, "attr_Remote Owner", "1234");
+  plan->setDynamicProperty(update_attribute, "attr_Remote Group", "5678");
 
   // Configure PutSFTP processor
   plan->setProperty(put, "Hostname", "${'attr_Hostname'}");

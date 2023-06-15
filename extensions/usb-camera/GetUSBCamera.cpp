@@ -32,31 +32,9 @@
 
 namespace org::apache::nifi::minifi::processors {
 
-const core::Property GetUSBCamera::FPS(
-    "FPS", "Frames per second to capture from USB camera", "1");
-const core::Property GetUSBCamera::Width(
-    "Width", "Target width of image to capture from USB camera", "");
-const core::Property GetUSBCamera::Height(
-    "Height", "Target height of image to capture from USB camera", "");
-const core::Property GetUSBCamera::Format(
-    "Format",
-    "Frame format (currently only PNG and RAW are supported; RAW is a binary pixel buffer of RGB values)",
-    "PNG");
-const core::Property GetUSBCamera::VendorID(
-    "USB Vendor ID", "USB Vendor ID of camera device, in hexadecimal format", "0x0");
-const core::Property GetUSBCamera::ProductID(
-    "USB Product ID", "USB Product ID of camera device, in hexadecimal format", "0x0");
-const core::Property GetUSBCamera::SerialNo(
-    "USB Serial No.", "USB Serial No. of camera device", "");
-
-const core::Relationship GetUSBCamera::Success(
-    "success", "Sucessfully captured images sent here");
-const core::Relationship GetUSBCamera::Failure(
-    "failure", "Failures sent here");
-
 void GetUSBCamera::initialize() {
-  setSupportedProperties(properties());
-  setSupportedRelationships(relationships());
+  setSupportedProperties(Properties);
+  setSupportedRelationships(Relationships);
 }
 
 void GetUSBCamera::onFrame(uvc_frame_t *frame, void *ptr) {

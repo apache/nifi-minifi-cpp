@@ -35,7 +35,6 @@
 #include "core/FlowFile.h"
 #include "core/logging/Logger.h"
 #include "core/ProcessContext.h"
-#include "core/PropertyBuilder.h"
 #include "core/Relationship.h"
 #include "core/Resource.h"
 #include "CapturePacket.h"
@@ -47,19 +46,6 @@
 namespace org::apache::nifi::minifi::processors {
 
 std::shared_ptr<utils::IdGenerator> CapturePacket::id_generator_ = utils::IdGenerator::getIdGenerator();
-
-const core::Property CapturePacket::BaseDir(core::PropertyBuilder::createProperty("Base Directory")
-    ->withDescription("Scratch directory for PCAP files")
-    ->withDefaultValue<std::string>("/tmp/")->build());
-const core::Property CapturePacket::BatchSize(core::PropertyBuilder::createProperty("Batch Size")
-    ->withDescription("The number of packets to combine within a given PCAP")
-    ->withDefaultValue<uint64_t>(50)->build());
-const core::Property CapturePacket::NetworkControllers("Network Controllers", "Regular expression of the network controller(s) to which we will attach", ".*");
-const core::Property CapturePacket::CaptureBluetooth(core::PropertyBuilder::createProperty("Capture Bluetooth")
-    ->withDescription("True indicates that we support bluetooth interfaces")
-    ->withDefaultValue<bool>(false)->build());
-
-const core::Relationship CapturePacket::Success("success", "All files are routed to success");
 
 std::filesystem::path CapturePacket::generate_new_pcap(const std::string &base_path) {
   auto path = base_path;
@@ -111,23 +97,23 @@ std::atomic<int> CapturePacket::num_(0);
 void CapturePacket::initialize() {
   logger_->log_info("Initializing CapturePacket");
 
-  setSupportedProperties(properties());
-  setSupportedRelationships(relationships());
+  setSupportedProperties(Properties);
+  setSupportedRelationships(Relationships);
 }
 
 void CapturePacket::onSchedule(const std::shared_ptr<core::ProcessContext> &context, const std::shared_ptr<core::ProcessSessionFactory>& /*sessionFactory*/) {
   std::string value;
-  if (context->getProperty(BatchSize.getName(), value)) {
+  if (context->getProperty(BatchSize, value)) {
     core::Property::StringToInt(value, pcap_batch_size_);
   }
 
   value = "";
-  if (context->getProperty(BaseDir.getName(), value)) {
+  if (context->getProperty(BaseDir, value)) {
     base_dir_ = value;
   }
 
   value = "";
-  if (context->getProperty(CaptureBluetooth.getName(), value)) {
+  if (context->getProperty(CaptureBluetooth, value)) {
     capture_bluetooth_ = utils::StringUtils::toBool(value).value_or(false);
   }
 

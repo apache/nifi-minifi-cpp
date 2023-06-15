@@ -25,6 +25,12 @@
 
 #include "NetworkListenerProcessor.h"
 #include "core/logging/LoggerConfiguration.h"
+#include "core/OutputAttributeDefinition.h"
+#include "core/PropertyDefinition.h"
+#include "core/PropertyDefinitionBuilder.h"
+#include "core/PropertyType.h"
+#include "core/RelationshipDefinition.h"
+#include "utils/net/Ssl.h"
 
 namespace org::apache::nifi::minifi::processors {
 
@@ -40,15 +46,46 @@ class ListenSyslog : public NetworkListenerProcessor {
       "valid messages will be transferred to success relationship, while invalid messages will be transferred to invalid relationship. "
       "With parsing disabled all message will be routed to the success relationship, but it will only contain the sender, protocol, and port attributes";
 
-  EXTENSIONAPI static const core::Property Port;
-  EXTENSIONAPI static const core::Property ProtocolProperty;
-  EXTENSIONAPI static const core::Property MaxBatchSize;
-  EXTENSIONAPI static const core::Property ParseMessages;
-  EXTENSIONAPI static const core::Property MaxQueueSize;
-  EXTENSIONAPI static const core::Property SSLContextService;
-  EXTENSIONAPI static const core::Property ClientAuth;
-  static auto properties() {
-    return std::array{
+  EXTENSIONAPI static constexpr auto Port = core::PropertyDefinitionBuilder<>::createProperty("Listening Port")
+      .withDescription("The port for Syslog communication. (Well-known ports (0-1023) require root access)")
+      .isRequired(true)
+      .withPropertyType(core::StandardPropertyTypes::LISTEN_PORT_TYPE)
+      .withDefaultValue("514")
+      .build();
+  EXTENSIONAPI static constexpr auto ProtocolProperty = core::PropertyDefinitionBuilder<utils::net::IpProtocol::length>::createProperty("Protocol")
+      .withDescription("The protocol for Syslog communication.")
+      .isRequired(true)
+      .withAllowedValues(utils::net::IpProtocol::values)
+      .withDefaultValue(toStringView(utils::net::IpProtocol::UDP))
+      .build();
+  EXTENSIONAPI static constexpr auto MaxBatchSize = core::PropertyDefinitionBuilder<>::createProperty("Max Batch Size")
+      .withDescription("The maximum number of Syslog events to process at a time.")
+      .withPropertyType(core::StandardPropertyTypes::UNSIGNED_LONG_TYPE)
+      .withDefaultValue("500")
+      .build();
+  EXTENSIONAPI static constexpr auto ParseMessages = core::PropertyDefinitionBuilder<>::createProperty("Parse Messages")
+      .withDescription("Indicates if the processor should parse the Syslog messages. "
+          "If set to false, each outgoing FlowFile will only contain the sender, protocol, and port, and no additional attributes.")
+      .withPropertyType(core::StandardPropertyTypes::BOOLEAN_TYPE)
+      .withDefaultValue("false")
+      .build();
+  EXTENSIONAPI static constexpr auto MaxQueueSize = core::PropertyDefinitionBuilder<>::createProperty("Max Size of Message Queue")
+      .withDescription("Maximum number of Syslog messages allowed to be buffered before processing them when the processor is triggered. "
+          "If the buffer is full, the message is ignored. If set to zero the buffer is unlimited.")
+      .withPropertyType(core::StandardPropertyTypes::UNSIGNED_LONG_TYPE)
+      .withDefaultValue("10000")
+      .build();
+  EXTENSIONAPI static constexpr auto SSLContextService = core::PropertyDefinitionBuilder<0, 1>::createProperty("SSL Context Service")
+      .withDescription("The Controller Service to use in order to obtain an SSL Context. If this property is set, messages will be received over a secure connection. "
+          "This Property is only considered if the <Protocol> Property has a value of \"TCP\".")
+      .withAllowedTypes({core::className<minifi::controllers::SSLContextService>()})
+      .build();
+  EXTENSIONAPI static constexpr auto ClientAuth = core::PropertyDefinitionBuilder<utils::net::ClientAuthOption::length>::createProperty("Client Auth")
+      .withDescription("The client authentication policy to use for the SSL Context. Only used if an SSL Context Service is provided.")
+      .withDefaultValue(toStringView(utils::net::ClientAuthOption::NONE))
+      .withAllowedValues(utils::net::ClientAuthOption::values)
+      .build();
+  EXTENSIONAPI static constexpr auto Properties = std::array<core::PropertyReference, 7>{
       Port,
       ProtocolProperty,
       MaxBatchSize,
@@ -56,55 +93,57 @@ class ListenSyslog : public NetworkListenerProcessor {
       MaxQueueSize,
       SSLContextService,
       ClientAuth
-    };
-  }
+  };
 
-  EXTENSIONAPI static const core::Relationship Success;
-  EXTENSIONAPI static const core::Relationship Invalid;
-  static auto relationships() { return std::array{Success, Invalid}; }
 
-  EXTENSIONAPI static const core::OutputAttribute Protocol;
-  EXTENSIONAPI static const core::OutputAttribute PortOutputAttribute;
-  EXTENSIONAPI static const core::OutputAttribute Sender;
-  EXTENSIONAPI static const core::OutputAttribute Valid;
-  EXTENSIONAPI static const core::OutputAttribute Priority;
-  EXTENSIONAPI static const core::OutputAttribute Severity;
-  EXTENSIONAPI static const core::OutputAttribute Facility;
-  EXTENSIONAPI static const core::OutputAttribute Timestamp;
-  EXTENSIONAPI static const core::OutputAttribute Hostname;
-  EXTENSIONAPI static const core::OutputAttribute Msg;
-  EXTENSIONAPI static const core::OutputAttribute Version;
-  EXTENSIONAPI static const core::OutputAttribute AppName;
-  EXTENSIONAPI static const core::OutputAttribute ProcId;
-  EXTENSIONAPI static const core::OutputAttribute MsgId;
-  EXTENSIONAPI static const core::OutputAttribute StructuredData;
-  static auto outputAttributes() {
-    return std::array{
-        Protocol,
-        PortOutputAttribute,
-        Sender,
-        Valid,
-        Priority,
-        Severity,
-        Facility,
-        Timestamp,
-        Hostname,
-        Msg,
-        Version,
-        AppName,
-        ProcId,
-        MsgId,
-        StructuredData
-    };
-  }
+  EXTENSIONAPI static constexpr auto Success = core::RelationshipDefinition{"success",
+      "Incoming messages that match the expected format when parsing will be sent to this relationship. "
+      "When Parse Messages is set to false, all incoming message will be sent to this relationship."};
+  EXTENSIONAPI static constexpr auto Invalid = core::RelationshipDefinition{"invalid",
+      "Incoming messages that do not match the expected format when parsing will be sent to this relationship."};
+  EXTENSIONAPI static constexpr auto Relationships = std::array{Success, Invalid};
+
+  EXTENSIONAPI static constexpr auto Protocol = core::OutputAttributeDefinition<0>{"syslog.protocol", {}, "The protocol over which the Syslog message was received."};
+  EXTENSIONAPI static constexpr auto PortOutputAttribute = core::OutputAttributeDefinition<0>{"syslog.port", {}, "The port over which the Syslog message was received."};
+  EXTENSIONAPI static constexpr auto Sender = core::OutputAttributeDefinition<0>{"syslog.sender", {}, "The hostname of the Syslog server that sent the message."};
+  EXTENSIONAPI static constexpr auto Valid = core::OutputAttributeDefinition<0>{"syslog.valid", {},
+      "An indicator of whether this message matched the expected formats. (requirement: parsing enabled)"};
+  EXTENSIONAPI static constexpr auto Priority = core::OutputAttributeDefinition<0>{"syslog.priority", {}, "The priority of the Syslog message. (requirement: parsed RFC5424/RFC3164)"};
+  EXTENSIONAPI static constexpr auto Severity = core::OutputAttributeDefinition<0>{"syslog.severity", {}, "The severity of the Syslog message. (requirement: parsed RFC5424/RFC3164)"};
+  EXTENSIONAPI static constexpr auto Facility = core::OutputAttributeDefinition<0>{"syslog.facility", {}, "The facility of the Syslog message. (requirement: parsed RFC5424/RFC3164)"};
+  EXTENSIONAPI static constexpr auto Timestamp = core::OutputAttributeDefinition<0>{"syslog.timestamp", {}, "The timestamp of the Syslog message. (requirement: parsed RFC5424/RFC3164)"};
+  EXTENSIONAPI static constexpr auto Hostname = core::OutputAttributeDefinition<0>{"syslog.hostname", {}, "The hostname of the Syslog message. (requirement: parsed RFC5424/RFC3164)"};
+  EXTENSIONAPI static constexpr auto Msg = core::OutputAttributeDefinition<0>{"syslog.msg", {}, "The free-form message of the Syslog message. (requirement: parsed RFC5424/RFC3164)"};
+  EXTENSIONAPI static constexpr auto Version = core::OutputAttributeDefinition<0>{"syslog.version", {}, "The version of the Syslog message. (requirement: parsed RFC5424)"};
+  EXTENSIONAPI static constexpr auto AppName = core::OutputAttributeDefinition<0>{"syslog.app_name", {}, "The app name of the Syslog message. (requirement: parsed RFC5424)"};
+  EXTENSIONAPI static constexpr auto ProcId = core::OutputAttributeDefinition<0>{"syslog.proc_id", {}, "The proc id of the Syslog message. (requirement: parsed RFC5424)"};
+  EXTENSIONAPI static constexpr auto MsgId = core::OutputAttributeDefinition<0>{"syslog.msg_id", {}, "The message id of the Syslog message. (requirement: parsed RFC5424)"};
+  EXTENSIONAPI static constexpr auto StructuredData = core::OutputAttributeDefinition<0>{"syslog.structured_data", {}, "The structured data of the Syslog message. (requirement: parsed RFC5424)"};
+  EXTENSIONAPI static constexpr auto OutputAttributes = std::array<core::OutputAttributeReference, 15>{
+      Protocol,
+      PortOutputAttribute,
+      Sender,
+      Valid,
+      Priority,
+      Severity,
+      Facility,
+      Timestamp,
+      Hostname,
+      Msg,
+      Version,
+      AppName,
+      ProcId,
+      MsgId,
+      StructuredData
+  };
 
   void initialize() override;
   void onSchedule(const std::shared_ptr<core::ProcessContext>& context, const std::shared_ptr<core::ProcessSessionFactory>& sessionFactory) override;
 
  protected:
-  const core::Property& getMaxBatchSizeProperty() override;
-  const core::Property& getMaxQueueSizeProperty() override;
-  const core::Property& getPortProperty() override;
+  core::PropertyReference getMaxBatchSizeProperty() override;
+  core::PropertyReference getMaxQueueSizeProperty() override;
+  core::PropertyReference getPortProperty() override;
 
  private:
   void transferAsFlowFile(const utils::net::Message& message, core::ProcessSession& session) override;

@@ -22,7 +22,6 @@
 #include <memory>
 #include <algorithm>
 #include <iterator>
-#include "core/PropertyBuilder.h"
 #include "core/Resource.h"
 #include "io/validation.h"
 #include "utils/StringUtils.h"
@@ -39,14 +38,6 @@ namespace org::apache::nifi::minifi::jni::controllers {
 #define W_OK    2       /* Test for write permission.  */
 #define F_OK    0       /* Test for existence.  */
 #endif
-const core::Property JavaControllerService::NarDirectory(
-    core::PropertyBuilder::createProperty("Nar Directory")->withDescription("Directory containing the nars to deploy")->isRequired(true)->supportsExpressionLanguage(false)->build());
-
-const core::Property JavaControllerService::NarDeploymentDirectory(
-    core::PropertyBuilder::createProperty("Nar Deployment Directory")->withDescription("Directory in which nars will be deployed")->isRequired(true)->supportsExpressionLanguage(false)->build());
-
-const core::Property JavaControllerService::NarDocumentDirectory(
-    core::PropertyBuilder::createProperty("Nar Document Directory")->withDescription("Directory in which documents will be deployed")->isRequired(true)->supportsExpressionLanguage(false)->build());
 
 void JavaControllerService::initialize() {
   std::lock_guard<std::mutex> lock(initialization_mutex_);
@@ -56,7 +47,7 @@ void JavaControllerService::initialize() {
 
   ControllerService::initialize();
 
-  setSupportedProperties(properties());
+  setSupportedProperties(Properties);
 
   initialized_ = true;
 }
@@ -64,26 +55,12 @@ void JavaControllerService::initialize() {
 void JavaControllerService::onEnable() {
   std::vector<std::string> pathOrFiles;
 
-  core::Property prop = NarDirectory;
-
   std::string nardir;
   std::string narscratch;
   std::string nardocs;
-  if (getProperty(NarDirectory.getName(), prop)) {
-    nardir = prop.getValue().to_string();
-  }
-
-  prop = NarDeploymentDirectory;
-
-  if (getProperty(NarDeploymentDirectory.getName(), prop)) {
-    narscratch = prop.getValue().to_string();
-  }
-
-  prop = NarDocumentDirectory;
-
-  if (getProperty(NarDocumentDirectory.getName(), prop)) {
-    nardocs = prop.getValue().to_string();
-  }
+  getProperty(NarDirectory, nardir);
+  getProperty(NarDeploymentDirectory, narscratch);
+  getProperty(NarDocumentDirectory, nardocs);
 
   for (const auto &path : pathOrFiles) {
     utils::file::FileUtils::addFilesMatchingExtension(logger_, path, ".jar", classpaths_);

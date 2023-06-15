@@ -17,8 +17,9 @@
 
 #include "../TestBase.h"
 #include "../Catch.h"
+#include "PropertyDefinition.h"
 #include "core/Processor.h"
-#include "core/PropertyBuilder.h"
+#include "core/PropertyDefinitionBuilder.h"
 #include "utils/ProcessorConfigUtils.h"
 #include "utils/Enum.h"
 
@@ -42,15 +43,15 @@ SMART_ENUM(TestEnum,
 )
 
 TEST_CASE("Parse enum property") {
-  auto prop = PropertyBuilder::createProperty("prop")
-      ->withAllowableValues(TestEnum::values())
-      ->build();
+  static constexpr auto prop = PropertyDefinitionBuilder<TestEnum::length>::createProperty("prop")
+      .withAllowedValues(TestEnum::values)
+      .build();
   auto proc = std::make_shared<TestProcessor>("test-proc");
-  proc->setSupportedProperties(std::array{prop});
+  proc->setSupportedProperties(std::array<core::PropertyReference, 1>{prop});
   ProcessContext context(std::make_shared<ProcessorNode>(proc.get()), nullptr, nullptr, nullptr, nullptr, nullptr);
   SECTION("Valid") {
     proc->setProperty(prop, "B");
-    TestEnum val = utils::parseEnumProperty<TestEnum>(context, prop);
+    const auto val = utils::parseEnumProperty<TestEnum>(context, prop);
     REQUIRE(val == TestEnum::B);
   }
   SECTION("Invalid") {

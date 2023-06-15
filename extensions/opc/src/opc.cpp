@@ -455,14 +455,6 @@ template UA_StatusCode Client::add_node<const char *>(const UA_NodeId parentNode
 template UA_StatusCode Client::add_node<std::string>(const UA_NodeId parentNodeId, const UA_NodeId targetNodeId, std::string_view browseName,
     std::string value, UA_NodeId *receivedNodeId);
 
-std::set<std::string> stringToOPCDataTypeMapKeys() {
-  std::set<std::string> keys;
-  for (const auto& [key, value] : StringToOPCDataTypeMap) {
-    keys.insert(key);
-  }
-  return keys;
-}
-
 std::string nodeValue2String(const NodeData& nd) {
   std::string ret_val;
   switch (nd.dataTypeID) {

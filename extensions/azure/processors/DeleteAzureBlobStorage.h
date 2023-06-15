@@ -27,6 +27,8 @@
 #include <vector>
 
 #include "core/Property.h"
+#include "core/PropertyDefinition.h"
+#include "core/PropertyDefinitionBuilder.h"
 #include "AzureBlobStorageSingleBlobProcessorBase.h"
 #include "core/logging/LoggerConfiguration.h"
 #include "utils/ArrayUtils.h"
@@ -40,14 +42,18 @@ class DeleteAzureBlobStorage final : public AzureBlobStorageSingleBlobProcessorB
  public:
   EXTENSIONAPI static constexpr const char* Description = "Deletes the provided blob from Azure Storage";
 
-  EXTENSIONAPI static const core::Property DeleteSnapshotsOption;
-  static auto properties() {
-    return utils::array_cat(AzureBlobStorageSingleBlobProcessorBase::properties(), std::array{DeleteSnapshotsOption});
-  }
+  EXTENSIONAPI static constexpr auto DeleteSnapshotsOption = core::PropertyDefinitionBuilder<storage::OptionalDeletion::length>::createProperty("Delete Snapshots Option")
+      .withDescription("Specifies the snapshot deletion options to be used when deleting a blob. None: Deletes the blob only. Include Snapshots: Delete the blob and its snapshots. "
+          "Delete Snapshots Only: Delete only the blob's snapshots.")
+      .isRequired(true)
+      .withDefaultValue(toStringView(storage::OptionalDeletion::NONE))
+      .withAllowedValues(storage::OptionalDeletion::values)
+      .build();
+  EXTENSIONAPI static constexpr auto Properties = utils::array_cat(AzureBlobStorageSingleBlobProcessorBase::Properties, std::array<core::PropertyReference, 1>{DeleteSnapshotsOption});
 
-  EXTENSIONAPI static const core::Relationship Success;
-  EXTENSIONAPI static const core::Relationship Failure;
-  static auto relationships() { return std::array{Success, Failure}; }
+  EXTENSIONAPI static constexpr auto Success = core::RelationshipDefinition{"success", "All successfully processed FlowFiles are routed to this relationship"};
+  EXTENSIONAPI static constexpr auto Failure = core::RelationshipDefinition{"failure", "Unsuccessful operations will be transferred to the failure relationship"};
+  EXTENSIONAPI static constexpr auto Relationships = std::array{Success, Failure};
 
   EXTENSIONAPI static constexpr bool SupportsDynamicProperties = false;
   EXTENSIONAPI static constexpr bool SupportsDynamicRelationships = false;

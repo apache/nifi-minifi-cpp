@@ -23,6 +23,7 @@
 #include "io/StreamPipe.h"
 #include "core/ProcessContext.h"
 #include "core/ProcessSession.h"
+#include "core/Resource.h"
 #include "Exception.h"
 
 namespace org::apache::nifi::minifi::processors {
@@ -35,16 +36,16 @@ ExecuteSQL::ExecuteSQL(std::string name, const utils::Identifier& uuid)
 }
 
 void ExecuteSQL::initialize() {
-  setSupportedProperties(properties());
-  setSupportedRelationships(relationships());
+  setSupportedProperties(Properties);
+  setSupportedRelationships(Relationships);
 }
 
 void ExecuteSQL::processOnSchedule(core::ProcessContext& context) {
-  context.getProperty(OutputFormat.getName(), output_format_);
+  context.getProperty(OutputFormat, output_format_);
 
   max_rows_ = [&] {
     uint64_t max_rows = 0;
-    context.getProperty(MaxRowsPerFlowFile.getName(), max_rows);
+    context.getProperty(MaxRowsPerFlowFile, max_rows);
     return gsl::narrow<size_t>(max_rows);
   }();
 }
@@ -56,7 +57,7 @@ void ExecuteSQL::processOnTrigger(core::ProcessContext& context, core::ProcessSe
   if (!context.getProperty(SQLSelectQuery, query, input_flow_file)) {
     if (!input_flow_file) {
       throw Exception(PROCESSOR_EXCEPTION,
-                      "No incoming FlowFile and the \"" + SQLSelectQuery.getName() + "\" processor property is not specified");
+                      "No incoming FlowFile and the \"" + std::string{SQLSelectQuery.name} + "\" processor property is not specified");
     }
     logger_->log_debug("Using the contents of the flow file as the SQL statement");
     query = to_string(session.readBuffer(input_flow_file));
@@ -79,7 +80,7 @@ void ExecuteSQL::processOnTrigger(core::ProcessContext& context, core::ProcessSe
     return;
   }
 
-  sql::JSONSQLWriter json_writer{output_format_ == OutputType::JSONPretty};
+  sql::JSONSQLWriter json_writer{output_format_ == flow_file_source::OutputType::JSONPretty};
   FlowFileGenerator flow_file_creator{session, json_writer};
   sql::SQLRowsetProcessor sql_rowset_processor(std::move(row_set), {json_writer, flow_file_creator});
 
@@ -101,5 +102,7 @@ void ExecuteSQL::processOnTrigger(core::ProcessContext& context, core::ProcessSe
     session.transfer(new_file, Success);
   }
 }
+
+REGISTER_RESOURCE(ExecuteSQL, Processor);
 
 }  // namespace org::apache::nifi::minifi::processors

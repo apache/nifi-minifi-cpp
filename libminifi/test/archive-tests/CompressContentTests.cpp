@@ -25,6 +25,7 @@
 #include <random>
 #include <sstream>
 #include <iostream>
+
 #include "FlowController.h"
 #include "../TestBase.h"
 #include "../Catch.h"
@@ -39,6 +40,7 @@
 #include "io/FileStream.h"
 #include "FlowFileRecord.h"
 #include "processors/LogAttribute.h"
+#include "processors/GetFile.h"
 #include "processors/PutFile.h"
 #include "utils/file/FileUtils.h"
 #include "../Utils.h"
@@ -267,8 +269,8 @@ class DecompressTestController : public CompressDecompressionTestController{
   }
 };
 
-using CompressionFormat = minifi::processors::CompressContent::ExtendedCompressionFormat;
-using CompressionMode = minifi::processors::CompressContent::CompressionMode;
+using CompressionFormat = minifi::processors::compress_content::ExtendedCompressionFormat;
+using CompressionMode = minifi::processors::compress_content::CompressionMode;
 
 TEST_CASE_METHOD(CompressTestController, "CompressFileGZip", "[compressfiletest1]") {
   context->setProperty(minifi::processors::CompressContent::CompressMode, toString(CompressionMode::Compress));
@@ -559,25 +561,25 @@ TEST_CASE_METHOD(TestController, "RawGzipCompressionDecompression", "[compressfi
       true);
 
   // Configure GetFile processor
-  plan->setProperty(get_file, "Input Directory", src_dir.string());
+  plan->setProperty(get_file, minifi::processors::GetFile::Directory, src_dir.string());
 
   // Configure CompressContent processor for compression
-  plan->setProperty(compress_content, "Mode", toString(CompressionMode::Compress));
-  plan->setProperty(compress_content, "Compression Format", toString(CompressionFormat::GZIP));
-  plan->setProperty(compress_content, "Update Filename", "true");
-  plan->setProperty(compress_content, "Encapsulate in TAR", "false");
+  plan->setProperty(compress_content, minifi::processors::CompressContent::CompressMode, toString(CompressionMode::Compress));
+  plan->setProperty(compress_content, minifi::processors::CompressContent::CompressFormat, toString(CompressionFormat::GZIP));
+  plan->setProperty(compress_content, minifi::processors::CompressContent::UpdateFileName, "true");
+  plan->setProperty(compress_content, minifi::processors::CompressContent::EncapsulateInTar, "false");
 
   // Configure first PutFile processor
-  plan->setProperty(put_compressed, "Directory", dst_dir.string());
+  plan->setProperty(put_compressed, minifi::processors::PutFile::Directory, dst_dir.string());
 
   // Configure CompressContent processor for decompression
-  plan->setProperty(decompress_content, "Mode", toString(CompressionMode::Decompress));
-  plan->setProperty(decompress_content, "Compression Format", toString(CompressionFormat::GZIP));
-  plan->setProperty(decompress_content, "Update Filename", "true");
-  plan->setProperty(decompress_content, "Encapsulate in TAR", "false");
+  plan->setProperty(decompress_content, minifi::processors::CompressContent::CompressMode, toString(CompressionMode::Decompress));
+  plan->setProperty(decompress_content, minifi::processors::CompressContent::CompressFormat, toString(CompressionFormat::GZIP));
+  plan->setProperty(decompress_content, minifi::processors::CompressContent::UpdateFileName, "true");
+  plan->setProperty(decompress_content, minifi::processors::CompressContent::EncapsulateInTar, "false");
 
   // Configure second PutFile processor
-  plan->setProperty(put_decompressed, "Directory", dst_dir.string());
+  plan->setProperty(put_decompressed, minifi::processors::PutFile::Directory, dst_dir.string());
 
   // Create source file
   std::string content;

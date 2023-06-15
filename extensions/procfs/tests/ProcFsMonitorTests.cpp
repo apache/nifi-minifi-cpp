@@ -27,8 +27,8 @@ TEST_CASE("ProcFsMonitorTests", "[procfsmonitortests]") {
   org::apache::nifi::minifi::test::SingleProcessorTestController test_controller_{proc_fs_monitor};
 
   SECTION("Absolute JSON") {
-    test_controller_.plan->setProperty(proc_fs_monitor, ProcFsMonitor::ResultRelativenessProperty.getName(), "Absolute");
-    test_controller_.plan->setProperty(proc_fs_monitor, ProcFsMonitor::OutputFormatProperty.getName(), "JSON");
+    test_controller_.plan->setProperty(proc_fs_monitor, ProcFsMonitor::ResultRelativenessProperty, "Absolute");
+    test_controller_.plan->setProperty(proc_fs_monitor, ProcFsMonitor::OutputFormatProperty, "JSON");
     const auto& result = test_controller_.trigger();
 
     REQUIRE(result.at(ProcFsMonitor::Success).size() == 1);
@@ -47,8 +47,8 @@ TEST_CASE("ProcFsMonitorTests", "[procfsmonitortests]") {
   }
 
   SECTION("Absolute OpenTelemetry")  {
-    test_controller_.plan->setProperty(proc_fs_monitor, ProcFsMonitor::ResultRelativenessProperty.getName(), "Absolute");
-    test_controller_.plan->setProperty(proc_fs_monitor, ProcFsMonitor::OutputFormatProperty.getName(), "OpenTelemetry");
+    test_controller_.plan->setProperty(proc_fs_monitor, ProcFsMonitor::ResultRelativenessProperty, "Absolute");
+    test_controller_.plan->setProperty(proc_fs_monitor, ProcFsMonitor::OutputFormatProperty, "OpenTelemetry");
     const auto& result = test_controller_.trigger();
 
     REQUIRE(result.at(ProcFsMonitor::Success).size() == 1);
@@ -68,8 +68,8 @@ TEST_CASE("ProcFsMonitorTests", "[procfsmonitortests]") {
   }
 
   SECTION("Relative JSON") {
-    test_controller_.plan->setProperty(proc_fs_monitor, ProcFsMonitor::ResultRelativenessProperty.getName(), "Relative");
-    test_controller_.plan->setProperty(proc_fs_monitor, ProcFsMonitor::OutputFormatProperty.getName(), "JSON");
+    test_controller_.plan->setProperty(proc_fs_monitor, ProcFsMonitor::ResultRelativenessProperty, "Relative");
+    test_controller_.plan->setProperty(proc_fs_monitor, ProcFsMonitor::OutputFormatProperty, "JSON");
     {
       const auto& result = test_controller_.trigger();
 
@@ -107,8 +107,8 @@ TEST_CASE("ProcFsMonitorTests", "[procfsmonitortests]") {
   }
 
   SECTION("Relative OpenTelemetry") {
-    test_controller_.plan->setProperty(proc_fs_monitor, ProcFsMonitor::ResultRelativenessProperty.getName(), "Relative");
-    test_controller_.plan->setProperty(proc_fs_monitor, ProcFsMonitor::OutputFormatProperty.getName(), "OpenTelemetry");
+    test_controller_.plan->setProperty(proc_fs_monitor, ProcFsMonitor::ResultRelativenessProperty, "Relative");
+    test_controller_.plan->setProperty(proc_fs_monitor, ProcFsMonitor::OutputFormatProperty, "OpenTelemetry");
     {
       const auto& result = test_controller_.trigger();
 
@@ -148,7 +148,7 @@ TEST_CASE("ProcFsMonitorTests", "[procfsmonitortests]") {
   }
 
   SECTION("Relative without wait") {
-    test_controller_.plan->setProperty(proc_fs_monitor, ProcFsMonitor::ResultRelativenessProperty.getName(), "Relative");
+    test_controller_.plan->setProperty(proc_fs_monitor, ProcFsMonitor::ResultRelativenessProperty, "Relative");
     const auto& result1 = test_controller_.trigger();
     REQUIRE(result1.at(ProcFsMonitor::Success).size() == 1);
     const auto& result2 = test_controller_.trigger();

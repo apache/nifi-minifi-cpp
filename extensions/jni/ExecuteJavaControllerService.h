@@ -25,7 +25,8 @@
 #include "core/controller/ControllerService.h"
 #include "core/ProcessSession.h"
 #include "core/Core.h"
-#include "core/Property.h"
+#include "core/PropertyDefinition.h"
+#include "core/PropertyDefinitionBuilder.h"
 #include "concurrentqueue.h"
 #include "core/logging/LoggerConfiguration.h"
 #include "jvm/JavaControllerService.h"
@@ -55,8 +56,13 @@ class ExecuteJavaControllerService : public ConfigurationContext, public std::en
   ~ExecuteJavaControllerService() override;
 
   EXTENSIONAPI static constexpr const char* Description = "ExecuteJavaClass runs NiFi Controller services given a provided system path";
-  EXTENSIONAPI static const core::Property NiFiControllerService;
-  static auto properties() { return std::array{NiFiControllerService}; }
+
+  EXTENSIONAPI static constexpr auto NiFiControllerService = core::PropertyDefinitionBuilder<>::createProperty("NiFi Controller Service")
+      .withDescription("Name of NiFi Controller Service to load and run")
+      .isRequired(true)
+      .build();
+  EXTENSIONAPI static constexpr auto Properties = std::array<core::PropertyReference, 1>{NiFiControllerService};
+
   EXTENSIONAPI static constexpr bool SupportsDynamicProperties = true;
   ADD_COMMON_VIRTUAL_FUNCTIONS_FOR_CONTROLLER_SERVICES
 

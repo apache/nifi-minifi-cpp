@@ -31,28 +31,12 @@
 #include <net/if_types.h>
 #endif
 #include "core/state/UpdatePolicy.h"
-#include "core/PropertyBuilder.h"
-#include "core/PropertyValidation.h"
 #include "core/Resource.h"
 
 namespace org::apache::nifi::minifi::controllers {
 
-const core::Property UpdatePolicyControllerService::AllowAllProperties(
-    core::PropertyBuilder::createProperty("Allow All Properties")->withDescription("Allows all properties, which are also not disallowed, to be updated")->withDefaultValue<bool>(
-        false)->build());
-
-const core::Property UpdatePolicyControllerService::AllowedProperties(
-    core::PropertyBuilder::createProperty("Allowed Properties")->withDescription("Properties for which we will allow updates")->isRequired(false)->build());
-
-const core::Property UpdatePolicyControllerService::DisallowedProperties(
-    core::PropertyBuilder::createProperty("Disallowed Properties")->withDescription("Properties for which we will not allow updates")->isRequired(false)->build());
-
-const core::Property UpdatePolicyControllerService::PersistUpdates(
-    core::PropertyBuilder::createProperty("Persist Updates")->withDescription("Property that dictates whether updates should persist after a restart")->isRequired(false)->withDefaultValue<bool>(false)
-        ->build());
-
 void UpdatePolicyControllerService::initialize() {
-  setSupportedProperties(properties());
+  setSupportedProperties(Properties);
 }
 
 void UpdatePolicyControllerService::yield() {
@@ -71,11 +55,11 @@ void UpdatePolicyControllerService::onEnable() {
   std::string persistStr;
 
   bool enable_all = false;
-  if (getProperty(AllowAllProperties.getName(), enableStr)) {
+  if (getProperty(AllowAllProperties, enableStr)) {
     enable_all = utils::StringUtils::toBool(enableStr).value_or(false);
   }
 
-  if (getProperty(PersistUpdates.getName(), persistStr)) {
+  if (getProperty(PersistUpdates, persistStr)) {
     persist_updates_ = utils::StringUtils::toBool(persistStr).value_or(false);
   }
 
@@ -84,13 +68,13 @@ void UpdatePolicyControllerService::onEnable() {
   core::Property all_prop("Allowed Properties", "Properties for which we will allow updates");
   core::Property dall_prop("Disallowed Properties", "Properties for which we will not allow updates");
 
-  if (getProperty(AllowedProperties.getName(), all_prop)) {
+  if (getProperty(AllowedProperties, all_prop)) {
     for (const auto &str : all_prop.getValues()) {
       builder->allowPropertyUpdate(str);
     }
   }
 
-  if (getProperty(DisallowedProperties.getName(), dall_prop)) {
+  if (getProperty(DisallowedProperties, dall_prop)) {
     for (const auto &str : dall_prop.getValues()) {
       builder->disallowPropertyUpdate(str);
     }

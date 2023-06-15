@@ -25,36 +25,52 @@
 #include <memory>
 
 #include "AzureDataLakeStorageProcessorBase.h"
+#include "core/PropertyDefinitionBuilder.h"
+#include "core/PropertyType.h"
 #include "utils/ArrayUtils.h"
 
 class ListAzureDataLakeStorageTestsFixture;
 
-namespace org::apache::nifi::minifi::azure::processors {
+namespace org::apache::nifi::minifi::azure {
+
+SMART_ENUM(EntityTracking,
+  (NONE, "none"),
+  (TIMESTAMPS, "timestamps")
+)
+
+namespace processors {
 
 class ListAzureDataLakeStorage final : public AzureDataLakeStorageProcessorBase {
  public:
-  SMART_ENUM(EntityTracking,
-    (NONE, "none"),
-    (TIMESTAMPS, "timestamps")
-  )
+  EXTENSIONAPI static constexpr const char *Description = "Lists directory in an Azure Data Lake Storage Gen 2 filesystem";
 
-  EXTENSIONAPI static constexpr const char* Description = "Lists directory in an Azure Data Lake Storage Gen 2 filesystem";
-
-  EXTENSIONAPI static const core::Property RecurseSubdirectories;
-  EXTENSIONAPI static const core::Property FileFilter;
-  EXTENSIONAPI static const core::Property PathFilter;
-  EXTENSIONAPI static const core::Property ListingStrategy;
-  static auto properties() {
-    return utils::array_cat(AzureDataLakeStorageProcessorBase::properties(), std::array{
+  EXTENSIONAPI static constexpr auto RecurseSubdirectories = core::PropertyDefinitionBuilder<>::createProperty("Recurse Subdirectories")
+      .withDescription("Indicates whether to list files from subdirectories of the directory")
+      .isRequired(true)
+      .withPropertyType(core::StandardPropertyTypes::BOOLEAN_TYPE)
+      .withDefaultValue("true")
+      .build();
+  EXTENSIONAPI static constexpr auto FileFilter = core::PropertyDefinitionBuilder<>::createProperty("File Filter")
+      .withDescription("Only files whose names match the given regular expression will be listed")
+      .build();
+  EXTENSIONAPI static constexpr auto PathFilter = core::PropertyDefinitionBuilder<>::createProperty("Path Filter")
+      .withDescription("When 'Recurse Subdirectories' is true, then only subdirectories whose paths match the given regular expression will be scanned")
+      .build();
+  EXTENSIONAPI static constexpr auto ListingStrategy = core::PropertyDefinitionBuilder<azure::EntityTracking::length>::createProperty("Listing Strategy")
+      .withDescription("Specify how to determine new/updated entities. If 'timestamps' is selected it tracks the latest timestamp of listed entity to "
+                       "determine new/updated entities. If 'none' is selected it lists an entity without any tracking, the same entity will be listed each time on executing this processor.")
+      .withDefaultValue(toStringView(azure::EntityTracking::TIMESTAMPS))
+      .withAllowedValues(azure::EntityTracking::values)
+      .build();
+  EXTENSIONAPI static constexpr auto Properties = utils::array_cat(AzureDataLakeStorageProcessorBase::Properties, std::array<core::PropertyReference, 4>{
       RecurseSubdirectories,
       FileFilter,
       PathFilter,
       ListingStrategy
-    });
-  }
+  });
 
-  EXTENSIONAPI static const core::Relationship Success;
-  static auto relationships() { return std::array{Success}; }
+  EXTENSIONAPI static constexpr auto Success = core::RelationshipDefinition{"success", "All FlowFiles that are received are routed to success"};
+  EXTENSIONAPI static constexpr auto Relationships = std::array{Success};
 
   EXTENSIONAPI static constexpr bool SupportsDynamicProperties = false;
   EXTENSIONAPI static constexpr bool SupportsDynamicRelationships = false;
@@ -63,28 +79,29 @@ class ListAzureDataLakeStorage final : public AzureDataLakeStorageProcessorBase 
 
   ADD_COMMON_VIRTUAL_FUNCTIONS_FOR_PROCESSORS
 
-  explicit ListAzureDataLakeStorage(std::string name, const minifi::utils::Identifier& uuid = minifi::utils::Identifier())
-    : AzureDataLakeStorageProcessorBase(std::move(name), uuid, core::logging::LoggerFactory<ListAzureDataLakeStorage>::getLogger(uuid)) {
+  explicit ListAzureDataLakeStorage(std::string name, const minifi::utils::Identifier &uuid = minifi::utils::Identifier())
+      : AzureDataLakeStorageProcessorBase(std::move(name), uuid, core::logging::LoggerFactory<ListAzureDataLakeStorage>::getLogger(uuid)) {
   }
 
   ~ListAzureDataLakeStorage() override = default;
 
   void initialize() override;
-  void onSchedule(const std::shared_ptr<core::ProcessContext>& context, const std::shared_ptr<core::ProcessSessionFactory>& sessionFactory) override;
+  void onSchedule(const std::shared_ptr<core::ProcessContext> &context, const std::shared_ptr<core::ProcessSessionFactory> &sessionFactory) override;
   void onTrigger(const std::shared_ptr<core::ProcessContext> &context, const std::shared_ptr<core::ProcessSession> &session) override;
 
  private:
   friend class ::ListAzureDataLakeStorageTestsFixture;
 
-  explicit ListAzureDataLakeStorage(std::string name, const minifi::utils::Identifier& uuid, std::unique_ptr<storage::DataLakeStorageClient> data_lake_storage_client)
-    : AzureDataLakeStorageProcessorBase(std::move(name), uuid, core::logging::LoggerFactory<ListAzureDataLakeStorage>::getLogger(uuid), std::move(data_lake_storage_client)) {
+  explicit ListAzureDataLakeStorage(std::string name, const minifi::utils::Identifier &uuid, std::unique_ptr<storage::DataLakeStorageClient> data_lake_storage_client)
+      : AzureDataLakeStorageProcessorBase(std::move(name), uuid, core::logging::LoggerFactory<ListAzureDataLakeStorage>::getLogger(uuid), std::move(data_lake_storage_client)) {
   }
 
-  std::optional<storage::ListAzureDataLakeStorageParameters> buildListParameters(core::ProcessContext& context);
+  std::optional<storage::ListAzureDataLakeStorageParameters> buildListParameters(core::ProcessContext &context);
 
-  EntityTracking tracking_strategy_ = EntityTracking::TIMESTAMPS;
+  azure::EntityTracking tracking_strategy_ = azure::EntityTracking::TIMESTAMPS;
   storage::ListAzureDataLakeStorageParameters list_parameters_;
   std::unique_ptr<minifi::utils::ListingStateManager> state_manager_;
 };
 
-}  // namespace org::apache::nifi::minifi::azure::processors
+}  // namespace processors
+}  // namespace org::apache::nifi::minifi::azure

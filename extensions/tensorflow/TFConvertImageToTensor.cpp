@@ -19,87 +19,13 @@
 
 #include "core/ProcessContext.h"
 #include "core/ProcessSession.h"
-#include "core/PropertyBuilder.h"
 #include "tensorflow/cc/ops/standard_ops.h"
 
 namespace org::apache::nifi::minifi::processors {
 
-const core::Property TFConvertImageToTensor::ImageFormat(
-    core::PropertyBuilder::createProperty("Input Format")
-        ->withDescription(
-            "The format of the input image (PNG or RAW). RAW is RGB24.")
-        ->withDefaultValue("")
-        ->build());
-
-const core::Property TFConvertImageToTensor::InputWidth(
-    core::PropertyBuilder::createProperty("Input Width")
-        ->withDescription("The width, in pixels, of the input image.")
-        ->withDefaultValue("")
-        ->build());
-
-const core::Property TFConvertImageToTensor::InputHeight(
-    core::PropertyBuilder::createProperty("Input Height")
-        ->withDescription("The height, in pixels, of the input image.")
-        ->withDefaultValue("")
-        ->build());
-
-const core::Property TFConvertImageToTensor::OutputWidth(
-    core::PropertyBuilder::createProperty("Output Width")
-        ->withDescription("The width, in pixels, of the output image.")
-        ->withDefaultValue("")
-        ->build());
-
-const core::Property TFConvertImageToTensor::OutputHeight(
-    core::PropertyBuilder::createProperty("Output Height")
-        ->withDescription("The height, in pixels, of the output image.")
-        ->withDefaultValue("")
-        ->build());
-
-const core::Property TFConvertImageToTensor::NumChannels(
-    core::PropertyBuilder::createProperty("Channels")
-        ->withDescription("The number of channels (e.g. 3 for RGB, 4 for RGBA) "
-                          "in the input image")
-        ->withDefaultValue("3")
-        ->build());
-
-const core::Property TFConvertImageToTensor::CropOffsetX(
-    core::PropertyBuilder::createProperty("Crop Offset X")
-        ->withDescription("The X (horizontal) offset, in pixels, to crop the "
-                          "input image (relative to top-left corner).")
-        ->withDefaultValue("")
-        ->build());
-
-const core::Property TFConvertImageToTensor::CropOffsetY(
-    core::PropertyBuilder::createProperty("Crop Offset Y")
-        ->withDescription("The Y (vertical) offset, in pixels, to crop the "
-                          "input image (relative to top-left corner).")
-        ->withDefaultValue("")
-        ->build());
-
-const core::Property TFConvertImageToTensor::CropSizeX(
-    core::PropertyBuilder::createProperty("Crop Size X")
-        ->withDescription(
-            "The X (horizontal) size, in pixels, to crop the input image.")
-        ->withDefaultValue("")
-        ->build());
-
-const core::Property TFConvertImageToTensor::CropSizeY(
-    core::PropertyBuilder::createProperty("Crop Size Y")
-        ->withDescription(
-            "The Y (vertical) size, in pixels, to crop the input image.")
-        ->withDefaultValue("")
-        ->build());
-
-const core::Relationship TFConvertImageToTensor::Success(
-    "success",
-    "Successful graph application outputs");
-const core::Relationship TFConvertImageToTensor::Failure(
-    "failure",
-    "Failures which will not work if retried");
-
 void TFConvertImageToTensor::initialize() {
-  setSupportedProperties(properties());
-  setSupportedRelationships(relationships());
+  setSupportedProperties(Properties);
+  setSupportedRelationships(Relationships);
 }
 
 void TFConvertImageToTensor::onSchedule(core::ProcessContext* context, core::ProcessSessionFactory* /*sessionFactory*/) {

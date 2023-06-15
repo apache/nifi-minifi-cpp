@@ -22,6 +22,10 @@
 #include <utility>
 
 #include "SplunkHECProcessor.h"
+#include "core/PropertyDefinition.h"
+#include "core/PropertyDefinitionBuilder.h"
+#include "core/PropertyType.h"
+#include "core/RelationshipDefinition.h"
 #include "utils/ArrayUtils.h"
 #include "utils/gsl.h"
 #include "client/HTTPClient.h"
@@ -41,7 +45,7 @@ class QuerySplunkIndexingStatus final : public SplunkHECProcessor {
   ~QuerySplunkIndexingStatus() override = default;
 
   EXTENSIONAPI static constexpr const char* Description =
-      "Queries the Splunk server in order to acquire the status of indexing acknowledgement."
+      "Queries the Splunk server in order to acquire the status of indexing acknowledgement.\n"
       "\n"
       "This processor is responsible for polling Splunk server and determine if a Splunk event is acknowledged at the time of\n"
       "execution. For more details about the HEC Index Acknowledgement please see\n"
@@ -65,27 +69,45 @@ class QuerySplunkIndexingStatus final : public SplunkHECProcessor {
       "the maximum number of events the processor will query about in one API request. This serves as an upper limit for the\n"
       "batch but the processor might execute the query with smaller number of undetermined events.\n";
 
-  EXTENSIONAPI static const core::Property MaximumWaitingTime;
-  EXTENSIONAPI static const core::Property MaxQuerySize;
-  static auto properties() {
-    return utils::array_cat(SplunkHECProcessor::properties(), std::array{
+  EXTENSIONAPI static constexpr auto MaximumWaitingTime = core::PropertyDefinitionBuilder<>::createProperty("Maximum Waiting Time")
+      .withDescription("The maximum time the processor tries to acquire acknowledgement confirmation for an index, from the point of registration. "
+          "After the given amount of time, the processor considers the index as not acknowledged and transfers the FlowFile to the \"unacknowledged\" relationship.")
+      .withPropertyType(core::StandardPropertyTypes::TIME_PERIOD_TYPE)
+      .withDefaultValue("1 hour")
+      .isRequired(true)
+      .build();
+  EXTENSIONAPI static constexpr auto MaxQuerySize = core::PropertyDefinitionBuilder<>::createProperty("Maximum Query Size")
+      .withDescription("The maximum number of acknowledgement identifiers the outgoing query contains in one batch. "
+          "It is recommended not to set it too low in order to reduce network communication.")
+      .withPropertyType(core::StandardPropertyTypes::UNSIGNED_LONG_TYPE)
+      .withDefaultValue("1000")
+      .isRequired(true)
+      .build();
+  EXTENSIONAPI static constexpr auto Properties = utils::array_cat(SplunkHECProcessor::Properties, std::array<core::PropertyReference, 2>{
       MaximumWaitingTime,
       MaxQuerySize
-    });
-  }
+  });
 
-  EXTENSIONAPI static const core::Relationship Acknowledged;
-  EXTENSIONAPI static const core::Relationship Unacknowledged;
-  EXTENSIONAPI static const core::Relationship Undetermined;
-  EXTENSIONAPI static const core::Relationship Failure;
-  static auto relationships() {
-    return std::array{
+
+  EXTENSIONAPI static constexpr auto Acknowledged = core::RelationshipDefinition{"acknowledged",
+    "A FlowFile is transferred to this relationship when the acknowledgement was successful."};
+  EXTENSIONAPI static constexpr auto Unacknowledged = core::RelationshipDefinition{"unacknowledged",
+    "A FlowFile is transferred to this relationship when the acknowledgement was not successful. "
+    "This can happen when the acknowledgement did not happened within the time period set for Maximum Waiting Time. "
+    "FlowFiles with acknowledgement id unknown for the Splunk server will be transferred to this relationship after the Maximum Waiting Time is reached."};
+  EXTENSIONAPI static constexpr auto Undetermined = core::RelationshipDefinition{"undetermined",
+    "A FlowFile is transferred to this relationship when the acknowledgement state is not determined. "
+    "FlowFiles transferred to this relationship might be penalized. "
+    "This happens when Splunk returns with HTTP 200 but with false response for the acknowledgement id in the flow file attribute."};
+  EXTENSIONAPI static constexpr auto Failure = core::RelationshipDefinition{"failure",
+    "A FlowFile is transferred to this relationship when the acknowledgement was not successful due to errors during the communication, "
+    "or if the flowfile was missing the acknowledgement id"};
+  EXTENSIONAPI static constexpr auto Relationships = std::array{
       Acknowledged,
       Unacknowledged,
       Undetermined,
       Failure
-    };
-  }
+  };
 
   EXTENSIONAPI static constexpr bool SupportsDynamicProperties = false;
   EXTENSIONAPI static constexpr bool SupportsDynamicRelationships = false;

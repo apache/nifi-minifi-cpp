@@ -25,6 +25,9 @@
 #include "core/Core.h"
 #include "core/logging/Logger.h"
 #include "core/logging/LoggerConfiguration.h"
+#include "core/PropertyDefinition.h"
+#include "core/PropertyDefinitionBuilder.h"
+#include "core/PropertyType.h"
 #include "../database/RocksDatabase.h"
 
 #include "rocksdb/options.h"
@@ -42,16 +45,28 @@ class RocksDbStateStorage : public KeyValueStateStorage {
 
   EXTENSIONAPI static constexpr const char* Description = "A state storage service implemented by RocksDB";
 
-  EXTENSIONAPI static const core::Property AlwaysPersist;
-  EXTENSIONAPI static const core::Property AutoPersistenceInterval;
-  EXTENSIONAPI static const core::Property Directory;
-  static auto properties() {
-    return std::array{
+  EXTENSIONAPI static constexpr auto AlwaysPersist = core::PropertyDefinitionBuilder<>::createProperty(ALWAYS_PERSIST_PROPERTY_NAME)
+      .withDescription("Persist every change instead of persisting it periodically.")
+      .isRequired(false)
+      .withPropertyType(core::StandardPropertyTypes::BOOLEAN_TYPE)
+      .withDefaultValue("false")
+      .build();
+  EXTENSIONAPI static constexpr auto AutoPersistenceInterval = core::PropertyDefinitionBuilder<>::createProperty(AUTO_PERSISTENCE_INTERVAL_PROPERTY_NAME)
+      .withDescription("The interval of the periodic task persisting all values. Only used if Always Persist is false. If set to 0 seconds, auto persistence will be disabled.")
+      .isRequired(false)
+      .withPropertyType(core::StandardPropertyTypes::TIME_PERIOD_TYPE)
+      .withDefaultValue("1 min")
+      .build();
+  EXTENSIONAPI static constexpr auto Directory = core::PropertyDefinitionBuilder<>::createProperty("Directory")
+      .withDescription("Path to a directory for the database")
+      .isRequired(true)
+      .build();
+  EXTENSIONAPI static constexpr auto Properties = std::array<core::PropertyReference, 3>{
       AlwaysPersist,
       AutoPersistenceInterval,
       Directory
-    };
-  }
+  };
+
 
   EXTENSIONAPI static constexpr bool SupportsDynamicProperties = false;
   ADD_COMMON_VIRTUAL_FUNCTIONS_FOR_CONTROLLER_SERVICES

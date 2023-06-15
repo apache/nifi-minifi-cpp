@@ -17,17 +17,14 @@
 
 #pragma once
 
-#include <ProcessContext.h>
 #include <memory>
 #include <unordered_map>
 #include <string>
+
+#include "ProcessContext.h"
 #include "impl/expression/Expression.h"
 
-namespace org {
-namespace apache {
-namespace nifi {
-namespace minifi {
-namespace core {
+namespace org::apache::nifi::minifi::core {
 
 /**
  * Purpose and Justification: Used to inject EL functionality into the classloader and remove EL as
@@ -37,9 +34,6 @@ namespace core {
  */
 class ProcessContextExpr final : public core::ProcessContext {
  public:
-  /**
-   std::forward of argument list did not work on all platform.
-   **/
   ProcessContextExpr(const std::shared_ptr<ProcessorNode> &processor, controller::ControllerServiceProvider* controller_service_provider,
                      const std::shared_ptr<core::Repository> &repo, const std::shared_ptr<core::Repository> &flow_repo,
                      const std::shared_ptr<core::ContentRepository> &content_repo = std::make_shared<core::repository::FileSystemRepository>())
@@ -53,15 +47,12 @@ class ProcessContextExpr final : public core::ProcessContext {
       : core::ProcessContext(processor, controller_service_provider, repo, flow_repo, configuration, content_repo),
         logger_(logging::LoggerFactory<ProcessContextExpr>::getLogger()) {
   }
-  // Destructor
+
   ~ProcessContextExpr() override = default;
-  /**
-   * Retrieves property using EL
-   * @param property property
-   * @param value that will be filled
-   * @param flow_file flow file.
-   */
-  bool getProperty(const Property &property, std::string &value, const std::shared_ptr<FlowFile> &flow_file) override;
+
+  bool getProperty(const Property& property, std::string &value, const std::shared_ptr<FlowFile> &flow_file) override;
+
+  bool getProperty(const PropertyReference& property, std::string &value, const std::shared_ptr<FlowFile> &flow_file) override;
 
   bool getDynamicProperty(const Property &property, std::string &value, const std::shared_ptr<FlowFile> &flow_file) override;
 
@@ -70,14 +61,12 @@ class ProcessContextExpr final : public core::ProcessContext {
   bool setDynamicProperty(const std::string& property, std::string value) override;
 
  private:
+  bool getProperty(bool supports_expression_language, std::string_view property_name, std::string& value, const std::shared_ptr<FlowFile>& flow_file);
+
   std::unordered_map<std::string, org::apache::nifi::minifi::expression::Expression> expressions_;
   std::unordered_map<std::string, org::apache::nifi::minifi::expression::Expression> dynamic_property_expressions_;
   std::unordered_map<std::string, std::string> expression_strs_;
   std::shared_ptr<logging::Logger> logger_;
 };
 
-} /* namespace core */
-} /* namespace minifi */
-} /* namespace nifi */
-} /* namespace apache */
-} /* namespace org */
+}  // namespace org::apache::nifi::minifi::core

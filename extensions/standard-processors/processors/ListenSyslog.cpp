@@ -19,78 +19,10 @@
 #include "ListenSyslog.h"
 #include "core/ProcessContext.h"
 #include "core/ProcessSession.h"
-#include "core/PropertyBuilder.h"
 #include "core/Resource.h"
 #include "controllers/SSLContextService.h"
-#include "utils/net/Ssl.h"
 
 namespace org::apache::nifi::minifi::processors {
-
-const core::Property ListenSyslog::Port(
-    core::PropertyBuilder::createProperty("Listening Port")
-        ->withDescription("The port for Syslog communication. (Well-known ports (0-1023) require root access)")
-        ->isRequired(true)
-        ->withDefaultValue<int>(514, core::StandardValidators::LISTEN_PORT_VALIDATOR)->build());
-
-const core::Property ListenSyslog::ProtocolProperty(
-    core::PropertyBuilder::createProperty("Protocol")
-        ->withDescription("The protocol for Syslog communication.")
-        ->isRequired(true)
-        ->withAllowableValues(utils::net::IpProtocol::values())
-        ->withDefaultValue(toString(utils::net::IpProtocol::UDP))
-        ->build());
-
-const core::Property ListenSyslog::MaxBatchSize(
-    core::PropertyBuilder::createProperty("Max Batch Size")
-        ->withDescription("The maximum number of Syslog events to process at a time.")
-        ->withDefaultValue<uint64_t>(500)
-        ->build());
-
-const core::Property ListenSyslog::ParseMessages(
-    core::PropertyBuilder::createProperty("Parse Messages")
-        ->withDescription("Indicates if the processor should parse the Syslog messages. "
-                          "If set to false, each outgoing FlowFile will only contain the sender, protocol, and port, and no additional attributes.")
-        ->withDefaultValue<bool>(false)->build());
-
-const core::Property ListenSyslog::MaxQueueSize(
-    core::PropertyBuilder::createProperty("Max Size of Message Queue")
-        ->withDescription("Maximum number of Syslog messages allowed to be buffered before processing them when the processor is triggered. "
-                          "If the buffer is full, the message is ignored. If set to zero the buffer is unlimited.")
-        ->withDefaultValue<uint64_t>(10000)->build());
-
-const core::Property ListenSyslog::SSLContextService(
-    core::PropertyBuilder::createProperty("SSL Context Service")
-        ->withDescription("The Controller Service to use in order to obtain an SSL Context. If this property is set, messages will be received over a secure connection. "
-                          "This Property is only considered if the <Protocol> Property has a value of \"TCP\".")
-        ->asType<minifi::controllers::SSLContextService>()
-        ->build());
-
-const core::Property ListenSyslog::ClientAuth(
-    core::PropertyBuilder::createProperty("Client Auth")
-      ->withDescription("The client authentication policy to use for the SSL Context. Only used if an SSL Context Service is provided.")
-      ->withDefaultValue<std::string>(toString(utils::net::ClientAuthOption::NONE))
-      ->withAllowableValues<std::string>(utils::net::ClientAuthOption::values())
-      ->build());
-
-const core::Relationship ListenSyslog::Success("success", "Incoming messages that match the expected format when parsing will be sent to this relationship. "
-                                                          "When Parse Messages is set to false, all incoming message will be sent to this relationship.");
-const core::Relationship ListenSyslog::Invalid("invalid", "Incoming messages that do not match the expected format when parsing will be sent to this relationship.");
-
-const core::OutputAttribute ListenSyslog::Protocol{"syslog.protocol", {}, "The protocol over which the Syslog message was received."};
-const core::OutputAttribute ListenSyslog::PortOutputAttribute{"syslog.port", {}, "The port over which the Syslog message was received."};
-const core::OutputAttribute ListenSyslog::Sender{"syslog.sender", {}, "The hostname of the Syslog server that sent the message."};
-const core::OutputAttribute ListenSyslog::Valid{"syslog.valid", {}, "An indicator of whether this message matched the expected formats. (requirement: parsing enabled)"};
-const core::OutputAttribute ListenSyslog::Priority{"syslog.priority", {}, "The priority of the Syslog message. (requirement: parsed RFC5424/RFC3164)"};
-const core::OutputAttribute ListenSyslog::Severity{"syslog.severity", {}, "The severity of the Syslog message. (requirement: parsed RFC5424/RFC3164)"};
-const core::OutputAttribute ListenSyslog::Facility{"syslog.facility", {}, "The facility of the Syslog message. (requirement: parsed RFC5424/RFC3164)"};
-const core::OutputAttribute ListenSyslog::Timestamp{"syslog.timestamp", {}, "The timestamp of the Syslog message. (requirement: parsed RFC5424/RFC3164)"};
-const core::OutputAttribute ListenSyslog::Hostname{"syslog.hostname", {}, "The hostname of the Syslog message. (requirement: parsed RFC5424/RFC3164)"};
-const core::OutputAttribute ListenSyslog::Msg{"syslog.msg", {}, "The free-form message of the Syslog message. (requirement: parsed RFC5424/RFC3164)"};
-const core::OutputAttribute ListenSyslog::Version{"syslog.version", {}, "The version of the Syslog message. (requirement: parsed RFC5424)"};
-const core::OutputAttribute ListenSyslog::AppName{"syslog.app_name", {}, "The app name of the Syslog message. (requirement: parsed RFC5424)"};
-const core::OutputAttribute ListenSyslog::ProcId{"syslog.proc_id", {}, "The proc id of the Syslog message. (requirement: parsed RFC5424)"};
-const core::OutputAttribute ListenSyslog::MsgId{"syslog.msg_id", {}, "The message id of the Syslog message. (requirement: parsed RFC5424)"};
-const core::OutputAttribute ListenSyslog::StructuredData{"syslog.structured_data", {}, "The structured data of the Syslog message. (requirement: parsed RFC5424)"};
 
 const std::regex ListenSyslog::rfc5424_pattern_(
     R"(^<(?:(\d|\d{2}|1[1-8]\d|19[01]))>)"                                                                    // priority
@@ -110,17 +42,17 @@ const std::regex ListenSyslog::rfc3164_pattern_(
     R"((.*)$)", std::regex::ECMAScript);                                                                      // msg
 
 void ListenSyslog::initialize() {
-  setSupportedProperties(properties());
-  setSupportedRelationships(relationships());
+  setSupportedProperties(Properties);
+  setSupportedRelationships(Relationships);
 }
 
 void ListenSyslog::onSchedule(const std::shared_ptr<core::ProcessContext>& context, const std::shared_ptr<core::ProcessSessionFactory>&) {
   gsl_Expects(context);
 
-  context->getProperty(ParseMessages.getName(), parse_messages_);
+  context->getProperty(ParseMessages, parse_messages_);
 
   utils::net::IpProtocol protocol;
-  context->getProperty(ProtocolProperty.getName(), protocol);
+  context->getProperty(ProtocolProperty, protocol);
 
   if (protocol == utils::net::IpProtocol::TCP) {
     startTcpServer(*context, SSLContextService, ClientAuth);
@@ -172,15 +104,15 @@ void ListenSyslog::transferAsFlowFile(const utils::net::Message& message, core::
   session.transfer(flow_file, valid ? Success : Invalid);
 }
 
-const core::Property& ListenSyslog::getMaxBatchSizeProperty() {
+core::PropertyReference ListenSyslog::getMaxBatchSizeProperty() {
   return MaxBatchSize;
 }
 
-const core::Property& ListenSyslog::getMaxQueueSizeProperty() {
+core::PropertyReference ListenSyslog::getMaxQueueSizeProperty() {
   return MaxQueueSize;
 }
 
-const core::Property& ListenSyslog::getPortProperty() {
+core::PropertyReference ListenSyslog::getPortProperty() {
   return Port;
 }
 

@@ -24,10 +24,11 @@
 
 #include "utils/ByteArrayCallback.h"
 #include "FlowFileRecord.h"
+#include "core/Core.h"
 #include "core/Processor.h"
 #include "core/ProcessSession.h"
-#include "core/Core.h"
-#include "core/Property.h"
+#include "core/PropertyDefinition.h"
+#include "core/RelationshipDefinition.h"
 #include "utils/Id.h"
 #include "SensorBase.h"
 #include "RTIMULib.h"
@@ -43,9 +44,9 @@ class GetMovementSensors : public SensorBase {
   virtual ~GetMovementSensors();
 
   EXTENSIONAPI static constexpr const char* Description = "Defines a processor that is able to retrieve sensor information from a class of known servo sensors";
-  static auto properties() { return std::array<core::Property, 0>{}; }
-  EXTENSIONAPI static const core::Relationship Success;
-  static auto relationships() { return std::array{Success}; }
+  EXTENSIONAPI static constexpr auto Properties = std::array<core::PropertyReference, 0>{};
+  EXTENSIONAPI static constexpr auto Success = core::RelationshipDefinition{"success", "All files are routed to success"};
+  EXTENSIONAPI static constexpr auto Relationships = std::array{Success};
   EXTENSIONAPI static constexpr bool SupportsDynamicProperties = false;
   EXTENSIONAPI static constexpr bool SupportsDynamicRelationships = false;
   EXTENSIONAPI static constexpr core::annotation::Input InputRequirement = core::annotation::Input::INPUT_ALLOWED;

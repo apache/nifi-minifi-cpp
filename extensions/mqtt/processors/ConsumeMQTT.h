@@ -24,10 +24,11 @@
 #include <utility>
 
 #include "FlowFileRecord.h"
+#include "core/Core.h"
+#include "core/OutputAttributeDefinition.h"
 #include "core/Processor.h"
 #include "core/ProcessSession.h"
-#include "core/Core.h"
-#include "core/Property.h"
+#include "core/PropertyDefinition.h"
 #include "core/logging/LoggerConfiguration.h"
 #include "concurrentqueue.h"
 #include "AbstractMQTTProcessor.h"
@@ -45,17 +46,38 @@ class ConsumeMQTT : public processors::AbstractMQTTProcessor {
   EXTENSIONAPI static constexpr const char* Description = "This Processor gets the contents of a FlowFile from a MQTT broker for a specified topic. "
       "The the payload of the MQTT message becomes content of a FlowFile";
 
-  EXTENSIONAPI static const core::Property Topic;
-  EXTENSIONAPI static const core::Property CleanSession;
-  EXTENSIONAPI static const core::Property CleanStart;
-  EXTENSIONAPI static const core::Property SessionExpiryInterval;
-  EXTENSIONAPI static const core::Property QueueBufferMaxMessage;
-  EXTENSIONAPI static const core::Property AttributeFromContentType;
-  EXTENSIONAPI static const core::Property TopicAliasMaximum;
-  EXTENSIONAPI static const core::Property ReceiveMaximum;
-
-  static auto properties() {
-    return utils::array_cat(AbstractMQTTProcessor::basicProperties(), std::array{
+  EXTENSIONAPI static constexpr auto Topic = core::PropertyDefinitionBuilder<>::createProperty("Topic")
+      .withDescription("The topic to subscribe to.")
+      .isRequired(true)
+      .build();
+  EXTENSIONAPI static constexpr auto CleanSession = core::PropertyDefinitionBuilder<>::createProperty("Clean Session")
+      .withDescription("Whether to start afresh rather than remembering previous subscriptions. If true, then make broker forget subscriptions after disconnected. MQTT 3.x only.")
+      .withDefaultValue("true")
+      .build();
+  EXTENSIONAPI static constexpr auto CleanStart = core::PropertyDefinitionBuilder<>::createProperty("Clean Start")
+      .withDescription("Whether to start afresh rather than remembering previous subscriptions. MQTT 5.x only.")
+      .withDefaultValue("true")
+      .build();
+  EXTENSIONAPI static constexpr auto SessionExpiryInterval = core::PropertyDefinitionBuilder<>::createProperty("Session Expiry Interval")
+      .withDescription("Time to delete session on broker after client is disconnected. MQTT 5.x only.")
+      .withDefaultValue("0 s")
+      .build();
+  EXTENSIONAPI static constexpr auto QueueBufferMaxMessage = core::PropertyDefinitionBuilder<>::createProperty("Queue Max Message")
+      .withDescription("Maximum number of messages allowed on the received MQTT queue")
+      .withDefaultValue("1000")
+      .build();
+  EXTENSIONAPI static constexpr auto AttributeFromContentType = core::PropertyDefinitionBuilder<>::createProperty("Attribute From Content Type")
+      .withDescription("Name of FlowFile attribute to be filled from content type of received message. MQTT 5.x only.")
+      .build();
+  EXTENSIONAPI static constexpr auto TopicAliasMaximum = core::PropertyDefinitionBuilder<>::createProperty("Topic Alias Maximum")
+      .withDescription("Maximum number of topic aliases to use. If set to 0, then topic aliases cannot be used. MQTT 5.x only.")
+      .withDefaultValue("0")
+      .build();
+  EXTENSIONAPI static constexpr auto ReceiveMaximum = core::PropertyDefinitionBuilder<>::createProperty("Receive Maximum")
+      .withDescription("Maximum number of unacknowledged messages allowed. MQTT 5.x only.")
+      .withDefaultValue(MQTT_MAX_RECEIVE_MAXIMUM_STR)
+      .build();
+  EXTENSIONAPI static constexpr auto Properties = utils::array_cat(AbstractMQTTProcessor::BasicProperties, std::array<core::PropertyReference, 8>{
       Topic,
       CleanSession,
       CleanStart,
@@ -64,11 +86,14 @@ class ConsumeMQTT : public processors::AbstractMQTTProcessor {
       AttributeFromContentType,
       TopicAliasMaximum,
       ReceiveMaximum
-    }, AbstractMQTTProcessor::advancedProperties());
-  }
+  }, AbstractMQTTProcessor::AdvancedProperties);
 
-  EXTENSIONAPI static const core::Relationship Success;
-  static auto relationships() { return std::array{Success}; }
+  EXTENSIONAPI static constexpr auto Success = core::RelationshipDefinition{"success", "FlowFiles that are sent successfully to the destination are transferred to this relationship"};
+  EXTENSIONAPI static constexpr auto Relationships = std::array{Success};
+
+  EXTENSIONAPI static constexpr auto BrokerOutputAttribute = core::OutputAttributeDefinition<0>{"mqtt.broker", {}, "URI of the sending broker"};
+  EXTENSIONAPI static constexpr auto TopicOutputAttribute = core::OutputAttributeDefinition<0>{"mqtt.topic", {}, "Topic of the message"};
+  EXTENSIONAPI static constexpr auto OutputAttributes = std::array<core::OutputAttributeReference, 2>{BrokerOutputAttribute, TopicOutputAttribute};
 
   EXTENSIONAPI static constexpr bool SupportsDynamicProperties = false;
   EXTENSIONAPI static constexpr bool SupportsDynamicRelationships = false;
@@ -76,9 +101,6 @@ class ConsumeMQTT : public processors::AbstractMQTTProcessor {
   EXTENSIONAPI static constexpr bool IsSingleThreaded = false;
 
   ADD_COMMON_VIRTUAL_FUNCTIONS_FOR_PROCESSORS
-
-  static constexpr const char* const MQTT_TOPIC_ATTRIBUTE = "mqtt.topic";
-  static constexpr const char* const MQTT_BROKER_ATTRIBUTE = "mqtt.broker";
 
   void readProperties(const std::shared_ptr<core::ProcessContext>& context) override;
   void onTriggerImpl(const std::shared_ptr<core::ProcessContext>& context, const std::shared_ptr<core::ProcessSession>& session) override;

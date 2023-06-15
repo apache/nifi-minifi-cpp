@@ -37,16 +37,16 @@ namespace org::apache::nifi::minifi::processors {
     username_.clear();
     trustBuffers_.clear();
 
-    context->getProperty(OPCServerEndPoint.getName(), endPointURL_);
-    context->getProperty(ApplicationURI.getName(), applicationURI_);
+    context->getProperty(OPCServerEndPoint, endPointURL_);
+    context->getProperty(ApplicationURI, applicationURI_);
 
-    if (context->getProperty(Username.getName(), username_) != context->getProperty(Password.getName(), password_)) {
+    if (context->getProperty(Username, username_) != context->getProperty(Password, password_)) {
       throw Exception(PROCESS_SCHEDULE_EXCEPTION, "Both or neither of Username and Password should be provided!");
     }
 
-    auto certificatePathRes = context->getProperty(CertificatePath.getName(), certpath_);
-    auto keyPathRes = context->getProperty(KeyPath.getName(), keypath_);
-    context->getProperty(TrustedPath.getName(), trustpath_);
+    auto certificatePathRes = context->getProperty(CertificatePath, certpath_);
+    auto keyPathRes = context->getProperty(KeyPath, keypath_);
+    context->getProperty(TrustedPath, trustpath_);
     if (certificatePathRes != keyPathRes) {
       throw Exception(PROCESS_SCHEDULE_EXCEPTION, "All or none of Certificate path and Key path should be provided!");
     }

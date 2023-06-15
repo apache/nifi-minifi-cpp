@@ -30,6 +30,7 @@
 #include "ArchiveMetadata.h"
 #include "core/Processor.h"
 #include "core/ProcessSession.h"
+#include "core/RelationshipDefinition.h"
 #include "core/Core.h"
 #include "core/logging/LoggerConfiguration.h"
 
@@ -46,10 +47,10 @@ class UnfocusArchiveEntry : public core::Processor {
 
   EXTENSIONAPI static constexpr const char* Description = "Restores a FlowFile which has had an archive entry focused via FocusArchiveEntry to its original state.";
 
-  static auto properties() { return std::array<core::Property, 0>{}; }
+  EXTENSIONAPI static constexpr auto Properties = std::array<core::PropertyReference, 0>{};
 
-  EXTENSIONAPI static const core::Relationship Success;
-  static auto relationships() { return std::array{Success}; }
+  EXTENSIONAPI static constexpr auto Success = core::RelationshipDefinition{"success", "success operational on the flow record"};
+  EXTENSIONAPI static constexpr auto Relationships = std::array{Success};
 
   EXTENSIONAPI static constexpr bool SupportsDynamicProperties = false;
   EXTENSIONAPI static constexpr bool SupportsDynamicRelationships = false;

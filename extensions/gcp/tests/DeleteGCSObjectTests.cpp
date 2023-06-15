@@ -51,10 +51,10 @@ class DeleteGCSObjectTests : public ::testing::Test {
   void SetUp() override {
     gcp_credentials_node_ = test_controller_.plan->addController("GCPCredentialsControllerService", "gcp_credentials_controller_service");
     test_controller_.plan->setProperty(gcp_credentials_node_,
-                                       GCPCredentialsControllerService::CredentialsLoc.getName(),
-                                       toString(GCPCredentialsControllerService::CredentialsLocation::USE_ANONYMOUS_CREDENTIALS));
+                                       GCPCredentialsControllerService::CredentialsLoc,
+                                       toString(minifi_gcp::CredentialsLocation::USE_ANONYMOUS_CREDENTIALS));
     test_controller_.plan->setProperty(delete_gcs_object_,
-                                       DeleteGCSObject::GCPCredentials.getName(),
+                                       DeleteGCSObject::GCPCredentials,
                                        "gcp_credentials_controller_service");
   }
   std::shared_ptr<DeleteGCSObjectMocked> delete_gcs_object_ = std::make_shared<DeleteGCSObjectMocked>("DeleteGCSObjectMocked");
@@ -64,36 +64,36 @@ class DeleteGCSObjectTests : public ::testing::Test {
 
 TEST_F(DeleteGCSObjectTests, MissingBucket) {
   EXPECT_CALL(*delete_gcs_object_->mock_client_, CreateResumableUpload).Times(0);
-  EXPECT_TRUE(test_controller_.plan->setProperty(delete_gcs_object_, DeleteGCSObject::Bucket.getName(), ""));
+  EXPECT_TRUE(test_controller_.plan->setProperty(delete_gcs_object_, DeleteGCSObject::Bucket, ""));
   const auto& result = test_controller_.trigger("hello world");
   EXPECT_EQ(0, result.at(DeleteGCSObject::Success).size());
   ASSERT_EQ(1, result.at(DeleteGCSObject::Failure).size());
-  EXPECT_EQ(std::nullopt, result.at(DeleteGCSObject::Failure)[0]->getAttribute(minifi_gcp::GCS_ERROR_DOMAIN));
-  EXPECT_EQ(std::nullopt, result.at(DeleteGCSObject::Failure)[0]->getAttribute(minifi_gcp::GCS_ERROR_REASON));
+  EXPECT_EQ(std::nullopt, result.at(DeleteGCSObject::Failure)[0]->getAttribute(std::string(minifi_gcp::GCS_ERROR_DOMAIN)));
+  EXPECT_EQ(std::nullopt, result.at(DeleteGCSObject::Failure)[0]->getAttribute(std::string(minifi_gcp::GCS_ERROR_REASON)));
   EXPECT_EQ("hello world", test_controller_.plan->getContent(result.at(DeleteGCSObject::Failure)[0]));
 }
 
 TEST_F(DeleteGCSObjectTests, ServerGivesPermaError) {
   EXPECT_CALL(*delete_gcs_object_->mock_client_, DeleteObject)
       .WillOnce(testing::Return(PermanentError()));
-  EXPECT_TRUE(test_controller_.plan->setProperty(delete_gcs_object_, DeleteGCSObject::Bucket.getName(), "bucket-from-property"));
+  EXPECT_TRUE(test_controller_.plan->setProperty(delete_gcs_object_, DeleteGCSObject::Bucket, "bucket-from-property"));
   const auto& result = test_controller_.trigger("hello world");
   EXPECT_EQ(0, result.at(DeleteGCSObject::Success).size());
   ASSERT_EQ(1, result.at(DeleteGCSObject::Failure).size());
-  EXPECT_NE(std::nullopt, result.at(DeleteGCSObject::Failure)[0]->getAttribute(minifi_gcp::GCS_ERROR_DOMAIN));
-  EXPECT_NE(std::nullopt, result.at(DeleteGCSObject::Failure)[0]->getAttribute(minifi_gcp::GCS_ERROR_REASON));
+  EXPECT_NE(std::nullopt, result.at(DeleteGCSObject::Failure)[0]->getAttribute(std::string(minifi_gcp::GCS_ERROR_DOMAIN)));
+  EXPECT_NE(std::nullopt, result.at(DeleteGCSObject::Failure)[0]->getAttribute(std::string(minifi_gcp::GCS_ERROR_REASON)));
   EXPECT_EQ("hello world", test_controller_.plan->getContent(result.at(DeleteGCSObject::Failure)[0]));
 }
 
 TEST_F(DeleteGCSObjectTests, ServerGivesTransientErrors) {
   EXPECT_CALL(*delete_gcs_object_->mock_client_, DeleteObject).WillOnce(testing::Return(TransientError()));
-  EXPECT_TRUE(test_controller_.plan->setProperty(delete_gcs_object_, DeleteGCSObject::NumberOfRetries.getName(), "1"));
-  EXPECT_TRUE(test_controller_.plan->setProperty(delete_gcs_object_, DeleteGCSObject::Bucket.getName(), "bucket-from-property"));
-  const auto& result = test_controller_.trigger("hello world", {{minifi_gcp::GCS_BUCKET_ATTR, "bucket-from-attribute"}});
+  EXPECT_TRUE(test_controller_.plan->setProperty(delete_gcs_object_, DeleteGCSObject::NumberOfRetries, "1"));
+  EXPECT_TRUE(test_controller_.plan->setProperty(delete_gcs_object_, DeleteGCSObject::Bucket, "bucket-from-property"));
+  const auto& result = test_controller_.trigger("hello world", {{std::string(minifi_gcp::GCS_BUCKET_ATTR), "bucket-from-attribute"}});
   EXPECT_EQ(0, result.at(DeleteGCSObject::Success).size());
   ASSERT_EQ(1, result.at(DeleteGCSObject::Failure).size());
-  EXPECT_NE(std::nullopt, result.at(DeleteGCSObject::Failure)[0]->getAttribute(minifi_gcp::GCS_ERROR_DOMAIN));
-  EXPECT_NE(std::nullopt, result.at(DeleteGCSObject::Failure)[0]->getAttribute(minifi_gcp::GCS_ERROR_REASON));
+  EXPECT_NE(std::nullopt, result.at(DeleteGCSObject::Failure)[0]->getAttribute(std::string(minifi_gcp::GCS_ERROR_DOMAIN)));
+  EXPECT_NE(std::nullopt, result.at(DeleteGCSObject::Failure)[0]->getAttribute(std::string(minifi_gcp::GCS_ERROR_REASON)));
   EXPECT_EQ("hello world", test_controller_.plan->getContent(result.at(DeleteGCSObject::Failure)[0]));
 }
 
@@ -107,8 +107,8 @@ TEST_F(DeleteGCSObjectTests, HandlingSuccessfullDeletion) {
         EXPECT_EQ(23, request.GetOption<gcs::Generation>().value());
         return google::cloud::make_status_or(gcs::internal::EmptyResponse{});
       });
-  EXPECT_TRUE(test_controller_.plan->setProperty(delete_gcs_object_, DeleteGCSObject::ObjectGeneration.getName(), "${gcs.generation}"));
-  const auto& result = test_controller_.trigger("hello world", {{minifi_gcp::GCS_BUCKET_ATTR, "bucket-from-attribute"}, {minifi_gcp::GCS_GENERATION, "23"}});
+  EXPECT_TRUE(test_controller_.plan->setProperty(delete_gcs_object_, DeleteGCSObject::ObjectGeneration, "${gcs.generation}"));
+  const auto& result = test_controller_.trigger("hello world", {{std::string(minifi_gcp::GCS_BUCKET_ATTR), "bucket-from-attribute"}, {std::string(minifi_gcp::GCS_GENERATION), "23"}});
   ASSERT_EQ(1, result.at(DeleteGCSObject::Success).size());
   EXPECT_EQ(0, result.at(DeleteGCSObject::Failure).size());
   EXPECT_EQ("hello world", test_controller_.plan->getContent(result.at(DeleteGCSObject::Success)[0]));
@@ -121,16 +121,16 @@ TEST_F(DeleteGCSObjectTests, EmptyGeneration) {
         EXPECT_FALSE(request.HasOption<gcs::Generation>());
         return google::cloud::make_status_or(gcs::internal::EmptyResponse{});
       });
-  EXPECT_TRUE(test_controller_.plan->setProperty(delete_gcs_object_, DeleteGCSObject::ObjectGeneration.getName(), "${gcs.generation}"));
-  const auto& result = test_controller_.trigger("hello world", {{minifi_gcp::GCS_BUCKET_ATTR, "bucket-from-attribute"}});
+  EXPECT_TRUE(test_controller_.plan->setProperty(delete_gcs_object_, DeleteGCSObject::ObjectGeneration, "${gcs.generation}"));
+  const auto& result = test_controller_.trigger("hello world", {{std::string(minifi_gcp::GCS_BUCKET_ATTR), "bucket-from-attribute"}});
   ASSERT_EQ(1, result.at(DeleteGCSObject::Success).size());
   EXPECT_EQ(0, result.at(DeleteGCSObject::Failure).size());
   EXPECT_EQ("hello world", test_controller_.plan->getContent(result.at(DeleteGCSObject::Success)[0]));
 }
 
 TEST_F(DeleteGCSObjectTests, InvalidGeneration) {
-  EXPECT_TRUE(test_controller_.plan->setProperty(delete_gcs_object_, DeleteGCSObject::ObjectGeneration.getName(), "${gcs.generation}"));
-  const auto& result = test_controller_.trigger("hello world", {{minifi_gcp::GCS_BUCKET_ATTR, "bucket-from-attribute"}, {minifi_gcp::GCS_GENERATION, "23 banana"}});
+  EXPECT_TRUE(test_controller_.plan->setProperty(delete_gcs_object_, DeleteGCSObject::ObjectGeneration, "${gcs.generation}"));
+  const auto& result = test_controller_.trigger("hello world", {{std::string(minifi_gcp::GCS_BUCKET_ATTR), "bucket-from-attribute"}, {std::string(minifi_gcp::GCS_GENERATION), "23 banana"}});
   ASSERT_EQ(0, result.at(DeleteGCSObject::Success).size());
   EXPECT_EQ(1, result.at(DeleteGCSObject::Failure).size());
   EXPECT_EQ("hello world", test_controller_.plan->getContent(result.at(DeleteGCSObject::Failure)[0]));

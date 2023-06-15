@@ -20,16 +20,10 @@
 
 #include "GenerateFlowFile.h"
 
-#include <ctime>
-
-#include <chrono>
 #include <limits>
-#include <map>
 #include <memory>
-#include <queue>
 #include <random>
 #include <string>
-#include <thread>
 #include <utility>
 #include <vector>
 
@@ -37,41 +31,16 @@
 #include "utils/StringUtils.h"
 #include "core/ProcessContext.h"
 #include "core/ProcessSession.h"
-#include "core/PropertyBuilder.h"
-#include "core/PropertyValidation.h"
-#include "core/TypedValues.h"
 #include "core/Resource.h"
 
 namespace org::apache::nifi::minifi::processors {
 const char *GenerateFlowFile::DATA_FORMAT_TEXT = "Text";
-const core::Property GenerateFlowFile::FileSize(
-    core::PropertyBuilder::createProperty("File Size")->withDescription("The size of the file that will be used")->isRequired(false)->withDefaultValue<core::DataSizeValue>("1 kB")->build());
-
-const core::Property GenerateFlowFile::BatchSize(
-    core::PropertyBuilder::createProperty("Batch Size")->withDescription("The number of FlowFiles to be transferred in each invocation")->isRequired(false)->withDefaultValue<int>(1)->build());
-
-const core::Property GenerateFlowFile::DataFormat(
-    core::PropertyBuilder::createProperty("Data Format")->withDescription("Specifies whether the data should be Text or Binary")->isRequired(false)->withAllowableValue<std::string>("Text")
-        ->withAllowableValue("Binary")->withDefaultValue("Binary")->build());
-
-const core::Property GenerateFlowFile::UniqueFlowFiles(
-    core::PropertyBuilder::createProperty("Unique FlowFiles")->withDescription("If true, each FlowFile that is generated will be unique. If false, a random value will be generated and all FlowFiles")
-        ->isRequired(false)->withDefaultValue<bool>(true)->build());
-
-const core::Property GenerateFlowFile::CustomText(
-    core::PropertyBuilder::createProperty("Custom Text")
-      ->withDescription("If Data Format is text and if Unique FlowFiles is false, then this custom text will be used as content of the generated FlowFiles and the File Size will be ignored. "
-                        "Finally, if Expression Language is used, evaluation will be performed only once per batch of generated FlowFiles")
-      ->supportsExpressionLanguage(true)
-      ->build());
-
-const core::Relationship GenerateFlowFile::Success("success", "success operational on the flow record");
 
 constexpr const char * TEXT_CHARS = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890!@#$%^&*()-_=+/?.,';:\"?<>\n\t ";
 
 void GenerateFlowFile::initialize() {
-  setSupportedProperties(properties());
-  setSupportedRelationships(relationships());
+  setSupportedProperties(Properties);
+  setSupportedRelationships(Relationships);
 }
 
 void generateData(std::vector<char>& data, bool textData = false) {
@@ -89,19 +58,19 @@ void generateData(std::vector<char>& data, bool textData = false) {
 }
 
 void GenerateFlowFile::onSchedule(const std::shared_ptr<core::ProcessContext> &context, const std::shared_ptr<core::ProcessSessionFactory>& /*sessionFactory*/) {
-  if (context->getProperty(FileSize.getName(), fileSize_)) {
+  if (context->getProperty(FileSize.name, fileSize_)) {
     logger_->log_trace("File size is configured to be %d", fileSize_);
   }
 
-  if (context->getProperty(BatchSize.getName(), batchSize_)) {
+  if (context->getProperty(BatchSize.name, batchSize_)) {
     logger_->log_trace("Batch size is configured to be %d", batchSize_);
   }
 
   std::string value;
-  if (context->getProperty(DataFormat.getName(), value)) {
+  if (context->getProperty(DataFormat.name, value)) {
     textData_ = (value == GenerateFlowFile::DATA_FORMAT_TEXT);
   }
-  if (context->getProperty(UniqueFlowFiles.getName(), uniqueFlowFile_)) {
+  if (context->getProperty(UniqueFlowFiles.name, uniqueFlowFile_)) {
     logger_->log_trace("Unique Flow files is configured to be %i", uniqueFlowFile_);
   }
 

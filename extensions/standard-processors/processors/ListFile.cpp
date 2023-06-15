@@ -20,86 +20,13 @@
 
 #include "utils/StringUtils.h"
 #include "utils/TimeUtil.h"
-#include "core/PropertyBuilder.h"
 #include "core/Resource.h"
 
 namespace org::apache::nifi::minifi::processors {
 
-const core::Property ListFile::InputDirectory(
-    core::PropertyBuilder::createProperty("Input Directory")
-      ->withDescription("The input directory from which files to pull files")
-      ->isRequired(true)
-      ->build());
-
-const core::Property ListFile::RecurseSubdirectories(
-    core::PropertyBuilder::createProperty("Recurse Subdirectories")
-      ->withDescription("Indicates whether to list files from subdirectories of the directory")
-      ->withDefaultValue(true)
-      ->isRequired(true)
-      ->build());
-
-const core::Property ListFile::FileFilter(
-    core::PropertyBuilder::createProperty("File Filter")
-      ->withDescription("Only files whose names match the given regular expression will be picked up")
-      ->build());
-
-const core::Property ListFile::PathFilter(
-    core::PropertyBuilder::createProperty("Path Filter")
-      ->withDescription("When Recurse Subdirectories is true, then only subdirectories whose path matches the given regular expression will be scanned")
-      ->build());
-
-const core::Property ListFile::MinimumFileAge(
-    core::PropertyBuilder::createProperty("Minimum File Age")
-      ->withDescription("The minimum age that a file must be in order to be pulled; any file younger than this amount of time (according to last modification date) will be ignored")
-      ->isRequired(true)
-      ->withDefaultValue<core::TimePeriodValue>("0 sec")
-      ->build());
-
-const core::Property ListFile::MaximumFileAge(
-    core::PropertyBuilder::createProperty("Maximum File Age")
-      ->withDescription("The maximum age that a file must be in order to be pulled; any file older than this amount of time (according to last modification date) will be ignored")
-      ->build());
-
-const core::Property ListFile::MinimumFileSize(
-    core::PropertyBuilder::createProperty("Minimum File Size")
-      ->withDescription("The minimum size that a file must be in order to be pulled")
-      ->isRequired(true)
-      ->withDefaultValue<core::DataSizeValue>("0 B")
-      ->build());
-
-const core::Property ListFile::MaximumFileSize(
-    core::PropertyBuilder::createProperty("Maximum File Size")
-      ->withDescription("The maximum size that a file can be in order to be pulled")
-      ->build());
-
-const core::Property ListFile::IgnoreHiddenFiles(
-    core::PropertyBuilder::createProperty("Ignore Hidden Files")
-      ->withDescription("Indicates whether or not hidden files should be ignored")
-      ->withDefaultValue(true)
-      ->isRequired(true)
-      ->build());
-
-const core::Relationship ListFile::Success("success", "All FlowFiles that are received are routed to success");
-
-const core::OutputAttribute ListFile::Filename{"filename", { Success }, "The name of the file that was read from filesystem."};
-const core::OutputAttribute ListFile::Path{"path", { Success },
-    "The path is set to the relative path of the file's directory on filesystem compared to the Input Directory property. "
-    "For example, if Input Directory is set to /tmp, then files picked up from /tmp will have the path attribute set to \"./\". "
-    "If the Recurse Subdirectories property is set to true and a file is picked up from /tmp/abc/1/2/3, then the path attribute will be set to \"abc/1/2/3/\"."};
-const core::OutputAttribute ListFile::AbsolutePath{"absolute.path", { Success },
-    "The absolute.path is set to the absolute path of the file's directory on filesystem. "
-    "For example, if the Input Directory property is set to /tmp, then files picked up from /tmp will have the path attribute set to \"/tmp/\". "
-    "If the Recurse Subdirectories property is set to true and a file is picked up from /tmp/abc/1/2/3, then the path attribute will be set to \"/tmp/abc/1/2/3/\"."};
-const core::OutputAttribute ListFile::FileOwner{"file.owner", { Success }, "The user that owns the file in filesystem"};
-const core::OutputAttribute ListFile::FileGroup{"file.group", { Success }, "The group that owns the file in filesystem"};
-const core::OutputAttribute ListFile::FileSize{"file.size", { Success }, "The number of bytes in the file in filesystem"};
-const core::OutputAttribute ListFile::FilePermissions{"file.permissions", { Success },
-    "The permissions for the file in filesystem. This is formatted as 3 characters for the owner, 3 for the group, and 3 for other users. For example rw-rw-r--"};
-const core::OutputAttribute ListFile::FileLastModifiedTime{"file.lastModifiedTime", { Success }, "The timestamp of when the file in filesystem was last modified as 'yyyy-MM-dd'T'HH:mm:ssZ'"};
-
 void ListFile::initialize() {
-  setSupportedProperties(properties());
-  setSupportedRelationships(relationships());
+  setSupportedProperties(Properties);
+  setSupportedRelationships(Relationships);
 }
 
 void ListFile::onSchedule(const std::shared_ptr<core::ProcessContext> &context, const std::shared_ptr<core::ProcessSessionFactory> &/*sessionFactory*/) {
@@ -117,14 +44,14 @@ void ListFile::onSchedule(const std::shared_ptr<core::ProcessContext> &context, 
     input_directory_ = *input_directory_str;
   }
 
-  context->getProperty(RecurseSubdirectories.getName(), recurse_subdirectories_);
+  context->getProperty(RecurseSubdirectories, recurse_subdirectories_);
 
   std::string value;
-  if (context->getProperty(FileFilter.getName(), value) && !value.empty()) {
+  if (context->getProperty(FileFilter, value) && !value.empty()) {
     file_filter_ = std::regex(value);
   }
 
-  if (recurse_subdirectories_ && context->getProperty(PathFilter.getName(), value) && !value.empty()) {
+  if (recurse_subdirectories_ && context->getProperty(PathFilter, value) && !value.empty()) {
     path_filter_ = std::regex(value);
   }
 
@@ -137,15 +64,15 @@ void ListFile::onSchedule(const std::shared_ptr<core::ProcessContext> &context, 
   }
 
   uint64_t int_value = 0;
-  if (context->getProperty(MinimumFileSize.getName(), value) && !value.empty() && core::Property::StringToInt(value, int_value)) {
+  if (context->getProperty(MinimumFileSize, value) && !value.empty() && core::Property::StringToInt(value, int_value)) {
     minimum_file_size_ = int_value;
   }
 
-  if (context->getProperty(MaximumFileSize.getName(), value) && !value.empty() && core::Property::StringToInt(value, int_value)) {
+  if (context->getProperty(MaximumFileSize, value) && !value.empty() && core::Property::StringToInt(value, int_value)) {
     maximum_file_size_ = int_value;
   }
 
-  context->getProperty(IgnoreHiddenFiles.getName(), ignore_hidden_files_);
+  context->getProperty(IgnoreHiddenFiles, ignore_hidden_files_);
 }
 
 bool ListFile::fileMatchesFilters(const ListedFile& listed_file) {

@@ -42,7 +42,6 @@
 #include "io/BufferStream.h"
 #include "core/ProcessContext.h"
 #include "core/ProcessSession.h"
-#include "core/PropertyBuilder.h"
 #include "core/Resource.h"
 #include "Bookmark.h"
 #include "wel/UniqueEvtHandle.h"
@@ -61,128 +60,6 @@ using namespace std::literals::chrono_literals;
 namespace org::apache::nifi::minifi::processors {
 
 const int EVT_NEXT_TIMEOUT_MS = 500;
-
-const core::Property ConsumeWindowsEventLog::Channel(
-  core::PropertyBuilder::createProperty("Channel")->
-  isRequired(true)->
-  withDefaultValue("System")->
-  withDescription("The Windows Event Log Channel to listen to. In order to process logs from a log file use the format 'SavedLog:<file path>'.")->
-  supportsExpressionLanguage(true)->
-  build());
-
-const core::Property ConsumeWindowsEventLog::Query(
-  core::PropertyBuilder::createProperty("Query")->
-  isRequired(true)->
-  withDefaultValue("*")->
-  withDescription("XPath Query to filter events. (See https://msdn.microsoft.com/en-us/library/windows/desktop/dd996910(v=vs.85).aspx for examples.)")->
-  supportsExpressionLanguage(true)->
-  build());
-
-const core::Property ConsumeWindowsEventLog::MaxBufferSize(
-  core::PropertyBuilder::createProperty("Max Buffer Size")->
-  isRequired(true)->
-  withDefaultValue<core::DataSizeValue>("1 MB")->
-  withDescription(
-    "The individual Event Log XMLs are rendered to a buffer."
-    " This specifies the maximum size in bytes that the buffer will be allowed to grow to. (Limiting the maximum size of an individual Event XML.)")->
-  build());
-
-// !!! This property is obsolete since now subscription is not used, but leave since it might be is used already in config.yml.
-const core::Property ConsumeWindowsEventLog::InactiveDurationToReconnect(
-  core::PropertyBuilder::createProperty("Inactive Duration To Reconnect")->
-  isRequired(true)->
-  withDefaultValue<core::TimePeriodValue>("10 min")->
-  withDescription(
-    "If no new event logs are processed for the specified time period, "
-    " this processor will try reconnecting to recover from a state where any further messages cannot be consumed."
-    " Such situation can happen if Windows Event Log service is restarted, or ERROR_EVT_QUERY_RESULT_STALE (15011) is returned."
-    " Setting no duration, e.g. '0 ms' disables auto-reconnection.")->
-  build());
-
-const core::Property ConsumeWindowsEventLog::IdentifierMatcher(
-  core::PropertyBuilder::createProperty("Identifier Match Regex")->
-  isRequired(false)->
-  withDefaultValue(".*Sid")->
-  withDescription("Regular Expression to match Subject Identifier Fields. These will be placed into the attributes of the FlowFile")->
-  build());
-
-
-const core::Property ConsumeWindowsEventLog::IdentifierFunction(
-  core::PropertyBuilder::createProperty("Apply Identifier Function")->
-  isRequired(false)->
-  withDefaultValue<bool>(true)->
-  withDescription("If true it will resolve SIDs matched in the 'Identifier Match Regex' to the DOMAIN\\USERNAME associated with that ID")->
-  build());
-
-const core::Property ConsumeWindowsEventLog::ResolveAsAttributes(
-  core::PropertyBuilder::createProperty("Resolve Metadata in Attributes")->
-  isRequired(false)->
-  withDefaultValue<bool>(true)->
-  withDescription("If true, any metadata that is resolved ( such as IDs or keyword metadata ) will be placed into attributes, otherwise it will be replaced in the XML or text output")->
-  build());
-
-
-const core::Property ConsumeWindowsEventLog::EventHeaderDelimiter(
-  core::PropertyBuilder::createProperty("Event Header Delimiter")->
-  isRequired(false)->
-  withDescription("If set, the chosen delimiter will be used in the Event output header. Otherwise, a colon followed by spaces will be used.")->
-  build());
-
-
-const core::Property ConsumeWindowsEventLog::EventHeader(
-  core::PropertyBuilder::createProperty("Event Header")->
-  isRequired(false)->
-  withDefaultValue("LOG_NAME=Log Name, SOURCE = Source, TIME_CREATED = Date,EVENT_RECORDID=Record ID,EVENTID = Event ID,"
-      "TASK_CATEGORY = Task Category,LEVEL = Level,KEYWORDS = Keywords,USER = User,COMPUTER = Computer, EVENT_TYPE = EventType")->
-  withDescription("Comma seperated list of key/value pairs with the following keys LOG_NAME, SOURCE, TIME_CREATED,EVENT_RECORDID,"
-      "EVENTID,TASK_CATEGORY,LEVEL,KEYWORDS,USER,COMPUTER, and EVENT_TYPE. Eliminating fields will remove them from the header.")->
-  build());
-
-const core::Property ConsumeWindowsEventLog::OutputFormatProperty(
-  core::PropertyBuilder::createProperty("Output Format")->
-  isRequired(true)->
-  withDefaultValue(toString(OutputFormat::BOTH))->
-  withAllowableValues(OutputFormat::values())->
-  withDescription("Set the output format type. In case \'Both\' is selected the processor generates two flow files for every event captured in format XML and Plaintext")->
-  build());
-
-const core::Property ConsumeWindowsEventLog::JsonFormatProperty(
-  core::PropertyBuilder::createProperty("JSON Format")->
-  isRequired(true)->
-  withDefaultValue(toString(JsonFormat::SIMPLE))->
-  withAllowableValues(JsonFormat::values())->
-  withDescription("Set the json format type. Only applicable if Output Format is set to 'JSON'")->
-  build());
-
-const core::Property ConsumeWindowsEventLog::BatchCommitSize(
-  core::PropertyBuilder::createProperty("Batch Commit Size")->
-  isRequired(false)->
-  withDefaultValue<uint64_t>(1000U)->
-  withDescription("Maximum number of Events to consume and create to Flow Files from before committing.")->
-  build());
-
-const core::Property ConsumeWindowsEventLog::BookmarkRootDirectory(
-  core::PropertyBuilder::createProperty("State Directory")->
-  isRequired(false)->
-  withDefaultValue("CWELState")->
-  withDescription("DEPRECATED. Only use it for state migration from the state file, supplying the legacy state directory.")->
-  build());
-
-const core::Property ConsumeWindowsEventLog::ProcessOldEvents(
-  core::PropertyBuilder::createProperty("Process Old Events")->
-  isRequired(true)->
-  withDefaultValue<bool>(false)->
-  withDescription("This property defines if old events (which are created before first time server is started) should be processed.")->
-  build());
-
-const core::Property ConsumeWindowsEventLog::CacheSidLookups(
-    core::PropertyBuilder::createProperty("Cache SID Lookups")->
-        isRequired(false)->
-        withDefaultValue<bool>(true)->
-        withDescription("Determines whether SID to name lookups are cached in memory")->
-        build());
-
-const core::Relationship ConsumeWindowsEventLog::Success("success", "Relationship for successfully consumed events.");
 
 ConsumeWindowsEventLog::ConsumeWindowsEventLog(const std::string& name, const utils::Identifier& uuid)
   : core::Processor(name, uuid),
@@ -217,8 +94,8 @@ ConsumeWindowsEventLog::~ConsumeWindowsEventLog() {
 }
 
 void ConsumeWindowsEventLog::initialize() {
-  setSupportedProperties(properties());
-  setSupportedRelationships(relationships());
+  setSupportedProperties(Properties);
+  setSupportedRelationships(Relationships);
 }
 
 bool ConsumeWindowsEventLog::insertHeaderName(wel::METADATA_NAMES &header, const std::string &key, const std::string & value) {
@@ -237,10 +114,10 @@ void ConsumeWindowsEventLog::onSchedule(const std::shared_ptr<core::ProcessConte
     throw Exception(PROCESSOR_EXCEPTION, "Failed to get StateManager");
   }
 
-  context->getProperty(ResolveAsAttributes.getName(), resolve_as_attributes_);
-  context->getProperty(IdentifierFunction.getName(), apply_identifier_function_);
+  context->getProperty(ResolveAsAttributes, resolve_as_attributes_);
+  context->getProperty(IdentifierFunction, apply_identifier_function_);
   header_delimiter_ = context->getProperty(EventHeaderDelimiter);
-  context->getProperty(BatchCommitSize.getName(), batch_commit_size_);
+  context->getProperty(BatchCommitSize, batch_commit_size_);
 
   header_names_.clear();
   if (auto header = context->getProperty(EventHeader)) {
@@ -267,10 +144,10 @@ void ConsumeWindowsEventLog::onSchedule(const std::shared_ptr<core::ProcessConte
     regex_.emplace(*identifier_matcher);
   }
 
-  output_format_ = utils::parseEnumProperty<OutputFormat>(*context, OutputFormatProperty);
-  json_format_ = utils::parseEnumProperty<JsonFormat>(*context, JsonFormatProperty);
+  output_format_ = utils::parseEnumProperty<cwel::OutputFormat>(*context, OutputFormatProperty);
+  json_format_ = utils::parseEnumProperty<cwel::JsonFormat>(*context, JsonFormatProperty);
 
-  if (output_format_ != OutputFormat::PLAINTEXT && !hMsobjsDll_) {
+  if (output_format_ != cwel::OutputFormat::PLAINTEXT && !hMsobjsDll_) {
     char systemDir[MAX_PATH];
     if (GetSystemDirectory(systemDir, sizeof(systemDir))) {
       hMsobjsDll_ = LoadLibrary((systemDir + std::string("\\msobjs.dll")).c_str());
@@ -290,15 +167,15 @@ void ConsumeWindowsEventLog::onSchedule(const std::shared_ptr<core::ProcessConte
   }
 
   std::string query;
-  context->getProperty(Query.getName(), query);
+  context->getProperty(Query, query);
   wstr_query_ = std::wstring(query.begin(), query.end());
 
   bool processOldEvents{};
-  context->getProperty(ProcessOldEvents.getName(), processOldEvents);
+  context->getProperty(ProcessOldEvents, processOldEvents);
 
   if (!bookmark_) {
     std::string bookmarkDir;
-    context->getProperty(BookmarkRootDirectory.getName(), bookmarkDir);
+    context->getProperty(BookmarkRootDirectory, bookmarkDir);
     if (bookmarkDir.empty()) {
       logger_->log_error("State Directory is empty");
       throw Exception(PROCESS_SCHEDULE_EXCEPTION, "State Directory is empty");
@@ -310,10 +187,10 @@ void ConsumeWindowsEventLog::onSchedule(const std::shared_ptr<core::ProcessConte
     }
   }
 
-  context->getProperty(MaxBufferSize.getName(), max_buffer_size_);
+  context->getProperty(MaxBufferSize, max_buffer_size_);
   logger_->log_debug("ConsumeWindowsEventLog: MaxBufferSize %" PRIu64, max_buffer_size_);
 
-  context->getProperty(CacheSidLookups.getName(), cache_sid_lookups_);
+  context->getProperty(CacheSidLookups, cache_sid_lookups_);
   logger_->log_debug("ConsumeWindowsEventLog: will%s cache SID to name lookups", cache_sid_lookups_ ? "" : " not");
 
   provenanceUri_ = "winlog://" + computerName_ + "/" + path_.str() + "?" + query;
@@ -571,7 +448,7 @@ nonstd::expected<std::string, std::string> ConsumeWindowsEventLog::renderEventAs
   return wel::to_string(buf.get());
 }
 
-nonstd::expected<EventRender, std::string> ConsumeWindowsEventLog::createEventRender(EVT_HANDLE hEvent) {
+nonstd::expected<cwel::EventRender, std::string> ConsumeWindowsEventLog::createEventRender(EVT_HANDLE hEvent) {
   auto event_as_xml = renderEventAsXml(hEvent);
   if (!event_as_xml)
     return nonstd::make_unexpected(event_as_xml.error());
@@ -580,7 +457,7 @@ nonstd::expected<EventRender, std::string> ConsumeWindowsEventLog::createEventRe
   if (!doc.load_string(event_as_xml->c_str()))
     return nonstd::make_unexpected("Invalid XML produced");
 
-  EventRender result;
+  cwel::EventRender result;
 
   // this is a well known path.
   std::string provider_name = doc.child("Event").child("System").child("Provider").attribute("Name").value();
@@ -592,7 +469,7 @@ nonstd::expected<EventRender, std::string> ConsumeWindowsEventLog::createEventRe
 
   logger_->log_trace("Finish doc traversing, performing writing...");
 
-  if (output_format_ == OutputFormat::PLAINTEXT || output_format_ == OutputFormat::BOTH) {
+  if (output_format_ == cwel::OutputFormat::PLAINTEXT || output_format_ == cwel::OutputFormat::BOTH) {
     logger_->log_trace("Writing event in plain text");
 
     auto& handler = getEventLogHandler(provider_name);
@@ -618,7 +495,7 @@ nonstd::expected<EventRender, std::string> ConsumeWindowsEventLog::createEventRe
     logger_->log_trace("Finish writing in plain text");
   }
 
-  if (output_format_ != OutputFormat::PLAINTEXT) {
+  if (output_format_ != cwel::OutputFormat::PLAINTEXT) {
     substituteXMLPercentageItems(doc);
     logger_->log_trace("Finish substituting %% in XML");
   }
@@ -627,7 +504,7 @@ nonstd::expected<EventRender, std::string> ConsumeWindowsEventLog::createEventRe
     result.matched_fields = walker.getFieldValues();
   }
 
-  if (output_format_ == OutputFormat::XML || output_format_ == OutputFormat::BOTH) {
+  if (output_format_ == cwel::OutputFormat::XML || output_format_ == cwel::OutputFormat::BOTH) {
     logger_->log_trace("Writing event in XML");
 
     wel::XmlString writer;
@@ -638,21 +515,21 @@ nonstd::expected<EventRender, std::string> ConsumeWindowsEventLog::createEventRe
     logger_->log_trace("Finish writing in XML");
   }
 
-  if (output_format_ == OutputFormat::JSON) {
+  if (output_format_ == cwel::OutputFormat::JSON) {
     switch (json_format_.value()) {
-      case JsonFormat::RAW: {
+      case cwel::JsonFormat::RAW: {
         logger_->log_trace("Writing event in raw JSON");
         result.json = wel::jsonToString(wel::toRawJSON(doc));
         logger_->log_trace("Finish writing in raw JSON");
         break;
       }
-      case JsonFormat::SIMPLE: {
+      case cwel::JsonFormat::SIMPLE: {
         logger_->log_trace("Writing event in simple JSON");
         result.json = wel::jsonToString(wel::toSimpleJSON(doc));
         logger_->log_trace("Finish writing in simple JSON");
         break;
       }
-      case JsonFormat::FLATTENED: {
+      case cwel::JsonFormat::FLATTENED: {
         logger_->log_trace("Writing event in flattened JSON");
         result.json = wel::jsonToString(wel::toFlattenedJSON(doc));
         logger_->log_trace("Finish writing in flattened JSON");
@@ -702,7 +579,7 @@ void ConsumeWindowsEventLog::refreshTimeZoneData() {
   logger_->log_trace("Timezone name: %s, offset: %s", timezone_name_, timezone_offset_);
 }
 
-void ConsumeWindowsEventLog::putEventRenderFlowFileToSession(const EventRender& eventRender, core::ProcessSession& session) const {
+void ConsumeWindowsEventLog::putEventRenderFlowFileToSession(const cwel::EventRender& eventRender, core::ProcessSession& session) const {
   auto commitFlowFile = [&] (const std::string& content, const std::string& mimeType) {
     auto flow_file = session.create();
     addMatchedFieldsAsAttributes(eventRender, session, flow_file);
@@ -714,23 +591,23 @@ void ConsumeWindowsEventLog::putEventRenderFlowFileToSession(const EventRender& 
     session.transfer(flow_file, Success);
   };
 
-  if (output_format_ == OutputFormat::XML || output_format_ == OutputFormat::BOTH) {
+  if (output_format_ == cwel::OutputFormat::XML || output_format_ == cwel::OutputFormat::BOTH) {
     logger_->log_trace("Writing rendered XML to a flow file");
     commitFlowFile(eventRender.xml, "application/xml");
   }
 
-  if (output_format_ == OutputFormat::PLAINTEXT || output_format_ == OutputFormat::BOTH) {
+  if (output_format_ == cwel::OutputFormat::PLAINTEXT || output_format_ == cwel::OutputFormat::BOTH) {
     logger_->log_trace("Writing rendered plain text to a flow file");
     commitFlowFile(eventRender.plaintext, "text/plain");
   }
 
-  if (output_format_ == OutputFormat::JSON) {
+  if (output_format_ == cwel::OutputFormat::JSON) {
     logger_->log_trace("Writing rendered %s JSON to a flow file", json_format_.toString());
     commitFlowFile(eventRender.json, "application/json");
   }
 }
 
-void ConsumeWindowsEventLog::addMatchedFieldsAsAttributes(const EventRender& eventRender, core::ProcessSession& session, const std::shared_ptr<core::FlowFile>& flowFile) const {
+void ConsumeWindowsEventLog::addMatchedFieldsAsAttributes(const cwel::EventRender& eventRender, core::ProcessSession& session, const std::shared_ptr<core::FlowFile>& flowFile) const {
   for (const auto &fieldMapping : eventRender.matched_fields) {
     if (!fieldMapping.second.empty()) {
       session.putAttribute(flowFile, fieldMapping.first, fieldMapping.second);

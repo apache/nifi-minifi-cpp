@@ -143,14 +143,14 @@ class StringUtils {
   /**
    * Compares strings by lower casing them.
    */
-  static inline bool equalsIgnoreCase(const std::string& left, const std::string& right) {
+  static inline bool equalsIgnoreCase(std::string_view left, std::string_view right) {
     if (left.length() != right.length()) {
       return false;
     }
     return std::equal(right.cbegin(), right.cend(), left.cbegin(), [](unsigned char lc, unsigned char rc) { return std::tolower(lc) == std::tolower(rc); });
   }
 
-  static inline bool equals(const char* left, const char* right, bool caseSensitive = true) {
+  static constexpr bool equals(const char* left, const char* right, bool caseSensitive = true) {
     if (caseSensitive) {
       return std::strcmp(left, right) == 0;
     }
@@ -162,7 +162,7 @@ class StringUtils {
     return std::equal(right, right + right_len, left, [](unsigned char lc, unsigned char rc) { return std::tolower(lc) == std::tolower(rc); });
   }
 
-  static inline bool equals(const std::string_view& left, const std::string_view& right, bool case_sensitive = true) {
+  static constexpr bool equals(std::string_view left, std::string_view right, bool case_sensitive = true) {
     if (case_sensitive) {
       return left == right;
     }
@@ -191,7 +191,7 @@ class StringUtils {
 
   static std::string& replaceAll(std::string& source_string, const std::string &from_string, const std::string &to_string);
 
-  inline static bool startsWith(const std::string_view& value, const std::string_view& start, bool case_sensitive = true) {
+  inline static bool startsWith(std::string_view value, std::string_view start, bool case_sensitive = true) {
     if (start.length() > value.length()) {
       return false;
     }
@@ -201,7 +201,7 @@ class StringUtils {
     return std::equal(start.begin(), start.end(), value.begin(), [](unsigned char lc, unsigned char rc) {return tolower(lc) == tolower(rc);});
   }
 
-  inline static bool endsWith(const std::string_view& value, const std::string_view& end, bool case_sensitive = true) {
+  inline static bool endsWith(std::string_view value, std::string_view end, bool case_sensitive = true) {
     if (end.length() > value.length()) {
       return false;
     }

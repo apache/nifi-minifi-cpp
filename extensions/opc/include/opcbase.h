@@ -25,6 +25,8 @@
 #include "opc.h"
 #include "core/Processor.h"
 #include "core/ProcessSession.h"
+#include "PropertyDefinition.h"
+#include "core/PropertyDefinitionBuilder.h"
 #include "core/Core.h"
 #include "core/Property.h"
 
@@ -32,15 +34,30 @@ namespace org::apache::nifi::minifi::processors {
 
 class BaseOPCProcessor : public core::Processor {
  public:
-  EXTENSIONAPI static const core::Property OPCServerEndPoint;
-  EXTENSIONAPI static const core::Property ApplicationURI;
-  EXTENSIONAPI static const core::Property Username;
-  EXTENSIONAPI static const core::Property Password;
-  EXTENSIONAPI static const core::Property CertificatePath;
-  EXTENSIONAPI static const core::Property KeyPath;
-  EXTENSIONAPI static const core::Property TrustedPath;
-  static auto properties() {
-    return std::array{
+  EXTENSIONAPI static constexpr auto OPCServerEndPoint = core::PropertyDefinitionBuilder<>::createProperty("OPC server endpoint")
+      .withDescription("Specifies the address, port and relative path of an OPC endpoint")
+      .isRequired(true)
+      .build();
+  EXTENSIONAPI static constexpr auto ApplicationURI = core::PropertyDefinitionBuilder<>::createProperty("Application URI")
+      .withDescription("Application URI of the client in the format 'urn:unconfigured:application'. "
+          "Mandatory, if using Secure Channel and must match the URI included in the certificate's Subject Alternative Names.")
+      .build();
+  EXTENSIONAPI static constexpr auto Username = core::PropertyDefinitionBuilder<>::createProperty("Username")
+      .withDescription("Username to log in with.")
+      .build();
+  EXTENSIONAPI static constexpr auto Password = core::PropertyDefinitionBuilder<>::createProperty("Password")
+      .withDescription("Password to log in with.")
+      .build();
+  EXTENSIONAPI static constexpr auto CertificatePath = core::PropertyDefinitionBuilder<>::createProperty("Certificate path")
+      .withDescription("Path to the DER-encoded cert file")
+      .build();
+  EXTENSIONAPI static constexpr auto KeyPath = core::PropertyDefinitionBuilder<>::createProperty("Key path")
+      .withDescription("Path to the DER-encoded key file")
+      .build();
+  EXTENSIONAPI static constexpr auto TrustedPath = core::PropertyDefinitionBuilder<>::createProperty("Trusted server certificate path")
+      .withDescription("Path to the DER-encoded trusted server certificate")
+      .build();
+  EXTENSIONAPI static constexpr auto Properties = std::array<core::PropertyReference, 7>{
       OPCServerEndPoint,
       ApplicationURI,
       Username,
@@ -48,8 +65,8 @@ class BaseOPCProcessor : public core::Processor {
       CertificatePath,
       KeyPath,
       TrustedPath
-    };
-  }
+  };
+
 
   explicit BaseOPCProcessor(std::string name, const utils::Identifier& uuid = {})
   : Processor(std::move(name), uuid) {

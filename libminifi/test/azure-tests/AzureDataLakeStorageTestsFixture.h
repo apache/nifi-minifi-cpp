@@ -67,8 +67,8 @@ class AzureDataLakeStorageTestsFixture {
     utils::putFileToDir(input_dir, GETFILE_FILE_NAME, TEST_DATA);
 
     get_file_ = plan_->addProcessor("GetFile", "GetFile");
-    plan_->setProperty(get_file_, minifi::processors::GetFile::Directory.getName(), input_dir.string());
-    plan_->setProperty(get_file_, minifi::processors::GetFile::KeepSourceFile.getName(), "false");
+    plan_->setProperty(get_file_, minifi::processors::GetFile::Directory, input_dir.string());
+    plan_->setProperty(get_file_, minifi::processors::GetFile::KeepSourceFile, "false");
 
     update_attribute_ = plan_->addProcessor("UpdateAttribute", "UpdateAttribute", { {"success", "d"} },  true);
     plan_->addProcessor(azure_data_lake_storage_, "AzureDataLakeStorageProcessor", { {"success", "d"}, {"failure", "d"} }, true);
@@ -78,13 +78,13 @@ class AzureDataLakeStorageTestsFixture {
     plan_->addConnection(logattribute, {"success", "d"}, success_putfile_);
     success_putfile_->setAutoTerminatedRelationships(std::array{core::Relationship{"success", "d"}, core::Relationship{"failure", "d"}});
     success_output_dir_ = test_controller_.createTempDirectory();
-    plan_->setProperty(success_putfile_, org::apache::nifi::minifi::processors::PutFile::Directory.getName(), success_output_dir_.string());
+    plan_->setProperty(success_putfile_, org::apache::nifi::minifi::processors::PutFile::Directory, success_output_dir_.string());
 
     failure_putfile_ = plan_->addProcessor("PutFile", "FailurePutFile", { {"success", "d"} }, false);
     plan_->addConnection(azure_data_lake_storage_, {"failure", "d"}, failure_putfile_);
     failure_putfile_->setAutoTerminatedRelationships(std::array{core::Relationship{"success", "d"}, core::Relationship{"failure", "d"}});
     failure_output_dir_ = test_controller_.createTempDirectory();
-    plan_->setProperty(failure_putfile_, org::apache::nifi::minifi::processors::PutFile::Directory.getName(), failure_output_dir_.string());
+    plan_->setProperty(failure_putfile_, org::apache::nifi::minifi::processors::PutFile::Directory, failure_output_dir_.string());
 
     azure_storage_cred_service_ = plan_->addController("AzureStorageCredentialsService", "AzureStorageCredentialsService");
     setDefaultProperties();
@@ -112,12 +112,12 @@ class AzureDataLakeStorageTestsFixture {
   }
 
   void setDefaultProperties() {
-    plan_->setProperty(azure_data_lake_storage_, AzureDataLakeStorageProcessor::AzureStorageCredentialsService.getName(), "AzureStorageCredentialsService");
-    plan_->setProperty(update_attribute_, "test.filesystemname", FILESYSTEM_NAME, true);
-    plan_->setProperty(azure_data_lake_storage_, AzureDataLakeStorageProcessor::FilesystemName.getName(), "${test.filesystemname}");
-    plan_->setProperty(update_attribute_, "test.directoryname", DIRECTORY_NAME, true);
-    plan_->setProperty(azure_data_lake_storage_, AzureDataLakeStorageProcessor::DirectoryName.getName(), "${test.directoryname}");
-    plan_->setProperty(azure_storage_cred_service_, minifi::azure::controllers::AzureStorageCredentialsService::ConnectionString.getName(), CONNECTION_STRING);
+    plan_->setProperty(azure_data_lake_storage_, AzureDataLakeStorageProcessor::AzureStorageCredentialsService, "AzureStorageCredentialsService");
+    plan_->setDynamicProperty(update_attribute_, "test.filesystemname", FILESYSTEM_NAME);
+    plan_->setProperty(azure_data_lake_storage_, AzureDataLakeStorageProcessor::FilesystemName, "${test.filesystemname}");
+    plan_->setDynamicProperty(update_attribute_, "test.directoryname", DIRECTORY_NAME);
+    plan_->setProperty(azure_data_lake_storage_, AzureDataLakeStorageProcessor::DirectoryName, "${test.directoryname}");
+    plan_->setProperty(azure_storage_cred_service_, minifi::azure::controllers::AzureStorageCredentialsService::ConnectionString, CONNECTION_STRING);
   }
 
   virtual ~AzureDataLakeStorageTestsFixture() {

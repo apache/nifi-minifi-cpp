@@ -53,6 +53,6 @@ struct SslServerOptions {
       client_auth_option(client_auth_option) {}
 };
 
-std::optional<utils::net::SslData> getSslData(const core::ProcessContext& context, const core::Property& ssl_prop, const std::shared_ptr<core::logging::Logger>& logger);
+std::optional<utils::net::SslData> getSslData(const core::ProcessContext& context, const core::PropertyReference& ssl_prop, const std::shared_ptr<core::logging::Logger>& logger);
 
 }  // namespace org::apache::nifi::minifi::utils::net

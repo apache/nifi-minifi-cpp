@@ -60,8 +60,8 @@ void setEnvironmentCredentials(const std::string& key, const std::string& secret
 }
 
 TEST_CASE_METHOD(AWSCredentialsServiceTestAccessor, "Test expired credentials are refreshed", "[credentialRefresh]") {
-  plan->setProperty(aws_credentials_service, "Access Key", "key");
-  plan->setProperty(aws_credentials_service, "Secret Key", "secret");
+  plan->setProperty(aws_credentials_service, minifi::aws::controllers::AWSCredentialsService::AccessKey, "key");
+  plan->setProperty(aws_credentials_service, minifi::aws::controllers::AWSCredentialsService::SecretKey, "secret");
   aws_credentials_service->enable();
   assert(aws_credentials_service->getControllerServiceImplementation() != nullptr);
   auto aws_credentials_impl = std::static_pointer_cast<minifi::aws::controllers::AWSCredentialsService>(aws_credentials_service->getControllerServiceImplementation());
@@ -82,7 +82,7 @@ TEST_CASE_METHOD(AWSCredentialsServiceTestAccessor, "Test expired credentials ar
 
 TEST_CASE_METHOD(AWSCredentialsServiceTestAccessor, "Test credentials from default credential chain are always refreshed", "[credentialRefresh]") {
   setEnvironmentCredentials("key", "secret");
-  plan->setProperty(aws_credentials_service, "Use Default Credentials", "true");
+  plan->setProperty(aws_credentials_service, minifi::aws::controllers::AWSCredentialsService::UseDefaultCredentials, "true");
   aws_credentials_service->enable();
   assert(aws_credentials_service->getControllerServiceImplementation() != nullptr);
   auto aws_credentials_impl = std::static_pointer_cast<minifi::aws::controllers::AWSCredentialsService>(aws_credentials_service->getControllerServiceImplementation());

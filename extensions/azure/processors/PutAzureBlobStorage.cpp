@@ -27,15 +27,15 @@
 namespace org::apache::nifi::minifi::azure::processors {
 
 void PutAzureBlobStorage::initialize() {
-  setSupportedProperties(properties());
-  setSupportedRelationships(relationships());
+  setSupportedProperties(Properties);
+  setSupportedRelationships(Relationships);
 }
 
 
 void PutAzureBlobStorage::onSchedule(const std::shared_ptr<core::ProcessContext>& context, const std::shared_ptr<core::ProcessSessionFactory>& session_factory) {
   gsl_Expects(context && session_factory);
   AzureBlobStorageProcessorBase::onSchedule(context, session_factory);
-  context->getProperty(CreateContainer.getName(), create_container_);
+  context->getProperty(CreateContainer, create_container_);
 }
 
 std::optional<storage::PutAzureBlobStorageParameters> PutAzureBlobStorage::buildPutAzureBlobStorageParameters(
@@ -89,5 +89,7 @@ void PutAzureBlobStorage::onTrigger(const std::shared_ptr<core::ProcessContext> 
   logger_->log_debug("Successfully uploaded blob '%s' to Azure Storage container '%s'", params->blob_name, params->container_name);
   session->transfer(flow_file, Success);
 }
+
+REGISTER_RESOURCE(PutAzureBlobStorage, Processor);
 
 }  // namespace org::apache::nifi::minifi::azure::processors

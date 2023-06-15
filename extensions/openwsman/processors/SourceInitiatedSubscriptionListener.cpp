@@ -47,8 +47,6 @@ extern "C" {
 #include "core/logging/Logger.h"
 #include "core/ProcessContext.h"
 #include "core/ProcessSessionFactory.h"
-#include "core/PropertyBuilder.h"
-#include "core/Relationship.h"
 #include "core/Resource.h"
 #include "io/BufferStream.h"
 #include "io/StreamFactory.h"
@@ -67,71 +65,6 @@ extern "C" {
 #define WSMAN_CUSTOM_ACTION_EVENTS "http://schemas.dmtf.org/wbem/wsman/1/wsman/Events"
 
 namespace org::apache::nifi::minifi::processors {
-
-const core::Property SourceInitiatedSubscriptionListener::ListenHostname(
-    core::PropertyBuilder::createProperty("Listen Hostname")->withDescription("The hostname or IP of this machine that will be advertised to event sources to connect to. "
-                                                                              "It must be contained as a Subject Alternative Name in the server certificate, "
-                                                                              "otherwise source machines will refuse to connect.")
-        ->isRequired(true)->build());
-const core::Property SourceInitiatedSubscriptionListener::ListenPort(
-    core::PropertyBuilder::createProperty("Listen Port")->withDescription("The port to listen on.")
-        ->isRequired(true)->withDefaultValue<int64_t>(5986, core::StandardValidators::LISTEN_PORT_VALIDATOR)->build());
-const core::Property SourceInitiatedSubscriptionListener::SubscriptionManagerPath(
-    core::PropertyBuilder::createProperty("Subscription Manager Path")->withDescription("The URI path that will be used for the WEC Subscription Manager endpoint.")
-        ->isRequired(true)->withDefaultValue("/wsman/SubscriptionManager/WEC")->build());
-const core::Property SourceInitiatedSubscriptionListener::SubscriptionsBasePath(
-    core::PropertyBuilder::createProperty("Subscriptions Base Path")->withDescription("The URI path that will be used as the base for endpoints serving individual subscriptions.")
-        ->isRequired(true)->withDefaultValue("/wsman/subscriptions")->build());
-const core::Property SourceInitiatedSubscriptionListener::SSLCertificate(
-    core::PropertyBuilder::createProperty("SSL Certificate")->withDescription("File containing PEM-formatted file including TLS/SSL certificate and key. "
-                                                                              "The root CA of the certificate must be the CA set in SSL Certificate Authority.")
-        ->isRequired(true)->build());
-const core::Property SourceInitiatedSubscriptionListener::SSLCertificateAuthority(
-    core::PropertyBuilder::createProperty("SSL Certificate Authority")->withDescription("File containing the PEM-formatted CA that is the root CA for both this server's certificate "
-                                                                                        "and the event source clients' certificates.")
-        ->isRequired(true)->build());
-const core::Property SourceInitiatedSubscriptionListener::SSLVerifyPeer(
-    core::PropertyBuilder::createProperty("SSL Verify Peer")->withDescription("Whether or not to verify the client's certificate")
-        ->isRequired(false)->withDefaultValue<bool>(true)->build());
-const core::Property SourceInitiatedSubscriptionListener::XPathXmlQuery(
-    core::PropertyBuilder::createProperty("XPath XML Query")->withDescription("An XPath Query in structured XML format conforming to the Query Schema described in "
-                                                                              "https://docs.microsoft.com/en-gb/windows/win32/wes/queryschema-schema, "
-                                                                              "see an example here: https://docs.microsoft.com/en-gb/windows/win32/wes/consuming-events")
-        ->isRequired(true)
-        ->withDefaultValue("<QueryList>\n"
-                           "  <Query Id=\"0\">\n"
-                           "    <Select Path=\"Application\">*</Select>\n"
-                           "  </Query>\n"
-                           "</QueryList>\n")->build());
-const core::Property SourceInitiatedSubscriptionListener::InitialExistingEventsStrategy(
-    core::PropertyBuilder::createProperty("Initial Existing Events Strategy")->withDescription("Defines the behaviour of the Processor when a new event source connects.\n"
-    "None: will not request existing events\n"
-    "All: will request all existing events matching the query")
-        ->isRequired(true)->withAllowableValues<std::string>({INITIAL_EXISTING_EVENTS_STRATEGY_NONE, INITIAL_EXISTING_EVENTS_STRATEGY_ALL})
-        ->withDefaultValue(INITIAL_EXISTING_EVENTS_STRATEGY_NONE)->build());
-const core::Property SourceInitiatedSubscriptionListener::SubscriptionExpirationInterval(
-    core::PropertyBuilder::createProperty("Subscription Expiration Interval")->withDescription("The interval while a subscription is valid without renewal. "
-    "Because in a source-initiated subscription, the collector can not cancel the subscription, "
-    "setting this too large could cause unnecessary load on the source machine. "
-    "Setting this too small causes frequent reenumeration and resubscription which is ineffective.")
-        ->isRequired(true)->withDefaultValue<core::TimePeriodValue>("10 min")->build());
-const core::Property SourceInitiatedSubscriptionListener::HeartbeatInterval(
-    core::PropertyBuilder::createProperty("Heartbeat Interval")->withDescription("The processor will ask the sources to send heartbeats with this interval.")
-        ->isRequired(true)->withDefaultValue<core::TimePeriodValue>("30 sec")->build());
-const core::Property SourceInitiatedSubscriptionListener::MaxElements(
-    core::PropertyBuilder::createProperty("Max Elements")->withDescription("The maximum number of events a source will batch together and send at once.")
-        ->isRequired(true)->withDefaultValue<uint32_t>(20U)->build());
-const core::Property SourceInitiatedSubscriptionListener::MaxLatency(
-    core::PropertyBuilder::createProperty("Max Latency")->withDescription("The maximum time a source will wait to send new events.")
-        ->isRequired(true)->withDefaultValue<core::TimePeriodValue>("10 sec")->build());
-const core::Property SourceInitiatedSubscriptionListener::ConnectionRetryInterval(
-    core::PropertyBuilder::createProperty("Connection Retry Interval")->withDescription("The interval with which a source will try to reconnect to the server.")
-        ->withDefaultValue<core::TimePeriodValue>("10 sec")->build());
-const core::Property SourceInitiatedSubscriptionListener::ConnectionRetryCount(
-    core::PropertyBuilder::createProperty("Connection Retry Count")->withDescription("The number of connection retries after which a source will consider the subscription expired.")
-        ->withDefaultValue<uint32_t>(5U)->build());
-
-const core::Relationship SourceInitiatedSubscriptionListener::Success("success", "All Events are routed to success");
 
 SourceInitiatedSubscriptionListener::SourceInitiatedSubscriptionListener(std::string name, const utils::Identifier& uuid)
     : Processor(std::move(name), uuid)
@@ -737,8 +670,8 @@ void SourceInitiatedSubscriptionListener::onTrigger(const std::shared_ptr<core::
 void SourceInitiatedSubscriptionListener::initialize() {
   logger_->log_trace("Initializing SourceInitiatedSubscriptionListener");
 
-  setSupportedProperties(properties());
-  setSupportedRelationships(relationships());
+  setSupportedProperties(Properties);
+  setSupportedRelationships(Relationships);
 }
 
 void SourceInitiatedSubscriptionListener::onSchedule(const std::shared_ptr<core::ProcessContext> &context, const std::shared_ptr<core::ProcessSessionFactory> &sessionFactory) {
@@ -751,26 +684,26 @@ void SourceInitiatedSubscriptionListener::onSchedule(const std::shared_ptr<core:
   }
 
   std::string value;
-  context->getProperty(ListenHostname.getName(), listen_hostname_);
-  if (!context->getProperty(ListenPort.getName(), value)) {
+  context->getProperty(ListenHostname, listen_hostname_);
+  if (!context->getProperty(ListenPort, value)) {
     throw Exception(PROCESSOR_EXCEPTION, "Listen Port attribute is missing or invalid");
   } else {
     core::Property::StringToInt(value, listen_port_);
   }
-  context->getProperty(SubscriptionManagerPath.getName(), subscription_manager_path_);
-  context->getProperty(SubscriptionsBasePath.getName(), subscriptions_base_path_);
-  if (!context->getProperty(SSLCertificate.getName(), ssl_certificate_file)) {
+  context->getProperty(SubscriptionManagerPath, subscription_manager_path_);
+  context->getProperty(SubscriptionsBasePath, subscriptions_base_path_);
+  if (!context->getProperty(SSLCertificate, ssl_certificate_file)) {
     throw Exception(PROCESSOR_EXCEPTION, "SSL Certificate attribute is missing");
   }
-  if (!context->getProperty(SSLCertificateAuthority.getName(), ssl_ca_file)) {
+  if (!context->getProperty(SSLCertificateAuthority, ssl_ca_file)) {
     throw Exception(PROCESSOR_EXCEPTION, "SSL Certificate Authority attribute is missing");
   }
-  if (!context->getProperty(SSLVerifyPeer.getName(), value)) {
+  if (!context->getProperty(SSLVerifyPeer, value)) {
     throw Exception(PROCESSOR_EXCEPTION, "SSL Verify Peer attribute is missing");
   }
   bool verify_peer = utils::StringUtils::toBool(value).value_or(true);
-  context->getProperty(XPathXmlQuery.getName(), xpath_xml_query_);
-  if (!context->getProperty(InitialExistingEventsStrategy.getName(), initial_existing_events_strategy_)) {
+  context->getProperty(XPathXmlQuery, xpath_xml_query_);
+  if (!context->getProperty(InitialExistingEventsStrategy, initial_existing_events_strategy_)) {
     throw Exception(PROCESSOR_EXCEPTION, "Initial Existing Events Strategy attribute is missing or invalid");
   }
   if (auto subscription_expiration_interval = context->getProperty<core::TimePeriodValue>(SubscriptionExpirationInterval)) {
@@ -783,7 +716,7 @@ void SourceInitiatedSubscriptionListener::onSchedule(const std::shared_ptr<core:
   } else {
     throw Exception(PROCESSOR_EXCEPTION, "Heartbeat Interval attribute is missing or invalid");
   }
-  if (!context->getProperty(MaxElements.getName(), value)) {
+  if (!context->getProperty(MaxElements, value)) {
     throw Exception(PROCESSOR_EXCEPTION, "Max Elements attribute is missing or invalid");
   } else if (!core::Property::StringToInt(value, max_elements_)) {
     throw Exception(PROCESSOR_EXCEPTION, "Max Elements attribute is invalid");
@@ -798,7 +731,7 @@ void SourceInitiatedSubscriptionListener::onSchedule(const std::shared_ptr<core:
   } else {
     throw Exception(PROCESSOR_EXCEPTION, "Connection Retry Interval attribute is missing or invalid");
   }
-  if (!context->getProperty(ConnectionRetryCount.getName(), value)) {
+  if (!context->getProperty(ConnectionRetryCount, value)) {
     throw Exception(PROCESSOR_EXCEPTION, "Connection Retry Count attribute is missing or invalid");
   } else if (!core::Property::StringToInt(value, connection_retry_count_)) {
     throw Exception(PROCESSOR_EXCEPTION, "Connection Retry Count attribute is invalid");

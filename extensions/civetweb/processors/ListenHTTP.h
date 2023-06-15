@@ -29,6 +29,10 @@
 #include "FlowFileRecord.h"
 #include "core/Processor.h"
 #include "core/ProcessSession.h"
+#include "core/PropertyDefinition.h"
+#include "core/PropertyDefinitionBuilder.h"
+#include "core/PropertyType.h"
+#include "core/RelationshipDefinition.h"
 #include "core/Core.h"
 #include "core/logging/LoggerConfiguration.h"
 #include "utils/MinifiConcurrentQueue.h"
@@ -39,6 +43,9 @@
 namespace org::apache::nifi::minifi::processors {
 
 class ListenHTTP : public core::Processor {
+ private:
+  static constexpr std::string_view DEFAULT_BUFFER_SIZE_STR = "20000";
+
  public:
   using FlowFileBufferPair = std::pair<std::shared_ptr<FlowFileRecord>, std::unique_ptr<io::BufferStream>>;
 
@@ -56,18 +63,56 @@ class ListenHTTP : public core::Processor {
       "The mime.type attribute of the response body FlowFile is used for the Content-type header in responses. Response body content can be cleared by sending an empty (size 0) "
       "FlowFile for a given URI mapping.";
 
-  EXTENSIONAPI static const core::Property BasePath;
-  EXTENSIONAPI static const core::Property Port;
-  EXTENSIONAPI static const core::Property AuthorizedDNPattern;
-  EXTENSIONAPI static const core::Property SSLCertificate;
-  EXTENSIONAPI static const core::Property SSLCertificateAuthority;
-  EXTENSIONAPI static const core::Property SSLVerifyPeer;
-  EXTENSIONAPI static const core::Property SSLMinimumVersion;
-  EXTENSIONAPI static const core::Property HeadersAsAttributesRegex;
-  EXTENSIONAPI static const core::Property BatchSize;
-  EXTENSIONAPI static const core::Property BufferSize;
-  static auto properties() {
-    return std::array{
+
+  EXTENSIONAPI static constexpr auto BasePath = core::PropertyDefinitionBuilder<>::createProperty("Base Path")
+      .withDescription("Base path for incoming connections")
+      .isRequired(false)
+      .withDefaultValue("contentListener")
+      .build();
+  EXTENSIONAPI static constexpr auto Port = core::PropertyDefinitionBuilder<>::createProperty("Listening Port")
+      .withDescription("The Port to listen on for incoming connections. 0 means port is going to be selected randomly.")
+      .isRequired(true)
+      .withPropertyType(core::StandardPropertyTypes::LISTEN_PORT_TYPE)
+      .withDefaultValue("80")
+      .build();
+  EXTENSIONAPI static constexpr auto AuthorizedDNPattern = core::PropertyDefinitionBuilder<>::createProperty("Authorized DN Pattern")
+      .withDescription("A Regular Expression to apply against the Distinguished Name of incoming"
+          " connections. If the Pattern does not match the DN, the connection will be refused.")
+      .withDefaultValue(".*")
+      .build();
+  EXTENSIONAPI static constexpr auto SSLCertificate = core::PropertyDefinitionBuilder<>::createProperty("SSL Certificate")
+      .withDescription("File containing PEM-formatted file including TLS/SSL certificate and key")
+      .build();
+  EXTENSIONAPI static constexpr auto SSLCertificateAuthority = core::PropertyDefinitionBuilder<>::createProperty("SSL Certificate Authority")
+      .withDescription("File containing trusted PEM-formatted certificates")
+      .build();
+  EXTENSIONAPI static constexpr auto SSLVerifyPeer = core::PropertyDefinitionBuilder<2>::createProperty("SSL Verify Peer")
+      .withDescription("Whether or not to verify the client's certificate (yes/no)")
+      .isRequired(false)
+      .withAllowedValues({"yes", "no"})
+      .withDefaultValue("no")
+      .build();
+  EXTENSIONAPI static constexpr auto SSLMinimumVersion = core::PropertyDefinitionBuilder<1>::createProperty("SSL Minimum Version")
+      .withDescription("Minimum TLS/SSL version allowed (TLS1.2)")
+      .isRequired(false)
+      .withAllowedValues({"TLS1.2"})
+      .withDefaultValue("TLS1.2")
+      .build();
+  EXTENSIONAPI static constexpr auto HeadersAsAttributesRegex = core::PropertyDefinitionBuilder<>::createProperty("HTTP Headers to receive as Attributes (Regex)")
+      .withDescription("Specifies the Regular Expression that determines the names of HTTP Headers that should be passed along as FlowFile attributes")
+      .build();
+  EXTENSIONAPI static constexpr auto BatchSize = core::PropertyDefinitionBuilder<>::createProperty("Batch Size")
+        .withDescription("Maximum number of buffered requests to be processed in a single batch. If set to zero all buffered requests are processed.")
+        .withPropertyType(core::StandardPropertyTypes::UNSIGNED_LONG_TYPE)
+        .withDefaultValue(ListenHTTP::DEFAULT_BUFFER_SIZE_STR)
+        .build();
+  EXTENSIONAPI static constexpr auto BufferSize = core::PropertyDefinitionBuilder<>::createProperty("Buffer Size")
+        .withDescription("Maximum number of HTTP Requests allowed to be buffered before processing them when the processor is triggered. "
+            "If the buffer full, the request is refused. If set to zero the buffer is unlimited.")
+        .withPropertyType(core::StandardPropertyTypes::UNSIGNED_LONG_TYPE)
+        .withDefaultValue(ListenHTTP::DEFAULT_BUFFER_SIZE_STR)
+        .build();
+  EXTENSIONAPI static constexpr auto Properties = std::array<core::PropertyReference, 10>{
       BasePath,
       Port,
       AuthorizedDNPattern,
@@ -78,11 +123,11 @@ class ListenHTTP : public core::Processor {
       HeadersAsAttributesRegex,
       BatchSize,
       BufferSize
-    };
-  }
+  };
 
-  EXTENSIONAPI static const core::Relationship Success;
-  static auto relationships() { return std::array{Success}; }
+
+  EXTENSIONAPI static constexpr auto Success = core::RelationshipDefinition{"success", "All files are routed to success"};
+  EXTENSIONAPI static constexpr auto Relationships = std::array{Success};
 
   EXTENSIONAPI static constexpr bool SupportsDynamicProperties = false;
   EXTENSIONAPI static constexpr bool SupportsDynamicRelationships = false;
@@ -184,8 +229,6 @@ class ListenHTTP : public core::Processor {
   void notifyStop() override;
 
  private:
-  static const uint64_t DEFAULT_BUFFER_SIZE;
-
   bool processIncomingFlowFile(core::ProcessSession &session);
   bool processRequestBuffer(core::ProcessSession &session);
 

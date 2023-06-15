@@ -68,8 +68,8 @@ class AzureBlobStorageTestsFixture {
     input_file_stream << TEST_DATA;
     input_file_stream.close();
     get_file_processor_ = plan_->addProcessor("GetFile", "GetFile");
-    plan_->setProperty(get_file_processor_, minifi::processors::GetFile::Directory.getName(), input_dir.string());
-    plan_->setProperty(get_file_processor_, minifi::processors::GetFile::KeepSourceFile.getName(), "false");
+    plan_->setProperty(get_file_processor_, minifi::processors::GetFile::Directory, input_dir.string());
+    plan_->setProperty(get_file_processor_, minifi::processors::GetFile::KeepSourceFile, "false");
     update_attribute_processor_ = plan_->addProcessor("UpdateAttribute", "UpdateAttribute", { {"success", "d"} },  true);
     plan_->addProcessor(azure_blob_storage_processor_, "AzureBlobStorageProcessor", { {"success", "d"} }, true);
     auto logattribute = plan_->addProcessor("LogAttribute", "LogAttribute", { {"success", "d"} }, true);
@@ -77,19 +77,19 @@ class AzureBlobStorageTestsFixture {
     plan_->addConnection(logattribute, {"success", "d"}, success_putfile_);
     success_putfile_->setAutoTerminatedRelationships(std::array{core::Relationship{"success", "d"}, core::Relationship{"failure", "d"}});
     success_output_dir_ = test_controller_.createTempDirectory();
-    plan_->setProperty(success_putfile_, org::apache::nifi::minifi::processors::PutFile::Directory.getName(), success_output_dir_.string());
+    plan_->setProperty(success_putfile_, org::apache::nifi::minifi::processors::PutFile::Directory, success_output_dir_.string());
 
     failure_putfile_ = plan_->addProcessor("PutFile", "FailurePutFile", { {"success", "d"} }, false);
     plan_->addConnection(azure_blob_storage_processor_, {"failure", "d"}, failure_putfile_);
     failure_putfile_->setAutoTerminatedRelationships(std::array{core::Relationship{"success", "d"}, core::Relationship{"failure", "d"}});
     failure_output_dir_ = test_controller_.createTempDirectory();
-    plan_->setProperty(failure_putfile_, org::apache::nifi::minifi::processors::PutFile::Directory.getName(), failure_output_dir_.string());
+    plan_->setProperty(failure_putfile_, org::apache::nifi::minifi::processors::PutFile::Directory, failure_output_dir_.string());
   }
 
   void setDefaultCredentials() {
-    plan_->setProperty(update_attribute_processor_, "test.account_name", STORAGE_ACCOUNT_NAME, true);
+    plan_->setDynamicProperty(update_attribute_processor_, "test.account_name", STORAGE_ACCOUNT_NAME);
     plan_->setProperty(azure_blob_storage_processor_, "Storage Account Name", "${test.account_name}");
-    plan_->setProperty(update_attribute_processor_, "test.account_key", STORAGE_ACCOUNT_KEY, true);
+    plan_->setDynamicProperty(update_attribute_processor_, "test.account_key", STORAGE_ACCOUNT_KEY);
     plan_->setProperty(azure_blob_storage_processor_, "Storage Account Key", "${test.account_key}");
   }
 

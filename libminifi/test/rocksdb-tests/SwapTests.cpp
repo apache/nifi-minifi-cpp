@@ -25,6 +25,8 @@
 #include "IntegrationTestUtils.h"
 #include "core/Processor.h"
 #include "core/ProcessSession.h"
+#include "core/PropertyDefinition.h"
+#include "core/RelationshipDefinition.h"
 #include "../unit/ProvenanceTestHelper.h"
 
 namespace org::apache::nifi::minifi::test {
@@ -32,14 +34,12 @@ namespace org::apache::nifi::minifi::test {
 class OutputProcessor : public core::Processor {
  public:
   using core::Processor::Processor;
-
-  static const core::Relationship Success;
-
   using core::Processor::onTrigger;
 
   static constexpr const char* Description = "Processor used for testing cycles";
-  static auto properties() { return std::array<core::Property, 0>{}; }
-  static auto relationships() { return std::array{Success}; }
+  static constexpr auto Properties = std::array<core::PropertyReference, 0>{};
+  static constexpr auto Success = core::RelationshipDefinition{"success", ""};
+  static constexpr auto Relationships = std::array{Success};
   static constexpr bool SupportsDynamicProperties = false;
   static constexpr bool SupportsDynamicRelationships = false;
   static constexpr core::annotation::Input InputRequirement = core::annotation::Input::INPUT_ALLOWED;
@@ -48,8 +48,8 @@ class OutputProcessor : public core::Processor {
   ADD_COMMON_VIRTUAL_FUNCTIONS_FOR_PROCESSORS
 
   void initialize() override {
-    setSupportedProperties(properties());
-    setSupportedRelationships(relationships());
+    setSupportedProperties(Properties);
+    setSupportedRelationships(Relationships);
   }
 
   void onTrigger(core::ProcessContext* /*context*/, core::ProcessSession* session) override {
@@ -70,8 +70,6 @@ class OutputProcessor : public core::Processor {
   std::vector<std::shared_ptr<core::FlowFile>> flow_files_;
   int next_id_{0};
 };
-
-const core::Relationship OutputProcessor::Success{"success", ""};
 
 TEST_CASE("Connection will on-demand swap flow files") {
   TestController testController;

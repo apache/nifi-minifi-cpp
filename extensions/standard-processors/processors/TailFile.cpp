@@ -46,104 +46,11 @@
 #include "TailFile.h"
 #include "core/ProcessContext.h"
 #include "core/ProcessSession.h"
-#include "core/PropertyBuilder.h"
 #include "core/Resource.h"
 #include "utils/RegexUtils.h"
 #include "utils/expected.h"
 
 namespace org::apache::nifi::minifi::processors {
-
-const core::Property TailFile::FileName(
-    core::PropertyBuilder::createProperty("File to Tail")
-        ->withDescription("Fully-qualified filename of the file that should be tailed when using single file mode, or a file regex when using multifile mode")
-        ->isRequired(true)
-        ->build());
-
-const core::Property TailFile::StateFile(
-    core::PropertyBuilder::createProperty("State File")
-        ->withDescription("DEPRECATED. Only use it for state migration from the legacy state file.")
-        ->isRequired(false)
-        ->withDefaultValue<std::string>("TailFileState")
-        ->build());
-
-const core::Property TailFile::Delimiter(
-    core::PropertyBuilder::createProperty("Input Delimiter")
-        ->withDescription("Specifies the character that should be used for delimiting the data being tailed"
-         "from the incoming file. If none is specified, data will be ingested as it becomes available.")
-        ->isRequired(false)
-        ->withDefaultValue<std::string>("\\n")
-        ->build());
-
-const core::Property TailFile::TailMode(
-    core::PropertyBuilder::createProperty("tail-mode", "Tailing Mode")
-        ->withDescription("Specifies the tail file mode. In 'Single file' mode only a single file will be watched. "
-        "In 'Multiple file' mode a regex may be used. Note that in multiple file mode we will still continue to watch for rollover on the initial set of watched files. "
-        "The Regex used to locate multiple files will be run during the schedule phrase. Note that if rotated files are matched by the regex, those files will be tailed.")->isRequired(true)
-        ->withAllowableValue<std::string>("Single file")->withAllowableValue("Multiple file")->withDefaultValue("Single file")
-        ->build());
-
-const core::Property TailFile::BaseDirectory(
-    core::PropertyBuilder::createProperty("tail-base-directory", "Base Directory")
-        ->withDescription("Base directory used to look for files to tail. This property is required when using Multiple file mode. "
-                          "Can contain expression language placeholders if Attribute Provider Service is set.")
-        ->isRequired(false)
-        ->supportsExpressionLanguage(true)
-        ->build());
-
-const core::Property TailFile::RecursiveLookup(
-    core::PropertyBuilder::createProperty("Recursive lookup")
-        ->withDescription("When using Multiple file mode, this property determines whether files are tailed in "
-        "child directories of the Base Directory or not.")
-        ->isRequired(false)
-        ->withDefaultValue<bool>(false)
-        ->build());
-
-const core::Property TailFile::LookupFrequency(
-    core::PropertyBuilder::createProperty("Lookup frequency")
-        ->withDescription("When using Multiple file mode, this property specifies the minimum duration "
-        "the processor will wait between looking for new files to tail in the Base Directory.")
-        ->isRequired(false)
-        ->withDefaultValue<core::TimePeriodValue>("10 min")
-        ->build());
-
-const core::Property TailFile::RollingFilenamePattern(
-    core::PropertyBuilder::createProperty("Rolling Filename Pattern")
-        ->withDescription("If the file to tail \"rolls over\" as would be the case with log files, this filename pattern will be used to "
-        "identify files that have rolled over so MiNiFi can read the remaining of the rolled-over file and then continue with the new log file. "
-        "This pattern supports the wildcard characters * and ?, it also supports the notation ${filename} to specify a pattern based on the name of the file "
-        "(without extension), and will assume that the files that have rolled over live in the same directory as the file being tailed.")
-        ->isRequired(false)
-        ->withDefaultValue<std::string>("${filename}.*")
-        ->build());
-
-const core::Property TailFile::InitialStartPosition(
-    core::PropertyBuilder::createProperty("Initial Start Position")
-        ->withDescription("When the Processor first begins to tail data, this property specifies where the Processor should begin reading data. "
-                          "Once data has been ingested from a file, the Processor will continue from the last point from which it has received data.\n"
-                          "Beginning of Time: Start with the oldest data that matches the Rolling Filename Pattern and then begin reading from the File to Tail.\n"
-                          "Beginning of File: Start with the beginning of the File to Tail. Do not ingest any data that has already been rolled over.\n"
-                          "Current Time: Start with the data at the end of the File to Tail. Do not ingest any data that has already been rolled over or "
-                          "any data in the File to Tail that has already been written.")
-        ->isRequired(true)
-        ->withDefaultValue(toString(InitialStartPositions::BEGINNING_OF_FILE))
-        ->withAllowableValues(InitialStartPositions::values())
-        ->build());
-
-const core::Property TailFile::AttributeProviderService(
-    core::PropertyBuilder::createProperty("Attribute Provider Service")
-        ->withDescription("Provides a list of key-value pair records which can be used in the Base Directory property using Expression Language. "
-                          "Requires Multiple file mode.")
-        ->asType<minifi::controllers::AttributeProviderService>()
-        ->build());
-
-const core::Property TailFile::BatchSize(
-    core::PropertyBuilder::createProperty("Batch Size")
-        ->withDescription("Maximum number of flowfiles emitted in a single trigger. If set to 0 all new content will be processed.")
-        ->isRequired(true)
-        ->withDefaultValue<uint32_t>(0)
-        ->build());
-
-const core::Relationship TailFile::Success("success", "All files are routed to success");
 
 const char *TailFile::CURRENT_STR = "CURRENT.";
 const char *TailFile::POSITION_STR = "POSITION.";
@@ -330,8 +237,8 @@ std::optional<char> getDelimiterOld(const std::string& delimiter_str) {
 }  // namespace
 
 void TailFile::initialize() {
-  setSupportedProperties(properties());
-  setSupportedRelationships(relationships());
+  setSupportedProperties(Properties);
+  setSupportedRelationships(Relationships);
 }
 
 void TailFile::onSchedule(const std::shared_ptr<core::ProcessContext> &context, const std::shared_ptr<core::ProcessSessionFactory>& /*sessionFactory*/) {
@@ -349,16 +256,16 @@ void TailFile::onSchedule(const std::shared_ptr<core::ProcessContext> &context, 
       delimiter_ = *parsed_delimiter;
     } else {
       logger_->log_error("Invalid %s: \"%s\" (it should be a single character, whether escaped or not). Using the first character as the %s",
-          TailFile::Delimiter.getName(), *delimiter_str, TailFile::Delimiter.getName());
+          std::string(TailFile::Delimiter.name), *delimiter_str, std::string(TailFile::Delimiter.name));
       delimiter_ = getDelimiterOld(*delimiter_str);
     }
   }
 
   std::string file_name_str;
-  context->getProperty(FileName.getName(), file_name_str);
+  context->getProperty(FileName, file_name_str);
 
   std::string mode;
-  context->getProperty(TailMode.getName(), mode);
+  context->getProperty(TailMode, mode);
 
   if (mode == "Multiple file") {
     tail_mode_ = Mode::MULTIPLE;
@@ -376,14 +283,14 @@ void TailFile::onSchedule(const std::shared_ptr<core::ProcessContext> &context, 
       throw minifi::Exception(ExceptionType::PROCESSOR_EXCEPTION, "Base directory does not exist or is not a directory");
     }
 
-    context->getProperty(RecursiveLookup.getName(), recursive_lookup_);
+    context->getProperty(RecursiveLookup, recursive_lookup_);
 
     // NOTE:
-    //   context->getProperty(LookupFrequency.getName(), lookup_frequency_);
+    //   context->getProperty(LookupFrequency, lookup_frequency_);
     // is incorrect, as std::chrono::milliseconds::rep is unspecified, and may not be supported by getProperty()
     // (e.g. in clang/libc++, this underlying type is long long)
     int64_t lookup_frequency;
-    if (context->getProperty(LookupFrequency.getName(), lookup_frequency)) {
+    if (context->getProperty(LookupFrequency, lookup_frequency)) {
       lookup_frequency_ = std::chrono::milliseconds{lookup_frequency};
     }
 
@@ -406,12 +313,12 @@ void TailFile::onSchedule(const std::shared_ptr<core::ProcessContext> &context, 
   }
 
   std::string rolling_filename_pattern_glob;
-  context->getProperty(RollingFilenamePattern.getName(), rolling_filename_pattern_glob);
+  context->getProperty(RollingFilenamePattern, rolling_filename_pattern_glob);
   rolling_filename_pattern_ = utils::file::globToRegex(rolling_filename_pattern_glob);
-  initial_start_position_ = InitialStartPositions{utils::parsePropertyWithAllowableValuesOrThrow(*context, InitialStartPosition.getName(), InitialStartPositions::values())};
+  initial_start_position_ = InitialStartPositions{utils::parsePropertyWithAllowableValuesOrThrow(*context, InitialStartPosition.name, InitialStartPositions::values)};
 
   uint32_t batch_size = 0;
-  if (context->getProperty(BatchSize.getName(), batch_size) && batch_size != 0) {
+  if (context->getProperty(BatchSize, batch_size) && batch_size != 0) {
     batch_size_ = batch_size;
   }
 }
@@ -572,7 +479,7 @@ bool TailFile::getStateFromStateManager(std::map<std::filesystem::path, TailStat
 bool TailFile::getStateFromLegacyStateFile(const std::shared_ptr<core::ProcessContext>& context,
                                            std::map<std::filesystem::path, TailState> &new_tail_states) const {
   std::string state_file_name_property;
-  context->getProperty(StateFile.getName(), state_file_name_property);
+  context->getProperty(StateFile, state_file_name_property);
   std::string state_file = state_file_name_property + "." + getUUIDStr();
 
   std::ifstream file(state_file.c_str(), std::ifstream::in);

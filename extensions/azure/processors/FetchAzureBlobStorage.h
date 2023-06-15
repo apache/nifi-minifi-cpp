@@ -26,6 +26,7 @@
 #include <utility>
 #include <vector>
 
+#include "PropertyDefinition.h"
 #include "core/Property.h"
 #include "AzureBlobStorageSingleBlobProcessorBase.h"
 #include "core/logging/LoggerConfiguration.h"
@@ -40,18 +41,25 @@ class FetchAzureBlobStorage final : public AzureBlobStorageSingleBlobProcessorBa
  public:
   EXTENSIONAPI static constexpr const char* Description = "Retrieves contents of an Azure Storage Blob, writing the contents to the content of the FlowFile";
 
-  EXTENSIONAPI static const core::Property RangeStart;
-  EXTENSIONAPI static const core::Property RangeLength;
-  static auto properties() {
-    return utils::array_cat(AzureBlobStorageSingleBlobProcessorBase::properties(), std::array{
+  EXTENSIONAPI static constexpr auto RangeStart = core::PropertyDefinitionBuilder<>::createProperty("Range Start")
+      .withDescription("The byte position at which to start reading from the blob. An empty value or a value of zero will start reading at the beginning of the blob.")
+      .supportsExpressionLanguage(true)
+      .build();
+
+  EXTENSIONAPI static constexpr auto RangeLength = core::PropertyDefinitionBuilder<>::createProperty("Range Length")
+      .withDescription("The number of bytes to download from the blob, starting from the Range Start. "
+                        "An empty value or a value that extends beyond the end of the blob will read to the end of the blob.")
+      .supportsExpressionLanguage(true)
+      .build();
+  EXTENSIONAPI static constexpr auto Properties = utils::array_cat(AzureBlobStorageSingleBlobProcessorBase::Properties, std::array<core::PropertyReference, 2>{
       RangeStart,
       RangeLength
-    });
-  }
+  });
 
-  EXTENSIONAPI static const core::Relationship Success;
-  EXTENSIONAPI static const core::Relationship Failure;
-  static auto relationships() { return std::array{Success, Failure}; }
+
+  EXTENSIONAPI static constexpr auto Success = core::RelationshipDefinition{"success", "All successfully processed FlowFiles are routed to this relationship"};
+  EXTENSIONAPI static constexpr auto Failure = core::RelationshipDefinition{"failure", "Unsuccessful operations will be transferred to the failure relationship"};
+  EXTENSIONAPI static constexpr auto Relationships = std::array{Success, Failure};
 
   EXTENSIONAPI static constexpr bool SupportsDynamicProperties = false;
   EXTENSIONAPI static constexpr bool SupportsDynamicRelationships = false;

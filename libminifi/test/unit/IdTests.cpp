@@ -150,7 +150,7 @@ TEST_CASE("Test parse", "[id]") {
   for (const auto& test_case : test_cases) {
     utils::Identifier id = utils::Identifier::parse(test_case.first).value();
     REQUIRE(memcmp(IdentifierTestAccessor::get_data_(id).data(), test_case.second.data(), 16U) == 0);
-    REQUIRE(utils::StringUtils::equalsIgnoreCase(test_case.first, id.to_string()));
+    REQUIRE(utils::StringUtils::equalsIgnoreCase(test_case.first, id.to_string().view()));
   }
 
   LogTestController::getInstance().reset();

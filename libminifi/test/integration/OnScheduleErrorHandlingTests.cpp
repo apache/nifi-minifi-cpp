@@ -40,7 +40,7 @@ class KamikazeErrorHandlingTests : public IntegrationBase {
       const int occurrences = result.second;
       return 1 < occurrences;
     }));
-    flowController_->updatePropertyValue("kamikaze", minifi::processors::KamikazeProcessor::ThrowInOnSchedule.getName(), "false");
+    flowController_->updatePropertyValue("kamikaze", std::string(minifi::processors::KamikazeProcessor::ThrowInOnSchedule.name), "false");
 
     const std::vector<std::string> must_appear_byorder_msgs = {minifi::processors::KamikazeProcessor::OnUnScheduleLogStr,
                                                  minifi::processors::KamikazeProcessor::OnScheduleLogStr,

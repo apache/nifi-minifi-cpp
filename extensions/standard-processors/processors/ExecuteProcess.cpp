@@ -19,13 +19,11 @@
  */
 #ifndef WIN32
 #include "ExecuteProcess.h"
-#include <cstring>
 #include <memory>
 #include <string>
 #include <iomanip>
 #include "core/ProcessContext.h"
 #include "core/ProcessSession.h"
-#include "core/PropertyBuilder.h"
 #include "core/Resource.h"
 #include "utils/StringUtils.h"
 #include "utils/TimeUtil.h"
@@ -36,47 +34,19 @@
 using namespace std::literals::chrono_literals;
 
 namespace org::apache::nifi::minifi::processors {
-core::Property ExecuteProcess::Command(
-    core::PropertyBuilder::createProperty("Command")
-      ->withDescription("Specifies the command to be executed; if just the name of an executable is provided, it must be in the user's environment PATH.")
-      ->build());
-
-core::Property ExecuteProcess::CommandArguments(
-    core::PropertyBuilder::createProperty("Command Arguments")
-      ->withDescription("The arguments to supply to the executable delimited by white space. White space can be escaped by enclosing it in double-quotes.")
-      ->build());
-
-core::Property ExecuteProcess::WorkingDir(
-    core::PropertyBuilder::createProperty("Working Directory")
-      ->withDescription("The directory to use as the current working directory when executing the command")
-      ->build());
-
-core::Property ExecuteProcess::BatchDuration(
-    core::PropertyBuilder::createProperty("Batch Duration")
-      ->withDescription("If the process is expected to be long-running and produce textual output, a batch duration can be specified.")
-      ->withDefaultValue<core::TimePeriodValue>("0 sec")
-      ->build());
-
-core::Property ExecuteProcess::RedirectErrorStream(
-    core::PropertyBuilder::createProperty("Redirect Error Stream")
-      ->withDescription("If true will redirect any error stream output of the process to the output stream.")
-      ->withDefaultValue<bool>(false)
-      ->build());
-
-core::Relationship ExecuteProcess::Success("success", "All created FlowFiles are routed to this relationship.");
 
 void ExecuteProcess::initialize() {
-  setSupportedProperties(properties());
-  setSupportedRelationships(relationships());
+  setSupportedProperties(Properties);
+  setSupportedRelationships(Relationships);
 }
 
 void ExecuteProcess::onSchedule(core::ProcessContext* context, core::ProcessSessionFactory* /*session_factory*/) {
   gsl_Expects(context);
   std::string value;
-  if (context->getProperty(Command.getName(), value)) {
+  if (context->getProperty(Command, value)) {
     command_ = value;
   }
-  if (context->getProperty(CommandArguments.getName(), value)) {
+  if (context->getProperty(CommandArguments, value)) {
     command_argument_ = value;
   }
   if (auto working_dir_str = context->getProperty(WorkingDir)) {
@@ -86,7 +56,7 @@ void ExecuteProcess::onSchedule(core::ProcessContext* context, core::ProcessSess
     batch_duration_ = batch_duration->getMilliseconds();
     logger_->log_debug("Setting batch duration to %d milliseconds", batch_duration_.count());
   }
-  if (context->getProperty(RedirectErrorStream.getName(), value)) {
+  if (context->getProperty(RedirectErrorStream, value)) {
     redirect_error_stream_ = org::apache::nifi::minifi::utils::StringUtils::toBool(value).value_or(false);
   }
   full_command_ = command_ + " " + command_argument_;

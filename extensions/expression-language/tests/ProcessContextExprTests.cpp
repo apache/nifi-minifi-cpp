@@ -22,7 +22,9 @@
 #include "core/Resource.h"
 #include "ProcessContextExpr.h"
 #include "Processor.h"
-#include "PropertyBuilder.h"
+#include "PropertyDefinition.h"
+#include "PropertyDefinitionBuilder.h"
+#include "RelationshipDefinition.h"
 #include "TestBase.h"
 #include "Catch.h"
 
@@ -33,29 +35,23 @@ class DummyProcessor : public core::Processor {
   using core::Processor::Processor;
 
   static constexpr const char* Description = "A processor that does nothing.";
-  static const core::Property SimpleProperty;
-  static const core::Property ExpressionLanguageProperty;
-  static auto properties() { return std::array{SimpleProperty, ExpressionLanguageProperty}; }
-  static auto relationships() { return std::array<core::Relationship, 0>{}; }
+  static constexpr auto SimpleProperty = core::PropertyDefinitionBuilder<>::createProperty("Simple Property")
+      .withDescription("Just a simple string property")
+      .build();
+  static constexpr auto ExpressionLanguageProperty = core::PropertyDefinitionBuilder<>::createProperty("Expression Language Property")
+      .withDescription("A property which supports expression language")
+      .supportsExpressionLanguage(true)
+      .build();
+  static constexpr auto Properties = std::array<core::PropertyReference, 2>{SimpleProperty, ExpressionLanguageProperty};
+  static constexpr auto Relationships = std::array<core::RelationshipDefinition, 0>{};
   static constexpr bool SupportsDynamicProperties = true;
   static constexpr bool SupportsDynamicRelationships = true;
   static constexpr core::annotation::Input InputRequirement = core::annotation::Input::INPUT_ALLOWED;
   static constexpr bool IsSingleThreaded = false;
   ADD_COMMON_VIRTUAL_FUNCTIONS_FOR_PROCESSORS
 
-  void initialize() override { setSupportedProperties(properties()); }
+  void initialize() override { setSupportedProperties(Properties); }
 };
-
-const core::Property DummyProcessor::SimpleProperty{
-    core::PropertyBuilder::createProperty("Simple Property")
-        ->withDescription("Just a simple string property")
-        ->build()};
-
-const core::Property DummyProcessor::ExpressionLanguageProperty{
-    core::PropertyBuilder::createProperty("Expression Language Property")
-        ->withDescription("A property which supports expression language")
-        ->supportsExpressionLanguage(true)
-        ->build()};
 
 REGISTER_RESOURCE(DummyProcessor, Processor);
 
@@ -78,10 +74,10 @@ TEST_CASE("ProcessContextExpr can update existing processor properties", "[setPr
     }
 
     SECTION("Using a string parameter") {
-      context->setProperty(minifi::DummyProcessor::SimpleProperty.getName(), "foo");
+      context->setProperty(minifi::DummyProcessor::SimpleProperty, "foo");
       CHECK(context->getProperty(minifi::DummyProcessor::SimpleProperty, nullptr) == "foo");
 
-      context->setProperty(minifi::DummyProcessor::SimpleProperty.getName(), "bar");
+      context->setProperty(minifi::DummyProcessor::SimpleProperty, "bar");
       CHECK(context->getProperty(minifi::DummyProcessor::SimpleProperty, nullptr) == "bar");
     }
   }
@@ -96,19 +92,19 @@ TEST_CASE("ProcessContextExpr can update existing processor properties", "[setPr
     }
 
     SECTION("Using a string parameter") {
-      context->setProperty(minifi::DummyProcessor::ExpressionLanguageProperty.getName(), "foo");
+      context->setProperty(minifi::DummyProcessor::ExpressionLanguageProperty, "foo");
       CHECK(context->getProperty(minifi::DummyProcessor::ExpressionLanguageProperty, nullptr) == "foo");
 
-      context->setProperty(minifi::DummyProcessor::ExpressionLanguageProperty.getName(), "bar");
+      context->setProperty(minifi::DummyProcessor::ExpressionLanguageProperty, "bar");
       CHECK(context->getProperty(minifi::DummyProcessor::ExpressionLanguageProperty, nullptr) == "bar");
     }
   }
 
   SECTION("Set and get simple dynamic property") {
-    const auto simple_property{
-        minifi::core::PropertyBuilder::createProperty("Simple Dynamic Property")
-        ->withDescription("A simple dynamic string property")
-        ->build()};
+    static constexpr auto simple_property_definition = minifi::core::PropertyDefinitionBuilder<>::createProperty("Simple Dynamic Property")
+        .withDescription("A simple dynamic string property")
+        .build();
+    core::Property simple_property{simple_property_definition};
     std::string property_value;
 
     context->setDynamicProperty(simple_property.getName(), "foo");
@@ -121,11 +117,11 @@ TEST_CASE("ProcessContextExpr can update existing processor properties", "[setPr
   }
 
   SECTION("Set and get expression language dynamic property") {
-    const auto expression_language_property{
-        minifi::core::PropertyBuilder::createProperty("Expression Language Dynamic Property")
-        ->withDescription("A dynamic property which supports expression language")
-        ->supportsExpressionLanguage(true)
-        ->build()};
+    static constexpr auto expression_language_property_definition = minifi::core::PropertyDefinitionBuilder<>::createProperty("Expression Language Dynamic Property")
+        .withDescription("A dynamic property which supports expression language")
+        .supportsExpressionLanguage(true)
+        .build();
+    core::Property expression_language_property{expression_language_property_definition};
     std::string property_value;
 
     context->setDynamicProperty(expression_language_property.getName(), "foo");

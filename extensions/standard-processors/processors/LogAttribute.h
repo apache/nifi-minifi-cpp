@@ -25,9 +25,13 @@
 #include <vector>
 
 #include "FlowFileRecord.h"
+#include "core/Core.h"
 #include "core/Processor.h"
 #include "core/ProcessSession.h"
-#include "core/Core.h"
+#include "core/PropertyDefinition.h"
+#include "core/PropertyDefinitionBuilder.h"
+#include "core/PropertyType.h"
+#include "core/RelationshipDefinition.h"
 #include "core/logging/LoggerConfiguration.h"
 #include "utils/gsl.h"
 #include "utils/Export.h"
@@ -43,16 +47,40 @@ class LogAttribute : public core::Processor {
 
   EXTENSIONAPI static constexpr const char* Description = "Logs attributes of flow files in the MiNiFi application log.";
 
-  EXTENSIONAPI static const core::Property LogLevel;
-  EXTENSIONAPI static const core::Property AttributesToLog;
-  EXTENSIONAPI static const core::Property AttributesToIgnore;
-  EXTENSIONAPI static const core::Property LogPayload;
-  EXTENSIONAPI static const core::Property HexencodePayload;
-  EXTENSIONAPI static const core::Property MaxPayloadLineLength;
-  EXTENSIONAPI static const core::Property LogPrefix;
-  EXTENSIONAPI static const core::Property FlowFilesToLog;
-  static auto properties() {
-    return std::array{
+  EXTENSIONAPI static constexpr auto LogLevel = core::PropertyDefinitionBuilder<5>::createProperty("Log Level")
+      .withDescription("The Log Level to use when logging the Attributes")
+      .withAllowedValues({"info", "trace", "error", "warn", "debug"})
+      .build();
+  EXTENSIONAPI static constexpr auto AttributesToLog = core::PropertyDefinitionBuilder<>::createProperty("Attributes to Log")
+      .withDescription("A comma-separated list of Attributes to Log. If not specified, all attributes will be logged.")
+      .build();
+  EXTENSIONAPI static constexpr auto AttributesToIgnore = core::PropertyDefinitionBuilder<>::createProperty("Attributes to Ignore")
+      .withDescription("A comma-separated list of Attributes to ignore. If not specified, no attributes will be ignored.")
+      .build();
+  EXTENSIONAPI static constexpr auto LogPayload = core::PropertyDefinitionBuilder<>::createProperty("Log Payload")
+      .withDescription("If true, the FlowFile's payload will be logged, in addition to its attributes. Otherwise, just the Attributes will be logged.")
+      .withPropertyType(core::StandardPropertyTypes::BOOLEAN_TYPE)
+      .withDefaultValue("false")
+      .build();
+  EXTENSIONAPI static constexpr auto HexencodePayload = core::PropertyDefinitionBuilder<>::createProperty("Hexencode Payload")
+      .withDescription("If true, the FlowFile's payload will be logged in a hexencoded format")
+      .withPropertyType(core::StandardPropertyTypes::BOOLEAN_TYPE)
+      .withDefaultValue("false")
+      .build();
+  EXTENSIONAPI static constexpr auto MaxPayloadLineLength = core::PropertyDefinitionBuilder<>::createProperty("Maximum Payload Line Length")
+      .withDescription("The logged payload will be broken into lines this long. 0 means no newlines will be added.")
+      .withPropertyType(core::StandardPropertyTypes::UNSIGNED_INT_TYPE)
+      .withDefaultValue("0")
+      .build();
+  EXTENSIONAPI static constexpr auto LogPrefix = core::PropertyDefinitionBuilder<>::createProperty("Log Prefix")
+      .withDescription("Log prefix appended to the log lines. It helps to distinguish the output of multiple LogAttribute processors.")
+      .build();
+  EXTENSIONAPI static constexpr auto FlowFilesToLog = core::PropertyDefinitionBuilder<>::createProperty("FlowFiles To Log")
+      .withDescription("Number of flow files to log. If set to zero all flow files will be logged. Please note that this may block other threads from running if not used judiciously.")
+      .withPropertyType(core::StandardPropertyTypes::UNSIGNED_LONG_TYPE)
+      .withDefaultValue("1")
+      .build();
+  EXTENSIONAPI static constexpr auto Properties = std::array<core::PropertyReference, 8>{
       LogLevel,
       AttributesToLog,
       AttributesToIgnore,
@@ -61,11 +89,11 @@ class LogAttribute : public core::Processor {
       MaxPayloadLineLength,
       LogPrefix,
       FlowFilesToLog
-    };
-  }
+  };
 
-  EXTENSIONAPI static const core::Relationship Success;
-  static auto relationships() { return std::array{Success}; }
+
+  EXTENSIONAPI static constexpr auto Success = core::RelationshipDefinition{"success", "success operational on the flow record"};
+  EXTENSIONAPI static constexpr auto Relationships = std::array{Success};
 
   EXTENSIONAPI static constexpr bool SupportsDynamicProperties = false;
   EXTENSIONAPI static constexpr bool SupportsDynamicRelationships = false;

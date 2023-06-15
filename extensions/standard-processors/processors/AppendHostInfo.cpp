@@ -28,46 +28,31 @@
 #include <regex>
 #include <algorithm>
 #include "core/ProcessContext.h"
-#include "core/PropertyBuilder.h"
 #include "core/ProcessSession.h"
 #include "core/FlowFile.h"
 #include "core/Resource.h"
 #include "io/ClientSocket.h"
 #include "utils/NetworkInterfaceInfo.h"
 
-namespace org {
-namespace apache {
-namespace nifi {
-namespace minifi {
-namespace processors {
-
-const core::Property AppendHostInfo::InterfaceNameFilter("Network Interface Filter", "A regular expression to filter ip addresses based on the name of the network interface", "");
-const core::Property AppendHostInfo::HostAttribute("Hostname Attribute", "Flowfile attribute used to record the agent's hostname", "source.hostname");
-const core::Property AppendHostInfo::IPAttribute("IP Attribute", "Flowfile attribute used to record the agent's IP addresses in a comma separated list", "source.ipv4");
-const core::Property AppendHostInfo::RefreshPolicy(core::PropertyBuilder::createProperty("Refresh Policy")
-    ->withDescription("When to recalculate the host info")
-    ->withAllowableValues<std::string>({ REFRESH_POLICY_ON_SCHEDULE, REFRESH_POLICY_ON_TRIGGER })
-    ->withDefaultValue(REFRESH_POLICY_ON_SCHEDULE)->build());
-
-const core::Relationship AppendHostInfo::Success("success", "success operational on the flow record");
+namespace org::apache::nifi::minifi::processors {
 
 void AppendHostInfo::initialize() {
-  setSupportedProperties(properties());
-  setSupportedRelationships(relationships());
+  setSupportedProperties(Properties);
+  setSupportedRelationships(Relationships);
 }
 
 void AppendHostInfo::onSchedule(const std::shared_ptr<core::ProcessContext>& context, const std::shared_ptr<core::ProcessSessionFactory>&) {
   std::unique_lock unique_lock(shared_mutex_);
-  context->getProperty(HostAttribute.getName(), hostname_attribute_name_);
-  context->getProperty(IPAttribute.getName(), ipaddress_attribute_name_);
+  context->getProperty(HostAttribute, hostname_attribute_name_);
+  context->getProperty(IPAttribute, ipaddress_attribute_name_);
   std::string interface_name_filter_str;
-  if (context->getProperty(InterfaceNameFilter.getName(), interface_name_filter_str) && !interface_name_filter_str.empty())
+  if (context->getProperty(InterfaceNameFilter, interface_name_filter_str) && !interface_name_filter_str.empty())
     interface_name_filter_.emplace(interface_name_filter_str);
   else
     interface_name_filter_ = std::nullopt;
 
   std::string refresh_policy;
-  context->getProperty(RefreshPolicy.getName(), refresh_policy);
+  context->getProperty(RefreshPolicy, refresh_policy);
   if (refresh_policy == REFRESH_POLICY_ON_TRIGGER)
     refresh_on_trigger_ = true;
   else
@@ -108,7 +93,7 @@ void AppendHostInfo::refreshHostInfo() {
   };
   auto network_interface_infos = utils::NetworkInterfaceInfo::getNetworkInterfaceInfos(filter);
   std::ostringstream oss;
-  if (network_interface_infos.size() == 0) {
+  if (network_interface_infos.empty()) {
     ipaddresses_ = std::nullopt;
   } else {
     for (auto& network_interface_info : network_interface_infos) {
@@ -122,8 +107,4 @@ void AppendHostInfo::refreshHostInfo() {
 
 REGISTER_RESOURCE(AppendHostInfo, Processor);
 
-} /* namespace processors */
-} /* namespace minifi */
-} /* namespace nifi */
-} /* namespace apache */
-} /* namespace org */
+}  // namespace org::apache::nifi::minifi::processors

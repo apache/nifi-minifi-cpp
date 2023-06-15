@@ -27,8 +27,8 @@
 namespace org::apache::nifi::minifi::azure::processors {
 
 void ListAzureBlobStorage::initialize() {
-  setSupportedProperties(properties());
-  setSupportedRelationships(relationships());
+  setSupportedProperties(Properties);
+  setSupportedRelationships(Relationships);
 }
 
 void ListAzureBlobStorage::onSchedule(const std::shared_ptr<core::ProcessContext>& context, const std::shared_ptr<core::ProcessSessionFactory>& session_factory) {
@@ -40,8 +40,8 @@ void ListAzureBlobStorage::onSchedule(const std::shared_ptr<core::ProcessContext
   }
   state_manager_ = std::make_unique<minifi::utils::ListingStateManager>(state_manager);
 
-  tracking_strategy_ = EntityTracking::parse(
-    utils::parsePropertyWithAllowableValuesOrThrow(*context, ListingStrategy.getName(), EntityTracking::values()).c_str());
+  tracking_strategy_ = azure::EntityTracking::parse(
+    utils::parsePropertyWithAllowableValuesOrThrow(*context, ListingStrategy.name, azure::EntityTracking::values).c_str());
 
   auto params = buildListAzureBlobStorageParameters(*context);
   if (!params) {
@@ -92,7 +92,7 @@ void ListAzureBlobStorage::onTrigger(const std::shared_ptr<core::ProcessContext>
   std::size_t files_transferred = 0;
 
   for (const auto& element : *list_result) {
-    if (tracking_strategy_ == EntityTracking::TIMESTAMPS && stored_listing_state.wasObjectListedAlready(element)) {
+    if (tracking_strategy_ == azure::EntityTracking::TIMESTAMPS && stored_listing_state.wasObjectListedAlready(element)) {
       continue;
     }
 
@@ -112,5 +112,7 @@ void ListAzureBlobStorage::onTrigger(const std::shared_ptr<core::ProcessContext>
     return;
   }
 }
+
+REGISTER_RESOURCE(ListAzureBlobStorage, Processor);
 
 }  // namespace org::apache::nifi::minifi::azure::processors

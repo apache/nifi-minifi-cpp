@@ -51,16 +51,16 @@ using ContentMatcher = std::function<void(const std::shared_ptr<core::FlowFile>&
 
 class FlowFileMatcher {
  public:
-  FlowFileMatcher(ContentMatcher content_matcher, std::vector<std::string> attribute_names)
+  FlowFileMatcher(ContentMatcher content_matcher, std::vector<std::string_view> attribute_names)
     : content_matcher_{std::move(content_matcher)},
       attribute_names_{std::move(attribute_names)} {}
 
   void verify(const std::shared_ptr<core::FlowFile>& actual_file, const std::vector<AttributeValue>& expected_attributes, const std::string& expected_content) {
     REQUIRE(expected_attributes.size() == attribute_names_.size());
     for (size_t idx = 0; idx < attribute_names_.size(); ++idx) {
-      const std::string& attribute_name = attribute_names_[idx];
+      std::string_view attribute_name = attribute_names_[idx];
       std::string actual_value;
-      REQUIRE(actual_file->getAttribute(attribute_name, actual_value));
+      REQUIRE(actual_file->getAttribute(std::string{attribute_name}, actual_value));
 
       const auto& expected_value = expected_attributes[idx];
       if (expected_value.capture != nullptr) {
@@ -77,5 +77,5 @@ class FlowFileMatcher {
 
  private:
   ContentMatcher content_matcher_;
-  std::vector<std::string> attribute_names_;
+  std::vector<std::string_view> attribute_names_;
 };

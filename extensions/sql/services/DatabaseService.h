@@ -23,6 +23,8 @@
 
 #include "core/logging/LoggerConfiguration.h"
 #include "core/controller/ControllerService.h"
+#include "core/PropertyDefinition.h"
+#include "core/PropertyDefinitionBuilder.h"
 #include "data/DatabaseConnectors.h"
 
 namespace org::apache::nifi::minifi::sql::controllers {
@@ -50,8 +52,11 @@ class DatabaseService : public core::controller::ControllerService {
   /**
    * Parameters needed.
    */
-  EXTENSIONAPI static core::Property ConnectionString;
-  static auto properties() { return std::array{ConnectionString}; }
+  EXTENSIONAPI static constexpr auto ConnectionString = core::PropertyDefinitionBuilder<>::createProperty("Connection String")
+      .withDescription("Database Connection String")
+      .isRequired(true)
+      .build();
+  EXTENSIONAPI static constexpr auto Properties = std::array<core::PropertyReference, 1>{ConnectionString};
 
   void initialize() override;
 

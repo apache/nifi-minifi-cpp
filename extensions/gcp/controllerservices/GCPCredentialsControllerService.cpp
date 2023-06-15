@@ -18,7 +18,6 @@
 
 #include "GCPCredentialsControllerService.h"
 
-#include "core/PropertyBuilder.h"
 #include "core/Resource.h"
 #include "google/cloud/storage/client.h"
 
@@ -26,28 +25,8 @@ namespace gcs = ::google::cloud::storage;
 
 namespace org::apache::nifi::minifi::extensions::gcp {
 
-const core::Property GCPCredentialsControllerService::CredentialsLoc(
-    core::PropertyBuilder::createProperty("Credentials Location")
-        ->withDescription("The location of the credentials.")
-        ->withAllowableValues(CredentialsLocation::values())
-        ->withDefaultValue(toString(CredentialsLocation::USE_DEFAULT_CREDENTIALS))
-        ->isRequired(true)
-        ->build());
-
-const core::Property GCPCredentialsControllerService::JsonFilePath(
-    core::PropertyBuilder::createProperty("Service Account JSON File")
-        ->withDescription("Path to a file containing a Service Account key file in JSON format.")
-        ->isRequired(false)
-        ->build());
-
-const core::Property GCPCredentialsControllerService::JsonContents(
-    core::PropertyBuilder::createProperty("Service Account JSON")
-        ->withDescription("The raw JSON containing a Service Account keyfile.")
-        ->isRequired(false)
-        ->build());
-
 void GCPCredentialsControllerService::initialize() {
-  setSupportedProperties(properties());
+  setSupportedProperties(Properties);
 }
 
 std::shared_ptr<gcs::oauth2::Credentials> GCPCredentialsControllerService::createDefaultCredentials() const {
@@ -61,8 +40,8 @@ std::shared_ptr<gcs::oauth2::Credentials> GCPCredentialsControllerService::creat
 
 std::shared_ptr<gcs::oauth2::Credentials> GCPCredentialsControllerService::createCredentialsFromJsonPath() const {
   std::string json_path;
-  if (!getProperty(JsonFilePath.getName(), json_path)) {
-    logger_->log_error("Missing or invalid %s", JsonFilePath.getName());
+  if (!getProperty(JsonFilePath, json_path)) {
+    logger_->log_error("Missing or invalid %s", std::string(JsonFilePath.name));
     return nullptr;
   }
 
@@ -76,8 +55,8 @@ std::shared_ptr<gcs::oauth2::Credentials> GCPCredentialsControllerService::creat
 
 std::shared_ptr<gcs::oauth2::Credentials> GCPCredentialsControllerService::createCredentialsFromJsonContents() const {
   std::string json_contents;
-  if (!getProperty(JsonContents.getName(), json_contents)) {
-    logger_->log_error("Missing or invalid %s", JsonContents.getName());
+  if (!getProperty(JsonContents, json_contents)) {
+    logger_->log_error("Missing or invalid %s", std::string(JsonContents.name));
     return nullptr;
   }
 
@@ -91,7 +70,7 @@ std::shared_ptr<gcs::oauth2::Credentials> GCPCredentialsControllerService::creat
 
 void GCPCredentialsControllerService::onEnable() {
   CredentialsLocation credentials_location;
-  if (!getProperty(CredentialsLoc.getName(), credentials_location)) {
+  if (!getProperty(CredentialsLoc, credentials_location)) {
     logger_->log_error("Invalid Credentials Location, defaulting to %s", toString(CredentialsLocation::USE_DEFAULT_CREDENTIALS));
     credentials_location = CredentialsLocation::USE_DEFAULT_CREDENTIALS;
   }

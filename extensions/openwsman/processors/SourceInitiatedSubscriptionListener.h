@@ -34,7 +34,10 @@ extern "C" {
 #include "core/Processor.h"
 #include "core/ProcessSession.h"
 #include "core/Core.h"
-#include "core/Property.h"
+#include "core/PropertyDefinition.h"
+#include "core/PropertyDefinitionBuilder.h"
+#include "core/PropertyType.h"
+#include "core/RelationshipDefinition.h"
 #include "controllers/SSLContextService.h"
 #include "core/logging/LoggerConfiguration.h"
 #include "utils/Id.h"
@@ -51,23 +54,100 @@ class SourceInitiatedSubscriptionListener : public core::Processor {
   EXTENSIONAPI static constexpr const char* Description = "This processor implements a Windows Event Forwarding Source Initiated Subscription server with the help of OpenWSMAN. "
       "Windows hosts can be set up to connect and forward Event Logs to this processor.";
 
-  EXTENSIONAPI static const core::Property ListenHostname;
-  EXTENSIONAPI static const core::Property ListenPort;
-  EXTENSIONAPI static const core::Property SubscriptionManagerPath;
-  EXTENSIONAPI static const core::Property SubscriptionsBasePath;
-  EXTENSIONAPI static const core::Property SSLCertificate;
-  EXTENSIONAPI static const core::Property SSLCertificateAuthority;
-  EXTENSIONAPI static const core::Property SSLVerifyPeer;
-  EXTENSIONAPI static const core::Property XPathXmlQuery;
-  EXTENSIONAPI static const core::Property InitialExistingEventsStrategy;
-  EXTENSIONAPI static const core::Property SubscriptionExpirationInterval;
-  EXTENSIONAPI static const core::Property HeartbeatInterval;
-  EXTENSIONAPI static const core::Property MaxElements;
-  EXTENSIONAPI static const core::Property MaxLatency;
-  EXTENSIONAPI static const core::Property ConnectionRetryInterval;
-  EXTENSIONAPI static const core::Property ConnectionRetryCount;
-  static auto properties() {
-    return std::array{
+  EXTENSIONAPI static constexpr auto ListenHostname = core::PropertyDefinitionBuilder<>::createProperty("Listen Hostname")
+      .withDescription("The hostname or IP of this machine that will be advertised to event sources to connect to. "
+          "It must be contained as a Subject Alternative Name in the server certificate, "
+          "otherwise source machines will refuse to connect.")
+      .isRequired(true)
+      .build();
+  EXTENSIONAPI static constexpr auto ListenPort = core::PropertyDefinitionBuilder<>::createProperty("Listen Port")
+      .withDescription("The port to listen on.")
+      .isRequired(true)
+      .withPropertyType(core::StandardPropertyTypes::LISTEN_PORT_TYPE)
+      .withDefaultValue("5986")
+      .build();
+  EXTENSIONAPI static constexpr auto SubscriptionManagerPath = core::PropertyDefinitionBuilder<>::createProperty("Subscription Manager Path")
+      .withDescription("The URI path that will be used for the WEC Subscription Manager endpoint.")
+      .isRequired(true)
+      .withDefaultValue("/wsman/SubscriptionManager/WEC")
+      .build();
+  EXTENSIONAPI static constexpr auto SubscriptionsBasePath = core::PropertyDefinitionBuilder<>::createProperty("Subscriptions Base Path")
+      .withDescription("The URI path that will be used as the base for endpoints serving individual subscriptions.")
+      .isRequired(true)
+      .withDefaultValue("/wsman/subscriptions")
+      .build();
+  EXTENSIONAPI static constexpr auto SSLCertificate = core::PropertyDefinitionBuilder<>::createProperty("SSL Certificate")
+      .withDescription("File containing PEM-formatted file including TLS/SSL certificate and key. "
+          "The root CA of the certificate must be the CA set in SSL Certificate Authority.")
+      .isRequired(true)
+      .build();
+  EXTENSIONAPI static constexpr auto SSLCertificateAuthority = core::PropertyDefinitionBuilder<>::createProperty("SSL Certificate Authority")
+      .withDescription("File containing the PEM-formatted CA that is the root CA for both this server's certificate and the event source clients' certificates.")
+      .isRequired(true)
+      .build();
+  EXTENSIONAPI static constexpr auto SSLVerifyPeer = core::PropertyDefinitionBuilder<>::createProperty("SSL Verify Peer")
+      .withDescription("Whether or not to verify the client's certificate")
+      .isRequired(false)
+      .withPropertyType(core::StandardPropertyTypes::BOOLEAN_TYPE)
+      .withDefaultValue("true")
+      .build();
+  EXTENSIONAPI static constexpr auto XPathXmlQuery = core::PropertyDefinitionBuilder<>::createProperty("XPath XML Query")
+      .withDescription("An XPath Query in structured XML format conforming to the Query Schema described in "
+          "https://docs.microsoft.com/en-gb/windows/win32/wes/queryschema-schema, "
+          "see an example here: https://docs.microsoft.com/en-gb/windows/win32/wes/consuming-events")
+      .isRequired(true)
+      .withDefaultValue("<QueryList>\n"
+          "  <Query Id=\"0\">\n"
+          "    <Select Path=\"Application\">*</Select>\n"
+          "  </Query>\n"
+          "</QueryList>\n")
+       .build();
+  EXTENSIONAPI static constexpr auto InitialExistingEventsStrategy = core::PropertyDefinitionBuilder<2>::createProperty("Initial Existing Events Strategy")
+      .withDescription("Defines the behaviour of the Processor when a new event source connects.\n"
+          "None: will not request existing events\n"
+          "All: will request all existing events matching the query")
+      .isRequired(true)
+      .withAllowedValues({INITIAL_EXISTING_EVENTS_STRATEGY_NONE, INITIAL_EXISTING_EVENTS_STRATEGY_ALL})
+      .withDefaultValue(INITIAL_EXISTING_EVENTS_STRATEGY_NONE)
+      .build();
+  EXTENSIONAPI static constexpr auto SubscriptionExpirationInterval = core::PropertyDefinitionBuilder<>::createProperty("Subscription Expiration Interval")
+      .withDescription("The interval while a subscription is valid without renewal. "
+          "Because in a source-initiated subscription, the collector can not cancel the subscription, "
+          "setting this too large could cause unnecessary load on the source machine. "
+          "Setting this too small causes frequent reenumeration and resubscription which is ineffective.")
+      .isRequired(true)
+      .withPropertyType(core::StandardPropertyTypes::TIME_PERIOD_TYPE)
+      .withDefaultValue("10 min")
+      .build();
+  EXTENSIONAPI static constexpr auto HeartbeatInterval = core::PropertyDefinitionBuilder<>::createProperty("Heartbeat Interval")
+      .withDescription("The processor will ask the sources to send heartbeats with this interval.")
+      .isRequired(true)
+      .withPropertyType(core::StandardPropertyTypes::TIME_PERIOD_TYPE)
+      .withDefaultValue("30 sec")
+      .build();
+  EXTENSIONAPI static constexpr auto MaxElements = core::PropertyDefinitionBuilder<>::createProperty("Max Elements")
+      .withDescription("The maximum number of events a source will batch together and send at once.")
+      .isRequired(true)
+      .withPropertyType(core::StandardPropertyTypes::UNSIGNED_INT_TYPE)
+      .withDefaultValue("20")
+      .build();
+  EXTENSIONAPI static constexpr auto MaxLatency = core::PropertyDefinitionBuilder<>::createProperty("Max Latency")
+      .withDescription("The maximum time a source will wait to send new events.")
+      .isRequired(true)
+      .withPropertyType(core::StandardPropertyTypes::TIME_PERIOD_TYPE)
+      .withDefaultValue("10 sec")
+      .build();
+  EXTENSIONAPI static constexpr auto ConnectionRetryInterval = core::PropertyDefinitionBuilder<>::createProperty("Connection Retry Interval")
+      .withDescription("The interval with which a source will try to reconnect to the server.")
+      .withPropertyType(core::StandardPropertyTypes::TIME_PERIOD_TYPE)
+      .withDefaultValue("10 sec")
+      .build();
+  EXTENSIONAPI static constexpr auto ConnectionRetryCount = core::PropertyDefinitionBuilder<>::createProperty("Connection Retry Count")
+      .withDescription("The number of connection retries after which a source will consider the subscription expired.")
+      .withPropertyType(core::StandardPropertyTypes::UNSIGNED_INT_TYPE)
+      .withDefaultValue("5")
+      .build();
+  EXTENSIONAPI static constexpr auto Properties = std::array<core::PropertyReference, 15>{
       ListenHostname,
       ListenPort,
       SubscriptionManagerPath,
@@ -83,11 +163,11 @@ class SourceInitiatedSubscriptionListener : public core::Processor {
       MaxLatency,
       ConnectionRetryInterval,
       ConnectionRetryCount
-    };
-  }
+  };
 
-  EXTENSIONAPI static const core::Relationship Success;
-  static auto relationships() { return std::array{Success}; }
+
+  EXTENSIONAPI static constexpr auto Success = core::RelationshipDefinition{"success", "All Events are routed to success"};
+  EXTENSIONAPI static constexpr auto Relationships = std::array{Success};
 
   EXTENSIONAPI static constexpr bool SupportsDynamicProperties = false;
   EXTENSIONAPI static constexpr bool SupportsDynamicRelationships = false;

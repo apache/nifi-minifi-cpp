@@ -583,9 +583,9 @@ TEST_CASE("Test Dependent Property", "[YamlConfigurationDependentProperty]") {
 
   core::YamlConfiguration yamlConfig(test_controller.getContext());
   const auto component = std::make_shared<DummyComponent>();
-  component->setSupportedProperties(std::array{
-    core::Property("Prop A", "Prop A desc", "val A", true, "", { }, { }),
-    core::Property("Prop B", "Prop B desc", "val B", true, "", { "Prop A" }, { })
+  component->setSupportedProperties(std::array<core::PropertyReference, 2>{
+    core::PropertyDefinitionBuilder<>::createProperty("Prop A").withDescription("Prop A desc").withDefaultValue("val A").isRequired(true).build(),
+    core::PropertyDefinitionBuilder<0, 0, 1>::createProperty("Prop B").withDescription("Prop B desc").withDefaultValue("val B").isRequired(true).withDependentProperties({ "Prop A" }).build()
   });
   yamlConfig.validateComponentProperties(*component, "component A", "section A");
   REQUIRE(true);  // Expected to get here w/o any exceptions
@@ -596,9 +596,9 @@ TEST_CASE("Test Dependent Property 2", "[YamlConfigurationDependentProperty2]") 
 
   core::YamlConfiguration yamlConfig(test_controller.getContext());
   const auto component = std::make_shared<DummyComponent>();
-  component->setSupportedProperties(std::array{
-    core::Property("Prop A", "Prop A desc", "", false, "", { }, { }),
-    core::Property("Prop B", "Prop B desc", "val B", true, "", { "Prop A" }, { })
+  component->setSupportedProperties(std::array<core::PropertyReference, 2>{
+    core::PropertyDefinitionBuilder<>::createProperty("Prop A").withDescription("Prop A desc").isRequired(false).build(),
+    core::PropertyDefinitionBuilder<0, 0, 1>::createProperty("Prop B").withDescription("Prop B desc").withDefaultValue("val B").isRequired(true).withDependentProperties({ "Prop A" }).build()
   });
   bool config_failed = false;
   try {
@@ -612,40 +612,29 @@ TEST_CASE("Test Dependent Property 2", "[YamlConfigurationDependentProperty2]") 
   REQUIRE(config_failed);
 }
 
-TEST_CASE("Test Exclusive Property", "[YamlConfigurationExclusiveProperty]") {
+TEST_CASE("Test Exclusive Property", "[YamlConfigurationExclusiveOfProperty]") {
   ConfigurationTestController test_controller;
 
   core::YamlConfiguration yamlConfig(test_controller.getContext());
   const auto component = std::make_shared<DummyComponent>();
-  component->setSupportedProperties(std::array{
-    core::Property("Prop A", "Prop A desc", "val A", true, "", { }, { }),
-    core::Property("Prop B", "Prop B desc", "val B", true, "", { }, { { "Prop A", "^abcd.*$" } })
+  component->setSupportedProperties(std::array<core::PropertyReference, 2>{
+    core::PropertyDefinitionBuilder<>::createProperty("Prop A").withDescription("Prop A desc").withDefaultValue("val A").isRequired(true).build(),
+    core::PropertyDefinitionBuilder<0, 0, 0, 1>::createProperty("Prop B").withDescription("Prop B desc").withDefaultValue("val B").isRequired(true)
+        .withExclusiveOfProperties({{ { "Prop A", "^abcd.*$" } }}).build()
   });
   yamlConfig.validateComponentProperties(*component, "component A", "section A");
   REQUIRE(true);  // Expected to get here w/o any exceptions
 }
 
-TEST_CASE("Test Regex Property", "[YamlConfigurationRegexProperty]") {
+TEST_CASE("Test Exclusive Property 2", "[YamlConfigurationExclusiveOfProperty2]") {
   ConfigurationTestController test_controller;
 
   core::YamlConfiguration yamlConfig(test_controller.getContext());
   const auto component = std::make_shared<DummyComponent>();
-  component->setSupportedProperties(std::array{
-    core::Property("Prop A", "Prop A desc", "val A", true, "", { }, { }),
-    core::Property("Prop B", "Prop B desc", "val B", true, "^val.*$", { }, { })
-  });
-  yamlConfig.validateComponentProperties(*component, "component A", "section A");
-  REQUIRE(true);  // Expected to get here w/o any exceptions
-}
-
-TEST_CASE("Test Exclusive Property 2", "[YamlConfigurationExclusiveProperty2]") {
-  ConfigurationTestController test_controller;
-
-  core::YamlConfiguration yamlConfig(test_controller.getContext());
-  const auto component = std::make_shared<DummyComponent>();
-  component->setSupportedProperties(std::array{
-    core::Property("Prop A", "Prop A desc", "val A", true, "", { }, { }),
-    core::Property("Prop B", "Prop B desc", "val B", true, "", { }, { { "Prop A", "^val.*$" } })
+  component->setSupportedProperties(std::array<core::PropertyReference, 2>{
+    core::PropertyDefinitionBuilder<>::createProperty("Prop A").withDescription("Prop A desc").withDefaultValue("val A").isRequired(true).build(),
+    core::PropertyDefinitionBuilder<0, 0, 0, 1>::createProperty("Prop B").withDescription("Prop B desc").withDefaultValue("val B").isRequired(true)
+        .withExclusiveOfProperties({{ { "Prop A", "^val.*$" } }}).build()
   });
   bool config_failed = false;
   try {
@@ -654,26 +643,6 @@ TEST_CASE("Test Exclusive Property 2", "[YamlConfigurationExclusiveProperty2]") 
     config_failed = true;
     REQUIRE("Unable to parse configuration file for component named 'component A' because "
         "property 'Prop B' must not be set when the value of property 'Prop A' matches '^val.*$' "
-        "[in 'section A' section of configuration file]" == std::string(e.what()));
-  }
-  REQUIRE(config_failed);
-}
-
-TEST_CASE("Test Regex Property 2", "[YamlConfigurationRegexProperty2]") {
-  ConfigurationTestController test_controller;
-  core::YamlConfiguration yamlConfig(test_controller.getContext());
-  const auto component = std::make_shared<DummyComponent>();
-  component->setSupportedProperties(std::array{
-    core::Property("Prop A", "Prop A desc", "val A", true, "", { }, { }),
-    core::Property("Prop B", "Prop B desc", "val B", true, "^notval.*$", { }, { })
-  });
-  bool config_failed = false;
-  try {
-    yamlConfig.validateComponentProperties(*component, "component A", "section A");
-  } catch (const std::exception &e) {
-    config_failed = true;
-    REQUIRE("Unable to parse configuration file for component named 'component A' because "
-        "property 'Prop B' does not match validation pattern '^notval.*$' "
         "[in 'section A' section of configuration file]" == std::string(e.what()));
   }
   REQUIRE(config_failed);

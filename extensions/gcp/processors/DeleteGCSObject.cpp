@@ -27,8 +27,8 @@ namespace gcs = ::google::cloud::storage;
 
 namespace org::apache::nifi::minifi::extensions::gcp {
 void DeleteGCSObject::initialize() {
-  setSupportedProperties(properties());
-  setSupportedRelationships(relationships());
+  setSupportedProperties(Properties);
+  setSupportedRelationships(Relationships);
 }
 
 void DeleteGCSObject::onTrigger(const std::shared_ptr<core::ProcessContext>& context, const std::shared_ptr<core::ProcessSession>& session) {
@@ -80,4 +80,7 @@ void DeleteGCSObject::onTrigger(const std::shared_ptr<core::ProcessContext>& con
 
   session->transfer(flow_file, Success);
 }
+
+REGISTER_RESOURCE(DeleteGCSObject, Processor);
+
 }  // namespace org::apache::nifi::minifi::extensions::gcp

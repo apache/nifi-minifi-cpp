@@ -111,7 +111,7 @@ TEST_CASE("PutUDP", "[putudp]") {
   {
     LogTestController::getInstance().clear();
     const char* const message = "message for invalid host";
-    controller.plan->setProperty(put_udp, PutUDP::Hostname.getName(), "invalid_hostname");
+    controller.plan->setProperty(put_udp, PutUDP::Hostname, "invalid_hostname");
     const auto result = controller.trigger(message);
     const auto& failure_flow_files = result.at(PutUDP::Failure);
     auto received_message = tryDequeueWithTimeout(listener);

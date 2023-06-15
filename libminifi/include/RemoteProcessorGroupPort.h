@@ -25,11 +25,15 @@
 #include <mutex>
 #include <memory>
 #include <stack>
+
 #include "utils/BaseHTTPClient.h"
 #include "concurrentqueue.h"
 #include "FlowFileRecord.h"
 #include "core/Processor.h"
 #include "core/ProcessSession.h"
+#include "core/PropertyDefinition.h"
+#include "core/PropertyDefinitionBuilder.h"
+#include "core/RelationshipDefinition.h"
 #include "sitetosite/SiteToSiteClient.h"
 #include "io/StreamFactory.h"
 #include "controllers/SSLContextService.h"
@@ -88,27 +92,39 @@ class RemoteProcessorGroupPort : public core::Processor {
     site2site_secure_ = false;
     peer_index_ = -1;
     // REST API port and host
-    setURL(url);
+    setURL(std::move(url));
   }
   virtual ~RemoteProcessorGroupPort() = default;
 
-  MINIFIAPI static const core::Property hostName;
-  MINIFIAPI static const core::Property SSLContext;
-  MINIFIAPI static const core::Property port;
-  MINIFIAPI static const core::Property portUUID;
-  MINIFIAPI static const core::Property idleTimeout;
-  static auto properties() {
-    return std::array{
+  MINIFIAPI static constexpr auto hostName = core::PropertyDefinitionBuilder<>::createProperty("Host Name")
+      .withDescription("Remote Host Name.")
+      .build();
+  MINIFIAPI static constexpr auto SSLContext = core::PropertyDefinitionBuilder<>::createProperty("SSL Context Service")
+      .withDescription("The SSL Context Service used to provide client certificate information for TLS/SSL (https) connections.")
+      .build();
+  MINIFIAPI static constexpr auto port = core::PropertyDefinitionBuilder<>::createProperty("Port")
+      .withDescription("Remote Port")
+      .build();
+  MINIFIAPI static constexpr auto portUUID = core::PropertyDefinitionBuilder<>::createProperty("Port UUID")
+      .withDescription("Specifies remote NiFi Port UUID.")
+      .build();
+  MINIFIAPI static constexpr auto idleTimeout = core::PropertyDefinitionBuilder<>::createProperty("Idle Timeout")
+    .withDescription("Max idle time for remote service")
+    .isRequired(false)
+    .withPropertyType(core::StandardPropertyTypes::TIME_PERIOD_TYPE)
+    .withDefaultValue("15 s")
+    .build();
+  MINIFIAPI static constexpr auto Properties = std::array<core::PropertyReference, 5>{
       hostName,
       SSLContext,
       port,
       portUUID,
       idleTimeout
-    };
-  }
+  };
 
-  MINIFIAPI static const core::Relationship relation;
-  static auto relationships() { return std::array{relation}; }
+
+  MINIFIAPI static constexpr auto relation = core::RelationshipDefinition{"", ""};
+  MINIFIAPI static constexpr auto Relationships = std::array{relation};
 
   MINIFIAPI static constexpr bool SupportsDynamicProperties = false;
   MINIFIAPI static constexpr bool SupportsDynamicRelationships = false;
@@ -117,7 +133,6 @@ class RemoteProcessorGroupPort : public core::Processor {
 
   ADD_COMMON_VIRTUAL_FUNCTIONS_FOR_PROCESSORS
 
- public:
   void onSchedule(const std::shared_ptr<core::ProcessContext> &context, const std::shared_ptr<core::ProcessSessionFactory> &sessionFactory) override;
   void onTrigger(const std::shared_ptr<core::ProcessContext> &context, const std::shared_ptr<core::ProcessSession> &session) override;
   void initialize() override;

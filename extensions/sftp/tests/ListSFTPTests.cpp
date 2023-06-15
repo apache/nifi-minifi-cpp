@@ -54,6 +54,7 @@
 #include "processors/UpdateAttribute.h"
 #include "tools/SFTPTestServer.h"
 #include "utils/TestUtils.h"
+
 using namespace std::literals::chrono_literals;
 
 class ListSFTPTestsFixture {
@@ -176,12 +177,12 @@ TEST_CASE_METHOD(ListSFTPTestsFixture, "ListSFTP list one file", "[ListSFTP][bas
 
 TEST_CASE_METHOD(ListSFTPTestsFixture, "ListSFTP public key authentication", "[ListSFTP][basic]") {
   plan->setProperty(list_sftp, "Remote File", "nifi_test/tstFile.ext");
-  plan->setProperty(list_sftp, "Private Key Path", get_sftp_test_dir() / "resources" / "id_rsa");
+  plan->setProperty(list_sftp, "Private Key Path", (get_sftp_test_dir() / "resources" / "id_rsa").string());
   plan->setProperty(list_sftp, "Private Key Passphrase", "privatekeypassword");
 
   createFileWithModificationTimeDiff("nifi_test/tstFile.ext", "Test content 1");
 
-  testController.runSession(plan, true);
+  TestController::runSession(plan, true);
 
   REQUIRE(LogTestController::getInstance().contains("Successfully authenticated with publickey"));
 

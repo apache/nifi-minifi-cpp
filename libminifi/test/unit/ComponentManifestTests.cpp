@@ -19,9 +19,11 @@
 #undef LOAD_EXTENSIONS
 #include "../TestBase.h"
 #include "../Catch.h"
+#include "core/Core.h"
 #include "core/ConfigurableComponent.h"
 #include "core/controller/ControllerService.h"
-#include "core/PropertyBuilder.h"
+#include "core/PropertyDefinition.h"
+#include "core/PropertyDefinitionBuilder.h"
 #include "core/Resource.h"
 #include "core/state/nodes/AgentInformation.h"
 
@@ -42,7 +44,7 @@ class ExampleService : public core::controller::ControllerService {
   using ControllerService::ControllerService;
 
   static constexpr const char* Description = "An example service";
-  static auto properties() { return std::array<core::Property, 0>{}; }
+  static constexpr auto Properties = std::array<core::PropertyReference, 0>{};
   static constexpr bool SupportsDynamicProperties = false;
   ADD_COMMON_VIRTUAL_FUNCTIONS_FOR_CONTROLLER_SERVICES
 
@@ -59,9 +61,13 @@ class ExampleProcessor : public core::Processor {
   using Processor::Processor;
 
   static constexpr const char* Description = "An example processor";
-  static const core::Property ExampleProperty;
-  static auto properties() { return std::array{ExampleProperty}; }
-  static auto relationships() { return std::array<core::Relationship, 0>{}; }
+  static constexpr auto ExampleProperty = core::PropertyDefinitionBuilder<0, 1>::createProperty("Example Property")
+      .withDescription("An example property")
+      .isRequired(false)
+      .withAllowedTypes({core::className<ExampleService>()})
+      .build();
+  static constexpr auto Properties = std::array<core::PropertyReference, 1>{ExampleProperty};
+  static constexpr auto Relationships = std::array<core::RelationshipDefinition, 0>{};
   static constexpr bool SupportsDynamicProperties = false;
   static constexpr bool SupportsDynamicRelationships = false;
   static constexpr core::annotation::Input InputRequirement = core::annotation::Input::INPUT_ALLOWED;
@@ -69,16 +75,9 @@ class ExampleProcessor : public core::Processor {
   ADD_COMMON_VIRTUAL_FUNCTIONS_FOR_PROCESSORS
 
   void initialize() override {
-    setSupportedProperties(properties());
+    setSupportedProperties(Properties);
   }
 };
-
-const core::Property ExampleProcessor::ExampleProperty(
-    core::PropertyBuilder::createProperty("Example Property")
-    ->withDescription("An example property")
-    ->isRequired(false)
-    ->asType<ExampleService>()
-    ->build());
 
 REGISTER_RESOURCE(ExampleProcessor, Processor);
 
@@ -105,7 +104,7 @@ TEST_CASE("Manifest indicates property type requirement") {
 
   REQUIRE(prop_it != properties.end());
 
-  // TODO(adebreceni): based on PropertyBuilder::asType a property could accept
+  // TODO(adebreceni): based on Property::types_ a property could accept
   //    multiple types, these would be dumped into the same object as the type of
   //    field "typeProvidedByValue" is not an array but an object
   auto& type = get(*prop_it, "typeProvidedByValue");

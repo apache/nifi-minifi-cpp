@@ -27,8 +27,8 @@
 namespace org::apache::nifi::minifi::aws::processors {
 
 void DeleteS3Object::initialize() {
-  setSupportedProperties(properties());
-  setSupportedRelationships(relationships());
+  setSupportedProperties(Properties);
+  setSupportedRelationships(Relationships);
 }
 
 std::optional<aws::s3::DeleteObjectRequestParameters> DeleteS3Object::buildDeleteS3RequestParams(
@@ -80,5 +80,7 @@ void DeleteS3Object::onTrigger(const std::shared_ptr<core::ProcessContext> &cont
     session->transfer(flow_file, Failure);
   }
 }
+
+REGISTER_RESOURCE(DeleteS3Object, Processor);
 
 }  // namespace org::apache::nifi::minifi::aws::processors

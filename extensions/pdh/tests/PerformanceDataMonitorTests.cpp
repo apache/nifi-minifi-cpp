@@ -42,7 +42,7 @@ class PerformanceDataMonitorTester {
     plan_ = test_controller_.createPlan();
     performance_monitor_ = plan_->addProcessor("PerformanceDataMonitor", "pdhsys");
     putfile_ = plan_->addProcessor("PutFile", "putfile", core::Relationship("success", "description"), true);
-    plan_->setProperty(putfile_, PutFile::Directory.getName(), dir_.string());
+    plan_->setProperty(putfile_, PutFile::Directory, dir_.string());
   }
 
   bool runWithRetries(std::function<bool()>&& assertions, uint32_t max_tries = 10) {
@@ -58,8 +58,8 @@ class PerformanceDataMonitorTester {
     return false;
   }
 
-  void setPerformanceMonitorProperty(const core::Property& property, const std::string& value) {
-    plan_->setProperty(performance_monitor_, property.getName(), value);
+  void setPerformanceMonitorProperty(const core::PropertyReference& property, const std::string& value) {
+    plan_->setProperty(performance_monitor_, property, value);
   }
 
   TestController test_controller_;

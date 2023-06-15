@@ -25,33 +25,15 @@
 #include <vector>
 #include <unordered_map>
 
-#include "core/PropertyBuilder.h"
 #include "core/Resource.h"
 #include "utils/ProcessorConfigUtils.h"
 #include "utils/StringUtils.h"
 
 namespace org::apache::nifi::minifi::processors {
 
-const core::Property ExecuteScript::ScriptEngine(
-  core::PropertyBuilder::createProperty("Script Engine")
-    ->withDescription(R"(The engine to execute scripts (python, lua))")
-    ->isRequired(true)
-    ->withAllowableValues(ScriptEngineOption::values())
-    ->withDefaultValue(toString(ScriptEngineOption::PYTHON))
-    ->build());
-const core::Property ExecuteScript::ScriptFile("Script File",
-    R"(Path to script file to execute. Only one of Script File or Script Body may be used)", "");
-const core::Property ExecuteScript::ScriptBody("Script Body",
-    R"(Body of script to execute. Only one of Script File or Script Body may be used)", "");
-const core::Property ExecuteScript::ModuleDirectory("Module Directory",
-    R"(Comma-separated list of paths to files and/or directories which contain modules required by the script)", "");
-
-const core::Relationship ExecuteScript::Success("success", "Script successes");
-const core::Relationship ExecuteScript::Failure("failure", "Script failures");
-
 void ExecuteScript::initialize() {
-  setSupportedProperties(properties());
-  setSupportedRelationships(relationships());
+  setSupportedProperties(Properties);
+  setSupportedRelationships(Relationships);
 }
 
 void ExecuteScript::onSchedule(core::ProcessContext *context, core::ProcessSessionFactory* /*sessionFactory*/) {
@@ -73,8 +55,8 @@ void ExecuteScript::onSchedule(core::ProcessContext *context, core::ProcessSessi
 
   std::string script_file;
   std::string script_body;
-  context->getProperty(ScriptFile.getName(), script_file);
-  context->getProperty(ScriptBody.getName(), script_body);
+  context->getProperty(ScriptFile, script_file);
+  context->getProperty(ScriptBody, script_body);
   auto module_directory = context->getProperty(ModuleDirectory);
 
   if (script_file.empty() && script_body.empty()) {

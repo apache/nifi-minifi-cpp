@@ -26,6 +26,9 @@
 #include "FlowFileRecord.h"
 #include "core/Processor.h"
 #include "core/ProcessSession.h"
+#include "core/PropertyDefinition.h"
+#include "core/PropertyDefinitionBuilder.h"
+#include "core/RelationshipDefinition.h"
 #include "core/Core.h"
 #include "core/logging/LoggerConfiguration.h"
 #include "utils/file/FileManager.h"
@@ -44,11 +47,13 @@ class FocusArchiveEntry : public core::Processor {
       "When an archive entry is focused, that entry is treated as the content of the FlowFile and may be manipulated independently of the rest of the archive. "
       "To restore the FlowFile to its original state, use UnfocusArchiveEntry.";
 
-  EXTENSIONAPI static const core::Property Path;
-  static auto properties() { return std::array{Path}; }
+  EXTENSIONAPI static constexpr auto Path = core::PropertyDefinitionBuilder<>::createProperty("Path")
+      .withDescription("The path within the archive to focus (\"/\" to focus the total archive)")
+      .build();
+  EXTENSIONAPI static constexpr auto Properties = std::array<core::PropertyReference, 1>{Path};
 
-  EXTENSIONAPI static const core::Relationship Success;
-  static auto relationships() { return std::array{Success}; }
+  EXTENSIONAPI static constexpr auto Success = core::RelationshipDefinition{"success", "success operational on the flow record"};
+  EXTENSIONAPI static constexpr auto Relationships = std::array{Success};
 
   EXTENSIONAPI static constexpr bool SupportsDynamicProperties = false;
   EXTENSIONAPI static constexpr bool SupportsDynamicRelationships = false;

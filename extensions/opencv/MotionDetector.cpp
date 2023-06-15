@@ -21,67 +21,36 @@
 #include "MotionDetector.h"
 #include "core/ProcessContext.h"
 #include "core/ProcessSession.h"
-#include "core/PropertyBuilder.h"
 #include "core/Resource.h"
 
 namespace org::apache::nifi::minifi::processors {
 
-const core::Property MotionDetector::ImageEncoding(
-    core::PropertyBuilder::createProperty("Image Encoding")
-        ->withDescription("The encoding that should be applied to the output")
-        ->isRequired(true)
-        ->withAllowableValues<std::string>({".jpg", ".png"})
-        ->withDefaultValue(".jpg")->build());
-const core::Property MotionDetector::MinInterestArea(
-    core::PropertyBuilder::createProperty("Minimum Area")
-        ->withDescription("We only consider the movement regions with area greater than this.")
-        ->isRequired(true)
-        ->withDefaultValue<uint32_t>(100)->build());
-const core::Property MotionDetector::Threshold(
-    core::PropertyBuilder::createProperty("Threshold for segmentation")
-        ->withDescription("Pixel greater than this will be white, otherwise black.")
-        ->isRequired(true)
-        ->withDefaultValue<uint32_t>(42)->build());
-const core::Property MotionDetector::BackgroundFrame(
-    core::PropertyBuilder::createProperty("Path to background frame")
-        ->withDescription("If not provided then the processor will take the first input frame as background")
-        ->isRequired(true)
-        ->build());
-const core::Property MotionDetector::DilateIter(
-    core::PropertyBuilder::createProperty("Dilate iteration")
-        ->withDescription("For image processing, if an object is detected as 2 separate objects, increase this value")
-        ->isRequired(true)
-        ->withDefaultValue<uint32_t>(10)->build());
-
-const core::Relationship MotionDetector::Success("success", "Successful to detect motion");
-const core::Relationship MotionDetector::Failure("failure", "Failure to detect motion");
-
 void MotionDetector::initialize() {
-  setSupportedProperties(properties());
-  setSupportedRelationships(relationships());
+  setSupportedProperties(Properties);
+  setSupportedRelationships(Relationships);
 }
 
 void MotionDetector::onSchedule(const std::shared_ptr<core::ProcessContext> &context,
                                   const std::shared_ptr<core::ProcessSessionFactory>& /*sessionFactory*/) {
   std::string value;
 
-  if (context->getProperty(ImageEncoding.getName(), value)) {
+  if (context->getProperty(ImageEncoding, value)) {
     image_encoding_ = value;
   }
 
-  if (context->getProperty(MinInterestArea.getName(), value)) {
+  if (context->getProperty(MinInterestArea, value)) {
     core::Property::StringToInt(value, min_area_);
   }
 
-  if (context->getProperty(Threshold.getName(), value)) {
+  if (context->getProperty(Threshold, value)) {
     core::Property::StringToInt(value, threshold_);
   }
 
-  if (context->getProperty(DilateIter.getName(), value)) {
+  if (context->getProperty(DilateIter, value)) {
     core::Property::StringToInt(value, dil_iter_);
   }
 
-  if (context->getProperty(BackgroundFrame.getName(), value) && !value.empty()) {
+  if (context->getProperty(BackgroundFrame, value) && !value.empty()) {
     bg_img_ = cv::imread(value, cv::IMREAD_GRAYSCALE);
     double scale = IMG_WIDTH / bg_img_.size().width;
     cv::resize(bg_img_, bg_img_, cv::Size(0, 0), scale, scale);

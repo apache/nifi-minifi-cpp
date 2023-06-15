@@ -24,6 +24,10 @@
 
 #include "core/logging/LoggerConfiguration.h"
 #include "core/Processor.h"
+#include "core/PropertyDefinition.h"
+#include "core/PropertyDefinitionBuilder.h"
+#include "core/PropertyType.h"
+#include "core/RelationshipDefinition.h"
 #include "opencv2/opencv.hpp"
 #include "opencv2/imgproc.hpp"
 
@@ -37,24 +41,46 @@ class MotionDetector : public core::Processor {
 
   EXTENSIONAPI static constexpr const char* Description = "Detect motion from captured images.";
 
-  EXTENSIONAPI static const core::Property ImageEncoding;
-  EXTENSIONAPI static const core::Property MinInterestArea;
-  EXTENSIONAPI static const core::Property Threshold;
-  EXTENSIONAPI static const core::Property DilateIter;
-  EXTENSIONAPI static const core::Property BackgroundFrame;
-  static auto properties() {
-    return std::array{
+  EXTENSIONAPI static constexpr auto ImageEncoding = core::PropertyDefinitionBuilder<2>::createProperty("Image Encoding")
+      .withDescription("The encoding that should be applied to the output")
+      .isRequired(true)
+      .withAllowedValues({".jpg", ".png"})
+      .withDefaultValue(".jpg")
+      .build();
+  EXTENSIONAPI static constexpr auto MinInterestArea = core::PropertyDefinitionBuilder<>::createProperty("Minimum Area")
+      .withDescription("We only consider the movement regions with area greater than this.")
+      .isRequired(true)
+      .withPropertyType(core::StandardPropertyTypes::UNSIGNED_INT_TYPE)
+      .withDefaultValue("100")
+      .build();
+  EXTENSIONAPI static constexpr auto Threshold = core::PropertyDefinitionBuilder<>::createProperty("Threshold for segmentation")
+      .withDescription("Pixel greater than this will be white, otherwise black.")
+      .isRequired(true)
+      .withPropertyType(core::StandardPropertyTypes::UNSIGNED_INT_TYPE)
+      .withDefaultValue("42")
+      .build();
+  EXTENSIONAPI static constexpr auto DilateIter = core::PropertyDefinitionBuilder<>::createProperty("Dilate iteration")
+      .withDescription("For image processing, if an object is detected as 2 separate objects, increase this value")
+      .isRequired(true)
+      .withPropertyType(core::StandardPropertyTypes::UNSIGNED_INT_TYPE)
+      .withDefaultValue("10")
+      .build();
+  EXTENSIONAPI static constexpr auto BackgroundFrame = core::PropertyDefinitionBuilder<>::createProperty("Path to background frame")
+      .withDescription("If not provided then the processor will take the first input frame as background")
+      .isRequired(true)
+      .build();
+  EXTENSIONAPI static constexpr auto Properties = std::array<core::PropertyReference, 5>{
       ImageEncoding,
       MinInterestArea,
       Threshold,
       DilateIter,
       BackgroundFrame
-    };
-  }
+  };
 
-  EXTENSIONAPI static const core::Relationship Success;
-  EXTENSIONAPI static const core::Relationship Failure;
-  static auto relationships() { return std::array{Success, Failure}; }
+
+  EXTENSIONAPI static constexpr auto Success = core::RelationshipDefinition{"success", "Successful to detect motion"};
+  EXTENSIONAPI static constexpr auto Failure = core::RelationshipDefinition{"failure", "Failure to detect motion"};
+  EXTENSIONAPI static constexpr auto Relationships = std::array{Success, Failure};
 
   EXTENSIONAPI static constexpr bool SupportsDynamicProperties = false;
   EXTENSIONAPI static constexpr bool SupportsDynamicRelationships = false;

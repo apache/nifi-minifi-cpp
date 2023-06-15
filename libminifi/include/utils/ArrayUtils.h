@@ -19,6 +19,11 @@
 
 #include <array>
 #include <algorithm>
+#include <stdexcept>
+#include <utility>
+
+#include "range/v3/algorithm/transform.hpp"
+#include "range/v3/algorithm/find_if.hpp"
 
 namespace org::apache::nifi::minifi::utils {
 
@@ -35,6 +40,34 @@ constexpr auto array_cat(const std::array<Type, sizes>&... arrays) {
   ((std::copy_n(arrays.begin(), sizes, result.begin() + index), index += sizes), ...);
 
   return result;
+}
+
+template<std::size_t size>
+constexpr auto string_view_to_array(std::string_view input) {
+  std::array<char, size> result;
+  std::copy_n(input.begin(), size, result.begin());
+  return result;
+}
+
+template<std::size_t size>
+constexpr std::string_view array_to_string_view(const std::array<char, size>& input) {
+  return {input.data(), input.size()};
+}
+
+template<typename Key, typename Value, size_t Size>
+constexpr std::array<Key, Size> getKeys(const std::array<std::pair<Key, Value>, Size>& mapping) {
+  std::array<Key, Size> result;
+  ranges::transform(mapping, result.begin(), [](const auto& kv) { return kv.first; });
+  return result;
+}
+
+template<typename Container, typename ComparableToKeyType>
+constexpr auto at(const Container& mapping, ComparableToKeyType key) {
+  const auto it = ranges::find_if(mapping, [key](const auto& kv) { return kv.first == key; });
+  if (it != mapping.end()) {
+    return it->second;
+  }
+  throw std::out_of_range{"minifi::utils::at out of range"};
 }
 
 }  // namespace org::apache::nifi::minifi::utils

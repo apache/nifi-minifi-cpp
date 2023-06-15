@@ -28,6 +28,9 @@
 #include "core/Processor.h"
 #include "core/ProcessSession.h"
 #include "core/Property.h"
+#include "core/PropertyDefinitionBuilder.h"
+#include "core/PropertyType.h"
+#include "core/RelationshipDefinition.h"
 #include "controllers/SSLContextService.h"
 #include "core/logging/LoggerConfiguration.h"
 #include "utils/ArrayUtils.h"
@@ -45,24 +48,43 @@ class FetchOPCProcessor : public BaseOPCProcessor {
 
   EXTENSIONAPI static constexpr const char* Description = "Fetches OPC-UA node";
 
-  EXTENSIONAPI static const core::Property NodeIDType;
-  EXTENSIONAPI static const core::Property NodeID;
-  EXTENSIONAPI static const core::Property NameSpaceIndex;
-  EXTENSIONAPI static const core::Property MaxDepth;
-  EXTENSIONAPI static const core::Property Lazy;
-  static auto properties() {
-    return utils::array_cat(BaseOPCProcessor::properties(), std::array{
+  EXTENSIONAPI static constexpr auto NodeIDType = core::PropertyDefinitionBuilder<3>::createProperty("Node ID type")
+      .withDescription("Specifies the type of the provided node ID")
+      .isRequired(true)
+      .withAllowedValues({"Path", "Int", "String"})
+      .build();
+  EXTENSIONAPI static constexpr auto NodeID = core::PropertyDefinitionBuilder<>::createProperty("Node ID")
+      .withDescription("Specifies the ID of the root node to traverse")
+      .isRequired(true)
+      .build();
+  EXTENSIONAPI static constexpr auto NameSpaceIndex = core::PropertyDefinitionBuilder<>::createProperty("Namespace index")
+      .withDescription("The index of the namespace. Used only if node ID type is not path.")
+      .withPropertyType(core::StandardPropertyTypes::INTEGER_TYPE)
+      .withDefaultValue("0")
+      .build();
+  EXTENSIONAPI static constexpr auto MaxDepth = core::PropertyDefinitionBuilder<>::createProperty("Max depth")
+      .withDescription("Specifiec the max depth of browsing. 0 means unlimited.")
+      .withPropertyType(core::StandardPropertyTypes::UNSIGNED_LONG_TYPE)
+      .withDefaultValue("0")
+      .build();
+  EXTENSIONAPI static constexpr auto Lazy = core::PropertyDefinitionBuilder<2>::createProperty("Lazy mode")
+      .withDescription("Only creates flowfiles from nodes with new timestamp from the server.")
+      .withDefaultValue("Off")
+      .isRequired(true)
+      .withAllowedValues({"On", "Off"})
+      .build();
+  EXTENSIONAPI static constexpr auto Properties = utils::array_cat(BaseOPCProcessor::Properties, std::array<core::PropertyReference, 5>{
       NodeIDType,
       NodeID,
       NameSpaceIndex,
       MaxDepth,
       Lazy
-    });
-  }
+  });
 
-  EXTENSIONAPI static const core::Relationship Success;
-  EXTENSIONAPI static const core::Relationship Failure;
-  static auto relationships() { return std::array{Success, Failure}; }
+
+  EXTENSIONAPI static constexpr auto Success = core::RelationshipDefinition{"success", "Successfully retrieved OPC-UA nodes"};
+  EXTENSIONAPI static constexpr auto Failure = core::RelationshipDefinition{"failure", "Retrieved OPC-UA nodes where value cannot be extracted (only if enabled)"};
+  EXTENSIONAPI static constexpr auto Relationships = std::array{Success, Failure};
 
   EXTENSIONAPI static constexpr bool SupportsDynamicProperties = false;
   EXTENSIONAPI static constexpr bool SupportsDynamicRelationships = false;

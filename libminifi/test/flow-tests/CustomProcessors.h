@@ -28,17 +28,28 @@
 #include "TestBase.h"
 #include "Catch.h"
 #include "processors/GenerateFlowFile.h"
-#include "core/PropertyBuilder.h"
+#include "core/PropertyDefinition.h"
+#include "core/PropertyDefinitionBuilder.h"
+#include "core/PropertyType.h"
+#include "core/RelationshipDefinition.h"
 #include "core/Resource.h"
 
 namespace org::apache::nifi::minifi::processors {
 
-static core::Relationship Apple{"apple", ""};
-static core::Relationship Banana{"banana", ""};
+static constexpr auto Apple = core::RelationshipDefinition{"apple", ""};
+static constexpr auto Banana = core::RelationshipDefinition{"banana", ""};
 // The probability that this processor routes to Apple
-static core::Property AppleProbability = core::PropertyBuilder::createProperty("AppleProbability")->withDefaultValue<int>(100)->isRequired(true)->build();
+static constexpr auto AppleProbability = core::PropertyDefinitionBuilder<>::createProperty("AppleProbability")
+    .withPropertyType(core::StandardPropertyTypes::INTEGER_TYPE)
+    .withDefaultValue("100")
+    .isRequired(true)
+    .build();
 // The probability that this processor routes to Banana
-static core::Property BananaProbability = core::PropertyBuilder::createProperty("BananaProbability")->withDefaultValue<int>(0)->isRequired(true)->build();
+static constexpr auto BananaProbability = core::PropertyDefinitionBuilder<>::createProperty("BananaProbability")
+    .withPropertyType(core::StandardPropertyTypes::INTEGER_TYPE)
+    .withDefaultValue("0")
+    .isRequired(true)
+    .build();
 
 class ProcessorWithStatistics {
  public:
@@ -52,8 +63,8 @@ class TestProcessor : public core::Processor, public ProcessorWithStatistics {
   explicit TestProcessor(const std::string& name) : Processor(name) {}
 
   static constexpr const char* Description = "Processor used for testing cycles";
-  static auto properties() { return std::array{AppleProbability, BananaProbability}; }
-  static auto relationships() { return std::array{Apple, Banana}; }
+  static constexpr auto Properties = std::array<core::PropertyReference, 2>{AppleProbability, BananaProbability};
+  static constexpr auto Relationships = std::array{Apple, Banana};
   static constexpr bool SupportsDynamicProperties = false;
   static constexpr bool SupportsDynamicRelationships = false;
   static constexpr core::annotation::Input InputRequirement = core::annotation::Input::INPUT_ALLOWED;
@@ -62,8 +73,8 @@ class TestProcessor : public core::Processor, public ProcessorWithStatistics {
   ADD_COMMON_VIRTUAL_FUNCTIONS_FOR_PROCESSORS
 
   void initialize() override {
-    setSupportedProperties(properties());
-    setSupportedRelationships(relationships());
+    setSupportedProperties(Properties);
+    setSupportedRelationships(Relationships);
   }
   void onTrigger(const std::shared_ptr<core::ProcessContext>& /*context*/, const std::shared_ptr<core::ProcessSession> &session) override {
     ++trigger_count;
@@ -88,10 +99,10 @@ class TestProcessor : public core::Processor, public ProcessorWithStatistics {
   }
   void onSchedule(const std::shared_ptr<core::ProcessContext> &context, const std::shared_ptr<core::ProcessSessionFactory>& /*sessionFactory*/) override {
     int apple;
-    bool appleSuccess = context->getProperty(AppleProbability.getName(), apple);
+    bool appleSuccess = context->getProperty(AppleProbability, apple);
     assert(appleSuccess);
     int banana;
-    bool bananaSuccess = context->getProperty(BananaProbability.getName(), banana);
+    bool bananaSuccess = context->getProperty(BananaProbability, banana);
     assert(bananaSuccess);
     apple_probability_ = apple;
     banana_probability_ = banana;

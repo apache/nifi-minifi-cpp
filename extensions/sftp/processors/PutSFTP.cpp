@@ -38,8 +38,8 @@ namespace org::apache::nifi::minifi::processors {
 void PutSFTP::initialize() {
   logger_->log_trace("Initializing PutSFTP");
 
-  setSupportedProperties(properties());
-  setSupportedRelationships(relationships());
+  setSupportedProperties(Properties);
+  setSupportedRelationships(Relationships);
 }
 
 PutSFTP::PutSFTP(std::string name, const utils::Identifier& uuid /*= utils::Identifier()*/)
@@ -57,24 +57,24 @@ void PutSFTP::onSchedule(const std::shared_ptr<core::ProcessContext> &context, c
   parseCommonPropertiesOnSchedule(context);
 
   std::string value;
-  if (!context->getProperty(CreateDirectory.getName(), value)) {
+  if (!context->getProperty(CreateDirectory, value)) {
     logger_->log_error("Create Directory attribute is missing or invalid");
   } else {
     create_directory_ = utils::StringUtils::toBool(value).value_or(false);
   }
-  if (!context->getProperty(BatchSize.getName(), value)) {
+  if (!context->getProperty(BatchSize, value)) {
     logger_->log_error("Batch Size attribute is missing or invalid");
   } else {
     core::Property::StringToInt(value, batch_size_);
   }
-  context->getProperty(ConflictResolution.getName(), conflict_resolution_);
-  if (context->getProperty(RejectZeroByte.getName(), value)) {
+  context->getProperty(ConflictResolution, conflict_resolution_);
+  if (context->getProperty(RejectZeroByte, value)) {
     reject_zero_byte_ = utils::StringUtils::toBool(value).value_or(true);
   }
-  if (context->getProperty(DotRename.getName(), value)) {
+  if (context->getProperty(DotRename, value)) {
     dot_rename_ = utils::StringUtils::toBool(value).value_or(true);
   }
-  if (!context->getProperty(UseCompression.getName(), value)) {
+  if (!context->getProperty(UseCompression, value)) {
     logger_->log_error("Use Compression attribute is missing or invalid");
   } else {
     use_compression_ = utils::StringUtils::toBool(value).value_or(false);
@@ -121,8 +121,8 @@ bool PutSFTP::processOne(const std::shared_ptr<core::ProcessContext> &context, c
       remote_path = ".";
   }
 
-  if (context->getDynamicProperty(DisableDirectoryListing.getName(), value) ||
-      context->getProperty(DisableDirectoryListing.getName(), value)) {
+  if (context->getDynamicProperty(std::string{DisableDirectoryListing.name}, value) ||
+      context->getProperty(DisableDirectoryListing, value)) {
     disable_directory_listing = utils::StringUtils::toBool(value).value_or(false);
   }
   context->getProperty(TempFilename, temp_file_name, flow_file);
@@ -353,5 +353,7 @@ void PutSFTP::onTrigger(const std::shared_ptr<core::ProcessContext> &context, co
     }
   }
 }
+
+REGISTER_RESOURCE(PutSFTP, Processor);
 
 }  // namespace org::apache::nifi::minifi::processors

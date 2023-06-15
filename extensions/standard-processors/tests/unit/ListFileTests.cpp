@@ -72,9 +72,9 @@ ListFileTestFixture::ListFileTestFixture()
   REQUIRE(!input_dir_.empty());
 
   list_file_processor_ = plan_->addProcessor("ListFile", "ListFile");
-  plan_->setProperty(list_file_processor_, "Input Directory", input_dir_.string());
+  plan_->setProperty(list_file_processor_, minifi::processors::ListFile::InputDirectory, input_dir_.string());
   auto log_attribute = plan_->addProcessor("LogAttribute", "logAttribute", core::Relationship("success", "description"), true);
-  plan_->setProperty(log_attribute, "FlowFiles To Log", "0");
+  plan_->setProperty(log_attribute, minifi::processors::LogAttribute::FlowFilesToLog, "0");
 
   hidden_file_path_ = utils::putFileToDir(input_dir_, ".hidden_file.txt", "hidden");
   standard_file_abs_path_ = utils::putFileToDir(input_dir_, "standard_file.log", "test");
@@ -100,7 +100,7 @@ ListFileTestFixture::ListFileTestFixture()
 }
 
 TEST_CASE_METHOD(ListFileTestFixture, "Input Directory is empty", "[testListFile]") {
-  plan_->setProperty(list_file_processor_, "Input Directory", "");
+  plan_->setProperty(list_file_processor_, minifi::processors::ListFile::InputDirectory, "");
   REQUIRE_THROWS_AS(test_controller_.runSession(plan_, true), minifi::Exception);
 }
 
@@ -147,7 +147,7 @@ TEST_CASE_METHOD(ListFileTestFixture, "Test listing files only once with default
 }
 
 TEST_CASE_METHOD(ListFileTestFixture, "Test turning off recursive file listing", "[testListFile]") {
-  plan_->setProperty(list_file_processor_, "Recurse Subdirectories", "false");
+  plan_->setProperty(list_file_processor_, minifi::processors::ListFile::RecurseSubdirectories, "false");
   TestController::runSession(plan_);
   REQUIRE(verifyLogLinePresenceInPollTime(3s, "key:filename value:standard_file.log"));
   REQUIRE(verifyLogLinePresenceInPollTime(3s, "key:filename value:empty_file.txt"));
@@ -156,7 +156,7 @@ TEST_CASE_METHOD(ListFileTestFixture, "Test turning off recursive file listing",
 }
 
 TEST_CASE_METHOD(ListFileTestFixture, "Test listing files matching the File Filter pattern", "[testListFile]") {
-  plan_->setProperty(list_file_processor_, "File Filter", "stand\\w+\\.log");
+  plan_->setProperty(list_file_processor_, minifi::processors::ListFile::FileFilter, "stand\\w+\\.log");
   TestController::runSession(plan_);
   REQUIRE(verifyLogLinePresenceInPollTime(3s, "key:filename value:standard_file.log"));
   REQUIRE_FALSE(LogTestController::getInstance().contains("key:filename value:empty_file.txt", 0s, 0ms));
@@ -165,14 +165,14 @@ TEST_CASE_METHOD(ListFileTestFixture, "Test listing files matching the File Filt
 }
 
 TEST_CASE_METHOD(ListFileTestFixture, "Test listing files matching the Path Filter pattern", "[testListFile]") {
-  plan_->setProperty(list_file_processor_, "Path Filter", "first.*");
+  plan_->setProperty(list_file_processor_, minifi::processors::ListFile::PathFilter, "first.*");
   TestController::runSession(plan_);
   CHECK(verifyLogLinePresenceInPollTime(3s, "key:filename value:sub_file_one.txt"));
   CHECK(LogTestController::getInstance().countOccurrences("key:filename value:") == 1);
 }
 
 TEST_CASE_METHOD(ListFileTestFixture, "Test listing files matching the Path Filter pattern when the pattern also matches .", "[testListFile]") {
-  plan_->setProperty(list_file_processor_, "Path Filter", "second.*|\\.");
+  plan_->setProperty(list_file_processor_, minifi::processors::ListFile::PathFilter, "second.*|\\.");
   TestController::runSession(plan_);
   CHECK(verifyLogLinePresenceInPollTime(3s, "key:filename value:standard_file.log"));
   CHECK(verifyLogLinePresenceInPollTime(3s, "key:filename value:empty_file.txt"));
@@ -181,7 +181,7 @@ TEST_CASE_METHOD(ListFileTestFixture, "Test listing files matching the Path Filt
 }
 
 TEST_CASE_METHOD(ListFileTestFixture, "Test listing files with restriction on the minimum file age", "[testListFile]") {
-  plan_->setProperty(list_file_processor_, "Minimum File Age", "90 min");
+  plan_->setProperty(list_file_processor_, minifi::processors::ListFile::MinimumFileAge, "90 min");
   TestController::runSession(plan_);
   REQUIRE(verifyLogLinePresenceInPollTime(3s, "key:filename value:sub_file_one.txt"));
   REQUIRE(verifyLogLinePresenceInPollTime(3s, "key:filename value:sub_file_two.txt"));
@@ -190,7 +190,7 @@ TEST_CASE_METHOD(ListFileTestFixture, "Test listing files with restriction on th
 }
 
 TEST_CASE_METHOD(ListFileTestFixture, "Test listing files with restriction on the maximum file age", "[testListFile]") {
-  plan_->setProperty(list_file_processor_, "Maximum File Age", "90 min");
+  plan_->setProperty(list_file_processor_, minifi::processors::ListFile::MaximumFileAge, "90 min");
   TestController::runSession(plan_);
   REQUIRE(verifyLogLinePresenceInPollTime(3s, "key:filename value:empty_file.txt"));
   REQUIRE(verifyLogLinePresenceInPollTime(3s, "key:filename value:standard_file.log"));
@@ -199,7 +199,7 @@ TEST_CASE_METHOD(ListFileTestFixture, "Test listing files with restriction on th
 }
 
 TEST_CASE_METHOD(ListFileTestFixture, "Test listing files with restriction on the minimum file size", "[testListFile]") {
-  plan_->setProperty(list_file_processor_, "Minimum File Size", "4 B");
+  plan_->setProperty(list_file_processor_, minifi::processors::ListFile::MinimumFileSize, "4 B");
   TestController::runSession(plan_);
   REQUIRE(verifyLogLinePresenceInPollTime(3s, "key:filename value:standard_file.log"));
   REQUIRE(verifyLogLinePresenceInPollTime(3s, "key:filename value:sub_file_two.txt"));
@@ -208,7 +208,7 @@ TEST_CASE_METHOD(ListFileTestFixture, "Test listing files with restriction on th
 }
 
 TEST_CASE_METHOD(ListFileTestFixture, "Test listing files with restriction on the maximum file size", "[testListFile]") {
-  plan_->setProperty(list_file_processor_, "Maximum File Size", "4 B");
+  plan_->setProperty(list_file_processor_, minifi::processors::ListFile::MaximumFileSize, "4 B");
   TestController::runSession(plan_);
   REQUIRE(verifyLogLinePresenceInPollTime(3s, "key:filename value:standard_file.log"));
   REQUIRE(verifyLogLinePresenceInPollTime(3s, "key:filename value:empty_file.txt"));
@@ -217,7 +217,7 @@ TEST_CASE_METHOD(ListFileTestFixture, "Test listing files with restriction on th
 }
 
 TEST_CASE_METHOD(ListFileTestFixture, "Test listing hidden files", "[testListFile]") {
-  plan_->setProperty(list_file_processor_, "Ignore Hidden Files", "false");
+  plan_->setProperty(list_file_processor_, minifi::processors::ListFile::IgnoreHiddenFiles, "false");
   TestController::runSession(plan_);
   REQUIRE(verifyLogLinePresenceInPollTime(3s, "key:filename value:standard_file.log"));
   REQUIRE(verifyLogLinePresenceInPollTime(3s, "key:filename value:empty_file.txt"));

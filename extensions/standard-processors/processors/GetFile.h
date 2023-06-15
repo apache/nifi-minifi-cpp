@@ -28,6 +28,10 @@
 #include "FlowFileRecord.h"
 #include "core/Processor.h"
 #include "core/ProcessSession.h"
+#include "core/PropertyDefinition.h"
+#include "core/PropertyDefinitionBuilder.h"
+#include "core/PropertyType.h"
+#include "core/RelationshipDefinition.h"
 #include "core/Core.h"
 #include "core/logging/LoggerConfiguration.h"
 #include "utils/Export.h"
@@ -87,19 +91,63 @@ class GetFile : public core::Processor {
 
   EXTENSIONAPI static constexpr const char* Description = "Creates FlowFiles from files in a directory. MiNiFi will ignore files for which it doesn't have read permissions.";
 
-  EXTENSIONAPI static const core::Property Directory;
-  EXTENSIONAPI static const core::Property Recurse;
-  EXTENSIONAPI static const core::Property KeepSourceFile;
-  EXTENSIONAPI static const core::Property MinAge;
-  EXTENSIONAPI static const core::Property MaxAge;
-  EXTENSIONAPI static const core::Property MinSize;
-  EXTENSIONAPI static const core::Property MaxSize;
-  EXTENSIONAPI static const core::Property IgnoreHiddenFile;
-  EXTENSIONAPI static const core::Property PollInterval;
-  EXTENSIONAPI static const core::Property BatchSize;
-  EXTENSIONAPI static const core::Property FileFilter;
-  static auto properties() {
-    return std::array{
+  EXTENSIONAPI static constexpr auto Directory = core::PropertyDefinitionBuilder<>::createProperty("Input Directory")
+      .withDescription("The input directory from which to pull files")
+      .isRequired(true)
+      .supportsExpressionLanguage(true)
+      .build();
+  EXTENSIONAPI static constexpr auto Recurse = core::PropertyDefinitionBuilder<>::createProperty("Recurse Subdirectories")
+      .withDescription("Indicates whether or not to pull files from subdirectories")
+      .withPropertyType(core::StandardPropertyTypes::BOOLEAN_TYPE)
+      .withDefaultValue("true")
+      .build();
+  EXTENSIONAPI static constexpr auto KeepSourceFile = core::PropertyDefinitionBuilder<>::createProperty("Keep Source File")
+      .withDescription("If true, the file is not deleted after it has been copied to the Content Repository")
+      .withPropertyType(core::StandardPropertyTypes::BOOLEAN_TYPE)
+      .withDefaultValue("false")
+      .build();
+  EXTENSIONAPI static constexpr auto MinAge = core::PropertyDefinitionBuilder<>::createProperty("Minimum File Age")
+      .withDescription("The minimum age that a file must be in order to be pulled;"
+          " any file younger than this amount of time (according to last modification date) will be ignored")
+      .withPropertyType(core::StandardPropertyTypes::TIME_PERIOD_TYPE)
+      .withDefaultValue("0 sec")
+      .build();
+  EXTENSIONAPI static constexpr auto MaxAge = core::PropertyDefinitionBuilder<>::createProperty("Maximum File Age")
+      .withDescription("The maximum age that a file must be in order to be pulled;"
+          " any file older than this amount of time (according to last modification date) will be ignored")
+      .withPropertyType(core::StandardPropertyTypes::TIME_PERIOD_TYPE)
+      .withDefaultValue("0 sec")
+      .build();
+  EXTENSIONAPI static constexpr auto MinSize = core::PropertyDefinitionBuilder<>::createProperty("Minimum File Size")
+      .withDescription("The minimum size that a file can be in order to be pulled")
+      .withPropertyType(core::StandardPropertyTypes::DATA_SIZE_TYPE)
+      .withDefaultValue("0 B")
+      .build();
+  EXTENSIONAPI static constexpr auto MaxSize = core::PropertyDefinitionBuilder<>::createProperty("Maximum File Size")
+      .withDescription("The maximum size that a file can be in order to be pulled")
+      .withPropertyType(core::StandardPropertyTypes::DATA_SIZE_TYPE)
+      .withDefaultValue("0 B")
+      .build();
+  EXTENSIONAPI static constexpr auto IgnoreHiddenFile = core::PropertyDefinitionBuilder<>::createProperty("Ignore Hidden Files")
+      .withDescription("Indicates whether or not hidden files should be ignored")
+      .withPropertyType(core::StandardPropertyTypes::BOOLEAN_TYPE)
+      .withDefaultValue("true")
+      .build();
+  EXTENSIONAPI static constexpr auto PollInterval = core::PropertyDefinitionBuilder<>::createProperty("Polling Interval")
+      .withDescription("Indicates how long to wait before performing a directory listing")
+      .withPropertyType(core::StandardPropertyTypes::TIME_PERIOD_TYPE)
+      .withDefaultValue("0 sec")
+      .build();
+  EXTENSIONAPI static constexpr auto BatchSize = core::PropertyDefinitionBuilder<>::createProperty("Batch Size")
+      .withDescription("The maximum number of files to pull in each iteration")
+      .withPropertyType(core::StandardPropertyTypes::UNSIGNED_INT_TYPE)
+      .withDefaultValue("10")
+      .build();
+  EXTENSIONAPI static constexpr auto FileFilter = core::PropertyDefinitionBuilder<>::createProperty("File Filter")
+      .withDescription("Only files whose names match the given regular expression will be picked up")
+      .withDefaultValue(".*")
+      .build();
+  EXTENSIONAPI static constexpr auto Properties = std::array<core::PropertyReference, 11>{
       Directory,
       Recurse,
       KeepSourceFile,
@@ -111,11 +159,11 @@ class GetFile : public core::Processor {
       PollInterval,
       BatchSize,
       FileFilter
-    };
-  }
+  };
 
-  EXTENSIONAPI static const core::Relationship Success;
-  static auto relationships() { return std::array{Success}; }
+
+  EXTENSIONAPI static constexpr auto Success = core::RelationshipDefinition{"success", "All files are routed to success"};
+  EXTENSIONAPI static constexpr auto Relationships = std::array{Success};
 
   EXTENSIONAPI static constexpr bool SupportsDynamicProperties = false;
   EXTENSIONAPI static constexpr bool SupportsDynamicRelationships = false;

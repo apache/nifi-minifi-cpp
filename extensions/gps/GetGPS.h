@@ -19,12 +19,17 @@
  */
 #pragma once
 
+#include <array>
 #include <string>
 #include <memory>
 #include <utility>
 
 #include "../FlowFileRecord.h"
 #include "../core/Processor.h"
+#include "core/PropertyDefinition.h"
+#include "core/PropertyDefinitionBuilder.h"
+#include "core/PropertyType.h"
+#include "core/RelationshipDefinition.h"
 
 namespace org::apache::nifi::minifi::processors {
 
@@ -40,19 +45,29 @@ class GetGPS : public core::Processor {
 
   EXTENSIONAPI static constexpr const char* Description = "Obtains GPS coordinates from the GPSDHost and port.";
 
-  EXTENSIONAPI static const core::Property GPSDHost;
-  EXTENSIONAPI static const core::Property GPSDPort;
-  EXTENSIONAPI static const core::Property GPSDWaitTime;
-  static auto properties() {
-    return std::array{
+  EXTENSIONAPI static constexpr auto GPSDHost = core::PropertyDefinitionBuilder<>::createProperty("GPSD Host")
+      .withDescription("The host running the GPSD daemon")
+      .withDefaultValue("localhost")
+      .build();
+  EXTENSIONAPI static constexpr auto GPSDPort = core::PropertyDefinitionBuilder<>::createProperty("GPSD Port")
+      .withDescription("The GPSD daemon port")
+      .withPropertyType(core::StandardPropertyTypes::PORT_TYPE)
+      .withDefaultValue("2947")
+      .build();
+  EXTENSIONAPI static constexpr auto GPSDWaitTime = core::PropertyDefinitionBuilder<>::createProperty("GPSD Wait Time")
+      .withDescription("Timeout value for waiting for data from the GPSD instance")
+      .withPropertyType(core::StandardPropertyTypes::UNSIGNED_LONG_TYPE)
+      .withDefaultValue("50000000")
+      .build();
+  EXTENSIONAPI static constexpr auto Properties = std::array<core::PropertyReference, 3>{
       GPSDHost,
       GPSDPort,
       GPSDWaitTime
-    };
-  }
+  };
 
-  EXTENSIONAPI static const core::Relationship Success;
-  static auto relationships() { return std::array{Success}; }
+
+  EXTENSIONAPI static constexpr auto Success = core::RelationshipDefinition{"success", "All files are routed to success"};
+  EXTENSIONAPI static constexpr auto Relationships = std::array{Success};
 
   EXTENSIONAPI static constexpr bool SupportsDynamicProperties = false;
   EXTENSIONAPI static constexpr bool SupportsDynamicRelationships = false;

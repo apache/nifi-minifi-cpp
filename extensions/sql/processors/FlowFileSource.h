@@ -21,34 +21,46 @@
 #include <vector>
 #include <memory>
 
-#include "core/Property.h"
+#include "core/PropertyDefinition.h"
+#include "core/PropertyDefinitionBuilder.h"
+#include "core/PropertyType.h"
 #include "utils/Enum.h"
 #include "data/SQLRowsetProcessor.h"
 #include "ProcessSession.h"
 #include "data/JSONSQLWriter.h"
 
-namespace org {
-namespace apache {
-namespace nifi {
-namespace minifi {
-namespace processors {
+namespace org::apache::nifi::minifi::processors {
+
+namespace flow_file_source {
+SMART_ENUM(OutputType,
+  (JSON, "JSON"),
+  (JSONPretty, "JSON-Pretty")
+)
+}  // namespace flow_file_source
 
 class FlowFileSource {
  public:
-  EXTENSIONAPI static const std::string FRAGMENT_IDENTIFIER;
-  EXTENSIONAPI static const std::string FRAGMENT_COUNT;
-  EXTENSIONAPI static const std::string FRAGMENT_INDEX;
+  EXTENSIONAPI static constexpr std::string_view FRAGMENT_IDENTIFIER = "fragment.identifier";
+  EXTENSIONAPI static constexpr std::string_view FRAGMENT_COUNT = "fragment.count";
+  EXTENSIONAPI static constexpr std::string_view FRAGMENT_INDEX = "fragment.index";
 
-  EXTENSIONAPI static const core::Property OutputFormat;
-  EXTENSIONAPI static const core::Property MaxRowsPerFlowFile;
-  static auto properties() {
-    return std::array{OutputFormat, MaxRowsPerFlowFile};
-  }
-
-  SMART_ENUM(OutputType,
-    (JSON, "JSON"),
-    (JSONPretty, "JSON-Pretty")
-  )
+  EXTENSIONAPI static constexpr auto OutputFormat = core::PropertyDefinitionBuilder<flow_file_source::OutputType::length>::createProperty("Output Format")
+      .withDescription("Set the output format type.")
+      .isRequired(true)
+      .supportsExpressionLanguage(true)
+      .withDefaultValue(toStringView(flow_file_source::OutputType::JSONPretty))
+      .withAllowedValues(flow_file_source::OutputType::values)
+      .build();
+  EXTENSIONAPI static constexpr auto MaxRowsPerFlowFile = core::PropertyDefinitionBuilder<>::createProperty("Max Rows Per Flow File")
+      .withDescription(
+        "The maximum number of result rows that will be included in a single FlowFile. This will allow you to break up very large result sets into multiple FlowFiles. "
+        "If the value specified is zero, then all rows are returned in a single FlowFile.")
+      .isRequired(true)
+      .supportsExpressionLanguage(true)
+      .withPropertyType(core::StandardPropertyTypes::UNSIGNED_LONG_TYPE)
+      .withDefaultValue("0")
+      .build();
+  EXTENSIONAPI static constexpr auto Properties = std::array<core::PropertyReference, 2>{OutputFormat, MaxRowsPerFlowFile};
 
  protected:
   class FlowFileGenerator : public sql::SQLRowSubscriber {
@@ -95,12 +107,8 @@ class FlowFileSource {
     std::vector<std::shared_ptr<core::FlowFile>> flow_files_;
   };
 
-  OutputType output_format_;
+  flow_file_source::OutputType output_format_;
   size_t max_rows_{0};
 };
 
-}  // namespace processors
-}  // namespace minifi
-}  // namespace nifi
-}  // namespace apache
-}  // namespace org
+}  // namespace org::apache::nifi::minifi::processors

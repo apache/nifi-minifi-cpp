@@ -39,7 +39,7 @@ class GetFileTestController {
   GetFileTestController();
   [[nodiscard]] std::filesystem::path getFullPath(const std::filesystem::path& filename) const;
   [[nodiscard]] std::filesystem::path getInputFilePath() const;
-  void setProperty(const core::Property& property, const std::string& value);
+  void setProperty(const core::PropertyReference& property, const std::string& value);
   void runSession();
   void resetTestPlan();
 
@@ -67,9 +67,9 @@ GetFileTestController::GetFileTestController()
 
   // Build MiNiFi processing graph
   get_file_processor_ = test_plan_->addProcessor("GetFile", "Get");
-  test_plan_->setProperty(get_file_processor_, minifi::processors::GetFile::Directory.getName(), temp_dir_.string());
+  test_plan_->setProperty(get_file_processor_, minifi::processors::GetFile::Directory, temp_dir_.string());
   auto log_attr = test_plan_->addProcessor("LogAttribute", "Log", core::Relationship("success", "description"), true);
-  test_plan_->setProperty(log_attr, minifi::processors::LogAttribute::FlowFilesToLog.getName(), "0");
+  test_plan_->setProperty(log_attr, minifi::processors::LogAttribute::FlowFilesToLog, "0");
 
   utils::putFileToDir(temp_dir_, input_file_name_, "The quick brown fox jumps over the lazy dog\n");
   utils::putFileToDir(temp_dir_, large_input_file_name_, "The quick brown fox jumps over the lazy dog who is 2 legit to quit\n");
@@ -89,8 +89,8 @@ std::filesystem::path GetFileTestController::getInputFilePath() const {
   return getFullPath(input_file_name_);
 }
 
-void GetFileTestController::setProperty(const core::Property& property, const std::string& value) {
-  test_plan_->setProperty(get_file_processor_, property.getName(), value);
+void GetFileTestController::setProperty(const core::PropertyReference& property, const std::string& value) {
+  test_plan_->setProperty(get_file_processor_, property, value);
 }
 
 void GetFileTestController::runSession() {

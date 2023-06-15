@@ -225,9 +225,13 @@ class TestPlan {
 
   std::shared_ptr<minifi::core::controller::ControllerServiceNode> addController(const std::string &controller_name, const std::string &name);
 
-  bool setProperty(const std::shared_ptr<minifi::core::Processor>& proc, const std::string &prop, const std::string &value, bool dynamic = false);
+  bool setProperty(const std::shared_ptr<minifi::core::Processor>& processor, const core::PropertyReference& property, std::string_view value);
+  bool setProperty(const std::shared_ptr<minifi::core::Processor>& processor, std::string_view property, std::string_view value);
+  bool setDynamicProperty(const std::shared_ptr<minifi::core::Processor>& processor, std::string_view property, std::string_view value);
 
-  static bool setProperty(const std::shared_ptr<minifi::core::controller::ControllerServiceNode>& controller_service_node, const std::string &prop, const std::string &value, bool dynamic = false);
+  static bool setProperty(const std::shared_ptr<minifi::core::controller::ControllerServiceNode>& controller_service_node, const core::PropertyReference& property, std::string_view value);
+  static bool setProperty(const std::shared_ptr<minifi::core::controller::ControllerServiceNode>& controller_service_node, std::string_view property, std::string_view value);
+  static bool setDynamicProperty(const std::shared_ptr<minifi::core::controller::ControllerServiceNode>& controller_service_node, std::string_view property, std::string_view value);
 
   void reset(bool reschedule = false);
   void increment_location() { ++location; }
@@ -331,6 +335,9 @@ class TestPlan {
   std::optional<minifi::core::Relationship> termination_;
 
  private:
+  bool setProperty(const std::shared_ptr<minifi::core::Processor>& processor, const std::string& property, const std::string& value, bool dynamic);
+  static bool setProperty(const std::shared_ptr<minifi::core::controller::ControllerServiceNode>& controller_service_node, const std::string& property, const std::string& value, bool dynamic);
+
   std::shared_ptr<logging::Logger> logger_;
 };
 

@@ -31,12 +31,9 @@
 
 namespace org::apache::nifi::minifi::processors {
 
-const core::Property ApplyTemplate::Template("Template", "Path to the input mustache template file", "");
-const core::Relationship ApplyTemplate::Success("success", "success operational on the flow record");
-
 void ApplyTemplate::initialize() {
-  setSupportedProperties(properties());
-  setSupportedRelationships(relationships());
+  setSupportedProperties(Properties);
+  setSupportedRelationships(Relationships);
 }
 
 void ApplyTemplate::onTrigger(const std::shared_ptr<core::ProcessContext> &context,

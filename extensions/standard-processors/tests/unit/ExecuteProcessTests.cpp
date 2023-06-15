@@ -54,7 +54,7 @@ TEST_CASE_METHOD(ExecuteProcessTestsFixture, "ExecuteProcess can run a single co
 TEST_CASE_METHOD(ExecuteProcessTestsFixture, "ExecuteProcess can run an executable with a parameter", "[ExecuteProcess]") {
   auto command = minifi::utils::file::get_executable_dir() / "EchoParameters";
   std::string arguments = "0 test_data";
-  REQUIRE(execute_process_->setProperty(processors::ExecuteProcess::Command, command));
+  REQUIRE(execute_process_->setProperty(processors::ExecuteProcess::Command, command.string()));
   REQUIRE(execute_process_->setProperty(processors::ExecuteProcess::CommandArguments, arguments));
 
   controller_.plan->scheduleProcessor(execute_process_);
@@ -70,7 +70,7 @@ TEST_CASE_METHOD(ExecuteProcessTestsFixture, "ExecuteProcess can run an executab
 TEST_CASE_METHOD(ExecuteProcessTestsFixture, "ExecuteProcess can run an executable with escaped parameters", "[ExecuteProcess]") {
   auto command = minifi::utils::file::get_executable_dir() / "EchoParameters";
   std::string arguments = R"(0 test_data test_data2 "test data 3" "\"test data 4\")";
-  REQUIRE(execute_process_->setProperty(processors::ExecuteProcess::Command, command));
+  REQUIRE(execute_process_->setProperty(processors::ExecuteProcess::Command, command.string()));
   REQUIRE(execute_process_->setProperty(processors::ExecuteProcess::CommandArguments, arguments));
 
   controller_.plan->scheduleProcessor(execute_process_);
@@ -85,7 +85,7 @@ TEST_CASE_METHOD(ExecuteProcessTestsFixture, "ExecuteProcess can run an executab
 
 TEST_CASE_METHOD(ExecuteProcessTestsFixture, "ExecuteProcess does not produce a flowfile if no output is generated", "[ExecuteProcess]") {
   auto command = minifi::utils::file::get_executable_dir() / "EchoParameters";
-  REQUIRE(execute_process_->setProperty(processors::ExecuteProcess::Command, command));
+  REQUIRE(execute_process_->setProperty(processors::ExecuteProcess::Command, command.string()));
 
   controller_.plan->scheduleProcessor(execute_process_);
   auto result = controller_.trigger();
@@ -96,7 +96,7 @@ TEST_CASE_METHOD(ExecuteProcessTestsFixture, "ExecuteProcess does not produce a 
 
 TEST_CASE_METHOD(ExecuteProcessTestsFixture, "ExecuteProcess can redirect error stream to stdout", "[ExecuteProcess]") {
   auto command = minifi::utils::file::get_executable_dir() / "EchoParameters";
-  REQUIRE(execute_process_->setProperty(processors::ExecuteProcess::Command, command));
+  REQUIRE(execute_process_->setProperty(processors::ExecuteProcess::Command, command.string()));
   REQUIRE(execute_process_->setProperty(processors::ExecuteProcess::RedirectErrorStream, "true"));
 
   controller_.plan->scheduleProcessor(execute_process_);
@@ -114,7 +114,7 @@ TEST_CASE_METHOD(ExecuteProcessTestsFixture, "ExecuteProcess can change workdir"
   std::string arguments = "0 test_data";
   REQUIRE(execute_process_->setProperty(processors::ExecuteProcess::Command, command));
   REQUIRE(execute_process_->setProperty(processors::ExecuteProcess::CommandArguments, arguments));
-  REQUIRE(execute_process_->setProperty(processors::ExecuteProcess::WorkingDir, minifi::utils::file::get_executable_dir()));
+  REQUIRE(execute_process_->setProperty(processors::ExecuteProcess::WorkingDir, minifi::utils::file::get_executable_dir().string()));
 
   controller_.plan->scheduleProcessor(execute_process_);
   auto result = controller_.trigger();
@@ -129,7 +129,7 @@ TEST_CASE_METHOD(ExecuteProcessTestsFixture, "ExecuteProcess can change workdir"
 TEST_CASE_METHOD(ExecuteProcessTestsFixture, "ExecuteProcess can forward long running output in batches", "[ExecuteProcess]") {
   auto command = minifi::utils::file::get_executable_dir() / "EchoParameters";
   std::string arguments = "100 test_data1 test_data2";
-  REQUIRE(execute_process_->setProperty(processors::ExecuteProcess::Command, command));
+  REQUIRE(execute_process_->setProperty(processors::ExecuteProcess::Command, command.string()));
   REQUIRE(execute_process_->setProperty(processors::ExecuteProcess::CommandArguments, arguments));
   REQUIRE(execute_process_->setProperty(processors::ExecuteProcess::BatchDuration, "10 ms"));
 
@@ -148,7 +148,7 @@ TEST_CASE_METHOD(ExecuteProcessTestsFixture, "ExecuteProcess can forward long ru
 
 TEST_CASE_METHOD(ExecuteProcessTestsFixture, "ExecuteProcess buffer long outputs", "[ExecuteProcess]") {
   auto command = minifi::utils::file::get_executable_dir() / "EchoParameters";
-  REQUIRE(execute_process_->setProperty(processors::ExecuteProcess::Command, command));
+  REQUIRE(execute_process_->setProperty(processors::ExecuteProcess::Command, command.string()));
   std::string param1;
 
   SECTION("Exact buffer size output") {

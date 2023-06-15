@@ -1,8 +1,4 @@
 /**
- * @file ExecuteScript.cpp
-
- * ExecuteScript class implementation
- *
  * Licensed to the Apache Software Foundation (ASF) under one or more
  * contributor license agreements.  See the NOTICE file distributed with
  * this work for additional information regarding copyright ownership.
@@ -29,38 +25,16 @@
 
 #include "utils/StringUtils.h"
 #include "utils/file/FileUtils.h"
-#include "core/PropertyBuilder.h"
 #include "core/Resource.h"
 #include "range/v3/range/conversion.hpp"
 
 namespace org::apache::nifi::minifi::extensions::python::processors {
 
-const core::Property ExecutePythonProcessor::ScriptFile(core::PropertyBuilder::createProperty("Script File")
-    ->withDescription("Path to script file to execute. Only one of Script File or Script Body may be used")
-    ->build());
-
-const core::Property ExecutePythonProcessor::ScriptBody(core::PropertyBuilder::createProperty("Script Body")
-    ->withDescription("Script to execute. Only one of Script File or Script Body may be used")
-    ->build());
-
-const core::Property ExecutePythonProcessor::ModuleDirectory(core::PropertyBuilder::createProperty("Module Directory")
-  ->withDescription("Comma-separated list of paths to files and/or directories which contain modules required by the script")
-  ->build());
-
-const core::Property ExecutePythonProcessor::ReloadOnScriptChange(core::PropertyBuilder::createProperty("Reload on Script Change")
-  ->withDescription("If true and Script File property is used, then script file will be reloaded if it has changed, otherwise the first loaded version will be used at all times.")
-  ->isRequired(true)
-  ->withDefaultValue<bool>(true)
-  ->build());
-
-const core::Relationship ExecutePythonProcessor::Success("success", "Script succeeds");
-const core::Relationship ExecutePythonProcessor::Failure("failure", "Script fails");
-
 void ExecutePythonProcessor::initialize() {
   if (getProperties().empty()) {
-    setSupportedProperties(properties());
+    setSupportedProperties(Properties);
     setAcceptAllProperties();
-    setSupportedRelationships(relationships());
+    setSupportedRelationships(Relationships);
   }
 
   if (processor_initialized_) {
@@ -105,7 +79,7 @@ void ExecutePythonProcessor::onSchedule(const std::shared_ptr<core::ProcessConte
   python_script_engine_->eval(script_to_exec_);
   python_script_engine_->onSchedule(context);
 
-  getProperty(ReloadOnScriptChange.getName(), reload_on_script_change_);
+  getProperty(ReloadOnScriptChange, reload_on_script_change_);
 }
 
 void ExecutePythonProcessor::onTrigger(const std::shared_ptr<core::ProcessContext> &context, const std::shared_ptr<core::ProcessSession> &session) {
@@ -119,7 +93,7 @@ void ExecutePythonProcessor::onTrigger(const std::shared_ptr<core::ProcessContex
 
 void ExecutePythonProcessor::appendPathForImportModules() {
   std::string module_directory;
-  getProperty(ModuleDirectory.getName(), module_directory);
+  getProperty(ModuleDirectory, module_directory);
   if (!module_directory.empty()) {
     python_script_engine_->setModulePaths(utils::StringUtils::splitAndTrimRemovingEmpty(module_directory, ",") | ranges::to<std::vector<std::filesystem::path>>());
   }
@@ -137,8 +111,8 @@ void ExecutePythonProcessor::loadScriptFromFile() {
 void ExecutePythonProcessor::loadScript() {
   std::string script_file;
   std::string script_body;
-  getProperty(ScriptFile.getName(), script_file);
-  getProperty(ScriptBody.getName(), script_body);
+  getProperty(ScriptFile, script_file);
+  getProperty(ScriptBody, script_body);
   if (script_file.empty() && script_body.empty()) {
     throw std::runtime_error("Neither Script Body nor Script File is available to execute");
   }

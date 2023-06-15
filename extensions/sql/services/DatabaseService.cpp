@@ -41,11 +41,11 @@ void DatabaseService::initialize() {
 }
 
 void DatabaseService::onEnable() {
-  getProperty(ConnectionString.getName(), connection_string_);
+  getProperty(ConnectionString, connection_string_);
 }
 
 void DatabaseService::initializeProperties() {
-  setSupportedProperties(properties());
+  setSupportedProperties(Properties);
 }
 
 }  // namespace org::apache::nifi::minifi::sql::controllers

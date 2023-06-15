@@ -70,14 +70,14 @@ TEST_CASE("Test usage of ExtractText", "[extracttextTest]") {
   auto temp_dir = testController.createTempDirectory();
   REQUIRE(!temp_dir.empty());
   std::shared_ptr<core::Processor> getfile = plan->addProcessor("GetFile", "getfileCreate2");
-  plan->setProperty(getfile, org::apache::nifi::minifi::processors::GetFile::Directory.getName(), temp_dir.string());
-  plan->setProperty(getfile, org::apache::nifi::minifi::processors::GetFile::KeepSourceFile.getName(), "true");
+  plan->setProperty(getfile, org::apache::nifi::minifi::processors::GetFile::Directory, temp_dir.string());
+  plan->setProperty(getfile, org::apache::nifi::minifi::processors::GetFile::KeepSourceFile, "true");
 
   std::shared_ptr<core::Processor> maprocessor = plan->addProcessor("ExtractText", "testExtractText", core::Relationship("success", "description"), true);
-  plan->setProperty(maprocessor, org::apache::nifi::minifi::processors::ExtractText::Attribute.getName(), TEST_ATTR);
+  plan->setProperty(maprocessor, org::apache::nifi::minifi::processors::ExtractText::Attribute, TEST_ATTR);
 
   std::shared_ptr<core::Processor> laprocessor = plan->addProcessor("LogAttribute", "outputLogAttribute", core::Relationship("success", "description"), true);
-  plan->setProperty(laprocessor, org::apache::nifi::minifi::processors::LogAttribute::AttributesToLog.getName(), TEST_ATTR);
+  plan->setProperty(laprocessor, org::apache::nifi::minifi::processors::LogAttribute::AttributesToLog, TEST_ATTR);
 
   auto test_file_path = temp_dir / TEST_FILE;
 
@@ -99,7 +99,7 @@ TEST_CASE("Test usage of ExtractText", "[extracttextTest]") {
 
   plan->reset();
 
-  plan->setProperty(maprocessor, org::apache::nifi::minifi::processors::ExtractText::SizeLimit.getName(), "4");
+  plan->setProperty(maprocessor, org::apache::nifi::minifi::processors::ExtractText::SizeLimit, "4");
 
   LogTestController::getInstance().reset();
   LogTestController::getInstance().setTrace<org::apache::nifi::minifi::processors::LogAttribute>();
@@ -136,17 +136,17 @@ TEST_CASE("Test usage of ExtractText in regex mode", "[extracttextRegexTest]") {
   auto dir = testController.createTempDirectory();
   REQUIRE(!dir.empty());
   std::shared_ptr<core::Processor> getfile = plan->addProcessor("GetFile", "getfileCreate2");
-  plan->setProperty(getfile, org::apache::nifi::minifi::processors::GetFile::Directory.getName(), dir.string());
-  plan->setProperty(getfile, org::apache::nifi::minifi::processors::GetFile::KeepSourceFile.getName(), "true");
+  plan->setProperty(getfile, org::apache::nifi::minifi::processors::GetFile::Directory, dir.string());
+  plan->setProperty(getfile, org::apache::nifi::minifi::processors::GetFile::KeepSourceFile, "true");
 
   std::shared_ptr<core::Processor> maprocessor = plan->addProcessor("ExtractText", "testExtractText", core::Relationship("success", "description"), true);
-  plan->setProperty(maprocessor, org::apache::nifi::minifi::processors::ExtractText::RegexMode.getName(), "true");
-  plan->setProperty(maprocessor, org::apache::nifi::minifi::processors::ExtractText::EnableRepeatingCaptureGroup.getName(), "true");
-  plan->setProperty(maprocessor, "RegexAttr", "Speed limit ([0-9]+)", true);
-  plan->setProperty(maprocessor, "InvalidRegex", "[Invalid)A(F)", true);
+  plan->setProperty(maprocessor, org::apache::nifi::minifi::processors::ExtractText::RegexMode, "true");
+  plan->setProperty(maprocessor, org::apache::nifi::minifi::processors::ExtractText::EnableRepeatingCaptureGroup, "true");
+  plan->setDynamicProperty(maprocessor, "RegexAttr", "Speed limit ([0-9]+)");
+  plan->setDynamicProperty(maprocessor, "InvalidRegex", "[Invalid)A(F)");
 
   std::shared_ptr<core::Processor> laprocessor = plan->addProcessor("LogAttribute", "outputLogAttribute", core::Relationship("success", "description"), true);
-  plan->setProperty(laprocessor, org::apache::nifi::minifi::processors::LogAttribute::AttributesToLog.getName(), TEST_ATTR);
+  plan->setProperty(laprocessor, org::apache::nifi::minifi::processors::LogAttribute::AttributesToLog, TEST_ATTR);
 
   auto test_file_path = dir / TEST_FILE;
 
@@ -159,7 +159,7 @@ TEST_CASE("Test usage of ExtractText in regex mode", "[extracttextRegexTest]") {
   std::list<std::string> expected_logs;
 
   SECTION("Do not include capture group 0") {
-    plan->setProperty(maprocessor, org::apache::nifi::minifi::processors::ExtractText::IncludeCaptureGroupZero.getName(), "false");
+    plan->setProperty(maprocessor, org::apache::nifi::minifi::processors::ExtractText::IncludeCaptureGroupZero, "false");
 
     testController.runSession(plan);
 
@@ -205,16 +205,16 @@ TEST_CASE("Test usage of ExtractText in regex mode with large regex matches", "[
   auto dir = test_controller.createTempDirectory();
   REQUIRE(!dir.empty());
   auto getfile = plan->addProcessor("GetFile", "GetFile");
-  plan->setProperty(getfile, org::apache::nifi::minifi::processors::GetFile::Directory.getName(), dir.string());
-  plan->setProperty(getfile, org::apache::nifi::minifi::processors::GetFile::KeepSourceFile.getName(), "true");
+  plan->setProperty(getfile, org::apache::nifi::minifi::processors::GetFile::Directory, dir.string());
+  plan->setProperty(getfile, org::apache::nifi::minifi::processors::GetFile::KeepSourceFile, "true");
 
   auto extract_text_processor = plan->addProcessor("ExtractText", "ExtractText", core::Relationship("success", "description"), true);
-  plan->setProperty(extract_text_processor, org::apache::nifi::minifi::processors::ExtractText::RegexMode.getName(), "true");
-  plan->setProperty(extract_text_processor, org::apache::nifi::minifi::processors::ExtractText::IncludeCaptureGroupZero.getName(), "false");
-  plan->setProperty(extract_text_processor, "RegexAttr", "Speed limit (.*)", true);
+  plan->setProperty(extract_text_processor, org::apache::nifi::minifi::processors::ExtractText::RegexMode, "true");
+  plan->setProperty(extract_text_processor, org::apache::nifi::minifi::processors::ExtractText::IncludeCaptureGroupZero, "false");
+  plan->setDynamicProperty(extract_text_processor, "RegexAttr", "Speed limit (.*)");
 
   auto log_attribute_processor = plan->addProcessor("LogAttribute", "outputLogAttribute", core::Relationship("success", "description"), true);
-  plan->setProperty(log_attribute_processor, org::apache::nifi::minifi::processors::LogAttribute::AttributesToLog.getName(), TEST_ATTR);
+  plan->setProperty(log_attribute_processor, org::apache::nifi::minifi::processors::LogAttribute::AttributesToLog, TEST_ATTR);
 
   std::string additional_long_string(100'000, '.');
   utils::putFileToDir(dir, TEST_FILE, "Speed limit 80" + additional_long_string);

@@ -84,8 +84,8 @@ class FetchFromGCSCallback {
 
 
 void FetchGCSObject::initialize() {
-  setSupportedProperties(properties());
-  setSupportedRelationships(relationships());
+  setSupportedProperties(Properties);
+  setSupportedRelationships(Relationships);
 }
 
 void FetchGCSObject::onSchedule(const std::shared_ptr<core::ProcessContext>& context, const std::shared_ptr<core::ProcessSessionFactory>& session_factory) {
@@ -95,7 +95,7 @@ void FetchGCSObject::onSchedule(const std::shared_ptr<core::ProcessContext>& con
     try {
       encryption_key_ = gcs::EncryptionKey::FromBase64Key(*encryption_key);
     } catch (const google::cloud::RuntimeStatusError&) {
-      throw minifi::Exception(ExceptionType::PROCESS_SCHEDULE_EXCEPTION, "Could not decode the base64-encoded encryption key from property " + EncryptionKey.getName());    }
+      throw minifi::Exception(ExceptionType::PROCESS_SCHEDULE_EXCEPTION, "Could not decode the base64-encoded encryption key from property " + std::string(EncryptionKey.name));    }
   }
 }
 
@@ -155,4 +155,7 @@ void FetchGCSObject::onTrigger(const std::shared_ptr<core::ProcessContext>& cont
     flow_file->setAttribute(GCS_STORAGE_CLASS, *storage_class);
   session->transfer(flow_file, Success);
 }
+
+REGISTER_RESOURCE(FetchGCSObject, Processor);
+
 }  // namespace org::apache::nifi::minifi::extensions::gcp

@@ -16,15 +16,9 @@
  */
 
 #include "VolatileMapStateStorage.h"
-#include "core/PropertyBuilder.h"
 #include "core/Resource.h"
 
 namespace org::apache::nifi::minifi::controllers {
-
-const core::Property VolatileMapStateStorage::LinkedServices(
-    core::PropertyBuilder::createProperty("Linked Services")
-    ->withDescription("Referenced Controller Services")
-    ->build());
 
 VolatileMapStateStorage::VolatileMapStateStorage(const std::string& name, const utils::Identifier& uuid /*= utils::Identifier()*/)
     : KeyValueStateStorage(name, uuid) {
@@ -37,7 +31,7 @@ VolatileMapStateStorage::VolatileMapStateStorage(const std::string& name, const 
 
 void VolatileMapStateStorage::initialize() {
   ControllerService::initialize();
-  setSupportedProperties(properties());
+  setSupportedProperties(Properties);
 }
 
 bool VolatileMapStateStorage::set(const std::string& key, const std::string& value) {

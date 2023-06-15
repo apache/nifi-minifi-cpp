@@ -21,7 +21,7 @@
 #include <limits>
 
 #include "core/ProcessSession.h"
-#include "core/PropertyValidation.h"
+#include "core/PropertyType.h"
 #include "core/Resource.h"
 #include "FlowFileRecord.h"
 #include "utils/ProcessorConfigUtils.h"
@@ -33,41 +33,40 @@ namespace org::apache::nifi::minifi {
 namespace core {
 // The upper limit for Max Poll Time is 4 seconds. This is because Watchdog would potentially start
 // reporting issues with the processor health otherwise
-ValidationResult ConsumeKafkaMaxPollTimeValidator::validate(const std::string& subject, const std::string& input) const {
+ValidationResult ConsumeKafkaMaxPollTimePropertyType::validate(const std::string& subject, const std::string& input) const {
   auto parsed_value = utils::timeutils::StringToDuration<std::chrono::milliseconds>(input);
-  return ValidationResult::Builder::createBuilder().withSubject(subject).withInput(input).isValid(
-      parsed_value.has_value() &&
-      0ms < *parsed_value && *parsed_value <= 4s).build();
+  bool is_valid = parsed_value.has_value() && 0ms < *parsed_value && *parsed_value <= 4s;
+  return ValidationResult{.valid = is_valid, .subject = subject, .input = input};
 }
 }  // namespace core
 
 namespace processors {
 
 void ConsumeKafka::initialize() {
-  setSupportedProperties(properties());
-  setSupportedRelationships(relationships());
+  setSupportedProperties(Properties);
+  setSupportedRelationships(Relationships);
 }
 
 void ConsumeKafka::onSchedule(core::ProcessContext* context, core::ProcessSessionFactory* /* sessionFactory */) {
   gsl_Expects(context);
   // Required properties
-  kafka_brokers_                = utils::getRequiredPropertyOrThrow(*context, KafkaBrokers.getName());
-  topic_names_                  = utils::listFromRequiredCommaSeparatedProperty(*context, TopicNames.getName());
-  topic_name_format_            = utils::getRequiredPropertyOrThrow(*context, TopicNameFormat.getName());
-  honor_transactions_           = utils::parseBooleanPropertyOrThrow(*context, HonorTransactions.getName());
-  group_id_                     = utils::getRequiredPropertyOrThrow(*context, GroupID.getName());
-  offset_reset_                 = utils::getRequiredPropertyOrThrow(*context, OffsetReset.getName());
-  key_attribute_encoding_       = utils::getRequiredPropertyOrThrow(*context, KeyAttributeEncoding.getName());
-  max_poll_time_milliseconds_   = utils::parseTimePropertyMSOrThrow(*context, MaxPollTime.getName());
-  session_timeout_milliseconds_ = utils::parseTimePropertyMSOrThrow(*context, SessionTimeout.getName());
+  kafka_brokers_                = utils::getRequiredPropertyOrThrow(*context, KafkaBrokers.name);
+  topic_names_                  = utils::listFromRequiredCommaSeparatedProperty(*context, TopicNames.name);
+  topic_name_format_            = utils::getRequiredPropertyOrThrow(*context, TopicNameFormat.name);
+  honor_transactions_           = utils::parseBooleanPropertyOrThrow(*context, HonorTransactions.name);
+  group_id_                     = utils::getRequiredPropertyOrThrow(*context, GroupID.name);
+  offset_reset_                 = utils::getRequiredPropertyOrThrow(*context, OffsetReset.name);
+  key_attribute_encoding_       = utils::getRequiredPropertyOrThrow(*context, KeyAttributeEncoding.name);
+  max_poll_time_milliseconds_   = utils::parseTimePropertyMSOrThrow(*context, MaxPollTime.name);
+  session_timeout_milliseconds_ = utils::parseTimePropertyMSOrThrow(*context, SessionTimeout.name);
 
   // Optional properties
-  context->getProperty(MessageDemarcator.getName(), message_demarcator_);
-  context->getProperty(MessageHeaderEncoding.getName(), message_header_encoding_);
-  context->getProperty(DuplicateHeaderHandling.getName(), duplicate_header_handling_);
+  context->getProperty(MessageDemarcator, message_demarcator_);
+  context->getProperty(MessageHeaderEncoding, message_header_encoding_);
+  context->getProperty(DuplicateHeaderHandling, duplicate_header_handling_);
 
-  headers_to_add_as_attributes_ = utils::listFromCommaSeparatedProperty(*context, HeadersToAddAsAttributes.getName());
-  max_poll_records_ = gsl::narrow<std::size_t>(context->getProperty<uint64_t>(MaxPollRecords).value_or(DEFAULT_MAX_POLL_RECORDS));
+  headers_to_add_as_attributes_ = utils::listFromCommaSeparatedProperty(*context, HeadersToAddAsAttributes.name);
+  max_poll_records_ = gsl::narrow<std::size_t>(context->getProperty<uint64_t>(MaxPollRecords).value_or(core::StandardPropertyTypes::UNSIGNED_LONG_TYPE.parse(DEFAULT_MAX_POLL_RECORDS)));
 
   if (!utils::StringUtils::equalsIgnoreCase(KEY_ATTR_ENCODING_UTF_8, key_attribute_encoding_) && !utils::StringUtils::equalsIgnoreCase(KEY_ATTR_ENCODING_HEX, key_attribute_encoding_)) {
     throw Exception(PROCESS_SCHEDULE_EXCEPTION, "Unsupported key attribute encoding: " + key_attribute_encoding_);
@@ -389,6 +388,8 @@ void ConsumeKafka::onTrigger(core::ProcessContext* /* context */, core::ProcessS
   }
   process_pending_messages(*session);
 }
+
+REGISTER_RESOURCE(ConsumeKafka, Processor);
 
 }  // namespace processors
 }  // namespace org::apache::nifi::minifi

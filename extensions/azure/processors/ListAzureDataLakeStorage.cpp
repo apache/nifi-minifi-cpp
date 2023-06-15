@@ -41,8 +41,8 @@ std::shared_ptr<core::FlowFile> createNewFlowFile(core::ProcessSession &session,
 }  // namespace
 
 void ListAzureDataLakeStorage::initialize() {
-  setSupportedProperties(properties());
-  setSupportedRelationships(relationships());
+  setSupportedProperties(Properties);
+  setSupportedRelationships(Relationships);
 }
 
 void ListAzureDataLakeStorage::onSchedule(const std::shared_ptr<core::ProcessContext>& context, const std::shared_ptr<core::ProcessSessionFactory>& sessionFactory) {
@@ -61,7 +61,7 @@ void ListAzureDataLakeStorage::onSchedule(const std::shared_ptr<core::ProcessCon
   }
 
   list_parameters_ = *std::move(params);
-  tracking_strategy_ = utils::parseEnumProperty<EntityTracking>(*context, ListingStrategy);
+  tracking_strategy_ = utils::parseEnumProperty<azure::EntityTracking>(*context, ListingStrategy);
 }
 
 std::optional<storage::ListAzureDataLakeStorageParameters> ListAzureDataLakeStorage::buildListParameters(core::ProcessContext& context) {
@@ -70,12 +70,12 @@ std::optional<storage::ListAzureDataLakeStorageParameters> ListAzureDataLakeStor
     return std::nullopt;
   }
 
-  if (!context.getProperty(RecurseSubdirectories.getName(), params.recurse_subdirectories)) {
+  if (!context.getProperty(RecurseSubdirectories, params.recurse_subdirectories)) {
     logger_->log_error("Recurse Subdirectories property missing or invalid");
     return std::nullopt;
   }
 
-  auto createFilterRegex = [&context](const std::string& property_name) -> std::optional<minifi::utils::Regex> {
+  auto createFilterRegex = [&context](std::string_view property_name) -> std::optional<minifi::utils::Regex> {
     try {
       std::string filter_str;
       context.getProperty(property_name, filter_str);
@@ -85,12 +85,12 @@ std::optional<storage::ListAzureDataLakeStorageParameters> ListAzureDataLakeStor
 
       return std::nullopt;
     } catch (const minifi::Exception&) {
-      throw Exception(PROCESS_SCHEDULE_EXCEPTION, property_name + " regex is invalid");
+      throw Exception(PROCESS_SCHEDULE_EXCEPTION, std::string(property_name) + " regex is invalid");
     }
   };
 
-  params.file_regex = createFilterRegex(FileFilter.getName());
-  params.path_regex = createFilterRegex(PathFilter.getName());
+  params.file_regex = createFilterRegex(FileFilter.name);
+  params.path_regex = createFilterRegex(PathFilter.name);
 
   return params;
 }
@@ -110,7 +110,7 @@ void ListAzureDataLakeStorage::onTrigger(const std::shared_ptr<core::ProcessCont
   std::size_t files_transferred = 0;
 
   for (const auto& element : *list_result) {
-    if (tracking_strategy_ == EntityTracking::TIMESTAMPS && stored_listing_state.wasObjectListedAlready(element)) {
+    if (tracking_strategy_ == azure::EntityTracking::TIMESTAMPS && stored_listing_state.wasObjectListedAlready(element)) {
       continue;
     }
 
@@ -130,5 +130,7 @@ void ListAzureDataLakeStorage::onTrigger(const std::shared_ptr<core::ProcessCont
     return;
   }
 }
+
+REGISTER_RESOURCE(ListAzureDataLakeStorage, Processor);
 
 }  // namespace org::apache::nifi::minifi::azure::processors

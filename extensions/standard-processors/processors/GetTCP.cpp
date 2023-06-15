@@ -30,69 +30,15 @@
 #include "core/ProcessContext.h"
 #include "core/ProcessSession.h"
 #include "core/ProcessSessionFactory.h"
-#include "core/PropertyBuilder.h"
 #include "core/Resource.h"
 
 using namespace std::literals::chrono_literals;
 
 namespace org::apache::nifi::minifi::processors {
 
-const core::Property GetTCP::EndpointList(
-    core::PropertyBuilder::createProperty("Endpoint List")
-      ->withDescription("A comma delimited list of the endpoints to connect to. The format should be <server_address>:<port>.")
-      ->isRequired(true)->build());
-
-const core::Property GetTCP::SSLContextService(
-    core::PropertyBuilder::createProperty("SSL Context Service")
-      ->withDescription("SSL Context Service Name")
-      ->asType<minifi::controllers::SSLContextService>()->build());
-
-const core::Property GetTCP::MessageDelimiter(
-    core::PropertyBuilder::createProperty("Message Delimiter")->withDescription(
-        "Character that denotes the end of the message.")
-        ->withDefaultValue("\\n")->build());
-
-const core::Property GetTCP::MaxQueueSize(
-    core::PropertyBuilder::createProperty("Max Size of Message Queue")
-        ->withDescription("Maximum number of messages allowed to be buffered before processing them when the processor is triggered. "
-                          "If the buffer is full, the message is ignored. If set to zero the buffer is unlimited.")
-        ->withDefaultValue<uint64_t>(10000)
-        ->isRequired(true)
-        ->build());
-
-const core::Property GetTCP::MaxBatchSize(
-    core::PropertyBuilder::createProperty("Max Batch Size")
-        ->withDescription("The maximum number of messages to process at a time.")
-        ->withDefaultValue<uint64_t>(500)
-        ->isRequired(true)
-        ->build());
-
-const core::Property GetTCP::MaxMessageSize(
-    core::PropertyBuilder::createProperty("Maximum Message Size")
-      ->withDescription("Optional size of the buffer to receive data in.")->build());
-
-const core::Property GetTCP::Timeout = core::PropertyBuilder::createProperty("Timeout")
-    ->withDescription("The timeout for connecting to and communicating with the destination.")
-    ->withDefaultValue<core::TimePeriodValue>("1s")
-    ->isRequired(true)
-    ->supportsExpressionLanguage(true)
-    ->build();
-
-const core::Property GetTCP::ReconnectInterval = core::PropertyBuilder::createProperty("Reconnection Interval")
-    ->withDescription("The duration to wait before attempting to reconnect to the endpoints.")
-    ->withDefaultValue<core::TimePeriodValue>("1 min")
-    ->isRequired(true)
-    ->supportsExpressionLanguage(true)
-    ->build();
-
-const core::Relationship GetTCP::Success("success", "All files are routed to success");
-const core::Relationship GetTCP::Partial("partial", "Indicates an incomplete message as a result of encountering the end of message byte trigger");
-
-const core::OutputAttribute GetTCP::SourceEndpoint{"source.endpoint", {Success, Partial}, "The address of the source endpoint the message came from"};
-
 void GetTCP::initialize() {
-  setSupportedProperties(properties());
-  setSupportedRelationships(relationships());
+  setSupportedProperties(Properties);
+  setSupportedRelationships(Relationships);
 }
 
 
@@ -109,7 +55,7 @@ std::vector<utils::net::ConnectionId> GetTCP::parseEndpointList(core::ProcessCon
     }
   }
   if (connections_to_make.empty())
-    throw Exception(PROCESS_SCHEDULE_EXCEPTION, fmt::format("No valid endpoint in {} property", EndpointList.getName()));
+    throw Exception(PROCESS_SCHEDULE_EXCEPTION, fmt::format("No valid endpoint in {} property", EndpointList.name));
 
   return connections_to_make;
 }
@@ -144,11 +90,12 @@ std::optional<asio::ssl::context> GetTCP::parseSSLContext(core::ProcessContext& 
 uint64_t GetTCP::parseMaxBatchSize(core::ProcessContext& context) {
   if (auto max_batch_size = context.getProperty<uint64_t>(MaxBatchSize)) {
     if (*max_batch_size == 0) {
-      throw Exception(PROCESS_SCHEDULE_EXCEPTION, fmt::format("{} should be non-zero.", MaxBatchSize.getName()));
+      throw Exception(PROCESS_SCHEDULE_EXCEPTION, fmt::format("{} should be non-zero.", MaxBatchSize.name));
     }
     return *max_batch_size;
   }
-  return MaxBatchSize.getDefaultValue();
+  static_assert(MaxBatchSize.default_value);
+  return MaxBatchSize.type->parse(*MaxBatchSize.default_value);
 }
 
 void GetTCP::onSchedule(const std::shared_ptr<core::ProcessContext>& context, const std::shared_ptr<core::ProcessSessionFactory>&) {
@@ -187,7 +134,7 @@ void GetTCP::notifyStop() {
 void GetTCP::transferAsFlowFile(const utils::net::Message& message, core::ProcessSession& session) {
   auto flow_file = session.create();
   session.writeBuffer(flow_file, message.message_data);
-  flow_file->setAttribute(GetTCP::SourceEndpoint.getName(), fmt::format("{}:{}", message.sender_address.to_string(), std::to_string(message.server_port)));
+  flow_file->setAttribute(GetTCP::SourceEndpoint.name, fmt::format("{}:{}", message.sender_address.to_string(), std::to_string(message.server_port)));
   if (message.is_partial)
     session.transfer(flow_file, Partial);
   else
