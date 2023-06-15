@@ -154,7 +154,7 @@ and rebuild.
 * perl -- Required for OpenSSL configuration
 * NASM -- Required for OpenSSL only on Windows
 
-**NOTE** On Windows if Strawberry Perl is used the `${StrawberryPerlRoot}\c\bin` directory should not be part of the %PATH% variable as Strawberry Perl's patch.exe will be found as the patch executable in the configure phase instead of the git patch executable.
+**NOTE** On Windows if Strawberry Perl is used the `${StrawberryPerlRoot}\c\bin` directory should not be part of the %PATH% variable or make sure to find git's patch executable before that as Strawberry Perl's patch.exe will be found as the patch executable in the configure phase instead of the git patch executable. Also on Windows CMake's CPack is used for MSI generation, building WIX files and calling WIX toolset tools to create an MSI. If Chocolatey package manager is used its CPack can conflict with CMake, so make sure that CMake's CPack is found in the %PATH% before that.
 
 #### CentOS 7
 
