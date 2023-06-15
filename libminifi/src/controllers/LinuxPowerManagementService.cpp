@@ -24,34 +24,9 @@
 
 #include "utils/gsl.h"
 #include "utils/StringUtils.h"
-#include "core/PropertyBuilder.h"
 #include "core/Resource.h"
 
 namespace org::apache::nifi::minifi::controllers {
-
-const core::Property LinuxPowerManagerService::BatteryCapacityPath(
-    core::PropertyBuilder::createProperty("Battery Capacity Path")->withDescription("Path to the battery level")->isRequired(true)->withDefaultValue<std::string>(
-        "/sys/class/power_supply/BAT0/capacity")->build());
-
-const core::Property LinuxPowerManagerService::BatteryStatusPath(
-    core::PropertyBuilder::createProperty("Battery Status Path")->withDescription("Path to the battery status ( Discharging/Battery )")->isRequired(true)->withDefaultValue<std::string>(
-        "/sys/class/power_supply/BAT0/status")->build());
-
-const core::Property LinuxPowerManagerService::BatteryStatusDischargeKeyword(
-    core::PropertyBuilder::createProperty("Battery Status Discharge")->withDescription("Keyword to identify if battery is discharging")->isRequired(true)->withDefaultValue<std::string>("Discharging")
-        ->build());
-
-const core::Property LinuxPowerManagerService::TriggerThreshold(
-    core::PropertyBuilder::createProperty("Trigger Threshold")->withDescription("Battery threshold before which we consider a slow reduction. Should be a number from 1-100")->isRequired(true)
-        ->withDefaultValue<int>(75)->build());
-
-const core::Property LinuxPowerManagerService::WaitPeriod(
-    core::PropertyBuilder::createProperty("Wait Period")->withDescription("Decay between checking threshold and determining if a reduction is needed")->isRequired(true)
-        ->withDefaultValue<core::TimePeriodValue>("100 ms")->build());
-
-const core::Property LinuxPowerManagerService::LowBatteryThreshold(
-    core::PropertyBuilder::createProperty("Low Battery Threshold")->withDescription("Battery threshold before which we will aggressively reduce. Should be a number from 1-100")->isRequired(true)
-        ->withDefaultValue<int>(50)->build());
 
 bool LinuxPowerManagerService::isAboveMax(int /*new_tasks*/) {
   return false;
@@ -161,7 +136,7 @@ bool LinuxPowerManagerService::shouldReduce() {
 
 void LinuxPowerManagerService::initialize() {
   ThreadManagementService::initialize();
-  setSupportedProperties(properties());
+  setSupportedProperties(Properties);
 }
 
 void LinuxPowerManagerService::yield() {
@@ -185,16 +160,16 @@ void LinuxPowerManagerService::onEnable() {
   core::Property statusPaths;
 
   uint64_t wait;
-  if (getProperty(TriggerThreshold.getName(), trigger_) && getProperty(WaitPeriod.getName(), wait)) {
+  if (getProperty(TriggerThreshold, trigger_) && getProperty(WaitPeriod, wait)) {
     wait_period_ = wait;
 
-    getProperty(BatteryStatusDischargeKeyword.getName(), status_keyword_);
+    getProperty(BatteryStatusDischargeKeyword, status_keyword_);
 
-    if (!getProperty(LowBatteryThreshold.getName(), low_battery_trigger_)) {
+    if (!getProperty(LowBatteryThreshold, low_battery_trigger_)) {
       low_battery_trigger_ = 0;
     }
-    getProperty(BatteryCapacityPath.getName(), capacityPaths);
-    getProperty(BatteryStatusPath.getName(), statusPaths);
+    getProperty(BatteryCapacityPath, capacityPaths);
+    getProperty(BatteryStatusPath, statusPaths);
     if (capacityPaths.getValues().size() == statusPaths.getValues().size()) {
       for (size_t i = 0; i < capacityPaths.getValues().size(); i++) {
         paths_.push_back(std::make_pair(capacityPaths.getValues().at(i), statusPaths.getValues().at(i)));

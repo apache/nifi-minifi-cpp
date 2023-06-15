@@ -107,7 +107,7 @@ TEST_CASE("ConsumeWindowsEventLog properties work with default values", "[create
   auto processor = test_plan->addProcessor("ConsumeWindowsEventLog", "cwel");
   TestController::runSession(test_plan);
 
-  auto properties_required_or_with_default_value = {
+  auto properties_required_or_with_default_value = std::array<core::PropertyReference, 12>{
     ConsumeWindowsEventLog::Channel,
     ConsumeWindowsEventLog::Query,
     // ConsumeWindowsEventLog::RenderFormatXML,  // FIXME(fgerlits): not defined, does not exist in NiFi either; should be removed
@@ -123,18 +123,18 @@ TEST_CASE("ConsumeWindowsEventLog properties work with default values", "[create
     ConsumeWindowsEventLog::ProcessOldEvents,
     ConsumeWindowsEventLog::CacheSidLookups
   };
-  for (const core::Property& property : properties_required_or_with_default_value) {
-    if (!LogTestController::getInstance().contains("property name " + property.getName() + " value ")) {
-      FAIL("Property did not get queried: " << property.getName());
+  for (const auto& property : properties_required_or_with_default_value) {
+    if (!LogTestController::getInstance().contains("property name " + std::string(property.name) + " value ")) {
+      FAIL("Property did not get queried: " << property.name);
     }
   }
 
-  auto properties_optional_without_default_value = {
+  auto properties_optional_without_default_value = std::array<core::PropertyReference, 1>{
     ConsumeWindowsEventLog::EventHeaderDelimiter
   };
-  for (const core::Property& property : properties_optional_without_default_value) {
-    if (!LogTestController::getInstance().contains("property name " + property.getName() + ", empty value")) {
-      FAIL("Optional property did not get queried: " << property.getName());
+  for (const auto& property : properties_optional_without_default_value) {
+    if (!LogTestController::getInstance().contains("property name " + std::string(property.name) + ", empty value")) {
+      FAIL("Optional property did not get queried: " << property.name);
     }
   }
 
@@ -146,7 +146,7 @@ TEST_CASE("ConsumeWindowsEventLog onSchedule throws if it cannot create the book
   std::shared_ptr<TestPlan> test_plan = test_controller.createPlan();
 
   auto processor = test_plan->addProcessor("ConsumeWindowsEventLog", "cwel");
-  test_plan->setProperty(processor, ConsumeWindowsEventLog::Channel.getName(), "NonexistentChannel1234981");
+  test_plan->setProperty(processor, ConsumeWindowsEventLog::Channel, "NonexistentChannel1234981");
 
   REQUIRE_THROWS_AS(test_controller.runSession(test_plan), minifi::Exception);
 }
@@ -158,13 +158,13 @@ TEST_CASE("ConsumeWindowsEventLog can consume new events", "[onTrigger]") {
   std::shared_ptr<TestPlan> test_plan = test_controller.createPlan();
 
   auto cwel_processor = test_plan->addProcessor("ConsumeWindowsEventLog", "cwel");
-  test_plan->setProperty(cwel_processor, ConsumeWindowsEventLog::Channel.getName(), APPLICATION_CHANNEL);
-  test_plan->setProperty(cwel_processor, ConsumeWindowsEventLog::Query.getName(), QUERY);
+  test_plan->setProperty(cwel_processor, ConsumeWindowsEventLog::Channel, APPLICATION_CHANNEL);
+  test_plan->setProperty(cwel_processor, ConsumeWindowsEventLog::Query, QUERY);
 
   auto logger_processor = test_plan->addProcessor("LogAttribute", "logger", Success, true);
-  test_plan->setProperty(logger_processor, LogAttribute::FlowFilesToLog.getName(), "0");
-  test_plan->setProperty(logger_processor, LogAttribute::LogPayload.getName(), "true");
-  test_plan->setProperty(logger_processor, LogAttribute::MaxPayloadLineLength.getName(), "1024");
+  test_plan->setProperty(logger_processor, LogAttribute::FlowFilesToLog, "0");
+  test_plan->setProperty(logger_processor, LogAttribute::LogPayload, "true");
+  test_plan->setProperty(logger_processor, LogAttribute::MaxPayloadLineLength, "1024");
 
   reportEvent(APPLICATION_CHANNEL, "Event zero");
 
@@ -209,11 +209,11 @@ TEST_CASE("ConsumeWindowsEventLog bookmarking works", "[onTrigger]") {
   std::shared_ptr<TestPlan> test_plan = test_controller.createPlan();
 
   auto cwel_processor = test_plan->addProcessor("ConsumeWindowsEventLog", "cwel");
-  test_plan->setProperty(cwel_processor, ConsumeWindowsEventLog::Channel.getName(), APPLICATION_CHANNEL);
-  test_plan->setProperty(cwel_processor, ConsumeWindowsEventLog::Query.getName(), QUERY);
+  test_plan->setProperty(cwel_processor, ConsumeWindowsEventLog::Channel, APPLICATION_CHANNEL);
+  test_plan->setProperty(cwel_processor, ConsumeWindowsEventLog::Query, QUERY);
 
   auto logger_processor = test_plan->addProcessor("LogAttribute", "logger", Success, true);
-  test_plan->setProperty(logger_processor, LogAttribute::FlowFilesToLog.getName(), "0");
+  test_plan->setProperty(logger_processor, LogAttribute::FlowFilesToLog, "0");
 
   reportEvent(APPLICATION_CHANNEL, "Event zero");
 
@@ -256,22 +256,22 @@ TEST_CASE("ConsumeWindowsEventLog extracts some attributes by default", "[onTrig
   std::shared_ptr<TestPlan> test_plan = test_controller.createPlan();
 
   auto cwel_processor = test_plan->addProcessor("ConsumeWindowsEventLog", "cwel");
-  test_plan->setProperty(cwel_processor, ConsumeWindowsEventLog::Channel.getName(), APPLICATION_CHANNEL);
-  test_plan->setProperty(cwel_processor, ConsumeWindowsEventLog::Query.getName(), QUERY);
+  test_plan->setProperty(cwel_processor, ConsumeWindowsEventLog::Channel, APPLICATION_CHANNEL);
+  test_plan->setProperty(cwel_processor, ConsumeWindowsEventLog::Query, QUERY);
 
   auto logger_processor = test_plan->addProcessor("LogAttribute", "logger", Success, true);
-  test_plan->setProperty(logger_processor, LogAttribute::FlowFilesToLog.getName(), "0");
+  test_plan->setProperty(logger_processor, LogAttribute::FlowFilesToLog, "0");
 
   SECTION("XML output") {
-    REQUIRE(test_plan->setProperty(cwel_processor, ConsumeWindowsEventLog::OutputFormatProperty.getName(), "XML"));
+    REQUIRE(test_plan->setProperty(cwel_processor, ConsumeWindowsEventLog::OutputFormatProperty, "XML"));
   }
 
   SECTION("Json output") {
-    REQUIRE(test_plan->setProperty(cwel_processor, ConsumeWindowsEventLog::OutputFormatProperty.getName(), "JSON"));
+    REQUIRE(test_plan->setProperty(cwel_processor, ConsumeWindowsEventLog::OutputFormatProperty, "JSON"));
   }
 
   SECTION("Plaintext output") {
-    REQUIRE(test_plan->setProperty(cwel_processor, ConsumeWindowsEventLog::OutputFormatProperty.getName(), "Plaintext"));
+    REQUIRE(test_plan->setProperty(cwel_processor, ConsumeWindowsEventLog::OutputFormatProperty, "Plaintext"));
   }
 
   // 0th event, only to create a bookmark
@@ -317,12 +317,12 @@ void outputFormatSetterTestHelper(const std::string &output_format, int expected
   std::shared_ptr<TestPlan> test_plan = test_controller.createPlan();
 
   auto cwel_processor = test_plan->addProcessor("ConsumeWindowsEventLog", "cwel");
-  test_plan->setProperty(cwel_processor, ConsumeWindowsEventLog::Channel.getName(), APPLICATION_CHANNEL);
-  test_plan->setProperty(cwel_processor, ConsumeWindowsEventLog::Query.getName(), QUERY);
-  test_plan->setProperty(cwel_processor, ConsumeWindowsEventLog::OutputFormatProperty.getName(), output_format);
+  test_plan->setProperty(cwel_processor, ConsumeWindowsEventLog::Channel, APPLICATION_CHANNEL);
+  test_plan->setProperty(cwel_processor, ConsumeWindowsEventLog::Query, QUERY);
+  test_plan->setProperty(cwel_processor, ConsumeWindowsEventLog::OutputFormatProperty, output_format);
 
   auto logger_processor = test_plan->addProcessor("LogAttribute", "logger", Success, true);
-  test_plan->setProperty(logger_processor, LogAttribute::FlowFilesToLog.getName(), "0");
+  test_plan->setProperty(logger_processor, LogAttribute::FlowFilesToLog, "0");
 
   {
     reportEvent(APPLICATION_CHANNEL, "Event zero: this is in the past");
@@ -446,10 +446,10 @@ void batchCommitSizeTestHelper(std::size_t num_events_read, std::size_t batch_co
   std::shared_ptr<TestPlan> test_plan = test_controller.createPlan();
 
   auto cwel_processor = test_plan->addProcessor("ConsumeWindowsEventLog", "cwel");
-  test_plan->setProperty(cwel_processor, ConsumeWindowsEventLog::Channel.getName(), APPLICATION_CHANNEL);
-  test_plan->setProperty(cwel_processor, ConsumeWindowsEventLog::Query.getName(), QUERY);
-  test_plan->setProperty(cwel_processor, ConsumeWindowsEventLog::OutputFormatProperty.getName(), "XML");
-  test_plan->setProperty(cwel_processor, ConsumeWindowsEventLog::BatchCommitSize.getName(), std::to_string(batch_commit_size));
+  test_plan->setProperty(cwel_processor, ConsumeWindowsEventLog::Channel, APPLICATION_CHANNEL);
+  test_plan->setProperty(cwel_processor, ConsumeWindowsEventLog::Query, QUERY);
+  test_plan->setProperty(cwel_processor, ConsumeWindowsEventLog::OutputFormatProperty, "XML");
+  test_plan->setProperty(cwel_processor, ConsumeWindowsEventLog::BatchCommitSize, std::to_string(batch_commit_size));
 
   {
     reportEvent(APPLICATION_CHANNEL, "Event zero: this is in the past");

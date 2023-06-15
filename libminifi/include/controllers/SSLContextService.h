@@ -42,6 +42,9 @@
 #include "io/validation.h"
 #include "../core/controller/ControllerService.h"
 #include "core/logging/LoggerFactory.h"
+#include "core/PropertyDefinition.h"
+#include "core/PropertyDefinitionBuilder.h"
+#include "core/PropertyType.h"
 #include "utils/Export.h"
 #include "utils/tls/CertificateUtils.h"
 
@@ -95,44 +98,44 @@ class SSLContextService : public core::controller::ControllerService {
     // set the properties based on the configuration
     std::string value;
     if (configuration_->get(Configure::nifi_security_client_certificate, value)) {
-      setProperty(ClientCertificate.getName(), value);
+      setProperty(ClientCertificate, value);
     }
 
     if (configuration_->get(Configure::nifi_security_client_private_key, value)) {
-      setProperty(PrivateKey.getName(), value);
+      setProperty(PrivateKey, value);
     }
 
     if (configuration_->get(Configure::nifi_security_client_pass_phrase, value)) {
-      setProperty(Passphrase.getName(), value);
+      setProperty(Passphrase, value);
     }
 
     if (configuration_->get(Configure::nifi_security_client_ca_certificate, value)) {
-      setProperty(CACertificate.getName(), value);
+      setProperty(CACertificate, value);
     }
 
     if (configuration_->get(Configure::nifi_security_use_system_cert_store, value)) {
-      setProperty(UseSystemCertStore.getName(), value);
+      setProperty(UseSystemCertStore, value);
     }
 
 #ifdef WIN32
     if (configuration_->get(Configure::nifi_security_windows_cert_store_location, value)) {
-      setProperty(CertStoreLocation.getName(), value);
+      setProperty(CertStoreLocation, value);
     }
 
     if (configuration_->get(Configure::nifi_security_windows_server_cert_store, value)) {
-      setProperty(ServerCertStore.getName(), value);
+      setProperty(ServerCertStore, value);
     }
 
     if (configuration_->get(Configure::nifi_security_windows_client_cert_store, value)) {
-      setProperty(ClientCertStore.getName(), value);
+      setProperty(ClientCertStore, value);
     }
 
     if (configuration_->get(Configure::nifi_security_windows_client_cert_cn, value)) {
-      setProperty(ClientCertCN.getName(), value);
+      setProperty(ClientCertCN, value);
     }
 
     if (configuration_->get(Configure::nifi_security_windows_client_cert_key_usage, value)) {
-      setProperty(ClientCertKeyUsage.getName(), value);
+      setProperty(ClientCertKeyUsage, value);
     }
 #endif  // WIN32
   }
@@ -173,33 +176,71 @@ class SSLContextService : public core::controller::ControllerService {
   MINIFIAPI static constexpr const char* Description = "Controller service that provides SSL/TLS capabilities to consuming interfaces";
 
 #ifdef WIN32
-  MINIFIAPI static const core::Property CertStoreLocation;
-  MINIFIAPI static const core::Property ServerCertStore;
-  MINIFIAPI static const core::Property ClientCertStore;
-  MINIFIAPI static const core::Property ClientCertCN;
-  MINIFIAPI static const core::Property ClientCertKeyUsage;
+  MINIFIAPI static constexpr auto CertStoreLocation = core::PropertyDefinitionBuilder<utils::tls::WindowsCertStoreLocation::SIZE>::createProperty("Certificate Store Location")
+      .withDescription("One of the Windows certificate store locations, eg. LocalMachine or CurrentUser")
+      .withAllowedValues(utils::tls::WindowsCertStoreLocation::LOCATION_NAMES)
+      .isRequired(false)
+      .withDefaultValue(utils::tls::WindowsCertStoreLocation::DEFAULT_LOCATION)
+      .build();
+  MINIFIAPI static constexpr auto ServerCertStore = core::PropertyDefinitionBuilder<>::createProperty("Server Cert Store")
+      .withDescription("The name of the certificate store which contains the server certificate")
+      .isRequired(false)
+      .withDefaultValue("ROOT")
+      .build();
+  MINIFIAPI static constexpr auto ClientCertStore = core::PropertyDefinitionBuilder<>::createProperty("Client Cert Store")
+      .withDescription("The name of the certificate store which contains the client certificate")
+      .isRequired(false)
+      .withDefaultValue("MY")
+      .build();
+  MINIFIAPI static constexpr auto ClientCertCN = core::PropertyDefinitionBuilder<>::createProperty("Client Cert CN")
+      .withDescription("The CN that the client certificate is required to match; default: use the first available client certificate in the store")
+      .isRequired(false)
+      .build();
+  MINIFIAPI static constexpr auto ClientCertKeyUsage = core::PropertyDefinitionBuilder<>::createProperty("Client Cert Key Usage")
+      .withDescription("Comma-separated list of enhanced key usage values that the client certificate is required to have")
+      .isRequired(false)
+      .withDefaultValue("Client Authentication")
+      .build();
 #endif  // WIN32
-  MINIFIAPI static const core::Property ClientCertificate;
-  MINIFIAPI static const core::Property PrivateKey;
-  MINIFIAPI static const core::Property Passphrase;
-  MINIFIAPI static const core::Property CACertificate;
-  MINIFIAPI static const core::Property UseSystemCertStore;
-  static auto properties() {
-    return std::array{
+  MINIFIAPI static constexpr auto ClientCertificate = core::PropertyDefinitionBuilder<>::createProperty("Client Certificate")
+      .withDescription("Client Certificate")
+      .isRequired(false)
+      .build();
+  MINIFIAPI static constexpr auto PrivateKey = core::PropertyDefinitionBuilder<>::createProperty("Private Key")
+      .withDescription("Private Key file")
+      .isRequired(false)
+      .build();
+  MINIFIAPI static constexpr auto Passphrase = core::PropertyDefinitionBuilder<>::createProperty("Passphrase")
+      .withDescription("Client passphrase. Either a file or unencrypted text")
+      .isRequired(false)
+      .build();
+  MINIFIAPI static constexpr auto CACertificate = core::PropertyDefinitionBuilder<>::createProperty("CA Certificate")
+      .withDescription("CA certificate file")
+      .isRequired(false)
+      .build();
+  MINIFIAPI static constexpr auto UseSystemCertStore = core::PropertyDefinitionBuilder<>::createProperty("Use System Cert Store")
+      .withDescription("Whether to use the certificates in the OS's certificate store")
+      .isRequired(false)
+      .withPropertyType(core::StandardPropertyTypes::BOOLEAN_TYPE)
+      .withDefaultValue("false")
+      .build();
+  MINIFIAPI static constexpr auto Properties =
 #ifdef WIN32
-      CertStoreLocation,
-      ServerCertStore,
-      ClientCertStore,
-      ClientCertCN,
-      ClientCertKeyUsage,
+      std::array<core::PropertyReference, 10>{
+          CertStoreLocation,
+          ServerCertStore,
+          ClientCertStore,
+          ClientCertCN,
+          ClientCertKeyUsage,
+#else
+      std::array<core::PropertyReference, 5>{
 #endif  // WIN32
-      ClientCertificate,
-      PrivateKey,
-      Passphrase,
-      CACertificate,
-      UseSystemCertStore
-    };
-  }
+          ClientCertificate,
+          PrivateKey,
+          Passphrase,
+          CACertificate,
+          UseSystemCertStore
+      };
 
   MINIFIAPI static constexpr bool SupportsDynamicProperties = false;
   ADD_COMMON_VIRTUAL_FUNCTIONS_FOR_CONTROLLER_SERVICES
@@ -261,6 +302,6 @@ class SSLContextService : public core::controller::ControllerService {
   void verifyCertificateExpiration();
 
   std::shared_ptr<core::logging::Logger> logger_;
-};
+};  // NOLINT the linter gets confused by the '{'s inside #ifdef's
 
 }  // namespace org::apache::nifi::minifi::controllers

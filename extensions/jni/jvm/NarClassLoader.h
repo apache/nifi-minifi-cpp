@@ -32,7 +32,7 @@
 #include "JniBundle.h"
 #include "../JavaException.h"
 #include "agent/agent_docs.h"
-#include "core/PropertyBuilder.h"
+#include "core/PropertyDefinitionBuilder.h"
 
 namespace org {
 namespace apache {
@@ -325,13 +325,12 @@ class NarClassLoader {
               auto propDesc = getStringMethod("getDescription", property_descriptor_clazz, env, propertyDescriptorObj);
               auto defaultValue = getStringMethod("getDefaultValue", property_descriptor_clazz, env, propertyDescriptorObj);
 
-              auto builder = core::PropertyBuilder::createProperty(propName)->withDescription(propDesc);
+              auto builder = core::PropertyDefinitionBuilder<>::createProperty(propName).withDescription(propDesc);
               if (!defaultValue.empty()) {
-                builder->withDefaultValue(defaultValue);
+                builder.withDefaultValue(defaultValue);
               }
-
-              builder = builder->isRequired(getBoolmethod("isRequired", property_descriptor_clazz, env, propertyDescriptorObj));
-              core::Property prop(builder->build());
+              builder = builder.isRequired(getBoolmethod("isRequired", property_descriptor_clazz, env, propertyDescriptorObj));
+              core::Property prop(builder.build());
               description.class_properties_.push_back(prop);
             }
           }

@@ -73,7 +73,7 @@ const core::PropertyValidator* getValidator(const std::string& lookup_value) {
 }
 
 std::optional<std::string> ensureTimePeriodValidatedPropertyHasExplicitUnit(const core::PropertyValidator* const validator, std::string& value) {
-  if (validator != &core::StandardValidators::TIME_PERIOD_VALIDATOR)
+  if (validator != &core::StandardPropertyTypes::TIME_PERIOD_TYPE)
     return std::nullopt;
   if (value.empty() || !std::all_of(value.begin(), value.end(), [](unsigned char c){ return ::isdigit(c); }))
     return std::nullopt;
@@ -82,7 +82,7 @@ std::optional<std::string> ensureTimePeriodValidatedPropertyHasExplicitUnit(cons
 }
 
 std::optional<std::string> ensureDataSizeValidatedPropertyHasExplicitUnit(const core::PropertyValidator* const validator, std::string& value) {
-  if (validator != &core::StandardValidators::DATA_SIZE_VALIDATOR)
+  if (validator != &core::StandardPropertyTypes::DATA_SIZE_TYPE)
     return std::nullopt;
   if (value.empty() || !std::all_of(value.begin(), value.end(), [](unsigned char c){ return ::isdigit(c); }))
     return std::nullopt;
@@ -91,10 +91,10 @@ std::optional<std::string> ensureDataSizeValidatedPropertyHasExplicitUnit(const 
 }
 
 bool integerValidatedProperty(const core::PropertyValidator* const validator) {
-  return validator == &core::StandardValidators::INTEGER_VALIDATOR
-      || validator == &core::StandardValidators::UNSIGNED_INT_VALIDATOR
-      || validator == &core::StandardValidators::LONG_VALIDATOR
-      || validator == &core::StandardValidators::UNSIGNED_LONG_VALIDATOR;
+  return validator == &core::StandardPropertyTypes::INTEGER_TYPE
+      || validator == &core::StandardPropertyTypes::UNSIGNED_INT_TYPE
+      || validator == &core::StandardPropertyTypes::LONG_TYPE
+      || validator == &core::StandardPropertyTypes::UNSIGNED_LONG_TYPE;
 }
 
 std::optional<int64_t> stringToDataSize(std::string_view input) {

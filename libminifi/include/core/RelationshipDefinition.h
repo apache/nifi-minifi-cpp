@@ -14,24 +14,15 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+#pragma once
 
-#include "DatabaseService.h"
-#include "ODBCConnector.h"
-#include "core/PropertyBuilder.h"
-#include "core/Resource.h"
+#include <string_view>
 
-// FIXME(fgerlits): we need to put all these static definitions in a single file so that they are executed in this order at runtime
-// when https://issues.apache.org/jira/browse/MINIFICPP-1825 is closed, these definitions should be moved back to the cpp file of the class to which they belong
+namespace org::apache::nifi::minifi::core {
 
-namespace org::apache::nifi::minifi::sql::controllers {
+struct RelationshipDefinition {
+  std::string_view name;
+  std::string_view description;
+};
 
-// DatabaseService
-
-core::Property DatabaseService::ConnectionString(core::PropertyBuilder::createProperty("Connection String")->withDescription("Database Connection String")->isRequired(true)->build());
-
-
-// ODBCService
-
-REGISTER_RESOURCE(ODBCService, ControllerService);
-
-}  // namespace org::apache::nifi::minifi::sql::controllers
+}  // namespace org::apache::nifi::minifi::core

@@ -17,6 +17,7 @@
  */
 #pragma once
 
+#include "PropertyDefinition.h"
 #undef NDEBUG
 
 #include <memory>
@@ -62,10 +63,10 @@ class VerifyInvokeHTTP : public HTTPIntegrationBase {
 
   void setProperties(const std::shared_ptr<core::Processor>& proc) {
     std::string url = scheme + "://localhost:" + getWebPort() + *path_;
-    proc->setProperty(minifi::processors::InvokeHTTP::URL.getName(), url);
+    proc->setProperty(minifi::processors::InvokeHTTP::URL, url);
   }
 
-  void setProperty(const std::string& property, const std::string& value) {
+  void setProperty(const core::PropertyReference& property, const std::string& value) {
     bool executed = false;
     flowController_->executeOnComponent("InvokeHTTP", [&](minifi::state::StateController& component) {
       const auto processorController = dynamic_cast<minifi::state::ProcessorController*>(&component);
@@ -96,7 +97,7 @@ class VerifyInvokeHTTP : public HTTPIntegrationBase {
     flowController_->load();
 
     std::string url = scheme + "://localhost:" + getWebPort() + *path_;
-    setProperty(minifi::processors::InvokeHTTP::URL.getName(), url);
+    setProperty(minifi::processors::InvokeHTTP::URL, url);
   }
 
   void run(const std::optional<std::filesystem::path>& flow_yml_path = {}, const std::optional<std::filesystem::path>& = {}) override {

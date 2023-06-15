@@ -224,7 +224,9 @@ class IntValue : public Value {
   explicit IntValue(const std::string &strvalue)
       : Value(strvalue) {
     utils::internal::ValueParser(strvalue).parse(value).parseEnd();
+    setTypeId<int>();
   }
+
   [[nodiscard]] int getValue() const {
     return value;
   }
@@ -270,6 +272,7 @@ class BoolValue : public Value {
   explicit BoolValue(const std::string &strvalue)
       : Value(strvalue) {
     utils::internal::ValueParser(strvalue).parse(value).parseEnd();
+    setTypeId<bool>();
   }
 
   [[nodiscard]] bool getValue() const {

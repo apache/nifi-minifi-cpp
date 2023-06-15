@@ -33,35 +33,25 @@
 
 #include "core/ProcessContext.h"
 #include "core/ProcessSession.h"
-#include "core/PropertyBuilder.h"
-#include "core/PropertyValidation.h"
 #include "core/Resource.h"
 
 namespace org::apache::nifi::minifi::processors {
 
-const core::Relationship GetGPS::Success("success", "All files are routed to success");
-
-const core::Property GetGPS::GPSDHost(core::PropertyBuilder::createProperty("GPSD Host")->withDescription("The host running the GPSD daemon")->withDefaultValue<std::string>("localhost")->build());
-const core::Property GetGPS::GPSDPort(
-    core::PropertyBuilder::createProperty("GPSD Port")->withDescription("The GPSD daemon port")->withDefaultValue<int64_t>(2947, core::StandardValidators::PORT_VALIDATOR)->build());
-const core::Property GetGPS::GPSDWaitTime(
-    core::PropertyBuilder::createProperty("GPSD Wait Time")->withDescription("Timeout value for waiting for data from the GPSD instance")->withDefaultValue<uint64_t>(50000000)->build());
-
 void GetGPS::initialize() {
-  setSupportedProperties(properties());
-  setSupportedRelationships(relationships());
+  setSupportedProperties(Properties);
+  setSupportedRelationships(Relationships);
 }
 
 void GetGPS::onSchedule(const std::shared_ptr<core::ProcessContext> &context, const std::shared_ptr<core::ProcessSessionFactory>& /*sessionFactory*/) {
   std::string value;
 
-  if (context->getProperty(GPSDHost.getName(), value)) {
+  if (context->getProperty(GPSDHost, value)) {
     gpsdHost_ = value;
   }
-  if (context->getProperty(GPSDPort.getName(), value)) {
+  if (context->getProperty(GPSDPort, value)) {
     gpsdPort_ = value;
   }
-  if (context->getProperty(GPSDWaitTime.getName(), value)) {
+  if (context->getProperty(GPSDWaitTime, value)) {
     core::Property::StringToInt(value, gpsdWaitTime_);
   }
   logger_->log_trace("GPSD client scheduled");

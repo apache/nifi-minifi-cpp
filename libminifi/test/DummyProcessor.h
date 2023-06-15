@@ -32,8 +32,8 @@ class DummyProcessor : public minifi::core::Processor {
   DummyProcessor(std::string name, const minifi::utils::Identifier& uuid) : Processor(std::move(name), uuid) {}
   explicit DummyProcessor(std::string name) : Processor(std::move(name)) {}
   static constexpr const char* Description = "A processor that does nothing.";
-  static auto properties() { return std::array<core::Property, 0>{}; }
-  static auto relationships() { return std::array<core::Relationship, 0>{}; }
+  static constexpr auto Properties = std::array<core::PropertyReference, 0>{};
+  static constexpr auto Relationships = std::array<core::RelationshipDefinition, 0>{};
   static constexpr bool SupportsDynamicProperties = false;
   static constexpr bool SupportsDynamicRelationships = false;
   static constexpr core::annotation::Input InputRequirement = core::annotation::Input::INPUT_ALLOWED;

@@ -610,7 +610,7 @@ void StructuredConfiguration::parseRPGPort(const Node& port_node, core::ProcessG
   if (Node propertiesNode = port_node[schema_.rpg_port_properties]) {
     parsePropertiesNode(propertiesNode, *port, nameStr);
   } else {
-    parsePropertyNodeElement(minifi::RemoteProcessorGroupPort::portUUID.getName(), port_node[schema_.rpg_port_target_id], *port);
+    parsePropertyNodeElement(std::string(minifi::RemoteProcessorGroupPort::portUUID.name), port_node[schema_.rpg_port_target_id], *port);
     validateComponentProperties(*port, nameStr, port_node.getPath());
   }
 
@@ -805,7 +805,7 @@ void StructuredConfiguration::validateComponentProperties(ConfigurableComponent&
       if (prop_pair.second.getValue().to_string().empty()) {
         std::string reason = utils::StringUtils::join_pack("required property '", prop_pair.second.getName(), "' is not set");
         raiseComponentError(component_name, section, reason);
-      } else if (!prop_pair.second.getValue().validate(prop_pair.first).valid()) {
+      } else if (!prop_pair.second.getValue().validate(prop_pair.first).valid) {
         std::string reason = utils::StringUtils::join_pack("the value '", prop_pair.first, "' is not valid for property '", prop_pair.second.getName(), "'");
         raiseComponentError(component_name, section, reason);
       }

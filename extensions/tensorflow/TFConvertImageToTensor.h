@@ -19,10 +19,13 @@
 
 #include <atomic>
 
-#include <core/Resource.h>
-#include <core/Processor.h>
-#include <tensorflow/core/public/session.h>
-#include <concurrentqueue.h>
+#include "core/logging/LoggerFactory.h"
+#include "core/PropertyDefinition.h"
+#include "core/PropertyDefinitionBuilder.h"
+#include "core/Resource.h"
+#include "core/Processor.h"
+#include "tensorflow/core/public/session.h"
+#include "concurrentqueue.h"
 #include "io/InputStream.h"
 #include "io/OutputStream.h"
 
@@ -32,23 +35,43 @@ class TFConvertImageToTensor : public core::Processor {
  public:
   explicit TFConvertImageToTensor(const std::string &name, const utils::Identifier &uuid = {})
       : Processor(name, uuid),
-        logger_(logging::LoggerFactory<TFConvertImageToTensor>::getLogger(uuid_)) {
+        logger_(core::logging::LoggerFactory<TFConvertImageToTensor>::getLogger(uuid_)) {
   }
 
   EXTENSIONAPI static constexpr const char* Description = "Converts the input image file into a tensor protobuf. The image will be resized to the given output tensor dimensions.";
 
-  EXTENSIONAPI static const core::Property ImageFormat;
-  EXTENSIONAPI static const core::Property NumChannels;
-  EXTENSIONAPI static const core::Property InputWidth;
-  EXTENSIONAPI static const core::Property InputHeight;
-  EXTENSIONAPI static const core::Property OutputWidth;
-  EXTENSIONAPI static const core::Property OutputHeight;
-  EXTENSIONAPI static const core::Property CropOffsetX;
-  EXTENSIONAPI static const core::Property CropOffsetY;
-  EXTENSIONAPI static const core::Property CropSizeX;
-  EXTENSIONAPI static const core::Property CropSizeY;
-  static auto properties() {
-    return std::array{
+  EXTENSIONAPI static constexpr auto ImageFormat = core::PropertyDefinitionBuilder<>::createProperty("Input Format")
+      .withDescription("The format of the input image (PNG or RAW). RAW is RGB24.")
+      .build();
+  EXTENSIONAPI static constexpr auto NumChannels = core::PropertyDefinitionBuilder<>::createProperty("Channels")
+      .withDescription("The number of channels (e.g. 3 for RGB, 4 for RGBA) in the input image")
+      .withDefaultValue("3")
+      .build();
+  EXTENSIONAPI static constexpr auto InputWidth = core::PropertyDefinitionBuilder<>::createProperty("Input Width")
+      .withDescription("The width, in pixels, of the input image.")
+      .build();
+  EXTENSIONAPI static constexpr auto InputHeight = core::PropertyDefinitionBuilder<>::createProperty("Input Height")
+      .withDescription("The height, in pixels, of the input image.")
+      .build();
+  EXTENSIONAPI static constexpr auto OutputWidth = core::PropertyDefinitionBuilder<>::createProperty("Output Width")
+      .withDescription("The width, in pixels, of the output image.")
+      .build();
+  EXTENSIONAPI static constexpr auto OutputHeight = core::PropertyDefinitionBuilder<>::createProperty("Output Height")
+      .withDescription("The height, in pixels, of the output image.")
+      .build();
+  EXTENSIONAPI static constexpr auto CropOffsetX = core::PropertyDefinitionBuilder<>::createProperty("Crop Offset X")
+      .withDescription("The X (horizontal) offset, in pixels, to crop the input image (relative to top-left corner).")
+      .build();
+  EXTENSIONAPI static constexpr auto CropOffsetY = core::PropertyDefinitionBuilder<>::createProperty("Crop Offset Y")
+      .withDescription("The Y (vertical) offset, in pixels, to crop the input image (relative to top-left corner).")
+      .build();
+  EXTENSIONAPI static constexpr auto CropSizeX = core::PropertyDefinitionBuilder<>::createProperty("Crop Size X")
+      .withDescription("The X (horizontal) size, in pixels, to crop the input image.")
+      .build();
+  EXTENSIONAPI static constexpr auto CropSizeY = core::PropertyDefinitionBuilder<>::createProperty("Crop Size Y")
+      .withDescription("The Y (vertical) size, in pixels, to crop the input image.")
+      .build();
+  EXTENSIONAPI static constexpr auto Properties = std::array<core::PropertyReference, 10>{
       ImageFormat,
       NumChannels,
       InputWidth,
@@ -59,12 +82,12 @@ class TFConvertImageToTensor : public core::Processor {
       CropOffsetY,
       CropSizeX,
       CropSizeY
-    };
-  }
+  };
 
-  EXTENSIONAPI static const core::Relationship Success;
-  EXTENSIONAPI static const core::Relationship Failure;
-  static auto relationships() { return std::array{Success, Failure}; }
+
+  EXTENSIONAPI static constexpr auto Success = core::RelationshipDefinition{"success", "Successful graph application outputs"};
+  EXTENSIONAPI static constexpr auto Failure = core::RelationshipDefinition{"failure", "Failures which will not work if retried"};
+  EXTENSIONAPI static constexpr auto Relationships = std::array{Success, Failure};
 
   EXTENSIONAPI static constexpr bool SupportsDynamicProperties = false;
   EXTENSIONAPI static constexpr bool SupportsDynamicRelationships = false;
@@ -110,7 +133,7 @@ class TFConvertImageToTensor : public core::Processor {
   };
 
  private:
-  std::shared_ptr<logging::Logger> logger_;
+  std::shared_ptr<core::logging::Logger> logger_;
 
   std::string input_format_;
   int input_width_;

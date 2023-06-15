@@ -42,7 +42,7 @@ class LuaScriptExecutor : public script::ScriptExecutor {
       const std::shared_ptr<core::logging::Logger>& logger) override;
 
 
-  static auto properties() { return std::array<core::Property, 0>{}; }
+  EXTENSIONAPI static constexpr auto Properties = std::array<core::PropertyReference, 0>{};
   EXTENSIONAPI static constexpr bool SupportsDynamicProperties = false;
   EXTENSIONAPI static constexpr bool SupportsDynamicRelationships = false;
  private:

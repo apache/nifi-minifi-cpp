@@ -15,46 +15,27 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#include <regex.h>
 #include <memory>
-#include <algorithm>
-#include <cctype>
-#include <cstdint>
-#include <cstring>
-#include <iostream>
 #include <iterator>
 #include <map>
 #include <string>
-#include <utility>
-#include <vector>
 
-#include "utils/ByteArrayCallback.h"
-#include "core/FlowFile.h"
 #include "core/logging/Logger.h"
 #include "core/ProcessContext.h"
-#include "core/Relationship.h"
 #include "core/Resource.h"
 #include "GetEnvironmentalSensors.h"
 #include "io/BufferStream.h"
 #include "io/StreamFactory.h"
-#include "ResourceClaim.h"
-#include "utils/StringUtils.h"
 
-namespace org {
-namespace apache {
-namespace nifi {
-namespace minifi {
-namespace processors {
+namespace org::apache::nifi::minifi::processors {
 
 std::shared_ptr<utils::IdGenerator> GetEnvironmentalSensors::id_generator_ = utils::IdGenerator::getIdGenerator();
-
-const core::Relationship GetEnvironmentalSensors::Success("success", "All files are routed to success");
 
 void GetEnvironmentalSensors::initialize() {
   logger_->log_trace("Initializing EnvironmentalSensors");
 
-  setSupportedProperties(properties());
-  setSupportedRelationships(relationships());
+  setSupportedProperties(Properties);
+  setSupportedRelationships(Relationships);
 }
 
 void GetEnvironmentalSensors::onSchedule(const std::shared_ptr<core::ProcessContext> &context, const std::shared_ptr<core::ProcessSessionFactory> &sessionFactory) {
@@ -136,8 +117,4 @@ void GetEnvironmentalSensors::onTrigger(const std::shared_ptr<core::ProcessConte
 
 REGISTER_RESOURCE(GetEnvironmentalSensors, Processor);
 
-} /* namespace processors */
-} /* namespace minifi */
-} /* namespace nifi */
-} /* namespace apache */
-} /* namespace org */
+}  // namespace org::apache::nifi::minifi::processors

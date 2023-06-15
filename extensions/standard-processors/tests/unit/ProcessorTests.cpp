@@ -241,14 +241,12 @@ TEST_CASE("TestConnectionFull", "[ConnectionFull]") {
   processor->setProperty(minifi::processors::GenerateFlowFile::BatchSize, "10");
   processor->setProperty(minifi::processors::GenerateFlowFile::FileSize, "0");
 
-
   std::shared_ptr<core::Repository> test_repo = std::make_shared<TestRepository>();
   std::shared_ptr<TestRepository> repo = std::static_pointer_cast<TestRepository>(test_repo);
 
   std::shared_ptr<minifi::Connection> connection = std::make_shared<minifi::Connection>(test_repo, content_repo, "GFF2Connection");
   connection->setBackpressureThresholdCount(5);
   connection->addRelationship(core::Relationship("success", "description"));
-
 
   utils::Identifier processoruuid = processor->getUUID();
 
@@ -295,7 +293,7 @@ TEST_CASE("LogAttributeTest", "[getfileCreate3]") {
 
   auto dir = testController.createTempDirectory();
 
-  plan->setProperty(getfile, org::apache::nifi::minifi::processors::GetFile::Directory.getName(), dir.string());
+  plan->setProperty(getfile, org::apache::nifi::minifi::processors::GetFile::Directory, dir.string());
   testController.runSession(plan, false);
   auto records = plan->getProvenanceRecords();
   std::shared_ptr<core::FlowFile> record = plan->getCurrentFlowFile();
@@ -337,9 +335,9 @@ TEST_CASE("LogAttributeTestInvalid", "[TestLogAttribute]") {
 
   auto dir = testController.createTempDirectory();
 
-  plan->setProperty(getfile, org::apache::nifi::minifi::processors::GetFile::Directory.getName(), dir.string());
-  plan->setProperty(getfile, org::apache::nifi::minifi::processors::GetFile::BatchSize.getName(), "1");
-  REQUIRE_THROWS_AS(plan->setProperty(loggattr, org::apache::nifi::minifi::processors::LogAttribute::FlowFilesToLog.getName(), "-1"), utils::internal::ParseException);
+  plan->setProperty(getfile, org::apache::nifi::minifi::processors::GetFile::Directory, dir.string());
+  plan->setProperty(getfile, org::apache::nifi::minifi::processors::GetFile::BatchSize, "1");
+  REQUIRE_THROWS_AS(plan->setProperty(loggattr, org::apache::nifi::minifi::processors::LogAttribute::FlowFilesToLog, "-1"), utils::internal::ParseException);
   LogTestController::getInstance().reset();
 }
 
@@ -358,9 +356,9 @@ void testMultiplesLogAttribute(int fileCount, int flowsToLog, std::string verify
   auto flowsToLogStr = std::to_string(flowsToLog);
   if (verifyStringFlowsLogged.empty())
     verifyStringFlowsLogged = std::to_string(flowsToLog);
-  plan->setProperty(getfile, org::apache::nifi::minifi::processors::GetFile::Directory.getName(), dir.string());
-  plan->setProperty(getfile, org::apache::nifi::minifi::processors::GetFile::BatchSize.getName(), std::to_string(fileCount));
-  plan->setProperty(loggattr, org::apache::nifi::minifi::processors::LogAttribute::FlowFilesToLog.getName(), flowsToLogStr);
+  plan->setProperty(getfile, org::apache::nifi::minifi::processors::GetFile::Directory, dir.string());
+  plan->setProperty(getfile, org::apache::nifi::minifi::processors::GetFile::BatchSize, std::to_string(fileCount));
+  plan->setProperty(loggattr, org::apache::nifi::minifi::processors::LogAttribute::FlowFilesToLog, flowsToLogStr);
   testController.runSession(plan, false);
   auto records = plan->getProvenanceRecords();
   std::shared_ptr<core::FlowFile> record = plan->getCurrentFlowFile();
@@ -421,7 +419,7 @@ TEST_CASE("Test Find file", "[getfileCreate3]") {
   plan->addProcessor(processorReport, "reporter", core::Relationship("success", "description"), false);
 
   auto dir = testController.createTempDirectory();
-  plan->setProperty(processor, org::apache::nifi::minifi::processors::GetFile::Directory.getName(), dir.string());
+  plan->setProperty(processor, org::apache::nifi::minifi::processors::GetFile::Directory, dir.string());
   testController.runSession(plan, false);
   auto records = plan->getProvenanceRecords();
   std::shared_ptr<core::FlowFile> record = plan->getCurrentFlowFile();
@@ -496,9 +494,9 @@ class TestProcessorNoContent : public minifi::core::Processor {
   }
 
   static constexpr const char* Description = "test resource";
-  static auto properties() { return std::array<core::Property, 0>{}; }
-  static const core::Relationship Success;
-  static auto relationships() { return std::array{Success}; }
+  static constexpr auto Properties = std::array<core::PropertyReference, 0>{};
+  static constexpr auto Success =  core::RelationshipDefinition{"success", "All files are routed to success"};
+  static constexpr auto Relationships = std::array{Success};
   static constexpr bool SupportsDynamicProperties = false;
   static constexpr bool SupportsDynamicRelationships = false;
   static constexpr core::annotation::Input InputRequirement = core::annotation::Input::INPUT_ALLOWED;
@@ -514,8 +512,6 @@ class TestProcessorNoContent : public minifi::core::Processor {
     session->transfer(ff, Success);
   }
 };
-
-const core::Relationship TestProcessorNoContent::Success("success", "All files are routed to success");
 
 REGISTER_RESOURCE(TestProcessorNoContent, Processor);
 

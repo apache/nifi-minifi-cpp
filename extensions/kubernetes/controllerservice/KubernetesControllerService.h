@@ -25,7 +25,8 @@
 #include "../ContainerInfo.h"
 #include "controllers/AttributeProviderService.h"
 #include "core/logging/Logger.h"
-#include "core/Property.h"
+#include "core/PropertyDefinition.h"
+#include "core/PropertyDefinitionBuilder.h"
 #include "utils/RegexUtils.h"
 
 namespace org::apache::nifi::minifi::controllers {
@@ -37,16 +38,22 @@ class KubernetesControllerService : public AttributeProviderService {
 
   EXTENSIONAPI static constexpr const char* Description = "Controller service that provides access to the Kubernetes API";
 
-  EXTENSIONAPI static const core::Property NamespaceFilter;
-  EXTENSIONAPI static const core::Property PodNameFilter;
-  EXTENSIONAPI static const core::Property ContainerNameFilter;
-  static auto properties() {
-    return std::array{
+  EXTENSIONAPI static constexpr auto NamespaceFilter = core::PropertyDefinitionBuilder<>::createProperty("Namespace Filter")
+      .withDescription("Limit the output to pods in namespaces which match this regular expression")
+      .withDefaultValue("default")
+      .build();
+  EXTENSIONAPI static constexpr auto PodNameFilter = core::PropertyDefinitionBuilder<>::createProperty("Pod Name Filter")
+      .withDescription("If present, limit the output to pods the name of which matches this regular expression")
+      .build();
+  EXTENSIONAPI static constexpr auto ContainerNameFilter = core::PropertyDefinitionBuilder<>::createProperty("Container Name Filter")
+      .withDescription("If present, limit the output to containers the name of which matches this regular expression")
+      .build();
+  EXTENSIONAPI static constexpr auto Properties = std::array<core::PropertyReference, 3>{
       NamespaceFilter,
       PodNameFilter,
       ContainerNameFilter
-    };
-  }
+  };
+
 
   EXTENSIONAPI static constexpr bool SupportsDynamicProperties = false;
   ADD_COMMON_VIRTUAL_FUNCTIONS_FOR_CONTROLLER_SERVICES

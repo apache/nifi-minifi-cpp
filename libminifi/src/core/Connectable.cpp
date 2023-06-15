@@ -20,6 +20,7 @@
 #include <memory>
 #include <string>
 #include <set>
+#include "core/RelationshipDefinition.h"
 #include "core/logging/LoggerConfiguration.h"
 #include "core/Relationship.h"
 
@@ -41,9 +42,9 @@ Connectable::Connectable(std::string name)
 
 Connectable::~Connectable() = default;
 
-void Connectable::setSupportedRelationships(std::span<const core::Relationship> relationships) {
+void Connectable::setSupportedRelationships(std::span<const core::RelationshipDefinition> relationships) {
   if (isRunning()) {
-    logger_->log_warn("Can not set processor supported relationship while the process %s is running", name_);
+    logger_->log_warn("Cannot set processor supported relationship while the process %s is running", name_);
     return;
   }
 
@@ -51,8 +52,8 @@ void Connectable::setSupportedRelationships(std::span<const core::Relationship> 
 
   relationships_.clear();
   for (const auto& item : relationships) {
-    relationships_[item.getName()] = item;
-    logger_->log_debug("Processor %s supported relationship name %s", name_, item.getName());
+    relationships_.emplace(item.name, item);
+    logger_->log_debug("Processor %s supported relationship name %s", name_, std::string(item.name));
   }
 }
 

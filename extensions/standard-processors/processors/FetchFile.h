@@ -22,6 +22,9 @@
 
 #include "core/Processor.h"
 #include "core/ProcessSession.h"
+#include "core/PropertyDefinition.h"
+#include "core/PropertyDefinitionBuilder.h"
+#include "core/RelationshipDefinition.h"
 #include "core/Property.h"
 #include "utils/Enum.h"
 #include "core/logging/LoggerConfiguration.h"
@@ -29,21 +32,32 @@
 
 namespace org::apache::nifi::minifi::processors {
 
+namespace fetch_file {
+SMART_ENUM(CompletionStrategyOption,
+  (NONE, "None"),
+  (MOVE_FILE, "Move File"),
+  (DELETE_FILE, "Delete File")
+)
+
+SMART_ENUM(MoveConflictStrategyOption,
+  (RENAME, "Rename"),
+  (REPLACE_FILE, "Replace File"),
+  (KEEP_EXISTING, "Keep Existing"),
+  (FAIL, "Fail")
+)
+
+SMART_ENUM(LogLevelOption,
+  (LOGGING_TRACE, "TRACE"),
+  (LOGGING_DEBUG, "DEBUG"),
+  (LOGGING_INFO, "INFO"),
+  (LOGGING_WARN, "WARN"),
+  (LOGGING_ERROR, "ERROR"),
+  (LOGGING_OFF, "OFF")
+)
+}  // namespace fetch_file
+
 class FetchFile : public core::Processor {
  public:
-  SMART_ENUM(CompletionStrategyOption,
-    (NONE, "None"),
-    (MOVE_FILE, "Move File"),
-    (DELETE_FILE, "Delete File")
-  )
-
-  SMART_ENUM(MoveConflictStrategyOption,
-    (RENAME, "Rename"),
-    (REPLACE_FILE, "Replace File"),
-    (KEEP_EXISTING, "Keep Existing"),
-    (FAIL, "Fail")
-  )
-
   explicit FetchFile(std::string name, const utils::Identifier& uuid = {})
     : core::Processor(std::move(name), uuid) {
   }
@@ -51,35 +65,64 @@ class FetchFile : public core::Processor {
   EXTENSIONAPI static constexpr const char* Description = "Reads the contents of a file from disk and streams it into the contents of an incoming FlowFile. "
       "Once this is done, the file is optionally moved elsewhere or deleted to help keep the file system organized.";
 
-  EXTENSIONAPI static const core::Property FileToFetch;
-  EXTENSIONAPI static const core::Property CompletionStrategy;
-  EXTENSIONAPI static const core::Property MoveDestinationDirectory;
-  EXTENSIONAPI static const core::Property MoveConflictStrategy;
-  EXTENSIONAPI static const core::Property LogLevelWhenFileNotFound;
-  EXTENSIONAPI static const core::Property LogLevelWhenPermissionDenied;
-  static auto properties() {
-    return std::array{
+  EXTENSIONAPI static constexpr auto FileToFetch = core::PropertyDefinitionBuilder<>::createProperty("File to Fetch")
+      .withDescription("The fully-qualified filename of the file to fetch from the file system. If not defined the default ${absolute.path}/${filename} path is used.")
+      .supportsExpressionLanguage(true)
+      .build();
+  EXTENSIONAPI static constexpr auto CompletionStrategy = core::PropertyDefinitionBuilder<fetch_file::CompletionStrategyOption::length>::createProperty("Completion Strategy")
+      .withDescription("Specifies what to do with the original file on the file system once it has been pulled into MiNiFi")
+      .withDefaultValue(toStringView(fetch_file::CompletionStrategyOption::NONE))
+      .withAllowedValues(fetch_file::CompletionStrategyOption::values)
+      .isRequired(true)
+      .build();
+  EXTENSIONAPI static constexpr auto MoveDestinationDirectory = core::PropertyDefinitionBuilder<>::createProperty("Move Destination Directory")
+      .withDescription("The directory to move the original file to once it has been fetched from the file system. "
+        "This property is ignored unless the Completion Strategy is set to \"Move File\". If the directory does not exist, it will be created.")
+      .supportsExpressionLanguage(true)
+      .build();
+  EXTENSIONAPI static constexpr auto MoveConflictStrategy = core::PropertyDefinitionBuilder<fetch_file::MoveConflictStrategyOption::length>::createProperty("Move Conflict Strategy")
+      .withDescription("If Completion Strategy is set to Move File and a file already exists in the destination directory with the same name, "
+        "this property specifies how that naming conflict should be resolved")
+      .withDefaultValue(toStringView(fetch_file::MoveConflictStrategyOption::RENAME))
+      .withAllowedValues(fetch_file::MoveConflictStrategyOption::values)
+      .isRequired(true)
+      .build();
+  EXTENSIONAPI static constexpr auto LogLevelWhenFileNotFound = core::PropertyDefinitionBuilder<fetch_file::LogLevelOption::length>::createProperty("Log level when file not found")
+      .withDescription("Log level to use in case the file does not exist when the processor is triggered")
+      .withDefaultValue(toStringView(fetch_file::LogLevelOption::LOGGING_ERROR))
+      .withAllowedValues(fetch_file::LogLevelOption::values)
+      .isRequired(true)
+      .build();
+  EXTENSIONAPI static constexpr auto LogLevelWhenPermissionDenied = core::PropertyDefinitionBuilder<fetch_file::LogLevelOption::length>::createProperty("Log level when permission denied")
+      .withDescription("Log level to use in case agent does not have sufficient permissions to read the file")
+      .withDefaultValue(toStringView(fetch_file::LogLevelOption::LOGGING_ERROR))
+      .withAllowedValues(fetch_file::LogLevelOption::values)
+      .isRequired(true)
+      .build();
+  EXTENSIONAPI static constexpr auto Properties = std::array<core::PropertyReference, 6>{
       FileToFetch,
       CompletionStrategy,
       MoveDestinationDirectory,
       MoveConflictStrategy,
       LogLevelWhenFileNotFound,
       LogLevelWhenPermissionDenied
-    };
-  }
+  };
 
-  EXTENSIONAPI static const core::Relationship Success;
-  EXTENSIONAPI static const core::Relationship NotFound;
-  EXTENSIONAPI static const core::Relationship PermissionDenied;
-  EXTENSIONAPI static const core::Relationship Failure;
-  static auto relationships() {
-    return std::array{
+
+  EXTENSIONAPI static constexpr auto Success = core::RelationshipDefinition{"success",
+      "Any FlowFile that is successfully fetched from the file system will be transferred to this Relationship."};
+  EXTENSIONAPI static constexpr auto NotFound = core::RelationshipDefinition{"not.found",
+      "Any FlowFile that could not be fetched from the file system because the file could not be found will be transferred to this Relationship."};
+  EXTENSIONAPI static constexpr auto PermissionDenied = core::RelationshipDefinition{"permission.denied",
+      "Any FlowFile that could not be fetched from the file system due to the user running MiNiFi not having sufficient permissions will be transferred to this Relationship."};
+  EXTENSIONAPI static constexpr auto Failure = core::RelationshipDefinition{"failure",
+      "Any FlowFile that could not be fetched from the file system for any reason other than insufficient permissions or the file not existing will be transferred to this Relationship."};
+  EXTENSIONAPI static constexpr auto Relationships = std::array{
       Success,
       NotFound,
       PermissionDenied,
       Failure
-    };
-  }
+  };
 
   EXTENSIONAPI static constexpr bool SupportsDynamicProperties = false;
   EXTENSIONAPI static constexpr bool SupportsDynamicRelationships = false;
@@ -102,8 +145,8 @@ class FetchFile : public core::Processor {
   void executeCompletionStrategy(const std::filesystem::path& file_to_fetch_path, const std::filesystem::path& file_name);
 
   std::filesystem::path move_destination_directory_;
-  CompletionStrategyOption completion_strategy_;
-  MoveConflictStrategyOption move_confict_strategy_;
+  fetch_file::CompletionStrategyOption completion_strategy_;
+  fetch_file::MoveConflictStrategyOption move_confict_strategy_;
   utils::LogUtils::LogLevelOption log_level_when_file_not_found_;
   utils::LogUtils::LogLevelOption log_level_when_permission_denied_;
   std::shared_ptr<core::logging::Logger> logger_ = core::logging::LoggerFactory<FetchFile>::getLogger(uuid_);

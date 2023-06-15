@@ -26,62 +26,19 @@
 #include "utils/OptionalUtils.h"
 #include "core/ProcessContext.h"
 #include "core/ProcessSession.h"
-#include "core/PropertyBuilder.h"
 #include "core/Resource.h"
 
 namespace org::apache::nifi::minifi::extensions::systemd {
 
 namespace chr = std::chrono;
 
-const core::Relationship ConsumeJournald::Success("success", "Successfully consumed journal messages.");
-
-const core::Property ConsumeJournald::BatchSize = core::PropertyBuilder::createProperty("Batch Size")
-    ->withDescription("The maximum number of entries processed in a single execution.")
-    ->withDefaultValue<size_t>(1000)
-    ->isRequired(true)
-    ->build();
-
-const core::Property ConsumeJournald::PayloadFormat = core::PropertyBuilder::createProperty("Payload Format")
-    ->withDescription("Configures flow file content formatting. Raw: only the message. Syslog: similar to syslog or journalctl output.")
-    ->withDefaultValue<std::string>(PAYLOAD_FORMAT_SYSLOG)
-    ->withAllowableValues<std::string>({PAYLOAD_FORMAT_RAW, PAYLOAD_FORMAT_SYSLOG})
-    ->isRequired(true)
-    ->build();
-
-const core::Property ConsumeJournald::IncludeTimestamp = core::PropertyBuilder::createProperty("Include Timestamp")
-    ->withDescription("Include message timestamp in the 'timestamp' attribute.")
-    ->withDefaultValue<bool>(true)
-    ->isRequired(true)
-    ->build();
-
-const core::Property ConsumeJournald::JournalType = core::PropertyBuilder::createProperty("Journal Type")
-    ->withDescription("Type of journal to consume.")
-    ->withDefaultValue<std::string>(JOURNAL_TYPE_SYSTEM)
-    ->withAllowableValues<std::string>({JOURNAL_TYPE_USER, JOURNAL_TYPE_SYSTEM, JOURNAL_TYPE_BOTH})
-    ->isRequired(true)
-    ->build();
-
-const core::Property ConsumeJournald::ProcessOldMessages = core::PropertyBuilder::createProperty("Process Old Messages")
-    ->withDescription("Process events created before the first usage (schedule) of the processor instance.")
-    ->withDefaultValue<bool>(false)
-    ->isRequired(true)
-    ->build();
-
-const core::Property ConsumeJournald::TimestampFormat = core::PropertyBuilder::createProperty("Timestamp Format")
-    ->withDescription("Format string to use when creating the timestamp attribute or writing messages in the syslog format. "
-        "ISO/ISO 8601/ISO8601 are equivalent to \"%FT%T%Ez\". "
-        "See https://howardhinnant.github.io/date/date.html#to_stream_formatting for all flags.")
-    ->withDefaultValue("%x %X %Z")
-    ->isRequired(true)
-    ->build();
-
 ConsumeJournald::ConsumeJournald(std::string name, const utils::Identifier &id, std::unique_ptr<libwrapper::LibWrapper>&& libwrapper)
     :core::Processor{std::move(name), id}, libwrapper_{std::move(libwrapper)}
 {}
 
 void ConsumeJournald::initialize() {
-  setSupportedProperties(properties());
-  setSupportedRelationships(relationships());
+  setSupportedProperties(Properties);
+  setSupportedRelationships(Relationships);
 
   worker_ = std::make_unique<utils::FifoExecutor>();
 }

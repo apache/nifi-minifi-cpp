@@ -41,15 +41,15 @@ TEST_CASE("GenerateFlowFileTest", "[generateflowfiletest]") {
 
   std::shared_ptr<core::Processor> putfile = plan->addProcessor("PutFile", "putfile", core::Relationship("success", "description"), true);
 
-  plan->setProperty(putfile, org::apache::nifi::minifi::processors::PutFile::Directory.getName(), dir.string());
+  plan->setProperty(putfile, org::apache::nifi::minifi::processors::PutFile::Directory, dir.string());
 
-  plan->setProperty(genfile, org::apache::nifi::minifi::processors::GenerateFlowFile::FileSize.getName(), "10");
-  plan->setProperty(genfile, org::apache::nifi::minifi::processors::GenerateFlowFile::BatchSize.getName(), "2");
-  plan->setProperty(genfile, org::apache::nifi::minifi::processors::GenerateFlowFile::UniqueFlowFiles.getName(), "true");
-  plan->setProperty(genfile, org::apache::nifi::minifi::processors::GenerateFlowFile::DataFormat.getName(), "Text");
+  plan->setProperty(genfile, org::apache::nifi::minifi::processors::GenerateFlowFile::FileSize, "10");
+  plan->setProperty(genfile, org::apache::nifi::minifi::processors::GenerateFlowFile::BatchSize, "2");
+  plan->setProperty(genfile, org::apache::nifi::minifi::processors::GenerateFlowFile::UniqueFlowFiles, "true");
+  plan->setProperty(genfile, org::apache::nifi::minifi::processors::GenerateFlowFile::DataFormat, "Text");
 
   // This property will be ignored if unique flow files are used
-  plan->setProperty(genfile, org::apache::nifi::minifi::processors::GenerateFlowFile::CustomText.getName(), "Current time: ${now()}");
+  plan->setProperty(genfile, org::apache::nifi::minifi::processors::GenerateFlowFile::CustomText, "Current time: ${now()}");
 
   plan->runNextProcessor();  // Generate
   plan->runNextProcessor();  // Put
@@ -85,14 +85,14 @@ TEST_CASE("GenerateFlowFileWithNonUniqueBinaryData", "[generateflowfiletest]") {
 
   std::shared_ptr<core::Processor> putfile = plan->addProcessor("PutFile", "putfile", core::Relationship("success", "description"), true);
 
-  plan->setProperty(putfile, org::apache::nifi::minifi::processors::PutFile::Directory.getName(), dir.string());
+  plan->setProperty(putfile, org::apache::nifi::minifi::processors::PutFile::Directory, dir.string());
 
-  plan->setProperty(genfile, org::apache::nifi::minifi::processors::GenerateFlowFile::FileSize.getName(), "10");
-  plan->setProperty(genfile, org::apache::nifi::minifi::processors::GenerateFlowFile::BatchSize.getName(), "2");
-  plan->setProperty(genfile, org::apache::nifi::minifi::processors::GenerateFlowFile::UniqueFlowFiles.getName(), "false");
+  plan->setProperty(genfile, org::apache::nifi::minifi::processors::GenerateFlowFile::FileSize, "10");
+  plan->setProperty(genfile, org::apache::nifi::minifi::processors::GenerateFlowFile::BatchSize, "2");
+  plan->setProperty(genfile, org::apache::nifi::minifi::processors::GenerateFlowFile::UniqueFlowFiles, "false");
 
   // This property will be ignored if binary files are used
-  plan->setProperty(genfile, org::apache::nifi::minifi::processors::GenerateFlowFile::CustomText.getName(), "Current time: ${now()}");
+  plan->setProperty(genfile, org::apache::nifi::minifi::processors::GenerateFlowFile::CustomText, "Current time: ${now()}");
 
   plan->runNextProcessor();  // Generate
   plan->runNextProcessor();  // Put
@@ -137,9 +137,9 @@ TEST_CASE("GenerateFlowFileTestEmpty", "[generateemptyfiletest]") {
 
   std::shared_ptr<core::Processor> putfile = plan->addProcessor("PutFile", "putfile", core::Relationship("success", "description"), true);
 
-  plan->setProperty(putfile, org::apache::nifi::minifi::processors::PutFile::Directory.getName(), dir.string());
+  plan->setProperty(putfile, org::apache::nifi::minifi::processors::PutFile::Directory, dir.string());
 
-  plan->setProperty(genfile, org::apache::nifi::minifi::processors::GenerateFlowFile::FileSize.getName(), "0");
+  plan->setProperty(genfile, org::apache::nifi::minifi::processors::GenerateFlowFile::FileSize, "0");
 
   plan->runNextProcessor();  // Generate
   plan->runNextProcessor();  // Put
@@ -174,11 +174,11 @@ TEST_CASE("GenerateFlowFileCustomTextTest", "[generateflowfiletest]") {
 
   std::shared_ptr<core::Processor> putfile = plan->addProcessor("PutFile", "putfile", core::Relationship("success", "description"), true);
 
-  plan->setProperty(putfile, org::apache::nifi::minifi::processors::PutFile::Directory.getName(), dir.string());
+  plan->setProperty(putfile, org::apache::nifi::minifi::processors::PutFile::Directory, dir.string());
 
-  plan->setProperty(genfile, org::apache::nifi::minifi::processors::GenerateFlowFile::CustomText.getName(), "${UUID()}");
-  plan->setProperty(genfile, org::apache::nifi::minifi::processors::GenerateFlowFile::UniqueFlowFiles.getName(), "false");
-  plan->setProperty(genfile, org::apache::nifi::minifi::processors::GenerateFlowFile::DataFormat.getName(), "Text");
+  plan->setProperty(genfile, org::apache::nifi::minifi::processors::GenerateFlowFile::CustomText, "${UUID()}");
+  plan->setProperty(genfile, org::apache::nifi::minifi::processors::GenerateFlowFile::UniqueFlowFiles, "false");
+  plan->setProperty(genfile, org::apache::nifi::minifi::processors::GenerateFlowFile::DataFormat, "Text");
 
   plan->runNextProcessor();  // Generate
   plan->runNextProcessor();  // Put
@@ -210,12 +210,12 @@ TEST_CASE("GenerateFlowFileCustomTextEmptyTest", "[generateflowfiletest]") {
 
   std::shared_ptr<core::Processor> putfile = plan->addProcessor("PutFile", "putfile", core::Relationship("success", "description"), true);
 
-  plan->setProperty(putfile, org::apache::nifi::minifi::processors::PutFile::Directory.getName(), dir.string());
+  plan->setProperty(putfile, org::apache::nifi::minifi::processors::PutFile::Directory, dir.string());
 
-  plan->setProperty(genfile, org::apache::nifi::minifi::processors::GenerateFlowFile::FileSize.getName(), "10");
-  plan->setProperty(genfile, org::apache::nifi::minifi::processors::GenerateFlowFile::CustomText.getName(), "");
-  plan->setProperty(genfile, org::apache::nifi::minifi::processors::GenerateFlowFile::UniqueFlowFiles.getName(), "false");
-  plan->setProperty(genfile, org::apache::nifi::minifi::processors::GenerateFlowFile::DataFormat.getName(), "Text");
+  plan->setProperty(genfile, org::apache::nifi::minifi::processors::GenerateFlowFile::FileSize, "10");
+  plan->setProperty(genfile, org::apache::nifi::minifi::processors::GenerateFlowFile::CustomText, "");
+  plan->setProperty(genfile, org::apache::nifi::minifi::processors::GenerateFlowFile::UniqueFlowFiles, "false");
+  plan->setProperty(genfile, org::apache::nifi::minifi::processors::GenerateFlowFile::DataFormat, "Text");
 
   plan->runNextProcessor();  // Generate
   plan->runNextProcessor();  // Put

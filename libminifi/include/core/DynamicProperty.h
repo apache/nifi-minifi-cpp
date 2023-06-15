@@ -16,43 +16,15 @@
  */
 #pragma once
 
-#include <string>
-#include <utility>
+#include <string_view>
 
 namespace org::apache::nifi::minifi::core {
 
-class DynamicProperty {
- public:
-  DynamicProperty() = default;  // required by VS 2019 to create an empty array; not required by VS 2022
-
-  DynamicProperty(std::string name, std::string value, std::string description, bool supports_expression_language)
-      : name_(std::move(name)),
-        value_(std::move(value)),
-        description_(std::move(description)),
-        supports_expression_language_(supports_expression_language) {
-  }
-
-  [[nodiscard]] std::string getName() const {
-    return name_;
-  }
-
-  [[nodiscard]] std::string getValue() const {
-    return value_;
-  }
-
-  [[nodiscard]] std::string getDescription() const {
-    return description_;
-  }
-
-  [[nodiscard]] bool supportsExpressionLanguage() const {
-    return supports_expression_language_;
-  }
-
- private:
-  std::string name_;
-  std::string value_;
-  std::string description_;
-  bool supports_expression_language_ = false;
+struct DynamicProperty {
+  std::string_view name;
+  std::string_view value;
+  std::string_view description;
+  bool supports_expression_language = false;
 };
 
 }  // namespace org::apache::nifi::minifi::core

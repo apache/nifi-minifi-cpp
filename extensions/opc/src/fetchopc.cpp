@@ -29,8 +29,8 @@
 namespace org::apache::nifi::minifi::processors {
 
   void FetchOPCProcessor::initialize() {
-    setSupportedProperties(properties());
-    setSupportedRelationships(relationships());
+    setSupportedProperties(Properties);
+    setSupportedRelationships(Relationships);
   }
 
   void FetchOPCProcessor::onSchedule(const std::shared_ptr<core::ProcessContext> &context, const std::shared_ptr<core::ProcessSessionFactory> &factory) {
@@ -41,11 +41,11 @@ namespace org::apache::nifi::minifi::processors {
     BaseOPCProcessor::onSchedule(context, factory);
 
     std::string value;
-    context->getProperty(NodeID.getName(), nodeID_);
-    context->getProperty(NodeIDType.getName(), value);
+    context->getProperty(NodeID, nodeID_);
+    context->getProperty(NodeIDType, value);
 
     maxDepth_ = 0;
-    context->getProperty(MaxDepth.getName(), maxDepth_);
+    context->getProperty(MaxDepth, maxDepth_);
 
     if (value == "String") {
       idType_ = opc::OPCNodeIDType::String;
@@ -68,13 +68,13 @@ namespace org::apache::nifi::minifi::processors {
       }
     }
     if (idType_ != opc::OPCNodeIDType::Path) {
-      if (!context->getProperty(NameSpaceIndex.getName(), nameSpaceIdx_)) {
-        auto error_msg = utils::StringUtils::join_pack(NameSpaceIndex.getName(), " is mandatory in case ", NodeIDType.getName(), " is not Path");
+      if (!context->getProperty(NameSpaceIndex, nameSpaceIdx_)) {
+        auto error_msg = utils::StringUtils::join_pack(NameSpaceIndex.name, " is mandatory in case ", NodeIDType.name, " is not Path");
         throw Exception(PROCESS_SCHEDULE_EXCEPTION, error_msg);
       }
     }
 
-    context->getProperty(Lazy.getName(), value);
+    context->getProperty(Lazy, value);
     lazy_mode_ = value == "On";
   }
 
@@ -179,5 +179,7 @@ namespace org::apache::nifi::minifi::processors {
     }
     session->transfer(flowFile, Success);
   }
+
+REGISTER_RESOURCE(FetchOPCProcessor, Processor);
 
 }  // namespace org::apache::nifi::minifi::processors

@@ -15,12 +15,14 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#ifndef LIBMINIFI_INCLUDE_CORE_CORE_H_
-#define LIBMINIFI_INCLUDE_CORE_CORE_H_
+#pragma once
+
 #ifndef WIN32_LEAN_AND_MEAN
 #define WIN32_LEAN_AND_MEAN 1
 #endif
 
+#include <algorithm>
+#include <array>
 #include <memory>
 #include <string>
 #include <string_view>
@@ -63,6 +65,7 @@
 #include <cxxabi.h>
 #endif
 
+#include "utils/ArrayUtils.h"
 #include "utils/Id.h"
 #include "properties/Configure.h"
 #include "utils/StringUtils.h"
@@ -93,6 +96,62 @@ static inline std::string getClassName() {
   }
   return std::string{name};
 #endif
+}
+
+constexpr std::string_view removeStructOrClassPrefix(std::string_view input) {
+  constexpr std::string_view STRUCT = "struct ";  // should be static constexpr, but that is only allowed inside a constexpr function with std >= c++23
+  constexpr std::string_view CLASS = "class ";
+
+  for (auto prefix : { STRUCT, CLASS }) {
+    if (input.find(prefix) == 0) {
+      return input.substr(prefix.size());
+    }
+  }
+  return input;
+}
+
+// based on https://bitwizeshift.github.io/posts/2021/03/09/getting-an-unmangled-type-name-at-compile-time/
+template<typename T>
+constexpr auto typeNameArray() {
+#if defined(__clang__)
+  constexpr auto prefix   = std::string_view{"[T = "};
+  constexpr auto suffix   = std::string_view{"]"};
+  constexpr auto function = std::string_view{__PRETTY_FUNCTION__};
+#elif defined(__GNUC__)
+  constexpr auto prefix   = std::string_view{"with T = "};
+  constexpr auto suffix   = std::string_view{"]"};
+  constexpr auto function = std::string_view{__PRETTY_FUNCTION__};
+#elif defined(_MSC_VER)
+  constexpr auto prefix   = std::string_view{"typeNameArray<"};
+  constexpr auto suffix   = std::string_view{">(void)"};
+  constexpr auto function = std::string_view{__FUNCSIG__};
+#else
+# error Unsupported compiler
+#endif
+
+  static_assert(function.find(prefix) != std::string_view::npos && function.rfind(suffix) != std::string_view::npos);
+
+  constexpr auto start = function.find(prefix) + prefix.size();
+  constexpr auto end = function.rfind(suffix);
+  static_assert(start < end);
+
+#if defined(_MSC_VER)
+  constexpr auto name = removeStructOrClassPrefix(function.substr(start, end - start));
+#else
+  constexpr auto name = function.substr(start, end - start);
+#endif
+
+  return utils::string_view_to_array<name.length()>(name);
+}
+
+template<typename T>
+struct TypeNameHolder {
+  static constexpr auto value = typeNameArray<T>();
+};
+
+template<typename T>
+constexpr std::string_view className() {
+  return utils::array_to_string_view(TypeNameHolder<T>::value);
 }
 
 template<typename T>
@@ -162,5 +221,3 @@ class CoreComponent {
 };
 
 }  // namespace org::apache::nifi::minifi::core
-
-#endif  // LIBMINIFI_INCLUDE_CORE_CORE_H_

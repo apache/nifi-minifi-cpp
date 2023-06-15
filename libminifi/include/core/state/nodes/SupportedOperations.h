@@ -54,7 +54,8 @@ class SupportedOperations : public DeviceInformation {
 
   template<typename T>
   static void serializeProperty(SerializedResponseNode& properties, const std::unordered_map<std::string, Metadata>& operand_with_metadata = {}) {
-    for (const auto& operand_type: T::values()) {
+    for (const auto& operand_type_view : T::values) {
+      std::string operand_type{operand_type_view};
       auto metadata_it = operand_with_metadata.find(operand_type);
       if (metadata_it != operand_with_metadata.end()) {
         addProperty(properties, operand_type, metadata_it->second);

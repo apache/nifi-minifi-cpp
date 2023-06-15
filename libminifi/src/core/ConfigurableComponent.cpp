@@ -68,6 +68,7 @@ bool ConfigurableComponent::setProperty(const std::string& name, const std::stri
     return true;
   } else {
     if (accept_all_properties_) {
+      static const std::string STAR_PROPERTIES = "Property";
       Property new_property(name, STAR_PROPERTIES, value, false, "", { }, { });
       new_property.setTransient();
       new_property.setValue(value);
@@ -102,6 +103,10 @@ bool ConfigurableComponent::updateProperty(const std::string &name, const std::s
   } else {
     return false;
   }
+}
+
+bool ConfigurableComponent::updateProperty(const PropertyReference& property, std::string_view value) {
+  return updateProperty(std::string{property.name}, std::string{value});
 }
 
 /**
@@ -139,6 +144,10 @@ bool ConfigurableComponent::setProperty(const Property& prop, const std::string&
   }
 }
 
+bool ConfigurableComponent::setProperty(const PropertyReference& property, std::string_view value) {
+  return setProperty(std::string{property.name}, std::string{value});
+}
+
 bool ConfigurableComponent::setProperty(const Property& prop, PropertyValue &value) {
   std::lock_guard<std::mutex> lock(configuration_mutex_);
   auto it = properties_.find(prop.getName());
@@ -168,7 +177,7 @@ bool ConfigurableComponent::setProperty(const Property& prop, PropertyValue &val
   }
 }
 
-void ConfigurableComponent::setSupportedProperties(std::span<const core::Property> properties) {
+void ConfigurableComponent::setSupportedProperties(std::span<const core::PropertyReference> properties) {
   if (!canEdit()) {
     return;
   }
@@ -177,7 +186,7 @@ void ConfigurableComponent::setSupportedProperties(std::span<const core::Propert
 
   properties_.clear();
   for (const auto& item : properties) {
-    properties_[item.getName()] = item;
+    properties_.emplace(item.name, item);
   }
 }
 
@@ -212,6 +221,7 @@ bool ConfigurableComponent::createDynamicProperty(const std::string &name, const
     return false;
   }
 
+  static const std::string DEFAULT_DYNAMIC_PROPERTY_DESC = "Dynamic Property";
   Property new_property(name, DEFAULT_DYNAMIC_PROPERTY_DESC, value, false, "", { }, { });
   new_property.setSupportsExpressionLanguage(true);
   logger_->log_info("Processor %s dynamic property '%s' value '%s'", name.c_str(), new_property.getName().c_str(), value.c_str());
@@ -289,6 +299,11 @@ std::map<std::string, Property> ConfigurableComponent::getProperties() const {
 bool ConfigurableComponent::isPropertyExplicitlySet(const Property& searched_prop) const {
   Property prop;
   return getProperty(searched_prop.getName(), prop) && !prop.getValues().empty();
+}
+
+bool ConfigurableComponent::isPropertyExplicitlySet(const PropertyReference& searched_prop) const {
+  Property prop;
+  return getProperty(std::string(searched_prop.name), prop) && !prop.getValues().empty();
 }
 
 }  // namespace org::apache::nifi::minifi::core

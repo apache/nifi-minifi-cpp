@@ -18,13 +18,14 @@
 
 #pragma once
 
+#include <array>
 #include <string>
 #include <functional>
 #include <map>
-#include <set>
 #include <vector>
 #include <memory>
 #include <string_view>
+#include <utility>
 
 #include "open62541/client.h"
 #include "logging/Logger.h"
@@ -119,11 +120,16 @@ struct NodeData {
   friend std::string nodeValue2String(const NodeData&);
 };
 
-static std::map<std::string, OPCNodeDataType>  StringToOPCDataTypeMap = {{"Int64", OPCNodeDataType::Int64}, {"UInt64", OPCNodeDataType::UInt64 }, {"Int32", OPCNodeDataType::Int32},
-                                                                         {"UInt32", OPCNodeDataType::UInt32}, {"Boolean", OPCNodeDataType::Boolean}, {"Float", OPCNodeDataType::Float},
-                                                                         {"Double", OPCNodeDataType::Double}, {"String", OPCNodeDataType::String}};
-
-std::set<std::string> stringToOPCDataTypeMapKeys();
+inline constexpr std::array<std::pair<std::string_view, OPCNodeDataType>, 8>  StringToOPCDataTypeMap = {{
+  {"Int64", OPCNodeDataType::Int64},
+  {"UInt64", OPCNodeDataType::UInt64 },
+  {"Int32", OPCNodeDataType::Int32},
+  {"UInt32", OPCNodeDataType::UInt32},
+  {"Boolean", OPCNodeDataType::Boolean},
+  {"Float", OPCNodeDataType::Float},
+  {"Double", OPCNodeDataType::Double},
+  {"String", OPCNodeDataType::String}
+}};
 
 std::string nodeValue2String(const NodeData& nd);
 

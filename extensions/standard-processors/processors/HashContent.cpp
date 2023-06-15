@@ -36,25 +36,18 @@
 
 namespace org::apache::nifi::minifi::processors {
 
-const core::Property HashContent::HashAttribute("Hash Attribute", "Attribute to store checksum to", "Checksum");
-const core::Property HashContent::HashAlgorithm("Hash Algorithm", "Name of the algorithm used to generate checksum", "SHA256");
-const core::Property HashContent::FailOnEmpty("Fail on empty", "Route to failure relationship in case of empty content", "false");
-
-const core::Relationship HashContent::Success("success", "success operational on the flow record");
-const core::Relationship HashContent::Failure("failure", "failure operational on the flow record");
-
 void HashContent::initialize() {
-  setSupportedProperties(properties());
-  setSupportedRelationships(relationships());
+  setSupportedProperties(Properties);
+  setSupportedRelationships(Relationships);
 }
 
 void HashContent::onSchedule(core::ProcessContext *context, core::ProcessSessionFactory* /*sessionFactory*/) {
-  context->getProperty(HashAttribute.getName(), attrKey_);
-  context->getProperty(FailOnEmpty.getName(), failOnEmpty_);
+  context->getProperty(HashAttribute, attrKey_);
+  context->getProperty(FailOnEmpty, failOnEmpty_);
 
   {
     std::string algo_name;
-    context->getProperty(HashAlgorithm.getName(), algo_name);
+    context->getProperty(HashAlgorithm, algo_name);
     std::transform(algo_name.begin(), algo_name.end(), algo_name.begin(), ::toupper);
     std::erase(algo_name, '-');
     if (!HashAlgos.contains(algo_name)) {

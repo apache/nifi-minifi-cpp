@@ -67,7 +67,7 @@ class VerifyC2Server : public HTTPIntegrationBase {
 
     assert(inv != nullptr);
     std::string url;
-    inv->getProperty(minifi::processors::InvokeHTTP::URL.getName(), url);
+    inv->getProperty(minifi::processors::InvokeHTTP::URL, url);
 
     std::string port;
     std::string scheme;

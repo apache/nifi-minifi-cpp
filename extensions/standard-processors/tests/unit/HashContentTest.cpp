@@ -72,23 +72,23 @@ TEST_CASE("Test usage of ExtractText", "[extracttextTest]") {
   REQUIRE(!tempdir.empty());
 
   std::shared_ptr<core::Processor> getfile = plan->addProcessor("GetFile", "getfileCreate2");
-  plan->setProperty(getfile, org::apache::nifi::minifi::processors::GetFile::Directory.getName(), tempdir.string());
-  plan->setProperty(getfile, org::apache::nifi::minifi::processors::GetFile::KeepSourceFile.getName(), "true");
+  plan->setProperty(getfile, org::apache::nifi::minifi::processors::GetFile::Directory, tempdir.string());
+  plan->setProperty(getfile, org::apache::nifi::minifi::processors::GetFile::KeepSourceFile, "true");
 
   std::shared_ptr<core::Processor> md5processor = plan->addProcessor("HashContent", "HashContentMD5",
       core::Relationship("success", "description"), true);
-  plan->setProperty(md5processor, org::apache::nifi::minifi::processors::HashContent::HashAttribute.getName(), MD5_ATTR);
-  plan->setProperty(md5processor, org::apache::nifi::minifi::processors::HashContent::HashAlgorithm.getName(), "MD5");
+  plan->setProperty(md5processor, org::apache::nifi::minifi::processors::HashContent::HashAttribute, MD5_ATTR);
+  plan->setProperty(md5processor, org::apache::nifi::minifi::processors::HashContent::HashAlgorithm, "MD5");
 
   std::shared_ptr<core::Processor> shaprocessor = plan->addProcessor("HashContent", "HashContentSHA1",
       core::Relationship("success", "description"), true);
-  plan->setProperty(shaprocessor, org::apache::nifi::minifi::processors::HashContent::HashAttribute.getName(), SHA1_ATTR);
-  plan->setProperty(shaprocessor, org::apache::nifi::minifi::processors::HashContent::HashAlgorithm.getName(), "sha1");
+  plan->setProperty(shaprocessor, org::apache::nifi::minifi::processors::HashContent::HashAttribute, SHA1_ATTR);
+  plan->setProperty(shaprocessor, org::apache::nifi::minifi::processors::HashContent::HashAlgorithm, "sha1");
 
   std::shared_ptr<core::Processor> sha2processor = plan->addProcessor("HashContent", "HashContentSHA256",
       core::Relationship("success", "description"), true);
-  plan->setProperty(sha2processor, org::apache::nifi::minifi::processors::HashContent::HashAttribute.getName(), SHA256_ATTR);
-  plan->setProperty(sha2processor, org::apache::nifi::minifi::processors::HashContent::HashAlgorithm.getName(), "sha-256");
+  plan->setProperty(sha2processor, org::apache::nifi::minifi::processors::HashContent::HashAttribute, SHA256_ATTR);
+  plan->setProperty(sha2processor, org::apache::nifi::minifi::processors::HashContent::HashAlgorithm, "sha-256");
 
   std::shared_ptr<core::Processor> laprocessor = plan->addProcessor("LogAttribute", "outputLogAttribute",
       core::Relationship("success", "description"), true);
@@ -139,21 +139,21 @@ TEST_CASE("TestingFailOnEmptyProperty", "[HashContentPropertiesCheck]") {
 
   auto tempdir = testController.createTempDirectory();
   std::shared_ptr<core::Processor> getfile = plan->addProcessor("GetFile", "getfileCreate2");
-  plan->setProperty(getfile, org::apache::nifi::minifi::processors::GetFile::Directory.getName(), tempdir.string());
-  plan->setProperty(getfile, org::apache::nifi::minifi::processors::GetFile::KeepSourceFile.getName(), "true");
+  plan->setProperty(getfile, org::apache::nifi::minifi::processors::GetFile::Directory, tempdir.string());
+  plan->setProperty(getfile, org::apache::nifi::minifi::processors::GetFile::KeepSourceFile, "true");
 
   std::shared_ptr<core::Processor> md5processor = plan->addProcessor("HashContent", "HashContentMD5",
                                                                      core::Relationship("success", "description"), true);
-  plan->setProperty(md5processor, HashContent::HashAttribute.getName(), MD5_ATTR);
-  plan->setProperty(md5processor, HashContent::HashAlgorithm.getName(), "MD5");
+  plan->setProperty(md5processor, HashContent::HashAttribute, MD5_ATTR);
+  plan->setProperty(md5processor, HashContent::HashAlgorithm, "MD5");
 
-  md5processor->setAutoTerminatedRelationships(std::array{HashContent::Success, HashContent::Failure});
+  md5processor->setAutoTerminatedRelationships(std::array<core::Relationship, 2>{HashContent::Success, HashContent::Failure});
 
   auto test_file_path = tempdir / TEST_FILE;
   std::ofstream test_file(test_file_path, std::ios::binary);
 
   SECTION("with an empty file and fail on empty property set to false") {
-    plan->setProperty(md5processor, HashContent::FailOnEmpty.getName(), "false");
+    plan->setProperty(md5processor, HashContent::FailOnEmpty, "false");
 
     plan->runNextProcessor();
     plan->runNextProcessor();
@@ -161,7 +161,7 @@ TEST_CASE("TestingFailOnEmptyProperty", "[HashContentPropertiesCheck]") {
     REQUIRE(LogTestController::getInstance().contains("attempting read"));
   }
   SECTION("with an empty file and fail on empty property set to true") {
-    plan->setProperty(md5processor, HashContent::FailOnEmpty.getName(), "true");
+    plan->setProperty(md5processor, HashContent::FailOnEmpty, "true");
 
     plan->runNextProcessor();
     plan->runNextProcessor();

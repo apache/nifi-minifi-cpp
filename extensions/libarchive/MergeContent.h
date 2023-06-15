@@ -28,6 +28,8 @@
 #include "archive_entry.h"
 #include "archive.h"
 #include "core/logging/LoggerConfiguration.h"
+#include "core/PropertyDefinitionBuilder.h"
+#include "core/PropertyType.h"
 #include "serialization/FlowFileSerializer.h"
 #include "utils/ArrayUtils.h"
 #include "utils/gsl.h"
@@ -37,18 +39,18 @@ namespace org::apache::nifi::minifi::processors {
 
 namespace merge_content_options {
 
-constexpr const char *MERGE_STRATEGY_BIN_PACK = "Bin-Packing Algorithm";
-constexpr const char *MERGE_STRATEGY_DEFRAGMENT = "Defragment";
-constexpr const char *MERGE_FORMAT_TAR_VALUE = "TAR";
-constexpr const char *MERGE_FORMAT_ZIP_VALUE = "ZIP";
-constexpr const char *MERGE_FORMAT_CONCAT_VALUE = "Binary Concatenation";
-constexpr const char* MERGE_FORMAT_FLOWFILE_STREAM_V3_VALUE = "FlowFile Stream, v3";
-constexpr const char *DELIMITER_STRATEGY_FILENAME = "Filename";
-constexpr const char *DELIMITER_STRATEGY_TEXT = "Text";
-constexpr const char *ATTRIBUTE_STRATEGY_KEEP_COMMON = "Keep Only Common Attributes";
-constexpr const char *ATTRIBUTE_STRATEGY_KEEP_ALL_UNIQUE = "Keep All Unique Attributes";
+inline constexpr std::string_view MERGE_STRATEGY_BIN_PACK = "Bin-Packing Algorithm";
+inline constexpr std::string_view MERGE_STRATEGY_DEFRAGMENT = "Defragment";
+inline constexpr std::string_view MERGE_FORMAT_TAR_VALUE = "TAR";
+inline constexpr std::string_view MERGE_FORMAT_ZIP_VALUE = "ZIP";
+inline constexpr std::string_view MERGE_FORMAT_CONCAT_VALUE = "Binary Concatenation";
+inline constexpr std::string_view MERGE_FORMAT_FLOWFILE_STREAM_V3_VALUE = "FlowFile Stream, v3";
+inline constexpr std::string_view DELIMITER_STRATEGY_FILENAME = "Filename";
+inline constexpr std::string_view DELIMITER_STRATEGY_TEXT = "Text";
+inline constexpr std::string_view ATTRIBUTE_STRATEGY_KEEP_COMMON = "Keep Only Common Attributes";
+inline constexpr std::string_view ATTRIBUTE_STRATEGY_KEEP_ALL_UNIQUE = "Keep All Unique Attributes";
 
-} /* namespace merge_content_options */
+}  // namespace merge_content_options
 
 class MergeBin {
  public:
@@ -154,8 +156,8 @@ class ArchiveMerge {
   // Nest Callback Class for write stream
   class WriteCallback {
    public:
-    WriteCallback(std::string merge_type, std::deque<std::shared_ptr<core::FlowFile>> &flows, FlowFileSerializer& serializer)
-        : merge_type_(std::move(merge_type)),
+    WriteCallback(std::string_view merge_type, std::deque<std::shared_ptr<core::FlowFile>> &flows, FlowFileSerializer& serializer)
+        : merge_type_(merge_type),
           flows_(flows),
           serializer_(serializer) {
       size_ = 0;
@@ -301,17 +303,51 @@ class MergeContent : public processors::BinFiles {
       "MergeContent should be configured with only one incoming connection as it won't create grouped Flow Files."
       "This processor updates the mime.type attribute as appropriate.";
 
-  EXTENSIONAPI static const core::Property MergeStrategy;
-  EXTENSIONAPI static const core::Property MergeFormat;
-  EXTENSIONAPI static const core::Property CorrelationAttributeName;
-  EXTENSIONAPI static const core::Property DelimiterStrategy;
-  EXTENSIONAPI static const core::Property KeepPath;
-  EXTENSIONAPI static const core::Property Header;
-  EXTENSIONAPI static const core::Property Footer;
-  EXTENSIONAPI static const core::Property Demarcator;
-  EXTENSIONAPI static const core::Property AttributeStrategy;
-  static auto properties() {
-    return utils::array_cat(BinFiles::properties(), std::array{
+  EXTENSIONAPI static constexpr auto MergeStrategy = core::PropertyDefinitionBuilder<2>::createProperty("Merge Strategy")
+      .withDescription("Defragment or Bin-Packing Algorithm")
+      .withAllowedValues({merge_content_options::MERGE_STRATEGY_DEFRAGMENT, merge_content_options::MERGE_STRATEGY_BIN_PACK})
+      .withDefaultValue(merge_content_options::MERGE_STRATEGY_DEFRAGMENT)
+      .build();
+  EXTENSIONAPI static constexpr auto MergeFormat = core::PropertyDefinitionBuilder<4>::createProperty("Merge Format")
+      .withDescription("Merge Format")
+      .withAllowedValues({
+        merge_content_options::MERGE_FORMAT_CONCAT_VALUE,
+        merge_content_options::MERGE_FORMAT_TAR_VALUE,
+        merge_content_options::MERGE_FORMAT_ZIP_VALUE,
+        merge_content_options::MERGE_FORMAT_FLOWFILE_STREAM_V3_VALUE})
+      .withDefaultValue(merge_content_options::MERGE_FORMAT_CONCAT_VALUE)
+      .build();
+  EXTENSIONAPI static constexpr auto CorrelationAttributeName = core::PropertyDefinitionBuilder<>::createProperty("Correlation Attribute Name")
+      .withDescription("Correlation Attribute Name")
+      .build();
+  EXTENSIONAPI static constexpr auto DelimiterStrategy = core::PropertyDefinitionBuilder<2>::createProperty("Delimiter Strategy")
+      .withDescription("Determines if Header, Footer, and Demarcator should point to files")
+      .withAllowedValues({merge_content_options::DELIMITER_STRATEGY_FILENAME, merge_content_options::DELIMITER_STRATEGY_TEXT})
+      .withDefaultValue(merge_content_options::DELIMITER_STRATEGY_FILENAME)
+      .build();
+  EXTENSIONAPI static constexpr auto Header = core::PropertyDefinitionBuilder<>::createProperty("Header File")
+      .withDescription("Filename specifying the header to use")
+      .build();
+  EXTENSIONAPI static constexpr auto Footer = core::PropertyDefinitionBuilder<>::createProperty("Footer File")
+      .withDescription("Filename specifying the footer to use")
+      .build();
+  EXTENSIONAPI static constexpr auto Demarcator = core::PropertyDefinitionBuilder<>::createProperty("Demarcator File")
+      .withDescription("Filename specifying the demarcator to use")
+      .build();
+  EXTENSIONAPI static constexpr auto KeepPath = core::PropertyDefinitionBuilder<>::createProperty("Keep Path")
+      .withDescription("If using the Zip or Tar Merge Format, specifies whether or not the FlowFiles' paths should be included in their entry")
+      .withPropertyType(core::StandardPropertyTypes::BOOLEAN_TYPE)
+      .withDefaultValue("false")
+      .build();
+  EXTENSIONAPI static constexpr auto AttributeStrategy = core::PropertyDefinitionBuilder<2>::createProperty("Attribute Strategy")
+      .withDescription("Determines which FlowFile attributes should be added to the bundle. If 'Keep All Unique Attributes' is selected, "
+          "any attribute on any FlowFile that gets bundled will be kept unless its value conflicts with the value from another FlowFile "
+          "(in which case neither, or none, of the conflicting attributes will be kept). If 'Keep Only Common Attributes' is selected, "
+          "only the attributes that exist on all FlowFiles in the bundle, with the same value, will be preserved.")
+      .withAllowedValues({merge_content_options::ATTRIBUTE_STRATEGY_KEEP_COMMON, merge_content_options::ATTRIBUTE_STRATEGY_KEEP_ALL_UNIQUE})
+      .withDefaultValue(merge_content_options::ATTRIBUTE_STRATEGY_KEEP_COMMON)
+      .build();
+  EXTENSIONAPI static constexpr auto Properties = utils::array_cat(BinFiles::Properties, std::array<core::PropertyReference, 9>{
       MergeStrategy,
       MergeFormat,
       CorrelationAttributeName,
@@ -321,13 +357,11 @@ class MergeContent : public processors::BinFiles {
       Footer,
       Demarcator,
       AttributeStrategy
-    });
-  }
+  });
 
-  EXTENSIONAPI static const core::Relationship Merge;
-  static auto relationships() {
-    return utils::array_cat(BinFiles::relationships(), std::array{Merge});
-  }
+
+  EXTENSIONAPI static constexpr auto Merge = core::RelationshipDefinition{"merged", "The FlowFile containing the merged content"};
+  EXTENSIONAPI static constexpr auto Relationships = utils::array_cat(BinFiles::Relationships, std::array{Merge});
 
   EXTENSIONAPI static constexpr bool SupportsDynamicProperties = false;
   EXTENSIONAPI static constexpr bool SupportsDynamicRelationships = false;

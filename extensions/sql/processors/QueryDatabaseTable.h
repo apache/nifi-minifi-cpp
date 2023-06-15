@@ -27,6 +27,8 @@
 #include <memory>
 
 #include "core/ProcessSession.h"
+#include "core/PropertyDefinition.h"
+#include "core/PropertyDefinitionBuilder.h"
 #include "SQLProcessor.h"
 #include "FlowFileSource.h"
 #include "data/SQLColumnIdentifier.h"
@@ -48,25 +50,56 @@ class QueryDatabaseTable: public SQLProcessor, public FlowFileSource {
       "Fetches all rows of a table, whose values in the specified Maximum-value Columns are larger than the previously-seen maxima. "
       "If that property is not provided, all rows are returned. The rows are grouped according to the value of Max Rows Per Flow File property and formatted as JSON.";
 
-  EXTENSIONAPI static const core::Property TableName;
-  EXTENSIONAPI static const core::Property ColumnNames;
-  EXTENSIONAPI static const core::Property MaxValueColumnNames;
-  EXTENSIONAPI static const core::Property WhereClause;
-  static auto properties() {
-    return utils::array_cat(SQLProcessor::properties(), FlowFileSource::properties(), std::array{
+  EXTENSIONAPI static constexpr auto TableName = core::PropertyDefinitionBuilder<>::createProperty("Table Name")
+      .withDescription("The name of the database table to be queried.")
+      .isRequired(true)
+      .supportsExpressionLanguage(true)
+      .build();
+  EXTENSIONAPI static constexpr auto ColumnNames = core::PropertyDefinitionBuilder<>::createProperty("Columns to Return")
+      .withDescription(
+        "A comma-separated list of column names to be used in the query. If your database requires special treatment of the names (quoting, e.g.), each name should include such treatment. "
+        "If no column names are supplied, all columns in the specified table will be returned. "
+        "NOTE: It is important to use consistent column names for a given table for incremental fetch to work properly.")
+      .isRequired(false)
+      .supportsExpressionLanguage(true)
+      .build();
+  EXTENSIONAPI static constexpr auto MaxValueColumnNames = core::PropertyDefinitionBuilder<>::createProperty("Maximum-value Columns")
+      .withDescription(
+        "A comma-separated list of column names. The processor will keep track of the maximum value for each column that has been returned since the processor started running. "
+        "Using multiple columns implies an order to the column list, and each column's values are expected to increase more slowly than the previous columns' values. "
+        "Thus, using multiple columns implies a hierarchical structure of columns, which is usually used for partitioning tables. "
+        "This processor can be used to retrieve only those rows that have been added/updated since the last retrieval. "
+        "Note that some ODBC types such as bit/boolean are not conducive to maintaining maximum value, so columns of these types should not be listed in this property, and will result in error(s) during processing. "
+        "If no columns are provided, all rows from the table will be considered, which could have a performance impact. "
+        "NOTE: It is important to use consistent max-value column names for a given table for incremental fetch to work properly. "
+        "NOTE: Because of a limitation of database access library 'soci', which doesn't support milliseconds in it's 'dt_date', "
+        "there is a possibility that flowfiles might have duplicated records, if a max-value column with 'dt_date' type has value with milliseconds.")
+      .isRequired(false)
+      .supportsExpressionLanguage(true)
+      .build();
+  EXTENSIONAPI static constexpr auto WhereClause = core::PropertyDefinitionBuilder<>::createProperty("Where Clause")
+      .withDescription("A custom clause to be added in the WHERE condition when building SQL queries.")
+      .isRequired(false)
+      .supportsExpressionLanguage(true)
+      .build();
+  EXTENSIONAPI static constexpr auto Properties = utils::array_cat(SQLProcessor::Properties, FlowFileSource::Properties, std::array<core::PropertyReference, 4>{
       TableName,
       ColumnNames,
       MaxValueColumnNames,
       WhereClause
-    });
-  }
+  });
 
-  EXTENSIONAPI static const core::Relationship Success;
-  static auto relationships() { return std::array{Success}; }
+
+  EXTENSIONAPI static constexpr auto Success =  core::RelationshipDefinition{"success", "Successfully created FlowFile from SQL query result set."};
+  EXTENSIONAPI static constexpr auto Relationships = std::array{Success};
 
   EXTENSIONAPI static constexpr bool SupportsDynamicProperties = true;
-  EXTENSIONAPI static const core::DynamicProperty InitialMaxValue;
-  static auto dynamicProperties() { return std::array{InitialMaxValue}; }
+  EXTENSIONAPI static constexpr auto InitialMaxValue = core::DynamicProperty{"initial.maxvalue.<max_value_column>",
+      "Initial maximum value for the specified column",
+      "Specifies an initial max value for max value column(s). Properties should be added in the format `initial.maxvalue.<max_value_column>`. "
+      "This value is only used the first time the table is accessed (when a Maximum Value Column is specified).",
+      true};
+  EXTENSIONAPI static constexpr auto DynamicProperties = std::array{InitialMaxValue};
 
   EXTENSIONAPI static constexpr bool SupportsDynamicRelationships = false;
   EXTENSIONAPI static constexpr core::annotation::Input InputRequirement = core::annotation::Input::INPUT_FORBIDDEN;

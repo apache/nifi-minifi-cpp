@@ -27,10 +27,10 @@ std::optional<utils::net::SslData> KafkaProcessorBase::getSslData(core::ProcessC
 }
 
 void KafkaProcessorBase::setKafkaAuthenticationParameters(core::ProcessContext& context, gsl::not_null<rd_kafka_conf_t*> config) {
-  security_protocol_ = utils::getRequiredPropertyOrThrow<SecurityProtocolOption>(context, SecurityProtocol.getName());
+  security_protocol_ = utils::getRequiredPropertyOrThrow<kafka::SecurityProtocolOption>(context, std::string{SecurityProtocol.name});
   utils::setKafkaConfigurationField(*config, "security.protocol", security_protocol_.toString());
   logger_->log_debug("Kafka security.protocol [%s]", security_protocol_.toString());
-  if (security_protocol_ == SecurityProtocolOption::SSL || security_protocol_ == SecurityProtocolOption::SASL_SSL) {
+  if (security_protocol_ == kafka::SecurityProtocolOption::SSL || security_protocol_ == kafka::SecurityProtocolOption::SASL_SSL) {
     auto ssl_data = getSslData(context);
     if (ssl_data) {
       if (ssl_data->ca_loc.empty() && ssl_data->cert_loc.empty() && ssl_data->key_loc.empty() && ssl_data->key_pw.empty()) {
@@ -48,13 +48,13 @@ void KafkaProcessorBase::setKafkaAuthenticationParameters(core::ProcessContext& 
     }
   }
 
-  auto sasl_mechanism = utils::getRequiredPropertyOrThrow<SASLMechanismOption>(context, SASLMechanism.getName());
+  auto sasl_mechanism = utils::getRequiredPropertyOrThrow<kafka::SASLMechanismOption>(context, std::string{SASLMechanism.name});
   utils::setKafkaConfigurationField(*config, "sasl.mechanism", sasl_mechanism.toString());
   logger_->log_debug("Kafka sasl.mechanism [%s]", sasl_mechanism.toString());
 
-  auto setKafkaConfigIfNotEmpty = [this, &context, config](const std::string& property_name, const std::string& kafka_config_name, bool log_value = true) {
+  auto setKafkaConfigIfNotEmpty = [this, &context, config](const core::PropertyReference& property, const std::string& kafka_config_name, bool log_value = true) {
     std::string value;
-    if (context.getProperty(property_name, value) && !value.empty()) {
+    if (context.getProperty(property, value) && !value.empty()) {
       utils::setKafkaConfigurationField(*config, kafka_config_name, value);
       if (log_value) {
         logger_->log_debug("Kafka %s [%s]", kafka_config_name, value);
@@ -64,11 +64,11 @@ void KafkaProcessorBase::setKafkaAuthenticationParameters(core::ProcessContext& 
     }
   };
 
-  setKafkaConfigIfNotEmpty(KerberosServiceName.getName(), "sasl.kerberos.service.name");
-  setKafkaConfigIfNotEmpty(KerberosPrincipal.getName(), "sasl.kerberos.principal");
-  setKafkaConfigIfNotEmpty(KerberosKeytabPath.getName(), "sasl.kerberos.keytab");
-  setKafkaConfigIfNotEmpty(Username.getName(), "sasl.username");
-  setKafkaConfigIfNotEmpty(Password.getName(), "sasl.password", false);
+  setKafkaConfigIfNotEmpty(KerberosServiceName, "sasl.kerberos.service.name");
+  setKafkaConfigIfNotEmpty(KerberosPrincipal, "sasl.kerberos.principal");
+  setKafkaConfigIfNotEmpty(KerberosKeytabPath, "sasl.kerberos.keytab");
+  setKafkaConfigIfNotEmpty(Username, "sasl.username");
+  setKafkaConfigIfNotEmpty(Password, "sasl.password", false);
 }
 
 }  // namespace org::apache::nifi::minifi::processors

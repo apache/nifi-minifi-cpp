@@ -30,24 +30,24 @@ TEST_CASE("PostElasticsearch", "[elastic]") {
   minifi::test::SingleProcessorTestController test_controller{post_elasticsearch_json};
   auto elasticsearch_credentials_controller_service = test_controller.plan->addController("ElasticsearchCredentialsControllerService", "elasticsearch_credentials_controller_service");
   CHECK(test_controller.plan->setProperty(post_elasticsearch_json,
-                                     PostElasticsearch::ElasticCredentials.getName(),
+                                     PostElasticsearch::ElasticCredentials,
                                      "elasticsearch_credentials_controller_service"));
   CHECK(test_controller.plan->setProperty(post_elasticsearch_json,
-                                    PostElasticsearch::Hosts.getName(),
+                                    PostElasticsearch::Hosts,
                                     "localhost:10433"));
   CHECK(test_controller.plan->setProperty(post_elasticsearch_json,
-                                    PostElasticsearch::Action.getName(),
+                                    PostElasticsearch::Action,
                                     "${elastic_action}"));
   CHECK(test_controller.plan->setProperty(post_elasticsearch_json,
-                                    PostElasticsearch::Index.getName(),
+                                    PostElasticsearch::Index,
                                     "test_index"));
 
   SECTION("Index with valid basic authentication") {
     CHECK(test_controller.plan->setProperty(elasticsearch_credentials_controller_service,
-                                            ElasticsearchCredentialsControllerService::Username.getName(),
+                                            ElasticsearchCredentialsControllerService::Username,
                                             MockElasticAuthHandler::USERNAME));
     CHECK(test_controller.plan->setProperty(elasticsearch_credentials_controller_service,
-                                            ElasticsearchCredentialsControllerService::Password.getName(),
+                                            ElasticsearchCredentialsControllerService::Password,
                                             MockElasticAuthHandler::PASSWORD));
 
     auto results = test_controller.trigger({{R"({"field1":"value1"}")", {{"elastic_action", "index"}}},
@@ -62,10 +62,10 @@ TEST_CASE("PostElasticsearch", "[elastic]") {
 
   SECTION("Update with valid ApiKey") {
     CHECK(test_controller.plan->setProperty(elasticsearch_credentials_controller_service,
-                                            ElasticsearchCredentialsControllerService::ApiKey.getName(),
+                                            ElasticsearchCredentialsControllerService::ApiKey,
                                             MockElasticAuthHandler::API_KEY));
     CHECK(test_controller.plan->setProperty(post_elasticsearch_json,
-                                            PostElasticsearch::Identifier.getName(),
+                                            PostElasticsearch::Identifier,
                                             "${filename}"));
 
     auto results = test_controller.trigger(R"({"field1":"value1"}")", {{"elastic_action", "upsert"}});
@@ -77,10 +77,10 @@ TEST_CASE("PostElasticsearch", "[elastic]") {
 
   SECTION("Update error") {
     CHECK(test_controller.plan->setProperty(elasticsearch_credentials_controller_service,
-                                            ElasticsearchCredentialsControllerService::ApiKey.getName(),
+                                            ElasticsearchCredentialsControllerService::ApiKey,
                                             MockElasticAuthHandler::API_KEY));
     CHECK(test_controller.plan->setProperty(post_elasticsearch_json,
-                                            PostElasticsearch::Identifier.getName(),
+                                            PostElasticsearch::Identifier,
                                             "${filename}"));
     mock_elastic.returnErrors(true);
     auto results = test_controller.trigger(R"({"field1":"value1"}")", {{"elastic_action", "upsert"}});
@@ -94,7 +94,7 @@ TEST_CASE("PostElasticsearch", "[elastic]") {
 
   SECTION("Invalid ApiKey") {
     CHECK(test_controller.plan->setProperty(elasticsearch_credentials_controller_service,
-                                            ElasticsearchCredentialsControllerService::ApiKey.getName(),
+                                            ElasticsearchCredentialsControllerService::ApiKey,
                                             "invalid_api_key"));
 
     auto results = test_controller.trigger(R"({"field1":"value1"}")", {{"elastic_action", "create"}});
@@ -103,10 +103,10 @@ TEST_CASE("PostElasticsearch", "[elastic]") {
 
   SECTION("Invalid basic authentication") {
     CHECK(test_controller.plan->setProperty(elasticsearch_credentials_controller_service,
-                                            ElasticsearchCredentialsControllerService::Username.getName(),
+                                            ElasticsearchCredentialsControllerService::Username,
                                             MockElasticAuthHandler::USERNAME));
     CHECK(test_controller.plan->setProperty(elasticsearch_credentials_controller_service,
-                                            ElasticsearchCredentialsControllerService::Password.getName(),
+                                            ElasticsearchCredentialsControllerService::Password,
                                             "wrong_password"));
 
     auto results = test_controller.trigger(R"({"field1":"value1"}")", {{"elastic_action", "index"}});

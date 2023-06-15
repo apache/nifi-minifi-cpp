@@ -27,6 +27,9 @@
 #include <utility>
 #include <vector>
 
+#include "core/PropertyDefinition.h"
+#include "core/PropertyDefinitionBuilder.h"
+#include "core/PropertyType.h"
 #include "io/StreamPipe.h"
 #include "S3Processor.h"
 #include "utils/ArrayUtils.h"
@@ -40,27 +43,70 @@ namespace org::apache::nifi::minifi::aws::processors {
 
 class PutS3Object : public S3Processor {
  public:
-  static const std::set<std::string> CANNED_ACLS;
-  static const std::set<std::string> STORAGE_CLASSES;
-  static const std::set<std::string> SERVER_SIDE_ENCRYPTIONS;
+  static constexpr auto CANNED_ACLS = minifi::utils::getKeys(minifi::aws::s3::CANNED_ACL_MAP);
+  static constexpr auto STORAGE_CLASSES = minifi::utils::getKeys(minifi::aws::s3::STORAGE_CLASS_MAP);
+  static constexpr auto SERVER_SIDE_ENCRYPTIONS = minifi::utils::getKeys(minifi::aws::s3::SERVER_SIDE_ENCRYPTION_MAP);
 
   EXTENSIONAPI static constexpr const char* Description = "Puts FlowFiles to an Amazon S3 Bucket. The upload uses the PutS3Object method. "
       "The PutS3Object method send the file in a single synchronous call, but it has a 5GB size limit. Larger files sent using the multipart upload methods are currently not supported. "
       "The AWS libraries select an endpoint URL based on the AWS region, but this can be overridden with the 'Endpoint Override URL' property for use with other S3-compatible endpoints. "
       "The S3 API specifies that the maximum file size for a PutS3Object upload is 5GB.";
 
-  static const core::Property ObjectKey;
-  static const core::Property ContentType;
-  static const core::Property StorageClass;
-  static const core::Property ServerSideEncryption;
-  static const core::Property FullControlUserList;
-  static const core::Property ReadPermissionUserList;
-  static const core::Property ReadACLUserList;
-  static const core::Property WriteACLUserList;
-  static const core::Property CannedACL;
-  static const core::Property UsePathStyleAccess;
-  static auto properties() {
-    return minifi::utils::array_cat(S3Processor::properties(), std::array{
+  EXTENSIONAPI static constexpr auto ObjectKey = core::PropertyDefinitionBuilder<>::createProperty("Object Key")
+      .withDescription("The key of the S3 object. If none is given the filename attribute will be used by default.")
+      .supportsExpressionLanguage(true)
+      .build();
+  EXTENSIONAPI static constexpr auto ContentType = core::PropertyDefinitionBuilder<>::createProperty("Content Type")
+      .withDescription("Sets the Content-Type HTTP header indicating the type of content stored in "
+          "the associated object. The value of this header is a standard MIME type. "
+          "If no content type is provided the default content type "
+          "\"application/octet-stream\" will be used.")
+      .supportsExpressionLanguage(true)
+      .withDefaultValue("application/octet-stream")
+      .build();
+  EXTENSIONAPI static constexpr auto StorageClass = core::PropertyDefinitionBuilder<STORAGE_CLASSES.size()>::createProperty("Storage Class")
+      .withDescription("AWS S3 Storage Class")
+      .isRequired(true)
+      .withDefaultValue("Standard")
+      .withAllowedValues(STORAGE_CLASSES)
+      .build();
+  EXTENSIONAPI static constexpr auto ServerSideEncryption = core::PropertyDefinitionBuilder<SERVER_SIDE_ENCRYPTIONS.size()>::createProperty("Server Side Encryption")
+      .isRequired(true)
+      .withDefaultValue("None")
+      .withAllowedValues(SERVER_SIDE_ENCRYPTIONS)
+      .withDescription("Specifies the algorithm used for server side encryption.")
+      .build();
+  EXTENSIONAPI static constexpr auto FullControlUserList = core::PropertyDefinitionBuilder<>::createProperty("FullControl User List")
+      .withDescription("A comma-separated list of Amazon User ID's or E-mail addresses that specifies who should have Full Control for an object.")
+      .supportsExpressionLanguage(true)
+      .build();
+  EXTENSIONAPI static constexpr auto ReadPermissionUserList = core::PropertyDefinitionBuilder<>::createProperty("Read Permission User List")
+      .withDescription("A comma-separated list of Amazon User ID's or E-mail addresses that specifies who should have Read Access for an object.")
+      .supportsExpressionLanguage(true)
+      .build();
+  EXTENSIONAPI static constexpr auto ReadACLUserList = core::PropertyDefinitionBuilder<>::createProperty("Read ACL User List")
+      .withDescription("A comma-separated list of Amazon User ID's or E-mail addresses that specifies who should have permissions to read "
+          "the Access Control List for an object.")
+      .supportsExpressionLanguage(true)
+      .build();
+  EXTENSIONAPI static constexpr auto WriteACLUserList = core::PropertyDefinitionBuilder<>::createProperty("Write ACL User List")
+      .withDescription("A comma-separated list of Amazon User ID's or E-mail addresses that specifies who should have permissions to change "
+          "the Access Control List for an object.")
+      .supportsExpressionLanguage(true)
+      .build();
+  EXTENSIONAPI static constexpr auto CannedACL = core::PropertyDefinitionBuilder<>::createProperty("Canned ACL")
+      .withDescription("Amazon Canned ACL for an object. Allowed values: BucketOwnerFullControl, BucketOwnerRead, AuthenticatedRead, "
+          "PublicReadWrite, PublicRead, Private, AwsExecRead; will be ignored if any other ACL/permission property is specified.")
+      .supportsExpressionLanguage(true)
+      .build();
+  EXTENSIONAPI static constexpr auto UsePathStyleAccess = core::PropertyDefinitionBuilder<>::createProperty("Use Path Style Access")
+      .withDescription("Path-style access can be enforced by setting this property to true. Set it to true if your endpoint does not support "
+          "virtual-hosted-style requests, only path-style requests.")
+      .withPropertyType(core::StandardPropertyTypes::BOOLEAN_TYPE)
+      .withDefaultValue("false")
+      .isRequired(true)
+      .build();
+  EXTENSIONAPI static constexpr auto Properties = minifi::utils::array_cat(S3Processor::Properties, std::array<core::PropertyReference, 10>{
       ObjectKey,
       ContentType,
       StorageClass,
@@ -71,12 +117,12 @@ class PutS3Object : public S3Processor {
       WriteACLUserList,
       CannedACL,
       UsePathStyleAccess
-    });
-  }
+  });
 
-  EXTENSIONAPI static const core::Relationship Success;
-  EXTENSIONAPI static const core::Relationship Failure;
-  static auto relationships() { return std::array{Success, Failure}; }
+
+  EXTENSIONAPI static constexpr auto Success = core::RelationshipDefinition{"success", "FlowFiles are routed to success relationship"};
+  EXTENSIONAPI static constexpr auto Failure = core::RelationshipDefinition{"failure", "FlowFiles are routed to failure relationship"};
+  EXTENSIONAPI static constexpr auto Relationships = std::array{Success, Failure};
 
   EXTENSIONAPI static constexpr bool SupportsDynamicProperties = true;
   EXTENSIONAPI static constexpr bool SupportsDynamicRelationships = false;

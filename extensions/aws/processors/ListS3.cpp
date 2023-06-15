@@ -28,8 +28,8 @@
 namespace org::apache::nifi::minifi::aws::processors {
 
 void ListS3::initialize() {
-  setSupportedProperties(properties());
-  setSupportedRelationships(relationships());
+  setSupportedProperties(Properties);
+  setSupportedRelationships(Relationships);
 }
 
 void ListS3::onSchedule(const std::shared_ptr<core::ProcessContext> &context, const std::shared_ptr<core::ProcessSessionFactory> &sessionFactory) {
@@ -51,13 +51,13 @@ void ListS3::onSchedule(const std::shared_ptr<core::ProcessContext> &context, co
   list_request_params_->setClientConfig(common_properties->proxy, common_properties->endpoint_override_url);
   list_request_params_->bucket = common_properties->bucket;
 
-  context->getProperty(Delimiter.getName(), list_request_params_->delimiter);
+  context->getProperty(Delimiter, list_request_params_->delimiter);
   logger_->log_debug("ListS3: Delimiter [%s]", list_request_params_->delimiter);
 
-  context->getProperty(Prefix.getName(), list_request_params_->prefix);
+  context->getProperty(Prefix, list_request_params_->prefix);
   logger_->log_debug("ListS3: Prefix [%s]", list_request_params_->prefix);
 
-  context->getProperty(UseVersions.getName(), list_request_params_->use_versions);
+  context->getProperty(UseVersions, list_request_params_->use_versions);
   logger_->log_debug("ListS3: UseVersions [%s]", list_request_params_->use_versions ? "true" : "false");
 
   if (auto minimum_object_age = context->getProperty<core::TimePeriodValue>(MinimumObjectAge)) {
@@ -67,13 +67,13 @@ void ListS3::onSchedule(const std::shared_ptr<core::ProcessContext> &context, co
   }
   logger_->log_debug("S3Processor: Minimum Object Age [%llud]", list_request_params_->min_object_age);
 
-  context->getProperty(WriteObjectTags.getName(), write_object_tags_);
+  context->getProperty(WriteObjectTags, write_object_tags_);
   logger_->log_debug("ListS3: WriteObjectTags [%s]", write_object_tags_ ? "true" : "false");
 
-  context->getProperty(WriteUserMetadata.getName(), write_user_metadata_);
+  context->getProperty(WriteUserMetadata, write_user_metadata_);
   logger_->log_debug("ListS3: WriteUserMetadata [%s]", write_user_metadata_ ? "true" : "false");
 
-  context->getProperty(RequesterPays.getName(), requester_pays_);
+  context->getProperty(RequesterPays, requester_pays_);
   logger_->log_debug("ListS3: RequesterPays [%s]", requester_pays_ ? "true" : "false");
 }
 
@@ -175,5 +175,7 @@ void ListS3::onTrigger(const std::shared_ptr<core::ProcessContext> &context, con
     return;
   }
 }
+
+REGISTER_RESOURCE(ListS3, Processor);
 
 }  // namespace org::apache::nifi::minifi::aws::processors

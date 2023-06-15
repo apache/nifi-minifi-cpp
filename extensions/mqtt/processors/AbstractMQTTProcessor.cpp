@@ -31,12 +31,12 @@ void AbstractMQTTProcessor::onSchedule(const std::shared_ptr<core::ProcessContex
   }
   logger_->log_debug("AbstractMQTTProcessor: BrokerURI [%s]", uri_);
 
-  mqtt_version_ = utils::parseEnumProperty<MqttVersions>(*context, MqttVersion);
+  mqtt_version_ = utils::parseEnumProperty<mqtt::MqttVersions>(*context, MqttVersion);
   logger_->log_debug("AbstractMQTTProcessor: MQTT Specification Version: %s", mqtt_version_.toString());
 
   if (auto value = context->getProperty(ClientID)) {
     clientID_ = std::move(*value);
-  } else if (mqtt_version_ == MqttVersions::V_3_1_0) {
+  } else if (mqtt_version_ == mqtt::MqttVersions::V_3_1_0) {
     throw minifi::Exception(ExceptionType::PROCESS_SCHEDULE_EXCEPTION, "MQTT 3.1.0 specification does not support empty client IDs");
   }
   logger_->log_debug("AbstractMQTTProcessor: ClientID [%s]", clientID_);
@@ -61,7 +61,7 @@ void AbstractMQTTProcessor::onSchedule(const std::shared_ptr<core::ProcessContex
   }
   logger_->log_debug("AbstractMQTTProcessor: ConnectionTimeout [%" PRId64 "] s", int64_t{connection_timeout_.count()});
 
-  qos_ = utils::parseEnumProperty<MqttQoS>(*context, QoS);
+  qos_ = utils::parseEnumProperty<mqtt::MqttQoS>(*context, QoS);
   logger_->log_debug("AbstractMQTTProcessor: QoS [%d]", qos_.value());
 
   if (const auto security_protocol = context->getProperty(SecurityProtocol)) {
@@ -103,7 +103,7 @@ void AbstractMQTTProcessor::onSchedule(const std::shared_ptr<core::ProcessContex
       last_will_->message = last_will_message_.c_str();
     }
 
-    last_will_qos_ = utils::parseEnumProperty<MqttQoS>(*context, LastWillQoS);
+    last_will_qos_ = utils::parseEnumProperty<mqtt::MqttQoS>(*context, LastWillQoS);
     logger_->log_debug("AbstractMQTTProcessor: Last Will QoS [%d]", last_will_qos_.value());
     last_will_->qos = last_will_qos_.value();
 
@@ -130,7 +130,7 @@ void AbstractMQTTProcessor::initializeClient() {
 
   if (!client_) {
     MQTTAsync_createOptions options = MQTTAsync_createOptions_initializer;
-    if (mqtt_version_.value() == MqttVersions::V_5_0) {
+    if (mqtt_version_.value() == mqtt::MqttVersions::V_5_0) {
       options.MQTTVersion = MQTTVERSION_5;
     }
     if (MQTTAsync_createWithOptions(&client_, uri_.c_str(), clientID_.c_str(), MQTTCLIENT_PERSISTENCE_NONE, nullptr, &options) != MQTTASYNC_SUCCESS) {
@@ -184,7 +184,7 @@ void AbstractMQTTProcessor::reconnect() {
 
 MQTTAsync_connectOptions AbstractMQTTProcessor::createConnectOptions(MQTTProperties& connect_properties, MQTTProperties& will_properties, ConnectFinishedTask& connect_finished_task) {
   MQTTAsync_connectOptions connect_options = [this, &connect_properties, &will_properties] {
-    if (mqtt_version_.value() == MqttVersions::V_5_0) {
+    if (mqtt_version_.value() == mqtt::MqttVersions::V_5_0) {
       return createMqtt5ConnectOptions(connect_properties, will_properties);
     } else {
       return createMqtt3ConnectOptions();
@@ -214,9 +214,9 @@ MQTTAsync_connectOptions AbstractMQTTProcessor::createMqtt3ConnectOptions() cons
   connect_options.onFailure = connectionFailure;
   connect_options.cleansession = getCleanSession();
 
-  if (mqtt_version_.value() == MqttVersions::V_3_1_0) {
+  if (mqtt_version_.value() == mqtt::MqttVersions::V_3_1_0) {
     connect_options.MQTTVersion = MQTTVERSION_3_1;
-  } else if (mqtt_version_.value() == MqttVersions::V_3_1_1) {
+  } else if (mqtt_version_.value() == mqtt::MqttVersions::V_3_1_1) {
     connect_options.MQTTVersion = MQTTVERSION_3_1_1;
   }
 
@@ -296,7 +296,7 @@ void AbstractMQTTProcessor::disconnect() {
           });
   disconnect_options.context = &disconnect_finished_task;
 
-  if (mqtt_version_.value() == MqttVersions::V_5_0) {
+  if (mqtt_version_.value() == mqtt::MqttVersions::V_5_0) {
     disconnect_options.onSuccess5 = connectionSuccess5;
     disconnect_options.onFailure5 = connectionFailure5;
   } else {

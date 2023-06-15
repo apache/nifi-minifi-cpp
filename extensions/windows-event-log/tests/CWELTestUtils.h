@@ -51,17 +51,17 @@ class OutputFormatTestController : public TestController {
     std::shared_ptr<TestPlan> test_plan = createPlan();
 
     auto cwel_processor = test_plan->addProcessor("ConsumeWindowsEventLog", "cwel");
-    test_plan->setProperty(cwel_processor, ConsumeWindowsEventLog::Channel.getName(), channel_);
-    test_plan->setProperty(cwel_processor, ConsumeWindowsEventLog::Query.getName(), query_);
-    test_plan->setProperty(cwel_processor, ConsumeWindowsEventLog::OutputFormatProperty.getName(), output_format_);
+    test_plan->setProperty(cwel_processor, ConsumeWindowsEventLog::Channel, channel_);
+    test_plan->setProperty(cwel_processor, ConsumeWindowsEventLog::Query, query_);
+    test_plan->setProperty(cwel_processor, ConsumeWindowsEventLog::OutputFormatProperty, output_format_);
     if (json_format_) {
-      test_plan->setProperty(cwel_processor, ConsumeWindowsEventLog::JsonFormatProperty.getName(), json_format_.value());
+      test_plan->setProperty(cwel_processor, ConsumeWindowsEventLog::JsonFormatProperty, json_format_.value());
     }
 
     auto dir = createTempDirectory();
 
     auto put_file = test_plan->addProcessor("PutFile", "putFile", Success, true);
-    test_plan->setProperty(put_file, PutFile::Directory.getName(), dir.string());
+    test_plan->setProperty(put_file, PutFile::Directory, dir.string());
 
     {
       dispatchBookmarkEvent();

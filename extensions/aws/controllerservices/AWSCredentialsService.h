@@ -28,6 +28,9 @@
 #include "utils/AWSInitializer.h"
 #include "core/controller/ControllerService.h"
 #include "core/logging/LoggerConfiguration.h"
+#include "core/PropertyDefinition.h"
+#include "core/PropertyDefinitionBuilder.h"
+#include "core/PropertyType.h"
 #include "AWSCredentialsProvider.h"
 
 class AWSCredentialsServiceTestAccessor;
@@ -46,18 +49,28 @@ class AWSCredentialsService : public core::controller::ControllerService {
 
   EXTENSIONAPI static constexpr const char* Description = "AWS Credentials Management Service";
 
-  EXTENSIONAPI static const core::Property UseDefaultCredentials;
-  EXTENSIONAPI static const core::Property AccessKey;
-  EXTENSIONAPI static const core::Property SecretKey;
-  EXTENSIONAPI static const core::Property CredentialsFile;
-  static auto properties() {
-    return std::array{
+  EXTENSIONAPI static constexpr auto UseDefaultCredentials = core::PropertyDefinitionBuilder<>::createProperty("Use Default Credentials")
+      .withDescription("If true, uses the Default Credential chain, including EC2 instance profiles or roles, environment variables, default user credentials, etc.")
+      .withPropertyType(core::StandardPropertyTypes::BOOLEAN_TYPE)
+      .withDefaultValue("false")
+      .isRequired(true)
+      .build();
+  EXTENSIONAPI static constexpr auto AccessKey = core::PropertyDefinitionBuilder<>::createProperty("Access Key")
+      .withDescription("Specifies the AWS Access Key.")
+      .build();
+  EXTENSIONAPI static constexpr auto SecretKey = core::PropertyDefinitionBuilder<>::createProperty("Secret Key")
+      .withDescription("Specifies the AWS Secret Key.")
+      .build();
+  EXTENSIONAPI static constexpr auto CredentialsFile = core::PropertyDefinitionBuilder<>::createProperty("Credentials File")
+      .withDescription("Path to a file containing AWS access key and secret key in properties file format. Properties used: accessKey and secretKey")
+      .build();
+  EXTENSIONAPI static constexpr auto Properties = std::array<core::PropertyReference, 4>{
       UseDefaultCredentials,
       AccessKey,
       SecretKey,
       CredentialsFile
-    };
-  }
+  };
+
 
   EXTENSIONAPI static constexpr bool SupportsDynamicProperties = false;
   ADD_COMMON_VIRTUAL_FUNCTIONS_FOR_CONTROLLER_SERVICES

@@ -34,8 +34,8 @@ const core::Relationship TFExtractTopLabels::Failure(
     "Failures which will not work if retried");
 
 void TFExtractTopLabels::initialize() {
-  setSupportedProperties(properties());
-  setSupportedRelationships(relationships());
+  setSupportedProperties(Properties);
+  setSupportedRelationships(Relationships);
 }
 
 void TFExtractTopLabels::onSchedule(core::ProcessContext* /*context*/, core::ProcessSessionFactory* /*sessionFactory*/) {

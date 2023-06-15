@@ -28,8 +28,8 @@
 namespace org::apache::nifi::minifi::azure::processors {
 
 void FetchAzureBlobStorage::initialize() {
-  setSupportedProperties(properties());
-  setSupportedRelationships(relationships());
+  setSupportedProperties(Properties);
+  setSupportedRelationships(Relationships);
 }
 
 std::optional<storage::FetchAzureBlobStorageParameters> FetchAzureBlobStorage::buildFetchAzureBlobStorageParameters(
@@ -88,5 +88,7 @@ void FetchAzureBlobStorage::onTrigger(const std::shared_ptr<core::ProcessContext
     session->remove(flow_file);
   }
 }
+
+REGISTER_RESOURCE(FetchAzureBlobStorage, Processor);
 
 }  // namespace org::apache::nifi::minifi::azure::processors

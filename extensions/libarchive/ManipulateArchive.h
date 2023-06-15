@@ -27,7 +27,9 @@
 #include "ArchiveMetadata.h"
 #include "core/Processor.h"
 #include "core/ProcessSession.h"
-
+#include "core/PropertyDefinition.h"
+#include "core/PropertyDefinitionBuilder.h"
+#include "core/RelationshipDefinition.h"
 #include "utils/Export.h"
 
 namespace org::apache::nifi::minifi::processors {
@@ -43,24 +45,33 @@ class ManipulateArchive : public core::Processor {
 
   EXTENSIONAPI static constexpr const char* Description = "Performs an operation which manipulates an archive without needing to split the archive into multiple FlowFiles.";
 
-  EXTENSIONAPI static const core::Property Operation;
-  EXTENSIONAPI static const core::Property Target;
-  EXTENSIONAPI static const core::Property Destination;
-  EXTENSIONAPI static const core::Property Before;
-  EXTENSIONAPI static const core::Property After;
-  static auto properties() {
-    return std::array{
+  EXTENSIONAPI static constexpr auto Operation = core::PropertyDefinitionBuilder<>::createProperty("Operation")
+      .withDescription("Operation to perform on the archive (touch, remove, copy, move).")
+      .build();
+  EXTENSIONAPI static constexpr auto Target = core::PropertyDefinitionBuilder<>::createProperty("Target")
+      .withDescription("An existing entry within the archive to perform the operation on.")
+      .build();
+  EXTENSIONAPI static constexpr auto Destination = core::PropertyDefinitionBuilder<>::createProperty("Destination")
+      .withDescription("Destination for operations (touch, move or copy) which result in new entries.")
+      .build();
+  EXTENSIONAPI static constexpr auto Before = core::PropertyDefinitionBuilder<>::createProperty("Before")
+      .withDescription("For operations which result in new entries, places the new entry before the entry specified by this property.")
+      .build();
+  EXTENSIONAPI static constexpr auto After = core::PropertyDefinitionBuilder<>::createProperty("After")
+      .withDescription("For operations which result in new entries, places the new entry after the entry specified by this property.")
+      .build();
+  EXTENSIONAPI static constexpr auto Properties = std::array<core::PropertyReference, 5>{
       Operation,
       Target,
       Destination,
       Before,
       After
-    };
-  }
+  };
 
-  EXTENSIONAPI static const core::Relationship Success;
-  EXTENSIONAPI static const core::Relationship Failure;
-  static auto relationships() { return std::array{Success, Failure}; }
+
+  EXTENSIONAPI static constexpr auto Success = core::RelationshipDefinition{"success", "FlowFiles will be transferred to the success relationship if the operation succeeds."};
+  EXTENSIONAPI static constexpr auto Failure = core::RelationshipDefinition{"failure", "FlowFiles will be transferred to the failure relationship if the operation fails."};
+  EXTENSIONAPI static constexpr auto Relationships = std::array{Success, Failure};
 
   EXTENSIONAPI static constexpr bool SupportsDynamicProperties = false;
   EXTENSIONAPI static constexpr bool SupportsDynamicRelationships = false;

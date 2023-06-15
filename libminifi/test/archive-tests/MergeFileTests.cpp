@@ -25,6 +25,7 @@
 #include <sstream>
 #include <string>
 
+#include "Relationship.h"
 #include "core/Core.h"
 #include "core/Processor.h"
 #include "core/ProcessContext.h"
@@ -178,7 +179,7 @@ class MergeTestController : public TestController {
     input_->setDestinationUUID(processoruuid);
     merge_content_processor_->addConnection(input_.get());
 
-    merge_content_processor_->setAutoTerminatedRelationships(std::array{minifi::processors::MergeContent::Original, minifi::processors::MergeContent::Failure});
+    merge_content_processor_->setAutoTerminatedRelationships(std::array<core::Relationship, 2>{minifi::processors::MergeContent::Original, minifi::processors::MergeContent::Failure});
 
     merge_content_processor_->incrementActiveTasks();
     merge_content_processor_->setScheduledState(core::ScheduledState::RUNNING);

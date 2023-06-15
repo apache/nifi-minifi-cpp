@@ -26,6 +26,8 @@
 
 #include "AzureDataLakeStorageFileProcessorBase.h"
 #include "io/StreamPipe.h"
+#include "core/PropertyDefinitionBuilder.h"
+#include "core/RelationshipDefinition.h"
 #include "utils/ArrayUtils.h"
 #include "utils/Enum.h"
 #include "utils/Export.h"
@@ -35,18 +37,29 @@ class AzureDataLakeStorageTestsFixture;
 
 namespace org::apache::nifi::minifi::azure::processors {
 
+namespace azure {
+SMART_ENUM(FileExistsResolutionStrategy,
+  (FAIL_FLOW, "fail"),
+  (REPLACE_FILE, "replace"),
+  (IGNORE_REQUEST, "ignore")
+)
+}  // namespace azure
+
 class PutAzureDataLakeStorage final : public AzureDataLakeStorageFileProcessorBase {
  public:
   EXTENSIONAPI static constexpr const char* Description = "Puts content into an Azure Data Lake Storage Gen 2";
 
-  EXTENSIONAPI static const core::Property ConflictResolutionStrategy;
-  static auto properties() {
-    return utils::array_cat(AzureDataLakeStorageFileProcessorBase::properties(), std::array{ConflictResolutionStrategy});
-  }
+  EXTENSIONAPI static constexpr auto ConflictResolutionStrategy = core::PropertyDefinitionBuilder<azure::FileExistsResolutionStrategy::length>::createProperty("Conflict Resolution Strategy")
+      .withDescription("Indicates what should happen when a file with the same name already exists in the output directory.")
+      .isRequired(true)
+      .withDefaultValue(toStringView(azure::FileExistsResolutionStrategy::FAIL_FLOW))
+      .withAllowedValues(azure::FileExistsResolutionStrategy::values)
+      .build();
+  EXTENSIONAPI static constexpr auto Properties = utils::array_cat(AzureDataLakeStorageFileProcessorBase::Properties, std::array<core::PropertyReference, 1>{ConflictResolutionStrategy});
 
-  EXTENSIONAPI static const core::Relationship Success;
-  EXTENSIONAPI static const core::Relationship Failure;
-  static auto relationships() { return std::array{Success, Failure}; }
+  EXTENSIONAPI static constexpr auto Success = core::RelationshipDefinition{"success", "Files that have been successfully written to Azure storage are transferred to this relationship"};
+  EXTENSIONAPI static constexpr auto Failure = core::RelationshipDefinition{"failure", "Files that could not be written to Azure storage for some reason are transferred to this relationship"};
+  EXTENSIONAPI static constexpr auto Relationships = std::array{Success, Failure};
 
   EXTENSIONAPI static constexpr bool SupportsDynamicProperties = false;
   EXTENSIONAPI static constexpr bool SupportsDynamicRelationships = false;
@@ -54,12 +67,6 @@ class PutAzureDataLakeStorage final : public AzureDataLakeStorageFileProcessorBa
   EXTENSIONAPI static constexpr bool IsSingleThreaded = false;
 
   ADD_COMMON_VIRTUAL_FUNCTIONS_FOR_PROCESSORS
-
-  SMART_ENUM(FileExistsResolutionStrategy,
-    (FAIL_FLOW, "fail"),
-    (REPLACE_FILE, "replace"),
-    (IGNORE_REQUEST, "ignore")
-  )
 
   explicit PutAzureDataLakeStorage(std::string name, const minifi::utils::Identifier& uuid = minifi::utils::Identifier())
     : PutAzureDataLakeStorage(std::move(name), uuid, nullptr) {
@@ -95,7 +102,7 @@ class PutAzureDataLakeStorage final : public AzureDataLakeStorageFileProcessorBa
 
   std::optional<storage::PutAzureDataLakeStorageParameters> buildUploadParameters(core::ProcessContext& context, const std::shared_ptr<core::FlowFile>& flow_file);
 
-  FileExistsResolutionStrategy conflict_resolution_strategy_;
+  azure::FileExistsResolutionStrategy conflict_resolution_strategy_;
 };
 
 }  // namespace org::apache::nifi::minifi::azure::processors

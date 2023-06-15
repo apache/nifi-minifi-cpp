@@ -72,9 +72,9 @@ TEST_CASE("Enum checks") {
   REQUIRE(A{A::Type(0)});
   REQUIRE(B{B::Type(1)});
 
-  REQUIRE(A::values() == (std::set<std::string>{"zero", "one"}));
-  REQUIRE(B::values() == (std::set<std::string>{"zero", "one", "two"}));
-  REQUIRE(C::values() == (std::set<std::string>{"zero", "one", "two", "three"}));
+  REQUIRE(A::values == std::array<std::string_view, 2>{"zero", "one"});
+  REQUIRE(B::values == std::array<std::string_view, 3>{"zero", "one", "two"});
+  REQUIRE(C::values == std::array<std::string_view, 4>{"zero", "one", "two", "three"});
 
   REQUIRE_THROWS(A::parse("not_any"));
   REQUIRE(!A::parse("not_any", A{}));
@@ -105,4 +105,26 @@ TEST_CASE("Enum checks") {
   REQUIRE(!C{C::_3}.cast<B>());
   REQUIRE(!C{C::_3}.cast<A>());
   REQUIRE(!B{B::_2}.cast<A>());
+}
+
+TEST_CASE("Operations on Smart Enums are constexpr") {
+  static constexpr auto c_values = C::values;
+  CHECK(c_values == std::array<std::string_view, 4>{"zero", "one", "two", "three"});
+
+  static constexpr bool zero_equals_zero{C::_0 == C::_0};  // NOLINT(misc-redundant-expression)
+  static constexpr bool zero_does_not_equal_three{C::_0 != C::_3};
+  static constexpr bool zero_is_less_than_two{C::_0 < C::_2};
+  static constexpr bool one_is_valid{C::_1};
+  CHECK((zero_equals_zero && zero_does_not_equal_three && zero_is_less_than_two && one_is_valid));
+
+  static constexpr C zero_object{C::_0};
+  static constexpr C::Type zero_type{zero_object.value()};
+  CHECK(zero_type == 0);
+
+  static constexpr C derived{C::_2};
+  static constexpr B derived_as_base = derived.cast<B>();
+  CHECK(toString(derived.value()) == toString(derived_as_base.value()));
+
+  static constexpr std::string_view zero_name{toStringView(C::_0)};
+  CHECK(zero_name == "zero");
 }

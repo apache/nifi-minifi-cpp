@@ -21,11 +21,16 @@
 
 #include <memory>
 #include <string>
+#include <string_view>
 #include <utility>
 #include <vector>
 
 #include "core/Processor.h"
 #include "core/ProcessSession.h"
+#include "core/PropertyDefinitionBuilder.h"
+#include "core/PropertyDefinition.h"
+#include "core/PropertyType.h"
+#include "core/RelationshipDefinition.h"
 #include "FlowFileRecord.h"
 #include "utils/Export.h"
 
@@ -37,17 +42,50 @@ class ExtractText : public core::Processor {
       : Processor(std::move(name), uuid) {
   }
 
+  // Default maximum bytes to read into an attribute
+  static constexpr std::string_view DEFAULT_SIZE_LIMIT_STR = "2097152";  // 2 * 1024 * 1024
+  static constexpr std::string_view MAX_CAPTURE_GROUP_SIZE_STR = "1024";
+
   EXTENSIONAPI static constexpr const char* Description = "Extracts the content of a FlowFile and places it into an attribute.";
 
-  EXTENSIONAPI static core::Property Attribute;
-  EXTENSIONAPI static core::Property SizeLimit;
-  EXTENSIONAPI static core::Property RegexMode;
-  EXTENSIONAPI static core::Property IncludeCaptureGroupZero;
-  EXTENSIONAPI static core::Property InsensitiveMatch;
-  EXTENSIONAPI static core::Property MaxCaptureGroupLen;
-  EXTENSIONAPI static core::Property EnableRepeatingCaptureGroup;
-  static auto properties() {
-    return std::array{
+  EXTENSIONAPI static constexpr auto Attribute = core::PropertyDefinitionBuilder<>::createProperty("Attribute")
+      .withDescription("Attribute to set from content")
+      .build();
+  // despite there being a size value, ExtractText was initially built with a numeric for this property
+  EXTENSIONAPI static constexpr auto SizeLimit = core::PropertyDefinitionBuilder<>::createProperty("Size Limit")
+      .withDescription("Maximum number of bytes to read into the attribute. 0 for no limit. Default is 2MB.")
+      .withPropertyType(core::StandardPropertyTypes::UNSIGNED_INT_TYPE)
+      .withDefaultValue(DEFAULT_SIZE_LIMIT_STR)
+      .build();
+  EXTENSIONAPI static constexpr auto RegexMode = core::PropertyDefinitionBuilder<>::createProperty("Regex Mode")
+      .withDescription("Set this to extract parts of flowfile content using regular experssions in dynamic properties")
+      .withPropertyType(core::StandardPropertyTypes::BOOLEAN_TYPE)
+      .withDefaultValue("false")
+      .build();
+  EXTENSIONAPI static constexpr auto IncludeCaptureGroupZero = core::PropertyDefinitionBuilder<>::createProperty("Include Capture Group 0")
+      .withDescription("Indicates that Capture Group 0 should be included as an attribute. "
+         "Capture Group 0 represents the entirety of the regular expression match, is typically not used, and could have considerable length.")
+      .withPropertyType(core::StandardPropertyTypes::BOOLEAN_TYPE)
+      .withDefaultValue("true")
+      .build();
+  EXTENSIONAPI static constexpr auto InsensitiveMatch = core::PropertyDefinitionBuilder<>::createProperty("Enable Case-insensitive Matching")
+      .withDescription("Indicates that two characters match even if they are in a different case. ")
+      .withPropertyType(core::StandardPropertyTypes::BOOLEAN_TYPE)
+      .withDefaultValue("false")
+      .build();
+  EXTENSIONAPI static constexpr auto MaxCaptureGroupLen = core::PropertyDefinitionBuilder<>::createProperty("Maximum Capture Group Length")
+      .withDescription("Specifies the maximum number of characters a given capture group value can have. "
+        "Any characters beyond the max will be truncated.")
+      .withPropertyType(core::StandardPropertyTypes::INTEGER_TYPE)
+      .withDefaultValue(MAX_CAPTURE_GROUP_SIZE_STR)
+      .build();
+  EXTENSIONAPI static constexpr auto EnableRepeatingCaptureGroup = core::PropertyDefinitionBuilder<>::createProperty("Enable repeating capture group")
+      .withDescription("f set to true, every string matching the capture groups will be extracted. "
+                      "Otherwise, if the Regular Expression matches more than once, only the first match will be extracted.")
+      .withPropertyType(core::StandardPropertyTypes::BOOLEAN_TYPE)
+      .withDefaultValue("false")
+      .build();
+  EXTENSIONAPI static constexpr auto Properties = std::array<core::PropertyReference, 7>{
       Attribute,
       SizeLimit,
       RegexMode,
@@ -55,20 +93,17 @@ class ExtractText : public core::Processor {
       InsensitiveMatch,
       MaxCaptureGroupLen,
       EnableRepeatingCaptureGroup
-    };
-  }
+  };
 
-  EXTENSIONAPI static core::Relationship Success;
-  static auto relationships() { return std::array{Success}; }
+
+  EXTENSIONAPI static constexpr auto Success = core::RelationshipDefinition{"success", "success operational on the flow record"};
+  EXTENSIONAPI static constexpr auto Relationships = std::array{Success};
 
   EXTENSIONAPI static constexpr bool SupportsDynamicProperties = true;
   EXTENSIONAPI static constexpr bool SupportsDynamicRelationships = false;
   EXTENSIONAPI static constexpr core::annotation::Input InputRequirement = core::annotation::Input::INPUT_REQUIRED;
   EXTENSIONAPI static constexpr bool IsSingleThreaded = false;
   ADD_COMMON_VIRTUAL_FUNCTIONS_FOR_PROCESSORS
-
-  //! Default maximum bytes to read into an attribute
-  EXTENSIONAPI static constexpr int DEFAULT_SIZE_LIMIT = 2 * 1024 * 1024;
 
   void onTrigger(core::ProcessContext *context, core::ProcessSession *session) override;
   void initialize() override;

@@ -29,7 +29,9 @@
 #include "FlowFileRecord.h"
 #include "core/Processor.h"
 #include "core/ProcessSession.h"
-#include "core/Property.h"
+#include "core/PropertyDefinition.h"
+#include "core/PropertyDefinitionBuilder.h"
+#include "core/PropertyType.h"
 #include "controllers/SSLContextService.h"
 #include "utils/Id.h"
 #include "../client/SFTPClient.h"
@@ -41,24 +43,96 @@ class SFTPProcessorBase : public core::Processor {
   SFTPProcessorBase(std::string name, const utils::Identifier& uuid);
   ~SFTPProcessorBase() override;
 
-  EXTENSIONAPI static const core::Property Hostname;
-  EXTENSIONAPI static const core::Property Port;
-  EXTENSIONAPI static const core::Property Username;
-  EXTENSIONAPI static const core::Property Password;
-  EXTENSIONAPI static const core::Property PrivateKeyPath;
-  EXTENSIONAPI static const core::Property PrivateKeyPassphrase;
-  EXTENSIONAPI static const core::Property StrictHostKeyChecking;
-  EXTENSIONAPI static const core::Property HostKeyFile;
-  EXTENSIONAPI static const core::Property ConnectionTimeout;
-  EXTENSIONAPI static const core::Property DataTimeout;
-  EXTENSIONAPI static const core::Property SendKeepaliveOnTimeout;
-  EXTENSIONAPI static const core::Property ProxyType;
-  EXTENSIONAPI static const core::Property ProxyHost;
-  EXTENSIONAPI static const core::Property ProxyPort;
-  EXTENSIONAPI static const core::Property HttpProxyUsername;
-  EXTENSIONAPI static const core::Property HttpProxyPassword;
-  static auto properties() {
-    return std::array{
+  static constexpr std::string_view PROXY_TYPE_DIRECT = "DIRECT";
+  static constexpr std::string_view PROXY_TYPE_HTTP = "HTTP";
+  static constexpr std::string_view PROXY_TYPE_SOCKS = "SOCKS";
+
+  EXTENSIONAPI static constexpr auto Hostname = core::PropertyDefinitionBuilder<>::createProperty("Hostname")
+      .withDescription("The fully qualified hostname or IP address of the remote system")
+      .isRequired(true)
+      .supportsExpressionLanguage(true)
+      .build();
+  EXTENSIONAPI static constexpr auto Port = core::PropertyDefinitionBuilder<>::createProperty("Port")
+      .withDescription("The port that the remote system is listening on for file transfers")
+      .isRequired(true)
+      .supportsExpressionLanguage(true)
+      .build();
+  EXTENSIONAPI static constexpr auto Username = core::PropertyDefinitionBuilder<>::createProperty("Username")
+      .withDescription("Username")
+      .isRequired(true)
+      .supportsExpressionLanguage(true)
+      .build();
+  EXTENSIONAPI static constexpr auto Password = core::PropertyDefinitionBuilder<>::createProperty("Password")
+      .withDescription("Password for the user account")
+      .isRequired(false)
+      .supportsExpressionLanguage(true)
+      .build();
+  EXTENSIONAPI static constexpr auto PrivateKeyPath = core::PropertyDefinitionBuilder<>::createProperty("Private Key Path")
+      .withDescription("The fully qualified path to the Private Key file")
+      .isRequired(false)
+      .supportsExpressionLanguage(true)
+      .build();
+  EXTENSIONAPI static constexpr auto PrivateKeyPassphrase = core::PropertyDefinitionBuilder<>::createProperty("Private Key Passphrase")
+      .withDescription("Password for the private key")
+      .isRequired(false)
+      .supportsExpressionLanguage(true)
+      .build();
+  EXTENSIONAPI static constexpr auto StrictHostKeyChecking = core::PropertyDefinitionBuilder<>::createProperty("Strict Host Key Checking")
+      .withDescription("Indicates whether or not strict enforcement of hosts keys should be applied")
+      .isRequired(true)
+      .withPropertyType(core::StandardPropertyTypes::BOOLEAN_TYPE)
+      .withDefaultValue("false")
+          .build();
+  EXTENSIONAPI static constexpr auto HostKeyFile = core::PropertyDefinitionBuilder<>::createProperty("Host Key File")
+      .withDescription("If supplied, the given file will be used as the Host Key; otherwise, no use host key file will be used")
+      .isRequired(false)
+      .build();
+  EXTENSIONAPI static constexpr auto ConnectionTimeout = core::PropertyDefinitionBuilder<>::createProperty("Connection Timeout")
+      .withDescription("Amount of time to wait before timing out while creating a connection")
+      .isRequired(true)
+      .withPropertyType(core::StandardPropertyTypes::TIME_PERIOD_TYPE)
+      .withDefaultValue("30 sec")
+      .build();
+  EXTENSIONAPI static constexpr auto DataTimeout = core::PropertyDefinitionBuilder<>::createProperty("Data Timeout")
+      .withDescription("When transferring a file between the local and remote system, this value specifies how long is allowed to elapse without any data being transferred between systems")
+      .isRequired(true)
+      .withPropertyType(core::StandardPropertyTypes::TIME_PERIOD_TYPE)
+      .withDefaultValue("30 sec")
+      .build();
+  EXTENSIONAPI static constexpr auto SendKeepaliveOnTimeout = core::PropertyDefinitionBuilder<>::createProperty("Send Keep Alive On Timeout")
+      .withDescription("Indicates whether or not to send a single Keep Alive message when SSH socket times out")
+      .isRequired(true)
+      .withPropertyType(core::StandardPropertyTypes::BOOLEAN_TYPE)
+      .withDefaultValue("true")
+      .build();
+  EXTENSIONAPI static constexpr auto ProxyType = core::PropertyDefinitionBuilder<3>::createProperty("Proxy Type")
+      .withDescription("Specifies the Proxy Configuration Controller Service to proxy network requests. If set, it supersedes proxy settings configured per component. "
+          "Supported proxies: HTTP + AuthN, SOCKS + AuthN")
+      .isRequired(false)
+      .withAllowedValues({PROXY_TYPE_DIRECT, PROXY_TYPE_HTTP, PROXY_TYPE_SOCKS})
+      .withDefaultValue(PROXY_TYPE_DIRECT)
+      .build();
+  EXTENSIONAPI static constexpr auto ProxyHost = core::PropertyDefinitionBuilder<>::createProperty("Proxy Host")
+      .withDescription("The fully qualified hostname or IP address of the proxy server")
+      .isRequired(false)
+      .supportsExpressionLanguage(true)
+      .build();
+  EXTENSIONAPI static constexpr auto ProxyPort = core::PropertyDefinitionBuilder<>::createProperty("Proxy Port")
+      .withDescription("The port of the proxy server")
+      .isRequired(false)
+      .supportsExpressionLanguage(true)
+      .build();
+  EXTENSIONAPI static constexpr auto HttpProxyUsername = core::PropertyDefinitionBuilder<>::createProperty("Http Proxy Username")
+      .withDescription("Http Proxy Username")
+      .isRequired(false)
+      .supportsExpressionLanguage(true)
+      .build();
+  EXTENSIONAPI static constexpr auto HttpProxyPassword = core::PropertyDefinitionBuilder<>::createProperty("Http Proxy Password")
+      .withDescription("Http Proxy Password")
+      .isRequired(false)
+      .supportsExpressionLanguage(true)
+      .build();
+  EXTENSIONAPI static constexpr auto Properties = std::array<core::PropertyReference, 16>{
       Hostname,
       Port,
       Username,
@@ -75,12 +149,8 @@ class SFTPProcessorBase : public core::Processor {
       ProxyPort,
       HttpProxyUsername,
       HttpProxyPassword
-    };
-  }
+  };
 
-  static constexpr char const *PROXY_TYPE_DIRECT = "DIRECT";
-  static constexpr char const *PROXY_TYPE_HTTP = "HTTP";
-  static constexpr char const *PROXY_TYPE_SOCKS = "SOCKS";
 
   void notifyStop() override;
 

@@ -16,7 +16,6 @@
  */
 
 #include "core/state/nodes/SupportedOperations.h"
-#include "core/PropertyBuilder.h"
 #include "core/Resource.h"
 #include "range/v3/algorithm/contains.hpp"
 #include "range/v3/view/filter.hpp"
@@ -131,18 +130,18 @@ std::vector<SerializedResponseNode> SupportedOperations::serialize() {
   supported_operation.name = "supportedOperations";
   supported_operation.array = true;
 
-  for (const auto& operation : minifi::c2::Operation::values()) {
+  for (const auto& operation : minifi::c2::Operation::values) {
     SerializedResponseNode child;
     child.name = "supportedOperations";
 
     SerializedResponseNode operation_type;
     operation_type.name = "type";
-    operation_type.value = operation;
+    operation_type.value = std::string(operation);
 
     SerializedResponseNode properties;
     properties.name = "properties";
 
-    fillProperties(properties, minifi::c2::Operation::parse(operation.c_str(), {}, false));
+    fillProperties(properties, minifi::c2::Operation::parse(operation, {}, false));
 
     child.children.push_back(operation_type);
     child.children.push_back(properties);

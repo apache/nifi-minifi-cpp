@@ -31,6 +31,10 @@
 
 #include "core/StateManager.h"
 #include "core/Processor.h"
+#include "core/PropertyDefinition.h"
+#include "core/PropertyDefinitionBuilder.h"
+#include "core/PropertyType.h"
+#include "core/RelationshipDefinition.h"
 #include "core/logging/LoggerConfiguration.h"
 #include "libwrapper/LibWrapper.h"
 #include "utils/Deleters.h"
@@ -53,25 +57,55 @@ class ConsumeJournald final : public core::Processor {
   EXTENSIONAPI static constexpr const char* Description = "Consume systemd-journald journal messages. Creates one flow file per message. "
       "Fields are mapped to attributes. Realtime timestamp is mapped to the 'timestamp' attribute. Available on Linux only.";
 
-  EXTENSIONAPI static const core::Property BatchSize;
-  EXTENSIONAPI static const core::Property PayloadFormat;
-  EXTENSIONAPI static const core::Property IncludeTimestamp;
-  EXTENSIONAPI static const core::Property JournalType;
-  EXTENSIONAPI static const core::Property ProcessOldMessages;
-  EXTENSIONAPI static const core::Property TimestampFormat;
-  static auto properties() {
-    return std::array{
+  EXTENSIONAPI static constexpr auto BatchSize = core::PropertyDefinitionBuilder<>::createProperty("Batch Size")
+    .withDescription("The maximum number of entries processed in a single execution.")
+    .withPropertyType(core::StandardPropertyTypes::UNSIGNED_LONG_TYPE)
+    .withDefaultValue("1000")
+    .isRequired(true)
+    .build();
+  EXTENSIONAPI static constexpr auto PayloadFormat = core::PropertyDefinitionBuilder<2>::createProperty("Payload Format")
+    .withDescription("Configures flow file content formatting. Raw: only the message. Syslog: similar to syslog or journalctl output.")
+    .withDefaultValue(PAYLOAD_FORMAT_SYSLOG)
+    .withAllowedValues({PAYLOAD_FORMAT_RAW, PAYLOAD_FORMAT_SYSLOG})
+    .isRequired(true)
+    .build();
+  EXTENSIONAPI static constexpr auto IncludeTimestamp = core::PropertyDefinitionBuilder<>::createProperty("Include Timestamp")
+    .withDescription("Include message timestamp in the 'timestamp' attribute.")
+    .withPropertyType(core::StandardPropertyTypes::BOOLEAN_TYPE)
+    .withDefaultValue("true")
+    .isRequired(true)
+    .build();
+  EXTENSIONAPI static constexpr auto JournalType = core::PropertyDefinitionBuilder<3>::createProperty("Journal Type")
+    .withDescription("Type of journal to consume.")
+    .withDefaultValue(JOURNAL_TYPE_SYSTEM)
+    .withAllowedValues({JOURNAL_TYPE_USER, JOURNAL_TYPE_SYSTEM, JOURNAL_TYPE_BOTH})
+    .isRequired(true)
+    .build();
+  EXTENSIONAPI static constexpr auto ProcessOldMessages = core::PropertyDefinitionBuilder<>::createProperty("Process Old Messages")
+    .withDescription("Process events created before the first usage (schedule) of the processor instance.")
+    .withPropertyType(core::StandardPropertyTypes::BOOLEAN_TYPE)
+    .withDefaultValue("false")
+    .isRequired(true)
+    .build();
+  EXTENSIONAPI static constexpr auto TimestampFormat = core::PropertyDefinitionBuilder<>::createProperty("Timestamp Format")
+    .withDescription("Format string to use when creating the timestamp attribute or writing messages in the syslog format. "
+        "ISO/ISO 8601/ISO8601 are equivalent to \"%FT%T%Ez\". "
+        "See https://howardhinnant.github.io/date/date.html#to_stream_formatting for all flags.")
+    .withDefaultValue("%x %X %Z")
+    .isRequired(true)
+    .build();
+  EXTENSIONAPI static constexpr auto Properties = std::array<core::PropertyReference, 6>{
       BatchSize,
       PayloadFormat,
       IncludeTimestamp,
       JournalType,
       ProcessOldMessages,
       TimestampFormat
-    };
-  }
+  };
 
-  EXTENSIONAPI static const core::Relationship Success;
-  static auto relationships() { return std::array{Success}; }
+
+  EXTENSIONAPI static constexpr auto Success = core::RelationshipDefinition{"success", "Successfully consumed journal messages."};
+  EXTENSIONAPI static constexpr auto Relationships = std::array{Success};
 
   EXTENSIONAPI static constexpr bool SupportsDynamicProperties = false;
   EXTENSIONAPI static constexpr bool SupportsDynamicRelationships = false;

@@ -29,6 +29,7 @@
 #include <condition_variable>
 #include "core/logging/Logger.h"
 #include "Relationship.h"
+#include "RelationshipDefinition.h"
 #include "Scheduling.h"
 #include "core/state/FlowIdentifier.h"
 #include "utils/gsl.h"
@@ -54,7 +55,7 @@ class Connectable : public CoreComponent {
   Connectable& operator=(const Connectable &other) = delete;
   Connectable& operator=(Connectable&& other) = delete;
 
-  void setSupportedRelationships(std::span<const core::Relationship> relationships);
+  void setSupportedRelationships(std::span<const core::RelationshipDefinition> relationships);
 
   bool isSupportedRelationship(const Relationship &relationship);
 

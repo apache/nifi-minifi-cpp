@@ -43,30 +43,30 @@ const char *BinFiles::SEGMENT_ORIGINAL_FILENAME = "segment.original.filename";
 const char *BinFiles::TAR_PERMISSIONS_ATTRIBUTE = "tar.permissions";
 
 void BinFiles::initialize() {
-  setSupportedProperties(properties());
-  setSupportedRelationships(relationships());
+  setSupportedProperties(Properties);
+  setSupportedRelationships(Relationships);
 }
 
 void BinFiles::onSchedule(core::ProcessContext *context, core::ProcessSessionFactory* /*sessionFactory*/) {
   uint32_t val32;
   uint64_t val64;
-  if (context->getProperty(MinSize.getName(), val64)) {
+  if (context->getProperty(MinSize, val64)) {
     this->binManager_.setMinSize(val64);
     logger_->log_debug("BinFiles: MinSize [%" PRId64 "]", val64);
   }
-  if (context->getProperty(MaxSize.getName(), val64)) {
+  if (context->getProperty(MaxSize, val64)) {
     this->binManager_.setMaxSize(val64);
     logger_->log_debug("BinFiles: MaxSize [%" PRId64 "]", val64);
   }
-  if (context->getProperty(MinEntries.getName(), val32)) {
+  if (context->getProperty(MinEntries, val32)) {
     this->binManager_.setMinEntries(val32);
     logger_->log_debug("BinFiles: MinEntries [%" PRIu32 "]", val32);
   }
-  if (context->getProperty(MaxEntries.getName(), val32)) {
+  if (context->getProperty(MaxEntries, val32)) {
     this->binManager_.setMaxEntries(val32);
     logger_->log_debug("BinFiles: MaxEntries [%" PRIu32 "]", val32);
   }
-  if (context->getProperty(MaxBinCount.getName(), maxBinCount_)) {
+  if (context->getProperty(MaxBinCount, maxBinCount_)) {
     logger_->log_debug("BinFiles: MaxBinCount [%" PRIu32 "]", maxBinCount_);
   }
   if (auto max_bin_age = context->getProperty<core::TimePeriodValue>(MaxBinAge)) {
@@ -75,7 +75,7 @@ void BinFiles::onSchedule(core::ProcessContext *context, core::ProcessSessionFac
     this->binManager_.setBinAge(max_bin_age->getMilliseconds());
     logger_->log_debug("BinFiles: MaxBinAge [%" PRId64 "] ms", int64_t{max_bin_age->getMilliseconds().count()});
   }
-  if (context->getProperty(BatchSize.getName(), batchSize_)) {
+  if (context->getProperty(BatchSize, batchSize_)) {
     logger_->log_debug("BinFiles: BatchSize [%" PRIu32 "]", batchSize_);
   }
 }
@@ -305,5 +305,7 @@ std::set<core::Connectable*> BinFiles::getOutGoingConnections(const std::string 
   }
   return result;
 }
+
+REGISTER_RESOURCE(BinFiles, Processor);
 
 }  // namespace org::apache::nifi::minifi::processors

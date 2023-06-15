@@ -16,64 +16,37 @@
  */
 
 #include "CaptureRTSPFrame.h"
+
 #include "core/ProcessContext.h"
 #include "core/ProcessSession.h"
 #include "core/Resource.h"
 
 namespace org::apache::nifi::minifi::processors {
 
-const core::Property CaptureRTSPFrame::RTSPUsername(
-    "RTSP Username",
-    "The username for connecting to the RTSP stream", "");
-const core::Property CaptureRTSPFrame::RTSPPassword(
-    "RTSP Password",
-    "Password used to connect to the RTSP stream", "");
-const core::Property CaptureRTSPFrame::RTSPHostname(
-    "RTSP Hostname",
-    "Hostname of the RTSP stream we are trying to connect to", "");
-const core::Property CaptureRTSPFrame::RTSPURI(
-    "RTSP URI",
-    "URI that should be appended to the RTSP stream hostname", "");
-const core::Property CaptureRTSPFrame::RTSPPort(
-    "RTSP Port",
-    "Port that should be connected to to receive RTSP Frames",
-    "");
-const core::Property CaptureRTSPFrame::ImageEncoding(
-    "Image Encoding",
-    "The encoding that should be applied the the frame images captured from the RTSP stream",
-    ".jpg");
-
-const core::Relationship CaptureRTSPFrame::Success(
-    "success",
-    "Successful capture of RTSP frame");
-const core::Relationship CaptureRTSPFrame::Failure(
-    "failure",
-    "Failures to capture RTSP frame");
-
 void CaptureRTSPFrame::initialize() {
-  setSupportedProperties(properties());
-  setSupportedRelationships(relationships());
+  setSupportedProperties(Properties);
+  setSupportedRelationships(Relationships);
 }
 
 void CaptureRTSPFrame::onSchedule(core::ProcessContext *context, core::ProcessSessionFactory* /*sessionFactory*/) {
   std::string value;
 
-  if (context->getProperty(RTSPUsername.getName(), value)) {
+  if (context->getProperty(RTSPUsername, value)) {
     rtsp_username_ = value;
   }
-  if (context->getProperty(RTSPPassword.getName(), value)) {
+  if (context->getProperty(RTSPPassword, value)) {
     rtsp_password_ = value;
   }
-  if (context->getProperty(RTSPHostname.getName(), value)) {
+  if (context->getProperty(RTSPHostname, value)) {
     rtsp_host_ = value;
   }
-  if (context->getProperty(RTSPPort.getName(), value)) {
+  if (context->getProperty(RTSPPort, value)) {
     rtsp_port_ = value;
   }
-  if (context->getProperty(RTSPURI.getName(), value)) {
+  if (context->getProperty(RTSPURI, value)) {
     rtsp_uri_ = value;
   }
-  if (context->getProperty(ImageEncoding.getName(), value)) {
+  if (context->getProperty(ImageEncoding, value)) {
     image_encoding_ = value;
   }
 

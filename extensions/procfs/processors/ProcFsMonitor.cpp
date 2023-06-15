@@ -16,6 +16,7 @@
  */
 
 #include "ProcFsMonitor.h"
+
 #include <limits>
 #include <utility>
 #include <vector>
@@ -24,7 +25,6 @@
 #include "core/Resource.h"
 #include "core/ProcessContext.h"
 #include "core/ProcessSession.h"
-#include "core/PropertyBuilder.h"
 #include "../ProcFsJsonSerialization.h"
 #include "utils/JsonCallback.h"
 #include "utils/OpenTelemetryLogDataModelUtils.h"
@@ -34,41 +34,16 @@ using namespace std::literals::chrono_literals;
 
 namespace org::apache::nifi::minifi::extensions::procfs {
 
-const core::Relationship ProcFsMonitor::Success("success", "All files are routed to success");
-
-const core::Property ProcFsMonitor::OutputFormatProperty(
-    core::PropertyBuilder::createProperty("Output Format")
-        ->withDescription("The output type of the new flowfile")
-        ->withAllowableValues<std::string>(OutputFormat::values())
-        ->withDefaultValue(toString(OutputFormat::JSON))->build());
-
-const core::Property ProcFsMonitor::OutputCompactnessProperty(
-    core::PropertyBuilder::createProperty("Output Compactness")
-        ->withDescription("The output format of the new flowfile")
-        ->withAllowableValues<std::string>(OutputCompactness::values())
-        ->withDefaultValue(toString(OutputCompactness::PRETTY))->build());
-
-const core::Property ProcFsMonitor::DecimalPlaces(
-    core::PropertyBuilder::createProperty("Round to decimal places")
-        ->withDescription("The number of decimal places to round the values to (blank for no rounding)")->build());
-
-const core::Property ProcFsMonitor::ResultRelativenessProperty(
-    core::PropertyBuilder::createProperty("Result Type")
-        ->withDescription("Absolute returns the current procfs values, relative calculates the usage between triggers")
-        ->withAllowableValues<std::string>(ResultRelativeness::values())
-        ->withDefaultValue(toString(ResultRelativeness::ABSOLUTE))->build());
-
-
 void ProcFsMonitor::initialize() {
-  setSupportedProperties(properties());
-  setSupportedRelationships(relationships());
+  setSupportedProperties(Properties);
+  setSupportedRelationships(Relationships);
 }
 
 void ProcFsMonitor::onSchedule(const std::shared_ptr<core::ProcessContext>& context, const std::shared_ptr<core::ProcessSessionFactory>&) {
   gsl_Expects(context);
-  context->getProperty(OutputFormatProperty.getName(), output_format_);
-  context->getProperty(OutputCompactnessProperty.getName(), output_compactness_);
-  context->getProperty(ResultRelativenessProperty.getName(), result_relativeness_);
+  context->getProperty(OutputFormatProperty, output_format_);
+  context->getProperty(OutputCompactnessProperty, output_compactness_);
+  context->getProperty(ResultRelativenessProperty, result_relativeness_);
   setupDecimalPlacesFromProperties(*context);
 }
 
@@ -147,7 +122,7 @@ rapidjson::Value& ProcFsMonitor::prepareJSONBody(rapidjson::Document& root) {
 
 void ProcFsMonitor::setupDecimalPlacesFromProperties(const core::ProcessContext& context) {
   std::string decimal_places_str;
-  if (!context.getProperty(DecimalPlaces.getName(), decimal_places_str) || decimal_places_str.empty()) {
+  if (!context.getProperty(DecimalPlaces, decimal_places_str) || decimal_places_str.empty()) {
     decimal_places_ = std::nullopt;
     return;
   }

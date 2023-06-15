@@ -36,23 +36,18 @@ namespace nifi {
 namespace minifi {
 namespace processors {
 
-const core::Relationship TailEventLog::Success("success", "All files, containing log events, are routed to success");
-
-const core::Property TailEventLog::LogSourceFileName("Log Source", "Log Source from which to read events", "");
-const core::Property TailEventLog::MaxEventsPerFlowFile("Max Events Per FlowFile", "Events per flow file", "1");
-
 void TailEventLog::initialize() {
-  setSupportedProperties(properties());
-  setSupportedRelationships(relationships());
+  setSupportedProperties(Properties);
+  setSupportedRelationships(Relationships);
 }
 
 void TailEventLog::onSchedule(const std::shared_ptr<core::ProcessContext> &context, const std::shared_ptr<core::ProcessSessionFactory> &sessionFactory) {
   std::string value;
 
-  if (context->getProperty(LogSourceFileName.getName(), value)) {
+  if (context->getProperty(LogSourceFileName, value)) {
     log_source_ = value;
   }
-  if (context->getProperty(MaxEventsPerFlowFile.getName(), value)) {
+  if (context->getProperty(MaxEventsPerFlowFile, value)) {
     core::Property::StringToInt(value, max_events_);
   }
 

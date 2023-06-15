@@ -24,6 +24,8 @@
 
 #include "core/ProcessSession.h"
 #include "core/ProcessContext.h"
+#include "core/PropertyDefinition.h"
+#include "core/PropertyDefinitionBuilder.h"
 #include "SQLProcessor.h"
 #include "FlowFileSource.h"
 #include "utils/ArrayUtils.h"
@@ -41,14 +43,19 @@ class ExecuteSQL : public SQLProcessor, public FlowFileSource {
       "This processor can be scheduled to run using the standard timer-based scheduling methods, or it can be triggered by an incoming FlowFile. "
       "If it is triggered by an incoming FlowFile, then attributes of that FlowFile will be available when evaluating the query.";
 
-  EXTENSIONAPI static const core::Property SQLSelectQuery;
-  static auto properties() {
-    return utils::array_cat(SQLProcessor::properties(), FlowFileSource::properties(), std::array{SQLSelectQuery});
-  }
+  EXTENSIONAPI static constexpr auto SQLSelectQuery = core::PropertyDefinitionBuilder<>::createProperty("SQL select query")
+      .withDescription(
+        "The SQL select query to execute. The query can be empty, a constant value, or built from attributes using Expression Language. "
+        "If this property is specified, it will be used regardless of the content of incoming flowfiles. "
+        "If this property is empty, the content of the incoming flow file is expected to contain a valid SQL select query, to be issued by the processor to the database. "
+        "Note that Expression Language is not evaluated for flow file contents.")
+      .supportsExpressionLanguage(true)
+      .build();
+  EXTENSIONAPI static constexpr auto Properties = utils::array_cat(SQLProcessor::Properties, FlowFileSource::Properties, std::array<core::PropertyReference, 1>{SQLSelectQuery});
 
-  EXTENSIONAPI static const core::Relationship Success;
-  EXTENSIONAPI static const core::Relationship Failure;
-  static auto relationships() { return std::array{Success, Failure}; }
+  EXTENSIONAPI static constexpr auto Success =  core::RelationshipDefinition{"success", "Successfully created FlowFile from SQL query result set."};
+  EXTENSIONAPI static constexpr auto Failure =  core::RelationshipDefinition{"failure", "Flow files containing malformed sql statements"};
+  EXTENSIONAPI static constexpr auto Relationships = std::array{Success, Failure};
 
   EXTENSIONAPI static constexpr bool SupportsDynamicProperties = false;
   EXTENSIONAPI static constexpr bool SupportsDynamicRelationships = false;

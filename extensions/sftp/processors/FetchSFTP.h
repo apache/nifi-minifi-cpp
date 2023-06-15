@@ -26,6 +26,8 @@
 #include "core/ProcessSession.h"
 #include "core/Core.h"
 #include "core/Property.h"
+#include "core/PropertyDefinitionBuilder.h"
+#include "core/PropertyType.h"
 #include "core/logging/LoggerConfiguration.h"
 #include "utils/ArrayUtils.h"
 #include "utils/Id.h"
@@ -45,35 +47,74 @@ class FetchSFTP : public SFTPProcessorBase {
   EXTENSIONAPI static constexpr const char* Description = "Fetches the content of a file from a remote SFTP server "
       "and overwrites the contents of an incoming FlowFile with the content of the remote file.";
 
-  EXTENSIONAPI static const core::Property RemoteFile;
-  EXTENSIONAPI static const core::Property CompletionStrategy;
-  EXTENSIONAPI static const core::Property MoveDestinationDirectory;
-  EXTENSIONAPI static const core::Property CreateDirectory;
-  EXTENSIONAPI static const core::Property DisableDirectoryListing;
-  EXTENSIONAPI static const core::Property UseCompression;
-  static auto properties() {
-    return utils::array_cat(SFTPProcessorBase::properties(), std::array{
+  EXTENSIONAPI static constexpr auto RemoteFile = core::PropertyDefinitionBuilder<>::createProperty("Remote File")
+      .withDescription("The fully qualified filename on the remote system")
+      .isRequired(true)
+      .supportsExpressionLanguage(true)
+      .build();
+  EXTENSIONAPI static constexpr auto CompletionStrategy = core::PropertyDefinitionBuilder<3>::createProperty("Completion Strategy")
+      .withDescription("Specifies what to do with the original file on the server once it has been pulled into NiFi. "
+          "If the Completion Strategy fails, a warning will be logged but the data will still be transferred.")
+      .isRequired(true)
+      .withAllowedValues({COMPLETION_STRATEGY_NONE, COMPLETION_STRATEGY_MOVE_FILE, COMPLETION_STRATEGY_DELETE_FILE})
+      .withDefaultValue(COMPLETION_STRATEGY_NONE)
+      .build();
+  EXTENSIONAPI static constexpr auto MoveDestinationDirectory = core::PropertyDefinitionBuilder<>::createProperty("Move Destination Directory")
+      .withDescription("The directory on the remote server to move the original file to once it has been ingested into NiFi. "
+          "This property is ignored unless the Completion Strategy is set to 'Move File'. "
+          "The specified directory must already exist on the remote system if 'Create Directory' is disabled, or the rename will fail.")
+      .isRequired(false)
+      .supportsExpressionLanguage(true)
+      .build();
+  EXTENSIONAPI static constexpr auto CreateDirectory = core::PropertyDefinitionBuilder<>::createProperty("Create Directory")
+      .withDescription("Specifies whether or not the remote directory should be created if it does not exist.")
+      .isRequired(true)
+      .withPropertyType(core::StandardPropertyTypes::BOOLEAN_TYPE)
+      .withDefaultValue("false")
+      .build();
+  EXTENSIONAPI static constexpr auto DisableDirectoryListing = core::PropertyDefinitionBuilder<>::createProperty("Disable Directory Listing")
+      .withDescription("Control how 'Move Destination Directory' is created when 'Completion Strategy' is 'Move File' and 'Create Directory' is enabled. "
+          "If set to 'true', directory listing is not performed prior to create missing directories. "
+          "By default, this processor executes a directory listing command to see target directory existence before creating missing directories. "
+          "However, there are situations that you might need to disable the directory listing such as the following. "
+          "Directory listing might fail with some permission setups (e.g. chmod 100) on a directory. "
+          "Also, if any other SFTP client created the directory after this processor performed a listing and before a directory creation request by this processor is finished, "
+          "then an error is returned because the directory already exists.")
+      .isRequired(false)
+      .withPropertyType(core::StandardPropertyTypes::BOOLEAN_TYPE)
+      .withDefaultValue("false")
+      .build();
+  EXTENSIONAPI static constexpr auto UseCompression = core::PropertyDefinitionBuilder<>::createProperty("Use Compression")
+      .withDescription("Indicates whether or not ZLIB compression should be used when transferring files")
+      .isRequired(true)
+      .withPropertyType(core::StandardPropertyTypes::BOOLEAN_TYPE)
+      .withDefaultValue("false")
+      .build();
+
+  EXTENSIONAPI static constexpr auto Properties = utils::array_cat(SFTPProcessorBase::Properties, std::array<core::PropertyReference, 6>{
       RemoteFile,
       CompletionStrategy,
       MoveDestinationDirectory,
       CreateDirectory,
       DisableDirectoryListing,
       UseCompression
-    });
-  }
+  });
 
-  EXTENSIONAPI static const core::Relationship Success;
-  EXTENSIONAPI static const core::Relationship CommsFailure;
-  EXTENSIONAPI static const core::Relationship NotFound;
-  EXTENSIONAPI static const core::Relationship PermissionDenied;
-  static auto relationships() {
-    return std::array{
+
+  EXTENSIONAPI static constexpr auto Success = core::RelationshipDefinition{"success",
+      "All FlowFiles that are received are routed to success"};
+  EXTENSIONAPI static constexpr auto CommsFailure = core::RelationshipDefinition{"comms.failure",
+      "Any FlowFile that could not be fetched from the remote server due to a communications failure will be transferred to this Relationship."};
+  EXTENSIONAPI static constexpr auto NotFound = core::RelationshipDefinition{"not.found",
+      "Any FlowFile for which we receive a 'Not Found' message from the remote server will be transferred to this Relationship."};
+  EXTENSIONAPI static constexpr auto PermissionDenied = core::RelationshipDefinition{"permission.denied",
+      "Any FlowFile that could not be fetched from the remote server due to insufficient permissions will be transferred to this Relationship."};
+  EXTENSIONAPI static constexpr auto Relationships = std::array{
       Success,
       CommsFailure,
       NotFound,
       PermissionDenied
-    };
-  }
+  };
 
   EXTENSIONAPI static constexpr bool SupportsDynamicProperties = false;
   EXTENSIONAPI static constexpr bool SupportsDynamicRelationships = false;

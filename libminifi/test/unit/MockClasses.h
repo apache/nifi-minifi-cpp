@@ -24,6 +24,9 @@
 #include "core/Processor.h"
 #include "core/ProcessContext.h"
 #include "core/ProcessSession.h"
+#include "core/PropertyDefinition.h"
+#include "core/PropertyDefinitionBuilder.h"
+#include "core/RelationshipDefinition.h"
 
 namespace minifi = org::apache::nifi::minifi;
 
@@ -44,7 +47,7 @@ class MockControllerService : public minifi::core::controller::ControllerService
   ~MockControllerService() override = default;
 
   static constexpr const char* Description = "An example service";
-  static auto properties() { return std::array<minifi::core::Property, 0>{}; }
+  static constexpr auto Properties = std::array<minifi::core::PropertyReference, 0>{};
   static constexpr bool SupportsDynamicProperties = false;
   ADD_COMMON_VIRTUAL_FUNCTIONS_FOR_CONTROLLER_SERVICES
 
@@ -91,9 +94,9 @@ class MockProcessor : public minifi::core::Processor {
   ~MockProcessor() override = default;
 
   static constexpr const char* Description = "An example processor";
-  static inline const minifi::core::Property LinkedService{"linkedService", "Linked service"};
-  static auto properties() { return std::array{LinkedService}; }
-  static auto relationships() { return std::array<minifi::core::Relationship, 0>{}; }
+  static constexpr auto LinkedService = minifi::core::PropertyDefinitionBuilder<>::createProperty("linkedService").withDescription("Linked service").build();
+  static constexpr auto Properties = std::array<minifi::core::PropertyReference, 1>{LinkedService};
+  static constexpr auto Relationships = std::array<minifi::core::RelationshipDefinition, 0>{};
   static constexpr bool SupportsDynamicProperties = false;
   static constexpr bool SupportsDynamicRelationships = false;
   static constexpr minifi::core::annotation::Input InputRequirement = minifi::core::annotation::Input::INPUT_ALLOWED;
@@ -101,7 +104,7 @@ class MockProcessor : public minifi::core::Processor {
   ADD_COMMON_VIRTUAL_FUNCTIONS_FOR_PROCESSORS
 
   void initialize() override {
-    setSupportedProperties(properties());
+    setSupportedProperties(Properties);
   }
 
   void onTrigger(minifi::core::ProcessContext *context, minifi::core::ProcessSession* /*session*/) override {

@@ -22,9 +22,9 @@
 
 namespace org::apache::nifi::minifi::core::flow {
 
-void StructuredConnectionParser::addNewRelationshipToConnection(const std::string& relationship_name, minifi::Connection& connection) const {
-  core::Relationship relationship(relationship_name, "");
-  logger_->log_debug("parseConnection: relationship => [%s]", relationship_name);
+void StructuredConnectionParser::addNewRelationshipToConnection(std::string_view relationship_name, minifi::Connection& connection) const {
+  core::Relationship relationship(std::string(relationship_name), "");
+  logger_->log_debug("parseConnection: relationship => [%s]", std::string(relationship_name));
   connection.addRelationship(relationship);
 }
 
@@ -43,7 +43,7 @@ void StructuredConnectionParser::addFunnelRelationshipToConnection(minifi::Conne
 
   auto& processor_ref = *processor;
   if (typeid(minifi::Funnel) == typeid(processor_ref)) {
-    addNewRelationshipToConnection(minifi::Funnel::Success.getName(), connection);
+    addNewRelationshipToConnection(minifi::Funnel::Success.name, connection);
   }
 }
 

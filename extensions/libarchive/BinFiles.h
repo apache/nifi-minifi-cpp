@@ -29,6 +29,9 @@
 #include "FlowFileRecord.h"
 #include "core/Processor.h"
 #include "core/ProcessSession.h"
+#include "core/PropertyDefinitionBuilder.h"
+#include "core/PropertyType.h"
+#include "core/RelationshipDefinition.h"
 #include "core/logging/LoggerConfiguration.h"
 #include "utils/gsl.h"
 #include "utils/Id.h"
@@ -199,15 +202,39 @@ class BinFiles : public core::Processor {
 
   EXTENSIONAPI static constexpr const char* Description = "Bins flow files into buckets based on the number of entries or size of entries";
 
-  EXTENSIONAPI static const core::Property MinSize;
-  EXTENSIONAPI static const core::Property MaxSize;
-  EXTENSIONAPI static const core::Property MinEntries;
-  EXTENSIONAPI static const core::Property MaxEntries;
-  EXTENSIONAPI static const core::Property MaxBinCount;
-  EXTENSIONAPI static const core::Property MaxBinAge;
-  EXTENSIONAPI static const core::Property BatchSize;
-  static auto properties() {
-    return std::array{
+  EXTENSIONAPI static constexpr auto MinSize = core::PropertyDefinitionBuilder<>::createProperty("Minimum Group Size")
+      .withDescription("The minimum size of for the bundle")
+      .withPropertyType(core::StandardPropertyTypes::UNSIGNED_LONG_TYPE)
+      .withDefaultValue("0")
+      .build();
+  EXTENSIONAPI static constexpr auto MaxSize = core::PropertyDefinitionBuilder<>::createProperty("Maximum Group Size")
+      .withDescription("The maximum size for the bundle. If not specified, there is no maximum.")
+      .withPropertyType(core::StandardPropertyTypes::UNSIGNED_LONG_TYPE)
+      .build();
+  EXTENSIONAPI static constexpr auto MinEntries = core::PropertyDefinitionBuilder<>::createProperty("Minimum Number of Entries")
+      .withDescription("The minimum number of files to include in a bundle")
+      .withPropertyType(core::StandardPropertyTypes::UNSIGNED_INT_TYPE)
+      .withDefaultValue("1")
+      .build();
+  EXTENSIONAPI static constexpr auto MaxEntries = core::PropertyDefinitionBuilder<>::createProperty("Maximum Number of Entries")
+      .withDescription("The maximum number of files to include in a bundle. If not specified, there is no maximum.")
+      .withPropertyType(core::StandardPropertyTypes::UNSIGNED_INT_TYPE)
+      .build();
+  EXTENSIONAPI static constexpr auto MaxBinAge = core::PropertyDefinitionBuilder<>::createProperty("Max Bin Age")
+      .withDescription("The maximum age of a Bin that will trigger a Bin to be complete. Expected format is <duration> <time unit>")
+      .withPropertyType(core::StandardPropertyTypes::TIME_PERIOD_TYPE)
+      .build();
+  EXTENSIONAPI static constexpr auto MaxBinCount = core::PropertyDefinitionBuilder<>::createProperty("Maximum number of Bins")
+      .withDescription("Specifies the maximum number of bins that can be held in memory at any one time")
+      .withPropertyType(core::StandardPropertyTypes::UNSIGNED_INT_TYPE)
+      .withDefaultValue("100")
+      .build();
+  EXTENSIONAPI static constexpr auto BatchSize = core::PropertyDefinitionBuilder<>::createProperty("Batch Size")
+      .withDescription("Maximum number of FlowFiles processed in a single session")
+      .withPropertyType(core::StandardPropertyTypes::UNSIGNED_INT_TYPE)
+      .withDefaultValue("1")
+      .build();
+  EXTENSIONAPI static constexpr auto Properties = std::array<core::PropertyReference, 7>{
       MinSize,
       MaxSize,
       MinEntries,
@@ -215,17 +242,17 @@ class BinFiles : public core::Processor {
       MaxBinCount,
       MaxBinAge,
       BatchSize
-    };
-  }
+  };
 
-  EXTENSIONAPI static const core::Relationship Failure;
-  EXTENSIONAPI static const core::Relationship Original;
-  static auto relationships() {
-    return std::array{
+
+  EXTENSIONAPI static constexpr auto Failure =  core::RelationshipDefinition{"failure",
+      "If the bundle cannot be created, all FlowFiles that would have been used to create the bundle will be transferred to failure"};
+  EXTENSIONAPI static constexpr auto Original =  core::RelationshipDefinition{"original",
+      "The FlowFiles that were used to create the bundle"};
+  EXTENSIONAPI static constexpr auto Relationships = std::array{
       Failure,
       Original
-    };
-  }
+  };
 
   EXTENSIONAPI static constexpr bool SupportsDynamicProperties = false;
   EXTENSIONAPI static constexpr bool SupportsDynamicRelationships = false;

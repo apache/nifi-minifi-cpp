@@ -24,10 +24,8 @@
 #include "utils/gsl.h"
 #include "core/ProcessContext.h"
 #include "core/ProcessSession.h"
-#include "core/PropertyBuilder.h"
 #include "core/Resource.h"
 #include "core/logging/Logger.h"
-
 #include "utils/net/AsioCoro.h"
 
 using asio::ip::tcp;
@@ -42,63 +40,6 @@ using org::apache::nifi::minifi::utils::net::asyncOperationWithTimeout;
 
 namespace org::apache::nifi::minifi::processors {
 
-const core::Property PutTCP::Hostname = core::PropertyBuilder::createProperty("Hostname")
-    ->withDescription("The ip address or hostname of the destination.")
-    ->withDefaultValue("localhost")
-    ->isRequired(true)
-    ->supportsExpressionLanguage(true)
-    ->build();
-
-const core::Property PutTCP::Port = core::PropertyBuilder::createProperty("Port")
-    ->withDescription("The port or service on the destination.")
-    ->isRequired(true)
-    ->supportsExpressionLanguage(true)
-    ->build();
-
-const core::Property PutTCP::IdleConnectionExpiration = core::PropertyBuilder::createProperty("Idle Connection Expiration")
-    ->withDescription("The amount of time a connection should be held open without being used before closing the connection. A value of 0 seconds will disable this feature.")
-    ->withDefaultValue<core::TimePeriodValue>("15 seconds")
-    ->isRequired(true)
-    ->supportsExpressionLanguage(true)
-    ->build();
-
-const core::Property PutTCP::Timeout = core::PropertyBuilder::createProperty("Timeout")
-    ->withDescription("The timeout for connecting to and communicating with the destination.")
-    ->withDefaultValue<core::TimePeriodValue>("15 seconds")
-    ->isRequired(true)
-    ->supportsExpressionLanguage(true)
-    ->build();
-
-const core::Property PutTCP::ConnectionPerFlowFile = core::PropertyBuilder::createProperty("Connection Per FlowFile")
-    ->withDescription("Specifies whether to send each FlowFile's content on an individual connection.")
-    ->withDefaultValue(false)
-    ->isRequired(true)
-    ->supportsExpressionLanguage(false)
-    ->build();
-
-const core::Property PutTCP::OutgoingMessageDelimiter = core::PropertyBuilder::createProperty("Outgoing Message Delimiter")
-    ->withDescription("Specifies the delimiter to use when sending messages out over the same TCP stream. "
-                      "The delimiter is appended to each FlowFile message that is transmitted over the stream so that the receiver can determine when one message ends and the next message begins. "
-                      "Users should ensure that the FlowFile content does not contain the delimiter character to avoid errors.")
-    ->isRequired(false)
-    ->supportsExpressionLanguage(true)
-    ->build();
-
-const core::Property PutTCP::SSLContextService = core::PropertyBuilder::createProperty("SSL Context Service")
-    ->withDescription("The Controller Service to use in order to obtain an SSL Context. If this property is set, messages will be sent over a secure connection.")
-    ->isRequired(false)
-    ->asType<minifi::controllers::SSLContextService>()
-    ->build();
-
-const core::Property PutTCP::MaxSizeOfSocketSendBuffer = core::PropertyBuilder::createProperty("Max Size of Socket Send Buffer")
-    ->withDescription("The maximum size of the socket send buffer that should be used. This is a suggestion to the Operating System to indicate how big the socket buffer should be.")
-    ->isRequired(false)
-    ->asType<core::DataSizeValue>()
-    ->build();
-
-const core::Relationship PutTCP::Success{"success", "FlowFiles that are sent to the destination are sent out this relationship."};
-const core::Relationship PutTCP::Failure{"failure", "FlowFiles that encountered IO errors are send out this relationship."};
-
 constexpr size_t chunk_size = 1024;
 
 PutTCP::PutTCP(const std::string& name, const utils::Identifier& uuid)
@@ -107,8 +48,8 @@ PutTCP::PutTCP(const std::string& name, const utils::Identifier& uuid)
 PutTCP::~PutTCP() = default;
 
 void PutTCP::initialize() {
-  setSupportedProperties(properties());
-  setSupportedRelationships(relationships());
+  setSupportedProperties(Properties);
+  setSupportedRelationships(Relationships);
 }
 
 void PutTCP::notifyStop() {}
@@ -141,7 +82,7 @@ void PutTCP::onSchedule(core::ProcessContext* const context, core::ProcessSessio
 
   std::string context_name;
   ssl_context_.reset();
-  if (context->getProperty(SSLContextService.getName(), context_name) && !IsNullOrEmpty(context_name)) {
+  if (context->getProperty(SSLContextService, context_name) && !IsNullOrEmpty(context_name)) {
     if (auto controller_service = context->getControllerService(context_name)) {
       if (auto ssl_context_service = std::dynamic_pointer_cast<minifi::controllers::SSLContextService>(context->getControllerService(context_name))) {
         ssl_context_ = utils::net::getSslContext(*ssl_context_service);

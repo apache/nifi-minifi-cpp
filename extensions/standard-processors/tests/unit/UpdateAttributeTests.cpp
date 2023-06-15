@@ -34,8 +34,8 @@ TEST_CASE("UpdateAttributeTest", "[updateAttributeTest]") {
   const auto &update_proc = plan->addProcessor("UpdateAttribute", "update", core::Relationship("success", "description"), true);
   plan->addProcessor("LogAttribute", "log", core::Relationship("success", "description"), true);
 
-  plan->setProperty(update_proc, "test_attr_1", "test_val_1", true);
-  plan->setProperty(update_proc, "test_attr_2", "test_val_2", true);
+  plan->setDynamicProperty(update_proc, "test_attr_1", "test_val_1");
+  plan->setDynamicProperty(update_proc, "test_attr_2", "test_val_2");
 
   testController.runSession(plan, false);  // generate
   testController.runSession(plan, false);  // update

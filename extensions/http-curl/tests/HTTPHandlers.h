@@ -40,7 +40,6 @@
 #include "utils/gsl.h"
 #include "agent/build_description.h"
 #include "c2/C2Payload.h"
-#include "core/PropertyBuilder.h"
 #include "properties/Configuration.h"
 #include "range/v3/algorithm/contains.hpp"
 #include "range/v3/view/filter.hpp"
@@ -543,7 +542,7 @@ class HeartbeatHandler : public ServerAwareHandler {
   template<typename T>
   void verifyOperands(const rapidjson::Value& operation_node, const std::unordered_map<std::string, Metadata>& operand_with_metadata = {}) {
     auto operands = getOperandsOfProperties(operation_node);
-    assert(operands == T::values());
+    assert(operands == std::set<std::string>(T::values.begin(), T::values.end()));
     verifyMetadata(operation_node, operand_with_metadata);
   }
 
@@ -613,7 +612,7 @@ class HeartbeatHandler : public ServerAwareHandler {
       verifyProperties(operation_node, minifi::c2::Operation::parse(operation_node["type"].GetString(), {}, false), verify_components, disallowed_properties);
     }
 
-    assert(operations == minifi::c2::Operation::values());
+    assert(operations == std::set<std::string>(minifi::c2::Operation::values.begin(), minifi::c2::Operation::values.end()));
   }
 
   std::shared_ptr<minifi::Configure> configuration_;

@@ -26,6 +26,7 @@
 #include <map>
 #include <string>
 
+#include "PropertyType.h"
 #include "archive_entry.h"
 #include "archive.h"
 
@@ -33,7 +34,8 @@
 #include "core/Processor.h"
 #include "core/ProcessSession.h"
 #include "core/Core.h"
-#include "core/Property.h"
+#include "core/PropertyDefinition.h"
+#include "core/PropertyDefinitionBuilder.h"
 #include "core/logging/LoggerConfiguration.h"
 #include "io/ZlibStream.h"
 #include "utils/Enum.h"
@@ -43,6 +45,17 @@
 #include "ReadArchiveStream.h"
 
 namespace org::apache::nifi::minifi::processors {
+
+namespace compress_content {
+SMART_ENUM(CompressionMode,
+  (Compress, "compress"),
+  (Decompress, "decompress")
+)
+
+SMART_ENUM_EXTEND(ExtendedCompressionFormat, io::CompressionFormat, (GZIP, LZMA, XZ_LZMA2, BZIP2),
+  (USE_MIME_TYPE, "use mime.type attribute")
+)
+}  // namespace compress_content
 
 class CompressContent : public core::Processor {
  public:
@@ -54,26 +67,57 @@ class CompressContent : public core::Processor {
   EXTENSIONAPI static constexpr const char* Description = "Compresses or decompresses the contents of FlowFiles using a user-specified compression algorithm "
       "and updates the mime.type attribute as appropriate";
 
-  EXTENSIONAPI static const core::Property CompressMode;
-  EXTENSIONAPI static const core::Property CompressLevel;
-  EXTENSIONAPI static const core::Property CompressFormat;
-  EXTENSIONAPI static const core::Property UpdateFileName;
-  EXTENSIONAPI static const core::Property EncapsulateInTar;
-  EXTENSIONAPI static const core::Property BatchSize;
-  static auto properties() {
-    return std::array{
+  EXTENSIONAPI static constexpr auto CompressMode = core::PropertyDefinitionBuilder<compress_content::CompressionMode::length>::createProperty("Mode")
+      .withDescription("Indicates whether the processor should compress content or decompress content.")
+      .isRequired(false)
+      .withAllowedValues(compress_content::CompressionMode::values)
+      .withDefaultValue(toStringView(compress_content::CompressionMode::Compress))
+      .build();
+  EXTENSIONAPI static constexpr auto CompressLevel = core::PropertyDefinitionBuilder<>::createProperty("Compression Level")
+      .withDescription("The compression level to use; this is valid only when using GZIP compression.")
+      .isRequired(false)
+      .withPropertyType(core::StandardPropertyTypes::INTEGER_TYPE)
+      .withDefaultValue("1")
+      .build();
+  EXTENSIONAPI static constexpr auto CompressFormat = core::PropertyDefinitionBuilder<compress_content::ExtendedCompressionFormat::length>::createProperty("Compression Format")
+      .withDescription("The compression format to use.")
+      .isRequired(false)
+      .withAllowedValues(compress_content::ExtendedCompressionFormat::values)
+      .withDefaultValue(toStringView(compress_content::ExtendedCompressionFormat::USE_MIME_TYPE))
+      .build();
+  EXTENSIONAPI static constexpr auto UpdateFileName = core::PropertyDefinitionBuilder<>::createProperty("Update Filename")
+      .withDescription("Determines if filename extension need to be updated")
+      .isRequired(false)
+      .withPropertyType(core::StandardPropertyTypes::BOOLEAN_TYPE)
+      .withDefaultValue("false")
+      .build();
+  EXTENSIONAPI static constexpr auto EncapsulateInTar = core::PropertyDefinitionBuilder<>::createProperty("Encapsulate in TAR")
+      .withDescription("If true, on compression the FlowFile is added to a TAR archive and then compressed, "
+          "and on decompression a compressed, TAR-encapsulated FlowFile is expected.\n"
+          "If false, on compression the content of the FlowFile simply gets compressed, and on decompression a simple compressed content is expected.\n"
+          "true is the behaviour compatible with older MiNiFi C++ versions, false is the behaviour compatible with NiFi.")
+      .isRequired(false)
+      .withPropertyType(core::StandardPropertyTypes::BOOLEAN_TYPE)
+      .withDefaultValue("true")
+      .build();
+  EXTENSIONAPI static constexpr auto BatchSize = core::PropertyDefinitionBuilder<>::createProperty("Batch Size")
+      .withDescription("Maximum number of FlowFiles processed in a single session")
+      .withPropertyType(core::StandardPropertyTypes::UNSIGNED_INT_TYPE)
+      .withDefaultValue("1")
+      .build();
+  EXTENSIONAPI static constexpr auto Properties = std::array<core::PropertyReference, 6>{
       CompressMode,
       CompressLevel,
       CompressFormat,
       UpdateFileName,
       EncapsulateInTar,
       BatchSize
-    };
-  }
+  };
 
-  EXTENSIONAPI static const core::Relationship Success;
-  EXTENSIONAPI static const core::Relationship Failure;
-  static auto relationships() { return std::array{Success, Failure}; }
+
+  EXTENSIONAPI static constexpr auto Success = core::RelationshipDefinition{"success", "FlowFiles will be transferred to the success relationship after successfully being compressed or decompressed"};
+  EXTENSIONAPI static constexpr auto Failure = core::RelationshipDefinition{"failure", "FlowFiles will be transferred to the failure relationship if they fail to compress/decompress"};
+  EXTENSIONAPI static constexpr auto Relationships = std::array{Success, Failure};
 
   EXTENSIONAPI static constexpr bool SupportsDynamicProperties = false;
   EXTENSIONAPI static constexpr bool SupportsDynamicRelationships = false;
@@ -84,18 +128,9 @@ class CompressContent : public core::Processor {
 
   static const std::string TAR_EXT;
 
-  SMART_ENUM(CompressionMode,
-    (Compress, "compress"),
-    (Decompress, "decompress")
-  )
-
-  SMART_ENUM_EXTEND(ExtendedCompressionFormat, io::CompressionFormat, (GZIP, LZMA, XZ_LZMA2, BZIP2),
-    (USE_MIME_TYPE, "use mime.type attribute")
-  )
-
   class GzipWriteCallback {
    public:
-    GzipWriteCallback(CompressionMode compress_mode, int compress_level, std::shared_ptr<core::FlowFile> flow, std::shared_ptr<core::ProcessSession> session)
+    GzipWriteCallback(compress_content::CompressionMode compress_mode, int compress_level, std::shared_ptr<core::FlowFile> flow, std::shared_ptr<core::ProcessSession> session)
       : compress_mode_(compress_mode)
       , compress_level_(compress_level)
       , flow_(std::move(flow))
@@ -103,7 +138,7 @@ class CompressContent : public core::Processor {
     }
 
     std::shared_ptr<core::logging::Logger> logger_ = core::logging::LoggerFactory<CompressContent>::getLogger();
-    CompressionMode compress_mode_;
+    compress_content::CompressionMode compress_mode_;
     int compress_level_;
     std::shared_ptr<core::FlowFile> flow_;
     std::shared_ptr<core::ProcessSession> session_;
@@ -111,7 +146,7 @@ class CompressContent : public core::Processor {
 
     int64_t operator()(const std::shared_ptr<io::OutputStream>& output_stream) {
       std::shared_ptr<io::ZlibBaseStream> filterStream;
-      if (compress_mode_ == CompressionMode::Compress) {
+      if (compress_mode_ == compress_content::CompressionMode::Compress) {
         filterStream = std::make_shared<io::ZlibCompressStream>(gsl::make_not_null(output_stream.get()), io::ZlibCompressionFormat::GZIP, compress_level_);
       } else {
         filterStream = std::make_shared<io::ZlibDecompressStream>(gsl::make_not_null(output_stream.get()), io::ZlibCompressionFormat::GZIP);
@@ -165,8 +200,8 @@ class CompressContent : public core::Processor {
 
   std::shared_ptr<core::logging::Logger> logger_ = core::logging::LoggerFactory<CompressContent>::getLogger(uuid_);
   int compressLevel_{};
-  CompressionMode compressMode_;
-  ExtendedCompressionFormat compressFormat_;
+  compress_content::CompressionMode compressMode_;
+  compress_content::ExtendedCompressionFormat compressFormat_;
   bool updateFileName_ = false;
   bool encapsulateInTar_ = false;
   uint32_t batchSize_{1};

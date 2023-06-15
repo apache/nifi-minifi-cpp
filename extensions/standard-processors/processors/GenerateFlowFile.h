@@ -27,6 +27,10 @@
 #include "FlowFileRecord.h"
 #include "core/Processor.h"
 #include "core/ProcessSession.h"
+#include "core/PropertyDefinition.h"
+#include "core/PropertyDefinitionBuilder.h"
+#include "core/PropertyType.h"
+#include "core/RelationshipDefinition.h"
 #include "core/Core.h"
 #include "utils/gsl.h"
 #include "utils/Export.h"
@@ -47,23 +51,45 @@ class GenerateFlowFile : public core::Processor {
   EXTENSIONAPI static constexpr const char* Description = "This processor creates FlowFiles with random data or custom content. "
       "GenerateFlowFile is useful for load testing, configuration, and simulation.";
 
-  EXTENSIONAPI static const core::Property FileSize;
-  EXTENSIONAPI static const core::Property BatchSize;
-  EXTENSIONAPI static const core::Property DataFormat;
-  EXTENSIONAPI static const core::Property UniqueFlowFiles;
-  EXTENSIONAPI static const core::Property CustomText;
-  static auto properties() {
-    return std::array{
+  EXTENSIONAPI static constexpr auto FileSize = core::PropertyDefinitionBuilder<>::createProperty("File Size")
+      .withDescription("The size of the file that will be used")
+      .isRequired(false)
+      .withPropertyType(core::StandardPropertyTypes::DATA_SIZE_TYPE)
+      .withDefaultValue("1 kB")
+      .build();
+  EXTENSIONAPI static constexpr auto BatchSize = core::PropertyDefinitionBuilder<>::createProperty("Batch Size")
+      .withDescription("The number of FlowFiles to be transferred in each invocation")
+      .isRequired(false)
+      .withPropertyType(core::StandardPropertyTypes::INTEGER_TYPE)
+      .withDefaultValue("1")
+      .build();
+  EXTENSIONAPI static constexpr auto DataFormat =  core::PropertyDefinitionBuilder<2>::createProperty("Data Format")
+      .withDescription("Specifies whether the data should be Text or Binary")
+      .isRequired(false)
+      .withAllowedValues({"Text", "Binary"})
+      .withDefaultValue("Binary")
+      .build();
+  EXTENSIONAPI static constexpr auto UniqueFlowFiles = core::PropertyDefinitionBuilder<>::createProperty("Unique FlowFiles")
+      .withDescription("If true, each FlowFile that is generated will be unique. If false, a random value will be generated and all FlowFiles")
+      .isRequired(false)
+      .withPropertyType(core::StandardPropertyTypes::BOOLEAN_TYPE)
+      .withDefaultValue("true")
+      .build();
+  EXTENSIONAPI static constexpr auto CustomText = core::PropertyDefinitionBuilder<>::createProperty("Custom Text")
+      .withDescription("If Data Format is text and if Unique FlowFiles is false, then this custom text will be used as content of the generated FlowFiles and the File Size will be ignored. "
+                       "Finally, if Expression Language is used, evaluation will be performed only once per batch of generated FlowFiles")
+      .supportsExpressionLanguage(true)
+      .build();
+  EXTENSIONAPI static constexpr auto Properties = std::array<core::PropertyReference, 5>{
       FileSize,
       BatchSize,
       DataFormat,
       UniqueFlowFiles,
       CustomText
-    };
-  }
+  };
 
-  EXTENSIONAPI static const core::Relationship Success;
-  static auto relationships() { return std::array{Success}; }
+  EXTENSIONAPI static constexpr auto Success = core::RelationshipDefinition{"success", "success operational on the flow record"};
+  EXTENSIONAPI static constexpr auto Relationships = std::array{Success};
 
   EXTENSIONAPI static constexpr bool SupportsDynamicProperties = false;
   EXTENSIONAPI static constexpr bool SupportsDynamicRelationships = false;

@@ -19,34 +19,19 @@
 
 #include "ElasticsearchCredentialsControllerService.h"
 #include "core/Resource.h"
-#include "core/PropertyBuilder.h"
 
 namespace org::apache::nifi::minifi::extensions::elasticsearch {
-const core::Property ElasticsearchCredentialsControllerService::Username = core::PropertyBuilder::createProperty("Username")
-    ->withDescription("The username for basic authentication")
-    ->supportsExpressionLanguage(true)
-    ->build();
-
-const core::Property ElasticsearchCredentialsControllerService::Password = core::PropertyBuilder::createProperty("Password")
-    ->withDescription("The password for basic authentication")
-    ->supportsExpressionLanguage(true)
-    ->build();
-
-const core::Property ElasticsearchCredentialsControllerService::ApiKey = core::PropertyBuilder::createProperty("API Key")
-    ->withDescription("The API Key to use")
-    ->build();
-
 
 void ElasticsearchCredentialsControllerService::initialize() {
-  setSupportedProperties(properties());
+  setSupportedProperties(Properties);
 }
 
 void ElasticsearchCredentialsControllerService::onEnable() {
-  getProperty(ApiKey.getName(), api_key_);
+  getProperty(ApiKey, api_key_);
   std::string username;
   std::string password;
-  getProperty(Username.getName(), username);
-  getProperty(Password.getName(), password);
+  getProperty(Username, username);
+  getProperty(Password, password);
   if (!username.empty() && !password.empty())
     username_password_.emplace(std::move(username), std::move(password));
   if (api_key_.has_value() == username_password_.has_value())

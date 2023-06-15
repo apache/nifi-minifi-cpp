@@ -21,9 +21,11 @@
 #include <vector>
 #include <utility>
 
+#include "core/Core.h"
 #include "core/Processor.h"
 #include "core/ProcessSession.h"
-#include "core/Core.h"
+#include "core/PropertyDefinition.h"
+#include "core/RelationshipDefinition.h"
 #include "core/Resource.h"
 #include "core/logging/Logger.h"
 #include "core/logging/LoggerConfiguration.h"
@@ -44,10 +46,10 @@ class ReadFromFlowFileTestProcessor : public core::Processor {
 
   static constexpr const char* Description = "ReadFromFlowFileTestProcessor (only for testing purposes)";
 
-  static auto properties() { return std::array<core::Property, 0>{}; }
+  static constexpr auto Properties = std::array<core::PropertyReference, 0>{};
 
-  static const core::Relationship Success;
-  static auto relationships() { return std::array{Success}; }
+  static constexpr auto Success = core::RelationshipDefinition{"success", "success operational on the flow record"};
+  static constexpr auto Relationships = std::array{Success};
 
   static constexpr bool SupportsDynamicProperties = false;
   static constexpr bool SupportsDynamicRelationships = false;

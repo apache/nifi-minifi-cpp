@@ -31,6 +31,8 @@
 #include "io/validation.h"
 #include "core/controller/ControllerService.h"
 #include "core/logging/LoggerConfiguration.h"
+#include "core/PropertyDefinition.h"
+#include "core/PropertyDefinitionBuilder.h"
 
 namespace org::apache::nifi::minifi::jni::controllers {
 
@@ -52,16 +54,27 @@ class JavaControllerService : public core::controller::ControllerService, public
 
   EXTENSIONAPI static constexpr const char* Description = "Allows specification of nars to be used within referenced processors.";
 
-  EXTENSIONAPI static const core::Property NarDirectory;
-  EXTENSIONAPI static const core::Property NarDeploymentDirectory;
-  EXTENSIONAPI static const core::Property NarDocumentDirectory;
-  static auto properties() {
-    return std::array{
+  EXTENSIONAPI static constexpr auto NarDirectory = core::PropertyDefinitionBuilder<>::createProperty("Nar Directory")
+      .withDescription("Directory containing the nars to deploy")
+      .isRequired(true)
+      .supportsExpressionLanguage(false)
+      .build();
+  EXTENSIONAPI static constexpr auto NarDeploymentDirectory = core::PropertyDefinitionBuilder<>::createProperty("Nar Deployment Directory")
+      .withDescription("Directory in which nars will be deployed")
+      .isRequired(true)
+      .supportsExpressionLanguage(false)
+      .build();
+  EXTENSIONAPI static constexpr auto NarDocumentDirectory = core::PropertyDefinitionBuilder<>::createProperty("Nar Document Directory")
+      .withDescription("Directory in which documents will be deployed")
+      .isRequired(true)
+      .supportsExpressionLanguage(false)
+      .build();
+  EXTENSIONAPI static constexpr auto Properties = std::array<core::PropertyReference, 3>{
       NarDirectory,
       NarDeploymentDirectory,
       NarDocumentDirectory
-    };
-  }
+  };
+
 
   EXTENSIONAPI static constexpr bool SupportsDynamicProperties = false;
   ADD_COMMON_VIRTUAL_FUNCTIONS_FOR_CONTROLLER_SERVICES

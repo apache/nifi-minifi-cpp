@@ -27,8 +27,8 @@
 namespace org::apache::nifi::minifi::azure::processors {
 
 void FetchAzureDataLakeStorage::initialize() {
-  setSupportedProperties(properties());
-  setSupportedRelationships(relationships());
+  setSupportedProperties(Properties);
+  setSupportedRelationships(Relationships);
 }
 
 std::optional<storage::FetchAzureDataLakeStorageParameters> FetchAzureDataLakeStorage::buildFetchParameters(
@@ -93,5 +93,7 @@ void FetchAzureDataLakeStorage::onTrigger(const std::shared_ptr<core::ProcessCon
     session->remove(flow_file);
   }
 }
+
+REGISTER_RESOURCE(FetchAzureDataLakeStorage, Processor);
 
 }  // namespace org::apache::nifi::minifi::azure::processors

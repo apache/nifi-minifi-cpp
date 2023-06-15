@@ -102,8 +102,8 @@ class UploadToGCSCallback {
 
 
 void PutGCSObject::initialize() {
-  setSupportedProperties(properties());
-  setSupportedRelationships(relationships());
+  setSupportedProperties(Properties);
+  setSupportedRelationships(Relationships);
 }
 
 
@@ -114,7 +114,7 @@ void PutGCSObject::onSchedule(const std::shared_ptr<core::ProcessContext>& conte
     try {
       encryption_key_ = gcs::EncryptionKey::FromBase64Key(*encryption_key);
     } catch (const google::cloud::RuntimeStatusError&) {
-      throw minifi::Exception(ExceptionType::PROCESS_SCHEDULE_EXCEPTION, "Could not decode the base64-encoded encryption key from property " + EncryptionKey.getName());
+      throw minifi::Exception(ExceptionType::PROCESS_SCHEDULE_EXCEPTION, "Could not decode the base64-encoded encryption key from property " + std::string(EncryptionKey.name));
     }
   }
 }
@@ -175,4 +175,7 @@ void PutGCSObject::onTrigger(const std::shared_ptr<core::ProcessContext>& contex
     session->transfer(flow_file, Success);
   }
 }
+
+REGISTER_RESOURCE(PutGCSObject, Processor);
+
 }  // namespace org::apache::nifi::minifi::extensions::gcp

@@ -44,7 +44,7 @@
 
 namespace org::apache::nifi::minifi::aws::s3 {
 
-static const std::unordered_map<std::string, Aws::S3::Model::StorageClass> STORAGE_CLASS_MAP {
+inline constexpr std::array<std::pair<std::string_view, Aws::S3::Model::StorageClass>, 7> STORAGE_CLASS_MAP {{
   {"Standard", Aws::S3::Model::StorageClass::STANDARD},
   {"ReducedRedundancy", Aws::S3::Model::StorageClass::REDUCED_REDUNDANCY},
   {"StandardIA", Aws::S3::Model::StorageClass::STANDARD_IA},
@@ -52,9 +52,9 @@ static const std::unordered_map<std::string, Aws::S3::Model::StorageClass> STORA
   {"IntelligentTiering", Aws::S3::Model::StorageClass::INTELLIGENT_TIERING},
   {"Glacier", Aws::S3::Model::StorageClass::GLACIER},
   {"DeepArchive", Aws::S3::Model::StorageClass::DEEP_ARCHIVE}
-};
+}};
 
-static const std::map<Aws::S3::Model::ObjectStorageClass, std::string> OBJECT_STORAGE_CLASS_MAP {
+inline constexpr std::array<std::pair<Aws::S3::Model::ObjectStorageClass, std::string_view>, 7> OBJECT_STORAGE_CLASS_MAP {{
   {Aws::S3::Model::ObjectStorageClass::STANDARD, "Standard"},
   {Aws::S3::Model::ObjectStorageClass::REDUCED_REDUNDANCY, "ReducedRedundancy"},
   {Aws::S3::Model::ObjectStorageClass::STANDARD_IA, "StandardIA"},
@@ -62,19 +62,19 @@ static const std::map<Aws::S3::Model::ObjectStorageClass, std::string> OBJECT_ST
   {Aws::S3::Model::ObjectStorageClass::INTELLIGENT_TIERING, "IntelligentTiering"},
   {Aws::S3::Model::ObjectStorageClass::GLACIER, "Glacier"},
   {Aws::S3::Model::ObjectStorageClass::DEEP_ARCHIVE, "DeepArchive"}
-};
+}};
 
-static const std::map<Aws::S3::Model::ObjectVersionStorageClass, std::string> VERSION_STORAGE_CLASS_MAP {
+inline constexpr std::array<std::pair<Aws::S3::Model::ObjectVersionStorageClass, std::string_view>, 1> VERSION_STORAGE_CLASS_MAP {{
   {Aws::S3::Model::ObjectVersionStorageClass::STANDARD, "Standard"}
-};
+}};
 
-static const std::unordered_map<std::string, Aws::S3::Model::ServerSideEncryption> SERVER_SIDE_ENCRYPTION_MAP {
+inline constexpr std::array<std::pair<std::string_view, Aws::S3::Model::ServerSideEncryption>, 3> SERVER_SIDE_ENCRYPTION_MAP {{
   {"None", Aws::S3::Model::ServerSideEncryption::NOT_SET},
   {"AES256", Aws::S3::Model::ServerSideEncryption::AES256},
   {"aws_kms", Aws::S3::Model::ServerSideEncryption::aws_kms},
-};
+}};
 
-static const std::unordered_map<std::string, Aws::S3::Model::ObjectCannedACL> CANNED_ACL_MAP {
+inline constexpr std::array<std::pair<std::string_view, Aws::S3::Model::ObjectCannedACL>, 7> CANNED_ACL_MAP {{
   {"BucketOwnerFullControl", Aws::S3::Model::ObjectCannedACL::bucket_owner_full_control},
   {"BucketOwnerRead", Aws::S3::Model::ObjectCannedACL::bucket_owner_read},
   {"AuthenticatedRead", Aws::S3::Model::ObjectCannedACL::authenticated_read},
@@ -82,7 +82,7 @@ static const std::unordered_map<std::string, Aws::S3::Model::ObjectCannedACL> CA
   {"PublicRead", Aws::S3::Model::ObjectCannedACL::public_read},
   {"Private", Aws::S3::Model::ObjectCannedACL::private_},
   {"AwsExecRead", Aws::S3::Model::ObjectCannedACL::aws_exec_read},
-};
+}};
 
 struct Expiration {
   std::string expiration_time;

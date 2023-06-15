@@ -23,6 +23,9 @@
 
 #include "SplunkHECProcessor.h"
 #include "client/HTTPClient.h"
+#include "core/PropertyDefinition.h"
+#include "core/PropertyDefinitionBuilder.h"
+#include "core/RelationshipDefinition.h"
 #include "utils/ArrayUtils.h"
 #include "utils/ResourceQueue.h"
 #include "utils/gsl.h"
@@ -58,24 +61,39 @@ class PutSplunkHTTP final : public SplunkHECProcessor {
       "of the response. In case the flow file transferred into \"failure\" relationship, the \"splunk.response.code\" might be\n"
       "also filled, based on the Splunk response code.";
 
-  EXTENSIONAPI static const core::Property Source;
-  EXTENSIONAPI static const core::Property SourceType;
-  EXTENSIONAPI static const core::Property Host;
-  EXTENSIONAPI static const core::Property Index;
-  EXTENSIONAPI static const core::Property ContentType;
-  static auto properties() {
-    return utils::array_cat(SplunkHECProcessor::properties(), std::array{
+  EXTENSIONAPI static constexpr auto Source = core::PropertyDefinitionBuilder<>::createProperty("Source")
+      .withDescription("Basic field describing the source of the event. If unspecified, the event will use the default defined in splunk.")
+      .supportsExpressionLanguage(true)
+      .build();
+  EXTENSIONAPI static constexpr auto SourceType = core::PropertyDefinitionBuilder<>::createProperty("Source Type")
+      .withDescription("Basic field describing the source type of the event. If unspecified, the event will use the default defined in splunk.")
+      .supportsExpressionLanguage(true)
+      .build();
+  EXTENSIONAPI static constexpr auto Host = core::PropertyDefinitionBuilder<>::createProperty("Host")
+      .withDescription("Basic field describing the host of the event. If unspecified, the event will use the default defined in splunk.")
+      .supportsExpressionLanguage(true)
+      .build();
+  EXTENSIONAPI static constexpr auto Index = core::PropertyDefinitionBuilder<>::createProperty("Index")
+      .withDescription("Identifies the index where to send the event. If unspecified, the event will use the default defined in splunk.")
+      .supportsExpressionLanguage(true)
+      .build();
+  EXTENSIONAPI static constexpr auto ContentType = core::PropertyDefinitionBuilder<>::createProperty("Content Type")
+      .withDescription("The media type of the event sent to Splunk. If not set, \"mime.type\" flow file attribute will be used. "
+          "In case of neither of them is specified, this information will not be sent to the server.")
+      .supportsExpressionLanguage(true)
+      .build();
+  EXTENSIONAPI static constexpr auto Properties = utils::array_cat(SplunkHECProcessor::Properties, std::array<core::PropertyReference, 5>{
       Source,
       SourceType,
       Host,
       Index,
       ContentType
-    });
-  }
+  });
 
-  EXTENSIONAPI static const core::Relationship Success;
-  EXTENSIONAPI static const core::Relationship Failure;
-  static auto relationships() { return std::array{Success, Failure}; }
+
+  EXTENSIONAPI static constexpr auto Success = core::RelationshipDefinition{"success", "FlowFiles that are sent successfully to the destination are sent to this relationship."};
+  EXTENSIONAPI static constexpr auto Failure = core::RelationshipDefinition{"failure", "FlowFiles that failed to be sent to the destination are sent to this relationship."};
+  EXTENSIONAPI static constexpr auto Relationships = std::array{Success, Failure};
 
   EXTENSIONAPI static constexpr bool SupportsDynamicProperties = false;
   EXTENSIONAPI static constexpr bool SupportsDynamicRelationships = false;

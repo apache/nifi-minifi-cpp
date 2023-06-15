@@ -24,6 +24,7 @@
 #include "io/BufferStream.h"
 #include "core/ProcessContext.h"
 #include "core/ProcessSession.h"
+#include "core/Resource.h"
 #include "Exception.h"
 #include "data/MaxCollector.h"
 #include "utils/StringUtils.h"
@@ -43,15 +44,15 @@ QueryDatabaseTable::QueryDatabaseTable(std::string name, const utils::Identifier
 }
 
 void QueryDatabaseTable::initialize() {
-  setSupportedProperties(properties());
-  setSupportedRelationships(relationships());
+  setSupportedProperties(Properties);
+  setSupportedRelationships(Relationships);
 }
 
 void QueryDatabaseTable::processOnSchedule(core::ProcessContext& context) {
-  context.getProperty(OutputFormat.getName(), output_format_);
+  context.getProperty(OutputFormat, output_format_);
   max_rows_ = [&] {
     uint64_t max_rows = 0;
-    context.getProperty(MaxRowsPerFlowFile.getName(), max_rows);
+    context.getProperty(MaxRowsPerFlowFile, max_rows);
     return gsl::narrow<size_t>(max_rows);
   }();
 
@@ -60,8 +61,8 @@ void QueryDatabaseTable::processOnSchedule(core::ProcessContext& context) {
     throw Exception(PROCESSOR_EXCEPTION, "Failed to get StateManager");
   }
 
-  context.getProperty(TableName.getName(), table_name_);
-  context.getProperty(WhereClause.getName(), extra_where_clause_);
+  context.getProperty(TableName, table_name_);
+  context.getProperty(WhereClause, extra_where_clause_);
 
   return_columns_.clear();
   queried_columns_.clear();
@@ -101,7 +102,7 @@ void QueryDatabaseTable::processOnTrigger(core::ProcessContext& /*context*/, cor
   auto column_filter = [&] (const std::string& column_name) {
     return return_columns_.empty() || return_columns_.contains(sql::SQLColumnIdentifier(column_name));
   };
-  sql::JSONSQLWriter json_writer{output_format_ == OutputType::JSONPretty, column_filter};
+  sql::JSONSQLWriter json_writer{output_format_ == flow_file_source::OutputType::JSONPretty, column_filter};
   FlowFileGenerator flow_file_creator{session, json_writer};
   sql::SQLRowsetProcessor sql_rowset_processor(std::move(rowset), {json_writer, maxCollector, flow_file_creator});
 
@@ -241,5 +242,7 @@ bool QueryDatabaseTable::saveState() {
   }
   return state_manager_->set(state_map);
 }
+
+REGISTER_RESOURCE(QueryDatabaseTable, Processor);
 
 }  // namespace org::apache::nifi::minifi::processors

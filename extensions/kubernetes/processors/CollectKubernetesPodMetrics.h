@@ -22,6 +22,8 @@
 #include "../controllerservice/KubernetesControllerService.h"
 #include "core/logging/LoggerConfiguration.h"
 #include "core/Processor.h"
+#include "core/PropertyDefinition.h"
+#include "core/PropertyDefinitionBuilder.h"
 
 namespace org::apache::nifi::minifi::processors {
 
@@ -33,15 +35,14 @@ class CollectKubernetesPodMetrics : public core::Processor {
 
   EXTENSIONAPI static constexpr const char* Description = "A processor which collects pod metrics when MiNiFi is run inside Kubernetes.";
 
-  EXTENSIONAPI static const core::Property KubernetesControllerService;
-  static auto properties() {
-    return std::array{KubernetesControllerService};
-  }
+  EXTENSIONAPI static constexpr auto KubernetesControllerService = core::PropertyDefinitionBuilder<>::createProperty("Kubernetes Controller Service")
+    .withDescription("Controller service which provides Kubernetes functionality")
+    .isRequired(true)
+    .build();
+  EXTENSIONAPI static constexpr auto Properties = std::array<core::PropertyReference, 1>{KubernetesControllerService};
 
-  EXTENSIONAPI static const core::Relationship Success;
-  static auto relationships() {
-    return std::array{Success};
-  }
+  EXTENSIONAPI static constexpr auto Success = core::RelationshipDefinition{"success", "All flow files produced are routed to Success."};
+  EXTENSIONAPI static constexpr auto Relationships = std::array{Success};
 
   EXTENSIONAPI static constexpr bool SupportsDynamicProperties = false;
   EXTENSIONAPI static constexpr bool SupportsDynamicRelationships = false;

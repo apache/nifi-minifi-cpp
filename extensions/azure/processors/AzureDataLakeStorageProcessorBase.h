@@ -26,6 +26,7 @@
 #include <optional>
 
 #include "core/Property.h"
+#include "core/PropertyDefinition.h"
 #include "core/logging/Logger.h"
 #include "core/logging/LoggerConfiguration.h"
 #include "storage/AzureDataLakeStorage.h"
@@ -36,14 +37,21 @@ namespace org::apache::nifi::minifi::azure::processors {
 
 class AzureDataLakeStorageProcessorBase : public AzureStorageProcessorBase {
  public:
-  EXTENSIONAPI static const core::Property FilesystemName;
-  EXTENSIONAPI static const core::Property DirectoryName;
-  static auto properties() {
-    return utils::array_cat(AzureStorageProcessorBase::properties(), std::array{
+  EXTENSIONAPI static constexpr auto FilesystemName = core::PropertyDefinitionBuilder<>::createProperty("Filesystem Name")
+      .withDescription("Name of the Azure Storage File System. It is assumed to be already existing.")
+      .supportsExpressionLanguage(true)
+      .isRequired(true)
+      .build();
+  EXTENSIONAPI static constexpr auto DirectoryName = core::PropertyDefinitionBuilder<>::createProperty("Directory Name")
+      .withDescription("Name of the Azure Storage Directory. The Directory Name cannot contain a leading '/'. "
+          "If left empty it designates the root directory. The directory will be created if not already existing.")
+      .supportsExpressionLanguage(true)
+      .build();
+  EXTENSIONAPI static constexpr auto Properties = utils::array_cat(AzureStorageProcessorBase::Properties, std::array<core::PropertyReference, 2>{
       FilesystemName,
       DirectoryName
-    });
-  }
+  });
+
 
   explicit AzureDataLakeStorageProcessorBase(std::string name, const minifi::utils::Identifier& uuid, const std::shared_ptr<core::logging::Logger> &logger)
     : AzureStorageProcessorBase(std::move(name), uuid, logger) {

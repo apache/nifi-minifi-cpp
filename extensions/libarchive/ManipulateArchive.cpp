@@ -38,28 +38,19 @@
 
 namespace org::apache::nifi::minifi::processors {
 
-const core::Property ManipulateArchive::Operation("Operation", "Operation to perform on the archive (touch, remove, copy, move).", "");
-const core::Property ManipulateArchive::Target("Target", "An existing entry within the archive to perform the operation on.", "");
-const core::Property ManipulateArchive::Destination("Destination", "Destination for operations (touch, move or copy) which result in new entries.", "");
-const core::Property ManipulateArchive::Before("Before", "For operations which result in new entries, places the new entry before the entry specified by this property.", "");
-const core::Property ManipulateArchive::After("After", "For operations which result in new entries, places the new entry after the entry specified by this property.", "");
-
-const core::Relationship ManipulateArchive::Success("success", "FlowFiles will be transferred to the success relationship if the operation succeeds.");
-const core::Relationship ManipulateArchive::Failure("failure", "FlowFiles will be transferred to the failure relationship if the operation fails.");
-
 char const* ManipulateArchive::OPERATION_REMOVE = "remove";
 char const* ManipulateArchive::OPERATION_COPY =   "copy";
 char const* ManipulateArchive::OPERATION_MOVE =   "move";
 char const* ManipulateArchive::OPERATION_TOUCH =  "touch";
 
 void ManipulateArchive::initialize() {
-  setSupportedProperties(properties());
+  setSupportedProperties(Properties);
 
-  setSupportedRelationships(relationships());
+  setSupportedRelationships(Relationships);
 }
 
 void ManipulateArchive::onSchedule(core::ProcessContext *context, core::ProcessSessionFactory* /*sessionFactory*/) {
-    context->getProperty(Operation.getName(), operation_);
+    context->getProperty(Operation, operation_);
     bool invalid = false;
     std::transform(operation_.begin(), operation_.end(), operation_.begin(), ::tolower);
 
@@ -73,10 +64,10 @@ void ManipulateArchive::onSchedule(core::ProcessContext *context, core::ProcessS
         invalid = true;
     }
 
-    context->getProperty(Target.getName(), targetEntry_);
-    context->getProperty(Destination.getName(), destination_);
-    context->getProperty(Before.getName(), before_);
-    context->getProperty(After.getName(), after_);
+    context->getProperty(Target, targetEntry_);
+    context->getProperty(Destination, destination_);
+    context->getProperty(Before, before_);
+    context->getProperty(After, after_);
 
     // All operations which create new entries require a set destination
     if (op_create == destination_.empty()) {

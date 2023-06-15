@@ -21,6 +21,8 @@
 #include <utility>
 #include <memory>
 
+#include "core/PropertyDefinition.h"
+#include "core/PropertyType.h"
 #include "io/StreamPipe.h"
 #include "utils/ArrayUtils.h"
 #include "AzureDataLakeStorageFileProcessorBase.h"
@@ -34,20 +36,31 @@ class FetchAzureDataLakeStorage final : public AzureDataLakeStorageFileProcessor
  public:
   EXTENSIONAPI static constexpr const char* Description = "Fetch the provided file from Azure Data Lake Storage Gen 2";
 
-  EXTENSIONAPI static const core::Property RangeStart;
-  EXTENSIONAPI static const core::Property RangeLength;
-  EXTENSIONAPI static const core::Property NumberOfRetries;
-  static auto properties() {
-    return utils::array_cat(AzureDataLakeStorageFileProcessorBase::properties(), std::array{
+  EXTENSIONAPI static constexpr auto RangeStart = core::PropertyDefinitionBuilder<>::createProperty("Range Start")
+      .withDescription("The byte position at which to start reading from the object. An empty value or a value of zero will start reading at the beginning of the object.")
+      .supportsExpressionLanguage(true)
+      .build();
+  EXTENSIONAPI static constexpr auto RangeLength = core::PropertyDefinitionBuilder<>::createProperty("Range Length")
+      .withDescription("The number of bytes to download from the object, starting from the Range Start. "
+                        "An empty value or a value that extends beyond the end of the object will read to the end of the object.")
+      .supportsExpressionLanguage(true)
+      .build();
+  EXTENSIONAPI static constexpr auto NumberOfRetries = core::PropertyDefinitionBuilder<>::createProperty("Number of Retries")
+      .withDescription("The number of automatic retries to perform if the download fails.")
+      .withPropertyType(core::StandardPropertyTypes::UNSIGNED_LONG_TYPE)
+      .withDefaultValue("0")
+      .supportsExpressionLanguage(true)
+      .build();
+  EXTENSIONAPI static constexpr auto Properties = utils::array_cat(AzureDataLakeStorageFileProcessorBase::Properties, std::array<core::PropertyReference, 3>{
       RangeStart,
       RangeLength,
       NumberOfRetries
-    });
-  }
+  });
 
-  EXTENSIONAPI static const core::Relationship Success;
-  EXTENSIONAPI static const core::Relationship Failure;
-  static auto relationships() { return std::array{Success, Failure}; }
+
+  EXTENSIONAPI static constexpr auto Success = core::RelationshipDefinition{"success", "Files that have been successfully fetched from Azure storage are transferred to this relationship"};
+  EXTENSIONAPI static constexpr auto Failure = core::RelationshipDefinition{"failure", "In case of fetch failure flowfiles are transferred to this relationship"};
+  EXTENSIONAPI static constexpr auto Relationships = std::array{Success, Failure};
 
   EXTENSIONAPI static constexpr bool SupportsDynamicProperties = false;
   EXTENSIONAPI static constexpr bool SupportsDynamicRelationships = false;

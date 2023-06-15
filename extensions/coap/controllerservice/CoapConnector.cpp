@@ -22,18 +22,11 @@
 
 #include "core/logging/LoggerConfiguration.h"
 #include "core/controller/ControllerService.h"
-#include "core/PropertyBuilder.h"
 #include "core/Resource.h"
 #include "io/validation.h"
 #include "properties/Configure.h"
 
 namespace org::apache::nifi::minifi::coap::controllers {
-
-const core::Property CoapConnectorService::RemoteServer(core::PropertyBuilder::createProperty("Remote Server")->withDescription("Remote CoAP server")->isRequired(false)->build());
-const core::Property CoapConnectorService::Port(
-    core::PropertyBuilder::createProperty("Remote Port")->withDescription("Remote CoAP server port")->withDefaultValue<uint64_t>(8181)->isRequired(true)->build());
-const core::Property CoapConnectorService::MaxQueueSize(
-    core::PropertyBuilder::createProperty("Max Queue Size")->withDescription("Max queue size for received data ")->withDefaultValue<uint64_t>(1000)->isRequired(false)->build());
 
 void CoapConnectorService::initialize() {
   std::lock_guard<std::mutex> lock(initialization_mutex_);
@@ -52,7 +45,7 @@ void CoapConnectorService::initialize() {
 
 void CoapConnectorService::onEnable() {
   std::string port_str;
-  if (getProperty(RemoteServer.getName(), host_) && !host_.empty() && getProperty(Port.getName(), port_str) && !port_str.empty()) {
+  if (getProperty(RemoteServer, host_) && !host_.empty() && getProperty(Port, port_str) && !port_str.empty()) {
     core::Property::StringToInt(port_str, port_);
   } else {
     // this is the case where we aren't being used in the context of a single controller service.
@@ -73,7 +66,7 @@ CoapResponse CoapConnectorService::sendPayload(uint8_t type, const std::string &
 }
 
 void CoapConnectorService::initializeProperties() {
-  setSupportedProperties(properties());
+  setSupportedProperties(Properties);
 }
 
 REGISTER_RESOURCE(CoapConnectorService, InternalResource);

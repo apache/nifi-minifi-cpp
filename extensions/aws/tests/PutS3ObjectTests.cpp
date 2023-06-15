@@ -86,7 +86,7 @@ TEST_CASE_METHOD(PutS3ObjectTestsFixture, "Test required property not set", "[aw
 
   SECTION("Test no object key is set") {
     setRequiredProperties();
-    plan->setProperty(update_attribute, "filename", "", true);
+    plan->setDynamicProperty(update_attribute, "filename", "");
   }
 
   SECTION("Test storage class is empty") {
@@ -152,12 +152,12 @@ TEST_CASE_METHOD(PutS3ObjectTestsFixture, "Check default client configuration wi
 TEST_CASE_METHOD(PutS3ObjectTestsFixture, "Set non-default client configuration", "[awsS3ClientConfig]") {
   setRequiredProperties();
   plan->setProperty(s3_processor, "Object Key", "custom_key");
-  plan->setProperty(update_attribute, "test.contentType", "application/tar", true);
+  plan->setDynamicProperty(update_attribute, "test.contentType", "application/tar");
   plan->setProperty(s3_processor, "Content Type", "${test.contentType}");
   plan->setProperty(s3_processor, "Storage Class", "ReducedRedundancy");
   plan->setProperty(s3_processor, "Region", minifi::aws::processors::region::AP_SOUTHEAST_3);
   plan->setProperty(s3_processor, "Communications Timeout", "10 Sec");
-  plan->setProperty(update_attribute, "test.endpoint", "http://localhost:1234", true);
+  plan->setDynamicProperty(update_attribute, "test.endpoint", "http://localhost:1234");
   plan->setProperty(s3_processor, "Endpoint Override URL", "${test.endpoint}");
   plan->setProperty(s3_processor, "Server Side Encryption", "AES256");
   test_controller.runSession(plan, true);
@@ -177,7 +177,7 @@ TEST_CASE_METHOD(PutS3ObjectTestsFixture, "Set non-default client configuration"
 
 TEST_CASE_METHOD(PutS3ObjectTestsFixture, "Test single user metadata", "[awsS3MetaData]") {
   setRequiredProperties();
-  plan->setProperty(s3_processor, "meta_key", "meta_value", true);
+  plan->setDynamicProperty(s3_processor, "meta_key", "meta_value");
   test_controller.runSession(plan, true);
   REQUIRE(mock_s3_request_sender_ptr->put_object_request.GetMetadata().at("meta_key") == "meta_value");
   REQUIRE(verifyLogLinePresenceInPollTime(std::chrono::seconds(3), "key:s3.usermetadata value:meta_key=meta_value"));
@@ -185,8 +185,8 @@ TEST_CASE_METHOD(PutS3ObjectTestsFixture, "Test single user metadata", "[awsS3Me
 
 TEST_CASE_METHOD(PutS3ObjectTestsFixture, "Test multiple user metadata", "[awsS3MetaData]") {
   setRequiredProperties();
-  plan->setProperty(s3_processor, "meta_key1", "meta_value1", true);
-  plan->setProperty(s3_processor, "meta_key2", "meta_value2", true);
+  plan->setDynamicProperty(s3_processor, "meta_key1", "meta_value1");
+  plan->setDynamicProperty(s3_processor, "meta_key2", "meta_value2");
   test_controller.runSession(plan, true);
   REQUIRE(mock_s3_request_sender_ptr->put_object_request.GetMetadata().at("meta_key1") == "meta_value1");
   REQUIRE(mock_s3_request_sender_ptr->put_object_request.GetMetadata().at("meta_key2") == "meta_value2");
@@ -202,15 +202,15 @@ TEST_CASE_METHOD(PutS3ObjectTestsFixture, "Test proxy setting", "[awsS3Proxy]") 
 
 TEST_CASE_METHOD(PutS3ObjectTestsFixture, "Test access control setting", "[awsS3ACL]") {
   setRequiredProperties();
-  plan->setProperty(update_attribute, "s3.permissions.full.users", "myuserid123, myuser@example.com", true);
+  plan->setDynamicProperty(update_attribute, "s3.permissions.full.users", "myuserid123, myuser@example.com");
   plan->setProperty(s3_processor, "FullControl User List", "${s3.permissions.full.users}");
-  plan->setProperty(update_attribute, "s3.permissions.read.users", "myuserid456,myuser2@example.com", true);
+  plan->setDynamicProperty(update_attribute, "s3.permissions.read.users", "myuserid456,myuser2@example.com");
   plan->setProperty(s3_processor, "Read Permission User List", "${s3.permissions.read.users}");
-  plan->setProperty(update_attribute, "s3.permissions.readacl.users", "myuserid789, otheruser", true);
+  plan->setDynamicProperty(update_attribute, "s3.permissions.readacl.users", "myuserid789, otheruser");
   plan->setProperty(s3_processor, "Read ACL User List", "${s3.permissions.readacl.users}");
-  plan->setProperty(update_attribute, "s3.permissions.writeacl.users", "myuser3@example.com", true);
+  plan->setDynamicProperty(update_attribute, "s3.permissions.writeacl.users", "myuser3@example.com");
   plan->setProperty(s3_processor, "Write ACL User List", "${s3.permissions.writeacl.users}");
-  plan->setProperty(update_attribute, "s3.permissions.cannedacl", "PublicReadWrite", true);
+  plan->setDynamicProperty(update_attribute, "s3.permissions.cannedacl", "PublicReadWrite");
   plan->setProperty(s3_processor, "Canned ACL", "${s3.permissions.cannedacl}");
   test_controller.runSession(plan, true);
   REQUIRE(mock_s3_request_sender_ptr->put_object_request.GetGrantFullControl() == "id=myuserid123, emailAddress=\"myuser@example.com\"");

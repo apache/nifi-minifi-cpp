@@ -21,15 +21,13 @@
 #include <optional>
 #include <set>
 #include <string>
+#include <string_view>
 
+#include "ArrayUtils.h"
 #include "StringUtils.h"
 #include "Macro.h"
 
-namespace org {
-namespace apache {
-namespace nifi {
-namespace minifi {
-namespace utils {
+namespace org::apache::nifi::minifi::utils {
 
 #define INCLUDE_BASE_FIELD(x) \
   x = Base::x
@@ -37,43 +35,25 @@ namespace utils {
 // [[maybe_unused]] on public members to avoid warnings when used inside an anonymous namespace
 #define SMART_ENUM_BODY(Clazz, ...) \
     constexpr Clazz(Type value = static_cast<Type>(-1)) : value_{value} {} \
-    explicit Clazz(const std::string& str) : value_{parse(str.c_str()).value_} {} \
-    explicit Clazz(const char* str) : value_{parse(str).value_} {} \
+    explicit Clazz(std::string_view str) : value_{parse(str).value_} {} \
+    explicit Clazz(const std::string& str) : Clazz(std::string_view{str}) {} \
     explicit Clazz(std::nullptr_t) = delete; \
    private: \
     Type value_; \
    public: \
-    [[maybe_unused]] Type value() const { \
+    [[maybe_unused]] constexpr Type value() const { \
       return value_; \
     } \
-    struct detail : Base::detail { \
-      static std::set<std::string> values() { \
-        static constexpr const char* ownValues[]{ \
-          FOR_EACH(SECOND, COMMA, (__VA_ARGS__)) \
-        }; \
-        std::set<std::string> values = Base::detail::values(); \
-        for (auto value : ownValues) { \
-          values.emplace(value); \
-        } \
-        return values; \
-      } \
-      static const char* toStringImpl(Type a, const char* DerivedName) { \
-        static constexpr const char* values[]{ \
-          FOR_EACH(SECOND, COMMA, (__VA_ARGS__)) \
-        }; \
-        int index = static_cast<int>(a); \
-        if (Base::length <= index && index < length) { \
-          return values[index - Base::length]; \
-        } \
-        return Base::detail::toStringImpl(static_cast<Base::Type>(a), DerivedName); \
-      } \
-    }; \
+    struct detail : public Base::detail {}; \
     static constexpr int length = Base::length + COUNT(__VA_ARGS__); \
-    [[maybe_unused]] friend const char* toString(Type a) { \
-      return detail::toStringImpl(a, #Clazz); \
-    } \
+    static constexpr auto values = org::apache::nifi::minifi::utils::array_cat(Base::values, \
+        std::array<std::string_view, COUNT(__VA_ARGS__)>{FOR_EACH(SECOND, COMMA, (__VA_ARGS__))}); \
     [[maybe_unused]] const char* toString() const { \
-      return detail::toStringImpl(value_, #Clazz); \
+      int index = static_cast<int>(value_); \
+      return values.at(index).data(); \
+    } \
+    [[maybe_unused]] friend const char* toString(Type a) { \
+      return Clazz{a}.toString(); \
     } \
     [[maybe_unused]] const char* toStringOr(const char* fallback) const { \
       if (*this) { \
@@ -81,39 +61,45 @@ namespace utils {
       } \
       return fallback; \
     } \
-    [[maybe_unused]] static std::set<std::string> values() { \
-      return detail::values(); \
-    } \
-    [[maybe_unused]] friend bool operator==(Clazz lhs, Clazz rhs) { \
+    [[maybe_unused]] friend constexpr bool operator==(Clazz lhs, Clazz rhs) { \
       return lhs.value_ == rhs.value_; \
     } \
-    [[maybe_unused]] friend bool operator!=(Clazz lhs, Clazz rhs) { \
+    [[maybe_unused]] friend constexpr bool operator!=(Clazz lhs, Clazz rhs) { \
       return lhs.value_ != rhs.value_; \
     } \
-    [[maybe_unused]] friend bool operator<(Clazz lhs, Clazz rhs) { \
+    [[maybe_unused]] friend constexpr bool operator<(Clazz lhs, Clazz rhs) { \
       return lhs.value_ < rhs.value_;\
     } \
-    [[maybe_unused]] explicit operator bool() const { \
+    [[maybe_unused]] explicit constexpr operator bool() const { \
       int idx = static_cast<int>(value_); \
       return 0 <= idx && idx < length; \
     } \
-    [[maybe_unused]] static Clazz parse(const char* str, const ::std::optional<Clazz>& fallback = {}, bool caseSensitive = true) { \
+    [[maybe_unused]] static Clazz parse(std::string_view str, const ::std::optional<Clazz>& fallback = {}, bool caseSensitive = true) { \
       for (int idx = 0; idx < length; ++idx) { \
-        if (::org::apache::nifi::minifi::utils::StringUtils::equals(str, detail::toStringImpl(static_cast<Type>(idx), #Clazz), caseSensitive)) \
+        if (::org::apache::nifi::minifi::utils::StringUtils::equals(str, values.at(idx), caseSensitive)) \
           return static_cast<Type>(idx); \
       } \
       if (fallback) { \
         return fallback.value(); \
       } \
-      throw std::runtime_error(std::string("Cannot convert \"") + str + "\" to " #Clazz); \
+      throw std::runtime_error("Cannot convert \"" + std::string(str) + "\" to " #Clazz); \
     } \
     template<typename T, typename = typename std::enable_if<std::is_base_of<typename T::detail, detail>::value>::type> \
-    [[maybe_unused]] T cast() const { \
+    [[maybe_unused]] constexpr T cast() const { \
       if (0 <= value_ && value_ < T::length) { \
         return static_cast<typename T::Type>(value_); \
       } \
       return {}; \
     }
+
+#define SMART_ENUM_OUT_OF_CLASS_DEFINITIONS(Clazz) \
+  [[maybe_unused]] inline constexpr std::string_view toStringView(Clazz::Type a) { \
+    int index = static_cast<int>(a); \
+    if (0 <= index && index < Clazz::length) { \
+      return Clazz::values.at(index); \
+    } \
+    return "Unknown value for " #Clazz;                                                   \
+  }
 
 /**
  * These macros provide an encapsulation of enum-like behavior offering the following:
@@ -132,7 +118,8 @@ namespace utils {
       FOR_EACH(FIRST, COMMA, (__VA_ARGS__)) \
     }; \
     SMART_ENUM_BODY(Clazz, __VA_ARGS__) \
-  };
+  }; \
+  SMART_ENUM_OUT_OF_CLASS_DEFINITIONS(Clazz)
 
 #define SMART_ENUM_EXTEND(Clazz, base, base_fields, ...) \
   struct Clazz { \
@@ -143,24 +130,14 @@ namespace utils {
     }; \
     static_assert((COUNT base_fields) == Base::length, "Must enumerate all base instance values"); \
     SMART_ENUM_BODY(Clazz, __VA_ARGS__) \
-  };
+  }; \
+  SMART_ENUM_OUT_OF_CLASS_DEFINITIONS(Clazz)
 
 struct EnumBase {
   enum Type {};
   static constexpr int length = 0;
-  struct detail {
-    static std::set<std::string> values() {
-      return {};
-    }
-    static const char* toStringImpl(Type a, const char* DerivedName) {
-      throw std::runtime_error(std::string("Cannot stringify unknown instance in enum \"") + DerivedName + "\" : \""
-                               + std::to_string(static_cast<int>(a)) + "\"");
-    }
-  };
+  static constexpr std::array<std::string_view, 0> values = {};
+  struct detail {};
 };
 
-}  // namespace utils
-}  // namespace minifi
-}  // namespace nifi
-}  // namespace apache
-}  // namespace org
+}  // namespace org::apache::nifi::minifi::utils

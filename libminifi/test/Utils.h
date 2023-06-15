@@ -221,7 +221,7 @@ inline std::error_code hide_file(const std::filesystem::path& file_name) {
 template<typename T>
 concept NetworkingProcessor = std::derived_from<T, minifi::core::Processor>
     && requires(T x) {
-      {T::Port} -> std::convertible_to<core::Property>;
+      {T::Port} -> std::convertible_to<core::PropertyReference>;
       {x.getPort()} -> std::convertible_to<uint16_t>;
     };  // NOLINT(readability/braces)
 

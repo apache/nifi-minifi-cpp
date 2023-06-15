@@ -341,14 +341,14 @@ TEST_CASE_METHOD(FetchSFTPTestsFixture, "FetchSFTP Completion Strategy Move File
 }
 
 TEST_CASE_METHOD(FetchSFTPTestsFixture, "FetchSFTP expression language test", "[FetchSFTP]") {
-  plan->setProperty(update_attribute, "attr_Hostname", "localhost", true /*dynamic*/);
-  plan->setProperty(update_attribute, "attr_Port", std::to_string(sftp_server->getPort()), true /*dynamic*/);
-  plan->setProperty(update_attribute, "attr_Username", "nifiuser", true /*dynamic*/);
-  plan->setProperty(update_attribute, "attr_Password", "nifipassword", true /*dynamic*/);
-  plan->setProperty(update_attribute, "attr_Private Key Path", (get_sftp_test_dir() / "resources" / "id_rsa").generic_string(), true /*dynamic*/);
-  plan->setProperty(update_attribute, "attr_Private Key Passphrase", "privatekeypassword", true /*dynamic*/);
-  plan->setProperty(update_attribute, "attr_Remote File", "nifi_test/tstFile.ext", true /*dynamic*/);
-  plan->setProperty(update_attribute, "attr_Move Destination Directory", "nifi_done/", true /*dynamic*/);
+  plan->setDynamicProperty(update_attribute, "attr_Hostname", "localhost");
+  plan->setDynamicProperty(update_attribute, "attr_Port", std::to_string(sftp_server->getPort()));
+  plan->setDynamicProperty(update_attribute, "attr_Username", "nifiuser");
+  plan->setDynamicProperty(update_attribute, "attr_Password", "nifipassword");
+  plan->setDynamicProperty(update_attribute, "attr_Private Key Path", (get_sftp_test_dir() / "resources" / "id_rsa").generic_string());
+  plan->setDynamicProperty(update_attribute, "attr_Private Key Passphrase", "privatekeypassword");
+  plan->setDynamicProperty(update_attribute, "attr_Remote File", "nifi_test/tstFile.ext");
+  plan->setDynamicProperty(update_attribute, "attr_Move Destination Directory", "nifi_done/");
 
   plan->setProperty(fetch_sftp, "Hostname", "${'attr_Hostname'}");
   plan->setProperty(fetch_sftp, "Port", "${'attr_Port'}");

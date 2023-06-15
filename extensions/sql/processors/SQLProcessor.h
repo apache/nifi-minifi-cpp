@@ -23,6 +23,8 @@
 #include "core/Core.h"
 #include "core/Processor.h"
 #include "core/ProcessSession.h"
+#include "core/PropertyDefinition.h"
+#include "core/PropertyDefinitionBuilder.h"
 #include "utils/Enum.h"
 
 #include "services/DatabaseService.h"
@@ -31,8 +33,12 @@ namespace org::apache::nifi::minifi::processors {
 
 class SQLProcessor: public core::Processor {
  public:
-  EXTENSIONAPI static const core::Property DBControllerService;
-  static auto properties() { return std::array{DBControllerService}; }
+  EXTENSIONAPI static constexpr auto DBControllerService = core::PropertyDefinitionBuilder<>::createProperty("DB Controller Service")
+      .withDescription("Database Controller Service.")
+      .isRequired(true)
+      .supportsExpressionLanguage(true)
+      .build();
+  EXTENSIONAPI static constexpr auto Properties = std::array<core::PropertyReference, 1>{DBControllerService};
 
  protected:
   SQLProcessor(std::string name, const utils::Identifier& uuid, std::shared_ptr<core::logging::Logger> logger)

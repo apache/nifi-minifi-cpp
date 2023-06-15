@@ -30,6 +30,7 @@
 #include "FlowFileRecord.h"
 #include "core/Processor.h"
 #include "core/ProcessSession.h"
+#include "core/PropertyDefinitionBuilder.h"
 #include "core/Core.h"
 #include "core/logging/LoggerConfiguration.h"
 #include "utils/Export.h"
@@ -48,21 +49,32 @@ class AppendHostInfo : public core::Processor {
 
   EXTENSIONAPI static constexpr const char* Description = "Appends host information such as IP address and hostname as an attribute to incoming flowfiles.";
 
-  EXTENSIONAPI static const core::Property InterfaceNameFilter;
-  EXTENSIONAPI static const core::Property HostAttribute;
-  EXTENSIONAPI static const core::Property IPAttribute;
-  EXTENSIONAPI static const core::Property RefreshPolicy;
-  static auto properties() {
-    return std::array{
+  EXTENSIONAPI static constexpr auto InterfaceNameFilter = core::PropertyDefinitionBuilder<>::createProperty("Network Interface Filter")
+      .withDescription("A regular expression to filter ip addresses based on the name of the network interface")
+      .build();
+  EXTENSIONAPI static constexpr auto HostAttribute = core::PropertyDefinitionBuilder<>::createProperty("Hostname Attribute")
+      .withDescription("Flowfile attribute used to record the agent's hostname")
+      .withDefaultValue("source.hostname")
+      .build();
+  EXTENSIONAPI static constexpr auto IPAttribute = core::PropertyDefinitionBuilder<>::createProperty("IP Attribute")
+      .withDescription("Flowfile attribute used to record the agent's IP addresses in a comma separated list")
+      .withDefaultValue("source.ipv4")
+      .build();
+  EXTENSIONAPI static constexpr auto RefreshPolicy = core::PropertyDefinitionBuilder<2>::createProperty("Refresh Policy")
+      .withDescription("When to recalculate the host info")
+      .withAllowedValues({ REFRESH_POLICY_ON_SCHEDULE, REFRESH_POLICY_ON_TRIGGER })
+      .withDefaultValue(REFRESH_POLICY_ON_SCHEDULE)
+      .build();
+  EXTENSIONAPI static constexpr auto Properties = std::array<core::PropertyReference, 4>{
       InterfaceNameFilter,
       HostAttribute,
       IPAttribute,
       RefreshPolicy
-    };
-  }
+  };
 
-  EXTENSIONAPI static const core::Relationship Success;
-  static auto relationships() { return std::array{Success}; }
+
+  EXTENSIONAPI static constexpr auto Success = core::RelationshipDefinition{"success", "success operational on the flow record"};
+  EXTENSIONAPI static constexpr auto Relationships = std::array{Success};
 
   EXTENSIONAPI static constexpr bool SupportsDynamicProperties = false;
   EXTENSIONAPI static constexpr bool SupportsDynamicRelationships = false;

@@ -27,31 +27,42 @@
 #include <vector>
 
 #include "core/Property.h"
+#include "core/PropertyDefinition.h"
 #include "AzureBlobStorageProcessorBase.h"
 #include "core/logging/LoggerConfiguration.h"
 
 namespace org::apache::nifi::minifi::azure::processors {
 
+namespace azure {
+SMART_ENUM(EntityTracking,
+  (NONE, "none"),
+  (TIMESTAMPS, "timestamps")
+)
+}  // namespace azure
+
 class ListAzureBlobStorage final : public AzureBlobStorageProcessorBase {
  public:
-  SMART_ENUM(EntityTracking,
-    (NONE, "none"),
-    (TIMESTAMPS, "timestamps")
-  )
-
   EXTENSIONAPI static constexpr const char* Description = "Lists blobs in an Azure Storage container. Listing details are attached to an empty FlowFile for use with FetchAzureBlobStorage.";
 
-  EXTENSIONAPI static const core::Property ListingStrategy;
-  EXTENSIONAPI static const core::Property Prefix;
-  static auto properties() {
-    return utils::array_cat(AzureBlobStorageProcessorBase::properties(), std::array{
+  EXTENSIONAPI static constexpr auto ListingStrategy = core::PropertyDefinitionBuilder<azure::EntityTracking::length>::createProperty("Listing Strategy")
+      .withDescription("Specify how to determine new/updated entities. If 'timestamps' is selected it tracks the latest timestamp of listed entity to determine new/updated entities. "
+          "If 'none' is selected it lists an entity without any tracking, the same entity will be listed each time on executing this processor.")
+      .isRequired(true)
+      .withDefaultValue(toStringView(azure::EntityTracking::TIMESTAMPS))
+      .withAllowedValues(azure::EntityTracking::values)
+      .build();
+  EXTENSIONAPI static constexpr auto Prefix = core::PropertyDefinitionBuilder<>::createProperty("Prefix")
+      .withDescription("Search prefix for listing")
+      .supportsExpressionLanguage(true)
+      .build();
+  EXTENSIONAPI static constexpr auto Properties = utils::array_cat(AzureBlobStorageProcessorBase::Properties, std::array<core::PropertyReference, 2>{
       ListingStrategy,
       Prefix
-    });
-  }
+  });
 
-  EXTENSIONAPI static const core::Relationship Success;
-  static auto relationships() { return std::array{Success}; }
+
+  EXTENSIONAPI static constexpr auto Success = core::RelationshipDefinition{"success", "All FlowFiles that are received are routed to success"};
+  EXTENSIONAPI static constexpr auto Relationships = std::array{Success};
 
   EXTENSIONAPI static constexpr bool SupportsDynamicProperties = false;
   EXTENSIONAPI static constexpr bool SupportsDynamicRelationships = false;
@@ -77,7 +88,7 @@ class ListAzureBlobStorage final : public AzureBlobStorageProcessorBase {
   std::shared_ptr<core::FlowFile> createNewFlowFile(core::ProcessSession &session, const storage::ListContainerResultElement &element);
 
   storage::ListAzureBlobStorageParameters list_parameters_;
-  EntityTracking tracking_strategy_ = EntityTracking::TIMESTAMPS;
+  azure::EntityTracking tracking_strategy_ = azure::EntityTracking::TIMESTAMPS;
   std::unique_ptr<minifi::utils::ListingStateManager> state_manager_;
 };
 

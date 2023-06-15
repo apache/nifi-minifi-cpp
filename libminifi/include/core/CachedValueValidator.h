@@ -20,12 +20,14 @@
 #include <utility>
 #include <memory>
 #include <string>
-#include "PropertyValidation.h"
+
 #include "state/Value.h"
+#include "ValidationResult.h"
 
 namespace org::apache::nifi::minifi::core {
 
 class PropertyValue;
+class PropertyValidator;
 
 namespace internal {
 
@@ -39,7 +41,7 @@ class CachedValueValidator {
     RECOMPUTE
   };
 
-  CachedValueValidator() = default;
+  CachedValueValidator();
 
   CachedValueValidator(const CachedValueValidator& other) : validator_(other.validator_) {}
 
@@ -62,27 +64,13 @@ class CachedValueValidator {
     validator_ = gsl::make_not_null(&new_validator);
   }
 
-  ValidationResult validate(const std::string& subject, const std::shared_ptr<state::response::Value>& value) const {
-    if (validation_result_ == CachedValueValidator::Result::SUCCESS) {
-      return ValidationResult::Builder::createBuilder().isValid(true).build();
-    }
-    if (validation_result_ == CachedValueValidator::Result::FAILURE) {
-      return ValidationResult::Builder::createBuilder().withSubject(subject).withInput(value->getStringValue()).isValid(false).build();
-    }
-    auto result = validator_->validate(subject, value);
-    if (result.valid()) {
-      validation_result_ = Result::SUCCESS;
-    } else {
-      validation_result_ = Result::FAILURE;
-    }
-    return result;
-  }
+  ValidationResult validate(const std::string& subject, const std::shared_ptr<state::response::Value>& value) const;
 
   void invalidateCachedResult() {
     validation_result_ = Result::RECOMPUTE;
   }
 
-  gsl::not_null<const PropertyValidator*> validator_{&StandardValidators::VALID_VALIDATOR};
+  gsl::not_null<const PropertyValidator*> validator_;
   mutable Result validation_result_{Result::RECOMPUTE};
 };
 

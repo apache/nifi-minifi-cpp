@@ -15,8 +15,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#ifndef LIBMINIFI_INCLUDE_CORE_PROPERTYVALUE_H_
-#define LIBMINIFI_INCLUDE_CORE_PROPERTYVALUE_H_
+#pragma once
 
 #include <typeindex>
 #include <string>
@@ -24,15 +23,13 @@
 #include <memory>
 
 #include "CachedValueValidator.h"
-#include "PropertyValidation.h"
+#include "ValidationResult.h"
 #include "state/Value.h"
 #include "TypedValues.h"
 
-namespace org {
-namespace apache {
-namespace nifi {
-namespace minifi {
-namespace core {
+namespace org::apache::nifi::minifi::core {
+
+class PropertyValidator;
 
 static inline std::shared_ptr<state::response::Value> convert(const std::shared_ptr<state::response::Value> &prior, const std::string &ref) {
   if (prior->getTypeIndex() == state::response::Value::UINT64_TYPE) {
@@ -73,6 +70,15 @@ class PropertyValue : public state::response::ValueNode {
 
   PropertyValue(const PropertyValue &o) = default;
   PropertyValue(PropertyValue &&o) noexcept = default;
+
+  template<typename T>
+  static PropertyValue parse(std::string_view input, const PropertyValidator& validator) {
+    PropertyValue property_value;
+    property_value.value_ = std::make_shared<T>(std::string{input});
+    property_value.type_id = property_value.value_->getTypeIndex();
+    property_value.cached_value_validator_ = validator;
+    return property_value;
+  }
 
   void setValidator(const PropertyValidator& validator) {
     cached_value_validator_ = validator;
@@ -219,7 +225,7 @@ class PropertyValue : public state::response::ValueNode {
 
   bool isValueUsable() const {
     if (!value_) return false;
-    return validate("__unknown__").valid();
+    return validate("__unknown__").valid;
   }
 
   template<typename Fn>
@@ -244,10 +250,4 @@ inline std::string conditional_conversion(const PropertyValue &v) {
   return v.getValue()->getStringValue();
 }
 
-}  // namespace core
-}  // namespace minifi
-}  // namespace nifi
-}  // namespace apache
-}  // namespace org
-
-#endif  // LIBMINIFI_INCLUDE_CORE_PROPERTYVALUE_H_
+}  // namespace org::apache::nifi::minifi::core

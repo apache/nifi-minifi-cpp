@@ -27,21 +27,22 @@
 #include <vector>
 #include <unordered_map>
 
-#include "Property.h"
+#include "controllers/keyvalue/KeyValueStateStorage.h"
 #include "core/Core.h"
 #include "core/ContentRepository.h"
 #include "core/repository/FileSystemRepository.h"
 #include "core/controller/ControllerServiceProvider.h"
 #include "core/controller/ControllerServiceLookup.h"
 #include "core/logging/LoggerFactory.h"
-#include "controllers/keyvalue/KeyValueStateStorage.h"
-#include "ProcessorNode.h"
+#include "core/ProcessorNode.h"
+#include "core/Property.h"
+#include "core/PropertyDefinition.h"
 #include "core/Repository.h"
 #include "core/FlowFile.h"
 #include "core/StateStorage.h"
+#include "core/VariableRegistry.h"
 #include "utils/file/FileUtils.h"
 #include "utils/PropertyErrors.h"
-#include "VariableRegistry.h"
 
 namespace org::apache::nifi::minifi::core {
 
@@ -90,6 +91,7 @@ class ProcessContext : public controller::ControllerServiceLookup, public core::
     return processor_node_;
   }
 
+  // TODO(fgerlits): remove if possible
   template<typename T = std::string>
   std::enable_if_t<std::is_default_constructible<T>::value, std::optional<T>>
   getProperty(const Property& property) const {
@@ -102,18 +104,46 @@ class ProcessContext : public controller::ControllerServiceLookup, public core::
     return value;
   }
 
-  template<typename T>
-  std::enable_if_t<!std::is_convertible_v<T&, const FlowFile&> && !std::is_convertible_v<T&, const std::shared_ptr<FlowFile>&>,
-      bool> getProperty(const std::string &name, T &value) const {
-    return getPropertyImp<typename std::common_type<T>::type>(name, value);
+  template<typename T = std::string>
+  std::enable_if_t<std::is_default_constructible<T>::value, std::optional<T>>
+  getProperty(const PropertyReference& property) const {
+    T value;
+    try {
+      if (!getProperty(property.name, value)) return std::nullopt;
+    } catch (const utils::internal::ValueException&) {
+      return std::nullopt;
+    }
+    return value;
   }
 
+  template<typename T>
+  requires(!std::is_convertible_v<T&, const FlowFile&> && !std::is_convertible_v<T&, const std::shared_ptr<FlowFile>&>)
+  bool getProperty(std::string_view name, T &value) const {
+    return getPropertyImp<typename std::common_type<T>::type>(std::string{name}, value);
+  }
+
+  template<typename T>
+  requires(!std::is_convertible_v<T&, const FlowFile&> && !std::is_convertible_v<T&, const std::shared_ptr<FlowFile>&>)
+  bool getProperty(const PropertyReference& property, T &value) const {
+    return getPropertyImp<typename std::common_type<T>::type>(std::string{property.name}, value);
+  }
+
+  // TODO(fgerlits): remove if possible
   template<typename T = std::string>
   std::enable_if_t<std::is_default_constructible_v<T>, std::optional<T>> getProperty(const Property&, const std::shared_ptr<FlowFile>&);
 
+  template<typename T = std::string>
+  std::enable_if_t<std::is_default_constructible_v<T>, std::optional<T>> getProperty(const PropertyReference&, const std::shared_ptr<FlowFile>&);
+
+  // TODO(fgerlits): remove if possible
   virtual bool getProperty(const Property &property, std::string &value, const std::shared_ptr<FlowFile>& /*flow_file*/) {
     return getProperty(property.getName(), value);
   }
+
+  virtual bool getProperty(const PropertyReference& property, std::string &value, const std::shared_ptr<FlowFile>& /*flow_file*/) {
+    return getProperty(property.name, value);
+  }
+
   bool getDynamicProperty(const std::string &name, std::string &value) const {
     return processor_node_->getDynamicProperty(name, value);
   }
@@ -151,7 +181,9 @@ class ProcessContext : public controller::ControllerServiceLookup, public core::
   bool setProperty(const Property& property, std::string value) {
     return setProperty(property.getName(), value);
   }
-
+  bool setProperty(const PropertyReference& property, std::string_view value) {
+    return setProperty(std::string{property.name}, std::string{value});
+  }
   // Check whether the relationship is auto terminated
   bool isAutoTerminated(Relationship relationship) const {
     return processor_node_->isAutoTerminated(relationship);
@@ -399,6 +431,13 @@ inline std::enable_if_t<std::is_default_constructible_v<T>, std::optional<T>> Pr
 
 template<>
 inline std::optional<std::string> ProcessContext::getProperty<std::string>(const Property& property, const std::shared_ptr<FlowFile>& flow_file) {
+  std::string value;
+  if (!getProperty(property, value, flow_file)) return std::nullopt;
+  return value;
+}
+
+template<>
+inline std::optional<std::string> ProcessContext::getProperty<std::string>(const PropertyReference& property, const std::shared_ptr<FlowFile>& flow_file) {
   std::string value;
   if (!getProperty(property, value, flow_file)) return std::nullopt;
   return value;

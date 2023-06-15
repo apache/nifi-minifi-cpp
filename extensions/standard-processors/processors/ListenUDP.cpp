@@ -17,43 +17,14 @@
 #include "ListenUDP.h"
 
 #include "core/Resource.h"
-#include "core/PropertyBuilder.h"
 #include "controllers/SSLContextService.h"
 #include "utils/ProcessorConfigUtils.h"
 
 namespace org::apache::nifi::minifi::processors {
 
-const core::Property ListenUDP::Port(
-    core::PropertyBuilder::createProperty("Listening Port")
-        ->withDescription("The port to listen on for communication.")
-        ->withType(core::StandardValidators::LISTEN_PORT_VALIDATOR)
-        ->isRequired(true)
-        ->build());
-
-const core::Property ListenUDP::MaxQueueSize(
-    core::PropertyBuilder::createProperty("Max Size of Message Queue")
-        ->withDescription("Maximum number of messages allowed to be buffered before processing them when the processor is triggered. "
-                          "If the buffer is full, the message is ignored. If set to zero the buffer is unlimited.")
-        ->withDefaultValue<uint64_t>(10000)
-        ->isRequired(true)
-        ->build());
-
-const core::Property ListenUDP::MaxBatchSize(
-    core::PropertyBuilder::createProperty("Max Batch Size")
-        ->withDescription("The maximum number of messages to process at a time.")
-        ->withDefaultValue<uint64_t>(500)
-        ->isRequired(true)
-        ->build());
-
-
-const core::Relationship ListenUDP::Success("success", "Messages received successfully will be sent out this relationship.");
-
-const core::OutputAttribute ListenUDP::PortOutputAttribute{"udp.port", {}, "The sending port the messages were received."};
-const core::OutputAttribute ListenUDP::Sender{"udp.sender", {}, "The sending host of the messages."};
-
 void ListenUDP::initialize() {
-  setSupportedProperties(properties());
-  setSupportedRelationships(relationships());
+  setSupportedProperties(Properties);
+  setSupportedRelationships(Relationships);
 }
 
 void ListenUDP::onSchedule(const std::shared_ptr<core::ProcessContext>& context, const std::shared_ptr<core::ProcessSessionFactory>&) {
@@ -69,15 +40,15 @@ void ListenUDP::transferAsFlowFile(const utils::net::Message& message, core::Pro
   session.transfer(flow_file, Success);
 }
 
-const core::Property& ListenUDP::getMaxBatchSizeProperty() {
+core::PropertyReference ListenUDP::getMaxBatchSizeProperty() {
   return MaxBatchSize;
 }
 
-const core::Property& ListenUDP::getMaxQueueSizeProperty() {
+core::PropertyReference ListenUDP::getMaxQueueSizeProperty() {
   return MaxQueueSize;
 }
 
-const core::Property& ListenUDP::getPortProperty() {
+core::PropertyReference ListenUDP::getPortProperty() {
   return Port;
 }
 

@@ -22,6 +22,9 @@
 #include <vector>
 
 #include "Processor.h"
+#include "core/PropertyDefinition.h"
+#include "core/PropertyDefinitionBuilder.h"
+#include "core/RelationshipDefinition.h"
 #include "utils/Export.h"
 
 namespace org::apache::nifi::minifi::core::logging { class Logger; }
@@ -33,13 +36,22 @@ class PutUDP final : public core::Processor {
       "which is then transmitted to the configured UDP server. "
       "The processor doesn't guarantee a successful transfer, even if the flow file is routed to the success relationship.";
 
-  EXTENSIONAPI static const core::Property Hostname;
-  EXTENSIONAPI static const core::Property Port;
-  static auto properties() { return std::array{Hostname, Port}; }
+  EXTENSIONAPI static constexpr auto Hostname = core::PropertyDefinitionBuilder<>::createProperty("Hostname")
+    .withDescription("The ip address or hostname of the destination.")
+    .withDefaultValue("localhost")
+    .isRequired(true)
+    .supportsExpressionLanguage(true)
+    .build();
+  EXTENSIONAPI static constexpr auto Port = core::PropertyDefinitionBuilder<>::createProperty("Port")
+    .withDescription("The port on the destination. Can be a service name like ssh or http, as defined in /etc/services.")
+    .isRequired(true)
+    .supportsExpressionLanguage(true)
+    .build();
+  EXTENSIONAPI static constexpr auto Properties = std::array<core::PropertyReference, 2>{Hostname, Port};
 
-  EXTENSIONAPI static const core::Relationship Success;
-  EXTENSIONAPI static const core::Relationship Failure;
-  static auto relationships() { return std::array{Success, Failure}; }
+  EXTENSIONAPI static constexpr auto Success = core::RelationshipDefinition{"success", "FlowFiles that are sent to the destination are sent out this relationship."};
+  EXTENSIONAPI static constexpr auto Failure = core::RelationshipDefinition{"failure", "FlowFiles that encountered IO errors are send out this relationship."};
+  EXTENSIONAPI static constexpr auto Relationships = std::array{Success, Failure};
 
   EXTENSIONAPI static constexpr bool SupportsDynamicProperties = false;
   EXTENSIONAPI static constexpr bool SupportsDynamicRelationships = false;

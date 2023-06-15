@@ -32,8 +32,8 @@ TEST_CASE("Script engine is not set", "[executescriptMisconfiguration]") {
 
   auto executeScript = plan->addProcessor("ExecuteScript", "executeScript");
 
-  plan->setProperty(executeScript, ExecuteScript::ScriptEngine.getName(), "");
-  plan->setProperty(executeScript, ExecuteScript::ScriptFile.getName(), "/path/to/script");
+  plan->setProperty(executeScript, ExecuteScript::ScriptEngine, "");
+  plan->setProperty(executeScript, ExecuteScript::ScriptFile, "/path/to/script");
 
   REQUIRE_THROWS_WITH(testController.runSession(plan, true), "Process Schedule Operation: Missing or invalid script engine name");
 }
@@ -45,11 +45,11 @@ TEST_CASE("Script engine is not available", "[executescriptMisconfiguration]") {
   auto executeScript = plan->addProcessor("ExecuteScript", "executeScript");
 
   SECTION("lua") {
-    plan->setProperty(executeScript, ExecuteScript::ScriptEngine.getName(), "lua");
+    plan->setProperty(executeScript, ExecuteScript::ScriptEngine, "lua");
     REQUIRE_THROWS_WITH(testController.runSession(plan, true), "Process Schedule Operation: Could not instantiate: LuaScriptExecutor. Make sure that the lua scripting extension is loaded");
   }
   SECTION("python") {
-    plan->setProperty(executeScript, ExecuteScript::ScriptEngine.getName(), "python");
+    plan->setProperty(executeScript, ExecuteScript::ScriptEngine, "python");
     REQUIRE_THROWS_WITH(testController.runSession(plan, true), "Process Schedule Operation: Could not instantiate: PythonScriptExecutor. Make sure that the python scripting extension is loaded");
   }
 }

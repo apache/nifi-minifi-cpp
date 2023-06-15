@@ -21,11 +21,9 @@
 
 namespace org::apache::nifi::minifi::processors {
 
-const core::Relationship WriteToFlowFileTestProcessor::Success("success", "success operational on the flow record");
-
 void WriteToFlowFileTestProcessor::initialize() {
-  setSupportedProperties(properties());
-  setSupportedRelationships(relationships());
+  setSupportedProperties(Properties);
+  setSupportedRelationships(Relationships);
 }
 
 void WriteToFlowFileTestProcessor::onSchedule(core::ProcessContext*, core::ProcessSessionFactory*) {

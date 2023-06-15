@@ -26,6 +26,8 @@
 #include "properties/Configure.h"
 #include "core/logging/Logger.h"
 #include "core/logging/LoggerConfiguration.h"
+#include "core/PropertyDefinition.h"
+#include "core/PropertyDefinitionBuilder.h"
 #include "controllers/keyvalue/KeyValueStateStorage.h"
 #include "InMemoryKeyValueStorage.h"
 
@@ -38,8 +40,10 @@ class VolatileMapStateStorage : virtual public KeyValueStateStorage {
   explicit VolatileMapStateStorage(const std::string& name, const std::shared_ptr<Configure>& configuration);
 
   EXTENSIONAPI static constexpr const char* Description = "A key-value service implemented by a locked std::unordered_map<std::string, std::string>";
-  EXTENSIONAPI static const core::Property LinkedServices;
-  static auto properties() { return std::array{LinkedServices}; }
+  EXTENSIONAPI static constexpr auto LinkedServices = core::PropertyDefinitionBuilder<>::createProperty("Linked Services")
+      .withDescription("Referenced Controller Services")
+      .build();
+  EXTENSIONAPI static constexpr auto Properties = std::array<core::PropertyReference, 1>{LinkedServices};
   EXTENSIONAPI static constexpr bool SupportsDynamicProperties = false;
   ADD_COMMON_VIRTUAL_FUNCTIONS_FOR_CONTROLLER_SERVICES
 

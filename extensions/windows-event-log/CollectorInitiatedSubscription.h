@@ -30,6 +30,10 @@
 #include "concurrentqueue.h"
 #include "core/Processor.h"
 #include "core/ProcessSession.h"
+#include "core/PropertyDefinition.h"
+#include "core/PropertyDefinitionBuilder.h"
+#include "core/PropertyType.h"
+#include "core/RelationshipDefinition.h"
 
 namespace org::apache::nifi::minifi::processors {
 
@@ -40,21 +44,87 @@ class CollectorInitiatedSubscription : public core::Processor {
 
   EXTENSIONAPI static constexpr const char* Description = "Windows Event Log Subscribe Callback to receive FlowFiles from Events on Windows.";
 
-  EXTENSIONAPI static const core::Property SubscriptionName;
-  EXTENSIONAPI static const core::Property SubscriptionDescription;
-  EXTENSIONAPI static const core::Property SourceAddress;
-  EXTENSIONAPI static const core::Property SourceUserName;
-  EXTENSIONAPI static const core::Property SourcePassword;
-  EXTENSIONAPI static const core::Property SourceChannels;
-  EXTENSIONAPI static const core::Property MaxDeliveryItems;
-  EXTENSIONAPI static const core::Property DeliveryMaxLatencyTime;
-  EXTENSIONAPI static const core::Property HeartbeatInterval;
-  EXTENSIONAPI static const core::Property Channel;
-  EXTENSIONAPI static const core::Property Query;
-  EXTENSIONAPI static const core::Property MaxBufferSize;
-  EXTENSIONAPI static const core::Property InactiveDurationToReconnect;
-  static auto properties() {
-    return std::array{
+  EXTENSIONAPI static constexpr auto SubscriptionName = core::PropertyDefinitionBuilder<>::createProperty("Subscription Name")
+      .isRequired(true)
+      .withDescription("The name of the subscription. The value provided for this parameter should be unique within the computer's scope.")
+      .supportsExpressionLanguage(true)
+      .build();
+  EXTENSIONAPI static constexpr auto SubscriptionDescription = core::PropertyDefinitionBuilder<>::createProperty("Subscription Description")
+      .isRequired(true)
+      .withDescription("A description of the subscription.")
+      .supportsExpressionLanguage(true)
+      .build();
+  EXTENSIONAPI static constexpr auto SourceAddress = core::PropertyDefinitionBuilder<>::createProperty("Source Address")
+      .isRequired(true)
+      .withDescription("The IP address or fully qualified domain name (FQDN) of the local or remote computer (event source) from which the events are collected.")
+      .supportsExpressionLanguage(true)
+      .build();
+  EXTENSIONAPI static constexpr auto SourceUserName = core::PropertyDefinitionBuilder<>::createProperty("Source User Name")
+      .isRequired(true)
+      .withDescription("The user name, which is used by the remote computer (event source) to authenticate the user.")
+      .supportsExpressionLanguage(true)
+      .build();
+  EXTENSIONAPI static constexpr auto SourcePassword = core::PropertyDefinitionBuilder<>::createProperty("Source Password")
+      .isRequired(true)
+      .withDescription("The password, which is used by the remote computer (event source) to authenticate the user.")
+      .supportsExpressionLanguage(true)
+      .build();
+  EXTENSIONAPI static constexpr auto SourceChannels = core::PropertyDefinitionBuilder<>::createProperty("Source Channels")
+      .isRequired(true)
+      .withDescription("The Windows Event Log Channels (on domain computer(s)) from which events are transferred.")
+      .supportsExpressionLanguage(true)
+      .build();
+  EXTENSIONAPI static constexpr auto MaxDeliveryItems = core::PropertyDefinitionBuilder<>::createProperty("Max Delivery Items")
+      .isRequired(true)
+      .withPropertyType(core::StandardPropertyTypes::DATA_SIZE_TYPE)
+      .withDefaultValue("1000")
+      .withDescription("Determines the maximum number of items that will forwarded from an event source for each request.")
+      .build();
+  EXTENSIONAPI static constexpr auto DeliveryMaxLatencyTime = core::PropertyDefinitionBuilder<>::createProperty("Delivery MaxLatency Time")
+      .isRequired(true)
+      .withPropertyType(core::StandardPropertyTypes::TIME_PERIOD_TYPE)
+      .withDefaultValue("10 min")
+      .withDescription("How long, in milliseconds, the event source should wait before sending events.")
+      .build();
+  EXTENSIONAPI static constexpr auto HeartbeatInterval = core::PropertyDefinitionBuilder<>::createProperty("Heartbeat Interval")
+      .isRequired(true)
+      .withPropertyType(core::StandardPropertyTypes::TIME_PERIOD_TYPE)
+      .withDefaultValue("10 min")
+      .withDescription(
+          "Time interval, in milliseconds, which is observed between the sent heartbeat messages."
+          " The event collector uses this property to determine the interval between queries to the event source.")
+      .build();
+  EXTENSIONAPI static constexpr auto Channel = core::PropertyDefinitionBuilder<>::createProperty("Channel")
+      .isRequired(true)
+      .withDefaultValue("ForwardedEvents")
+      .withDescription("The Windows Event Log Channel (on local machine) to which events are transferred.")
+      .supportsExpressionLanguage(true)
+      .build();
+  EXTENSIONAPI static constexpr auto Query = core::PropertyDefinitionBuilder<>::createProperty("Query")
+      .isRequired(true)
+      .withDefaultValue("*")
+      .withDescription("XPath Query to filter events. (See https://msdn.microsoft.com/en-us/library/windows/desktop/dd996910(v=vs.85).aspx for examples.)")
+      .supportsExpressionLanguage(true)
+      .build();
+  EXTENSIONAPI static constexpr auto MaxBufferSize = core::PropertyDefinitionBuilder<>::createProperty("Max Buffer Size")
+      .isRequired(true)
+      .withPropertyType(core::StandardPropertyTypes::DATA_SIZE_TYPE)
+      .withDefaultValue("1 MB")
+      .withDescription(
+          "The individual Event Log XMLs are rendered to a buffer."
+          " This specifies the maximum size in bytes that the buffer will be allowed to grow to. (Limiting the maximum size of an individual Event XML.)")
+      .build();
+  EXTENSIONAPI static constexpr auto InactiveDurationToReconnect = core::PropertyDefinitionBuilder<>::createProperty("Inactive Duration To Reconnect")
+      .isRequired(true)
+      .withPropertyType(core::StandardPropertyTypes::TIME_PERIOD_TYPE)
+      .withDefaultValue("10 min")
+      .withDescription(
+          "If no new event logs are processed for the specified time period,"
+          " this processor will try reconnecting to recover from a state where any further messages cannot be consumed."
+          " Such situation can happen if Windows Event Log service is restarted, or ERROR_EVT_QUERY_RESULT_STALE (15011) is returned."
+          " Setting no duration, e.g. '0 ms' disables auto-reconnection.")
+      .build();
+  EXTENSIONAPI static constexpr auto Properties = std::array<core::PropertyReference, 13>{
       SubscriptionName,
       SubscriptionDescription,
       SourceAddress,
@@ -68,11 +138,11 @@ class CollectorInitiatedSubscription : public core::Processor {
       Query,
       MaxBufferSize,
       InactiveDurationToReconnect
-    };
-  }
+  };
 
-  EXTENSIONAPI static const core::Relationship Success;
-  static auto relationships() { return std::array{Success}; }
+
+  EXTENSIONAPI static constexpr auto Success = core::RelationshipDefinition{"success", "Relationship for successfully consumed events."};
+  EXTENSIONAPI static constexpr auto Relationships = std::array{Success};
 
   EXTENSIONAPI static constexpr bool SupportsDynamicProperties = false;
   EXTENSIONAPI static constexpr bool SupportsDynamicRelationships = false;

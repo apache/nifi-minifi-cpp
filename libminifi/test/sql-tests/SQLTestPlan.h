@@ -28,6 +28,7 @@
 
 #include "../TestBase.h"
 #include "../Catch.h"
+#include "processors/SQLProcessor.h"
 
 #ifdef USE_REAL_ODBC_TEST_DRIVER
 static const std::string ODBC_SERVICE = "ODBCService";
@@ -41,7 +42,7 @@ class SQLTestPlan {
   SQLTestPlan(TestController& controller, const std::string& connection_str, const std::string& sql_processor, std::initializer_list<core::Relationship> output_rels) {
     plan_ = controller.createPlan();
     processor_ = plan_->addProcessor(sql_processor, sql_processor, {}, false);
-    plan_->setProperty(processor_, "DB Controller Service", "ODBCService");
+    plan_->setProperty(processor_, minifi::processors::SQLProcessor::DBControllerService, "ODBCService");
     input_ = plan_->addConnection({}, {"success", "d"}, processor_);
     for (const auto& output_rel : output_rels) {
       outputs_[output_rel] = plan_->addConnection(processor_, output_rel, {});
@@ -49,7 +50,7 @@ class SQLTestPlan {
 
     // initialize database service
     auto service = plan_->addController(ODBC_SERVICE, "ODBCService");
-    plan_->setProperty(service, minifi::sql::controllers::DatabaseService::ConnectionString.getName(), connection_str);
+    plan_->setProperty(service, minifi::sql::controllers::DatabaseService::ConnectionString, connection_str);
   }
 
   std::string getContent(const std::shared_ptr<core::FlowFile>& flow_file) {

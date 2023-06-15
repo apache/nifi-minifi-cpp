@@ -28,6 +28,7 @@
 
 #include "core/logging/LoggerConfiguration.h"
 #include "core/Processor.h"
+#include "core/PropertyDefinitionBuilder.h"
 #include "io/StreamPipe.h"
 #include "utils/gsl.h"
 #include "utils/Export.h"
@@ -42,26 +43,38 @@ class CaptureRTSPFrame : public core::Processor {
 
   EXTENSIONAPI static constexpr const char* Description = "Captures a frame from the RTSP stream at specified intervals.";
 
-  EXTENSIONAPI static const core::Property RTSPUsername;
-  EXTENSIONAPI static const core::Property RTSPPassword;
-  EXTENSIONAPI static const core::Property RTSPHostname;
-  EXTENSIONAPI static const core::Property RTSPURI;
-  EXTENSIONAPI static const core::Property RTSPPort;
-  EXTENSIONAPI static const core::Property ImageEncoding;
-  static auto properties() {
-    return std::array{
+  EXTENSIONAPI static constexpr auto RTSPUsername = core::PropertyDefinitionBuilder<>::createProperty("RTSP Username")
+    .withDescription("The username for connecting to the RTSP stream")
+    .build();
+  EXTENSIONAPI static constexpr auto RTSPPassword = core::PropertyDefinitionBuilder<>::createProperty("RTSP Password")
+    .withDescription("Password used to connect to the RTSP stream")
+    .build();
+  EXTENSIONAPI static constexpr auto RTSPHostname = core::PropertyDefinitionBuilder<>::createProperty("RTSP Hostname")
+    .withDescription("Hostname of the RTSP stream we are trying to connect to")
+    .build();
+  EXTENSIONAPI static constexpr auto RTSPURI = core::PropertyDefinitionBuilder<>::createProperty("RTSP URI")
+    .withDescription("URI that should be appended to the RTSP stream hostname")
+    .build();
+  EXTENSIONAPI static constexpr auto RTSPPort = core::PropertyDefinitionBuilder<>::createProperty("RTSP Port")
+    .withDescription("Port that should be connected to to receive RTSP Frames")
+    .build();
+  EXTENSIONAPI static constexpr auto ImageEncoding = core::PropertyDefinitionBuilder<>::createProperty("Image Encoding")
+    .withDescription("The encoding that should be applied the the frame images captured from the RTSP stream")
+    .withDefaultValue(".jpg")
+    .build();
+  EXTENSIONAPI static constexpr auto Properties = std::array<core::PropertyReference, 6>{
       RTSPUsername,
       RTSPPassword,
       RTSPHostname,
       RTSPURI,
       RTSPPort,
       ImageEncoding
-    };
-  }
+  };
 
-  EXTENSIONAPI static const core::Relationship Success;
-  EXTENSIONAPI static const core::Relationship Failure;
-  static auto relationships() { return std::array{Success, Failure}; }
+
+  EXTENSIONAPI static constexpr auto Success = core::RelationshipDefinition{"success", "Successful capture of RTSP frame"};
+  EXTENSIONAPI static constexpr auto Failure = core::RelationshipDefinition{"failure", "Failures to capture RTSP frame"};
+  EXTENSIONAPI static constexpr auto Relationships = std::array{Success, Failure};
 
   EXTENSIONAPI static constexpr bool SupportsDynamicProperties = false;
   EXTENSIONAPI static constexpr bool SupportsDynamicRelationships = false;

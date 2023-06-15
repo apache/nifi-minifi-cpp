@@ -17,36 +17,38 @@
 
 #pragma once
 
+#include <string_view>
+
 #include "google/cloud/storage/object_metadata.h"
 #include "core/FlowFile.h"
 
 namespace org::apache::nifi::minifi::extensions::gcp {
 
-constexpr const char* GCS_ERROR_REASON = "gcs.error.reason";
-constexpr const char* GCS_ERROR_DOMAIN = "gcs.error.domain";
-constexpr const char* GCS_STATUS_MESSAGE = "gcs.status.message";
-constexpr const char* GCS_BUCKET_ATTR = "gcs.bucket";
-constexpr const char* GCS_OBJECT_NAME_ATTR = "gcs.key";
-constexpr const char* GCS_SIZE_ATTR = "gcs.size";
-constexpr const char* GCS_CRC32C_ATTR = "gcs.crc32c";
-constexpr const char* GCS_MD5_ATTR = "gcs.md5";
-constexpr const char* GCS_OWNER_ENTITY_ATTR = "gcs.owner.entity";
-constexpr const char* GCS_OWNER_ENTITY_ID_ATTR = "gcs.owner.entity.id";
-constexpr const char* GCS_MEDIA_LINK_ATTR = "gcs.media.link";
-constexpr const char* GCS_ETAG_ATTR = "gcs.etag";
-constexpr const char* GCS_GENERATED_ID = "gcs.generated.id";
-constexpr const char* GCS_GENERATION = "gcs.generation";
-constexpr const char* GCS_META_GENERATION = "gcs.metageneration";
-constexpr const char* GCS_STORAGE_CLASS = "gcs.storage.class";
-constexpr const char* GCS_CONTENT_ENCODING_ATTR = "gcs.content.encoding";
-constexpr const char* GCS_CONTENT_LANGUAGE_ATTR = "gcs.content.language";
-constexpr const char* GCS_CONTENT_DISPOSITION_ATTR = "gcs.content.disposition";
-constexpr const char* GCS_CREATE_TIME_ATTR = "gcs.create.time";
-constexpr const char* GCS_DELETE_TIME_ATTR = "gcs.delete.time";
-constexpr const char* GCS_UPDATE_TIME_ATTR = "gcs.update.time";
-constexpr const char* GCS_SELF_LINK_ATTR = "gcs.self.link";
-constexpr const char* GCS_ENCRYPTION_ALGORITHM_ATTR = "gcs.encryption.algorithm";
-constexpr const char* GCS_ENCRYPTION_SHA256_ATTR = "gcs.encryption.sha256";
+constexpr std::string_view GCS_ERROR_REASON = "gcs.error.reason";
+constexpr std::string_view GCS_ERROR_DOMAIN = "gcs.error.domain";
+constexpr std::string_view GCS_STATUS_MESSAGE = "gcs.status.message";
+constexpr std::string_view GCS_BUCKET_ATTR = "gcs.bucket";
+constexpr std::string_view GCS_OBJECT_NAME_ATTR = "gcs.key";
+constexpr std::string_view GCS_SIZE_ATTR = "gcs.size";
+constexpr std::string_view GCS_CRC32C_ATTR = "gcs.crc32c";
+constexpr std::string_view GCS_MD5_ATTR = "gcs.md5";
+constexpr std::string_view GCS_OWNER_ENTITY_ATTR = "gcs.owner.entity";
+constexpr std::string_view GCS_OWNER_ENTITY_ID_ATTR = "gcs.owner.entity.id";
+constexpr std::string_view GCS_MEDIA_LINK_ATTR = "gcs.media.link";
+constexpr std::string_view GCS_ETAG_ATTR = "gcs.etag";
+constexpr std::string_view GCS_GENERATED_ID = "gcs.generated.id";
+constexpr std::string_view GCS_GENERATION = "gcs.generation";
+constexpr std::string_view GCS_META_GENERATION = "gcs.metageneration";
+constexpr std::string_view GCS_STORAGE_CLASS = "gcs.storage.class";
+constexpr std::string_view GCS_CONTENT_ENCODING_ATTR = "gcs.content.encoding";
+constexpr std::string_view GCS_CONTENT_LANGUAGE_ATTR = "gcs.content.language";
+constexpr std::string_view GCS_CONTENT_DISPOSITION_ATTR = "gcs.content.disposition";
+constexpr std::string_view GCS_CREATE_TIME_ATTR = "gcs.create.time";
+constexpr std::string_view GCS_DELETE_TIME_ATTR = "gcs.delete.time";
+constexpr std::string_view GCS_UPDATE_TIME_ATTR = "gcs.update.time";
+constexpr std::string_view GCS_SELF_LINK_ATTR = "gcs.self.link";
+constexpr std::string_view GCS_ENCRYPTION_ALGORITHM_ATTR = "gcs.encryption.algorithm";
+constexpr std::string_view GCS_ENCRYPTION_SHA256_ATTR = "gcs.encryption.sha256";
 
 inline void setAttributesFromObjectMetadata(core::FlowFile& flow_file, const ::google::cloud::storage::ObjectMetadata& object_metadata) {
   flow_file.setAttribute(GCS_BUCKET_ATTR, object_metadata.bucket());

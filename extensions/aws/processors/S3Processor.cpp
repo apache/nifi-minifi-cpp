@@ -25,6 +25,7 @@
 #include "S3Wrapper.h"
 #include "AWSCredentialsService.h"
 #include "properties/Properties.h"
+#include "range/v3/algorithm/contains.hpp"
 #include "utils/StringUtils.h"
 #include "utils/HTTPUtils.h"
 
@@ -43,7 +44,7 @@ S3Processor::S3Processor(std::string name, const minifi::utils::Identifier& uuid
 
 std::optional<Aws::Auth::AWSCredentials> S3Processor::getAWSCredentialsFromControllerService(const std::shared_ptr<core::ProcessContext> &context) const {
   std::string service_name;
-  if (!context->getProperty(AWSCredentialsProviderService.getName(), service_name) || service_name.empty()) {
+  if (!context->getProperty(AWSCredentialsProviderService, service_name) || service_name.empty()) {
     return std::nullopt;
   }
 
@@ -79,11 +80,11 @@ std::optional<Aws::Auth::AWSCredentials> S3Processor::getAWSCredentials(
   if (context->getProperty(SecretKey, value, flow_file)) {
     aws_credentials_provider.setSecretKey(value);
   }
-  if (context->getProperty(CredentialsFile.getName(), value)) {
+  if (context->getProperty(CredentialsFile, value)) {
     aws_credentials_provider.setCredentialsFile(value);
   }
   bool use_default_credentials = false;
-  if (context->getProperty(UseDefaultCredentials.getName(), use_default_credentials)) {
+  if (context->getProperty(UseDefaultCredentials, use_default_credentials)) {
     aws_credentials_provider.setUseDefaultCredentials(use_default_credentials);
   }
 
@@ -109,11 +110,11 @@ std::optional<aws::s3::ProxyOptions> S3Processor::getProxy(const std::shared_ptr
 void S3Processor::onSchedule(const std::shared_ptr<core::ProcessContext>& context, const std::shared_ptr<core::ProcessSessionFactory>& /*sessionFactory*/) {
   client_config_ = Aws::Client::ClientConfiguration();
   std::string value;
-  if (!context->getProperty(Bucket.getName(), value) || value.empty()) {
+  if (!context->getProperty(Bucket, value) || value.empty()) {
     throw Exception(PROCESS_SCHEDULE_EXCEPTION, "Bucket property missing or invalid");
   }
 
-  if (!context->getProperty(Region.getName(), client_config_->region) || client_config_->region.empty() || !REGIONS.contains(client_config_->region)) {
+  if (!context->getProperty(Region, client_config_->region) || client_config_->region.empty() || !ranges::contains(region::REGIONS, client_config_->region)) {
     throw Exception(PROCESS_SCHEDULE_EXCEPTION, "Region property missing or invalid");
   }
   logger_->log_debug("S3Processor: Region [%s]", client_config_->region);

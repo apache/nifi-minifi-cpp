@@ -24,42 +24,11 @@
 #include <map>
 #include "core/ProcessContext.h"
 #include "core/ProcessSession.h"
-#include "core/PropertyBuilder.h"
 #include "utils/StringUtils.h"
 #include "core/Resource.h"
 #include "io/StreamPipe.h"
 
 namespace org::apache::nifi::minifi::processors {
-
-const core::Property CompressContent::CompressLevel(
-    core::PropertyBuilder::createProperty("Compression Level")->withDescription("The compression level to use; this is valid only when using GZIP compression.")
-        ->isRequired(false)->withDefaultValue<int>(1)->build());
-const core::Property CompressContent::CompressMode(
-    core::PropertyBuilder::createProperty("Mode")->withDescription("Indicates whether the processor should compress content or decompress content.")
-        ->isRequired(false)->withAllowableValues(CompressionMode::values())
-        ->withDefaultValue(toString(CompressionMode::Compress))->build());
-const core::Property CompressContent::CompressFormat(
-    core::PropertyBuilder::createProperty("Compression Format")->withDescription("The compression format to use.")
-        ->isRequired(false)
-        ->withAllowableValues(ExtendedCompressionFormat::values())
-        ->withDefaultValue(toString(ExtendedCompressionFormat::USE_MIME_TYPE))->build());
-const core::Property CompressContent::UpdateFileName(
-    core::PropertyBuilder::createProperty("Update Filename")->withDescription("Determines if filename extension need to be updated")
-        ->isRequired(false)->withDefaultValue<bool>(false)->build());
-const core::Property CompressContent::EncapsulateInTar(
-    core::PropertyBuilder::createProperty("Encapsulate in TAR")
-        ->withDescription("If true, on compression the FlowFile is added to a TAR archive and then compressed, "
-                          "and on decompression a compressed, TAR-encapsulated FlowFile is expected.\n"
-                          "If false, on compression the content of the FlowFile simply gets compressed, and on decompression a simple compressed content is expected.\n"
-                          "true is the behaviour compatible with older MiNiFi C++ versions, false is the behaviour compatible with NiFi.")
-        ->isRequired(false)->withDefaultValue<bool>(true)->build());
-const core::Property CompressContent::BatchSize(
-    core::PropertyBuilder::createProperty("Batch Size")
-    ->withDescription("Maximum number of FlowFiles processed in a single session")
-    ->withDefaultValue<uint32_t>(1)->build());
-
-const core::Relationship CompressContent::Success("success", "FlowFiles will be transferred to the success relationship after successfully being compressed or decompressed");
-const core::Relationship CompressContent::Failure("failure", "FlowFiles will be transferred to the failure relationship if they fail to compress/decompress");
 
 const std::string CompressContent::TAR_EXT = ".tar";
 
@@ -79,17 +48,17 @@ const std::map<io::CompressionFormat, std::string> CompressContent::fileExtensio
 };
 
 void CompressContent::initialize() {
-  setSupportedProperties(properties());
-  setSupportedRelationships(relationships());
+  setSupportedProperties(Properties);
+  setSupportedRelationships(Relationships);
 }
 
 void CompressContent::onSchedule(core::ProcessContext *context, core::ProcessSessionFactory* /*sessionFactory*/) {
-  context->getProperty(CompressLevel.getName(), compressLevel_);
-  context->getProperty(CompressMode.getName(), compressMode_);
-  context->getProperty(CompressFormat.getName(), compressFormat_);
-  context->getProperty(UpdateFileName.getName(), updateFileName_);
-  context->getProperty(EncapsulateInTar.getName(), encapsulateInTar_);
-  context->getProperty(BatchSize.getName(), batchSize_);
+  context->getProperty(CompressLevel, compressLevel_);
+  context->getProperty(CompressMode, compressMode_);
+  context->getProperty(CompressFormat, compressFormat_);
+  context->getProperty(UpdateFileName, updateFileName_);
+  context->getProperty(EncapsulateInTar, encapsulateInTar_);
+  context->getProperty(BatchSize, batchSize_);
 
   logger_->log_info("Compress Content: Mode [%s] Format [%s] Level [%d] UpdateFileName [%d] EncapsulateInTar [%d]",
       compressMode_.toString(), compressFormat_.toString(), compressLevel_, updateFileName_, encapsulateInTar_);
@@ -115,7 +84,7 @@ void CompressContent::processFlowFile(const std::shared_ptr<core::FlowFile>& flo
   session->remove(flowFile);
 
   io::CompressionFormat compressFormat;
-  if (compressFormat_ == ExtendedCompressionFormat::USE_MIME_TYPE) {
+  if (compressFormat_ == compress_content::ExtendedCompressionFormat::USE_MIME_TYPE) {
     std::string attr;
     flowFile->getAttribute(core::SpecialFlowAttribute::MIME_TYPE, attr);
     if (attr.empty()) {
@@ -163,7 +132,7 @@ void CompressContent::processFlowFile(const std::shared_ptr<core::FlowFile>& flo
   if (encapsulateInTar_) {
     std::function<int64_t(const std::shared_ptr<io::InputStream>&, const std::shared_ptr<io::OutputStream>&)> transformer;
 
-    if (compressMode_ == CompressionMode::Compress) {
+    if (compressMode_ == compress_content::CompressionMode::Compress) {
       std::string filename;
       flowFile->getAttribute(core::SpecialFlowAttribute::FILENAME, filename);
       transformer = [&, filename] (const std::shared_ptr<io::InputStream>& in, const std::shared_ptr<io::OutputStream>& out) -> int64_t {
@@ -206,7 +175,7 @@ void CompressContent::processFlowFile(const std::shared_ptr<core::FlowFile>& flo
   } else {
     std::string fileName;
     result->getAttribute(core::SpecialFlowAttribute::FILENAME, fileName);
-    if (compressMode_ == CompressionMode::Compress) {
+    if (compressMode_ == compress_content::CompressionMode::Compress) {
       session->putAttribute(result, core::SpecialFlowAttribute::MIME_TYPE, mimeType);
       if (updateFileName_) {
         if (encapsulateInTar_) {

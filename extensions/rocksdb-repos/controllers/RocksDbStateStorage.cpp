@@ -22,28 +22,9 @@
 #include "RocksDbStateStorage.h"
 #include "../encryption/RocksDbEncryptionProvider.h"
 #include "utils/StringUtils.h"
-#include "core/PropertyBuilder.h"
 #include "core/Resource.h"
 
 namespace org::apache::nifi::minifi::controllers {
-
-const core::Property RocksDbStateStorage::AlwaysPersist(
-    core::PropertyBuilder::createProperty(ALWAYS_PERSIST_PROPERTY_NAME)
-    ->withDescription("Persist every change instead of persisting it periodically.")
-    ->isRequired(false)
-    ->withDefaultValue<bool>(false)
-    ->build());
-const core::Property RocksDbStateStorage::AutoPersistenceInterval(
-    core::PropertyBuilder::createProperty(AUTO_PERSISTENCE_INTERVAL_PROPERTY_NAME)
-    ->withDescription("The interval of the periodic task persisting all values. Only used if Always Persist is false. If set to 0 seconds, auto persistence will be disabled.")
-    ->isRequired(false)
-    ->withDefaultValue<core::TimePeriodValue>("1 min")
-    ->build());
-const core::Property RocksDbStateStorage::Directory(
-    core::PropertyBuilder::createProperty("Directory")
-    ->withDescription("Path to a directory for the database")
-    ->isRequired(true)
-    ->build());
 
 RocksDbStateStorage::RocksDbStateStorage(const std::string& name, const utils::Identifier& uuid /*= utils::Identifier()*/)
     : KeyValueStateStorage(name, uuid) {
@@ -55,7 +36,7 @@ RocksDbStateStorage::~RocksDbStateStorage() {
 
 void RocksDbStateStorage::initialize() {
   ControllerService::initialize();
-  setSupportedProperties(properties());
+  setSupportedProperties(Properties);
 }
 
 void RocksDbStateStorage::onEnable() {
@@ -64,13 +45,13 @@ void RocksDbStateStorage::onEnable() {
     return;
   }
 
-  const auto always_persist = getProperty<bool>(AlwaysPersist.getName()).value_or(false);
+  const auto always_persist = getProperty<bool>(AlwaysPersist).value_or(false);
   logger_->log_info("Always Persist property: %s", always_persist ? "true" : "false");
 
-  const auto auto_persistence_interval = getProperty<core::TimePeriodValue>(AutoPersistenceInterval.getName()).value_or(core::TimePeriodValue{}).getMilliseconds();
+  const auto auto_persistence_interval = getProperty<core::TimePeriodValue>(AutoPersistenceInterval).value_or(core::TimePeriodValue{}).getMilliseconds();
   logger_->log_info("Auto Persistence Interval property: %" PRId64 " ms", auto_persistence_interval.count());
 
-  if (!getProperty(Directory.getName(), directory_)) {
+  if (!getProperty(Directory, directory_)) {
     logger_->log_error("Invalid or missing property: Directory");
     return;
   }

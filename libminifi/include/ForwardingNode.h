@@ -33,9 +33,9 @@ class ForwardingNode : public core::Processor {
   }
   ForwardingNode(std::string name, std::shared_ptr<core::logging::Logger> logger) : Processor(std::move(name)), logger_(std::move(logger)) {}
 
-  static auto properties() { return std::array<core::Property, 0>{}; }
-  MINIFIAPI static const core::Relationship Success;
-  static auto relationships() { return std::array{Success}; }
+  MINIFIAPI static constexpr auto Properties = std::array<core::PropertyReference, 0>{};
+  MINIFIAPI static constexpr auto Success = core::RelationshipDefinition{"success", "FlowFiles are routed to success relationship"};
+  MINIFIAPI static constexpr auto Relationships = std::array{Success};
   MINIFIAPI static constexpr bool SupportsDynamicProperties = false;
   MINIFIAPI static constexpr bool SupportsDynamicRelationships = false;
   MINIFIAPI static constexpr bool IsSingleThreaded = false;

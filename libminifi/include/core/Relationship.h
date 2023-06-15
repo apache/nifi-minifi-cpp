@@ -17,11 +17,12 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#ifndef LIBMINIFI_INCLUDE_CORE_RELATIONSHIP_H_
-#define LIBMINIFI_INCLUDE_CORE_RELATIONSHIP_H_
+#pragma once
 
 #include <string>
 #include <utility>
+
+#include "RelationshipDefinition.h"
 
 namespace org::apache::nifi::minifi::core {
 
@@ -32,6 +33,10 @@ class Relationship {
   Relationship(std::string name, std::string description)
       : name_(std::move(name)),
         description_(std::move(description)) {
+  }
+
+  Relationship(const RelationshipDefinition& relationship_definition)  // NOLINT: non-explicit on purpose
+      : Relationship{std::string{relationship_definition.name}, std::string{relationship_definition.description}} {
   }
 
   [[nodiscard]] std::string getName() const {
@@ -66,5 +71,3 @@ struct std::hash<org::apache::nifi::minifi::core::Relationship> {
     return std::hash<std::string>{}(relationship.getName());
   }
 };
-
-#endif  // LIBMINIFI_INCLUDE_CORE_RELATIONSHIP_H_

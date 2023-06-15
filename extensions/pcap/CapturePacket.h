@@ -30,6 +30,10 @@
 #include "FlowFileRecord.h"
 #include "core/Processor.h"
 #include "core/ProcessSession.h"
+#include "core/PropertyDefinition.h"
+#include "core/PropertyDefinitionBuilder.h"
+#include "core/PropertyType.h"
+#include "core/RelationshipDefinition.h"
 #include "core/Core.h"
 #include "core/Property.h"
 #include "concurrentqueue.h"
@@ -99,21 +103,34 @@ class CapturePacket : public core::Processor {
     " Configuration options exist to adjust the batching of PCAP files. PCAP batching will place a single PCAP into a flow file. "
     "A regular expression selects network interfaces. Bluetooth network interfaces can be selected through a separate option.";
 
-  static const core::Property BatchSize;
-  static const core::Property NetworkControllers;
-  static const core::Property BaseDir;
-  static const core::Property CaptureBluetooth;
-  static auto properties() {
-    return std::array{
+  EXTENSIONAPI static constexpr auto BatchSize = core::PropertyDefinitionBuilder<>::createProperty("Batch Size")
+      .withDescription("The number of packets to combine within a given PCAP")
+      .withPropertyType(core::StandardPropertyTypes::UNSIGNED_INT_TYPE)
+      .withDefaultValue("50")
+      .build();
+  EXTENSIONAPI static constexpr auto NetworkControllers = core::PropertyDefinitionBuilder<>::createProperty("Network Controllers")
+      .withDescription("Regular expression of the network controller(s) to which we will attach")
+      .withDefaultValue(".*")
+      .build();
+  EXTENSIONAPI static constexpr auto BaseDir = core::PropertyDefinitionBuilder<>::createProperty("Base Directory")
+      .withDescription("Scratch directory for PCAP files")
+      .withDefaultValue("/tmp/")
+      .build();
+  EXTENSIONAPI static constexpr auto CaptureBluetooth = core::PropertyDefinitionBuilder<>::createProperty("Capture Bluetooth")
+      .withDescription("True indicates that we support bluetooth interfaces")
+      .withPropertyType(core::StandardPropertyTypes::BOOLEAN_TYPE)
+      .withDefaultValue("false")
+      .build();
+  EXTENSIONAPI static constexpr auto Properties = std::array<core::PropertyReference, 4>{
       BatchSize,
       NetworkControllers,
       BaseDir,
       CaptureBluetooth
-    };
-  }
+  };
 
-  EXTENSIONAPI static const core::Relationship Success;
-  static auto relationships() { return std::array{Success}; }
+
+  EXTENSIONAPI static constexpr auto Success =  core::RelationshipDefinition{"success", "All files are routed to success"};
+  EXTENSIONAPI static constexpr auto Relationships = std::array{Success};
 
   EXTENSIONAPI static constexpr bool SupportsDynamicProperties = false;
   EXTENSIONAPI static constexpr bool SupportsDynamicRelationships = false;

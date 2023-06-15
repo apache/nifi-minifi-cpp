@@ -26,16 +26,18 @@
 #include <utility>
 
 #include "AzureBlobStorageProcessorBase.h"
+#include "PropertyDefinition.h"
 #include "utils/ArrayUtils.h"
 
 namespace org::apache::nifi::minifi::azure::processors {
 
 class AzureBlobStorageSingleBlobProcessorBase : public AzureBlobStorageProcessorBase {
  public:
-  EXTENSIONAPI static const core::Property Blob;
-  static auto properties() {
-    return utils::array_cat(AzureBlobStorageProcessorBase::properties(), std::array{Blob});
-  }
+  EXTENSIONAPI static constexpr auto Blob = core::PropertyDefinitionBuilder<>::createProperty("Blob")
+      .withDescription("The filename of the blob. If left empty the filename attribute will be used by default.")
+      .supportsExpressionLanguage(true)
+      .build();
+  EXTENSIONAPI static constexpr auto Properties = utils::array_cat(AzureBlobStorageProcessorBase::Properties, std::array<core::PropertyReference, 1>{Blob});
 
  protected:
   explicit AzureBlobStorageSingleBlobProcessorBase(

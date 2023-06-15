@@ -51,10 +51,10 @@ TEST_CASE("CaptureRTSPFrame::ValidCapture", "[!mayfail]") {
     // alternatively, we can set our own server using vlc.
     // vlc -vvv --loop <input video> --sout '#rtp{port=1234,sdp=rtsp://127.0.0.1:port/test}' --sout-keep
     // then the uri will be rtsp://127.0.0.1:port/test
-    plan->setProperty(captureRTSP, minifi::processors::CaptureRTSPFrame::RTSPHostname.getName(), "170.93.143.139");
-    plan->setProperty(captureRTSP, minifi::processors::CaptureRTSPFrame::RTSPURI.getName(), "rtplive/470011e600ef003a004ee33696235daa");
-    plan->setProperty(captureRTSP, minifi::processors::CaptureRTSPFrame::RTSPPort.getName(), "");
-    plan->setProperty(captureRTSP, minifi::processors::CaptureRTSPFrame::ImageEncoding.getName(), ".jpg");
+    plan->setProperty(captureRTSP, minifi::processors::CaptureRTSPFrame::RTSPHostname, "170.93.143.139");
+    plan->setProperty(captureRTSP, minifi::processors::CaptureRTSPFrame::RTSPURI, "rtplive/470011e600ef003a004ee33696235daa");
+    plan->setProperty(captureRTSP, minifi::processors::CaptureRTSPFrame::RTSPPort, "");
+    plan->setProperty(captureRTSP, minifi::processors::CaptureRTSPFrame::ImageEncoding, ".jpg");
 
     testController.runSession(plan, true);
     std::shared_ptr<core::FlowFile> record = plan->getCurrentFlowFile();
@@ -71,10 +71,10 @@ TEST_CASE("CaptureRTSPFrame::InvalidURI", "[opencvtest2]") {
   std::shared_ptr<TestPlan> plan = testController.createPlan();
   std::shared_ptr<core::Processor> captureRTSP = plan->addProcessor("CaptureRTSPFrame", "CaptureRTSPFrame");
 
-  plan->setProperty(captureRTSP, minifi::processors::CaptureRTSPFrame::RTSPHostname.getName(), "170.93.143.139");
-  plan->setProperty(captureRTSP, minifi::processors::CaptureRTSPFrame::RTSPURI.getName(), "abcd");
-  plan->setProperty(captureRTSP, minifi::processors::CaptureRTSPFrame::RTSPPort.getName(), "");
-  plan->setProperty(captureRTSP, minifi::processors::CaptureRTSPFrame::ImageEncoding.getName(), ".jpg");
+  plan->setProperty(captureRTSP, minifi::processors::CaptureRTSPFrame::RTSPHostname, "170.93.143.139");
+  plan->setProperty(captureRTSP, minifi::processors::CaptureRTSPFrame::RTSPURI, "abcd");
+  plan->setProperty(captureRTSP, minifi::processors::CaptureRTSPFrame::RTSPPort, "");
+  plan->setProperty(captureRTSP, minifi::processors::CaptureRTSPFrame::ImageEncoding, ".jpg");
 
   plan->addProcessor(
           "LogAttribute",

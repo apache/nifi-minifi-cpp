@@ -57,18 +57,18 @@ TEST_CASE("QuerySplunkIndexingStatus tests", "[querysplunkindexingstatus]") {
   read_from_unacknowledged->setAutoTerminatedRelationships(std::array{core::Relationship{ReadFromFlowFileTestProcessor::Success}});
   read_from_failure->setAutoTerminatedRelationships(std::array{core::Relationship{ReadFromFlowFileTestProcessor::Success}});
 
-  plan->setProperty(query_splunk_indexing_status, QuerySplunkIndexingStatus::Hostname.getName(), "localhost");
-  plan->setProperty(query_splunk_indexing_status, QuerySplunkIndexingStatus::Port.getName(), mock_splunk_hec.getPort());
-  plan->setProperty(query_splunk_indexing_status, QuerySplunkIndexingStatus::Token.getName(), MockSplunkHEC::TOKEN);
-  plan->setProperty(query_splunk_indexing_status, QuerySplunkIndexingStatus::SplunkRequestChannel.getName(), "a12254b4-f481-435d-896d-3b6033eabe58");
+  plan->setProperty(query_splunk_indexing_status, QuerySplunkIndexingStatus::Hostname, "localhost");
+  plan->setProperty(query_splunk_indexing_status, QuerySplunkIndexingStatus::Port, mock_splunk_hec.getPort());
+  plan->setProperty(query_splunk_indexing_status, QuerySplunkIndexingStatus::Token, MockSplunkHEC::TOKEN);
+  plan->setProperty(query_splunk_indexing_status, QuerySplunkIndexingStatus::SplunkRequestChannel, "a12254b4-f481-435d-896d-3b6033eabe58");
 
   auto response_timestamp = std::to_string(std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now().time_since_epoch()).count());
-  plan->setProperty(update_attribute, org::apache::nifi::minifi::extensions::splunk::SPLUNK_RESPONSE_TIME, response_timestamp, true);
+  plan->setDynamicProperty(update_attribute, org::apache::nifi::minifi::extensions::splunk::SPLUNK_RESPONSE_TIME, response_timestamp);
 
   write_to_flow_file->setContent("foobar");
 
   SECTION("Querying indexed id") {
-    plan->setProperty(update_attribute, org::apache::nifi::minifi::extensions::splunk::SPLUNK_ACK_ID, std::to_string(MockSplunkHEC::indexed_events[0]), true);
+    plan->setDynamicProperty(update_attribute, org::apache::nifi::minifi::extensions::splunk::SPLUNK_ACK_ID, std::to_string(MockSplunkHEC::indexed_events[0]));
     test_controller.runSession(plan);
     CHECK(read_from_failure->numberOfFlowFilesRead() == 0);
     CHECK(read_from_undetermined->numberOfFlowFilesRead() == 0);
@@ -77,7 +77,7 @@ TEST_CASE("QuerySplunkIndexingStatus tests", "[querysplunkindexingstatus]") {
   }
 
   SECTION("Querying not indexed id") {
-    plan->setProperty(update_attribute, org::apache::nifi::minifi::extensions::splunk::SPLUNK_ACK_ID, "100", true);
+    plan->setDynamicProperty(update_attribute, org::apache::nifi::minifi::extensions::splunk::SPLUNK_ACK_ID, "100");
     query_splunk_indexing_status->setPenalizationPeriod(50ms);
     test_controller.runSession(plan);
     CHECK(read_from_failure->numberOfFlowFilesRead() == 0);
@@ -97,10 +97,10 @@ TEST_CASE("QuerySplunkIndexingStatus tests", "[querysplunkindexingstatus]") {
   }
 
   SECTION("Querying not indexed old id") {
-    plan->setProperty(update_attribute, org::apache::nifi::minifi::extensions::splunk::SPLUNK_ACK_ID, "100", true);
+    plan->setDynamicProperty(update_attribute, org::apache::nifi::minifi::extensions::splunk::SPLUNK_ACK_ID, "100");
     response_timestamp = std::to_string(std::chrono::duration_cast<std::chrono::milliseconds>((std::chrono::system_clock::now() - 2h).time_since_epoch()).count());
 
-    plan->setProperty(update_attribute, org::apache::nifi::minifi::extensions::splunk::SPLUNK_RESPONSE_TIME, response_timestamp, true);
+    plan->setDynamicProperty(update_attribute, org::apache::nifi::minifi::extensions::splunk::SPLUNK_RESPONSE_TIME, response_timestamp);
     test_controller.runSession(plan);
     CHECK(read_from_failure->numberOfFlowFilesRead() == 0);
     CHECK(read_from_undetermined->numberOfFlowFilesRead() == 0);
@@ -109,8 +109,8 @@ TEST_CASE("QuerySplunkIndexingStatus tests", "[querysplunkindexingstatus]") {
   }
 
   SECTION("Multiple inputs with same id") {
-    plan->setProperty(update_attribute, org::apache::nifi::minifi::extensions::splunk::SPLUNK_ACK_ID, std::to_string(MockSplunkHEC::indexed_events[0]), true);
-    plan->setProperty(update_attribute, org::apache::nifi::minifi::extensions::splunk::SPLUNK_RESPONSE_TIME, response_timestamp, true);
+    plan->setDynamicProperty(update_attribute, org::apache::nifi::minifi::extensions::splunk::SPLUNK_ACK_ID, std::to_string(MockSplunkHEC::indexed_events[0]));
+    plan->setDynamicProperty(update_attribute, org::apache::nifi::minifi::extensions::splunk::SPLUNK_RESPONSE_TIME, response_timestamp);
     for (size_t i = 0; i < 4; ++i) {
       plan->runProcessor(write_to_flow_file);
       plan->runProcessor(update_attribute);
@@ -127,7 +127,7 @@ TEST_CASE("QuerySplunkIndexingStatus tests", "[querysplunkindexingstatus]") {
   }
 
   SECTION("MaxQuerySize can limit the number of queries") {
-    plan->setProperty(query_splunk_indexing_status, QuerySplunkIndexingStatus::MaxQuerySize.getName(), "5");
+    plan->setProperty(query_splunk_indexing_status, QuerySplunkIndexingStatus::MaxQuerySize, "5");
     for (size_t i = 0; i < 10; ++i) {
       plan->runProcessor(write_to_flow_file);
       plan->runProcessor(update_attribute);
@@ -145,7 +145,7 @@ TEST_CASE("QuerySplunkIndexingStatus tests", "[querysplunkindexingstatus]") {
   }
 
   SECTION("Invalid index") {
-    plan->setProperty(update_attribute, org::apache::nifi::minifi::extensions::splunk::SPLUNK_ACK_ID, "foo", true);
+    plan->setDynamicProperty(update_attribute, org::apache::nifi::minifi::extensions::splunk::SPLUNK_ACK_ID, "foo");
     REQUIRE_THROWS(test_controller.runSession(plan));
   }
 }

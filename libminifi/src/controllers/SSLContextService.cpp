@@ -33,7 +33,6 @@
 #include <memory>
 #include <string>
 
-#include "core/PropertyBuilder.h"
 #include "core/Resource.h"
 #include "io/validation.h"
 #include "properties/Configure.h"
@@ -44,74 +43,6 @@
 #include "utils/TimeUtil.h"
 
 namespace org::apache::nifi::minifi::controllers {
-
-const core::Property SSLContextService::ClientCertificate(
-    core::PropertyBuilder::createProperty("Client Certificate")
-        ->withDescription("Client Certificate")
-        ->isRequired(false)
-        ->build());
-
-const core::Property SSLContextService::PrivateKey(
-    core::PropertyBuilder::createProperty("Private Key")
-        ->withDescription("Private Key file")
-        ->isRequired(false)
-        ->build());
-
-const core::Property SSLContextService::Passphrase(
-    core::PropertyBuilder::createProperty("Passphrase")
-        ->withDescription("Client passphrase. Either a file or unencrypted text")
-        ->isRequired(false)
-        ->build());
-
-const core::Property SSLContextService::CACertificate(
-    core::PropertyBuilder::createProperty("CA Certificate")
-        ->withDescription("CA certificate file")
-        ->isRequired(false)
-        ->build());
-
-const core::Property SSLContextService::UseSystemCertStore(
-    core::PropertyBuilder::createProperty("Use System Cert Store")
-        ->withDescription("Whether to use the certificates in the OS's certificate store")
-        ->isRequired(false)
-        ->withDefaultValue<bool>(false)
-        ->build());
-
-#ifdef WIN32
-const core::Property SSLContextService::CertStoreLocation(
-    core::PropertyBuilder::createProperty("Certificate Store Location")
-        ->withDescription("One of the Windows certificate store locations, eg. LocalMachine or CurrentUser")
-        ->withAllowableValues(utils::tls::WindowsCertStoreLocation::allowedLocations())
-        ->isRequired(false)
-        ->withDefaultValue(utils::tls::WindowsCertStoreLocation::defaultLocation())
-        ->build());
-
-const core::Property SSLContextService::ServerCertStore(
-    core::PropertyBuilder::createProperty("Server Cert Store")
-        ->withDescription("The name of the certificate store which contains the server certificate")
-        ->isRequired(false)
-        ->withDefaultValue("ROOT")
-        ->build());
-
-const core::Property SSLContextService::ClientCertStore(
-    core::PropertyBuilder::createProperty("Client Cert Store")
-        ->withDescription("The name of the certificate store which contains the client certificate")
-        ->isRequired(false)
-        ->withDefaultValue("MY")
-        ->build());
-
-const core::Property SSLContextService::ClientCertCN(
-    core::PropertyBuilder::createProperty("Client Cert CN")
-        ->withDescription("The CN that the client certificate is required to match; default: use the first available client certificate in the store")
-        ->isRequired(false)
-        ->build());
-
-const core::Property SSLContextService::ClientCertKeyUsage(
-    core::PropertyBuilder::createProperty("Client Cert Key Usage")
-        ->withDescription("Comma-separated list of enhanced key usage values that the client certificate is required to have")
-        ->isRequired(false)
-        ->withDefaultValue("Client Authentication")
-        ->build());
-#endif  // WIN32
 
 namespace {
 bool is_valid_and_readable_path(const std::filesystem::path& path_to_be_tested) {
@@ -482,7 +413,7 @@ void SSLContextService::onEnable() {
   logger_->log_trace("onEnable()");
 
   certificate_.clear();
-  if (auto certificate = getProperty(ClientCertificate.getName())) {
+  if (auto certificate = getProperty(ClientCertificate)) {
     if (is_valid_and_readable_path(*certificate)) {
       certificate_ = *certificate;
     } else {
@@ -499,7 +430,7 @@ void SSLContextService::onEnable() {
 
   private_key_.clear();
   if (!certificate_.empty() && !isFileTypeP12(certificate_)) {
-    if (auto private_key = getProperty(PrivateKey.getName())) {
+    if (auto private_key = getProperty(PrivateKey)) {
       if (is_valid_and_readable_path(*private_key)) {
         private_key_ = *private_key;
       } else {
@@ -517,7 +448,7 @@ void SSLContextService::onEnable() {
   }
 
   passphrase_.clear();
-  if (!getProperty(Passphrase.getName(), passphrase_)) {
+  if (!getProperty(Passphrase, passphrase_)) {
     logger_->log_debug("No pass phrase for %s", certificate_.string());
   } else {
     std::ifstream passphrase_file(passphrase_);
@@ -538,7 +469,7 @@ void SSLContextService::onEnable() {
   }
 
   ca_certificate_.clear();
-  if (auto ca_certificate = getProperty(CACertificate.getName())) {
+  if (auto ca_certificate = getProperty(CACertificate)) {
     if (is_valid_and_readable_path(*ca_certificate)) {
       ca_certificate_ = *ca_certificate;
     } else {
@@ -554,16 +485,16 @@ void SSLContextService::onEnable() {
     logger_->log_debug("CA Certificate empty");
   }
 
-  getProperty(UseSystemCertStore.getName(), use_system_cert_store_);
+  getProperty(UseSystemCertStore, use_system_cert_store_);
 
 #ifdef WIN32
-  getProperty(CertStoreLocation.getName(), cert_store_location_);
-  getProperty(ServerCertStore.getName(), server_cert_store_);
-  getProperty(ClientCertStore.getName(), client_cert_store_);
-  getProperty(ClientCertCN.getName(), client_cert_cn_);
+  getProperty(CertStoreLocation, cert_store_location_);
+  getProperty(ServerCertStore, server_cert_store_);
+  getProperty(ClientCertStore, client_cert_store_);
+  getProperty(ClientCertCN, client_cert_cn_);
 
   std::string client_cert_key_usage;
-  getProperty(ClientCertKeyUsage.getName(), client_cert_key_usage);
+  getProperty(ClientCertKeyUsage, client_cert_key_usage);
   client_cert_key_usage_ = utils::tls::ExtendedKeyUsage{client_cert_key_usage};
 #endif  // WIN32
 
@@ -571,7 +502,7 @@ void SSLContextService::onEnable() {
 }
 
 void SSLContextService::initializeProperties() {
-  setSupportedProperties(properties());
+  setSupportedProperties(Properties);
 }
 
 void SSLContextService::verifyCertificateExpiration() {
@@ -641,8 +572,6 @@ void SSLContextService::verifyCertificateExpiration() {
   }
 
 #ifdef WIN32
-
-
   if (use_system_cert_store_ && IsNullOrEmpty(certificate_)) {
     findClientCertificate([&] (auto cert, auto /*priv_key*/) -> bool {
       auto cert_name = getCertName(cert);

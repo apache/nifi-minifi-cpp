@@ -66,10 +66,10 @@ TEST_CASE("TensorFlow: Apply Graph", "[tfApplyGraph]") { // NOLINT
       "Get Proto");
   plan->setProperty(
       get_file,
-      processors::GetFile::Directory.getName(), in_dir);
+      processors::GetFile::Directory, in_dir);
   plan->setProperty(
       get_file,
-      processors::GetFile::KeepSourceFile.getName(),
+      processors::GetFile::KeepSourceFile,
       "false");
   plan->addProcessor(
       "LogAttribute",
@@ -101,11 +101,11 @@ TEST_CASE("TensorFlow: Apply Graph", "[tfApplyGraph]") { // NOLINT
       true);
   plan->setProperty(
       put_file,
-      processors::PutFile::Directory.getName(),
+      processors::PutFile::Directory,
       out_dir);
   plan->setProperty(
       put_file,
-      processors::PutFile::ConflictResolution.getName(),
+      processors::PutFile::ConflictResolution,
       processors::PutFile::CONFLICT_RESOLUTION_STRATEGY_REPLACE);
 
   // Build test TensorFlow graph
@@ -199,10 +199,10 @@ TEST_CASE("TensorFlow: ConvertImageToTensor", "[tfConvertImageToTensor]") { // N
       "Get Proto");
   plan->setProperty(
       get_file,
-      processors::GetFile::Directory.getName(), in_dir);
+      processors::GetFile::Directory, in_dir);
   plan->setProperty(
       get_file,
-      processors::GetFile::KeepSourceFile.getName(),
+      processors::GetFile::KeepSourceFile,
       "false");
   plan->addProcessor(
       "LogAttribute",
@@ -250,11 +250,11 @@ TEST_CASE("TensorFlow: ConvertImageToTensor", "[tfConvertImageToTensor]") { // N
       true);
   plan->setProperty(
       put_file,
-      processors::PutFile::Directory.getName(),
+      processors::PutFile::Directory,
       out_dir);
   plan->setProperty(
       put_file,
-      processors::PutFile::ConflictResolution.getName(),
+      processors::PutFile::ConflictResolution,
       processors::PutFile::CONFLICT_RESOLUTION_STRATEGY_REPLACE);
 
   // Write test input image
@@ -322,10 +322,10 @@ TEST_CASE("TensorFlow: Extract Top Labels", "[tfExtractTopLabels]") { // NOLINT
       "Get Input");
   plan->setProperty(
       get_file,
-      processors::GetFile::Directory.getName(), in_dir);
+      processors::GetFile::Directory, in_dir);
   plan->setProperty(
       get_file,
-      processors::GetFile::KeepSourceFile.getName(),
+      processors::GetFile::KeepSourceFile,
       "false");
   plan->addProcessor(
       "LogAttribute",

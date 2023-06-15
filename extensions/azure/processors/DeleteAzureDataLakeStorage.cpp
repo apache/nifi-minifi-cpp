@@ -28,8 +28,8 @@
 namespace org::apache::nifi::minifi::azure::processors {
 
 void DeleteAzureDataLakeStorage::initialize() {
-  setSupportedProperties(properties());
-  setSupportedRelationships(relationships());
+  setSupportedProperties(Properties);
+  setSupportedRelationships(Relationships);
 }
 
 std::optional<storage::DeleteAzureDataLakeStorageParameters> DeleteAzureDataLakeStorage::buildDeleteParameters(
@@ -66,5 +66,7 @@ void DeleteAzureDataLakeStorage::onTrigger(const std::shared_ptr<core::ProcessCo
     session->transfer(flow_file, Success);
   }
 }
+
+REGISTER_RESOURCE(DeleteAzureDataLakeStorage, Processor);
 
 }  // namespace org::apache::nifi::minifi::azure::processors

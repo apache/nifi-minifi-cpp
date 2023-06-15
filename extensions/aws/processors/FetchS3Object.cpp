@@ -24,19 +24,20 @@
 
 #include "core/ProcessContext.h"
 #include "core/ProcessSession.h"
+#include "core/Resource.h"
 #include "utils/OptionalUtils.h"
 
 namespace org::apache::nifi::minifi::aws::processors {
 
 void FetchS3Object::initialize() {
-  setSupportedProperties(properties());
-  setSupportedRelationships(relationships());
+  setSupportedProperties(Properties);
+  setSupportedRelationships(Relationships);
 }
 
 void FetchS3Object::onSchedule(const std::shared_ptr<core::ProcessContext> &context, const std::shared_ptr<core::ProcessSessionFactory> &sessionFactory) {
   S3Processor::onSchedule(context, sessionFactory);
 
-  context->getProperty(RequesterPays.getName(), requester_pays_);
+  context->getProperty(RequesterPays, requester_pays_);
   logger_->log_debug("FetchS3Object: RequesterPays [%s]", requester_pays_ ? "true" : "false");
 }
 
@@ -112,5 +113,7 @@ void FetchS3Object::onTrigger(const std::shared_ptr<core::ProcessContext> &conte
     session->transfer(flow_file, Failure);
   }
 }
+
+REGISTER_RESOURCE(FetchS3Object, Processor);
 
 }  // namespace org::apache::nifi::minifi::aws::processors

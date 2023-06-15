@@ -1,6 +1,4 @@
 /**
- * ExecuteJavaClass class declaration
- *
  * Licensed to the Apache Software Foundation (ASF) under one or more
  * contributor license agreements.  See the NOTICE file distributed with
  * this work for additional information regarding copyright ownership.
@@ -24,10 +22,11 @@
 #include <vector>
 
 #include "FlowFileRecord.h"
+#include "RelationshipDefinition.h"
 #include "core/Processor.h"
 #include "core/ProcessSession.h"
 #include "core/Core.h"
-#include "core/Property.h"
+#include "core/PropertyDefinitionBuilder.h"
 #include "concurrentqueue.h"
 #include "core/logging/LoggerConfiguration.h"
 #include "jvm/JavaControllerService.h"
@@ -39,6 +38,7 @@
 #include "jvm/JniControllerServiceLookup.h"
 #include "jvm/JniInitializationContext.h"
 #include "ClassRegistrar.h"
+
 namespace org::apache::nifi::minifi::jni::processors {
 
 /**
@@ -51,14 +51,24 @@ class ExecuteJavaProcessor : public core::Processor {
   explicit ExecuteJavaProcessor(std::string name, const utils::Identifier& uuid = {})
       : Processor(std::move(name), uuid) {
   }
-  virtual ~ExecuteJavaProcessor();
+  ~ExecuteJavaProcessor() override;
 
-  EXTENSIONAPI static constexpr const char* Description = "ExecuteJavaClass runs NiFi processors given a provided system path ";
-  static core::Property JVMControllerService;
-  static core::Property NiFiProcessor;
-  static auto properties() { return std::array{JVMControllerService, NiFiProcessor}; }
-  static core::Relationship Success;
-  static auto relationships() { return std::array{Success}; }
+  EXTENSIONAPI static constexpr const char* Description = "ExecuteJavaClass runs NiFi processors given a provided system path";
+
+  EXTENSIONAPI static constexpr auto JVMControllerService = core::PropertyDefinitionBuilder<>::createProperty("JVM Controller Service")
+      .withDescription("Name of controller service defined within this flow")
+      .isRequired(false)
+      .build();
+
+  EXTENSIONAPI static constexpr auto NiFiProcessor = core::PropertyDefinitionBuilder<>::createProperty("NiFi Processor")
+      .withDescription("Name of NiFi processor to load and run")
+      .isRequired(true)
+      .build();
+  EXTENSIONAPI static constexpr auto Properties = std::array<core::PropertyReference, 2>{JVMControllerService, NiFiProcessor};
+
+  EXTENSIONAPI static constexpr auto Success = core::RelationshipDefinition{"success", "All files are routed to success"};
+  EXTENSIONAPI static constexpr auto Relationships = std::array{Success};
+
   EXTENSIONAPI static constexpr bool SupportsDynamicProperties = true;
   EXTENSIONAPI static constexpr bool SupportsDynamicRelationships = false;
   EXTENSIONAPI static constexpr core::annotation::Input InputRequirement = core::annotation::Input::INPUT_ALLOWED;

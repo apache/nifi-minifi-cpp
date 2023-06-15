@@ -24,6 +24,8 @@
 #include <vector>
 
 #include "S3ClientRequestSender.h"
+#include "range/v3/algorithm/find.hpp"
+#include "utils/ArrayUtils.h"
 #include "utils/StringUtils.h"
 #include "utils/file/FileUtils.h"
 #include "utils/gsl.h"
@@ -44,11 +46,13 @@ S3Wrapper::S3Wrapper(std::unique_ptr<S3RequestSender>&& request_sender) : reques
 }
 
 void S3Wrapper::setCannedAcl(Aws::S3::Model::PutObjectRequest& request, const std::string& canned_acl) const {
-  if (canned_acl.empty() || CANNED_ACL_MAP.find(canned_acl) == CANNED_ACL_MAP.end())
-    return;
+  if (canned_acl.empty()) return;
+
+  const auto it = ranges::find(CANNED_ACL_MAP, canned_acl, [](const auto& kv) { return kv.first; });
+  if (it == CANNED_ACL_MAP.end()) return;
 
   logger_->log_debug("Setting AWS canned ACL [%s]", canned_acl);
-  request.SetACL(CANNED_ACL_MAP.at(canned_acl));
+  request.SetACL(it->second);
 }
 
 Expiration S3Wrapper::getExpiration(const std::string& expiration) {
@@ -65,12 +69,9 @@ std::string S3Wrapper::getEncryptionString(Aws::S3::Model::ServerSideEncryption 
     return "";
   }
 
-  auto it = std::find_if(SERVER_SIDE_ENCRYPTION_MAP.begin(), SERVER_SIDE_ENCRYPTION_MAP.end(),
-    [&](const std::pair<std::string, const Aws::S3::Model::ServerSideEncryption>& pair) {
-      return pair.second == encryption;
-    });
+  const auto it = ranges::find(SERVER_SIDE_ENCRYPTION_MAP, encryption, [](const auto& kv) { return kv.second; });
   if (it != SERVER_SIDE_ENCRYPTION_MAP.end()) {
-    return it->first;
+    return std::string{it->first};
   }
   return "";
 }
@@ -79,8 +80,8 @@ std::optional<PutObjectResult> S3Wrapper::putObject(const PutObjectRequestParame
   Aws::S3::Model::PutObjectRequest request;
   request.SetBucket(put_object_params.bucket);
   request.SetKey(put_object_params.object_key);
-  request.SetStorageClass(STORAGE_CLASS_MAP.at(put_object_params.storage_class));
-  request.SetServerSideEncryption(SERVER_SIDE_ENCRYPTION_MAP.at(put_object_params.server_side_encryption));
+  request.SetStorageClass(minifi::utils::at(STORAGE_CLASS_MAP, put_object_params.storage_class));
+  request.SetServerSideEncryption(minifi::utils::at(SERVER_SIDE_ENCRYPTION_MAP, put_object_params.server_side_encryption));
   request.SetContentType(put_object_params.content_type);
   request.SetMetadata(put_object_params.user_metadata_map);
   request.SetBody(data_stream);
@@ -159,7 +160,7 @@ void S3Wrapper::addListResults(const Aws::Vector<Aws::S3::Model::ObjectVersion>&
     attributes.is_latest = version.GetIsLatest();
     attributes.last_modified = version.GetLastModified().UnderlyingTimestamp();
     attributes.length = version.GetSize();
-    attributes.store_class = VERSION_STORAGE_CLASS_MAP.at(version.GetStorageClass());
+    attributes.store_class = minifi::utils::at(VERSION_STORAGE_CLASS_MAP, version.GetStorageClass());
     attributes.version = version.GetVersionId();
     listed_objects.push_back(attributes);
   }
@@ -178,7 +179,7 @@ void S3Wrapper::addListResults(const Aws::Vector<Aws::S3::Model::Object>& conten
     attributes.is_latest = true;
     attributes.last_modified = object.GetLastModified().UnderlyingTimestamp();
     attributes.length = object.GetSize();
-    attributes.store_class = OBJECT_STORAGE_CLASS_MAP.at(object.GetStorageClass());
+    attributes.store_class = minifi::utils::at(OBJECT_STORAGE_CLASS_MAP, object.GetStorageClass());
     listed_objects.push_back(attributes);
   }
 }

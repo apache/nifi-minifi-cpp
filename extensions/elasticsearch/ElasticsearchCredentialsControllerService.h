@@ -22,8 +22,10 @@
 #include <utility>
 #include <memory>
 
-#include "core/controller/ControllerService.h"
 #include "client/HTTPClient.h"
+#include "core/controller/ControllerService.h"
+#include "core/PropertyDefinition.h"
+#include "core/PropertyDefinitionBuilder.h"
 #include "utils/Enum.h"
 
 namespace org::apache::nifi::minifi::extensions::elasticsearch {
@@ -32,17 +34,23 @@ class ElasticsearchCredentialsControllerService : public core::controller::Contr
  public:
   EXTENSIONAPI static constexpr const char* Description = "Elasticsearch/Opensearch Credentials Controller Service";
 
-  EXTENSIONAPI static const core::Property Username;
-  EXTENSIONAPI static const core::Property Password;
-  EXTENSIONAPI static const core::Property ApiKey;
-
-  static auto properties() {
-    return std::array{
+  EXTENSIONAPI static constexpr auto Username = core::PropertyDefinitionBuilder<>::createProperty("Username")
+      .withDescription("The username for basic authentication")
+      .supportsExpressionLanguage(true)
+      .build();
+  EXTENSIONAPI static constexpr auto Password = core::PropertyDefinitionBuilder<>::createProperty("Password")
+      .withDescription("The password for basic authentication")
+      .supportsExpressionLanguage(true)
+      .build();
+  EXTENSIONAPI static constexpr auto ApiKey = core::PropertyDefinitionBuilder<>::createProperty("API Key")
+      .withDescription("The API Key to use")
+      .build();
+  EXTENSIONAPI static constexpr auto Properties = std::array<core::PropertyReference, 3>{
         Username,
         Password,
         ApiKey
-    };
-  }
+  };
+
 
   EXTENSIONAPI static constexpr bool SupportsDynamicProperties = false;
   ADD_COMMON_VIRTUAL_FUNCTIONS_FOR_CONTROLLER_SERVICES

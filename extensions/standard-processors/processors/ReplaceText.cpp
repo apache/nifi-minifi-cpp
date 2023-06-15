@@ -20,7 +20,6 @@
 #include <algorithm>
 #include <vector>
 
-#include "core/PropertyBuilder.h"
 #include "core/Resource.h"
 #include "core/TypedValues.h"
 #include "core/logging/LoggerConfiguration.h"
@@ -28,61 +27,14 @@
 
 namespace org::apache::nifi::minifi::processors {
 
-const core::Property ReplaceText::EvaluationMode = core::PropertyBuilder::createProperty("Evaluation Mode")
-    ->withDescription("Run the 'Replacement Strategy' against each line separately (Line-by-Line) or "
-                      "against the whole input treated as a single string (Entire Text).")
-    ->isRequired(true)
-    ->withDefaultValue<std::string>(toString(EvaluationModeType::LINE_BY_LINE))
-    ->withAllowableValues(EvaluationModeType::values())
-    ->build();
-
-const core::Property ReplaceText::LineByLineEvaluationMode = core::PropertyBuilder::createProperty("Line-by-Line Evaluation Mode")
-    ->withDescription("Run the 'Replacement Strategy' against each line separately (Line-by-Line) for All lines in the FlowFile, "
-                      "First Line (Header) only, Last Line (Footer) only, all Except the First Line (Header) or all Except the Last Line (Footer).")
-    ->isRequired(false)
-    ->withDefaultValue<std::string>(toString(LineByLineEvaluationModeType::ALL))
-    ->withAllowableValues(LineByLineEvaluationModeType::values())
-    ->build();
-
-const core::Property ReplaceText::ReplacementStrategy = core::PropertyBuilder::createProperty("Replacement Strategy")
-    ->withDescription("The strategy for how and what to replace within the FlowFile's text content. "
-                      "Substitute Variables replaces ${attribute_name} placeholders with the corresponding attribute's value "
-                      "(if an attribute is not found, the placeholder is kept as it was).")
-    ->isRequired(true)
-    ->withDefaultValue(toString(ReplacementStrategyType::REGEX_REPLACE))
-    ->withAllowableValues(ReplacementStrategyType::values())
-    ->build();
-
-const core::Property ReplaceText::SearchValue = core::PropertyBuilder::createProperty("Search Value")
-    ->withDescription("The Search Value to search for in the FlowFile content. "
-                      "Only used for 'Literal Replace' and 'Regex Replace' matching strategies. "
-                      "Supports expression language except in Regex Replace mode.")
-    ->isRequired(false)
-    ->supportsExpressionLanguage(true)
-    ->build();
-
-const core::Property ReplaceText::ReplacementValue = core::PropertyBuilder::createProperty("Replacement Value")
-    ->withDescription("The value to insert using the 'Replacement Strategy'. "
-                      "Using 'Regex Replace' back-references to Regular Expression capturing groups are supported: "
-                      "$& is the entire matched substring, $1, $2, ... are the matched capturing groups. Use $$1 for a literal $1. "
-                      "Back-references to non-existent capturing groups will be replaced by empty strings. "
-                      "Supports expression language except in Regex Replace mode.")
-    ->isRequired(true)
-    ->supportsExpressionLanguage(true)
-    ->build();
-
-const core::Relationship ReplaceText::Success("success", "FlowFiles that have been successfully processed are routed to this relationship. "
-                                                         "This includes both FlowFiles that had text replaced and those that did not.");
-const core::Relationship ReplaceText::Failure("failure", "FlowFiles that could not be updated are routed to this relationship.");
-
 ReplaceText::ReplaceText(std::string name, const utils::Identifier& uuid)
   : core::Processor(std::move(name), uuid),
     logger_(core::logging::LoggerFactory<ReplaceText>::getLogger(uuid)) {
 }
 
 void ReplaceText::initialize() {
-  setSupportedProperties(properties());
-  setSupportedRelationships(relationships());
+  setSupportedProperties(Properties);
+  setSupportedRelationships(Relationships);
 }
 
 void ReplaceText::onSchedule(const std::shared_ptr<core::ProcessContext>& context, const std::shared_ptr<core::ProcessSessionFactory>&) {
@@ -90,17 +42,17 @@ void ReplaceText::onSchedule(const std::shared_ptr<core::ProcessContext>& contex
 
   const std::optional<std::string> evaluation_mode = context->getProperty(EvaluationMode);
   evaluation_mode_ = EvaluationModeType::parse(evaluation_mode.value().c_str());
-  logger_->log_debug("the %s property is set to %s", EvaluationMode.getName(), evaluation_mode_.toString());
+  logger_->log_debug("the %s property is set to %s", std::string(EvaluationMode.name), evaluation_mode_.toString());
 
   const std::optional<std::string> line_by_line_evaluation_mode = context->getProperty(LineByLineEvaluationMode);
   if (line_by_line_evaluation_mode) {
     line_by_line_evaluation_mode_ = LineByLineEvaluationModeType::parse(line_by_line_evaluation_mode->c_str());
-    logger_->log_debug("the %s property is set to %s", LineByLineEvaluationMode.getName(), line_by_line_evaluation_mode_.toString());
+    logger_->log_debug("the %s property is set to %s", std::string(LineByLineEvaluationMode.name), line_by_line_evaluation_mode_.toString());
   }
 
   const std::optional<std::string> replacement_strategy = context->getProperty(ReplacementStrategy);
   replacement_strategy_ = ReplacementStrategyType::parse(replacement_strategy.value().c_str());
-  logger_->log_debug("the %s property is set to %s", ReplacementStrategy.getName(), replacement_strategy_.toString());
+  logger_->log_debug("the %s property is set to %s", std::string(ReplacementStrategy.name), replacement_strategy_.toString());
 }
 
 void ReplaceText::onTrigger(const std::shared_ptr<core::ProcessContext>& context, const std::shared_ptr<core::ProcessSession>& session) {
@@ -125,7 +77,7 @@ void ReplaceText::onTrigger(const std::shared_ptr<core::ProcessContext>& context
       return;
   }
 
-  throw Exception{PROCESSOR_EXCEPTION, utils::StringUtils::join_pack("Unsupported ", EvaluationMode.getName(), ": ", evaluation_mode_.toString())};
+  throw Exception{PROCESSOR_EXCEPTION, utils::StringUtils::join_pack("Unsupported ", EvaluationMode.name, ": ", evaluation_mode_.toString())};
 }
 
 ReplaceText::Parameters ReplaceText::readParameters(const std::shared_ptr<core::ProcessContext>& context, const std::shared_ptr<core::FlowFile>& flow_file) const {
@@ -133,30 +85,30 @@ ReplaceText::Parameters ReplaceText::readParameters(const std::shared_ptr<core::
 
   bool found_search_value;
   if (replacement_strategy_ == ReplacementStrategyType::REGEX_REPLACE) {
-    found_search_value = context->getProperty(SearchValue.getName(), parameters.search_value_);
+    found_search_value = context->getProperty(SearchValue, parameters.search_value_);
   } else {
     found_search_value = context->getProperty(SearchValue, parameters.search_value_, flow_file);
   }
   if (found_search_value) {
-    logger_->log_debug("the %s property is set to %s", SearchValue.getName(), parameters.search_value_);
+    logger_->log_debug("the %s property is set to %s", std::string{SearchValue.name}, parameters.search_value_);
     if (replacement_strategy_ == ReplacementStrategyType::REGEX_REPLACE) {
       parameters.search_regex_ = std::regex{parameters.search_value_};
     }
   }
   if ((replacement_strategy_ == ReplacementStrategyType::REGEX_REPLACE || replacement_strategy_ == ReplacementStrategyType::LITERAL_REPLACE) && parameters.search_value_.empty()) {
-    throw Exception{PROCESSOR_EXCEPTION, utils::StringUtils::join_pack("Error: missing or empty ", SearchValue.getName(), " property")};
+    throw Exception{PROCESSOR_EXCEPTION, utils::StringUtils::join_pack("Error: missing or empty ", SearchValue.name, " property")};
   }
 
   bool found_replacement_value;
   if (replacement_strategy_ == ReplacementStrategyType::REGEX_REPLACE) {
-    found_replacement_value = context->getProperty(ReplacementValue.getName(), parameters.replacement_value_);
+    found_replacement_value = context->getProperty(ReplacementValue, parameters.replacement_value_);
   } else {
     found_replacement_value = context->getProperty(ReplacementValue, parameters.replacement_value_, flow_file);
   }
   if (found_replacement_value) {
-    logger_->log_debug("the %s property is set to %s", ReplacementValue.getName(), parameters.replacement_value_);
+    logger_->log_debug("the %s property is set to %s", std::string(ReplacementValue.name), parameters.replacement_value_);
   } else {
-    throw Exception{PROCESSOR_EXCEPTION, utils::StringUtils::join_pack("Missing required property: ", ReplacementValue.getName())};
+    throw Exception{PROCESSOR_EXCEPTION, utils::StringUtils::join_pack("Missing required property: ", ReplacementValue.name)};
   }
 
   if (evaluation_mode_ == EvaluationModeType::LINE_BY_LINE) {
@@ -199,7 +151,7 @@ void ReplaceText::replaceTextLineByLine(const std::shared_ptr<core::FlowFile>& f
         case LineByLineEvaluationModeType::EXCEPT_LAST_LINE:
           return is_last_line ? input_line: applyReplacements(input_line, flow_file, parameters);
       }
-      throw Exception{PROCESSOR_EXCEPTION, utils::StringUtils::join_pack("Unsupported ", LineByLineEvaluationMode.getName(), ": ", line_by_line_evaluation_mode_.toString())};
+      throw Exception{PROCESSOR_EXCEPTION, utils::StringUtils::join_pack("Unsupported ", LineByLineEvaluationMode.name, ": ", line_by_line_evaluation_mode_.toString())};
     }};
     session->readWrite(flow_file, std::move(read_write_callback));
     session->transfer(flow_file, Success);
@@ -232,7 +184,7 @@ std::string ReplaceText::applyReplacements(const std::string& input, const std::
       return applySubstituteVariables(chomped_input, flow_file) + line_ending;
   }
 
-  throw Exception{PROCESSOR_EXCEPTION, utils::StringUtils::join_pack("Unsupported ", ReplacementStrategy.getName(), ": ", replacement_strategy_.toString())};
+  throw Exception{PROCESSOR_EXCEPTION, utils::StringUtils::join_pack("Unsupported ", ReplacementStrategy.name, ": ", replacement_strategy_.toString())};
 }
 
 std::string ReplaceText::applyLiteralReplace(const std::string& input, const Parameters& parameters) {

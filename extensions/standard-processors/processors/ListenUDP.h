@@ -20,7 +20,12 @@
 #include <string>
 
 #include "NetworkListenerProcessor.h"
+#include "OutputAttributeDefinition.h"
 #include "core/logging/LoggerConfiguration.h"
+#include "core/PropertyDefinition.h"
+#include "core/PropertyDefinitionBuilder.h"
+#include "core/PropertyType.h"
+#include "core/RelationshipDefinition.h"
 
 namespace org::apache::nifi::minifi::processors {
 
@@ -32,31 +37,45 @@ class ListenUDP : public NetworkListenerProcessor {
 
   EXTENSIONAPI static constexpr const char* Description = "Listens for incoming UDP datagrams. For each datagram the processor produces a single FlowFile.";
 
-  EXTENSIONAPI static const core::Property Port;
-  EXTENSIONAPI static const core::Property MaxBatchSize;
-  EXTENSIONAPI static const core::Property MaxQueueSize;
-  static auto properties() {
-    return std::array{
+  EXTENSIONAPI static constexpr auto Port = core::PropertyDefinitionBuilder<>::createProperty("Listening Port")
+      .withDescription("The port to listen on for communication.")
+      .withPropertyType(core::StandardPropertyTypes::LISTEN_PORT_TYPE)
+      .isRequired(true)
+      .build();
+  EXTENSIONAPI static constexpr auto MaxBatchSize = core::PropertyDefinitionBuilder<>::createProperty("Max Batch Size")
+      .withDescription("The maximum number of messages to process at a time.")
+      .withPropertyType(core::StandardPropertyTypes::UNSIGNED_LONG_TYPE)
+      .withDefaultValue("500")
+      .isRequired(true)
+      .build();
+  EXTENSIONAPI static constexpr auto MaxQueueSize = core::PropertyDefinitionBuilder<>::createProperty("Max Size of Message Queue")
+      .withDescription("Maximum number of messages allowed to be buffered before processing them when the processor is triggered. "
+          "If the buffer is full, the message is ignored. If set to zero the buffer is unlimited.")
+      .withPropertyType(core::StandardPropertyTypes::UNSIGNED_LONG_TYPE)
+      .withDefaultValue("10000")
+      .isRequired(true)
+      .build();
+  EXTENSIONAPI static constexpr auto Properties = std::array<core::PropertyReference, 3>{
       Port,
       MaxBatchSize,
       MaxQueueSize,
-    };
-  }
+  };
 
-  EXTENSIONAPI static const core::Relationship Success;
-  static auto relationships() { return std::array{Success}; }
 
-  EXTENSIONAPI static const core::OutputAttribute PortOutputAttribute;
-  EXTENSIONAPI static const core::OutputAttribute Sender;
-  static auto outputAttributes() { return std::array{PortOutputAttribute, Sender}; }
+  EXTENSIONAPI static constexpr auto Success = core::RelationshipDefinition{"success", "Messages received successfully will be sent out this relationship."};
+  EXTENSIONAPI static constexpr auto Relationships = std::array{Success};
+
+  EXTENSIONAPI static constexpr auto PortOutputAttribute = core::OutputAttributeDefinition<0>{"udp.port", {}, "The sending port the messages were received."};
+  EXTENSIONAPI static constexpr auto Sender = core::OutputAttributeDefinition<0>{"udp.sender", {}, "The sending host of the messages."};
+  EXTENSIONAPI static constexpr auto OutputAttributes = std::array<core::OutputAttributeReference, 2>{PortOutputAttribute, Sender};
 
   void initialize() override;
   void onSchedule(const std::shared_ptr<core::ProcessContext>& context, const std::shared_ptr<core::ProcessSessionFactory>& sessionFactory) override;
 
  protected:
-  const core::Property& getMaxBatchSizeProperty() override;
-  const core::Property& getMaxQueueSizeProperty() override;
-  const core::Property& getPortProperty() override;
+  core::PropertyReference getMaxBatchSizeProperty() override;
+  core::PropertyReference getMaxQueueSizeProperty() override;
+  core::PropertyReference getPortProperty() override;
 
  private:
   void transferAsFlowFile(const utils::net::Message& message, core::ProcessSession& session) override;

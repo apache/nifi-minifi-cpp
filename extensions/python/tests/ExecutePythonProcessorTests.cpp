@@ -113,7 +113,7 @@ class SimplePythonFlowFileTransferTest : public ExecutePythonProcessorTestBase {
     const auto output_dir = testController_->createTempDirectory();
 
     auto executePythonProcessor = plan_->addProcessor("ExecutePythonProcessor", "executePythonProcessor");
-    plan_->setProperty(executePythonProcessor, "Script File", getScriptFullPath("stateful_processor.py").string());
+    plan_->setProperty(executePythonProcessor, minifi::extensions::python::processors::ExecutePythonProcessor::ScriptFile, getScriptFullPath("stateful_processor.py").string());
 
     addPutFileProcessorToPlan(core::Relationship("success", "description"), output_dir);
     plan_->runNextProcessor();  // ExecutePythonProcessor
@@ -132,25 +132,25 @@ class SimplePythonFlowFileTransferTest : public ExecutePythonProcessorTestBase {
 
   std::shared_ptr<core::Processor> addGetFileProcessorToPlan(const std::filesystem::path& dir_path) {
     std::shared_ptr<core::Processor> getfile = plan_->addProcessor("GetFile", "getfileCreate2");
-    plan_->setProperty(getfile, org::apache::nifi::minifi::processors::GetFile::Directory.getName(), dir_path.string());
-    plan_->setProperty(getfile, org::apache::nifi::minifi::processors::GetFile::KeepSourceFile.getName(), "true");
+    plan_->setProperty(getfile, minifi::processors::GetFile::Directory, dir_path.string());
+    plan_->setProperty(getfile, minifi::processors::GetFile::KeepSourceFile, "true");
     return getfile;
   }
 
   std::shared_ptr<core::Processor> addExecutePythonProcessorToPlan(const std::filesystem::path& used_as_script_file, const std::string& used_as_script_body) {
     auto executePythonProcessor = plan_->addProcessor("ExecutePythonProcessor", "executePythonProcessor", core::Relationship("success", "description"), true);
     if (!used_as_script_file.empty()) {
-      plan_->setProperty(executePythonProcessor, "Script File", getScriptFullPath(used_as_script_file).string());
+      plan_->setProperty(executePythonProcessor, minifi::extensions::python::processors::ExecutePythonProcessor::ScriptFile, getScriptFullPath(used_as_script_file).string());
     }
     if (!used_as_script_body.empty()) {
-      plan_->setProperty(executePythonProcessor, "Script Body", getFileContent(getScriptFullPath(used_as_script_body)));
+      plan_->setProperty(executePythonProcessor, minifi::extensions::python::processors::ExecutePythonProcessor::ScriptBody, getFileContent(getScriptFullPath(used_as_script_body)));
     }
     return executePythonProcessor;
   }
 
   std::shared_ptr<core::Processor> addPutFileProcessorToPlan(const core::Relationship& execute_python_outbound_connection, const std::filesystem::path& dir_path) {
     std::shared_ptr<core::Processor> putfile = plan_->addProcessor("PutFile", "putfile", execute_python_outbound_connection, true);
-    plan_->setProperty(putfile, org::apache::nifi::minifi::processors::PutFile::Directory.getName(), dir_path.string());
+    plan_->setProperty(putfile, minifi::processors::PutFile::Directory, dir_path.string());
     return putfile;
   }
 
@@ -164,20 +164,20 @@ class SimplePythonFlowFileTransferTest : public ExecutePythonProcessorTestBase {
 
     auto execute_python_processor = addExecutePythonProcessorToPlan(reloaded_script_dir / "reloaded_script.py", "");
     if (reload_on_script_change) {
-      plan_->setProperty(execute_python_processor, "Reload on Script Change", *reload_on_script_change ? "true" : "false");
+      plan_->setProperty(execute_python_processor, minifi::extensions::python::processors::ExecutePythonProcessor::ReloadOnScriptChange, *reload_on_script_change ? "true" : "false");
     }
 
     auto success_putfile = plan_->addProcessor("PutFile", "SuccessPutFile", { {"success", "d"} }, false);
     plan_->addConnection(execute_python_processor, {"success", "d"}, success_putfile);
     success_putfile->setAutoTerminatedRelationships(std::array{core::Relationship{"success", "d"}, core::Relationship{"failure", "d"}});
     auto success_output_dir = testController_->createTempDirectory();
-    plan_->setProperty(success_putfile, org::apache::nifi::minifi::processors::PutFile::Directory.getName(), success_output_dir.string());
+    plan_->setProperty(success_putfile, minifi::processors::PutFile::Directory, success_output_dir.string());
 
     auto failure_putfile = plan_->addProcessor("PutFile", "FailurePutFile", { {"success", "d"} }, false);
     plan_->addConnection(execute_python_processor, {"failure", "d"}, failure_putfile);
     failure_putfile->setAutoTerminatedRelationships(std::array{core::Relationship{"success", "d"}, core::Relationship{"failure", "d"}});
     auto failure_output_dir = testController_->createTempDirectory();
-    plan_->setProperty(failure_putfile, org::apache::nifi::minifi::processors::PutFile::Directory.getName(), failure_output_dir.string());
+    plan_->setProperty(failure_putfile, minifi::processors::PutFile::Directory, failure_output_dir.string());
 
     testController_->runSession(plan_);
     plan_->reset();
@@ -283,13 +283,14 @@ TEST_CASE_METHOD(SimplePythonFlowFileTransferTest, "Test module load of processo
   addGetFileProcessorToPlan(input_dir);
 
   auto execute_python_processor = addExecutePythonProcessorToPlan("foo_bar_processor.py", "");
-  plan_->setProperty(execute_python_processor, "Module Directory", getScriptFullPath(std::filesystem::path("foo_modules")/"foo.py").string() + "," + getScriptFullPath("bar_modules").string());
+  plan_->setProperty(execute_python_processor, minifi::extensions::python::processors::ExecutePythonProcessor::ModuleDirectory,
+      getScriptFullPath(std::filesystem::path("foo_modules")/"foo.py").string() + "," + getScriptFullPath("bar_modules").string());
 
   auto success_putfile = plan_->addProcessor("PutFile", "SuccessPutFile", { {"success", "d"} }, false);
   plan_->addConnection(execute_python_processor, {"success", "d"}, success_putfile);
   success_putfile->setAutoTerminatedRelationships(std::array{core::Relationship{"success", "d"}, core::Relationship{"failure", "d"}});
   auto success_output_dir = testController_->createTempDirectory();
-  plan_->setProperty(success_putfile, org::apache::nifi::minifi::processors::PutFile::Directory.getName(), success_output_dir.string());
+  plan_->setProperty(success_putfile, minifi::processors::PutFile::Directory, success_output_dir.string());
 
   testController_->runSession(plan_);
   plan_->reset();

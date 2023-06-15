@@ -53,8 +53,8 @@ class AttributesToJSONTestFixture {
     logattribute_ = plan_->addProcessor("LogAttribute", "LogAttribute", core::Relationship("success", "description"), true);
     putfile_ = plan_->addProcessor("PutFile", "PutFile", core::Relationship("success", "description"), true);
 
-    plan_->setProperty(getfile_, org::apache::nifi::minifi::processors::GetFile::Directory.getName(), dir_.string());
-    plan_->setProperty(putfile_, org::apache::nifi::minifi::processors::PutFile::Directory.getName(), dir_.string());
+    plan_->setProperty(getfile_, org::apache::nifi::minifi::processors::GetFile::Directory, dir_.string());
+    plan_->setProperty(putfile_, org::apache::nifi::minifi::processors::PutFile::Directory, dir_.string());
 
     update_attribute_->setDynamicProperty("my_attribute", "my_value");
     update_attribute_->setDynamicProperty("my_attribute_1", "my_value_1");
@@ -136,7 +136,7 @@ TEST_CASE_METHOD(AttributesToJSONTestFixture, "Move all attributes to a flowfile
 }
 
 TEST_CASE_METHOD(AttributesToJSONTestFixture, "Move selected attributes to a flowfile attribute", "[AttributesToJSONTests]") {
-  plan_->setProperty(attribute_to_json_, org::apache::nifi::minifi::processors::AttributesToJSON::AttributesList.getName(), "my_attribute,non_existent_attribute");
+  plan_->setProperty(attribute_to_json_, org::apache::nifi::minifi::processors::AttributesToJSON::AttributesList, "my_attribute,non_existent_attribute");
   test_controller_.runSession(plan_);
   auto file_contents = getOutputFileContents();
   REQUIRE(file_contents.size() == 1);
@@ -151,7 +151,7 @@ TEST_CASE_METHOD(AttributesToJSONTestFixture, "Move selected attributes to a flo
 
 TEST_CASE_METHOD(AttributesToJSONTestFixture, "Move selected attributes with special characters to a flowfile attribute", "[AttributesToJSONTests]") {
   update_attribute_->setDynamicProperty("special_attribute", "\\\"");
-  plan_->setProperty(attribute_to_json_, org::apache::nifi::minifi::processors::AttributesToJSON::AttributesList.getName(), "special_attribute");
+  plan_->setProperty(attribute_to_json_, org::apache::nifi::minifi::processors::AttributesToJSON::AttributesList, "special_attribute");
   test_controller_.runSession(plan_);
   auto file_contents = getOutputFileContents();
   REQUIRE(file_contents.size() == 1);
@@ -164,8 +164,8 @@ TEST_CASE_METHOD(AttributesToJSONTestFixture, "Move selected attributes with spe
 }
 
 TEST_CASE_METHOD(AttributesToJSONTestFixture, "Non-existent selected attributes shall be written as null in JSON", "[AttributesToJSONTests]") {
-  plan_->setProperty(attribute_to_json_, org::apache::nifi::minifi::processors::AttributesToJSON::AttributesList.getName(), "my_attribute,non_existent_attribute,empty_attribute");
-  plan_->setProperty(attribute_to_json_, org::apache::nifi::minifi::processors::AttributesToJSON::NullValue.getName(), "true");
+  plan_->setProperty(attribute_to_json_, org::apache::nifi::minifi::processors::AttributesToJSON::AttributesList, "my_attribute,non_existent_attribute,empty_attribute");
+  plan_->setProperty(attribute_to_json_, org::apache::nifi::minifi::processors::AttributesToJSON::NullValue, "true");
   test_controller_.runSession(plan_);
   auto file_contents = getOutputFileContents();
   REQUIRE(file_contents.size() == 1);
@@ -180,7 +180,7 @@ TEST_CASE_METHOD(AttributesToJSONTestFixture, "Non-existent selected attributes 
 }
 
 TEST_CASE_METHOD(AttributesToJSONTestFixture, "JSON attributes are written in flowfile", "[AttributesToJSONTests]") {
-  plan_->setProperty(attribute_to_json_, org::apache::nifi::minifi::processors::AttributesToJSON::Destination.getName(), "flowfile-content");
+  plan_->setProperty(attribute_to_json_, org::apache::nifi::minifi::processors::AttributesToJSON::Destination, "flowfile-content");
   test_controller_.runSession(plan_);
 
   const std::unordered_map<std::string, std::optional<std::string>> expected_attributes {
@@ -197,7 +197,7 @@ TEST_CASE_METHOD(AttributesToJSONTestFixture, "JSON attributes are written in fl
 }
 
 TEST_CASE_METHOD(AttributesToJSONTestFixture, "Do not include core attributes in JSON", "[AttributesToJSONTests]") {
-  plan_->setProperty(attribute_to_json_, org::apache::nifi::minifi::processors::AttributesToJSON::IncludeCoreAttributes.getName(), "false");
+  plan_->setProperty(attribute_to_json_, org::apache::nifi::minifi::processors::AttributesToJSON::IncludeCoreAttributes, "false");
   test_controller_.runSession(plan_);
   auto file_contents = getOutputFileContents();
   REQUIRE(file_contents.size() == 1);
@@ -213,7 +213,7 @@ TEST_CASE_METHOD(AttributesToJSONTestFixture, "Do not include core attributes in
 }
 
 TEST_CASE_METHOD(AttributesToJSONTestFixture, "Regex selected attributes are written in JSONAttributes attribute", "[AttributesToJSONTests]") {
-  plan_->setProperty(attribute_to_json_, org::apache::nifi::minifi::processors::AttributesToJSON::AttributesRegularExpression.getName(), "[a-z]+y_attribute");
+  plan_->setProperty(attribute_to_json_, org::apache::nifi::minifi::processors::AttributesToJSON::AttributesRegularExpression, "[a-z]+y_attribute");
   test_controller_.runSession(plan_);
   auto file_contents = getOutputFileContents();
   REQUIRE(file_contents.size() == 1);
@@ -227,13 +227,13 @@ TEST_CASE_METHOD(AttributesToJSONTestFixture, "Regex selected attributes are wri
 }
 
 TEST_CASE_METHOD(AttributesToJSONTestFixture, "Invalid destination is set", "[AttributesToJSONTests]") {
-  plan_->setProperty(attribute_to_json_, org::apache::nifi::minifi::processors::AttributesToJSON::Destination.getName(), "invalid-destination");
+  plan_->setProperty(attribute_to_json_, org::apache::nifi::minifi::processors::AttributesToJSON::Destination, "invalid-destination");
   REQUIRE_THROWS_AS(test_controller_.runSession(plan_), minifi::Exception);
 }
 
 TEST_CASE_METHOD(AttributesToJSONTestFixture, "Attributes from attributes list and regex selected attributes combined are written in JSONAttributes attribute", "[AttributesToJSONTests]") {
-  plan_->setProperty(attribute_to_json_, org::apache::nifi::minifi::processors::AttributesToJSON::AttributesRegularExpression.getName(), "[a-z]+y_attribute");
-  plan_->setProperty(attribute_to_json_, org::apache::nifi::minifi::processors::AttributesToJSON::AttributesList.getName(), "filename, path,my_attribute");
+  plan_->setProperty(attribute_to_json_, org::apache::nifi::minifi::processors::AttributesToJSON::AttributesRegularExpression, "[a-z]+y_attribute");
+  plan_->setProperty(attribute_to_json_, org::apache::nifi::minifi::processors::AttributesToJSON::AttributesList, "filename, path,my_attribute");
   test_controller_.runSession(plan_);
   auto file_contents = getOutputFileContents();
   REQUIRE(file_contents.size() == 1);
@@ -249,8 +249,8 @@ TEST_CASE_METHOD(AttributesToJSONTestFixture, "Attributes from attributes list a
 }
 
 TEST_CASE_METHOD(AttributesToJSONTestFixture, "Core attributes are written if they match regex", "[AttributesToJSONTests]") {
-  plan_->setProperty(attribute_to_json_, org::apache::nifi::minifi::processors::AttributesToJSON::AttributesRegularExpression.getName(), "file.*");
-  plan_->setProperty(attribute_to_json_, org::apache::nifi::minifi::processors::AttributesToJSON::IncludeCoreAttributes.getName(), "false");
+  plan_->setProperty(attribute_to_json_, org::apache::nifi::minifi::processors::AttributesToJSON::AttributesRegularExpression, "file.*");
+  plan_->setProperty(attribute_to_json_, org::apache::nifi::minifi::processors::AttributesToJSON::IncludeCoreAttributes, "false");
   test_controller_.runSession(plan_);
   auto file_contents = getOutputFileContents();
   REQUIRE(file_contents.size() == 1);
@@ -263,8 +263,8 @@ TEST_CASE_METHOD(AttributesToJSONTestFixture, "Core attributes are written if th
 }
 
 TEST_CASE_METHOD(AttributesToJSONTestFixture, "Core attributes are written if they match attributes list", "[AttributesToJSONTests]") {
-  plan_->setProperty(attribute_to_json_, org::apache::nifi::minifi::processors::AttributesToJSON::AttributesList.getName(), "filename, path,my_attribute");
-  plan_->setProperty(attribute_to_json_, org::apache::nifi::minifi::processors::AttributesToJSON::IncludeCoreAttributes.getName(), "false");
+  plan_->setProperty(attribute_to_json_, org::apache::nifi::minifi::processors::AttributesToJSON::AttributesList, "filename, path,my_attribute");
+  plan_->setProperty(attribute_to_json_, org::apache::nifi::minifi::processors::AttributesToJSON::IncludeCoreAttributes, "false");
   test_controller_.runSession(plan_);
   auto file_contents = getOutputFileContents();
   REQUIRE(file_contents.size() == 1);
@@ -279,8 +279,8 @@ TEST_CASE_METHOD(AttributesToJSONTestFixture, "Core attributes are written if th
 }
 
 TEST_CASE_METHOD(AttributesToJSONTestFixture, "No matching attribute in list nor by regex", "[AttributesToJSONTests]") {
-  plan_->setProperty(attribute_to_json_, org::apache::nifi::minifi::processors::AttributesToJSON::AttributesRegularExpression.getName(), "non-exist.*");
-  plan_->setProperty(attribute_to_json_, org::apache::nifi::minifi::processors::AttributesToJSON::IncludeCoreAttributes.getName(), "false");
+  plan_->setProperty(attribute_to_json_, org::apache::nifi::minifi::processors::AttributesToJSON::AttributesRegularExpression, "non-exist.*");
+  plan_->setProperty(attribute_to_json_, org::apache::nifi::minifi::processors::AttributesToJSON::IncludeCoreAttributes, "false");
   test_controller_.runSession(plan_);
   auto file_contents = getOutputFileContents();
   REQUIRE(file_contents.size() == 1);

@@ -118,31 +118,31 @@ class RetryFlowFileTest {
     log_attribute->setAutoTerminatedRelationships(std::array{success});
 
     // Properties
-    if (retry_attribute_value_before_processing) { plan_->setProperty(update, retry_attr_name_on_flowfile.value_or("flowfile.retries"), retry_attribute_value_before_processing.value(), true); }
+    if (retry_attribute_value_before_processing) { plan_->setDynamicProperty(update, retry_attr_name_on_flowfile.value_or("flowfile.retries"), retry_attribute_value_before_processing.value()); }
 
     if (processor_uuid_matches_flowfile) {
       if (processor_uuid_matches_flowfile.value()) {
-        plan_->setProperty(update, retry_attr_name_on_flowfile.value_or("flowfile.retries") + ".uuid", retryflowfile->getUUIDStr(), true);
+        plan_->setDynamicProperty(update, retry_attr_name_on_flowfile.value_or("flowfile.retries") + ".uuid", retryflowfile->getUUIDStr().view());
       } else {
         utils::Identifier non_matching_uuid = utils::IdGenerator::getIdGenerator()->generate();
-        plan_->setProperty(update, retry_attr_name_on_flowfile.value_or("flowfile.retries") + ".uuid", non_matching_uuid.to_string(), true);
+        plan_->setDynamicProperty(update, retry_attr_name_on_flowfile.value_or("flowfile.retries") + ".uuid", non_matching_uuid.to_string().view());
       }
     }
 
-    if (maximum_retries)                 { plan_->setProperty(retryflowfile, RetryFlowFile::MaximumRetries.getName(), std::to_string(maximum_retries.value())); }
-    if (penalize_retries)                { plan_->setProperty(retryflowfile, RetryFlowFile::PenalizeRetries.getName(), penalize_retries.value() ? "true": "false"); }
-    if (fail_on_non_numerical_overwrite) { plan_->setProperty(retryflowfile, RetryFlowFile::FailOnNonNumericalOverwrite.getName(), fail_on_non_numerical_overwrite.value() ? "true": "false"); }
-    if (reuse_mode)                      { plan_->setProperty(retryflowfile, RetryFlowFile::ReuseMode.getName(), reuse_mode.value()); }
-    plan_->setProperty(retryflowfile, "retries_exceeded_property_key_1", "retries_exceeded_property_value_1", true);
-    plan_->setProperty(retryflowfile, "retries_exceeded_property_key_2", "retries_exceeded_property_value_2", true);
+    if (maximum_retries)                 { plan_->setProperty(retryflowfile, RetryFlowFile::MaximumRetries, std::to_string(maximum_retries.value())); }
+    if (penalize_retries)                { plan_->setProperty(retryflowfile, RetryFlowFile::PenalizeRetries, penalize_retries.value() ? "true": "false"); }
+    if (fail_on_non_numerical_overwrite) { plan_->setProperty(retryflowfile, RetryFlowFile::FailOnNonNumericalOverwrite, fail_on_non_numerical_overwrite.value() ? "true": "false"); }
+    if (reuse_mode)                      { plan_->setProperty(retryflowfile, RetryFlowFile::ReuseMode, reuse_mode.value()); }
+    plan_->setDynamicProperty(retryflowfile, "retries_exceeded_property_key_1", "retries_exceeded_property_value_1");
+    plan_->setDynamicProperty(retryflowfile, "retries_exceeded_property_key_2", "retries_exceeded_property_value_2");
 
     const auto retry_dir            = testController_->createTempDirectory();
     const auto retries_exceeded_dir = testController_->createTempDirectory();
     const auto failure_dir          = testController_->createTempDirectory();
 
-    plan_->setProperty(putfile_on_retry, PutFile::Directory.getName(), retry_dir.string());
-    plan_->setProperty(putfile_on_retries_exceeded, PutFile::Directory.getName(), retries_exceeded_dir.string());
-    plan_->setProperty(putfile_on_failure, PutFile::Directory.getName(), failure_dir.string());
+    plan_->setProperty(putfile_on_retry, PutFile::Directory, retry_dir.string());
+    plan_->setProperty(putfile_on_retries_exceeded, PutFile::Directory, retries_exceeded_dir.string());
+    plan_->setProperty(putfile_on_failure, PutFile::Directory, failure_dir.string());
 
     plan_->runNextProcessor();  // GenerateFlowFile
     plan_->runNextProcessor();  // UpdateAttribute
@@ -152,11 +152,11 @@ class RetryFlowFileTest {
     plan_->runNextProcessor();  // PutFile
     plan_->runNextProcessor();  // LogAttribute
 
-    REQUIRE((RetryFlowFile::Retry.getName() == exp_outbound_relationship.getName() ? 1 : 0) == FileUtils::list_dir_all(retry_dir, logger_).size());
-    REQUIRE((RetryFlowFile::RetriesExceeded.getName() == exp_outbound_relationship.getName() ? 1 : 0) == FileUtils::list_dir_all(retries_exceeded_dir, logger_).size());
-    REQUIRE((RetryFlowFile::Failure.getName() == exp_outbound_relationship.getName() ? 1 : 0) == FileUtils::list_dir_all(failure_dir, logger_).size());
-    REQUIRE((RetryFlowFile::RetriesExceeded.getName() == exp_outbound_relationship.getName()) == logContainsText("key:retries_exceeded_property_key_1 value:retries_exceeded_property_value_1"));
-    REQUIRE((RetryFlowFile::RetriesExceeded.getName() == exp_outbound_relationship.getName()) == logContainsText("key:retries_exceeded_property_key_2 value:retries_exceeded_property_value_2"));
+    REQUIRE((RetryFlowFile::Retry.name == exp_outbound_relationship.getName() ? 1 : 0) == FileUtils::list_dir_all(retry_dir, logger_).size());
+    REQUIRE((RetryFlowFile::RetriesExceeded.name == exp_outbound_relationship.getName() ? 1 : 0) == FileUtils::list_dir_all(retries_exceeded_dir, logger_).size());
+    REQUIRE((RetryFlowFile::Failure.name == exp_outbound_relationship.getName() ? 1 : 0) == FileUtils::list_dir_all(failure_dir, logger_).size());
+    REQUIRE((RetryFlowFile::RetriesExceeded.name == exp_outbound_relationship.getName()) == logContainsText("key:retries_exceeded_property_key_1 value:retries_exceeded_property_value_1"));
+    REQUIRE((RetryFlowFile::RetriesExceeded.name == exp_outbound_relationship.getName()) == logContainsText("key:retries_exceeded_property_key_2 value:retries_exceeded_property_value_2"));
     REQUIRE(exp_penalty_on_flowfile == flowfileWasPenalizedARetryflowfile());
     const bool expect_warning_on_reuse = !processor_uuid_matches_flowfile.value_or(true) && "Warn on Reuse" == reuse_mode;
     REQUIRE(expect_warning_on_reuse == retryFlowfileWarnedForReuse());
@@ -185,9 +185,9 @@ class RetryFlowFileTest {
 
 TEST_CASE_METHOD(RetryFlowFileTest, "Simple file passthrough", "[executePythonProcessorSimple]") {
   // RetryFlowFile outbound relationships
-  const core::Relationship retry           {RetryFlowFile::Retry.getName(), "description"};
-  const core::Relationship retries_exceeded{RetryFlowFile::RetriesExceeded.getName(), "description"};
-  const core::Relationship failure         {RetryFlowFile::Failure.getName(), "description"};
+  const core::Relationship retry           {RetryFlowFile::Retry};
+  const core::Relationship retries_exceeded{RetryFlowFile::RetriesExceeded};
+  const core::Relationship failure         {RetryFlowFile::Failure};
 
   //                 EXP_RETRY_PROP_NAME                           RETRY_ATTRIBUTE_VALUE_BEFORE_PROCESSING FAIL_NONNUM_OVERW
   //                       EXP_RETRY_PROP_VAL        EXP_PENALTY_ON_FF                        MAXIMUM_RETRIES                     REUSE_MODE

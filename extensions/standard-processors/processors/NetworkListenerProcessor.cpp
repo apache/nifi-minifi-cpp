@@ -40,15 +40,15 @@ void NetworkListenerProcessor::onTrigger(const std::shared_ptr<core::ProcessCont
 
 NetworkListenerProcessor::ServerOptions NetworkListenerProcessor::readServerOptions(const core::ProcessContext& context) {
   ServerOptions options;
-  context.getProperty(getMaxBatchSizeProperty().getName(), max_batch_size_);
+  context.getProperty(getMaxBatchSizeProperty(), max_batch_size_);
   if (max_batch_size_ < 1)
     throw Exception(PROCESSOR_EXCEPTION, "Max Batch Size property is invalid");
 
   uint64_t max_queue_size = 0;
-  context.getProperty(getMaxQueueSizeProperty().getName(), max_queue_size);
+  context.getProperty(getMaxQueueSizeProperty(), max_queue_size);
   options.max_queue_size = max_queue_size > 0 ? std::optional<uint64_t>(max_queue_size) : std::nullopt;
 
-  context.getProperty(getPortProperty().getName(), options.port);
+  context.getProperty(getPortProperty(), options.port);
   return options;
 }
 
@@ -61,13 +61,13 @@ void NetworkListenerProcessor::startServer(const ServerOptions& options, utils::
                      max_batch_size_);
 }
 
-void NetworkListenerProcessor::startTcpServer(const core::ProcessContext& context, const core::Property& ssl_context_property, const core::Property& client_auth_property) {
+void NetworkListenerProcessor::startTcpServer(const core::ProcessContext& context, const core::PropertyReference& ssl_context_property, const core::PropertyReference& client_auth_property) {
   gsl_Expects(!server_thread_.joinable() && !server_);
   auto options = readServerOptions(context);
 
   std::string ssl_value;
   std::optional<utils::net::SslServerOptions> ssl_options;
-  if (context.getProperty(ssl_context_property.getName(), ssl_value) && !ssl_value.empty()) {
+  if (context.getProperty(ssl_context_property, ssl_value) && !ssl_value.empty()) {
     auto ssl_data = utils::net::getSslData(context, ssl_context_property, logger_);
     if (!ssl_data || !ssl_data->isValid()) {
       throw Exception(PROCESSOR_EXCEPTION, "SSL Context Service is set, but no valid SSL data was found!");

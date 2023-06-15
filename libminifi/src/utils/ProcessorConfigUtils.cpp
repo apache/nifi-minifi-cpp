@@ -18,52 +18,45 @@
 
 #include <vector>
 #include <string>
-#include <set>
+#include <string_view>
 
+#include "range/v3/algorithm/contains.hpp"
 #include "utils/StringUtils.h"
 
-namespace org {
-namespace apache {
-namespace nifi {
-namespace minifi {
-namespace utils {
+namespace org::apache::nifi::minifi::utils {
 
-std::vector<std::string> listFromCommaSeparatedProperty(const core::ProcessContext& context, const std::string& property_name) {
+std::vector<std::string> listFromCommaSeparatedProperty(const core::ProcessContext& context, std::string_view property_name) {
   std::string property_string;
   context.getProperty(property_name, property_string);
   return utils::StringUtils::splitAndTrim(property_string, ",");
 }
 
-std::vector<std::string> listFromRequiredCommaSeparatedProperty(const core::ProcessContext& context, const std::string& property_name) {
+std::vector<std::string> listFromRequiredCommaSeparatedProperty(const core::ProcessContext& context, std::string_view property_name) {
   return utils::StringUtils::splitAndTrim(getRequiredPropertyOrThrow(context, property_name), ",");
 }
 
-bool parseBooleanPropertyOrThrow(const core::ProcessContext& context, const std::string& property_name) {
+bool parseBooleanPropertyOrThrow(const core::ProcessContext& context, std::string_view property_name) {
   const std::string value_str = getRequiredPropertyOrThrow(context, property_name);
   const auto maybe_value = utils::StringUtils::toBool(value_str);
   if (!maybe_value) {
-    throw std::runtime_error(property_name + " property is invalid: value is " + value_str);
+    throw std::runtime_error(std::string(property_name) + " property is invalid: value is " + value_str);
   }
   return maybe_value.value();
 }
 
-std::chrono::milliseconds parseTimePropertyMSOrThrow(const core::ProcessContext& context, const std::string& property_name) {
-  const core::TimePeriodValue time_property = getRequiredPropertyOrThrow<core::TimePeriodValue>(context, property_name);
+std::chrono::milliseconds parseTimePropertyMSOrThrow(const core::ProcessContext& context, std::string_view property_name) {
+  const auto time_property = getRequiredPropertyOrThrow<core::TimePeriodValue>(context, property_name);
   return time_property.getMilliseconds();
 }
 
-std::string parsePropertyWithAllowableValuesOrThrow(const core::ProcessContext& context, const std::string& property_name, const std::set<std::string>& allowable_values) {
+std::string parsePropertyWithAllowableValuesOrThrow(const core::ProcessContext& context, std::string_view property_name, std::span<const std::string_view> allowable_values) {
   std::string value;
   if (!context.getProperty(property_name, value)
       || value.empty()
-      || allowable_values.find(value) == allowable_values.end()) {
-    throw Exception(PROCESS_SCHEDULE_EXCEPTION, property_name + " property missing or invalid");
+      || !ranges::contains(allowable_values, value)) {
+    throw Exception(PROCESS_SCHEDULE_EXCEPTION, std::string(property_name) + " property missing or invalid");
   }
   return value;
 }
 
-}  // namespace utils
-}  // namespace minifi
-}  // namespace nifi
-}  // namespace apache
-}  // namespace org
+}  // namespace org::apache::nifi::minifi::utils

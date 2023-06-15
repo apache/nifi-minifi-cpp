@@ -208,18 +208,18 @@ TEST_CASE("GetFile PutFile dynamic attribute", "[expressionLanguageTestGetFilePu
 
   // Build MiNiFi processing graph
   auto get_file = plan->addProcessor("GetFile", "GetFile");
-  plan->setProperty(get_file, minifi::processors::GetFile::Directory.getName(), in_dir.string());
-  plan->setProperty(get_file, minifi::processors::GetFile::KeepSourceFile.getName(), "false");
+  plan->setProperty(get_file, minifi::processors::GetFile::Directory, in_dir.string());
+  plan->setProperty(get_file, minifi::processors::GetFile::KeepSourceFile, "false");
   auto update = plan->addProcessor("UpdateAttribute", "UpdateAttribute", core::Relationship("success", "description"), true);
   update->setDynamicProperty("prop_attr", "${'nifi.my.own.property'}_added");
   plan->addProcessor("LogAttribute", "LogAttribute", core::Relationship("success", "description"), true);
   auto extract_text = plan->addProcessor("ExtractText", "ExtractText", core::Relationship("success", "description"), true);
-  plan->setProperty(extract_text, minifi::processors::ExtractText::Attribute.getName(), "extracted_attr_name");
+  plan->setProperty(extract_text, minifi::processors::ExtractText::Attribute, "extracted_attr_name");
   plan->addProcessor("LogAttribute", "LogAttribute", core::Relationship("success", "description"), true);
   auto put_file = plan->addProcessor("PutFile", "PutFile", core::Relationship("success", "description"), true);
-  plan->setProperty(put_file, minifi::processors::PutFile::Directory.getName(), (out_dir / "${extracted_attr_name}").string());
-  plan->setProperty(put_file, minifi::processors::PutFile::ConflictResolution.getName(), minifi::processors::PutFile::CONFLICT_RESOLUTION_STRATEGY_REPLACE);
-  plan->setProperty(put_file, minifi::processors::PutFile::CreateDirs.getName(), "true");
+  plan->setProperty(put_file, minifi::processors::PutFile::Directory, (out_dir / "${extracted_attr_name}").string());
+  plan->setProperty(put_file, minifi::processors::PutFile::ConflictResolution, minifi::processors::PutFile::CONFLICT_RESOLUTION_STRATEGY_REPLACE);
+  plan->setProperty(put_file, minifi::processors::PutFile::CreateDirs, "true");
 
   // Write test input
   {

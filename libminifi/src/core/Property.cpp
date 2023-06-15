@@ -18,6 +18,10 @@
 
 #include "core/Property.h"
 
+#include <utility>
+
+#include "core/PropertyType.h"
+
 namespace org::apache::nifi::minifi::core {
 
 std::string Property::getName() const {
@@ -88,6 +92,43 @@ std::vector<std::string> Property::getDependentProperties() const {
 
 std::vector<std::pair<std::string, std::string>> Property::getExclusiveOfProperties() const {
   return exclusive_of_properties_;
+}
+
+namespace {
+std::vector<PropertyValue> createPropertyValues(gsl::span<const std::string_view> values, const core::PropertyParser& property_parser) {
+  return ranges::views::transform(values, [&property_parser](const auto& value) {
+    return property_parser.parse(value);
+  }) | ranges::to<std::vector>;
+}
+
+inline std::vector<std::string> createStrings(gsl::span<const std::string_view> string_views) {
+  return ranges::views::transform(string_views, [](const auto& string_view) { return std::string{string_view}; })
+      | ranges::to<std::vector>;
+}
+
+inline std::vector<std::pair<std::string, std::string>> createStrings(gsl::span<const std::pair<std::string_view, std::string_view>> pairs_of_string_views) {
+  return ranges::views::transform(pairs_of_string_views, [](const auto& pair_of_string_views) { return std::pair<std::string, std::string>(pair_of_string_views); })
+      | ranges::to<std::vector>;
+}
+}  // namespace
+
+Property::Property(const PropertyReference& compile_time_property)
+    : name_(compile_time_property.name),
+      description_(compile_time_property.description),
+      is_required_(compile_time_property.is_required),
+      valid_regex_(compile_time_property.valid_regex),
+      dependent_properties_(createStrings(compile_time_property.dependent_properties)),
+      exclusive_of_properties_(createStrings(compile_time_property.exclusive_of_properties)),
+      is_collection_(false),
+      validator_(compile_time_property.type),
+      display_name_(compile_time_property.display_name),
+      allowed_values_(createPropertyValues(compile_time_property.allowed_values, *compile_time_property.type)),
+      types_(createStrings(compile_time_property.allowed_types)),
+      supports_el_(compile_time_property.supports_expression_language),
+      is_transient_(false) {
+  if (compile_time_property.default_value) {
+    default_value_ = compile_time_property.type->parse(*compile_time_property.default_value);
+  }
 }
 
 }  // namespace org::apache::nifi::minifi::core

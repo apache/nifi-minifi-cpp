@@ -27,11 +27,20 @@
 #include "core/FlowFileStore.h"
 #include "core/logging/Logger.h"
 #include "core/logging/LoggerConfiguration.h"
+#include "core/PropertyDefinition.h"
+#include "core/PropertyDefinitionBuilder.h"
 #include "utils/Enum.h"
 #include "serialization/PayloadSerializer.h"
 #include "utils/RegexUtils.h"
 
 namespace org::apache::nifi::minifi::processors {
+
+namespace defragment_text {
+SMART_ENUM(PatternLocation,
+    (END_OF_MESSAGE, "End of Message"),
+    (START_OF_MESSAGE, "Start of Message")
+)
+}  // namespace defragment_text
 
 class DefragmentText : public core::Processor {
  public:
@@ -42,28 +51,38 @@ class DefragmentText : public core::Processor {
   EXTENSIONAPI static constexpr const char* Description = "DefragmentText splits and merges incoming flowfiles so cohesive messages are not split between them. "
       "It can handle multiple inputs differentiated by the absolute.path flow file attribute.";
 
-  EXTENSIONAPI static const core::Property Pattern;
-  EXTENSIONAPI static const core::Property PatternLoc;
-  EXTENSIONAPI static const core::Property MaxBufferAge;
-  EXTENSIONAPI static const core::Property MaxBufferSize;
-  static auto properties() {
-    return std::array{
+  EXTENSIONAPI static constexpr auto Pattern = core::PropertyDefinitionBuilder<>::createProperty("Pattern")
+      .withDescription("A regular expression to match at the start or end of messages.")
+      .isRequired(true)
+      .build();
+  EXTENSIONAPI static constexpr auto PatternLoc = core::PropertyDefinitionBuilder<defragment_text::PatternLocation::length>::createProperty("Pattern Location")
+      .withDescription("Whether the pattern is located at the start or at the end of the messages.")
+      .withAllowedValues(defragment_text::PatternLocation::values)
+      .withDefaultValue(toStringView(defragment_text::PatternLocation::START_OF_MESSAGE))
+      .build();
+  EXTENSIONAPI static constexpr auto MaxBufferAge = core::PropertyDefinitionBuilder<>::createProperty("Max Buffer Age")
+      .withDescription("The maximum age of the buffer after which it will be transferred to success when matching Start of Message patterns or to failure when matching End of Message patterns. "
+          "Expected format is <duration> <time unit>")
+      .withDefaultValue("10 min")
+      .build();
+  EXTENSIONAPI static constexpr auto MaxBufferSize = core::PropertyDefinitionBuilder<>::createProperty("Max Buffer Size")
+      .withDescription("The maximum buffer size, if the buffer exceeds this, it will be transferred to failure. Expected format is <size> <data unit>")
+      .withPropertyType(core::StandardPropertyTypes::DATA_SIZE_TYPE)
+      .build();
+  EXTENSIONAPI static constexpr auto Properties = std::array<core::PropertyReference, 4>{
       Pattern,
       PatternLoc,
       MaxBufferAge,
       MaxBufferSize
-    };
-  }
+  };
 
-  EXTENSIONAPI static const core::Relationship Self;
-  EXTENSIONAPI static const core::Relationship Success;
-  EXTENSIONAPI static const core::Relationship Failure;
-  static auto relationships() {
-    return std::array{
+
+  EXTENSIONAPI static constexpr auto Success = core::RelationshipDefinition{"success", "Flowfiles that have been successfully defragmented"};
+  EXTENSIONAPI static constexpr auto Failure = core::RelationshipDefinition{"failure", "Flowfiles that failed the defragmentation process"};
+  EXTENSIONAPI static constexpr auto Relationships = std::array{
       Success,
       Failure
-    };
-  }
+  };
 
   EXTENSIONAPI static constexpr bool SupportsDynamicProperties = false;
   EXTENSIONAPI static constexpr bool SupportsDynamicRelationships = false;
@@ -72,16 +91,13 @@ class DefragmentText : public core::Processor {
 
   ADD_COMMON_VIRTUAL_FUNCTIONS_FOR_PROCESSORS
 
+  EXTENSIONAPI static const core::Relationship Self;
+
   void initialize() override;
   void onSchedule(core::ProcessContext* context, core::ProcessSessionFactory* sessionFactory) override;
   void onTrigger(core::ProcessContext* context, core::ProcessSession* session) override;
   void restore(const std::shared_ptr<core::FlowFile>& flowFile) override;
   std::set<core::Connectable*> getOutGoingConnections(const std::string &relationship) override;
-
-  SMART_ENUM(PatternLocation,
-             (END_OF_MESSAGE, "End of Message"),
-             (START_OF_MESSAGE, "Start of Message")
-  )
 
  protected:
   class Buffer {
@@ -119,7 +135,7 @@ class DefragmentText : public core::Processor {
 
 
   utils::Regex pattern_;
-  PatternLocation pattern_location_;
+  defragment_text::PatternLocation pattern_location_;
   std::optional<std::chrono::milliseconds> max_age_;
   std::optional<size_t> max_size_;
 

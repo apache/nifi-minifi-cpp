@@ -23,7 +23,6 @@
 
 #include "utils/file/FileUtils.h"
 #include "utils/StringUtils.h"
-#include "core/PropertyBuilder.h"
 #include "core/Resource.h"
 
 namespace {
@@ -50,24 +49,6 @@ namespace {
 }  // namespace
 
 namespace org::apache::nifi::minifi::controllers {
-
-const core::Property PersistentMapStateStorage::AlwaysPersist(
-    core::PropertyBuilder::createProperty(ALWAYS_PERSIST_PROPERTY_NAME)
-    ->withDescription("Persist every change instead of persisting it periodically.")
-    ->isRequired(false)
-    ->withDefaultValue<bool>(false)
-    ->build());
-const core::Property PersistentMapStateStorage::AutoPersistenceInterval(
-    core::PropertyBuilder::createProperty(AUTO_PERSISTENCE_INTERVAL_PROPERTY_NAME)
-    ->withDescription("The interval of the periodic task persisting all values. Only used if Always Persist is false. If set to 0 seconds, auto persistence will be disabled.")
-    ->isRequired(false)
-    ->withDefaultValue<core::TimePeriodValue>("1 min")
-    ->build());
-const core::Property PersistentMapStateStorage::File(
-    core::PropertyBuilder::createProperty("File")
-    ->withDescription("Path to a file to store state")
-    ->isRequired(true)
-    ->build());
 
 PersistentMapStateStorage::PersistentMapStateStorage(const std::string& name, const utils::Identifier& uuid /*= utils::Identifier()*/)
     : KeyValueStateStorage(name, uuid) {
@@ -141,7 +122,7 @@ bool PersistentMapStateStorage::parseLine(const std::string& line, std::string& 
 void PersistentMapStateStorage::initialize() {
   // VolatileMapStateStorage::initialize() also calls setSupportedProperties, and we don't want that
   ControllerService::initialize();  // NOLINT(bugprone-parent-virtual-call)
-  setSupportedProperties(properties());
+  setSupportedProperties(Properties);
 }
 
 void PersistentMapStateStorage::onEnable() {
@@ -150,13 +131,13 @@ void PersistentMapStateStorage::onEnable() {
     return;
   }
 
-  const auto always_persist = getProperty<bool>(AlwaysPersist.getName()).value_or(false);
+  const auto always_persist = getProperty<bool>(AlwaysPersist).value_or(false);
   logger_->log_info("Always Persist property: %s", always_persist ? "true" : "false");
 
-  const auto auto_persistence_interval = getProperty<core::TimePeriodValue>(AutoPersistenceInterval.getName()).value_or(core::TimePeriodValue{}).getMilliseconds();
+  const auto auto_persistence_interval = getProperty<core::TimePeriodValue>(AutoPersistenceInterval).value_or(core::TimePeriodValue{}).getMilliseconds();
   logger_->log_info("Auto Persistence Interval property: %" PRId64 " ms", auto_persistence_interval.count());
 
-  if (!getProperty(File.getName(), file_)) {
+  if (!getProperty(File, file_)) {
     logger_->log_error("Invalid or missing property: File");
     return;
   }

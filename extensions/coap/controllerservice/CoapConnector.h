@@ -24,6 +24,9 @@
 
 #include "core/logging/LoggerConfiguration.h"
 #include "core/controller/ControllerService.h"
+#include "core/PropertyDefinition.h"
+#include "core/PropertyDefinitionBuilder.h"
+#include "core/PropertyType.h"
 
 #include "CoapResponse.h"
 #include "CoapMessaging.h"
@@ -51,16 +54,28 @@ class CoapConnectorService : public core::controller::ControllerService {
     initialize();
   }
 
-  EXTENSIONAPI static const core::Property RemoteServer;
-  EXTENSIONAPI static const core::Property Port;
-  EXTENSIONAPI static const core::Property MaxQueueSize;
-  static auto properties() {
-    return std::array{
+  EXTENSIONAPI static constexpr auto RemoteServer = core::PropertyDefinitionBuilder<>::createProperty("Remote Server")
+      .withDescription("Remote CoAP server")
+      .isRequired(false)
+      .build();
+  EXTENSIONAPI static constexpr auto Port = core::PropertyDefinitionBuilder<>::createProperty("Remote Port")
+      .withDescription("Remote CoAP server port")
+      .withPropertyType(core::StandardPropertyTypes::UNSIGNED_LONG_TYPE)
+      .withDefaultValue("8181")
+      .isRequired(true)
+      .build();
+  EXTENSIONAPI static constexpr auto MaxQueueSize = core::PropertyDefinitionBuilder<>::createProperty("Max Queue Size")
+      .withDescription("Max queue size for received data ")
+      .withPropertyType(core::StandardPropertyTypes::UNSIGNED_LONG_TYPE)
+      .withDefaultValue("1000")
+      .isRequired(false)
+      .build();
+  EXTENSIONAPI static constexpr auto Properties = std::array<core::PropertyReference, 3>{
       RemoteServer,
       Port,
       MaxQueueSize
-    };
-  }
+  };
+
   EXTENSIONAPI static constexpr bool SupportsDynamicProperties = false;
   ADD_COMMON_VIRTUAL_FUNCTIONS_FOR_CONTROLLER_SERVICES
 

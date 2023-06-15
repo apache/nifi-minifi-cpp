@@ -32,6 +32,8 @@
 #include "FlowFileRecord.h"
 #include "core/Processor.h"
 #include "core/ProcessSession.h"
+#include "core/PropertyDefinition.h"
+#include "core/RelationshipDefinition.h"
 #include "core/Core.h"
 #include "core/logging/LoggerConfiguration.h"
 
@@ -40,10 +42,10 @@ namespace org::apache::nifi::minifi::processors {
 class CallbackProcessor : public core::Processor {
  public:
   static constexpr const char* Description = "";
-  static auto properties() { return std::array<core::Property, 0>{}; }
-  static const core::Relationship Success;
-  static const core::Relationship Failure;
-  static auto relationships() { return std::array{Success, Failure}; }
+  static constexpr auto Properties = std::array<core::PropertyReference, 0>{};
+  static constexpr auto Success = core::RelationshipDefinition{"success", "All files are routed to success"};
+  static constexpr auto Failure = core::RelationshipDefinition{"failure", "Failed files (based on callback logic) are transferred to failure"};
+  static constexpr auto Relationships = std::array{Success, Failure};
   static constexpr bool SupportsDynamicProperties = true;
   static constexpr bool SupportsDynamicRelationships = false;
   static constexpr core::annotation::Input InputRequirement = core::annotation::Input::INPUT_ALLOWED;

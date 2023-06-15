@@ -20,48 +20,23 @@
 
 #include "core/ProcessContext.h"
 #include "core/ProcessSession.h"
-#include "core/PropertyBuilder.h"
 #include "utils/gsl.h"
 
 namespace org::apache::nifi::minifi::processors {
 
-const core::Property TFApplyGraph::InputNode(
-    core::PropertyBuilder::createProperty("Input Node")
-        ->withDescription(
-            "The node of the TensorFlow graph to feed tensor inputs to")
-        ->withDefaultValue("")
-        ->build());
-
-const core::Property TFApplyGraph::OutputNode(
-    core::PropertyBuilder::createProperty("Output Node")
-        ->withDescription(
-            "The node of the TensorFlow graph to read tensor outputs from")
-        ->withDefaultValue("")
-        ->build());
-
-const core::Relationship TFApplyGraph::Success(  // NOLINT
-    "success",
-    "Successful graph application outputs");
-const core::Relationship TFApplyGraph::Retry(  // NOLINT
-    "retry",
-    "Inputs which fail graph application but may work if sent again");
-const core::Relationship TFApplyGraph::Failure(  // NOLINT
-    "failure",
-    "Failures which will not work if retried");
-
 void TFApplyGraph::initialize() {
-  setSupportedProperties(properties());
-  setSupportedRelationships(relationships());
+  setSupportedProperties(Properties);
+  setSupportedRelationships(Relationships);
 }
 
 void TFApplyGraph::onSchedule(core::ProcessContext *context, core::ProcessSessionFactory* /*sessionFactory*/) {
-  context->getProperty(InputNode.getName(), input_node_);
+  context->getProperty(InputNode, input_node_);
 
   if (input_node_.empty()) {
     logger_->log_error("Invalid input node");
   }
 
-  context->getProperty(OutputNode.getName(), output_node_);
+  context->getProperty(OutputNode, output_node_);
 
   if (output_node_.empty()) {
     logger_->log_error("Invalid output node");

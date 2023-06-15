@@ -23,9 +23,11 @@
 
 #include "core/Annotation.h"
 #include "core/DynamicProperty.h"
-#include "core/OutputAttribute.h"
+#include "core/OutputAttributeDefinition.h"
 #include "core/Property.h"
+#include "core/PropertyDefinition.h"
 #include "core/Relationship.h"
+#include "core/RelationshipDefinition.h"
 #include "utils/Export.h"
 #include "utils/StringUtils.h"
 
@@ -41,9 +43,9 @@ struct ClassDescription {
   std::string full_name_{};
   std::string description_{};
   std::vector<core::Property> class_properties_{};
-  std::vector<core::DynamicProperty> dynamic_properties_{};
+  std::span<const core::DynamicProperty> dynamic_properties_{};
   std::vector<core::Relationship> class_relationships_{};
-  std::vector<core::OutputAttribute> output_attributes_{};
+  std::span<const core::OutputAttributeReference> output_attributes_{};
   bool supports_dynamic_properties_ = false;
   bool supports_dynamic_relationships_ = false;
   std::string inputRequirement_{};
@@ -61,9 +63,12 @@ struct Components {
 };
 
 namespace detail {
-template<typename Container>
-auto toVector(const Container& container) {
-  return std::vector<typename Container::value_type>(container.begin(), container.end());
+inline auto toVector(std::span<const core::PropertyReference> properties) {
+  return std::vector<core::Property>(properties.begin(), properties.end());
+}
+
+inline auto toVector(std::span<const core::RelationshipDefinition> relationships) {
+  return std::vector<core::Relationship>(relationships.begin(), relationships.end());
 }
 
 template<typename T>
@@ -92,10 +97,10 @@ class AgentDocs {
         .short_name_ = name,
         .full_name_ = detail::classNameWithDots<Class>(),
         .description_ = Class::Description,
-        .class_properties_ = detail::toVector(Class::properties()),
-        .dynamic_properties_ = detail::toVector(Class::dynamicProperties()),
-        .class_relationships_ = detail::toVector(Class::relationships()),
-        .output_attributes_ = detail::toVector(Class::outputAttributes()),
+        .class_properties_ = detail::toVector(Class::Properties),
+        .dynamic_properties_ = Class::DynamicProperties,
+        .class_relationships_ = detail::toVector(Class::Relationships),
+        .output_attributes_ = Class::OutputAttributes,
         .supports_dynamic_properties_ = Class::SupportsDynamicProperties,
         .supports_dynamic_relationships_ = Class::SupportsDynamicRelationships,
         .inputRequirement_ = toString(Class::InputRequirement),
@@ -107,7 +112,7 @@ class AgentDocs {
         .short_name_ = name,
         .full_name_ = detail::classNameWithDots<Class>(),
         .description_ = Class::Description,
-        .class_properties_ = detail::toVector(Class::properties()),
+        .class_properties_ = detail::toVector(Class::Properties),
         .supports_dynamic_properties_ = Class::SupportsDynamicProperties,
       });
     } else if constexpr (Type == ResourceType::InternalResource) {
@@ -115,7 +120,7 @@ class AgentDocs {
         .type_ = Type,
         .short_name_ = name,
         .full_name_ = detail::classNameWithDots<Class>(),
-        .class_properties_ = detail::toVector(Class::properties()),
+        .class_properties_ = detail::toVector(Class::Properties),
         .supports_dynamic_properties_ = Class::SupportsDynamicProperties,
       });
     } else if constexpr (Type == ResourceType::DescriptionOnly) {

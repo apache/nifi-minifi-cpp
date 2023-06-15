@@ -18,7 +18,6 @@
 #include <cinttypes>
 
 #include "controllers/keyvalue/AutoPersistor.h"
-#include "core/PropertyBuilder.h"
 #include "core/TypedValues.h"
 
 using namespace std::literals::chrono_literals;

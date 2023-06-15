@@ -38,8 +38,8 @@ class LogOnDestructionProcessor : public core::Processor {
   }
 
   EXTENSIONAPI static constexpr const char* Description = "This processor logs a message on destruction. Only for testing purposes.";
-  static auto properties() { return std::array<core::Property, 0>{}; }
-  static auto relationships() { return std::array<core::Relationship, 0>{}; }
+  EXTENSIONAPI static constexpr auto Properties = std::array<core::PropertyReference, 0>{};
+  EXTENSIONAPI static constexpr auto Relationships = std::array<core::RelationshipDefinition, 0>{};
   EXTENSIONAPI static constexpr bool SupportsDynamicProperties = false;
   EXTENSIONAPI static constexpr bool SupportsDynamicRelationships = false;
   EXTENSIONAPI static constexpr core::annotation::Input InputRequirement = core::annotation::Input::INPUT_ALLOWED;

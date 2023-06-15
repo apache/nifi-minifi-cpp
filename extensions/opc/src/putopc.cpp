@@ -15,14 +15,11 @@
  * limitations under the License.
  */
 
-#include <list>
 #include <memory>
-#include <set>
 #include <string>
 
 #include "opc.h"
 #include "putopc.h"
-#include "core/Processor.h"
 #include "core/ProcessSession.h"
 #include "core/Resource.h"
 #include "utils/StringUtils.h"
@@ -30,8 +27,8 @@
 namespace org::apache::nifi::minifi::processors {
 
   void PutOPCProcessor::initialize() {
-    setSupportedProperties(properties());
-    setSupportedRelationships(relationships());
+    setSupportedProperties(Properties);
+    setSupportedRelationships(Relationships);
   }
 
   void PutOPCProcessor::onSchedule(const std::shared_ptr<core::ProcessContext> &context, const std::shared_ptr<core::ProcessSessionFactory> &factory) {
@@ -42,8 +39,8 @@ namespace org::apache::nifi::minifi::processors {
     BaseOPCProcessor::onSchedule(context, factory);
 
     std::string value;
-    context->getProperty(ParentNodeID.getName(), nodeID_);
-    context->getProperty(ParentNodeIDType.getName(), value);
+    context->getProperty(ParentNodeID, nodeID_);
+    context->getProperty(ParentNodeIDType, value);
 
     if (value == "String") {
       idType_ = opc::OPCNodeIDType::String;
@@ -66,15 +63,15 @@ namespace org::apache::nifi::minifi::processors {
       }
     }
     if (idType_ != opc::OPCNodeIDType::Path) {
-      if (!context->getProperty(ParentNameSpaceIndex.getName(), nameSpaceIdx_)) {
-        auto error_msg = utils::StringUtils::join_pack(ParentNameSpaceIndex.getName(), " is mandatory in case ", ParentNodeIDType.getName(), " is not Path");
+      if (!context->getProperty(ParentNameSpaceIndex, nameSpaceIdx_)) {
+        auto error_msg = utils::StringUtils::join_pack(ParentNameSpaceIndex.name, " is mandatory in case ", ParentNodeIDType.name, " is not Path");
         throw Exception(PROCESS_SCHEDULE_EXCEPTION, error_msg);
       }
     }
 
     std::string typestr;
-    context->getProperty(ValueType.getName(), typestr);
-    nodeDataType_ = opc::StringToOPCDataTypeMap.at(typestr);  // This throws, but allowed values are generated based on this map -> that's a really unexpected error
+    context->getProperty(ValueType, typestr);
+    nodeDataType_ = utils::at(opc::StringToOPCDataTypeMap, typestr);  // This throws, but allowed values are generated based on this map -> that's a really unexpected error
   }
 
   void PutOPCProcessor::onTrigger(const std::shared_ptr<core::ProcessContext> &context, const std::shared_ptr<core::ProcessSession> &session) {
@@ -106,7 +103,7 @@ namespace org::apache::nifi::minifi::processors {
         if (idType_ == opc::OPCNodeIDType::Int) {
           parentNodeID_.identifierType = UA_NODEIDTYPE_NUMERIC;
           parentNodeID_.identifier.numeric = std::stoi(nodeID_);
-        } else if (idType_ == opc::OPCNodeIDType::String) {
+        } else {  // idType_ == opc::OPCNodeIDType::String
           parentNodeID_.identifierType = UA_NODEIDTYPE_STRING;
           parentNodeID_.identifier.string = UA_STRING_ALLOC(nodeID_.c_str());
         }
@@ -245,7 +242,7 @@ namespace org::apache::nifi::minifi::processors {
         }
       } catch (...) {
         std::string typestr;
-        context->getProperty(ValueType.getName(), typestr);
+        context->getProperty(ValueType, typestr);
         logger_->log_error("Failed to convert %s to data type %s", contentstr, typestr);
         session->transfer(flowFile, Failure);
         return;
@@ -322,7 +319,7 @@ namespace org::apache::nifi::minifi::processors {
         }
       } catch (...) {
         std::string typestr;
-        context->getProperty(ValueType.getName(), typestr);
+        context->getProperty(ValueType, typestr);
         logger_->log_error("Failed to convert %s to data type %s", contentstr, typestr);
         session->transfer(flowFile, Failure);
         return;
@@ -332,5 +329,7 @@ namespace org::apache::nifi::minifi::processors {
       return;
     }
   }
+
+REGISTER_RESOURCE(PutOPCProcessor, Processor);
 
 }  // namespace org::apache::nifi::minifi::processors

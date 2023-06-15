@@ -36,6 +36,9 @@
 
 #include "FlowFileRecord.h"
 #include "core/Processor.h"
+#include "core/PropertyDefinition.h"
+#include "core/PropertyDefinitionBuilder.h"
+#include "core/RelationshipDefinition.h"
 #include "core/ProcessSession.h"
 #include "utils/StringUtils.h"
 #include "utils/Export.h"
@@ -143,20 +146,28 @@ class HashContent : public core::Processor {
   EXTENSIONAPI static constexpr const char* Description = "HashContent calculates the checksum of the content of the flowfile and adds it as an attribute. "
       "Configuration options exist to select hashing algorithm and set the name of the attribute.";
 
-  EXTENSIONAPI static const core::Property HashAttribute;
-  EXTENSIONAPI static const core::Property HashAlgorithm;
-  EXTENSIONAPI static const core::Property FailOnEmpty;
-  static auto properties() {
-    return std::array{
+  EXTENSIONAPI static constexpr auto HashAttribute = core::PropertyDefinitionBuilder<>::createProperty("Hash Attribute")
+      .withDescription("Attribute to store checksum to")
+      .withDefaultValue("Checksum")
+      .build();
+  EXTENSIONAPI static constexpr auto HashAlgorithm = core::PropertyDefinitionBuilder<>::createProperty("Hash Algorithm")
+      .withDescription("Name of the algorithm used to generate checksum")
+      .withDefaultValue("SHA256")
+      .build();
+  EXTENSIONAPI static constexpr auto FailOnEmpty = core::PropertyDefinitionBuilder<>::createProperty("Fail on empty")
+      .withDescription("Route to failure relationship in case of empty content")
+      .withDefaultValue("false")
+      .build();
+  EXTENSIONAPI static constexpr auto Properties = std::array<core::PropertyReference, 3>{
       HashAttribute,
       HashAlgorithm,
       FailOnEmpty
-    };
-  }
+  };
 
-  EXTENSIONAPI static const core::Relationship Success;
-  EXTENSIONAPI static const core::Relationship Failure;
-  static auto relationships() { return std::array{Success, Failure}; }
+
+  EXTENSIONAPI static constexpr auto Success = core::RelationshipDefinition{"success", "success operational on the flow record"};
+  EXTENSIONAPI static constexpr auto Failure = core::RelationshipDefinition{"failure", "failure operational on the flow record"};
+  EXTENSIONAPI static constexpr auto Relationships = std::array{Success, Failure};
 
   EXTENSIONAPI static constexpr bool SupportsDynamicProperties = false;
   EXTENSIONAPI static constexpr bool SupportsDynamicRelationships = false;

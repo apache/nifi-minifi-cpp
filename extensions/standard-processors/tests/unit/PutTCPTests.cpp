@@ -161,10 +161,10 @@ class PutTCPTestFixture {
   void addSSLContextToPutTCP(const std::filesystem::path& ca_cert, const std::optional<std::filesystem::path>& client_cert_key) {
     const std::filesystem::path ca_dir = std::filesystem::path(minifi::utils::file::FileUtils::get_executable_dir()) / "resources";
     auto ssl_context_service_node = controller_.plan->addController("SSLContextService", "SSLContextService");
-    REQUIRE(controller_.plan->setProperty(ssl_context_service_node, SSLContextService::CACertificate.getName(), (ca_dir / ca_cert).string()));
+    REQUIRE(controller_.plan->setProperty(ssl_context_service_node, SSLContextService::CACertificate, (ca_dir / ca_cert).string()));
     if (client_cert_key) {
-      REQUIRE(controller_.plan->setProperty(ssl_context_service_node, SSLContextService::ClientCertificate.getName(), (ca_dir / *client_cert_key).string()));
-      REQUIRE(controller_.plan->setProperty(ssl_context_service_node, SSLContextService::PrivateKey.getName(), (ca_dir / *client_cert_key).string()));
+      REQUIRE(controller_.plan->setProperty(ssl_context_service_node, SSLContextService::ClientCertificate, (ca_dir / *client_cert_key).string()));
+      REQUIRE(controller_.plan->setProperty(ssl_context_service_node, SSLContextService::PrivateKey, (ca_dir / *client_cert_key).string()));
     }
     ssl_context_service_node->enable();
 
@@ -172,15 +172,15 @@ class PutTCPTestFixture {
   }
 
   void setHostname(const std::string& hostname) {
-    REQUIRE(controller_.plan->setProperty(put_tcp_, PutTCP::Hostname.getName(), hostname));
+    REQUIRE(controller_.plan->setProperty(put_tcp_, PutTCP::Hostname, hostname));
   }
 
   void enableConnectionPerFlowFile() {
-    REQUIRE(controller_.plan->setProperty(put_tcp_, PutTCP::ConnectionPerFlowFile.getName(), "true"));
+    REQUIRE(controller_.plan->setProperty(put_tcp_, PutTCP::ConnectionPerFlowFile, "true"));
   }
 
   void setIdleConnectionExpiration(const std::string& idle_connection_expiration_str) {
-    REQUIRE(controller_.plan->setProperty(put_tcp_, PutTCP::IdleConnectionExpiration.getName(), idle_connection_expiration_str));
+    REQUIRE(controller_.plan->setProperty(put_tcp_, PutTCP::IdleConnectionExpiration, idle_connection_expiration_str));
   }
 
   uint16_t addTCPServer() {

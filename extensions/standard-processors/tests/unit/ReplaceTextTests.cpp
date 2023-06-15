@@ -46,16 +46,16 @@ TEST_CASE("ReplaceText can parse its properties", "[onSchedule]") {
   LogTestController::getInstance().setDebug<minifi::processors::ReplaceText>();
 
   std::shared_ptr<core::Processor> generate_flow_file = plan->addProcessor("GenerateFlowFile", "generate_flow_file");
-  plan->setProperty(generate_flow_file, minifi::processors::GenerateFlowFile::CustomText.getName(), "One green bottle is hanging on the wall");
-  plan->setProperty(generate_flow_file, minifi::processors::GenerateFlowFile::DataFormat.getName(), "Text");
-  plan->setProperty(generate_flow_file, minifi::processors::GenerateFlowFile::UniqueFlowFiles.getName(), "false");
+  plan->setProperty(generate_flow_file, minifi::processors::GenerateFlowFile::CustomText, "One green bottle is hanging on the wall");
+  plan->setProperty(generate_flow_file, minifi::processors::GenerateFlowFile::DataFormat, "Text");
+  plan->setProperty(generate_flow_file, minifi::processors::GenerateFlowFile::UniqueFlowFiles, "false");
 
   std::shared_ptr<core::Processor> replace_text = plan->addProcessor("ReplaceText", "replace_text", minifi::processors::GenerateFlowFile::Success, true);
-  plan->setProperty(replace_text, minifi::processors::ReplaceText::EvaluationMode.getName(), "Entire text");
-  plan->setProperty(replace_text, minifi::processors::ReplaceText::LineByLineEvaluationMode.getName(), "Except-First-Line");
-  plan->setProperty(replace_text, minifi::processors::ReplaceText::ReplacementStrategy.getName(), "Substitute Variables");
-  plan->setProperty(replace_text, minifi::processors::ReplaceText::SearchValue.getName(), "apple");
-  plan->setProperty(replace_text, minifi::processors::ReplaceText::ReplacementValue.getName(), "orange");
+  plan->setProperty(replace_text, minifi::processors::ReplaceText::EvaluationMode, "Entire text");
+  plan->setProperty(replace_text, minifi::processors::ReplaceText::LineByLineEvaluationMode, "Except-First-Line");
+  plan->setProperty(replace_text, minifi::processors::ReplaceText::ReplacementStrategy, "Substitute Variables");
+  plan->setProperty(replace_text, minifi::processors::ReplaceText::SearchValue, "apple");
+  plan->setProperty(replace_text, minifi::processors::ReplaceText::ReplacementValue, "orange");
 
   testController.runSession(plan);
 
@@ -93,7 +93,7 @@ TEST_CASE("Regex Replace works correctly in ReplaceText", "[applyReplacements][R
   replace_text.setSearchRegex("a\\w+e");
   replace_text.setReplacementValue("orange");
 
-  CHECK(replace_text.applyReplacements("") == "");
+  CHECK(replace_text.applyReplacements("") == "");  // NOLINT(readability-container-size-empty)
   CHECK(replace_text.applyReplacements("apple tree") == "orange tree");
   CHECK(replace_text.applyReplacements("one apple, two apples") == "one orange, two oranges");
 }
@@ -105,7 +105,7 @@ TEST_CASE("Regex Replace works with back references in ReplaceText", "[applyRepl
   replace_text.setSearchRegex("a(b+)c");
   replace_text.setReplacementValue("$& [found $1]");
 
-  CHECK(replace_text.applyReplacements("") == "");
+  CHECK(replace_text.applyReplacements("") == "");  // NOLINT(readability-container-size-empty)
   CHECK(replace_text.applyReplacements("abc") == "abc [found b]");
   CHECK(replace_text.applyReplacements("cba") == "cba");
   CHECK(replace_text.applyReplacements("xxx abc yyy abbbc zzz") == "xxx abc [found b] yyy abbbc [found bbb] zzz");
@@ -118,7 +118,7 @@ TEST_CASE("Regex Replace treats non-existent back references as blank in Replace
   replace_text.setSearchRegex("a(b+)c");
   replace_text.setReplacementValue("_$1_ '$2'");
 
-  CHECK(replace_text.applyReplacements("") == "");
+  CHECK(replace_text.applyReplacements("") == "");  // NOLINT(readability-container-size-empty)
   CHECK(replace_text.applyReplacements("abc") == "_b_ ''");
   CHECK(replace_text.applyReplacements("cba") == "cba");
   CHECK(replace_text.applyReplacements("xxx abc yyy abbbc zzz") == "xxx _b_ '' yyy _bbb_ '' zzz");
@@ -131,7 +131,7 @@ TEST_CASE("Back references can be escaped when using Regex Replace in ReplaceTex
   replace_text.setSearchRegex("a(b+)c");
   replace_text.setReplacementValue("$1 costs $$2");
 
-  CHECK(replace_text.applyReplacements("") == "");
+  CHECK(replace_text.applyReplacements("") == "");  // NOLINT(readability-container-size-empty)
   CHECK(replace_text.applyReplacements("abc") == "b costs $2");
   CHECK(replace_text.applyReplacements("cba") == "cba");
   CHECK(replace_text.applyReplacements("xxx abc yyy abbbc zzz") == "xxx b costs $2 yyy bbb costs $2 zzz");
@@ -144,7 +144,7 @@ TEST_CASE("Literal replace works correctly in ReplaceText", "[applyReplacements]
   replace_text.setSearchValue("apple");
   replace_text.setReplacementValue("orange");
 
-  CHECK(replace_text.applyReplacements("") == "");
+  CHECK(replace_text.applyReplacements("") == "");  // NOLINT(readability-container-size-empty)
   CHECK(replace_text.applyReplacements("apple tree") == "orange tree");
   CHECK(replace_text.applyReplacements("one apple, two apples") == "one orange, two oranges");
 }
@@ -169,7 +169,7 @@ TEST_CASE("Substitute Variables works correctly in ReplaceText", "[applyReplacem
   flow_file->setAttribute("color", "green");
   flow_file->setAttribute("food", "eggs and ham");
 
-  CHECK(replace_text.applyReplacements("", flow_file) == "");
+  CHECK(replace_text.applyReplacements("", flow_file) == "");  // NOLINT(readability-container-size-empty)
   CHECK(replace_text.applyReplacements("no placeholders", flow_file) == "no placeholders");
   CHECK(replace_text.applyReplacements("${color}", flow_file) == "green");
   CHECK(replace_text.applyReplacements("I like ${color} ${food}!", flow_file) == "I like green eggs and ham!");
@@ -185,98 +185,98 @@ TEST_CASE("Regex Replace works correctly in ReplaceText in line by line mode", "
   LogTestController::getInstance().setDebug<minifi::processors::LogAttribute>();
 
   std::shared_ptr<core::Processor> generate_flow_file = plan->addProcessor("GenerateFlowFile", "generate_flow_file");
-  plan->setProperty(generate_flow_file, minifi::processors::GenerateFlowFile::CustomText.getName(), "apple\n pear\n orange\n banana\n");
-  plan->setProperty(generate_flow_file, minifi::processors::GenerateFlowFile::DataFormat.getName(), "Text");
-  plan->setProperty(generate_flow_file, minifi::processors::GenerateFlowFile::UniqueFlowFiles.getName(), "false");
+  plan->setProperty(generate_flow_file, minifi::processors::GenerateFlowFile::CustomText, "apple\n pear\n orange\n banana\n");
+  plan->setProperty(generate_flow_file, minifi::processors::GenerateFlowFile::DataFormat, "Text");
+  plan->setProperty(generate_flow_file, minifi::processors::GenerateFlowFile::UniqueFlowFiles, "false");
 
   std::shared_ptr<core::Processor> replace_text = plan->addProcessor("ReplaceText", "replace_text", minifi::processors::GenerateFlowFile::Success, true);
-  plan->setProperty(replace_text, minifi::processors::ReplaceText::EvaluationMode.getName(), toString(minifi::processors::EvaluationModeType::LINE_BY_LINE));
-  plan->setProperty(replace_text, minifi::processors::ReplaceText::ReplacementStrategy.getName(), toString(minifi::processors::ReplacementStrategyType::REGEX_REPLACE));
-  plan->setProperty(replace_text, minifi::processors::ReplaceText::SearchValue.getName(), "[aeiou]");
-  plan->setProperty(replace_text, minifi::processors::ReplaceText::ReplacementValue.getName(), "_");
+  plan->setProperty(replace_text, minifi::processors::ReplaceText::EvaluationMode, toString(minifi::processors::EvaluationModeType::LINE_BY_LINE));
+  plan->setProperty(replace_text, minifi::processors::ReplaceText::ReplacementStrategy, toString(minifi::processors::ReplacementStrategyType::REGEX_REPLACE));
+  plan->setProperty(replace_text, minifi::processors::ReplaceText::SearchValue, "[aeiou]");
+  plan->setProperty(replace_text, minifi::processors::ReplaceText::ReplacementValue, "_");
 
   std::string expected_output;
   SECTION("Replacing all lines") {
-    plan->setProperty(replace_text, minifi::processors::ReplaceText::LineByLineEvaluationMode.getName(), toString(minifi::processors::LineByLineEvaluationModeType::ALL));
+    plan->setProperty(replace_text, minifi::processors::ReplaceText::LineByLineEvaluationMode, toString(minifi::processors::LineByLineEvaluationModeType::ALL));
     expected_output = "_ppl_\n p__r\n _r_ng_\n b_n_n_\n";
   }
   SECTION("Replacing the first line") {
-    plan->setProperty(replace_text, minifi::processors::ReplaceText::LineByLineEvaluationMode.getName(), toString(minifi::processors::LineByLineEvaluationModeType::FIRST_LINE));
+    plan->setProperty(replace_text, minifi::processors::ReplaceText::LineByLineEvaluationMode, toString(minifi::processors::LineByLineEvaluationModeType::FIRST_LINE));
     expected_output = "_ppl_\n pear\n orange\n banana\n";
   }
   SECTION("Replacing the last line") {
-    plan->setProperty(replace_text, minifi::processors::ReplaceText::LineByLineEvaluationMode.getName(), toString(minifi::processors::LineByLineEvaluationModeType::LAST_LINE));
+    plan->setProperty(replace_text, minifi::processors::ReplaceText::LineByLineEvaluationMode, toString(minifi::processors::LineByLineEvaluationModeType::LAST_LINE));
     expected_output = "apple\n pear\n orange\n b_n_n_\n";
   }
   SECTION("Replacing all lines except the first") {
-    plan->setProperty(replace_text, minifi::processors::ReplaceText::LineByLineEvaluationMode.getName(), toString(minifi::processors::LineByLineEvaluationModeType::EXCEPT_FIRST_LINE));
+    plan->setProperty(replace_text, minifi::processors::ReplaceText::LineByLineEvaluationMode, toString(minifi::processors::LineByLineEvaluationModeType::EXCEPT_FIRST_LINE));
     expected_output = "apple\n p__r\n _r_ng_\n b_n_n_\n";
   }
   SECTION("Replacing all lines except the last") {
-    plan->setProperty(replace_text, minifi::processors::ReplaceText::LineByLineEvaluationMode.getName(), toString(minifi::processors::LineByLineEvaluationModeType::EXCEPT_LAST_LINE));
+    plan->setProperty(replace_text, minifi::processors::ReplaceText::LineByLineEvaluationMode, toString(minifi::processors::LineByLineEvaluationModeType::EXCEPT_LAST_LINE));
     expected_output = "_ppl_\n p__r\n _r_ng_\n banana\n";
   }
   SECTION("The output has fewer characters than the input") {
-    plan->setProperty(replace_text, minifi::processors::ReplaceText::ReplacementValue.getName(), "");
+    plan->setProperty(replace_text, minifi::processors::ReplaceText::ReplacementValue, "");
     expected_output = "ppl\n pr\n rng\n bnn\n";
   }
   SECTION("The output has more characters than the input") {
-    plan->setProperty(replace_text, minifi::processors::ReplaceText::ReplacementValue.getName(), "$&v$&");
+    plan->setProperty(replace_text, minifi::processors::ReplaceText::ReplacementValue, "$&v$&");
     expected_output = "avappleve\n peveavar\n ovoravangeve\n bavanavanava\n";
   }
   SECTION("The start of line anchor works correctly") {
-    plan->setProperty(replace_text, minifi::processors::ReplaceText::SearchValue.getName(), "^( ?)[aeiou]");
-    plan->setProperty(replace_text, minifi::processors::ReplaceText::ReplacementValue.getName(), "$1_");
+    plan->setProperty(replace_text, minifi::processors::ReplaceText::SearchValue, "^( ?)[aeiou]");
+    plan->setProperty(replace_text, minifi::processors::ReplaceText::ReplacementValue, "$1_");
     expected_output = "_pple\n pear\n _range\n banana\n";
   }
   SECTION("The end of line anchor works correctly") {
-    plan->setProperty(generate_flow_file, minifi::processors::GenerateFlowFile::CustomText.getName(), "apple\n pear\n orange\n banana");
-    plan->setProperty(replace_text, minifi::processors::ReplaceText::SearchValue.getName(), "[aeiou]$");
+    plan->setProperty(generate_flow_file, minifi::processors::GenerateFlowFile::CustomText, "apple\n pear\n orange\n banana");
+    plan->setProperty(replace_text, minifi::processors::ReplaceText::SearchValue, "[aeiou]$");
     expected_output = "appl_\n pear\n orang_\n banan_";
   }
   SECTION("The end of line anchor works correctly with Windows line endings, too") {
-    plan->setProperty(generate_flow_file, minifi::processors::GenerateFlowFile::CustomText.getName(), "apple\r\n pear\r\n orange\r\n banana");
-    plan->setProperty(replace_text, minifi::processors::ReplaceText::SearchValue.getName(), "[aeiou]$");
+    plan->setProperty(generate_flow_file, minifi::processors::GenerateFlowFile::CustomText, "apple\r\n pear\r\n orange\r\n banana");
+    plan->setProperty(replace_text, minifi::processors::ReplaceText::SearchValue, "[aeiou]$");
     expected_output = "appl_\r\n pear\r\n orang_\r\n banan_";
   }
   SECTION("Prepend works correctly in line by line mode") {
-    plan->setProperty(generate_flow_file, minifi::processors::GenerateFlowFile::CustomText.getName(), "apple\npear\norange\nbanana\n");
-    plan->setProperty(replace_text, minifi::processors::ReplaceText::ReplacementStrategy.getName(), toString(minifi::processors::ReplacementStrategyType::PREPEND));
-    plan->setProperty(replace_text, minifi::processors::ReplaceText::ReplacementValue.getName(), "- ");
+    plan->setProperty(generate_flow_file, minifi::processors::GenerateFlowFile::CustomText, "apple\npear\norange\nbanana\n");
+    plan->setProperty(replace_text, minifi::processors::ReplaceText::ReplacementStrategy, toString(minifi::processors::ReplacementStrategyType::PREPEND));
+    plan->setProperty(replace_text, minifi::processors::ReplaceText::ReplacementValue, "- ");
     expected_output = "- apple\n- pear\n- orange\n- banana\n";
   }
   SECTION("Append works correctly in line by line mode") {
-    plan->setProperty(replace_text, minifi::processors::ReplaceText::ReplacementStrategy.getName(), toString(minifi::processors::ReplacementStrategyType::APPEND));
-    plan->setProperty(replace_text, minifi::processors::ReplaceText::ReplacementValue.getName(), " tree");
+    plan->setProperty(replace_text, minifi::processors::ReplaceText::ReplacementStrategy, toString(minifi::processors::ReplacementStrategyType::APPEND));
+    plan->setProperty(replace_text, minifi::processors::ReplaceText::ReplacementValue, " tree");
     expected_output = "apple tree\n pear tree\n orange tree\n banana tree\n";
   }
   SECTION("Literal Replace works correctly in line by line mode") {
-    plan->setProperty(replace_text, minifi::processors::ReplaceText::ReplacementStrategy.getName(), toString(minifi::processors::ReplacementStrategyType::LITERAL_REPLACE));
-    plan->setProperty(replace_text, minifi::processors::ReplaceText::SearchValue.getName(), "a");
-    plan->setProperty(replace_text, minifi::processors::ReplaceText::ReplacementValue.getName(), "*");
+    plan->setProperty(replace_text, minifi::processors::ReplaceText::ReplacementStrategy, toString(minifi::processors::ReplacementStrategyType::LITERAL_REPLACE));
+    plan->setProperty(replace_text, minifi::processors::ReplaceText::SearchValue, "a");
+    plan->setProperty(replace_text, minifi::processors::ReplaceText::ReplacementValue, "*");
     expected_output = "*pple\n pe*r\n or*nge\n b*n*n*\n";
   }
   SECTION("Always Replace works correctly in line by line mode - without newline") {
-    plan->setProperty(generate_flow_file, minifi::processors::GenerateFlowFile::CustomText.getName(), "apple\n pear\n orange\n banana");
-    plan->setProperty(replace_text, minifi::processors::ReplaceText::ReplacementStrategy.getName(), toString(minifi::processors::ReplacementStrategyType::ALWAYS_REPLACE));
-    plan->setProperty(replace_text, minifi::processors::ReplaceText::ReplacementValue.getName(), "fruit");
+    plan->setProperty(generate_flow_file, minifi::processors::GenerateFlowFile::CustomText, "apple\n pear\n orange\n banana");
+    plan->setProperty(replace_text, minifi::processors::ReplaceText::ReplacementStrategy, toString(minifi::processors::ReplacementStrategyType::ALWAYS_REPLACE));
+    plan->setProperty(replace_text, minifi::processors::ReplaceText::ReplacementValue, "fruit");
     expected_output = "fruit\nfruit\nfruit\nfruit";
   }
   SECTION("Always Replace works correctly in line by line mode - with newline") {
-    plan->setProperty(generate_flow_file, minifi::processors::GenerateFlowFile::CustomText.getName(), "apple\n pear\n orange\n banana");
-    plan->setProperty(replace_text, minifi::processors::ReplaceText::ReplacementStrategy.getName(), toString(minifi::processors::ReplacementStrategyType::ALWAYS_REPLACE));
-    plan->setProperty(replace_text, minifi::processors::ReplaceText::ReplacementValue.getName(), "fruit\n");
+    plan->setProperty(generate_flow_file, minifi::processors::GenerateFlowFile::CustomText, "apple\n pear\n orange\n banana");
+    plan->setProperty(replace_text, minifi::processors::ReplaceText::ReplacementStrategy, toString(minifi::processors::ReplacementStrategyType::ALWAYS_REPLACE));
+    plan->setProperty(replace_text, minifi::processors::ReplaceText::ReplacementValue, "fruit\n");
     expected_output = "fruit\nfruit\nfruit\nfruit";
   }
   SECTION("Always Replace works correctly in line by line mode - with Windows line endings") {
-    plan->setProperty(generate_flow_file, minifi::processors::GenerateFlowFile::CustomText.getName(), "apple\r\n pear\r\n orange\r\n banana");
-    plan->setProperty(replace_text, minifi::processors::ReplaceText::ReplacementStrategy.getName(), toString(minifi::processors::ReplacementStrategyType::ALWAYS_REPLACE));
-    plan->setProperty(replace_text, minifi::processors::ReplaceText::ReplacementValue.getName(), "fruit");
+    plan->setProperty(generate_flow_file, minifi::processors::GenerateFlowFile::CustomText, "apple\r\n pear\r\n orange\r\n banana");
+    plan->setProperty(replace_text, minifi::processors::ReplaceText::ReplacementStrategy, toString(minifi::processors::ReplacementStrategyType::ALWAYS_REPLACE));
+    plan->setProperty(replace_text, minifi::processors::ReplaceText::ReplacementValue, "fruit");
     expected_output = "fruit\r\nfruit\r\nfruit\r\nfruit";
   }
 
   std::shared_ptr<core::Processor> log_attribute = plan->addProcessor("LogAttribute", "log_attribute", minifi::processors::ReplaceText::Success, true);
-  plan->setProperty(log_attribute, minifi::processors::LogAttribute::LogPayload.getName(), "true");
+  plan->setProperty(log_attribute, minifi::processors::LogAttribute::LogPayload, "true");
 
   testController.runSession(plan);
 
@@ -294,15 +294,15 @@ class HandleEmptyIncomingFlowFile {
     LogTestController::getInstance().setDebug<minifi::processors::LogAttribute>();
 
     std::shared_ptr<core::Processor> generate_flow_file = plan->addProcessor("GenerateFlowFile", "generate_flow_file");
-    plan->setProperty(generate_flow_file, minifi::processors::GenerateFlowFile::FileSize.getName(), "0 B");
+    plan->setProperty(generate_flow_file, minifi::processors::GenerateFlowFile::FileSize, "0 B");
 
     std::shared_ptr<core::Processor> replace_text = plan->addProcessor("ReplaceText", "replace_text", minifi::processors::GenerateFlowFile::Success, true);
-    plan->setProperty(replace_text, minifi::processors::ReplaceText::EvaluationMode.getName(), evaluation_mode_.toString());
-    plan->setProperty(replace_text, minifi::processors::ReplaceText::ReplacementStrategy.getName(), replacement_strategy_.toString());
-    plan->setProperty(replace_text, minifi::processors::ReplaceText::ReplacementValue.getName(), "hippopotamus");
+    plan->setProperty(replace_text, minifi::processors::ReplaceText::EvaluationMode, evaluation_mode_.toString());
+    plan->setProperty(replace_text, minifi::processors::ReplaceText::ReplacementStrategy, replacement_strategy_.toString());
+    plan->setProperty(replace_text, minifi::processors::ReplaceText::ReplacementValue, "hippopotamus");
 
     std::shared_ptr<core::Processor> log_attribute = plan->addProcessor("LogAttribute", "log_attribute", minifi::processors::ReplaceText::Success, true);
-    plan->setProperty(log_attribute, minifi::processors::LogAttribute::LogPayload.getName(), "true");
+    plan->setProperty(log_attribute, minifi::processors::LogAttribute::LogPayload, "true");
 
     testController.runSession(plan);
 
@@ -356,22 +356,22 @@ class UseExpressionLanguage {
     LogTestController::getInstance().setDebug<minifi::processors::LogAttribute>();
 
     std::shared_ptr<core::Processor> generate_flow_file = plan->addProcessor("GenerateFlowFile", "generate_flow_file");
-    plan->setProperty(generate_flow_file, minifi::processors::GenerateFlowFile::CustomText.getName(), "apple\n pear\n orange\n banana\n");
-    plan->setProperty(generate_flow_file, minifi::processors::GenerateFlowFile::DataFormat.getName(), "Text");
-    plan->setProperty(generate_flow_file, minifi::processors::GenerateFlowFile::UniqueFlowFiles.getName(), "false");
+    plan->setProperty(generate_flow_file, minifi::processors::GenerateFlowFile::CustomText, "apple\n pear\n orange\n banana\n");
+    plan->setProperty(generate_flow_file, minifi::processors::GenerateFlowFile::DataFormat, "Text");
+    plan->setProperty(generate_flow_file, minifi::processors::GenerateFlowFile::UniqueFlowFiles, "false");
 
     std::shared_ptr<core::Processor> update_attribute = plan->addProcessor("UpdateAttribute", "update_attribute", minifi::processors::GenerateFlowFile::Success, true);
-    plan->setProperty(update_attribute, "substring", "an", true);
-    plan->setProperty(update_attribute, "color", "blue", true);
+    plan->setDynamicProperty(update_attribute, "substring", "an");
+    plan->setDynamicProperty(update_attribute, "color", "blue");
 
     std::shared_ptr<core::Processor> replace_text = plan->addProcessor("ReplaceText", "replace_text", minifi::processors::GenerateFlowFile::Success, true);
-    plan->setProperty(replace_text, minifi::processors::ReplaceText::EvaluationMode.getName(), toString(minifi::processors::EvaluationModeType::ENTIRE_TEXT));
-    plan->setProperty(replace_text, minifi::processors::ReplaceText::ReplacementStrategy.getName(), toString(minifi::processors::ReplacementStrategyType::LITERAL_REPLACE));
-    plan->setProperty(replace_text, minifi::processors::ReplaceText::SearchValue.getName(), search_value_);
-    plan->setProperty(replace_text, minifi::processors::ReplaceText::ReplacementValue.getName(), replacement_value_);
+    plan->setProperty(replace_text, minifi::processors::ReplaceText::EvaluationMode, toString(minifi::processors::EvaluationModeType::ENTIRE_TEXT));
+    plan->setProperty(replace_text, minifi::processors::ReplaceText::ReplacementStrategy, toString(minifi::processors::ReplacementStrategyType::LITERAL_REPLACE));
+    plan->setProperty(replace_text, minifi::processors::ReplaceText::SearchValue, search_value_);
+    plan->setProperty(replace_text, minifi::processors::ReplaceText::ReplacementValue, replacement_value_);
 
     std::shared_ptr<core::Processor> log_attribute = plan->addProcessor("LogAttribute", "log_attribute", minifi::processors::ReplaceText::Success, true);
-    plan->setProperty(log_attribute, minifi::processors::LogAttribute::LogPayload.getName(), "true");
+    plan->setProperty(log_attribute, minifi::processors::LogAttribute::LogPayload, "true");
 
     testController.runSession(plan);
 

@@ -16,42 +16,20 @@
  * limitations under the License.
  */
 #include <memory>
-#include <algorithm>
-#include <cctype>
-#include <cstdint>
-#include <cstring>
-#include <iostream>
-#include <iterator>
-#include <map>
 #include <string>
-#include <utility>
-#include <vector>
 
-#include "utils/ByteArrayCallback.h"
-#include "core/FlowFile.h"
-#include "core/logging/Logger.h"
 #include "core/ProcessContext.h"
-#include "core/Relationship.h"
 #include "core/Resource.h"
 #include "GetMovementSensors.h"
-#include "io/BufferStream.h"
 #include "io/StreamFactory.h"
-#include "ResourceClaim.h"
-#include "utils/StringUtils.h"
 
-namespace org {
-namespace apache {
-namespace nifi {
-namespace minifi {
-namespace processors {
-
-const core::Relationship GetMovementSensors::Success("success", "All files are routed to success");
+namespace org::apache::nifi::minifi::processors {
 
 void GetMovementSensors::initialize() {
   logger_->log_trace("Initializing GetMovementSensors");
 
-  setSupportedProperties(properties());
-  setSupportedRelationships(relationships());
+  setSupportedProperties(Properties);
+  setSupportedRelationships(Relationships);
 }
 
 GetMovementSensors::~GetMovementSensors() = default;
@@ -84,8 +62,4 @@ void GetMovementSensors::onTrigger(const std::shared_ptr<core::ProcessContext>& 
 
 REGISTER_RESOURCE(GetMovementSensors, Processor);
 
-} /* namespace processors */
-} /* namespace minifi */
-} /* namespace nifi */
-} /* namespace apache */
-} /* namespace org */
+}  // namespace org::apache::nifi::minifi::processors

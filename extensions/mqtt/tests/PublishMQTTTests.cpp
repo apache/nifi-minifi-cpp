@@ -55,7 +55,7 @@ TEST_CASE_METHOD(Fixture, "PublishMQTTTest_EmptyBrokerURI", "[publishMQTTTest]")
 TEST_CASE_METHOD(Fixture, "PublishMQTTTest_EmptyClientID_V_3_1_0", "[publishMQTTTest]") {
   publishMqttProcessor_->setProperty(minifi::processors::PublishMQTT::Topic, "mytopic");
   publishMqttProcessor_->setProperty(minifi::processors::AbstractMQTTProcessor::BrokerURI, "127.0.0.1:1883");
-  publishMqttProcessor_->setProperty(minifi::processors::AbstractMQTTProcessor::MqttVersion, toString(minifi::processors::AbstractMQTTProcessor::MqttVersions::V_3_1_0));
+  publishMqttProcessor_->setProperty(minifi::processors::AbstractMQTTProcessor::MqttVersion, toString(minifi::processors::mqtt::MqttVersions::V_3_1_0));
   REQUIRE_THROWS_WITH(plan_->scheduleProcessor(publishMqttProcessor_), Catch::EndsWith("MQTT 3.1.0 specification does not support empty client IDs"));
 }
 

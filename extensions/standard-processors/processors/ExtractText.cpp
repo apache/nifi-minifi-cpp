@@ -28,7 +28,6 @@
 #include "ExtractText.h"
 #include "core/ProcessContext.h"
 #include "core/ProcessSession.h"
-#include "core/PropertyBuilder.h"
 #include "core/Resource.h"
 #include "core/FlowFile.h"
 #include "utils/gsl.h"
@@ -36,51 +35,11 @@
 
 namespace org::apache::nifi::minifi::processors {
 
-constexpr size_t MAX_BUFFER_SIZE = 4096;
-constexpr int MAX_CAPTURE_GROUP_SIZE = 1024;
-
-core::Property ExtractText::Attribute(core::PropertyBuilder::createProperty("Attribute")->withDescription("Attribute to set from content")->build());
-
-// despite there being a size value, ExtractText was initially built with a numeric for this property
-core::Property ExtractText::SizeLimit(
-    core::PropertyBuilder::createProperty("Size Limit")
-    ->withDescription("Maximum number of bytes to read into the attribute. 0 for no limit. Default is 2MB.")
-    ->withDefaultValue<uint32_t>(DEFAULT_SIZE_LIMIT)->build());
-
-core::Property ExtractText::RegexMode(
-    core::PropertyBuilder::createProperty("Regex Mode")
-    ->withDescription("Set this to extract parts of flowfile content using regular experssions in dynamic properties")
-    ->withDefaultValue<bool>(false)->build());
-
-core::Property ExtractText::IncludeCaptureGroupZero(
-    core::PropertyBuilder::createProperty("Include Capture Group 0")
-    ->withDescription("Indicates that Capture Group 0 should be included as an attribute. "
-                      "Capture Group 0 represents the entirety of the regular expression match, is typically not used, and could have considerable length.")
-    ->withDefaultValue<bool>(true)->build());
-
-core::Property ExtractText::InsensitiveMatch(
-    core::PropertyBuilder::createProperty("Enable Case-insensitive Matching")
-    ->withDescription("Indicates that two characters match even if they are in a different case. ")
-    ->withDefaultValue<bool>(false)->build());
-
-core::Property ExtractText::MaxCaptureGroupLen(
-    core::PropertyBuilder::createProperty("Maximum Capture Group Length")
-    ->withDescription("Specifies the maximum number of characters a given capture group value can have. "
-                      "Any characters beyond the max will be truncated.")
-    ->withDefaultValue<int>(MAX_CAPTURE_GROUP_SIZE)->build());
-
-
-core::Property ExtractText::EnableRepeatingCaptureGroup(
-    core::PropertyBuilder::createProperty("Enable repeating capture group")
-    ->withDescription("f set to true, every string matching the capture groups will be extracted. "
-                      "Otherwise, if the Regular Expression matches more than once, only the first match will be extracted.")
-    ->withDefaultValue<bool>(false)->build());
-
-core::Relationship ExtractText::Success("success", "success operational on the flow record");
+inline constexpr size_t MAX_BUFFER_SIZE = 4096;
 
 void ExtractText::initialize() {
-  setSupportedProperties(properties());
-  setSupportedRelationships(relationships());
+  setSupportedProperties(Properties);
+  setSupportedRelationships(Relationships);
 }
 
 void ExtractText::onTrigger(core::ProcessContext *context, core::ProcessSession *session) {
@@ -103,13 +62,14 @@ int64_t ExtractText::ReadCallback::operator()(const std::shared_ptr<io::InputStr
 
   std::string attrKey;
   std::string sizeLimitStr;
-  ctx_->getProperty(Attribute.getName(), attrKey);
-  ctx_->getProperty(SizeLimit.getName(), sizeLimitStr);
-  ctx_->getProperty(RegexMode.getName(), regex_mode);
+  ctx_->getProperty(Attribute, attrKey);
+  ctx_->getProperty(SizeLimit, sizeLimitStr);
+  ctx_->getProperty(RegexMode, regex_mode);
 
   if (sizeLimitStr.empty())
-    size_limit = DEFAULT_SIZE_LIMIT;
-  else if (sizeLimitStr != "0")
+    sizeLimitStr = DEFAULT_SIZE_LIMIT_STR;
+
+  if (sizeLimitStr != "0")
     size_limit = static_cast<size_t>(std::stoi(sizeLimitStr));
 
   std::ostringstream contentStream;
@@ -135,18 +95,18 @@ int64_t ExtractText::ReadCallback::operator()(const std::shared_ptr<io::InputStr
   if (regex_mode) {
     bool insensitive;
     std::vector<utils::Regex::Mode> regex_flags;
-    if (ctx_->getProperty(InsensitiveMatch.getName(), insensitive) && insensitive) {
+    if (ctx_->getProperty(InsensitiveMatch, insensitive) && insensitive) {
       regex_flags.push_back(utils::Regex::Mode::ICASE);
     }
 
     const bool include_capture_group_zero = ctx_->getProperty<bool>(IncludeCaptureGroupZero).value_or(true);
 
     bool repeatingcapture;
-    ctx_->getProperty(EnableRepeatingCaptureGroup.getName(), repeatingcapture);
+    ctx_->getProperty(EnableRepeatingCaptureGroup, repeatingcapture);
 
     const size_t maxCaptureSize = [this] {
       uint64_t val = 0;
-      ctx_->getProperty(MaxCaptureGroupLen.getName(), val);
+      ctx_->getProperty(MaxCaptureGroupLen, val);
       return gsl::narrow<size_t>(val);
     }();
 

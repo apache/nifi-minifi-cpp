@@ -83,22 +83,22 @@ TEST_CASE("FocusArchive", "[testFocusArchive]") {
     REQUIRE(!dir2.empty());
     REQUIRE(!dir3.empty());
     std::shared_ptr<core::Processor> getfile = plan->addProcessor("GetFile", "getfileCreate2");
-    plan->setProperty(getfile, org::apache::nifi::minifi::processors::GetFile::Directory.getName(), dir1.string());
-    plan->setProperty(getfile, org::apache::nifi::minifi::processors::GetFile::KeepSourceFile.getName(), "true");
+    plan->setProperty(getfile, org::apache::nifi::minifi::processors::GetFile::Directory, dir1.string());
+    plan->setProperty(getfile, org::apache::nifi::minifi::processors::GetFile::KeepSourceFile, "true");
 
     std::shared_ptr<core::Processor> fprocessor = plan->addProcessor("FocusArchiveEntry", "focusarchiveCreate", core::Relationship("success", "description"), true);
-    plan->setProperty(fprocessor, org::apache::nifi::minifi::processors::FocusArchiveEntry::Path.getName(), FOCUSED_FILE);
+    plan->setProperty(fprocessor, org::apache::nifi::minifi::processors::FocusArchiveEntry::Path, FOCUSED_FILE);
 
     std::shared_ptr<core::Processor> putfile1 = plan->addProcessor("PutFile", "PutFile1", core::Relationship("success", "description"), true);
-    plan->setProperty(putfile1, org::apache::nifi::minifi::processors::PutFile::Directory.getName(), dir2.string());
-    plan->setProperty(putfile1, org::apache::nifi::minifi::processors::PutFile::ConflictResolution.getName(),
+    plan->setProperty(putfile1, org::apache::nifi::minifi::processors::PutFile::Directory, dir2.string());
+    plan->setProperty(putfile1, org::apache::nifi::minifi::processors::PutFile::ConflictResolution,
                       org::apache::nifi::minifi::processors::PutFile::CONFLICT_RESOLUTION_STRATEGY_REPLACE);
 
     std::shared_ptr<core::Processor> ufprocessor = plan->addProcessor("UnfocusArchiveEntry", "unfocusarchiveCreate", core::Relationship("success", "description"), true);
 
     std::shared_ptr<core::Processor> putfile2 = plan->addProcessor("PutFile", "PutFile2", core::Relationship("success", "description"), true);
-    plan->setProperty(putfile2, org::apache::nifi::minifi::processors::PutFile::Directory.getName(), dir3.string());
-    plan->setProperty(putfile2, org::apache::nifi::minifi::processors::PutFile::ConflictResolution.getName(),
+    plan->setProperty(putfile2, org::apache::nifi::minifi::processors::PutFile::Directory, dir3.string());
+    plan->setProperty(putfile2, org::apache::nifi::minifi::processors::PutFile::ConflictResolution,
                       org::apache::nifi::minifi::processors::PutFile::CONFLICT_RESOLUTION_STRATEGY_REPLACE);
 
     auto archive_path_1 = dir1 / TEST_ARCHIVE_NAME;

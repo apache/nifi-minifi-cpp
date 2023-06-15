@@ -22,9 +22,12 @@
 #include <string>
 #include <utility>
 
+#include "core/OutputAttributeDefinition.h"
 #include "core/Processor.h"
 #include "core/ProcessSession.h"
-#include "core/Property.h"
+#include "core/PropertyDefinition.h"
+#include "core/PropertyDefinitionBuilder.h"
+#include "core/PropertyType.h"
 #include "core/logging/LoggerConfiguration.h"
 #include "utils/Enum.h"
 #include "utils/ListingStateManager.h"
@@ -41,17 +44,47 @@ class ListFile : public core::Processor {
   EXTENSIONAPI static constexpr const char* Description = "Retrieves a listing of files from the local filesystem. For each file that is listed, "
       "creates a FlowFile that represents the file so that it can be fetched in conjunction with FetchFile.";
 
-  EXTENSIONAPI static const core::Property InputDirectory;
-  EXTENSIONAPI static const core::Property RecurseSubdirectories;
-  EXTENSIONAPI static const core::Property FileFilter;
-  EXTENSIONAPI static const core::Property PathFilter;
-  EXTENSIONAPI static const core::Property MinimumFileAge;
-  EXTENSIONAPI static const core::Property MaximumFileAge;
-  EXTENSIONAPI static const core::Property MinimumFileSize;
-  EXTENSIONAPI static const core::Property MaximumFileSize;
-  EXTENSIONAPI static const core::Property IgnoreHiddenFiles;
-  static auto properties() {
-    return std::array{
+  EXTENSIONAPI static constexpr auto InputDirectory = core::PropertyDefinitionBuilder<>::createProperty("Input Directory")
+      .withDescription("The input directory from which files to pull files")
+      .isRequired(true)
+      .build();
+  EXTENSIONAPI static constexpr auto RecurseSubdirectories = core::PropertyDefinitionBuilder<>::createProperty("Recurse Subdirectories")
+      .withDescription("Indicates whether to list files from subdirectories of the directory")
+      .withPropertyType(core::StandardPropertyTypes::BOOLEAN_TYPE)
+      .withDefaultValue("true")
+      .isRequired(true)
+      .build();
+  EXTENSIONAPI static constexpr auto FileFilter = core::PropertyDefinitionBuilder<>::createProperty("File Filter")
+      .withDescription("Only files whose names match the given regular expression will be picked up")
+     .build();
+  EXTENSIONAPI static constexpr auto PathFilter = core::PropertyDefinitionBuilder<>::createProperty("Path Filter")
+      .withDescription("When Recurse Subdirectories is true, then only subdirectories whose path matches the given regular expression will be scanned")
+     .build();
+  EXTENSIONAPI static constexpr auto MinimumFileAge = core::PropertyDefinitionBuilder<>::createProperty("Minimum File Age")
+      .withDescription("The minimum age that a file must be in order to be pulled; any file younger than this amount of time (according to last modification date) will be ignored")
+      .isRequired(true)
+      .withPropertyType(core::StandardPropertyTypes::TIME_PERIOD_TYPE)
+      .withDefaultValue("0 sec")
+      .build();
+  EXTENSIONAPI static constexpr auto MaximumFileAge = core::PropertyDefinitionBuilder<>::createProperty("Maximum File Age")
+      .withDescription("The maximum age that a file must be in order to be pulled; any file older than this amount of time (according to last modification date) will be ignored")
+     .build();
+  EXTENSIONAPI static constexpr auto MinimumFileSize = core::PropertyDefinitionBuilder<>::createProperty("Minimum File Size")
+      .withDescription("The minimum size that a file must be in order to be pulled")
+      .isRequired(true)
+      .withPropertyType(core::StandardPropertyTypes::DATA_SIZE_TYPE)
+      .withDefaultValue("0 B")
+      .build();
+  EXTENSIONAPI static constexpr auto MaximumFileSize = core::PropertyDefinitionBuilder<>::createProperty("Maximum File Size")
+      .withDescription("The maximum size that a file can be in order to be pulled")
+     .build();
+  EXTENSIONAPI static constexpr auto IgnoreHiddenFiles = core::PropertyDefinitionBuilder<>::createProperty("Ignore Hidden Files")
+      .withDescription("Indicates whether or not hidden files should be ignored")
+      .withPropertyType(core::StandardPropertyTypes::BOOLEAN_TYPE)
+      .withDefaultValue("true")
+      .isRequired(true)
+      .build();
+  EXTENSIONAPI static constexpr auto Properties = std::array<core::PropertyReference, 9>{
       InputDirectory,
       RecurseSubdirectories,
       FileFilter,
@@ -61,32 +94,42 @@ class ListFile : public core::Processor {
       MinimumFileSize,
       MaximumFileSize,
       IgnoreHiddenFiles
-    };
-  }
+  };
 
-  EXTENSIONAPI static const core::Relationship Success;
-  static auto relationships() { return std::array{Success}; }
 
-  EXTENSIONAPI static const core::OutputAttribute Filename;
-  EXTENSIONAPI static const core::OutputAttribute Path;
-  EXTENSIONAPI static const core::OutputAttribute AbsolutePath;
-  EXTENSIONAPI static const core::OutputAttribute FileOwner;
-  EXTENSIONAPI static const core::OutputAttribute FileGroup;
-  EXTENSIONAPI static const core::OutputAttribute FileSize;
-  EXTENSIONAPI static const core::OutputAttribute FilePermissions;
-  EXTENSIONAPI static const core::OutputAttribute FileLastModifiedTime;
-  static auto outputAttributes() {
-    return std::array{
-        Filename,
-        Path,
-        AbsolutePath,
-        FileOwner,
-        FileGroup,
-        FileSize,
-        FilePermissions,
-        FileLastModifiedTime
-    };
-  }
+  EXTENSIONAPI static constexpr auto Success = core::RelationshipDefinition{"success", "All FlowFiles that are received are routed to success"};
+  EXTENSIONAPI static constexpr auto Relationships = std::array{Success};
+
+  EXTENSIONAPI static constexpr auto Filename = core::OutputAttributeDefinition<>{"filename", { Success },
+      "The name of the file that was read from filesystem."};
+  EXTENSIONAPI static constexpr auto Path = core::OutputAttributeDefinition<>{"path", { Success },
+      "The path is set to the relative path of the file's directory on filesystem compared to the Input Directory property. "
+      "For example, if Input Directory is set to /tmp, then files picked up from /tmp will have the path attribute set to \"./\". "
+      "If the Recurse Subdirectories property is set to true and a file is picked up from /tmp/abc/1/2/3, then the path attribute will be set to \"abc/1/2/3/\"."};
+  EXTENSIONAPI static constexpr auto AbsolutePath = core::OutputAttributeDefinition<>{"absolute.path", { Success },
+      "The absolute.path is set to the absolute path of the file's directory on filesystem. "
+      "For example, if the Input Directory property is set to /tmp, then files picked up from /tmp will have the path attribute set to \"/tmp/\". "
+      "If the Recurse Subdirectories property is set to true and a file is picked up from /tmp/abc/1/2/3, then the path attribute will be set to \"/tmp/abc/1/2/3/\"."};
+  EXTENSIONAPI static constexpr auto FileOwner = core::OutputAttributeDefinition<>{"file.owner", { Success },
+      "The user that owns the file in filesystem"};
+  EXTENSIONAPI static constexpr auto FileGroup = core::OutputAttributeDefinition<>{"file.group", { Success },
+      "The group that owns the file in filesystem"};
+  EXTENSIONAPI static constexpr auto FileSize = core::OutputAttributeDefinition<>{"file.size", { Success },
+      "The number of bytes in the file in filesystem"};
+  EXTENSIONAPI static constexpr auto FilePermissions = core::OutputAttributeDefinition<>{"file.permissions", { Success },
+      "The permissions for the file in filesystem. This is formatted as 3 characters for the owner, 3 for the group, and 3 for other users. For example rw-rw-r--"};
+  EXTENSIONAPI static constexpr auto FileLastModifiedTime = core::OutputAttributeDefinition<>{"file.lastModifiedTime", { Success },
+      "The timestamp of when the file in filesystem was last modified as 'yyyy-MM-dd'T'HH:mm:ssZ'"};
+  EXTENSIONAPI static constexpr auto OutputAttributes = std::array<core::OutputAttributeReference, 8>{
+      Filename,
+      Path,
+      AbsolutePath,
+      FileOwner,
+      FileGroup,
+      FileSize,
+      FilePermissions,
+      FileLastModifiedTime
+  };
 
   EXTENSIONAPI static constexpr bool SupportsDynamicProperties = false;
   EXTENSIONAPI static constexpr bool SupportsDynamicRelationships = false;

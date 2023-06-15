@@ -23,8 +23,12 @@
 #include <utility>
 #include <optional>
 
+#include "../controllerservices/GCPCredentialsControllerService.h"
 #include "core/logging/Logger.h"
 #include "core/Processor.h"
+#include "core/PropertyDefinition.h"
+#include "core/PropertyDefinitionBuilder.h"
+#include "core/PropertyType.h"
 #include "google/cloud/storage/oauth2/credentials.h"
 #include "google/cloud/storage/client.h"
 #include "google/cloud/storage/retry_policy.h"
@@ -34,19 +38,33 @@ class GCSProcessor : public core::Processor {
  public:
   GCSProcessor(std::string name, const minifi::utils::Identifier& uuid, std::shared_ptr<core::logging::Logger> logger)
       : core::Processor(std::move(name), uuid),
-        logger_(std::move(logger)) {
+     #include "PropertyDefinitionBuilder.h"
+   logger_(std::move(logger)) {
   }
 
-  EXTENSIONAPI static const core::Property GCPCredentials;
-  EXTENSIONAPI static const core::Property NumberOfRetries;
-  EXTENSIONAPI static const core::Property EndpointOverrideURL;
-  static auto properties() {
-    return std::array{
+  EXTENSIONAPI static constexpr auto GCPCredentials = core::PropertyDefinitionBuilder<0, 1>::createProperty("GCP Credentials Provider Service")
+      .withDescription("The Controller Service used to obtain Google Cloud Platform credentials. Should be the name of a GCPCredentialsControllerService.")
+      .isRequired(true)
+      .withAllowedTypes({core::className<GCPCredentialsControllerService>()})
+      .build();
+  EXTENSIONAPI static constexpr auto NumberOfRetries = core::PropertyDefinitionBuilder<>::createProperty("Number of retries")
+      .withDescription("How many retry attempts should be made before routing to the failure relationship.")
+      .withPropertyType(core::StandardPropertyTypes::UNSIGNED_LONG_TYPE)
+      .withDefaultValue("6")
+      .isRequired(true)
+      .supportsExpressionLanguage(false)
+      .build();
+  EXTENSIONAPI static constexpr auto EndpointOverrideURL = core::PropertyDefinitionBuilder<>::createProperty("Endpoint Override URL")
+      .withDescription("Overrides the default Google Cloud Storage endpoints")
+      .isRequired(false)
+      .supportsExpressionLanguage(true)
+      .build();
+  EXTENSIONAPI static constexpr auto Properties = std::array<core::PropertyReference, 3>{
       GCPCredentials,
       NumberOfRetries,
       EndpointOverrideURL
-    };
-  }
+  };
+
 
   void onSchedule(const std::shared_ptr<core::ProcessContext> &context, const std::shared_ptr<core::ProcessSessionFactory> &sessionFactory) override;
 

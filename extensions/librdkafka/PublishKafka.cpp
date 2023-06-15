@@ -341,8 +341,8 @@ void messageDeliveryCallback(rd_kafka_t* rk, const rd_kafka_message_t* rkmessage
 }  // namespace
 
 void PublishKafka::initialize() {
-  setSupportedProperties(properties());
-  setSupportedRelationships(relationships());
+  setSupportedProperties(Properties);
+  setSupportedRelationships(Relationships);
 }
 
 void PublishKafka::onSchedule(const std::shared_ptr<core::ProcessContext> &context, const std::shared_ptr<core::ProcessSessionFactory>& /*sessionFactory*/) {
@@ -361,20 +361,20 @@ void PublishKafka::onSchedule(const std::shared_ptr<core::ProcessContext> &conte
   // Get some properties not (only) used directly to set up librdkafka
 
   // Batch Size
-  context->getProperty(BatchSize.getName(), batch_size_);
+  context->getProperty(BatchSize, batch_size_);
   logger_->log_debug("PublishKafka: Batch Size [%lu]", batch_size_);
 
   // Target Batch Payload Size
-  context->getProperty(TargetBatchPayloadSize.getName(), target_batch_payload_size_);
+  context->getProperty(TargetBatchPayloadSize, target_batch_payload_size_);
   logger_->log_debug("PublishKafka: Target Batch Payload Size [%llu]", target_batch_payload_size_);
 
   // Max Flow Segment Size
-  context->getProperty(MaxFlowSegSize.getName(), max_flow_seg_size_);
+  context->getProperty(MaxFlowSegSize, max_flow_seg_size_);
   logger_->log_debug("PublishKafka: Max Flow Segment Size [%llu]", max_flow_seg_size_);
 
   // Attributes to Send as Headers
   std::string value;
-  if (context->getProperty(AttributeNameRegex.getName(), value) && !value.empty()) {
+  if (context->getProperty(AttributeNameRegex, value) && !value.empty()) {
     attributeNameRegex_ = utils::Regex(value);
     logger_->log_debug("PublishKafka: AttributeNameRegex [%s]", value);
   }
@@ -386,8 +386,8 @@ void PublishKafka::onSchedule(const std::shared_ptr<core::ProcessContext> &conte
   configureNewConnection(context);
 
   std::string message_key_field;
-  if (context->getProperty(MessageKeyField.getName(), message_key_field) && !message_key_field.empty()) {
-    logger_->log_error("The %s property is set. This property is DEPRECATED and has no effect; please use Kafka Key instead.", MessageKeyField.getName());
+  if (context->getProperty(MessageKeyField, message_key_field) && !message_key_field.empty()) {
+    logger_->log_error("The %s property is set. This property is DEPRECATED and has no effect; please use Kafka Key instead.", std::string{MessageKeyField.name});
   }
 
   logger_->log_debug("Successfully configured PublishKafka");
@@ -448,7 +448,7 @@ bool PublishKafka::configureNewConnection(const std::shared_ptr<core::ProcessCon
   }
 
   value = "";
-  if (context->getProperty(DebugContexts.getName(), value) && !value.empty()) {
+  if (context->getProperty(DebugContexts, value) && !value.empty()) {
     result = rd_kafka_conf_set(conf_.get(), "debug", value.c_str(), errstr.data(), errstr.size());
     logger_->log_debug("PublishKafka: debug [%s]", value);
     if (result != RD_KAFKA_CONF_OK) {
@@ -458,7 +458,7 @@ bool PublishKafka::configureNewConnection(const std::shared_ptr<core::ProcessCon
   }
 
   value = "";
-  if (context->getProperty(MaxMessageSize.getName(), value) && !value.empty()) {
+  if (context->getProperty(MaxMessageSize, value) && !value.empty()) {
     result = rd_kafka_conf_set(conf_.get(), "message.max.bytes", value.c_str(), errstr.data(), errstr.size());
     logger_->log_debug("PublishKafka: message.max.bytes [%s]", value);
     if (result != RD_KAFKA_CONF_OK) {
@@ -468,7 +468,7 @@ bool PublishKafka::configureNewConnection(const std::shared_ptr<core::ProcessCon
   }
   value = "";
   uint32_t int_val;
-  if (context->getProperty(QueueBufferMaxMessage.getName(), int_val)) {
+  if (context->getProperty(QueueBufferMaxMessage, int_val)) {
     if (int_val < batch_size_) {
       throw Exception(PROCESS_SCHEDULE_EXCEPTION, "Invalid configuration: Batch Size cannot be larger than Queue Max Message");
     }
@@ -482,7 +482,7 @@ bool PublishKafka::configureNewConnection(const std::shared_ptr<core::ProcessCon
     }
   }
   value = "";
-  if (context->getProperty(QueueBufferMaxSize.getName(), value) && !value.empty() && core::Property::StringToInt(value, valInt)) {
+  if (context->getProperty(QueueBufferMaxSize, value) && !value.empty() && core::Property::StringToInt(value, valInt)) {
     valInt = valInt / 1024;
     valueConf = std::to_string(valInt);
     result = rd_kafka_conf_set(conf_.get(), "queue.buffering.max.kbytes", valueConf.c_str(), errstr.data(), errstr.size());
@@ -503,7 +503,7 @@ bool PublishKafka::configureNewConnection(const std::shared_ptr<core::ProcessCon
     }
   }
   value = "";
-  if (context->getProperty(BatchSize.getName(), value) && !value.empty()) {
+  if (context->getProperty(BatchSize, value) && !value.empty()) {
     result = rd_kafka_conf_set(conf_.get(), "batch.num.messages", value.c_str(), errstr.data(), errstr.size());
     logger_->log_debug("PublishKafka: batch.num.messages [%s]", value);
     if (result != RD_KAFKA_CONF_OK) {
@@ -512,7 +512,7 @@ bool PublishKafka::configureNewConnection(const std::shared_ptr<core::ProcessCon
     }
   }
   value = "";
-  if (context->getProperty(CompressCodec.getName(), value) && !value.empty() && value != "none") {
+  if (context->getProperty(CompressCodec, value) && !value.empty() && value != "none") {
     result = rd_kafka_conf_set(conf_.get(), "compression.codec", value.c_str(), errstr.data(), errstr.size());
     logger_->log_debug("PublishKafka: compression.codec [%s]", value);
     if (result != RD_KAFKA_CONF_OK) {
@@ -735,7 +735,7 @@ void PublishKafka::onTrigger(const std::shared_ptr<core::ProcessContext> &contex
     }
 
     bool failEmptyFlowFiles = true;
-    context->getProperty(FailEmptyFlowFiles.getName(), failEmptyFlowFiles);
+    context->getProperty(FailEmptyFlowFiles, failEmptyFlowFiles);
 
     ReadCallback callback(max_flow_seg_size_, kafkaKey, thisTopic->getTopic(), conn_->getConnection(), *flowFile,
                           attributeNameRegex_, messages, flow_file_index, failEmptyFlowFiles, logger_);
@@ -807,5 +807,7 @@ void PublishKafka::onTrigger(const std::shared_ptr<core::ProcessContext> &contex
     }
   });
 }
+
+REGISTER_RESOURCE(PublishKafka, Processor);
 
 }  // namespace org::apache::nifi::minifi::processors

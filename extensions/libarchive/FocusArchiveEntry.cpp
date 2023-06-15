@@ -39,12 +39,9 @@ namespace org::apache::nifi::minifi::processors {
 
 std::shared_ptr<utils::IdGenerator> FocusArchiveEntry::id_generator_ = utils::IdGenerator::getIdGenerator();
 
-const core::Property FocusArchiveEntry::Path("Path", "The path within the archive to focus (\"/\" to focus the total archive)", "");
-const core::Relationship FocusArchiveEntry::Success("success", "success operational on the flow record");
-
 void FocusArchiveEntry::initialize() {
-  setSupportedProperties(properties());
-  setSupportedRelationships(relationships());
+  setSupportedProperties(Properties);
+  setSupportedRelationships(Relationships);
 }
 
 void FocusArchiveEntry::onTrigger(core::ProcessContext *context, core::ProcessSession *session) {
@@ -58,7 +55,7 @@ void FocusArchiveEntry::onTrigger(core::ProcessContext *context, core::ProcessSe
 
   // Extract archive contents
   ArchiveMetadata archiveMetadata;
-  context->getProperty(Path.getName(), archiveMetadata.focusedEntry);
+  context->getProperty(Path, archiveMetadata.focusedEntry);
   flowFile->getAttribute("filename", archiveMetadata.archiveName);
 
   session->read(flowFile, ReadCallback{this, &file_man, &archiveMetadata});

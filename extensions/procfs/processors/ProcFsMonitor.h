@@ -26,6 +26,9 @@
 
 #include "../ProcFs.h"
 #include "core/Processor.h"
+#include "core/PropertyDefinition.h"
+#include "core/PropertyDefinitionBuilder.h"
+#include "core/RelationshipDefinition.h"
 #include "core/logging/LoggerConfiguration.h"
 #include "core/logging/Logger.h"
 #include "utils/Enum.h"
@@ -34,6 +37,21 @@
 #include "rapidjson/document.h"
 
 namespace org::apache::nifi::minifi::extensions::procfs {
+
+SMART_ENUM(OutputFormat,
+    (JSON, "JSON"),
+    (OPENTELEMETRY, "OpenTelemetry")
+)
+
+SMART_ENUM(OutputCompactness,
+    (COMPACT, "Compact"),
+    (PRETTY, "Pretty")
+)
+
+SMART_ENUM(ResultRelativeness,
+    (RELATIVE, "Relative"),
+    (ABSOLUTE, "Absolute")
+)
 
 class ProcFsMonitor : public core::Processor {
  public:
@@ -44,21 +62,34 @@ class ProcFsMonitor : public core::Processor {
 
   EXTENSIONAPI static constexpr const char* Description = "This processor can create FlowFiles with various performance data through the proc pseudo-filesystem. (Linux only)";
 
-  EXTENSIONAPI static const core::Property OutputFormatProperty;
-  EXTENSIONAPI static const core::Property OutputCompactnessProperty;
-  EXTENSIONAPI static const core::Property DecimalPlaces;
-  EXTENSIONAPI static const core::Property ResultRelativenessProperty;
-  static auto properties() {
-    return std::array{
+  EXTENSIONAPI static constexpr auto OutputFormatProperty = core::PropertyDefinitionBuilder<OutputFormat::length>::createProperty("Output Format")
+      .withDescription("The output type of the new flowfile")
+      .withAllowedValues(OutputFormat::values)
+      .withDefaultValue(toStringView(OutputFormat::JSON))
+      .build();
+  EXTENSIONAPI static constexpr auto OutputCompactnessProperty = core::PropertyDefinitionBuilder<OutputCompactness::length>::createProperty("Output Compactness")
+      .withDescription("The output format of the new flowfile")
+      .withAllowedValues(OutputCompactness::values)
+      .withDefaultValue(toStringView(OutputCompactness::PRETTY))
+      .build();
+  EXTENSIONAPI static constexpr auto DecimalPlaces = core::PropertyDefinitionBuilder<>::createProperty("Round to decimal places")
+      .withDescription("The number of decimal places to round the values to (blank for no rounding)")
+      .build();
+  EXTENSIONAPI static constexpr auto ResultRelativenessProperty = core::PropertyDefinitionBuilder<ResultRelativeness::length>::createProperty("Result Type")
+      .withDescription("Absolute returns the current procfs values, relative calculates the usage between triggers")
+      .withAllowedValues(ResultRelativeness::values)
+      .withDefaultValue(toStringView(ResultRelativeness::ABSOLUTE))
+      .build();
+  EXTENSIONAPI static constexpr auto Properties = std::array<core::PropertyReference, 4>{
       OutputFormatProperty,
       OutputCompactnessProperty,
       DecimalPlaces,
       ResultRelativenessProperty
-    };
-  }
+  };
 
-  EXTENSIONAPI static const core::Relationship Success;
-  static auto relationships() { return std::array{Success}; }
+
+  EXTENSIONAPI static constexpr auto Success = core::RelationshipDefinition{"success", "All files are routed to success"};
+  EXTENSIONAPI static constexpr auto Relationships = std::array{Success};
 
   EXTENSIONAPI static constexpr bool SupportsDynamicProperties = false;
   EXTENSIONAPI static constexpr bool SupportsDynamicRelationships = false;
@@ -72,21 +103,6 @@ class ProcFsMonitor : public core::Processor {
   void onTrigger(core::ProcessContext *context, core::ProcessSession *session) override;
 
   void initialize() override;
-
-  SMART_ENUM(OutputFormat,
-             (JSON, "JSON"),
-             (OPENTELEMETRY, "OpenTelemetry")
-  )
-
-  SMART_ENUM(OutputCompactness,
-             (COMPACT, "Compact"),
-             (PRETTY, "Pretty")
-  )
-
-  SMART_ENUM(ResultRelativeness,
-             (RELATIVE, "Relative"),
-             (ABSOLUTE, "Absolute")
-  )
 
  private:
   rapidjson::Value& prepareJSONBody(rapidjson::Document& root);

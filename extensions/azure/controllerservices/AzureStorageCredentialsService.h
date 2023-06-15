@@ -24,6 +24,9 @@
 
 #include "core/controller/ControllerService.h"
 #include "core/logging/LoggerConfiguration.h"
+#include "core/PropertyDefinition.h"
+#include "core/PropertyDefinitionBuilder.h"
+#include "core/PropertyType.h"
 #include "storage/AzureStorageCredentials.h"
 #include "utils/Export.h"
 
@@ -33,22 +36,38 @@ class AzureStorageCredentialsService : public core::controller::ControllerServic
  public:
   EXTENSIONAPI static constexpr const char* Description = "Azure Storage Credentials Management Service";
 
-  EXTENSIONAPI static const core::Property StorageAccountName;
-  EXTENSIONAPI static const core::Property StorageAccountKey;
-  EXTENSIONAPI static const core::Property SASToken;
-  EXTENSIONAPI static const core::Property CommonStorageAccountEndpointSuffix;
-  EXTENSIONAPI static const core::Property ConnectionString;
-  EXTENSIONAPI static const core::Property UseManagedIdentityCredentials;
-  static auto properties() {
-    return std::array{
+  EXTENSIONAPI static constexpr auto StorageAccountName = core::PropertyDefinitionBuilder<>::createProperty("Storage Account Name")
+      .withDescription("The storage account name.")
+      .build();
+  EXTENSIONAPI static constexpr auto StorageAccountKey = core::PropertyDefinitionBuilder<>::createProperty("Storage Account Key")
+      .withDescription("The storage account key. This is an admin-like password providing access to every container in this account. "
+          "It is recommended one uses Shared Access Signature (SAS) token instead for fine-grained control with policies.")
+      .build();
+  EXTENSIONAPI static constexpr auto SASToken = core::PropertyDefinitionBuilder<>::createProperty("SAS Token")
+      .withDescription("Shared Access Signature token. Specify either SAS Token (recommended) or Storage Account Key together with Storage Account Name if Managed Identity is not used.")
+      .build();
+  EXTENSIONAPI static constexpr auto CommonStorageAccountEndpointSuffix = core::PropertyDefinitionBuilder<>::createProperty("Common Storage Account Endpoint Suffix")
+      .withDescription("Storage accounts in public Azure always use a common FQDN suffix. Override this endpoint suffix with a "
+          "different suffix in certain circumstances (like Azure Stack or non-public Azure regions).")
+      .build();
+  EXTENSIONAPI static constexpr auto ConnectionString = core::PropertyDefinitionBuilder<>::createProperty("Connection String")
+      .withDescription("Connection string used to connect to Azure Storage service. This overrides all other set credential properties if Managed Identity is not used.")
+      .build();
+  EXTENSIONAPI static constexpr auto UseManagedIdentityCredentials = core::PropertyDefinitionBuilder<>::createProperty("Use Managed Identity Credentials")
+      .withDescription("If true Managed Identity credentials will be used together with the Storage Account Name for authentication.")
+      .isRequired(true)
+      .withPropertyType(core::StandardPropertyTypes::BOOLEAN_TYPE)
+      .withDefaultValue("false")
+      .build();
+  EXTENSIONAPI static constexpr auto Properties = std::array<core::PropertyReference, 6>{
       StorageAccountName,
       StorageAccountKey,
       SASToken,
       CommonStorageAccountEndpointSuffix,
       ConnectionString,
       UseManagedIdentityCredentials
-    };
-  }
+  };
+
 
   EXTENSIONAPI static constexpr bool SupportsDynamicProperties = false;
   ADD_COMMON_VIRTUAL_FUNCTIONS_FOR_CONTROLLER_SERVICES

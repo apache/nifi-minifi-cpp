@@ -22,7 +22,6 @@
 
 #include "core/ProcessContext.h"
 #include "core/ProcessSession.h"
-#include "core/PropertyBuilder.h"
 #include "core/Resource.h"
 #include "serialization/PayloadSerializer.h"
 #include "TextFragmentUtils.h"
@@ -31,36 +30,11 @@
 
 namespace org::apache::nifi::minifi::processors {
 
-const core::Relationship DefragmentText::Success("success", "Flowfiles that have been successfully defragmented");
-const core::Relationship DefragmentText::Failure("failure", "Flowfiles that failed the defragmentation process");
 const core::Relationship DefragmentText::Self("__self__", "Marks the FlowFile to be owned by this processor");
 
-const core::Property DefragmentText::Pattern(
-    core::PropertyBuilder::createProperty("Pattern")
-        ->withDescription("A regular expression to match at the start or end of messages.")
-        ->isRequired(true)->build());
-
-const core::Property DefragmentText::PatternLoc(
-    core::PropertyBuilder::createProperty("Pattern Location")->withDescription("Whether the pattern is located at the start or at the end of the messages.")
-        ->withAllowableValues(PatternLocation::values())
-        ->withDefaultValue(toString(PatternLocation::START_OF_MESSAGE))->build());
-
-
-const core::Property DefragmentText::MaxBufferSize(
-    core::PropertyBuilder::createProperty("Max Buffer Size")
-        ->withDescription("The maximum buffer size, if the buffer exceeds this, it will be transferred to failure. Expected format is <size> <data unit>")
-        ->withType(core::StandardValidators::DATA_SIZE_VALIDATOR)->build());
-
-const core::Property DefragmentText::MaxBufferAge(
-    core::PropertyBuilder::createProperty("Max Buffer Age")->
-        withDescription("The maximum age of the buffer after which it will be transferred to success when matching Start of Message patterns or to failure when matching End of Message patterns. "
-                        "Expected format is <duration> <time unit>")
-        ->withDefaultValue("10 min")
-        ->build());
-
 void DefragmentText::initialize() {
-  setSupportedProperties(properties());
-  setSupportedRelationships(relationships());
+  setSupportedProperties(Properties);
+  setSupportedRelationships(Relationships);
 }
 
 void DefragmentText::onSchedule(core::ProcessContext* context, core::ProcessSessionFactory*) {
@@ -78,10 +52,10 @@ void DefragmentText::onSchedule(core::ProcessContext* context, core::ProcessSess
     logger_->log_trace("The Buffer maximum size is configured to be %" PRIu64 " B", max_buffer_size->getValue());
   }
 
-  context->getProperty(PatternLoc.getName(), pattern_location_);
+  context->getProperty(PatternLoc, pattern_location_);
 
   std::string pattern_str;
-  if (context->getProperty(Pattern.getName(), pattern_str) && !pattern_str.empty()) {
+  if (context->getProperty(Pattern, pattern_str) && !pattern_str.empty()) {
     pattern_ = utils::Regex(pattern_str);
     logger_->log_trace("The Pattern is configured to be %s", pattern_str);
   } else {
@@ -105,7 +79,7 @@ void DefragmentText::onTrigger(core::ProcessContext*, core::ProcessSession* sess
     if (fragment_source.buffer.maxSizeReached(max_size_)) {
       fragment_source.buffer.flushAndReplace(session, Failure, nullptr);
     } else if (fragment_source.buffer.maxAgeReached(max_age_)) {
-      fragment_source.buffer.flushAndReplace(session, pattern_location_ == PatternLocation::START_OF_MESSAGE ? Success : Failure, nullptr);
+      fragment_source.buffer.flushAndReplace(session, pattern_location_ == defragment_text::PatternLocation::START_OF_MESSAGE ? Success : Failure, nullptr);
     }
   }
 }
@@ -184,9 +158,9 @@ void updateAppendedAttributes(core::FlowFile& buffered_ff) {
   buffered_ff.setAttribute(core::SpecialFlowAttribute::FILENAME, buffer_new_name);
 }
 
-size_t getSplitPosition(const utils::SMatch& last_match, DefragmentText::PatternLocation pattern_location) {
+size_t getSplitPosition(const utils::SMatch& last_match, defragment_text::PatternLocation pattern_location) {
   size_t split_position = last_match.position(0);
-  if (pattern_location == DefragmentText::PatternLocation::END_OF_MESSAGE) {
+  if (pattern_location == defragment_text::PatternLocation::END_OF_MESSAGE) {
     split_position += last_match.length(0);
   }
   return split_position;

@@ -47,17 +47,17 @@ class ListAzureDataLakeStorageTestsFixture {
 
     plan_->addProcessor(list_azure_data_lake_storage_, "ListAzureDataLakeStorage", { {"success", "d"} });
     auto logattribute = plan_->addProcessor("LogAttribute", "LogAttribute", { {"success", "d"} }, true);
-    plan_->setProperty(logattribute, minifi::processors::LogAttribute::FlowFilesToLog.getName(), "0");
+    plan_->setProperty(logattribute, minifi::processors::LogAttribute::FlowFilesToLog, "0");
 
     azure_storage_cred_service_ = plan_->addController("AzureStorageCredentialsService", "AzureStorageCredentialsService");
     setDefaultProperties();
   }
 
   void setDefaultProperties() {
-    plan_->setProperty(list_azure_data_lake_storage_, minifi::azure::processors::ListAzureDataLakeStorage::AzureStorageCredentialsService.getName(), "AzureStorageCredentialsService");
-    plan_->setProperty(list_azure_data_lake_storage_, minifi::azure::processors::ListAzureDataLakeStorage::FilesystemName.getName(), FILESYSTEM_NAME);
-    plan_->setProperty(list_azure_data_lake_storage_, minifi::azure::processors::ListAzureDataLakeStorage::DirectoryName.getName(), DIRECTORY_NAME);
-    plan_->setProperty(azure_storage_cred_service_, minifi::azure::controllers::AzureStorageCredentialsService::ConnectionString.getName(), CONNECTION_STRING);
+    plan_->setProperty(list_azure_data_lake_storage_, minifi::azure::processors::ListAzureDataLakeStorage::AzureStorageCredentialsService, "AzureStorageCredentialsService");
+    plan_->setProperty(list_azure_data_lake_storage_, minifi::azure::processors::ListAzureDataLakeStorage::FilesystemName, FILESYSTEM_NAME);
+    plan_->setProperty(list_azure_data_lake_storage_, minifi::azure::processors::ListAzureDataLakeStorage::DirectoryName, DIRECTORY_NAME);
+    plan_->setProperty(azure_storage_cred_service_, minifi::azure::controllers::AzureStorageCredentialsService::ConnectionString, CONNECTION_STRING);
   }
 
   virtual ~ListAzureDataLakeStorageTestsFixture() {
@@ -77,26 +77,26 @@ namespace {
 using namespace std::chrono_literals;
 
 TEST_CASE_METHOD(ListAzureDataLakeStorageTestsFixture, "Azure storage credentials service is empty", "[azureDataLakeStorageParameters]") {
-  plan_->setProperty(list_azure_data_lake_storage_, minifi::azure::processors::ListAzureDataLakeStorage::AzureStorageCredentialsService.getName(), "");
+  plan_->setProperty(list_azure_data_lake_storage_, minifi::azure::processors::ListAzureDataLakeStorage::AzureStorageCredentialsService, "");
   REQUIRE_THROWS_AS(test_controller_.runSession(plan_, true), minifi::Exception);
 }
 
 TEST_CASE_METHOD(ListAzureDataLakeStorageTestsFixture, "Filesystem name is not set", "[azureDataLakeStorageParameters]") {
-  plan_->setProperty(list_azure_data_lake_storage_, minifi::azure::processors::ListAzureDataLakeStorage::FilesystemName.getName(), "");
+  plan_->setProperty(list_azure_data_lake_storage_, minifi::azure::processors::ListAzureDataLakeStorage::FilesystemName, "");
   REQUIRE_THROWS_AS(test_controller_.runSession(plan_, true), minifi::Exception);
   using org::apache::nifi::minifi::utils::verifyLogLinePresenceInPollTime;
   REQUIRE(verifyLogLinePresenceInPollTime(1s, "Filesystem Name '' is invalid or empty!"));
 }
 
 TEST_CASE_METHOD(ListAzureDataLakeStorageTestsFixture, "Connection String is empty", "[azureDataLakeStorageParameters]") {
-  plan_->setProperty(azure_storage_cred_service_, minifi::azure::controllers::AzureStorageCredentialsService::ConnectionString.getName(), "");
+  plan_->setProperty(azure_storage_cred_service_, minifi::azure::controllers::AzureStorageCredentialsService::ConnectionString, "");
   REQUIRE_THROWS_AS(test_controller_.runSession(plan_, true), minifi::Exception);
 }
 
 TEST_CASE_METHOD(ListAzureDataLakeStorageTestsFixture, "List all files every time", "[listAzureDataLakeStorage]") {
-  plan_->setProperty(list_azure_data_lake_storage_, minifi::azure::processors::ListAzureDataLakeStorage::ListingStrategy.getName(),
-    toString(minifi::azure::processors::ListAzureDataLakeStorage::EntityTracking::NONE));
-  plan_->setProperty(list_azure_data_lake_storage_, minifi::azure::processors::ListAzureDataLakeStorage::RecurseSubdirectories.getName(), "false");
+  plan_->setProperty(list_azure_data_lake_storage_, minifi::azure::processors::ListAzureDataLakeStorage::ListingStrategy,
+    toString(minifi::azure::processors::azure::EntityTracking::NONE));
+  plan_->setProperty(list_azure_data_lake_storage_, minifi::azure::processors::ListAzureDataLakeStorage::RecurseSubdirectories, "false");
   test_controller_.runSession(plan_, true);
   using org::apache::nifi::minifi::utils::verifyLogLinePresenceInPollTime;
   auto run_assertions = [this]() {
@@ -124,9 +124,9 @@ TEST_CASE_METHOD(ListAzureDataLakeStorageTestsFixture, "List all files every tim
 }
 
 TEST_CASE_METHOD(ListAzureDataLakeStorageTestsFixture, "Do not list same files the second time when timestamps are tracked", "[listAzureDataLakeStorage]") {
-  plan_->setProperty(list_azure_data_lake_storage_, minifi::azure::processors::ListAzureDataLakeStorage::ListingStrategy.getName(),
-    toString(minifi::azure::processors::ListAzureDataLakeStorage::EntityTracking::TIMESTAMPS));
-  plan_->setProperty(list_azure_data_lake_storage_, minifi::azure::processors::ListAzureDataLakeStorage::RecurseSubdirectories.getName(), "false");
+  plan_->setProperty(list_azure_data_lake_storage_, minifi::azure::processors::ListAzureDataLakeStorage::ListingStrategy,
+    toString(minifi::azure::processors::azure::EntityTracking::TIMESTAMPS));
+  plan_->setProperty(list_azure_data_lake_storage_, minifi::azure::processors::ListAzureDataLakeStorage::RecurseSubdirectories, "false");
   test_controller_.runSession(plan_, true);
   using org::apache::nifi::minifi::utils::verifyLogLinePresenceInPollTime;
   auto passed_params = mock_data_lake_storage_client_ptr_->getPassedListParams();
@@ -153,7 +153,7 @@ TEST_CASE_METHOD(ListAzureDataLakeStorageTestsFixture, "Do not list same files t
 }
 
 TEST_CASE_METHOD(ListAzureDataLakeStorageTestsFixture, "Do not list filtered files", "[listAzureDataLakeStorage]") {
-  plan_->setProperty(list_azure_data_lake_storage_, minifi::azure::processors::ListAzureDataLakeStorage::FileFilter.getName(), "item1.*g");
+  plan_->setProperty(list_azure_data_lake_storage_, minifi::azure::processors::ListAzureDataLakeStorage::FileFilter, "item1.*g");
   test_controller_.runSession(plan_, true);
   using org::apache::nifi::minifi::utils::verifyLogLinePresenceInPollTime;
   auto passed_params = mock_data_lake_storage_client_ptr_->getPassedListParams();
@@ -176,7 +176,7 @@ TEST_CASE_METHOD(ListAzureDataLakeStorageTestsFixture, "Do not list filtered fil
 }
 
 TEST_CASE_METHOD(ListAzureDataLakeStorageTestsFixture, "Do not list filtered paths", "[listAzureDataLakeStorage]") {
-  plan_->setProperty(list_azure_data_lake_storage_, minifi::azure::processors::ListAzureDataLakeStorage::PathFilter.getName(), "su.*");
+  plan_->setProperty(list_azure_data_lake_storage_, minifi::azure::processors::ListAzureDataLakeStorage::PathFilter, "su.*");
   test_controller_.runSession(plan_, true);
   using org::apache::nifi::minifi::utils::verifyLogLinePresenceInPollTime;
   auto passed_params = mock_data_lake_storage_client_ptr_->getPassedListParams();
@@ -199,12 +199,12 @@ TEST_CASE_METHOD(ListAzureDataLakeStorageTestsFixture, "Do not list filtered pat
 }
 
 TEST_CASE_METHOD(ListAzureDataLakeStorageTestsFixture, "Throw on invalid file filter", "[listAzureDataLakeStorage]") {
-  plan_->setProperty(list_azure_data_lake_storage_, minifi::azure::processors::ListAzureDataLakeStorage::FileFilter.getName(), "(item1][].*g");
+  plan_->setProperty(list_azure_data_lake_storage_, minifi::azure::processors::ListAzureDataLakeStorage::FileFilter, "(item1][].*g");
   REQUIRE_THROWS_AS(test_controller_.runSession(plan_, true), minifi::Exception);
 }
 
 TEST_CASE_METHOD(ListAzureDataLakeStorageTestsFixture, "Throw on invalid path filter", "[listAzureDataLakeStorage]") {
-  plan_->setProperty(list_azure_data_lake_storage_, minifi::azure::processors::ListAzureDataLakeStorage::PathFilter.getName(), "su.([[*");
+  plan_->setProperty(list_azure_data_lake_storage_, minifi::azure::processors::ListAzureDataLakeStorage::PathFilter, "su.([[*");
   REQUIRE_THROWS_AS(test_controller_.runSession(plan_, true), minifi::Exception);
 }
 

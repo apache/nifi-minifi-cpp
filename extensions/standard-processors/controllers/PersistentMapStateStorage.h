@@ -29,6 +29,9 @@
 #include "controllers/keyvalue/KeyValueStateStorage.h"
 #include "core/logging/Logger.h"
 #include "core/logging/LoggerConfiguration.h"
+#include "core/PropertyDefinition.h"
+#include "core/PropertyDefinitionBuilder.h"
+#include "core/PropertyType.h"
 
 namespace org::apache::nifi::minifi::controllers {
 
@@ -41,16 +44,28 @@ class PersistentMapStateStorage : public KeyValueStateStorage {
 
   EXTENSIONAPI static constexpr const char* Description = "A persistable state storage service implemented by a locked std::unordered_map<std::string, std::string> and persisted into a file";
 
-  EXTENSIONAPI static const core::Property AlwaysPersist;
-  EXTENSIONAPI static const core::Property AutoPersistenceInterval;
-  EXTENSIONAPI static const core::Property File;
-  static auto properties() {
-    return std::array{
+  EXTENSIONAPI static constexpr auto AlwaysPersist = core::PropertyDefinitionBuilder<>::createProperty(ALWAYS_PERSIST_PROPERTY_NAME)
+      .withDescription("Persist every change instead of persisting it periodically.")
+      .isRequired(false)
+      .withPropertyType(core::StandardPropertyTypes::BOOLEAN_TYPE)
+      .withDefaultValue("false")
+      .build();
+  EXTENSIONAPI static constexpr auto AutoPersistenceInterval = core::PropertyDefinitionBuilder<>::createProperty(AUTO_PERSISTENCE_INTERVAL_PROPERTY_NAME)
+      .withDescription("The interval of the periodic task persisting all values. Only used if Always Persist is false. If set to 0 seconds, auto persistence will be disabled.")
+      .isRequired(false)
+      .withPropertyType(core::StandardPropertyTypes::TIME_PERIOD_TYPE)
+      .withDefaultValue("1 min")
+      .build();
+  EXTENSIONAPI static constexpr auto File = core::PropertyDefinitionBuilder<>::createProperty("File")
+      .withDescription("Path to a file to store state")
+      .isRequired(true)
+      .build();
+  EXTENSIONAPI static constexpr auto Properties = std::array<core::PropertyReference, 3>{
       AlwaysPersist,
       AutoPersistenceInterval,
       File
-    };
-  }
+  };
+
 
   EXTENSIONAPI static constexpr bool SupportsDynamicProperties = false;
   ADD_COMMON_VIRTUAL_FUNCTIONS_FOR_CONTROLLER_SERVICES

@@ -26,6 +26,9 @@
 #include "io/validation.h"
 #include "core/controller/ControllerService.h"
 #include "core/logging/LoggerFactory.h"
+#include "core/PropertyDefinition.h"
+#include "core/PropertyDefinitionBuilder.h"
+#include "core/PropertyType.h"
 #include "core/state/UpdatePolicy.h"
 #include "utils/Export.h"
 
@@ -50,18 +53,32 @@ class UpdatePolicyControllerService : public core::controller::ControllerService
   MINIFIAPI static constexpr const char* Description = "UpdatePolicyControllerService allows a flow specific policy on allowing or disallowing updates. "
       "Since the flow dictates the purpose of a device it will also be used to dictate updates to specific components.";
 
-  MINIFIAPI static const core::Property AllowAllProperties;
-  MINIFIAPI static const core::Property PersistUpdates;
-  MINIFIAPI static const core::Property AllowedProperties;
-  MINIFIAPI static const core::Property DisallowedProperties;
-  static auto properties() {
-    return std::array{
+  MINIFIAPI static constexpr auto AllowAllProperties = core::PropertyDefinitionBuilder<>::createProperty("Allow All Properties")
+      .withDescription("Allows all properties, which are also not disallowed, to be updated")
+      .withPropertyType(core::StandardPropertyTypes::BOOLEAN_TYPE)
+      .withDefaultValue("false")
+      .build();
+  MINIFIAPI static constexpr auto PersistUpdates = core::PropertyDefinitionBuilder<>::createProperty("Persist Updates")
+      .withDescription("Property that dictates whether updates should persist after a restart")
+      .isRequired(false)
+      .withPropertyType(core::StandardPropertyTypes::BOOLEAN_TYPE)
+      .withDefaultValue("false")
+      .build();
+  MINIFIAPI static constexpr auto AllowedProperties = core::PropertyDefinitionBuilder<>::createProperty("Allowed Properties")
+      .withDescription("Properties for which we will allow updates")
+      .isRequired(false)
+      .build();
+  MINIFIAPI static constexpr auto DisallowedProperties = core::PropertyDefinitionBuilder<>::createProperty("Disallowed Properties")
+      .withDescription("Properties for which we will not allow updates")
+      .isRequired(false)
+      .build();
+  MINIFIAPI static constexpr auto Properties = std::array<core::PropertyReference, 4>{
       AllowAllProperties,
       PersistUpdates,
       AllowedProperties,
       DisallowedProperties
-    };
-  }
+  };
+
 
   MINIFIAPI static constexpr bool SupportsDynamicProperties = false;
   ADD_COMMON_VIRTUAL_FUNCTIONS_FOR_CONTROLLER_SERVICES

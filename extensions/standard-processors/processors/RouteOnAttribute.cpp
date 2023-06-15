@@ -28,23 +28,20 @@
 
 namespace org::apache::nifi::minifi::processors {
 
-const core::Relationship RouteOnAttribute::Unmatched("unmatched", "Files which do not match any expression are routed here");
-const core::Relationship RouteOnAttribute::Failure("failure", "Failed files are transferred to failure");
-
 void RouteOnAttribute::initialize() {
-  setSupportedProperties(properties());
-  setSupportedRelationships(relationships());
+  setSupportedProperties(Properties);
+  setSupportedRelationships(Relationships);
 }
 
 void RouteOnAttribute::onDynamicPropertyModified(const core::Property& /*orig_property*/, const core::Property &new_property) {
   // Update the routing table when routes are added via dynamic properties.
   route_properties_[new_property.getName()] = new_property;
 
-  const auto static_relationships = RouteOnAttribute::relationships();
-  std::vector<core::Relationship> relationships(static_relationships.begin(), static_relationships.end());
+  const auto static_relationships = RouteOnAttribute::Relationships;
+  std::vector<core::RelationshipDefinition> relationships(static_relationships.begin(), static_relationships.end());
 
   for (const auto &route : route_properties_) {
-    core::Relationship route_rel { route.first, "Dynamic route" };
+    core::RelationshipDefinition route_rel{ route.first, "Dynamic route" };
     route_rels_[route.first] = route_rel;
     relationships.push_back(route_rel);
     logger_->log_info("RouteOnAttribute registered route '%s' with expression '%s'", route.first, route.second.getValue().to_string());

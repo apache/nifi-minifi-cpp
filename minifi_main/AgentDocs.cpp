@@ -41,7 +41,8 @@ namespace {
 
 namespace minifi = org::apache::nifi::minifi;
 
-std::string formatName(const std::string& name, bool is_required) {
+std::string formatName(std::string_view name_view, bool is_required) {
+  std::string name{name_view};
   if (is_required) {
     return "**" + name + "**";
   } else {
@@ -56,13 +57,14 @@ std::string formatAllowableValues(const std::vector<minifi::core::PropertyValue>
       | ranges::to<std::string>();
 }
 
-std::string formatDescription(std::string description, bool supports_expression_language = false) {
+std::string formatDescription(std::string_view description_view, bool supports_expression_language = false) {
+  std::string description{description_view};
   org::apache::nifi::minifi::utils::StringUtils::replaceAll(description, "\n", "<br/>");
   return supports_expression_language ? description + "<br/>**Supports Expression Language: true**" : description;
 }
 
-std::string formatListOfRelationships(const std::vector<minifi::core::Relationship>& relationships) {
-  return minifi::utils::StringUtils::join(", ", relationships, [](const auto& relationship) { return relationship.getName(); });
+std::string formatListOfRelationships(std::span<const minifi::core::RelationshipDefinition> relationships) {
+  return minifi::utils::StringUtils::join(", ", relationships, [](const auto& relationship) { return relationship.name; });
 }
 
 }  // namespace
@@ -112,9 +114,9 @@ void AgentDocs::generate(const std::filesystem::path& docsdir, std::ostream &gen
       Table dynamic_properties{{"Name", "Value", "Description"}};
       for (const auto& dynamic_property : processor.second.dynamic_properties_) {
         dynamic_properties.addRow({
-            formatName(dynamic_property.getName(), false),
-            dynamic_property.getValue(),
-            formatDescription(dynamic_property.getDescription(), dynamic_property.supportsExpressionLanguage())
+            formatName(dynamic_property.name, false),
+            std::string(dynamic_property.value),
+            formatDescription(dynamic_property.description, dynamic_property.supports_expression_language)
         });
       }
       outfile << dynamic_properties.toString() << '\n';
@@ -132,9 +134,9 @@ void AgentDocs::generate(const std::filesystem::path& docsdir, std::ostream &gen
       Table output_attributes{{"Attribute", "Relationship", "Description"}};
       for (const auto& output_attribute : processor.second.output_attributes_) {
         output_attributes.addRow({
-            output_attribute.getName(),
-            formatListOfRelationships(output_attribute.getRelationships()),
-            formatDescription(output_attribute.getDescription())});
+            std::string(output_attribute.name),
+            formatListOfRelationships(output_attribute.relationships),
+            formatDescription(output_attribute.description)});
       }
       outfile << output_attributes.toString() << '\n';
     }

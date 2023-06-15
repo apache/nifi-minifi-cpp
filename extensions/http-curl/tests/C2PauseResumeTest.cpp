@@ -149,7 +149,7 @@ int main(int argc, char **argv) {
   const auto inv = dynamic_cast<minifi::processors::InvokeHTTP*>(proc);
   assert(inv != nullptr);
   std::string url;
-  inv->getProperty(minifi::processors::InvokeHTTP::URL.getName(), url);
+  inv->getProperty(minifi::processors::InvokeHTTP::URL, url);
   std::string port;
   std::string scheme;
   std::string path;

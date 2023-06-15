@@ -22,7 +22,6 @@
 #include "utils/expected.h"
 #include "core/ProcessContext.h"
 #include "core/ProcessSession.h"
-#include "core/PropertyBuilder.h"
 #include "core/Resource.h"
 #include "core/logging/LoggerConfiguration.h"
 
@@ -32,22 +31,6 @@ using asio::ip::udp;
 
 namespace org::apache::nifi::minifi::processors {
 
-const core::Property PutUDP::Hostname = core::PropertyBuilder::createProperty("Hostname")
-    ->withDescription("The ip address or hostname of the destination.")
-    ->withDefaultValue("localhost")
-    ->isRequired(true)
-    ->supportsExpressionLanguage(true)
-    ->build();
-
-const core::Property PutUDP::Port = core::PropertyBuilder::createProperty("Port")
-    ->withDescription("The port on the destination. Can be a service name like ssh or http, as defined in /etc/services.")
-    ->isRequired(true)
-    ->supportsExpressionLanguage(true)
-    ->build();
-
-const core::Relationship PutUDP::Success{"success", "FlowFiles that are sent to the destination are sent out this relationship."};
-const core::Relationship PutUDP::Failure{"failure", "FlowFiles that encountered IO errors are send out this relationship."};
-
 PutUDP::PutUDP(std::string name, const utils::Identifier& uuid)
     : Processor(std::move(name), uuid), logger_{core::logging::LoggerFactory<PutUDP>::getLogger(uuid)}
 { }
@@ -55,8 +38,8 @@ PutUDP::PutUDP(std::string name, const utils::Identifier& uuid)
 PutUDP::~PutUDP() = default;
 
 void PutUDP::initialize() {
-  setSupportedProperties(properties());
-  setSupportedRelationships(relationships());
+  setSupportedProperties(Properties);
+  setSupportedRelationships(Relationships);
 }
 
 void PutUDP::notifyStop() {}
