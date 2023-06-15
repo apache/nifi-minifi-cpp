@@ -17,7 +17,9 @@
 #
 
 # First stage: the build environment
-FROM centos:7
+ARG BASE_IMAGE="centos:7"
+
+FROM ${BASE_IMAGE} AS build
 LABEL maintainer="Apache NiFi <dev@nifi.apache.org>"
 
 ARG MINIFI_VERSION

@@ -100,7 +100,7 @@ while [[ $# -gt 0 ]]; do
       if [ "${ARR[0]}" == "BUILD_NUMBER" ]; then
         BUILD_NUMBER="${ARR[1]}"
       elif [ "${ARR[0]}" == "DOCKER_BASE_IMAGE" ]; then
-        BUILD_ARGS+=("--build-arg" "BASE_ALPINE_IMAGE=${ARR[1]}")
+        BUILD_ARGS+=("--build-arg" "BASE_IMAGE=${ARR[1]}")
       elif [ "${ARR[0]}" == "DOCKER_CCACHE_DUMP_LOCATION" ]; then
         DOCKER_CCACHE_DUMP_LOCATION="${ARR[1]}"
       elif [ "${ARR[0]}" == "DOCKER_SKIP_TESTS" ]; then
