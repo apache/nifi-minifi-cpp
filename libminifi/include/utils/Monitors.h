@@ -15,20 +15,17 @@
  * limitations under the License.
  */
 
-#ifndef LIBMINIFI_INCLUDE_UTILS_MONITORS_H_
-#define LIBMINIFI_INCLUDE_UTILS_MONITORS_H_
+#pragma once
 
-#include <chrono>
+#include <algorithm>
 #include <atomic>
+#include <chrono>
 #if defined(WIN32)
 #include <future>  // This is required to work around a VS2017 bug, see the details below
 #endif
+#include "utils/gsl.h"
 
-namespace org {
-namespace apache {
-namespace nifi {
-namespace minifi {
-namespace utils {
+namespace org::apache::nifi::minifi::utils {
 
 /**
  * Worker task helper that determines
@@ -40,95 +37,51 @@ class AfterExecute {
   virtual ~AfterExecute() = default;
 
   AfterExecute() = default;
-  AfterExecute(AfterExecute&& /*other*/) = default;
+  AfterExecute(AfterExecute&& /*other*/)  noexcept = default;
   virtual bool isFinished(const T &result) = 0;
   virtual bool isCancelled(const T &result) = 0;
   /**
    * Time to wait before re-running this task if necessary
    * @return milliseconds since epoch after which we are eligible to re-run this task.
    */
-  virtual std::chrono::milliseconds wait_time() = 0;
+  virtual std::chrono::steady_clock::duration wait_time() = 0;
 };
 
 /**
  * Uses the wait time for a given worker to determine if it is eligible to run
  */
-class TimerAwareMonitor : public utils::AfterExecute<std::chrono::milliseconds> {
- public:
-  TimerAwareMonitor(std::atomic<bool> *run_monitor) // NOLINT
-      : current_wait_(std::chrono::milliseconds(0)),
-        run_monitor_(run_monitor) {
-  }
-  bool isFinished(const std::chrono::milliseconds &result) override {
-    current_wait_.store(result);
-    if (*run_monitor_) {
-      return false;
-    }
-    return true;
-  }
-  bool isCancelled(const std::chrono::milliseconds& /*result*/) override {
-    if (*run_monitor_) {
-      return false;
-    }
-    return true;
-  }
-  /**
-   * Time to wait before re-running this task if necessary
-   * @return milliseconds since epoch after which we are eligible to re-run this task.
-   */
-  std::chrono::milliseconds wait_time() override {
-    return current_wait_.load();
-  }
-
- protected:
-  std::atomic<std::chrono::milliseconds> current_wait_;
-  std::atomic<bool> *run_monitor_;
-};
-
-class SingleRunMonitor : public utils::AfterExecute<bool>{
- public:
-  SingleRunMonitor(std::chrono::milliseconds retry_interval = std::chrono::milliseconds(100)) // NOLINT
-      : retry_interval_(retry_interval) {
-  }
-
-  bool isFinished(const bool &result) override {
-    return result;
-  }
-  bool isCancelled(const bool& /*result*/) override {
-    return false;
-  }
-  std::chrono::milliseconds wait_time() override {
-    return retry_interval_;
-  }
- protected:
-  const std::chrono::milliseconds retry_interval_;
-};
-
 
 struct TaskRescheduleInfo {
-  TaskRescheduleInfo(bool result, std::chrono::milliseconds wait_time)
-    : wait_time_(wait_time), finished_(result) {}
+  TaskRescheduleInfo(bool result, std::chrono::steady_clock::duration wait_time)
+    : wait_time_(wait_time), finished_(result) {
+    gsl_Expects(wait_time >= std::chrono::milliseconds(0));
+  }
 
-  std::chrono::milliseconds wait_time_;
+  std::chrono::steady_clock::duration wait_time_;
   bool finished_;
 
   static TaskRescheduleInfo Done() {
-    return TaskRescheduleInfo(true, std::chrono::milliseconds(0));
+    return {true, std::chrono::steady_clock::duration(0)};
   }
 
-  static TaskRescheduleInfo RetryIn(std::chrono::milliseconds interval) {
-    return TaskRescheduleInfo(false, interval);
+  static TaskRescheduleInfo RetryIn(std::chrono::steady_clock::duration interval) {
+    return {false, interval};
+  }
+
+  static TaskRescheduleInfo RetryAfter(std::chrono::steady_clock::time_point time_point) {
+    auto interval = std::max(time_point - std::chrono::steady_clock::now(), std::chrono::steady_clock::duration(0));
+    return {false, interval};
   }
 
   static TaskRescheduleInfo RetryImmediately() {
-    return TaskRescheduleInfo(false, std::chrono::milliseconds(0));
+    return {false, std::chrono::steady_clock::duration(0)};
   }
 
 #if defined(WIN32)
 // https://developercommunity.visualstudio.com/content/problem/60897/c-shared-state-futuresstate-default-constructs-the.html
 // Because of this bug we need to have this object default constructible, which makes no sense otherwise. Hack.
  private:
-  TaskRescheduleInfo() : wait_time_(std::chrono::milliseconds(0)), finished_(true) {}
+  TaskRescheduleInfo() : wait_time_(std::chrono::steady_clock::duration(0)), finished_(true) {}
   friend class std::_Associated_state<TaskRescheduleInfo>;
 #endif
 };
@@ -147,22 +100,13 @@ class ComplexMonitor : public utils::AfterExecute<TaskRescheduleInfo> {
   bool isCancelled(const TaskRescheduleInfo& /*result*/) override {
     return false;
   }
-  /**
-   * Time to wait before re-running this task if necessary
-   * @return milliseconds since epoch after which we are eligible to re-run this task.
-   */
-  std::chrono::milliseconds wait_time() override {
+
+  std::chrono::steady_clock::duration wait_time() override {
     return current_wait_.load();
   }
 
  private:
-  std::atomic<std::chrono::milliseconds> current_wait_ {std::chrono::milliseconds(0)};
+  std::atomic<std::chrono::steady_clock::duration> current_wait_ {std::chrono::steady_clock::duration(0)};
 };
 
-}  // namespace utils
-}  // namespace minifi
-}  // namespace nifi
-}  // namespace apache
-}  // namespace org
-
-#endif  // LIBMINIFI_INCLUDE_UTILS_MONITORS_H_
+}  // namespace org::apache::nifi::minifi::utils

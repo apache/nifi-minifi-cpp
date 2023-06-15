@@ -824,3 +824,9 @@ TEST_CASE("Test getProcessorType", "[getProcessorType]") {
   auto processor = plan->addProcessor("GenerateFlowFile", "myProc");
   REQUIRE(processor->getProcessorType() == "GenerateFlowFile");
 }
+
+TEST_CASE("IsYield and getYieldTime is consistent") {
+  auto processor = TestProcessorNoContent("test_processor");
+  processor.yield(1ms);
+  REQUIRE(processor.isYield() == (processor.getYieldTime() != 0ms));
+}

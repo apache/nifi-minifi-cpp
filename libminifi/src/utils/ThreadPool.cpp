@@ -18,6 +18,8 @@
 #include "utils/ThreadPool.h"
 #include "core/state/UpdateController.h"
 
+using namespace std::literals::chrono_literals;
+
 namespace org::apache::nifi::minifi::utils {
 
 template<typename T>
@@ -92,7 +94,7 @@ void ThreadPool<T>::run_tasks(const std::shared_ptr<WorkerThread>& thread) {
       // The threadpool is running, but the ConcurrentQueue is stopped -> shouldn't happen during normal conditions
       // Might happen during startup or shutdown for a very short time
       if (running_.load()) {
-        std::this_thread::sleep_for(std::chrono::milliseconds(1));
+        std::this_thread::sleep_for(1ms);
       }
     }
   }
@@ -105,8 +107,7 @@ void ThreadPool<T>::manage_delayed_queue() {
     std::unique_lock<std::mutex> lock(worker_queue_mutex_);
 
     // Put the tasks ready to run in the worker queue
-    while (!delayed_worker_queue_.empty() &&
-        delayed_worker_queue_.top().getNextExecutionTime() <= std::chrono::steady_clock::now()) {
+    while (!delayed_worker_queue_.empty() && delayed_worker_queue_.top().getNextExecutionTime() <= std::chrono::steady_clock::now()) {
       // I'm very sorry for this - committee must has been seriously drunk when the interface of prio queue was submitted.
       Worker<T> task = std::move(const_cast<Worker<T>&>(delayed_worker_queue_.top()));
       delayed_worker_queue_.pop();
@@ -115,9 +116,8 @@ void ThreadPool<T>::manage_delayed_queue() {
     if (delayed_worker_queue_.empty()) {
       delayed_task_available_.wait(lock);
     } else {
-      auto wait_time = std::chrono::duration_cast<std::chrono::milliseconds>(
-          delayed_worker_queue_.top().getNextExecutionTime() - std::chrono::steady_clock::now());
-      delayed_task_available_.wait_for(lock, std::max(wait_time, std::chrono::milliseconds(1)));
+      auto wait_time = delayed_worker_queue_.top().getNextExecutionTime() - std::chrono::steady_clock::now();
+      delayed_task_available_.wait_for(lock, std::max(wait_time, std::chrono::steady_clock::duration(1ms)));
     }
   }
 }
@@ -151,12 +151,13 @@ void ThreadPool<T>::manageWorkers() {
 
   if (nullptr != thread_manager_) {
     while (running_) {
-      auto waitperiod = std::chrono::milliseconds(500);
+      auto wait_period = 500ms;
       {
-        std::unique_lock<std::recursive_mutex> lock(manager_mutex_, std::try_to_lock);
-        if (!lock.owns_lock()) {
+        std::unique_lock<std::recursive_mutex> manager_lock(manager_mutex_, std::try_to_lock);
+        if (!manager_lock.owns_lock()) {
           // Threadpool is being stopped/started or config is being changed, better wait a bit
-          std::this_thread::sleep_for(std::chrono::milliseconds(10));
+          std::this_thread::sleep_for(10ms);
+          continue;
         }
         if (thread_manager_->isAboveMax(current_workers_)) {
           auto max = thread_manager_->getMaxConcurrentTasks();
@@ -167,7 +168,7 @@ void ThreadPool<T>::manageWorkers() {
             thread_reduction_count_++;
           thread_manager_->reduce();
         } else if (thread_manager_->canIncrease() && max_worker_threads_ > current_workers_) {  // increase slowly
-          std::unique_lock<std::mutex> lock(worker_queue_mutex_);
+          std::unique_lock<std::mutex> worker_queue_lock(worker_queue_mutex_);
           auto worker_thread = std::make_shared<WorkerThread>();
           worker_thread->thread_ = createThread([this, worker_thread] { run_tasks(worker_thread); });
           if (daemon_threads_) {
@@ -178,13 +179,13 @@ void ThreadPool<T>::manageWorkers() {
         }
         std::shared_ptr<WorkerThread> thread_ref;
         while (deceased_thread_queue_.tryDequeue(thread_ref)) {
-          std::unique_lock<std::mutex> lock(worker_queue_mutex_);
+          std::unique_lock<std::mutex> worker_queue_lock(worker_queue_mutex_);
           if (thread_ref->thread_.joinable())
             thread_ref->thread_.join();
           thread_queue_.erase(std::remove(thread_queue_.begin(), thread_queue_.end(), thread_ref), thread_queue_.end());
         }
       }
-      std::this_thread::sleep_for(waitperiod);
+      std::this_thread::sleep_for(wait_period);
     }
   } else {
     for (auto &thread : thread_queue_) {

@@ -23,9 +23,7 @@
 #include "../Catch.h"
 #include "utils/ThreadPool.h"
 
-bool function() {
-  return true;
-}
+using namespace std::literals::chrono_literals;
 
 class WorkerNumberExecutions : public utils::AfterExecute<int> {
  public:
@@ -45,13 +43,8 @@ class WorkerNumberExecutions : public utils::AfterExecute<int> {
     return false;
   }
 
-  [[nodiscard]] int getRuns() const {
-    return runs;
-  }
-
-  std::chrono::milliseconds wait_time() override {
-    // wait 50ms
-    return std::chrono::milliseconds(50);
+  std::chrono::steady_clock::duration wait_time() override {
+    return 50ms;
   }
 
  protected:
@@ -61,8 +54,7 @@ class WorkerNumberExecutions : public utils::AfterExecute<int> {
 
 TEST_CASE("ThreadPoolTest1", "[TPT1]") {
   utils::ThreadPool<bool> pool(5);
-  std::function<bool()> f_ex = function;
-  utils::Worker<bool> functor(f_ex, "id");
+  utils::Worker<bool> functor([](){ return true; }, "id");
   pool.start();
   std::future<bool> fut;
   pool.execute(std::move(functor), fut);  // NOLINT(bugprone-use-after-move)
@@ -70,21 +62,39 @@ TEST_CASE("ThreadPoolTest1", "[TPT1]") {
   REQUIRE(true == fut.get());
 }
 
-std::atomic<int> counter;
-
-int counterFunction() {
-  return ++counter;
-}
-
 TEST_CASE("ThreadPoolTest2", "[TPT2]") {
-  counter = 0;
+  std::atomic<int> counter = 0;
   utils::ThreadPool<int> pool(5);
-  std::function<int()> f_ex = counterFunction;
   std::unique_ptr<utils::AfterExecute<int>> after_execute = std::unique_ptr<utils::AfterExecute<int>>(new WorkerNumberExecutions(20));
-  utils::Worker<int> functor(f_ex, "id", std::move(after_execute));
+  utils::Worker<int> functor([&counter]() { return ++counter; }, "id", std::move(after_execute));
   pool.start();
   std::future<int> fut;
-  pool.execute(std::move(functor), fut);  // NOLINT(bugprone-use-after-move)
+  pool.execute(std::move(functor), fut);
   fut.wait();
   REQUIRE(20 == fut.get());
+}
+
+TEST_CASE("Worker wait time should be relative to the last run") {
+  std::vector<std::chrono::steady_clock::time_point> worker_execution_time_points;
+  utils::ThreadPool<utils::TaskRescheduleInfo> pool(1);
+  auto wait_time_between_tasks = 10ms;
+  utils::Worker<utils::TaskRescheduleInfo> worker([&]()->utils::TaskRescheduleInfo {
+    worker_execution_time_points.push_back(std::chrono::steady_clock::now());
+    if (worker_execution_time_points.size() == 2) {
+      return utils::TaskRescheduleInfo::Done();
+    } else {
+      return utils::TaskRescheduleInfo::RetryIn(wait_time_between_tasks);
+    }
+  }, "id", std::make_unique<utils::ComplexMonitor>());
+  std::this_thread::sleep_for(wait_time_between_tasks + 1ms);  // Pre-waiting should not matter
+
+  std::future<utils::TaskRescheduleInfo> task_future;
+  pool.execute(std::move(worker), task_future);
+  pool.start();
+
+  auto final_task_reschedule_info = task_future.get();
+
+  CHECK(final_task_reschedule_info.finished_);
+  REQUIRE(worker_execution_time_points.size() == 2);
+  CHECK(worker_execution_time_points[1] - worker_execution_time_points[0] >= wait_time_between_tasks);
 }

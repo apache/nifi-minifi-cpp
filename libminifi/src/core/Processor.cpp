@@ -50,9 +50,9 @@ Processor::Processor(std::string name, std::shared_ptr<ProcessorMetrics> metrics
   state_ = DISABLED;
   strategy_ = TIMER_DRIVEN;
   _triggerWhenEmpty = false;
-  scheduling_period_nano_ = MINIMUM_SCHEDULING_NANOS;
-  run_duration_nano_ = DEFAULT_RUN_DURATION;
-  yield_period_msec_ = DEFAULT_YIELD_PERIOD_SECONDS;
+  scheduling_period_ = MINIMUM_SCHEDULING_PERIOD;
+  run_duration_ = DEFAULT_RUN_DURATION;
+  yield_period_ = DEFAULT_YIELD_PERIOD_SECONDS;
   penalization_period_ = DEFAULT_PENALIZATION_PERIOD;
   max_concurrent_tasks_ = DEFAULT_MAX_CONCURRENT_TASKS;
   active_tasks_ = 0;
@@ -69,9 +69,9 @@ Processor::Processor(std::string name, const utils::Identifier& uuid, std::share
   state_ = DISABLED;
   strategy_ = TIMER_DRIVEN;
   _triggerWhenEmpty = false;
-  scheduling_period_nano_ = MINIMUM_SCHEDULING_NANOS;
-  run_duration_nano_ = DEFAULT_RUN_DURATION;
-  yield_period_msec_ = DEFAULT_YIELD_PERIOD_SECONDS;
+  scheduling_period_ = MINIMUM_SCHEDULING_PERIOD;
+  run_duration_ = DEFAULT_RUN_DURATION;
+  yield_period_ = DEFAULT_YIELD_PERIOD_SECONDS;
   penalization_period_ = DEFAULT_PENALIZATION_PERIOD;
   max_concurrent_tasks_ = DEFAULT_MAX_CONCURRENT_TASKS;
   active_tasks_ = 0;
@@ -372,28 +372,23 @@ void Processor::setMaxConcurrentTasks(const uint8_t tasks) {
 }
 
 void Processor::yield() {
-  yield_expiration_ = std::chrono::system_clock::now() + yield_period_msec_.load();
+  yield_expiration_ = std::chrono::steady_clock::now() + yield_period_.load();
 }
 
-void Processor::yield(std::chrono::milliseconds delta_time) {
-  yield_expiration_ = std::chrono::system_clock::now() + delta_time;
+void Processor::yield(std::chrono::steady_clock::duration delta_time) {
+  yield_expiration_ = std::chrono::steady_clock::now() + delta_time;
 }
 
 bool Processor::isYield() {
-  return yield_expiration_.load() >= std::chrono::system_clock::now();
+  return getYieldTime() > 0ms;
 }
 
 void Processor::clearYield() {
-  yield_expiration_ = std::chrono::system_clock::time_point();
+  yield_expiration_ = std::chrono::steady_clock::time_point();
 }
 
-std::chrono::milliseconds Processor::getYieldTime() const {
-  auto yield_expiration = yield_expiration_.load();
-  auto current_time = std::chrono::system_clock::now();
-  if (yield_expiration > current_time)
-    return std::chrono::duration_cast<std::chrono::milliseconds>(yield_expiration - current_time);
-  else
-    return 0ms;
+std::chrono::steady_clock::duration Processor::getYieldTime() const {
+  return std::max(yield_expiration_.load()-std::chrono::steady_clock::now(), std::chrono::steady_clock::duration{0});
 }
 
 }  // namespace org::apache::nifi::minifi::core

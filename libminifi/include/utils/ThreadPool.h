@@ -94,7 +94,7 @@ class Worker {
       promise->set_value(result);
       return false;
     }
-    next_exec_time_ = std::max(next_exec_time_ + run_determinant_->wait_time(), std::chrono::steady_clock::now());
+    next_exec_time_ = std::max(next_exec_time_, std::chrono::steady_clock::now() + run_determinant_->wait_time());
     return true;
   }
 
@@ -105,11 +105,6 @@ class Worker {
   virtual std::chrono::steady_clock::time_point getNextExecutionTime() const {
     return next_exec_time_;
   }
-
-  virtual std::chrono::milliseconds getWaitTime() const {
-    return run_determinant_->wait_time();
-  }
-
 
   std::shared_ptr<std::promise<T>> getPromise() const;
 

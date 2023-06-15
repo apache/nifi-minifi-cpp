@@ -15,6 +15,8 @@
  * limitations under the License.
  */
 
+#include <chrono>
+
 #include "../Catch.h"
 #include "../TestBase.h"
 #include "ProvenanceTestHelper.h"
@@ -35,12 +37,16 @@ class CountOnTriggersProcessor : public minifi::core::Processor {
   ADD_COMMON_VIRTUAL_FUNCTIONS_FOR_PROCESSORS
 
   void onTrigger(core::ProcessContext*, core::ProcessSession*) override {
+    if (on_trigger_duration_ > 0ms)
+      std::this_thread::sleep_for(on_trigger_duration_);
     ++number_of_triggers;
   }
 
   size_t getNumberOfTriggers() const { return number_of_triggers; }
+  void setOnTriggerDuration(std::chrono::steady_clock::duration on_trigger_duration) { on_trigger_duration_ = on_trigger_duration; }
 
  private:
+  std::chrono::steady_clock::duration on_trigger_duration_ = 0ms;
   std::atomic<size_t> number_of_triggers = 0;
 };
 
@@ -64,7 +70,7 @@ TEST_CASE("SchedulingAgentTests", "[SchedulingAgent]") {
   auto node = std::make_shared<core::ProcessorNode>(count_proc.get());
   auto context = std::make_shared<core::ProcessContext>(node, nullptr, repo, repo, content_repo);
   std::shared_ptr<core::ProcessSessionFactory> factory = std::make_shared<core::ProcessSessionFactory>(context);
-  count_proc->setSchedulingPeriodNano(1250ms);
+  count_proc->setSchedulingPeriod(125ms);
 #ifdef WIN32
   utils::dateSetInstall(TZ_DATA_DIR);
 #endif
@@ -74,14 +80,21 @@ TEST_CASE("SchedulingAgentTests", "[SchedulingAgent]") {
     timer_driven_agent->start();
     auto first_task_reschedule_info = timer_driven_agent->run(count_proc.get(), context, factory);
     CHECK(!first_task_reschedule_info.finished_);
-    CHECK(first_task_reschedule_info.wait_time_ == 1250ms);
+    CHECK(first_task_reschedule_info.wait_time_ <= 125ms);
     CHECK(count_proc->getNumberOfTriggers() == 1);
 
+    count_proc->setOnTriggerDuration(50ms);
     auto second_task_reschedule_info = timer_driven_agent->run(count_proc.get(), context, factory);
 
     CHECK(!second_task_reschedule_info.finished_);
-    CHECK(second_task_reschedule_info.wait_time_ == 1250ms);
+    CHECK(second_task_reschedule_info.wait_time_ <= 75ms);
     CHECK(count_proc->getNumberOfTriggers() == 2);
+
+    count_proc->setOnTriggerDuration(150ms);
+    auto third_task_reschedule_info = timer_driven_agent->run(count_proc.get(), context, factory);
+    CHECK(!third_task_reschedule_info.finished_);
+    CHECK(third_task_reschedule_info.wait_time_ == 0ms);
+    CHECK(count_proc->getNumberOfTriggers() == 3);
   }
 
   SECTION("Event Driven") {

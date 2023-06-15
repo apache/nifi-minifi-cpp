@@ -28,11 +28,12 @@ namespace org::apache::nifi::minifi {
 utils::TaskRescheduleInfo TimerDrivenSchedulingAgent::run(core::Processor* processor, const std::shared_ptr<core::ProcessContext> &processContext,
                                          const std::shared_ptr<core::ProcessSessionFactory> &sessionFactory) {
   if (this->running_ && processor->isRunning()) {
+    auto trigger_start_time = std::chrono::steady_clock::now();
     this->onTrigger(processor, processContext, sessionFactory);
     if (processor->isYield())
       return utils::TaskRescheduleInfo::RetryIn(processor->getYieldTime());
 
-    return utils::TaskRescheduleInfo::RetryIn(std::chrono::duration_cast<std::chrono::milliseconds>(processor->getSchedulingPeriodNano()));
+    return utils::TaskRescheduleInfo::RetryAfter(trigger_start_time + processor->getSchedulingPeriod());
   }
   return utils::TaskRescheduleInfo::Done();
 }
