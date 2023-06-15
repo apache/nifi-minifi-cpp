@@ -75,9 +75,8 @@ namespace minifi = org::apache::nifi::minifi;
 namespace core = minifi::core;
 namespace utils = minifi::utils;
 
- // Variables that allow us to avoid a timed wait.
-static sem_t *flow_controller_running;
-static sem_t *process_running;
+static std::atomic_flag flow_controller_running;
+static std::atomic_flag process_running;
 
 /**
  * Removed the stop command from the signal handler so that we could trigger
@@ -91,27 +90,26 @@ static sem_t *process_running;
 
 #ifdef WIN32
 BOOL WINAPI consoleSignalHandler(DWORD signal) {
-  if (!process_running) { exit(0); return TRUE; }
+  if (!process_running.test()) { exit(0); return TRUE; }
   if (signal == CTRL_C_EVENT || signal == CTRL_BREAK_EVENT) {
-    int ret = ETIMEDOUT;
-    while (ret == ETIMEDOUT) {
-      if (flow_controller_running) { sem_post(flow_controller_running); }
-      const struct timespec timeout_100ms { .tv_sec = 0, .tv_nsec = 100000000};
-      ret = sem_timedwait(process_running, &timeout_100ms);
-    }
+    flow_controller_running.clear();
+    flow_controller_running.notify_all();
+    process_running.wait(true);
     return TRUE;
   }
   return FALSE;
 }
 
 void SignalExitProcess() {
-  sem_post(flow_controller_running);
+  flow_controller_running.clear();
+  flow_controller_running.notify_all();
 }
 #endif
 
 void sigHandler(int signal) {
   if (signal == SIGINT || signal == SIGTERM) {
-    sem_post(flow_controller_running);
+    flow_controller_running.clear();
+    flow_controller_running.notify_all();
   }
 }
 
@@ -204,32 +202,21 @@ int main(int argc, char **argv) {
     logger->log_error("Failed to change working directory to MINIFI_HOME (%s)", minifiHome.string());
     return -1;
   }
-  const auto flow_controller_semaphore_path = "/MiNiFiMain";
-  const auto process_semaphore_path = "/MiNiFiProc";
 
-  process_running = sem_open(process_semaphore_path, O_CREAT, 0644, 0);
-  if (process_running == SEM_FAILED) {
-    logger->log_error("could not initialize process semaphore");
-    perror("sem_open");
-    return -1;
-  }
+  process_running.test_and_set();
 
   std::atomic<bool> restart_token{false};
   const auto request_restart = [&] {
     if (!restart_token.exchange(true)) {
-      // only do sem_post if a restart is not already in progress (the flag was unset before the exchange)
-      sem_post(flow_controller_running);
+      // only trigger if a restart is not already in progress (the flag was unset before the exchange)
+      flow_controller_running.clear();
+      flow_controller_running.notify_all();
       logger->log_info("Initiating restart...");
     }
   };
 
   do {
-    flow_controller_running = sem_open(flow_controller_semaphore_path, O_CREAT, 0644, 0);
-    if (flow_controller_running == SEM_FAILED) {
-      logger->log_error("could not initialize flow controller semaphore");
-      perror("sem_open");
-      return -1;
-    }
+    flow_controller_running.test_and_set();
 
     std::string graceful_shutdown_seconds;
     std::string prov_repo_class = "provenancerepository";
@@ -453,21 +440,7 @@ int main(int argc, char **argv) {
 
     logger->log_info("MiNiFi started");
 
-    /**
-     * Sem wait provides us the ability to have a controlled
-     * yield without the need for a more complex construct and
-     * a spin lock
-     */
-    int ret_val;
-    while ((ret_val = sem_wait(flow_controller_running)) == -1 && errno == EINTR) {}
-    if (ret_val == -1) perror("sem_wait");
-
-    while ((ret_val = sem_close(flow_controller_running)) == -1 && errno == EINTR) {}
-    if (ret_val == -1) perror("sem_close");
-    flow_controller_running = nullptr;
-
-    while ((ret_val = sem_unlink(flow_controller_semaphore_path)) == -1 && errno == EINTR) {}
-    if (ret_val == -1) perror("sem_unlink");
+    flow_controller_running.wait(true);
 
     disk_space_watchdog = nullptr;
 
@@ -485,7 +458,8 @@ int main(int argc, char **argv) {
     return restart_token_temp;
   }());
 
-  if (process_running) { sem_post(process_running); }
+  process_running.clear();
+  process_running.notify_all();
   logger->log_info("MiNiFi exit");
   return 0;
 }
