@@ -222,9 +222,12 @@ Feature: Sending data from MiNiFi-C++ to an AWS server
     And the "Multipart Threshold" property of the PutS3Object processor is set to "5 MB"
     And the "Multipart Part Size" property of the PutS3Object processor is set to "5 MB"
     And the "success" relationship of the GetFile processor is connected to the PutS3Object
+    And a PutFile processor with the "Directory" property set to "/tmp/output"
+    And the "success" relationship of the PutS3Object processor is connected to the PutFile
     And a s3 server is set up in correspondence with the PutS3Object
     When all instances start up
-    Then the object on the s3 server is present and matches the original hash
+    Then 1 flowfile is placed in the monitored directory in 120 seconds
+    And the object on the s3 server is present and matches the original hash
     And the Minifi logs contain the following message: "passes the multipart threshold, uploading it in multiple parts" in less than 10 seconds
 
   Scenario: A MiNiFi instance can use multipart upload through http proxy to s3
@@ -240,11 +243,14 @@ Feature: Sending data from MiNiFi-C++ to an AWS server
     | PutS3Object     | Proxy Username | admin                    |
     | PutS3Object     | Proxy Password | test101                  |
     And the "success" relationship of the GetFile processor is connected to the PutS3Object
+    And a PutFile processor with the "Directory" property set to "/tmp/output"
+    And the "success" relationship of the PutS3Object processor is connected to the PutFile
 
     And a s3 server is set up in correspondence with the PutS3Object
     And the http proxy server is set up
     When all instances start up
 
-    Then the object on the s3 server is present and matches the original hash
+    Then 1 flowfile is placed in the monitored directory in 120 seconds
+    And the object on the s3 server is present and matches the original hash
     And the Minifi logs contain the following message: "passes the multipart threshold, uploading it in multiple parts" in less than 10 seconds
     And no errors were generated on the http-proxy regarding "http://s3-server-${feature_id}:9090/test_bucket/test_object_key"

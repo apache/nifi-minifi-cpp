@@ -36,8 +36,6 @@ class OutputEventHandler(FileSystemEventHandler):
     def on_created(self, event):
         if os.path.isfile(event.src_path) and not is_temporary_output_file(event.src_path):
             logging.info("Output file created: %s", event.src_path)
-            with open(os.path.abspath(event.src_path), "r") as out_file:
-                logging.info("Contents: %s", out_file.read())
             with self.files_created_lock:
                 self.files_created.add(event.src_path)
             self.done_event.set()
@@ -45,8 +43,6 @@ class OutputEventHandler(FileSystemEventHandler):
     def on_modified(self, event):
         if os.path.isfile(event.src_path) and not is_temporary_output_file(event.src_path):
             logging.info("Output file modified: %s", event.src_path)
-            with open(os.path.abspath(event.src_path), "r") as out_file:
-                logging.info("Contents: %s", out_file.read())
             with self.files_created_lock:
                 self.files_created.add(event.src_path)
             self.done_event.set()
@@ -60,8 +56,6 @@ class OutputEventHandler(FileSystemEventHandler):
                 file_count_modified = True
 
             if not is_temporary_output_file(event.dest_path):
-                with open(os.path.abspath(event.dest_path), "r") as out_file:
-                    logging.info("Contents: %s", out_file.read())
                 with self.files_created_lock:
                     self.files_created.add(event.dest_path)
                 file_count_modified = True
