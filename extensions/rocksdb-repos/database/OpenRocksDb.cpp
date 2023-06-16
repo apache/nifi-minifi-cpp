@@ -142,7 +142,7 @@ minifi::core::RepositoryMetricsSource::RocksDbStats OpenRocksDb::getStats() {
   try {
     stats.table_readers_size = std::stoull(table_readers);
   } catch (const std::exception&) {
-    logger_->log_error("Could not retrieve valid 'rocksdb.estimate-table-readers-mem' property value from rocksdb content repository!");
+    logger_->log_warn("Could not retrieve valid 'rocksdb.estimate-table-readers-mem' property value from rocksdb content repository!");
   }
 
   std::string all_memtables;
@@ -150,7 +150,7 @@ minifi::core::RepositoryMetricsSource::RocksDbStats OpenRocksDb::getStats() {
   try {
     stats.all_memory_tables_size = std::stoull(all_memtables);
   } catch (const std::exception&) {
-    logger_->log_error("Could not retrieve valid 'rocksdb.cur-size-all-mem-tables' property value from rocksdb content repository!");
+    logger_->log_warn("Could not retrieve valid 'rocksdb.cur-size-all-mem-tables' property value from rocksdb content repository!");
   }
 
   return stats;
