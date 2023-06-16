@@ -74,7 +74,18 @@ TEST_CASE_METHOD(MultipartUploadStateStorageTestFixture, "Get key upload state f
   state3.upload_time = Aws::Utils::DateTime::CurrentTimeMillis();
   state3.uploaded_etags = {"etag6", "etag7", "etag9", "etag8"};
   upload_storage_.storeState("test_bucket", "key2", state3);
-  REQUIRE(*upload_storage_.getState("test_bucket", "key1") == state2);
+  minifi::aws::s3::MultipartUploadState state4;
+  state2.upload_id = "id2";
+  state2.uploaded_parts = 3;
+  state2.uploaded_size = 150_MiB;
+  state2.part_size = 50_MiB;
+  state2.full_size = 200_MiB;
+  state2.upload_time = Aws::Utils::DateTime::CurrentTimeMillis();
+  state2.uploaded_etags = {"etag4", "etag5", "etag10"};
+  upload_storage_.storeState("test_bucket", "key1", state4);
+  REQUIRE(*upload_storage_.getState("test_bucket", "key1") == state4);
+  REQUIRE(*upload_storage_.getState("old_bucket", "key1") == state1);
+  REQUIRE(*upload_storage_.getState("test_bucket", "key2") == state3);
 }
 
 TEST_CASE_METHOD(MultipartUploadStateStorageTestFixture, "Remove state", "[s3StateStorage]") {
