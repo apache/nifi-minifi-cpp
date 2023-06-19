@@ -100,7 +100,7 @@ void PutS3Object::onSchedule(const std::shared_ptr<core::ProcessContext> &contex
   context->getProperty(TemporaryDirectoryMultipartState.getName(), multipart_temp_dir);
 
 
-  s3_wrapper_.initailizeMultipartUploadStateStorage(multipart_temp_dir, getUUIDStr());
+  s3_wrapper_.initializeMultipartUploadStateStorage(multipart_temp_dir, getUUIDStr());
 }
 
 std::string PutS3Object::parseAccessControlList(const std::string &comma_separated_list) {

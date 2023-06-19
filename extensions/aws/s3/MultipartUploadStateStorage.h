@@ -60,6 +60,7 @@ class MultipartUploadStateStorage {
   std::optional<MultipartUploadState> getState(const std::string& bucket, const std::string& key) const;
   void removeState(const std::string& bucket, const std::string& key);
   void removeAgedStates(std::chrono::milliseconds multipart_upload_max_age_threshold);
+  std::filesystem::path getStateFilePath() const;
 
  private:
   void loadFile();

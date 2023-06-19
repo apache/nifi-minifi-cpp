@@ -217,7 +217,7 @@ Feature: Sending data from MiNiFi-C++ to an AWS server
 
   Scenario: A MiNiFi instance transfers data in multiple parts to s3
     Given a GetFile processor with the "Input Directory" property set to "/tmp/input"
-    And a file with 16MB content is present in "/tmp/input"
+    And a file of size 16MB is present in "/tmp/input"
     And a PutS3Object processor set up to communicate with an s3 server
     And the "Multipart Threshold" property of the PutS3Object processor is set to "5 MB"
     And the "Multipart Part Size" property of the PutS3Object processor is set to "5 MB"
@@ -232,7 +232,7 @@ Feature: Sending data from MiNiFi-C++ to an AWS server
 
   Scenario: A MiNiFi instance can use multipart upload through http proxy to s3
     Given a GetFile processor with the "Input Directory" property set to "/tmp/input"
-    And a file with 6MB content is present in "/tmp/input"
+    And a file of size 6MB is present in "/tmp/input"
     And a PutS3Object processor set up to communicate with an s3 server
     And the "Multipart Threshold" property of the PutS3Object processor is set to "5 MB"
     And the "Multipart Part Size" property of the PutS3Object processor is set to "5 MB"

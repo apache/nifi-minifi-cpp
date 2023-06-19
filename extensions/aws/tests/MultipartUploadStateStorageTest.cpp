@@ -32,7 +32,36 @@ class MultipartUploadStateStorageTestFixture {
   minifi::aws::s3::MultipartUploadStateStorage upload_storage_;
 };
 
+class MultipartUploadStateStorageGeneratedStatedirTestFixture {
+ public:
+  MultipartUploadStateStorageGeneratedStatedirTestFixture()
+    : upload_storage_("", "test_id") {
+  }
+
+  ~MultipartUploadStateStorageGeneratedStatedirTestFixture() {
+    std::filesystem::remove_all(upload_storage_.getStateFilePath());
+  }
+
+ protected:
+  TestController test_controller;
+  minifi::aws::s3::MultipartUploadStateStorage upload_storage_;
+};
+
 TEST_CASE_METHOD(MultipartUploadStateStorageTestFixture, "Store and get current key state", "[s3StateStorage]") {
+  REQUIRE(upload_storage_.getState("test_bucket", "key") == std::nullopt);
+  minifi::aws::s3::MultipartUploadState state;
+  state.upload_id = "id1";
+  state.uploaded_parts = 2;
+  state.uploaded_size = 100_MiB;
+  state.part_size = 50_MiB;
+  state.full_size = 200_MiB;
+  state.upload_time = Aws::Utils::DateTime::CurrentTimeMillis();
+  state.uploaded_etags = {"etag1", "etag2"};
+  upload_storage_.storeState("test_bucket", "key", state);
+  REQUIRE(*upload_storage_.getState("test_bucket", "key") == state);
+}
+
+TEST_CASE_METHOD(MultipartUploadStateStorageGeneratedStatedirTestFixture, "Store and get current key state in generated state dir", "[s3StateStorage]") {
   REQUIRE(upload_storage_.getState("test_bucket", "key") == std::nullopt);
   minifi::aws::s3::MultipartUploadState state;
   state.upload_id = "id1";

@@ -240,7 +240,7 @@ class S3Wrapper {
   std::optional<HeadObjectResult> headObject(const HeadObjectRequestParameters& head_object_params);
   std::optional<std::vector<MultipartUpload>> listMultipartUploads(const ListMultipartUploadsRequestParameters& params);
   bool abortMultipartUpload(const AbortMultipartUploadRequestParameters& params);
-  void initailizeMultipartUploadStateStorage(const std::string& multipart_temp_dir, const std::string& state_id);
+  void initializeMultipartUploadStateStorage(const std::string& multipart_temp_dir, const std::string& state_id);
   void ageOffLocalS3MultipartUploadStates(std::chrono::milliseconds multipart_upload_max_age_threshold);
 
   virtual ~S3Wrapper() = default;

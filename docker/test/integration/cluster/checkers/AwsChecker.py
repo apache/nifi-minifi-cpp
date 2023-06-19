@@ -36,6 +36,8 @@ class AwsChecker:
             return False
         s3_mock_dir = output.strip()
         (code, md5_output) = self.container_communicator.execute_command(container_name, ["md5sum", s3_mock_dir + "/binaryData"])
+        if code != 0:
+            return False
         file_hash = md5_output.split(' ')[0].strip()
         return code == 0 and file_hash == expected_file_hash
 

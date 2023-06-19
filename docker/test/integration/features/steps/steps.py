@@ -275,7 +275,7 @@ def step_impl(context, content, path):
     context.test.add_test_data(path, content)
 
 
-@given("a file with {size} content is present in \"{path}\"")
+@given("a file of size {size} is present in \"{path}\"")
 def step_impl(context, size: str, path: str):
     context.test.add_random_test_data(path, humanfriendly.parse_size(size))
 

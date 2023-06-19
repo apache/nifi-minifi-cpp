@@ -25,12 +25,12 @@ namespace org::apache::nifi::minifi::aws::s3 {
 MultipartUploadStateStorage::MultipartUploadStateStorage(const std::string& state_directory, const std::string& state_id) {
   if (state_directory.empty()) {
     char format[] = "/var/tmp/nifi-minifi-cpp.s3-multipart-upload.XXXXXX";
-    state_file_path_ = minifi::utils::file::FileUtils::create_temp_directory(format);
+    state_file_path_ = minifi::utils::file::FileUtils::create_temp_directory(format) / std::string(state_id + "-s3-multipart-upload-state.properties");
   } else {
     state_file_path_ = std::filesystem::path(state_directory) / std::string(state_id + "-s3-multipart-upload-state.properties");
     if (!std::filesystem::exists(state_file_path_)) {
       std::filesystem::create_directories(state_file_path_.parent_path());
-      std::ofstream ofs(state_file_path_);
+      // std::ofstream ofs(state_file_path_);
     } else {
       loadFile();
     }
@@ -96,10 +96,6 @@ void MultipartUploadStateStorage::removeAgedStates(std::chrono::milliseconds mul
     if (!minifi::utils::StringUtils::endsWith(property_key, ".upload_time")) {
       continue;
     }
-    if (!state_.contains(property_key)) {
-      logger_->log_error("Could not retrieve value for multipart upload cache key '%s'", property_key);
-      continue;
-    }
     int64_t stored_upload_time{};
     if (!core::Property::StringToInt(value, stored_upload_time)) {
       logger_->log_error("Multipart upload cache key '%s' has invalid value '%s'", property_key, value);
@@ -108,10 +104,6 @@ void MultipartUploadStateStorage::removeAgedStates(std::chrono::milliseconds mul
     auto upload_time = Aws::Utils::DateTime(stored_upload_time);
     if (upload_time < age_off_time) {
       auto state_key_and_property_name = minifi::utils::StringUtils::split(property_key, ".");
-      if (state_key_and_property_name.size() < 2) {
-        logger_->log_error("Invalid property '%s'", property_key);
-        continue;
-      }
       keys_to_remove.push_back(state_key_and_property_name[0]);
     }
   }
@@ -160,6 +152,10 @@ void MultipartUploadStateStorage::commitChanges() {
   for (const auto& [key, value] : state_) {
     ofs << key << "=" << value << "\n";
   }
+}
+
+std::filesystem::path MultipartUploadStateStorage::getStateFilePath() const {
+  return state_file_path_;
 }
 
 }  // namespace org::apache::nifi::minifi::aws::s3
