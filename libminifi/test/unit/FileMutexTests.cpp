@@ -20,13 +20,14 @@
 #include <cstdlib>
 #include "utils/FileMutex.h"
 #include "utils/file/FileUtils.h"
+#include "utils/OsUtils.h"
 #include "../TestBase.h"
 
 namespace minifi = org::apache::nifi::minifi;
 
 int main(int argc, char* argv[]) {
   if (argc == 2) {
-    std::cout << "Trying to lock file a second time '" << argv[1] << "'" << std::endl;
+    std::cout << "Trying to lock file a second time '" << argv[1] << "', from pid: " << utils::OsUtils::getCurrentProcessId() << std::endl;
     minifi::utils::FileMutex mtx{argv[1]};
     std::unique_lock lock{mtx};
     return 0;
@@ -37,7 +38,7 @@ int main(int argc, char* argv[]) {
 
   minifi::utils::FileMutex mtx{lock_file};
   {
-    std::cout << "Locking file the first time '" << lock_file << "'" << std::endl;
+    std::cout << "Locking file the first time '" << lock_file << "', from pid: " << utils::OsUtils::getCurrentProcessId() << std::endl;
     std::unique_lock lock{mtx};
 
     int second_lock = std::system((utils::file::get_executable_path().string() + " " + lock_file.string()).c_str());  // NOLINT

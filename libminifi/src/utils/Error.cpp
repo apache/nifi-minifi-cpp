@@ -15,12 +15,9 @@
  * limitations under the License.
  */
 
-#pragma once
+#include "utils/Error.h"
 
-#include <filesystem>
-#include <array>
-#include <mutex>
-#include <optional>
+#include <cerrno>
 #include "utils/gsl.h"
 
 #ifdef WIN32
@@ -29,31 +26,12 @@
 
 namespace org::apache::nifi::minifi::utils {
 
-// Warning: this will write the pid of the current process into the file
-class FileMutex {
- public:
-  explicit FileMutex(std::filesystem::path path);
-  ~FileMutex() {
-    gsl_Expects(!file_handle_.has_value());
-  }
-
-  FileMutex(const FileMutex&) = delete;
-  FileMutex(FileMutex&&) = delete;
-  FileMutex& operator=(const FileMutex&) = delete;
-  FileMutex& operator=(FileMutex&&) = delete;
-
-  void lock();
-  void unlock();
-
- private:
-  std::filesystem::path path_;
-
-  std::mutex mtx_;
+std::error_code getLastError() {
 #ifdef WIN32
-  std::optional<HANDLE> file_handle_;
+  return {gsl:narrow<int>(GetLastError()), std::system_category()};
 #else
-  std::optional<int> file_handle_;
+  return {gsl::narrow<int>(errno), std::generic_category()};
 #endif
-};
+}
 
 }  // namespace org::apache::nifi::minifi::utils
