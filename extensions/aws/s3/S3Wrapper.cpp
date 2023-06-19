@@ -464,8 +464,8 @@ bool S3Wrapper::abortMultipartUpload(const AbortMultipartUploadRequestParameters
   return request_sender_->sendAbortMultipartUploadRequest(request, params.credentials, params.client_config, params.use_virtual_addressing);
 }
 
-void S3Wrapper::initializeMultipartUploadStateStorage(const std::string& multipart_temp_dir, const std::string& state_id) {
-  multipart_upload_storage_ = std::make_unique<MultipartUploadStateStorage>(multipart_temp_dir, state_id);
+void S3Wrapper::initializeMultipartUploadStateStorage(const std::shared_ptr<minifi::Configure>& configuration, const std::string& state_id) {
+  multipart_upload_storage_ = std::make_unique<MultipartUploadStateStorage>(configuration, state_id);
 }
 
 void S3Wrapper::ageOffLocalS3MultipartUploadStates(std::chrono::milliseconds multipart_upload_max_age_threshold) {

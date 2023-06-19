@@ -31,6 +31,7 @@
 #include "core/logging/LoggerConfiguration.h"
 #include "aws/core/utils/DateTime.h"
 #include "utils/file/FileUtils.h"
+#include "properties/Configure.h"
 
 namespace org::apache::nifi::minifi::aws::s3 {
 
@@ -54,7 +55,7 @@ struct MultipartUploadState {
 
 class MultipartUploadStateStorage {
  public:
-  MultipartUploadStateStorage(const std::string& state_directory, const std::string& state_id);
+  MultipartUploadStateStorage(const std::shared_ptr<minifi::Configure>& configuration, const std::string& state_id);
 
   void storeState(const std::string& bucket, const std::string& key, const MultipartUploadState& state);
   std::optional<MultipartUploadState> getState(const std::string& bucket, const std::string& key) const;

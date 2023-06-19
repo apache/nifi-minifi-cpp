@@ -16,18 +16,16 @@
  */
 #include "MultipartUploadStateStorage.h"
 
-#include <unordered_map>
-
 #include "utils/StringUtils.h"
 
 namespace org::apache::nifi::minifi::aws::s3 {
 
-MultipartUploadStateStorage::MultipartUploadStateStorage(const std::string& state_directory, const std::string& state_id) {
-  if (state_directory.empty()) {
-    char format[] = "/var/tmp/nifi-minifi-cpp.s3-multipart-upload.XXXXXX";
-    state_file_path_ = minifi::utils::file::FileUtils::create_temp_directory(format) / std::string(state_id + "-s3-multipart-upload-state.properties");
+MultipartUploadStateStorage::MultipartUploadStateStorage(const std::shared_ptr<minifi::Configure>& configuration, const std::string& state_id) {
+  auto state_directory = configuration->get(minifi::Configuration::nifi_s3_multipart_upload_state_directory);
+  if (!state_directory || state_directory->empty()) {
+    state_file_path_ = configuration->getHome() / std::string("s3-multipart-upload-state") / std::string(state_id + "-s3-multipart-upload-state.properties");
   } else {
-    state_file_path_ = std::filesystem::path(state_directory) / std::string(state_id + "-s3-multipart-upload-state.properties");
+    state_file_path_ = std::filesystem::path(*state_directory) / std::string(state_id + "-s3-multipart-upload-state.properties");
     if (!std::filesystem::exists(state_file_path_)) {
       std::filesystem::create_directories(state_file_path_.parent_path());
     } else {

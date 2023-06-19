@@ -15,35 +15,26 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+#include <memory>
+
 #include "TestBase.h"
 #include "Catch.h"
 #include "s3/MultipartUploadStateStorage.h"
+#include "utils/Environment.h"
 
 namespace org::apache::nifi::minifi::test {
 
 class MultipartUploadStateStorageTestFixture {
  public:
   MultipartUploadStateStorageTestFixture()
-    : upload_storage_(test_controller.createTempDirectory().string(), "test_id") {
+      : upload_storage_(configuration_, "test_id") {
+    auto temp_dir = test_controller.createTempDirectory();
+    configuration_->set(minifi::Configuration::nifi_s3_multipart_upload_state_directory, temp_dir.string());
   }
 
  protected:
   TestController test_controller;
-  minifi::aws::s3::MultipartUploadStateStorage upload_storage_;
-};
-
-class MultipartUploadStateStorageGeneratedStatedirTestFixture {
- public:
-  MultipartUploadStateStorageGeneratedStatedirTestFixture()
-    : upload_storage_("", "test_id") {
-  }
-
-  ~MultipartUploadStateStorageGeneratedStatedirTestFixture() {
-    std::filesystem::remove_all(upload_storage_.getStateFilePath());
-  }
-
- protected:
-  TestController test_controller;
+  std::shared_ptr<minifi::Configure> configuration_ = std::make_shared<minifi::Configure>();
   minifi::aws::s3::MultipartUploadStateStorage upload_storage_;
 };
 
@@ -61,7 +52,10 @@ TEST_CASE_METHOD(MultipartUploadStateStorageTestFixture, "Store and get current 
   REQUIRE(*upload_storage_.getState("test_bucket", "key") == state);
 }
 
-TEST_CASE_METHOD(MultipartUploadStateStorageGeneratedStatedirTestFixture, "Store and get current key state in generated state dir", "[s3StateStorage]") {
+TEST_CASE_METHOD(MultipartUploadStateStorageTestFixture, "Store and get current key state in generated state dir", "[s3StateStorage]") {
+  configuration_->set(minifi::Configuration::nifi_s3_multipart_upload_state_directory, "");
+  auto minifi_home_dir = test_controller.createTempDirectory();
+  minifi::utils::Environment::setEnvironmentVariable("MINIFI_HOME", minifi_home_dir.string().c_str());
   REQUIRE(upload_storage_.getState("test_bucket", "key") == std::nullopt);
   minifi::aws::s3::MultipartUploadState state;
   state.upload_id = "id1";

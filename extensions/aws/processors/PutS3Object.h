@@ -55,7 +55,8 @@ class PutS3Object : public S3Processor {
       "locally tracking the upload ID and parts uploaded, which must both be provided to complete the upload. The AWS libraries select an endpoint URL based on the AWS region, "
       "but this can be overridden with the 'Endpoint Override URL' property for use with other S3-compatible endpoints. The S3 API specifies that the maximum file size for a "
       "PutS3Object upload is 5GB. It also requires that parts in a multipart upload must be at least 5MB in size, except for the last part. These limits establish the bounds "
-      "for the Multipart Upload Threshold and Part Size properties.";
+      "for the Multipart Upload Threshold and Part Size properties. The multipart upload states are stored in a separate directory set in the nifi.s3.multipart.upload.state.directory "
+      "configuration property which defaults to the ${MINIFI_HOME}/s3-multipart-upload-state/ directory.";
 
   EXTENSIONAPI static constexpr auto ObjectKey = core::PropertyDefinitionBuilder<>::createProperty("Object Key")
       .withDescription("The key of the S3 object. If none is given the filename attribute will be used by default.")
@@ -134,10 +135,6 @@ class PutS3Object : public S3Processor {
         .withDefaultValue<core::TimePeriodValue>("7 days")
         .isRequired(true)
         .build();
-  EXTENSIONAPI static constexpr auto TemporaryDirectoryMultipartState = core::PropertyDefinitionBuilder<>::createProperty("Temporary Directory Multipart State")
-      .withDescription("Directory in which, for multipart uploads, the processor will locally save the state tracking the upload ID and parts uploaded which must both be provided to complete "
-                       "the upload. If left empty, a temporary directory will be created.")
-      ->build();
   EXTENSIONAPI static constexpr auto Properties = minifi::utils::array_cat(S3Processor::Properties, std::array<core::PropertyReference, 10>{
       ObjectKey,
       ContentType,
@@ -152,8 +149,7 @@ class PutS3Object : public S3Processor {
       MultipartThreshold,
       MultipartPartSize,
       MultipartUploadAgeOffInterval,
-      MultipartUploadMaxAgeThreshold,
-      TemporaryDirectoryMultipartState
+      MultipartUploadMaxAgeThreshold
   });
 
 
