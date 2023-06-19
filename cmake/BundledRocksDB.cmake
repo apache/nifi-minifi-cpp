@@ -26,6 +26,9 @@ function(use_bundled_rocksdb SOURCE_DIR BINARY_DIR)
         list(APPEND CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/cmake/lz4/dummy")
     endif()
 
+    set(PATCH_FILE "${SOURCE_DIR}/thirdparty/rocksdb/arm7.patch")
+    set(PC ${Bash_EXECUTABLE} -c "set -x && \
+            (\"${Patch_EXECUTABLE}\" -p1 -R -s -f --dry-run -i \"${PATCH_FILE}\" || \"${Patch_EXECUTABLE}\" -p1 -N -i \"${PATCH_FILE}\")")
     # Define byproducts
     if (WIN32)
         set(BYPRODUCT "lib/rocksdb.lib")
@@ -71,6 +74,7 @@ function(use_bundled_rocksdb SOURCE_DIR BINARY_DIR)
             URL_HASH "SHA256=b8ac9784a342b2e314c821f6d701148912215666ac5e9bdbccd93cf3767cb611"
             SOURCE_DIR "${BINARY_DIR}/thirdparty/rocksdb-src"
             CMAKE_ARGS ${ROCKSDB_CMAKE_ARGS}
+            PATCH_COMMAND ${PC}
             BUILD_BYPRODUCTS "${BINARY_DIR}/thirdparty/rocksdb-install/${BYPRODUCT}"
             EXCLUDE_FROM_ALL TRUE
             LIST_SEPARATOR % # This is needed for passing semicolon-separated lists

@@ -104,6 +104,9 @@ if ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "GNU" AND CMAKE_CXX_COMPILER_VERSION VER
     list(APPEND LIBMINIFI_LIBRARIES stdc++fs)
 endif()
 target_link_libraries(core-minifi ${CMAKE_DL_LIBS} ${LIBMINIFI_LIBRARIES})
+if (UNIX AND (CMAKE_SYSTEM_PROCESSOR MATCHES "armv7"))
+    target_link_libraries(core-minifi "-latomic")
+endif()
 
 SET (LIBMINIFI core-minifi PARENT_SCOPE)
 
