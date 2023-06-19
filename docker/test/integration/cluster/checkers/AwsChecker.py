@@ -39,7 +39,7 @@ class AwsChecker:
         if code != 0:
             return False
         file_hash = md5_output.split(' ')[0].strip()
-        return code == 0 and file_hash == expected_file_hash
+        return file_hash == expected_file_hash
 
     @retry_check()
     def check_s3_server_object_metadata(self, container_name, content_type="application/octet-stream", metadata=dict()):

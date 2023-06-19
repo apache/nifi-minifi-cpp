@@ -418,12 +418,13 @@ FetchObjectResult S3Wrapper::fillFetchObjectResult(const GetObjectRequestParamet
   return result;
 }
 
-void S3Wrapper::addListMultipartUploadResults(const Aws::Vector<Aws::S3::Model::MultipartUpload>& uploads, std::optional<std::chrono::milliseconds> max_upload_age,
+void S3Wrapper::addListMultipartUploadResults(const Aws::Vector<Aws::S3::Model::MultipartUpload>& uploads, std::optional<std::chrono::milliseconds> age_off_limit,
     std::vector<MultipartUpload>& filtered_uploads) {
   const auto now = Aws::Utils::DateTime::Now();
   for (const auto& upload : uploads) {
-    if (max_upload_age && now - upload.GetInitiated() <= *max_upload_age) {
-      logger_->log_debug("Multipart upload with key '%s' and upload id '%s' did not meet the age limit", upload.GetKey(), upload.GetUploadId());
+    // if age_off_limit is set only list the aged off uploads
+    if (age_off_limit && now - upload.GetInitiated() <= *age_off_limit) {
+      logger_->log_debug("Multipart upload with key '%s' and upload id '%s' has not aged off yet", upload.GetKey(), upload.GetUploadId());
       continue;
     }
 
@@ -446,7 +447,7 @@ std::optional<std::vector<MultipartUpload>> S3Wrapper::listMultipartUploads(cons
     }
     const auto& uploads = aws_result->GetUploads();
     logger_->log_debug("AWS S3 List operation returned %zu multipart uploads. This result is%s truncated.", uploads.size(), aws_result->GetIsTruncated() ? "" : " not");
-    addListMultipartUploadResults(uploads, params.upload_max_age, result);
+    addListMultipartUploadResults(uploads, params.age_off_limit, result);
     if (aws_result->GetIsTruncated()) {
       request.SetKeyMarker(aws_result->GetNextKeyMarker());
     }

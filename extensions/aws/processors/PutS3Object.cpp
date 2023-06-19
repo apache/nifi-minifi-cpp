@@ -221,7 +221,7 @@ void PutS3Object::ageOffMultipartUploads(const CommonProperties &common_properti
   aws::s3::ListMultipartUploadsRequestParameters list_params(common_properties.credentials, *client_config_);
   list_params.setClientConfig(common_properties.proxy, common_properties.endpoint_override_url);
   list_params.bucket = common_properties.bucket;
-  list_params.upload_max_age = multipart_upload_max_age_threshold_;
+  list_params.age_off_limit = multipart_upload_max_age_threshold_;
   list_params.use_virtual_addressing = use_virtual_addressing_;
   auto aged_off_uploads_in_progress = s3_wrapper_.listMultipartUploads(list_params);
   if (!aged_off_uploads_in_progress) {

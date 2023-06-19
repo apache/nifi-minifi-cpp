@@ -30,7 +30,6 @@ MultipartUploadStateStorage::MultipartUploadStateStorage(const std::string& stat
     state_file_path_ = std::filesystem::path(state_directory) / std::string(state_id + "-s3-multipart-upload-state.properties");
     if (!std::filesystem::exists(state_file_path_)) {
       std::filesystem::create_directories(state_file_path_.parent_path());
-      // std::ofstream ofs(state_file_path_);
     } else {
       loadFile();
     }
