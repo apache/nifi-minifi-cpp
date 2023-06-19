@@ -28,7 +28,7 @@ namespace org::apache::nifi::minifi::utils {
 
 std::error_code getLastError() {
 #ifdef WIN32
-  return {gsl:narrow<int>(GetLastError()), std::system_category()};
+  return {gsl::narrow<int>(GetLastError()), std::system_category()};
 #else
   return {gsl::narrow<int>(errno), std::generic_category()};
 #endif

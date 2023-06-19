@@ -29,7 +29,12 @@ int main(int argc, char* argv[]) {
   if (argc == 2) {
     std::cout << "Trying to lock file a second time '" << argv[1] << "', from pid: " << utils::OsUtils::getCurrentProcessId() << std::endl;
     minifi::utils::FileMutex mtx{argv[1]};
-    std::unique_lock lock{mtx};
+    try {
+      std::unique_lock lock{mtx};
+    } catch (const std::exception& ex) {
+      std::cerr << ex.what() << std::endl;
+      throw;
+    }
     return 0;
   }
 

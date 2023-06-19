@@ -34,22 +34,25 @@ FileMutex::FileMutex(std::filesystem::path path): path_(std::move(path)) {}
 void FileMutex::lock() {
   std::lock_guard guard(mtx_);
   gsl_Expects(!file_handle_.has_value());
-  HANDLE handle = CreateFileA(path_.string().c_str(), (GENERIC_READ | GENERIC_WRITE), 0, NULL, CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL);
+  HANDLE handle = CreateFileA(path_.string().c_str(), GENERIC_WRITE, FILE_SHARE_READ, NULL, CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL);
 
   if (handle == INVALID_HANDLE_VALUE) {
     const auto err = utils::getLastError();
     std::string pid_str = "unknown";
-    handle = CreateFileA(path_.string().c_str(), GENERIC_READ, 0, NULL, OPEN_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL);
+    handle = CreateFileA(path_.string().c_str(), GENERIC_READ, FILE_SHARE_WRITE, NULL, OPEN_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL);
     if (handle == INVALID_HANDLE_VALUE) {
-      std::cerr << "Failed to open file to read pid " << utils::getLastError().message() << std::endl;
+      std::cerr << "Failed to open file to read pid: " << utils::getLastError().message() << std::endl;
     } else {
       std::array<char, 16> buffer;
       size_t pid_str_size = 0;
       DWORD read_size;
-      while (ReadFile(handle, buffer.data() + pid_str_size, buffer.size() - pid_str_size, &read_size) && read_size != 0) {
+      while (ReadFile(handle, buffer.data() + pid_str_size, buffer.size() - pid_str_size, &read_size, NULL) && read_size != 0) {
         pid_str_size += read_size;
       }
       pid_str = "'" + std::string(buffer.data(), pid_str_size) + "'";
+      if (!CloseHandle(handle)) {
+        std::cerr << "Failed to close file after unsuccessful locking attempt: " << utils::getLastError().message() << std::endl;
+      }
     }
 
     throw std::system_error{err, "Failed to open file '" + path_.string() + "' to be locked, previous pid: " + pid_str};
@@ -59,7 +62,7 @@ void FileMutex::lock() {
   std::span<const char> buffer = pidstr;
   while (!buffer.empty()) {
     DWORD written;
-    if (!WriteFile(handle, buffer.data(), buffer.size(), &written)) {
+    if (!WriteFile(handle, buffer.data(), buffer.size(), &written, NULL)) {
       const auto err = utils::getLastError();
       if (!CloseHandle(file_handle_.value())) {
         std::cerr << "Failed to close file: " << utils::getLastError().message() << std::endl;
