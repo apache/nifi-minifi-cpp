@@ -17,6 +17,7 @@
 #include "PrometheusMetricsPublisher.h"
 
 #include <utility>
+#include <stdexcept>
 
 #include "core/Resource.h"
 #include "utils/StringUtils.h"
@@ -42,7 +43,11 @@ PrometheusExposerConfig PrometheusMetricsPublisher::readExposerConfig() const {
   gsl_Expects(configuration_);
   PrometheusExposerConfig config;
   if (auto port = configuration_->get(Configuration::nifi_metrics_publisher_prometheus_metrics_publisher_port)) {
-    config.port = std::stoul(*port);
+    try {
+      config.port = std::stoul(*port);
+    } catch(const std::exception&) {
+      throw Exception(GENERAL_EXCEPTION, "Port configured for Prometheus metrics publisher is invalid: '" + *port + "'");
+    }
   } else {
     throw Exception(GENERAL_EXCEPTION, "Port not configured for Prometheus metrics publisher!");
   }
