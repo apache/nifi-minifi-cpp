@@ -22,11 +22,7 @@
 #include "Exception.h"
 #include "utils/StringUtils.h"
 
-namespace org {
-namespace apache {
-namespace nifi {
-namespace minifi {
-namespace utils {
+namespace org::apache::nifi::minifi::utils {
 
 void setKafkaConfigurationField(rd_kafka_conf_t& configuration, const std::string& field_name, const std::string& value) {
   static std::array<char, 512U> errstr{};
@@ -55,7 +51,7 @@ std::string get_human_readable_kafka_message_timestamp(const rd_kafka_message_t&
   } else if (tstype == RD_KAFKA_TIMESTAMP_LOG_APPEND_TIME) {
     tsname = "log append time";
   }
-  const int64_t seconds_since_timestamp = timestamp == -1 ? 0 : static_cast<int64_t>(time(NULL)) - static_cast<int64_t>(timestamp / 1000);
+  const int64_t seconds_since_timestamp = timestamp == -1 ? 0 : static_cast<int64_t>(time(nullptr)) - static_cast<int64_t>(timestamp / 1000);
   return {"[Timestamp](" + std::string(tsname) + " " + std::to_string(timestamp) + " (" + std::to_string(seconds_since_timestamp) + " s ago)"};
 }
 
@@ -114,8 +110,4 @@ std::optional<std::string> get_encoded_message_key(const rd_kafka_message_t& mes
   return get_encoded_string({reinterpret_cast<const char*>(message.key), message.key_len}, encoding);
 }
 
-}  // namespace utils
-}  // namespace minifi
-}  // namespace nifi
-}  // namespace apache
-}  // namespace org
+}  // namespace org::apache::nifi::minifi::utils

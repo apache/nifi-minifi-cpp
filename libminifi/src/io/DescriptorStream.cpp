@@ -29,11 +29,7 @@
 #include <unistd.h>
 #endif
 
-namespace org {
-namespace apache {
-namespace nifi {
-namespace minifi {
-namespace io {
+namespace org::apache::nifi::minifi::io {
 
 DescriptorStream::DescriptorStream(int fd)
     : fd_(fd) {
@@ -86,9 +82,4 @@ size_t DescriptorStream::read(std::span<std::byte> buf) {
   return gsl::narrow<size_t>(size_read);
 }
 
-} /* namespace io */
-} /* namespace minifi */
-} /* namespace nifi */
-} /* namespace apache */
-} /* namespace org */
-
+}  // namespace org::apache::nifi::minifi::io

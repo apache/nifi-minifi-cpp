@@ -25,11 +25,8 @@
 #include <string>
 #include <Exception.h>
 #include "io/validation.h"
-namespace org {
-namespace apache {
-namespace nifi {
-namespace minifi {
-namespace io {
+
+namespace org::apache::nifi::minifi::io {
 
 RocksDbStream::RocksDbStream(std::string path, gsl::not_null<minifi::internal::RocksDatabase*> db, bool write_enable, minifi::internal::WriteBatch* batch)
     : BaseStream(),
@@ -90,9 +87,4 @@ size_t RocksDbStream::read(std::span<std::byte> buf) {
   return amtToRead;
 }
 
-} /* namespace io */
-} /* namespace minifi */
-} /* namespace nifi */
-} /* namespace apache */
-} /* namespace org */
-
+}  // namespace org::apache::nifi::minifi::io

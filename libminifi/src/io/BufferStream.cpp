@@ -22,11 +22,7 @@
 #include "io/BufferStream.h"
 #include "utils/gsl.h"
 
-namespace org {
-namespace apache {
-namespace nifi {
-namespace minifi {
-namespace io {
+namespace org::apache::nifi::minifi::io {
 
 size_t BufferStream::write(const uint8_t *value, size_t size) {
   size_t originalSize = buffer_.size();
@@ -47,8 +43,4 @@ size_t BufferStream::read(std::span<std::byte> buf) {
   return readlen;
 }
 
-} /* namespace io */
-} /* namespace minifi */
-} /* namespace nifi */
-} /* namespace apache */
-} /* namespace org */
+}  // namespace org::apache::nifi::minifi::io
