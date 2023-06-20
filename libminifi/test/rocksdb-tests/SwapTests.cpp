@@ -126,10 +126,11 @@ TEST_CASE("Connection will on-demand swap flow files") {
   std::set<std::shared_ptr<core::FlowFile>> expired;
   for (size_t i = 0; i < 200; ++i) {
     std::shared_ptr<core::FlowFile> ff;
-    minifi::utils::verifyEventHappenedInPollTime(std::chrono::seconds{1}, [&] {
+    bool got_non_null_flow_file = minifi::utils::verifyEventHappenedInPollTime(std::chrono::seconds{5}, [&] {
       ff = connection->poll(expired);
       return static_cast<bool>(ff);
     });
+    REQUIRE(got_non_null_flow_file);
     REQUIRE(ff->getAttribute("index") == std::to_string(i));
     REQUIRE(ff->getResourceClaim()->getContentFullPath() == processor->flow_files_[i]->getResourceClaim()->getContentFullPath());
   }
