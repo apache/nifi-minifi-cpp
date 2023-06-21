@@ -113,7 +113,7 @@ void GetTCP::onSchedule(const std::shared_ptr<core::ProcessContext>& context, co
   char delimiter = '\n';
   if (auto delimiter_str = context->getProperty(MessageDelimiter)) {
     auto parsed_delimiter = utils::StringUtils::parseCharacter(*delimiter_str);
-    if (!parsed_delimiter)
+    if (!parsed_delimiter || parsed_delimiter->has_value())
       throw Exception(PROCESS_SCHEDULE_EXCEPTION, fmt::format("Invalid delimiter: {} (it must be a single (escaped or not) character", *delimiter_str));
     delimiter = **parsed_delimiter;
   }
