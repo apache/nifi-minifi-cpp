@@ -14,8 +14,6 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
-
 #pragma once
 
 #include <string>
@@ -38,7 +36,6 @@ class GCSProcessor : public core::Processor {
  public:
   GCSProcessor(std::string name, const minifi::utils::Identifier& uuid, std::shared_ptr<core::logging::Logger> logger)
       : core::Processor(std::move(name), uuid),
-     #include "PropertyDefinitionBuilder.h"
    logger_(std::move(logger)) {
   }
 
