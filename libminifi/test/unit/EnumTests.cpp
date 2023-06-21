@@ -83,6 +83,14 @@ TEST_CASE("Enum checks") {
   REQUIRE(C::parse("one") == C::_1);
   REQUIRE(C::parse("three") == C::_3);
   REQUIRE_THROWS(C::parse("nada"));
+
+  REQUIRE_THROWS(A(std::string_view{"not_any"}));
+  REQUIRE(A(std::string_view{"zero"}) == A::_0);
+  REQUIRE(B(std::string_view{"zero"}) == B::_0);
+  REQUIRE(C(std::string_view{"one"}) == C::_1);
+  REQUIRE(C(std::string_view{"three"}) == C::_3);
+  REQUIRE_THROWS(C(std::string_view{"nada"}));
+
   REQUIRE(!C::parse("nada", C{}));
   REQUIRE(!C::parse("ThRee", C{}));
   REQUIRE(C::parse("ThRee", {}, false) == C::_3);

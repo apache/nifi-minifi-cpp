@@ -16,8 +16,7 @@
  * limitations under the License.
  */
 
-#ifndef LIBMINIFI_INCLUDE_UTILS_VALUEPARSER_H_
-#define LIBMINIFI_INCLUDE_UTILS_VALUEPARSER_H_
+#pragma once
 
 #include <exception>
 #include <string>
@@ -30,11 +29,7 @@
 
 #include "PropertyErrors.h"
 
-namespace org {
-namespace apache {
-namespace nifi {
-namespace minifi {
-namespace utils {
+namespace org::apache::nifi::minifi::utils {
 namespace internal {
 
 class ValueParser {
@@ -191,11 +186,17 @@ class ValueParser {
   const std::string& str;
   std::size_t offset;
 };
-} /* namespace internal */
-} /* namespace utils */
-} /* namespace minifi */
-} /* namespace nifi */
-} /* namespace apache */
-} /* namespace org */
+}  // namespace internal
 
-#endif  // LIBMINIFI_INCLUDE_UTILS_VALUEPARSER_H_
+template<typename T>
+std::optional<T> toNumber(const std::string& input) {
+  try {
+    T output;
+    internal::ValueParser(input).parse(output).parseEnd();
+    return output;
+  } catch(const internal::ParseException&) {
+    return std::nullopt;
+  }
+}
+
+}  // namespace org::apache::nifi::minifi::utils

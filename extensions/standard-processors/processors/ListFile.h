@@ -68,7 +68,8 @@ class ListFile : public core::Processor {
       .build();
   EXTENSIONAPI static constexpr auto MaximumFileAge = core::PropertyDefinitionBuilder<>::createProperty("Maximum File Age")
       .withDescription("The maximum age that a file must be in order to be pulled; any file older than this amount of time (according to last modification date) will be ignored")
-     .build();
+      .withPropertyType(core::StandardPropertyTypes::TIME_PERIOD_TYPE)
+      .build();
   EXTENSIONAPI static constexpr auto MinimumFileSize = core::PropertyDefinitionBuilder<>::createProperty("Minimum File Size")
       .withDescription("The minimum size that a file must be in order to be pulled")
       .isRequired(true)

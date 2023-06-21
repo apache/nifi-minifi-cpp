@@ -100,23 +100,19 @@ class ProcessContext : public controller::ControllerServiceLookup, public core::
   template<std::default_initializable T = std::string>
   std::optional<T> getProperty(const Property& property) const {
     T value;
-    try {
-      if (!getProperty(property.getName(), value)) return std::nullopt;
-    } catch (const utils::internal::ValueException&) {
-      return std::nullopt;
+    if (getProperty(property.getName(), value)) {
+      return value;
     }
-    return value;
+    return std::nullopt;
   }
 
   template<std::default_initializable T = std::string>
   std::optional<T> getProperty(const PropertyReference& property) const {
     T value;
-    try {
-      if (!getProperty(property.name, value)) return std::nullopt;
-    } catch (const utils::internal::ValueException&) {
-      return std::nullopt;
+    if (getProperty(property.name, value)) {
+      return value;
     }
-    return value;
+    return std::nullopt;
   }
 
   bool getProperty(std::string_view name, detail::NotAFlowFile auto& value) const {

@@ -78,10 +78,12 @@ class AbstractMQTTProcessor : public core::Processor {
       .build();
   EXTENSIONAPI static constexpr auto ConnectionTimeout = core::PropertyDefinitionBuilder<>::createProperty("Connection Timeout")
       .withDescription("Maximum time interval the client will wait for the network connection to the MQTT broker")
+      .withPropertyType(core::StandardPropertyTypes::TIME_PERIOD_TYPE)
       .withDefaultValue("10 sec")
       .build();
   EXTENSIONAPI static constexpr auto KeepAliveInterval = core::PropertyDefinitionBuilder<>::createProperty("Keep Alive Interval")
       .withDescription("Defines the maximum time interval between messages sent or received")
+      .withPropertyType(core::StandardPropertyTypes::TIME_PERIOD_TYPE)
       .withDefaultValue("60 sec")
       .build();
   EXTENSIONAPI static constexpr auto LastWillTopic = core::PropertyDefinitionBuilder<>::createProperty("Last Will Topic")
@@ -97,6 +99,7 @@ class AbstractMQTTProcessor : public core::Processor {
       .build();
   EXTENSIONAPI static constexpr auto LastWillRetain = core::PropertyDefinitionBuilder<>::createProperty("Last Will Retain")
       .withDescription("Whether to retain the client's Last Will")
+      .withPropertyType(core::StandardPropertyTypes::BOOLEAN_TYPE)
       .withDefaultValue("false")
       .build();
   EXTENSIONAPI static constexpr auto LastWillContentType = core::PropertyDefinitionBuilder<>::createProperty("Last Will Content Type")

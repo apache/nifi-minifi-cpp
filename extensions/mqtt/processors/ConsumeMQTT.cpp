@@ -23,6 +23,7 @@
 #include <vector>
 
 #include "utils/StringUtils.h"
+#include "utils/ValueParser.h"
 #include "core/ProcessContext.h"
 #include "core/ProcessSession.h"
 #include "core/Resource.h"
@@ -50,22 +51,22 @@ void ConsumeMQTT::readProperties(const std::shared_ptr<core::ProcessContext>& co
   }
   logger_->log_debug("ConsumeMQTT: Topic [%s]", topic_);
 
-  if (const auto value = context->getProperty<bool>(CleanSession)) {
+  if (const auto value = context->getProperty(CleanSession) | utils::flatMap(&utils::StringUtils::toBool)) {
     clean_session_ = *value;
   }
   logger_->log_debug("ConsumeMQTT: CleanSession [%d]", clean_session_);
 
-  if (const auto value = context->getProperty<bool>(CleanStart)) {
+  if (const auto value = context->getProperty(CleanStart) | utils::flatMap(&utils::StringUtils::toBool)) {
     clean_start_ = *value;
   }
   logger_->log_debug("ConsumeMQTT: CleanStart [%d]", clean_start_);
 
-  if (const auto session_expiry_interval = context->getProperty<core::TimePeriodValue>(SessionExpiryInterval)) {
+  if (const auto session_expiry_interval = context->getProperty(SessionExpiryInterval) | utils::flatMap(&core::TimePeriodValue::fromString)) {
     session_expiry_interval_ = std::chrono::duration_cast<std::chrono::seconds>(session_expiry_interval->getMilliseconds());
   }
   logger_->log_debug("ConsumeMQTT: SessionExpiryInterval [%" PRId64 "] s", int64_t{session_expiry_interval_.count()});
 
-  if (const auto value = context->getProperty<uint64_t>(QueueBufferMaxMessage)) {
+  if (const auto value = context->getProperty(QueueBufferMaxMessage) | utils::flatMap(&utils::toNumber<uint64_t>)) {
     max_queue_size_ = *value;
   }
   logger_->log_debug("ConsumeMQTT: Queue Max Message [%" PRIu64 "]", max_queue_size_);
@@ -75,12 +76,12 @@ void ConsumeMQTT::readProperties(const std::shared_ptr<core::ProcessContext>& co
   }
   logger_->log_debug("ConsumeMQTT: Attribute From Content Type [%s]", attribute_from_content_type_);
 
-  if (const auto topic_alias_maximum = context->getProperty<uint32_t>(TopicAliasMaximum)) {
+  if (const auto topic_alias_maximum = context->getProperty(TopicAliasMaximum) | utils::flatMap(&utils::toNumber<uint32_t>)) {
     topic_alias_maximum_ = gsl::narrow<uint16_t>(*topic_alias_maximum);
   }
   logger_->log_debug("ConsumeMQTT: Topic Alias Maximum [%" PRIu16 "]", topic_alias_maximum_);
 
-  if (const auto receive_maximum = context->getProperty<uint32_t>(ReceiveMaximum)) {
+  if (const auto receive_maximum = context->getProperty(ReceiveMaximum) | utils::flatMap(&utils::toNumber<uint32_t>)) {
     receive_maximum_ = gsl::narrow<uint16_t>(*receive_maximum);
   }
   logger_->log_debug("ConsumeMQTT: Receive Maximum [%" PRIu16 "]", receive_maximum_);

@@ -40,7 +40,7 @@ void DefragmentText::initialize() {
 void DefragmentText::onSchedule(core::ProcessContext* context, core::ProcessSessionFactory*) {
   gsl_Expects(context);
 
-  if (auto max_buffer_age = context->getProperty<core::TimePeriodValue>(MaxBufferAge)) {
+  if (auto max_buffer_age = context->getProperty(MaxBufferAge) | utils::flatMap(&core::TimePeriodValue::fromString)) {
     max_age_ = max_buffer_age->getMilliseconds();
     setTriggerWhenEmpty(true);
     logger_->log_trace("The Buffer maximum age is configured to be %" PRId64 " ms", int64_t{max_buffer_age->getMilliseconds().count()});

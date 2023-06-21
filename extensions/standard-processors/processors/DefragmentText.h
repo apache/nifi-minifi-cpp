@@ -63,6 +63,7 @@ class DefragmentText : public core::Processor {
   EXTENSIONAPI static constexpr auto MaxBufferAge = core::PropertyDefinitionBuilder<>::createProperty("Max Buffer Age")
       .withDescription("The maximum age of the buffer after which it will be transferred to success when matching Start of Message patterns or to failure when matching End of Message patterns. "
           "Expected format is <duration> <time unit>")
+      .withPropertyType(core::StandardPropertyTypes::TIME_PERIOD_TYPE)
       .withDefaultValue("10 min")
       .build();
   EXTENSIONAPI static constexpr auto MaxBufferSize = core::PropertyDefinitionBuilder<>::createProperty("Max Buffer Size")
