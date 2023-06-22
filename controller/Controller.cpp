@@ -20,195 +20,298 @@
 
 #include "io/BufferStream.h"
 #include "c2/C2Payload.h"
+#include "io/AsioStream.h"
+#include "asio/ssl/context.hpp"
+#include "asio/ssl/stream.hpp"
+#include "asio/connect.hpp"
+#include "core/logging/Logger.h"
 
 namespace org::apache::nifi::minifi::controller {
 
-bool sendSingleCommand(std::unique_ptr<io::Socket> socket, uint8_t op, const std::string& value) {
-  if (socket->initialize() < 0) {
+namespace {
+
+class ClientConnection {
+ public:
+  explicit ClientConnection(const ControllerSocketData& socket_data) {
+    if (socket_data.ssl_context_service) {
+      connectTcpSocketOverSsl(socket_data);
+    } else {
+      connectTcpSocket(socket_data);
+    }
+  }
+
+  [[nodiscard]] io::BaseStream* getStream() const {
+    return stream_.get();
+  }
+
+ private:
+  static asio::ssl::context createSslContext(const std::shared_ptr<minifi::controllers::SSLContextService>& ssl_context_service) {
+    asio::ssl::context ssl_context(asio::ssl::context::tls_client);
+    ssl_context.set_options(asio::ssl::context::no_tlsv1 | asio::ssl::context::no_tlsv1_1);
+    ssl_context.load_verify_file(ssl_context_service->getCACertificate().string());
+    ssl_context.set_verify_mode(asio::ssl::verify_peer);
+    if (const auto& cert_file = ssl_context_service->getCertificateFile(); !cert_file.empty())
+      ssl_context.use_certificate_file(cert_file.string(), asio::ssl::context::pem);
+    if (const auto& private_key_file = ssl_context_service->getPrivateKeyFile(); !private_key_file.empty())
+      ssl_context.use_private_key_file(private_key_file.string(), asio::ssl::context::pem);
+    ssl_context.set_password_callback([password = ssl_context_service->getPassphrase()](std::size_t&, asio::ssl::context_base::password_purpose&) { return password; });
+    return ssl_context;
+  }
+
+  void connectTcpSocketOverSsl(const ControllerSocketData& socket_data) {
+    auto ssl_context = createSslContext(socket_data.ssl_context_service);
+    asio::ssl::stream<asio::ip::tcp::socket> socket(io_context_, ssl_context);
+
+    asio::ip::tcp::resolver resolver(io_context_);
+    asio::error_code err;
+    asio::ip::tcp::resolver::results_type endpoints = resolver.resolve(socket_data.host, std::to_string(socket_data.port), err);
+    if (err) {
+      logger_->log_error("Resolving host '%s' on port '%s' failed with the following message: '%s'", socket_data.host, std::to_string(socket_data.port), err.message());
+      return;
+    }
+
+    asio::connect(socket.lowest_layer(), endpoints, err);
+    if (err) {
+      logger_->log_error("Connecting to host '%s' on port '%s' failed with the following message: '%s'", socket_data.host, std::to_string(socket_data.port), err.message());
+      return;
+    }
+    socket.handshake(asio::ssl::stream_base::client, err);
+    if (err) {
+      logger_->log_error("SSL handshake failed while connecting to host '%s' on port '%s' with the following message: '%s'", socket_data.host, std::to_string(socket_data.port), err.message());
+      return;
+    }
+    stream_ = std::make_unique<io::AsioStream<asio::ssl::stream<asio::ip::tcp::socket>>>(std::move(socket));
+  }
+
+  void connectTcpSocket(const ControllerSocketData& socket_data) {
+    asio::ip::tcp::socket socket(io_context_);
+
+    asio::ip::tcp::resolver resolver(io_context_);
+    asio::error_code err;
+    asio::ip::tcp::resolver::results_type endpoints = resolver.resolve(socket_data.host, std::to_string(socket_data.port));
+    if (err) {
+      logger_->log_error("Resolving host '%s' on port '%s' failed with the following message: '%s'", socket_data.host, std::to_string(socket_data.port), err.message());
+      return;
+    }
+
+    asio::connect(socket, endpoints, err);
+    if (err) {
+      logger_->log_error("Connecting to host '%s' on port '%s' failed with the following message: '%s'", socket_data.host, std::to_string(socket_data.port), err.message());
+      return;
+    }
+    stream_ = std::make_unique<io::AsioStream<asio::ip::tcp::socket>>(std::move(socket));
+  }
+
+  asio::io_context io_context_;
+  std::unique_ptr<io::BaseStream> stream_;
+  std::shared_ptr<core::logging::Logger> logger_{core::logging::LoggerFactory<ClientConnection>::getLogger()};
+};
+
+}  // namespace
+
+
+bool sendSingleCommand(const ControllerSocketData& socket_data, uint8_t op, const std::string& value) {
+  ClientConnection connection(socket_data);
+  auto connection_stream = connection.getStream();
+  if (!connection_stream) {
     return false;
   }
-  io::BufferStream stream;
-  stream.write(&op, 1);
-  stream.write(value);
-  return socket->write(stream.getBuffer()) == stream.size();
+  io::BufferStream buffer;
+  buffer.write(&op, 1);
+  buffer.write(value);
+  return connection_stream->write(buffer.getBuffer()) == buffer.size();
 }
 
-bool stopComponent(std::unique_ptr<io::Socket> socket, const std::string& component) {
-  return sendSingleCommand(std::move(socket), static_cast<uint8_t>(c2::Operation::stop), component);
+bool stopComponent(const ControllerSocketData& socket_data, const std::string& component) {
+  return sendSingleCommand(socket_data, static_cast<uint8_t>(c2::Operation::stop), component);
 }
 
-bool startComponent(std::unique_ptr<io::Socket> socket, const std::string& component) {
-  return sendSingleCommand(std::move(socket), static_cast<uint8_t>(c2::Operation::start), component);
+bool startComponent(const ControllerSocketData& socket_data, const std::string& component) {
+  return sendSingleCommand(socket_data, static_cast<uint8_t>(c2::Operation::start), component);
 }
 
-bool clearConnection(std::unique_ptr<io::Socket> socket, const std::string& connection) {
-  return sendSingleCommand(std::move(socket), static_cast<uint8_t>(c2::Operation::clear), connection);
+bool clearConnection(const ControllerSocketData& socket_data, const std::string& connection) {
+  return sendSingleCommand(socket_data, static_cast<uint8_t>(c2::Operation::clear), connection);
 }
 
-int updateFlow(std::unique_ptr<io::Socket> socket, std::ostream &out, const std::string& file) {
-  if (socket->initialize() < 0) {
-    return -1;
+bool updateFlow(const ControllerSocketData& socket_data, std::ostream &out, const std::string& file) {
+  ClientConnection connection(socket_data);
+  auto connection_stream = connection.getStream();
+  if (!connection_stream) {
+    return false;
   }
   auto op = static_cast<uint8_t>(c2::Operation::update);
-  io::BufferStream stream;
-  stream.write(&op, 1);
-  stream.write("flow");
-  stream.write(file);
-  if (io::isError(socket->write(stream.getBuffer()))) {
-    return -1;
+  io::BufferStream buffer;
+  buffer.write(&op, 1);
+  buffer.write("flow");
+  buffer.write(file);
+  if (io::isError(connection_stream->write(buffer.getBuffer()))) {
+    return false;
   }
   // read the response
   uint8_t resp = 0;
-  socket->read(resp);
+  connection_stream->read(resp);
   if (resp == static_cast<uint8_t>(c2::Operation::describe)) {
     uint16_t connections = 0;
-    socket->read(connections);
+    connection_stream->read(connections);
     out << connections << " are full" << std::endl;
     for (int i = 0; i < connections; i++) {
       std::string fullcomponent;
-      socket->read(fullcomponent);
+      connection_stream->read(fullcomponent);
       out << fullcomponent << " is full" << std::endl;
     }
   }
-  return 0;
+  return true;
 }
 
-int getFullConnections(std::unique_ptr<io::Socket> socket, std::ostream &out) {
-  if (socket->initialize() < 0) {
-    return -1;
+bool getFullConnections(const ControllerSocketData& socket_data, std::ostream &out) {
+  ClientConnection connection(socket_data);
+  auto connection_stream = connection.getStream();
+  if (!connection_stream) {
+    return false;
   }
   auto op = static_cast<uint8_t>(c2::Operation::describe);
-  io::BufferStream stream;
-  stream.write(&op, 1);
-  stream.write("getfull");
-  if (io::isError(socket->write(stream.getBuffer()))) {
-    return -1;
+  io::BufferStream buffer;
+  buffer.write(&op, 1);
+  buffer.write("getfull");
+  if (io::isError(connection_stream->write(buffer.getBuffer()))) {
+    return false;
   }
   // read the response
   uint8_t resp = 0;
-  socket->read(resp);
+  connection_stream->read(resp);
   if (resp == static_cast<uint8_t>(c2::Operation::describe)) {
     uint16_t connections = 0;
-    socket->read(connections);
+    connection_stream->read(connections);
     out << connections << " are full" << std::endl;
     for (int i = 0; i < connections; i++) {
       std::string fullcomponent;
-      socket->read(fullcomponent);
+      connection_stream->read(fullcomponent);
       out << fullcomponent << " is full" << std::endl;
     }
   }
-  return 0;
+  return true;
 }
 
-int getConnectionSize(std::unique_ptr<io::Socket> socket, std::ostream &out, const std::string& connection) {
-  if (socket->initialize() < 0) {
-    return -1;
+bool getConnectionSize(const ControllerSocketData& socket_data, std::ostream &out, const std::string& connection) {
+  ClientConnection client_connection(socket_data);
+  auto connection_stream = client_connection.getStream();
+  if (!connection_stream) {
+    return false;
   }
   auto op = static_cast<uint8_t>(c2::Operation::describe);
-  io::BufferStream stream;
-  stream.write(&op, 1);
-  stream.write("queue");
-  stream.write(connection);
-  if (io::isError(socket->write(stream.getBuffer()))) {
-    return -1;
+  io::BufferStream buffer;
+  buffer.write(&op, 1);
+  buffer.write("queue");
+  buffer.write(connection);
+  if (io::isError(connection_stream->write(buffer.getBuffer()))) {
+    return false;
   }
   // read the response
   uint8_t resp = 0;
-  socket->read(resp);
+  connection_stream->read(resp);
   if (resp == static_cast<uint8_t>(c2::Operation::describe)) {
     std::string size;
-    socket->read(size);
+    connection_stream->read(size);
     out << "Size/Max of " << connection << " " << size << std::endl;
   }
-  return 0;
+  return true;
 }
 
-int listComponents(std::unique_ptr<io::Socket> socket, std::ostream &out, bool show_header) {
-  if (socket->initialize() < 0) {
-    return -1;
+bool listComponents(const ControllerSocketData& socket_data, std::ostream &out, bool show_header) {
+  ClientConnection connection(socket_data);
+  auto connection_stream = connection.getStream();
+  if (!connection_stream) {
+    return false;
   }
-  io::BufferStream stream;
+  io::BufferStream buffer;
   auto op = static_cast<uint8_t>(c2::Operation::describe);
-  stream.write(&op, 1);
-  stream.write("components");
-  if (io::isError(socket->write(stream.getBuffer()))) {
-    return -1;
+  buffer.write(&op, 1);
+  buffer.write("components");
+  if (io::isError(connection_stream->write(buffer.getBuffer()))) {
+    return false;
   }
   uint16_t responses = 0;
-  socket->read(op);
-  socket->read(responses);
+  connection_stream->read(op);
+  connection_stream->read(responses);
   if (show_header)
     out << "Components:" << std::endl;
 
   for (int i = 0; i < responses; i++) {
     std::string name;
-    socket->read(name, false);
+    connection_stream->read(name, false);
     std::string status;
-    socket->read(status, false);
+    connection_stream->read(status, false);
     out << name << ", running: " << status << std::endl;
   }
-  return 0;
+  return true;
 }
 
-int listConnections(std::unique_ptr<io::Socket> socket, std::ostream &out, bool show_header) {
-  if (socket->initialize() < 0) {
-    return -1;
+bool listConnections(const ControllerSocketData& socket_data, std::ostream &out, bool show_header) {
+  ClientConnection connection(socket_data);
+  auto connection_stream = connection.getStream();
+  if (!connection_stream) {
+    return false;
   }
-  io::BufferStream stream;
+  io::BufferStream buffer;
   auto op = static_cast<uint8_t>(c2::Operation::describe);
-  stream.write(&op, 1);
-  stream.write("connections");
-  if (io::isError(socket->write(stream.getBuffer()))) {
-    return -1;
+  buffer.write(&op, 1);
+  buffer.write("connections");
+  if (io::isError(connection_stream->write(buffer.getBuffer()))) {
+    return false;
   }
   uint16_t responses = 0;
-  socket->read(op);
-  socket->read(responses);
+  connection_stream->read(op);
+  connection_stream->read(responses);
   if (show_header)
     out << "Connection Names:" << std::endl;
 
   for (int i = 0; i < responses; i++) {
     std::string name;
-    socket->read(name, false);
+    connection_stream->read(name, false);
     out << name << std::endl;
   }
-  return 0;
+  return true;
 }
 
-int printManifest(std::unique_ptr<io::Socket> socket, std::ostream &out) {
-  if (socket->initialize() < 0) {
-    return -1;
+bool printManifest(const ControllerSocketData& socket_data, std::ostream &out) {
+  ClientConnection connection(socket_data);
+  auto connection_stream = connection.getStream();
+  if (!connection_stream) {
+    return false;
   }
-  io::BufferStream stream;
+  io::BufferStream buffer;
   auto op = static_cast<uint8_t>(c2::Operation::describe);
-  stream.write(&op, 1);
-  stream.write("manifest");
-  if (io::isError(socket->write(stream.getBuffer()))) {
-    return -1;
+  buffer.write(&op, 1);
+  buffer.write("manifest");
+  if (io::isError(connection_stream->write(buffer.getBuffer()))) {
+    return false;
   }
-  socket->read(op);
+  connection_stream->read(op);
   std::string manifest;
-  socket->read(manifest, true);
+  connection_stream->read(manifest, true);
   out << manifest << std::endl;
-  return 0;
+  return true;
 }
 
-int getJstacks(std::unique_ptr<io::Socket> socket, std::ostream &out) {
-  if (socket->initialize() < 0) {
-    return -1;
+bool getJstacks(const ControllerSocketData& socket_data, std::ostream &out) {
+  ClientConnection connection(socket_data);
+  auto connection_stream = connection.getStream();
+  if (!connection_stream) {
+    return false;
   }
-  io::BufferStream stream;
+  io::BufferStream buffer;
   auto op = static_cast<uint8_t>(c2::Operation::describe);
-  stream.write(&op, 1);
-  stream.write("jstack");
-  if (io::isError(socket->write(stream.getBuffer()))) {
-    return -1;
+  buffer.write(&op, 1);
+  buffer.write("jstack");
+  if (io::isError(connection_stream->write(buffer.getBuffer()))) {
+    return false;
   }
-  socket->read(op);
+  connection_stream->read(op);
   std::string manifest;
-  socket->read(manifest, true);
+  connection_stream->read(manifest, true);
   out << manifest << std::endl;
-  return 0;
+  return true;
 }
 
 }  // namespace org::apache::nifi::minifi::controller
