@@ -108,7 +108,7 @@ void GetTCP::onSchedule(const std::shared_ptr<core::ProcessContext>& context, co
   }
 
   if (connections_to_make.empty())
-    throw Exception(PROCESS_SCHEDULE_EXCEPTION, "No valid endpoint in endpoint-list property");
+    throw Exception(PROCESS_SCHEDULE_EXCEPTION, "No valid endpoint in Endpoint List property");
 
   char delimiter = '\n';
   if (auto delimiter_str = context->getProperty(MessageDelimiter)) {
