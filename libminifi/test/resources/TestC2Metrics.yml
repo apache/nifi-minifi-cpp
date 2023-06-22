@@ -33,8 +33,8 @@ Processors:
       Properties:
           Endpoint List: localhost:8776
           Message Delimiter: \r
-          reconnect-interval: 100ms
-          connection-attempt-timeout: 2000
+          Reconnection Interval: 100ms
+          Timeout: 1s
     - name: LogAttribute
       id: 2438e3c8-015a-1000-79ca-83af40ec1992
       class: org.apache.nifi.processors.standard.LogAttribute
@@ -66,4 +66,3 @@ Connections:
 
 Controller Services: []
 Remote Processing Groups:
-
