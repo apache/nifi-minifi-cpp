@@ -15,7 +15,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#include "utils/FileReaderCallback.h"
+#include "utils/file/FileReaderCallback.h"
 
 #include <cinttypes>
 #include <cstring>

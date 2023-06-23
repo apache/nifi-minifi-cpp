@@ -18,11 +18,9 @@
 #include "utils/net/Socket.h"
 #include "core/logging/LoggerConfiguration.h"
 #ifdef WIN32
-#include <Windows.h>
-#include <winsock2.h>
 #include <iphlpapi.h>
-#include <WS2tcpip.h>
 #pragma comment(lib, "IPHLPAPI.lib")
+#include "utils/OsUtils.h"
 #else
 #include <unistd.h>
 #include <netinet/in.h>
@@ -37,19 +35,9 @@ namespace org::apache::nifi::minifi::utils {
 std::shared_ptr<core::logging::Logger> NetworkInterfaceInfo::logger_ = core::logging::LoggerFactory<NetworkInterfaceInfo>::getLogger();
 
 #ifdef WIN32
-namespace {
-std::string utf8_encode(const std::wstring& wstr) {
-  if (wstr.empty())
-    return std::string();
-  int size_needed = WideCharToMultiByte(CP_UTF8, 0, wstr.c_str(), -1, nullptr, 0, nullptr, nullptr);
-  std::string result_string(size_needed, 0);
-  WideCharToMultiByte(CP_UTF8, 0, wstr.c_str(), -1, result_string.data(), size_needed, nullptr, nullptr);
-  return result_string;
-}
-}
 
 NetworkInterfaceInfo::NetworkInterfaceInfo(const IP_ADAPTER_ADDRESSES* adapter) {
-  name_ = utf8_encode(adapter->FriendlyName);
+  name_ = OsUtils::wideStringToString(adapter->FriendlyName);
   for (auto unicast_address = adapter->FirstUnicastAddress; unicast_address != nullptr; unicast_address = unicast_address->Next) {
     if (unicast_address->Address.lpSockaddr->sa_family == AF_INET) {
       ip_v4_addresses_.push_back(net::sockaddr_ntop(unicast_address->Address.lpSockaddr));
@@ -94,7 +82,7 @@ std::vector<NetworkInterfaceInfo> NetworkInterfaceInfo::getNetworkInterfaceInfos
     return network_adapters;
   }
   std::vector<char> bytes(buffer_length, 0);
-  IP_ADAPTER_ADDRESSES* adapter = reinterpret_cast<IP_ADAPTER_ADDRESSES*>(bytes.data());
+  auto* adapter = reinterpret_cast<IP_ADAPTER_ADDRESSES*>(bytes.data());
   get_adapters_err = GetAdaptersAddresses(0, 0, nullptr, adapter, &buffer_length);
   if (NO_ERROR != get_adapters_err) {
     logger_->log_error("GetAdaptersAddresses failed: %lu", get_adapters_err);

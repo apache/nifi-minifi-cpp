@@ -159,10 +159,6 @@ std::map<std::string, std::string> MetadataWalker::getIdentifiers() const {
   return replaced_identifiers_;
 }
 
-std::string MetadataWalker::to_string(const wchar_t* pChar) {
-  return std::wstring_convert<std::codecvt_utf8<wchar_t>>().to_bytes(pChar);
-}
-
 template<typename Fn>
 requires std::is_convertible_v<std::invoke_result_t<Fn, std::string>, std::string>
 void MetadataWalker::updateText(pugi::xml_node &node, const std::string &field_name, Fn &&fn) {

@@ -103,9 +103,9 @@ class FileUpdateTrigger : public C2Trigger {
     return true;
   }
 
-  std::optional<std::filesystem::file_time_type> getLastUpdate() const;
+  std::optional<std::chrono::file_clock::time_point> getLastUpdate() const;
 
-  void setLastUpdate(const std::optional<std::filesystem::file_time_type> &last_update);
+  void setLastUpdate(const std::optional<std::chrono::file_clock::time_point> &last_update);
 
  protected:
   std::string file_;
@@ -114,7 +114,7 @@ class FileUpdateTrigger : public C2Trigger {
  private:
   std::shared_ptr<core::logging::Logger> logger_ = core::logging::LoggerFactory<FileUpdateTrigger>::getLogger();
   mutable std::mutex last_update_lock;
-  std::optional<std::filesystem::file_time_type> last_update_;
+  std::optional<std::chrono::file_clock::time_point> last_update_;
 };
 
 }  // namespace org::apache::nifi::minifi::c2

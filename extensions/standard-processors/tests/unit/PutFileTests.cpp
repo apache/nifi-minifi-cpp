@@ -49,7 +49,6 @@ TEST_CASE("PutFileTest", "[getfileputpfile]") {
   LogTestController::getInstance().setDebug<minifi::processors::GetFile>();
   LogTestController::getInstance().setDebug<TestPlan>();
   LogTestController::getInstance().setDebug<minifi::processors::PutFile>();
-  LogTestController::getInstance().setDebug<minifi::processors::PutFile::ReadCallback>();
   LogTestController::getInstance().setDebug<minifi::processors::LogAttribute>();
 
   std::shared_ptr<TestPlan> plan = testController.createPlan();
@@ -289,12 +288,6 @@ TEST_CASE("PutFileTestFileExistsReplace", "[getfileputpfile]") {
   LogTestController::getInstance().reset();
 }
 
-TEST_CASE("Test generation of temporary write path", "[putfileTmpWritePath]") {
-  auto processor = std::make_shared<org::apache::nifi::minifi::processors::PutFile>("processorname");
-  std::filesystem::path path = std::filesystem::path("a") / std::string("b") / "";
-  CHECK(processor->tmpWritePath(path, "").string().starts_with(path.string()));
-}
-
 TEST_CASE("PutFileMaxFileCountTest", "[getfileputpfilemaxcount]") {
   TestController testController;
 
@@ -436,7 +429,6 @@ TEST_CASE("PutFileCreateDirectoryTest", "[PutFileProperties]") {
   LogTestController::getInstance().setDebug<minifi::processors::GetFile>();
   LogTestController::getInstance().setDebug<TestPlan>();
   LogTestController::getInstance().setDebug<minifi::processors::PutFile>();
-  LogTestController::getInstance().setDebug<minifi::processors::PutFile::ReadCallback>();
   LogTestController::getInstance().setDebug<minifi::processors::LogAttribute>();
 
   std::shared_ptr<TestPlan> plan = testController.createPlan();
@@ -479,8 +471,6 @@ TEST_CASE("PutFileCreateDirectoryTest", "[PutFileProperties]") {
 
     REQUIRE_FALSE(utils::file::exists(putfiledir));
     REQUIRE_FALSE(utils::file::exists(path));
-    std::string check = "Failed to create empty file: " + path.string();
-    REQUIRE(LogTestController::getInstance().contains(check));
   }
 
   SECTION("with a non-empty file and create directory property set to true") {
@@ -512,8 +502,6 @@ TEST_CASE("PutFileCreateDirectoryTest", "[PutFileProperties]") {
 
     REQUIRE_FALSE(utils::file::exists(putfiledir));
     REQUIRE_FALSE(utils::file::exists(path));
-    std::string check = "PutFile commit put file operation to " + path.string() + " failed because write failed";
-    REQUIRE(LogTestController::getInstance().contains(check));
   }
 }
 

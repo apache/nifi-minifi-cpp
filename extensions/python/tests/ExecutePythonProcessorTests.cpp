@@ -53,7 +53,6 @@ class ExecutePythonProcessorTestBase {
     plan_ = testController_->createPlan();
     logTestController_.setDebug<TestPlan>();
     logTestController_.setDebug<minifi::processors::PutFile>();
-    logTestController_.setDebug<minifi::processors::PutFile::ReadCallback>();
   }
 
   auto getScriptFullPath(const std::filesystem::path& script_file_name) {

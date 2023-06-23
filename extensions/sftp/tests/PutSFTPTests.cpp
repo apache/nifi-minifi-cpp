@@ -154,7 +154,7 @@ class PutSFTPTestsFixture {
     REQUIRE(false == file.good());
   }
 
-  void testModificationTime(const std::string& relative_path, std::filesystem::file_time_type mtime) {
+  void testModificationTime(const std::string& relative_path, std::chrono::file_clock::time_point mtime) {
     auto result_file = dst_dir / "vfs" / relative_path;
     REQUIRE(mtime == utils::file::last_write_time(result_file).value());
   }

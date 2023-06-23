@@ -60,7 +60,7 @@ void matchJSON(const rapidjson::Value& actual, const rapidjson::Value& expected)
   } else if (expected.IsArray()) {
     REQUIRE(actual.IsArray());
     REQUIRE(actual.Size() == expected.Size());
-    for (size_t idx{0}; idx < expected.Size(); ++idx) {
+    for (rapidjson::SizeType idx{0}; idx < expected.Size(); ++idx) {
       matchJSON(actual[idx], expected[idx]);
     }
   } else {

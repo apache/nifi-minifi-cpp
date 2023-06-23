@@ -100,7 +100,7 @@ bool Logger::should_log(const LOG_LEVEL &level) {
 void Logger::log_string(LOG_LEVEL level, std::string str) {
   switch (level) {
     case critical:
-      log_warn(str.c_str());
+      log_critical(str.c_str());
       break;
     case err:
       log_error(str.c_str());

@@ -45,7 +45,7 @@ class AlertHandler : public ServerAwareHandler {
     std::string id(doc["agentId"].GetString(), doc["agentId"].GetStringLength());
     REQUIRE(id == agent_id_);
     std::vector<std::string> batch;
-    for (size_t i = 0; i < doc["alerts"].Size(); ++i) {
+    for (rapidjson::SizeType i = 0; i < doc["alerts"].Size(); ++i) {
       REQUIRE(doc["alerts"][i].IsString());
       batch.emplace_back(doc["alerts"][i].GetString(), doc["alerts"][i].GetStringLength());
     }

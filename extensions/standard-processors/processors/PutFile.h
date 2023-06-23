@@ -1,7 +1,5 @@
+
 /**
- * @file PutFile.h
- * PutFile class declaration
- *
  * Licensed to the Apache Software Foundation (ASF) under one or more
  * contributor license agreements.  See the NOTICE file distributed with
  * this work for additional information regarding copyright ownership.
@@ -34,20 +32,23 @@
 #include "core/logging/LoggerConfiguration.h"
 #include "utils/Id.h"
 #include "utils/Export.h"
+#include "utils/Enum.h"
 
 namespace org::apache::nifi::minifi::processors {
 
 class PutFile : public core::Processor {
  public:
-  static constexpr std::string_view CONFLICT_RESOLUTION_STRATEGY_REPLACE = "replace";
-  static constexpr std::string_view CONFLICT_RESOLUTION_STRATEGY_IGNORE = "ignore";
-  static constexpr std::string_view CONFLICT_RESOLUTION_STRATEGY_FAIL = "fail";
-
   explicit PutFile(std::string_view name,  const utils::Identifier& uuid = {})
       : core::Processor(name, uuid) {
   }
 
   ~PutFile() override = default;
+
+  enum class FileExistsResolutionStrategy {
+    fail,
+    replace,
+    ignore
+  };
 
   EXTENSIONAPI static constexpr const char* Description = "Writes the contents of a FlowFile to the local file system";
 
@@ -68,8 +69,8 @@ class PutFile : public core::Processor {
       .build();
   EXTENSIONAPI static constexpr auto ConflictResolution = core::PropertyDefinitionBuilder<3>::createProperty("Conflict Resolution Strategy")
       .withDescription("Indicates what should happen when a file with the same name already exists in the output directory")
-      .withAllowedValues({CONFLICT_RESOLUTION_STRATEGY_FAIL, CONFLICT_RESOLUTION_STRATEGY_IGNORE, CONFLICT_RESOLUTION_STRATEGY_REPLACE})
-      .withDefaultValue(CONFLICT_RESOLUTION_STRATEGY_FAIL)
+      .withDefaultValue(magic_enum::enum_name(FileExistsResolutionStrategy::fail))
+      .withAllowedValues(magic_enum::enum_names<FileExistsResolutionStrategy>())
       .build();
   EXTENSIONAPI static constexpr auto CreateDirs = core::PropertyDefinitionBuilder<0, 1>::createProperty("Create Missing Directories")
       .withDescription("If true, then missing destination directories will be created. If false, flowfiles are penalized and sent to failure.")
@@ -111,38 +112,15 @@ class PutFile : public core::Processor {
   void onTrigger(core::ProcessContext *context, core::ProcessSession *session) override;
   void initialize() override;
 
-  class ReadCallback {
-   public:
-    ReadCallback(std::filesystem::path tmp_file, std::filesystem::path dest_file);
-    ~ReadCallback();
-    int64_t operator()(const std::shared_ptr<io::InputStream>& stream);
-    bool commit();
-
-   private:
-    std::shared_ptr<core::logging::Logger> logger_{ core::logging::LoggerFactory<PutFile::ReadCallback>::getLogger() };
-    bool write_succeeded_ = false;
-    std::filesystem::path tmp_file_;
-    std::filesystem::path dest_file_;
-  };
-
-  /**
-   * Generate a safe (universally-unique) temporary filename on the same partition
-   *
-   * @param filename from which to generate temporary write file path
-   * @return
-   */
-  static std::filesystem::path tmpWritePath(const std::filesystem::path& filename, const std::filesystem::path& directory);
-
  private:
-  std::string conflict_resolution_;
+  FileExistsResolutionStrategy conflict_resolution_strategy_ = FileExistsResolutionStrategy::fail;
   bool try_mkdirs_ = true;
-  int64_t max_dest_files_ = -1;
+  std::optional<uint64_t> max_dest_files_ = std::nullopt;
 
-  bool putFile(core::ProcessSession *session,
-               const std::shared_ptr<core::FlowFile>& flowFile,
-               const std::filesystem::path& tmpFile,
-               const std::filesystem::path& destFile,
-               const std::filesystem::path& destDir);
+  void prepareDirectory(const std::filesystem::path& directory_path) const;
+  bool directoryIsFull(const std::filesystem::path& directory) const;
+  std::optional<std::filesystem::path> getDestinationPath(core::ProcessContext& context, const std::shared_ptr<core::FlowFile>& flow_file);
+  void putFile(core::ProcessSession& session, const std::shared_ptr<core::FlowFile>& flow_file, const std::filesystem::path& dest_file);
   std::shared_ptr<core::logging::Logger> logger_ = core::logging::LoggerFactory<PutFile>::getLogger(uuid_);
   static std::shared_ptr<utils::IdGenerator> id_generator_;
 

@@ -29,6 +29,7 @@ enum class LogLevelOption {
   LOGGING_INFO,
   LOGGING_WARN,
   LOGGING_ERROR,
+  LOGGING_CRITICAL,
   LOGGING_OFF
 };
 
@@ -49,6 +50,9 @@ void logWithLevel(const std::shared_ptr<core::logging::Logger>& logger, LogLevel
       break;
     case LogLevelOption::LOGGING_ERROR:
       logger->log_error(std::forward<Args>(args)...);
+      break;
+    case LogLevelOption::LOGGING_CRITICAL:
+      logger->log_critical(std::forward<Args>(args)...);
       break;
     case LogLevelOption::LOGGING_OFF:
     default:
@@ -74,6 +78,8 @@ constexpr customize_t enum_name<LogLevelOption>(LogLevelOption value) noexcept {
       return "WARN";
     case LogLevelOption::LOGGING_ERROR:
       return "ERROR";
+    case LogLevelOption::LOGGING_CRITICAL:
+      return "CRITICAL";
     case LogLevelOption::LOGGING_OFF:
       return "OFF";
   }
