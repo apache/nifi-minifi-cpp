@@ -16,6 +16,7 @@
  */
 #pragma once
 
+#include <chrono>
 #include <filesystem>
 #include <fstream>
 #include <memory>
@@ -72,6 +73,7 @@
 
 #include "core/logging/LoggerFactory.h"
 #include "utils/StringUtils.h"
+#include "utils/expected.h"
 #include "utils/file/PathUtils.h"
 #include "utils/gsl.h"
 
@@ -84,9 +86,9 @@ namespace org::apache::nifi::minifi::utils::file {
 
 namespace FileUtils = ::org::apache::nifi::minifi::utils::file;
 
-std::chrono::system_clock::time_point to_sys(std::filesystem::file_time_type file_time);
+std::chrono::system_clock::time_point to_sys(std::chrono::file_clock::time_point file_time);
 
-std::filesystem::file_time_type from_sys(std::chrono::system_clock::time_point sys_time);
+std::chrono::file_clock::time_point from_sys(std::chrono::system_clock::time_point sys_time);
 
 inline int64_t delete_dir(const std::filesystem::path& path, bool delete_files_recursively = true) {
   // Empty path is interpreted as the root of the current partition on Windows, which should not be allowed
@@ -118,7 +120,7 @@ inline std::chrono::time_point<std::chrono::file_clock,
   return std::chrono::time_point<std::chrono::file_clock, std::chrono::seconds>{};
 }
 
-inline std::optional<std::filesystem::file_time_type> last_write_time(const std::filesystem::path& path) {
+inline std::optional<std::chrono::file_clock::time_point> last_write_time(const std::filesystem::path& path) {
   std::error_code ec;
   auto result = std::filesystem::last_write_time(path, ec);
   if (ec.value() == 0) {
@@ -127,10 +129,12 @@ inline std::optional<std::filesystem::file_time_type> last_write_time(const std:
   return std::nullopt;
 }
 
-inline bool set_last_write_time(const std::filesystem::path& path, std::filesystem::file_time_type new_time) {
+inline nonstd::expected<void, std::error_code> set_last_write_time(const std::filesystem::path& path, std::chrono::file_clock::time_point new_time) {
   std::error_code ec;
   std::filesystem::last_write_time(path, new_time, ec);
-  return ec.value() == 0;
+  if (ec)
+    return nonstd::make_unexpected(ec);
+  return {};
 }
 
 inline uint64_t file_size(const std::filesystem::path& path) {
@@ -569,5 +573,20 @@ inline std::optional<std::filesystem::path> get_relative_path(const std::filesys
 
   return std::filesystem::relative(path, base_path);
 }
+
+inline size_t countNumberOfFiles(const std::filesystem::path& path) {
+  using std::filesystem::directory_iterator;
+  return std::count_if(directory_iterator(path), directory_iterator(), [](const auto& entry) { return entry.is_regular_file(); });
+}
+
+#ifdef WIN32
+struct WindowsFileTimes {
+  std::chrono::file_clock::time_point creation_time;
+  std::chrono::file_clock::time_point last_access_time;
+  std::chrono::file_clock::time_point last_write_time;
+};
+
+nonstd::expected<WindowsFileTimes, std::error_code> getWindowsFileTimes(const std::filesystem::path& path);
+#endif
 
 }  // namespace org::apache::nifi::minifi::utils::file

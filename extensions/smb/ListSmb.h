@@ -22,32 +22,39 @@
 #include <string>
 #include <utility>
 
-#include "core/OutputAttributeDefinition.h"
+#include "SmbConnectionControllerService.h"
 #include "core/Processor.h"
 #include "core/ProcessSession.h"
+#include "core/Property.h"
 #include "core/PropertyDefinition.h"
 #include "core/PropertyDefinitionBuilder.h"
-#include "core/PropertyType.h"
+#include "core/OutputAttributeDefinition.h"
 #include "core/logging/LoggerConfiguration.h"
 #include "utils/Enum.h"
 #include "utils/ListingStateManager.h"
 #include "utils/file/ListedFile.h"
 #include "utils/file/FileUtils.h"
 
-namespace org::apache::nifi::minifi::processors {
+namespace org::apache::nifi::minifi::extensions::smb {
 
-class ListFile : public core::Processor {
+class ListSmb : public core::Processor {
  public:
-  explicit ListFile(std::string_view name, const utils::Identifier& uuid = {})
-    : core::Processor(name, uuid) {
+  explicit ListSmb(std::string name, const utils::Identifier& uuid = {})
+      : core::Processor(std::move(name), uuid) {
   }
 
-  EXTENSIONAPI static constexpr const char* Description = "Retrieves a listing of files from the local filesystem. For each file that is listed, "
-      "creates a FlowFile that represents the file so that it can be fetched in conjunction with FetchFile.";
+  EXTENSIONAPI static constexpr const char* Description = "Retrieves a listing of files from an SMB share. For each file that is listed, "
+                                                          "creates a FlowFile that represents the file so that it can be fetched in conjunction with FetchSmb.";
 
-  EXTENSIONAPI static constexpr auto InputDirectory = core::PropertyDefinitionBuilder<>::createProperty("Input Directory")
-      .withDescription("The input directory from which files to pull files")
+  EXTENSIONAPI static constexpr auto ConnectionControllerService = core::PropertyDefinitionBuilder<>::createProperty("SMB Connection Controller Service")
+      .withDescription("Specifies the SMB connection controller service to use for connecting to the SMB server. "
+                       "If the SMB share is auto-mounted to a drive letter, its recommended to use ListFile instead.")
       .isRequired(true)
+      .withAllowedTypes<SmbConnectionControllerService>()
+      .build();
+  EXTENSIONAPI static constexpr auto InputDirectory = core::PropertyDefinitionBuilder<>::createProperty("Input Directory")
+      .withDescription("The input directory to list the contents of")
+      .isRequired(false)
       .build();
   EXTENSIONAPI static constexpr auto RecurseSubdirectories = core::PropertyDefinitionBuilder<>::createProperty("Recurse Subdirectories")
       .withDescription("Indicates whether to list files from subdirectories of the directory")
@@ -57,15 +64,15 @@ class ListFile : public core::Processor {
       .build();
   EXTENSIONAPI static constexpr auto FileFilter = core::PropertyDefinitionBuilder<>::createProperty("File Filter")
       .withDescription("Only files whose names match the given regular expression will be picked up")
-     .build();
+      .build();
   EXTENSIONAPI static constexpr auto PathFilter = core::PropertyDefinitionBuilder<>::createProperty("Path Filter")
       .withDescription("When Recurse Subdirectories is true, then only subdirectories whose path matches the given regular expression will be scanned")
-     .build();
+      .build();
   EXTENSIONAPI static constexpr auto MinimumFileAge = core::PropertyDefinitionBuilder<>::createProperty("Minimum File Age")
       .withDescription("The minimum age that a file must be in order to be pulled; any file younger than this amount of time (according to last modification date) will be ignored")
       .isRequired(true)
       .withPropertyType(core::StandardPropertyTypes::TIME_PERIOD_TYPE)
-      .withDefaultValue("0 sec")
+      .withDefaultValue("5 sec")
       .build();
   EXTENSIONAPI static constexpr auto MaximumFileAge = core::PropertyDefinitionBuilder<>::createProperty("Maximum File Age")
       .withDescription("The maximum age that a file must be in order to be pulled; any file older than this amount of time (according to last modification date) will be ignored")
@@ -73,20 +80,21 @@ class ListFile : public core::Processor {
       .build();
   EXTENSIONAPI static constexpr auto MinimumFileSize = core::PropertyDefinitionBuilder<>::createProperty("Minimum File Size")
       .withDescription("The minimum size that a file must be in order to be pulled")
-      .isRequired(true)
       .withPropertyType(core::StandardPropertyTypes::DATA_SIZE_TYPE)
-      .withDefaultValue("0 B")
       .build();
   EXTENSIONAPI static constexpr auto MaximumFileSize = core::PropertyDefinitionBuilder<>::createProperty("Maximum File Size")
       .withDescription("The maximum size that a file can be in order to be pulled")
-     .build();
+      .withPropertyType(core::StandardPropertyTypes::DATA_SIZE_TYPE)
+      .build();
   EXTENSIONAPI static constexpr auto IgnoreHiddenFiles = core::PropertyDefinitionBuilder<>::createProperty("Ignore Hidden Files")
       .withDescription("Indicates whether or not hidden files should be ignored")
       .withPropertyType(core::StandardPropertyTypes::BOOLEAN_TYPE)
       .withDefaultValue("true")
       .isRequired(true)
       .build();
-  EXTENSIONAPI static constexpr auto Properties = std::array<core::PropertyReference, 9>{
+
+  EXTENSIONAPI static constexpr auto Properties = std::array<core::PropertyReference, 10>{
+      ConnectionControllerService,
       InputDirectory,
       RecurseSubdirectories,
       FileFilter,
@@ -98,40 +106,27 @@ class ListFile : public core::Processor {
       IgnoreHiddenFiles
   };
 
-
   EXTENSIONAPI static constexpr auto Success = core::RelationshipDefinition{"success", "All FlowFiles that are received are routed to success"};
   EXTENSIONAPI static constexpr auto Relationships = std::array{Success};
 
-  EXTENSIONAPI static constexpr auto Filename = core::OutputAttributeDefinition<>{"filename", { Success },
-      "The name of the file that was read from filesystem."};
+  EXTENSIONAPI static constexpr auto Filename = core::OutputAttributeDefinition<>{"filename", { Success }, "The name of the file that was read from filesystem."};
   EXTENSIONAPI static constexpr auto Path = core::OutputAttributeDefinition<>{"path", { Success },
-      "The path is set to the relative path of the file's directory on filesystem compared to the Input Directory property. "
-      "For example, if Input Directory is set to /tmp, then files picked up from /tmp will have the path attribute set to \"./\". "
-      "If the Recurse Subdirectories property is set to true and a file is picked up from /tmp/abc/1/2/3, then the path attribute will be set to \"abc/1/2/3/\"."};
-  EXTENSIONAPI static constexpr auto AbsolutePath = core::OutputAttributeDefinition<>{"absolute.path", { Success },
-      "The absolute.path is set to the absolute path of the file's directory on filesystem. "
-      "For example, if the Input Directory property is set to /tmp, then files picked up from /tmp will have the path attribute set to \"/tmp/\". "
-      "If the Recurse Subdirectories property is set to true and a file is picked up from /tmp/abc/1/2/3, then the path attribute will be set to \"/tmp/abc/1/2/3/\"."};
-  EXTENSIONAPI static constexpr auto FileOwner = core::OutputAttributeDefinition<>{"file.owner", { Success },
-      "The user that owns the file in filesystem"};
-  EXTENSIONAPI static constexpr auto FileGroup = core::OutputAttributeDefinition<>{"file.group", { Success },
-      "The group that owns the file in filesystem"};
-  EXTENSIONAPI static constexpr auto FileSize = core::OutputAttributeDefinition<>{"file.size", { Success },
-      "The number of bytes in the file in filesystem"};
-  EXTENSIONAPI static constexpr auto FilePermissions = core::OutputAttributeDefinition<>{"file.permissions", { Success },
-      "The permissions for the file in filesystem. This is formatted as 3 characters for the owner, 3 for the group, and 3 for other users. For example rw-rw-r--"};
-  EXTENSIONAPI static constexpr auto FileLastModifiedTime = core::OutputAttributeDefinition<>{"file.lastModifiedTime", { Success },
-      "The timestamp of when the file in filesystem was last modified as 'yyyy-MM-dd'T'HH:mm:ssZ'"};
-  EXTENSIONAPI static constexpr auto OutputAttributes = std::array<core::OutputAttributeReference, 8>{
-      Filename,
-      Path,
-      AbsolutePath,
-      FileOwner,
-      FileGroup,
-      FileSize,
-      FilePermissions,
-      FileLastModifiedTime
-  };
+      "The path is set to the relative path of the file's directory on the remote filesystem compared to the Share root directory. "
+      "For example, for a given remote location smb://HOSTNAME:PORT/SHARE/DIRECTORY, and a file is being listed from smb://HOSTNAME:PORT/SHARE/DIRECTORY/sub/folder/file "
+      "then the path attribute will be set to \"DIRECTORY/sub/folder\"."};
+  EXTENSIONAPI static constexpr auto ServiceLocation = core::OutputAttributeDefinition<>{"serviceLocation", { Success },
+                                                       "The SMB URL of the share."};
+  EXTENSIONAPI static constexpr auto LastModifiedTime = core::OutputAttributeDefinition<>{"lastModifiedTime", { Success },
+                                                        "The timestamp of when the file's content changed in the filesystem as 'yyyy-MM-dd'T'HH:mm:ss'."};
+  EXTENSIONAPI static constexpr auto CreationTime = core::OutputAttributeDefinition<>{"creationTime", { Success },
+                                                    "The timestamp of when the file was created in the filesystem as 'yyyy-MM-dd'T'HH:mm:ss'."};
+  EXTENSIONAPI static constexpr auto LastAccessTime = core::OutputAttributeDefinition<>{"lastAccessTime", { Success },
+                                                      "The timestamp of when the file was accessed in the filesystem as 'yyyy-MM-dd'T'HH:mm:ss'."};
+
+
+  EXTENSIONAPI static constexpr auto Size = core::OutputAttributeDefinition<>{"size", { Success }, "The size of the file in bytes."};
+
+  EXTENSIONAPI static constexpr auto OutputAttributes = std::array<core::OutputAttributeReference, 7> {Filename, Path, ServiceLocation, LastModifiedTime, CreationTime, LastAccessTime, Size };
 
   EXTENSIONAPI static constexpr bool SupportsDynamicProperties = false;
   EXTENSIONAPI static constexpr bool SupportsDynamicRelationships = false;
@@ -147,11 +142,12 @@ class ListFile : public core::Processor {
  private:
   std::shared_ptr<core::FlowFile> createFlowFile(core::ProcessSession& session, const utils::ListedFile& listed_file);
 
-  std::shared_ptr<core::logging::Logger> logger_ = core::logging::LoggerFactory<ListFile>::getLogger(uuid_);
+  std::shared_ptr<core::logging::Logger> logger_ = core::logging::LoggerFactory<ListSmb>::getLogger(uuid_);
   std::filesystem::path input_directory_;
+  std::shared_ptr<SmbConnectionControllerService> smb_connection_controller_service_;
   std::unique_ptr<minifi::utils::ListingStateManager> state_manager_;
   bool recurse_subdirectories_ = true;
   utils::FileFilter file_filter_{};
 };
 
-}  // namespace org::apache::nifi::minifi::processors
+}  // namespace org::apache::nifi::minifi::extensions::smb

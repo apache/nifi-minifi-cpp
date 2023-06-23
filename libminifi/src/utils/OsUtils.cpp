@@ -21,6 +21,7 @@
 #include <iostream>
 #include <map>
 
+#include "fmt/format.h"
 #include "utils/gsl.h"
 #include "Exception.h"
 
@@ -89,31 +90,32 @@ std::string OsUtils::userIdToUsername(const std::string &uid) {
   name = uid;
   if (!name.empty()) {
 #ifdef _WIN32
-    const auto resolved_name = resolve_common_identifiers(name);
+    auto resolved_name = resolve_common_identifiers(name);
     if (!resolved_name.empty()) {
       return resolved_name;
     }
     // First call to LookupAccountSid to get the buffer sizes.
-    PSID pSidOwner = NULL;
-    const auto guard_pSidOwner = gsl::finally([&pSidOwner]() { if (pSidOwner != NULL) { LocalFree(pSidOwner); } });
+    PSID pSidOwner = nullptr;
+    const auto guard_pSidOwner = gsl::finally([&pSidOwner]() { if (pSidOwner != nullptr) { LocalFree(pSidOwner); } });
     if (ConvertStringSidToSidA(name.c_str(), &pSidOwner)) {
       SID_NAME_USE sidType = SidTypeUnknown;
-      DWORD windowsAccountNameSize = 0, dwwindowsDomainSize = 0;
+      DWORD windowsAccountNameSize = 0;
+      DWORD dwwindowsDomainSize = 0;
       /*
        We can use a unique ptr with a deleter here but some of the calls
        below require we use global alloc -- so a global deleter to call GlobalFree
        won't buy us a ton unless we anticipate requiring more of this. If we do
        I suggest we break this out until a subset of OsUtils into our own convenience functions.
        */
-      LPTSTR windowsDomain = NULL;
-      LPTSTR windowsAccount = NULL;
+      LPTSTR windowsDomain = nullptr;
+      LPTSTR windowsAccount = nullptr;
 
       /*
        The first call will be to obtain sizes for domain and account,
        after which we will allocate the memory and free it after.
        In some cases youc an replace GlobalAlloc with
        */
-      LookupAccountSid(NULL /** local computer **/, pSidOwner,
+      LookupAccountSid(nullptr /** local computer **/, pSidOwner,
           windowsAccount,
           (LPDWORD)&windowsAccountNameSize,
           windowsDomain,
@@ -132,7 +134,7 @@ std::string OsUtils::userIdToUsername(const std::string &uid) {
         }
 
         if (LookupAccountSid(
-                NULL,
+                nullptr,
                 pSidOwner,
                 windowsAccount,
                 (LPDWORD)&windowsAccountNameSize,
@@ -336,6 +338,36 @@ std::optional<std::string> OsUtils::getHostName() {
   }
   return {hostname};
 }
+
+#ifdef WIN32
+std::wstring OsUtils::stringToWideString(const std::string& string) {
+  if (string.empty())
+    return {};
+
+  const auto size_needed = MultiByteToWideChar(CP_UTF8, 0, &string.at(0), gsl::narrow<int>(string.size()), nullptr, 0);
+  if (size_needed <= 0) {
+    throw std::runtime_error(fmt::format("MultiByteToWideChar() returned: {}, due to {}", std::to_string(size_needed), utils::OsUtils::windowsErrorToErrorCode(GetLastError()).message()));
+  }
+
+  std::wstring result(size_needed, L'\0');
+  MultiByteToWideChar(CP_UTF8, 0, &string.at(0), gsl::narrow<int>(string.size()), &result.at(0), size_needed);
+  return result;
+}
+
+std::string OsUtils::wideStringToString(const std::wstring& wide_string) {
+  if (wide_string.empty())
+    return {};
+
+  const auto size_needed = WideCharToMultiByte(CP_UTF8, 0, &wide_string.at(0), gsl::narrow<int>(wide_string.size()), nullptr, 0, nullptr, nullptr);
+  if (size_needed <= 0) {
+    throw std::runtime_error(fmt::format("WideCharToMultiByte() returned: {}, due to {}", std::to_string(size_needed), utils::OsUtils::windowsErrorToErrorCode(GetLastError()).message()));
+  }
+
+  std::string result(size_needed, 0);
+  WideCharToMultiByte(CP_UTF8, 0, &wide_string.at(0), gsl::narrow<int>(wide_string.size()), &result.at(0), size_needed, nullptr, nullptr);
+  return result;
+}
+#endif
 
 std::optional<double> OsUtils::getSystemLoadAverage() {
 #ifndef WIN32

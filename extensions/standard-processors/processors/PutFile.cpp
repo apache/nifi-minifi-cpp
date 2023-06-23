@@ -26,10 +26,9 @@
 #include <memory>
 #include <string>
 #include <utility>
-#ifdef WIN32
-#include <Windows.h>
-#endif
 #include "utils/file/FileUtils.h"
+#include "utils/file/FileWriterCallback.h"
+#include "utils/ProcessorConfigUtils.h"
 #include "utils/gsl.h"
 #include "core/Resource.h"
 
@@ -43,16 +42,10 @@ void PutFile::initialize() {
 }
 
 void PutFile::onSchedule(core::ProcessContext *context, core::ProcessSessionFactory* /*sessionFactory*/) {
-  if (!context->getProperty(ConflictResolution, conflict_resolution_)) {
-    logger_->log_error("Conflict Resolution Strategy attribute is missing or invalid");
-  }
-
-  std::string value;
-  context->getProperty(CreateDirs, value);
-  try_mkdirs_ = utils::StringUtils::toBool(value).value_or(true);
-
-  if (context->getProperty(MaxDestFiles, value)) {
-    core::Property::StringToInt(value, max_dest_files_);
+  conflict_resolution_strategy_ = utils::parseEnumProperty<FileExistsResolutionStrategy>(*context, ConflictResolution);
+  try_mkdirs_ = context->getProperty<bool>(CreateDirs).value_or(true);
+  if (auto max_dest_files = context->getProperty<int64_t>(MaxDestFiles); max_dest_files && *max_dest_files > 0) {
+    max_dest_files_ = gsl::narrow_cast<uint64_t>(*max_dest_files);
   }
 
 #ifndef WIN32
@@ -61,132 +54,91 @@ void PutFile::onSchedule(core::ProcessContext *context, core::ProcessSessionFact
 #endif
 }
 
-void PutFile::onTrigger(core::ProcessContext *context, core::ProcessSession *session) {
-  if (IsNullOrEmpty(conflict_resolution_)) {
-    logger_->log_error("Conflict resolution value is invalid");
-    context->yield();
-    return;
-  }
-
-  std::shared_ptr<core::FlowFile> flowFile = session->get();
-
-  // Do nothing if there are no incoming files
-  if (!flowFile) {
-    return;
-  }
-
-  session->remove(flowFile);
-
+std::optional<std::filesystem::path> PutFile::getDestinationPath(core::ProcessContext& context, const std::shared_ptr<core::FlowFile>& flow_file) {
   std::filesystem::path directory;
-
-  if (auto directory_str = context->getProperty(Directory, flowFile)) {
+  if (auto directory_str = context.getProperty(Directory, flow_file); directory_str && !directory_str->empty()) {
     directory = *directory_str;
   } else {
-    logger_->log_error("Directory attribute is missing or invalid");
-  }
-
-  if (IsNullOrEmpty(directory)) {
     logger_->log_error("Directory attribute evaluated to invalid value");
-    session->transfer(flowFile, Failure);
+    return std::nullopt;
+  }
+  auto file_name_str = flow_file->getAttribute(core::SpecialFlowAttribute::FILENAME).value_or(flow_file->getUUIDStr());
+
+  return directory / file_name_str;
+}
+
+bool PutFile::directoryIsFull(const std::filesystem::path& directory) const {
+  return max_dest_files_ && utils::file::countNumberOfFiles(directory) >= *max_dest_files_;
+}
+
+void PutFile::onTrigger(core::ProcessContext *context, core::ProcessSession *session) {
+  std::shared_ptr<core::FlowFile> flow_file = session->get();
+
+  // Do nothing if there are no incoming files
+  if (!flow_file) {
     return;
   }
 
-  std::string filename;
-  flowFile->getAttribute(core::SpecialFlowAttribute::FILENAME, filename);
-  auto tmpFile = tmpWritePath(filename, directory);
+  auto dest_path = getDestinationPath(*context, flow_file);
+  if (!dest_path) {
+    return session->transfer(flow_file, Failure);
+  }
 
-  logger_->log_debug("PutFile using temporary file %s", tmpFile.string());
+  logger_->log_debug("PutFile writing file %s into directory %s", dest_path->filename().string(), dest_path->parent_path().string());
 
-  // Determine dest full file paths
-  auto destFile = directory / filename;
+  if (directoryIsFull(dest_path->parent_path())) {
+    logger_->log_warn("Routing to failure because the output directory %s has at least %u files, which exceeds the "
+                      "configured max number of files", dest_path->parent_path().string(), *max_dest_files_);
+    return session->transfer(flow_file, Failure);
+  }
 
-  logger_->log_debug("PutFile writing file %s into directory %s", filename, directory.string());
-
-  if ((max_dest_files_ != -1) && utils::file::is_directory(directory)) {
-    int64_t count = 0;
-
-    // Callback, called for each file entry in the listed directory
-    // Return value is used to break (false) or continue (true) listing
-    auto lambda = [&count, this](const std::filesystem::path&, const std::filesystem::path&) -> bool {
-      return ++count < max_dest_files_;
-    };
-
-    utils::file::list_dir(directory, lambda, logger_, false);
-
-    if (count >= max_dest_files_) {
-      logger_->log_warn("Routing to failure because the output directory %s has at least %u files, which exceeds the "
-                        "configured max number of files", directory.string(), max_dest_files_);
-      session->transfer(flowFile, Failure);
-      return;
+  if (utils::file::exists(*dest_path)) {
+    logger_->log_warn("Destination file %s exists; applying Conflict Resolution Strategy: %s", dest_path->string(), std::string(magic_enum::enum_name(conflict_resolution_strategy_)));
+    if (conflict_resolution_strategy_ == FileExistsResolutionStrategy::fail) {
+      return session->transfer(flow_file, Failure);
+    } else if (conflict_resolution_strategy_ == FileExistsResolutionStrategy::ignore) {
+      return session->transfer(flow_file, Success);
     }
   }
 
-  if (utils::file::exists(destFile)) {
-    logger_->log_warn("Destination file %s exists; applying Conflict Resolution Strategy: %s", destFile.string(), conflict_resolution_);
-
-    if (conflict_resolution_ == CONFLICT_RESOLUTION_STRATEGY_REPLACE) {
-      putFile(session, flowFile, tmpFile, destFile, directory);
-    } else if (conflict_resolution_ == CONFLICT_RESOLUTION_STRATEGY_IGNORE) {
-      session->transfer(flowFile, Success);
-    } else {
-      session->transfer(flowFile, Failure);
-    }
-  } else {
-    putFile(session, flowFile, tmpFile, destFile, directory);
-  }
+  putFile(*session, flow_file, *dest_path);
 }
 
-std::filesystem::path PutFile::tmpWritePath(const std::filesystem::path& filename, const std::filesystem::path& directory) {
-  utils::Identifier tmpFileUuid = id_generator_->generate();
-  auto new_filename = std::filesystem::path("." + filename.filename().string());
-  new_filename += "." + tmpFileUuid.to_string();
-  return (directory / filename.parent_path() / new_filename);
-}
-
-bool PutFile::putFile(core::ProcessSession *session,
-                      const std::shared_ptr<core::FlowFile>& flowFile,
-                      const std::filesystem::path& tmpFile,
-                      const std::filesystem::path& destFile,
-                      const std::filesystem::path& destDir) {
-  if (!utils::file::exists(destDir) && try_mkdirs_) {
-    logger_->log_debug("Destination directory does not exist; will attempt to create: %s", destDir.string());
-    utils::file::create_dir(destDir, true);
+void PutFile::prepareDirectory(const std::filesystem::path& directory_path) const {
+  if (!utils::file::exists(directory_path) && try_mkdirs_) {
+    logger_->log_debug("Destination directory does not exist; will attempt to create: %s", directory_path.string());
+    utils::file::create_dir(directory_path, true);
 #ifndef WIN32
     if (directory_permissions_.valid()) {
-      utils::file::set_permissions(destDir, directory_permissions_.getValue());
+      utils::file::set_permissions(directory_path, directory_permissions_.getValue());
     }
 #endif
   }
+}
+
+void PutFile::putFile(core::ProcessSession& session,
+                      const std::shared_ptr<core::FlowFile>& flow_file,
+                      const std::filesystem::path& dest_file) {
+  prepareDirectory(dest_file.parent_path());
 
   bool success = false;
 
-  if (flowFile->getSize() > 0) {
-    ReadCallback cb(tmpFile, destFile);
-    session->read(flowFile, std::ref(cb));
-    logger_->log_debug("Committing %s", destFile.string());
-    success = cb.commit();
+  utils::FileWriterCallback file_writer_callback(dest_file);
+  auto read_result = session.read(flow_file, std::ref(file_writer_callback));
+  if (io::isError(read_result)) {
+    logger_->log_error("Failed to write to %s", dest_file.string());
+    success = false;
   } else {
-    std::ofstream outfile(destFile, std::ios::out | std::ios::binary);
-    if (!outfile.good()) {
-      logger_->log_error("Failed to create empty file: %s", destFile.string());
-    } else {
-      success = true;
-    }
+    success = file_writer_callback.commit();
   }
 
 #ifndef WIN32
   if (permissions_.valid()) {
-    utils::file::set_permissions(destFile, permissions_.getValue());
+    utils::file::set_permissions(dest_file, permissions_.getValue());
   }
 #endif
 
-  if (success) {
-    session->transfer(flowFile, Success);
-    return true;
-  } else {
-    session->transfer(flowFile, Failure);
-  }
-  return false;
+  session.transfer(flow_file, success ? Success : Failure);
 }
 
 #ifndef WIN32
@@ -226,66 +178,6 @@ void PutFile::getDirectoryPermissions(core::ProcessContext *context) {
   }
 }
 #endif
-
-PutFile::ReadCallback::ReadCallback(std::filesystem::path tmp_file, std::filesystem::path dest_file)
-    : tmp_file_(std::move(tmp_file)),
-      dest_file_(std::move(dest_file)) {
-}
-
-// Copy the entire file contents to the temporary file
-int64_t PutFile::ReadCallback::operator()(const std::shared_ptr<io::InputStream>& stream) {
-  // Copy file contents into tmp file
-  write_succeeded_ = false;
-  size_t size = 0;
-  std::array<std::byte, 1024> buffer{};
-
-  std::ofstream tmp_file_os(tmp_file_, std::ios::out | std::ios::binary);
-
-  do {
-    const auto read = stream->read(buffer);
-    if (io::isError(read)) return -1;
-    if (read == 0) break;
-    tmp_file_os.write(reinterpret_cast<char *>(buffer.data()), gsl::narrow<std::streamsize>(read));
-    size += read;
-  } while (size < stream->size());
-
-  tmp_file_os.close();
-
-  if (tmp_file_os) {
-    write_succeeded_ = true;
-  }
-
-  return gsl::narrow<int64_t>(size);
-}
-
-// Renames tmp file to final destination
-// Returns true if commit succeeded
-bool PutFile::ReadCallback::commit() {
-  bool success = false;
-
-  logger_->log_info("PutFile committing put file operation to %s", dest_file_.string());
-
-  if (write_succeeded_) {
-    std::error_code rename_error;
-    std::filesystem::rename(tmp_file_, dest_file_, rename_error);
-    if (rename_error) {
-      logger_->log_info("PutFile commit put file operation to %s failed because std::filesystem::rename call failed", dest_file_.string());
-    } else {
-      success = true;
-      logger_->log_info("PutFile commit put file operation to %s succeeded", dest_file_.string());
-    }
-  } else {
-    logger_->log_error("PutFile commit put file operation to %s failed because write failed", dest_file_.string());
-  }
-
-  return success;
-}
-
-// Clean up resources
-PutFile::ReadCallback::~ReadCallback() {
-  // Clean up tmp file, if necessary
-  std::filesystem::remove(tmp_file_);
-}
 
 REGISTER_RESOURCE(PutFile, Processor);
 

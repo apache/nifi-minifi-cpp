@@ -219,7 +219,7 @@ TEST_CASE("GetFile PutFile dynamic attribute", "[expressionLanguageTestGetFilePu
   plan->addProcessor("LogAttribute", "LogAttribute", core::Relationship("success", "description"), true);
   auto put_file = plan->addProcessor("PutFile", "PutFile", core::Relationship("success", "description"), true);
   plan->setProperty(put_file, minifi::processors::PutFile::Directory, (out_dir / "${extracted_attr_name}").string());
-  plan->setProperty(put_file, minifi::processors::PutFile::ConflictResolution, minifi::processors::PutFile::CONFLICT_RESOLUTION_STRATEGY_REPLACE);
+  plan->setProperty(put_file, minifi::processors::PutFile::ConflictResolution, magic_enum::enum_name(minifi::processors::PutFile::FileExistsResolutionStrategy::replace));
   plan->setProperty(put_file, minifi::processors::PutFile::CreateDirs, "true");
 
   // Write test input

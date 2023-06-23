@@ -106,7 +106,7 @@ endif()
 # Enable usage of the VERSION specifier
 if (WIN32)
     add_compile_definitions(WIN32_LEAN_AND_MEAN _CRT_SECURE_NO_WARNINGS NOMINMAX)
-    add_compile_options(/W3 /utf-8)
+    add_compile_options(/W3 /utf-8 /bigobj)
 endif()
 
 if (NOT PORTABLE)

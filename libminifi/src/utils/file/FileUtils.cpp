@@ -25,6 +25,10 @@
 #include "utils/Literals.h"
 #include "utils/Searcher.h"
 
+#ifdef WIN32
+#include "utils/OsUtils.h"
+#endif
+
 namespace org::apache::nifi::minifi::utils::file {
 
 uint64_t computeChecksum(const std::filesystem::path& file_name, uint64_t up_to_position) {
@@ -66,7 +70,7 @@ bool contains(const std::filesystem::path& file_path, std::string_view text_to_s
   return std::search(view.begin(), view.end(), searcher) != view.end();
 }
 
-std::chrono::system_clock::time_point to_sys(std::filesystem::file_time_type file_time) {
+std::chrono::system_clock::time_point to_sys(std::chrono::file_clock::time_point file_time) {
   using namespace std::chrono;  // NOLINT(build/namespaces)
 #if defined(WIN32)
   // workaround for https://github.com/microsoft/STL/issues/2446
@@ -81,7 +85,7 @@ std::chrono::system_clock::time_point to_sys(std::filesystem::file_time_type fil
 #endif
 }
 
-std::filesystem::file_time_type from_sys(std::chrono::system_clock::time_point sys_time) {
+std::chrono::file_clock::time_point from_sys(std::chrono::system_clock::time_point sys_time) {
   using namespace std::chrono;  // NOLINT(build/namespaces)
 #if defined(WIN32)
   // workaround for https://github.com/microsoft/STL/issues/2446
@@ -95,5 +99,24 @@ std::filesystem::file_time_type from_sys(std::chrono::system_clock::time_point s
   return time_point_cast<file_clock::duration>(file_clock::from_sys(sys_time));
 #endif
 }
+
+#ifdef WIN32
+std::chrono::file_clock::time_point fileTimePointFromFileTime(const FILETIME& filetime) {
+  // FILETIME contains a 64-bit value representing the number of 100-nanosecond intervals since January 1, 1601 (UTC).
+  static_assert(std::ratio_equal_v<std::chrono::file_clock::duration::period, std::ratio<1, 10000000>>, "file_clock duration tick period must be 100 nanoseconds");
+  std::chrono::file_clock::duration duration{(static_cast<int64_t>(filetime.dwHighDateTime) << 32) | filetime.dwLowDateTime};
+  return std::chrono::file_clock::time_point{duration};
+}
+
+nonstd::expected<WindowsFileTimes, std::error_code> getWindowsFileTimes(const std::filesystem::path& path) {
+  WIN32_FILE_ATTRIBUTE_DATA file_attributes;
+  auto get_file_attributes_result = GetFileAttributesExW(path.c_str(), GetFileExInfoStandard, &file_attributes);
+  if (!get_file_attributes_result)
+    return nonstd::make_unexpected(utils::OsUtils::windowsErrorToErrorCode(GetLastError()));
+  return WindowsFileTimes{.creation_time = fileTimePointFromFileTime(file_attributes.ftCreationTime),
+                          .last_access_time = fileTimePointFromFileTime(file_attributes.ftLastAccessTime),
+                          .last_write_time = fileTimePointFromFileTime(file_attributes.ftLastWriteTime)};
+}
+#endif  // WIN32
 
 }  // namespace org::apache::nifi::minifi::utils::file

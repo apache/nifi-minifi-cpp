@@ -153,6 +153,16 @@ class Logger : public BaseLogger {
   Logger(Logger const&) = delete;
   Logger& operator=(Logger const&) = delete;
 
+
+  /**
+    * @brief Log critical message
+    * @param format format string ('man printf' for syntax)
+    * @warning does not check @p log or @p format for null. Caller must ensure parameters and format string lengths match
+    */
+  template<typename ...Args>
+  void log_critical(const char * const format, Args&& ...args) {
+    log(spdlog::level::critical, format, std::forward<Args>(args)...);
+  }
   /**
    * @brief Log error message
    * @param format format string ('man printf' for syntax)
@@ -252,4 +262,5 @@ class Logger : public BaseLogger {
 
 #define LOG_WARN(x) LogBuilder((x).get(), org::apache::nifi::minifi::core::logging::LOG_LEVEL::warn)
 
+#define LOG_CRITICAL(x) LogBuilder((x).get(), org::apache::nifi::minifi::core::logging::LOG_LEVEL::critical)
 }  // namespace org::apache::nifi::minifi::core::logging

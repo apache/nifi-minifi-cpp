@@ -21,7 +21,7 @@
 #include <utility>
 
 #include "utils/ProcessorConfigUtils.h"
-#include "utils/FileReaderCallback.h"
+#include "utils/file/FileReaderCallback.h"
 #include "utils/file/FileUtils.h"
 #include "core/Resource.h"
 
@@ -52,9 +52,9 @@ std::filesystem::path FetchFile::getFileToFetch(core::ProcessContext& context, c
     return file_to_fetch_path;
   }
 
-  flow_file->getAttribute("absolute.path", file_to_fetch_path);
+  flow_file->getAttribute(core::SpecialFlowAttribute::ABSOLUTE_PATH, file_to_fetch_path);
   std::string filename;
-  flow_file->getAttribute("filename", filename);
+  flow_file->getAttribute(core::SpecialFlowAttribute::FILENAME, filename);
   return std::filesystem::path(file_to_fetch_path) / filename;
 }
 

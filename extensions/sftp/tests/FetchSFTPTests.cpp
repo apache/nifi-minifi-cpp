@@ -101,7 +101,7 @@ class FetchSFTPTestsFixture {
 
     // Configure PutFile processor
     plan->setProperty(put_file, "Directory", (dst_dir / "${path}").string());
-    plan->setProperty(put_file, "Conflict Resolution Strategy", minifi::processors::PutFile::CONFLICT_RESOLUTION_STRATEGY_FAIL);
+    plan->setProperty(put_file, "Conflict Resolution Strategy", magic_enum::enum_name(minifi::processors::PutFile::FileExistsResolutionStrategy::fail));
     plan->setProperty(put_file, "Create Missing Directories", "true");
   }
 
