@@ -76,7 +76,7 @@ std::optional<asio::ssl::context> GetTCP::parseSSLContext(core::ProcessContext& 
   if (auto context_name = context.getProperty(SSLContextService)) {
     if (auto controller_service = context.getControllerService(*context_name)) {
       if (auto ssl_context_service = std::dynamic_pointer_cast<minifi::controllers::SSLContextService>(context.getControllerService(*context_name))) {
-        ssl_context = utils::net::getClientSslContext(*ssl_context_service);
+        ssl_context = utils::net::getSslContext(*ssl_context_service);
       } else {
         throw Exception(PROCESS_SCHEDULE_EXCEPTION, *context_name + " is not an SSL Context Service");
       }

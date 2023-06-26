@@ -25,6 +25,7 @@
 #include "asio/ssl/stream.hpp"
 #include "asio/connect.hpp"
 #include "core/logging/Logger.h"
+#include "utils/net/AsioSocketUtils.h"
 
 namespace org::apache::nifi::minifi::controller {
 
@@ -45,21 +46,8 @@ class ClientConnection {
   }
 
  private:
-  static asio::ssl::context createSslContext(const std::shared_ptr<minifi::controllers::SSLContextService>& ssl_context_service) {
-    asio::ssl::context ssl_context(asio::ssl::context::tls_client);
-    ssl_context.set_options(asio::ssl::context::no_tlsv1 | asio::ssl::context::no_tlsv1_1);
-    ssl_context.load_verify_file(ssl_context_service->getCACertificate().string());
-    ssl_context.set_verify_mode(asio::ssl::verify_peer);
-    if (const auto& cert_file = ssl_context_service->getCertificateFile(); !cert_file.empty())
-      ssl_context.use_certificate_file(cert_file.string(), asio::ssl::context::pem);
-    if (const auto& private_key_file = ssl_context_service->getPrivateKeyFile(); !private_key_file.empty())
-      ssl_context.use_private_key_file(private_key_file.string(), asio::ssl::context::pem);
-    ssl_context.set_password_callback([password = ssl_context_service->getPassphrase()](std::size_t&, asio::ssl::context_base::password_purpose&) { return password; });
-    return ssl_context;
-  }
-
   void connectTcpSocketOverSsl(const ControllerSocketData& socket_data) {
-    auto ssl_context = createSslContext(socket_data.ssl_context_service);
+    auto ssl_context = utils::net::getSslContext(*socket_data.ssl_context_service);
     asio::ssl::stream<asio::ip::tcp::socket> socket(io_context_, ssl_context);
 
     asio::ip::tcp::resolver resolver(io_context_);

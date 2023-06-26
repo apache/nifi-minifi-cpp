@@ -85,7 +85,7 @@ void PutTCP::onSchedule(core::ProcessContext* const context, core::ProcessSessio
   if (context->getProperty(SSLContextService, context_name) && !IsNullOrEmpty(context_name)) {
     if (auto controller_service = context->getControllerService(context_name)) {
       if (auto ssl_context_service = std::dynamic_pointer_cast<minifi::controllers::SSLContextService>(context->getControllerService(context_name))) {
-        ssl_context_ = utils::net::getClientSslContext(*ssl_context_service);
+        ssl_context_ = utils::net::getSslContext(*ssl_context_service);
       } else {
         throw Exception(PROCESS_SCHEDULE_EXCEPTION, context_name + " is not an SSL Context Service");
       }

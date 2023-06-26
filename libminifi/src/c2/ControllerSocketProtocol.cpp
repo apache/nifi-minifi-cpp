@@ -29,6 +29,7 @@
 #include "properties/Configuration.h"
 #include "io/AsioStream.h"
 #include "asio/ssl/stream.hpp"
+#include "utils/net/AsioSocketUtils.h"
 
 namespace org::apache::nifi::minifi::c2 {
 
@@ -98,13 +99,7 @@ void ControllerSocketProtocol::startAccept() {
 void ControllerSocketProtocol::startAcceptSsl(std::shared_ptr<minifi::controllers::SSLContextService> ssl_context_service) {
   acceptor_->async_accept([this, ssl_context_service = std::move(ssl_context_service)](const asio::error_code& error, asio::ip::tcp::socket socket) {
     if (!error) {
-      asio::ssl::context ssl_context(asio::ssl::context::tls_server);
-      ssl_context.set_options(asio::ssl::context::default_workarounds | asio::ssl::context::single_dh_use | asio::ssl::context::no_tlsv1 | asio::ssl::context::no_tlsv1_1);
-      ssl_context.set_password_callback([key_pw = ssl_context_service->getPassphrase()](std::size_t&, asio::ssl::context_base::password_purpose&) { return key_pw; });
-      ssl_context.use_certificate_file(ssl_context_service->getCertificateFile().string(), asio::ssl::context::pem);
-      ssl_context.use_private_key_file(ssl_context_service->getPrivateKeyFile().string(), asio::ssl::context::pem);
-      ssl_context.load_verify_file(ssl_context_service->getCACertificate().string());
-      ssl_context.set_verify_mode(asio::ssl::verify_peer);
+      asio::ssl::context ssl_context = utils::net::getSslContext(*ssl_context_service, asio::ssl::context::tls_server);
       asio::ssl::stream<asio::ip::tcp::socket> ssl_socket(std::move(socket), ssl_context);
       asio::error_code err;
       ssl_socket.handshake(asio::ssl::stream_base::server, err);
