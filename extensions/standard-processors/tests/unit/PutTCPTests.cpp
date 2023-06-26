@@ -32,6 +32,7 @@
 #include "IntegrationTestUtils.h"
 
 using namespace std::literals::chrono_literals;
+using org::apache::nifi::minifi::utils::verifyLogLinePresenceInPollTime;
 
 namespace org::apache::nifi::minifi::processors {
 
@@ -64,12 +65,14 @@ class CancellableTcpServer : public utils::net::TcpServer {
         logger_->log_error("Error during accepting new connection: %s", accept_error.message());
         break;
       }
+      std::error_code error;
+      auto remote_address = socket.lowest_layer().remote_endpoint(error).address();
       auto cancellable_timer = std::make_shared<asio::steady_timer>(io_context_);
       cancellable_timers_.push_back(cancellable_timer);
       if (ssl_data_)
-        co_spawn(io_context_, secureSession(std::move(socket)) || wait_until_cancelled(cancellable_timer), asio::detached);
+        co_spawn(io_context_, secureSession(std::move(socket), std::move(remote_address), port_) || wait_until_cancelled(cancellable_timer), asio::detached);
       else
-        co_spawn(io_context_, insecureSession(std::move(socket)) || wait_until_cancelled(cancellable_timer), asio::detached);
+        co_spawn(io_context_, insecureSession(std::move(socket), std::move(remote_address), port_) || wait_until_cancelled(cancellable_timer), asio::detached);
     }
   }
 
@@ -400,9 +403,9 @@ TEST_CASE("PutTCP test missing client cert", "[PutTCP]") {
   auto port = test_fixture.addSSLServer();
   test_fixture.setPutTCPPort(port);
 
-  trigger_expect_failure(test_fixture, "message for invalid-cert server");
+  test_fixture.trigger("message for invalid-cert server");
 
-  CHECK(LogTestController::getInstance().matchesRegex("Handshake with .* failed", 0ms));
+  CHECK(verifyLogLinePresenceInPollTime(std::chrono::seconds(3), "peer did not return a certificate (SSL routines)"));
 }
 
 TEST_CASE("PutTCP test idle connection expiration", "[PutTCP]") {

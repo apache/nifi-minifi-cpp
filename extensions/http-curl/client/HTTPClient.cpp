@@ -167,6 +167,11 @@ bool HTTPClient::setSpecificSSLVersion(utils::SSLVersion specific_version) {
         ssl_context_service_->setMaxTlsVersion(TLS1_2_VERSION);
         break;
       }
+      case utils::SSLVersion::TLSv1_3: {
+        ssl_context_service_->setMinTlsVersion(TLS1_3_VERSION);
+        ssl_context_service_->setMaxTlsVersion(TLS1_3_VERSION);
+        break;
+      }
       default: break;
     }
   }
@@ -181,6 +186,8 @@ bool HTTPClient::setSpecificSSLVersion(utils::SSLVersion specific_version) {
       return CURLE_OK == curl_easy_setopt(http_session_.get(), CURLOPT_SSLVERSION, static_cast<int>(CURL_SSLVERSION_TLSv1_1) | static_cast<int>(CURL_SSLVERSION_MAX_TLSv1_1));
     case utils::SSLVersion::TLSv1_2:
       return CURLE_OK == curl_easy_setopt(http_session_.get(), CURLOPT_SSLVERSION, static_cast<int>(CURL_SSLVERSION_TLSv1_2) | static_cast<int>(CURL_SSLVERSION_MAX_TLSv1_2));
+    case utils::SSLVersion::TLSv1_3:
+      return CURLE_OK == curl_easy_setopt(http_session_.get(), CURLOPT_SSLVERSION, static_cast<int>(CURL_SSLVERSION_TLSv1_3) | static_cast<int>(CURL_SSLVERSION_MAX_TLSv1_3));
     default: return false;
   }
 #else
@@ -205,6 +212,10 @@ bool HTTPClient::setMinimumSSLVersion(utils::SSLVersion minimum_version) {
         ssl_context_service_->setMinTlsVersion(TLS1_2_VERSION);
         break;
       }
+      case utils::SSLVersion::TLSv1_3: {
+        ssl_context_service_->setMinTlsVersion(TLS1_3_VERSION);
+        break;
+      }
       default: break;
     }
   }
@@ -220,6 +231,9 @@ bool HTTPClient::setMinimumSSLVersion(utils::SSLVersion minimum_version) {
       break;
     case utils::SSLVersion::TLSv1_2:
       ret = curl_easy_setopt(http_session_.get(), CURLOPT_SSLVERSION, CURL_SSLVERSION_TLSv1_2);
+      break;
+    case utils::SSLVersion::TLSv1_3:
+      ret = curl_easy_setopt(http_session_.get(), CURLOPT_SSLVERSION, CURL_SSLVERSION_TLSv1_3);
       break;
   }
 

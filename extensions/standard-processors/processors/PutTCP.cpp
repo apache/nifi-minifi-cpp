@@ -120,7 +120,9 @@ class ConnectionHandler : public ConnectionHandlerBase {
         ssl_context_(ssl_context) {
   }
 
-  ~ConnectionHandler() override = default;
+  ~ConnectionHandler() override {
+    shutdownSocket();
+  }
 
   asio::awaitable<std::error_code> sendStreamWithDelimiter(const std::shared_ptr<io::InputStream>& stream_to_send,
       const std::vector<std::byte>& delimiter,
@@ -144,6 +146,7 @@ class ConnectionHandler : public ConnectionHandlerBase {
   asio::awaitable<std::error_code> send(const std::shared_ptr<io::InputStream>& stream_to_send, const std::vector<std::byte>& delimiter);
 
   SocketType createNewSocket(asio::io_context& io_context_);
+  void shutdownSocket();
 
   utils::net::ConnectionId connection_id_;
   std::optional<SocketType> socket_;
@@ -167,6 +170,26 @@ template<>
 SslSocket ConnectionHandler<SslSocket>::createNewSocket(asio::io_context& io_context_) {
   gsl_Expects(ssl_context_);
   return {io_context_, *ssl_context_};
+}
+
+template<>
+void ConnectionHandler<TcpSocket>::shutdownSocket() {
+}
+
+template<>
+void ConnectionHandler<SslSocket>::shutdownSocket() {
+  gsl_Expects(ssl_context_);
+  if (socket_) {
+    asio::error_code ec;
+    socket_->lowest_layer().cancel(ec);
+    if (ec) {
+      logger_->log_error("Cancelling asynchronous operations of SSL socket failed with: %s", ec.message());
+    }
+    socket_->shutdown(ec);
+    if (ec) {
+      logger_->log_error("Shutdown of SSL socket failed with: %s", ec.message());
+    }
+  }
 }
 
 template<class SocketType>
