@@ -138,7 +138,7 @@ TEST_CASE_METHOD(DeleteAzureBlobStorageTestsFixture, "Test credentials settings"
     plan_->setProperty(azure_blob_storage_processor_, "Storage Account Name", STORAGE_ACCOUNT_NAME);
     plan_->setProperty(azure_blob_storage_processor_, "Use Managed Identity Credentials", "true");
     test_controller_.runSession(plan_, true);
-    CHECK(getFailedFlowFileContents().size() == 0);
+    CHECK(getFailedFlowFileContents().empty());
     auto passed_params = mock_blob_storage_ptr_->getPassedDeleteParams();
     CHECK(passed_params.credentials.buildConnectionString().empty());
     CHECK(passed_params.credentials.getStorageAccountName() == STORAGE_ACCOUNT_NAME);
@@ -153,7 +153,7 @@ TEST_CASE_METHOD(DeleteAzureBlobStorageTestsFixture, "Test credentials settings"
     plan_->setProperty(azure_storage_cred_service, "Common Storage Account Endpoint Suffix", "core.chinacloudapi.cn");
     plan_->setProperty(azure_blob_storage_processor_, "Azure Storage Credentials Service", "AzureStorageCredentialsService");
     test_controller_.runSession(plan_, true);
-    CHECK(getFailedFlowFileContents().size() == 0);
+    CHECK(getFailedFlowFileContents().empty());
     auto passed_params = mock_blob_storage_ptr_->getPassedDeleteParams();
     CHECK(passed_params.credentials.buildConnectionString().empty());
     CHECK(passed_params.credentials.getStorageAccountName() == STORAGE_ACCOUNT_NAME);
@@ -229,7 +229,7 @@ TEST_CASE_METHOD(DeleteAzureBlobStorageTestsFixture, "Test Azure blob delete wit
   CHECK(passed_params.container_name == CONTAINER_NAME);
   CHECK(passed_params.blob_name == GET_FILE_NAME);
   CHECK(passed_params.optional_deletion == minifi::azure::storage::OptionalDeletion::NONE);
-  CHECK(getFailedFlowFileContents().size() == 0);
+  CHECK(getFailedFlowFileContents().empty());
 }
 
 TEST_CASE_METHOD(DeleteAzureBlobStorageTestsFixture, "Test Azure blob delete including snapshots", "[azureBlobStorageDelete]") {
@@ -244,7 +244,7 @@ TEST_CASE_METHOD(DeleteAzureBlobStorageTestsFixture, "Test Azure blob delete inc
   CHECK(passed_params.container_name == CONTAINER_NAME);
   CHECK(passed_params.blob_name == BLOB_NAME);
   CHECK(passed_params.optional_deletion == minifi::azure::storage::OptionalDeletion::INCLUDE_SNAPSHOTS);
-  CHECK(getFailedFlowFileContents().size() == 0);
+  CHECK(getFailedFlowFileContents().empty());
 }
 
 TEST_CASE_METHOD(DeleteAzureBlobStorageTestsFixture, "Test Azure blob delete with snapshots only", "[azureBlobStorageDelete]") {
@@ -259,7 +259,7 @@ TEST_CASE_METHOD(DeleteAzureBlobStorageTestsFixture, "Test Azure blob delete wit
   CHECK(passed_params.container_name == CONTAINER_NAME);
   CHECK(passed_params.blob_name == BLOB_NAME);
   CHECK(passed_params.optional_deletion == minifi::azure::storage::OptionalDeletion::DELETE_SNAPSHOTS_ONLY);
-  CHECK(getFailedFlowFileContents().size() == 0);
+  CHECK(getFailedFlowFileContents().empty());
 }
 
 TEST_CASE_METHOD(DeleteAzureBlobStorageTestsFixture, "Test Azure blob delete with remote failure", "[azureBlobStorageDelete]") {
