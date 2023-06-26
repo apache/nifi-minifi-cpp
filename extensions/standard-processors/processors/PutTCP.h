@@ -61,7 +61,8 @@ class PutTCP final : public core::Processor {
       "By default, the FlowFiles are transmitted over the same TCP connection. To assist the TCP server with determining message boundaries, "
       "an optional \"Outgoing Message Delimiter\" string can be configured which is appended to the end of each FlowFiles content when it is transmitted over the TCP connection. "
       "An optional \"Connection Per FlowFile\" parameter can be specified to change the behaviour so that each FlowFiles content is transmitted over a single TCP connection "
-      "which is closed after the FlowFile has been sent.";
+      "which is closed after the FlowFile has been sent. Note: When using TLS 1.3 the processor can still route the flow file to success if the TLS handshake fails. This is due to TLS 1.3's "
+      "faster handshake process which allows the message to be sent before we know the result of the TLS handshake.";
 
   EXTENSIONAPI static constexpr auto Hostname = core::PropertyDefinitionBuilder<>::createProperty("Hostname")
       .withDescription("The ip address or hostname of the destination.")
@@ -125,7 +126,7 @@ class PutTCP final : public core::Processor {
 
 
   EXTENSIONAPI static constexpr auto Success = core::RelationshipDefinition{"success", "FlowFiles that are sent to the destination are sent out this relationship."};
-  EXTENSIONAPI static constexpr auto Failure = core::RelationshipDefinition{"failure", "FlowFiles that encountered IO errors are send out this relationship."};
+  EXTENSIONAPI static constexpr auto Failure = core::RelationshipDefinition{"failure", "FlowFiles that encountered IO errors are sent out this relationship."};
   EXTENSIONAPI static constexpr auto Relationships = std::array{Success, Failure};
 
   EXTENSIONAPI static constexpr bool SupportsDynamicProperties = false;

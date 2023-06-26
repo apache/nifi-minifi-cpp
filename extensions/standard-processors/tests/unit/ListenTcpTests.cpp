@@ -22,10 +22,12 @@
 #include "Utils.h"
 #include "controllers/SSLContextService.h"
 #include "range/v3/algorithm/contains.hpp"
+#include "utils/IntegrationTestUtils.h"
 
 using ListenTCP = org::apache::nifi::minifi::processors::ListenTCP;
 
 using namespace std::literals::chrono_literals;
+using org::apache::nifi::minifi::utils::verifyLogLinePresenceInPollTime;
 
 namespace org::apache::nifi::minifi::test {
 
@@ -211,7 +213,8 @@ TEST_CASE("Test ListenTCP with SSL connection", "[ListenTCP][NetworkListenerProc
       endpoint = asio::ip::tcp::endpoint(asio::ip::address_v4::loopback(), port);
     }
 
-    CHECK_THAT(utils::sendMessagesViaSSL({"test_message_1"}, endpoint, executable_dir / "resources" / "ca_A.crt"), MatchesError());
+    utils::sendMessagesViaSSL({"test_message_1"}, endpoint, executable_dir / "resources" / "ca_A.crt");
+    CHECK(verifyLogLinePresenceInPollTime(std::chrono::seconds(3), "peer did not return a certificate (SSL routines)"));
   }
 
   ProcessorTriggerResult result;
@@ -287,7 +290,7 @@ TEST_CASE("Test ListenTCP SSL/TLS compatibility", "[ListenTCP][NetworkListenerPr
 
   SECTION("tlsv13 should be enabled") {
     client_method = asio::ssl::context::method::tlsv13_client;
-    expected_to_work = false;
+    expected_to_work = true;
   }
 
   if (!isSslMethodAvailable(client_method))

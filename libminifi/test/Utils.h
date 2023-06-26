@@ -175,7 +175,7 @@ std::error_code sendMessagesViaSSL(const std::vector<std::string_view>& contents
     const asio::ip::tcp::endpoint& remote_endpoint,
     const std::filesystem::path& ca_cert_path,
     const std::optional<minifi::utils::net::SslData>& ssl_data = std::nullopt,
-    asio::ssl::context::method method = asio::ssl::context::tlsv12_client) {
+    asio::ssl::context::method method = asio::ssl::context::tls_client) {
   asio::ssl::context ctx(method);
   ctx.load_verify_file(ca_cert_path.string());
   if (ssl_data) {
@@ -186,6 +186,11 @@ std::error_code sendMessagesViaSSL(const std::vector<std::string_view>& contents
   }
   asio::io_context io_context;
   asio::ssl::stream<asio::ip::tcp::socket> socket(io_context, ctx);
+  auto shutdown_socket = gsl::finally([&] {
+    asio::error_code ec;
+    socket.lowest_layer().cancel(ec);
+    socket.shutdown(ec);
+  });
   asio::error_code err;
   socket.lowest_layer().connect(remote_endpoint, err);
   if (err) {

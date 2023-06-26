@@ -94,6 +94,7 @@ enum class SSLVersion : uint8_t {
   TLSv1_0,
   TLSv1_1,
   TLSv1_2,
+  TLSv1_3
 };
 
 struct HTTPHeaderResponse {

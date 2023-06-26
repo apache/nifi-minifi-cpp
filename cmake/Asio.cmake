@@ -18,8 +18,8 @@
 include(FetchContent)
 
 FetchContent_Declare(asio
-        URL https://github.com/chriskohlhoff/asio/archive/refs/tags/asio-1-24-0.tar.gz
-        URL_HASH SHA256=cbcaaba0f66722787b1a7c33afe1befb3a012b5af3ad7da7ff0f6b8c9b7a8a5b)
+        URL https://github.com/chriskohlhoff/asio/archive/refs/tags/asio-1-28-1.tar.gz
+        URL_HASH SHA256=5ff6111ec8cbe73a168d997c547f562713aa7bd004c5c02326f0e9d579a5f2ce)
 
 FetchContent_GetProperties(asio)
 if(NOT asio_POPULATED)
