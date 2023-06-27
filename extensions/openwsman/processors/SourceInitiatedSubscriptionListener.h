@@ -49,7 +49,7 @@ class SourceInitiatedSubscriptionListener : public core::Processor {
   static constexpr char const *INITIAL_EXISTING_EVENTS_STRATEGY_NONE = "None";
   static constexpr char const *INITIAL_EXISTING_EVENTS_STRATEGY_ALL = "All";
 
-  explicit SourceInitiatedSubscriptionListener(std::string name, const utils::Identifier& uuid = {});
+  explicit SourceInitiatedSubscriptionListener(std::string_view name, const utils::Identifier& uuid = {});
 
   EXTENSIONAPI static constexpr const char* Description = "This processor implements a Windows Event Forwarding Source Initiated Subscription server with the help of OpenWSMAN. "
       "Windows hosts can be set up to connect and forward Event Logs to this processor.";

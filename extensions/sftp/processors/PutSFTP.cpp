@@ -21,7 +21,6 @@
 #include <cstdint>
 #include <iostream>
 #include <limits>
-#include <string>
 #include <utility>
 
 #include "core/FlowFile.h"
@@ -29,7 +28,6 @@
 #include "core/ProcessContext.h"
 #include "core/Resource.h"
 #include "io/BufferStream.h"
-#include "io/StreamFactory.h"
 #include "utils/StringUtils.h"
 #include "utils/file/FileUtils.h"
 
@@ -42,8 +40,8 @@ void PutSFTP::initialize() {
   setSupportedRelationships(Relationships);
 }
 
-PutSFTP::PutSFTP(std::string name, const utils::Identifier& uuid /*= utils::Identifier()*/)
-  : SFTPProcessorBase(std::move(name), uuid),
+PutSFTP::PutSFTP(std::string_view name, const utils::Identifier& uuid /*= utils::Identifier()*/)
+  : SFTPProcessorBase(name, uuid),
     create_directory_(false),
     batch_size_(0),
     reject_zero_byte_(false),

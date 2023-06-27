@@ -26,6 +26,7 @@
 #include <memory>
 #include <mutex>
 #include <string>
+#include <string_view>
 #include <unordered_set>
 #include <unordered_map>
 #include <utility>
@@ -61,10 +62,6 @@ namespace org::apache::nifi::minifi {
 
 class Connection;
 
-namespace io {
-class StreamFactory;
-}
-
 namespace core {
 
 class ProcessContext;
@@ -77,8 +74,8 @@ constexpr std::chrono::microseconds MINIMUM_SCHEDULING_PERIOD{30};
 
 class Processor : public Connectable, public ConfigurableComponent, public state::response::ResponseNodeSource {
  public:
-  Processor(std::string name, const utils::Identifier& uuid, std::shared_ptr<ProcessorMetrics> metrics = nullptr);
-  explicit Processor(std::string name, std::shared_ptr<ProcessorMetrics> metrics = nullptr);
+  Processor(std::string_view name, const utils::Identifier& uuid, std::shared_ptr<ProcessorMetrics> metrics = nullptr);
+  explicit Processor(std::string_view name, std::shared_ptr<ProcessorMetrics> metrics = nullptr);
 
   Processor(const Processor& parent) = delete;
   Processor& operator=(const Processor& parent) = delete;
@@ -211,10 +208,6 @@ class Processor : public Connectable, public ConfigurableComponent, public state
   // Check all incoming connections for work
   bool isWorkAvailable() override;
 
-  void setStreamFactory(std::shared_ptr<minifi::io::StreamFactory> stream_factory) {
-    stream_factory_ = std::move(stream_factory);
-  }
-
   bool isThrottledByBackpressure() const;
 
   Connectable* pickIncomingConnection() override;
@@ -234,8 +227,6 @@ class Processor : public Connectable, public ConfigurableComponent, public state
  protected:
   virtual void notifyStop() {
   }
-
-  std::shared_ptr<minifi::io::StreamFactory> stream_factory_;
 
   std::atomic<ScheduledState> state_;
 

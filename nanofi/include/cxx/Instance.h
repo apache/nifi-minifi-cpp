@@ -22,7 +22,6 @@
 #include <string>
 #include "core/Property.h"
 #include "properties/Configure.h"
-#include "io/StreamFactory.h"
 #include "RemoteProcessorGroupPort.h"
 #include "core/ContentRepository.h"
 #include "core/repository/VolatileContentRepository.h"
@@ -77,10 +76,9 @@ class Instance {
         free(cwd);
     }
     running_ = false;
-    stream_factory_ = minifi::io::StreamFactory::getInstance(configure_);
     utils::Identifier uuid;
     uuid = port;
-    rpg_ = std::make_shared<minifi::RemoteProcessorGroupPort>(stream_factory_, url, url, configure_, uuid);
+    rpg_ = std::make_shared<minifi::RemoteProcessorGroupPort>(url, url, configure_, uuid);
     proc_node_ = std::make_shared<core::ProcessorNode>(rpg_.get());
     core::extension::ExtensionManager::get().initialize(configure_);
     content_repo_->initialize(configure_);
@@ -164,7 +162,6 @@ class Instance {
 
   std::shared_ptr<core::ProcessorNode> proc_node_;
   std::shared_ptr<minifi::RemoteProcessorGroupPort> rpg_;
-  std::shared_ptr<io::StreamFactory> stream_factory_;
   std::string url_;
   std::shared_ptr<Configure> configure_;
 

@@ -23,9 +23,7 @@
 #include <mutex>
 #include <atomic>
 
-#include "io/StreamFactory.h"
 #include "io/BaseStream.h"
-#include "io/ServerSocket.h"
 #include "core/logging/LoggerConfiguration.h"
 #include "core/state/nodes/StateMonitor.h"
 #include "core/controller/ControllerServiceProvider.h"

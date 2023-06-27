@@ -18,11 +18,7 @@
 
 #include "sitetosite/SiteToSite.h"
 
-namespace org {
-namespace apache {
-namespace nifi {
-namespace minifi {
-namespace sitetosite {
+namespace org::apache::nifi::minifi::sitetosite {
 
 const char *SiteToSiteRequest::RequestTypeStr[MAX_REQUEST_TYPE] = { "NEGOTIATE_FLOWFILE_CODEC", "REQUEST_PEER_LIST", "SEND_FLOWFILES", "RECEIVE_FLOWFILES", "SHUTDOWN" };
 
@@ -50,8 +46,4 @@ RespondCodeContext SiteToSiteRequest::respondCodeContext[21] = { //NOLINT
     { UNRECOGNIZED_RESPONSE_CODE, "Unrecognized Response Code", false },  //NOLINT
     { END_OF_STREAM, "End of Stream", false } };
 
-} /* namespace sitetosite */
-} /* namespace minifi */
-} /* namespace nifi */
-} /* namespace apache */
-} /* namespace org */
+}  // namespace org::apache::nifi::minifi::sitetosite

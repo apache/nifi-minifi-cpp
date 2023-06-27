@@ -15,22 +15,18 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#ifndef LIBMINIFI_INCLUDE_SITETOSITE_SITETOSITEFACTORY_H_
-#define LIBMINIFI_INCLUDE_SITETOSITE_SITETOSITEFACTORY_H_
+#pragma once
 
 #include <utility>
+#include <memory>
 
 #include "RawSocketProtocol.h"
 #include "SiteToSite.h"
-#include <memory>
 #include "Peer.h"
 #include "SiteToSiteClient.h"
+#include "utils/net/AsioSocketUtils.h"
 
-namespace org {
-namespace apache {
-namespace nifi {
-namespace minifi {
-namespace sitetosite {
+namespace org::apache::nifi::minifi::sitetosite {
 
 /**
  * Create a streaming peer from the provided client configuration
@@ -38,17 +34,9 @@ namespace sitetosite {
  * @returns SiteToSitePeer
  */
 static std::unique_ptr<SiteToSitePeer> createStreamingPeer(const SiteToSiteClientConfiguration &client_configuration) {
-  std::unique_ptr<org::apache::nifi::minifi::io::BaseStream> str = nullptr;
-  if (nullptr != client_configuration.getSecurityContext()) {
-    str = client_configuration.getStreamFactory()->createSecureSocket(client_configuration.getPeer()->getHost(), client_configuration.getPeer()->getPort(), client_configuration.getSecurityContext());
-  } else {
-    str = client_configuration.getStreamFactory()->createSocket(client_configuration.getPeer()->getHost(), client_configuration.getPeer()->getPort());
-  }
-
-  if (nullptr == str)
-    return nullptr;
-  auto peer = std::unique_ptr<SiteToSitePeer>(new SiteToSitePeer(std::move(str), client_configuration.getPeer()->getHost(), client_configuration.getPeer()->getPort(),
-      client_configuration.getInterface()));
+  utils::net::SocketData socket_data{client_configuration.getPeer()->getHost(), client_configuration.getPeer()->getPort(), client_configuration.getSecurityContext()};
+  auto connection = std::make_unique<utils::net::AsioSocketConnection>(socket_data);
+  auto peer = std::make_unique<SiteToSitePeer>(std::move(connection), client_configuration.getPeer()->getHost(), client_configuration.getPeer()->getPort(), client_configuration.getInterface());
   return peer;
 }
 
@@ -98,10 +86,4 @@ static std::unique_ptr<SiteToSiteClient> createClient(const SiteToSiteClientConf
   return nullptr;
 }
 
-}  // namespace sitetosite
-}  // namespace minifi
-}  // namespace nifi
-}  // namespace apache
-}  // namespace org
-
-#endif  // LIBMINIFI_INCLUDE_SITETOSITE_SITETOSITEFACTORY_H_
+}  // namespace org::apache::nifi::minifi::sitetosite

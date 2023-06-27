@@ -35,7 +35,6 @@
 #include "core/PropertyDefinitionBuilder.h"
 #include "core/RelationshipDefinition.h"
 #include "sitetosite/SiteToSiteClient.h"
-#include "io/StreamFactory.h"
 #include "controllers/SSLContextService.h"
 #include "core/logging/LoggerFactory.h"
 #include "utils/Export.h"
@@ -77,7 +76,7 @@ struct RPG {
 
 class RemoteProcessorGroupPort : public core::Processor {
  public:
-  RemoteProcessorGroupPort(const std::shared_ptr<io::StreamFactory> &stream_factory, std::string name, std::string url, std::shared_ptr<Configure> configure, const utils::Identifier &uuid = {})
+  RemoteProcessorGroupPort(std::string name, std::string url, std::shared_ptr<Configure> configure, const utils::Identifier &uuid = {})
       : core::Processor(std::move(name), uuid),
         configure_(std::move(configure)),
         direction_(sitetosite::SEND),
@@ -87,7 +86,6 @@ class RemoteProcessorGroupPort : public core::Processor {
         ssl_service(nullptr),
         logger_(core::logging::LoggerFactory<RemoteProcessorGroupPort>::getLogger(uuid)) {
     client_type_ = sitetosite::CLIENT_TYPE::RAW;
-    stream_factory_ = stream_factory;
     protocol_uuid_ = uuid;
     site2site_secure_ = false;
     peer_index_ = -1;
@@ -211,7 +209,6 @@ class RemoteProcessorGroupPort : public core::Processor {
     }
   }
 
-  std::shared_ptr<io::StreamFactory> stream_factory_;
   std::unique_ptr<sitetosite::SiteToSiteClient> getNextProtocol(bool create);
   void returnProtocol(std::unique_ptr<sitetosite::SiteToSiteClient> protocol);
 

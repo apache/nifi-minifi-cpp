@@ -35,8 +35,6 @@
 
 #include "core/Repository.h"
 #include "core/reporting/SiteToSiteProvenanceReportingTask.h"
-#include "../include/io/StreamFactory.h"
-#include "io/ClientSocket.h"
 #include "utils/TimeUtil.h"
 #include "core/ProcessContext.h"
 #include "core/ProcessSession.h"

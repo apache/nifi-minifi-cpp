@@ -30,12 +30,11 @@
 #include "core/logging/LoggerFactory.h"
 #include "core/Property.h"
 #include "io/BaseStream.h"
-#include "io/ClientSocket.h"
 #include "io/BufferStream.h"
-#include "io/EndianCheck.h"
 #include "properties/Configure.h"
 #include "utils/BaseHTTPClient.h"
 #include "utils/TimeUtil.h"
+#include "io/NetworkPrioritizer.h"
 
 namespace org::apache::nifi::minifi::sitetosite {
 

@@ -26,7 +26,6 @@
 #include <map>
 #include <set>
 #include <list>
-#include <string>
 #include <utility>
 #include <vector>
 #include <tuple>
@@ -39,7 +38,6 @@
 #include "core/ProcessContext.h"
 #include "core/Resource.h"
 #include "io/BufferStream.h"
-#include "io/StreamFactory.h"
 #include "rapidjson/ostreamwrapper.h"
 
 using namespace std::literals::chrono_literals;
@@ -68,8 +66,8 @@ void ListSFTP::initialize() {
   setSupportedRelationships(Relationships);
 }
 
-ListSFTP::ListSFTP(std::string name, const utils::Identifier& uuid /*= utils::Identifier()*/)
-    : SFTPProcessorBase(std::move(name), uuid) {
+ListSFTP::ListSFTP(std::string_view name, const utils::Identifier& uuid /*= utils::Identifier()*/)
+    : SFTPProcessorBase(name, uuid) {
   logger_ = core::logging::LoggerFactory<ListSFTP>::getLogger(uuid_);
 }
 

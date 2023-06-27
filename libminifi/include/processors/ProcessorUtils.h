@@ -35,10 +35,8 @@ class ProcessorUtils {
    * @param class_short_name short name of the class
    * @param canonicalName full class name ( canonical name )
    * @param uuid uuid object for the processor
-   * @param stream_factory stream factory to be set onto the processor
    */
-  static inline std::unique_ptr<core::Processor> createProcessor(const std::string &class_short_name, const std::string &canonicalName, const utils::Identifier &uuid,
-                                                                 const std::shared_ptr<minifi::io::StreamFactory> &stream_factory) {
+  static inline std::unique_ptr<core::Processor> createProcessor(const std::string &class_short_name, const std::string &canonicalName, const utils::Identifier &uuid) {
     auto ptr = core::ClassLoader::getDefaultClassLoader().instantiate(class_short_name, uuid);
     // fallback to the canonical name if the short name does not work, then attempt JNI bindings if they exist
     if (ptr == nullptr) {
@@ -52,7 +50,6 @@ class ProcessorUtils {
           }
           processor->initialize();
           processor->setProperty("NiFi Processor", canonicalName);
-          processor->setStreamFactory(stream_factory);
           return processor;
         }
       }
@@ -67,7 +64,6 @@ class ProcessorUtils {
     }
 
     returnPtr->initialize();
-    returnPtr->setStreamFactory(stream_factory);
     return returnPtr;
   }
 };

@@ -49,7 +49,6 @@ extern "C" {
 #include "core/ProcessSessionFactory.h"
 #include "core/Resource.h"
 #include "io/BufferStream.h"
-#include "io/StreamFactory.h"
 #include "ResourceClaim.h"
 #include "utils/gsl.h"
 #include "utils/StringUtils.h"
@@ -66,8 +65,8 @@ extern "C" {
 
 namespace org::apache::nifi::minifi::processors {
 
-SourceInitiatedSubscriptionListener::SourceInitiatedSubscriptionListener(std::string name, const utils::Identifier& uuid)
-    : Processor(std::move(name), uuid)
+SourceInitiatedSubscriptionListener::SourceInitiatedSubscriptionListener(std::string_view name, const utils::Identifier& uuid)
+    : Processor(name, uuid)
     , session_factory_(nullptr)
     , listen_port_(0U)
     , subscription_expiration_interval_(0)

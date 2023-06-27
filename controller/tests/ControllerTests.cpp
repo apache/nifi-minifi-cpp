@@ -287,7 +287,7 @@ class ControllerTestFixture {
   std::unique_ptr<minifi::c2::ControllerSocketProtocol> controller_socket_protocol_;
   std::shared_ptr<controllers::SSLContextService> ssl_context_service_;
   std::unique_ptr<TestControllerServiceProvider> controller_service_provider_;
-  minifi::controller::ControllerSocketData controller_socket_data_;
+  minifi::utils::net::SocketData controller_socket_data_;
 };
 
 TEST_CASE_METHOD(ControllerTestFixture, "Test listComponents", "[controllerTests]") {

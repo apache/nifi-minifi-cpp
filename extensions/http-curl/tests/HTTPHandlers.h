@@ -44,6 +44,7 @@
 #include "range/v3/algorithm/contains.hpp"
 #include "range/v3/view/filter.hpp"
 #include "range/v3/view/view.hpp"
+#include "utils/net/DNS.h"
 
 static std::atomic<int> transaction_id;
 static std::atomic<int> transaction_id_output;
@@ -99,7 +100,7 @@ class PeerResponder : public ServerAwareHandler {
 
   bool handleGet(CivetServer* /*server*/, struct mg_connection *conn) override {
 #ifdef WIN32
-    std::string hostname = org::apache::nifi::minifi::io::Socket::getMyHostName();
+    std::string hostname = org::apache::nifi::minifi::utils::net::getMyHostName();
 #else
     std::string hostname = "localhost";
 #endif

@@ -33,7 +33,6 @@
 #include "core/ProcessorConfig.h"
 #include "core/ProcessContext.h"
 #include "core/ProcessSessionFactory.h"
-#include "io/StreamFactory.h"
 #include "utils/gsl.h"
 #include "range/v3/algorithm/any_of.hpp"
 
@@ -41,8 +40,8 @@ using namespace std::literals::chrono_literals;
 
 namespace org::apache::nifi::minifi::core {
 
-Processor::Processor(std::string name, std::shared_ptr<ProcessorMetrics> metrics)
-    : Connectable(std::move(name)),
+Processor::Processor(std::string_view name, std::shared_ptr<ProcessorMetrics> metrics)
+    : Connectable(name),
       logger_(logging::LoggerFactory<Processor>::getLogger(uuid_)),
       metrics_(metrics ? std::move(metrics) : std::make_shared<ProcessorMetrics>(*this)) {
   has_work_.store(false);
@@ -60,8 +59,8 @@ Processor::Processor(std::string name, std::shared_ptr<ProcessorMetrics> metrics
   logger_->log_debug("Processor %s created UUID %s", name_, getUUIDStr());
 }
 
-Processor::Processor(std::string name, const utils::Identifier& uuid, std::shared_ptr<ProcessorMetrics> metrics)
-    : Connectable(std::move(name), uuid),
+Processor::Processor(std::string_view name, const utils::Identifier& uuid, std::shared_ptr<ProcessorMetrics> metrics)
+    : Connectable(name, uuid),
       logger_(logging::LoggerFactory<Processor>::getLogger(uuid_)),
       metrics_(metrics ? std::move(metrics) : std::make_shared<ProcessorMetrics>(*this)) {
   has_work_.store(false);

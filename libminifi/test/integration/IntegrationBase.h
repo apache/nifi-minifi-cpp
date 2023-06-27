@@ -32,7 +32,6 @@
 #include "FlowController.h"
 #include "properties/Configure.h"
 #include "../unit/ProvenanceTestHelper.h"
-#include "io/StreamFactory.h"
 #include "RemoteProcessorGroupPort.h"
 #include "core/ConfigurableComponent.h"
 #include "controllers/SSLContextService.h"
@@ -40,6 +39,7 @@
 #include "utils/FifoExecutor.h"
 #include "core/state/MetricsPublisherFactory.h"
 #include "c2/C2Utils.h"
+#include "utils/net/DNS.h"
 
 namespace minifi = org::apache::nifi::minifi;
 namespace core = minifi::core;
@@ -165,8 +165,6 @@ void IntegrationBase::run(const std::optional<std::filesystem::path>& test_file_
   while (running) {
     running = false;  // Stop running after this iteration, unless restart is explicitly requested
 
-    std::shared_ptr<minifi::io::StreamFactory> stream_factory = minifi::io::StreamFactory::getInstance(configuration);
-
     bool should_encrypt_flow_config = (configuration->get(minifi::Configure::nifi_flow_configuration_encrypt)
         | utils::flatMap(utils::StringUtils::toBool)).value_or(false);
 
@@ -179,7 +177,7 @@ void IntegrationBase::run(const std::optional<std::filesystem::path>& test_file_
       filesystem = std::make_shared<utils::file::FileSystem>();
     }
 
-    auto flow_config = std::make_shared<core::YamlConfiguration>(core::ConfigurationContext{test_repo, content_repo, stream_factory, configuration, test_file_location, filesystem});
+    auto flow_config = std::make_shared<core::YamlConfiguration>(core::ConfigurationContext{test_repo, content_repo, configuration, test_file_location, filesystem});
 
     auto controller_service_provider = flow_config->getControllerServiceProvider();
     char state_dir_name_template[] = "/var/tmp/integrationstate.XXXXXX";
@@ -268,7 +266,7 @@ cmd_args parse_cmdline_args_with_url(int argc, char ** argv) {
     if (url.find("localhost") != std::string::npos) {
       std::string port, scheme, path;
       minifi::utils::parse_http_components(url, port, scheme, path);
-      url = scheme + "://" + org::apache::nifi::minifi::io::Socket::getMyHostName() + ":" + port +  path;
+      url = scheme + "://" + org::apache::nifi::minifi::utils::net::getMyHostName() + ":" + port +  path;
     }
 #endif
     args.url = url;

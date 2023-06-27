@@ -28,7 +28,6 @@
 #include "core/yaml/YamlConfiguration.h"
 #include "FlowController.h"
 #include "properties/Configure.h"
-#include "io/StreamFactory.h"
 #include "integration/IntegrationBase.h"
 
 class VerifyC2PauseResume : public VerifyC2Base {
@@ -128,18 +127,17 @@ int main(int argc, char **argv) {
   configuration->set(minifi::Configure::nifi_default_directory, args.key_dir);
   configuration->set(minifi::Configure::nifi_flow_configuration_file, args.test_file);
 
-  std::shared_ptr<minifi::io::StreamFactory> stream_factory = minifi::io::StreamFactory::getInstance(configuration);
   std::shared_ptr<core::ContentRepository> content_repo = std::make_shared<core::repository::VolatileContentRepository>();
   content_repo->initialize(configuration);
 
-  auto yaml_ptr = std::make_shared<core::YamlConfiguration>(core::ConfigurationContext{test_repo, content_repo, stream_factory, configuration, args.test_file});
+  auto yaml_ptr = std::make_shared<core::YamlConfiguration>(core::ConfigurationContext{test_repo, content_repo, configuration, args.test_file});
 
   std::vector<std::shared_ptr<core::RepositoryMetricsSource>> repo_metric_sources{test_repo, test_flow_repo, content_repo};
   auto metrics_publisher_store = std::make_unique<minifi::state::MetricsPublisherStore>(configuration, repo_metric_sources, yaml_ptr);
   std::shared_ptr<minifi::FlowController> controller = std::make_shared<minifi::FlowController>(test_repo, test_flow_repo, configuration,
       std::move(yaml_ptr), content_repo, std::move(metrics_publisher_store));
 
-  core::YamlConfiguration yaml_config({test_repo, content_repo, stream_factory, configuration, args.test_file});
+  core::YamlConfiguration yaml_config({test_repo, content_repo, configuration, args.test_file});
 
   auto root = yaml_config.getRoot();
   const auto proc = root->findProcessorByName("invoke");

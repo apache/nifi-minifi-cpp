@@ -20,7 +20,6 @@
 #include <string>
 #include <queue>
 #include "io/BufferStream.h"
-#include "io/EndianCheck.h"
 #include "core/Core.h"
 #include "utils/gsl.h"
 

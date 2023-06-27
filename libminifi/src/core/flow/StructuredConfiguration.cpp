@@ -591,7 +591,7 @@ void StructuredConfiguration::parseRPGPort(const Node& port_node, core::ProcessG
   uuid = portId;
 
   auto port = std::make_unique<minifi::RemoteProcessorGroupPort>(
-          stream_factory_, nameStr, parent->getURL(), this->configuration_, uuid);
+          nameStr, parent->getURL(), this->configuration_, uuid);
   port->setDirection(direction);
   port->setTimeout(parent->getTimeout());
   port->setTransmitting(true);

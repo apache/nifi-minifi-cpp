@@ -20,26 +20,20 @@
 #include <memory>
 #include <string>
 
-#include "controllers/SSLContextService.h"
+#include "utils/net/AsioSocketUtils.h"
 
 namespace org::apache::nifi::minifi::controller {
 
-struct ControllerSocketData {
-  std::string host = "localhost";
-  int port = -1;
-  std::shared_ptr<minifi::controllers::SSLContextService> ssl_context_service;
-};
-
-bool sendSingleCommand(const ControllerSocketData& socket_data, uint8_t op, const std::string& value);
-bool stopComponent(const ControllerSocketData& socket_data, const std::string& component);
-bool startComponent(const ControllerSocketData& socket_data, const std::string& component);
-bool clearConnection(const ControllerSocketData& socket_data, const std::string& connection);
-bool updateFlow(const ControllerSocketData& socket_data, std::ostream &out, const std::string& file);
-bool getFullConnections(const ControllerSocketData& socket_data, std::ostream &out);
-bool getConnectionSize(const ControllerSocketData& socket_data, std::ostream &out, const std::string& connection);
-bool listComponents(const ControllerSocketData& socket_data, std::ostream &out, bool show_header = true);
-bool listConnections(const ControllerSocketData& socket_data, std::ostream &out, bool show_header = true);
-bool printManifest(const ControllerSocketData& socket_data, std::ostream &out);
-bool getJstacks(const ControllerSocketData& socket_data, std::ostream &out);
+bool sendSingleCommand(const utils::net::SocketData& socket_data, uint8_t op, const std::string& value);
+bool stopComponent(const utils::net::SocketData& socket_data, const std::string& component);
+bool startComponent(const utils::net::SocketData& socket_data, const std::string& component);
+bool clearConnection(const utils::net::SocketData& socket_data, const std::string& connection);
+bool updateFlow(const utils::net::SocketData& socket_data, std::ostream &out, const std::string& file);
+bool getFullConnections(const utils::net::SocketData& socket_data, std::ostream &out);
+bool getConnectionSize(const utils::net::SocketData& socket_data, std::ostream &out, const std::string& connection);
+bool listComponents(const utils::net::SocketData& socket_data, std::ostream &out, bool show_header = true);
+bool listConnections(const utils::net::SocketData& socket_data, std::ostream &out, bool show_header = true);
+bool printManifest(const utils::net::SocketData& socket_data, std::ostream &out);
+bool getJstacks(const utils::net::SocketData& socket_data, std::ostream &out);
 
 }  // namespace org::apache::nifi::minifi::controller

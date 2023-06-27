@@ -22,8 +22,8 @@
 #include <string_view>
 #include <optional>
 
-#include "io/ClientSocket.h"
 #include "utils/RegexUtils.h"
+#include "utils/net/DNS.h"
 
 namespace org::apache::nifi::minifi::utils {
 
@@ -33,7 +33,7 @@ so we convert localhost to our local hostname.
   */
 inline bool parse_http_components(const std::string &url, std::string &port, std::string &scheme, std::string &path) {
 #ifdef WIN32
-  auto hostname = (url.find(org::apache::nifi::minifi::io::Socket::getMyHostName()) != std::string::npos ? org::apache::nifi::minifi::io::Socket::getMyHostName() : "localhost");
+  auto hostname = (url.find(org::apache::nifi::minifi::utils::net::getMyHostName()) != std::string::npos ? org::apache::nifi::minifi::utils::net::getMyHostName() : "localhost");
   std::string regex_str = "(http|https)://(" + hostname + ":)([0-9]+)?(/.*)";
 #else
   std::string regex_str = "(http|https)://(localhost:)([0-9]+)?(/.*)";

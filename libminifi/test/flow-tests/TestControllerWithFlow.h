@@ -64,9 +64,8 @@ class TestControllerWithFlow: public TestController {
     std::shared_ptr<core::ContentRepository> content_repo = std::make_shared<core::repository::VolatileContentRepository>();
 
     REQUIRE(content_repo->initialize(configuration_));
-    std::shared_ptr<minifi::io::StreamFactory> stream_factory = minifi::io::StreamFactory::getInstance(configuration_);
 
-    auto flow = std::make_shared<core::YamlConfiguration>(core::ConfigurationContext{ff_repo, content_repo, stream_factory, configuration_, yaml_path_.string()});
+    auto flow = std::make_shared<core::YamlConfiguration>(core::ConfigurationContext{ff_repo, content_repo, configuration_, yaml_path_.string()});
     auto root = flow->getRoot();
     root_ = root.get();
     std::vector<std::shared_ptr<core::RepositoryMetricsSource>> repo_metric_sources{prov_repo, ff_repo, content_repo};

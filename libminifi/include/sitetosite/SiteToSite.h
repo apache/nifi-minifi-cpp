@@ -15,8 +15,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#ifndef LIBMINIFI_INCLUDE_SITETOSITE_SITETOSITE_H_
-#define LIBMINIFI_INCLUDE_SITETOSITE_SITETOSITE_H_
+#pragma once
 
 #include <memory>
 #include <string>
@@ -27,16 +26,11 @@
 #include "core/Property.h"
 #include "properties/Configure.h"
 #include "io/CRCStream.h"
-#include "io/StreamFactory.h"
 #include "utils/Id.h"
 #include "utils/BaseHTTPClient.h"
 #include "utils/Export.h"
 
-namespace org {
-namespace apache {
-namespace nifi {
-namespace minifi {
-namespace sitetosite {
+namespace org::apache::nifi::minifi::sitetosite {
 #if defined(__GNUC__) || defined(__GNUG__)
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wunused-variable"
@@ -330,9 +324,8 @@ class Transaction {
 
 class SiteToSiteClientConfiguration {
  public:
-  SiteToSiteClientConfiguration(std::shared_ptr<io::StreamFactory> stream_factory, const std::shared_ptr<Peer> &peer, const std::string &ifc, CLIENT_TYPE type = RAW)
-      : stream_factory_(stream_factory),
-        peer_(peer),
+  SiteToSiteClientConfiguration(const std::shared_ptr<Peer> &peer, const std::string &ifc, CLIENT_TYPE type = RAW)
+      : peer_(peer),
         local_network_interface_(ifc),
         ssl_service_(nullptr) {
     client_type_ = type;
@@ -354,10 +347,6 @@ class SiteToSiteClientConfiguration {
 
   const std::shared_ptr<controllers::SSLContextService> &getSecurityContext() const {
     return ssl_service_;
-  }
-
-  const std::shared_ptr<io::StreamFactory> &getStreamFactory() const {
-    return stream_factory_;
   }
 
   void setIdleTimeout(std::chrono::milliseconds timeout) {
@@ -383,8 +372,6 @@ class SiteToSiteClientConfiguration {
   }
 
  protected:
-  std::shared_ptr<io::StreamFactory> stream_factory_;
-
   std::shared_ptr<Peer> peer_;
 
   CLIENT_TYPE client_type_;
@@ -403,10 +390,4 @@ class SiteToSiteClientConfiguration {
 #pragma GCC diagnostic pop
 #endif
 
-}  // namespace sitetosite
-}  // namespace minifi
-}  // namespace nifi
-}  // namespace apache
-}  // namespace org
-
-#endif  // LIBMINIFI_INCLUDE_SITETOSITE_SITETOSITE_H_
+}  // namespace org::apache::nifi::minifi::sitetosite

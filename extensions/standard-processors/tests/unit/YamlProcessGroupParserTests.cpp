@@ -22,7 +22,7 @@
 #include "IntegrationTestUtils.h"
 #include "ProcessGroupTestUtils.h"
 
-static core::YamlConfiguration config({nullptr, nullptr, nullptr, std::make_shared<minifi::Configure>()});
+static core::YamlConfiguration config({nullptr, nullptr, std::make_shared<minifi::Configure>()});
 
 TEST_CASE("Root process group is correctly parsed", "[YamlProcessGroupParser]") {
   auto pattern = Group("root")

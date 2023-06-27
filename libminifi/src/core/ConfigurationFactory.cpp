@@ -26,7 +26,6 @@
 #include "core/Core.h"
 #include "core/ConfigurationFactory.h"
 #include "core/FlowConfiguration.h"
-#include "io/StreamFactory.h"
 
 #include "core/yaml/YamlConfiguration.h"
 #include "core/flow/AdaptiveConfiguration.h"

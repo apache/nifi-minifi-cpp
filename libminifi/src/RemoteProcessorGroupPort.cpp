@@ -43,6 +43,7 @@
 #include "core/ProcessorNode.h"
 #include "core/Relationship.h"
 #include "utils/BaseHTTPClient.h"
+#include "utils/net/DNS.h"
 
 #undef GetObject  // windows.h #defines GetObject = GetObjectA or GetObjectW, which conflicts with rapidjson
 
@@ -63,10 +64,10 @@ std::unique_ptr<sitetosite::SiteToSiteClient> RemoteProcessorGroupPort::getNextP
           auto host = rpg.host_;
 #ifdef WIN32
           if ("localhost" == host) {
-            host = org::apache::nifi::minifi::io::Socket::getMyHostName();
+            host = org::apache::nifi::minifi::utils::net::getMyHostName();
           }
 #endif
-          sitetosite::SiteToSiteClientConfiguration config(stream_factory_, std::make_shared<sitetosite::Peer>(protocol_uuid_, host, rpg.port_, ssl_service != nullptr), this->getInterface(),
+          sitetosite::SiteToSiteClientConfiguration config(std::make_shared<sitetosite::Peer>(protocol_uuid_, host, rpg.port_, ssl_service != nullptr), this->getInterface(),
                                                            client_type_);
           config.setHTTPProxy(this->proxy_);
           config.setIdleTimeout(idle_timeout_);
@@ -75,7 +76,7 @@ std::unique_ptr<sitetosite::SiteToSiteClient> RemoteProcessorGroupPort::getNextP
       } else if (peer_index_ >= 0) {
         std::lock_guard<std::mutex> lock(peer_mutex_);
         logger_->log_debug("Creating client from peer %d", peer_index_.load());
-        sitetosite::SiteToSiteClientConfiguration config(stream_factory_, peers_[this->peer_index_].getPeer(), local_network_interface_, client_type_);
+        sitetosite::SiteToSiteClientConfiguration config(peers_[this->peer_index_].getPeer(), local_network_interface_, client_type_);
         config.setSecurityContext(ssl_service);
         peer_index_++;
         if (peer_index_ >= static_cast<int>(peers_.size())) {
@@ -177,7 +178,7 @@ void RemoteProcessorGroupPort::onSchedule(const std::shared_ptr<core::ProcessCon
       count = max_concurrent_tasks_;
     for (uint32_t i = 0; i < count; i++) {
       std::unique_ptr<sitetosite::SiteToSiteClient> nextProtocol = nullptr;
-      sitetosite::SiteToSiteClientConfiguration config(stream_factory_, peers_[this->peer_index_].getPeer(), this->getInterface(), client_type_);
+      sitetosite::SiteToSiteClientConfiguration config(peers_[this->peer_index_].getPeer(), this->getInterface(), client_type_);
       config.setSecurityContext(ssl_service);
       peer_index_++;
       if (peer_index_ >= static_cast<int>(peers_.size())) {
@@ -255,7 +256,7 @@ std::pair<std::string, int> RemoteProcessorGroupPort::refreshRemoteSite2SiteInfo
     std::string host = nifi.host_;
 #ifdef WIN32
     if ("localhost" == host) {
-      host = org::apache::nifi::minifi::io::Socket::getMyHostName();
+      host = org::apache::nifi::minifi::utils::net::getMyHostName();
     }
 #endif
     std::string protocol = nifi.protocol_;
@@ -367,7 +368,7 @@ void RemoteProcessorGroupPort::refreshPeerList() {
   this->peers_.clear();
 
   std::unique_ptr<sitetosite::SiteToSiteClient> protocol;
-  sitetosite::SiteToSiteClientConfiguration config(stream_factory_, std::make_shared<sitetosite::Peer>(protocol_uuid_, connection.first, connection.second, ssl_service != nullptr),
+  sitetosite::SiteToSiteClientConfiguration config(std::make_shared<sitetosite::Peer>(protocol_uuid_, connection.first, connection.second, ssl_service != nullptr),
                                                    this->getInterface(), client_type_);
   config.setSecurityContext(ssl_service);
   config.setHTTPProxy(this->proxy_);

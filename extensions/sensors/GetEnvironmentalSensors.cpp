@@ -25,7 +25,6 @@
 #include "core/Resource.h"
 #include "GetEnvironmentalSensors.h"
 #include "io/BufferStream.h"
-#include "io/StreamFactory.h"
 
 namespace org::apache::nifi::minifi::processors {
 

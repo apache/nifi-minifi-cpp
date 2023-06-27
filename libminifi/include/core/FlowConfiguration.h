@@ -37,7 +37,6 @@
 #include "core/ProcessContext.h"
 #include "core/ProcessSession.h"
 #include "core/ProcessGroup.h"
-#include "io/StreamFactory.h"
 #include "core/state/nodes/FlowInformation.h"
 #include "utils/file/FileSystem.h"
 #include "utils/ChecksumCalculator.h"
@@ -55,7 +54,6 @@ extern static_initializers &get_static_functions();
 struct ConfigurationContext {
   std::shared_ptr<core::Repository> flow_file_repo;
   std::shared_ptr<core::ContentRepository> content_repo;
-  std::shared_ptr<io::StreamFactory> stream_factory;
   std::shared_ptr<Configure> configuration;
   std::optional<std::filesystem::path> path{std::nullopt};
   std::shared_ptr<utils::file::FileSystem> filesystem{std::make_shared<utils::file::FileSystem>()};
@@ -141,8 +139,6 @@ class FlowConfiguration : public CoreComponent {
   std::shared_ptr<core::Repository> flow_file_repo_;
   // content repository.
   std::shared_ptr<core::ContentRepository> content_repo_;
-  // stream factory
-  std::shared_ptr<io::StreamFactory> stream_factory_;
   std::shared_ptr<Configure> configuration_;
   std::shared_ptr<state::response::FlowVersion> flow_version_;
   std::shared_ptr<utils::file::FileSystem> filesystem_;

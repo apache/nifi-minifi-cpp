@@ -27,7 +27,6 @@
 #include "core/logging/LoggerConfiguration.h"
 #include "core/ProcessorConfig.h"
 #include "Exception.h"
-#include "io/StreamFactory.h"
 #include "io/validation.h"
 #include "sitetosite/SiteToSite.h"
 #include "utils/Id.h"

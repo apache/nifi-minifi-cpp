@@ -21,7 +21,6 @@
 #include "core/ProcessContext.h"
 #include "core/Resource.h"
 #include "GetMovementSensors.h"
-#include "io/StreamFactory.h"
 
 namespace org::apache::nifi::minifi::processors {
 
