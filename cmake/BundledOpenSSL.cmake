@@ -62,14 +62,15 @@ function(use_openssl SOURCE_DIR BINARY_DIR)
             "-DCMAKE_VISIBILITY_INLINES_HIDDEN=ON"
             )
 
+    # Note: when upgrading to a later release than 3.1.1 the --no-apps could be used instead of --no-tests to minimize the build size
     if (WIN32)
         ExternalProject_Add(
                 openssl-external
-                URL https://github.com/openssl/openssl/releases/download/openssl-3.1.0/openssl-3.1.0.tar.gz
-                URL_HASH "SHA256=aaa925ad9828745c4cad9d9efeb273deca820f2cdcf2c3ac7d7c1212b7c497b4"
+                URL https://github.com/openssl/openssl/releases/download/openssl-3.1.1/openssl-3.1.1.tar.gz
+                URL_HASH "SHA256=b3aa61334233b852b63ddb048df181177c2c659eb9d4376008118f9c08d07674"
                 SOURCE_DIR "${BINARY_DIR}/thirdparty/openssl-src"
                 BUILD_IN_SOURCE true
-                CONFIGURE_COMMAND perl Configure "CFLAGS=${PASSTHROUGH_CMAKE_C_FLAGS} -fPIC" "CXXFLAGS=${PASSTHROUGH_CMAKE_CXX_FLAGS} -fPIC" ${OPENSSL_SHARED_FLAG} "--prefix=${OPENSSL_BIN_DIR}" "--openssldir=${OPENSSL_BIN_DIR}"
+                CONFIGURE_COMMAND perl Configure "CFLAGS=${PASSTHROUGH_CMAKE_C_FLAGS} -fPIC" "CXXFLAGS=${PASSTHROUGH_CMAKE_CXX_FLAGS} -fPIC" ${OPENSSL_SHARED_FLAG} no-tests "--prefix=${OPENSSL_BIN_DIR}" "--openssldir=${OPENSSL_BIN_DIR}"
                 BUILD_BYPRODUCTS ${OPENSSL_LIBRARIES_LIST}
                 EXCLUDE_FROM_ALL TRUE
                 BUILD_COMMAND nmake
@@ -78,11 +79,11 @@ function(use_openssl SOURCE_DIR BINARY_DIR)
     else()
         ExternalProject_Add(
                 openssl-external
-                URL https://github.com/openssl/openssl/releases/download/openssl-3.1.0/openssl-3.1.0.tar.gz
-                URL_HASH "SHA256=aaa925ad9828745c4cad9d9efeb273deca820f2cdcf2c3ac7d7c1212b7c497b4"
+                URL https://github.com/openssl/openssl/releases/download/openssl-3.1.1/openssl-3.1.1.tar.gz
+                URL_HASH "SHA256=b3aa61334233b852b63ddb048df181177c2c659eb9d4376008118f9c08d07674"
                 SOURCE_DIR "${BINARY_DIR}/thirdparty/openssl-src"
                 BUILD_IN_SOURCE true
-                CONFIGURE_COMMAND ./Configure "CFLAGS=${PASSTHROUGH_CMAKE_C_FLAGS} -fPIC" "CXXFLAGS=${PASSTHROUGH_CMAKE_CXX_FLAGS} -fPIC" ${OPENSSL_SHARED_FLAG} "--prefix=${OPENSSL_BIN_DIR}" "--openssldir=${OPENSSL_BIN_DIR}"
+                CONFIGURE_COMMAND ./Configure "CFLAGS=${PASSTHROUGH_CMAKE_C_FLAGS} -fPIC" "CXXFLAGS=${PASSTHROUGH_CMAKE_CXX_FLAGS} -fPIC" ${OPENSSL_SHARED_FLAG} no-tests "--prefix=${OPENSSL_BIN_DIR}" "--openssldir=${OPENSSL_BIN_DIR}"
                 BUILD_BYPRODUCTS ${OPENSSL_LIBRARIES_LIST}
                 EXCLUDE_FROM_ALL TRUE
         )
