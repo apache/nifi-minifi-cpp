@@ -21,7 +21,6 @@
 #include <string>
 #include "../TestBase.h"
 #include "../Catch.h"
-#include "io/ClientSocket.h"
 #include "core/controller/ControllerService.h"
 #include "controllers/NetworkPrioritizerService.h"
 #include "utils/TestUtils.h"
@@ -57,7 +56,7 @@ TEST_CASE("TestPrioritizerOneInterfaceMaxPayload", "[test2]") {
   controller->onEnable();
 
   REQUIRE("eth0" == controller->getInterface(5).getInterface());
-  REQUIRE("" == controller->getInterface(20).getInterface());  // larger than max payload
+  REQUIRE(controller->getInterface(20).getInterface().empty());  // larger than max payload
   REQUIRE("eth0" == controller->getInterface(5).getInterface());
 }
 
@@ -71,7 +70,7 @@ TEST_CASE("TestPrioritizerOneInterfaceMaxThroughput", "[test3]") {
   controller->onEnable();
   REQUIRE("eth0" == controller->getInterface(5).getInterface());
   REQUIRE("eth0" == controller->getInterface(5).getInterface());
-  REQUIRE("" == controller->getInterface(5).getInterface());  // max throughput reached
+  REQUIRE(controller->getInterface(5).getInterface().empty());  // max throughput reached
   clock->advance(std::chrono::milliseconds{10});   // wait for more tokens to be generated
   REQUIRE("eth0" == controller->getInterface(5).getInterface());  // now we can send again
 }

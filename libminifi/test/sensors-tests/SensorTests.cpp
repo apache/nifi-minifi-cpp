@@ -37,7 +37,6 @@
 #include "FlowController.h"
 #include "properties/Configure.h"
 #include "../unit/ProvenanceTestHelper.h"
-#include "io/StreamFactory.h"
 #include "core/ConfigurableComponent.h"
 #include "../integration/IntegrationBase.h"
 #include "GetEnvironmentalSensors.h"

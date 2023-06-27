@@ -179,7 +179,7 @@ TEST_CASE("Processors Can Store FlowFiles", "[TestP1]") {
   ff_repository->initialize(config);
   content_repo->initialize(config);
 
-  auto flowConfig = std::make_unique<core::FlowConfiguration>(core::ConfigurationContext{ff_repository, content_repo, nullptr, config, ""});
+  auto flowConfig = std::make_unique<core::FlowConfiguration>(core::ConfigurationContext{ff_repository, content_repo, config, ""});
   auto flowController = std::make_shared<minifi::FlowController>(prov_repo, ff_repository, config, std::move(flowConfig), content_repo);
 
   {
@@ -297,7 +297,7 @@ TEST_CASE("Persisted flowFiles are updated on modification", "[TestP1]") {
   ff_repository->initialize(config);
   content_repo->initialize(config);
 
-  auto flowConfig = std::make_unique<core::FlowConfiguration>(core::ConfigurationContext{ff_repository, content_repo, nullptr, config, ""});
+  auto flowConfig = std::make_unique<core::FlowConfiguration>(core::ConfigurationContext{ff_repository, content_repo, config, ""});
   auto flowController = std::make_shared<minifi::FlowController>(prov_repo, ff_repository, config, std::move(flowConfig), content_repo);
 
   {

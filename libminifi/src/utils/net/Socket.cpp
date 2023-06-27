@@ -14,19 +14,15 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
 #include "utils/net/Socket.h"
-#include "Exception.h"
-#include <cstring>
-#include <system_error>
+
 #ifdef WIN32
-#ifndef WIN32_LEAN_AND_MEAN
-#define WIN32_LEAN_AND_MEAN
-#endif /* WIN32_LEAN_AND_MEAN */
 #include <ws2tcpip.h>
 #else
 #include <arpa/inet.h>
-#endif /* WIN32 */
+#endif
+#include <cstring>
+#include "Exception.h"
 
 namespace org::apache::nifi::minifi::utils::net {
 std::error_code get_last_socket_error() {
@@ -36,14 +32,6 @@ std::error_code get_last_socket_error() {
   const auto error_code = errno;
 #endif /* WIN32 */
   return {error_code, std::system_category()};
-}
-
-nonstd::expected<OpenSocketResult, std::error_code> open_socket(const gsl::not_null<const addrinfo*> getaddrinfo_result) {
-  for (const addrinfo* it = getaddrinfo_result; it; it = it->ai_next) {
-    const auto fd = socket(it->ai_family, it->ai_socktype, it->ai_protocol);
-    if (fd != utils::net::InvalidSocket) return OpenSocketResult{UniqueSocketHandle{fd}, gsl::make_not_null(it)};
-  }
-  return nonstd::make_unexpected(get_last_socket_error());
 }
 
 std::string sockaddr_ntop(const sockaddr* const sa) {

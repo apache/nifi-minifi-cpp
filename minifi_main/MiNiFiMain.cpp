@@ -349,8 +349,6 @@ int main(int argc, char **argv) {
 
     configure->get(minifi::Configure::nifi_configuration_class_name, nifi_configuration_class_name);
 
-    std::shared_ptr<minifi::io::StreamFactory> stream_factory = minifi::io::StreamFactory::getInstance(configure);
-
     bool should_encrypt_flow_config = (configure->get(minifi::Configure::nifi_flow_configuration_encrypt)
         | utils::flatMap(utils::StringUtils::toBool)).value_or(false);
 
@@ -362,7 +360,6 @@ int main(int argc, char **argv) {
         core::ConfigurationContext{
           .flow_file_repo = flow_repo,
           .content_repo = content_repo,
-          .stream_factory = stream_factory,
           .configuration = configure,
           .path = configure->get(minifi::Configure::nifi_flow_configuration_file),
           .filesystem = filesystem}, nifi_configuration_class_name);

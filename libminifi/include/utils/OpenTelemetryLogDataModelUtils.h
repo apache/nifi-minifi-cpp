@@ -21,13 +21,9 @@
 
 #include "rapidjson/document.h"
 #include "NetworkInterfaceInfo.h"
-#include "io/ClientSocket.h"
+#include "utils/net/DNS.h"
 
-namespace org {
-namespace apache {
-namespace nifi {
-namespace minifi {
-namespace utils {
+namespace org::apache::nifi::minifi::utils {
 
 class OpenTelemetryLogDataModel {
  public:
@@ -50,7 +46,7 @@ class OpenTelemetryLogDataModel {
 
  private:
   static void appendHostName(rapidjson::Value& resource, rapidjson::Document::AllocatorType& allocator) {
-    std::string hostname = io::Socket::getMyHostName();
+    std::string hostname = utils::net::getMyHostName();
     rapidjson::Value hostname_value;
     hostname_value.SetString(hostname.c_str(), hostname.length(), allocator);
     resource.AddMember("host.hostname", hostname_value, allocator);
@@ -76,8 +72,4 @@ class OpenTelemetryLogDataModel {
   }
 };
 
-} /* namespace utils */
-} /* namespace minifi */
-} /* namespace nifi */
-} /* namespace apache */
-} /* namespace org */
+}  // namespace org::apache::nifi::minifi::utils

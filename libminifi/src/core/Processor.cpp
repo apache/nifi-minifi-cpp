@@ -33,7 +33,6 @@
 #include "core/ProcessorConfig.h"
 #include "core/ProcessContext.h"
 #include "core/ProcessSessionFactory.h"
-#include "io/StreamFactory.h"
 #include "utils/gsl.h"
 #include "range/v3/algorithm/any_of.hpp"
 

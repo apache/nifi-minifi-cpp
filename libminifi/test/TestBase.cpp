@@ -207,7 +207,6 @@ TestPlan::TestPlan(std::shared_ptr<minifi::core::ContentRepository> content_repo
       current_flowfile_(nullptr),
       flow_version_(std::move(flow_version)),
       logger_(logging::LoggerFactory<TestPlan>::getLogger()) {
-  stream_factory = org::apache::nifi::minifi::io::StreamFactory::getInstance(std::make_shared<minifi::Configure>());
   controller_services_ = std::make_shared<minifi::core::controller::ControllerServiceMap>();
   controller_services_provider_ = std::make_shared<minifi::core::controller::StandardControllerServiceProvider>(controller_services_, configuration_);
   /* Inject the default state storage ahead of ProcessContext to make sure we have a unique state directory */
@@ -240,7 +239,6 @@ std::shared_ptr<minifi::core::Processor> TestPlan::addProcessor(const std::share
     return nullptr;
   }
   std::lock_guard<std::recursive_mutex> guard(mutex);
-  processor->setStreamFactory(stream_factory);
   // initialize the processor
   processor->initialize();
   processor->setFlowIdentifier(flow_version_->getFlowIdentifier());

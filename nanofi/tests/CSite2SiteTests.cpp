@@ -38,9 +38,12 @@
 #include "sitetosite/CSiteToSite.h"
 #include "sitetosite/RawSocketProtocol.h"
 #include "core/cstructs.h"
-#include "RandomServerSocket.h"
 #include "core/log.h"
 #include "utils/gsl.h"
+#include "io/AsioStream.h"
+#include "utils/net/AsioCoro.h"
+#include "asio/detached.hpp"
+#include "asio/ip/tcp.hpp"
 
 #define FMT_DEFAULT fmt_lower
 
@@ -172,6 +175,19 @@ void different_version_bootstrap(minifi::io::BaseStream* stream, TransferState& 
   sunny_path_bootstrap(stream, transfer_state, s2s_data);
 }
 
+asio::awaitable<void> startAccept(asio::ip::tcp::acceptor& acceptor, const std::function<void(minifi::io::BaseStream*, TransferState&, S2SReceivedData&)>& bootstrap_func,
+    TransferState& transfer_state, S2SReceivedData& received_data) {
+  while (true) {
+    auto [accept_error, socket] = co_await acceptor.async_accept(utils::net::use_nothrow_awaitable);
+    if (accept_error) {
+      continue;
+    }
+    minifi::io::AsioStream<asio::ip::tcp::socket> stream(std::move(socket));
+    bootstrap_func(&stream, transfer_state, received_data);
+    accept_transfer(&stream, PAYLOAD_CRC, transfer_state, received_data);
+  }
+}
+
 TEST_CASE("TestSiteToBootStrap", "[S2S3]") {
 #ifndef WIN32
   signal(SIGPIPE, SIG_IGN);
@@ -182,16 +198,20 @@ TEST_CASE("TestSiteToBootStrap", "[S2S3]") {
   for (const auto& bootstrap_func : bootstrap_functions) {
     TransferState transfer_state;
     S2SReceivedData received_data;
-    std::unique_ptr<minifi::io::ServerSocket> sckt(new minifi::io::RandomServerSocket("localhost"));
-    uint16_t port = sckt->getPort();
 
-    sckt->registerCallback([]() -> bool { return true; },  [&bootstrap_func, &transfer_state, &received_data](minifi::io::BaseStream* stream)
-      {bootstrap_func(stream, transfer_state, received_data); accept_transfer(stream, PAYLOAD_CRC, transfer_state, received_data); });
+    asio::io_context io_context;
+    asio::ip::tcp::acceptor acceptor(io_context, asio::ip::tcp::endpoint(asio::ip::address_v4::loopback(), 0));
+    co_spawn(io_context, startAccept(acceptor, bootstrap_func, transfer_state, received_data), asio::detached);
+    auto port = acceptor.local_endpoint().port();
+
+    std::thread server_thread = std::thread([&] {
+      io_context.run();
+    });
 
     bool c_handshake_ok = false;
     bool c_transfer_ok = false;
 
-    auto c_client_thread = [&transfer_state, &c_handshake_ok, &c_transfer_ok, port]() {
+    auto c_client_thread = [&transfer_state, &c_handshake_ok, &c_transfer_ok, &port]() {
       SiteToSiteCPeer cpeer;
       initPeer(&cpeer, "localhost", port);
 
@@ -236,5 +256,9 @@ TEST_CASE("TestSiteToBootStrap", "[S2S3]") {
     REQUIRE(received_data.attr_num == 1);
     REQUIRE(received_data.attributes[ATTR_NAME] == ATTR_VALUE);
     REQUIRE(std::string(reinterpret_cast<const char*>(received_data.payload.data()), received_data.payload.size()) == PAYLOAD);
+    io_context.stop();
+    if (server_thread.joinable()) {
+      server_thread.join();
+    }
   }
 }

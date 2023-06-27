@@ -15,37 +15,24 @@
  * limitations under the License.
  */
 #pragma once
+
 #include <chrono>
-#include <memory>
 #include <string>
 #include <string_view>
 #include <system_error>
+
 #include "nonstd/expected.hpp"
-#include "utils/gsl.h"
 #include "IpProtocol.h"
 #include "asio/ip/address.hpp"
 
 struct addrinfo;
 
 namespace org::apache::nifi::minifi::utils::net {
-struct addrinfo_deleter {
-  void operator()(addrinfo*) const noexcept;
-};
-
-nonstd::expected<gsl::not_null<std::unique_ptr<addrinfo, addrinfo_deleter>>, std::error_code> resolveHost(const char* hostname, const char* port, IpProtocol = IpProtocol::TCP,
-    bool need_canonname = false);
-inline auto resolveHost(const char* const port, const IpProtocol proto = IpProtocol::TCP, const bool need_canonname = false) {
-  return resolveHost(nullptr, port, proto, need_canonname);
-}
-inline auto resolveHost(const char* const hostname, const uint16_t port, const IpProtocol proto = IpProtocol::TCP, const bool need_canonname = false) {
-  return resolveHost(hostname, std::to_string(port).c_str(), proto, need_canonname);
-}
-inline auto resolveHost(const uint16_t port, const IpProtocol proto = IpProtocol::TCP, const bool need_canonname = false) {
-  return resolveHost(nullptr, port, proto, need_canonname);
-}
 
 nonstd::expected<asio::ip::address, std::error_code> addressFromString(std::string_view ip_address_str);
 
 nonstd::expected<std::string, std::error_code> reverseDnsLookup(const asio::ip::address& ip_address, std::chrono::steady_clock::duration timeout = std::chrono::seconds(5));
+
+std::string getMyHostName();
 
 }  // namespace org::apache::nifi::minifi::utils::net

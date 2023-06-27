@@ -25,9 +25,9 @@
 #include <iostream>
 
 #include "sitetosite/Peer.h"
-#include "io/ClientSocket.h"
 #include "io/validation.h"
 #include "FlowController.h"
+#include "utils/net/AsioSocketUtils.h"
 
 namespace org::apache::nifi::minifi::sitetosite {
 
@@ -41,9 +41,9 @@ bool SiteToSitePeer::Open() {
    * previously by the socket preference.
    */
   if (!this->local_network_interface_.getInterface().empty()) {
-    auto* socket = dynamic_cast<io::Socket*>(stream_.get());
+    auto* socket = dynamic_cast<utils::net::AsioSocketConnection*>(stream_.get());
     if (nullptr != socket) {
-      socket->setInterface(io::NetworkInterface(local_network_interface_.getInterface(), nullptr));
+      socket->setInterface(local_network_interface_.getInterface());
     }
   }
 

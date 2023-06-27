@@ -49,7 +49,6 @@
 #include "FlowController.h"
 #include "properties/Configure.h"
 #include "unit/ProvenanceTestHelper.h"
-#include "io/StreamFactory.h"
 #include "processors/PutSFTP.h"
 #include "processors/GetFile.h"
 #include "processors/LogAttribute.h"

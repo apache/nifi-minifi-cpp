@@ -61,10 +61,6 @@ namespace org::apache::nifi::minifi {
 
 class Connection;
 
-namespace io {
-class StreamFactory;
-}
-
 namespace core {
 
 class ProcessContext;
@@ -211,10 +207,6 @@ class Processor : public Connectable, public ConfigurableComponent, public state
   // Check all incoming connections for work
   bool isWorkAvailable() override;
 
-  void setStreamFactory(std::shared_ptr<minifi::io::StreamFactory> stream_factory) {
-    stream_factory_ = std::move(stream_factory);
-  }
-
   bool isThrottledByBackpressure() const;
 
   Connectable* pickIncomingConnection() override;
@@ -234,8 +226,6 @@ class Processor : public Connectable, public ConfigurableComponent, public state
  protected:
   virtual void notifyStop() {
   }
-
-  std::shared_ptr<minifi::io::StreamFactory> stream_factory_;
 
   std::atomic<ScheduledState> state_;
 

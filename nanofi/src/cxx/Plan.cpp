@@ -36,7 +36,6 @@ ExecutionPlan::ExecutionPlan(std::shared_ptr<core::ContentRepository> content_re
       location(-1),
       current_flowfile_(nullptr),
       logger_(core::logging::LoggerFactory<ExecutionPlan>::getLogger()) {
-  stream_factory = org::apache::nifi::minifi::io::StreamFactory::getInstance(std::make_shared<minifi::Configure>());
 }
 
 /**
@@ -89,7 +88,6 @@ std::shared_ptr<core::Processor> ExecutionPlan::addProcessor(const std::shared_p
     return nullptr;
   }
 
-  processor->setStreamFactory(stream_factory);
   // initialize the processor
   processor->initialize();
 

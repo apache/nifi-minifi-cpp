@@ -70,9 +70,6 @@ class FlowVersion;
 namespace provenance {
 class ProvenanceEventRecord;
 }  // namespace provenance
-namespace io {
-class StreamFactory;
-}  // namespace io
 }  // namespace org::apache::nifi::minifi
 
 class LogTestController {
@@ -298,8 +295,6 @@ class TestPlan {
   std::unique_ptr<TempDirectory> state_dir_;
 
   std::unique_ptr<minifi::Connection> buildFinalConnection(const std::shared_ptr<minifi::core::Processor>& processor, bool setDest = false);
-
-  std::shared_ptr<minifi::io::StreamFactory> stream_factory;
 
   std::shared_ptr<minifi::Configure> configuration_;
 

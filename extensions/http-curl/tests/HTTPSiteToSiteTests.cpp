@@ -27,7 +27,6 @@
 #include "InvokeHTTP.h"
 #include "TestBase.h"
 #include "FlowController.h"
-#include "io/StreamFactory.h"
 #include "RemoteProcessorGroupPort.h"
 #include "core/ConfigurableComponent.h"
 #include "HTTPIntegrationBase.h"

@@ -31,7 +31,6 @@ class ConfigurationTestController : public TestController {
   ConfigurationTestController() {
     flow_file_repo_ = core::createRepository("flowfilerepository");
     configuration_ = std::make_shared<minifi::Configure>();
-    stream_factory_ = minifi::io::StreamFactory::getInstance(configuration_);
     content_repo_ = std::make_shared<core::repository::VolatileContentRepository>();
 
     LogTestController::getInstance().setDebug<TestPlan>();
@@ -44,13 +43,11 @@ class ConfigurationTestController : public TestController {
     return core::ConfigurationContext{
         .flow_file_repo = flow_file_repo_,
         .content_repo = content_repo_,
-        .stream_factory = stream_factory_,
         .configuration = configuration_
     };
   }
 
   std::shared_ptr<core::Repository> flow_file_repo_;
   std::shared_ptr<minifi::Configure> configuration_;
-  std::shared_ptr<minifi::io::StreamFactory> stream_factory_;
   std::shared_ptr<core::ContentRepository> content_repo_;
 };

@@ -285,7 +285,7 @@ TEST_CASE("Test FlowFile Restore", "[TestFFR6]") {
   auto inputPtr = input.get();
   root->addConnection(std::move(input));
 
-  auto flowConfig = std::make_unique<core::FlowConfiguration>(core::ConfigurationContext{ff_repository, content_repo, nullptr, config, ""});
+  auto flowConfig = std::make_unique<core::FlowConfiguration>(core::ConfigurationContext{ff_repository, content_repo, config, ""});
   auto flowController = std::make_shared<minifi::FlowController>(prov_repo, ff_repository, config, std::move(flowConfig), content_repo);
 
   std::string data = "banana";

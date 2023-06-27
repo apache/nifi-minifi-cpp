@@ -17,6 +17,9 @@
 
 #include "utils/net/AsioSocketUtils.h"
 #include "controllers/SSLContextService.h"
+#include "io/AsioStream.h"
+
+#include "asio/connect.hpp"
 
 namespace org::apache::nifi::minifi::utils::net {
 
@@ -44,4 +47,66 @@ asio::ssl::context getSslContext(const controllers::SSLContextService& ssl_conte
   return ssl_context;
 }
 
+AsioSocketConnection::AsioSocketConnection(SocketData socket_data) : socket_data_(std::move(socket_data)) {
+}
+
+int AsioSocketConnection::initialize() {
+  bool result = false;
+  if (socket_data_.ssl_context_service) {
+    result = connectTcpSocketOverSsl();
+  } else {
+    result = connectTcpSocket();
+  }
+  return result ? 0 : -1;
+}
+
+bool AsioSocketConnection::connectTcpSocketOverSsl() {
+  auto ssl_context = utils::net::getSslContext(*socket_data_.ssl_context_service);
+  asio::ssl::stream<asio::ip::tcp::socket> socket(io_context_, ssl_context);
+
+  bindToLocalInterface(socket.lowest_layer());
+
+  asio::ip::tcp::resolver resolver(io_context_);
+  asio::error_code err;
+  asio::ip::tcp::resolver::results_type endpoints = resolver.resolve(socket_data_.host, std::to_string(socket_data_.port), err);
+  if (err) {
+    logger_->log_error("Resolving host '%s' on port '%s' failed with the following message: '%s'", socket_data_.host, std::to_string(socket_data_.port), err.message());
+    return false;
+  }
+
+  asio::connect(socket.lowest_layer(), endpoints, err);
+  if (err) {
+    logger_->log_error("Connecting to host '%s' on port '%s' failed with the following message: '%s'", socket_data_.host, std::to_string(socket_data_.port), err.message());
+    return false;
+  }
+  socket.handshake(asio::ssl::stream_base::client, err);
+  if (err) {
+    logger_->log_error("SSL handshake failed while connecting to host '%s' on port '%s' with the following message: '%s'", socket_data_.host, std::to_string(socket_data_.port), err.message());
+    return false;
+  }
+  stream_ = std::make_unique<io::AsioStream<asio::ssl::stream<asio::ip::tcp::socket>>>(std::move(socket));
+  return true;
+}
+
+bool AsioSocketConnection::connectTcpSocket() {
+  asio::ip::tcp::socket socket(io_context_);
+
+  bindToLocalInterface(socket);
+
+  asio::ip::tcp::resolver resolver(io_context_);
+  asio::error_code err;
+  asio::ip::tcp::resolver::results_type endpoints = resolver.resolve(socket_data_.host, std::to_string(socket_data_.port));
+  if (err) {
+    logger_->log_error("Resolving host '%s' on port '%s' failed with the following message: '%s'", socket_data_.host, std::to_string(socket_data_.port), err.message());
+    return false;
+  }
+
+  asio::connect(socket, endpoints, err);
+  if (err) {
+    logger_->log_error("Connecting to host '%s' on port '%s' failed with the following message: '%s'", socket_data_.host, std::to_string(socket_data_.port), err.message());
+    return false;
+  }
+  stream_ = std::make_unique<io::AsioStream<asio::ip::tcp::socket>>(std::move(socket));
+  return true;
+}
 }  // namespace org::apache::nifi::minifi::utils::net

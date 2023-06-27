@@ -24,7 +24,6 @@
 #include "c2/ControllerSocketProtocol.h"
 #include "core/controller/ControllerService.h"
 #include "core/extension/ExtensionManager.h"
-#include "io/StreamFactory.h"
 #include "core/ConfigurationFactory.h"
 #include "Exception.h"
 
@@ -39,12 +38,10 @@ std::shared_ptr<minifi::core::controller::ControllerService> getControllerServic
   minifi::core::extension::ExtensionManager::get().initialize(configuration);
 
   configuration->get(minifi::Configure::nifi_configuration_class_name, nifi_configuration_class_name);
-  const auto stream_factory = minifi::io::StreamFactory::getInstance(configuration);
   auto flow_configuration = minifi::core::createFlowConfiguration(
     minifi::core::ConfigurationContext{
       .flow_file_repo = nullptr,
       .content_repo = nullptr,
-      .stream_factory = stream_factory,
       .configuration = configuration,
       .path = configuration->get(minifi::Configure::nifi_flow_configuration_file)},
     nifi_configuration_class_name);
@@ -104,14 +101,13 @@ int main(int argc, char **argv) {
   log_properties->loadConfigureFile(DEFAULT_LOG_PROPERTIES_FILE);
   minifi::core::logging::LoggerConfiguration::getConfiguration().initialize(log_properties);
 
-  minifi::controller::ControllerSocketData socket_data;
+  minifi::utils::net::SocketData socket_data;
   try {
     socket_data.ssl_context_service = getSSLContextService(configuration);
   } catch(const minifi::Exception& ex) {
     logger->log_error(ex.what());
     exit(1);
   }
-  auto stream_factory_ = minifi::io::StreamFactory::getInstance(configuration);
 
   cxxopts::Options options("MiNiFiController", "MiNiFi local agent controller");
   options.positional_help("[optional args]").show_positional_help();

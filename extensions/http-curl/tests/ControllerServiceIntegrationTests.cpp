@@ -64,18 +64,17 @@ int main(int argc, char **argv) {
   configuration->set(minifi::Configure::nifi_security_client_pass_phrase, passphrase);
   configuration->set(minifi::Configure::nifi_default_directory, args.key_dir);
 
-  std::shared_ptr<minifi::io::StreamFactory> stream_factory = minifi::io::StreamFactory::getInstance(configuration);
   std::shared_ptr<core::ContentRepository> content_repo = std::make_shared<core::repository::VolatileContentRepository>();
   content_repo->initialize(configuration);
   std::unique_ptr<core::FlowConfiguration> yaml_ptr = std::make_unique<core::YamlConfiguration>(
-      core::ConfigurationContext{test_repo, content_repo, stream_factory, configuration, args.test_file});
+      core::ConfigurationContext{test_repo, content_repo, configuration, args.test_file});
 
   const auto controller = std::make_shared<minifi::FlowController>(test_repo, test_flow_repo, configuration, std::move(yaml_ptr), content_repo);
 
   disabled = false;
   std::shared_ptr<core::controller::ControllerServiceMap> map = std::make_shared<core::controller::ControllerServiceMap>();
 
-  core::YamlConfiguration yaml_config({test_repo, content_repo, stream_factory, configuration, args.test_file});
+  core::YamlConfiguration yaml_config({test_repo, content_repo, configuration, args.test_file});
 
   auto pg = yaml_config.getRoot();
 

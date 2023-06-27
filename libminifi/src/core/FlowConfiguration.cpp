@@ -32,7 +32,6 @@ FlowConfiguration::FlowConfiguration(ConfigurationContext ctx)
     : CoreComponent(core::className<FlowConfiguration>()),
       flow_file_repo_(std::move(ctx.flow_file_repo)),
       content_repo_(std::move(ctx.content_repo)),
-      stream_factory_(std::move(ctx.stream_factory)),
       configuration_(std::move(ctx.configuration)),
       filesystem_(std::move(ctx.filesystem)),
       logger_(logging::LoggerFactory<FlowConfiguration>::getLogger()) {
@@ -70,7 +69,7 @@ FlowConfiguration::~FlowConfiguration() {
 }
 
 std::unique_ptr<core::Processor> FlowConfiguration::createProcessor(const std::string &name, const utils::Identifier &uuid) {
-  auto processor = minifi::processors::ProcessorUtils::createProcessor(name, name, uuid, stream_factory_);
+  auto processor = minifi::processors::ProcessorUtils::createProcessor(name, name, uuid);
   if (nullptr == processor) {
     logger_->log_error("No Processor defined for %s", name);
     return nullptr;
@@ -79,7 +78,7 @@ std::unique_ptr<core::Processor> FlowConfiguration::createProcessor(const std::s
 }
 
 std::unique_ptr<core::Processor> FlowConfiguration::createProcessor(const std::string &name, const std::string &fullname, const utils::Identifier &uuid) {
-  auto processor = minifi::processors::ProcessorUtils::createProcessor(name, fullname, uuid, stream_factory_);
+  auto processor = minifi::processors::ProcessorUtils::createProcessor(name, fullname, uuid);
   if (nullptr == processor) {
     logger_->log_error("No Processor defined for %s", fullname);
     return nullptr;
@@ -88,7 +87,7 @@ std::unique_ptr<core::Processor> FlowConfiguration::createProcessor(const std::s
 }
 
 std::unique_ptr<core::reporting::SiteToSiteProvenanceReportingTask> FlowConfiguration::createProvenanceReportTask() {
-  auto processor = std::make_unique<org::apache::nifi::minifi::core::reporting::SiteToSiteProvenanceReportingTask>(stream_factory_, this->configuration_);
+  auto processor = std::make_unique<org::apache::nifi::minifi::core::reporting::SiteToSiteProvenanceReportingTask>(this->configuration_);
   processor->initialize();
   return processor;
 }

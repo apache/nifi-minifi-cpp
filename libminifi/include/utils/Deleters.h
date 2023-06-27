@@ -68,8 +68,6 @@ struct StackAwareDeleter {
   D impl_;
 };
 
-using net::addrinfo_deleter;
-
 #ifndef WIN32
 struct ifaddrs_deleter {
   void operator()(ifaddrs* const p) const noexcept {

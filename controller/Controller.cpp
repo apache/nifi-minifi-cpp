@@ -29,79 +29,9 @@
 
 namespace org::apache::nifi::minifi::controller {
 
-namespace {
-
-class ClientConnection {
- public:
-  explicit ClientConnection(const ControllerSocketData& socket_data) {
-    if (socket_data.ssl_context_service) {
-      connectTcpSocketOverSsl(socket_data);
-    } else {
-      connectTcpSocket(socket_data);
-    }
-  }
-
-  [[nodiscard]] io::BaseStream* getStream() const {
-    return stream_.get();
-  }
-
- private:
-  void connectTcpSocketOverSsl(const ControllerSocketData& socket_data) {
-    auto ssl_context = utils::net::getSslContext(*socket_data.ssl_context_service);
-    asio::ssl::stream<asio::ip::tcp::socket> socket(io_context_, ssl_context);
-
-    asio::ip::tcp::resolver resolver(io_context_);
-    asio::error_code err;
-    asio::ip::tcp::resolver::results_type endpoints = resolver.resolve(socket_data.host, std::to_string(socket_data.port), err);
-    if (err) {
-      logger_->log_error("Resolving host '%s' on port '%s' failed with the following message: '%s'", socket_data.host, std::to_string(socket_data.port), err.message());
-      return;
-    }
-
-    asio::connect(socket.lowest_layer(), endpoints, err);
-    if (err) {
-      logger_->log_error("Connecting to host '%s' on port '%s' failed with the following message: '%s'", socket_data.host, std::to_string(socket_data.port), err.message());
-      return;
-    }
-    socket.handshake(asio::ssl::stream_base::client, err);
-    if (err) {
-      logger_->log_error("SSL handshake failed while connecting to host '%s' on port '%s' with the following message: '%s'", socket_data.host, std::to_string(socket_data.port), err.message());
-      return;
-    }
-    stream_ = std::make_unique<io::AsioStream<asio::ssl::stream<asio::ip::tcp::socket>>>(std::move(socket));
-  }
-
-  void connectTcpSocket(const ControllerSocketData& socket_data) {
-    asio::ip::tcp::socket socket(io_context_);
-
-    asio::ip::tcp::resolver resolver(io_context_);
-    asio::error_code err;
-    asio::ip::tcp::resolver::results_type endpoints = resolver.resolve(socket_data.host, std::to_string(socket_data.port));
-    if (err) {
-      logger_->log_error("Resolving host '%s' on port '%s' failed with the following message: '%s'", socket_data.host, std::to_string(socket_data.port), err.message());
-      return;
-    }
-
-    asio::connect(socket, endpoints, err);
-    if (err) {
-      logger_->log_error("Connecting to host '%s' on port '%s' failed with the following message: '%s'", socket_data.host, std::to_string(socket_data.port), err.message());
-      return;
-    }
-    stream_ = std::make_unique<io::AsioStream<asio::ip::tcp::socket>>(std::move(socket));
-  }
-
-  asio::io_context io_context_;
-  std::unique_ptr<io::BaseStream> stream_;
-  std::shared_ptr<core::logging::Logger> logger_{core::logging::LoggerFactory<ClientConnection>::getLogger()};
-};
-
-}  // namespace
-
-
-bool sendSingleCommand(const ControllerSocketData& socket_data, uint8_t op, const std::string& value) {
-  ClientConnection connection(socket_data);
-  auto connection_stream = connection.getStream();
-  if (!connection_stream) {
+bool sendSingleCommand(const utils::net::SocketData& socket_data, uint8_t op, const std::string& value) {
+  std::unique_ptr<io::BaseStream> connection_stream = std::make_unique<utils::net::AsioSocketConnection>(socket_data);
+  if (connection_stream->initialize() < 0) {
     return false;
   }
   io::BufferStream buffer;
@@ -110,22 +40,21 @@ bool sendSingleCommand(const ControllerSocketData& socket_data, uint8_t op, cons
   return connection_stream->write(buffer.getBuffer()) == buffer.size();
 }
 
-bool stopComponent(const ControllerSocketData& socket_data, const std::string& component) {
+bool stopComponent(const utils::net::SocketData& socket_data, const std::string& component) {
   return sendSingleCommand(socket_data, static_cast<uint8_t>(c2::Operation::stop), component);
 }
 
-bool startComponent(const ControllerSocketData& socket_data, const std::string& component) {
+bool startComponent(const utils::net::SocketData& socket_data, const std::string& component) {
   return sendSingleCommand(socket_data, static_cast<uint8_t>(c2::Operation::start), component);
 }
 
-bool clearConnection(const ControllerSocketData& socket_data, const std::string& connection) {
+bool clearConnection(const utils::net::SocketData& socket_data, const std::string& connection) {
   return sendSingleCommand(socket_data, static_cast<uint8_t>(c2::Operation::clear), connection);
 }
 
-bool updateFlow(const ControllerSocketData& socket_data, std::ostream &out, const std::string& file) {
-  ClientConnection connection(socket_data);
-  auto connection_stream = connection.getStream();
-  if (!connection_stream) {
+bool updateFlow(const utils::net::SocketData& socket_data, std::ostream &out, const std::string& file) {
+  std::unique_ptr<io::BaseStream> connection_stream = std::make_unique<utils::net::AsioSocketConnection>(socket_data);
+  if (connection_stream->initialize() < 0) {
     return false;
   }
   auto op = static_cast<uint8_t>(c2::Operation::update);
@@ -152,10 +81,9 @@ bool updateFlow(const ControllerSocketData& socket_data, std::ostream &out, cons
   return true;
 }
 
-bool getFullConnections(const ControllerSocketData& socket_data, std::ostream &out) {
-  ClientConnection connection(socket_data);
-  auto connection_stream = connection.getStream();
-  if (!connection_stream) {
+bool getFullConnections(const utils::net::SocketData& socket_data, std::ostream &out) {
+  std::unique_ptr<io::BaseStream> connection_stream = std::make_unique<utils::net::AsioSocketConnection>(socket_data);
+  if (connection_stream->initialize() < 0) {
     return false;
   }
   auto op = static_cast<uint8_t>(c2::Operation::describe);
@@ -181,10 +109,9 @@ bool getFullConnections(const ControllerSocketData& socket_data, std::ostream &o
   return true;
 }
 
-bool getConnectionSize(const ControllerSocketData& socket_data, std::ostream &out, const std::string& connection) {
-  ClientConnection client_connection(socket_data);
-  auto connection_stream = client_connection.getStream();
-  if (!connection_stream) {
+bool getConnectionSize(const utils::net::SocketData& socket_data, std::ostream &out, const std::string& connection) {
+  std::unique_ptr<io::BaseStream> connection_stream = std::make_unique<utils::net::AsioSocketConnection>(socket_data);
+  if (connection_stream->initialize() < 0) {
     return false;
   }
   auto op = static_cast<uint8_t>(c2::Operation::describe);
@@ -206,10 +133,9 @@ bool getConnectionSize(const ControllerSocketData& socket_data, std::ostream &ou
   return true;
 }
 
-bool listComponents(const ControllerSocketData& socket_data, std::ostream &out, bool show_header) {
-  ClientConnection connection(socket_data);
-  auto connection_stream = connection.getStream();
-  if (!connection_stream) {
+bool listComponents(const utils::net::SocketData& socket_data, std::ostream &out, bool show_header) {
+  std::unique_ptr<io::BaseStream> connection_stream = std::make_unique<utils::net::AsioSocketConnection>(socket_data);
+  if (connection_stream->initialize() < 0) {
     return false;
   }
   io::BufferStream buffer;
@@ -235,10 +161,9 @@ bool listComponents(const ControllerSocketData& socket_data, std::ostream &out, 
   return true;
 }
 
-bool listConnections(const ControllerSocketData& socket_data, std::ostream &out, bool show_header) {
-  ClientConnection connection(socket_data);
-  auto connection_stream = connection.getStream();
-  if (!connection_stream) {
+bool listConnections(const utils::net::SocketData& socket_data, std::ostream &out, bool show_header) {
+  std::unique_ptr<io::BaseStream> connection_stream = std::make_unique<utils::net::AsioSocketConnection>(socket_data);
+  if (connection_stream->initialize() < 0) {
     return false;
   }
   io::BufferStream buffer;
@@ -262,10 +187,9 @@ bool listConnections(const ControllerSocketData& socket_data, std::ostream &out,
   return true;
 }
 
-bool printManifest(const ControllerSocketData& socket_data, std::ostream &out) {
-  ClientConnection connection(socket_data);
-  auto connection_stream = connection.getStream();
-  if (!connection_stream) {
+bool printManifest(const utils::net::SocketData& socket_data, std::ostream &out) {
+  std::unique_ptr<io::BaseStream> connection_stream = std::make_unique<utils::net::AsioSocketConnection>(socket_data);
+  if (connection_stream->initialize() < 0) {
     return false;
   }
   io::BufferStream buffer;
@@ -282,10 +206,9 @@ bool printManifest(const ControllerSocketData& socket_data, std::ostream &out) {
   return true;
 }
 
-bool getJstacks(const ControllerSocketData& socket_data, std::ostream &out) {
-  ClientConnection connection(socket_data);
-  auto connection_stream = connection.getStream();
-  if (!connection_stream) {
+bool getJstacks(const utils::net::SocketData& socket_data, std::ostream &out) {
+  std::unique_ptr<io::BaseStream> connection_stream = std::make_unique<utils::net::AsioSocketConnection>(socket_data);
+  if (connection_stream->initialize() < 0) {
     return false;
   }
   io::BufferStream buffer;

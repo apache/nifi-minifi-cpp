@@ -64,10 +64,9 @@ class CoapIntegrationBase : public IntegrationBase {
 
     std::shared_ptr<core::ContentRepository> content_repo = std::make_shared<core::repository::VolatileContentRepository>();
     content_repo->initialize(configuration);
-    std::shared_ptr<minifi::io::StreamFactory> stream_factory = minifi::io::StreamFactory::getInstance(configuration);
-    auto yaml_ptr = std::make_shared<core::YamlConfiguration>(core::ConfigurationContext{test_repo, content_repo, stream_factory, configuration, test_file_location});
+    auto yaml_ptr = std::make_shared<core::YamlConfiguration>(core::ConfigurationContext{test_repo, content_repo, configuration, test_file_location});
 
-    core::YamlConfiguration yaml_config({test_repo, content_repo, stream_factory, configuration, test_file_location});
+    core::YamlConfiguration yaml_config({test_repo, content_repo, configuration, test_file_location});
 
     std::shared_ptr<core::ProcessGroup> pg{ yaml_config.getRoot() };
 

@@ -42,4 +42,3 @@ std::vector<SerializedResponseNode> BuildInformation::serialize() {
 REGISTER_RESOURCE(BuildInformation, DescriptionOnly);
 
 }  // namespace org::apache::nifi::minifi::state::response
-
