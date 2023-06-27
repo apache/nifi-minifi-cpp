@@ -49,7 +49,7 @@ add_custom_target(
         -o \"-DENABLE_LIBRDKAFKA=ON
              -DENABLE_AWS=ON
              -DENABLE_AZURE=ON
-             -DENABLE_CONTROLLER=OFF
+             -DENABLE_CONTROLLER=ON
              -DENABLE_PROMETHEUS=ON
              -DENABLE_MQTT=OFF
              -DENABLE_ELASTICSEARCH=OFF
