@@ -50,17 +50,6 @@ FOREACH(testfile ${PROCESSOR_UNIT_TESTS})
     add_test(NAME "${testfilename}" COMMAND "${testfilename}" WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR})
 
     MATH(EXPR PROCESSOR_INT_TEST_COUNT "${PROCESSOR_INT_TEST_COUNT}+1")
-
-    # Copy test resources only once after the first build to be available for all test cases
-    if(PROCESSOR_INT_TEST_COUNT EQUAL 1)
-        add_custom_command(
-            TARGET "${testfilename}"
-            POST_BUILD
-            COMMAND ${CMAKE_COMMAND} -E copy_directory
-                    "${CMAKE_SOURCE_DIR}/extensions/standard-processors/tests/unit/resources"
-                    "$<TARGET_FILE_DIR:${testfilename}>/resources"
-            )
-    endif()
 ENDFOREACH()
 
 message("-- Finished building ${PROCESSOR_INT_TEST_COUNT} processor unit test file(s)...")
@@ -107,3 +96,5 @@ FOREACH(resourcefile ${RESOURCE_APPS})
     add_executable("${resourcefilename}" "${resourcefile}")
     set_target_properties(${resourcefilename} PROPERTIES RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/bin")
 ENDFOREACH()
+
+configureTestResources(${CMAKE_SOURCE_DIR}/libminifi/test/resources/certs ${CMAKE_BINARY_DIR}/bin/resources)

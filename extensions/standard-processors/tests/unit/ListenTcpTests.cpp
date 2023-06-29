@@ -117,7 +117,7 @@ TEST_CASE("Test ListenTCP with SSL connection", "[ListenTCP][NetworkListenerProc
   const auto executable_dir = minifi::utils::file::FileUtils::get_executable_dir();
   REQUIRE(controller.plan->setProperty(ssl_context_service, controllers::SSLContextService::CACertificate, (executable_dir / "resources" / "ca_A.crt").string()));
   REQUIRE(controller.plan->setProperty(ssl_context_service, controllers::SSLContextService::ClientCertificate, (executable_dir / "resources" / "localhost_by_A.pem").string()));
-  REQUIRE(controller.plan->setProperty(ssl_context_service, controllers::SSLContextService::PrivateKey, (executable_dir / "resources" / "localhost_by_A.pem").string()));
+  REQUIRE(controller.plan->setProperty(ssl_context_service, controllers::SSLContextService::PrivateKey, (executable_dir / "resources" / "localhost.key").string()));
   REQUIRE(controller.plan->setProperty(ssl_context_service, controllers::SSLContextService::Passphrase, "Password12"));
   REQUIRE(controller.plan->setProperty(listen_tcp, ListenTCP::MaxBatchSize, "2"));
   REQUIRE(controller.plan->setProperty(listen_tcp, ListenTCP::SSLContextService, "SSLContextService"));
@@ -189,7 +189,7 @@ TEST_CASE("Test ListenTCP with SSL connection", "[ListenTCP][NetworkListenerProc
     minifi::utils::net::SslData ssl_data;
     ssl_data.ca_loc = executable_dir / "resources" / "ca_A.crt";
     ssl_data.cert_loc = executable_dir / "resources" / "localhost_by_A.pem";
-    ssl_data.key_loc = executable_dir / "resources" / "localhost_by_A.pem";
+    ssl_data.key_loc = executable_dir / "resources" / "localhost.key";
     ssl_data.key_pw = "Password12";
 
     expected_successful_messages = {"test_message_1", "another_message"};
@@ -245,7 +245,7 @@ TEST_CASE("Test ListenTCP SSL/TLS compatibility", "[ListenTCP][NetworkListenerPr
   const auto executable_dir = minifi::utils::file::FileUtils::get_executable_dir();
   REQUIRE(controller.plan->setProperty(ssl_context_service, controllers::SSLContextService::CACertificate, (executable_dir / "resources" / "ca_A.crt").string()));
   REQUIRE(controller.plan->setProperty(ssl_context_service, controllers::SSLContextService::ClientCertificate, (executable_dir / "resources" / "localhost_by_A.pem").string()));
-  REQUIRE(controller.plan->setProperty(ssl_context_service, controllers::SSLContextService::PrivateKey, (executable_dir / "resources" / "localhost_by_A.pem").string()));
+  REQUIRE(controller.plan->setProperty(ssl_context_service, controllers::SSLContextService::PrivateKey, (executable_dir / "resources" / "localhost.key").string()));
   REQUIRE(controller.plan->setProperty(ssl_context_service, controllers::SSLContextService::Passphrase, "Password12"));
   REQUIRE(controller.plan->setProperty(listen_tcp, ListenTCP::MaxBatchSize, "2"));
   REQUIRE(controller.plan->setProperty(listen_tcp, ListenTCP::SSLContextService, "SSLContextService"));
@@ -258,7 +258,7 @@ TEST_CASE("Test ListenTCP SSL/TLS compatibility", "[ListenTCP][NetworkListenerPr
   minifi::utils::net::SslData ssl_data;
   ssl_data.ca_loc = executable_dir / "resources" / "ca_A.crt";
   ssl_data.cert_loc = executable_dir / "resources" / "localhost_by_A.pem";
-  ssl_data.key_loc = executable_dir / "resources" / "localhost_by_A.pem";
+  ssl_data.key_loc = executable_dir / "resources" / "localhost.key";
   ssl_data.key_pw = "Password12";
 
 

@@ -60,7 +60,7 @@ template<>
 asio::awaitable<std::tuple<std::error_code>> handshake(SslSocket& socket, asio::steady_timer::duration);
 
 
-asio::ssl::context getSslContext(const controllers::SSLContextService& ssl_context_service);
+asio::ssl::context getClientSslContext(const controllers::SSLContextService& ssl_context_service);
 }  // namespace org::apache::nifi::minifi::utils::net
 
 namespace std {

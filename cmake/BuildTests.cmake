@@ -30,6 +30,16 @@ ENDMACRO()
 
 set(NANOFI_TEST_DIR "${CMAKE_SOURCE_DIR}/nanofi/tests/")
 
+function(configureTestResources SOURCE_DIR DEST_DIR)
+    file(GLOB RESOURCE_FILES  "${SOURCE_DIR}/*")
+    foreach(RESOURCE_FILE ${RESOURCE_FILES})
+        get_filename_component(RESOURCE_FILENAME "${RESOURCE_FILE}" NAME)
+        set(dest_file "${DEST_DIR}/${RESOURCE_FILENAME}")
+
+        configure_file(${RESOURCE_FILE} ${dest_file} COPYONLY)
+    endforeach()
+endfunction()
+
 function(appendIncludes testName)
     target_include_directories(${testName} SYSTEM BEFORE PRIVATE "${CMAKE_SOURCE_DIR}/thirdparty/catch")
     target_include_directories(${testName} BEFORE PRIVATE "${CMAKE_SOURCE_DIR}/include")
