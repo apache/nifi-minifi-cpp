@@ -53,8 +53,8 @@ class ExecuteSQL : public SQLProcessor, public FlowFileSource {
       .build();
   EXTENSIONAPI static constexpr auto Properties = utils::array_cat(SQLProcessor::Properties, FlowFileSource::Properties, std::array<core::PropertyReference, 1>{SQLSelectQuery});
 
-  EXTENSIONAPI static constexpr auto Success =  core::RelationshipDefinition{"success", "Successfully created FlowFile from SQL query result set."};
-  EXTENSIONAPI static constexpr auto Failure =  core::RelationshipDefinition{"failure", "Flow files containing malformed sql statements"};
+  EXTENSIONAPI static constexpr auto Success = core::RelationshipDefinition{"success", "Successfully created FlowFile from SQL query result set."};
+  EXTENSIONAPI static constexpr auto Failure = core::RelationshipDefinition{"failure", "Flow files containing malformed sql statements"};
   EXTENSIONAPI static constexpr auto Relationships = std::array{Success, Failure};
 
   EXTENSIONAPI static constexpr bool SupportsDynamicProperties = false;

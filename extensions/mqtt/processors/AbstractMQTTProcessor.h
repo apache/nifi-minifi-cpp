@@ -63,7 +63,7 @@ class AbstractMQTTProcessor : public core::Processor {
       .withDescription("The URI to use to connect to the MQTT broker")
       .isRequired(true)
       .build();
-  EXTENSIONAPI static constexpr auto ClientID =       core::PropertyDefinitionBuilder<>::createProperty("Client ID")
+  EXTENSIONAPI static constexpr auto ClientID = core::PropertyDefinitionBuilder<>::createProperty("Client ID")
       .withDescription("MQTT client ID to use. WARNING: Must not be empty when using MQTT 3.1.0!")
       .build();
   EXTENSIONAPI static constexpr auto QoS = core::PropertyDefinitionBuilder<mqtt::MqttQoS::length>::createProperty("Quality of Service")

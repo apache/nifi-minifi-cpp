@@ -129,7 +129,7 @@ class CapturePacket : public core::Processor {
   };
 
 
-  EXTENSIONAPI static constexpr auto Success =  core::RelationshipDefinition{"success", "All files are routed to success"};
+  EXTENSIONAPI static constexpr auto Success = core::RelationshipDefinition{"success", "All files are routed to success"};
   EXTENSIONAPI static constexpr auto Relationships = std::array{Success};
 
   EXTENSIONAPI static constexpr bool SupportsDynamicProperties = false;

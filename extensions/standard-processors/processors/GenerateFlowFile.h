@@ -63,7 +63,7 @@ class GenerateFlowFile : public core::Processor {
       .withPropertyType(core::StandardPropertyTypes::INTEGER_TYPE)
       .withDefaultValue("1")
       .build();
-  EXTENSIONAPI static constexpr auto DataFormat =  core::PropertyDefinitionBuilder<2>::createProperty("Data Format")
+  EXTENSIONAPI static constexpr auto DataFormat = core::PropertyDefinitionBuilder<2>::createProperty("Data Format")
       .withDescription("Specifies whether the data should be Text or Binary")
       .isRequired(false)
       .withAllowedValues({"Text", "Binary"})

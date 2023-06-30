@@ -90,7 +90,7 @@ class QueryDatabaseTable: public SQLProcessor, public FlowFileSource {
   });
 
 
-  EXTENSIONAPI static constexpr auto Success =  core::RelationshipDefinition{"success", "Successfully created FlowFile from SQL query result set."};
+  EXTENSIONAPI static constexpr auto Success = core::RelationshipDefinition{"success", "Successfully created FlowFile from SQL query result set."};
   EXTENSIONAPI static constexpr auto Relationships = std::array{Success};
 
   EXTENSIONAPI static constexpr bool SupportsDynamicProperties = true;

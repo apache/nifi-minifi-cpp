@@ -136,7 +136,7 @@ class S3Processor : public core::Processor {
       .withDescription("The port number of the proxy host")
       .supportsExpressionLanguage(true)
       .build();
-  EXTENSIONAPI static constexpr auto ProxyUsername =   core::PropertyDefinitionBuilder<>::createProperty("Proxy Username")
+  EXTENSIONAPI static constexpr auto ProxyUsername = core::PropertyDefinitionBuilder<>::createProperty("Proxy Username")
       .withDescription("Username to set when authenticating against proxy")
       .supportsExpressionLanguage(true)
       .build();

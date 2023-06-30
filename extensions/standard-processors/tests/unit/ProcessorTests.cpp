@@ -495,7 +495,7 @@ class TestProcessorNoContent : public minifi::core::Processor {
 
   static constexpr const char* Description = "test resource";
   static constexpr auto Properties = std::array<core::PropertyReference, 0>{};
-  static constexpr auto Success =  core::RelationshipDefinition{"success", "All files are routed to success"};
+  static constexpr auto Success = core::RelationshipDefinition{"success", "All files are routed to success"};
   static constexpr auto Relationships = std::array{Success};
   static constexpr bool SupportsDynamicProperties = false;
   static constexpr bool SupportsDynamicRelationships = false;

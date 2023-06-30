@@ -245,9 +245,9 @@ class BinFiles : public core::Processor {
   };
 
 
-  EXTENSIONAPI static constexpr auto Failure =  core::RelationshipDefinition{"failure",
+  EXTENSIONAPI static constexpr auto Failure = core::RelationshipDefinition{"failure",
       "If the bundle cannot be created, all FlowFiles that would have been used to create the bundle will be transferred to failure"};
-  EXTENSIONAPI static constexpr auto Original =  core::RelationshipDefinition{"original",
+  EXTENSIONAPI static constexpr auto Original = core::RelationshipDefinition{"original",
       "The FlowFiles that were used to create the bundle"};
   EXTENSIONAPI static constexpr auto Relationships = std::array{
       Failure,
