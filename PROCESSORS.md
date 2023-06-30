@@ -1154,6 +1154,13 @@ In the list below, the names of required properties appear in bold. Any other pr
 | success | All files are routed to success                                                             |
 | partial | Indicates an incomplete message as a result of encountering the end of message byte trigger |
 
+### Output Attributes
+
+| Attribute       | Relationship     | Description                                              |
+|-----------------|------------------|----------------------------------------------------------|
+| source.endpoint | success, partial | The address of the source endpoint the message came from |
+
+
 
 ## GetUSBCamera
 

@@ -91,6 +91,10 @@ class GetTCP : public core::Processor {
   EXTENSIONAPI static constexpr core::annotation::Input InputRequirement = core::annotation::Input::INPUT_ALLOWED;
   EXTENSIONAPI static constexpr bool IsSingleThreaded = false;
 
+  EXTENSIONAPI static const core::OutputAttribute SourceEndpoint;
+
+  static auto outputAttributes() { return std::array{SourceEndpoint}; }
+
   ADD_COMMON_VIRTUAL_FUNCTIONS_FOR_PROCESSORS
 
   void onSchedule(const std::shared_ptr<core::ProcessContext> &processContext, const std::shared_ptr<core::ProcessSessionFactory> &sessionFactory) override;

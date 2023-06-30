@@ -17,7 +17,6 @@
  */
 #include "GetTCP.h"
 
-#include <cinttypes>
 #include <memory>
 #include <thread>
 #include <string>
@@ -89,6 +88,8 @@ const core::Property GetTCP::ReconnectInterval = core::PropertyBuilder::createPr
 const core::Relationship GetTCP::Success("success", "All files are routed to success");
 const core::Relationship GetTCP::Partial("partial", "Indicates an incomplete message as a result of encountering the end of message byte trigger");
 
+const core::OutputAttribute GetTCP::SourceEndpoint{"source.endpoint", {Success, Partial}, "The address of the source endpoint the message came from"};
+
 void GetTCP::initialize() {
   setSupportedProperties(properties());
   setSupportedRelationships(relationships());
@@ -108,7 +109,7 @@ void GetTCP::onSchedule(const std::shared_ptr<core::ProcessContext>& context, co
   }
 
   if (connections_to_make.empty())
-    throw Exception(PROCESS_SCHEDULE_EXCEPTION, "No valid endpoint in Endpoint List property");
+    throw Exception(PROCESS_SCHEDULE_EXCEPTION, fmt::format("No valid endpoint in {} property", EndpointList.getName()));
 
   char delimiter = '\n';
   if (auto delimiter_str = context->getProperty(MessageDelimiter)) {
@@ -118,11 +119,11 @@ void GetTCP::onSchedule(const std::shared_ptr<core::ProcessContext>& context, co
     delimiter = **parsed_delimiter;
   }
 
-  std::optional<asio::ssl::context> ssl_context_;
+  std::optional<asio::ssl::context> ssl_context;
   if (auto context_name = context->getProperty(SSLContextService)) {
     if (auto controller_service = context->getControllerService(*context_name)) {
       if (auto ssl_context_service = std::dynamic_pointer_cast<minifi::controllers::SSLContextService>(context->getControllerService(*context_name))) {
-        ssl_context_ = utils::net::getSslContext(*ssl_context_service);
+        ssl_context = utils::net::getSslContext(*ssl_context_service);
       } else {
         throw Exception(PROCESS_SCHEDULE_EXCEPTION, *context_name + " is not an SSL Context Service");
       }
@@ -135,6 +136,9 @@ void GetTCP::onSchedule(const std::shared_ptr<core::ProcessContext>& context, co
   std::optional<size_t> max_message_size = context->getProperty<uint64_t>(MaxMessageSize);
 
   if (auto max_batch_size = context->getProperty<uint64_t>(MaxBatchSize)) {
+    if (*max_batch_size == 0) {
+      throw Exception(PROCESS_SCHEDULE_EXCEPTION, fmt::format("{} should be non-zero.", MaxBatchSize.getName()));
+    }
     max_batch_size_ = *max_batch_size;
   }
 
@@ -149,7 +153,7 @@ void GetTCP::onSchedule(const std::shared_ptr<core::ProcessContext>& context, co
   }
 
 
-  client_.emplace(delimiter, timeout_duration, reconnection_interval, std::move(ssl_context_), max_queue_size, max_message_size, std::move(connections_to_make), logger_);
+  client_.emplace(delimiter, timeout_duration, reconnection_interval, std::move(ssl_context), max_queue_size, max_message_size, std::move(connections_to_make), logger_);
   client_thread_ = std::thread([this]() { client_->run(); });  // NOLINT
 }
 
@@ -161,8 +165,7 @@ void GetTCP::notifyStop() {
 void GetTCP::transferAsFlowFile(const utils::net::Message& message, core::ProcessSession& session) {
   auto flow_file = session.create();
   session.writeBuffer(flow_file, message.message_data);
-  flow_file->setAttribute("tcp.port", std::to_string(message.server_port));
-  flow_file->setAttribute("tcp.sender", message.sender_address.to_string());
+  flow_file->setAttribute(GetTCP::SourceEndpoint.getName(), fmt::format("{}:{}", message.sender_address.to_string(), std::to_string(message.server_port)));
   if (message.is_partial)
     session.transfer(flow_file, Partial);
   else

@@ -33,9 +33,8 @@ using namespace std::literals::chrono_literals;
 namespace org::apache::nifi::minifi::test {
 
 void check_for_attributes(core::FlowFile& flow_file, uint16_t port) {
-  CHECK(std::to_string(port) == flow_file.getAttribute("tcp.port"));
-  const auto local_addresses = {"127.0.0.1", "::ffff:127.0.0.1", "::1"};
-  CHECK(ranges::contains(local_addresses, flow_file.getAttribute("tcp.sender")));
+  const auto local_addresses = {"127.0.0.1:" + std::to_string(port), "::ffff:127.0.0.1:" + std::to_string(port), "::1:" + std::to_string(port)};
+  CHECK(ranges::contains(local_addresses, flow_file.getAttribute(GetTCP::SourceEndpoint.getName())));
 }
 
 minifi::utils::net::SslData createSslDataForServer() {
