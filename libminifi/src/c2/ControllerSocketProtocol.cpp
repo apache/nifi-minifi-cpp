@@ -29,6 +29,7 @@
 #include "properties/Configuration.h"
 #include "io/AsioStream.h"
 #include "asio/ssl/stream.hpp"
+#include "asio/detached.hpp"
 #include "utils/net/AsioSocketUtils.h"
 
 namespace org::apache::nifi::minifi::c2 {
@@ -86,32 +87,37 @@ void ControllerSocketProtocol::stopListener() {
   io_context_.restart();
 }
 
-void ControllerSocketProtocol::startAccept() {
-  acceptor_->async_accept([this](const asio::error_code& error, asio::ip::tcp::socket socket) {
-    if (!error) {
-      io::AsioStream<asio::ip::tcp::socket> stream(std::move(socket));
-      handleCommand(stream);
+asio::awaitable<void> ControllerSocketProtocol::startAccept() {
+  while (true) {
+    auto [accept_error, socket] = co_await acceptor_->async_accept(utils::net::use_nothrow_awaitable);
+    if (accept_error) {
+      logger_->log_error("Controller socket accept failed with the following message: '%s'", accept_error.message());
+      co_return;
     }
-    startAccept();
-  });
+    auto stream = std::make_unique<io::AsioStream<asio::ip::tcp::socket>>(std::move(socket));
+    co_spawn(io_context_, handleCommand(std::move(stream)), asio::detached);
+  }
 }
 
-void ControllerSocketProtocol::startAcceptSsl(std::shared_ptr<minifi::controllers::SSLContextService> ssl_context_service) {
-  acceptor_->async_accept([this, ssl_context_service = std::move(ssl_context_service)](const asio::error_code& error, asio::ip::tcp::socket socket) {
-    if (!error) {
-      asio::ssl::context ssl_context = utils::net::getSslContext(*ssl_context_service, asio::ssl::context::tls_server);
-      asio::ssl::stream<asio::ip::tcp::socket> ssl_socket(std::move(socket), ssl_context);
-      asio::error_code err;
-      ssl_socket.handshake(asio::ssl::stream_base::server, err);
-      if (err) {
-        logger_->log_error("SSL handshake failed!");
-        return;
-      }
-      io::AsioStream<asio::ssl::stream<asio::ip::tcp::socket>> stream(std::move(ssl_socket));
-      handleCommand(stream);
+asio::awaitable<void> ControllerSocketProtocol::startAcceptSsl(std::shared_ptr<minifi::controllers::SSLContextService> ssl_context_service) {
+  while (true) {
+    auto [accept_error, socket] = co_await acceptor_->async_accept(utils::net::use_nothrow_awaitable);
+    if (accept_error) {
+      logger_->log_error("Controller socket accept failed with the following message: '%s'", accept_error.message());
+      co_return;
     }
-    startAcceptSsl(ssl_context_service);
-  });
+    asio::ssl::context ssl_context = utils::net::getSslContext(*ssl_context_service, asio::ssl::context::tls_server);
+    asio::ssl::stream<asio::ip::tcp::socket> ssl_socket(std::move(socket), ssl_context);
+
+    auto [handshake_error] = co_await ssl_socket.async_handshake(utils::net::HandshakeType::server, utils::net::use_nothrow_awaitable);
+    if (handshake_error) {
+      logger_->log_error("Controller socket handshake failed with the following message: '%s'", handshake_error.message());
+      co_return;
+    }
+
+    auto stream = std::make_unique<io::AsioStream<asio::ssl::stream<asio::ip::tcp::socket>>>(std::move(ssl_socket));
+    co_spawn(io_context_, handleCommand(std::move(stream)), asio::detached);
+  }
 }
 
 void ControllerSocketProtocol::initialize() {
@@ -150,9 +156,9 @@ void ControllerSocketProtocol::initialize() {
     }
 
     if (secure_context) {
-      startAcceptSsl(std::move(secure_context));
+      co_spawn(io_context_, startAcceptSsl(std::move(secure_context)), asio::detached);
     } else {
-      startAccept();
+      co_spawn(io_context_, startAccept(), asio::detached);
     }
     server_thread_ = std::thread([this] {
       io_context_.run();
@@ -359,34 +365,34 @@ void ControllerSocketProtocol::handleDescribe(io::BaseStream &stream) {
   }
 }
 
-void ControllerSocketProtocol::handleCommand(io::BaseStream &stream) {
+asio::awaitable<void> ControllerSocketProtocol::handleCommand(std::unique_ptr<io::BaseStream>&& stream) {
   uint8_t head;
-  if (stream.read(head) != 1) {
+  if (stream->read(head) != 1) {
     logger_->log_debug("Connection broke");
-    return;
+    co_return;
   }
 
   if (socket_restart_processor_.isSocketRestarting()) {
     logger_->log_debug("Socket restarting, dropping command");
-    return;
+    co_return;
   }
 
   auto op = static_cast<Operation>(head);
   switch (op) {
     case Operation::start:
-      handleStart(stream);
+      handleStart(*stream);
       break;
     case Operation::stop:
-      handleStop(stream);
+      handleStop(*stream);
       break;
     case Operation::clear:
-      handleClear(stream);
+      handleClear(*stream);
       break;
     case Operation::update:
-      handleUpdate(stream);
+      handleUpdate(*stream);
       break;
     case Operation::describe:
-      handleDescribe(stream);
+      handleDescribe(*stream);
       break;
     default:
       logger_->log_error("Unhandled C2 operation: %s", std::to_string(head));

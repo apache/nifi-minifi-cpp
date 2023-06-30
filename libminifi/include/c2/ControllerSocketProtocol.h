@@ -33,6 +33,7 @@
 #include "utils/MinifiConcurrentQueue.h"
 #include "asio/ip/tcp.hpp"
 #include "asio/ssl/context.hpp"
+#include "utils/net/AsioCoro.h"
 
 namespace org::apache::nifi::minifi::c2 {
 
@@ -59,10 +60,10 @@ class ControllerSocketProtocol {
   void writeManifestResponse(io::BaseStream &stream);
   void writeJstackResponse(io::BaseStream &stream);
   void handleDescribe(io::BaseStream &stream);
-  void handleCommand(io::BaseStream &stream);
+  asio::awaitable<void> handleCommand(std::unique_ptr<io::BaseStream>&& stream);
   std::string getJstack();
-  void startAccept();
-  void startAcceptSsl(std::shared_ptr<minifi::controllers::SSLContextService> ssl_context_service);
+  asio::awaitable<void> startAccept();
+  asio::awaitable<void> startAcceptSsl(std::shared_ptr<minifi::controllers::SSLContextService> ssl_context_service);
   void stopListener();
 
   core::controller::ControllerServiceProvider& controller_;
