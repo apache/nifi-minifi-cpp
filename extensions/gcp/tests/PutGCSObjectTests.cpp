@@ -31,8 +31,7 @@ namespace minifi_gcp = org::apache::nifi::minifi::extensions::gcp;
 using PutGCSObject = org::apache::nifi::minifi::extensions::gcp::PutGCSObject;
 using GCPCredentialsControllerService = org::apache::nifi::minifi::extensions::gcp::GCPCredentialsControllerService;
 using ResumableUploadRequest = gcs::internal::ResumableUploadRequest;
-using ResumableUploadResponse = gcs::internal::ResumableUploadResponse;
-using ResumableUploadSession = gcs::internal::ResumableUploadSession;
+using QueryResumableUploadResponse = gcs::internal::QueryResumableUploadResponse;
 using ::google::cloud::storage::testing::canonical_errors::TransientError;
 using ::google::cloud::storage::testing::canonical_errors::PermanentError;
 
@@ -43,7 +42,7 @@ class PutGCSObjectMocked : public PutGCSObject {
   static constexpr const char* Description = "PutGCSObjectMocked";
 
   gcs::Client getClient() const override {
-    return gcs::testing::ClientFromMock(mock_client_, *retry_policy_);
+    return gcs::testing::UndecoratedClientFromMock(mock_client_);
   }
   std::shared_ptr<gcs::testing::MockClient> mock_client_ = std::make_shared<gcs::testing::MockClient>();
 };
@@ -65,10 +64,6 @@ class PutGCSObjectTests : public ::testing::Test {
   org::apache::nifi::minifi::test::SingleProcessorTestController test_controller_{put_gcs_object_};
   std::shared_ptr<minifi::core::controller::ControllerServiceNode>  gcp_credentials_node_;
 
-  static auto return_upload_in_progress() {
-    return testing::Return(google::cloud::make_status_or(ResumableUploadResponse{"fake-url", ResumableUploadResponse::kInProgress, 0, {}, {}}));
-  }
-
   static auto return_upload_done(const ResumableUploadRequest& request) {
     using ObjectMetadataParser = gcs::internal::ObjectMetadataParser;
     nlohmann::json metadata_json;
@@ -79,14 +74,12 @@ class PutGCSObjectTests : public ::testing::Test {
       metadata_json["customerEncryption"]["encryptionAlgorithm"] = "AES256";
       metadata_json["customerEncryption"]["keySha256"] = "zkeXIcAB56dkHp0z1023TQZ+mzm+fZ5JRVgmAQ3bEVE=";
     }
-    return testing::Return(google::cloud::make_status_or(ResumableUploadResponse{"fake-url",
-                                                                                 ResumableUploadResponse::kDone, 0,
-                                                                                 *ObjectMetadataParser::FromJson(metadata_json), {}}));
+    return testing::Return(google::cloud::make_status_or(QueryResumableUploadResponse{absl::nullopt, *ObjectMetadataParser::FromJson(metadata_json)}));
   }
 };
 
 TEST_F(PutGCSObjectTests, MissingBucket) {
-  EXPECT_CALL(*put_gcs_object_->mock_client_, CreateResumableSession).Times(0);
+  EXPECT_CALL(*put_gcs_object_->mock_client_, CreateResumableUpload).Times(0);
   EXPECT_TRUE(test_controller_.plan->setProperty(put_gcs_object_, PutGCSObject::Bucket.getName(), ""));
   const auto& result = test_controller_.trigger("hello world");
   EXPECT_EQ(0, result.at(PutGCSObject::Success).size());
@@ -97,16 +90,11 @@ TEST_F(PutGCSObjectTests, MissingBucket) {
 }
 
 TEST_F(PutGCSObjectTests, BucketFromAttribute) {
-  EXPECT_CALL(*put_gcs_object_->mock_client_, CreateResumableSession)
-      .WillOnce([](const ResumableUploadRequest& request) {
+  EXPECT_CALL(*put_gcs_object_->mock_client_, CreateResumableUpload)
+      .WillOnce([this](const ResumableUploadRequest& request) {
         EXPECT_EQ("bucket-from-attribute", request.bucket_name());
-
-        auto mock_upload_session = std::make_unique<gcs::testing::MockResumableUploadSession>();
-        EXPECT_CALL(*mock_upload_session, done()).WillRepeatedly(testing::Return(false));
-        EXPECT_CALL(*mock_upload_session, next_expected_byte()).WillRepeatedly(testing::Return(0));
-        EXPECT_CALL(*mock_upload_session, UploadChunk).WillRepeatedly(return_upload_in_progress());
-        EXPECT_CALL(*mock_upload_session, UploadFinalChunk).WillOnce(return_upload_done(request));
-        return google::cloud::make_status_or(std::unique_ptr<gcs::internal::ResumableUploadSession>(std::move(mock_upload_session)));
+        EXPECT_CALL(*put_gcs_object_->mock_client_, UploadChunk).WillOnce(return_upload_done(request));
+        return gcs::internal::CreateResumableUploadResponse{"test-only-upload-id"};
       });
   EXPECT_TRUE(test_controller_.plan->setProperty(put_gcs_object_, PutGCSObject::Bucket.getName(), "${gcs.bucket}"));
   const auto& result = test_controller_.trigger("hello world", {{minifi_gcp::GCS_BUCKET_ATTR, "bucket-from-attribute"}});
@@ -116,15 +104,7 @@ TEST_F(PutGCSObjectTests, BucketFromAttribute) {
 }
 
 TEST_F(PutGCSObjectTests, ServerGivesTransientErrors) {
-  auto return_temp_error = [](ResumableUploadRequest const&) {
-    return google::cloud::StatusOr<std::unique_ptr<ResumableUploadSession>>(
-        TransientError());
-  };
-
-  EXPECT_CALL(*put_gcs_object_->mock_client_, CreateResumableSession)
-      .WillOnce(return_temp_error)
-      .WillOnce(return_temp_error)
-      .WillOnce(return_temp_error);
+  EXPECT_CALL(*put_gcs_object_->mock_client_, CreateResumableUpload).WillOnce(testing::Return(TransientError()));
   EXPECT_TRUE(test_controller_.plan->setProperty(put_gcs_object_, PutGCSObject::NumberOfRetries.getName(), "2"));
   EXPECT_TRUE(test_controller_.plan->setProperty(put_gcs_object_, PutGCSObject::Bucket.getName(), "bucket-from-property"));
   EXPECT_TRUE(test_controller_.plan->setProperty(put_gcs_object_, PutGCSObject::Key.getName(), "object-name-from-property"));
@@ -137,13 +117,7 @@ TEST_F(PutGCSObjectTests, ServerGivesTransientErrors) {
 }
 
 TEST_F(PutGCSObjectTests, ServerGivesPermaError) {
-  auto return_permanent_error = [](ResumableUploadRequest const&) {
-    return google::cloud::StatusOr<std::unique_ptr<ResumableUploadSession>>(
-        PermanentError());
-  };
-
-  EXPECT_CALL(*put_gcs_object_->mock_client_, CreateResumableSession)
-      .WillOnce(return_permanent_error);
+  EXPECT_CALL(*put_gcs_object_->mock_client_, CreateResumableUpload).WillOnce(testing::Return(PermanentError()));
   EXPECT_TRUE(test_controller_.plan->setProperty(put_gcs_object_, PutGCSObject::Bucket.getName(), "bucket-from-property"));
   EXPECT_TRUE(test_controller_.plan->setProperty(put_gcs_object_, PutGCSObject::Key.getName(), "object-name-from-property"));
   const auto& result = test_controller_.trigger("hello world");
@@ -155,18 +129,14 @@ TEST_F(PutGCSObjectTests, ServerGivesPermaError) {
 }
 
 TEST_F(PutGCSObjectTests, NonRequiredPropertiesAreMissing) {
-  EXPECT_CALL(*put_gcs_object_->mock_client_, CreateResumableSession)
-      .WillOnce([](const ResumableUploadRequest& request) {
+  EXPECT_CALL(*put_gcs_object_->mock_client_, CreateResumableUpload)
+      .WillOnce([this](const ResumableUploadRequest& request) {
         EXPECT_FALSE(request.HasOption<gcs::MD5HashValue>());
         EXPECT_FALSE(request.HasOption<gcs::Crc32cChecksumValue>());
         EXPECT_FALSE(request.HasOption<gcs::PredefinedAcl>());
         EXPECT_FALSE(request.HasOption<gcs::IfGenerationMatch>());
-        auto mock_upload_session = std::make_unique<gcs::testing::MockResumableUploadSession>();
-        EXPECT_CALL(*mock_upload_session, done()).WillRepeatedly(testing::Return(false));
-        EXPECT_CALL(*mock_upload_session, next_expected_byte()).WillRepeatedly(testing::Return(0));
-        EXPECT_CALL(*mock_upload_session, UploadChunk).WillRepeatedly(return_upload_in_progress());
-        EXPECT_CALL(*mock_upload_session, UploadFinalChunk).WillOnce(return_upload_done(request));
-        return google::cloud::make_status_or(std::unique_ptr<gcs::internal::ResumableUploadSession>(std::move(mock_upload_session)));
+        EXPECT_CALL(*put_gcs_object_->mock_client_, UploadChunk).WillOnce(return_upload_done(request));
+        return gcs::internal::CreateResumableUploadResponse{"test-only-upload-id"};
       });
   EXPECT_TRUE(test_controller_.plan->setProperty(put_gcs_object_, PutGCSObject::Bucket.getName(), "bucket-from-property"));
   EXPECT_TRUE(test_controller_.plan->setProperty(put_gcs_object_, PutGCSObject::Key.getName(), "object-name-from-property"));
@@ -176,18 +146,14 @@ TEST_F(PutGCSObjectTests, NonRequiredPropertiesAreMissing) {
 }
 
 TEST_F(PutGCSObjectTests, Crc32cMD5LocationTest) {
-  EXPECT_CALL(*put_gcs_object_->mock_client_, CreateResumableSession)
-      .WillOnce([](const ResumableUploadRequest& request) {
+  EXPECT_CALL(*put_gcs_object_->mock_client_, CreateResumableUpload)
+      .WillOnce([this](const ResumableUploadRequest& request) {
         EXPECT_TRUE(request.HasOption<gcs::Crc32cChecksumValue>());
         EXPECT_EQ("yZRlqg==", request.GetOption<gcs::Crc32cChecksumValue>().value());
         EXPECT_TRUE(request.HasOption<gcs::MD5HashValue>());
         EXPECT_EQ("XrY7u+Ae7tCTyyK7j1rNww==", request.GetOption<gcs::MD5HashValue>().value());
-        auto mock_upload_session = std::make_unique<gcs::testing::MockResumableUploadSession>();
-        EXPECT_CALL(*mock_upload_session, done()).WillRepeatedly(testing::Return(false));
-        EXPECT_CALL(*mock_upload_session, next_expected_byte()).WillRepeatedly(testing::Return(0));
-        EXPECT_CALL(*mock_upload_session, UploadChunk).WillRepeatedly(return_upload_in_progress());
-        EXPECT_CALL(*mock_upload_session, UploadFinalChunk).WillOnce(return_upload_done(request));
-        return google::cloud::make_status_or(std::unique_ptr<gcs::internal::ResumableUploadSession>(std::move(mock_upload_session)));
+        EXPECT_CALL(*put_gcs_object_->mock_client_, UploadChunk).WillOnce(return_upload_done(request));
+        return gcs::internal::CreateResumableUploadResponse{"test-only-upload-id"};
       });
   EXPECT_TRUE(test_controller_.plan->setProperty(put_gcs_object_, PutGCSObject::MD5Hash.getName(), "${md5}"));
   EXPECT_TRUE(test_controller_.plan->setProperty(put_gcs_object_, PutGCSObject::Crc32cChecksum.getName(), "${crc32c}"));
@@ -199,15 +165,11 @@ TEST_F(PutGCSObjectTests, Crc32cMD5LocationTest) {
 }
 
 TEST_F(PutGCSObjectTests, DontOverwriteTest) {
-  EXPECT_CALL(*put_gcs_object_->mock_client_, CreateResumableSession)
-      .WillOnce([](const ResumableUploadRequest& request) {
+  EXPECT_CALL(*put_gcs_object_->mock_client_, CreateResumableUpload)
+      .WillOnce([this](const ResumableUploadRequest& request) {
         EXPECT_TRUE(request.HasOption<gcs::IfGenerationMatch>());
-        auto mock_upload_session = std::make_unique<gcs::testing::MockResumableUploadSession>();
-        EXPECT_CALL(*mock_upload_session, done()).WillRepeatedly(testing::Return(false));
-        EXPECT_CALL(*mock_upload_session, next_expected_byte()).WillRepeatedly(testing::Return(0));
-        EXPECT_CALL(*mock_upload_session, UploadChunk).WillRepeatedly(return_upload_in_progress());
-        EXPECT_CALL(*mock_upload_session, UploadFinalChunk).WillOnce(return_upload_done(request));
-        return google::cloud::make_status_or(std::unique_ptr<gcs::internal::ResumableUploadSession>(std::move(mock_upload_session)));
+        EXPECT_CALL(*put_gcs_object_->mock_client_, UploadChunk).WillOnce(return_upload_done(request));
+        return gcs::internal::CreateResumableUploadResponse{"test-only-upload-id"};
       });
   EXPECT_TRUE(test_controller_.plan->setProperty(put_gcs_object_, PutGCSObject::OverwriteObject.getName(), "false"));
   EXPECT_TRUE(test_controller_.plan->setProperty(put_gcs_object_, PutGCSObject::Bucket.getName(), "bucket-from-property"));
@@ -219,15 +181,11 @@ TEST_F(PutGCSObjectTests, DontOverwriteTest) {
 }
 
 TEST_F(PutGCSObjectTests, ValidServerSideEncryptionTest) {
-  EXPECT_CALL(*put_gcs_object_->mock_client_, CreateResumableSession)
-      .WillOnce([](const ResumableUploadRequest& request) {
+  EXPECT_CALL(*put_gcs_object_->mock_client_, CreateResumableUpload)
+      .WillOnce([this](const ResumableUploadRequest& request) {
         EXPECT_TRUE(request.HasOption<gcs::EncryptionKey>());
-        auto mock_upload_session = std::make_unique<gcs::testing::MockResumableUploadSession>();
-        EXPECT_CALL(*mock_upload_session, done()).WillRepeatedly(testing::Return(false));
-        EXPECT_CALL(*mock_upload_session, next_expected_byte()).WillRepeatedly(testing::Return(0));
-        EXPECT_CALL(*mock_upload_session, UploadChunk).WillRepeatedly(return_upload_in_progress());
-        EXPECT_CALL(*mock_upload_session, UploadFinalChunk).WillOnce(return_upload_done(request));
-        return google::cloud::make_status_or(std::unique_ptr<gcs::internal::ResumableUploadSession>(std::move(mock_upload_session)));
+        EXPECT_CALL(*put_gcs_object_->mock_client_, UploadChunk).WillOnce(return_upload_done(request));
+        return gcs::internal::CreateResumableUploadResponse{"test-only-upload-id"};
       });
   EXPECT_TRUE(test_controller_.plan->setProperty(put_gcs_object_, PutGCSObject::EncryptionKey.getName(), "ZW5jcnlwdGlvbl9rZXk="));
   EXPECT_TRUE(test_controller_.plan->setProperty(put_gcs_object_, PutGCSObject::Bucket.getName(), "bucket-from-property"));
@@ -241,7 +199,7 @@ TEST_F(PutGCSObjectTests, ValidServerSideEncryptionTest) {
 }
 
 TEST_F(PutGCSObjectTests, InvalidServerSideEncryptionTest) {
-  EXPECT_CALL(*put_gcs_object_->mock_client_, CreateResumableSession).Times(0);
+  EXPECT_CALL(*put_gcs_object_->mock_client_, CreateResumableUpload).Times(0);
   EXPECT_TRUE(test_controller_.plan->setProperty(put_gcs_object_, PutGCSObject::EncryptionKey.getName(), "not_base64_key"));
   EXPECT_TRUE(test_controller_.plan->setProperty(put_gcs_object_, PutGCSObject::Bucket.getName(), "bucket-from-property"));
   EXPECT_TRUE(test_controller_.plan->setProperty(put_gcs_object_, PutGCSObject::Key.getName(), "object-name-from-property"));
@@ -249,15 +207,11 @@ TEST_F(PutGCSObjectTests, InvalidServerSideEncryptionTest) {
 }
 
 TEST_F(PutGCSObjectTests, NoContentType) {
-  EXPECT_CALL(*put_gcs_object_->mock_client_, CreateResumableSession)
-      .WillOnce([](const ResumableUploadRequest& request) {
+  EXPECT_CALL(*put_gcs_object_->mock_client_, CreateResumableUpload)
+      .WillOnce([this](const ResumableUploadRequest& request) {
         EXPECT_FALSE(request.HasOption<gcs::ContentType>());
-        auto mock_upload_session = std::make_unique<gcs::testing::MockResumableUploadSession>();
-        EXPECT_CALL(*mock_upload_session, done()).WillRepeatedly(testing::Return(false));
-        EXPECT_CALL(*mock_upload_session, next_expected_byte()).WillRepeatedly(testing::Return(0));
-        EXPECT_CALL(*mock_upload_session, UploadChunk).WillRepeatedly(return_upload_in_progress());
-        EXPECT_CALL(*mock_upload_session, UploadFinalChunk).WillOnce(return_upload_done(request));
-        return google::cloud::make_status_or(std::unique_ptr<gcs::internal::ResumableUploadSession>(std::move(mock_upload_session)));
+        EXPECT_CALL(*put_gcs_object_->mock_client_, UploadChunk).WillOnce(return_upload_done(request));
+        return gcs::internal::CreateResumableUploadResponse{"test-only-upload-id"};
       });
   EXPECT_TRUE(test_controller_.plan->setProperty(put_gcs_object_, PutGCSObject::Bucket.getName(), "bucket-from-property"));
   EXPECT_TRUE(test_controller_.plan->setProperty(put_gcs_object_, PutGCSObject::Key.getName(), "object-name-from-property"));
@@ -268,16 +222,12 @@ TEST_F(PutGCSObjectTests, NoContentType) {
 }
 
 TEST_F(PutGCSObjectTests, ContentTypeFromAttribute) {
-  EXPECT_CALL(*put_gcs_object_->mock_client_, CreateResumableSession)
-      .WillOnce([](const ResumableUploadRequest& request) {
+  EXPECT_CALL(*put_gcs_object_->mock_client_, CreateResumableUpload)
+      .WillOnce([this](const ResumableUploadRequest& request) {
         EXPECT_TRUE(request.HasOption<gcs::ContentType>());
         EXPECT_EQ("text/attribute", request.GetOption<gcs::ContentType>().value());
-        auto mock_upload_session = std::make_unique<gcs::testing::MockResumableUploadSession>();
-        EXPECT_CALL(*mock_upload_session, done()).WillRepeatedly(testing::Return(false));
-        EXPECT_CALL(*mock_upload_session, next_expected_byte()).WillRepeatedly(testing::Return(0));
-        EXPECT_CALL(*mock_upload_session, UploadChunk).WillRepeatedly(return_upload_in_progress());
-        EXPECT_CALL(*mock_upload_session, UploadFinalChunk).WillOnce(return_upload_done(request));
-        return google::cloud::make_status_or(std::unique_ptr<gcs::internal::ResumableUploadSession>(std::move(mock_upload_session)));
+        EXPECT_CALL(*put_gcs_object_->mock_client_, UploadChunk).WillOnce(return_upload_done(request));
+        return gcs::internal::CreateResumableUploadResponse{"test-only-upload-id"};
       });
   EXPECT_TRUE(test_controller_.plan->setProperty(put_gcs_object_, PutGCSObject::Bucket.getName(), "bucket-from-property"));
   EXPECT_TRUE(test_controller_.plan->setProperty(put_gcs_object_, PutGCSObject::Key.getName(), "object-name-from-property"));
@@ -288,16 +238,12 @@ TEST_F(PutGCSObjectTests, ContentTypeFromAttribute) {
 }
 
 TEST_F(PutGCSObjectTests, ObjectACLTest) {
-  EXPECT_CALL(*put_gcs_object_->mock_client_, CreateResumableSession)
-      .WillOnce([](const ResumableUploadRequest& request) {
+  EXPECT_CALL(*put_gcs_object_->mock_client_, CreateResumableUpload)
+      .WillOnce([this](const ResumableUploadRequest& request) {
         EXPECT_TRUE(request.HasOption<gcs::PredefinedAcl>());
         EXPECT_EQ(gcs::PredefinedAcl::AuthenticatedRead().value(), request.GetOption<gcs::PredefinedAcl>().value());
-        auto mock_upload_session = std::make_unique<gcs::testing::MockResumableUploadSession>();
-        EXPECT_CALL(*mock_upload_session, done()).WillRepeatedly(testing::Return(false));
-        EXPECT_CALL(*mock_upload_session, next_expected_byte()).WillRepeatedly(testing::Return(0));
-        EXPECT_CALL(*mock_upload_session, UploadChunk).WillRepeatedly(return_upload_in_progress());
-        EXPECT_CALL(*mock_upload_session, UploadFinalChunk).WillOnce(return_upload_done(request));
-        return google::cloud::make_status_or(std::unique_ptr<gcs::internal::ResumableUploadSession>(std::move(mock_upload_session)));
+        EXPECT_CALL(*put_gcs_object_->mock_client_, UploadChunk).WillOnce(return_upload_done(request));
+        return gcs::internal::CreateResumableUploadResponse{"test-only-upload-id"};
       });
   EXPECT_TRUE(test_controller_.plan->setProperty(put_gcs_object_, PutGCSObject::Bucket.getName(), "bucket-from-property"));
   EXPECT_TRUE(test_controller_.plan->setProperty(put_gcs_object_, PutGCSObject::Key.getName(), "object-name-from-property"));

@@ -16,16 +16,6 @@
 # specific language governing permissions and limitations
 # under the License.
 #
-include(GoogleTest)
-include(FetchContent)
-FetchContent_Declare(
-        googletest
-        URL            https://github.com/google/googletest/archive/refs/tags/release-1.11.0.tar.gz
-        URL_HASH       SHA256=b4870bf121ff7795ba20d20bcdd8627b8e088f2d1dab299a031c1034eddc93d5
-)
-set(BUILD_GMOCK ON CACHE BOOL "" FORCE)
-FetchContent_MakeAvailable(googletest)
-
 file(GLOB GCS_TESTS  "*.cpp")
 FOREACH(testfile ${GCS_TESTS})
     get_filename_component(testfilename "${testfile}" NAME_WE)
@@ -41,7 +31,7 @@ FOREACH(testfile ${GCS_TESTS})
     target_link_libraries(${testfilename} minifi-gcp)
     target_link_libraries(${testfilename} minifi-standard-processors)
     target_link_libraries(${testfilename} minifi-expression-language-extensions)
-    target_link_libraries(${testfilename} gtest_main gmock)
+    target_link_libraries(${testfilename} gtest_main gmock mock_google_cloud_client)
 
     gtest_add_tests(TARGET "${testfilename}")
 ENDFOREACH()

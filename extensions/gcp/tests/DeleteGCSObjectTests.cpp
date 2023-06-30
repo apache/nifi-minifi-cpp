@@ -39,7 +39,7 @@ class DeleteGCSObjectMocked : public DeleteGCSObject {
   static constexpr const char* Description = "DeleteGCSObjectMocked";
 
   gcs::Client getClient() const override {
-    return gcs::testing::ClientFromMock(mock_client_, *retry_policy_);
+    return gcs::testing::UndecoratedClientFromMock(mock_client_);
   }
   std::shared_ptr<gcs::testing::MockClient> mock_client_ = std::make_shared<gcs::testing::MockClient>();
 };
@@ -63,7 +63,7 @@ class DeleteGCSObjectTests : public ::testing::Test {
 };
 
 TEST_F(DeleteGCSObjectTests, MissingBucket) {
-  EXPECT_CALL(*delete_gcs_object_->mock_client_, CreateResumableSession).Times(0);
+  EXPECT_CALL(*delete_gcs_object_->mock_client_, CreateResumableUpload).Times(0);
   EXPECT_TRUE(test_controller_.plan->setProperty(delete_gcs_object_, DeleteGCSObject::Bucket.getName(), ""));
   const auto& result = test_controller_.trigger("hello world");
   EXPECT_EQ(0, result.at(DeleteGCSObject::Success).size());
@@ -86,9 +86,7 @@ TEST_F(DeleteGCSObjectTests, ServerGivesPermaError) {
 }
 
 TEST_F(DeleteGCSObjectTests, ServerGivesTransientErrors) {
-  EXPECT_CALL(*delete_gcs_object_->mock_client_, DeleteObject)
-      .WillOnce(testing::Return(TransientError()))
-      .WillOnce(testing::Return(TransientError()));
+  EXPECT_CALL(*delete_gcs_object_->mock_client_, DeleteObject).WillOnce(testing::Return(TransientError()));
   EXPECT_TRUE(test_controller_.plan->setProperty(delete_gcs_object_, DeleteGCSObject::NumberOfRetries.getName(), "1"));
   EXPECT_TRUE(test_controller_.plan->setProperty(delete_gcs_object_, DeleteGCSObject::Bucket.getName(), "bucket-from-property"));
   const auto& result = test_controller_.trigger("hello world", {{minifi_gcp::GCS_BUCKET_ATTR, "bucket-from-attribute"}});

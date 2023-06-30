@@ -38,7 +38,7 @@ class ListGCSBucketMocked : public ListGCSBucket {
   static constexpr const char* Description = "ListGCSBucketMocked";
 
   gcs::Client getClient() const override {
-    return gcs::testing::ClientFromMock(mock_client_, *retry_policy_);
+    return gcs::testing::UndecoratedClientFromMock(mock_client_);
   }
   std::shared_ptr<gcs::testing::MockClient> mock_client_ = std::make_shared<gcs::testing::MockClient>();
 };
@@ -78,7 +78,7 @@ class ListGCSBucketTests : public ::testing::Test {
 };
 
 TEST_F(ListGCSBucketTests, MissingBucket) {
-  EXPECT_CALL(*list_gcs_bucket_->mock_client_, CreateResumableSession).Times(0);
+  EXPECT_CALL(*list_gcs_bucket_->mock_client_, CreateResumableUpload).Times(0);
   EXPECT_THROW(test_controller_.trigger(), utils::internal::RequiredPropertyMissingException);
 }
 
@@ -97,9 +97,7 @@ TEST_F(ListGCSBucketTests, ServerGivesTransientErrors) {
   auto return_temp_error = [](ListObjectsRequest const&) {
     return google::cloud::StatusOr<ListObjectsResponse>(TransientError());
   };
-  EXPECT_CALL(*list_gcs_bucket_->mock_client_, ListObjects)
-      .WillOnce(return_temp_error)
-      .WillOnce(return_temp_error);
+  EXPECT_CALL(*list_gcs_bucket_->mock_client_, ListObjects).WillOnce(return_temp_error);
   EXPECT_TRUE(test_controller_.plan->setProperty(list_gcs_bucket_, ListGCSBucket::NumberOfRetries.getName(), "1"));
   EXPECT_TRUE(test_controller_.plan->setProperty(list_gcs_bucket_, ListGCSBucket::Bucket.getName(), "bucket-from-property"));
   const auto& result = test_controller_.trigger();

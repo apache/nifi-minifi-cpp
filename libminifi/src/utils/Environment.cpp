@@ -81,7 +81,7 @@ bool Environment::setEnvironmentVariable(const char* name, const char* value, bo
     if (!overwrite && Environment::getEnvironmentVariable(name)) {
       success = true;
     } else {
-      success = SetEnvironmentVariableA(name, value);
+      success = SetEnvironmentVariableA(name, value) && _putenv_s(name, value) == 0;
     }
 #else
     int ret = setenv(name, value, static_cast<int>(overwrite));
