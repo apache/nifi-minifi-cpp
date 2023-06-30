@@ -34,46 +34,20 @@ void RepositoryMetricsSourceStore::addRepository(const std::shared_ptr<core::Rep
 std::vector<SerializedResponseNode> RepositoryMetricsSourceStore::serialize() const {
   std::vector<SerializedResponseNode> serialized;
   for (const auto& repo : repositories_) {
-    SerializedResponseNode parent;
-    parent.name = repo->getRepositoryName();
-    SerializedResponseNode is_running;
-    is_running.name = "running";
-    is_running.value = repo->isRunning();
+    SerializedResponseNode parent = {
+      .name = repo->getRepositoryName(),
+      .children = {
+        {.name = "running", .value = repo->isRunning()},
+        {.name = "full", .value = repo->isFull()},
+        {.name = "size", .value = repo->getRepositorySize()},
+        {.name = "maxSize", .value = repo->getMaxRepositorySize()},
+        {.name = "entryCount", .value = repo->getRepositoryEntryCount()},
+      }
+    };
 
-    SerializedResponseNode is_full;
-    is_full.name = "full";
-    is_full.value = repo->isFull();
-
-    SerializedResponseNode repo_size;
-    repo_size.name = "size";
-    repo_size.value = repo->getRepositorySize();
-
-    SerializedResponseNode max_repo_size;
-    max_repo_size.name = "maxSize";
-    max_repo_size.value = repo->getMaxRepositorySize();
-
-    SerializedResponseNode repo_entry_count;
-    repo_entry_count.name = "entryCount";
-    repo_entry_count.value = repo->getRepositoryEntryCount();
-
-    parent.children.push_back(is_running);
-    parent.children.push_back(is_full);
-    parent.children.push_back(repo_size);
-    parent.children.push_back(max_repo_size);
-    parent.children.push_back(repo_entry_count);
-
-    auto rocksdb_stats = repo->getRocksDbStats();
-    if (rocksdb_stats) {
-      SerializedResponseNode rocksdb_table_readers_size;
-      rocksdb_table_readers_size.name = "rocksDbTableReadersSize";
-      rocksdb_table_readers_size.value = rocksdb_stats->table_readers_size;
-
-      SerializedResponseNode rocksdb_all_memory_tables_size;
-      rocksdb_all_memory_tables_size.name = "rocksDbAllMemoryTablesSize";
-      rocksdb_all_memory_tables_size.value = rocksdb_stats->all_memory_tables_size;
-
-      parent.children.push_back(rocksdb_table_readers_size);
-      parent.children.push_back(rocksdb_all_memory_tables_size);
+    if (auto rocksdb_stats = repo->getRocksDbStats()) {
+      parent.children.push_back({.name = "rocksDbTableReadersSize", .value = rocksdb_stats->table_readers_size});
+      parent.children.push_back({.name = "rocksDbAllMemoryTablesSize", .value = rocksdb_stats->all_memory_tables_size});
     }
 
     serialized.push_back(parent);
@@ -89,8 +63,7 @@ std::vector<PublishedMetric> RepositoryMetricsSourceStore::calculateMetrics() co
     metrics.push_back({"repository_size_bytes", static_cast<double>(repo->getRepositorySize()), {{"metric_class", name_}, {"repository_name", repo->getRepositoryName()}}});
     metrics.push_back({"max_repository_size_bytes", static_cast<double>(repo->getMaxRepositorySize()), {{"metric_class", name_}, {"repository_name", repo->getRepositoryName()}}});
     metrics.push_back({"repository_entry_count", static_cast<double>(repo->getRepositoryEntryCount()), {{"metric_class", name_}, {"repository_name", repo->getRepositoryName()}}});
-    auto rocksdb_stats = repo->getRocksDbStats();
-    if (rocksdb_stats) {
+    if (auto rocksdb_stats = repo->getRocksDbStats()) {
       metrics.push_back({"rocksdb_table_readers_size_bytes", static_cast<double>(rocksdb_stats->table_readers_size),
         {{"metric_class", name_}, {"repository_name", repo->getRepositoryName()}}});
       metrics.push_back({"rocksdb_all_memory_tables_size_bytes", static_cast<double>(rocksdb_stats->all_memory_tables_size),
