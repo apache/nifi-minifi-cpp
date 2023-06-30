@@ -30,6 +30,8 @@ extern std::string userIdToUsername(const std::string &uid);
 /// Returns physical memory usage by the current process in bytes
 int64_t getCurrentProcessPhysicalMemoryUsage();
 
+int64_t getCurrentProcessId();
+
 /// Returns physical memory usage by the system in bytes
 int64_t getSystemPhysicalMemoryUsage();
 

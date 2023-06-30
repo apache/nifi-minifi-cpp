@@ -200,6 +200,14 @@ int64_t OsUtils::getCurrentProcessPhysicalMemoryUsage() {
 #endif
 }
 
+int64_t OsUtils::getCurrentProcessId() {
+#ifdef WIN32
+  return int64_t{GetCurrentProcessId()};
+#else
+  return int64_t{getpid()};
+#endif
+}
+
 int64_t OsUtils::getSystemPhysicalMemoryUsage() {
 #if defined(__linux__)
   const std::string available_memory_prefix = "MemAvailable:";
