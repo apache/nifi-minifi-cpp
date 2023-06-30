@@ -400,6 +400,3 @@ class MiNiFi_integration_test:
 
     def enable_log_metrics_publisher_in_minifi(self):
         self.cluster.enable_log_metrics_publisher_in_minifi()
-
-    def enable_ssl_in_prometheus_checker(self):
-        self.cluster.enable_ssl_in_prometheus_checker()

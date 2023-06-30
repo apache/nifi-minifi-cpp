@@ -996,10 +996,7 @@ def step_impl(context):
 
 @given("a Prometheus server is set up with SSL")
 def step_impl(context):
-    context.test.enable_ssl_in_prometheus_checker()
-    context.test.acquire_container(context=context, name="prometheus", engine="prometheus-ssl",
-                                   command=['/bin/prometheus', '--web.config.file=/etc/prometheus/web-config.yml', '--config.file=/etc/prometheus/prometheus.yml', '--storage.tsdb.path=/prometheus',
-                                            '--web.console.libraries=/usr/share/prometheus/console_libraries', '--web.console.templates=/usr/share/prometheus/consoles', '--log.level=debug'])
+    context.test.acquire_container(context=context, name="prometheus", engine="prometheus-ssl")
 
 
 @then("\"{metric_class}\" are published to the Prometheus server in less than {timeout_seconds:d} seconds")

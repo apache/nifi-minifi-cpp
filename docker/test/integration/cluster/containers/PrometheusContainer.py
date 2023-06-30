@@ -56,23 +56,11 @@ scrape_configs:
     scheme: https
     tls_config:
       ca_file: /etc/prometheus/certs/root-ca.pem
-      cert_file: /etc/prometheus/certs/prometheus.crt
-      key_file: /etc/prometheus/certs/prometheus.key
 """.format(feature_id=self.feature_context.id)
             self.yaml_file = tempfile.NamedTemporaryFile(delete=False)
             self.yaml_file.write(prometheus_yml_content.encode())
             self.yaml_file.close()
             os.chmod(self.yaml_file.name, 0o644)
-
-            prometheus_web_config_content = """
-tls_server_config:
-  cert_file: /etc/prometheus/certs/prometheus.crt
-  key_file: /etc/prometheus/certs/prometheus.key
-"""
-            self.web_config_file = tempfile.NamedTemporaryFile(delete=False)
-            self.web_config_file.write(prometheus_web_config_content.encode())
-            self.web_config_file.close()
-            os.chmod(self.web_config_file.name, 0o644)
         else:
             prometheus_yml_content = """
 global:
@@ -106,23 +94,8 @@ scrape_configs:
         if self.ssl:
             mounts.append(docker.types.Mount(
                 type='bind',
-                source=self.web_config_file.name,
-                target='/etc/prometheus/web-config.yml'
-            ))
-            mounts.append(docker.types.Mount(
-                type='bind',
                 source=self.root_ca_file.name,
                 target='/etc/prometheus/certs/root-ca.pem'
-            ))
-            mounts.append(docker.types.Mount(
-                type='bind',
-                source=self.prometheus_cert_file.name,
-                target='/etc/prometheus/certs/prometheus.crt'
-            ))
-            mounts.append(docker.types.Mount(
-                type='bind',
-                source=self.prometheus_key_file.name,
-                target='/etc/prometheus/certs/prometheus.key'
             ))
 
         self.client.containers.run(

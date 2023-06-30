@@ -340,6 +340,3 @@ class DockerTestCluster:
     def manifest_can_be_retrieved_through_minifi_controller(self, container_name: str) -> bool:
         manifest = self.minifi_controller_executor.get_manifest(container_name)
         return '"agentManifest": {' in manifest and '"componentManifest": {' in manifest and '"agentType": "cpp"' in manifest
-
-    def enable_ssl_in_prometheus_checker(self):
-        self.prometheus_checker.enable_ssl()
