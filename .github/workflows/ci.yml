@@ -230,7 +230,7 @@ jobs:
           sed -i -e 's/\/usr\/lib\/ccache\/clang++-14/\/lib\/llvm-14\/bin\/clang++/g' build/compile_commands.json
           sed -i -e 's/\/usr\/lib\/ccache\/clang-14/\/lib\/llvm-14\/bin\/clang/g' build/compile_commands.json
 
-          parallel -j$(nproc) ./run_clang_tidy.sh ::: ${FILES}
+          parallel -j$(( $(nproc) + 1 )) ./run_clang_tidy.sh ::: ${FILES}
       - name: check-cores
         if: ${{ failure() && steps.test.conclusion == 'failure' }}
         run: |
