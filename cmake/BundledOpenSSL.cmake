@@ -52,6 +52,11 @@ function(use_openssl SOURCE_DIR BINARY_DIR)
         LIST(APPEND OPENSSL_LIBRARIES_LIST "${OPENSSL_BIN_DIR}/${BYPRODUCT}")
     ENDFOREACH(BYPRODUCT)
 
+    # Define patch step
+    set(PATCH_FILE "${SOURCE_DIR}/thirdparty/openssl/Tidy-up-aarch64-feature-detection-code-in-armcap.c.patch")
+    set(PC ${Bash_EXECUTABLE} -c "set -x && \
+            (\"${Patch_EXECUTABLE}\" -p1 -R -s -f --dry-run -i \"${PATCH_FILE}\" || \"${Patch_EXECUTABLE}\" -p1 -N -i \"${PATCH_FILE}\")")
+
     # Set build options
     set(OPENSSL_CMAKE_ARGS ${PASSTHROUGH_CMAKE_ARGS}
             "-DCMAKE_INSTALL_PREFIX=${OPENSSL_BIN_DIR}"
@@ -72,6 +77,7 @@ function(use_openssl SOURCE_DIR BINARY_DIR)
                 BUILD_IN_SOURCE true
                 CONFIGURE_COMMAND perl Configure "CFLAGS=${PASSTHROUGH_CMAKE_C_FLAGS} -fPIC" "CXXFLAGS=${PASSTHROUGH_CMAKE_CXX_FLAGS} -fPIC" ${OPENSSL_SHARED_FLAG} no-tests "--prefix=${OPENSSL_BIN_DIR}" "--openssldir=${OPENSSL_BIN_DIR}"
                 BUILD_BYPRODUCTS ${OPENSSL_LIBRARIES_LIST}
+                PATCH_COMMAND ${PC}
                 EXCLUDE_FROM_ALL TRUE
                 BUILD_COMMAND nmake
                 INSTALL_COMMAND nmake install
@@ -85,6 +91,7 @@ function(use_openssl SOURCE_DIR BINARY_DIR)
                 BUILD_IN_SOURCE true
                 CONFIGURE_COMMAND ./Configure "CFLAGS=${PASSTHROUGH_CMAKE_C_FLAGS} -fPIC" "CXXFLAGS=${PASSTHROUGH_CMAKE_CXX_FLAGS} -fPIC" ${OPENSSL_SHARED_FLAG} no-tests "--prefix=${OPENSSL_BIN_DIR}" "--openssldir=${OPENSSL_BIN_DIR}"
                 BUILD_BYPRODUCTS ${OPENSSL_LIBRARIES_LIST}
+                PATCH_COMMAND ${PC}
                 EXCLUDE_FROM_ALL TRUE
         )
     endif()
