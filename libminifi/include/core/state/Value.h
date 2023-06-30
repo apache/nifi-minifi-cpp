@@ -15,8 +15,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#ifndef LIBMINIFI_INCLUDE_CORE_STATE_VALUE_H_
-#define LIBMINIFI_INCLUDE_CORE_STATE_VALUE_H_
+#pragma once
 
 #include <typeindex>
 #include <limits>
@@ -31,6 +30,9 @@
 #include "utils/ValueCaster.h"
 #include "utils/Export.h"
 #include "utils/meta/type_list.h"
+#include "rapidjson/writer.h"
+#include "rapidjson/document.h"
+#include "rapidjson/stringbuffer.h"
 
 namespace org::apache::nifi::minifi::state::response {
 
@@ -558,13 +560,26 @@ struct SerializedResponseNode {
     return value.empty() && children.empty();
   }
 
-  [[nodiscard]] std::string to_string() const;
+  template<typename Writer = rapidjson::Writer<rapidjson::StringBuffer>>
+  [[nodiscard]] std::string to_string() const {
+    rapidjson::Document doc;
+    doc.SetObject();
+    doc.AddMember(rapidjson::Value(name.c_str(), doc.GetAllocator()), nodeToJson(*this, doc.GetAllocator()), doc.GetAllocator());
+    rapidjson::StringBuffer buf;
+    Writer writer{buf};
+    doc.Accept(writer);
+    return buf.GetString();
+  }
+
+  [[nodiscard]] std::string to_pretty_string() const;
+
+ private:
+  static rapidjson::Value nodeToJson(const SerializedResponseNode& node, rapidjson::MemoryPoolAllocator<rapidjson::CrtAllocator>& alloc);
 };
+
 
 inline std::string to_string(const SerializedResponseNode& node) { return node.to_string(); }
 
 std::string hashResponseNodes(const std::vector<SerializedResponseNode>& nodes);
 
 }  // namespace org::apache::nifi::minifi::state::response
-
-#endif  // LIBMINIFI_INCLUDE_CORE_STATE_VALUE_H_

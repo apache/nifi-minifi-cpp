@@ -61,16 +61,16 @@ const core::Property FetchFile::MoveConflictStrategy(
 const core::Property FetchFile::LogLevelWhenFileNotFound(
     core::PropertyBuilder::createProperty("Log level when file not found")
       ->withDescription("Log level to use in case the file does not exist when the processor is triggered")
-      ->withDefaultValue<std::string>(toString(LogLevelOption::LOGGING_ERROR))
-      ->withAllowableValues<std::string>(LogLevelOption::values())
+      ->withDefaultValue<std::string>(toString(utils::LogUtils::LogLevelOption::LOGGING_ERROR))
+      ->withAllowableValues<std::string>(utils::LogUtils::LogLevelOption::values())
       ->isRequired(true)
       ->build());
 
 const core::Property FetchFile::LogLevelWhenPermissionDenied(
     core::PropertyBuilder::createProperty("Log level when permission denied")
       ->withDescription("Log level to use in case agent does not have sufficient permissions to read the file")
-      ->withDefaultValue<std::string>(toString(LogLevelOption::LOGGING_ERROR))
-      ->withAllowableValues<std::string>(LogLevelOption::values())
+      ->withDefaultValue<std::string>(toString(utils::LogUtils::LogLevelOption::LOGGING_ERROR))
+      ->withAllowableValues<std::string>(utils::LogUtils::LogLevelOption::values())
       ->isRequired(true)
       ->build());
 
@@ -99,8 +99,8 @@ void FetchFile::onSchedule(const std::shared_ptr<core::ProcessContext> &context,
     throw Exception(PROCESS_SCHEDULE_EXCEPTION, "Move Destination Directory is required when Completion Strategy is set to Move File");
   }
   move_confict_strategy_ = utils::parseEnumProperty<MoveConflictStrategyOption>(*context, MoveConflictStrategy);
-  log_level_when_file_not_found_ = utils::parseEnumProperty<LogLevelOption>(*context, LogLevelWhenFileNotFound);
-  log_level_when_permission_denied_ = utils::parseEnumProperty<LogLevelOption>(*context, LogLevelWhenPermissionDenied);
+  log_level_when_file_not_found_ = utils::parseEnumProperty<utils::LogUtils::LogLevelOption>(*context, LogLevelWhenFileNotFound);
+  log_level_when_permission_denied_ = utils::parseEnumProperty<utils::LogUtils::LogLevelOption>(*context, LogLevelWhenPermissionDenied);
 }
 
 std::filesystem::path FetchFile::getFileToFetch(core::ProcessContext& context, const std::shared_ptr<core::FlowFile>& flow_file) {
@@ -114,30 +114,6 @@ std::filesystem::path FetchFile::getFileToFetch(core::ProcessContext& context, c
   std::string filename;
   flow_file->getAttribute("filename", filename);
   return std::filesystem::path(file_to_fetch_path) / filename;
-}
-
-template<typename... Args>
-void FetchFile::logWithLevel(LogLevelOption log_level, Args&&... args) const {
-  switch (log_level.value()) {
-    case LogLevelOption::LOGGING_TRACE:
-      logger_->log_trace(std::forward<Args>(args)...);
-      break;
-    case LogLevelOption::LOGGING_DEBUG:
-      logger_->log_debug(std::forward<Args>(args)...);
-      break;
-    case LogLevelOption::LOGGING_INFO:
-      logger_->log_info(std::forward<Args>(args)...);
-      break;
-    case LogLevelOption::LOGGING_WARN:
-      logger_->log_warn(std::forward<Args>(args)...);
-      break;
-    case LogLevelOption::LOGGING_ERROR:
-      logger_->log_error(std::forward<Args>(args)...);
-      break;
-    case LogLevelOption::LOGGING_OFF:
-    default:
-      break;
-  }
 }
 
 std::filesystem::path FetchFile::getMoveAbsolutePath(const std::filesystem::path& file_name) const {
@@ -209,7 +185,7 @@ void FetchFile::onTrigger(const std::shared_ptr<core::ProcessContext> &context, 
 
   const auto file_to_fetch_path = getFileToFetch(*context, flow_file);
   if (!std::filesystem::is_regular_file(file_to_fetch_path)) {
-    logWithLevel(log_level_when_file_not_found_, "File to fetch was not found: '%s'!", file_to_fetch_path.string());
+    utils::LogUtils::logWithLevel(logger_, log_level_when_file_not_found_, "File to fetch was not found: '%s'!", file_to_fetch_path.string());
     session->transfer(flow_file, NotFound);
     return;
   }
@@ -232,7 +208,7 @@ void FetchFile::onTrigger(const std::shared_ptr<core::ProcessContext> &context, 
     session->transfer(flow_file, Success);
   } catch (const utils::FileReaderCallbackIOError& io_error) {
     if (io_error.error_code == EACCES) {
-      logWithLevel(log_level_when_permission_denied_, "Read permission denied for file '%s' to be fetched!", file_to_fetch_path.string());
+      utils::LogUtils::logWithLevel(logger_, log_level_when_permission_denied_, "Read permission denied for file '%s' to be fetched!", file_to_fetch_path.string());
       session->transfer(flow_file, PermissionDenied);
     } else {
       logger_->log_error("Fetching file '%s' failed! %s", file_to_fetch_path.string(), io_error.what());

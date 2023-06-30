@@ -40,12 +40,12 @@ class MetricsPublisherStore {
   std::weak_ptr<state::MetricsPublisher> getMetricsPublisher(const std::string& name) const;
 
  private:
-  void addMetricsPublisher(const std::string& name, std::shared_ptr<state::MetricsPublisher> publisher) {
+  void addMetricsPublisher(std::string name, std::shared_ptr<state::MetricsPublisher> publisher) {
     if (!publisher) {
       return;
     }
 
-    metrics_publishers_.emplace(name, gsl::make_not_null(std::move(publisher)));
+    metrics_publishers_.emplace(std::move(name), gsl::make_not_null(std::move(publisher)));
   }
 
   std::shared_ptr<Configure> configuration_;

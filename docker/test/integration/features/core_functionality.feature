@@ -70,3 +70,17 @@ Feature: Core flow functionalities
     When all instances start up
     Then the peak memory usage of the agent is more than 130 MB in less than 20 seconds
     And the memory usage of the agent decreases to 70% peak usage in less than 20 seconds
+
+  Scenario: Metrics can be logged
+    Given a GenerateFlowFile processor
+    And log metrics publisher is enabled in MiNiFi
+    When all instances start up
+    Then the Minifi logs contain the following message: '[info] {' in less than 30 seconds
+    And the Minifi logs contain the following message: '    "LogMetrics": {' in less than 2 seconds
+    And the Minifi logs contain the following message: '        "RepositoryMetrics": {' in less than 2 seconds
+    And the Minifi logs contain the following message: '            "flowfile": {' in less than 2 seconds
+    And the Minifi logs contain the following message: '                "running": "true",' in less than 2 seconds
+    And the Minifi logs contain the following message: '                "full": "false",' in less than 2 seconds
+    And the Minifi logs contain the following message: '                "size": "0"' in less than 2 seconds
+    And the Minifi logs contain the following message: '            },' in less than 2 seconds
+    And the Minifi logs contain the following message: '            "provenance": {' in less than 2 seconds

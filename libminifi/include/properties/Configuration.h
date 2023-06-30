@@ -183,6 +183,10 @@ class Configuration : public Properties {
   static constexpr const char *nifi_metrics_publisher_agent_identifier = "nifi.metrics.publisher.agent.identifier";
   static constexpr const char *nifi_metrics_publisher_class = "nifi.metrics.publisher.class";
   static constexpr const char *nifi_metrics_publisher_prometheus_metrics_publisher_port = "nifi.metrics.publisher.PrometheusMetricsPublisher.port";
+  static constexpr const char *nifi_metrics_publisher_prometheus_metrics_publisher_metrics = "nifi.metrics.publisher.PrometheusMetricsPublisher.metrics";
+  static constexpr const char *nifi_metrics_publisher_log_metrics_publisher_metrics = "nifi.metrics.publisher.LogMetricsPublisher.metrics";
+  static constexpr const char *nifi_metrics_publisher_log_metrics_logging_interval = "nifi.metrics.publisher.LogMetricsPublisher.logging.interval";
+  static constexpr const char *nifi_metrics_publisher_log_metrics_log_level = "nifi.metrics.publisher.LogMetricsPublisher.log.level";
   static constexpr const char *nifi_metrics_publisher_metrics = "nifi.metrics.publisher.metrics";
 
   // Controller socket options

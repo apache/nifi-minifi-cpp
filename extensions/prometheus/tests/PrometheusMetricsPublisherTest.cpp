@@ -93,7 +93,22 @@ TEST_CASE_METHOD(PrometheusPublisherTestFixtureWithRealExposer, "Test prometheus
 }
 
 TEST_CASE_METHOD(PrometheusPublisherTestFixtureWithDummyExposer, "Test adding metrics to exposer", "[prometheusPublisherTest]") {
-  configuration_->set(Configure::nifi_metrics_publisher_metrics, "QueueMetrics,RepositoryMetrics,DeviceInfoNode,FlowInformation,AgentInformation,InvalidMetrics,GetFileMetrics,GetTCPMetrics");
+  SECTION("Define metrics in general metrics property") {
+    configuration_->set(Configure::nifi_metrics_publisher_metrics, "QueueMetrics,RepositoryMetrics,DeviceInfoNode,FlowInformation,AgentInformation,InvalidMetrics,GetFileMetrics,GetTCPMetrics");
+  }
+  SECTION("Define metrics in publisher specific metrics property") {
+    configuration_->set(Configure::nifi_metrics_publisher_prometheus_metrics_publisher_metrics,
+      "QueueMetrics,RepositoryMetrics,DeviceInfoNode,FlowInformation,AgentInformation,InvalidMetrics,GetFileMetrics,GetTCPMetrics");
+  }
+  SECTION("Publisher specific metrics property should be prioritized") {
+    configuration_->set(Configure::nifi_metrics_publisher_prometheus_metrics_publisher_metrics,
+      "QueueMetrics,RepositoryMetrics,DeviceInfoNode,FlowInformation,AgentInformation,InvalidMetrics,GetFileMetrics,GetTCPMetrics");
+    configuration_->set(Configure::nifi_metrics_publisher_metrics, "QueueMetrics");
+  }
+  SECTION("Empty metrics property should be ignored") {
+    configuration_->set(Configure::nifi_metrics_publisher_metrics, "QueueMetrics,RepositoryMetrics,DeviceInfoNode,FlowInformation,AgentInformation,InvalidMetrics,GetFileMetrics,GetTCPMetrics");
+    configuration_->set(Configure::nifi_metrics_publisher_prometheus_metrics_publisher_metrics, "");
+  }
   configuration_->set(Configure::nifi_metrics_publisher_agent_identifier, "AgentId-1");
   publisher_->initialize(configuration_, response_node_loader_);
   publisher_->loadMetricNodes();

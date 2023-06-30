@@ -42,24 +42,65 @@ Aside from the publisher exposed metrics, metrics are also sent through C2 proto
 
 ## Configuration
 
-To configure the a metrics publisher first we have to set which publisher class should be used:
+Currently LogMetricsPublisher and PrometheusMetricsPublisher are available that can be configured as metrics publishers. C2 metrics are published through C2 specific properties, see [C2 documentation](C2.md) for more information on that.
+
+The LogMetricsPublisher serializes all the configured metrics into a json output and writes the json to the MiNiFi logs periodically. LogMetricsPublisher follows the conventions of the C2 metrics, and all information that is present in those metrics, including string data, is present in the log metrics as well. An example log entry may look like the following:
+
+    [2023-03-09 15:04:32.268] [org::apache::nifi::minifi::state::LogMetricsPublisher] [info] {"LogMetrics":{"RepositoryMetrics":{"flowfile":{"running":"true","full":"false","size":"0"},"provenance":{"running":"true","full":"false","size":"0"}}}}
+
+PrometheusMetricsPublisher publishes only numerical metrics to a Prometheus server in Prometheus specific format. This is different from the json format of the C2 and LogMetricsPublisher.
+
+### Common configuration properties
+
+To configure the a publisher first we have to specify the class in the properties. One or multiple publisher can be defined in comma separated format:
 
     # in minifi.properties
 
-    nifi.metrics.publisher.class=PrometheusMetricsPublisher
+    nifi.metrics.publisher.class=LogMetricsPublisher
 
-Currently PrometheusMetricsPublisher is the only available publisher in MiNiFi C++ which publishes metrics to a Prometheus server.
-To use the publisher a port should also be configured where the metrics will be available to be scraped through:
+    # alternatively
+
+    nifi.metrics.publisher.class=LogMetricsPublisher,PrometheusMetricsPublisher
+
+To define which metrics should be published either the generic or the publisher specific metrics property should be used. The generic metrics are applied to all publishers if no publisher specific metric is specified.
+
+    # in minifi.properties
+
+    # define generic metrics for all selected publisher classes
+
+    nifi.metrics.publisher.metrics=QueueMetrics,RepositoryMetrics,GetFileMetrics,DeviceInfoNode,FlowInformation,processorMetrics/Tail.*
+
+    # alternatively LogMetricsPublisher will only use the following metrics
+
+    nifi.metrics.publisher.LogMetricsPublisher.metrics=QueueMetrics,RepositoryMetrics
+
+Additional configuration properties may be required by specific publishers, these are listed below.
+
+### LogMetricsPublisher
+
+LogMetricsPublisher requires a logging interval to be configured which states how often the selected metrics should be logged
+
+    # in minifi.properties
+
+    # log the metrics in MiNiFi app logs every 30 seconds
+
+    nifi.metrics.publisher.LogMetricsPublisher.logging.interval=30s
+
+Optionally LogMetricsPublisher can be configured which log level should the publisher use. The default log level is INFO
+
+    # in minifi.properties
+
+    # change log level to debug
+
+    nifi.metrics.publisher.LogMetricsPublisher.log.level=DEBUG
+
+### PrometheusMetricsPublisher
+
+PrometheusMetricsPublisher requires a port to be configured where the metrics will be available to be scraped from:
 
     # in minifi.properties
 
     nifi.metrics.publisher.PrometheusMetricsPublisher.port=9936
-
-The following option defines which metric classes should be exposed through the metrics publisher in configured with a comma separated value:
-
-    # in minifi.properties
-
-    nifi.metrics.publisher.metrics=QueueMetrics,RepositoryMetrics,GetFileMetrics,DeviceInfoNode,FlowInformation,processorMetrics/Tail.*
 
 An agent identifier should also be defined to identify which agent the metric is exposed from. If not set, the hostname is used as the identifier.
 

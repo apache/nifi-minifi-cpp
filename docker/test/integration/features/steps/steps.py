@@ -348,6 +348,11 @@ def step_impl(context):
     context.test.enable_prometheus_in_minifi()
 
 
+@given("log metrics publisher is enabled in MiNiFi")
+def step_impl(context):
+    context.test.enable_log_metrics_publisher_in_minifi()
+
+
 # HTTP proxy setup
 @given("the http proxy server is set up")
 @given("a http proxy server is set up accordingly")
@@ -902,6 +907,7 @@ def step_impl(context, query, number_of_rows, timeout_seconds):
 
 
 @then("the Minifi logs contain the following message: \"{log_message}\" in less than {duration}")
+@then("the Minifi logs contain the following message: '{log_message}' in less than {duration}")
 def step_impl(context, log_message, duration):
     context.test.check_minifi_log_contents(log_message, humanfriendly.parse_timespan(duration))
 

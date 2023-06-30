@@ -42,9 +42,9 @@ void MetricsPublisherStore::initialize(core::controller::ControllerServiceProvid
     addMetricsPublisher(c2::CONTROLLER_SOCKET_METRICS_PUBLISHER, std::move(controller_socket_metrics_publisher));
   }
 
-  std::shared_ptr metrics_publisher = minifi::state::createMetricsPublisher(configuration_, response_node_loader_);
-  if (metrics_publisher) {
-    addMetricsPublisher(minifi::Configure::nifi_metrics_publisher_class, std::move(metrics_publisher));
+  for (auto&& publisher : minifi::state::createMetricsPublishers(configuration_, response_node_loader_)) {
+    auto name = publisher->getName();
+    addMetricsPublisher(std::move(name), std::move(publisher));
   }
 
   loadMetricNodes(nullptr);

@@ -96,6 +96,9 @@ class DockerTestCluster:
     def set_controller_socket_properties_in_minifi(self):
         self.container_store.set_controller_socket_properties_in_minifi()
 
+    def enable_log_metrics_publisher_in_minifi(self):
+        self.container_store.enable_log_metrics_publisher_in_minifi()
+
     def get_app_log(self, container_name):
         container_name = self.container_store.get_container_name_with_postfix(container_name)
         log_source = self.container_store.log_source(container_name)
