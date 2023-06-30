@@ -314,6 +314,19 @@ class WholeFileReaderCallback {
   std::ifstream input_stream_;
   std::shared_ptr<core::logging::Logger> logger_ = core::logging::LoggerFactory<TailFile>::getLogger();
 };
+
+// This is for backwards compatibility only, as it will accept any string as Input Delimiter while only use the first character from it, which can be confusing
+std::optional<char> getDelimiterOld(const std::string& delimiter_str) {
+  if (delimiter_str.empty()) return std::nullopt;
+  if (delimiter_str[0] != '\\') return delimiter_str[0];
+  if (delimiter_str.size() == 1) return '\\';
+  switch (delimiter_str[1]) {
+    case 'r': return '\r';
+    case 't': return '\t';
+    case 'n': return '\n';
+    default: return delimiter_str[1];
+  }
+}
 }  // namespace
 
 void TailFile::initialize() {
@@ -332,10 +345,13 @@ void TailFile::onSchedule(const std::shared_ptr<core::ProcessContext> &context, 
   }
 
   if (auto delimiter_str = context->getProperty(Delimiter)) {
-    auto parsed_delimiter = utils::StringUtils::parseCharacter(*delimiter_str);
-    if (!parsed_delimiter)
-      throw Exception(PROCESS_SCHEDULE_EXCEPTION, fmt::format("Invalid delimiter: {} (it must be a single character, whether escaped or not)", *delimiter_str));
-    delimiter_ = *parsed_delimiter;
+    if (auto parsed_delimiter = utils::StringUtils::parseCharacter(*delimiter_str)) {
+      delimiter_ = *parsed_delimiter;
+    } else {
+      logger_->log_error("Invalid %s: \"%s\" (it should be a single character, whether escaped or not). Using the first character as the %s",
+          TailFile::Delimiter.getName(), *delimiter_str, TailFile::Delimiter.getName());
+      delimiter_ = getDelimiterOld(*delimiter_str);
+    }
   }
 
   std::string file_name_str;
