@@ -68,7 +68,7 @@ const core::Property MergeContent::MergeStrategy(
   core::PropertyBuilder::createProperty("Merge Strategy")
   ->withDescription("Defragment or Bin-Packing Algorithm")
   ->withAllowableValues<std::string>({merge_content_options::MERGE_STRATEGY_DEFRAGMENT, merge_content_options::MERGE_STRATEGY_BIN_PACK})
-  ->withDefaultValue(merge_content_options::MERGE_STRATEGY_DEFRAGMENT)->build());
+  ->withDefaultValue(merge_content_options::MERGE_STRATEGY_BIN_PACK)->build());
 const core::Property MergeContent::MergeFormat(
   core::PropertyBuilder::createProperty("Merge Format")
   ->withDescription("Merge Format")
