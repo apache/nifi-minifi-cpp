@@ -34,12 +34,12 @@ const std::type_index Value::BOOL_TYPE = std::type_index(typeid(bool));
 const std::type_index Value::DOUBLE_TYPE = std::type_index(typeid(double));
 const std::type_index Value::STRING_TYPE = std::type_index(typeid(std::string));
 
-void hashNode(const SerializedResponseNode& node, EVP_MD_CTX* ctx) {
-  EVP_DigestUpdate(ctx, node.name.c_str(), node.name.length());
+void hashNode(const SerializedResponseNode& node, EVP_MD_CTX& ctx) {
+  EVP_DigestUpdate(&ctx, node.name.c_str(), node.name.length());
   const auto valueStr = node.value.to_string();
-  EVP_DigestUpdate(ctx, valueStr.c_str(), valueStr.length());
-  EVP_DigestUpdate(ctx, &node.array, sizeof(node.array));
-  EVP_DigestUpdate(ctx, &node.collapsible, sizeof(node.collapsible));
+  EVP_DigestUpdate(&ctx, valueStr.c_str(), valueStr.length());
+  EVP_DigestUpdate(&ctx, &node.array, sizeof(node.array));
+  EVP_DigestUpdate(&ctx, &node.collapsible, sizeof(node.collapsible));
   for (const auto& child : node.children) {
     hashNode(child, ctx);
   }
@@ -50,10 +50,9 @@ std::string hashResponseNodes(const std::vector<SerializedResponseNode>& nodes) 
   const auto guard = gsl::finally([&ctx]() {
     EVP_MD_CTX_free(ctx);
   });
-  const EVP_MD *md = EVP_sha512();
-  EVP_DigestInit_ex(ctx, md, nullptr);
+  EVP_DigestInit_ex(ctx, EVP_sha512(), nullptr);
   for (const auto& node : nodes) {
-    hashNode(node, ctx);
+    hashNode(node, *ctx);
   }
   std::array<std::byte, EVP_MAX_MD_SIZE> digest{};
   EVP_DigestFinal_ex(ctx, reinterpret_cast<unsigned char*>(digest.data()), nullptr);

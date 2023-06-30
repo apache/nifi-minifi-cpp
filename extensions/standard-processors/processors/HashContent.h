@@ -22,6 +22,8 @@
 #ifdef OPENSSL_SUPPORT
 
 #include <openssl/evp.h>
+#include <openssl/sha.h>
+#include <openssl/md5.h>
 
 #include <array>
 #include <cstdint>
@@ -52,8 +54,7 @@ namespace { // NOLINT
     const auto guard = gsl::finally([&context]() {
       EVP_MD_CTX_free(context);
     });
-    const EVP_MD *md = EVP_md5();
-    EVP_DigestInit_ex(context, md, nullptr);
+    EVP_DigestInit_ex(context, EVP_md5(), nullptr);
 
     size_t ret = 0;
     do {
@@ -65,7 +66,7 @@ namespace { // NOLINT
     } while (ret > 0);
 
     if (ret_val.second > 0) {
-      std::array<std::byte, EVP_MAX_MD_SIZE> digest{};
+      std::array<std::byte, MD5_DIGEST_LENGTH> digest{};
       EVP_DigestFinal_ex(context, reinterpret_cast<unsigned char*>(digest.data()), nullptr);
       ret_val.first = org::apache::nifi::minifi::utils::StringUtils::to_hex(digest, true /*uppercase*/);
     }
@@ -80,8 +81,7 @@ namespace { // NOLINT
     const auto guard = gsl::finally([&context]() {
       EVP_MD_CTX_free(context);
     });
-    const EVP_MD *md = EVP_sha1();
-    EVP_DigestInit_ex(context, md, nullptr);
+    EVP_DigestInit_ex(context, EVP_sha1(), nullptr);
 
     size_t ret = 0;
     do {
@@ -93,7 +93,7 @@ namespace { // NOLINT
     } while (ret > 0);
 
     if (ret_val.second > 0) {
-      std::array<std::byte, EVP_MAX_MD_SIZE> digest{};
+      std::array<std::byte, SHA_DIGEST_LENGTH> digest{};
       EVP_DigestFinal_ex(context, reinterpret_cast<unsigned char*>(digest.data()), nullptr);
       ret_val.first = org::apache::nifi::minifi::utils::StringUtils::to_hex(digest, true /*uppercase*/);
     }
@@ -108,8 +108,7 @@ namespace { // NOLINT
     const auto guard = gsl::finally([&context]() {
       EVP_MD_CTX_free(context);
     });
-    const EVP_MD *md = EVP_sha256();
-    EVP_DigestInit_ex(context, md, nullptr);
+    EVP_DigestInit_ex(context, EVP_sha256(), nullptr);
 
     size_t ret;
     do {
@@ -121,7 +120,7 @@ namespace { // NOLINT
     } while (ret > 0);
 
     if (ret_val.second > 0) {
-      std::array<std::byte, EVP_MAX_MD_SIZE> digest{};
+      std::array<std::byte, SHA256_DIGEST_LENGTH> digest{};
       EVP_DigestFinal_ex(context, reinterpret_cast<unsigned char*>(digest.data()), nullptr);
       ret_val.first = org::apache::nifi::minifi::utils::StringUtils::to_hex(digest, true /*uppercase*/);
     }

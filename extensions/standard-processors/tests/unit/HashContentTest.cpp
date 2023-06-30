@@ -110,19 +110,19 @@ TEST_CASE("Test usage of ExtractText", "[extracttextTest]") {
   }
 
   std::stringstream ss2;
-  ss2 << "key:" << MD5_ATTR << " value:" << MD5_CHECKSUM;
+  ss2 << "key:" << MD5_ATTR << " value:" << MD5_CHECKSUM << "\n";
   std::string log_check = ss2.str();
 
   REQUIRE(LogTestController::getInstance().contains(log_check));
 
   ss2.str("");
-  ss2 << "key:" << SHA1_ATTR << " value:" << SHA1_CHECKSUM;
+  ss2 << "key:" << SHA1_ATTR << " value:" << SHA1_CHECKSUM << "\n";
   log_check = ss2.str();
 
   REQUIRE(LogTestController::getInstance().contains(log_check));
 
   ss2.str("");
-  ss2 << "key:" << SHA256_ATTR << " value:" << SHA256_CHECKSUM;
+  ss2 << "key:" << SHA256_ATTR << " value:" << SHA256_CHECKSUM << "\n";
   log_check = ss2.str();
 
   REQUIRE(LogTestController::getInstance().contains(log_check));
