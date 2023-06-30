@@ -43,6 +43,9 @@ Amazon Technologies, Inc (http://www.amazon.com/).
 This bundles the 'Azure SDK for C++' (MIT licensed) project (https://github.com/Azure/azure-sdk-for-cpp), which includes the following NOTICE:
 Copyright (c) Microsoft Corporation.
 
+This includes CodeCoverage.cmake from the bilke/cmake-modules project (https://github.com/bilke/cmake-modules)
+Copyright (c) 2012 - 2017, Lars Bilke
+
 **********************
 THIRD PARTY COMPONENTS
 **********************

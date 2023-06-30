@@ -42,7 +42,8 @@ TEST_CASE("Test Physical memory usage", "[testphysicalmemoryusage]") {
     std::cout << "Total Physical Memory in the system: " << ram_total << v.data();
   }
   REQUIRE(ram_usage_by_process >= gsl::narrow<int64_t>(v.size()));
-  REQUIRE(gsl::narrow<int64_t>(v.size()*2) >= ram_usage_by_process);
+  // In the worst case scenario, building with coverage flags, the ram usage still should be under 4 times the vector's size
+  REQUIRE(gsl::narrow<int64_t>(v.size()*4) >= ram_usage_by_process);
   REQUIRE(ram_usage_by_system >= ram_usage_by_process);
   REQUIRE(ram_total >= ram_usage_by_system);
 }
