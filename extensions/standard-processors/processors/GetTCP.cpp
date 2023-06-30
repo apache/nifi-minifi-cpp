@@ -229,18 +229,18 @@ bool GetTCP::TcpClient::tryDequeue(utils::net::Message& received_message) {
 
 asio::awaitable<std::error_code> GetTCP::TcpClient::readLoop(auto& socket) {
   std::string read_message;
-  bool last_was_partial = false;
-  bool current_is_partial = false;
+  bool previous_didnt_end_with_delimiter = false;
+  bool current_doesnt_end_with_delimiter = false;
   while (true) {
     {
-      last_was_partial = current_is_partial;
-      current_is_partial = false;
+      previous_didnt_end_with_delimiter = current_doesnt_end_with_delimiter;
+      current_doesnt_end_with_delimiter = false;
     }
     auto dynamic_buffer = max_message_size_ ? asio::dynamic_buffer(read_message, *max_message_size_) : asio::dynamic_buffer(read_message);
     auto [read_error, bytes_read] = co_await asio::async_read_until(socket, dynamic_buffer, delimiter_, utils::net::use_nothrow_awaitable);  // NOLINT
 
     if (*max_message_size_ && read_error == asio::error::not_found) {
-      current_is_partial = true;
+      current_doesnt_end_with_delimiter = true;
       bytes_read = *max_message_size_;
     } else if (read_error) {
       logger_->log_error("Error during read %s", read_error.message());
@@ -252,7 +252,7 @@ asio::awaitable<std::error_code> GetTCP::TcpClient::readLoop(auto& socket) {
 
     if (!max_queue_size_ || max_queue_size_ > concurrent_queue_.size()) {
       utils::net::Message message{read_message.substr(0, bytes_read), utils::net::IpProtocol::TCP, socket.lowest_layer().remote_endpoint().address(), socket.lowest_layer().remote_endpoint().port()};
-      if (last_was_partial || current_is_partial)
+      if (previous_didnt_end_with_delimiter || current_doesnt_end_with_delimiter)
         message.is_partial = true;
       concurrent_queue_.enqueue(std::move(message));
     } else {
