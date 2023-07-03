@@ -100,7 +100,7 @@ asio::awaitable<void> ControllerSocketProtocol::startAccept() {
 }
 
 asio::awaitable<void> ControllerSocketProtocol::startAcceptSsl(std::shared_ptr<minifi::controllers::SSLContextService> ssl_context_service) {
-  while (true) {
+  while (true) {  // NOLINT(clang-analyzer-core.NullDereference) suppressing asio library linter warning
     auto [accept_error, socket] = co_await acceptor_->async_accept(utils::net::use_nothrow_awaitable);
     if (accept_error) {
       logger_->log_error("Controller socket accept failed with the following message: '%s'", accept_error.message());
