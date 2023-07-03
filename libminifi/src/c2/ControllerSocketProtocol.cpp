@@ -92,7 +92,7 @@ asio::awaitable<void> ControllerSocketProtocol::startAccept() {
     auto [accept_error, socket] = co_await acceptor_->async_accept(utils::net::use_nothrow_awaitable);
     if (accept_error) {
       logger_->log_error("Controller socket accept failed with the following message: '%s'", accept_error.message());
-      co_return;
+      continue;
     }
     auto stream = std::make_unique<io::AsioStream<asio::ip::tcp::socket>>(std::move(socket));
     co_spawn(io_context_, handleCommand(std::move(stream)), asio::detached);
@@ -104,7 +104,7 @@ asio::awaitable<void> ControllerSocketProtocol::startAcceptSsl(std::shared_ptr<m
     auto [accept_error, socket] = co_await acceptor_->async_accept(utils::net::use_nothrow_awaitable);
     if (accept_error) {
       logger_->log_error("Controller socket accept failed with the following message: '%s'", accept_error.message());
-      co_return;
+      continue;
     }
     asio::ssl::context ssl_context = utils::net::getSslContext(*ssl_context_service, asio::ssl::context::tls_server);
     asio::ssl::stream<asio::ip::tcp::socket> ssl_socket(std::move(socket), ssl_context);
@@ -112,7 +112,7 @@ asio::awaitable<void> ControllerSocketProtocol::startAcceptSsl(std::shared_ptr<m
     auto [handshake_error] = co_await ssl_socket.async_handshake(utils::net::HandshakeType::server, utils::net::use_nothrow_awaitable);
     if (handshake_error) {
       logger_->log_error("Controller socket handshake failed with the following message: '%s'", handshake_error.message());
-      co_return;
+      continue;
     }
 
     auto stream = std::make_unique<io::AsioStream<asio::ssl::stream<asio::ip::tcp::socket>>>(std::move(ssl_socket));
