@@ -21,11 +21,7 @@
 #include "io/InputStream.h"
 #include "utils/gsl.h"
 
-namespace org {
-namespace apache {
-namespace nifi {
-namespace minifi {
-namespace io {
+namespace org::apache::nifi::minifi::io {
 
 size_t InputStream::read(bool &value) {
   uint8_t buf = 0;
@@ -71,18 +67,20 @@ size_t InputStream::read(std::string &str, bool widen) {
     return length_return;
   }
 
-  std::vector<std::byte> buffer(string_length);
-  const auto read_return = read(buffer);
-  if (read_return != string_length) {
-    return read_return;
+  str.clear();
+  str.reserve(string_length);
+
+  auto bytes_to_read = string_length;
+  while (bytes_to_read > 0) {
+    std::vector<std::byte> buffer(bytes_to_read);
+    const auto read_return = read(buffer);
+    if (io::isError(read_return))
+      return read_return;
+    bytes_to_read -= read_return;
+    str.append(std::string(reinterpret_cast<const char*>(buffer.data()), read_return));
   }
 
-  str = std::string(reinterpret_cast<const char*>(buffer.data()), string_length);
   return length_return + string_length;
 }
 
-} /* namespace io */
-} /* namespace minifi */
-} /* namespace nifi */
-} /* namespace apache */
-} /* namespace org */
+}  // namespace org::apache::nifi::minifi::io

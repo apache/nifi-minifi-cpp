@@ -81,7 +81,7 @@ size_t AsioStream<AsioSocketStreamType>::read(std::span<std::byte> buf) {
   }
 
   asio::error_code err;
-  auto read_bytes = asio::read(stream_, asio::buffer(buf.data(), buf.size()), err);
+  auto read_bytes = stream_.read_some(asio::buffer(buf.data(), buf.size()), err);
   if (err) {
     return STREAM_ERROR;
   }
