@@ -95,6 +95,21 @@ TEST_CASE("MetadataWalker updates the Sid in the XML if both update_xml and reso
   }
 }
 
+
+TEST_CASE("MetadataWalker updates the Security/UserId attribute", "[updateXmlMetadata][userid]") {
+  std::string xml = readFile("resources/userid.xml");
+
+  SECTION("No resolution") {
+    REQUIRE(updateXmlMetadata(xml, nullptr, nullptr, false, true) == formatXml(xml));
+  }
+
+  SECTION("Resolve nobody") {
+    std::string nobody = readFile("resources/resolveduserid.xml");
+    auto regex = utils::Regex("(.*Sid)|UserID");
+    REQUIRE(updateXmlMetadata(xml, nullptr, nullptr, true, true, &regex) == formatXml(nobody));
+  }
+}
+
 TEST_CASE("MetadataWalker works even when there is no Data block", "[updateXmlMetadata]") {
   std::string xml = readFile("resources/nodata.xml");
 

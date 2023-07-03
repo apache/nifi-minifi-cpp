@@ -88,6 +88,7 @@ class MetadataWalker : public pugi::xml_tree_walker {
    * Updates text within the XML representation
    */
   void updateText(pugi::xml_node &node, const std::string &field_name, std::function<std::string(const std::string &)> &&fn);
+  void updateText(pugi::xml_attribute &node, const std::string &field_name, std::function<std::string(const std::string &)> &&fn);
 
   const WindowsEventLogMetadata& windows_event_log_metadata_;
   const std::string log_name_;

@@ -154,6 +154,12 @@ rapidjson::Document toJSONImpl(const pugi::xml_node& root, bool flatten) {
 
     system.AddMember("Channel", rapidjson::StringRef(system_xml.child("Channel").text().get()), doc.GetAllocator());
     system.AddMember("Computer", rapidjson::StringRef(system_xml.child("Computer").text().get()), doc.GetAllocator());
+
+    {
+      auto security_xml = system_xml.child("Security");
+      auto& security = flatten ? doc : system.AddMember("Security", rapidjson::kObjectType, doc.GetAllocator())["Security"];
+      security.AddMember("UserID", rapidjson::StringRef(security_xml.attribute("UserID").value()), doc.GetAllocator());
+    }
   }
 
   {
