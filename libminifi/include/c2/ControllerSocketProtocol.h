@@ -61,6 +61,7 @@ class ControllerSocketProtocol {
   void writeJstackResponse(io::BaseStream &stream);
   void handleDescribe(io::BaseStream &stream);
   asio::awaitable<void> handleCommand(std::unique_ptr<io::BaseStream>&& stream);
+  asio::awaitable<void> handshakeAndHandleCommand(asio::ip::tcp::socket&& socket, std::shared_ptr<minifi::controllers::SSLContextService> ssl_context_service);
   std::string getJstack();
   asio::awaitable<void> startAccept();
   asio::awaitable<void> startAcceptSsl(std::shared_ptr<minifi::controllers::SSLContextService> ssl_context_service);

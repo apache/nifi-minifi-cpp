@@ -99,6 +99,20 @@ asio::awaitable<void> ControllerSocketProtocol::startAccept() {
   }
 }
 
+asio::awaitable<void> ControllerSocketProtocol::handshakeAndHandleCommand(asio::ip::tcp::socket&& socket, std::shared_ptr<minifi::controllers::SSLContextService> ssl_context_service) {
+  asio::ssl::context ssl_context = utils::net::getSslContext(*ssl_context_service, asio::ssl::context::tls_server);
+  asio::ssl::stream<asio::ip::tcp::socket> ssl_socket(std::move(socket), ssl_context);
+
+  auto [handshake_error] = co_await ssl_socket.async_handshake(utils::net::HandshakeType::server, utils::net::use_nothrow_awaitable);
+  if (handshake_error) {
+    logger_->log_error("Controller socket handshake failed with the following message: '%s'", handshake_error.message());
+    co_return;
+  }
+
+  auto stream = std::make_unique<io::AsioStream<asio::ssl::stream<asio::ip::tcp::socket>>>(std::move(ssl_socket));
+  co_return co_await handleCommand(std::move(stream));
+}
+
 asio::awaitable<void> ControllerSocketProtocol::startAcceptSsl(std::shared_ptr<minifi::controllers::SSLContextService> ssl_context_service) {
   while (true) {  // NOLINT(clang-analyzer-core.NullDereference) suppressing asio library linter warning
     auto [accept_error, socket] = co_await acceptor_->async_accept(utils::net::use_nothrow_awaitable);
@@ -106,17 +120,8 @@ asio::awaitable<void> ControllerSocketProtocol::startAcceptSsl(std::shared_ptr<m
       logger_->log_error("Controller socket accept failed with the following message: '%s'", accept_error.message());
       continue;
     }
-    asio::ssl::context ssl_context = utils::net::getSslContext(*ssl_context_service, asio::ssl::context::tls_server);
-    asio::ssl::stream<asio::ip::tcp::socket> ssl_socket(std::move(socket), ssl_context);
 
-    auto [handshake_error] = co_await ssl_socket.async_handshake(utils::net::HandshakeType::server, utils::net::use_nothrow_awaitable);
-    if (handshake_error) {
-      logger_->log_error("Controller socket handshake failed with the following message: '%s'", handshake_error.message());
-      continue;
-    }
-
-    auto stream = std::make_unique<io::AsioStream<asio::ssl::stream<asio::ip::tcp::socket>>>(std::move(ssl_socket));
-    co_spawn(io_context_, handleCommand(std::move(stream)), asio::detached);
+    co_spawn(io_context_, handshakeAndHandleCommand(std::move(socket), ssl_context_service), asio::detached);
   }
 }
 
