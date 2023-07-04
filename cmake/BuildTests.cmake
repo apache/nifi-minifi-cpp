@@ -30,7 +30,7 @@ ENDMACRO()
 
 set(NANOFI_TEST_DIR "${CMAKE_SOURCE_DIR}/nanofi/tests/")
 
-function(configureTestResources SOURCE_DIR DEST_DIR)
+function(copyTestResources SOURCE_DIR DEST_DIR)
     file(GLOB RESOURCE_FILES  "${SOURCE_DIR}/*")
     foreach(RESOURCE_FILE ${RESOURCE_FILES})
         get_filename_component(RESOURCE_FILENAME "${RESOURCE_FILE}" NAME)
