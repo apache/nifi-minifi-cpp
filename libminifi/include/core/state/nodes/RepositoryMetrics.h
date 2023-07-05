@@ -21,11 +21,9 @@
 #include <string>
 #include <utility>
 #include <vector>
-#include <sstream>
-#include <map>
 
-#include "../nodes/MetricsBase.h"
-#include "Connection.h"
+#include "core/state/nodes/MetricsBase.h"
+#include "core/RepositoryMetricsSource.h"
 #include "RepositoryMetricsSourceStore.h"
 
 namespace org::apache::nifi::minifi::state::response {
@@ -58,17 +56,9 @@ class RepositoryMetrics : public ResponseNode {
     return "RepositoryMetrics";
   }
 
-  void addRepository(const std::shared_ptr<core::RepositoryMetricsSource> &repo) {
-    return repository_metrics_source_store_.addRepository(repo);
-  }
-
-  std::vector<SerializedResponseNode> serialize() override {
-    return repository_metrics_source_store_.serialize();
-  }
-
-  std::vector<PublishedMetric> calculateMetrics() override {
-    return repository_metrics_source_store_.calculateMetrics();
-  }
+  void addRepository(const std::shared_ptr<core::RepositoryMetricsSource> &repo);
+  std::vector<SerializedResponseNode> serialize() override;
+  std::vector<PublishedMetric> calculateMetrics() override;
 
  protected:
   RepositoryMetricsSourceStore repository_metrics_source_store_;

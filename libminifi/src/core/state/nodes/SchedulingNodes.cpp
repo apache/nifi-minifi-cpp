@@ -15,29 +15,25 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
-#include "core/state/nodes/QueueMetrics.h"
-#include "core/Resource.h"
+#include "core/state/nodes/SchedulingNodes.h"
 
 namespace org::apache::nifi::minifi::state::response {
 
-std::vector<SerializedResponseNode> QueueMetrics::serialize() {
-  std::vector<SerializedResponseNode> serialized;
-  for (const auto& [_, connection] : connection_store_.getConnections()) {
-    serialized.push_back({
-      .name = connection->getName(),
+std::vector<SerializedResponseNode> SchedulingDefaults::serialize() {
+  return {
+    {
+      .name = "schedulingDefaults",
       .children = {
-        {.name = "datasize", .value = std::to_string(connection->getQueueDataSize())},
-        {.name = "datasizemax", .value = std::to_string(connection->getBackpressureThresholdDataSize())},
-        {.name = "queued", .value = std::to_string(connection->getQueueSize())},
-        {.name = "queuedmax", .value = std::to_string(connection->getBackpressureThresholdCount())},
+        {.name = "defaultSchedulingStrategy", .value = core::DEFAULT_SCHEDULING_STRATEGY},
+        {.name = "defaultSchedulingPeriodMillis", .value = int64_t{core::DEFAULT_SCHEDULING_PERIOD_MILLIS.count()}},
+        {.name = "defaultRunDurationNanos", .value = int64_t{core::DEFAULT_RUN_DURATION.count()}},
+        {.name = "defaultMaxConcurrentTasks", .value = core::DEFAULT_MAX_CONCURRENT_TASKS},
+        {.name = "yieldDurationMillis", .value = int64_t{std::chrono::milliseconds(core::DEFAULT_YIELD_PERIOD_SECONDS).count()}},
+        {.name = "penalizationPeriodMillis", .value = int64_t{std::chrono::milliseconds{core::DEFAULT_PENALIZATION_PERIOD}.count()}},
       }
-    });
-  }
-  return serialized;
+    }
+  };
 }
-
-REGISTER_RESOURCE(QueueMetrics, DescriptionOnly);
 
 }  // namespace org::apache::nifi::minifi::state::response
 

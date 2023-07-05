@@ -20,37 +20,7 @@
 #include <utility>
 #include <vector>
 
-#ifndef WIN32
-
-#if ( defined(__APPLE__) || defined(__MACH__) || defined(BSD))
-#include <net/if_dl.h>
-#include <net/if_types.h>
-#endif
-
-#include <arpa/inet.h>
-#include <sys/ioctl.h>
-#include <sys/socket.h>
-#include <ifaddrs.h>
-#include <netinet/in.h>
-#include <net/if.h>
-#include <netdb.h>
-#include <unistd.h>
-
-#endif
-
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
-
-#include <functional>
-#include <map>
-#include <sstream>
-
-#include "../../../agent/agent_version.h"
-#include "../nodes/MetricsBase.h"
-#include "Connection.h"
-#include "core/ClassLoader.h"
-#include "io/ClientSocket.h"
+#include "core/state/nodes/MetricsBase.h"
 
 namespace org::apache::nifi::minifi::state::response {
 
@@ -74,52 +44,7 @@ class BuildInformation : public DeviceInformation {
     return "BuildInformation";
   }
 
-  std::vector<SerializedResponseNode> serialize() override {
-    std::vector<SerializedResponseNode> serialized;
-
-    SerializedResponseNode build_version;
-    build_version.name = "build_version";
-    build_version.value = AgentBuild::VERSION;
-
-    SerializedResponseNode build_rev;
-    build_rev.name = "build_rev";
-    build_rev.value = AgentBuild::BUILD_REV;
-
-    SerializedResponseNode build_date;
-    build_date.name = "build_date";
-    build_date.value = AgentBuild::BUILD_DATE;
-
-    SerializedResponseNode compiler;
-    compiler.name = "compiler";
-    {
-      SerializedResponseNode compiler_command;
-      compiler_command.name = "compiler_command";
-      compiler_command.value = AgentBuild::COMPILER;
-
-      SerializedResponseNode compiler_version;
-      compiler_version.name = "compiler_version";
-      compiler_version.value = AgentBuild::COMPILER_VERSION;
-
-      SerializedResponseNode compiler_flags;
-      compiler_flags.name = "compiler_flags";
-      compiler_flags.value = AgentBuild::COMPILER_FLAGS;
-
-      compiler.children.push_back(compiler_command);
-      compiler.children.push_back(compiler_version);
-      compiler.children.push_back(compiler_flags);
-    }
-    SerializedResponseNode device_id;
-    device_id.name = "device_id";
-    device_id.value = AgentBuild::BUILD_IDENTIFIER;
-
-    serialized.push_back(build_version);
-    serialized.push_back(build_rev);
-    serialized.push_back(build_date);
-    serialized.push_back(compiler);
-    serialized.push_back(device_id);
-
-    return serialized;
-  }
+  std::vector<SerializedResponseNode> serialize() override;
 };
 
 }  // namespace org::apache::nifi::minifi::state::response

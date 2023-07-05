@@ -38,29 +38,19 @@ std::string SupportedOperations::getName() const {
 }
 
 void SupportedOperations::addProperty(SerializedResponseNode& properties, const std::string& operand, const Metadata& metadata) {
-  SerializedResponseNode operand_node;
-  operand_node.name = operand;
-  operand_node.keep_empty = true;
+  SerializedResponseNode operand_node{.name = operand, .keep_empty = true};
 
   for (const auto& [key, value_array] : metadata) {
-    SerializedResponseNode metadata_item;
-    metadata_item.name = key;
-    metadata_item.array = true;
-
+    SerializedResponseNode metadata_item{.name = key, .array = true};
     for (const auto& value_object : value_array) {
       SerializedResponseNode value_child;
       for (const auto& pair: value_object) {
-        SerializedResponseNode object_element;
-        object_element.name = pair.first;
-        object_element.value = pair.second;
-        value_child.children.push_back(object_element);
+        value_child.children.push_back({.name = pair.first, .value = pair.second});
       }
       metadata_item.children.push_back(value_child);
     }
-
     operand_node.children.push_back(metadata_item);
   }
-
   properties.children.push_back(operand_node);
 }
 
@@ -125,31 +115,23 @@ void SupportedOperations::fillProperties(SerializedResponseNode& properties, min
 }
 
 std::vector<SerializedResponseNode> SupportedOperations::serialize() {
-  std::vector<SerializedResponseNode> serialized;
-  SerializedResponseNode supported_operation;
-  supported_operation.name = "supportedOperations";
-  supported_operation.array = true;
+  SerializedResponseNode supported_operation{.name = "supportedOperations", .array = true};
 
-  for (const auto& operation : minifi::c2::Operation::values) {
-    SerializedResponseNode child;
-    child.name = "supportedOperations";
+  for (const auto& operation : minifi::c2::Operation::values()) {
+    SerializedResponseNode child{
+      .name = "supportedOperations",
+      .children = {
+        {.name = "type", .value = std::string(operation)}
+      }
+    };
 
-    SerializedResponseNode operation_type;
-    operation_type.name = "type";
-    operation_type.value = std::string(operation);
-
-    SerializedResponseNode properties;
-    properties.name = "properties";
-
+    SerializedResponseNode properties{.name = "properties"};
     fillProperties(properties, minifi::c2::Operation::parse(operation, {}, false));
-
-    child.children.push_back(operation_type);
     child.children.push_back(properties);
     supported_operation.children.push_back(child);
   }
 
-  serialized.push_back(supported_operation);
-  return serialized;
+  return {supported_operation};
 }
 
 REGISTER_RESOURCE(SupportedOperations, DescriptionOnly);
