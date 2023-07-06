@@ -16,6 +16,8 @@
  */
 #pragma once
 
+#include <cstdint>
+
 #ifdef __linux__
 #include <stdlib.h>
 #include <stdio.h>
@@ -24,7 +26,6 @@
 #endif
 
 #ifdef WIN32
-#include <cstdint>
 #include "TCHAR.h"
 #include "windows.h"
 #endif
