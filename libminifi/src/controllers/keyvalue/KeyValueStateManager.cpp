@@ -101,7 +101,7 @@ bool KeyValueStateManager::beginTransaction() {
 
 bool KeyValueStateManager::commit() {
   if (!transaction_in_progress_) {
-    return false;
+    return true;
   }
 
   bool success = true;
@@ -133,7 +133,7 @@ bool KeyValueStateManager::commit() {
 
 bool KeyValueStateManager::rollback() {
   if (!transaction_in_progress_) {
-    return false;
+    return true;
   }
 
   change_type_ = ChangeType::NONE;

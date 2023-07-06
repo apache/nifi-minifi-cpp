@@ -109,15 +109,6 @@ auto standardLogChecker = [] {
   return errorResult.second == 0 && warningResult.second == 0;
 };
 
-auto commitAndRollbackWarnings = [] {
-  const std::string logs = LogTestController::getInstance().getLogs();
-  const auto errorResult = utils::StringUtils::countOccurrences(logs, "[error]");
-  const auto commitWarningResult = utils::StringUtils::countOccurrences(logs, "[warning] Caught \"Process Session Operation: State manager commit failed.\"");
-  const auto rollbackWarningFirst = utils::StringUtils::countOccurrences(logs, "[warning] Caught Exception during process session rollback");
-  const auto rollbackWarningSecond = utils::StringUtils::countOccurrences(logs, "Process Session Operation: State manager rollback failed.");
-  return errorResult.second == 0 && commitWarningResult.second == 1 && rollbackWarningFirst.second == 1 && rollbackWarningSecond.second == 1;
-};
-
 auto exceptionRollbackWarnings = [] {
   const std::string logs = LogTestController::getInstance().getLogs();
   const auto errorResult = utils::StringUtils::countOccurrences(logs, "[error]");
@@ -233,7 +224,7 @@ const std::unordered_map<std::string, HookCollection> testCasesToHookLists {
           assert(stateManager.commit());
         }
       },
-      commitAndRollbackWarnings
+      standardLogChecker
     },
   },
   {
@@ -244,7 +235,7 @@ const std::unordered_map<std::string, HookCollection> testCasesToHookLists {
           assert(stateManager.rollback());
         }
       },
-      commitAndRollbackWarnings
+      standardLogChecker
     },
   },
   {

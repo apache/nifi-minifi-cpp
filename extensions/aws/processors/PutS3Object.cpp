@@ -96,7 +96,11 @@ void PutS3Object::onSchedule(const std::shared_ptr<core::ProcessContext> &contex
 
   fillUserMetadata(context);
 
-  s3_wrapper_.initializeMultipartUploadStateStorage(context->getConfiguration(), getUUIDStr());
+  auto state_manager = context->getStateManager();
+  if (state_manager == nullptr) {
+    throw Exception(PROCESSOR_EXCEPTION, "Failed to get StateManager");
+  }
+  s3_wrapper_.initializeMultipartUploadStateStorage(gsl::make_not_null(state_manager));
 }
 
 std::string PutS3Object::parseAccessControlList(const std::string &comma_separated_list) {

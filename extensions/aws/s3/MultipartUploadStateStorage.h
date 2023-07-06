@@ -55,7 +55,9 @@ struct MultipartUploadState {
 
 class MultipartUploadStateStorage {
  public:
-  MultipartUploadStateStorage(const std::shared_ptr<minifi::Configure>& configuration, const std::string& state_id);
+  explicit MultipartUploadStateStorage(gsl::not_null<core::StateManager*> state_manager)
+    : state_manager_(state_manager) {
+  }
 
   void storeState(const std::string& bucket, const std::string& key, const MultipartUploadState& state);
   std::optional<MultipartUploadState> getState(const std::string& bucket, const std::string& key) const;
@@ -64,13 +66,9 @@ class MultipartUploadStateStorage {
   std::filesystem::path getStateFilePath() const;
 
  private:
-  void loadFile();
-  void commitChanges();
-  void removeKey(const std::string& state_key);
+  static void removeKey(const std::string& state_key, std::unordered_map<std::string, std::string>& state_map);
 
-  mutable std::mutex state_mutex_;
-  std::filesystem::path state_file_path_;
-  std::unordered_map<std::string, std::string> state_;
+  gsl::not_null<core::StateManager*> state_manager_;
   std::shared_ptr<core::logging::Logger> logger_{core::logging::LoggerFactory<MultipartUploadStateStorage>::getLogger()};
 };
 

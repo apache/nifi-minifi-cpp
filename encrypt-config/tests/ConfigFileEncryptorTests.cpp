@@ -77,7 +77,7 @@ TEST_CASE("ConfigFileEncryptor can encrypt the sensitive properties", "[encrypt-
     uint32_t num_properties_encrypted = encryptSensitivePropertiesInFile(test_file, KEY);
 
     REQUIRE(num_properties_encrypted == 1);
-    REQUIRE(test_file.size() == 112);
+    REQUIRE(test_file.size() == 110);
     REQUIRE(check_encryption(test_file, Configuration::nifi_rest_api_password, original_password.length()));
 
     SECTION("calling encryptSensitiveProperties a second time does nothing") {
