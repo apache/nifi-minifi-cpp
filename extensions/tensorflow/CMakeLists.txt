@@ -17,6 +17,8 @@
 # under the License.
 #
 
+# The TensorFlow extension requires the libtensorflow_cc.so library to be installed on the system
+# Due to this reason ENABLE_ALL does not include the TensorFlow extension
 if (NOT ENABLE_TENSORFLOW)
     return()
 endif()

@@ -17,7 +17,7 @@
 # under the License.
 #
 
-if (NOT (WIN32 AND ENABLE_PDH))
+if (NOT (WIN32 AND (ENABLE_ALL OR ENABLE_PDH)))
     return()
 endif()
 

@@ -16,8 +16,7 @@
 # specific language governing permissions and limitations
 # under the License.
 #
-
-if (NOT ENABLE_OPC)
+if (NOT (ENABLE_ALL OR ENABLE_OPC))
     return()
 endif()
 

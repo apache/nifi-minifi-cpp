@@ -17,7 +17,7 @@
 # under the License.
 #
 
-if (NOT ENABLE_SYSTEMD OR NOT CMAKE_SYSTEM_NAME STREQUAL "Linux")
+if (NOT (ENABLE_ALL OR ENABLE_SYSTEMD) OR NOT CMAKE_SYSTEM_NAME STREQUAL "Linux")
     return()
 endif()
 
