@@ -208,7 +208,7 @@ void PutS3Object::setAttributes(
 
 void PutS3Object::ageOffMultipartUploads(const CommonProperties &common_properties) {
   const auto now = std::chrono::system_clock::now();
-  if (now - last_ageoff_time_ < multipart_upload_ageoff_interval_) {
+  if (now - last_ageoff_time_.load() < multipart_upload_ageoff_interval_) {
     logger_->log_debug("Multipart Upload Age off interval still in progress, not checking obsolete multipart uploads.");
     return;
   }

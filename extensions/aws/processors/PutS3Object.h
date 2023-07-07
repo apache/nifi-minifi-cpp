@@ -27,6 +27,7 @@
 #include <utility>
 #include <vector>
 #include <chrono>
+#include <atomic>
 
 #include "core/PropertyDefinition.h"
 #include "core/PropertyDefinitionBuilder.h"
@@ -255,7 +256,7 @@ class PutS3Object : public S3Processor {
   uint64_t multipart_size_{};
   std::chrono::milliseconds multipart_upload_ageoff_interval_;
   std::chrono::milliseconds multipart_upload_max_age_threshold_;
-  std::chrono::time_point<std::chrono::system_clock> last_ageoff_time_;
+  std::atomic<std::chrono::time_point<std::chrono::system_clock>> last_ageoff_time_;
 };
 
 }  // namespace org::apache::nifi::minifi::aws::processors
