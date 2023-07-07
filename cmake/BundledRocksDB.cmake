@@ -68,7 +68,7 @@ function(use_bundled_rocksdb SOURCE_DIR BINARY_DIR)
     ExternalProject_Add(
             rocksdb-external
             URL "https://github.com/facebook/rocksdb/archive/refs/tags/v8.1.1.tar.gz"
-	    URL_HASH "SHA256=9102704e169cfb53e7724a30750eeeb3e71307663852f01fa08d5a320e6155a8"
+            URL_HASH "SHA256=9102704e169cfb53e7724a30750eeeb3e71307663852f01fa08d5a320e6155a8"
             SOURCE_DIR "${BINARY_DIR}/thirdparty/rocksdb-src"
             CMAKE_ARGS ${ROCKSDB_CMAKE_ARGS}
             BUILD_BYPRODUCTS "${BINARY_DIR}/thirdparty/rocksdb-install/${BYPRODUCT}"
