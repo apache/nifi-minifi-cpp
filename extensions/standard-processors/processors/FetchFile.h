@@ -45,15 +45,6 @@ SMART_ENUM(MoveConflictStrategyOption,
   (KEEP_EXISTING, "Keep Existing"),
   (FAIL, "Fail")
 )
-
-SMART_ENUM(LogLevelOption,
-  (LOGGING_TRACE, "TRACE"),
-  (LOGGING_DEBUG, "DEBUG"),
-  (LOGGING_INFO, "INFO"),
-  (LOGGING_WARN, "WARN"),
-  (LOGGING_ERROR, "ERROR"),
-  (LOGGING_OFF, "OFF")
-)
 }  // namespace fetch_file
 
 class FetchFile : public core::Processor {
@@ -87,16 +78,16 @@ class FetchFile : public core::Processor {
       .withAllowedValues(fetch_file::MoveConflictStrategyOption::values)
       .isRequired(true)
       .build();
-  EXTENSIONAPI static constexpr auto LogLevelWhenFileNotFound = core::PropertyDefinitionBuilder<fetch_file::LogLevelOption::length>::createProperty("Log level when file not found")
+  EXTENSIONAPI static constexpr auto LogLevelWhenFileNotFound = core::PropertyDefinitionBuilder<utils::LogUtils::LogLevelOption::length>::createProperty("Log level when file not found")
       .withDescription("Log level to use in case the file does not exist when the processor is triggered")
-      .withDefaultValue(toStringView(fetch_file::LogLevelOption::LOGGING_ERROR))
-      .withAllowedValues(fetch_file::LogLevelOption::values)
+      .withDefaultValue(toStringView(utils::LogUtils::LogLevelOption::LOGGING_ERROR))
+      .withAllowedValues(utils::LogUtils::LogLevelOption::values)
       .isRequired(true)
       .build();
-  EXTENSIONAPI static constexpr auto LogLevelWhenPermissionDenied = core::PropertyDefinitionBuilder<fetch_file::LogLevelOption::length>::createProperty("Log level when permission denied")
+  EXTENSIONAPI static constexpr auto LogLevelWhenPermissionDenied = core::PropertyDefinitionBuilder<utils::LogUtils::LogLevelOption::length>::createProperty("Log level when permission denied")
       .withDescription("Log level to use in case agent does not have sufficient permissions to read the file")
-      .withDefaultValue(toStringView(fetch_file::LogLevelOption::LOGGING_ERROR))
-      .withAllowedValues(fetch_file::LogLevelOption::values)
+      .withDefaultValue(toStringView(utils::LogUtils::LogLevelOption::LOGGING_ERROR))
+      .withAllowedValues(utils::LogUtils::LogLevelOption::values)
       .isRequired(true)
       .build();
   EXTENSIONAPI static constexpr auto Properties = std::array<core::PropertyReference, 6>{

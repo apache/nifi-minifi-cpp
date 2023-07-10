@@ -306,7 +306,7 @@ class MergeContent : public processors::BinFiles {
   EXTENSIONAPI static constexpr auto MergeStrategy = core::PropertyDefinitionBuilder<2>::createProperty("Merge Strategy")
       .withDescription("Defragment or Bin-Packing Algorithm")
       .withAllowedValues({merge_content_options::MERGE_STRATEGY_DEFRAGMENT, merge_content_options::MERGE_STRATEGY_BIN_PACK})
-      .withDefaultValue(merge_content_options::MERGE_STRATEGY_DEFRAGMENT)
+      .withDefaultValue(merge_content_options::MERGE_STRATEGY_BIN_PACK)
       .build();
   EXTENSIONAPI static constexpr auto MergeFormat = core::PropertyDefinitionBuilder<4>::createProperty("Merge Format")
       .withDescription("Merge Format")
