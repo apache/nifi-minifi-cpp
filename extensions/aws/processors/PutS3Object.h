@@ -186,22 +186,7 @@ class PutS3Object : public S3Processor {
         logger_(logger) {
     }
 
-    int64_t operator()(const std::shared_ptr<io::InputStream>& stream) {
-      try {
-        if (flow_size_ <= multipart_threshold_) {
-          logger_.log_info("Uploading S3 Object '%s' in a single upload", options_.object_key);
-          result_ = s3_wrapper_.putObject(options_, stream, flow_size_);
-          return gsl::narrow<int64_t>(flow_size_);
-        } else {
-          logger_.log_info("S3 Object '%s' passes the multipart threshold, uploading it in multiple parts", options_.object_key);
-          result_ = s3_wrapper_.putObjectMultipart(options_, stream, flow_size_, multipart_size_);
-          return gsl::narrow<int64_t>(flow_size_);
-        }
-      } catch(const aws::s3::StreamReadException& ex) {
-        logger_.log_error("Error occurred while uploading to S3: %s", ex.what());
-        return -1;
-      }
-    }
+    int64_t operator()(const std::shared_ptr<io::InputStream>& stream);
 
     uint64_t flow_size_;
     const minifi::aws::s3::PutObjectRequestParameters& options_;

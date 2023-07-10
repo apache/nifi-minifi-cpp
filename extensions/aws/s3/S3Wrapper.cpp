@@ -33,6 +33,7 @@
 #include "utils/RegexUtils.h"
 #include "aws/core/utils/HashingUtils.h"
 #include "range/v3/algorithm/any_of.hpp"
+#include "utils/GeneralUtils.h"
 
 namespace org::apache::nifi::minifi::aws::s3 {
 
@@ -111,13 +112,11 @@ std::optional<S3Wrapper::UploadPartsResult> S3Wrapper::uploadParts(const PutObje
   result.upload_id = upload_state.upload_id;
   result.part_etags = upload_state.uploaded_etags;
   const auto flow_size = upload_state.full_size - upload_state.uploaded_size;
-  const auto div_ceil = [](size_t n, size_t d) {
-    if (n % d == 0)
-      return n / d;
-    else
-      return n / d + 1;
-  };
-  const size_t part_count = div_ceil(flow_size, upload_state.part_size);
+  if (upload_state.part_size == 0) {
+    logger_->log_error("Invalid upload part size 0 was set for S3 object with key '%s' in bucket '%s'", put_object_params.object_key, put_object_params.bucket);
+    return std::nullopt;
+  }
+  const size_t part_count = minifi::utils::intdiv_ceil(flow_size, upload_state.part_size);
   size_t total_read = 0;
   const size_t start_part = upload_state.uploaded_parts + 1;
   const size_t last_part = start_part + part_count - 1;
