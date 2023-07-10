@@ -163,9 +163,11 @@ std::string MetadataWalker::to_string(const wchar_t* pChar) {
   return std::wstring_convert<std::codecvt_utf8<wchar_t>>().to_bytes(pChar);
 }
 
-void MetadataWalker::updateText(pugi::xml_node &node, const std::string &field_name, std::function<std::string(const std::string &)> &&fn) {
+template<typename Fn>
+requires std::is_convertible_v<std::invoke_result_t<Fn, std::string>, std::string>
+void MetadataWalker::updateText(pugi::xml_node &node, const std::string &field_name, Fn &&fn) {
   std::string previous_value = node.text().get();
-  auto new_field_value = fn(previous_value);
+  auto new_field_value = std::invoke(std::forward<Fn>(fn), previous_value);
   if (new_field_value != previous_value) {
     metadata_[field_name] = new_field_value;
     if (update_xml_) {
@@ -176,13 +178,15 @@ void MetadataWalker::updateText(pugi::xml_node &node, const std::string &field_n
   }
 }
 
-void MetadataWalker::updateText(pugi::xml_attribute &node, const std::string &field_name, std::function<std::string(const std::string &)> &&fn) {
-  std::string previous_value = node.value();
-  auto new_field_value = fn(previous_value);
+template<typename Fn>
+requires std::is_convertible_v<std::invoke_result_t<Fn, std::string>, std::string>
+void MetadataWalker::updateText(pugi::xml_attribute &attr, const std::string &field_name, Fn &&fn) {
+  std::string previous_value = attr.value();
+  auto new_field_value = std::invoke(std::forward<Fn>(fn), previous_value);
   if (new_field_value != previous_value) {
     metadata_[field_name] = new_field_value;
     if (update_xml_) {
-      node.set_value(new_field_value.c_str());
+      attr.set_value(new_field_value.c_str());
     } else {
       fields_values_[field_name] = new_field_value;
     }
