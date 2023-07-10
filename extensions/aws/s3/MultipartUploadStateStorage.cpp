@@ -101,7 +101,8 @@ void MultipartUploadStateStorage::removeAgedStates(std::chrono::milliseconds mul
 
   std::vector<std::string> keys_to_remove;
   for (const auto& [property_key, value] : state_map) {
-    if (!minifi::utils::StringUtils::endsWith(property_key, ".upload_time")) {
+    std::string upload_time_suffix = ".upload_time";
+    if (!minifi::utils::StringUtils::endsWith(property_key, upload_time_suffix)) {
       continue;
     }
     int64_t stored_upload_time{};
@@ -111,8 +112,8 @@ void MultipartUploadStateStorage::removeAgedStates(std::chrono::milliseconds mul
     }
     auto upload_time = Aws::Utils::DateTime(stored_upload_time);
     if (upload_time < age_off_time) {
-      auto state_key_and_property_name = minifi::utils::StringUtils::split(property_key, ".");
-      keys_to_remove.push_back(state_key_and_property_name[0]);
+      auto state_key_and_property_name = property_key.substr(0, property_key.size() - upload_time_suffix.size());
+      keys_to_remove.push_back(state_key_and_property_name);
     }
   }
   for (const auto& key : keys_to_remove) {

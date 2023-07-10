@@ -22,6 +22,7 @@
 #include <memory>
 #include <utility>
 #include <vector>
+#include <algorithm>
 
 #include "S3ClientRequestSender.h"
 #include "range/v3/algorithm/find.hpp"
@@ -123,7 +124,7 @@ std::optional<S3Wrapper::UploadPartsResult> S3Wrapper::uploadParts(const PutObje
   for (size_t part_number = start_part; part_number <= last_part; ++part_number) {
     uint64_t read_size{};
     const auto remaining = flow_size - total_read;
-    const auto next_read_size = remaining < upload_state.part_size ? remaining : upload_state.part_size;
+    const auto next_read_size = std::min(remaining, upload_state.part_size);
     auto stream_ptr = readFlowFileStream(stream, next_read_size, read_size);
     total_read += read_size;
 
