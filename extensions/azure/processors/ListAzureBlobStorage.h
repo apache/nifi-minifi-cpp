@@ -31,14 +31,14 @@
 #include "AzureBlobStorageProcessorBase.h"
 #include "core/logging/LoggerConfiguration.h"
 
-namespace org::apache::nifi::minifi::azure::processors {
+namespace org::apache::nifi::minifi::azure {
 
-namespace azure {
 SMART_ENUM(EntityTracking,
   (NONE, "none"),
   (TIMESTAMPS, "timestamps")
 )
-}  // namespace azure
+
+namespace processors {
 
 class ListAzureBlobStorage final : public AzureBlobStorageProcessorBase {
  public:
@@ -59,7 +59,6 @@ class ListAzureBlobStorage final : public AzureBlobStorageProcessorBase {
       ListingStrategy,
       Prefix
   });
-
 
   EXTENSIONAPI static constexpr auto Success = core::RelationshipDefinition{"success", "All FlowFiles that are received are routed to success"};
   EXTENSIONAPI static constexpr auto Relationships = std::array{Success};
@@ -92,4 +91,5 @@ class ListAzureBlobStorage final : public AzureBlobStorageProcessorBase {
   std::unique_ptr<minifi::utils::ListingStateManager> state_manager_;
 };
 
-}  // namespace org::apache::nifi::minifi::azure::processors
+}  // namespace processors
+}  // namespace org::apache::nifi::minifi::azure

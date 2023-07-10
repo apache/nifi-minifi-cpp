@@ -220,7 +220,7 @@ TEST_CASE_METHOD(ListAzureBlobStorageTestsFixture, "List all files every time", 
   plan_->setProperty(list_azure_blob_storage_, minifi::azure::processors::ListAzureBlobStorage::ContainerName, CONTAINER_NAME);
   plan_->setProperty(list_azure_blob_storage_, minifi::azure::processors::ListAzureBlobStorage::Prefix, PREFIX);
   plan_->setProperty(list_azure_blob_storage_, minifi::azure::processors::ListAzureBlobStorage::ListingStrategy,
-    toString(minifi::azure::processors::azure::EntityTracking::NONE));
+    toString(minifi::azure::EntityTracking::NONE));
   test_controller_.runSession(plan_, true);
   using org::apache::nifi::minifi::utils::verifyLogLinePresenceInPollTime;
   auto run_assertions = [this]() {
@@ -256,7 +256,7 @@ TEST_CASE_METHOD(ListAzureBlobStorageTestsFixture, "Do not list same files the s
   plan_->setProperty(list_azure_blob_storage_, minifi::azure::processors::ListAzureBlobStorage::ContainerName, CONTAINER_NAME);
   plan_->setProperty(list_azure_blob_storage_, minifi::azure::processors::ListAzureBlobStorage::Prefix, PREFIX);
   plan_->setProperty(list_azure_blob_storage_, minifi::azure::processors::ListAzureBlobStorage::ListingStrategy,
-    toString(minifi::azure::processors::azure::EntityTracking::TIMESTAMPS));
+    toString(minifi::azure::EntityTracking::TIMESTAMPS));
   test_controller_.runSession(plan_, true);
   using org::apache::nifi::minifi::utils::verifyLogLinePresenceInPollTime;
   auto passed_params = mock_blob_storage_ptr_->getPassedListParams();
