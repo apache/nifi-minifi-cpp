@@ -34,7 +34,7 @@ namespace org::apache::nifi::minifi::test {
 
 void check_for_attributes(core::FlowFile& flow_file, uint16_t port) {
   const auto local_addresses = {"127.0.0.1:" + std::to_string(port), "::ffff:127.0.0.1:" + std::to_string(port), "::1:" + std::to_string(port)};
-  CHECK(ranges::contains(local_addresses, flow_file.getAttribute(std::string(GetTCP::SourceEndpoint.name))));
+  CHECK(ranges::contains(local_addresses, flow_file.getAttribute(GetTCP::SourceEndpoint.name)));
 }
 
 minifi::utils::net::SslData createSslDataForServer() {

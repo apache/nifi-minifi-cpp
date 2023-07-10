@@ -65,8 +65,8 @@ TEST_F(FetchGCSObjectTests, MissingBucket) {
   const auto& result = test_controller_.trigger("hello world");
   EXPECT_EQ(0, result.at(FetchGCSObject::Success).size());
   ASSERT_EQ(1, result.at(FetchGCSObject::Failure).size());
-  EXPECT_EQ(std::nullopt, result.at(FetchGCSObject::Failure)[0]->getAttribute(std::string(minifi_gcp::GCS_ERROR_DOMAIN)));
-  EXPECT_EQ(std::nullopt, result.at(FetchGCSObject::Failure)[0]->getAttribute(std::string(minifi_gcp::GCS_ERROR_REASON)));
+  EXPECT_EQ(std::nullopt, result.at(FetchGCSObject::Failure)[0]->getAttribute(minifi_gcp::GCS_ERROR_DOMAIN));
+  EXPECT_EQ(std::nullopt, result.at(FetchGCSObject::Failure)[0]->getAttribute(minifi_gcp::GCS_ERROR_REASON));
   EXPECT_EQ("hello world", test_controller_.plan->getContent(result.at(FetchGCSObject::Failure)[0]));
 }
 
@@ -91,8 +91,8 @@ TEST_F(FetchGCSObjectTests, ServerError) {
   const auto& result = test_controller_.trigger("hello world", {{std::string(minifi_gcp::GCS_BUCKET_ATTR), "bucket-from-attribute"}});
   EXPECT_EQ(0, result.at(FetchGCSObject::Success).size());
   ASSERT_EQ(1, result.at(FetchGCSObject::Failure).size());
-  EXPECT_NE(std::nullopt, result.at(FetchGCSObject::Failure)[0]->getAttribute(std::string(minifi_gcp::GCS_ERROR_DOMAIN)));
-  EXPECT_NE(std::nullopt, result.at(FetchGCSObject::Failure)[0]->getAttribute(std::string(minifi_gcp::GCS_ERROR_REASON)));
+  EXPECT_NE(std::nullopt, result.at(FetchGCSObject::Failure)[0]->getAttribute(minifi_gcp::GCS_ERROR_DOMAIN));
+  EXPECT_NE(std::nullopt, result.at(FetchGCSObject::Failure)[0]->getAttribute(minifi_gcp::GCS_ERROR_REASON));
 }
 
 TEST_F(FetchGCSObjectTests, HappyPath) {
