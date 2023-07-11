@@ -34,16 +34,16 @@ TEST_CASE("getClassName() works correctly") {
 
 TEST_CASE("className() works correctly and is constexpr") {
   static constexpr auto struct_name = core::className<DummyStruct>();
-  CHECK(struct_name == "org::apache::nifi::minifi::test::DummyStruct");
+  static_assert(struct_name == "org::apache::nifi::minifi::test::DummyStruct");
 
   static constexpr auto class_name = core::className<DummyClass>();
-  CHECK(class_name == "org::apache::nifi::minifi::test::DummyClass");
+  static_assert(class_name == "org::apache::nifi::minifi::test::DummyClass");
 
   static constexpr auto struct_template_name = core::className<DummyStructTemplate<int>>();
-  CHECK(struct_template_name == "org::apache::nifi::minifi::test::DummyStructTemplate<int>");
+  static_assert(struct_template_name == "org::apache::nifi::minifi::test::DummyStructTemplate<int>");
 
   static constexpr auto class_template_name = core::className<DummyClassTemplate<int>>();
-  CHECK(class_template_name == "org::apache::nifi::minifi::test::DummyClassTemplate<int>");
+  static_assert(class_template_name == "org::apache::nifi::minifi::test::DummyClassTemplate<int>");
 }
 
 }  // namespace org::apache::nifi::minifi::test

@@ -109,22 +109,23 @@ TEST_CASE("Enum checks") {
 
 TEST_CASE("Operations on Smart Enums are constexpr") {
   static constexpr auto c_values = C::values;
-  CHECK(c_values == std::array<std::string_view, 4>{"zero", "one", "two", "three"});
+  static_assert(c_values == std::array<std::string_view, 4>{"zero", "one", "two", "three"});
 
   static constexpr bool zero_equals_zero{C::_0 == C::_0};  // NOLINT(misc-redundant-expression)
   static constexpr bool zero_does_not_equal_three{C::_0 != C::_3};
   static constexpr bool zero_is_less_than_two{C::_0 < C::_2};
   static constexpr bool one_is_valid{C::_1};
-  CHECK((zero_equals_zero && zero_does_not_equal_three && zero_is_less_than_two && one_is_valid));
+  static_assert(zero_equals_zero && zero_does_not_equal_three && zero_is_less_than_two && one_is_valid);
 
   static constexpr C zero_object{C::_0};
   static constexpr C::Type zero_type{zero_object.value()};
-  CHECK(zero_type == 0);
+  static_assert(zero_type == 0);
 
   static constexpr C derived{C::_2};
   static constexpr B derived_as_base = derived.cast<B>();
+  static_assert(toStringView(derived.value()) == toStringView(derived_as_base.value()));
   CHECK(toString(derived.value()) == toString(derived_as_base.value()));
 
   static constexpr std::string_view zero_name{toStringView(C::_0)};
-  CHECK(zero_name == "zero");
+  static_assert(zero_name == "zero");
 }
