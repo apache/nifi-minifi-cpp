@@ -99,10 +99,8 @@ static inline std::string getClassName() {
 }
 
 constexpr std::string_view removeStructOrClassPrefix(std::string_view input) {
-  constexpr std::string_view STRUCT = "struct ";  // should be static constexpr, but that is only allowed inside a constexpr function with std >= c++23
-  constexpr std::string_view CLASS = "class ";
-
-  for (auto prefix : { STRUCT, CLASS }) {
+  using namespace std::literals;
+  for (auto prefix : { "struct "sv, "class "sv }) {
     if (input.find(prefix) == 0) {
       return input.substr(prefix.size());
     }
