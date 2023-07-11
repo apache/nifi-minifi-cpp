@@ -55,7 +55,7 @@ std::vector<utils::net::ConnectionId> GetTCP::parseEndpointList(core::ProcessCon
     }
   }
   if (connections_to_make.empty())
-    throw Exception(PROCESS_SCHEDULE_EXCEPTION, fmt::format("No valid endpoint in {} property", EndpointList.getName()));
+    throw Exception(PROCESS_SCHEDULE_EXCEPTION, fmt::format("No valid endpoint in {} property", EndpointList.name));
 
   return connections_to_make;
 }
@@ -90,11 +90,12 @@ std::optional<asio::ssl::context> GetTCP::parseSSLContext(core::ProcessContext& 
 uint64_t GetTCP::parseMaxBatchSize(core::ProcessContext& context) {
   if (auto max_batch_size = context.getProperty<uint64_t>(MaxBatchSize)) {
     if (*max_batch_size == 0) {
-      throw Exception(PROCESS_SCHEDULE_EXCEPTION, fmt::format("{} should be non-zero.", MaxBatchSize.getName()));
+      throw Exception(PROCESS_SCHEDULE_EXCEPTION, fmt::format("{} should be non-zero.", MaxBatchSize.name));
     }
     return *max_batch_size;
   }
-  return MaxBatchSize.getDefaultValue();
+  static_assert(MaxBatchSize.default_value);
+  return MaxBatchSize.type->parse(*MaxBatchSize.default_value);
 }
 
 void GetTCP::onSchedule(const std::shared_ptr<core::ProcessContext>& context, const std::shared_ptr<core::ProcessSessionFactory>&) {
@@ -133,7 +134,7 @@ void GetTCP::notifyStop() {
 void GetTCP::transferAsFlowFile(const utils::net::Message& message, core::ProcessSession& session) {
   auto flow_file = session.create();
   session.writeBuffer(flow_file, message.message_data);
-  flow_file->setAttribute(GetTCP::SourceEndpoint.getName(), fmt::format("{}:{}", message.sender_address.to_string(), std::to_string(message.server_port)));
+  flow_file->setAttribute(GetTCP::SourceEndpoint.name, fmt::format("{}:{}", message.sender_address.to_string(), std::to_string(message.server_port)));
   if (message.is_partial)
     session.transfer(flow_file, Partial);
   else

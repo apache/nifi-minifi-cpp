@@ -34,7 +34,7 @@ namespace org::apache::nifi::minifi::test {
 
 void check_for_attributes(core::FlowFile& flow_file, uint16_t port) {
   const auto local_addresses = {"127.0.0.1:" + std::to_string(port), "::ffff:127.0.0.1:" + std::to_string(port), "::1:" + std::to_string(port)};
-  CHECK(ranges::contains(local_addresses, flow_file.getAttribute(GetTCP::SourceEndpoint.getName())));
+  CHECK(ranges::contains(local_addresses, flow_file.getAttribute(std::string(GetTCP::SourceEndpoint.name))));
 }
 
 minifi::utils::net::SslData createSslDataForServer() {
@@ -50,9 +50,9 @@ void addSslContextServiceTo(SingleProcessorTestController& controller) {
   auto ssl_context_service = controller.plan->addController("SSLContextService", "SSLContextService");
   LogTestController::getInstance().setTrace<GetTCP>();
   const auto executable_dir = minifi::utils::file::FileUtils::get_executable_dir();
-  REQUIRE(controller.plan->setProperty(ssl_context_service, controllers::SSLContextService::CACertificate.getName(), (executable_dir / "resources" / "ca_A.crt").string()));
-  REQUIRE(controller.plan->setProperty(ssl_context_service, controllers::SSLContextService::ClientCertificate.getName(), (executable_dir / "resources" / "alice_by_A.pem").string()));
-  REQUIRE(controller.plan->setProperty(ssl_context_service, controllers::SSLContextService::PrivateKey.getName(), (executable_dir / "resources" / "alice_by_A.pem").string()));
+  REQUIRE(controller.plan->setProperty(ssl_context_service, controllers::SSLContextService::CACertificate, (executable_dir / "resources" / "ca_A.crt").string()));
+  REQUIRE(controller.plan->setProperty(ssl_context_service, controllers::SSLContextService::ClientCertificate, (executable_dir / "resources" / "alice_by_A.pem").string()));
+  REQUIRE(controller.plan->setProperty(ssl_context_service, controllers::SSLContextService::PrivateKey, (executable_dir / "resources" / "alice_by_A.pem").string()));
   ssl_context_service->enable();
 }
 
