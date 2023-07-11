@@ -174,30 +174,6 @@ class PutS3Object : public S3Processor {
   void onSchedule(const std::shared_ptr<core::ProcessContext> &context, const std::shared_ptr<core::ProcessSessionFactory> &sessionFactory) override;
   void onTrigger(const std::shared_ptr<core::ProcessContext> &context, const std::shared_ptr<core::ProcessSession> &session) override;
 
-  class ReadCallback {
-   public:
-    ReadCallback(uint64_t flow_size, const minifi::aws::s3::PutObjectRequestParameters& options, aws::s3::S3Wrapper& s3_wrapper,
-          uint64_t multipart_threshold, uint64_t multipart_size, core::logging::Logger& logger)
-      : flow_size_(flow_size),
-        options_(options),
-        s3_wrapper_(s3_wrapper),
-        multipart_threshold_(multipart_threshold),
-        multipart_size_(multipart_size),
-        logger_(logger) {
-    }
-
-    int64_t operator()(const std::shared_ptr<io::InputStream>& stream);
-
-    uint64_t flow_size_;
-    const minifi::aws::s3::PutObjectRequestParameters& options_;
-    aws::s3::S3Wrapper& s3_wrapper_;
-    uint64_t multipart_threshold_;
-    uint64_t multipart_size_;
-    uint64_t read_size_ = 0;
-    std::optional<minifi::aws::s3::PutObjectResult> result_;
-    core::logging::Logger& logger_;
-  };
-
  protected:
   static constexpr uint64_t MIN_PART_SIZE = 5_MiB;
   static constexpr uint64_t MAX_UPLOAD_SIZE = 5_GiB;
