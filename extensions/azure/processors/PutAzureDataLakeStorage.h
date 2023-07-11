@@ -35,19 +35,19 @@
 template<typename AzureDataLakeStorageProcessor>
 class AzureDataLakeStorageTestsFixture;
 
-namespace org::apache::nifi::minifi::azure::processors {
+namespace org::apache::nifi::minifi::azure {
 
-namespace azure {
 SMART_ENUM(FileExistsResolutionStrategy,
   (FAIL_FLOW, "fail"),
   (REPLACE_FILE, "replace"),
   (IGNORE_REQUEST, "ignore")
 )
-}  // namespace azure
+
+namespace processors {
 
 class PutAzureDataLakeStorage final : public AzureDataLakeStorageFileProcessorBase {
  public:
-  EXTENSIONAPI static constexpr const char* Description = "Puts content into an Azure Data Lake Storage Gen 2";
+  EXTENSIONAPI static constexpr const char *Description = "Puts content into an Azure Data Lake Storage Gen 2";
 
   EXTENSIONAPI static constexpr auto ConflictResolutionStrategy = core::PropertyDefinitionBuilder<azure::FileExistsResolutionStrategy::length>::createProperty("Conflict Resolution Strategy")
       .withDescription("Indicates what should happen when a file with the same name already exists in the output directory.")
@@ -68,8 +68,8 @@ class PutAzureDataLakeStorage final : public AzureDataLakeStorageFileProcessorBa
 
   ADD_COMMON_VIRTUAL_FUNCTIONS_FOR_PROCESSORS
 
-  explicit PutAzureDataLakeStorage(std::string name, const minifi::utils::Identifier& uuid = minifi::utils::Identifier())
-    : PutAzureDataLakeStorage(std::move(name), uuid, nullptr) {
+  explicit PutAzureDataLakeStorage(std::string name, const minifi::utils::Identifier &uuid = minifi::utils::Identifier())
+      : PutAzureDataLakeStorage(std::move(name), uuid, nullptr) {
   }
 
   void initialize() override;
@@ -81,8 +81,8 @@ class PutAzureDataLakeStorage final : public AzureDataLakeStorageFileProcessorBa
 
   class ReadCallback {
    public:
-    ReadCallback(uint64_t flow_size, storage::AzureDataLakeStorage& azure_data_lake_storage, const storage::PutAzureDataLakeStorageParameters& params, std::shared_ptr<core::logging::Logger> logger);
-    int64_t operator()(const std::shared_ptr<io::InputStream>& stream);
+    ReadCallback(uint64_t flow_size, storage::AzureDataLakeStorage &azure_data_lake_storage, const storage::PutAzureDataLakeStorageParameters &params, std::shared_ptr<core::logging::Logger> logger);
+    int64_t operator()(const std::shared_ptr<io::InputStream> &stream);
 
     [[nodiscard]] storage::UploadDataLakeStorageResult getResult() const {
       return result_;
@@ -90,19 +90,20 @@ class PutAzureDataLakeStorage final : public AzureDataLakeStorageFileProcessorBa
 
    private:
     uint64_t flow_size_;
-    storage::AzureDataLakeStorage& azure_data_lake_storage_;
-    const storage::PutAzureDataLakeStorageParameters& params_;
+    storage::AzureDataLakeStorage &azure_data_lake_storage_;
+    const storage::PutAzureDataLakeStorageParameters &params_;
     storage::UploadDataLakeStorageResult result_;
     std::shared_ptr<core::logging::Logger> logger_;
   };
 
-  explicit PutAzureDataLakeStorage(std::string name, const minifi::utils::Identifier& uuid, std::unique_ptr<storage::DataLakeStorageClient> data_lake_storage_client)
-    : AzureDataLakeStorageFileProcessorBase(std::move(name), uuid, core::logging::LoggerFactory<PutAzureDataLakeStorage>::getLogger(), std::move(data_lake_storage_client)) {
+  explicit PutAzureDataLakeStorage(std::string name, const minifi::utils::Identifier &uuid, std::unique_ptr<storage::DataLakeStorageClient> data_lake_storage_client)
+      : AzureDataLakeStorageFileProcessorBase(std::move(name), uuid, core::logging::LoggerFactory<PutAzureDataLakeStorage>::getLogger(), std::move(data_lake_storage_client)) {
   }
 
-  std::optional<storage::PutAzureDataLakeStorageParameters> buildUploadParameters(core::ProcessContext& context, const std::shared_ptr<core::FlowFile>& flow_file);
+  std::optional<storage::PutAzureDataLakeStorageParameters> buildUploadParameters(core::ProcessContext &context, const std::shared_ptr<core::FlowFile> &flow_file);
 
   azure::FileExistsResolutionStrategy conflict_resolution_strategy_;
 };
 
-}  // namespace org::apache::nifi::minifi::azure::processors
+}  // namespace processors
+}  // namespace org::apache::nifi::minifi::azure

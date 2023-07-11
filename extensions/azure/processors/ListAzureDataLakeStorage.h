@@ -31,18 +31,18 @@
 
 class ListAzureDataLakeStorageTestsFixture;
 
-namespace org::apache::nifi::minifi::azure::processors {
+namespace org::apache::nifi::minifi::azure {
 
-namespace azure {
 SMART_ENUM(EntityTracking,
   (NONE, "none"),
   (TIMESTAMPS, "timestamps")
 )
-}  // namespace azure
+
+namespace processors {
 
 class ListAzureDataLakeStorage final : public AzureDataLakeStorageProcessorBase {
  public:
-  EXTENSIONAPI static constexpr const char* Description = "Lists directory in an Azure Data Lake Storage Gen 2 filesystem";
+  EXTENSIONAPI static constexpr const char *Description = "Lists directory in an Azure Data Lake Storage Gen 2 filesystem";
 
   EXTENSIONAPI static constexpr auto RecurseSubdirectories = core::PropertyDefinitionBuilder<>::createProperty("Recurse Subdirectories")
       .withDescription("Indicates whether to list files from subdirectories of the directory")
@@ -58,7 +58,7 @@ class ListAzureDataLakeStorage final : public AzureDataLakeStorageProcessorBase 
       .build();
   EXTENSIONAPI static constexpr auto ListingStrategy = core::PropertyDefinitionBuilder<azure::EntityTracking::length>::createProperty("Listing Strategy")
       .withDescription("Specify how to determine new/updated entities. If 'timestamps' is selected it tracks the latest timestamp of listed entity to "
-          "determine new/updated entities. If 'none' is selected it lists an entity without any tracking, the same entity will be listed each time on executing this processor.")
+                       "determine new/updated entities. If 'none' is selected it lists an entity without any tracking, the same entity will be listed each time on executing this processor.")
       .withDefaultValue(toStringView(azure::EntityTracking::TIMESTAMPS))
       .withAllowedValues(azure::EntityTracking::values)
       .build();
@@ -68,7 +68,6 @@ class ListAzureDataLakeStorage final : public AzureDataLakeStorageProcessorBase 
       PathFilter,
       ListingStrategy
   });
-
 
   EXTENSIONAPI static constexpr auto Success = core::RelationshipDefinition{"success", "All FlowFiles that are received are routed to success"};
   EXTENSIONAPI static constexpr auto Relationships = std::array{Success};
@@ -80,28 +79,29 @@ class ListAzureDataLakeStorage final : public AzureDataLakeStorageProcessorBase 
 
   ADD_COMMON_VIRTUAL_FUNCTIONS_FOR_PROCESSORS
 
-  explicit ListAzureDataLakeStorage(std::string name, const minifi::utils::Identifier& uuid = minifi::utils::Identifier())
-    : AzureDataLakeStorageProcessorBase(std::move(name), uuid, core::logging::LoggerFactory<ListAzureDataLakeStorage>::getLogger(uuid)) {
+  explicit ListAzureDataLakeStorage(std::string name, const minifi::utils::Identifier &uuid = minifi::utils::Identifier())
+      : AzureDataLakeStorageProcessorBase(std::move(name), uuid, core::logging::LoggerFactory<ListAzureDataLakeStorage>::getLogger(uuid)) {
   }
 
   ~ListAzureDataLakeStorage() override = default;
 
   void initialize() override;
-  void onSchedule(const std::shared_ptr<core::ProcessContext>& context, const std::shared_ptr<core::ProcessSessionFactory>& sessionFactory) override;
+  void onSchedule(const std::shared_ptr<core::ProcessContext> &context, const std::shared_ptr<core::ProcessSessionFactory> &sessionFactory) override;
   void onTrigger(const std::shared_ptr<core::ProcessContext> &context, const std::shared_ptr<core::ProcessSession> &session) override;
 
  private:
   friend class ::ListAzureDataLakeStorageTestsFixture;
 
-  explicit ListAzureDataLakeStorage(std::string name, const minifi::utils::Identifier& uuid, std::unique_ptr<storage::DataLakeStorageClient> data_lake_storage_client)
-    : AzureDataLakeStorageProcessorBase(std::move(name), uuid, core::logging::LoggerFactory<ListAzureDataLakeStorage>::getLogger(uuid), std::move(data_lake_storage_client)) {
+  explicit ListAzureDataLakeStorage(std::string name, const minifi::utils::Identifier &uuid, std::unique_ptr<storage::DataLakeStorageClient> data_lake_storage_client)
+      : AzureDataLakeStorageProcessorBase(std::move(name), uuid, core::logging::LoggerFactory<ListAzureDataLakeStorage>::getLogger(uuid), std::move(data_lake_storage_client)) {
   }
 
-  std::optional<storage::ListAzureDataLakeStorageParameters> buildListParameters(core::ProcessContext& context);
+  std::optional<storage::ListAzureDataLakeStorageParameters> buildListParameters(core::ProcessContext &context);
 
   azure::EntityTracking tracking_strategy_ = azure::EntityTracking::TIMESTAMPS;
   storage::ListAzureDataLakeStorageParameters list_parameters_;
   std::unique_ptr<minifi::utils::ListingStateManager> state_manager_;
 };
 
-}  // namespace org::apache::nifi::minifi::azure::processors
+}  // namespace processors
+}  // namespace org::apache::nifi::minifi::azure
