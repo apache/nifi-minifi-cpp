@@ -91,7 +91,6 @@ class ProcessContext : public controller::ControllerServiceLookup, public core::
     return processor_node_;
   }
 
-  // TODO(fgerlits): remove if possible
   template<typename T = std::string>
   std::enable_if_t<std::is_default_constructible<T>::value, std::optional<T>>
   getProperty(const Property& property) const {
@@ -128,14 +127,12 @@ class ProcessContext : public controller::ControllerServiceLookup, public core::
     return getPropertyImp<typename std::common_type<T>::type>(std::string{property.name}, value);
   }
 
-  // TODO(fgerlits): remove if possible
   template<typename T = std::string>
   std::enable_if_t<std::is_default_constructible_v<T>, std::optional<T>> getProperty(const Property&, const std::shared_ptr<FlowFile>&);
 
   template<typename T = std::string>
   std::enable_if_t<std::is_default_constructible_v<T>, std::optional<T>> getProperty(const PropertyReference&, const std::shared_ptr<FlowFile>&);
 
-  // TODO(fgerlits): remove if possible
   virtual bool getProperty(const Property &property, std::string &value, const std::shared_ptr<FlowFile>& /*flow_file*/) {
     return getProperty(property.getName(), value);
   }
