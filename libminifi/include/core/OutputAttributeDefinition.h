@@ -38,7 +38,7 @@ struct OutputAttributeDefinition {
 };
 
 struct OutputAttributeReference {
-  constexpr OutputAttributeReference() = default;  // TODO(fgerlits): is this needed?
+  constexpr OutputAttributeReference() = default;  // Visual Studio 2019 cannot create an empty OutputAttributeReference array without this
 
   template<size_t NumRelationships>
   constexpr OutputAttributeReference(const OutputAttributeDefinition<NumRelationships>& output_attribute_definition)  // NOLINT: non-explicit on purpose
