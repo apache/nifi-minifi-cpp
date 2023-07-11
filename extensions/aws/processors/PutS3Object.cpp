@@ -33,7 +33,7 @@ namespace org::apache::nifi::minifi::aws::processors {
 
 namespace {
 class ReadCallback {
-  public:
+ public:
   ReadCallback(uint64_t flow_size, const minifi::aws::s3::PutObjectRequestParameters& options, aws::s3::S3Wrapper& s3_wrapper,
         uint64_t multipart_threshold, uint64_t multipart_size, core::logging::Logger& logger)
     : flow_size_(flow_size),
