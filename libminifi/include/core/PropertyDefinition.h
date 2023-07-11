@@ -53,7 +53,7 @@ struct PropertyReference {
   gsl::span<const std::string_view> dependent_properties;
   gsl::span<const std::pair<std::string_view, std::string_view>> exclusive_of_properties;
   std::optional<std::string_view> default_value;
-  const PropertyType* type;
+  gsl::not_null<const PropertyType*> type = gsl::make_not_null(&StandardPropertyTypes::VALID_TYPE);
   bool supports_expression_language = false;
 
   constexpr PropertyReference() = default;
