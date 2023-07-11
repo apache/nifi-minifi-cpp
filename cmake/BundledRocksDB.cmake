@@ -26,6 +26,7 @@ function(use_bundled_rocksdb SOURCE_DIR BINARY_DIR)
         list(APPEND CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/cmake/lz4/dummy")
     endif()
 
+    # Patch to fix build issue on ARM7 architecture: https://github.com/facebook/rocksdb/issues/8609#issuecomment-1009572506
     set(PATCH_FILE "${SOURCE_DIR}/thirdparty/rocksdb/arm7.patch")
     set(PC ${Bash_EXECUTABLE} -c "set -x && \
             (\"${Patch_EXECUTABLE}\" -p1 -R -s -f --dry-run -i \"${PATCH_FILE}\" || \"${Patch_EXECUTABLE}\" -p1 -N -i \"${PATCH_FILE}\")")
