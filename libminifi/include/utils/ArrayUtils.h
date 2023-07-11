@@ -22,6 +22,9 @@
 #include <stdexcept>
 #include <utility>
 
+#include "range/v3/algorithm/transform.hpp"
+#include "range/v3/algorithm/find_if.hpp"
+
 namespace org::apache::nifi::minifi::utils {
 
 /**
@@ -54,18 +57,15 @@ constexpr std::string_view array_to_string_view(const std::array<char, size>& in
 template<typename Key, typename Value, size_t Size>
 constexpr std::array<Key, Size> getKeys(const std::array<std::pair<Key, Value>, Size>& mapping) {
   std::array<Key, Size> result;
-  for (size_t idx = 0; idx < Size; ++idx) {
-    result.at(idx) = mapping.at(idx).first;
-  }
+  ranges::transform(mapping, result.begin(), [](const auto& kv) { return kv.first; });
   return result;
 }
 
 template<typename Container, typename ComparableToKeyType>
 constexpr auto at(const Container& mapping, ComparableToKeyType key) {
-  for (const auto& kv : mapping) {
-    if (kv.first == key) {
-      return kv.second;
-    }
+  const auto it = ranges::find_if(mapping, [key](const auto& kv) { return kv.first == key; });
+  if (it != mapping.end()) {
+    return it->second;
   }
   throw std::out_of_range{"minifi::utils::at out of range"};
 }
