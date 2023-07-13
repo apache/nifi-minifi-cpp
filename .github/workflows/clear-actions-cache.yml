@@ -1,7 +1,9 @@
 name: "MiNiFi-CPP Github Actions Cache Eviction"
 on:
-  schedule:
-    - cron: '*/30 * * * *'
+  workflow_run:
+    workflows: ["MiNiFi-CPP CI"]
+    types:
+      - completed
   workflow_dispatch:
 jobs:
   ubuntu_20_04:
