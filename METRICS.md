@@ -110,7 +110,7 @@ An agent identifier should also be defined to identify which agent the metric is
 
 ### Configure Prometheus metrics publisher with SSL
 
-The communication between MiNiFi and the Prometheus server can be encrypted using SSL. This can be achieved by adding the SSL certificate path (a single file containing both the certificate and the SSL key) and optionally adding the root CA path when using a self signed certificate to the minifi.properties file. Here is an example with the SSL properties:
+The communication between MiNiFi and Prometheus can be encrypted using SSL. This can be achieved by adding the SSL certificate path (a single file containing both the MiNiFi certificate and the MiNiFi SSL key) and optionally adding the root CA path if Prometheus uses a self-signed certificate, to the minifi.properties file. Here is an example with the SSL properties:
 
     # in minifi.properties
 

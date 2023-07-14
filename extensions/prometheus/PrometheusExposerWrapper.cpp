@@ -22,7 +22,7 @@ namespace org::apache::nifi::minifi::extensions::prometheus {
 
 PrometheusExposerWrapper::PrometheusExposerWrapper(const PrometheusExposerConfig& config)
     : exposer_(parseExposerConfig(config)) {
-  logger_->log_info("Started Prometheus metrics publisher on port %" PRIu32, config.port);
+  logger_->log_info("Started Prometheus metrics publisher on port %" PRIu32 "%s", config.port, config.certificate ? " with TLS enabled" : "");
 }
 
 std::vector<std::string> PrometheusExposerWrapper::parseExposerConfig(const PrometheusExposerConfig& config) {

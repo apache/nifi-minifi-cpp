@@ -27,6 +27,7 @@ class PrometheusContainer(Container):
         engine = "prometheus-ssl" if ssl else "prometheus"
         super().__init__(feature_context, name, engine, vols, network, image_store, command)
         self.ssl = ssl
+        extra_ssl_settings = ""
         if ssl:
             prometheus_cert, prometheus_key = make_cert_without_extended_usage(f"prometheus-{feature_context.id}", feature_context.root_ca_cert, feature_context.root_ca_key)
 
@@ -45,24 +46,13 @@ class PrometheusContainer(Container):
             self.prometheus_key_file.close()
             os.chmod(self.prometheus_key_file.name, 0o644)
 
-            prometheus_yml_content = """
-global:
-  scrape_interval: 2s
-  evaluation_interval: 15s
-scrape_configs:
-  - job_name: "minifi"
-    static_configs:
-      - targets: ["minifi-cpp-flow-{feature_id}:9936"]
+            extra_ssl_settings = """
     scheme: https
     tls_config:
       ca_file: /etc/prometheus/certs/root-ca.pem
-""".format(feature_id=self.feature_context.id)
-            self.yaml_file = tempfile.NamedTemporaryFile(delete=False)
-            self.yaml_file.write(prometheus_yml_content.encode())
-            self.yaml_file.close()
-            os.chmod(self.yaml_file.name, 0o644)
-        else:
-            prometheus_yml_content = """
+"""
+
+        prometheus_yml_content = """
 global:
   scrape_interval: 2s
   evaluation_interval: 15s
@@ -70,7 +60,9 @@ scrape_configs:
   - job_name: "minifi"
     static_configs:
       - targets: ["minifi-cpp-flow-{feature_id}:9936"]
-""".format(feature_id=self.feature_context.id)
+{extra_ssl_settings}
+""".format(feature_id=self.feature_context.id, extra_ssl_settings=extra_ssl_settings)
+
         self.yaml_file = tempfile.NamedTemporaryFile(delete=False)
         self.yaml_file.write(prometheus_yml_content.encode())
         self.yaml_file.close()
