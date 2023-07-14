@@ -16,6 +16,7 @@
  */
 #pragma once
 
+#include <concepts>
 #include <algorithm>
 #include <atomic>
 #include <map>
@@ -45,6 +46,9 @@
 #include "utils/PropertyErrors.h"
 
 namespace org::apache::nifi::minifi::core {
+
+template<typename T>
+concept NotAFlowFile = !std::convertible_to<T&, const FlowFile&> && !std::convertible_to<T&, const std::shared_ptr<FlowFile>&>;
 
 class ProcessContext : public controller::ControllerServiceLookup, public core::VariableRegistry, public std::enable_shared_from_this<VariableRegistry> {
  public:
@@ -91,9 +95,8 @@ class ProcessContext : public controller::ControllerServiceLookup, public core::
     return processor_node_;
   }
 
-  template<typename T = std::string>
-  std::enable_if_t<std::is_default_constructible<T>::value, std::optional<T>>
-  getProperty(const Property& property) const {
+  template<std::default_initializable T = std::string>
+  std::optional<T> getProperty(const Property& property) const {
     T value;
     try {
       if (!getProperty(property.getName(), value)) return std::nullopt;
@@ -103,9 +106,8 @@ class ProcessContext : public controller::ControllerServiceLookup, public core::
     return value;
   }
 
-  template<typename T = std::string>
-  std::enable_if_t<std::is_default_constructible<T>::value, std::optional<T>>
-  getProperty(const PropertyReference& property) const {
+  template<std::default_initializable T = std::string>
+  std::optional<T> getProperty(const PropertyReference& property) const {
     T value;
     try {
       if (!getProperty(property.name, value)) return std::nullopt;
@@ -115,23 +117,17 @@ class ProcessContext : public controller::ControllerServiceLookup, public core::
     return value;
   }
 
-  template<typename T>
-  requires(!std::is_convertible_v<T&, const FlowFile&> && !std::is_convertible_v<T&, const std::shared_ptr<FlowFile>&>)
-  bool getProperty(std::string_view name, T &value) const {
-    return getPropertyImp<typename std::common_type<T>::type>(std::string{name}, value);
+  bool getProperty(std::string_view name, NotAFlowFile auto& value) const {
+    return getPropertyImp(std::string{name}, value);
   }
 
-  template<typename T>
-  requires(!std::is_convertible_v<T&, const FlowFile&> && !std::is_convertible_v<T&, const std::shared_ptr<FlowFile>&>)
-  bool getProperty(const PropertyReference& property, T &value) const {
-    return getPropertyImp<typename std::common_type<T>::type>(std::string{property.name}, value);
+  bool getProperty(const PropertyReference& property, NotAFlowFile auto& value) const {
+    return getPropertyImp(std::string{property.name}, value);
   }
 
-  template<typename T = std::string>
-  std::enable_if_t<std::is_default_constructible_v<T>, std::optional<T>> getProperty(const Property&, const std::shared_ptr<FlowFile>&);
+  std::optional<std::string> getProperty(const Property&, const std::shared_ptr<FlowFile>&);
 
-  template<typename T = std::string>
-  std::enable_if_t<std::is_default_constructible_v<T>, std::optional<T>> getProperty(const PropertyReference&, const std::shared_ptr<FlowFile>&);
+  std::optional<std::string> getProperty(const PropertyReference&, const std::shared_ptr<FlowFile>&);
 
   virtual bool getProperty(const Property &property, std::string &value, const std::shared_ptr<FlowFile>& /*flow_file*/) {
     return getProperty(property.getName(), value);
@@ -413,28 +409,13 @@ class ProcessContext : public controller::ControllerServiceLookup, public core::
   bool initialized_;
 };
 
-template<typename T>
-inline std::enable_if_t<std::is_default_constructible_v<T>, std::optional<T>> ProcessContext::getProperty(const Property& property, const std::shared_ptr<FlowFile>& flow_file) {
-  T value;
-  std::string string_value;
-  if (!getProperty(property, string_value, flow_file)) return std::nullopt;
-  try {
-    if (!state::response::Value{string_value}.template convertValue<>(value)) return std::nullopt;
-  } catch (const utils::internal::ValueException&) {
-    return std::nullopt;
-  }
-  return value;
-}
-
-template<>
-inline std::optional<std::string> ProcessContext::getProperty<std::string>(const Property& property, const std::shared_ptr<FlowFile>& flow_file) {
+inline std::optional<std::string> ProcessContext::getProperty(const Property& property, const std::shared_ptr<FlowFile>& flow_file) {
   std::string value;
   if (!getProperty(property, value, flow_file)) return std::nullopt;
   return value;
 }
 
-template<>
-inline std::optional<std::string> ProcessContext::getProperty<std::string>(const PropertyReference& property, const std::shared_ptr<FlowFile>& flow_file) {
+inline std::optional<std::string> ProcessContext::getProperty(const PropertyReference& property, const std::shared_ptr<FlowFile>& flow_file) {
   std::string value;
   if (!getProperty(property, value, flow_file)) return std::nullopt;
   return value;
