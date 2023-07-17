@@ -19,8 +19,6 @@
 
 using namespace std::literals::chrono_literals;
 
-using namespace std::literals::chrono_literals;
-
 namespace org::apache::nifi::minifi::utils {
 
 ThreadPool::ThreadPool(int max_worker_threads, core::controller::ControllerServiceProvider* controller_service_provider, std::string name)

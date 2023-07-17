@@ -106,13 +106,6 @@ class Worker {
   std::shared_ptr<std::promise<TaskRescheduleInfo>> promise;
 };
 
-class DelayedTaskComparator {
- public:
-  bool operator()(Worker &a, Worker &b) {
-    return a.getNextExecutionTime() > b.getNextExecutionTime();
-  }
-};
-
 class WorkerThread {
  public:
   explicit WorkerThread(std::thread thread, const std::string &name = "NamelessWorker")
@@ -266,56 +259,33 @@ class ThreadPool {
   }
 
   std::atomic<int> thread_reduction_count_;
-// max worker threads
   int max_worker_threads_;
-// current worker tasks.
   std::atomic<int> current_workers_;
-// thread queue
   std::vector<std::shared_ptr<WorkerThread>> thread_queue_;
-// manager thread
   std::thread manager_thread_;
-// the thread responsible for putting delayed tasks to the worker queue when they had to be put
   std::thread delayed_scheduler_thread_;
-// conditional that's used to adjust the threads
   std::atomic<bool> adjust_threads_;
-// atomic running boolean
   std::atomic<bool> running_;
-// controller service provider
   core::controller::ControllerServiceProvider* controller_service_provider_;
-// integrated power manager
   std::shared_ptr<controllers::ThreadManagementService> thread_manager_;
-  // thread queue for the recently deceased threads.
   ConcurrentQueue<std::shared_ptr<WorkerThread>> deceased_thread_queue_;
-// worker queue of worker objects
   ConditionConcurrentQueue<Worker> worker_queue_;
-  std::priority_queue<Worker, std::vector<Worker>, DelayedTaskComparator> delayed_worker_queue_;
-// mutex to  protect task status and delayed queue
+  std::priority_queue<Worker, std::vector<Worker>,
+      /* comparator: */ decltype([](const Worker& lhs, const Worker& rhs) noexcept { return lhs.getNextExecutionTime() > rhs.getNextExecutionTime(); })
+  > delayed_worker_queue_;
   std::mutex worker_queue_mutex_;
-// notification for new delayed tasks that's before the current ones
   std::condition_variable delayed_task_available_;
-// map to identify if a task should be
   std::map<TaskId, bool> task_status_;
-// manager mutex
   std::recursive_mutex manager_mutex_;
-  // thread pool name
   std::string name_;
-  // count of running tasks by ID
   std::unordered_map<TaskId, uint32_t> running_task_count_by_id_;
-  // variable to signal task running completion
   std::condition_variable task_run_complete_;
 
   std::shared_ptr<core::logging::Logger> logger_;
 
-  /**
-   * Call for the manager to start worker threads
-   */
+
   void manageWorkers();
-
-  /**
-   * Runs worker tasks
-   */
   void run_tasks(const std::shared_ptr<WorkerThread>& thread);
-
   void manage_delayed_queue();
 };
 
