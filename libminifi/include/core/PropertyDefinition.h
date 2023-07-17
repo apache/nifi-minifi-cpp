@@ -32,7 +32,6 @@ struct PropertyDefinition {
   std::string_view display_name;
   std::string_view description;
   bool is_required = false;
-  std::string_view valid_regex;
   std::array<std::string_view, NumAllowedValues> allowed_values;
   std::array<std::string_view, NumAllowedTypes> allowed_types;
   std::array<std::string_view, NumDependentProperties> dependent_properties;
@@ -47,7 +46,6 @@ struct PropertyReference {
   std::string_view display_name;
   std::string_view description;
   bool is_required = false;
-  std::string_view valid_regex;
   gsl::span<const std::string_view> allowed_values;
   gsl::span<const std::string_view> allowed_types;
   gsl::span<const std::string_view> dependent_properties;
@@ -64,7 +62,6 @@ struct PropertyReference {
       display_name{property_definition.display_name},
       description{property_definition.description},
       is_required{property_definition.is_required},
-      valid_regex{property_definition.valid_regex},
       allowed_values{property_definition.allowed_values},
       allowed_types{property_definition.allowed_types},
       dependent_properties{property_definition.dependent_properties},

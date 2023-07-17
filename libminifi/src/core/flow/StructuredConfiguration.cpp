@@ -846,19 +846,6 @@ void StructuredConfiguration::validateComponentProperties(ConfigurableComponent&
       }
     }
   }
-
-  // Validate regex properties
-  for (const auto &prop_pair : component_properties) {
-    const auto &prop_regex_str = prop_pair.second.getValidRegex();
-
-    if (!prop_regex_str.empty()) {
-      utils::Regex prop_regex(prop_regex_str);
-      if (!utils::regexMatch(prop_pair.second.getValue().to_string(), prop_regex)) {
-        std::string reason = utils::StringUtils::join_pack("property '", prop_pair.second.getName(), "' does not match validation pattern '", prop_regex_str, "'");
-        raiseComponentError(component_name, section, reason);
-      }
-    }
-  }
 }
 
 void StructuredConfiguration::raiseComponentError(const std::string &component_name, const std::string &section, const std::string &reason) const {

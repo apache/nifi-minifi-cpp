@@ -39,12 +39,11 @@ class Property {
    * as they will get coerced to the bool true and false, causing
    * further overwrites to inherit the bool validator.
    */
-  Property(std::string name, std::string description, const std::string& value, bool is_required, std::string valid_regex, std::vector<std::string> dependent_properties,
+  Property(std::string name, std::string description, const std::string& value, bool is_required, std::vector<std::string> dependent_properties,
            std::vector<std::pair<std::string, std::string>> exclusive_of_properties)
       : name_(std::move(name)),
         description_(std::move(description)),
         is_required_(is_required),
-        valid_regex_(std::move(valid_regex)),
         dependent_properties_(std::move(dependent_properties)),
         exclusive_of_properties_(std::move(exclusive_of_properties)),
         is_collection_(false),
@@ -100,7 +99,6 @@ class Property {
   const PropertyValue &getValue() const;
   bool getRequired() const;
   bool supportsExpressionLanguage() const;
-  std::string getValidRegex() const;
   std::vector<std::string> getDependentProperties() const;
   std::vector<std::pair<std::string, std::string>> getExclusiveOfProperties() const;
   std::vector<std::string> getValues();
@@ -248,7 +246,6 @@ class Property {
   std::string name_;
   std::string description_;
   bool is_required_;
-  std::string valid_regex_;
   std::vector<std::string> dependent_properties_;
   std::vector<std::pair<std::string, std::string>> exclusive_of_properties_;
   bool is_collection_;

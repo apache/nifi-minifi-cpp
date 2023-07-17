@@ -69,7 +69,7 @@ bool ConfigurableComponent::setProperty(const std::string& name, const std::stri
   } else {
     if (accept_all_properties_) {
       static const std::string STAR_PROPERTIES = "Property";
-      Property new_property(name, STAR_PROPERTIES, value, false, "", { }, { });
+      Property new_property(name, STAR_PROPERTIES, value, false, { }, { });
       new_property.setTransient();
       new_property.setValue(value);
       properties_.insert(std::pair<std::string, Property>(name, new_property));
@@ -222,7 +222,7 @@ bool ConfigurableComponent::createDynamicProperty(const std::string &name, const
   }
 
   static const std::string DEFAULT_DYNAMIC_PROPERTY_DESC = "Dynamic Property";
-  Property new_property(name, DEFAULT_DYNAMIC_PROPERTY_DESC, value, false, "", { }, { });
+  Property new_property(name, DEFAULT_DYNAMIC_PROPERTY_DESC, value, false, { }, { });
   new_property.setSupportsExpressionLanguage(true);
   logger_->log_info("Processor %s dynamic property '%s' value '%s'", name.c_str(), new_property.getName().c_str(), value.c_str());
   dynamic_properties_[new_property.getName()] = new_property;

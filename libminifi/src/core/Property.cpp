@@ -55,10 +55,6 @@ bool Property::supportsExpressionLanguage() const {
   return supports_el_;
 }
 
-std::string Property::getValidRegex() const {
-  return valid_regex_;
-}
-
 const PropertyValidator& Property::getValidator() const {
   return *validator_;
 }
@@ -116,7 +112,6 @@ Property::Property(const PropertyReference& compile_time_property)
     : name_(compile_time_property.name),
       description_(compile_time_property.description),
       is_required_(compile_time_property.is_required),
-      valid_regex_(compile_time_property.valid_regex),
       dependent_properties_(createStrings(compile_time_property.dependent_properties)),
       exclusive_of_properties_(createStrings(compile_time_property.exclusive_of_properties)),
       is_collection_(false),
