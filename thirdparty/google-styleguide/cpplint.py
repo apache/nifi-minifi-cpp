@@ -1,19 +1,3 @@
-# Licensed to the Apache Software Foundation (ASF) under one or more
-# contributor license agreements.  See the NOTICE file distributed with
-# this work for additional information regarding copyright ownership.
-# The ASF licenses this file to You under the Apache License, Version 2.0
-# (the "License"); you may not use this file except in compliance with
-# the License.  You may obtain a copy of the License at
-#
-#     http://www.apache.org/licenses/LICENSE-2.0
-#
-# Unless required by applicable law or agreed to in writing, software
-# distributed under the License is distributed on an "AS IS" BASIS,
-# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-# See the License for the specific language governing permissions and
-# limitations under the License.
-
-
 #!/usr/bin/env python
 #
 # Copyright (c) 2009 Google Inc. All rights reserved.
@@ -57,6 +41,11 @@ We do a small hack, which is to ignore //'s with "'s after them on the
 same line, but it is far from perfect (in either direction).
 """
 
+# cpplint predates fstrings
+# pylint: disable=consider-using-f-string
+
+# pylint: disable=invalid-name
+
 import codecs
 import copy
 import getopt
@@ -75,9 +64,10 @@ import xml.etree.ElementTree
 # if empty, use defaults
 _valid_extensions = set([])
 
-__VERSION__ = '1.4.4'
+__VERSION__ = '7b88b68187e3516540fab3caa900988d2179ed24'
 
 try:
+  #  -- pylint: disable=used-before-assignment
   xrange          # Python 2
 except NameError:
   #  -- pylint: disable=redefined-builtin
@@ -85,7 +75,7 @@ except NameError:
 
 
 _USAGE = """
-Syntax: cpplint.py [--verbose=#] [--output=emacs|eclipse|vs7|junit]
+Syntax: cpplint.py [--verbose=#] [--output=emacs|eclipse|vs7|junit|sed|gsed]
                    [--filter=-x,+y,...]
                    [--counting=total|toplevel|detailed] [--root=subdir]
                    [--repository=path]
@@ -93,6 +83,7 @@ Syntax: cpplint.py [--verbose=#] [--output=emacs|eclipse|vs7|junit]
                    [--recursive]
                    [--exclude=path]
                    [--extensions=hpp,cpp,...]
+                   [--includeorder=default|standardcfirst]
                    [--quiet]
                    [--version]
         <file> [file] ...
@@ -107,9 +98,10 @@ Syntax: cpplint.py [--verbose=#] [--output=emacs|eclipse|vs7|junit]
   certain of the problem, and 1 meaning it could be a legitimate construct.
   This will miss some errors, and is not a substitute for a code review.
 
-  To suppress false-positive errors of a certain category, add a
-  'NOLINT(category)' comment to the line.  NOLINT or NOLINT(*)
-  suppresses errors of all categories on that line.
+  To suppress false-positive errors of certain categories, add a
+  'NOLINT(category[, category...])' comment to the line.  NOLINT or NOLINT(*)
+  suppresses errors of all categories on that line. To suppress categories
+  on the next line use NOLINTNEXTLINE instead of NOLINT.
 
   The files passed in will be linted; at least one file must be provided.
   Default linted extensions are %s.
@@ -118,11 +110,16 @@ Syntax: cpplint.py [--verbose=#] [--output=emacs|eclipse|vs7|junit]
 
   Flags:
 
-    output=emacs|eclipse|vs7|junit
+    output=emacs|eclipse|vs7|junit|sed|gsed
       By default, the output is formatted to ease emacs parsing.  Visual Studio
       compatible output (vs7) may also be used.  Further support exists for
       eclipse (eclipse), and JUnit (junit). XML parsers such as those used
-      in Jenkins and Bamboo may also be used.  Other formats are unsupported.
+      in Jenkins and Bamboo may also be used.
+      The sed format outputs sed commands that should fix some of the errors.
+      Note that this requires gnu sed. If that is installed as gsed on your
+      system (common e.g. on macOS with homebrew) you can use the gsed output
+      format. Sed commands are written to stdout, not stderr, so you should be
+      able to pipe output straight to a shell to run the fixes.
 
     verbose=#
       Specify a number 0-5 to restrict errors to certain verbosity levels.
@@ -137,11 +134,11 @@ Syntax: cpplint.py [--verbose=#] [--output=emacs|eclipse|vs7|junit]
       error messages whose category names pass the filters will be printed.
       (Category names are printed with the message and look like
       "[whitespace/indent]".)  Filters are evaluated left to right.
-      "-FOO" and "FOO" means "do not print categories that start with FOO".
+      "-FOO" means "do not print categories that start with FOO".
       "+FOO" means "do print categories that start with FOO".
 
       Examples: --filter=-whitespace,+whitespace/braces
-                --filter=whitespace,runtime/printf,+runtime/printf_format
+                --filter=-whitespace,-runtime/printf,+runtime/printf_format
                 --filter=-,+build/include_what_you_use
 
       To see a list of all the categories used in cpplint, pass no arg:
@@ -225,6 +222,15 @@ Syntax: cpplint.py [--verbose=#] [--output=emacs|eclipse|vs7|junit]
       Examples:
         --extensions=%s
 
+    includeorder=default|standardcfirst
+      For the build/include_order rule, the default is to blindly assume angle
+      bracket includes with file extension are c-system-headers (default),
+      even knowing this will have false classifications.
+      The default is established at google.
+      standardcfirst means to instead use an allow-list of known c headers and
+      treat all others as separate group of "other system headers". The C headers
+      included are those of the C-standard lib and closely related ones.
+
     headers=x,y,...
       The header extensions that cpplint will treat as .h in checks. Values are
       automatically added to --extensions list.
@@ -298,6 +304,7 @@ _ERROR_CATEGORIES = [
     'build/include_alpha',
     'build/include_order',
     'build/include_what_you_use',
+    'build/namespaces_headers',
     'build/namespaces_literals',
     'build/namespaces',
     'build/printf_format',
@@ -354,6 +361,13 @@ _ERROR_CATEGORIES = [
     'whitespace/todo',
     ]
 
+# keywords to use with --outputs which generate stdout for machine processing
+_MACHINE_OUTPUTS = [
+  'junit',
+  'sed',
+  'gsed'
+]
+
 # These error categories are no longer enforced by cpplint, but for backwards-
 # compatibility they may still appear in NOLINT comments.
 _LEGACY_ERROR_CATEGORIES = [
@@ -361,7 +375,6 @@ _LEGACY_ERROR_CATEGORIES = [
     'readability/function',
     ]
 
-# https://github.com/cpplint/cpplint/pull/196
 # These prefixes for categories should be ignored since they relate to other
 # tools which also use the NOLINT syntax, e.g. clang-tidy.
 _OTHER_NOLINT_CATEGORY_PREFIXES = [
@@ -408,7 +421,7 @@ _CPP_HEADERS = frozenset([
     'alloc.h',
     'builtinbuf.h',
     'bvector.h',
-    'complex.h',
+    # 'complex.h', collides with System C header "complex.h"
     'defalloc.h',
     'deque.h',
     'editbuf.h',
@@ -520,6 +533,22 @@ _CPP_HEADERS = frozenset([
     'optional',
     'string_view',
     'variant',
+    # 17.6.1.2 C++20 headers
+    'barrier',
+    'bit',
+    'compare',
+    'concepts',
+    'coroutine',
+    'format',
+    'latch'
+    'numbers',
+    'ranges',
+    'semaphore',
+    'source_location',
+    'span',
+    'stop_token',
+    'syncstream',
+    'version',
     # 17.6.1.2 C++ headers for C library facilities
     'cassert',
     'ccomplex',
@@ -548,6 +577,186 @@ _CPP_HEADERS = frozenset([
     'cwchar',
     'cwctype',
     ])
+
+# C headers
+_C_HEADERS = frozenset([
+    # System C headers
+    'assert.h',
+    'complex.h',
+    'ctype.h',
+    'errno.h',
+    'fenv.h',
+    'float.h',
+    'inttypes.h',
+    'iso646.h',
+    'limits.h',
+    'locale.h',
+    'math.h',
+    'setjmp.h',
+    'signal.h',
+    'stdalign.h',
+    'stdarg.h',
+    'stdatomic.h',
+    'stdbool.h',
+    'stddef.h',
+    'stdint.h',
+    'stdio.h',
+    'stdlib.h',
+    'stdnoreturn.h',
+    'string.h',
+    'tgmath.h',
+    'threads.h',
+    'time.h',
+    'uchar.h',
+    'wchar.h',
+    'wctype.h',
+    # additional POSIX C headers
+    'aio.h',
+    'arpa/inet.h',
+    'cpio.h',
+    'dirent.h',
+    'dlfcn.h',
+    'fcntl.h',
+    'fmtmsg.h',
+    'fnmatch.h',
+    'ftw.h',
+    'glob.h',
+    'grp.h',
+    'iconv.h',
+    'langinfo.h',
+    'libgen.h',
+    'monetary.h',
+    'mqueue.h',
+    'ndbm.h',
+    'net/if.h',
+    'netdb.h',
+    'netinet/in.h',
+    'netinet/tcp.h',
+    'nl_types.h',
+    'poll.h',
+    'pthread.h',
+    'pwd.h',
+    'regex.h',
+    'sched.h',
+    'search.h',
+    'semaphore.h',
+    'setjmp.h',
+    'signal.h',
+    'spawn.h',
+    'strings.h',
+    'stropts.h',
+    'syslog.h',
+    'tar.h',
+    'termios.h',
+    'trace.h',
+    'ulimit.h',
+    'unistd.h',
+    'utime.h',
+    'utmpx.h',
+    'wordexp.h',
+    # additional GNUlib headers
+    'a.out.h',
+    'aliases.h',
+    'alloca.h',
+    'ar.h',
+    'argp.h',
+    'argz.h',
+    'byteswap.h',
+    'crypt.h',
+    'endian.h',
+    'envz.h',
+    'err.h',
+    'error.h',
+    'execinfo.h',
+    'fpu_control.h',
+    'fstab.h',
+    'fts.h',
+    'getopt.h',
+    'gshadow.h',
+    'ieee754.h',
+    'ifaddrs.h',
+    'libintl.h',
+    'mcheck.h',
+    'mntent.h',
+    'obstack.h',
+    'paths.h',
+    'printf.h',
+    'pty.h',
+    'resolv.h',
+    'shadow.h',
+    'sysexits.h',
+    'ttyent.h',
+    # Additional linux glibc headers
+    'dlfcn.h',
+    'elf.h',
+    'features.h',
+    'gconv.h',
+    'gnu-versions.h',
+    'lastlog.h',
+    'libio.h',
+    'link.h',
+    'malloc.h',
+    'memory.h',
+    'netash/ash.h',
+    'netatalk/at.h',
+    'netax25/ax25.h',
+    'neteconet/ec.h',
+    'netipx/ipx.h',
+    'netiucv/iucv.h',
+    'netpacket/packet.h',
+    'netrom/netrom.h',
+    'netrose/rose.h',
+    'nfs/nfs.h',
+    'nl_types.h',
+    'nss.h',
+    're_comp.h',
+    'regexp.h',
+    'sched.h',
+    'sgtty.h',
+    'stab.h',
+    'stdc-predef.h',
+    'stdio_ext.h',
+    'syscall.h',
+    'termio.h',
+    'thread_db.h',
+    'ucontext.h',
+    'ustat.h',
+    'utmp.h',
+    'values.h',
+    'wait.h',
+    'xlocale.h',
+    # Hardware specific headers
+    'arm_neon.h',
+    'emmintrin.h',
+    'xmmintin.h',
+    ])
+
+# Folders of C libraries so commonly used in C++,
+# that they have parity with standard C libraries.
+C_STANDARD_HEADER_FOLDERS = frozenset([
+    # standard C library
+    "sys",
+    # glibc for linux
+    "arpa",
+    "asm-generic",
+    "bits",
+    "gnu",
+    "net",
+    "netinet",
+    "protocols",
+    "rpc",
+    "rpcsvc",
+    "scsi",
+    # linux kernel header
+    "drm",
+    "linux",
+    "misc",
+    "mtd",
+    "rdma",
+    "sound",
+    "video",
+    "xen",
+  ])
 
 # Type names
 _TYPES = re.compile(
@@ -635,9 +844,10 @@ _ALT_TOKEN_REPLACEMENT_PATTERN = re.compile(
 # _IncludeState.CheckNextIncludeOrder().
 _C_SYS_HEADER = 1
 _CPP_SYS_HEADER = 2
-_LIKELY_MY_HEADER = 3
-_POSSIBLE_MY_HEADER = 4
-_OTHER_HEADER = 5
+_OTHER_SYS_HEADER = 3
+_LIKELY_MY_HEADER = 4
+_POSSIBLE_MY_HEADER = 5
+_OTHER_HEADER = 6
 
 # These constants define the current inline assembly state
 _NO_ASM = 0       # Outside of inline assembly block
@@ -656,6 +866,22 @@ _SEARCH_C_FILE = re.compile(r'\b(?:LINT_C_FILE|'
 
 # Match string that indicates we're working on a Linux Kernel file.
 _SEARCH_KERNEL_FILE = re.compile(r'\b(?:LINT_KERNEL_FILE)')
+
+# Commands for sed to fix the problem
+_SED_FIXUPS = {
+  'Remove spaces around =': r's/ = /=/',
+  'Remove spaces around !=': r's/ != /!=/',
+  'Remove space before ( in if (': r's/if (/if(/',
+  'Remove space before ( in for (': r's/for (/for(/',
+  'Remove space before ( in while (': r's/while (/while(/',
+  'Remove space before ( in switch (': r's/switch (/switch(/',
+  'Should have a space between // and comment': r's/\/\//\/\/ /',
+  'Missing space before {': r's/\([^ ]\){/\1 {/',
+  'Tab found, replace by spaces': r's/\t/  /g',
+  'Line ends in whitespace.  Consider deleting these extra spaces.': r's/\s*$//',
+  'You don\'t need a ; after a }': r's/};/}/',
+  'Missing space after ,': r's/,\([^ ]\)/, \1/g',
+}
 
 _regexp_compile_cache = {}
 
@@ -676,20 +902,25 @@ _repository = None
 # Files to exclude from linting. This is set by the --exclude flag.
 _excludes = None
 
-# Whether to supress PrintInfo messages
+# Whether to supress all PrintInfo messages, UNRELATED to --quiet flag
 _quiet = False
 
 # The allowed line length of files.
 # This is set by --linelength flag.
 _line_length = 80
 
+# This allows to use different include order rule than default
+_include_order = "default"
+
 try:
+  #  -- pylint: disable=used-before-assignment
   unicode
 except NameError:
   #  -- pylint: disable=redefined-builtin
   basestring = unicode = str
 
 try:
+  #  -- pylint: disable=used-before-assignment
   long
 except NameError:
   #  -- pylint: disable=redefined-builtin
@@ -725,6 +956,15 @@ def ProcessHppHeadersOption(val):
     _hpp_headers = {ext.strip() for ext in val.split(',')}
   except ValueError:
     PrintUsage('Header extensions must be comma separated list.')
+
+def ProcessIncludeOrderOption(val):
+  if val is None or val == "default":
+    pass
+  elif val == "standardcfirst":
+    global _include_order
+    _include_order = val
+  else:
+    PrintUsage('Invalid includeorder value %s. Expected default|standardcfirst')
 
 def IsHeaderExtension(file_extension):
   return file_extension in GetHeaderExtensions()
@@ -774,12 +1014,11 @@ def ParseNolintSuppressions(filename, raw_line, linenum, error):
       suppressed_line = linenum + 1
     else:
       suppressed_line = linenum
-    category = matched.group(2)
-    if category in (None, '(*)'):  # => "suppress all"
+    categories = matched.group(2)
+    if categories in (None, '(*)'):  # => "suppress all"
       _error_suppressions.setdefault(None, set()).add(suppressed_line)
-    else:
-      if category.startswith('(') and category.endswith(')'):
-        category = category[1:-1]
+    elif categories.startswith('(') and categories.endswith(')'):
+      for category in set(map(lambda c: c.strip(), categories[1:-1].split(','))):
         if category in _ERROR_CATEGORIES:
           _error_suppressions.setdefault(category, set()).add(suppressed_line)
         elif any(c for c in _OTHER_NOLINT_CATEGORY_PREFIXES if category.startswith(c)):
@@ -890,11 +1129,13 @@ class _IncludeState(object):
   _MY_H_SECTION = 1
   _C_SECTION = 2
   _CPP_SECTION = 3
-  _OTHER_H_SECTION = 4
+  _OTHER_SYS_SECTION = 4
+  _OTHER_H_SECTION = 5
 
   _TYPE_NAMES = {
       _C_SYS_HEADER: 'C system header',
       _CPP_SYS_HEADER: 'C++ system header',
+      _OTHER_SYS_HEADER: 'other system header',
       _LIKELY_MY_HEADER: 'header this file implements',
       _POSSIBLE_MY_HEADER: 'header this file may implement',
       _OTHER_HEADER: 'other header',
@@ -904,6 +1145,7 @@ class _IncludeState(object):
       _MY_H_SECTION: 'a header this file implements',
       _C_SECTION: 'C system header',
       _CPP_SECTION: 'C++ system header',
+      _OTHER_SYS_SECTION: 'other system header',
       _OTHER_H_SECTION: 'other header',
       }
 
@@ -1017,6 +1259,12 @@ class _IncludeState(object):
       else:
         self._last_header = ''
         return error_message
+    elif header_type == _OTHER_SYS_HEADER:
+      if self._section <= self._OTHER_SYS_SECTION:
+        self._section = self._OTHER_SYS_SECTION
+      else:
+        self._last_header = ''
+        return error_message
     elif header_type == _LIKELY_MY_HEADER:
       if self._section <= self._MY_H_SECTION:
         self._section = self._MY_H_SECTION
@@ -1058,6 +1306,8 @@ class _CppLintState(object):
     # "eclipse" - format that eclipse can parse
     # "vs7" - format that Microsoft Visual Studio 7 can parse
     # "junit" - format that Jenkins, Bamboo, etc can parse
+    # "sed" - returns a gnu sed command to fix the problem
+    # "gsed" - like sed, but names the command gsed, e.g. for macOS homebrew users
     self.output_format = 'emacs'
 
     # For JUnit output, save errors and failures until the end so that they
@@ -1146,7 +1396,9 @@ class _CppLintState(object):
       self.PrintInfo('Total errors found: %d\n' % self.error_count)
 
   def PrintInfo(self, message):
-    if not _quiet and self.output_format != 'junit':
+    # _quiet does not represent --quiet flag.
+    # Hide infos from stdout to keep stdout pure for machine consumption
+    if not _quiet and self.output_format not in _MACHINE_OUTPUTS:
       sys.stdout.write(message)
 
   def PrintError(self, message):
@@ -1506,6 +1758,13 @@ def Error(filename, linenum, category, confidence, message):
     elif _cpplint_state.output_format == 'junit':
       _cpplint_state.AddJUnitFailure(filename, linenum, message, category,
           confidence)
+    elif _cpplint_state.output_format in ['sed', 'gsed']:
+      if message in _SED_FIXUPS:
+        sys.stdout.write(_cpplint_state.output_format + " -i '%s%s' %s # %s  [%s] [%d]\n" % (
+            linenum, _SED_FIXUPS[message], filename, message, category, confidence))
+      else:
+        sys.stderr.write('# %s:%s:  "%s"  [%s] [%d]\n' % (
+            filename, linenum, message, category, confidence))
     else:
       final_message = '%s:%s:  %s  [%s] [%d]\n' % (
           filename, linenum, message, category, confidence)
@@ -1646,7 +1905,7 @@ def FindNextMultiLineCommentEnd(lines, lineix):
 
 def RemoveMultiLineCommentsFromRange(lines, begin, end):
   """Clears a range of lines for multi-line comments."""
-  # Having // dummy comments makes the lines non-empty, so we will not get
+  # Having // <empty> comments makes the lines non-empty, so we will not get
   # unnecessary blank line warnings later in the code.
   for i in range(begin, end):
     lines[i] = '/**/'
@@ -1701,6 +1960,7 @@ class CleansedLines(object):
     self.raw_lines = lines
     self.num_lines = len(lines)
     self.lines_without_raw_strings = CleanseRawStrings(lines)
+    # # pylint: disable=consider-using-enumerate
     for linenum in range(len(self.lines_without_raw_strings)):
       self.lines.append(CleanseComments(
           self.lines_without_raw_strings[linenum]))
@@ -2020,7 +2280,7 @@ def CheckForCopyright(filename, lines, error):
   """Logs an error if no Copyright message appears at the top of the file."""
 
   # We'll say it should occur by line 10. Don't forget there's a
-  # dummy line at the front.
+  # placeholder line at the front.
   for line in xrange(1, min(len(lines), 11)):
     if re.search(r'Copyright', lines[line], re.I): break
   else:                       # means no copyright line was found
@@ -2123,7 +2383,8 @@ def GetHeaderGuardCPPVariable(filename):
 
     #   --root=.. , will prepend the outer directory to the header guard
     full_path = fileinfo.FullName()
-    root_abspath = os.path.abspath(_root)
+    # adapt slashes for windows
+    root_abspath = os.path.abspath(_root).replace('\\', '/')
 
     maybe_path = StripListPrefix(PathSplitToList(full_path),
                                  PathSplitToList(root_abspath))
@@ -2263,16 +2524,22 @@ def CheckHeaderFileIncluded(filename, include_state, error):
       continue
     headername = FileInfo(headerfile).RepositoryName()
     first_include = None
+    include_uses_unix_dir_aliases = False
     for section_list in include_state.include_list:
       for f in section_list:
-        if headername in f[0] or f[0] in headername:
+        include_text = f[0]
+        if "./" in include_text:
+          include_uses_unix_dir_aliases = True
+        if headername in include_text or include_text in headername:
           return
         if not first_include:
           first_include = f[1]
 
-    error(filename, first_include, 'build/include', 5,
-          '%s should include its header file %s' % (fileinfo.RepositoryName(),
-                                                    headername))
+    message = '%s should include its header file %s' % (fileinfo.RepositoryName(), headername)
+    if include_uses_unix_dir_aliases:
+      message += ". Relative paths like . and .. are not allowed."
+
+    error(filename, first_include, 'build/include', 5, message)
 
 
 def CheckForBadCharacters(filename, lines, error):
@@ -2923,7 +3190,7 @@ class NestingState(object):
     #   };
     class_decl_match = Match(
         r'^(\s*(?:template\s*<[\w\s<>,:=]*>\s*)?'
-        r'(class|struct)\s+(?:[A-Z_]+\s+)*(\w+(?:::\w+)*))'
+        r'(class|struct)\s+(?:[a-zA-Z0-9_]+\s+)*(\w+(?:::\w+)*))'
         r'(.*)$', line)
     if (class_decl_match and
         (not self.stack or self.stack[-1].open_parentheses == 0)):
@@ -3251,7 +3518,7 @@ def CheckSpacingForFunctionCall(filename, clean_lines, linenum, error):
   # Note that we assume the contents of [] to be short enough that
   # they'll never need to wrap.
   if (  # Ignore control structures.
-      not Search(r'\b(if|for|while|switch|return|new|delete|catch|sizeof)\b',
+      not Search(r'\b(if|elif|for|while|switch|return|new|delete|catch|sizeof)\b',
                  fncall) and
       # Ignore pointers/references to functions.
       not Search(r' \([^)]+\)\([^)]*(\)|,$)', fncall) and
@@ -3557,9 +3824,10 @@ def CheckSpacing(filename, clean_lines, linenum, nesting_state, error):
   # get rid of comments and strings
   line = clean_lines.elided[linenum]
 
-  # You shouldn't have spaces before your brackets, except maybe after
-  # 'delete []', 'return []() {};', or 'auto [abc, ...] = ...;'.
-  if Search(r'\w\s+\[', line) and not Search(r'(?:auto&?|delete|return)\s+\[', line):
+  # You shouldn't have spaces before your brackets, except for C++11 attributes
+  # or maybe after 'delete []', 'return []() {};', or 'auto [abc, ...] = ...;'.
+  if (Search(r'\w\s+\[(?!\[)', line) and
+      not Search(r'(?:auto&?|delete|return)\s+\[', line)):
     error(filename, linenum, 'whitespace/braces', 5,
           'Extra space before [')
 
@@ -4077,11 +4345,11 @@ def CheckBraces(filename, clean_lines, linenum, error):
   # its line, and the line after that should have an indent level equal to or
   # lower than the if. We also check for ambiguous if/else nesting without
   # braces.
-  if_else_match = Search(r'\b(if\s*\(|else\b)', line)
+  if_else_match = Search(r'\b(if\s*(|constexpr)\s*\(|else\b)', line)
   if if_else_match and not Match(r'\s*#', line):
     if_indent = GetIndentLevel(line)
     endline, endlinenum, endpos = line, linenum, if_else_match.end()
-    if_match = Search(r'\bif\s*\(', line)
+    if_match = Search(r'\bif\s*(|constexpr)\s*\(', line)
     if if_match:
       # This could be a multiline if condition, so find the end first.
       pos = if_match.end() - 1
@@ -4140,9 +4408,9 @@ def CheckTrailingSemicolon(filename, clean_lines, linenum, error):
 
   # Block bodies should not be followed by a semicolon.  Due to C++11
   # brace initialization, there are more places where semicolons are
-  # required than not, so we use a whitelist approach to check these
-  # rather than a blacklist.  These are the places where "};" should
-  # be replaced by just "}":
+  # required than not, so we explicitly list the allowed rules rather
+  # than listing the disallowed ones.  These are the places where "};"
+  # should be replaced by just "}":
   # 1. Some flavor of block following closing parenthesis:
   #    for (;;) {};
   #    while (...) {};
@@ -4198,11 +4466,11 @@ def CheckTrailingSemicolon(filename, clean_lines, linenum, error):
     #  - INTERFACE_DEF
     #  - EXCLUSIVE_LOCKS_REQUIRED, SHARED_LOCKS_REQUIRED, LOCKS_EXCLUDED:
     #
-    # We implement a whitelist of safe macros instead of a blacklist of
+    # We implement a list of safe macros instead of a list of
     # unsafe macros, even though the latter appears less frequently in
     # google code and would have been easier to implement.  This is because
-    # the downside for getting the whitelist wrong means some extra
-    # semicolons, while the downside for getting the blacklist wrong
+    # the downside for getting the allowed checks wrong means some extra
+    # semicolons, while the downside for getting disallowed checks wrong
     # would result in compile errors.
     #
     # In addition to macros, we also don't want to warn on
@@ -4623,7 +4891,7 @@ def CheckStyle(filename, clean_lines, linenum, file_extension, nesting_state,
   # if(match($0, " <<")) complain = 0;
   # if(match(prev, " +for \\(")) complain = 0;
   # if(prevodd && match(prevprev, " +for \\(")) complain = 0;
-  scope_or_label_pattern = r'\s*\w+\s*:\s*\\?$'
+  scope_or_label_pattern = r'\s*(?:public|private|protected|signals)(?:\s+(?:slots\s*)?)?:\s*\\?$'
   classinfo = nesting_state.InnermostClass()
   initial_spaces = 0
   cleansed_line = clean_lines.elided[linenum]
@@ -4747,13 +5015,14 @@ def _DropCommonSuffixes(filename):
   return os.path.splitext(filename)[0]
 
 
-def _ClassifyInclude(fileinfo, include, is_system):
+def _ClassifyInclude(fileinfo, include, used_angle_brackets, include_order="default"):
   """Figures out what kind of header 'include' is.
 
   Args:
     fileinfo: The current file cpplint is running over. A FileInfo instance.
     include: The path to a #included file.
-    is_system: True if the #include used <> rather than "".
+    used_angle_brackets: True if the #include used <> rather than "".
+    include_order: "default" or other value allowed in program arguments
 
   Returns:
     One of the _XXX_HEADER constants.
@@ -4763,6 +5032,8 @@ def _ClassifyInclude(fileinfo, include, is_system):
     _C_SYS_HEADER
     >>> _ClassifyInclude(FileInfo('foo/foo.cc'), 'string', True)
     _CPP_SYS_HEADER
+    >>> _ClassifyInclude(FileInfo('foo/foo.cc'), 'foo/foo.h', True, "standardcfirst")
+    _OTHER_SYS_HEADER
     >>> _ClassifyInclude(FileInfo('foo/foo.cc'), 'foo/foo.h', False)
     _LIKELY_MY_HEADER
     >>> _ClassifyInclude(FileInfo('foo/foo_unknown_extension.cc'),
@@ -4773,17 +5044,24 @@ def _ClassifyInclude(fileinfo, include, is_system):
   """
   # This is a list of all standard c++ header files, except
   # those already checked for above.
-  is_cpp_h = include in _CPP_HEADERS
+  is_cpp_header = include in _CPP_HEADERS
+
+  # Mark include as C header if in list or in a known folder for standard-ish C headers.
+  is_std_c_header = (include_order == "default") or (include in _C_HEADERS
+            # additional linux glibc header folders
+            or Search(r'(?:%s)\/.*\.h' % "|".join(C_STANDARD_HEADER_FOLDERS), include))
 
   # Headers with C++ extensions shouldn't be considered C system headers
-  if is_system and os.path.splitext(include)[1] in ['.hpp', '.hxx', '.h++']:
-    is_system = False
+  include_ext = os.path.splitext(include)[1]
+  is_system = used_angle_brackets and not include_ext in ['.hh', '.hpp', '.hxx', '.h++']
 
   if is_system:
-    if is_cpp_h:
+    if is_cpp_header:
       return _CPP_SYS_HEADER
-    else:
+    if is_std_c_header:
       return _C_SYS_HEADER
+    else:
+      return _OTHER_SYS_HEADER
 
   # If the target file and the include we're checking share a
   # basename when we drop common extensions, and the include
@@ -4837,10 +5115,12 @@ def CheckIncludeLine(filename, clean_lines, linenum, include_state, error):
   #
   # We also make an exception for Lua headers, which follow google
   # naming convention but not the include convention.
-  match = Match(r'#include\s*"([^/]+\.h)"', line)
-  if match and not _THIRD_PARTY_HEADERS_PATTERN.match(match.group(1)):
-    error(filename, linenum, 'build/include_subdir', 4,
-          'Include the directory when naming .h files')
+  match = Match(r'#include\s*"([^/]+\.(.*))"', line)
+  if match:
+    if (IsHeaderExtension(match.group(2)) and
+        not _THIRD_PARTY_HEADERS_PATTERN.match(match.group(1))):
+      error(filename, linenum, 'build/include_subdir', 4,
+            'Include the directory when naming header files')
 
   # we shouldn't include a file more than once. actually, there are a
   # handful of instances where doing so is okay, but in general it's
@@ -4848,7 +5128,7 @@ def CheckIncludeLine(filename, clean_lines, linenum, include_state, error):
   match = _RE_PATTERN_INCLUDE.search(line)
   if match:
     include = match.group(2)
-    is_system = (match.group(1) == '<')
+    used_angle_brackets = match.group(1) == '<'
     duplicate_line = include_state.FindHeader(include)
     if duplicate_line >= 0:
       error(filename, linenum, 'build/include', 4,
@@ -4890,7 +5170,7 @@ def CheckIncludeLine(filename, clean_lines, linenum, include_state, error):
       # track of the highest type seen, and complains if we see a
       # lower type after that.
       error_message = include_state.CheckNextIncludeOrder(
-          _ClassifyInclude(fileinfo, include, is_system))
+          _ClassifyInclude(fileinfo, include, used_angle_brackets, _include_order))
       if error_message:
         error(filename, linenum, 'build/include_order', 4,
               '%s. Should be: %s.h, c system, c++ system, other.' %
@@ -5144,7 +5424,7 @@ def CheckLanguage(filename, clean_lines, linenum, file_extension,
   if (IsHeaderExtension(file_extension)
       and Search(r'\bnamespace\s*{', line)
       and line[-1] != '\\'):
-    error(filename, linenum, 'build/namespaces', 4,
+    error(filename, linenum, 'build/namespaces_headers', 4,
           'Do not use unnamed namespaces in header files.  See '
           'https://google-styleguide.googlecode.com/svn/trunk/cppguide.xml#Namespaces'
           ' for more information.')
@@ -5434,19 +5714,19 @@ def CheckForNonConstReference(filename, clean_lines, linenum,
   #
   # We also accept & in static_assert, which looks like a function but
   # it's actually a declaration expression.
-  whitelisted_functions = (r'(?:[sS]wap(?:<\w:+>)?|'
+  allowed_functions = (r'(?:[sS]wap(?:<\w:+>)?|'
                            r'operator\s*[<>][<>]|'
                            r'static_assert|COMPILE_ASSERT'
                            r')\s*\(')
-  if Search(whitelisted_functions, line):
+  if Search(allowed_functions, line):
     return
   elif not Search(r'\S+\([^)]*$', line):
-    # Don't see a whitelisted function on this line.  Actually we
+    # Don't see an allowed function on this line.  Actually we
     # didn't see any function name on this line, so this is likely a
     # multi-line parameter list.  Try a bit harder to catch this case.
     for i in xrange(2):
       if (linenum > i and
-          Search(whitelisted_functions, clean_lines.elided[linenum - i - 1])):
+          Search(allowed_functions, clean_lines.elided[linenum - i - 1])):
         return
 
   decls = ReplaceAll(r'{[^}]*}', ' ', line)  # exclude function body
@@ -5521,7 +5801,7 @@ def CheckCasts(filename, clean_lines, linenum, error):
 
   if not expecting_function:
     CheckCStyleCast(filename, clean_lines, linenum, 'static_cast',
-                    r'\((int|float|double|bool|char|u?int(16|32|64))\)', error)
+                    r'\((int|float|double|bool|char|u?int(16|32|64)|size_t)\)', error)
 
   # This doesn't catch all cases. Consider (const char * const)"hello".
   #
@@ -5613,7 +5893,8 @@ def CheckCStyleCast(filename, clean_lines, linenum, cast_type, pattern, error):
     return False
 
   # operator++(int) and operator--(int)
-  if context.endswith(' operator++') or context.endswith(' operator--'):
+  if (context.endswith(' operator++') or context.endswith(' operator--') or
+      context.endswith('::operator++') or context.endswith('::operator--')):
     return False
 
   # A single unnamed argument for a function tends to look like old style cast.
@@ -5804,18 +6085,19 @@ def UpdateIncludeState(filename, include_dict, io=codecs):
   """
   headerfile = None
   try:
-    headerfile = io.open(filename, 'r', 'utf8', 'replace')
+    with io.open(filename, 'r', 'utf8', 'replace') as headerfile:
+      linenum = 0
+      for line in headerfile:
+        linenum += 1
+        clean_line = CleanseComments(line)
+        match = _RE_PATTERN_INCLUDE.search(clean_line)
+        if match:
+          include = match.group(2)
+          include_dict.setdefault(include, linenum)
+    return True
   except IOError:
     return False
-  linenum = 0
-  for line in headerfile:
-    linenum += 1
-    clean_line = CleanseComments(line)
-    match = _RE_PATTERN_INCLUDE.search(clean_line)
-    if match:
-      include = match.group(2)
-      include_dict.setdefault(include, linenum)
-  return True
+
 
 
 def CheckForIncludeWhatYouUse(filename, clean_lines, include_state, error,
@@ -6291,7 +6573,7 @@ def ProcessConfigOverrides(filename):
       continue
 
     try:
-      with open(cfg_file) as file_handle:
+      with codecs.open(cfg_file, 'r', 'utf8', 'replace') as file_handle:
         for line in file_handle:
           line, _, _ = line.partition('#')  # Remove comments.
           if not line.strip():
@@ -6336,6 +6618,8 @@ def ProcessConfigOverrides(filename):
             _root = os.path.join(os.path.dirname(cfg_file), val)
           elif name == 'headers':
             ProcessHppHeadersOption(val)
+          elif name == 'includeorder':
+            ProcessIncludeOrderOption(val)
           else:
             _cpplint_state.PrintError(
                 'Invalid configuration option (%s) in file %s\n' %
@@ -6392,7 +6676,8 @@ def ProcessFile(filename, vlevel, extra_check_functions=None):
                                         codecs.getwriter('utf8'),
                                         'replace').read().split('\n')
     else:
-      lines = codecs.open(filename, 'r', 'utf8', 'replace').read().split('\n')
+      with codecs.open(filename, 'r', 'utf8', 'replace') as target_file:
+        lines = target_file.read().split('\n')
 
     # Remove trailing '\r'.
     # The -1 accounts for the extra trailing blank line we get from split()
@@ -6452,10 +6737,10 @@ def PrintUsage(message):
   Args:
     message: The optional error message.
   """
-  sys.stderr.write(_USAGE  % (list(GetAllExtensions()),
-       ','.join(list(GetAllExtensions())),
-       GetHeaderExtensions(),
-       ','.join(GetHeaderExtensions())))
+  sys.stderr.write(_USAGE  % (sorted(list(GetAllExtensions())),
+       ','.join(sorted(list(GetAllExtensions()))),
+       sorted(GetHeaderExtensions()),
+       ','.join(sorted(GetHeaderExtensions()))))
 
   if message:
     sys.exit('\nFATAL ERROR: ' + message)
@@ -6501,6 +6786,7 @@ def ParseArguments(args):
                                                  'exclude=',
                                                  'recursive',
                                                  'headers=',
+                                                 'includeorder=',
                                                  'quiet'])
   except getopt.GetoptError:
     PrintUsage('Invalid arguments.')
@@ -6518,9 +6804,9 @@ def ParseArguments(args):
     if opt == '--version':
       PrintVersion()
     elif opt == '--output':
-      if val not in ('emacs', 'vs7', 'eclipse', 'junit'):
+      if val not in ('emacs', 'vs7', 'eclipse', 'junit', 'sed', 'gsed'):
         PrintUsage('The only allowed output formats are emacs, vs7, eclipse '
-                   'and junit.')
+                   'sed, gsed and junit.')
       output_format = val
     elif opt == '--quiet':
       quiet = True
@@ -6557,6 +6843,8 @@ def ParseArguments(args):
       ProcessHppHeadersOption(val)
     elif opt == '--recursive':
       recursive = True
+    elif opt == '--includeorder':
+      ProcessIncludeOrderOption(val)
 
   if not filenames:
     PrintUsage('No files were specified.')
@@ -6573,6 +6861,7 @@ def ParseArguments(args):
   _SetFilters(filters)
   _SetCountingStyle(counting_style)
 
+  filenames.sort()
   return filenames
 
 def _ExpandDirectories(filenames):
