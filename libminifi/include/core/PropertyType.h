@@ -108,7 +108,7 @@ class BooleanPropertyType : public PropertyType {
  public:
   constexpr ~BooleanPropertyType() override {}  // NOLINT see comment at parent
 
-  [[nodiscard]] std::string_view getName() const override { return "BOOLEAN_TYPE"; }
+  [[nodiscard]] std::string_view getName() const override { return "BOOLEAN_VALIDATOR"; }
 
   [[nodiscard]] PropertyValue parse(std::string_view input) const override;
 
@@ -128,7 +128,7 @@ class IntegerPropertyType : public PropertyType {
  public:
   constexpr ~IntegerPropertyType() override {}  // NOLINT see comment at parent
 
-  [[nodiscard]] std::string_view getName() const override { return "INTEGER_TYPE"; }
+  [[nodiscard]] std::string_view getName() const override { return "INTEGER_VALIDATOR"; }
 
   [[nodiscard]] PropertyValue parse(std::string_view input) const override;
 
@@ -181,7 +181,7 @@ class LongPropertyType : public PropertyType {
 
   constexpr ~LongPropertyType() override {}  // NOLINT see comment at parent
 
-  [[nodiscard]] std::string_view getName() const override { return "LONG_TYPE"; }
+  [[nodiscard]] std::string_view getName() const override { return "LONG_VALIDATOR"; }
 
   [[nodiscard]] PropertyValue parse(std::string_view input) const override;
 
@@ -219,7 +219,7 @@ class UnsignedLongPropertyType : public PropertyType {
 
   constexpr ~UnsignedLongPropertyType() override {}  // NOLINT see comment at parent
 
-  [[nodiscard]] std::string_view getName() const override { return "LONG_TYPE"; }  // name is used by java nifi validators, so we should keep this as LONG instead of UNSIGNED_LONG
+  [[nodiscard]] std::string_view getName() const override { return "LONG_VALIDATOR"; }  // name is used by java nifi validators, so we should keep this as LONG instead of UNSIGNED_LONG
 
   [[nodiscard]] PropertyValue parse(std::string_view input) const override;
 
@@ -249,7 +249,7 @@ class NonBlankPropertyType : public PropertyType {
  public:
   constexpr ~NonBlankPropertyType() override {}  // NOLINT see comment at parent
 
-  [[nodiscard]] std::string_view getName() const override { return "NON_BLANK_TYPE"; }
+  [[nodiscard]] std::string_view getName() const override { return "NON_BLANK_VALIDATOR"; }
 
   [[nodiscard]] ValidationResult validate(const std::string& subject, const std::shared_ptr<minifi::state::response::Value>& input) const final {
     return validate(subject, input->getStringValue());
@@ -264,7 +264,7 @@ class DataSizePropertyType : public PropertyType {
  public:
   constexpr ~DataSizePropertyType() override {}  // NOLINT see comment at parent
 
-  [[nodiscard]] std::string_view getName() const override { return "DATA_SIZE_TYPE"; }
+  [[nodiscard]] std::string_view getName() const override { return "DATA_SIZE_VALIDATOR"; }
 
   [[nodiscard]] PropertyValue parse(std::string_view input) const override;
 
@@ -286,7 +286,7 @@ class PortPropertyType : public LongPropertyType {
 
   constexpr ~PortPropertyType() override {}  // NOLINT see comment at parent
 
-  [[nodiscard]] std::string_view getName() const override { return "PORT_TYPE"; }
+  [[nodiscard]] std::string_view getName() const override { return "PORT_VALIDATOR"; }
 };
 
 // Use only for specifying listen ports, where 0 means a randomly chosen one!
@@ -298,14 +298,14 @@ class ListenPortValidator : public LongPropertyType {
 
   constexpr ~ListenPortValidator() override {}  // NOLINT see comment at parent
 
-  [[nodiscard]] std::string_view getName() const override { return "PORT_TYPE"; }
+  [[nodiscard]] std::string_view getName() const override { return "PORT_VALIDATOR"; }
 };
 
 class TimePeriodPropertyType : public PropertyType {
  public:
   constexpr ~TimePeriodPropertyType() override {}  // NOLINT see comment at parent
 
-  [[nodiscard]] std::string_view getName() const override { return "TIME_PERIOD_TYPE"; }
+  [[nodiscard]] std::string_view getName() const override { return "TIME_PERIOD_VALIDATOR"; }
 
   [[nodiscard]] PropertyValue parse(std::string_view input) const override;
 
