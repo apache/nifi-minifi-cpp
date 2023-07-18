@@ -16,6 +16,7 @@
  */
 
 #include "Catch.h"
+#include "catch2/catch_approx.hpp"
 #include "ProcFs.h"
 #include "MockProcFs.h"
 
@@ -35,7 +36,7 @@ void cpu_stat_period_total_should_be_one(const CpuStatData& cpu_stat) {
   percentage += cpu_stat.getSteal() / cpu_stat.getTotal();
   percentage += cpu_stat.getGuest() / cpu_stat.getTotal();
   percentage += cpu_stat.getGuestNice() / cpu_stat.getTotal();
-  REQUIRE(percentage == Approx(1.0));
+  REQUIRE(percentage == Catch::Approx(1.0));
 }
 
 TEST_CASE("ProcFSTest stat test with mock", "[procfsstatmockabsolutetest]") {

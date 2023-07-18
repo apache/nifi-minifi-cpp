@@ -89,7 +89,7 @@ std::shared_ptr<minifi::controllers::SSLContextService> getSSLContextService(con
 int main(int argc, char **argv) {
   const auto logger = minifi::core::logging::LoggerConfiguration::getConfiguration().getLogger("controller");
 
-  const std::string minifi_home = determineMinifiHome(logger);
+  const auto minifi_home = determineMinifiHome(logger);
   if (minifi_home.empty()) {
     // determineMinifiHome already logged everything we need
     return -1;

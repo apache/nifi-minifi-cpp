@@ -51,4 +51,10 @@ TEST_CASE("CurrentUser and LocalMachine are among the allowed values of WindowsC
   CHECK_FALSE(ranges::contains(allowed_locations, "SomebodyElsesComputer"));
 }
 
+#else
+#include "../Catch.h"
+TEST_CASE("WindowsCertStoreLocation") {
+  SUCCEED("To avoid empty test executable");
+}
+
 #endif  // WIN32

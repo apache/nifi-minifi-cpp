@@ -19,6 +19,7 @@
 #include "range/v3/algorithm/find_if.hpp"
 
 #include "Catch.h"
+#include "catch2/matchers/catch_matchers_string.hpp"
 #include "TestBase.h"
 #include "../processors/PublishMQTT.h"
 
@@ -44,19 +45,19 @@ struct Fixture {
 
 TEST_CASE_METHOD(Fixture, "PublishMQTTTest_EmptyTopic", "[publishMQTTTest]") {
   publishMqttProcessor_->setProperty(minifi::processors::AbstractMQTTProcessor::BrokerURI, "127.0.0.1:1883");
-  REQUIRE_THROWS_WITH(plan_->scheduleProcessor(publishMqttProcessor_), Catch::EndsWith("Required property is empty: Topic"));
+  REQUIRE_THROWS_WITH(plan_->scheduleProcessor(publishMqttProcessor_), Catch::Matchers::EndsWith("Required property is empty: Topic"));
 }
 
 TEST_CASE_METHOD(Fixture, "PublishMQTTTest_EmptyBrokerURI", "[publishMQTTTest]") {
   publishMqttProcessor_->setProperty(minifi::processors::PublishMQTT::Topic, "mytopic");
-  REQUIRE_THROWS_WITH(plan_->scheduleProcessor(publishMqttProcessor_), Catch::EndsWith("Required property is empty: Broker URI"));
+  REQUIRE_THROWS_WITH(plan_->scheduleProcessor(publishMqttProcessor_), Catch::Matchers::EndsWith("Required property is empty: Broker URI"));
 }
 
 TEST_CASE_METHOD(Fixture, "PublishMQTTTest_EmptyClientID_V_3_1_0", "[publishMQTTTest]") {
   publishMqttProcessor_->setProperty(minifi::processors::PublishMQTT::Topic, "mytopic");
   publishMqttProcessor_->setProperty(minifi::processors::AbstractMQTTProcessor::BrokerURI, "127.0.0.1:1883");
   publishMqttProcessor_->setProperty(minifi::processors::AbstractMQTTProcessor::MqttVersion, toString(minifi::processors::mqtt::MqttVersions::V_3_1_0));
-  REQUIRE_THROWS_WITH(plan_->scheduleProcessor(publishMqttProcessor_), Catch::EndsWith("MQTT 3.1.0 specification does not support empty client IDs"));
+  REQUIRE_THROWS_WITH(plan_->scheduleProcessor(publishMqttProcessor_), Catch::Matchers::EndsWith("MQTT 3.1.0 specification does not support empty client IDs"));
 }
 
 TEST_CASE_METHOD(Fixture, "PublishMQTTTest_EmptyClientID_V_3", "[publishMQTTTest]") {

@@ -21,6 +21,7 @@
 #include <string>
 #include "../TestBase.h"
 #include "../Catch.h"
+#include "catch2/catch_session.hpp"
 #include "controllers/keyvalue/AutoPersistor.h"
 #include "controllers/keyvalue/KeyValueStateStorage.h"
 #include "core/ProcessGroup.h"
@@ -37,7 +38,7 @@ int main(int argc, char* argv[]) {
   Catch::Session session;
 
   auto cli = session.cli()
-      | Catch::clara::Opt{config_yaml, "config-yaml"}
+      | Catch::Clara::Opt{config_yaml, "config-yaml"}
           ["--config-yaml"]
           ("path to the config.yaml containing the VolatileMapStateStorageTest controller service configuration");
   session.cli(cli);

@@ -265,13 +265,13 @@ TEST_CASE("ListenSyslog without parsing test", "[ListenSyslog]") {
     port = utils::scheduleProcessorOnRandomPort(controller.plan, listen_syslog);
 
     asio::ip::udp::endpoint endpoint;
-    SECTION("sending through IPv4", "[IPv4]") {
-      endpoint = asio::ip::udp::endpoint(asio::ip::address_v4::loopback(), port);
-    }
     SECTION("sending through IPv6", "[IPv6]") {
       if (utils::isIPv6Disabled())
-        return;
+        SKIP("IPv6 is disabled");
       endpoint = asio::ip::udp::endpoint(asio::ip::address_v6::loopback(), port);
+    }
+    SECTION("sending through IPv4", "[IPv4]") {
+      endpoint = asio::ip::udp::endpoint(asio::ip::address_v4::loopback(), port);
     }
     protocol = "UDP";
     CHECK_THAT(utils::sendUdpDatagram(rfc5424_logger_example_1, endpoint), MatchesSuccess());
@@ -285,13 +285,13 @@ TEST_CASE("ListenSyslog without parsing test", "[ListenSyslog]") {
     port = utils::scheduleProcessorOnRandomPort(controller.plan, listen_syslog);
 
     asio::ip::tcp::endpoint endpoint;
-    SECTION("sending through IPv4", "[IPv4]") {
-      endpoint = asio::ip::tcp::endpoint(asio::ip::address_v4::loopback(), port);
-    }
     SECTION("sending through IPv6", "[IPv6]") {
       if (utils::isIPv6Disabled())
-        return;
+        SKIP("IPv6 is disabled");
       endpoint = asio::ip::tcp::endpoint(asio::ip::address_v6::loopback(), port);
+    }
+    SECTION("sending through IPv4", "[IPv4]") {
+      endpoint = asio::ip::tcp::endpoint(asio::ip::address_v4::loopback(), port);
     }
     CHECK_THAT(utils::sendMessagesViaTCP({rfc5424_logger_example_1}, endpoint), MatchesSuccess());
     CHECK_THAT(utils::sendMessagesViaTCP({invalid_syslog}, endpoint), MatchesSuccess());
@@ -322,13 +322,13 @@ TEST_CASE("ListenSyslog with parsing test", "[ListenSyslog][NetworkListenerProce
     port = utils::scheduleProcessorOnRandomPort(controller.plan, listen_syslog);
 
     asio::ip::udp::endpoint endpoint;
-    SECTION("sending through IPv4", "[IPv4]") {
-      endpoint = asio::ip::udp::endpoint(asio::ip::address_v4::loopback(), port);
-    }
     SECTION("sending through IPv6", "[IPv6]") {
       if (utils::isIPv6Disabled())
-        return;
+        SKIP("IPv6 is disabled");
       endpoint = asio::ip::udp::endpoint(asio::ip::address_v6::loopback(), port);
+    }
+    SECTION("sending through IPv4", "[IPv4]") {
+      endpoint = asio::ip::udp::endpoint(asio::ip::address_v4::loopback(), port);
     }
 
     CHECK_THAT(utils::sendUdpDatagram(rfc5424_doc_example_1.unparsed_, endpoint), MatchesSuccess());
@@ -352,13 +352,13 @@ TEST_CASE("ListenSyslog with parsing test", "[ListenSyslog][NetworkListenerProce
     port = utils::scheduleProcessorOnRandomPort(controller.plan, listen_syslog);
 
     asio::ip::tcp::endpoint endpoint;
-    SECTION("sending through IPv4", "[IPv4]") {
-      endpoint = asio::ip::tcp::endpoint(asio::ip::address_v4::loopback(), port);
-    }
     SECTION("sending through IPv6", "[IPv6]") {
       if (utils::isIPv6Disabled())
-        return;
+        SKIP("IPv6 is disabled");
       endpoint = asio::ip::tcp::endpoint(asio::ip::address_v6::loopback(), port);
+    }
+    SECTION("sending through IPv4", "[IPv4]") {
+      endpoint = asio::ip::tcp::endpoint(asio::ip::address_v4::loopback(), port);
     }
 
     CHECK_THAT(utils::sendMessagesViaTCP({rfc5424_doc_example_1.unparsed_,
@@ -450,13 +450,13 @@ TEST_CASE("ListenSyslog max queue and max batch size test", "[ListenSyslog][Netw
     port = utils::scheduleProcessorOnRandomPort(controller.plan, listen_syslog);
 
     asio::ip::udp::endpoint endpoint;
-    SECTION("sending through IPv4", "[IPv4]") {
-      endpoint = asio::ip::udp::endpoint(asio::ip::address_v4::loopback(), port);
-    }
     SECTION("sending through IPv6", "[IPv6]") {
       if (utils::isIPv6Disabled())
-        return;
+        SKIP("IPv6 is disabled");
       endpoint = asio::ip::udp::endpoint(asio::ip::address_v6::loopback(), port);
+    }
+    SECTION("sending through IPv4", "[IPv4]") {
+      endpoint = asio::ip::udp::endpoint(asio::ip::address_v4::loopback(), port);
     }
     for (auto i = 0; i < 100; ++i) {
       CHECK_THAT(utils::sendUdpDatagram(rfc5424_doc_example_1.unparsed_, endpoint), MatchesSuccess());
@@ -469,14 +469,16 @@ TEST_CASE("ListenSyslog max queue and max batch size test", "[ListenSyslog][Netw
     port = utils::scheduleProcessorOnRandomPort(controller.plan, listen_syslog);
 
     asio::ip::tcp::endpoint endpoint;
+    SECTION("sending through IPv6", "[IPv6]") {
+      if (utils::isIPv6Disabled())
+        SKIP("IPv6 is disabled");
+      endpoint = asio::ip::tcp::endpoint(asio::ip::address_v6::loopback(), port);
+    }
+
     SECTION("sending through IPv4", "[IPv4]") {
       endpoint = asio::ip::tcp::endpoint(asio::ip::address_v4::loopback(), port);
     }
-    SECTION("sending through IPv6", "[IPv6]") {
-      if (utils::isIPv6Disabled())
-        return;
-      endpoint = asio::ip::tcp::endpoint(asio::ip::address_v6::loopback(), port);
-    }
+
     for (auto i = 0; i < 100; ++i) {
       CHECK_THAT(utils::sendMessagesViaTCP({rfc5424_doc_example_1.unparsed_}, endpoint), MatchesSuccess());
     }
@@ -510,13 +512,13 @@ TEST_CASE("Test ListenSyslog via TCP with SSL connection", "[ListenSyslog][Netwo
   auto port = utils::scheduleProcessorOnRandomPort(controller.plan, listen_syslog);
 
   asio::ip::tcp::endpoint endpoint;
-  SECTION("sending through IPv4", "[IPv4]") {
-    endpoint = asio::ip::tcp::endpoint(asio::ip::address_v4::loopback(), port);
-  }
   SECTION("sending through IPv6", "[IPv6]") {
     if (utils::isIPv6Disabled())
-      return;
+      SKIP("IPv6 is disabled");
     endpoint = asio::ip::tcp::endpoint(asio::ip::address_v6::loopback(), port);
+  }
+  SECTION("sending through IPv4", "[IPv4]") {
+    endpoint = asio::ip::tcp::endpoint(asio::ip::address_v4::loopback(), port);
   }
 
   CHECK_THAT(utils::sendMessagesViaSSL({rfc5424_logger_example_1}, endpoint, executable_dir / "resources" / "ca_A.crt"), MatchesSuccess());

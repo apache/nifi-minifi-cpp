@@ -25,7 +25,6 @@
 #include "io/tls/TLSServerSocket.h"
 #include "io/tls/TLSSocket.h"
 #include "../../TestBase.h"
-#include "../../Catch.h"
 #include "../../SimpleSSLTestServer.h"
 #include "../utils/IntegrationTestUtils.h"
 

@@ -25,6 +25,7 @@
 
 #include "../TestBase.h"
 #include "../Catch.h"
+#include "catch2/catch_session.hpp"
 #include "core/controller/ControllerService.h"
 #include "core/ProcessGroup.h"
 #include "core/yaml/YamlConfiguration.h"
@@ -40,7 +41,7 @@ int main(int argc, char* argv[]) {
   Catch::Session session;
 
   auto cli = session.cli()
-      | Catch::clara::Opt{config_yaml, "config-yaml"}
+      | Catch::Clara::Opt{config_yaml, "config-yaml"}
           ["--config-yaml"]
           ("path to the config.yaml containing the StateStorage controller service configuration");
   session.cli(cli);

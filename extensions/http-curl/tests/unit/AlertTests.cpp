@@ -17,13 +17,11 @@
  */
 
 #undef NDEBUG
-#define CATCH_CONFIG_MAIN
 #include "TestBase.h"
-#include "Catch.h"
-#include "ServerAwareHandler.h"
+#include "tests/ServerAwareHandler.h"
 #include "CivetServer.h"
-#include "TestServer.h"
-#include "HTTPIntegrationBase.h"
+#include "tests/TestServer.h"
+#include "tests/HTTPIntegrationBase.h"
 #include "rapidjson/document.h"
 #include "EmptyFlow.h"
 #include "Utils.h"

@@ -43,13 +43,13 @@ TEST_CASE("ListenTCP test multiple messages", "[ListenTCP][NetworkListenerProces
   auto port = utils::scheduleProcessorOnRandomPort(controller.plan, listen_tcp);
 
   asio::ip::tcp::endpoint endpoint;
-  SECTION("sending through IPv4", "[IPv4]") {
-    endpoint = asio::ip::tcp::endpoint(asio::ip::address_v4::loopback(), port);
-  }
   SECTION("sending through IPv6", "[IPv6]") {
     if (utils::isIPv6Disabled())
-      return;
+      SKIP("IPv6 is disabled");
     endpoint = asio::ip::tcp::endpoint(asio::ip::address_v6::loopback(), port);
+  }
+  SECTION("sending through IPv4", "[IPv4]") {
+    endpoint = asio::ip::tcp::endpoint(asio::ip::address_v4::loopback(), port);
   }
 
   CHECK_THAT(utils::sendMessagesViaTCP({"test_message_1"}, endpoint), MatchesSuccess());
@@ -84,13 +84,13 @@ TEST_CASE("ListenTCP max queue and max batch size test", "[ListenTCP][NetworkLis
   auto port = utils::scheduleProcessorOnRandomPort(controller.plan, listen_tcp);
 
   asio::ip::tcp::endpoint endpoint;
-  SECTION("sending through IPv4", "[IPv4]") {
-    endpoint = asio::ip::tcp::endpoint(asio::ip::address_v4::loopback(), port);
-  }
   SECTION("sending through IPv6", "[IPv6]") {
     if (utils::isIPv6Disabled())
-      return;
+      SKIP("IPv6 is disabled");
     endpoint = asio::ip::tcp::endpoint(asio::ip::address_v6::loopback(), port);
+  }
+  SECTION("sending through IPv4", "[IPv4]") {
+    endpoint = asio::ip::tcp::endpoint(asio::ip::address_v4::loopback(), port);
   }
 
   LogTestController::getInstance().setWarn<ListenTCP>();
@@ -129,26 +129,26 @@ TEST_CASE("Test ListenTCP with SSL connection", "[ListenTCP][NetworkListenerProc
     SECTION("Client certificate not required, Client Auth set to NONE by default") {
       ssl_context_service->enable();
       port = utils::scheduleProcessorOnRandomPort(controller.plan, listen_tcp);
-      SECTION("sending through IPv4", "[IPv4]") {
-        endpoint = asio::ip::tcp::endpoint(asio::ip::address_v4::loopback(), port);
-      }
       SECTION("sending through IPv6", "[IPv6]") {
         if (utils::isIPv6Disabled())
-          return;
+          SKIP("IPv6 is disabled");
         endpoint = asio::ip::tcp::endpoint(asio::ip::address_v6::loopback(), port);
+      }
+      SECTION("sending through IPv4", "[IPv4]") {
+        endpoint = asio::ip::tcp::endpoint(asio::ip::address_v4::loopback(), port);
       }
     }
     SECTION("Client certificate not required, but validated if provided") {
       REQUIRE(controller.plan->setProperty(listen_tcp, ListenTCP::ClientAuth, "WANT"));
       ssl_context_service->enable();
       port = utils::scheduleProcessorOnRandomPort(controller.plan, listen_tcp);
-      SECTION("sending through IPv4", "[IPv4]") {
-        endpoint = asio::ip::tcp::endpoint(asio::ip::address_v4::loopback(), port);
-      }
       SECTION("sending through IPv6", "[IPv6]") {
         if (utils::isIPv6Disabled())
-          return;
+          SKIP("IPv6 is disabled");
         endpoint = asio::ip::tcp::endpoint(asio::ip::address_v6::loopback(), port);
+      }
+      SECTION("sending through IPv4", "[IPv4]") {
+        endpoint = asio::ip::tcp::endpoint(asio::ip::address_v4::loopback(), port);
       }
     }
 
@@ -163,26 +163,26 @@ TEST_CASE("Test ListenTCP with SSL connection", "[ListenTCP][NetworkListenerProc
       REQUIRE(controller.plan->setProperty(listen_tcp, ListenTCP::ClientAuth, "REQUIRED"));
       ssl_context_service->enable();
       port = utils::scheduleProcessorOnRandomPort(controller.plan, listen_tcp);
-      SECTION("sending through IPv4", "[IPv4]") {
-        endpoint = asio::ip::tcp::endpoint(asio::ip::address_v4::loopback(), port);
-      }
       SECTION("sending through IPv6", "[IPv6]") {
         if (utils::isIPv6Disabled())
-          return;
+          SKIP("IPv6 is disabled");
         endpoint = asio::ip::tcp::endpoint(asio::ip::address_v6::loopback(), port);
+      }
+      SECTION("sending through IPv4", "[IPv4]") {
+        endpoint = asio::ip::tcp::endpoint(asio::ip::address_v4::loopback(), port);
       }
     }
     SECTION("Client certificate not required but validated") {
       REQUIRE(controller.plan->setProperty(listen_tcp, ListenTCP::ClientAuth, "WANT"));
       ssl_context_service->enable();
       port = utils::scheduleProcessorOnRandomPort(controller.plan, listen_tcp);
-      SECTION("sending through IPv4", "[IPv4]") {
-        endpoint = asio::ip::tcp::endpoint(asio::ip::address_v4::loopback(), port);
-      }
       SECTION("sending through IPv6", "[IPv6]") {
         if (utils::isIPv6Disabled())
-          return;
+          SKIP("IPv6 is disabled");
         endpoint = asio::ip::tcp::endpoint(asio::ip::address_v6::loopback(), port);
+      }
+      SECTION("sending through IPv4", "[IPv4]") {
+        endpoint = asio::ip::tcp::endpoint(asio::ip::address_v4::loopback(), port);
       }
     }
 
@@ -202,13 +202,13 @@ TEST_CASE("Test ListenTCP with SSL connection", "[ListenTCP][NetworkListenerProc
     ssl_context_service->enable();
     REQUIRE(controller.plan->setProperty(listen_tcp, ListenTCP::ClientAuth, "REQUIRED"));
     port = utils::scheduleProcessorOnRandomPort(controller.plan, listen_tcp);
-    SECTION("sending through IPv4", "[IPv4]") {
-      endpoint = asio::ip::tcp::endpoint(asio::ip::address_v4::loopback(), port);
-    }
     SECTION("sending through IPv6", "[IPv6]") {
       if (utils::isIPv6Disabled())
-        return;
+        SKIP("IPv6 is disabled");
       endpoint = asio::ip::tcp::endpoint(asio::ip::address_v6::loopback(), port);
+    }
+    SECTION("sending through IPv4", "[IPv4]") {
+      endpoint = asio::ip::tcp::endpoint(asio::ip::address_v4::loopback(), port);
     }
 
     CHECK_THAT(utils::sendMessagesViaSSL({"test_message_1"}, endpoint, executable_dir / "resources" / "ca_A.crt"), MatchesError());

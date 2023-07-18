@@ -18,7 +18,6 @@
 
 #undef NDEBUG
 #include <string>
-#include "Catch.h"
 #include "HTTPIntegrationBase.h"
 #include "HTTPHandlers.h"
 #include "properties/Configuration.h"

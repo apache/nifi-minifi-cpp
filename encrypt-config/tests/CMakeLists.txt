@@ -26,14 +26,13 @@ foreach(testfile ${ENCRYPT_CONFIG_TESTS})
     get_filename_component(testfilename "${testfile}" NAME_WE)
     add_executable(${testfilename} "${testfile}" ${ENCRYPT_CONFIG_SOURCES})
 
-    target_include_directories(${testfilename} SYSTEM BEFORE PRIVATE "${CMAKE_SOURCE_DIR}/thirdparty/catch")
     target_include_directories(${testfilename} BEFORE PRIVATE "${CMAKE_SOURCE_DIR}/encrypt-config")
     target_include_directories(${testfilename} BEFORE PRIVATE "${CMAKE_SOURCE_DIR}/libminifi/include")
     target_include_directories(${testfilename} BEFORE PRIVATE "${CMAKE_SOURCE_DIR}/libminifi/test")
 
     createTests(${testfilename})
 
-    target_link_libraries(${testfilename} ${CATCH_MAIN_LIB} ${LIBMINIFI} ${TEST_BASE_LIB})
+    target_link_libraries(${testfilename} Catch2WithMain ${LIBMINIFI} ${TEST_BASE_LIB})
     add_test(NAME ${testfilename} COMMAND ${testfilename} WORKING_DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}")
 
     math(EXPR ENCRYPT_CONFIG_TEST_COUNT "${ENCRYPT_CONFIG_TEST_COUNT}+1")

@@ -32,6 +32,7 @@
 
 #include "TestBase.h"
 #include "Catch.h"
+#include "catch2/matchers/catch_matchers_string.hpp"
 #include "LogAttribute.h"
 #include "GetFile.h"
 #include "unit/ProvenanceTestHelper.h"
@@ -182,8 +183,6 @@ TEST_CASE("Test GetFile Ignore", "[getfileCreate3]") {
 
   processor->onSchedule(context, factory);
 
-  int prev = 0;
-
   auto session = std::make_shared<core::ProcessSession>(context);
   REQUIRE(processor->getName() == "getfileCreate2");
 
@@ -228,7 +227,6 @@ TEST_CASE("Test GetFile Ignore", "[getfileCreate3]") {
   std::shared_ptr<core::FlowFile> ffr = session->get();
 
   REQUIRE(repo->getRepoMap().empty());
-  prev++;
 }
 
 TEST_CASE("TestConnectionFull", "[ConnectionFull]") {
@@ -750,7 +748,7 @@ TEST_CASE("InputRequirementTestForbidden", "[InputRequirement]") {
   plan->addProcessor("GenerateFlowFile", "generateFlowFile");
   plan->addProcessor("GenerateFlowFile", "generateFlowFile2", core::Relationship("success", "description"), true);
 
-  REQUIRE_THROWS_WITH(plan->validateAnnotations(), Catch::EndsWith("INPUT_FORBIDDEN was specified for the processor, but there are incoming connections"));
+  REQUIRE_THROWS_WITH(plan->validateAnnotations(), Catch::Matchers::EndsWith("INPUT_FORBIDDEN was specified for the processor, but there are incoming connections"));
   testController.runSession(plan);
 }
 
@@ -762,7 +760,7 @@ TEST_CASE("InputRequirementTestRequired", "[InputRequirement]") {
   plan->addProcessor("LogAttribute", "logAttribute");
   plan->addProcessor("LogAttribute", "logAttribute2", core::Relationship("success", "description"), true);
 
-  REQUIRE_THROWS_WITH(plan->validateAnnotations(), Catch::EndsWith("INPUT_REQUIRED was specified for the processor, but no incoming connections were found"));
+  REQUIRE_THROWS_WITH(plan->validateAnnotations(), Catch::Matchers::EndsWith("INPUT_REQUIRED was specified for the processor, but no incoming connections were found"));
   testController.runSession(plan);
 }
 

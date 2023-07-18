@@ -25,7 +25,6 @@
 #include <string>
 
 #include "TestBase.h"
-#include "Catch.h"
 #include "HTTPClient.h"
 #include "InvokeHTTP.h"
 #include "processors/LogAttribute.h"

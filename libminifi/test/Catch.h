@@ -17,11 +17,12 @@
 
 #pragma once
 
-#define CATCH_CONFIG_FAST_COMPILE
 #include <optional>
 #include <string>
+#include <chrono>
 #include "spdlog/spdlog.h"
-#include "catch.hpp"
+#include "catch2/catch_test_macros.hpp"
+#include "catch2/matchers/catch_matchers.hpp"
 
 namespace Catch {
 template<typename T>
@@ -47,10 +48,17 @@ struct StringMaker<std::error_code> {
     return fmt::format("std::error_code(category:{}, value:{}, message:{})", error_code.category().name(), error_code.value(), error_code.message());
   }
 };
+
+template <>
+struct StringMaker<std::chrono::file_clock::duration> {
+  static std::string convert(const std::chrono::file_clock::duration& duration) {
+    return fmt::format("{} {} s", duration.count(), Catch::ratio_string<std::chrono::file_clock::duration::period>::symbol());
+  }
+};
 }  // namespace Catch
 
 namespace org::apache::nifi::minifi::test {
-struct MatchesSuccess : Catch::MatcherBase<std::error_code> {
+struct MatchesSuccess : Catch::Matchers::MatcherBase<std::error_code> {
   MatchesSuccess() = default;
 
   bool match(const std::error_code& err) const override {
@@ -62,9 +70,9 @@ struct MatchesSuccess : Catch::MatcherBase<std::error_code> {
   }
 };
 
-struct MatchesError : Catch::MatcherBase<std::error_code> {
+struct MatchesError : Catch::Matchers::MatcherBase<std::error_code> {
   explicit MatchesError(std::optional<std::error_code> expected_error = std::nullopt)
-      : Catch::MatcherBase<std::error_code>(),
+      : Catch::Matchers::MatcherBase<std::error_code>(),
         expected_error_(expected_error) {
   }
 

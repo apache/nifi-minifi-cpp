@@ -20,7 +20,6 @@
 #include <string>
 #include <atomic>
 #include "TestBase.h"
-#include "Catch.h"
 #include "HTTPIntegrationBase.h"
 #include "HTTPHandlers.h"
 #include "utils/IntegrationTestUtils.h"

@@ -32,7 +32,7 @@ FOREACH(testfile ${FLOW_TESTS})
         target_link_libraries(${testfilename} minifi-rocksdb-repos)
     endif()
 
-    target_link_libraries(${testfilename} ${CATCH_MAIN_LIB})
+    target_link_libraries(${testfilename} Catch2WithMain)
     MATH(EXPR FLOW_TEST_COUNT "${FLOW_TEST_COUNT}+1")
     add_test(NAME "${testfilename}" COMMAND "${testfilename}")
 ENDFOREACH()
