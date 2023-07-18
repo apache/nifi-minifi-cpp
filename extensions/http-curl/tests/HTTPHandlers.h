@@ -568,7 +568,7 @@ class HeartbeatHandler : public ServerAwareHandler {
           if (auto value = configuration_->getRawValue(std::string(property_name))) {
             config_property.emplace("propertyValue", *value);
           }
-          config_property.emplace("validator", property_validator->getName());
+          config_property.emplace("validator", property_validator->getValidatorName());
           config_properties.push_back(config_property);
         }
         Metadata metadata;
