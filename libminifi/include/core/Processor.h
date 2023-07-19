@@ -45,7 +45,7 @@
 
 #define ADD_GET_PROCESSOR_NAME \
   std::string getProcessorType() const override { \
-    auto class_name = org::apache::nifi::minifi::core::getClassName<decltype(*this)>(); \
+    auto class_name = org::apache::nifi::minifi::core::className<decltype(*this)>(); \
     auto splitted = org::apache::nifi::minifi::utils::StringUtils::split(class_name, "::"); \
     return splitted[splitted.size() - 1]; \
   }

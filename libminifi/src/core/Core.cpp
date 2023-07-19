@@ -22,8 +22,8 @@
 
 namespace org::apache::nifi::minifi::core {
 
-CoreComponent::CoreComponent(std::string name, const utils::Identifier& uuid, const std::shared_ptr<utils::IdGenerator>& idGenerator)
-    : name_(std::move(name)) {
+CoreComponent::CoreComponent(std::string_view name, const utils::Identifier& uuid, const std::shared_ptr<utils::IdGenerator>& idGenerator)
+    : name_(name) {
   if (uuid.isNil()) {
     // Generate the global UUID for the flow record
     uuid_ = idGenerator->generate();

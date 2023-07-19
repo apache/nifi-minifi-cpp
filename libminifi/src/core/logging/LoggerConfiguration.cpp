@@ -94,10 +94,10 @@ LoggerConfiguration::LoggerConfiguration()
       formatter_(std::make_shared<spdlog::pattern_formatter>(spdlog_default_pattern)) {
   controller_ = std::make_shared<LoggerControl>();
   logger_ = std::make_shared<LoggerImpl>(
-      core::getClassName<LoggerConfiguration>(),
+      core::className<LoggerConfiguration>(),
       std::nullopt,
       controller_,
-      get_logger(nullptr, root_namespace_, core::getClassName<LoggerConfiguration>(), formatter_));
+      get_logger(nullptr, root_namespace_, core::className<LoggerConfiguration>(), formatter_));
   loggers.push_back(logger_);
 }
 
@@ -148,13 +148,13 @@ void LoggerConfiguration::initialize(const std::shared_ptr<LoggerProperties> &lo
   logger_->log_debug("Set following pattern on loggers: %s", spdlog_pattern);
 }
 
-std::shared_ptr<Logger> LoggerConfiguration::getLogger(const std::string& name, const std::optional<utils::Identifier>& id) {
+std::shared_ptr<Logger> LoggerConfiguration::getLogger(std::string_view name, const std::optional<utils::Identifier>& id) {
   std::lock_guard<std::mutex> lock(mutex);
   return getLogger(name, id, lock);
 }
 
-std::shared_ptr<Logger> LoggerConfiguration::getLogger(const std::string& name, const std::optional<utils::Identifier>& id, const std::lock_guard<std::mutex>& /*lock*/) {
-  std::string adjusted_name = name;
+std::shared_ptr<Logger> LoggerConfiguration::getLogger(std::string_view name, const std::optional<utils::Identifier>& id, const std::lock_guard<std::mutex>& /*lock*/) {
+  std::string adjusted_name{name};
   const std::string clazz = "class ";
   auto haz_clazz = name.find(clazz);
   if (haz_clazz == 0)
@@ -252,8 +252,9 @@ std::shared_ptr<internal::LoggerNamespace> LoggerConfiguration::initialize_names
   return root_namespace;
 }
 
-std::shared_ptr<spdlog::logger> LoggerConfiguration::get_logger(const std::shared_ptr<Logger>& logger, const std::shared_ptr<internal::LoggerNamespace> &root_namespace, const std::string &name,
+std::shared_ptr<spdlog::logger> LoggerConfiguration::get_logger(const std::shared_ptr<Logger>& logger, const std::shared_ptr<internal::LoggerNamespace> &root_namespace, std::string_view name_view,
                                                                 const std::shared_ptr<spdlog::formatter>& formatter, bool remove_if_present) {
+  std::string name{name_view};
   std::shared_ptr<spdlog::logger> spdlogger = spdlog::get(name);
   if (spdlogger) {
     if (remove_if_present) {

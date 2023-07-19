@@ -18,7 +18,7 @@
 
 #pragma once
 
-#include <string>
+#include <string_view>
 #include <memory>
 
 #include "core/logging/Logger.h"
@@ -28,19 +28,19 @@ namespace org::apache::nifi::minifi::core::logging {
 
 class LoggerFactoryBase {
  public:
-  static std::shared_ptr<Logger> getAliasedLogger(const std::string& name, const std::optional<utils::Identifier>& id = {});
+  static std::shared_ptr<Logger> getAliasedLogger(std::string_view name, const std::optional<utils::Identifier>& id = {});
 };
 
 template<typename T>
 class LoggerFactory : public LoggerFactoryBase {
  public:
   static std::shared_ptr<Logger> getLogger() {
-    static std::shared_ptr<Logger> logger = getAliasedLogger(core::getClassName<T>());
+    static std::shared_ptr<Logger> logger = getAliasedLogger(core::className<T>());
     return logger;
   }
 
   static std::shared_ptr<Logger> getLogger(const utils::Identifier& uuid) {
-    return getAliasedLogger(core::getClassName<T>(), uuid);
+    return getAliasedLogger(core::className<T>(), uuid);
   }
 };
 

@@ -17,7 +17,7 @@
  */
 #pragma once
 
-#include <string>
+#include <string_view>
 #include <utility>
 
 #include "core/Core.h"
@@ -29,11 +29,11 @@ namespace org::apache::nifi::minifi::core {
 
 class SerializableComponent : public core::CoreComponent {
  public:
-  explicit SerializableComponent(std::string name)
-    : core::CoreComponent(std::move(name)) {
+  explicit SerializableComponent(std::string_view name)
+    : core::CoreComponent(name) {
   }
 
-  virtual ~SerializableComponent() = default;
+  ~SerializableComponent() override = default;
 
   virtual bool serialize(io::OutputStream& output_stream) = 0;
   virtual bool deserialize(io::InputStream &input_stream) = 0;

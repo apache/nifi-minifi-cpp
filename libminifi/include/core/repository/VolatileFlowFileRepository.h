@@ -19,6 +19,7 @@
 
 #include <memory>
 #include <string>
+#include <string_view>
 
 #include "VolatileRepository.h"
 #include "FlowFileRecord.h"
@@ -37,12 +38,12 @@ class VolatileFlowFileRepository : public VolatileRepository {
   friend struct ::VolatileFlowFileRepositoryTestAccessor;
 
  public:
-  explicit VolatileFlowFileRepository(const std::string& repo_name = "",
+  explicit VolatileFlowFileRepository(std::string_view repo_name = "",
                                       const std::string& /*dir*/ = REPOSITORY_DIRECTORY,
                                       std::chrono::milliseconds maxPartitionMillis = MAX_REPOSITORY_ENTRY_LIFE_TIME,
                                       int64_t maxPartitionBytes = MAX_REPOSITORY_STORAGE_SIZE,
                                       std::chrono::milliseconds purgePeriod = REPOSITORY_PURGE_PERIOD)
-    : VolatileRepository(repo_name.length() > 0 ? repo_name : core::getClassName<VolatileRepository>(), "", maxPartitionMillis, maxPartitionBytes, purgePeriod) {
+    : VolatileRepository(repo_name.length() > 0 ? repo_name : core::className<VolatileRepository>(), "", maxPartitionMillis, maxPartitionBytes, purgePeriod) {
   }
 
   ~VolatileFlowFileRepository() override {

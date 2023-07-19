@@ -25,7 +25,7 @@
 
 namespace org::apache::nifi::minifi::utils {
 
-bool ClassUtils::shortenClassName(const std::string &class_name, std::string &out) {
+bool ClassUtils::shortenClassName(std::string_view class_name, std::string &out) {
   std::string class_delim = "::";
   auto class_split = utils::StringUtils::split(class_name, class_delim);
   // support . and ::

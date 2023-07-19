@@ -26,6 +26,7 @@
 #include <memory>
 #include <set>
 #include <string>
+#include <string_view>
 #include <utility>
 #include <vector>
 
@@ -57,12 +58,12 @@ constexpr auto REPOSITORY_PURGE_PERIOD = std::chrono::milliseconds(2500);
 
 class Repository : public core::CoreComponent, public core::RepositoryMetricsSource {
  public:
-  explicit Repository(std::string repo_name = "Repository",
+  explicit Repository(std::string_view repo_name = "Repository",
                       std::string directory = REPOSITORY_DIRECTORY,
                       std::chrono::milliseconds maxPartitionMillis = MAX_REPOSITORY_ENTRY_LIFE_TIME,
                       int64_t maxPartitionBytes = MAX_REPOSITORY_STORAGE_SIZE,
                       std::chrono::milliseconds purgePeriod = REPOSITORY_PURGE_PERIOD)
-    : core::CoreComponent(std::move(repo_name)),
+    : core::CoreComponent(repo_name),
       max_partition_millis_(maxPartitionMillis),
       max_partition_bytes_(maxPartitionBytes),
       purge_period_(purgePeriod),

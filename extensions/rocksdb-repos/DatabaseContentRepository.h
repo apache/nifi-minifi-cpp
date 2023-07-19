@@ -18,6 +18,7 @@
 
 #include <memory>
 #include <string>
+#include <string_view>
 #include <utility>
 #include <thread>
 
@@ -44,8 +45,8 @@ class DatabaseContentRepository : public core::ContentRepository {
  public:
   static constexpr const char* ENCRYPTION_KEY_NAME = "nifi.database.content.repository.encryption.key";
 
-  explicit DatabaseContentRepository(std::string name = getClassName<DatabaseContentRepository>(), const utils::Identifier& uuid = {})
-    : core::ContentRepository(std::move(name), uuid),
+  explicit DatabaseContentRepository(std::string_view name = className<DatabaseContentRepository>(), const utils::Identifier& uuid = {})
+    : core::ContentRepository(name, uuid),
       is_valid_(false),
       db_(nullptr),
       logger_(logging::LoggerFactory<DatabaseContentRepository>::getLogger()) {

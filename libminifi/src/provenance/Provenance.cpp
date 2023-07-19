@@ -41,7 +41,7 @@ const char *ProvenanceEventRecord::ProvenanceEventTypeStr[REPLAY + 1] = { "CREAT
     "ATTRIBUTES_MODIFIED", "ROUTE", "ADDINFO", "REPLAY" };
 
 ProvenanceEventRecord::ProvenanceEventRecord(ProvenanceEventRecord::ProvenanceEventType event, std::string componentId, std::string componentType)
-    : core::SerializableComponent(core::getClassName<ProvenanceEventRecord>()),
+    : core::SerializableComponent(core::className<ProvenanceEventRecord>()),
       _eventType(event),
       _componentId(std::move(componentId)),
       _componentType(std::move(componentType)),

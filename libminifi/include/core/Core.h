@@ -26,6 +26,7 @@
 #include <memory>
 #include <string>
 #include <string_view>
+#include <type_traits>
 
 #ifdef WIN32
 #pragma comment(lib, "shlwapi.lib")
@@ -74,29 +75,6 @@
  * namespace aliasing
  */
 namespace org::apache::nifi::minifi::core {
-
-template<typename T>
-static inline std::string getClassName() {
-#ifndef WIN32
-  char *b = abi::__cxa_demangle(typeid(T).name(), 0, 0, 0);
-  if (b == nullptr)
-    return {};
-  std::string name = b;
-  std::free(b);
-  return name;
-#else
-  std::string_view name = typeid(T).name();
-  const std::string_view class_prefix = "class ";
-  const std::string_view struct_prefix = "struct ";
-
-  if (utils::StringUtils::startsWith(name, class_prefix)) {
-    name.remove_prefix(class_prefix.length());
-  } else if (utils::StringUtils::startsWith(name, struct_prefix)) {
-    name.remove_prefix(struct_prefix.length());
-  }
-  return std::string{name};
-#endif
-}
 
 constexpr std::string_view removeStructOrClassPrefix(std::string_view input) {
   using namespace std::literals;
@@ -149,7 +127,7 @@ struct TypeNameHolder {
 
 template<typename T>
 constexpr std::string_view className() {
-  return utils::array_to_string_view(TypeNameHolder<T>::value);
+  return utils::array_to_string_view(TypeNameHolder<std::remove_reference_t<T>>::value);
 }
 
 template<typename T>
@@ -168,7 +146,7 @@ std::unique_ptr<T> instantiate(const std::string name = {}) {
  */
 class CoreComponent {
  public:
-  explicit CoreComponent(std::string name, const utils::Identifier &uuid = {}, const std::shared_ptr<utils::IdGenerator> &idGenerator = utils::IdGenerator::getIdGenerator());
+  explicit CoreComponent(std::string_view name, const utils::Identifier &uuid = {}, const std::shared_ptr<utils::IdGenerator> &idGenerator = utils::IdGenerator::getIdGenerator());
   CoreComponent(const CoreComponent &other) = default;
   CoreComponent(CoreComponent &&other) = default;
   CoreComponent& operator=(const CoreComponent&) = default;

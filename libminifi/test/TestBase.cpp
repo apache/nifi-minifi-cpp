@@ -58,10 +58,10 @@ std::shared_ptr<LogTestController> LogTestController::getInstance(const std::sha
   }
 }
 
-void LogTestController::setLevel(const std::string& name, spdlog::level::level_enum level) {
+void LogTestController::setLevel(std::string_view name, spdlog::level::level_enum level) {
   const auto levelView(spdlog::level::to_string_view(level));
-  logger_->log_info("Setting log level for %s to %s", name, std::string(levelView.begin(), levelView.end()));
-  std::string adjusted_name = name;
+  logger_->log_info("Setting log level for %s to %s", std::string(name), std::string(levelView.begin(), levelView.end()));
+  std::string adjusted_name{name};
   const std::string clazz = "class ";
   auto haz_clazz = name.find(clazz);
   if (haz_clazz == 0)
@@ -72,22 +72,22 @@ void LogTestController::setLevel(const std::string& name, spdlog::level::level_e
   logging::LoggerConfiguration::getSpdlogLogger(adjusted_name)->set_level(level);
 }
 
-std::shared_ptr<logging::Logger> LogTestController::getLoggerByClassName(const std::string& class_name, const std::optional<utils::Identifier>& id) {
+std::shared_ptr<logging::Logger> LogTestController::getLoggerByClassName(std::string_view class_name, const std::optional<utils::Identifier>& id) {
   return config ? config->getLogger(class_name, id) : logging::LoggerConfiguration::getConfiguration().getLogger(class_name, id);
 }
 
-void LogTestController::setLevelByClassName(spdlog::level::level_enum level, const std::string& class_name) {
+void LogTestController::setLevelByClassName(spdlog::level::level_enum level, std::string_view class_name) {
   if (config)
     config->getLogger(class_name);
   else
     logging::LoggerConfiguration::getConfiguration().getLogger(class_name);
-  modified_loggers.push_back(class_name);
+  modified_loggers.emplace_back(class_name);
   setLevel(class_name, level);
   // also support shortened classnames
   if (config && config->shortenClassNames()) {
-    std::string adjusted = class_name;
+    std::string adjusted{class_name};
     if (minifi::utils::ClassUtils::shortenClassName(class_name, adjusted)) {
-      modified_loggers.push_back(class_name);
+      modified_loggers.emplace_back(class_name);
       setLevel(class_name, level);
     }
   }
@@ -179,21 +179,21 @@ LogTestController::LogTestController(const std::shared_ptr<logging::LoggerProper
     initMain = true;
   }
   my_properties_->set("logger.root", "ERROR,ostream");
-  my_properties_->set("logger." + minifi::core::getClassName<LogTestController>(), "INFO");
-  my_properties_->set("logger." + minifi::core::getClassName<logging::LoggerConfiguration>(), "INFO");
+  my_properties_->set("logger." + std::string(minifi::core::className<LogTestController>()), "INFO");
+  my_properties_->set("logger." + std::string(minifi::core::className<logging::LoggerConfiguration>()), "INFO");
   std::shared_ptr<spdlog::sinks::dist_sink_mt> dist_sink = std::make_shared<spdlog::sinks::dist_sink_mt>();
   dist_sink->add_sink(std::make_shared<StringStreamSink>(log_output_ptr_, log_output_mutex_, true));
   dist_sink->add_sink(std::make_shared<spdlog::sinks::stderr_sink_mt>());
   my_properties_->add_sink("ostream", dist_sink);
   if (initMain) {
     logging::LoggerConfiguration::getConfiguration().initialize(my_properties_);
-    logger_ = logging::LoggerConfiguration::getConfiguration().getLogger(minifi::core::getClassName<LogTestController>());
+    logger_ = logging::LoggerConfiguration::getConfiguration().getLogger(minifi::core::className<LogTestController>());
   } else {
     config = logging::LoggerConfiguration::newInstance();
     // create for test purposes. most tests use the main logging factory, but this exists to test the logging
     // framework itself.
     config->initialize(my_properties_);
-    logger_ = config->getLogger(minifi::core::getClassName<LogTestController>());
+    logger_ = config->getLogger(minifi::core::className<LogTestController>());
   }
 }
 

@@ -18,6 +18,7 @@
 #pragma once
 
 #include <string>
+#include <string_view>
 
 #include "VolatileRepository.h"
 #include "core/ThreadedRepository.h"
@@ -26,12 +27,12 @@ namespace org::apache::nifi::minifi::core::repository {
 
 class VolatileProvenanceRepository : public VolatileRepository {
  public:
-  explicit VolatileProvenanceRepository(std::string repo_name = "",
+  explicit VolatileProvenanceRepository(std::string_view repo_name = "",
                                         std::string /*dir*/ = REPOSITORY_DIRECTORY,
                                         std::chrono::milliseconds maxPartitionMillis = MAX_REPOSITORY_ENTRY_LIFE_TIME,
                                         int64_t maxPartitionBytes = MAX_REPOSITORY_STORAGE_SIZE,
                                         std::chrono::milliseconds purgePeriod = REPOSITORY_PURGE_PERIOD)
-    : VolatileRepository(repo_name.length() > 0 ? repo_name : core::getClassName<VolatileRepository>(), "", maxPartitionMillis, maxPartitionBytes, purgePeriod) {
+    : VolatileRepository(repo_name.length() > 0 ? repo_name : core::className<VolatileRepository>(), "", maxPartitionMillis, maxPartitionBytes, purgePeriod) {
   }
 
   ~VolatileProvenanceRepository() override {

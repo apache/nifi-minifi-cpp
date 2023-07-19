@@ -64,7 +64,8 @@ std::string_view StringUtils::trim(const char* str) {
 }
 
 template<typename Fun>
-std::vector<std::string> split_transformed(std::string str, const std::string& delimiter, Fun transformation) {
+std::vector<std::string> split_transformed(std::string_view str_view, std::string_view delimiter, Fun transformation) {
+  std::string str{str_view};
   std::vector<std::string> result;
   if (delimiter.empty()) {
     for (auto c : str) {
@@ -87,21 +88,21 @@ std::vector<std::string> split_transformed(std::string str, const std::string& d
   return result;
 }
 
-std::vector<std::string> StringUtils::split(const std::string& str, const std::string& delimiter) {
+std::vector<std::string> StringUtils::split(std::string_view str, std::string_view delimiter) {
   return split_transformed(str, delimiter, identity{});
 }
 
-std::vector<std::string> StringUtils::splitRemovingEmpty(const std::string& str, const std::string& delimiter) {
+std::vector<std::string> StringUtils::splitRemovingEmpty(std::string_view str, std::string_view delimiter) {
   auto result = split(str, delimiter);
   result.erase(std::remove_if(result.begin(), result.end(), [](const std::string& str) { return str.empty(); }), result.end());
   return result;
 }
 
-std::vector<std::string> StringUtils::splitAndTrim(const std::string& str, const std::string& delimiter) {
+std::vector<std::string> StringUtils::splitAndTrim(std::string_view str, std::string_view delimiter) {
   return split_transformed(str, delimiter, static_cast<std::string(*)(const std::string&)>(trim));
 }
 
-std::vector<std::string> StringUtils::splitAndTrimRemovingEmpty(const std::string& str, const std::string& delimiter) {
+std::vector<std::string> StringUtils::splitAndTrimRemovingEmpty(std::string_view str, std::string_view delimiter) {
   auto result = splitAndTrim(str, delimiter);
   result.erase(std::remove_if(result.begin(), result.end(), [](const std::string& str) { return str.empty(); }), result.end());
   return result;

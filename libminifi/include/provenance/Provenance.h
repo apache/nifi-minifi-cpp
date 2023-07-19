@@ -152,7 +152,7 @@ class ProvenanceEventRecord : public core::SerializableComponent {
   ProvenanceEventRecord(ProvenanceEventType event, std::string componentId, std::string componentType);
 
   ProvenanceEventRecord()
-      : core::SerializableComponent(core::getClassName<ProvenanceEventRecord>()) {
+      : core::SerializableComponent(core::className<ProvenanceEventRecord>()) {
     _eventTime = std::chrono::system_clock::now();
   }
 

@@ -61,7 +61,7 @@ enum ControllerServiceState {
 class ControllerService : public ConfigurableComponent, public Connectable {
  public:
   ControllerService()
-      : Connectable(core::getClassName<ControllerService>()),
+      : Connectable(core::className<ControllerService>()),
         configuration_(std::make_shared<Configure>()) {
     current_state_ = DISABLED;
   }

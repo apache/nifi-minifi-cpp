@@ -51,7 +51,7 @@ FlowController::FlowController(std::shared_ptr<core::Repository> provenance_repo
                                std::shared_ptr<Configure> configure, std::shared_ptr<core::FlowConfiguration> flow_configuration,
                                std::shared_ptr<core::ContentRepository> content_repo, std::unique_ptr<state::MetricsPublisherStore> metrics_publisher_store,
                                std::shared_ptr<utils::file::FileSystem> filesystem, std::function<void()> request_restart)
-    : core::controller::ForwardingControllerServiceProvider(core::getClassName<FlowController>()),
+    : core::controller::ForwardingControllerServiceProvider(core::className<FlowController>()),
       running_(false),
       initialized_(false),
       thread_pool_(5, false, nullptr, "Flowcontroller threadpool"),
