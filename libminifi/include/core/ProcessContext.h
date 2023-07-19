@@ -47,8 +47,10 @@
 
 namespace org::apache::nifi::minifi::core {
 
+namespace detail {
 template<typename T>
-concept NotAFlowFile = !std::convertible_to<T&, const FlowFile&> && !std::convertible_to<T&, const std::shared_ptr<FlowFile>&>;
+concept NotAFlowFile = !std::convertible_to<T &, const FlowFile &> && !std::convertible_to<T &, const std::shared_ptr<FlowFile> &>;
+}  // namespace detail
 
 class ProcessContext : public controller::ControllerServiceLookup, public core::VariableRegistry, public std::enable_shared_from_this<VariableRegistry> {
  public:
@@ -117,11 +119,11 @@ class ProcessContext : public controller::ControllerServiceLookup, public core::
     return value;
   }
 
-  bool getProperty(std::string_view name, NotAFlowFile auto& value) const {
+  bool getProperty(std::string_view name, detail::NotAFlowFile auto& value) const {
     return getPropertyImp(std::string{name}, value);
   }
 
-  bool getProperty(const PropertyReference& property, NotAFlowFile auto& value) const {
+  bool getProperty(const PropertyReference& property, detail::NotAFlowFile auto& value) const {
     return getPropertyImp(std::string{property.name}, value);
   }
 
