@@ -106,6 +106,13 @@ class Worker {
   std::shared_ptr<std::promise<TaskRescheduleInfo>> promise;
 };
 
+class DelayedTaskComparator {
+ public:
+  bool operator()(Worker &a, Worker &b) {
+    return a.getNextExecutionTime() > b.getNextExecutionTime();
+  }
+};
+
 class WorkerThread {
  public:
   explicit WorkerThread(std::thread thread, const std::string &name = "NamelessWorker")
@@ -270,9 +277,7 @@ class ThreadPool {
   std::shared_ptr<controllers::ThreadManagementService> thread_manager_;
   ConcurrentQueue<std::shared_ptr<WorkerThread>> deceased_thread_queue_;
   ConditionConcurrentQueue<Worker> worker_queue_;
-  std::priority_queue<Worker, std::vector<Worker>,
-      /* comparator: */ decltype([](const Worker& lhs, const Worker& rhs) noexcept { return lhs.getNextExecutionTime() > rhs.getNextExecutionTime(); })
-  > delayed_worker_queue_;
+  std::priority_queue<Worker, std::vector<Worker>, DelayedTaskComparator> delayed_worker_queue_;
   std::mutex worker_queue_mutex_;
   std::condition_variable delayed_task_available_;
   std::map<TaskId, bool> task_status_;
