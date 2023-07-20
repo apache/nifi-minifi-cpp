@@ -113,29 +113,33 @@ class PutS3Object : public S3Processor {
       .isRequired(true)
       .build();
   EXTENSIONAPI static constexpr auto MultipartThreshold = core::PropertyDefinitionBuilder<>::createProperty("Multipart Threshold")
-        .withDescription("Specifies the file size threshold for switch from the PutS3Object API to the PutS3MultipartUpload API. "
-                         "Flow files bigger than this limit will be sent using the multipart process. The valid range is 5MB to 5GB.")
-        .withDefaultValue<core::DataSizeValue>("5 GB")
-        .isRequired(true)
-        .build();
+      .withDescription("Specifies the file size threshold for switch from the PutS3Object API to the PutS3MultipartUpload API. "
+                        "Flow files bigger than this limit will be sent using the multipart process. The valid range is 5MB to 5GB.")
+      .withPropertyType(core::StandardPropertyTypes::DATA_SIZE_TYPE)
+      .withDefaultValue("5 GB")
+      .isRequired(true)
+      .build();
   EXTENSIONAPI static constexpr auto MultipartPartSize = core::PropertyDefinitionBuilder<>::createProperty("Multipart Part Size")
-        .withDescription("Specifies the part size for use when the PutS3Multipart Upload API is used. "
-                         "Flow files will be broken into chunks of this size for the upload process, but the last part sent can be smaller since it is not padded. The valid range is 5MB to 5GB.")
-        .withDefaultValue<core::DataSizeValue>("5 GB")
-        .isRequired(true)
-        .build();
+      .withDescription("Specifies the part size for use when the PutS3Multipart Upload API is used. "
+                        "Flow files will be broken into chunks of this size for the upload process, but the last part sent can be smaller since it is not padded. The valid range is 5MB to 5GB.")
+      .withPropertyType(core::StandardPropertyTypes::DATA_SIZE_TYPE)
+      .withDefaultValue("5 GB")
+      .isRequired(true)
+      .build();
   EXTENSIONAPI static constexpr auto MultipartUploadAgeOffInterval = core::PropertyDefinitionBuilder<>::createProperty("Multipart Upload AgeOff Interval")
-        .withDescription("Specifies the interval at which existing multipart uploads in AWS S3 will be evaluated for ageoff. "
-                         "When processor is triggered it will initiate the ageoff evaluation if this interval has been exceeded.")
-        .withDefaultValue<core::TimePeriodValue>("60 min")
-        .isRequired(true)
-        .build();
+      .withDescription("Specifies the interval at which existing multipart uploads in AWS S3 will be evaluated for ageoff. "
+                        "When processor is triggered it will initiate the ageoff evaluation if this interval has been exceeded.")
+      .withPropertyType(core::StandardPropertyTypes::TIME_PERIOD_TYPE)
+      .withDefaultValue("60 min")
+      .isRequired(true)
+      .build();
   EXTENSIONAPI static constexpr auto MultipartUploadMaxAgeThreshold = core::PropertyDefinitionBuilder<>::createProperty("Multipart Upload Max Age Threshold")
-        .withDescription("Specifies the maximum age for existing multipart uploads in AWS S3. When the ageoff process occurs, any upload older than this threshold will be aborted.")
-        .withDefaultValue<core::TimePeriodValue>("7 days")
-        .isRequired(true)
-        .build();
-  EXTENSIONAPI static constexpr auto Properties = minifi::utils::array_cat(S3Processor::Properties, std::array<core::PropertyReference, 10>{
+      .withDescription("Specifies the maximum age for existing multipart uploads in AWS S3. When the ageoff process occurs, any upload older than this threshold will be aborted.")
+      .withPropertyType(core::StandardPropertyTypes::TIME_PERIOD_TYPE)
+      .withDefaultValue("7 days")
+      .isRequired(true)
+      .build();
+  EXTENSIONAPI static constexpr auto Properties = minifi::utils::array_cat(S3Processor::Properties, std::array<core::PropertyReference, 14>{
       ObjectKey,
       ContentType,
       StorageClass,

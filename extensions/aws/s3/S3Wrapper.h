@@ -43,6 +43,7 @@
 #include "S3RequestSender.h"
 #include "Exception.h"
 #include "MultipartUploadStateStorage.h"
+#include "range/v3/algorithm/find.hpp"
 
 namespace org::apache::nifi::minifi::aws::s3 {
 

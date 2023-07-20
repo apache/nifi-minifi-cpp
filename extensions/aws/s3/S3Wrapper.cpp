@@ -25,7 +25,6 @@
 #include <algorithm>
 
 #include "S3ClientRequestSender.h"
-#include "range/v3/algorithm/find.hpp"
 #include "utils/ArrayUtils.h"
 #include "utils/StringUtils.h"
 #include "utils/file/FileUtils.h"

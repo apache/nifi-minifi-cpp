@@ -271,24 +271,24 @@ TEST_CASE_METHOD(PutS3ObjectUploadLimitChangedTestsFixture, "Test multipart uplo
   auto temp_dir = test_controller.createTempDirectory();
   plan->setProperty(s3_processor, "Temporary Directory Multipart State", temp_dir.string());
 
-  plan->setProperty(update_attribute, "s3.permissions.full.users", "myuserid123, myuser@example.com", true);
+  plan->setDynamicProperty(update_attribute, "s3.permissions.full.users", "myuserid123, myuser@example.com");
   plan->setProperty(s3_processor, "FullControl User List", "${s3.permissions.full.users}");
-  plan->setProperty(update_attribute, "s3.permissions.read.users", "myuserid456,myuser2@example.com", true);
+  plan->setDynamicProperty(update_attribute, "s3.permissions.read.users", "myuserid456,myuser2@example.com");
   plan->setProperty(s3_processor, "Read Permission User List", "${s3.permissions.read.users}");
-  plan->setProperty(update_attribute, "s3.permissions.readacl.users", "myuserid789, otheruser", true);
+  plan->setDynamicProperty(update_attribute, "s3.permissions.readacl.users", "myuserid789, otheruser");
   plan->setProperty(s3_processor, "Read ACL User List", "${s3.permissions.readacl.users}");
-  plan->setProperty(update_attribute, "s3.permissions.writeacl.users", "myuser3@example.com", true);
+  plan->setDynamicProperty(update_attribute, "s3.permissions.writeacl.users", "myuser3@example.com");
   plan->setProperty(s3_processor, "Write ACL User List", "${s3.permissions.writeacl.users}");
-  plan->setProperty(update_attribute, "s3.permissions.cannedacl", "PublicReadWrite", true);
+  plan->setDynamicProperty(update_attribute, "s3.permissions.cannedacl", "PublicReadWrite");
   plan->setProperty(s3_processor, "Canned ACL", "${s3.permissions.cannedacl}");
-  plan->setProperty(s3_processor, "meta_key1", "meta_value1", true);
-  plan->setProperty(s3_processor, "meta_key2", "meta_value2", true);
-  plan->setProperty(update_attribute, "test.contentType", "application/tar", true);
+  plan->setDynamicProperty(s3_processor, "meta_key1", "meta_value1");
+  plan->setDynamicProperty(s3_processor, "meta_key2", "meta_value2");
+  plan->setDynamicProperty(update_attribute, "test.contentType", "application/tar");
   plan->setProperty(s3_processor, "Content Type", "${test.contentType}");
   plan->setProperty(s3_processor, "Storage Class", "ReducedRedundancy");
   plan->setProperty(s3_processor, "Region", minifi::aws::processors::region::AP_SOUTHEAST_3);
   plan->setProperty(s3_processor, "Communications Timeout", "10 Sec");
-  plan->setProperty(update_attribute, "test.endpoint", "http://localhost:1234", true);
+  plan->setDynamicProperty(update_attribute, "test.endpoint", "http://localhost:1234");
   plan->setProperty(s3_processor, "Endpoint Override URL", "${test.endpoint}");
   plan->setProperty(s3_processor, "Server Side Encryption", "AES256");
 

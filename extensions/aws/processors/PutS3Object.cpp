@@ -28,6 +28,7 @@
 #include "core/ProcessSession.h"
 #include "core/Resource.h"
 #include "range/v3/algorithm/contains.hpp"
+#include "utils/ProcessorConfigUtils.h"
 
 namespace org::apache::nifi::minifi::aws::processors {
 
@@ -117,22 +118,20 @@ void PutS3Object::onSchedule(const std::shared_ptr<core::ProcessContext> &contex
     use_virtual_addressing_ = !*use_path_style_access;
   }
 
-  context->getProperty(MultipartThreshold.getName(), multipart_threshold_);
-  if (multipart_threshold_ > getMaxUploadSize() || multipart_threshold_ < getMinPartSize()) {
+  if (!context->getProperty(MultipartThreshold, multipart_threshold_) || multipart_threshold_ > getMaxUploadSize() || multipart_threshold_ < getMinPartSize()) {
     throw Exception(PROCESS_SCHEDULE_EXCEPTION, "Multipart Threshold is not between the valid 5MB and 5GB range!");
   }
   logger_->log_debug("PutS3Object: Multipart Threshold %" PRIu64, multipart_threshold_);
-  context->getProperty(MultipartPartSize.getName(), multipart_size_);
-  if (multipart_size_ > getMaxUploadSize() || multipart_size_ < getMinPartSize()) {
+  if (!context->getProperty(MultipartPartSize, multipart_size_) || multipart_size_ > getMaxUploadSize() || multipart_size_ < getMinPartSize()) {
     throw Exception(PROCESS_SCHEDULE_EXCEPTION, "Multipart Part Size is not between the valid 5MB and 5GB range!");
   }
   logger_->log_debug("PutS3Object: Multipart Size %" PRIu64, multipart_size_);
 
 
-  multipart_upload_ageoff_interval_ = minifi::utils::getRequiredPropertyOrThrow<core::TimePeriodValue>(*context, MultipartUploadAgeOffInterval.getName()).getMilliseconds();
+  multipart_upload_ageoff_interval_ = minifi::utils::getRequiredPropertyOrThrow<core::TimePeriodValue>(*context, MultipartUploadAgeOffInterval.name).getMilliseconds();
   logger_->log_debug("PutS3Object: Multipart Upload Ageoff Interval %" PRId64 " ms", int64_t{multipart_upload_ageoff_interval_.count()});
 
-  multipart_upload_max_age_threshold_ = minifi::utils::getRequiredPropertyOrThrow<core::TimePeriodValue>(*context, MultipartUploadMaxAgeThreshold.getName()).getMilliseconds();
+  multipart_upload_max_age_threshold_ = minifi::utils::getRequiredPropertyOrThrow<core::TimePeriodValue>(*context, MultipartUploadMaxAgeThreshold.name).getMilliseconds();
   logger_->log_debug("PutS3Object: Multipart Upload Max Age Threshold %" PRId64 " ms", int64_t{multipart_upload_max_age_threshold_.count()});
 
   fillUserMetadata(context);
