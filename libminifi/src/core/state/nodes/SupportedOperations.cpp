@@ -117,7 +117,7 @@ void SupportedOperations::fillProperties(SerializedResponseNode& properties, min
 std::vector<SerializedResponseNode> SupportedOperations::serialize() {
   SerializedResponseNode supported_operation{.name = "supportedOperations", .array = true};
 
-  for (const auto& operation : minifi::c2::Operation::values()) {
+  for (const auto& operation : minifi::c2::Operation::values) {
     SerializedResponseNode child{
       .name = "supportedOperations",
       .children = {
