@@ -23,7 +23,6 @@
 #include "utils/StringUtils.h"
 #include "utils/OsUtils.h"
 #include "utils/Id.h"
-#include "core/PropertyValidation.h"
 
 namespace org::apache::nifi::minifi::extensions::prometheus {
 
