@@ -11,15 +11,15 @@ class TestGithubActionsCacheCleaner(unittest.TestCase):
         mock.list_open_pull_requests = MagicMock()
         open_pull_requests = [
             {
-                "number": "227",
+                "number": 227,
                 "title": "MINIFICPP-13712 TEST1",
             },
             {
-                "number": "228",
+                "number": 228,
                 "title": "MINIFICPP-9999 TEST2",
             },
             {
-                "number": "229",
+                "number": 229,
                 "title": "MINIFICPP-123 TEST3",
             }
         ]
@@ -27,35 +27,35 @@ class TestGithubActionsCacheCleaner(unittest.TestCase):
         caches = {
             "actions_caches": [
                 {
-                    "id": "999",
+                    "id": 999,
                     "key": "macos-xcode-ccache-refs/pull/226/merge-6c8d283f5bc894af8dfc295e5976a5f154753123",
                 },
                 {
-                    "id": "11111",
+                    "id": 11111,
                     "key": "ubuntu-20.04-ccache-refs/pull/227/merge-9d6d283f5bc894af8dfc295e5976a5f1b46649c4",
                 },
                 {
-                    "id": "11112",
+                    "id": 11112,
                     "key": "ubuntu-20.04-ccache-refs/pull/227/merge-1d6d283f5bc894af8dfc295e5976a5f154753487",
                 },
                 {
-                    "id": "12345",
+                    "id": 12345,
                     "key": "macos-xcode-ccache-refs/pull/227/merge-2d6d283f5bc894af8dfc295e5976a5f154753536",
                 },
                 {
-                    "id": "22221",
+                    "id": 22221,
                     "key": "macos-xcode-ccache-refs/heads/MINIFICPP-9999-9d5e183f5bc894af8dfc295e5976a5f1b4664456",
                 },
                 {
-                    "id": "22222",
+                    "id": 22222,
                     "key": "macos-xcode-ccache-refs/heads/MINIFICPP-9999-8f4d283f5bc894af8dfc295e5976a5f1b4664123",
                 },
                 {
-                    "id": "44444",
+                    "id": 44444,
                     "key": "ubuntu-20.04-all-clang-ccache-refs/heads/main-1d4d283f5bc894af8dfc295e5976a5f1b4664456",
                 },
                 {
-                    "id": "55555",
+                    "id": 55555,
                     "key": "ubuntu-20.04-all-clang-ccache-refs/heads/main-2f4d283f5bc894af8dfc295e5976a5f1b4664567",
                 }
             ]
