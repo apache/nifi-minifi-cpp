@@ -17,7 +17,7 @@
 # under the License.
 #
 
-if (NOT ENABLE_BUSTACHE)
+if (NOT (ENABLE_ALL OR ENABLE_BUSTACHE))
     return()
 endif()
 

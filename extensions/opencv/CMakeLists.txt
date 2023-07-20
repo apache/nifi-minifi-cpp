@@ -17,7 +17,7 @@
 # under the License.
 #
 
-if (NOT ENABLE_OPENCV)
+if (NOT (ENABLE_ALL OR ENABLE_OPENCV))
     return()
 endif()
 

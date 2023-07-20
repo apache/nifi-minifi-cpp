@@ -15,7 +15,7 @@
 # specific language governing permissions and limitations
 # under the License.
 
-if (NOT ENABLE_PYTHON_SCRIPTING)
+if (NOT (ENABLE_ALL OR ENABLE_PYTHON_SCRIPTING))
     return()
 endif()
 
