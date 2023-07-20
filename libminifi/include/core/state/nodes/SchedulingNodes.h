@@ -15,8 +15,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#ifndef LIBMINIFI_INCLUDE_CORE_STATE_NODES_SCHEDULINGNODES_H_
-#define LIBMINIFI_INCLUDE_CORE_STATE_NODES_SCHEDULINGNODES_H_
+#pragma once
 
 #include <string>
 #include <utility>
@@ -41,54 +40,7 @@ class SchedulingDefaults : public DeviceInformation {
     return "schedulingDefaults";
   }
 
-  std::vector<SerializedResponseNode> serialize() override {
-    std::vector<SerializedResponseNode> serialized;
-
-    SerializedResponseNode schedulingDefaults;
-    schedulingDefaults.name = "schedulingDefaults";
-
-    SerializedResponseNode defaultSchedulingStrategy;
-    defaultSchedulingStrategy.name = "defaultSchedulingStrategy";
-    defaultSchedulingStrategy.value = core::DEFAULT_SCHEDULING_STRATEGY;
-
-    schedulingDefaults.children.push_back(defaultSchedulingStrategy);
-
-    SerializedResponseNode defaultSchedulingPeriod;
-    defaultSchedulingPeriod.name = "defaultSchedulingPeriodMillis";
-    defaultSchedulingPeriod.value = int64_t{core::DEFAULT_SCHEDULING_PERIOD_MILLIS.count()};
-
-    schedulingDefaults.children.push_back(defaultSchedulingPeriod);
-
-    SerializedResponseNode defaultRunDuration;
-    defaultRunDuration.name = "defaultRunDurationNanos";
-    defaultRunDuration.value = int64_t{core::DEFAULT_RUN_DURATION.count()};
-
-    schedulingDefaults.children.push_back(defaultRunDuration);
-
-    SerializedResponseNode defaultMaxConcurrentTasks;
-    defaultMaxConcurrentTasks.name = "defaultMaxConcurrentTasks";
-    defaultMaxConcurrentTasks.value = core::DEFAULT_MAX_CONCURRENT_TASKS;
-
-    schedulingDefaults.children.push_back(defaultMaxConcurrentTasks);
-
-    SerializedResponseNode yieldDuration;
-    yieldDuration.name = "yieldDurationMillis";
-    yieldDuration.value = int64_t{std::chrono::milliseconds(core::DEFAULT_YIELD_PERIOD_SECONDS).count()};
-
-    schedulingDefaults.children.push_back(yieldDuration);
-
-    SerializedResponseNode penalizationPeriod;
-    penalizationPeriod.name = "penalizationPeriodMillis";
-    penalizationPeriod.value = int64_t{std::chrono::milliseconds{core::DEFAULT_PENALIZATION_PERIOD}.count()};
-
-    schedulingDefaults.children.push_back(penalizationPeriod);
-
-    serialized.push_back(schedulingDefaults);
-
-    return serialized;
-  }
+  std::vector<SerializedResponseNode> serialize() override;
 };
 
 }  // namespace org::apache::nifi::minifi::state::response
-
-#endif  // LIBMINIFI_INCLUDE_CORE_STATE_NODES_SCHEDULINGNODES_H_
