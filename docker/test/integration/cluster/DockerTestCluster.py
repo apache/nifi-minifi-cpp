@@ -87,6 +87,9 @@ class DockerTestCluster:
     def enable_prometheus_in_minifi(self):
         self.container_store.enable_prometheus_in_minifi()
 
+    def enable_prometheus_with_ssl_in_minifi(self):
+        self.container_store.enable_prometheus_with_ssl_in_minifi()
+
     def enable_sql_in_minifi(self):
         self.container_store.enable_sql_in_minifi()
 

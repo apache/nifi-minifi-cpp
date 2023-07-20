@@ -108,6 +108,15 @@ An agent identifier should also be defined to identify which agent the metric is
 
     nifi.metrics.publisher.agent.identifier=Agent1
 
+### Configure Prometheus metrics publisher with SSL
+
+The communication between MiNiFi and Prometheus can be encrypted using SSL. This can be achieved by adding the SSL certificate path (a single file containing both the MiNiFi certificate and the MiNiFi SSL key) and optionally adding the root CA path if Prometheus uses a self-signed certificate, to the minifi.properties file. Here is an example with the SSL properties:
+
+    # in minifi.properties
+
+    nifi.metrics.publisher.PrometheusMetricsPublisher.certificate=/tmp/certs/prometheus-publisher/minifi-cpp.crt
+    nifi.metrics.publisher.PrometheusMetricsPublisher.ca.certificate=/tmp/certs/prometheus-publisher/root-ca.pem
+
 ## System Metrics
 
 The following section defines the currently available metrics to be published by the MiNiFi C++ agent.

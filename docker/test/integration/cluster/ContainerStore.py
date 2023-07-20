@@ -242,6 +242,15 @@ class ContainerStore:
                                                                   network=self.network,
                                                                   image_store=self.image_store,
                                                                   command=command))
+        elif engine == "prometheus-ssl":
+            return self.containers.setdefault(container_name,
+                                              PrometheusContainer(feature_context=feature_context,
+                                                                  name=container_name,
+                                                                  vols=self.vols,
+                                                                  network=self.network,
+                                                                  image_store=self.image_store,
+                                                                  command=command,
+                                                                  ssl=True))
         elif engine == "minifi-c2-server":
             return self.containers.setdefault(container_name,
                                               MinifiC2ServerContainer(feature_context=feature_context,
@@ -312,6 +321,9 @@ class ContainerStore:
 
     def enable_prometheus_in_minifi(self):
         self.minifi_options.enable_prometheus = True
+
+    def enable_prometheus_with_ssl_in_minifi(self):
+        self.minifi_options.enable_prometheus_with_ssl = True
 
     def enable_sql_in_minifi(self):
         self.minifi_options.enable_sql = True

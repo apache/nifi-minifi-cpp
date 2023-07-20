@@ -31,6 +31,7 @@ class MinifiOptions:
         self.enable_c2_with_ssl = False
         self.enable_provenance = False
         self.enable_prometheus = False
+        self.enable_prometheus_with_ssl = False
         self.enable_sql = False
         self.config_format = "json"
         self.use_flow_config_from_url = False
@@ -118,20 +119,24 @@ class MinifiContainer(FlowContainer):
             if not self.options.enable_provenance:
                 f.write("nifi.provenance.repository.class.name=NoOpRepository\n")
 
-            if self.options.enable_prometheus or self.options.enable_log_metrics_publisher:
-                classes = []
-                if self.options.enable_prometheus:
-                    f.write("nifi.metrics.publisher.agent.identifier=Agent1\n")
-                    f.write("nifi.metrics.publisher.PrometheusMetricsPublisher.port=9936\n")
-                    f.write("nifi.metrics.publisher.PrometheusMetricsPublisher.metrics=RepositoryMetrics,QueueMetrics,PutFileMetrics,processorMetrics/Get.*,FlowInformation,DeviceInfoNode,AgentStatus\n")
-                    classes.append("PrometheusMetricsPublisher")
+            metrics_publisher_classes = []
+            if self.options.enable_prometheus or self.options.enable_prometheus_with_ssl:
+                f.write("nifi.metrics.publisher.agent.identifier=Agent1\n")
+                f.write("nifi.metrics.publisher.PrometheusMetricsPublisher.port=9936\n")
+                f.write("nifi.metrics.publisher.PrometheusMetricsPublisher.metrics=RepositoryMetrics,QueueMetrics,PutFileMetrics,processorMetrics/Get.*,FlowInformation,DeviceInfoNode,AgentStatus\n")
+                metrics_publisher_classes.append("PrometheusMetricsPublisher")
 
-                if self.options.enable_log_metrics_publisher:
-                    f.write("nifi.metrics.publisher.LogMetricsPublisher.metrics=RepositoryMetrics\n")
-                    f.write("nifi.metrics.publisher.LogMetricsPublisher.logging.interval=1s\n")
-                    classes.append("LogMetricsPublisher")
+            if self.options.enable_prometheus_with_ssl:
+                f.write("nifi.metrics.publisher.PrometheusMetricsPublisher.certificate=/tmp/resources/minifi_merged_cert.crt\n")
+                f.write("nifi.metrics.publisher.PrometheusMetricsPublisher.ca.certificate=/tmp/resources/root_ca.crt\n")
 
-                f.write("nifi.metrics.publisher.class=" + ",".join(classes) + "\n")
+            if self.options.enable_log_metrics_publisher:
+                f.write("nifi.metrics.publisher.LogMetricsPublisher.metrics=RepositoryMetrics\n")
+                f.write("nifi.metrics.publisher.LogMetricsPublisher.logging.interval=1s\n")
+                metrics_publisher_classes.append("LogMetricsPublisher")
+
+            if metrics_publisher_classes:
+                f.write("nifi.metrics.publisher.class=" + ",".join(metrics_publisher_classes) + "\n")
 
             if self.options.use_flow_config_from_url:
                 f.write(f"nifi.c2.flow.url=http://minifi-c2-server-{self.feature_context.id}:10090/c2/config?class=minifi-test-class\n")

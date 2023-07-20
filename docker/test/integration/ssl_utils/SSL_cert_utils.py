@@ -132,6 +132,10 @@ def _make_cert(common_name, ca_cert, ca_key, extended_key_usage=None):
     if extended_key_usage:
         extensions.append(crypto.X509Extension(b"extendedKeyUsage", False, extended_key_usage))
 
+    cert.add_extensions([
+        crypto.X509Extension(b"subjectAltName", False, b"DNS.1:" + common_name.encode())
+    ])
+
     cert.add_extensions(extensions)
 
     cert.set_issuer(ca_cert.get_subject())

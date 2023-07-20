@@ -353,6 +353,11 @@ def step_impl(context):
     context.test.enable_log_metrics_publisher_in_minifi()
 
 
+@given("Prometheus with SSL is enabled in MiNiFi")
+def step_impl(context):
+    context.test.enable_prometheus_with_ssl_in_minifi()
+
+
 # HTTP proxy setup
 @given("the http proxy server is set up")
 @given("a http proxy server is set up accordingly")
@@ -987,6 +992,11 @@ def step_imp(context, content, source, source_type, host):
 @given("a Prometheus server is set up")
 def step_impl(context):
     context.test.acquire_container(context=context, name="prometheus", engine="prometheus")
+
+
+@given("a Prometheus server is set up with SSL")
+def step_impl(context):
+    context.test.acquire_container(context=context, name="prometheus", engine="prometheus-ssl")
 
 
 @then("\"{metric_class}\" are published to the Prometheus server in less than {timeout_seconds:d} seconds")
