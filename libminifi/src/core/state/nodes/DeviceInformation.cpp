@@ -27,13 +27,6 @@ utils::SystemCpuUsageTracker DeviceInfoNode::cpu_load_tracker_;
 std::mutex DeviceInfoNode::cpu_load_tracker_mutex_;
 
 Device::Device() {
-  addrinfo hints;
-  memset(&hints, 0, sizeof hints);  // make sure the struct is empty
-  hints.ai_family = AF_UNSPEC;
-  hints.ai_socktype = SOCK_STREAM;
-  hints.ai_flags = AI_CANONNAME;
-  hints.ai_protocol = 0; /* any protocol */
-
   char hostname[1024];
   hostname[1023] = '\0';
   gethostname(hostname, 1023);
