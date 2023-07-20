@@ -105,8 +105,6 @@ constexpr auto typeNameArray() {
 # error Unsupported compiler
 #endif
 
-  static_assert(function.find(prefix) != std::string_view::npos && function.rfind(suffix) != std::string_view::npos);
-
   constexpr auto start = function.find(prefix) + prefix.size();
   constexpr auto end = function.rfind(suffix);
   static_assert(start < end);
