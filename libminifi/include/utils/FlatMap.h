@@ -145,9 +145,7 @@ class FlatMap{
     return data_.rbegin()->second;
   }
 
-  template<typename T>
-  requires std::equality_comparable_with<K, T>
-  const V& at(const T& key) const {
+  const V& at(std::equality_comparable_with<K> auto const& key) const {
     auto it = find(key);
     if (it != end()) {
       return it->second;
@@ -155,9 +153,7 @@ class FlatMap{
     throw std::out_of_range("utils::FlatMap::at");
   }
 
-  template<typename T>
-  requires std::equality_comparable_with<K, T>
-  V& at(const T& key) {
+  V& at(std::equality_comparable_with<K> auto const& key) {
     auto it = find(key);
     if (it != end()) {
       return it->second;
@@ -172,9 +168,7 @@ class FlatMap{
     return iterator{data_.begin() + offset};
   }
 
-  template<typename T>
-  requires std::equality_comparable_with<K, T>
-  std::size_t erase(const T& key) {
+  std::size_t erase(std::equality_comparable_with<K> auto const& key) {
     for (auto it = data_.begin(); it != data_.end(); ++it) {
       if (it->first == key) {
         std::swap(*data_.rbegin(), *it);
@@ -216,18 +210,14 @@ class FlatMap{
     return {iterator{data_.begin() + data_.size() - 1}, true};
   }
 
-  template<typename T>
-  requires std::equality_comparable_with<K, T>
-  iterator find(const T& key) {
+  iterator find(std::equality_comparable_with<K> auto const& key) {
     for (auto it = data_.begin(); it != data_.end(); ++it) {
       if (it->first == key) return iterator{it};
     }
     return end();
   }
 
-  template<typename T>
-  requires std::equality_comparable_with<K, T>
-  const_iterator find(const T& key) const {
+  const_iterator find(std::equality_comparable_with<K> auto const& key) const {
     for (auto it = data_.begin(); it != data_.end(); ++it) {
       if (it->first == key) return const_iterator{it};
     }
@@ -294,9 +284,7 @@ class FlatMap{
     return data_.empty();
   }
 
-  template<typename T>
-  requires std::equality_comparable_with<K, T>
-  bool contains(const T& key) const {
+  bool contains(std::equality_comparable_with<K> auto const& key) const {
     return find(key) != end();
   }
 
