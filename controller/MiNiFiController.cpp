@@ -113,10 +113,6 @@ int main(int argc, char **argv) {
   }
   auto stream_factory_ = minifi::io::StreamFactory::getInstance(configuration);
 
-
-  std::string port_str;
-  std::string ca_cert;
-
   cxxopts::Options options("MiNiFiController", "MiNiFi local agent controller");
   options.positional_help("[optional args]").show_positional_help();
 
@@ -151,6 +147,7 @@ int main(int argc, char **argv) {
       configuration->get(minifi::Configure::controller_socket_host, socket_data.host);
     }
 
+    std::string port_str;
     if (result.count("port")) {
       socket_data.port = result["port"].as<int>();
     } else if (socket_data.port == -1 && configuration->get(minifi::Configure::controller_socket_port, port_str)) {
@@ -189,9 +186,7 @@ int main(int argc, char **argv) {
       auto& components = result["c"].as<std::vector<std::string>>();
       for (const auto& connection : components) {
         if (minifi::controller::clearConnection(socket_data, connection)) {
-          std::cout << "Sent clear command to " << connection << ". Size before clear operation sent: " << std::endl;
-          if (!minifi::controller::getConnectionSize(socket_data, std::cout, connection))
-            std::cout << "Could not connect to remote host " << socket_data.host << ":" << socket_data.port << std::endl;
+          std::cout << "Sent clear command to " << connection << "." << std::endl;
         } else {
           std::cout << "Could not connect to remote host " << socket_data.host << ":" << socket_data.port << std::endl;
         }
