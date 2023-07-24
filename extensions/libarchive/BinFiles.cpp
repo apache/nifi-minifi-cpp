@@ -80,7 +80,7 @@ void BinFiles::onSchedule(core::ProcessContext *context, core::ProcessSessionFac
   }
 }
 
-void BinFiles::preprocessFlowFile(core::ProcessContext* /*context*/, core::ProcessSession* /*session*/, const std::shared_ptr<core::FlowFile>& flow) {
+void BinFiles::preprocessFlowFile(const std::shared_ptr<core::FlowFile>& flow) {
   // handle backward compatibility with old segment attributes
   std::string value;
   if (!flow->getAttribute(BinFiles::FRAGMENT_COUNT_ATTRIBUTE, value) && flow->getAttribute(BinFiles::SEGMENT_COUNT_ATTRIBUTE, value)) {
@@ -156,6 +156,11 @@ void BinManager::getReadyBin(std::deque<std::unique_ptr<Bin>> &retBins) {
   }
 }
 
+void BinManager::addReadyBin(std::unique_ptr<Bin> ready_bin) {
+  std::lock_guard<std::mutex> lock(mutex_);
+  readyBin_.push_back(std::move(ready_bin));
+}
+
 bool BinManager::offer(const std::string &group, const std::shared_ptr<core::FlowFile>& flow) {
   std::lock_guard < std::mutex > lock(mutex_);
   if (flow->getSize() > maxSize_) {
@@ -203,93 +208,97 @@ bool BinManager::offer(const std::string &group, const std::shared_ptr<core::Flo
   return true;
 }
 
-void BinFiles::onTrigger(const std::shared_ptr<core::ProcessContext> &context, const std::shared_ptr<core::ProcessSession> &session) {
-  // Rollback is not viable for this processor!!
-  {
-    // process resurrected FlowFiles first
-    auto flowFiles = file_store_.getNewFlowFiles();
-    // these are already processed FlowFiles, that we own
-    bool hadFailure = false;
-    for (auto &file : flowFiles) {
-      std::string groupId = getGroupId(context.get(), file);
-      bool offer = this->binManager_.offer(groupId, file);
-      if (!offer) {
-        session->transfer(file, Failure);
-        hadFailure = true;
-      } else {
-        // no need to route successfully captured such files as we already own them
-      }
+bool BinFiles::resurrectFlowFiles(core::ProcessSession &session) {
+  auto flow_files = file_store_.getNewFlowFiles();
+  // these are already processed FlowFiles, that we own
+  bool had_failure = false;
+  for (auto &file : flow_files) {
+    std::string group_id = getGroupId(file);
+    if (!binManager_.offer(group_id, file)) {
+      session.transfer(file, Failure);
+      had_failure = true;
     }
-    if (hadFailure) {
-      context->yield();
-      return;
-    }
+    // no need to route successfully captured such files as we already own them in the Self relationship
   }
+  return had_failure;
+}
 
+void BinFiles::assumeOwnershipOfNextBatch(core::ProcessSession &session) {
   for (size_t i = 0; i < batchSize_; ++i) {
-    auto flow = session->get();
+    auto flow = session.get();
 
     if (flow == nullptr) {
       break;
     }
 
-    preprocessFlowFile(context.get(), session.get(), flow);
-    std::string groupId = getGroupId(context.get(), flow);
+    preprocessFlowFile(flow);
+    std::string group_id = getGroupId(flow);
 
-    bool offer = this->binManager_.offer(groupId, flow);
+    bool offer = binManager_.offer(group_id, flow);
     if (!offer) {
-      session->transfer(flow, Failure);
-      context->yield();
-      return;
+      session.transfer(flow, Failure);
+      continue;
     }
-    // assuming ownership over the incoming flowFile
-    session->transfer(flow, Self);
+    session.transfer(flow, Self);
   }
+  session.commit();
+}
 
-  // migrate bin to ready bin
-  this->binManager_.gatherReadyBins();
-  if (gsl::narrow<uint32_t>(this->binManager_.getBinCount()) > maxBinCount_) {
-    // bin count reach max allowed
-    context->yield();
-    logger_->log_debug("BinFiles reach max bin count %d", this->binManager_.getBinCount());
-    this->binManager_.removeOldestBin();
-  }
+void BinFiles::processReadyBins(std::deque<std::unique_ptr<Bin>> ready_bins, core::ProcessSession &session) {
+  while (!ready_bins.empty()) {
+    std::unique_ptr<Bin> bin = std::move(ready_bins.front());
+    ready_bins.pop_front();
 
-  // get the ready bin
-  std::deque<std::unique_ptr<Bin>> readyBins;
-  binManager_.getReadyBin(readyBins);
-
-  // process the ready bin
-  while (!readyBins.empty()) {
-    // create session for merge
-    // we have to create a new session
-    // for each merge as a rollback erases all
-    // previously added files
-    core::ProcessSession mergeSession(context);
-    mergeSession.setMetrics(metrics_);
-    std::unique_ptr<Bin> bin = std::move(readyBins.front());
-    readyBins.pop_front();
-    // add bin's flows to the session
-    this->addFlowsToSession(context.get(), &mergeSession, bin);
-    logger_->log_debug("BinFiles start to process bin %s for group %s", bin->getUUIDStr(), bin->getGroupId());
-    if (!this->processBin(context.get(), &mergeSession, bin))
-      this->transferFlowsToFail(context.get(), &mergeSession, bin);
-    mergeSession.commit();
+    try {
+      addFlowsToSession(session, bin);
+      logger_->log_debug("BinFiles start to process bin %s for group %s", bin->getUUIDStr(), bin->getGroupId());
+      if (!processBin(session, bin))
+        transferFlowsToFail(session, bin);
+      session.commit();
+    } catch(const std::exception& ex) {
+      logger_->log_error("Caught Exception type: '%s' while merging ready bin: '%s'", typeid(ex).name(), ex.what());
+      binManager_.addReadyBin(std::move(bin));
+      session.rollback();
+    }
   }
 }
 
-void BinFiles::transferFlowsToFail(core::ProcessContext* /*context*/, core::ProcessSession *session, std::unique_ptr<Bin> &bin) {
+std::deque<std::unique_ptr<Bin>> BinFiles::gatherReadyBins(core::ProcessContext &context) {
+  binManager_.gatherReadyBins();
+  if (gsl::narrow<uint32_t>(binManager_.getBinCount()) > maxBinCount_) {
+    // bin count reach max allowed
+    context.yield();
+    logger_->log_debug("BinFiles reach max bin count %d", binManager_.getBinCount());
+    binManager_.removeOldestBin();
+  }
+
+  std::deque<std::unique_ptr<Bin>> ready_bins;
+  binManager_.getReadyBin(ready_bins);
+  return ready_bins;
+}
+
+void BinFiles::onTrigger(const std::shared_ptr<core::ProcessContext> &context, const std::shared_ptr<core::ProcessSession> &session) {
+  if (resurrectFlowFiles(*session)) {
+    context->yield();
+    return;
+  }
+
+  assumeOwnershipOfNextBatch(*session);
+  processReadyBins(gatherReadyBins(*context), *session);
+}
+
+void BinFiles::transferFlowsToFail(core::ProcessSession &session, std::unique_ptr<Bin> &bin) {
   std::deque<std::shared_ptr<core::FlowFile>> &flows = bin->getFlowFile();
   for (const auto& flow : flows) {
-    session->transfer(flow, Failure);
+    session.transfer(flow, Failure);
   }
   flows.clear();
 }
 
-void BinFiles::addFlowsToSession(core::ProcessContext* /*context*/, core::ProcessSession *session, std::unique_ptr<Bin> &bin) {
+void BinFiles::addFlowsToSession(core::ProcessSession &session, std::unique_ptr<Bin> &bin) {
   std::deque<std::shared_ptr<core::FlowFile>> &flows = bin->getFlowFile();
   for (const auto& flow : flows) {
-    session->add(flow);
+    session.add(flow);
   }
 }
 

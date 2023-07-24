@@ -56,7 +56,7 @@ class MergeBin {
  public:
   virtual ~MergeBin() = default;
   // merge the flows in the bin
-  virtual void merge(core::ProcessContext *context, core::ProcessSession *session,
+  virtual void merge(core::ProcessSession &session,
       std::deque<std::shared_ptr<core::FlowFile>> &flows, FlowFileSerializer& serializer, const std::shared_ptr<core::FlowFile> &flowFile) = 0;
 };
 
@@ -64,7 +64,7 @@ class BinaryConcatenationMerge : public MergeBin {
  public:
   BinaryConcatenationMerge(std::string header, std::string footer, std::string demarcator);
 
-  void merge(core::ProcessContext* context, core::ProcessSession *session,
+  void merge(core::ProcessSession &session,
     std::deque<std::shared_ptr<core::FlowFile>>& flows, FlowFileSerializer& serializer, const std::shared_ptr<core::FlowFile>& merge_flow) override;
   // Nest Callback Class for write stream
   class WriteCallback {
@@ -242,13 +242,13 @@ class ArchiveMerge {
 
 class TarMerge: public ArchiveMerge, public MergeBin {
  public:
-  void merge(core::ProcessContext *context, core::ProcessSession *session, std::deque<std::shared_ptr<core::FlowFile>> &flows,
+  void merge(core::ProcessSession &session, std::deque<std::shared_ptr<core::FlowFile>> &flows,
              FlowFileSerializer& serializer, const std::shared_ptr<core::FlowFile> &merge_flow) override;
 };
 
 class ZipMerge: public ArchiveMerge, public MergeBin {
  public:
-  void merge(core::ProcessContext *context, core::ProcessSession *session, std::deque<std::shared_ptr<core::FlowFile>> &flows,
+  void merge(core::ProcessSession &session, std::deque<std::shared_ptr<core::FlowFile>> &flows,
              FlowFileSerializer& serializer, const std::shared_ptr<core::FlowFile> &merge_flow) override;
 };
 
@@ -256,7 +256,7 @@ class AttributeMerger {
  public:
   explicit AttributeMerger(std::deque<std::shared_ptr<org::apache::nifi::minifi::core::FlowFile>> &flows)
     : flows_(flows) {}
-  void mergeAttributes(core::ProcessSession *session, const std::shared_ptr<core::FlowFile> &merge_flow);
+  void mergeAttributes(core::ProcessSession &session, const std::shared_ptr<core::FlowFile> &merge_flow);
   virtual ~AttributeMerger() = default;
 
  protected:
@@ -287,6 +287,17 @@ class KeepAllUniqueAttributesMerger: public AttributeMerger {
   std::vector<std::string> removed_attributes_;
 };
 
+/**
+ * A processor that merges multiple correlated flow files to a single flow file
+ *
+ * Concepts:
+ * - Batch size: represents the maximum number of flow files to be processed from the incoming relationship
+ * - Bin (or bundle): represents a set of flow files that belong together defined by the processor properties. Correlated flow files are defined by the CorrelationAttributeName property which
+ *                    defines the attribute that provides the groupid for the bin the flow file belongs to
+ * - Ready bin: when a bin reaches a limit defined by the maximum age or the maximum size, the bin becomes ready, and ready bins can be merged
+ * - Group: a set of bins with the same groupid. In case a bin cannot accept a new flow files (e.g. it would go above its size limit), a new bin is created with this new flow file and added
+ *          to the same group of bins
+ */
 class MergeContent : public processors::BinFiles {
  public:
   explicit MergeContent(const std::string& name, const utils::Identifier& uuid = {})
@@ -373,11 +384,11 @@ class MergeContent : public processors::BinFiles {
   void onSchedule(core::ProcessContext *context, core::ProcessSessionFactory *sessionFactory) override;
   void onTrigger(core::ProcessContext *context, core::ProcessSession *session) override;
   void initialize() override;
-  bool processBin(core::ProcessContext *context, core::ProcessSession *session, std::unique_ptr<Bin> &bin) override;
+  bool processBin(core::ProcessSession &session, std::unique_ptr<Bin> &bin) override;
 
  protected:
   // Returns a group ID representing a bin. This allows flow files to be binned into like groups
-  std::string getGroupId(core::ProcessContext *context, const std::shared_ptr<core::FlowFile>& flow) override;
+  std::string getGroupId(const std::shared_ptr<core::FlowFile>& flow) override;
   // check whether the defragment bin is validate
   static bool checkDefragment(std::unique_ptr<Bin> &bin);
 
