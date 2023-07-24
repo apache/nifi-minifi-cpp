@@ -220,6 +220,7 @@ bool MergeContent::processBin(core::ProcessContext *context, core::ProcessSessio
     KeepAllUniqueAttributesMerger(bin->getFlowFile()).mergeAttributes(session, merge_flow);
   } else {
     logger_->log_error("Attribute strategy not supported %s", attributeStrategy_);
+    session->remove(merge_flow);
     return false;
   }
 
@@ -246,6 +247,7 @@ bool MergeContent::processBin(core::ProcessContext *context, core::ProcessSessio
     mimeType = "application/zip";
   } else {
     logger_->log_error("Merge format not supported %s", mergeFormat_);
+    session->remove(merge_flow);
     return false;
   }
 
@@ -255,9 +257,11 @@ bool MergeContent::processBin(core::ProcessContext *context, core::ProcessSessio
     session->putAttribute(merge_flow, core::SpecialFlowAttribute::MIME_TYPE, mimeType);
   } catch (const std::exception& ex) {
     logger_->log_error("Merge Content merge catch exception, type: %s, what: %s", typeid(ex).name(), ex.what());
+    session->remove(merge_flow);
     return false;
   } catch (...) {
     logger_->log_error("Merge Content merge catch exception, type: %s", getCurrentExceptionTypeName());
+    session->remove(merge_flow);
     return false;
   }
   session->putAttribute(merge_flow, BinFiles::FRAGMENT_COUNT_ATTRIBUTE, std::to_string(bin->getSize()));

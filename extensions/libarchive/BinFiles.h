@@ -177,6 +177,7 @@ class BinManager {
   void removeOldestBin();
   // get ready bin from binManager
   void getReadyBin(std::deque<std::unique_ptr<Bin>> &retBins);
+  void addReadyBin(std::unique_ptr<Bin> ready_bin);
 
  private:
   std::mutex mutex_;
@@ -297,6 +298,11 @@ class BinFiles : public core::Processor {
   static void transferFlowsToFail(core::ProcessContext *context, core::ProcessSession *session, std::unique_ptr<Bin> &bin);
   // moves owned flows to session
   static void addFlowsToSession(core::ProcessContext *context, core::ProcessSession *session, std::unique_ptr<Bin> &bin);
+
+  bool resurrectFlowFiles(const std::shared_ptr<core::ProcessContext> &context, const std::shared_ptr<core::ProcessSession> &session);
+  void assumeOwnerShipOfNextBatch(const std::shared_ptr<core::ProcessContext> &context, const std::shared_ptr<core::ProcessSession> &session);
+  std::deque<std::unique_ptr<Bin>> gatherReadyBins(const std::shared_ptr<core::ProcessContext> &context);
+  void processReadyBins(std::deque<std::unique_ptr<Bin>> ready_bins, const std::shared_ptr<core::ProcessContext> &context, const std::shared_ptr<core::ProcessSession> &session);
 
   BinManager binManager_;
 
