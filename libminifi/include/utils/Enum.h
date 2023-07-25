@@ -37,7 +37,7 @@ T enumCast(std::string_view str, bool case_insensitive = false) {
   if (enum_optional_value) {
     return enum_optional_value.value();
   }
-  throw std::runtime_error("Cannot convert \"" + std::string(str) + "\" to enum class value of enum type \"" + std::string{magic_enum::enum_type_name<T>()} + "\"");
+  throw std::runtime_error("Cannot convert \"" + std::string(str) + "\" to enum class value of enum type \"" + std::string(magic_enum::enum_type_name<T>()) + "\"");
 }
 
 }  // namespace org::apache::nifi::minifi::utils
