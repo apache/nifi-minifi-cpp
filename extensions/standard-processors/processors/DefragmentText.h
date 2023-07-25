@@ -41,12 +41,14 @@ enum class PatternLocation {
 }  // namespace org::apache::nifi::minifi::processors::defragment_text
 
 namespace magic_enum::customize {
+using PatternLocation = org::apache::nifi::minifi::processors::defragment_text::PatternLocation;
+
 template <>
-constexpr customize_t enum_name<org::apache::nifi::minifi::processors::defragment_text::PatternLocation>(org::apache::nifi::minifi::processors::defragment_text::PatternLocation value) noexcept {
+constexpr customize_t enum_name<PatternLocation>(PatternLocation value) noexcept {
   switch (value) {
-    case org::apache::nifi::minifi::processors::defragment_text::PatternLocation::END_OF_MESSAGE:
+    case PatternLocation::END_OF_MESSAGE:
       return "End of Message";
-    case org::apache::nifi::minifi::processors::defragment_text::PatternLocation::START_OF_MESSAGE:
+    case PatternLocation::START_OF_MESSAGE:
       return "Start of Message";
   }
   return default_tag;

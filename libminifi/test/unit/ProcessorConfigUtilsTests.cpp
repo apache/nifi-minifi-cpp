@@ -61,6 +61,19 @@ TEST_CASE("Parse enum property") {
   SECTION("Missing") {
     REQUIRE_THROWS(utils::parseEnumProperty<TestEnum>(context, prop));
   }
+  SECTION("Optional enum property valid") {
+    proc->setProperty(prop, "B");
+    const auto val = utils::parseOptionalEnumProperty<TestEnum>(context, prop);
+    REQUIRE(*val == TestEnum::B);
+  }
+  SECTION("Optional enum property invalid") {
+    proc->setProperty(prop, "C");
+    REQUIRE_THROWS(utils::parseOptionalEnumProperty<TestEnum>(context, prop));
+  }
+  SECTION("Optional enum property missing") {
+    const auto val = utils::parseOptionalEnumProperty<TestEnum>(context, prop);
+    REQUIRE(val == std::nullopt);
+  }
 }
 
 }  // namespace

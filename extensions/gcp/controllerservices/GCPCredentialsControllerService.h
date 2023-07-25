@@ -40,18 +40,20 @@ enum class CredentialsLocation {
 }  // namespace org::apache::nifi::minifi::extensions::gcp
 
 namespace magic_enum::customize {
+using CredentialsLocation = org::apache::nifi::minifi::extensions::gcp::CredentialsLocation;
+
 template <>
-constexpr customize_t enum_name<org::apache::nifi::minifi::extensions::gcp::CredentialsLocation>(org::apache::nifi::minifi::extensions::gcp::CredentialsLocation value) noexcept {
+constexpr customize_t enum_name<CredentialsLocation>(CredentialsLocation value) noexcept {
   switch (value) {
-    case org::apache::nifi::minifi::extensions::gcp::CredentialsLocation::USE_DEFAULT_CREDENTIALS:
+    case CredentialsLocation::USE_DEFAULT_CREDENTIALS:
       return "Google Application Default Credentials";
-    case org::apache::nifi::minifi::extensions::gcp::CredentialsLocation::USE_COMPUTE_ENGINE_CREDENTIALS:
+    case CredentialsLocation::USE_COMPUTE_ENGINE_CREDENTIALS:
       return "Use Compute Engine Credentials";
-    case org::apache::nifi::minifi::extensions::gcp::CredentialsLocation::USE_JSON_FILE:
+    case CredentialsLocation::USE_JSON_FILE:
       return "Service Account JSON File";
-    case org::apache::nifi::minifi::extensions::gcp::CredentialsLocation::USE_JSON_CONTENTS:
+    case CredentialsLocation::USE_JSON_CONTENTS:
       return "Service Account JSON";
-    case org::apache::nifi::minifi::extensions::gcp::CredentialsLocation::USE_ANONYMOUS_CREDENTIALS:
+    case CredentialsLocation::USE_ANONYMOUS_CREDENTIALS:
       return "Use Anonymous credentials";
   }
   return default_tag;

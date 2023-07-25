@@ -37,12 +37,14 @@ enum class OutputType {
 }  // namespace org::apache::nifi::minifi::processors::flow_file_source
 
 namespace magic_enum::customize {
+using OutputType = org::apache::nifi::minifi::processors::flow_file_source::OutputType;
+
 template <>
-constexpr customize_t enum_name<org::apache::nifi::minifi::processors::flow_file_source::OutputType>(org::apache::nifi::minifi::processors::flow_file_source::OutputType value) noexcept {
+constexpr customize_t enum_name<OutputType>(OutputType value) noexcept {
   switch (value) {
-    case org::apache::nifi::minifi::processors::flow_file_source::OutputType::JSON:
+    case OutputType::JSON:
       return "JSON";
-    case org::apache::nifi::minifi::processors::flow_file_source::OutputType::JSONPretty:
+    case OutputType::JSONPretty:
       return "JSON-Pretty";
   }
   return default_tag;

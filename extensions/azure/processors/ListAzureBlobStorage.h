@@ -30,15 +30,9 @@
 #include "core/PropertyDefinition.h"
 #include "AzureBlobStorageProcessorBase.h"
 #include "core/logging/LoggerConfiguration.h"
+#include "utils/AzureEnums.h"
 
-namespace org::apache::nifi::minifi::azure {
-
-enum class EntityTracking {
-  none,
-  timestamps
-};
-
-namespace processors {
+namespace org::apache::nifi::minifi::azure::processors {
 
 class ListAzureBlobStorage final : public AzureBlobStorageProcessorBase {
  public:
@@ -91,5 +85,4 @@ class ListAzureBlobStorage final : public AzureBlobStorageProcessorBase {
   std::unique_ptr<minifi::utils::ListingStateManager> state_manager_;
 };
 
-}  // namespace processors
-}  // namespace org::apache::nifi::minifi::azure
+}  // namespace org::apache::nifi::minifi::azure::processors

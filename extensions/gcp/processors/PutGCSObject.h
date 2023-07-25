@@ -45,22 +45,24 @@ enum class PredefinedAcl {
 }  // namespace org::apache::nifi::minifi::extensions::gcp::put_gcs_object
 
 namespace magic_enum::customize {
+using PredefinedAcl = org::apache::nifi::minifi::extensions::gcp::put_gcs_object::PredefinedAcl;
+
 template <>
-constexpr customize_t enum_name<org::apache::nifi::minifi::extensions::gcp::put_gcs_object::PredefinedAcl>(org::apache::nifi::minifi::extensions::gcp::put_gcs_object::PredefinedAcl value) noexcept {
+constexpr customize_t enum_name<PredefinedAcl>(PredefinedAcl value) noexcept {
   switch (value) {
-    case org::apache::nifi::minifi::extensions::gcp::put_gcs_object::PredefinedAcl::AUTHENTICATED_READ:
+    case PredefinedAcl::AUTHENTICATED_READ:
       return "authenticatedRead";
-    case org::apache::nifi::minifi::extensions::gcp::put_gcs_object::PredefinedAcl::BUCKET_OWNER_FULL_CONTROL:
+    case PredefinedAcl::BUCKET_OWNER_FULL_CONTROL:
       return "bucketOwnerFullControl";
-    case org::apache::nifi::minifi::extensions::gcp::put_gcs_object::PredefinedAcl::BUCKET_OWNER_READ_ONLY:
+    case PredefinedAcl::BUCKET_OWNER_READ_ONLY:
       return "bucketOwnerRead";
-    case org::apache::nifi::minifi::extensions::gcp::put_gcs_object::PredefinedAcl::PRIVATE:
+    case PredefinedAcl::PRIVATE:
       return "private";
-    case org::apache::nifi::minifi::extensions::gcp::put_gcs_object::PredefinedAcl::PROJECT_PRIVATE:
+    case PredefinedAcl::PROJECT_PRIVATE:
       return "projectPrivate";
-    case org::apache::nifi::minifi::extensions::gcp::put_gcs_object::PredefinedAcl::PUBLIC_READ_ONLY:
+    case PredefinedAcl::PUBLIC_READ_ONLY:
       return "publicRead";
-    case org::apache::nifi::minifi::extensions::gcp::put_gcs_object::PredefinedAcl::PUBLIC_READ_WRITE:
+    case PredefinedAcl::PUBLIC_READ_WRITE:
       return "publicReadWrite";
   }
   return default_tag;

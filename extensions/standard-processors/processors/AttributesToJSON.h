@@ -48,13 +48,14 @@ enum class WriteDestination {
 }  // namespace org::apache::nifi::minifi::processors::attributes_to_json
 
 namespace magic_enum::customize {
+using WriteDestination = org::apache::nifi::minifi::processors::attributes_to_json::WriteDestination;
+
 template <>
-constexpr customize_t enum_name<org::apache::nifi::minifi::processors::attributes_to_json::WriteDestination>(
-    org::apache::nifi::minifi::processors::attributes_to_json::WriteDestination value) noexcept {
+constexpr customize_t enum_name<WriteDestination>(WriteDestination value) noexcept {
   switch (value) {
-    case org::apache::nifi::minifi::processors::attributes_to_json::WriteDestination::FLOWFILE_ATTRIBUTE:
+    case WriteDestination::FLOWFILE_ATTRIBUTE:
       return "flowfile-attribute";
-    case org::apache::nifi::minifi::processors::attributes_to_json::WriteDestination::FLOWFILE_CONTENT:
+    case WriteDestination::FLOWFILE_CONTENT:
       return "flowfile-content";
   }
   return default_tag;

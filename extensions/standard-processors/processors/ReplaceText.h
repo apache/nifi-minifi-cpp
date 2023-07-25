@@ -60,48 +60,52 @@ enum class ReplacementStrategyType {
 }  // namespace org::apache::nifi::minifi::processors
 
 namespace magic_enum::customize {
+using EvaluationModeType = org::apache::nifi::minifi::processors::EvaluationModeType;
+using LineByLineEvaluationModeType = org::apache::nifi::minifi::processors::LineByLineEvaluationModeType;
+using ReplacementStrategyType = org::apache::nifi::minifi::processors::ReplacementStrategyType;
+
 template <>
-constexpr customize_t enum_name<org::apache::nifi::minifi::processors::EvaluationModeType>(org::apache::nifi::minifi::processors::EvaluationModeType value) noexcept {
+constexpr customize_t enum_name<EvaluationModeType>(EvaluationModeType value) noexcept {
   switch (value) {
-    case org::apache::nifi::minifi::processors::EvaluationModeType::LINE_BY_LINE:
+    case EvaluationModeType::LINE_BY_LINE:
       return "Line-by-Line";
-    case org::apache::nifi::minifi::processors::EvaluationModeType::ENTIRE_TEXT:
+    case EvaluationModeType::ENTIRE_TEXT:
       return "Entire text";
   }
   return default_tag;
 }
 
 template <>
-constexpr customize_t enum_name<org::apache::nifi::minifi::processors::LineByLineEvaluationModeType>(org::apache::nifi::minifi::processors::LineByLineEvaluationModeType value) noexcept {
+constexpr customize_t enum_name<LineByLineEvaluationModeType>(LineByLineEvaluationModeType value) noexcept {
   switch (value) {
-    case org::apache::nifi::minifi::processors::LineByLineEvaluationModeType::ALL:
+    case LineByLineEvaluationModeType::ALL:
       return "All";
-    case org::apache::nifi::minifi::processors::LineByLineEvaluationModeType::FIRST_LINE:
+    case LineByLineEvaluationModeType::FIRST_LINE:
       return "First-Line";
-    case org::apache::nifi::minifi::processors::LineByLineEvaluationModeType::LAST_LINE:
+    case LineByLineEvaluationModeType::LAST_LINE:
       return "Last-Line";
-    case org::apache::nifi::minifi::processors::LineByLineEvaluationModeType::EXCEPT_FIRST_LINE:
+    case LineByLineEvaluationModeType::EXCEPT_FIRST_LINE:
       return "Except-First-Line";
-    case org::apache::nifi::minifi::processors::LineByLineEvaluationModeType::EXCEPT_LAST_LINE:
+    case LineByLineEvaluationModeType::EXCEPT_LAST_LINE:
       return "Except-Last-Line";
   }
   return default_tag;
 }
 
 template <>
-constexpr customize_t enum_name<org::apache::nifi::minifi::processors::ReplacementStrategyType>(org::apache::nifi::minifi::processors::ReplacementStrategyType value) noexcept {
+constexpr customize_t enum_name<ReplacementStrategyType>(ReplacementStrategyType value) noexcept {
   switch (value) {
-    case org::apache::nifi::minifi::processors::ReplacementStrategyType::PREPEND:
+    case ReplacementStrategyType::PREPEND:
       return "Prepend";
-    case org::apache::nifi::minifi::processors::ReplacementStrategyType::APPEND:
+    case ReplacementStrategyType::APPEND:
       return "Append";
-    case org::apache::nifi::minifi::processors::ReplacementStrategyType::REGEX_REPLACE:
+    case ReplacementStrategyType::REGEX_REPLACE:
       return "Regex Replace";
-    case org::apache::nifi::minifi::processors::ReplacementStrategyType::LITERAL_REPLACE:
+    case ReplacementStrategyType::LITERAL_REPLACE:
       return "Literal Replace";
-    case org::apache::nifi::minifi::processors::ReplacementStrategyType::ALWAYS_REPLACE:
+    case ReplacementStrategyType::ALWAYS_REPLACE:
       return "Always Replace";
-    case org::apache::nifi::minifi::processors::ReplacementStrategyType::SUBSTITUTE_VARIABLES:
+    case ReplacementStrategyType::SUBSTITUTE_VARIABLES:
       return "Substitute Variables";
   }
   return default_tag;

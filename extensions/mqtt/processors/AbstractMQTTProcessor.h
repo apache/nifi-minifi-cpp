@@ -48,29 +48,32 @@ enum class MqttQoS : uint8_t {
 }  // namespace org::apache::nifi::minifi::processors::mqtt
 
 namespace magic_enum::customize {
+using MqttVersions = org::apache::nifi::minifi::processors::mqtt::MqttVersions;
+using MqttQoS = org::apache::nifi::minifi::processors::mqtt::MqttQoS;
+
 template <>
-constexpr customize_t enum_name<org::apache::nifi::minifi::processors::mqtt::MqttVersions>(org::apache::nifi::minifi::processors::mqtt::MqttVersions value) noexcept {
+constexpr customize_t enum_name<MqttVersions>(MqttVersions value) noexcept {
   switch (value) {
-    case org::apache::nifi::minifi::processors::mqtt::MqttVersions::V_3X_AUTO:
+    case MqttVersions::V_3X_AUTO:
       return "3.x AUTO";
-    case org::apache::nifi::minifi::processors::mqtt::MqttVersions::V_3_1_0:
+    case MqttVersions::V_3_1_0:
       return "3.1.0";
-    case org::apache::nifi::minifi::processors::mqtt::MqttVersions::V_3_1_1:
+    case MqttVersions::V_3_1_1:
       return "3.1.1";
-    case org::apache::nifi::minifi::processors::mqtt::MqttVersions::V_5_0:
+    case MqttVersions::V_5_0:
       return "5.0";
   }
   return default_tag;
 }
 
 template <>
-constexpr customize_t enum_name<org::apache::nifi::minifi::processors::mqtt::MqttQoS>(org::apache::nifi::minifi::processors::mqtt::MqttQoS value) noexcept {
+constexpr customize_t enum_name<MqttQoS>(MqttQoS value) noexcept {
   switch (value) {
-    case org::apache::nifi::minifi::processors::mqtt::MqttQoS::LEVEL_0:
+    case MqttQoS::LEVEL_0:
       return "0";
-    case org::apache::nifi::minifi::processors::mqtt::MqttQoS::LEVEL_1:
+    case MqttQoS::LEVEL_1:
       return "1";
-    case org::apache::nifi::minifi::processors::mqtt::MqttQoS::LEVEL_2:
+    case MqttQoS::LEVEL_2:
       return "2";
   }
   return default_tag;

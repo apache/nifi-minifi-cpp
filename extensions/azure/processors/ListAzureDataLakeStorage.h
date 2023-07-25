@@ -28,17 +28,11 @@
 #include "core/PropertyDefinitionBuilder.h"
 #include "core/PropertyType.h"
 #include "utils/ArrayUtils.h"
+#include "utils/AzureEnums.h"
 
 class ListAzureDataLakeStorageTestsFixture;
 
-namespace org::apache::nifi::minifi::azure {
-
-enum class EntityTracking {
-  none,
-  timestamps
-};
-
-namespace processors {
+namespace org::apache::nifi::minifi::azure::processors {
 
 class ListAzureDataLakeStorage final : public AzureDataLakeStorageProcessorBase {
  public:
@@ -103,5 +97,4 @@ class ListAzureDataLakeStorage final : public AzureDataLakeStorageProcessorBase 
   std::unique_ptr<minifi::utils::ListingStateManager> state_manager_;
 };
 
-}  // namespace processors
-}  // namespace org::apache::nifi::minifi::azure
+}  // namespace org::apache::nifi::minifi::azure::processors

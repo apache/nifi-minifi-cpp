@@ -48,31 +48,32 @@ enum class MoveConflictStrategyOption {
 }  // namespace org::apache::nifi::minifi::processors::fetch_file
 
 namespace magic_enum::customize {
+using CompletionStrategyOption = org::apache::nifi::minifi::processors::fetch_file::CompletionStrategyOption;
+using MoveConflictStrategyOption = org::apache::nifi::minifi::processors::fetch_file::MoveConflictStrategyOption;
+
 template <>
-constexpr customize_t enum_name<org::apache::nifi::minifi::processors::fetch_file::CompletionStrategyOption>(
-    org::apache::nifi::minifi::processors::fetch_file::CompletionStrategyOption value) noexcept {
+constexpr customize_t enum_name<CompletionStrategyOption>(CompletionStrategyOption value) noexcept {
   switch (value) {
-    case org::apache::nifi::minifi::processors::fetch_file::CompletionStrategyOption::NONE:
+    case CompletionStrategyOption::NONE:
       return "None";
-    case org::apache::nifi::minifi::processors::fetch_file::CompletionStrategyOption::MOVE_FILE:
+    case CompletionStrategyOption::MOVE_FILE:
       return "Move File";
-    case org::apache::nifi::minifi::processors::fetch_file::CompletionStrategyOption::DELETE_FILE:
+    case CompletionStrategyOption::DELETE_FILE:
       return "Delete File";
   }
   return default_tag;
 }
 
 template <>
-constexpr customize_t enum_name<org::apache::nifi::minifi::processors::fetch_file::MoveConflictStrategyOption>(
-    org::apache::nifi::minifi::processors::fetch_file::MoveConflictStrategyOption value) noexcept {
+constexpr customize_t enum_name<MoveConflictStrategyOption>(MoveConflictStrategyOption value) noexcept {
   switch (value) {
-    case org::apache::nifi::minifi::processors::fetch_file::MoveConflictStrategyOption::RENAME:
+    case MoveConflictStrategyOption::RENAME:
       return "Rename";
-    case org::apache::nifi::minifi::processors::fetch_file::MoveConflictStrategyOption::REPLACE_FILE:
+    case MoveConflictStrategyOption::REPLACE_FILE:
       return "Replace File";
-    case org::apache::nifi::minifi::processors::fetch_file::MoveConflictStrategyOption::KEEP_EXISTING:
+    case MoveConflictStrategyOption::KEEP_EXISTING:
       return "Keep Existing";
-    case org::apache::nifi::minifi::processors::fetch_file::MoveConflictStrategyOption::FAIL:
+    case MoveConflictStrategyOption::FAIL:
       return "Fail";
   }
   return default_tag;

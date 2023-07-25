@@ -60,7 +60,11 @@ std::optional<T> parseOptionalEnumProperty(const core::ProcessContext& context, 
   if (!context.getProperty(prop.name, value)) {
     return std::nullopt;
   }
-  return magic_enum::enum_cast<T>(value);
+  auto result = magic_enum::enum_cast<T>(value);
+  if (!result) {
+    throw Exception(PROCESS_SCHEDULE_EXCEPTION, "Property '" + std::string(prop.name) + "' has invalid value: '" + value + "'");
+  }
+  return result.value();
 }
 
 }  // namespace org::apache::nifi::minifi::utils

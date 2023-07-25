@@ -41,14 +41,16 @@ enum class OptionalDeletion {
 }  // namespace org::apache::nifi::minifi::azure::storage
 
 namespace magic_enum::customize {
+using OptionalDeletion = org::apache::nifi::minifi::azure::storage::OptionalDeletion;
+
 template <>
-constexpr customize_t enum_name<org::apache::nifi::minifi::azure::storage::OptionalDeletion>(org::apache::nifi::minifi::azure::storage::OptionalDeletion value) noexcept {
+constexpr customize_t enum_name<OptionalDeletion>(OptionalDeletion value) noexcept {
   switch (value) {
-    case org::apache::nifi::minifi::azure::storage::OptionalDeletion::NONE:
+    case OptionalDeletion::NONE:
       return "None";
-    case org::apache::nifi::minifi::azure::storage::OptionalDeletion::INCLUDE_SNAPSHOTS:
+    case OptionalDeletion::INCLUDE_SNAPSHOTS:
       return "Include Snapshots";
-    case org::apache::nifi::minifi::azure::storage::OptionalDeletion::DELETE_SNAPSHOTS_ONLY:
+    case OptionalDeletion::DELETE_SNAPSHOTS_ONLY:
       return "Delete Snapshots Only";
   }
   return default_tag;

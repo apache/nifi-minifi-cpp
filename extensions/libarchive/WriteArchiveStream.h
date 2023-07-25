@@ -41,16 +41,18 @@ enum class CompressionFormat {
 }  // namespace org::apache::nifi::minifi::io
 
 namespace magic_enum::customize {
+using CompressionFormat = org::apache::nifi::minifi::io::CompressionFormat;
+
 template <>
-constexpr customize_t enum_name<org::apache::nifi::minifi::io::CompressionFormat>(org::apache::nifi::minifi::io::CompressionFormat value) noexcept {
+constexpr customize_t enum_name<CompressionFormat>(CompressionFormat value) noexcept {
   switch (value) {
-    case org::apache::nifi::minifi::io::CompressionFormat::GZIP:
+    case CompressionFormat::GZIP:
       return "gzip";
-    case org::apache::nifi::minifi::io::CompressionFormat::LZMA:
+    case CompressionFormat::LZMA:
       return "lzma";
-    case org::apache::nifi::minifi::io::CompressionFormat::XZ_LZMA2:
+    case CompressionFormat::XZ_LZMA2:
       return "xz-lzma2";
-    case org::apache::nifi::minifi::io::CompressionFormat::BZIP2:
+    case CompressionFormat::BZIP2:
       return "bzip2";
   }
   return default_tag;

@@ -434,7 +434,7 @@ C2Payload C2Agent::prepareConfigurationOptions(const C2ContentResponse &resp) co
 void C2Agent::handle_clear(const C2ContentResponse &resp) {
   ClearOperand operand;
   try {
-    operand = utils::enumCast<ClearOperand>(resp.name, std::nullopt, true);
+    operand = utils::enumCast<ClearOperand>(resp.name, true);
   } catch(const std::runtime_error&) {
     logger_->log_debug("Clearing unknown %s", resp.name);
     return;
@@ -489,7 +489,7 @@ void C2Agent::handle_clear(const C2ContentResponse &resp) {
 void C2Agent::handle_describe(const C2ContentResponse &resp) {
   DescribeOperand operand;
   try {
-    operand = utils::enumCast<DescribeOperand>(resp.name, std::nullopt, true);
+    operand = utils::enumCast<DescribeOperand>(resp.name, true);
   } catch(const std::runtime_error&) {
     C2Payload response(Operation::acknowledge, resp.ident, true);
     enqueue_c2_response(std::move(response));
@@ -591,7 +591,7 @@ void C2Agent::handle_describe(const C2ContentResponse &resp) {
 void C2Agent::handle_update(const C2ContentResponse &resp) {
   UpdateOperand operand;
   try {
-    operand = utils::enumCast<UpdateOperand>(resp.name, std::nullopt, true);
+    operand = utils::enumCast<UpdateOperand>(resp.name, true);
   } catch(const std::runtime_error&) {
     C2Payload response(Operation::acknowledge, state::UpdateState::NOT_APPLIED, resp.ident, true);
     enqueue_c2_response(std::move(response));
@@ -700,7 +700,7 @@ C2Payload C2Agent::bundleDebugInfo(std::map<std::string, std::unique_ptr<io::Inp
 void C2Agent::handle_transfer(const C2ContentResponse &resp) {
   TransferOperand operand;
   try {
-    operand = utils::enumCast<TransferOperand>(resp.name, std::nullopt, true);
+    operand = utils::enumCast<TransferOperand>(resp.name, true);
   } catch(const std::runtime_error&) {
     throw C2TransferError("Unknown operand '" + resp.name + "'");
   }

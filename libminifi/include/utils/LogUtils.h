@@ -59,20 +59,22 @@ void logWithLevel(const std::shared_ptr<core::logging::Logger>& logger, LogLevel
 }  // namespace org::apache::nifi::minifi::utils::LogUtils
 
 namespace magic_enum::customize {
+using LogLevelOption = org::apache::nifi::minifi::utils::LogUtils::LogLevelOption;
+
 template <>
-constexpr customize_t enum_name<org::apache::nifi::minifi::utils::LogUtils::LogLevelOption>(org::apache::nifi::minifi::utils::LogUtils::LogLevelOption value) noexcept {
+constexpr customize_t enum_name<LogLevelOption>(LogLevelOption value) noexcept {
   switch (value) {
-    case org::apache::nifi::minifi::utils::LogUtils::LogLevelOption::LOGGING_TRACE:
+    case LogLevelOption::LOGGING_TRACE:
       return "TRACE";
-    case org::apache::nifi::minifi::utils::LogUtils::LogLevelOption::LOGGING_DEBUG:
+    case LogLevelOption::LOGGING_DEBUG:
       return "DEBUG";
-    case org::apache::nifi::minifi::utils::LogUtils::LogLevelOption::LOGGING_INFO:
+    case LogLevelOption::LOGGING_INFO:
       return "INFO";
-    case org::apache::nifi::minifi::utils::LogUtils::LogLevelOption::LOGGING_WARN:
+    case LogLevelOption::LOGGING_WARN:
       return "WARN";
-    case org::apache::nifi::minifi::utils::LogUtils::LogLevelOption::LOGGING_ERROR:
+    case LogLevelOption::LOGGING_ERROR:
       return "ERROR";
-    case org::apache::nifi::minifi::utils::LogUtils::LogLevelOption::LOGGING_OFF:
+    case LogLevelOption::LOGGING_OFF:
       return "OFF";
   }
   return default_tag;

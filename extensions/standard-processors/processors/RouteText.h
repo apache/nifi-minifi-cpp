@@ -62,46 +62,50 @@ enum class CasePolicy {
 }  // namespace org::apache::nifi::minifi::processors::route_text
 
 namespace magic_enum::customize {
+using Routing = org::apache::nifi::minifi::processors::route_text::Routing;
+using Matching = org::apache::nifi::minifi::processors::route_text::Matching;
+using Segmentation = org::apache::nifi::minifi::processors::route_text::Segmentation;
+
 template <>
-constexpr customize_t enum_name<org::apache::nifi::minifi::processors::route_text::Routing>(org::apache::nifi::minifi::processors::route_text::Routing value) noexcept {
+constexpr customize_t enum_name<Routing>(Routing value) noexcept {
   switch (value) {
-    case org::apache::nifi::minifi::processors::route_text::Routing::DYNAMIC:
+    case Routing::DYNAMIC:
       return "Dynamic Routing";
-    case org::apache::nifi::minifi::processors::route_text::Routing::ALL:
+    case Routing::ALL:
       return "Route On All";
-    case org::apache::nifi::minifi::processors::route_text::Routing::ANY:
+    case Routing::ANY:
       return "Route On Any";
   }
   return default_tag;
 }
 
 template <>
-constexpr customize_t enum_name<org::apache::nifi::minifi::processors::route_text::Matching>(org::apache::nifi::minifi::processors::route_text::Matching value) noexcept {
+constexpr customize_t enum_name<Matching>(Matching value) noexcept {
   switch (value) {
-    case org::apache::nifi::minifi::processors::route_text::Matching::STARTS_WITH:
+    case Matching::STARTS_WITH:
       return "Starts With";
-    case org::apache::nifi::minifi::processors::route_text::Matching::ENDS_WITH:
+    case Matching::ENDS_WITH:
       return "Ends With";
-    case org::apache::nifi::minifi::processors::route_text::Matching::CONTAINS:
+    case Matching::CONTAINS:
       return "Contains";
-    case org::apache::nifi::minifi::processors::route_text::Matching::EQUALS:
+    case Matching::EQUALS:
       return "Equals";
-    case org::apache::nifi::minifi::processors::route_text::Matching::MATCHES_REGEX:
+    case Matching::MATCHES_REGEX:
       return "Matches Regex";
-    case org::apache::nifi::minifi::processors::route_text::Matching::CONTAINS_REGEX:
+    case Matching::CONTAINS_REGEX:
       return "Contains Regex";
-    case org::apache::nifi::minifi::processors::route_text::Matching::EXPRESSION:
+    case Matching::EXPRESSION:
       return "Satisfies Expression";
   }
   return default_tag;
 }
 
 template <>
-constexpr customize_t enum_name<org::apache::nifi::minifi::processors::route_text::Segmentation>(org::apache::nifi::minifi::processors::route_text::Segmentation value) noexcept {
+constexpr customize_t enum_name<Segmentation>(Segmentation value) noexcept {
   switch (value) {
-    case org::apache::nifi::minifi::processors::route_text::Segmentation::FULL_TEXT:
+    case Segmentation::FULL_TEXT:
       return "Full Text";
-    case org::apache::nifi::minifi::processors::route_text::Segmentation::PER_LINE:
+    case Segmentation::PER_LINE:
       return "Per Line";
   }
   return default_tag;

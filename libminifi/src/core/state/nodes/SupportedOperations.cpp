@@ -127,7 +127,7 @@ std::vector<SerializedResponseNode> SupportedOperations::serialize() {
     };
 
     SerializedResponseNode properties{.name = "properties"};
-    fillProperties(properties, utils::enumCast<minifi::c2::Operation>(operation, std::nullopt, true));
+    fillProperties(properties, utils::enumCast<minifi::c2::Operation>(operation, true));
     child.children.push_back(properties);
     supported_operation.children.push_back(child);
   }

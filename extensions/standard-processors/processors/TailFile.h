@@ -53,14 +53,16 @@ enum class InitialStartPositions {
 }  // namespace org::apache::nifi::minifi::processors
 
 namespace magic_enum::customize {
+using InitialStartPositions = org::apache::nifi::minifi::processors::InitialStartPositions;
+
 template <>
-constexpr customize_t enum_name<org::apache::nifi::minifi::processors::InitialStartPositions>(org::apache::nifi::minifi::processors::InitialStartPositions value) noexcept {
+constexpr customize_t enum_name<InitialStartPositions>(InitialStartPositions value) noexcept {
   switch (value) {
-    case org::apache::nifi::minifi::processors::InitialStartPositions::BEGINNING_OF_TIME:
+    case InitialStartPositions::BEGINNING_OF_TIME:
       return "Beginning of Time";
-    case org::apache::nifi::minifi::processors::InitialStartPositions::BEGINNING_OF_FILE:
+    case InitialStartPositions::BEGINNING_OF_FILE:
       return "Beginning of File";
-    case org::apache::nifi::minifi::processors::InitialStartPositions::CURRENT_TIME:
+    case InitialStartPositions::CURRENT_TIME:
       return "Current Time";
   }
   return default_tag;

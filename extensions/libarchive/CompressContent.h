@@ -61,19 +61,20 @@ enum class ExtendedCompressionFormat {
 }  // namespace org::apache::nifi::minifi::processors::compress_content
 
 namespace magic_enum::customize {
+using ExtendedCompressionFormat = org::apache::nifi::minifi::processors::compress_content::ExtendedCompressionFormat;
+
 template <>
-constexpr customize_t enum_name<org::apache::nifi::minifi::processors::compress_content::ExtendedCompressionFormat>(
-    org::apache::nifi::minifi::processors::compress_content::ExtendedCompressionFormat value) noexcept {
+constexpr customize_t enum_name<ExtendedCompressionFormat>(ExtendedCompressionFormat value) noexcept {
   switch (value) {
-    case org::apache::nifi::minifi::processors::compress_content::ExtendedCompressionFormat::GZIP:
+    case ExtendedCompressionFormat::GZIP:
       return "gzip";
-    case org::apache::nifi::minifi::processors::compress_content::ExtendedCompressionFormat::LZMA:
+    case ExtendedCompressionFormat::LZMA:
       return "lzma";
-    case org::apache::nifi::minifi::processors::compress_content::ExtendedCompressionFormat::XZ_LZMA2:
+    case ExtendedCompressionFormat::XZ_LZMA2:
       return "xz-lzma2";
-    case org::apache::nifi::minifi::processors::compress_content::ExtendedCompressionFormat::BZIP2:
+    case ExtendedCompressionFormat::BZIP2:
       return "bzip2";
-    case org::apache::nifi::minifi::processors::compress_content::ExtendedCompressionFormat::USE_MIME_TYPE:
+    case ExtendedCompressionFormat::USE_MIME_TYPE:
       return "use mime.type attribute";
   }
   return default_tag;
