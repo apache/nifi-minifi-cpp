@@ -18,7 +18,7 @@ from ..core.ControllerService import ControllerService
 
 
 class SSLContextService(ControllerService):
-    def __init__(self, name=None, cert=None, key=None, ca_cert=None, passphrase=None):
+    def __init__(self, name=None, cert=None, key=None, ca_cert=None, passphrase=None, use_system_cert_store=None):
         super(SSLContextService, self).__init__(name=name)
 
         self.service_class = 'SSLContextService'
@@ -34,3 +34,6 @@ class SSLContextService(ControllerService):
 
         if passphrase is not None:
             self.properties['Passphrase'] = passphrase
+
+        if use_system_cert_store is not None:
+            self.properties['Use System Cert Store'] = use_system_cert_store

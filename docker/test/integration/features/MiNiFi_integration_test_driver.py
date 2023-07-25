@@ -22,7 +22,7 @@ import OpenSSL.crypto
 
 from pydoc import locate
 
-from ssl_utils.SSL_cert_utils import make_ca, make_cert_without_extended_usage
+from ssl_utils.SSL_cert_utils import make_self_signed_cert, make_cert_without_extended_usage, make_server_cert
 from minifi.core.InputPort import InputPort
 
 from cluster.DockerTestCluster import DockerTestCluster
@@ -52,22 +52,38 @@ class MiNiFi_integration_test:
 
         self.docker_directory_bindings = context.directory_bindings
         self.cluster.set_directory_bindings(self.docker_directory_bindings.get_directory_bindings(self.feature_id), self.docker_directory_bindings.get_data_directories(self.feature_id))
-        self.root_ca_cert, self.root_ca_key = make_ca("root CA")
+        self.root_ca_cert, self.root_ca_key = make_self_signed_cert("root CA")
 
         minifi_client_cert, minifi_client_key = make_cert_without_extended_usage(common_name=f"minifi-cpp-flow-{self.feature_id}",
                                                                                  ca_cert=self.root_ca_cert,
                                                                                  ca_key=self.root_ca_key)
+        minifi_server_cert, minifi_server_key = make_server_cert(common_name=f"server-{self.feature_id}",
+                                                                 ca_cert=self.root_ca_cert,
+                                                                 ca_key=self.root_ca_key)
+        self_signed_server_cert, self_signed_server_key = make_self_signed_cert(f"server-{self.feature_id}")
+
         self.put_test_resource('root_ca.crt',
                                OpenSSL.crypto.dump_certificate(type=OpenSSL.crypto.FILETYPE_PEM,
                                                                cert=self.root_ca_cert))
-
+        self.put_test_resource("system_certs_dir/ca-certificates.crt",
+                               OpenSSL.crypto.dump_certificate(type=OpenSSL.crypto.FILETYPE_PEM,
+                                                               cert=self.root_ca_cert))
         self.put_test_resource('minifi_client.crt',
                                OpenSSL.crypto.dump_certificate(type=OpenSSL.crypto.FILETYPE_PEM,
                                                                cert=minifi_client_cert))
         self.put_test_resource('minifi_client.key',
                                OpenSSL.crypto.dump_privatekey(type=OpenSSL.crypto.FILETYPE_PEM,
                                                               pkey=minifi_client_key))
-
+        self.put_test_resource('minifi_server.crt',
+                               OpenSSL.crypto.dump_certificate(type=OpenSSL.crypto.FILETYPE_PEM,
+                                                               cert=minifi_server_cert)
+                               + OpenSSL.crypto.dump_privatekey(type=OpenSSL.crypto.FILETYPE_PEM,
+                                                              pkey=minifi_server_key))
+        self.put_test_resource('self_signed_server.crt',
+                               OpenSSL.crypto.dump_certificate(type=OpenSSL.crypto.FILETYPE_PEM,
+                                                               cert=self_signed_server_cert)
+                               + OpenSSL.crypto.dump_privatekey(type=OpenSSL.crypto.FILETYPE_PEM,
+                                                                pkey=self_signed_server_key))
         self.put_test_resource('minifi_merged_cert.crt',
                                OpenSSL.crypto.dump_certificate(type=OpenSSL.crypto.FILETYPE_PEM,
                                                                cert=minifi_client_cert)

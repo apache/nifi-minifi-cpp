@@ -17,13 +17,13 @@
  */
 #include "utils/HTTPUtils.h"
 
-#include <vector>
+#include <array>
 
 namespace org::apache::nifi::minifi::utils {
 
-std::optional<std::filesystem::path> getDefaultCAPath() {
+std::optional<std::string_view> getDefaultCAFile() {
 #ifndef WIN32
-  const std::vector<std::filesystem::path> possible_ca_paths = {
+  static constexpr std::array<std::string_view, 5> possible_ca_paths = {
       "/etc/ssl/certs/ca-certificates.crt",
       "/etc/pki/tls/certs/ca-bundle.crt",
       "/usr/share/ssl/certs/ca-bundle.crt",

@@ -371,34 +371,27 @@ def step_impl(context):
 
 
 # TLS
-@given("an ssl context service set up for {producer_name} and {consumer_name}")
-def step_impl(context, producer_name, consumer_name):
-    minifi_crt_file = '/tmp/resources/minifi_client.crt'
-    minifi_key_file = '/tmp/resources/minifi_client.key'
-    root_ca_crt_file = '/tmp/resources/root_ca.crt'
-    ssl_context_service = SSLContextService(cert=minifi_crt_file, ca_cert=root_ca_crt_file, key=minifi_key_file)
+@given("an ssl context service is set up for {processor_name}")
+@given("an ssl context service with a manual CA cert file is set up for {processor_name}")
+def step_impl(context, processor_name):
+    ssl_context_service = SSLContextService(cert='/tmp/resources/minifi_client.crt',
+                                            key='/tmp/resources/minifi_client.key',
+                                            ca_cert='/tmp/resources/root_ca.crt')
 
-    secondary_cert, secondary_key = make_server_cert(context.test.get_container_name_with_postfix("secondary"), context.test.root_ca_cert, context.test.root_ca_key)
-    secondary_pem_file = '/tmp/resources/secondary.crt'
-    context.test.put_test_resource('secondary.crt', OpenSSL.crypto.dump_certificate(type=OpenSSL.crypto.FILETYPE_PEM, cert=secondary_cert) + OpenSSL.crypto.dump_privatekey(type=OpenSSL.crypto.FILETYPE_PEM, pkey=secondary_key))
-    producer = context.test.get_node_by_name(producer_name)
-    producer.controller_services.append(ssl_context_service)
-    producer.set_property("SSL Context Service", ssl_context_service.name)
-    consumer = context.test.get_node_by_name(consumer_name)
-    consumer.set_property("SSL Certificate Authority", root_ca_crt_file)
-    consumer.set_property("SSL Certificate", secondary_pem_file)
-    consumer.set_property("SSL Verify Peer", "yes")
+    processor = context.test.get_node_by_name(processor_name)
+    processor.controller_services.append(ssl_context_service)
+    processor.set_property('SSL Context Service', ssl_context_service.name)
 
 
-@given("an ssl context service set up for {producer_name}")
-def step_impl(context, producer_name):
-    minifi_crt_file = '/tmp/resources/minifi_client.crt'
-    minifi_key_file = '/tmp/resources/minifi_client.key'
-    root_ca_crt_file = '/tmp/resources/root_ca.crt'
-    ssl_context_service = SSLContextService(cert=minifi_crt_file, ca_cert=root_ca_crt_file, key=minifi_key_file)
-    producer = context.test.get_node_by_name(producer_name)
-    producer.controller_services.append(ssl_context_service)
-    producer.set_property("SSL Context Service", ssl_context_service.name)
+@given("an ssl context service using the system CA cert store is set up for {processor_name}")
+def step_impl(context, processor_name):
+    ssl_context_service = SSLContextService(cert='/tmp/resources/minifi_client.crt',
+                                            key='/tmp/resources/minifi_client.key',
+                                            use_system_cert_store='true')
+
+    processor = context.test.get_node_by_name(processor_name)
+    processor.controller_services.append(ssl_context_service)
+    processor.set_property('SSL Context Service', ssl_context_service.name)
 
 
 # Kubernetes

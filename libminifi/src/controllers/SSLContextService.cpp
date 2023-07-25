@@ -36,6 +36,7 @@
 #include "core/Resource.h"
 #include "io/validation.h"
 #include "properties/Configure.h"
+#include "utils/HTTPUtils.h"
 #include "utils/tls/CertificateUtils.h"
 #include "utils/tls/TLSUtils.h"
 #include "utils/tls/DistinguishedName.h"
@@ -313,7 +314,12 @@ bool SSLContextService::addServerCertificatesFromSystemStoreToSSLContext(SSL_CTX
 
   return true;
 #else
-  SSL_CTX_set_default_verify_paths(ctx);
+  static const auto default_ca_file = utils::getDefaultCAFile();
+  if (default_ca_file) {
+    SSL_CTX_load_verify_file(ctx, std::string(*default_ca_file).c_str());
+  } else {
+    SSL_CTX_set_default_verify_paths(ctx);
+  }
   return true;
 #endif  // WIN32
 }
@@ -503,6 +509,11 @@ void SSLContextService::onEnable() {
 
 void SSLContextService::initializeProperties() {
   setSupportedProperties(Properties);
+
+  logger_->log_debug("Using certificate file \"%s\"", certificate_.string());
+  logger_->log_debug("Using private key file \"%s\"", private_key_.string());
+  logger_->log_debug("Using CA certificate file \"%s\"", ca_certificate_.string());
+  logger_->log_debug("Using the system cert store: %s", use_system_cert_store_ ? "yes" : "no");
 }
 
 void SSLContextService::verifyCertificateExpiration() {

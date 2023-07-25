@@ -458,26 +458,22 @@ int HTTPClient::onProgress(void *clientp, curl_off_t /*dltotal*/, curl_off_t dln
 void HTTPClient::configure_secure_connection() {
 #ifdef OPENSSL_SUPPORT
   if (ssl_context_service_) {
-    logger_->log_debug("Using certificate file \"%s\"", ssl_context_service_->getCertificateFile().string());
-    logger_->log_debug("Using private key file \"%s\"", ssl_context_service_->getPrivateKeyFile().string());
-    logger_->log_debug("Using CA certificate file \"%s\"", ssl_context_service_->getCACertificate().string());
-
     curl_easy_setopt(http_session_.get(), CURLOPT_SSL_CTX_FUNCTION, &configure_ssl_context);
     curl_easy_setopt(http_session_.get(), CURLOPT_SSL_CTX_DATA, static_cast<void *>(ssl_context_service_.get()));
     curl_easy_setopt(http_session_.get(), CURLOPT_CAINFO, nullptr);
     curl_easy_setopt(http_session_.get(), CURLOPT_CAPATH, nullptr);
   } else {
-    static const auto default_ca_path = utils::getDefaultCAPath();
+    static const auto default_ca_file = utils::getDefaultCAFile();
 
-    if (default_ca_path)
-      logger_->log_debug("Using CA certificate file \"%s\"", default_ca_path->string());
+    if (default_ca_file)
+      logger_->log_debug("Using CA certificate file \"%s\"", std::string(*default_ca_file));
     else
       logger_->log_error("Could not find valid CA certificate file");
 
     curl_easy_setopt(http_session_.get(), CURLOPT_SSL_CTX_FUNCTION, nullptr);
     curl_easy_setopt(http_session_.get(), CURLOPT_SSL_CTX_DATA, nullptr);
-    if (default_ca_path)
-      curl_easy_setopt(http_session_.get(), CURLOPT_CAINFO, default_ca_path->string().c_str());
+    if (default_ca_file)
+      curl_easy_setopt(http_session_.get(), CURLOPT_CAINFO, std::string(*default_ca_file).c_str());
     else
       curl_easy_setopt(http_session_.get(), CURLOPT_CAINFO, nullptr);
     curl_easy_setopt(http_session_.get(), CURLOPT_CAPATH, nullptr);

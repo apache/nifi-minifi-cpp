@@ -75,7 +75,7 @@ def gen_req():
     return req, key
 
 
-def make_ca(common_name):
+def make_self_signed_cert(common_name):
     ca_key = crypto.PKey()
     ca_key.generate_key(crypto.TYPE_RSA, 2048)
 
