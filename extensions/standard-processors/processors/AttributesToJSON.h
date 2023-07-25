@@ -58,7 +58,7 @@ constexpr customize_t enum_name<WriteDestination>(WriteDestination value) noexce
     case WriteDestination::FLOWFILE_CONTENT:
       return "flowfile-content";
   }
-  return default_tag;
+  return invalid_tag;
 }
 }  // namespace magic_enum::customize
 

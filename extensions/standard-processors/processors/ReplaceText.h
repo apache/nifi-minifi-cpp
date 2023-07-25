@@ -72,7 +72,7 @@ constexpr customize_t enum_name<EvaluationModeType>(EvaluationModeType value) no
     case EvaluationModeType::ENTIRE_TEXT:
       return "Entire text";
   }
-  return default_tag;
+  return invalid_tag;
 }
 
 template <>
@@ -89,7 +89,7 @@ constexpr customize_t enum_name<LineByLineEvaluationModeType>(LineByLineEvaluati
     case LineByLineEvaluationModeType::EXCEPT_LAST_LINE:
       return "Except-Last-Line";
   }
-  return default_tag;
+  return invalid_tag;
 }
 
 template <>
@@ -108,7 +108,7 @@ constexpr customize_t enum_name<ReplacementStrategyType>(ReplacementStrategyType
     case ReplacementStrategyType::SUBSTITUTE_VARIABLES:
       return "Substitute Variables";
   }
-  return default_tag;
+  return invalid_tag;
 }
 }  // namespace magic_enum::customize
 

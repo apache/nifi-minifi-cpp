@@ -62,7 +62,7 @@ void CompressContent::onSchedule(core::ProcessContext *context, core::ProcessSes
   context->getProperty(BatchSize, batchSize_);
 
   logger_->log_info("Compress Content: Mode [%s] Format [%s] Level [%d] UpdateFileName [%d] EncapsulateInTar [%d]",
-      magic_enum::enum_name(compressMode_).data(), magic_enum::enum_name(compressFormat_).data(), compressLevel_, updateFileName_, encapsulateInTar_);
+      std::string{magic_enum::enum_name(compressMode_)}, std::string{magic_enum::enum_name(compressFormat_)}, compressLevel_, updateFileName_, encapsulateInTar_);
 }
 
 void CompressContent::onTrigger(const std::shared_ptr<core::ProcessContext> &context, const std::shared_ptr<core::ProcessSession> &session) {
@@ -113,12 +113,12 @@ void CompressContent::processFlowFile(const std::shared_ptr<core::FlowFile>& flo
     return;
   }
   if (compressFormat == io::CompressionFormat::BZIP2 && archive_bzlib_version() == nullptr) {
-    logger_->log_error("%s compression format is requested, but the agent was compiled without BZip2 support", magic_enum::enum_name(compressFormat).data());
+    logger_->log_error("%s compression format is requested, but the agent was compiled without BZip2 support", std::string{magic_enum::enum_name(compressFormat)});
     session->transfer(flowFile, Failure);
     return;
   }
   if ((compressFormat == io::CompressionFormat::LZMA || compressFormat == io::CompressionFormat::XZ_LZMA2) && archive_liblzma_version() == nullptr) {
-    logger_->log_error("%s compression format is requested, but the agent was compiled without LZMA support ", magic_enum::enum_name(compressFormat).data());
+    logger_->log_error("%s compression format is requested, but the agent was compiled without LZMA support ", std::string{magic_enum::enum_name(compressFormat)});
     session->transfer(flowFile, Failure);
     return;
   }

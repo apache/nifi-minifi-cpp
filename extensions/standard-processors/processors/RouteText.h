@@ -76,7 +76,7 @@ constexpr customize_t enum_name<Routing>(Routing value) noexcept {
     case Routing::ANY:
       return "Route On Any";
   }
-  return default_tag;
+  return invalid_tag;
 }
 
 template <>
@@ -97,7 +97,7 @@ constexpr customize_t enum_name<Matching>(Matching value) noexcept {
     case Matching::EXPRESSION:
       return "Satisfies Expression";
   }
-  return default_tag;
+  return invalid_tag;
 }
 
 template <>
@@ -108,7 +108,7 @@ constexpr customize_t enum_name<Segmentation>(Segmentation value) noexcept {
     case Segmentation::PER_LINE:
       return "Per Line";
   }
-  return default_tag;
+  return invalid_tag;
 }
 }  // namespace magic_enum::customize
 

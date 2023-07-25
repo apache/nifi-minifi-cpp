@@ -77,7 +77,7 @@ constexpr customize_t enum_name<ExtendedCompressionFormat>(ExtendedCompressionFo
     case ExtendedCompressionFormat::USE_MIME_TYPE:
       return "use mime.type attribute";
   }
-  return default_tag;
+  return invalid_tag;
 }
 }  // namespace magic_enum::customize
 

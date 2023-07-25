@@ -56,7 +56,7 @@ constexpr customize_t enum_name<CredentialsLocation>(CredentialsLocation value) 
     case CredentialsLocation::USE_ANONYMOUS_CREDENTIALS:
       return "Use Anonymous credentials";
   }
-  return default_tag;
+  return invalid_tag;
 }
 }  // namespace magic_enum::customize
 

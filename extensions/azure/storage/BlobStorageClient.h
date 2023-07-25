@@ -53,7 +53,7 @@ constexpr customize_t enum_name<OptionalDeletion>(OptionalDeletion value) noexce
     case OptionalDeletion::DELETE_SNAPSHOTS_ONLY:
       return "Delete Snapshots Only";
   }
-  return default_tag;
+  return invalid_tag;
 }
 }  // namespace magic_enum::customize
 

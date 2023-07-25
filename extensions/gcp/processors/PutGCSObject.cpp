@@ -69,7 +69,7 @@ class UploadToGCSCallback {
   }
 
   void setPredefinedAcl(put_gcs_object::PredefinedAcl predefined_acl) {
-    predefined_acl_ = gcs::PredefinedAcl(magic_enum::enum_name(predefined_acl).data());
+    predefined_acl_ = gcs::PredefinedAcl(std::string{magic_enum::enum_name(predefined_acl)});
   }
 
   void setContentType(const std::string& content_type_str) {

@@ -77,6 +77,6 @@ constexpr customize_t enum_name<LogLevelOption>(LogLevelOption value) noexcept {
     case LogLevelOption::LOGGING_OFF:
       return "OFF";
   }
-  return default_tag;
+  return invalid_tag;
 }
 }  // namespace magic_enum::customize

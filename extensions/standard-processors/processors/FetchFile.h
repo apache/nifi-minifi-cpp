@@ -61,7 +61,7 @@ constexpr customize_t enum_name<CompletionStrategyOption>(CompletionStrategyOpti
     case CompletionStrategyOption::DELETE_FILE:
       return "Delete File";
   }
-  return default_tag;
+  return invalid_tag;
 }
 
 template <>
@@ -76,7 +76,7 @@ constexpr customize_t enum_name<MoveConflictStrategyOption>(MoveConflictStrategy
     case MoveConflictStrategyOption::FAIL:
       return "Fail";
   }
-  return default_tag;
+  return invalid_tag;
 }
 
 }  // namespace magic_enum::customize

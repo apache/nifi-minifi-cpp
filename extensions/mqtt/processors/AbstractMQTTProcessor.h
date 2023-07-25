@@ -63,7 +63,7 @@ constexpr customize_t enum_name<MqttVersions>(MqttVersions value) noexcept {
     case MqttVersions::V_5_0:
       return "5.0";
   }
-  return default_tag;
+  return invalid_tag;
 }
 
 template <>
@@ -76,7 +76,7 @@ constexpr customize_t enum_name<MqttQoS>(MqttQoS value) noexcept {
     case MqttQoS::LEVEL_2:
       return "2";
   }
-  return default_tag;
+  return invalid_tag;
 }
 }  // namespace magic_enum::customize
 

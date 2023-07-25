@@ -67,7 +67,7 @@ constexpr customize_t enum_name<SFTPError>(SFTPError value) noexcept {
     case SFTPError::Unexpected:
       return "Unexpected";
   }
-  return default_tag;
+  return invalid_tag;
 }
 }  // namespace magic_enum::customize
 

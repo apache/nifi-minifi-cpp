@@ -51,7 +51,7 @@ constexpr customize_t enum_name<PatternLocation>(PatternLocation value) noexcept
     case PatternLocation::START_OF_MESSAGE:
       return "Start of Message";
   }
-  return default_tag;
+  return invalid_tag;
 }
 }  // namespace magic_enum::customize
 

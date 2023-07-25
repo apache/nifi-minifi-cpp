@@ -65,7 +65,7 @@ constexpr customize_t enum_name<InitialStartPositions>(InitialStartPositions val
     case InitialStartPositions::CURRENT_TIME:
       return "Current Time";
   }
-  return default_tag;
+  return invalid_tag;
 }
 }  // namespace magic_enum::customize
 

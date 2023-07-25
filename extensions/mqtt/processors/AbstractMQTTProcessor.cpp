@@ -32,7 +32,7 @@ void AbstractMQTTProcessor::onSchedule(const std::shared_ptr<core::ProcessContex
   logger_->log_debug("AbstractMQTTProcessor: BrokerURI [%s]", uri_);
 
   mqtt_version_ = utils::parseEnumProperty<mqtt::MqttVersions>(*context, MqttVersion);
-  logger_->log_debug("AbstractMQTTProcessor: MQTT Specification Version: %s", magic_enum::enum_name(mqtt_version_).data());
+  logger_->log_debug("AbstractMQTTProcessor: MQTT Specification Version: %s", std::string{magic_enum::enum_name(mqtt_version_)});
 
   if (auto value = context->getProperty(ClientID)) {
     clientID_ = std::move(*value);

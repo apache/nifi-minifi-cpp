@@ -47,7 +47,7 @@ constexpr customize_t enum_name<OutputType>(OutputType value) noexcept {
     case OutputType::JSONPretty:
       return "JSON-Pretty";
   }
-  return default_tag;
+  return invalid_tag;
 }
 }  // namespace magic_enum::customize
 

@@ -42,15 +42,15 @@ void ReplaceText::onSchedule(const std::shared_ptr<core::ProcessContext>& contex
   gsl_Expects(context);
 
   evaluation_mode_ = utils::parseEnumProperty<EvaluationModeType>(*context, EvaluationMode);
-  logger_->log_debug("the %s property is set to %s", std::string(EvaluationMode.name), magic_enum::enum_name(evaluation_mode_).data());
+  logger_->log_debug("the %s property is set to %s", std::string(EvaluationMode.name), std::string{magic_enum::enum_name(evaluation_mode_)});
 
   if (auto line_by_line_evaluation_mode = utils::parseOptionalEnumProperty<LineByLineEvaluationModeType>(*context, LineByLineEvaluationMode)) {
     line_by_line_evaluation_mode_ = *line_by_line_evaluation_mode;
-    logger_->log_debug("the %s property is set to %s", std::string(LineByLineEvaluationMode.name), magic_enum::enum_name(line_by_line_evaluation_mode_).data());
+    logger_->log_debug("the %s property is set to %s", std::string(LineByLineEvaluationMode.name), std::string{magic_enum::enum_name(line_by_line_evaluation_mode_)});
   }
 
   replacement_strategy_ = utils::parseEnumProperty<ReplacementStrategyType>(*context, ReplacementStrategy);
-  logger_->log_debug("the %s property is set to %s", std::string(ReplacementStrategy.name), magic_enum::enum_name(replacement_strategy_).data());
+  logger_->log_debug("the %s property is set to %s", std::string(ReplacementStrategy.name), std::string{magic_enum::enum_name(replacement_strategy_)});
 }
 
 void ReplaceText::onTrigger(const std::shared_ptr<core::ProcessContext>& context, const std::shared_ptr<core::ProcessSession>& session) {
@@ -75,7 +75,7 @@ void ReplaceText::onTrigger(const std::shared_ptr<core::ProcessContext>& context
       return;
   }
 
-  throw Exception{PROCESSOR_EXCEPTION, utils::StringUtils::join_pack("Unsupported ", EvaluationMode.name, ": ", magic_enum::enum_name(evaluation_mode_).data())};
+  throw Exception{PROCESSOR_EXCEPTION, utils::StringUtils::join_pack("Unsupported ", EvaluationMode.name, ": ", std::string{magic_enum::enum_name(evaluation_mode_)})};
 }
 
 ReplaceText::Parameters ReplaceText::readParameters(const std::shared_ptr<core::ProcessContext>& context, const std::shared_ptr<core::FlowFile>& flow_file) const {
@@ -149,7 +149,7 @@ void ReplaceText::replaceTextLineByLine(const std::shared_ptr<core::FlowFile>& f
         case LineByLineEvaluationModeType::EXCEPT_LAST_LINE:
           return is_last_line ? input_line: applyReplacements(input_line, flow_file, parameters);
       }
-      throw Exception{PROCESSOR_EXCEPTION, utils::StringUtils::join_pack("Unsupported ", LineByLineEvaluationMode.name, ": ", magic_enum::enum_name(line_by_line_evaluation_mode_).data())};
+      throw Exception{PROCESSOR_EXCEPTION, utils::StringUtils::join_pack("Unsupported ", LineByLineEvaluationMode.name, ": ", std::string{magic_enum::enum_name(line_by_line_evaluation_mode_)})};
     }};
     session->readWrite(flow_file, std::move(read_write_callback));
     session->transfer(flow_file, Success);
@@ -182,7 +182,7 @@ std::string ReplaceText::applyReplacements(const std::string& input, const std::
       return applySubstituteVariables(chomped_input, flow_file) + line_ending;
   }
 
-  throw Exception{PROCESSOR_EXCEPTION, utils::StringUtils::join_pack("Unsupported ", ReplacementStrategy.name, ": ", magic_enum::enum_name(replacement_strategy_).data())};
+  throw Exception{PROCESSOR_EXCEPTION, utils::StringUtils::join_pack("Unsupported ", ReplacementStrategy.name, ": ", std::string{magic_enum::enum_name(replacement_strategy_)})};
 }
 
 std::string ReplaceText::applyLiteralReplace(const std::string& input, const Parameters& parameters) {
@@ -239,7 +239,7 @@ std::string ReplaceText::getAttributeValue(const std::shared_ptr<core::FlowFile>
   if (attribute_value) {
     return *attribute_value;
   } else {
-    logger_->log_debug("Attribute %s not found in the flow file during %s", attribute_key, magic_enum::enum_name(ReplacementStrategyType::SUBSTITUTE_VARIABLES).data());
+    logger_->log_debug("Attribute %s not found in the flow file during %s", attribute_key, std::string{magic_enum::enum_name(ReplacementStrategyType::SUBSTITUTE_VARIABLES)});
     return match[0];
   }
 }

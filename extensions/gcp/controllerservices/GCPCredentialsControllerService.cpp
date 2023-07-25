@@ -76,7 +76,7 @@ void GCPCredentialsControllerService::onEnable() {
     credentials_location = magic_enum::enum_cast<CredentialsLocation>(value);
   }
   if (!credentials_location) {
-    logger_->log_error("Invalid Credentials Location, defaulting to %s", magic_enum::enum_name(CredentialsLocation::USE_DEFAULT_CREDENTIALS).data());
+    logger_->log_error("Invalid Credentials Location, defaulting to %s", std::string{magic_enum::enum_name(CredentialsLocation::USE_DEFAULT_CREDENTIALS)});
     credentials_location = CredentialsLocation::USE_DEFAULT_CREDENTIALS;
   }
   if (*credentials_location == CredentialsLocation::USE_DEFAULT_CREDENTIALS) {
