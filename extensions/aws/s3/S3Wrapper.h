@@ -292,22 +292,21 @@ class S3Wrapper {
     if (!put_object_params.write_acl_user_list.empty()) {
       request.SetGrantWriteACP(put_object_params.write_acl_user_list);
     }
-    setCannedAcl(request, put_object_params.canned_acl);
+    setCannedAcl<RequestType>(request, put_object_params.canned_acl);
     return request;
   }
 
   template<typename ResultType>
   PutObjectResult createPutObjectResult(const ResultType& upload_result) {
-    PutObjectResult put_object_result;
-    // Etags are returned by AWS in quoted form that should be removed
-    put_object_result.etag = minifi::utils::StringUtils::removeFramingCharacters(upload_result.GetETag(), '"');
-    put_object_result.version = upload_result.GetVersionId();
-
-    // GetExpiration returns a string pair with a date and a ruleid in 'expiry-date=\"<DATE>\", rule-id=\"<RULEID>\"' format
-    // s3.expiration only needs the date member of this pair
-    put_object_result.expiration = getExpiration(upload_result.GetExpiration()).expiration_time;
-    put_object_result.ssealgorithm = getEncryptionString(upload_result.GetServerSideEncryption());
-    return put_object_result;
+    return {
+      .version = upload_result.GetVersionId(),
+      // Etags are returned by AWS in quoted form that should be removed
+      .etag = minifi::utils::StringUtils::removeFramingCharacters(upload_result.GetETag(), '"'),
+      // GetExpiration returns a string pair with a date and a ruleid in 'expiry-date=\"<DATE>\", rule-id=\"<RULEID>\"' format
+      // s3.expiration only needs the date member of this pair
+      .expiration = getExpiration(upload_result.GetExpiration()).expiration_time,
+      .ssealgorithm = getEncryptionString(upload_result.GetServerSideEncryption())
+    };
   }
 
   static int64_t writeFetchedBody(Aws::IOStream& source, int64_t data_size, io::OutputStream& output);

@@ -220,7 +220,8 @@ class PutS3Object : public S3Processor {
   uint64_t multipart_size_{};
   std::chrono::milliseconds multipart_upload_ageoff_interval_;
   std::chrono::milliseconds multipart_upload_max_age_threshold_;
-  std::atomic<std::chrono::time_point<std::chrono::system_clock>> last_ageoff_time_;
+  std::mutex last_ageoff_mutex_;
+  std::chrono::time_point<std::chrono::system_clock> last_ageoff_time_;
 };
 
 }  // namespace org::apache::nifi::minifi::aws::processors

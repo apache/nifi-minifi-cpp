@@ -126,8 +126,8 @@ std::optional<S3Wrapper::UploadPartsResult> S3Wrapper::uploadParts(const PutObje
     auto stream_ptr = readFlowFileStream(stream, next_read_size, read_size);
     total_read += read_size;
 
-    Aws::S3::Model::UploadPartRequest upload_part_request;
-    upload_part_request.WithBucket(put_object_params.bucket)
+    auto upload_part_request = Aws::S3::Model::UploadPartRequest{}
+      .WithBucket(put_object_params.bucket)
       .WithKey(put_object_params.object_key)
       .WithPartNumber(part_number)
       .WithUploadId(upload_state.upload_id);
@@ -155,15 +155,15 @@ std::optional<S3Wrapper::UploadPartsResult> S3Wrapper::uploadParts(const PutObje
 
 std::optional<Aws::S3::Model::CompleteMultipartUploadResult> S3Wrapper::completeMultipartUpload(const PutObjectRequestParameters& put_object_params,
     const S3Wrapper::UploadPartsResult& upload_parts_result) {
-  Aws::S3::Model::CompleteMultipartUploadRequest complete_multipart_upload_request;
-  complete_multipart_upload_request.WithBucket(put_object_params.bucket)
+  auto complete_multipart_upload_request = Aws::S3::Model::CompleteMultipartUploadRequest{}
+    .WithBucket(put_object_params.bucket)
     .WithKey(put_object_params.object_key)
     .WithUploadId(upload_parts_result.upload_id);
 
   Aws::S3::Model::CompletedMultipartUpload completed_multipart_upload;
   for (size_t i = 0; i < upload_parts_result.part_etags.size(); ++i) {
-    Aws::S3::Model::CompletedPart part;
-    part.WithETag(upload_parts_result.part_etags[i])
+    auto part = Aws::S3::Model::CompletedPart{}
+      .WithETag(upload_parts_result.part_etags[i])
       .WithPartNumber(i + 1);
     completed_multipart_upload.AddParts(part);
   }
@@ -218,8 +218,8 @@ std::optional<PutObjectResult> S3Wrapper::putObjectMultipart(const PutObjectRequ
 }
 
 bool S3Wrapper::deleteObject(const DeleteObjectRequestParameters& params) {
-  Aws::S3::Model::DeleteObjectRequest request;
-  request.WithBucket(params.bucket)
+  auto request = Aws::S3::Model::DeleteObjectRequest{}
+    .WithBucket(params.bucket)
     .WithKey(params.object_key);
   if (!params.version.empty()) {
     request.SetVersionId(params.version);
@@ -343,8 +343,8 @@ std::optional<std::vector<ListedObjectAttributes>> S3Wrapper::listBucket(const L
 }
 
 std::optional<std::map<std::string, std::string>> S3Wrapper::getObjectTags(const GetObjectTagsParameters& params) {
-  Aws::S3::Model::GetObjectTaggingRequest request;
-  request.WithBucket(params.bucket)
+  auto request = Aws::S3::Model::GetObjectTaggingRequest{}
+    .WithBucket(params.bucket)
     .WithKey(params.object_key);
   if (!params.version.empty()) {
     request.SetVersionId(params.version);
@@ -371,6 +371,7 @@ std::optional<HeadObjectResult> S3Wrapper::headObject(const HeadObjectRequestPar
 
 template<typename ListRequest>
 ListRequest S3Wrapper::createListRequest(const ListRequestParameters& params) {
+<<<<<<< HEAD
   ListRequest request;
 <<<<<<< HEAD
   request.SetBucket(params.bucket);
@@ -386,12 +387,18 @@ ListRequest S3Wrapper::createListRequest(const ListRequestParameters& params) {
     .WithPrefix(params.prefix);
 >>>>>>> 646190315 (Refactor S3 changes)
   return request;
+=======
+  return ListRequest{}
+    .WithBucket(params.bucket)
+    .WithDelimiter(params.delimiter)
+    .WithPrefix(params.prefix);
+>>>>>>> c777a50c2 (Review update)
 }
 
 template<typename FetchObjectRequest>
 FetchObjectRequest S3Wrapper::createFetchObjectRequest(const GetObjectRequestParameters& get_object_params) {
-  FetchObjectRequest request;
-  request.WithBucket(get_object_params.bucket)
+  auto request = FetchObjectRequest{}
+    .WithBucket(get_object_params.bucket)
     .WithKey(get_object_params.object_key);
   if (!get_object_params.version.empty()) {
     request.SetVersionId(get_object_params.version);
@@ -427,10 +434,7 @@ void S3Wrapper::addListMultipartUploadResults(const Aws::Vector<Aws::S3::Model::
       continue;
     }
 
-    MultipartUpload filtered_upload;
-    filtered_upload.key = upload.GetKey();
-    filtered_upload.upload_id = upload.GetUploadId();
-    filtered_uploads.push_back(filtered_upload);
+    filtered_uploads.push_back({.key = upload.GetKey(), .upload_id = upload.GetUploadId()});
   }
 }
 
@@ -456,8 +460,8 @@ std::optional<std::vector<MultipartUpload>> S3Wrapper::listMultipartUploads(cons
 }
 
 bool S3Wrapper::abortMultipartUpload(const AbortMultipartUploadRequestParameters& params) {
-  Aws::S3::Model::AbortMultipartUploadRequest request;
-  request.WithBucket(params.bucket)
+  auto request = Aws::S3::Model::AbortMultipartUploadRequest{}
+    .WithBucket(params.bucket)
     .WithKey(params.key)
     .WithUploadId(params.upload_id);
   return request_sender_->sendAbortMultipartUploadRequest(request, params.credentials, params.client_config, params.use_virtual_addressing);
