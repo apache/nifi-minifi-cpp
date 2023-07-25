@@ -175,7 +175,7 @@ Feature: Sending data to using Kafka streaming platform using PublishKafka
       | PublishKafka   | Username               | alice                                      |
       | PublishKafka   | Password               | alice-secret                               |
     And a PutFile processor with the "Directory" property set to "/tmp/output"
-    And an ssl context service set up for PublishKafka
+    And an ssl context service is set up for PublishKafka
     And the "success" relationship of the GetFile processor is connected to the PublishKafka
     And the "success" relationship of the PublishKafka processor is connected to the PutFile
 
@@ -200,7 +200,7 @@ Feature: Sending data to using Kafka streaming platform using PublishKafka
       | PublishKafka   | Message Timeout        | 12 sec                                     |
       | PublishKafka   | Security Protocol      | ssl                                        |
     And a PutFile processor with the "Directory" property set to "/tmp/output"
-    And an ssl context service set up for PublishKafka
+    And an ssl context service is set up for PublishKafka
     And the "success" relationship of the GetFile processor is connected to the PublishKafka
     And the "success" relationship of the PublishKafka processor is connected to the PutFile
 
@@ -414,7 +414,7 @@ Feature: Sending data to using Kafka streaming platform using PublishKafka
       | ConsumeKafka   | Kafka Brokers        | kafka-broker-${feature_id}:9093            |
       | ConsumeKafka   | Security Protocol    | ssl                                        |
     And a PutFile processor with the "Directory" property set to "/tmp/output" in the "kafka-consumer-flow" flow
-    And an ssl context service set up for ConsumeKafka
+    And an ssl context service is set up for ConsumeKafka
     And the "success" relationship of the ConsumeKafka processor is connected to the PutFile
 
     And a kafka broker is set up in correspondence with the publisher flow
@@ -435,7 +435,7 @@ Feature: Sending data to using Kafka streaming platform using PublishKafka
       | ConsumeKafka   | Username             | alice                                      |
       | ConsumeKafka   | Password             | alice-secret                               |
     And a PutFile processor with the "Directory" property set to "/tmp/output" in the "kafka-consumer-flow" flow
-    And an ssl context service set up for ConsumeKafka
+    And an ssl context service is set up for ConsumeKafka
     And the "success" relationship of the ConsumeKafka processor is connected to the PutFile
 
     And a kafka broker is set up in correspondence with the publisher flow

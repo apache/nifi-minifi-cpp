@@ -72,7 +72,7 @@ void setupClientProxy(extensions::curl::HTTPClient& client, const core::ProcessC
 
 void setupClientPeerVerification(extensions::curl::HTTPClient& client, const core::ProcessContext& context) {
   if (auto disable_peer_verification = context.getProperty(InvokeHTTP::DisablePeerVerification) | utils::flatMap(&utils::StringUtils::toBool)) {
-    client.setPeerVerification(*disable_peer_verification);
+    client.setPeerVerification(!*disable_peer_verification);
   }
 }
 

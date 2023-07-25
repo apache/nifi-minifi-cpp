@@ -4,7 +4,7 @@ behavex==2.0.1
 docker==5.0.0
 kafka-python==2.0.2
 confluent-kafka==1.7.0
-PyYAML==5.4.1
+PyYAML==6.0.1
 m2crypto==0.38.0
 watchdog==2.1.2
 pyopenssl==23.0.0

@@ -68,7 +68,7 @@ class HTTPClient : public utils::BaseHTTPClient, public core::Connectable {
  public:
   HTTPClient();
 
-  HTTPClient(std::string name, const utils::Identifier& uuid);
+  HTTPClient(std::string_view name, const utils::Identifier& uuid);
 
   HTTPClient(const HTTPClient&) = delete;
   HTTPClient& operator=(const HTTPClient&) = delete;

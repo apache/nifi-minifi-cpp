@@ -126,9 +126,9 @@ void S3Processor::onSchedule(const std::shared_ptr<core::ProcessContext>& contex
     throw Exception(PROCESS_SCHEDULE_EXCEPTION, "Communications Timeout missing or invalid");
   }
 
-  static const auto default_ca_path = minifi::utils::getDefaultCAPath();
-  if (default_ca_path) {
-    client_config_->caFile = default_ca_path->string();
+  static const auto default_ca_file = minifi::utils::getDefaultCAFile();
+  if (default_ca_file) {
+    client_config_->caFile = *default_ca_file;
   }
 }
 

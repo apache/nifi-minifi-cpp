@@ -20,8 +20,6 @@
 #include "HTTPHandlers.h"
 #include "utils/IntegrationTestUtils.h"
 
-#define CURLOPT_SSL_VERIFYPEER_DISABLE 1
-
 class VerifyHTTPGet : public VerifyInvokeHTTP {
  public:
   void runAssertions() override {

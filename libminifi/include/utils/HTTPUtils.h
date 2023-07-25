@@ -19,8 +19,8 @@
 #pragma once
 
 #include <string>
+#include <string_view>
 #include <optional>
-#include <filesystem>
 
 #include "io/ClientSocket.h"
 #include "utils/RegexUtils.h"
@@ -52,6 +52,6 @@ inline bool parse_http_components(const std::string &url, std::string &port, std
   return false;
 }
 
-std::optional<std::filesystem::path> getDefaultCAPath();
+std::optional<std::string_view> getDefaultCAFile();
 
 }  // namespace org::apache::nifi::minifi::utils
