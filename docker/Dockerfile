@@ -56,7 +56,6 @@ RUN apk --no-cache add gcc \
   libusb-dev \
   gpsd-dev \
   python3-dev \
-  boost-dev \
   doxygen \
   ccache \
   lua-dev
@@ -110,7 +109,6 @@ RUN addgroup -g ${GID} ${USER} && adduser -u ${UID} -D -G ${USER} -g "" ${USER} 
     if echo "$MINIFI_OPTIONS" | grep -q "ENABLE_JNI=ON"; then apk add --no-cache openjdk8-jre-base; fi && \
     if echo "$MINIFI_OPTIONS" | grep -q "ENABLE_PCAP=ON"; then apk add --no-cache libpcap; fi && \
     if echo "$MINIFI_OPTIONS" | grep -q "ENABLE_USB_CAMERA=ON"; then apk add --no-cache libpng libusb; fi && \
-    if echo "$MINIFI_OPTIONS" | grep -q "ENABLE_OPENCV=ON" || echo "$MINIFI_OPTIONS" | grep -q "ENABLE_BUSTACHE=ON"; then apk add --no-cache boost; fi && \
     if echo "$MINIFI_OPTIONS" | grep -q "ENABLE_LUA_SCRIPTING=ON"; then apk add --no-cache lua; fi && \
     if echo "$MINIFI_OPTIONS" | grep -q "ENABLE_PYTHON_SCRIPTING=ON"; then apk add --no-cache python3; fi
 

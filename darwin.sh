@@ -91,8 +91,6 @@ build_deps(){
                         INSTALLED+=("flex")
                     elif [ "$FOUND_VALUE" = "python" ]; then
                         INSTALLED+=("python")
-                    elif [ "$FOUND_VALUE" = "boost" ]; then
-                        INSTALLED+=("boost")
                     elif [ "$FOUND_VALUE" = "lua" ]; then
                         INSTALLED+=("lua")
                     elif [ "$FOUND_VALUE" = "jnibuild" ]; then

@@ -16,21 +16,10 @@
 # specific language governing permissions and limitations
 # under the License.
 #
-
-if (NOT (ENABLE_ALL OR ENABLE_BUSTACHE))
-    return()
-endif()
-
-include(Bustache)
-
-include(${CMAKE_SOURCE_DIR}/extensions/ExtensionHeader.txt)
-
-file(GLOB SOURCES "*.cpp")
-
-add_library(minifi-bustache-extensions SHARED ${SOURCES})
-
-target_link_libraries(minifi-bustache-extensions ${LIBMINIFI})
-target_link_libraries(minifi-bustache-extensions bustache)
-
-register_extension(minifi-bustache-extensions "BUSTACHE EXTENSIONS" BUSTACHE-EXTENSIONS "This enables bustache functionality including ApplyTemplate." "extensions/bustache/tests")
-register_extension_linter(minifi-bustache-extensions-linter)
+include(FetchContent)
+FetchContent_Declare(Fmt
+        URL  https://github.com/fmtlib/fmt/archive/refs/tags/10.0.0.tar.gz
+        URL_HASH SHA256=ede1b6b42188163a3f2e0f25ad5c0637eca564bd8df74d02e31a311dd6b37ad8
+        FIND_PACKAGE_ARGS
+        )
+FetchContent_MakeAvailable(Fmt)

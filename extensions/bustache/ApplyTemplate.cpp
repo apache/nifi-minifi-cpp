@@ -19,15 +19,14 @@
  */
 #include "ApplyTemplate.h"
 
-#include <filesystem>
-#include <fstream>
-#include <iostream>
+#include <unordered_map>
 #include <memory>
 #include <string>
 #include <utility>
 
 #include "core/Resource.h"
 #include "bustache/model.hpp"
+#include "bustache/render/string.hpp"
 
 namespace org::apache::nifi::minifi::processors {
 
@@ -55,14 +54,14 @@ void ApplyTemplate::onTrigger(const std::shared_ptr<core::ProcessContext> &conte
     }();
 
     bustache::format format(template_file_contents);
-    bustache::object data;
+    std::unordered_map<std::string, std::string> data;
 
     for (const auto &attr : flow_file->getAttributes()) {
       data[attr.first] = attr.second;
     }
 
     // TODO(calebj) write ostream reciever for format() to prevent excessive copying
-    std::string ostring = to_string(format(data));
+    std::string ostring = bustache::to_string(format(data));
     output_stream->write(gsl::make_span(ostring).as_span<const std::byte>());
     return gsl::narrow<int64_t>(ostring.length());
   });
