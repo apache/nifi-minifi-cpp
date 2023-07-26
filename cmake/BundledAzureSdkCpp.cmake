@@ -18,7 +18,7 @@
 function(use_bundled_libazure SOURCE_DIR BINARY_DIR)
     set(PATCH_FILE "${SOURCE_DIR}/thirdparty/azure-sdk-cpp/remove-amqp.patch")
     set(PC ${Bash_EXECUTABLE} -c "set -x && \
-            (\"${Patch_EXECUTABLE}\" -p1 -R -s -f --dry-run -i \"${PATCH_FILE}\" || \"${Patch_EXECUTABLE}\" -p1 -N -i \"${PATCH_FILE}\")")
+            (\"${Patch_EXECUTABLE}\" -p1 -N -i \"${PATCH_FILE}\")")
     # Define byproducts
     set(INSTALL_DIR "${BINARY_DIR}/thirdparty/azure-sdk-cpp-install")
     if (WIN32)
@@ -55,7 +55,8 @@ function(use_bundled_libazure SOURCE_DIR BINARY_DIR)
 
     set(AZURE_SDK_CMAKE_ARGS ${PASSTHROUGH_CMAKE_ARGS}
         -DWARNINGS_AS_ERRORS=OFF
-        -DCMAKE_INSTALL_PREFIX=${INSTALL_DIR})
+        -DCMAKE_INSTALL_PREFIX=${INSTALL_DIR}
+        -DDISABLE_AZURE_CORE_OPENTELEMETRY=ON)
     append_third_party_passthrough_args(AZURE_SDK_CMAKE_ARGS "${AZURE_SDK_CMAKE_ARGS}")
 
     # Build project
