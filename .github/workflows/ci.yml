@@ -27,7 +27,8 @@ jobs:
           sudo apt install -y ccache libfl-dev libboost-all-dev libpcap-dev
           echo "PATH=/usr/lib/ccache:$PATH" >> $GITHUB_ENV
           echo -e "127.0.0.1\t$HOSTNAME" | sudo tee -a /etc/hosts > /dev/null
-          sudo brew install gcc@13
+          eval "$(/home/linuxbrew/.linuxbrew/bin/brew shellenv)"
+          brew install gcc@13
       - name: build
         run: |
           export CC=gcc-13
