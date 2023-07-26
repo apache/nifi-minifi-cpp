@@ -6,9 +6,9 @@ env:
     -DENABLE_ELASTICSEARCH=OFF -DDOCKER_BUILD_ONLY=ON
   SCCACHE_GHA_ENABLE: true
 jobs:
-  ubuntu_20_04:
-    name: "ubuntu-20.04-gcc-13"
-    runs-on: ubuntu-20.04
+  ubuntu_22_04:
+    name: "ubuntu-22.04-gcc-13"
+    runs-on: ubuntu-22.04
     timeout-minutes: 120
     steps:
       - id: checkout
