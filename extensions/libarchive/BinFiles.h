@@ -285,24 +285,24 @@ class BinFiles : public core::Processor {
 
  protected:
   // Allows general pre-processing of a flow file before it is offered to a bin. This is called before getGroupId().
-  virtual void preprocessFlowFile(core::ProcessContext *context, core::ProcessSession *session, const std::shared_ptr<core::FlowFile>& flow);
+  virtual void preprocessFlowFile(const std::shared_ptr<core::FlowFile>& flow);
   // Returns a group ID representing a bin. This allows flow files to be binned into like groups
-  virtual std::string getGroupId(core::ProcessContext* /*context*/, const std::shared_ptr<core::FlowFile>& /*flow*/) {
+  virtual std::string getGroupId(const std::shared_ptr<core::FlowFile>& /*flow*/) {
     return "";
   }
   // Processes a single bin.
-  virtual bool processBin(core::ProcessContext* /*context*/, core::ProcessSession* /*session*/, std::unique_ptr<Bin>& /*bin*/) {
+  virtual bool processBin(core::ProcessSession& /*session*/, std::unique_ptr<Bin>& /*bin*/) {
     return false;
   }
   // transfer flows to failure in bin
-  static void transferFlowsToFail(core::ProcessContext *context, core::ProcessSession *session, std::unique_ptr<Bin> &bin);
+  static void transferFlowsToFail(core::ProcessSession &session, std::unique_ptr<Bin> &bin);
   // moves owned flows to session
-  static void addFlowsToSession(core::ProcessContext *context, core::ProcessSession *session, std::unique_ptr<Bin> &bin);
+  static void addFlowsToSession(core::ProcessSession &session, std::unique_ptr<Bin> &bin);
 
-  bool resurrectFlowFiles(const std::shared_ptr<core::ProcessContext> &context, const std::shared_ptr<core::ProcessSession> &session);
-  void assumeOwnerShipOfNextBatch(const std::shared_ptr<core::ProcessContext> &context, const std::shared_ptr<core::ProcessSession> &session);
-  std::deque<std::unique_ptr<Bin>> gatherReadyBins(const std::shared_ptr<core::ProcessContext> &context);
-  void processReadyBins(std::deque<std::unique_ptr<Bin>> ready_bins, const std::shared_ptr<core::ProcessContext> &context, const std::shared_ptr<core::ProcessSession> &session);
+  bool resurrectFlowFiles(core::ProcessSession &session);
+  void assumeOwnerShipOfNextBatch(core::ProcessSession &session);
+  std::deque<std::unique_ptr<Bin>> gatherReadyBins(core::ProcessContext &context);
+  void processReadyBins(std::deque<std::unique_ptr<Bin>> ready_bins, core::ProcessSession &session);
 
   BinManager binManager_;
 
