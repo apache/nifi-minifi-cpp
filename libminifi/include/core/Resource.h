@@ -67,11 +67,13 @@ class StaticClassType {
       getClassLoader().unregisterClass(construction_name);
     }
   }
-
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wdangling-reference"
   static const StaticClassType& get(const std::string& name, const std::vector<std::string>& construction_names) {
     static const StaticClassType instance(name, construction_names);
     return instance;
   }
+#pragma GCC diagnostic pop
 
  private:
   std::string name_;

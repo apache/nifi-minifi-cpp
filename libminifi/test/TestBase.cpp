@@ -52,8 +52,7 @@ std::shared_ptr<LogTestController> LogTestController::getInstance(const std::sha
   } else {
     // in practice I'd use a derivation here or another paradigm entirely but for the purposes of this test code
     // having extra overhead is negligible. this is the most readable and least impactful way
-    auto instance = std::shared_ptr<LogTestController>(new LogTestController(logger_properties));
-    map.insert(std::make_pair(logger_properties, instance));
+    map.insert(std::make_pair(logger_properties, std::shared_ptr<LogTestController>(new LogTestController(logger_properties))));
     return map.find(logger_properties)->second;
   }
 }

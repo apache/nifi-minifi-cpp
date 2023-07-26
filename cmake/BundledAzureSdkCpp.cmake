@@ -16,9 +16,13 @@
 # under the License.
 
 function(use_bundled_libazure SOURCE_DIR BINARY_DIR)
-    set(PATCH_FILE "${SOURCE_DIR}/thirdparty/azure-sdk-cpp/azure-sdk-cpp-remove-samples.patch")
+    set(PATCH_FILE1 "${SOURCE_DIR}/thirdparty/azure-sdk-cpp/remove-amqp.patch")
+    set(PATCH_FILE2 "${SOURCE_DIR}/thirdparty/azure-sdk-cpp/gcc13.patch")
     set(PC ${Bash_EXECUTABLE} -c "set -x && \
-            (\"${Patch_EXECUTABLE}\" -p1 -R -s -f --dry-run -i \"${PATCH_FILE}\" || \"${Patch_EXECUTABLE}\" -p1 -N -i \"${PATCH_FILE}\")")
+            (\"${Patch_EXECUTABLE}\" -p1 -N -i \"${PATCH_FILE}\")")
+    set(PC ${Bash_EXECUTABLE} -c "set -x &&\
+            (\"${Patch_EXECUTABLE}\" -p1 -N -i \"${PATCH_FILE1}\") &&\
+            (\"${Patch_EXECUTABLE}\" -p1 -N -i \"${PATCH_FILE2}\") ")
     # Define byproducts
     set(INSTALL_DIR "${BINARY_DIR}/thirdparty/azure-sdk-cpp-install")
     if (WIN32)
@@ -55,14 +59,16 @@ function(use_bundled_libazure SOURCE_DIR BINARY_DIR)
 
     set(AZURE_SDK_CMAKE_ARGS ${PASSTHROUGH_CMAKE_ARGS}
         -DWARNINGS_AS_ERRORS=OFF
-        -DCMAKE_INSTALL_PREFIX=${INSTALL_DIR})
+        -DCMAKE_INSTALL_PREFIX=${INSTALL_DIR}
+        -DDISABLE_AZURE_CORE_OPENTELEMETRY=ON
+        -DBUILD_TRANSPORT_CURL=ON)
     append_third_party_passthrough_args(AZURE_SDK_CMAKE_ARGS "${AZURE_SDK_CMAKE_ARGS}")
 
     # Build project
     ExternalProject_Add(
             asdkext  # short for azure-sdk-cpp-external due to windows MAX_PATH limitations
-            URL https://github.com/Azure/azure-sdk-for-cpp/archive/refs/tags/azure-storage-files-datalake_12.2.0.tar.gz
-            URL_HASH "SHA256=d4e80ea5e786dc689ddd04825d97ab91f5e1ef2787fa88a3d5ee00f0b820433f"
+            URL https://github.com/Azure/azure-sdk-for-cpp/archive/refs/tags/azure-storage-files-datalake_12.7.0.tar.gz
+            URL_HASH "SHA256=42b9c1df0c15d9e0a3f547eeba8c45708aa86819986da66234e267f4ad728112"
             SOURCE_DIR "${BINARY_DIR}/thirdparty/azure-sdk-cpp-src"
             INSTALL_DIR "${BINARY_DIR}/thirdparty/azure-sdk-cpp-install"
             BUILD_BYPRODUCTS "${AZURESDK_LIBRARIES_LIST}"
