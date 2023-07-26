@@ -66,3 +66,5 @@ if (WIN32)
 else()
     target_compile_options(google_cloud_cpp_storage PUBLIC -Wno-error=deprecated-declarations)
 endif()
+
+target_compile_options(google_cloud_cpp_rest_internal PUBLIC -Wno-error)

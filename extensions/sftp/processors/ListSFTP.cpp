@@ -535,9 +535,9 @@ void ListSFTP::listByTrackingTimestamps(
       /* Determine the minimum reliable timestamp based on precision */
       auto minimum_reliable_timestamp = now - listing_lag;
       if (remote_system_timestamp_precision == TARGET_SYSTEM_TIMESTAMP_PRECISION_SECONDS) {
-        std::chrono::floor<std::chrono::seconds>(minimum_reliable_timestamp);
+        minimum_reliable_timestamp = std::chrono::floor<std::chrono::seconds>(minimum_reliable_timestamp);
       } else {
-        std::chrono::floor<std::chrono::minutes>(minimum_reliable_timestamp);
+        minimum_reliable_timestamp = std::chrono::floor<std::chrono::minutes>(minimum_reliable_timestamp);
       }
       /* If the latest timestamp is not old enough, we wait another cycle */
       if (latest_listed_entry_timestamp_this_cycle && minimum_reliable_timestamp < latest_listed_entry_timestamp_this_cycle) {
