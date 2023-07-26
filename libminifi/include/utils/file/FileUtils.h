@@ -44,6 +44,7 @@
 #include <sys/utime.h>  // _utime64
 #include <tchar.h>  // _tcscpy,_tcscat,_tcscmp
 #include <windows.h>  // winapi
+#include <io.h>
 
 #ifndef WIN32_LEAN_AND_MEAN
   #define WIN32_LEAN_AND_MEAN

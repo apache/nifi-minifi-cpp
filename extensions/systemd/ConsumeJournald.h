@@ -114,7 +114,7 @@ class ConsumeJournald final : public core::Processor {
 
   ADD_COMMON_VIRTUAL_FUNCTIONS_FOR_PROCESSORS
 
-  explicit ConsumeJournald(std::string name, const utils::Identifier& id = {}, std::unique_ptr<libwrapper::LibWrapper>&& = libwrapper::createLibWrapper());
+  explicit ConsumeJournald(std::string_view name, const utils::Identifier& id = {}, std::unique_ptr<libwrapper::LibWrapper>&& = libwrapper::createLibWrapper());
   ConsumeJournald(const ConsumeJournald&) = delete;
   ConsumeJournald(ConsumeJournald&&) = delete;
   ConsumeJournald& operator=(const ConsumeJournald&) = delete;

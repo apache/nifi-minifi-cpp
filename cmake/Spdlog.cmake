@@ -16,21 +16,12 @@
 # specific language governing permissions and limitations
 # under the License.
 #
-
-if (NOT (ENABLE_ALL OR ENABLE_BUSTACHE))
-    return()
-endif()
-
-include(Bustache)
-
-include(${CMAKE_SOURCE_DIR}/extensions/ExtensionHeader.txt)
-
-file(GLOB SOURCES "*.cpp")
-
-add_library(minifi-bustache-extensions SHARED ${SOURCES})
-
-target_link_libraries(minifi-bustache-extensions ${LIBMINIFI})
-target_link_libraries(minifi-bustache-extensions bustache)
-
-register_extension(minifi-bustache-extensions "BUSTACHE EXTENSIONS" BUSTACHE-EXTENSIONS "This enables bustache functionality including ApplyTemplate." "extensions/bustache/tests")
-register_extension_linter(minifi-bustache-extensions-linter)
+include(FetchContent)
+include(fmt)
+set(SPDLOG_FMT_EXTERNAL ON CACHE STRING "" FORCE)
+FetchContent_Declare(Spdlog
+        URL  https://github.com/gabime/spdlog/archive/refs/tags/v1.12.0.tar.gz
+        URL_HASH SHA256=4dccf2d10f410c1e2feaff89966bfc49a1abb29ef6f08246335b110e001e09a9
+        FIND_PACKAGE_ARGS
+        )
+FetchContent_MakeAvailable(Spdlog)

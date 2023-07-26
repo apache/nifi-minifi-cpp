@@ -21,6 +21,8 @@
 
 #include <memory>
 
+using HANDLE = void*;
+
 #include "core/Core.h"
 
 struct GetTerminationEventHandleReturnType {

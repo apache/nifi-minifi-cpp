@@ -21,7 +21,7 @@
 #include <algorithm>
 
 #include "date/date.h"
-#include "spdlog/spdlog.h"  // TODO(szaszm): make fmt directly available
+#include "fmt/format.h"
 #include "utils/GeneralUtils.h"
 #include "utils/OptionalUtils.h"
 #include "core/ProcessContext.h"
@@ -32,8 +32,8 @@ namespace org::apache::nifi::minifi::extensions::systemd {
 
 namespace chr = std::chrono;
 
-ConsumeJournald::ConsumeJournald(std::string name, const utils::Identifier &id, std::unique_ptr<libwrapper::LibWrapper>&& libwrapper)
-    :core::Processor{std::move(name), id}, libwrapper_{std::move(libwrapper)}
+ConsumeJournald::ConsumeJournald(std::string_view name, const utils::Identifier &id, std::unique_ptr<libwrapper::LibWrapper>&& libwrapper)
+    :core::Processor{name, id}, libwrapper_{std::move(libwrapper)}
 {}
 
 void ConsumeJournald::initialize() {

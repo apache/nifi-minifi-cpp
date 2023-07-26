@@ -24,7 +24,7 @@
 #include "utils/gsl.h"
 #include "utils/IntegrationTestUtils.h"
 #include "EmptyFlow.h"
-#include "spdlog/spdlog.h"
+#include "fmt/format.h"
 #include "spdlog/sinks/stdout_sinks.h"
 #include "spdlog/sinks/ostream_sink.h"
 #include "spdlog/sinks/dist_sink.h"

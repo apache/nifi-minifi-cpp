@@ -32,7 +32,7 @@ ENV MINIFI_HOME $MINIFI_BASE_DIR/nifi-minifi-cpp-$MINIFI_VERSION
 ENV JAVA_HOME /usr/lib/jvm/java-8-openjdk-amd64/
 
 RUN apt-get update \
-    && DEBIAN_FRONTEND="noninteractive" apt-get install -y openjdk-8-jdk openjdk-8-source sudo git maven autogen autoconf automake pkgconf libtool libfl-dev libboost-all-dev libusb-1.0-0-dev \
+    && DEBIAN_FRONTEND="noninteractive" apt-get install -y openjdk-8-jdk openjdk-8-source sudo git maven autogen autoconf automake pkgconf libtool libfl-dev libusb-1.0-0-dev \
     libpng-dev libgps-dev libsqliteodbc liblua5.3-dev \
     && mkdir -p $MINIFI_BASE_DIR
 COPY . ${MINIFI_BASE_DIR}
