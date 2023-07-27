@@ -40,7 +40,7 @@ COPY . ${MINIFI_BASE_DIR}
 
 # Install the system dependencies needed for a build
 # gpsd-devel and ccache are in EPEL
-RUN dnf -y install epel-release && dnf -y install sudo git which make libarchive ccache ca-certificates cmake perl && \
+RUN dnf -y install epel-release && dnf -y install sudo git which make libarchive ccache ca-certificates perl && \
     if echo "$MINIFI_OPTIONS" | grep -q "ENABLE_GPS=ON"; then dnf -y install gpsd-devel; fi && \
     if echo "$MINIFI_OPTIONS" | grep -q "ENABLE_JNI=ON"; then dnf -y install java-1.8.0-openjdk maven; fi && \
     if echo "$MINIFI_OPTIONS" | grep -q "ENABLE_PCAP=ON"; then dnf -y install libpcap-devel; fi && \
@@ -66,5 +66,5 @@ RUN cd $MINIFI_BASE_DIR && \
     source /opt/rh/gcc-toolset-12/enable && \
     export PATH=/usr/lib64/ccache${PATH:+:${PATH}} && \
     export CCACHE_DIR=${MINIFI_BASE_DIR}/.ccache && \
-    cmake3 -DSTATIC_BUILD= -DSKIP_TESTS=${DOCKER_SKIP_TESTS} ${MINIFI_OPTIONS} -DAWS_ENABLE_UNITY_BUILD=OFF -DCMAKE_BUILD_TYPE="${CMAKE_BUILD_TYPE}" .. && \
+    cmake -DSTATIC_BUILD= -DSKIP_TESTS=${DOCKER_SKIP_TESTS} ${MINIFI_OPTIONS} -DAWS_ENABLE_UNITY_BUILD=OFF -DCMAKE_BUILD_TYPE="${CMAKE_BUILD_TYPE}" .. && \
     make -j "$(nproc)" ${DOCKER_MAKE_TARGET}

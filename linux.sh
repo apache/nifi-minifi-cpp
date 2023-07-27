@@ -19,3 +19,33 @@ verify_gcc_enable(){
   #feature="$1"
   [ "$COMPILER_MAJOR" -ge 11 ] && echo true || echo false
 }
+
+install_cmake_from_binary() {
+  CMAKE_VERSION="3.24.4"
+  CMAKE_URL="https://cmake.org/files/v3.24/cmake-3.24.4-linux-x86_64.tar.gz"
+  EXPECTED_SHA256="cac77d28fb8668c179ac02c283b058aeb846fe2133a57d40b503711281ed9f19"
+
+  TMP_DIR=$(mktemp -d)
+
+  install_pkgs wget
+  wget -P "$TMP_DIR" "$CMAKE_URL"
+
+  ACTUAL_SHA256=$(sha256sum "$TMP_DIR/cmake-$CMAKE_VERSION-linux-x86_64.tar.gz" | cut -d " " -f 1)
+
+  if [ "$ACTUAL_SHA256" != "$EXPECTED_SHA256" ]; then
+    echo "ERROR: SHA-256 verification failed. Aborting."
+    rm -r "$TMP_DIR"
+    exit 1
+  fi
+
+  echo "Installing CMake $CMAKE_VERSION to /opt/cmake-$CMAKE_VERSION..."
+  set -x
+  tar -C "$TMP_DIR" -zxf "$TMP_DIR/cmake-$CMAKE_VERSION-linux-x86_64.tar.gz"
+  sudo mv "$TMP_DIR/cmake-$CMAKE_VERSION-linux-x86_64" /opt/cmake-$CMAKE_VERSION
+
+  sudo ln -s "/opt/cmake-$CMAKE_VERSION/bin/cmake" /usr/local/bin/cmake
+  set +x
+
+  echo "CMake $CMAKE_VERSION has been installed successfully."
+  rm -r "$TMP_DIR"
+}

@@ -57,13 +57,7 @@ install_libusb() {
 
 
 bootstrap_cmake(){
-    case "$OS_MAJOR" in
-        7)
-            install_pkgs epel-release
-            install_pkgs cmake3
-            ;;
-        *) install_pkgs cmake ;;
-    esac
+    install_cmake_from_binary
 }
 
 bootstrap_compiler() {
