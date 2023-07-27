@@ -368,7 +368,6 @@ show_supported_features() {
   echo "G. PCAP support ................$(print_feature_status PCAP_ENABLED)"
   echo "H. USB Camera support ..........$(print_feature_status USB_ENABLED)"
   echo "I. GPS support .................$(print_feature_status GPS_ENABLED)"
-  echo "J. TensorFlow Support ..........$(print_feature_status TENSORFLOW_ENABLED)"
   echo "K. Bustache Support ............$(print_feature_status BUSTACHE_ENABLED)"
   echo "L. Lua Scripting Support .......$(print_feature_status LUA_SCRIPTING_ENABLED)"
   echo "M. MQTT Support ................$(print_feature_status MQTT_ENABLED)"
@@ -426,7 +425,6 @@ read_feature_options(){
     g) ToggleFeature PCAP_ENABLED ;;
     h) ToggleFeature USB_ENABLED ;;
     i) ToggleFeature GPS_ENABLED ;;
-    j) ToggleFeature TENSORFLOW_ENABLED ;;
     k) ToggleFeature BUSTACHE_ENABLED ;;
     l) ToggleFeature LUA_SCRIPTING_ENABLED ;;
     m) ToggleFeature MQTT_ENABLED ;;

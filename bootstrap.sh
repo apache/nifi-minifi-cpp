@@ -316,10 +316,6 @@ add_option OPENWSMAN_ENABLED ${FALSE} "ENABLE_OPENWSMAN"
 add_option BUSTACHE_ENABLED ${FALSE} "ENABLE_BUSTACHE" "2.6" ${TRUE}
 add_dependency BUSTACHE_ENABLED "boost"
 
-## currently need to limit on certain platforms
-add_option TENSORFLOW_ENABLED ${FALSE} "ENABLE_TENSORFLOW" "2.6" ${TRUE}
-add_dependency TENSORFLOW_ENABLED "tensorflow"
-
 add_option OPC_ENABLED ${FALSE} "ENABLE_OPC"
 add_dependency OPC_ENABLED "mbedtls"
 

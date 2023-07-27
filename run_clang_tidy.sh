@@ -4,7 +4,7 @@ set -uo pipefail
 
 FILE=$1
 
-EXCLUDED_EXTENSIONS=("pdh" "windows-event-log" "tensorflow")
+EXCLUDED_EXTENSIONS=("pdh" "windows-event-log")
 EXCLUDED_DIRECTORY=("nanofi")
 
 for excluded_extension in "${EXCLUDED_EXTENSIONS[@]}"; do

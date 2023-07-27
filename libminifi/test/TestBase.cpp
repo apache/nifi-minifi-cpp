@@ -542,7 +542,7 @@ bool TestPlan::runNextProcessor(const PreTriggerVerifier& verify) {
   return runProcessor(location, verify);
 }
 
-bool TestPlan::runCurrentProcessor(const PreTriggerVerifier& /*verify*/) {
+bool TestPlan::runCurrentProcessor() {
   std::lock_guard<std::recursive_mutex> guard(mutex);
   return runProcessor(location);
 }
