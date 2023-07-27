@@ -281,8 +281,7 @@ else()
 endif()
 
 # spdlog
-include(BundledSpdlog)
-use_bundled_spdlog(${CMAKE_CURRENT_SOURCE_DIR} ${CMAKE_CURRENT_BINARY_DIR})
+include(Spdlog)
 
 # yaml-cpp
 include(BundledYamlCpp)
