@@ -24,15 +24,13 @@ jobs:
       - id: install_deps
         run: |
           sudo apt update
-          sudo apt install -y ccache libfl-dev libboost-all-dev libpcap-dev
+          sudo apt install -y ccache libfl-dev libpcap-dev libboost-all-dev openjdk-8-jdk maven libusb-1.0-0-dev libpng-dev libgps-dev libsqliteodbc lua5.3 liblua5.3-dev flake8 parallel
           echo "PATH=/usr/lib/ccache:$PATH" >> $GITHUB_ENV
           echo -e "127.0.0.1\t$HOSTNAME" | sudo tee -a /etc/hosts > /dev/null
       - name: build
         run: |
           eval "$(/home/linuxbrew/.linuxbrew/bin/brew shellenv)"
-          brew install gcc@13 gpsd libusb
-          sudo ln -s /home/linuxbrew/.linuxbrew/include/gps.h /usr/local/include/gps.h
-          sudo ln -s /home/linuxbrew/.linuxbrew/lib/libgps.so /usr/local/lib/libgps.so
+          brew install gcc@13
           export CC=gcc-13
           export CXX=g++-13
           g++-13 --version
