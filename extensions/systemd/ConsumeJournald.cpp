@@ -21,7 +21,7 @@
 #include <algorithm>
 
 #include "date/date.h"
-#include "spdlog/spdlog.h"  // TODO(szaszm): make fmt directly available
+#include "fmt/format.h"
 #include "utils/GeneralUtils.h"
 #include "utils/OptionalUtils.h"
 #include "core/ProcessContext.h"

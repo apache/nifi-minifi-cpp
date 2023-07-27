@@ -20,7 +20,7 @@
 #include "../Catch.h"
 #include "core/logging/LoggerConfiguration.h"
 #include "io/BufferStream.h"
-#include "spdlog/spdlog.h"
+#include "fmt/format.h"
 #include "utils/span.h"
 
 using minifi::utils::LineByLineInputOutputStreamCallback;
