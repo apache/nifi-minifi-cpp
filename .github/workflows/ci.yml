@@ -31,6 +31,8 @@ jobs:
         run: |
           eval "$(/home/linuxbrew/.linuxbrew/bin/brew shellenv)"
           brew install gcc@13 gpsd libusb
+          ln -s /home/linuxbrew/.linuxbrew/include/gps.h /usr/local/include/gps.h
+          ln -s /home/linuxbrew/.linuxbrew/lib/libgps.so /usr/local/lib/libgps.so
           export CC=gcc-13
           export CXX=g++-13
           g++-13 --version
