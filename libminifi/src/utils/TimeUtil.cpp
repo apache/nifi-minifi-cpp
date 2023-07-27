@@ -37,7 +37,7 @@ void setClock(std::shared_ptr<SteadyClock> clock) {
 
 std::optional<std::chrono::system_clock::time_point> parseRfc3339(const std::string& str) {
   std::istringstream stream(str);
-  date::year_month_day date_part;
+  date::year_month_day date_part{};
   date::from_stream(stream, "%F", date_part);
 
   if (stream.fail())
