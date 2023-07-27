@@ -214,13 +214,17 @@ bool MergeContent::processBin(core::ProcessSession &session, std::unique_ptr<Bin
   }
 
   std::shared_ptr<core::FlowFile> merge_flow = std::static_pointer_cast<FlowFileRecord>(session.create());
+  auto removeMergeFlow = gsl::finally([&](){
+    if (!session.hasBeenTransferred(*merge_flow)) {
+      session.remove(merge_flow);
+    }
+  });
   if (attributeStrategy_ == merge_content_options::ATTRIBUTE_STRATEGY_KEEP_COMMON) {
     KeepOnlyCommonAttributesMerger(bin->getFlowFile()).mergeAttributes(session, merge_flow);
   } else if (attributeStrategy_ == merge_content_options::ATTRIBUTE_STRATEGY_KEEP_ALL_UNIQUE) {
     KeepAllUniqueAttributesMerger(bin->getFlowFile()).mergeAttributes(session, merge_flow);
   } else {
     logger_->log_error("Attribute strategy not supported %s", attributeStrategy_);
-    session.remove(merge_flow);
     return false;
   }
 
@@ -247,21 +251,17 @@ bool MergeContent::processBin(core::ProcessSession &session, std::unique_ptr<Bin
     mimeType = "application/zip";
   } else {
     logger_->log_error("Merge format not supported %s", mergeFormat_);
-    session.remove(merge_flow);
     return false;
   }
 
-  std::shared_ptr<core::FlowFile> mergeFlow;
   try {
     mergeBin->merge(session, bin->getFlowFile(), *serializer, merge_flow);
     session.putAttribute(merge_flow, core::SpecialFlowAttribute::MIME_TYPE, mimeType);
   } catch (const std::exception& ex) {
     logger_->log_error("Merge Content merge catch exception, type: %s, what: %s", typeid(ex).name(), ex.what());
-    session.remove(merge_flow);
     return false;
   } catch (...) {
     logger_->log_error("Merge Content merge catch exception, type: %s", getCurrentExceptionTypeName());
-    session.remove(merge_flow);
     return false;
   }
   session.putAttribute(merge_flow, BinFiles::FRAGMENT_COUNT_ATTRIBUTE, std::to_string(bin->getSize()));

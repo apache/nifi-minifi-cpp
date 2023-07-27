@@ -1147,4 +1147,8 @@ bool ProcessSession::existsFlowFileInRelationship(const Relationship &relationsh
   });
 }
 
+bool ProcessSession::hasBeenTransferred(const core::FlowFile &flow) const {
+  return updated_relationships_.contains(flow.getUUID()) || added_flowfiles_.contains(flow.getUUID());
+}
+
 }  // namespace org::apache::nifi::minifi::core

@@ -151,6 +151,8 @@ class ProcessSession : public ReferenceContainer {
     metrics_ = metrics;
   }
 
+  bool hasBeenTransferred(const core::FlowFile &flow) const;
+
 // Prevent default copy constructor and assignment operation
 // Only support pass by reference or pointer
   ProcessSession(const ProcessSession &parent) = delete;
