@@ -332,7 +332,7 @@ jobs:
           path: /tmp/bin
   docker_build:
     name: "Docker build for integration tests"
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-22.04
     timeout-minutes: 180
     steps:
       - id: checkout

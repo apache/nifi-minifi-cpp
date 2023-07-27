@@ -116,7 +116,7 @@ Through JNI extensions you can run NiFi processors using NARs. The JNI extension
 ### To build
 
 #### Utilities
-* CMake 3.17 or greater
+* CMake 3.24 or greater
 * gcc 11 or greater
 * bison 3.0.x+ (3.2 has been shown to fail builds)
 * flex 2.6 or greater
