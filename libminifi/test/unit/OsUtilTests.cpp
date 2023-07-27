@@ -39,10 +39,9 @@ TEST_CASE("Test userIdToUsername for well-known SIDs", "[OsUtils]") {
   CHECK_FALSE(minifi::utils::OsUtils::userIdToUsername("S-1-3-4").empty());
   CHECK_FALSE(minifi::utils::OsUtils::userIdToUsername("S-1-5-80-0").empty());
 }
-#else
-TEST_CASE("OsUtilTests") {
-  SUCCEED("To avoid empty test executable");
-}
 #endif
 
+TEST_CASE("Machine architecture is supported") {
+  CHECK(minifi::utils::OsUtils::getMachineArchitecture() != "unknown");
+}
 }  // namespace org::apache::nifi::minifi::test

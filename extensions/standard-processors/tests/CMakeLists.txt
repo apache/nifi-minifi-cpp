@@ -29,6 +29,9 @@ if(OPENSSL_OFF)
     list(REMOVE_ITEM PROCESSOR_INTEGRATION_TESTS "${CMAKE_CURRENT_SOURCE_DIR}/integration/TLSClientSocketSupportedProtocolsTest.cpp")
 endif()
 
+if (WIN32)
+    list(REMOVE_ITEM PROCESSOR_UNIT_TESTS "${CMAKE_CURRENT_SOURCE_DIR}/unit/ExecuteProcessTests.cpp")
+endif()
 SET(PROCESSOR_INT_TEST_COUNT 0)
 
 FOREACH(testfile ${PROCESSOR_UNIT_TESTS})

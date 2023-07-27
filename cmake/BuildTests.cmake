@@ -87,6 +87,10 @@ GETSOURCEFILES(TLS_UNIT_TESTS "${TEST_DIR}/unit/tls/")
 GETSOURCEFILES(NANOFI_UNIT_TESTS "${NANOFI_TEST_DIR}")
 GETSOURCEFILES(INTEGRATION_TESTS "${TEST_DIR}/integration/")
 
+if (NOT WIN32)
+    list(REMOVE_ITEM UNIT_TESTS WindowsCertStoreLocationTests.cpp)
+endif()
+
 SET(UNIT_TEST_COUNT 0)
 FOREACH(testfile ${UNIT_TESTS})
     get_filename_component(testfilename "${testfile}" NAME_WE)
