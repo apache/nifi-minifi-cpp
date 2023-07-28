@@ -161,6 +161,7 @@ class LoggerConfiguration {
   std::shared_ptr<LoggerImpl> logger_ = nullptr;
   std::shared_ptr<LoggerControl> controller_;
   std::unordered_set<std::shared_ptr<AlertSink>> alert_sinks_;
+  std::optional<uint64_t> max_log_entry_length_;
   bool shorten_names_ = false;
   bool include_uuid_ = true;
 };

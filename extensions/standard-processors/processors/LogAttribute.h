@@ -42,6 +42,7 @@ class LogAttribute : public core::Processor {
  public:
   explicit LogAttribute(std::string name, const utils::Identifier& uuid = {})
       : Processor(std::move(name), uuid) {
+    logger_->set_max_log_size(-1);
   }
   ~LogAttribute() override = default;
 

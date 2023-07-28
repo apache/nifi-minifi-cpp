@@ -166,6 +166,7 @@ class Configuration : public Properties {
   static constexpr const char *nifi_log_logger_root = "nifi.log.logger.root";
   static constexpr const char *nifi_log_compression_cached_log_max_size = "nifi.log.compression.cached.log.max.size";
   static constexpr const char *nifi_log_compression_compressed_log_max_size = "nifi.log.compression.compressed.log.max.size";
+  static constexpr const char *nifi_log_max_log_entry_length = "nifi.log.max.log.entry.length";
 
   // alert options
   static constexpr const char *nifi_log_alert_url = "nifi.log.alert.url";

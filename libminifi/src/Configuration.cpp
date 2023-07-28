@@ -133,6 +133,7 @@ const std::unordered_map<std::string_view, gsl::not_null<const core::PropertyVal
   {Configuration::nifi_log_logger_root, gsl::make_not_null(&core::StandardPropertyTypes::VALID_TYPE)},
   {Configuration::nifi_log_compression_cached_log_max_size, gsl::make_not_null(&core::StandardPropertyTypes::DATA_SIZE_TYPE)},
   {Configuration::nifi_log_compression_compressed_log_max_size, gsl::make_not_null(&core::StandardPropertyTypes::DATA_SIZE_TYPE)},
+  {Configuration::nifi_log_max_log_entry_length, gsl::make_not_null(&core::StandardPropertyTypes::UNSIGNED_INT_TYPE)},
   {Configuration::nifi_log_alert_url, gsl::make_not_null(&core::StandardPropertyTypes::VALID_TYPE)},
   {Configuration::nifi_log_alert_ssl_context_service, gsl::make_not_null(&core::StandardPropertyTypes::VALID_TYPE)},
   {Configuration::nifi_log_alert_batch_size, gsl::make_not_null(&core::StandardPropertyTypes::VALID_TYPE)},
