@@ -70,16 +70,93 @@ It's recommended to create your configuration in YAML format or configure the ag
                 max concurrent tasks: 1
                 Properties:
 
+### Configuring flow configuration format
+
+MiNiFi supports YAML and JSON configuration formats. The desired configuration format can be set in the minifi.properties file, but it is automatically identified by default. The default value is `adaptiveconfiguration`, but we can force to use YAML with the `yamlconfiguration` value.
+
+    # in minifi.properties
+    nifi.flow.configuration.class.name=adaptiveconfiguration
+
 ### Scheduling strategies
 Currently Apache NiFi MiNiFi C++ supports TIMER_DRIVEN, EVENT_DRIVEN, and CRON_DRIVEN. TIMER_DRIVEN uses periods to execute your processor(s) at given intervals.
 The EVENT_DRIVEN strategy awaits for data be available or some other notification mechanism to trigger execution. CRON_DRIVEN executes at the desired intervals
 based on the CRON periods. Apache NiFi MiNiFi C++ supports standard CRON expressions without intervals ( */5 * * * * ).
 
+### Configuring encryption for flow configuration
+
+To encrypt flow configuration set the following property to true.
+
+    # in minifi.properties
+    nifi.flow.configuration.encrypt=true
+
+### Configuring additional sensitive properties
+
+It is possible to set a comma seperated list of encrypted configuration options beyond the default sensitive property list.
+
+    # in minifi.properties
+    nifi.sensitive.props.additional.keys=nifi.flow.configuration.file, nifi.rest.api.password
+
+### Backup previous flow configuration on flow update
+
+It is possible to backup the previous flow configuration file with `.bak` extension in case of a flow update (e.g. through C2 or controller socket protocol).
+
+    # in minifi.properties
+    nifi.flow.configuration.backup.on.update=true
+
+### Set number of flow threads
+
+The number of threads used by the flow scheduler can be set in the MiNiFi configuration. The default value is 5.
+
+    # in minifi.properties
+    nifi.flow.engine.threads=5
+
+### OnTrigger runtime alert
+
+MiNiFi writes warning logs in case a processor has been running for too long. The period for these alerts can be set in the configuration file with the default being 5 seconds.
+
+    # in minifi.properties
+    nifi.flow.engine.alert.period=5 sec
+
+### Event driven processor time slice
+
+The flow scheduler can be configured how much time it should allocate at maximum for event driven processors. The processor is triggered until it has work to do, but no more than the configured time slice. The default value is 500 milliseconds.
+
+    # in minifi.properties
+    nifi.flow.engine.event.driven.time.slice=500 millis
+
+### Administrative yield duration
+
+In case an uncaught exception is thrown while running a processor, the processor will yield for the configured administrative yield time. The default yield duration is 30 seconds.
+
+    # in minifi.properties
+    nifi.administrative.yield.duration=30 sec
+
+### Bored yield duration
+
+If a processor is triggered but has no work available, it will yield for the configured bored yield time. The default yield duration is 100 milliseconds.
+
+    # in minifi.properties
+    nifi.bored.yield.duration=100 millis
+
+### Graceful shutdown period
+
+It is possible to configure a graceful shutdown period, the period the flow controller will wait to unload the flow configuration and stop running processors.
+
+    # in minifi.properties
+    nifi.flowcontroller.graceful.shutdown.period=30 sec
+
+### FlowController drain timeout
+
+Timeout period for finishing processing of flow files in progress when shutting down flow controller. When not set we do not wait for flow files to finish processing.
+
+    # in minifi.properties
+    nifi.flowcontroller.drain.timeout=500 millis
+
 ### SiteToSite Security Configuration
 
-    in minifi.properties
+    # in minifi.properties
 
-    enable tls
+    # enable tls
     nifi.remote.input.secure=true
 
     if you want to enable client certificate base authorization
@@ -94,6 +171,24 @@ based on the CRON periods. Apache NiFi MiNiFi C++ supports standard CRON express
 
     if you do not want to enable client certificate base authorization
     nifi.security.need.ClientAuth=false
+
+It can also be configured to use the system certificate store.
+
+    # in minifi.properties
+    nifi.security.use.system.cert.store=true
+
+Windows specific certificate options with the following default values:
+
+    # in minifi.properties
+    nifi.security.windows.cert.store.location=LocalMachine
+    nifi.security.windows.server.cert.store=ROOT
+    nifi.security.windows.client.cert.store=MY
+
+    # The CN that the client certificate is required to match; default: use the first available client certificate in the store
+    # nifi.security.windows.client.cert.cn=
+
+    # Comma-separated list of enhanced key usage values that the client certificate is required to have
+    nifi.security.windows.client.cert.key.usage=Client Authentication
 
 You have the option of specifying an SSL Context Service definition for the RPGs instead of the properties above.
 This will link to a corresponding SSL Context service defined in the flow.
@@ -130,6 +225,14 @@ for TCP and secure HTTPS communications.
           Passphrase: <passphrase path or passphrase>
           CA Certificate: <CA cert path>
 
+If the SSL certificates are not provided with an absolute path or cannot be found on the given relative path, MiNiFi will try to find them on the default path provided in the configuration file.
+
+    in minifi.properties
+
+    # default minifi resource path
+    nifi.default.directory=/path/to/cert/files/
+
+
 ### HTTP SiteToSite Configuration
 To enable HTTPSiteToSite for a remote process group.
     Remote Processing Groups:
@@ -149,6 +252,40 @@ To enable HTTP Proxy for a remote process group.
 
 ### Command and Control Configuration
 Please see the [C2 readme](C2.md) for more informatoin
+
+### State Storage
+
+State storage is used for keeping the state of stateful processors like TailFile. This is done using RocksDB database, but can be configured to use a different state storage with custom options.
+
+The default location of the RocksDB local state storage is the `corecomponentstate` directory under the MiNiFi root directory. This can be reconfigured if other directory is preferred.
+
+    # in minifi.properties
+    nifi.state.storage.local.path=/var/tmp/minifi-state/
+
+To have a custom state storage one option is to configure it in the flow configuration file and set the created controller in the minifi.properties file.
+
+    # in config.yml
+    Controller Services:
+    - name: testcontroller
+      id: 2438e3c8-015a-1000-79ca-83af40ec1994
+      class: PersistentMapStateStorage
+      Properties:
+        Auto Persistence Interval:
+            - value: 0 sec
+        Always Persist:
+            - value: true
+        File:
+            - value: state.txt
+
+    # in minifi.properties
+    nifi.state.storage.local=2438e3c8-015a-1000-79ca-83af40ec1994
+
+Another option to define a state storage is to use the following properties in the minifi.properties file.
+
+    # in minifi.properties
+    nifi.state.storage.local.class.name=PersistentMapStateStorage
+    nifi.state.storage.local.always.persist=true
+    nifi.state.storage.local.auto.persistence.interval=0 sec
 
 
 ### Configuring Repository storage locations
@@ -171,7 +308,6 @@ If content repository or flow file repository is set to use the rocksdb database
      nifi.flowfile.repository.rocksdb.compression=zlib
      nifi.content.repository.rocksdb.compression=auto
 
-
 ### Configuring compaction for rocksdb database
 
 Rocksdb has an option to run compaction at specific intervals not just when needed.
@@ -192,7 +328,7 @@ separate "subdatabase" is created under the name `"flowfile"`.
     in minifi.properties
     nifi.flowfile.repository.directory.default=minifidb://${MINIFI_HOME}/agent_state/flowfile
     nifi.database.content.repository.directory.default=minifidb://${MINIFI_HOME}/agent_state/content
-    nifi.state.management.provider.local.path=minifidb://${MINIFI_HOME}/agent_state/processor_states
+    nifi.state.storage.local.path=minifidb://${MINIFI_HOME}/agent_state/processor_states
 
 We should not simultaneously use the same directory with and without the `minifidb://` scheme.
 Moreover the `"default"` name is restricted and should not be used.
@@ -202,7 +338,7 @@ Moreover the `"default"` name is restricted and should not be used.
     nifi.flowfile.repository.directory.default=minifidb://${MINIFI_HOME}/agent_state/flowfile
     nifi.database.content.repository.directory.default=${MINIFI_HOME}/agent_state
     ^ error: using the same database directory without the "minifidb://" scheme
-    nifi.state.management.provider.local.path=minifidb://${MINIFI_HOME}/agent_state/default
+    nifi.state.storage.local.path=minifidb://${MINIFI_HOME}/agent_state/default
     ^ error: "default" is restricted
 
 ### Configuring Repository encryption
@@ -264,6 +400,14 @@ Each of the repositories can be configured to be volatile ( state kept in memory
  Systems that have limited memory must be cognizant of the options above. Limiting the max count for the number of entries limits memory consumption but also limits the number of events that can be stored. If you are limiting the amount of volatile content you are configuring, you may have excessive session rollback due to invalid stream errors that occur when a claim cannot be found.
 
  The content repository has a default option for "minimal.locking" set to true. This will attempt to use lock free structures. This may or may not be optimal as this requires additional additional searching of the underlying vector. This may be optimal for cases where max.count is not excessively high. In cases where object permanence is low within the repositories, minimal locking will result in better performance. If there are many processors and/or timing is such that the content repository fills up quickly, performance may be reduced. In all cases a locking cache is used to avoid the worst case complexity of O(n) for the content repository; however, this caching is more heavily used when "minimal.locking" is set to false.
+
+### Configuring provenance repository storage
+
+Provenance repository size buffer size and TTL can be configured when used with RocksDB. If not set it uses the available maximum RocksDB values.
+
+    #in minifi.properties
+    nifi.provenance.repository.max.storage.size=16 MB
+    nifi.provenance.repository.max.storage.time=30 days
 
 ### Provenance Reporter
 
@@ -390,6 +534,16 @@ The MQTTController Service can be configured for MQTT connectivity and provide t
          Network Controllers: en2,en3
          Max Throughput: 1,024,1024
          Max Payload: 1,024,1024
+
+### Disk space watchdog #
+
+Stops MiNiFi FlowController activity (excluding C2), when the available disk space on either of the repository volumes go below stop.threshold, checked every interval, then restarts when the available space on all repository volumes reach at least restart.threshold.
+
+    # in minifi.properties
+    minifi.disk.space.watchdog.enable=true
+    minifi.disk.space.watchdog.interval=15 sec
+    minifi.disk.space.watchdog.stop.threshold=100 MB
+    minifi.disk.space.watchdog.restart.threshold=150 MB
 
 ### Extension configuration
 To notify the agent which extensions it should load see [Loading extensions](Extensions.md#Loading extensions).
