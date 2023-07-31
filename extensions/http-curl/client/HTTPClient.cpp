@@ -125,7 +125,11 @@ void HTTPClient::initialize(std::string method, std::string url, std::shared_ptr
 }
 
 void HTTPClient::setPeerVerification(bool peer_verification) {
-  logger_->log_debug("%s peer verification", peer_verification ? "Enabling" : "Disabling");
+  if (peer_verification) {
+    logger_->log_debug("Enabling peer verification");
+  } else {
+    logger_->log_warn("Disabling peer verification: the authenticity of https servers will not be verified!");
+  }
   curl_easy_setopt(http_session_.get(), CURLOPT_SSL_VERIFYPEER, peer_verification);
 }
 
