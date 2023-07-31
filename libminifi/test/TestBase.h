@@ -246,12 +246,10 @@ class TestPlan {
   void scheduleProcessor(const std::shared_ptr<minifi::core::Processor>& processor);
   void scheduleProcessors();
 
-  // Note: all this verify logic is only used in TensorFlow tests as a replacement for UpdateAttribute
-  // It should probably not be the part of the standard way of running processors
   bool runProcessor(const std::shared_ptr<minifi::core::Processor>& processor, const PreTriggerVerifier& verify = nullptr);
   bool runProcessor(size_t target_location, const PreTriggerVerifier& verify = nullptr);
   bool runNextProcessor(const PreTriggerVerifier& verify = nullptr);
-  bool runCurrentProcessor(const PreTriggerVerifier& verify = nullptr);
+  bool runCurrentProcessor();
   bool runCurrentProcessorUntilFlowfileIsProduced(std::chrono::milliseconds wait_duration);
 
   std::set<std::shared_ptr<minifi::provenance::ProvenanceEventRecord>> getProvenanceRecords();
@@ -359,8 +357,7 @@ class TestController {
 
   static void runSession(const std::shared_ptr<TestPlan> &plan,
                   bool runToCompletion = true,
-                  const std::function<void(const std::shared_ptr<minifi::core::ProcessContext>&,
-                  const std::shared_ptr<minifi::core::ProcessSession>&)>& verify = nullptr) {
+                  const TestPlan::PreTriggerVerifier& verify = nullptr) {
     while (plan->runNextProcessor(verify) && runToCompletion) {
     }
   }

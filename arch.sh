@@ -76,8 +76,6 @@ build_deps(){
                         INSTALLED+=("gpsd")
                     elif [ "$FOUND_VALUE" = "libarchive" ]; then
                         INSTALLED+=("libarchive")
-                    elif [ "$FOUND_VALUE" = "tensorflow" ]; then
-                        INSTALLED+=("tensorflow")
                     elif [ "$FOUND_VALUE" = "boost" ]; then
                         INSTALLED+=("boost")
                     elif [ "$FOUND_VALUE" = "opensslbuild" ]; then
