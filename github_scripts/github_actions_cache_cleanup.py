@@ -73,7 +73,7 @@ class GithubActionsCacheCleaner:
 
     def _is_pr_already_closed(self, entry, open_tickets):
         match = re.search(r'refs/pull/([\d]+)/merge', entry.key)
-        return match and match[1] not in open_tickets
+        return match and int(match[1]) not in open_tickets
 
     def _remove_non_latest_branch_caches(self, entry: CacheEntry, latest_branch_cache_map: Dict[str, CacheEntry], removable_entries: List[str]):
         cache_mapping_key = "-".join(entry.key.split("-")[0:-1])
