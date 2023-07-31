@@ -27,7 +27,6 @@
 #include <utility>
 #include <vector>
 #include <chrono>
-#include <atomic>
 
 #include "core/PropertyDefinition.h"
 #include "core/PropertyDefinitionBuilder.h"

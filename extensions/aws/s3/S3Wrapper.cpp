@@ -371,28 +371,14 @@ std::optional<HeadObjectResult> S3Wrapper::headObject(const HeadObjectRequestPar
 
 template<typename ListRequest>
 ListRequest S3Wrapper::createListRequest(const ListRequestParameters& params) {
-<<<<<<< HEAD
-  ListRequest request;
-<<<<<<< HEAD
-  request.SetBucket(params.bucket);
+  auto request = ListRequest{}.WithBucket(params.bucket);
   if (!params.delimiter.empty()) {
     request.SetDelimiter(params.delimiter);
   }
   if (!params.prefix.empty()) {
     request.SetPrefix(params.prefix);
   }
-=======
-  request.WithBucket(params.bucket)
-    .WithDelimiter(params.delimiter)
-    .WithPrefix(params.prefix);
->>>>>>> 646190315 (Refactor S3 changes)
   return request;
-=======
-  return ListRequest{}
-    .WithBucket(params.bucket)
-    .WithDelimiter(params.delimiter)
-    .WithPrefix(params.prefix);
->>>>>>> c777a50c2 (Review update)
 }
 
 template<typename FetchObjectRequest>
