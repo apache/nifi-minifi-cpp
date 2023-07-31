@@ -504,16 +504,16 @@ void SSLContextService::onEnable() {
   client_cert_key_usage_ = utils::tls::ExtendedKeyUsage{client_cert_key_usage};
 #endif  // WIN32
 
+  logger_->log_debug("Using certificate file \"%s\"", certificate_.string());
+  logger_->log_debug("Using private key file \"%s\"", private_key_.string());
+  logger_->log_debug("Using CA certificate file \"%s\"", ca_certificate_.string());
+  logger_->log_debug("Using the system cert store: %s", use_system_cert_store_ ? "yes" : "no");
+
   verifyCertificateExpiration();
 }
 
 void SSLContextService::initializeProperties() {
   setSupportedProperties(Properties);
-
-  logger_->log_debug("Using certificate file \"%s\"", certificate_.string());
-  logger_->log_debug("Using private key file \"%s\"", private_key_.string());
-  logger_->log_debug("Using CA certificate file \"%s\"", ca_certificate_.string());
-  logger_->log_debug("Using the system cert store: %s", use_system_cert_store_ ? "yes" : "no");
 }
 
 void SSLContextService::verifyCertificateExpiration() {
