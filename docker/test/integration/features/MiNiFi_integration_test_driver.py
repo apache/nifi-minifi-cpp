@@ -78,7 +78,7 @@ class MiNiFi_integration_test:
                                OpenSSL.crypto.dump_certificate(type=OpenSSL.crypto.FILETYPE_PEM,
                                                                cert=minifi_server_cert)
                                + OpenSSL.crypto.dump_privatekey(type=OpenSSL.crypto.FILETYPE_PEM,
-                                                              pkey=minifi_server_key))
+                                                                pkey=minifi_server_key))
         self.put_test_resource('self_signed_server.crt',
                                OpenSSL.crypto.dump_certificate(type=OpenSSL.crypto.FILETYPE_PEM,
                                                                cert=self_signed_server_cert)
