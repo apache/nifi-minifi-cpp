@@ -16,9 +16,13 @@
 # under the License.
 
 function(use_bundled_libazure SOURCE_DIR BINARY_DIR)
-    set(PATCH_FILE "${SOURCE_DIR}/thirdparty/azure-sdk-cpp/remove-amqp.patch")
+    set(PATCH_FILE1 "${SOURCE_DIR}/thirdparty/azure-sdk-cpp/remove-amqp.patch")
+    set(PATCH_FILE2 "${SOURCE_DIR}/thirdparty/azure-sdk-cpp/gcc13.patch")
     set(PC ${Bash_EXECUTABLE} -c "set -x && \
             (\"${Patch_EXECUTABLE}\" -p1 -N -i \"${PATCH_FILE}\")")
+    set(PC ${Bash_EXECUTABLE} -c "set -x &&\
+            (\"${Patch_EXECUTABLE}\" -p1 -N -i \"${PATCH_FILE1}\") &&\
+            (\"${Patch_EXECUTABLE}\" -p1 -N -i \"${PATCH_FILE2}\") ")
     # Define byproducts
     set(INSTALL_DIR "${BINARY_DIR}/thirdparty/azure-sdk-cpp-install")
     if (WIN32)

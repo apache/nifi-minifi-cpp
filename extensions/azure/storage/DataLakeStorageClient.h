@@ -28,7 +28,7 @@
 
 #include "utils/gsl.h"
 #include "io/InputStream.h"
-#include "azure/storage/files/datalake/protocol/datalake_rest_client.hpp"
+#include "azure/storage/files/datalake/datalake_responses.hpp"
 #include "utils/Enum.h"
 #include "utils/RegexUtils.h"
 
