@@ -6,9 +6,128 @@ env:
     -DENABLE_ELASTICSEARCH=OFF -DDOCKER_BUILD_ONLY=ON
   SCCACHE_GHA_ENABLE: true
 jobs:
-  ubuntu_22_04:
-    name: "ubuntu-22.04-gcc-13"
-    runs-on: ubuntu-22.04
+  macos_xcode:
+    name: "macos-xcode"
+    runs-on: macos-12
+    timeout-minutes: 180
+    env:
+      CCACHE_BASEDIR: ${{ GITHUB.WORKSPACE }}
+      CCACHE_DIR: ${{ GITHUB.WORKSPACE }}/.ccache
+    steps:
+      - id: checkout
+        uses: actions/checkout@v3
+      - name: cache restore
+        uses: actions/cache/restore@v3
+        with:
+          path: ${{ env.CCACHE_DIR }}
+          key: macos-xcode-ccache-${{github.ref}}-${{github.sha}}
+          restore-keys: |
+            macos-xcode-ccache-${{github.ref}}-
+            macos-xcode-ccache-refs/heads/main-
+      - id: install_dependencies
+        run: |
+          # Skip brew update until https://github.com/actions/setup-python/issues/577 is fixed
+          # brew update
+          HOMEBREW_NO_AUTO_UPDATE=1 brew install ossp-uuid flex lua ccache sqliteodbc automake autoconf
+      - id: setup_env
+        name: setup enviroment
+        run: |
+          echo "PATH=/usr/lib/ccache:/usr/local/opt/ccache/bin:/usr/local/opt/ccache/libexec:$PATH" >> $GITHUB_ENV
+          echo -e "127.0.0.1\t$HOSTNAME" | sudo tee -a /etc/hosts > /dev/null
+          # https://github.com/actions/virtual-environments/blob/main/images/macos/macos-12-Readme.md#xcode
+          sudo xcode-select -switch /Applications/Xcode_14.0.1.app
+      - name: build
+        run: |
+          export PATH="/usr/local/opt/flex/bin:$PATH"
+          export LDFLAGS="-L/usr/local/opt/flex/lib"
+          export CPPFLAGS="-I/usr/local/opt/flex/include"
+          # CPPFLAGS are not recognized by cmake, so we have to force them to CFLAGS and CXXFLAGS to have flex 2.6 working
+          ./bootstrap.sh -e -t && cd build  && cmake -DCMAKE_BUILD_TYPE=Release -DCI_BUILD=ON -DCMAKE_C_FLAGS="${CPPFLAGS} ${CFLAGS}" -DCMAKE_CXX_FLAGS="${CPPFLAGS} ${CXXFLAGS}" -DENABLE_PYTHON_SCRIPTING=ON -DENABLE_LUA_SCRIPTING=ON -DENABLE_SQL=ON -DUSE_REAL_ODBC_TEST_DRIVER=ON -DENABLE_AZURE=ON -DENABLE_GCP=ON -DCMAKE_VERBOSE_MAKEFILE=ON -DCMAKE_RULE_MESSAGES=OFF -DSTRICT_GSL_CHECKS=AUDIT -DFAIL_ON_WARNINGS=ON .. && cmake --build . --parallel 4
+      - name: cache save
+        uses: actions/cache/save@v3
+        if: always()
+        with:
+          path: ${{ env.CCACHE_DIR }}
+          key: macos-xcode-ccache-${{github.ref}}-${{github.sha}}
+      - name: test
+        id: test
+        run: |
+          # Set core file size limit to 1GiB
+          ulimit -c 1048576
+          cd build && make test ARGS="--timeout 300 -j4 --output-on-failure"
+      - name: linter
+        run: cd build && make -j4 linter
+      - name: check-cores
+        if: ${{ failure() && steps.test.conclusion == 'failure' }}
+        run: |
+          if [ "$(ls -A /cores)" ]; then echo "CORES_EXIST=true" >> $GITHUB_ENV; fi
+      - uses: actions/upload-artifact@v3.1.2
+        if: ${{ failure() && env.CORES_EXIST == 'true' }}
+        with:
+          name: macos-coredumps
+          path: /cores
+      - uses: actions/upload-artifact@v3.1.2
+        if: ${{ failure() && env.CORES_EXIST == 'true' }}
+        with:
+          name: macos-binaries
+          path: build/bin
+  windows_VS2019:
+    name: "windows-2019"
+    runs-on: windows-2019
+    timeout-minutes: 180
+    steps:
+      - name: Support longpaths
+        run: git config --system core.longpaths true
+      - id: checkout
+        uses: actions/checkout@v3
+      - name: sccache cache restore
+        uses: actions/cache/restore@v3
+        with:
+          path: ~/AppData/Local/Mozilla/sccache/cache
+          key: ${{ runner.os }}-sccache-${{ github.ref }}-${{ github.sha }}
+          restore-keys: |
+            ${{ runner.os }}-sccache-${{ github.ref }}
+            ${{ runner.os }}-sccache-refs/heads/main
+            ${{ runner.os }}-sccache
+      - name: Run sccache-cache
+        uses: mozilla-actions/sccache-action@v0.0.3
+      - name: Install ninja-build tool
+        uses: seanmiddleditch/gha-setup-ninja@v3
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.11'
+      - name: Set up Lua
+        uses: xpol/setup-lua@v0.3
+      - name: Set up NASM for OpenSSL
+        uses: ilammy/setup-nasm@v1
+      - id: install-sqliteodbc-driver
+        run: |
+          Invoke-WebRequest -Uri "http://www.ch-werner.de/sqliteodbc/sqliteodbc_w64.exe" -OutFile "sqliteodbc_w64.exe"
+          if ((Get-FileHash 'sqliteodbc_w64.exe').Hash -ne "bd93e8450bcbd4ae16894e06ecb1b8572d6a01448df5b8dd2964eb6d3d302db7") {Write "Hash mismatch"; Exit 1}
+          ./sqliteodbc_w64.exe /S
+        shell: powershell
+      - name: build
+        run: |
+          for /f "usebackq delims=" %%i in (`vswhere.exe -latest -property installationPath`) do if exist "%%i\Common7\Tools\vsdevcmd.bat" call "%%i\Common7\Tools\vsdevcmd.bat" -arch=x64 -host_arch=x64
+          win_build_vs.bat ..\b /64 /CI /S /A /PDH /SPLUNK /GCP /ELASTIC /K /L /R /Z /N /RO /PR /PYTHON_SCRIPTING /LUA_SCRIPTING /MQTT /SCCACHE /NINJA
+          sccache --show-stats
+        shell: cmd
+      - name: sccache cache save
+        uses: actions/cache/save@v3
+        if: always()
+        with:
+          path: ~/AppData/Local/Mozilla/sccache/cache
+          key: ${{ runner.os }}-sccache-${{ github.ref }}-${{ github.sha }}
+      - name: test
+        run: cd ..\b && ctest --timeout 300 --parallel %NUMBER_OF_PROCESSORS% -C Release --output-on-failure
+        shell: cmd
+      - name: linter
+        run: cd ..\b && cmake --build . --target linter --config Release -j 8
+        shell: cmd
+  ubuntu_20_04:
+    name: "ubuntu-20.04"
+    runs-on: ubuntu-20.04
     timeout-minutes: 120
     steps:
       - id: checkout
@@ -24,22 +143,18 @@ jobs:
       - id: install_deps
         run: |
           sudo apt update
-          sudo apt install -y ccache libfl-dev libpcap-dev libboost-all-dev openjdk-8-jdk maven libusb-1.0-0-dev libpng-dev libgps-dev libsqliteodbc lua5.3 liblua5.3-dev flake8 parallel
+          sudo apt install -y ccache libfl-dev libboost-all-dev libpcap-dev
           echo "PATH=/usr/lib/ccache:$PATH" >> $GITHUB_ENV
           echo -e "127.0.0.1\t$HOSTNAME" | sudo tee -a /etc/hosts > /dev/null
       - name: build
         run: |
-          eval "$(/home/linuxbrew/.linuxbrew/bin/brew shellenv)"
-          brew install gcc@13
-          export CC=gcc-13
-          export CXX=g++-13
-          g++-13 --version
+          export CC=gcc-11
+          export CXX=g++-11
           ./bootstrap.sh -e -t
           cd build
-          cmake -DUSE_SHARED_LIBS=ON -DCMAKE_BUILD_TYPE=Release -DCI_BUILD=ON -DSTRICT_GSL_CHECKS=AUDIT -DFAIL_ON_WARNINGS=ON -DENABLE_AWS=ON -DENABLE_AZURE=ON -DENABLE_BUSTACHE=ON -DENABLE_COAP=ON \
-              -DENABLE_ENCRYPT_CONFIG=ON -DENABLE_GPS=ON -DENABLE_LIBRDKAFKA=ON -DENABLE_MQTT=ON -DENABLE_NANOFI=ON -DENABLE_OPC=ON -DENABLE_OPENCV=ON -DENABLE_JNI=ON \
-              -DENABLE_OPENWSMAN=ON -DENABLE_OPS=ON -DENABLE_PCAP=ON -DENABLE_SENSORS=ON -DENABLE_SFTP=ON -DENABLE_SQL=ON -DENABLE_SYSTEMD=ON -DENABLE_TENSORFLOW=OFF \
-              -DENABLE_USB_CAMERA=ON -DENABLE_PYTHON_SCRIPTING=ON -DENABLE_LUA_SCRIPTING=ON -DENABLE_KUBERNETES=ON -DENABLE_GCP=ON -DENABLE_PROCFS=ON -DENABLE_PROMETHEUS=ON -DENABLE_ELASTICSEARCH=ON ..
+          cmake -DUSE_SHARED_LIBS=ON -DCMAKE_BUILD_TYPE=Release -DCI_BUILD=ON -DSTRICT_GSL_CHECKS=AUDIT -DFAIL_ON_WARNINGS=ON -DENABLE_SQL=OFF -DENABLE_LIBRDKAFKA=OFF -DENABLE_AWS=OFF \
+              -DENABLE_AZURE=OFF -DENABLE_SPLUNK=OFF -DENABLE_GCP=OFF -DENABLE_PROCFS=OFF -DENABLE_BUSTACHE=ON -DENABLE_PCAP=ON -DENABLE_JNI=ON -DENABLE_SFTP=ON  \
+              -DENABLE_LUA_SCRIPTING=OFF -DENABLE_PYTHON_SCRIPTING=OFF -DENABLE_MQTT=OFF -DENABLE_ELASTICSEARCH=OFF -DENABLE_KUBERNETES=OFF -DENABLE_OPC=OFF ..
           make -j$(nproc) VERBOSE=1
       - name: cache save
         uses: actions/cache/save@v3
