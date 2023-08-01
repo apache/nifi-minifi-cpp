@@ -76,6 +76,9 @@ size_t InputStream::read(std::string &str, bool widen) {
     const auto read_return = read(buffer);
     if (io::isError(read_return))
       return read_return;
+    if (read_return == 0) {
+      return STREAM_ERROR;
+    }
     bytes_to_read -= read_return;
     str.append(std::string(reinterpret_cast<const char*>(buffer.data()), read_return));
   }
