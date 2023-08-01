@@ -249,7 +249,7 @@ class FlowFileResponder : public ServerAwareHandler {
         }
         flow->attributes[name] = value;
       }
-      uint64_t length;
+      uint64_t length{};
       {
         const auto read = stream.read(length);
         if (!isServerRunning()) return false;
