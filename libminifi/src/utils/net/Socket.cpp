@@ -17,6 +17,9 @@
 #include "utils/net/Socket.h"
 
 #ifdef WIN32
+#ifndef WIN32_LEAN_AND_MEAN
+#define WIN32_LEAN_AND_MEAN
+#endif /* WIN32_LEAN_AND_MEAN */
 #include <ws2tcpip.h>
 #else
 #include <arpa/inet.h>
@@ -25,6 +28,8 @@
 #include "Exception.h"
 
 namespace org::apache::nifi::minifi::utils::net {
+
+namespace {
 std::error_code get_last_socket_error() {
 #ifdef WIN32
   const auto error_code = WSAGetLastError();
@@ -33,6 +38,7 @@ std::error_code get_last_socket_error() {
 #endif /* WIN32 */
   return {error_code, std::system_category()};
 }
+}  // namespace
 
 std::string sockaddr_ntop(const sockaddr* const sa) {
   std::string result;

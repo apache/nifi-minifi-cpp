@@ -16,14 +16,7 @@
  */
 #include "utils/net/DNS.h"
 
-#ifdef WIN32
-#ifndef WIN32_LEAN_AND_MEAN
-#define WIN32_LEAN_AND_MEAN
-#endif
-#include <winsock2.h>
-#include <ws2tcpip.h>
-#else
-#include <netdb.h>
+#ifndef WIN32
 #include <cstring>
 #endif /* WIN32 */
 

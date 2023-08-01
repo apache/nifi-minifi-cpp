@@ -22,10 +22,7 @@
 #include <system_error>
 
 #include "nonstd/expected.hpp"
-#include "IpProtocol.h"
 #include "asio/ip/address.hpp"
-
-struct addrinfo;
 
 namespace org::apache::nifi::minifi::utils::net {
 

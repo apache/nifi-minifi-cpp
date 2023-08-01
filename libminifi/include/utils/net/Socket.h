@@ -23,15 +23,10 @@
 #endif /* WIN32_LEAN_AND_MEAN */
 #include <WinSock2.h>
 #else
-#include <netdb.h>
+#include <sys/socket.h>
 #endif /* WIN32 */
 
 namespace org::apache::nifi::minifi::utils::net {
-
-/**
- * Return the last socket error code, based on errno on posix and WSAGetLastError() on windows.
- */
-std::error_code get_last_socket_error();
 
 std::string sockaddr_ntop(const sockaddr* sa);
 
