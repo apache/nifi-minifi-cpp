@@ -66,7 +66,8 @@ asio::ssl::context setupSslContext(SslServerOptions& ssl_data) {
   ssl_context.set_password_callback([key_pw = ssl_data.cert_data.key_pw](std::size_t&, asio::ssl::context_base::password_purpose&) { return key_pw; });
   ssl_context.use_certificate_file(ssl_data.cert_data.cert_loc.string(), asio::ssl::context::pem);
   ssl_context.use_private_key_file(ssl_data.cert_data.key_loc.string(), asio::ssl::context::pem);
-  ssl_context.load_verify_file(ssl_data.cert_data.ca_loc.string());
+  if (!ssl_data.cert_data.ca_loc.empty())
+    ssl_context.load_verify_file(ssl_data.cert_data.ca_loc.string());
   if (ssl_data.client_auth_option == ClientAuthOption::REQUIRED) {
     ssl_context.set_verify_mode(asio::ssl::verify_peer|asio::ssl::verify_fail_if_no_peer_cert);
   } else if (ssl_data.client_auth_option == ClientAuthOption::WANT) {
