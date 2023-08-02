@@ -18,7 +18,7 @@
 function(use_openssl SOURCE_DIR BINARY_DIR)
     message("Using bundled OpenSSL")
 
-    if(APPLE OR WIN32 OR CMAKE_SIZEOF_VOID_P EQUAL 4)
+    if(APPLE OR WIN32 OR CMAKE_SIZEOF_VOID_P EQUAL 4 OR CMAKE_SYSTEM_PROCESSOR MATCHES "(arm64)|(ARM64)|(aarch64)|(armv8)")
         set(LIBDIR "lib")
     else()
         set(LIBDIR "lib64")
