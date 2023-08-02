@@ -88,7 +88,7 @@ class DockerTestDirectoryBindings:
         vols[self.data_directories[feature_id]["input_dir"]] = {"bind": "/tmp/input", "mode": "rw"}
         vols[self.data_directories[feature_id]["output_dir"]] = {"bind": "/tmp/output", "mode": "rw"}
         vols[self.data_directories[feature_id]["resources_dir"]] = {"bind": "/tmp/resources", "mode": "rw"}
-        vols[self.data_directories[feature_id]["system_certs_dir"]] = {"bind": "/etc/ssl/certs", "mode": "rw"}
+        vols[self.data_directories[feature_id]["system_certs_dir"]] = {"bind": "/usr/local/share/certs", "mode": "rw"}
         vols[self.data_directories[feature_id]["minifi_config_dir"]] = {"bind": "/tmp/minifi_config", "mode": "rw"}
         vols[self.data_directories[feature_id]["nifi_config_dir"]] = {"bind": "/tmp/nifi_config", "mode": "rw"}
         vols[self.data_directories[feature_id]["kubernetes_config_dir"]] = {"bind": "/tmp/kubernetes_config", "mode": "rw"}

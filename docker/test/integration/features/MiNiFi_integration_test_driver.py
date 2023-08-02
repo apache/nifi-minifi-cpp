@@ -65,7 +65,7 @@ class MiNiFi_integration_test:
         self.put_test_resource('root_ca.crt',
                                OpenSSL.crypto.dump_certificate(type=OpenSSL.crypto.FILETYPE_PEM,
                                                                cert=self.root_ca_cert))
-        self.put_test_resource("system_certs_dir/ca-certificates.crt",
+        self.put_test_resource("system_certs_dir/ca-root-nss.crt",
                                OpenSSL.crypto.dump_certificate(type=OpenSSL.crypto.FILETYPE_PEM,
                                                                cert=self.root_ca_cert))
         self.put_test_resource('minifi_client.crt',

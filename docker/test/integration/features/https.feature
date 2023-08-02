@@ -83,7 +83,7 @@ Feature: Transfer data from and to MiNiFi using HTTPS
 
     And a ListenHTTP processor with the "Listening Port" property set to "4430" in a "server" flow
     And the "SSL Certificate" property of the ListenHTTP processor is set to "/tmp/resources/minifi_server.crt"
-    And the "SSL Certificate Authority" property of the ListenHTTP processor is set to "/etc/ssl/certs/ca-certificates.crt"
+    And the "SSL Certificate Authority" property of the ListenHTTP processor is set to "/usr/local/share/certs/ca-root-nss.crt"
     And the "SSL Verify Peer" property of the ListenHTTP processor is set to "yes"
     And a PutFile processor with the "Directory" property set to "/tmp/output" in the "server" flow
     And the "success" relationship of the ListenHTTP processor is connected to the PutFile
@@ -121,7 +121,7 @@ Feature: Transfer data from and to MiNiFi using HTTPS
 
     And a ListenHTTP processor with the "Listening Port" property set to "4430" in a "server" flow
     And the "SSL Certificate" property of the ListenHTTP processor is set to "/tmp/resources/minifi_server.crt"
-    And the "SSL Certificate Authority" property of the ListenHTTP processor is set to "/etc/ssl/certs/ca-certificates.crt"
+    And the "SSL Certificate Authority" property of the ListenHTTP processor is set to "/usr/local/share/certs/ca-root-nss.crt"
     And the "SSL Verify Peer" property of the ListenHTTP processor is set to "yes"
     And a PutFile processor with the "Directory" property set to "/tmp/output" in the "server" flow
     And the "success" relationship of the ListenHTTP processor is connected to the PutFile
@@ -159,7 +159,7 @@ Feature: Transfer data from and to MiNiFi using HTTPS
 
     And a ListenHTTP processor with the "Listening Port" property set to "4430" in a "server" flow
     And the "SSL Certificate" property of the ListenHTTP processor is set to "/tmp/resources/self_signed_server.crt"
-    And the "SSL Certificate Authority" property of the ListenHTTP processor is set to "/etc/ssl/certs/ca-certificates.crt"
+    And the "SSL Certificate Authority" property of the ListenHTTP processor is set to "/usr/local/share/certs/ca-root-nss.crt"
     And the "SSL Verify Peer" property of the ListenHTTP processor is set to "yes"
     And a PutFile processor with the "Directory" property set to "/tmp/output" in the "server" flow
     And the "success" relationship of the ListenHTTP processor is connected to the PutFile
