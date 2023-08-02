@@ -87,9 +87,9 @@ class ProcessSession : public ReferenceContainer {
   // Transfer the FlowFile to the relationship
   virtual void transfer(const std::shared_ptr<core::FlowFile>& flow, const Relationship& relationship);
   // Put Attribute
-  void putAttribute(const std::shared_ptr<core::FlowFile>& flow, const std::string& key, const std::string& value);
+  void putAttribute(const std::shared_ptr<core::FlowFile>& flow, std::string_view key, const std::string& value);
   // Remove Attribute
-  void removeAttribute(const std::shared_ptr<core::FlowFile>& flow, const std::string& key);
+  void removeAttribute(const std::shared_ptr<core::FlowFile>& flow, std::string_view key);
   // Remove Flow File
   void remove(const std::shared_ptr<core::FlowFile> &flow);
   // Access the contents of the flow file as an input stream; returns null if the flow file has no content claim

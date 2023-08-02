@@ -89,7 +89,7 @@ void CompressContent::processFlowFile(const std::shared_ptr<core::FlowFile>& flo
     std::string attr;
     flowFile->getAttribute(core::SpecialFlowAttribute::MIME_TYPE, attr);
     if (attr.empty()) {
-      logger_->log_error("No %s attribute existed for the flow, route to failure", core::SpecialFlowAttribute::MIME_TYPE);
+      logger_->log_error("No %s attribute existed for the flow, route to failure", std::string(core::SpecialFlowAttribute::MIME_TYPE));
       session->transfer(flowFile, Failure);
       return;
     }

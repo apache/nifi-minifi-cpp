@@ -90,7 +90,7 @@ void FetchS3Object::onTrigger(const std::shared_ptr<core::ProcessContext> &conte
   });
 
   if (result) {
-    auto putAttributeIfNotEmpty = [&](const std::string& attribute, const std::string& value) {
+    auto putAttributeIfNotEmpty = [&](std::string_view attribute, const std::string& value) {
       if (!value.empty()) {
         session->putAttribute(flow_file, attribute, value);
       }

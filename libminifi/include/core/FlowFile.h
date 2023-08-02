@@ -15,8 +15,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#ifndef LIBMINIFI_INCLUDE_CORE_FLOWFILE_H_
-#define LIBMINIFI_INCLUDE_CORE_FLOWFILE_H_
+#pragma once
 
 #include <map>
 #include <memory>
@@ -34,11 +33,7 @@
 #include "utils/FlatMap.h"
 #include "utils/Export.h"
 
-namespace org {
-namespace apache {
-namespace nifi {
-namespace minifi {
-namespace core {
+namespace org::apache::nifi::minifi::core {
 
 class Connectable;
 
@@ -125,7 +120,7 @@ class FlowFile : public CoreComponent, public ReferenceContainer {
    * Sets the lineage start date
    * @param date new lineage start date
    */
-  void setLineageStartDate(const std::chrono::system_clock::time_point date);
+  void setLineageStartDate(std::chrono::system_clock::time_point date);
 
   void setLineageIdentifiers(const std::vector<utils::Identifier>& lineage_Identifiers) {
     lineage_Identifiers_ = lineage_Identifiers;
@@ -137,9 +132,9 @@ class FlowFile : public CoreComponent, public ReferenceContainer {
    * @param value value to set
    * @return result of finding key
    */
-  bool getAttribute(const std::string& key, std::string& value) const;
+  bool getAttribute(std::string_view key, std::string& value) const;
 
-  [[nodiscard]] std::optional<std::string> getAttribute(const std::string& key) const;
+  [[nodiscard]] std::optional<std::string> getAttribute(std::string_view key) const;
 
   /**
    * Updates the value in the attribute map that corresponds
@@ -148,14 +143,14 @@ class FlowFile : public CoreComponent, public ReferenceContainer {
    * @param value value to set to attribute name
    * @return result of finding key
    */
-  bool updateAttribute(std::string key, std::string value);
+  bool updateAttribute(std::string_view key, const std::string& value);
 
   /**
    * Removes the attribute
    * @param key attribute name to remove
    * @return result of finding key
    */
-  bool removeAttribute(std::string key);
+  bool removeAttribute(std::string_view key);
 
   /**
    * setAttribute, if attribute already there, update it, else, add it
@@ -184,7 +179,7 @@ class FlowFile : public CoreComponent, public ReferenceContainer {
    * adds an attribute if it does not exist
    *
    */
-  bool addAttribute(const std::string& key, const std::string& value);
+  bool addAttribute(std::string_view key, const std::string& value);
 
   /**
    * Set the size of this record.
@@ -296,36 +291,29 @@ class FlowFile : public CoreComponent, public ReferenceContainer {
 // FlowFile Attribute
 struct SpecialFlowAttribute {
   // The flowfile's path indicates the relative directory to which a FlowFile belongs and does not contain the filename
-  MINIFIAPI static const std::string PATH;
+  MINIFIAPI static constexpr std::string_view PATH = "path";
   // The flowfile's absolute path indicates the absolute directory to which a FlowFile belongs and does not contain the filename
-  MINIFIAPI static const std::string ABSOLUTE_PATH;
+  MINIFIAPI static constexpr std::string_view ABSOLUTE_PATH = "absolute.path";
   // The filename of the FlowFile. The filename should not contain any directory structure.
-  MINIFIAPI static const std::string FILENAME;
+  MINIFIAPI static constexpr std::string_view FILENAME = "filename";
   // A unique UUID assigned to this FlowFile.
-  MINIFIAPI static const std::string UUID;
+  MINIFIAPI static constexpr std::string_view UUID = "uuid";
   // A numeric value indicating the FlowFile priority
-  MINIFIAPI static const std::string priority;
+  MINIFIAPI static constexpr std::string_view priority = "priority";
   // The MIME Type of this FlowFile
-  MINIFIAPI static const std::string MIME_TYPE;
+  MINIFIAPI static constexpr std::string_view MIME_TYPE = "mime.type";
   // Specifies the reason that a FlowFile is being discarded
-  MINIFIAPI static const std::string DISCARD_REASON;
+  MINIFIAPI static constexpr std::string_view DISCARD_REASON = "discard.reason";
   // Indicates an identifier other than the FlowFile's UUID that is known to refer to this FlowFile.
-  MINIFIAPI static const std::string ALTERNATE_IDENTIFIER;
+  MINIFIAPI static constexpr std::string_view ALTERNATE_IDENTIFIER = "alternate.identifier";
   // Flow identifier
-  MINIFIAPI static const std::string FLOW_ID;
+  MINIFIAPI static constexpr std::string_view FLOW_ID = "flow.id";
 
-  static const auto& getSpecialFlowAttributes() {
-    static const std::array<std::string_view, 9> SPECIAL_FLOW_ATTRIBUTES {
-      PATH, ABSOLUTE_PATH, FILENAME, UUID, priority, MIME_TYPE, DISCARD_REASON, ALTERNATE_IDENTIFIER, FLOW_ID
+  static constexpr std::array<std::string_view, 9> getSpecialFlowAttributes() {
+    return {
+        PATH, ABSOLUTE_PATH, FILENAME, UUID, priority, MIME_TYPE, DISCARD_REASON, ALTERNATE_IDENTIFIER, FLOW_ID
     };
-    return SPECIAL_FLOW_ATTRIBUTES;
   }
 };
 
-}  // namespace core
-}  // namespace minifi
-}  // namespace nifi
-}  // namespace apache
-}  // namespace org
-
-#endif  // LIBMINIFI_INCLUDE_CORE_FLOWFILE_H_
+}  // namespace org::apache::nifi::minifi::core

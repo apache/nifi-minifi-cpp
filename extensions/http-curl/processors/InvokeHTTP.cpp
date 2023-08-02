@@ -286,10 +286,10 @@ void InvokeHTTP::onTriggerWithClient(const std::shared_ptr<core::ProcessContext>
 
     int64_t http_code = client.getResponseCode();
     const char* content_type = client.getContentType();
-    flow_file->addAttribute(std::string(STATUS_CODE), std::to_string(http_code));
-    if (!response_headers.empty()) { flow_file->addAttribute(std::string(STATUS_MESSAGE), response_headers.at(0)); }
-    flow_file->addAttribute(std::string(REQUEST_URL), client.getURL());
-    flow_file->addAttribute(std::string(TRANSACTION_ID), transaction_id);
+    flow_file->addAttribute(STATUS_CODE, std::to_string(http_code));
+    if (!response_headers.empty()) { flow_file->addAttribute(STATUS_MESSAGE, response_headers.at(0)); }
+    flow_file->addAttribute(REQUEST_URL, client.getURL());
+    flow_file->addAttribute(TRANSACTION_ID, transaction_id);
 
     bool is_success = ((http_code / 100) == 2);
 
@@ -307,10 +307,10 @@ void InvokeHTTP::onTriggerWithClient(const std::shared_ptr<core::ProcessContext>
         // if content type isn't returned we should return application/octet-stream
         // as per RFC 2046 -- 4.5.1
         response_flow->addAttribute(core::SpecialFlowAttribute::MIME_TYPE, content_type ? std::string(content_type) : DefaultContentType);
-        response_flow->addAttribute(std::string(STATUS_CODE), std::to_string(http_code));
-        if (!response_headers.empty()) { response_flow->addAttribute(std::string(STATUS_MESSAGE), response_headers.at(0)); }
-        response_flow->addAttribute(std::string(REQUEST_URL), client.getURL());
-        response_flow->addAttribute(std::string(TRANSACTION_ID), transaction_id);
+        response_flow->addAttribute(STATUS_CODE, std::to_string(http_code));
+        if (!response_headers.empty()) { response_flow->addAttribute(STATUS_MESSAGE, response_headers.at(0)); }
+        response_flow->addAttribute(REQUEST_URL, client.getURL());
+        response_flow->addAttribute(TRANSACTION_ID, transaction_id);
         io::BufferStream stream(gsl::make_span(response_body).as_span<const std::byte>());
         // need an import from the data stream.
         session->importFrom(stream, response_flow);

@@ -84,8 +84,8 @@ TEST_F(PutGCSObjectTests, MissingBucket) {
   const auto& result = test_controller_.trigger("hello world");
   EXPECT_EQ(0, result.at(PutGCSObject::Success).size());
   ASSERT_EQ(1, result.at(PutGCSObject::Failure).size());
-  EXPECT_EQ(std::nullopt, result.at(PutGCSObject::Failure)[0]->getAttribute(std::string(minifi_gcp::GCS_ERROR_DOMAIN)));
-  EXPECT_EQ(std::nullopt, result.at(PutGCSObject::Failure)[0]->getAttribute(std::string(minifi_gcp::GCS_ERROR_REASON)));
+  EXPECT_EQ(std::nullopt, result.at(PutGCSObject::Failure)[0]->getAttribute(minifi_gcp::GCS_ERROR_DOMAIN));
+  EXPECT_EQ(std::nullopt, result.at(PutGCSObject::Failure)[0]->getAttribute(minifi_gcp::GCS_ERROR_REASON));
   EXPECT_EQ("hello world", test_controller_.plan->getContent(result.at(PutGCSObject::Failure)[0]));
 }
 
@@ -111,8 +111,8 @@ TEST_F(PutGCSObjectTests, ServerGivesTransientErrors) {
   const auto& result = test_controller_.trigger("hello world");
   EXPECT_EQ(0, result.at(PutGCSObject::Success).size());
   ASSERT_EQ(1, result.at(PutGCSObject::Failure).size());
-  EXPECT_NE(std::nullopt, result.at(PutGCSObject::Failure)[0]->getAttribute(std::string(minifi_gcp::GCS_ERROR_DOMAIN)));
-  EXPECT_NE(std::nullopt, result.at(PutGCSObject::Failure)[0]->getAttribute(std::string(minifi_gcp::GCS_ERROR_REASON)));
+  EXPECT_NE(std::nullopt, result.at(PutGCSObject::Failure)[0]->getAttribute(minifi_gcp::GCS_ERROR_DOMAIN));
+  EXPECT_NE(std::nullopt, result.at(PutGCSObject::Failure)[0]->getAttribute(minifi_gcp::GCS_ERROR_REASON));
   EXPECT_EQ("hello world", test_controller_.plan->getContent(result.at(PutGCSObject::Failure)[0]));
 }
 
@@ -123,8 +123,8 @@ TEST_F(PutGCSObjectTests, ServerGivesPermaError) {
   const auto& result = test_controller_.trigger("hello world");
   EXPECT_EQ(0, result.at(PutGCSObject::Success).size());
   ASSERT_EQ(1, result.at(PutGCSObject::Failure).size());
-  EXPECT_NE(std::nullopt, result.at(PutGCSObject::Failure)[0]->getAttribute(std::string(minifi_gcp::GCS_ERROR_DOMAIN)));
-  EXPECT_NE(std::nullopt, result.at(PutGCSObject::Failure)[0]->getAttribute(std::string(minifi_gcp::GCS_ERROR_REASON)));
+  EXPECT_NE(std::nullopt, result.at(PutGCSObject::Failure)[0]->getAttribute(minifi_gcp::GCS_ERROR_DOMAIN));
+  EXPECT_NE(std::nullopt, result.at(PutGCSObject::Failure)[0]->getAttribute(minifi_gcp::GCS_ERROR_REASON));
   EXPECT_EQ("hello world", test_controller_.plan->getContent(result.at(PutGCSObject::Failure)[0]));
 }
 
@@ -193,8 +193,8 @@ TEST_F(PutGCSObjectTests, ValidServerSideEncryptionTest) {
   const auto& result = test_controller_.trigger("hello world");
   ASSERT_EQ(1, result.at(PutGCSObject::Success).size());
   EXPECT_EQ(0, result.at(PutGCSObject::Failure).size());
-  EXPECT_NE(std::nullopt, result.at(PutGCSObject::Success)[0]->getAttribute(std::string(minifi_gcp::GCS_ENCRYPTION_SHA256_ATTR)));
-  EXPECT_NE(std::nullopt, result.at(PutGCSObject::Success)[0]->getAttribute(std::string(minifi_gcp::GCS_ENCRYPTION_ALGORITHM_ATTR)));
+  EXPECT_NE(std::nullopt, result.at(PutGCSObject::Success)[0]->getAttribute(minifi_gcp::GCS_ENCRYPTION_SHA256_ATTR));
+  EXPECT_NE(std::nullopt, result.at(PutGCSObject::Success)[0]->getAttribute(minifi_gcp::GCS_ENCRYPTION_ALGORITHM_ATTR));
   EXPECT_EQ("hello world", test_controller_.plan->getContent(result.at(PutGCSObject::Success)[0]));
 }
 

@@ -102,8 +102,8 @@ void ConsumeMQTT::onTriggerImpl(const std::shared_ptr<core::ProcessContext>& /*c
       session->remove(flow_file);
     } else {
       putUserPropertiesAsAttributes(message, flow_file, session);
-      session->putAttribute(flow_file, std::string(BrokerOutputAttribute.name), uri_);
-      session->putAttribute(flow_file, std::string(TopicOutputAttribute.name), message.topic);
+      session->putAttribute(flow_file, BrokerOutputAttribute.name, uri_);
+      session->putAttribute(flow_file, TopicOutputAttribute.name, message.topic);
       fillAttributeFromContentType(message, flow_file, session);
       logger_->log_debug("ConsumeMQTT processing success for the flow with UUID %s topic %s", flow_file->getUUIDStr(), message.topic);
       session->transfer(flow_file, Success);

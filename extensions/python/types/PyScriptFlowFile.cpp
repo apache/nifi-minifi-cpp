@@ -72,7 +72,7 @@ PyObject* PyScriptFlowFile::getAttribute(PyScriptFlowFile* self, PyObject* args)
   if (!PyArg_ParseTuple(args, "s", &attribute)) {
     throw PyException();
   }
-  return object::returnReference(flow_file->getAttribute(std::string(attribute)).value_or(""));
+  return object::returnReference(flow_file->getAttribute(attribute).value_or(""));
 }
 
 PyObject* PyScriptFlowFile::addAttribute(PyScriptFlowFile* self, PyObject* args) {
@@ -88,7 +88,7 @@ PyObject* PyScriptFlowFile::addAttribute(PyScriptFlowFile* self, PyObject* args)
     throw PyException();
   }
 
-  return object::returnReference(flow_file->addAttribute(std::string(key), std::string(value)));
+  return object::returnReference(flow_file->addAttribute(key, std::string(value)));
 }
 
 PyObject* PyScriptFlowFile::updateAttribute(PyScriptFlowFile* self, PyObject* args) {
@@ -104,7 +104,7 @@ PyObject* PyScriptFlowFile::updateAttribute(PyScriptFlowFile* self, PyObject* ar
     throw PyException();
   }
 
-  return object::returnReference(flow_file->updateAttribute(std::string(key), std::string(value)));
+  return object::returnReference(flow_file->updateAttribute(key, std::string(value)));
 }
 
 PyObject* PyScriptFlowFile::removeAttribute(PyScriptFlowFile* self, PyObject* args) {
@@ -118,7 +118,7 @@ PyObject* PyScriptFlowFile::removeAttribute(PyScriptFlowFile* self, PyObject* ar
   if (!PyArg_ParseTuple(args, "s", &attribute)) {
     throw PyException();
   }
-  return object::returnReference(flow_file->removeAttribute(std::string(attribute)));
+  return object::returnReference(flow_file->removeAttribute(attribute));
 }
 
 PyObject* PyScriptFlowFile::setAttribute(PyScriptFlowFile* self, PyObject* args) {

@@ -23,11 +23,7 @@
 #include <vector>
 #include <utility>
 
-namespace org {
-namespace apache {
-namespace nifi {
-namespace minifi {
-namespace utils {
+namespace org::apache::nifi::minifi::utils {
 
 template<typename K, typename V>
 class FlatMap{
@@ -128,7 +124,7 @@ class FlatMap{
   FlatMap(InputIterator begin, InputIterator end) : data_(begin, end) {}
 
   FlatMap& operator=(const FlatMap& source) = default;
-  FlatMap& operator=(FlatMap&& source) = default;
+  FlatMap& operator=(FlatMap&& source) noexcept = default;
   FlatMap& operator=(std::initializer_list<value_type> items) {
     data_ = items;
     return *this;
@@ -138,7 +134,9 @@ class FlatMap{
     return data_.size();
   }
 
-  V& operator[](const K& key) {
+  template<typename T>
+  requires std::constructible_from<K, T> && std::equality_comparable_with<K, T>
+  V& operator[](const T& key) {
     auto it = find(key);
     if (it != end()) {
       return it->second;
@@ -147,7 +145,8 @@ class FlatMap{
     return data_.rbegin()->second;
   }
 
-  const V& at(const K& key) const {
+  template<std::equality_comparable_with<K> T>
+  const V& at(const T& key) const {
     auto it = find(key);
     if (it != end()) {
       return it->second;
@@ -155,7 +154,8 @@ class FlatMap{
     throw std::out_of_range("utils::FlatMap::at");
   }
 
-  V& at(const K& key) {
+  template<std::equality_comparable_with<K> T>
+  V& at(const T& key) {
     auto it = find(key);
     if (it != end()) {
       return it->second;
@@ -170,7 +170,8 @@ class FlatMap{
     return iterator{data_.begin() + offset};
   }
 
-  std::size_t erase(const K& key) {
+  template<std::equality_comparable_with<K> T>
+  std::size_t erase(const T& key) {
     for (auto it = data_.begin(); it != data_.end(); ++it) {
       if (it->first == key) {
         std::swap(*data_.rbegin(), *it);
@@ -212,14 +213,16 @@ class FlatMap{
     return {iterator{data_.begin() + data_.size() - 1}, true};
   }
 
-  iterator find(const K& key) {
+  template<std::equality_comparable_with<K> T>
+  iterator find(const T& key) {
     for (auto it = data_.begin(); it != data_.end(); ++it) {
       if (it->first == key) return iterator{it};
     }
     return end();
   }
 
-  const_iterator find(const K& key) const {
+  template<std::equality_comparable_with<K> T>
+  const_iterator find(const T& key) const {
     for (auto it = data_.begin(); it != data_.end(); ++it) {
       if (it->first == key) return const_iterator{it};
     }
@@ -258,7 +261,7 @@ class FlatMap{
     // sort the underlying storage
     for (const auto& item : *this) {
       auto it = other.find(item.first);
-      if (it == other.end() || !(it.second == item.second)) {
+      if (it == other.end() || it.second != item.second) {
         return false;
       }
     }
@@ -282,11 +285,12 @@ class FlatMap{
     return data_.max_size();
   }
 
-  bool empty() const noexcept {
+  [[nodiscard]] bool empty() const noexcept {
     return data_.empty();
   }
 
-  bool contains(const K& key) const {
+  template<std::equality_comparable_with<K> T>
+  bool contains(const T& key) const {
     return find(key) != end();
   }
 
@@ -294,8 +298,4 @@ class FlatMap{
   Container data_;
 };
 
-}  // namespace utils
-}  // namespace minifi
-}  // namespace nifi
-}  // namespace apache
-}  // namespace org
+}  // namespace org::apache::nifi::minifi::utils

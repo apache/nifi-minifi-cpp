@@ -202,17 +202,17 @@ void ProcessSession::remove(const std::shared_ptr<core::FlowFile> &flow) {
   provenance_report_->drop(flow, reason);
 }
 
-void ProcessSession::putAttribute(const std::shared_ptr<core::FlowFile>& flow, const std::string& key, const std::string& value) {
+void ProcessSession::putAttribute(const std::shared_ptr<core::FlowFile>& flow, std::string_view key, const std::string& value) {
   flow->setAttribute(key, value);
   std::stringstream details;
   details << process_context_->getProcessorNode()->getName() << " modify flow record " << flow->getUUIDStr() << " attribute " << key << ":" << value;
   provenance_report_->modifyAttributes(flow, details.str());
 }
 
-void ProcessSession::removeAttribute(const std::shared_ptr<core::FlowFile>& flow, const std::string& key) {
+void ProcessSession::removeAttribute(const std::shared_ptr<core::FlowFile>& flow, std::string_view key) {
   flow->removeAttribute(key);
   std::stringstream details;
-  details << process_context_->getProcessorNode()->getName() << " remove flow record " << flow->getUUIDStr() << " attribute " + key;
+  details << process_context_->getProcessorNode()->getName() << " remove flow record " << flow->getUUIDStr() << " attribute " << key;
   provenance_report_->modifyAttributes(flow, details.str());
 }
 
