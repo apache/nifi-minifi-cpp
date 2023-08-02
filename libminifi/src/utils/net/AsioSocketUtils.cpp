@@ -33,7 +33,7 @@ asio::awaitable<std::tuple<std::error_code>> handshake(SslSocket& socket, asio::
 asio::ssl::context getClientSslContext(const controllers::SSLContextService& ssl_context_service) {
   asio::ssl::context ssl_context(asio::ssl::context::tls_client);
   ssl_context.set_options(asio::ssl::context::no_tlsv1 | asio::ssl::context::no_tlsv1_1);
-  if (auto ca_cert = ssl_context_service.getCACertificate(); !ca_cert.empty())
+  if (const auto& ca_cert = ssl_context_service.getCACertificate(); !ca_cert.empty())
     ssl_context.load_verify_file(ssl_context_service.getCACertificate().string());
   ssl_context.set_verify_mode(asio::ssl::verify_peer);
   ssl_context.set_password_callback([password = ssl_context_service.getPassphrase()](std::size_t&, asio::ssl::context_base::password_purpose&) { return password; });
