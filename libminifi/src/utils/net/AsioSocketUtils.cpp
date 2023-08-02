@@ -32,7 +32,7 @@ asio::awaitable<std::tuple<std::error_code>> handshake(SslSocket& socket, asio::
 
 asio::ssl::context getSslContext(const controllers::SSLContextService& ssl_context_service, asio::ssl::context::method ssl_context_method) {
   asio::ssl::context ssl_context(ssl_context_method);
-  ssl_context.set_options(asio::ssl::context::default_workarounds | asio::ssl::context::single_dh_use | asio::ssl::context::no_tlsv1 | asio::ssl::context::no_tlsv1_1);
+  ssl_context.set_options(MINIFI_SSL_OPTIONS);
   if (const auto& ca_cert = ssl_context_service.getCACertificate(); !ca_cert.empty())
     ssl_context.load_verify_file(ssl_context_service.getCACertificate().string());
   ssl_context.set_verify_mode(asio::ssl::verify_peer);

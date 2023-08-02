@@ -72,8 +72,8 @@ class TcpTestServer {
   void enableSSL() {
     const std::filesystem::path executable_dir = minifi::utils::file::FileUtils::get_executable_dir();
 
-    asio::ssl::context ssl_context(asio::ssl::context::tls_server);
-    ssl_context.set_options(asio::ssl::context::default_workarounds | asio::ssl::context::single_dh_use | asio::ssl::context::no_tlsv1 | asio::ssl::context::no_tlsv1_1);
+    asio::ssl::context ssl_context(asio::ssl::context::tlsv12_server);
+    ssl_context.set_options(minifi::utils::net::MINIFI_SSL_OPTIONS);
     ssl_context.set_password_callback([key_pw = "Password12"](std::size_t&, asio::ssl::context_base::password_purpose&) { return key_pw; });
     ssl_context.use_certificate_file((executable_dir / "resources" / "localhost_by_A.pem").string(), asio::ssl::context::pem);
     ssl_context.use_private_key_file((executable_dir / "resources" / "localhost.key").string(), asio::ssl::context::pem);

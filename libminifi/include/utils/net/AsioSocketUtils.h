@@ -36,6 +36,8 @@ using HandshakeType = asio::ssl::stream_base::handshake_type;
 using TcpSocket = asio::ip::tcp::socket;
 using SslSocket = asio::ssl::stream<asio::ip::tcp::socket>;
 
+constexpr auto MINIFI_SSL_OPTIONS = asio::ssl::context::default_workarounds | asio::ssl::context::single_dh_use;
+
 class ConnectionId {
  public:
   ConnectionId(std::string hostname, std::string port) : hostname_(std::move(hostname)), service_(std::move(port)) {}
@@ -60,7 +62,7 @@ template<>
 asio::awaitable<std::tuple<std::error_code>> handshake(SslSocket& socket, asio::steady_timer::duration);
 
 
-asio::ssl::context getSslContext(const controllers::SSLContextService& ssl_context_service, asio::ssl::context::method ssl_context_method = asio::ssl::context::tls_client);
+asio::ssl::context getSslContext(const controllers::SSLContextService& ssl_context_service, asio::ssl::context::method ssl_context_method = asio::ssl::context::tlsv12_client);
 }  // namespace org::apache::nifi::minifi::utils::net
 
 namespace std {
