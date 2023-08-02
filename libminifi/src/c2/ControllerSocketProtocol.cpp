@@ -371,7 +371,7 @@ void ControllerSocketProtocol::handleDescribe(io::BaseStream &stream) {
   }
 }
 
-asio::awaitable<void> ControllerSocketProtocol::handleCommand(std::unique_ptr<io::BaseStream>&& stream) {
+asio::awaitable<void> ControllerSocketProtocol::handleCommand(std::unique_ptr<io::BaseStream> stream) {
   uint8_t head;
   if (stream->read(head) != 1) {
     logger_->log_debug("Connection broke");
