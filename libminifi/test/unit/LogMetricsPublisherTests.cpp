@@ -24,6 +24,7 @@
 #include "core/state/nodes/ResponseNodeLoader.h"
 #include "core/RepositoryFactory.h"
 #include "utils/IntegrationTestUtils.h"
+#include "utils/file/FileUtils.h"
 
 using namespace std::literals::chrono_literals;
 
@@ -40,6 +41,11 @@ class LogPublisherTestFixture {
       publisher_("LogMetricsPublisher") {
     provenance_repo_->initialize(configuration_);
     flow_file_repo_->initialize(configuration_);
+  }
+
+  ~LogPublisherTestFixture() {
+    minifi::utils::file::delete_dir(provenance_repo_->getDirectory());
+    minifi::utils::file::delete_dir(flow_file_repo_->getDirectory());
   }
 
  protected:
