@@ -16,10 +16,6 @@
  */
 #include "utils/net/DNS.h"
 
-#ifndef WIN32
-#include <cstring>
-#endif /* WIN32 */
-
 #include "Exception.h"
 #include "utils/StringUtils.h"
 #include "utils/net/AsioCoro.h"
@@ -63,8 +59,7 @@ nonstd::expected<std::string, std::error_code> reverseDnsLookup(const asio::ip::
 }
 
 std::string getMyHostName() {
-  static const std::string HOSTNAME = asio::ip::host_name();
-  return HOSTNAME;
+  return asio::ip::host_name();
 }
 
 }  // namespace org::apache::nifi::minifi::utils::net
