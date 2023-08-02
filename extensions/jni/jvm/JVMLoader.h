@@ -21,11 +21,13 @@
 #include <memory>
 #include <utility>
 #include <string>
+#include <string_view>
 #include <map>
 #include <vector>
 #include <sstream>
 #include <iterator>
 #include <algorithm>
+
 #include "JavaClass.h"
 #include "JavaServicer.h"
 #include "../JavaException.h"
@@ -250,9 +252,9 @@ class JVMLoader {
    * stack overflow. It's a common field, so the hope is that we can potentially access any class
    * in which the native pointer is stored in nativePtr.
    */
-  static jfieldID getPtrField(const std::string &className, JNIEnv *env, jobject obj) {
+  static jfieldID getPtrField(std::string_view className, JNIEnv *env, jobject obj) {
     static std::string fn = "nativePtr", args = "J", lookup = "nativePtrJ";
-    auto field = getClassMapping().getField(className, lookup);
+    auto field = getClassMapping().getField(std::string(className), lookup);
     if (field != nullptr) {
       return field;
     }
@@ -263,14 +265,14 @@ class JVMLoader {
 
   template<typename T>
   static T *getPtr(JNIEnv *env, jobject obj) {
-    jlong handle = env->GetLongField(obj, getPtrField(minifi::core::getClassName<T>(), env, obj));
+    jlong handle = env->GetLongField(obj, getPtrField(minifi::core::className<T>(), env, obj));
     return reinterpret_cast<T *>(handle);
   }
 
   template<typename T>
   static void setPtr(JNIEnv *env, jobject obj, T *t) {
     jlong handle = reinterpret_cast<jlong>(t);
-    env->SetLongField(obj, getPtrField(minifi::core::getClassName<T>(), env, obj), handle);
+    env->SetLongField(obj, getPtrField(minifi::core::className<T>(), env, obj), handle);
   }
 
   void setBaseServicer(std::shared_ptr<JavaServicer> servicer) {
@@ -285,7 +287,7 @@ class JVMLoader {
   template<typename T>
   static void putClassMapping(JNIEnv *env, JavaClass &clazz, const std::string &fieldStr, const std::string &arg) {
     auto classref = clazz.getReference();
-    auto name = minifi::core::getClassName<T>();
+    auto name = std::string{minifi::core::className<T>()};
     auto field = env->GetFieldID(classref, fieldStr.c_str(), arg.c_str());
     auto fieldName = fieldStr + arg;
     getClassMapping().putField(name, fieldName, field);

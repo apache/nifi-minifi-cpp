@@ -20,6 +20,7 @@
 
 #include <memory>
 #include <string>
+#include <string_view>
 #include <utility>
 #include <algorithm>
 
@@ -32,8 +33,8 @@ namespace org::apache::nifi::minifi::core::repository {
 
 class FileSystemRepository : public core::ContentRepository {
  public:
-  explicit FileSystemRepository(std::string name = getClassName<FileSystemRepository>())
-    : core::ContentRepository(std::move(name)),
+  explicit FileSystemRepository(std::string_view name = className<FileSystemRepository>())
+    : core::ContentRepository(name),
       logger_(logging::LoggerFactory<FileSystemRepository>::getLogger()) {
   }
 

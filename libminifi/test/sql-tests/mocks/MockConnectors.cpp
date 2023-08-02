@@ -187,7 +187,7 @@ void MockDB::createTable(const std::string& query) {
   std::regex expr(R"(create table (\w+)\s*\((.*)\);)", std::regex_constants::icase);
   std::regex_search(query, match, expr);
   std::string table_name = match[1];
-  auto columns_with_type = minifi::utils::StringUtils::splitAndTrimRemovingEmpty(match[2], ",");
+  auto columns_with_type = minifi::utils::StringUtils::splitAndTrimRemovingEmpty(match[2].str(), ",");
   std::vector<std::string> col_names;
   std::vector<DataType> col_types;
   for (const auto& col_with_type : columns_with_type) {
@@ -215,11 +215,11 @@ void MockDB::insertInto(const std::string& query, const std::vector<std::string>
   if (!tables_.contains(table_name)) {
     throw sql::StatementError("No such table: '" + table_name + "'");
   }
-  std::vector<std::string> values = minifi::utils::StringUtils::splitAndTrimRemovingEmpty(match[4], ",");
+  std::vector<std::string> values = minifi::utils::StringUtils::splitAndTrimRemovingEmpty(match[4].str(), ",");
   for (auto& value : values) {
     value = minifi::utils::StringUtils::removeFramingCharacters(value, '\'');
   }
-  auto insert_col_names = minifi::utils::StringUtils::splitAndTrimRemovingEmpty(match[3], ",");
+  auto insert_col_names = minifi::utils::StringUtils::splitAndTrimRemovingEmpty(match[3].str(), ",");
   if (!insert_col_names.empty()) {
     auto col_names = tables_.at(table_name).getColumnNames();
     std::vector<std::string> row;
@@ -251,7 +251,7 @@ std::unique_ptr<Rowset> MockDB::select(const std::string& query, const std::vect
   std::smatch match;
   std::regex expr(R"(select\s+(.+)\s+from\s+(\w+)\s*(where ((.+(?= order by))|.+$))*\s*(order by (.+))*)", std::regex_constants::icase);
   std::regex_search(replaced_query, match, expr);
-  auto cols = minifi::utils::StringUtils::splitAndTrimRemovingEmpty(match[1], ",");
+  auto cols = minifi::utils::StringUtils::splitAndTrimRemovingEmpty(match[1].str(), ",");
   if (cols[0] == "*") {
     cols = {};
   }

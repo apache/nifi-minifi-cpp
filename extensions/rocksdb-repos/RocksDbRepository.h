@@ -19,6 +19,7 @@
 #include <utility>
 #include <vector>
 #include <string>
+#include <string_view>
 #include <memory>
 
 #include "database/RocksDatabase.h"
@@ -30,13 +31,13 @@ constexpr auto FLOWFILE_REPOSITORY_RETRY_INTERVAL_INCREMENTS = std::chrono::mill
 
 class RocksDbRepository : public ThreadedRepository {
  public:
-  RocksDbRepository(std::string repo_name,
+  RocksDbRepository(std::string_view repo_name,
                     std::string directory,
                     std::chrono::milliseconds max_partition_millis,
                     int64_t max_partition_bytes,
                     std::chrono::milliseconds purge_period,
                     std::shared_ptr<logging::Logger> logger)
-    : ThreadedRepository(std::move(repo_name), std::move(directory), max_partition_millis, max_partition_bytes, purge_period),
+    : ThreadedRepository(repo_name, std::move(directory), max_partition_millis, max_partition_bytes, purge_period),
       logger_(std::move(logger)) {
   }
 

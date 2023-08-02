@@ -24,6 +24,7 @@
 #include <regex>
 #include <set>
 #include <string>
+#include <string_view>
 #include <utility>
 #include <vector>
 #include <mutex>
@@ -119,16 +120,16 @@ class LogTestController {
    * of changeable test formats
    */
   template<typename T>
-  std::shared_ptr<logging::Logger> getLogger(const std::optional<utils::Identifier>& id = {}) { return getLoggerByClassName(minifi::core::getClassName<T>(), id); }
+  std::shared_ptr<logging::Logger> getLogger(const std::optional<utils::Identifier>& id = {}) { return getLoggerByClassName(minifi::core::className<T>(), id); }
 
-  std::shared_ptr<logging::Logger> getLoggerByClassName(const std::string& class_name, const std::optional<utils::Identifier>& id = {});
+  std::shared_ptr<logging::Logger> getLoggerByClassName(std::string_view class_name, const std::optional<utils::Identifier>& id = {});
 
   template<typename T>
   void setLevel(spdlog::level::level_enum level) {
-    setLevelByClassName(level, minifi::core::getClassName<T>());
+    setLevelByClassName(level, minifi::core::className<T>());
   }
 
-  void setLevelByClassName(spdlog::level::level_enum level, const std::string& class_name);
+  void setLevelByClassName(spdlog::level::level_enum level, std::string_view class_name);
 
   bool contains(const std::string &ending, std::chrono::milliseconds timeout = std::chrono::seconds(3), std::chrono::milliseconds sleep_interval = std::chrono::milliseconds(200)) const;
 
@@ -163,7 +164,7 @@ class LogTestController {
 
   explicit LogTestController(const std::shared_ptr<logging::LoggerProperties> &loggerProps);
 
-  void setLevel(const std::string& name, spdlog::level::level_enum level);
+  void setLevel(std::string_view name, spdlog::level::level_enum level);
   bool contains(const std::function<std::string()>& log_string_getter, const std::string& ending, std::chrono::milliseconds timeout, std::chrono::milliseconds sleep_interval) const;
 
   mutable std::shared_ptr<std::mutex> log_output_mutex_ = std::make_shared<std::mutex>();

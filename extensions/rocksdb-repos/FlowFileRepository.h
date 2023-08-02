@@ -19,6 +19,7 @@
 #include <utility>
 #include <vector>
 #include <string>
+#include <string_view>
 #include <memory>
 #include <list>
 
@@ -68,16 +69,16 @@ class FlowFileRepository : public RocksDbRepository, public SwapManager {
  public:
   static constexpr const char* ENCRYPTION_KEY_NAME = "nifi.flowfile.repository.encryption.key";
 
-  FlowFileRepository(std::string name, const utils::Identifier& /*uuid*/)
-    : FlowFileRepository(std::move(name)) {
+  FlowFileRepository(std::string_view name, const utils::Identifier& /*uuid*/)
+    : FlowFileRepository(name) {
   }
 
-  explicit FlowFileRepository(const std::string& repo_name = "",
+  explicit FlowFileRepository(const std::string_view repo_name = "",
                               std::string directory = FLOWFILE_REPOSITORY_DIRECTORY,
                               std::chrono::milliseconds maxPartitionMillis = MAX_FLOWFILE_REPOSITORY_ENTRY_LIFE_TIME,
                               int64_t maxPartitionBytes = MAX_FLOWFILE_REPOSITORY_STORAGE_SIZE,
                               std::chrono::milliseconds purgePeriod = FLOWFILE_REPOSITORY_PURGE_PERIOD)
-    : RocksDbRepository(repo_name.length() > 0 ? std::move(repo_name) : core::getClassName<FlowFileRepository>(),
+    : RocksDbRepository(repo_name.length() > 0 ? repo_name : core::className<FlowFileRepository>(),
                         std::move(directory), maxPartitionMillis, maxPartitionBytes, purgePeriod, logging::LoggerFactory<FlowFileRepository>::getLogger()) {
   }
 

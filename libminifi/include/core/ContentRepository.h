@@ -20,6 +20,7 @@
 #include <map>
 #include <memory>
 #include <string>
+#include <string_view>
 #include <utility>
 #include <list>
 
@@ -37,7 +38,7 @@ namespace org::apache::nifi::minifi::core {
  */
 class ContentRepository : public core::CoreComponent, public StreamManager<minifi::ResourceClaim>, public utils::EnableSharedFromThis<ContentRepository>, public core::RepositoryMetricsSource {
  public:
-  explicit ContentRepository(std::string name, const utils::Identifier& uuid = {}) : core::CoreComponent(std::move(name), uuid) {}
+  explicit ContentRepository(std::string_view name, const utils::Identifier& uuid = {}) : core::CoreComponent(name, uuid) {}
   ~ContentRepository() override = default;
 
   virtual bool initialize(const std::shared_ptr<Configure> &configure) = 0;

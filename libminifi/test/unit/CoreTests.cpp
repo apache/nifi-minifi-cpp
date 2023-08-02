@@ -25,13 +25,6 @@ class DummyClass {};
 template<typename T> struct DummyStructTemplate {};
 template<typename T> class DummyClassTemplate {};
 
-TEST_CASE("getClassName() works correctly") {
-  CHECK(core::getClassName<DummyStruct>() == "org::apache::nifi::minifi::test::DummyStruct");
-  CHECK(core::getClassName<DummyClass>() == "org::apache::nifi::minifi::test::DummyClass");
-  CHECK(core::getClassName<DummyStructTemplate<int>>() == "org::apache::nifi::minifi::test::DummyStructTemplate<int>");
-  CHECK(core::getClassName<DummyClassTemplate<int>>() == "org::apache::nifi::minifi::test::DummyClassTemplate<int>");
-}
-
 TEST_CASE("className() works correctly and is constexpr") {
   static constexpr auto struct_name = core::className<DummyStruct>();
   static_assert(struct_name == "org::apache::nifi::minifi::test::DummyStruct");

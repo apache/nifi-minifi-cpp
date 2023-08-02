@@ -17,6 +17,7 @@
 #pragma once
 
 #include <string>
+#include <string_view>
 
 namespace org::apache::nifi::minifi::utils::ClassUtils {
 
@@ -26,6 +27,6 @@ namespace org::apache::nifi::minifi::utils::ClassUtils {
  * @param out output class name that is shortened.
  * @return true if out has been updated, false otherwise
  */
-bool shortenClassName(const std::string &class_name, std::string &out);
+bool shortenClassName(std::string_view class_name, std::string &out);
 
 }  // namespace org::apache::nifi::minifi::utils::ClassUtils

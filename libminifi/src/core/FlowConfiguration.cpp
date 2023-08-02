@@ -29,7 +29,7 @@
 namespace org::apache::nifi::minifi::core {
 
 FlowConfiguration::FlowConfiguration(ConfigurationContext ctx)
-    : CoreComponent(core::getClassName<FlowConfiguration>()),
+    : CoreComponent(core::className<FlowConfiguration>()),
       flow_file_repo_(std::move(ctx.flow_file_repo)),
       content_repo_(std::move(ctx.content_repo)),
       stream_factory_(std::move(ctx.stream_factory)),

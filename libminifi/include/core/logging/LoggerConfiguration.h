@@ -26,6 +26,7 @@
 #include <map>
 #include <mutex>
 #include <string>
+#include <string_view>
 #include <unordered_set>
 
 #include "spdlog/common.h"
@@ -109,17 +110,17 @@ class LoggerConfiguration {
   /**
    * Can be used to get arbitrarily named Logger, LoggerFactory should be preferred within a class.
    */
-  std::shared_ptr<Logger> getLogger(const std::string& name, const std::optional<utils::Identifier>& id = {});
+  std::shared_ptr<Logger> getLogger(std::string_view name, const std::optional<utils::Identifier>& id = {});
 
   static const char *spdlog_default_pattern;
 
  protected:
   static std::shared_ptr<internal::LoggerNamespace> initialize_namespaces(const std::shared_ptr<LoggerProperties> &logger_properties, const std::shared_ptr<Logger> &logger = {});
-  static std::shared_ptr<spdlog::logger> get_logger(const std::shared_ptr<Logger>& logger, const std::shared_ptr<internal::LoggerNamespace> &root_namespace, const std::string &name,
+  static std::shared_ptr<spdlog::logger> get_logger(const std::shared_ptr<Logger>& logger, const std::shared_ptr<internal::LoggerNamespace> &root_namespace, std::string_view name_view,
                                                     const std::shared_ptr<spdlog::formatter>& formatter, bool remove_if_present = false);
 
  private:
-  std::shared_ptr<Logger> getLogger(const std::string& name, const std::optional<utils::Identifier>& id, const std::lock_guard<std::mutex>& lock);
+  std::shared_ptr<Logger> getLogger(std::string_view name, const std::optional<utils::Identifier>& id, const std::lock_guard<std::mutex>& lock);
 
   void initializeCompression(const std::lock_guard<std::mutex>& lock, const std::shared_ptr<LoggerProperties>& properties);
 
@@ -132,9 +133,9 @@ class LoggerConfiguration {
 
   class LoggerImpl : public Logger {
    public:
-    explicit LoggerImpl(std::string name, std::optional<utils::Identifier> id, const std::shared_ptr<LoggerControl> &controller, const std::shared_ptr<spdlog::logger> &delegate)
+    explicit LoggerImpl(std::string_view name, std::optional<utils::Identifier> id, const std::shared_ptr<LoggerControl> &controller, const std::shared_ptr<spdlog::logger> &delegate)
         : Logger(delegate, controller),
-          name(std::move(name)),
+          name(name),
           id(internal::formatId(id)) {
     }
 

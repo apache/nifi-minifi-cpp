@@ -89,13 +89,13 @@ class ObjectFactory {
 template<class T>
 class DefautObjectFactory : public ObjectFactory {
  public:
-  DefautObjectFactory() {
-    className = core::getClassName<T>();
+  DefautObjectFactory()
+      : className(core::className<T>()) {
   }
 
   explicit DefautObjectFactory(std::string group_name)
-      : ObjectFactory(std::move(group_name)) {
-    className = core::getClassName<T>();
+      : ObjectFactory(std::move(group_name)),
+      className(core::className<T>()) {
   }
 
   /**

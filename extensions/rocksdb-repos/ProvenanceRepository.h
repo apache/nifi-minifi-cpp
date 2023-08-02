@@ -19,6 +19,7 @@
 #include <cinttypes>
 #include <vector>
 #include <string>
+#include <string_view>
 #include <memory>
 #include <algorithm>
 #include <utility>
@@ -44,12 +45,12 @@ class ProvenanceRepository : public core::repository::RocksDbRepository {
     : ProvenanceRepository(std::move(name)) {
   }
 
-  explicit ProvenanceRepository(std::string repo_name = "",
+  explicit ProvenanceRepository(std::string_view repo_name = "",
                                 std::string directory = PROVENANCE_DIRECTORY,
                                 std::chrono::milliseconds maxPartitionMillis = MAX_PROVENANCE_ENTRY_LIFE_TIME,
                                 int64_t maxPartitionBytes = MAX_PROVENANCE_STORAGE_SIZE,
                                 std::chrono::milliseconds purgePeriod = PROVENANCE_PURGE_PERIOD)
-    : RocksDbRepository(repo_name.length() > 0 ? std::move(repo_name) : core::getClassName<ProvenanceRepository>(),
+    : RocksDbRepository(repo_name.length() > 0 ? repo_name : core::className<ProvenanceRepository>(),
         directory, maxPartitionMillis, maxPartitionBytes, purgePeriod, core::logging::LoggerFactory<ProvenanceRepository>::getLogger()) {
   }
 

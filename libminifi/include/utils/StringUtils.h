@@ -172,10 +172,10 @@ class StringUtils {
     return std::equal(left.begin(), left.end(), right.begin(), [](unsigned char lc, unsigned char rc) { return std::tolower(lc) == std::tolower(rc); });
   }
 
-  static std::vector<std::string> split(const std::string &str, const std::string &delimiter);
-  static std::vector<std::string> splitRemovingEmpty(const std::string& str, const std::string& delimiter);
-  static std::vector<std::string> splitAndTrim(const std::string &str, const std::string &delimiter);
-  static std::vector<std::string> splitAndTrimRemovingEmpty(const std::string& str, const std::string& delimiter);
+  static std::vector<std::string> split(std::string_view str, std::string_view delimiter);
+  static std::vector<std::string> splitRemovingEmpty(std::string_view str, std::string_view delimiter);
+  static std::vector<std::string> splitAndTrim(std::string_view str, std::string_view delimiter);
+  static std::vector<std::string> splitAndTrimRemovingEmpty(std::string_view str, std::string_view delimiter);
 
   /**
    * Converts a string to a float

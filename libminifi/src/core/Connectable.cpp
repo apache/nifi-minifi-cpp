@@ -26,15 +26,15 @@
 
 namespace org::apache::nifi::minifi::core {
 
-Connectable::Connectable(std::string name, const utils::Identifier &uuid)
-    : CoreComponent(std::move(name), uuid),
+Connectable::Connectable(std::string_view name, const utils::Identifier &uuid)
+    : CoreComponent(name, uuid),
       max_concurrent_tasks_(1),
       connectable_version_(nullptr),
       logger_(logging::LoggerFactory<Connectable>::getLogger(uuid_)) {
 }
 
-Connectable::Connectable(std::string name)
-    : CoreComponent(std::move(name)),
+Connectable::Connectable(std::string_view name)
+    : CoreComponent(name),
       max_concurrent_tasks_(1),
       connectable_version_(nullptr),
       logger_(logging::LoggerFactory<Connectable>::getLogger(uuid_)) {

@@ -20,6 +20,7 @@
 #include <map>
 #include <memory>
 #include <string>
+#include <string_view>
 
 #include "AtomicRepoEntries.h"
 #include "io/AtomicEntryStream.h"
@@ -40,7 +41,7 @@ class VolatileContentRepository : public core::ContentRepository {
  public:
   static const char *minimal_locking;
 
-  explicit VolatileContentRepository(std::string name = getClassName<VolatileContentRepository>())
+  explicit VolatileContentRepository(std::string_view name = className<VolatileContentRepository>())
     : core::ContentRepository(name),
       repo_data_(15000, static_cast<size_t>(10_MiB * 0.75)),
       minimize_locking_(true),

@@ -20,9 +20,11 @@
 
 #include <memory>
 #include <string>
+#include <string_view>
 #include <utility>
 #include <future>
 #include <vector>
+
 #include "core/Core.h"
 #include "ControllerServiceLookup.h"
 #include "core/ConfigurableComponent.h"
@@ -35,18 +37,18 @@ namespace org::apache::nifi::minifi::core::controller {
 
 class ControllerServiceProvider : public CoreComponent, public ConfigurableComponent, public ControllerServiceLookup {
  public:
-  explicit ControllerServiceProvider(std::string name)
-      : CoreComponent(std::move(name)) {
+  explicit ControllerServiceProvider(std::string_view name)
+      : CoreComponent(name) {
     controller_map_ = std::make_shared<ControllerServiceMap>();
   }
 
   explicit ControllerServiceProvider(std::shared_ptr<ControllerServiceMap> services)
-      : CoreComponent(core::getClassName<ControllerServiceProvider>()),
+      : CoreComponent(core::className<ControllerServiceProvider>()),
         controller_map_(std::move(services)) {
   }
 
-  explicit ControllerServiceProvider(std::string name, std::shared_ptr<ControllerServiceMap> services)
-      : CoreComponent(std::move(name)),
+  explicit ControllerServiceProvider(std::string_view name, std::shared_ptr<ControllerServiceMap> services)
+      : CoreComponent(name),
         controller_map_(std::move(services)) {
   }
 
