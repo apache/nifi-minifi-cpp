@@ -542,18 +542,18 @@ class HeartbeatHandler : public ServerAwareHandler {
   template<typename T>
   void verifyOperands(const rapidjson::Value& operation_node, const std::unordered_map<std::string, Metadata>& operand_with_metadata = {}) {
     auto operands = getOperandsOfProperties(operation_node);
-    assert(operands == std::set<std::string>(T::values.begin(), T::values.end()));
+    assert(operands == std::set<std::string>(magic_enum::enum_names<T>().begin(), magic_enum::enum_names<T>().end()));
     verifyMetadata(operation_node, operand_with_metadata);
   }
 
   void verifyProperties(const rapidjson::Value& operation_node, minifi::c2::Operation operation,
       const std::vector<std::string>& verify_components, const std::vector<std::string>& disallowed_properties) {
-    switch (operation.value()) {
-      case minifi::c2::Operation::DESCRIBE: {
+    switch (operation) {
+      case minifi::c2::Operation::describe: {
         verifyOperands<minifi::c2::DescribeOperand>(operation_node);
         break;
       }
-      case minifi::c2::Operation::UPDATE: {
+      case minifi::c2::Operation::update: {
         std::vector<std::unordered_map<std::string, std::string>> config_properties;
         const auto prop_reader = [this](const std::string& sensitive_props) { return configuration_->getString(sensitive_props); };
         const auto sensitive_props = minifi::Configuration::getSensitiveProperties(prop_reader);
@@ -578,16 +578,16 @@ class HeartbeatHandler : public ServerAwareHandler {
         verifyOperands<minifi::c2::UpdateOperand>(operation_node, operand_with_metadata);
         break;
       }
-      case minifi::c2::Operation::TRANSFER: {
+      case minifi::c2::Operation::transfer: {
         verifyOperands<minifi::c2::TransferOperand>(operation_node);
         break;
       }
-      case minifi::c2::Operation::CLEAR: {
+      case minifi::c2::Operation::clear: {
         verifyOperands<minifi::c2::ClearOperand>(operation_node);
         break;
       }
-      case minifi::c2::Operation::START:
-      case minifi::c2::Operation::STOP: {
+      case minifi::c2::Operation::start:
+      case minifi::c2::Operation::stop: {
         auto operands = getOperandsOfProperties(operation_node);
         assert(operands.find("c2") != operands.end());
         // FlowController is also present, but this handler has no way of knowing its UUID to test it
@@ -609,10 +609,10 @@ class HeartbeatHandler : public ServerAwareHandler {
     for (const auto& operation_node : agent_manifest["supportedOperations"].GetArray()) {
       assert(operation_node.HasMember("type"));
       operations.insert(operation_node["type"].GetString());
-      verifyProperties(operation_node, minifi::c2::Operation::parse(operation_node["type"].GetString(), {}, false), verify_components, disallowed_properties);
+      verifyProperties(operation_node, utils::enumCast<minifi::c2::Operation>(operation_node["type"].GetString(), true), verify_components, disallowed_properties);
     }
 
-    assert(operations == std::set<std::string>(minifi::c2::Operation::values.begin(), minifi::c2::Operation::values.end()));
+    assert(operations == std::set<std::string>(magic_enum::enum_names<minifi::c2::Operation>().begin(), magic_enum::enum_names<minifi::c2::Operation>().end()));
   }
 
   std::shared_ptr<minifi::Configure> configuration_;

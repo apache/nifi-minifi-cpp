@@ -27,11 +27,11 @@
 
 namespace org::apache::nifi::minifi::utils::net {
 
-SMART_ENUM(ClientAuthOption,
-    (NONE, "NONE"),
-    (WANT, "WANT"),
-    (REQUIRED, "REQUIRED")
-)
+enum class ClientAuthOption {
+  NONE,
+  WANT,
+  REQUIRED
+};
 
 struct SslData {
   std::filesystem::path ca_loc;

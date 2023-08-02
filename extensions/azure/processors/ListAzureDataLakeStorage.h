@@ -28,17 +28,11 @@
 #include "core/PropertyDefinitionBuilder.h"
 #include "core/PropertyType.h"
 #include "utils/ArrayUtils.h"
+#include "utils/AzureEnums.h"
 
 class ListAzureDataLakeStorageTestsFixture;
 
-namespace org::apache::nifi::minifi::azure {
-
-SMART_ENUM(EntityTracking,
-  (NONE, "none"),
-  (TIMESTAMPS, "timestamps")
-)
-
-namespace processors {
+namespace org::apache::nifi::minifi::azure::processors {
 
 class ListAzureDataLakeStorage final : public AzureDataLakeStorageProcessorBase {
  public:
@@ -56,11 +50,11 @@ class ListAzureDataLakeStorage final : public AzureDataLakeStorageProcessorBase 
   EXTENSIONAPI static constexpr auto PathFilter = core::PropertyDefinitionBuilder<>::createProperty("Path Filter")
       .withDescription("When 'Recurse Subdirectories' is true, then only subdirectories whose paths match the given regular expression will be scanned")
       .build();
-  EXTENSIONAPI static constexpr auto ListingStrategy = core::PropertyDefinitionBuilder<azure::EntityTracking::length>::createProperty("Listing Strategy")
+  EXTENSIONAPI static constexpr auto ListingStrategy = core::PropertyDefinitionBuilder<magic_enum::enum_count<azure::EntityTracking>()>::createProperty("Listing Strategy")
       .withDescription("Specify how to determine new/updated entities. If 'timestamps' is selected it tracks the latest timestamp of listed entity to "
-                       "determine new/updated entities. If 'none' is selected it lists an entity without any tracking, the same entity will be listed each time on executing this processor.")
-      .withDefaultValue(toStringView(azure::EntityTracking::TIMESTAMPS))
-      .withAllowedValues(azure::EntityTracking::values)
+          "determine new/updated entities. If 'none' is selected it lists an entity without any tracking, the same entity will be listed each time on executing this processor.")
+      .withDefaultValue(magic_enum::enum_name(azure::EntityTracking::timestamps))
+      .withAllowedValues(magic_enum::enum_names<azure::EntityTracking>())
       .build();
   EXTENSIONAPI static constexpr auto Properties = utils::array_cat(AzureDataLakeStorageProcessorBase::Properties, std::array<core::PropertyReference, 4>{
       RecurseSubdirectories,
@@ -98,10 +92,9 @@ class ListAzureDataLakeStorage final : public AzureDataLakeStorageProcessorBase 
 
   std::optional<storage::ListAzureDataLakeStorageParameters> buildListParameters(core::ProcessContext &context);
 
-  azure::EntityTracking tracking_strategy_ = azure::EntityTracking::TIMESTAMPS;
+  azure::EntityTracking tracking_strategy_ = azure::EntityTracking::timestamps;
   storage::ListAzureDataLakeStorageParameters list_parameters_;
   std::unique_ptr<minifi::utils::ListingStateManager> state_manager_;
 };
 
-}  // namespace processors
-}  // namespace org::apache::nifi::minifi::azure
+}  // namespace org::apache::nifi::minifi::azure::processors

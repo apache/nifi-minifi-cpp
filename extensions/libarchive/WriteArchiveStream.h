@@ -31,12 +31,35 @@
 
 namespace org::apache::nifi::minifi::io {
 
-SMART_ENUM(CompressionFormat,
-  (GZIP, "gzip"),
-  (LZMA, "lzma"),
-  (XZ_LZMA2, "xz-lzma2"),
-  (BZIP2, "bzip2")
-)
+enum class CompressionFormat {
+  GZIP,
+  LZMA,
+  XZ_LZMA2,
+  BZIP2
+};
+
+}  // namespace org::apache::nifi::minifi::io
+
+namespace magic_enum::customize {
+using CompressionFormat = org::apache::nifi::minifi::io::CompressionFormat;
+
+template <>
+constexpr customize_t enum_name<CompressionFormat>(CompressionFormat value) noexcept {
+  switch (value) {
+    case CompressionFormat::GZIP:
+      return "gzip";
+    case CompressionFormat::LZMA:
+      return "lzma";
+    case CompressionFormat::XZ_LZMA2:
+      return "xz-lzma2";
+    case CompressionFormat::BZIP2:
+      return "bzip2";
+  }
+  return invalid_tag;
+}
+}  // namespace magic_enum::customize
+
+namespace org::apache::nifi::minifi::io {
 
 class WriteArchiveStreamImpl: public WriteArchiveStream {
   struct archive_write_deleter {

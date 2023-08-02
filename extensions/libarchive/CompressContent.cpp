@@ -27,6 +27,7 @@
 #include "utils/StringUtils.h"
 #include "core/Resource.h"
 #include "io/StreamPipe.h"
+#include "utils/ProcessorConfigUtils.h"
 
 namespace org::apache::nifi::minifi::processors {
 
@@ -54,14 +55,14 @@ void CompressContent::initialize() {
 
 void CompressContent::onSchedule(core::ProcessContext *context, core::ProcessSessionFactory* /*sessionFactory*/) {
   context->getProperty(CompressLevel, compressLevel_);
-  context->getProperty(CompressMode, compressMode_);
-  context->getProperty(CompressFormat, compressFormat_);
+  compressMode_ = utils::parseEnumProperty<compress_content::CompressionMode>(*context, CompressMode);
+  compressFormat_ = utils::parseEnumProperty<compress_content::ExtendedCompressionFormat>(*context, CompressFormat);
   context->getProperty(UpdateFileName, updateFileName_);
   context->getProperty(EncapsulateInTar, encapsulateInTar_);
   context->getProperty(BatchSize, batchSize_);
 
   logger_->log_info("Compress Content: Mode [%s] Format [%s] Level [%d] UpdateFileName [%d] EncapsulateInTar [%d]",
-      compressMode_.toString(), compressFormat_.toString(), compressLevel_, updateFileName_, encapsulateInTar_);
+      std::string{magic_enum::enum_name(compressMode_)}, std::string{magic_enum::enum_name(compressFormat_)}, compressLevel_, updateFileName_, encapsulateInTar_);
 }
 
 void CompressContent::onTrigger(const std::shared_ptr<core::ProcessContext> &context, const std::shared_ptr<core::ProcessSession> &session) {
@@ -101,7 +102,7 @@ void CompressContent::processFlowFile(const std::shared_ptr<core::FlowFile>& flo
       return;
     }
   } else {
-    compressFormat = compressFormat_.cast<io::CompressionFormat>();
+    compressFormat = *magic_enum::enum_cast<io::CompressionFormat>(magic_enum::enum_name(compressFormat_));
   }
   std::string mimeType = toMimeType(compressFormat);
 
@@ -112,12 +113,12 @@ void CompressContent::processFlowFile(const std::shared_ptr<core::FlowFile>& flo
     return;
   }
   if (compressFormat == io::CompressionFormat::BZIP2 && archive_bzlib_version() == nullptr) {
-    logger_->log_error("%s compression format is requested, but the agent was compiled without BZip2 support", compressFormat.toString());
+    logger_->log_error("%s compression format is requested, but the agent was compiled without BZip2 support", std::string{magic_enum::enum_name(compressFormat)});
     session->transfer(flowFile, Failure);
     return;
   }
   if ((compressFormat == io::CompressionFormat::LZMA || compressFormat == io::CompressionFormat::XZ_LZMA2) && archive_liblzma_version() == nullptr) {
-    logger_->log_error("%s compression format is requested, but the agent was compiled without LZMA support ", compressFormat.toString());
+    logger_->log_error("%s compression format is requested, but the agent was compiled without LZMA support ", std::string{magic_enum::enum_name(compressFormat)});
     session->transfer(flowFile, Failure);
     return;
   }
@@ -132,7 +133,7 @@ void CompressContent::processFlowFile(const std::shared_ptr<core::FlowFile>& flo
   if (encapsulateInTar_) {
     std::function<int64_t(const std::shared_ptr<io::InputStream>&, const std::shared_ptr<io::OutputStream>&)> transformer;
 
-    if (compressMode_ == compress_content::CompressionMode::Compress) {
+    if (compressMode_ == compress_content::CompressionMode::compress) {
       std::string filename;
       flowFile->getAttribute(core::SpecialFlowAttribute::FILENAME, filename);
       transformer = [&, filename] (const std::shared_ptr<io::InputStream>& in, const std::shared_ptr<io::OutputStream>& out) -> int64_t {
@@ -175,7 +176,7 @@ void CompressContent::processFlowFile(const std::shared_ptr<core::FlowFile>& flo
   } else {
     std::string fileName;
     result->getAttribute(core::SpecialFlowAttribute::FILENAME, fileName);
-    if (compressMode_ == compress_content::CompressionMode::Compress) {
+    if (compressMode_ == compress_content::CompressionMode::compress) {
       session->putAttribute(result, core::SpecialFlowAttribute::MIME_TYPE, mimeType);
       if (updateFileName_) {
         if (encapsulateInTar_) {
@@ -202,7 +203,7 @@ void CompressContent::processFlowFile(const std::shared_ptr<core::FlowFile>& flo
 }
 
 std::string CompressContent::toMimeType(io::CompressionFormat format) {
-  switch (format.value()) {
+  switch (format) {
     case io::CompressionFormat::GZIP: return "application/gzip";
     case io::CompressionFormat::BZIP2: return "application/bzip2";
     case io::CompressionFormat::LZMA: return "application/x-lzma";

@@ -37,17 +37,17 @@ C2CallbackAgent::C2CallbackAgent(const std::shared_ptr<Configure> &configuration
 }
 
 void C2CallbackAgent::handle_c2_server_response(const C2ContentResponse &resp) {
-  switch (resp.op.value()) {
-    case Operation::CLEAR:
+  switch (resp.op) {
+    case Operation::clear:
       break;
-    case Operation::UPDATE:
+    case Operation::update:
       break;
-    case Operation::DESCRIBE:
+    case Operation::describe:
       break;
-    case Operation::RESTART:
+    case Operation::restart:
       break;
-    case Operation::START:
-    case Operation::STOP: {
+    case Operation::start:
+    case Operation::stop: {
       if (resp.name == "C2" || resp.name == "c2") {
         raise(SIGTERM);
       }
@@ -59,9 +59,9 @@ void C2CallbackAgent::handle_c2_server_response(const C2ContentResponse &resp) {
 
       break;
     }
-    case Operation::PAUSE:
+    case Operation::pause:
       break;
-    case Operation::RESUME:
+    case Operation::resume:
       break;
     default:
       break;

@@ -33,14 +33,29 @@
 #include "serialization/PayloadSerializer.h"
 #include "utils/RegexUtils.h"
 
-namespace org::apache::nifi::minifi::processors {
+namespace org::apache::nifi::minifi::processors::defragment_text {
+enum class PatternLocation {
+    END_OF_MESSAGE,
+    START_OF_MESSAGE
+};
+}  // namespace org::apache::nifi::minifi::processors::defragment_text
 
-namespace defragment_text {
-SMART_ENUM(PatternLocation,
-    (END_OF_MESSAGE, "End of Message"),
-    (START_OF_MESSAGE, "Start of Message")
-)
-}  // namespace defragment_text
+namespace magic_enum::customize {
+using PatternLocation = org::apache::nifi::minifi::processors::defragment_text::PatternLocation;
+
+template <>
+constexpr customize_t enum_name<PatternLocation>(PatternLocation value) noexcept {
+  switch (value) {
+    case PatternLocation::END_OF_MESSAGE:
+      return "End of Message";
+    case PatternLocation::START_OF_MESSAGE:
+      return "Start of Message";
+  }
+  return invalid_tag;
+}
+}  // namespace magic_enum::customize
+
+namespace org::apache::nifi::minifi::processors {
 
 class DefragmentText : public core::Processor {
  public:
@@ -55,10 +70,11 @@ class DefragmentText : public core::Processor {
       .withDescription("A regular expression to match at the start or end of messages.")
       .isRequired(true)
       .build();
-  EXTENSIONAPI static constexpr auto PatternLoc = core::PropertyDefinitionBuilder<defragment_text::PatternLocation::length>::createProperty("Pattern Location")
+  EXTENSIONAPI static constexpr auto PatternLoc = core::PropertyDefinitionBuilder<magic_enum::enum_count<defragment_text::PatternLocation>()>::createProperty("Pattern Location")
       .withDescription("Whether the pattern is located at the start or at the end of the messages.")
-      .withAllowedValues(defragment_text::PatternLocation::values)
-      .withDefaultValue(toStringView(defragment_text::PatternLocation::START_OF_MESSAGE))
+      .withDefaultValue(magic_enum::enum_name(defragment_text::PatternLocation::START_OF_MESSAGE))
+      .withAllowedValues(magic_enum::enum_names<defragment_text::PatternLocation>())
+      .isRequired(true)
       .build();
   EXTENSIONAPI static constexpr auto MaxBufferAge = core::PropertyDefinitionBuilder<>::createProperty("Max Buffer Age")
       .withDescription("The maximum age of the buffer after which it will be transferred to success when matching Start of Message patterns or to failure when matching End of Message patterns. "

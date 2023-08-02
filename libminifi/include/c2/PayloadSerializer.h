@@ -110,32 +110,32 @@ class PayloadSerializer {
   static uint8_t opToInt(const Operation opt) {
     uint8_t op;
 
-    switch (opt.value()) {
-      case Operation::ACKNOWLEDGE:
+    switch (opt) {
+      case Operation::acknowledge:
         op = 1;
         break;
-      case Operation::HEARTBEAT:
+      case Operation::heartbeat:
         op = 2;
         break;
-      case Operation::RESTART:
+      case Operation::restart:
         op = 3;
         break;
-      case Operation::DESCRIBE:
+      case Operation::describe:
         op = 4;
         break;
-      case Operation::STOP:
+      case Operation::stop:
         op = 5;
         break;
-      case Operation::START:
+      case Operation::start:
         op = 6;
         break;
-      case Operation::UPDATE:
+      case Operation::update:
         op = 7;
         break;
-      case Operation::PAUSE:
+      case Operation::pause:
         op = 8;
         break;
-      case Operation::RESUME:
+      case Operation::resume:
         op = 9;
         break;
       default:
@@ -212,11 +212,11 @@ class PayloadSerializer {
     return node;
   }
   static C2Payload deserialize(const std::vector<std::byte>& data) {
-    C2Payload payload(Operation::HEARTBEAT, state::UpdateState::READ_COMPLETE);
+    C2Payload payload(Operation::heartbeat, state::UpdateState::READ_COMPLETE);
     if (deserialize(data, payload)) {
       return payload;
     }
-    return C2Payload(Operation::HEARTBEAT, state::UpdateState::READ_ERROR);
+    return C2Payload(Operation::heartbeat, state::UpdateState::READ_ERROR);
   }
   /**
    * Deserializes the payloads
@@ -308,25 +308,25 @@ class PayloadSerializer {
   static Operation intToOp(int op) {
     switch (op) {
       case 1:
-        return Operation::ACKNOWLEDGE;
+        return Operation::acknowledge;
       case 2:
-        return Operation::HEARTBEAT;
+        return Operation::heartbeat;
       case 3:
-        return Operation::RESTART;
+        return Operation::restart;
       case 4:
-        return Operation::DESCRIBE;
+        return Operation::describe;
       case 5:
-        return Operation::STOP;
+        return Operation::stop;
       case 6:
-        return Operation::START;
+        return Operation::start;
       case 7:
-        return Operation::UPDATE;
+        return Operation::update;
       case 8:
-        return Operation::PAUSE;
+        return Operation::pause;
       case 9:
-        return Operation::RESUME;
+        return Operation::resume;
       default:
-        return Operation::HEARTBEAT;
+        return Operation::heartbeat;
     }
   }
   PayloadSerializer();

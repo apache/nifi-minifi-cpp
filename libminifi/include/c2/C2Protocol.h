@@ -74,7 +74,7 @@ class C2Protocol : public core::Connectable {
   virtual C2Payload consumePayload(const C2Payload &operation, Direction direction = TRANSMIT, bool async = false) = 0;
 
   virtual C2Payload fetch(const std::string& url, const std::vector<std::string>& /*accepted_formats*/ = {}, bool async = false) {
-    return consumePayload(url, C2Payload(Operation::TRANSFER, true), Direction::RECEIVE, async);
+    return consumePayload(url, C2Payload(Operation::transfer, true), Direction::RECEIVE, async);
   }
 
   /**

@@ -30,26 +30,20 @@
 #include "core/PropertyDefinition.h"
 #include "AzureBlobStorageProcessorBase.h"
 #include "core/logging/LoggerConfiguration.h"
+#include "utils/AzureEnums.h"
 
-namespace org::apache::nifi::minifi::azure {
-
-SMART_ENUM(EntityTracking,
-  (NONE, "none"),
-  (TIMESTAMPS, "timestamps")
-)
-
-namespace processors {
+namespace org::apache::nifi::minifi::azure::processors {
 
 class ListAzureBlobStorage final : public AzureBlobStorageProcessorBase {
  public:
   EXTENSIONAPI static constexpr const char* Description = "Lists blobs in an Azure Storage container. Listing details are attached to an empty FlowFile for use with FetchAzureBlobStorage.";
 
-  EXTENSIONAPI static constexpr auto ListingStrategy = core::PropertyDefinitionBuilder<azure::EntityTracking::length>::createProperty("Listing Strategy")
+  EXTENSIONAPI static constexpr auto ListingStrategy = core::PropertyDefinitionBuilder<magic_enum::enum_count<EntityTracking>()>::createProperty("Listing Strategy")
       .withDescription("Specify how to determine new/updated entities. If 'timestamps' is selected it tracks the latest timestamp of listed entity to determine new/updated entities. "
           "If 'none' is selected it lists an entity without any tracking, the same entity will be listed each time on executing this processor.")
       .isRequired(true)
-      .withDefaultValue(toStringView(azure::EntityTracking::TIMESTAMPS))
-      .withAllowedValues(azure::EntityTracking::values)
+      .withDefaultValue(magic_enum::enum_name(EntityTracking::timestamps))
+      .withAllowedValues(magic_enum::enum_names<EntityTracking>())
       .build();
   EXTENSIONAPI static constexpr auto Prefix = core::PropertyDefinitionBuilder<>::createProperty("Prefix")
       .withDescription("Search prefix for listing")
@@ -87,9 +81,8 @@ class ListAzureBlobStorage final : public AzureBlobStorageProcessorBase {
   std::shared_ptr<core::FlowFile> createNewFlowFile(core::ProcessSession &session, const storage::ListContainerResultElement &element);
 
   storage::ListAzureBlobStorageParameters list_parameters_;
-  azure::EntityTracking tracking_strategy_ = azure::EntityTracking::TIMESTAMPS;
+  azure::EntityTracking tracking_strategy_ = azure::EntityTracking::timestamps;
   std::unique_ptr<minifi::utils::ListingStateManager> state_manager_;
 };
 
-}  // namespace processors
-}  // namespace org::apache::nifi::minifi::azure
+}  // namespace org::apache::nifi::minifi::azure::processors

@@ -24,6 +24,7 @@
 #include "core/ProcessContext.h"
 #include "core/ProcessSession.h"
 #include "../GCPAttributes.h"
+#include "utils/ProcessorConfigUtils.h"
 
 namespace gcs = ::google::cloud::storage;
 
@@ -67,8 +68,8 @@ class UploadToGCSCallback {
     encryption_key_ = encryption_key;
   }
 
-  void setPredefinedAcl(PutGCSObject::PredefinedAcl predefined_acl) {
-    predefined_acl_ = gcs::PredefinedAcl(predefined_acl.toString());
+  void setPredefinedAcl(put_gcs_object::PredefinedAcl predefined_acl) {
+    predefined_acl_ = gcs::PredefinedAcl(std::string{magic_enum::enum_name(predefined_acl)});
   }
 
   void setContentType(const std::string& content_type_str) {
@@ -156,7 +157,7 @@ void PutGCSObject::onTrigger(const std::shared_ptr<core::ProcessContext>& contex
   if (content_type && !content_type->empty())
     callback.setContentType(*content_type);
 
-  if (auto predefined_acl = context->getProperty<PredefinedAcl>(ObjectACL))
+  if (auto predefined_acl = utils::parseOptionalEnumProperty<put_gcs_object::PredefinedAcl>(*context, ObjectACL))
     callback.setPredefinedAcl(*predefined_acl);
   callback.setIfGenerationMatch(context->getProperty<bool>(OverwriteObject));
 

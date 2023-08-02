@@ -28,6 +28,7 @@
 #include "Exception.h"
 #include "data/MaxCollector.h"
 #include "utils/StringUtils.h"
+#include "utils/ProcessorConfigUtils.h"
 
 namespace org::apache::nifi::minifi::processors {
 
@@ -49,7 +50,7 @@ void QueryDatabaseTable::initialize() {
 }
 
 void QueryDatabaseTable::processOnSchedule(core::ProcessContext& context) {
-  context.getProperty(OutputFormat, output_format_);
+  output_format_ = utils::parseEnumProperty<flow_file_source::OutputType>(context, OutputFormat);
   max_rows_ = [&] {
     uint64_t max_rows = 0;
     context.getProperty(MaxRowsPerFlowFile, max_rows);

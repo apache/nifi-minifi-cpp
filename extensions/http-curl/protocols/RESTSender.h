@@ -38,12 +38,12 @@ namespace org::apache::nifi::minifi::c2 {
  *
  */
 class RESTSender : public RESTProtocol, public C2Protocol {
-  SMART_ENUM(RequestEncoding,
-    (None, "none"),
-    (Gzip, "gzip")
-  )
-
  public:
+  enum class RequestEncoding {
+    none,
+    gzip
+  };
+
   explicit RESTSender(std::string name, const utils::Identifier &uuid = utils::Identifier());
 
   EXTENSIONAPI static constexpr const char* Description = "Encapsulates the restful protocol that is built upon C2Protocol.";

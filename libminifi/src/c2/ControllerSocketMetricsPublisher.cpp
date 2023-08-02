@@ -66,7 +66,7 @@ std::unordered_set<std::string> ControllerSocketMetricsPublisher::getConnections
 }
 
 std::string ControllerSocketMetricsPublisher::getAgentManifest() {
-  C2Payload agent_manifest(Operation::DESCRIBE);
+  C2Payload agent_manifest(Operation::describe);
   agent_manifest.setLabel("agentManifest");
   auto manifest = response_node_loader_->getAgentManifest();
   C2Agent::serializeMetrics(agent_manifest, manifest.name, manifest.serialized_nodes);

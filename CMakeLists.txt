@@ -326,6 +326,9 @@ include(Date)
 # expected-lite
 include(ExpectedLite)
 
+# magic_enum
+include(MagicEnum)
+
 # Update passthrough args used in configurations in patch commands
 if (WIN32)
     set(PASSTHROUGH_CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /w")

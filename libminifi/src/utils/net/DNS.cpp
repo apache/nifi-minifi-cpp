@@ -77,7 +77,7 @@ nonstd::expected<gsl::not_null<std::unique_ptr<addrinfo, addrinfo_deleter>>, std
   if (!hostname)
     hints.ai_flags |= AI_PASSIVE;
   hints.ai_protocol = [protocol]() -> int {
-    switch (protocol.value()) {
+    switch (protocol) {
       case IpProtocol::TCP: return IPPROTO_TCP;
       case IpProtocol::UDP: return IPPROTO_UDP;
     }

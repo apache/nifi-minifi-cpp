@@ -57,7 +57,7 @@ std::optional<storage::PutAzureDataLakeStorageParameters> PutAzureDataLakeStorag
   if (!setFileOperationCommonParameters(params, context, flow_file)) {
     return std::nullopt;
   }
-  params.replace_file = conflict_resolution_strategy_ == azure::FileExistsResolutionStrategy::REPLACE_FILE;
+  params.replace_file = conflict_resolution_strategy_ == azure::FileExistsResolutionStrategy::replace;
 
   return params;
 }
@@ -82,13 +82,13 @@ void PutAzureDataLakeStorage::onTrigger(const std::shared_ptr<core::ProcessConte
   const storage::UploadDataLakeStorageResult result = callback.getResult();
 
   if (result.result_code == storage::UploadResultCode::FILE_ALREADY_EXISTS) {
-    gsl_Expects(conflict_resolution_strategy_ != azure::FileExistsResolutionStrategy::REPLACE_FILE);
-    if (conflict_resolution_strategy_ == azure::FileExistsResolutionStrategy::FAIL_FLOW) {
+    gsl_Expects(conflict_resolution_strategy_ != azure::FileExistsResolutionStrategy::replace);
+    if (conflict_resolution_strategy_ == azure::FileExistsResolutionStrategy::fail) {
       logger_->log_error("Failed to upload file '%s/%s' to filesystem '%s' on Azure Data Lake storage because file already exists",
         params->directory_name, params->filename, params->file_system_name);
       session->transfer(flow_file, Failure);
       return;
-    } else if (conflict_resolution_strategy_ == azure::FileExistsResolutionStrategy::IGNORE_REQUEST) {
+    } else if (conflict_resolution_strategy_ == azure::FileExistsResolutionStrategy::ignore) {
       logger_->log_debug("Upload of file '%s/%s' was ignored because it already exits in filesystem '%s' on Azure Data Lake Storage",
         params->directory_name, params->filename, params->file_system_name);
       session->transfer(flow_file, Success);

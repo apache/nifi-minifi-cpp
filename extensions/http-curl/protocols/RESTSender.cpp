@@ -58,16 +58,16 @@ void RESTSender::initialize(core::controller::ControllerServiceProvider* control
       }
     }
     if (auto req_encoding_str = configure->get(Configuration::nifi_c2_rest_request_encoding)) {
-      if (auto req_encoding = RequestEncoding::parse(req_encoding_str->c_str(), RequestEncoding{}, false)) {
-        logger_->log_debug("Using request encoding '%s'", req_encoding.toString());
-        req_encoding_ = req_encoding;
+      if (auto req_encoding = magic_enum::enum_cast<RequestEncoding>(*req_encoding_str, magic_enum::case_insensitive)) {
+        logger_->log_debug("Using request encoding '%s'", std::string{magic_enum::enum_name(*req_encoding)});
+        req_encoding_ = *req_encoding;
       } else {
         logger_->log_error("Invalid request encoding '%s'", req_encoding_str.value());
-        req_encoding_ = RequestEncoding::None;
+        req_encoding_ = RequestEncoding::none;
       }
     } else {
-      logger_->log_debug("Request encoding is not specified, using default '%s'", toString(RequestEncoding::None));
-      req_encoding_ = RequestEncoding::None;
+      logger_->log_debug("Request encoding is not specified, using default '%s'", std::string{magic_enum::enum_name(RequestEncoding::none)});
+      req_encoding_ = RequestEncoding::none;
     }
   }
   logger_->log_debug("Submitting to %s", rest_uri_);
@@ -76,7 +76,7 @@ void RESTSender::initialize(core::controller::ControllerServiceProvider* control
 C2Payload RESTSender::consumePayload(const std::string &url, const C2Payload &payload, Direction direction, bool /*async*/) {
   std::optional<std::string> data;
 
-  if (direction == Direction::TRANSMIT && payload.getOperation() != Operation::TRANSFER) {
+  if (direction == Direction::TRANSMIT && payload.getOperation() != Operation::transfer) {
     // treat payload as json
     data = serializeJsonRootPayload(payload);
   }
@@ -84,7 +84,7 @@ C2Payload RESTSender::consumePayload(const std::string &url, const C2Payload &pa
 }
 
 C2Payload RESTSender::consumePayload(const C2Payload &payload, Direction direction, bool async) {
-  if (payload.getOperation() == Operation::ACKNOWLEDGE) {
+  if (payload.getOperation() == Operation::acknowledge) {
     return consumePayload(ack_uri_, payload, direction, async);
   }
   return consumePayload(rest_uri_, payload, direction, async);
@@ -123,7 +123,7 @@ C2Payload RESTSender::sendPayload(const std::string& url, const Direction direct
   };
   if (direction == Direction::TRANSMIT) {
     setUpHttpRequest("POST");
-    if (payload.getOperation() == Operation::TRANSFER) {
+    if (payload.getOperation() == Operation::transfer) {
       // treat nested payloads as files
       for (const auto& file : payload.getNestedPayloads()) {
         std::string filename = file.getLabel();
@@ -136,7 +136,7 @@ C2Payload RESTSender::sendPayload(const std::string& url, const Direction direct
       }
     } else {
       auto data_input = std::make_unique<utils::HTTPUploadByteArrayInputCallback>();
-      if (data && req_encoding_ == RequestEncoding::Gzip) {
+      if (data && req_encoding_ == RequestEncoding::gzip) {
         io::BufferStream compressed_payload;
         bool compression_success = [&] {
           io::ZlibCompressStream compressor(gsl::make_not_null(&compressed_payload), io::ZlibCompressionFormat::GZIP, Z_BEST_COMPRESSION);
@@ -166,7 +166,7 @@ C2Payload RESTSender::sendPayload(const std::string& url, const Direction direct
     setUpHttpRequest("GET");
   }
 
-  if (payload.getOperation() == Operation::TRANSFER) {
+  if (payload.getOperation() == Operation::transfer) {
     auto read = std::make_unique<utils::HTTPReadCallback>(std::numeric_limits<size_t>::max());
     client.setReadCallback(std::move(read));
     if (accepted_formats && !accepted_formats->empty()) {
@@ -202,7 +202,7 @@ C2Payload RESTSender::sendPayload(const std::string& url, const Direction direct
 }
 
 C2Payload RESTSender::fetch(const std::string& url, const std::vector<std::string>& accepted_formats, bool /*async*/) {
-  return sendPayload(url, Direction::RECEIVE, C2Payload(Operation::TRANSFER, true), std::nullopt, accepted_formats);
+  return sendPayload(url, Direction::RECEIVE, C2Payload(Operation::transfer, true), std::nullopt, accepted_formats);
 }
 
 REGISTER_RESOURCE(RESTSender, DescriptionOnly);

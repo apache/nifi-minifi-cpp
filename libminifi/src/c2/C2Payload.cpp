@@ -110,7 +110,7 @@ std::ostream& operator<<(std::ostream& out, const C2Payload& payload) {
     << "label: \"" << payload.label_ << "\", "
     << "payloads: " << payload.payloads_ << ", "
     << "contents: " << payload.content_ << ", "
-    << "op: " << payload.op_.toStringOr("<invalid operation>") << ", "
+    << "op: " << magic_enum::enum_name(payload.op_) << ", "
     << "raw: " << payload.raw_ << ", "
     << "data: \"" << utils::StringUtils::escapeUnprintableBytes(payload.raw_data_) << "\", "
     << "is_container: " << payload.is_container_ << ", "
@@ -121,7 +121,7 @@ std::ostream& operator<<(std::ostream& out, const C2Payload& payload) {
 std::ostream& operator<<(std::ostream& out, const C2ContentResponse& response) {
   out << std::boolalpha;
   return out << "{"
-    << "op: " << response.op.toStringOr("<invalid operation>") << ", "
+    << "op: " << magic_enum::enum_name(response.op) << ", "
     << "required: " << response.required << ", "
     << "ident: \"" << response.ident << "\", "
     << "delay: " << response.delay << ", "

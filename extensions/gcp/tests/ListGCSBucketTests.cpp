@@ -68,7 +68,7 @@ class ListGCSBucketTests : public ::testing::Test {
     gcp_credentials_node_ = test_controller_.plan->addController("GCPCredentialsControllerService", "gcp_credentials_controller_service");
     test_controller_.plan->setProperty(gcp_credentials_node_,
                                        GCPCredentialsControllerService::CredentialsLoc,
-                                       toString(minifi_gcp::CredentialsLocation::USE_ANONYMOUS_CREDENTIALS));
+                                       magic_enum::enum_name(minifi_gcp::CredentialsLocation::USE_ANONYMOUS_CREDENTIALS));
     test_controller_.plan->setProperty(list_gcs_bucket_,
                                        ListGCSBucket::GCPCredentials,
                                        "gcp_credentials_controller_service");

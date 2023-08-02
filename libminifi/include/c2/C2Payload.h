@@ -15,8 +15,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#ifndef LIBMINIFI_INCLUDE_C2_C2PAYLOAD_H_
-#define LIBMINIFI_INCLUDE_C2_C2PAYLOAD_H_
+#pragma once
 
 #include <vector>
 #include <memory>
@@ -31,49 +30,45 @@
 #include "utils/gsl.h"
 #include "utils/span.h"
 
-namespace org {
-namespace apache {
-namespace nifi {
-namespace minifi {
-namespace c2 {
+namespace org::apache::nifi::minifi::c2 {
 
-SMART_ENUM(Operation,
-  (ACKNOWLEDGE, "acknowledge"),
-  (START, "start"),
-  (STOP, "stop"),
-  (RESTART, "restart"),
-  (DESCRIBE, "describe"),
-  (HEARTBEAT, "heartbeat"),
-  (UPDATE, "update"),
-  (CLEAR, "clear"),
-  (TRANSFER, "transfer"),
-  (PAUSE, "pause"),
-  (RESUME, "resume")
-)
+enum class Operation : uint8_t {
+  acknowledge,
+  start,
+  stop,
+  restart,
+  describe,
+  heartbeat,
+  update,
+  clear,
+  transfer,
+  pause,
+  resume
+};
 
-SMART_ENUM(DescribeOperand,
-  (METRICS, "metrics"),
-  (CONFIGURATION, "configuration"),
-  (MANIFEST, "manifest"),
-  (JSTACK, "jstack"),
-  (CORECOMPONENTSTATE, "corecomponentstate")
-)
+enum class DescribeOperand : uint8_t {
+  metrics,
+  configuration,
+  manifest,
+  jstack,
+  corecomponentstate
+};
 
-SMART_ENUM(UpdateOperand,
-  (CONFIGURATION, "configuration"),
-  (PROPERTIES, "properties"),
-  (ASSET, "asset")
-)
+enum class UpdateOperand : uint8_t {
+  configuration,
+  properties,
+  asset
+};
 
-SMART_ENUM(TransferOperand,
-  (DEBUG, "debug")
-)
+enum class TransferOperand : uint8_t {
+  debug
+};
 
-SMART_ENUM(ClearOperand,
-  (CONNECTION, "connection"),
-  (REPOSITORIES, "repositories"),
-  (CORECOMPONENTSTATE, "corecomponentstate")
-)
+enum class ClearOperand : uint8_t{
+  connection,
+  repositories,
+  corecomponentstate
+};
 
 #define PAYLOAD_NO_STATUS 0
 #define PAYLOAD_SUCCESS 1
@@ -261,10 +256,4 @@ class C2Payload : public state::Update {
   bool is_collapsible_{ true };
 };
 
-}  // namespace c2
-}  // namespace minifi
-}  // namespace nifi
-}  // namespace apache
-}  // namespace org
-
-#endif  // LIBMINIFI_INCLUDE_C2_C2PAYLOAD_H_
+}  // namespace org::apache::nifi::minifi::c2

@@ -40,8 +40,7 @@ void ListAzureBlobStorage::onSchedule(const std::shared_ptr<core::ProcessContext
   }
   state_manager_ = std::make_unique<minifi::utils::ListingStateManager>(state_manager);
 
-  tracking_strategy_ = azure::EntityTracking::parse(
-    utils::parsePropertyWithAllowableValuesOrThrow(*context, ListingStrategy.name, azure::EntityTracking::values).c_str());
+  tracking_strategy_ = utils::parseEnumProperty<azure::EntityTracking>(*context, ListingStrategy);
 
   auto params = buildListAzureBlobStorageParameters(*context);
   if (!params) {
@@ -92,7 +91,7 @@ void ListAzureBlobStorage::onTrigger(const std::shared_ptr<core::ProcessContext>
   std::size_t files_transferred = 0;
 
   for (const auto& element : *list_result) {
-    if (tracking_strategy_ == azure::EntityTracking::TIMESTAMPS && stored_listing_state.wasObjectListedAlready(element)) {
+    if (tracking_strategy_ == azure::EntityTracking::timestamps && stored_listing_state.wasObjectListedAlready(element)) {
       continue;
     }
 

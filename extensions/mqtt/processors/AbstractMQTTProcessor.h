@@ -32,20 +32,55 @@
 #include "utils/Enum.h"
 #include "MQTTAsync.h"
 
+namespace org::apache::nifi::minifi::processors::mqtt {
+enum class MqttVersions {
+  V_3X_AUTO,
+  V_3_1_0,
+  V_3_1_1,
+  V_5_0
+};
+
+enum class MqttQoS : uint8_t {
+  LEVEL_0,
+  LEVEL_1,
+  LEVEL_2
+};
+}  // namespace org::apache::nifi::minifi::processors::mqtt
+
+namespace magic_enum::customize {
+using MqttVersions = org::apache::nifi::minifi::processors::mqtt::MqttVersions;
+using MqttQoS = org::apache::nifi::minifi::processors::mqtt::MqttQoS;
+
+template <>
+constexpr customize_t enum_name<MqttVersions>(MqttVersions value) noexcept {
+  switch (value) {
+    case MqttVersions::V_3X_AUTO:
+      return "3.x AUTO";
+    case MqttVersions::V_3_1_0:
+      return "3.1.0";
+    case MqttVersions::V_3_1_1:
+      return "3.1.1";
+    case MqttVersions::V_5_0:
+      return "5.0";
+  }
+  return invalid_tag;
+}
+
+template <>
+constexpr customize_t enum_name<MqttQoS>(MqttQoS value) noexcept {
+  switch (value) {
+    case MqttQoS::LEVEL_0:
+      return "0";
+    case MqttQoS::LEVEL_1:
+      return "1";
+    case MqttQoS::LEVEL_2:
+      return "2";
+  }
+  return invalid_tag;
+}
+}  // namespace magic_enum::customize
+
 namespace org::apache::nifi::minifi::processors {
-
-namespace mqtt {
-SMART_ENUM(MqttVersions,
-  (V_3X_AUTO, "3.x AUTO"),
-  (V_3_1_0, "3.1.0"),
-  (V_3_1_1, "3.1.1"),
-  (V_5_0, "5.0"));
-
-SMART_ENUM(MqttQoS,
-  (LEVEL_0, "0"),
-  (LEVEL_1, "1"),
-  (LEVEL_2, "2"));
-}  // namespace mqtt
 
 static constexpr const char* const MQTT_SECURITY_PROTOCOL_SSL = "ssl";
 
@@ -66,15 +101,17 @@ class AbstractMQTTProcessor : public core::Processor {
   EXTENSIONAPI static constexpr auto ClientID = core::PropertyDefinitionBuilder<>::createProperty("Client ID")
       .withDescription("MQTT client ID to use. WARNING: Must not be empty when using MQTT 3.1.0!")
       .build();
-  EXTENSIONAPI static constexpr auto QoS = core::PropertyDefinitionBuilder<mqtt::MqttQoS::length>::createProperty("Quality of Service")
+  EXTENSIONAPI static constexpr auto QoS = core::PropertyDefinitionBuilder<magic_enum::enum_count<mqtt::MqttQoS>()>::createProperty("Quality of Service")
       .withDescription("The Quality of Service (QoS) of messages.")
-      .withDefaultValue(toStringView(mqtt::MqttQoS::LEVEL_0))
-      .withAllowedValues(mqtt::MqttQoS::values)
+      .withDefaultValue(magic_enum::enum_name(mqtt::MqttQoS::LEVEL_0))
+      .withAllowedValues(magic_enum::enum_names<mqtt::MqttQoS>())
+      .isRequired(true)
       .build();
-  EXTENSIONAPI static constexpr auto MqttVersion = core::PropertyDefinitionBuilder<mqtt::MqttVersions::length>::createProperty("MQTT Version")
+  EXTENSIONAPI static constexpr auto MqttVersion = core::PropertyDefinitionBuilder<magic_enum::enum_count<mqtt::MqttVersions>()>::createProperty("MQTT Version")
       .withDescription("The MQTT specification version when connecting to the broker.")
-      .withDefaultValue(toStringView(mqtt::MqttVersions::V_3X_AUTO))
-      .withAllowedValues(mqtt::MqttVersions::values)
+      .withDefaultValue(magic_enum::enum_name(mqtt::MqttVersions::V_3X_AUTO))
+      .withAllowedValues(magic_enum::enum_names<mqtt::MqttVersions>())
+      .isRequired(true)
       .build();
   EXTENSIONAPI static constexpr auto ConnectionTimeout = core::PropertyDefinitionBuilder<>::createProperty("Connection Timeout")
       .withDescription("Maximum time interval the client will wait for the network connection to the MQTT broker")
@@ -90,10 +127,11 @@ class AbstractMQTTProcessor : public core::Processor {
   EXTENSIONAPI static constexpr auto LastWillMessage = core::PropertyDefinitionBuilder<>::createProperty("Last Will Message")
       .withDescription("The message to send as the client's Last Will. If the Last Will Message is empty, Last Will will be deleted from the broker")
       .build();
-  EXTENSIONAPI static constexpr auto LastWillQoS = core::PropertyDefinitionBuilder<mqtt::MqttQoS::length>::createProperty("Last Will QoS")
+  EXTENSIONAPI static constexpr auto LastWillQoS = core::PropertyDefinitionBuilder<magic_enum::enum_count<mqtt::MqttQoS>()>::createProperty("Last Will QoS")
       .withDescription("The Quality of Service (QoS) to send the last will with.")
-      .withDefaultValue(toStringView(mqtt::MqttQoS::LEVEL_0))
-      .withAllowedValues(mqtt::MqttQoS::values)
+      .withDefaultValue(magic_enum::enum_name(mqtt::MqttQoS::LEVEL_0))
+      .withAllowedValues(magic_enum::enum_names<mqtt::MqttQoS>())
+      .isRequired(true)
       .build();
   EXTENSIONAPI static constexpr auto LastWillRetain = core::PropertyDefinitionBuilder<>::createProperty("Last Will Retain")
       .withDescription("Whether to retain the client's Last Will")

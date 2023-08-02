@@ -224,7 +224,7 @@ void C2Agent::configure(const std::shared_ptr<Configure> &configure, bool reconf
 }
 
 void C2Agent::performHeartBeat() {
-  C2Payload payload(Operation::HEARTBEAT);
+  C2Payload payload(Operation::heartbeat);
   logger_->log_trace("Performing heartbeat");
   std::vector<state::response::NodeReporter::ReportedNode> metrics;
   if (auto node_reporter = node_reporter_.lock()) {
@@ -239,7 +239,7 @@ void C2Agent::performHeartBeat() {
 
   payload.reservePayloads(metrics.size());
   for (const auto& metric : metrics) {
-    C2Payload child_metric_payload(Operation::HEARTBEAT);
+    C2Payload child_metric_payload(Operation::heartbeat);
     child_metric_payload.setLabel(metric.name);
     child_metric_payload.setContainer(metric.is_array);
     serializeMetrics(child_metric_payload, metric.name, metric.serialized_nodes, metric.is_array);
@@ -337,25 +337,25 @@ struct C2DebugBundleError : public C2TransferError {
 }  // namespace
 
 void C2Agent::handle_c2_server_response(const C2ContentResponse &resp) {
-  switch (resp.op.value()) {
-    case Operation::CLEAR:
+  switch (resp.op) {
+    case Operation::clear:
       handle_clear(resp);
       break;
-    case Operation::UPDATE:
+    case Operation::update:
       handle_update(resp);
       break;
-    case Operation::DESCRIBE:
+    case Operation::describe:
       handle_describe(resp);
       break;
-    case Operation::RESTART: {
+    case Operation::restart: {
       update_sink_->stop();
-      C2Payload response(Operation::ACKNOWLEDGE, resp.ident, true);
+      C2Payload response(Operation::acknowledge, resp.ident, true);
       protocol_.load()->consumePayload(response);
       restart_needed_ = true;
     }
       break;
-    case Operation::START:
-    case Operation::STOP: {
+    case Operation::start:
+    case Operation::stop: {
       if (resp.name == "C2" || resp.name == "c2") {
         raise(SIGTERM);
       }
@@ -363,7 +363,7 @@ void C2Agent::handle_c2_server_response(const C2ContentResponse &resp) {
       // stop all referenced components.
       update_sink_->executeOnComponent(resp.name, [this, &resp] (state::StateController& component) {
         logger_->log_debug("Stopping component %s", resp.name);
-        if (resp.op == Operation::STOP) {
+        if (resp.op == Operation::stop) {
           component.stop();
         } else {
           component.start();
@@ -371,33 +371,33 @@ void C2Agent::handle_c2_server_response(const C2ContentResponse &resp) {
       });
 
       if (resp.ident.length() > 0) {
-        C2Payload response(Operation::ACKNOWLEDGE, resp.ident, true);
+        C2Payload response(Operation::acknowledge, resp.ident, true);
         enqueue_c2_response(std::move(response));
       }
     }
       //
       break;
-    case Operation::PAUSE:
+    case Operation::pause:
       if (pause_handler_ != nullptr) {
         pause_handler_->pause();
       } else {
         logger_->log_warn("Pause functionality is not supported!");
       }
       break;
-    case Operation::RESUME:
+    case Operation::resume:
       if (pause_handler_ != nullptr) {
         pause_handler_->resume();
       } else {
         logger_->log_warn("Resume functionality is not supported!");
       }
       break;
-    case Operation::TRANSFER: {
+    case Operation::transfer: {
       try {
         handle_transfer(resp);
-        C2Payload response(Operation::ACKNOWLEDGE, resp.ident, true);
+        C2Payload response(Operation::acknowledge, resp.ident, true);
         enqueue_c2_response(std::move(response));
       } catch (const std::runtime_error& error) {
-        C2Payload response(Operation::ACKNOWLEDGE, state::UpdateState::SET_ERROR, resp.ident, true);
+        C2Payload response(Operation::acknowledge, state::UpdateState::SET_ERROR, resp.ident, true);
         response.setRawData(error.what());
         enqueue_c2_response(std::move(response));
       }
@@ -415,13 +415,13 @@ C2Payload C2Agent::prepareConfigurationOptions(const C2ContentResponse &resp) co
     std::copy_if(unsanitized_keys.begin(), unsanitized_keys.end(), std::back_inserter(keys),
             [](const std::string& key) {return key.find("pass") == std::string::npos;});
 
-    C2Payload response(Operation::ACKNOWLEDGE, resp.ident, true);
-    C2Payload options(Operation::ACKNOWLEDGE);
+    C2Payload response(Operation::acknowledge, resp.ident, true);
+    C2Payload options(Operation::acknowledge);
     options.setLabel("configuration_options");
     std::string value;
     for (const auto& key : keys) {
       if (configuration_->get(key, value)) {
-        C2ContentResponse option(Operation::ACKNOWLEDGE);
+        C2ContentResponse option(Operation::acknowledge);
         option.name = key;
         option.operation_arguments[key] = value;
         options.addContent(std::move(option));
@@ -434,25 +434,25 @@ C2Payload C2Agent::prepareConfigurationOptions(const C2ContentResponse &resp) co
 void C2Agent::handle_clear(const C2ContentResponse &resp) {
   ClearOperand operand;
   try {
-    operand = ClearOperand::parse(resp.name.c_str(), {}, false);
+    operand = utils::enumCast<ClearOperand>(resp.name, true);
   } catch(const std::runtime_error&) {
     logger_->log_debug("Clearing unknown %s", resp.name);
     return;
   }
 
-  switch (operand.value()) {
-    case ClearOperand::CONNECTION: {
+  switch (operand) {
+    case ClearOperand::connection: {
       for (const auto& connection : resp.operation_arguments) {
         logger_->log_debug("Clearing connection %s", connection.second.to_string());
         update_sink_->clearConnection(connection.second.to_string());
       }
       break;
     }
-    case ClearOperand::REPOSITORIES: {
+    case ClearOperand::repositories: {
       update_sink_->drainRepositories();
       break;
     }
-    case ClearOperand::CORECOMPONENTSTATE: {
+    case ClearOperand::corecomponentstate: {
       for (const auto& corecomponent : resp.operation_arguments) {
         auto state_storage = core::ProcessContext::getStateStorage(logger_, controller_, configuration_);
         if (state_storage != nullptr) {
@@ -478,7 +478,7 @@ void C2Agent::handle_clear(const C2ContentResponse &resp) {
       logger_->log_error("Unknown clear operand %s", resp.name);
   }
 
-  C2Payload response(Operation::ACKNOWLEDGE, resp.ident, true);
+  C2Payload response(Operation::acknowledge, resp.ident, true);
   enqueue_c2_response(std::move(response));
 }
 
@@ -489,16 +489,16 @@ void C2Agent::handle_clear(const C2ContentResponse &resp) {
 void C2Agent::handle_describe(const C2ContentResponse &resp) {
   DescribeOperand operand;
   try {
-    operand = DescribeOperand::parse(resp.name.c_str(), {}, false);
+    operand = utils::enumCast<DescribeOperand>(resp.name, true);
   } catch(const std::runtime_error&) {
-    C2Payload response(Operation::ACKNOWLEDGE, resp.ident, true);
+    C2Payload response(Operation::acknowledge, resp.ident, true);
     enqueue_c2_response(std::move(response));
     return;
   }
 
-  switch (operand.value()) {
-    case DescribeOperand::METRICS: {
-      C2Payload response(Operation::ACKNOWLEDGE, resp.ident, true);
+  switch (operand) {
+    case DescribeOperand::metrics: {
+      C2Payload response(Operation::acknowledge, resp.ident, true);
       auto iter = resp.operation_arguments.find("metricsClass");
       std::string metricsClass;
       if (iter != resp.operation_arguments.end()) {
@@ -508,7 +508,7 @@ void C2Agent::handle_describe(const C2ContentResponse &resp) {
       if (auto node_reporter = node_reporter_.lock()) {
         metricsNode = node_reporter->getMetricsNode(metricsClass);
       }
-      C2Payload metrics(Operation::ACKNOWLEDGE);
+      C2Payload metrics(Operation::acknowledge);
       metricsClass.empty() ? metrics.setLabel("metrics") : metrics.setLabel(metricsClass);
       if (metricsNode) {
         serializeMetrics(metrics, metricsNode->name, metricsNode->serialized_nodes, metricsNode->is_array);
@@ -517,14 +517,14 @@ void C2Agent::handle_describe(const C2ContentResponse &resp) {
       enqueue_c2_response(std::move(response));
       break;
     }
-    case DescribeOperand::CONFIGURATION: {
+    case DescribeOperand::configuration: {
       auto configOptions = prepareConfigurationOptions(resp);
       enqueue_c2_response(std::move(configOptions));
       break;
     }
-    case DescribeOperand::MANIFEST: {
+    case DescribeOperand::manifest: {
       C2Payload response(prepareConfigurationOptions(resp));
-      C2Payload agentInfo(Operation::ACKNOWLEDGE, resp.ident, true);
+      C2Payload agentInfo(Operation::acknowledge, resp.ident, true);
       agentInfo.setLabel("agentInfo");
 
       if (auto node_reporter = node_reporter_.lock()) {
@@ -535,7 +535,7 @@ void C2Agent::handle_describe(const C2ContentResponse &resp) {
       enqueue_c2_response(std::move(response));
       break;
     }
-    case DescribeOperand::JSTACK: {
+    case DescribeOperand::jstack: {
       if (update_sink_->isRunning()) {
         const std::vector<BackTrace> traces = update_sink_->getTraces();
         for (const auto &trace : traces) {
@@ -544,13 +544,13 @@ void C2Agent::handle_describe(const C2ContentResponse &resp) {
           }
         }
         auto keys = configuration_->getConfiguredKeys();
-        C2Payload response(Operation::ACKNOWLEDGE, resp.ident, true);
+        C2Payload response(Operation::acknowledge, resp.ident, true);
         for (const auto &trace : traces) {
-          C2Payload options(Operation::ACKNOWLEDGE, resp.ident, true);
+          C2Payload options(Operation::acknowledge, resp.ident, true);
           options.setLabel(trace.getName());
           std::string value;
           for (const auto &line : trace.getTraces()) {
-            C2ContentResponse option(Operation::ACKNOWLEDGE);
+            C2ContentResponse option(Operation::acknowledge);
             option.name = line;
             option.operation_arguments[line] = line;
             options.addContent(std::move(option));
@@ -561,19 +561,19 @@ void C2Agent::handle_describe(const C2ContentResponse &resp) {
       }
       break;
     }
-    case DescribeOperand::CORECOMPONENTSTATE: {
-      C2Payload response(Operation::ACKNOWLEDGE, resp.ident, true);
+    case DescribeOperand::corecomponentstate: {
+      C2Payload response(Operation::acknowledge, resp.ident, true);
       response.setLabel("corecomponentstate");
-      C2Payload states(Operation::ACKNOWLEDGE, resp.ident, true);
+      C2Payload states(Operation::acknowledge, resp.ident, true);
       states.setLabel("corecomponentstate");
       auto state_storage = core::ProcessContext::getStateStorage(logger_, controller_, configuration_);
       if (state_storage != nullptr) {
         auto core_component_states = state_storage->getAllStates();
         for (const auto& core_component_state : core_component_states) {
-          C2Payload state(Operation::ACKNOWLEDGE, resp.ident, true);
+          C2Payload state(Operation::acknowledge, resp.ident, true);
           state.setLabel(core_component_state.first.to_string());
           for (const auto& kv : core_component_state.second) {
-            C2ContentResponse entry(Operation::ACKNOWLEDGE);
+            C2ContentResponse entry(Operation::acknowledge);
             entry.name = kv.first;
             entry.operation_arguments[kv.first] = kv.second;
             state.addContent(std::move(entry));
@@ -591,23 +591,23 @@ void C2Agent::handle_describe(const C2ContentResponse &resp) {
 void C2Agent::handle_update(const C2ContentResponse &resp) {
   UpdateOperand operand;
   try {
-    operand = UpdateOperand::parse(resp.name.c_str(), {}, false);
+    operand = utils::enumCast<UpdateOperand>(resp.name, true);
   } catch(const std::runtime_error&) {
-    C2Payload response(Operation::ACKNOWLEDGE, state::UpdateState::NOT_APPLIED, resp.ident, true);
+    C2Payload response(Operation::acknowledge, state::UpdateState::NOT_APPLIED, resp.ident, true);
     enqueue_c2_response(std::move(response));
     return;
   }
 
-  switch (operand.value()) {
-    case UpdateOperand::CONFIGURATION: {
+  switch (operand) {
+    case UpdateOperand::configuration: {
       handleConfigurationUpdate(resp);
       break;
     }
-    case UpdateOperand::PROPERTIES: {
+    case UpdateOperand::properties: {
       handlePropertyUpdate(resp);
       break;
     }
-    case UpdateOperand::ASSET: {
+    case UpdateOperand::asset: {
       handleAssetUpdate(resp);
       break;
     }
@@ -642,7 +642,7 @@ void C2Agent::handlePropertyUpdate(const C2ContentResponse &resp) {
   if (propertyWasUpdated && !configuration_->commitChanges()) {
     result = state::UpdateState::PARTIALLY_APPLIED;
   }
-  C2Payload response(Operation::ACKNOWLEDGE, result, resp.ident, true);
+  C2Payload response(Operation::acknowledge, result, resp.ident, true);
   enqueue_c2_response(std::move(response));
   if (propertyWasUpdated) { restart_needed_ = true; }
 }
@@ -666,7 +666,7 @@ C2Agent::UpdateResult C2Agent::update_property(const std::string &property_name,
 }
 
 C2Payload C2Agent::bundleDebugInfo(std::map<std::string, std::unique_ptr<io::InputStream>>& files) {
-  C2Payload payload(Operation::TRANSFER, false);
+  C2Payload payload(Operation::transfer, false);
   auto stream_provider = core::ClassLoader::getDefaultClassLoader().instantiate<io::ArchiveStreamProvider>(
       "ArchiveStreamProvider", "ArchiveStreamProvider");
   if (!stream_provider) {
@@ -690,7 +690,7 @@ C2Payload C2Agent::bundleDebugInfo(std::map<std::string, std::unique_ptr<io::Inp
   if (!archiver->finish()) {
     throw C2DebugBundleError("Failed to complete debug bundle archive");
   }
-  C2Payload file(Operation::TRANSFER, true);
+  C2Payload file(Operation::transfer, true);
   file.setLabel("debug.tar.gz");
   file.setRawData(bundle->moveBuffer());
   payload.addPayload(std::move(file));
@@ -700,13 +700,13 @@ C2Payload C2Agent::bundleDebugInfo(std::map<std::string, std::unique_ptr<io::Inp
 void C2Agent::handle_transfer(const C2ContentResponse &resp) {
   TransferOperand operand;
   try {
-    operand = TransferOperand::parse(resp.name.c_str(), {}, false);
+    operand = utils::enumCast<TransferOperand>(resp.name, true);
   } catch(const std::runtime_error&) {
     throw C2TransferError("Unknown operand '" + resp.name + "'");
   }
 
-  switch (operand.value()) {
-    case TransferOperand::DEBUG: {
+  switch (operand) {
+    case TransferOperand::debug: {
       auto target_it = resp.operation_arguments.find("target");
       if (target_it == resp.operation_arguments.end()) {
         throw C2DebugBundleError("Missing argument for debug operation: 'target'");
@@ -782,7 +782,7 @@ utils::TaskRescheduleInfo C2Agent::consume() {
       extractPayload(payload);
     });
     if (!consume_success) {
-      extractPayload(C2Payload{ Operation::HEARTBEAT });
+      extractPayload(C2Payload{ Operation::heartbeat });
     }
   }
   return utils::TaskRescheduleInfo::RetryIn(std::chrono::milliseconds(C2RESPONSE_POLL_MS));
@@ -867,7 +867,7 @@ bool C2Agent::handleConfigurationUpdate(const C2ContentResponse &resp) {
     std::optional<std::string> optional_configuration_str = fetchFlow(file_uri);
     if (!optional_configuration_str) {
       logger_->log_error("Couldn't load new flow configuration from: \"%s\"", file_uri);
-      C2Payload response(Operation::ACKNOWLEDGE, state::UpdateState::SET_ERROR, resp.ident, true);
+      C2Payload response(Operation::acknowledge, state::UpdateState::SET_ERROR, resp.ident, true);
       response.setRawData("Error while applying flow. Couldn't load flow configuration.");
       enqueue_c2_response(std::move(response));
       return false;
@@ -878,7 +878,7 @@ bool C2Agent::handleConfigurationUpdate(const C2ContentResponse &resp) {
     auto update_text = resp.operation_arguments.find("configuration_data");
     if (update_text == resp.operation_arguments.end()) {
       logger_->log_error("Neither the config file location nor the data is provided");
-      C2Payload response(Operation::ACKNOWLEDGE, state::UpdateState::SET_ERROR, resp.ident, true);
+      C2Payload response(Operation::acknowledge, state::UpdateState::SET_ERROR, resp.ident, true);
       response.setRawData("Error while applying flow. Neither the config file location nor the data is provided.");
       enqueue_c2_response(std::move(response));
       return false;
@@ -897,13 +897,13 @@ bool C2Agent::handleConfigurationUpdate(const C2ContentResponse &resp) {
   int16_t err = {update_sink_->applyUpdate(file_uri, configuration_str, should_persist, getFlowIdFromConfigUpdate(resp))};
   if (err != 0) {
     logger_->log_error("Flow configuration update failed with error code %" PRIi16, err);
-    C2Payload response(Operation::ACKNOWLEDGE, state::UpdateState::SET_ERROR, resp.ident, true);
+    C2Payload response(Operation::acknowledge, state::UpdateState::SET_ERROR, resp.ident, true);
     response.setRawData("Error while applying flow. Likely missing processors");
     enqueue_c2_response(std::move(response));
     return false;
   }
 
-  C2Payload response(Operation::ACKNOWLEDGE, state::UpdateState::FULLY_APPLIED, resp.ident, true);
+  C2Payload response(Operation::acknowledge, state::UpdateState::FULLY_APPLIED, resp.ident, true);
   enqueue_c2_response(std::move(response));
 
   if (should_persist) {
@@ -942,7 +942,7 @@ static std::optional<std::string> validateFilePath(const std::filesystem::path& 
 void C2Agent::handleAssetUpdate(const C2ContentResponse& resp) {
   auto send_error = [&] (std::string_view error) {
     logger_->log_error("%s", std::string(error));
-    C2Payload response(Operation::ACKNOWLEDGE, state::UpdateState::SET_ERROR, resp.ident, true);
+    C2Payload response(Operation::acknowledge, state::UpdateState::SET_ERROR, resp.ident, true);
     response.setRawData(as_bytes(std::span(error.begin(), error.end())));
     enqueue_c2_response(std::move(response));
   };
@@ -993,7 +993,7 @@ void C2Agent::handleAssetUpdate(const C2ContentResponse& resp) {
 
   if (!force_download && std::filesystem::exists(file_path)) {
     logger_->log_info("File already exists");
-    C2Payload response(Operation::ACKNOWLEDGE, state::UpdateState::NO_OPERATION, resp.ident, true);
+    C2Payload response(Operation::acknowledge, state::UpdateState::NO_OPERATION, resp.ident, true);
     enqueue_c2_response(std::move(response));
     return;
   }
@@ -1017,7 +1017,7 @@ void C2Agent::handleAssetUpdate(const C2ContentResponse& resp) {
     file.write(reinterpret_cast<const char*>(raw_data.data()), raw_data.size());
   }
 
-  C2Payload response(Operation::ACKNOWLEDGE, state::UpdateState::FULLY_APPLIED, resp.ident, true);
+  C2Payload response(Operation::acknowledge, state::UpdateState::FULLY_APPLIED, resp.ident, true);
   enqueue_c2_response(std::move(response));
 }
 

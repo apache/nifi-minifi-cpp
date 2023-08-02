@@ -29,14 +29,29 @@
 #include "ProcessSession.h"
 #include "data/JSONSQLWriter.h"
 
-namespace org::apache::nifi::minifi::processors {
+namespace org::apache::nifi::minifi::processors::flow_file_source {
+enum class OutputType {
+  JSON,
+  JSONPretty
+};
+}  // namespace org::apache::nifi::minifi::processors::flow_file_source
 
-namespace flow_file_source {
-SMART_ENUM(OutputType,
-  (JSON, "JSON"),
-  (JSONPretty, "JSON-Pretty")
-)
-}  // namespace flow_file_source
+namespace magic_enum::customize {
+using OutputType = org::apache::nifi::minifi::processors::flow_file_source::OutputType;
+
+template <>
+constexpr customize_t enum_name<OutputType>(OutputType value) noexcept {
+  switch (value) {
+    case OutputType::JSON:
+      return "JSON";
+    case OutputType::JSONPretty:
+      return "JSON-Pretty";
+  }
+  return invalid_tag;
+}
+}  // namespace magic_enum::customize
+
+namespace org::apache::nifi::minifi::processors {
 
 class FlowFileSource {
  public:
@@ -44,12 +59,12 @@ class FlowFileSource {
   EXTENSIONAPI static constexpr std::string_view FRAGMENT_COUNT = "fragment.count";
   EXTENSIONAPI static constexpr std::string_view FRAGMENT_INDEX = "fragment.index";
 
-  EXTENSIONAPI static constexpr auto OutputFormat = core::PropertyDefinitionBuilder<flow_file_source::OutputType::length>::createProperty("Output Format")
+  EXTENSIONAPI static constexpr auto OutputFormat = core::PropertyDefinitionBuilder<magic_enum::enum_count<flow_file_source::OutputType>()>::createProperty("Output Format")
       .withDescription("Set the output format type.")
       .isRequired(true)
       .supportsExpressionLanguage(true)
-      .withDefaultValue(toStringView(flow_file_source::OutputType::JSONPretty))
-      .withAllowedValues(flow_file_source::OutputType::values)
+      .withDefaultValue(magic_enum::enum_name(flow_file_source::OutputType::JSONPretty))
+      .withAllowedValues(magic_enum::enum_names<flow_file_source::OutputType>())
       .build();
   EXTENSIONAPI static constexpr auto MaxRowsPerFlowFile = core::PropertyDefinitionBuilder<>::createProperty("Max Rows Per Flow File")
       .withDescription(

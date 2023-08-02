@@ -110,7 +110,7 @@ void ListAzureDataLakeStorage::onTrigger(const std::shared_ptr<core::ProcessCont
   std::size_t files_transferred = 0;
 
   for (const auto& element : *list_result) {
-    if (tracking_strategy_ == azure::EntityTracking::TIMESTAMPS && stored_listing_state.wasObjectListedAlready(element)) {
+    if (tracking_strategy_ == azure::EntityTracking::timestamps && stored_listing_state.wasObjectListedAlready(element)) {
       continue;
     }
 

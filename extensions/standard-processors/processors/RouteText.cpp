@@ -73,7 +73,7 @@ class RouteText::ReadCallback {
       throw Exception(PROCESS_SESSION_EXCEPTION, "Couldn't read whole flowfile content");
     }
     std::string_view content{reinterpret_cast<const char*>(buffer.data()), buffer.size()};
-    switch (segmentation_.value()) {
+    switch (segmentation_) {
       case route_text::Segmentation::FULL_TEXT: {
         fn_({content, 0});
         return gsl::narrow<int64_t>(content.length());
@@ -241,7 +241,7 @@ void RouteText::onTrigger(core::ProcessContext *context, core::ProcessSession *s
 
     // group extraction always uses the preprocessed
     auto group = getGroup(preprocessed_value);
-    switch (routing_.value()) {
+    switch (routing_) {
       case route_text::Routing::ALL: {
         if (std::all_of(dynamic_properties_.cbegin(), dynamic_properties_.cend(), [&] (const auto& prop) {
           return matchSegment(matching_context, segment, prop.second);
@@ -309,7 +309,7 @@ std::string_view RouteText::preprocess(std::string_view str) const {
 }
 
 bool RouteText::matchSegment(MatchingContext& context, const Segment& segment, const core::Property& prop) const {
-  switch (matching_.value()) {
+  switch (matching_) {
     case route_text::Matching::EXPRESSION: {
       std::map<std::string, std::string> variables;
       variables["segment"] = segment.value_;

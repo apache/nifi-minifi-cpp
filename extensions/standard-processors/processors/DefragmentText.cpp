@@ -27,6 +27,7 @@
 #include "TextFragmentUtils.h"
 #include "utils/gsl.h"
 #include "utils/StringUtils.h"
+#include "utils/ProcessorConfigUtils.h"
 
 namespace org::apache::nifi::minifi::processors {
 
@@ -52,7 +53,7 @@ void DefragmentText::onSchedule(core::ProcessContext* context, core::ProcessSess
     logger_->log_trace("The Buffer maximum size is configured to be %" PRIu64 " B", max_buffer_size->getValue());
   }
 
-  context->getProperty(PatternLoc, pattern_location_);
+  pattern_location_ = utils::parseEnumProperty<defragment_text::PatternLocation>(*context, PatternLoc);
 
   std::string pattern_str;
   if (context->getProperty(Pattern, pattern_str) && !pattern_str.empty()) {

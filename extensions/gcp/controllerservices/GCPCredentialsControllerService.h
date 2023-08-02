@@ -30,22 +30,46 @@
 #include "google/cloud/storage/oauth2/credentials.h"
 
 namespace org::apache::nifi::minifi::extensions::gcp {
+enum class CredentialsLocation {
+  USE_DEFAULT_CREDENTIALS,
+  USE_COMPUTE_ENGINE_CREDENTIALS,
+  USE_JSON_FILE,
+  USE_JSON_CONTENTS,
+  USE_ANONYMOUS_CREDENTIALS
+};
+}  // namespace org::apache::nifi::minifi::extensions::gcp
 
-SMART_ENUM(CredentialsLocation,
-    (USE_DEFAULT_CREDENTIALS, "Google Application Default Credentials"),
-    (USE_COMPUTE_ENGINE_CREDENTIALS, "Use Compute Engine Credentials"),
-    (USE_JSON_FILE, "Service Account JSON File"),
-    (USE_JSON_CONTENTS, "Service Account JSON"),
-    (USE_ANONYMOUS_CREDENTIALS, "Use Anonymous credentials"));
+namespace magic_enum::customize {
+using CredentialsLocation = org::apache::nifi::minifi::extensions::gcp::CredentialsLocation;
+
+template <>
+constexpr customize_t enum_name<CredentialsLocation>(CredentialsLocation value) noexcept {
+  switch (value) {
+    case CredentialsLocation::USE_DEFAULT_CREDENTIALS:
+      return "Google Application Default Credentials";
+    case CredentialsLocation::USE_COMPUTE_ENGINE_CREDENTIALS:
+      return "Use Compute Engine Credentials";
+    case CredentialsLocation::USE_JSON_FILE:
+      return "Service Account JSON File";
+    case CredentialsLocation::USE_JSON_CONTENTS:
+      return "Service Account JSON";
+    case CredentialsLocation::USE_ANONYMOUS_CREDENTIALS:
+      return "Use Anonymous credentials";
+  }
+  return invalid_tag;
+}
+}  // namespace magic_enum::customize
+
+namespace org::apache::nifi::minifi::extensions::gcp {
 
 class GCPCredentialsControllerService : public core::controller::ControllerService {
  public:
   EXTENSIONAPI static constexpr const char* Description = "Google Cloud Platform Credentials Controller Service";
 
-  EXTENSIONAPI static constexpr auto CredentialsLoc = core::PropertyDefinitionBuilder<CredentialsLocation::length>::createProperty("Credentials Location")
+  EXTENSIONAPI static constexpr auto CredentialsLoc = core::PropertyDefinitionBuilder<magic_enum::enum_count<CredentialsLocation>()>::createProperty("Credentials Location")
       .withDescription("The location of the credentials.")
-      .withAllowedValues(CredentialsLocation::values)
-      .withDefaultValue(toStringView(CredentialsLocation::USE_DEFAULT_CREDENTIALS))
+      .withDefaultValue(magic_enum::enum_name(CredentialsLocation::USE_DEFAULT_CREDENTIALS))
+      .withAllowedValues(magic_enum::enum_names<CredentialsLocation>())
       .isRequired(true)
       .build();
   EXTENSIONAPI static constexpr auto JsonFilePath = core::PropertyDefinitionBuilder<>::createProperty("Service Account JSON File")

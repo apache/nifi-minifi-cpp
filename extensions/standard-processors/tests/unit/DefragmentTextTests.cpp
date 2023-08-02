@@ -63,7 +63,7 @@ TEST_CASE("DefragmentText Single source tests", "[defragmenttextsinglesource]") 
 
   SECTION("Single line messages starting with pattern") {
     plan->setProperty(defrag_text_flow_files, DefragmentText::Pattern, "<[0-9]+>");
-    plan->setProperty(defrag_text_flow_files, DefragmentText::PatternLoc, toString(defragment_text::PatternLocation::START_OF_MESSAGE));
+    plan->setProperty(defrag_text_flow_files, DefragmentText::PatternLoc, magic_enum::enum_name(defragment_text::PatternLocation::START_OF_MESSAGE));
 
     write_to_flow_file->setContent("<1> Foo");
     testController.runSession(plan);
@@ -80,7 +80,7 @@ TEST_CASE("DefragmentText Single source tests", "[defragmenttextsinglesource]") 
 
   SECTION("Single line messages ending with pattern") {
     plan->setProperty(defrag_text_flow_files, DefragmentText::Pattern, "<[0-9]+>");
-    plan->setProperty(defrag_text_flow_files, DefragmentText::PatternLoc, toString(defragment_text::PatternLocation::END_OF_MESSAGE));
+    plan->setProperty(defrag_text_flow_files, DefragmentText::PatternLoc, magic_enum::enum_name(defragment_text::PatternLocation::END_OF_MESSAGE));
 
     write_to_flow_file->setContent("Foo <1>");
     testController.runSession(plan);
@@ -97,7 +97,7 @@ TEST_CASE("DefragmentText Single source tests", "[defragmenttextsinglesource]") 
 
   SECTION("Multiline matching start of messages") {
     plan->setProperty(defrag_text_flow_files, DefragmentText::Pattern, "<[0-9]+>");
-    plan->setProperty(defrag_text_flow_files, DefragmentText::PatternLoc, toString(defragment_text::PatternLocation::START_OF_MESSAGE));
+    plan->setProperty(defrag_text_flow_files, DefragmentText::PatternLoc, magic_enum::enum_name(defragment_text::PatternLocation::START_OF_MESSAGE));
 
     write_to_flow_file->setContent("apple<1> banana<2> cherry<3> dragon ");
     testController.runSession(plan);
@@ -111,7 +111,7 @@ TEST_CASE("DefragmentText Single source tests", "[defragmenttextsinglesource]") 
 
   SECTION("Multiline matching end of messages") {
     plan->setProperty(defrag_text_flow_files, DefragmentText::Pattern, "<[0-9]+>");
-    plan->setProperty(defrag_text_flow_files, DefragmentText::PatternLoc, toString(defragment_text::PatternLocation::END_OF_MESSAGE));
+    plan->setProperty(defrag_text_flow_files, DefragmentText::PatternLoc, magic_enum::enum_name(defragment_text::PatternLocation::END_OF_MESSAGE));
 
     write_to_flow_file->setContent("apple<1> banana<2> cherry<3> dragon ");
     testController.runSession(plan);
@@ -140,7 +140,7 @@ TEST_CASE("DefragmentText Single source tests", "[defragmenttextsinglesource]") 
 
   SECTION("Timeout test Start of Line") {
     plan->setProperty(defrag_text_flow_files, DefragmentText::Pattern, "<[0-9]+>");
-    plan->setProperty(defrag_text_flow_files, DefragmentText::PatternLoc, toString(defragment_text::PatternLocation::START_OF_MESSAGE));
+    plan->setProperty(defrag_text_flow_files, DefragmentText::PatternLoc, magic_enum::enum_name(defragment_text::PatternLocation::START_OF_MESSAGE));
     plan->setProperty(defrag_text_flow_files, DefragmentText::MaxBufferAge, "100 ms");
 
     write_to_flow_file->setContent("Message");
@@ -156,7 +156,7 @@ TEST_CASE("DefragmentText Single source tests", "[defragmenttextsinglesource]") 
 
   SECTION("Timeout test Start of Line") {
     plan->setProperty(defrag_text_flow_files, DefragmentText::Pattern, "<[0-9]+>");
-    plan->setProperty(defrag_text_flow_files, DefragmentText::PatternLoc, toString(defragment_text::PatternLocation::END_OF_MESSAGE));
+    plan->setProperty(defrag_text_flow_files, DefragmentText::PatternLoc, magic_enum::enum_name(defragment_text::PatternLocation::END_OF_MESSAGE));
     plan->setProperty(defrag_text_flow_files, DefragmentText::MaxBufferAge, "100 ms");
 
     write_to_flow_file->setContent("Message");

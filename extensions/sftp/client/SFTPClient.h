@@ -34,19 +34,49 @@
 
 namespace org::apache::nifi::minifi::utils {
 
-SMART_ENUM(SFTPError,
-    (Ok, "Ok"),
-    (PermissionDenied, "Permission denied"),
-    (FileDoesNotExist, "File does not exist"),
-    (FileAlreadyExists, "File already exists"),
-    (CommunicationFailure, "Communication failure"),
-    (IoError, "IO error"),
-    (Unexpected, "Unexpected"))
+enum class SFTPError {
+  Ok,
+  PermissionDenied,
+  FileDoesNotExist,
+  FileAlreadyExists,
+  CommunicationFailure,
+  IoError,
+  Unexpected
+};
+
+}  // namespace org::apache::nifi::minifi::utils
+
+namespace magic_enum::customize {
+using SFTPError = org::apache::nifi::minifi::utils::SFTPError;
+
+template <>
+constexpr customize_t enum_name<SFTPError>(SFTPError value) noexcept {
+  switch (value) {
+    case SFTPError::Ok:
+      return "Ok";
+    case SFTPError::PermissionDenied:
+      return "Permission denied";
+    case SFTPError::FileDoesNotExist:
+      return "File does not exist";
+    case SFTPError::FileAlreadyExists:
+      return "File already exists";
+    case SFTPError::CommunicationFailure:
+      return "Communication failure";
+    case SFTPError::IoError:
+      return "IO error";
+    case SFTPError::Unexpected:
+      return "Unexpected";
+  }
+  return invalid_tag;
+}
+}  // namespace magic_enum::customize
+
+namespace org::apache::nifi::minifi::utils {
 
 class SFTPException : public Exception {
  public:
   explicit SFTPException(const SFTPError err)
-      :Exception{ExceptionType::FILE_OPERATION_EXCEPTION, fmt::format("SFTP Error: {0}", err.toString())},
+      :Exception{ExceptionType::FILE_OPERATION_EXCEPTION, fmt::format("SFTP Error: {0}", magic_enum::enum_name(err))},
       error_{err}
   {}
   [[nodiscard]] SFTPError error() const noexcept { return error_; }

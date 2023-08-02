@@ -27,13 +27,13 @@ TEST_CASE("Test Valid Payload", "[tv1]") {
   std::string ident = "identifier";
   std::string cheese = "cheese";
   std::string chips = "chips";
-  minifi::c2::C2Payload payload(minifi::c2::Operation::ACKNOWLEDGE, ident);
-  minifi::c2::C2Payload payload2(minifi::c2::Operation::ACKNOWLEDGE, minifi::state::UpdateState::FULLY_APPLIED, cheese);
-  minifi::c2::C2ContentResponse response(minifi::c2::Operation::ACKNOWLEDGE);
+  minifi::c2::C2Payload payload(minifi::c2::Operation::acknowledge, ident);
+  minifi::c2::C2Payload payload2(minifi::c2::Operation::acknowledge, minifi::state::UpdateState::FULLY_APPLIED, cheese);
+  minifi::c2::C2ContentResponse response(minifi::c2::Operation::acknowledge);
   response.operation_arguments["type"] = "munster";
   payload2.addContent(std::move(response));
   payload.addPayload(std::move(payload2));
-  payload.addPayload(minifi::c2::C2Payload(minifi::c2::Operation::ACKNOWLEDGE, chips));
+  payload.addPayload(minifi::c2::C2Payload(minifi::c2::Operation::acknowledge, chips));
   REQUIRE("munster" == minifi::c2::PayloadParser::getInstance(payload).in("cheese").getAs<std::string>("type"));
 }
 
@@ -41,13 +41,13 @@ TEST_CASE("Test Invalid not found", "[tv2]") {
   std::string ident = "identifier";
   std::string cheese = "cheese";
   std::string chips = "chips";
-  minifi::c2::C2Payload payload(minifi::c2::Operation::ACKNOWLEDGE, ident);
-  minifi::c2::C2Payload payload2(minifi::c2::Operation::ACKNOWLEDGE, cheese);
-  minifi::c2::C2ContentResponse response(minifi::c2::Operation::ACKNOWLEDGE);
+  minifi::c2::C2Payload payload(minifi::c2::Operation::acknowledge, ident);
+  minifi::c2::C2Payload payload2(minifi::c2::Operation::acknowledge, cheese);
+  minifi::c2::C2ContentResponse response(minifi::c2::Operation::acknowledge);
   response.operation_arguments["typeS"] = "munster";
   payload2.addContent(std::move(response));
   payload.addPayload(std::move(payload2));
-  payload.addPayload(minifi::c2::C2Payload(minifi::c2::Operation::ACKNOWLEDGE, chips));
+  payload.addPayload(minifi::c2::C2Payload(minifi::c2::Operation::acknowledge, chips));
   REQUIRE_THROWS_AS(minifi::c2::PayloadParser::getInstance(payload).in("cheese").getAs<std::string>("type"), minifi::c2::PayloadParseException);
 }
 
@@ -56,13 +56,13 @@ TEST_CASE("Test Invalid coercion", "[tv3]") {
   std::string ident = "identifier";
   std::string cheese = "cheese";
   std::string chips = "chips";
-  minifi::c2::C2Payload payload(minifi::c2::Operation::ACKNOWLEDGE, ident);
-  minifi::c2::C2Payload payload2(minifi::c2::Operation::ACKNOWLEDGE, minifi::state::UpdateState::FULLY_APPLIED, cheese);
-  minifi::c2::C2ContentResponse response(minifi::c2::Operation::ACKNOWLEDGE);
+  minifi::c2::C2Payload payload(minifi::c2::Operation::acknowledge, ident);
+  minifi::c2::C2Payload payload2(minifi::c2::Operation::acknowledge, minifi::state::UpdateState::FULLY_APPLIED, cheese);
+  minifi::c2::C2ContentResponse response(minifi::c2::Operation::acknowledge);
   response.operation_arguments["type"] = "munster";
   payload2.addContent(std::move(response));
   payload.addPayload(std::move(payload2));
-  payload.addPayload(minifi::c2::C2Payload(minifi::c2::Operation::ACKNOWLEDGE, chips));
+  payload.addPayload(minifi::c2::C2Payload(minifi::c2::Operation::acknowledge, chips));
   REQUIRE_THROWS_AS(minifi::c2::PayloadParser::getInstance(payload).in("cheese").getAs<uint64_t>("type"), minifi::c2::PayloadParseException);
 }
 
@@ -70,13 +70,13 @@ TEST_CASE("Test Invalid not there", "[tv4]") {
   std::string ident = "identifier";
   std::string cheese = "cheese";
   std::string chips = "chips";
-  minifi::c2::C2Payload payload(minifi::c2::Operation::ACKNOWLEDGE, ident);
-  minifi::c2::C2Payload payload2(minifi::c2::Operation::ACKNOWLEDGE, minifi::state::UpdateState::FULLY_APPLIED, cheese);
-  minifi::c2::C2ContentResponse response(minifi::c2::Operation::ACKNOWLEDGE);
+  minifi::c2::C2Payload payload(minifi::c2::Operation::acknowledge, ident);
+  minifi::c2::C2Payload payload2(minifi::c2::Operation::acknowledge, minifi::state::UpdateState::FULLY_APPLIED, cheese);
+  minifi::c2::C2ContentResponse response(minifi::c2::Operation::acknowledge);
   response.operation_arguments["type"] = "munster";
   payload2.addContent(std::move(response));
   payload.addPayload(std::move(payload2));
-  payload.addPayload(minifi::c2::C2Payload(minifi::c2::Operation::ACKNOWLEDGE, chips));
+  payload.addPayload(minifi::c2::C2Payload(minifi::c2::Operation::acknowledge, chips));
   REQUIRE_THROWS_AS(minifi::c2::PayloadParser::getInstance(payload).in("cheeses").getAs<uint64_t>("type"), minifi::c2::PayloadParseException);
 }
 
@@ -86,15 +86,15 @@ TEST_CASE("Test typed conversions", "[tv5]") {
   std::string chips = "chips";
   uint64_t size = 233;
   bool isvalid = false;
-  minifi::c2::C2Payload payload(minifi::c2::Operation::ACKNOWLEDGE, ident);
-  minifi::c2::C2Payload payload2(minifi::c2::Operation::ACKNOWLEDGE, minifi::state::UpdateState::FULLY_APPLIED, cheese);
-  minifi::c2::C2ContentResponse response(minifi::c2::Operation::ACKNOWLEDGE);
+  minifi::c2::C2Payload payload(minifi::c2::Operation::acknowledge, ident);
+  minifi::c2::C2Payload payload2(minifi::c2::Operation::acknowledge, minifi::state::UpdateState::FULLY_APPLIED, cheese);
+  minifi::c2::C2ContentResponse response(minifi::c2::Operation::acknowledge);
   response.operation_arguments["type"] = "munster";
   response.operation_arguments["isvalid"] = isvalid;
   response.operation_arguments["size"] = size;
   payload2.addContent(std::move(response));
   payload.addPayload(std::move(payload2));
-  payload.addPayload(minifi::c2::C2Payload(minifi::c2::Operation::ACKNOWLEDGE, chips));
+  payload.addPayload(minifi::c2::C2Payload(minifi::c2::Operation::acknowledge, chips));
   REQUIRE("munster" == minifi::c2::PayloadParser::getInstance(payload).in("cheese").getAs<std::string>("type"));
   REQUIRE(233 == minifi::c2::PayloadParser::getInstance(payload).in("cheese").getAs<uint64_t>("size"));
   REQUIRE(false == minifi::c2::PayloadParser::getInstance(payload).in("cheese").getAs<bool>("isvalid"));
@@ -105,12 +105,12 @@ TEST_CASE("Test Invalid not there deep", "[tv6]") {
   std::string ident = "identifier";
   std::string cheese = "cheese";
   std::string chips = "chips";
-  minifi::c2::C2Payload payload(minifi::c2::Operation::ACKNOWLEDGE, ident);
-  minifi::c2::C2Payload payload2(minifi::c2::Operation::ACKNOWLEDGE, minifi::state::UpdateState::FULLY_APPLIED, cheese);
-  minifi::c2::C2ContentResponse response(minifi::c2::Operation::ACKNOWLEDGE);
+  minifi::c2::C2Payload payload(minifi::c2::Operation::acknowledge, ident);
+  minifi::c2::C2Payload payload2(minifi::c2::Operation::acknowledge, minifi::state::UpdateState::FULLY_APPLIED, cheese);
+  minifi::c2::C2ContentResponse response(minifi::c2::Operation::acknowledge);
   response.operation_arguments["type"] = "munster";
   payload2.addContent(std::move(response));
   payload.addPayload(std::move(payload2));
-  payload.addPayload(minifi::c2::C2Payload(minifi::c2::Operation::ACKNOWLEDGE, chips));
+  payload.addPayload(minifi::c2::C2Payload(minifi::c2::Operation::acknowledge, chips));
   REQUIRE_THROWS_AS(minifi::c2::PayloadParser::getInstance(payload).in("chips").getAs<uint64_t>("type"), minifi::c2::PayloadParseException);
 }

@@ -315,7 +315,7 @@ void TailFile::onSchedule(const std::shared_ptr<core::ProcessContext> &context, 
   std::string rolling_filename_pattern_glob;
   context->getProperty(RollingFilenamePattern, rolling_filename_pattern_glob);
   rolling_filename_pattern_ = utils::file::globToRegex(rolling_filename_pattern_glob);
-  initial_start_position_ = InitialStartPositions{utils::parsePropertyWithAllowableValuesOrThrow(*context, InitialStartPosition.name, InitialStartPositions::values)};
+  initial_start_position_ = utils::parseEnumProperty<InitialStartPositions>(*context, InitialStartPosition);
 
   uint32_t batch_size = 0;
   if (context->getProperty(BatchSize, batch_size) && batch_size != 0) {

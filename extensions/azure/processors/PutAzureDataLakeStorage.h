@@ -37,11 +37,11 @@ class AzureDataLakeStorageTestsFixture;
 
 namespace org::apache::nifi::minifi::azure {
 
-SMART_ENUM(FileExistsResolutionStrategy,
-  (FAIL_FLOW, "fail"),
-  (REPLACE_FILE, "replace"),
-  (IGNORE_REQUEST, "ignore")
-)
+enum class FileExistsResolutionStrategy {
+  fail,
+  replace,
+  ignore
+};
 
 namespace processors {
 
@@ -49,11 +49,12 @@ class PutAzureDataLakeStorage final : public AzureDataLakeStorageFileProcessorBa
  public:
   EXTENSIONAPI static constexpr const char *Description = "Puts content into an Azure Data Lake Storage Gen 2";
 
-  EXTENSIONAPI static constexpr auto ConflictResolutionStrategy = core::PropertyDefinitionBuilder<azure::FileExistsResolutionStrategy::length>::createProperty("Conflict Resolution Strategy")
+  EXTENSIONAPI static constexpr auto ConflictResolutionStrategy
+    = core::PropertyDefinitionBuilder<magic_enum::enum_count<azure::FileExistsResolutionStrategy>()>::createProperty("Conflict Resolution Strategy")
       .withDescription("Indicates what should happen when a file with the same name already exists in the output directory.")
       .isRequired(true)
-      .withDefaultValue(toStringView(azure::FileExistsResolutionStrategy::FAIL_FLOW))
-      .withAllowedValues(azure::FileExistsResolutionStrategy::values)
+      .withDefaultValue(magic_enum::enum_name(azure::FileExistsResolutionStrategy::fail))
+      .withAllowedValues(magic_enum::enum_names<azure::FileExistsResolutionStrategy>())
       .build();
   EXTENSIONAPI static constexpr auto Properties = utils::array_cat(AzureDataLakeStorageFileProcessorBase::Properties, std::array<core::PropertyReference, 1>{ConflictResolutionStrategy});
 
