@@ -172,7 +172,7 @@ class ConsumeKafka : public KafkaProcessorBase {
       .build();
   EXTENSIONAPI static constexpr auto MaxPollRecords = core::PropertyDefinitionBuilder<>::createProperty("Max Poll Records")
       .withDescription("Specifies the maximum number of records Kafka should return when polling each time the processor is triggered.")
-      .withPropertyType(core::StandardPropertyTypes::UNSIGNED_INT_TYPE)
+      .withPropertyType(core::StandardPropertyTypes::UNSIGNED_LONG_TYPE)
       .withDefaultValue(DEFAULT_MAX_POLL_RECORDS)
       .build();
   EXTENSIONAPI static constexpr auto MaxPollTime = core::PropertyDefinitionBuilder<>::createProperty("Max Poll Time")

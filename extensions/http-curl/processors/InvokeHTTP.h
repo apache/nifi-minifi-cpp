@@ -104,9 +104,7 @@ class InvokeHTTP : public core::Processor {
       .withDescription("Regular expression that defines which attributes to send as HTTP headers in the request. If not defined, no attributes are sent as headers.")
       .build();
   EXTENSIONAPI static constexpr auto SSLContext = core::PropertyDefinitionBuilder<0, 1, 0, 1>::createProperty("SSL Context Service")
-      .withDescription(
-          "The SSL Context Service used to provide client certificate "
-          "information for TLS/SSL (https) connections.")
+      .withDescription("The SSL Context Service used to provide client certificate information for TLS/SSL (https) connections.")
       .isRequired(false)
       .withAllowedTypes({core::className<minifi::controllers::SSLContextService>()})
       .withExclusiveOfProperties({{{"Remote URL", "^http:.*$"}}})
@@ -147,10 +145,12 @@ class InvokeHTTP : public core::Processor {
       .withDescription("When POST'ing, PUT'ing or PATCH'ing content set this property to true in order to not pass the 'Content-length' header"
           " and instead send 'Transfer-Encoding' with a value of 'chunked'."
           " This will enable the data transfer mechanism which was introduced in HTTP 1.1 to pass data of unknown lengths in chunks.")
+      .withPropertyType(core::StandardPropertyTypes::BOOLEAN_TYPE)
       .withDefaultValue("false")
       .build();
   EXTENSIONAPI static constexpr auto DisablePeerVerification = core::PropertyDefinitionBuilder<>::createProperty("Disable Peer Verification")
       .withDescription("Disables peer verification for the SSL session")
+      .withPropertyType(core::StandardPropertyTypes::BOOLEAN_TYPE)
       .withDefaultValue("false")
       .build();
   EXTENSIONAPI static constexpr auto PutResponseBodyInAttribute = core::PropertyDefinitionBuilder<>::createProperty("Put Response Body in Attribute")
@@ -160,10 +160,12 @@ class InvokeHTTP : public core::Processor {
       .build();
   EXTENSIONAPI static constexpr auto AlwaysOutputResponse = core::PropertyDefinitionBuilder<>::createProperty("Always Output Response")
       .withDescription("Will force a response FlowFile to be generated and routed to the 'Response' relationship regardless of what the server status code received is ")
+      .withPropertyType(core::StandardPropertyTypes::BOOLEAN_TYPE)
       .withDefaultValue("false")
       .build();
   EXTENSIONAPI static constexpr auto PenalizeOnNoRetry = core::PropertyDefinitionBuilder<>::createProperty("Penalize on \"No Retry\"")
       .withDescription("Enabling this property will penalize FlowFiles that are routed to the \"No Retry\" relationship.")
+      .withPropertyType(core::StandardPropertyTypes::BOOLEAN_TYPE)
       .withDefaultValue("false")
       .build();
   EXTENSIONAPI static constexpr auto InvalidHTTPHeaderFieldHandlingStrategy

@@ -51,12 +51,12 @@ void AbstractMQTTProcessor::onSchedule(const std::shared_ptr<core::ProcessContex
   }
   logger_->log_debug("AbstractMQTTProcessor: Password [%s]", password_);
 
-  if (const auto keep_alive_interval = context->getProperty<core::TimePeriodValue>(KeepAliveInterval)) {
+  if (const auto keep_alive_interval = context->getProperty(KeepAliveInterval) | utils::flatMap(&core::TimePeriodValue::fromString)) {
     keep_alive_interval_ = std::chrono::duration_cast<std::chrono::seconds>(keep_alive_interval->getMilliseconds());
   }
   logger_->log_debug("AbstractMQTTProcessor: KeepAliveInterval [%" PRId64 "] s", int64_t{keep_alive_interval_.count()});
 
-  if (const auto connection_timeout = context->getProperty<core::TimePeriodValue>(ConnectionTimeout)) {
+  if (const auto connection_timeout = context->getProperty(ConnectionTimeout) | utils::flatMap(&core::TimePeriodValue::fromString)) {
     connection_timeout_ = std::chrono::duration_cast<std::chrono::seconds>(connection_timeout->getMilliseconds());
   }
   logger_->log_debug("AbstractMQTTProcessor: ConnectionTimeout [%" PRId64 "] s", int64_t{connection_timeout_.count()});
@@ -107,7 +107,7 @@ void AbstractMQTTProcessor::onSchedule(const std::shared_ptr<core::ProcessContex
     logger_->log_debug("AbstractMQTTProcessor: Last Will QoS [%u]", static_cast<uint8_t>(last_will_qos_));
     last_will_->qos = static_cast<int>(last_will_qos_);
 
-    if (const auto value = context->getProperty<bool>(LastWillRetain)) {
+    if (const auto value = context->getProperty(LastWillRetain) | utils::flatMap(&utils::StringUtils::toBool)) {
       logger_->log_debug("AbstractMQTTProcessor: Last Will Retain [%d]", *value);
       last_will_retain_ = {*value};
       last_will_->retained = last_will_retain_;

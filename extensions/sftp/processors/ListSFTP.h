@@ -135,16 +135,15 @@ class ListSFTP : public SFTPProcessorBase {
       .withDefaultValue(ENTITY_TRACKING_INITIAL_LISTING_TARGET_ALL_AVAILABLE)
       .build();
   EXTENSIONAPI static constexpr auto MinimumFileAge = core::PropertyDefinitionBuilder<>::createProperty("Minimum File Age")
-      .withDescription("The minimum age that a file must be in order to be pulled; "
-                      "any file younger than this amount of time (according to last modification date) will be ignored")
+      .withDescription("The minimum age that a file must be in order to be pulled; any file younger than this amount of time (according to last modification date) will be ignored")
       .isRequired(true)
       .withPropertyType(core::StandardPropertyTypes::TIME_PERIOD_TYPE)
       .withDefaultValue("0 sec")
       .build();
   EXTENSIONAPI static constexpr auto MaximumFileAge = core::PropertyDefinitionBuilder<>::createProperty("Maximum File Age")
-      .withDescription("The maximum age that a file must be in order to be pulled; "
-                      "any file older than this amount of time (according to last modification date) will be ignored")
+      .withDescription("The maximum age that a file must be in order to be pulled; any file older than this amount of time (according to last modification date) will be ignored")
       .isRequired(false)
+      .withPropertyType(core::StandardPropertyTypes::TIME_PERIOD_TYPE)
       .build();
   EXTENSIONAPI static constexpr auto MinimumFileSize = core::PropertyDefinitionBuilder<>::createProperty("Minimum File Size")
       .withDescription("The minimum size that a file must be in order to be pulled")

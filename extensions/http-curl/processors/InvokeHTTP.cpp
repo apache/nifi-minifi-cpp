@@ -71,8 +71,9 @@ void setupClientProxy(extensions::curl::HTTPClient& client, const core::ProcessC
 }
 
 void setupClientPeerVerification(extensions::curl::HTTPClient& client, const core::ProcessContext& context) {
-  if (auto disable_peer_verification = context.getProperty<bool>(InvokeHTTP::DisablePeerVerification))
+  if (auto disable_peer_verification = context.getProperty(InvokeHTTP::DisablePeerVerification) | utils::flatMap(&utils::StringUtils::toBool)) {
     client.setPeerVerification(*disable_peer_verification);
+  }
 }
 
 void setupClientFollowRedirects(extensions::curl::HTTPClient& client, const core::ProcessContext& context) {
@@ -104,8 +105,8 @@ void InvokeHTTP::setupMembersFromProperties(const core::ProcessContext& context)
                         | utils::orElse([this] { logger_->log_debug("%s is missing, so the default value will be used", std::string{AttributesToSend.name}); });
 
 
-  always_output_response_ = context.getProperty<bool>(AlwaysOutputResponse).value_or(false);
-  penalize_no_retry_ = context.getProperty<bool>(PenalizeOnNoRetry).value_or(false);
+  always_output_response_ = (context.getProperty(AlwaysOutputResponse) | utils::flatMap(&utils::StringUtils::toBool)).value_or(false);
+  penalize_no_retry_ = (context.getProperty(PenalizeOnNoRetry) | utils::flatMap(&utils::StringUtils::toBool)).value_or(false);
 
   invalid_http_header_field_handling_strategy_ = utils::parseEnumProperty<invoke_http::InvalidHTTPHeaderFieldHandlingOption>(context, InvalidHTTPHeaderFieldHandlingStrategy);
 
@@ -115,7 +116,7 @@ void InvokeHTTP::setupMembersFromProperties(const core::ProcessContext& context)
     put_response_body_in_attribute_.reset();
   }
 
-  use_chunked_encoding_ = context.getProperty<bool>(UseChunkedEncoding).value_or(false);
+  use_chunked_encoding_ = (context.getProperty(UseChunkedEncoding) | utils::flatMap(&utils::StringUtils::toBool)).value_or(false);
   send_date_header_ = context.getProperty<bool>(DateHeader).value_or(true);
 }
 

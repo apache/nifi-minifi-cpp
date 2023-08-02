@@ -59,7 +59,7 @@ void ListFile::onSchedule(const std::shared_ptr<core::ProcessContext> &context, 
     minimum_file_age_ =  minimum_file_age->getMilliseconds();
   }
 
-  if (auto maximum_file_age = context->getProperty<core::TimePeriodValue>(MaximumFileAge)) {
+  if (auto maximum_file_age = context->getProperty(MaximumFileAge) | utils::flatMap(&core::TimePeriodValue::fromString)) {
     maximum_file_age_ =  maximum_file_age->getMilliseconds();
   }
 
