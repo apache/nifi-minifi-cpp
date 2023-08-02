@@ -80,15 +80,29 @@ std::optional<PutObjectResult> S3Wrapper::putObject(const PutObjectRequestParame
   Aws::S3::Model::PutObjectRequest request;
   request.SetBucket(put_object_params.bucket);
   request.SetKey(put_object_params.object_key);
-  request.SetStorageClass(minifi::utils::at(STORAGE_CLASS_MAP, put_object_params.storage_class));
-  request.SetServerSideEncryption(minifi::utils::at(SERVER_SIDE_ENCRYPTION_MAP, put_object_params.server_side_encryption));
-  request.SetContentType(put_object_params.content_type);
-  request.SetMetadata(put_object_params.user_metadata_map);
   request.SetBody(data_stream);
-  request.SetGrantFullControl(put_object_params.fullcontrol_user_list);
-  request.SetGrantRead(put_object_params.read_permission_user_list);
-  request.SetGrantReadACP(put_object_params.read_acl_user_list);
-  request.SetGrantWriteACP(put_object_params.write_acl_user_list);
+  request.SetStorageClass(minifi::utils::at(STORAGE_CLASS_MAP, put_object_params.storage_class));
+  if (!put_object_params.server_side_encryption.empty() && put_object_params.server_side_encryption != "None") {
+    request.SetServerSideEncryption(minifi::utils::at(SERVER_SIDE_ENCRYPTION_MAP, put_object_params.server_side_encryption));
+  }
+  if (!put_object_params.content_type.empty()) {
+    request.SetContentType(put_object_params.content_type);
+  }
+  if (!put_object_params.user_metadata_map.empty()) {
+    request.SetMetadata(put_object_params.user_metadata_map);
+  }
+  if (!put_object_params.fullcontrol_user_list.empty()) {
+    request.SetGrantFullControl(put_object_params.fullcontrol_user_list);
+  }
+  if (!put_object_params.read_permission_user_list.empty()) {
+    request.SetGrantRead(put_object_params.read_permission_user_list);
+  }
+  if (!put_object_params.read_acl_user_list.empty()) {
+    request.SetGrantReadACP(put_object_params.read_acl_user_list);
+  }
+  if (!put_object_params.write_acl_user_list.empty()) {
+    request.SetGrantWriteACP(put_object_params.write_acl_user_list);
+  }
   setCannedAcl(request, put_object_params.canned_acl);
 
   auto aws_result = request_sender_->sendPutObjectRequest(request, put_object_params.credentials, put_object_params.client_config, put_object_params.use_virtual_addressing);
@@ -264,8 +278,12 @@ template<typename ListRequest>
 ListRequest S3Wrapper::createListRequest(const ListRequestParameters& params) {
   ListRequest request;
   request.SetBucket(params.bucket);
-  request.SetDelimiter(params.delimiter);
-  request.SetPrefix(params.prefix);
+  if (!params.delimiter.empty()) {
+    request.SetDelimiter(params.delimiter);
+  }
+  if (!params.prefix.empty()) {
+    request.SetPrefix(params.prefix);
+  }
   return request;
 }
 

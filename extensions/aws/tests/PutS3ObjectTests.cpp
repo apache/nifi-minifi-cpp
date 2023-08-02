@@ -27,17 +27,17 @@ using org::apache::nifi::minifi::utils::verifyLogLinePresenceInPollTime;
 class PutS3ObjectTestsFixture : public FlowProcessorS3TestsFixture<minifi::aws::processors::PutS3Object> {
  public:
   static void checkPutObjectResults() {
-    REQUIRE(verifyLogLinePresenceInPollTime(std::chrono::seconds(3), "key:s3.version value:" + S3_VERSION_1));
-    REQUIRE(verifyLogLinePresenceInPollTime(std::chrono::seconds(3), "key:s3.etag value:" + S3_ETAG_UNQUOTED));
-    REQUIRE(verifyLogLinePresenceInPollTime(std::chrono::seconds(3), "key:s3.expiration value:" + S3_EXPIRATION_DATE));
-    REQUIRE(verifyLogLinePresenceInPollTime(std::chrono::seconds(3), "key:s3.sseAlgorithm value:" + S3_SSEALGORITHM_STR));
+    CHECK(verifyLogLinePresenceInPollTime(std::chrono::seconds(3), "key:s3.version value:" + S3_VERSION_1));
+    CHECK(verifyLogLinePresenceInPollTime(std::chrono::seconds(3), "key:s3.etag value:" + S3_ETAG_UNQUOTED));
+    CHECK(verifyLogLinePresenceInPollTime(std::chrono::seconds(3), "key:s3.expiration value:" + S3_EXPIRATION_DATE));
+    CHECK(verifyLogLinePresenceInPollTime(std::chrono::seconds(3), "key:s3.sseAlgorithm value:" + S3_SSEALGORITHM_STR));
   }
 
   static void checkEmptyPutObjectResults() {
-    REQUIRE_FALSE(LogTestController::getInstance().contains("key:s3.version value:", std::chrono::seconds(0), std::chrono::milliseconds(0)));
-    REQUIRE_FALSE(LogTestController::getInstance().contains("key:s3.etag value:", std::chrono::seconds(0), std::chrono::milliseconds(0)));
-    REQUIRE_FALSE(LogTestController::getInstance().contains("key:s3.expiration value:", std::chrono::seconds(0), std::chrono::milliseconds(0)));
-    REQUIRE_FALSE(LogTestController::getInstance().contains("key:s3.sseAlgorithm value:", std::chrono::seconds(0), std::chrono::milliseconds(0)));
+    CHECK_FALSE(LogTestController::getInstance().contains("key:s3.version value:", std::chrono::seconds(0), std::chrono::milliseconds(0)));
+    CHECK_FALSE(LogTestController::getInstance().contains("key:s3.etag value:", std::chrono::seconds(0), std::chrono::milliseconds(0)));
+    CHECK_FALSE(LogTestController::getInstance().contains("key:s3.expiration value:", std::chrono::seconds(0), std::chrono::milliseconds(0)));
+    CHECK_FALSE(LogTestController::getInstance().contains("key:s3.sseAlgorithm value:", std::chrono::seconds(0), std::chrono::milliseconds(0)));
   }
 };
 
@@ -72,8 +72,8 @@ TEST_CASE_METHOD(PutS3ObjectTestsFixture, "Test AWS credential setting", "[awsCr
   }
 
   test_controller.runSession(plan, true);
-  REQUIRE(mock_s3_request_sender_ptr->getCredentials().GetAWSAccessKeyId() == "key");
-  REQUIRE(mock_s3_request_sender_ptr->getCredentials().GetAWSSecretKey() == "secret");
+  CHECK(mock_s3_request_sender_ptr->getCredentials().GetAWSAccessKeyId() == "key");
+  CHECK(mock_s3_request_sender_ptr->getCredentials().GetAWSSecretKey() == "secret");
 }
 
 TEST_CASE_METHOD(PutS3ObjectTestsFixture, "Test required property not set", "[awsS3Config]") {
@@ -121,31 +121,31 @@ TEST_CASE_METHOD(PutS3ObjectTestsFixture, "Test incomplete credentials in creden
 TEST_CASE_METHOD(PutS3ObjectTestsFixture, "Check default client configuration", "[awsS3ClientConfig]") {
   setRequiredProperties();
   test_controller.runSession(plan, true);
-  REQUIRE(verifyLogLinePresenceInPollTime(std::chrono::seconds(3), "key:s3.bucket value:testBucket"));
-  REQUIRE(verifyLogLinePresenceInPollTime(std::chrono::seconds(3), "key:s3.key value:" + INPUT_FILENAME));
-  REQUIRE(verifyLogLinePresenceInPollTime(std::chrono::seconds(3), "key:s3.contenttype value:application/octet-stream"));
+  CHECK(verifyLogLinePresenceInPollTime(std::chrono::seconds(3), "key:s3.bucket value:testBucket"));
+  CHECK(verifyLogLinePresenceInPollTime(std::chrono::seconds(3), "key:s3.key value:" + INPUT_FILENAME));
+  CHECK(verifyLogLinePresenceInPollTime(std::chrono::seconds(3), "key:s3.contenttype value:application/octet-stream"));
   checkPutObjectResults();
-  REQUIRE(mock_s3_request_sender_ptr->put_object_request.GetContentType() == "application/octet-stream");
-  REQUIRE(mock_s3_request_sender_ptr->put_object_request.GetStorageClass() == Aws::S3::Model::StorageClass::STANDARD);
-  REQUIRE(mock_s3_request_sender_ptr->put_object_request.GetServerSideEncryption() == Aws::S3::Model::ServerSideEncryption::NOT_SET);
-  REQUIRE(mock_s3_request_sender_ptr->put_object_request.GetACL() == Aws::S3::Model::ObjectCannedACL::NOT_SET);
-  REQUIRE(mock_s3_request_sender_ptr->getClientConfig().region == minifi::aws::processors::region::US_WEST_2);
-  REQUIRE(mock_s3_request_sender_ptr->getClientConfig().connectTimeoutMs == 30000);
-  REQUIRE(mock_s3_request_sender_ptr->getClientConfig().endpointOverride.empty());
-  REQUIRE(mock_s3_request_sender_ptr->getClientConfig().proxyHost.empty());
-  REQUIRE(mock_s3_request_sender_ptr->getClientConfig().proxyUserName.empty());
-  REQUIRE(mock_s3_request_sender_ptr->getClientConfig().proxyPassword.empty());
-  REQUIRE(mock_s3_request_sender_ptr->getPutObjectRequestBody() == INPUT_DATA);
-  REQUIRE(mock_s3_request_sender_ptr->getUseVirtualAddressing());
+  CHECK(mock_s3_request_sender_ptr->put_object_request.GetContentType() == "application/octet-stream");
+  CHECK(mock_s3_request_sender_ptr->put_object_request.GetStorageClass() == Aws::S3::Model::StorageClass::STANDARD);
+  CHECK(mock_s3_request_sender_ptr->put_object_request.GetServerSideEncryption() == Aws::S3::Model::ServerSideEncryption::NOT_SET);
+  CHECK(mock_s3_request_sender_ptr->put_object_request.GetACL() == Aws::S3::Model::ObjectCannedACL::NOT_SET);
+  CHECK(mock_s3_request_sender_ptr->getClientConfig().region == minifi::aws::processors::region::US_WEST_2);
+  CHECK(mock_s3_request_sender_ptr->getClientConfig().connectTimeoutMs == 30000);
+  CHECK(mock_s3_request_sender_ptr->getClientConfig().endpointOverride.empty());
+  CHECK(mock_s3_request_sender_ptr->getClientConfig().proxyHost.empty());
+  CHECK(mock_s3_request_sender_ptr->getClientConfig().proxyUserName.empty());
+  CHECK(mock_s3_request_sender_ptr->getClientConfig().proxyPassword.empty());
+  CHECK(mock_s3_request_sender_ptr->getPutObjectRequestBody() == INPUT_DATA);
+  CHECK(mock_s3_request_sender_ptr->getUseVirtualAddressing());
 }
 
 TEST_CASE_METHOD(PutS3ObjectTestsFixture, "Check default client configuration with empty result", "[awsS3ClientConfig]") {
   setRequiredProperties();
   mock_s3_request_sender_ptr->returnEmptyS3Result();
   test_controller.runSession(plan, true);
-  REQUIRE(verifyLogLinePresenceInPollTime(std::chrono::seconds(3), "key:s3.bucket value:testBucket"));
-  REQUIRE(verifyLogLinePresenceInPollTime(std::chrono::seconds(3), "key:s3.key value:input_data.log"));
-  REQUIRE(verifyLogLinePresenceInPollTime(std::chrono::seconds(3), "key:s3.contenttype value:application/octet-stream"));
+  CHECK(verifyLogLinePresenceInPollTime(std::chrono::seconds(3), "key:s3.bucket value:testBucket"));
+  CHECK(verifyLogLinePresenceInPollTime(std::chrono::seconds(3), "key:s3.key value:input_data.log"));
+  CHECK(verifyLogLinePresenceInPollTime(std::chrono::seconds(3), "key:s3.contenttype value:application/octet-stream"));
   checkEmptyPutObjectResults();
 }
 
@@ -162,25 +162,25 @@ TEST_CASE_METHOD(PutS3ObjectTestsFixture, "Set non-default client configuration"
   plan->setProperty(s3_processor, "Server Side Encryption", "AES256");
   test_controller.runSession(plan, true);
   checkPutObjectResults();
-  REQUIRE(verifyLogLinePresenceInPollTime(std::chrono::seconds(3), "key:s3.bucket value:testBucket"));
-  REQUIRE(verifyLogLinePresenceInPollTime(std::chrono::seconds(3), "key:s3.key value:custom_key"));
-  REQUIRE(verifyLogLinePresenceInPollTime(std::chrono::seconds(3), "key:s3.contenttype value:application/tar"));
-  REQUIRE(mock_s3_request_sender_ptr->put_object_request.GetContentType() == "application/tar");
-  REQUIRE(mock_s3_request_sender_ptr->put_object_request.GetStorageClass() == Aws::S3::Model::StorageClass::REDUCED_REDUNDANCY);
-  REQUIRE(mock_s3_request_sender_ptr->put_object_request.GetServerSideEncryption() == Aws::S3::Model::ServerSideEncryption::AES256);
-  REQUIRE(mock_s3_request_sender_ptr->getClientConfig().region == minifi::aws::processors::region::AP_SOUTHEAST_3);
-  REQUIRE(mock_s3_request_sender_ptr->getClientConfig().connectTimeoutMs == 10000);
-  REQUIRE(mock_s3_request_sender_ptr->getClientConfig().endpointOverride == "http://localhost:1234");
-  REQUIRE(mock_s3_request_sender_ptr->getPutObjectRequestBody() == INPUT_DATA);
-  REQUIRE(mock_s3_request_sender_ptr->getUseVirtualAddressing());
+  CHECK(verifyLogLinePresenceInPollTime(std::chrono::seconds(3), "key:s3.bucket value:testBucket"));
+  CHECK(verifyLogLinePresenceInPollTime(std::chrono::seconds(3), "key:s3.key value:custom_key"));
+  CHECK(verifyLogLinePresenceInPollTime(std::chrono::seconds(3), "key:s3.contenttype value:application/tar"));
+  CHECK(mock_s3_request_sender_ptr->put_object_request.GetContentType() == "application/tar");
+  CHECK(mock_s3_request_sender_ptr->put_object_request.GetStorageClass() == Aws::S3::Model::StorageClass::REDUCED_REDUNDANCY);
+  CHECK(mock_s3_request_sender_ptr->put_object_request.GetServerSideEncryption() == Aws::S3::Model::ServerSideEncryption::AES256);
+  CHECK(mock_s3_request_sender_ptr->getClientConfig().region == minifi::aws::processors::region::AP_SOUTHEAST_3);
+  CHECK(mock_s3_request_sender_ptr->getClientConfig().connectTimeoutMs == 10000);
+  CHECK(mock_s3_request_sender_ptr->getClientConfig().endpointOverride == "http://localhost:1234");
+  CHECK(mock_s3_request_sender_ptr->getPutObjectRequestBody() == INPUT_DATA);
+  CHECK(mock_s3_request_sender_ptr->getUseVirtualAddressing());
 }
 
 TEST_CASE_METHOD(PutS3ObjectTestsFixture, "Test single user metadata", "[awsS3MetaData]") {
   setRequiredProperties();
   plan->setDynamicProperty(s3_processor, "meta_key", "meta_value");
   test_controller.runSession(plan, true);
-  REQUIRE(mock_s3_request_sender_ptr->put_object_request.GetMetadata().at("meta_key") == "meta_value");
-  REQUIRE(verifyLogLinePresenceInPollTime(std::chrono::seconds(3), "key:s3.usermetadata value:meta_key=meta_value"));
+  CHECK(mock_s3_request_sender_ptr->put_object_request.GetMetadata().at("meta_key") == "meta_value");
+  CHECK(verifyLogLinePresenceInPollTime(std::chrono::seconds(3), "key:s3.usermetadata value:meta_key=meta_value"));
 }
 
 TEST_CASE_METHOD(PutS3ObjectTestsFixture, "Test multiple user metadata", "[awsS3MetaData]") {
@@ -188,9 +188,9 @@ TEST_CASE_METHOD(PutS3ObjectTestsFixture, "Test multiple user metadata", "[awsS3
   plan->setDynamicProperty(s3_processor, "meta_key1", "meta_value1");
   plan->setDynamicProperty(s3_processor, "meta_key2", "meta_value2");
   test_controller.runSession(plan, true);
-  REQUIRE(mock_s3_request_sender_ptr->put_object_request.GetMetadata().at("meta_key1") == "meta_value1");
-  REQUIRE(mock_s3_request_sender_ptr->put_object_request.GetMetadata().at("meta_key2") == "meta_value2");
-  REQUIRE(verifyLogLinePresenceInPollTime(std::chrono::seconds(3), "key:s3.usermetadata value:meta_key1=meta_value1,meta_key2=meta_value2"));
+  CHECK(mock_s3_request_sender_ptr->put_object_request.GetMetadata().at("meta_key1") == "meta_value1");
+  CHECK(mock_s3_request_sender_ptr->put_object_request.GetMetadata().at("meta_key2") == "meta_value2");
+  CHECK(verifyLogLinePresenceInPollTime(std::chrono::seconds(3), "key:s3.usermetadata value:meta_key1=meta_value1,meta_key2=meta_value2"));
 }
 
 TEST_CASE_METHOD(PutS3ObjectTestsFixture, "Test proxy setting", "[awsS3Proxy]") {
@@ -213,11 +213,11 @@ TEST_CASE_METHOD(PutS3ObjectTestsFixture, "Test access control setting", "[awsS3
   plan->setDynamicProperty(update_attribute, "s3.permissions.cannedacl", "PublicReadWrite");
   plan->setProperty(s3_processor, "Canned ACL", "${s3.permissions.cannedacl}");
   test_controller.runSession(plan, true);
-  REQUIRE(mock_s3_request_sender_ptr->put_object_request.GetGrantFullControl() == "id=myuserid123, emailAddress=\"myuser@example.com\"");
-  REQUIRE(mock_s3_request_sender_ptr->put_object_request.GetGrantRead() == "id=myuserid456, emailAddress=\"myuser2@example.com\"");
-  REQUIRE(mock_s3_request_sender_ptr->put_object_request.GetGrantReadACP() == "id=myuserid789, id=otheruser");
-  REQUIRE(mock_s3_request_sender_ptr->put_object_request.GetGrantWriteACP() == "emailAddress=\"myuser3@example.com\"");
-  REQUIRE(mock_s3_request_sender_ptr->put_object_request.GetACL() == Aws::S3::Model::ObjectCannedACL::public_read_write);
+  CHECK(mock_s3_request_sender_ptr->put_object_request.GetGrantFullControl() == "id=myuserid123, emailAddress=\"myuser@example.com\"");
+  CHECK(mock_s3_request_sender_ptr->put_object_request.GetGrantRead() == "id=myuserid456, emailAddress=\"myuser2@example.com\"");
+  CHECK(mock_s3_request_sender_ptr->put_object_request.GetGrantReadACP() == "id=myuserid789, id=otheruser");
+  CHECK(mock_s3_request_sender_ptr->put_object_request.GetGrantWriteACP() == "emailAddress=\"myuser3@example.com\"");
+  CHECK(mock_s3_request_sender_ptr->put_object_request.GetACL() == Aws::S3::Model::ObjectCannedACL::public_read_write);
 }
 
 TEST_CASE_METHOD(PutS3ObjectTestsFixture, "Test path style access property", "[awsS3PathStyleAccess]") {
