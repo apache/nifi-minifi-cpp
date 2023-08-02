@@ -16,19 +16,11 @@
 # specific language governing permissions and limitations
 # under the License.
 #
+include(FetchContent)
 
-include(JsonSchemaValidator)
-
-file(GLOB SCHEMA_TESTS  "*.cpp")
-SET(SCHEMA_TEST_COUNT 0)
-FOREACH(testfile ${SCHEMA_TESTS})
-  get_filename_component(testfilename "${testfile}" NAME_WE)
-  add_executable("${testfilename}" "${testfile}")
-  createTests("${testfilename}")
-  target_link_libraries(${testfilename} Catch2WithMain)
-  target_link_libraries(${testfilename} minifi-standard-processors)
-  target_link_libraries(${testfilename} nlohmann_json_schema_validator)
-  MATH(EXPR SCHEMA_TEST_COUNT "${SCHEMA_TEST_COUNT}+1")
-  add_test(NAME "${testfilename}" COMMAND "${testfilename}" WORKING_DIRECTORY ${TEST_DIR})
-ENDFOREACH()
-message("-- Finished building ${SCHEMA_TEST_COUNT} Json Schema related test file(s)...")
+FetchContent_Declare(
+        Catch2
+        URL      https://github.com/catchorg/Catch2/archive/refs/tags/v3.4.0.tar.gz
+        URL_HASH SHA256=122928b814b75717316c71af69bd2b43387643ba076a6ec16e7882bfb2dfacbb
+)
+FetchContent_MakeAvailable(Catch2)

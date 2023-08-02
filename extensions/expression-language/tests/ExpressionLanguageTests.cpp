@@ -39,6 +39,7 @@
 #include "utils/gsl.h"
 #include "TestBase.h"
 #include "Catch.h"
+#include "catch2/catch_approx.hpp"
 #include "unit/ProvenanceTestHelper.h"
 #include "date/tz.h"
 #include "Utils.h"
@@ -626,7 +627,7 @@ TEST_CASE("Plus Exponent 2", "[expressionLanguagePlusExponent2]") {
 
   auto flow_file_a = std::make_shared<core::FlowFile>();
   flow_file_a->addAttribute("attr", "11.345678901234");
-  REQUIRE(10000011.345678901234 == Approx(expr(expression::Parameters{ flow_file_a }).asLongDouble()));
+  REQUIRE(10000011.345678901234 == Catch::Approx(expr(expression::Parameters{ flow_file_a }).asLongDouble()));
 }
 
 TEST_CASE("Minus Integer", "[expressionLanguageMinusInteger]") {
@@ -658,7 +659,7 @@ TEST_CASE("Multiply Decimal", "[expressionLanguageMultiplyDecimal]") {
 
   auto flow_file_a = std::make_shared<core::FlowFile>();
   flow_file_a->addAttribute("attr", "11.1");
-  REQUIRE(-148.136937 == Approx(expr(expression::Parameters{ flow_file_a }).asLongDouble()));
+  REQUIRE(-148.136937 == Catch::Approx(expr(expression::Parameters{ flow_file_a }).asLongDouble()));
 }
 
 TEST_CASE("Divide Integer", "[expressionLanguageDivideInteger]") {
@@ -910,8 +911,8 @@ TEST_CASE("GT3", "[expressionGT3]") {
 
 // using :gt() to test string to integer parsing code
 TEST_CASE("GT4 Value parsing errors", "[expressionGT4][outofrange]") {
-  const char* test_str;
-  const char* expected_substr;
+  const char* test_str = nullptr;
+  const char* expected_substr = nullptr;
   SECTION("integer out of range") {
     // 2 ^ 64, the smallest positive integer that's not representable even in uint64_t
     test_str = "18446744073709551616";
@@ -1405,28 +1406,29 @@ TEST_CASE("Reverse DNS lookup with valid ip", "[ExpressionLanguage][reverseDnsLo
 
   auto flow_file_a = std::make_shared<core::FlowFile>();
   std::string expected_hostname;
+
+  SECTION("dns.google IPv6") {
+    if (minifi::test::utils::isIPv6Disabled())
+      SKIP("IPv6 is disabled");
+    flow_file_a->addAttribute("ip_addr", "2001:4860:4860::8888");
+    expected_hostname = "dns.google";
+  }
+
   SECTION("dns.google IPv4") {
     flow_file_a->addAttribute("ip_addr", "8.8.8.8");
     expected_hostname = "dns.google";
   }
 
-  SECTION("dns.google IPv6") {
+  SECTION("Unresolvable address IPv6") {
     if (minifi::test::utils::isIPv6Disabled())
-      return;
-    flow_file_a->addAttribute("ip_addr", "2001:4860:4860::8888");
-    expected_hostname = "dns.google";
+      SKIP("IPv6 is disabled");
+    flow_file_a->addAttribute("ip_addr", "2001:db8::");
+    expected_hostname = "2001:db8::";
   }
 
   SECTION("Unresolvable address IPv4") {
     flow_file_a->addAttribute("ip_addr", "192.0.2.0");
     expected_hostname = "192.0.2.0";
-  }
-
-  SECTION("Unresolvable address IPv6") {
-    if (minifi::test::utils::isIPv6Disabled())
-      return;
-    flow_file_a->addAttribute("ip_addr", "2001:db8::");
-    expected_hostname = "2001:db8::";
   }
 
   REQUIRE(expr(expression::Parameters{ flow_file_a }).asString() ==  expected_hostname);

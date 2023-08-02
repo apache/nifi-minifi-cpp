@@ -45,13 +45,13 @@ TEST_CASE("ListenUDP test multiple messages", "[ListenUDP][NetworkListenerProces
   auto port = utils::scheduleProcessorOnRandomPort(controller.plan, listen_udp);
 
   asio::ip::udp::endpoint endpoint;
-  SECTION("sending through IPv4", "[IPv4]") {
-    endpoint = asio::ip::udp::endpoint(asio::ip::address_v4::loopback(), port);
-  }
   SECTION("sending through IPv6", "[IPv6]") {
     if (utils::isIPv6Disabled())
-      return;
+      SKIP("IPv6 is disabled");
     endpoint = asio::ip::udp::endpoint(asio::ip::address_v6::loopback(), port);
+  }
+  SECTION("sending through IPv4", "[IPv4]") {
+    endpoint = asio::ip::udp::endpoint(asio::ip::address_v4::loopback(), port);
   }
 
   controller.plan->scheduleProcessor(listen_udp);
@@ -88,13 +88,13 @@ TEST_CASE("ListenUDP max queue and max batch size test", "[ListenUDP][NetworkLis
   auto port = utils::scheduleProcessorOnRandomPort(controller.plan, listen_udp);
 
   asio::ip::udp::endpoint endpoint;
-  SECTION("sending through IPv4", "[IPv4]") {
-    endpoint = asio::ip::udp::endpoint(asio::ip::address_v4::loopback(), port);
-  }
   SECTION("sending through IPv6", "[IPv6]") {
     if (utils::isIPv6Disabled())
-      return;
+      SKIP("IPv6 is disabled");
     endpoint = asio::ip::udp::endpoint(asio::ip::address_v6::loopback(), port);
+  }
+  SECTION("sending through IPv4", "[IPv4]") {
+    endpoint = asio::ip::udp::endpoint(asio::ip::address_v4::loopback(), port);
   }
 
   LogTestController::getInstance().setWarn<ListenUDP>();

@@ -23,7 +23,6 @@
 #include <iostream>
 #include "InvokeHTTP.h"
 #include "TestBase.h"
-#include "Catch.h"
 #include "core/logging/Logger.h"
 #include "core/ProcessGroup.h"
 #include "TestServer.h"

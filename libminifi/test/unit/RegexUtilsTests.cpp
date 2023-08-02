@@ -22,6 +22,8 @@
 #include "utils/RegexUtils.h"
 #include "../TestBase.h"
 #include "../Catch.h"
+#include "catch2/catch_all.hpp"
+#include "catch2/matchers/catch_matchers_string.hpp"
 
 using org::apache::nifi::minifi::utils::Regex;
 namespace minifi = org::apache::nifi::minifi;
@@ -40,7 +42,7 @@ TEST_CASE("TestRegexUtils::invalid_construction", "[regex2]") {
   std::string rgx2 = "[Invalid)A(F)";
   std::vector<Regex::Mode> mode = {Regex::Mode::ICASE};
   Regex r1(rgx1, mode);
-  REQUIRE_THROWS_WITH(Regex(rgx2, mode), Catch::Contains("Regex Operation"));
+  REQUIRE_THROWS_WITH(Regex(rgx2, mode), Catch::Matchers::StartsWith("Regex Operation"));
 }
 
 TEST_CASE("TestRegexUtils::empty_input", "[regex3]") {

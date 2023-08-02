@@ -81,7 +81,7 @@ void verifyJSON(const std::string& actual_str, const std::string& expected_str, 
 }
 
 template<typename T>
-class ExceptionSubStringMatcher : public Catch::MatcherBase<T> {
+class ExceptionSubStringMatcher : public Catch::Matchers::MatcherBase<T> {
  public:
   explicit ExceptionSubStringMatcher(std::vector<std::string> exception_substr) :
       possible_exception_substrs_(std::move(exception_substr)) {}

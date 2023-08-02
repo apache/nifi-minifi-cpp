@@ -23,7 +23,6 @@
 #include "core/logging/Logger.h"
 #include "FlowController.h"
 #include "TestBase.h"
-#include "Catch.h"
 #include "processors/GenerateFlowFile.h"
 #include "processors/LogAttribute.h"
 #include "processors/UpdateAttribute.h"

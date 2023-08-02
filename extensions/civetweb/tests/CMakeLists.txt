@@ -34,7 +34,7 @@ if(NOT DISABLE_CURL)
         target_link_libraries(${testfilename} minifi-standard-processors)
 
         createTests("${testfilename}")
-        target_link_libraries(${testfilename} ${CATCH_MAIN_LIB})
+        target_link_libraries(${testfilename} Catch2WithMain)
         MATH(EXPR CIVETWEB-EXTENSIONS_TEST_COUNT "${CIVETWEB-EXTENSIONS_TEST_COUNT}+1")
         add_test(NAME "${testfilename}" COMMAND "${testfilename}" WORKING_DIRECTORY ${TEST_DIR})
         # Copy test resources

@@ -25,7 +25,7 @@ FOREACH(TEST_FILE ${MINIFI_MAIN_UNIT_TESTS})
     target_include_directories(${TEST_TARGET} PRIVATE BEFORE
             "${CMAKE_SOURCE_DIR}/libminifi/test"
             "${CMAKE_SOURCE_DIR}/minifi_main")
-    target_link_libraries(${TEST_TARGET} core-minifi ${CATCH_MAIN_LIB})
+    target_link_libraries(${TEST_TARGET} core-minifi Catch2WithMain)
     createTests("${TEST_TARGET}")
     add_test(NAME ${TEST_TARGET} COMMAND "${TEST_TARGET}" WORKING_DIRECTORY "${TEST_DIR}")
     MATH(EXPR MINIFI_MAIN_UNIT_TEST_COUNT "${MINIFI_MAIN_UNIT_TEST_COUNT}+1")

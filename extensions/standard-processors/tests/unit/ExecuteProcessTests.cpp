@@ -24,7 +24,6 @@
 using namespace std::literals::chrono_literals;
 
 namespace org::apache::nifi::minifi::test {
-#ifndef WIN32
 
 class ExecuteProcessTestsFixture {
  public:
@@ -170,6 +169,4 @@ TEST_CASE_METHOD(ExecuteProcessTestsFixture, "ExecuteProcess buffer long outputs
   CHECK(success_flow_files[0]->getAttribute("command") == command);
   CHECK(success_flow_files[0]->getAttribute("command.arguments") == arguments);
 }
-
-#endif
 }  // namespace org::apache::nifi::minifi::test

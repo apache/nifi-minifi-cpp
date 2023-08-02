@@ -30,6 +30,7 @@
 #include "../unit/ProvenanceTestHelper.h"
 #include "../TestBase.h"
 #include "../Catch.h"
+#include "catch2/matchers/catch_matchers_string.hpp"
 #include "../../extensions/libarchive/MergeContent.h"
 #include "core/repository/VolatileFlowFileRepository.h"
 #include "../../extensions/rocksdb-repos/DatabaseContentRepository.h"
@@ -235,7 +236,7 @@ TEST_CASE("Processors Can Store FlowFiles", "[TestP1]") {
 
     auto content = flow.read(file);
     // See important note about matchers at: https://github.com/catchorg/Catch2/blob/e8cdfdca87ebacd993befdd08ea6aa7e8068ef3d/docs/matchers.md#using-matchers
-    REQUIRE_THAT(content, Catch::Equals("_Header_one_Demarcator_two_Demarcator_three_Footer_") || Catch::Equals("_Header_two_Demarcator_one_Demarcator_three_Footer_"));
+    REQUIRE_THAT(content, Catch::Matchers::Equals("_Header_one_Demarcator_two_Demarcator_three_Footer_") || Catch::Matchers::Equals("_Header_two_Demarcator_one_Demarcator_three_Footer_"));
   }
 }
 

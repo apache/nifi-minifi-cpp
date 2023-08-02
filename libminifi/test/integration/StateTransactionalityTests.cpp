@@ -21,7 +21,6 @@
 #include "IntegrationBase.h"
 #include "../StatefulProcessor.h"
 #include "../TestBase.h"
-#include "../Catch.h"
 #include "utils/IntegrationTestUtils.h"
 #include "core/state/ProcessorController.h"
 

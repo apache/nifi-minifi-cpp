@@ -23,7 +23,6 @@
 #include <sstream>
 #include "processors/InvokeHTTP.h"
 #include "TestBase.h"
-#include "Catch.h"
 #include "core/ProcessGroup.h"
 #include "properties/Configure.h"
 #include "TestServer.h"

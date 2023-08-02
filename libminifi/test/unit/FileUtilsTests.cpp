@@ -16,9 +16,9 @@
  * limitations under the License.
  */
 
+#include <iostream>
 #include <cstdlib>
 #include <fstream>
-#include <iostream>
 #include <string>
 #include <thread>
 #include <vector>
@@ -27,9 +27,7 @@
 #include "../Catch.h"
 #include "core/Core.h"
 #include "utils/file/FileUtils.h"
-#include "utils/file/PathUtils.h"
 #include "utils/gsl.h"
-#include "utils/Environment.h"
 #include "utils/TimeUtil.h"
 
 namespace FileUtils = org::apache::nifi::minifi::utils::file;
@@ -186,10 +184,9 @@ TEST_CASE("TestFileUtils::addFilesMatchingExtension", "[TestAddFilesMatchingExte
 
 TEST_CASE("FileUtils::last_write_time and last_write_time_point work", "[last_write_time][last_write_time_point]") {
   using namespace std::chrono;
-  namespace fs = std::filesystem;
 
-  fs::file_time_type time_before_write = file_clock::now();
-  time_point<file_clock, seconds> time_point_before_write = time_point_cast<seconds>(file_clock::now());
+  auto time_before_write = file_clock::now();
+  auto time_point_before_write = time_point_cast<seconds>(file_clock::now());
 
   TestController testController;
 
@@ -204,14 +201,14 @@ TEST_CASE("FileUtils::last_write_time and last_write_time_point work", "[last_wr
   test_file_stream << "foo\n";
   test_file_stream.flush();
 
-  fs::file_time_type time_after_first_write = file_clock::now();
-  time_point<file_clock, seconds> time_point_after_first_write = time_point_cast<seconds>(file_clock::now());
+  auto time_after_first_write = file_clock::now();
+  auto time_point_after_first_write = time_point_cast<seconds>(file_clock::now());
 
-  fs::file_time_type first_mtime = FileUtils::last_write_time(test_file).value();
+  auto first_mtime = FileUtils::last_write_time(test_file).value();
   REQUIRE(first_mtime >= time_before_write);
   REQUIRE(first_mtime <= time_after_first_write);
 
-  time_point<file_clock, seconds> first_mtime_time_point = FileUtils::last_write_time_point(test_file);
+  auto first_mtime_time_point = FileUtils::last_write_time_point(test_file);
   REQUIRE(first_mtime_time_point >= time_point_before_write);
   REQUIRE(first_mtime_time_point <= time_point_after_first_write);
 
@@ -219,15 +216,15 @@ TEST_CASE("FileUtils::last_write_time and last_write_time_point work", "[last_wr
   test_file_stream << "bar\n";
   test_file_stream.flush();
 
-  fs::file_time_type time_after_second_write = file_clock::now();
-  time_point<file_clock, seconds> time_point_after_second_write = time_point_cast<seconds>(file_clock::now());
+  auto time_after_second_write = file_clock::now();
+  auto time_point_after_second_write = time_point_cast<seconds>(file_clock::now());
 
-  fs::file_time_type second_mtime = FileUtils::last_write_time(test_file).value();
+  auto second_mtime = FileUtils::last_write_time(test_file).value();
   REQUIRE(second_mtime >= first_mtime);
   REQUIRE(second_mtime >= time_after_first_write);
   REQUIRE(second_mtime <= time_after_second_write);
 
-  time_point<file_clock, seconds> second_mtime_time_point = FileUtils::last_write_time_point(test_file);
+  auto second_mtime_time_point = FileUtils::last_write_time_point(test_file);
   REQUIRE(second_mtime_time_point >= first_mtime_time_point);
   REQUIRE(second_mtime_time_point >= time_point_after_first_write);
   REQUIRE(second_mtime_time_point <= time_point_after_second_write);
@@ -236,10 +233,10 @@ TEST_CASE("FileUtils::last_write_time and last_write_time_point work", "[last_wr
 
   // On Windows it would rarely occur that the last_write_time is off by 1 from the previous check
 #ifndef WIN32
-  fs::file_time_type third_mtime = FileUtils::last_write_time(test_file).value();
+  auto third_mtime = FileUtils::last_write_time(test_file).value();
   REQUIRE(third_mtime == second_mtime);
 
-  time_point<file_clock, seconds> third_mtime_time_point = FileUtils::last_write_time_point(test_file);
+  auto third_mtime_time_point = FileUtils::last_write_time_point(test_file);
   REQUIRE(third_mtime_time_point == second_mtime_time_point);
 #endif
 }

@@ -24,7 +24,6 @@
 #include <iostream>
 #include "InvokeHTTP.h"
 #include "TestBase.h"
-#include "Catch.h"
 #include "core/logging/Logger.h"
 #include "FlowController.h"
 #include "CivetServer.h"

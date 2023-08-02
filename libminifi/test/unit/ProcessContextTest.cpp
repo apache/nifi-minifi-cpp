@@ -15,6 +15,7 @@
  * limitations under the License.
  */
 #include <memory>
+#include "../Catch.h"
 #include "ProcessContext.h"
 #include "core/FlowFile.h"
 #include "utils/meta/detected.h"
@@ -24,13 +25,16 @@ namespace org::apache::nifi::minifi {
 template<typename... Args>
 using getProperty_compiles = decltype(std::declval<core::ProcessContext>().getProperty(std::declval<Args>()...));
 
-static_assert(!utils::meta::is_detected_v<getProperty_compiles, std::string, const core::FlowFile&>);
-static_assert(!utils::meta::is_detected_v<getProperty_compiles, std::string, const std::shared_ptr<core::FlowFile>&>);
-static_assert(!utils::meta::is_detected_v<getProperty_compiles, std::string, core::FlowFile&>);
-static_assert(!utils::meta::is_detected_v<getProperty_compiles, std::string, std::shared_ptr<core::FlowFile>>);
-static_assert(!utils::meta::is_detected_v<getProperty_compiles, const char*, const core::FlowFile&>);
-static_assert(!utils::meta::is_detected_v<getProperty_compiles, const char*, const std::shared_ptr<core::FlowFile>&>);
-static_assert(!utils::meta::is_detected_v<getProperty_compiles, const char*, core::FlowFile&>);
-static_assert(!utils::meta::is_detected_v<getProperty_compiles, const char*, std::shared_ptr<core::FlowFile>>);
+TEST_CASE("ProcessContextTest") {
+  STATIC_REQUIRE_FALSE(utils::meta::is_detected_v<getProperty_compiles, std::string, const core::FlowFile&>);
+  STATIC_REQUIRE_FALSE(utils::meta::is_detected_v<getProperty_compiles, std::string, const std::shared_ptr<core::FlowFile>&>);
+  STATIC_REQUIRE_FALSE(utils::meta::is_detected_v<getProperty_compiles, std::string, core::FlowFile&>);
+  STATIC_REQUIRE_FALSE(utils::meta::is_detected_v<getProperty_compiles, std::string, std::shared_ptr<core::FlowFile>>);
+  STATIC_REQUIRE_FALSE(utils::meta::is_detected_v<getProperty_compiles, const char*, const core::FlowFile&>);
+  STATIC_REQUIRE_FALSE(utils::meta::is_detected_v<getProperty_compiles, const char*, const std::shared_ptr<core::FlowFile>&>);
+  STATIC_REQUIRE_FALSE(utils::meta::is_detected_v<getProperty_compiles, const char*, core::FlowFile&>);
+  STATIC_REQUIRE_FALSE(utils::meta::is_detected_v<getProperty_compiles, const char*, std::shared_ptr<core::FlowFile>>);
+}
+
 
 }  // namespace org::apache::nifi::minifi

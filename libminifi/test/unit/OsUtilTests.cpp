@@ -41,4 +41,7 @@ TEST_CASE("Test userIdToUsername for well-known SIDs", "[OsUtils]") {
 }
 #endif
 
+TEST_CASE("Machine architecture is supported") {
+  CHECK(minifi::utils::OsUtils::getMachineArchitecture() != "unknown");
+}
 }  // namespace org::apache::nifi::minifi::test

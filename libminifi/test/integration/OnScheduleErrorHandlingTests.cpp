@@ -23,7 +23,6 @@
 #include "core/Scheduling.h"
 #include "core/state/ProcessorController.h"
 #include "../TestBase.h"
-#include "../Catch.h"
 #include "../../../extensions/test-processors/KamikazeProcessor.h"
 #include "utils/StringUtils.h"
 #include "utils/IntegrationTestUtils.h"

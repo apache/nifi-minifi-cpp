@@ -19,7 +19,6 @@
 #include <array>
 
 #include "TestBase.h"
-#include "Catch.h"
 #include "tests/TestServer.h"
 #include "HTTPHandlers.h"
 
