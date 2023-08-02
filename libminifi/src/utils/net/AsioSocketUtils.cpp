@@ -30,10 +30,11 @@ asio::awaitable<std::tuple<std::error_code>> handshake(SslSocket& socket, asio::
   co_return co_await asyncOperationWithTimeout(socket.async_handshake(HandshakeType::client, use_nothrow_awaitable), timeout_duration);  // NOLINT
 }
 
-asio::ssl::context getSslContext(const controllers::SSLContextService& ssl_context_service) {
+asio::ssl::context getClientSslContext(const controllers::SSLContextService& ssl_context_service) {
   asio::ssl::context ssl_context(asio::ssl::context::tls_client);
   ssl_context.set_options(asio::ssl::context::no_tlsv1 | asio::ssl::context::no_tlsv1_1);
-  ssl_context.load_verify_file(ssl_context_service.getCACertificate().string());
+  if (const auto& ca_cert = ssl_context_service.getCACertificate(); !ca_cert.empty())
+    ssl_context.load_verify_file(ssl_context_service.getCACertificate().string());
   ssl_context.set_verify_mode(asio::ssl::verify_peer);
   ssl_context.set_password_callback([password = ssl_context_service.getPassphrase()](std::size_t&, asio::ssl::context_base::password_purpose&) { return password; });
   if (const auto& cert_file = ssl_context_service.getCertificateFile(); !cert_file.empty())
@@ -42,4 +43,5 @@ asio::ssl::context getSslContext(const controllers::SSLContextService& ssl_conte
     ssl_context.use_private_key_file(private_key_file.string(), asio::ssl::context::pem);
   return ssl_context;
 }
+
 }  // namespace org::apache::nifi::minifi::utils::net

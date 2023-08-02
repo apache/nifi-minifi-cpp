@@ -42,7 +42,7 @@ minifi::utils::net::SslData createSslDataForServer() {
   minifi::utils::net::SslData ssl_data;
   ssl_data.ca_loc = (executable_dir / "resources" / "ca_A.crt").string();
   ssl_data.cert_loc = (executable_dir / "resources" / "localhost_by_A.pem").string();
-  ssl_data.key_loc = (executable_dir / "resources" / "localhost_by_A.pem").string();
+  ssl_data.key_loc = (executable_dir / "resources" / "localhost.key").string();
   return ssl_data;
 }
 
@@ -52,7 +52,7 @@ void addSslContextServiceTo(SingleProcessorTestController& controller) {
   const auto executable_dir = minifi::utils::file::FileUtils::get_executable_dir();
   REQUIRE(controller.plan->setProperty(ssl_context_service, controllers::SSLContextService::CACertificate, (executable_dir / "resources" / "ca_A.crt").string()));
   REQUIRE(controller.plan->setProperty(ssl_context_service, controllers::SSLContextService::ClientCertificate, (executable_dir / "resources" / "alice_by_A.pem").string()));
-  REQUIRE(controller.plan->setProperty(ssl_context_service, controllers::SSLContextService::PrivateKey, (executable_dir / "resources" / "alice_by_A.pem").string()));
+  REQUIRE(controller.plan->setProperty(ssl_context_service, controllers::SSLContextService::PrivateKey, (executable_dir / "resources" / "alice.key").string()));
   ssl_context_service->enable();
 }
 
@@ -76,7 +76,7 @@ class TcpTestServer {
     ssl_context.set_options(asio::ssl::context::default_workarounds | asio::ssl::context::single_dh_use | asio::ssl::context::no_tlsv1 | asio::ssl::context::no_tlsv1_1);
     ssl_context.set_password_callback([key_pw = "Password12"](std::size_t&, asio::ssl::context_base::password_purpose&) { return key_pw; });
     ssl_context.use_certificate_file((executable_dir / "resources" / "localhost_by_A.pem").string(), asio::ssl::context::pem);
-    ssl_context.use_private_key_file((executable_dir / "resources" / "localhost_by_A.pem").string(), asio::ssl::context::pem);
+    ssl_context.use_private_key_file((executable_dir / "resources" / "localhost.key").string(), asio::ssl::context::pem);
     ssl_context.load_verify_file((executable_dir / "resources" / "ca_A.crt").string());
     ssl_context.set_verify_mode(asio::ssl::verify_peer);
 
