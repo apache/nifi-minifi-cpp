@@ -50,11 +50,16 @@ std::string formatName(std::string_view name_view, bool is_required) {
   }
 }
 
-std::string formatAllowableValues(const std::vector<minifi::core::PropertyValue>& values) {
-  return values
-      | ranges::views::transform([](const auto& value) { return value.to_string(); })
-      | ranges::views::join(std::string_view{"<br/>"})
-      | ranges::to<std::string>();
+std::string formatAllowedValues(const minifi::core::Property& property) {
+  if (&property.getValidator() == &minifi::core::StandardPropertyTypes::BOOLEAN_TYPE) {
+    return "true<br/>false";
+  } else {
+    const auto allowed_values = property.getAllowedValues();
+    return allowed_values
+        | ranges::views::transform([](const auto &value) { return value.to_string(); })
+        | ranges::views::join(std::string_view{"<br/>"})
+        | ranges::to<std::string>();
+  }
 }
 
 std::string formatDescription(std::string_view description_view, bool supports_expression_language = false) {
@@ -104,7 +109,7 @@ void AgentDocs::generate(const std::filesystem::path& docsdir, std::ostream &gen
       properties.addRow({
           formatName(prop.getName(), prop.getRequired()),
           prop.getDefaultValue().to_string(),
-          formatAllowableValues(prop.getAllowedValues()),
+          formatAllowedValues(prop),
           formatDescription(prop.getDescription(), prop.supportsExpressionLanguage())});
     }
     outfile << properties.toString() << '\n';
