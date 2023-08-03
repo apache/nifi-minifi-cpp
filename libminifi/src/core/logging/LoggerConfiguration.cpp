@@ -134,9 +134,13 @@ void LoggerConfiguration::initialize(const std::shared_ptr<LoggerProperties> &lo
 
   if (const auto max_log_entry_length_str = logger_properties->getString("max.log.entry.length")) {
     try {
-      max_log_entry_length_ = std::stoull(*max_log_entry_length_str);
+      if (internal::UNLIMITED_LOG_ENTRY_LENGTH == *max_log_entry_length_str) {
+        max_log_entry_length_ = -1;
+      } else {
+        max_log_entry_length_ = std::stoull(*max_log_entry_length_str);
+      }
     } catch (const std::exception& ex) {
-      logger_->log_debug("Parsing max log entry length property failed with the following exception: %s", ex.what());
+      logger_->log_error("Parsing max log entry length property failed with the following exception: %s", ex.what());
     }
   }
 
@@ -176,7 +180,7 @@ std::shared_ptr<Logger> LoggerConfiguration::getLogger(std::string_view name, co
   std::shared_ptr<LoggerImpl> result = std::make_shared<LoggerImpl>(adjusted_name, id_if_enabled, controller_, get_logger(logger_, root_namespace_, adjusted_name, formatter_));
   loggers.push_back(result);
   if (max_log_entry_length_) {
-    result->set_max_log_size(*max_log_entry_length_);
+    result->set_max_log_size(gsl::narrow<int>(*max_log_entry_length_));
   }
   return result;
 }

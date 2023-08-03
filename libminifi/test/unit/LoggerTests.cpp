@@ -329,10 +329,15 @@ TEST_CASE("Setting max log entry length to a size larger than the internal buffe
   REQUIRE(logs.find(expected_log) != std::string::npos);
 }
 
-TEST_CASE("Setting max log entry length to negative number results in unlimited log entry size", "[ttl15]") {
+TEST_CASE("Setting max log entry length to unlimited results in unlimited log entry size", "[ttl15]") {
   auto& log_config = logging::LoggerConfiguration::getConfiguration();
   auto properties = std::make_shared<logging::LoggerProperties>();
-  properties->set("max.log.entry.length", "-1");
+  SECTION("Use unlimited value") {
+    properties->set("max.log.entry.length", "unlimited");
+  }
+  SECTION("Use -1 value") {
+    properties->set("max.log.entry.length", "-1");
+  }
   properties->set("logger.root", "INFO");
   log_config.initialize(properties);
   auto logger = log_config.getLogger("SetMaxLogEntryLengthTestLogger");
