@@ -18,6 +18,7 @@
 #include "utils/HTTPUtils.h"
 
 #include <array>
+#include <filesystem>
 
 namespace org::apache::nifi::minifi::utils {
 

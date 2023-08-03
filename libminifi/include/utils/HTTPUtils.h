@@ -21,7 +21,6 @@
 #include <string>
 #include <string_view>
 #include <optional>
-#include <filesystem>
 
 #include "io/ClientSocket.h"
 #include "utils/RegexUtils.h"
