@@ -268,8 +268,8 @@ class S3Wrapper {
   template<typename RequestType>
   RequestType createPutObjectRequest(const PutObjectRequestParameters& put_object_params) {
     auto request = RequestType{}
-      .WithBucket(put_object_params.bucket);
-      .WithKey(put_object_params.object_key);
+      .WithBucket(put_object_params.bucket)
+      .WithKey(put_object_params.object_key)
       .WithStorageClass(minifi::utils::at(STORAGE_CLASS_MAP, put_object_params.storage_class));
     if (!put_object_params.server_side_encryption.empty() && put_object_params.server_side_encryption != "None") {
       request.SetServerSideEncryption(minifi::utils::at(SERVER_SIDE_ENCRYPTION_MAP, put_object_params.server_side_encryption));
