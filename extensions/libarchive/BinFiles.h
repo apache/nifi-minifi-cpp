@@ -40,13 +40,8 @@
 
 namespace org::apache::nifi::minifi::processors {
 
-// Bin Class
 class Bin {
  public:
-  // Constructor
-  /*!
-   * Create a new Bin. Note: this object is not thread safe
-   */
   explicit Bin(const uint64_t &minSize, const uint64_t &maxSize, const size_t &minEntries, const size_t & maxEntries, std::string fileCount, std::string groupId)
       : minSize_(minSize),
         maxSize_(maxSize),
@@ -62,7 +57,6 @@ class Bin {
   virtual ~Bin() {
     logger_->log_debug("Bin %s for group %s destroyed", getUUIDStr(), groupId_);
   }
-  // check whether the bin is full
   [[nodiscard]] bool isFull() const {
     return queued_data_size_ >= maxSize_ || queue_.size() >= maxEntries_;
   }
@@ -70,14 +64,12 @@ class Bin {
   [[nodiscard]] bool isReadyForMerge() const {
     return closed_ || isFull() || (queued_data_size_ >= minSize_ && queue_.size() >= minEntries_);
   }
-  // check whether the bin is older than the time specified in msec
   [[nodiscard]] bool isOlderThan(const std::chrono::milliseconds duration) const {
     return std::chrono::system_clock::now() > (creation_dated_ + duration);
   }
   std::deque<std::shared_ptr<core::FlowFile>>& getFlowFile() {
     return queue_;
   }
-  // offer the flowfile to the bin
   bool offer(const std::shared_ptr<core::FlowFile>& flow) {
     if (!fileCount_.empty()) {
       std::string value;
@@ -103,18 +95,15 @@ class Bin {
 
     return true;
   }
-  // getBinAge
   [[nodiscard]] std::chrono::system_clock::time_point getCreationDate() const {
     return creation_dated_;
   }
   [[nodiscard]] int getSize() const {
     return gsl::narrow<int>(queue_.size());
   }
-
   [[nodiscard]] utils::SmallString<36> getUUIDStr() const {
     return uuid_.to_string();
   }
-
   [[nodiscard]] std::string getGroupId() const {
     return groupId_;
   }
@@ -124,20 +113,16 @@ class Bin {
   uint64_t maxSize_;
   size_t maxEntries_;
   size_t minEntries_;
-  // Queued data size
   uint64_t queued_data_size_;
   bool closed_{false};
-  // Queue for the Flow File
   std::deque<std::shared_ptr<core::FlowFile>> queue_;
   std::chrono::system_clock::time_point creation_dated_;
   std::string fileCount_;
   std::string groupId_;
   std::shared_ptr<core::logging::Logger> logger_ = core::logging::LoggerFactory<Bin>::getLogger();
-  // A global unique identifier
   utils::Identifier uuid_;
 };
 
-// BinManager Class
 class BinManager {
  public:
   virtual ~BinManager() {
@@ -175,7 +160,6 @@ class BinManager {
   void gatherReadyBins();
   // marks oldest bin as ready
   void removeOldestBin();
-  // get ready bin from binManager
   void getReadyBin(std::deque<std::unique_ptr<Bin>> &retBins);
   void addReadyBin(std::unique_ptr<Bin> ready_bin);
 
@@ -262,7 +246,6 @@ class BinFiles : public core::Processor {
 
   ADD_COMMON_VIRTUAL_FUNCTIONS_FOR_PROCESSORS
 
-  // attributes
   EXTENSIONAPI static const char *FRAGMENT_ID_ATTRIBUTE;
   EXTENSIONAPI static const char *FRAGMENT_INDEX_ATTRIBUTE;
   EXTENSIONAPI static const char *FRAGMENT_COUNT_ATTRIBUTE;
@@ -290,15 +273,13 @@ class BinFiles : public core::Processor {
   virtual std::string getGroupId(const std::shared_ptr<core::FlowFile>& /*flow*/) {
     return "";
   }
-  // Processes a single bin.
   virtual bool processBin(core::ProcessSession& /*session*/, std::unique_ptr<Bin>& /*bin*/) {
     return false;
   }
-  // transfer flows to failure in bin
   static void transferFlowsToFail(core::ProcessSession &session, std::unique_ptr<Bin> &bin);
-  // moves owned flows to session
   static void addFlowsToSession(core::ProcessSession &session, std::unique_ptr<Bin> &bin);
 
+  // Sort flow files retrieved from the flow file repository after restart to their respective bins
   bool resurrectFlowFiles(core::ProcessSession &session);
   void assumeOwnerShipOfNextBatch(core::ProcessSession &session);
   std::deque<std::unique_ptr<Bin>> gatherReadyBins(core::ProcessContext &context);

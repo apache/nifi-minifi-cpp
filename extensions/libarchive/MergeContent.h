@@ -287,6 +287,17 @@ class KeepAllUniqueAttributesMerger: public AttributeMerger {
   std::vector<std::string> removed_attributes_;
 };
 
+/**
+ * A processor that merges multiple correlated flow files to a single flow file
+ *
+ * Concepts:
+ * - Batch size: represents the maximum number of flow files to be processed from the incoming relationship
+ * - Bin (or bundle): represents a set of flow files that belong together defined by the processor properties. Correlated flow files are defined by the CorrelationAttributeName property which
+ *                    defines the attribute that provides the groupid for the bin the flow file belongs to
+ * - Ready bin: when a bin reaches a limit defined by the maximum age or the maximum size, the bin becomes ready, and ready bins can be merged
+ * - Group: a set of bins with the same groupid. In case a bin cannot accept a new flow files (e.g. it would go above its size limit), a new bin is created with this new flow file and added
+ *          to the same group of bins
+ */
 class MergeContent : public processors::BinFiles {
  public:
   explicit MergeContent(const std::string& name, const utils::Identifier& uuid = {})
