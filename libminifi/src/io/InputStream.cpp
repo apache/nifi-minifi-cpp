@@ -71,12 +71,13 @@ size_t InputStream::read(std::string &str, bool widen) {
   str.reserve(string_length);
 
   auto bytes_to_read = string_length;
+  auto zero_return_retry_count = 0;
   while (bytes_to_read > 0) {
     std::vector<std::byte> buffer(bytes_to_read);
     const auto read_return = read(buffer);
     if (io::isError(read_return))
       return read_return;
-    if (read_return == 0) {
+    if (read_return == 0 && ++zero_return_retry_count > 3) {
       return STREAM_ERROR;
     }
     bytes_to_read -= read_return;
