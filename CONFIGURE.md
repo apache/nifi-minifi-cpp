@@ -159,17 +159,17 @@ Timeout period for finishing processing of flow files in progress when shutting 
     # enable tls
     nifi.remote.input.secure=true
 
-    if you want to enable client certificate base authorization
+    # if you want to enable client certificate base authorization
     nifi.security.need.ClientAuth=true
-    setup the client certificate and private key PEM files
+    # setup the client certificate and private key PEM files
     nifi.security.client.certificate=./conf/client.pem
     nifi.security.client.private.key=./conf/client.pem
-    setup the client private key passphrase file
+    # setup the client private key passphrase file
     nifi.security.client.pass.phrase=./conf/password
-    setup the client CA certificate file
+    # setup the client CA certificate file
     nifi.security.client.ca.certificate=./conf/nifi-cert.pem
 
-    if you do not want to enable client certificate base authorization
+    # if you do not want to enable client certificate base authorization
     nifi.security.need.ClientAuth=false
 
 It can also be configured to use the system certificate store.
@@ -227,7 +227,7 @@ for TCP and secure HTTPS communications.
 
 If the SSL certificates are not provided with an absolute path or cannot be found on the given relative path, MiNiFi will try to find them on the default path provided in the configuration file.
 
-    in minifi.properties
+    # in minifi.properties
 
     # default minifi resource path
     nifi.default.directory=/path/to/cert/files/
@@ -294,7 +294,7 @@ The repository locations and their defaults are defined below. By default the MI
 variable is used. If this is not specified we extrapolate the path and use the root installation
 folder. You may specify your own path in place of these defaults.
 
-    in minifi.properties
+    # in minifi.properties
     nifi.provenance.repository.directory.default=${MINIFI_HOME}/provenance_repository
     nifi.flowfile.repository.directory.default=${MINIFI_HOME}/flowfile_repository
     nifi.database.content.repository.directory.default=${MINIFI_HOME}/content_repository
@@ -304,7 +304,7 @@ folder. You may specify your own path in place of these defaults.
 Rocksdb has an option to set compression type for its database to use less disk space.
 If content repository or flow file repository is set to use the rocksdb database as their storage, then we have the option to compress those repositories. On Unix operating systems `zlib`, `bzip2`, `zstd`, `lz4` and `lz4hc` compression types and on Windows `xpress` compression type is supported by MiNiFi C++. If the property is set to `auto` then `xpress` will be used on Windows, `zstd` on Unix operating systems. These options can be set in the minifi.properies file with the following properties:
 
-     in minifi.properties
+     # in minifi.properties
      nifi.flowfile.repository.rocksdb.compression=zlib
      nifi.content.repository.rocksdb.compression=auto
 
@@ -312,7 +312,7 @@ If content repository or flow file repository is set to use the rocksdb database
 
 Rocksdb has an option to run compaction at specific intervals not just when needed.
 
-     in minifi.properties
+     # in minifi.properties
      nifi.flowfile.repository.rocksdb.compaction.period=2 min
      nifi.database.content.repository.rocksdb.compaction.period=2 min
 
@@ -325,7 +325,7 @@ created into. E.g. in `minifidb:///home/user/minifi/agent_state/flowfile` a dire
 `/home/user/minifi/agent_state` populated with rocksdb-specific content, and in that repository a logically
 separate "subdatabase" is created under the name `"flowfile"`.
 
-    in minifi.properties
+    # in minifi.properties
     nifi.flowfile.repository.directory.default=minifidb://${MINIFI_HOME}/agent_state/flowfile
     nifi.database.content.repository.directory.default=minifidb://${MINIFI_HOME}/agent_state/content
     nifi.state.storage.local.path=minifidb://${MINIFI_HOME}/agent_state/processor_states
@@ -334,7 +334,7 @@ We should not simultaneously use the same directory with and without the `minifi
 Moreover the `"default"` name is restricted and should not be used.
 
 
-    in minifi.properties
+    # in minifi.properties
     nifi.flowfile.repository.directory.default=minifidb://${MINIFI_HOME}/agent_state/flowfile
     nifi.database.content.repository.directory.default=${MINIFI_HOME}/agent_state
     ^ error: using the same database directory without the "minifidb://" scheme
@@ -368,7 +368,7 @@ Each of the repositories can be configured to be volatile ( state kept in memory
 
  To configure the repositories:
 
-    in minifi.properties
+    # in minifi.properties
     # For Volatile Repositories:
     nifi.flowfile.repository.class.name=VolatileFlowFileRepository
     nifi.provenance.repository.class.name=VolatileProvenanceRepository
