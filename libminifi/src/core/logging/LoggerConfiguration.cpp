@@ -137,7 +137,7 @@ void LoggerConfiguration::initialize(const std::shared_ptr<LoggerProperties> &lo
       if (internal::UNLIMITED_LOG_ENTRY_LENGTH == *max_log_entry_length_str) {
         max_log_entry_length_ = -1;
       } else {
-        max_log_entry_length_ = std::stoull(*max_log_entry_length_str);
+        max_log_entry_length_ = std::stoi(*max_log_entry_length_str);
       }
     } catch (const std::exception& ex) {
       logger_->log_error("Parsing max log entry length property failed with the following exception: %s", ex.what());

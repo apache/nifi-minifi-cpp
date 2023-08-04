@@ -65,7 +65,7 @@ inline std::optional<std::string> formatId(std::optional<utils::Identifier> opt_
   return opt_id | utils::map([](auto id) { return " (" + std::string(id.to_string()) + ")"; });
 }
 
-constexpr std::string_view UNLIMITED_LOG_ENTRY_LENGTH = "unlimited";
+inline constexpr std::string_view UNLIMITED_LOG_ENTRY_LENGTH = "unlimited";
 }  // namespace internal
 
 class LoggerConfiguration {
