@@ -49,7 +49,6 @@ class Configuration : public Properties {
   static constexpr const char *nifi_bored_yield_duration = "nifi.bored.yield.duration";
   static constexpr const char *nifi_graceful_shutdown_seconds = "nifi.flowcontroller.graceful.shutdown.period";
   static constexpr const char *nifi_flowcontroller_drain_timeout = "nifi.flowcontroller.drain.timeout";
-  static constexpr const char *nifi_server_name = "nifi.server.name";
   static constexpr const char *nifi_configuration_class_name = "nifi.flow.configuration.class.name";
   static constexpr const char *nifi_flow_repository_class_name = "nifi.flowfile.repository.class.name";
   static constexpr const char *nifi_flow_repository_rocksdb_compression = "nifi.flowfile.repository.rocksdb.compression";
@@ -63,8 +62,6 @@ class Configuration : public Properties {
   static constexpr const char *nifi_volatile_repository_options_content_max_count = "nifi.volatile.repository.options.content.max.count";
   static constexpr const char *nifi_volatile_repository_options_content_max_bytes = "nifi.volatile.repository.options.content.max.bytes";
   static constexpr const char *nifi_volatile_repository_options_content_minimal_locking = "nifi.volatile.repository.options.content.minimal.locking";
-  static constexpr const char *nifi_server_port = "nifi.server.port";
-  static constexpr const char *nifi_server_report_interval = "nifi.server.report.interval";
   static constexpr const char *nifi_provenance_repository_max_storage_size = "nifi.provenance.repository.max.storage.size";
   static constexpr const char *nifi_provenance_repository_max_storage_time = "nifi.provenance.repository.max.storage.time";
   static constexpr const char *nifi_provenance_repository_directory_default = "nifi.provenance.repository.directory.default";
@@ -123,9 +120,6 @@ class Configuration : public Properties {
   static constexpr const char *nifi_c2_rest_ssl_context_service = "nifi.c2.rest.ssl.context.service";
   static constexpr const char *nifi_c2_rest_heartbeat_minimize_updates = "nifi.c2.rest.heartbeat.minimize.updates";
   static constexpr const char *nifi_c2_rest_request_encoding = "nifi.c2.rest.request.encoding";
-  static constexpr const char *nifi_c2_mqtt_connector_service = "nifi.c2.mqtt.connector.service";
-  static constexpr const char *nifi_c2_mqtt_heartbeat_topic = "nifi.c2.mqtt.heartbeat.topic";
-  static constexpr const char *nifi_c2_mqtt_update_topic = "nifi.c2.mqtt.update.topic";
 
   // state management options
   static constexpr const char *nifi_state_storage_local = "nifi.state.storage.local";

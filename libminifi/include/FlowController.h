@@ -50,7 +50,6 @@
 #include "c2/C2Agent.h"
 #include "CronDrivenSchedulingAgent.h"
 #include "EventDrivenSchedulingAgent.h"
-#include "FlowControlProtocol.h"
 #include "FlowFileRecord.h"
 #include "properties/Configure.h"
 #include "TimerDrivenSchedulingAgent.h"
@@ -188,7 +187,6 @@ class FlowController : public core::controller::ForwardingControllerServiceProvi
   std::unique_ptr<TimerDrivenSchedulingAgent> timer_scheduler_;
   std::unique_ptr<EventDrivenSchedulingAgent> event_scheduler_;
   std::unique_ptr<CronDrivenSchedulingAgent> cron_scheduler_;
-  std::unique_ptr<FlowControlProtocol> protocol_;
   std::chrono::steady_clock::time_point start_time_;
   std::shared_ptr<Configure> configuration_;
   std::shared_ptr<core::Repository> provenance_repo_;

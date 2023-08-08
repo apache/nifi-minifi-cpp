@@ -73,7 +73,6 @@ FlowController::FlowController(std::shared_ptr<core::Repository> provenance_repo
   if (flow_configuration_) {
     controller_service_provider_impl_ = flow_configuration_->getControllerServiceProvider();
   }
-  protocol_ = std::make_unique<FlowControlProtocol>(this, configuration_);
   if (metrics_publisher_store_) {
     metrics_publisher_store_->initialize(this, this);
   }
@@ -101,7 +100,6 @@ FlowController::~FlowController() {
   }
   stop();
   // TODO(adebreceni): are these here on purpose, so they are destroyed first?
-  protocol_ = nullptr;
   flow_file_repo_ = nullptr;
   provenance_repo_ = nullptr;
   logger_->log_trace("Destroying FlowController");
@@ -346,7 +344,6 @@ int16_t FlowController::start() {
 
     core::logging::LoggerConfiguration::getConfiguration().initializeAlertSinks(this, configuration_);
     running_ = true;
-    protocol_->start();
     content_repo_->start();
     provenance_repo_->start();
     flow_file_repo_->start();

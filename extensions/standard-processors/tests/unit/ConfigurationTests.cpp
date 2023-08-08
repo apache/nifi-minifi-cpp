@@ -48,7 +48,7 @@ TEST_CASE("Configuration can merge lists of property names", "[mergeProperties]"
 }
 
 TEST_CASE("Configuration can validate values to be assigned to specific properties", "[validatePropertyValue]") {
-  REQUIRE(Configuration::validatePropertyValue(Configuration::nifi_server_name, "anything is valid"));
+  REQUIRE(Configuration::validatePropertyValue(Configuration::nifi_c2_agent_identifier_fallback, "anything is valid"));
   REQUIRE_FALSE(Configuration::validatePropertyValue(Configuration::nifi_flow_configuration_encrypt, "invalid.value"));
   REQUIRE(Configuration::validatePropertyValue(Configuration::nifi_flow_configuration_encrypt, "true"));
   REQUIRE(Configuration::validatePropertyValue("random.property", "random_value"));

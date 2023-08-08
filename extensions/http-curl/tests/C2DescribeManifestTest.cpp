@@ -64,10 +64,10 @@ int main(int argc, char **argv) {
 
   harness.getConfiguration()->set(minifi::Configuration::nifi_rest_api_password, encrypted_value);
   harness.getConfiguration()->set(std::string(minifi::Configuration::nifi_rest_api_password) + ".protected", utils::crypto::EncryptionType::name());
-  harness.getConfiguration()->set(minifi::Configuration::nifi_server_name, "server_name");
+  harness.getConfiguration()->set(minifi::Configuration::nifi_c2_agent_identifier_fallback, "c2_id_fallback");
   harness.getConfiguration()->set(minifi::Configuration::nifi_framework_dir, "framework_path");
   harness.getConfiguration()->set(minifi::Configuration::nifi_sensitive_props_additional_keys,
-    std::string(minifi::Configuration::nifi_framework_dir) + ", " + std::string(minifi::Configuration::nifi_server_name));
+    std::string(minifi::Configuration::nifi_framework_dir) + ", " + std::string(minifi::Configuration::nifi_c2_agent_identifier_fallback));
   harness.getConfiguration()->set(minifi::Configuration::nifi_log_appender_rolling_directory, "/var/log/minifi");
 
   harness.setUrl(args.url, &responder);
