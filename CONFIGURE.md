@@ -360,6 +360,17 @@ Finally, as the last line is commented out, it will make the state manager use p
 
 When multiple repositories use the same directory (as with `minifidb://` scheme) they should either be all plaintext or all encrypted with the same key.
 
+### Configuring Repository Cleanup
+
+When a flow file content is no longer needed we can specify the deletion strategy.
+
+    # any value other than 0 enables async cleanup with the specified period
+    # while a value of 0 sec triggers an immediate deletion as soon as the resource
+    # is not needed
+    # (the default value is 1 sec)
+    nifi.database.content.repository.purge.period = 1 sec
+
+
 ### Configuring Volatile and NO-OP Repositories
 Each of the repositories can be configured to be volatile ( state kept in memory and flushed
  upon restart ) or persistent. Currently, the flow file and provenance repositories can persist

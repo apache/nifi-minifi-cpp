@@ -28,6 +28,7 @@
 #include "../Catch.h"
 #include "../unit/ProvenanceTestHelper.h"
 #include "../unit/ContentRepositoryDependentTests.h"
+#include "IntegrationTestUtils.h"
 
 class TestDatabaseContentRepository : public core::repository::DatabaseContentRepository {
  public:
@@ -79,6 +80,7 @@ TEST_CASE("Write Claim", "[TestDBCR1]") {
 
 TEST_CASE("Delete Claim", "[TestDBCR2]") {
   TestController testController;
+  LogTestController::getInstance().setDebug<core::repository::DatabaseContentRepository>();
   auto dir = testController.createTempDirectory();
   auto content_repo = std::make_shared<TestDatabaseContentRepository>();
 
@@ -103,16 +105,35 @@ TEST_CASE("Delete Claim", "[TestDBCR2]") {
 
   configuration = std::make_shared<org::apache::nifi::minifi::Configure>();
   configuration->set(minifi::Configure::nifi_dbcontent_repository_directory_default, dir.string());
-  REQUIRE(content_repo->initialize(configuration));
-
-  content_repo->remove(*claim);
-
-  auto read_stream = content_repo->read(*claim);
 
   std::string readstr;
 
-  // error tells us we have an invalid stream
-  REQUIRE(minifi::io::isError(read_stream->read(readstr)));
+  SECTION("Sync") {
+    configuration->set(minifi::Configure::nifi_dbcontent_repository_purge_period, "0 s");
+    REQUIRE(content_repo->initialize(configuration));
+
+    content_repo->remove(*claim);
+
+    auto read_stream = content_repo->read(*claim);
+
+    // error tells us we have an invalid stream
+    REQUIRE(minifi::io::isError(read_stream->read(readstr)));
+  }
+
+  SECTION("Async") {
+    configuration->set(minifi::Configure::nifi_dbcontent_repository_purge_period, "100 ms");
+    REQUIRE(content_repo->initialize(configuration));
+    content_repo->start();
+
+    content_repo->remove(*claim);
+
+    // an immediate read will still be able to access the content
+    REQUIRE_FALSE(minifi::io::isError(content_repo->read(*claim)->read(readstr)));
+
+    REQUIRE(minifi::utils::verifyEventHappenedInPollTime(1s, [&] {
+      return minifi::io::isError(content_repo->read(*claim)->read(readstr));
+    }));
+  }
 }
 
 TEST_CASE("Test Empty Claim", "[TestDBCR3]") {

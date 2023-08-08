@@ -278,6 +278,7 @@ TEST_CASE("Persisted flowFiles are updated on modification", "[TestP1]") {
   auto config = std::make_shared<minifi::Configure>();
   config->set(minifi::Configure::nifi_dbcontent_repository_directory_default, (dir / "content_repository").string());
   config->set(minifi::Configure::nifi_flowfile_repository_directory_default, (dir / "flowfile_repository").string());
+  config->set(minifi::Configure::nifi_dbcontent_repository_purge_period, "0 s");
 
   std::shared_ptr<core::Repository> prov_repo = std::make_shared<TestThreadedRepository>();
   std::shared_ptr<core::Repository> ff_repository = std::make_shared<core::repository::FlowFileRepository>("flowFileRepository");

@@ -48,7 +48,7 @@ void provisionRepo(minifi::provenance::ProvenanceRepository& repo, size_t number
 }
 
 void verifyMaxKeyCount(const minifi::provenance::ProvenanceRepository& repo, uint64_t keyCount) {
-  uint64_t k = keyCount;
+  uint64_t k = std::numeric_limits<uint64_t>::max();
 
   for (int i = 0; i < 50; ++i) {
     std::this_thread::sleep_for(100ms);

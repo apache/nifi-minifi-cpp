@@ -21,6 +21,7 @@
 #include <string_view>
 #include <utility>
 #include <thread>
+#include <vector>
 
 #include "core/ContentRepository.h"
 #include "core/BufferedContentSession.h"
@@ -79,6 +80,9 @@ class DatabaseContentRepository : public core::ContentRepository {
   uint64_t getRepositoryEntryCount() const override;
   std::optional<RepositoryMetricsSource::RocksDbStats> getRocksDbStats() const override;
 
+ private:
+  void runGc();
+
  protected:
   bool removeKey(const std::string& content_path) override;
 
@@ -93,6 +97,11 @@ class DatabaseContentRepository : public core::ContentRepository {
 
   std::chrono::milliseconds compaction_period_{DEFAULT_COMPACTION_PERIOD};
   std::unique_ptr<utils::StoppableThread> compaction_thread_;
+
+  std::chrono::milliseconds purge_period_{std::chrono::seconds{1}};
+  std::mutex keys_mtx_;
+  std::vector<std::string> keys_to_delete_;
+  std::unique_ptr<utils::StoppableThread> gc_thread_;
 };
 
 }  // namespace org::apache::nifi::minifi::core::repository
