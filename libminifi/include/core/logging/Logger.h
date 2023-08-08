@@ -81,12 +81,9 @@ std::string format_string(int max_size, char const* format_str, const Args& ...a
   const auto buf_size = gsl::narrow<size_t>(result);
   if (buf_size <= LOG_BUFFER_SIZE) {
     // static buffer was large enough
-    return {buf, buf_size};
+    return {buf, max_size >= 0 ? std::min(buf_size, gsl::narrow<size_t>(max_size)) : buf_size};
   }
-  if (max_size >= 0 && gsl::narrow<size_t>(max_size) <= LOG_BUFFER_SIZE) {
-    // static buffer was already larger than allowed, use the filled buffer
-    return {buf, LOG_BUFFER_SIZE};
-  }
+
   // try to use dynamic buffer
   size_t dynamic_buffer_size = max_size < 0 ? buf_size : gsl::narrow<size_t>(std::min(result, max_size));
   std::vector<char> buffer(dynamic_buffer_size + 1);  // extra '\0' character
@@ -97,8 +94,12 @@ std::string format_string(int max_size, char const* format_str, const Args& ...a
   return {buffer.cbegin(), buffer.cend() - 1};  // -1 to not include the terminating '\0'
 }
 
-inline std::string format_string(int /*max_size*/, char const* format_str) {
-  return format_str;
+inline std::string format_string(int max_size, char const* format_str) {
+  std::string return_value(format_str);
+  if (max_size >= 0 && return_value.size() > gsl::narrow<size_t>(max_size)) {
+    return return_value.substr(0, max_size);
+  }
+  return return_value;
 }
 
 enum LOG_LEVEL {

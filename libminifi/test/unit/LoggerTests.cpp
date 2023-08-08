@@ -278,3 +278,74 @@ TEST_CASE("Setting either properties to 0 disables in-memory compressed logs", "
   logger->log_error("Hi there");
   REQUIRE((logging::LoggerConfiguration::getCompressedLog(true) == nullptr) == is_nullptr);
 }
+
+TEST_CASE("Setting max log entry length property trims long log entries", "[ttl12]") {
+  auto& log_config = logging::LoggerConfiguration::getConfiguration();
+  auto properties = std::make_shared<logging::LoggerProperties>();
+  properties->set("max.log.entry.length", "2");
+  properties->set("logger.root", "INFO");
+  log_config.initialize(properties);
+  auto logger = log_config.getLogger("SetMaxLogEntryLengthTestLogger");
+  logger->log_error("Hi there");
+
+  std::shared_ptr<InputStream> compressed_log{logging::LoggerConfiguration::getCompressedLog(true)};
+  REQUIRE(compressed_log);
+  auto logs = decompress(compressed_log);
+  REQUIRE(logs.find("Hi ") == std::string::npos);
+  REQUIRE(logs.find("Hi") != std::string::npos);
+}
+
+TEST_CASE("Setting max log entry length property trims long formatted log entries", "[ttl13]") {
+  auto& log_config = logging::LoggerConfiguration::getConfiguration();
+  auto properties = std::make_shared<logging::LoggerProperties>();
+  properties->set("max.log.entry.length", "2");
+  properties->set("logger.root", "INFO");
+  log_config.initialize(properties);
+  auto logger = log_config.getLogger("SetMaxLogEntryLengthTestLogger");
+  logger->log_error("Hi there %s", "John");
+
+  std::shared_ptr<InputStream> compressed_log{logging::LoggerConfiguration::getCompressedLog(true)};
+  REQUIRE(compressed_log);
+  auto logs = decompress(compressed_log);
+  REQUIRE(logs.find("Hi ") == std::string::npos);
+  REQUIRE(logs.find("Hi") != std::string::npos);
+}
+
+TEST_CASE("Setting max log entry length to a size larger than the internal buffer size", "[ttl14]") {
+  auto& log_config = logging::LoggerConfiguration::getConfiguration();
+  auto properties = std::make_shared<logging::LoggerProperties>();
+  properties->set("max.log.entry.length", "1500");
+  properties->set("logger.root", "INFO");
+  log_config.initialize(properties);
+  auto logger = log_config.getLogger("SetMaxLogEntryLengthTestLogger");
+  std::string log(2000, 'a');
+  std::string expected_log(1500, 'a');
+  logger->log_error(log.c_str());
+
+  std::shared_ptr<InputStream> compressed_log{logging::LoggerConfiguration::getCompressedLog(true)};
+  REQUIRE(compressed_log);
+  auto logs = decompress(compressed_log);
+  REQUIRE(logs.find(log) == std::string::npos);
+  REQUIRE(logs.find(expected_log) != std::string::npos);
+}
+
+TEST_CASE("Setting max log entry length to unlimited results in unlimited log entry size", "[ttl15]") {
+  auto& log_config = logging::LoggerConfiguration::getConfiguration();
+  auto properties = std::make_shared<logging::LoggerProperties>();
+  SECTION("Use unlimited value") {
+    properties->set("max.log.entry.length", "unlimited");
+  }
+  SECTION("Use -1 value") {
+    properties->set("max.log.entry.length", "-1");
+  }
+  properties->set("logger.root", "INFO");
+  log_config.initialize(properties);
+  auto logger = log_config.getLogger("SetMaxLogEntryLengthTestLogger");
+  std::string log(5000, 'a');
+  logger->log_error(log.c_str());
+
+  std::shared_ptr<InputStream> compressed_log{logging::LoggerConfiguration::getCompressedLog(true)};
+  REQUIRE(compressed_log);
+  auto logs = decompress(compressed_log);
+  REQUIRE(logs.find(log) != std::string::npos);
+}

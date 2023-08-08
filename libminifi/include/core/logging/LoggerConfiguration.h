@@ -64,6 +64,8 @@ struct LoggerNamespace {
 inline std::optional<std::string> formatId(std::optional<utils::Identifier> opt_id) {
   return opt_id | utils::map([](auto id) { return " (" + std::string(id.to_string()) + ")"; });
 }
+
+inline constexpr std::string_view UNLIMITED_LOG_ENTRY_LENGTH = "unlimited";
 }  // namespace internal
 
 class LoggerConfiguration {
@@ -161,6 +163,7 @@ class LoggerConfiguration {
   std::shared_ptr<LoggerImpl> logger_ = nullptr;
   std::shared_ptr<LoggerControl> controller_;
   std::unordered_set<std::shared_ptr<AlertSink>> alert_sinks_;
+  std::optional<int> max_log_entry_length_;
   bool shorten_names_ = false;
   bool include_uuid_ = true;
 };
