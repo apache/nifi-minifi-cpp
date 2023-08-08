@@ -26,6 +26,7 @@
 #include <memory>
 #include <mutex>
 #include <string>
+#include <string_view>
 #include <unordered_set>
 #include <unordered_map>
 #include <utility>
@@ -73,8 +74,8 @@ constexpr std::chrono::microseconds MINIMUM_SCHEDULING_PERIOD{30};
 
 class Processor : public Connectable, public ConfigurableComponent, public state::response::ResponseNodeSource {
  public:
-  Processor(std::string name, const utils::Identifier& uuid, std::shared_ptr<ProcessorMetrics> metrics = nullptr);
-  explicit Processor(std::string name, std::shared_ptr<ProcessorMetrics> metrics = nullptr);
+  Processor(std::string_view name, const utils::Identifier& uuid, std::shared_ptr<ProcessorMetrics> metrics = nullptr);
+  explicit Processor(std::string_view name, std::shared_ptr<ProcessorMetrics> metrics = nullptr);
 
   Processor(const Processor& parent) = delete;
   Processor& operator=(const Processor& parent) = delete;
