@@ -33,7 +33,7 @@ set(LWS_WITH_SHARED OFF                               CACHE BOOL "" FORCE)
 set(LWS_OPENSSL_INCLUDE_DIRS "${OPENSSL_INCLUDE_DIR}" CACHE STRING "" FORCE)
 set(LWS_OPENSSL_LIBRARIES "${OPENSSL_LIBRARIES}"      CACHE STRING "" FORCE)
 set(CMAKE_C_FLAGS "-fpic"                             CACHE STRING "" FORCE)
-set(DISABLE_WERROR ON)
+set(DISABLE_WERROR ON                                 CACHE STRING "" FORCE)
 
 set(WEBSOCKETS_PATCH_FILE_1 "${CMAKE_SOURCE_DIR}/thirdparty/libwebsockets/fix-include-dirs.patch")
 set(WEBSOCKETS_PATCH_FILE_2 "${CMAKE_SOURCE_DIR}/thirdparty/libwebsockets/openssl3.patch")
