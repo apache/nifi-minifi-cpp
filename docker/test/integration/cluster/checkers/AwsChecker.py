@@ -30,6 +30,18 @@ class AwsChecker:
         return code == 0 and file_data == test_data
 
     @retry_check()
+    def check_s3_server_object_hash(self, container_name: str, expected_file_hash: str):
+        (code, output) = self.container_communicator.execute_command(container_name, ["find", "/s3mockroot/test_bucket", "-mindepth", "1", "-maxdepth", "1", "-type", "d"])
+        if code != 0:
+            return False
+        s3_mock_dir = output.strip()
+        (code, md5_output) = self.container_communicator.execute_command(container_name, ["md5sum", s3_mock_dir + "/binaryData"])
+        if code != 0:
+            return False
+        file_hash = md5_output.split(' ')[0].strip()
+        return file_hash == expected_file_hash
+
+    @retry_check()
     def check_s3_server_object_metadata(self, container_name, content_type="application/octet-stream", metadata=dict()):
         (code, output) = self.container_communicator.execute_command(container_name, ["find", "/s3mockroot/test_bucket", "-mindepth", "1", "-maxdepth", "1", "-type", "d"])
         if code != 0:

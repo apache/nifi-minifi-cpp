@@ -36,6 +36,8 @@
 #include "MockS3RequestSender.h"
 #include "utils/TestUtils.h"
 #include "AWSCredentialsProvider.h"
+#include "s3/MultipartUploadStateStorage.h"
+#include "s3/S3Wrapper.h"
 
 template<typename T>
 class S3TestsFixture {
@@ -51,6 +53,8 @@ class S3TestsFixture {
     LogTestController::getInstance().setDebug<minifi::processors::LogAttribute>();
     LogTestController::getInstance().setTrace<T>();
     LogTestController::getInstance().setDebug<minifi::aws::AWSCredentialsProvider>();
+    LogTestController::getInstance().setDebug<minifi::aws::s3::MultipartUploadStateStorage>();
+    LogTestController::getInstance().setDebug<minifi::aws::s3::S3Wrapper>();
 
     // Build MiNiFi processing graph
     plan = test_controller.createPlan();
@@ -126,7 +130,7 @@ template<typename T>
 class FlowProcessorS3TestsFixture : public S3TestsFixture<T> {
  public:
   const std::string INPUT_FILENAME = "input_data.log";
-  const std::string INPUT_DATA = "input_data";
+  const std::string INPUT_DATA = "This data is has a length of 37 bytes";
 
   FlowProcessorS3TestsFixture() {
     LogTestController::getInstance().setTrace<minifi::processors::GetFile>();
@@ -138,7 +142,7 @@ class FlowProcessorS3TestsFixture : public S3TestsFixture<T> {
     input_file_stream.close();
     auto get_file = this->plan->addProcessor("GetFile", "GetFile");
     this->plan->setProperty(get_file, minifi::processors::GetFile::Directory, input_dir.string());
-    this->plan->setProperty(get_file, minifi::processors::GetFile::KeepSourceFile, "false");
+    this->plan->setProperty(get_file, minifi::processors::GetFile::KeepSourceFile, "true");
     update_attribute = this->plan->addProcessor(
       "UpdateAttribute",
       "UpdateAttribute",
@@ -155,6 +159,7 @@ class FlowProcessorS3TestsFixture : public S3TestsFixture<T> {
       core::Relationship("success", "d"),
       true);
     this->plan->setProperty(log_attribute, minifi::processors::LogAttribute::FlowFilesToLog, "0");
+    log_attribute->setAutoTerminatedRelationships(std::array{core::Relationship("success", "d")});
   }
 
   void setAccesKeyCredentialsInProcessor() override {

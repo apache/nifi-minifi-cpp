@@ -275,6 +275,11 @@ def step_impl(context, content, path):
     context.test.add_test_data(path, content)
 
 
+@given("a file of size {size} is present in \"{path}\"")
+def step_impl(context, size: str, path: str):
+    context.test.add_random_test_data(path, humanfriendly.parse_size(size))
+
+
 @given("{number_of_files:d} files with the content \"{content}\" are present in \"{path}\"")
 def step_impl(context, number_of_files, content, path):
     for i in range(0, number_of_files):
@@ -857,6 +862,11 @@ def step_impl(context, url):
 @then("the object on the s3 server is \"{object_data}\"")
 def step_impl(context, object_data):
     context.test.check_s3_server_object_data("s3-server", object_data)
+
+
+@then("the object on the s3 server is present and matches the original hash")
+def step_impl(context):
+    context.test.check_s3_server_large_object_data("s3-server")
 
 
 @then("the object content type on the s3 server is \"{content_type}\" and the object metadata matches use metadata")
