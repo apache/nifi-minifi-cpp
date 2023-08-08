@@ -33,20 +33,25 @@ namespace org::apache::nifi::minifi::wel {
 
 bool MetadataWalker::for_each(pugi::xml_node &node) {
   // don't shortcut resolution here so that we can log attributes.
+  const auto idUpdate = [&](const std::string &input) {
+    if (resolve_) {
+      auto resolved = user_id_to_username_fn_(input);
+      replaced_identifiers_[input] = resolved;
+      return resolved;
+    }
+
+    replaced_identifiers_[input] = input;
+    return input;
+  };
+  for (pugi::xml_attribute attr : node.attributes())  {
+    if (regex_ && utils::regexMatch(attr.name(), *regex_)) {
+      updateAttributeValue(attr, attr.name(), idUpdate);
+    }
+  }
+
   const std::string node_name = node.name();
   if (node_name == "Data") {
     for (pugi::xml_attribute attr : node.attributes())  {
-      const auto idUpdate = [&](const std::string &input) {
-        if (resolve_) {
-          auto resolved = user_id_to_username_fn_(input);
-          replaced_identifiers_[input] = resolved;
-          return resolved;
-        }
-
-        replaced_identifiers_[input] = input;
-        return input;
-      };
-
       if (regex_ && utils::regexMatch(attr.name(), *regex_)) {
         updateText(node, attr.name(), idUpdate);
       }
@@ -158,13 +163,30 @@ std::string MetadataWalker::to_string(const wchar_t* pChar) {
   return std::wstring_convert<std::codecvt_utf8<wchar_t>>().to_bytes(pChar);
 }
 
-void MetadataWalker::updateText(pugi::xml_node &node, const std::string &field_name, std::function<std::string(const std::string &)> &&fn) {
+template<typename Fn>
+requires std::is_convertible_v<std::invoke_result_t<Fn, std::string>, std::string>
+void MetadataWalker::updateText(pugi::xml_node &node, const std::string &field_name, Fn &&fn) {
   std::string previous_value = node.text().get();
-  auto new_field_value = fn(previous_value);
+  auto new_field_value = std::invoke(std::forward<Fn>(fn), previous_value);
   if (new_field_value != previous_value) {
     metadata_[field_name] = new_field_value;
     if (update_xml_) {
       node.text().set(new_field_value.c_str());
+    } else {
+      fields_values_[field_name] = new_field_value;
+    }
+  }
+}
+
+template<typename Fn>
+requires std::is_convertible_v<std::invoke_result_t<Fn, std::string>, std::string>
+void MetadataWalker::updateAttributeValue(pugi::xml_attribute &attr, const std::string &field_name, Fn &&fn) {
+  std::string previous_value = attr.value();
+  auto new_field_value = std::invoke(std::forward<Fn>(fn), previous_value);
+  if (new_field_value != previous_value) {
+    metadata_[field_name] = new_field_value;
+    if (update_xml_) {
+      attr.set_value(new_field_value.c_str());
     } else {
       fields_values_[field_name] = new_field_value;
     }
