@@ -79,9 +79,9 @@ class AsioSocketConnection : public io::BaseStream {
     gsl_Expects(stream_);
     return stream_->read(out_buffer);
   }
-  size_t write(const uint8_t *value, size_t len) override {
+  size_t write(const uint8_t *in_buffer, size_t len) override {
     gsl_Expects(stream_);
-    return stream_->write(value, len);
+    return stream_->write(in_buffer, len);
   }
 
   void setInterface(const std::string& local_network_interface) {
