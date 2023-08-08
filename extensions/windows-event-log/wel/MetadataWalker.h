@@ -92,7 +92,7 @@ class MetadataWalker : public pugi::xml_tree_walker {
   void updateText(pugi::xml_node &node, const std::string &field_name, Fn &&fn);
   template<typename Fn>
   requires std::is_convertible_v<std::invoke_result_t<Fn, std::string>, std::string>
-  void updateText(pugi::xml_attribute &node, const std::string &field_name, Fn &&fn);
+  void updateAttributeValue(pugi::xml_attribute &node, const std::string &field_name, Fn &&fn);
 
   const WindowsEventLogMetadata& windows_event_log_metadata_;
   const std::string log_name_;

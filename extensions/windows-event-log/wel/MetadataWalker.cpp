@@ -45,7 +45,7 @@ bool MetadataWalker::for_each(pugi::xml_node &node) {
   };
   for (pugi::xml_attribute attr : node.attributes())  {
     if (regex_ && utils::regexMatch(attr.name(), *regex_)) {
-      updateText(attr, attr.name(), idUpdate);
+      updateAttributeValue(attr, attr.name(), idUpdate);
     }
   }
 
@@ -180,7 +180,7 @@ void MetadataWalker::updateText(pugi::xml_node &node, const std::string &field_n
 
 template<typename Fn>
 requires std::is_convertible_v<std::invoke_result_t<Fn, std::string>, std::string>
-void MetadataWalker::updateText(pugi::xml_attribute &attr, const std::string &field_name, Fn &&fn) {
+void MetadataWalker::updateAttributeValue(pugi::xml_attribute &attr, const std::string &field_name, Fn &&fn) {
   std::string previous_value = attr.value();
   auto new_field_value = std::invoke(std::forward<Fn>(fn), previous_value);
   if (new_field_value != previous_value) {
