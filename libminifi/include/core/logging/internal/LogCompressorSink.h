@@ -21,6 +21,7 @@
 #include <memory>
 #include <atomic>
 #include <utility>
+#include <vector>
 
 #include "spdlog/common.h"
 #include "spdlog/details/log_msg.h"
@@ -57,24 +58,42 @@ class LogCompressorSink : public spdlog::sinks::base_sink<std::mutex> {
   ~LogCompressorSink() override;
 
   template<class Rep, class Period>
-  std::unique_ptr<io::InputStream> getContent(const std::chrono::duration<Rep, Period>& time, bool flush = false) {
+  std::vector<std::unique_ptr<io::InputStream>> getContent(const std::chrono::duration<Rep, Period>& time, bool flush = false) {
     if (flush) {
       cached_logs_.commit();
       compress(true);
     }
-    LogBuffer compressed;
-    if (!compressed_logs_.tryDequeue(compressed, time) && flush) {
-      return createEmptyArchive();
+
+    std::vector<std::unique_ptr<io::InputStream>> log_segments;
+    const auto segment_count = compressed_logs_.itemCount();
+    for (size_t i = 0; i < segment_count; ++i) {
+      LogBuffer compressed;
+      if (!compressed_logs_.tryDequeue(compressed, time) && flush) {
+        break;
+      }
+      log_segments.push_back(std::move(compressed.buffer_));
     }
-    return std::move(compressed.buffer_);
+
+    if (log_segments.empty()) {
+      log_segments.push_back(createEmptyArchive());
+    }
+    return log_segments;
   }
 
   size_t getMaxCacheSize() const {
     return cached_logs_.getMaxSize();
   }
 
+  size_t getMaxCacheSegmenSize() const {
+    return cached_logs_.getMaxItemSize();
+  }
+
   size_t getMaxCompressedSize() const {
     return compressed_logs_.getMaxSize();
+  }
+
+  size_t getMaxCompressedSegmentSize() const {
+    return compressed_logs_.getMaxItemSize();
   }
 
  private:

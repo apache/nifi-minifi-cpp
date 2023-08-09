@@ -473,8 +473,10 @@ std::vector<BackTrace> FlowController::getTraces() {
 
 std::map<std::string, std::unique_ptr<io::InputStream>> FlowController::getDebugInfo() {
   std::map<std::string, std::unique_ptr<io::InputStream>> debug_info;
-  if (auto logs = core::logging::LoggerConfiguration::getCompressedLog(true)) {
-    debug_info["minifi.log.gz"] = std::move(logs);
+  auto logs = core::logging::LoggerConfiguration::getCompressedLogs(true);
+  for (size_t i = 0; i < logs.size(); ++i) {
+    std::string index_str = i == logs.size() - 1 ? "" : "." + std::to_string(logs.size() - 1 - i);
+    debug_info["minifi.log" + index_str + ".gz"] = std::move(logs[i]);
   }
   if (auto opt_flow_path = flow_configuration_->getConfigurationPath()) {
     debug_info["config.yml"] = std::make_unique<io::FileStream>(opt_flow_path.value(), 0, false);

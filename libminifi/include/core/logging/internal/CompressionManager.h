@@ -24,6 +24,7 @@
 #include <functional>
 #include <utility>
 #include <string>
+#include <vector>
 
 #include "core/logging/Logger.h"
 #include "LogCompressorSink.h"
@@ -50,12 +51,12 @@ class CompressionManager {
   std::shared_ptr<LogCompressorSink> initialize(const std::shared_ptr<LoggerProperties>& properties, const std::shared_ptr<Logger>& error_logger, const LoggerFactory& logger_factory);
 
   template<class Rep, class Period>
-  std::unique_ptr<io::InputStream> getCompressedLog(const std::chrono::duration<Rep, Period>& time, bool flush = false) {
+  std::vector<std::unique_ptr<io::InputStream>> getCompressedLogs(const std::chrono::duration<Rep, Period>& time, bool flush = false) {
     std::shared_ptr<internal::LogCompressorSink> sink = getSink();
     if (sink) {
       return sink->getContent(time, flush);
     }
-    return nullptr;
+    return {};
   }
 
   static constexpr const char* compression_cached_log_max_size_ = "compression.cached.log.max.size";

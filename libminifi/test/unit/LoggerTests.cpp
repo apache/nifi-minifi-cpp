@@ -20,6 +20,7 @@
 #include <memory>
 #include <vector>
 #include <ctime>
+#include <random>
 #include "../TestBase.h"
 #include "../Catch.h"
 #include "core/logging/LoggerConfiguration.h"
@@ -189,7 +190,7 @@ TEST_CASE("Test ShortenNames", "[ttl8]") {
 
 using namespace minifi::io;
 
-std::string decompress(const std::shared_ptr<InputStream>& input) {
+std::string decompress(const std::unique_ptr<InputStream>& input) {
   auto output = std::make_unique<BufferStream>();
   auto decompressor = std::make_shared<ZlibDecompressStream>(gsl::make_not_null(output.get()));
   minifi::internal::pipe(*input, *decompressor);
@@ -214,9 +215,9 @@ TEST_CASE("Test Compression", "[ttl9]") {
   log_config.initialize(properties);
   auto logger = log_config.getLogger(className);
   logger->log_error("Hi there");
-  std::shared_ptr<InputStream> compressed_log{logging::LoggerConfiguration::getCompressedLog(true)};
-  REQUIRE(compressed_log);
-  auto logs = decompress(compressed_log);
+  auto compressed_logs = logging::LoggerConfiguration::getCompressedLogs(true);
+  REQUIRE(compressed_logs.size() == 1);
+  auto logs = decompress(compressed_logs[0]);
   REQUIRE(logs.find("Hi there") != std::string::npos);
 }
 
@@ -233,6 +234,9 @@ class LoggerTestAccessor {
   }
   static size_t getCompressedSize(logging::LoggerConfiguration& log_config) {
     return log_config.compression_manager_.getSink()->compressed_logs_.size();
+  }
+  static void runCompression(logging::LoggerConfiguration& log_config) {
+    while (logging::internal::LogCompressorSink::CompressionResult::Success == log_config.compression_manager_.getSink()->compress()){}
   }
 };
 
@@ -276,7 +280,7 @@ TEST_CASE("Setting either properties to 0 disables in-memory compressed logs", "
   log_config.initialize(properties);
   auto logger = log_config.getLogger("DisableCompressionTestLogger");
   logger->log_error("Hi there");
-  REQUIRE((logging::LoggerConfiguration::getCompressedLog(true) == nullptr) == is_nullptr);
+  REQUIRE(logging::LoggerConfiguration::getCompressedLogs(true).empty() == is_nullptr);
 }
 
 TEST_CASE("Setting max log entry length property trims long log entries", "[ttl12]") {
@@ -288,9 +292,9 @@ TEST_CASE("Setting max log entry length property trims long log entries", "[ttl1
   auto logger = log_config.getLogger("SetMaxLogEntryLengthTestLogger");
   logger->log_error("Hi there");
 
-  std::shared_ptr<InputStream> compressed_log{logging::LoggerConfiguration::getCompressedLog(true)};
-  REQUIRE(compressed_log);
-  auto logs = decompress(compressed_log);
+  auto compressed_logs = logging::LoggerConfiguration::getCompressedLogs(true);
+  REQUIRE(compressed_logs.size() == 1);
+  auto logs = decompress(compressed_logs[0]);
   REQUIRE(logs.find("Hi ") == std::string::npos);
   REQUIRE(logs.find("Hi") != std::string::npos);
 }
@@ -304,9 +308,9 @@ TEST_CASE("Setting max log entry length property trims long formatted log entrie
   auto logger = log_config.getLogger("SetMaxLogEntryLengthTestLogger");
   logger->log_error("Hi there %s", "John");
 
-  std::shared_ptr<InputStream> compressed_log{logging::LoggerConfiguration::getCompressedLog(true)};
-  REQUIRE(compressed_log);
-  auto logs = decompress(compressed_log);
+  auto compressed_logs = logging::LoggerConfiguration::getCompressedLogs(true);
+  REQUIRE(compressed_logs.size() == 1);
+  auto logs = decompress(compressed_logs[0]);
   REQUIRE(logs.find("Hi ") == std::string::npos);
   REQUIRE(logs.find("Hi") != std::string::npos);
 }
@@ -322,9 +326,9 @@ TEST_CASE("Setting max log entry length to a size larger than the internal buffe
   std::string expected_log(1500, 'a');
   logger->log_error(log.c_str());
 
-  std::shared_ptr<InputStream> compressed_log{logging::LoggerConfiguration::getCompressedLog(true)};
-  REQUIRE(compressed_log);
-  auto logs = decompress(compressed_log);
+  auto compressed_logs = logging::LoggerConfiguration::getCompressedLogs(true);
+  REQUIRE(compressed_logs.size() == 1);
+  auto logs = decompress(compressed_logs[0]);
   REQUIRE(logs.find(log) == std::string::npos);
   REQUIRE(logs.find(expected_log) != std::string::npos);
 }
@@ -344,8 +348,40 @@ TEST_CASE("Setting max log entry length to unlimited results in unlimited log en
   std::string log(5000, 'a');
   logger->log_error(log.c_str());
 
-  std::shared_ptr<InputStream> compressed_log{logging::LoggerConfiguration::getCompressedLog(true)};
-  REQUIRE(compressed_log);
-  auto logs = decompress(compressed_log);
+  auto compressed_logs = logging::LoggerConfiguration::getCompressedLogs(true);
+  REQUIRE(compressed_logs.size() == 1);
+  auto logs = decompress(compressed_logs[0]);
   REQUIRE(logs.find(log) != std::string::npos);
+}
+
+TEST_CASE("Test sending multiple segments at once", "[ttl16]") {
+  auto& log_config = logging::LoggerConfiguration::getConfiguration();
+  LoggerTestAccessor::setCompressionCompressedSegmentSize(log_config, 100);
+  LoggerTestAccessor::setCompressionCacheSegmentSize(log_config, 100);
+  auto properties = std::make_shared<logging::LoggerProperties>();
+  // by default the root logger is OFF
+  properties->set("logger.root", "INFO");
+  log_config.initialize(properties);
+  auto logger = log_config.getLogger("CompressionTestMultiSegment");
+
+  std::random_device rd;
+  std::mt19937 eng(rd());
+  constexpr const char * TEXT_CHARS = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890";
+  const int index_of_last_char = gsl::narrow<int>(strlen(TEXT_CHARS)) - 1;
+  std::uniform_int_distribution<> distr(0, index_of_last_char);
+  std::vector<char> data(100);
+  std::string log_str;
+  const size_t SEGMENT_COUNT = 5;
+  for (size_t idx = 0; idx < SEGMENT_COUNT; ++idx) {
+    std::generate_n(data.begin(), data.size(), [&] { return TEXT_CHARS[static_cast<uint8_t>(distr(eng))]; });
+    log_str = std::string{data.begin(), data.end()} + "." + std::to_string(idx);
+    logger->log_error(log_str.c_str());
+  }
+
+  LoggerTestAccessor::runCompression(log_config);
+
+  auto compressed_logs = logging::LoggerConfiguration::getCompressedLogs(true);
+  REQUIRE(compressed_logs.size() == SEGMENT_COUNT);
+  auto logs = decompress(compressed_logs[SEGMENT_COUNT - 1]);
+  REQUIRE(logs.find(log_str) != std::string::npos);
 }

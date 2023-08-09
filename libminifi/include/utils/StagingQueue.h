@@ -143,6 +143,10 @@ class StagingQueue {
     return max_size_;
   }
 
+  size_t getMaxItemSize() const {
+    return max_item_size_;
+  }
+
   void discardOverflow() {
     while (total_size_ > max_size_) {
       Item item;
@@ -155,6 +159,10 @@ class StagingQueue {
 
   size_t size() const {
     return total_size_;
+  }
+
+  size_t itemCount() const {
+    return queue_.size();
   }
 
  private:

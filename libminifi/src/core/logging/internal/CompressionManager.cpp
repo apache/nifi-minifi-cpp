@@ -51,7 +51,8 @@ std::shared_ptr<LogCompressorSink> CompressionManager::initialize(
     return sink_;
   }
   // do not create new sink if all relevant parameters match
-  if (!sink_ || sink_->getMaxCacheSize() != cached_log_max_size || sink_->getMaxCompressedSize() != compressed_log_max_size) {
+  if (!sink_ || sink_->getMaxCacheSize() != cached_log_max_size || sink_->getMaxCompressedSize() != compressed_log_max_size ||
+      sink_->getMaxCacheSegmenSize() != cache_segment_size || sink_->getMaxCompressedSegmentSize() != compressed_segment_size) {
     sink_ = std::make_shared<internal::LogCompressorSink>(
         LogQueueSize{cached_log_max_size, cache_segment_size},
         LogQueueSize{compressed_log_max_size, compressed_segment_size},
