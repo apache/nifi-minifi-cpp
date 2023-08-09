@@ -61,8 +61,7 @@ function(use_bundled_libazure SOURCE_DIR BINARY_DIR)
         -DWARNINGS_AS_ERRORS=OFF
         -DCMAKE_INSTALL_PREFIX=${INSTALL_DIR}
         -DDISABLE_AZURE_CORE_OPENTELEMETRY=ON
-        -DBUILD_TRANSPORT_CURL=ON
-        -DCMAKE_CXX_FLAGS=-DCURL_STATICLIB)
+        -DBUILD_TRANSPORT_CURL=ON)
     append_third_party_passthrough_args(AZURE_SDK_CMAKE_ARGS "${AZURE_SDK_CMAKE_ARGS}")
 
     # Build project
