@@ -18,22 +18,24 @@
 
 #include <array>
 #include <optional>
+#include <span>
 #include <string_view>
 #include <utility>
 
+#include "core/Core.h"
 #include "core/PropertyType.h"
 #include "utils/gsl.h"
 
 namespace org::apache::nifi::minifi::core {
 
-template<size_t NumAllowedValues = 0, size_t NumAllowedTypes = 0, size_t NumDependentProperties = 0, size_t NumExclusiveOfProperties = 0>
+template<size_t NumAllowedValues = 0, size_t NumDependentProperties = 0, size_t NumExclusiveOfProperties = 0>
 struct PropertyDefinition {
   std::string_view name;
   std::string_view display_name;
   std::string_view description;
   bool is_required = false;
   std::array<std::string_view, NumAllowedValues> allowed_values;
-  std::array<std::string_view, NumAllowedTypes> allowed_types;
+  std::span<const std::string_view> allowed_types;
   std::array<std::string_view, NumDependentProperties> dependent_properties;
   std::array<std::pair<std::string_view, std::string_view>, NumExclusiveOfProperties> exclusive_of_properties;
   std::optional<std::string_view> default_value;
@@ -46,18 +48,18 @@ struct PropertyReference {
   std::string_view display_name;
   std::string_view description;
   bool is_required = false;
-  gsl::span<const std::string_view> allowed_values;
-  gsl::span<const std::string_view> allowed_types;
-  gsl::span<const std::string_view> dependent_properties;
-  gsl::span<const std::pair<std::string_view, std::string_view>> exclusive_of_properties;
+  std::span<const std::string_view> allowed_values;
+  std::span<const std::string_view> allowed_types;
+  std::span<const std::string_view> dependent_properties;
+  std::span<const std::pair<std::string_view, std::string_view>> exclusive_of_properties;
   std::optional<std::string_view> default_value;
   gsl::not_null<const PropertyType*> type = gsl::make_not_null(&StandardPropertyTypes::VALID_TYPE);
   bool supports_expression_language = false;
 
   constexpr PropertyReference() = default;
 
-  template<size_t NumAllowedValues = 0, size_t NumAllowedTypes = 0, size_t NumDependentProperties = 0, size_t NumExclusiveOfProperties = 0>
-  constexpr PropertyReference(const PropertyDefinition<NumAllowedValues, NumAllowedTypes, NumDependentProperties, NumExclusiveOfProperties>& property_definition)  // NOLINT: non-explicit on purpose
+  template<size_t NumAllowedValues = 0, size_t NumDependentProperties = 0, size_t NumExclusiveOfProperties = 0>
+  constexpr PropertyReference(const PropertyDefinition<NumAllowedValues, NumDependentProperties, NumExclusiveOfProperties>& property_definition)  // NOLINT: non-explicit on purpose
     : name{property_definition.name},
       display_name{property_definition.display_name},
       description{property_definition.description},

@@ -91,18 +91,18 @@ std::vector<std::pair<std::string, std::string>> Property::getExclusiveOfPropert
 }
 
 namespace {
-std::vector<PropertyValue> createPropertyValues(gsl::span<const std::string_view> values, const core::PropertyParser& property_parser) {
+std::vector<PropertyValue> createPropertyValues(std::span<const std::string_view> values, const core::PropertyParser& property_parser) {
   return ranges::views::transform(values, [&property_parser](const auto& value) {
     return property_parser.parse(value);
   }) | ranges::to<std::vector>;
 }
 
-inline std::vector<std::string> createStrings(gsl::span<const std::string_view> string_views) {
+inline std::vector<std::string> createStrings(std::span<const std::string_view> string_views) {
   return ranges::views::transform(string_views, [](const auto& string_view) { return std::string{string_view}; })
       | ranges::to<std::vector>;
 }
 
-inline std::vector<std::pair<std::string, std::string>> createStrings(gsl::span<const std::pair<std::string_view, std::string_view>> pairs_of_string_views) {
+inline std::vector<std::pair<std::string, std::string>> createStrings(std::span<const std::pair<std::string_view, std::string_view>> pairs_of_string_views) {
   return ranges::views::transform(pairs_of_string_views, [](const auto& pair_of_string_views) { return std::pair<std::string, std::string>(pair_of_string_views); })
       | ranges::to<std::vector>;
 }

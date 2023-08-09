@@ -71,7 +71,7 @@ class PutFile : public core::Processor {
       .withAllowedValues({CONFLICT_RESOLUTION_STRATEGY_FAIL, CONFLICT_RESOLUTION_STRATEGY_IGNORE, CONFLICT_RESOLUTION_STRATEGY_REPLACE})
       .withDefaultValue(CONFLICT_RESOLUTION_STRATEGY_FAIL)
       .build();
-  EXTENSIONAPI static constexpr auto CreateDirs = core::PropertyDefinitionBuilder<0, 0, 1>::createProperty("Create Missing Directories")
+  EXTENSIONAPI static constexpr auto CreateDirs = core::PropertyDefinitionBuilder<0, 1>::createProperty("Create Missing Directories")
       .withDescription("If true, then missing destination directories will be created. If false, flowfiles are penalized and sent to failure.")
       .withDefaultValue("true")
       .isRequired(true)

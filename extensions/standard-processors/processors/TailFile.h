@@ -179,9 +179,9 @@ class TailFile : public core::Processor {
       .withDefaultValue(magic_enum::enum_name(InitialStartPositions::BEGINNING_OF_FILE))
       .withAllowedValues(magic_enum::enum_names<InitialStartPositions>())
       .build();
-  EXTENSIONAPI static constexpr auto AttributeProviderService = core::PropertyDefinitionBuilder<0, 1>::createProperty("Attribute Provider Service")
+  EXTENSIONAPI static constexpr auto AttributeProviderService = core::PropertyDefinitionBuilder<>::createProperty("Attribute Provider Service")
       .withDescription("Provides a list of key-value pair records which can be used in the Base Directory property using Expression Language. Requires Multiple file mode.")
-      .withAllowedTypes({core::className<minifi::controllers::AttributeProviderService>()})
+      .withAllowedTypes<minifi::controllers::AttributeProviderService>()
       .build();
   EXTENSIONAPI static constexpr auto BatchSize = core::PropertyDefinitionBuilder<>::createProperty("Batch Size")
       .withDescription("Maximum number of flowfiles emitted in a single trigger. If set to 0 all new content will be processed.")
