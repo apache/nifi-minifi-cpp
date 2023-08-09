@@ -585,7 +585,7 @@ TEST_CASE("Test Dependent Property", "[YamlConfigurationDependentProperty]") {
   const auto component = std::make_shared<DummyComponent>();
   component->setSupportedProperties(std::array<core::PropertyReference, 2>{
     core::PropertyDefinitionBuilder<>::createProperty("Prop A").withDescription("Prop A desc").withDefaultValue("val A").isRequired(true).build(),
-    core::PropertyDefinitionBuilder<0, 0, 1>::createProperty("Prop B").withDescription("Prop B desc").withDefaultValue("val B").isRequired(true).withDependentProperties({ "Prop A" }).build()
+    core::PropertyDefinitionBuilder<0, 1>::createProperty("Prop B").withDescription("Prop B desc").withDefaultValue("val B").isRequired(true).withDependentProperties({ "Prop A" }).build()
   });
   yamlConfig.validateComponentProperties(*component, "component A", "section A");
   REQUIRE(true);  // Expected to get here w/o any exceptions
@@ -598,7 +598,7 @@ TEST_CASE("Test Dependent Property 2", "[YamlConfigurationDependentProperty2]") 
   const auto component = std::make_shared<DummyComponent>();
   component->setSupportedProperties(std::array<core::PropertyReference, 2>{
     core::PropertyDefinitionBuilder<>::createProperty("Prop A").withDescription("Prop A desc").isRequired(false).build(),
-    core::PropertyDefinitionBuilder<0, 0, 1>::createProperty("Prop B").withDescription("Prop B desc").withDefaultValue("val B").isRequired(true).withDependentProperties({ "Prop A" }).build()
+    core::PropertyDefinitionBuilder<0, 1>::createProperty("Prop B").withDescription("Prop B desc").withDefaultValue("val B").isRequired(true).withDependentProperties({ "Prop A" }).build()
   });
   bool config_failed = false;
   try {
@@ -619,7 +619,7 @@ TEST_CASE("Test Exclusive Property", "[YamlConfigurationExclusiveOfProperty]") {
   const auto component = std::make_shared<DummyComponent>();
   component->setSupportedProperties(std::array<core::PropertyReference, 2>{
     core::PropertyDefinitionBuilder<>::createProperty("Prop A").withDescription("Prop A desc").withDefaultValue("val A").isRequired(true).build(),
-    core::PropertyDefinitionBuilder<0, 0, 0, 1>::createProperty("Prop B").withDescription("Prop B desc").withDefaultValue("val B").isRequired(true)
+    core::PropertyDefinitionBuilder<0, 0, 1>::createProperty("Prop B").withDescription("Prop B desc").withDefaultValue("val B").isRequired(true)
         .withExclusiveOfProperties({{ { "Prop A", "^abcd.*$" } }}).build()
   });
   yamlConfig.validateComponentProperties(*component, "component A", "section A");
@@ -633,7 +633,7 @@ TEST_CASE("Test Exclusive Property 2", "[YamlConfigurationExclusiveOfProperty2]"
   const auto component = std::make_shared<DummyComponent>();
   component->setSupportedProperties(std::array<core::PropertyReference, 2>{
     core::PropertyDefinitionBuilder<>::createProperty("Prop A").withDescription("Prop A desc").withDefaultValue("val A").isRequired(true).build(),
-    core::PropertyDefinitionBuilder<0, 0, 0, 1>::createProperty("Prop B").withDescription("Prop B desc").withDefaultValue("val B").isRequired(true)
+    core::PropertyDefinitionBuilder<0, 0, 1>::createProperty("Prop B").withDescription("Prop B desc").withDefaultValue("val B").isRequired(true)
         .withExclusiveOfProperties({{ { "Prop A", "^val.*$" } }}).build()
   });
   bool config_failed = false;

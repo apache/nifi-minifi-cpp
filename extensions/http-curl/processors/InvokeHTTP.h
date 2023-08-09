@@ -103,10 +103,10 @@ class InvokeHTTP : public core::Processor {
   EXTENSIONAPI static constexpr auto AttributesToSend = core::PropertyDefinitionBuilder<>::createProperty("Attributes to Send")
       .withDescription("Regular expression that defines which attributes to send as HTTP headers in the request. If not defined, no attributes are sent as headers.")
       .build();
-  EXTENSIONAPI static constexpr auto SSLContext = core::PropertyDefinitionBuilder<0, 1, 0, 1>::createProperty("SSL Context Service")
+  EXTENSIONAPI static constexpr auto SSLContext = core::PropertyDefinitionBuilder<0, 0, 1, utils::meta::type_list<minifi::controllers::SSLContextService>>::
+      createProperty("SSL Context Service")
       .withDescription("The SSL Context Service used to provide client certificate information for TLS/SSL (https) connections.")
       .isRequired(false)
-      .withAllowedTypes({core::className<minifi::controllers::SSLContextService>()})
       .withExclusiveOfProperties({{{"Remote URL", "^http:.*$"}}})
       .build();
   EXTENSIONAPI static constexpr auto ProxyHost = core::PropertyDefinitionBuilder<>::createProperty("Proxy Host")

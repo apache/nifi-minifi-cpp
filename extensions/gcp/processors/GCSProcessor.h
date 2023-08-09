@@ -39,10 +39,10 @@ class GCSProcessor : public core::Processor {
    logger_(std::move(logger)) {
   }
 
-  EXTENSIONAPI static constexpr auto GCPCredentials = core::PropertyDefinitionBuilder<0, 1>::createProperty("GCP Credentials Provider Service")
+  EXTENSIONAPI static constexpr auto GCPCredentials = core::PropertyDefinitionBuilder<0, 0, 0, utils::meta::type_list<GCPCredentialsControllerService>>::
+      createProperty("GCP Credentials Provider Service")
       .withDescription("The Controller Service used to obtain Google Cloud Platform credentials. Should be the name of a GCPCredentialsControllerService.")
       .isRequired(true)
-      .withAllowedTypes({core::className<GCPCredentialsControllerService>()})
       .build();
   EXTENSIONAPI static constexpr auto NumberOfRetries = core::PropertyDefinitionBuilder<>::createProperty("Number of retries")
       .withDescription("How many retry attempts should be made before routing to the failure relationship.")

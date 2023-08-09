@@ -69,9 +69,9 @@ class GetTCP : public core::Processor {
       .withDescription("A comma delimited list of the endpoints to connect to. The format should be <server_address>:<port>.")
       .isRequired(true)
       .build();
-  EXTENSIONAPI static constexpr auto SSLContextService = core::PropertyDefinitionBuilder<0, 1>::createProperty("SSL Context Service")
+  EXTENSIONAPI static constexpr auto SSLContextService = core::PropertyDefinitionBuilder<0, 0, 0, utils::meta::type_list<minifi::controllers::SSLContextService>>::
+      createProperty("SSL Context Service")
       .withDescription("SSL Context Service Name")
-      .withAllowedTypes({core::className<minifi::controllers::SSLContextService>()})
       .build();
   EXTENSIONAPI static constexpr auto MessageDelimiter = core::PropertyDefinitionBuilder<>::createProperty("Message Delimiter")
       .withDescription("Character that denotes the end of the message.")

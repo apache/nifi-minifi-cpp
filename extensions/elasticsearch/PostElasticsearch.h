@@ -53,16 +53,16 @@ class PostElasticsearch : public core::Processor {
       .withPropertyType(core::StandardPropertyTypes::UNSIGNED_LONG_TYPE)
       .withDefaultValue("100")
       .build();
-  EXTENSIONAPI static constexpr auto ElasticCredentials = core::PropertyDefinitionBuilder<0, 1>::createProperty("Elasticsearch Credentials Provider Service")
+  EXTENSIONAPI static constexpr auto ElasticCredentials = core::PropertyDefinitionBuilder<0, 0, 0, utils::meta::type_list<ElasticsearchCredentialsControllerService>>::
+      createProperty("Elasticsearch Credentials Provider Service")
       .withDescription("The Controller Service used to obtain Elasticsearch credentials.")
       .isRequired(true)
-      .withAllowedTypes({core::className<ElasticsearchCredentialsControllerService>()})
       .build();
-  EXTENSIONAPI static constexpr auto SSLContext = core::PropertyDefinitionBuilder<0, 1>::createProperty("SSL Context Service")
+  EXTENSIONAPI static constexpr auto SSLContext = core::PropertyDefinitionBuilder<0, 0, 0, utils::meta::type_list<minifi::controllers::SSLContextService>>::
+      createProperty("SSL Context Service")
       .withDescription("The SSL Context Service used to provide client certificate "
           "information for TLS/SSL (https) connections.")
       .isRequired(false)
-      .withAllowedTypes({core::className<minifi::controllers::SSLContextService>()})
       .build();
   EXTENSIONAPI static constexpr auto Hosts = core::PropertyDefinitionBuilder<>::createProperty("Hosts")
       .withDescription("A comma-separated list of HTTP hosts that host Elasticsearch query nodes. Currently only supports a single host.")
@@ -89,7 +89,6 @@ class PostElasticsearch : public core::Processor {
       Index,
       Identifier
   };
-
 
   EXTENSIONAPI static constexpr auto Success = core::RelationshipDefinition{"success", "All flowfiles that succeed in being transferred into Elasticsearch go here."};
   EXTENSIONAPI static constexpr auto Failure = core::RelationshipDefinition{"failure", "All flowfiles that fail for reasons unrelated to server availability go to this relationship."};

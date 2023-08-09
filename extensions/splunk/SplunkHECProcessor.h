@@ -36,29 +36,29 @@ namespace org::apache::nifi::minifi::extensions::splunk {
 class SplunkHECProcessor : public core::Processor {
  public:
   EXTENSIONAPI static constexpr auto Hostname = core::PropertyDefinitionBuilder<>::createProperty("Hostname")
-    .withDescription("The ip address or hostname of the Splunk server.")
-    .isRequired(true)
-    .build();
+      .withDescription("The ip address or hostname of the Splunk server.")
+      .isRequired(true)
+      .build();
   EXTENSIONAPI static constexpr auto Port = core::PropertyDefinitionBuilder<>::createProperty("Port")
-    .withDescription("The HTTP Event Collector HTTP Port Number.")
-    .withPropertyType(core::StandardPropertyTypes::PORT_TYPE)
-    .withDefaultValue("8088")
-    .isRequired(true)
-    .build();
+      .withDescription("The HTTP Event Collector HTTP Port Number.")
+      .withPropertyType(core::StandardPropertyTypes::PORT_TYPE)
+      .withDefaultValue("8088")
+      .isRequired(true)
+      .build();
   EXTENSIONAPI static constexpr auto Token = core::PropertyDefinitionBuilder<>::createProperty("Token")
-    .withDescription("HTTP Event Collector token starting with the string Splunk. For example \'Splunk 1234578-abcd-1234-abcd-1234abcd\'")
-    .isRequired(true)
-    .build();
+      .withDescription("HTTP Event Collector token starting with the string Splunk. For example \'Splunk 1234578-abcd-1234-abcd-1234abcd\'")
+      .isRequired(true)
+      .build();
   EXTENSIONAPI static constexpr auto SplunkRequestChannel = core::PropertyDefinitionBuilder<>::createProperty("Splunk Request Channel")
-    .withDescription("Identifier of the used request channel.")
-    .isRequired(true)
-    .build();
-  EXTENSIONAPI static constexpr auto SSLContext = core::PropertyDefinitionBuilder<0, 1, 0, 1>::createProperty("SSL Context Service")
-    .withDescription("The SSL Context Service used to provide client certificate information for TLS/SSL (https) connections.")
-    .isRequired(false)
-    .withExclusiveOfProperties({{{"Hostname", "^http:.*$"}}})
-    .withAllowedTypes({core::className<minifi::controllers::SSLContextService>()})
-    .build();
+      .withDescription("Identifier of the used request channel.")
+      .isRequired(true)
+      .build();
+  EXTENSIONAPI static constexpr auto SSLContext = core::PropertyDefinitionBuilder<0, 0, 1, utils::meta::type_list<minifi::controllers::SSLContextService>>::
+      createProperty("SSL Context Service")
+      .withDescription("The SSL Context Service used to provide client certificate information for TLS/SSL (https) connections.")
+      .isRequired(false)
+      .withExclusiveOfProperties({{{"Hostname", "^http:.*$"}}})
+      .build();
   EXTENSIONAPI static constexpr auto Properties = std::array<core::PropertyReference, 5>{
       Hostname,
       Port,
