@@ -19,6 +19,7 @@
 #pragma once
 
 #include <chrono>
+#include <filesystem>
 #include <fstream>
 #include <memory>
 #include <string>
@@ -50,6 +51,10 @@ std::string getFileContent(const std::filesystem::path& file_name) {
   std::string file_content{ (std::istreambuf_iterator<char>(file_handle)), (std::istreambuf_iterator<char>()) };
   return file_content;
 }
+
+void makeFileOrDirectoryNotWritable(const std::filesystem::path& file_name);
+
+void makeFileOrDirectoryWritable(const std::filesystem::path& file_name);
 
 Identifier generateUUID() {
   // TODO(hunyadi): Will make the Id generator manage lifetime using a unique_ptr and return a raw ptr on access

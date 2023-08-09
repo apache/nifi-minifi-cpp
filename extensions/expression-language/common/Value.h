@@ -142,9 +142,9 @@ class Value {
     if (value.empty()) return default_value;
     try {
       return std::invoke(conversion_function, value);
-    } catch (const std::invalid_argument& ex) {
+    } catch (const std::invalid_argument&) {
       throw std::invalid_argument{utils::StringUtils::join_pack(context, " failed to parse \"", value, "\": invalid argument")};
-    } catch (const std::out_of_range& ex) {
+    } catch (const std::out_of_range&) {
       throw std::out_of_range{utils::StringUtils::join_pack(context, " failed to parse \"", value, "\": out of range")};
     }
   }

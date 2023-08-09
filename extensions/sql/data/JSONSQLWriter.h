@@ -24,11 +24,7 @@
 
 #include "SQLWriter.h"
 
-namespace org {
-namespace apache {
-namespace nifi {
-namespace minifi {
-namespace sql {
+namespace org::apache::nifi::minifi::sql {
 
 class JSONSQLWriter: public SQLWriter {
  public:
@@ -63,10 +59,4 @@ private:
   ColumnFilter column_filter_;
 };
 
-} /* namespace sql */
-} /* namespace minifi */
-} /* namespace nifi */
-} /* namespace apache */
-} /* namespace org */
-
-
+}  // namespace org::apache::nifi::minifi::sql

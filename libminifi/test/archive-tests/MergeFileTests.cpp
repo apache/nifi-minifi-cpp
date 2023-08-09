@@ -90,9 +90,9 @@ class FixedBuffer {
   }
 
   template<class Input>
-  int write(Input& input, std::size_t len) {
+  int64_t write(Input& input, std::size_t len) {
     REQUIRE(size_ + len <= capacity_);
-    int total_read = 0;
+    size_t total_read = 0;
     do {
       const size_t ret{input.read(as_writable_bytes(std::span(end(), len)))};
       if (ret == 0) break;
@@ -101,8 +101,9 @@ class FixedBuffer {
       len -= ret;
       total_read += ret;
     } while (size_ != capacity_);
-    return total_read;
+    return gsl::narrow<int64_t>(total_read);
   }
+
   int64_t operator()(const std::shared_ptr<minifi::io::InputStream>& stream) {
     return write(*stream, capacity_);
   }
@@ -132,7 +133,7 @@ std::vector<FixedBuffer> read_archives(const FixedBuffer& input) {
   struct archive_entry *ae = nullptr;
 
   while (archive_read_next_header(a, &ae) == ARCHIVE_OK) {
-    int size = gsl::narrow<int>(archive_entry_size(ae));
+    int64_t size{archive_entry_size(ae)};
     FixedBuffer buf(size);
     ArchiveEntryReader reader(a);
     auto ret = buf.write(reader, buf.capacity());

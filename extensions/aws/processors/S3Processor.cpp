@@ -121,7 +121,7 @@ void S3Processor::onSchedule(const std::shared_ptr<core::ProcessContext>& contex
 
   if (auto communications_timeout = context->getProperty<core::TimePeriodValue>(CommunicationsTimeout)) {
     logger_->log_debug("S3Processor: Communications Timeout %" PRId64 " ms", communications_timeout->getMilliseconds().count());
-    client_config_->connectTimeoutMs = gsl::narrow<int64_t>(communications_timeout->getMilliseconds().count());
+    client_config_->connectTimeoutMs = gsl::narrow<long>(communications_timeout->getMilliseconds().count());  // NOLINT(runtime/int)
   } else {
     throw Exception(PROCESS_SCHEDULE_EXCEPTION, "Communications Timeout missing or invalid");
   }

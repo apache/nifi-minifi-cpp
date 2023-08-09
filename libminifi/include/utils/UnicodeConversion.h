@@ -22,25 +22,18 @@
 
 #include <atlbase.h>
 #include <atlconv.h>
-
 #include <string>
 
-namespace org {
-namespace apache {
-namespace nifi {
-namespace minifi {
-namespace wel {
-inline std::string to_string(const wchar_t* pChar) {
-  ATL::CW2A aString(pChar, CP_UTF8);
-  return std::string(aString);
+namespace org::apache::nifi::minifi::utils {
+
+inline std::string to_string(const std::wstring& utf16_string) {
+  ATL::CW2A utf8_string(utf16_string.c_str(), CP_UTF8);
+  return {LPSTR{utf8_string}};
 }
 
-inline std::wstring to_wstring(const char* pChar) {
-  ATL::CA2W wString(pChar, CP_UTF8);
-  return std::wstring(wString);
+inline std::wstring to_wstring(const std::string& utf8_string) {
+  ATL::CA2W utf16_string(utf8_string.c_str(), CP_UTF8);
+  return {LPWSTR{utf16_string}};
 }
-} /* namespace wel */
-} /* namespace minifi */
-} /* namespace nifi */
-} /* namespace apache */
-} /* namespace org */
+
+}  // namespace org::apache::nifi::minifi::utils

@@ -113,7 +113,7 @@ void rebalance_cb(rd_kafka_t* rk, rd_kafka_resp_err_t trigger, rd_kafka_topic_pa
 }  // namespace
 
 void ConsumeKafka::create_topic_partition_list() {
-  kf_topic_partition_list_ = { rd_kafka_topic_partition_list_new(topic_names_.size()), utils::rd_kafka_topic_partition_list_deleter() };
+  kf_topic_partition_list_ = { rd_kafka_topic_partition_list_new(gsl::narrow<int>(topic_names_.size())), utils::rd_kafka_topic_partition_list_deleter() };
 
   // On subscriptions any topics prefixed with ^ will be regex matched
   if (utils::StringUtils::equalsIgnoreCase(TOPIC_FORMAT_PATTERNS, topic_name_format_)) {
@@ -229,8 +229,8 @@ std::vector<std::unique_ptr<rd_kafka_message_t, utils::rd_kafka_message_deleter>
   auto elapsed = std::chrono::steady_clock::now() - start;
   while (messages.size() < max_poll_records_ && elapsed < max_poll_time_milliseconds_) {
     logger_->log_debug("Polling for new messages for %d milliseconds...", max_poll_time_milliseconds_.count());
-    std::unique_ptr<rd_kafka_message_t, utils::rd_kafka_message_deleter>
-      message { rd_kafka_consumer_poll(consumer_.get(), std::chrono::duration_cast<std::chrono::milliseconds>(max_poll_time_milliseconds_ - elapsed).count()), utils::rd_kafka_message_deleter() };
+    const auto timeout_ms = gsl::narrow<int>(std::chrono::duration_cast<std::chrono::milliseconds>(max_poll_time_milliseconds_ - elapsed).count());
+    std::unique_ptr<rd_kafka_message_t, utils::rd_kafka_message_deleter> message{rd_kafka_consumer_poll(consumer_.get(), timeout_ms)};
     if (!message) {
       break;
     }

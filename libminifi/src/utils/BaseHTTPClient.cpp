@@ -204,7 +204,7 @@ int HTTPRequestResponse::seek_callback(void *p, int64_t offset, int) {
       return SEEKFUNC_FAIL;
     }
     auto *callback = reinterpret_cast<HTTPUploadCallback *>(p);
-    return callback->setPosition(offset);
+    return gsl::narrow<int>(callback->setPosition(offset));
   } catch (...) {
     return SEEKFUNC_FAIL;
   }

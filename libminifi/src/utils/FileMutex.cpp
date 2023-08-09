@@ -43,10 +43,10 @@ void FileMutex::lock() {
     if (handle == INVALID_HANDLE_VALUE) {
       std::cerr << "Failed to open file to read pid: " << utils::getLastError().message() << std::endl;
     } else {
-      std::array<char, 16> buffer;
+      std::array<char, 16> buffer = {};
       size_t pid_str_size = 0;
       DWORD read_size;
-      while (ReadFile(handle, buffer.data() + pid_str_size, buffer.size() - pid_str_size, &read_size, NULL) && read_size != 0) {
+      while (ReadFile(handle, buffer.data() + pid_str_size, gsl::narrow<DWORD>(buffer.size() - pid_str_size), &read_size, NULL) && read_size != 0) {
         pid_str_size += read_size;
       }
       pid_str = "'" + std::string(buffer.data(), pid_str_size) + "'";
@@ -62,7 +62,7 @@ void FileMutex::lock() {
   std::span<const char> buffer = pidstr;
   while (!buffer.empty()) {
     DWORD written;
-    if (!WriteFile(handle, buffer.data(), buffer.size(), &written, NULL)) {
+    if (!WriteFile(handle, buffer.data(), gsl::narrow<DWORD>(buffer.size()), &written, NULL)) {
       const auto err = utils::getLastError();
       if (!CloseHandle(file_handle_.value())) {
         std::cerr << "Failed to close file: " << utils::getLastError().message() << std::endl;

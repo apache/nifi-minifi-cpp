@@ -20,7 +20,10 @@
 
 #include <windows.h>
 #include <winevt.h>
+
 #include <string>
+
+#include "utils/gsl.h"
 
 namespace org::apache::nifi::minifi::wel {
 
@@ -32,26 +35,27 @@ class EventPath {
   };
 
   EventPath() = default;
-  explicit EventPath(std::wstring wstr);
+  explicit EventPath(const std::wstring& wstr);
   explicit EventPath(std::string str);
 
-  constexpr const std::wstring& wstr() const noexcept {
+  [[nodiscard]] constexpr const std::wstring& wstr() const noexcept {
     return wstr_;
   }
 
-  constexpr const std::string& str() const noexcept {
+  [[nodiscard]] constexpr const std::string& str() const noexcept {
     return str_;
   }
 
-  constexpr EventPath::Kind kind() const noexcept {
+  [[nodiscard]] constexpr EventPath::Kind kind() const noexcept {
     return kind_;
   }
 
-  constexpr EVT_QUERY_FLAGS getQueryFlags() const noexcept {
+  [[nodiscard]] constexpr EVT_QUERY_FLAGS getQueryFlags() const noexcept {
     switch (kind_) {
       case Kind::CHANNEL: return EvtQueryChannelPath;
       case Kind::FILE: return EvtQueryFilePath;
     }
+    gsl_FailFast();
   }
 
  private:

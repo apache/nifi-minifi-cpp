@@ -20,6 +20,7 @@
 #include "Catch.h"
 #include "SmbConnectionControllerService.h"
 #include "utils/TempSmbShare.h"
+#include "utils/UnicodeConversion.h"
 
 namespace org::apache::nifi::minifi::extensions::smb::test {
 
@@ -49,7 +50,7 @@ TEST_CASE_METHOD(SmbConnectionControllerServiceFixture, "SmbConnectionController
 
   SECTION("Valid share") {
     plan_->setProperty(smb_connection_node_, SmbConnectionControllerService::Hostname, "localhost");
-    plan_->setProperty(smb_connection_node_, SmbConnectionControllerService::Share, minifi::utils::OsUtils::wideStringToString(share_local_name));
+    plan_->setProperty(smb_connection_node_, SmbConnectionControllerService::Share, minifi::utils::to_string(share_local_name));
 
     REQUIRE_NOTHROW(plan_->finalize());
 

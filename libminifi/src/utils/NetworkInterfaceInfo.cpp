@@ -21,6 +21,7 @@
 #include <iphlpapi.h>
 #pragma comment(lib, "IPHLPAPI.lib")
 #include "utils/OsUtils.h"
+#include "utils/UnicodeConversion.h"
 #else
 #include <unistd.h>
 #include <netinet/in.h>
@@ -37,7 +38,7 @@ std::shared_ptr<core::logging::Logger> NetworkInterfaceInfo::logger_ = core::log
 #ifdef WIN32
 
 NetworkInterfaceInfo::NetworkInterfaceInfo(const IP_ADAPTER_ADDRESSES* adapter)
-    : name_(OsUtils::wideStringToString(adapter->FriendlyName)),
+    : name_(to_string(adapter->FriendlyName)),
       running_(adapter->OperStatus == IfOperStatusUp),
       loopback_(adapter->IfType == IF_TYPE_SOFTWARE_LOOPBACK) {
   for (auto unicast_address = adapter->FirstUnicastAddress; unicast_address != nullptr; unicast_address = unicast_address->Next) {

@@ -69,7 +69,7 @@ void Aes256EcbCipher::encrypt(std::span<unsigned char, BLOCK_SIZE> data) const {
   int ciphertext_len = 0;
   int len;
 
-  if (1 != EVP_EncryptUpdate(ctx.get(), data.data(), &len, data.data(), data.size())) {
+  if (1 != EVP_EncryptUpdate(ctx.get(), data.data(), &len, data.data(), gsl::narrow<int>(data.size()))) {
     handleOpenSSLError("Could not update cipher content");
   }
   ciphertext_len += len;
@@ -101,7 +101,7 @@ void Aes256EcbCipher::decrypt(std::span<unsigned char, BLOCK_SIZE> data) const {
   int plaintext_len = 0;
   int len;
 
-  if (1 != EVP_DecryptUpdate(ctx.get(), data.data(), &len, data.data(), data.size())) {
+  if (1 != EVP_DecryptUpdate(ctx.get(), data.data(), &len, data.data(), gsl::narrow<int>(data.size()))) {
     handleOpenSSLError("Could not update cipher content");
   }
   plaintext_len += len;

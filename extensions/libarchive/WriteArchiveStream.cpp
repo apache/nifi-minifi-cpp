@@ -115,7 +115,7 @@ size_t WriteArchiveStreamImpl::write(const uint8_t* data, size_t len) {
   }
   gsl_Expects(data);
 
-  int result = archive_write_data(arch_.get(), data, len);
+  int result = gsl::narrow<int>(archive_write_data(arch_.get(), data, len));
   if (result < 0) {
     logger_->log_error("Archive write data error %s", archive_error_string(arch_.get()));
     arch_entry_.reset();

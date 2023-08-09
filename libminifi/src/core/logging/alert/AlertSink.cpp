@@ -203,10 +203,10 @@ void AlertSink::send(Services& services) {
 
   rapidjson::Document doc(rapidjson::kObjectType);
   std::string agent_id = services.agent_id->getAgentIdentifier();
-  doc.AddMember("agentId", rapidjson::Value(agent_id.data(), agent_id.length()), doc.GetAllocator());
+  doc.AddMember("agentId", rapidjson::Value(agent_id.data(), gsl::narrow<rapidjson::SizeType>(agent_id.length())), doc.GetAllocator());
   doc.AddMember("alerts", rapidjson::Value(rapidjson::kArrayType), doc.GetAllocator());
   for (const auto& [log, _] : logs.data_) {
-    doc["alerts"].PushBack(rapidjson::Value(log.data(), log.size()), doc.GetAllocator());
+    doc["alerts"].PushBack(rapidjson::Value(log.data(), gsl::narrow<rapidjson::SizeType>(log.size())), doc.GetAllocator());
   }
   rapidjson::StringBuffer buffer;
   rapidjson::Writer<rapidjson::StringBuffer> writer(buffer);

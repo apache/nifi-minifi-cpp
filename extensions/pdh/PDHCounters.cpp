@@ -55,7 +55,7 @@ std::string PDHCounter::getCounterName() const {
 }
 
 void SinglePDHCounter::addToJson(rapidjson::Value& body, rapidjson::Document::AllocatorType& alloc) const {
-  rapidjson::Value key(getCounterName().c_str(), getCounterName().length(), alloc);
+  rapidjson::Value key(getCounterName().c_str(), gsl::narrow<rapidjson::SizeType>(getCounterName().length()), alloc);
   rapidjson::Value& group_node = acquireNode(getObjectName(), body, alloc);
   group_node.AddMember(key, getValue(), alloc);
 }
@@ -91,7 +91,7 @@ void PDHCounterArray::addToJson(rapidjson::Value& body, rapidjson::Document::All
     rapidjson::Value& counter_node = acquireNode(node_name, group_node, alloc);
     rapidjson::Value value = getValue(i);
     rapidjson::Value key;
-    key.SetString(getCounterName().c_str(), getCounterName().length(), alloc);
+    key.SetString(getCounterName().c_str(), gsl::narrow<rapidjson::SizeType>(getCounterName().length()), alloc);
     counter_node.AddMember(key, value, alloc);
   }
 }

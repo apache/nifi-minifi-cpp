@@ -129,7 +129,7 @@ std::optional<S3Wrapper::UploadPartsResult> S3Wrapper::uploadParts(const PutObje
     auto upload_part_request = Aws::S3::Model::UploadPartRequest{}
       .WithBucket(put_object_params.bucket)
       .WithKey(put_object_params.object_key)
-      .WithPartNumber(part_number)
+      .WithPartNumber(gsl::narrow<int>(part_number))
       .WithUploadId(upload_state.upload_id);
     upload_part_request.SetBody(stream_ptr);
 
@@ -164,7 +164,7 @@ std::optional<Aws::S3::Model::CompleteMultipartUploadResult> S3Wrapper::complete
   for (size_t i = 0; i < upload_parts_result.part_etags.size(); ++i) {
     auto part = Aws::S3::Model::CompletedPart{}
       .WithETag(upload_parts_result.part_etags[i])
-      .WithPartNumber(i + 1);
+      .WithPartNumber(gsl::narrow<int>(i + 1));
     completed_multipart_upload.AddParts(part);
   }
 

@@ -19,10 +19,11 @@
 #include "EventPath.h"
 #include <utility>
 #include "utils/StringUtils.h"
+#include "utils/UnicodeConversion.h"
 
 namespace org::apache::nifi::minifi::wel {
 
-EventPath::EventPath(std::wstring wstr) : EventPath(std::string(wstr.begin(), wstr.end())) {}
+EventPath::EventPath(const std::wstring& wstr) : EventPath(utils::to_string(wstr)) {}
 
 EventPath::EventPath(std::string str) {
   constexpr std::string_view saved_log_prefix = "SavedLog:";

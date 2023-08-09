@@ -39,7 +39,7 @@ std::unique_ptr<Azure::Storage::Files::DataLake::DataLakeFileSystemClient> Azure
     const AzureStorageCredentials& credentials, const std::string& file_system_name, std::optional<uint64_t> number_of_retries) {
   Azure::Storage::Files::DataLake::DataLakeClientOptions options;
   if (number_of_retries) {
-    options.Retry.MaxRetries = *number_of_retries;
+    options.Retry.MaxRetries = gsl::narrow<int32_t>(*number_of_retries);
   }
 
   if (credentials.getUseManagedIdentityCredentials()) {

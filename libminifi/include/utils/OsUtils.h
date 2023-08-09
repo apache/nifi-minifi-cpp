@@ -51,10 +51,6 @@ std::string getMachineArchitecture();
 #ifdef WIN32
 /// Resolves common identifiers
 extern std::string resolve_common_identifiers(const std::string &id);
-
-std::wstring stringToWideString(const std::string& string);
-
-std::string wideStringToString(const std::wstring& wide_string);
 #endif
 
 std::optional<std::string> getHostName();

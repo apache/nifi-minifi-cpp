@@ -25,6 +25,7 @@
 #include "flow-tests/TestControllerWithFlow.h"
 #include "EmptyFlow.h"
 #include "c2/C2MetricsPublisher.h"
+#include "utils/gsl.h"
 
 using minifi::state::response::SerializedResponseNode;
 
@@ -40,7 +41,7 @@ const SerializedResponseNode& getNode(const std::vector<SerializedResponseNode>&
   for (auto& node : nodes) {
     if (node.name == name) return node;
   }
-  assert(false);
+  gsl_FailFast();
 }
 
 TEST_CASE("Python processor's description is part of the manifest") {

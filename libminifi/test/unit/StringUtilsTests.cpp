@@ -28,6 +28,10 @@
 #include "utils/StringUtils.h"
 #include "utils/Environment.h"
 
+#ifdef WIN32
+#include "utils/UnicodeConversion.h"
+#endif
+
 namespace org::apache::nifi::minifi::utils {
 
 // NOLINTBEGIN(readability-container-size-empty)
@@ -597,6 +601,28 @@ TEST_CASE("string::parseCharacter tests") {
   CHECK_FALSE(string::parseCharacter("\\nd").has_value());
   CHECK(string::parseCharacter("") == std::nullopt);
 }
+
+#ifdef WIN32
+TEST_CASE("Conversion from UTF-8 strings to UTF-16 strings works") {
+  using org::apache::nifi::minifi::utils::to_wstring;
+
+  CHECK(to_wstring("árvíztűrő tükörfúrógép") == L"árvíztűrő tükörfúrógép");
+  CHECK(to_wstring("Falsches Üben von Xylophonmusik quält jeden größeren Zwerg.") == L"Falsches Üben von Xylophonmusik quält jeden größeren Zwerg.");
+  CHECK(to_wstring("가나다라마바사아자차카타파하") == L"가나다라마바사아자차카타파하");
+  CHECK(to_wstring("العربية تجربة") == L"العربية تجربة");
+  CHECK(to_wstring("פטכןצימסעואבגדהוזחטייכלמנסעפצקרשת") == L"פטכןצימסעואבגדהוזחטייכלמנסעפצקרשת");
+}
+
+TEST_CASE("Conversion from UTF-16 strings to UTF-8 strings works") {
+  using org::apache::nifi::minifi::utils::to_string;
+
+  CHECK(to_string(L"árvíztűrő tükörfúrógép") == "árvíztűrő tükörfúrógép");
+  CHECK(to_string(L"Falsches Üben von Xylophonmusik quält jeden größeren Zwerg.") == "Falsches Üben von Xylophonmusik quält jeden größeren Zwerg.");
+  CHECK(to_string(L"가나다라마바사아자차카타파하") == "가나다라마바사아자차카타파하");
+  CHECK(to_string(L"العربية تجربة") == "العربية تجربة");
+  CHECK(to_string(L"פטכןצימסעואבגדהוזחטייכלמנסעפצקרשת") == "פטכןצימסעואבגדהוזחטייכלמנסעפצקרשת");
+}
+#endif
 
 }  // namespace org::apache::nifi::minifi::utils
 

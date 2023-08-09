@@ -39,26 +39,6 @@ TEST_CASE("Test userIdToUsername for well-known SIDs", "[OsUtils]") {
   CHECK_FALSE(minifi::utils::OsUtils::userIdToUsername("S-1-3-4").empty());
   CHECK_FALSE(minifi::utils::OsUtils::userIdToUsername("S-1-5-80-0").empty());
 }
-
-TEST_CASE("OsUtils::stringToWideString tests") {
-  using org::apache::nifi::minifi::utils::OsUtils::stringToWideString;
-
-  CHECK(stringToWideString("árvíztűrő tükörfúrógép") == L"árvíztűrő tükörfúrógép");
-  CHECK(stringToWideString("Falsches Üben von Xylophonmusik quält jeden größeren Zwerg.") == L"Falsches Üben von Xylophonmusik quält jeden größeren Zwerg.");
-  CHECK(stringToWideString("가나다라마바사아자차카타파하") == L"가나다라마바사아자차카타파하");
-  CHECK(stringToWideString("العربية تجربة") == L"العربية تجربة");
-  CHECK(stringToWideString("פטכןצימסעואבגדהוזחטייכלמנסעפצקרשת") == L"פטכןצימסעואבגדהוזחטייכלמנסעפצקרשת");
-}
-
-TEST_CASE("OsUtils::wideStringToString tests") {
-  using org::apache::nifi::minifi::utils::OsUtils::wideStringToString;
-
-  CHECK(wideStringToString(L"árvíztűrő tükörfúrógép") == "árvíztűrő tükörfúrógép");
-  CHECK(wideStringToString(L"Falsches Üben von Xylophonmusik quält jeden größeren Zwerg.") == "Falsches Üben von Xylophonmusik quält jeden größeren Zwerg.");
-  CHECK(wideStringToString(L"가나다라마바사아자차카타파하") == "가나다라마바사아자차카타파하");
-  CHECK(wideStringToString(L"العربية تجربة") == "العربية تجربة");
-  CHECK(wideStringToString(L"פטכןצימסעואבגדהוזחטייכלמנסעפצקרשת") == "פטכןצימסעואבגדהוזחטייכלמנסעפצקרשת");
-}
 #endif
 
 TEST_CASE("Machine architecture is supported") {

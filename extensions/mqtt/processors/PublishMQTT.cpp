@@ -216,7 +216,7 @@ void PublishMQTT::setMqtt5Properties(MQTTAsync_message& message, const std::stri
   if (message_expiry_interval_.has_value()) {
     MQTTProperty property;
     property.identifier = MQTTPROPERTY_CODE_MESSAGE_EXPIRY_INTERVAL;
-    property.value.integer4 = message_expiry_interval_->count();  // NOLINT(cppcoreguidelines-pro-type-union-access)
+    property.value.integer4 = gsl::narrow<int>(message_expiry_interval_->count());  // NOLINT(cppcoreguidelines-pro-type-union-access)
     MQTTProperties_add(&message.properties, &property);
   }
 

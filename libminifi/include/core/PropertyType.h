@@ -138,7 +138,7 @@ class IntegerPropertyType : public PropertyType {
 
   [[nodiscard]] ValidationResult validate(const std::string &subject, const std::string &input) const override {
     try {
-      std::stoi(input);
+      (void) std::stoi(input);
       return ValidationResult{.valid = true, .subject = subject, .input = input};
     } catch (...) {
     }
@@ -164,7 +164,7 @@ class UnsignedIntPropertyType : public PropertyType {
       if (negative) {
         throw std::out_of_range("non negative expected");
       }
-      std::stoul(input);
+      (void) std::stoul(input);
       return ValidationResult{.valid = true, .subject = subject, .input = input};
     } catch (...) {
     }
