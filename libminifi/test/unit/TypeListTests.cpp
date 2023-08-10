@@ -16,6 +16,7 @@
  */
 
 #include "../Catch.h"
+#include "core/Core.h"
 #include "utils/meta/type_list.h"
 
 class A {};
@@ -58,5 +59,5 @@ TEST_CASE("toStrings() on a type_list produces the correct list of types") {
   STATIC_CHECK(type_list<A, outer::B>::AsStringViews == std::array<std::string_view, 2>{"A", "outer::B"});
   STATIC_CHECK(type_list<A, outer::C, outer::inner::D>::AsStringViews == std::array<std::string_view, 3>{"A", "outer::C", "outer::inner::D"});
   STATIC_CHECK(type_list<outer::C, A, outer::inner::D, outer::B>::AsStringViews == std::array<std::string_view, 4>{"outer::C", "A", "outer::inner::D", "outer::B"});
-  STATIC_CHECK(type_list<double, A, std::vector<int>>::AsStringViews == std::array<std::string_view, 3>{"double", "A", "std::vector<int>"});
+  STATIC_CHECK(type_list<double, A, std::vector<int>>::AsStringViews == std::array<std::string_view, 3>{"double", "A", org::apache::nifi::minifi::core::className<std::vector<int>>()});
 }
