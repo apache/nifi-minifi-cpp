@@ -501,24 +501,24 @@ $ cd nifi-minifi-cpp-*
 ### Configuring
 The 'conf' directory in the installation root contains a template config.yml document, minifi.properties, and minifi-log.properties. Please see our [Configuration document](CONFIGURE.md) for details on how to configure agents.
 
+### Installing as a service
+
+MiNiFi can also be installed as a system service using minifi.sh:
+
+    $ ./bin/minifi.sh install
+
 ### Running
-After completing the [installation](#installation), the application can be run by issuing the following command from the installation directory:
+After completing the [installation](#installing-as-a-service), the application can be run by issuing the following command from the installation directory:
 
     $ ./bin/minifi.sh start
 
-By default, this will make use of a config.yml located in the conf directory.  This configuration file location can be altered by adjusting the property `nifi.flow.configuration.file` in minifi.properties located in the conf directory.
+By default, this will make use of a config.yml located in the conf directory. This configuration file location can be altered by adjusting the property `nifi.flow.configuration.file` in minifi.properties located in the conf directory.
 
 ### Stopping
 
 MiNiFi can then be stopped by issuing:
 
     $ ./bin/minifi.sh stop
-
-### Installing as a service
-
-MiNiFi can also be installed as a system service using minifi.sh with an optional "service name" (default: minifi)
-
-    $ ./bin/minifi.sh install [service name]
 
 ### Running as a docker container
 You can use the officially released image pulled from the [apache/nifi-minifi-cpp](https://hub.docker.com/r/apache/nifi-minifi-cpp) repository on dockerhub or you can use your locally built image.

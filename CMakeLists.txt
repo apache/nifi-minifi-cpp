@@ -541,7 +541,7 @@ if (NOT WIN32)
         DESTINATION minifi-python
         COMPONENT bin)
 
-    install(PROGRAMS bin/minifi.sh
+    install(PROGRAMS bin/minifi.sh bin/minifi.service
         DESTINATION bin
         COMPONENT bin)
 endif()
