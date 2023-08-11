@@ -1,0 +1,16 @@
+[Unit]
+Description=Starts and stops the MiNiFi C++ Agent
+After=network.target
+
+[Service]
+Type=simple
+Environment=MINIFI_HOME=/opt/minifi-cpp
+ExecStart=/opt/minifi-cpp/bin/minifi
+Restart=on-failure
+RestartSec=3
+KillSignal=SIGTERM
+TimeoutStopSec=20
+RestartForceExitStatus=3
+
+[Install]
+WantedBy=multi-user.target

@@ -49,7 +49,6 @@ cmake-build-debug
 build
 /*build*
 bt_state
-bin
 target
 thirdparty/**/*.o
 thirdparty/**/*.a
