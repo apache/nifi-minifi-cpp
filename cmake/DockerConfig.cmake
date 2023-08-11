@@ -56,7 +56,8 @@ add_custom_target(
              -DENABLE_LUA_SCRIPTING=OFF
              -DENABLE_PYTHON_SCRIPTING=OFF
              -DENABLE_OPC=OFF
-             -DENABLE_ENCRYPT_CONFIG=OFF \"
+             -DENABLE_ENCRYPT_CONFIG=OFF
+             -DCI_BUILD=${CI_BUILD}\"
         -c DOCKER_BASE_IMAGE=${DOCKER_BASE_IMAGE}
         -c DOCKER_SKIP_TESTS=${DOCKER_SKIP_TESTS}
         -c BUILD_NUMBER=${BUILD_NUMBER}
