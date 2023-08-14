@@ -17,9 +17,9 @@
 #pragma once
 
 #include <array>
+#include <span>
 #include <string_view>
 
-#include "utils/gsl.h"
 #include "RelationshipDefinition.h"
 
 namespace org::apache::nifi::minifi::core {
@@ -48,7 +48,7 @@ struct OutputAttributeReference {
   }
 
   std::string_view name;
-  gsl::span<const RelationshipDefinition> relationships;
+  std::span<const RelationshipDefinition> relationships;
   std::string_view description;
 };
 

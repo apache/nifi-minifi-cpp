@@ -18,6 +18,7 @@
 
 #include <array>
 #include <optional>
+#include <span>
 #include <string_view>
 #include <utility>
 
@@ -39,7 +40,7 @@ struct PropertyDefinition {
   std::string_view description;
   bool is_required = false;
   std::array<std::string_view, NumAllowedValues> allowed_values;
-  gsl::span<const std::string_view> allowed_types;
+  std::span<const std::string_view> allowed_types;
   std::array<std::string_view, NumDependentProperties> dependent_properties;
   std::array<std::pair<std::string_view, std::string_view>, NumExclusiveOfProperties> exclusive_of_properties;
   std::optional<std::string_view> default_value;
@@ -52,10 +53,10 @@ struct PropertyReference {
   std::string_view display_name;
   std::string_view description;
   bool is_required = false;
-  gsl::span<const std::string_view> allowed_values;
-  gsl::span<const std::string_view> allowed_types;
-  gsl::span<const std::string_view> dependent_properties;
-  gsl::span<const std::pair<std::string_view, std::string_view>> exclusive_of_properties;
+  std::span<const std::string_view> allowed_values;
+  std::span<const std::string_view> allowed_types;
+  std::span<const std::string_view> dependent_properties;
+  std::span<const std::pair<std::string_view, std::string_view>> exclusive_of_properties;
   std::optional<std::string_view> default_value;
   gsl::not_null<const PropertyType*> type = gsl::make_not_null(&StandardPropertyTypes::VALID_TYPE);
   bool supports_expression_language = false;
