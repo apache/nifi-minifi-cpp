@@ -76,8 +76,8 @@ TEST_CASE("BT2", "[TPT2]") {
     CHECK(ranges::any_of(first_worker_trace.getTraces(), [](const std::string& trace_line) { return trace_line.find("inner_function") != trace_line.npos; }));
 #endif
 #endif
-  done_with_checking.test_and_set();
-  done_with_checking.notify_all();
+    done_with_checking.test_and_set();
+    done_with_checking.notify_all();
   }
   future.wait();
 }
