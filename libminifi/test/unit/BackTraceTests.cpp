@@ -65,6 +65,7 @@ TEST_CASE("BT2", "[TPT2]") {
     ready_for_checking.wait(false);
     std::vector<BackTrace> traces = pool.getTraces();
     CHECK(traces.size() <= number_of_worker_threads);
+    REQUIRE(!traces.empty());
     for (const auto &trace : traces) {
       CHECK(trace.getName().starts_with(thread_pool_name));
     }
