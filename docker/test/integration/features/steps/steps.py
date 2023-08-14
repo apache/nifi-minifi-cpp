@@ -335,7 +335,7 @@ def step_impl(context, flow_name):
 
 @given("a transient MiNiFi flow with the name \"{flow_name}\" is set up")
 def step_impl(context, flow_name):
-    context.test.acquire_container(context=context, name=flow_name, command=["/bin/sh", "-c", "./bin/minifi.sh start && sleep 10 && ./bin/minifi.sh stop && sleep 100"])
+    context.test.acquire_container(context=context, name=flow_name, command=["/bin/sh", "-c", "timeout 10s ./bin/minifi.sh run && sleep 100"])
 
 
 @given("the provenance repository is enabled in MiNiFi")
