@@ -181,11 +181,7 @@ asio::awaitable<bool> createSocket() {
 
   co_return true;
 }
-/**
- * MINIFI-320 was created to address reallocations within TLSContext
- * This test will create 20 threads that attempt to create contexts
- * to ensure we no longer see the segfaults.
- */
+
 TEST_CASE("TestTLSContextCreation", "[TestSocket8]") {
   constexpr size_t number_of_threads = 20;
   asio::thread_pool pool(number_of_threads);
@@ -203,10 +199,6 @@ TEST_CASE("TestTLSContextCreation", "[TestSocket8]") {
   REQUIRE(number_of_threads == counter.load());
 }
 
-/**
- * MINIFI-329 was created in regards to an option existing but not
- * being properly evaluated.
- */
 TEST_CASE("TestTLSContextCreation2", "[TestSocket9]") {
   std::shared_ptr<minifi::Configure> configure = std::make_shared<minifi::Configure>();
   configure->set(minifi::Configuration::nifi_remote_input_secure, "false");
@@ -217,10 +209,6 @@ TEST_CASE("TestTLSContextCreation2", "[TestSocket9]") {
   REQUIRE(tls == nullptr);
 }
 
-/**
- * MINIFI-329 was created in regards to an option existing but not
- * being properly evaluated.
- */
 TEST_CASE("TestTLSContextCreationNullptr", "[TestSocket10]") {
   std::shared_ptr<minifi::Configure> configure = std::make_shared<minifi::Configure>();
   configure->set(minifi::Configuration::nifi_remote_input_secure, "false");
