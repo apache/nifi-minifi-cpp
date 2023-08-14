@@ -26,6 +26,7 @@ class B {};
 class C {};
 
 namespace inner {
+class C {};
 class D {};
 }
 }
@@ -51,4 +52,10 @@ TEST_CASE("a non-empty type_list contains what it should") {
   STATIC_CHECK(type_list<int, A, std::string>::contains<std::string>());
   STATIC_CHECK_FALSE(type_list<int, A, std::string>::contains<double>());
   STATIC_CHECK_FALSE(type_list<int, A, std::string>::contains<outer::C>());
+
+  namespace inner = outer::inner;
+  STATIC_CHECK(type_list<outer::C>::contains<outer::C>());
+  STATIC_CHECK(type_list<inner::C>::contains<inner::C>());
+  STATIC_CHECK_FALSE(type_list<outer::C>::contains<inner::C>());
+  STATIC_CHECK_FALSE(type_list<inner::C>::contains<outer::C>());
 }
