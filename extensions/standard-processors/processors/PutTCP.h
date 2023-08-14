@@ -102,10 +102,10 @@ class PutTCP final : public core::Processor {
       .isRequired(false)
       .supportsExpressionLanguage(true)
       .build();
-  EXTENSIONAPI static constexpr auto SSLContextService = core::PropertyDefinitionBuilder<0, 0, 0, utils::meta::type_list<minifi::controllers::SSLContextService>>::
-      createProperty("SSL Context Service")
+  EXTENSIONAPI static constexpr auto SSLContextService = core::PropertyDefinitionBuilder<>::createProperty("SSL Context Service")
       .withDescription("The Controller Service to use in order to obtain an SSL Context. If this property is set, messages will be sent over a secure connection.")
       .isRequired(false)
+      .withAllowedTypes<minifi::controllers::SSLContextService>()
       .build();
   EXTENSIONAPI static constexpr auto MaxSizeOfSocketSendBuffer = core::PropertyDefinitionBuilder<>::createProperty("Max Size of Socket Send Buffer")
       .withDescription("The maximum size of the socket send buffer that should be used. This is a suggestion to the Operating System to indicate how big the socket buffer should be.")

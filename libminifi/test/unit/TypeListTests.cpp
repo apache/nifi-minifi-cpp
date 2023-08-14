@@ -52,12 +52,3 @@ TEST_CASE("a non-empty type_list contains what it should") {
   STATIC_CHECK_FALSE(type_list<int, A, std::string>::contains<double>());
   STATIC_CHECK_FALSE(type_list<int, A, std::string>::contains<outer::C>());
 }
-
-TEST_CASE("toStrings() on a type_list produces the correct list of types") {
-  STATIC_CHECK(type_list<>::AsStringViews.empty());
-  STATIC_CHECK(type_list<A>::AsStringViews == std::array<std::string_view, 1>{"A"});
-  STATIC_CHECK(type_list<A, outer::B>::AsStringViews == std::array<std::string_view, 2>{"A", "outer::B"});
-  STATIC_CHECK(type_list<A, outer::C, outer::inner::D>::AsStringViews == std::array<std::string_view, 3>{"A", "outer::C", "outer::inner::D"});
-  STATIC_CHECK(type_list<outer::C, A, outer::inner::D, outer::B>::AsStringViews == std::array<std::string_view, 4>{"outer::C", "A", "outer::inner::D", "outer::B"});
-  STATIC_CHECK(type_list<double, A, std::vector<int>>::AsStringViews == std::array<std::string_view, 3>{"double", "A", org::apache::nifi::minifi::core::className<std::vector<int>>()});
-}

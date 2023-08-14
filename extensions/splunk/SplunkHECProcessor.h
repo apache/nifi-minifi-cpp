@@ -53,11 +53,11 @@ class SplunkHECProcessor : public core::Processor {
       .withDescription("Identifier of the used request channel.")
       .isRequired(true)
       .build();
-  EXTENSIONAPI static constexpr auto SSLContext = core::PropertyDefinitionBuilder<0, 0, 1, utils::meta::type_list<minifi::controllers::SSLContextService>>::
-      createProperty("SSL Context Service")
+  EXTENSIONAPI static constexpr auto SSLContext = core::PropertyDefinitionBuilder<0, 0, 1>::createProperty("SSL Context Service")
       .withDescription("The SSL Context Service used to provide client certificate information for TLS/SSL (https) connections.")
       .isRequired(false)
       .withExclusiveOfProperties({{{"Hostname", "^http:.*$"}}})
+      .withAllowedTypes<minifi::controllers::SSLContextService>()
       .build();
   EXTENSIONAPI static constexpr auto Properties = std::array<core::PropertyReference, 5>{
       Hostname,

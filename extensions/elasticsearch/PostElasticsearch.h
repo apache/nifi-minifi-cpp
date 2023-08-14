@@ -53,16 +53,16 @@ class PostElasticsearch : public core::Processor {
       .withPropertyType(core::StandardPropertyTypes::UNSIGNED_LONG_TYPE)
       .withDefaultValue("100")
       .build();
-  EXTENSIONAPI static constexpr auto ElasticCredentials = core::PropertyDefinitionBuilder<0, 0, 0, utils::meta::type_list<ElasticsearchCredentialsControllerService>>::
-      createProperty("Elasticsearch Credentials Provider Service")
+  EXTENSIONAPI static constexpr auto ElasticCredentials = core::PropertyDefinitionBuilder<>::createProperty("Elasticsearch Credentials Provider Service")
       .withDescription("The Controller Service used to obtain Elasticsearch credentials.")
       .isRequired(true)
+      .withAllowedTypes<ElasticsearchCredentialsControllerService>()
       .build();
-  EXTENSIONAPI static constexpr auto SSLContext = core::PropertyDefinitionBuilder<0, 0, 0, utils::meta::type_list<minifi::controllers::SSLContextService>>::
-      createProperty("SSL Context Service")
+  EXTENSIONAPI static constexpr auto SSLContext = core::PropertyDefinitionBuilder<>::createProperty("SSL Context Service")
       .withDescription("The SSL Context Service used to provide client certificate "
           "information for TLS/SSL (https) connections.")
       .isRequired(false)
+      .withAllowedTypes<minifi::controllers::SSLContextService>()
       .build();
   EXTENSIONAPI static constexpr auto Hosts = core::PropertyDefinitionBuilder<>::createProperty("Hosts")
       .withDescription("A comma-separated list of HTTP hosts that host Elasticsearch query nodes. Currently only supports a single host.")

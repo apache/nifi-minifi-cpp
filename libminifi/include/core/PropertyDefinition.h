@@ -21,19 +21,25 @@
 #include <string_view>
 #include <utility>
 
+#include "core/Core.h"
 #include "core/PropertyType.h"
 #include "utils/gsl.h"
-#include "utils/meta/type_list.h"
 
 namespace org::apache::nifi::minifi::core {
 
-template<size_t NumAllowedValues = 0, size_t NumDependentProperties = 0, size_t NumExclusiveOfProperties = 0, typename AllowedTypes = utils::meta::type_list<>>
+namespace detail {
+template<typename... Types>
+inline constexpr auto TypeNames = std::array<std::string_view, sizeof...(Types)>{core::className<Types>()...};
+}
+
+template<size_t NumAllowedValues = 0, size_t NumDependentProperties = 0, size_t NumExclusiveOfProperties = 0>
 struct PropertyDefinition {
   std::string_view name;
   std::string_view display_name;
   std::string_view description;
   bool is_required = false;
   std::array<std::string_view, NumAllowedValues> allowed_values;
+  gsl::span<const std::string_view> allowed_types;
   std::array<std::string_view, NumDependentProperties> dependent_properties;
   std::array<std::pair<std::string_view, std::string_view>, NumExclusiveOfProperties> exclusive_of_properties;
   std::optional<std::string_view> default_value;
@@ -56,14 +62,14 @@ struct PropertyReference {
 
   constexpr PropertyReference() = default;
 
-  template<size_t NumAllowedValues = 0, size_t NumDependentProperties = 0, size_t NumExclusiveOfProperties = 0, typename AllowedTypes = utils::meta::type_list<>>
-  constexpr PropertyReference(const PropertyDefinition<NumAllowedValues, NumDependentProperties, NumExclusiveOfProperties, AllowedTypes>& property_definition)  // NOLINT: non-explicit on purpose
+  template<size_t NumAllowedValues = 0, size_t NumDependentProperties = 0, size_t NumExclusiveOfProperties = 0>
+  constexpr PropertyReference(const PropertyDefinition<NumAllowedValues, NumDependentProperties, NumExclusiveOfProperties>& property_definition)  // NOLINT: non-explicit on purpose
     : name{property_definition.name},
       display_name{property_definition.display_name},
       description{property_definition.description},
       is_required{property_definition.is_required},
       allowed_values{property_definition.allowed_values},
-      allowed_types{AllowedTypes::AsStringViews},
+      allowed_types{property_definition.allowed_types},
       dependent_properties{property_definition.dependent_properties},
       exclusive_of_properties{property_definition.exclusive_of_properties},
       default_value{property_definition.default_value},

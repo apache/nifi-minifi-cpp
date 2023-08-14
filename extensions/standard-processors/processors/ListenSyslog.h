@@ -75,10 +75,10 @@ class ListenSyslog : public NetworkListenerProcessor {
       .withPropertyType(core::StandardPropertyTypes::UNSIGNED_LONG_TYPE)
       .withDefaultValue("10000")
       .build();
-  EXTENSIONAPI static constexpr auto SSLContextService = core::PropertyDefinitionBuilder<0, 0, 0, utils::meta::type_list<minifi::controllers::SSLContextService>>::
-      createProperty("SSL Context Service")
+  EXTENSIONAPI static constexpr auto SSLContextService = core::PropertyDefinitionBuilder<>::createProperty("SSL Context Service")
       .withDescription("The Controller Service to use in order to obtain an SSL Context. If this property is set, messages will be received over a secure connection. "
           "This Property is only considered if the <Protocol> Property has a value of \"TCP\".")
+      .withAllowedTypes<minifi::controllers::SSLContextService>()
       .build();
   EXTENSIONAPI static constexpr auto ClientAuth = core::PropertyDefinitionBuilder<magic_enum::enum_count<utils::net::ClientAuthOption>()>::createProperty("Client Auth")
       .withDescription("The client authentication policy to use for the SSL Context. Only used if an SSL Context Service is provided.")

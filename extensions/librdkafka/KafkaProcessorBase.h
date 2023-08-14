@@ -47,9 +47,9 @@ enum class SASLMechanismOption {
 
 class KafkaProcessorBase : public core::Processor {
  public:
-  EXTENSIONAPI static constexpr auto SSLContextService = core::PropertyDefinitionBuilder<0, 0, 0, utils::meta::type_list<minifi::controllers::SSLContextService>>::
-      createProperty("SSL Context Service")
+  EXTENSIONAPI static constexpr auto SSLContextService = core::PropertyDefinitionBuilder<>::createProperty("SSL Context Service")
       .withDescription("SSL Context Service Name")
+      .withAllowedTypes<minifi::controllers::SSLContextService>()
       .build();
   EXTENSIONAPI static constexpr auto SecurityProtocol = core::PropertyDefinitionBuilder<magic_enum::enum_count<kafka::SecurityProtocolOption>()>::createProperty("Security Protocol")
       .withDescription("Protocol used to communicate with brokers. Corresponds to Kafka's 'security.protocol' property.")

@@ -15,23 +15,14 @@
  * limitations under the License.
  */
 #pragma once
-
-#include <array>
-#include <string_view>
 #include <type_traits>
 
-#include "core/Core.h"
-
 namespace org::apache::nifi::minifi::utils::meta {
-
 template<typename... Types>
 struct type_list {
   template<typename T>
   [[nodiscard]] constexpr static bool contains() noexcept {
     return (std::is_same_v<T, Types> || ...);
   }
-
-  static constexpr auto AsStringViews = std::array<std::string_view, sizeof...(Types)>{core::className<Types>()...};
 };
-
 }  // namespace org::apache::nifi::minifi::utils::meta

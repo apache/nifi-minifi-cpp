@@ -61,9 +61,10 @@ class ExampleProcessor : public core::Processor {
   using Processor::Processor;
 
   static constexpr const char* Description = "An example processor";
-  static constexpr auto ExampleProperty = core::PropertyDefinitionBuilder<0, 0, 0, utils::meta::type_list<ExampleService>>::createProperty("Example Property")
+  static constexpr auto ExampleProperty = core::PropertyDefinitionBuilder<>::createProperty("Example Property")
       .withDescription("An example property")
       .isRequired(false)
+      .withAllowedTypes<ExampleService>()
       .build();
   static constexpr auto Properties = std::array<core::PropertyReference, 1>{ExampleProperty};
   static constexpr auto Relationships = std::array<core::RelationshipDefinition, 0>{};
