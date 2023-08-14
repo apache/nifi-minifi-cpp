@@ -30,7 +30,7 @@ install_cmake_from_binary() {
   install_pkgs wget
   wget -P "$TMP_DIR" "$CMAKE_URL"
 
-  ACTUAL_SHA256=$(sha256sum "$TMP_DIR/cmake-$CMAKE_VERSION-linux-x86_64.tar.gz" | cut -d " " -f 2)
+  ACTUAL_SHA256=$(sha256sum "$TMP_DIR/cmake-$CMAKE_VERSION-linux-x86_64.tar.gz" | cut -d " " -f 1)
 
   if [ "$ACTUAL_SHA256" != "$EXPECTED_SHA256" ]; then
     echo "ERROR: SHA-256 verification failed. Aborting."
