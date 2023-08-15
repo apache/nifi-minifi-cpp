@@ -23,6 +23,11 @@
 
 namespace org::apache::nifi::minifi::core {
 
+namespace detail {
+template<typename... Types>
+inline constexpr auto TypeNames = std::array<std::string_view, sizeof...(Types)>{core::className<Types>()...};
+}
+
 template<size_t NumAllowedValues = 0, size_t NumDependentProperties = 0, size_t NumExclusiveOfProperties = 0>
 struct PropertyDefinitionBuilder {
   static constexpr PropertyDefinitionBuilder<NumAllowedValues, NumDependentProperties, NumExclusiveOfProperties> createProperty(std::string_view name) {
