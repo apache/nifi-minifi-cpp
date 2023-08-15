@@ -40,8 +40,7 @@ class ExecutePythonProcessorTestBase {
   ExecutePythonProcessorTestBase() :
       logTestController_(LogTestController::getInstance()),
       logger_(logging::LoggerFactory<ExecutePythonProcessorTestBase>::getLogger()) {
-    auto path = std::filesystem::path(__FILE__).parent_path();
-    SCRIPT_FILES_DIRECTORY = minifi::utils::file::FileUtils::get_executable_dir() / "test_python_scripts";
+    SCRIPT_FILES_DIRECTORY = minifi::utils::file::FileUtils::get_executable_dir() / "resources" / "test_python_scripts";
     reInitialize();
   }
   virtual ~ExecutePythonProcessorTestBase() {

@@ -8,7 +8,7 @@ env:
 jobs:
   macos_xcode:
     name: "macos-xcode"
-    runs-on: macos-12
+    runs-on: macos-13
     timeout-minutes: 180
     env:
       CCACHE_BASEDIR: ${{ GITHUB.WORKSPACE }}
@@ -28,21 +28,19 @@ jobs:
         run: |
           # Skip brew update until https://github.com/actions/setup-python/issues/577 is fixed
           # brew update
-          HOMEBREW_NO_AUTO_UPDATE=1 brew install ossp-uuid flex lua ccache sqliteodbc automake autoconf
+          HOMEBREW_NO_AUTO_UPDATE=1 brew install ossp-uuid flex lua ccache sqliteodbc automake autoconf ninja
       - id: setup_env
         name: setup enviroment
         run: |
           echo "PATH=/usr/lib/ccache:/usr/local/opt/ccache/bin:/usr/local/opt/ccache/libexec:$PATH" >> $GITHUB_ENV
           echo -e "127.0.0.1\t$HOSTNAME" | sudo tee -a /etc/hosts > /dev/null
-          # https://github.com/actions/virtual-environments/blob/main/images/macos/macos-12-Readme.md#xcode
-          sudo xcode-select -switch /Applications/Xcode_14.0.1.app
       - name: build
         run: |
           export PATH="/usr/local/opt/flex/bin:$PATH"
           export LDFLAGS="-L/usr/local/opt/flex/lib"
           export CPPFLAGS="-I/usr/local/opt/flex/include"
           # CPPFLAGS are not recognized by cmake, so we have to force them to CFLAGS and CXXFLAGS to have flex 2.6 working
-          ./bootstrap.sh -e -t && cd build  && cmake -DCMAKE_BUILD_TYPE=Release -DCI_BUILD=ON -DCMAKE_C_FLAGS="${CPPFLAGS} ${CFLAGS}" -DCMAKE_CXX_FLAGS="${CPPFLAGS} ${CXXFLAGS}" -DENABLE_PYTHON_SCRIPTING=ON -DENABLE_LUA_SCRIPTING=ON -DENABLE_SQL=ON -DUSE_REAL_ODBC_TEST_DRIVER=ON -DENABLE_AZURE=ON -DENABLE_GCP=ON -DCMAKE_VERBOSE_MAKEFILE=ON -DCMAKE_RULE_MESSAGES=OFF -DSTRICT_GSL_CHECKS=AUDIT -DFAIL_ON_WARNINGS=ON .. && cmake --build . --parallel 4
+          ./bootstrap.sh -e -t && cd build  && cmake -G Ninja -DCMAKE_BUILD_TYPE=Release -DCI_BUILD=ON -DCMAKE_C_FLAGS="${CPPFLAGS} ${CFLAGS}" -DCMAKE_CXX_FLAGS="${CPPFLAGS} ${CXXFLAGS}" -DENABLE_PYTHON_SCRIPTING=ON -DENABLE_LUA_SCRIPTING=ON -DENABLE_SQL=ON -DUSE_REAL_ODBC_TEST_DRIVER=ON -DENABLE_AZURE=ON -DENABLE_GCP=ON -DCMAKE_VERBOSE_MAKEFILE=ON -DCMAKE_RULE_MESSAGES=OFF -DSTRICT_GSL_CHECKS=AUDIT -DFAIL_ON_WARNINGS=ON .. && cmake --build . --parallel 4
       - name: cache save
         uses: actions/cache/save@v3
         if: always()
@@ -54,9 +52,9 @@ jobs:
         run: |
           # Set core file size limit to 1GiB
           ulimit -c 1048576
-          cd build && make test ARGS="--timeout 300 -j4 --output-on-failure"
+          cd build && ctest -j4 --output-on-failure --timeout 300
       - name: linter
-        run: cd build && make -j4 linter
+        run: cd build && ninja linter
       - name: check-cores
         if: ${{ failure() && steps.test.conclusion == 'failure' }}
         run: |

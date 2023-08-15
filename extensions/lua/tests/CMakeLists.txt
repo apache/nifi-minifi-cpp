@@ -34,4 +34,5 @@ FOREACH(testfile ${EXECUTESCRIPT_LUA_TESTS})
     add_test(NAME "${testfilename}" COMMAND "${testfilename}" WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR})
 ENDFOREACH()
 
+copyTestResources(${CMAKE_CURRENT_SOURCE_DIR}/test_lua_scripts/ ${CMAKE_BINARY_DIR}/bin/resources/test_lua_scripts/)
 message("-- Finished building ${EXTENSIONS_TEST_COUNT} tests for minifi-lua-script-extension...")

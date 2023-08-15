@@ -32,10 +32,17 @@ ENDMACRO()
 set(NANOFI_TEST_DIR "${CMAKE_SOURCE_DIR}/nanofi/tests/")
 
 function(copyTestResources SOURCE_DIR DEST_DIR)
-    file(GLOB RESOURCE_FILES  "${SOURCE_DIR}/*")
+    file(GLOB_RECURSE RESOURCE_FILES "${SOURCE_DIR}/*")
     foreach(RESOURCE_FILE ${RESOURCE_FILES})
-        get_filename_component(RESOURCE_FILENAME "${RESOURCE_FILE}" NAME)
-        set(dest_file "${DEST_DIR}/${RESOURCE_FILENAME}")
+        if(IS_DIRECTORY "${RESOURCE_FILE}")
+            continue()
+        endif()
+
+        file(RELATIVE_PATH RESOURCE_RELATIVE_PATH "${SOURCE_DIR}" "${RESOURCE_FILE}")
+        get_filename_component(RESOURCE_DEST_DIR "${DEST_DIR}/${RESOURCE_RELATIVE_PATH}" DIRECTORY)
+
+        file(MAKE_DIRECTORY "${RESOURCE_DEST_DIR}")
+        set(dest_file "${DEST_DIR}/${RESOURCE_RELATIVE_PATH}")
 
         configure_file(${RESOURCE_FILE} ${dest_file} COPYONLY)
     endforeach()
