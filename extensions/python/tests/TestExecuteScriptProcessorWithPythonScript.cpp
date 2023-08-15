@@ -221,8 +221,7 @@ TEST_CASE("Python: Test Module Directory property", "[executescriptPythonModuleD
   minifi::test::SingleProcessorTestController controller{execute_script};
   LogTestController::getInstance().setTrace<ExecuteScript>();
 
-  const auto script_files_directory = std::filesystem::path(__FILE__).parent_path() / "test_python_scripts";
-
+  const auto script_files_directory =  minifi::utils::file::FileUtils::get_executable_dir() / "resources" / "test_python_scripts";
 
   execute_script->setProperty(ExecuteScript::ScriptEngine, "python");
   execute_script->setProperty(ExecuteScript::ScriptFile, (script_files_directory / "foo_bar_processor.py").string());

@@ -275,8 +275,7 @@ TEST_CASE("Lua: Test Module Directory property", "[executescriptLuaModuleDirecto
   minifi::test::SingleProcessorTestController controller{execute_script};
   LogTestController::getInstance().setTrace<ExecuteScript>();
 
-  const auto script_files_directory = std::filesystem::path(__FILE__).parent_path() / "test_lua_scripts";
-
+  const auto script_files_directory =  minifi::utils::file::FileUtils::get_executable_dir() / "resources" / "test_lua_scripts";
 
   execute_script->setProperty(ExecuteScript::ScriptEngine, "lua");
   execute_script->setProperty(ExecuteScript::ScriptFile, (script_files_directory / "foo_bar_processor.lua").string());
