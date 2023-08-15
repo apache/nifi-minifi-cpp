@@ -92,14 +92,14 @@ class KafkaProcessorBase : public core::Processor {
 
   KafkaProcessorBase(std::string name, const utils::Identifier& uuid, std::shared_ptr<core::logging::Logger> logger)
       : core::Processor(std::move(name), uuid),
-        logger_(logger) {
+        logger_(std::move(logger)) {
   }
 
  protected:
   virtual std::optional<utils::net::SslData> getSslData(core::ProcessContext& context) const;
   void setKafkaAuthenticationParameters(core::ProcessContext& context, gsl::not_null<rd_kafka_conf_t*> config);
 
-  kafka::SecurityProtocolOption security_protocol_;
+  kafka::SecurityProtocolOption security_protocol_{};
   std::shared_ptr<core::logging::Logger> logger_;
 };
 
