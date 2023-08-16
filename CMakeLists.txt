@@ -537,6 +537,10 @@ if (NOT WIN32)
         DESTINATION conf
         COMPONENT bin)
 
+    install(DIRECTORY extensions/python/pythonprocessors/
+        DESTINATION minifi-python
+        COMPONENT bin)
+
     install(PROGRAMS bin/minifi.sh bin/minifi.service
         DESTINATION bin
         COMPONENT bin)
