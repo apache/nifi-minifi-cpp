@@ -65,6 +65,7 @@ macro(register_extension extension-name extension-display-name extension-guard d
     endif()
 
     if ((NOT "NO_INSTALL" IN_LIST ARG_FLAGS) AND (NOT "CI_ONLY_INSTALL" IN_LIST ARG_FLAGS OR CI_BUILD))
+        message(CONFIGURE_LOG "INSTALL ${extension-name}")
         get_component_name(${extension-name} component-name)
 
         if(WIN32)
@@ -80,6 +81,8 @@ macro(register_extension extension-name extension-display-name extension-guard d
             endif()
             install(TARGETS ${extension-name} LIBRARY DESTINATION extensions COMPONENT ${component-name})
         endif()
+    else()
+        message(CONFIGURE_LOG "SKIP INSTALL ${extension-name}")
     endif()
 
     ADD_FEATURE_INFO("${extension-display-name}" ${extension-guard} "${description}")
