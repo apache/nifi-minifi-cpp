@@ -64,7 +64,7 @@ macro(register_extension extension-name extension-display-name extension-guard d
         set(ARG_FLAGS ${ARGV5})
     endif()
 
-    if ((NOT "NO_INSTALL" IN_LIST ARG_FLAGS) AND (NOT "CI_ONLY_INSTALL" IN_LIST ARG_FLAGS OR ${CI_BUILD}))
+    if ((NOT "NO_INSTALL" IN_LIST ARG_FLAGS) AND (NOT "CI_ONLY_INSTALL" IN_LIST ARG_FLAGS OR CI_BUILD))
         get_component_name(${extension-name} component-name)
 
         if(WIN32)
