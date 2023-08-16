@@ -242,7 +242,7 @@ TEST_CASE("Processors Can Store FlowFiles", "[TestP1]") {
 
 class ContentUpdaterProcessor : public core::Processor {
  public:
-  ContentUpdaterProcessor(std::string name, const utils::Identifier& id) : Processor(std::move(name), id) {}
+  ContentUpdaterProcessor(std::string_view name, const utils::Identifier& id) : Processor(name, id) {}
 
   static constexpr bool SupportsDynamicProperties = false;
   static constexpr bool SupportsDynamicRelationships = false;

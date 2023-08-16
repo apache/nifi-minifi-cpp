@@ -42,8 +42,8 @@
 
 namespace org::apache::nifi::minifi::processors {
 
-SFTPProcessorBase::SFTPProcessorBase(std::string name, const utils::Identifier& uuid)
-    : Processor(std::move(name), uuid),
+SFTPProcessorBase::SFTPProcessorBase(std::string_view name, const utils::Identifier& uuid)
+    : Processor(name, uuid),
       connection_timeout_(0),
       data_timeout_(0),
       strict_host_checking_(false),

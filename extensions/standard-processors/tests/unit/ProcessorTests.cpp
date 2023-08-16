@@ -487,8 +487,8 @@ TEST_CASE("Test Find file", "[getfileCreate3]") {
 
 class TestProcessorNoContent : public minifi::core::Processor {
  public:
-  explicit TestProcessorNoContent(std::string name, const utils::Identifier& uuid = {})
-      : Processor(std::move(name), uuid) {
+  explicit TestProcessorNoContent(std::string_view name, const utils::Identifier& uuid = {})
+      : Processor(name, uuid) {
   }
 
   static constexpr const char* Description = "test resource";
