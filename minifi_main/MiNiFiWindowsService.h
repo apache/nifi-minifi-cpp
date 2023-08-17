@@ -20,6 +20,7 @@
 #ifdef WIN32
 
 #include <memory>
+#include <Windows.h>
 
 #include "core/Core.h"
 
