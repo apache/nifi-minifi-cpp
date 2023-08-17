@@ -33,12 +33,10 @@ add_os_flags() {
 }
 bootstrap_cmake(){
     ## on Ubuntu install the latest CMake
-    if [[ "$OS" = Ubuntu* && "$OS_MAJOR" -lt 22 ]]; then
-        echo "Adding KitWare CMake apt repository..."
-        sudo apt-get update && sudo apt-get install -y apt-transport-https ca-certificates gnupg software-properties-common wget
-        wget -O - https://apt.kitware.com/keys/kitware-archive-latest.asc 2>/dev/null | sudo apt-key add -
-        sudo apt-add-repository "deb https://apt.kitware.com/ubuntu/ $(lsb_release -c --short) main" && sudo apt-get update
-    fi
+    echo "Adding KitWare CMake apt repository..."
+    sudo apt-get update && sudo apt-get install -y apt-transport-https ca-certificates gnupg software-properties-common wget
+    wget -O - https://apt.kitware.com/keys/kitware-archive-latest.asc 2>/dev/null | sudo apt-key add -
+    sudo apt-add-repository "deb https://apt.kitware.com/ubuntu/ $(lsb_release -c --short) main" && sudo apt-get update
     sudo apt-get -y install cmake
 }
 bootstrap_compiler() {
