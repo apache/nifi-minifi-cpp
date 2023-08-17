@@ -66,7 +66,7 @@ TEST_CASE("net::reverseDnsLookup", "[net][dns][reverseDnsLookup]") {
   }
 }
 
-TEST_CASE("utils::net::getClientSslContext") {
+TEST_CASE("utils::net::getSslContext") {
   TestController controller;
   auto plan = controller.createPlan();
 
@@ -101,13 +101,13 @@ TEST_CASE("utils::net::getClientSslContext") {
     REQUIRE(ssl_context_service->setProperty(minifi::controllers::SSLContextService::CACertificate, (cert_dir / "alice_by_A_with_key.pem").string()));
   }
   REQUIRE_NOTHROW(plan->finalize());
-  auto ssl_context = utils::net::getClientSslContext(*ssl_context_service);
+  auto ssl_context = utils::net::getSslContext(*ssl_context_service);
   asio::error_code verification_error;
   ssl_context.set_verify_mode(asio::ssl::verify_peer, verification_error);
   CHECK(!verification_error);
 }
 
-TEST_CASE("utils::net::getClientSslContext passphrase problems") {
+TEST_CASE("utils::net::getSslContext passphrase problems") {
   TestController controller;
   auto plan = controller.createPlan();
 
@@ -122,23 +122,23 @@ TEST_CASE("utils::net::getClientSslContext passphrase problems") {
 
   SECTION("Missing passphrase") {
     REQUIRE_NOTHROW(plan->finalize());
-    REQUIRE_THROWS_WITH(utils::net::getClientSslContext(*ssl_context_service), "use_private_key_file: bad decrypt (Provider routines)");
+    REQUIRE_THROWS_WITH(utils::net::getSslContext(*ssl_context_service), "use_private_key_file: bad decrypt (Provider routines)");
   }
 
   SECTION("Invalid passphrase") {
     REQUIRE(ssl_context_service->setProperty(minifi::controllers::SSLContextService::Passphrase, "not_the_correct_passphrase"));
     REQUIRE_NOTHROW(plan->finalize());
-    REQUIRE_THROWS_WITH(utils::net::getClientSslContext(*ssl_context_service), "use_private_key_file: bad decrypt (Provider routines)");
+    REQUIRE_THROWS_WITH(utils::net::getSslContext(*ssl_context_service), "use_private_key_file: bad decrypt (Provider routines)");
   }
 
   SECTION("Invalid passphrase file") {
     REQUIRE(ssl_context_service->setProperty(minifi::controllers::SSLContextService::Passphrase, (cert_dir / "alice_by_B.pem").string()));
     REQUIRE_NOTHROW(plan->finalize());
-    REQUIRE_THROWS_WITH(utils::net::getClientSslContext(*ssl_context_service), "use_private_key_file: bad decrypt (Provider routines)");
+    REQUIRE_THROWS_WITH(utils::net::getSslContext(*ssl_context_service), "use_private_key_file: bad decrypt (Provider routines)");
   }
 }
 
-TEST_CASE("utils::net::getClientSslContext missing CA") {
+TEST_CASE("utils::net::getSslContext missing CA") {
   TestController controller;
   auto plan = controller.createPlan();
 
@@ -151,7 +151,7 @@ TEST_CASE("utils::net::getClientSslContext missing CA") {
   REQUIRE(ssl_context_service->setProperty(minifi::controllers::SSLContextService::PrivateKey, (cert_dir / "alice.key").string()));
 
   REQUIRE_NOTHROW(plan->finalize());
-  auto ssl_context = utils::net::getClientSslContext(*ssl_context_service);
+  auto ssl_context = utils::net::getSslContext(*ssl_context_service);
   asio::error_code verification_error;
   ssl_context.set_verify_mode(asio::ssl::verify_peer, verification_error);
   CHECK(!verification_error);

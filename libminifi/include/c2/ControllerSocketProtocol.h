@@ -31,6 +31,9 @@
 #include "core/controller/ControllerServiceProvider.h"
 #include "ControllerSocketReporter.h"
 #include "utils/MinifiConcurrentQueue.h"
+#include "asio/ip/tcp.hpp"
+#include "asio/ssl/context.hpp"
+#include "utils/net/AsioCoro.h"
 
 namespace org::apache::nifi::minifi::c2 {
 
@@ -42,27 +45,35 @@ class ControllerSocketProtocol {
  public:
   ControllerSocketProtocol(core::controller::ControllerServiceProvider& controller, state::StateMonitor& update_sink,
     std::shared_ptr<Configure> configuration, const std::shared_ptr<ControllerSocketReporter>& controller_socket_reporter);
+  ~ControllerSocketProtocol();
   void initialize();
 
  private:
-  void handleStart(io::BaseStream *stream);
-  void handleStop(io::BaseStream *stream);
-  void handleClear(io::BaseStream *stream);
-  void handleUpdate(io::BaseStream *stream);
-  void writeQueueSizesResponse(io::BaseStream *stream);
-  void writeComponentsResponse(io::BaseStream *stream);
-  void writeConnectionsResponse(io::BaseStream *stream);
-  void writeGetFullResponse(io::BaseStream *stream);
-  void writeManifestResponse(io::BaseStream *stream);
-  void writeJstackResponse(io::BaseStream *stream);
-  void handleDescribe(io::BaseStream *stream);
-  void handleCommand(io::BaseStream *stream);
+  void handleStart(io::BaseStream &stream);
+  void handleStop(io::BaseStream &stream);
+  void handleClear(io::BaseStream &stream);
+  void handleUpdate(io::BaseStream &stream);
+  void writeQueueSizesResponse(io::BaseStream &stream);
+  void writeComponentsResponse(io::BaseStream &stream);
+  void writeConnectionsResponse(io::BaseStream &stream);
+  void writeGetFullResponse(io::BaseStream &stream);
+  void writeManifestResponse(io::BaseStream &stream);
+  void writeJstackResponse(io::BaseStream &stream);
+  void handleDescribe(io::BaseStream &stream);
+  asio::awaitable<void> handleCommand(std::unique_ptr<io::BaseStream> stream);
+  asio::awaitable<void> handshakeAndHandleCommand(asio::ip::tcp::socket&& socket, std::shared_ptr<minifi::controllers::SSLContextService> ssl_context_service);
   std::string getJstack();
+  asio::awaitable<void> startAccept();
+  asio::awaitable<void> startAcceptSsl(std::shared_ptr<minifi::controllers::SSLContextService> ssl_context_service);
+  void stopListener();
 
   core::controller::ControllerServiceProvider& controller_;
   state::StateMonitor& update_sink_;
-  std::unique_ptr<io::BaseServerSocket> server_socket_;
-  std::shared_ptr<minifi::io::StreamFactory> stream_factory_;
+
+  asio::io_context io_context_;
+  std::unique_ptr<asio::ip::tcp::acceptor> acceptor_;
+  std::thread server_thread_;
+
   std::weak_ptr<ControllerSocketReporter> controller_socket_reporter_;
   std::shared_ptr<Configure> configuration_;
   std::shared_ptr<core::logging::Logger> logger_ = core::logging::LoggerFactory<ControllerSocketProtocol>::getLogger();

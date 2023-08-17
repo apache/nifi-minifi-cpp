@@ -20,61 +20,26 @@
 #include <memory>
 #include <string>
 
-#include "io/ClientSocket.h"
+#include "controllers/SSLContextService.h"
 
 namespace org::apache::nifi::minifi::controller {
 
-/**
- * Sends a single argument comment
- * @param socket socket unique ptr.
- * @param op operation to perform
- * @param value value to send
- */
-bool sendSingleCommand(std::unique_ptr<io::Socket> socket, uint8_t op, const std::string& value);
+struct ControllerSocketData {
+  std::string host = "localhost";
+  int port = -1;
+  std::shared_ptr<minifi::controllers::SSLContextService> ssl_context_service;
+};
 
-/**
- * Stops a stopped component
- * @param socket socket unique ptr.
- * @param op operation to perform
- */
-bool stopComponent(std::unique_ptr<io::Socket> socket, const std::string& component);
-
-/**
- * Starts a previously stopped component.
- * @param socket socket unique ptr.
- * @param op operation to perform
- */
-bool startComponent(std::unique_ptr<io::Socket> socket, const std::string& component);
-
-/**
- * Clears a connection queue.
- * @param socket socket unique ptr.
- * @param op operation to perform
- */
-bool clearConnection(std::unique_ptr<io::Socket> socket, const std::string& connection);
-
-/**
- * Updates the flow to the provided file
- */
-int updateFlow(std::unique_ptr<io::Socket> socket, std::ostream &out, const std::string& file);
-
-/**
- * Lists connections which are full
- * @param socket socket ptr
- */
-int getFullConnections(std::unique_ptr<io::Socket> socket, std::ostream &out);
-
-/**
- * Prints the connection size for the provided connection.
- * @param socket socket ptr
- * @param connection connection whose size will be returned.
- */
-int getConnectionSize(std::unique_ptr<io::Socket> socket, std::ostream &out, const std::string& connection);
-
-int listComponents(std::unique_ptr<io::Socket> socket, std::ostream &out, bool show_header = true);
-int listConnections(std::unique_ptr<io::Socket> socket, std::ostream &out, bool show_header = true);
-int printManifest(std::unique_ptr<io::Socket> socket, std::ostream &out);
-
-int getJstacks(std::unique_ptr<io::Socket> socket, std::ostream &out);
+bool sendSingleCommand(const ControllerSocketData& socket_data, uint8_t op, const std::string& value);
+bool stopComponent(const ControllerSocketData& socket_data, const std::string& component);
+bool startComponent(const ControllerSocketData& socket_data, const std::string& component);
+bool clearConnection(const ControllerSocketData& socket_data, const std::string& connection);
+bool updateFlow(const ControllerSocketData& socket_data, std::ostream &out, const std::string& file);
+bool getFullConnections(const ControllerSocketData& socket_data, std::ostream &out);
+bool getConnectionSize(const ControllerSocketData& socket_data, std::ostream &out, const std::string& connection);
+bool listComponents(const ControllerSocketData& socket_data, std::ostream &out, bool show_header = true);
+bool listConnections(const ControllerSocketData& socket_data, std::ostream &out, bool show_header = true);
+bool printManifest(const ControllerSocketData& socket_data, std::ostream &out);
+bool getJstacks(const ControllerSocketData& socket_data, std::ostream &out);
 
 }  // namespace org::apache::nifi::minifi::controller

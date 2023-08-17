@@ -47,10 +47,18 @@ asio::awaitable<void> TcpServer::readLoop(auto& socket) {
     if (read_error || bytes_read == 0)
       co_return;
 
-    if (!max_queue_size_ || max_queue_size_ > concurrent_queue_.size())
-      concurrent_queue_.enqueue(Message(read_message.substr(0, bytes_read - 1), IpProtocol::TCP, socket.lowest_layer().remote_endpoint().address(), socket.lowest_layer().local_endpoint().port()));
-    else
+    if (!max_queue_size_ || max_queue_size_ > concurrent_queue_.size()) {
+      std::error_code error;
+      auto remote_address = socket.lowest_layer().remote_endpoint(error).address();
+      if (error)
+        logger_->log_debug("Error during fetching remote endpoint: %s", error.message());
+      auto local_port = socket.lowest_layer().local_endpoint(error).port();
+      if (error)
+        logger_->log_debug("Error during fetching local endpoint: %s", error.message());
+      concurrent_queue_.enqueue(Message(read_message.substr(0, bytes_read - 1), IpProtocol::TCP, remote_address, local_port));
+    } else {
       logger_->log_warn("Queue is full. TCP message ignored.");
+    }
     read_message.erase(0, bytes_read);
   }
 }
@@ -62,7 +70,7 @@ asio::awaitable<void> TcpServer::insecureSession(asio::ip::tcp::socket socket) {
 namespace {
 asio::ssl::context setupSslContext(SslServerOptions& ssl_data) {
   asio::ssl::context ssl_context(asio::ssl::context::tlsv12_server);
-  ssl_context.set_options(asio::ssl::context::default_workarounds | asio::ssl::context::single_dh_use | asio::ssl::context::no_tlsv1 | asio::ssl::context::no_tlsv1_1);
+  ssl_context.set_options(minifi::utils::net::MINIFI_SSL_OPTIONS);
   ssl_context.set_password_callback([key_pw = ssl_data.cert_data.key_pw](std::size_t&, asio::ssl::context_base::password_purpose&) { return key_pw; });
   ssl_context.use_certificate_file(ssl_data.cert_data.cert_loc.string(), asio::ssl::context::pem);
   ssl_context.use_private_key_file(ssl_data.cert_data.key_loc.string(), asio::ssl::context::pem);
