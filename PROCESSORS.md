@@ -2433,7 +2433,7 @@ In the list below, the names of required properties appear in bold. Any other pr
 
 ### Description
 
-The PutTCP processor receives a FlowFile and transmits the FlowFile content over a TCP connection to the configured TCP server. By default, the FlowFiles are transmitted over the same TCP connection. To assist the TCP server with determining message boundaries, an optional "Outgoing Message Delimiter" string can be configured which is appended to the end of each FlowFiles content when it is transmitted over the TCP connection. An optional "Connection Per FlowFile" parameter can be specified to change the behaviour so that each FlowFiles content is transmitted over a single TCP connection which is closed after the FlowFile has been sent.
+The PutTCP processor receives a FlowFile and transmits the FlowFile content over a TCP connection to the configured TCP server. By default, the FlowFiles are transmitted over the same TCP connection. To assist the TCP server with determining message boundaries, an optional "Outgoing Message Delimiter" string can be configured which is appended to the end of each FlowFiles content when it is transmitted over the TCP connection. An optional "Connection Per FlowFile" parameter can be specified to change the behaviour so that each FlowFiles content is transmitted over a single TCP connection which is closed after the FlowFile has been sent. Note: When using TLS 1.3 the processor can still route the flow file to success if the TLS handshake fails. This is due to TLS 1.3's faster handshake process which allows the message to be sent before we know the result of the TLS handshake.
 
 ### Properties
 
@@ -2455,7 +2455,7 @@ In the list below, the names of required properties appear in bold. Any other pr
 | Name    | Description                                                                |
 |---------|----------------------------------------------------------------------------|
 | success | FlowFiles that are sent to the destination are sent out this relationship. |
-| failure | FlowFiles that encountered IO errors are send out this relationship.       |
+| failure | FlowFiles that encountered IO errors are sent out this relationship.       |
 
 
 ## PutUDP
@@ -2478,7 +2478,7 @@ In the list below, the names of required properties appear in bold. Any other pr
 | Name    | Description                                                                |
 |---------|----------------------------------------------------------------------------|
 | success | FlowFiles that are sent to the destination are sent out this relationship. |
-| failure | FlowFiles that encountered IO errors are send out this relationship.       |
+| failure | FlowFiles that encountered IO errors are sent out this relationship.       |
 
 
 ## QueryDatabaseTable
