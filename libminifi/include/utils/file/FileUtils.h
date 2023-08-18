@@ -419,14 +419,6 @@ inline std::filesystem::path get_executable_dir() {
   return executable_path.parent_path();
 }
 
-inline int close(int file_descriptor) {
-#ifdef WIN32
-  return _close(file_descriptor);
-#else
-  return ::close(file_descriptor);
-#endif
-}
-
 uint64_t computeChecksum(const std::filesystem::path& file_name, uint64_t up_to_position);
 
 inline std::string get_content(const std::filesystem::path& file_name) {
