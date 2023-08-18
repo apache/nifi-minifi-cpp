@@ -20,7 +20,6 @@
 #include <memory>
 #include <algorithm>
 #include <cstdint>
-#include <string>
 #include <utility>
 
 #include "core/FlowFile.h"
@@ -40,8 +39,8 @@ void FetchSFTP::initialize() {
   setSupportedRelationships(Relationships);
 }
 
-FetchSFTP::FetchSFTP(std::string name, const utils::Identifier& uuid /*= utils::Identifier()*/)
-    : SFTPProcessorBase(std::move(name), uuid) {
+FetchSFTP::FetchSFTP(std::string_view name, const utils::Identifier& uuid /*= utils::Identifier()*/)
+    : SFTPProcessorBase(name, uuid) {
   logger_ = core::logging::LoggerFactory<FetchSFTP>::getLogger(uuid_);
 }
 

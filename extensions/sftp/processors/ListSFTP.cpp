@@ -26,7 +26,6 @@
 #include <map>
 #include <set>
 #include <list>
-#include <string>
 #include <utility>
 #include <vector>
 #include <tuple>
@@ -67,8 +66,8 @@ void ListSFTP::initialize() {
   setSupportedRelationships(Relationships);
 }
 
-ListSFTP::ListSFTP(std::string name, const utils::Identifier& uuid /*= utils::Identifier()*/)
-    : SFTPProcessorBase(std::move(name), uuid) {
+ListSFTP::ListSFTP(std::string_view name, const utils::Identifier& uuid /*= utils::Identifier()*/)
+    : SFTPProcessorBase(name, uuid) {
   logger_ = core::logging::LoggerFactory<ListSFTP>::getLogger(uuid_);
 }
 
