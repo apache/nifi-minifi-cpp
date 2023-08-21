@@ -173,7 +173,7 @@ Finally, it is required to add the `-lrt` compiler flag by using the
 On all distributions please use -DUSE_SHARED_LIBS=OFF to statically link zlib, libcurl, and OpenSSL.
 
 #### Windows
-  Build and Installation has been tested with Windows 10 using Visual Studio 2019.
+  Build and Installation has been tested with Windows 10 using Visual Studio 2022.
   You can build and create an MSI via the CPACK command. This requires the installation of the WiX
   toolset (http://wixtoolset.org/). To do this, open up a prompt into your build directory and
   type 'cpack' . The CPACK command will automatically generate and provide you a path to the distributable

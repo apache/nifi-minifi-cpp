@@ -20,9 +20,6 @@
 #include <algorithm>
 #include <atomic>
 #include <chrono>
-#if defined(WIN32)
-#include <future>  // This is required to work around a VS2017 bug, see the details below
-#endif
 
 namespace org::apache::nifi::minifi::utils {
 
@@ -47,25 +44,17 @@ class TaskRescheduleInfo {
     return {false, std::chrono::steady_clock::time_point::min()};
   }
 
-  std::chrono::steady_clock::time_point getNextExecutionTime() const {
+  [[nodiscard]] std::chrono::steady_clock::time_point getNextExecutionTime() const {
     return next_execution_time_;
   }
 
-  bool isFinished() const {
+  [[nodiscard]] bool isFinished() const {
     return finished_;
   }
 
  private:
   std::chrono::steady_clock::time_point next_execution_time_;
   bool finished_;
-
-#if defined(WIN32)
-// https://developercommunity.visualstudio.com/content/problem/60897/c-shared-state-futuresstate-default-constructs-the.html
-// Because of this bug we need to have this object default constructible, which makes no sense otherwise. Hack.
- private:
-  TaskRescheduleInfo() : next_execution_time_(std::chrono::steady_clock::time_point::min()), finished_(true) {}
-  friend class std::_Associated_state<TaskRescheduleInfo>;
-#endif
 };
 
 

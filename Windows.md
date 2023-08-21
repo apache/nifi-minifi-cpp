@@ -17,13 +17,13 @@
 
 ## Requirements
 
-Apache NiFi MiNiFi C++ has been built on Window Server 2016, 2019, and Windows 10 operating systems. The project is CMake focused we suggest building via Visual Studio 2019 or our `win_build_vs.bat` script.
+Apache NiFi MiNiFi C++ has been built on Window Server 2016, 2019, and Windows 10 operating systems. The project is CMake focused we suggest building via Visual Studio 2022 or our `win_build_vs.bat` script.
 
 The project previously required OpenSSL to be installed. If you follow our build procedures, below, you will not need to install that dependency.
 
 ### Required software
 
- - Visual Studio 2019
+ - Visual Studio 2022
  - [CMake](https://cmake.org/download/)
  - [Git](https://git-scm.com/download/win) (the build process requires the bash.exe and patch.exe tools packaged with Git)
  - [Perl](https://strawberryperl.com/)
@@ -100,7 +100,7 @@ Examples:
  - 32-bit build with kafka, disabling tests, enabling MSI creation: `win_build_vs.bat build32 /T /K /P`
  - 64-bit build with JNI, with debug symbols: `win_build_vs.bat build64 /64 /J /D`
 
-`win_build_vs.bat` requires a Visual Studio 2019 build environment to be set up. Use the `x86 Native Tools Command Prompt for VS 2019`, or the `x64 Native Tools Command Prompt for VS 2019` for 32-bit and 64-bit builds respectively.
+`win_build_vs.bat` requires a Visual Studio 2022 build environment to be set up. Use the `x86 Native Tools Command Prompt for VS 2022`, or the `x64 Native Tools Command Prompt for VS 2022` for 32-bit and 64-bit builds respectively.
 
 You can specify additional CMake arguments by setting the EXTRA_CMAKE_ARGUMENTS variable:
 ```
@@ -119,7 +119,7 @@ A basic working CMake configuration can be inferred from the `win_build_vs.bat`.
 ```
 mkdir build
 cd build
-cmake -G "Visual Studio 16 2019" -A x64 -DINSTALLER_MERGE_MODULES=OFF -DTEST_CUSTOM_WEL_PROVIDER=OFF -DENABLE_SQL=OFF -DUSE_REAL_ODBC_TEST_DRIVER=OFF -DCMAKE_BUILD_TYPE_INIT=Release -DCMAKE_BUILD_TYPE=Release -DWIN32=WIN32 -DENABLE_LIBRDKAFKA=OFF -DENABLE_JNI=OFF -DOPENSSL_OFF=OFF -DENABLE_COAP=OFF -DENABLE_AWS=OFF -DENABLE_PDH= -DENABLE_AZURE=OFF -DENABLE_SFTP=OFF -DENABLE_SPLUNK= -DENABLE_GCP= -DENABLE_NANOFI=OFF -DENABLE_OPENCV=OFF -DENABLE_PROMETHEUS=OFF -DENABLE_ELASTICSEARCH= -DUSE_SHARED_LIBS=OFF -DENABLE_CONTROLLER=ON -DENABLE_BUSTACHE=OFF -DENABLE_COAP=OFF -DENABLE_ENCRYPT_CONFIG=OFF -DENABLE_GPS=OFF -DENABLE_LUA_SCRIPTING=OFF -DENABLE_MQTT=OFF -DENABLE_OPC=OFF -DENABLE_OPENWSMAN=OFF -DENABLE_OPS=OFF -DENABLE_PCAP=OFF -DENABLE_PYTHON_SCRIPTING= -DENABLE_SENSORS=OFF -DENABLE_USB_CAMERA=OFF -DBUILD_ROCKSDB=ON -DFORCE_WINDOWS=ON -DUSE_SYSTEM_UUID=OFF -DDISABLE_LIBARCHIVE=OFF -DENABLE_WEL=ON -DFAIL_ON_WARNINGS=OFF -DSKIP_TESTS=OFF ..
+cmake -G "Visual Studio 17 2022" -A x64 -DINSTALLER_MERGE_MODULES=OFF -DTEST_CUSTOM_WEL_PROVIDER=OFF -DENABLE_SQL=OFF -DUSE_REAL_ODBC_TEST_DRIVER=OFF -DCMAKE_BUILD_TYPE_INIT=Release -DCMAKE_BUILD_TYPE=Release -DWIN32=WIN32 -DENABLE_LIBRDKAFKA=OFF -DENABLE_JNI=OFF -DOPENSSL_OFF=OFF -DENABLE_COAP=OFF -DENABLE_AWS=OFF -DENABLE_PDH= -DENABLE_AZURE=OFF -DENABLE_SFTP=OFF -DENABLE_SPLUNK= -DENABLE_GCP= -DENABLE_NANOFI=OFF -DENABLE_OPENCV=OFF -DENABLE_PROMETHEUS=OFF -DENABLE_ELASTICSEARCH= -DUSE_SHARED_LIBS=OFF -DENABLE_CONTROLLER=ON -DENABLE_BUSTACHE=OFF -DENABLE_COAP=OFF -DENABLE_ENCRYPT_CONFIG=OFF -DENABLE_GPS=OFF -DENABLE_LUA_SCRIPTING=OFF -DENABLE_MQTT=OFF -DENABLE_OPC=OFF -DENABLE_OPENWSMAN=OFF -DENABLE_OPS=OFF -DENABLE_PCAP=OFF -DENABLE_PYTHON_SCRIPTING= -DENABLE_SENSORS=OFF -DENABLE_USB_CAMERA=OFF -DBUILD_ROCKSDB=ON -DFORCE_WINDOWS=ON -DUSE_SYSTEM_UUID=OFF -DDISABLE_LIBARCHIVE=OFF -DENABLE_WEL=ON -DFAIL_ON_WARNINGS=OFF -DSKIP_TESTS=OFF ..
 msbuild /m nifi-minifi-cpp.sln /property:Configuration=Release /property:Platform=x64
 copy minifi_main\Release\minifi.exe minifi_main\
 cpack

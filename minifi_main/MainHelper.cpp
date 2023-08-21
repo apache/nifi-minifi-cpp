@@ -22,61 +22,6 @@
 #include "utils/StringUtils.h"
 #include "utils/file/FileUtils.h"
 
-#ifdef WIN32
-FILE* __cdecl _imp____iob_func() {
-  struct _iobuf_VS2012 {  // ...\Microsoft Visual Studio 11.0\VC\include\stdio.h #56
-    char *_ptr;
-    int   _cnt;
-    char *_base;
-    int   _flag;
-    int   _file;
-    int   _charbuf;
-    int   _bufsiz;
-    char *_tmpfname;
-  };
-  // VS2015 has FILE = struct {void* _Placeholder}
-
-  static struct _iobuf_VS2012 bufs[3];
-  static char initialized = 0;
-
-  if (!initialized) {
-    bufs[0]._ptr = (char*)stdin->_Placeholder;
-    bufs[1]._ptr = (char*)stdout->_Placeholder;
-    bufs[2]._ptr = (char*)stderr->_Placeholder;
-    initialized = 1;
-  }
-
-  return (FILE*)&bufs;
-}
-
-FILE* __cdecl __imp___iob_func() {
-  struct _iobuf_VS2012 {  // ...\Microsoft Visual Studio 11.0\VC\include\stdio.h #56
-    char *_ptr;
-    int   _cnt;
-    char *_base;
-    int   _flag;
-    int   _file;
-    int   _charbuf;
-    int   _bufsiz;
-    char *_tmpfname;
-};
-  // VS2015 has FILE = struct {void* _Placeholder}
-
-  static struct _iobuf_VS2012 bufs[3];
-  static char initialized = 0;
-
-  if (!initialized) {
-    bufs[0]._ptr = (char*)stdin->_Placeholder;
-    bufs[1]._ptr = (char*)stdout->_Placeholder;
-    bufs[2]._ptr = (char*)stderr->_Placeholder;
-    initialized = 1;
-  }
-
-  return (FILE*)&bufs;
-}
-
-#endif
-
 namespace minifi = org::apache::nifi::minifi;
 namespace utils = minifi::utils;
 namespace logging = minifi::core::logging;
