@@ -44,6 +44,7 @@
 #include <string>
 #include <vector>
 #include <utility>
+#include <optional>
 
 #include "core/state/nodes/MetricsBase.h"
 #include "Connection.h"
@@ -109,6 +110,7 @@ class DeviceInfoNode : public DeviceInformation {
   static SerializedResponseNode serializeTotalPhysicalMemoryInformation();
   static SerializedResponseNode serializePhysicalMemoryUsageInformation();
   static SerializedResponseNode serializeSystemCPUUsageInformation();
+  static std::optional<SerializedResponseNode> serializeCPULoadAverageInformation();
   static SerializedResponseNode serializeArchitectureInformation();
   static SerializedResponseNode serializeSystemInfo();
   SerializedResponseNode serializeHostNameInfo() const;

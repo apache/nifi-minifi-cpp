@@ -170,11 +170,12 @@ RepositoryMetrics is a system level metric that reports metrics for the register
 
 DeviceInfoNode is a system level metric that reports metrics about the system resources used and available
 
-| Metric name     | Labels       | Description                         |
-|-----------------|--------------|-------------------------------------|
-| physical_mem    | -            | Physical memory available           |
-| memory_usage    | -            | Physical memory usage of the system |
-| cpu_utilization | -            | CPU utilized by the system          |
+| Metric name      | Labels       | Description                                                                                                              |
+|------------------|--------------|--------------------------------------------------------------------------------------------------------------------------|
+| physical_mem     | -            | Physical memory available                                                                                                |
+| memory_usage     | -            | Physical memory usage of the system                                                                                      |
+| cpu_utilization  | -            | CPU utilized by the system                                                                                               |
+| cpu_load_average | -            | The number of processes in the system run queue averaged over the last minute. This metrics is not available on Windows. |
 
 ### FlowInformation
 

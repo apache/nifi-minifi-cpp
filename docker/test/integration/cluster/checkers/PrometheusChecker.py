@@ -72,7 +72,7 @@ class PrometheusChecker:
             self.verify_metric_exists('minifi_is_running', 'FlowInformation', {'component_name': 'FlowController'})
 
     def verify_device_info_node_metrics(self):
-        return self.verify_metrics_exist(['minifi_physical_mem', 'minifi_memory_usage', 'minifi_cpu_utilization'], 'DeviceInfoNode')
+        return self.verify_metrics_exist(['minifi_physical_mem', 'minifi_memory_usage', 'minifi_cpu_utilization', 'minifi_cpu_load_average'], 'DeviceInfoNode')
 
     def verify_agent_status_metrics(self):
         label_list = [{'repository_name': 'flowfile'}, {'repository_name': 'content'}]
