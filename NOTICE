@@ -76,6 +76,7 @@ This software includes third party software subject to the following copyrights:
 - OpenSSL - Copyright (c) 1998-2022 The OpenSSL Project, Copyright (c) 1995-1998 Eric A. Young, Tim J. Hudson. All rights reserved.
 - bitwizeshift.github.io - Copyright (c) 2020 Matthew Rodusek
 - magic_enum - Copyright (c) 2019 - 2023 Daniil Goncharov
+- argparse - Copyright (c) 2018 Pranav Srinivas Kumar <pranav.srinivas.kumar@gmail.com>
 
 The licenses for these third party components are included in LICENSE.txt
 

@@ -17,7 +17,8 @@
 # under the License.
 #
 
-cmake_minimum_required(VERSION 3.16)
+cmake_minimum_required(VERSION 3.24)
+cmake_policy(SET CMP0135 NEW) # policy to set the timestamps of extracted contents to the time of extraction
 
 include_directories(../libminifi/include)
 
@@ -63,7 +64,8 @@ if (WIN32)
 endif()
 
 get_property(extensions GLOBAL PROPERTY EXTENSION-OPTIONS)
-target_link_libraries(minifiexe spdlog libsodium gsl-lite ${LIBMINIFI})
+include(ArgParse)
+target_link_libraries(minifiexe spdlog libsodium gsl-lite argparse ${LIBMINIFI})
 
 set_target_properties(minifiexe PROPERTIES RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/bin")
 set_target_properties(minifiexe PROPERTIES OUTPUT_NAME minifi)

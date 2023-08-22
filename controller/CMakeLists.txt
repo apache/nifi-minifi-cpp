@@ -17,7 +17,8 @@
 # under the License.
 #
 
-cmake_minimum_required(VERSION 3.16)
+cmake_minimum_required(VERSION 3.24)
+cmake_policy(SET CMP0135 NEW) # policy to set the timestamps of extracted contents to the time of extraction
 
 include_directories(../minifi_main/ ../libminifi/include  ../libminifi/include/c2  ../libminifi/include/c2/protocols/  ../libminifi/include/core/state ./libminifi/include/core/statemanagement/metrics  ../libminifi/include/core/yaml  ../libminifi/include/core)
 
@@ -39,7 +40,8 @@ if (WIN32)
 endif()
 
 add_executable(minificontroller ${MINIFI_CONTROLLER_SOURCES})
-target_link_libraries(minificontroller ${LIBMINIFI} cxxopts Threads::Threads)
+include(ArgParse)
+target_link_libraries(minificontroller ${LIBMINIFI} argparse Threads::Threads)
 
 set_target_properties(minificontroller PROPERTIES
     OUTPUT_NAME minificontroller

@@ -16,18 +16,9 @@
 # under the License.
 
 include(FetchContent)
-
-FetchContent_Declare(cxxopts_src
-    URL      https://github.com/jarro2783/cxxopts/archive/refs/tags/v2.2.1.tar.gz
-    URL_HASH SHA256=984aa3c8917d649b14d7f6277104ce38dd142ce378a9198ec926f03302399681
+FetchContent_Declare(
+    argparse
+    URL https://github.com/p-ranav/argparse/archive/refs/tags/v2.9.tar.gz
+    URL_HASH SHA256=cd563293580b9dc592254df35b49cf8a19b4870ff5f611c7584cf967d9e6031e
 )
-FetchContent_GetProperties(cxxopts_src)
-if (NOT cxxopts_src_POPULATED)
-    FetchContent_Populate(cxxopts_src)
-    set(CXXOPTS_INCLUDE_DIR "${cxxopts_src_SOURCE_DIR}/include" CACHE STRING "" FORCE)
-    add_library(cxxopts INTERFACE)
-    add_library(cxxopts::cxxopts ALIAS cxxopts)
-    target_sources(cxxopts INTERFACE ${CXXOPTS_INCLUDE_DIR}/cxxopts.hpp)
-    target_include_directories(cxxopts SYSTEM INTERFACE ${CXXOPTS_INCLUDE_DIR})
-    target_compile_features(cxxopts INTERFACE cxx_std_11)
-endif()
+FetchContent_MakeAvailable(argparse)
