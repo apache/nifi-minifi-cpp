@@ -71,6 +71,7 @@
 #include "c2/C2Agent.h"
 #include "core/state/MetricsPublisherFactory.h"
 #include "core/state/MetricsPublisherStore.h"
+#include "argparse/argparse.hpp"
 
 namespace minifi = org::apache::nifi::minifi;
 namespace core = minifi::core;
@@ -134,7 +135,93 @@ void writeJsonSchema(const std::shared_ptr<minifi::Configure> &configuration, st
   out << minifi::docs::generateJsonSchema();
 }
 
+void overridePropertiesFromCommandLine(const argparse::ArgumentParser& parser, const std::shared_ptr<minifi::Configure>& configure) {
+  const auto& properties = parser.get<std::vector<std::string>>("--property");
+  for (const auto& property : properties) {
+    auto property_key_and_value = utils::StringUtils::splitAndTrimRemovingEmpty(property, "=");
+    if (property_key_and_value.size() != 2) {
+      std::cerr << "Command line property must be defined in <key>=<value> format, invalid property: " << property << std::endl;
+      std::cerr << parser;
+      std::exit(1);
+    }
+    configure->set(property_key_and_value[0], property_key_and_value[1]);
+  }
+}
+
+void dumpDocsIfRequested(const argparse::ArgumentParser& parser, const std::shared_ptr<minifi::Configure>& configure) {
+  if (!parser.is_used("--docs")) {
+    return;
+  }
+  const auto& docs_params = parser.get<std::vector<std::string>>("--docs");
+  if (utils::file::create_dir(docs_params[0]) != 0) {
+    std::cerr << "Working directory doesn't exist and cannot be created: " << docs_params[0] << std::endl;
+    exit(1);
+  }
+
+  std::cout << "Dumping docs to " << docs_params[0] << std::endl;
+  if (docs_params.size() > 1) {
+    auto path = std::filesystem::path(docs_params[1]);
+    if (std::filesystem::exists(path) && !std::filesystem::is_regular_file(path)) {
+      std::cerr << "PROCESSORS.md target path exists, but it is not a regular file: " << path << std::endl;
+      exit(1);
+    }
+    auto dir = path.parent_path();
+    if (dir == docs_params[0]) {
+      std::cerr << "Target file should be out of the working directory: " << dir << std::endl;
+      exit(1);
+    }
+    std::ofstream outref(docs_params[1]);
+    dumpDocs(configure, docs_params[0], outref);
+  } else {
+    dumpDocs(configure, docs_params[0], std::cout);
+  }
+  exit(0);
+}
+
+void writeSchemaIfRequested(const argparse::ArgumentParser& parser, const std::shared_ptr<minifi::Configure>& configure) {
+  if (!parser.is_used("--schema")) {
+    return;
+  }
+  const auto& schema_path = parser.get("--schema");
+  if (std::filesystem::exists(schema_path) && !std::filesystem::is_regular_file(schema_path)) {
+    std::cerr << "JSON schema target path already exists, but it is not a regular file: " << schema_path << std::endl;
+    exit(1);
+  }
+
+  auto parent_dir = std::filesystem::path(schema_path).parent_path();
+  if (utils::file::create_dir(parent_dir) != 0) {
+    std::cerr << "JSON schema parent directory doesn't exist and cannot be created: " << parent_dir << std::endl;
+    exit(1);
+  }
+  std::cout << "Writing json schema to " << schema_path << std::endl;
+  std::ofstream schema_file{schema_path};
+  writeJsonSchema(configure, schema_file);
+  std::exit(0);
+}
+
 int main(int argc, char **argv) {
+  argparse::ArgumentParser argument_parser("Apache MiNiFi C++");
+  argument_parser.add_argument("-p", "--property")
+    .append()
+    .metavar("KEY=VALUE")
+    .help("Override a property read from minifi.properties file in key=value format");
+  argument_parser.add_argument("-d", "--docs")
+    .nargs(1, 2)
+    .metavar("PATH")
+    .help("Generate documentation in the directory specified in the first parameter. File path can be specified for the PROCESSORS.md file in the second parameter. "
+      "If no separate path is given for the PROCESSORS.md file, it will be printed to stdout.");
+  argument_parser.add_argument("-s", "--schema")
+    .metavar("PATH")
+    .help("Generate JSON schema to the specified path");
+
+  try {
+    argument_parser.parse_args(argc, argv);
+  } catch (const std::runtime_error& err) {
+    std::cerr << err.what() << std::endl;
+    std::cerr << argument_parser;
+    std::exit(1);
+  }
+
 #ifdef WIN32
   RunAsServiceIfNeeded();
 
@@ -257,51 +344,12 @@ int main(int argc, char **argv) {
     const std::shared_ptr<minifi::Configure> configure = std::make_shared<minifi::Configure>(std::move(decryptor), std::move(log_properties));
     configure->setHome(minifiHome);
     configure->loadConfigureFile(DEFAULT_NIFI_PROPERTIES_FILE);
+    overridePropertiesFromCommandLine(argument_parser, configure);
 
     minifi::core::extension::ExtensionManager::get().initialize(configure);
 
-    if (argc >= 2 && std::string("docs") == argv[1]) {
-      if (argc < 3 || argc > 4) {
-        std::cerr << "Usage: <minifiexe> docs <directory where to write individual doc files> [file where to write PROCESSORS.md]\n";
-        std::cerr << "    If no file name is given for PROCESSORS.md, it will be printed to stdout.\n";
-        exit(1);
-      }
-      if (utils::file::create_dir(argv[2]) != 0) {
-        std::cerr << "Working directory doesn't exist and cannot be created: " << argv[2] << std::endl;
-        exit(1);
-      }
-
-      std::cout << "Dumping docs to " << argv[2] << std::endl;
-      if (argc == 4) {
-        auto path = std::filesystem::path(argv[3]);
-        auto dir = path.parent_path();
-        auto filename = path.filename();
-        if (dir == argv[2]) {
-          std::cerr << "Target file should be out of the working directory: " << dir << std::endl;
-          exit(1);
-        }
-        std::ofstream outref(argv[3]);
-        dumpDocs(configure, argv[2], outref);
-      } else {
-        dumpDocs(configure, argv[2], std::cout);
-      }
-      exit(0);
-    }
-
-    if (argc >= 2 && std::string("schema") == argv[1]) {
-      if (argc != 3) {
-        std::cerr << "Malformed schema command, expected '<minifiexe> schema <output-file>'" << std::endl;
-        std::exit(1);
-      }
-
-      std::cout << "Writing json schema to " << argv[2] << std::endl;
-
-      {
-        std::ofstream schema_file{argv[2]};
-        writeJsonSchema(configure, schema_file);
-      }
-      std::exit(0);
-    }
+    dumpDocsIfRequested(argument_parser, configure);
+    writeSchemaIfRequested(argument_parser, configure);
 
     std::chrono::milliseconds stop_wait_time = configure->get(minifi::Configure::nifi_graceful_shutdown_seconds)
         | utils::flatMap(utils::timeutils::StringToDuration<std::chrono::milliseconds>)
