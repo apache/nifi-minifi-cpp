@@ -64,7 +64,9 @@ bool AsioSocketConnection::connectTcpSocketOverSsl() {
   auto ssl_context = utils::net::getSslContext(*socket_data_.ssl_context_service);
   asio::ssl::stream<asio::ip::tcp::socket> socket(io_context_, ssl_context);
 
-  bindToLocalInterface(socket.lowest_layer());
+#ifndef WIN32
+  bindToLocalInterfaceIfSpecified(socket.lowest_layer());
+#endif
 
   asio::ip::tcp::resolver resolver(io_context_);
   asio::error_code err;
@@ -91,7 +93,9 @@ bool AsioSocketConnection::connectTcpSocketOverSsl() {
 bool AsioSocketConnection::connectTcpSocket() {
   asio::ip::tcp::socket socket(io_context_);
 
-  bindToLocalInterface(socket);
+#ifndef WIN32
+  bindToLocalInterfaceIfSpecified(socket);
+#endif
 
   asio::ip::tcp::resolver resolver(io_context_);
   asio::error_code err;

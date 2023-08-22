@@ -17,6 +17,10 @@
 
 #pragma once
 
+#ifndef WIN32
+#include <ifaddrs.h>
+#endif
+
 #include <string>
 #include <utility>
 #include <tuple>
@@ -30,6 +34,7 @@
 #include "utils/StringUtils.h"  // for string <=> on libc++
 #include "controllers/SSLContextService.h"
 #include "io/BaseStream.h"
+#include "utils/Deleters.h"
 
 namespace org::apache::nifi::minifi::utils::net {
 
@@ -89,28 +94,71 @@ class AsioSocketConnection : public io::BaseStream {
   }
 
  private:
+#ifndef WIN32
   template<typename SocketType>
-  bool bindToLocalInterface(SocketType& socket) {
+  void bindToLocalInterfaceIfSpecified(SocketType& socket) {
     if (local_network_interface_.empty()) {
-      return true;
+      return;
     }
 
-    asio::ip::tcp::endpoint local_endpoint(asio::ip::address::from_string(local_network_interface_), 0);
+    using ifaddrs_uniq_ptr = std::unique_ptr<ifaddrs, utils::ifaddrs_deleter>;
+    const auto if_list_ptr = []() -> ifaddrs_uniq_ptr {
+      ifaddrs *list = nullptr;
+      [[maybe_unused]] const auto get_ifa_success = getifaddrs(&list) == 0;
+      assert(get_ifa_success || !list);
+      return ifaddrs_uniq_ptr{ list };
+    }();
+    if (!if_list_ptr) {
+      return;
+    }
+
+    const auto advance_func = [](const ifaddrs *const p) { return p->ifa_next; };
+    const auto predicate = [this](const ifaddrs *const item) {
+      return item->ifa_addr && item->ifa_name && (item->ifa_addr->sa_family == AF_INET || item->ifa_addr->sa_family == AF_INET6)
+          && item->ifa_name == local_network_interface_;
+    };
+    auto item_found = [&]() -> ifaddrs* {
+      for (auto it = if_list_ptr.get(); it; it = advance_func(it)) {
+        if (predicate(it)) { return it; }
+      }
+      return nullptr;
+    }();
+
+    if (item_found == nullptr) {
+      logger_->log_error("Could not find specified network interface: '%s'", local_network_interface_);
+      return;
+    }
+
+    std::string address;
+    if (item_found->ifa_addr->sa_family == AF_INET) {
+      struct sockaddr_in *ipv4_addr = (struct sockaddr_in *)item_found->ifa_addr;
+      char ip_str[INET_ADDRSTRLEN];
+      inet_ntop(AF_INET, &(ipv4_addr->sin_addr), ip_str, INET_ADDRSTRLEN);
+      address = ip_str;
+    } else if (item_found->ifa_addr->sa_family == AF_INET6) {
+      struct sockaddr_in6 *ipv6_addr = (struct sockaddr_in6 *)item_found->ifa_addr;
+      char ip_str[INET6_ADDRSTRLEN];
+      inet_ntop(AF_INET6, &(ipv6_addr->sin6_addr), ip_str, INET6_ADDRSTRLEN);
+      address = ip_str;
+    } else {
+      logger_->log_error("Invalid IP address family found");
+      return;
+    }
+
+    asio::ip::tcp::endpoint local_endpoint(asio::ip::address::from_string(address), 0);
     asio::error_code err;
     socket.open(local_endpoint.protocol(), err);
     if (err) {
       logger_->log_error("Failed to open socket on network interface '%s' with the following message: '%s'", local_network_interface_, err.message());
-      return false;
+      return;
     }
-    socket.set_option(asio::ip::tcp::socket::reuse_address(true));
     socket.bind(local_endpoint, err);
     if (err) {
       logger_->log_error("Failed to bind to network interface '%s' with the following message: '%s'", local_network_interface_, err.message());
-      return false;
+      return;
     }
-
-    return true;
   }
+#endif
 
   bool connectTcpSocketOverSsl();
   bool connectTcpSocket();
