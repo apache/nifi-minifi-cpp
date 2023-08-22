@@ -281,7 +281,7 @@ class BinFiles : public core::Processor {
 
   // Sort flow files retrieved from the flow file repository after restart to their respective bins
   bool resurrectFlowFiles(core::ProcessSession &session);
-  void assumeOwnerShipOfNextBatch(core::ProcessSession &session);
+  void assumeOwnershipOfNextBatch(core::ProcessSession &session);
   std::deque<std::unique_ptr<Bin>> gatherReadyBins(core::ProcessContext &context);
   void processReadyBins(std::deque<std::unique_ptr<Bin>> ready_bins, core::ProcessSession &session);
 

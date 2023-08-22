@@ -223,7 +223,7 @@ bool BinFiles::resurrectFlowFiles(core::ProcessSession &session) {
   return had_failure;
 }
 
-void BinFiles::assumeOwnerShipOfNextBatch(core::ProcessSession &session) {
+void BinFiles::assumeOwnershipOfNextBatch(core::ProcessSession &session) {
   for (size_t i = 0; i < batchSize_; ++i) {
     auto flow = session.get();
 
@@ -283,7 +283,7 @@ void BinFiles::onTrigger(const std::shared_ptr<core::ProcessContext> &context, c
     return;
   }
 
-  assumeOwnerShipOfNextBatch(*session);
+  assumeOwnershipOfNextBatch(*session);
   processReadyBins(gatherReadyBins(*context), *session);
 }
 
