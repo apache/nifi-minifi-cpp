@@ -35,6 +35,7 @@
 #include "controllers/SSLContextService.h"
 #include "io/BaseStream.h"
 #include "utils/Deleters.h"
+#include "utils/net/Socket.h"
 
 namespace org::apache::nifi::minifi::utils::net {
 
@@ -130,18 +131,10 @@ class AsioSocketConnection : public io::BaseStream {
     }
 
     std::string address;
-    if (item_found->ifa_addr->sa_family == AF_INET) {
-      struct sockaddr_in *ipv4_addr = (struct sockaddr_in *)item_found->ifa_addr;
-      char ip_str[INET_ADDRSTRLEN];
-      inet_ntop(AF_INET, &(ipv4_addr->sin_addr), ip_str, INET_ADDRSTRLEN);
-      address = ip_str;
-    } else if (item_found->ifa_addr->sa_family == AF_INET6) {
-      struct sockaddr_in6 *ipv6_addr = (struct sockaddr_in6 *)item_found->ifa_addr;
-      char ip_str[INET6_ADDRSTRLEN];
-      inet_ntop(AF_INET6, &(ipv6_addr->sin6_addr), ip_str, INET6_ADDRSTRLEN);
-      address = ip_str;
-    } else {
-      logger_->log_error("Invalid IP address family found");
+    try {
+      address = utils::net::sockaddr_ntop(item_found->ifa_addr);
+    } catch(const std::exception& ex) {
+      logger_->log_error("Error occurred while getting network interface address: '%s'", ex.what());
       return;
     }
 
