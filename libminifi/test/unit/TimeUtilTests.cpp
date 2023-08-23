@@ -117,6 +117,30 @@ TEST_CASE("Test system_clock epoch", "[systemclockepoch]") {
   REQUIRE(unix_epoch_plus_3e9_sec.time_since_epoch() == 3000000000s);
 }
 
+#ifdef WIN32
+TEST_CASE("Test windows file_clock duration period and epoch") {
+  using namespace std::chrono;
+  static_assert(std::ratio_equal_v<std::chrono::file_clock::duration::period, std::ratio<1, 10000000>>, "file_clock duration tick period must be 100 nanoseconds");
+  auto file_clock_epoch = std::chrono::file_clock::time_point{};
+  auto file_clock_epoch_as_sys_time = utils::file::to_sys(file_clock_epoch);
+  system_clock::time_point expected_windows_file_epoch = date::sys_days(date::January / 1 / 1601);
+  CHECK(file_clock_epoch_as_sys_time == expected_windows_file_epoch);
+}
+
+TEST_CASE("Test windows FILETIME epoch") {
+  SYSTEMTIME system_time;
+  FILETIME file_time{.dwLowDateTime=0, .dwHighDateTime=0};
+  FileTimeToSystemTime(&file_time, &system_time);
+  CHECK(system_time.wYear == 1601);
+  CHECK(system_time.wMonth == 1);
+  CHECK(system_time.wDay == 1);
+  CHECK(system_time.wHour == 0);
+  CHECK(system_time.wMinute == 0);
+  CHECK(system_time.wSecond == 0);
+  CHECK(system_time.wMilliseconds == 0);
+}
+#endif
+
 TEST_CASE("Test clock resolutions", "[clockresolutiontests]") {
   using namespace std::chrono;
   CHECK(std::is_constructible<system_clock::duration, std::chrono::microseconds>::value);  // The resolution of the system_clock is at least microseconds
