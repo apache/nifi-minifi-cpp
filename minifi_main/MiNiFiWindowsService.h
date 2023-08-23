@@ -20,7 +20,8 @@
 #ifdef WIN32
 
 #include <memory>
-#include <Windows.h>
+
+using HANDLE = void*;
 
 #include "core/Core.h"
 
