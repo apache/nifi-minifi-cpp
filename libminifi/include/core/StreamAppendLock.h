@@ -1,5 +1,4 @@
 /**
- *
  * Licensed to the Apache Software Foundation (ASF) under one or more
  * contributor license agreements.  See the NOTICE file distributed with
  * this work for additional information regarding copyright ownership.
@@ -15,31 +14,14 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
 #pragma once
 
-#include <memory>
-#include "ResourceClaim.h"
-#include "io/BaseStream.h"
 
 namespace org::apache::nifi::minifi::core {
 
-class ContentSession {
+class StreamAppendLock {
  public:
-  virtual std::shared_ptr<ResourceClaim> create() = 0;
-
-  virtual std::shared_ptr<io::BaseStream> write(const std::shared_ptr<ResourceClaim>& resource_id) = 0;
-
-  virtual std::shared_ptr<io::BaseStream> append(const std::shared_ptr<ResourceClaim>& resource_id, size_t offset, std::function<void(std::shared_ptr<ResourceClaim>)> on_copy) = 0;
-
-  virtual std::shared_ptr<io::BaseStream> read(const std::shared_ptr<ResourceClaim>& resource_id) = 0;
-
-  virtual void commit() = 0;
-
-  virtual void rollback() = 0;
-
-  virtual ~ContentSession() = default;
+  virtual ~StreamAppendLock() = default;
 };
 
 }  // namespace org::apache::nifi::minifi::core
-

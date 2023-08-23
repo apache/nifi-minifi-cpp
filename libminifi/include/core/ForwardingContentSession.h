@@ -40,7 +40,7 @@ class ForwardingContentSession : public ContentSession {
 
   std::shared_ptr<io::BaseStream> write(const std::shared_ptr<ResourceClaim>& resource_id) override;
 
-  std::shared_ptr<io::BaseStream> append(const std::shared_ptr<ResourceClaim>& resource_id) override;
+  std::shared_ptr<io::BaseStream> append(const std::shared_ptr<ResourceClaim>& resource_id, size_t offset, std::function<void(std::shared_ptr<ResourceClaim>)> on_copy) override;
 
   std::shared_ptr<io::BaseStream> read(const std::shared_ptr<ResourceClaim>& resource_id) override;
 
@@ -49,6 +49,7 @@ class ForwardingContentSession : public ContentSession {
   void rollback() override;
 
  protected:
+  std::unordered_map<ResourceClaim::Path, std::unique_ptr<StreamAppendLock>> append_locks_;
   std::unordered_set<std::shared_ptr<ResourceClaim>> created_claims_;
   std::shared_ptr<ContentRepository> repository_;
 };

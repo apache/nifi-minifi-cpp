@@ -21,6 +21,7 @@
 #include "core/ContentRepository.h"
 #include "ResourceClaim.h"
 #include "io/BaseStream.h"
+#include "io/StreamPipe.h"
 #include "Exception.h"
 
 namespace org::apache::nifi::minifi::core {
@@ -40,15 +41,27 @@ std::shared_ptr<io::BaseStream> BufferedContentSession::write(const std::shared_
   throw Exception(REPOSITORY_EXCEPTION, "Can only overwrite owned resource");
 }
 
-std::shared_ptr<io::BaseStream> BufferedContentSession::append(const std::shared_ptr<ResourceClaim>& resource_id) {
+std::shared_ptr<io::BaseStream> BufferedContentSession::append(const std::shared_ptr<ResourceClaim>& resource_id, size_t offset, std::function<void(std::shared_ptr<ResourceClaim>)> on_copy) {
   if (auto it = managed_resources_.find(resource_id); it != managed_resources_.end()) {
     return it->second;
   }
+
   auto& extension = extended_resources_[resource_id];
-  if (!extension) {
-    extension = std::make_shared<io::BufferStream>();
+  if (extension) {
+    return extension;
   }
-  return extension;
+  if (append_locks_.contains(resource_id->getContentFullPath())) {
+    return extension = std::make_shared<io::BufferStream>();
+  }
+  if (auto append_lock = repository_->append(*resource_id, offset)) {
+    append_locks_[resource_id->getContentFullPath()] = std::move(append_lock);
+    return extension = std::make_shared<io::BufferStream>();
+  }
+  auto new_claim = create();
+  auto out_stream = write(new_claim);
+  internal::pipe(*read(resource_id), *out_stream);
+  on_copy(new_claim);
+  return out_stream;
 }
 
 std::shared_ptr<io::BaseStream> BufferedContentSession::read(const std::shared_ptr<ResourceClaim>& resource_id) {
@@ -87,11 +100,13 @@ void BufferedContentSession::commit() {
 
   managed_resources_.clear();
   extended_resources_.clear();
+  append_locks_.clear();
 }
 
 void BufferedContentSession::rollback() {
   managed_resources_.clear();
   extended_resources_.clear();
+  append_locks_.clear();
 }
 
 }  // namespace org::apache::nifi::minifi::core

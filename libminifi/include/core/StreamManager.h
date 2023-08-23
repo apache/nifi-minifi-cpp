@@ -23,6 +23,7 @@
 
 #include "properties/Configure.h"
 #include "ResourceClaim.h"
+#include "StreamAppendLock.h"
 #include "io/BufferStream.h"
 #include "io/BaseStream.h"
 
@@ -56,11 +57,18 @@ class StreamManager {
   virtual std::shared_ptr<io::BaseStream> write(const T &streamId, bool append = false) = 0;
 
   /**
+   * Queries the stream and locks it to be appended to
+   */
+  virtual std::unique_ptr<StreamAppendLock> append(const T &streamId, size_t offset) = 0;
+
+  /**
    * Create a read stream using the streamId as a reference.
    * @param streamId stream identifier
    * @return stream pointer.
    */
   virtual std::shared_ptr<io::BaseStream> read(const T &streamId) = 0;
+
+  virtual size_t size(const T &streamId) {return read(streamId)->size();}
 
   /**
    * Closes the stream

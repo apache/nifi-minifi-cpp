@@ -98,4 +98,23 @@ bool ContentRepository::remove(const minifi::ResourceClaim &streamId) {
   return true;
 }
 
+std::unique_ptr<StreamAppendLock> ContentRepository::append(const org::apache::nifi::minifi::ResourceClaim &claim, size_t offset) {
+  std::lock_guard guard(appending_mutex_);
+  if (offset != size(claim)) {
+    // we are trying to append to a resource that has already been appended to
+    return {};
+  }
+  if (!appending_.insert(claim.getContentFullPath()).second) {
+    // this resource is currently being appended to
+    return {};
+  }
+  return std::make_unique<ContentStreamAppendLock>(sharedFromThis(), claim);
+}
+
+void ContentRepository::unlockAppend(const ResourceClaim::Path &path) {
+  std::lock_guard guard(appending_mutex_);
+  size_t removed_count = appending_.erase(path);
+  gsl_Expects(removed_count == 1);
+}
+
 }  // namespace org::apache::nifi::minifi::core

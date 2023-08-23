@@ -70,6 +70,10 @@ const std::shared_ptr<minifi::io::InputStream>& operator>>(const std::shared_ptr
   return stream;
 }
 
+void NO_CREATE(std::shared_ptr<minifi::ResourceClaim>) {
+  REQUIRE(false);
+}
+
 // TODO(adebreceni):
 //  seems like the current version of Catch2 does not support templated tests
 //  we should update instead of creating make-shift macros
@@ -93,7 +97,7 @@ void test_template() {
 
   REQUIRE_NOTHROW(session->read(oldClaim));
 
-  session->append(oldClaim) << "-addendum";
+  session->append(oldClaim, 4, NO_CREATE) << "-addendum";
   // TODO(adebreceni): MINIFICPP-1954
   if (is_buffered_session) {
     REQUIRE_THROWS(session->read(oldClaim));
@@ -107,12 +111,12 @@ void test_template() {
   }
 
   auto claim2 = session->create();
-  session->append(claim2) << "beginning";
-  session->append(claim2) << "-end";
+  session->append(claim2, 0, NO_CREATE) << "beginning";
+  session->append(claim2, 9, NO_CREATE) << "-end";
 
   auto claim3 = session->create();
   session->write(claim3) << "first";
-  session->append(claim3) << "-last";
+  session->append(claim3, 5, NO_CREATE) << "-last";
 
   auto claim4 = session->create();
   session->write(claim4) << "beginning";
