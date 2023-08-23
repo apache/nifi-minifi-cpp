@@ -102,7 +102,7 @@ std::chrono::file_clock::time_point from_sys(std::chrono::system_clock::time_poi
 
 #ifdef WIN32
 std::chrono::file_clock::time_point fileTimePointFromFileTime(const FILETIME& filetime) {
-  static_assert(std::ratio_equal_v<std::chrono::file_clock::duration::period, std::ratio<1, 10000000>>, "file_clock duration must be 100 nanoseconds");
+  static_assert(std::ratio_equal_v<std::chrono::file_clock::duration::period, std::ratio<1, 10000000>>, "file_clock duration tick period must be 100 nanoseconds");
   std::chrono::file_clock::duration duration{(static_cast<int64_t>(filetime.dwHighDateTime) << 32) | filetime.dwLowDateTime};
   return std::chrono::file_clock::time_point{duration};
 }
