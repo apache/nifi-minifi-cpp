@@ -158,4 +158,46 @@ TEST_CASE("FileSystemRepository removes non-existing resource file from purge li
   REQUIRE(content_repo->getPurgeList().empty());
 }
 
+TEST_CASE("Append Claim") {
+  TestController testController;
+  auto dir = testController.createTempDirectory();
+  auto content_repo = std::make_shared<TestFileSystemRepository>();
+
+  auto configuration = std::make_shared<org::apache::nifi::minifi::Configure>();
+  configuration->set(minifi::Configure::nifi_dbcontent_repository_directory_default, dir.string());
+  REQUIRE(content_repo->initialize(configuration));
+
+
+  const std::string content = "well hello there";
+
+  auto claim = std::make_shared<minifi::ResourceClaim>(content_repo);
+  content_repo->write(*claim)->write(as_bytes(std::span(content)));
+
+  // requesting append before content end fails
+  CHECK(content_repo->append(*claim, 0) == nullptr);
+  auto lock = content_repo->append(*claim, content.length());
+  // trying to append to the end succeeds
+  CHECK(lock != nullptr);
+  // simultaneously trying to append to the same claim fails
+  CHECK(content_repo->append(*claim, content.length()) == nullptr);
+
+  // manually deleting append lock
+  lock.reset();
+
+  // appending after lock is released succeeds
+  lock = content_repo->append(*claim, content.length());
+  CHECK(lock != nullptr);
+
+  const std::string appended = "General Kenobi!";
+  content_repo->write(*claim, true)->write(as_bytes(std::span(appended)));
+
+  lock.reset();
+
+  // size has changed
+  CHECK(content_repo->append(*claim, content.length()) == nullptr);
+
+  CHECK(content_repo->append(*claim, content.length() + appended.length()) != nullptr);
+}
+
+
 }  // namespace org::apache::nifi::minifi::test

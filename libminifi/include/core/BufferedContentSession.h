@@ -50,10 +50,7 @@ class BufferedContentSession : public ContentSession {
   void rollback() override;
 
  protected:
-  std::unordered_map<ResourceClaim::Path, std::unique_ptr<StreamAppendLock>> append_locks_;
   std::map<std::shared_ptr<ResourceClaim>, std::shared_ptr<io::BufferStream>> managed_resources_;
-  std::map<std::shared_ptr<ResourceClaim>, std::shared_ptr<io::BufferStream>> extended_resources_;
-  std::shared_ptr<ContentRepository> repository_;
 };
 
 }  // namespace org::apache::nifi::minifi::core

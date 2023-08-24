@@ -21,16 +21,26 @@
 #include <memory>
 #include "ResourceClaim.h"
 #include "io/BaseStream.h"
+#include "StreamAppendLock.h"
 
 namespace org::apache::nifi::minifi::core {
 
+class ContentRepository;
+
 class ContentSession {
+  struct ExtensionData {
+    std::shared_ptr<io::BaseStream> stream;
+    size_t base_size;
+    std::unique_ptr<StreamAppendLock> lock;
+  };
  public:
+  explicit ContentSession(std::shared_ptr<ContentRepository> repository): repository_(std::move(repository)) {}
+
   virtual std::shared_ptr<ResourceClaim> create() = 0;
 
   virtual std::shared_ptr<io::BaseStream> write(const std::shared_ptr<ResourceClaim>& resource_id) = 0;
 
-  virtual std::shared_ptr<io::BaseStream> append(const std::shared_ptr<ResourceClaim>& resource_id, size_t offset, std::function<void(std::shared_ptr<ResourceClaim>)> on_copy) = 0;
+  virtual std::shared_ptr<io::BaseStream> append(const std::shared_ptr<ResourceClaim>& resource_id, size_t offset, std::function<void(std::shared_ptr<ResourceClaim>)> on_copy);
 
   virtual std::shared_ptr<io::BaseStream> read(const std::shared_ptr<ResourceClaim>& resource_id) = 0;
 
@@ -39,6 +49,10 @@ class ContentSession {
   virtual void rollback() = 0;
 
   virtual ~ContentSession() = default;
+
+ protected:
+  std::map<std::shared_ptr<ResourceClaim>, ExtensionData> extensions_;
+  std::shared_ptr<ContentRepository> repository_;
 };
 
 }  // namespace org::apache::nifi::minifi::core

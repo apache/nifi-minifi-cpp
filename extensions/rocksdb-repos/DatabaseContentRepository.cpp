@@ -162,13 +162,13 @@ void DatabaseContentRepository::Session::commit() {
       throw Exception(REPOSITORY_EXCEPTION, "Failed to write new resource: " + resource.first->getContentFullPath());
     }
   }
-  for (const auto& resource : extended_resources_) {
+  for (const auto& resource : extensions_) {
     auto outStream = dbContentRepository->write(*resource.first, true, &batch);
     if (outStream == nullptr) {
       throw Exception(REPOSITORY_EXCEPTION, "Couldn't open the underlying resource for append: " + resource.first->getContentFullPath());
     }
-    const auto size = resource.second->size();
-    if (outStream->write(resource.second->getBuffer()) != size) {
+    const auto size = resource.second.stream->size();
+    if (outStream->write(resource.second.stream->getBuffer()) != size) {
       throw Exception(REPOSITORY_EXCEPTION, "Failed to append to resource: " + resource.first->getContentFullPath());
     }
   }
@@ -181,7 +181,7 @@ void DatabaseContentRepository::Session::commit() {
   }
 
   managed_resources_.clear();
-  extended_resources_.clear();
+  extensions_.clear();
 }
 
 std::shared_ptr<io::BaseStream> DatabaseContentRepository::write(const minifi::ResourceClaim &claim, bool append) {
