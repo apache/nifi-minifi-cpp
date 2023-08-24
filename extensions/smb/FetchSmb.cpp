@@ -28,16 +28,11 @@ void FetchSmb::initialize() {
 
 void FetchSmb::onSchedule(const std::shared_ptr<core::ProcessContext>& context, const std::shared_ptr<core::ProcessSessionFactory>&) {
   gsl_Expects(context);
-  if (auto connection_controller_name = context->getProperty(FetchSmb::ConnectionControllerService)) {
-    smb_connection_controller_service_ = std::dynamic_pointer_cast<SmbConnectionControllerService>(context->getControllerService(*connection_controller_name));
-  }
-  if (!smb_connection_controller_service_) {
-    throw minifi::Exception(ExceptionType::PROCESS_SCHEDULE_EXCEPTION, "Missing SMB Connection Controller Service");
-  }
+  smb_connection_controller_service_ = SmbConnectionControllerService::getFromProperty(*context, FetchSmb::ConnectionControllerService);
 }
 
 namespace {
-std::filesystem::path getPath(core::ProcessContext& context, const std::shared_ptr<core::FlowFile>& flow_file) {
+std::filesystem::path getTargetRelativePath(core::ProcessContext& context, const std::shared_ptr<core::FlowFile>& flow_file) {
   auto remote_file = context.getProperty(FetchSmb::RemoteFile, flow_file);
   if (remote_file && !remote_file->empty()) {
     if (remote_file->starts_with('/'))
@@ -53,8 +48,7 @@ std::filesystem::path getPath(core::ProcessContext& context, const std::shared_p
 void FetchSmb::onTrigger(const std::shared_ptr<core::ProcessContext>& context, const std::shared_ptr<core::ProcessSession>& session) {
   gsl_Expects(context && session && smb_connection_controller_service_);
 
-  auto connection_error = smb_connection_controller_service_->validateConnection();
-  if (connection_error) {
+  if (auto connection_error = smb_connection_controller_service_->validateConnection()) {
     logger_->log_error("Couldn't establish connection to the specified network location due to %s", connection_error.message());
     context->yield();
     return;
@@ -66,10 +60,8 @@ void FetchSmb::onTrigger(const std::shared_ptr<core::ProcessContext>& context, c
     return;
   }
 
-  auto path = getPath(*context, flow_file);
-
   try {
-    session->write(flow_file, utils::FileReaderCallback{smb_connection_controller_service_->getPath() / path});
+    session->write(flow_file, utils::FileReaderCallback{smb_connection_controller_service_->getPath() / getTargetRelativePath(*context, flow_file)});
     session->transfer(flow_file, Success);
   } catch (const utils::FileReaderCallbackIOError& io_error) {
     flow_file->addAttribute(ErrorCode.name, fmt::format("{}", io_error.error_code));

@@ -44,7 +44,7 @@ void SmbConnectionControllerService::onEnable()  {
   auto username = getProperty(Username);
 
   if (password.has_value() != username.has_value())
-    throw Exception(PROCESS_SCHEDULE_EXCEPTION, "Either a username and password must be provided, or neither of them should be provided.");
+    throw Exception(PROCESS_SCHEDULE_EXCEPTION,  "Either both a username and a password, or neither of them should be provided.");
 
   if (username.has_value())
     credentials_.emplace(Credentials{.username = *username, .password = *password});
@@ -62,6 +62,17 @@ void SmbConnectionControllerService::notifyStop() {
   auto disconnection_result = disconnect();
   if (!disconnection_result)
     logger_->log_error("Error while disconnecting from SMB: %s", disconnection_result.error().message());
+}
+
+std::shared_ptr<SmbConnectionControllerService> SmbConnectionControllerService::getFromProperty(const core::ProcessContext& context, const core::PropertyReference& property) {
+  std::shared_ptr<SmbConnectionControllerService> smb_connection_controller_service;
+  if (auto connection_controller_name = context.getProperty(property)) {
+    smb_connection_controller_service = std::dynamic_pointer_cast<SmbConnectionControllerService>(context.getControllerService(*connection_controller_name));
+  }
+  if (!smb_connection_controller_service) {
+    minifi::Exception(ExceptionType::PROCESS_SCHEDULE_EXCEPTION, "Missing SMB Connection Controller Service");
+  }
+  return smb_connection_controller_service;
 }
 
 nonstd::expected<void, std::error_code> SmbConnectionControllerService::connect() {
@@ -86,8 +97,10 @@ nonstd::expected<void, std::error_code> SmbConnectionControllerService::disconne
 bool SmbConnectionControllerService::isConnected() {
   std::error_code error_code;
   auto exists = std::filesystem::exists(server_path_, error_code);
-  if (error_code)
+  if (error_code) {
+    logger_->log_debug("std::filesystem::exists(%s) failed due to %s", server_path_, error_code.message());
     return false;
+  }
   return exists;
 }
 

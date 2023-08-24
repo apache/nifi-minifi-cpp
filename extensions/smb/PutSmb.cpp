@@ -32,13 +32,7 @@ void PutSmb::initialize() {
 
 void PutSmb::onSchedule(core::ProcessContext* context, core::ProcessSessionFactory*) {
   gsl_Expects(context);
-  if (auto connection_controller_name = context->getProperty(PutSmb::ConnectionControllerService)) {
-    smb_connection_controller_service_ = std::dynamic_pointer_cast<SmbConnectionControllerService>(context->getControllerService(*connection_controller_name));
-  }
-  if (!smb_connection_controller_service_) {
-    throw minifi::Exception(ExceptionType::PROCESS_SCHEDULE_EXCEPTION, "Missing SMB Connection Controller Service");
-  }
-
+  smb_connection_controller_service_ = SmbConnectionControllerService::getFromProperty(*context, PutSmb::ConnectionControllerService);
   create_missing_dirs_ = context->getProperty<bool>(PutSmb::CreateMissingDirectories).value_or(true);
   conflict_resolution_strategy_ = utils::parseEnumProperty<FileExistsResolutionStrategy>(*context, ConflictResolution);
 }
@@ -51,8 +45,7 @@ std::filesystem::path PutSmb::getFilePath(core::ProcessContext& context, const s
 void PutSmb::onTrigger(core::ProcessContext* context, core::ProcessSession* session) {
   gsl_Expects(context && session && smb_connection_controller_service_);
 
-  auto connection_error = smb_connection_controller_service_->validateConnection();
-  if (connection_error) {
+  if (auto connection_error = smb_connection_controller_service_->validateConnection()) {
     logger_->log_error("Couldn't establish connection to the specified network location due to %s", connection_error.message());
     context->yield();
     return;

@@ -33,13 +33,7 @@ void ListSmb::initialize() {
 
 void ListSmb::onSchedule(const std::shared_ptr<core::ProcessContext> &context, const std::shared_ptr<core::ProcessSessionFactory> &/*sessionFactory*/) {
   gsl_Expects(context);
-
-  if (auto connection_controller_name = context->getProperty(ListSmb::ConnectionControllerService)) {
-    smb_connection_controller_service_ = std::dynamic_pointer_cast<SmbConnectionControllerService>(context->getControllerService(*connection_controller_name));
-  }
-  if (!smb_connection_controller_service_) {
-    throw minifi::Exception(ExceptionType::PROCESS_SCHEDULE_EXCEPTION, "Missing SMB Connection Controller Service");
-  }
+  smb_connection_controller_service_ = SmbConnectionControllerService::getFromProperty(*context, ListSmb::ConnectionControllerService);
 
   auto state_manager = context->getStateManager();
   if (state_manager == nullptr) {
@@ -113,8 +107,7 @@ std::shared_ptr<core::FlowFile> ListSmb::createFlowFile(core::ProcessSession& se
 void ListSmb::onTrigger(const std::shared_ptr<core::ProcessContext> &context, const std::shared_ptr<core::ProcessSession> &session) {
   gsl_Expects(context && session && smb_connection_controller_service_);
 
-  auto connection_error = smb_connection_controller_service_->validateConnection();
-  if (connection_error) {
+  if (auto connection_error = smb_connection_controller_service_->validateConnection()) {
     logger_->log_error("Couldn't establish connection to the specified network location due to %s", connection_error.message());
     context->yield();
     return;

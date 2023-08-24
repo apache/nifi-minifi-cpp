@@ -20,6 +20,7 @@
 #include <string>
 #include <memory>
 
+#include "ProcessContext.h"
 #include "core/PropertyDefinition.h"
 #include "core/PropertyDefinitionBuilder.h"
 #include "core/controller/ControllerService.h"
@@ -29,13 +30,6 @@
 #include "utils/expected.h"
 
 namespace org::apache::nifi::minifi::extensions::smb {
-
-class SmbConnectionController {
- public:
-  virtual nonstd::expected<void, std::error_code> connect() = 0;
-  virtual nonstd::expected<void, std::error_code> disconnect() = 0;
-  virtual bool isConnected() const = 0;
-};
 
 class SmbConnectionControllerService : public core::controller::ControllerService {
  public:
@@ -86,6 +80,8 @@ class SmbConnectionControllerService : public core::controller::ControllerServic
 
   virtual std::error_code validateConnection();
   virtual std::filesystem::path getPath() const { return server_path_; }
+
+  static std::shared_ptr<SmbConnectionControllerService> getFromProperty(const core::ProcessContext& context, const core::PropertyReference& property);
 
  private:
   nonstd::expected<void, std::error_code> connect();
