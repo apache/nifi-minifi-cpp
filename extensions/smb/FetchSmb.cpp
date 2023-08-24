@@ -67,7 +67,6 @@ void FetchSmb::onTrigger(const std::shared_ptr<core::ProcessContext>& context, c
     flow_file->addAttribute(ErrorCode.name, fmt::format("{}", io_error.error_code));
     flow_file->addAttribute(ErrorMessage.name, io_error.what());
     session->transfer(flow_file, Failure);
-    return;
   }
 }
 

@@ -37,7 +37,6 @@ void SmbConnectionControllerService::onEnable()  {
   if (!getProperty(Share, share))
     throw Exception(PROCESS_SCHEDULE_EXCEPTION, "Missing share");
 
-
   server_path_ = "\\\\" + hostname + "\\" + share;
 
   auto password = getProperty(Password);
