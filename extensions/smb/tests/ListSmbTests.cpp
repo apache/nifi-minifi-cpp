@@ -19,6 +19,7 @@
 #include "TestBase.h"
 #include "Catch.h"
 #include "ListSmb.h"
+#include "Utils.h"
 #include "utils/MockSmbConnectionControllerService.h"
 #include "SingleProcessorTestController.h"
 #include "range/v3/algorithm/count_if.hpp"
@@ -65,6 +66,8 @@ TEST_CASE("ListSmb tests") {
   auto d_expected_attributes = mock_smb_connection_controller_service->addFile("subdir/d.foo", std::string(100, 'd'), 10min);
   auto e_expected_attributes = mock_smb_connection_controller_service->addFile("subdir2/e.foo", std::string(1, 'e'), 0s);
   auto f_expected_attributes = mock_smb_connection_controller_service->addFile("third/f.bar", std::string(50_KiB, 'f'), 30min);
+  auto g_expected_attributes = mock_smb_connection_controller_service->addFile("g.foo", std::string(50_KiB, 'f'), 30min);
+  REQUIRE_FALSE(minifi::test::utils::hide_file(mock_smb_connection_controller_service->getPath() / "g.foo"));
 
   REQUIRE((a_expected_attributes && b_expected_attributes && c_expected_attributes && d_expected_attributes && e_expected_attributes && f_expected_attributes));
 
@@ -111,6 +114,18 @@ TEST_CASE("ListSmb tests") {
     CHECK_FALSE(list_smb->isYield());
     CHECK(checkForFlowFileWithAttributes(trigger_results.at(ListSmb::Success), *a_expected_attributes));
     CHECK(checkForFlowFileWithAttributes(trigger_results.at(ListSmb::Success), *b_expected_attributes));
+  }
+
+  SECTION("Dont ignore hidden files") {
+    REQUIRE(controller.plan->setProperty(list_smb, ListSmb::IgnoreHiddenFiles, "false"));
+    REQUIRE(controller.plan->setProperty(list_smb, ListSmb::FileFilter, ".*\\.foo"));
+    REQUIRE(controller.plan->setProperty(list_smb, ListSmb::RecurseSubdirectories, "false"));
+    const auto trigger_results = controller.trigger();
+    CHECK(trigger_results.at(ListSmb::Success).size() == 3);
+    CHECK_FALSE(list_smb->isYield());
+    CHECK(checkForFlowFileWithAttributes(trigger_results.at(ListSmb::Success), *a_expected_attributes));
+    CHECK(checkForFlowFileWithAttributes(trigger_results.at(ListSmb::Success), *b_expected_attributes));
+    CHECK(checkForFlowFileWithAttributes(trigger_results.at(ListSmb::Success), *g_expected_attributes));
   }
 
   const auto second_trigger = controller.trigger();
