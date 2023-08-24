@@ -29,7 +29,6 @@ void PutSmb::initialize() {
   setSupportedRelationships(Relationships);
 }
 
-
 void PutSmb::onSchedule(core::ProcessContext* context, core::ProcessSessionFactory*) {
   gsl_Expects(context);
   smb_connection_controller_service_ = SmbConnectionControllerService::getFromProperty(*context, PutSmb::ConnectionControllerService);
