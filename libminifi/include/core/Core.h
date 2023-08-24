@@ -115,9 +115,6 @@ constexpr auto typeNameArray() {  // In root namespace to avoid gcc-13 optimizin
   return org::apache::nifi::minifi::utils::string_view_to_array<name.length()>(name);
 }
 
-/**
- * namespace aliasing
- */
 namespace org::apache::nifi::minifi::core {
 
 template<typename T>
