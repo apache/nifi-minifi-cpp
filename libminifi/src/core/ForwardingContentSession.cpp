@@ -48,6 +48,14 @@ std::shared_ptr<io::BaseStream> ForwardingContentSession::read(const std::shared
   return repository_->read(*resource_id);
 }
 
+//std::shared_ptr<io::BaseStream> ForwardingContentSession::append(const std::shared_ptr<ResourceClaim>& resource_id, size_t offset, std::function<void(std::shared_ptr<ResourceClaim>)> on_copy) {
+//
+//}
+
+std::shared_ptr<io::BaseStream> ForwardingContentSession::append(const std::shared_ptr<ResourceClaim>& resource_id) {
+  return repository_->write(*resource_id, true);
+}
+
 void ForwardingContentSession::commit() {
   created_claims_.clear();
   extensions_.clear();

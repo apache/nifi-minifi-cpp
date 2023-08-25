@@ -74,6 +74,7 @@ FileStream::FileStream(std::filesystem::path path, uint32_t offset, bool write_e
   } else {
     file_stream_->open(path_, std::fstream::in | std::fstream::binary);
   }
+  length_ = 0;
   if (file_stream_->is_open()) {
     seekToEndOfFile(FILE_OPENING_ERROR_MSG);
     auto len = file_stream_->tellg();

@@ -49,6 +49,10 @@ std::shared_ptr<io::BaseStream> BufferedContentSession::append(const std::shared
   return ContentSession::append(resource_id, offset, on_copy);
 }
 
+std::shared_ptr<io::BaseStream> BufferedContentSession::append(const std::shared_ptr<ResourceClaim>& /*resource_id*/) {
+  return std::make_shared<io::BufferStream>();
+}
+
 std::shared_ptr<io::BaseStream> BufferedContentSession::read(const std::shared_ptr<ResourceClaim>& resource_id) {
   // TODO(adebreceni):
   //  after the stream refactor is merged we should be able to share the underlying buffer

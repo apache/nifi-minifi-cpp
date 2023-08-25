@@ -50,6 +50,8 @@ class BufferedContentSession : public ContentSession {
   void rollback() override;
 
  protected:
+  std::shared_ptr<io::BaseStream> append(const std::shared_ptr<ResourceClaim>& resource_id) override;
+
   std::map<std::shared_ptr<ResourceClaim>, std::shared_ptr<io::BufferStream>> managed_resources_;
 };
 

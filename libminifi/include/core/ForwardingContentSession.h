@@ -42,11 +42,15 @@ class ForwardingContentSession : public ContentSession {
 
   std::shared_ptr<io::BaseStream> read(const std::shared_ptr<ResourceClaim>& resource_id) override;
 
+//  std::shared_ptr<io::BaseStream> append(const std::shared_ptr<ResourceClaim>& resource_id, size_t offset, std::function<void(std::shared_ptr<ResourceClaim>)> on_copy) override;
+
   void commit() override;
 
   void rollback() override;
 
  protected:
+  std::shared_ptr<io::BaseStream> append(const std::shared_ptr<ResourceClaim>& resource_id) override;
+
   std::unordered_set<std::shared_ptr<ResourceClaim>> created_claims_;
 };
 
