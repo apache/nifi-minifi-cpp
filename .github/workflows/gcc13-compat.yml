@@ -4,15 +4,25 @@ jobs:
   ubuntu_22_04:
     name: "ubuntu-22.04-gcc-13"
     runs-on: ubuntu-22.04
-    timeout-minutes: 120
+    timeout-minutes: 300
     steps:
+      - id: free_disk_space
+        run: |
+          # We can gain additional disk space on the Ubuntu runners thanks to these suggestions:
+          # https://github.com/actions/runner-images/issues/2840#issuecomment-790492173
+          # https://github.com/actions/runner-images/issues/2606#issuecomment-772683150
+          sudo rm -rf /usr/share/dotnet
+          sudo rm -rf /usr/local/lib/android
+          sudo rm -rf /opt/ghc
+          sudo rm -rf "/usr/local/share/boost"
+          sudo rm -rf "$AGENT_TOOLSDIRECTORY"
       - id: checkout
         uses: actions/checkout@v3
       - id: install_deps
         run: |
           sudo add-apt-repository ppa:ubuntu-toolchain-r/test
           sudo apt update
-          sudo apt install -y ccache libfl-dev libpcap-dev libboost-all-dev openjdk-8-jdk maven libusb-1.0-0-dev libpng-dev libgps-dev libsqliteodbc lua5.3 liblua5.3-dev flake8 parallel gcc-13
+          sudo apt install -y ccache libfl-dev libpcap-dev libboost-all-dev openjdk-8-jdk maven libusb-1.0-0-dev libpng-dev libgps-dev libsqliteodbc lua5.3 liblua5.3-dev flake8 parallel gcc-13 g++-13
           echo "PATH=/usr/lib/ccache:$PATH" >> $GITHUB_ENV
           echo -e "127.0.0.1\t$HOSTNAME" | sudo tee -a /etc/hosts > /dev/null
       - name: build

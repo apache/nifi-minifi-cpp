@@ -71,11 +71,7 @@
 #include "properties/Configure.h"
 #include "utils/StringUtils.h"
 
-/**
- * namespace aliasing
- */
-namespace org::apache::nifi::minifi::core {
-
+#if defined(_MSC_VER)
 constexpr std::string_view removeStructOrClassPrefix(std::string_view input) {
   using namespace std::literals;
   for (auto prefix : { "struct "sv, "class "sv }) {
@@ -85,10 +81,11 @@ constexpr std::string_view removeStructOrClassPrefix(std::string_view input) {
   }
   return input;
 }
+#endif
 
 // based on https://bitwizeshift.github.io/posts/2021/03/09/getting-an-unmangled-type-name-at-compile-time/
 template<typename T>
-constexpr auto typeNameArray() {
+constexpr auto typeNameArray() {  // In root namespace to avoid gcc-13 optimizing out namespaces from __PRETTY_FUNCTION__
 #if defined(__clang__)
   constexpr auto prefix   = std::string_view{"[T = "};
   constexpr auto suffix   = std::string_view{"]"};
@@ -115,8 +112,10 @@ constexpr auto typeNameArray() {
   constexpr auto name = function.substr(start, end - start);
 #endif
 
-  return utils::string_view_to_array<name.length()>(name);
+  return org::apache::nifi::minifi::utils::string_view_to_array<name.length()>(name);
 }
+
+namespace org::apache::nifi::minifi::core {
 
 template<typename T>
 struct TypeNameHolder {
