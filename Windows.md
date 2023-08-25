@@ -71,7 +71,6 @@ After the build directory it will take optional parameters modifying the CMake c
 | /Z                | Enables Azure extension                                                        |
 | /MQTT             | Enables MQTT extension                                                         |
 | /N                | Enables Nanofi                                                                 |
-| /GPS              | Enables GPS extension                                                          |
 | /LUA_SCRIPTING    | Enables Lua scripting extension                                                |
 | /PYTHON_SCRIPTING | Enables Python scripting extension                                             |
 | /SENSORS          | Enables the Sensors package                                                    |

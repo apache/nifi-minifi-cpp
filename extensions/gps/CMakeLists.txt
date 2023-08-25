@@ -17,7 +17,7 @@
 # under the License.
 #
 
-if (NOT (ENABLE_ALL OR ENABLE_GPS))
+if (WIN32 OR NOT (ENABLE_ALL OR ENABLE_GPS))
     return()
 endif()
 
