@@ -129,7 +129,7 @@ TEST_CASE("Test windows file_clock duration period and epoch") {
 
 TEST_CASE("Test windows FILETIME epoch") {
   SYSTEMTIME system_time;
-  FILETIME file_time{.dwLowDateTime=0, .dwHighDateTime=0};
+  FILETIME file_time{.dwLowDateTime = 0, .dwHighDateTime = 0};
   FileTimeToSystemTime(&file_time, &system_time);
   CHECK(system_time.wYear == 1601);
   CHECK(system_time.wMonth == 1);
