@@ -36,7 +36,6 @@ add_custom_target(
         -c DOCKER_PLATFORMS=${DOCKER_PLATFORMS}
         -c DOCKER_PUSH=${DOCKER_PUSH}
         -c DOCKER_TAGS=${DOCKER_TAGS}
-        -o CI_BUILD=${CI_BUILD}
     WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}/docker/)
 
 # Create minimal docker image
@@ -57,7 +56,8 @@ add_custom_target(
              -DENABLE_LUA_SCRIPTING=OFF
              -DENABLE_PYTHON_SCRIPTING=OFF
              -DENABLE_OPC=OFF
-             -DENABLE_ENCRYPT_CONFIG=OFF \"
+             -DENABLE_ENCRYPT_CONFIG=OFF
+             -DCI_BUILD=${CI_BUILD}\"
         -c DOCKER_BASE_IMAGE=${DOCKER_BASE_IMAGE}
         -c DOCKER_SKIP_TESTS=${DOCKER_SKIP_TESTS}
         -c BUILD_NUMBER=${BUILD_NUMBER}
@@ -65,7 +65,6 @@ add_custom_target(
         -c DOCKER_PLATFORMS=${DOCKER_PLATFORMS}
         -c DOCKER_PUSH=${DOCKER_PUSH}
         -c DOCKER_TAGS=${DOCKER_TAGS}
-        -o CI_BUILD=${CI_BUILD}
     WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}/docker/)
 
 add_custom_target(
@@ -85,7 +84,6 @@ add_custom_target(
         -c DOCKER_PUSH=${DOCKER_PUSH}
         -c DOCKER_TAGS=${DOCKER_TAGS}
         -c DOCKER_BASE_IMAGE=${DOCKER_BASE_IMAGE}
-        -o CI_BUILD=${CI_BUILD}
     WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}/docker/)
 
 add_custom_target(
@@ -103,7 +101,6 @@ add_custom_target(
         -c DOCKER_PUSH=${DOCKER_PUSH}
         -c DOCKER_TAGS=${DOCKER_TAGS}
         -c DOCKER_BASE_IMAGE=${DOCKER_BASE_IMAGE}
-        -o CI_BUILD=${CI_BUILD}
     WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}/docker/)
 
 add_custom_target(
@@ -121,7 +118,6 @@ add_custom_target(
         -c DOCKER_PUSH=${DOCKER_PUSH}
         -c DOCKER_TAGS=${DOCKER_TAGS}
         -c DOCKER_BASE_IMAGE=${DOCKER_BASE_IMAGE}
-        -o CI_BUILD=${CI_BUILD}
     WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}/docker/)
 
 add_custom_target(
@@ -139,7 +135,6 @@ add_custom_target(
         -c DOCKER_PUSH=${DOCKER_PUSH}
         -c DOCKER_TAGS=${DOCKER_TAGS}
         -c DOCKER_BASE_IMAGE=${DOCKER_BASE_IMAGE}
-        -o CI_BUILD=${CI_BUILD}
     WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}/docker/)
 
 add_custom_target(
@@ -157,7 +152,6 @@ add_custom_target(
         -c DOCKER_PUSH=${DOCKER_PUSH}
         -c DOCKER_TAGS=${DOCKER_TAGS}
         -c DOCKER_BASE_IMAGE=${DOCKER_BASE_IMAGE}
-        -o CI_BUILD=${CI_BUILD}
     WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}/docker/)
 
 add_custom_target(
@@ -177,7 +171,6 @@ add_custom_target(
         -c DOCKER_PUSH=${DOCKER_PUSH}
         -c DOCKER_TAGS=${DOCKER_TAGS}
         -c DOCKER_BASE_IMAGE=${DOCKER_BASE_IMAGE}
-        -o CI_BUILD=${CI_BUILD}
     WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}/docker/)
 
 if (EXISTS ${CMAKE_SOURCE_DIR}/docker/test/integration/features)
