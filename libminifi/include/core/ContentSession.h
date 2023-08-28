@@ -19,6 +19,8 @@
 #pragma once
 
 #include <memory>
+#include <utility>
+#include <map>
 #include "ResourceClaim.h"
 #include "io/BaseStream.h"
 #include "StreamAppendLock.h"
@@ -33,6 +35,7 @@ class ContentSession {
     size_t base_size;
     std::unique_ptr<StreamAppendLock> lock;
   };
+
  public:
   explicit ContentSession(std::shared_ptr<ContentRepository> repository): repository_(std::move(repository)) {}
 

@@ -47,6 +47,7 @@ class ContentRepository : public core::CoreComponent, public StreamManager<minif
     std::shared_ptr<ContentRepository> repository_;
     ResourceClaim::Path content_path_;
   };
+
  public:
   explicit ContentRepository(std::string_view name, const utils::Identifier& uuid = {}) : core::CoreComponent(name, uuid) {}
   ~ContentRepository() override = default;
