@@ -84,6 +84,7 @@ class DatabaseContentRepository : public core::ContentRepository {
   void runGc();
 
  protected:
+  bool removeKeySync(const std::string& content_path);
   bool removeKey(const std::string& content_path) override;
 
   std::shared_ptr<io::BaseStream> write(const minifi::ResourceClaim &claim, bool append, minifi::internal::WriteBatch* batch);

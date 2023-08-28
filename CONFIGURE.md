@@ -364,7 +364,7 @@ When multiple repositories use the same directory (as with `minifidb://` scheme)
 
 When a flow file content is no longer needed we can specify the deletion strategy.
 
-    # any value other than 0 enables async cleanup with the specified period
+    # any value other than 0 enables garbage collection with the specified frequency
     # while a value of 0 sec triggers an immediate deletion as soon as the resource
     # is not needed
     # (the default value is 1 sec)

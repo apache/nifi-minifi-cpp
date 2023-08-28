@@ -211,26 +211,30 @@ bool DatabaseContentRepository::exists(const minifi::ResourceClaim &streamId) {
   }
 }
 
+bool DatabaseContentRepository::removeKeySync(const std::string &content_path) {
+  if (!is_valid_ || !db_)
+    return false;
+  // synchronous deletion
+  auto opendb = db_->open();
+  if (!opendb) {
+    return false;
+  }
+  rocksdb::Status status = opendb->Delete(rocksdb::WriteOptions(), content_path);
+  if (status.ok()) {
+    logger_->log_debug("Deleting resource %s", content_path);
+    return true;
+  } else if (status.IsNotFound()) {
+    logger_->log_debug("Resource %s was not found", content_path);
+    return true;
+  } else {
+    logger_->log_debug("Attempted, but could not delete %s", content_path);
+    return false;
+  }
+}
+
 bool DatabaseContentRepository::removeKey(const std::string& content_path) {
   if (purge_period_ == std::chrono::seconds(0)) {
-    if (!is_valid_ || !db_)
-      return false;
-    // synchronous deletion
-    auto opendb = db_->open();
-    if (!opendb) {
-      return false;
-    }
-    rocksdb::Status status = opendb->Delete(rocksdb::WriteOptions(), content_path);
-    if (status.ok()) {
-      logger_->log_debug("Deleting resource %s", content_path);
-      return true;
-    } else if (status.IsNotFound()) {
-      logger_->log_debug("Resource %s was not found", content_path);
-      return true;
-    } else {
-      logger_->log_debug("Attempted, but could not delete %s", content_path);
-      return false;
-    }
+    return removeKeySync(content_path);
   }
   // asynchronous deletion
   std::lock_guard guard(keys_mtx_);
@@ -240,7 +244,7 @@ bool DatabaseContentRepository::removeKey(const std::string& content_path) {
 }
 
 void DatabaseContentRepository::runGc() {
-  do {
+  while (!utils::StoppableThread::waitForStopRequest(purge_period_)) {
     auto opendb = db_->open();
     if (!opendb) {
       continue;
@@ -268,7 +272,7 @@ void DatabaseContentRepository::runGc() {
       std::lock_guard guard(keys_mtx_);
       keys_to_delete_.insert(keys_to_delete_.end(), keys.begin(), keys.end());
     }
-  } while (!utils::StoppableThread::waitForStopRequest(purge_period_));
+  }
 }
 
 std::shared_ptr<io::BaseStream> DatabaseContentRepository::write(const minifi::ResourceClaim& claim, bool /*append*/, minifi::internal::WriteBatch* batch) {
