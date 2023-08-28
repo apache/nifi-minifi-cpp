@@ -1,0 +1,74 @@
+diff --git a/CMake/AbseilDll.cmake b/CMake/AbseilDll.cmake
+index f0d984ae..6e6dc40b 100644
+--- a/CMake/AbseilDll.cmake
++++ b/CMake/AbseilDll.cmake
+@@ -474,7 +474,7 @@ set(ABSL_INTERNAL_DLL_TARGETS
+   "crc_cord_state"
+   "crc_cpu_detect"
+   "crc_internal"
+-  "crc32c"
++  "crc32c_internal"
+   "debugging"
+   "debugging_internal"
+   "demangle_internal"
+diff --git a/absl/crc/BUILD.bazel b/absl/crc/BUILD.bazel
+index cdbaa9b2..78dac82e 100644
+--- a/absl/crc/BUILD.bazel
++++ b/absl/crc/BUILD.bazel
+@@ -67,7 +67,7 @@ cc_library(
+ )
+ 
+ cc_library(
+-    name = "crc32c",
++    name = "crc32c_internal",
+     srcs = [
+         "crc32c.cc",
+         "internal/crc32c_inline.h",
+diff --git a/absl/crc/CMakeLists.txt b/absl/crc/CMakeLists.txt
+index 21247160..f72b6cb3 100644
+--- a/absl/crc/CMakeLists.txt
++++ b/absl/crc/CMakeLists.txt
+@@ -55,7 +55,7 @@ absl_cc_library(
+ 
+ absl_cc_library(
+   NAME
+-    crc32c
++  crc32c_internal
+   HDRS
+     "crc32c.h"
+     "internal/crc32c.h"
+@@ -89,7 +89,7 @@ absl_cc_test(
+   COPTS
+     ${ABSL_DEFAULT_COPTS}
+   DEPS
+-    absl::crc32c
++    absl::crc32c_internal
+     absl::strings
+     absl::str_format
+     GTest::gtest_main
+@@ -129,7 +129,7 @@ absl_cc_test(
+   COPTS
+     ${ABSL_DEFAULT_COPTS}
+   DEPS
+-    absl::crc32c
++    absl::crc32c_internal
+     absl::memory
+     absl::random_random
+     absl::random_distributions
+@@ -159,7 +159,7 @@ absl_cc_library(
+   COPTS
+     ${ABSL_DEFAULT_COPTS}
+   DEPS
+-    absl::crc32c
++    absl::crc32c_internal
+     absl::config
+     absl::strings
+ )
+@@ -173,6 +173,6 @@ absl_cc_test(
+     ${ABSL_DEFAULT_COPTS}
+   DEPS
+     absl::crc_cord_state
+-    absl::crc32c
++    absl::crc32c_internal
+     GTest::gtest_main
+ )

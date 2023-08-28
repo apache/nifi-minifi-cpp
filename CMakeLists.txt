@@ -328,15 +328,6 @@ include(ExpectedLite)
 # magic_enum
 include(MagicEnum)
 
-# Update passthrough args used in configurations in patch commands
-if (WIN32)
-    set(PASSTHROUGH_CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /w")
-    set(PASSTHROUGH_CMAKE_C_FLAGS "${CMAKE_C_FLAGS} /w")
-else()
-    set(PASSTHROUGH_CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -w")
-    set(PASSTHROUGH_CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -w")
-endif()
-
 # Setup warning flags
 if(MSVC)
     if(FAIL_ON_WARNINGS)
