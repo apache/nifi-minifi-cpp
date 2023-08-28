@@ -92,7 +92,7 @@ void ComponentManifest::serializeClassDescription(const std::vector<ClassDescrip
         child.children.push_back({.name = "validator", .value = std::string{prop.getValidator().getValidatorName()}});
         child.children.push_back({.name = "required", .value = prop.getRequired()});
         child.children.push_back({.name = "expressionLanguageScope", .value = prop.supportsExpressionLanguage() ? "FLOWFILE_ATTRIBUTES" : "NONE"});
-        child.children.push_back({.name = "defaultValue", .value = prop.getValue()});
+        child.children.push_back({.name = "defaultValue", .value = prop.getValue()});  // NOLINT(cppcoreguidelines-slicing)
         child.children.push_back(descriptorDependentProperties);
         child.children.push_back(descriptorExclusiveOfProperties);
 
@@ -102,8 +102,8 @@ void ComponentManifest::serializeClassDescription(const std::vector<ClassDescrip
             SerializedResponseNode allowableValue{
               .name = "allowableValues",
               .children = {
-                {.name = "value", .value = av},
-                {.name = "displayName", .value = av},
+                {.name = "value", .value = av},  // NOLINT(cppcoreguidelines-slicing)
+                {.name = "displayName", .value = av},  // NOLINT(cppcoreguidelines-slicing)
               }
             };
 

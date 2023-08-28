@@ -100,7 +100,7 @@ std::string NetworkPrioritizerService::get_nearest_interface(const std::vector<s
 
 bool NetworkPrioritizerService::interface_online(const std::string &ifc) {
 #ifndef WIN32
-  struct ifreq ifr;
+  struct ifreq ifr{};
   auto sockid = socket(PF_INET, SOCK_DGRAM, IPPROTO_IP);
   memset(&ifr, 0, sizeof(ifr));
   memcpy(ifr.ifr_name, ifc.data(), ifc.length());

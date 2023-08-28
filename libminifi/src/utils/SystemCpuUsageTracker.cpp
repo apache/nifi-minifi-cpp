@@ -16,12 +16,9 @@
  */
 
 #include "utils/SystemCpuUsageTracker.h"
+#include "utils/gsl.h"
 
-namespace org {
-namespace apache {
-namespace nifi {
-namespace minifi {
-namespace utils {
+namespace org::apache::nifi::minifi::utils {
 #ifdef __linux__
 
 SystemCpuUsageTracker::SystemCpuUsageTracker() :
@@ -46,14 +43,14 @@ void SystemCpuUsageTracker::queryCpuTimes() {
   previous_total_user_low_ = total_user_low_;
   previous_total_sys_ = total_sys_;
   previous_total_idle_ = total_idle_;
-  FILE* file = fopen("/proc/stat", "r");
+  gsl::owner<FILE*> file = fopen("/proc/stat", "r");
   if (fscanf(file, "cpu %lu %lu %lu %lu", &total_user_, &total_user_low_, &total_sys_, &total_idle_) != 4) {  // NOLINT(cert-err34-c)
     total_user_ = previous_total_user_;
     total_user_low_ = previous_total_user_low_;
     total_idle_ = previous_total_idle_;
     total_sys_ = previous_total_sys_;
   }
-  fclose(file);
+  (void)fclose(file);
 }
 
 bool SystemCpuUsageTracker::isCurrentQueryOlderThanPrevious() const {
@@ -191,8 +188,4 @@ double SystemCpuUsageTracker::getCpuUsageBetweenLastTwoQueries() const {
 }
 #endif  // macOS
 
-} /* namespace utils */
-} /* namespace minifi */
-} /* namespace nifi */
-} /* namespace apache */
-} /* namespace org */
+}  // namespace org::apache::nifi::minifi::utils

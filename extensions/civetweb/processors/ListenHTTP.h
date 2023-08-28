@@ -185,7 +185,7 @@ class ListenHTTP : public core::Processor {
     std::shared_ptr<core::logging::Logger> logger_ = core::logging::LoggerFactory<ListenHTTP>::getLogger();
     std::map<std::string, ResponseBody> response_uri_map_;
     std::mutex uri_map_mutex_;
-    uint64_t buffer_size_;
+    uint64_t buffer_size_ = 0;
     utils::ConcurrentQueue<FlowFileBufferPair> request_buffer_;
   };
 

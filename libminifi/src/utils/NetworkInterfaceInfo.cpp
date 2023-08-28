@@ -36,8 +36,10 @@ std::shared_ptr<core::logging::Logger> NetworkInterfaceInfo::logger_ = core::log
 
 #ifdef WIN32
 
-NetworkInterfaceInfo::NetworkInterfaceInfo(const IP_ADAPTER_ADDRESSES* adapter) {
-  name_ = OsUtils::wideStringToString(adapter->FriendlyName);
+NetworkInterfaceInfo::NetworkInterfaceInfo(const IP_ADAPTER_ADDRESSES* adapter)
+    : name_(OsUtils::wideStringToString(adapter->FriendlyName)),
+      running_(adapter->OperStatus == IfOperStatusUp),
+      loopback_(adapter->IfType == IF_TYPE_SOFTWARE_LOOPBACK) {
   for (auto unicast_address = adapter->FirstUnicastAddress; unicast_address != nullptr; unicast_address = unicast_address->Next) {
     if (unicast_address->Address.lpSockaddr->sa_family == AF_INET) {
       ip_v4_addresses_.push_back(net::sockaddr_ntop(unicast_address->Address.lpSockaddr));
@@ -45,19 +47,17 @@ NetworkInterfaceInfo::NetworkInterfaceInfo(const IP_ADAPTER_ADDRESSES* adapter) 
       ip_v6_addresses_.push_back(net::sockaddr_ntop(unicast_address->Address.lpSockaddr));
     }
   }
-  running_ = adapter->OperStatus == IfOperStatusUp;
-  loopback_ = adapter->IfType == IF_TYPE_SOFTWARE_LOOPBACK;
 }
 #else
-NetworkInterfaceInfo::NetworkInterfaceInfo(const struct ifaddrs* ifa) {
-  name_ = ifa->ifa_name;
+NetworkInterfaceInfo::NetworkInterfaceInfo(const struct ifaddrs* ifa)
+    : name_(ifa->ifa_name),
+      running_(ifa->ifa_flags & IFF_RUNNING),
+      loopback_(ifa->ifa_flags & IFF_LOOPBACK) {
   if (ifa->ifa_addr->sa_family == AF_INET) {
     ip_v4_addresses_.push_back(net::sockaddr_ntop(ifa->ifa_addr));
   } else if (ifa->ifa_addr->sa_family == AF_INET6) {
     ip_v6_addresses_.push_back(net::sockaddr_ntop(ifa->ifa_addr));
   }
-  running_ = (ifa->ifa_flags & IFF_RUNNING);
-  loopback_ = (ifa->ifa_flags & IFF_LOOPBACK);
 }
 #endif
 

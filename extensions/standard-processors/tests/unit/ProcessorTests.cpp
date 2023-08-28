@@ -15,7 +15,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#define EXTENSION_LIST "*minifi-*,!*http-curl*,!*coap*,!*splunk*,!*elastic*"
+#define EXTENSION_LIST "*minifi-*,!*http-curl*,!*coap*,!*splunk*,!*elastic*"  // NOLINT(cppcoreguidelines-macro-usage)
 
 #include <cstdio>
 #include <utility>
@@ -602,6 +602,10 @@ namespace {
 class ProcessorWithIncomingConnectionTest {
  public:
   ProcessorWithIncomingConnectionTest();
+  ProcessorWithIncomingConnectionTest(ProcessorWithIncomingConnectionTest&&) = delete;
+  ProcessorWithIncomingConnectionTest(const ProcessorWithIncomingConnectionTest&) = delete;
+  ProcessorWithIncomingConnectionTest& operator=(ProcessorWithIncomingConnectionTest&&) = delete;
+  ProcessorWithIncomingConnectionTest& operator=(const ProcessorWithIncomingConnectionTest&) = delete;
   ~ProcessorWithIncomingConnectionTest();
 
  protected:

@@ -46,7 +46,7 @@ struct KafkaConnectionKey {
 
 class KafkaConnection {
  public:
-  explicit KafkaConnection(const KafkaConnectionKey &key);
+  explicit KafkaConnection(KafkaConnectionKey key);
 
   KafkaConnection(const KafkaConnection&) = delete;
   KafkaConnection& operator=(KafkaConnection) = delete;
@@ -61,7 +61,7 @@ class KafkaConnection {
 
   void setConnection(gsl::owner<rd_kafka_t*> producer);
 
-  rd_kafka_t *getConnection() const;
+  gsl::owner<rd_kafka_t*> getConnection() const;
 
   bool hasTopic(const std::string &topic) const;
 

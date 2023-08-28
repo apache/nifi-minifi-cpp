@@ -119,6 +119,11 @@ class PutSFTPTestsFixture {
     plan->setProperty(put, "Reject Zero-Byte Files", "true");
   }
 
+  PutSFTPTestsFixture(PutSFTPTestsFixture&&) = delete;
+  PutSFTPTestsFixture(const PutSFTPTestsFixture&) = delete;
+  PutSFTPTestsFixture& operator=(PutSFTPTestsFixture&&) = delete;
+  PutSFTPTestsFixture& operator=(const PutSFTPTestsFixture&) = delete;
+
   virtual ~PutSFTPTestsFixture() {
     LogTestController::getInstance().reset();
   }
@@ -141,7 +146,7 @@ class PutSFTPTestsFixture {
     std::stringstream content;
     std::vector<char> buffer(1024U);
     while (file) {
-      file.read(buffer.data(), buffer.size());
+      file.read(buffer.data(), gsl::narrow<std::streamsize>(buffer.size()));
       content << std::string(buffer.data(), file.gcount());
     }
     REQUIRE(expected_content == content.str());
@@ -726,7 +731,7 @@ TEST_CASE_METHOD(PutSFTPTestsFixture, "PutSFTP connection caching reaches limit"
 
   for (size_t i = 0; i < 10; i++) {
     std::string destination_dir = testController.createTempDirectory();
-    sftp_servers.emplace_back(new SFTPTestServer(destination_dir));
+    sftp_servers.emplace_back(std::make_unique<SFTPTestServer>(destination_dir));
     REQUIRE(true == sftp_servers.back()->start());
     createFile(src_dir, "tstFile" + std::to_string(i) + ".ext", std::to_string(sftp_servers.back()->getPort()));
 

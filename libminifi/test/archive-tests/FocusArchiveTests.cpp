@@ -37,15 +37,15 @@
 #include "repository/VolatileContentRepository.h"
 #include "../unit/ProvenanceTestHelper.h"
 
-const char TEST_ARCHIVE_NAME[] = "focus_test_archive.tar";
+namespace org::apache::nifi::minifi::processors::test {
+
+const std::string TEST_ARCHIVE_NAME = "focus_test_archive.tar";
 const int NUM_FILES = 2;
-const char* FILE_NAMES[NUM_FILES] = {"file1", "file2"};
-const char* FILE_CONTENT[NUM_FILES] = {"Test file 1\n", "Test file 2\n"};
+const char* FILE_NAMES[NUM_FILES] = {"file1", "file2"};  // NOLINT(cppcoreguidelines-avoid-c-arrays)
+const char* FILE_CONTENT[NUM_FILES] = {"Test file 1\n", "Test file 2\n"};  // NOLINT(cppcoreguidelines-avoid-c-arrays)
 
 const char* FOCUSED_FILE = FILE_NAMES[0];
 const char* FOCUSED_CONTENT = FILE_CONTENT[0];
-
-namespace org::apache::nifi::minifi::processors::test {
 
 TEST_CASE("Test Creation of FocusArchiveEntry", "[getfileCreate]") {
   TestController testController;
@@ -115,8 +115,9 @@ TEST_CASE("FocusArchive", "[testFocusArchive]") {
 
   auto size = gsl::narrow<size_t>(ifs.tellg());
   ifs.seekg(0, std::ios::beg);
-  char* content = new char[size];
-  ifs.read(content, size);
+  gsl::owner<char*> content = nullptr;
+  content = new char[size];
+  ifs.read(content, gsl::narrow<std::streamsize>(size));
 
   REQUIRE(size == strlen(FOCUSED_CONTENT));
   REQUIRE(memcmp(content, FOCUSED_CONTENT, size) == 0);
@@ -126,6 +127,7 @@ TEST_CASE("FocusArchive", "[testFocusArchive]") {
 
   auto archive_path_2 = dir3 / TEST_ARCHIVE_NAME;
   REQUIRE(check_archive_contents(archive_path_2, test_archive_map));
+  delete[] content;
 }
 
 }  // namespace org::apache::nifi::minifi::processors::test

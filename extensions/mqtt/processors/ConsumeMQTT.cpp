@@ -136,7 +136,7 @@ int64_t ConsumeMQTT::WriteCallback::operator() (const std::shared_ptr<io::Output
     return -1;
   }
 
-  return len;
+  return gsl::narrow<int64_t>(len);
 }
 
 void ConsumeMQTT::putUserPropertiesAsAttributes(const SmartMessage& message, const std::shared_ptr<core::FlowFile>& flow_file, const std::shared_ptr<core::ProcessSession>& session) const {
@@ -147,8 +147,8 @@ void ConsumeMQTT::putUserPropertiesAsAttributes(const SmartMessage& message, con
   const auto property_count = MQTTProperties_propertyCount(&message.contents->properties, MQTTPROPERTY_CODE_USER_PROPERTY);
   for (int i=0; i < property_count; ++i) {
     MQTTProperty* property = MQTTProperties_getPropertyAt(&message.contents->properties, MQTTPROPERTY_CODE_USER_PROPERTY, i);
-    std::string key(property->value.data.data, property->value.data.len);
-    std::string value(property->value.value.data, property->value.value.len);
+    std::string key(property->value.data.data, property->value.data.len);  // NOLINT(cppcoreguidelines-pro-type-union-access)
+    std::string value(property->value.value.data, property->value.value.len);  // NOLINT(cppcoreguidelines-pro-type-union-access)
     session->putAttribute(flow_file, key, value);
   }
 }
@@ -163,7 +163,7 @@ void ConsumeMQTT::fillAttributeFromContentType(const SmartMessage& message, cons
     return;
   }
 
-  std::string content_type(property->value.data.data, property->value.data.len);
+  std::string content_type(property->value.data.data, property->value.data.len);  // NOLINT(cppcoreguidelines-pro-type-union-access)
   session->putAttribute(flow_file, attribute_from_content_type_, content_type);
 }
 
@@ -313,14 +313,14 @@ void ConsumeMQTT::setProcessorSpecificMqtt5ConnectOptions(MQTTProperties& connec
   if (topic_alias_maximum_ > 0) {
     MQTTProperty property;
     property.identifier = MQTTPROPERTY_CODE_TOPIC_ALIAS_MAXIMUM;
-    property.value.integer2 = topic_alias_maximum_;
+    property.value.integer2 = topic_alias_maximum_;  // NOLINT(cppcoreguidelines-pro-type-union-access)
     MQTTProperties_add(&connect_props, &property);
   }
 
   if (receive_maximum_ < MQTT_MAX_RECEIVE_MAXIMUM) {
     MQTTProperty property;
     property.identifier = MQTTPROPERTY_CODE_RECEIVE_MAXIMUM;
-    property.value.integer2 = receive_maximum_;
+    property.value.integer2 = receive_maximum_;  // NOLINT(cppcoreguidelines-pro-type-union-access)
     MQTTProperties_add(&connect_props, &property);
   }
 }

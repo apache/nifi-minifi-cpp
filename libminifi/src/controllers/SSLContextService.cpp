@@ -365,7 +365,7 @@ bool SSLContextService::useServerCertificate(PCCERT_CONTEXT certificate, ServerC
 std::unique_ptr<SSLContext> SSLContextService::createSSLContext() {
 #ifdef OPENSSL_SUPPORT
   SSL_library_init();
-  const SSL_METHOD *method;
+  const SSL_METHOD *method = nullptr;
 
   OpenSSL_add_all_algorithms();
   SSL_load_error_strings();

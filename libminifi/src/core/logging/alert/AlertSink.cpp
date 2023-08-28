@@ -33,10 +33,10 @@ namespace org::apache::nifi::minifi::core::logging {
 AlertSink::AlertSink(Config config, std::shared_ptr<Logger> logger)
     : config_(std::move(config)),
       live_logs_(config_.rate_limit),
+      next_flush_(clock_->timeSinceEpoch() + config_.flush_period),
       buffer_(config_.buffer_limit, config_.batch_size),
       logger_(std::move(logger)) {
   set_level(config_.level);
-  next_flush_ = clock_->timeSinceEpoch() + config_.flush_period;
   flush_thread_ = std::thread([this] {run();});
 }
 
@@ -75,7 +75,7 @@ std::shared_ptr<AlertSink> AlertSink::create(const std::string& prop_name_prefix
   };
 
   auto datasize_parser = [] (const std::string& str) -> std::optional<int> {
-    int val;
+    int val = 0;
     if (DataSizeValue::StringToInt(str, val)) {
       return val;
     }
@@ -184,7 +184,7 @@ AlertSink::~AlertSink() {
   if (flush_thread_.joinable()) {
     flush_thread_.join();
   }
-  delete services_.exchange(nullptr);
+  delete services_.exchange(nullptr);  // NOLINT(cppcoreguidelines-owning-memory)
 }
 
 void AlertSink::send(Services& services) {

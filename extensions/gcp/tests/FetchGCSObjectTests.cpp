@@ -74,7 +74,7 @@ TEST_F(FetchGCSObjectTests, ServerError) {
   EXPECT_CALL(*fetch_gcs_object_->mock_client_, ReadObject)
       .WillOnce([](gcs::internal::ReadObjectRangeRequest const& request) {
         EXPECT_EQ(request.bucket_name(), "bucket-from-property") << request;
-        auto* mock_source = new gcs::testing::MockObjectReadSource;
+        auto mock_source = std::make_unique<gcs::testing::MockObjectReadSource>();
         ::testing::InSequence seq;
         EXPECT_CALL(*mock_source, IsOpen).WillRepeatedly(testing::Return(true));
         EXPECT_CALL(*mock_source, Read)
@@ -83,9 +83,8 @@ TEST_F(FetchGCSObjectTests, ServerError) {
                 "Invalid Argument")));
         EXPECT_CALL(*mock_source, IsOpen).WillRepeatedly(testing::Return(false));
 
-        std::unique_ptr<gcs::internal::ObjectReadSource> result(mock_source);
-
-        return google::cloud::make_status_or(std::move(result));
+        std::unique_ptr<gcs::internal::ObjectReadSource> object_read_source = std::move(mock_source);
+        return google::cloud::make_status_or(std::move(object_read_source));
       });
   EXPECT_TRUE(test_controller_.plan->setProperty(fetch_gcs_object_, FetchGCSObject::Bucket, "bucket-from-property"));
   const auto& result = test_controller_.trigger("hello world", {{std::string(minifi_gcp::GCS_BUCKET_ATTR), "bucket-from-attribute"}});

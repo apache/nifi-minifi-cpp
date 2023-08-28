@@ -125,8 +125,8 @@ void FocusArchiveEntry::onTrigger(core::ProcessContext *context, core::ProcessSe
 
 struct FocusArchiveEntryReadData {
   std::shared_ptr<io::InputStream> stream;
-  core::Processor *processor;
-  std::array<std::byte, 8196> buf;
+  core::Processor *processor = nullptr;
+  std::array<std::byte, 8196> buf{};
 };
 
 // Read callback which reads from the flowfile stream
@@ -151,7 +151,7 @@ la_ssize_t FocusArchiveEntry::ReadCallback::read_cb(struct archive * a, void *d,
 
 int64_t FocusArchiveEntry::ReadCallback::operator()(const std::shared_ptr<io::InputStream>& stream) const {
   auto inputArchive = archive_read_new();
-  struct archive_entry *entry;
+  struct archive_entry *entry = nullptr;
   int64_t nlen = 0;
 
   FocusArchiveEntryReadData data;
@@ -221,7 +221,7 @@ int64_t FocusArchiveEntry::ReadCallback::operator()(const std::shared_ptr<io::In
 #endif
       }
 
-      fclose(fd);
+      (void)fclose(fd);
     }
 
     (*_archiveMetadata).entryMetadata.push_back(metadata);
@@ -234,8 +234,8 @@ int64_t FocusArchiveEntry::ReadCallback::operator()(const std::shared_ptr<io::In
 
 FocusArchiveEntry::ReadCallback::ReadCallback(core::Processor *processor, utils::file::FileManager *file_man, ArchiveMetadata *archiveMetadata)
     : file_man_(file_man),
-      proc_(processor) {
-  _archiveMetadata = archiveMetadata;
+      proc_(processor),
+      _archiveMetadata(archiveMetadata) {
 }
 
 REGISTER_RESOURCE(FocusArchiveEntry, Processor);

@@ -50,6 +50,10 @@ class RetryFlowFileTest {
     logger_(logging::LoggerFactory<org::apache::nifi::minifi::processors::RetryFlowFile>::getLogger()) {
     reInitialize();
   }
+  RetryFlowFileTest(RetryFlowFileTest&&) = delete;
+  RetryFlowFileTest(const RetryFlowFileTest&) = delete;
+  RetryFlowFileTest& operator=(RetryFlowFileTest&&) = delete;
+  RetryFlowFileTest& operator=(const RetryFlowFileTest&) = delete;
   virtual ~RetryFlowFileTest() {
     logTestController_.reset();
   }

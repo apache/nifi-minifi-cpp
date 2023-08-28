@@ -34,7 +34,7 @@ VolatileRepositoryData::~VolatileRepositoryData() {
 
 void VolatileRepositoryData::clear() {
   for (auto ent : value_vector) {
-    delete ent;
+    delete ent;  // NOLINT(cppcoreguidelines-owning-memory)
   }
   value_vector.clear();
 }
@@ -68,7 +68,7 @@ void VolatileRepositoryData::initialize(const std::shared_ptr<Configure> &config
 
   value_vector.reserve(max_count);
   for (uint32_t i = 0; i < max_count; i++) {
-    value_vector.emplace_back(new AtomicEntry<std::string>(&current_size, &max_size));
+    value_vector.emplace_back(new AtomicEntry<std::string>(&current_size, &max_size));  // NOLINT(cppcoreguidelines-owning-memory)
   }
 }
 

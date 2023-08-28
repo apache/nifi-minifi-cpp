@@ -33,7 +33,7 @@ const std::shared_ptr<logging::Logger> ExtensionManager::logger_ = logging::Logg
 
 ExtensionManager::ExtensionManager() {
   modules_.push_back(std::make_unique<Executable>());
-  active_module_ = modules_[0].get();
+  active_module_ = modules_[0].get();  // NOLINT(cppcoreguidelines-prefer-member-initializer)
 }
 
 ExtensionManager& ExtensionManager::get() {

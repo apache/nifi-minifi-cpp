@@ -18,6 +18,7 @@
 
 #include <fstream>
 #include <set>
+#include <array>
 
 #include "core/Resource.h"
 
@@ -27,9 +28,9 @@ utils::SystemCpuUsageTracker DeviceInfoNode::cpu_load_tracker_;
 std::mutex DeviceInfoNode::cpu_load_tracker_mutex_;
 
 Device::Device() {
-  char hostname[1024];
+  std::array<char, 1024> hostname{};
   hostname[1023] = '\0';
-  gethostname(hostname, 1023);
+  gethostname(hostname.data(), 1023);
 
   std::ifstream device_id_file(".device_id");
   if (device_id_file) {
@@ -44,12 +45,12 @@ Device::Device() {
 
     std::ofstream outputFile(".device_id");
     if (outputFile) {
-      outputFile.write(device_id_.c_str(), device_id_.length());
+      outputFile.write(device_id_.c_str(), gsl::narrow<std::streamsize>(device_id_.length()));
     }
     outputFile.close();
   }
 
-  canonical_hostname_ = hostname;
+  canonical_hostname_ = hostname.data();
 
   std::stringstream ips;
   auto ipaddressess = getIpAddresses();
@@ -79,12 +80,12 @@ std::vector<std::string> Device::getIpAddresses() {
 std::string Device::getDeviceId() {
   std::hash<std::string> hash_fn;
   std::string macs;
-  ifaddrs *ifaddr;
-  ifaddrs *ifa;
-  int family;
-  int s;
-  int n;
-  char host[NI_MAXHOST];
+  ifaddrs *ifaddr = nullptr;
+  ifaddrs *ifa = nullptr;
+  int family = 0;
+  int s = 0;
+  int n = 0;
+  std::array<char, NI_MAXHOST> host{};
 
   if (getifaddrs(&ifaddr) == -1) {
     exit(EXIT_FAILURE);
@@ -104,7 +105,7 @@ std::string Device::getDeviceId() {
     /* For an AF_INET* interface address, display the address */
 
     if (family == AF_INET || family == AF_INET6) {
-      s = getnameinfo(ifa->ifa_addr, (family == AF_INET) ? sizeof(struct sockaddr_in) : sizeof(struct sockaddr_in6), host, NI_MAXHOST,
+      s = getnameinfo(ifa->ifa_addr, (family == AF_INET) ? sizeof(struct sockaddr_in) : sizeof(struct sockaddr_in6), host.data(), NI_MAXHOST,
           nullptr,
           0, NI_NUMERICHOST);
       if (s != 0) {
@@ -117,11 +118,11 @@ std::string Device::getDeviceId() {
   freeifaddrs(ifaddr);
 
   int sock = socket(AF_INET, SOCK_DGRAM, IPPROTO_IP);
-  struct ifreq ifr;
-  struct ifconf ifc;
-  char buf[1024];
-  ifc.ifc_len = sizeof(buf);
-  ifc.ifc_buf = buf;
+  struct ifreq ifr{};
+  struct ifconf ifc{};
+  std::array<char, 1024> buf{};
+  ifc.ifc_len = buf.size();
+  ifc.ifc_buf = buf.data();
   if (ioctl(sock, SIOCGIFCONF, &ifc) == -1) { /* handle error */
   }
 
@@ -133,14 +134,14 @@ std::string Device::getDeviceId() {
     if (ioctl(sock, SIOCGIFFLAGS, &ifr) == 0) {
       if (!(ifr.ifr_flags & IFF_LOOPBACK)) {  // don't count loopback
         if (ioctl(sock, SIOCGIFHWADDR, &ifr) == 0) {
-          unsigned char mac[6];
+          std::array<unsigned char, 6> mac{};
 
-          memcpy(mac, ifr.ifr_hwaddr.sa_data, 6);
+          memcpy(mac.data(), ifr.ifr_hwaddr.sa_data, mac.size());
 
-          char mac_add[13];
-          snprintf(mac_add, 13, "%02X%02X%02X%02X%02X%02X", mac[0], mac[1], mac[2], mac[3], mac[4], mac[5]); // NOLINT
+          std::array<char, 13> mac_add{};
+          snprintf(mac_add.data(), mac_add.size(), "%02X%02X%02X%02X%02X%02X", mac[0], mac[1], mac[2], mac[3], mac[4], mac[5]); // NOLINT
 
-          macs += mac_add;
+          macs += mac_add.data();
         }
       }
 

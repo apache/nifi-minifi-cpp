@@ -43,7 +43,7 @@ TEST_CASE("TestSetPortId", "[S2S1]") {
   REQUIRE(fakeUUID == protocol.getPortId());
 }
 
-void sunny_path_bootstrap(SiteToSiteResponder *collector) {
+void sunny_path_bootstrap(const std::unique_ptr<SiteToSiteResponder>& collector) {
   char a = 0x14;  // RESOURCE_OK
   std::string resp_code;
   resp_code.insert(resp_code.begin(), a);
@@ -64,11 +64,12 @@ void sunny_path_bootstrap(SiteToSiteResponder *collector) {
 }
 
 TEST_CASE("TestSiteToSiteVerifySend", "[S2S3]") {
-  auto *collector = new SiteToSiteResponder();
+  auto collector = std::make_unique<SiteToSiteResponder>();
+  auto collector_ptr = collector.get();
 
   sunny_path_bootstrap(collector);
 
-  auto peer = std::make_unique<minifi::sitetosite::SiteToSitePeer>(std::unique_ptr<minifi::io::BaseStream>(collector), "fake_host", 65433, "");
+  auto peer = std::make_unique<minifi::sitetosite::SiteToSitePeer>(std::move(collector), "fake_host", 65433, "");
 
   minifi::sitetosite::RawSiteToSiteClient protocol(std::move(peer));
 
@@ -78,32 +79,32 @@ TEST_CASE("TestSiteToSiteVerifySend", "[S2S3]") {
 
   REQUIRE(true == protocol.bootstrap());
 
-  REQUIRE(collector->get_next_client_response() == "NiFi");
-  collector->get_next_client_response();
-  REQUIRE(collector->get_next_client_response() == "SocketFlowFileProtocol");
-  collector->get_next_client_response();
-  collector->get_next_client_response();
-  collector->get_next_client_response();
-  collector->get_next_client_response();
-  REQUIRE(collector->get_next_client_response() == "nifi://fake_host:65433");
-  collector->get_next_client_response();
-  collector->get_next_client_response();
-  REQUIRE(collector->get_next_client_response() == "GZIP");
-  collector->get_next_client_response();
-  REQUIRE(collector->get_next_client_response() == "false");
-  collector->get_next_client_response();
-  REQUIRE(collector->get_next_client_response() == "PORT_IDENTIFIER");
-  collector->get_next_client_response();
-  REQUIRE(utils::StringUtils::equalsIgnoreCase(collector->get_next_client_response(), "c56a4180-65aa-42ec-a945-5fd21dec0538"));
-  collector->get_next_client_response();
-  REQUIRE(collector->get_next_client_response() == "REQUEST_EXPIRATION_MILLIS");
-  collector->get_next_client_response();
-  REQUIRE(collector->get_next_client_response() == "30000");
-  collector->get_next_client_response();
-  REQUIRE(collector->get_next_client_response() == "NEGOTIATE_FLOWFILE_CODEC");
-  collector->get_next_client_response();
-  REQUIRE(collector->get_next_client_response() == "StandardFlowFileCodec");
-  collector->get_next_client_response();  // codec version
+  REQUIRE(collector_ptr->get_next_client_response() == "NiFi");
+  collector_ptr->get_next_client_response();
+  REQUIRE(collector_ptr->get_next_client_response() == "SocketFlowFileProtocol");
+  collector_ptr->get_next_client_response();
+  collector_ptr->get_next_client_response();
+  collector_ptr->get_next_client_response();
+  collector_ptr->get_next_client_response();
+  REQUIRE(collector_ptr->get_next_client_response() == "nifi://fake_host:65433");
+  collector_ptr->get_next_client_response();
+  collector_ptr->get_next_client_response();
+  REQUIRE(collector_ptr->get_next_client_response() == "GZIP");
+  collector_ptr->get_next_client_response();
+  REQUIRE(collector_ptr->get_next_client_response() == "false");
+  collector_ptr->get_next_client_response();
+  REQUIRE(collector_ptr->get_next_client_response() == "PORT_IDENTIFIER");
+  collector_ptr->get_next_client_response();
+  REQUIRE(utils::StringUtils::equalsIgnoreCase(collector_ptr->get_next_client_response(), "c56a4180-65aa-42ec-a945-5fd21dec0538"));
+  collector_ptr->get_next_client_response();
+  REQUIRE(collector_ptr->get_next_client_response() == "REQUEST_EXPIRATION_MILLIS");
+  collector_ptr->get_next_client_response();
+  REQUIRE(collector_ptr->get_next_client_response() == "30000");
+  collector_ptr->get_next_client_response();
+  REQUIRE(collector_ptr->get_next_client_response() == "NEGOTIATE_FLOWFILE_CODEC");
+  collector_ptr->get_next_client_response();
+  REQUIRE(collector_ptr->get_next_client_response() == "StandardFlowFileCodec");
+  collector_ptr->get_next_client_response();  // codec version
 
   // start to send the stuff
   // Create the transaction
@@ -112,20 +113,20 @@ TEST_CASE("TestSiteToSiteVerifySend", "[S2S3]") {
   transaction = protocol.createTransaction(minifi::sitetosite::SEND);
   REQUIRE(transaction);
   auto transactionID = transaction->getUUID();
-  collector->get_next_client_response();
-  REQUIRE(collector->get_next_client_response() == "SEND_FLOWFILES");
+  collector_ptr->get_next_client_response();
+  REQUIRE(collector_ptr->get_next_client_response() == "SEND_FLOWFILES");
   std::map<std::string, std::string> attributes;
   std::shared_ptr<logging::Logger> logger = nullptr;
   minifi::sitetosite::DataPacket packet(logger, transaction, attributes, payload);
   REQUIRE(protocol.send(transactionID, &packet, nullptr, nullptr) == 0);
-  collector->get_next_client_response();
-  collector->get_next_client_response();
-  std::string rx_payload = collector->get_next_client_response();
+  collector_ptr->get_next_client_response();
+  collector_ptr->get_next_client_response();
+  std::string rx_payload = collector_ptr->get_next_client_response();
   REQUIRE(payload == rx_payload);
 }
 
 TEST_CASE("TestSiteToSiteVerifyNegotiationFail", "[S2S4]") {
-  auto *collector = new SiteToSiteResponder();
+  auto collector = std::make_unique<SiteToSiteResponder>();
 
   char a = '\xFF';
   std::string resp_code;
@@ -133,7 +134,7 @@ TEST_CASE("TestSiteToSiteVerifyNegotiationFail", "[S2S4]") {
   collector->push_response(resp_code);
   collector->push_response(resp_code);
 
-  auto peer = std::make_unique<minifi::sitetosite::SiteToSitePeer>(std::unique_ptr<minifi::io::BaseStream>(collector), "fake_host", 65433, "");
+  auto peer = std::make_unique<minifi::sitetosite::SiteToSitePeer>(std::move(collector), "fake_host", 65433, "");
 
   minifi::sitetosite::RawSiteToSiteClient protocol(std::move(peer));
 

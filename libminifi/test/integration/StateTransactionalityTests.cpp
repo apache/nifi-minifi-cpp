@@ -95,7 +95,7 @@ class StatefulIntegrationTest : public IntegrationBase {
   const std::vector<StatefulProcessor::HookType> on_trigger_hooks_;
   const LogChecker log_checker_;
   const std::string test_case_;
-  StatefulProcessor* stateful_processor_;
+  StatefulProcessor* stateful_processor_ = nullptr;
   std::shared_ptr<logging::Logger> logger_{logging::LoggerFactory<StatefulIntegrationTest>::getLogger()};
 };
 

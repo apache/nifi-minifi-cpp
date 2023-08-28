@@ -22,7 +22,7 @@ using namespace std::literals::chrono_literals;
 namespace org::apache::nifi::minifi::extensions::procfs {
 
 std::optional<CpuStatData> CpuStatData::parseCpuStatLine(std::istream& iss) {
-  CpuStatData data;
+  CpuStatData data{};
   iss >> data.user_ >> data.nice_ >> data.system_ >> data.idle_ >> data.io_wait_ >> data.irq_ >> data.soft_irq_ >> data.steal_ >> data.guest_ >> data.guest_nice_;
   if (iss.fail())
     return std::nullopt;
@@ -30,7 +30,7 @@ std::optional<CpuStatData> CpuStatData::parseCpuStatLine(std::istream& iss) {
 }
 
 CpuStatData CpuStatData::operator-(const CpuStatData& rhs) const {
-  CpuStatData result;
+  CpuStatData result{};
   result.user_ = user_ - rhs.user_;
   result.nice_ = nice_ - rhs.nice_;
   result.system_ = system_ - rhs.system_;

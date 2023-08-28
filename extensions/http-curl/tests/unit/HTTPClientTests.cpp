@@ -55,7 +55,7 @@ TEST_CASE("HTTPClientTestChunkedResponse", "[basic]") {
     bool handlePost(CivetServer* /*server*/, struct mg_connection* conn) override {
       mg_printf(conn, "HTTP/1.1 100 Continue\r\n\r\n");
 
-      std::array<uint8_t, 16384U> buf;
+      std::array<uint8_t, 16384U> buf{};
       while (mg_read(conn, buf.data(), buf.size()) > 0) {}
 
       send_response(conn);

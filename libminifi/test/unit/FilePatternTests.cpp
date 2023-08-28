@@ -34,10 +34,6 @@ struct FilePatternTestAccessor {
 
 using FilePatternSegment = FilePatternTestAccessor::FilePatternSegment;
 
-#define REQUIRE_INCLUDE(val) REQUIRE((val == FilePatternSegment::MatchResult::INCLUDE))
-#define REQUIRE_EXCLUDE(val) REQUIRE((val == FilePatternSegment::MatchResult::EXCLUDE))
-#define REQUIRE_NOT_MATCHING(val) REQUIRE((val == FilePatternSegment::MatchResult::NOT_MATCHING))
-
 #ifdef WIN32
 static std::filesystem::path root{"C:\\"};
 #else
@@ -76,66 +72,66 @@ TEST_CASE("FilePattern reports error in correct subpattern") {
 
 TEST_CASE("Matching directories without globs") {
   FilePatternSegment pattern((root / "one" / "banana" / "file").string());
-  REQUIRE_INCLUDE(pattern.match(root / "one/"));
-  REQUIRE_INCLUDE(pattern.match(root / "one" / "banana/"));
-  REQUIRE_NOT_MATCHING(pattern.match(root / "two/"));
-  REQUIRE_NOT_MATCHING(pattern.match(root / "one" / "apple/"));
+  REQUIRE(pattern.match(root / "one/") == FilePatternSegment::MatchResult::INCLUDE);
+  REQUIRE(pattern.match(root / "one" / "banana/") == FilePatternSegment::MatchResult::INCLUDE);
+  REQUIRE(pattern.match(root / "two/") == FilePatternSegment::MatchResult::NOT_MATCHING);
+  REQUIRE(pattern.match(root / "one" / "apple/") == FilePatternSegment::MatchResult::NOT_MATCHING);
   // this looks at the DIRECTORY "/one/banana/file", while our pattern
   // looks for the FILE "/one/banana/file"
-  REQUIRE_NOT_MATCHING(pattern.match(root / "one" / "banana" / "file/"));
+  REQUIRE(pattern.match(root / "one" / "banana" / "file/") == FilePatternSegment::MatchResult::NOT_MATCHING);
 }
 
 TEST_CASE("Matching directories with double asterisk") {
   FilePatternSegment pattern((root / "one" / "**" / "file").string());
-  REQUIRE_INCLUDE(pattern.match(root / "one/"));
-  REQUIRE_INCLUDE(pattern.match(root / "one" / "banana/"));
-  REQUIRE_INCLUDE(pattern.match(root / "one" / "banana" / "inner/"));
-  REQUIRE_NOT_MATCHING(pattern.match(root / "two/"));
+  REQUIRE(pattern.match(root / "one/") == FilePatternSegment::MatchResult::INCLUDE);
+  REQUIRE(pattern.match(root / "one" / "banana/") == FilePatternSegment::MatchResult::INCLUDE);
+  REQUIRE(pattern.match(root / "one" / "banana" / "inner/") == FilePatternSegment::MatchResult::INCLUDE);
+  REQUIRE(pattern.match(root / "two/") == FilePatternSegment::MatchResult::NOT_MATCHING);
 }
 
 TEST_CASE("Matching directories with trailing double asterisk") {
   FilePatternSegment pattern((root / "one" / "**").string());
-  REQUIRE_INCLUDE(pattern.match(root / "one/"));
-  REQUIRE_INCLUDE(pattern.match(root / "one" / "banana/"));
-  REQUIRE_INCLUDE(pattern.match(root / "one" / "banana" / "inner/"));
+  REQUIRE(pattern.match(root / "one/") == FilePatternSegment::MatchResult::INCLUDE);
+  REQUIRE(pattern.match(root / "one" / "banana/") == FilePatternSegment::MatchResult::INCLUDE);
+  REQUIRE(pattern.match(root / "one" / "banana" / "inner/") == FilePatternSegment::MatchResult::INCLUDE);
 }
 
 TEST_CASE("Matching directories with single asterisk") {
   FilePatternSegment pattern((root / "one" / "*e*" / "file").string());
-  REQUIRE_INCLUDE(pattern.match(root / "one/"));
-  REQUIRE_INCLUDE(pattern.match(root / "one" / "then/"));
-  REQUIRE_NOT_MATCHING(pattern.match(root / "one" / "then" / "inner/"));
-  REQUIRE_NOT_MATCHING(pattern.match(root / "one" / "not/"));
+  REQUIRE(pattern.match(root / "one/") == FilePatternSegment::MatchResult::INCLUDE);
+  REQUIRE(pattern.match(root / "one" / "then/") == FilePatternSegment::MatchResult::INCLUDE);
+  REQUIRE(pattern.match(root / "one" / "then" / "inner/") == FilePatternSegment::MatchResult::NOT_MATCHING);
+  REQUIRE(pattern.match(root / "one" / "not/") == FilePatternSegment::MatchResult::NOT_MATCHING);
 }
 
 TEST_CASE("Matching files without globs") {
   FilePatternSegment pattern((root / "one" / "banana" / "file").string());
-  REQUIRE_NOT_MATCHING(pattern.match(root / "one" / "file"));
-  REQUIRE_INCLUDE(pattern.match(root / "one" / "banana" / "file"));
-  REQUIRE_NOT_MATCHING(pattern.match(root / "one" / "banana" / "not_file"));
+  REQUIRE(pattern.match(root / "one" / "file") == FilePatternSegment::MatchResult::NOT_MATCHING);
+  REQUIRE(pattern.match(root / "one" / "banana" / "file") == FilePatternSegment::MatchResult::INCLUDE);
+  REQUIRE(pattern.match(root / "one" / "banana" / "not_file") == FilePatternSegment::MatchResult::NOT_MATCHING);
 }
 
 TEST_CASE("Matching files with single asterisk") {
   FilePatternSegment pattern((root / "one" / "banana" / "*.txt").string());
-  REQUIRE_NOT_MATCHING(pattern.match(root / "one" / "file"));
-  REQUIRE_INCLUDE(pattern.match(root / "one" / "banana" / "file.txt"));
-  REQUIRE_INCLUDE(pattern.match(root / "one" / "banana" / ".txt"));
-  REQUIRE_NOT_MATCHING(pattern.match(root / "one" / "banana" / "file.jpg"));
+  REQUIRE(pattern.match(root / "one" / "file") == FilePatternSegment::MatchResult::NOT_MATCHING);
+  REQUIRE(pattern.match(root / "one" / "banana" / "file.txt") == FilePatternSegment::MatchResult::INCLUDE);
+  REQUIRE(pattern.match(root / "one" / "banana" / ".txt") == FilePatternSegment::MatchResult::INCLUDE);
+  REQUIRE(pattern.match(root / "one" / "banana" / "file.jpg") == FilePatternSegment::MatchResult::NOT_MATCHING);
 }
 
 TEST_CASE("Matching files with double asterisk in directory") {
   FilePatternSegment pattern((root / "one" / "**" / "banana" / "*.txt").string());
-  REQUIRE_NOT_MATCHING(pattern.match(root / "one" / "file.txt"));
-  REQUIRE_INCLUDE(pattern.match(root / "one" / "banana" / "file.txt"));
-  REQUIRE_INCLUDE(pattern.match(root / "one" / "inter" / "banana" / "other.txt"));
-  REQUIRE_NOT_MATCHING(pattern.match(root / "one" / "inter" / "banana" / "not-good" / "other.txt"));
-  REQUIRE_INCLUDE(pattern.match(root / "one" / "inter" / "inter2" / "banana" / "other.txt"));
+  REQUIRE(pattern.match(root / "one" / "file.txt") == FilePatternSegment::MatchResult::NOT_MATCHING);
+  REQUIRE(pattern.match(root / "one" / "banana" / "file.txt") == FilePatternSegment::MatchResult::INCLUDE);
+  REQUIRE(pattern.match(root / "one" / "inter" / "banana" / "other.txt") == FilePatternSegment::MatchResult::INCLUDE);
+  REQUIRE(pattern.match(root / "one" / "inter" / "banana" / "not-good" / "other.txt") == FilePatternSegment::MatchResult::NOT_MATCHING);
+  REQUIRE(pattern.match(root / "one" / "inter" / "inter2" / "banana" / "other.txt") == FilePatternSegment::MatchResult::INCLUDE);
 }
 
 TEST_CASE("Matching files with trailing double asterisk") {
   FilePatternSegment pattern((root / "one" / "**").string());
-  REQUIRE_INCLUDE(pattern.match(root / "one" / "file.txt"));
-  REQUIRE_INCLUDE(pattern.match(root / "one" / "banana" / "file.txt"));
+  REQUIRE(pattern.match(root / "one" / "file.txt") == FilePatternSegment::MatchResult::INCLUDE);
+  REQUIRE(pattern.match(root / "one" / "banana" / "file.txt") == FilePatternSegment::MatchResult::INCLUDE);
 }
 
 TEST_CASE("Matching directory with exclusion") {
@@ -207,48 +203,48 @@ TEST_CASE("Matching directory with exclusion") {
 
 TEST_CASE("Excluding directories with directory-tree exclusion") {
   FilePatternSegment pattern("!" + (root / "one" / "**").string());
-  REQUIRE_EXCLUDE(pattern.match(root / "one/"));
-  REQUIRE_EXCLUDE(pattern.match(root / "one" / "banana/"));
-  REQUIRE_NOT_MATCHING(pattern.match(root / "two/"));
+  REQUIRE(pattern.match(root / "one/") == FilePatternSegment::MatchResult::EXCLUDE);
+  REQUIRE(pattern.match(root / "one" / "banana/") == FilePatternSegment::MatchResult::EXCLUDE);
+  REQUIRE(pattern.match(root / "two/") == FilePatternSegment::MatchResult::NOT_MATCHING);
 }
 
 TEST_CASE("Excluding files with directory-tree exclusion") {
   FilePatternSegment pattern("!" + (root / "one" / "**").string());
-  REQUIRE_EXCLUDE(pattern.match(root / "one" / "file.txt"));
-  REQUIRE_EXCLUDE(pattern.match(root / "one" / "banana" / "other.txt"));
-  REQUIRE_NOT_MATCHING(pattern.match(root / "two" / "no-excluded.txt"));
+  REQUIRE(pattern.match(root / "one" / "file.txt") == FilePatternSegment::MatchResult::EXCLUDE);
+  REQUIRE(pattern.match(root / "one" / "banana" / "other.txt") == FilePatternSegment::MatchResult::EXCLUDE);
+  REQUIRE(pattern.match(root / "two" / "no-excluded.txt") == FilePatternSegment::MatchResult::NOT_MATCHING);
 }
 
 TEST_CASE("Excluding with specific file exclusion") {
   FilePatternSegment pattern("!" + (root / "one" / "banana" / "file.txt").string());
-  REQUIRE_NOT_MATCHING(pattern.match(root / "one/"));
-  REQUIRE_NOT_MATCHING(pattern.match(root / "one" / "file.txt"));
-  REQUIRE_NOT_MATCHING(pattern.match(root / "two" / "no-excluded.txt"));
-  REQUIRE_NOT_MATCHING(pattern.match(root / "one" / "banana" / "other.txt"));
-  REQUIRE_EXCLUDE(pattern.match(root / "one" / "banana" / "file.txt"));
+  REQUIRE(pattern.match(root / "one/") == FilePatternSegment::MatchResult::NOT_MATCHING);
+  REQUIRE(pattern.match(root / "one" / "file.txt") == FilePatternSegment::MatchResult::NOT_MATCHING);
+  REQUIRE(pattern.match(root / "two" / "no-excluded.txt") == FilePatternSegment::MatchResult::NOT_MATCHING);
+  REQUIRE(pattern.match(root / "one" / "banana" / "other.txt") == FilePatternSegment::MatchResult::NOT_MATCHING);
+  REQUIRE(pattern.match(root / "one" / "banana" / "file.txt") == FilePatternSegment::MatchResult::EXCLUDE);
 }
 
 TEST_CASE("Excluding with file wildcards") {
   FilePatternSegment pattern("!" + (root / "one" / "banana" / "*.txt").string());
-  REQUIRE_NOT_MATCHING(pattern.match(root / "one/"));
-  REQUIRE_EXCLUDE(pattern.match(root / "one" / "banana" / "other.txt"));
-  REQUIRE_EXCLUDE(pattern.match(root / "one" / "banana" / "file.txt"));
+  REQUIRE(pattern.match(root / "one/") == FilePatternSegment::MatchResult::NOT_MATCHING);
+  REQUIRE(pattern.match(root / "one" / "banana" / "other.txt") == FilePatternSegment::MatchResult::EXCLUDE);
+  REQUIRE(pattern.match(root / "one" / "banana" / "file.txt") == FilePatternSegment::MatchResult::EXCLUDE);
 }
 
 TEST_CASE("Excluding with directory-tree file specific exclusion") {
   FilePatternSegment pattern("!" + (root / "one" / "**" / "file.txt").string());
-  REQUIRE_NOT_MATCHING(pattern.match(root / "one/"));
-  REQUIRE_EXCLUDE(pattern.match(root / "one" / "file.txt"));
-  REQUIRE_EXCLUDE(pattern.match(root / "one" / "banana" / "file.txt"));
+  REQUIRE(pattern.match(root / "one/") == FilePatternSegment::MatchResult::NOT_MATCHING);
+  REQUIRE(pattern.match(root / "one" / "file.txt") == FilePatternSegment::MatchResult::EXCLUDE);
+  REQUIRE(pattern.match(root / "one" / "banana" / "file.txt") == FilePatternSegment::MatchResult::EXCLUDE);
 }
 
 TEST_CASE("Excluding with directory wildcard exclusion") {
   FilePatternSegment pattern("!" + (root / "one" / "*e*" / "*").string());
-  REQUIRE_NOT_MATCHING(pattern.match(root / "one/"));
+  REQUIRE(pattern.match(root / "one/") == FilePatternSegment::MatchResult::NOT_MATCHING);
   // even though it seems to match, it would exclude the likes of "/one/ten/banana/file.txt"
-  REQUIRE_NOT_MATCHING(pattern.match(root / "one" / "ten/"));
-  REQUIRE_NOT_MATCHING(pattern.match(root / "one" / "six/"));
-  REQUIRE_EXCLUDE(pattern.match(root / "one" / "ten" / "file.txt"));
+  REQUIRE(pattern.match(root / "one" / "ten/") == FilePatternSegment::MatchResult::NOT_MATCHING);
+  REQUIRE(pattern.match(root / "one" / "six/") == FilePatternSegment::MatchResult::NOT_MATCHING);
+  REQUIRE(pattern.match(root / "one" / "ten" / "file.txt") == FilePatternSegment::MatchResult::EXCLUDE);
 }
 
 TEST_CASE("Check only relevant subdir contents") {

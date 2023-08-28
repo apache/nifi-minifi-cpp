@@ -29,6 +29,11 @@ struct Fixture {
     consumeMqttProcessor_ = plan_->addProcessor("ConsumeMQTT", "consumeMqttProcessor");
   }
 
+  Fixture(Fixture&&) = delete;
+  Fixture(const Fixture&) = delete;
+  Fixture& operator=(Fixture&&) = delete;
+  Fixture& operator=(const Fixture&) = delete;
+
   ~Fixture() {
     LogTestController::getInstance().reset();
   }

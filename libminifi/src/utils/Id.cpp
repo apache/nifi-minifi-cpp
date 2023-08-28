@@ -23,7 +23,7 @@
 
 #include "utils/Id.h"
 
-#define __STDC_FORMAT_MACROS 1  // NOLINT(bugprone-reserved-identifier,cert-dcl37-c,cert-dcl51-cpp)
+#define __STDC_FORMAT_MACROS 1  // NOLINT(bugprone-reserved-identifier,cert-dcl37-c,cert-dcl51-cpp,cppcoreguidelines-macro-usage)
 #include <cinttypes>
 #include <algorithm>
 #include <chrono>
@@ -168,8 +168,8 @@ std::optional<Identifier> Identifier::parse(const std::string &str) {
 }
 
 bool Identifier::parseByte(Data &data, const uint8_t *input, int &charIdx, int &byteIdx) {
-  uint8_t upper;
-  uint8_t lower;
+  uint8_t upper = 0;
+  uint8_t lower = 0;
   if (!StringUtils::from_hex(input[charIdx++], upper)
       || !StringUtils::from_hex(input[charIdx++], lower)) {
     return false;
@@ -218,9 +218,11 @@ uint64_t IdGenerator::getRandomDeviceSegment(int numBits) const {
 #else
     uuid temp_uuid;
     temp_uuid.make(UUID_MAKE_V4);
-    void* uuid_bin = temp_uuid.binary();
-    memcpy(random_uuid.data(), uuid_bin, 16);
-    free(uuid_bin);
+    auto closeFunc = [](gsl::owner<void*> vp) {
+      free(vp);  // NOLINT(cppcoreguidelines-no-malloc)
+    };
+    std::unique_ptr<void, decltype(closeFunc)> uuid_bin(temp_uuid.binary());
+    memcpy(random_uuid.data(), uuid_bin.get(), 16);
 #endif
     for (int i = 0; i < 4; i++) {
       deviceSegment += random_uuid[i];
@@ -281,18 +283,20 @@ void IdGenerator::initialize(const std::shared_ptr<Properties>& properties) {
 
 #ifndef WIN32
 bool IdGenerator::generateWithUuidImpl(unsigned int mode, Identifier::Data& output) {
-  void* uuid = nullptr;
+  auto closeFunc = [](gsl::owner<void*> vp) {
+    free(vp);  // NOLINT(cppcoreguidelines-no-malloc)
+  };
+  std::unique_ptr<void, decltype(closeFunc)> uuid;
   try {
     std::lock_guard<std::mutex> lock(uuid_mutex_);
     uuid_impl_->make(mode);
-    uuid = uuid_impl_->binary();
+    uuid.reset(uuid_impl_->binary());
   } catch (uuid_error_t& uuid_error) {
     logger_->log_error("Failed to generate UUID, error: %s", uuid_error.string());
     return false;
   }
 
-  memcpy(output.data(), uuid, 16);
-  free(uuid);
+  memcpy(output.data(), uuid.get(), 16);
   return true;
 }
 #endif
@@ -309,7 +313,7 @@ Identifier IdGenerator::generate() {
 #endif
       break;
     case MINIFI_UID_IMPL: {
-      std::memcpy(output.data(), deterministic_prefix_, sizeof(deterministic_prefix_));
+      std::memcpy(output.data(), deterministic_prefix_.data(), sizeof(deterministic_prefix_));
       uint64_t incrementor_value = incrementor_++;
       for (int i = 8; i < 16; i++) {
         output[i] = (incrementor_value >> ((15 - i) * 8)) & std::numeric_limits<unsigned char>::max();

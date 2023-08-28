@@ -33,6 +33,11 @@ struct Fixture {
     publishMqttProcessor_ = plan_->addProcessor("PublishMQTT", "publishMqttProcessor");
   }
 
+  Fixture(Fixture&&) = delete;
+  Fixture(const Fixture&) = delete;
+  Fixture& operator=(Fixture&&) = delete;
+  Fixture& operator=(const Fixture&) = delete;
+
   ~Fixture() {
     LogTestController::getInstance().reset();
   }

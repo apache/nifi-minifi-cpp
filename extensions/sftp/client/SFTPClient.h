@@ -209,7 +209,7 @@ class SFTPClient {
 
   std::vector<char> curl_errorbuffer_;
 
-  CURL *easy_ = nullptr;
+  CURL *easy_;
   LIBSSH2_SESSION *ssh_session_ = nullptr;
   LIBSSH2_SFTP *sftp_session_ = nullptr;
 

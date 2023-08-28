@@ -229,9 +229,9 @@ class RouteText : public core::Processor {
   bool matchSegment(MatchingContext& context, const Segment& segment, const core::Property& prop) const;
   std::optional<std::string> getGroup(const std::string_view& segment) const;
 
-  route_text::Routing routing_;
-  route_text::Matching matching_;
-  route_text::Segmentation segmentation_;
+  route_text::Routing routing_ = route_text::Routing::DYNAMIC;
+  route_text::Matching matching_ = route_text::Matching::STARTS_WITH;
+  route_text::Segmentation segmentation_ = route_text::Segmentation::PER_LINE;
   bool trim_{true};
   route_text::CasePolicy case_policy_{route_text::CasePolicy::CASE_SENSITIVE};
   std::optional<utils::Regex> group_regex_;

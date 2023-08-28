@@ -28,7 +28,7 @@ std::optional<MemInfo> MemInfo::parseMemInfoFile(std::ifstream& mem_info_file) {
   bool kb_swap_total_found = false;
   bool kb_swap_free_found = false;
   std::string line;
-  MemInfo mem_info;
+  MemInfo mem_info{};
   while (std::getline(mem_info_file, line)) {
     std::istringstream iss(line);
     std::string entry_name;

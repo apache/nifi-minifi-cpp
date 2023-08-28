@@ -24,22 +24,22 @@ using namespace std::literals::chrono_literals;
 namespace org::apache::nifi::minifi::extensions::procfs {
 
 DiskStatData::MonotonicIncreasingMembers DiskStatData::MonotonicIncreasingMembers::operator-(const MonotonicIncreasingMembers& rhs) const {
-  MonotonicIncreasingMembers diff;
-  diff.reads_completed_ = reads_completed_ - rhs.reads_completed_;
-  diff.reads_merged_ = reads_merged_ - rhs.reads_merged_;
-  diff.sectors_read_ = sectors_read_ - rhs.sectors_read_;
-  diff.milliseconds_spent_reading_ = milliseconds_spent_reading_ - rhs.milliseconds_spent_reading_;
-  diff.writes_completed_ = writes_completed_ - rhs.writes_completed_;
-  diff.writes_merged_ = writes_merged_ - rhs.writes_merged_;
-  diff.sectors_written_ = sectors_written_ - rhs.sectors_written_;
-  diff.milliseconds_spent_writing_ = milliseconds_spent_writing_ - rhs.milliseconds_spent_writing_;
-  diff.milliseconds_spent_io_ = milliseconds_spent_io_ - rhs.milliseconds_spent_io_;
-  diff.weighted_milliseconds_spent_io_ = weighted_milliseconds_spent_io_ - rhs.weighted_milliseconds_spent_io_;
-  return diff;
+  return MonotonicIncreasingMembers {
+    .reads_completed_ = reads_completed_ - rhs.reads_completed_,
+    .reads_merged_ = reads_merged_ - rhs.reads_merged_,
+    .sectors_read_ = sectors_read_ - rhs.sectors_read_,
+    .milliseconds_spent_reading_ = milliseconds_spent_reading_ - rhs.milliseconds_spent_reading_,
+    .writes_completed_ = writes_completed_ - rhs.writes_completed_,
+    .writes_merged_ = writes_merged_ - rhs.writes_merged_,
+    .sectors_written_ = sectors_written_ - rhs.sectors_written_,
+    .milliseconds_spent_writing_ = milliseconds_spent_writing_ - rhs.milliseconds_spent_writing_,
+    .milliseconds_spent_io_ = milliseconds_spent_io_ - rhs.milliseconds_spent_io_,
+    .weighted_milliseconds_spent_io_ = weighted_milliseconds_spent_io_ - rhs.weighted_milliseconds_spent_io_
+  };
 }
 
 std::optional<std::pair<std::string, DiskStatData>> DiskStatData::parseDiskStatLine(std::istream& iss) {
-  DiskStatData disk_stat_data;
+  DiskStatData disk_stat_data{};
   std::string disk_name;
   iss >> disk_stat_data.major_device_number_
       >> disk_stat_data.minor_device_number_
@@ -62,7 +62,7 @@ std::optional<std::pair<std::string, DiskStatData>> DiskStatData::parseDiskStatL
 }
 
 DiskStatData DiskStatData::operator-(const DiskStatData& rhs) const {
-  DiskStatData result;
+  DiskStatData result{};
   gsl_Expects(major_device_number_ == rhs.major_device_number_);
   gsl_Expects(minor_device_number_ == rhs.minor_device_number_);
   gsl_Expects(monotonic_increasing_members_ >= rhs.monotonic_increasing_members_);

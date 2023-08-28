@@ -42,38 +42,38 @@ namespace org::apache::nifi::minifi::core {
 
 Processor::Processor(std::string_view name, std::shared_ptr<ProcessorMetrics> metrics)
     : Connectable(name),
-      logger_(logging::LoggerFactory<Processor>::getLogger(uuid_)),
-      metrics_(metrics ? std::move(metrics) : std::make_shared<ProcessorMetrics>(*this)) {
+      state_(DISABLED),
+      scheduling_period_(MINIMUM_SCHEDULING_PERIOD),
+      run_duration_(DEFAULT_RUN_DURATION),
+      yield_period_(DEFAULT_YIELD_PERIOD_SECONDS),
+      active_tasks_(0),
+      _triggerWhenEmpty(false),
+      metrics_(metrics ? std::move(metrics) : std::make_shared<ProcessorMetrics>(*this)),
+      logger_(logging::LoggerFactory<Processor>::getLogger(uuid_)) {
   has_work_.store(false);
   // Setup the default values
-  state_ = DISABLED;
   strategy_ = TIMER_DRIVEN;
-  _triggerWhenEmpty = false;
-  scheduling_period_ = MINIMUM_SCHEDULING_PERIOD;
-  run_duration_ = DEFAULT_RUN_DURATION;
-  yield_period_ = DEFAULT_YIELD_PERIOD_SECONDS;
   penalization_period_ = DEFAULT_PENALIZATION_PERIOD;
   max_concurrent_tasks_ = DEFAULT_MAX_CONCURRENT_TASKS;
-  active_tasks_ = 0;
   incoming_connections_Iter = this->incoming_connections_.begin();
   logger_->log_debug("Processor %s created UUID %s", name_, getUUIDStr());
 }
 
 Processor::Processor(std::string_view name, const utils::Identifier& uuid, std::shared_ptr<ProcessorMetrics> metrics)
     : Connectable(name, uuid),
-      logger_(logging::LoggerFactory<Processor>::getLogger(uuid_)),
-      metrics_(metrics ? std::move(metrics) : std::make_shared<ProcessorMetrics>(*this)) {
+      state_(DISABLED),
+      scheduling_period_(MINIMUM_SCHEDULING_PERIOD),
+      run_duration_(DEFAULT_RUN_DURATION),
+      yield_period_(DEFAULT_YIELD_PERIOD_SECONDS),
+      active_tasks_(0),
+      _triggerWhenEmpty(false),
+      metrics_(metrics ? std::move(metrics) : std::make_shared<ProcessorMetrics>(*this)),
+      logger_(logging::LoggerFactory<Processor>::getLogger(uuid_)) {
   has_work_.store(false);
   // Setup the default values
-  state_ = DISABLED;
   strategy_ = TIMER_DRIVEN;
-  _triggerWhenEmpty = false;
-  scheduling_period_ = MINIMUM_SCHEDULING_PERIOD;
-  run_duration_ = DEFAULT_RUN_DURATION;
-  yield_period_ = DEFAULT_YIELD_PERIOD_SECONDS;
   penalization_period_ = DEFAULT_PENALIZATION_PERIOD;
   max_concurrent_tasks_ = DEFAULT_MAX_CONCURRENT_TASKS;
-  active_tasks_ = 0;
   incoming_connections_Iter = this->incoming_connections_.begin();
   logger_->log_debug("Processor %s created with uuid %s", name_, getUUIDStr());
 }
@@ -325,7 +325,7 @@ Connectable* Processor::pickIncomingConnection() {
   std::lock_guard<std::mutex> rel_guard(relationship_mutex_);
 
   auto beginIt = incoming_connections_Iter;
-  Connectable* inConn;
+  Connectable* inConn = nullptr;
   do {
     inConn = getNextIncomingConnectionImpl(rel_guard);
     auto connection = dynamic_cast<Connection*>(inConn);

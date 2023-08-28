@@ -90,7 +90,7 @@ struct TestJournal final : libwrapper::Journal {
   }
 
   int getCursor(gsl::owner<char*>* const cursor_out) noexcept override {
-    *cursor_out = strdup(std::to_string(consumed).c_str());
+    *cursor_out = gsl::owner<char*>(strdup(std::to_string(consumed).c_str()));
     return *cursor_out ? 0 : -ENOMEM;
   }
 
@@ -140,11 +140,11 @@ struct TestLibWrapper final : libwrapper::LibWrapper {
 };
 }  // namespace
 
-namespace org { namespace apache { namespace nifi { namespace minifi { namespace extensions { namespace systemd {
+namespace org::apache::nifi::minifi::extensions::systemd {
 struct ConsumeJournaldTestAccessor {
   FIELD_ACCESSOR(state_manager_);
 };
-}}}}}}  // namespace org::apache::nifi::minifi::extensions::systemd
+}  // namespace org::apache::nifi::minifi::extensions::systemd
 using org::apache::nifi::minifi::extensions::systemd::ConsumeJournaldTestAccessor;
 
 TEST_CASE("ConsumeJournald", "[consumejournald]") {

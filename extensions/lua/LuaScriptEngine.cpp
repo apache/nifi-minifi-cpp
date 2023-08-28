@@ -123,6 +123,11 @@ class TriggerSession {
       lua_session_(std::move(lua_session)) {
   }
 
+  TriggerSession(TriggerSession&&) = delete;
+  TriggerSession(const TriggerSession&) = delete;
+  TriggerSession& operator=(TriggerSession&&) = delete;
+  TriggerSession& operator=(const TriggerSession&) = delete;
+
   ~TriggerSession() {
     script_context_->releaseProcessContext();
     lua_session_->releaseCoreResources();

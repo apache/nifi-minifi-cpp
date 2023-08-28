@@ -133,8 +133,8 @@ void UnfocusArchiveEntry::onTrigger(core::ProcessContext *context, core::Process
   session->transfer(flowFile, Success);
 }
 
-UnfocusArchiveEntry::WriteCallback::WriteCallback(ArchiveMetadata *archiveMetadata) {
-  _archiveMetadata = archiveMetadata;
+UnfocusArchiveEntry::WriteCallback::WriteCallback(ArchiveMetadata *archiveMetadata)
+    : _archiveMetadata(archiveMetadata) {
 }
 
 struct UnfocusArchiveEntryWriteData {
@@ -159,8 +159,8 @@ int64_t UnfocusArchiveEntry::WriteCallback::operator()(const std::shared_ptr<io:
   archive_write_open(outputArchive, &data, ok_cb, write_cb, ok_cb);
 
   // Iterate entries & write from tmp file to archive
-  char buf[8192];
-  struct stat st;
+  std::array<char, 8192> buf{};
+  struct stat st{};
   struct archive_entry* entry = nullptr;
 
   for (const auto &entryMetadata : _archiveMetadata->entryMetadata) {
@@ -178,7 +178,7 @@ int64_t UnfocusArchiveEntry::WriteCallback::operator()(const std::shared_ptr<io:
     archive_entry_set_filetype(entry, entryMetadata.entryType);
     archive_entry_set_pathname(entry, entryMetadata.entryName.c_str());
     archive_entry_set_perm(entry, entryMetadata.entryPerm);
-    archive_entry_set_size(entry, entryMetadata.entrySize);
+    archive_entry_set_size(entry, gsl::narrow<la_int64_t>(entryMetadata.entrySize));
     archive_entry_set_uid(entry, entryMetadata.entryUID);
     archive_entry_set_gid(entry, entryMetadata.entryGID);
     archive_entry_set_mtime(entry, entryMetadata.entryMTime, gsl::narrow<long>(entryMetadata.entryMTimeNsec));  // NOLINT long comes from libarchive API
@@ -196,9 +196,9 @@ int64_t UnfocusArchiveEntry::WriteCallback::operator()(const std::shared_ptr<io:
       std::ifstream ifs(entryMetadata.tmpFileName, std::ifstream::in | std::ios::binary);
 
       while (ifs.good()) {
-        ifs.read(buf, sizeof(buf));
+        ifs.read(buf.data(), buf.size());
         auto len = gsl::narrow<size_t>(ifs.gcount());
-        int64_t written = archive_write_data(outputArchive, buf, len);
+        int64_t written = archive_write_data(outputArchive, buf.data(), len);
         if (written < 0) {
           logger_->log_error("UnfocusArchiveEntry failed to write data to "
                              "archive entry %s due to error: %s",

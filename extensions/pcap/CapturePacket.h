@@ -45,15 +45,10 @@ namespace org::apache::nifi::minifi::processors {
 class CapturePacketMechanism {
  public:
   explicit CapturePacketMechanism(const std::string &base_path, const std::string &file, int64_t *max_size)
-      : writer_(nullptr),
-        path_(base_path),
+      : path_(base_path),
         file_(file),
         max_size_(max_size) {
     atomic_count_.store(0);
-  }
-
-  ~CapturePacketMechanism() {
-    delete writer_;
   }
 
   bool inline incrementAndCheck() {
@@ -64,7 +59,7 @@ class CapturePacketMechanism {
     return max_size_;
   }
 
-  pcpp::PcapFileWriterDevice *writer_;
+  std::unique_ptr<pcpp::PcapFileWriterDevice> writer_;
 
   const std::filesystem::path &getBasePath() {
     return path_;

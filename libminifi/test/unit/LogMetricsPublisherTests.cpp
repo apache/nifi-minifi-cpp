@@ -43,6 +43,11 @@ class LogPublisherTestFixture {
     flow_file_repo_->initialize(configuration_);
   }
 
+  LogPublisherTestFixture(LogPublisherTestFixture&&) = delete;
+  LogPublisherTestFixture(const LogPublisherTestFixture&) = delete;
+  LogPublisherTestFixture& operator=(LogPublisherTestFixture&&) = delete;
+  LogPublisherTestFixture& operator=(const LogPublisherTestFixture&) = delete;
+
   ~LogPublisherTestFixture() {
     minifi::utils::file::delete_dir(provenance_repo_->getDirectory());
     minifi::utils::file::delete_dir(flow_file_repo_->getDirectory());

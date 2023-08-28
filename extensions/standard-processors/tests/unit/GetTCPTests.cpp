@@ -87,6 +87,12 @@ class TcpTestServer {
     return port_;
   }
 
+  TcpTestServer() = default;
+  TcpTestServer(TcpTestServer&&) = delete;
+  TcpTestServer(const TcpTestServer&) = delete;
+  TcpTestServer& operator=(TcpTestServer&&) = delete;
+  TcpTestServer& operator=(const TcpTestServer&) = delete;
+
   ~TcpTestServer() {
     io_context_.stop();
     if (server_thread_.joinable())

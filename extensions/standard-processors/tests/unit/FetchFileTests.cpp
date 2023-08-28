@@ -37,6 +37,10 @@ namespace {
 class FetchFileTestFixture {
  public:
   FetchFileTestFixture();
+  FetchFileTestFixture(FetchFileTestFixture&&) = delete;
+  FetchFileTestFixture(const FetchFileTestFixture&) = delete;
+  FetchFileTestFixture& operator=(FetchFileTestFixture&&) = delete;
+  FetchFileTestFixture& operator=(const FetchFileTestFixture&) = delete;
   ~FetchFileTestFixture();
 
  protected:

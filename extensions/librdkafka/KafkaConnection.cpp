@@ -18,17 +18,18 @@
 #include "KafkaConnection.h"
 
 #include <memory>
+#include <utility>
 
 #include "utils/gsl.h"
 
 namespace org::apache::nifi::minifi::processors {
 
-KafkaConnection::KafkaConnection(const KafkaConnectionKey &key)
+KafkaConnection::KafkaConnection(KafkaConnectionKey key)
     : logger_(core::logging::LoggerFactory<KafkaConnection>::getLogger()),
+      initialized_(false),
+      key_(std::move(key)),
       kafka_connection_(nullptr),
       poll_(false) {
-  initialized_ = false;
-  key_ = key;
 }
 
 KafkaConnection::~KafkaConnection() {
@@ -69,7 +70,7 @@ void KafkaConnection::setConnection(gsl::owner<rd_kafka_t*> producer) {
   startPoll();
 }
 
-rd_kafka_t *KafkaConnection::getConnection() const {
+gsl::owner<rd_kafka_t*> KafkaConnection::getConnection() const {
   return kafka_connection_;
 }
 

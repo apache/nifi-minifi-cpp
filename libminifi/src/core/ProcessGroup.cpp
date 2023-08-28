@@ -50,16 +50,15 @@ ProcessGroup::ProcessGroup(ProcessGroupType type, std::string_view name, const u
       config_version_(version),
       type_(type),
       parent_process_group_(parent),
+      yield_period_msec_(0ms),
+      transmitting_(false),
+      transport_protocol_("RAW"),
       logger_(logging::LoggerFactory<ProcessGroup>::getLogger()) {
-  yield_period_msec_ = 0ms;
-
   if (parent_process_group_ != nullptr) {
     onschedule_retry_msec_ = parent_process_group_->getOnScheduleRetryPeriod();
   } else {
     onschedule_retry_msec_ = DEFAULT_ONSCHEDULE_RETRY_INTERVAL_MS;
   }
-  transmitting_ = false;
-  transport_protocol_ = "RAW";
 
   logger_->log_debug("ProcessGroup %s created", name_);
 }
@@ -69,12 +68,11 @@ ProcessGroup::ProcessGroup(ProcessGroupType type, std::string_view name)
       config_version_(0),
       type_(type),
       parent_process_group_(nullptr),
+      yield_period_msec_(0ms),
+      onschedule_retry_msec_(DEFAULT_ONSCHEDULE_RETRY_INTERVAL_MS),
+      transmitting_(false),
+      transport_protocol_("RAW"),
       logger_(logging::LoggerFactory<ProcessGroup>::getLogger()) {
-  yield_period_msec_ = 0ms;
-  onschedule_retry_msec_ = DEFAULT_ONSCHEDULE_RETRY_INTERVAL_MS;
-  transmitting_ = false;
-  transport_protocol_ = "RAW";
-
   logger_->log_debug("ProcessGroup %s created", name_);
 }
 

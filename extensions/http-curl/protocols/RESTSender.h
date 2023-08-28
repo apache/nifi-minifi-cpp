@@ -74,7 +74,7 @@ class RESTSender : public RESTProtocol, public C2Protocol {
 
   std::string rest_uri_;
   std::string ack_uri_;
-  RequestEncoding req_encoding_;
+  RequestEncoding req_encoding_ = RequestEncoding::none;
 
  private:
   std::shared_ptr<core::logging::Logger> logger_ = core::logging::LoggerFactory<RESTSender>::getLogger();

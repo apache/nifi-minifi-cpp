@@ -108,6 +108,11 @@ class ListenHTTPTestsFixture {
     plan->setProperty(log_attribute, minifi::processors::LogAttribute::FlowFilesToLog, "0");
   }
 
+  ListenHTTPTestsFixture(ListenHTTPTestsFixture&&) = delete;
+  ListenHTTPTestsFixture(const ListenHTTPTestsFixture&) = delete;
+  ListenHTTPTestsFixture& operator=(ListenHTTPTestsFixture&&) = delete;
+  ListenHTTPTestsFixture& operator=(const ListenHTTPTestsFixture&) = delete;
+
   virtual ~ListenHTTPTestsFixture() {
     LogTestController::getInstance().reset();
   }

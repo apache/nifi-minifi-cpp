@@ -200,7 +200,7 @@ class C2Agent : public state::UpdateController {
   std::function<utils::TaskRescheduleInfo()> c2_producer_;
 
   // reference to the update sink, against which we will execute updates.
-  state::StateMonitor* update_sink_;
+  state::StateMonitor* update_sink_ = nullptr;
 
   // functions that will be used for the udpate controller.
   std::vector<std::function<utils::TaskRescheduleInfo()>> functions_;
@@ -208,9 +208,9 @@ class C2Agent : public state::UpdateController {
   std::shared_ptr<controllers::UpdatePolicyControllerService> update_service_;
 
   // controller service provider reference.
-  core::controller::ControllerServiceProvider* controller_;
+  core::controller::ControllerServiceProvider* controller_ = nullptr;
 
-  state::Pausable* pause_handler_;
+  state::Pausable* pause_handler_ = nullptr;
 
   // shared pointer to the configuration of this agent
   std::shared_ptr<Configure> configuration_;

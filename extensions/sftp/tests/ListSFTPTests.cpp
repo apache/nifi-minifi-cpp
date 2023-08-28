@@ -81,6 +81,11 @@ class ListSFTPTestsFixture {
     createPlan(nullptr, configuration);
   }
 
+  ListSFTPTestsFixture(ListSFTPTestsFixture&&) = delete;
+  ListSFTPTestsFixture(const ListSFTPTestsFixture&) = delete;
+  ListSFTPTestsFixture& operator=(ListSFTPTestsFixture&&) = delete;
+  ListSFTPTestsFixture& operator=(const ListSFTPTestsFixture&) = delete;
+
   virtual ~ListSFTPTestsFixture() {
     LogTestController::getInstance().reset();
   }
@@ -227,7 +232,7 @@ TEST_CASE_METHOD(ListSFTPTestsFixture, "ListSFTP list one file writes attributes
   uint64_t uid = 0;
   uint64_t gid = 0;
   REQUIRE(true == utils::file::FileUtils::get_uid_gid(file, uid, gid));
-  uint32_t permissions;
+  uint32_t permissions = 0;
   REQUIRE(true == utils::file::FileUtils::get_permissions(file, permissions));
   std::stringstream permissions_ss;
   permissions_ss << std::setfill('0') << std::setw(4) << std::oct << permissions;

@@ -118,21 +118,21 @@ Value resolve_user_id(const std::vector<Value> &args) {
 }
 
 Value expr_hostname(const std::vector<Value> &args) {
-  char hostname[1024];
+  std::array<char, 1024> hostname{};
   hostname[1023] = '\0';
-  gethostname(hostname, 1023);
+  gethostname(hostname.data(), 1023);
 
   if (!args.empty() && args[0].asBoolean()) {
-    int status;
-    struct addrinfo hints;
-    struct addrinfo *result;
-    struct addrinfo *addr_cursor;
+    int status = 0;
+    struct addrinfo hints{};
+    struct addrinfo *result = nullptr;
+    struct addrinfo *addr_cursor = nullptr;
     memset(&hints, 0, sizeof(hints));
     hints.ai_family = AF_UNSPEC;
     hints.ai_socktype = SOCK_STREAM;
     hints.ai_flags = AI_CANONNAME;
 
-    status = getaddrinfo(hostname, nullptr, &hints, &result);
+    status = getaddrinfo(hostname.data(), nullptr, &hints, &result);
 
     if (status) {
       std::string message("Failed to resolve local hostname to discover IP: ");
@@ -151,24 +151,24 @@ Value expr_hostname(const std::vector<Value> &args) {
     freeaddrinfo(result);
   }
 
-  return Value(std::string(hostname));
+  return Value(std::string(hostname.data()));
 }
 
 Value expr_ip(const std::vector<Value>& /*args*/) {
-  char hostname[1024];
+  std::array<char, 1024> hostname{};
   hostname[1023] = '\0';
-  gethostname(hostname, 1023);
+  gethostname(hostname.data(), 1023);
 
-  int status;
-  char ip_str[INET6_ADDRSTRLEN];
-  struct sockaddr_in *addr;
-  struct addrinfo hints;
-  struct addrinfo *result;
-  struct addrinfo *addr_cursor;
+  int status = 0;
+  std::array<char, INET6_ADDRSTRLEN> ip_str{};
+  struct sockaddr_in *addr = nullptr;
+  struct addrinfo hints{};
+  struct addrinfo *result = nullptr;
+  struct addrinfo *addr_cursor = nullptr;
   memset(&hints, 0, sizeof(hints));
   hints.ai_family = AF_INET;
 
-  status = getaddrinfo(hostname, nullptr, &hints, &result);
+  status = getaddrinfo(hostname.data(), nullptr, &hints, &result);
 
   if (status) {
     std::string message("Failed to resolve local hostname to discover IP: ");
@@ -179,9 +179,9 @@ Value expr_ip(const std::vector<Value>& /*args*/) {
   for (addr_cursor = result; addr_cursor != nullptr; addr_cursor = addr_cursor->ai_next) {
     if (addr_cursor->ai_family == AF_INET) {
       addr = reinterpret_cast<struct sockaddr_in *>(addr_cursor->ai_addr);
-      inet_ntop(addr_cursor->ai_family, &(addr->sin_addr), ip_str, sizeof(ip_str));
+      inet_ntop(addr_cursor->ai_family, &(addr->sin_addr), ip_str.data(), ip_str.size());
       freeaddrinfo(result);
-      return Value(std::string(ip_str));
+      return Value(std::string(ip_str.data()));
     }
   }
 
@@ -612,7 +612,7 @@ Value expr_unescapeXml(const std::vector<Value> &args) {
 
 Value expr_escapeCsv(const std::vector<Value> &args) {
   auto result = args[0].asString();
-  const char quote_req_chars[] = { '"', '\r', '\n', ',' };
+  const std::array<char, 4> quote_req_chars = { '"', '\r', '\n', ',' };
   bool quote_required = false;
 
   for (const auto &c : quote_req_chars) {
@@ -686,7 +686,7 @@ Value expr_unescapeCsv(const std::vector<Value> &args) {
     if (quote_pos != result.length() - 1) {
       quote_required = true;
     } else {
-      const char quote_req_chars[] = { '\r', '\n', ',' };
+      const std::array<char, 3> quote_req_chars = { '\r', '\n', ',' };
 
       for (const auto &c : quote_req_chars) {
         if (result.find(c) != std::string::npos) {
@@ -732,7 +732,7 @@ Value expr_urlDecode(const std::vector<Value> &args) {
   auto arg_0 = args[0].asString();
   CURL *curl = curl_easy_init();
   if (curl != nullptr) {
-    int out_len;
+    int out_len = 0;
     char *output = curl_easy_unescape(curl, arg_0.c_str(), static_cast<int>(arg_0.length()), &out_len);
     if (output != nullptr) {
       auto result = std::string(output, static_cast<size_t>(out_len));
@@ -891,9 +891,8 @@ Value expr_toRadix(const std::vector<Value> &args) {
     sign = "-";
   }
 
-  const char chars[] = "0123456789ab"
-      "cdefghijklmn"
-      "opqrstuvwxyz";
+  const std::array<char, 36> chars = { '0', '1', '2', '3', '4', '5', '6', '7', '8', '9', 'a', 'b', 'c', 'd', 'e', 'f', 'g', 'h',
+    'i', 'j', 'k', 'l', 'm', 'n', 'o', 'p', 'q', 'r', 's', 't', 'u', 'v', 'w', 'x', 'y', 'z' };
   std::string str_num;
 
   while (value) {

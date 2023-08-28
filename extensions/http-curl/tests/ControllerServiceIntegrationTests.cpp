@@ -16,7 +16,7 @@
  * limitations under the License.
  */
 
-#define EXTENSION_LIST "*minifi-*,!*jni*"
+#define EXTENSION_LIST "*minifi-*,!*jni*"  // NOLINT(cppcoreguidelines-macro-usage)
 
 #undef NDEBUG
 #include <cassert>

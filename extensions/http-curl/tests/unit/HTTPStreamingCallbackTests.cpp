@@ -36,6 +36,11 @@ class HttpStreamingCallbackTestsFixture {
     LogTestController::getInstance().setTrace<HttpStreamingCallback>();
   }
 
+  HttpStreamingCallbackTestsFixture(HttpStreamingCallbackTestsFixture&&) = delete;
+  HttpStreamingCallbackTestsFixture(const HttpStreamingCallbackTestsFixture&) = delete;
+  HttpStreamingCallbackTestsFixture& operator=(HttpStreamingCallbackTestsFixture&&) = delete;
+  HttpStreamingCallbackTestsFixture& operator=(const HttpStreamingCallbackTestsFixture&) = delete;
+
   virtual ~HttpStreamingCallbackTestsFixture() {
     if (consumer_thread_.joinable()) {
       consumer_thread_.join();

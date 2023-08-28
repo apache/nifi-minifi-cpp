@@ -105,13 +105,13 @@ class AlertSink : public spdlog::sinks::base_sink<std::mutex> {
 
   std::atomic_bool running_{true};
   std::mutex mtx_;
+  std::shared_ptr<utils::timeutils::Clock> clock_ = utils::timeutils::getClock();
   std::chrono::milliseconds next_flush_;
   std::condition_variable cv_;
   std::thread flush_thread_;
 
   utils::StagingQueue<LogBuffer> buffer_;
 
-  std::shared_ptr<utils::timeutils::Clock> clock_ = utils::timeutils::getClock();
   std::atomic<gsl::owner<Services*>> services_{nullptr};
 
   std::shared_ptr<Logger> logger_;

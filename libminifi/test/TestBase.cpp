@@ -169,9 +169,9 @@ void LogTestController::resetStream(std::ostringstream& stream) {
   stream.clear();
 }
 
-LogTestController::LogTestController(const std::shared_ptr<logging::LoggerProperties>& loggerProps) {
+LogTestController::LogTestController(const std::shared_ptr<logging::LoggerProperties>& loggerProps)
+    : my_properties_(loggerProps) {
   gsl_Expects(log_output_ptr_);
-  my_properties_ = loggerProps;
   bool initMain = false;
   if (nullptr == my_properties_) {
     my_properties_ = std::make_shared<logging::LoggerProperties>();
