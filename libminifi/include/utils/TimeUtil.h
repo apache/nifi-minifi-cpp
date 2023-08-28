@@ -35,15 +35,24 @@
 #include "StringUtils.h"
 
 // libc++ doesn't define operator<=> on durations, and apparently the operator rewrite rules don't automagically make one
-#if defined(_LIBCPP_VERSION) && _LIBCPP_VERSION < 16000
+#if defined(_LIBCPP_VERSION)
 #include <compare>
+#include <concepts>
 #endif
 
 #include "date/date.h"
 
 #define TIME_FORMAT "%Y-%m-%d %H:%M:%S"
 
-#if defined(_LIBCPP_VERSION) && _LIBCPP_VERSION < 16000
+#if defined(_LIBCPP_VERSION)
+namespace org::apache::nifi::minifi::detail {
+template<typename T>
+concept has_spaceship_operator = requires(T t, T u) { t <=> u; };  // NOLINT(readability/braces)
+}  // namespace org::apache::nifi::minifi::detail
+
+static_assert(!org::apache::nifi::minifi::detail::has_spaceship_operator<std::chrono::duration<double>>,
+  "Current libc++ version supports spaceship operator for durations, remove this workaround!");
+
 template<typename Rep1, typename Period1, typename Rep2, typename Period2>
 std::strong_ordering operator<=>(std::chrono::duration<Rep1, Period1> lhs, std::chrono::duration<Rep2, Period2> rhs) {
   if (lhs < rhs) {

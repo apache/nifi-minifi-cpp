@@ -17,9 +17,11 @@
 
 function(use_bundled_curl SOURCE_DIR BINARY_DIR)
     # Define patch step
-    set(PATCH_FILE "${SOURCE_DIR}/thirdparty/curl/module-path.patch")
+    set(PATCH_FILE_1 "${SOURCE_DIR}/thirdparty/curl/module-path.patch")
+    set(PATCH_FILE_2 "${SOURCE_DIR}/thirdparty/curl/strerror.patch")
     set(PC ${Bash_EXECUTABLE} -c "set -x && \
-            (\"${Patch_EXECUTABLE}\" -p1 -R -s -f --dry-run -i \"${PATCH_FILE}\" || \"${Patch_EXECUTABLE}\" -p1 -N -i \"${PATCH_FILE}\")")
+            (\"${Patch_EXECUTABLE}\" -p1 -R -s -f --dry-run -i \"${PATCH_FILE_1}\" || \"${Patch_EXECUTABLE}\" -p1 -N -i \"${PATCH_FILE_1}\") && \
+            (\"${Patch_EXECUTABLE}\" -p1 -R -s -f --dry-run -i \"${PATCH_FILE_2}\" || \"${Patch_EXECUTABLE}\" -p1 -N -i \"${PATCH_FILE_2}\")")
     # Define byproducts
     if (WIN32)
         set(BYPRODUCT "lib/libcurl.lib")
