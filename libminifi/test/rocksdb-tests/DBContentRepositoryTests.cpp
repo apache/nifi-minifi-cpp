@@ -109,7 +109,7 @@ TEST_CASE("Delete Claim", "[TestDBCR2]") {
   std::string readstr;
 
   SECTION("Sync") {
-    configuration->set(minifi::Configure::nifi_dbcontent_repository_purge_period, "0 s");
+    configuration->set(minifi::Configure::nifi_dbcontent_repository_purge_period, "0");
     REQUIRE(content_repo->initialize(configuration));
 
     content_repo->remove(*claim);
