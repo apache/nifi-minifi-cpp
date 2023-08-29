@@ -39,7 +39,8 @@ if (WIN32)
 endif()
 
 add_executable(minificontroller ${MINIFI_CONTROLLER_SOURCES})
-target_link_libraries(minificontroller ${LIBMINIFI} cxxopts Threads::Threads)
+include(ArgParse)
+target_link_libraries(minificontroller ${LIBMINIFI} argparse Threads::Threads)
 
 set_target_properties(minificontroller PROPERTIES
     OUTPUT_NAME minificontroller

@@ -200,7 +200,7 @@ void writeSchemaIfRequested(const argparse::ArgumentParser& parser, const std::s
 }
 
 int main(int argc, char **argv) {
-  argparse::ArgumentParser argument_parser("Apache MiNiFi C++");
+  argparse::ArgumentParser argument_parser("Apache MiNiFi C++", "1.0", argparse::default_arguments::help);
   argument_parser.add_argument("-p", "--property")
     .append()
     .metavar("KEY=VALUE")

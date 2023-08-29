@@ -17,6 +17,8 @@
  */
 #include <vector>
 #include <iostream>
+#include <string>
+#include <string_view>
 
 #include "MainHelper.h"
 #include "properties/Configure.h"
@@ -26,8 +28,8 @@
 #include "core/extension/ExtensionManager.h"
 #include "core/ConfigurationFactory.h"
 #include "Exception.h"
-
-#include "cxxopts.hpp"
+#include "argparse/argparse.hpp"
+#include "range/v3/algorithm/contains.hpp"
 
 namespace minifi = org::apache::nifi::minifi;
 
@@ -109,43 +111,73 @@ int main(int argc, char **argv) {
     exit(1);
   }
 
-  cxxopts::Options options("MiNiFiController", "MiNiFi local agent controller");
-  options.positional_help("[optional args]").show_positional_help();
+  argparse::ArgumentParser argument_parser("Apache MiNiFi C++ Controller", "1.0", argparse::default_arguments::help);
+  argument_parser.add_argument("--host").metavar("HOSTNAME")
+    .help("Specifies connecting host name");
+  argument_parser.add_argument("--port")
+    .metavar("PORT")
+    .help("Specifies connecting host port")
+    .scan<'d', int>();
+  argument_parser.add_argument("--stop")
+    .metavar("COMPONENT")
+    .nargs(argparse::nargs_pattern::at_least_one)
+    .help("Shuts down the provided components");
+  argument_parser.add_argument("--start")
+    .metavar("COMPONENT")
+    .nargs(argparse::nargs_pattern::at_least_one)
+    .help("Starts provided components");
+  argument_parser.add_argument("-l", "--list")
+    .action([](const std::string& value) {
+      static const std::vector<std::string> choices = {"components", "connections"};
+      if (ranges::contains(choices, value)) {
+        return value;
+      }
+      throw std::runtime_error("List command only accepts the following parameters: [components, connections]");
+    })
+    .help("Provides a list of connections or components (processors). Accepted parameters: [components, components]");
+  argument_parser.add_argument("-c", "--clear")
+    .metavar("CONNECTION")
+    .nargs(argparse::nargs_pattern::at_least_one)
+    .help("Clears the associated connection queues");
+  argument_parser.add_argument("--getsize")
+    .metavar("CONNECTION")
+    .nargs(argparse::nargs_pattern::at_least_one)
+    .help("Reports the size of the associated connection queues");
+  argument_parser.add_argument("--updateflow")
+    .metavar("FLOW_CONFIG_PATH")
+    .help("Updates the flow of the agent using the provided flow file");
 
-  options.add_options()
-      ("h,help", "Shows Help")
-      ("host", "Specifies connecting host name", cxxopts::value<std::string>())
-      ("port", "Specifies connecting host port", cxxopts::value<int>())
-      ("stop", "Shuts down the provided component", cxxopts::value<std::vector<std::string>>())
-      ("start", "Starts provided component", cxxopts::value<std::vector<std::string>>())
-      ("l,list", "Provides a list of connections or processors", cxxopts::value<std::string>())
-      ("c,clear", "Clears the associated connection queue", cxxopts::value<std::vector<std::string>>())
-      ("getsize", "Reports the size of the associated connection queue", cxxopts::value<std::vector<std::string>>())
-      ("updateflow", "Updates the flow of the agent using the provided flow file", cxxopts::value<std::string>())
-      ("getfull", "Reports a list of full connections")
-      ("jstack", "Returns backtraces from the agent")
-      ("manifest", "Generates a manifest for the current binary")
-      ("noheaders", "Removes headers from output streams");
+  auto addFlagOption = [&](std::string_view name, const std::string& help) {
+    argument_parser.add_argument(name)
+      .default_value(false)
+      .implicit_value(true)
+      .help(help);
+  };
+  addFlagOption("--getfull", "Reports a list of full connections");
+  addFlagOption("--jstack", "Returns backtraces from the agent");
+  addFlagOption("--manifest", "Generates a manifest for the current binary");
+  addFlagOption("--noheaders", "Removes headers from output streams");
 
   bool show_headers = true;
 
   try {
-    auto result = options.parse(argc, argv);
+    argument_parser.parse_args(argc, argv);
+  } catch (const std::runtime_error& err) {
+    std::cerr << err.what() << std::endl;
+    std::cerr << argument_parser;
+    std::exit(1);
+  }
 
-    if (result.count("help")) {
-      std::cout << options.help({ "", "Group" }) << std::endl;
-      exit(0);
-    }
-
-    if (result.count("host")) {
-      socket_data.host = result["host"].as<std::string>();
+  try {
+    if (const auto& host = argument_parser.present("--host")) {
+      socket_data.host = *host;
     } else {
       configuration->get(minifi::Configure::controller_socket_host, socket_data.host);
     }
 
     std::string port_str;
-    if (result.count("port")) {
-      socket_data.port = result["port"].as<int>();
+    if (const auto& port = argument_parser.present<int>("--port")) {
+      socket_data.port = *port;
     } else if (socket_data.port == -1 && configuration->get(minifi::Configure::controller_socket_port, port_str)) {
       socket_data.port = std::stoi(port_str);
     }
@@ -154,13 +186,12 @@ int main(int argc, char **argv) {
       std::cout << "MiNiFi Controller is disabled" << std::endl;
       exit(0);
     }
-    if (result.count("noheaders")) {
+    if (argument_parser.get<bool>("--noheaders")) {
       show_headers = false;
     }
 
-    if (result.count("stop") > 0) {
-      auto& components = result["stop"].as<std::vector<std::string>>();
-      for (const auto& component : components) {
+    if (const auto& components = argument_parser.present<std::vector<std::string>>("--stop")) {
+      for (const auto& component : *components) {
         if (minifi::controller::stopComponent(socket_data, component))
           std::cout << component << " requested to stop" << std::endl;
         else
@@ -168,9 +199,8 @@ int main(int argc, char **argv) {
       }
     }
 
-    if (result.count("start") > 0) {
-      auto& components = result["start"].as<std::vector<std::string>>();
-      for (const auto& component : components) {
+    if (const auto& components = argument_parser.present<std::vector<std::string>>("--start")) {
+      for (const auto& component : *components) {
         if (minifi::controller::startComponent(socket_data, component))
           std::cout << component << " requested to start" << std::endl;
         else
@@ -178,9 +208,8 @@ int main(int argc, char **argv) {
       }
     }
 
-    if (result.count("c") > 0) {
-      auto& components = result["c"].as<std::vector<std::string>>();
-      for (const auto& connection : components) {
+    if (const auto& components = argument_parser.present<std::vector<std::string>>("--clear")) {
+      for (const auto& connection : *components) {
         if (minifi::controller::clearConnection(socket_data, connection)) {
           std::cout << "Sent clear command to " << connection << "." << std::endl;
         } else {
@@ -189,40 +218,39 @@ int main(int argc, char **argv) {
       }
     }
 
-    if (result.count("getsize") > 0) {
-      auto& components = result["getsize"].as<std::vector<std::string>>();
-      for (const auto& component : components) {
+    if (const auto& components = argument_parser.present<std::vector<std::string>>("--getsize")) {
+      for (const auto& component : *components) {
         if (!minifi::controller::getConnectionSize(socket_data, std::cout, component))
           std::cout << "Could not connect to remote host " << socket_data.host << ":" << socket_data.port << std::endl;
       }
     }
-    if (result.count("l") > 0) {
-      auto& option = result["l"].as<std::string>();
-      if (option == "components") {
+
+    if (const auto& option = argument_parser.present("--list")) {
+      if (*option == "components") {
         if (!minifi::controller::listComponents(socket_data, std::cout, show_headers))
           std::cout << "Could not connect to remote host " << socket_data.host << ":" << socket_data.port << std::endl;
-      } else if (option == "connections") {
+      } else if (*option == "connections") {
         if (!minifi::controller::listConnections(socket_data, std::cout, show_headers))
           std::cout << "Could not connect to remote host " << socket_data.host << ":" << socket_data.port << std::endl;
       }
     }
-    if (result.count("getfull") > 0) {
+
+    if (argument_parser.get<bool>("--getfull")) {
       if (!minifi::controller::getFullConnections(socket_data, std::cout))
         std::cout << "Could not connect to remote host " << socket_data.host << ":" << socket_data.port << std::endl;
     }
 
-    if (result.count("updateflow") > 0) {
-      auto& flow_file = result["updateflow"].as<std::string>();
-      if (!minifi::controller::updateFlow(socket_data, std::cout, flow_file))
+    if (const auto& flow_file = argument_parser.present("--updateflow")) {
+      if (!minifi::controller::updateFlow(socket_data, std::cout, *flow_file))
         std::cout << "Could not connect to remote host " << socket_data.host << ":" << socket_data.port << std::endl;
     }
 
-    if (result.count("manifest") > 0) {
+    if (argument_parser.get<bool>("--manifest")) {
       if (!minifi::controller::printManifest(socket_data, std::cout))
         std::cout << "Could not connect to remote host " << socket_data.host << ":" << socket_data.port << std::endl;
     }
 
-    if (result.count("jstack") > 0) {
+    if (argument_parser.get<bool>("--jstack")) {
       if (!minifi::controller::getJstacks(socket_data, std::cout))
         std::cout << "Could not connect to remote host " << socket_data.host << ":" << socket_data.port << std::endl;
     }
@@ -230,8 +258,8 @@ int main(int argc, char **argv) {
     // catch anything thrown within try block that derives from std::exception
     std::cerr << exc.what() << std::endl;
   } catch (...) {
-    std::cout << options.help({ "", "Group" }) << std::endl;
-    exit(0);
+    std::cerr << argument_parser;
+    exit(1);
   }
   return 0;
 }

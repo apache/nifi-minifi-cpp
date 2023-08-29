@@ -297,9 +297,6 @@ add_library(RapidJSON INTERFACE)
 target_include_directories(RapidJSON SYSTEM INTERFACE "${CMAKE_CURRENT_SOURCE_DIR}/thirdparty/rapidjson-48fbd8cd202ca54031fe799db2ad44ffa8e77c13/include")
 target_compile_definitions(RapidJSON INTERFACE RAPIDJSON_HAS_STDSTRING)
 
-# cxxopts
-include(CxxOpts)
-
 include(Coroutines)
 enable_coroutines()
 
