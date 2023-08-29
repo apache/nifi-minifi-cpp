@@ -28,7 +28,7 @@ install_pkgs() {
     if [ "$OS_MAJOR" -gt 7 ]; then
         sudo dnf -y install "$@"
     else
-        sudo yum -y install "$@"
+        ulimit -n 1024000 && sudo yum -y install "$@"
     fi
 }
 
