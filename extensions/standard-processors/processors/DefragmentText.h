@@ -59,8 +59,8 @@ namespace org::apache::nifi::minifi::processors {
 
 class DefragmentText : public core::Processor {
  public:
-  explicit DefragmentText(std::string name,  const utils::Identifier& uuid = {})
-      : Processor(std::move(name), uuid) {
+  explicit DefragmentText(std::string_view name,  const utils::Identifier& uuid = {})
+      : Processor(name, uuid) {
   }
 
   EXTENSIONAPI static constexpr const char* Description = "DefragmentText splits and merges incoming flowfiles so cohesive messages are not split between them. "

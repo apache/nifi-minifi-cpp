@@ -42,8 +42,8 @@ class AppendHostInfo : public core::Processor {
   static constexpr const char* REFRESH_POLICY_ON_TRIGGER = "On every trigger";
   static constexpr const char* REFRESH_POLICY_ON_SCHEDULE = "On schedule";
 
-  explicit AppendHostInfo(std::string name, const utils::Identifier& uuid = {})
-      : core::Processor(std::move(name), uuid) {
+  explicit AppendHostInfo(std::string_view name, const utils::Identifier& uuid = {})
+      : core::Processor(name, uuid) {
   }
   ~AppendHostInfo() override = default;
 

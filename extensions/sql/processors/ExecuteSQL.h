@@ -35,7 +35,7 @@ namespace org::apache::nifi::minifi::processors {
 
 class ExecuteSQL : public SQLProcessor, public FlowFileSource {
  public:
-  explicit ExecuteSQL(std::string name, const utils::Identifier& uuid = {});
+  explicit ExecuteSQL(std::string_view name, const utils::Identifier& uuid = {});
 
   EXTENSIONAPI static constexpr const char* Description = "Execute provided SQL query. "
       "Query result rows will be outputted as new flow files with attribute keys equal to result column names and values equal to result values. "

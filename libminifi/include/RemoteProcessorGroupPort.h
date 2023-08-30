@@ -76,8 +76,8 @@ struct RPG {
 
 class RemoteProcessorGroupPort : public core::Processor {
  public:
-  RemoteProcessorGroupPort(std::string name, std::string url, std::shared_ptr<Configure> configure, const utils::Identifier &uuid = {})
-      : core::Processor(std::move(name), uuid),
+  RemoteProcessorGroupPort(std::string_view name, std::string url, std::shared_ptr<Configure> configure, const utils::Identifier &uuid = {})
+      : core::Processor(name, uuid),
         configure_(std::move(configure)),
         direction_(sitetosite::SEND),
         transmitting_(false),

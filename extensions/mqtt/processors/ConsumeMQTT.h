@@ -39,8 +39,8 @@ namespace org::apache::nifi::minifi::processors {
 
 class ConsumeMQTT : public processors::AbstractMQTTProcessor {
  public:
-  explicit ConsumeMQTT(std::string name, const utils::Identifier& uuid = {})
-      : processors::AbstractMQTTProcessor(std::move(name), uuid) {
+  explicit ConsumeMQTT(std::string_view name, const utils::Identifier& uuid = {})
+      : processors::AbstractMQTTProcessor(name, uuid) {
   }
 
   EXTENSIONAPI static constexpr const char* Description = "This Processor gets the contents of a FlowFile from a MQTT broker for a specified topic. "

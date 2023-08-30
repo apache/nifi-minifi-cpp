@@ -24,13 +24,13 @@
 
 namespace org::apache::nifi::minifi::state::response {
 
-SupportedOperations::SupportedOperations(std::string name, const utils::Identifier &uuid)
-    : DeviceInformation(std::move(name), uuid) {
+SupportedOperations::SupportedOperations(std::string_view name, const utils::Identifier &uuid)
+    : DeviceInformation(name, uuid) {
   setArray(true);
 }
 
-SupportedOperations::SupportedOperations(std::string name)
-    : DeviceInformation(std::move(name)) {
+SupportedOperations::SupportedOperations(std::string_view name)
+    : DeviceInformation(name) {
   setArray(true);
 }
 

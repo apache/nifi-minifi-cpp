@@ -46,8 +46,8 @@ enum class ScriptEngineOption {
 
 class ExecuteScript : public core::Processor {
  public:
-  explicit ExecuteScript(std::string name, const utils::Identifier &uuid = {})
-      : Processor(std::move(name), uuid) {
+  explicit ExecuteScript(std::string_view name, const utils::Identifier &uuid = {})
+      : Processor(name, uuid) {
   }
 
   EXTENSIONAPI static constexpr const char* Description = "Executes a script given the flow file and a process session. "

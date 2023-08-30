@@ -30,14 +30,14 @@ namespace org::apache::nifi::minifi::sql::controllers {
 
 class MockODBCService : public DatabaseService {
  public:
-  explicit MockODBCService(std::string name, utils::Identifier uuid = utils::Identifier())
-    : DatabaseService(std::move(name), uuid),
+  explicit MockODBCService(std::string_view name, utils::Identifier uuid = utils::Identifier())
+    : DatabaseService(name, uuid),
       logger_(logging::LoggerFactory<MockODBCService>::getLogger(uuid)) {
     initialize();
   }
 
-  explicit MockODBCService(std::string name, const std::shared_ptr<Configure> &configuration)
-      : DatabaseService(std::move(name)),
+  explicit MockODBCService(std::string_view name, const std::shared_ptr<Configure> &configuration)
+      : DatabaseService(name),
         logger_(logging::LoggerFactory<MockODBCService>::getLogger()) {
     setConfiguration(configuration);
     initialize();

@@ -72,12 +72,12 @@ class AzureStorageCredentialsService : public core::controller::ControllerServic
   EXTENSIONAPI static constexpr bool SupportsDynamicProperties = false;
   ADD_COMMON_VIRTUAL_FUNCTIONS_FOR_CONTROLLER_SERVICES
 
-  explicit AzureStorageCredentialsService(std::string name, const minifi::utils::Identifier& uuid = {})
-      : ControllerService(std::move(name), uuid) {
+  explicit AzureStorageCredentialsService(std::string_view name, const minifi::utils::Identifier& uuid = {})
+      : ControllerService(name, uuid) {
   }
 
-  explicit AzureStorageCredentialsService(std::string name, const std::shared_ptr<Configure>& /*configuration*/)
-      : ControllerService(std::move(name)) {
+  explicit AzureStorageCredentialsService(std::string_view name, const std::shared_ptr<Configure>& /*configuration*/)
+      : ControllerService(name) {
   }
 
   void initialize() override;

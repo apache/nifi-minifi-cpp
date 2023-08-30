@@ -31,8 +31,8 @@ using asio::ip::udp;
 
 namespace org::apache::nifi::minifi::processors {
 
-PutUDP::PutUDP(std::string name, const utils::Identifier& uuid)
-    : Processor(std::move(name), uuid), logger_{core::logging::LoggerFactory<PutUDP>::getLogger(uuid)}
+PutUDP::PutUDP(std::string_view name, const utils::Identifier& uuid)
+    : Processor(name, uuid), logger_{core::logging::LoggerFactory<PutUDP>::getLogger(uuid)}
 { }
 
 PutUDP::~PutUDP() = default;

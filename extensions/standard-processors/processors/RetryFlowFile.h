@@ -43,8 +43,8 @@ namespace org::apache::nifi::minifi::processors {
 
 class RetryFlowFile : public core::Processor {
  public:
-  explicit RetryFlowFile(std::string name, const utils::Identifier& uuid = {})
-      : Processor(std::move(name), uuid) {}
+  explicit RetryFlowFile(std::string_view name, const utils::Identifier& uuid = {})
+      : Processor(name, uuid) {}
   ~RetryFlowFile() override = default;
 
   // ReuseMode allowed values

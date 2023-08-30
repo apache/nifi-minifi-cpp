@@ -77,16 +77,16 @@ class Device {
  */
 class DeviceInfoNode : public DeviceInformation {
  public:
-  DeviceInfoNode(std::string name, const utils::Identifier& uuid)
-      : DeviceInformation(std::move(name), uuid) {
+  DeviceInfoNode(std::string_view name, const utils::Identifier& uuid)
+      : DeviceInformation(name, uuid) {
     static Device device;
     hostname_ = device.canonical_hostname_;
     ip_ = device.ip_;
     device_id_ = device.device_id_;
   }
 
-  explicit DeviceInfoNode(std::string name)
-      : DeviceInformation(std::move(name)) {
+  explicit DeviceInfoNode(std::string_view name)
+      : DeviceInformation(name) {
     static Device device;
     hostname_ = device.canonical_hostname_;
     ip_ = device.ip_;

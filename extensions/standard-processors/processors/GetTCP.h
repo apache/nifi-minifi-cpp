@@ -48,8 +48,8 @@ namespace org::apache::nifi::minifi::processors {
 
 class GetTCP : public core::Processor {
  public:
-  explicit GetTCP(std::string name, const utils::Identifier& uuid = {})
-    : Processor(std::move(name), uuid) {
+  explicit GetTCP(std::string_view name, const utils::Identifier& uuid = {})
+    : Processor(name, uuid) {
   }
 
   ~GetTCP() override {

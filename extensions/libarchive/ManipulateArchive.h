@@ -38,8 +38,8 @@ using core::logging::Logger;
 
 class ManipulateArchive : public core::Processor {
  public:
-  explicit ManipulateArchive(std::string name, const utils::Identifier& uuid = {})
-      : core::Processor(std::move(name), uuid) {
+  explicit ManipulateArchive(std::string_view name, const utils::Identifier& uuid = {})
+      : core::Processor(name, uuid) {
   }
   ~ManipulateArchive() override = default;
 

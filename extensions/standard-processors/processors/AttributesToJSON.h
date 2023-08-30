@@ -116,8 +116,8 @@ class AttributesToJSON : public core::Processor {
 
   ADD_COMMON_VIRTUAL_FUNCTIONS_FOR_PROCESSORS
 
-  explicit AttributesToJSON(std::string name, const utils::Identifier& uuid = {})
-      : core::Processor(std::move(name), uuid) {
+  explicit AttributesToJSON(std::string_view name, const utils::Identifier& uuid = {})
+      : core::Processor(name, uuid) {
   }
 
   void initialize() override;

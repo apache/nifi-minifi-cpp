@@ -20,8 +20,8 @@
 
 namespace org::apache::nifi::minifi::c2 {
 
-HeartbeatLogger::HeartbeatLogger(std::string name, const utils::Identifier& id)
-  : HeartbeatReporter(std::move(name), id) {
+HeartbeatLogger::HeartbeatLogger(std::string_view name, const utils::Identifier& id)
+  : HeartbeatReporter(name, id) {
   logger_->set_max_log_size(-1);  // log however huge the heartbeat is
 }
 

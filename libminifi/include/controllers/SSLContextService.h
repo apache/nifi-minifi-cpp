@@ -82,14 +82,14 @@ class SSLContext {
  */
 class SSLContextService : public core::controller::ControllerService {
  public:
-  explicit SSLContextService(std::string name, const utils::Identifier &uuid = {})
-      : ControllerService(std::move(name), uuid),
+  explicit SSLContextService(std::string_view name, const utils::Identifier &uuid = {})
+      : ControllerService(name, uuid),
         initialized_(false),
         logger_(core::logging::LoggerFactory<SSLContextService>::getLogger(uuid_)) {
   }
 
-  explicit SSLContextService(std::string name, const std::shared_ptr<Configure> &configuration)
-      : ControllerService(std::move(name)),
+  explicit SSLContextService(std::string_view name, const std::shared_ptr<Configure> &configuration)
+      : ControllerService(name),
         initialized_(false),
         logger_(core::logging::LoggerFactory<SSLContextService>::getLogger(uuid_)) {
     setConfiguration(configuration);

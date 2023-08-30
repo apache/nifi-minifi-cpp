@@ -323,8 +323,8 @@ class FragmentGenerator : public core::Processor {
   static constexpr bool IsSingleThreaded = false;
   ADD_COMMON_VIRTUAL_FUNCTIONS_FOR_PROCESSORS
 
-  explicit FragmentGenerator(std::string name, const utils::Identifier& uuid = utils::Identifier())
-      : Processor(std::move(name), uuid) {
+  explicit FragmentGenerator(std::string_view name, const utils::Identifier& uuid = utils::Identifier())
+      : Processor(name, uuid) {
   }
 
   void onTrigger(core::ProcessContext*, core::ProcessSession* session) override {

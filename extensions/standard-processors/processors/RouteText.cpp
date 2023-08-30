@@ -36,8 +36,8 @@
 
 namespace org::apache::nifi::minifi::processors {
 
-RouteText::RouteText(std::string name, const utils::Identifier& uuid)
-    : core::Processor(std::move(name), uuid), logger_(core::logging::LoggerFactory<RouteText>::getLogger(uuid)) {}
+RouteText::RouteText(std::string_view name, const utils::Identifier& uuid)
+    : core::Processor(name, uuid), logger_(core::logging::LoggerFactory<RouteText>::getLogger(uuid)) {}
 
 void RouteText::initialize() {
   setSupportedProperties(Properties);

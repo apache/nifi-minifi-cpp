@@ -68,8 +68,8 @@ class BaseOPCProcessor : public core::Processor {
   };
 
 
-  explicit BaseOPCProcessor(std::string name, const utils::Identifier& uuid = {})
-  : Processor(std::move(name), uuid) {
+  explicit BaseOPCProcessor(std::string_view name, const utils::Identifier& uuid = {})
+  : Processor(name, uuid) {
   }
 
   void onSchedule(const std::shared_ptr<core::ProcessContext> &context, const std::shared_ptr<core::ProcessSessionFactory> &factory) override;

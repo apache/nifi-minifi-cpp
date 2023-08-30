@@ -84,8 +84,8 @@ class GetFileMetrics : public core::ProcessorMetrics {
 
 class GetFile : public core::Processor {
  public:
-  explicit GetFile(std::string name, const utils::Identifier& uuid = {})
-      : Processor(std::move(name), uuid, std::make_shared<GetFileMetrics>(*this)) {
+  explicit GetFile(std::string_view name, const utils::Identifier& uuid = {})
+      : Processor(name, uuid, std::make_shared<GetFileMetrics>(*this)) {
   }
   ~GetFile() override = default;
 

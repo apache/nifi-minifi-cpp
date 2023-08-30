@@ -216,8 +216,8 @@ class PublishKafka : public KafkaProcessorBase {
 
   ADD_COMMON_VIRTUAL_FUNCTIONS_FOR_PROCESSORS
 
-  explicit PublishKafka(std::string name, const utils::Identifier& uuid = {})
-      : KafkaProcessorBase(std::move(name), uuid, core::logging::LoggerFactory<PublishKafka>::getLogger(uuid)) {
+  explicit PublishKafka(std::string_view name, const utils::Identifier& uuid = {})
+      : KafkaProcessorBase(name, uuid, core::logging::LoggerFactory<PublishKafka>::getLogger(uuid)) {
   }
 
   ~PublishKafka() override = default;

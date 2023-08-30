@@ -30,12 +30,12 @@ namespace org::apache::nifi::minifi::state::response {
  */
 class BuildInformation : public DeviceInformation {
  public:
-  BuildInformation(std::string name, const utils::Identifier &uuid)
-      : DeviceInformation(std::move(name), uuid) {
+  BuildInformation(std::string_view name, const utils::Identifier &uuid)
+      : DeviceInformation(name, uuid) {
   }
 
-  explicit BuildInformation(std::string name)
-      : DeviceInformation(std::move(name)) {
+  explicit BuildInformation(std::string_view name)
+      : DeviceInformation(name) {
   }
 
   MINIFIAPI static constexpr const char* Description = "Metric node that defines the pertinent build information for this agent binary";

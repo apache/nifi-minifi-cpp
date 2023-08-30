@@ -49,8 +49,8 @@ class ListenHTTP : public core::Processor {
  public:
   using FlowFileBufferPair = std::pair<std::shared_ptr<FlowFileRecord>, std::unique_ptr<io::BufferStream>>;
 
-  explicit ListenHTTP(std::string name, const utils::Identifier& uuid = {})
-      : Processor(std::move(name), uuid) {
+  explicit ListenHTTP(std::string_view name, const utils::Identifier& uuid = {})
+      : Processor(name, uuid) {
     callbacks_.log_message = &logMessage;
     callbacks_.log_access = &logAccess;
   }

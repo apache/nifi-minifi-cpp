@@ -30,7 +30,7 @@ class HeartbeatLogger : public RESTProtocol, public HeartbeatReporter {
  public:
   MINIFIAPI static constexpr const char* Description = "Logs heartbeats at TRACE level.";
 
-  explicit HeartbeatLogger(std::string name, const utils::Identifier& id = {});
+  explicit HeartbeatLogger(std::string_view name, const utils::Identifier& id = {});
   int16_t heartbeat(const C2Payload &heartbeat) override;
   void initialize(core::controller::ControllerServiceProvider* controller, state::StateMonitor* updateSink, const std::shared_ptr<Configure> &configure) override;
 

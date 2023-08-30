@@ -29,8 +29,8 @@ namespace org::apache::nifi::minifi::processors {
 
 class LogOnDestructionProcessor : public core::Processor {
  public:
-  explicit LogOnDestructionProcessor(std::string name, const utils::Identifier& uuid = utils::Identifier())
-    : Processor(std::move(name), uuid) {
+  explicit LogOnDestructionProcessor(std::string_view name, const utils::Identifier& uuid = utils::Identifier())
+    : Processor(name, uuid) {
   }
 
   ~LogOnDestructionProcessor() override {

@@ -35,8 +35,8 @@ namespace org::apache::nifi::minifi::processors {
 
 class RouteOnAttribute : public core::Processor {
  public:
-  explicit RouteOnAttribute(std::string name, const utils::Identifier& uuid = {})
-      : core::Processor(std::move(name), uuid) {
+  explicit RouteOnAttribute(std::string_view name, const utils::Identifier& uuid = {})
+      : core::Processor(name, uuid) {
   }
 
   EXTENSIONAPI static constexpr const char* Description = "Routes FlowFiles based on their Attributes using the Attribute Expression Language.\n\n"

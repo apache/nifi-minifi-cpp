@@ -37,16 +37,16 @@ constexpr int DEFAULT_ONSCHEDULE_RETRY_INTERVAL_MS = 30000;
 
 std::shared_ptr<utils::IdGenerator> ProcessGroup::id_generator_ = utils::IdGenerator::getIdGenerator();
 
-ProcessGroup::ProcessGroup(ProcessGroupType type, std::string name, const utils::Identifier& uuid)
-    : ProcessGroup(type, std::move(name), uuid, 0, nullptr) {
+ProcessGroup::ProcessGroup(ProcessGroupType type, std::string_view name, const utils::Identifier& uuid)
+    : ProcessGroup(type, name, uuid, 0, nullptr) {
 }
 
-ProcessGroup::ProcessGroup(ProcessGroupType type, std::string name, const utils::Identifier& uuid, int version)
-    : ProcessGroup(type, std::move(name), uuid, version, nullptr) {
+ProcessGroup::ProcessGroup(ProcessGroupType type, std::string_view name, const utils::Identifier& uuid, int version)
+    : ProcessGroup(type, name, uuid, version, nullptr) {
 }
 
-ProcessGroup::ProcessGroup(ProcessGroupType type, std::string name, const utils::Identifier& uuid, int version, ProcessGroup* parent)
-    : CoreComponent(std::move(name), uuid, id_generator_),
+ProcessGroup::ProcessGroup(ProcessGroupType type, std::string_view name, const utils::Identifier& uuid, int version, ProcessGroup* parent)
+    : CoreComponent(name, uuid, id_generator_),
       config_version_(version),
       type_(type),
       parent_process_group_(parent),
@@ -64,8 +64,8 @@ ProcessGroup::ProcessGroup(ProcessGroupType type, std::string name, const utils:
   logger_->log_debug("ProcessGroup %s created", name_);
 }
 
-ProcessGroup::ProcessGroup(ProcessGroupType type, std::string name)
-    : CoreComponent(std::move(name), {}, id_generator_),
+ProcessGroup::ProcessGroup(ProcessGroupType type, std::string_view name)
+    : CoreComponent(name, {}, id_generator_),
       config_version_(0),
       type_(type),
       parent_process_group_(nullptr),

@@ -219,8 +219,8 @@ class ConsumeKafka : public KafkaProcessorBase {
 
   ADD_COMMON_VIRTUAL_FUNCTIONS_FOR_PROCESSORS
 
-  explicit ConsumeKafka(std::string name, const utils::Identifier& uuid = utils::Identifier()) :
-      KafkaProcessorBase(std::move(name), uuid, core::logging::LoggerFactory<ConsumeKafka>::getLogger(uuid)) {}
+  explicit ConsumeKafka(std::string_view name, const utils::Identifier& uuid = utils::Identifier()) :
+      KafkaProcessorBase(name, uuid, core::logging::LoggerFactory<ConsumeKafka>::getLogger(uuid)) {}
 
   ~ConsumeKafka() override = default;
 

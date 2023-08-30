@@ -34,8 +34,8 @@
 namespace org::apache::nifi::minifi::extensions::gcp {
 class GCSProcessor : public core::Processor {
  public:
-  GCSProcessor(std::string name, const minifi::utils::Identifier& uuid, std::shared_ptr<core::logging::Logger> logger)
-      : core::Processor(std::move(name), uuid),
+  GCSProcessor(std::string_view name, const minifi::utils::Identifier& uuid, std::shared_ptr<core::logging::Logger> logger)
+      : core::Processor(name, uuid),
    logger_(std::move(logger)) {
   }
 

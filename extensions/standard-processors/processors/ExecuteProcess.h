@@ -49,8 +49,8 @@ namespace org::apache::nifi::minifi::processors {
 
 class ExecuteProcess : public core::Processor {
  public:
-  explicit ExecuteProcess(std::string name, const utils::Identifier& uuid = {})
-      : Processor(std::move(name), uuid),
+  explicit ExecuteProcess(std::string_view name, const utils::Identifier& uuid = {})
+      : Processor(name, uuid),
         working_dir_(".") {
   }
   ~ExecuteProcess() override {

@@ -39,12 +39,12 @@ namespace org::apache::nifi::minifi::state::response {
 
 class ComponentManifest : public DeviceInformation {
  public:
-  ComponentManifest(std::string name, const utils::Identifier& uuid)
-      : DeviceInformation(std::move(name), uuid) {
+  ComponentManifest(std::string_view name, const utils::Identifier& uuid)
+      : DeviceInformation(name, uuid) {
   }
 
-  explicit ComponentManifest(std::string name)
-      : DeviceInformation(std::move(name)) {
+  explicit ComponentManifest(std::string_view name)
+      : DeviceInformation(name) {
   }
 
   std::string getName() const override {
@@ -62,12 +62,12 @@ class ComponentManifest : public DeviceInformation {
 
 class ExternalManifest : public ComponentManifest {
  public:
-  ExternalManifest(std::string name, const utils::Identifier& uuid)
-      : ComponentManifest(std::move(name), uuid) {
+  ExternalManifest(std::string_view name, const utils::Identifier& uuid)
+      : ComponentManifest(name, uuid) {
   }
 
-  explicit ExternalManifest(std::string name)
-      : ComponentManifest(std::move(name)) {
+  explicit ExternalManifest(std::string_view name)
+      : ComponentManifest(name) {
   }
 
   std::vector<SerializedResponseNode> serialize() override;
@@ -75,13 +75,13 @@ class ExternalManifest : public ComponentManifest {
 
 class Bundles : public DeviceInformation {
  public:
-  Bundles(std::string name, const utils::Identifier& uuid)
-      : DeviceInformation(std::move(name), uuid) {
+  Bundles(std::string_view name, const utils::Identifier& uuid)
+      : DeviceInformation(name, uuid) {
     setArray(true);
   }
 
-  explicit Bundles(std::string name)
-      : DeviceInformation(std::move(name)) {
+  explicit Bundles(std::string_view name)
+      : DeviceInformation(name) {
     setArray(true);
   }
 
@@ -97,18 +97,18 @@ class Bundles : public DeviceInformation {
  */
 class AgentStatus : public StateMonitorNode {
  public:
-  AgentStatus(std::string name, const utils::Identifier& uuid)
-      : StateMonitorNode(std::move(name), uuid),
+  AgentStatus(std::string_view name, const utils::Identifier& uuid)
+      : StateMonitorNode(name, uuid),
         repository_metrics_source_store_(getName()) {
   }
 
-  explicit AgentStatus(std::string name)
-      : StateMonitorNode(std::move(name)),
+  explicit AgentStatus(std::string_view name)
+      : StateMonitorNode(name),
         repository_metrics_source_store_(getName()) {
   }
 
-  explicit AgentStatus(std::string name, std::string parent_metrics_name)
-      : StateMonitorNode(std::move(name)),
+  explicit AgentStatus(std::string_view name, std::string parent_metrics_name)
+      : StateMonitorNode(name),
         repository_metrics_source_store_(std::move(parent_metrics_name)) {
   }
 
@@ -187,12 +187,12 @@ class AgentMonitor {
  */
 class AgentManifest : public DeviceInformation {
  public:
-  AgentManifest(std::string name, const utils::Identifier& uuid)
-    : DeviceInformation(std::move(name), uuid) {
+  AgentManifest(std::string_view name, const utils::Identifier& uuid)
+    : DeviceInformation(name, uuid) {
   }
 
-  explicit AgentManifest(std::string name)
-    : DeviceInformation(std::move(name)) {
+  explicit AgentManifest(std::string_view name)
+    : DeviceInformation(name) {
   }
 
   std::string getName() const override {
@@ -221,13 +221,13 @@ class AgentManifest : public DeviceInformation {
 
 class AgentNode : public DeviceInformation, public AgentMonitor, public AgentIdentifier {
  public:
-  AgentNode(std::string name, const utils::Identifier& uuid)
-      : DeviceInformation(std::move(name), uuid) {
+  AgentNode(std::string_view name, const utils::Identifier& uuid)
+      : DeviceInformation(name, uuid) {
     setArray(false);
   }
 
-  explicit AgentNode(std::string name)
-      : DeviceInformation(std::move(name)) {
+  explicit AgentNode(std::string_view name)
+      : DeviceInformation(name) {
     setArray(false);
   }
 
@@ -260,14 +260,14 @@ class AgentNode : public DeviceInformation, public AgentMonitor, public AgentIde
  */
 class AgentInformation : public AgentNode {
  public:
-  AgentInformation(std::string name, const utils::Identifier& uuid)
-      : AgentNode(std::move(name), uuid),
+  AgentInformation(std::string_view name, const utils::Identifier& uuid)
+      : AgentNode(name, uuid),
         include_agent_status_(true) {
     setArray(false);
   }
 
-  explicit AgentInformation(std::string name)
-      : AgentNode(std::move(name)),
+  explicit AgentInformation(std::string_view name)
+      : AgentNode(name),
         include_agent_status_(true) {
     setArray(false);
   }

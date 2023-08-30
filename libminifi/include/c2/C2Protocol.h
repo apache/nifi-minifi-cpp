@@ -34,8 +34,8 @@ namespace org::apache::nifi::minifi::c2 {
  */
 class C2Protocol : public core::Connectable {
  public:
-  C2Protocol(std::string name, const utils::Identifier &uuid)
-      : core::Connectable(std::move(name), uuid),
+  C2Protocol(std::string_view name, const utils::Identifier &uuid)
+      : core::Connectable(name, uuid),
         running_(true) {
   }
 

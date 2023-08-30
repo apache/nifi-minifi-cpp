@@ -36,13 +36,13 @@ namespace org::apache::nifi::minifi::controllers {
  */
 class ThreadManagementService : public core::controller::ControllerService {
  public:
-  explicit ThreadManagementService(std::string name, const utils::Identifier &uuid = {})
-      : ControllerService(std::move(name), uuid),
+  explicit ThreadManagementService(std::string_view name, const utils::Identifier &uuid = {})
+      : ControllerService(name, uuid),
         logger_(core::logging::LoggerFactory<ThreadManagementService>::getLogger()) {
   }
 
-  explicit ThreadManagementService(std::string name, const std::shared_ptr<Configure>& /*configuration*/)
-      : ControllerService(std::move(name)),
+  explicit ThreadManagementService(std::string_view name, const std::shared_ptr<Configure>& /*configuration*/)
+      : ControllerService(name),
         logger_(core::logging::LoggerFactory<ThreadManagementService>::getLogger()) {
   }
 

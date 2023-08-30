@@ -34,9 +34,9 @@ namespace org::apache::nifi::minifi::core::expressions {
  */
 class ExpressionContextBuilder : public core::ProcessContextBuilder {
  public:
-  ExpressionContextBuilder(std::string name, const minifi::utils::Identifier &uuid);
+  ExpressionContextBuilder(std::string_view name, const minifi::utils::Identifier &uuid);
 
-  explicit ExpressionContextBuilder(std::string name);
+  explicit ExpressionContextBuilder(std::string_view name);
 
   virtual ~ExpressionContextBuilder();
 

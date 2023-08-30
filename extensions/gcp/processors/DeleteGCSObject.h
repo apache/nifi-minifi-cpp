@@ -33,8 +33,8 @@ namespace org::apache::nifi::minifi::extensions::gcp {
 
 class DeleteGCSObject : public GCSProcessor {
  public:
-  explicit DeleteGCSObject(std::string name, const utils::Identifier& uuid = {})
-      : GCSProcessor(std::move(name), uuid, core::logging::LoggerFactory<DeleteGCSObject>::getLogger(uuid)) {
+  explicit DeleteGCSObject(std::string_view name, const utils::Identifier& uuid = {})
+      : GCSProcessor(name, uuid, core::logging::LoggerFactory<DeleteGCSObject>::getLogger(uuid)) {
   }
   ~DeleteGCSObject() override = default;
 

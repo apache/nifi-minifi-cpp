@@ -58,8 +58,8 @@ class InvokeHTTP : public core::Processor {
   EXTENSIONAPI static constexpr std::string_view REQUEST_URL = "invokehttp.request.url";
   EXTENSIONAPI static constexpr std::string_view TRANSACTION_ID = "invokehttp.tx.id";
 
-  explicit InvokeHTTP(std::string name, const utils::Identifier& uuid = {})
-      : Processor(std::move(name), uuid) {
+  explicit InvokeHTTP(std::string_view name, const utils::Identifier& uuid = {})
+      : Processor(name, uuid) {
     setTriggerWhenEmpty(true);
   }
 

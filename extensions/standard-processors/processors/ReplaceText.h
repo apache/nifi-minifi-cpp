@@ -178,7 +178,7 @@ class ReplaceText : public core::Processor {
 
   ADD_COMMON_VIRTUAL_FUNCTIONS_FOR_PROCESSORS
 
-  explicit ReplaceText(std::string name, const utils::Identifier& uuid = {});
+  explicit ReplaceText(std::string_view name, const utils::Identifier& uuid = {});
   void initialize() override;
   void onSchedule(const std::shared_ptr<core::ProcessContext>& context, const std::shared_ptr<core::ProcessSessionFactory>&) override;
   void onTrigger(const std::shared_ptr<core::ProcessContext>& context, const std::shared_ptr<core::ProcessSession>& session) override;

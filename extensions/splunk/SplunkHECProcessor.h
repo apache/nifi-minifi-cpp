@@ -68,8 +68,8 @@ class SplunkHECProcessor : public core::Processor {
   };
 
 
-  explicit SplunkHECProcessor(std::string name, const utils::Identifier& uuid = {})
-      : Processor(std::move(name), uuid) {
+  explicit SplunkHECProcessor(std::string_view name, const utils::Identifier& uuid = {})
+      : Processor(name, uuid) {
   }
   ~SplunkHECProcessor() override = default;
 

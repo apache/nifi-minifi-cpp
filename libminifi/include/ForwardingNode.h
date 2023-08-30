@@ -28,10 +28,10 @@ namespace org::apache::nifi::minifi {
 
 class ForwardingNode : public core::Processor {
  public:
-  ForwardingNode(std::string name, const utils::Identifier& uuid, std::shared_ptr<core::logging::Logger> logger) : Processor(std::move(name), uuid), logger_(std::move(logger)) {
+  ForwardingNode(std::string_view name, const utils::Identifier& uuid, std::shared_ptr<core::logging::Logger> logger) : Processor(name, uuid), logger_(std::move(logger)) {
     strategy_ = core::SchedulingStrategy::EVENT_DRIVEN;
   }
-  ForwardingNode(std::string name, std::shared_ptr<core::logging::Logger> logger) : Processor(std::move(name)), logger_(std::move(logger)) {}
+  ForwardingNode(std::string_view name, std::shared_ptr<core::logging::Logger> logger) : Processor(name), logger_(std::move(logger)) {}
 
   MINIFIAPI static constexpr auto Properties = std::array<core::PropertyReference, 0>{};
   MINIFIAPI static constexpr auto Success = core::RelationshipDefinition{"success", "FlowFiles are routed to success relationship"};

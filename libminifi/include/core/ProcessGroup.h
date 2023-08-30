@@ -68,10 +68,10 @@ class ProcessGroup : public CoreComponent {
     IncludeChildren
   };
 
-  ProcessGroup(ProcessGroupType type, std::string name, const utils::Identifier& uuid, int version, ProcessGroup *parent);
-  ProcessGroup(ProcessGroupType type, std::string name);
-  ProcessGroup(ProcessGroupType type, std::string name, const utils::Identifier& uuid);
-  ProcessGroup(ProcessGroupType type, std::string name, const utils::Identifier& uuid, int version);
+  ProcessGroup(ProcessGroupType type, std::string_view name, const utils::Identifier& uuid, int version, ProcessGroup *parent);
+  ProcessGroup(ProcessGroupType type, std::string_view name);
+  ProcessGroup(ProcessGroupType type, std::string_view name, const utils::Identifier& uuid);
+  ProcessGroup(ProcessGroupType type, std::string_view name, const utils::Identifier& uuid, int version);
   // Destructor
   ~ProcessGroup() override;
   // Set URL

@@ -36,8 +36,8 @@ namespace org::apache::nifi::minifi::processors {
 
 class UpdateAttribute : public core::Processor {
  public:
-  UpdateAttribute(std::string name,  const utils::Identifier& uuid = {}) // NOLINT
-      : core::Processor(std::move(name), uuid) {
+  UpdateAttribute(std::string_view name,  const utils::Identifier& uuid = {}) // NOLINT
+      : core::Processor(name, uuid) {
   }
 
   EXTENSIONAPI static constexpr const char* Description = "This processor updates the attributes of a FlowFile using properties that are added by the user. "

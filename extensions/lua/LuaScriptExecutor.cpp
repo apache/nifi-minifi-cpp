@@ -24,7 +24,7 @@
 
 namespace org::apache::nifi::minifi::extensions::lua {
 
-LuaScriptExecutor::LuaScriptExecutor(std::string name, const utils::Identifier& uuid) : script::ScriptExecutor(std::move(name), uuid) {}
+LuaScriptExecutor::LuaScriptExecutor(std::string_view name, const utils::Identifier& uuid) : script::ScriptExecutor(name, uuid) {}
 
 void LuaScriptExecutor::onTrigger(const std::shared_ptr<core::ProcessContext>& context, const std::shared_ptr<core::ProcessSession>& session) {
   auto lua_script_engine = lua_script_engine_queue_->getResource();

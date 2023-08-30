@@ -35,12 +35,12 @@ std::mutex control_mutex;
 
 class MockControllerService : public minifi::core::controller::ControllerService {
  public:
-  explicit MockControllerService(std::string name, const minifi::utils::Identifier &uuid)
-      : ControllerService(std::move(name), uuid) {
+  explicit MockControllerService(std::string_view name, const minifi::utils::Identifier &uuid)
+      : ControllerService(name, uuid) {
   }
 
-  explicit MockControllerService(std::string name)
-      : ControllerService(std::move(name)) {
+  explicit MockControllerService(std::string_view name)
+      : ControllerService(name) {
   }
   MockControllerService() = default;
 
@@ -81,13 +81,13 @@ class MockControllerService : public minifi::core::controller::ControllerService
 
 class MockProcessor : public minifi::core::Processor {
  public:
-  explicit MockProcessor(std::string name, const minifi::utils::Identifier &uuid)
-      : Processor(std::move(name), uuid) {
+  explicit MockProcessor(std::string_view name, const minifi::utils::Identifier &uuid)
+      : Processor(name, uuid) {
     setTriggerWhenEmpty(true);
   }
 
-  explicit MockProcessor(std::string name)
-      : Processor(std::move(name)) {
+  explicit MockProcessor(std::string_view name)
+      : Processor(name) {
     setTriggerWhenEmpty(true);
   }
 

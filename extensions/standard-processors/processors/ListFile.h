@@ -37,8 +37,8 @@ namespace org::apache::nifi::minifi::processors {
 
 class ListFile : public core::Processor {
  public:
-  explicit ListFile(std::string name, const utils::Identifier& uuid = {})
-    : core::Processor(std::move(name), uuid) {
+  explicit ListFile(std::string_view name, const utils::Identifier& uuid = {})
+    : core::Processor(name, uuid) {
   }
 
   EXTENSIONAPI static constexpr const char* Description = "Retrieves a listing of files from the local filesystem. For each file that is listed, "

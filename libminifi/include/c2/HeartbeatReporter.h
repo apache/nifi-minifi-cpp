@@ -36,8 +36,8 @@ namespace org::apache::nifi::minifi::c2 {
  */
 class HeartbeatReporter : public core::Connectable {
  public:
-  HeartbeatReporter(std::string name, const utils::Identifier& uuid)
-      : core::Connectable(std::move(name), uuid),
+  HeartbeatReporter(std::string_view name, const utils::Identifier& uuid)
+      : core::Connectable(name, uuid),
         controller_(nullptr),
         update_sink_(nullptr),
         configuration_(nullptr) {

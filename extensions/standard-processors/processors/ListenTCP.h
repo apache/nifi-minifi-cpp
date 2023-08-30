@@ -35,8 +35,8 @@ namespace org::apache::nifi::minifi::processors {
 
 class ListenTCP : public NetworkListenerProcessor {
  public:
-  explicit ListenTCP(std::string name, const utils::Identifier& uuid = {})
-    : NetworkListenerProcessor(std::move(name), uuid, core::logging::LoggerFactory<ListenTCP>::getLogger(uuid)) {
+  explicit ListenTCP(std::string_view name, const utils::Identifier& uuid = {})
+    : NetworkListenerProcessor(name, uuid, core::logging::LoggerFactory<ListenTCP>::getLogger(uuid)) {
   }
 
   EXTENSIONAPI static constexpr const char* Description = "Listens for incoming TCP connections and reads data from each connection using a line separator as the message demarcator. "

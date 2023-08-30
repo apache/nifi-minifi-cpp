@@ -59,7 +59,7 @@ class ProcessorWithStatistics {
 
 class TestProcessor : public core::Processor, public ProcessorWithStatistics {
  public:
-  TestProcessor(std::string name, const utils::Identifier& uuid) : Processor(std::move(name), uuid) {}
+  TestProcessor(std::string_view name, const utils::Identifier& uuid) : Processor(name, uuid) {}
   explicit TestProcessor(const std::string& name) : Processor(name) {}
 
   static constexpr const char* Description = "Processor used for testing cycles";
@@ -113,7 +113,7 @@ class TestProcessor : public core::Processor, public ProcessorWithStatistics {
 
 class TestFlowFileGenerator : public processors::GenerateFlowFile, public ProcessorWithStatistics {
  public:
-  TestFlowFileGenerator(std::string name, const utils::Identifier& uuid) : GenerateFlowFile(std::move(name), uuid) {}
+  TestFlowFileGenerator(std::string_view name, const utils::Identifier& uuid) : GenerateFlowFile(name, uuid) {}
   explicit TestFlowFileGenerator(const std::string& name) : GenerateFlowFile(name) {}
 
   static constexpr const char* Description = "Processor generating files and notifying us";

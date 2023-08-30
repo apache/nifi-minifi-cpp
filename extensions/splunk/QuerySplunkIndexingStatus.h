@@ -35,8 +35,8 @@ namespace org::apache::nifi::minifi::extensions::splunk {
 
 class QuerySplunkIndexingStatus final : public SplunkHECProcessor {
  public:
-  explicit QuerySplunkIndexingStatus(std::string name, const utils::Identifier& uuid = {})
-      : SplunkHECProcessor(std::move(name), uuid) {
+  explicit QuerySplunkIndexingStatus(std::string_view name, const utils::Identifier& uuid = {})
+      : SplunkHECProcessor(name, uuid) {
   }
   QuerySplunkIndexingStatus(const QuerySplunkIndexingStatus&) = delete;
   QuerySplunkIndexingStatus(QuerySplunkIndexingStatus&&) = delete;

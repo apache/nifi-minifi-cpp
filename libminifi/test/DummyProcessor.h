@@ -29,8 +29,8 @@ class DummyProcessor : public minifi::core::Processor {
   using minifi::core::Processor::Processor;
 
  public:
-  DummyProcessor(std::string_view name, const minifi::utils::Identifier& uuid) : Processor(std::move(name), uuid) {}
-  explicit DummyProcessor(std::string_view name) : Processor(std::move(name)) {}
+  DummyProcessor(std::string_view name, const minifi::utils::Identifier& uuid) : Processor(name, uuid) {}
+  explicit DummyProcessor(std::string_view name) : Processor(name) {}
   static constexpr const char* Description = "A processor that does nothing.";
   static constexpr auto Properties = std::array<core::PropertyReference, 0>{};
   static constexpr auto Relationships = std::array<core::RelationshipDefinition, 0>{};
