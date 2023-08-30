@@ -58,8 +58,8 @@ class InvokeHTTP : public core::Processor {
   EXTENSIONAPI static constexpr std::string_view REQUEST_URL = "invokehttp.request.url";
   EXTENSIONAPI static constexpr std::string_view TRANSACTION_ID = "invokehttp.tx.id";
 
-  explicit InvokeHTTP(std::string name, const utils::Identifier& uuid = {})
-      : Processor(std::move(name), uuid) {
+  explicit InvokeHTTP(std::string_view name, const utils::Identifier& uuid = {})
+      : Processor(name, uuid) {
     setTriggerWhenEmpty(true);
   }
 
@@ -258,16 +258,17 @@ class InvokeHTTP : public core::Processor {
  private:
   void route(const std::shared_ptr<core::FlowFile>& request, const std::shared_ptr<core::FlowFile>& response, const std::shared_ptr<core::ProcessSession>& session,
              const std::shared_ptr<core::ProcessContext>& context, bool is_success, int64_t status_code);
-  static bool shouldEmitFlowFile(minifi::extensions::curl::HTTPClient& client);
-  void onTriggerWithClient(const std::shared_ptr<core::ProcessContext>& context, const std::shared_ptr<core::ProcessSession>& session, minifi::extensions::curl::HTTPClient& client);
+  [[nodiscard]] bool shouldEmitFlowFile() const;
+  void onTriggerWithClient(const std::shared_ptr<core::ProcessContext>& context, const std::shared_ptr<core::ProcessSession>& session,
+                           const std::shared_ptr<core::FlowFile>& flow_file, minifi::extensions::curl::HTTPClient& client);
   [[nodiscard]] bool appendHeaders(const core::FlowFile& flow_file, /*std::invocable<std::string, std::string>*/ auto append_header);
 
 
   void setupMembersFromProperties(const core::ProcessContext& context);
   std::unique_ptr<minifi::extensions::curl::HTTPClient> createHTTPClientFromPropertiesAndMembers(const core::ProcessContext& context) const;
 
+  std::string method_;
   std::optional<utils::Regex> attributes_to_send_;
-
   std::optional<std::string> put_response_body_in_attribute_;
   bool always_output_response_{false};
   bool use_chunked_encoding_{false};
@@ -275,7 +276,7 @@ class InvokeHTTP : public core::Processor {
   bool send_message_body_{true};
   bool send_date_header_{true};
 
-  invoke_http::InvalidHTTPHeaderFieldHandlingOption invalid_http_header_field_handling_strategy_;
+  invoke_http::InvalidHTTPHeaderFieldHandlingOption invalid_http_header_field_handling_strategy_{};
 
   std::shared_ptr<core::logging::Logger> logger_{core::logging::LoggerFactory<InvokeHTTP>::getLogger(uuid_)};
   std::shared_ptr<utils::ResourceQueue<extensions::curl::HTTPClient>> client_queue_;
