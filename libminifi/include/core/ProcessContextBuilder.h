@@ -50,9 +50,9 @@ namespace org::apache::nifi::minifi::core {
  */
 class ProcessContextBuilder : public core::CoreComponent, public std::enable_shared_from_this<ProcessContextBuilder> {
  public:
-  ProcessContextBuilder(std::string name, const minifi::utils::Identifier &uuid);
+  ProcessContextBuilder(std::string_view name, const minifi::utils::Identifier &uuid);
 
-  explicit ProcessContextBuilder(std::string name);
+  explicit ProcessContextBuilder(std::string_view name);
 
   ~ProcessContextBuilder() override = default;
 

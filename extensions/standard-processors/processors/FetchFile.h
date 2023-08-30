@@ -85,8 +85,8 @@ namespace org::apache::nifi::minifi::processors {
 
 class FetchFile : public core::Processor {
  public:
-  explicit FetchFile(std::string name, const utils::Identifier& uuid = {})
-    : core::Processor(std::move(name), uuid) {
+  explicit FetchFile(std::string_view name, const utils::Identifier& uuid = {})
+    : core::Processor(name, uuid) {
   }
 
   EXTENSIONAPI static constexpr const char* Description = "Reads the contents of a file from disk and streams it into the contents of an incoming FlowFile. "

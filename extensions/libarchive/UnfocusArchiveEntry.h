@@ -40,8 +40,8 @@ using core::logging::Logger;
 
 class UnfocusArchiveEntry : public core::Processor {
  public:
-  explicit UnfocusArchiveEntry(std::string name, const utils::Identifier& uuid = {})
-      : core::Processor(std::move(name), uuid) {
+  explicit UnfocusArchiveEntry(std::string_view name, const utils::Identifier& uuid = {})
+      : core::Processor(name, uuid) {
   }
   ~UnfocusArchiveEntry() override = default;
 

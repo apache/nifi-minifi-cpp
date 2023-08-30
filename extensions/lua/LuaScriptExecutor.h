@@ -30,7 +30,7 @@ namespace org::apache::nifi::minifi::extensions::lua {
 
 class LuaScriptExecutor : public script::ScriptExecutor {
  public:
-  explicit LuaScriptExecutor(std::string name, const utils::Identifier& uuid = {});
+  explicit LuaScriptExecutor(std::string_view name, const utils::Identifier& uuid = {});
 
   void onTrigger(const std::shared_ptr<core::ProcessContext> &context, const std::shared_ptr<core::ProcessSession> &session) override;
   void initialize(std::filesystem::path script_file,

@@ -41,8 +41,8 @@ class ODBCService : public DatabaseService {
     initialize();
   }
 
-  explicit ODBCService(std::string name, const std::shared_ptr<Configure> &configuration)
-      : DatabaseService(std::move(name)) {
+  explicit ODBCService(std::string_view name, const std::shared_ptr<Configure> &configuration)
+      : DatabaseService(name) {
     setConfiguration(configuration);
     initialize();
   }

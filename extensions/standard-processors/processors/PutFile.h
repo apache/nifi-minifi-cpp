@@ -43,8 +43,8 @@ class PutFile : public core::Processor {
   static constexpr std::string_view CONFLICT_RESOLUTION_STRATEGY_IGNORE = "ignore";
   static constexpr std::string_view CONFLICT_RESOLUTION_STRATEGY_FAIL = "fail";
 
-  explicit PutFile(std::string name,  const utils::Identifier& uuid = {})
-      : core::Processor(std::move(name), uuid) {
+  explicit PutFile(std::string_view name,  const utils::Identifier& uuid = {})
+      : core::Processor(name, uuid) {
   }
 
   ~PutFile() override = default;

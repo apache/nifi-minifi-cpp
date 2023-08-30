@@ -139,8 +139,8 @@ static const std::map<std::string, const std::function<HashReturnType(const std:
 
 class HashContent : public core::Processor {
  public:
-  explicit HashContent(std::string name,  const utils::Identifier& uuid = {})
-      : Processor(std::move(name), uuid) {
+  explicit HashContent(std::string_view name,  const utils::Identifier& uuid = {})
+      : Processor(name, uuid) {
   }
 
   EXTENSIONAPI static constexpr const char* Description = "HashContent calculates the checksum of the content of the flowfile and adds it as an attribute. "

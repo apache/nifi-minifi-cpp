@@ -65,8 +65,8 @@ class PutAzureBlobStorage final : public AzureBlobStorageSingleBlobProcessorBase
 
   ADD_COMMON_VIRTUAL_FUNCTIONS_FOR_PROCESSORS
 
-  explicit PutAzureBlobStorage(std::string name, const minifi::utils::Identifier& uuid = minifi::utils::Identifier())
-    : PutAzureBlobStorage(std::move(name), uuid, nullptr) {
+  explicit PutAzureBlobStorage(std::string_view name, const minifi::utils::Identifier& uuid = minifi::utils::Identifier())
+    : PutAzureBlobStorage(name, uuid, nullptr) {
   }
 
   void initialize() override;
@@ -107,8 +107,8 @@ class PutAzureBlobStorage final : public AzureBlobStorageSingleBlobProcessorBase
  private:
   friend class ::AzureBlobStorageTestsFixture<PutAzureBlobStorage>;
 
-  explicit PutAzureBlobStorage(std::string name, const minifi::utils::Identifier& uuid, std::unique_ptr<storage::BlobStorageClient> blob_storage_client)
-    : AzureBlobStorageSingleBlobProcessorBase(std::move(name), uuid, core::logging::LoggerFactory<PutAzureBlobStorage>::getLogger(), std::move(blob_storage_client)) {
+  explicit PutAzureBlobStorage(std::string_view name, const minifi::utils::Identifier& uuid, std::unique_ptr<storage::BlobStorageClient> blob_storage_client)
+    : AzureBlobStorageSingleBlobProcessorBase(name, uuid, core::logging::LoggerFactory<PutAzureBlobStorage>::getLogger(), std::move(blob_storage_client)) {
   }
 
   std::optional<storage::PutAzureBlobStorageParameters> buildPutAzureBlobStorageParameters(core::ProcessContext &context, const std::shared_ptr<core::FlowFile> &flow_file);

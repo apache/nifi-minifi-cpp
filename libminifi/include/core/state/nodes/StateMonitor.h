@@ -27,13 +27,13 @@ namespace org::apache::nifi::minifi::state::response {
 
 class StateMonitorNode : public DeviceInformation {
  public:
-  StateMonitorNode(std::string name, const utils::Identifier& uuid)
-      : DeviceInformation(std::move(name), uuid),
+  StateMonitorNode(std::string_view name, const utils::Identifier& uuid)
+      : DeviceInformation(name, uuid),
         monitor_(nullptr) {
   }
 
-  explicit StateMonitorNode(std::string name)
-      : DeviceInformation(std::move(name)),
+  explicit StateMonitorNode(std::string_view name)
+      : DeviceInformation(name),
         monitor_(nullptr) {
   }
 

@@ -38,7 +38,7 @@ namespace org::apache::nifi::minifi::processors {
 
 class QueryDatabaseTable: public SQLProcessor, public FlowFileSource {
  public:
-  explicit QueryDatabaseTable(std::string name, const utils::Identifier& uuid = {});
+  explicit QueryDatabaseTable(std::string_view name, const utils::Identifier& uuid = {});
 
   EXTENSIONAPI static const std::string RESULT_TABLE_NAME;
   EXTENSIONAPI static const std::string RESULT_ROW_COUNT;

@@ -105,8 +105,8 @@ enum class Mode {
 
 class TailFile : public core::Processor {
  public:
-  explicit TailFile(std::string name, const utils::Identifier& uuid = {})
-      : core::Processor(std::move(name), uuid) {
+  explicit TailFile(std::string_view name, const utils::Identifier& uuid = {})
+      : core::Processor(name, uuid) {
   }
 
   ~TailFile() override = default;

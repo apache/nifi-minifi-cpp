@@ -40,8 +40,8 @@ const std::string QueryDatabaseTable::RESULT_ROW_COUNT = "querydbtable.row.count
 const std::string QueryDatabaseTable::TABLENAME_KEY = "tablename";
 const std::string QueryDatabaseTable::MAXVALUE_KEY_PREFIX = "maxvalue.";
 
-QueryDatabaseTable::QueryDatabaseTable(std::string name, const utils::Identifier& uuid)
-  : SQLProcessor(std::move(name), uuid, core::logging::LoggerFactory<QueryDatabaseTable>::getLogger(uuid)) {
+QueryDatabaseTable::QueryDatabaseTable(std::string_view name, const utils::Identifier& uuid)
+  : SQLProcessor(name, uuid, core::logging::LoggerFactory<QueryDatabaseTable>::getLogger(uuid)) {
 }
 
 void QueryDatabaseTable::initialize() {

@@ -38,8 +38,8 @@ namespace org::apache::nifi::minifi::processors {
 
 class FocusArchiveEntry : public core::Processor {
  public:
-  explicit FocusArchiveEntry(std::string name, const utils::Identifier& uuid = {})
-  : core::Processor(std::move(name), uuid) {
+  explicit FocusArchiveEntry(std::string_view name, const utils::Identifier& uuid = {})
+  : core::Processor(name, uuid) {
   }
   ~FocusArchiveEntry()   override = default;
 

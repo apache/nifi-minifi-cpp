@@ -73,8 +73,8 @@ namespace org::apache::nifi::minifi::extensions::gcp {
 
 class PutGCSObject : public GCSProcessor {
  public:
-  explicit PutGCSObject(std::string name, const utils::Identifier& uuid = {})
-      : GCSProcessor(std::move(name), uuid, core::logging::LoggerFactory<PutGCSObject>::getLogger(uuid)) {
+  explicit PutGCSObject(std::string_view name, const utils::Identifier& uuid = {})
+      : GCSProcessor(name, uuid, core::logging::LoggerFactory<PutGCSObject>::getLogger(uuid)) {
   }
   ~PutGCSObject() override = default;
 

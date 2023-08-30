@@ -41,8 +41,8 @@ class SQLProcessor: public core::Processor {
   EXTENSIONAPI static constexpr auto Properties = std::array<core::PropertyReference, 1>{DBControllerService};
 
  protected:
-  SQLProcessor(std::string name, const utils::Identifier& uuid, std::shared_ptr<core::logging::Logger> logger)
-    : core::Processor(std::move(name), uuid), logger_(std::move(logger)) {
+  SQLProcessor(std::string_view name, const utils::Identifier& uuid, std::shared_ptr<core::logging::Logger> logger)
+    : core::Processor(name, uuid), logger_(std::move(logger)) {
   }
 
   static std::vector<std::string> collectArguments(const std::shared_ptr<core::FlowFile>& flow_file);

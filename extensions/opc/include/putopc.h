@@ -99,8 +99,8 @@ class PutOPCProcessor : public BaseOPCProcessor {
 
   ADD_COMMON_VIRTUAL_FUNCTIONS_FOR_PROCESSORS
 
-  explicit PutOPCProcessor(std::string name, const utils::Identifier& uuid = {})
-      : BaseOPCProcessor(std::move(name), uuid) {
+  explicit PutOPCProcessor(std::string_view name, const utils::Identifier& uuid = {})
+      : BaseOPCProcessor(name, uuid) {
     logger_ = core::logging::LoggerFactory<PutOPCProcessor>::getLogger(uuid_);
   }
 

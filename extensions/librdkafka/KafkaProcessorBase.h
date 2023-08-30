@@ -90,8 +90,8 @@ class KafkaProcessorBase : public core::Processor {
   };
 
 
-  KafkaProcessorBase(std::string name, const utils::Identifier& uuid, std::shared_ptr<core::logging::Logger> logger)
-      : core::Processor(std::move(name), uuid),
+  KafkaProcessorBase(std::string_view name, const utils::Identifier& uuid, std::shared_ptr<core::logging::Logger> logger)
+      : core::Processor(name, uuid),
         logger_(std::move(logger)) {
   }
 

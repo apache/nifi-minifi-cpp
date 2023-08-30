@@ -167,8 +167,8 @@ class PutS3Object : public S3Processor {
 
   ADD_COMMON_VIRTUAL_FUNCTIONS_FOR_PROCESSORS
 
-  explicit PutS3Object(std::string name, const minifi::utils::Identifier& uuid = minifi::utils::Identifier())
-    : S3Processor(std::move(name), uuid, core::logging::LoggerFactory<PutS3Object>::getLogger(uuid)) {
+  explicit PutS3Object(std::string_view name, const minifi::utils::Identifier& uuid = minifi::utils::Identifier())
+    : S3Processor(name, uuid, core::logging::LoggerFactory<PutS3Object>::getLogger(uuid)) {
   }
 
   ~PutS3Object() override = default;

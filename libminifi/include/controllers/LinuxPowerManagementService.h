@@ -39,8 +39,8 @@ namespace org::apache::nifi::minifi::controllers {
  */
 class LinuxPowerManagerService : public ThreadManagementService {
  public:
-  explicit LinuxPowerManagerService(std::string name, const utils::Identifier &uuid = {})
-      : ThreadManagementService(std::move(name), uuid),
+  explicit LinuxPowerManagerService(std::string_view name, const utils::Identifier &uuid = {})
+      : ThreadManagementService(name, uuid),
         enabled_(false),
         battery_level_(0),
         wait_period_(0),
@@ -49,8 +49,8 @@ class LinuxPowerManagerService : public ThreadManagementService {
         low_battery_trigger_(0) {
   }
 
-  explicit LinuxPowerManagerService(std::string name, const std::shared_ptr<Configure> &configuration)
-      : LinuxPowerManagerService(std::move(name)) {
+  explicit LinuxPowerManagerService(std::string_view name, const std::shared_ptr<Configure> &configuration)
+      : LinuxPowerManagerService(name) {
     setConfiguration(configuration);
     initialize();
   }

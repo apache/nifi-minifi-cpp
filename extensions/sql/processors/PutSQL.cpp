@@ -29,8 +29,8 @@
 
 namespace org::apache::nifi::minifi::processors {
 
-PutSQL::PutSQL(std::string name, const utils::Identifier& uuid)
-  : SQLProcessor(std::move(name), uuid, core::logging::LoggerFactory<PutSQL>::getLogger(uuid)) {
+PutSQL::PutSQL(std::string_view name, const utils::Identifier& uuid)
+  : SQLProcessor(name, uuid, core::logging::LoggerFactory<PutSQL>::getLogger(uuid)) {
 }
 
 void PutSQL::initialize() {

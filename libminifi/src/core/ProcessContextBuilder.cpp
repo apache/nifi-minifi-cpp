@@ -22,14 +22,14 @@
 
 namespace org::apache::nifi::minifi::core {
 
-ProcessContextBuilder::ProcessContextBuilder(std::string name, const minifi::utils::Identifier &uuid)
-    : core::CoreComponent(std::move(name), uuid) {
+ProcessContextBuilder::ProcessContextBuilder(std::string_view name, const minifi::utils::Identifier &uuid)
+    : core::CoreComponent(name, uuid) {
   content_repo_ = std::make_shared<core::repository::FileSystemRepository>();
   configuration_ = std::make_shared<minifi::Configure>();
 }
 
-ProcessContextBuilder::ProcessContextBuilder(std::string name)
-    : core::CoreComponent(std::move(name)) {
+ProcessContextBuilder::ProcessContextBuilder(std::string_view name)
+    : core::CoreComponent(name) {
   content_repo_ = std::make_shared<core::repository::FileSystemRepository>();
   configuration_ = std::make_shared<minifi::Configure>();
 }

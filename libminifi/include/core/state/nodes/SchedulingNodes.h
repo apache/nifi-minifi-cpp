@@ -28,12 +28,12 @@ namespace org::apache::nifi::minifi::state::response {
 
 class SchedulingDefaults : public DeviceInformation {
  public:
-  SchedulingDefaults(std::string name, const utils::Identifier &uuid)
-      : DeviceInformation(std::move(name), uuid) {
+  SchedulingDefaults(std::string_view name, const utils::Identifier &uuid)
+      : DeviceInformation(name, uuid) {
   }
 
-  explicit SchedulingDefaults(std::string name)
-      : DeviceInformation(std::move(name)) {
+  explicit SchedulingDefaults(std::string_view name)
+      : DeviceInformation(name) {
   }
 
   std::string getName() const override {

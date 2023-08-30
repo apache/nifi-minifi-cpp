@@ -34,8 +34,8 @@ namespace org::apache::nifi::minifi::extensions::gcp {
 
 class FetchGCSObject : public GCSProcessor {
  public:
-  explicit FetchGCSObject(std::string name, const utils::Identifier& uuid = {})
-      : GCSProcessor(std::move(name), uuid, core::logging::LoggerFactory<FetchGCSObject>::getLogger(uuid)) {
+  explicit FetchGCSObject(std::string_view name, const utils::Identifier& uuid = {})
+      : GCSProcessor(name, uuid, core::logging::LoggerFactory<FetchGCSObject>::getLogger(uuid)) {
   }
   ~FetchGCSObject() override = default;
 

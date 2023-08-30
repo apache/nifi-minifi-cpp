@@ -28,8 +28,8 @@
 
 namespace org::apache::nifi::minifi::processors {
 
-ReplaceText::ReplaceText(std::string name, const utils::Identifier& uuid)
-  : core::Processor(std::move(name), uuid),
+ReplaceText::ReplaceText(std::string_view name, const utils::Identifier& uuid)
+  : core::Processor(name, uuid),
     logger_(core::logging::LoggerFactory<ReplaceText>::getLogger(uuid)) {
 }
 

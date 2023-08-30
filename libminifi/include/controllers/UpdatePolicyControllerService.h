@@ -40,12 +40,12 @@ namespace org::apache::nifi::minifi::controllers {
  */
 class UpdatePolicyControllerService : public core::controller::ControllerService, public std::enable_shared_from_this<UpdatePolicyControllerService> {
  public:
-  explicit UpdatePolicyControllerService(std::string name, const utils::Identifier &uuid = {})
-      : ControllerService(std::move(name), uuid) {
+  explicit UpdatePolicyControllerService(std::string_view name, const utils::Identifier &uuid = {})
+      : ControllerService(name, uuid) {
   }
 
-  explicit UpdatePolicyControllerService(std::string name, const std::shared_ptr<Configure> &configuration)
-      : UpdatePolicyControllerService(std::move(name)) {
+  explicit UpdatePolicyControllerService(std::string_view name, const std::shared_ptr<Configure> &configuration)
+      : UpdatePolicyControllerService(name) {
     setConfiguration(configuration);
     initialize();
   }

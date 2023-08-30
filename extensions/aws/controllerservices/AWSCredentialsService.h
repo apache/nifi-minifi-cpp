@@ -39,12 +39,12 @@ namespace org::apache::nifi::minifi::aws::controllers {
 
 class AWSCredentialsService : public core::controller::ControllerService {
  public:
-  explicit AWSCredentialsService(std::string name, const minifi::utils::Identifier &uuid = {})
-      : ControllerService(std::move(name), uuid) {
+  explicit AWSCredentialsService(std::string_view name, const minifi::utils::Identifier &uuid = {})
+      : ControllerService(name, uuid) {
   }
 
-  explicit AWSCredentialsService(std::string name, const std::shared_ptr<Configure>& /*configuration*/)
-      : ControllerService(std::move(name)) {
+  explicit AWSCredentialsService(std::string_view name, const std::shared_ptr<Configure>& /*configuration*/)
+      : ControllerService(name) {
   }
 
   EXTENSIONAPI static constexpr const char* Description = "AWS Credentials Management Service";

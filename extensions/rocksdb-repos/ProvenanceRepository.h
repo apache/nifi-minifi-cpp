@@ -41,8 +41,8 @@ constexpr auto PROVENANCE_PURGE_PERIOD = std::chrono::milliseconds(2500);
 
 class ProvenanceRepository : public core::repository::RocksDbRepository {
  public:
-  ProvenanceRepository(std::string name, const utils::Identifier& /*uuid*/)
-    : ProvenanceRepository(std::move(name)) {
+  ProvenanceRepository(std::string_view name, const utils::Identifier& /*uuid*/)
+    : ProvenanceRepository(name) {
   }
 
   explicit ProvenanceRepository(std::string_view repo_name = "",

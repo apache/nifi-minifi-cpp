@@ -32,8 +32,8 @@ using namespace std::literals::chrono_literals;
 
 namespace org::apache::nifi::minifi::c2 {
 
-RESTSender::RESTSender(std::string name, const utils::Identifier &uuid)
-    : C2Protocol(std::move(name), uuid) {
+RESTSender::RESTSender(std::string_view name, const utils::Identifier &uuid)
+    : C2Protocol(name, uuid) {
 }
 
 void RESTSender::initialize(core::controller::ControllerServiceProvider* controller, const std::shared_ptr<Configure> &configure) {

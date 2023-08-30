@@ -85,8 +85,8 @@ namespace org::apache::nifi::minifi::processors {
 
 class CompressContent : public core::Processor {
  public:
-  explicit CompressContent(std::string name, const utils::Identifier& uuid = {})
-    : core::Processor(std::move(name), uuid) {
+  explicit CompressContent(std::string_view name, const utils::Identifier& uuid = {})
+    : core::Processor(name, uuid) {
   }
   ~CompressContent() override = default;
 

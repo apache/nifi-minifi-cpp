@@ -73,8 +73,8 @@ class ListAzureDataLakeStorage final : public AzureDataLakeStorageProcessorBase 
 
   ADD_COMMON_VIRTUAL_FUNCTIONS_FOR_PROCESSORS
 
-  explicit ListAzureDataLakeStorage(std::string name, const minifi::utils::Identifier &uuid = minifi::utils::Identifier())
-      : AzureDataLakeStorageProcessorBase(std::move(name), uuid, core::logging::LoggerFactory<ListAzureDataLakeStorage>::getLogger(uuid)) {
+  explicit ListAzureDataLakeStorage(std::string_view name, const minifi::utils::Identifier &uuid = minifi::utils::Identifier())
+      : AzureDataLakeStorageProcessorBase(name, uuid, core::logging::LoggerFactory<ListAzureDataLakeStorage>::getLogger(uuid)) {
   }
 
   ~ListAzureDataLakeStorage() override = default;
@@ -86,8 +86,8 @@ class ListAzureDataLakeStorage final : public AzureDataLakeStorageProcessorBase 
  private:
   friend class ::ListAzureDataLakeStorageTestsFixture;
 
-  explicit ListAzureDataLakeStorage(std::string name, const minifi::utils::Identifier &uuid, std::unique_ptr<storage::DataLakeStorageClient> data_lake_storage_client)
-      : AzureDataLakeStorageProcessorBase(std::move(name), uuid, core::logging::LoggerFactory<ListAzureDataLakeStorage>::getLogger(uuid), std::move(data_lake_storage_client)) {
+  explicit ListAzureDataLakeStorage(std::string_view name, const minifi::utils::Identifier &uuid, std::unique_ptr<storage::DataLakeStorageClient> data_lake_storage_client)
+      : AzureDataLakeStorageProcessorBase(name, uuid, core::logging::LoggerFactory<ListAzureDataLakeStorage>::getLogger(uuid), std::move(data_lake_storage_client)) {
   }
 
   std::optional<storage::ListAzureDataLakeStorageParameters> buildListParameters(core::ProcessContext &context);

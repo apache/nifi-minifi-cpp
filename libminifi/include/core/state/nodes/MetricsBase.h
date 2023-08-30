@@ -44,13 +44,13 @@ class ResponseNode : public core::Connectable, public PublishedMetricProvider {
         is_array_(false) {
   }
 
-  explicit ResponseNode(std::string name)
-      : core::Connectable(std::move(name)),
+  explicit ResponseNode(std::string_view name)
+      : core::Connectable(name),
         is_array_(false) {
   }
 
-  ResponseNode(std::string name, const utils::Identifier& uuid)
-      : core::Connectable(std::move(name), uuid),
+  ResponseNode(std::string_view name, const utils::Identifier& uuid)
+      : core::Connectable(name, uuid),
         is_array_(false) {
   }
 
@@ -92,12 +92,12 @@ class ResponseNode : public core::Connectable, public PublishedMetricProvider {
  */
 class DeviceInformation : public ResponseNode {
  public:
-  DeviceInformation(std::string name, const utils::Identifier& uuid)
-      : ResponseNode(std::move(name), uuid) {
+  DeviceInformation(std::string_view name, const utils::Identifier& uuid)
+      : ResponseNode(name, uuid) {
   }
 
-  explicit DeviceInformation(std::string name)
-      : ResponseNode(std::move(name)) {
+  explicit DeviceInformation(std::string_view name)
+      : ResponseNode(name) {
   }
 };
 

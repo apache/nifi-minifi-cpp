@@ -40,8 +40,8 @@ namespace org::apache::nifi::minifi::processors {
 
 class LogAttribute : public core::Processor {
  public:
-  explicit LogAttribute(std::string name, const utils::Identifier& uuid = {})
-      : Processor(std::move(name), uuid) {
+  explicit LogAttribute(std::string_view name, const utils::Identifier& uuid = {})
+      : Processor(name, uuid) {
     logger_->set_max_log_size(-1);
   }
   ~LogAttribute() override = default;

@@ -41,8 +41,8 @@ namespace org::apache::nifi::minifi::processors {
 
 class FetchOPCProcessor : public BaseOPCProcessor {
  public:
-  explicit FetchOPCProcessor(std::string name, const utils::Identifier& uuid = {})
-      : BaseOPCProcessor(std::move(name), uuid) {
+  explicit FetchOPCProcessor(std::string_view name, const utils::Identifier& uuid = {})
+      : BaseOPCProcessor(name, uuid) {
     logger_ = core::logging::LoggerFactory<FetchOPCProcessor>::getLogger(uuid_);
   }
 

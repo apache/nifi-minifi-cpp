@@ -38,8 +38,8 @@ namespace org::apache::nifi::minifi::processors {
 
 class ExtractText : public core::Processor {
  public:
-  explicit ExtractText(std::string name,  const utils::Identifier& uuid = {})
-      : Processor(std::move(name), uuid) {
+  explicit ExtractText(std::string_view name,  const utils::Identifier& uuid = {})
+      : Processor(name, uuid) {
   }
 
   // Default maximum bytes to read into an attribute

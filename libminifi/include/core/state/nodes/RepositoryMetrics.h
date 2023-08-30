@@ -35,13 +35,13 @@ namespace org::apache::nifi::minifi::state::response {
  */
 class RepositoryMetrics : public ResponseNode {
  public:
-  RepositoryMetrics(std::string name, const utils::Identifier &uuid)
-      : ResponseNode(std::move(name), uuid),
+  RepositoryMetrics(std::string_view name, const utils::Identifier &uuid)
+      : ResponseNode(name, uuid),
         repository_metrics_source_store_(getName()) {
   }
 
-  explicit RepositoryMetrics(std::string name)
-      : ResponseNode(std::move(name)),
+  explicit RepositoryMetrics(std::string_view name)
+      : ResponseNode(name),
         repository_metrics_source_store_(getName()) {
   }
 

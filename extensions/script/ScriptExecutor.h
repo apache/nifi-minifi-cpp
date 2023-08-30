@@ -30,7 +30,7 @@ namespace org::apache::nifi::minifi::extensions::script {
 
 class ScriptExecutor : public minifi::core::CoreComponent {
  public:
-  ScriptExecutor(std::string name, const utils::Identifier& uuid) : core::CoreComponent(std::move(name), uuid) {}
+  ScriptExecutor(std::string_view name, const utils::Identifier& uuid) : core::CoreComponent(name, uuid) {}
 
   virtual void onTrigger(const std::shared_ptr<core::ProcessContext> &context, const std::shared_ptr<core::ProcessSession> &session) = 0;
   virtual void initialize(std::filesystem::path script_file,

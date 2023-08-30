@@ -40,8 +40,8 @@ class ReadFromFlowFileTestProcessor : public core::Processor {
   static constexpr const char* ON_TRIGGER_LOG_STR = "ReadFromFlowFileTestProcessor::onTrigger executed";
   static constexpr const char* ON_UNSCHEDULE_LOG_STR = "ReadFromFlowFileTestProcessor::onUnSchedule executed";
 
-  explicit ReadFromFlowFileTestProcessor(std::string name, const utils::Identifier& uuid = utils::Identifier())
-      : Processor(std::move(name), uuid) {
+  explicit ReadFromFlowFileTestProcessor(std::string_view name, const utils::Identifier& uuid = utils::Identifier())
+      : Processor(name, uuid) {
   }
 
   static constexpr const char* Description = "ReadFromFlowFileTestProcessor (only for testing purposes)";

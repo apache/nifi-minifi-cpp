@@ -39,7 +39,7 @@ int ssl_protocol_en(void *ssl_context, void *user_data);
  */
 class RESTReceiver : public RESTProtocol, public HeartbeatReporter {
  public:
-  explicit RESTReceiver(std::string name, const utils::Identifier& uuid = {});
+  explicit RESTReceiver(std::string_view name, const utils::Identifier& uuid = {});
 
   EXTENSIONAPI static constexpr const char* Description = "Provides a webserver to display C2 heartbeat information";
 
