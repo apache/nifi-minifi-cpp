@@ -16,18 +16,15 @@
  */
 #include "HTTPClient.h"
 
-#include <algorithm>
 #include <cinttypes>
 #include <memory>
 #include <string>
 #include <utility>
 #include <vector>
 
-#include "Exception.h"
 #include "utils/gsl.h"
 #include "utils/StringUtils.h"
 #include "core/Resource.h"
-#include "utils/RegexUtils.h"
 #include "range/v3/algorithm/all_of.hpp"
 #include "range/v3/action/transform.hpp"
 #include "utils/HTTPUtils.h"
@@ -328,18 +325,15 @@ void HTTPClient::setRequestHeader(std::string key, std::optional<std::string> va
 }
 
 namespace {
-struct CurlSListFreeAll {
-  void operator()(struct curl_slist* slist) const {
-    curl_slist_free_all(slist);
-  }
-};
+using CurlSlistDeleter = decltype([](struct curl_slist* slist) { curl_slist_free_all(slist); });
 
-std::unique_ptr<struct curl_slist, CurlSListFreeAll> getCurlSList(const std::unordered_map<std::string, std::string>& request_headers) {
+std::unique_ptr<struct curl_slist, CurlSlistDeleter> toCurlSlist(const std::unordered_map<std::string, std::string>& request_headers) {
   curl_slist* new_list = nullptr;
+  const auto guard = gsl::finally([&new_list]() { curl_slist_free_all(new_list); });
   for (const auto& [header_key, header_value] : request_headers)
     new_list = curl_slist_append(new_list, utils::StringUtils::join_pack(header_key, ": ", header_value).c_str());
 
-  return {new_list, {}};
+  return {std::exchange(new_list, nullptr), {}};
 }
 }  // namespace
 
@@ -366,7 +360,7 @@ bool HTTPClient::submit() {
     curl_easy_setopt(http_session_.get(), CURLOPT_NOPROGRESS, 1);
   }
 
-  auto headers = getCurlSList(request_headers_);
+  const auto headers = toCurlSlist(request_headers_);
   if (headers) {
     curl_slist_append(headers.get(), "Expect:");
     curl_easy_setopt(http_session_.get(), CURLOPT_HTTPHEADER, headers.get());
@@ -452,7 +446,8 @@ void HTTPClient::set_request_method(std::string method) {
 }
 
 int HTTPClient::onProgress(void *clientp, curl_off_t /*dltotal*/, curl_off_t dlnow, curl_off_t /*ultotal*/, curl_off_t ulnow) {
-  HTTPClient& client = *reinterpret_cast<HTTPClient*>(clientp);
+  gsl_Expects(clientp);
+  HTTPClient& client = *static_cast<HTTPClient*>(clientp);
   auto now = std::chrono::steady_clock::now();
   auto elapsed = now - client.progress_.last_transferred_;
   if (dlnow != client.progress_.downloaded_data_ || ulnow != client.progress_.uploaded_data_) {
@@ -522,8 +517,6 @@ std::string HTTPClient::replaceInvalidCharactersInHttpHeaderFieldName(std::strin
     return "X-MiNiFi-Empty-Attribute-Name";
   }
 
-  std::string result;
-  result.reserve(field_name.size());
   // RFC822 3.1.2: The  field-name must be composed of printable ASCII characters
   // (i.e., characters that  have  values  between  33.  and  126., decimal, except colon).
   ranges::actions::transform(field_name, [](char ch) {

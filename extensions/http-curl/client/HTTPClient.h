@@ -208,8 +208,10 @@ class HTTPClient : public utils::BaseHTTPClient, public core::Connectable {
  protected:
   static CURLcode configure_ssl_context(CURL* /*curl*/, void *ctx, void *param) {
 #ifdef OPENSSL_SUPPORT
-    auto* ssl_context_service = static_cast<minifi::controllers::SSLContextService*>(param);
-    if (!ssl_context_service->configure_ssl_context(static_cast<SSL_CTX*>(ctx))) {
+    gsl_Expects(ctx);
+    gsl_Expects(param);
+    auto& ssl_context_service = *static_cast<minifi::controllers::SSLContextService*>(param);
+    if (!ssl_context_service.configure_ssl_context(static_cast<SSL_CTX*>(ctx))) {
       return CURLE_FAILED_INIT;
     }
     return CURLE_OK;
