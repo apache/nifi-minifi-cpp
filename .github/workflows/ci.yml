@@ -180,7 +180,7 @@ jobs:
         with:
           name: ubuntu-binaries
           path: build/bin
-  ubuntu_20_04_clang:
+  ubuntu_22_04_clang:
     name: "ubuntu-22.04-clang"
     runs-on: ubuntu-22.04
     timeout-minutes: 180
