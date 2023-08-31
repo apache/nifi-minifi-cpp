@@ -84,7 +84,7 @@ class LogCompressorSink : public spdlog::sinks::base_sink<std::mutex> {
     return cached_logs_.getMaxSize();
   }
 
-  size_t getMaxCacheSegmenSize() const {
+  size_t getMaxCacheSegmentSize() const {
     return cached_logs_.getMaxItemSize();
   }
 
