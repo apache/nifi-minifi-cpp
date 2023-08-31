@@ -1,5 +1,5 @@
 diff --git a/lib/strerror.c b/lib/strerror.c
-index bd9cc535c..92f832c04 100644
+index bd9cc535c..0da7b09e4 100644
 --- a/lib/strerror.c
 +++ b/lib/strerror.c
 @@ -861,7 +861,8 @@ const char *Curl_strerror(int err, char *buf, size_t buflen)
@@ -21,14 +21,7 @@ index bd9cc535c..92f832c04 100644
   /*
    * The glibc-style strerror_r() only *might* use the buffer we pass to
    * the function, but it always returns the error message as a pointer,
-@@ -879,12 +880,13 @@ const char *Curl_strerror(int err, char *buf, size_t buflen)
-   */
-   {
-     char buffer[256];
--    char *msg = strerror_r(err, buffer, sizeof(buffer));
-+    int *msg = strerror_r(err, buffer, sizeof(buffer));
-     if(msg)
-       strncpy(buf, msg, max);
+@@ -885,6 +886,7 @@ const char *Curl_strerror(int err, char *buf, size_t buflen)
      else
        msnprintf(buf, max, "Unknown error %d", err);
    }
