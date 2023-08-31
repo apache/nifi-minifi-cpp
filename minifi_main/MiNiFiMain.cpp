@@ -156,7 +156,7 @@ void dumpDocsIfRequested(const argparse::ArgumentParser& parser, const std::shar
   const auto& docs_params = parser.get<std::vector<std::string>>("--docs");
   if (utils::file::create_dir(docs_params[0]) != 0) {
     std::cerr << "Working directory doesn't exist and cannot be created: " << docs_params[0] << std::endl;
-    exit(1);
+    std::exit(1);
   }
 
   std::cout << "Dumping docs to " << docs_params[0] << std::endl;
@@ -164,19 +164,19 @@ void dumpDocsIfRequested(const argparse::ArgumentParser& parser, const std::shar
     auto path = std::filesystem::path(docs_params[1]);
     if (std::filesystem::exists(path) && !std::filesystem::is_regular_file(path)) {
       std::cerr << "PROCESSORS.md target path exists, but it is not a regular file: " << path << std::endl;
-      exit(1);
+      std::exit(1);
     }
     auto dir = path.parent_path();
     if (dir == docs_params[0]) {
       std::cerr << "Target file should be out of the working directory: " << dir << std::endl;
-      exit(1);
+      std::exit(1);
     }
     std::ofstream outref(docs_params[1]);
     dumpDocs(configure, docs_params[0], outref);
   } else {
     dumpDocs(configure, docs_params[0], std::cout);
   }
-  exit(0);
+  std::exit(0);
 }
 
 void writeSchemaIfRequested(const argparse::ArgumentParser& parser, const std::shared_ptr<minifi::Configure>& configure) {
@@ -186,17 +186,19 @@ void writeSchemaIfRequested(const argparse::ArgumentParser& parser, const std::s
   const auto& schema_path = parser.get("--schema");
   if (std::filesystem::exists(schema_path) && !std::filesystem::is_regular_file(schema_path)) {
     std::cerr << "JSON schema target path already exists, but it is not a regular file: " << schema_path << std::endl;
-    exit(1);
+    std::exit(1);
   }
 
   auto parent_dir = std::filesystem::path(schema_path).parent_path();
   if (utils::file::create_dir(parent_dir) != 0) {
     std::cerr << "JSON schema parent directory doesn't exist and cannot be created: " << parent_dir << std::endl;
-    exit(1);
+    std::exit(1);
   }
   std::cout << "Writing json schema to " << schema_path << std::endl;
-  std::ofstream schema_file{schema_path};
-  writeJsonSchema(configure, schema_file);
+  {
+    std::ofstream schema_file{schema_path};
+    writeJsonSchema(configure, schema_file);
+  }
   std::exit(0);
 }
 
@@ -356,14 +358,13 @@ int main(int argc, char **argv) {
         | utils::flatMap(utils::timeutils::StringToDuration<std::chrono::milliseconds>)
         | utils::valueOrElse([] { return std::chrono::milliseconds(STOP_WAIT_TIME_MS);});
 
-
     configure->get(minifi::Configure::nifi_provenance_repository_class_name, prov_repo_class);
     // Create repos for flow record and provenance
     std::shared_ptr prov_repo = core::createRepository(prov_repo_class, "provenance");
 
     if (!prov_repo || !prov_repo->initialize(configure)) {
       logger->log_error("Provenance repository failed to initialize, exiting..");
-      exit(1);
+      std::exit(1);
     }
 
     configure->get(minifi::Configure::nifi_flow_repository_class_name, flow_repo_class);
@@ -372,7 +373,7 @@ int main(int argc, char **argv) {
 
     if (!flow_repo || !flow_repo->initialize(configure)) {
       logger->log_error("Flow file repository failed to initialize, exiting..");
-      exit(1);
+      std::exit(1);
     }
 
     configure->get(minifi::Configure::nifi_content_repository_class_name, content_repo_class);
@@ -381,13 +382,13 @@ int main(int argc, char **argv) {
 
     if (!content_repo->initialize(configure)) {
       logger->log_error("Content repository failed to initialize, exiting..");
-      exit(1);
+      std::exit(1);
     }
     const bool is_flow_repo_non_persistent = flow_repo->isNoop() || std::dynamic_pointer_cast<core::repository::VolatileFlowFileRepository>(flow_repo) != nullptr;
     const bool is_content_repo_non_persistent = std::dynamic_pointer_cast<core::repository::VolatileContentRepository>(content_repo) != nullptr;
     if (is_flow_repo_non_persistent != is_content_repo_non_persistent) {
       logger->log_error("Both or neither of flowfile and content repositories must be persistent! Exiting..");
-      exit(1);
+      std::exit(1);
     }
 
     std::string content_repo_path;

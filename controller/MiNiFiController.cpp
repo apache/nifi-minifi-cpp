@@ -109,7 +109,7 @@ int main(int argc, char **argv) {
     socket_data.ssl_context_service = getSSLContextService(configuration);
   } catch(const minifi::Exception& ex) {
     logger->log_error(ex.what());
-    exit(1);
+    std::exit(1);
   }
 
   argparse::ArgumentParser argument_parser("Apache MiNiFi C++ Controller", minifi::AgentBuild::VERSION);
@@ -185,7 +185,7 @@ int main(int argc, char **argv) {
 
     if ((minifi::IsNullOrEmpty(socket_data.host) && socket_data.port == -1)) {
       std::cout << "MiNiFi Controller is disabled" << std::endl;
-      exit(0);
+      std::exit(0);
     }
     if (argument_parser.get<bool>("--noheaders")) {
       show_headers = false;
@@ -260,7 +260,7 @@ int main(int argc, char **argv) {
     std::cerr << exc.what() << std::endl;
   } catch (...) {
     std::cerr << argument_parser;
-    exit(1);
+    std::exit(1);
   }
   return 0;
 }
