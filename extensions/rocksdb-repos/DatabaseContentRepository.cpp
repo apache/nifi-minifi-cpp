@@ -251,6 +251,9 @@ void DatabaseContentRepository::runGc() {
     if (!opendb) {
       continue;
     }
+    // keys_to_delete_ is not persisted, in memory only, and is lost on restart
+    // the clearOrphans method is executed during agent startup making sure that this
+    // does not cause a content leak
     std::vector<std::string> keys;
     {
       std::lock_guard guard(keys_mtx_);
