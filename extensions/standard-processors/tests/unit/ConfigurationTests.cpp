@@ -58,7 +58,8 @@ TEST_CASE("Configuration can fix misconfigured timeperiod<->integer validated pr
   LogTestController::getInstance().setInfo<minifi::Configure>();
   LogTestController::getInstance().setInfo<minifi::Properties>();
 
-  auto properties_path = std::filesystem::temp_directory_path() /  "test.properties";
+  TestController test_controller;
+  auto properties_path = test_controller.createTempDirectory() /  "test.properties";
 
   std::ofstream{properties_path}
       << "nifi.c2.agent.heartbeat.period=1min\n"
@@ -99,7 +100,8 @@ TEST_CASE("Configuration can fix misconfigured datasize<->integer validated prop
   LogTestController::getInstance().setInfo<minifi::Configure>();
   LogTestController::getInstance().setInfo<minifi::Properties>();
 
-  auto properties_path = std::filesystem::temp_directory_path() /  "test.properties";
+  TestController test_controller;
+  auto properties_path = test_controller.createTempDirectory() /  "test.properties";
 
   {
     std::ofstream properties_file(properties_path);
@@ -135,7 +137,8 @@ TEST_CASE("Configuration can fix misconfigured datasize<->integer validated prop
 TEST_CASE("Configuration can fix misconfigured validated properties within environmental variables") {
   LogTestController::getInstance().setInfo<minifi::Configure>();
   LogTestController::getInstance().setInfo<minifi::Properties>();
-  auto properties_path = std::filesystem::temp_directory_path() /  "test.properties";
+  TestController test_controller;
+  auto properties_path = test_controller.createTempDirectory() /  "test.properties";
 
   CHECK(minifi::utils::Environment::setEnvironmentVariable("SOME_VARIABLE", "4000"));
 
