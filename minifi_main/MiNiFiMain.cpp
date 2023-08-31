@@ -72,6 +72,7 @@
 #include "core/state/MetricsPublisherFactory.h"
 #include "core/state/MetricsPublisherStore.h"
 #include "argparse/argparse.hpp"
+#include "agent/agent_version.h"
 
 namespace minifi = org::apache::nifi::minifi;
 namespace core = minifi::core;
@@ -200,7 +201,7 @@ void writeSchemaIfRequested(const argparse::ArgumentParser& parser, const std::s
 }
 
 int main(int argc, char **argv) {
-  argparse::ArgumentParser argument_parser("Apache MiNiFi C++", "1.0", argparse::default_arguments::help);
+  argparse::ArgumentParser argument_parser("Apache MiNiFi C++", minifi::AgentBuild::VERSION);
   argument_parser.add_argument("-p", "--property")
     .append()
     .metavar("KEY=VALUE")

@@ -30,6 +30,7 @@
 #include "Exception.h"
 #include "argparse/argparse.hpp"
 #include "range/v3/algorithm/contains.hpp"
+#include "agent/agent_version.h"
 
 namespace minifi = org::apache::nifi::minifi;
 
@@ -111,7 +112,7 @@ int main(int argc, char **argv) {
     exit(1);
   }
 
-  argparse::ArgumentParser argument_parser("Apache MiNiFi C++ Controller", "1.0", argparse::default_arguments::help);
+  argparse::ArgumentParser argument_parser("Apache MiNiFi C++ Controller", minifi::AgentBuild::VERSION);
   argument_parser.add_argument("--host").metavar("HOSTNAME")
     .help("Specifies connecting host name");
   argument_parser.add_argument("--port")

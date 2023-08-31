@@ -20,11 +20,12 @@
 
 #include "EncryptConfig.h"
 #include "argparse/argparse.hpp"
+#include "agent/agent_version.h"
 
 using org::apache::nifi::minifi::encrypt_config::EncryptConfig;
 
 int main(int argc, char* argv[]) try {
-  argparse::ArgumentParser argument_parser("Apache MiNiFi C++ Encrypt-Config", "1.0", argparse::default_arguments::help);
+  argparse::ArgumentParser argument_parser("Apache MiNiFi C++ Encrypt-Config", org::apache::nifi::minifi::AgentBuild::VERSION);
   argument_parser.add_argument("-m", "--minifi-home")
     .required()
     .metavar("MINIFI_HOME")
