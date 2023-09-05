@@ -519,8 +519,8 @@ std::string HTTPClient::replaceInvalidCharactersInHttpHeaderFieldName(std::strin
 
   // RFC822 3.1.2: The  field-name must be composed of printable ASCII characters
   // (i.e., characters that  have  values  between  33.  and  126., decimal, except colon).
-  ranges::actions::transform(field_name, [](char ch) {
-      return (ch >= 33 && ch <= 126 && ch != ':') ? ch : '-';
+  ranges::actions::transform(field_name, [](char ch) {  // NOLINT: false positive: Add #include <algorithm> for transform  [build/include_what_you_use] [4]
+    return (ch >= 33 && ch <= 126 && ch != ':') ? ch : '-';
   });
   return field_name;
 }
