@@ -26,7 +26,6 @@
 #include <vector>
 #include <cstdio>
 #include <algorithm>
-#include "utils/expected.h"
 
 #ifndef WIN32
 #include <unistd.h>
@@ -74,6 +73,7 @@
 
 #include "core/logging/LoggerFactory.h"
 #include "utils/StringUtils.h"
+#include "utils/expected.h"
 #include "utils/file/PathUtils.h"
 #include "utils/gsl.h"
 

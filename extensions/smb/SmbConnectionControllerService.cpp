@@ -50,11 +50,12 @@ void SmbConnectionControllerService::onEnable()  {
   else
     credentials_.reset();
 
-  ZeroMemory(&net_resource_, sizeof(net_resource_));
-  net_resource_.dwType = RESOURCETYPE_DISK;
-  net_resource_.lpLocalName = nullptr;
-  net_resource_.lpRemoteName = server_path_.data();
-  net_resource_.lpProvider = nullptr;
+  net_resource_ = {
+      .dwType = RESOURCETYPE_DISK,
+      .lpLocalName = nullptr,
+      .lpRemoteName = server_path_.data(),
+      .lpProvider = nullptr,
+  };
 }
 
 void SmbConnectionControllerService::notifyStop() {
@@ -63,15 +64,15 @@ void SmbConnectionControllerService::notifyStop() {
     logger_->log_error("Error while disconnecting from SMB: %s", disconnection_result.error().message());
 }
 
-std::shared_ptr<SmbConnectionControllerService> SmbConnectionControllerService::getFromProperty(const core::ProcessContext& context, const core::PropertyReference& property) {
+gsl::not_null<std::shared_ptr<SmbConnectionControllerService>> SmbConnectionControllerService::getFromProperty(const core::ProcessContext& context, const core::PropertyReference& property) {
   std::shared_ptr<SmbConnectionControllerService> smb_connection_controller_service;
   if (auto connection_controller_name = context.getProperty(property)) {
     smb_connection_controller_service = std::dynamic_pointer_cast<SmbConnectionControllerService>(context.getControllerService(*connection_controller_name));
   }
   if (!smb_connection_controller_service) {
-    minifi::Exception(ExceptionType::PROCESS_SCHEDULE_EXCEPTION, "Missing SMB Connection Controller Service");
+    throw minifi::Exception(ExceptionType::PROCESS_SCHEDULE_EXCEPTION, "Missing SMB Connection Controller Service");
   }
-  return smb_connection_controller_service;
+  return gsl::make_not_null(smb_connection_controller_service);
 }
 
 nonstd::expected<void, std::error_code> SmbConnectionControllerService::connect() {
@@ -104,8 +105,9 @@ bool SmbConnectionControllerService::isConnected() {
 }
 
 std::error_code SmbConnectionControllerService::validateConnection() {
-  if (isConnected())
+  if (isConnected()) {
     return std::error_code();
+  }
   auto connection_result = connect();
   if (!connection_result) {
     return connection_result.error();

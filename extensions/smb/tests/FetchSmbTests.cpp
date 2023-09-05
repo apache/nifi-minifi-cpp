@@ -34,7 +34,7 @@ TEST_CASE("FetchSmb invalid network path") {
   minifi::test::SingleProcessorTestController controller{fetch_smb};
   auto smb_connection_node = controller.plan->addController("MockSmbConnectionControllerService", "smb_connection_controller_service");
   REQUIRE(controller.plan->setProperty(smb_connection_node, SmbConnectionControllerService::Hostname, utils::OsUtils::getHostName().value_or("localhost")));
-  REQUIRE(controller.plan->setProperty(smb_connection_node, SmbConnectionControllerService::Share, "some_share_that_does_not_exists"));
+  REQUIRE(controller.plan->setProperty(smb_connection_node, SmbConnectionControllerService::Share, "some_share_that_does_not_exist"));
   REQUIRE(controller.plan->setProperty(fetch_smb, FetchSmb::ConnectionControllerService, "smb_connection_controller_service"));
   const auto trigger_results = controller.trigger("", {{std::string(core::SpecialFlowAttribute::FILENAME), "a.foo"}, {std::string(core::SpecialFlowAttribute::PATH), ""}});
   CHECK(trigger_results.at(FetchSmb::Success).empty());

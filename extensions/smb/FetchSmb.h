@@ -51,7 +51,7 @@ class FetchSmb : public core::Processor {
       .withAllowedTypes<SmbConnectionControllerService>()
       .build();
   EXTENSIONAPI static constexpr auto RemoteFile = core::PropertyDefinitionBuilder<>::createProperty("Input Directory")
-      .withDescription("The full path of the file to be retrieved from the remote server. Expression language supported. If left empty the path and filename attributes will be used.")
+      .withDescription("The full path of the file to be retrieved from the remote server. If left empty, the path and filename attributes of the incoming flow file will be used.")
       .isRequired(false)
       .supportsExpressionLanguage(true)
       .build();

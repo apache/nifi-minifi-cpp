@@ -64,12 +64,13 @@ TEST_CASE("ListSmb tests") {
   auto b_expected_attributes = mock_smb_connection_controller_service->addFile("b.foo", std::string(13_KiB, 'b'), 1h);
   auto c_expected_attributes = mock_smb_connection_controller_service->addFile("c.bar", std::string(1_KiB, 'c'), 2h);
   auto d_expected_attributes = mock_smb_connection_controller_service->addFile("subdir/d.foo", std::string(100, 'd'), 10min);
-  auto e_expected_attributes = mock_smb_connection_controller_service->addFile("subdir2/e.foo", std::string(1, 'e'), 0s);
+  auto e_expected_attributes = mock_smb_connection_controller_service->addFile("subdir2/e.foo", std::string(1, 'e'), 10s);
   auto f_expected_attributes = mock_smb_connection_controller_service->addFile("third/f.bar", std::string(50_KiB, 'f'), 30min);
   auto g_expected_attributes = mock_smb_connection_controller_service->addFile("g.foo", std::string(50_KiB, 'f'), 30min);
-  REQUIRE_FALSE(minifi::test::utils::hide_file(mock_smb_connection_controller_service->getPath() / "g.foo"));
+  auto hide_file_error = minifi::test::utils::hide_file(mock_smb_connection_controller_service->getPath() / "g.foo");
+  REQUIRE_FALSE(hide_file_error);
 
-  REQUIRE((a_expected_attributes && b_expected_attributes && c_expected_attributes && d_expected_attributes && e_expected_attributes && f_expected_attributes));
+  REQUIRE((a_expected_attributes && b_expected_attributes && c_expected_attributes && d_expected_attributes && e_expected_attributes && f_expected_attributes && g_expected_attributes));
 
   REQUIRE(controller.plan->setProperty(list_smb, ListSmb::ConnectionControllerService, "smb_connection_controller_service"));
 

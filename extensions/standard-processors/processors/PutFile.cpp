@@ -68,7 +68,7 @@ std::optional<std::filesystem::path> PutFile::getDestinationPath(core::ProcessCo
 }
 
 bool PutFile::directoryIsFull(const std::filesystem::path& directory) const {
-  return max_dest_files_ && utils::file::is_directory(directory) && utils::file::countNumberOfFiles(directory) >= *max_dest_files_;
+  return max_dest_files_ && utils::file::countNumberOfFiles(directory) >= *max_dest_files_;
 }
 
 void PutFile::onTrigger(core::ProcessContext *context, core::ProcessSession *session) {

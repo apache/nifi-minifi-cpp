@@ -21,6 +21,7 @@
 #include "utils/ProcessorConfigUtils.h"
 #include "utils/OsUtils.h"
 #include "utils/file/FileWriterCallback.h"
+#include "core/Resource.h"
 
 namespace org::apache::nifi::minifi::extensions::smb {
 
@@ -87,5 +88,7 @@ void PutSmb::onTrigger(core::ProcessContext* context, core::ProcessSession* sess
 
   session->transfer(flow_file, success ? Success : Failure);
 }
+
+REGISTER_RESOURCE(PutSmb, Processor);
 
 }  // namespace org::apache::nifi::minifi::extensions::smb

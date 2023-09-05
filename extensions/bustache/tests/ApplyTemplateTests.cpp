@@ -17,11 +17,8 @@
  */
 
 #include <fstream>
-#include <map>
 #include <memory>
-#include <utility>
 #include <string>
-#include <set>
 #include <iostream>
 
 #include "TestBase.h"
@@ -30,9 +27,7 @@
 
 #include "core/FlowFile.h"
 #include "core/Processor.h"
-#include "core/ProcessContext.h"
 #include "core/ProcessSession.h"
-#include "core/ProcessorNode.h"
 #include "repository/VolatileContentRepository.h"
 #include "unit/ProvenanceTestHelper.h"
 
@@ -81,7 +76,7 @@ TEST_CASE("Test usage of ApplyTemplate", "[ApplyTemplateTest]") {
   REQUIRE_FALSE(put_file_destination_dir.empty());
 
   std::shared_ptr<core::Processor> getfile = plan->addProcessor("GetFile", "getFile");
-  plan->setProperty(getfile, org::apache::nifi::minifi::processors::GetFile::Directory, get_file_source_dir);
+  plan->setProperty(getfile, org::apache::nifi::minifi::processors::GetFile::Directory, get_file_source_dir.string());
   plan->setProperty(getfile, org::apache::nifi::minifi::processors::GetFile::KeepSourceFile, "true");
 
   std::shared_ptr<core::Processor> extract_text = plan->addProcessor("ExtractText", "testExtractText", core::Relationship("success", "description"), true);
@@ -90,7 +85,7 @@ TEST_CASE("Test usage of ApplyTemplate", "[ApplyTemplateTest]") {
   std::shared_ptr<core::Processor> apply_template = plan->addProcessor("ApplyTemplate", "testApplyTemplate", core::Relationship("success", "description"), true);
 
   std::shared_ptr<core::Processor> put_file = plan->addProcessor("PutFile", "put_file", core::Relationship("success", "description"), true);
-  plan->setProperty(put_file, org::apache::nifi::minifi::processors::PutFile::Directory, put_file_destination_dir);
+  plan->setProperty(put_file, org::apache::nifi::minifi::processors::PutFile::Directory, put_file_destination_dir.string());
   plan->setProperty(put_file, org::apache::nifi::minifi::processors::PutFile::ConflictResolution, magic_enum::enum_name(minifi::processors::PutFile::FileExistsResolutionStrategy::replace));
 
   // Write attribute value to file for GetFile->ExtractText

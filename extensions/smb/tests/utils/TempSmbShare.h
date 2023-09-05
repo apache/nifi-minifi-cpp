@@ -41,23 +41,23 @@ class TempSmbShare {
   }
 
   static nonstd::expected<TempSmbShare, std::error_code> create(std::wstring net_name, std::wstring path) {
-    SHARE_INFO_502 shareInfo{};
     std::wstring remark = L"SMB share to test SMB capabilities of minifi";
-    shareInfo.shi502_netname = net_name.data();
-    shareInfo.shi502_type = STYPE_DISKTREE;
-    shareInfo.shi502_remark = remark.data();
-    shareInfo.shi502_permissions = ACCESS_ALL;
-    shareInfo.shi502_max_uses = -1;
-    shareInfo.shi502_current_uses = 0;
-    shareInfo.shi502_path = path.data();
-    shareInfo.shi502_passwd = nullptr;
-    shareInfo.shi502_reserved = 0;
-    shareInfo.shi502_security_descriptor = nullptr;
+    SHARE_INFO_502 share_info = {
+        .shi502_netname = net_name.data(),
+        .shi502_type = STYPE_DISKTREE,
+        .shi502_remark = remark.data(),
+        .shi502_permissions = ACCESS_ALL,
+        .shi502_max_uses = static_cast<DWORD>(-1),
+        .shi502_current_uses = 0,
+        .shi502_path = path.data(),
+        .shi502_passwd = nullptr,
+        .shi502_reserved = 0,
+        .shi502_security_descriptor = nullptr,
+    };
 
-    DWORD netshare_result = NetShareAdd(nullptr, 502, reinterpret_cast<LPBYTE>(&shareInfo), nullptr);
+    DWORD netshare_result = NetShareAdd(nullptr, 502, reinterpret_cast<LPBYTE>(&share_info), nullptr);
     if (netshare_result == NERR_Success) {
-      auto asd = TempSmbShare(std::move(net_name), std::move(path));
-      return asd;
+      return TempSmbShare(std::move(net_name), std::move(path));
     }
     return nonstd::make_unexpected(utils::OsUtils::windowsErrorToErrorCode(netshare_result));
   }

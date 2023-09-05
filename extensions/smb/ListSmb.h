@@ -52,7 +52,7 @@ class ListSmb : public core::Processor {
       .withAllowedTypes<SmbConnectionControllerService>()
       .build();
   EXTENSIONAPI static constexpr auto InputDirectory = core::PropertyDefinitionBuilder<>::createProperty("Input Directory")
-      .withDescription("The input directory from which files to pull files")
+      .withDescription("The input directory to list the contents of")
       .isRequired(false)
       .build();
   EXTENSIONAPI static constexpr auto RecurseSubdirectories = core::PropertyDefinitionBuilder<>::createProperty("Recurse Subdirectories")
@@ -71,19 +71,19 @@ class ListSmb : public core::Processor {
       .withDescription("The minimum age that a file must be in order to be pulled; any file younger than this amount of time (according to last modification date) will be ignored")
       .isRequired(true)
       .withPropertyType(core::StandardPropertyTypes::TIME_PERIOD_TYPE)
-      .withDefaultValue("0 sec")
+      .withDefaultValue("5 sec")
       .build();
   EXTENSIONAPI static constexpr auto MaximumFileAge = core::PropertyDefinitionBuilder<>::createProperty("Maximum File Age")
       .withDescription("The maximum age that a file must be in order to be pulled; any file older than this amount of time (according to last modification date) will be ignored")
+      .withPropertyType(core::StandardPropertyTypes::TIME_PERIOD_TYPE)
       .build();
   EXTENSIONAPI static constexpr auto MinimumFileSize = core::PropertyDefinitionBuilder<>::createProperty("Minimum File Size")
       .withDescription("The minimum size that a file must be in order to be pulled")
-      .isRequired(true)
       .withPropertyType(core::StandardPropertyTypes::DATA_SIZE_TYPE)
-      .withDefaultValue("0 B")
       .build();
   EXTENSIONAPI static constexpr auto MaximumFileSize = core::PropertyDefinitionBuilder<>::createProperty("Maximum File Size")
       .withDescription("The maximum size that a file can be in order to be pulled")
+      .withPropertyType(core::StandardPropertyTypes::DATA_SIZE_TYPE)
       .build();
   EXTENSIONAPI static constexpr auto IgnoreHiddenFiles = core::PropertyDefinitionBuilder<>::createProperty("Ignore Hidden Files")
       .withDescription("Indicates whether or not hidden files should be ignored")
@@ -111,8 +111,8 @@ class ListSmb : public core::Processor {
   EXTENSIONAPI static constexpr auto Filename = core::OutputAttributeDefinition<>{"filename", { Success }, "The name of the file that was read from filesystem."};
   EXTENSIONAPI static constexpr auto Path = core::OutputAttributeDefinition<>{"path", { Success },
       "The path is set to the relative path of the file's directory on the remote filesystem compared to the Share root directory. "
-      "For example, for a given remote locationsmb://HOSTNAME:PORT/SHARE/DIRECTORY, and a file is being listed from smb://HOSTNAME:PORT/SHARE/DIRECTORY/sub/folder/file "
-      "then the path attribute will be set to \"DIRECTORY/sub/folder\"."};
+      "For example, for a given remote location smb://HOSTNAME:PORT/SHARE/DIRECTORY, and a file is being listed from smb://HOSTNAME:PORT/SHARE/DIRECTORY/sub/folder/file "
+      "then the path attribute will be set to \"sub/folder\"."};
   EXTENSIONAPI static constexpr auto ServiceLocation = core::OutputAttributeDefinition<>{"serviceLocation", { Success },
                                                        "The SMB URL of the share."};
   EXTENSIONAPI static constexpr auto LastModifiedTime = core::OutputAttributeDefinition<>{"lastModifiedTime", { Success },
@@ -123,7 +123,7 @@ class ListSmb : public core::Processor {
                                                       "The timestamp of when the file was accessed in the filesystem as 'yyyy-MM-dd'T'HH:mm:ss'."};
 
 
-  EXTENSIONAPI static constexpr auto Size = core::OutputAttributeDefinition<>{"size", { Success }, "The size of the file in bytes.."};
+  EXTENSIONAPI static constexpr auto Size = core::OutputAttributeDefinition<>{"size", { Success }, "The size of the file in bytes."};
 
   EXTENSIONAPI static constexpr auto OutputAttributes = std::array<core::OutputAttributeReference, 7> {Filename, Path, ServiceLocation, LastModifiedTime, CreationTime, LastAccessTime, Size };
 

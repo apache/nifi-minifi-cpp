@@ -55,7 +55,7 @@ class PutSmb : public core::Processor {
       .supportsExpressionLanguage(true)
       .withDefaultValue(".")
       .build();
-  EXTENSIONAPI static constexpr auto ConflictResolution = core::PropertyDefinitionBuilder<3>::createProperty("Conflict Resolution Strategy")
+  EXTENSIONAPI static constexpr auto ConflictResolution = core::PropertyDefinitionBuilder<magic_enum::enum_count<FileExistsResolutionStrategy>()>::createProperty("Conflict Resolution Strategy")
       .withDescription("Indicates what should happen when a file with the same name already exists in the output directory")
       .withDefaultValue(magic_enum::enum_name(FileExistsResolutionStrategy::fail))
       .withAllowedValues(magic_enum::enum_names<FileExistsResolutionStrategy>())

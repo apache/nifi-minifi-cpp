@@ -21,6 +21,7 @@
 #include "../../SmbConnectionControllerService.h"
 #include "core/controller/ControllerService.h"
 #include "utils/OsUtils.h"
+#include "utils/file/FileUtils.h"
 #include "ListSmb.h"
 #include "Catch.h"
 
@@ -84,10 +85,10 @@ class MockSmbConnectionControllerService : public SmbConnectionControllerService
         return nonstd::make_unexpected(std::make_error_code(std::errc::bad_file_descriptor));
       out_file << content;
     }
-    auto last_write_time_error = utils::file::set_last_write_time(full_path, std::chrono::file_clock::now() - age);
+    auto current_time = std::chrono::system_clock::now();
+    auto last_write_time_error = utils::file::set_last_write_time(full_path, minifi::utils::file::from_sys(current_time) - age);
     if (!last_write_time_error)
       return nonstd::make_unexpected(std::make_error_code(std::errc::bad_file_descriptor));
-    auto current_time = std::chrono::system_clock::now();
     auto path = relative_path.parent_path().empty() ? (std::filesystem::path(".") / "").string() : (relative_path.parent_path() / "").string();
     return ListSmbExpectedAttributes{
         .expected_filename = relative_path.filename().string(),

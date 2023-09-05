@@ -62,13 +62,12 @@ void ListSmb::onSchedule(const std::shared_ptr<core::ProcessContext> &context, c
     file_filter_.maximum_file_age =  maximum_file_age->getMilliseconds();
   }
 
-  uint64_t int_value = 0;
-  if (context->getProperty(MinimumFileSize, value) && !value.empty() && core::Property::StringToInt(value, int_value)) {
-    file_filter_.minimum_file_size = int_value;
+  if (const auto minimum_file_size = context->getProperty<core::DataSizeValue>(MinimumFileSize)) {
+    file_filter_.minimum_file_size = minimum_file_size->getValue();
   }
 
-  if (context->getProperty(MaximumFileSize, value) && !value.empty() && core::Property::StringToInt(value, int_value)) {
-    file_filter_.maximum_file_size = int_value;
+  if (const auto maximum_file_size = context->getProperty<core::DataSizeValue>(MaximumFileSize)) {
+    file_filter_.maximum_file_size = maximum_file_size->getValue();
   }
 
   context->getProperty(IgnoreHiddenFiles, file_filter_.ignore_hidden_files);

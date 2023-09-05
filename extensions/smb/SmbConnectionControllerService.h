@@ -50,10 +50,12 @@ class SmbConnectionControllerService : public core::controller::ControllerServic
   EXTENSIONAPI static constexpr auto Username  = core::PropertyDefinitionBuilder<>::createProperty("Username")
       .withDescription("The username used for authentication. If no username is set then anonymous authentication is attempted.")
       .isRequired(false)
+      .withDependentProperties({"Password"})
       .build();
   EXTENSIONAPI static constexpr auto Password  = core::PropertyDefinitionBuilder<>::createProperty("Password")
       .withDescription("The password used for authentication. Required if Username is set.")
       .isRequired(false)
+      .withDependentProperties({"Username"})
       .build();
 
   static constexpr auto Properties = std::array<core::PropertyReference, 5>{
@@ -81,7 +83,7 @@ class SmbConnectionControllerService : public core::controller::ControllerServic
   virtual std::error_code validateConnection();
   virtual std::filesystem::path getPath() const { return server_path_; }
 
-  static std::shared_ptr<SmbConnectionControllerService> getFromProperty(const core::ProcessContext& context, const core::PropertyReference& property);
+  static gsl::not_null<std::shared_ptr<SmbConnectionControllerService>> getFromProperty(const core::ProcessContext& context, const core::PropertyReference& property);
 
  private:
   nonstd::expected<void, std::error_code> connect();

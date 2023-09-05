@@ -44,7 +44,6 @@ TEST_CASE_METHOD(SmbConnectionControllerServiceFixture, "SmbConnectionController
   auto temp_smb_share = TempSmbShare::create(share_local_name, temp_directory.wstring());
   if (!temp_smb_share && temp_smb_share.error() == std::error_code(5, std::system_category())) {
     SKIP("SmbConnectionControllerService tests needs administrator privileges");
-    return;
   }
 
 
