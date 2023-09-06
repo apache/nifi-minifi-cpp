@@ -91,7 +91,9 @@ class C2DebugBundleHandler : public ServerAwareHandler {
   }
   static int field_get(const char* /*key*/, const char* value, size_t valuelen, void* user_data) {
     auto& file_content = *static_cast<std::optional<std::string>*>(user_data);
-    file_content = "";
+    if (!file_content) {
+      file_content = "";
+    }
     (*file_content) += std::string(value, valuelen);
     return MG_FORM_FIELD_HANDLE_GET;
   }
@@ -183,6 +185,7 @@ int main() {
     log_text.resize(log_stream->size());
     log_stream->read(as_writable_bytes(std::span(log_text)));
     assert(log_text.find("Tis but a scratch") != std::string::npos);
+    assert(archive_content["manifest.json"].find("minifi-archive-extensions") != std::string::npos);
     return true;
   });
 
