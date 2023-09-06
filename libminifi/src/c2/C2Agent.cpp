@@ -676,7 +676,7 @@ C2Payload C2Agent::bundleDebugInfo(std::map<std::string, std::unique_ptr<io::Inp
   if (!archiver) {
     throw C2DebugBundleError("Couldn't instantiate archiver");
   }
-  for (auto&[filename, stream] : files) {
+  for (auto& [filename, stream] : files) {
     size_t file_size = stream->size();
     if (!archiver->newEntry({filename, file_size})) {
       throw C2DebugBundleError("Couldn't initialize archive entry for '" + filename + "'");
@@ -684,6 +684,25 @@ C2Payload C2Agent::bundleDebugInfo(std::map<std::string, std::unique_ptr<io::Inp
     if (gsl::narrow<int64_t>(file_size) != internal::pipe(*stream, *archiver)) {
       // we have touched the input streams, they cannot be reused
       throw C2DebugBundleError("Error while writing file '" + filename + "' into the debug bundle");
+    }
+  }
+  if (auto node_reporter = node_reporter_.lock()) {
+    constexpr const char* MANIFEST_FILE_NAME = "manifest.json";
+    auto reported_manifest = node_reporter->getAgentManifest();
+    state::response::SerializedResponseNode manifest;
+    manifest.name = std::move(reported_manifest.name);
+    manifest.children = std::move(reported_manifest.serialized_nodes);
+    manifest.array = reported_manifest.is_array;
+    std::string manifest_str = manifest.to_pretty_string();
+    std::ofstream{"/home/adam/Desktop/manifest.json", std::ios::binary} << manifest_str;
+    std::cout << "Manifest size: " << manifest_str.size() << std::endl;
+    if (!archiver->newEntry({MANIFEST_FILE_NAME, manifest_str.size()})) {
+      throw C2DebugBundleError(fmt::format("Couldn't initialize archive entry for '{}'", MANIFEST_FILE_NAME));
+    }
+    io::BufferStream manifest_stream;
+    manifest_stream.write(as_bytes(std::span(manifest_str)));
+    if (gsl::narrow<int64_t>(manifest_stream.size()) != internal::pipe(manifest_stream, *archiver)) {
+      throw C2DebugBundleError(fmt::format("Error while writing file '{}'", MANIFEST_FILE_NAME));
     }
   }
   if (!archiver->finish()) {
