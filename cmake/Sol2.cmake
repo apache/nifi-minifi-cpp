@@ -31,6 +31,7 @@ if(NOT EXISTS "${SOL2_INCLUDE_DIR}/sol.hpp")
          EXPECTED_HASH SHA256=8fc34d74e9b4b8baa381f5e6ab7b6f6b44114cd355c718505495943ff6b85740)
     configure_file("${SOL2_INCLUDE_DIR}/sol/forward.hpp" "${SOL2_INCLUDE_DIR}/sol/forward.hpp" NEWLINE_STYLE LF)
 
+    # Some platform simply define LUA_COMPAT_BITLIB or LUA_COMPAT_5_2 without setting them to explicitly 1
     set(PC "${Patch_EXECUTABLE}" -p1 -i "${CMAKE_SOURCE_DIR}/thirdparty/sol2/fix_bitlib_compatibility.patch" "${SOL2_INCLUDE_DIR}/sol/sol.hpp")
 
     execute_process(COMMAND ${PC} RESULT_VARIABLE patch_result_code)
