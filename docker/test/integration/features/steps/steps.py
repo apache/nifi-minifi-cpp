@@ -428,6 +428,7 @@ def step_impl(context):
 @given("an MQTT broker is set up in correspondence with the PublishMQTT and ConsumeMQTT")
 def step_impl(context):
     context.test.acquire_container(context=context, name="mqtt-broker", engine="mqtt-broker")
+    context.test.start('mqtt-broker')
 
 
 # s3 setup
