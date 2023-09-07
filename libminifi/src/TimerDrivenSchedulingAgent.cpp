@@ -30,10 +30,10 @@ utils::TaskRescheduleInfo TimerDrivenSchedulingAgent::run(core::Processor* proce
   if (this->running_ && processor->isRunning()) {
     auto trigger_start_time = std::chrono::steady_clock::now();
     this->onTrigger(processor, processContext, sessionFactory);
-    if (processor->isYield())
-      return utils::TaskRescheduleInfo::RetryAfter(processor->getYieldExpirationTime());
 
-    return utils::TaskRescheduleInfo::RetryAfter(trigger_start_time + processor->getSchedulingPeriod());
+    auto next_scheduled_run = trigger_start_time + processor->getSchedulingPeriod();
+    auto yield_expiration_time = processor->getYieldExpirationTime();
+    return utils::TaskRescheduleInfo::RetryAfter(std::max(next_scheduled_run, yield_expiration_time));
   }
   return utils::TaskRescheduleInfo::Done();
 }
