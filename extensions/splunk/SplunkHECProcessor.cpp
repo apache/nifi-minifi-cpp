@@ -53,7 +53,7 @@ std::shared_ptr<minifi::controllers::SSLContextService> SplunkHECProcessor::getS
 }
 
 void SplunkHECProcessor::initializeClient(curl::HTTPClient& client, const std::string &url, std::shared_ptr<minifi::controllers::SSLContextService> ssl_context_service) const {
-  client.initialize("POST", url, std::move(ssl_context_service));
+  client.initialize(utils::HttpRequestMethod::POST, url, std::move(ssl_context_service));
   client.setRequestHeader("Authorization", token_);
   client.setRequestHeader("X-Splunk-Request-Channel", request_channel_);
 }

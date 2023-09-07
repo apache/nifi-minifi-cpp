@@ -16,7 +16,6 @@
  */
 #include "HTTPProtocol.h"
 
-#include <cstdio>
 #include <chrono>
 #include <map>
 #include <string>
@@ -48,7 +47,7 @@ std::shared_ptr<sitetosite::Transaction> HttpSiteToSiteClient::createTransaction
   std::string dir_str = direction == sitetosite::SEND ? "input-ports" : "output-ports";
   std::stringstream uri;
   uri << getBaseURI() << "data-transfer/" << dir_str << "/" << getPortId().to_string() << "/transactions";
-  auto client = create_http_client(uri.str(), "POST");
+  auto client = create_http_client(uri.str(), utils::HttpRequestMethod::POST);
   client->setRequestHeader(PROTOCOL_VERSION_HEADER, "1");
   client->setConnectionTimeout(std::chrono::milliseconds(5000));
   client->setContentType("application/json");
@@ -180,7 +179,7 @@ bool HttpSiteToSiteClient::getPeerList(std::vector<sitetosite::PeerStatus> &peer
   std::stringstream uri;
   uri << getBaseURI() << "site-to-site/peers";
 
-  auto client = create_http_client(uri.str(), "GET");
+  auto client = create_http_client(uri.str(), utils::HttpRequestMethod::GET);
 
   client->setRequestHeader(PROTOCOL_VERSION_HEADER, "1");
 
@@ -197,7 +196,7 @@ bool HttpSiteToSiteClient::getPeerList(std::vector<sitetosite::PeerStatus> &peer
 std::shared_ptr<minifi::extensions::curl::HTTPClient> HttpSiteToSiteClient::openConnectionForSending(const std::shared_ptr<HttpTransaction> &transaction) {
   std::stringstream uri;
   uri << transaction->getTransactionUrl() << "/flow-files";
-  std::shared_ptr<minifi::extensions::curl::HTTPClient> client = create_http_client(uri.str(), "POST");
+  std::shared_ptr<minifi::extensions::curl::HTTPClient> client = create_http_client(uri.str(), utils::HttpRequestMethod::POST);
   client->setContentType("application/octet-stream");
   client->setRequestHeader("Accept", "text/plain");
   client->setRequestHeader("Transfer-Encoding", "chunked");
@@ -207,7 +206,7 @@ std::shared_ptr<minifi::extensions::curl::HTTPClient> HttpSiteToSiteClient::open
 std::shared_ptr<minifi::extensions::curl::HTTPClient> HttpSiteToSiteClient::openConnectionForReceive(const std::shared_ptr<HttpTransaction> &transaction) {
   std::stringstream uri;
   uri << transaction->getTransactionUrl() << "/flow-files";
-  std::shared_ptr<minifi::extensions::curl::HTTPClient> client = create_http_client(uri.str(), "GET");
+  std::shared_ptr<minifi::extensions::curl::HTTPClient> client = create_http_client(uri.str(), utils::HttpRequestMethod::GET);
   return client;
 }
 
@@ -270,7 +269,7 @@ void HttpSiteToSiteClient::closeTransaction(const utils::Identifier &transaction
     uri << "&checksum=" << transaction->getCRC();
   }
 
-  auto client = create_http_client(uri.str(), "DELETE");
+  auto client = create_http_client(uri.str(), utils::HttpRequestMethod::DELETE);
 
   client->setRequestHeader(PROTOCOL_VERSION_HEADER, "1");
 

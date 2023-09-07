@@ -93,7 +93,7 @@ void setupClientTransferEncoding(extensions::curl::HTTPClient& client, bool use_
 }  // namespace
 
 void InvokeHTTP::setupMembersFromProperties(const core::ProcessContext& context) {
-  method_  = (context.getProperty(Method) | utils::orElse([] { throw Exception(PROCESS_SCHEDULE_EXCEPTION, "Method property missing or invalid"); })).value();
+  method_ = utils::parseEnumProperty<utils::HttpRequestMethod>(context, Method);
 
   context.getProperty(SendMessageBody, send_message_body_);
 
@@ -162,7 +162,7 @@ void InvokeHTTP::onSchedule(const std::shared_ptr<core::ProcessContext>& context
 }
 
 bool InvokeHTTP::shouldEmitFlowFile() const {
-  return ("POST" == method_ || "PUT" == method_ || "PATCH" == method_);
+  return (utils::HttpRequestMethod::POST == method_ || utils::HttpRequestMethod::PUT == method_ || utils::HttpRequestMethod::PATCH == method_);
 }
 
 /**
@@ -205,10 +205,10 @@ void InvokeHTTP::onTrigger(const std::shared_ptr<core::ProcessContext>& context,
 
   if (flow_file == nullptr) {
     if (!shouldEmitFlowFile()) {
-      logger_->log_debug("InvokeHTTP -- create flow file with  %s", method_);
+      logger_->log_debug("InvokeHTTP -- create flow file with  %s", std::string(magic_enum::enum_name(method_)));
       flow_file = session->create();
     } else {
-      logger_->log_debug("Exiting because method is %s and there is no flowfile available to execute it, yielding", method_);
+      logger_->log_debug("Exiting because method is %s and there is no flowfile available to execute it, yielding", std::string(magic_enum::enum_name(method_)));
       yield();
       return;
     }
@@ -223,7 +223,7 @@ void InvokeHTTP::onTrigger(const std::shared_ptr<core::ProcessContext>& context,
 
 void InvokeHTTP::onTriggerWithClient(const std::shared_ptr<core::ProcessContext>& context, const std::shared_ptr<core::ProcessSession>& session,
     const std::shared_ptr<core::FlowFile>& flow_file, minifi::extensions::curl::HTTPClient& client) {
-  logger_->log_debug("onTrigger InvokeHTTP with %s to %s", method_, client.getURL());
+  logger_->log_debug("onTrigger InvokeHTTP with %s to %s", std::string(magic_enum::enum_name(method_)), client.getURL());
 
   const auto remove_callback_from_client_at_exit = gsl::finally([&client] {
     client.setUploadCallback({});

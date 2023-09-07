@@ -22,13 +22,14 @@
 #include <utility>
 #include <vector>
 
-#include "utils/gsl.h"
-#include "utils/StringUtils.h"
 #include "core/Resource.h"
+#include "magic_enum.hpp"
 #include "range/v3/algorithm/all_of.hpp"
 #include "range/v3/action/transform.hpp"
+#include "utils/gsl.h"
 #include "utils/HTTPUtils.h"
 #include "utils/Literals.h"
+#include "utils/StringUtils.h"
 
 using namespace std::literals::chrono_literals;
 
@@ -109,8 +110,8 @@ bool isSecure(const std::string& url) {
 }
 }  // namespace
 
-void HTTPClient::initialize(std::string method, std::string url, std::shared_ptr<minifi::controllers::SSLContextService> ssl_context_service) {
-  set_request_method(std::move(method));
+void HTTPClient::initialize(utils::HttpRequestMethod method, std::string url, std::shared_ptr<minifi::controllers::SSLContextService> ssl_context_service) {
+  set_request_method(method);
   if (ssl_context_service) {
     ssl_context_service_ = std::move(ssl_context_service);
   }
@@ -272,7 +273,7 @@ void HTTPClient::setReadCallback(std::unique_ptr<utils::HTTPReadCallback> callba
 void HTTPClient::setUploadCallback(std::unique_ptr<utils::HTTPUploadCallback> callback) {
   logger_->log_debug("Setting callback for %s", url_);
   write_callback_ = std::move(callback);
-  if (method_ == "PUT") {
+  if (method_ == utils::HttpRequestMethod::PUT) {
     curl_easy_setopt(http_session_.get(), CURLOPT_INFILESIZE_LARGE, (curl_off_t) write_callback_->size());
   }
   curl_easy_setopt(http_session_.get(), CURLOPT_READFUNCTION, &utils::HTTPRequestResponse::send_write);
@@ -342,6 +343,10 @@ std::unique_ptr<struct curl_slist, CurlSlistDeleter> toCurlSlist(const std::unor
 bool HTTPClient::submit() {
   if (url_.empty()) {
     logger_->log_error("Tried to submit to an empty url");
+    return false;
+  }
+  if (!method_) {
+    logger_->log_error("Tried to use HTTPClient without setting an HTTP method");
     return false;
   }
 
@@ -420,29 +425,34 @@ const std::vector<char> &HTTPClient::getResponseBody() {
   return response_data_.response_body;
 }
 
-void HTTPClient::set_request_method(std::string method) {
-  ranges::actions::transform(method, [](auto ch) { return ::toupper(static_cast<unsigned char>(ch)); });
+void HTTPClient::set_request_method(utils::HttpRequestMethod method) {
   if (method_ == method)
     return;
-  method_ = std::move(method);
-  if (method_ == "POST") {
-    curl_easy_setopt(http_session_.get(), CURLOPT_POST, 1L);
-    curl_easy_setopt(http_session_.get(), CURLOPT_CUSTOMREQUEST, nullptr);
-  } else if (method_ == "HEAD") {
-    curl_easy_setopt(http_session_.get(), CURLOPT_NOBODY, 1L);
-    curl_easy_setopt(http_session_.get(), CURLOPT_CUSTOMREQUEST, nullptr);
-  } else if (method_ == "GET") {
-    curl_easy_setopt(http_session_.get(), CURLOPT_HTTPGET, 1L);
-    curl_easy_setopt(http_session_.get(), CURLOPT_CUSTOMREQUEST, nullptr);
-  } else if (method_ == "PUT") {
-    curl_easy_setopt(http_session_.get(), CURLOPT_UPLOAD, 1L);
-    curl_easy_setopt(http_session_.get(), CURLOPT_CUSTOMREQUEST, nullptr);
-  } else {
-    curl_easy_setopt(http_session_.get(), CURLOPT_POST, 0L);
-    curl_easy_setopt(http_session_.get(), CURLOPT_NOBODY, 0L);
-    curl_easy_setopt(http_session_.get(), CURLOPT_HTTPGET, 0L);
-    curl_easy_setopt(http_session_.get(), CURLOPT_UPLOAD, 0L);
-    curl_easy_setopt(http_session_.get(), CURLOPT_CUSTOMREQUEST, method_.c_str());
+  method_ = method;
+  switch (*method_) {
+    case utils::HttpRequestMethod::POST:
+      curl_easy_setopt(http_session_.get(), CURLOPT_POST, 1L);
+      curl_easy_setopt(http_session_.get(), CURLOPT_CUSTOMREQUEST, nullptr);
+      break;
+    case utils::HttpRequestMethod::HEAD:
+      curl_easy_setopt(http_session_.get(), CURLOPT_NOBODY, 1L);
+      curl_easy_setopt(http_session_.get(), CURLOPT_CUSTOMREQUEST, nullptr);
+      break;
+    case utils::HttpRequestMethod::GET:
+      curl_easy_setopt(http_session_.get(), CURLOPT_HTTPGET, 1L);
+      curl_easy_setopt(http_session_.get(), CURLOPT_CUSTOMREQUEST, nullptr);
+      break;
+    case utils::HttpRequestMethod::PUT:
+      curl_easy_setopt(http_session_.get(), CURLOPT_UPLOAD, 1L);
+      curl_easy_setopt(http_session_.get(), CURLOPT_CUSTOMREQUEST, nullptr);
+      break;
+    default:
+      curl_easy_setopt(http_session_.get(), CURLOPT_POST, 0L);
+      curl_easy_setopt(http_session_.get(), CURLOPT_NOBODY, 0L);
+      curl_easy_setopt(http_session_.get(), CURLOPT_HTTPGET, 0L);
+      curl_easy_setopt(http_session_.get(), CURLOPT_UPLOAD, 0L);
+      curl_easy_setopt(http_session_.get(), CURLOPT_CUSTOMREQUEST, std::string(magic_enum::enum_name(*method_)).c_str());
+      break;
   }
 }
 

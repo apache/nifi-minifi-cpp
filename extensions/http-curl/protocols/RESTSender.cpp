@@ -93,7 +93,7 @@ C2Payload RESTSender::consumePayload(const C2Payload &payload, Direction directi
 void RESTSender::update(const std::shared_ptr<Configure> &) {
 }
 
-void RESTSender::setSecurityContext(extensions::curl::HTTPClient &client, const std::string &type, const std::string &url) {
+void RESTSender::setSecurityContext(extensions::curl::HTTPClient &client, utils::HttpRequestMethod type, const std::string &url) {
   // only use the SSL Context if we have a secure URL.
   auto generatedService = std::make_shared<minifi::controllers::SSLContextService>("Service", configuration_);
   generatedService->onEnable();
@@ -111,7 +111,7 @@ C2Payload RESTSender::sendPayload(const std::string& url, const Direction direct
   client.setKeepAliveProbe(extensions::curl::KeepAliveProbeData{2s, 2s});
   client.setConnectionTimeout(2s);
 
-  auto setUpHttpRequest = [&](const std::string& http_method) {
+  auto setUpHttpRequest = [&](utils::HttpRequestMethod http_method) {
     client.set_request_method(http_method);
     if (url.find("https://") == 0) {
       if (!ssl_context_service_) {
@@ -122,7 +122,7 @@ C2Payload RESTSender::sendPayload(const std::string& url, const Direction direct
     }
   };
   if (direction == Direction::TRANSMIT) {
-    setUpHttpRequest("POST");
+    setUpHttpRequest(utils::HttpRequestMethod::POST);
     if (payload.getOperation() == Operation::transfer) {
       // treat nested payloads as files
       for (const auto& file : payload.getNestedPayloads()) {
@@ -163,7 +163,7 @@ C2Payload RESTSender::sendPayload(const std::string& url, const Direction direct
   } else {
     // we do not need to set the upload callback
     // since we are not uploading anything on a get
-    setUpHttpRequest("GET");
+    setUpHttpRequest(utils::HttpRequestMethod::GET);
   }
 
   if (payload.getOperation() == Operation::transfer) {
