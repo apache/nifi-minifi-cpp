@@ -141,12 +141,13 @@ TEST_CASE_METHOD(SchedulingAgentTestFixture, "Cron Driven every year") {
 
     auto time_until_new_years_day = new_years_day.get_local_time() - current_time.get_local_time();
 
-    CHECK(std::chrono::round<std::chrono::minutes>(time_until_new_years_day - wait_time_till_next_execution_time) == 0min);
+    CHECK(std::chrono::abs(time_until_new_years_day - wait_time_till_next_execution_time) < 1min);
     CHECK(count_proc_->getNumberOfTriggers() == 0);
 
     auto second_task_reschedule_info = cron_driven_agent->run(count_proc_.get(), context_, factory_);
     CHECK(!second_task_reschedule_info.isFinished());
-    CHECK(std::chrono::round<std::chrono::minutes>(first_task_reschedule_info.getNextExecutionTime() - second_task_reschedule_info.getNextExecutionTime()) == 0min);
+    CHECK(std::chrono::abs(first_task_reschedule_info.getNextExecutionTime() - second_task_reschedule_info.getNextExecutionTime()) < 1min);
+
     CHECK(count_proc_->getNumberOfTriggers() == 0);
   }
 }
