@@ -176,9 +176,15 @@ TEST_CASE_METHOD(SchedulingAgentTestFixture, "Cron Driven no future triggers") {
   CHECK(first_task_reschedule_info.isFinished());
 }
 
-TEST_CASE_METHOD(SchedulingAgentTestFixture, "Timer driven should wait for scheduled run even if it yielded") {
-  count_proc_->setSchedulingPeriod(1min);
-  count_proc_->setYieldPeriodMsec(10ms);
+TEST_CASE_METHOD(SchedulingAgentTestFixture, "Timer driven should respect both yield and run schedule") {
+  SECTION("Fast yield slow schedule") {
+    count_proc_->setSchedulingPeriod(1min);
+    count_proc_->setYieldPeriodMsec(10ms);
+  }
+  SECTION("Slow yield fast schedule") {
+    count_proc_->setSchedulingPeriod(10ms);
+    count_proc_->setYieldPeriodMsec(1min);
+  }
   count_proc_->setShouldYield(true);
   auto timer_driven_agent = std::make_shared<TimerDrivenSchedulingAgent>(gsl::make_not_null(controller_services_provider_.get()), test_repo_, test_repo_, content_repo_, configuration_, thread_pool_);
   timer_driven_agent->start();
@@ -187,18 +193,5 @@ TEST_CASE_METHOD(SchedulingAgentTestFixture, "Timer driven should wait for sched
   CHECK(first_task_reschedule_info.getNextExecutionTime() > std::chrono::steady_clock::now() + 100ms);
   CHECK(count_proc_->getNumberOfTriggers() == 1);
 }
-
-TEST_CASE_METHOD(SchedulingAgentTestFixture, "Timer driven should wait for yield if processor yielded") {
-  count_proc_->setSchedulingPeriod(10ms);
-  count_proc_->setYieldPeriodMsec(1min);
-  count_proc_->setShouldYield(true);
-  auto timer_driven_agent = std::make_shared<TimerDrivenSchedulingAgent>(gsl::make_not_null(controller_services_provider_.get()), test_repo_, test_repo_, content_repo_, configuration_, thread_pool_);
-  timer_driven_agent->start();
-  auto first_task_reschedule_info = timer_driven_agent->run(count_proc_.get(), context_, factory_);
-  CHECK(!first_task_reschedule_info.isFinished());
-  CHECK(first_task_reschedule_info.getNextExecutionTime() > std::chrono::steady_clock::now() + 100ms);
-  CHECK(count_proc_->getNumberOfTriggers() == 1);
-}
-
 
 }  // namespace org::apache::nifi::minifi::testing
