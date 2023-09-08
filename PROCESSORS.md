@@ -46,6 +46,7 @@ limitations under the License.
 - [FetchOPCProcessor](#fetchopcprocessor)
 - [FetchS3Object](#fetchs3object)
 - [FetchSFTP](#fetchsftp)
+- [FetchSmb](#fetchsmb)
 - [FocusArchiveEntry](#focusarchiveentry)
 - [GenerateFlowFile](#generateflowfile)
 - [GetEnvironmentalSensors](#getenvironmentalsensors)
@@ -66,6 +67,7 @@ limitations under the License.
 - [ListGCSBucket](#listgcsbucket)
 - [ListS3](#lists3)
 - [ListSFTP](#listsftp)
+- [ListSmb](#listsmb)
 - [LogAttribute](#logattribute)
 - [ManipulateArchive](#manipulatearchive)
 - [MergeContent](#mergecontent)
@@ -82,6 +84,7 @@ limitations under the License.
 - [PutOPCProcessor](#putopcprocessor)
 - [PutS3Object](#puts3object)
 - [PutSFTP](#putsftp)
+- [PutSmb](#putsmb)
 - [PutSplunkHTTP](#putsplunkhttp)
 - [PutSQL](#putsql)
 - [PutTCP](#puttcp)
@@ -1027,6 +1030,36 @@ In the list below, the names of required properties appear in bold. Any other pr
 | permission.denied | Any FlowFile that could not be fetched from the remote server due to insufficient permissions will be transferred to this Relationship. |
 
 
+## FetchSmb
+
+### Description
+
+Fetches files from a SMB Share. Designed to be used in tandem with ListSmb.
+
+### Properties
+
+In the list below, the names of required properties appear in bold. Any other properties (not in bold) are considered optional. The table also indicates any default values, and whether a property supports the NiFi Expression Language.
+
+| Name                                  | Default Value | Allowable Values | Description                                                                                                                                                                                          |
+|---------------------------------------|---------------|------------------|------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| **SMB Connection Controller Service** |               |                  | Specifies the SMB connection controller service to use for connecting to the SMB server.                                                                                                             |
+| Input Directory                       |               |                  | The full path of the file to be retrieved from the remote server. If left empty, the path and filename attributes of the incoming flow file will be used.<br/>**Supports Expression Language: true** |
+
+### Relationships
+
+| Name    | Description                                                        |
+|---------|--------------------------------------------------------------------|
+| success | A flowfile will be routed here for each successfully fetched file. |
+| failure | A flowfile will be routed here when failed to fetch its content.   |
+
+### Output Attributes
+
+| Attribute     | Relationship | Description                                                       |
+|---------------|--------------|-------------------------------------------------------------------|
+| error.code    | failure      | The error code returned by SMB when the fetch of a file fails.    |
+| error.message | failure      | The error message returned by SMB when the fetch of a file fails. |
+
+
 ## FocusArchiveEntry
 
 ### Description
@@ -1687,6 +1720,48 @@ In the list below, the names of required properties appear in bold. Any other pr
 | Name    | Description                                           |
 |---------|-------------------------------------------------------|
 | success | All FlowFiles that are received are routed to success |
+
+
+## ListSmb
+
+### Description
+
+Retrieves a listing of files from an SMB share. For each file that is listed, creates a FlowFile that represents the file so that it can be fetched in conjunction with FetchSmb.
+
+### Properties
+
+In the list below, the names of required properties appear in bold. Any other properties (not in bold) are considered optional. The table also indicates any default values, and whether a property supports the NiFi Expression Language.
+
+| Name                                  | Default Value | Allowable Values | Description                                                                                                                                                |
+|---------------------------------------|---------------|------------------|------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| **SMB Connection Controller Service** |               |                  | Specifies the SMB connection controller service to use for connecting to the SMB server.                                                                   |
+| Input Directory                       |               |                  | The input directory to list the contents of                                                                                                                |
+| **Recurse Subdirectories**            | true          |                  | Indicates whether to list files from subdirectories of the directory                                                                                       |
+| File Filter                           |               |                  | Only files whose names match the given regular expression will be picked up                                                                                |
+| Path Filter                           |               |                  | When Recurse Subdirectories is true, then only subdirectories whose path matches the given regular expression will be scanned                              |
+| **Minimum File Age**                  | 5 sec         |                  | The minimum age that a file must be in order to be pulled; any file younger than this amount of time (according to last modification date) will be ignored |
+| Maximum File Age                      |               |                  | The maximum age that a file must be in order to be pulled; any file older than this amount of time (according to last modification date) will be ignored   |
+| Minimum File Size                     |               |                  | The minimum size that a file must be in order to be pulled                                                                                                 |
+| Maximum File Size                     |               |                  | The maximum size that a file can be in order to be pulled                                                                                                  |
+| **Ignore Hidden Files**               | true          |                  | Indicates whether or not hidden files should be ignored                                                                                                    |
+
+### Relationships
+
+| Name    | Description                                           |
+|---------|-------------------------------------------------------|
+| success | All FlowFiles that are received are routed to success |
+
+### Output Attributes
+
+| Attribute        | Relationship | Description                                                                                                                                                                                                                                                                                                                                        |
+|------------------|--------------|----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| filename         | success      | The name of the file that was read from filesystem.                                                                                                                                                                                                                                                                                                |
+| path             | success      | The path is set to the relative path of the file's directory on the remote filesystem compared to the Share root directory. For example, for a given remote location smb://HOSTNAME:PORT/SHARE/DIRECTORY, and a file is being listed from smb://HOSTNAME:PORT/SHARE/DIRECTORY/sub/folder/file then the path attribute will be set to "sub/folder". |
+| serviceLocation  | success      | The SMB URL of the share.                                                                                                                                                                                                                                                                                                                          |
+| lastModifiedTime | success      | The timestamp of when the file's content changed in the filesystem as 'yyyy-MM-dd'T'HH:mm:ss'.                                                                                                                                                                                                                                                     |
+| creationTime     | success      | The timestamp of when the file was created in the filesystem as 'yyyy-MM-dd'T'HH:mm:ss'.                                                                                                                                                                                                                                                           |
+| lastAccessTime   | success      | The timestamp of when the file was accessed in the filesystem as 'yyyy-MM-dd'T'HH:mm:ss'.                                                                                                                                                                                                                                                          |
+| size             | success      | The size of the file in bytes.                                                                                                                                                                                                                                                                                                                     |
 
 
 ## LogAttribute
@@ -2358,6 +2433,31 @@ In the list below, the names of required properties appear in bold. Any other pr
 | success | FlowFiles that are successfully sent will be routed to success                                       |
 | reject  | FlowFiles that were rejected by the destination system                                               |
 | failure | FlowFiles that failed to send to the remote system; failure is usually looped back to this processor |
+
+
+## PutSmb
+
+### Description
+
+Writes the contents of a FlowFile to an smb network location
+
+### Properties
+
+In the list below, the names of required properties appear in bold. Any other properties (not in bold) are considered optional. The table also indicates any default values, and whether a property supports the NiFi Expression Language.
+
+| Name                                  | Default Value | Allowable Values            | Description                                                                                                           |
+|---------------------------------------|---------------|-----------------------------|-----------------------------------------------------------------------------------------------------------------------|
+| **SMB Connection Controller Service** |               |                             | Specifies the SMB connection controller service to use for connecting to the SMB server.                              |
+| Directory                             | .             |                             | The output directory to which to put files<br/>**Supports Expression Language: true**                                 |
+| Conflict Resolution Strategy          | fail          | fail<br/>replace<br/>ignore | Indicates what should happen when a file with the same name already exists in the output directory                    |
+| **Create Missing Directories**        | true          |                             | If true, then missing destination directories will be created. If false, flowfiles are penalized and sent to failure. |
+
+### Relationships
+
+| Name    | Description                                                             |
+|---------|-------------------------------------------------------------------------|
+| success | All files are routed to success                                         |
+| failure | Failed files (conflict, write failure, etc.) are transferred to failure |
 
 
 ## PutSplunkHTTP
