@@ -423,6 +423,7 @@ def step_impl(context):
 
 
 # MQTT setup
+@when("an MQTT broker is set up in correspondence with the PublishMQTT")
 @given("an MQTT broker is set up in correspondence with the PublishMQTT")
 @given("an MQTT broker is set up in correspondence with the ConsumeMQTT")
 @given("an MQTT broker is set up in correspondence with the PublishMQTT and ConsumeMQTT")
@@ -956,17 +957,6 @@ def step_impl(context, log_count, log_pattern):
 @then("the \"{minifi_container_name}\" flow has a log line matching \"{log_pattern}\" in less than {duration}")
 def step_impl(context, minifi_container_name, log_pattern, duration):
     context.test.check_container_log_matches_regex(minifi_container_name, log_pattern, humanfriendly.parse_timespan(duration), count=1)
-
-
-@then("an MQTT broker is deployed in correspondence with the PublishMQTT")
-def step_impl(context):
-    context.test.acquire_container(context=context, name="mqtt-broker", engine="mqtt-broker")
-    context.test.start()
-
-
-@when("the MQTT broker is started")
-def step_impl(context):
-    context.test.start('mqtt-broker')
 
 
 # Google Cloud Storage
