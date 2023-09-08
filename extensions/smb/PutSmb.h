@@ -35,8 +35,6 @@ class PutSmb : public core::Processor {
       : core::Processor(std::move(name), uuid) {
   }
 
-  ~PutSmb() override = default;
-
   enum class FileExistsResolutionStrategy {
     fail,
     replace,
