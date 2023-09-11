@@ -106,7 +106,7 @@ Through JNI extensions you can run NiFi processors using NARs. The JNI extension
 
 ## Caveats
 * We follow semver with regards to API compatibility, but no ABI compatibility is provided. See [semver's website](https://semver.org/) for more information
-* Build and usage currently only supports Windows, Linux and OS X environments. MiNiFi C++ can be built and run through the Windows Subsystem for Linux but we provide no support for this platform.
+* Build and usage currently only supports Windows, Linux and macOS environments. MiNiFi C++ can be built and run through the Windows Subsystem for Linux but we provide no support for this platform.
 * Provenance events generation is supported and are persisted using RocksDB. Volatile repositories can be used on systems without persistent storage.
 * If MiNiFi C++ is built with the OPC-UA extension enabled, it bundles [open62541](https://open62541.org/), which is available under the Mozilla Public License Version 2.0, a Category B license under [ASF 3rd party license policy](https://www.apache.org/legal/resolved.html#category-b).
 * If MiNiFi C++ packaged on Windows, the resulting MSI may not be publicly redistributed under the Apache license, because it contains Microsoft redistributable DLLs, which fall under Category X of the [ASF 3rd party license policy](https://www.apache.org/legal/resolved.html#category-x).
@@ -131,7 +131,7 @@ versions of OpenSSL, cURL, or zlib are used:
 * automake
 * libtool
 
-**NOTE** if Expression Language support is enabled, FlexLexer must be in the include path and the version must be compatible with the version of flex used when generating lexer sources. On Mac OS X and FreeBSD, make sure that the system version is overridden with the correct flex version, which may require merging your CPPFLAGS into CFLAGS and CXXFLAGS. Lexer source generation is automatically performed during CMake builds. To re-generate the sources, remove:
+**NOTE** if Expression Language support is enabled, FlexLexer must be in the include path and the version must be compatible with the version of flex used when generating lexer sources. On macOS and FreeBSD, make sure that the system version is overridden with the correct flex version, which may require merging your CPPFLAGS into CFLAGS and CXXFLAGS. Lexer source generation is automatically performed during CMake builds. To re-generate the sources, remove:
 
  * extensions/expression-language/Parser.cpp
  * extensions/expression-language/Parser.hpp
@@ -267,7 +267,7 @@ apt install libgps-dev
 apt install libpcap-dev
 ```
 
-##### OS X Using Homebrew (with XCode Command Line Tools installed)
+##### macOS Using Homebrew (with XCode Command Line Tools installed)
 ```
 # ~/Development/code/apache/nifi-minifi-cpp on git:master
 brew install cmake \
@@ -326,31 +326,31 @@ sudo brew install libpcap
     A. Persistent Repositories .....Enabled
     B. libcurl features ............Enabled
     C. libarchive features .........Enabled
-    D. Python Scripting support ....Disabled
+    D. Python Scripting support ....Enabled
     E. Expression Language support .Enabled
     F. Kafka support ...............Enabled
     G. PCAP support ................Disabled
     H. USB Camera support ..........Disabled
     I. GPS support .................Disabled
     K. Bustache Support ............Disabled
-    L. Lua Scripting Support .......Disabled
-    M. MQTT Support ................Disabled
+    L. Lua Scripting Support .......Enabled
+    M. MQTT Support ................Enabled
     N. COAP Support ................Disabled
     O. SFTP Support ................Disabled
     S. AWS Support .................Enabled
     T. OpenCV Support ..............Disabled
-    U. OPC-UA Support...............Disabled
+    U. OPC-UA Support...............Enabled
     V. SQL Support..................Enabled
     W. Openwsman Support ...........Disabled
     X. Azure Support ...............Enabled
     Y. Systemd Support .............Enabled
     Z. NanoFi Support ..............Disabled
     AA. Splunk Support .............Enabled
-    AB. Kubernetes Support .........Disabled
+    AB. Kubernetes Support .........Enabled
     AC. Google Cloud Support .......Enabled
     AD. ProcFs Support .............Enabled
-    AE. Prometheus Support .........Disabled
-    AF. Elasticsearch Support ......Disabled
+    AE. Prometheus Support .........Enabled
+    AF. Elasticsearch Support ......Enabled
     ****************************************
                 Build Options.
     ****************************************
