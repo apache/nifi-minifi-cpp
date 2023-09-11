@@ -24,27 +24,25 @@ set scriptdir=%~dp0
 set skiptests=OFF
 set skiptestrun=OFF
 set cmake_build_type=Release
-set build_platform=Win32
-set build_kafka=OFF
-set build_coap=OFF
-set build_jni=OFF
-set build_SQL=OFF
-set build_AWS=OFF
-set build_SFTP=OFF
-set build_azure=OFF
+set build_platform=x64
+set enable_kafka=ON
+set enable_coap=OFF
+set enable_jni=OFF
+set enable_sql=ON
+set enable_aws=ON
+set enable_sftp=OFF
+set enable_azure=ON
 set enable_bustache=OFF
 set enable_coap=OFF
-set enable_encrypt_config=OFF
-set enable_gps=OFF
-set enable_lua_scripting=OFF
-set enable_mqtt=OFF
-set enable_opc=OFF
+set enable_encrypt_config=ON
+set enable_lua_scripting=ON
+set enable_mqtt=ON
+set enable_opc=ON
 set enable_openwsman=OFF
-set enable_ops=OFF
+set enable_ops=ON
 set enable_pcap=OFF
-set enable_python_scripting=OFF
+set enable_python_scripting=ON
 set enable_sensors=OFF
-set enable_tensorflow=OFF
 set enable_usb_camera=OFF
 set test_custom_wel_provider=OFF
 set generator="Visual Studio 16 2019"
@@ -52,9 +50,9 @@ set cpack=OFF
 set installer_merge_modules=OFF
 set strict_gsl_checks=
 set redist=
-set build_nanofi=OFF
-set build_opencv=OFF
-set build_prometheus=OFF
+set enable_nanofi=OFF
+set enable_opencv=OFF
+set enable_prometheus=ON
 set real_odbc=OFF
 set sccache_arg=
 
@@ -65,34 +63,33 @@ for %%x in (%*) do (
     if [%%~x] EQU [/T]                set skiptests=ON
     if [%%~x] EQU [/R]                set skiptestrun=ON
     if [%%~x] EQU [/P]                set cpack=ON
-    if [%%~x] EQU [/K]                set build_kafka=ON
-    if [%%~x] EQU [/J]                set build_JNI=ON
-    if [%%~x] EQU [/S]                set build_SQL=ON
-    if [%%~x] EQU [/C]                set build_coap=ON
-    if [%%~x] EQU [/A]                set build_AWS=ON
-    if [%%~x] EQU [/SFTP]             set build_SFTP=ON
-    if [%%~x] EQU [/PDH]              set build_PDH=ON
-    if [%%~x] EQU [/SPLUNK]           set build_SPLUNK=ON
-    if [%%~x] EQU [/GCP]              set build_GCP=ON
-    if [%%~x] EQU [/ELASTIC]          set build_ELASTIC=ON
+    if [%%~x] EQU [/NO_KAFKA]         set enable_kafka=OFF
+    if [%%~x] EQU [/J]                set enable_jni=ON
+    if [%%~x] EQU [/NO_SQL]           set enable_sql=OFF
+    if [%%~x] EQU [/C]                set enable_coap=ON
+    if [%%~x] EQU [/NO_AWS]           set enable_aws=OFF
+    if [%%~x] EQU [/PDH]              set enable_pdh=ON
+    if [%%~x] EQU [/NO_SPLUNK]        set enable_splunk=OFF
+    if [%%~x] EQU [/NO_GCP]           set enable_gcp=OFF
+    if [%%~x] EQU [/NO_ELASTIC]       set enable_elastic=OFF
     if [%%~x] EQU [/M]                set installer_merge_modules=ON
-    if [%%~x] EQU [/Z]                set build_azure=ON
-    if [%%~x] EQU [/N]                set build_nanofi=ON
-    if [%%~x] EQU [/O]                set build_opencv=ON
-    if [%%~x] EQU [/PR]               set build_prometheus=ON
+    if [%%~x] EQU [/NO_AZURE]         set enable_azure=OFF
+    if [%%~x] EQU [/N]                set enable_nanofi=ON
+    if [%%~x] EQU [/O]                set enable_opencv=ON
+    if [%%~x] EQU [/NO_PROMETHEUS]    set enable_prometheus=OFF
     if [%%~x] EQU [/BUSTACHE]         set enable_bustache=ON
     if [%%~x] EQU [/COAP]             set enable_coap=ON
-    if [%%~x] EQU [/ENCRYPT_CONFIG]   set enable_encrypt_config=ON
-    if [%%~x] EQU [/LUA_SCRIPTING]    set enable_lua_scripting=ON
-    if [%%~x] EQU [/MQTT]             set enable_mqtt=ON
-    if [%%~x] EQU [/OPC]              set enable_opc=ON
+    if [%%~x] EQU [/NO_ENCRYPT_CONFIG] set enable_encrypt_config=OFF
+    if [%%~x] EQU [/NO_LUA_SCRIPTING] set enable_lua_scripting=OFF
+    if [%%~x] EQU [/NO_MQTT]          set enable_mqtt=OFF
+    if [%%~x] EQU [/NO_OPC]           set enable_opc=OFF
     if [%%~x] EQU [/OPENWSMAN]        set enable_openwsman=ON
-    if [%%~x] EQU [/OPS]              set enable_ops=ON
+    if [%%~x] EQU [/NO_OPS]           set enable_ops=OFF
     if [%%~x] EQU [/PCAP]             set enable_pcap=ON
-    if [%%~x] EQU [/PYTHON_SCRIPTING] set enable_python_scripting=ON
+    if [%%~x] EQU [/NO_PYTHON_SCRIPTING] set enable_python_scripting=OFF
     if [%%~x] EQU [/SENSORS]          set enable_sensors=ON
     if [%%~x] EQU [/USB_CAMERA]       set enable_usb_camera=ON
-    if [%%~x] EQU [/64]               set build_platform=x64
+    if [%%~x] EQU [/32]               set build_platform=Win32
     if [%%~x] EQU [/D]                set cmake_build_type=RelWithDebInfo
     if [%%~x] EQU [/DD]               set cmake_build_type=Debug
     if [%%~x] EQU [/CI]               set "strict_gsl_checks=-DSTRICT_GSL_CHECKS=AUDIT" & set test_custom_wel_provider=ON
@@ -113,10 +110,10 @@ if [%generator%] EQU ["Ninja"] (
     set "build_platform_cmd=-A %build_platform%"
 )
 echo on
-cmake -G %generator% %build_platform_cmd% -DINSTALLER_MERGE_MODULES=%installer_merge_modules% -DTEST_CUSTOM_WEL_PROVIDER=%test_custom_wel_provider% -DENABLE_SQL=%build_SQL% -DUSE_REAL_ODBC_TEST_DRIVER=%real_odbc% ^
-        -DCMAKE_BUILD_TYPE_INIT=%cmake_build_type% -DCMAKE_BUILD_TYPE=%cmake_build_type% -DWIN32=WIN32 -DENABLE_LIBRDKAFKA=%build_kafka% -DENABLE_JNI=%build_jni% -DOPENSSL_OFF=OFF ^
-        -DENABLE_COAP=%build_coap% -DENABLE_AWS=%build_AWS% -DENABLE_PDH=%build_PDH% -DENABLE_AZURE=%build_azure% -DENABLE_SFTP=%build_SFTP% -DENABLE_SPLUNK=%build_SPLUNK% -DENABLE_GCP=%build_GCP% ^
-        -DENABLE_NANOFI=%build_nanofi% -DENABLE_OPENCV=%build_opencv% -DENABLE_PROMETHEUS=%build_prometheus% -DENABLE_ELASTICSEARCH=%build_ELASTIC% -DUSE_SHARED_LIBS=OFF -DENABLE_CONTROLLER=OFF  ^
+cmake -G %generator% %build_platform_cmd% -DINSTALLER_MERGE_MODULES=%installer_merge_modules% -DTEST_CUSTOM_WEL_PROVIDER=%test_custom_wel_provider% -DENABLE_SQL=%enable_sql% -DUSE_REAL_ODBC_TEST_DRIVER=%real_odbc% ^
+        -DCMAKE_BUILD_TYPE_INIT=%cmake_build_type% -DCMAKE_BUILD_TYPE=%cmake_build_type% -DWIN32=WIN32 -DENABLE_LIBRDKAFKA=%enable_kafka% -DENABLE_JNI=%enable_jni% -DOPENSSL_OFF=OFF ^
+        -DENABLE_COAP=%enable_coap% -DENABLE_AWS=%enable_aws% -DENABLE_PDH=%enable_pdh% -DENABLE_AZURE=%enable_azure% -DENABLE_SFTP=%enable_sftp% -DENABLE_SPLUNK=%enable_splunk% -DENABLE_GCP=%enable_gcp% ^
+        -DENABLE_NANOFI=%enable_nanofi% -DENABLE_OPENCV=%enable_opencv% -DENABLE_PROMETHEUS=%enable_prometheus% -DENABLE_ELASTICSEARCH=%enable_elastic% -DUSE_SHARED_LIBS=OFF -DENABLE_CONTROLLER=OFF  ^
         -DENABLE_BUSTACHE=%enable_bustache% -DENABLE_COAP=%enable_coap% -DENABLE_ENCRYPT_CONFIG=%enable_encrypt_config% -DENABLE_LUA_SCRIPTING=%enable_lua_scripting% ^
         -DENABLE_MQTT=%enable_mqtt% -DENABLE_OPC=%enable_opc% -DENABLE_OPENWSMAN=%enable_openwsman% -DENABLE_OPS=%enable_ops% -DENABLE_PCAP=%enable_pcap% ^
         -DENABLE_PYTHON_SCRIPTING=%enable_python_scripting% -DENABLE_SENSORS=%enable_sensors% -DENABLE_USB_CAMERA=%enable_usb_camera% ^

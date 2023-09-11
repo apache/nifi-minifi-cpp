@@ -601,6 +601,7 @@ set(EXTENSIONS_ENABLED_BY_DEFAULT (
     minifi-gcp
     minifi-http-curl
     minifi-archive-extensions
+    minifi-mqtt-extensions
     minifi-rdkafka-extensions
     minifi-pdh
     minifi-prometheus
