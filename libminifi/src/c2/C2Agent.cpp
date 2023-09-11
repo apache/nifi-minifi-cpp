@@ -694,8 +694,6 @@ C2Payload C2Agent::bundleDebugInfo(std::map<std::string, std::unique_ptr<io::Inp
     manifest.children = std::move(reported_manifest.serialized_nodes);
     manifest.array = reported_manifest.is_array;
     std::string manifest_str = manifest.to_pretty_string();
-    std::ofstream{"/home/adam/Desktop/manifest.json", std::ios::binary} << manifest_str;
-    std::cout << "Manifest size: " << manifest_str.size() << std::endl;
     if (!archiver->newEntry({MANIFEST_FILE_NAME, manifest_str.size()})) {
       throw C2DebugBundleError(fmt::format("Couldn't initialize archive entry for '{}'", MANIFEST_FILE_NAME));
     }
