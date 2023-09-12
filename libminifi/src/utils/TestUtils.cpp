@@ -19,6 +19,8 @@
 
 namespace org::apache::nifi::minifi::utils {
 #ifdef WIN32
+// If minifi is not installed through the MSI installer, then TZDATA might be missing
+// date::set_install can point to the TZDATA location, but it has to be called from each library/executable that wants to use timezones
 void dateSetInstall(const std::string& install) {
   date::set_install(install);
 }
