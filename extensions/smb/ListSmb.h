@@ -47,7 +47,8 @@ class ListSmb : public core::Processor {
                                                           "creates a FlowFile that represents the file so that it can be fetched in conjunction with FetchSmb.";
 
   EXTENSIONAPI static constexpr auto ConnectionControllerService = core::PropertyDefinitionBuilder<>::createProperty("SMB Connection Controller Service")
-      .withDescription("Specifies the SMB connection controller service to use for connecting to the SMB server.")
+      .withDescription("Specifies the SMB connection controller service to use for connecting to the SMB server. "
+                       "If the SMB share is auto-mounted to a drive letter, its recommended to use ListFile instead.")
       .isRequired(true)
       .withAllowedTypes<SmbConnectionControllerService>()
       .build();

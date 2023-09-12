@@ -46,7 +46,8 @@ class FetchSmb : public core::Processor {
   EXTENSIONAPI static constexpr const char* Description = "Fetches files from a SMB Share. Designed to be used in tandem with ListSmb.";
 
   EXTENSIONAPI static constexpr auto ConnectionControllerService = core::PropertyDefinitionBuilder<>::createProperty("SMB Connection Controller Service")
-      .withDescription("Specifies the SMB connection controller service to use for connecting to the SMB server.")
+      .withDescription("Specifies the SMB connection controller service to use for connecting to the SMB server. "
+                       "If the SMB share is auto-mounted to a drive letter, its recommended to use FetchFile instead.")
       .isRequired(true)
       .withAllowedTypes<SmbConnectionControllerService>()
       .build();

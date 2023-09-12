@@ -44,7 +44,8 @@ class PutSmb : public core::Processor {
   EXTENSIONAPI static constexpr const char* Description = "Writes the contents of a FlowFile to an smb network location";
 
   EXTENSIONAPI static constexpr auto ConnectionControllerService = core::PropertyDefinitionBuilder<>::createProperty("SMB Connection Controller Service")
-      .withDescription("Specifies the SMB connection controller service to use for connecting to the SMB server.")
+      .withDescription("Specifies the SMB connection controller service to use for connecting to the SMB server. "
+                       "If the SMB share is auto-mounted to a drive letter, its recommended to use PutFile instead.")
       .isRequired(true)
       .withAllowedTypes<SmbConnectionControllerService>()
       .build();
