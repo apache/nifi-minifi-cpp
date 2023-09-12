@@ -19,16 +19,20 @@
 
 set(SOL2_INCLUDE_DIR "${CMAKE_BINARY_DIR}/_deps/sol2/" CACHE STRING "" FORCE)
 if(NOT EXISTS "${SOL2_INCLUDE_DIR}/sol.hpp")
-    file(DOWNLOAD "https://github.com/ThePhD/sol2/releases/download/v3.2.2/sol.hpp" "${SOL2_INCLUDE_DIR}/sol/sol.hpp"
-         EXPECTED_HASH SHA256=4aba3e893497591901af1bdff923b8b6725951a9df519a6003e5d0498b4cef69)
+    file(DOWNLOAD "https://github.com/ThePhD/sol2/releases/download/v3.3.0/sol.hpp" "${SOL2_INCLUDE_DIR}/sol/sol.hpp"
+         EXPECTED_HASH SHA256=e095a961a5189863745e6c101124fce944af991f3d4726a1e82c5b4a885a187f)
+    configure_file("${SOL2_INCLUDE_DIR}/sol/sol.hpp" "${SOL2_INCLUDE_DIR}/sol/sol.hpp" NEWLINE_STYLE LF)
 
-    file(DOWNLOAD "https://github.com/ThePhD/sol2/releases/download/v3.2.2/config.hpp" "${SOL2_INCLUDE_DIR}/sol/config.hpp"
-         EXPECTED_HASH SHA256=1a768cd8fdc8efeb993a4952b79204b79ac3d4bd69f55abcb605c5eba4e48b11)
+    file(DOWNLOAD "https://github.com/ThePhD/sol2/releases/download/v3.3.0/config.hpp" "${SOL2_INCLUDE_DIR}/sol/config.hpp"
+         EXPECTED_HASH SHA256=6c283673a16f0eeb3c56f8b8d72ccf7ed3f048816dbd2584ac58564c61315f02)
+    configure_file("${SOL2_INCLUDE_DIR}/sol/config.hpp" "${SOL2_INCLUDE_DIR}/sol/config.hpp" NEWLINE_STYLE LF)
 
-    file(DOWNLOAD "https://github.com/ThePhD/sol2/releases/download/v3.2.2/forward.hpp" "${SOL2_INCLUDE_DIR}/sol/forward.hpp"
-         EXPECTED_HASH SHA256=491c59790c242f8ec766deb35a18a5aae34772da3393c1b8f0719f5c50d01fdf)
+    file(DOWNLOAD "https://github.com/ThePhD/sol2/releases/download/v3.3.0/forward.hpp" "${SOL2_INCLUDE_DIR}/sol/forward.hpp"
+         EXPECTED_HASH SHA256=8fc34d74e9b4b8baa381f5e6ab7b6f6b44114cd355c718505495943ff6b85740)
+    configure_file("${SOL2_INCLUDE_DIR}/sol/forward.hpp" "${SOL2_INCLUDE_DIR}/sol/forward.hpp" NEWLINE_STYLE LF)
 
-    set(PC "${Patch_EXECUTABLE}" --binary -p1 -i "${CMAKE_SOURCE_DIR}/thirdparty/sol2/add-missing-include.patch" "${SOL2_INCLUDE_DIR}/sol/sol.hpp")
+    # Some platform simply define LUA_COMPAT_BITLIB or LUA_COMPAT_5_2 without setting them to explicitly 1
+    set(PC "${Patch_EXECUTABLE}" -p1 -i "${CMAKE_SOURCE_DIR}/thirdparty/sol2/fix_bitlib_compatibility.patch" "${SOL2_INCLUDE_DIR}/sol/sol.hpp")
 
     execute_process(COMMAND ${PC} RESULT_VARIABLE patch_result_code)
     if(NOT patch_result_code EQUAL "0")
