@@ -30,6 +30,7 @@
 #include "database/RocksDbUtils.h"
 #include "database/StringAppender.h"
 #include "core/Resource.h"
+#include "core/TypedValues.h"
 
 namespace org::apache::nifi::minifi::core::repository {
 
@@ -39,6 +40,15 @@ bool DatabaseContentRepository::initialize(const std::shared_ptr<minifi::Configu
     directory_ = value;
   } else {
     directory_ = (configuration->getHome() / "dbcontentrepository").string();
+  }
+  auto purge_period_str = utils::StringUtils::trim(configuration->get(Configure::nifi_dbcontent_repository_purge_period).value_or("1 s"));
+  if (purge_period_str == "0") {
+    purge_period_ = std::chrono::seconds{0};
+  } else if (auto purge_period_val = core::TimePeriodValue::fromString(purge_period_str)) {
+    purge_period_ = purge_period_val->getMilliseconds();
+  } else {
+    logger_->log_error("Malformed delete period value, expected time format: '%s'", purge_period_str);
+    purge_period_ = std::chrono::seconds{1};
   }
   const auto encrypted_env = createEncryptingEnv(utils::crypto::EncryptionManager{configuration->getHome()}, DbEncryptionOptions{directory_, ENCRYPTION_KEY_NAME});
   logger_->log_info("Using %s DatabaseContentRepository", encrypted_env ? "encrypted" : "plaintext");
@@ -107,8 +117,13 @@ void DatabaseContentRepository::start() {
     return;
   }
   if (compaction_period_.count() != 0) {
-    compaction_thread_ = std::make_unique<utils::StoppableThread>([this] () {
+    compaction_thread_ = std::make_unique<utils::StoppableThread>([this] {
       runCompaction();
+    });
+  }
+  if (purge_period_.count() != 0) {
+    gc_thread_ = std::make_unique<utils::StoppableThread>([this] {
+      runGc();
     });
   }
 }
@@ -120,6 +135,7 @@ void DatabaseContentRepository::stop() {
       opendb->FlushWAL(true);
     }
     compaction_thread_.reset();
+    gc_thread_.reset();
   }
 }
 
@@ -197,18 +213,15 @@ bool DatabaseContentRepository::exists(const minifi::ResourceClaim &streamId) {
   }
 }
 
-bool DatabaseContentRepository::removeKey(const std::string& content_path) {
-  if (!is_valid_ || !db_) {
-    logger_->log_error("DB is not valid, could not delete %s", content_path);
+bool DatabaseContentRepository::removeKeySync(const std::string &content_path) {
+  if (!is_valid_ || !db_)
     return false;
-  }
+  // synchronous deletion
   auto opendb = db_->open();
   if (!opendb) {
-    logger_->log_error("Could not open DB, did not delete %s", content_path);
     return false;
   }
-  rocksdb::Status status;
-  status = opendb->Delete(rocksdb::WriteOptions(), content_path);
+  rocksdb::Status status = opendb->Delete(rocksdb::WriteOptions(), content_path);
   if (status.ok()) {
     logger_->log_debug("Deleting resource %s", content_path);
     return true;
@@ -216,8 +229,54 @@ bool DatabaseContentRepository::removeKey(const std::string& content_path) {
     logger_->log_debug("Resource %s was not found", content_path);
     return true;
   } else {
-    logger_->log_error("Attempted, but could not delete %s", content_path);
+    logger_->log_debug("Attempted, but could not delete %s", content_path);
     return false;
+  }
+}
+
+bool DatabaseContentRepository::removeKey(const std::string& content_path) {
+  if (purge_period_ == std::chrono::seconds(0)) {
+    return removeKeySync(content_path);
+  }
+  // asynchronous deletion
+  std::lock_guard guard(keys_mtx_);
+  logger_->log_debug("Staging resource for deletion %s", content_path);
+  keys_to_delete_.push_back(content_path);
+  return true;
+}
+
+void DatabaseContentRepository::runGc() {
+  while (!utils::StoppableThread::waitForStopRequest(purge_period_)) {
+    auto opendb = db_->open();
+    if (!opendb) {
+      continue;
+    }
+    // keys_to_delete_ is not persisted, in memory only, and is lost on restart
+    // the clearOrphans method is executed during agent startup making sure that this
+    // does not cause a content leak
+    std::vector<std::string> keys;
+    {
+      std::lock_guard guard(keys_mtx_);
+      keys = std::exchange(keys_to_delete_, std::vector<std::string>{});
+    }
+    auto batch = opendb->createWriteBatch();
+    for (auto& key : keys) {
+      batch.Delete(key);
+    }
+    rocksdb::Status status;
+    status = opendb->Write(rocksdb::WriteOptions(), &batch);
+    if (status.ok()) {
+      for (auto& key : keys) {
+        logger_->log_debug("Deleted resource async %s", key);
+      }
+    } else {
+      for (auto& key : keys) {
+        logger_->log_debug("Failed to delete resource async %s", key);
+      }
+      // move keys we could not delete back to the list for a retry
+      std::lock_guard guard(keys_mtx_);
+      keys_to_delete_.insert(keys_to_delete_.end(), keys.begin(), keys.end());
+    }
   }
 }
 

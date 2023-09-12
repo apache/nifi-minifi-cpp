@@ -71,6 +71,7 @@ class Configuration : public Properties {
   // these are internal properties related to the rocksdb backend
   static constexpr const char *nifi_flowfile_repository_rocksdb_compaction_period = "nifi.flowfile.repository.rocksdb.compaction.period";
   static constexpr const char *nifi_dbcontent_repository_rocksdb_compaction_period = "nifi.database.content.repository.rocksdb.compaction.period";
+  static constexpr const char *nifi_dbcontent_repository_purge_period = "nifi.database.content.repository.purge.period";
 
   static constexpr const char *nifi_remote_input_secure = "nifi.remote.input.secure";
   static constexpr const char *nifi_security_need_ClientAuth = "nifi.security.need.ClientAuth";
