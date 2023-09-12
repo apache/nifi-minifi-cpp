@@ -54,5 +54,6 @@ extern std::string resolve_common_identifiers(const std::string &id);
 #endif
 
 std::optional<std::string> getHostName();
+std::optional<double> getSystemLoadAverage();
 
 }  // namespace org::apache::nifi::minifi::utils::OsUtils

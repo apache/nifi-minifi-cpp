@@ -240,11 +240,17 @@ std::vector<PublishedMetric> DeviceInfoNode::calculateMetrics() {
   SerializedResponseNode cpu_usage;
   cpu_usage.name = "cpuUtilization";
   cpu_usage.value = system_cpu_usage;
-  return {
+  std::vector<PublishedMetric> metrics = {
     {"physical_mem", static_cast<double>(utils::OsUtils::getSystemTotalPhysicalMemory()), {{"metric_class", "DeviceInfoNode"}}},
     {"memory_usage", static_cast<double>(utils::OsUtils::getSystemPhysicalMemoryUsage()), {{"metric_class", "DeviceInfoNode"}}},
     {"cpu_utilization", system_cpu_usage, {{"metric_class", "DeviceInfoNode"}}},
   };
+
+  if (auto system_load_average = utils::OsUtils::getSystemLoadAverage()) {
+    metrics.push_back({"cpu_load_average", *system_load_average, {{"metric_class", "DeviceInfoNode"}}});
+  }
+
+  return metrics;
 }
 
 SerializedResponseNode DeviceInfoNode::serializeIdentifier() const {
@@ -283,8 +289,16 @@ SerializedResponseNode DeviceInfoNode::serializeArchitectureInformation() {
   return {.name = "machineArch", .value = utils::OsUtils::getMachineArchitecture()};
 }
 
+std::optional<SerializedResponseNode> DeviceInfoNode::serializeCPULoadAverageInformation() {
+  if (auto system_load_average = utils::OsUtils::getSystemLoadAverage()) {
+    return SerializedResponseNode{.name = "cpuLoadAverage", .value = *system_load_average};
+  }
+
+  return std::nullopt;
+}
+
 SerializedResponseNode DeviceInfoNode::serializeSystemInfo() {
-  return {
+  SerializedResponseNode system_info = {
     .name = "systemInfo",
     .children = {
       serializeVCoreInfo(),
@@ -295,6 +309,11 @@ SerializedResponseNode DeviceInfoNode::serializeSystemInfo() {
       serializeSystemCPUUsageInformation()
     }
   };
+
+  if (auto cpu_load_average = serializeCPULoadAverageInformation()) {
+    system_info.children.push_back(*cpu_load_average);
+  }
+  return system_info;
 }
 
 SerializedResponseNode DeviceInfoNode::serializeHostNameInfo() const {

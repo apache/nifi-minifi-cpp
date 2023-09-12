@@ -26,6 +26,7 @@
 
 #ifdef __linux__
 #include <sys/sysinfo.h>
+#include <cstdlib>
 #include <optional>
 #include <sstream>
 #endif
@@ -334,6 +335,19 @@ std::optional<std::string> OsUtils::getHostName() {
     return std::nullopt;
   }
   return {hostname};
+}
+
+std::optional<double> OsUtils::getSystemLoadAverage() {
+#ifndef WIN32
+  double load_avg[1];
+  auto numSamples = getloadavg(load_avg, 1);
+  if (numSamples == -1) {
+    return std::nullopt;
+  }
+  return load_avg[0];
+#else
+  return std::nullopt;
+#endif
 }
 
 }  // namespace org::apache::nifi::minifi::utils
