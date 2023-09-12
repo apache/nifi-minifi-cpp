@@ -63,8 +63,11 @@ TEST_CASE("FetchSmb tests") {
 
   SECTION("Without Remote File property") {
   }
-  SECTION("Remote File Property with expression language") {
+  SECTION("Remote File Property with expression language (unix separator)") {
     REQUIRE(controller.plan->setProperty(fetch_smb, FetchSmb::RemoteFile, "${path}/${filename}"));
+  }
+  SECTION("Remote File Property with expression language (windows separator)") {
+    REQUIRE(controller.plan->setProperty(fetch_smb, FetchSmb::RemoteFile, "${path}\\${filename}"));
   }
 
   {

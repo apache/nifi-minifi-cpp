@@ -35,9 +35,7 @@ namespace {
 std::filesystem::path getTargetRelativePath(core::ProcessContext& context, const std::shared_ptr<core::FlowFile>& flow_file) {
   auto remote_file = context.getProperty(FetchSmb::RemoteFile, flow_file);
   if (remote_file && !remote_file->empty()) {
-    if (remote_file->starts_with('/'))
-      remote_file->erase(remote_file->begin());
-    return *remote_file;
+    return std::filesystem::path{*remote_file}.relative_path();  // We need to make sure that the path remains relative (e.g. ${path}/foo where ${path} is empty can lead to /foo)
   }
   std::filesystem::path path = flow_file->getAttribute(core::SpecialFlowAttribute::PATH).value_or("");
   std::filesystem::path filename = flow_file->getAttribute(core::SpecialFlowAttribute::FILENAME).value_or("");
