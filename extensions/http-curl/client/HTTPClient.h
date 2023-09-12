@@ -119,7 +119,6 @@ class HTTPClient : public utils::BaseHTTPClient, public core::Connectable {
   const std::vector<char>& getResponseBody() override;
 
   void set_request_method(std::string method) override;
-  std::string& getRequestMethod() { return method_; }
 
   void setPeerVerification(bool peer_verification) override;
   void setHostVerification(bool host_verification) override;
