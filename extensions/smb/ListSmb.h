@@ -112,7 +112,7 @@ class ListSmb : public core::Processor {
   EXTENSIONAPI static constexpr auto Path = core::OutputAttributeDefinition<>{"path", { Success },
       "The path is set to the relative path of the file's directory on the remote filesystem compared to the Share root directory. "
       "For example, for a given remote location smb://HOSTNAME:PORT/SHARE/DIRECTORY, and a file is being listed from smb://HOSTNAME:PORT/SHARE/DIRECTORY/sub/folder/file "
-      "then the path attribute will be set to \"sub/folder\"."};
+      "then the path attribute will be set to \"DIRECTORY/sub/folder\"."};
   EXTENSIONAPI static constexpr auto ServiceLocation = core::OutputAttributeDefinition<>{"serviceLocation", { Success },
                                                        "The SMB URL of the share."};
   EXTENSIONAPI static constexpr auto LastModifiedTime = core::OutputAttributeDefinition<>{"lastModifiedTime", { Success },

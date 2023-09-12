@@ -84,7 +84,7 @@ std::shared_ptr<core::FlowFile> ListSmb::createFlowFile(core::ProcessSession& se
   session.putAttribute(flow_file, core::SpecialFlowAttribute::FILENAME, listed_file.getPath().filename().string());
   session.putAttribute(flow_file, core::SpecialFlowAttribute::ABSOLUTE_PATH, (listed_file.getPath().parent_path() / "").string());
 
-  auto relative_path = std::filesystem::relative(listed_file.getPath().parent_path(), listed_file.getDirectory());
+  auto relative_path = std::filesystem::relative(listed_file.getPath().parent_path(), smb_connection_controller_service_->getPath());
   session.putAttribute(flow_file, core::SpecialFlowAttribute::PATH, (relative_path / "").string());
 
   session.putAttribute(flow_file, Size.name, std::to_string(utils::file::file_size(listed_file.getPath())));
