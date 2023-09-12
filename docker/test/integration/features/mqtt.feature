@@ -70,10 +70,10 @@ Feature: Sending data to MQTT streaming platform using PublishMQTT
     And the "success" relationship of the PublishMQTT processor is connected to the PutFile
 
     When the MiNiFi instance starts up
-    Then no files are placed in the monitored directory in 30 seconds of running time
+    Then no files are placed in the monitored directory in 10 seconds of running time
 
-    And an MQTT broker is deployed in correspondence with the PublishMQTT
-    And a flowfile with the content "test" is placed in the monitored directory in less than 60 seconds
+    When an MQTT broker is set up in correspondence with the PublishMQTT
+    Then a flowfile with the content "test" is placed in the monitored directory in less than 60 seconds
     And the MQTT broker has a log line matching "Received PUBLISH from .*testtopic.*\(4 bytes\)"
 
     Examples: MQTT versions
@@ -319,8 +319,7 @@ Feature: Sending data to MQTT streaming platform using PublishMQTT
 
     And an MQTT broker is set up in correspondence with the PublishMQTT and ConsumeMQTT
 
-    When the MQTT broker is started
-    And "publisher-client" flow is started
+    When both instances start up
     Then the MQTT broker has a log line matching "Received PUBLISH from .*testtopic.*\(4 bytes\)"
 
     # consumer is joining late, but it will still see the retained message
