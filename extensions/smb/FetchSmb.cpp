@@ -62,7 +62,7 @@ void FetchSmb::onTrigger(const std::shared_ptr<core::ProcessContext>& context, c
     session->write(flow_file, utils::FileReaderCallback{smb_connection_controller_service_->getPath() / getTargetRelativePath(*context, flow_file)});
     session->transfer(flow_file, Success);
   } catch (const utils::FileReaderCallbackIOError& io_error) {
-    flow_file->addAttribute(ErrorCode.name, fmt::format("{}", io_error.error_code));
+    flow_file->addAttribute(ErrorCode.name, std::to_string(io_error.error_code));
     flow_file->addAttribute(ErrorMessage.name, io_error.what());
     session->transfer(flow_file, Failure);
   }
