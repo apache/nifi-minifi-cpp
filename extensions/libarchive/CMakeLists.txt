@@ -39,5 +39,5 @@ add_library(minifi-archive-extensions SHARED ${SOURCES})
 target_link_libraries(minifi-archive-extensions ${LIBMINIFI} Threads::Threads)
 target_link_libraries(minifi-archive-extensions LibArchive::LibArchive)
 
-register_extension(minifi-archive-extensions "ARCHIVE EXTENSIONS" ARCHIVE-EXTENSIONS "This Enables libarchive functionality including MergeContent, CompressContent, (Un)FocusArchiveEntry and ManipulateArchive." "${TEST_DIR}/archive-tests")
+register_extension(minifi-archive-extensions "ARCHIVE EXTENSIONS" ARCHIVE-EXTENSIONS "This Enables libarchive functionality including MergeContent, CompressContent, (Un)FocusArchiveEntry and ManipulateArchive." "extensions/libarchive/tests")
 register_extension_linter(minifi-archive-extensions-linter)

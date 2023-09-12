@@ -73,5 +73,5 @@ endif ()
 
 target_link_libraries(minifi-pcap ${LIBMINIFI} Threads::Threads)
 
-register_extension(minifi-pcap "PCAP EXTENSIONS" PCAP-EXTENSION "Enables libPCAP Functionality and the PacketCapture processor." "${TEST_DIR}/pcap-tests")
+register_extension(minifi-pcap "PCAP EXTENSIONS" PCAP-EXTENSION "Enables libPCAP Functionality and the PacketCapture processor." "extensions/pcap/tests")
 register_extension_linter(minifi-pcap-linter)

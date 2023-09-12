@@ -17,16 +17,19 @@
 # under the License.
 #
 
-file(GLOB COAP_INTEGRATION_TESTS  "*.cpp")
-SET(COAP_TEST_COUNT 0)
-FOREACH(testfile ${COAP_INTEGRATION_TESTS})
+file(GLOB ARCHIVE_INTEGRATION_TESTS  "*.cpp")
+
+SET(EXTENSIONS_TEST_COUNT 0)
+FOREACH(testfile ${ARCHIVE_INTEGRATION_TESTS})
     get_filename_component(testfilename "${testfile}" NAME_WE)
-    add_executable("${testfilename}" "${testfile}")
-    target_include_directories(${testfilename} PRIVATE BEFORE "${CMAKE_SOURCE_DIR}/extensions/coap/")
-    createTests("${testfilename}")
-    target_link_libraries(${testfilename} minifi-coap)
+    add_executable("${testfilename}" "${testfile}" "util/ArchiveTests.cpp")
+    target_include_directories(${testfilename} BEFORE PRIVATE "${CMAKE_SOURCE_DIR}/extensions/libarchive")
+    target_include_directories(${testfilename} PRIVATE BEFORE "${CMAKE_SOURCE_DIR}/extensions/standard-processors")
+    target_link_libraries(${testfilename} minifi-archive-extensions)
     target_link_libraries(${testfilename} minifi-standard-processors)
-    MATH(EXPR COAP_TEST_COUNT "${COAP_TEST_COUNT}+1")
+    createTests("${testfilename}")
+    target_link_libraries(${testfilename} Catch2WithMain)
+    MATH(EXPR EXTENSIONS_TEST_COUNT "${EXTENSIONS_TEST_COUNT}+1")
     add_test(NAME "${testfilename}" COMMAND "${testfilename}" WORKING_DIRECTORY ${TEST_DIR})
 ENDFOREACH()
-message("-- Finished building ${COAP_TEST_COUNT} COAP related test file(s)...")
+message("-- Finished building ${ARCHIVE-EXTENSIONS_TEST_COUNT} Lib Archive related test file(s)...")

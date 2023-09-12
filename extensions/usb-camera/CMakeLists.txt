@@ -61,5 +61,5 @@ add_library(minifi-usb-camera-extensions SHARED ${SOURCES})
 target_link_libraries(minifi-usb-camera-extensions ${LIBMINIFI} Threads::Threads)
 target_link_libraries(minifi-usb-camera-extensions libuvc PNG::PNG)
 
-register_extension(minifi-usb-camera-extensions "USB CAMERA EXTENSIONS" USB-CAMERA-EXTENSIONS "This enables USB camera support" "${TEST_DIR}/usb-camera-tests")
+register_extension(minifi-usb-camera-extensions "USB CAMERA EXTENSIONS" USB-CAMERA-EXTENSIONS "This enables USB camera support")
 register_extension_linter(minifi-usb-camera-extensions-linter)

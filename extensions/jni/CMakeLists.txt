@@ -111,5 +111,5 @@ else()
     target_link_libraries (minifi-jni ${JAVA_JVM_LIBRARY})
 endif()
 
-register_extension(minifi-jni "JNI EXTENSIONS" JNI-EXTENSION "Enables JNI capabilities to support loading Java Classes." "${TEST_DIR}/jni-tests")
+register_extension(minifi-jni "JNI EXTENSIONS" JNI-EXTENSION "Enables JNI capabilities to support loading Java Classes.")
 register_extension_linter(minifi-jni-linter)

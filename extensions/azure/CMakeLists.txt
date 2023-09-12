@@ -45,6 +45,6 @@ if (WIN32)
     target_link_libraries(minifi-azure crypt32.lib bcrypt.lib)
 endif()
 
-register_extension(minifi-azure "AZURE EXTENSIONS" AZURE-EXTENSIONS "This enables Azure support" "${TEST_DIR}/azure-tests")
+register_extension(minifi-azure "AZURE EXTENSIONS" AZURE-EXTENSIONS "This enables Azure support" "extensions/azure/tests")
 
 register_extension_linter(minifi-azure-extensions-linter)
