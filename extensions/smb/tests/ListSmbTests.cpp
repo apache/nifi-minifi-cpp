@@ -63,9 +63,9 @@ TEST_CASE("ListSmb tests") {
   auto a_expected_attributes = mock_smb_connection_controller_service->addFile("a.foo", std::string(10_KiB, 'a'), 5min);
   auto b_expected_attributes = mock_smb_connection_controller_service->addFile("b.foo", std::string(13_KiB, 'b'), 1h);
   auto c_expected_attributes = mock_smb_connection_controller_service->addFile("c.bar", std::string(1_KiB, 'c'), 2h);
-  auto d_expected_attributes = mock_smb_connection_controller_service->addFile("subdir/d.foo", std::string(100, 'd'), 10min);
-  auto e_expected_attributes = mock_smb_connection_controller_service->addFile("subdir2/e.foo", std::string(1, 'e'), 10s);
-  auto f_expected_attributes = mock_smb_connection_controller_service->addFile("third/f.bar", std::string(50_KiB, 'f'), 30min);
+  auto d_expected_attributes = mock_smb_connection_controller_service->addFile(std::filesystem::path("subdir") / "some" / "d.foo", std::string(100, 'd'), 10min);
+  auto e_expected_attributes = mock_smb_connection_controller_service->addFile(std::filesystem::path("subdir2") /"e.foo", std::string(1, 'e'), 10s);
+  auto f_expected_attributes = mock_smb_connection_controller_service->addFile(std::filesystem::path("third") / "f.bar", std::string(50_KiB, 'f'), 30min);
   auto g_expected_attributes = mock_smb_connection_controller_service->addFile("g.foo", std::string(50_KiB, 'f'), 30min);
   auto hide_file_error = minifi::test::utils::hide_file(mock_smb_connection_controller_service->getPath() / "g.foo");
   REQUIRE_FALSE(hide_file_error);
@@ -84,6 +84,15 @@ TEST_CASE("ListSmb tests") {
     CHECK(checkForFlowFileWithAttributes(trigger_results.at(ListSmb::Success), *b_expected_attributes));
   }
 
+  SECTION("Input directory") {
+    REQUIRE(controller.plan->setProperty(list_smb, ListSmb::InputDirectory, "subdir"));
+    REQUIRE(controller.plan->setProperty(list_smb, ListSmb::RecurseSubdirectories, "true"));
+    const auto trigger_results = controller.trigger();
+    CHECK(trigger_results.at(ListSmb::Success).size() == 1);
+    CHECK_FALSE(list_smb->isYield());
+    CHECK(checkForFlowFileWithAttributes(trigger_results.at(ListSmb::Success), *d_expected_attributes));
+  }
+  
   SECTION("PathFilter and FileFilter") {
     REQUIRE(controller.plan->setProperty(list_smb, ListSmb::FileFilter, ".*\\.foo"));
     REQUIRE(controller.plan->setProperty(list_smb, ListSmb::RecurseSubdirectories, "true"));
