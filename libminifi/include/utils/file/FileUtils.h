@@ -575,12 +575,8 @@ inline std::optional<std::filesystem::path> get_relative_path(const std::filesys
 }
 
 inline size_t countNumberOfFiles(const std::filesystem::path& path) {
-  size_t counter = 0;
-  for (const auto& entry : std::filesystem::directory_iterator(path)) {
-    if (entry.is_regular_file())
-      ++counter;
-  }
-  return counter;
+  using std::filesystem::directory_iterator;
+  return std::count_if(directory_iterator(path), directory_iterator(), [](const auto& entry) { return entry.is_regular_file(); });
 }
 
 #ifdef WIN32
