@@ -16,8 +16,8 @@
  * limitations under the License.
  */
 
-#include "../TestBase.h"
-#include "../Catch.h"
+#include "TestBase.h"
+#include "Catch.h"
 #include "FlowFileRepository.h"
 #include "utils/IntegrationTestUtils.h"
 #include "repository/VolatileContentRepository.h"

@@ -26,8 +26,8 @@
 #include "DatabaseContentRepository.h"
 #include "BufferedContentSession.h"
 #include "FlowFileRecord.h"
-#include "../TestBase.h"
-#include "../Catch.h"
+#include "TestBase.h"
+#include "Catch.h"
 #include "utils/gsl.h"
 
 template<typename ContentRepositoryClass>

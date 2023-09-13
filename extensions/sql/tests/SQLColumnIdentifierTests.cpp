@@ -18,8 +18,8 @@
 
 #undef NDEBUG
 
-#include "../TestBase.h"
-#include "../Catch.h"
+#include "TestBase.h"
+#include "Catch.h"
 #include "data/SQLColumnIdentifier.h"
 
 using org::apache::nifi::minifi::sql::SQLColumnIdentifier;

@@ -29,16 +29,16 @@
 #include <vector>
 #include <iostream>
 #include <sstream>
-#include "../TestBase.h"
+#include "TestBase.h"
 #include "utils/StringUtils.h"
 #include "core/Core.h"
 #include "core/logging/Logger.h"
 #include "core/ProcessGroup.h"
 #include "FlowController.h"
 #include "properties/Configure.h"
-#include "../unit/ProvenanceTestHelper.h"
+#include "unit/ProvenanceTestHelper.h"
 #include "core/ConfigurableComponent.h"
-#include "../integration/IntegrationBase.h"
+#include "integration/IntegrationBase.h"
 #include "GetEnvironmentalSensors.h"
 #include "utils/IntegrationTestUtils.h"
 

@@ -16,11 +16,11 @@
  * limitations under the License.
  */
 
-#include "../TestBase.h"
-#include "../Catch.h"
-#include "../../extensions/rocksdb-repos/RocksDbStream.h"
-#include "../../extensions/rocksdb-repos/DatabaseContentRepository.h"
-#include "../../extensions/rocksdb-repos/database/StringAppender.h"
+#include "TestBase.h"
+#include "Catch.h"
+#include "../RocksDbStream.h"
+#include "../DatabaseContentRepository.h"
+#include "../database/StringAppender.h"
 
 class RocksDBStreamTest : TestController {
  public:

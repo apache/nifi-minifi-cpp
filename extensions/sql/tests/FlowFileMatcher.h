@@ -25,8 +25,8 @@
 #include <utility>
 #include <vector>
 
-#include "../TestBase.h"
-#include "../Catch.h"
+#include "TestBase.h"
+#include "Catch.h"
 #include "core/FlowFile.h"
 
 struct AttributeValue {

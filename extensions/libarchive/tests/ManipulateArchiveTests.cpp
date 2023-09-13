@@ -21,8 +21,8 @@
 #include <memory>
 #include <utility>
 
-#include "../TestBase.h"
-#include "../Catch.h"
+#include "TestBase.h"
+#include "Catch.h"
 #include "ArchiveTests.h"
 #include "core/PropertyDefinition.h"
 #include "processors/GetFile.h"
@@ -31,7 +31,7 @@
 #include "ManipulateArchive.h"
 #include "FocusArchiveEntry.h"
 #include "UnfocusArchiveEntry.h"
-#include "../unit/ProvenanceTestHelper.h"
+#include "unit/ProvenanceTestHelper.h"
 #include "repository/VolatileContentRepository.h"
 
 const char TEST_ARCHIVE_NAME[] = "manipulate_test_archive.tar";

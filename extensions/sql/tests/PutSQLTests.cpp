@@ -18,8 +18,8 @@
 
 #undef NDEBUG
 
-#include "../TestBase.h"
-#include "../Catch.h"
+#include "TestBase.h"
+#include "Catch.h"
 #include "SQLTestController.h"
 
 #include "processors/PutSQL.h"

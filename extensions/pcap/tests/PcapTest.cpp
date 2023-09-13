@@ -20,12 +20,12 @@
 #include <cassert>
 #include <chrono>
 #include <string>
-#include "../TestBase.h"
+#include "TestBase.h"
 #include "core/ProcessGroup.h"
 #include "FlowController.h"
 #include "core/ConfigurableComponent.h"
 #include "core/state/ProcessorController.h"
-#include "../integration/IntegrationBase.h"
+#include "integration/IntegrationBase.h"
 #include "CapturePacket.h"
 #include "utils/IntegrationTestUtils.h"
 

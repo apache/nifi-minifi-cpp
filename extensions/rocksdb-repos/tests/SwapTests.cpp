@@ -15,19 +15,19 @@
  * limitations under the License.
  */
 
-#include "../Catch.h"
+#include "Catch.h"
 #include "core/RepositoryFactory.h"
 #include "core/repository/VolatileContentRepository.h"
 #include "FlowFileRepository.h"
-#include "../TestBase.h"
-#include "../Utils.h"
+#include "TestBase.h"
+#include "Utils.h"
 #include "StreamPipe.h"
 #include "IntegrationTestUtils.h"
 #include "core/Processor.h"
 #include "core/ProcessSession.h"
 #include "core/PropertyDefinition.h"
 #include "core/RelationshipDefinition.h"
-#include "../unit/ProvenanceTestHelper.h"
+#include "unit/ProvenanceTestHelper.h"
 
 namespace org::apache::nifi::minifi::test {
 

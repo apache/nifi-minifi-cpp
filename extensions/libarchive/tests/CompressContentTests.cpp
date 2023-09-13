@@ -27,11 +27,11 @@
 #include <iostream>
 
 #include "FlowController.h"
-#include "../TestBase.h"
-#include "../Catch.h"
+#include "TestBase.h"
+#include "Catch.h"
 #include "core/Core.h"
 #include "../../include/core/FlowFile.h"
-#include "../unit/ProvenanceTestHelper.h"
+#include "unit/ProvenanceTestHelper.h"
 #include "core/Processor.h"
 #include "core/ProcessContext.h"
 #include "core/ProcessSession.h"
@@ -43,7 +43,7 @@
 #include "processors/GetFile.h"
 #include "processors/PutFile.h"
 #include "utils/file/FileUtils.h"
-#include "../Utils.h"
+#include "Utils.h"
 #include "utils/gsl.h"
 
 class ReadCallback {

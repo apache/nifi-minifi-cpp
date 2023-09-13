@@ -26,8 +26,8 @@
 #include <utility>
 #include <vector>
 
-#include "../TestBase.h"
-#include "../Catch.h"
+#include "TestBase.h"
+#include "Catch.h"
 #include "processors/SQLProcessor.h"
 
 #ifdef USE_REAL_ODBC_TEST_DRIVER

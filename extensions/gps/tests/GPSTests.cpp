@@ -33,9 +33,9 @@
 #include "FlowController.h"
 #include "GetGPS.h"
 #include "processors/GetFile.h"
-#include "../TestBase.h"
-#include "../Catch.h"
-#include "../unit/ProvenanceTestHelper.h"
+#include "TestBase.h"
+#include "Catch.h"
+#include "unit/ProvenanceTestHelper.h"
 
 TEST_CASE("GPSD Create", "[gpsdtest1]") {
   TestController testController;

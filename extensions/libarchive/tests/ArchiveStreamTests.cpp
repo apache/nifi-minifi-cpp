@@ -16,8 +16,8 @@
  * limitations under the License.
  */
 
-#include "../TestBase.h"
-#include "../Catch.h"
+#include "TestBase.h"
+#include "Catch.h"
 #include "WriteArchiveStream.h"
 #include "ReadArchiveStream.h"
 

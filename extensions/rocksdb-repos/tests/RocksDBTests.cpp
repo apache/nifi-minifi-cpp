@@ -17,15 +17,15 @@
 
 #include <fstream>
 
-#include "../TestBase.h"
-#include "../Catch.h"
-#include "../../extensions/rocksdb-repos/database/RocksDatabase.h"
-#include "../../extensions/rocksdb-repos/database/RocksDbInstance.h"
-#include "../../extensions/rocksdb-repos/database/ColumnHandle.h"
-#include "../../extensions/rocksdb-repos/database/DbHandle.h"
+#include "TestBase.h"
+#include "Catch.h"
+#include "../database/RocksDatabase.h"
+#include "../database/RocksDbInstance.h"
+#include "../database/ColumnHandle.h"
+#include "../database/DbHandle.h"
 #include "IntegrationTestUtils.h"
 #include "database/StringAppender.h"
-#include "../../extensions/rocksdb-repos/encryption/RocksDbEncryptionProvider.h"
+#include "../encryption/RocksDbEncryptionProvider.h"
 
 #undef NDEBUG
 

@@ -16,8 +16,8 @@
  * limitations under the License.
  */
 
-#include "../TestBase.h"
-#include "../Catch.h"
+#include "TestBase.h"
+#include "Catch.h"
 #include "MockBlobStorage.h"
 #include "utils/IntegrationTestUtils.h"
 #include "processors/LogAttribute.h"
