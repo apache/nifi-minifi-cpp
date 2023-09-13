@@ -18,14 +18,19 @@
 
 #include "utils/tls/CertificateUtils.h"
 
-#include <openssl/rsa.h>
-#include <openssl/err.h>
+#include "openssl/rsa.h"
+#include "openssl/err.h"
 
 #ifdef WIN32
 #include <winsock2.h>
 
 #pragma comment(lib, "ncrypt.lib")
 #pragma comment(lib, "Ws2_32.lib")
+
+#include "openssl/core_names.h"
+#include "openssl/evp.h"
+#include "openssl/param_build.h"
+#include "openssl/ssl.h"
 #endif  // WIN32
 
 #include "utils/StringUtils.h"
@@ -87,12 +92,27 @@ X509_unique_ptr convertWindowsCertificate(const PCCERT_CONTEXT certificate) {
   return X509_unique_ptr{d2i_X509(nullptr, &certificate_binary, certificate_length)};
 }
 
+struct OSSL_PARAM_BLD_deleter {
+  void operator()(OSSL_PARAM_BLD* param_builder) const { OSSL_PARAM_BLD_free(param_builder); }
+};
+using OSSL_PARAM_BLD_unique_ptr = std::unique_ptr<OSSL_PARAM_BLD, OSSL_PARAM_BLD_deleter>;
+
+struct OSSL_PARAM_deleter {
+  void operator()(OSSL_PARAM* params) const { OSSL_PARAM_free(params); }
+};
+using OSSL_PARAM_unique_ptr = std::unique_ptr<OSSL_PARAM, OSSL_PARAM_deleter>;
+
+struct EVP_PKEY_CTX_deleter {
+  void operator()(EVP_PKEY_CTX* pkey_context) const { EVP_PKEY_CTX_free(pkey_context); }
+};
+using EVP_PKEY_CTX_unique_ptr = std::unique_ptr<EVP_PKEY_CTX, EVP_PKEY_CTX_deleter>;
+
 EVP_PKEY_unique_ptr convertWindowsRsaKeyPair(std::span<BYTE> data) {
   // https://docs.microsoft.com/en-us/windows/win32/api/bcrypt/ns-bcrypt-bcrypt_rsakey_blob
   auto const blob = reinterpret_cast<BCRYPT_RSAKEY_BLOB *>(data.data());
 
   if (blob->Magic == BCRYPT_RSAFULLPRIVATE_MAGIC) {
-    auto rsa = RSA_new();
+    OSSL_PARAM_BLD_unique_ptr param_builder{OSSL_PARAM_BLD_new()};
 
     // n is the modulus common to both public and private key
     auto const n = BN_bin2bn(data.data() + sizeof(BCRYPT_RSAKEY_BLOB) + blob->cbPublicExp, blob->cbModulus, nullptr);
@@ -102,7 +122,9 @@ EVP_PKEY_unique_ptr convertWindowsRsaKeyPair(std::span<BYTE> data) {
     auto const d = BN_bin2bn(data.data() + sizeof(BCRYPT_RSAKEY_BLOB) + blob->cbPublicExp + blob->cbModulus + blob->cbPrime1
                                  + blob->cbPrime2 + blob->cbPrime1 + blob->cbPrime2 + blob->cbPrime1, blob->cbModulus, nullptr);
 
-    RSA_set0_key(rsa, n, e, d);
+    OSSL_PARAM_BLD_push_BN(param_builder.get(), OSSL_PKEY_PARAM_RSA_N, n);
+    OSSL_PARAM_BLD_push_BN(param_builder.get(), OSSL_PKEY_PARAM_RSA_E, e);
+    OSSL_PARAM_BLD_push_BN(param_builder.get(), OSSL_PKEY_PARAM_RSA_D, d);
 
     // p and q are the first and second factor of n
     auto const p = BN_bin2bn(data.data() + sizeof(BCRYPT_RSAKEY_BLOB) + blob->cbPublicExp + blob->cbModulus,
@@ -110,7 +132,8 @@ EVP_PKEY_unique_ptr convertWindowsRsaKeyPair(std::span<BYTE> data) {
     auto const q = BN_bin2bn(data.data() + sizeof(BCRYPT_RSAKEY_BLOB) + blob->cbPublicExp + blob->cbModulus + blob->cbPrime1,
                              blob->cbPrime2, nullptr);
 
-    RSA_set0_factors(rsa, p, q);
+    OSSL_PARAM_BLD_push_BN(param_builder.get(), OSSL_PKEY_PARAM_RSA_FACTOR1, p);
+    OSSL_PARAM_BLD_push_BN(param_builder.get(), OSSL_PKEY_PARAM_RSA_FACTOR2, q);
 
     // dmp1, dmq1 and iqmp are the exponents and coefficient for CRT calculations
     auto const dmp1 = BN_bin2bn(data.data() + sizeof(BCRYPT_RSAKEY_BLOB) + blob->cbPublicExp + blob->cbModulus + blob->cbPrime1
@@ -120,11 +143,17 @@ EVP_PKEY_unique_ptr convertWindowsRsaKeyPair(std::span<BYTE> data) {
     auto const iqmp = BN_bin2bn(data.data() + sizeof(BCRYPT_RSAKEY_BLOB) + blob->cbPublicExp + blob->cbModulus + blob->cbPrime1
                                     + blob->cbPrime2 + blob->cbPrime1 + blob->cbPrime2, blob->cbPrime1, nullptr);
 
-    RSA_set0_crt_params(rsa, dmp1, dmq1, iqmp);
+    OSSL_PARAM_BLD_push_BN(param_builder.get(), OSSL_PKEY_PARAM_RSA_EXPONENT1, dmp1);
+    OSSL_PARAM_BLD_push_BN(param_builder.get(), OSSL_PKEY_PARAM_RSA_EXPONENT2, dmq1);
+    OSSL_PARAM_BLD_push_BN(param_builder.get(), OSSL_PKEY_PARAM_RSA_COEFFICIENT1, iqmp);
 
-    EVP_PKEY_unique_ptr private_key{EVP_PKEY_new()};
-    EVP_PKEY_assign_RSA(private_key.get(), rsa);  // ownership of rsa transferred to private_key
-    return private_key;
+    OSSL_PARAM_unique_ptr params{OSSL_PARAM_BLD_to_param(param_builder.get())};
+    EVP_PKEY_CTX_unique_ptr context{EVP_PKEY_CTX_new_from_name(NULL, SSL_TXT_RSA, NULL)};
+    EVP_PKEY_fromdata_init(context.get());
+
+    EVP_PKEY* keypair_raw = nullptr;
+    EVP_PKEY_fromdata(context.get(), &keypair_raw, EVP_PKEY_KEYPAIR, params.get());
+    return EVP_PKEY_unique_ptr{keypair_raw};
   }
 
   return nullptr;
