@@ -42,16 +42,31 @@ bool parseBooleanPropertyOrThrow(const core::ProcessContext& context, std::strin
 std::chrono::milliseconds parseTimePropertyMSOrThrow(const core::ProcessContext& context, std::string_view property_name);
 
 template<typename T>
-T parseEnumProperty(const core::ProcessContext& context, const core::PropertyReference& prop) {
+nonstd::expected<T, std::string> parseEnumPropertyNoThrow(const core::ProcessContext& context, const core::PropertyReference& prop) {
   std::string value;
   if (!context.getProperty(prop.name, value)) {
-    throw Exception(PROCESS_SCHEDULE_EXCEPTION, "Property '" + std::string(prop.name) + "' is missing");
+    return nonstd::make_unexpected(fmt::format("Property '{}' is missing'", prop.name));
   }
   auto result = magic_enum::enum_cast<T>(value);
   if (!result) {
-    throw Exception(PROCESS_SCHEDULE_EXCEPTION, "Property '" + std::string(prop.name) + "' has invalid value: '" + value + "'");
+    return nonstd::make_unexpected(fmt::format("Property '{}' has invalid value: '{}'", prop.name, value));
   }
   return result.value();
+}
+
+template<typename T>
+T parseEnumProperty(const core::ProcessContext& context, const core::PropertyReference& prop) {
+  auto parsed_enum = parseEnumPropertyNoThrow<T>(context, prop);
+  if (!parsed_enum)
+    throw Exception(PROCESS_SCHEDULE_EXCEPTION, parsed_enum.error());
+  return parsed_enum.value();
+}
+
+template<typename T>
+T parseEnumPropertyOrWarnAndFallbackToDefault(const core::ProcessContext& context, const core::PropertyReference& prop, core::logging::Logger& logger, T&& default_value) {
+  auto parsed_enum = parseEnumPropertyNoThrow<T>(context, prop);
+  if (!parsed_enum) { logger.log_warn("%s", parsed_enum.error()); }
+  return parsed_enum.value_or(default_value);
 }
 
 template<typename T>

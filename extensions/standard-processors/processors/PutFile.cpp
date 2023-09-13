@@ -42,7 +42,7 @@ void PutFile::initialize() {
 }
 
 void PutFile::onSchedule(core::ProcessContext *context, core::ProcessSessionFactory* /*sessionFactory*/) {
-  conflict_resolution_strategy_ = utils::parseEnumProperty<FileExistsResolutionStrategy>(*context, ConflictResolution);
+  conflict_resolution_strategy_ = utils::parseEnumPropertyOrWarnAndFallbackToDefault<FileExistsResolutionStrategy>(*context, ConflictResolution, *logger_, FileExistsResolutionStrategy::fail);
   try_mkdirs_ = context->getProperty<bool>(CreateDirs).value_or(true);
   if (auto max_dest_files = context->getProperty<int64_t>(MaxDestFiles); max_dest_files && *max_dest_files > 0) {
     max_dest_files_ = gsl::narrow_cast<uint64_t>(*max_dest_files);
