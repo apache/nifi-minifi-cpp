@@ -92,7 +92,7 @@ TEST_CASE("ListSmb tests") {
     CHECK_FALSE(list_smb->isYield());
     CHECK(checkForFlowFileWithAttributes(trigger_results.at(ListSmb::Success), *d_expected_attributes));
   }
-  
+
   SECTION("PathFilter and FileFilter") {
     REQUIRE(controller.plan->setProperty(list_smb, ListSmb::FileFilter, ".*\\.foo"));
     REQUIRE(controller.plan->setProperty(list_smb, ListSmb::RecurseSubdirectories, "true"));
