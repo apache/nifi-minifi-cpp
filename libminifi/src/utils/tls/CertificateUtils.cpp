@@ -87,6 +87,49 @@ X509_unique_ptr convertWindowsCertificate(const PCCERT_CONTEXT certificate) {
   return X509_unique_ptr{d2i_X509(nullptr, &certificate_binary, certificate_length)};
 }
 
+EVP_PKEY_unique_ptr convertWindowsRsaKeyPair(std::span<BYTE> data) {
+  // https://docs.microsoft.com/en-us/windows/win32/api/bcrypt/ns-bcrypt-bcrypt_rsakey_blob
+  auto const blob = reinterpret_cast<BCRYPT_RSAKEY_BLOB *>(data.data());
+
+  if (blob->Magic == BCRYPT_RSAFULLPRIVATE_MAGIC) {
+    auto rsa = RSA_new();
+
+    // n is the modulus common to both public and private key
+    auto const n = BN_bin2bn(data.data() + sizeof(BCRYPT_RSAKEY_BLOB) + blob->cbPublicExp, blob->cbModulus, nullptr);
+    // e is the public exponent
+    auto const e = BN_bin2bn(data.data() + sizeof(BCRYPT_RSAKEY_BLOB), blob->cbPublicExp, nullptr);
+    // d is the private exponent
+    auto const d = BN_bin2bn(data.data() + sizeof(BCRYPT_RSAKEY_BLOB) + blob->cbPublicExp + blob->cbModulus + blob->cbPrime1
+                                 + blob->cbPrime2 + blob->cbPrime1 + blob->cbPrime2 + blob->cbPrime1, blob->cbModulus, nullptr);
+
+    RSA_set0_key(rsa, n, e, d);
+
+    // p and q are the first and second factor of n
+    auto const p = BN_bin2bn(data.data() + sizeof(BCRYPT_RSAKEY_BLOB) + blob->cbPublicExp + blob->cbModulus,
+                             blob->cbPrime1, nullptr);
+    auto const q = BN_bin2bn(data.data() + sizeof(BCRYPT_RSAKEY_BLOB) + blob->cbPublicExp + blob->cbModulus + blob->cbPrime1,
+                             blob->cbPrime2, nullptr);
+
+    RSA_set0_factors(rsa, p, q);
+
+    // dmp1, dmq1 and iqmp are the exponents and coefficient for CRT calculations
+    auto const dmp1 = BN_bin2bn(data.data() + sizeof(BCRYPT_RSAKEY_BLOB) + blob->cbPublicExp + blob->cbModulus + blob->cbPrime1
+                                    + blob->cbPrime2, blob->cbPrime1, nullptr);
+    auto const dmq1 = BN_bin2bn(data.data() + sizeof(BCRYPT_RSAKEY_BLOB) + blob->cbPublicExp + blob->cbModulus + blob->cbPrime1
+                                    + blob->cbPrime2 + blob->cbPrime1, blob->cbPrime2, nullptr);
+    auto const iqmp = BN_bin2bn(data.data() + sizeof(BCRYPT_RSAKEY_BLOB) + blob->cbPublicExp + blob->cbModulus + blob->cbPrime1
+                                    + blob->cbPrime2 + blob->cbPrime1 + blob->cbPrime2, blob->cbPrime1, nullptr);
+
+    RSA_set0_crt_params(rsa, dmp1, dmq1, iqmp);
+
+    EVP_PKEY_unique_ptr private_key{EVP_PKEY_new()};
+    EVP_PKEY_assign_RSA(private_key.get(), rsa);  // ownership of rsa transferred to private_key
+    return private_key;
+  }
+
+  return nullptr;
+}
+
 // from Shane Powell's answer at https://stackoverflow.com/questions/60180688, used with permission
 EVP_PKEY_unique_ptr extractPrivateKey(const PCCERT_CONTEXT certificate) {
   HCRYPTPROV_OR_NCRYPT_KEY_HANDLE key_handle;
@@ -114,45 +157,7 @@ EVP_PKEY_unique_ptr extractPrivateKey(const PCCERT_CONTEXT certificate) {
                                   length,
                                   &length,
                                   0))) {
-      // https://docs.microsoft.com/en-us/windows/win32/api/bcrypt/ns-bcrypt-bcrypt_rsakey_blob
-      auto const blob = reinterpret_cast<BCRYPT_RSAKEY_BLOB *>(data.get());
-
-      if (blob->Magic == BCRYPT_RSAFULLPRIVATE_MAGIC) {
-        auto rsa = RSA_new();
-
-        // n is the modulus common to both public and private key
-        auto const n = BN_bin2bn(data.get() + sizeof(BCRYPT_RSAKEY_BLOB) + blob->cbPublicExp, blob->cbModulus, nullptr);
-        // e is the public exponent
-        auto const e = BN_bin2bn(data.get() + sizeof(BCRYPT_RSAKEY_BLOB), blob->cbPublicExp, nullptr);
-        // d is the private exponent
-        auto const d = BN_bin2bn(data.get() + sizeof(BCRYPT_RSAKEY_BLOB) + blob->cbPublicExp + blob->cbModulus + blob->cbPrime1
-            + blob->cbPrime2 + blob->cbPrime1 + blob->cbPrime2 + blob->cbPrime1, blob->cbModulus, nullptr);
-
-        RSA_set0_key(rsa, n, e, d);
-
-        // p and q are the first and second factor of n
-        auto const p = BN_bin2bn(data.get() + sizeof(BCRYPT_RSAKEY_BLOB) + blob->cbPublicExp + blob->cbModulus,
-                                 blob->cbPrime1, nullptr);
-        auto const q = BN_bin2bn(data.get() + sizeof(BCRYPT_RSAKEY_BLOB) + blob->cbPublicExp + blob->cbModulus + blob->cbPrime1,
-                                 blob->cbPrime2, nullptr);
-
-        RSA_set0_factors(rsa, p, q);
-
-        // dmp1, dmq1 and iqmp are the exponents and coefficient for CRT calculations
-        auto const dmp1 = BN_bin2bn(data.get() + sizeof(BCRYPT_RSAKEY_BLOB) + blob->cbPublicExp + blob->cbModulus + blob->cbPrime1
-            + blob->cbPrime2, blob->cbPrime1, nullptr);
-        auto const dmq1 = BN_bin2bn(data.get() + sizeof(BCRYPT_RSAKEY_BLOB) + blob->cbPublicExp + blob->cbModulus + blob->cbPrime1
-            + blob->cbPrime2 + blob->cbPrime1, blob->cbPrime2, nullptr);
-        auto const iqmp = BN_bin2bn(data.get() + sizeof(BCRYPT_RSAKEY_BLOB) + blob->cbPublicExp + blob->cbModulus + blob->cbPrime1
-            + blob->cbPrime2 + blob->cbPrime1 + blob->cbPrime2, blob->cbPrime1, nullptr);
-
-        RSA_set0_crt_params(rsa, dmp1, dmq1, iqmp);
-
-        pkey.reset(EVP_PKEY_new());
-
-        // ownership of rsa transferred to pkey
-        EVP_PKEY_assign_RSA(pkey.get(), rsa);
-      }
+      pkey = convertWindowsRsaKeyPair(std::span(data.get(), length));
     }
   }
 
