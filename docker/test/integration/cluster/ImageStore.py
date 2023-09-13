@@ -100,7 +100,7 @@ class ImageStore:
                     echo 'acl authenticated proxy_auth REQUIRED' >> /etc/squid/squid.conf && \
                     echo 'http_access allow authenticated' >> /etc/squid/squid.conf && \
                     echo 'http_port {proxy_port}' >> /etc/squid/squid.conf
-                """.format(base_image='ubuntu/squid:5.6-22.10_beta', proxy_username='admin', proxy_password='test101', proxy_port='3128'))
+                """.format(base_image='ubuntu/squid:5.2-22.04_beta', proxy_username='admin', proxy_password='test101', proxy_port='3128'))
 
         return self.__build_image(dockerfile)
 
