@@ -33,8 +33,6 @@ using namespace std::literals::chrono_literals;
 
 namespace org::apache::nifi::minifi::core {
 
-constexpr int DEFAULT_ONSCHEDULE_RETRY_INTERVAL_MS = 30000;
-
 std::shared_ptr<utils::IdGenerator> ProcessGroup::id_generator_ = utils::IdGenerator::getIdGenerator();
 
 ProcessGroup::ProcessGroup(ProcessGroupType type, std::string_view name, const utils::Identifier& uuid)
@@ -54,12 +52,6 @@ ProcessGroup::ProcessGroup(ProcessGroupType type, std::string_view name, const u
       transmitting_(false),
       transport_protocol_("RAW"),
       logger_(logging::LoggerFactory<ProcessGroup>::getLogger()) {
-  if (parent_process_group_ != nullptr) {
-    onschedule_retry_msec_ = parent_process_group_->getOnScheduleRetryPeriod();
-  } else {
-    onschedule_retry_msec_ = DEFAULT_ONSCHEDULE_RETRY_INTERVAL_MS;
-  }
-
   logger_->log_debug("ProcessGroup %s created", name_);
 }
 
@@ -69,7 +61,6 @@ ProcessGroup::ProcessGroup(ProcessGroupType type, std::string_view name)
       type_(type),
       parent_process_group_(nullptr),
       yield_period_msec_(0ms),
-      onschedule_retry_msec_(DEFAULT_ONSCHEDULE_RETRY_INTERVAL_MS),
       transmitting_(false),
       transport_protocol_("RAW"),
       logger_(logging::LoggerFactory<ProcessGroup>::getLogger()) {
@@ -167,12 +158,14 @@ void ProcessGroup::startProcessingProcessors(TimerDrivenSchedulingAgent& timeSch
     }
   }
 
-  if (!onScheduleTimer_ && !failed_processors_.empty() && onschedule_retry_msec_ > 0) {
-    logger_->log_info("Retrying failed processors in %lld msec", onschedule_retry_msec_.load());
+  // The admin yield duration comes from the configuration, should be equal in all three schedulers
+  std::chrono::milliseconds admin_yield_duration = timeScheduler.getAdminYieldDuration();
+  if (!onScheduleTimer_ && !failed_processors_.empty() && admin_yield_duration > 0ms) {
+    logger_->log_info("Retrying failed processors in %lld msec", admin_yield_duration.count());
     auto func = [this, eventScheduler = &eventScheduler, cronScheduler = &cronScheduler, timeScheduler = &timeScheduler]() {
       this->startProcessingProcessors(*timeScheduler, *eventScheduler, *cronScheduler);
     };
-    onScheduleTimer_ = std::make_unique<utils::CallBackTimer>(std::chrono::milliseconds(onschedule_retry_msec_), func);
+    onScheduleTimer_ = std::make_unique<utils::CallBackTimer>(admin_yield_duration, func);
     onScheduleTimer_->start();
   } else if (failed_processors_.empty() && onScheduleTimer_) {
     onScheduleTimer_->stop();

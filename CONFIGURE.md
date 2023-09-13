@@ -29,7 +29,6 @@ It's recommended to create your configuration in YAML format or configure the ag
     Flow Controller:
         id: 471deef6-2a6e-4a7d-912a-81cc17e3a205
         name: MiNiFi Flow
-        onschedule retry interval: 30000 ms
 
     Processors:
         - name: GetFile

@@ -19,7 +19,6 @@
 
 Flow Controller:
   name: MiNiFi Flow
-  onschedule retry interval: 100 ms
 Processors:
   - name: generate
     id: 2438e3c8-015a-1000-79ca-83af40ec1991

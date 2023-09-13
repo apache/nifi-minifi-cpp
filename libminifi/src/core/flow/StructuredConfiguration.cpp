@@ -80,17 +80,6 @@ std::unique_ptr<core::ProcessGroup> StructuredConfiguration::createProcessGroup(
     group = FlowConfiguration::createSimpleProcessGroup(flowName, uuid, version);
   }
 
-  if (node[schema_.onschedule_retry_interval]) {
-    auto onScheduleRetryPeriod = node[schema_.onschedule_retry_interval].getString().value();
-    logger_->log_debug("parseRootProcessGroup: onschedule retry period => [%s]", onScheduleRetryPeriod);
-
-    auto on_schedule_retry_period_value = utils::timeutils::StringToDuration<std::chrono::milliseconds>(onScheduleRetryPeriod);
-    if (on_schedule_retry_period_value.has_value() && group) {
-      logger_->log_debug("parseRootProcessGroup: onschedule retry => [%" PRId64 "] ms", on_schedule_retry_period_value->count());
-      group->setOnScheduleRetryPeriod(on_schedule_retry_period_value->count());
-    }
-  }
-
   return group;
 }
 

@@ -109,6 +109,8 @@ class SchedulingAgent {
   SchedulingAgent(const SchedulingAgent &parent) = delete;
   SchedulingAgent &operator=(const SchedulingAgent &parent) = delete;
 
+  std::chrono::milliseconds getAdminYieldDuration() const { return admin_yield_duration_; }
+
  protected:
   std::mutex mutex_;
   std::atomic<bool> running_;
