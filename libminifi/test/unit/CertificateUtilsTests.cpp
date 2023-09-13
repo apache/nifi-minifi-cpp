@@ -14,15 +14,34 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#ifdef WIN32
 
 #include "../Catch.h"
+#include "date/date.h"
 #include "openssl/core_names.h"
+#include "utils/file/FileUtils.h"
 #include "utils/span.h"
 #include "utils/StringUtils.h"
 #include "utils/tls/CertificateUtils.h"
 
 namespace utils = org::apache::nifi::minifi::utils;
+
+TEST_CASE("getCertificateExpiration() works correctly") {
+  using namespace date::literals;
+  using namespace std::literals::chrono_literals;
+
+  const auto executable_dir = utils::file::get_executable_dir();
+  const auto cert_location = executable_dir / "resources" / "goodCA.crt";
+
+  size_t num_times_called = 0;
+  utils::tls::processPEMCertificate(cert_location, {}, {[&](utils::tls::X509_unique_ptr cert) {
+    ++num_times_called;
+    CHECK(utils::tls::getCertificateExpiration(cert) == date::sys_days(date::year_month_day(2053_y / 4 / 30)) + 9h + 3min);
+    return std::error_code{};
+  }, {}, {}});
+  CHECK(num_times_called == 1);
+}
+
+#ifdef WIN32
 
 constexpr std::string_view BCRYPT_RSAFULLPRIVATE_BLOB_example =
     "52534133000800000300000000010000800000008000000001000184CAF5B447EB8AC0C9FA70942B1DBDA43E1E52B58DCF9F"
