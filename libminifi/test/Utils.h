@@ -27,7 +27,7 @@
 #include "net/Ssl.h"
 #include "utils/IntegrationTestUtils.h"
 
-using namespace std::chrono_literals;
+using namespace std::literals::chrono_literals;
 
 #undef GetObject  // windows.h #defines GetObject = GetObjectA or GetObjectW, which conflicts with rapidjson
 #include "Connection.h"

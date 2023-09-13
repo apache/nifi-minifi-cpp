@@ -21,18 +21,16 @@
 #include "WriteArchiveStream.h"
 #include "ReadArchiveStream.h"
 
-using namespace minifi;
-
 TEST_CASE("Create and read archive") {
   std::map<std::string, std::string> files{
       {"a.txt", "hello, I'm file A"},
       {"b.txt", "hello, I'm file B"}
   };
 
-  auto archive = std::make_shared<io::BufferStream>();
+  auto archive = std::make_shared<minifi::io::BufferStream>();
 
   {
-    io::WriteArchiveStreamImpl compressor(9, io::CompressionFormat::GZIP, archive);
+    minifi::io::WriteArchiveStreamImpl compressor(9, minifi::io::CompressionFormat::GZIP, archive);
 
     for (const auto& [filename, content] : files) {
       REQUIRE(compressor.newEntry({filename, content.length()}));
@@ -41,7 +39,7 @@ TEST_CASE("Create and read archive") {
   }
 
   {
-    io::ReadArchiveStreamImpl decompressor(archive);
+    minifi::io::ReadArchiveStreamImpl decompressor(archive);
 
     size_t extracted_entries = 0;
     while (auto info = decompressor.nextEntry()) {

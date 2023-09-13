@@ -78,7 +78,7 @@ class ListAzureBlobStorageTestsFixture {
 
 namespace {
 
-using namespace std::chrono_literals;
+using namespace std::literals::chrono_literals;
 
 TEST_CASE_METHOD(ListAzureBlobStorageTestsFixture, "Test credentials settings", "[azureStorageCredentials]") {
   plan_->setProperty(list_azure_blob_storage_, "Container Name", CONTAINER_NAME);

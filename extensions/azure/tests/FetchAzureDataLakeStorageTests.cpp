@@ -22,7 +22,7 @@
 
 namespace {
 
-using namespace std::chrono_literals;
+using namespace std::literals::chrono_literals;
 
 using FetchAzureDataLakeStorageTestsFixture = AzureDataLakeStorageTestsFixture<minifi::azure::processors::FetchAzureDataLakeStorage>;
 

@@ -79,7 +79,7 @@ class ListAzureDataLakeStorageTestsFixture {
 
 namespace {
 
-using namespace std::chrono_literals;
+using namespace std::literals::chrono_literals;
 
 TEST_CASE_METHOD(ListAzureDataLakeStorageTestsFixture, "Azure storage credentials service is empty", "[azureDataLakeStorageParameters]") {
   plan_->setProperty(list_azure_data_lake_storage_, minifi::azure::processors::ListAzureDataLakeStorage::AzureStorageCredentialsService, "");
