@@ -328,10 +328,11 @@ namespace {
 using CurlSlistDeleter = decltype([](struct curl_slist* slist) { curl_slist_free_all(slist); });
 
 std::unique_ptr<struct curl_slist, CurlSlistDeleter> toCurlSlist(const std::unordered_map<std::string, std::string>& request_headers) {
-  curl_slist* new_list = nullptr;
+  gsl::owner<curl_slist*> new_list = nullptr;
   const auto guard = gsl::finally([&new_list]() { curl_slist_free_all(new_list); });
   for (const auto& [header_key, header_value] : request_headers)
-    new_list = curl_slist_append(new_list, utils::StringUtils::join_pack(header_key, ": ", header_value).c_str());
+    new_list = (utils::optional_from_ptr(curl_slist_append(new_list, utils::StringUtils::join_pack(header_key, ": ", header_value).c_str()))
+        | utils::orElse([]() { throw std::runtime_error{"curl_slist_append failed"}; })).value();
 
   return {std::exchange(new_list, nullptr), {}};
 }
