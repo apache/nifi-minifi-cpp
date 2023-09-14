@@ -113,6 +113,7 @@ EVP_PKEY_unique_ptr convertWindowsRsaKeyPair(std::span<BYTE> data) {
 
   if (blob->Magic == BCRYPT_RSAFULLPRIVATE_MAGIC) {
     OSSL_PARAM_BLD_unique_ptr param_builder{OSSL_PARAM_BLD_new()};
+    if (!param_builder) { return nullptr; }
 
     // n is the modulus common to both public and private key
     const auto* const n = BN_bin2bn(data.data() + sizeof(BCRYPT_RSAKEY_BLOB) + blob->cbPublicExp, blob->cbModulus, nullptr);
@@ -122,9 +123,9 @@ EVP_PKEY_unique_ptr convertWindowsRsaKeyPair(std::span<BYTE> data) {
     const auto* const d = BN_bin2bn(data.data() + sizeof(BCRYPT_RSAKEY_BLOB) + blob->cbPublicExp + blob->cbModulus + blob->cbPrime1
                                  + blob->cbPrime2 + blob->cbPrime1 + blob->cbPrime2 + blob->cbPrime1, blob->cbModulus, nullptr);
 
-    OSSL_PARAM_BLD_push_BN(param_builder.get(), OSSL_PKEY_PARAM_RSA_N, n);
-    OSSL_PARAM_BLD_push_BN(param_builder.get(), OSSL_PKEY_PARAM_RSA_E, e);
-    OSSL_PARAM_BLD_push_BN(param_builder.get(), OSSL_PKEY_PARAM_RSA_D, d);
+    if (OSSL_PARAM_BLD_push_BN(param_builder.get(), OSSL_PKEY_PARAM_RSA_N, n) == 0 ||
+        OSSL_PARAM_BLD_push_BN(param_builder.get(), OSSL_PKEY_PARAM_RSA_E, e) == 0 ||
+        OSSL_PARAM_BLD_push_BN(param_builder.get(), OSSL_PKEY_PARAM_RSA_D, d) == 0) { return nullptr; }
 
     // p and q are the first and second factor of n
     const auto* const p = BN_bin2bn(data.data() + sizeof(BCRYPT_RSAKEY_BLOB) + blob->cbPublicExp + blob->cbModulus,
@@ -132,8 +133,8 @@ EVP_PKEY_unique_ptr convertWindowsRsaKeyPair(std::span<BYTE> data) {
     const auto* const q = BN_bin2bn(data.data() + sizeof(BCRYPT_RSAKEY_BLOB) + blob->cbPublicExp + blob->cbModulus + blob->cbPrime1,
                              blob->cbPrime2, nullptr);
 
-    OSSL_PARAM_BLD_push_BN(param_builder.get(), OSSL_PKEY_PARAM_RSA_FACTOR1, p);
-    OSSL_PARAM_BLD_push_BN(param_builder.get(), OSSL_PKEY_PARAM_RSA_FACTOR2, q);
+    if (OSSL_PARAM_BLD_push_BN(param_builder.get(), OSSL_PKEY_PARAM_RSA_FACTOR1, p) == 0 ||
+        OSSL_PARAM_BLD_push_BN(param_builder.get(), OSSL_PKEY_PARAM_RSA_FACTOR2, q) == 0) { return nullptr; }
 
     // dmp1, dmq1 and iqmp are the exponents and coefficient for CRT calculations
     const auto* const dmp1 = BN_bin2bn(data.data() + sizeof(BCRYPT_RSAKEY_BLOB) + blob->cbPublicExp + blob->cbModulus + blob->cbPrime1
@@ -143,16 +144,18 @@ EVP_PKEY_unique_ptr convertWindowsRsaKeyPair(std::span<BYTE> data) {
     const auto* const iqmp = BN_bin2bn(data.data() + sizeof(BCRYPT_RSAKEY_BLOB) + blob->cbPublicExp + blob->cbModulus + blob->cbPrime1
                                     + blob->cbPrime2 + blob->cbPrime1 + blob->cbPrime2, blob->cbPrime1, nullptr);
 
-    OSSL_PARAM_BLD_push_BN(param_builder.get(), OSSL_PKEY_PARAM_RSA_EXPONENT1, dmp1);
-    OSSL_PARAM_BLD_push_BN(param_builder.get(), OSSL_PKEY_PARAM_RSA_EXPONENT2, dmq1);
-    OSSL_PARAM_BLD_push_BN(param_builder.get(), OSSL_PKEY_PARAM_RSA_COEFFICIENT1, iqmp);
+    if (OSSL_PARAM_BLD_push_BN(param_builder.get(), OSSL_PKEY_PARAM_RSA_EXPONENT1, dmp1) == 0 ||
+        OSSL_PARAM_BLD_push_BN(param_builder.get(), OSSL_PKEY_PARAM_RSA_EXPONENT2, dmq1) == 0 ||
+        OSSL_PARAM_BLD_push_BN(param_builder.get(), OSSL_PKEY_PARAM_RSA_COEFFICIENT1, iqmp) == 0) { return nullptr; }
 
     OSSL_PARAM_unique_ptr params{OSSL_PARAM_BLD_to_param(param_builder.get())};
+    if (!params) { return nullptr; }
+
     EVP_PKEY_CTX_unique_ptr context{EVP_PKEY_CTX_new_from_name(NULL, SSL_TXT_RSA, NULL)};
-    EVP_PKEY_fromdata_init(context.get());
+    if (!context || EVP_PKEY_fromdata_init(context.get()) <= 0) { return nullptr; }
 
     EVP_PKEY* keypair_raw = nullptr;
-    EVP_PKEY_fromdata(context.get(), &keypair_raw, EVP_PKEY_KEYPAIR, params.get());
+    if (EVP_PKEY_fromdata(context.get(), &keypair_raw, EVP_PKEY_KEYPAIR, params.get()) <= 0) { return nullptr; }
     return EVP_PKEY_unique_ptr{keypair_raw};
   }
 
