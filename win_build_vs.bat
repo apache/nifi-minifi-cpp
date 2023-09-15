@@ -68,6 +68,7 @@ for %%x in (%*) do (
     if [%%~x] EQU [/NO_SQL]           set enable_sql=OFF
     if [%%~x] EQU [/C]                set enable_coap=ON
     if [%%~x] EQU [/NO_AWS]           set enable_aws=OFF
+    if [%%~x] EQU [/SFTP]             set enable_sftp=ON
     if [%%~x] EQU [/PDH]              set enable_pdh=ON
     if [%%~x] EQU [/NO_SPLUNK]        set enable_splunk=OFF
     if [%%~x] EQU [/NO_GCP]           set enable_gcp=OFF
@@ -78,7 +79,6 @@ for %%x in (%*) do (
     if [%%~x] EQU [/O]                set enable_opencv=ON
     if [%%~x] EQU [/NO_PROMETHEUS]    set enable_prometheus=OFF
     if [%%~x] EQU [/BUSTACHE]         set enable_bustache=ON
-    if [%%~x] EQU [/COAP]             set enable_coap=ON
     if [%%~x] EQU [/NO_ENCRYPT_CONFIG] set enable_encrypt_config=OFF
     if [%%~x] EQU [/NO_LUA_SCRIPTING] set enable_lua_scripting=OFF
     if [%%~x] EQU [/NO_MQTT]          set enable_mqtt=OFF
