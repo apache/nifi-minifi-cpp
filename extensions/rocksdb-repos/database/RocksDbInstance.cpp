@@ -44,7 +44,7 @@ void RocksDbInstance::invalidate(const std::lock_guard<std::mutex>&) {
 
 void RocksDbInstance::registerColumnConfig(const std::string& column, const DBOptionsPatch& db_options_patch, const ColumnFamilyOptionsPatch& cf_options_patch) {
   std::lock_guard<std::mutex> db_guard{mtx_};
-  logger_->log_trace("Registering column '%s' in database '%s'", column, db_name_);
+  logger_->log_trace("Registering column '{}' in database '{}'", column, db_name_);
   auto [_, inserted] = column_configs_.insert({column, ColumnConfig{.dbo_patch = db_options_patch, .cfo_patch = cf_options_patch}});
   if (!inserted) {
     throw std::runtime_error("Configuration is already registered for column '" + column + "'");
@@ -122,7 +122,7 @@ std::optional<OpenRocksDb> RocksDbInstance::open(const std::string& column) {
           Writable<rocksdb::DBOptions> db_options_writer(dummy_opts);
           dbo_patch(db_options_writer);
           if (db_options_writer.isModified()) {
-            logger_->log_error("Conflicting database options requested for '%s'", db_name_);
+            logger_->log_error("Conflicting database options requested for '{}'", db_name_);
             return std::nullopt;
           }
         }
@@ -149,14 +149,14 @@ std::optional<OpenRocksDb> RocksDbInstance::open(const std::string& column) {
       }
     }
     if (option_status.ok()) {
-      logger_->log_trace("Found existing database '%s', checking compatibility", db_name_);
+      logger_->log_trace("Found existing database '{}', checking compatibility", db_name_);
       rocksdb::Status compat_status = rocksdb::CheckOptionsCompatibility(conf_options, db_name_, db_options_, cf_descriptors);
       if (!compat_status.ok()) {
-        logger_->log_error("Incompatible database options: %s", compat_status.ToString());
+        logger_->log_error("Incompatible database options: {}", compat_status.ToString());
         return std::nullopt;
       }
     } else if (option_status.IsNotFound()) {
-      logger_->log_trace("Database at '%s' not found, creating", db_name_);
+      logger_->log_trace("Database at '{}' not found, creating", db_name_);
       rocksdb::ColumnFamilyOptions default_cf_options;
       if (auto it = column_configs_.find("default"); it != column_configs_.end()) {
         if (auto& cfo_patch = it->second.cfo_patch) {
@@ -165,7 +165,7 @@ std::optional<OpenRocksDb> RocksDbInstance::open(const std::string& column) {
       }
       cf_descriptors.emplace_back("default", default_cf_options);
     } else if (!option_status.ok()) {
-      logger_->log_error("Couldn't query database '%s' for options: '%s'", db_name_, option_status.ToString());
+      logger_->log_error("Couldn't query database '{}' for options: '{}'", db_name_, option_status.ToString());
       return std::nullopt;
     }
     std::vector<rocksdb::ColumnFamilyHandle*> column_handles;
@@ -173,13 +173,13 @@ std::optional<OpenRocksDb> RocksDbInstance::open(const std::string& column) {
       case RocksDbMode::ReadWrite:
         result = rocksdb::DB::Open(db_options_, db_name_, cf_descriptors, &column_handles, &db_instance);
         if (!result.ok()) {
-          logger_->log_error("Cannot open writable rocksdb database '%s', error: '%s'", db_name_, result.ToString());
+          logger_->log_error("Cannot open writable rocksdb database '{}', error: '{}'", db_name_, result.ToString());
         }
         break;
       case RocksDbMode::ReadOnly:
         result = rocksdb::DB::OpenForReadOnly(db_options_, db_name_, cf_descriptors, &column_handles, &db_instance);
         if (!result.ok()) {
-          logger_->log_error("Cannot open read-only rocksdb database '%s', error: '%s'", db_name_, result.ToString());
+          logger_->log_error("Cannot open read-only rocksdb database '{}', error: '{}'", db_name_, result.ToString());
         }
         break;
     }
@@ -214,11 +214,11 @@ std::optional<OpenRocksDb> RocksDbInstance::open(const std::string& column) {
 std::shared_ptr<ColumnHandle> RocksDbInstance::getOrCreateColumnFamily(const std::string& column, const std::lock_guard<std::mutex>& /*guard*/) {
   gsl_Expects(impl_);
   if (!column_configs_.contains(column)) {
-    logger_->log_error("Trying to access column '%s' in database '%s' without configuration", column, impl_->handle->GetName());
+    logger_->log_error("Trying to access column '{}' in database '{}' without configuration", column, impl_->handle->GetName());
     return nullptr;
   }
   if (auto it = columns_.find(column); it != columns_.end()) {
-    logger_->log_trace("Column '%s' already exists in database '%s'", column, impl_->handle->GetName());
+    logger_->log_trace("Column '{}' already exists in database '{}'", column, impl_->handle->GetName());
     return it->second;
   }
   if (mode_ == RocksDbMode::ReadOnly) {
@@ -236,10 +236,10 @@ std::shared_ptr<ColumnHandle> RocksDbInstance::getOrCreateColumnFamily(const std
   }
   auto status = impl_->handle->CreateColumnFamily(cf_options, column, &raw_handle);
   if (!status.ok()) {
-    logger_->log_error("Failed to create column '%s' in database '%s'", column, impl_->handle->GetName());
+    logger_->log_error("Failed to create column '{}' in database '{}'", column, impl_->handle->GetName());
     return nullptr;
   }
-  logger_->log_trace("Successfully created column '%s' in database '%s'", column, impl_->handle->GetName());
+  logger_->log_trace("Successfully created column '{}' in database '{}'", column, impl_->handle->GetName());
   columns_[column] = std::make_shared<ColumnHandle>(std::unique_ptr<rocksdb::ColumnFamilyHandle>(raw_handle), cfo_patch);
   return columns_[column];
 }

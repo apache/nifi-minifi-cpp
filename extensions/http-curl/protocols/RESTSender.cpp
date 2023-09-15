@@ -59,18 +59,18 @@ void RESTSender::initialize(core::controller::ControllerServiceProvider* control
     }
     if (auto req_encoding_str = configure->get(Configuration::nifi_c2_rest_request_encoding)) {
       if (auto req_encoding = magic_enum::enum_cast<RequestEncoding>(*req_encoding_str, magic_enum::case_insensitive)) {
-        logger_->log_debug("Using request encoding '%s'", std::string{magic_enum::enum_name(*req_encoding)});
+        logger_->log_debug("Using request encoding '{}'", std::string{magic_enum::enum_name(*req_encoding)});
         req_encoding_ = *req_encoding;
       } else {
-        logger_->log_error("Invalid request encoding '%s'", req_encoding_str.value());
+        logger_->log_error("Invalid request encoding '{}'", req_encoding_str.value());
         req_encoding_ = RequestEncoding::none;
       }
     } else {
-      logger_->log_debug("Request encoding is not specified, using default '%s'", std::string{magic_enum::enum_name(RequestEncoding::none)});
+      logger_->log_debug("Request encoding is not specified, using default '{}'", std::string{magic_enum::enum_name(RequestEncoding::none)});
       req_encoding_ = RequestEncoding::none;
     }
   }
-  logger_->log_debug("Submitting to %s", rest_uri_);
+  logger_->log_debug("Submitting to {}", rest_uri_);
 }
 
 C2Payload RESTSender::consumePayload(const std::string &url, const C2Payload &payload, Direction direction, bool /*async*/) {
@@ -183,12 +183,12 @@ C2Payload RESTSender::sendPayload(const std::string& url, const Direction direct
   const bool clientError = 400 <= respCode && respCode < 500;
   const bool serverError = 500 <= respCode && respCode < 600;
   if (clientError || serverError) {
-    logger_->log_error("Error response code '" "%" PRId64 "' from '%s'", respCode, url);
+    logger_->log_error("Error response code '" "{}' from '{}'", respCode, url);
   } else {
-    logger_->log_debug("Response code '" "%" PRId64 "' from '%s'", respCode, url);
+    logger_->log_debug("Response code '" "{}' from '{}'", respCode, url);
   }
   const auto response_body_bytes = gsl::make_span(client.getResponseBody()).as_span<const std::byte>();
-  logger_->log_trace("Received response: \"%s\"", [&] {return utils::StringUtils::escapeUnprintableBytes(response_body_bytes);});
+  logger_->log_trace("Received response: {}", [&] { return utils::StringUtils::escapeUnprintableBytes(response_body_bytes);});
   if (isOkay && !clientError && !serverError) {
     if (accepted_formats) {
       C2Payload response_payload(payload.getOperation(), state::UpdateState::READ_COMPLETE, true);

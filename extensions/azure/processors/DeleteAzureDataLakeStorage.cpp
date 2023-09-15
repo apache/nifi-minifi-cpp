@@ -59,10 +59,10 @@ void DeleteAzureDataLakeStorage::onTrigger(const std::shared_ptr<core::ProcessCo
 
   auto result = azure_data_lake_storage_.deleteFile(*params);
   if (!result) {
-    logger_->log_error("Failed to delete file '%s' to Azure Data Lake storage", params->filename);
+    logger_->log_error("Failed to delete file '{}' to Azure Data Lake storage", params->filename);
     session->transfer(flow_file, Failure);
   } else {
-    logger_->log_debug("Successfully deleted file '%s' of filesystem '%s' on Azure Data Lake storage", params->filename, params->file_system_name);
+    logger_->log_debug("Successfully deleted file '{}' of filesystem '{}' on Azure Data Lake storage", params->filename, params->file_system_name);
     session->transfer(flow_file, Success);
   }
 }

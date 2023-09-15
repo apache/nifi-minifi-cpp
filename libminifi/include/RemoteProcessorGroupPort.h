@@ -165,10 +165,10 @@ class RemoteProcessorGroupPort : public core::Processor {
     for (const auto& url : urls) {
       utils::URL parsed_url{utils::StringUtils::trim(url)};
       if (parsed_url.isValid()) {
-        logger_->log_debug("Parsed RPG URL '%s' -> '%s'", url, parsed_url.hostPort());
+        logger_->log_debug("Parsed RPG URL '{}' -> '{}'", url, parsed_url.hostPort());
         nifi_instances_.push_back({parsed_url.host(), parsed_url.port(), parsed_url.protocol()});
       } else {
-        logger_->log_error("Could not parse RPG URL '%s'", url);
+        logger_->log_error("Could not parse RPG URL '{}'", url);
       }
     }
   }

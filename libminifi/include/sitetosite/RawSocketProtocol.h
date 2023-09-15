@@ -131,7 +131,7 @@ class RawSiteToSiteClient : public sitetosite::SiteToSiteClient {
   // read Respond
   virtual int readRespond(const std::shared_ptr<Transaction> &transaction, RespondCode &code, std::string &message);
   // write respond
-  virtual int writeRespond(const std::shared_ptr<Transaction> &transaction, RespondCode code, std::string message);
+  virtual int writeRespond(const std::shared_ptr<Transaction> &transaction, RespondCode code, const std::string& message);
   // getRespondCodeContext
   RespondCodeContext *getRespondCodeContext(RespondCode code) override {
     return SiteToSiteClient::getRespondCodeContext(code);

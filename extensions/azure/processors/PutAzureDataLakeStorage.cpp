@@ -84,18 +84,18 @@ void PutAzureDataLakeStorage::onTrigger(const std::shared_ptr<core::ProcessConte
   if (result.result_code == storage::UploadResultCode::FILE_ALREADY_EXISTS) {
     gsl_Expects(conflict_resolution_strategy_ != azure::FileExistsResolutionStrategy::replace);
     if (conflict_resolution_strategy_ == azure::FileExistsResolutionStrategy::fail) {
-      logger_->log_error("Failed to upload file '%s/%s' to filesystem '%s' on Azure Data Lake storage because file already exists",
+      logger_->log_error("Failed to upload file '{}/{}' to filesystem '{}' on Azure Data Lake storage because file already exists",
         params->directory_name, params->filename, params->file_system_name);
       session->transfer(flow_file, Failure);
       return;
     } else if (conflict_resolution_strategy_ == azure::FileExistsResolutionStrategy::ignore) {
-      logger_->log_debug("Upload of file '%s/%s' was ignored because it already exits in filesystem '%s' on Azure Data Lake Storage",
+      logger_->log_debug("Upload of file '{}/{}' was ignored because it already exits in filesystem '{}' on Azure Data Lake Storage",
         params->directory_name, params->filename, params->file_system_name);
       session->transfer(flow_file, Success);
       return;
     }
   } else if (result.result_code == storage::UploadResultCode::FAILURE) {
-    logger_->log_error("Failed to upload file '%s/%s' to filesystem '%s' on Azure Data Lake storage", params->directory_name, params->filename, params->file_system_name);
+    logger_->log_error("Failed to upload file '{}/{}' to filesystem '{}' on Azure Data Lake storage", params->directory_name, params->filename, params->file_system_name);
     session->transfer(flow_file, Failure);
   } else {
     session->putAttribute(flow_file, "azure.filesystem", params->file_system_name);
@@ -103,7 +103,7 @@ void PutAzureDataLakeStorage::onTrigger(const std::shared_ptr<core::ProcessConte
     session->putAttribute(flow_file, "azure.filename", params->filename);
     session->putAttribute(flow_file, "azure.primaryUri", result.primary_uri);
     session->putAttribute(flow_file, "azure.length", std::to_string(flow_file->getSize()));
-    logger_->log_debug("Successfully uploaded file '%s/%s' to filesystem '%s' on Azure Data Lake storage", params->directory_name, params->filename, params->file_system_name);
+    logger_->log_debug("Successfully uploaded file '{}/{}' to filesystem '{}' on Azure Data Lake storage", params->directory_name, params->filename, params->file_system_name);
     session->transfer(flow_file, Success);
   }
 }

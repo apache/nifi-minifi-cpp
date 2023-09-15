@@ -54,7 +54,7 @@ NetworkListenerProcessor::ServerOptions NetworkListenerProcessor::readServerOpti
 
 void NetworkListenerProcessor::startServer(const ServerOptions& options, utils::net::IpProtocol protocol) {
   server_thread_ = std::thread([this]() { server_->run(); });
-  logger_->log_debug("Started %s server on port %d with %s max queue size and %zu max batch size",
+  logger_->log_debug("Started {} server on port {} with {} max queue size and {} max batch size",
                      std::string{magic_enum::enum_name(protocol)},
                      options.port,
                      options.max_queue_size ? std::to_string(*options.max_queue_size) : "unlimited",

@@ -183,7 +183,7 @@ SFTPClient::~SFTPClient() {
     if (easy_ != nullptr) {
       curl_easy_cleanup(easy_);
     }
-  logger_->log_trace("Closing SFTPClient for %s:%hu", hostname_, port_);
+  logger_->log_trace("Closing SFTPClient for {}:{}", hostname_, port_);
 }
 
 bool SFTPClient::setVerbose() {
@@ -198,13 +198,13 @@ bool SFTPClient::setHostKeyFile(const std::string& host_key_file_path, bool stri
   if (ssh_known_hosts_ == nullptr) {
     char *err_msg = nullptr;
     libssh2_session_last_error(ssh_session_, &err_msg, nullptr, 0);
-    logger_->log_error("Failed to init knownhost structure, error: %s", err_msg);
+    logger_->log_error("Failed to init knownhost structure, error: {}", err_msg);
     return false;
   }
   if (libssh2_knownhost_readfile(ssh_known_hosts_, host_key_file_path.c_str(), LIBSSH2_KNOWNHOST_FILE_OPENSSH) <= 0) {
     char *err_msg = nullptr;
     libssh2_session_last_error(ssh_session_, &err_msg, nullptr, 0);
-    logger_->log_error("Failed to read host file %s, error: %s", host_key_file_path.c_str(), err_msg);
+    logger_->log_error("Failed to read host file {}, error: {}", host_key_file_path.c_str(), err_msg);
     return false;
   }
   strict_host_checking_ = strict_host_checking;
@@ -289,7 +289,7 @@ bool SFTPClient::connect() {
   /* Connecting to proxy, if needed, then to the host */
   CURLcode curl_res = curl_easy_perform(easy_);
   if (curl_res != CURLE_OK) {
-    logger_->log_error("Failed to connect to %s, curl error code: %s, detailed error message: %s",
+    logger_->log_error("Failed to connect to {}, curl error code: {}, detailed error message: {}",
         uri.c_str(),
         curl_easy_strerror(curl_res),
         curl_errorbuffer_.data());
@@ -311,7 +311,7 @@ bool SFTPClient::connect() {
   if (libssh2_session_handshake(ssh_session_, gsl::narrow<libssh2_socket_t>(sockfd)) != 0) {
     char *err_msg = nullptr;
     libssh2_session_last_error(ssh_session_, &err_msg, nullptr, 0);
-    logger_->log_info("Failed to establish SSH connection, error: %s", err_msg);
+    logger_->log_info("Failed to establish SSH connection, error: {}", err_msg);
     return false;
   }
 
@@ -324,7 +324,7 @@ bool SFTPClient::connect() {
       if (hostkey_ptr == nullptr) {
         char *err_msg = nullptr;
         libssh2_session_last_error(ssh_session_, &err_msg, nullptr, 0);
-        logger_->log_info("Failed to get session hostkey, error: %s", err_msg);
+        logger_->log_info("Failed to get session hostkey, error: {}", err_msg);
         return std::nullopt;
       }
       const auto hostkey = std::string_view{hostkey_ptr, hostkey_len};
@@ -341,7 +341,7 @@ bool SFTPClient::connect() {
         keybit = LIBSSH2_KNOWNHOST_KEY_SSHDSS;
         break;
       default:
-        logger_->log_error("Unknown host key type: %d", hostkey_type);
+        logger_->log_error("Unknown host key type: {}", hostkey_type);
         return false;
     }
     struct libssh2_knownhost* known_host = nullptr;
@@ -356,23 +356,23 @@ bool SFTPClient::connect() {
     bool host_match = false;
     switch (keycheck_result) {
       case LIBSSH2_KNOWNHOST_CHECK_FAILURE:
-        logger_->log_warn("Failed to verify host key for %s", hostname_.c_str());
+        logger_->log_warn("Failed to verify host key for {}", hostname_.c_str());
         break;
       case LIBSSH2_KNOWNHOST_CHECK_NOTFOUND:
-        logger_->log_warn("Host %s not found in the host key file", hostname_.c_str());
+        logger_->log_warn("Host {} not found in the host key file", hostname_.c_str());
         break;
       case LIBSSH2_KNOWNHOST_CHECK_MISMATCH: {
         auto hostkey_b64 = utils::StringUtils::to_base64(hostkey);
-        logger_->log_warn("Host key mismatch for %s, expected: %s, actual: %s", hostname_.c_str(),
+        logger_->log_warn("Host key mismatch for {}, expected: {}, actual: {}", hostname_.c_str(),
                           known_host == nullptr ? "" : known_host->key, hostkey_b64.c_str());
         break;
       }
       case LIBSSH2_KNOWNHOST_CHECK_MATCH:
         host_match = true;
-        logger_->log_debug("Host key verification succeeded for %s", hostname_.c_str());
+        logger_->log_debug("Host key verification succeeded for {}", hostname_.c_str());
         break;
       default:
-        logger_->log_error("Unknown libssh2_knownhost_checkp result: %d", keycheck_result);
+        logger_->log_error("Unknown libssh2_knownhost_checkp result: {}", keycheck_result);
         break;
     }
     if (strict_host_checking_ && !host_match) {
@@ -392,7 +392,7 @@ bool SFTPClient::connect() {
           fingerprint_hex_colon << ":";
         }
       }
-      logger_->log_debug("SHA1 host key fingerprint for %s is %s", hostname_.c_str(), fingerprint_hex_colon.str().c_str());
+      logger_->log_debug("SHA1 host key fingerprint for {} is {}", hostname_.c_str(), fingerprint_hex_colon.str().c_str());
     }
   }
 
@@ -426,7 +426,7 @@ bool SFTPClient::connect() {
     } else {
       char *err_msg = nullptr;
       libssh2_session_last_error(ssh_session_, &err_msg, nullptr, 0);
-      logger_->log_info("Failed to authenticate with publickey, error: %s", err_msg);
+      logger_->log_info("Failed to authenticate with publickey, error: {}", err_msg);
     }
   }
   if (!authenticated && password_authentication_enabled_ && auth_methods.count("password") == 1) {
@@ -436,7 +436,7 @@ bool SFTPClient::connect() {
     } else {
       char *err_msg = nullptr;
       libssh2_session_last_error(ssh_session_, &err_msg, nullptr, 0);
-      logger_->log_info("Failed to authenticate with password, error: %s", err_msg);
+      logger_->log_info("Failed to authenticate with password, error: {}", err_msg);
     }
   }
   if (!authenticated) {
@@ -449,7 +449,7 @@ bool SFTPClient::connect() {
   if (sftp_session_ == nullptr) {
     char *err_msg = nullptr;
     libssh2_session_last_error(ssh_session_, &err_msg, nullptr, 0);
-    logger_->log_error("Failed to initialize SFTP session, error: %s", err_msg);
+    logger_->log_error("Failed to initialize SFTP session, error: {}", err_msg);
     return false;
   }
 
@@ -467,7 +467,7 @@ bool SFTPClient::sendKeepAliveIfNeeded(int &seconds_to_next) {
   if (libssh2_keepalive_send(ssh_session_, &seconds_to_next) != 0) {
     char *err_msg = nullptr;
     libssh2_session_last_error(ssh_session_, &err_msg, nullptr, 0);
-    logger_->log_error("Failed to send keepalive to %s@%s:%hu, error: %s",
+    logger_->log_error("Failed to send keepalive to {}@{}:{}, error: {}",
         username_,
         hostname_,
         port_,
@@ -503,12 +503,12 @@ std::optional<uint64_t> SFTPClient::getFile(const std::string& path, io::OutputS
     /* We can only get the sftp error in this case if the ssh error is a protocol error */
     if (ssh_errno == LIBSSH2_ERROR_SFTP_PROTOCOL) {
       last_error_.setLibssh2Error(libssh2_sftp_last_error(sftp_session_));
-      logger_->log_error("Failed to open remote file \"%s\", error: %s", path.c_str(), sftp_strerror(last_error_));
+      logger_->log_error("Failed to open remote file \"{}\", error: {}", path.c_str(), sftp_strerror(last_error_));
     } else {
       last_error_.setSftpError(SFTPError::IoError);
       char *err_msg = nullptr;
       libssh2_session_last_error(ssh_session_, &err_msg, nullptr, 0);
-      logger_->log_error("Failed to open remote file \"%s\" due to an underlying SSH error: %s", path.c_str(), err_msg);
+      logger_->log_error("Failed to open remote file \"{}\" due to an underlying SSH error: {}", path.c_str(), err_msg);
     }
     return std::nullopt;
   }
@@ -523,13 +523,13 @@ std::optional<uint64_t> SFTPClient::getFile(const std::string& path, io::OutputS
     ssize_t read_ret = libssh2_sftp_read(file_handle, reinterpret_cast<char*>(buf.data()), buf.size());
     if (read_ret < 0) {
       last_error_.setSftpError(SFTPError::IoError);
-      logger_->log_error("Failed to read remote file \"%s\"", path.c_str());
+      logger_->log_error("Failed to read remote file \"{}\"", path.c_str());
       return std::nullopt;
     } else if (read_ret == 0) {
-      logger_->log_trace("EOF while reading remote file \"%s\"", path.c_str());
+      logger_->log_trace("EOF while reading remote file \"{}\"", path.c_str());
       break;
     }
-    logger_->log_trace("Read %d bytes from remote file \"%s\"", read_ret, path.c_str());
+    logger_->log_trace("Read {} bytes from remote file \"{}\"", read_ret, path.c_str());
     total_read += gsl::narrow<uint64_t>(read_ret);
     auto remaining = read_ret;
     while (remaining > 0) {
@@ -545,7 +545,7 @@ std::optional<uint64_t> SFTPClient::getFile(const std::string& path, io::OutputS
 
   if (expected_size >= 0 && total_read != gsl::narrow<uint64_t>(expected_size)) {
     last_error_.setLibssh2Error(LIBSSH2_FX_OK);
-    logger_->log_error("Remote file \"%s\" has unexpected size, expected: %ld, actual: %lu", path.c_str(), expected_size, total_read);
+    logger_->log_error("Remote file \"{}\" has unexpected size, expected: {}, actual: {}", path.c_str(), expected_size, total_read);
     return std::nullopt;
   }
 
@@ -554,23 +554,23 @@ std::optional<uint64_t> SFTPClient::getFile(const std::string& path, io::OutputS
 
 std::optional<uint64_t> SFTPClient::putFile(const std::string& path, io::InputStream& input, bool overwrite, int64_t expected_size /*= -1*/) {
   int flags = LIBSSH2_FXF_WRITE | LIBSSH2_FXF_CREAT | (overwrite ? LIBSSH2_FXF_TRUNC : LIBSSH2_FXF_EXCL);
-  logger_->log_trace("Opening remote file \"%s\"", path.c_str());
+  logger_->log_trace("Opening remote file \"{}\"", path.c_str());
   LIBSSH2_SFTP_HANDLE *file_handle = libssh2_sftp_open(sftp_session_, path.c_str(), flags, 0644);
   if (file_handle == nullptr) {
     int ssh_errno = libssh2_session_last_errno(ssh_session_);
     /* We can only get the sftp error in this case if the ssh error is a protocol error */
     if (ssh_errno == LIBSSH2_ERROR_SFTP_PROTOCOL) {
       last_error_.setLibssh2Error(libssh2_sftp_last_error(sftp_session_));
-      logger_->log_error("Failed to open remote file \"%s\", error: %s", path.c_str(), sftp_strerror(last_error_));
+      logger_->log_error("Failed to open remote file \"{}\", error: {}", path.c_str(), sftp_strerror(last_error_));
     } else {
       last_error_.setSftpError(SFTPError::IoError);
       char *err_msg = nullptr;
       libssh2_session_last_error(ssh_session_, &err_msg, nullptr, 0);
-      logger_->log_error("Failed to open remote file \"%s\" due to an underlying SSH error: %s", path.c_str(), err_msg);
+      logger_->log_error("Failed to open remote file \"{}\" due to an underlying SSH error: {}", path.c_str(), err_msg);
     }
   }
   const auto guard = gsl::finally([this, &file_handle, &path]() {
-    logger_->log_trace("Closing remote file \"%s\"", path.c_str());
+    logger_->log_trace("Closing remote file \"{}\"", path.c_str());
     libssh2_sftp_close(file_handle);
   });
 
@@ -592,24 +592,24 @@ std::optional<uint64_t> SFTPClient::putFile(const std::string& path, io::InputSt
       logger_->log_trace("EOF while reading input");
       break;
     }
-    logger_->log_trace("Read %d bytes", read_ret);
+    logger_->log_trace("Read {} bytes", read_ret);
     total_read += read_ret;
     auto remaining = read_ret;
     while (remaining > 0) {
       const auto write_ret = libssh2_sftp_write(file_handle, reinterpret_cast<char*>(buf.data() + (read_ret - remaining)), remaining);
       if (write_ret < 0) {
         last_error_.setSftpError(SFTPError::IoError);
-        logger_->log_error("Failed to write remote file \"%s\"", path.c_str());
+        logger_->log_error("Failed to write remote file \"{}\"", path.c_str());
         return std::nullopt;
       }
-      logger_->log_trace("Wrote %d bytes to remote file \"%s\"", write_ret, path.c_str());
+      logger_->log_trace("Wrote {} bytes to remote file \"{}\"", write_ret, path.c_str());
       remaining -= gsl::narrow<size_t>(write_ret);
     }
   } while (true);
 
   if (expected_size >= 0 && total_read != gsl::narrow<size_t>(expected_size)) {
     last_error_.setLibssh2Error(LIBSSH2_FX_OK);
-    logger_->log_error("Input has unexpected size, expected: %ld, actual: %lu", path.c_str(), expected_size, total_read);
+    logger_->log_error("Input has unexpected size, expected: {}, actual: {}", path.c_str(), expected_size, total_read);
     return std::nullopt;
   }
 
@@ -633,7 +633,7 @@ bool SFTPClient::rename(const std::string& source_path, const std::string& targe
     auto err = libssh2_sftp_last_error(sftp_session_);
     if (overwrite && err == LIBSSH2_FX_FILE_ALREADY_EXISTS && !tried_deleting) {
       /* It couldn't overwrite the file, let's delete it and try again */
-      logger_->log_debug("Failed to overwrite file \"%s\" with rename, deleting instead", target_path.c_str());
+      logger_->log_debug("Failed to overwrite file \"{}\" with rename, deleting instead", target_path.c_str());
       tried_deleting = true;
       if (!this->removeFile(target_path)) {
         return false;
@@ -641,7 +641,7 @@ bool SFTPClient::rename(const std::string& source_path, const std::string& targe
       continue;
     }
     last_error_.setLibssh2Error(libssh2_sftp_last_error(sftp_session_));
-    logger_->log_error(R"(Failed to rename remote file "%s" to "%s", error: %s)",
+    logger_->log_error(R"(Failed to rename remote file "{}" to "{}", error: {})",
         source_path.c_str(),
         target_path.c_str(),
         sftp_strerror(last_error_));
@@ -671,10 +671,10 @@ bool SFTPClient::createDirectoryHierarchy(const std::string& path) {
           err != LIBSSH2_FX_FAILURE &&
           err != LIBSSH2_FX_PERMISSION_DENIED) {
         last_error_.setLibssh2Error(err);
-        logger_->log_error("Failed to create remote directory \"%s\", error: %s", current_dir.c_str(), sftp_strerror(last_error_));
+        logger_->log_error("Failed to create remote directory \"{}\", error: {}", current_dir.c_str(), sftp_strerror(last_error_));
         return false;
       } else {
-        logger_->log_debug("Non-fatal failure to create remote directory \"%s\", error: %s", current_dir.c_str(), sftp_strerror(err));
+        logger_->log_debug("Non-fatal failure to create remote directory \"{}\", error: {}", current_dir.c_str(), sftp_strerror(err));
       }
     }
   }
@@ -684,7 +684,7 @@ bool SFTPClient::createDirectoryHierarchy(const std::string& path) {
 bool SFTPClient::removeFile(const std::string& path) {
   if (libssh2_sftp_unlink(sftp_session_, path.c_str()) != 0) {
     last_error_.setLibssh2Error(libssh2_sftp_last_error(sftp_session_));
-    logger_->log_error("Failed to remove remote file \"%s\", error: %s", path.c_str(), sftp_strerror(last_error_));
+    logger_->log_error("Failed to remove remote file \"{}\", error: {}", path.c_str(), sftp_strerror(last_error_));
     return false;
   }
   return true;
@@ -693,7 +693,7 @@ bool SFTPClient::removeFile(const std::string& path) {
 bool SFTPClient::removeDirectory(const std::string& path) {
   if (libssh2_sftp_rmdir(sftp_session_, path.c_str()) != 0) {
     last_error_.setLibssh2Error(libssh2_sftp_last_error(sftp_session_));
-    logger_->log_error("Failed to remove remote directory \"%s\", error: %s", path.c_str(), sftp_strerror(last_error_));
+    logger_->log_error("Failed to remove remote directory \"{}\", error: {}", path.c_str(), sftp_strerror(last_error_));
     return false;
   }
   return true;
@@ -709,7 +709,7 @@ bool SFTPClient::listDirectory(const std::string& path, bool follow_symlinks,
                                                           LIBSSH2_SFTP_OPENDIR);
   if (dir_handle == nullptr) {
     last_error_.setLibssh2Error(libssh2_sftp_last_error(sftp_session_));
-    logger_->log_error("Failed to open remote directory \"%s\", error: %s", path.c_str(), sftp_strerror(last_error_));
+    logger_->log_error("Failed to open remote directory \"{}\", error: {}", path.c_str(), sftp_strerror(last_error_));
     return false;
   }
   const auto guard = gsl::finally([&dir_handle]() {
@@ -728,7 +728,7 @@ bool SFTPClient::listDirectory(const std::string& path, bool follow_symlinks,
                                       &attrs);
     if (ret < 0) {
       last_error_.setLibssh2Error(libssh2_sftp_last_error(sftp_session_));
-      logger_->log_error("Failed to read remote directory \"%s\", error: %s", path.c_str(), sftp_strerror(last_error_));
+      logger_->log_error("Failed to read remote directory \"{}\", error: {}", path.c_str(), sftp_strerror(last_error_));
       return false;
     } else if (ret == 0) {
       break;
@@ -753,7 +753,7 @@ bool SFTPClient::stat(const std::string& path, bool follow_symlinks, LIBSSH2_SFT
                             follow_symlinks ? LIBSSH2_SFTP_STAT : LIBSSH2_SFTP_LSTAT,
                             &result) != 0) {
     last_error_.setLibssh2Error(libssh2_sftp_last_error(sftp_session_));
-    logger_->log_debug("Failed to stat remote path \"%s\", error: %s", path.c_str(), sftp_strerror(last_error_));
+    logger_->log_debug("Failed to stat remote path \"{}\", error: {}", path.c_str(), sftp_strerror(last_error_));
     return false;
   }
   return true;
@@ -797,7 +797,7 @@ bool SFTPClient::setAttributes(const std::string& path, const SFTPAttributes& in
                            LIBSSH2_SFTP_SETSTAT,
                            &attrs) != 0) {
     last_error_.setLibssh2Error(libssh2_sftp_last_error(sftp_session_));
-    logger_->log_debug("Failed to setstat on remote path \"%s\", error: %s", path.c_str(), sftp_strerror(last_error_));
+    logger_->log_debug("Failed to setstat on remote path \"{}\", error: {}", path.c_str(), sftp_strerror(last_error_));
     return false;
   }
 

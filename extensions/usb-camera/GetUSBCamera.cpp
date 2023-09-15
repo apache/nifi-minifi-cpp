@@ -60,7 +60,7 @@ void GetUSBCamera::onFrame(uvc_frame_t *frame, void *ptr) {
     ret = uvc_any2rgb(frame, cb_data->frame_buffer);
 
     if (ret) {
-      cb_data->logger->log_error("Failed to convert frame to RGB: %s", uvc_strerror(ret));
+      cb_data->logger->log_error("Failed to convert frame to RGB: {}", uvc_strerror(ret));
       return;
     }
 
@@ -69,13 +69,13 @@ void GetUSBCamera::onFrame(uvc_frame_t *frame, void *ptr) {
 
     std::string flow_file_name;
     flow_file->getAttribute("filename", flow_file_name);
-    cb_data->logger->log_info("Created flow file: %s", flow_file_name);
+    cb_data->logger->log_info("Created flow file: {}", flow_file_name);
 
     if (cb_data->format == "RAW") {
       session->writeBuffer(flow_file, gsl::make_span(static_cast<const std::byte*>(cb_data->frame_buffer->data), cb_data->frame_buffer->data_bytes));
     } else {
       if (cb_data->format != "PNG") {
-        cb_data->logger->log_warn("Invalid format specified (%s); defaulting to PNG", cb_data->format);
+        cb_data->logger->log_warn("Invalid format specified ({}); defaulting to PNG", cb_data->format);
       }
       session->write(flow_file, GetUSBCamera::PNGWriteCallback{
           cb_data->png_write_mtx,
@@ -86,7 +86,7 @@ void GetUSBCamera::onFrame(uvc_frame_t *frame, void *ptr) {
     session->transfer(flow_file, GetUSBCamera::Success);
     session->commit();
   } catch (std::exception &exception) {
-    cb_data->logger->log_debug("GetUSBCamera Caught Exception %s", exception.what());
+    cb_data->logger->log_debug("GetUSBCamera Caught Exception {}", exception.what());
   } catch (...) {
     cb_data->logger->log_debug("GetUSBCamera Caught Unknown Exception");
   }
@@ -101,12 +101,12 @@ void GetUSBCamera::onSchedule(core::ProcessContext *context, core::ProcessSessio
   context->getProperty("FPS", conf_fps_str);
 
   if (conf_fps_str.empty()) {
-    logger_->log_info("FPS property was not set; using default %f", default_fps);
+    logger_->log_info("FPS property was not set; using default {}", default_fps);
   } else {
     try {
       target_fps = std::stod(conf_fps_str);
     } catch (std::invalid_argument &e) {
-      logger_->log_error("Could not parse configured FPS value (will use default %f): %s", default_fps, conf_fps_str);
+      logger_->log_error("Could not parse configured FPS value (will use default {}): {}", default_fps, conf_fps_str);
     }
   }
 
@@ -118,11 +118,11 @@ void GetUSBCamera::onSchedule(core::ProcessContext *context, core::ProcessSessio
   if (!conf_width_str.empty()) {
     auto target_width_ul = std::stoul(conf_width_str);
     if (target_width_ul > UINT16_MAX) {
-      logger_->log_error("Configured target width %s is out of range", conf_width_str);
+      logger_->log_error("Configured target width {} is out of range", conf_width_str);
     } else {
       target_width = static_cast<uint16_t>(target_width_ul);
     }
-    logger_->log_info("Using configured target width: %i", target_width);
+    logger_->log_info("Using configured target width: {}", target_width);
   }
 
   std::string conf_height_str;
@@ -131,11 +131,11 @@ void GetUSBCamera::onSchedule(core::ProcessContext *context, core::ProcessSessio
   if (!conf_height_str.empty()) {
     auto target_height_ul = std::stoul(conf_height_str);
     if (target_height_ul > UINT16_MAX) {
-      logger_->log_error("Configured target height %s is out of range", conf_height_str);
+      logger_->log_error("Configured target height {} is out of range", conf_height_str);
     } else {
       target_height = static_cast<uint16_t>(target_height_ul);
     }
-    logger_->log_info("Using configured target height: %i", target_height);
+    logger_->log_info("Using configured target height: {}", target_height);
   }
 
   std::string conf_format_str;
@@ -145,13 +145,13 @@ void GetUSBCamera::onSchedule(core::ProcessContext *context, core::ProcessSessio
   std::string conf_vendor_id;
   context->getProperty("USB Vendor ID", conf_vendor_id);
   std::stringstream(conf_vendor_id) >> std::hex >> usb_vendor_id;
-  logger_->log_info("Using USB Vendor ID: %x", usb_vendor_id);
+  logger_->log_info("Using USB Vendor ID: {:#x}", usb_vendor_id);
 
   int usb_product_id;
   std::string conf_product_id;
   context->getProperty("USB Product ID", conf_product_id);
   std::stringstream(conf_product_id) >> std::hex >> usb_product_id;
-  logger_->log_info("Using USB Product ID: %x", usb_product_id);
+  logger_->log_info("Using USB Product ID: {:#x}", usb_product_id);
 
   const char *usb_serial_no = nullptr;
   std::string conf_serial;
@@ -159,7 +159,7 @@ void GetUSBCamera::onSchedule(core::ProcessContext *context, core::ProcessSessio
 
   if (!conf_serial.empty()) {
     usb_serial_no = conf_serial.c_str();
-    logger_->log_info("Using USB Serial No.: %s", conf_serial);
+    logger_->log_info("Using USB Serial No.: {}", conf_serial);
   }
 
   cleanupUvc();
@@ -181,7 +181,7 @@ void GetUSBCamera::onSchedule(core::ProcessContext *context, core::ProcessSessio
   res = uvc_find_device(ctx_, &dev_, usb_vendor_id, usb_product_id, usb_serial_no);
 
   if (res < 0) {
-    logger_->log_error("Unable to find device: %s", uvc_strerror(res));
+    logger_->log_error("Unable to find device: {}", uvc_strerror(res));
     dev_ = nullptr;
   } else {
     logger_->log_info("Device found");
@@ -190,7 +190,7 @@ void GetUSBCamera::onSchedule(core::ProcessContext *context, core::ProcessSessio
     res = uvc_open(dev_, &devh_);
 
     if (res < 0) {
-      logger_->log_error("Unable to open device: %s", uvc_strerror(res));
+      logger_->log_error("Unable to open device: {}", uvc_strerror(res));
       devh_ = nullptr;
     } else {
       logger_->log_info("Device opened");
@@ -213,21 +213,21 @@ void GetUSBCamera::onSchedule(core::ProcessContext *context, core::ProcessSessio
           case UVC_VS_FORMAT_FRAME_BASED:
             for (frame_desc = fmt_desc->frame_descs; frame_desc; frame_desc = frame_desc->next) {
               uint32_t frame_fps = 10000000 / frame_desc->dwDefaultFrameInterval;
-              logger_->log_info("Discovered supported format %ix%i @ %i",
+              logger_->log_info("Discovered supported format {}x{} @ {}",
                                 frame_desc->wWidth,
                                 frame_desc->wHeight,
                                 frame_fps);
               if (target_height > 0 && target_width > 0) {
                 if (frame_fps >= target_fps) {
                   current_width_diff = abs(frame_desc->wWidth - target_width) / static_cast<double>(target_width);
-                  logger_->log_debug("Current frame format width difference is %f", current_width_diff);
+                  logger_->log_debug("Current frame format width difference is {}", current_width_diff);
                   current_height_diff = abs(frame_desc->wHeight - target_height) / static_cast<double>(target_height);
-                  logger_->log_debug("Current frame format height difference is %f", current_height_diff);
+                  logger_->log_debug("Current frame format height difference is {}", current_height_diff);
                   current_diff = (current_width_diff + current_height_diff) / 2;
-                  logger_->log_debug("Current frame format difference is %f", current_diff);
+                  logger_->log_debug("Current frame format difference is {}", current_diff);
 
                   if (min_diff < 0 || current_diff < min_diff) {
-                    logger_->log_info("Format %ix%i @ %i is now closest to target",
+                    logger_->log_info("Format {}x{} @ {} is now closest to target",
                                       frame_desc->wWidth,
                                       frame_desc->wHeight,
                                       frame_fps);
@@ -264,12 +264,12 @@ void GetUSBCamera::onSchedule(core::ProcessContext *context, core::ProcessSessio
         return;
       }
 
-      logger_->log_info("Negotiating stream profile (looking for %dx%d @ %d)", width, height, fps);
+      logger_->log_info("Negotiating stream profile (looking for {}x{} @ {})", width, height, fps);
 
       res = uvc_get_stream_ctrl_format_size(devh_, &ctrl, UVC_FRAME_FORMAT_UNCOMPRESSED, width, height, fps);
 
       if (res < 0) {
-        logger_->log_error("Failed to find a matching stream profile: %s", uvc_strerror(res));
+        logger_->log_error("Failed to find a matching stream profile: {}", uvc_strerror(res));
       } else {
         cb_data_.session_factory = session_factory;
 
@@ -300,7 +300,7 @@ void GetUSBCamera::onSchedule(core::ProcessContext *context, core::ProcessSessio
         res = uvc_start_streaming(devh_, &ctrl, onFrame, &cb_data_, 0);
 
         if (res < 0) {
-          logger_->log_error("Unable to start streaming: %s", uvc_strerror(res));
+          logger_->log_error("Unable to start streaming: {}", uvc_strerror(res));
         } else {
           logger_->log_info("Streaming...");
 
@@ -364,7 +364,7 @@ GetUSBCamera::PNGWriteCallback::PNGWriteCallback(std::shared_ptr<std::mutex> wri
 
 int64_t GetUSBCamera::PNGWriteCallback::operator()(const std::shared_ptr<io::OutputStream>& stream) {
   std::lock_guard<std::mutex> lock(*png_write_mtx_);
-  logger_->log_info("Writing %d bytes of raw capture data to PNG output", frame_->data_bytes);
+  logger_->log_info("Writing {} bytes of raw capture data to PNG output", frame_->data_bytes);
   png_structp png = png_create_write_struct(PNG_LIBPNG_VER_STRING, nullptr, nullptr, nullptr);
 
   if (!png) {

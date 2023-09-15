@@ -54,7 +54,7 @@ void ExecuteProcess::onSchedule(core::ProcessContext* context, core::ProcessSess
   }
   if (auto batch_duration = context->getProperty<core::TimePeriodValue>(BatchDuration)) {
     batch_duration_ = batch_duration->getMilliseconds();
-    logger_->log_debug("Setting batch duration to %d milliseconds", batch_duration_.count());
+    logger_->log_debug("Setting batch duration to {} milliseconds", batch_duration_.count());
   }
   if (context->getProperty(RedirectErrorStream, value)) {
     redirect_error_stream_ = org::apache::nifi::minifi::utils::StringUtils::toBool(value).value_or(false);
@@ -118,7 +118,7 @@ void ExecuteProcess::readOutputInBatches(core::ProcessSession& session) {
     if (num_read <= 0) {
       break;
     }
-    logger_->log_debug("Execute Command Respond %zd", num_read);
+    logger_->log_debug("Execute Command Respond {}", num_read);
     auto flow_file = session.create();
     if (!flow_file) {
       logger_->log_error("Flow file could not be created!");
@@ -157,7 +157,7 @@ void ExecuteProcess::readOutput(core::ProcessSession& session) {
   while (num_read > 0) {
     if (num_read == static_cast<ssize_t>(sizeof(buffer) - read_to_buffer)) {
       // we reach the max buffer size
-      logger_->log_debug("Execute Command Max Respond %zu", sizeof(buffer));
+      logger_->log_debug("Execute Command Max Respond {}", sizeof(buffer));
       if (!writeToFlowFile(session, flow_file, buffer)) {
         continue;
       }
@@ -172,7 +172,7 @@ void ExecuteProcess::readOutput(core::ProcessSession& session) {
   }
 
   if (read_to_buffer > 0) {
-    logger_->log_debug("Execute Command Respond %zu", read_to_buffer);
+    logger_->log_debug("Execute Command Respond {}", read_to_buffer);
     // child exits and close the pipe
     const auto buffer_span = gsl::make_span(buffer, read_to_buffer);
     if (!writeToFlowFile(session, flow_file, buffer_span)) {
@@ -196,9 +196,9 @@ void ExecuteProcess::collectChildProcessOutput(core::ProcessSession& session) {
   int status = 0;
   wait(&status);
   if (WIFEXITED(status)) {
-    logger_->log_info("Execute Command Complete %s status %d pid %d", full_command_, WEXITSTATUS(status), pid_);
+    logger_->log_info("Execute Command Complete {} status {} pid {}", full_command_, WEXITSTATUS(status), pid_);
   } else {
-    logger_->log_info("Execute Command Complete %s status %d pid %d", full_command_, WTERMSIG(status), pid_);
+    logger_->log_info("Execute Command Complete {} status {} pid {}", full_command_, WTERMSIG(status), pid_);
   }
 
   close(pipefd_[0]);
@@ -217,7 +217,7 @@ void ExecuteProcess::onTrigger(core::ProcessContext *context, core::ProcessSessi
     yield();
     return;
   }
-  logger_->log_info("Execute Command %s", full_command_);
+  logger_->log_info("Execute Command {}", full_command_);
 
   if (pipe(pipefd_) == -1) {
     yield();

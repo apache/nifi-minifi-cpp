@@ -52,10 +52,10 @@ class Bin {
     queued_data_size_ = 0;
     creation_dated_ = std::chrono::system_clock::now();
     uuid_ = utils::IdGenerator::getIdGenerator()->generate();
-    logger_->log_debug("Bin %s for group %s created", getUUIDStr(), groupId_);
+    logger_->log_debug("Bin {} for group {} created", getUUIDStr(), groupId_);
   }
   virtual ~Bin() {
-    logger_->log_debug("Bin %s for group %s destroyed", getUUIDStr(), groupId_);
+    logger_->log_debug("Bin {} for group {} destroyed", getUUIDStr(), groupId_);
   }
   [[nodiscard]] bool isFull() const {
     return queued_data_size_ >= maxSize_ || queue_.size() >= maxEntries_;
@@ -91,7 +91,7 @@ class Bin {
 
     queue_.push_back(flow);
     queued_data_size_ += flow->getSize();
-    logger_->log_debug("Bin %s for group %s offer size %zu byte %" PRIu64 " min_entry %zu max_entry %zu", getUUIDStr(), groupId_, queue_.size(), queued_data_size_, minEntries_, maxEntries_);
+    logger_->log_debug("Bin {} for group {} offer size {} byte {} min_entry {} max_entry {}", getUUIDStr(), groupId_, queue_.size(), queued_data_size_, minEntries_, maxEntries_);
 
     return true;
   }
@@ -295,4 +295,3 @@ class BinFiles : public core::Processor {
 };
 
 }  // namespace org::apache::nifi::minifi::processors
-

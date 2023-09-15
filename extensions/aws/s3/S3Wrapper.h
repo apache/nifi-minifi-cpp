@@ -261,7 +261,7 @@ class S3Wrapper {
     const auto it = ranges::find(CANNED_ACL_MAP, canned_acl, [](const auto& kv) { return kv.first; });
     if (it == CANNED_ACL_MAP.end()) return;
 
-    logger_->log_debug("Setting AWS canned ACL [%s]", canned_acl);
+    logger_->log_debug("Setting AWS canned ACL [{}]", canned_acl);
     request.SetACL(it->second);
   }
 

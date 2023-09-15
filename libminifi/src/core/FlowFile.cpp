@@ -103,7 +103,7 @@ std::shared_ptr<ResourceClaim> FlowFile::getStashClaim(const std::string& key) {
 
 void FlowFile::setStashClaim(const std::string& key, const std::shared_ptr<ResourceClaim>& claim) {
   if (hasStashClaim(key)) {
-    logger_->log_warn("Stashing content of record %s to existing key %s; "
+    logger_->log_warn("Stashing content of record {} to existing key {}; "
                       "existing content will be overwritten",
                       getUUIDStr(), key.c_str());
   }

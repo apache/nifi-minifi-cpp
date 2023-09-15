@@ -36,14 +36,14 @@ Connection::Connection(std::shared_ptr<core::Repository> flow_repository, std::s
     : core::Connectable(name),
       flow_repository_(std::move(flow_repository)),
       content_repo_(std::move(content_repo)) {
-  logger_->log_debug("Connection %s created", name_);
+  logger_->log_debug("Connection {} created", name_);
 }
 
 Connection::Connection(std::shared_ptr<core::Repository> flow_repository, std::shared_ptr<core::ContentRepository> content_repo, std::string_view name, const utils::Identifier &uuid)
     : core::Connectable(name, uuid),
       flow_repository_(std::move(flow_repository)),
       content_repo_(std::move(content_repo)) {
-  logger_->log_debug("Connection %s created", name_);
+  logger_->log_debug("Connection {} created", name_);
 }
 
 Connection::Connection(std::shared_ptr<core::Repository> flow_repository, std::shared_ptr<core::ContentRepository> content_repo, std::string_view name, const utils::Identifier &uuid,
@@ -52,7 +52,7 @@ Connection::Connection(std::shared_ptr<core::Repository> flow_repository, std::s
       src_uuid_(srcUUID),
       flow_repository_(std::move(flow_repository)),
       content_repo_(std::move(content_repo)) {
-  logger_->log_debug("Connection %s created", name_);
+  logger_->log_debug("Connection {} created", name_);
 }
 
 Connection::Connection(std::shared_ptr<core::Repository> flow_repository, std::shared_ptr<core::ContentRepository> content_repo, std::string_view name, const utils::Identifier &uuid,
@@ -62,7 +62,7 @@ Connection::Connection(std::shared_ptr<core::Repository> flow_repository, std::s
       dest_uuid_(destUUID),
       flow_repository_(std::move(flow_repository)),
       content_repo_(std::move(content_repo)) {
-  logger_->log_debug("Connection %s created", name_);
+  logger_->log_debug("Connection {} created", name_);
 }
 
 Connection::Connection(std::shared_ptr<core::Repository> flow_repository, std::shared_ptr<core::ContentRepository> content_repo, std::shared_ptr<SwapManager> swap_manager,
@@ -71,7 +71,7 @@ Connection::Connection(std::shared_ptr<core::Repository> flow_repository, std::s
       flow_repository_(std::move(flow_repository)),
       content_repo_(std::move(content_repo)),
       queue_(std::move(swap_manager)) {
-  logger_->log_debug("Connection %s created", name_);
+  logger_->log_debug("Connection {} created", name_);
 }
 
 bool Connection::isEmpty() const {
@@ -96,7 +96,7 @@ bool Connection::backpressureThresholdReached() const {
 
 void Connection::put(const std::shared_ptr<core::FlowFile>& flow) {
   if (drop_empty_ && flow->getSize() == 0) {
-    logger_->log_info("Dropping empty flow file: %s", flow->getUUIDStr());
+    logger_->log_info("Dropping empty flow file: {}", flow->getUUIDStr());
     return;
   }
   {
@@ -106,12 +106,12 @@ void Connection::put(const std::shared_ptr<core::FlowFile>& flow) {
 
     queued_data_size_ += flow->getSize();
 
-    logger_->log_debug("Enqueue flow file UUID %s to connection %s", flow->getUUIDStr(), name_);
+    logger_->log_debug("Enqueue flow file UUID {} to connection {}", flow->getUUIDStr(), name_);
   }
 
   // Notify receiving processor that work may be available
   if (dest_connectable_) {
-    logger_->log_debug("Notifying %s that %s was inserted", dest_connectable_->getName(), flow->getUUIDStr());
+    logger_->log_debug("Notifying {} that {} was inserted", dest_connectable_->getName(), flow->getUUIDStr());
     dest_connectable_->notifyWork();
   }
 }
@@ -122,19 +122,19 @@ void Connection::multiPut(std::vector<std::shared_ptr<core::FlowFile>>& flows) {
 
     for (auto &ff : flows) {
       if (drop_empty_ && ff->getSize() == 0) {
-        logger_->log_info("Dropping empty flow file: %s", ff->getUUIDStr());
+        logger_->log_info("Dropping empty flow file: {}", ff->getUUIDStr());
         continue;
       }
 
       queue_.push(ff);
       queued_data_size_ += ff->getSize();
 
-      logger_->log_debug("Enqueue flow file UUID %s to connection %s", ff->getUUIDStr(), name_);
+      logger_->log_debug("Enqueue flow file UUID {} to connection {}", ff->getUUIDStr(), name_);
     }
   }
 
   if (dest_connectable_) {
-    logger_->log_debug("Notifying %s that flowfiles were inserted", dest_connectable_->getName());
+    logger_->log_debug("Notifying {} that flowfiles were inserted", dest_connectable_->getName());
     dest_connectable_->notifyWork();
   }
 }
@@ -155,15 +155,15 @@ std::shared_ptr<core::FlowFile> Connection::poll(std::set<std::shared_ptr<core::
       if (std::chrono::system_clock::now() > (item->getEntryDate() + expired_duration_.load())) {
         // Flow record expired
         expiredFlowRecords.insert(item);
-        logger_->log_debug("Delete flow file UUID %s from connection %s, because it expired", item->getUUIDStr(), name_);
+        logger_->log_debug("Delete flow file UUID {} from connection {}, because it expired", item->getUUIDStr(), name_);
       } else {
         item->setConnection(this);
-        logger_->log_debug("Dequeue flow file UUID %s from connection %s", item->getUUIDStr(), name_);
+        logger_->log_debug("Dequeue flow file UUID {} from connection {}", item->getUUIDStr(), name_);
         return item;
       }
     } else {
       item->setConnection(this);
-      logger_->log_debug("Dequeue flow file UUID %s from connection %s", item->getUUIDStr(), name_);
+      logger_->log_debug("Dequeue flow file UUID {} from connection {}", item->getUUIDStr(), name_);
       return item;
     }
   }
@@ -192,7 +192,7 @@ void Connection::drain(bool delete_permanently) {
   }
 
   queued_data_size_ = 0;
-  logger_->log_debug("Drain connection %s", name_);
+  logger_->log_debug("Drain connection {}", name_);
 }
 
 }  // namespace org::apache::nifi::minifi

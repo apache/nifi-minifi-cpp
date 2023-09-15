@@ -72,20 +72,20 @@ class ClassLoader {
   void registerClass(const std::string &clazz, std::unique_ptr<ObjectFactory> factory) {
     std::lock_guard<std::mutex> lock(internal_mutex_);
     if (loaded_factories_.find(clazz) != loaded_factories_.end()) {
-      logger_->log_error("Class '%s' is already registered at '%s'", clazz, name_);
+      logger_->log_error("Class '{}' is already registered at '{}'", clazz, name_);
       return;
     }
-    logger_->log_trace("Registering class '%s' at '%s'", clazz, name_);
+    logger_->log_trace("Registering class '{}' at '{}'", clazz, name_);
     loaded_factories_.insert(std::make_pair(clazz, std::move(factory)));
   }
 
   void unregisterClass(const std::string& clazz) {
     std::lock_guard<std::mutex> lock(internal_mutex_);
     if (loaded_factories_.erase(clazz) == 0) {
-      logger_->log_error("Could not unregister non-registered class '%s' at '%s'", clazz, name_);
+      logger_->log_error("Could not unregister non-registered class '{}' at '{}'", clazz, name_);
       return;
     } else {
-      logger_->log_trace("Unregistered class '%s' at '%s'", clazz, name_);
+      logger_->log_trace("Unregistered class '{}' at '{}'", clazz, name_);
     }
   }
 

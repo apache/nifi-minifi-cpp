@@ -47,7 +47,7 @@ void FetchSmb::onTrigger(const std::shared_ptr<core::ProcessContext>& context, c
   gsl_Expects(context && session && smb_connection_controller_service_);
 
   if (auto connection_error = smb_connection_controller_service_->validateConnection()) {
-    logger_->log_error("Couldn't establish connection to the specified network location due to %s", connection_error.message());
+    logger_->log_error("Couldn't establish connection to the specified network location due to {}", connection_error.message());
     context->yield();
     return;
   }

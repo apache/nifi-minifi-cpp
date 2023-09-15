@@ -212,9 +212,9 @@ TEST_CASE("Extend the waiting period during shutdown", "[TestFlow4]") {
   auto controller = testController.controller_;
   auto root = testController.root_;
 
-  unsigned int timeout_ms = 1000;
+  std::chrono::milliseconds timeout_ms = 1000ms;
 
-  testController.configuration_->set(minifi::Configure::nifi_flowcontroller_drain_timeout, std::to_string(timeout_ms) + " ms");
+  testController.configuration_->set(minifi::Configure::nifi_flowcontroller_drain_timeout, fmt::format("{}", timeout_ms));
 
   auto sourceProc = static_cast<minifi::processors::TestFlowFileGenerator*>(root->findProcessorByName("Generator"));
   auto sinkProc = static_cast<minifi::processors::TestProcessor*>(root->findProcessorByName("TestProcessor"));
@@ -249,10 +249,10 @@ TEST_CASE("Extend the waiting period during shutdown", "[TestFlow4]") {
 
   std::this_thread::sleep_for(std::chrono::milliseconds{500});
   while (shutdownDuration() < std::chrono::milliseconds(5000) && controller->isRunning()) {
-    timeout_ms += 500;
-    testController.getLogger()->log_info("Controller still running after %u ms, extending the waiting period to %u ms, ff count: %u",
-        static_cast<unsigned int>(shutdownDuration().count()), timeout_ms, static_cast<unsigned int>(root->getTotalFlowFileCount()));
-    testController.configuration_->set(minifi::Configure::nifi_flowcontroller_drain_timeout, std::to_string(timeout_ms) + " ms");
+    timeout_ms += 500ms;
+    testController.getLogger()->log_info("Controller still running after {}, extending the waiting period to {}, ff count: {}",
+        shutdownDuration(), timeout_ms, static_cast<unsigned int>(root->getTotalFlowFileCount()));
+    testController.configuration_->set(minifi::Configure::nifi_flowcontroller_drain_timeout, fmt::format("{}", timeout_ms));
     std::this_thread::sleep_for(std::chrono::milliseconds{500});
   }
 

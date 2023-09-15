@@ -47,7 +47,7 @@ std::vector<utils::net::ConnectionId> GetTCP::parseEndpointList(core::ProcessCon
     for (const auto& endpoint_str : utils::StringUtils::splitAndTrim(*endpoint_list_str, ",")) {
       auto hostname_service_pair = utils::StringUtils::splitAndTrim(endpoint_str, ":");
       if (hostname_service_pair.size() != 2) {
-        logger_->log_error("%s endpoint is invalid, expected {hostname}:{service} format", endpoint_str);
+        logger_->log_error("{} endpoint is invalid, expected {{hostname}}:{{service}} format", endpoint_str);
         continue;
       }
       connections_to_make.emplace_back(hostname_service_pair[0], hostname_service_pair[1]);
@@ -211,7 +211,7 @@ asio::awaitable<std::error_code> GetTCP::TcpClient::readLoop(auto& socket) {
       current_doesnt_end_with_delimiter = true;
       bytes_read = *max_message_size_;
     } else if (read_error) {
-      logger_->log_error("Error during read %s", read_error.message());
+      logger_->log_error("Error during read {}", read_error.message());
       co_return read_error;
     }
 
@@ -247,7 +247,7 @@ asio::awaitable<void> GetTCP::TcpClient::doReceiveFrom(const utils::net::Connect
     auto [resolve_error, resolve_result] = co_await utils::net::asyncOperationWithTimeout(  // NOLINT
         resolver.async_resolve(connection_id.getHostname(), connection_id.getService(), utils::net::use_nothrow_awaitable), timeout_duration_);
     if (resolve_error) {
-      logger_->log_error("Error during resolution: %s", resolve_error.message());
+      logger_->log_error("Error during resolution: {}", resolve_error.message());
       co_await utils::net::async_wait(reconnection_interval_);
       continue;
     }
@@ -266,7 +266,7 @@ asio::awaitable<void> GetTCP::TcpClient::doReceiveFrom(const utils::net::Connect
           continue;
       }
     }
-    logger_->log_error("Error connecting to %s:%s due to %s", connection_id.getHostname().data(), connection_id.getService().data(), last_error.message());
+    logger_->log_error("Error connecting to {}:{} due to {}", connection_id.getHostname().data(), connection_id.getService().data(), last_error.message());
     co_await utils::net::async_wait(reconnection_interval_);
   }
 }

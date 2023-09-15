@@ -74,14 +74,14 @@ void RunAsServiceIfNeeded() {
 
         s_hEvent = CreateEvent(0, TRUE, FALSE, SERVICE_TERMINATION_EVENT_NAME);
         if (!s_hEvent) {
-          Log()->log_error("!CreateEvent lastError %x", GetLastError());
+          Log()->log_error("!CreateEvent lastError {:#x}", GetLastError());
           return;
         }
 
         s_statusHandle = RegisterServiceCtrlHandler(
           SERVICE_NAME,
           [](DWORD ctrlCode) {
-            Log()->log_trace("ServiceCtrlHandler ctrlCode %d", ctrlCode);
+            Log()->log_trace("ServiceCtrlHandler ctrlCode {}", ctrlCode);
 
             if (SERVICE_CONTROL_STOP == ctrlCode) {
               Log()->log_trace("ServiceCtrlHandler ctrlCode = SERVICE_CONTROL_STOP");
@@ -92,7 +92,7 @@ void RunAsServiceIfNeeded() {
               s_serviceStatus.dwWin32ExitCode = 0;
 
               if (!SetServiceStatus(s_statusHandle, &s_serviceStatus)) {
-                Log()->log_error("!SetServiceStatus SERVICE_STOP_PENDING lastError %x", GetLastError());
+                Log()->log_error("!SetServiceStatus SERVICE_STOP_PENDING lastError {:#x}", GetLastError());
               }
 
               bool exeTerminated = false;
@@ -107,11 +107,11 @@ void RunAsServiceIfNeeded() {
                   break;
 
                 case WAIT_TIMEOUT:
-                  Log()->log_error("WaitForSingleObject timeout %d", WAIT_TIME_EXE_TERMINATION);
+                  Log()->log_error("WaitForSingleObject timeout {}", WAIT_TIME_EXE_TERMINATION);
                   break;
 
                 default:
-                  Log()->log_error("!WaitForSingleObject return %d", res);
+                  Log()->log_error("!WaitForSingleObject return {}", res);
               }
 
               if (!exeTerminated) {
@@ -122,10 +122,10 @@ void RunAsServiceIfNeeded() {
                   s_serviceStatus.dwWin32ExitCode = 0;
 
                   if (!SetServiceStatus(s_statusHandle, &s_serviceStatus)) {
-                    Log()->log_error("!SetServiceStatus SERVICE_STOPPED lastError %x", GetLastError());
+                    Log()->log_error("!SetServiceStatus SERVICE_STOPPED lastError {:#x}", GetLastError());
                   }
                 } else {
-                  Log()->log_error("!TerminateProcess lastError %x", GetLastError());
+                  Log()->log_error("!TerminateProcess lastError {:#x}", GetLastError());
                 }
               }
             }
@@ -133,7 +133,7 @@ void RunAsServiceIfNeeded() {
         );
 
         if (!s_statusHandle) {
-          Log()->log_error("!RegisterServiceCtrlHandler lastError %x", GetLastError());
+          Log()->log_error("!RegisterServiceCtrlHandler lastError {:#x}", GetLastError());
           return;
         }
 
@@ -146,7 +146,7 @@ void RunAsServiceIfNeeded() {
         s_serviceStatus.dwServiceSpecificExitCode = 0;
 
         if (!SetServiceStatus(s_statusHandle, &s_serviceStatus)) {
-          Log()->log_error("!SetServiceStatus SERVICE_START_PENDING lastError %x", GetLastError());
+          Log()->log_error("!SetServiceStatus SERVICE_START_PENDING lastError {:#x}", GetLastError());
           return;
         }
 
@@ -156,7 +156,7 @@ void RunAsServiceIfNeeded() {
         s_serviceStatus.dwWin32ExitCode = 0;
 
         if (!SetServiceStatus(s_statusHandle, &s_serviceStatus)) {
-          Log()->log_error("!SetServiceStatus SERVICE_RUNNING lastError %x", GetLastError());
+          Log()->log_error("!SetServiceStatus SERVICE_RUNNING lastError {:#x}", GetLastError());
 
           // Set service status SERVICE_START_PENDING.
           s_serviceStatus.dwControlsAccepted = 0;
@@ -164,7 +164,7 @@ void RunAsServiceIfNeeded() {
           s_serviceStatus.dwWin32ExitCode = GetLastError();
 
           if (!SetServiceStatus(s_statusHandle, &s_serviceStatus)) {
-            Log()->log_error("!SetServiceStatus SERVICE_STOPPED lastError %x", GetLastError());
+            Log()->log_error("!SetServiceStatus SERVICE_STOPPED lastError {:#x}", GetLastError());
           }
 
           return;
@@ -172,12 +172,12 @@ void RunAsServiceIfNeeded() {
 
         char filePath[MAX_PATH];
         if (!GetModuleFileName(0, filePath, _countof(filePath))) {
-          Log()->log_error("!GetModuleFileName lastError %x", GetLastError());
+          Log()->log_error("!GetModuleFileName lastError {:#x}", GetLastError());
           return;
         }
 
         do {
-          Log()->log_debug("Start exe path %s", filePath);
+          Log()->log_debug("Start exe path {}", filePath);
 
           STARTUPINFO startupInfo{};
           startupInfo.cb = sizeof(startupInfo);
@@ -185,25 +185,25 @@ void RunAsServiceIfNeeded() {
           PROCESS_INFORMATION processInformation{};
 
           if (!CreateProcess(filePath, 0, 0, 0, 0, FALSE, 0, 0, &startupInfo, &processInformation)) {
-            Log()->log_error("!CreateProcess lastError %x", GetLastError());
+            Log()->log_error("!CreateProcess lastError {:#x}", GetLastError());
             return;
           }
 
           s_hProcess = processInformation.hProcess;
 
-          Log()->log_info("%s started", filePath);
+          Log()->log_info("{} started", filePath);
 
           auto res = WaitForSingleObject(processInformation.hProcess, INFINITE);
           CloseHandle(processInformation.hProcess);
           CloseHandle(processInformation.hThread);
 
           if (WAIT_FAILED == res) {
-            Log()->log_error("!WaitForSingleObject hProcess lastError %x", GetLastError());
+            Log()->log_error("!WaitForSingleObject hProcess lastError {:#x}", GetLastError());
           } else if (WAIT_OBJECT_0 != res) {
-            Log()->log_error("!WaitForSingleObject hProcess return %d", res);
+            Log()->log_error("!WaitForSingleObject hProcess return {}", res);
           }
 
-          Log()->log_info("Sleep %d sec before restarting exe", WAIT_TIME_EXE_RESTART/1000);
+          Log()->log_info("Sleep {} sec before restarting exe", WAIT_TIME_EXE_RESTART/1000);
           res = WaitForSingleObject(s_hEvent, WAIT_TIME_EXE_RESTART);
 
           if (WAIT_OBJECT_0 == res) {
@@ -212,9 +212,9 @@ void RunAsServiceIfNeeded() {
           }
 
           if (WAIT_FAILED == res) {
-            Log()->log_error("!WaitForSingleObject s_hEvent lastError %x", GetLastError());
+            Log()->log_error("!WaitForSingleObject s_hEvent lastError {:#x}", GetLastError());
           } if (WAIT_TIMEOUT != res) {
-            Log()->log_error("!WaitForSingleObject s_hEvent return %d", res);
+            Log()->log_error("!WaitForSingleObject s_hEvent return {}", res);
           }
         } while (true);
 
@@ -223,7 +223,7 @@ void RunAsServiceIfNeeded() {
         s_serviceStatus.dwWin32ExitCode = 0;
 
         if (!SetServiceStatus(s_statusHandle, &s_serviceStatus)) {
-          Log()->log_error("!SetServiceStatus SERVICE_STOPPED lastError %x", GetLastError());
+          Log()->log_error("!SetServiceStatus SERVICE_STOPPED lastError {:#x}", GetLastError());
         }
       }
     },
@@ -236,7 +236,7 @@ void RunAsServiceIfNeeded() {
       return;
     }
 
-    Log()->log_error("!StartServiceCtrlDispatcher lastError %x", GetLastError());
+    Log()->log_error("!StartServiceCtrlDispatcher lastError {:#x}", GetLastError());
 
     ExitProcess(1);
   }
@@ -260,7 +260,7 @@ bool CreateServiceTerminationThread(std::shared_ptr<minifi::core::logging::Logge
   auto hService = [&logger]() -> HANDLE {
     auto hSnapShot = CreateToolhelp32Snapshot(TH32CS_SNAPPROCESS, 0);
     if (INVALID_HANDLE_VALUE == hSnapShot) {
-      logger->log_error("!CreateToolhelp32Snapshot lastError %x", GetLastError());
+      logger->log_error("!CreateToolhelp32Snapshot lastError {:#x}", GetLastError());
       return 0;
     }
 
@@ -272,7 +272,7 @@ bool CreateServiceTerminationThread(std::shared_ptr<minifi::core::logging::Logge
       procentry.dwSize = sizeof(procentry);
 
       if (!Process32First(hSnapShot, &procentry)) {
-        logger->log_error("!Process32First lastError %x", GetLastError());
+        logger->log_error("!Process32First lastError {:#x}", GetLastError());
         return;
       }
 
@@ -299,25 +299,25 @@ bool CreateServiceTerminationThread(std::shared_ptr<minifi::core::logging::Logge
     // Just in case check that service name == current process name.
     char filePath[MAX_PATH];
     if (!GetModuleFileName(0, filePath, _countof(filePath))) {
-      logger->log_error("!GetModuleFileName lastError %x", GetLastError());
+      logger->log_error("!GetModuleFileName lastError {:#x}", GetLastError());
       return 0;
     }
 
     const auto pSlash = strrchr(filePath, '\\');
     if (!pSlash) {
-      logger->log_error("Invalid filePath %s", filePath);
+      logger->log_error("Invalid filePath {}", filePath);
       return 0;
     }
     const std::string fileName = pSlash + 1;
 
     if (_stricmp(fileName.c_str(), parentProcessName.c_str())) {
-      logger->log_error("Parent process %s != current process %s", parentProcessName.c_str(), fileName.c_str());
+      logger->log_error("Parent process {} != current process {}", parentProcessName.c_str(), fileName.c_str());
       return 0;
     }
 
     const auto hParentProcess = OpenProcess(SYNCHRONIZE, FALSE, parentProcessId);
     if (!hParentProcess) {
-      logger->log_error("!OpenProcess lastError %x", GetLastError());
+      logger->log_error("!OpenProcess lastError {:#x}", GetLastError());
       return 0;
     }
 
@@ -341,7 +341,7 @@ bool CreateServiceTerminationThread(std::shared_ptr<minifi::core::logging::Logge
       HANDLE arHandle[] = { terminationEventHandle, hService };
       switch (auto res = WaitForMultipleObjects(_countof(arHandle), arHandle, FALSE, INFINITE)) {
         case WAIT_FAILED:
-          logger->log_error("!WaitForSingleObject lastError %x", GetLastError());
+          logger->log_error("!WaitForSingleObject lastError {:#x}", GetLastError());
         break;
 
         case WAIT_OBJECT_0:
@@ -353,7 +353,7 @@ bool CreateServiceTerminationThread(std::shared_ptr<minifi::core::logging::Logge
         break;
 
         default:
-          logger->log_info("WaitForMultipleObjects return %d", res);
+          logger->log_info("WaitForMultipleObjects return {}", res);
       }
 
       SignalExitProcess();
@@ -363,7 +363,7 @@ bool CreateServiceTerminationThread(std::shared_ptr<minifi::core::logging::Logge
     pThreadInfo,
     0, 0);
   if (!hThread) {
-    logger->log_error("!_beginthreadex lastError %x", GetLastError());
+    logger->log_error("!_beginthreadex lastError {:#x}", GetLastError());
 
     delete pThreadInfo;
 

@@ -75,7 +75,7 @@ void PrometheusMetricsPublisher::loadMetricNodes() {
   auto nodes = getMetricNodes();
 
   for (const auto& metric_node : nodes) {
-    logger_->log_debug("Registering metric node '%s'", metric_node->getName());
+    logger_->log_debug("Registering metric node '{}'", metric_node->getName());
     gauge_collections_.push_back(std::make_shared<PublishedMetricGaugeCollection>(metric_node, agent_identifier_));
     exposer_->registerMetric(gauge_collections_.back());
   }
@@ -93,7 +93,7 @@ std::vector<state::response::SharedResponseNode> PrometheusMetricsPublisher::get
     for (const std::string& clazz : metric_classes) {
       auto response_nodes = response_node_loader_->loadResponseNodes(clazz);
       if (response_nodes.empty()) {
-        logger_->log_warn("Metric class '%s' could not be loaded.", clazz);
+        logger_->log_warn("Metric class '{}' could not be loaded.", clazz);
         continue;
       }
       nodes.insert(nodes.end(), response_nodes.begin(), response_nodes.end());

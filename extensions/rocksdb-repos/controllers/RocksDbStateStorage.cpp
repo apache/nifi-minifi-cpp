@@ -46,10 +46,10 @@ void RocksDbStateStorage::onEnable() {
   }
 
   const auto always_persist = getProperty<bool>(AlwaysPersist).value_or(false);
-  logger_->log_info("Always Persist property: %s", always_persist ? "true" : "false");
+  logger_->log_info("Always Persist property: {}", always_persist ? "true" : "false");
 
   const auto auto_persistence_interval = getProperty<core::TimePeriodValue>(AutoPersistenceInterval).value_or(core::TimePeriodValue{}).getMilliseconds();
-  logger_->log_info("Auto Persistence Interval property: %" PRId64 " ms", auto_persistence_interval.count());
+  logger_->log_info("Auto Persistence Interval property: {}", auto_persistence_interval);
 
   if (!getProperty(Directory, directory_)) {
     logger_->log_error("Invalid or missing property: Directory");
@@ -64,7 +64,7 @@ void RocksDbStateStorage::onEnable() {
   if (!encrypted_env) {
     encrypted_env = createEncryptingEnv(utils::crypto::EncryptionManager{configuration_->getHome()}, core::repository::DbEncryptionOptions{directory_, ENCRYPTION_KEY_NAME_OLD});
   }
-  logger_->log_info("Using %s RocksDbStateStorage", encrypted_env ? "encrypted" : "plaintext");
+  logger_->log_info("Using {} RocksDbStateStorage", encrypted_env ? "encrypted" : "plaintext");
 
   auto set_db_opts = [encrypted_env] (internal::Writable<rocksdb::DBOptions>& db_opts) {
     db_opts.set(&rocksdb::DBOptions::create_if_missing, true);
@@ -83,10 +83,10 @@ void RocksDbStateStorage::onEnable() {
   };
   db_ = minifi::internal::RocksDatabase::create(set_db_opts, set_cf_opts, directory_);
   if (db_->open()) {
-    logger_->log_trace("Successfully opened RocksDB database at %s", directory_.c_str());
+    logger_->log_trace("Successfully opened RocksDB database at {}", directory_.c_str());
   } else {
     // TODO(adebreceni) forward the status
-    logger_->log_error("Failed to open RocksDB database at %s, error", directory_.c_str());
+    logger_->log_error("Failed to open RocksDB database at {}, error", directory_.c_str());
     return;
   }
 
@@ -112,7 +112,7 @@ bool RocksDbStateStorage::set(const std::string& key, const std::string& value) 
   }
   rocksdb::Status status = opendb->Put(default_write_options, key, value);
   if (!status.ok()) {
-    logger_->log_error("Failed to Put key %s to RocksDB database at %s, error: %s", key.c_str(), directory_.c_str(), status.getState());
+    logger_->log_error("Failed to Put key {} to RocksDB database at {}, error: {}", key.c_str(), directory_.c_str(), status.getState());
     return false;
   }
   return true;
@@ -129,9 +129,9 @@ bool RocksDbStateStorage::get(const std::string& key, std::string& value) {
   rocksdb::Status status = opendb->Get(rocksdb::ReadOptions(), key, &value);
   if (!status.ok()) {
     if (status.getState() != nullptr) {
-      logger_->log_error("Failed to Get key %s from RocksDB database at %s, error: %s", key.c_str(), directory_.c_str(), status.getState());
+      logger_->log_error("Failed to Get key {} from RocksDB database at {}, error: {}", key.c_str(), directory_.c_str(), status.getState());
     } else {
-      logger_->log_warn("Failed to Get key %s from RocksDB database at %s (it may not have been initialized yet)", key.c_str(), directory_.c_str());
+      logger_->log_warn("Failed to Get key {} from RocksDB database at {} (it may not have been initialized yet)", key.c_str(), directory_.c_str());
     }
     return false;
   }
@@ -152,7 +152,7 @@ bool RocksDbStateStorage::get(std::unordered_map<std::string, std::string>& kvs)
     kvs.emplace(it->key().ToString(), it->value().ToString());
   }
   if (!it->status().ok()) {
-    logger_->log_error("Encountered error when iterating through RocksDB database at %s, error: %s", directory_.c_str(), it->status().getState());
+    logger_->log_error("Encountered error when iterating through RocksDB database at {}, error: {}", directory_.c_str(), it->status().getState());
     return false;
   }
   return true;
@@ -168,7 +168,7 @@ bool RocksDbStateStorage::remove(const std::string& key) {
   }
   rocksdb::Status status = opendb->Delete(default_write_options, key);
   if (!status.ok()) {
-    logger_->log_error("Failed to Delete from RocksDB database at %s, error: %s", directory_.c_str(), status.getState());
+    logger_->log_error("Failed to Delete from RocksDB database at {}, error: {}", directory_.c_str(), status.getState());
     return false;
   }
   return true;
@@ -186,12 +186,12 @@ bool RocksDbStateStorage::clear() {
   for (it->SeekToFirst(); it->Valid(); it->Next()) {
     rocksdb::Status status = opendb->Delete(default_write_options, it->key());
     if (!status.ok()) {
-      logger_->log_error("Failed to Delete from RocksDB database at %s, error: %s", directory_.c_str(), status.getState());
+      logger_->log_error("Failed to Delete from RocksDB database at {}, error: {}", directory_.c_str(), status.getState());
       return false;
     }
   }
   if (!it->status().ok()) {
-    logger_->log_error("Encountered error when iterating through RocksDB database at %s, error: %s", directory_.c_str(), it->status().getState());
+    logger_->log_error("Encountered error when iterating through RocksDB database at {}, error: {}", directory_.c_str(), it->status().getState());
     return false;
   }
   return true;

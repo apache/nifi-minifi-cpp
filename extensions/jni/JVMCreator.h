@@ -53,7 +53,7 @@ class JVMCreator : public minifi::core::CoreComponent {
     }
 
     for (const auto &path : pathOrFiles) {
-      logger_->log_debug("Adding path %s", path);
+      logger_->log_debug("Adding path {}", path);
       minifi::utils::file::FileUtils::addFilesMatchingExtension(logger_, path, ".jar", classpaths_);
     }
   }

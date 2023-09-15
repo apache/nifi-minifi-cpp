@@ -56,7 +56,7 @@ void FlowFileRepository::flush() {
 
   for (auto& ff : flow_files) {
     batch.Delete(ff.key);
-    logger_->log_debug("Issuing batch delete, including %s, Content path %s", ff.key, ff.content ? ff.content->getContentFullPath() : "null");
+    logger_->log_debug("Issuing batch delete, including {}, Content path {}", ff.key, ff.content ? ff.content->getContentFullPath() : "null");
   }
 
   auto operation = [&batch, &opendb]() { return opendb->Write(rocksdb::WriteOptions(), &batch); };
@@ -95,7 +95,7 @@ void FlowFileRepository::deserializeFlowFilesWithNoContentClaim(minifi::internal
 
   for (size_t i = 0; i < keys.size(); ++i) {
     if (!multistatus[i].ok()) {
-      logger_->log_error("Failed to read key from rocksdb: %s! DB is most probably in an inconsistent state!", keys[i].data());
+      logger_->log_error("Failed to read key from rocksdb: {}! DB is most probably in an inconsistent state!", keys[i].data());
       flow_files.erase(key_positions.at(i));
       continue;
     }
@@ -106,7 +106,7 @@ void FlowFileRepository::deserializeFlowFilesWithNoContentClaim(minifi::internal
       gsl_Expects(flow_file->getUUIDStr() == key_positions.at(i)->key);
       key_positions.at(i)->content = flow_file->getResourceClaim();
     } else {
-      logger_->log_error("Could not deserialize flow file %s", key_positions.at(i)->key);
+      logger_->log_error("Could not deserialize flow file {}", key_positions.at(i)->key);
     }
   }
 }
@@ -145,13 +145,13 @@ void FlowFileRepository::initialize_repository() {
         found = (search != connection_map_.end());
       }
       if (found) {
-        logger_->log_debug("Found connection for %s, path %s ", container_id.to_string(), eventRead->getContentFullPath());
+        logger_->log_debug("Found connection for {}, path {} ", container_id.to_string(), eventRead->getContentFullPath());
         eventRead->setStoredToRepository(true);
         // we found the connection for the persistent flowFile
         // even if a processor immediately marks it for deletion, flush only happens after prune_stored_flowfiles
         search->second->restore(eventRead);
       } else {
-        logger_->log_warn("Could not find connection for %s, path %s ", container_id.to_string(), eventRead->getContentFullPath());
+        logger_->log_warn("Could not find connection for {}, path {} ", container_id.to_string(), eventRead->getContentFullPath());
         keys_to_delete_.enqueue({.key = key, .content = eventRead->getResourceClaim()});
       }
     } else {
@@ -177,12 +177,12 @@ bool FlowFileRepository::initialize(const std::shared_ptr<Configure> &configure)
   if (configure->get(Configure::nifi_flowfile_repository_directory_default, value) && !value.empty()) {
     directory_ = value;
   }
-  logger_->log_debug("NiFi FlowFile Repository Directory %s", directory_);
+  logger_->log_debug("NiFi FlowFile Repository Directory {}", directory_);
 
   setCompactionPeriod(configure);
 
   const auto encrypted_env = createEncryptingEnv(utils::crypto::EncryptionManager{configure->getHome()}, DbEncryptionOptions{directory_, ENCRYPTION_KEY_NAME});
-  logger_->log_info("Using %s FlowFileRepository", encrypted_env ? "encrypted" : "plaintext");
+  logger_->log_info("Using {} FlowFileRepository", encrypted_env ? "encrypted" : "plaintext");
 
   auto db_options = [encrypted_env] (minifi::internal::Writable<rocksdb::DBOptions>& options) {
     options.set(&rocksdb::DBOptions::create_if_missing, true);
@@ -212,10 +212,10 @@ bool FlowFileRepository::initialize(const std::shared_ptr<Configure> &configure)
   };
   db_ = minifi::internal::RocksDatabase::create(db_options, cf_options, directory_);
   if (db_->open()) {
-    logger_->log_debug("NiFi FlowFile Repository database open %s success", directory_);
+    logger_->log_debug("NiFi FlowFile Repository database open {} success", directory_);
     return true;
   } else {
-    logger_->log_error("NiFi FlowFile Repository database open %s fail", directory_);
+    logger_->log_error("NiFi FlowFile Repository database open {} fail", directory_);
     return false;
   }
 }
@@ -226,13 +226,13 @@ void FlowFileRepository::setCompactionPeriod(const std::shared_ptr<Configure> &c
     if (auto compaction_period = TimePeriodValue::fromString(compaction_period_str.value())) {
       compaction_period_ = compaction_period->getMilliseconds();
       if (compaction_period_.count() == 0) {
-        logger_->log_warn("Setting '%s' to 0 disables forced compaction", Configure::nifi_flowfile_repository_rocksdb_compaction_period);
+        logger_->log_warn("Setting '{}' to 0 disables forced compaction", Configure::nifi_flowfile_repository_rocksdb_compaction_period);
       }
     } else {
-      logger_->log_error("Malformed property '%s', expected time period, using default", Configure::nifi_flowfile_repository_rocksdb_compaction_period);
+      logger_->log_error("Malformed property '{}', expected time period, using default", Configure::nifi_flowfile_repository_rocksdb_compaction_period);
     }
   } else {
-    logger_->log_debug("Using default compaction period of %" PRId64 " ms", int64_t{compaction_period_.count()});
+    logger_->log_debug("Using default compaction period of {}", compaction_period_);
   }
 }
 
@@ -245,7 +245,7 @@ void FlowFileRepository::runCompaction() {
   do {
     if (auto opendb = db_->open()) {
       auto status = opendb->RunCompaction();
-      logger_->log_trace("Compaction triggered: %s", status.ToString());
+      logger_->log_trace("Compaction triggered: {}", status.ToString());
     } else {
       logger_->log_error("Failed to open database for compaction");
     }

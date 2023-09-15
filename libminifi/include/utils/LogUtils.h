@@ -33,30 +33,31 @@ enum class LogLevelOption {
   LOGGING_OFF
 };
 
-template<typename... Args>
-void logWithLevel(const std::shared_ptr<core::logging::Logger>& logger, LogLevelOption log_level, Args&&... args) {
-  switch (log_level) {
-    case LogLevelOption::LOGGING_TRACE:
-      logger->log_trace(std::forward<Args>(args)...);
-      break;
-    case LogLevelOption::LOGGING_DEBUG:
-      logger->log_debug(std::forward<Args>(args)...);
-      break;
-    case LogLevelOption::LOGGING_INFO:
-      logger->log_info(std::forward<Args>(args)...);
-      break;
-    case LogLevelOption::LOGGING_WARN:
-      logger->log_warn(std::forward<Args>(args)...);
-      break;
-    case LogLevelOption::LOGGING_ERROR:
-      logger->log_error(std::forward<Args>(args)...);
-      break;
-    case LogLevelOption::LOGGING_CRITICAL:
-      logger->log_critical(std::forward<Args>(args)...);
-      break;
-    case LogLevelOption::LOGGING_OFF:
+inline LogLevelOption mapToLogLevelOption(core::logging::LOG_LEVEL level) {
+  switch (level) {
+    case core::logging::trace: return LogLevelOption::LOGGING_TRACE;
+    case core::logging::debug: return LogLevelOption::LOGGING_DEBUG;
+    case core::logging::info: return LogLevelOption::LOGGING_INFO;
+    case core::logging::warn: return LogLevelOption::LOGGING_WARN;
+    case core::logging::err: return LogLevelOption::LOGGING_ERROR;
+    case core::logging::critical: return LogLevelOption::LOGGING_CRITICAL;
+    case core::logging::off: return LogLevelOption::LOGGING_OFF;
     default:
-      break;
+      throw std::invalid_argument(fmt::format("Invalid LOG_LEVEL {}", magic_enum::enum_underlying(level)));
+  }
+}
+
+inline core::logging::LOG_LEVEL mapToLogLevel(LogLevelOption option) {
+  switch (option) {
+    case LogLevelOption::LOGGING_TRACE: return core::logging::trace;
+    case LogLevelOption::LOGGING_DEBUG: return core::logging::debug;
+    case LogLevelOption::LOGGING_INFO: return core::logging::info;
+    case LogLevelOption::LOGGING_WARN: return core::logging::warn;
+    case LogLevelOption::LOGGING_ERROR: return core::logging::err;
+    case LogLevelOption::LOGGING_CRITICAL: return core::logging::critical;
+    case LogLevelOption::LOGGING_OFF: return core::logging::off;
+    default:
+      throw std::invalid_argument(fmt::format("Invalid LogLevelOption {}", magic_enum::enum_underlying(option)));
   }
 }
 

@@ -22,6 +22,7 @@
 #include "LuaScriptEngine.h"
 #include "LuaProcessSession.h"
 #include "LuaScriptProcessContext.h"
+#include "LuaLogger.h"
 #include "utils/StringUtils.h"
 
 namespace org::apache::nifi::minifi::extensions::lua {
@@ -37,9 +38,9 @@ LuaScriptEngine::LuaScriptEngine() {
       sol::lib::table,
       sol::lib::utf8,
       sol::lib::package);
-  lua_.new_usertype<core::logging::Logger>(
+  lua_.new_usertype<LuaLogger>(
       "Logger",
-      "info", &core::logging::Logger::log_info<>);
+      "info", &LuaLogger::log_info);
   lua_.new_usertype<LuaProcessSession>(
       "ProcessSession",
       "create", static_cast<std::shared_ptr<LuaScriptFlowFile> (LuaProcessSession::*)()>(&LuaProcessSession::create),
@@ -109,7 +110,8 @@ void LuaScriptEngine::evalFile(const std::filesystem::path& file_name) {
 }
 
 void LuaScriptEngine::initialize(const core::Relationship& success, const core::Relationship& failure, const std::shared_ptr<core::logging::Logger>& logger) {
-  bind("log", logger);
+  lua_logger_ = std::make_unique<LuaLogger>(logger.get());
+  bind("log", lua_logger_.get());
   bind("REL_SUCCESS", success);
   bind("REL_FAILURE", failure);
 }

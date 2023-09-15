@@ -134,9 +134,9 @@ void ProcFsMonitor::setupDecimalPlacesFromProperties(const core::ProcessContext&
       throw Exception(PROCESS_SCHEDULE_EXCEPTION, "ProcFsMonitor Decimal Places property is zero or too large");
     }
     decimal_places_ = gsl::narrow<uint8_t>(decimal_places);
-    logger_->log_trace("Rounding is enabled with %d decimal places", decimal_places_.value());
+    logger_->log_trace("Rounding is enabled with {} decimal places", decimal_places_.value());
   } catch (const std::exception&) {
-    logger_->log_error("ProcFsMonitor Decimal Places property is invalid or out of range: %s", decimal_places_str);
+    logger_->log_error("ProcFsMonitor Decimal Places property is invalid or out of range: {}", decimal_places_str);
     throw Exception(PROCESS_SCHEDULE_EXCEPTION, "ProcFsMonitor Decimal Places property is invalid or out of range");
   }
 }

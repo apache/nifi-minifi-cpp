@@ -215,12 +215,12 @@ int main() {
     for (auto& op : operations) {
       if (auto res = ack_handler.getState(op.id)) {
         if (res->state != op.state) {
-          controller.getLogger()->log_error("Operation '%s' in expected to return '%s', got '%s'", op.id, op.state, res->state);
+          controller.getLogger()->log_error("Operation '{}' in expected to return '{}', got '{}'", op.id, op.state, res->state);
           assert(false);
         }
         if (op.details) {
           if (res->details.find(op.details.value()) == std::string::npos) {
-            controller.getLogger()->log_error("In operation '%s' failed to find '%s' in ack details '%s'", op.id, op.details.value(), res->details);
+            controller.getLogger()->log_error("In operation '{}' failed to find '{}' in ack details '{}'", op.id, op.details.value(), res->details);
             assert(false);
           }
         }
@@ -249,12 +249,12 @@ int main() {
 
   size_t file_count = utils::file::list_dir_all(asset_dir.string(), controller.getLogger()).size();
   if (file_count != expected_files.size()) {
-    controller.getLogger()->log_error("Expected %zu files, got %zu", expected_files.size(), file_count);
+    controller.getLogger()->log_error("Expected {} files, got {}", expected_files.size(), file_count);
     assert(false);
   }
   for (auto& [path, content] : expected_files) {
     if (utils::file::get_content(path) != content) {
-      controller.getLogger()->log_error("File content mismatch at '%s'", path);
+      controller.getLogger()->log_error("File content mismatch at '{}'", path);
       assert(false);
     }
   }

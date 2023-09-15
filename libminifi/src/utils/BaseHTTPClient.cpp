@@ -87,7 +87,7 @@ URL::URL(const std::string& url_input) {
   if (protocol) {
     protocol_ = *protocol;
   } else {
-    logger_->log_error("Unknown protocol in URL '%s'", url_input);
+    logger_->log_error("Unknown protocol in URL '{}'", url_input);
     return;
   }
 
@@ -98,7 +98,7 @@ URL::URL(const std::string& url_input) {
   std::string::const_iterator end_of_host = std::find_first_of(current_pos, url_input.end(), std::begin(HOST_TERMINATORS), std::end(HOST_TERMINATORS));
   host_ = std::string{current_pos, end_of_host};
   if (host_.empty()) {
-    logger_->log_error("No host found in URL '%s'", url_input);
+    logger_->log_error("No host found in URL '{}'", url_input);
     return;
   }
   current_pos = end_of_host;
@@ -111,7 +111,7 @@ URL::URL(const std::string& url_input) {
     if (port_number) {
       port_ = *port_number;
     } else {
-      logger_->log_error("Could not parse the port number in URL '%s'", url_input);
+      logger_->log_error("Could not parse the port number in URL '{}'", url_input);
       return;
     }
     current_pos = end_of_port;
@@ -248,7 +248,7 @@ size_t HTTPUploadByteArrayInputCallback::setPosition(int64_t offset) {
 }
 
 size_t HTTPUploadStreamContentsCallback::getDataChunk(char *data, size_t size) {
-  logger_->log_trace("HTTPUploadStreamContentsCallback is asked for up to %zu bytes", size);
+  logger_->log_trace("HTTPUploadStreamContentsCallback is asked for up to {} bytes", size);
 
   std::span<char> buffer{data, size};
   size_t num_read = input_stream_->read(as_writable_bytes(buffer));
@@ -258,7 +258,7 @@ size_t HTTPUploadStreamContentsCallback::getDataChunk(char *data, size_t size) {
     return 0;
   }
 
-  logger_->log_debug("HTTPUploadStreamContentsCallback is returning %zu bytes", num_read);
+  logger_->log_debug("HTTPUploadStreamContentsCallback is returning {} bytes", num_read);
   return num_read;
 }
 
@@ -266,7 +266,7 @@ size_t HTTPUploadStreamContentsCallback::setPosition(int64_t offset) {
   if (offset == 0) {
     logger_->log_debug("HTTPUploadStreamContentsCallback is ignoring request to rewind to the beginning");
   } else {
-    logger_->log_warn("HTTPUploadStreamContentsCallback is ignoring request to seek to position %" PRId64, offset);
+    logger_->log_warn("HTTPUploadStreamContentsCallback is ignoring request to seek to position {}", offset);
   }
 
   return HTTPRequestResponse::SEEKFUNC_OK;

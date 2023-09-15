@@ -28,8 +28,8 @@ namespace org::apache::nifi::minifi::coap::c2 {
 
 uint8_t CoapProtocol::REGISTRATION_MSG[8] = { 0x72, 0x65, 0x67, 0x69, 0x73, 0x74, 0x65, 0x72 };
 
-CoapProtocol::CoapProtocol(std::string name, const utils::Identifier &uuid)
-    : RESTSender(std::move(name), uuid),
+CoapProtocol::CoapProtocol(std::string_view name, const utils::Identifier &uuid)
+    : RESTSender(name, uuid),
       require_registration_(false) {
 }
 
@@ -92,7 +92,7 @@ int CoapProtocol::writeHeartbeat(io::OutputStream *stream, const minifi::c2::C2P
 
     stream->write(deviceIdent, false);
 
-    logger_->log_trace("Writing heartbeat with device Ident %s and agent Ident %s", deviceIdent, agentIdent);
+    logger_->log_trace("Writing heartbeat with device Ident {} and agent Ident {}", deviceIdent, agentIdent);
 
     if (agentIdent.empty()) {
       return -1;
@@ -151,13 +151,13 @@ int CoapProtocol::writeHeartbeat(io::OutputStream *stream, const minifi::c2::C2P
       stream->write(bucketId);
       stream->write(flowId);
     } catch (const minifi::c2::PayloadParseException &pe) {
-      logger_->log_error("Parser exception occurred, but is ignorable, reason %s", pe.what());
+      logger_->log_error("Parser exception occurred, but is ignorable, reason {}", pe.what());
       // okay to ignore
       byte = false;
       stream->write(byte);
     }
   } catch (const minifi::c2::PayloadParseException &e) {
-    logger_->log_error("Parser exception occurred, reason %s", e.what());
+    logger_->log_error("Parser exception occurred, reason {}", e.what());
     return -1;
   }
   return 0;
@@ -255,7 +255,7 @@ minifi::c2::C2Payload CoapProtocol::serialize(const minifi::c2::C2Payload &paylo
     io::BufferStream responseStream(message_data);
     responseStream.read(version);
     responseStream.read(size);
-    logger_->log_trace("Received ack. version %d. number of operations %d", version, size);
+    logger_->log_trace("Received ack. version {}. number of operations {}", version, size);
     minifi::c2::C2Payload new_payload(payload.getOperation(), state::UpdateState::NESTED);
     for (int i = 0; i < size; i++) {
       uint8_t operationType;
@@ -266,7 +266,7 @@ minifi::c2::C2Payload CoapProtocol::serialize(const minifi::c2::C2Payload &paylo
       REQUIRE_VALID(responseStream.read(id, false))
       REQUIRE_VALID(responseStream.read(operand, false))
 
-      logger_->log_trace("Received op %d, with id %s and operand %s", operationType, id, operand);
+      logger_->log_trace("Received op {}, with id {} and operand {}", operationType, id, operand);
       auto newOp = getOperation(operationType);
       minifi::c2::C2Payload nested_payload(newOp, state::UpdateState::READ_COMPLETE);
       nested_payload.setIdentifier(id);

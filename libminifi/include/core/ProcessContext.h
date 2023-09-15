@@ -376,7 +376,7 @@ class ProcessContext : public controller::ControllerServiceLookup, public core::
     if (configuration != nullptr && configuration->get(minifi::Configure::nifi_state_storage_local, minifi::Configure::nifi_state_storage_local_old, requestedStateStorageName)) {
       auto node = controller_service_provider->getControllerServiceNode(requestedStateStorageName);
       if (node == nullptr) {
-        logger->log_error("Failed to find the StateStorage %s defined by %s", requestedStateStorageName, minifi::Configure::nifi_state_storage_local);
+        logger->log_error("Failed to find the StateStorage {} defined by {}", requestedStateStorageName, minifi::Configure::nifi_state_storage_local);
         return nullptr;
       }
       return std::dynamic_pointer_cast<core::StateStorage>(node->getControllerServiceImplementation());

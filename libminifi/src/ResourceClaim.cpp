@@ -34,7 +34,7 @@ utils::NonRepeatingStringGenerator ResourceClaim::non_repeating_string_generator
 std::string default_directory_path;
 
 void setDefaultDirectory(std::string path) {
-  default_directory_path = path;
+  default_directory_path = std::move(path);
 }
 
 ResourceClaim::ResourceClaim(std::shared_ptr<core::StreamManager<ResourceClaim>> claim_manager)
@@ -49,7 +49,7 @@ ResourceClaim::ResourceClaim(std::shared_ptr<core::StreamManager<ResourceClaim>>
       claim_manager_(std::move(claim_manager)),
       logger_(core::logging::LoggerFactory<ResourceClaim>::getLogger()) {
   if (claim_manager_) increaseFlowFileRecordOwnedCount();
-  logger_->log_debug("Resource Claim created %s", _contentFullPath);
+  logger_->log_debug("Resource Claim created {}", _contentFullPath);
 }
 
 ResourceClaim::ResourceClaim(Path path, std::shared_ptr<core::StreamManager<ResourceClaim>> claim_manager)

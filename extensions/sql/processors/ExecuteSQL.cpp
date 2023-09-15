@@ -76,7 +76,7 @@ void ExecuteSQL::processOnTrigger(core::ProcessContext& context, core::ProcessSe
   try {
     row_set = connection_->prepareStatement(query)->execute(collectArguments(input_flow_file));
   } catch (const sql::StatementError& ex) {
-    logger_->log_error("Error while executing sql statement: %s", ex.what());
+    logger_->log_error("Error while executing sql statement: {}", ex.what());
     session.transfer(input_flow_file, Failure);
     return;
   }

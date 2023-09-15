@@ -32,7 +32,7 @@ void AzureBlobStorageProcessorBase::onSchedule(const std::shared_ptr<core::Proce
   }
 
   if (context->getProperty(AzureStorageCredentialsService, value) && !value.empty()) {
-    logger_->log_info("Getting Azure Storage credentials from controller service with name: '%s'", value);
+    logger_->log_info("Getting Azure Storage credentials from controller service with name: '{}'", value);
     return;
   }
 

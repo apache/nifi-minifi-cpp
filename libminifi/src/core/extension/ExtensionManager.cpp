@@ -63,12 +63,12 @@ bool ExtensionManager::initialize(const std::shared_ptr<Configure>& config) {
        */
       auto opt_pattern = config->get(minifi::Configuration::nifi_extension_path);
       if (!opt_pattern) {
-        logger_->log_warn("No extension path is provided, using default: '%s'", DEFAULT_EXTENSION_PATH);
+        logger_->log_warn("No extension path is provided, using default: '{}'", DEFAULT_EXTENSION_PATH);
       }
       return opt_pattern.value_or(DEFAULT_EXTENSION_PATH);
     }();
     auto candidates = utils::file::match(utils::file::FilePattern(pattern, [&] (std::string_view subpattern, std::string_view error_msg) {
-      logger_->log_error("Error in subpattern '%s': %s", std::string{subpattern}, std::string{error_msg});
+      logger_->log_error("Error in subpattern '{}': {}", std::string{subpattern}, std::string{error_msg});
     }));
     for (const auto& candidate : candidates) {
       auto library = internal::asDynamicLibrary(candidate);
@@ -90,7 +90,7 @@ bool ExtensionManager::initialize(const std::shared_ptr<Configure>& config) {
         }
       }
       if (!module->initialize(config)) {
-        logger_->log_error("Failed to initialize module '%s' at '%s'", library->name, library->getFullPath().string());
+        logger_->log_error("Failed to initialize module '{}' at '{}'", library->name, library->getFullPath());
       } else {
         modules_.push_back(std::move(module));
       }

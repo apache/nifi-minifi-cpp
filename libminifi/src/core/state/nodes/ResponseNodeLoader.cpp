@@ -114,7 +114,7 @@ std::vector<SharedResponseNode> ResponseNodeLoader::getResponseNodes(const std::
   }
   auto response_node = getSystemMetricsNode(clazz);
   if (!response_node) {
-    logger_->log_error(response_node.error().c_str());
+    logger_->log_error("{}", response_node.error());
     return {};
   }
   return {*response_node};
@@ -218,7 +218,7 @@ void ResponseNodeLoader::initializeFlowMonitor(const SharedResponseNode& respons
 std::vector<SharedResponseNode> ResponseNodeLoader::loadResponseNodes(const std::string& clazz) {
   auto response_nodes = getResponseNodes(clazz);
   if (response_nodes.empty()) {
-    logger_->log_error("No metric defined for %s", clazz);
+    logger_->log_error("No metric defined for {}", clazz);
     return {};
   }
 
@@ -293,4 +293,3 @@ state::response::NodeReporter::ReportedNode ResponseNodeLoader::getAgentManifest
 }
 
 }  // namespace org::apache::nifi::minifi::state::response
-

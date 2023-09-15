@@ -29,61 +29,61 @@ void AbstractMQTTProcessor::onSchedule(const std::shared_ptr<core::ProcessContex
   if (auto value = context->getProperty(BrokerURI)) {
     uri_ = std::move(*value);
   }
-  logger_->log_debug("AbstractMQTTProcessor: BrokerURI [%s]", uri_);
+  logger_->log_debug("AbstractMQTTProcessor: BrokerURI [{}]", uri_);
 
   mqtt_version_ = utils::parseEnumProperty<mqtt::MqttVersions>(*context, MqttVersion);
-  logger_->log_debug("AbstractMQTTProcessor: MQTT Specification Version: %s", std::string{magic_enum::enum_name(mqtt_version_)});
+  logger_->log_debug("AbstractMQTTProcessor: MQTT Specification Version: {}", std::string{magic_enum::enum_name(mqtt_version_)});
 
   if (auto value = context->getProperty(ClientID)) {
     clientID_ = std::move(*value);
   } else if (mqtt_version_ == mqtt::MqttVersions::V_3_1_0) {
     throw minifi::Exception(ExceptionType::PROCESS_SCHEDULE_EXCEPTION, "MQTT 3.1.0 specification does not support empty client IDs");
   }
-  logger_->log_debug("AbstractMQTTProcessor: ClientID [%s]", clientID_);
+  logger_->log_debug("AbstractMQTTProcessor: ClientID [{}]", clientID_);
 
   if (auto value = context->getProperty(Username)) {
     username_ = std::move(*value);
   }
-  logger_->log_debug("AbstractMQTTProcessor: Username [%s]", username_);
+  logger_->log_debug("AbstractMQTTProcessor: Username [{}]", username_);
 
   if (auto value = context->getProperty(Password)) {
     password_ = std::move(*value);
   }
-  logger_->log_debug("AbstractMQTTProcessor: Password [%s]", password_);
+  logger_->log_debug("AbstractMQTTProcessor: Password [{}]", password_);
 
   if (const auto keep_alive_interval = context->getProperty(KeepAliveInterval) | utils::andThen(&core::TimePeriodValue::fromString)) {
     keep_alive_interval_ = std::chrono::duration_cast<std::chrono::seconds>(keep_alive_interval->getMilliseconds());
   }
-  logger_->log_debug("AbstractMQTTProcessor: KeepAliveInterval [%" PRId64 "] s", int64_t{keep_alive_interval_.count()});
+  logger_->log_debug("AbstractMQTTProcessor: KeepAliveInterval [{}] s", int64_t{keep_alive_interval_.count()});
 
   if (const auto connection_timeout = context->getProperty(ConnectionTimeout) | utils::andThen(&core::TimePeriodValue::fromString)) {
     connection_timeout_ = std::chrono::duration_cast<std::chrono::seconds>(connection_timeout->getMilliseconds());
   }
-  logger_->log_debug("AbstractMQTTProcessor: ConnectionTimeout [%" PRId64 "] s", int64_t{connection_timeout_.count()});
+  logger_->log_debug("AbstractMQTTProcessor: ConnectionTimeout [{}] s", int64_t{connection_timeout_.count()});
 
   qos_ = utils::parseEnumProperty<mqtt::MqttQoS>(*context, QoS);
-  logger_->log_debug("AbstractMQTTProcessor: QoS [%u]", static_cast<uint8_t>(qos_));
+  logger_->log_debug("AbstractMQTTProcessor: QoS [{}]", static_cast<uint8_t>(qos_));
 
   if (const auto security_protocol = context->getProperty(SecurityProtocol)) {
     if (*security_protocol == MQTT_SECURITY_PROTOCOL_SSL) {
       sslOpts_ = MQTTAsync_SSLOptions_initializer;
       if (auto value = context->getProperty(SecurityCA)) {
-        logger_->log_debug("AbstractMQTTProcessor: trustStore [%s]", *value);
+        logger_->log_debug("AbstractMQTTProcessor: trustStore [{}]", *value);
         securityCA_ = std::move(*value);
         sslOpts_->trustStore = securityCA_.c_str();
       }
       if (auto value = context->getProperty(SecurityCert)) {
-        logger_->log_debug("AbstractMQTTProcessor: keyStore [%s]", *value);
+        logger_->log_debug("AbstractMQTTProcessor: keyStore [{}]", *value);
         securityCert_ = std::move(*value);
         sslOpts_->keyStore = securityCert_.c_str();
       }
       if (auto value = context->getProperty(SecurityPrivateKey)) {
-        logger_->log_debug("AbstractMQTTProcessor: privateKey [%s]", *value);
+        logger_->log_debug("AbstractMQTTProcessor: privateKey [{}]", *value);
         securityPrivateKey_ = std::move(*value);
         sslOpts_->privateKey = securityPrivateKey_.c_str();
       }
       if (auto value = context->getProperty(SecurityPrivateKeyPassword)) {
-        logger_->log_debug("AbstractMQTTProcessor: privateKeyPassword [%s]", *value);
+        logger_->log_debug("AbstractMQTTProcessor: privateKeyPassword [{}]", *value);
         securityPrivateKeyPassword_ = std::move(*value);
         sslOpts_->privateKeyPassword = securityPrivateKeyPassword_.c_str();
       }
@@ -93,28 +93,28 @@ void AbstractMQTTProcessor::onSchedule(const std::shared_ptr<core::ProcessContex
   if (auto last_will_topic = context->getProperty(LastWillTopic); last_will_topic.has_value() && !last_will_topic->empty()) {
     last_will_ = MQTTAsync_willOptions_initializer;
 
-    logger_->log_debug("AbstractMQTTProcessor: Last Will Topic [%s]", *last_will_topic);
+    logger_->log_debug("AbstractMQTTProcessor: Last Will Topic [{}]", *last_will_topic);
     last_will_topic_ = std::move(*last_will_topic);
     last_will_->topicName = last_will_topic_.c_str();
 
     if (auto value = context->getProperty(LastWillMessage)) {
-      logger_->log_debug("AbstractMQTTProcessor: Last Will Message [%s]", *value);
+      logger_->log_debug("AbstractMQTTProcessor: Last Will Message [{}]", *value);
       last_will_message_ = std::move(*value);
       last_will_->message = last_will_message_.c_str();
     }
 
     last_will_qos_ = utils::parseEnumProperty<mqtt::MqttQoS>(*context, LastWillQoS);
-    logger_->log_debug("AbstractMQTTProcessor: Last Will QoS [%u]", static_cast<uint8_t>(last_will_qos_));
+    logger_->log_debug("AbstractMQTTProcessor: Last Will QoS [{}]", static_cast<uint8_t>(last_will_qos_));
     last_will_->qos = static_cast<int>(last_will_qos_);
 
     if (const auto value = context->getProperty(LastWillRetain) | utils::andThen(&utils::StringUtils::toBool)) {
-      logger_->log_debug("AbstractMQTTProcessor: Last Will Retain [%d]", *value);
+      logger_->log_debug("AbstractMQTTProcessor: Last Will Retain [{}]", *value);
       last_will_retain_ = {*value};
       last_will_->retained = last_will_retain_;
     }
 
     if (auto value = context->getProperty(LastWillContentType)) {
-      logger_->log_debug("AbstractMQTTProcessor: Last Will Content Type [%s]", *value);
+      logger_->log_debug("AbstractMQTTProcessor: Last Will Content Type [{}]", *value);
       last_will_content_type_ = std::move(*value);
     }
   }
@@ -151,7 +151,7 @@ void AbstractMQTTProcessor::reconnect() {
     throw minifi::Exception(ExceptionType::PROCESS_SCHEDULE_EXCEPTION, "MQTT client is not existing while trying to reconnect");
   }
   if (MQTTAsync_isConnected(client_)) {
-    logger_->log_debug("Already connected to %s, no need to reconnect", uri_);
+    logger_->log_debug("Already connected to {}, no need to reconnect", uri_);
     return;
   }
 
@@ -165,16 +165,16 @@ void AbstractMQTTProcessor::reconnect() {
 
   const MQTTAsync_connectOptions connect_options = createConnectOptions(connect_properties, will_properties, connect_finished_task);
 
-  logger_->log_info("Reconnecting to %s", uri_);
+  logger_->log_info("Reconnecting to {}", uri_);
   if (MQTTAsync_isConnected(client_)) {
-    logger_->log_debug("Already connected to %s, no need to reconnect", uri_);
+    logger_->log_debug("Already connected to {}, no need to reconnect", uri_);
     return;
   }
 
   const int ret = MQTTAsync_connect(client_, &connect_options);
   MQTTProperties_free(&connect_properties);
   if (ret != MQTTASYNC_SUCCESS) {
-    logger_->log_error("MQTTAsync_connect failed to MQTT broker %s with error code [%d]", uri_, ret);
+    logger_->log_error("MQTTAsync_connect failed to MQTT broker {} with error code [{}]", uri_, ret);
     return;
   }
 
@@ -263,7 +263,7 @@ void AbstractMQTTProcessor::onTrigger(const std::shared_ptr<core::ProcessContext
   reconnect();
 
   if (!MQTTAsync_isConnected(client_)) {
-    logger_->log_error("Could not work with MQTT broker because disconnected to %s", uri_);
+    logger_->log_error("Could not work with MQTT broker because disconnected to {}", uri_);
     yield();
     return;
   }
@@ -308,7 +308,7 @@ void AbstractMQTTProcessor::disconnect() {
 
   const int ret = MQTTAsync_disconnect(client_, &disconnect_options);
   if (ret != MQTTASYNC_SUCCESS) {
-    logger_->log_error("MQTTAsync_disconnect failed to MQTT broker %s with error code [%d]", uri_, ret);
+    logger_->log_error("MQTTAsync_disconnect failed to MQTT broker {} with error code [{}]", uri_, ret);
     return;
   }
 
@@ -399,23 +399,23 @@ int AbstractMQTTProcessor::msgReceived(void *context, char* topic_name, int topi
 }
 
 void AbstractMQTTProcessor::onConnectionLost(char* cause) {
-  logger_->log_error("Connection lost to MQTT broker %s", uri_);
+  logger_->log_error("Connection lost to MQTT broker {}", uri_);
   if (cause != nullptr) {
-    logger_->log_error("Cause for connection loss: %s", cause);
+    logger_->log_error("Cause for connection loss: {}", cause);
   }
 }
 
 void AbstractMQTTProcessor::onConnectFinished(MQTTAsync_successData* success_data, MQTTAsync_successData5* success_data_5,
                                               MQTTAsync_failureData* failure_data, MQTTAsync_failureData5* failure_data_5) {
   if (success_data) {
-    logger_->log_info("Successfully connected to MQTT broker %s", uri_);
+    logger_->log_info("Successfully connected to MQTT broker {}", uri_);
     startupClient();
     return;
   }
 
   if (success_data_5) {
-    logger_->log_info("Successfully connected to MQTT broker %s", uri_);
-    logger_->log_info("Reason code for connection success: %d: %s", success_data_5->reasonCode, MQTTReasonCode_toString(success_data_5->reasonCode));
+    logger_->log_info("Successfully connected to MQTT broker {}", uri_);
+    logger_->log_info("Reason code for connection success: {}: {}", magic_enum::enum_underlying(success_data_5->reasonCode), MQTTReasonCode_toString(success_data_5->reasonCode));
     setBrokerLimits(success_data_5);
     checkBrokerLimits();
     startupClient();
@@ -423,49 +423,49 @@ void AbstractMQTTProcessor::onConnectFinished(MQTTAsync_successData* success_dat
   }
 
   if (failure_data) {
-    logger_->log_error("Connection failed to MQTT broker %s (%d)", uri_, failure_data->code);
+    logger_->log_error("Connection failed to MQTT broker {} ({})", uri_, failure_data->code);
     if (failure_data->message != nullptr) {
-      logger_->log_error("Detailed reason for connection failure: %s", failure_data->message);
+      logger_->log_error("Detailed reason for connection failure: {}", failure_data->message);
     }
     return;
   }
 
   if (failure_data_5) {
-    logger_->log_error("Connection failed to MQTT broker %s (%d)", uri_, failure_data_5->code);
+    logger_->log_error("Connection failed to MQTT broker {} ({})", uri_, failure_data_5->code);
     if (failure_data_5->message != nullptr) {
-      logger_->log_error("Detailed reason for connection failure: %s", failure_data_5->message);
+      logger_->log_error("Detailed reason for connection failure: {}", failure_data_5->message);
     }
-    logger_->log_error("Reason code for connection failure: %d: %s", failure_data_5->reasonCode, MQTTReasonCode_toString(failure_data_5->reasonCode));
+    logger_->log_error("Reason code for connection failure: {}: {}", magic_enum::enum_underlying(failure_data_5->reasonCode), MQTTReasonCode_toString(failure_data_5->reasonCode));
   }
 }
 
 void AbstractMQTTProcessor::onDisconnectFinished(MQTTAsync_successData* success_data, MQTTAsync_successData5* success_data_5,
                                                  MQTTAsync_failureData* failure_data, MQTTAsync_failureData5* failure_data_5) {
   if (success_data) {
-    logger_->log_info("Successfully disconnected from MQTT broker %s", uri_);
+    logger_->log_info("Successfully disconnected from MQTT broker {}", uri_);
     return;
   }
 
   if (success_data_5) {
-    logger_->log_info("Successfully disconnected from MQTT broker %s", uri_);
-    logger_->log_info("Reason code for disconnection success: %d: %s", success_data_5->reasonCode, MQTTReasonCode_toString(success_data_5->reasonCode));
+    logger_->log_info("Successfully disconnected from MQTT broker {}", uri_);
+    logger_->log_info("Reason code for disconnection success: {}: {}", magic_enum::enum_underlying(success_data_5->reasonCode), MQTTReasonCode_toString(success_data_5->reasonCode));
     return;
   }
 
   if (failure_data) {
-    logger_->log_error("Disconnection failed from MQTT broker %s (%d)", uri_, failure_data->code);
+    logger_->log_error("Disconnection failed from MQTT broker {} ({})", uri_, failure_data->code);
     if (failure_data->message != nullptr) {
-      logger_->log_error("Detailed reason for disconnection failure: %s", failure_data->message);
+      logger_->log_error("Detailed reason for disconnection failure: {}", failure_data->message);
     }
     return;
   }
 
   if (failure_data_5) {
-    logger_->log_error("Disconnection failed from MQTT broker %s (%d)", uri_, failure_data_5->code);
+    logger_->log_error("Disconnection failed from MQTT broker {} ({})", uri_, failure_data_5->code);
     if (failure_data_5->message != nullptr) {
-      logger_->log_error("Detailed reason for disconnection failure: %s", failure_data_5->message);
+      logger_->log_error("Detailed reason for disconnection failure: {}", failure_data_5->message);
     }
-    logger_->log_error("Reason code for disconnection failure: %d: %s", failure_data_5->reasonCode, MQTTReasonCode_toString(failure_data_5->reasonCode));
+    logger_->log_error("Reason code for disconnection failure: {}: {}", magic_enum::enum_underlying(failure_data_5->reasonCode), MQTTReasonCode_toString(failure_data_5->reasonCode));
   }
 }
 

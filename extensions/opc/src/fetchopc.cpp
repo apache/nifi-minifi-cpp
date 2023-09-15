@@ -25,6 +25,7 @@
 #include "core/ProcessSession.h"
 #include "core/Resource.h"
 #include "utils/StringUtils.h"
+#include "utils/Enum.h"
 
 namespace org::apache::nifi::minifi::processors {
 
@@ -100,7 +101,7 @@ namespace org::apache::nifi::minifi::processors {
         myID.identifierType = UA_NODEIDTYPE_STRING;
         myID.identifier.string = UA_STRING_ALLOC(nodeID_.c_str());  // NOLINT(cppcoreguidelines-pro-type-union-access)
       } else {
-        logger_->log_error("Unhandled id type: '%d'. No flowfiles are generated.", idType_);
+        logger_->log_error("Unhandled id type: '{}'. No flowfiles are generated.", magic_enum::enum_underlying(idType_));
         yield();
         return;
       }
@@ -109,7 +110,7 @@ namespace org::apache::nifi::minifi::processors {
       if (translatedNodeIDs_.empty()) {
         auto sc = connection_->translateBrowsePathsToNodeIdsRequest(nodeID_, translatedNodeIDs_, logger_);
         if (sc != UA_STATUSCODE_GOOD) {
-          logger_->log_error("Failed to translate %s to node id, no flow files will be generated (%s)", nodeID_.c_str(), UA_StatusCode_name(sc));
+          logger_->log_error("Failed to translate {} to node id, no flow files will be generated ({})", nodeID_.c_str(), UA_StatusCode_name(sc));
           yield();
           return;
         }
@@ -141,7 +142,7 @@ namespace org::apache::nifi::minifi::processors {
           std::string new_timestamp = nodedata.attributes["Sourcetimestamp"];
           if (cur_timestamp != new_timestamp) {
             node_timestamp_[nodeid] = new_timestamp;
-            logger_->log_debug("Node %s has new source timestamp %s", nodeid, new_timestamp);
+            logger_->log_debug("Node {} has new source timestamp {}", nodeid, new_timestamp);
             write = true;
           }
         }
@@ -151,7 +152,7 @@ namespace org::apache::nifi::minifi::processors {
         }
       } catch (const std::exception& exception) {
         std::string browse_name(reinterpret_cast<char*>(ref->browseName.name.data), ref->browseName.name.length);
-        logger_->log_warn("Caught Exception while trying to get data from node %s: %s", path + "/" + browse_name, exception.what());
+        logger_->log_warn("Caught Exception while trying to get data from node {}: {}", path + "/" + browse_name, exception.what());
       }
     }
     return true;
@@ -172,7 +173,7 @@ namespace org::apache::nifi::minifi::processors {
       } catch (const std::exception& e) {
         std::string browsename;
         flowFile->getAttribute("Browsename", browsename);
-        logger_->log_info("Failed to extract data of OPC node %s: %s", browsename, e.what());
+        logger_->log_info("Failed to extract data of OPC node {}: {}", browsename, e.what());
         session->transfer(flowFile, Failure);
         return;
       }

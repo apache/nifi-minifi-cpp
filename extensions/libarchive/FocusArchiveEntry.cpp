@@ -66,10 +66,10 @@ void FocusArchiveEntry::onTrigger(core::ProcessContext *context, core::ProcessSe
 
   for (auto &entryMetadata : archiveMetadata.entryMetadata) {
     if (entryMetadata.entryType == AE_IFREG) {
-      logger_->log_info("FocusArchiveEntry importing %s from %s", entryMetadata.entryName, entryMetadata.tmpFileName.string());
+      logger_->log_info("FocusArchiveEntry importing {} from {}", entryMetadata.entryName, entryMetadata.tmpFileName);
       session->import(entryMetadata.tmpFileName.string(), flowFile, false, 0);
       utils::Identifier stashKeyUuid = id_generator_->generate();
-      logger_->log_debug("FocusArchiveEntry generated stash key %s for entry %s", stashKeyUuid.to_string(), entryMetadata.entryName);
+      logger_->log_debug("FocusArchiveEntry generated stash key {} for entry {}", stashKeyUuid.to_string(), entryMetadata.entryName);
       entryMetadata.stashKey = stashKeyUuid.to_string();
 
       if (entryMetadata.entryName == archiveMetadata.focusedEntry) {
@@ -85,7 +85,7 @@ void FocusArchiveEntry::onTrigger(core::ProcessContext *context, core::ProcessSe
   if (!targetEntryStashKey.empty()) {
     session->restore(targetEntryStashKey, flowFile);
   } else {
-    logger_->log_warn("FocusArchiveEntry failed to locate target entry: %s",
+    logger_->log_warn("FocusArchiveEntry failed to locate target entry: {}",
                       archiveMetadata.focusedEntry.c_str());
   }
 
@@ -100,7 +100,7 @@ void FocusArchiveEntry::onTrigger(core::ProcessContext *context, core::ProcessSe
       try {
         archiveStack.loadJsonString(existingLensStack);
       } catch (Exception &exception) {
-        logger_->log_debug(exception.what());
+        logger_->log_debug("{}", exception.what());
         context->yield();
         return;
       }
@@ -163,7 +163,7 @@ int64_t FocusArchiveEntry::ReadCallback::operator()(const std::shared_ptr<io::In
 
   // Read each item in the archive
   if (archive_read_open(inputArchive, &data, ok_cb, read_cb, ok_cb)) {
-    logger_->log_error("FocusArchiveEntry can't open due to archive error: %s", archive_error_string(inputArchive));
+    logger_->log_error("FocusArchiveEntry can't open due to archive error: {}", archive_error_string(inputArchive));
     return nlen;
   }
 
@@ -175,12 +175,12 @@ int64_t FocusArchiveEntry::ReadCallback::operator()(const std::shared_ptr<io::In
     }
 
     if (res < ARCHIVE_OK) {
-      logger_->log_error("FocusArchiveEntry can't read header due to archive error: %s", archive_error_string(inputArchive));
+      logger_->log_error("FocusArchiveEntry can't read header due to archive error: {}", archive_error_string(inputArchive));
       return nlen;
     }
 
     if (res < ARCHIVE_WARN) {
-      logger_->log_warn("FocusArchiveEntry got archive warning while reading header: %s", archive_error_string(inputArchive));
+      logger_->log_warn("FocusArchiveEntry got archive warning while reading header: {}", archive_error_string(inputArchive));
       return nlen;
     }
 
@@ -201,15 +201,15 @@ int64_t FocusArchiveEntry::ReadCallback::operator()(const std::shared_ptr<io::In
     metadata.entryMTime = archive_entry_mtime(entry);
     metadata.entryMTimeNsec = archive_entry_mtime_nsec(entry);
 
-    logger_->log_info("FocusArchiveEntry entry type of %s is: %d", entryName, metadata.entryType);
-    logger_->log_info("FocusArchiveEntry entry perm of %s is: %d", entryName, metadata.entryPerm);
+    logger_->log_info("FocusArchiveEntry entry type of {} is: {}", entryName, metadata.entryType);
+    logger_->log_info("FocusArchiveEntry entry perm of {} is: {}", entryName, metadata.entryPerm);
 
     // Write content to tmp file
     if (entryType == AE_IFREG) {
       auto tmpFileName = file_man_->unique_file(true);
       metadata.tmpFileName = tmpFileName;
       metadata.entryType = entryType;
-      logger_->log_info("FocusArchiveEntry extracting %s to: %s", entryName, tmpFileName.string());
+      logger_->log_info("FocusArchiveEntry extracting {} to: {}", entryName, tmpFileName);
 
       auto fd = fopen(tmpFileName.string().c_str(), "w");
 

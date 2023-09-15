@@ -27,13 +27,10 @@
 
 #include "sitetosite/Peer.h"
 #include "utils/StringUtils.h"
+#include "utils/Enum.h"
 #include "Exception.h"
 
-namespace org {
-namespace apache {
-namespace nifi {
-namespace minifi {
-namespace sitetosite {
+namespace org::apache::nifi::minifi::sitetosite {
 
 /**
  * Represents a peer. Contains the parser for the Peer JSON.
@@ -78,12 +75,12 @@ class PeersEntity {
                 secure = false;
               } else {
                 const auto err = utils::StringUtils::join_pack("could not parse secure string ", secureStr);
-                logger->log_error("%s", err);
+                logger->log_error("{}", err);
                 throw std::logic_error{err};
               }
             } else {
-              logger->log_warn("Invalid value type for secure, assuming false (rapidjson type id %i)",
-                               peer["secure"].GetType());
+              logger->log_warn("Invalid value type for secure, assuming false (rapidjson type id {})",
+                  magic_enum::enum_underlying(peer["secure"].GetType()));
             }
           }
 
@@ -100,15 +97,15 @@ class PeersEntity {
             sitetosite::PeerStatus status(std::make_shared<sitetosite::Peer>(id, hostname, port, secure), flowFileCount, true);
             peer_statuses.push_back(std::move(status));
           } else {
-            logger->log_debug("hostname empty or port is zero. hostname: %s, port: %d", hostname, port);
+            logger->log_debug("hostname empty or port is zero. hostname: {}, port: {}", hostname, port);
           }
         }
       } else {
-        logger->log_debug("Peers is either not a member or is empty. String to analyze: %s", entity);
+        logger->log_debug("Peers is either not a member or is empty. String to analyze: {}", entity);
       }
       return true;
     } catch (Exception &exception) {
-      logger->log_debug("Caught Exception %s", exception.what());
+      logger->log_debug("Caught Exception {}", exception.what());
       return false;
     } catch (...) {
       logger->log_debug("General exception occurred");
@@ -117,8 +114,4 @@ class PeersEntity {
   }
 };
 
-} /* namespace sitetosite */
-} /* namespace minifi */
-} /* namespace nifi */
-} /* namespace apache */
-} /* namespace org */
+}  // namespace org::apache::nifi::minifi::sitetosite

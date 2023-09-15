@@ -91,7 +91,7 @@ std::map<std::filesystem::path, TailState> update_keys_in_legacy_states(const st
 }
 
 void openFile(const std::filesystem::path& file_path, uint64_t offset, std::ifstream &input_stream, const std::shared_ptr<core::logging::Logger> &logger) {
-  logger->log_debug("Opening %s", file_path.string());
+  logger->log_debug("Opening {}", file_path);
   input_stream.open(file_path, std::fstream::in | std::fstream::binary);
   if (!input_stream.is_open() || !input_stream.good()) {
     input_stream.close();
@@ -100,7 +100,7 @@ void openFile(const std::filesystem::path& file_path, uint64_t offset, std::ifst
   if (offset != 0U) {
     input_stream.seekg(offset, std::ifstream::beg);
     if (!input_stream.good()) {
-      logger->log_error("Seeking to %" PRIu64 " failed for file %s (does file/filesystem support seeking?)", offset, file_path.string());
+      logger->log_error("Seeking to {} failed for file {} (does file/filesystem support seeking?)", offset, file_path);
       throw Exception(FILE_OPERATION_EXCEPTION, "Could not seek file " + file_path.string() + " to offset " + std::to_string(offset));
     }
   }
@@ -130,7 +130,7 @@ class FileReaderCallback {
         input_stream_.read(reinterpret_cast<char *>(buffer_.data()), gsl::narrow<std::streamsize>(buffer_.size()));
 
         const auto num_bytes_read = input_stream_.gcount();
-        logger_->log_trace("Read %jd bytes of input", std::intmax_t{num_bytes_read});
+        logger_->log_trace("Read {} bytes of input", std::intmax_t{num_bytes_read});
 
         begin_ = buffer_.data();
         end_ = begin_ + num_bytes_read;
@@ -203,7 +203,7 @@ class WholeFileReaderCallback {
       input_stream_.read(buffer.data(), buffer.size());
 
       const auto num_bytes_read = input_stream_.gcount();
-      logger_->log_trace("Read %jd bytes of input", std::intmax_t{num_bytes_read});
+      logger_->log_trace("Read {} bytes of input", std::intmax_t{num_bytes_read});
 
       const int len = gsl::narrow<int>(num_bytes_read);
 
@@ -255,7 +255,7 @@ void TailFile::onSchedule(const std::shared_ptr<core::ProcessContext> &context, 
     if (auto parsed_delimiter = utils::StringUtils::parseCharacter(*delimiter_str)) {
       delimiter_ = *parsed_delimiter;
     } else {
-      logger_->log_error("Invalid %s: \"%s\" (it should be a single character, whether escaped or not). Using the first character as the %s",
+      logger_->log_error("Invalid {}: \"{}\" (it should be a single character, whether escaped or not). Using the first character as the {}",
           std::string(TailFile::Delimiter.name), *delimiter_str, std::string(TailFile::Delimiter.name));
       delimiter_ = getDelimiterOld(*delimiter_str);
     }
@@ -344,7 +344,7 @@ void TailFile::parseAttributeProviderServiceProperty(core::ProcessContext& conte
 void TailFile::parseStateFileLine(char *buf, std::map<std::filesystem::path, TailState> &state) const {
   char *line = buf;
 
-  logger_->log_trace("Received line %s", buf);
+  logger_->log_trace("Received line {}", buf);
 
   while ((line[0] == ' ') || (line[0] == '\t'))
     ++line;
@@ -378,7 +378,7 @@ void TailFile::parseStateFileLine(char *buf, std::map<std::filesystem::path, Tai
   if (key == "FILENAME") {
     std::filesystem::path file_path = value;
     if (file_path.has_filename() && file_path.has_parent_path()) {
-      logger_->log_debug("State migration received path %s, file %s", file_path.parent_path().string(), file_path.filename().string());
+      logger_->log_debug("State migration received path {}, file {}", file_path.parent_path(), file_path.filename());
       state.emplace(file_path.filename(), TailState{file_path.parent_path(), file_path.filename()});
     } else {
       state.emplace(value, TailState{file_path.parent_path(), value});
@@ -390,7 +390,7 @@ void TailFile::parseStateFileLine(char *buf, std::map<std::filesystem::path, Tai
       throw minifi::Exception(ExceptionType::PROCESSOR_EXCEPTION, "Incompatible state file types");
     }
     const auto position = std::stoull(value);
-    logger_->log_debug("Received position %llu", position);
+    logger_->log_debug("Received position {}", position);
     state.begin()->second.position_ = gsl::narrow<uint64_t>(position);
   }
   if (key.find(CURRENT_STR) == 0) {
@@ -456,7 +456,7 @@ bool TailFile::getStateFromStateManager(std::map<std::filesystem::path, TailStat
 
         std::filesystem::path file_path = current;
         if (file_path.has_filename() && file_path.has_parent_path()) {
-          logger_->log_debug("Received path %s, file %s", file_path.parent_path().string(), file_path.filename().string());
+          logger_->log_debug("Received path {}, file {}", file_path.parent_path(), file_path.filename());
           new_tail_states.emplace(current, TailState{file_path.parent_path(), file_path.filename(), position, last_read_time, checksum});
         } else {
           new_tail_states.emplace(current, TailState{file_path.parent_path(), file_path, position, last_read_time, checksum});
@@ -466,7 +466,7 @@ bool TailFile::getStateFromStateManager(std::map<std::filesystem::path, TailStat
       }
     }
     for (const auto& s : tail_states_) {
-      logger_->log_debug("TailState %s: %s, %s, %" PRIu64 ", %" PRIu64,
+      logger_->log_debug("TailState {}: {}, {}, {}, {}",
                          s.first.string(), s.second.path_.string(), s.second.file_name_.string(), s.second.position_, s.second.checksum_);
     }
     return true;
@@ -484,7 +484,7 @@ bool TailFile::getStateFromLegacyStateFile(const std::shared_ptr<core::ProcessCo
 
   std::ifstream file(state_file.c_str(), std::ifstream::in);
   if (!file.good()) {
-    logger_->log_info("Legacy state file %s not found (this is OK)", state_file);
+    logger_->log_info("Legacy state file {} not found (this is OK)", state_file);
     return false;
   }
 
@@ -499,7 +499,7 @@ bool TailFile::getStateFromLegacyStateFile(const std::shared_ptr<core::ProcessCo
 }
 
 void TailFile::logState() {
-  logger_->log_info("State of the TailFile processor %s:", name_);
+  logger_->log_info("State of the TailFile processor {}:", name_);
   for (const auto& [key, value] : tail_states_) {
     core::logging::LOG_INFO(logger_) << key << " => { " << value << " }";
   }
@@ -548,7 +548,7 @@ std::vector<TailState> TailFile::findAllRotatedFiles(const TailState &state) con
     if (file_name != state.file_name_ && utils::regexMatch(file_name.string(), pattern_regex)) {
       auto full_file_name = path / file_name;
       TailStateWithMtime::TimePoint mtime{utils::file::last_write_time_point(full_file_name)};
-      logger_->log_debug("File %s with mtime %" PRId64 " matches rolling filename pattern %s, so we are reading it", file_name.string(), int64_t{mtime.time_since_epoch().count()}, pattern);
+      logger_->log_debug("File {} with mtime {} matches rolling filename pattern {}, so we are reading it", file_name, int64_t{mtime.time_since_epoch().count()}, pattern);
       matched_files_with_mtime.emplace_back(TailState{path, file_name}, mtime);
     }
     return true;
@@ -560,7 +560,7 @@ std::vector<TailState> TailFile::findAllRotatedFiles(const TailState &state) con
 }
 
 std::vector<TailState> TailFile::findRotatedFilesAfterLastReadTime(const TailState &state) const {
-  logger_->log_debug("Searching for files rolled over after last read time: %" PRId64, state.lastReadTimeInMilliseconds());
+  logger_->log_debug("Searching for files rolled over after last read time: {}", state.lastReadTimeInMilliseconds());
 
   std::string pattern = parseRollingFilePattern(state);
 
@@ -570,9 +570,9 @@ std::vector<TailState> TailFile::findRotatedFilesAfterLastReadTime(const TailSta
     if (file_name != state.file_name_ && utils::regexMatch(file_name.string(), pattern_regex)) {
       auto full_file_name = path / file_name;
       TailStateWithMtime::TimePoint mtime{utils::file::last_write_time_point(full_file_name)};
-      logger_->log_debug("File %s with mtime %" PRId64 " matches rolling filename pattern %s", file_name.string(), int64_t{mtime.time_since_epoch().count()}, pattern);
+      logger_->log_debug("File {} with mtime {} matches rolling filename pattern {}", file_name, int64_t{mtime.time_since_epoch().count()}, pattern);
       if (mtime >= std::chrono::time_point_cast<std::chrono::seconds>(state.last_read_time_)) {
-        logger_->log_debug("File %s has mtime >= last read time, so we are going to read it", file_name.string());
+        logger_->log_debug("File {} has mtime >= last read time, so we are going to read it", file_name);
         matched_files_with_mtime.emplace_back(TailState{path, file_name}, mtime);
       }
     }
@@ -615,7 +615,7 @@ void TailFile::onTrigger(const std::shared_ptr<core::ProcessContext>& context, c
 
   if (tail_mode_ == Mode::MULTIPLE) {
     if (last_multifile_lookup_ + lookup_frequency_ < std::chrono::steady_clock::now()) {
-      logger_->log_debug("Lookup frequency %" PRId64 " ms have elapsed, doing new multifile lookup", int64_t{lookup_frequency_.count()});
+      logger_->log_debug("Lookup frequency {} have elapsed, doing new multifile lookup", lookup_frequency_);
       doMultifileLookup(*context);
     } else {
       logger_->log_trace("Skipping multifile lookup");
@@ -657,7 +657,7 @@ void TailFile::processFile(const std::shared_ptr<core::ProcessSession> &session,
     if (fsize < state.position_) {
       processRotatedFilesAfterLastReadTime(session, state);
     } else if (fsize == state.position_) {
-      logger_->log_trace("Skipping file %s as its size hasn't changed since last read", state.file_name_.string());
+      logger_->log_trace("Skipping file {} as its size hasn't changed since last read", state.file_name_);
       return;
     }
   }
@@ -690,10 +690,10 @@ void TailFile::processSingleFile(const std::shared_ptr<core::ProcessSession> &se
   auto fileName = state.file_name_;
 
   if (utils::file::file_size(full_file_name) == 0U) {
-    logger_->log_warn("Unable to read file %s as it does not exist or has size zero", full_file_name.string());
+    logger_->log_warn("Unable to read file {} as it does not exist or has size zero", full_file_name);
     return;
   }
-  logger_->log_debug("Tailing file %s from %" PRIu64, full_file_name.string(), state.position_);
+  logger_->log_debug("Tailing file {} from {}", full_file_name, state.position_);
 
   std::string baseName = fileName.stem().string();
   std::string extension = fileName.extension().string();
@@ -701,7 +701,7 @@ void TailFile::processSingleFile(const std::shared_ptr<core::ProcessSession> &se
     extension.erase(extension.begin());
 
   if (delimiter_) {
-    logger_->log_trace("Looking for delimiter 0x%X", *delimiter_);
+    logger_->log_trace("Looking for delimiter 0x{:X}", *delimiter_);
 
     std::size_t num_flow_files = 0;
     FileReaderCallback file_reader{full_file_name, state.position_, *delimiter_, state.checksum_};
@@ -724,7 +724,7 @@ void TailFile::processSingleFile(const std::shared_ptr<core::ProcessSession> &se
     }
 
     state = state_copy;
-    logger_->log_info("%zu flowfiles were received from TailFile input", num_flow_files);
+    logger_->log_info("{} flowfiles were received from TailFile input", num_flow_files);
 
   } else {
     WholeFileReaderCallback file_reader{full_file_name, state.position_, state.checksum_};
@@ -741,7 +741,7 @@ void TailFile::updateFlowFileAttributes(const std::filesystem::path& full_file_n
                                         const std::filesystem::path& fileName, const std::string& baseName,
                                         const std::string& extension,
                                         std::shared_ptr<core::FlowFile> &flow_file) const {
-  logger_->log_info("TailFile %s for %" PRIu64 " bytes", fileName.string(), flow_file->getSize());
+  logger_->log_info("TailFile {} for {} bytes", fileName, flow_file->getSize());
   std::string logName = textfragmentutils::createFileName(baseName, extension, state.position_, flow_file->getSize());
   flow_file->setAttribute(core::SpecialFlowAttribute::PATH, state.path_.string());
   flow_file->addAttribute(core::SpecialFlowAttribute::ABSOLUTE_PATH, full_file_name.string());

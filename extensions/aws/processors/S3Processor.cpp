@@ -50,13 +50,13 @@ std::optional<Aws::Auth::AWSCredentials> S3Processor::getAWSCredentialsFromContr
 
   std::shared_ptr<core::controller::ControllerService> service = context->getControllerService(service_name);
   if (!service) {
-    logger_->log_error("AWS credentials service with name: '%s' could not be found", service_name);
+    logger_->log_error("AWS credentials service with name: '{}' could not be found", service_name);
     return std::nullopt;
   }
 
   auto aws_credentials_service = std::dynamic_pointer_cast<minifi::aws::controllers::AWSCredentialsService>(service);
   if (!aws_credentials_service) {
-    logger_->log_error("Controller service with name: '%s' is not an AWS credentials service", service_name);
+    logger_->log_error("Controller service with name: '{}' is not an AWS credentials service", service_name);
     return std::nullopt;
   }
 
@@ -117,10 +117,10 @@ void S3Processor::onSchedule(const std::shared_ptr<core::ProcessContext>& contex
   if (!context->getProperty(Region, client_config_->region) || client_config_->region.empty() || !ranges::contains(region::REGIONS, client_config_->region)) {
     throw Exception(PROCESS_SCHEDULE_EXCEPTION, "Region property missing or invalid");
   }
-  logger_->log_debug("S3Processor: Region [%s]", client_config_->region);
+  logger_->log_debug("S3Processor: Region [{}]", client_config_->region);
 
   if (auto communications_timeout = context->getProperty<core::TimePeriodValue>(CommunicationsTimeout)) {
-    logger_->log_debug("S3Processor: Communications Timeout %" PRId64 " ms", communications_timeout->getMilliseconds().count());
+    logger_->log_debug("S3Processor: Communications Timeout {}", communications_timeout->getMilliseconds());
     client_config_->connectTimeoutMs = gsl::narrow<long>(communications_timeout->getMilliseconds().count());  // NOLINT(runtime/int)
   } else {
     throw Exception(PROCESS_SCHEDULE_EXCEPTION, "Communications Timeout missing or invalid");
@@ -137,10 +137,10 @@ std::optional<CommonProperties> S3Processor::getCommonELSupportedProperties(
     const std::shared_ptr<core::FlowFile> &flow_file) {
   CommonProperties properties;
   if (!context->getProperty(Bucket, properties.bucket, flow_file) || properties.bucket.empty()) {
-    logger_->log_error("Bucket '%s' is invalid or empty!", properties.bucket);
+    logger_->log_error("Bucket '{}' is invalid or empty!", properties.bucket);
     return std::nullopt;
   }
-  logger_->log_debug("S3Processor: Bucket [%s]", properties.bucket);
+  logger_->log_debug("S3Processor: Bucket [{}]", properties.bucket);
 
   auto credentials = getAWSCredentials(context, flow_file);
   if (!credentials) {
@@ -157,7 +157,7 @@ std::optional<CommonProperties> S3Processor::getCommonELSupportedProperties(
 
   context->getProperty(EndpointOverrideURL, properties.endpoint_override_url, flow_file);
   if (!properties.endpoint_override_url.empty()) {
-    logger_->log_debug("S3Processor: Endpoint Override URL [%s]", properties.endpoint_override_url);
+    logger_->log_debug("S3Processor: Endpoint Override URL [{}]", properties.endpoint_override_url);
   }
 
   return properties;

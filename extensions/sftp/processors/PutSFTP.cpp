@@ -145,7 +145,7 @@ bool PutSFTP::processOne(const std::shared_ptr<core::ProcessContext> &context, c
 
   /* Reject zero-byte files if needed */
   if (reject_zero_byte_ && flow_file->getSize() == 0U) {
-    logger_->log_debug("Rejecting %s because it is zero bytes", filename.generic_string());
+    logger_->log_debug("Rejecting {} because it is zero bytes", filename.generic_string());
     session->transfer(flow_file, Reject);
     return true;
   }
@@ -183,30 +183,30 @@ bool PutSFTP::processOne(const std::shared_ptr<core::ProcessContext> &context, c
     LIBSSH2_SFTP_ATTRIBUTES attrs;
     if (!client->stat(target_path, true /*follow_symlinks*/, attrs)) {
       if (client->getLastError() != utils::SFTPError::FileDoesNotExist) {
-        logger_->log_error("Failed to stat %s", target_path.c_str());
+        logger_->log_error("Failed to stat {}", target_path.c_str());
         session->transfer(flow_file, Failure);
         return true;
       }
     } else {
       if ((attrs.flags & LIBSSH2_SFTP_ATTR_PERMISSIONS) && LIBSSH2_SFTP_S_ISDIR(attrs.permissions)) {
-        logger_->log_error("Rejecting %s because a directory with the same name already exists", filename.c_str());
+        logger_->log_error("Rejecting {} because a directory with the same name already exists", filename.c_str());
         session->transfer(flow_file, Reject);
         put_connection_back_to_cache();
         return true;
       }
-      logger_->log_debug("Found file with the same name as the target file: %s", filename.c_str());
+      logger_->log_debug("Found file with the same name as the target file: {}", filename.c_str());
       if (conflict_resolution_ == CONFLICT_RESOLUTION_IGNORE) {
-        logger_->log_debug("Routing %s to SUCCESS despite a file with the same name already existing", filename.c_str());
+        logger_->log_debug("Routing {} to SUCCESS despite a file with the same name already existing", filename.c_str());
         session->transfer(flow_file, Success);
         put_connection_back_to_cache();
         return true;
       } else if (conflict_resolution_ == CONFLICT_RESOLUTION_REJECT) {
-        logger_->log_debug("Routing %s to REJECT because a file with the same name already exists", filename.c_str());
+        logger_->log_debug("Routing {} to REJECT because a file with the same name already exists", filename.c_str());
         session->transfer(flow_file, Reject);
         put_connection_back_to_cache();
         return true;
       } else if (conflict_resolution_ == CONFLICT_RESOLUTION_FAIL) {
-        logger_->log_debug("Routing %s to FAILURE because a file with the same name already exists", filename.c_str());
+        logger_->log_debug("Routing {} to FAILURE because a file with the same name already exists", filename.c_str());
         session->transfer(flow_file, Failure);
         put_connection_back_to_cache();
         return true;
@@ -221,17 +221,17 @@ bool PutSFTP::processOne(const std::shared_ptr<core::ProcessContext> &context, c
               unique_name_generated = true;
               break;
             } else {
-              logger_->log_error("Failed to stat %s", possible_resolved_path.c_str());
+              logger_->log_error("Failed to stat {}", possible_resolved_path.c_str());
               session->transfer(flow_file, Failure);
               return true;
             }
           }
         }
         if (unique_name_generated) {
-          logger_->log_debug("Resolved %s to %s", filename.generic_string(), possible_resolved_filename);
+          logger_->log_debug("Resolved {} to {}", filename.generic_string(), possible_resolved_filename);
           resolved_filename = std::move(possible_resolved_filename);
         } else {
-          logger_->log_error("Rejecting %s because a unique name could not be determined after 99 attempts", filename.c_str());
+          logger_->log_error("Rejecting {} because a unique name could not be determined after 99 attempts", filename.c_str());
           session->transfer(flow_file, Reject);
           put_connection_back_to_cache();
           return true;
@@ -256,7 +256,7 @@ bool PutSFTP::processOne(const std::shared_ptr<core::ProcessContext> &context, c
         put_connection_back_to_cache();
         return true;
       default:
-        logger_->log_error("Unknown createDirectoryHierarchy result: %hhu", static_cast<uint8_t>(res));
+        logger_->log_error("Unknown createDirectoryHierarchy result: {}", magic_enum::enum_underlying(res));
         context->yield();
         return false;
     }
@@ -273,7 +273,7 @@ bool PutSFTP::processOne(const std::shared_ptr<core::ProcessContext> &context, c
   }
 
   std::string final_target_path = (remote_path / resolved_filename).generic_string();
-  logger_->log_debug("The target path is %s, final target path is %s", target_path.c_str(), final_target_path.c_str());
+  logger_->log_debug("The target path is {}, final target path is {}", target_path.c_str(), final_target_path.c_str());
 
   try {
     session->read(flow_file, [&client, &target_path, this](const std::shared_ptr<io::InputStream>& stream) {
@@ -286,7 +286,7 @@ bool PutSFTP::processOne(const std::shared_ptr<core::ProcessContext> &context, c
       return gsl::narrow<int64_t>(stream->size());
     });
   } catch (const utils::SFTPException& ex) {
-    logger_->log_debug(ex.what());
+    logger_->log_debug("{}", ex.what());
     session->transfer(flow_file, Failure);
     return true;
   }
@@ -294,9 +294,9 @@ bool PutSFTP::processOne(const std::shared_ptr<core::ProcessContext> &context, c
   /* Move file to its final place */
   if (target_path != final_target_path) {
     if (!client->rename(target_path.generic_string(), final_target_path, conflict_resolution_ == CONFLICT_RESOLUTION_REPLACE /*overwrite*/)) {
-      logger_->log_error("Failed to move temporary file %s to final path %s", target_path.generic_string(), final_target_path);
+      logger_->log_error("Failed to move temporary file {} to final path {}", target_path.generic_string(), final_target_path);
       if (!client->removeFile(target_path.generic_string())) {
-        logger_->log_error("Failed to remove temporary file %s", target_path.generic_string());
+        logger_->log_error("Failed to remove temporary file {}", target_path.generic_string());
       }
       session->transfer(flow_file, Failure);
       return true;
@@ -334,7 +334,7 @@ bool PutSFTP::processOne(const std::shared_ptr<core::ProcessContext> &context, c
     }
     if (!client->setAttributes(final_target_path, attrs)) {
       /* This is not fatal, just log a warning */
-      logger_->log_warn("Failed to set file attributes for %s", target_path.generic_string());
+      logger_->log_warn("Failed to set file attributes for {}", target_path.generic_string());
     }
   }
 

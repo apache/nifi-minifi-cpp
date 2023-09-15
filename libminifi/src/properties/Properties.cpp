@@ -144,12 +144,12 @@ void fixValidatedProperty(const std::string& property_name,
   }
 
   if (persisted_value == value) {
-    logger.log_info("Changed validated property from %s to %s, this change will be persisted",  value, *fixed_property_value);
+    logger.log_info("Changed validated property from {} to {}, this change will be persisted",  value, *fixed_property_value);
     value = *fixed_property_value;
     persisted_value = value;
     needs_to_persist_new_value = true;
   } else {
-    logger.log_info("Changed validated property from %s to %s, this change won't be persisted", value, *fixed_property_value);
+    logger.log_info("Changed validated property from {} to {}, this change won't be persisted", value, *fixed_property_value);
     value = *fixed_property_value;
     needs_to_persist_new_value = false;
   }
@@ -162,7 +162,7 @@ void fixValidatedProperty(const std::string& property_name,
 void Properties::loadConfigureFile(const std::filesystem::path& configuration_file, std::string_view prefix) {
   std::lock_guard<std::mutex> lock(mutex_);
   if (configuration_file.empty()) {
-    logger_->log_error("Configuration file path for %s is empty!", getName());
+    logger_->log_error("Configuration file path for {} is empty!", getName());
     return;
   }
 
@@ -170,16 +170,16 @@ void Properties::loadConfigureFile(const std::filesystem::path& configuration_fi
   properties_file_ = std::filesystem::canonical(getHome() / configuration_file, ec);
 
   if (ec.value() != 0) {
-    logger_->log_warn("Configuration file '%s' does not exist, so it could not be loaded.", configuration_file.string());
+    logger_->log_warn("Configuration file '{}' does not exist, so it could not be loaded.", configuration_file);
     return;
   }
 
-  logger_->log_info("Using configuration file to load configuration for %s from %s (located at %s)",
+  logger_->log_info("Using configuration file to load configuration for {} from {} (located at {})",
                     getName().c_str(), configuration_file.string(), properties_file_.string());
 
   std::ifstream file(properties_file_, std::ifstream::in);
   if (!file.good()) {
-    logger_->log_error("load configure file failed %s", properties_file_.string());
+    logger_->log_error("load configure file failed {}", properties_file_);
     return;
   }
   properties_.clear();
@@ -209,7 +209,7 @@ bool Properties::commitChanges() {
   }
   std::ifstream file(properties_file_, std::ifstream::in);
   if (!file) {
-    logger_->log_error("load configure file failed %s", properties_file_.string());
+    logger_->log_error("load configure file failed {}", properties_file_);
     return false;
   }
 
@@ -231,20 +231,20 @@ bool Properties::commitChanges() {
   try {
     current_content.writeTo(new_file);
   } catch (const std::exception&) {
-    logger_->log_error("Could not update %s", properties_file_.string());
+    logger_->log_error("Could not update {}", properties_file_);
     return false;
   }
 
   auto backup = properties_file_;
   backup += ".bak";
   if (utils::file::FileUtils::copy_file(properties_file_, backup) == 0 && utils::file::FileUtils::copy_file(new_file, properties_file_) == 0) {
-    logger_->log_info("Persisted %s", properties_file_.string());
+    logger_->log_info("Persisted {}", properties_file_);
     checksum_calculator_.invalidateChecksum();
     dirty_ = false;
     return true;
   }
 
-  logger_->log_error("Could not update %s", properties_file_.string());
+  logger_->log_error("Could not update {}", properties_file_);
   return false;
 }
 

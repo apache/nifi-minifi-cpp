@@ -50,7 +50,7 @@ void GCSProcessor::onSchedule(const std::shared_ptr<core::ProcessContext>& conte
 
   endpoint_url_ = context->getProperty(EndpointOverrideURL);
   if (endpoint_url_)
-    logger_->log_debug("Endpoint overwritten: %s", *endpoint_url_);
+    logger_->log_debug("Endpoint overwritten: {}", *endpoint_url_);
 }
 
 gcs::Client GCSProcessor::getClient() const {

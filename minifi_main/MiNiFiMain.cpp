@@ -275,14 +275,14 @@ int main(int argc, char **argv) {
   try {
     minifi_home_lock.lock();
   } catch (const std::exception& ex) {
-    logger->log_error("Could not acquire LOCK for minifi home '%s', maybe another minifi instance is running: %s", minifiHome.string(), ex.what());
+    logger->log_error("Could not acquire LOCK for minifi home '{}', maybe another minifi instance is running: {}", minifiHome, ex.what());
     std::exit(1);
   }
   // chdir to MINIFI_HOME
   std::error_code current_path_error;
   std::filesystem::current_path(minifiHome, current_path_error);
   if (current_path_error) {
-    logger->log_error("Failed to change working directory to MINIFI_HOME (%s)", minifiHome.string());
+    logger->log_error("Failed to change working directory to MINIFI_HOME ({})", minifiHome);
     return -1;
   }
 
@@ -319,7 +319,7 @@ int main(int argc, char **argv) {
     utils::IdGenerator::getIdGenerator()->initialize(uid_properties);
 
     // Make a record of minifi home in the configured log file.
-    logger->log_info("MINIFI_HOME=%s", minifiHome.string());
+    logger->log_info("MINIFI_HOME={}", minifiHome);
 
     auto decryptor = minifi::Decryptor::create(minifiHome);
     if (decryptor) {
@@ -453,7 +453,7 @@ int main(int argc, char **argv) {
           }
         });
       } catch (const std::runtime_error& error) {
-        logger->log_error(error.what());
+        logger->log_error("{}", error.what());
         return -1;
       }
     }
@@ -465,7 +465,7 @@ int main(int argc, char **argv) {
       controller->load();
     }
     catch (std::exception& e) {
-      logger->log_error("Failed to load configuration due to exception: %s", e.what());
+      logger->log_error("Failed to load configuration due to exception: {}", e.what());
       return -1;
     }
     catch (...) {

@@ -29,17 +29,17 @@ asio::awaitable<void> TcpServer::doReceive() {
   while (true) {
     auto [accept_error, socket] = co_await acceptor.async_accept(use_nothrow_awaitable);
     if (accept_error) {
-      logger_->log_error("Error during accepting new connection: %s", accept_error.message());
+      logger_->log_error("Error during accepting new connection: {}", accept_error.message());
       co_await utils::net::async_wait(1s);
       continue;
     }
     std::error_code error;
     auto remote_address = socket.lowest_layer().remote_endpoint(error).address();
     if (error)
-      logger_->log_warn("Error during fetching remote endpoint: %s", error.message());
+      logger_->log_warn("Error during fetching remote endpoint: {}", error.message());
     auto local_port = socket.lowest_layer().local_endpoint(error).port();
     if (error)
-      logger_->log_warn("Error during fetching local endpoint: %s", error.message());
+      logger_->log_warn("Error during fetching local endpoint: {}", error.message());
     if (ssl_data_)
       co_spawn(io_context_, secureSession(std::move(socket), std::move(remote_address), local_port), asio::detached);
     else
@@ -53,7 +53,7 @@ asio::awaitable<void> TcpServer::readLoop(auto& socket, const auto& remote_addre
     auto [read_error, bytes_read] = co_await asio::async_read_until(socket, asio::dynamic_buffer(read_message), '\n', use_nothrow_awaitable);  // NOLINT
     if (read_error) {
       if (read_error != asio::error::eof) {
-        logger_->log_error("Error during reading from socket: %s", read_error.message());
+        logger_->log_error("Error during reading from socket: {}", read_error.message());
       }
       co_return;
     }
@@ -108,7 +108,7 @@ asio::awaitable<void> TcpServer::secureSession(asio::ip::tcp::socket socket, asi
   asio::error_code ec;
   ssl_socket.lowest_layer().cancel(ec);
   if (ec) {
-    logger_->log_error("Cancelling asynchronous operations of SSL socket failed with: %s", ec.message());
+    logger_->log_error("Cancelling asynchronous operations of SSL socket failed with: {}", ec.message());
   }
   auto [shutdown_error] = co_await ssl_socket.async_shutdown(use_nothrow_awaitable);
   if (shutdown_error) {

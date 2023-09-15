@@ -53,7 +53,7 @@ Bookmark::Bookmark(const wel::EventPath& path,
         migrated_path += "-migrated";
         std::filesystem::rename(filePath_, migrated_path);
       } else {
-        logger_->log_warn("Could not migrate state from specified State Directory %s", bookmarkRootDir.string());
+        logger_->log_warn("Could not migrate state from specified State Directory {}", bookmarkRootDir);
       }
     }
   } else {
@@ -130,7 +130,7 @@ bool Bookmark::saveBookmarkXml(const std::wstring& bookmarkXml) {
 bool Bookmark::saveBookmark(EVT_HANDLE event_handle) {
   auto bookmark_xml = getNewBookmarkXml(event_handle);
   if (!bookmark_xml) {
-    logger_->log_error("%s", bookmark_xml.error());
+    logger_->log_error("{}", bookmark_xml.error());
     return false;
   }
 
@@ -139,7 +139,7 @@ bool Bookmark::saveBookmark(EVT_HANDLE event_handle) {
 
 nonstd::expected<std::wstring, std::string> Bookmark::getNewBookmarkXml(EVT_HANDLE hEvent) {
   if (!EvtUpdateBookmark(hBookmark_.get(), hEvent)) {
-    return nonstd::make_unexpected(fmt::format("EvtUpdateBookmark failed due to %s", utils::OsUtils::windowsErrorToErrorCode(GetLastError()).message()));
+    return nonstd::make_unexpected(fmt::format("EvtUpdateBookmark failed due to {}", utils::OsUtils::windowsErrorToErrorCode(GetLastError()).message()));
   }
   // Render the bookmark as an XML string that can be persisted.
   logger_->log_trace("Rendering new bookmark");
@@ -152,13 +152,13 @@ nonstd::expected<std::wstring, std::string> Bookmark::getNewBookmarkXml(EVT_HAND
 
   auto last_error = GetLastError();
   if (last_error != ERROR_INSUFFICIENT_BUFFER)
-    return nonstd::make_unexpected(fmt::format("EvtRender failed due to %s", utils::OsUtils::windowsErrorToErrorCode(last_error).message()));
+    return nonstd::make_unexpected(fmt::format("EvtRender failed due to {}", utils::OsUtils::windowsErrorToErrorCode(last_error).message()));
 
   bufferSize = bufferUsed;
   std::vector<wchar_t> buf(bufferSize / 2 + 1);
 
   if (!EvtRender(nullptr, hBookmark_.get(), EvtRenderBookmark, bufferSize, buf.data(), &bufferUsed, &propertyCount)) {
-    return nonstd::make_unexpected(fmt::format("EvtRender failed due to %s", utils::OsUtils::windowsErrorToErrorCode(GetLastError()).message()));
+    return nonstd::make_unexpected(fmt::format("EvtRender failed due to {}", utils::OsUtils::windowsErrorToErrorCode(GetLastError()).message()));
   }
 
   return std::wstring(buf.data());
@@ -192,7 +192,7 @@ bool Bookmark::getBookmarkXmlFromFile(std::wstring& bookmarkXml) {
   // '!' should be at the end of bookmark.
   auto pos = bookmarkXml.find(L'!');
   if (std::wstring::npos == pos) {
-    logger_->log_error("No '!' in bookmarXml '%ls'", bookmarkXml.c_str());
+    logger_->log_error("No '!' in bookmarXml '{}'", utils::OsUtils::wideStringToString(bookmarkXml));
     bookmarkXml.clear();
     return false;
   }

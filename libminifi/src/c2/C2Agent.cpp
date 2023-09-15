@@ -123,14 +123,14 @@ void C2Agent::stop() {
 }
 
 void C2Agent::checkTriggers() {
-  logger_->log_debug("Checking %d triggers", triggers_.size());
+  logger_->log_debug("Checking {} triggers", triggers_.size());
   for (const auto &trigger : triggers_) {
     if (trigger->triggered()) {
       /**
        * Action was triggered, so extract it.
        */
       C2Payload &&triggerAction = trigger->getAction();
-      logger_->log_trace("%s action triggered", trigger->getName());
+      logger_->log_trace("{} action triggered", trigger->getName());
       // handle the response the same way. This means that
       // acknowledgements will be sent to the c2 server for every trigger action.
       // this is expected
@@ -138,7 +138,7 @@ void C2Agent::checkTriggers() {
       // call reset if the trigger supports this activity
       trigger->reset();
     } else {
-      logger_->log_trace("%s action not triggered", trigger->getName());
+      logger_->log_trace("{} action not triggered", trigger->getName());
     }
   }
 }
@@ -151,16 +151,16 @@ void C2Agent::configure(const std::shared_ptr<Configure> &configure, bool reconf
     if (!configure->get(Configuration::nifi_c2_agent_protocol_class, "c2.agent.protocol.class", clazz)) {
       clazz = "RESTSender";
     }
-    logger_->log_info("Class is %s", clazz);
+    logger_->log_info("Class is {}", clazz);
 
     auto protocol = core::ClassLoader::getDefaultClassLoader().instantiateRaw(clazz, clazz);
     if (protocol == nullptr) {
-      logger_->log_warn("Class %s not found", clazz);
+      logger_->log_warn("Class {} not found", clazz);
       protocol = core::ClassLoader::getDefaultClassLoader().instantiateRaw("RESTSender", "RESTSender");
       if (!protocol) {
-        const char* errmsg = "Attempted to load RESTSender. To enable C2, please specify an active protocol for this agent.";
-        logger_->log_error(errmsg);
-        throw Exception{ GENERAL_EXCEPTION, errmsg };
+        constexpr std::string_view errmsg = "Attempted to load RESTSender. To enable C2, please specify an active protocol for this agent.";
+        logger_->log_error("{}", errmsg);
+        throw Exception{ GENERAL_EXCEPTION, std::string(errmsg) };
       }
 
       logger_->log_info("Class is RESTSender");
@@ -182,14 +182,14 @@ void C2Agent::configure(const std::shared_ptr<Configure> &configure, bool reconf
         heart_beat_period_ = std::chrono::milliseconds(std::stoi(heartbeat_period));
       }
     } catch (const std::invalid_argument &) {
-      logger_->log_error("Invalid heartbeat period: %s", heartbeat_period);
+      logger_->log_error("Invalid heartbeat period: {}", heartbeat_period);
       heart_beat_period_ = 3s;
     }
   } else {
     if (!reconfigure)
       heart_beat_period_ = 3s;
   }
-  logger_->log_debug("Using %" PRId64 " ms as the heartbeat period", heart_beat_period_.count());
+  logger_->log_debug("Using {} as the heartbeat period", heart_beat_period_);
 
   std::string heartbeat_reporters;
   if (configure->get(Configuration::nifi_c2_agent_heartbeat_reporter_classes, "c2.agent.heartbeat.reporter.classes", heartbeat_reporters)) {
@@ -198,7 +198,7 @@ void C2Agent::configure(const std::shared_ptr<Configure> &configure, bool reconf
     for (const auto& reporter : reporters) {
       auto heartbeat_reporter_obj = core::ClassLoader::getDefaultClassLoader().instantiate<HeartbeatReporter>(reporter, reporter);
       if (heartbeat_reporter_obj == nullptr) {
-        logger_->log_error("Could not instantiate %s", reporter);
+        logger_->log_error("Could not instantiate {}", reporter);
       } else {
         heartbeat_reporter_obj->initialize(controller_, update_sink_, configuration_);
         heartbeat_protocols_.push_back(std::move(heartbeat_reporter_obj));
@@ -213,7 +213,7 @@ void C2Agent::configure(const std::shared_ptr<Configure> &configure, bool reconf
     for (const auto& trigger : triggers) {
       auto trigger_obj = core::ClassLoader::getDefaultClassLoader().instantiate<C2Trigger>(trigger, trigger);
       if (trigger_obj == nullptr) {
-        logger_->log_error("Could not instantiate %s", trigger);
+        logger_->log_error("Could not instantiate {}", trigger);
       } else {
         trigger_obj->initialize(configuration_);
         triggers_.push_back(std::move(trigger_obj));
@@ -318,7 +318,7 @@ void C2Agent::extractPayload(const C2Payload &resp) {
       logger_->log_debug("Received no operation event from protocol");
       break;
     default:
-      logger_->log_error("Received unknown event (%d) from protocol", static_cast<int>(resp.getStatus().getState()));
+      logger_->log_error("Received unknown event ({}) from protocol", static_cast<int>(resp.getStatus().getState()));
       break;
   }
 }
@@ -361,7 +361,7 @@ void C2Agent::handle_c2_server_response(const C2ContentResponse &resp) {
 
       // stop all referenced components.
       update_sink_->executeOnComponent(resp.name, [this, &resp] (state::StateController& component) {
-        logger_->log_debug("Stopping component %s", resp.name);
+        logger_->log_debug("Stopping component {}", resp.name);
         if (resp.op == Operation::stop) {
           component.stop();
         } else {
@@ -435,14 +435,14 @@ void C2Agent::handle_clear(const C2ContentResponse &resp) {
   try {
     operand = utils::enumCast<ClearOperand>(resp.name, true);
   } catch(const std::runtime_error&) {
-    logger_->log_debug("Clearing unknown %s", resp.name);
+    logger_->log_debug("Clearing unknown {}", resp.name);
     return;
   }
 
   switch (operand) {
     case ClearOperand::connection: {
       for (const auto& connection : resp.operation_arguments) {
-        logger_->log_debug("Clearing connection %s", connection.second.to_string());
+        logger_->log_debug("Clearing connection {}", connection.second.to_string());
         update_sink_->clearConnection(connection.second.to_string());
       }
       break;
@@ -456,7 +456,7 @@ void C2Agent::handle_clear(const C2ContentResponse &resp) {
         auto state_storage = core::ProcessContext::getStateStorage(logger_, controller_, configuration_);
         if (state_storage != nullptr) {
           update_sink_->executeOnComponent(corecomponent.second.to_string(), [this, &state_storage] (state::StateController& component) {
-            logger_->log_debug("Clearing state for component %s", component.getComponentName());
+            logger_->log_debug("Clearing state for component {}", component.getComponentName());
             auto state_manager = state_storage->getStateManager(component.getComponentUUID());
             if (state_manager != nullptr) {
               component.stop();
@@ -464,7 +464,7 @@ void C2Agent::handle_clear(const C2ContentResponse &resp) {
               state_manager->persist();
               component.start();
             } else {
-              logger_->log_warn("Failed to get StateManager for component %s", component.getComponentUUID().to_string());
+              logger_->log_warn("Failed to get StateManager for component {}", component.getComponentUUID().to_string());
             }
           });
         } else {
@@ -474,7 +474,7 @@ void C2Agent::handle_clear(const C2ContentResponse &resp) {
       break;
     }
     default:
-      logger_->log_error("Unknown clear operand %s", resp.name);
+      logger_->log_error("Unknown clear operand {}", resp.name);
   }
 
   C2Payload response(Operation::acknowledge, resp.ident, true);
@@ -539,7 +539,7 @@ void C2Agent::handle_describe(const C2ContentResponse &resp) {
         const std::vector<BackTrace> traces = update_sink_->getTraces();
         for (const auto &trace : traces) {
           for (const auto & line : trace.getTraces()) {
-            logger_->log_trace("%s -- %s", trace.getName(), line);
+            logger_->log_trace("{} -- {}", trace.getName(), line);
           }
         }
         auto keys = configuration_->getConfiguredKeys();
@@ -763,7 +763,7 @@ utils::TaskRescheduleInfo C2Agent::produce() {
             enqueue_c2_server_response(std::move(response));
           }
           catch(const std::exception &e) {
-            logger_->log_error("Exception occurred while consuming payload. error: %s", e.what());
+            logger_->log_error("Exception occurred while consuming payload. error: {}", e.what());
           }
           catch(...) {
             logger_->log_error("Unknown exception occurred while consuming payload.");
@@ -780,10 +780,10 @@ utils::TaskRescheduleInfo C2Agent::produce() {
       performHeartBeat();
     }
     catch (const std::exception &e) {
-      logger_->log_error("Exception occurred while performing heartbeat. type: %s, what: %s", typeid(e).name(), e.what());
+      logger_->log_error("Exception occurred while performing heartbeat. type: {}, what: {}", typeid(e).name(), e.what());
     }
     catch (...) {
-      logger_->log_error("Unknown exception occurred while performing heartbeat, type: %s", getCurrentExceptionTypeName());
+      logger_->log_error("Unknown exception occurred while performing heartbeat, type: {}", getCurrentExceptionTypeName());
     }
   }
 
@@ -821,7 +821,7 @@ std::optional<std::string> C2Agent::resolveFlowUrl(const std::string& url) const
     if (base_url.isValid()) {
       return base_url.hostPort() + "/c2/api/" + url;
     }
-    logger_->log_error("Could not parse C2 REST URL '%s'", base);
+    logger_->log_error("Could not parse C2 REST URL '{}'", base);
     return std::nullopt;
   }
   return url;
@@ -840,7 +840,7 @@ std::optional<std::string> C2Agent::resolveUrl(const std::string& url) const {
   if (base_url.isValid()) {
     return base_url.hostPort() + url;
   }
-  logger_->log_error("Could not parse C2 REST URL '%s'", base);
+  logger_->log_error("Could not parse C2 REST URL '{}'", base);
   return std::nullopt;
 }
 
@@ -853,7 +853,7 @@ std::optional<std::string> C2Agent::fetchFlow(const std::string& uri) const {
     }
   }
   if (protocol_.load() == nullptr) {
-    logger_->log_error("Couldn't open '%s' as file and we have no protocol to request the file from", uri);
+    logger_->log_error("Couldn't open '{}' as file and we have no protocol to request the file from", uri);
     return {};
   }
 
@@ -882,7 +882,7 @@ bool C2Agent::handleConfigurationUpdate(const C2ContentResponse &resp) {
     file_uri = url->second.to_string();
     std::optional<std::string> optional_configuration_str = fetchFlow(file_uri);
     if (!optional_configuration_str) {
-      logger_->log_error("Couldn't load new flow configuration from: \"%s\"", file_uri);
+      logger_->log_error("Couldn't load new flow configuration from: \"{}\"", file_uri);
       C2Payload response(Operation::acknowledge, state::UpdateState::SET_ERROR, resp.ident, true);
       response.setRawData("Error while applying flow. Couldn't load flow configuration.");
       enqueue_c2_response(std::move(response));
@@ -890,7 +890,7 @@ bool C2Agent::handleConfigurationUpdate(const C2ContentResponse &resp) {
     }
     configuration_str = optional_configuration_str.value();
   } else {
-    logger_->log_debug("Did not have location within %s", resp.ident);
+    logger_->log_debug("Did not have location within {}", resp.ident);
     auto update_text = resp.operation_arguments.find("configuration_data");
     if (update_text == resp.operation_arguments.end()) {
       logger_->log_error("Neither the config file location nor the data is provided");
@@ -912,7 +912,7 @@ bool C2Agent::handleConfigurationUpdate(const C2ContentResponse &resp) {
 
   int16_t err = {update_sink_->applyUpdate(file_uri, configuration_str, should_persist, getFlowIdFromConfigUpdate(resp))};
   if (err != 0) {
-    logger_->log_error("Flow configuration update failed with error code %" PRIi16, err);
+    logger_->log_error("Flow configuration update failed with error code {}", err);
     C2Payload response(Operation::acknowledge, state::UpdateState::SET_ERROR, resp.ident, true);
     response.setRawData("Error while applying flow. Likely missing processors");
     enqueue_c2_response(std::move(response));
@@ -957,7 +957,7 @@ static std::optional<std::string> validateFilePath(const std::filesystem::path& 
 
 void C2Agent::handleAssetUpdate(const C2ContentResponse& resp) {
   auto send_error = [&] (std::string_view error) {
-    logger_->log_error("%s", std::string(error));
+    logger_->log_error("{}", std::string(error));
     C2Payload response(Operation::acknowledge, state::UpdateState::SET_ERROR, resp.ident, true);
     response.setRawData(as_bytes(std::span(error.begin(), error.end())));
     enqueue_c2_response(std::move(response));
@@ -1038,7 +1038,7 @@ void C2Agent::handleAssetUpdate(const C2ContentResponse& resp) {
 }
 
 void C2Agent::enqueue_c2_server_response(C2Payload &&resp) {
-  logger_->log_trace("Server response: %s", [&] {return resp.str();});
+  logger_->log_trace("Server response: return {}", [&] { return resp.str(); });
 
   responses.enqueue(std::move(resp));
 }

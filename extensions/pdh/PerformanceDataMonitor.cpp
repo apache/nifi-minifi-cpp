@@ -47,7 +47,7 @@ void PerformanceDataMonitor::onSchedule(const std::shared_ptr<core::ProcessConte
     if (pdh_counter != nullptr) {
       PDH_STATUS add_to_query_result = pdh_counter->addToQuery(pdh_query_);
       if (add_to_query_result != ERROR_SUCCESS) {
-        logger_->log_error("Error adding %s to query, error code: 0x%x", pdh_counter->getName(), add_to_query_result);
+        logger_->log_error("Error adding {} to query, error code: {:#x}", pdh_counter->getName(), add_to_query_result);
         it = resource_consumption_counters_.erase(it);
         continue;
       }
@@ -57,7 +57,7 @@ void PerformanceDataMonitor::onSchedule(const std::shared_ptr<core::ProcessConte
 
   PDH_STATUS collect_query_data_result = PdhCollectQueryData(pdh_query_);
   if (ERROR_SUCCESS != collect_query_data_result) {
-    logger_->log_error("Error during PdhCollectQueryData, error code: 0x%x", collect_query_data_result);
+    logger_->log_error("Error during PdhCollectQueryData, error code: {:#x}", collect_query_data_result);
   }
 }
 
@@ -77,7 +77,7 @@ void PerformanceDataMonitor::onTrigger(core::ProcessContext* context, core::Proc
 
   PDH_STATUS collect_query_data_result = PdhCollectQueryData(pdh_query_);
   if (ERROR_SUCCESS != collect_query_data_result) {
-    logger_->log_error("Error during PdhCollectQueryData, error code: 0x%x", collect_query_data_result);
+    logger_->log_error("Error during PdhCollectQueryData, error code: {:#x}", collect_query_data_result);
     yield();
     return;
   }
@@ -244,7 +244,7 @@ void PerformanceDataMonitor::addCustomPDHCountersFromProperty(const std::string&
 void PerformanceDataMonitor::setupCountersFromProperties(const std::shared_ptr<core::ProcessContext>& context) {
   std::string custom_pdh_counters;
   if (context->getProperty(CustomPDHCounters, custom_pdh_counters)) {
-    logger_->log_trace("Custom PDH counters configured to be %s", custom_pdh_counters);
+    logger_->log_trace("Custom PDH counters configured to be {}", custom_pdh_counters);
     addCustomPDHCountersFromProperty(custom_pdh_counters);
   }
 }
@@ -252,7 +252,7 @@ void PerformanceDataMonitor::setupCountersFromProperties(const std::shared_ptr<c
 void PerformanceDataMonitor::setupPredefinedGroupsFromProperties(const std::shared_ptr<core::ProcessContext>& context) {
   std::string predefined_groups;
   if (context->getProperty(PredefinedGroups, predefined_groups)) {
-    logger_->log_trace("Predefined group configured to be %s", predefined_groups);
+    logger_->log_trace("Predefined group configured to be {}", predefined_groups);
     addCountersFromPredefinedGroupsProperty(predefined_groups);
   }
 }
@@ -280,7 +280,7 @@ void PerformanceDataMonitor::setupOutputFormatFromProperties(const std::shared_p
     }
   }
 
-  logger_->log_trace("OutputFormat is configured to be %s %s", pretty_output_ ? "pretty" : "compact", output_format_ == OutputFormat::JSON ? "JSON" : "OpenTelemetry");
+  logger_->log_trace("OutputFormat is configured to be {} {}", pretty_output_ ? "pretty" : "compact", output_format_ == OutputFormat::JSON ? "JSON" : "OpenTelemetry");
 }
 
 void PerformanceDataMonitor::setupDecimalPlacesFromProperties(const std::shared_ptr<core::ProcessContext>& context) {
@@ -297,7 +297,7 @@ void PerformanceDataMonitor::setupDecimalPlacesFromProperties(const std::shared_
     decimal_places_ = static_cast<uint8_t>(decimal_places);
   }
   if (decimal_places_.has_value())
-    logger_->log_trace("Rounding is enabled with %d decimal places", decimal_places_.value());
+    logger_->log_trace("Rounding is enabled with {} decimal places", decimal_places_.value());
 }
 
 void PerformanceDataMonitor::setupMembersFromProperties(const std::shared_ptr<core::ProcessContext>& context) {

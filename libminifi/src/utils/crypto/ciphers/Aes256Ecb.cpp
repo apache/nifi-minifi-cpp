@@ -31,7 +31,7 @@ std::shared_ptr<core::logging::Logger> Aes256EcbCipher::logger_{core::logging::L
 
 Aes256EcbCipher::Aes256EcbCipher(Bytes encryption_key) : encryption_key_(std::move(encryption_key)) {
   if (encryption_key_.size() != KEY_SIZE) {
-    handleError("Invalid key length %zu bytes, expected %zu bytes", encryption_key_.size(), static_cast<size_t>(KEY_SIZE));
+    handleError(fmt::format("Invalid key length {} bytes, expected {} bytes", encryption_key_.size(), static_cast<size_t>(KEY_SIZE)));
   }
 }
 
@@ -39,10 +39,10 @@ void Aes256EcbCipher::handleOpenSSLError(const char* msg) {
   std::array<char, 128> errmsg = {0};
   const auto errcode = ERR_peek_last_error();
   if (!errcode) {
-    handleError("%s: %s", msg, "Unknown OpenSSL error");
+    handleError(fmt::format("{}: {}", msg, "Unknown OpenSSL error"));
   }
   ERR_error_string_n(errcode, errmsg.data(), errmsg.size());
-  handleError("%s: %s", msg, errmsg.data());
+  handleError(fmt::format("{}: {}", msg, errmsg.data()));
 }
 
 Bytes Aes256EcbCipher::generateKey() {

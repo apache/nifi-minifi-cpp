@@ -88,7 +88,7 @@ void GetFile::onSchedule(core::ProcessContext *context, core::ProcessSessionFact
 
 void GetFile::onTrigger(core::ProcessContext* /*context*/, core::ProcessSession* session) {
   const bool is_dir_empty_before_poll = isListingEmpty();
-  logger_->log_debug("Listing is %s before polling directory", is_dir_empty_before_poll ? "empty" : "not empty");
+  logger_->log_debug("Listing is {} before polling directory", is_dir_empty_before_poll ? "empty" : "not empty");
   if (is_dir_empty_before_poll) {
     if (request_.pollInterval == 0ms || (std::chrono::system_clock::now() - last_listing_time_.load()) > request_.pollInterval) {
       performListing(request_);
@@ -97,7 +97,7 @@ void GetFile::onTrigger(core::ProcessContext* /*context*/, core::ProcessSession*
   }
 
   const bool is_dir_empty_after_poll = isListingEmpty();
-  logger_->log_debug("Listing is %s after polling directory", is_dir_empty_after_poll ? "empty" : "not empty");
+  logger_->log_debug("Listing is {} after polling directory", is_dir_empty_after_poll ? "empty" : "not empty");
   if (is_dir_empty_after_poll) {
     yield();
     return;
@@ -112,7 +112,7 @@ void GetFile::onTrigger(core::ProcessContext* /*context*/, core::ProcessSession*
 }
 
 void GetFile::getSingleFile(core::ProcessSession& session, const std::filesystem::path& file_path) const {
-  logger_->log_info("GetFile process %s", file_path.string());
+  logger_->log_info("GetFile process {}", file_path);
   auto flow_file = session.create();
   gsl_Expects(flow_file);
 
@@ -127,11 +127,11 @@ void GetFile::getSingleFile(core::ProcessSession& session, const std::filesystem
     if (!request_.keepSourceFile) {
       std::error_code remove_error;
       if (!std::filesystem::remove(file_path, remove_error)) {
-        logger_->log_error("GetFile could not delete file '%s', error: %s", file_path.string(), remove_error.message());
+        logger_->log_error("GetFile could not delete file '{}', error: {}", file_path, remove_error.message());
       }
     }
   } catch (const utils::FileReaderCallbackIOError& io_error) {
-    logger_->log_error("IO error while processing file '%s': %s", file_path.string(), io_error.what());
+    logger_->log_error("IO error while processing file '{}': {}", file_path, io_error.what());
     flow_file->setDeleted(true);
   }
 }
@@ -143,7 +143,7 @@ bool GetFile::isListingEmpty() const {
 }
 
 void GetFile::putListing(const std::filesystem::path& file_path) {
-  logger_->log_trace("Adding file to queue: %s", file_path.string());
+  logger_->log_trace("Adding file to queue: {}", file_path);
 
   std::lock_guard<std::mutex> lock(directory_listing_mutex_);
 
@@ -162,17 +162,17 @@ std::queue<std::filesystem::path> GetFile::pollListing(uint64_t batch_size) {
 }
 
 bool GetFile::fileMatchesRequestCriteria(const std::filesystem::path& full_name, const std::filesystem::path& name, const GetFileRequest &request) {
-  logger_->log_trace("Checking file: %s", full_name.string());
+  logger_->log_trace("Checking file: {}", full_name);
 
   std::error_code ec;
   uint64_t file_size = std::filesystem::file_size(full_name, ec);
   if (ec) {
-    logger_->log_error("file_size of %s: %s", full_name.string(), ec.message());
+    logger_->log_error("file_size of {}: {}", full_name, ec.message());
     return false;
   }
   const auto modifiedTime = std::filesystem::last_write_time(full_name, ec);
   if (ec) {
-    logger_->log_error("last_write_time of %s: %s", full_name.string(), ec.message());
+    logger_->log_error("last_write_time of {}: {}", full_name, ec.message());
     return false;
   }
 

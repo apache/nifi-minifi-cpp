@@ -59,10 +59,10 @@ bool ProvenanceEventRecord::loadFromRepository(const std::shared_ptr<core::Repos
   ret = repo->Get(getUUIDStr(), value);
 
   if (!ret) {
-    logger_->log_error("NiFi Provenance Store event %s can not be found", getUUIDStr());
+    logger_->log_error("NiFi Provenance Store event {} can not be found", getUUIDStr());
     return false;
   } else {
-    logger_->log_debug("NiFi Provenance Read event %s", getUUIDStr());
+    logger_->log_debug("NiFi Provenance Read event {}", getUUIDStr());
   }
 
   org::apache::nifi::minifi::io::BufferStream stream(value);
@@ -70,9 +70,9 @@ bool ProvenanceEventRecord::loadFromRepository(const std::shared_ptr<core::Repos
   ret = deserialize(stream);
 
   if (ret) {
-    logger_->log_debug("NiFi Provenance retrieve event %s size %llu eventType %d success", getUUIDStr(), stream.size(), _eventType);
+    logger_->log_debug("NiFi Provenance retrieve event {} size {} eventType {} success", getUUIDStr(), stream.size(), magic_enum::enum_name(_eventType));
   } else {
-    logger_->log_debug("NiFi Provenance retrieve event %s size %llu eventType %d fail", getUUIDStr(), stream.size(), _eventType);
+    logger_->log_debug("NiFi Provenance retrieve event {} size {} eventType {} fail", getUUIDStr(), stream.size(), magic_enum::enum_name(_eventType));
   }
 
   return ret;

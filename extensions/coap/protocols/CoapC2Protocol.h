@@ -55,7 +55,7 @@ namespace org::apache::nifi::minifi::coap::c2 {
  */
 class CoapProtocol : public minifi::c2::RESTSender {
  public:
-  explicit CoapProtocol(std::string name, const utils::Identifier &uuid = utils::Identifier());
+  explicit CoapProtocol(std::string_view name, const utils::Identifier &uuid = utils::Identifier());
 
   ~CoapProtocol() override;
 

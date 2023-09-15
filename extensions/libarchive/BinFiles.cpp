@@ -52,31 +52,31 @@ void BinFiles::onSchedule(core::ProcessContext *context, core::ProcessSessionFac
   uint64_t val64;
   if (context->getProperty(MinSize, val64)) {
     this->binManager_.setMinSize(val64);
-    logger_->log_debug("BinFiles: MinSize [%" PRId64 "]", val64);
+    logger_->log_debug("BinFiles: MinSize [{}]", val64);
   }
   if (context->getProperty(MaxSize, val64)) {
     this->binManager_.setMaxSize(val64);
-    logger_->log_debug("BinFiles: MaxSize [%" PRId64 "]", val64);
+    logger_->log_debug("BinFiles: MaxSize [{}]", val64);
   }
   if (context->getProperty(MinEntries, val32)) {
     this->binManager_.setMinEntries(val32);
-    logger_->log_debug("BinFiles: MinEntries [%" PRIu32 "]", val32);
+    logger_->log_debug("BinFiles: MinEntries [{}]", val32);
   }
   if (context->getProperty(MaxEntries, val32)) {
     this->binManager_.setMaxEntries(val32);
-    logger_->log_debug("BinFiles: MaxEntries [%" PRIu32 "]", val32);
+    logger_->log_debug("BinFiles: MaxEntries [{}]", val32);
   }
   if (context->getProperty(MaxBinCount, maxBinCount_)) {
-    logger_->log_debug("BinFiles: MaxBinCount [%" PRIu32 "]", maxBinCount_);
+    logger_->log_debug("BinFiles: MaxBinCount [{}]", maxBinCount_);
   }
   if (auto max_bin_age = context->getProperty<core::TimePeriodValue>(MaxBinAge)) {
     // We need to trigger the processor even when there are no incoming flow files so that it can flush the bins.
     setTriggerWhenEmpty(true);
     this->binManager_.setBinAge(max_bin_age->getMilliseconds());
-    logger_->log_debug("BinFiles: MaxBinAge [%" PRId64 "] ms", int64_t{max_bin_age->getMilliseconds().count()});
+    logger_->log_debug("BinFiles: MaxBinAge [{}]", max_bin_age->getMilliseconds());
   }
   if (context->getProperty(BatchSize, batchSize_)) {
-    logger_->log_debug("BinFiles: BatchSize [%" PRIu32 "]", batchSize_);
+    logger_->log_debug("BinFiles: BatchSize [{}]", batchSize_);
   }
 }
 
@@ -104,7 +104,7 @@ void BinManager::gatherReadyBins() {
         readyBin_.push_back(std::move(bin));
         queue->pop_front();
         binCount_--;
-        logger_->log_debug("BinManager move bin %s to ready bins for group %s", readyBin_.back()->getUUIDStr(), readyBin_.back()->getGroupId());
+        logger_->log_debug("BinManager move bin {} to ready bins for group {}", readyBin_.back()->getUUIDStr(), readyBin_.back()->getGroupId());
       } else {
         break;
       }
@@ -117,7 +117,7 @@ void BinManager::gatherReadyBins() {
     // erase from the map if the queue is empty for the group
     groupBinMap_.erase(group);
   }
-  logger_->log_debug("BinManager groupBinMap size %d", groupBinMap_.size());
+  logger_->log_debug("BinManager groupBinMap size {}", groupBinMap_.size());
 }
 
 void BinManager::removeOldestBin() {
@@ -139,12 +139,12 @@ void BinManager::removeOldestBin() {
     readyBin_.push_back(std::move(remove));
     (*oldqueue)->pop_front();
     binCount_--;
-    logger_->log_debug("BinManager move bin %s to ready bins for group %s", readyBin_.back()->getUUIDStr(), readyBin_.back()->getGroupId());
+    logger_->log_debug("BinManager move bin {} to ready bins for group {}", readyBin_.back()->getUUIDStr(), readyBin_.back()->getGroupId());
     if ((*oldqueue)->empty()) {
       groupBinMap_.erase(group);
     }
   }
-  logger_->log_debug("BinManager groupBinMap size %d", groupBinMap_.size());
+  logger_->log_debug("BinManager groupBinMap size {}", groupBinMap_.size());
 }
 
 void BinManager::getReadyBin(std::deque<std::unique_ptr<Bin>> &retBins) {
@@ -169,7 +169,7 @@ bool BinManager::offer(const std::string &group, const std::shared_ptr<core::Flo
     if (!bin->offer(flow))
       return false;
     readyBin_.push_back(std::move(bin));
-    logger_->log_debug("BinManager move bin %s to ready bins for group %s", readyBin_.back()->getUUIDStr(), group);
+    logger_->log_debug("BinManager move bin {} to ready bins for group {}", readyBin_.back()->getUUIDStr(), group);
     return true;
   }
   auto search = groupBinMap_.find(group);
@@ -183,7 +183,7 @@ bool BinManager::offer(const std::string &group, const std::shared_ptr<core::Flo
         if (!bin->offer(flow))
           return false;
         queue->push_back(std::move(bin));
-        logger_->log_debug("BinManager add bin %s to group %s", queue->back()->getUUIDStr(), group);
+        logger_->log_debug("BinManager add bin {} to group {}", queue->back()->getUUIDStr(), group);
         binCount_++;
       }
     } else {
@@ -192,7 +192,7 @@ bool BinManager::offer(const std::string &group, const std::shared_ptr<core::Flo
         return false;
       queue->push_back(std::move(bin));
       binCount_++;
-      logger_->log_debug("BinManager add bin %s to group %s", queue->back()->getUUIDStr(), group);
+      logger_->log_debug("BinManager add bin {} to group {}", queue->back()->getUUIDStr(), group);
     }
   } else {
     auto queue = std::make_unique<std::deque<std::unique_ptr<Bin>>>();
@@ -200,7 +200,7 @@ bool BinManager::offer(const std::string &group, const std::shared_ptr<core::Flo
     if (!bin->offer(flow))
       return false;
     queue->push_back(std::move(bin));
-    logger_->log_debug("BinManager add bin %s to group %s", queue->back()->getUUIDStr(), group);
+    logger_->log_debug("BinManager add bin {} to group {}", queue->back()->getUUIDStr(), group);
     groupBinMap_.insert(std::make_pair(group, std::move(queue)));
     binCount_++;
   }
@@ -251,12 +251,12 @@ void BinFiles::processReadyBins(std::deque<std::unique_ptr<Bin>> ready_bins, cor
 
     try {
       addFlowsToSession(session, bin);
-      logger_->log_debug("BinFiles start to process bin %s for group %s", bin->getUUIDStr(), bin->getGroupId());
+      logger_->log_debug("BinFiles start to process bin {} for group {}", bin->getUUIDStr(), bin->getGroupId());
       if (!processBin(session, bin))
         transferFlowsToFail(session, bin);
       session.commit();
     } catch(const std::exception& ex) {
-      logger_->log_error("Caught Exception type: '%s' while merging ready bin: '%s'", typeid(ex).name(), ex.what());
+      logger_->log_error("Caught Exception type: '{}' while merging ready bin: '{}'", typeid(ex).name(), ex.what());
       binManager_.addReadyBin(std::move(bin));
       session.rollback();
     }
@@ -268,7 +268,7 @@ std::deque<std::unique_ptr<Bin>> BinFiles::gatherReadyBins(core::ProcessContext 
   if (gsl::narrow<uint32_t>(binManager_.getBinCount()) > maxBinCount_) {
     // bin count reach max allowed
     context.yield();
-    logger_->log_debug("BinFiles reach max bin count %d", binManager_.getBinCount());
+    logger_->log_debug("BinFiles reach max bin count {}", binManager_.getBinCount());
     binManager_.removeOldestBin();
   }
 

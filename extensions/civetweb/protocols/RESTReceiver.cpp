@@ -65,7 +65,7 @@ int16_t RESTReceiver::heartbeat(const C2Payload &payload) {
   std::string outputConfig = serializeJsonRootPayload(payload);
 
   if (handler != nullptr) {
-    logger_->log_trace("Setting %s", outputConfig);
+    logger_->log_trace("Setting {}", outputConfig);
     handler->setResponse(outputConfig);
   }
 

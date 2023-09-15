@@ -57,7 +57,7 @@ struct LibraryDescriptor {
       throw std::runtime_error{"File not found: " + path.string()};
     }
     const Timer timer{[&](const std::chrono::milliseconds elapsed) {
-      core::logging::LOG_DEBUG(logger) << "Verification for '" << path << "' took " << elapsed.count() << " ms";
+      logger->log_debug("Verification for '{}' took {}", path, elapsed);
     }};
     const std::string_view begin_marker = "__EXTENSION_BUILD_IDENTIFIER_BEGIN__";
     const std::string_view end_marker = "__EXTENSION_BUILD_IDENTIFIER_END__";

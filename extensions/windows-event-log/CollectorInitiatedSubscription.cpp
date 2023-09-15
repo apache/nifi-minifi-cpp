@@ -34,6 +34,7 @@
 #include "core/Resource.h"
 #include "utils/gsl.h"
 #include "utils/OptionalUtils.h"
+#include "utils/OsUtils.h"
 
 #pragma comment(lib, "wevtapi.lib")
 #pragma comment(lib, "Wecapi.lib")
@@ -113,7 +114,7 @@ void CollectorInitiatedSubscription::onTrigger(const std::shared_ptr<core::Proce
              | utils::transform([](const auto& time_period_value) { return time_period_value.getMilliseconds().count(); });
              inactive_duration_to_reconnect_ms && *inactive_duration_to_reconnect_ms > 0) {
     if ((now - lastActivityTimestamp_) > gsl::narrow<uint64_t>(*inactive_duration_to_reconnect_ms)) {
-      logger_->log_info("Exceeds configured 'inactive duration to reconnect' %lld ms. Unsubscribe to reconnect..", *inactive_duration_to_reconnect_ms);
+      logger_->log_info("Exceeds configured 'inactive duration to reconnect' {} ms. Unsubscribe to reconnect..", *inactive_duration_to_reconnect_ms);
       unsubscribe();
     }
   }
@@ -274,7 +275,7 @@ bool CollectorInitiatedSubscription::checkSubscriptionRuntimeStatus() {
     const auto lastError = vProperty->UInt32Val;
 
     if (lastError == 0 && (runtimeStatus == EcRuntimeStatusActiveStatusActive || runtimeStatus == EcRuntimeStatusActiveStatusTrying)) {
-      logger_->log_info("Subscription '%ws': status '%ws', no error.", subscription_name_.c_str(), strRuntimeStatus.c_str());
+      logger_->log_info("Subscription '{}': status '{}', no error.", utils::OsUtils::wideStringToString(subscription_name_), utils::OsUtils::wideStringToString(strRuntimeStatus));
       return true;
     }
 
@@ -293,7 +294,10 @@ bool CollectorInitiatedSubscription::checkSubscriptionRuntimeStatus() {
       lastErrorMessage = vProperty->StringVal;
     }
 
-    logger_->log_error("Runtime status: %ws, last error: %d, last error message: %ws", strRuntimeStatus.c_str(), lastError, lastErrorMessage.c_str());
+    logger_->log_error("Runtime status: {}, last error: {}, last error message: {}",
+        utils::OsUtils::wideStringToString(strRuntimeStatus),
+        lastError,
+        utils::OsUtils::wideStringToString(lastErrorMessage));
 
     return false;
   }
@@ -453,7 +457,7 @@ bool CollectorInitiatedSubscription::createSubscription(const std::shared_ptr<co
 bool CollectorInitiatedSubscription::subscribe(const std::shared_ptr<core::ProcessContext> &context) {
   gsl_Expects(context);
 
-  logger_->log_debug("CollectorInitiatedSubscription: MaxBufferSize %lld", max_buffer_size_.getValue());
+  logger_->log_debug("CollectorInitiatedSubscription: MaxBufferSize {}", max_buffer_size_.getValue());
 
   const auto channel = context->getProperty(Channel).value();
   const auto query = context->getProperty(Query).value();
@@ -471,7 +475,7 @@ bool CollectorInitiatedSubscription::subscribe(const std::shared_ptr<core::Proce
       if (ERROR_EVT_QUERY_RESULT_STALE == reinterpret_cast<intptr_t>(hEvent)) {
         logger->log_error("Received missing event notification. Consider triggering processor more frequently or increasing queue size.");
       } else {
-        logger->log_error("Received the following Win32 error: %x", hEvent);
+        logger->log_error("Received the following Win32 error: {:#x}", hEvent);
       }
     } else if (action == EvtSubscribeActionDeliver) {
       DWORD size = 0;
@@ -481,7 +485,7 @@ bool CollectorInitiatedSubscription::subscribe(const std::shared_ptr<core::Proce
       if (!EvtRender(NULL, hEvent, EvtRenderEventXml, size, 0, &used, &propertyCount)) {
         if (ERROR_INSUFFICIENT_BUFFER == GetLastError()) {
           if (used > pCollectorInitiatedSubscription->max_buffer_size_.getValue()) {
-            logger->log_error("Dropping event %p because it couldn't be rendered within %llu bytes.", hEvent, pCollectorInitiatedSubscription->max_buffer_size_.getValue());
+            logger->log_error("Dropping event %p because it couldn't be rendered within {} bytes.", hEvent, pCollectorInitiatedSubscription->max_buffer_size_.getValue());
             return 0UL;
           }
 
@@ -492,7 +496,7 @@ bool CollectorInitiatedSubscription::subscribe(const std::shared_ptr<core::Proce
 
             pCollectorInitiatedSubscription->renderedXMLs_.enqueue(std::move(xml));
           } else {
-            logger->log_error("EvtRender returned the following error code: %d.", GetLastError());
+            logger->log_error("EvtRender returned the following error code: {}.", GetLastError());
           }
         }
       }
@@ -512,7 +516,7 @@ bool CollectorInitiatedSubscription::subscribe(const std::shared_ptr<core::Proce
       EvtSubscribeToFutureEvents | EvtSubscribeStrict);
 
   if (!subscriptionHandle_) {
-    logger_->log_error("Unable to subscribe with provided parameters, received the following error code: %d", GetLastError());
+    logger_->log_error("Unable to subscribe with provided parameters, received the following error code: {}", GetLastError());
     return false;
   }
 
@@ -570,7 +574,7 @@ void CollectorInitiatedSubscription::notifyStop() {
 }
 
 void CollectorInitiatedSubscription::logError(int line, const std::string& error) {
-  logger_->log_error("Line %d: %s\n", error.c_str());
+  logger_->log_error("Line {}: {}\n", line, error);
 }
 
 void CollectorInitiatedSubscription::logWindowsError(int line, const std::string& info) {
@@ -586,7 +590,7 @@ void CollectorInitiatedSubscription::logWindowsError(int line, const std::string
     0,
     NULL);
 
-  logger_->log_error("Line %d: '%s': error %d: %s\n", line, info.c_str(), static_cast<int>(error), reinterpret_cast<char *>(lpMsg));
+  logger_->log_error("Line {}: '{}': error {}: {}\n", line, info, static_cast<int>(error), reinterpret_cast<char *>(lpMsg));
 
   LocalFree(lpMsg);
 }

@@ -73,7 +73,7 @@ bool MotionDetector::detectAndDraw(cv::Mat &frame) {
   cv::GaussianBlur(gray, gray, cv::Size(21, 21), 0, 0);
 
   // Get difference between current frame and background
-  logger_->log_trace("Get difference [%d x %d] [%d x %d]", bg_img_.rows, bg_img_.cols, gray.rows, gray.cols);
+  logger_->log_trace("Get difference [{} x {}] [{} x {}]", bg_img_.rows, bg_img_.cols, gray.rows, gray.cols);
   cv::absdiff(gray, bg_img_, img_diff);
   logger_->log_trace("Apply threshold");
   cv::threshold(img_diff, thresh, threshold_, 255, cv::THRESH_BINARY);

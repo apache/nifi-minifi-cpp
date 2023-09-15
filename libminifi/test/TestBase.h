@@ -161,6 +161,7 @@ class LogTestController {
 
   explicit LogTestController(const std::shared_ptr<logging::LoggerProperties> &loggerProps);
 
+  void init(const std::shared_ptr<logging::LoggerProperties>& logger_props);
   void setLevel(std::string_view name, spdlog::level::level_enum level);
   bool contains(const std::function<std::string()>& log_string_getter, const std::string& ending, std::chrono::milliseconds timeout, std::chrono::milliseconds sleep_interval) const;
 

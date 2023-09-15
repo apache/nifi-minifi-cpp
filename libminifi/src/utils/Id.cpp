@@ -292,7 +292,7 @@ bool IdGenerator::generateWithUuidImpl(unsigned int mode, Identifier::Data& outp
     uuid_impl_->make(mode);
     uuid.reset(uuid_impl_->binary());
   } catch (uuid_error_t& uuid_error) {
-    logger_->log_error("Failed to generate UUID, error: %s", uuid_error.string());
+    logger_->log_error("Failed to generate UUID, error: {}", uuid_error.string());
     return false;
   }
 

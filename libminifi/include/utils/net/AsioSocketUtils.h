@@ -127,7 +127,7 @@ class AsioSocketConnection : public io::BaseStream {
     }();
 
     if (item_found == nullptr) {
-      logger_->log_error("Could not find specified network interface: '%s'", local_network_interface_);
+      logger_->log_error("Could not find specified network interface: '{}'", local_network_interface_);
       return;
     }
 
@@ -135,7 +135,7 @@ class AsioSocketConnection : public io::BaseStream {
     try {
       address = utils::net::sockaddr_ntop(item_found->ifa_addr);
     } catch(const std::exception& ex) {
-      logger_->log_error("Error occurred while getting network interface address: '%s'", ex.what());
+      logger_->log_error("Error occurred while getting network interface address: '{}'", ex.what());
       return;
     }
 
@@ -143,12 +143,12 @@ class AsioSocketConnection : public io::BaseStream {
     asio::error_code err;
     socket.open(local_endpoint.protocol(), err);
     if (err) {
-      logger_->log_error("Failed to open socket on network interface '%s' with the following message: '%s'", local_network_interface_, err.message());
+      logger_->log_error("Failed to open socket on network interface '{}' with the following message: '{}'", local_network_interface_, err.message());
       return;
     }
     socket.bind(local_endpoint, err);
     if (err) {
-      logger_->log_error("Failed to bind to network interface '%s' with the following message: '%s'", local_network_interface_, err.message());
+      logger_->log_error("Failed to bind to network interface '{}' with the following message: '{}'", local_network_interface_, err.message());
       return;
     }
   }

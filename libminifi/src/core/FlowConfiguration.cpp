@@ -49,7 +49,7 @@ FlowConfiguration::FlowConfiguration(ConfigurationContext ctx)
   } else {
     config_path_ = utils::file::canonicalize(*ctx.path);
     if (!config_path_) {
-      logger_->log_error("Couldn't find config file \"%s\".", ctx.path->string());
+      logger_->log_error("Couldn't find config file \"{}\".", ctx.path->string());
       config_path_ = ctx.path;
     }
     checksum_calculator_.setFileLocation(*config_path_);
@@ -71,7 +71,7 @@ FlowConfiguration::~FlowConfiguration() {
 std::unique_ptr<core::Processor> FlowConfiguration::createProcessor(const std::string &name, const utils::Identifier &uuid) {
   auto processor = minifi::processors::ProcessorUtils::createProcessor(name, name, uuid);
   if (nullptr == processor) {
-    logger_->log_error("No Processor defined for %s", name);
+    logger_->log_error("No Processor defined for {}", name);
     return nullptr;
   }
   return processor;
@@ -80,7 +80,7 @@ std::unique_ptr<core::Processor> FlowConfiguration::createProcessor(const std::s
 std::unique_ptr<core::Processor> FlowConfiguration::createProcessor(const std::string &name, const std::string &fullname, const utils::Identifier &uuid) {
   auto processor = minifi::processors::ProcessorUtils::createProcessor(name, fullname, uuid);
   if (nullptr == processor) {
-    logger_->log_error("No Processor defined for %s", fullname);
+    logger_->log_error("No Processor defined for {}", fullname);
     return nullptr;
   }
   return processor;
@@ -130,10 +130,10 @@ bool FlowConfiguration::persist(const std::string &configuration) {
 
   if (backup_file) {
     if (utils::file::FileUtils::copy_file(*config_path_, config_file_backup) != 0) {
-      logger_->log_debug("Cannot copy %s to %s", config_path_->string(), config_file_backup.string());
+      logger_->log_debug("Cannot copy {} to {}", *config_path_, config_file_backup);
       return false;
     }
-    logger_->log_debug("Copy %s to %s", config_path_->string(), config_file_backup.string());
+    logger_->log_debug("Copy {} to {}", *config_path_, config_file_backup);
   }
 
   const bool status = filesystem_->write(*config_path_, configuration);

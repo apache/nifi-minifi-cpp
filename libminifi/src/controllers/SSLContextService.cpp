@@ -199,11 +199,11 @@ bool SSLContextService::addPemCertificateToSSLContext(SSL_CTX* ctx) const {
 bool SSLContextService::findClientCertificate(ClientCertCallback cb) const {
   utils::tls::WindowsCertStore cert_store(utils::tls::WindowsCertStoreLocation{cert_store_location_}, client_cert_store_);
   if (auto error = cert_store.error()) {
-    logger_->log_error("Could not open system certificate store %s/%s (client certificates): %s", cert_store_location_, client_cert_store_, error.message());
+    logger_->log_error("Could not open system certificate store {}/{} (client certificates): {}", cert_store_location_, client_cert_store_, error.message());
     return false;
   }
 
-  logger_->log_debug("Looking for client certificate in sytem store %s/%s", cert_store_location_, client_cert_store_);
+  logger_->log_debug("Looking for client certificate in sytem store {}/{}", cert_store_location_, client_cert_store_);
 
   while (auto cert_ctx = cert_store.nextCert()) {
     if (useClientCertificate(cert_ctx, cb)) {
@@ -211,7 +211,7 @@ bool SSLContextService::findClientCertificate(ClientCertCallback cb) const {
     }
   }
 
-  logger_->log_error("Could not find any suitable client certificate in sytem store %s/%s", cert_store_location_, client_cert_store_);
+  logger_->log_error("Could not find any suitable client certificate in sytem store {}/{}", cert_store_location_, client_cert_store_);
   return false;
 }
 
@@ -222,12 +222,12 @@ bool SSLContextService::addClientCertificateFromSystemStoreToSSLContext(SSL_CTX*
   return findClientCertificate([&] (auto cert, auto priv_key) -> bool {
     auto cert_name = getCertName(cert);
     if (SSL_CTX_use_certificate(ctx, cert.get()) != 1) {
-      logger_->log_error("Failed to set certificate from %s, %s", cert_name, getLatestOpenSSLErrorString);
+      logger_->log_error("Failed to set certificate from {}, {}", cert_name, getLatestOpenSSLErrorString());
       return false;
     }
 
     if (SSL_CTX_use_PrivateKey(ctx, priv_key.get()) != 1) {
-      logger_->log_error("Failed to use private key %s, %s", cert_name, getLatestOpenSSLErrorString());
+      logger_->log_error("Failed to use private key {}, {}", cert_name, getLatestOpenSSLErrorString());
       return false;
     }
     return true;
@@ -251,7 +251,7 @@ bool SSLContextService::useClientCertificate(PCCERT_CONTEXT certificate, ClientC
   std::string x509_name = getCertName(x509_cert);
   utils::tls::EVP_PKEY_unique_ptr private_key = utils::tls::extractPrivateKey(certificate);
   if (!private_key) {
-    logger_->log_debug("Skipping client certificate %s because it has no exportable private key", x509_name);
+    logger_->log_debug("Skipping client certificate {} because it has no exportable private key", x509_name);
     return false;
   }
 
@@ -259,25 +259,25 @@ bool SSLContextService::useClientCertificate(PCCERT_CONTEXT certificate, ClientC
     utils::tls::DistinguishedName dn = utils::tls::DistinguishedName::fromSlashSeparated(x509_name);
     std::optional<std::string> cn = dn.getCN();
     if (!cn || *cn != client_cert_cn_) {
-      logger_->log_debug("Skipping client certificate %s because it doesn't match CN=%s", x509_name, client_cert_cn_);
+      logger_->log_debug("Skipping client certificate {} because it doesn't match CN={}", x509_name, client_cert_cn_);
       return false;
     }
   }
 
   utils::tls::EXTENDED_KEY_USAGE_unique_ptr key_usage{static_cast<EXTENDED_KEY_USAGE*>(X509_get_ext_d2i(x509_cert.get(), NID_ext_key_usage, nullptr, nullptr))};
   if (!key_usage) {
-    logger_->log_error("Skipping client certificate %s because it has no extended key usage", x509_name);
+    logger_->log_error("Skipping client certificate {} because it has no extended key usage", x509_name);
     return false;
   }
 
   if (!(client_cert_key_usage_.isSubsetOf(utils::tls::ExtendedKeyUsage{*key_usage}))) {
-    logger_->log_debug("Skipping client certificate %s because its extended key usage set does not contain all usages specified in %s",
+    logger_->log_debug("Skipping client certificate {} because its extended key usage set does not contain all usages specified in {}",
                        x509_name, Configuration::nifi_security_windows_client_cert_key_usage);
     return false;
   }
 
   if (cb(std::move(x509_cert), std::move(private_key))) {
-    logger_->log_debug("Found client certificate %s", x509_name);
+    logger_->log_debug("Found client certificate {}", x509_name);
     return true;
   }
 
@@ -298,17 +298,17 @@ bool SSLContextService::addServerCertificatesFromSystemStoreToSSLContext(SSL_CTX
     auto cert_name = getCertName(cert);
     int success = X509_STORE_add_cert(ssl_store, cert.get());
     if (success == 1) {
-      logger_->log_debug("Added server certificate %s from the system store to the SSL store", cert_name);
+      logger_->log_debug("Added server certificate {} from the system store to the SSL store", cert_name);
       return false;
     }
 
     auto err = ERR_peek_last_error();
     if (ERR_GET_REASON(err) == X509_R_CERT_ALREADY_IN_HASH_TABLE) {
-      logger_->log_debug("Ignoring duplicate server certificate %s", cert_name);
+      logger_->log_debug("Ignoring duplicate server certificate {}", cert_name);
       return false;
     }
 
-    logger_->log_error("Failed to add server certificate %s to the SSL store; error: %s", cert_name, getLatestOpenSSLErrorString());
+    logger_->log_error("Failed to add server certificate {} to the SSL store; error: {}", cert_name, getLatestOpenSSLErrorString());
     return false;
   });
 
@@ -328,11 +328,11 @@ bool SSLContextService::addServerCertificatesFromSystemStoreToSSLContext(SSL_CTX
 bool SSLContextService::findServerCertificate(ServerCertCallback cb) const {
   utils::tls::WindowsCertStore cert_store(utils::tls::WindowsCertStoreLocation{cert_store_location_}, server_cert_store_);
   if (auto error = cert_store.error()) {
-    logger_->log_error("Could not open system certificate store %s/%s (server certificates): %s", cert_store_location_, server_cert_store_, error.message());
+    logger_->log_error("Could not open system certificate store {}/{} (server certificates): {}", cert_store_location_, server_cert_store_, error.message());
     return false;
   }
 
-  logger_->log_debug("Adding server certificates from system store %s/%s", cert_store_location_, server_cert_store_);
+  logger_->log_debug("Adding server certificates from system store {}/{}", cert_store_location_, server_cert_store_);
 
   while (auto cert_ctx = cert_store.nextCert()) {
     if (useServerCertificate(cert_ctx, cb)) {
@@ -423,11 +423,11 @@ void SSLContextService::onEnable() {
     if (is_valid_and_readable_path(*certificate)) {
       certificate_ = *certificate;
     } else {
-      logger_->log_warn("Cannot open certificate file %s", *certificate);
+      logger_->log_warn("Cannot open certificate file {}", *certificate);
       if (is_valid_and_readable_path(default_dir / *certificate)) {
         certificate_ = default_dir / *certificate;
       } else {
-        logger_->log_error("Cannot open certificate file %s", (default_dir / *certificate).string());
+        logger_->log_error("Cannot open certificate file {}", (default_dir / *certificate));
       }
     }
   } else {
@@ -440,14 +440,14 @@ void SSLContextService::onEnable() {
       if (is_valid_and_readable_path(*private_key)) {
         private_key_ = *private_key;
       } else {
-        logger_->log_warn("Cannot open private key file %s", *private_key);
+        logger_->log_warn("Cannot open private key file {}", *private_key);
         if (is_valid_and_readable_path(default_dir / *private_key)) {
           private_key_ = default_dir / *private_key;
         } else {
-          logger_->log_error("Cannot open private key file %s", (default_dir / *private_key).string());
+          logger_->log_error("Cannot open private key file {}", (default_dir / *private_key));
         }
       }
-      logger_->log_info("Using private key file %s", private_key_.string());
+      logger_->log_info("Using private key file {}", private_key_);
     } else {
       logger_->log_debug("Private key empty");
     }
@@ -455,7 +455,7 @@ void SSLContextService::onEnable() {
 
   passphrase_.clear();
   if (!getProperty(Passphrase, passphrase_)) {
-    logger_->log_debug("No pass phrase for %s", certificate_.string());
+    logger_->log_debug("No pass phrase for {}", certificate_);
   } else {
     std::ifstream passphrase_file(passphrase_);
     if (passphrase_file.good()) {
@@ -479,14 +479,14 @@ void SSLContextService::onEnable() {
     if (is_valid_and_readable_path(*ca_certificate)) {
       ca_certificate_ = *ca_certificate;
     } else {
-      logger_->log_warn("Cannot open CA certificate file %s", *ca_certificate);
+      logger_->log_warn("Cannot open CA certificate file {}", *ca_certificate);
       if (is_valid_and_readable_path(default_dir / *ca_certificate)) {
         ca_certificate_ = default_dir / *ca_certificate;
       } else {
-        logger_->log_error("Cannot open CA certificate file %s", (default_dir / *ca_certificate).string());
+        logger_->log_error("Cannot open CA certificate file {}", (default_dir / *ca_certificate));
       }
     }
-    logger_->log_info("Using CA certificate file %s", ca_certificate_.string());
+    logger_->log_info("Using CA certificate file {}", ca_certificate_);
   } else {
     logger_->log_debug("CA Certificate empty");
   }
@@ -504,10 +504,10 @@ void SSLContextService::onEnable() {
   client_cert_key_usage_ = utils::tls::ExtendedKeyUsage{client_cert_key_usage};
 #endif  // WIN32
 
-  logger_->log_debug("Using certificate file \"%s\"", certificate_.string());
-  logger_->log_debug("Using private key file \"%s\"", private_key_.string());
-  logger_->log_debug("Using CA certificate file \"%s\"", ca_certificate_.string());
-  logger_->log_debug("Using the system cert store: %s", use_system_cert_store_ ? "yes" : "no");
+  logger_->log_debug("Using certificate file \"{}\"", certificate_);
+  logger_->log_debug("Using private key file \"{}\"", private_key_);
+  logger_->log_debug("Using CA certificate file \"{}\"", ca_certificate_);
+  logger_->log_debug("Using the system cert store: {}", use_system_cert_store_ ? "yes" : "no");
 
   verifyCertificateExpiration();
 }

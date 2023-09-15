@@ -60,7 +60,7 @@ class FileUpdateTrigger : public C2Trigger {
     }
     auto update_time = utils::file::last_write_time(file_);
     auto last_update_l = getLastUpdate().value().time_since_epoch().count();
-    logger_->log_trace("Last Update is %d and update time is %d", last_update_l , update_time.value().time_since_epoch().count());
+    logger_->log_trace("Last Update is {} and update time is {}", last_update_l , update_time.value().time_since_epoch().count());
     if (update_time > getLastUpdate()) {
       setLastUpdate(update_time);
       update_ = true;

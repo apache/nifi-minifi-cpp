@@ -39,18 +39,18 @@ std::optional<XSalsa20Cipher> EncryptionManager::createXSalsa20Cipher(const std:
 std::optional<Aes256EcbCipher> EncryptionManager::createAes256EcbCipher(const std::string &key_name) const {
   auto key = readKey(key_name);
   if (!key) {
-    logger_->log_info("No encryption key found for '%s'", key_name);
+    logger_->log_info("No encryption key found for '{}'", key_name);
     return std::nullopt;
   }
   if (key->empty()) {
     // generate new key
-    logger_->log_info("Generating encryption key '%s'", key_name);
+    logger_->log_info("Generating encryption key '{}'", key_name);
     key = Aes256EcbCipher::generateKey();
     if (!writeKey(key_name, key.value())) {
-      logger_->log_warn("Failed to write key '%s'", key_name);
+      logger_->log_warn("Failed to write key '{}'", key_name);
     }
   } else {
-    logger_->log_info("Using existing encryption key '%s'", key_name);
+    logger_->log_info("Using existing encryption key '{}'", key_name);
   }
   return Aes256EcbCipher{key.value()};
 }

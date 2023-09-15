@@ -89,10 +89,10 @@ io::NetworkInterface NetworkPrioritizerService::getInterface(uint32_t size = 0) 
 std::string NetworkPrioritizerService::get_nearest_interface(const std::vector<std::string> &ifcs) {
   for (auto ifc : ifcs) {
     if (!verify_interfaces_ || interface_online(ifc)) {
-      logger_->log_debug("%s is online", ifc);
+      logger_->log_debug("{} is online", ifc);
       return ifc;
     } else {
-      logger_->log_debug("%s is not online", ifc);
+      logger_->log_debug("{} is not online", ifc);
     }
   }
   return "";
@@ -106,7 +106,7 @@ bool NetworkPrioritizerService::interface_online(const std::string &ifc) {
   memcpy(ifr.ifr_name, ifc.data(), ifc.length());
   ifr.ifr_name[ifc.length()] = 0;
   if (ioctl(sockid, SIOCGIFFLAGS, &ifr) < 0) {
-    logger_->log_trace("Could not use ioctl on %s", ifc);
+    logger_->log_trace("Could not use ioctl on {}", ifc);
     return false;
   }
   close(sockid);
@@ -161,7 +161,7 @@ void NetworkPrioritizerService::onEnable() {
   if (getProperty(NetworkControllers, controllers) || !linked_services_.empty()) {
     // if this controller service is defined, it will be an intersection of this config with linked services.
     if (getProperty(MaxThroughput, max_throughput_)) {
-      logger_->log_trace("Max throughput is %d", max_throughput_);
+      logger_->log_trace("Max throughput is {}", max_throughput_);
       if (max_throughput_ < 1000) {
         bytes_per_token_ = 1;
         tokens_ = gsl::narrow<uint32_t>(max_throughput_);
@@ -175,7 +175,7 @@ void NetworkPrioritizerService::onEnable() {
     if (!controllers.empty()) {
       network_controllers_ = utils::StringUtils::split(controllers, ",");
       for (const auto &ifc : network_controllers_) {
-        logger_->log_trace("%s added to list of applied interfaces", ifc);
+        logger_->log_trace("{} added to list of applied interfaces", ifc);
       }
     }
     bool is_default = false;

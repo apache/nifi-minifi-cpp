@@ -157,13 +157,13 @@ bool SourceInitiatedSubscriptionListener::loadState() {
     try {
       bookmark = state_map.at("subscriber." + std::to_string(i) + ".bookmark");
     } catch (...) {
-      logger_->log_error("Bookmark for subscriber \"%s\" is missing, skipping", machineId);
+      logger_->log_error("Bookmark for subscriber \"{}\" is missing, skipping", machineId);
       continue;
     }
 
     WsXmlDocH doc = ws_xml_read_memory(bookmark.data(), bookmark.size(), "UTF-8", 0);
     if (doc == nullptr) {
-      logger_->log_error("Failed to parse saved bookmark for subscriber \"%s\", skipping", machineId);
+      logger_->log_error("Failed to parse saved bookmark for subscriber \"{}\", skipping", machineId);
       continue;
     }
     subscribers_[machineId].setBookmark(doc);
@@ -190,10 +190,10 @@ bool SourceInitiatedSubscriptionListener::Handler::handlePost(CivetServer* /*ser
     processor_.logger_->log_error("Failed to get called endpoint (local_uri)");
     return false;
   }
-  processor_.logger_->log_trace("Endpoint \"%s\" has been called", endpoint);
+  processor_.logger_->log_trace("Endpoint \"{}\" has been called", endpoint);
 
   for (int i = 0; i < req_info->num_headers; i++) {
-    processor_.logger_->log_trace("Received header \"%s: %s\"", req_info->http_headers[i].name, req_info->http_headers[i].value);
+    processor_.logger_->log_trace("Received header \"{}: {}\"", req_info->http_headers[i].name, req_info->http_headers[i].value);
   }
 
   const char* content_type = mg_get_header(conn, "Content-Type");
@@ -216,7 +216,7 @@ bool SourceInitiatedSubscriptionListener::Handler::handlePost(CivetServer* /*ser
         charset = std::string(charset_begin, charset_end - charset_begin);
     }
   }
-  processor_.logger_->log_trace("charset is \"%s\"", charset.c_str());
+  processor_.logger_->log_trace("charset is \"{}\"", charset.c_str());
 
   std::vector<uint8_t> raw_data;
   {
@@ -326,7 +326,7 @@ bool SourceInitiatedSubscriptionListener::Handler::handleSubscriptionManager(str
   const struct mg_request_info* req_info = mg_get_request_info(conn);
   std::string remote_ip = req_info->remote_addr;
   if (action != ENUM_ACTION_ENUMERATE) {
-    processor_.logger_->log_error("%s called by %s (%s) with unknown Action \"%s\"", endpoint.c_str(), machine_id.c_str(), remote_ip.c_str(), action.c_str());
+    processor_.logger_->log_error("{} called by {} ({}) with unknown Action \"{}\"", endpoint.c_str(), machine_id.c_str(), remote_ip.c_str(), action.c_str());
     return false;  // TODO(bakaid): generate fault if possible
   }
 
@@ -558,7 +558,7 @@ int SourceInitiatedSubscriptionListener::Handler::enumerateEventCallback(WsXmlNo
 
     session->transfer(flow_file, SourceInitiatedSubscriptionListener::Success);
   } catch (const std::exception& e) {
-    logger->log_error("Caught exception while processing Events: %s", e.what());
+    logger->log_error("Caught exception while processing Events: {}", e.what());
     return 1;
   } catch (...) {
     logger->log_error("Caught exception while processing Events");
@@ -584,19 +584,19 @@ bool SourceInitiatedSubscriptionListener::Handler::handleSubscriptions(struct mg
     }
     // TODO(bakaid): make sure whether we really have to clean the bookmark as well (based on the fault)
   } else if (action == WSMAN_CUSTOM_ACTION_HEARTBEAT) {
-    processor_.logger_->log_debug("Received Heartbeat on %s from %s (%s)", endpoint.c_str(), machine_id.c_str(), remote_ip.c_str());
+    processor_.logger_->log_debug("Received Heartbeat on {} from {} ({})", endpoint.c_str(), machine_id.c_str(), remote_ip.c_str());
   } else if (action == WSMAN_CUSTOM_ACTION_EVENTS) {
-    processor_.logger_->log_debug("Received Events on %s from %s (%s)", endpoint.c_str(), machine_id.c_str(), remote_ip.c_str());
+    processor_.logger_->log_debug("Received Events on {} from {} ({})", endpoint.c_str(), machine_id.c_str(), remote_ip.c_str());
     // Body
     WsXmlNodeH body = ws_xml_get_soap_body(request);
     if (body == nullptr) {
-      processor_.logger_->log_error("Received malformed Events request on %s from %s (%s), SOAP Body missing", endpoint.c_str(), machine_id.c_str(), remote_ip.c_str());
+      processor_.logger_->log_error("Received malformed Events request on {} from {} ({}), SOAP Body missing", endpoint.c_str(), machine_id.c_str(), remote_ip.c_str());
       return false;
     }
     // Body/Events
     WsXmlNodeH events_node = ws_xml_get_child(body, 0 /*index*/, XML_NS_WS_MAN, WSM_EVENTS);
     if (events_node == nullptr) {
-      processor_.logger_->log_error("Received malformed Events request on %s from %s (%s), Events missing", endpoint.c_str(), machine_id.c_str(), remote_ip.c_str());
+      processor_.logger_->log_error("Received malformed Events request on {} from {} ({}), Events missing", endpoint.c_str(), machine_id.c_str(), remote_ip.c_str());
       return false;
     }
     // Enumare Body/Events/Event nodes
@@ -605,7 +605,7 @@ bool SourceInitiatedSubscriptionListener::Handler::handleSubscriptions(struct mg
         std::forward_as_tuple(session, processor_.logger_, machine_id, remote_ip);
     int ret = ws_xml_enum_children(events_node, &SourceInitiatedSubscriptionListener::Handler::enumerateEventCallback, &callback_args, 0 /*bRecursive*/);
     if (ret != 0) {
-      processor_.logger_->log_error("Failed to parse events on %s from %s (%s), rolling back session", endpoint.c_str(), machine_id.c_str(), remote_ip.c_str());
+      processor_.logger_->log_error("Failed to parse events on {} from {} ({}), rolling back session", endpoint.c_str(), machine_id.c_str(), remote_ip.c_str());
       session->rollback();
     }
     // Header
@@ -632,11 +632,11 @@ bool SourceInitiatedSubscriptionListener::Handler::handleSubscriptions(struct mg
       char* xml_buf = nullptr;
       int xml_buf_size = 0;
       ws_xml_dump_memory_enc(bookmark_doc, &xml_buf, &xml_buf_size, "UTF-8");
-      processor_.logger_->log_debug("Saved new bookmark for %s: \"%.*s\"", machine_id.c_str(), xml_buf_size, xml_buf);
+      processor_.logger_->log_debug("Saved new bookmark for {}: \"{:.{}}\"", machine_id.c_str(), xml_buf, xml_buf_size);
       ws_xml_free_memory(xml_buf);
     }
   } else {
-    processor_.logger_->log_error("%s called by %s (%s) with unknown Action \"%s\"", endpoint.c_str(), machine_id.c_str(), remote_ip.c_str(), action.c_str());
+    processor_.logger_->log_error("{} called by {} ({}) with unknown Action \"{}\"", endpoint.c_str(), machine_id.c_str(), remote_ip.c_str(), action.c_str());
     return false;  // TODO(bakaid): generate fault if possible
   }
 
@@ -756,7 +756,7 @@ void SourceInitiatedSubscriptionListener::onSchedule(const std::shared_ptr<core:
     throw Exception(PROCESSOR_EXCEPTION, "Failed to get fingerprint for CA specified by SSL Certificate Authority attribute");
   }
   ssl_ca_cert_thumbprint_ = utils::StringUtils::to_hex(hash_buf, true /*uppercase*/);
-  logger_->log_debug("%s SHA-1 thumbprint is %s", ssl_ca_file.c_str(), ssl_ca_cert_thumbprint_.c_str());
+  logger_->log_debug("{} SHA-1 thumbprint is {}", ssl_ca_file.c_str(), ssl_ca_cert_thumbprint_.c_str());
 
   session_factory_ = sessionFactory;
 

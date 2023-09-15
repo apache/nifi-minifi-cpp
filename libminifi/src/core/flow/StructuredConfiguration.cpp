@@ -72,7 +72,7 @@ std::unique_ptr<core::ProcessGroup> StructuredConfiguration::createProcessGroup(
     version = gsl::narrow<int>(node[schema_.process_group_version].getInt64().value());
   }
 
-  logger_->log_debug("parseRootProcessGroup: id => [%s], name => [%s]", uuid.to_string(), flowName);
+  logger_->log_debug("parseRootProcessGroup: id => [{}], name => [{}]", uuid.to_string(), flowName);
   std::unique_ptr<core::ProcessGroup> group;
   if (is_root) {
     group = FlowConfiguration::createRootProcessGroup(flowName, uuid, version);
@@ -132,7 +132,7 @@ std::unique_ptr<core::ProcessGroup> StructuredConfiguration::getRootFrom(const N
 
     return root;
   } catch (const std::exception& ex) {
-    logger_->log_error("Error while processing configuration file: %s", ex.what());
+    logger_->log_error("Error while processing configuration file: {}", ex.what());
     throw;
   }
 }
@@ -163,10 +163,10 @@ void StructuredConfiguration::parseProcessorNode(const Node& processors_node, co
     procCfg.id = getOrGenerateId(procNode);
 
     uuid = procCfg.id;
-    logger_->log_debug("parseProcessorNode: name => [%s] id => [%s]", procCfg.name, procCfg.id);
+    logger_->log_debug("parseProcessorNode: name => [{}] id => [{}]", procCfg.name, procCfg.id);
     checkRequiredField(procNode, schema_.type);
     procCfg.javaClass = procNode[schema_.type].getString().value();
-    logger_->log_debug("parseProcessorNode: class => [%s]", procCfg.javaClass);
+    logger_->log_debug("parseProcessorNode: class => [{}]", procCfg.javaClass);
 
     // Determine the processor name only from the Java class
     auto lastOfIdx = procCfg.javaClass.find_last_of('.');
@@ -180,7 +180,7 @@ void StructuredConfiguration::parseProcessorNode(const Node& processors_node, co
     }
 
     if (!processor) {
-      logger_->log_error("Could not create a processor %s with id %s", procCfg.name, procCfg.id);
+      logger_->log_error("Could not create a processor {} with id {}", procCfg.name, procCfg.id);
       throw std::invalid_argument("Could not create processor " + procCfg.name);
     }
 
@@ -189,30 +189,30 @@ void StructuredConfiguration::parseProcessorNode(const Node& processors_node, co
     processor->setFlowIdentifier(flow_version_->getFlowIdentifier());
 
     procCfg.schedulingStrategy = getOptionalField(procNode, schema_.scheduling_strategy, DEFAULT_SCHEDULING_STRATEGY);
-    logger_->log_debug("parseProcessorNode: scheduling strategy => [%s]", procCfg.schedulingStrategy);
+    logger_->log_debug("parseProcessorNode: scheduling strategy => [{}]", procCfg.schedulingStrategy);
 
     procCfg.schedulingPeriod = getOptionalField(procNode, schema_.scheduling_period, DEFAULT_SCHEDULING_PERIOD_STR);
 
-    logger_->log_debug("parseProcessorNode: scheduling period => [%s]", procCfg.schedulingPeriod);
+    logger_->log_debug("parseProcessorNode: scheduling period => [{}]", procCfg.schedulingPeriod);
 
     if (auto tasksNode = procNode[schema_.max_concurrent_tasks]) {
       procCfg.maxConcurrentTasks = tasksNode.getIntegerAsString().value();
-      logger_->log_debug("parseProcessorNode: max concurrent tasks => [%s]", procCfg.maxConcurrentTasks);
+      logger_->log_debug("parseProcessorNode: max concurrent tasks => [{}]", procCfg.maxConcurrentTasks);
     }
 
     if (auto penalizationNode = procNode[schema_.penalization_period]) {
       procCfg.penalizationPeriod = penalizationNode.getString().value();
-      logger_->log_debug("parseProcessorNode: penalization period => [%s]", procCfg.penalizationPeriod);
+      logger_->log_debug("parseProcessorNode: penalization period => [{}]", procCfg.penalizationPeriod);
     }
 
     if (auto yieldNode = procNode[schema_.proc_yield_period]) {
       procCfg.yieldPeriod = yieldNode.getString().value();
-      logger_->log_debug("parseProcessorNode: yield period => [%s]", procCfg.yieldPeriod);
+      logger_->log_debug("parseProcessorNode: yield period => [{}]", procCfg.yieldPeriod);
     }
 
     if (auto runNode = procNode[schema_.runduration_nanos]) {
       procCfg.runDurationNanos = runNode.getIntegerAsString().value();
-      logger_->log_debug("parseProcessorNode: run duration nanos => [%s]", procCfg.runDurationNanos);
+      logger_->log_debug("parseProcessorNode: run duration nanos => [{}]", procCfg.runDurationNanos);
     }
 
     // handle auto-terminated relationships
@@ -235,7 +235,7 @@ void StructuredConfiguration::parseProcessorNode(const Node& processors_node, co
 
     if (procCfg.schedulingStrategy == "TIMER_DRIVEN" || procCfg.schedulingStrategy == "EVENT_DRIVEN") {
       if (auto scheduling_period = utils::timeutils::StringToDuration<std::chrono::nanoseconds>(procCfg.schedulingPeriod)) {
-        logger_->log_debug("convert: parseProcessorNode: schedulingPeriod => [%" PRId64 "] ns", scheduling_period->count());
+        logger_->log_debug("convert: parseProcessorNode: schedulingPeriod => [{}] ns", scheduling_period->count());
         processor->setSchedulingPeriod(*scheduling_period);
       }
     } else {
@@ -243,12 +243,12 @@ void StructuredConfiguration::parseProcessorNode(const Node& processors_node, co
     }
 
     if (auto penalization_period = utils::timeutils::StringToDuration<std::chrono::milliseconds>(procCfg.penalizationPeriod)) {
-      logger_->log_debug("convert: parseProcessorNode: penalizationPeriod => [%" PRId64 "] ms", penalization_period->count());
+      logger_->log_debug("convert: parseProcessorNode: penalizationPeriod => [{}]", penalization_period);
       processor->setPenalizationPeriod(penalization_period.value());
     }
 
     if (auto yield_period = utils::timeutils::StringToDuration<std::chrono::milliseconds>(procCfg.yieldPeriod)) {
-      logger_->log_debug("convert: parseProcessorNode: yieldPeriod => [%" PRId64 "] ms", yield_period->count());
+      logger_->log_debug("convert: parseProcessorNode: yieldPeriod => [{}]", yield_period);
       processor->setYieldPeriodMsec(yield_period.value());
     }
 
@@ -257,30 +257,30 @@ void StructuredConfiguration::parseProcessorNode(const Node& processors_node, co
 
     if (procCfg.schedulingStrategy == "TIMER_DRIVEN") {
       processor->setSchedulingStrategy(core::TIMER_DRIVEN);
-      logger_->log_debug("setting scheduling strategy as %s", procCfg.schedulingStrategy);
+      logger_->log_debug("setting scheduling strategy as {}", procCfg.schedulingStrategy);
     } else if (procCfg.schedulingStrategy == "EVENT_DRIVEN") {
       processor->setSchedulingStrategy(core::EVENT_DRIVEN);
-      logger_->log_debug("setting scheduling strategy as %s", procCfg.schedulingStrategy);
+      logger_->log_debug("setting scheduling strategy as {}", procCfg.schedulingStrategy);
     } else {
       processor->setSchedulingStrategy(core::CRON_DRIVEN);
-      logger_->log_debug("setting scheduling strategy as %s", procCfg.schedulingStrategy);
+      logger_->log_debug("setting scheduling strategy as {}", procCfg.schedulingStrategy);
     }
 
     int32_t maxConcurrentTasks;
     if (core::Property::StringToInt(procCfg.maxConcurrentTasks, maxConcurrentTasks)) {
-      logger_->log_debug("parseProcessorNode: maxConcurrentTasks => [%d]", maxConcurrentTasks);
+      logger_->log_debug("parseProcessorNode: maxConcurrentTasks => [{}]", maxConcurrentTasks);
       processor->setMaxConcurrentTasks((uint8_t) maxConcurrentTasks);
     }
 
     if (core::Property::StringToInt(procCfg.runDurationNanos, runDurationNanos)) {
-      logger_->log_debug("parseProcessorNode: runDurationNanos => [%d]", runDurationNanos);
+      logger_->log_debug("parseProcessorNode: runDurationNanos => [{}]", runDurationNanos);
       processor->setRunDurationNano(std::chrono::nanoseconds(runDurationNanos));
     }
 
     std::vector<core::Relationship> autoTerminatedRelationships;
     for (auto &&relString : procCfg.autoTerminatedRelationships) {
       core::Relationship relationship(relString, "");
-      logger_->log_debug("parseProcessorNode: autoTerminatedRelationship  => [%s]", relString);
+      logger_->log_debug("parseProcessorNode: autoTerminatedRelationship  => [{}]", relString);
       autoTerminatedRelationships.push_back(relationship);
     }
 
@@ -307,11 +307,11 @@ void StructuredConfiguration::parseRemoteProcessGroup(const Node& rpg_node_seq, 
     auto name = currRpgNode[schema_.name].getString().value();
     id = getOrGenerateId(currRpgNode);
 
-    logger_->log_debug("parseRemoteProcessGroup: name => [%s], id => [%s]", name, id);
+    logger_->log_debug("parseRemoteProcessGroup: name => [{}], id => [{}]", name, id);
 
     auto url = getOptionalField(currRpgNode, schema_.rpg_url, "");
 
-    logger_->log_debug("parseRemoteProcessGroup: url => [%s]", url);
+    logger_->log_debug("parseRemoteProcessGroup: url => [{}]", url);
 
     uuid = id;
     auto group = createRemoteProcessGroup(name, uuid);
@@ -319,56 +319,56 @@ void StructuredConfiguration::parseRemoteProcessGroup(const Node& rpg_node_seq, 
 
     if (currRpgNode[schema_.rpg_yield_period]) {
       auto yieldPeriod = currRpgNode[schema_.rpg_yield_period].getString().value();
-      logger_->log_debug("parseRemoteProcessGroup: yield period => [%s]", yieldPeriod);
+      logger_->log_debug("parseRemoteProcessGroup: yield period => [{}]", yieldPeriod);
 
       auto yield_period_value = utils::timeutils::StringToDuration<std::chrono::milliseconds>(yieldPeriod);
       if (yield_period_value.has_value() && group) {
-        logger_->log_debug("parseRemoteProcessGroup: yieldPeriod => [%" PRId64 "] ms", yield_period_value->count());
+        logger_->log_debug("parseRemoteProcessGroup: yieldPeriod => [{}]", yield_period_value);
         group->setYieldPeriodMsec(*yield_period_value);
       }
     }
 
     if (currRpgNode[schema_.rpg_timeout]) {
       auto timeout = currRpgNode[schema_.rpg_timeout].getString().value();
-      logger_->log_debug("parseRemoteProcessGroup: timeout => [%s]", timeout);
+      logger_->log_debug("parseRemoteProcessGroup: timeout => [{}]", timeout);
 
       auto timeout_value = utils::timeutils::StringToDuration<std::chrono::milliseconds>(timeout);
       if (timeout_value.has_value() && group) {
-        logger_->log_debug("parseRemoteProcessGroup: timeoutValue => [%" PRId64 "] ms", timeout_value->count());
+        logger_->log_debug("parseRemoteProcessGroup: timeoutValue => [{}]", timeout_value);
         group->setTimeout(timeout_value->count());
       }
     }
 
     if (currRpgNode[schema_.rpg_local_network_interface]) {
       auto interface = currRpgNode[schema_.rpg_local_network_interface].getString().value();
-      logger_->log_debug("parseRemoteProcessGroup: local network interface => [%s]", interface);
+      logger_->log_debug("parseRemoteProcessGroup: local network interface => [{}]", interface);
       group->setInterface(interface);
     }
 
     if (currRpgNode[schema_.rpg_transport_protocol]) {
       auto transport_protocol = currRpgNode[schema_.rpg_transport_protocol].getString().value();
-      logger_->log_debug("parseRemoteProcessGroup: transport protocol => [%s]", transport_protocol);
+      logger_->log_debug("parseRemoteProcessGroup: transport protocol => [{}]", transport_protocol);
       if (transport_protocol == "HTTP") {
         group->setTransportProtocol(transport_protocol);
         if (currRpgNode[schema_.rpg_proxy_host]) {
           auto http_proxy_host = currRpgNode[schema_.rpg_proxy_host].getString().value();
-          logger_->log_debug("parseRemoteProcessGroup: proxy host => [%s]", http_proxy_host);
+          logger_->log_debug("parseRemoteProcessGroup: proxy host => [{}]", http_proxy_host);
           group->setHttpProxyHost(http_proxy_host);
           if (currRpgNode[schema_.rpg_proxy_user]) {
             auto http_proxy_username = currRpgNode[schema_.rpg_proxy_user].getString().value();
-            logger_->log_debug("parseRemoteProcessGroup: proxy user => [%s]", http_proxy_username);
+            logger_->log_debug("parseRemoteProcessGroup: proxy user => [{}]", http_proxy_username);
             group->setHttpProxyUserName(http_proxy_username);
           }
           if (currRpgNode[schema_.rpg_proxy_password]) {
             auto http_proxy_password = currRpgNode[schema_.rpg_proxy_password].getString().value();
-            logger_->log_debug("parseRemoteProcessGroup: proxy password => [%s]", http_proxy_password);
+            logger_->log_debug("parseRemoteProcessGroup: proxy password => [{}]", http_proxy_password);
             group->setHttpProxyPassWord(http_proxy_password);
           }
           if (currRpgNode[schema_.rpg_proxy_port]) {
             auto http_proxy_port = currRpgNode[schema_.rpg_proxy_port].getIntegerAsString().value();
             int32_t port;
             if (core::Property::StringToInt(http_proxy_port, port)) {
-              logger_->log_debug("parseRemoteProcessGroup: proxy port => [%d]", port);
+              logger_->log_debug("parseRemoteProcessGroup: proxy port => [{}]", port);
               group->setHttpProxyPort(port);
             }
           }
@@ -425,13 +425,13 @@ void StructuredConfiguration::parseProvenanceReporting(const Node& node, core::P
   auto schedulingPeriodStr = node[schema_.scheduling_period].getString().value();
 
   if (auto scheduling_period = utils::timeutils::StringToDuration<std::chrono::nanoseconds>(schedulingPeriodStr)) {
-    logger_->log_debug("ProvenanceReportingTask schedulingPeriod %" PRId64 " ns", scheduling_period->count());
+    logger_->log_debug("ProvenanceReportingTask schedulingPeriod {}", scheduling_period);
     reportTask->setSchedulingPeriod(*scheduling_period);
   }
 
   if (schedulingStrategyStr == "TIMER_DRIVEN") {
     reportTask->setSchedulingStrategy(core::TIMER_DRIVEN);
-    logger_->log_debug("ProvenanceReportingTask scheduling strategy %s", schedulingStrategyStr);
+    logger_->log_debug("ProvenanceReportingTask scheduling strategy {}", schedulingStrategyStr);
   } else {
     throw std::invalid_argument("Invalid scheduling strategy " + schedulingStrategyStr);
   }
@@ -442,7 +442,7 @@ void StructuredConfiguration::parseProvenanceReporting(const Node& node, core::P
 
     std::string portStr = node["port"].getIntegerAsString().value();
     if (core::Property::StringToInt(portStr, lvalue) && !hostStr.empty()) {
-      logger_->log_debug("ProvenanceReportingTask port %" PRId64, lvalue);
+      logger_->log_debug("ProvenanceReportingTask port {}", lvalue);
       std::string url = hostStr + ":" + portStr;
       reportTask->setURL(url);
     }
@@ -452,7 +452,7 @@ void StructuredConfiguration::parseProvenanceReporting(const Node& node, core::P
     auto urlStr = node["url"].getString().value();
     if (!urlStr.empty()) {
       reportTask->setURL(urlStr);
-      logger_->log_debug("ProvenanceReportingTask URL %s", urlStr);
+      logger_->log_debug("ProvenanceReportingTask URL {}", urlStr);
     }
   }
   checkRequiredField(node, schema_.provenance_reporting_port_uuid);
@@ -460,7 +460,7 @@ void StructuredConfiguration::parseProvenanceReporting(const Node& node, core::P
   checkRequiredField(node, schema_.provenance_reporting_batch_size);
   auto batchSizeStr = node[schema_.provenance_reporting_batch_size].getString().value();
 
-  logger_->log_debug("ProvenanceReportingTask port uuid %s", portUUIDStr);
+  logger_->log_debug("ProvenanceReportingTask port uuid {}", portUUIDStr);
   port_uuid = portUUIDStr;
   reportTask->setPortUUID(port_uuid);
 
@@ -483,7 +483,7 @@ void StructuredConfiguration::parseControllerServices(const Node& controller_ser
     checkRequiredField(service_node, schema_.name);
 
     auto type = getRequiredField(service_node, schema_.type);
-    logger_->log_debug("Using type %s for controller service node", type);
+    logger_->log_debug("Using type {} for controller service node", type);
 
     std::string fullType = type;
     auto lastOfIdx = type.find_last_of('.');
@@ -499,7 +499,7 @@ void StructuredConfiguration::parseControllerServices(const Node& controller_ser
     uuid = id;
     std::shared_ptr<core::controller::ControllerServiceNode> controller_service_node = createControllerService(type, fullType, name, uuid);
     if (nullptr != controller_service_node) {
-      logger_->log_debug("Created Controller Service with UUID %s and name %s", id, name);
+      logger_->log_debug("Created Controller Service with UUID {} and name {}", id, name);
       controller_service_node->initialize();
       if (Node propertiesNode = service_node[schema_.controller_service_properties]) {
         // we should propagate properties to the node and to the implementation
@@ -509,7 +509,7 @@ void StructuredConfiguration::parseControllerServices(const Node& controller_ser
         }
       }
     } else {
-      logger_->log_debug("Could not locate %s", type);
+      logger_->log_debug("Could not locate {}", type);
     }
     controller_services_->put(id, controller_service_node);
     controller_services_->put(name, controller_service_node);
@@ -545,7 +545,7 @@ void StructuredConfiguration::parseConnection(const Node& connection_node_seq, c
     });
 
     auto connection = createConnection(name, uuid.value());
-    logger_->log_debug("Created connection with UUID %s and name %s", id, name);
+    logger_->log_debug("Created connection with UUID {} and name {}", id, name);
     const StructuredConnectionParser connectionParser(connection_node, name, gsl::not_null<core::ProcessGroup*>{ parent }, logger_, schema_);
     connectionParser.configureConnectionSourceRelationships(*connection);
     connection->setBackpressureThresholdCount(connectionParser.getWorkQueueSize());
@@ -614,7 +614,7 @@ void StructuredConfiguration::parseRPGPort(const Node& port_node, core::ProcessG
     if (core::Property::StringToInt(rawMaxConcurrentTasks, maxConcurrentTasks)) {
       processor.setMaxConcurrentTasks(maxConcurrentTasks);
     }
-    logger_->log_debug("parseProcessorNode: maxConcurrentTasks => [%d]", maxConcurrentTasks);
+    logger_->log_debug("parseProcessorNode: maxConcurrentTasks => [{}]", maxConcurrentTasks);
     processor.setMaxConcurrentTasks(maxConcurrentTasks);
   }
 }
@@ -625,15 +625,15 @@ void StructuredConfiguration::parsePropertyValueSequence(const std::string& prop
       Node propertiesNode = nodeVal["value"];
       // must insert the sequence in differently.
       const auto rawValueString = propertiesNode.getString().value();
-      logger_->log_debug("Found %s=%s", property_name, rawValueString);
+      logger_->log_debug("Found {}={}", property_name, rawValueString);
       if (!component.updateProperty(property_name, rawValueString)) {
         auto proc = dynamic_cast<core::Connectable*>(&component);
         if (proc) {
-          logger_->log_warn("Received property %s with value %s but is not one of the properties for %s. Attempting to add as dynamic property.", property_name, rawValueString, proc->getName());
+          logger_->log_warn("Received property {} with value {} but is not one of the properties for {}. Attempting to add as dynamic property.", property_name, rawValueString, proc->getName());
           if (!component.setDynamicProperty(property_name, rawValueString)) {
-            logger_->log_warn("Unable to set the dynamic property %s with value %s", property_name, rawValueString);
+            logger_->log_warn("Unable to set the dynamic property {} with value {}", property_name, rawValueString);
           } else {
-            logger_->log_warn("Dynamic property %s with value %s set", property_name, rawValueString);
+            logger_->log_warn("Dynamic property {} with value {} set", property_name, rawValueString);
           }
         }
       }
@@ -664,10 +664,10 @@ PropertyValue StructuredConfiguration::getValidatedProcessorPropertyForDefaultTy
     }
     return coercedValue;
   } catch (const std::exception& e) {
-    logger_->log_error("Fetching property failed with an exception of %s", e.what());
-    logger_->log_error("Invalid conversion for field %s. Value %s", property_from_processor.getName(), property_value_node.getDebugString());
+    logger_->log_error("Fetching property failed with an exception of {}", e.what());
+    logger_->log_error("Invalid conversion for field {}. Value {}", property_from_processor.getName(), property_value_node.getDebugString());
   } catch (...) {
-    logger_->log_error("Invalid conversion for field %s. Value %s", property_from_processor.getName(), property_value_node.getDebugString());
+    logger_->log_error("Invalid conversion for field {}. Value {}", property_from_processor.getName(), property_value_node.getDebugString());
   }
   return defaultValue;
 }
@@ -682,9 +682,9 @@ void StructuredConfiguration::parseSingleProperty(const std::string& property_na
   } catch(const utils::internal::InvalidValueException&) {
     auto component = dynamic_cast<core::CoreComponent*>(&processor);
     if (component == nullptr) {
-      logger_->log_error("processor was not a CoreComponent for property '%s'", property_name);
+      logger_->log_error("processor was not a CoreComponent for property '{}'", property_name);
     } else {
-      logger_->log_error("Invalid value was set for property '%s' creating component '%s'", property_name, component->getName());
+      logger_->log_error("Invalid value was set for property '{}' creating component '{}'", property_name, component->getName());
     }
     throw;
   }
@@ -692,20 +692,20 @@ void StructuredConfiguration::parseSingleProperty(const std::string& property_na
     const auto rawValueString = property_value_node.getScalarAsString().value();
     auto proc = dynamic_cast<core::Connectable*>(&processor);
     if (proc) {
-      logger_->log_warn("Received property %s with value %s but is not one of the properties for %s. Attempting to add as dynamic property.", property_name, rawValueString, proc->getName());
+      logger_->log_warn("Received property {} with value {} but is not one of the properties for {}. Attempting to add as dynamic property.", property_name, rawValueString, proc->getName());
       if (!processor.setDynamicProperty(property_name, rawValueString)) {
-        logger_->log_warn("Unable to set the dynamic property %s with value %s", property_name, rawValueString);
+        logger_->log_warn("Unable to set the dynamic property {} with value {}", property_name, rawValueString);
       } else {
-        logger_->log_warn("Dynamic property %s with value %s set", property_name, rawValueString);
+        logger_->log_warn("Dynamic property {} with value {} set", property_name, rawValueString);
       }
     }
   } else {
-    logger_->log_debug("Property %s with value %s set", property_name, coercedValue.to_string());
+    logger_->log_debug("Property {} with value {} set", property_name, coercedValue.to_string());
   }
 }
 
 void StructuredConfiguration::parsePropertyNodeElement(const std::string& property_name, const Node& property_value_node, core::ConfigurableComponent& processor) {
-  logger_->log_trace("Encountered %s", property_name);
+  logger_->log_trace("Encountered {}", property_name);
   if (!property_value_node || property_value_node.isNull()) {
     return;
   }
@@ -718,7 +718,7 @@ void StructuredConfiguration::parsePropertyNodeElement(const std::string& proper
 
 void StructuredConfiguration::parsePropertiesNode(const Node& properties_node, core::ConfigurableComponent& component, const std::string& component_name) {
   // Treat generically as a node so we can perform inspection on entries to ensure they are populated
-  logger_->log_trace("Entered %s", component_name);
+  logger_->log_trace("Entered {}", component_name);
   for (const auto& property_node : properties_node) {
     const auto propertyName = property_node.first.getString().value();
     const Node propertyValueNode = property_node.second;
@@ -749,7 +749,7 @@ void StructuredConfiguration::parseFunnels(const Node& node, core::ProcessGroup*
     });
 
     auto funnel = std::make_unique<minifi::Funnel>(name, uuid.value());
-    logger_->log_debug("Created funnel with UUID %s and name %s", id, name);
+    logger_->log_debug("Created funnel with UUID {} and name {}", id, name);
     funnel->setScheduledState(core::RUNNING);
     funnel->setSchedulingStrategy(core::EVENT_DRIVEN);
     parent->addProcessor(std::move(funnel));
@@ -777,7 +777,7 @@ void StructuredConfiguration::parsePorts(const flow::Node& node, core::ProcessGr
     });
 
     auto port = std::make_unique<Port>(name, uuid.value(), port_type);
-    logger_->log_debug("Created port UUID %s and name %s", id, name);
+    logger_->log_debug("Created port UUID {} and name {}", id, name);
     port->setScheduledState(core::RUNNING);
     port->setSchedulingStrategy(core::EVENT_DRIVEN);
     parent->addPort(std::move(port));
@@ -861,7 +861,7 @@ std::string StructuredConfiguration::getOrGenerateId(const Node& node) {
   }
 
   auto id = id_generator_->generate().to_string();
-  logger_->log_debug("Generating random ID: id => [%s]", id);
+  logger_->log_debug("Generating random ID: id => [{}]", id);
   return id;
 }
 

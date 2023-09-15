@@ -124,12 +124,12 @@ void RootProcessGroupWrapper::clearConnection(const std::string &connection) {
   if (root_ == nullptr) {
     return;
   }
-  logger_->log_info("Attempting to clear connection %s", connection);
+  logger_->log_info("Attempting to clear connection {}", connection);
   std::map<std::string, Connection*> connections;
   root_->getConnections(connections);
   auto conn = connections.find(connection);
   if (conn != connections.end()) {
-    logger_->log_info("Clearing connection %s", connection);
+    logger_->log_info("Clearing connection {}", connection);
     conn->second->drain(true);
   }
 }
@@ -171,7 +171,7 @@ state::StateController* RootProcessGroupWrapper::getProcessorController(const st
           });
     })
     | utils::valueOrElse([this, &id_or_name]() -> state::ProcessorController* {
-      logger_->log_error("Could not get processor controller for requested id/name \"%s\", because the processor was not found", id_or_name);
+      logger_->log_error("Could not get processor controller for requested id/name \"{}\", because the processor was not found", id_or_name);
       return nullptr;
     });
 }

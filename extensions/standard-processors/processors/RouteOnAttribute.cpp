@@ -44,7 +44,7 @@ void RouteOnAttribute::onDynamicPropertyModified(const core::Property& /*orig_pr
     core::RelationshipDefinition route_rel{ route.first, "Dynamic route" };
     route_rels_[route.first] = route_rel;
     relationships.push_back(route_rel);
-    logger_->log_info("RouteOnAttribute registered route '%s' with expression '%s'", route.first, route.second.getValue().to_string());
+    logger_->log_info("RouteOnAttribute registered route '{}' with expression '{}'", route.first, route.second.getValue().to_string());
   }
 
   setSupportedRelationships(relationships);
@@ -79,7 +79,7 @@ void RouteOnAttribute::onTrigger(core::ProcessContext *context, core::ProcessSes
       session->remove(flow_file);
     }
   } catch (const std::exception &e) {
-    logger_->log_error("Caught exception while updating attributes: type: %s, what: %s", typeid(e).name(), e.what());
+    logger_->log_error("Caught exception while updating attributes: type: {}, what: {}", typeid(e).name(), e.what());
     session->transfer(flow_file, Failure);
     yield();
   }

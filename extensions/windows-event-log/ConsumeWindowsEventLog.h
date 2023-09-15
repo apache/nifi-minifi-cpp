@@ -225,7 +225,7 @@ class ConsumeWindowsEventLog : public core::Processor {
 
   struct TimeDiff {
     auto operator()() const {
-      return int64_t{ std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::steady_clock::now() - time_).count() };
+      return std::chrono::steady_clock::now() - time_;
     }
     const decltype(std::chrono::steady_clock::now()) time_ = std::chrono::steady_clock::now();
   };

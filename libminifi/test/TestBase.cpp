@@ -59,7 +59,7 @@ std::shared_ptr<LogTestController> LogTestController::getInstance(const std::sha
 
 void LogTestController::setLevel(std::string_view name, spdlog::level::level_enum level) {
   const auto levelView(spdlog::level::to_string_view(level));
-  logger_->log_info("Setting log level for %s to %s", std::string(name), std::string(levelView.begin(), levelView.end()));
+  logger_->log_info("Setting log level for {} to {}", std::string(name), std::string(levelView.begin(), levelView.end()));
   std::string adjusted_name{name};
   const std::string clazz = "class ";
   auto haz_clazz = name.find(clazz);
@@ -117,7 +117,7 @@ bool LogTestController::contains(const std::function<std::string()>& log_string_
     }
   } while (!found && !timed_out);
 
-  logger_->log_info("%s %s in log output.", found ? "Successfully found" : "Failed to find", ending);
+  logger_->log_info("{} {} in log output.", found ? "Successfully found" : "Failed to find", ending);
   return found;
 }
 
@@ -140,7 +140,7 @@ std::optional<std::smatch> LogTestController::matchesRegex(const std::string& re
     }
   } while (!found && !timed_out);
 
-  logger_->log_info("%s %s in log output.", found ? "Successfully matched regex" : "Failed to match regex", regex_str);
+  logger_->log_info("{} {} in log output.", found ? "Successfully matched regex" : "Failed to match regex", regex_str);
   return found ? std::make_optional<std::smatch>(match) : std::nullopt;
 }
 
@@ -155,7 +155,9 @@ void LogTestController::reset() {
   modified_loggers.clear();
   if (config)
     config = logging::LoggerConfiguration::newInstance();
+  my_properties_ = std::make_shared<logging::LoggerProperties>();
   clear();
+  init(nullptr);
 }
 
 void LogTestController::clear() {
@@ -169,9 +171,9 @@ void LogTestController::resetStream(std::ostringstream& stream) {
   stream.clear();
 }
 
-LogTestController::LogTestController(const std::shared_ptr<logging::LoggerProperties>& loggerProps)
-    : my_properties_(loggerProps) {
+void LogTestController::init(const std::shared_ptr<logging::LoggerProperties>& logger_props) {
   gsl_Expects(log_output_ptr_);
+  my_properties_ = logger_props;
   bool initMain = false;
   if (nullptr == my_properties_) {
     my_properties_ = std::make_shared<logging::LoggerProperties>();
@@ -194,6 +196,10 @@ LogTestController::LogTestController(const std::shared_ptr<logging::LoggerProper
     config->initialize(my_properties_);
     logger_ = config->getLogger(minifi::core::className<LogTestController>());
   }
+}
+
+LogTestController::LogTestController(const std::shared_ptr<logging::LoggerProperties>& loggerProps) {
+  init(loggerProps);
 }
 
 TestPlan::TestPlan(std::shared_ptr<minifi::core::ContentRepository> content_repo, std::shared_ptr<minifi::core::Repository> flow_repo, std::shared_ptr<minifi::core::Repository> prov_repo,
@@ -258,7 +264,7 @@ std::shared_ptr<minifi::core::Processor> TestPlan::addProcessor(const std::share
     std::stringstream connection_name;
     connection_name << last->getUUIDStr() << "-to-" << processor->getUUIDStr();
     auto connection = std::make_unique<minifi::Connection>(flow_repo_, content_repo_, connection_name.str());
-    logger_->log_info("Creating %s connection for proc %d", connection_name.str(), processor_queue_.size() + 1);
+    logger_->log_info("Creating {} connection for proc {}", connection_name.str(), processor_queue_.size() + 1);
 
     for (const auto& relationship : relationships) {
       connection->addRelationship(relationship);
@@ -371,7 +377,7 @@ bool TestPlan::setProperty(const std::shared_ptr<minifi::core::Processor>& proce
   std::lock_guard<std::recursive_mutex> guard(mutex);
 
   size_t i = 0;
-  logger_->log_info("Attempting to set property %s to %s for %s", property, value, processor->getName());
+  logger_->log_info("Attempting to set property {} to {} for {}", property, value, processor->getName());
   for (i = 0; i < processor_queue_.size(); i++) {
     if (processor_queue_.at(i) == processor) {
       break;
@@ -507,7 +513,7 @@ bool TestPlan::runProcessor(size_t target_location, const PreTriggerVerifier& ve
   if (!finalized) {
     finalize();
   }
-  logger_->log_info("Running next processor %d, processor_queue_.size %d, processor_contexts_.size %d", target_location, processor_queue_.size(), processor_contexts_.size());
+  logger_->log_info("Running next processor {}, processor_queue_.size {}, processor_contexts_.size {}", target_location, processor_queue_.size(), processor_contexts_.size());
   std::lock_guard<std::recursive_mutex> guard(mutex);
 
   std::shared_ptr<minifi::core::Processor> processor = processor_queue_.at(target_location);
@@ -526,7 +532,7 @@ bool TestPlan::runProcessor(size_t target_location, const PreTriggerVerifier& ve
     auto session_factory = std::make_shared<TestSessionFactory>(context, [&] (auto current_session) {
       process_sessions_.push_back(current_session);
     });
-    logger_->log_info("Running %s", processor->getName());
+    logger_->log_info("Running {}", processor->getName());
     processor->onTrigger(context, session_factory);
   }
 

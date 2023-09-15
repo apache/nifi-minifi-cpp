@@ -50,17 +50,17 @@ FileStream::FileStream(std::filesystem::path path, bool append)
       seekToEndOfFile(FILE_OPENING_ERROR_MSG);
       auto len = file_stream_->tellg();
       if (len == std::streampos(-1))
-        core::logging::LOG_ERROR(logger_) << FILE_OPENING_ERROR_MSG << TELLG_CALL_ERROR_MSG;
+        logger_->log_error("{}{}", FILE_OPENING_ERROR_MSG, TELLG_CALL_ERROR_MSG);
       length_ = len > 0 ? gsl::narrow<size_t>(len) : 0;
       FileStream::seek(offset_);
     } else {
-      core::logging::LOG_ERROR(logger_) << FILE_OPENING_ERROR_MSG << path_.string() << " " << strerror(errno);
+      logger_->log_error("{}{} {}", FILE_OPENING_ERROR_MSG, path_, strerror(errno));
     }
   } else {
     file_stream_->open(path_, std::fstream::out | std::fstream::binary);
     length_ = 0;
     if (!file_stream_->is_open()) {
-      core::logging::LOG_ERROR(logger_) << FILE_OPENING_ERROR_MSG << path_.string() << " " << strerror(errno);
+      logger_->log_error("{}{} {}", FILE_OPENING_ERROR_MSG, path_, strerror(errno));
     }
   }
 }
@@ -172,4 +172,3 @@ void FileStream::seekToEndOfFile(const char *caller_error_msg) {
 }
 
 }  // namespace org::apache::nifi::minifi::io
-

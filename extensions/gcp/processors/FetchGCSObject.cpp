@@ -131,7 +131,7 @@ void FetchGCSObject::onTrigger(const std::shared_ptr<core::ProcessContext>& cont
       utils::internal::ValueParser(*gen_str).parse(gen).parseEnd();
       callback.setGeneration(gcs::Generation(gen));
     } catch (const utils::internal::ValueException&) {
-      logger_->log_error("Invalid generation: %s", *gen_str);
+      logger_->log_error("Invalid generation: {}", *gen_str);
       session->transfer(flow_file, Failure);
       return;
     }
@@ -142,7 +142,7 @@ void FetchGCSObject::onTrigger(const std::shared_ptr<core::ProcessContext>& cont
     flow_file->setAttribute(GCS_STATUS_MESSAGE, callback.getStatus().message());
     flow_file->setAttribute(GCS_ERROR_REASON, callback.getStatus().error_info().reason());
     flow_file->setAttribute(GCS_ERROR_DOMAIN, callback.getStatus().error_info().domain());
-    logger_->log_error("Failed to fetch from Google Cloud Storage %s %s", callback.getStatus().message(), callback.getStatus().error_info().reason());
+    logger_->log_error("Failed to fetch from Google Cloud Storage {} {}", callback.getStatus().message(), callback.getStatus().error_info().reason());
     session->transfer(flow_file, Failure);
     return;
   }

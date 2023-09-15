@@ -76,7 +76,7 @@ class PythonCreator : public minifi::core::CoreComponent {
       try {
         registerScriptDescription(class_name, full_name, path, script_name.string());
       } catch (const std::exception &err) {
-        logger_->log_error("Cannot load %s: %s", script_name.string(), err.what());
+        logger_->log_error("Cannot load {}: {}", script_name, err.what());
       }
     }
   }
@@ -85,7 +85,7 @@ class PythonCreator : public minifi::core::CoreComponent {
   void registerScriptDescription(const std::string& class_name, const std::string& full_name, const std::filesystem::path& path, const std::string& script_name) {
     auto processor = core::ClassLoader::getDefaultClassLoader().instantiate<python::processors::ExecutePythonProcessor>(class_name, utils::IdGenerator::getIdGenerator()->generate());
     if (!processor) {
-      logger_->log_error("Couldn't instantiate '%s' python processor", class_name);
+      logger_->log_error("Couldn't instantiate '{}' python processor", class_name);
       return;
     }
     processor->initialize();

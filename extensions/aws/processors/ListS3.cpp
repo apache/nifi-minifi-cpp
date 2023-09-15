@@ -52,29 +52,29 @@ void ListS3::onSchedule(const std::shared_ptr<core::ProcessContext> &context, co
   list_request_params_->bucket = common_properties->bucket;
 
   context->getProperty(Delimiter, list_request_params_->delimiter);
-  logger_->log_debug("ListS3: Delimiter [%s]", list_request_params_->delimiter);
+  logger_->log_debug("ListS3: Delimiter [{}]", list_request_params_->delimiter);
 
   context->getProperty(Prefix, list_request_params_->prefix);
-  logger_->log_debug("ListS3: Prefix [%s]", list_request_params_->prefix);
+  logger_->log_debug("ListS3: Prefix [{}]", list_request_params_->prefix);
 
   context->getProperty(UseVersions, list_request_params_->use_versions);
-  logger_->log_debug("ListS3: UseVersions [%s]", list_request_params_->use_versions ? "true" : "false");
+  logger_->log_debug("ListS3: UseVersions [{}]", list_request_params_->use_versions ? "true" : "false");
 
   if (auto minimum_object_age = context->getProperty<core::TimePeriodValue>(MinimumObjectAge)) {
     list_request_params_->min_object_age = minimum_object_age->getMilliseconds().count();
   } else {
     throw Exception(PROCESS_SCHEDULE_EXCEPTION, "Minimum Object Age missing or invalid");
   }
-  logger_->log_debug("S3Processor: Minimum Object Age [%llud]", list_request_params_->min_object_age);
+  logger_->log_debug("S3Processor: Minimum Object Age [{}]", list_request_params_->min_object_age);
 
   context->getProperty(WriteObjectTags, write_object_tags_);
-  logger_->log_debug("ListS3: WriteObjectTags [%s]", write_object_tags_ ? "true" : "false");
+  logger_->log_debug("ListS3: WriteObjectTags [{}]", write_object_tags_ ? "true" : "false");
 
   context->getProperty(WriteUserMetadata, write_user_metadata_);
-  logger_->log_debug("ListS3: WriteUserMetadata [%s]", write_user_metadata_ ? "true" : "false");
+  logger_->log_debug("ListS3: WriteUserMetadata [{}]", write_user_metadata_ ? "true" : "false");
 
   context->getProperty(RequesterPays, requester_pays_);
-  logger_->log_debug("ListS3: RequesterPays [%s]", requester_pays_ ? "true" : "false");
+  logger_->log_debug("ListS3: RequesterPays [{}]", requester_pays_ ? "true" : "false");
 }
 
 void ListS3::writeObjectTags(
@@ -95,7 +95,7 @@ void ListS3::writeObjectTags(
       session.putAttribute(flow_file, "s3.tag." + tag.first, tag.second);
     }
   } else {
-    logger_->log_warn("Failed to get object tags for object %s in bucket %s", object_attributes.filename, params.bucket);
+    logger_->log_warn("Failed to get object tags for object {} in bucket {}", object_attributes.filename, params.bucket);
   }
 }
 
@@ -118,7 +118,7 @@ void ListS3::writeUserMetadata(
       session.putAttribute(flow_file, "s3.user.metadata." + metadata.first, metadata.second);
     }
   } else {
-    logger_->log_warn("Failed to get object metadata for object %s in bucket %s", params.object_key, params.bucket);
+    logger_->log_warn("Failed to get object metadata for object {} in bucket {}", params.object_key, params.bucket);
   }
 }
 
@@ -147,7 +147,7 @@ void ListS3::onTrigger(const std::shared_ptr<core::ProcessContext> &context, con
 
   auto aws_results = s3_wrapper_.listBucket(*list_request_params_);
   if (!aws_results) {
-    logger_->log_error("Failed to list S3 bucket %s", list_request_params_->bucket);
+    logger_->log_error("Failed to list S3 bucket {}", list_request_params_->bucket);
     context->yield();
     return;
   }
@@ -166,11 +166,11 @@ void ListS3::onTrigger(const std::shared_ptr<core::ProcessContext> &context, con
     latest_listing_state.updateState(object_attributes);
   }
 
-  logger_->log_debug("ListS3 transferred %zu flow files", files_transferred);
+  logger_->log_debug("ListS3 transferred {} flow files", files_transferred);
   state_manager_->storeState(latest_listing_state);
 
   if (files_transferred == 0) {
-    logger_->log_debug("No new S3 objects were found in bucket %s to list", list_request_params_->bucket);
+    logger_->log_debug("No new S3 objects were found in bucket {} to list", list_request_params_->bucket);
     context->yield();
     return;
   }

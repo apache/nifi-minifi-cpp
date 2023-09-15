@@ -53,7 +53,7 @@ void SQLProcessor::onTrigger(const std::shared_ptr<core::ProcessContext>& contex
     }
     processOnTrigger(*context, *session);
   } catch (const sql::ConnectionError& ex) {
-    logger_->log_error("Connection error: %s", ex.what());
+    logger_->log_error("Connection error: {}", ex.what());
     // try to reconnect next time
     connection_.reset();
     throw;

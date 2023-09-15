@@ -71,7 +71,7 @@ class VerifyNoRetryInvokeHTTP : public VerifyInvokeHTTP {
     using org::apache::nifi::minifi::utils::verifyLogLinePresenceInPollTime;
     assert(verifyLogLinePresenceInPollTime(std::chrono::seconds(6),
         "key:invokehttp.status.message value:HTTP/1.1 404 Not Found",
-        "isSuccess: 0, response code 404"));
+        "isSuccess: false, response code 404"));
   }
 };
 
@@ -81,7 +81,7 @@ class VerifyRetryInvokeHTTP : public VerifyInvokeHTTP {
     using org::apache::nifi::minifi::utils::verifyLogLinePresenceInPollTime;
     assert(verifyLogLinePresenceInPollTime(std::chrono::seconds(6),
         "key:invokehttp.status.message value:HTTP/1.1 501 Not Implemented",
-        "isSuccess: 0, response code 501"));
+        "isSuccess: false, response code 501"));
   }
 };
 

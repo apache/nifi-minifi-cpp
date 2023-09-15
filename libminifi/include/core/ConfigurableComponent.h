@@ -228,13 +228,13 @@ bool ConfigurableComponent::getProperty(const std::string& name, T &value) const
     if (property.getValue().getValue() == nullptr) {
       // empty value
       if (property.getRequired()) {
-        logger_->log_error("Component %s required property %s is empty", name, property.getName());
+        logger_->log_error("Component {} required property {} is empty", name, property.getName());
         throw utils::internal::RequiredPropertyMissingException("Required property is empty: " + property.getName());
       }
-      logger_->log_debug("Component %s property name %s, empty value", name, property.getName());
+      logger_->log_debug("Component {} property name {}, empty value", name, property.getName());
       return false;
     }
-    logger_->log_debug("Component %s property name %s value %s", name, property.getName(), property.getValue().to_string());
+    logger_->log_debug("Component {} property name {} value {}", name, property.getName(), property.getValue().to_string());
 
     if constexpr (std::is_base_of<TransformableValue, T>::value) {
       value = T(property.getValue().operator std::string());
@@ -243,7 +243,7 @@ bool ConfigurableComponent::getProperty(const std::string& name, T &value) const
     }
     return true;
   } else {
-    logger_->log_warn("Could not find property %s", name);
+    logger_->log_warn("Could not find property {}", name);
     return false;
   }
 }

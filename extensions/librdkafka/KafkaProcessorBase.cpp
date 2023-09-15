@@ -29,20 +29,20 @@ std::optional<utils::net::SslData> KafkaProcessorBase::getSslData(core::ProcessC
 void KafkaProcessorBase::setKafkaAuthenticationParameters(core::ProcessContext& context, gsl::not_null<rd_kafka_conf_t*> config) {
   security_protocol_ = utils::parseEnumProperty<kafka::SecurityProtocolOption>(context, SecurityProtocol);
   utils::setKafkaConfigurationField(*config, "security.protocol", std::string{magic_enum::enum_name(security_protocol_)});
-  logger_->log_debug("Kafka security.protocol [%s]", std::string{magic_enum::enum_name(security_protocol_)});
+  logger_->log_debug("Kafka security.protocol [{}]", std::string{magic_enum::enum_name(security_protocol_)});
   if (security_protocol_ == kafka::SecurityProtocolOption::ssl || security_protocol_ == kafka::SecurityProtocolOption::sasl_ssl) {
     auto ssl_data = getSslData(context);
     if (ssl_data) {
       if (ssl_data->ca_loc.empty() && ssl_data->cert_loc.empty() && ssl_data->key_loc.empty() && ssl_data->key_pw.empty()) {
-        logger_->log_warn("Security protocol is set to %s, but no valid security parameters are set in the properties or in the SSL Context Service.",
+        logger_->log_warn("Security protocol is set to {}, but no valid security parameters are set in the properties or in the SSL Context Service.",
           std::string{magic_enum::enum_name(security_protocol_)});
       } else {
         utils::setKafkaConfigurationField(*config, "ssl.ca.location", ssl_data->ca_loc.string());
-        logger_->log_debug("Kafka ssl.ca.location [%s]", ssl_data->ca_loc.string());
+        logger_->log_debug("Kafka ssl.ca.location [{}]", ssl_data->ca_loc);
         utils::setKafkaConfigurationField(*config, "ssl.certificate.location", ssl_data->cert_loc.string());
-        logger_->log_debug("Kafka ssl.certificate.location [%s]", ssl_data->cert_loc.string());
+        logger_->log_debug("Kafka ssl.certificate.location [{}]", ssl_data->cert_loc);
         utils::setKafkaConfigurationField(*config, "ssl.key.location", ssl_data->key_loc.string());
-        logger_->log_debug("Kafka ssl.key.location [%s]", ssl_data->key_loc.string());
+        logger_->log_debug("Kafka ssl.key.location [{}]", ssl_data->key_loc);
         utils::setKafkaConfigurationField(*config, "ssl.key.password", ssl_data->key_pw);
         logger_->log_debug("Kafka ssl.key.password was set");
       }
@@ -51,16 +51,16 @@ void KafkaProcessorBase::setKafkaAuthenticationParameters(core::ProcessContext& 
 
   auto sasl_mechanism = utils::parseEnumProperty<kafka::SASLMechanismOption>(context, SASLMechanism);
   utils::setKafkaConfigurationField(*config, "sasl.mechanism", std::string{magic_enum::enum_name(sasl_mechanism)});
-  logger_->log_debug("Kafka sasl.mechanism [%s]", std::string{magic_enum::enum_name(sasl_mechanism)});
+  logger_->log_debug("Kafka sasl.mechanism [{}]", std::string{magic_enum::enum_name(sasl_mechanism)});
 
   auto setKafkaConfigIfNotEmpty = [this, &context, config](const core::PropertyReference& property, const std::string& kafka_config_name, bool log_value = true) {
     std::string value;
     if (context.getProperty(property, value) && !value.empty()) {
       utils::setKafkaConfigurationField(*config, kafka_config_name, value);
       if (log_value) {
-        logger_->log_debug("Kafka %s [%s]", kafka_config_name, value);
+        logger_->log_debug("Kafka {} [{}]", kafka_config_name, value);
       } else {
-        logger_->log_debug("Kafka %s was set", kafka_config_name);
+        logger_->log_debug("Kafka {} was set", kafka_config_name);
       }
     }
   };

@@ -42,10 +42,10 @@ std::optional<aws::s3::DeleteObjectRequestParameters> DeleteS3Object::buildDelet
     logger_->log_error("No Object Key is set and default object key 'filename' attribute could not be found!");
     return std::nullopt;
   }
-  logger_->log_debug("DeleteS3Object: Object Key [%s]", params.object_key);
+  logger_->log_debug("DeleteS3Object: Object Key [{}]", params.object_key);
 
   context->getProperty(Version, params.version, flow_file);
-  logger_->log_debug("DeleteS3Object: Version [%s]", params.version);
+  logger_->log_debug("DeleteS3Object: Version [{}]", params.version);
 
   params.bucket = common_properties.bucket;
   params.setClientConfig(common_properties.proxy, common_properties.endpoint_override_url);
@@ -73,10 +73,10 @@ void DeleteS3Object::onTrigger(const std::shared_ptr<core::ProcessContext> &cont
   }
 
   if (s3_wrapper_.deleteObject(*params)) {
-    logger_->log_debug("Successfully deleted S3 object '%s' from bucket '%s'", params->object_key, common_properties->bucket);
+    logger_->log_debug("Successfully deleted S3 object '{}' from bucket '{}'", params->object_key, common_properties->bucket);
     session->transfer(flow_file, Success);
   } else {
-    logger_->log_error("Failed to delete S3 object '%s' from bucket '%s'", params->object_key, common_properties->bucket);
+    logger_->log_error("Failed to delete S3 object '{}' from bucket '{}'", params->object_key, common_properties->bucket);
     session->transfer(flow_file, Failure);
   }
 }

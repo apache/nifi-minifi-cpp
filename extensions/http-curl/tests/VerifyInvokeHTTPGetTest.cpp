@@ -35,7 +35,7 @@ class VerifyRetryHTTPGet : public VerifyInvokeHTTP {
   void runAssertions() override {
     assert(org::apache::nifi::minifi::utils::verifyLogLinePresenceInPollTime(
         std::chrono::seconds(10),
-        "isSuccess: 0, response code 501"));
+        "isSuccess: false, response code 501"));
     assert(org::apache::nifi::minifi::utils::verifyLogLinePresenceInPollTime(
         std::chrono::seconds(10),
         "from InvokeHTTP to relationship retry"));

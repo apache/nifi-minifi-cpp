@@ -128,7 +128,7 @@ bool LinuxPowerManagerService::shouldReduce() {
     }
 
   } else {
-    logger_->log_trace("%d level is not below trigger of %d", battery_level_.load(), trigger_);
+    logger_->log_trace("{} level is not below trigger of {}", battery_level_.load(), trigger_);
   }
 
   return overConsume;

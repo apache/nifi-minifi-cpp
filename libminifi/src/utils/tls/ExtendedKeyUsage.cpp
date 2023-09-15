@@ -76,7 +76,7 @@ ExtendedKeyUsage::ExtendedKeyUsage(const std::string& key_usage_str) : ExtendedK
       const uint8_t bit_pos = it->value;
       bits_.set(bit_pos);
     } else {
-      logger_->log_error("Ignoring unrecognized extended key usage type %s", key_usage_trimmed);
+      logger_->log_error("Ignoring unrecognized extended key usage type {}", key_usage_trimmed);
     }
   }
 }

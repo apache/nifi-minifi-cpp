@@ -46,7 +46,7 @@ void PutSmb::onTrigger(core::ProcessContext* context, core::ProcessSession* sess
   gsl_Expects(context && session && smb_connection_controller_service_);
 
   if (auto connection_error = smb_connection_controller_service_->validateConnection()) {
-    logger_->log_error("Couldn't establish connection to the specified network location due to %s", connection_error.message());
+    logger_->log_error("Couldn't establish connection to the specified network location due to {}", connection_error.message());
     context->yield();
     return;
   }
@@ -60,7 +60,7 @@ void PutSmb::onTrigger(core::ProcessContext* context, core::ProcessSession* sess
   auto full_file_path = getFilePath(*context, flow_file);
 
   if (utils::file::exists(full_file_path)) {
-    logger_->log_warn("Destination file %s exists; applying Conflict Resolution Strategy: %s", full_file_path.string(), std::string(magic_enum::enum_name(conflict_resolution_strategy_)));
+    logger_->log_warn("Destination file {} exists; applying Conflict Resolution Strategy: {}", full_file_path, std::string(magic_enum::enum_name(conflict_resolution_strategy_)));
     if (conflict_resolution_strategy_ == FileExistsResolutionStrategy::fail) {
       session->transfer(flow_file, Failure);
       return;
@@ -71,7 +71,7 @@ void PutSmb::onTrigger(core::ProcessContext* context, core::ProcessSession* sess
   }
 
   if (!utils::file::exists(full_file_path.parent_path()) && create_missing_dirs_) {
-    logger_->log_debug("Destination directory does not exist; will attempt to create: %s", full_file_path.parent_path().string());
+    logger_->log_debug("Destination directory does not exist; will attempt to create: {}", full_file_path.parent_path());
     utils::file::create_dir(full_file_path.parent_path(), true);
   }
 
@@ -80,7 +80,7 @@ void PutSmb::onTrigger(core::ProcessContext* context, core::ProcessSession* sess
   utils::FileWriterCallback file_writer_callback(full_file_path);
   auto read_result = session->read(flow_file, std::ref(file_writer_callback));
   if (io::isError(read_result)) {
-    logger_->log_error("Failed to write to %s", full_file_path.string());
+    logger_->log_error("Failed to write to {}", full_file_path);
     success = false;
   } else {
     success = file_writer_callback.commit();

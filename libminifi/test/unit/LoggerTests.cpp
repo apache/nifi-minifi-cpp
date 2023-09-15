@@ -29,12 +29,14 @@
 #include "utils/IntegrationTestUtils.h"
 #include "utils/span.h"
 
+#include "spdlog/spdlog.h"
+
 using namespace std::literals::chrono_literals;
 
 TEST_CASE("Test log Levels", "[ttl1]") {
   LogTestController::getInstance().setTrace<logging::Logger>();
   std::shared_ptr<logging::Logger> logger = logging::LoggerFactory<logging::Logger>::getLogger();
-  logger->log_info("hello %s", "world");
+  logger->log_info("hello {}", "world");
 
   REQUIRE(true == LogTestController::getInstance().contains("[org::apache::nifi::minifi::core::logging::Logger] [info] hello world"));
   LogTestController::getInstance().reset();
@@ -43,7 +45,7 @@ TEST_CASE("Test log Levels", "[ttl1]") {
 TEST_CASE("Test log Levels debug", "[ttl2]") {
   LogTestController::getInstance().setTrace<logging::Logger>();
   std::shared_ptr<logging::Logger> logger = logging::LoggerFactory<logging::Logger>::getLogger();
-  logger->log_debug("hello %s", "world");
+  logger->log_debug("hello {}", "world");
 
   REQUIRE(true == LogTestController::getInstance().contains("[org::apache::nifi::minifi::core::logging::Logger] [debug] hello world"));
   LogTestController::getInstance().reset();
@@ -52,7 +54,7 @@ TEST_CASE("Test log Levels debug", "[ttl2]") {
 TEST_CASE("Test log Levels trace", "[ttl3]") {
   LogTestController::getInstance().setTrace<logging::Logger>();
   std::shared_ptr<logging::Logger> logger = logging::LoggerFactory<logging::Logger>::getLogger();
-  logger->log_trace("hello %s", "world");
+  logger->log_trace("hello {}", "world");
 
   REQUIRE(true == LogTestController::getInstance().contains("[org::apache::nifi::minifi::core::logging::Logger] [trace] hello world"));
   LogTestController::getInstance().reset();
@@ -61,7 +63,7 @@ TEST_CASE("Test log Levels trace", "[ttl3]") {
 TEST_CASE("Test log Levels error", "[ttl4]") {
   LogTestController::getInstance().setTrace<logging::Logger>();
   std::shared_ptr<logging::Logger> logger = logging::LoggerFactory<logging::Logger>::getLogger();
-  logger->log_error("hello %s", "world");
+  logger->log_error("hello {}", "world");
 
   REQUIRE(true == LogTestController::getInstance().contains("[org::apache::nifi::minifi::core::logging::Logger] [error] hello world"));
   LogTestController::getInstance().reset();
@@ -70,12 +72,12 @@ TEST_CASE("Test log Levels error", "[ttl4]") {
 TEST_CASE("Test log Levels change", "[ttl5]") {
   LogTestController::getInstance().setTrace<logging::Logger>();
   std::shared_ptr<logging::Logger> logger = logging::LoggerFactory<logging::Logger>::getLogger();
-  logger->log_error("hello %s", "world");
+  logger->log_error("hello {}", "world");
 
   REQUIRE(true == LogTestController::getInstance().contains("[org::apache::nifi::minifi::core::logging::Logger] [error] hello world"));
   LogTestController::getInstance().reset();
   LogTestController::getInstance().setOff<logging::Logger>();
-  logger->log_error("hello %s", "world");
+  logger->log_error("hello {}", "world");
 
   REQUIRE(false == LogTestController::getInstance().contains("[org::apache::nifi::minifi::core::logging::Logger] [error] hello world", std::chrono::seconds(0)));
   LogTestController::getInstance().reset();
@@ -85,7 +87,7 @@ TEST_CASE("Logger configured with an ID prints this ID in every log line", "[log
   LogTestController::getInstance().setTrace<logging::Logger>();
   const auto uuid = utils::IdGenerator::getIdGenerator()->generate();
   std::shared_ptr<logging::Logger> logger = logging::LoggerFactory<logging::Logger>::getLogger(uuid);
-  logger->log_error("hello %s", "world");
+  logger->log_error("hello {}", "world");
 
   CHECK(LogTestController::getInstance().contains("[org::apache::nifi::minifi::core::logging::Logger] [error] hello world (" + uuid.to_string() + ")"));
   LogTestController::getInstance().reset();
@@ -109,7 +111,7 @@ TEST_CASE("Printing of the ID can be disabled in the config", "[logger][id][conf
 
   const auto uuid = utils::IdGenerator::getIdGenerator()->generate();
   std::shared_ptr<logging::Logger> logger = LogTestController::getInstance(properties)->getLogger<logging::Logger>(uuid);
-  logger->log_error("hello %s", "world");
+  logger->log_error("hello {}", "world");
 
   CHECK(LogTestController::getInstance().contains("[org::apache::nifi::minifi::core::logging::Logger] [error] hello world"));
   CHECK(id_is_present == LogTestController::getInstance().contains(uuid.to_string()));
@@ -127,7 +129,7 @@ struct CStringConvertible {
 TEST_CASE("Test log custom string formatting", "[ttl6]") {
   LogTestController::getInstance().setTrace<logging::Logger>();
   std::shared_ptr<logging::Logger> logger = logging::LoggerFactory<logging::Logger>::getLogger();
-  logger->log_trace("%s %s %s", "one", std::string{"two"}, CStringConvertible{"three"});
+  logger->log_trace("{} {} {}", "one", std::string{"two"}, CStringConvertible{"three"}.c_str());
 
   REQUIRE(LogTestController::getInstance().contains("[trace] one two three", 0s));
   LogTestController::getInstance().reset();
@@ -138,12 +140,12 @@ TEST_CASE("Test log lazy string generation", "[ttl7]") {
   std::shared_ptr<logging::Logger> logger = logging::LoggerFactory<logging::Logger>::getLogger();
   int call_count = 0;
 
-  logger->log_trace("%s", [&] {
+  logger->log_trace("{}", [&] {
     ++call_count;
     return std::string{"hello trace"};
   });
 
-  logger->log_debug("%s", [&] {
+  logger->log_debug("{}", [&] {
     ++call_count;
     return std::string{"hello debug"};
   });
@@ -167,17 +169,17 @@ TEST_CASE("Test ShortenNames", "[ttl8]") {
   props->set("spdlog.shorten_names", "true");
 
   std::shared_ptr<logging::Logger> logger = LogTestController::getInstance(props)->getLogger<logging::Logger>();
-  logger->log_error("hello %s", "world");
+  logger->log_error("hello {}", "world");
 
   REQUIRE(true == LogTestController::getInstance(props)->contains("[o::a::n::m::c::l::Logger] [error] hello world"));
 
   logger = LogTestController::getInstance(props)->getLogger<single::TestClass>();
-  logger->log_error("hello %s", "world");
+  logger->log_error("hello {}", "world");
 
   REQUIRE(true == LogTestController::getInstance(props)->contains("[s::TestClass] [error] hello world"));
 
   logger = LogTestController::getInstance(props)->getLogger<TestClass2>();
-  logger->log_error("hello %s", "world");
+  logger->log_error("hello {}", "world");
 
   REQUIRE(true == LogTestController::getInstance(props)->contains("[TestClass2] [error] hello world"));
 
@@ -306,7 +308,7 @@ TEST_CASE("Setting max log entry length property trims long formatted log entrie
   properties->set("logger.root", "INFO");
   log_config.initialize(properties);
   auto logger = log_config.getLogger("SetMaxLogEntryLengthTestLogger");
-  logger->log_error("Hi there %s", "John");
+  logger->log_error("Hi there {}", "John");
 
   auto compressed_logs = logging::LoggerConfiguration::getCompressedLogs();
   REQUIRE(compressed_logs.size() == 1);
@@ -324,7 +326,7 @@ TEST_CASE("Setting max log entry length to a size larger than the internal buffe
   auto logger = log_config.getLogger("SetMaxLogEntryLengthTestLogger");
   std::string log(2000, 'a');
   std::string expected_log(1500, 'a');
-  logger->log_error(log.c_str());
+  logger->log_error("{}", log);
 
   auto compressed_logs = logging::LoggerConfiguration::getCompressedLogs();
   REQUIRE(compressed_logs.size() == 1);
@@ -346,12 +348,25 @@ TEST_CASE("Setting max log entry length to unlimited results in unlimited log en
   log_config.initialize(properties);
   auto logger = log_config.getLogger("SetMaxLogEntryLengthTestLogger");
   std::string log(5000, 'a');
-  logger->log_error(log.c_str());
+  logger->log_error("{}", log);
 
   auto compressed_logs = logging::LoggerConfiguration::getCompressedLogs();
   REQUIRE(compressed_logs.size() == 1);
   auto logs = decompress(compressed_logs[0]);
   REQUIRE(logs.find(log) != std::string::npos);
+  LogTestController::getInstance().reset();
+}
+
+TEST_CASE("fmt formatting works with the logger") {
+  LogTestController::getInstance().setTrace<logging::Logger>();
+  std::shared_ptr<logging::Logger> logger = logging::LoggerFactory<logging::Logger>::getLogger();
+  logger->log_critical("{} equals to {}", 1min, 60s);
+  logger->log_critical("{} in hex is {:#x}", 13, 13);
+  logger->log_critical("{:%Q %q} equals to {:%Q %q}", 2h, std::chrono::duration_cast<std::chrono::seconds>(2h));
+  CHECK(LogTestController::getInstance().contains("[org::apache::nifi::minifi::core::logging::Logger] [critical] 1m equals to 60s"));
+  CHECK(LogTestController::getInstance().contains("[org::apache::nifi::minifi::core::logging::Logger] [critical] 2 h equals to 7200 s"));
+
+  LogTestController::getInstance().reset();
 }
 
 TEST_CASE("Test sending multiple segments at once", "[ttl16]") {
@@ -375,7 +390,7 @@ TEST_CASE("Test sending multiple segments at once", "[ttl16]") {
   for (size_t idx = 0; idx < SEGMENT_COUNT; ++idx) {
     std::generate_n(data.begin(), data.size(), [&] { return TEXT_CHARS[static_cast<uint8_t>(distr(eng))]; });
     log_str = std::string{data.begin(), data.end()} + "." + std::to_string(idx);
-    logger->log_error(log_str.c_str());
+    logger->log_error("{}", log_str);
   }
 
   LoggerTestAccessor::runCompression(log_config);

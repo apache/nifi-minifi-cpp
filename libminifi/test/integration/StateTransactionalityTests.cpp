@@ -51,7 +51,7 @@ class StatefulIntegrationTest : public IntegrationBase {
     LogTestController::getInstance().setDebug<core::Processor>();
     LogTestController::getInstance().setDebug<core::ProcessSession>();
     LogTestController::getInstance().setDebug<StatefulIntegrationTest>();
-    logger_->log_info("Running test case \"%s\"", test_case_);
+    logger_->log_info("Running test case \"{}\"", test_case_);
   }
 
   void updateProperties(minifi::FlowController& fc) override {
@@ -615,4 +615,3 @@ int main(int argc, char** argv) {
     return EXIT_FAILURE;
   }
 }
-

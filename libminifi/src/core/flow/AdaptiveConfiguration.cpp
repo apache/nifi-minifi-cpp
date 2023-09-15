@@ -61,8 +61,8 @@ std::unique_ptr<core::ProcessGroup> AdaptiveConfiguration::getRootFromPayload(co
     flow::Node root{std::make_shared<YamlNode>(rootYamlNode)};
     return getRootFrom(root, FlowSchema::getDefault());
   } catch (const YAML::ParserException& ex) {
-    logger_->log_error("Configuration file is not valid json: %s (%zu)", rapidjson::GetParseError_En(res.Code()), gsl::narrow<size_t>(res.Offset()));
-    logger_->log_error("Configuration file is not valid yaml: %s", ex.what());
+    logger_->log_error("Configuration file is not valid json: {} ({})", rapidjson::GetParseError_En(res.Code()), gsl::narrow<size_t>(res.Offset()));
+    logger_->log_error("Configuration file is not valid yaml: {}", ex.what());
     throw;
   }
 }

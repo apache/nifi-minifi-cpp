@@ -83,9 +83,9 @@ void C2MetricsPublisher::loadC2ResponseConfiguration(const std::string &prefix) 
       // We don't need to lock here, we already do it in the loadMetricNodes member function
       root_response_nodes_[name].push_back(new_node);
     } catch (const std::exception& ex) {
-      logger_->log_error("Could not create metrics class %s, exception type: %s, what: %s", metricsClass, typeid(ex).name(), ex.what());
+      logger_->log_error("Could not create metrics class {}, exception type: {}, what: {}", metricsClass, typeid(ex).name(), ex.what());
     } catch (...) {
-      logger_->log_error("Could not create metrics class %s, exception type: %s", metricsClass, getCurrentExceptionTypeName());
+      logger_->log_error("Could not create metrics class {}, exception type: {}", metricsClass, getCurrentExceptionTypeName());
     }
   }
 }
@@ -129,9 +129,9 @@ state::response::SharedResponseNode C2MetricsPublisher::loadC2ResponseConfigurat
         }
       }
     } catch (const std::exception& ex) {
-      logger_->log_error("Could not create metrics class %s, exception type: %s, what: %s", metricsClass, typeid(ex).name(), ex.what());
+      logger_->log_error("Could not create metrics class {}, exception type: {}, what: {}", metricsClass, typeid(ex).name(), ex.what());
     } catch (...) {
-      logger_->log_error("Could not create metrics class %s, exception type: %s", metricsClass, getCurrentExceptionTypeName());
+      logger_->log_error("Could not create metrics class {}, exception type: {}", metricsClass, getCurrentExceptionTypeName());
     }
   }
   return prev_node;

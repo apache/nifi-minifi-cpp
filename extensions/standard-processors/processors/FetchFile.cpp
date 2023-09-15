@@ -77,14 +77,14 @@ bool FetchFile::moveWouldFailWithDestinationConflict(const std::filesystem::path
 void FetchFile::executeMoveConflictStrategy(const std::filesystem::path& file_to_fetch_path, const std::filesystem::path& file_name) {
   if (move_confict_strategy_ == fetch_file::MoveConflictStrategyOption::REPLACE_FILE) {
     auto moved_path = getMoveAbsolutePath(file_name);
-    logger_->log_debug("Due to conflict replacing file '%s' by the Move Completion Strategy", moved_path.string());
+    logger_->log_debug("Due to conflict replacing file '{}' by the Move Completion Strategy", moved_path);
     std::filesystem::rename(file_to_fetch_path, moved_path);
   } else if (move_confict_strategy_ == fetch_file::MoveConflictStrategyOption::RENAME) {
     std::filesystem::path generated_filename{utils::IdGenerator::getIdGenerator()->generate().to_string().view()};
-    logger_->log_debug("Due to conflict file '%s' is moved with generated name '%s' by the Move Completion Strategy", file_to_fetch_path.string(), generated_filename.string());
+    logger_->log_debug("Due to conflict file '{}' is moved with generated name '{}' by the Move Completion Strategy", file_to_fetch_path, generated_filename);
     std::filesystem::rename(file_to_fetch_path, getMoveAbsolutePath(generated_filename));
   } else if (move_confict_strategy_ == fetch_file::MoveConflictStrategyOption::KEEP_EXISTING) {
-    logger_->log_debug("Due to conflict file '%s' is deleted by the Move Completion Strategy", file_to_fetch_path.string());
+    logger_->log_debug("Due to conflict file '{}' is deleted by the Move Completion Strategy", file_to_fetch_path);
     std::filesystem::remove(file_to_fetch_path);
   }
 }
@@ -95,7 +95,7 @@ void FetchFile::processMoveCompletion(const std::filesystem::path& file_to_fetch
       std::filesystem::create_directories(move_destination_directory_);
     }
     auto moved_path = getMoveAbsolutePath(file_name);
-    logger_->log_debug("'%s' is moved to '%s' by the Move Completion Strategy", file_to_fetch_path.string(), moved_path.string());
+    logger_->log_debug("'{}' is moved to '{}' by the Move Completion Strategy", file_to_fetch_path, moved_path);
     std::filesystem::rename(file_to_fetch_path, moved_path);
     return;
   }
@@ -108,11 +108,11 @@ void FetchFile::executeCompletionStrategy(const std::filesystem::path& file_to_f
     if (completion_strategy_ == fetch_file::CompletionStrategyOption::MOVE_FILE) {
       processMoveCompletion(file_to_fetch_path, file_name);
     } else if (completion_strategy_ == fetch_file::CompletionStrategyOption::DELETE_FILE) {
-      logger_->log_debug("File '%s' is deleted by the Delete Completion Strategy", file_to_fetch_path.string());
+      logger_->log_debug("File '{}' is deleted by the Delete Completion Strategy", file_to_fetch_path);
       std::filesystem::remove(file_to_fetch_path);
     }
   } catch(const std::filesystem::filesystem_error& ex) {
-    logger_->log_warn("Executing completion strategy failed due to filesystem error: %s", ex.what());
+    logger_->log_warn("Executing completion strategy failed due to filesystem error: {}", ex.what());
   }
 }
 
@@ -127,7 +127,7 @@ void FetchFile::onTrigger(const std::shared_ptr<core::ProcessContext> &context, 
 
   const auto file_to_fetch_path = getFileToFetch(*context, flow_file);
   if (!std::filesystem::is_regular_file(file_to_fetch_path)) {
-    utils::LogUtils::logWithLevel(logger_, log_level_when_file_not_found_, "File to fetch was not found: '%s'!", file_to_fetch_path.string());
+    logger_->log_with_level(utils::LogUtils::mapToLogLevel(log_level_when_file_not_found_), "File to fetch was not found: '{}'!", file_to_fetch_path);
     session->transfer(flow_file, NotFound);
     return;
   }
@@ -138,7 +138,7 @@ void FetchFile::onTrigger(const std::shared_ptr<core::ProcessContext> &context, 
   context->getProperty(MoveDestinationDirectory, move_destination_directory, flow_file);
   move_destination_directory_ = move_destination_directory;
   if (moveWouldFailWithDestinationConflict(file_name)) {
-    logger_->log_error("Move destination (%s) conflicts with an already existing file!", move_destination_directory_.string());
+    logger_->log_error("Move destination ({}) conflicts with an already existing file!", move_destination_directory_);
     session->transfer(flow_file, Failure);
     return;
   }
@@ -146,14 +146,14 @@ void FetchFile::onTrigger(const std::shared_ptr<core::ProcessContext> &context, 
   try {
     utils::FileReaderCallback callback(file_to_fetch_path);
     session->write(flow_file, std::move(callback));
-    logger_->log_debug("Fetching file '%s' successful!", file_to_fetch_path.string());
+    logger_->log_debug("Fetching file '{}' successful!", file_to_fetch_path);
     session->transfer(flow_file, Success);
   } catch (const utils::FileReaderCallbackIOError& io_error) {
     if (io_error.error_code == EACCES) {
-      utils::LogUtils::logWithLevel(logger_, log_level_when_permission_denied_, "Read permission denied for file '%s' to be fetched!", file_to_fetch_path.string());
+      logger_->log_with_level(utils::LogUtils::mapToLogLevel(log_level_when_permission_denied_), "Read permission denied for file '{}' to be fetched!", file_to_fetch_path);
       session->transfer(flow_file, PermissionDenied);
     } else {
-      logger_->log_error("Fetching file '%s' failed! %s", file_to_fetch_path.string(), io_error.what());
+      logger_->log_error("Fetching file '{}' failed! {}", file_to_fetch_path, io_error.what());
       session->transfer(flow_file, Failure);
     }
     return;

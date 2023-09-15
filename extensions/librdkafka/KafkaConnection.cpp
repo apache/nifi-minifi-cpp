@@ -42,7 +42,7 @@ void KafkaConnection::remove() {
 }
 
 void KafkaConnection::removeConnection() {
-  logger_->log_trace("KafkaConnection::removeConnection START: Client = %s -- Broker = %s", key_.client_id_, key_.brokers_);
+  logger_->log_trace("KafkaConnection::removeConnection START: Client = {} -- Broker = {}", key_.client_id_, key_.brokers_);
   stopPoll();
   if (kafka_connection_) {
     rd_kafka_flush(kafka_connection_, 10 * 1000); /* wait for max 10 seconds */
@@ -53,7 +53,7 @@ void KafkaConnection::removeConnection() {
     kafka_connection_ = nullptr;
   }
   initialized_ = false;
-  logger_->log_trace("KafkaConnection::removeConnection FINISH: Client = %s -- Broker = %s", key_.client_id_, key_.brokers_);
+  logger_->log_trace("KafkaConnection::removeConnection FINISH: Client = {} -- Broker = {}", key_.client_id_, key_.brokers_);
 }
 
 bool KafkaConnection::initialized() const {
@@ -111,18 +111,20 @@ void KafkaConnection::logCallback(const rd_kafka_t* rk, int level, const char* /
     case 0:  // LOG_EMERG
     case 1:  // LOG_ALERT
     case 2:  // LOG_CRIT
+      logger->log_critical("{}", buf);
+      break;
     case 3:  // LOG_ERR
-      core::logging::LOG_ERROR(logger) << buf;
+      logger->log_error("{}", buf);
       break;
     case 4:  // LOG_WARNING
-      core::logging::LOG_WARN(logger) << buf;
+      logger->log_warn("{}", buf);
       break;
     case 5:  // LOG_NOTICE
     case 6:  // LOG_INFO
-      core::logging::LOG_INFO(logger) << buf;
+      logger->log_info("{}", buf);
       break;
     case 7:  // LOG_DEBUG
-      core::logging::LOG_DEBUG(logger) << buf;
+      logger->log_debug("{}", buf);
       break;
     default:
       gsl_FailFast();

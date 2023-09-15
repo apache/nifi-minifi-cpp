@@ -23,7 +23,7 @@ namespace org::apache::nifi::minifi::internal {
 
 ColumnHandle::~ColumnHandle() {
   static auto logger = core::logging::LoggerFactory<ColumnHandle>::getLogger();
-  logger->log_trace("Closing column handle '%s'", handle->GetName());
+  logger->log_trace("Closing column handle '{}'", handle->GetName());
 }
 
 }  // namespace org::apache::nifi::minifi::internal

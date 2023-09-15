@@ -388,7 +388,7 @@ public class JniClassLoader  {
             initializer = ConfigurableComponentInitializerFactory.createComponentInitializer(manager,configurableComponent.getClass());
             initializer.initialize(configurableComponent);
         } catch (final InitializationException e) {
-            logger.warn(String.format("Unable to initialize component %s due to %s", configurableComponent.getClass().getName(), e.getMessage()));
+            logger.warn(String.format("Unable to initialize component {} due to {}", configurableComponent.getClass().getName(), e.getMessage()));
         }
     }
 

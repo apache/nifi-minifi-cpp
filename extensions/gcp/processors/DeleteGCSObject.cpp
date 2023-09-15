@@ -61,7 +61,7 @@ void DeleteGCSObject::onTrigger(const std::shared_ptr<core::ProcessContext>& con
       utils::internal::ValueParser(*gen_str).parse(gen).parseEnd();
       generation = gcs::Generation(gen);
     } catch (const utils::internal::ValueException&) {
-      logger_->log_error("Invalid generation: %s", *gen_str);
+      logger_->log_error("Invalid generation: {}", *gen_str);
       session->transfer(flow_file, Failure);
       return;
     }
@@ -73,7 +73,7 @@ void DeleteGCSObject::onTrigger(const std::shared_ptr<core::ProcessContext>& con
     flow_file->setAttribute(GCS_STATUS_MESSAGE, status.message());
     flow_file->setAttribute(GCS_ERROR_REASON, status.error_info().reason());
     flow_file->setAttribute(GCS_ERROR_DOMAIN, status.error_info().domain());
-    logger_->log_error("Failed to delete %s object from %s bucket on Google Cloud Storage %s %s", *object_name, *bucket, status.message(), status.error_info().reason());
+    logger_->log_error("Failed to delete {} object from {} bucket on Google Cloud Storage {} {}", *object_name, *bucket, status.message(), status.error_info().reason());
     session->transfer(flow_file, Failure);
     return;
   }

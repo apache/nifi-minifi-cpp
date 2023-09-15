@@ -59,11 +59,11 @@ void generateData(std::vector<char>& data, bool textData = false) {
 
 void GenerateFlowFile::onSchedule(const std::shared_ptr<core::ProcessContext> &context, const std::shared_ptr<core::ProcessSessionFactory>& /*sessionFactory*/) {
   if (context->getProperty(FileSize.name, fileSize_)) {
-    logger_->log_trace("File size is configured to be %d", fileSize_);
+    logger_->log_trace("File size is configured to be {}", fileSize_);
   }
 
   if (context->getProperty(BatchSize.name, batchSize_)) {
-    logger_->log_trace("Batch size is configured to be %d", batchSize_);
+    logger_->log_trace("Batch size is configured to be {}", batchSize_);
   }
 
   std::string value;
@@ -71,7 +71,7 @@ void GenerateFlowFile::onSchedule(const std::shared_ptr<core::ProcessContext> &c
     textData_ = (value == GenerateFlowFile::DATA_FORMAT_TEXT);
   }
   if (context->getProperty(UniqueFlowFiles.name, uniqueFlowFile_)) {
-    logger_->log_trace("Unique Flow files is configured to be %i", uniqueFlowFile_);
+    logger_->log_trace("Unique Flow files is configured to be {}", uniqueFlowFile_);
   }
 
   std::string custom_text;

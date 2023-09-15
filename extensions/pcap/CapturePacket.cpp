@@ -148,34 +148,34 @@ void CapturePacket::onSchedule(const std::shared_ptr<core::ProcessContext> &cont
         }
       }
       if (!found_match) {
-        logger_->log_debug("Skipping %s because it does not match any regex", name);
+        logger_->log_debug("Skipping {} because it does not match any regex", name);
         continue;
       } else {
-        logger_->log_trace("Accepting %s because it matches %s", name, matching_regex);
+        logger_->log_trace("Accepting {} because it matches {}", name, matching_regex);
       }
     }
 
     if (!iter->open()) {
-      logger_->log_error("Could not open device %s", name);
+      logger_->log_error("Could not open device {}", name);
       continue;
     }
 
     if (!capture_bluetooth_) {
       if (name.find("bluetooth") != std::string::npos) {
-        logger_->log_error("Skipping %s because blue tooth capture is not enabled", name);
+        logger_->log_error("Skipping {} because blue tooth capture is not enabled", name);
         continue;
       }
     }
 
     if (name.find("dbus") != std::string::npos) {
-      logger_->log_error("Skipping %s because dbus capture is disabled", name);
+      logger_->log_error("Skipping {} because dbus capture is disabled", name);
       continue;
     }
 
     if (iter->startCapture(packet_callback, mover.get())) {
-      logger_->log_debug("Starting capture on %s", iter->getName());
+      logger_->log_debug("Starting capture on {}", iter->getName());
       CapturePacketMechanism *aa = create_new_capture(getPath(), &pcap_batch_size_);
-      logger_->log_trace("Creating packet capture in %s", aa->getFile());
+      logger_->log_trace("Creating packet capture in {}", aa->getFile());
       mover->source.enqueue(aa);
       device_list_.push_back(iter);
     }
@@ -194,7 +194,7 @@ void CapturePacket::onTrigger(const std::shared_ptr<core::ProcessContext> &conte
   if (mover->sink.try_dequeue(capture)) {
     auto ff = session->create();
     session->import(capture->getFile(), ff, false, 0);
-    logger_->log_debug("Received packet capture in file %s %d for %s", capture->getFile(), capture->getSize(), ff->getResourceClaim()->getContentFullPath());
+    logger_->log_debug("Received packet capture in file {} {} for {}", capture->getFile(), capture->getSize(), ff->getResourceClaim()->getContentFullPath());
     session->transfer(ff, Success);
     delete capture;
   } else {

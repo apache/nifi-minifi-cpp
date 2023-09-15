@@ -56,7 +56,7 @@ Processor::Processor(std::string_view name, std::shared_ptr<ProcessorMetrics> me
   penalization_period_ = DEFAULT_PENALIZATION_PERIOD;
   max_concurrent_tasks_ = DEFAULT_MAX_CONCURRENT_TASKS;
   incoming_connections_Iter = this->incoming_connections_.begin();
-  logger_->log_debug("Processor %s created UUID %s", name_, getUUIDStr());
+  logger_->log_debug("Processor {} created UUID {}", name_, getUUIDStr());
 }
 
 Processor::Processor(std::string_view name, const utils::Identifier& uuid, std::shared_ptr<ProcessorMetrics> metrics)
@@ -75,11 +75,11 @@ Processor::Processor(std::string_view name, const utils::Identifier& uuid, std::
   penalization_period_ = DEFAULT_PENALIZATION_PERIOD;
   max_concurrent_tasks_ = DEFAULT_MAX_CONCURRENT_TASKS;
   incoming_connections_Iter = this->incoming_connections_.begin();
-  logger_->log_debug("Processor %s created with uuid %s", name_, getUUIDStr());
+  logger_->log_debug("Processor {} created with uuid {}", name_, getUUIDStr());
 }
 
 Processor::~Processor() {
-  logger_->log_debug("Destroying processor %s with uuid %s", name_, getUUIDStr());
+  logger_->log_debug("Destroying processor {} with uuid {}", name_, getUUIDStr());
 }
 
 bool Processor::isRunning() const {
@@ -102,7 +102,7 @@ bool Processor::addConnection(Connectable* conn) {
   SetAs result = SetAs::NONE;
 
   if (isRunning()) {
-    logger_->log_warn("Can not add connection while the process %s is running", name_);
+    logger_->log_warn("Can not add connection while the process {} is running", name_);
     return false;
   }
   const auto connection = dynamic_cast<Connection*>(conn);
@@ -128,7 +128,7 @@ bool Processor::addConnection(Connectable* conn) {
     if (incoming_connections_.find(connection) == incoming_connections_.end()) {
       incoming_connections_.insert(connection);
       connection->setDestination(this);
-      logger_->log_debug("Add connection %s into Processor %s incoming connection", connection->getName(), name_);
+      logger_->log_debug("Add connection {} into Processor {} incoming connection", connection->getName(), name_);
       incoming_connections_Iter = this->incoming_connections_.begin();
       result = SetAs::OUTPUT;
     }
@@ -146,7 +146,7 @@ bool Processor::addConnection(Connectable* conn) {
           existedConnection.insert(connection);
           connection->setSource(this);
           outgoing_connections_[relationship] = existedConnection;
-          logger_->log_debug("Add connection %s into Processor %s outgoing connection for relationship %s", connection->getName(), name_, relationship);
+          logger_->log_debug("Add connection {} into Processor {} outgoing connection for relationship {}", connection->getName(), name_, relationship);
           result = SetAs::INPUT;
         }
       } else {
@@ -155,7 +155,7 @@ bool Processor::addConnection(Connectable* conn) {
         newConnection.insert(connection);
         connection->setSource(this);
         outgoing_connections_[relationship] = newConnection;
-        logger_->log_debug("Add connection %s into Processor %s outgoing connection for relationship %s", connection->getName(), name_, relationship);
+        logger_->log_debug("Add connection {} into Processor {} outgoing connection for relationship {}", connection->getName(), name_, relationship);
         result = SetAs::INPUT;
       }
     }
@@ -193,12 +193,12 @@ void Processor::onTrigger(ProcessContext *context, ProcessSessionFactory *sessio
     session->commit();
     metrics_->addLastSessionCommitRuntime(std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::steady_clock::now() - start));
   } catch (const std::exception& exception) {
-    logger_->log_warn("Caught \"%s\" (%s) during Processor::onTrigger of processor: %s (%s)",
+    logger_->log_warn("Caught \"{}\" ({}) during Processor::onTrigger of processor: {} ({})",
         exception.what(), typeid(exception).name(), getUUIDStr(), getName());
     session->rollback();
     throw;
   } catch (...) {
-    logger_->log_warn("Caught unknown exception during Processor::onTrigger of processor: %s (%s)", getUUIDStr(), getName());
+    logger_->log_warn("Caught unknown exception during Processor::onTrigger of processor: {} ({})", getUUIDStr(), getName());
     session->rollback();
     throw;
   }
@@ -218,12 +218,12 @@ void Processor::onTrigger(const std::shared_ptr<ProcessContext> &context, const 
     session->commit();
     metrics_->addLastSessionCommitRuntime(std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::steady_clock::now() - start));
   } catch (std::exception &exception) {
-    logger_->log_warn("Caught \"%s\" (%s) during Processor::onTrigger of processor: %s (%s)",
+    logger_->log_warn("Caught \"{}\" ({}) during Processor::onTrigger of processor: {} ({})",
         exception.what(), typeid(exception).name(), getUUIDStr(), getName());
     session->rollback();
     throw;
   } catch (...) {
-    logger_->log_warn("Caught unknown exception during Processor::onTrigger of processor: %s (%s)", getUUIDStr(), getName());
+    logger_->log_warn("Caught unknown exception during Processor::onTrigger of processor: {} ({})", getUUIDStr(), getName());
     session->rollback();
     throw;
   }
@@ -246,7 +246,7 @@ bool Processor::isWorkAvailable() {
       }
     }
   } catch (...) {
-    logger_->log_error("Caught an exception (type: %s) while checking if work is available;"
+    logger_->log_error("Caught an exception (type: {}) while checking if work is available;"
         " unless it was positively determined that work is available, assuming NO work is available!",
         getCurrentExceptionTypeName());
   }
@@ -361,8 +361,8 @@ void Processor::validateAnnotations() const {
 
 void Processor::setMaxConcurrentTasks(const uint8_t tasks) {
   if (isSingleThreaded() && tasks > 1) {
-    logger_->log_warn("Processor %s can not be run in parallel, its \"max concurrent tasks\" value is too high. "
-                      "It was set to 1 from %" PRIu8 ".", name_, tasks);
+    logger_->log_warn("Processor {} can not be run in parallel, its \"max concurrent tasks\" value is too high. "
+                      "It was set to 1 from {}.", name_, tasks);
     max_concurrent_tasks_ = 1;
     return;
   }

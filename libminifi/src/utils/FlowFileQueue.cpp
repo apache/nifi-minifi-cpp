@@ -98,7 +98,7 @@ bool FlowFileQueue::processLoadTaskWait(std::optional<std::chrono::milliseconds>
     queue_.push(std::move(intermediate_item));
   }
   load_task_.reset();
-  logger_->log_debug("Swapped in '%zu' flow files and committed '%zu' pending files", swapped_in_count, intermediate_count);
+  logger_->log_debug("Swapped in '{}' flow files and committed '{}' pending files", swapped_in_count, intermediate_count);
   return true;
 }
 
@@ -140,7 +140,7 @@ void FlowFileQueue::push(value_type element) {
     for (const auto& flow_file : flow_files_to_be_swapped_out) {
       swapped_flow_files_.push(SwappedFlowFile{flow_file->getUUID(), flow_file->getPenaltyExpiration()});
     }
-    logger_->log_debug("Initiating store of %zu flow files", flow_files_to_be_swapped_out.size());
+    logger_->log_debug("Initiating store of {} flow files", flow_files_to_be_swapped_out.size());
     swap_manager_->store(std::move(flow_files_to_be_swapped_out));
   }
 }
@@ -182,7 +182,7 @@ void FlowFileQueue::initiateLoadIfNeeded() {
   if (flow_files_count == 0) {
     return;
   }
-  logger_->log_debug("Initiating load of %zu flow files", flow_files_count);
+  logger_->log_debug("Initiating load of {} flow files", flow_files_count);
   TimePoint min = TimePoint::max();
   TimePoint max = TimePoint::min();
   std::vector<SwappedFlowFile> flow_files;

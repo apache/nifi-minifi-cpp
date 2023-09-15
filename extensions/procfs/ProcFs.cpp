@@ -35,7 +35,7 @@ std::map<pid_t, ProcessStat> ProcFs::getProcessStats() const {
       if (auto process_stat_data = ProcessStatData::parseProcessStatFile(stat_file)) {
         process_stats.emplace(process_stat_data->getPid(), ProcessStat(*process_stat_data, page_size_));
       } else {
-        logger_->log_error("Failed to parse %s", entry.path());
+        logger_->log_error("Failed to parse {}", entry.path());
       }
     }
   }
@@ -56,7 +56,7 @@ std::vector<std::pair<std::string, CpuStatData>> ProcFs::getCpuStats() const {
       if (auto cpu_stat_data = CpuStatData::parseCpuStatLine(iss)) {
         cpu_stats.emplace_back(entry_name, *cpu_stat_data);
       } else {
-        logger_->log_error("Failed to parse %s from %s", entry_name, stat_file_path);
+        logger_->log_error("Failed to parse {} from {}", entry_name, stat_file_path);
       }
     }
   }
@@ -78,7 +78,7 @@ std::vector<std::pair<std::string, NetDevData>> ProcFs::getNetDevs() const {
     if (auto net_dev = NetDevData::parseNetDevLine(iss)) {
       net_devs.emplace_back(net_dev->first, net_dev->second);
     } else {
-      logger_->log_error("Failed to parse line %d from %s", line_num, stat_file_path);
+      logger_->log_error("Failed to parse line {} from {}", line_num, stat_file_path);
     }
   }
   return net_devs;
@@ -97,7 +97,7 @@ std::vector<std::pair<std::string, DiskStatData>> ProcFs::getDiskStats() const {
     if (auto disk_stat = DiskStatData::parseDiskStatLine(iss)) {
       disk_stats.emplace_back(disk_stat->first, disk_stat->second);
     } else {
-      logger_->log_error("Failed to parse line %d from %s", line_num, disk_stats_file_path);
+      logger_->log_error("Failed to parse line {} from {}", line_num, disk_stats_file_path);
     }
   }
   return disk_stats;

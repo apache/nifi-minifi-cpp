@@ -45,7 +45,7 @@ void ApplyTemplate::onTrigger(const std::shared_ptr<core::ProcessContext> &conte
   std::string template_file;
   context->getProperty(Template, template_file, flow_file);
   session->write(flow_file, [&template_file, &flow_file, this](const auto& output_stream) {
-    logger_->log_info("ApplyTemplate reading template file from %s", template_file);
+    logger_->log_info("ApplyTemplate reading template file from {}", template_file);
     // TODO(szaszm): we might want to return to memory-mapped input files when the next todo is done. Until then, the agents stores the whole result in memory anyway, so no point in not doing the same
     // with the template file itself
     const auto template_file_contents = [&] {

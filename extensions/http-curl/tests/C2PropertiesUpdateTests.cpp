@@ -141,7 +141,7 @@ int main() {
   // this sets the ostream logger
   auto log_test_controller = LogTestController::getInstance(logger_properties);
 
-  logger_properties->setHome(home_dir.string());
+  logger_properties->setHome(home_dir);
   logger_properties->loadConfigureFile("conf/minifi-log.properties");
   core::logging::LoggerConfiguration::getConfiguration().initialize(logger_properties);
 

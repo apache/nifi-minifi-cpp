@@ -142,7 +142,7 @@ int64_t ExtractText::ReadCallback::operator()(const std::shared_ptr<io::InputStr
           workStr = matches.suffix();
         }
       } catch (const Exception &e) {
-        logger_->log_error("%s error encountered when trying to construct regular expression from property (key: %s) value: %s",
+        logger_->log_error("{} error encountered when trying to construct regular expression from property (key: {}) value: {}",
                            e.what(), k, value);
         continue;
       }

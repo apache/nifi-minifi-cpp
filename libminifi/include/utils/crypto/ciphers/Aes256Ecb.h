@@ -58,10 +58,8 @@ class Aes256EcbCipher {
   bool operator==(const Aes256EcbCipher& other) const;
 
  private:
-  template<typename ...Args>
-  static void handleError(const char* format, Args&& ...args) {
-    std::string error_msg = core::logging::format_string(-1, format, core::logging::conditional_stringify(std::forward<Args>(args))...);
-    logger_->log_error("%s", error_msg);
+  static void handleError(const std::string& error_msg) {
+    logger_->log_error("{}", error_msg);
     throw CipherError(error_msg);
   }
 

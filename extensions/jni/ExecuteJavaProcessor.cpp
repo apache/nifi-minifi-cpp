@@ -198,11 +198,11 @@ void ExecuteJavaProcessor::onTrigger(const std::shared_ptr<core::ProcessContext>
   } catch (const JavaException &je) {
     // clear the java exception so we don't continually wrap it
     env->ExceptionClear();
-    logger_->log_error(" Java Exception occurred during onTrigger, reason: %s", je.what());
+    logger_->log_error(" Java Exception occurred during onTrigger, reason: {}", je.what());
   } catch (const std::exception &e) {
     // clear the java exception so we don't continually wrap it
     env->ExceptionClear();
-    logger_->log_error(" Exception occurred during onTrigger, reason: %s", e.what());
+    logger_->log_error(" Exception occurred during onTrigger, reason: {}", e.what());
   }
 }
 
