@@ -47,12 +47,12 @@ void PublishMQTT::readProperties(const std::shared_ptr<core::ProcessContext>& co
     throw Exception(PROCESS_SCHEDULE_EXCEPTION, "PublishMQTT: Topic is required");
   }
 
-  if (const auto retain_opt = context->getProperty(Retain) | utils::flatMap(&utils::StringUtils::toBool)) {
+  if (const auto retain_opt = context->getProperty(Retain) | utils::andThen(&utils::StringUtils::toBool)) {
     retain_ = *retain_opt;
   }
   logger_->log_debug("PublishMQTT: Retain [%d]", retain_);
 
-  if (const auto message_expiry_interval = context->getProperty(MessageExpiryInterval) | utils::flatMap(&core::TimePeriodValue::fromString)) {
+  if (const auto message_expiry_interval = context->getProperty(MessageExpiryInterval) | utils::andThen(&core::TimePeriodValue::fromString)) {
     message_expiry_interval_ = std::chrono::duration_cast<std::chrono::seconds>(message_expiry_interval->getMilliseconds());
     logger_->log_debug("PublishMQTT: MessageExpiryInterval [%" PRId64 "] s", int64_t{message_expiry_interval_->count()});
   }

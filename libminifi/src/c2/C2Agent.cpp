@@ -631,8 +631,8 @@ void C2Agent::handlePropertyUpdate(const C2ContentResponse &resp) {
   for (const auto& [name, value] : resp.operation_arguments) {
     bool persist = (
         value.getAnnotation("persist")
-        | utils::map(&AnnotatedValue::to_string)
-        | utils::flatMap(utils::StringUtils::toBool)).value_or(true);
+        | utils::transform(&AnnotatedValue::to_string)
+        | utils::andThen(utils::StringUtils::toBool)).value_or(true);
     PropertyChangeLifetime lifetime = persist ? PropertyChangeLifetime::PERSISTENT : PropertyChangeLifetime::TRANSIENT;
     changeUpdateState(update_property(name, value.to_string(), lifetime));
   }
@@ -969,7 +969,7 @@ void C2Agent::handleAssetUpdate(const C2ContentResponse& resp) {
 
   // output file
   std::filesystem::path file_path;
-  if (auto file_rel = resp.getArgument("file") | utils::map(make_path)) {
+  if (auto file_rel = resp.getArgument("file") | utils::transform(make_path)) {
     if (auto error = validateFilePath(file_rel.value())) {
       send_error(error.value());
       return;

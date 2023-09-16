@@ -42,7 +42,7 @@ class EventDrivenSchedulingAgent : public ThreadedSchedulingAgent {
     using namespace std::literals::chrono_literals;
 
     time_slice_ = configuration->get(Configure::nifi_flow_engine_event_driven_time_slice)
-        | utils::flatMap(utils::timeutils::StringToDuration<std::chrono::milliseconds>)
+        | utils::andThen(utils::timeutils::StringToDuration<std::chrono::milliseconds>)
         | utils::valueOrElse([] { return DEFAULT_TIME_SLICE; });
 
     if (time_slice_ < 10ms || 1000ms < time_slice_) {

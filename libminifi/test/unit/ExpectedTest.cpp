@@ -16,6 +16,7 @@
  * limitations under the License.
  */
 #define EXTENSION_LIST ""
+#include <memory>
 #include <string_view>
 #include "../TestBase.h"
 #include "../Catch.h"
@@ -25,69 +26,69 @@
 namespace utils = org::apache::nifi::minifi::utils;
 
 // shamelessly copied from https://github.com/TartanLlama/expected/blob/master/tests/extensions.cpp (License: CC0)
-TEST_CASE("expected map", "[expected][map]") {
+TEST_CASE("expected transform", "[expected][transform]") {
   auto mul2 = [](int a) { return a * 2; };
   auto ret_void = [](int) {};
 
   {
     nonstd::expected<int, int> e = 21;
-    auto ret = e | utils::map(mul2);
+    auto ret = e | utils::transform(mul2);
     REQUIRE(ret);
     REQUIRE(*ret == 42);
   }
 
   {
     const nonstd::expected<int, int> e = 21;
-    auto ret = e | utils::map(mul2);
+    auto ret = e | utils::transform(mul2);
     REQUIRE(ret);
     REQUIRE(*ret == 42);
   }
 
   {
     nonstd::expected<int, int> e = 21;
-    auto ret = std::move(e) | utils::map(mul2);
+    auto ret = std::move(e) | utils::transform(mul2);
     REQUIRE(ret);
     REQUIRE(*ret == 42);
   }
 
   {
     const nonstd::expected<int, int> e = 21;
-    auto ret = std::move(e) | utils::map(mul2);  // NOLINT(performance-move-const-arg)
+    auto ret = std::move(e) | utils::transform(mul2);  // NOLINT(performance-move-const-arg)
     REQUIRE(ret);
     REQUIRE(*ret == 42);
   }
 
   {
     nonstd::expected<int, int> e(nonstd::unexpect, 21);
-    auto ret = e | utils::map(mul2);
+    auto ret = e | utils::transform(mul2);
     REQUIRE(!ret);
     REQUIRE(ret.error() == 21);
   }
 
   {
     const nonstd::expected<int, int> e(nonstd::unexpect, 21);
-    auto ret = e | utils::map(mul2);
+    auto ret = e | utils::transform(mul2);
     REQUIRE(!ret);
     REQUIRE(ret.error() == 21);
   }
 
   {
     nonstd::expected<int, int> e(nonstd::unexpect, 21);
-    auto ret = std::move(e) | utils::map(mul2);
+    auto ret = std::move(e) | utils::transform(mul2);
     REQUIRE(!ret);
     REQUIRE(ret.error() == 21);
   }
 
   {
     const nonstd::expected<int, int> e(nonstd::unexpect, 21);
-    auto ret = std::move(e) | utils::map(mul2);  // NOLINT(performance-move-const-arg)
+    auto ret = std::move(e) | utils::transform(mul2);  // NOLINT(performance-move-const-arg)
     REQUIRE(!ret);
     REQUIRE(ret.error() == 21);
   }
 
   {
     nonstd::expected<int, int> e = 21;
-    auto ret = e | utils::map(ret_void);
+    auto ret = e | utils::transform(ret_void);
     REQUIRE(ret);
     STATIC_REQUIRE(
         (std::is_same<decltype(ret), nonstd::expected<void, int>>::value));
@@ -95,7 +96,7 @@ TEST_CASE("expected map", "[expected][map]") {
 
   {
     const nonstd::expected<int, int> e = 21;
-    auto ret = e | utils::map(ret_void);
+    auto ret = e | utils::transform(ret_void);
     REQUIRE(ret);
     STATIC_REQUIRE(
         (std::is_same<decltype(ret), nonstd::expected<void, int>>::value));
@@ -103,7 +104,7 @@ TEST_CASE("expected map", "[expected][map]") {
 
   {
     nonstd::expected<int, int> e = 21;
-    auto ret = std::move(e) | utils::map(ret_void);
+    auto ret = std::move(e) | utils::transform(ret_void);
     REQUIRE(ret);
     STATIC_REQUIRE(
         (std::is_same<decltype(ret), nonstd::expected<void, int>>::value));
@@ -111,7 +112,7 @@ TEST_CASE("expected map", "[expected][map]") {
 
   {
     const nonstd::expected<int, int> e = 21;
-    auto ret = std::move(e) | utils::map(ret_void);  // NOLINT(performance-move-const-arg)
+    auto ret = std::move(e) | utils::transform(ret_void);  // NOLINT(performance-move-const-arg)
     REQUIRE(ret);
     STATIC_REQUIRE(
         (std::is_same<decltype(ret), nonstd::expected<void, int>>::value));
@@ -119,7 +120,7 @@ TEST_CASE("expected map", "[expected][map]") {
 
   {
     nonstd::expected<int, int> e(nonstd::unexpect, 21);
-    auto ret = e | utils::map(ret_void);
+    auto ret = e | utils::transform(ret_void);
     REQUIRE(!ret);
     STATIC_REQUIRE(
         (std::is_same<decltype(ret), nonstd::expected<void, int>>::value));
@@ -127,7 +128,7 @@ TEST_CASE("expected map", "[expected][map]") {
 
   {
     const nonstd::expected<int, int> e(nonstd::unexpect, 21);
-    auto ret = e | utils::map(ret_void);
+    auto ret = e | utils::transform(ret_void);
     REQUIRE(!ret);
     STATIC_REQUIRE(
         (std::is_same<decltype(ret), nonstd::expected<void, int>>::value));
@@ -135,7 +136,7 @@ TEST_CASE("expected map", "[expected][map]") {
 
   {
     nonstd::expected<int, int> e(nonstd::unexpect, 21);
-    auto ret = std::move(e) | utils::map(ret_void);
+    auto ret = std::move(e) | utils::transform(ret_void);
     REQUIRE(!ret);
     STATIC_REQUIRE(
         (std::is_same<decltype(ret), nonstd::expected<void, int>>::value));
@@ -143,7 +144,7 @@ TEST_CASE("expected map", "[expected][map]") {
 
   {
     const nonstd::expected<int, int> e(nonstd::unexpect, 21);
-    auto ret = std::move(e) | utils::map(ret_void);  // NOLINT(performance-move-const-arg)
+    auto ret = std::move(e) | utils::transform(ret_void);  // NOLINT(performance-move-const-arg)
     REQUIRE(!ret);
     STATIC_REQUIRE(
         (std::is_same<decltype(ret), nonstd::expected<void, int>>::value));
@@ -153,141 +154,139 @@ TEST_CASE("expected map", "[expected][map]") {
   // mapping functions which return references
   {
     nonstd::expected<int, int> e(42);
-    auto ret = e | utils::map([](int& i) -> int& { return i; });
+    auto ret = e | utils::transform([](int& i) -> int& { return i; });
     REQUIRE(ret);
     REQUIRE(ret == 42);
   }
 }
 
-TEST_CASE("expected flatMap", "[expected][flatMap]") {
+TEST_CASE("expected andThen", "[expected][andThen]") {
   auto succeed = [](int) { return nonstd::expected<int, int>(21 * 2); };
   auto fail = [](int) { return nonstd::expected<int, int>(nonstd::unexpect, 17); };
 
   {
     nonstd::expected<int, int> e = 21;
-    auto ret = e | utils::flatMap(succeed);
+    auto ret = e | utils::andThen(succeed);
     REQUIRE(ret);
     REQUIRE(*ret == 42);
   }
 
   {
     const nonstd::expected<int, int> e = 21;
-    auto ret = e | utils::flatMap(succeed);
-    REQUIRE(ret);
-    REQUIRE(*ret == 42);
-  }
-
-  {
-    nonstd::expected<int, int> e = 21;
-    auto ret = std::move(e) | utils::flatMap(succeed);
-    REQUIRE(ret);
-    REQUIRE(*ret == 42);
-  }
-
-  {
-    const nonstd::expected<int, int> e = 21;
-    auto ret = std::move(e) | utils::flatMap(succeed);  // NOLINT(performance-move-const-arg)
+    auto ret = e | utils::andThen(succeed);
     REQUIRE(ret);
     REQUIRE(*ret == 42);
   }
 
   {
     nonstd::expected<int, int> e = 21;
-    auto ret = e | utils::flatMap(fail);
+    auto ret = std::move(e) | utils::andThen(succeed);
+    REQUIRE(ret);
+    REQUIRE(*ret == 42);
+  }
+
+  {
+    const nonstd::expected<int, int> e = 21;
+    auto ret = std::move(e) | utils::andThen(succeed);  // NOLINT(performance-move-const-arg)
+    REQUIRE(ret);
+    REQUIRE(*ret == 42);
+  }
+
+  {
+    nonstd::expected<int, int> e = 21;
+    auto ret = e | utils::andThen(fail);
     REQUIRE(!ret);
     REQUIRE(ret.error() == 17);
   }
 
   {
     const nonstd::expected<int, int> e = 21;
-    auto ret = e | utils::flatMap(fail);
+    auto ret = e | utils::andThen(fail);
     REQUIRE(!ret);
     REQUIRE(ret.error() == 17);
   }
 
   {
     nonstd::expected<int, int> e = 21;
-    auto ret = std::move(e) | utils::flatMap(fail);
+    auto ret = std::move(e) | utils::andThen(fail);
     REQUIRE(!ret);
     REQUIRE(ret.error() == 17);
   }
 
   {
     const nonstd::expected<int, int> e = 21;
-    auto ret = std::move(e) | utils::flatMap(fail);  // NOLINT(performance-move-const-arg)
+    auto ret = std::move(e) | utils::andThen(fail);  // NOLINT(performance-move-const-arg)
     REQUIRE(!ret);
     REQUIRE(ret.error() == 17);
   }
 
   {
     nonstd::expected<int, int> e(nonstd::unexpect, 21);
-    auto ret = e | utils::flatMap(succeed);
+    auto ret = e | utils::andThen(succeed);
     REQUIRE(!ret);
     REQUIRE(ret.error() == 21);
   }
 
   {
     const nonstd::expected<int, int> e(nonstd::unexpect, 21);
-    auto ret = e | utils::flatMap(succeed);
+    auto ret = e | utils::andThen(succeed);
     REQUIRE(!ret);
     REQUIRE(ret.error() == 21);
   }
 
   {
     nonstd::expected<int, int> e(nonstd::unexpect, 21);
-    auto ret = std::move(e) | utils::flatMap(succeed);
+    auto ret = std::move(e) | utils::andThen(succeed);
     REQUIRE(!ret);
     REQUIRE(ret.error() == 21);
   }
 
   {
     const nonstd::expected<int, int> e(nonstd::unexpect, 21);
-    auto ret = std::move(e) | utils::flatMap(succeed);  // NOLINT(performance-move-const-arg)
+    auto ret = std::move(e) | utils::andThen(succeed);  // NOLINT(performance-move-const-arg)
     REQUIRE(!ret);
     REQUIRE(ret.error() == 21);
   }
 
   {
     nonstd::expected<int, int> e(nonstd::unexpect, 21);
-    auto ret = e | utils::flatMap(fail);
+    auto ret = e | utils::andThen(fail);
     REQUIRE(!ret);
     REQUIRE(ret.error() == 21);
   }
 
   {
     const nonstd::expected<int, int> e(nonstd::unexpect, 21);
-    auto ret = e | utils::flatMap(fail);
+    auto ret = e | utils::andThen(fail);
     REQUIRE(!ret);
     REQUIRE(ret.error() == 21);
   }
 
   {
     nonstd::expected<int, int> e(nonstd::unexpect, 21);
-    auto ret = std::move(e) | utils::flatMap(fail);
+    auto ret = std::move(e) | utils::andThen(fail);
     REQUIRE(!ret);
     REQUIRE(ret.error() == 21);
   }
 
   {
     const nonstd::expected<int, int> e(nonstd::unexpect, 21);
-    auto ret = std::move(e) | utils::flatMap(fail);  // NOLINT(performance-move-const-arg)
+    auto ret = std::move(e) | utils::andThen(fail);  // NOLINT(performance-move-const-arg)
     REQUIRE(!ret);
     REQUIRE(ret.error() == 21);
   }
 }
 
 TEST_CASE("expected orElse", "[expected][orElse]") {
-  // commented out parts depend on https://github.com/martinmoene/expected-lite/pull/40 (waiting for release)
-  // using eptr = std::unique_ptr<int>;
+  using eptr = std::unique_ptr<int>;
   auto succeed = [](int) { return nonstd::expected<int, int>(21 * 2); };
-  // auto succeedptr = [](eptr e) { return nonstd::expected<int, eptr>(21*2);};
-  auto fail =    [](int) { return nonstd::expected<int, int>(nonstd::unexpect, 17);};
-  // auto efail =   [](eptr e) { *e = 17;return nonstd::expected<int, eptr>(nonstd::unexpect, std::move(e));};
-  // auto failptr = [](eptr e) { return nonstd::expected<int, eptr>(nonstd::unexpect, std::move(e));};
+  auto succeedptr = [](eptr) { return nonstd::expected<int, eptr>(21*2); };
+  auto fail =    [](int) { return nonstd::expected<int, int>(nonstd::unexpect, 17); };
+  auto efail =   [](eptr e) { *e = 17; return nonstd::expected<int, eptr>(nonstd::unexpect, std::move(e)); };
   auto failvoid = [](int) {};
-  // auto failvoidptr = [](const eptr&) { /* don't consume */};
-  // auto consumeptr = [](eptr) {};
-  // auto make_u_int = [](int n) { return std::unique_ptr<int>(new int(n));};
+  auto failvoidptr = [](const eptr&) { /* don't consume */};
+  auto consumeptr = [](eptr) {};
+  auto make_u_int = [](int n) { return std::make_unique<int>(n); };
 
   {
     nonstd::expected<int, int> e = 21;
@@ -310,14 +309,12 @@ TEST_CASE("expected orElse", "[expected][orElse]") {
     REQUIRE(*ret == 21);
   }
 
-  /*
   {
     nonstd::expected<int, eptr> e = 21;
     auto ret = std::move(e) | utils::orElse(succeedptr);
     REQUIRE(ret);
     REQUIRE(*ret == 21);
   }
-   */
 
   {
     const nonstd::expected<int, int> e = 21;
@@ -348,14 +345,12 @@ TEST_CASE("expected orElse", "[expected][orElse]") {
   }
 
 
-  /*
   {
     nonstd::expected<int, eptr> e = 21;
     auto ret = std::move(e) | utils::orElse(efail);
     REQUIRE(ret);
     REQUIRE(ret == 21);
   }
-   */
 
   {
     const nonstd::expected<int, int> e = 21;
@@ -385,14 +380,12 @@ TEST_CASE("expected orElse", "[expected][orElse]") {
     REQUIRE(*ret == 42);
   }
 
-  /*
   {
     nonstd::expected<int, eptr> e(nonstd::unexpect, make_u_int(21));
     auto ret = std::move(e) | utils::orElse(succeedptr);
     REQUIRE(ret);
     REQUIRE(*ret == 42);
   }
-   */
 
   {
     const nonstd::expected<int, int> e(nonstd::unexpect, 21);
@@ -443,7 +436,6 @@ TEST_CASE("expected orElse", "[expected][orElse]") {
     REQUIRE(ret.error() == 21);
   }
 
-  /*
   {
     nonstd::expected<int, eptr> e(nonstd::unexpect, make_u_int(21));
     auto ret = std::move(e) | utils::orElse(failvoidptr);
@@ -457,7 +449,6 @@ TEST_CASE("expected orElse", "[expected][orElse]") {
     REQUIRE(!ret);
     REQUIRE(ret.error() == nullptr);
   }
-   */
 
   {
     const nonstd::expected<int, int> e(nonstd::unexpect, 21);
@@ -483,4 +474,64 @@ TEST_CASE("expected valueOrElse", "[expected][valueOrElse]") {
   REQUIRE_THROWS_AS(ex | utils::valueOrElse([](std::string){ throw std::exception(); }), std::exception);  // NOLINT(performance-unnecessary-value-param)
   REQUIRE_THROWS_AS(ex | utils::valueOrElse([](const std::string&) -> int { throw std::exception(); }), std::exception);
   REQUIRE_THROWS_AS(std::move(ex) | utils::valueOrElse([](std::string&&) -> int { throw std::exception(); }), std::exception);
+}
+
+TEST_CASE("expected transformError", "[expected][transformError]") {
+  auto mul2 = [](int a) { return a * 2; };
+
+  {
+    nonstd::expected<int, int> e = nonstd::make_unexpected(21);
+    auto ret = e | utils::transformError(mul2);
+    REQUIRE(!ret);
+    REQUIRE(ret.error() == 42);
+  }
+
+  {
+    const nonstd::expected<int, int> e = nonstd::make_unexpected(21);
+    auto ret = e | utils::transformError(mul2);
+    REQUIRE(!ret);
+    REQUIRE(ret.error() == 42);
+  }
+
+  {
+    nonstd::expected<int, int> e = nonstd::make_unexpected(21);
+    auto ret = std::move(e) | utils::transformError(mul2);
+    REQUIRE(!ret);
+    REQUIRE(ret.error() == 42);
+  }
+
+  {
+    const nonstd::expected<int, int> e = nonstd::make_unexpected(21);
+    auto ret = std::move(e) | utils::transformError(mul2);  // NOLINT(performance-move-const-arg)
+    REQUIRE(!ret);
+    REQUIRE(ret.error() == 42);
+  }
+
+  {
+    nonstd::expected<int, int> e = 21;
+    auto ret = e | utils::transformError(mul2);
+    REQUIRE(ret);
+    REQUIRE(*ret == 21);
+  }
+
+  {
+    const nonstd::expected<int, int> e = 21;
+    auto ret = e | utils::transformError(mul2);
+    REQUIRE(ret);
+    REQUIRE(*ret == 21);
+  }
+
+  {
+    const auto mutable_rvalue_fn = []{ return nonstd::expected<int, int>{21}; };
+    auto ret = mutable_rvalue_fn() | utils::transformError(mul2);
+    REQUIRE(ret);
+    REQUIRE(*ret == 21);
+  }
+
+  {
+    const nonstd::expected<int, int> e = 21;
+    auto ret = std::move(e) | utils::transformError(mul2);  // NOLINT(performance-move-const-arg)
+    REQUIRE(ret);
+    REQUIRE(*ret == 21);
+  }
 }

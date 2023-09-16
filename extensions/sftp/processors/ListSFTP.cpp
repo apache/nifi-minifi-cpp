@@ -125,7 +125,7 @@ void ListSFTP::onSchedule(const std::shared_ptr<core::ProcessContext> &context, 
     logger_->log_error("Minimum File Age attribute is missing or invalid");
   }
 
-  if (auto maximum_file_age = context->getProperty(MaximumFileAge) | utils::flatMap(&core::TimePeriodValue::fromString)) {
+  if (auto maximum_file_age = context->getProperty(MaximumFileAge) | utils::andThen(&core::TimePeriodValue::fromString)) {
     maximum_file_age_ = maximum_file_age->getMilliseconds();
   } else {
     logger_->log_error("Maximum File Age attribute is missing or invalid");

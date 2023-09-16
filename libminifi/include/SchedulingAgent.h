@@ -66,7 +66,7 @@ class SchedulingAgent {
     flow_repo_ = flow_repo;
 
     alert_time_ = configuration->get(Configure::nifi_flow_engine_alert_period)
-        | utils::flatMap(utils::timeutils::StringToDuration<std::chrono::milliseconds>)
+        | utils::andThen(utils::timeutils::StringToDuration<std::chrono::milliseconds>)
         | utils::valueOrElse([] { return SCHEDULING_WATCHDOG_DEFAULT_ALERT_PERIOD; });
 
     if (alert_time_ > std::chrono::milliseconds(0)) {

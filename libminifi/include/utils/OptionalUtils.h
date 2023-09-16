@@ -41,9 +41,9 @@ template<typename T>
 struct is_optional<std::optional<T>, void> : std::true_type {};
 
 namespace detail {
-// map implementation
+// transform implementation
 template<typename SourceType, typename F>
-auto operator|(std::optional<SourceType> o, map_wrapper<F> f) noexcept(noexcept(std::invoke(std::forward<F>(f.function), *std::move(o)))) {
+auto operator|(std::optional<SourceType> o, transform_wrapper<F> f) noexcept(noexcept(std::invoke(std::forward<F>(f.function), *std::move(o)))) {
   using cb_result = std::decay_t<std::invoke_result_t<F, SourceType>>;
   if constexpr(std::is_same_v<cb_result, void>) {
     if (o.has_value()) {
@@ -59,9 +59,9 @@ auto operator|(std::optional<SourceType> o, map_wrapper<F> f) noexcept(noexcept(
   }
 }
 
-// flatMap implementation
+// andThen implementation
 template<typename SourceType, typename F>
-auto operator|(const std::optional<SourceType>& o, flat_map_wrapper<F> f) noexcept(noexcept(std::invoke(std::forward<F>(f.function), *o)))
+auto operator|(const std::optional<SourceType>& o, and_then_wrapper<F> f) noexcept(noexcept(std::invoke(std::forward<F>(f.function), *o)))
     -> std::optional<typename std::decay<decltype(*std::invoke(std::forward<F>(f.function), *o))>::type> {
   static_assert(is_optional<decltype(std::invoke(std::forward<F>(f.function), *o))>::value, "flatMap expects a function returning optional");
   if (o.has_value()) {
@@ -71,7 +71,7 @@ auto operator|(const std::optional<SourceType>& o, flat_map_wrapper<F> f) noexce
   }
 }
 template<typename SourceType, typename F>
-auto operator|(std::optional<SourceType>&& o, flat_map_wrapper<F> f) noexcept(noexcept(std::invoke(std::forward<F>(f.function), std::move(*o))))
+auto operator|(std::optional<SourceType>&& o, and_then_wrapper<F> f) noexcept(noexcept(std::invoke(std::forward<F>(f.function), std::move(*o))))
     -> std::optional<typename std::decay<decltype(*std::invoke(std::forward<F>(f.function), std::move(*o)))>::type> {
   static_assert(is_optional<decltype(std::invoke(std::forward<F>(f.function), std::move(*o)))>::value, "flatMap expects a function returning optional");
   if (o.has_value()) {

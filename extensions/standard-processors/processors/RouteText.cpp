@@ -50,7 +50,7 @@ void RouteText::onSchedule(core::ProcessContext* context, core::ProcessSessionFa
   matching_ = utils::parseEnumProperty<route_text::Matching>(*context, MatchingStrategy);
   context->getProperty(TrimWhitespace, trim_);
   case_policy_ = context->getProperty<bool>(IgnoreCase).value_or(false) ? route_text::CasePolicy::IGNORE_CASE : route_text::CasePolicy::CASE_SENSITIVE;
-  group_regex_ = context->getProperty(GroupingRegex) | utils::map([] (const auto& str) {return utils::Regex(str);});
+  group_regex_ = context->getProperty(GroupingRegex) | utils::transform([] (const auto& str) {return utils::Regex(str);});
   segmentation_ = utils::parseEnumProperty<route_text::Segmentation>(*context, SegmentationStrategy);
   context->getProperty(GroupingFallbackValue, group_fallback_);
 }

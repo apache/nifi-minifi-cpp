@@ -25,17 +25,12 @@
 
 #include "utils/IntervalSwitch.h"
 
-namespace org {
-namespace apache {
-namespace nifi {
-namespace minifi {
+namespace org::apache::nifi::minifi {
 
 class Configure;
-namespace core {
-namespace logging {
+namespace core::logging {
 class Logger;
-}  // namespace logging
-}  // namespace core
+}  // namespace core::logging
 
 namespace disk_space_watchdog {
 struct Config {
@@ -54,7 +49,4 @@ inline utils::IntervalSwitch<std::uintmax_t> disk_space_interval_switch(Config c
 std::vector<std::uintmax_t> check_available_space(const std::vector<std::string>& paths, core::logging::Logger* logger = nullptr);
 
 }  // namespace disk_space_watchdog
-}  // namespace minifi
-}  // namespace nifi
-}  // namespace apache
-}  // namespace org
+}  // namespace org::apache::nifi::minifi
