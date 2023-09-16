@@ -43,7 +43,7 @@ class Decryptor {
 
   static std::optional<Decryptor> create(const std::filesystem::path& minifi_home) {
     return utils::crypto::EncryptionProvider::create(minifi_home)
-        | utils::map([](const utils::crypto::EncryptionProvider& provider) {return Decryptor{provider};});
+        | utils::transform([](const utils::crypto::EncryptionProvider& provider) {return Decryptor{provider};});
   }
 
  private:

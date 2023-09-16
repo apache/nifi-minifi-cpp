@@ -23,10 +23,7 @@
 #include "utils/file/PathUtils.h"
 #include "utils/TimeUtil.h"
 
-namespace org {
-namespace apache {
-namespace nifi {
-namespace minifi {
+namespace org::apache::nifi::minifi {
 
 namespace {
 namespace chr = std::chrono;
@@ -40,14 +37,13 @@ std::optional<T> data_size_string_to_int(const std::string& str) {
   return std::make_optional(result);
 }
 
-
 }  // namespace
 
 namespace disk_space_watchdog {
 Config read_config(const Configure& conf) {
-  const auto interval_ms = conf.get(Configure::minifi_disk_space_watchdog_interval) | utils::flatMap(utils::timeutils::StringToDuration<chr::milliseconds>);
-  const auto stop_bytes = conf.get(Configure::minifi_disk_space_watchdog_stop_threshold) | utils::flatMap(data_size_string_to_int<std::uintmax_t>);
-  const auto restart_bytes = conf.get(Configure::minifi_disk_space_watchdog_restart_threshold) | utils::flatMap(data_size_string_to_int<std::uintmax_t>);
+  const auto interval_ms = conf.get(Configure::minifi_disk_space_watchdog_interval) | utils::andThen(utils::timeutils::StringToDuration<chr::milliseconds>);
+  const auto stop_bytes = conf.get(Configure::minifi_disk_space_watchdog_stop_threshold) | utils::andThen(data_size_string_to_int<std::uintmax_t>);
+  const auto restart_bytes = conf.get(Configure::minifi_disk_space_watchdog_restart_threshold) | utils::andThen(data_size_string_to_int<std::uintmax_t>);
   if (restart_bytes < stop_bytes) { throw std::runtime_error{"disk space watchdog stop threshold must be <= restart threshold"}; }
   constexpr auto mebibytes = 1024 * 1024;
   return {
@@ -75,7 +71,4 @@ std::vector<std::uintmax_t> check_available_space(const std::vector<std::string>
 }
 
 }  // namespace disk_space_watchdog
-}  // namespace minifi
-}  // namespace nifi
-}  // namespace apache
-}  // namespace org
+}  // namespace org::apache::nifi::minifi

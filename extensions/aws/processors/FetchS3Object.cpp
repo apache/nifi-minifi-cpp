@@ -86,7 +86,7 @@ void FetchS3Object::onTrigger(const std::shared_ptr<core::ProcessContext> &conte
   std::optional<minifi::aws::s3::GetObjectResult> result;
   session->write(flow_file, [&get_object_params, &result, this](const std::shared_ptr<io::OutputStream>& stream) -> int64_t {
     result = s3_wrapper_.getObject(*get_object_params, *stream);
-    return (result | minifi::utils::map(&s3::GetObjectResult::write_size)).value_or(0);
+    return (result | minifi::utils::transform(&s3::GetObjectResult::write_size)).value_or(0);
   });
 
   if (result) {

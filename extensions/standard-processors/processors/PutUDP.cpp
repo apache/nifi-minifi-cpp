@@ -124,8 +124,8 @@ void PutUDP::onTrigger(core::ProcessContext* context, core::ProcessSession* cons
   };
 
   resolve_hostname()
-      | utils::flatMap(send_data_to_endpoint)
-      | utils::map(transfer_to_success)
+      | utils::andThen(send_data_to_endpoint)
+      | utils::transform(transfer_to_success)
       | utils::orElse(transfer_to_failure);
 }
 

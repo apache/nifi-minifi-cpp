@@ -26,7 +26,7 @@ constexpr const char* CONFIG_ENCRYPTION_KEY_PROPERTY_NAME = "nifi.bootstrap.sens
 
 std::optional<EncryptionProvider> EncryptionProvider::create(const std::filesystem::path& home_path) {
   return EncryptionManager{home_path}.createXSalsa20Cipher(CONFIG_ENCRYPTION_KEY_PROPERTY_NAME)
-    | utils::map([] (const XSalsa20Cipher& cipher) {return EncryptionProvider{cipher};});
+    | utils::transform([] (const XSalsa20Cipher& cipher) {return EncryptionProvider{cipher};});
 }
 
 }  // namespace org::apache::nifi::minifi::utils::crypto

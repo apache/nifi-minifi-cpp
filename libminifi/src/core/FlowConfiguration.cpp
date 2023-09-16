@@ -126,7 +126,7 @@ bool FlowConfiguration::persist(const std::string &configuration) {
   auto config_file_backup = *config_path_;
   config_file_backup += ".bak";
   bool backup_file = (configuration_->get(minifi::Configure::nifi_flow_configuration_file_backup_update)
-                      | utils::flatMap(utils::StringUtils::toBool)).value_or(false);
+                      | utils::andThen(utils::StringUtils::toBool)).value_or(false);
 
   if (backup_file) {
     if (utils::file::FileUtils::copy_file(*config_path_, config_file_backup) != 0) {

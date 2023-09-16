@@ -21,12 +21,12 @@
 namespace org::apache::nifi::minifi::utils {
 namespace detail {
 template<typename T>
-struct map_wrapper {
+struct transform_wrapper {
   T function;
 };
 
 template<typename T>
-struct flat_map_wrapper {
+struct and_then_wrapper {
   T function;
 };
 
@@ -44,6 +44,11 @@ template<typename T>
 struct filter_wrapper {
   T function;
 };
+
+template<typename T>
+struct transform_error_wrapper {
+  T function;
+};
 }  // namespace detail
 
 /**
@@ -53,7 +58,7 @@ struct filter_wrapper {
  * @return Wrapped result of func
  */
 template<typename T>
-detail::map_wrapper<T&&> map(T&& func) noexcept { return {std::forward<T>(func)}; }
+detail::transform_wrapper<T&&> transform(T&& func) noexcept { return {std::forward<T>(func)}; }
 
 /**
  * Transforms a wrapped value of T by calling the provided function T -> wrapped U, returning wrapped U.
@@ -61,7 +66,7 @@ detail::map_wrapper<T&&> map(T&& func) noexcept { return {std::forward<T>(func)}
  * @return Transformed value
  */
 template<typename T>
-detail::flat_map_wrapper<T&&> flatMap(T&& func) noexcept { return {std::forward<T>(func)}; }
+detail::and_then_wrapper<T&&> andThen(T&& func) noexcept { return {std::forward<T>(func)}; }
 
 /**
  * For optional-like types, possibly provides a value for an empty object to be replaced with.
@@ -89,4 +94,7 @@ detail::value_or_else_wrapper<T&&> valueOrElse(T&& func) noexcept { return {std:
  */
 template<typename T>
 detail::filter_wrapper<T&&> filter(T&& func) noexcept { return {std::forward<T>(func)}; }
+
+template<typename T>
+detail::transform_error_wrapper<T&&> transformError(T&& func) noexcept { return {std::forward<T>(func)}; }
 }  // namespace org::apache::nifi::minifi::utils

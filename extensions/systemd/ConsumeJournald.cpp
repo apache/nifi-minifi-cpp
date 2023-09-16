@@ -68,11 +68,11 @@ void ConsumeJournald::onSchedule(core::ProcessContext* const context, core::Proc
     return std::nullopt;
   };
   batch_size_ = context->getProperty<size_t>(BatchSize).value();
-  payload_format_ = (context->getProperty(PayloadFormat) | utils::flatMap(parse_payload_format)
+  payload_format_ = (context->getProperty(PayloadFormat) | utils::andThen(parse_payload_format)
       | utils::orElse([]{ throw Exception{ExceptionType::PROCESSOR_EXCEPTION, "invalid payload format"}; }))
       .value();
   include_timestamp_ = context->getProperty<bool>(IncludeTimestamp).value();
-  const auto journal_type = (context->getProperty(JournalType) | utils::flatMap(parse_journal_type)
+  const auto journal_type = (context->getProperty(JournalType) | utils::andThen(parse_journal_type)
       | utils::orElse([]{ throw Exception{ExceptionType::PROCESSOR_EXCEPTION, "invalid journal type"}; }))
       .value();
   const auto process_old_messages = context->getProperty<bool>(ProcessOldMessages).value_or(false);
@@ -93,7 +93,7 @@ void ConsumeJournald::onSchedule(core::ProcessContext* const context, core::Proc
     return process_old_messages ? journal.seekHead() : journal.seekTail();
   };
   worker_->enqueue([this, &seek_default] {
-    const auto cursor = state_manager_->get() | utils::map([](std::unordered_map<std::string, std::string>&& m) { return m.at(CURSOR_KEY); });
+    const auto cursor = state_manager_->get() | utils::transform([](std::unordered_map<std::string, std::string>&& m) { return m.at(CURSOR_KEY); });
     if (!cursor) {
       seek_default(*journal_);
     } else {
@@ -147,7 +147,7 @@ std::optional<std::span<const char>> ConsumeJournald::enumerateJournalEntry(libw
 }
 
 std::optional<ConsumeJournald::journal_field> ConsumeJournald::getNextField(libwrapper::Journal& journal) {
-  return enumerateJournalEntry(journal) | utils::map([](std::span<const char> field) {
+  return enumerateJournalEntry(journal) | utils::transform([](std::span<const char> field) {
     const auto eq_pos = std::find(std::begin(field), std::end(field), '=');
     gsl_Ensures(eq_pos != std::end(field) && "field string must contain an equals sign");
     const auto eq_idx = gsl::narrow<size_t>(eq_pos - std::begin(field));
@@ -205,12 +205,12 @@ std::string ConsumeJournald::formatSyslogMessage(const journal_message& msg) con
 
   const auto pid_string = utils::optional_from_ptr(syslog_pid)
       | utils::orElse([&] { return utils::optional_from_ptr(systemd_pid); })
-      | utils::map([](const std::string* const pid) { return fmt::format("[{}]", *pid); });
+      | utils::transform([](const std::string* const pid) { return fmt::format("[{}]", *pid); });
 
   return fmt::format("{} {} {}{}: {}",
       date::format(timestamp_format_, chr::floor<chr::microseconds>(msg.timestamp)),
-      (utils::optional_from_ptr(systemd_hostname) | utils::map(utils::dereference)).value_or("unknown_host"),
-      (utils::optional_from_ptr(syslog_identifier) | utils::map(utils::dereference)).value_or("unknown_process"),
+      (utils::optional_from_ptr(systemd_hostname) | utils::transform(utils::dereference)).value_or("unknown_host"),
+      (utils::optional_from_ptr(syslog_identifier) | utils::transform(utils::dereference)).value_or("unknown_process"),
       pid_string.value_or(std::string{}),
       *message);
 }

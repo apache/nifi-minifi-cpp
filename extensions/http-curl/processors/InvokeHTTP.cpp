@@ -67,7 +67,7 @@ void setupClientProxy(extensions::curl::HTTPClient& client, const core::ProcessC
 }
 
 void setupClientPeerVerification(extensions::curl::HTTPClient& client, const core::ProcessContext& context) {
-  if (auto disable_peer_verification = context.getProperty(InvokeHTTP::DisablePeerVerification) | utils::flatMap(&utils::StringUtils::toBool)) {
+  if (auto disable_peer_verification = context.getProperty(InvokeHTTP::DisablePeerVerification) | utils::andThen(&utils::StringUtils::toBool)) {
     client.setPeerVerification(!*disable_peer_verification);
   }
 }
@@ -99,11 +99,11 @@ void InvokeHTTP::setupMembersFromProperties(const core::ProcessContext& context)
 
   attributes_to_send_ = context.getProperty(AttributesToSend)
                         | utils::filter([](const std::string& s) { return !s.empty(); })  // avoid compiling an empty string to regex
-                        | utils::map([](const std::string& regex_str) { return utils::Regex{regex_str}; })
+                        | utils::transform([](const std::string& regex_str) { return utils::Regex{regex_str}; })
                         | utils::orElse([this] { logger_->log_debug("%s is missing, so the default value will be used", std::string{AttributesToSend.name}); });
 
-  always_output_response_ = (context.getProperty(AlwaysOutputResponse) | utils::flatMap(&utils::StringUtils::toBool)).value_or(false);
-  penalize_no_retry_ = (context.getProperty(PenalizeOnNoRetry) | utils::flatMap(&utils::StringUtils::toBool)).value_or(false);
+  always_output_response_ = (context.getProperty(AlwaysOutputResponse) | utils::andThen(&utils::StringUtils::toBool)).value_or(false);
+  penalize_no_retry_ = (context.getProperty(PenalizeOnNoRetry) | utils::andThen(&utils::StringUtils::toBool)).value_or(false);
 
   invalid_http_header_field_handling_strategy_ = utils::parseEnumProperty<invoke_http::InvalidHTTPHeaderFieldHandlingOption>(context, InvalidHTTPHeaderFieldHandlingStrategy);
 
@@ -113,7 +113,7 @@ void InvokeHTTP::setupMembersFromProperties(const core::ProcessContext& context)
     put_response_body_in_attribute_.reset();
   }
 
-  use_chunked_encoding_ = (context.getProperty(UseChunkedEncoding) | utils::flatMap(&utils::StringUtils::toBool)).value_or(false);
+  use_chunked_encoding_ = (context.getProperty(UseChunkedEncoding) | utils::andThen(&utils::StringUtils::toBool)).value_or(false);
   send_date_header_ = context.getProperty<bool>(DateHeader).value_or(true);
 }
 

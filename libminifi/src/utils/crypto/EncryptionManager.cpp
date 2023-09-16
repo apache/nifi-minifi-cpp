@@ -33,7 +33,7 @@ std::shared_ptr<core::logging::Logger> EncryptionManager::logger_{core::logging:
 
 std::optional<XSalsa20Cipher> EncryptionManager::createXSalsa20Cipher(const std::string &key_name) const {
   return readKey(key_name)
-         | utils::map([] (const Bytes& key) {return XSalsa20Cipher{key};});
+         | utils::transform([] (const Bytes& key) {return XSalsa20Cipher{key};});
 }
 
 std::optional<Aes256EcbCipher> EncryptionManager::createAes256EcbCipher(const std::string &key_name) const {
@@ -61,7 +61,7 @@ std::optional<Bytes> EncryptionManager::readKey(const std::string& key_name) con
   bootstrap_conf.setHome(key_dir_);
   bootstrap_conf.loadConfigureFile(DEFAULT_NIFI_BOOTSTRAP_FILE);
   return bootstrap_conf.getString(key_name)
-         | utils::map([](const std::string &encryption_key_hex) { return utils::StringUtils::from_hex(encryption_key_hex); });
+         | utils::transform([](const std::string &encryption_key_hex) { return utils::StringUtils::from_hex(encryption_key_hex); });
 }
 
 bool EncryptionManager::writeKey(const std::string &key_name, const Bytes& key) const {

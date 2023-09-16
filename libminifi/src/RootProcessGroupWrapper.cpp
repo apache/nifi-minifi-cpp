@@ -162,9 +162,9 @@ state::StateController* RootProcessGroupWrapper::getProcessorController(const st
   }
 
   return utils::Identifier::parse(id_or_name)
-    | utils::flatMap([this](utils::Identifier id) { return utils::optional_from_ptr(root_->findProcessorById(id)); })
+    | utils::andThen([this](utils::Identifier id) { return utils::optional_from_ptr(root_->findProcessorById(id)); })
     | utils::orElse([this, &id_or_name] { return utils::optional_from_ptr(root_->findProcessorByName(id_or_name)); })
-    | utils::map([this, &controllerFactory](gsl::not_null<core::Processor*> proc) -> gsl::not_null<state::ProcessorController*> {
+    | utils::transform([this, &controllerFactory](gsl::not_null<core::Processor*> proc) -> gsl::not_null<state::ProcessorController*> {
       return utils::optional_from_ptr(processor_to_controller_[proc->getUUID()].get())
           | utils::valueOrElse([this, proc, &controllerFactory] {
             return gsl::make_not_null((processor_to_controller_[proc->getUUID()] = controllerFactory(*proc)).get());

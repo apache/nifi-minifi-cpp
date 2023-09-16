@@ -92,7 +92,7 @@ void Arguments::set(const std::string& flag) {
 }
 
 std::optional<std::string> Arguments::get(const std::string &key) const {
-  return getArg(key) | utils::flatMap([&] (const Argument& arg) {return get(arg);});
+  return getArg(key) | utils::andThen([&] (const Argument& arg) {return get(arg);});
 }
 
 std::optional<std::string> Arguments::get(const Argument& arg) const {

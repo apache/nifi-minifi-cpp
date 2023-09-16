@@ -84,14 +84,14 @@ bool RocksDbRepository::Get(const std::string &key, std::string &value) {
 
 uint64_t RocksDbRepository::getRepositorySize() const {
   return (utils::optional_from_ptr(db_.get()) |
-          utils::flatMap([](const auto& db) { return db->open(); }) |
-          utils::flatMap([](const auto& opendb) { return opendb.getApproximateSizes(); })).value_or(0);
+          utils::andThen([](const auto& db) { return db->open(); }) |
+          utils::andThen([](const auto& opendb) { return opendb.getApproximateSizes(); })).value_or(0);
 }
 
 uint64_t RocksDbRepository::getRepositoryEntryCount() const {
   return (utils::optional_from_ptr(db_.get()) |
-          utils::flatMap([](const auto& db) { return db->open(); }) |
-          utils::flatMap([](auto&& opendb) -> std::optional<uint64_t> {
+          utils::andThen([](const auto& db) { return db->open(); }) |
+          utils::andThen([](auto&& opendb) -> std::optional<uint64_t> {
               std::string key_count;
               opendb.GetProperty("rocksdb.estimate-num-keys", &key_count);
               if (!key_count.empty()) {

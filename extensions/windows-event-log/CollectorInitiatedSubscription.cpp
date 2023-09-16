@@ -110,7 +110,7 @@ void CollectorInitiatedSubscription::onTrigger(const std::shared_ptr<core::Proce
   if (flowFileCount > 0) {
     lastActivityTimestamp_ = now;
   } else if (auto inactive_duration_to_reconnect_ms = context->getProperty<core::TimePeriodValue>(InactiveDurationToReconnect)
-             | utils::map([](const auto& time_period_value) { return time_period_value.getMilliseconds().count(); });
+             | utils::transform([](const auto& time_period_value) { return time_period_value.getMilliseconds().count(); });
              inactive_duration_to_reconnect_ms && *inactive_duration_to_reconnect_ms > 0) {
     if ((now - lastActivityTimestamp_) > *inactive_duration_to_reconnect_ms) {
       logger_->log_info("Exceeds configured 'inactive duration to reconnect' %lld ms. Unsubscribe to reconnect..", *inactive_duration_to_reconnect_ms);

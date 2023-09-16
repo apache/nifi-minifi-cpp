@@ -22,28 +22,28 @@
 
 namespace utils = org::apache::nifi::minifi::utils;
 
-TEST_CASE("optional map", "[optional map]") {
-  const auto test1 = std::make_optional(6) | utils::map([](const int i) { return i * 2; });
+TEST_CASE("optional transform", "[optional transform]") {
+  const auto test1 = std::make_optional(6) | utils::transform([](const int i) { return i * 2; });
   REQUIRE(12 == test1.value());
 
-  const auto test2 = std::optional<int>{} | utils::map([](const int i) { return i * 2; });
+  const auto test2 = std::optional<int>{} | utils::transform([](const int i) { return i * 2; });
   REQUIRE(!test2.has_value());
 }
 
-TEST_CASE("optional flatMap", "[optional flat map]") {
+TEST_CASE("optional andThen", "[optional and then]") {
   const auto make_intdiv_noremainder = [](const int denom) {
     return [denom](const int num) { return num % denom == 0 ? std::make_optional(num / denom) : std::optional<int>{}; };
   };
 
-  const auto test1 = std::make_optional(6) | utils::flatMap(make_intdiv_noremainder(3));
+  const auto test1 = std::make_optional(6) | utils::andThen(make_intdiv_noremainder(3));
   REQUIRE(2 == test1.value());
 
   const auto const_lval_func = make_intdiv_noremainder(4);
-  const auto test2 = std::optional<int>{} | utils::flatMap(const_lval_func);
+  const auto test2 = std::optional<int>{} | utils::andThen(const_lval_func);
   REQUIRE(!test2.has_value());
 
   auto mutable_lval_func = make_intdiv_noremainder(3);
-  const auto test3 = std::make_optional(7) | utils::flatMap(mutable_lval_func);
+  const auto test3 = std::make_optional(7) | utils::andThen(mutable_lval_func);
   REQUIRE(!test3.has_value());
 }
 
