@@ -28,264 +28,263 @@
 #include "utils/StringUtils.h"
 #include "utils/Environment.h"
 
-using org::apache::nifi::minifi::utils::StringUtils;
-using utils::as_string;
+namespace org::apache::nifi::minifi::utils {
 
 // NOLINTBEGIN(readability-container-size-empty)
 
-TEST_CASE("StringUtils::chomp works correctly", "[StringUtils][chomp]") {
+TEST_CASE("string::chomp works correctly", "[StringUtils][chomp]") {
   using pair_of = std::pair<std::string, std::string>;
-  CHECK(StringUtils::chomp("foobar") == pair_of{"foobar", ""});
-  CHECK(StringUtils::chomp("foobar\n") == pair_of{"foobar", "\n"});
-  CHECK(StringUtils::chomp("foobar\r\n") == pair_of{"foobar", "\r\n"});
-  CHECK(StringUtils::chomp("foo\rbar\n") == pair_of{"foo\rbar", "\n"});
+  CHECK(string::chomp("foobar") == pair_of{"foobar", ""});
+  CHECK(string::chomp("foobar\n") == pair_of{"foobar", "\n"});
+  CHECK(string::chomp("foobar\r\n") == pair_of{"foobar", "\r\n"});
+  CHECK(string::chomp("foo\rbar\n") == pair_of{"foo\rbar", "\n"});
 }
 
-TEST_CASE("TestStringUtils::split", "[test split no delimiter]") {
-  std::vector<std::string> expected = { "hello" };
-  REQUIRE(expected == StringUtils::split("hello", ","));
+TEST_CASE("test string::split", "[test split no delimiter]") {
+  std::vector<std::string> expected = {"hello"};
+  REQUIRE(expected == string::split("hello", ","));
 }
 
-TEST_CASE("TestStringUtils::split2", "[test split single delimiter]") {
-  std::vector<std::string> expected = { "hello", "world" };
-  REQUIRE(expected == StringUtils::split("hello world", " "));
+TEST_CASE("test string::split2", "[test split single delimiter]") {
+  std::vector<std::string> expected = {"hello", "world"};
+  REQUIRE(expected == string::split("hello world", " "));
 }
 
-TEST_CASE("TestStringUtils::split3", "[test split multiple delimiter]") {
-  std::vector<std::string> expected = { "hello", "world", "I'm", "a", "unit", "test" };
-  REQUIRE(expected == StringUtils::split("hello world I'm a unit test", " "));
+TEST_CASE("test string::split3", "[test split multiple delimiter]") {
+  std::vector<std::string> expected = {"hello", "world", "I'm", "a", "unit", "test"};
+  REQUIRE(expected == string::split("hello world I'm a unit test", " "));
 }
 
-TEST_CASE("TestStringUtils::split4", "[test split classname]") {
-  std::vector<std::string> expected = { "org", "apache", "nifi", "minifi", "utils", "StringUtils" };
-  REQUIRE(expected == StringUtils::split(org::apache::nifi::minifi::core::className<org::apache::nifi::minifi::utils::StringUtils>(), "::"));
+TEST_CASE("test string::split4", "[test split classname]") {
+  std::vector<std::string> expected = {"org", "apache", "nifi", "minifi", "utils", "string", "ParseError"};
+  REQUIRE(expected == string::split(org::apache::nifi::minifi::core::className<string::ParseError>(), "::"));
 }
 
-TEST_CASE("TestStringUtils::split5", "[test split with delimiter set to empty string]") {
-  std::vector<std::string> expected{ "h", "e", "l", "l", "o", " ", "w", "o", "r", "l", "d" };
-  REQUIRE(expected == StringUtils::split("hello world", ""));
+TEST_CASE("test string::split5", "[test split with delimiter set to empty string]") {
+  std::vector<std::string> expected{"h", "e", "l", "l", "o", " ", "w", "o", "r", "l", "d"};
+  REQUIRE(expected == string::split("hello world", ""));
 }
 
-TEST_CASE("TestStringUtils::split6", "[test split with delimiter with empty results]") {
+TEST_CASE("test string::split6", "[test split with delimiter with empty results]") {
   std::vector<std::string> expected = {""};
-  REQUIRE(expected == StringUtils::split("", ","));
+  REQUIRE(expected == string::split("", ","));
   expected = {"", ""};
-  REQUIRE(expected == StringUtils::split(",", ","));
+  REQUIRE(expected == string::split(",", ","));
   expected = {"", " ", "", ""};
-  REQUIRE(expected == StringUtils::split(", ,,", ","));
+  REQUIRE(expected == string::split(", ,,", ","));
 }
 
-TEST_CASE("TestStringUtils::splitRemovingEmpty", "[test splitRemovingEmpty multiple delimiter]") {
-  std::vector<std::string> expected = { "hello", "world", "I'm", "a", "unit", "test" };
-  REQUIRE(expected == StringUtils::split("hello world I'm a unit test", " "));
+TEST_CASE("test string::splitRemovingEmpty", "[test splitRemovingEmpty multiple delimiter]") {
+  std::vector<std::string> expected = {"hello", "world", "I'm", "a", "unit", "test"};
+  REQUIRE(expected == string::split("hello world I'm a unit test", " "));
 }
 
-TEST_CASE("TestStringUtils::splitRemovingEmpty2", "[test splitRemovingEmpty no delimiter]") {
-  std::vector<std::string> expected = { "hello" };
-  REQUIRE(expected == StringUtils::splitRemovingEmpty("hello", ","));
+TEST_CASE("test string::splitRemovingEmpty2", "[test splitRemovingEmpty no delimiter]") {
+  std::vector<std::string> expected = {"hello"};
+  REQUIRE(expected == string::splitRemovingEmpty("hello", ","));
 }
 
-TEST_CASE("TestStringUtils::splitRemovingEmpty3", "[test splitRemovingEmpty with delimiter with empty results]") {
+TEST_CASE("test string::splitRemovingEmpty3", "[test splitRemovingEmpty with delimiter with empty results]") {
   std::vector<std::string> expected = {};
-  REQUIRE(expected == StringUtils::splitRemovingEmpty("", ","));
-  REQUIRE(expected == StringUtils::splitRemovingEmpty(",", ","));
+  REQUIRE(expected == string::splitRemovingEmpty("", ","));
+  REQUIRE(expected == string::splitRemovingEmpty(",", ","));
   expected = {" "};
-  REQUIRE(expected == StringUtils::splitRemovingEmpty(", ,,", ","));
+  REQUIRE(expected == string::splitRemovingEmpty(", ,,", ","));
 }
 
-TEST_CASE("TestStringUtils::splitAndTrim", "[test split with trim with characters]") {
-  std::vector<std::string> expected{ "hello", "world peace" };
-  REQUIRE(expected == StringUtils::splitAndTrim("hello, world peace", ","));
+TEST_CASE("test string::splitAndTrim", "[test split with trim with characters]") {
+  std::vector<std::string> expected{"hello", "world peace"};
+  REQUIRE(expected == string::splitAndTrim("hello, world peace", ","));
   expected = {""};
-  REQUIRE(expected == StringUtils::splitAndTrim("", ","));
+  REQUIRE(expected == string::splitAndTrim("", ","));
   expected = {"", ""};
-  REQUIRE(expected == StringUtils::splitAndTrim(",", ","));
+  REQUIRE(expected == string::splitAndTrim(",", ","));
   expected = {"", "", "", ""};
-  REQUIRE(expected == StringUtils::splitAndTrim(", ,,", ","));
+  REQUIRE(expected == string::splitAndTrim(", ,,", ","));
 }
 
-TEST_CASE("StringUtils::splitAndTrim2", "[test split with trim with words]") {
-  std::vector<std::string> expected{ "tom", "jerry" };
-  REQUIRE(expected == StringUtils::splitAndTrim("tom and jerry", "and"));
+TEST_CASE("string::splitAndTrim2", "[test split with trim with words]") {
+  std::vector<std::string> expected{"tom", "jerry"};
+  REQUIRE(expected == string::splitAndTrim("tom and jerry", "and"));
   expected = {"", ""};
-  REQUIRE(expected == StringUtils::splitAndTrim("and", "and"));
+  REQUIRE(expected == string::splitAndTrim("and", "and"));
   expected = {"", "", ""};
-  REQUIRE(expected == StringUtils::splitAndTrim("andand", "and"));
+  REQUIRE(expected == string::splitAndTrim("andand", "and"));
   expected = {"stan", "pan", ""};
-  REQUIRE(expected == StringUtils::splitAndTrim("stan and pan and ", "and"));
+  REQUIRE(expected == string::splitAndTrim("stan and pan and ", "and"));
   expected = {"", ""};
-  REQUIRE(expected == StringUtils::splitAndTrim(" and ", "and"));
+  REQUIRE(expected == string::splitAndTrim(" and ", "and"));
   expected = {"a", "b", "c"};
-  REQUIRE(expected == StringUtils::splitAndTrim("a and ... b and ...  c", "and ..."));
+  REQUIRE(expected == string::splitAndTrim("a and ... b and ...  c", "and ..."));
 }
 
-TEST_CASE("StringUtils::splitAndTrimRemovingEmpty", "[test split with trim removing empty strings]") {
-  std::vector<std::string> expected{ "tom", "jerry" };
-  REQUIRE(expected == StringUtils::splitAndTrimRemovingEmpty("tom and jerry", "and"));
+TEST_CASE("string::splitAndTrimRemovingEmpty", "[test split with trim removing empty strings]") {
+  std::vector<std::string> expected{"tom", "jerry"};
+  REQUIRE(expected == string::splitAndTrimRemovingEmpty("tom and jerry", "and"));
   expected = {};
-  REQUIRE(expected == StringUtils::splitAndTrimRemovingEmpty("and", "and"));
-  REQUIRE(expected == StringUtils::splitAndTrimRemovingEmpty("andand", "and"));
+  REQUIRE(expected == string::splitAndTrimRemovingEmpty("and", "and"));
+  REQUIRE(expected == string::splitAndTrimRemovingEmpty("andand", "and"));
   expected = {"stan", "pan"};
-  REQUIRE(expected == StringUtils::splitAndTrimRemovingEmpty("stan and pan and ", "and"));
+  REQUIRE(expected == string::splitAndTrimRemovingEmpty("stan and pan and ", "and"));
   expected = {};
-  REQUIRE(expected == StringUtils::splitAndTrimRemovingEmpty(" and ", "and"));
+  REQUIRE(expected == string::splitAndTrimRemovingEmpty(" and ", "and"));
   expected = {"a", "b", "c"};
-  REQUIRE(expected == StringUtils::splitAndTrimRemovingEmpty("a and ... b and ...  c", "and ..."));
+  REQUIRE(expected == string::splitAndTrimRemovingEmpty("a and ... b and ...  c", "and ..."));
 }
 
-TEST_CASE("StringUtils::replaceEnvironmentVariables works correctly", "[replaceEnvironmentVariables]") {
+TEST_CASE("string::replaceEnvironmentVariables works correctly", "[replaceEnvironmentVariables]") {
   utils::Environment::setEnvironmentVariable("blahblahnamenamenotexist", "computer", false);
 
-  REQUIRE("hello world computer" == StringUtils::replaceEnvironmentVariables("hello world ${blahblahnamenamenotexist}"));
-  REQUIRE("hello world ${blahblahnamenamenotexist" == StringUtils::replaceEnvironmentVariables("hello world ${blahblahnamenamenotexist"));
-  REQUIRE("hello world $computer" == StringUtils::replaceEnvironmentVariables("hello world $${blahblahnamenamenotexist}"));
-  REQUIRE("hello world ${blahblahnamenamenotexist}" == StringUtils::replaceEnvironmentVariables("hello world \\${blahblahnamenamenotexist}"));
-  REQUIRE("the computer costs $123" == StringUtils::replaceEnvironmentVariables("the ${blahblahnamenamenotexist} costs \\$123"));
-  REQUIRE("computer bug" == StringUtils::replaceEnvironmentVariables("${blahblahnamenamenotexist} bug"));
-  REQUIRE("O computer! My computer!" == StringUtils::replaceEnvironmentVariables("O ${blahblahnamenamenotexist}! My ${blahblahnamenamenotexist}!"));
+  REQUIRE("hello world computer" == string::replaceEnvironmentVariables("hello world ${blahblahnamenamenotexist}"));
+  REQUIRE("hello world ${blahblahnamenamenotexist" == string::replaceEnvironmentVariables("hello world ${blahblahnamenamenotexist"));
+  REQUIRE("hello world $computer" == string::replaceEnvironmentVariables("hello world $${blahblahnamenamenotexist}"));
+  REQUIRE("hello world ${blahblahnamenamenotexist}" == string::replaceEnvironmentVariables("hello world \\${blahblahnamenamenotexist}"));
+  REQUIRE("the computer costs $123" == string::replaceEnvironmentVariables("the ${blahblahnamenamenotexist} costs \\$123"));
+  REQUIRE("computer bug" == string::replaceEnvironmentVariables("${blahblahnamenamenotexist} bug"));
+  REQUIRE("O computer! My computer!" == string::replaceEnvironmentVariables("O ${blahblahnamenamenotexist}! My ${blahblahnamenamenotexist}!"));
 
   utils::Environment::setEnvironmentVariable("blahblahnamenamenotexist_2", "no", false);
-  REQUIRE("computer says 'no'" == StringUtils::replaceEnvironmentVariables("${blahblahnamenamenotexist} says '${blahblahnamenamenotexist_2}'"));
-  REQUIRE("no computer can say no to computer nougats" == StringUtils::replaceEnvironmentVariables(
+  REQUIRE("computer says 'no'" == string::replaceEnvironmentVariables("${blahblahnamenamenotexist} says '${blahblahnamenamenotexist_2}'"));
+  REQUIRE("no computer can say no to computer nougats" == string::replaceEnvironmentVariables(
       "${blahblahnamenamenotexist_2} ${blahblahnamenamenotexist} can say ${blahblahnamenamenotexist_2} to ${blahblahnamenamenotexist} ${blahblahnamenamenotexist_2}ugats"));
 
-  REQUIRE("hello world ${}" == StringUtils::replaceEnvironmentVariables("hello world ${}"));
-  REQUIRE("hello world " == StringUtils::replaceEnvironmentVariables("hello world ${blahblahnamenamenotexist_reallydoesnotexist}"));
+  REQUIRE("hello world ${}" == string::replaceEnvironmentVariables("hello world ${}"));
+  REQUIRE("hello world " == string::replaceEnvironmentVariables("hello world ${blahblahnamenamenotexist_reallydoesnotexist}"));
 }
 
-TEST_CASE("TestStringUtils::testJoin", "[test string join]") {
+TEST_CASE("test string::testJoin", "[test string join]") {
   std::set<std::string> strings = {"3", "2", "1"};
-  CHECK(StringUtils::join(",", strings) == "1,2,3");
+  CHECK(string::join(",", strings) == "1,2,3");
 
   std::wstring sep = L"é";
   std::vector<std::wstring> wstrings = {L"1", L"2"};
-  CHECK(StringUtils::join(sep, wstrings) == L"1é2");
+  CHECK(string::join(sep, wstrings) == L"1é2");
 
   std::list<uint64_t> ulist = {1, 2};
-  CHECK(StringUtils::join(sep, ulist) == L"1é2");
+  CHECK(string::join(sep, ulist) == L"1é2");
 
-  CHECK(StringUtils::join(">", ulist) == "1>2");
+  CHECK(string::join(">", ulist) == "1>2");
 
-  CHECK(StringUtils::join("", ulist) == "12");
+  CHECK(string::join("", ulist) == "12");
 
-  CHECK(StringUtils::join("this separator wont appear", std::vector<std::string>()) == "");
+  CHECK(string::join("this separator wont appear", std::vector<std::string>()) == "");
 }
 
 TEST_CASE("Test the join function with a projection", "[join][projection]") {
-  std::vector<std::string> fruits = { "APPLE", "OrAnGe" };
-  CHECK(StringUtils::join(", ", fruits, [](auto fruit) { return StringUtils::toLower(fruit); }) == "apple, orange");
+  std::vector<std::string> fruits = {"APPLE", "OrAnGe"};
+  CHECK(string::join(", ", fruits, [](auto fruit) { return string::toLower(fruit); }) == "apple, orange");
 
-  std::set numbers_set = { 3, 2, 1 };
-  CHECK(StringUtils::join(", ", numbers_set, [](auto x) { return std::to_string(x); }) == "1, 2, 3");
+  std::set numbers_set = {3, 2, 1};
+  CHECK(string::join(", ", numbers_set, [](auto x) { return std::to_string(x); }) == "1, 2, 3");
 
   std::wstring sep = L"é";
-  std::vector numbers_vector = { 1,  2 };
-  CHECK(StringUtils::join(sep, numbers_vector, [](auto x) { return std::to_wstring(x); }) == L"1é2");
+  std::vector numbers_vector = {1, 2};
+  CHECK(string::join(sep, numbers_vector, [](auto x) { return std::to_wstring(x); }) == L"1é2");
 
-  std::list<uint64_t> numbers_list = { 1, 2, 3 };
-  CHECK(StringUtils::join(", ", numbers_list, [](auto x) { return std::to_string(x * x); }) == "1, 4, 9");
+  std::list<uint64_t> numbers_list = {1, 2, 3};
+  CHECK(string::join(", ", numbers_list, [](auto x) { return std::to_string(x * x); }) == "1, 4, 9");
 
-  CHECK(StringUtils::join(std::string_view{"-"}, numbers_list, [](auto x) { return std::to_string(5 * x); }) == "5-10-15");
+  CHECK(string::join(std::string_view{"-"}, numbers_list, [](auto x) { return std::to_string(5 * x); }) == "5-10-15");
 
-  CHECK(StringUtils::join(std::string{}, numbers_list, [](auto x) { return '<' + std::to_string(x) + '>'; }) == "<1><2><3>");
+  CHECK(string::join(std::string{}, numbers_list, [](auto x) { return '<' + std::to_string(x) + '>'; }) == "<1><2><3>");
 
-  CHECK(StringUtils::join("this separator wont appear", std::vector<int>{}, [](int) { return std::string_view{"foo"}; }) == "");
+  CHECK(string::join("this separator wont appear", std::vector<int>{}, [](int) { return std::string_view{"foo"}; }) == "");
 }
 
-TEST_CASE("TestStringUtils::trim", "[test trim]") {
-  REQUIRE("" == StringUtils::trim(""));
-  REQUIRE("" == StringUtils::trim(" \n\t"));
-  REQUIRE("foobar" == StringUtils::trim("foobar"));
-  REQUIRE("foo bar" == StringUtils::trim("foo bar"));
-  REQUIRE("foobar" == StringUtils::trim("foobar "));
-  REQUIRE("foobar" == StringUtils::trim(" foobar"));
-  REQUIRE("foobar" == StringUtils::trim("foobar  "));
-  REQUIRE("foobar" == StringUtils::trim("  foobar"));
-  REQUIRE("foobar" == StringUtils::trim("  foobar  "));
-  REQUIRE("foobar" == StringUtils::trim(" \n\tfoobar\n\t "));
+TEST_CASE("test string::trim", "[test trim]") {
+  REQUIRE("" == string::trim(""));
+  REQUIRE("" == string::trim(" \n\t"));
+  REQUIRE("foobar" == string::trim("foobar"));
+  REQUIRE("foo bar" == string::trim("foo bar"));
+  REQUIRE("foobar" == string::trim("foobar "));
+  REQUIRE("foobar" == string::trim(" foobar"));
+  REQUIRE("foobar" == string::trim("foobar  "));
+  REQUIRE("foobar" == string::trim("  foobar"));
+  REQUIRE("foobar" == string::trim("  foobar  "));
+  REQUIRE("foobar" == string::trim(" \n\tfoobar\n\t "));
 
-  REQUIRE("" == StringUtils::trimRight(" \n\t"));
-  REQUIRE("foobar" == StringUtils::trimRight("foobar"));
-  REQUIRE("foo bar" == StringUtils::trimRight("foo bar"));
-  REQUIRE("foobar" == StringUtils::trimRight("foobar "));
-  REQUIRE(" foobar" == StringUtils::trimRight(" foobar"));
-  REQUIRE("foobar" == StringUtils::trimRight("foobar  "));
-  REQUIRE("  foobar" == StringUtils::trimRight("  foobar"));
-  REQUIRE("  foobar" == StringUtils::trimRight("  foobar  "));
-  REQUIRE(" \n\tfoobar" == StringUtils::trimRight(" \n\tfoobar\n\t "));
+  REQUIRE("" == string::trimRight(" \n\t"));
+  REQUIRE("foobar" == string::trimRight("foobar"));
+  REQUIRE("foo bar" == string::trimRight("foo bar"));
+  REQUIRE("foobar" == string::trimRight("foobar "));
+  REQUIRE(" foobar" == string::trimRight(" foobar"));
+  REQUIRE("foobar" == string::trimRight("foobar  "));
+  REQUIRE("  foobar" == string::trimRight("  foobar"));
+  REQUIRE("  foobar" == string::trimRight("  foobar  "));
+  REQUIRE(" \n\tfoobar" == string::trimRight(" \n\tfoobar\n\t "));
 
-  REQUIRE("" == StringUtils::trimLeft(" \n\t"));
-  REQUIRE("foobar" == StringUtils::trimLeft("foobar"));
-  REQUIRE("foo bar" == StringUtils::trimLeft("foo bar"));
-  REQUIRE("foobar " == StringUtils::trimLeft("foobar "));
-  REQUIRE("foobar" == StringUtils::trimLeft(" foobar"));
-  REQUIRE("foobar  " == StringUtils::trimLeft("foobar  "));
-  REQUIRE("foobar" == StringUtils::trimLeft("  foobar"));
-  REQUIRE("foobar  " == StringUtils::trimLeft("  foobar  "));
-  REQUIRE("foobar\n\t " == StringUtils::trimLeft(" \n\tfoobar\n\t "));
+  REQUIRE("" == string::trimLeft(" \n\t"));
+  REQUIRE("foobar" == string::trimLeft("foobar"));
+  REQUIRE("foo bar" == string::trimLeft("foo bar"));
+  REQUIRE("foobar " == string::trimLeft("foobar "));
+  REQUIRE("foobar" == string::trimLeft(" foobar"));
+  REQUIRE("foobar  " == string::trimLeft("foobar  "));
+  REQUIRE("foobar" == string::trimLeft("  foobar"));
+  REQUIRE("foobar  " == string::trimLeft("  foobar  "));
+  REQUIRE("foobar\n\t " == string::trimLeft(" \n\tfoobar\n\t "));
 }
 
-TEST_CASE("TestStringUtils::startsWith - case sensitive", "[test startsWith]") {
-  REQUIRE(StringUtils::startsWith("abcd", ""));
-  REQUIRE(StringUtils::startsWith("abcd", "a"));
-  REQUIRE(!StringUtils::startsWith("Abcd", "a"));
-  REQUIRE(!StringUtils::startsWith("abcd", "A"));
-  REQUIRE(StringUtils::startsWith("abcd", "abcd"));
-  REQUIRE(StringUtils::startsWith("abcd", "abc"));
-  REQUIRE(!StringUtils::startsWith("abcd", "abcde"));
+TEST_CASE("test string::startsWith - case sensitive", "[test startsWith]") {
+  REQUIRE(string::startsWith("abcd", ""));
+  REQUIRE(string::startsWith("abcd", "a"));
+  REQUIRE(!string::startsWith("Abcd", "a"));
+  REQUIRE(!string::startsWith("abcd", "A"));
+  REQUIRE(string::startsWith("abcd", "abcd"));
+  REQUIRE(string::startsWith("abcd", "abc"));
+  REQUIRE(!string::startsWith("abcd", "abcde"));
 
-  REQUIRE(StringUtils::startsWith("", ""));
-  REQUIRE(!StringUtils::startsWith("", "abcd"));
-  REQUIRE(!StringUtils::startsWith("abcd", "b"));
-  REQUIRE(!StringUtils::startsWith("abcd", "d"));
+  REQUIRE(string::startsWith("", ""));
+  REQUIRE(!string::startsWith("", "abcd"));
+  REQUIRE(!string::startsWith("abcd", "b"));
+  REQUIRE(!string::startsWith("abcd", "d"));
 }
 
-TEST_CASE("TestStringUtils::endsWith - case sensitive", "[test endsWith]") {
-  REQUIRE(StringUtils::endsWith("abcd", ""));
-  REQUIRE(StringUtils::endsWith("abcd", "d"));
-  REQUIRE(!StringUtils::endsWith("abcD", "d"));
-  REQUIRE(!StringUtils::endsWith("abcd", "D"));
-  REQUIRE(StringUtils::endsWith("abcd", "abcd"));
-  REQUIRE(StringUtils::endsWith("abcd", "bcd"));
-  REQUIRE(!StringUtils::endsWith("abcd", "1abcd"));
+TEST_CASE("test string::endsWith - case sensitive", "[test endsWith]") {
+  REQUIRE(string::endsWith("abcd", ""));
+  REQUIRE(string::endsWith("abcd", "d"));
+  REQUIRE(!string::endsWith("abcD", "d"));
+  REQUIRE(!string::endsWith("abcd", "D"));
+  REQUIRE(string::endsWith("abcd", "abcd"));
+  REQUIRE(string::endsWith("abcd", "bcd"));
+  REQUIRE(!string::endsWith("abcd", "1abcd"));
 
-  REQUIRE(StringUtils::endsWith("", ""));
-  REQUIRE(!StringUtils::endsWith("", "abcd"));
-  REQUIRE(!StringUtils::endsWith("abcd", "c"));
-  REQUIRE(!StringUtils::endsWith("abcd", "a"));
+  REQUIRE(string::endsWith("", ""));
+  REQUIRE(!string::endsWith("", "abcd"));
+  REQUIRE(!string::endsWith("abcd", "c"));
+  REQUIRE(!string::endsWith("abcd", "a"));
 }
 
-TEST_CASE("TestStringUtils::startsWith - case insensitive", "[test startsWith case insensitive]") {
-  REQUIRE(StringUtils::startsWith("abcd", "", false));
-  REQUIRE(StringUtils::startsWith("abcd", "a", false));
-  REQUIRE(StringUtils::startsWith("Abcd", "a", false));
-  REQUIRE(StringUtils::startsWith("abcd", "A", false));
-  REQUIRE(StringUtils::startsWith("aBcd", "abCd", false));
-  REQUIRE(StringUtils::startsWith("abcd", "abc", false));
-  REQUIRE(!StringUtils::startsWith("abcd", "abcde", false));
+TEST_CASE("test string::startsWith - case insensitive", "[test startsWith case insensitive]") {
+  REQUIRE(string::startsWith("abcd", "", false));
+  REQUIRE(string::startsWith("abcd", "a", false));
+  REQUIRE(string::startsWith("Abcd", "a", false));
+  REQUIRE(string::startsWith("abcd", "A", false));
+  REQUIRE(string::startsWith("aBcd", "abCd", false));
+  REQUIRE(string::startsWith("abcd", "abc", false));
+  REQUIRE(!string::startsWith("abcd", "abcde", false));
 
-  REQUIRE(StringUtils::startsWith("", "", false));
-  REQUIRE(!StringUtils::startsWith("", "abcd", false));
-  REQUIRE(!StringUtils::startsWith("abcd", "b", false));
-  REQUIRE(!StringUtils::startsWith("abcd", "d", false));
+  REQUIRE(string::startsWith("", "", false));
+  REQUIRE(!string::startsWith("", "abcd", false));
+  REQUIRE(!string::startsWith("abcd", "b", false));
+  REQUIRE(!string::startsWith("abcd", "d", false));
 }
 
-TEST_CASE("TestStringUtils::endsWith - case insensitive", "[test endsWith case insensitive]") {
-  REQUIRE(StringUtils::endsWith("abcd", "", false));
-  REQUIRE(StringUtils::endsWith("abcd", "d", false));
-  REQUIRE(StringUtils::endsWith("abcd", "D", false));
-  REQUIRE(StringUtils::endsWith("abcD", "d", false));
-  REQUIRE(StringUtils::endsWith("abcd", "abcd", false));
-  REQUIRE(StringUtils::endsWith("aBcd", "bcD", false));
-  REQUIRE(!StringUtils::endsWith("abCd", "1aBcd", false));
+TEST_CASE("test string::endsWith - case insensitive", "[test endsWith case insensitive]") {
+  REQUIRE(string::endsWith("abcd", "", false));
+  REQUIRE(string::endsWith("abcd", "d", false));
+  REQUIRE(string::endsWith("abcd", "D", false));
+  REQUIRE(string::endsWith("abcD", "d", false));
+  REQUIRE(string::endsWith("abcd", "abcd", false));
+  REQUIRE(string::endsWith("aBcd", "bcD", false));
+  REQUIRE(!string::endsWith("abCd", "1aBcd", false));
 
-  REQUIRE(StringUtils::endsWith("", "", false));
-  REQUIRE(!StringUtils::endsWith("", "abcd", false));
-  REQUIRE(!StringUtils::endsWith("abcd", "c", false));
-  REQUIRE(!StringUtils::endsWith("abcd", "a", false));
+  REQUIRE(string::endsWith("", "", false));
+  REQUIRE(!string::endsWith("", "abcd", false));
+  REQUIRE(!string::endsWith("abcd", "c", false));
+  REQUIRE(!string::endsWith("abcd", "a", false));
 }
 
-TEST_CASE("TestStringUtils::toBool", "[test toBool]") {
+TEST_CASE("test string::toBool", "[test toBool]") {
   std::vector<std::pair<std::string, std::optional<bool>>> cases{
       {"", {}},
       {"true", true},
@@ -294,52 +293,52 @@ TEST_CASE("TestStringUtils::toBool", "[test toBool]") {
       {"\n \r FaLsE \t", false},
       {"not false", {}}
   };
-  for (const auto& test_case : cases) {
-    REQUIRE(StringUtils::toBool(test_case.first) == test_case.second);
+  for (const auto& test_case: cases) {
+    REQUIRE(string::toBool(test_case.first) == test_case.second);
   }
 }
 
-TEST_CASE("TestStringUtils::testHexEncode", "[test hex encode]") {
-  REQUIRE("" == StringUtils::to_hex(""));
-  REQUIRE("6f" == StringUtils::to_hex("o"));
-  REQUIRE("666f6f626172" == StringUtils::to_hex("foobar"));
-  REQUIRE("000102030405060708090a0b0c0d0e0f" == StringUtils::to_hex(gsl::make_span(std::vector<uint8_t>{
+TEST_CASE("test string::testHexEncode", "[test hex encode]") {
+  REQUIRE("" == string::to_hex(""));
+  REQUIRE("6f" == string::to_hex("o"));
+  REQUIRE("666f6f626172" == string::to_hex("foobar"));
+  REQUIRE("000102030405060708090a0b0c0d0e0f" == string::to_hex(gsl::make_span(std::vector<uint8_t>{
       0x00, 0x01, 0x02, 0x03,
       0x04, 0x05, 0x06, 0x07,
       0x08, 0x09, 0x0a, 0x0b,
       0x0c, 0x0d, 0x0e, 0x0f}).as_span<const std::byte>()));
-  REQUIRE("6F" == StringUtils::to_hex("o", true /*uppercase*/));
-  REQUIRE("666F6F626172" == StringUtils::to_hex("foobar", true /*uppercase*/));
-  REQUIRE("000102030405060708090A0B0C0D0E0F" == StringUtils::to_hex(gsl::make_span(std::vector<uint8_t>{
+  REQUIRE("6F" == string::to_hex("o", true /*uppercase*/));
+  REQUIRE("666F6F626172" == string::to_hex("foobar", true /*uppercase*/));
+  REQUIRE("000102030405060708090A0B0C0D0E0F" == string::to_hex(gsl::make_span(std::vector<uint8_t>{
       0x00, 0x01, 0x02, 0x03,
       0x04, 0x05, 0x06, 0x07,
       0x08, 0x09, 0x0a, 0x0b,
       0x0c, 0x0d, 0x0e, 0x0f}).as_span<const std::byte>(), true /*uppercase*/));
 }
 
-TEST_CASE("TestStringUtils::testHexDecode", "[test hex decode]") {
-  REQUIRE(StringUtils::from_hex("").empty());
-  REQUIRE("o" == StringUtils::from_hex("6f", utils::as_string));
-  REQUIRE("o" == StringUtils::from_hex("6F", utils::as_string));
-  REQUIRE("foobar" == StringUtils::from_hex("666f6f626172", utils::as_string));
-  REQUIRE("foobar" == StringUtils::from_hex("666F6F626172", utils::as_string));
-  REQUIRE("foobar" == StringUtils::from_hex("66:6F:6F:62:61:72", utils::as_string));
-  REQUIRE("foobar" == StringUtils::from_hex("66 6F 6F 62 61 72", utils::as_string));
+TEST_CASE("test string::testHexDecode", "[test hex decode]") {
+  REQUIRE(string::from_hex("").empty());
+  REQUIRE("o" == string::from_hex("6f", utils::as_string));
+  REQUIRE("o" == string::from_hex("6F", utils::as_string));
+  REQUIRE("foobar" == string::from_hex("666f6f626172", utils::as_string));
+  REQUIRE("foobar" == string::from_hex("666F6F626172", utils::as_string));
+  REQUIRE("foobar" == string::from_hex("66:6F:6F:62:61:72", utils::as_string));
+  REQUIRE("foobar" == string::from_hex("66 6F 6F 62 61 72", utils::as_string));
   REQUIRE(std::string({0x00, 0x01, 0x02, 0x03,
-                       0x04, 0x05, 0x06, 0x07,
-                       0x08, 0x09, 0x0a, 0x0b,
-                       0x0c, 0x0d, 0x0e, 0x0f}) == StringUtils::from_hex("000102030405060708090a0b0c0d0e0f", utils::as_string));
+      0x04, 0x05, 0x06, 0x07,
+      0x08, 0x09, 0x0a, 0x0b,
+      0x0c, 0x0d, 0x0e, 0x0f}) == string::from_hex("000102030405060708090a0b0c0d0e0f", utils::as_string));
   REQUIRE(std::string({0x00, 0x01, 0x02, 0x03,
-                       0x04, 0x05, 0x06, 0x07,
-                       0x08, 0x09, 0x0a, 0x0b,
-                       0x0c, 0x0d, 0x0e, 0x0f}) == StringUtils::from_hex("000102030405060708090A0B0C0D0E0F", utils::as_string));
+      0x04, 0x05, 0x06, 0x07,
+      0x08, 0x09, 0x0a, 0x0b,
+      0x0c, 0x0d, 0x0e, 0x0f}) == string::from_hex("000102030405060708090A0B0C0D0E0F", utils::as_string));
 
-  REQUIRE_THROWS_WITH(StringUtils::from_hex("666f6f62617"), "Hexencoded string is malformed");
-  REQUIRE_THROWS_WITH(StringUtils::from_hex("666f6f6261 7"), "Hexencoded string is malformed");
+  REQUIRE_THROWS_WITH(string::from_hex("666f6f62617"), "Hexencoded string is malformed");
+  REQUIRE_THROWS_WITH(string::from_hex("666f6f6261 7"), "Hexencoded string is malformed");
 }
 
-TEST_CASE("TestStringUtils::testHexEncodeDecode", "[test hex encode decode]") {
-  std::mt19937 gen(std::random_device { }());
+TEST_CASE("test string::testHexEncodeDecode", "[test hex encode decode]") {
+  std::mt19937 gen(std::random_device{}());
   for (size_t i = 0U; i < 1024U; i++) {
     const bool uppercase = gen() % 2;
     const size_t length = gen() % 1024;
@@ -347,27 +346,27 @@ TEST_CASE("TestStringUtils::testHexEncodeDecode", "[test hex encode decode]") {
     std::generate_n(data.begin(), data.size(), [&]() -> std::byte {
       return static_cast<std::byte>(gen() % 256);
     });
-    auto hex = utils::StringUtils::to_hex(data, uppercase);
-    REQUIRE(data == utils::StringUtils::from_hex(hex));
+    auto hex = string::to_hex(data, uppercase);
+    REQUIRE(data == string::from_hex(hex));
   }
 }
 
-TEST_CASE("TestStringUtils::testBase64Encode", "[test base64 encode]") {
-  REQUIRE("" == StringUtils::to_base64(""));
+TEST_CASE("test string::testBase64Encode", "[test base64 encode]") {
+  REQUIRE("" == string::to_base64(""));
 
-  REQUIRE("bw==" == StringUtils::to_base64("o"));
-  REQUIRE("b28=" == StringUtils::to_base64("oo"));
-  REQUIRE("b29v" == StringUtils::to_base64("ooo"));
-  REQUIRE("b29vbw==" == StringUtils::to_base64("oooo"));
-  REQUIRE("b29vb28=" == StringUtils::to_base64("ooooo"));
-  REQUIRE("b29vb29v" == StringUtils::to_base64("oooooo"));
+  REQUIRE("bw==" == string::to_base64("o"));
+  REQUIRE("b28=" == string::to_base64("oo"));
+  REQUIRE("b29v" == string::to_base64("ooo"));
+  REQUIRE("b29vbw==" == string::to_base64("oooo"));
+  REQUIRE("b29vb28=" == string::to_base64("ooooo"));
+  REQUIRE("b29vb29v" == string::to_base64("oooooo"));
 
-  REQUIRE("bw" == StringUtils::to_base64("o", false /*url*/, false /*padded*/));
-  REQUIRE("b28" == StringUtils::to_base64("oo", false /*url*/, false /*padded*/));
-  REQUIRE("b29v" == StringUtils::to_base64("ooo", false /*url*/, false /*padded*/));
-  REQUIRE("b29vbw" == StringUtils::to_base64("oooo", false /*url*/, false /*padded*/));
-  REQUIRE("b29vb28" == StringUtils::to_base64("ooooo", false /*url*/, false /*padded*/));
-  REQUIRE("b29vb29v" == StringUtils::to_base64("oooooo", false /*url*/, false /*padded*/));
+  REQUIRE("bw" == string::to_base64("o", false /*url*/, false /*padded*/));
+  REQUIRE("b28" == string::to_base64("oo", false /*url*/, false /*padded*/));
+  REQUIRE("b29v" == string::to_base64("ooo", false /*url*/, false /*padded*/));
+  REQUIRE("b29vbw" == string::to_base64("oooo", false /*url*/, false /*padded*/));
+  REQUIRE("b29vb28" == string::to_base64("ooooo", false /*url*/, false /*padded*/));
+  REQUIRE("b29vb29v" == string::to_base64("oooooo", false /*url*/, false /*padded*/));
 
   std::vector<uint8_t> message{
       0x00, 0x10, 0x83, 0x10,
@@ -384,21 +383,21 @@ TEST_CASE("TestStringUtils::testBase64Encode", "[test base64 encode]") {
       0xbb, 0xf3, 0xdf, 0xbf};
 
   REQUIRE("ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/" ==
-      StringUtils::to_base64(as_bytes(std::span(message))));
+      string::to_base64(as_bytes(std::span(message))));
   REQUIRE("ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-_" ==
-      StringUtils::to_base64(as_bytes(std::span(message)), true /*url*/));
+      string::to_base64(as_bytes(std::span(message)), true /*url*/));
 }
 
-TEST_CASE("TestStringUtils::testBase64Decode", "[test base64 decode]") {
-  REQUIRE(StringUtils::from_base64("", as_string).empty());
-  REQUIRE("o" == StringUtils::from_base64("bw==", as_string));
-  REQUIRE("oo" == StringUtils::from_base64("b28=", as_string));
-  REQUIRE("ooo" == StringUtils::from_base64("b29v", as_string));
-  REQUIRE("oooo" == StringUtils::from_base64("b29vbw==", as_string));
-  REQUIRE("ooooo" == StringUtils::from_base64("b29vb28=", as_string));
-  REQUIRE("oooooo" == StringUtils::from_base64("b29vb29v", as_string));
-  REQUIRE("\xfb\xff\xbf" == StringUtils::from_base64("-_-_", as_string));
-  REQUIRE("\xfb\xff\xbf" == StringUtils::from_base64("+/+/", as_string));
+TEST_CASE("test string::testBase64Decode", "[test base64 decode]") {
+  REQUIRE(string::from_base64("", as_string).empty());
+  REQUIRE("o" == string::from_base64("bw==", as_string));
+  REQUIRE("oo" == string::from_base64("b28=", as_string));
+  REQUIRE("ooo" == string::from_base64("b29v", as_string));
+  REQUIRE("oooo" == string::from_base64("b29vbw==", as_string));
+  REQUIRE("ooooo" == string::from_base64("b29vb28=", as_string));
+  REQUIRE("oooooo" == string::from_base64("b29vb29v", as_string));
+  REQUIRE("\xfb\xff\xbf" == string::from_base64("-_-_", as_string));
+  REQUIRE("\xfb\xff\xbf" == string::from_base64("+/+/", as_string));
   std::string expected = {
       '\x00', '\x10', '\x83', '\x10',
       '\x51', '\x87', '\x20', '\x92',
@@ -413,28 +412,28 @@ TEST_CASE("TestStringUtils::testBase64Decode", "[test base64 decode]") {
       '\x5d', '\xb7', '\xe3', '\x9e',
       '\xbb', '\xf3', '\xdf', '\xbf'};
 
-  REQUIRE(expected == StringUtils::from_base64("ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/", as_string));
-  REQUIRE(expected == StringUtils::from_base64("ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-_", as_string));
+  REQUIRE(expected == string::from_base64("ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/", as_string));
+  REQUIRE(expected == string::from_base64("ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-_", as_string));
 
-  REQUIRE("foobarbuzz" == StringUtils::from_base64("Zm9vYmFyYnV6eg==", as_string));
-  REQUIRE("foobarbuzz"== StringUtils::from_base64("\r\nZm9vYmFyYnV6eg==", as_string));
-  REQUIRE("foobarbuzz" == StringUtils::from_base64("Zm9\r\nvYmFyYnV6eg==", as_string));
-  REQUIRE("foobarbuzz" == StringUtils::from_base64("Zm\r9vYmFy\n\n\n\n\n\n\n\nYnV6eg==", as_string));
-  REQUIRE("foobarbuzz" == StringUtils::from_base64("\nZ\nm\n9\nv\nY\nm\nF\ny\nY\nn\nV\n6\ne\ng\n=\n=\n", as_string));
+  REQUIRE("foobarbuzz" == string::from_base64("Zm9vYmFyYnV6eg==", as_string));
+  REQUIRE("foobarbuzz" == string::from_base64("\r\nZm9vYmFyYnV6eg==", as_string));
+  REQUIRE("foobarbuzz" == string::from_base64("Zm9\r\nvYmFyYnV6eg==", as_string));
+  REQUIRE("foobarbuzz" == string::from_base64("Zm\r9vYmFy\n\n\n\n\n\n\n\nYnV6eg==", as_string));
+  REQUIRE("foobarbuzz" == string::from_base64("\nZ\nm\n9\nv\nY\nm\nF\ny\nY\nn\nV\n6\ne\ng\n=\n=\n", as_string));
 
-  REQUIRE_THROWS_WITH(StringUtils::from_base64("a"), "Base64 encoded string is malformed");
-  REQUIRE_THROWS_WITH(StringUtils::from_base64("aaaaa"), "Base64 encoded string is malformed");
-  REQUIRE_THROWS_WITH(StringUtils::from_base64("aa="), "Base64 encoded string is malformed");
-  REQUIRE_THROWS_WITH(StringUtils::from_base64("aaaaaa="), "Base64 encoded string is malformed");
-  REQUIRE_THROWS_WITH(StringUtils::from_base64("aa==?"), "Base64 encoded string is malformed");
-  REQUIRE_THROWS_WITH(StringUtils::from_base64("aa==a"), "Base64 encoded string is malformed");
-  REQUIRE_THROWS_WITH(StringUtils::from_base64("aa==="), "Base64 encoded string is malformed");
-  REQUIRE_THROWS_WITH(StringUtils::from_base64("?"), "Base64 encoded string is malformed");
-  REQUIRE_THROWS_WITH(StringUtils::from_base64("aaaa?"), "Base64 encoded string is malformed");
+  REQUIRE_THROWS_WITH(string::from_base64("a"), "Base64 encoded string is malformed");
+  REQUIRE_THROWS_WITH(string::from_base64("aaaaa"), "Base64 encoded string is malformed");
+  REQUIRE_THROWS_WITH(string::from_base64("aa="), "Base64 encoded string is malformed");
+  REQUIRE_THROWS_WITH(string::from_base64("aaaaaa="), "Base64 encoded string is malformed");
+  REQUIRE_THROWS_WITH(string::from_base64("aa==?"), "Base64 encoded string is malformed");
+  REQUIRE_THROWS_WITH(string::from_base64("aa==a"), "Base64 encoded string is malformed");
+  REQUIRE_THROWS_WITH(string::from_base64("aa==="), "Base64 encoded string is malformed");
+  REQUIRE_THROWS_WITH(string::from_base64("?"), "Base64 encoded string is malformed");
+  REQUIRE_THROWS_WITH(string::from_base64("aaaa?"), "Base64 encoded string is malformed");
 }
 
-TEST_CASE("TestStringUtils::testBase64EncodeDecode", "[test base64 encode decode]") {
-  std::mt19937 gen(std::random_device { }());
+TEST_CASE("test string::testBase64EncodeDecode", "[test base64 encode decode]") {
+  std::mt19937 gen(std::random_device{}());
   for (size_t i = 0U; i < 1024U; i++) {
     const bool url = gen() % 2;
     const bool padded = gen() % 2;
@@ -443,53 +442,53 @@ TEST_CASE("TestStringUtils::testBase64EncodeDecode", "[test base64 encode decode
     std::generate_n(data.begin(), data.size(), [&]() -> std::byte {
       return static_cast<std::byte>(gen() % 256);
     });
-    auto base64 = utils::StringUtils::to_base64(data, url, padded);
-    REQUIRE(data == utils::StringUtils::from_base64(base64));
+    auto base64 = string::to_base64(data, url, padded);
+    REQUIRE(data == string::from_base64(base64));
   }
 }
 
-TEST_CASE("TestStringUtils::testJoinPack", "[test join_pack]") {
+TEST_CASE("test string::testJoinPack", "[test join_pack]") {
   std::string stdstr = "std::string";
   const char* cstr = "c string";
   const char carr[] = "char array";
-  REQUIRE(utils::StringUtils::join_pack("rvalue c string, ", cstr, std::string{ ", rval std::string, " }, stdstr, ", ", carr)
-              == "rvalue c string, c string, rval std::string, std::string, char array");
+  REQUIRE(string::join_pack("rvalue c string, ", cstr, std::string{", rval std::string, "}, stdstr, ", ", carr)
+      == "rvalue c string, c string, rval std::string, std::string, char array");
 }
 
-TEST_CASE("TestStringUtils::testJoinPackWstring", "[test join_pack wstring]") {
+TEST_CASE("test string::testJoinPackWstring", "[test join_pack wstring]") {
   std::wstring stdstr = L"std::string";
   const wchar_t* cstr = L"c string";
   const wchar_t carr[] = L"char array";
-  REQUIRE(utils::StringUtils::join_pack(L"rvalue c string, ", cstr, std::wstring{ L", rval std::string, " }, stdstr, L", ", carr)
-              == L"rvalue c string, c string, rval std::string, std::string, char array");
+  REQUIRE(string::join_pack(L"rvalue c string, ", cstr, std::wstring{L", rval std::string, "}, stdstr, L", ", carr)
+      == L"rvalue c string, c string, rval std::string, std::string, char array");
 }
 
 /* doesn't and shouldn't compile
-TEST_CASE("TestStringUtils::testJoinPackNegative", "[test join_pack negative]") {
+TEST_CASE("test string::testJoinPackNegative", "[test join_pack negative]") {
   std::wstring stdstr = L"std::string";
   const wchar_t* cstr = L"c string";
   const wchar_t carr[] = L"char array";
-  REQUIRE(utils::StringUtils::join_pack("rvalue c string, ", cstr, std::string{ ", rval std::string, " }, stdstr, ", ", carr)
+  REQUIRE(string::join_pack("rvalue c string, ", cstr, std::string{ ", rval std::string, " }, stdstr, ", ", carr)
               == "rvalue c string, c string, rval std::string, std::string, char array");
 }
  */
 
-TEST_CASE("StringUtils::replaceOne works correctly", "[replaceOne]") {
-  REQUIRE(utils::StringUtils::replaceOne("", "x", "y") == "");
-  REQUIRE(utils::StringUtils::replaceOne("banana", "a", "_") == "b_nana");
-  REQUIRE(utils::StringUtils::replaceOne("banana", "b", "_") == "_anana");
-  REQUIRE(utils::StringUtils::replaceOne("banana", "x", "y") == "banana");
-  REQUIRE(utils::StringUtils::replaceOne("banana", "an", "") == "bana");
-  REQUIRE(utils::StringUtils::replaceOne("banana", "an", "AN") == "bANana");
-  REQUIRE(utils::StringUtils::replaceOne("banana", "an", "***") == "b***ana");
-  REQUIRE(utils::StringUtils::replaceOne("banana", "banana", "kiwi") == "kiwi");
-  REQUIRE(utils::StringUtils::replaceOne("banana", "banana", "grapefruit") == "grapefruit");
-  REQUIRE(utils::StringUtils::replaceOne("fruit", "", "grape") == "grapefruit");
+TEST_CASE("string::replaceOne works correctly", "[replaceOne]") {
+  REQUIRE(string::replaceOne("", "x", "y") == "");
+  REQUIRE(string::replaceOne("banana", "a", "_") == "b_nana");
+  REQUIRE(string::replaceOne("banana", "b", "_") == "_anana");
+  REQUIRE(string::replaceOne("banana", "x", "y") == "banana");
+  REQUIRE(string::replaceOne("banana", "an", "") == "bana");
+  REQUIRE(string::replaceOne("banana", "an", "AN") == "bANana");
+  REQUIRE(string::replaceOne("banana", "an", "***") == "b***ana");
+  REQUIRE(string::replaceOne("banana", "banana", "kiwi") == "kiwi");
+  REQUIRE(string::replaceOne("banana", "banana", "grapefruit") == "grapefruit");
+  REQUIRE(string::replaceOne("fruit", "", "grape") == "grapefruit");
 }
 
-TEST_CASE("StringUtils::replaceAll works correctly", "[replaceAll]") {
-  auto replaceAll = [](std::string input, const std::string &from, const std::string &to) -> std::string {
-    return utils::StringUtils::replaceAll(input, from, to);
+TEST_CASE("string::replaceAll works correctly", "[replaceAll]") {
+  auto replaceAll = [](std::string input, const std::string& from, const std::string& to) -> std::string {
+    return string::replaceAll(input, from, to);
   };
   REQUIRE(replaceAll("", "x", "y") == "");
   REQUIRE(replaceAll("banana", "a", "_") == "b_n_n_");
@@ -504,99 +503,101 @@ TEST_CASE("StringUtils::replaceAll works correctly", "[replaceAll]") {
   REQUIRE(replaceAll("banana", "", "") == "banana");
 }
 
-TEST_CASE("StringUtils::countOccurrences works correctly", "[countOccurrences]") {
-  REQUIRE(utils::StringUtils::countOccurrences("", "a") == std::make_pair(size_t{0}, 0));
-  REQUIRE(utils::StringUtils::countOccurrences("abc", "a") == std::make_pair(size_t{0}, 1));
-  REQUIRE(utils::StringUtils::countOccurrences("abc", "b") == std::make_pair(size_t{1}, 1));
-  REQUIRE(utils::StringUtils::countOccurrences("abc", "x") == std::make_pair(size_t{0}, 0));
-  REQUIRE(utils::StringUtils::countOccurrences("banana", "a") == std::make_pair(size_t{5}, 3));
-  REQUIRE(utils::StringUtils::countOccurrences("banana", "an") == std::make_pair(size_t{3}, 2));
-  REQUIRE(utils::StringUtils::countOccurrences("aaaaaaaa", "aaa") == std::make_pair(size_t{3}, 2));  // overlapping occurrences are not counted
-  REQUIRE(utils::StringUtils::countOccurrences("abc", "") == std::make_pair(size_t{3}, 4));  // "" occurs at the start, between chars, and at the end
-  REQUIRE(utils::StringUtils::countOccurrences("", "") == std::make_pair(size_t{0}, 1));
+TEST_CASE("string::countOccurrences works correctly", "[countOccurrences]") {
+  REQUIRE(string::countOccurrences("", "a") == std::make_pair(size_t{0}, 0));
+  REQUIRE(string::countOccurrences("abc", "a") == std::make_pair(size_t{0}, 1));
+  REQUIRE(string::countOccurrences("abc", "b") == std::make_pair(size_t{1}, 1));
+  REQUIRE(string::countOccurrences("abc", "x") == std::make_pair(size_t{0}, 0));
+  REQUIRE(string::countOccurrences("banana", "a") == std::make_pair(size_t{5}, 3));
+  REQUIRE(string::countOccurrences("banana", "an") == std::make_pair(size_t{3}, 2));
+  REQUIRE(string::countOccurrences("aaaaaaaa", "aaa") == std::make_pair(size_t{3}, 2));  // overlapping occurrences are not counted
+  REQUIRE(string::countOccurrences("abc", "") == std::make_pair(size_t{3}, 4));  // "" occurs at the start, between chars, and at the end
+  REQUIRE(string::countOccurrences("", "") == std::make_pair(size_t{0}, 1));
 }
 
-TEST_CASE("StringUtils::removeFramingCharacters works correctly", "[removeFramingCharacters]") {
-  REQUIRE(utils::StringUtils::removeFramingCharacters("", 'a') == "");
-  REQUIRE(utils::StringUtils::removeFramingCharacters("a", 'a') == "a");
-  REQUIRE(utils::StringUtils::removeFramingCharacters("aa", 'a') == "");
-  REQUIRE(utils::StringUtils::removeFramingCharacters("\"abba\"", '"') == "abba");
-  REQUIRE(utils::StringUtils::removeFramingCharacters("\"\"abba\"\"", '"') == "\"abba\"");
+TEST_CASE("string::removeFramingCharacters works correctly", "[removeFramingCharacters]") {
+  REQUIRE(string::removeFramingCharacters("", 'a') == "");
+  REQUIRE(string::removeFramingCharacters("a", 'a') == "a");
+  REQUIRE(string::removeFramingCharacters("aa", 'a') == "");
+  REQUIRE(string::removeFramingCharacters("\"abba\"", '"') == "abba");
+  REQUIRE(string::removeFramingCharacters("\"\"abba\"\"", '"') == "\"abba\"");
 }
 
 // ignore terminating \0 character
 template<size_t N>
-std::span<const std::byte> from_cstring(const char (&str)[N]) {
-  return as_bytes(std::span<const char>(str, N-1));
+std::span<const std::byte> from_cstring(const char (& str)[N]) {
+  return as_bytes(std::span<const char>(str, N - 1));
 }
 
-TEST_CASE("StringUtils::escapeUnprintableBytes", "[escapeUnprintableBytes]") {
-  REQUIRE(StringUtils::escapeUnprintableBytes(from_cstring("abcd")) == "abcd");
-  REQUIRE(StringUtils::escapeUnprintableBytes(from_cstring("ab\n\r\t\v\fde")) == "ab\\n\\r\\t\\v\\fde");
-  REQUIRE(StringUtils::escapeUnprintableBytes(from_cstring("ab\x00""c\x01""d")) == "ab\\x00c\\x01d");
+TEST_CASE("string::escapeUnprintableBytes", "[escapeUnprintableBytes]") {
+  REQUIRE(string::escapeUnprintableBytes(from_cstring("abcd")) == "abcd");
+  REQUIRE(string::escapeUnprintableBytes(from_cstring("ab\n\r\t\v\fde")) == "ab\\n\\r\\t\\v\\fde");
+  REQUIRE(string::escapeUnprintableBytes(from_cstring("ab\x00""c\x01""d")) == "ab\\x00c\\x01d");
 }
 
-TEST_CASE("StringUtils::matchesSequence works correctly", "[matchesSequence]") {
-  REQUIRE(StringUtils::matchesSequence("abcdef", {"abc", "def"}));
-  REQUIRE(!StringUtils::matchesSequence("abcef", {"abc", "def"}));
-  REQUIRE(StringUtils::matchesSequence("xxxabcxxxdefxxx", {"abc", "def"}));
-  REQUIRE(!StringUtils::matchesSequence("defabc", {"abc", "def"}));
-  REQUIRE(StringUtils::matchesSequence("xxxabcxxxabcxxxdefxxx", {"abc", "def"}));
-  REQUIRE(StringUtils::matchesSequence("xxxabcxxxabcxxxdefxxx", {"abc", "abc", "def"}));
-  REQUIRE(!StringUtils::matchesSequence("xxxabcxxxdefxxx", {"abc", "abc", "def"}));
+TEST_CASE("string::matchesSequence works correctly", "[matchesSequence]") {
+  REQUIRE(string::matchesSequence("abcdef", {"abc", "def"}));
+  REQUIRE(!string::matchesSequence("abcef", {"abc", "def"}));
+  REQUIRE(string::matchesSequence("xxxabcxxxdefxxx", {"abc", "def"}));
+  REQUIRE(!string::matchesSequence("defabc", {"abc", "def"}));
+  REQUIRE(string::matchesSequence("xxxabcxxxabcxxxdefxxx", {"abc", "def"}));
+  REQUIRE(string::matchesSequence("xxxabcxxxabcxxxdefxxx", {"abc", "abc", "def"}));
+  REQUIRE(!string::matchesSequence("xxxabcxxxdefxxx", {"abc", "abc", "def"}));
 }
 
-TEST_CASE("StringUtils::toLower and toUpper tests") {
-  CHECK(StringUtils::toUpper("Lorem ipsum dolor sit amet") == "LOREM IPSUM DOLOR SIT AMET");
-  CHECK(StringUtils::toLower("Lorem ipsum dolor sit amet") == "lorem ipsum dolor sit amet");
+TEST_CASE("string::toLower and toUpper tests") {
+  CHECK(string::toUpper("Lorem ipsum dolor sit amet") == "LOREM IPSUM DOLOR SIT AMET");
+  CHECK(string::toLower("Lorem ipsum dolor sit amet") == "lorem ipsum dolor sit amet");
 
-  CHECK(StringUtils::toUpper("SuSpenDISse") == "SUSPENDISSE");
-  CHECK(StringUtils::toLower("SuSpenDISse") == "suspendisse");
+  CHECK(string::toUpper("SuSpenDISse") == "SUSPENDISSE");
+  CHECK(string::toLower("SuSpenDISse") == "suspendisse");
 }
 
-TEST_CASE("StringUtils::splitToValueAndUnit tests") {
+TEST_CASE("string::splitToValueAndUnit tests") {
   int64_t value;
   std::string unit_str;
   SECTION("Simple case") {
-    CHECK(StringUtils::splitToValueAndUnit("1 horse", value, unit_str));
+    CHECK(string::splitToValueAndUnit("1 horse", value, unit_str));
     CHECK(value == 1);
     CHECK(unit_str == "horse");
   }
 
   SECTION("Without whitespace") {
-    CHECK(StringUtils::splitToValueAndUnit("112KiB", value, unit_str));
+    CHECK(string::splitToValueAndUnit("112KiB", value, unit_str));
     CHECK(value == 112);
     CHECK(unit_str == "KiB");
   }
 
   SECTION("Additional whitespace in the middle") {
-    CHECK(StringUtils::splitToValueAndUnit("100    hOrSe", value, unit_str));
+    CHECK(string::splitToValueAndUnit("100    hOrSe", value, unit_str));
     CHECK(value == 100);
     CHECK(unit_str == "hOrSe");
   }
 
   SECTION("Invalid value") {
-    CHECK_FALSE(StringUtils::splitToValueAndUnit("one horse", value, unit_str));
+    CHECK_FALSE(string::splitToValueAndUnit("one horse", value, unit_str));
   }
 
   SECTION("Empty string") {
-    CHECK_FALSE(StringUtils::splitToValueAndUnit("", value, unit_str));
+    CHECK_FALSE(string::splitToValueAndUnit("", value, unit_str));
   }
 }
 
-TEST_CASE("StringUtils::parseCharacter tests") {
-  CHECK(StringUtils::parseCharacter("a") == 'a');
-  CHECK(StringUtils::parseCharacter("\\n") == '\n');
-  CHECK(StringUtils::parseCharacter("\\t") == '\t');
-  CHECK(StringUtils::parseCharacter("\\r") == '\r');
-  CHECK(StringUtils::parseCharacter("\\s") == 's');
-  CHECK(StringUtils::parseCharacter("\\'") == '\'');
-  CHECK(StringUtils::parseCharacter("\\") == '\\');
-  CHECK(StringUtils::parseCharacter("\\?") == '\?');
+TEST_CASE("string::parseCharacter tests") {
+  CHECK(string::parseCharacter("a") == 'a');
+  CHECK(string::parseCharacter("\\n") == '\n');
+  CHECK(string::parseCharacter("\\t") == '\t');
+  CHECK(string::parseCharacter("\\r") == '\r');
+  CHECK(string::parseCharacter("\\s") == 's');
+  CHECK(string::parseCharacter("\\'") == '\'');
+  CHECK(string::parseCharacter("\\") == '\\');
+  CHECK(string::parseCharacter("\\?") == '\?');
 
-  CHECK_FALSE(StringUtils::parseCharacter("abc").has_value());
-  CHECK_FALSE(StringUtils::parseCharacter("\\nd").has_value());
-  CHECK(StringUtils::parseCharacter("") == std::nullopt);
+  CHECK_FALSE(string::parseCharacter("abc").has_value());
+  CHECK_FALSE(string::parseCharacter("\\nd").has_value());
+  CHECK(string::parseCharacter("") == std::nullopt);
 }
+
+}  // namespace org::apache::nifi::minifi::utils
 
 // NOLINTEND(readability-container-size-empty)
