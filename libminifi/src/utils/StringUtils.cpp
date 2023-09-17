@@ -22,9 +22,9 @@
 #include "utils/GeneralUtils.h"
 #include "utils/StringUtils.h"
 
-namespace org::apache::nifi::minifi::utils {
+namespace org::apache::nifi::minifi::utils::string {
 
-std::optional<bool> StringUtils::toBool(const std::string& input) {
+std::optional<bool> toBool(const std::string& input) {
   std::string trimmed = trim(input);
   if (equalsIgnoreCase(trimmed, "true")) {
     return true;
@@ -35,7 +35,7 @@ std::optional<bool> StringUtils::toBool(const std::string& input) {
   return std::nullopt;
 }
 
-std::pair<std::string, std::string> StringUtils::chomp(const std::string& input_line) {
+std::pair<std::string, std::string> chomp(const std::string& input_line) {
   if (endsWith(input_line, "\r\n")) {
     return std::make_pair(input_line.substr(0, input_line.size() - 2), "\r\n");
   } else if (endsWith(input_line, "\n")) {
@@ -45,11 +45,11 @@ std::pair<std::string, std::string> StringUtils::chomp(const std::string& input_
   }
 }
 
-std::string StringUtils::trim(const std::string& s) {
+std::string trim(const std::string& s) {
   return trimRight(trimLeft(s));
 }
 
-std::string_view StringUtils::trim(std::string_view sv) {
+std::string_view trim(std::string_view sv) {
   auto begin = std::find_if(sv.begin(), sv.end(), [](unsigned char c) -> bool { return !isspace(c); });
   auto end = std::find_if(sv.rbegin(), std::reverse_iterator(begin), [](unsigned char c) -> bool { return !isspace(c); }).base();
   // c++20 iterator constructor
@@ -59,7 +59,7 @@ std::string_view StringUtils::trim(std::string_view sv) {
   return sv.substr(std::distance(sv.begin(), begin), std::distance(begin, end));
 }
 
-std::string_view StringUtils::trim(const char* str) {
+std::string_view trim(const char* str) {
   return trim(std::string_view(str));
 }
 
@@ -88,27 +88,27 @@ std::vector<std::string> split_transformed(std::string_view str_view, std::strin
   return result;
 }
 
-std::vector<std::string> StringUtils::split(std::string_view str, std::string_view delimiter) {
+std::vector<std::string> split(std::string_view str, std::string_view delimiter) {
   return split_transformed(str, delimiter, identity{});
 }
 
-std::vector<std::string> StringUtils::splitRemovingEmpty(std::string_view str, std::string_view delimiter) {
+std::vector<std::string> splitRemovingEmpty(std::string_view str, std::string_view delimiter) {
   auto result = split(str, delimiter);
   result.erase(std::remove_if(result.begin(), result.end(), [](const std::string& str) { return str.empty(); }), result.end());
   return result;
 }
 
-std::vector<std::string> StringUtils::splitAndTrim(std::string_view str, std::string_view delimiter) {
+std::vector<std::string> splitAndTrim(std::string_view str, std::string_view delimiter) {
   return split_transformed(str, delimiter, static_cast<std::string(*)(const std::string&)>(trim));
 }
 
-std::vector<std::string> StringUtils::splitAndTrimRemovingEmpty(std::string_view str, std::string_view delimiter) {
+std::vector<std::string> splitAndTrimRemovingEmpty(std::string_view str, std::string_view delimiter) {
   auto result = splitAndTrim(str, delimiter);
   result.erase(std::remove_if(result.begin(), result.end(), [](const std::string& str) { return str.empty(); }), result.end());
   return result;
 }
 
-bool StringUtils::StringToFloat(const std::string& input, float &output, FailurePolicy cp /*= RETURN*/) {
+bool StringToFloat(const std::string& input, float &output, FailurePolicy cp /*= RETURN*/) {
   try {
     output = std::stof(input);
   } catch (const std::invalid_argument &ie) {
@@ -136,7 +136,7 @@ bool StringUtils::StringToFloat(const std::string& input, float &output, Failure
   return true;
 }
 
-std::string StringUtils::replaceEnvironmentVariables(std::string source_string) {
+std::string replaceEnvironmentVariables(std::string source_string) {
   std::string::size_type beg_seq = 0;
   std::string::size_type end_seq = 0;
   do {
@@ -171,7 +171,7 @@ std::string StringUtils::replaceEnvironmentVariables(std::string source_string) 
   return source_string;
 }
 
-std::string StringUtils::replaceOne(const std::string &input, const std::string &from, const std::string &to) {
+std::string replaceOne(const std::string &input, const std::string &from, const std::string &to) {
   std::size_t found_at_position = input.find(from);
   if (found_at_position != std::string::npos) {
     std::string input_copy = input;
@@ -181,7 +181,7 @@ std::string StringUtils::replaceOne(const std::string &input, const std::string 
   }
 }
 
-std::string& StringUtils::replaceAll(std::string& source_string, const std::string &from_string, const std::string &to_string) {
+std::string& replaceAll(std::string& source_string, const std::string &from_string, const std::string &to_string) {
   std::size_t loc = 0;
   std::size_t lastFound;
   while ((lastFound = source_string.find(from_string, loc)) != std::string::npos) {
@@ -194,7 +194,7 @@ std::string& StringUtils::replaceAll(std::string& source_string, const std::stri
   return source_string;
 }
 
-std::string StringUtils::replaceMap(std::string source_string, const std::map<std::string, std::string> &replace_map) {
+std::string replaceMap(std::string source_string, const std::map<std::string, std::string> &replace_map) {
   auto result_string = source_string;
 
   std::vector<std::pair<size_t, std::pair<size_t, std::string>>> replacements;
@@ -275,7 +275,7 @@ constexpr uint8_t base64_dec_lut[128] =
      0x31, 0x32, 0x33, ILGL, ILGL, ILGL, ILGL, ILGL};
 }  // namespace
 
-bool StringUtils::from_hex(uint8_t ch, uint8_t& output) {
+bool from_hex(uint8_t ch, uint8_t& output) {
   if (ch > 127) {
     return false;
   }
@@ -283,7 +283,7 @@ bool StringUtils::from_hex(uint8_t ch, uint8_t& output) {
   return output != SKIP;
 }
 
-bool StringUtils::from_hex(std::byte* data, size_t* data_length, std::string_view hex) {
+bool from_hex(std::byte* data, size_t* data_length, std::string_view hex) {
   if (*data_length < hex.size() / 2) {
     return false;
   }
@@ -309,7 +309,7 @@ bool StringUtils::from_hex(std::byte* data, size_t* data_length, std::string_vie
   return !found_first_nibble;
 }
 
-std::vector<std::byte> StringUtils::from_hex(std::string_view hex) {
+std::vector<std::byte> from_hex(std::string_view hex) {
   std::vector<std::byte> decoded(hex.size() / 2);
   size_t data_length = decoded.size();
   if (!from_hex(decoded.data(), &data_length, hex)) {
@@ -319,7 +319,7 @@ std::vector<std::byte> StringUtils::from_hex(std::string_view hex) {
   return decoded;
 }
 
-size_t StringUtils::to_hex(char* hex, std::span<const std::byte> data_to_be_transformed, bool uppercase) {
+size_t to_hex(char* hex, std::span<const std::byte> data_to_be_transformed, bool uppercase) {
   if (data_to_be_transformed.size() > std::numeric_limits<size_t>::max() / 2) {
     throw std::length_error("Data is too large to be hexencoded");
   }
@@ -330,7 +330,7 @@ size_t StringUtils::to_hex(char* hex, std::span<const std::byte> data_to_be_tran
   return data_to_be_transformed.size() * 2;
 }
 
-std::string StringUtils::to_hex(std::span<const std::byte> data_to_be_transformed, bool uppercase /*= false*/) {
+std::string to_hex(std::span<const std::byte> data_to_be_transformed, bool uppercase /*= false*/) {
   if (data_to_be_transformed.size() > (std::numeric_limits<size_t>::max() / 2 - 1)) {
     throw std::length_error("Data is too large to be hexencoded");
   }
@@ -341,7 +341,7 @@ std::string StringUtils::to_hex(std::span<const std::byte> data_to_be_transforme
   return result;
 }
 
-bool StringUtils::from_base64(std::byte* const data, size_t* const data_length, const std::string_view base64) {
+bool from_base64(std::byte* const data, size_t* const data_length, const std::string_view base64) {
   if (*data_length < (base64.size() / 4 + 1) * 3) {
     return false;
   }
@@ -409,7 +409,7 @@ bool StringUtils::from_base64(std::byte* const data, size_t* const data_length, 
   return true;
 }
 
-std::vector<std::byte> StringUtils::from_base64(const std::string_view base64) {
+std::vector<std::byte> from_base64(const std::string_view base64) {
   std::vector<std::byte> decoded((base64.size() / 4 + 1) * 3);
   size_t data_length = decoded.size();
   if (!from_base64(decoded.data(), &data_length, base64)) {
@@ -419,7 +419,7 @@ std::vector<std::byte> StringUtils::from_base64(const std::string_view base64) {
   return decoded;
 }
 
-size_t StringUtils::to_base64(char* base64, const std::span<const std::byte> raw_data, bool url, bool padded) {
+size_t to_base64(char* base64, const std::span<const std::byte> raw_data, bool url, bool padded) {
   gsl_Expects(base64);
   if (raw_data.size() > std::numeric_limits<size_t>::max() * 3 / 4 - 3) {
     throw std::length_error("Data is too large to be base64 encoded");
@@ -453,7 +453,7 @@ size_t StringUtils::to_base64(char* base64, const std::span<const std::byte> raw
   return base64_length;
 }
 
-std::string StringUtils::to_base64(const std::span<const std::byte> raw_data, bool url /*= false*/, bool padded /*= true*/) {
+std::string to_base64(const std::span<const std::byte> raw_data, bool url /*= false*/, bool padded /*= true*/) {
   std::string buf;
   buf.resize((raw_data.size() / 3 + 1) * 4);
   size_t base64_length = to_base64(buf.data(), raw_data, url, padded);
@@ -462,7 +462,7 @@ std::string StringUtils::to_base64(const std::span<const std::byte> raw_data, bo
   return buf;
 }
 
-std::string StringUtils::escapeUnprintableBytes(std::span<const std::byte> data) {
+std::string escapeUnprintableBytes(std::span<const std::byte> data) {
   constexpr const char* hex_digits = "0123456789abcdef";
   std::string result;
   for (auto byte : data) {
@@ -488,7 +488,7 @@ std::string StringUtils::escapeUnprintableBytes(std::span<const std::byte> data)
   return result;
 }
 
-bool StringUtils::matchesSequence(std::string_view str, const std::vector<std::string>& patterns) {
+bool matchesSequence(std::string_view str, const std::vector<std::string>& patterns) {
   size_t pos = 0;
 
   for (const auto& pattern : patterns) {
@@ -502,7 +502,7 @@ bool StringUtils::matchesSequence(std::string_view str, const std::vector<std::s
   return true;
 }
 
-bool StringUtils::splitToValueAndUnit(std::string_view input, int64_t& value, std::string& unit) {
+bool splitToValueAndUnit(std::string_view input, int64_t& value, std::string& unit) {
   const char* begin = input.data();
   const char* end = begin + input.size();
   auto [ptr, ec] = std::from_chars(begin, end, value);
@@ -518,7 +518,7 @@ bool StringUtils::splitToValueAndUnit(std::string_view input, int64_t& value, st
   return true;
 }
 
-nonstd::expected<std::optional<char>, StringUtils::ParseError> StringUtils::parseCharacter(const std::string &input) {
+nonstd::expected<std::optional<char>, ParseError> parseCharacter(std::string_view input) {
   if (input.empty()) { return std::nullopt; }
   if (input.size() == 1) { return input[0]; }
 
@@ -538,4 +538,13 @@ nonstd::expected<std::optional<char>, StringUtils::ParseError> StringUtils::pars
   return nonstd::make_unexpected(ParseError{});
 }
 
-}  // namespace org::apache::nifi::minifi::utils
+std::string repeat(std::string_view str, size_t count) {
+  std::string result;
+  result.reserve(count * str.length());
+  for (size_t i = 0; i < count; ++i) {
+    result.append(str);
+  }
+  return result;
+}
+
+}  // namespace org::apache::nifi::minifi::utils::string

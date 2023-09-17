@@ -29,7 +29,7 @@ namespace {
 
 const std::string AGENT_IDENTIFIER_KEY = std::string(org::apache::nifi::minifi::Configuration::nifi_c2_agent_identifier) + "=";
 
-}
+}  // namespace
 
 namespace org::apache::nifi::minifi::utils {
 
@@ -53,11 +53,9 @@ std::string ChecksumCalculator::getChecksum() {
 }
 
 std::string ChecksumCalculator::computeChecksum(const std::filesystem::path& file_location) {
-  using org::apache::nifi::minifi::utils::StringUtils;
-
   std::ifstream input_file{file_location, std::ios::in | std::ios::binary};
   if (!input_file.is_open()) {
-    throw std::runtime_error(StringUtils::join_pack("Could not open config file '", file_location.string(), "' to compute the checksum: ", std::strerror(errno)));
+    throw std::runtime_error(string::join_pack("Could not open config file '", file_location.string(), "' to compute the checksum: ", std::strerror(errno)));
   }
 
   crypto_hash_sha256_state state;
@@ -66,7 +64,7 @@ std::string ChecksumCalculator::computeChecksum(const std::filesystem::path& fil
   std::string line;
   while (std::getline(input_file, line)) {
     // skip lines containing the agent identifier, so agents in the same class will have the same checksum
-    if (StringUtils::startsWith(line, AGENT_IDENTIFIER_KEY)) {
+    if (string::startsWith(line, AGENT_IDENTIFIER_KEY)) {
       continue;
     }
     if (!input_file.eof()) {  // eof() means we have just read the last line, which was not terminated by a newline
@@ -75,13 +73,13 @@ std::string ChecksumCalculator::computeChecksum(const std::filesystem::path& fil
     crypto_hash_sha256_update(&state, reinterpret_cast<const unsigned char*>(line.data()), line.size());
   }
   if (input_file.bad()) {
-    throw std::runtime_error(StringUtils::join_pack("Error reading config file '", file_location.string(), "' while computing the checksum: ", std::strerror(errno)));
+    throw std::runtime_error(string::join_pack("Error reading config file '", file_location.string(), "' while computing the checksum: ", std::strerror(errno)));
   }
 
   std::array<unsigned char, LENGTH_OF_HASH_IN_BYTES> hash{};
   crypto_hash_sha256_final(&state, hash.data());
 
-  return StringUtils::to_hex(gsl::make_span(hash).as_span<std::byte>());
+  return string::to_hex(gsl::make_span(hash).as_span<std::byte>());
 }
 
 }  // namespace org::apache::nifi::minifi::utils
