@@ -35,7 +35,7 @@
 #include "StringUtils.h"
 
 // libc++ doesn't define operator<=> on durations, and apparently the operator rewrite rules don't automagically make one
-#if defined(_LIBCPP_VERSION) && _LIBCPP_VERSION < 16000
+#if defined(_LIBCPP_VERSION)
 #include <compare>
 #endif
 
@@ -43,7 +43,7 @@
 
 #define TIME_FORMAT "%Y-%m-%d %H:%M:%S"
 
-#if defined(_LIBCPP_VERSION) && _LIBCPP_VERSION < 16000
+#if defined(_LIBCPP_VERSION)
 template<typename Rep1, typename Period1, typename Rep2, typename Period2>
 std::strong_ordering operator<=>(std::chrono::duration<Rep1, Period1> lhs, std::chrono::duration<Rep2, Period2> rhs) {
   if (lhs < rhs) {
