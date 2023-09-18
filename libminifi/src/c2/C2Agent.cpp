@@ -687,13 +687,13 @@ C2Payload C2Agent::bundleDebugInfo(std::map<std::string, std::unique_ptr<io::Inp
     }
   }
   if (auto node_reporter = node_reporter_.lock()) {
-    constexpr const char* MANIFEST_FILE_NAME = "manifest.json";
+    static constexpr const char* MANIFEST_FILE_NAME = "manifest.json";
     auto reported_manifest = node_reporter->getAgentManifest();
-    state::response::SerializedResponseNode manifest;
-    manifest.name = std::move(reported_manifest.name);
-    manifest.children = std::move(reported_manifest.serialized_nodes);
-    manifest.array = reported_manifest.is_array;
-    std::string manifest_str = manifest.to_pretty_string();
+    std::string manifest_str = state::response::SerializedResponseNode{
+      .name = std::move(reported_manifest.name),
+      .array = reported_manifest.is_array,
+      .children = std::move(reported_manifest.serialized_nodes)
+    }.to_pretty_string();
     if (!archiver->newEntry({MANIFEST_FILE_NAME, manifest_str.size()})) {
       throw C2DebugBundleError(fmt::format("Couldn't initialize archive entry for '{}'", MANIFEST_FILE_NAME));
     }
