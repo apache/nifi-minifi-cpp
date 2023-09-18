@@ -129,8 +129,7 @@ int main(int argc, char **argv) {
     .help("Starts provided components");
   argument_parser.add_argument("-l", "--list")
     .action([](const std::string& value) {
-      static const std::vector<std::string> choices = {"components", "connections"};
-      if (ranges::contains(choices, value)) {
+      if (ranges::contains(std::array{"components", "connections"}, value)) {
         return value;
       }
       throw std::runtime_error("List command only accepts the following parameters: [components, connections]");

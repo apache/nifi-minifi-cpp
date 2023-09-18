@@ -17,10 +17,8 @@
 # under the License.
 #
 
-cmake_minimum_required(VERSION 3.16)
-if (CMAKE_VERSION VERSION_GREATER_EQUAL 3.24)
-    cmake_policy(SET CMP0135 NEW) # policy to set the timestamps of extracted contents to the time of extraction
-endif()
+cmake_minimum_required(VERSION 3.24)
+cmake_policy(SET CMP0135 NEW) # policy to set the timestamps of extracted contents to the time of extraction
 
 include_directories(../minifi_main/ ../libminifi/include  ../libminifi/include/c2  ../libminifi/include/c2/protocols/  ../libminifi/include/core/state ./libminifi/include/core/statemanagement/metrics  ../libminifi/include/core/yaml  ../libminifi/include/core)
 
