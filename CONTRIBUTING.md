@@ -19,7 +19,7 @@ We welcome all contributions to Apache MiNiFi. All new files must include a copy
 To make development easier, we've included the linter for the Google Style guide. Google provides an Eclipse formatter
 for their style guide. It is located
 [here](https://github.com/google/styleguide/blob/gh-pages/eclipse-cpp-google-style.xml).
-New contributions are expected to follow the 
+New contributions are expected to follow the
 [Google C++ Style Guide](https://google.github.io/styleguide/cppguide.html), except for the following points:
 - Use .cpp extension for implementation files
 - Use lowerCamelCase for functions, including accessors/mutators
@@ -67,13 +67,13 @@ as part of the verification process, that is applied to all new contributions.
 ## Issues and Pull Requests
 
 Issues within MiNiFi C++ are tracked in the official [Apache JIRA](https://issues.apache.org/jira/projects/MINIFICPP/issues).
-New users can register freely and ask for contributor access on the
-[Developers Mailing List](https://nifi.apache.org/mailing_lists.html).
-Unassigned tickets may be assigned to yourself or filed via this JIRA instance. Pull requests can be submitted via our
-[Github Mirror](https://github.com/apache/nifi-minifi-cpp) . When doing so please create a JIRA issue for your pull
-request.
+New users can freely request JIRA access on the
+[Self-Service Portal](https://selfserve.apache.org/jira-account.html) for the nifi project. An Apache PMC member will review and
+approve the request as prudent. Unassigned tickets may be assigned to yourself or filed via this JIRA instance. As a new user looking to contribute,
+any tickets that are tagged as "beginner", "starter", or "newbie" are good places to start. Pull requests can be submitted via our
+[Github Mirror](https://github.com/apache/nifi-minifi-cpp). If your contribution does not have a corresponding JIRA issue for it then please create one.
 
-Apache NiFi MiNiFi C++ is a review then commit community. As a result, we will review your commits and merge them following 
+Apache NiFi MiNiFi C++ is a review then commit community. As a result, we will review your commits and merge them following
 review. We ask that you provide tests and documentation when possible. Typically PRs are merged after they get 2-3
 approvals, usually in a week or two.
 
@@ -94,7 +94,7 @@ This will provide output for all source files.
 
 Please see [ThirdParties.md](ThirdParties.md) on how MiNiFi builds and uses third party libraries and how you can add new ones.
 
-### Extensions 
+### Extensions
 
 MiNiFi C++ contains a dynamic loading mechanism that loads arbitrary objects. To maintain consistency of development amongst the NiFi ecosystem, it is called a class loader. If you
 are contributing a custom Processor or Controller Service, the mechanism to register your class into the default class loader is a pragma definition named:
