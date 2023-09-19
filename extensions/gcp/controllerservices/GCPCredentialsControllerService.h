@@ -64,7 +64,8 @@ namespace org::apache::nifi::minifi::extensions::gcp {
 
 class GCPCredentialsControllerService : public core::controller::ControllerService {
  public:
-  EXTENSIONAPI static constexpr const char* Description = "Google Cloud Platform Credentials Controller Service";
+  EXTENSIONAPI static constexpr const char* Description = "Manages the credentials for Google Cloud Platform. This allows for multiple Google Cloud Platform related processors "
+      "to reference this single controller service so that Google Cloud Platform credentials can be managed and controlled in a central location.";
 
   EXTENSIONAPI static constexpr auto CredentialsLoc = core::PropertyDefinitionBuilder<magic_enum::enum_count<CredentialsLocation>()>::createProperty("Credentials Location")
       .withDescription("The location of the credentials.")

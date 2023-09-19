@@ -116,7 +116,7 @@ void sigHandler(int signal) {
   }
 }
 
-void dumpDocs(const std::shared_ptr<minifi::Configure> &configuration, const std::string &dir, std::ostream &out) {
+void dumpDocs(const std::shared_ptr<minifi::Configure> &configuration, const std::string &dir) {
   auto pythoncreator = core::ClassLoader::getDefaultClassLoader().instantiate("PythonCreator", "PythonCreator");
   if (nullptr != pythoncreator) {
     pythoncreator->configure(configuration);
@@ -124,7 +124,7 @@ void dumpDocs(const std::shared_ptr<minifi::Configure> &configuration, const std
 
   minifi::docs::AgentDocs docsCreator;
 
-  docsCreator.generate(dir, out);
+  docsCreator.generate(dir);
 }
 
 void writeJsonSchema(const std::shared_ptr<minifi::Configure> &configuration, std::ostream& out) {
@@ -160,22 +160,7 @@ void dumpDocsIfRequested(const argparse::ArgumentParser& parser, const std::shar
   }
 
   std::cout << "Dumping docs to " << docs_params[0] << std::endl;
-  if (docs_params.size() > 1) {
-    auto path = std::filesystem::path(docs_params[1]);
-    if (std::filesystem::exists(path) && !std::filesystem::is_regular_file(path)) {
-      std::cerr << "PROCESSORS.md target path exists, but it is not a regular file: " << path << std::endl;
-      std::exit(1);
-    }
-    auto dir = path.parent_path();
-    if (dir == docs_params[0]) {
-      std::cerr << "Target file should be out of the working directory: " << dir << std::endl;
-      std::exit(1);
-    }
-    std::ofstream outref(docs_params[1]);
-    dumpDocs(configure, docs_params[0], outref);
-  } else {
-    dumpDocs(configure, docs_params[0], std::cout);
-  }
+  dumpDocs(configure, docs_params[0]);
   std::exit(0);
 }
 
@@ -209,10 +194,9 @@ int main(int argc, char **argv) {
     .metavar("KEY=VALUE")
     .help("Override a property read from minifi.properties file in key=value format");
   argument_parser.add_argument("-d", "--docs")
-    .nargs(1, 2)
-    .metavar("PATH")
-    .help("Generate documentation in the directory specified in the first parameter. File path can be specified for the PROCESSORS.md file in the second parameter. "
-      "If no separate path is given for the PROCESSORS.md file, it will be printed to stdout.");
+    .nargs(1)
+    .metavar("DIRECTORY")
+    .help("Generate documentation in the specified directory");
   argument_parser.add_argument("-s", "--schema")
     .metavar("PATH")
     .help("Generate JSON schema to the specified path");

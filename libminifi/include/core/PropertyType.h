@@ -335,21 +335,21 @@ inline constexpr auto LISTEN_PORT_TYPE = ListenPortValidator{};
 
 inline gsl::not_null<const PropertyValidator*> getValidator(const std::shared_ptr<minifi::state::response::Value>& input) {
   if (std::dynamic_pointer_cast<core::DataSizeValue>(input) != nullptr) {
-    return gsl::make_not_null(&DATA_SIZE_TYPE);
+    return gsl::make_not_null<const PropertyValidator*>(&DATA_SIZE_TYPE);
   } else if (std::dynamic_pointer_cast<core::TimePeriodValue>(input) != nullptr) {
-    return gsl::make_not_null(&TIME_PERIOD_TYPE);
+    return gsl::make_not_null<const PropertyValidator*>(&TIME_PERIOD_TYPE);
   } else if (std::dynamic_pointer_cast<minifi::state::response::BoolValue>(input) != nullptr) {
-    return gsl::make_not_null(&BOOLEAN_TYPE);
+    return gsl::make_not_null<const PropertyValidator*>(&BOOLEAN_TYPE);
   } else if (std::dynamic_pointer_cast<minifi::state::response::IntValue>(input) != nullptr) {
-    return gsl::make_not_null(&INTEGER_TYPE);
+    return gsl::make_not_null<const PropertyValidator*>(&INTEGER_TYPE);
   } else if (std::dynamic_pointer_cast<minifi::state::response::UInt32Value>(input) != nullptr) {
-    return gsl::make_not_null(&UNSIGNED_INT_TYPE);;
+    return gsl::make_not_null<const PropertyValidator*>(&UNSIGNED_INT_TYPE);;
   } else if (std::dynamic_pointer_cast<minifi::state::response::Int64Value>(input) != nullptr) {
-    return gsl::make_not_null(&LONG_TYPE);
+    return gsl::make_not_null<const PropertyValidator*>(&LONG_TYPE);
   } else if (std::dynamic_pointer_cast<minifi::state::response::UInt64Value>(input) != nullptr) {
-    return gsl::make_not_null(&UNSIGNED_LONG_TYPE);
+    return gsl::make_not_null<const PropertyValidator*>(&UNSIGNED_LONG_TYPE);
   } else {
-    return gsl::make_not_null(&VALID_TYPE);
+    return gsl::make_not_null<const PropertyValidator*>(&VALID_TYPE);
   }
 }
 }  // namespace StandardPropertyTypes

@@ -39,7 +39,7 @@ struct PropertyDefinition {
   std::array<std::string_view, NumDependentProperties> dependent_properties;
   std::array<std::pair<std::string_view, std::string_view>, NumExclusiveOfProperties> exclusive_of_properties;
   std::optional<std::string_view> default_value;
-  gsl::not_null<const PropertyType*> type = gsl::make_not_null(&StandardPropertyTypes::VALID_TYPE);
+  gsl::not_null<const PropertyType*> type = gsl::make_not_null<const PropertyType*>(&StandardPropertyTypes::VALID_TYPE);
   bool supports_expression_language = false;
 };
 
@@ -53,7 +53,7 @@ struct PropertyReference {
   std::span<const std::string_view> dependent_properties;
   std::span<const std::pair<std::string_view, std::string_view>> exclusive_of_properties;
   std::optional<std::string_view> default_value;
-  gsl::not_null<const PropertyType*> type = gsl::make_not_null(&StandardPropertyTypes::VALID_TYPE);
+  gsl::not_null<const PropertyType*> type = gsl::make_not_null<const PropertyType*>(&StandardPropertyTypes::VALID_TYPE);
   bool supports_expression_language = false;
 
   constexpr PropertyReference() = default;

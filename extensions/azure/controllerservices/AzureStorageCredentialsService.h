@@ -34,7 +34,8 @@ namespace org::apache::nifi::minifi::azure::controllers {
 
 class AzureStorageCredentialsService : public core::controller::ControllerService {
  public:
-  EXTENSIONAPI static constexpr const char* Description = "Azure Storage Credentials Management Service";
+  EXTENSIONAPI static constexpr const char* Description = "Manages the credentials for an Azure Storage account. This allows for multiple Azure Storage related processors to reference this single "
+      "controller service so that Azure storage credentials can be managed and controlled in a central location.";
 
   EXTENSIONAPI static constexpr auto StorageAccountName = core::PropertyDefinitionBuilder<>::createProperty("Storage Account Name")
       .withDescription("The storage account name.")

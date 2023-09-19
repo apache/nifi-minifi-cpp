@@ -15,91 +15,91 @@ limitations under the License.
 
 ## Table of Contents
 
-- [AppendHostInfo](#appendhostinfo)
-- [ApplyTemplate](#applytemplate)
-- [AttributesToJSON](#attributestojson)
-- [BinFiles](#binfiles)
-- [CapturePacket](#capturepacket)
-- [CaptureRTSPFrame](#capturertspframe)
-- [CollectKubernetesPodMetrics](#collectkubernetespodmetrics)
-- [CollectorInitiatedSubscription](#collectorinitiatedsubscription)
-- [CompressContent](#compresscontent)
-- [ConsumeJournald](#consumejournald)
-- [ConsumeKafka](#consumekafka)
-- [ConsumeMQTT](#consumemqtt)
-- [ConsumeWindowsEventLog](#consumewindowseventlog)
-- [DefragmentText](#defragmenttext)
-- [DeleteAzureBlobStorage](#deleteazureblobstorage)
-- [DeleteAzureDataLakeStorage](#deleteazuredatalakestorage)
-- [DeleteGCSObject](#deletegcsobject)
-- [DeleteS3Object](#deletes3object)
-- [ExecuteJavaProcessor](#executejavaprocessor)
-- [ExecuteProcess](#executeprocess)
-- [ExecutePythonProcessor](#executepythonprocessor)
-- [ExecuteScript](#executescript)
-- [ExecuteSQL](#executesql)
-- [ExtractText](#extracttext)
-- [FetchAzureBlobStorage](#fetchazureblobstorage)
-- [FetchAzureDataLakeStorage](#fetchazuredatalakestorage)
-- [FetchFile](#fetchfile)
-- [FetchGCSObject](#fetchgcsobject)
-- [FetchOPCProcessor](#fetchopcprocessor)
-- [FetchS3Object](#fetchs3object)
-- [FetchSFTP](#fetchsftp)
-- [FetchSmb](#fetchsmb)
-- [FocusArchiveEntry](#focusarchiveentry)
-- [GenerateFlowFile](#generateflowfile)
-- [GetEnvironmentalSensors](#getenvironmentalsensors)
-- [GetFile](#getfile)
-- [GetGPS](#getgps)
-- [GetMovementSensors](#getmovementsensors)
-- [GetTCP](#gettcp)
-- [GetUSBCamera](#getusbcamera)
-- [HashContent](#hashcontent)
-- [InvokeHTTP](#invokehttp)
-- [ListAzureBlobStorage](#listazureblobstorage)
-- [ListAzureDataLakeStorage](#listazuredatalakestorage)
-- [ListenHTTP](#listenhttp)
-- [ListenSyslog](#listensyslog)
-- [ListenTCP](#listentcp)
-- [ListenUDP](#listenudp)
-- [ListFile](#listfile)
-- [ListGCSBucket](#listgcsbucket)
-- [ListS3](#lists3)
-- [ListSFTP](#listsftp)
-- [ListSmb](#listsmb)
-- [LogAttribute](#logattribute)
-- [ManipulateArchive](#manipulatearchive)
-- [MergeContent](#mergecontent)
-- [MotionDetector](#motiondetector)
-- [PerformanceDataMonitor](#performancedatamonitor)
-- [PostElasticsearch](#postelasticsearch)
-- [ProcFsMonitor](#procfsmonitor)
-- [PublishKafka](#publishkafka)
-- [PublishMQTT](#publishmqtt)
-- [PutAzureBlobStorage](#putazureblobstorage)
-- [PutAzureDataLakeStorage](#putazuredatalakestorage)
-- [PutFile](#putfile)
-- [PutGCSObject](#putgcsobject)
-- [PutOPCProcessor](#putopcprocessor)
-- [PutS3Object](#puts3object)
-- [PutSFTP](#putsftp)
-- [PutSmb](#putsmb)
-- [PutSplunkHTTP](#putsplunkhttp)
-- [PutSQL](#putsql)
-- [PutTCP](#puttcp)
-- [PutUDP](#putudp)
-- [QueryDatabaseTable](#querydatabasetable)
-- [QuerySplunkIndexingStatus](#querysplunkindexingstatus)
-- [ReplaceText](#replacetext)
-- [RetryFlowFile](#retryflowfile)
-- [RouteOnAttribute](#routeonattribute)
-- [RouteText](#routetext)
-- [SourceInitiatedSubscriptionListener](#sourceinitiatedsubscriptionlistener)
-- [TailEventLog](#taileventlog)
-- [TailFile](#tailfile)
-- [UnfocusArchiveEntry](#unfocusarchiveentry)
-- [UpdateAttribute](#updateattribute)
+- [AppendHostInfo](#AppendHostInfo)
+- [ApplyTemplate](#ApplyTemplate)
+- [AttributesToJSON](#AttributesToJSON)
+- [BinFiles](#BinFiles)
+- [CapturePacket](#CapturePacket)
+- [CaptureRTSPFrame](#CaptureRTSPFrame)
+- [CollectKubernetesPodMetrics](#CollectKubernetesPodMetrics)
+- [CollectorInitiatedSubscription](#CollectorInitiatedSubscription)
+- [CompressContent](#CompressContent)
+- [ConsumeJournald](#ConsumeJournald)
+- [ConsumeKafka](#ConsumeKafka)
+- [ConsumeMQTT](#ConsumeMQTT)
+- [ConsumeWindowsEventLog](#ConsumeWindowsEventLog)
+- [DefragmentText](#DefragmentText)
+- [DeleteAzureBlobStorage](#DeleteAzureBlobStorage)
+- [DeleteAzureDataLakeStorage](#DeleteAzureDataLakeStorage)
+- [DeleteGCSObject](#DeleteGCSObject)
+- [DeleteS3Object](#DeleteS3Object)
+- [ExecuteJavaProcessor](#ExecuteJavaProcessor)
+- [ExecuteProcess](#ExecuteProcess)
+- [ExecutePythonProcessor](#ExecutePythonProcessor)
+- [ExecuteScript](#ExecuteScript)
+- [ExecuteSQL](#ExecuteSQL)
+- [ExtractText](#ExtractText)
+- [FetchAzureBlobStorage](#FetchAzureBlobStorage)
+- [FetchAzureDataLakeStorage](#FetchAzureDataLakeStorage)
+- [FetchFile](#FetchFile)
+- [FetchGCSObject](#FetchGCSObject)
+- [FetchOPCProcessor](#FetchOPCProcessor)
+- [FetchS3Object](#FetchS3Object)
+- [FetchSFTP](#FetchSFTP)
+- [FetchSmb](#FetchSmb)
+- [FocusArchiveEntry](#FocusArchiveEntry)
+- [GenerateFlowFile](#GenerateFlowFile)
+- [GetEnvironmentalSensors](#GetEnvironmentalSensors)
+- [GetFile](#GetFile)
+- [GetGPS](#GetGPS)
+- [GetMovementSensors](#GetMovementSensors)
+- [GetTCP](#GetTCP)
+- [GetUSBCamera](#GetUSBCamera)
+- [HashContent](#HashContent)
+- [InvokeHTTP](#InvokeHTTP)
+- [ListAzureBlobStorage](#ListAzureBlobStorage)
+- [ListAzureDataLakeStorage](#ListAzureDataLakeStorage)
+- [ListenHTTP](#ListenHTTP)
+- [ListenSyslog](#ListenSyslog)
+- [ListenTCP](#ListenTCP)
+- [ListenUDP](#ListenUDP)
+- [ListFile](#ListFile)
+- [ListGCSBucket](#ListGCSBucket)
+- [ListS3](#ListS3)
+- [ListSFTP](#ListSFTP)
+- [ListSmb](#ListSmb)
+- [LogAttribute](#LogAttribute)
+- [ManipulateArchive](#ManipulateArchive)
+- [MergeContent](#MergeContent)
+- [MotionDetector](#MotionDetector)
+- [PerformanceDataMonitor](#PerformanceDataMonitor)
+- [PostElasticsearch](#PostElasticsearch)
+- [ProcFsMonitor](#ProcFsMonitor)
+- [PublishKafka](#PublishKafka)
+- [PublishMQTT](#PublishMQTT)
+- [PutAzureBlobStorage](#PutAzureBlobStorage)
+- [PutAzureDataLakeStorage](#PutAzureDataLakeStorage)
+- [PutFile](#PutFile)
+- [PutGCSObject](#PutGCSObject)
+- [PutOPCProcessor](#PutOPCProcessor)
+- [PutS3Object](#PutS3Object)
+- [PutSFTP](#PutSFTP)
+- [PutSmb](#PutSmb)
+- [PutSplunkHTTP](#PutSplunkHTTP)
+- [PutSQL](#PutSQL)
+- [PutTCP](#PutTCP)
+- [PutUDP](#PutUDP)
+- [QueryDatabaseTable](#QueryDatabaseTable)
+- [QuerySplunkIndexingStatus](#QuerySplunkIndexingStatus)
+- [ReplaceText](#ReplaceText)
+- [RetryFlowFile](#RetryFlowFile)
+- [RouteOnAttribute](#RouteOnAttribute)
+- [RouteText](#RouteText)
+- [SourceInitiatedSubscriptionListener](#SourceInitiatedSubscriptionListener)
+- [TailEventLog](#TailEventLog)
+- [TailFile](#TailFile)
+- [UnfocusArchiveEntry](#UnfocusArchiveEntry)
+- [UpdateAttribute](#UpdateAttribute)
 
 
 ## AppendHostInfo
@@ -860,14 +860,14 @@ Reads the contents of a file from disk and streams it into the contents of an in
 
 In the list below, the names of required properties appear in bold. Any other properties (not in bold) are considered optional. The table also indicates any default values, and whether a property supports the NiFi Expression Language.
 
-| Name                                 | Default Value | Allowable Values                                    | Description                                                                                                                                                                                                                                                              |
-|--------------------------------------|---------------|-----------------------------------------------------|--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
-| File to Fetch                        |               |                                                     | The fully-qualified filename of the file to fetch from the file system. If not defined the default ${absolute.path}/${filename} path is used.<br/>**Supports Expression Language: true**                                                                                 |
-| **Completion Strategy**              | None          | None<br/>Move File<br/>Delete File                  | Specifies what to do with the original file on the file system once it has been pulled into MiNiFi                                                                                                                                                                       |
-| Move Destination Directory           |               |                                                     | The directory to move the original file to once it has been fetched from the file system. This property is ignored unless the Completion Strategy is set to "Move File". If the directory does not exist, it will be created.<br/>**Supports Expression Language: true** |
-| **Move Conflict Strategy**           | Rename        | Rename<br/>Replace File<br/>Keep Existing<br/>Fail  | If Completion Strategy is set to Move File and a file already exists in the destination directory with the same name, this property specifies how that naming conflict should be resolved                                                                                |
-| **Log level when file not found**    | ERROR         | TRACE<br/>DEBUG<br/>INFO<br/>WARN<br/>ERROR<br/>OFF | Log level to use in case the file does not exist when the processor is triggered                                                                                                                                                                                         |
-| **Log level when permission denied** | ERROR         | TRACE<br/>DEBUG<br/>INFO<br/>WARN<br/>ERROR<br/>OFF | Log level to use in case agent does not have sufficient permissions to read the file                                                                                                                                                                                     |
+| Name                                 | Default Value | Allowable Values                                                 | Description                                                                                                                                                                                                                                                              |
+|--------------------------------------|---------------|------------------------------------------------------------------|--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| File to Fetch                        |               |                                                                  | The fully-qualified filename of the file to fetch from the file system. If not defined the default ${absolute.path}/${filename} path is used.<br/>**Supports Expression Language: true**                                                                                 |
+| **Completion Strategy**              | None          | None<br/>Move File<br/>Delete File                               | Specifies what to do with the original file on the file system once it has been pulled into MiNiFi                                                                                                                                                                       |
+| Move Destination Directory           |               |                                                                  | The directory to move the original file to once it has been fetched from the file system. This property is ignored unless the Completion Strategy is set to "Move File". If the directory does not exist, it will be created.<br/>**Supports Expression Language: true** |
+| **Move Conflict Strategy**           | Rename        | Rename<br/>Replace File<br/>Keep Existing<br/>Fail               | If Completion Strategy is set to Move File and a file already exists in the destination directory with the same name, this property specifies how that naming conflict should be resolved                                                                                |
+| **Log level when file not found**    | ERROR         | TRACE<br/>DEBUG<br/>INFO<br/>WARN<br/>ERROR<br/>CRITICAL<br/>OFF | Log level to use in case the file does not exist when the processor is triggered                                                                                                                                                                                         |
+| **Log level when permission denied** | ERROR         | TRACE<br/>DEBUG<br/>INFO<br/>WARN<br/>ERROR<br/>CRITICAL<br/>OFF | Log level to use in case agent does not have sufficient permissions to read the file                                                                                                                                                                                     |
 
 ### Relationships
 
@@ -1042,7 +1042,7 @@ In the list below, the names of required properties appear in bold. Any other pr
 
 | Name                                  | Default Value | Allowable Values | Description                                                                                                                                                                                          |
 |---------------------------------------|---------------|------------------|------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
-| **SMB Connection Controller Service** |               |                  | Specifies the SMB connection controller service to use for connecting to the SMB server.                                                                                                             |
+| **SMB Connection Controller Service** |               |                  | Specifies the SMB connection controller service to use for connecting to the SMB server. If the SMB share is auto-mounted to a drive letter, its recommended to use FetchFile instead.               |
 | Input Directory                       |               |                  | The full path of the file to be retrieved from the remote server. If left empty, the path and filename attributes of the incoming flow file will be used.<br/>**Supports Expression Language: true** |
 
 ### Relationships
@@ -1732,18 +1732,18 @@ Retrieves a listing of files from an SMB share. For each file that is listed, cr
 
 In the list below, the names of required properties appear in bold. Any other properties (not in bold) are considered optional. The table also indicates any default values, and whether a property supports the NiFi Expression Language.
 
-| Name                                  | Default Value | Allowable Values | Description                                                                                                                                                |
-|---------------------------------------|---------------|------------------|------------------------------------------------------------------------------------------------------------------------------------------------------------|
-| **SMB Connection Controller Service** |               |                  | Specifies the SMB connection controller service to use for connecting to the SMB server.                                                                   |
-| Input Directory                       |               |                  | The input directory to list the contents of                                                                                                                |
-| **Recurse Subdirectories**            | true          |                  | Indicates whether to list files from subdirectories of the directory                                                                                       |
-| File Filter                           |               |                  | Only files whose names match the given regular expression will be picked up                                                                                |
-| Path Filter                           |               |                  | When Recurse Subdirectories is true, then only subdirectories whose path matches the given regular expression will be scanned                              |
-| **Minimum File Age**                  | 5 sec         |                  | The minimum age that a file must be in order to be pulled; any file younger than this amount of time (according to last modification date) will be ignored |
-| Maximum File Age                      |               |                  | The maximum age that a file must be in order to be pulled; any file older than this amount of time (according to last modification date) will be ignored   |
-| Minimum File Size                     |               |                  | The minimum size that a file must be in order to be pulled                                                                                                 |
-| Maximum File Size                     |               |                  | The maximum size that a file can be in order to be pulled                                                                                                  |
-| **Ignore Hidden Files**               | true          |                  | Indicates whether or not hidden files should be ignored                                                                                                    |
+| Name                                  | Default Value | Allowable Values | Description                                                                                                                                                                           |
+|---------------------------------------|---------------|------------------|---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| **SMB Connection Controller Service** |               |                  | Specifies the SMB connection controller service to use for connecting to the SMB server. If the SMB share is auto-mounted to a drive letter, its recommended to use ListFile instead. |
+| Input Directory                       |               |                  | The input directory to list the contents of                                                                                                                                           |
+| **Recurse Subdirectories**            | true          | true<br/>false   | Indicates whether to list files from subdirectories of the directory                                                                                                                  |
+| File Filter                           |               |                  | Only files whose names match the given regular expression will be picked up                                                                                                           |
+| Path Filter                           |               |                  | When Recurse Subdirectories is true, then only subdirectories whose path matches the given regular expression will be scanned                                                         |
+| **Minimum File Age**                  | 5 sec         |                  | The minimum age that a file must be in order to be pulled; any file younger than this amount of time (according to last modification date) will be ignored                            |
+| Maximum File Age                      |               |                  | The maximum age that a file must be in order to be pulled; any file older than this amount of time (according to last modification date) will be ignored                              |
+| Minimum File Size                     |               |                  | The minimum size that a file must be in order to be pulled                                                                                                                            |
+| Maximum File Size                     |               |                  | The maximum size that a file can be in order to be pulled                                                                                                                             |
+| **Ignore Hidden Files**               | true          | true<br/>false   | Indicates whether or not hidden files should be ignored                                                                                                                               |
 
 ### Relationships
 
@@ -1753,15 +1753,15 @@ In the list below, the names of required properties appear in bold. Any other pr
 
 ### Output Attributes
 
-| Attribute        | Relationship | Description                                                                                                                                                                                                                                                                                                                                        |
-|------------------|--------------|----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
-| filename         | success      | The name of the file that was read from filesystem.                                                                                                                                                                                                                                                                                                |
-| path             | success      | The path is set to the relative path of the file's directory on the remote filesystem compared to the Share root directory. For example, for a given remote location smb://HOSTNAME:PORT/SHARE/DIRECTORY, and a file is being listed from smb://HOSTNAME:PORT/SHARE/DIRECTORY/sub/folder/file then the path attribute will be set to "sub/folder". |
-| serviceLocation  | success      | The SMB URL of the share.                                                                                                                                                                                                                                                                                                                          |
-| lastModifiedTime | success      | The timestamp of when the file's content changed in the filesystem as 'yyyy-MM-dd'T'HH:mm:ss'.                                                                                                                                                                                                                                                     |
-| creationTime     | success      | The timestamp of when the file was created in the filesystem as 'yyyy-MM-dd'T'HH:mm:ss'.                                                                                                                                                                                                                                                           |
-| lastAccessTime   | success      | The timestamp of when the file was accessed in the filesystem as 'yyyy-MM-dd'T'HH:mm:ss'.                                                                                                                                                                                                                                                          |
-| size             | success      | The size of the file in bytes.                                                                                                                                                                                                                                                                                                                     |
+| Attribute        | Relationship | Description                                                                                                                                                                                                                                                                                                                                                  |
+|------------------|--------------|--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| filename         | success      | The name of the file that was read from filesystem.                                                                                                                                                                                                                                                                                                          |
+| path             | success      | The path is set to the relative path of the file's directory on the remote filesystem compared to the Share root directory. For example, for a given remote location smb://HOSTNAME:PORT/SHARE/DIRECTORY, and a file is being listed from smb://HOSTNAME:PORT/SHARE/DIRECTORY/sub/folder/file then the path attribute will be set to "DIRECTORY/sub/folder". |
+| serviceLocation  | success      | The SMB URL of the share.                                                                                                                                                                                                                                                                                                                                    |
+| lastModifiedTime | success      | The timestamp of when the file's content changed in the filesystem as 'yyyy-MM-dd'T'HH:mm:ss'.                                                                                                                                                                                                                                                               |
+| creationTime     | success      | The timestamp of when the file was created in the filesystem as 'yyyy-MM-dd'T'HH:mm:ss'.                                                                                                                                                                                                                                                                     |
+| lastAccessTime   | success      | The timestamp of when the file was accessed in the filesystem as 'yyyy-MM-dd'T'HH:mm:ss'.                                                                                                                                                                                                                                                                    |
+| size             | success      | The size of the file in bytes.                                                                                                                                                                                                                                                                                                                               |
 
 
 ## LogAttribute
@@ -2227,7 +2227,7 @@ In the list below, the names of required properties appear in bold. Any other pr
 | Permissions                    |               |                             | Sets the permissions on the output file to the value of this attribute. Must be an octal number (e.g. 644 or 0755). Not supported on Windows systems.                                |
 | Directory Permissions          |               |                             | Sets the permissions on the directories being created if 'Create Missing Directories' property is set. Must be an octal number (e.g. 644 or 0755). Not supported on Windows systems. |
 | Directory                      | .             |                             | The output directory to which to put files<br/>**Supports Expression Language: true**                                                                                                |
-| Conflict Resolution Strategy   | fail          | fail<br/>ignore<br/>replace | Indicates what should happen when a file with the same name already exists in the output directory                                                                                   |
+| Conflict Resolution Strategy   | fail          | fail<br/>replace<br/>ignore | Indicates what should happen when a file with the same name already exists in the output directory                                                                                   |
 | **Create Missing Directories** | true          |                             | If true, then missing destination directories will be created. If false, flowfiles are penalized and sent to failure.                                                                |
 | Maximum File Count             | -1            |                             | Specifies the maximum number of files that can exist in the output directory                                                                                                         |
 
@@ -2445,12 +2445,12 @@ Writes the contents of a FlowFile to an smb network location
 
 In the list below, the names of required properties appear in bold. Any other properties (not in bold) are considered optional. The table also indicates any default values, and whether a property supports the NiFi Expression Language.
 
-| Name                                  | Default Value | Allowable Values            | Description                                                                                                           |
-|---------------------------------------|---------------|-----------------------------|-----------------------------------------------------------------------------------------------------------------------|
-| **SMB Connection Controller Service** |               |                             | Specifies the SMB connection controller service to use for connecting to the SMB server.                              |
-| Directory                             | .             |                             | The output directory to which to put files<br/>**Supports Expression Language: true**                                 |
-| Conflict Resolution Strategy          | fail          | fail<br/>replace<br/>ignore | Indicates what should happen when a file with the same name already exists in the output directory                    |
-| **Create Missing Directories**        | true          |                             | If true, then missing destination directories will be created. If false, flowfiles are penalized and sent to failure. |
+| Name                                  | Default Value | Allowable Values            | Description                                                                                                                                                                          |
+|---------------------------------------|---------------|-----------------------------|--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| **SMB Connection Controller Service** |               |                             | Specifies the SMB connection controller service to use for connecting to the SMB server. If the SMB share is auto-mounted to a drive letter, its recommended to use PutFile instead. |
+| Directory                             | .             |                             | The output directory to which to put files<br/>**Supports Expression Language: true**                                                                                                |
+| Conflict Resolution Strategy          | fail          | fail<br/>replace<br/>ignore | Indicates what should happen when a file with the same name already exists in the output directory                                                                                   |
+| **Create Missing Directories**        | true          |                             | If true, then missing destination directories will be created. If false, flowfiles are penalized and sent to failure.                                                                |
 
 ### Relationships
 

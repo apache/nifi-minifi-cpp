@@ -177,27 +177,27 @@ class SSLContextService : public core::controller::ControllerService {
 
 #ifdef WIN32
   MINIFIAPI static constexpr auto CertStoreLocation = core::PropertyDefinitionBuilder<utils::tls::WindowsCertStoreLocation::SIZE>::createProperty("Certificate Store Location")
-      .withDescription("One of the Windows certificate store locations, eg. LocalMachine or CurrentUser")
+      .withDescription("One of the Windows certificate store locations, eg. LocalMachine or CurrentUser (Windows only)")
       .withAllowedValues(utils::tls::WindowsCertStoreLocation::LOCATION_NAMES)
       .isRequired(false)
       .withDefaultValue(utils::tls::WindowsCertStoreLocation::DEFAULT_LOCATION)
       .build();
   MINIFIAPI static constexpr auto ServerCertStore = core::PropertyDefinitionBuilder<>::createProperty("Server Cert Store")
-      .withDescription("The name of the certificate store which contains the server certificate")
+      .withDescription("The name of the certificate store which contains the server certificate (Windows only)")
       .isRequired(false)
       .withDefaultValue("ROOT")
       .build();
   MINIFIAPI static constexpr auto ClientCertStore = core::PropertyDefinitionBuilder<>::createProperty("Client Cert Store")
-      .withDescription("The name of the certificate store which contains the client certificate")
+      .withDescription("The name of the certificate store which contains the client certificate (Windows only)")
       .isRequired(false)
       .withDefaultValue("MY")
       .build();
   MINIFIAPI static constexpr auto ClientCertCN = core::PropertyDefinitionBuilder<>::createProperty("Client Cert CN")
-      .withDescription("The CN that the client certificate is required to match; default: use the first available client certificate in the store")
+      .withDescription("The CN that the client certificate is required to match; default: use the first available client certificate in the store (Windows only)")
       .isRequired(false)
       .build();
   MINIFIAPI static constexpr auto ClientCertKeyUsage = core::PropertyDefinitionBuilder<>::createProperty("Client Cert Key Usage")
-      .withDescription("Comma-separated list of enhanced key usage values that the client certificate is required to have")
+      .withDescription("Comma-separated list of enhanced key usage values that the client certificate is required to have (Windows only)")
       .isRequired(false)
       .withDefaultValue("Client Authentication")
       .build();

@@ -47,7 +47,9 @@ class AWSCredentialsService : public core::controller::ControllerService {
       : ControllerService(name) {
   }
 
-  EXTENSIONAPI static constexpr const char* Description = "AWS Credentials Management Service";
+  EXTENSIONAPI static constexpr const char* Description = "Manages the Amazon Web Services (AWS) credentials for an AWS account. This allows for multiple "
+      "AWS credential services to be defined. This also allows for multiple AWS related processors to reference this single "
+      "controller service so that AWS credentials can be managed and controlled in a central location.";
 
   EXTENSIONAPI static constexpr auto UseDefaultCredentials = core::PropertyDefinitionBuilder<>::createProperty("Use Default Credentials")
       .withDescription("If true, uses the Default Credential chain, including EC2 instance profiles or roles, environment variables, default user credentials, etc.")
