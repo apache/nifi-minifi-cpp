@@ -215,7 +215,7 @@ TEST_CASE("Test Compression", "[ttl9]") {
   log_config.initialize(properties);
   auto logger = log_config.getLogger(className);
   logger->log_error("Hi there");
-  auto compressed_logs = logging::LoggerConfiguration::getCompressedLogs(true);
+  auto compressed_logs = logging::LoggerConfiguration::getCompressedLogs();
   REQUIRE(compressed_logs.size() == 1);
   auto logs = decompress(compressed_logs[0]);
   REQUIRE(logs.find("Hi there") != std::string::npos);
@@ -280,7 +280,7 @@ TEST_CASE("Setting either properties to 0 disables in-memory compressed logs", "
   log_config.initialize(properties);
   auto logger = log_config.getLogger("DisableCompressionTestLogger");
   logger->log_error("Hi there");
-  REQUIRE(logging::LoggerConfiguration::getCompressedLogs(true).empty() == is_nullptr);
+  REQUIRE(logging::LoggerConfiguration::getCompressedLogs().empty() == is_nullptr);
 }
 
 TEST_CASE("Setting max log entry length property trims long log entries", "[ttl12]") {
@@ -292,7 +292,7 @@ TEST_CASE("Setting max log entry length property trims long log entries", "[ttl1
   auto logger = log_config.getLogger("SetMaxLogEntryLengthTestLogger");
   logger->log_error("Hi there");
 
-  auto compressed_logs = logging::LoggerConfiguration::getCompressedLogs(true);
+  auto compressed_logs = logging::LoggerConfiguration::getCompressedLogs();
   REQUIRE(compressed_logs.size() == 1);
   auto logs = decompress(compressed_logs[0]);
   REQUIRE(logs.find("Hi ") == std::string::npos);
@@ -308,7 +308,7 @@ TEST_CASE("Setting max log entry length property trims long formatted log entrie
   auto logger = log_config.getLogger("SetMaxLogEntryLengthTestLogger");
   logger->log_error("Hi there %s", "John");
 
-  auto compressed_logs = logging::LoggerConfiguration::getCompressedLogs(true);
+  auto compressed_logs = logging::LoggerConfiguration::getCompressedLogs();
   REQUIRE(compressed_logs.size() == 1);
   auto logs = decompress(compressed_logs[0]);
   REQUIRE(logs.find("Hi ") == std::string::npos);
@@ -326,7 +326,7 @@ TEST_CASE("Setting max log entry length to a size larger than the internal buffe
   std::string expected_log(1500, 'a');
   logger->log_error(log.c_str());
 
-  auto compressed_logs = logging::LoggerConfiguration::getCompressedLogs(true);
+  auto compressed_logs = logging::LoggerConfiguration::getCompressedLogs();
   REQUIRE(compressed_logs.size() == 1);
   auto logs = decompress(compressed_logs[0]);
   REQUIRE(logs.find(log) == std::string::npos);
@@ -348,7 +348,7 @@ TEST_CASE("Setting max log entry length to unlimited results in unlimited log en
   std::string log(5000, 'a');
   logger->log_error(log.c_str());
 
-  auto compressed_logs = logging::LoggerConfiguration::getCompressedLogs(true);
+  auto compressed_logs = logging::LoggerConfiguration::getCompressedLogs();
   REQUIRE(compressed_logs.size() == 1);
   auto logs = decompress(compressed_logs[0]);
   REQUIRE(logs.find(log) != std::string::npos);
@@ -380,7 +380,7 @@ TEST_CASE("Test sending multiple segments at once", "[ttl16]") {
 
   LoggerTestAccessor::runCompression(log_config);
 
-  auto compressed_logs = logging::LoggerConfiguration::getCompressedLogs(true);
+  auto compressed_logs = logging::LoggerConfiguration::getCompressedLogs();
   REQUIRE(compressed_logs.size() == SEGMENT_COUNT);
   auto logs = decompress(compressed_logs[SEGMENT_COUNT - 1]);
   REQUIRE(logs.find(log_str) != std::string::npos);

@@ -98,15 +98,15 @@ class LoggerConfiguration {
    */
   void initialize(const std::shared_ptr<LoggerProperties> &logger_properties);
 
-  static std::vector<std::unique_ptr<io::InputStream>> getCompressedLogs(bool flush = false) {
-    return getCompressedLogs(std::chrono::milliseconds{0}, flush);
+  static std::vector<std::unique_ptr<io::InputStream>> getCompressedLogs() {
+    return getCompressedLogs(std::chrono::milliseconds{0});
   }
 
   void initializeAlertSinks(core::controller::ControllerServiceProvider* controller, const std::shared_ptr<AgentIdentificationProvider>& agent_id);
 
   template<class Rep, class Period>
-  static std::vector<std::unique_ptr<io::InputStream>> getCompressedLogs(const std::chrono::duration<Rep, Period>& time, bool flush = false) {
-    return getConfiguration().compression_manager_.getCompressedLogs(time, flush);
+  static std::vector<std::unique_ptr<io::InputStream>> getCompressedLogs(const std::chrono::duration<Rep, Period>& time) {
+    return getConfiguration().compression_manager_.getCompressedLogs(time);
   }
 
   /**

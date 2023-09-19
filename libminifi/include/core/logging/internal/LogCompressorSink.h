@@ -58,17 +58,15 @@ class LogCompressorSink : public spdlog::sinks::base_sink<std::mutex> {
   ~LogCompressorSink() override;
 
   template<class Rep, class Period>
-  std::vector<std::unique_ptr<io::InputStream>> getContent(const std::chrono::duration<Rep, Period>& time, bool flush = false) {
-    if (flush) {
-      cached_logs_.commit();
-      compress(true);
-    }
+  std::vector<std::unique_ptr<io::InputStream>> getContent(const std::chrono::duration<Rep, Period>& time) {
+    cached_logs_.commit();
+    compress(true);
 
     std::vector<std::unique_ptr<io::InputStream>> log_segments;
     const auto segment_count = compressed_logs_.itemCount();
     for (size_t i = 0; i < segment_count; ++i) {
       LogBuffer compressed;
-      if (!compressed_logs_.tryDequeue(compressed, time) && flush) {
+      if (!compressed_logs_.tryDequeue(compressed, time)) {
         break;
       }
       log_segments.push_back(std::move(compressed.buffer_));

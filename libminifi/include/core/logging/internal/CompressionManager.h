@@ -51,10 +51,10 @@ class CompressionManager {
   std::shared_ptr<LogCompressorSink> initialize(const std::shared_ptr<LoggerProperties>& properties, const std::shared_ptr<Logger>& error_logger, const LoggerFactory& logger_factory);
 
   template<class Rep, class Period>
-  std::vector<std::unique_ptr<io::InputStream>> getCompressedLogs(const std::chrono::duration<Rep, Period>& time, bool flush = false) {
+  std::vector<std::unique_ptr<io::InputStream>> getCompressedLogs(const std::chrono::duration<Rep, Period>& time) {
     std::shared_ptr<internal::LogCompressorSink> sink = getSink();
     if (sink) {
-      return sink->getContent(time, flush);
+      return sink->getContent(time);
     }
     return {};
   }
