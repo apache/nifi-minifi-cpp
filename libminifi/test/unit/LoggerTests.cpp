@@ -262,17 +262,17 @@ TEST_CASE("Test Compression cache overflow is discarded intermittently", "[ttl10
 TEST_CASE("Setting either properties to 0 disables in-memory compressed logs", "[ttl11]") {
   auto& log_config = logging::LoggerConfiguration::getConfiguration();
   auto properties = std::make_shared<logging::LoggerProperties>();
-  bool is_nullptr = false;
+  bool is_empty = false;
   SECTION("Cached log size is set to 0") {
-    is_nullptr = true;
+    is_empty = true;
     properties->set(logging::internal::CompressionManager::compression_cached_log_max_size_, "0");
   }
   SECTION("Compressed log size is set to 0") {
-    is_nullptr = true;
+    is_empty = true;
     properties->set(logging::internal::CompressionManager::compression_compressed_log_max_size_, "0");
   }
   SECTION("Sanity check") {
-    is_nullptr = false;
+    is_empty = false;
     // pass
   }
   // by default the root logger is OFF
@@ -280,7 +280,7 @@ TEST_CASE("Setting either properties to 0 disables in-memory compressed logs", "
   log_config.initialize(properties);
   auto logger = log_config.getLogger("DisableCompressionTestLogger");
   logger->log_error("Hi there");
-  REQUIRE(logging::LoggerConfiguration::getCompressedLogs().empty() == is_nullptr);
+  REQUIRE(logging::LoggerConfiguration::getCompressedLogs().empty() == is_empty);
 }
 
 TEST_CASE("Setting max log entry length property trims long log entries", "[ttl12]") {
