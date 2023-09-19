@@ -32,11 +32,14 @@ inline constexpr bool is_expected_v<nonstd::expected<V, E>> = true;
 template<typename T>
 concept expected = is_expected_v<std::remove_cvref_t<T>>;
 
+// from cppreference.com: The type must not be an array type, a non-object type, a specialization of std::unexpected, or a cv-qualified type.
+// base template: not cv-qualified, must be an object type, not an array type
 template<typename T>
 inline constexpr bool is_valid_unexpected_type_v = std::is_same_v<T, std::remove_cvref_t<T>> && std::is_object_v<T> && !std::is_array_v<T>;
 
-template<typename T>
-inline constexpr bool is_valid_unexpected_type_v<nonstd::unexpected_type<T>> = false;
+// specialization: the type must not be a specialization of std::unexpected
+template<typename E>
+inline constexpr bool is_valid_unexpected_type_v<nonstd::unexpected_type<E>> = false;
 
 template<typename T>
 concept valid_unexpected_type = is_valid_unexpected_type_v<T>;
@@ -77,19 +80,19 @@ auto operator|(Expected&& object, transform_wrapper<F> f) {
 template<expected Expected, typename F>
 auto operator|(Expected&& object, and_then_wrapper<F> f) {
   using value_type = typename std::remove_cvref_t<Expected>::value_type;
-  if constexpr (!std::is_void_v<value_type>) {
-    using function_return_type = std::remove_cvref_t<std::invoke_result_t<F, decltype(*std::forward<Expected>(object))>>;
-    static_assert(is_expected_v<function_return_type>, "flatMap expects a function returning expected");
-    if (object.has_value()) {
-      return std::invoke(std::forward<F>(f.function), *std::forward<Expected>(object));
-    } else {
-      return function_return_type{nonstd::unexpect, std::forward<Expected>(object).error()};
-    }
-  } else {
+  if constexpr (std::is_void_v<value_type>) {
     using function_return_type = std::remove_cvref_t<std::invoke_result_t<F>>;
     static_assert(is_expected_v<function_return_type>, "flatMap expects a function returning expected");
     if (object.has_value()) {
       return std::invoke(std::forward<F>(f.function));
+    } else {
+      return function_return_type{nonstd::unexpect, std::forward<Expected>(object).error()};
+    }
+  } else {
+    using function_return_type = std::remove_cvref_t<std::invoke_result_t<F, decltype(*std::forward<Expected>(object))>>;
+    static_assert(is_expected_v<function_return_type>, "flatMap expects a function returning expected");
+    if (object.has_value()) {
+      return std::invoke(std::forward<F>(f.function), *std::forward<Expected>(object));
     } else {
       return function_return_type{nonstd::unexpect, std::forward<Expected>(object).error()};
     }
