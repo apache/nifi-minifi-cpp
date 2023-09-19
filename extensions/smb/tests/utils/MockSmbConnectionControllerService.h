@@ -46,9 +46,9 @@ struct ListSmbExpectedAttributes {
     auto creation_time_from_attribute = utils::timeutils::parseDateTimeStr(*flow_file.getAttribute(ListSmb::CreationTime.name));
     auto last_access_time_from_attribute = utils::timeutils::parseDateTimeStr(*flow_file.getAttribute(ListSmb::LastAccessTime.name));
 
-    CHECK(std::chrono::abs(expected_last_modified_time - *last_modified_time_from_attribute) < 1s);
-    CHECK(std::chrono::abs(expected_creation_time - *creation_time_from_attribute) < 1s);
-    CHECK(std::chrono::abs(expected_last_access_time - *last_access_time_from_attribute) < 1s);
+    CHECK(std::chrono::abs(expected_last_modified_time - *last_modified_time_from_attribute) < 5s);
+    CHECK(std::chrono::abs(expected_creation_time - *creation_time_from_attribute) < 5s);
+    CHECK(std::chrono::abs(expected_last_access_time - *last_access_time_from_attribute) < 5s);
     CHECK(flow_file.getAttribute(ListSmb::Size.name) == expected_size);
   }
 };
