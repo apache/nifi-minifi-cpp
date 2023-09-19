@@ -16,6 +16,7 @@
  * limitations under the License.
  */
 #define EXTENSION_LIST ""
+#include <memory>
 #include <string_view>
 #include "../TestBase.h"
 #include "../Catch.h"
@@ -277,17 +278,16 @@ TEST_CASE("expected andThen", "[expected][andThen]") {
 }
 
 TEST_CASE("expected orElse", "[expected][orElse]") {
-  // commented out parts depend on https://github.com/martinmoene/expected-lite/pull/40 (waiting for release)
-  // using eptr = std::unique_ptr<int>;
+  using eptr = std::unique_ptr<int>;
   auto succeed = [](int) { return nonstd::expected<int, int>(21 * 2); };
-  // auto succeedptr = [](eptr e) { return nonstd::expected<int, eptr>(21*2);};
-  auto fail =    [](int) { return nonstd::expected<int, int>(nonstd::unexpect, 17);};
-  // auto efail =   [](eptr e) { *e = 17;return nonstd::expected<int, eptr>(nonstd::unexpect, std::move(e));};
-  // auto failptr = [](eptr e) { return nonstd::expected<int, eptr>(nonstd::unexpect, std::move(e));};
+  auto succeedptr = [](eptr) { return nonstd::expected<int, eptr>(21*2); };
+  auto fail =    [](int) { return nonstd::expected<int, int>(nonstd::unexpect, 17); };
+  auto efail =   [](eptr e) { *e = 17; return nonstd::expected<int, eptr>(nonstd::unexpect, std::move(e)); };
+  auto failptr = [](eptr e) { return nonstd::expected<int, eptr>(nonstd::unexpect, std::move(e)); };
   auto failvoid = [](int) {};
-  // auto failvoidptr = [](const eptr&) { /* don't consume */};
-  // auto consumeptr = [](eptr) {};
-  // auto make_u_int = [](int n) { return std::unique_ptr<int>(new int(n));};
+  auto failvoidptr = [](const eptr&) { /* don't consume */};
+  auto consumeptr = [](eptr) {};
+  auto make_u_int = [](int n) { return std::make_unique<int>(n); };
 
   {
     nonstd::expected<int, int> e = 21;
@@ -310,14 +310,12 @@ TEST_CASE("expected orElse", "[expected][orElse]") {
     REQUIRE(*ret == 21);
   }
 
-  /*
   {
     nonstd::expected<int, eptr> e = 21;
     auto ret = std::move(e) | utils::orElse(succeedptr);
     REQUIRE(ret);
     REQUIRE(*ret == 21);
   }
-   */
 
   {
     const nonstd::expected<int, int> e = 21;
@@ -348,14 +346,12 @@ TEST_CASE("expected orElse", "[expected][orElse]") {
   }
 
 
-  /*
   {
     nonstd::expected<int, eptr> e = 21;
     auto ret = std::move(e) | utils::orElse(efail);
     REQUIRE(ret);
     REQUIRE(ret == 21);
   }
-   */
 
   {
     const nonstd::expected<int, int> e = 21;
@@ -385,14 +381,12 @@ TEST_CASE("expected orElse", "[expected][orElse]") {
     REQUIRE(*ret == 42);
   }
 
-  /*
   {
     nonstd::expected<int, eptr> e(nonstd::unexpect, make_u_int(21));
     auto ret = std::move(e) | utils::orElse(succeedptr);
     REQUIRE(ret);
     REQUIRE(*ret == 42);
   }
-   */
 
   {
     const nonstd::expected<int, int> e(nonstd::unexpect, 21);
@@ -443,7 +437,6 @@ TEST_CASE("expected orElse", "[expected][orElse]") {
     REQUIRE(ret.error() == 21);
   }
 
-  /*
   {
     nonstd::expected<int, eptr> e(nonstd::unexpect, make_u_int(21));
     auto ret = std::move(e) | utils::orElse(failvoidptr);
@@ -457,7 +450,6 @@ TEST_CASE("expected orElse", "[expected][orElse]") {
     REQUIRE(!ret);
     REQUIRE(ret.error() == nullptr);
   }
-   */
 
   {
     const nonstd::expected<int, int> e(nonstd::unexpect, 21);
@@ -531,8 +523,8 @@ TEST_CASE("expected transformError", "[expected][transformError]") {
   }
 
   {
-    nonstd::expected<int, int> e = 21;
-    auto ret = std::move(e) | utils::transformError(mul2);
+    const auto mutable_rvalue_fn = []{ return nonstd::expected<int, int>{21}; };
+    auto ret = mutable_rvalue_fn() | utils::transformError(mul2);
     REQUIRE(ret);
     REQUIRE(*ret == 21);
   }
