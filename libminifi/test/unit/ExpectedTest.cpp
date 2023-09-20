@@ -283,7 +283,6 @@ TEST_CASE("expected orElse", "[expected][orElse]") {
   auto succeedptr = [](eptr) { return nonstd::expected<int, eptr>(21*2); };
   auto fail =    [](int) { return nonstd::expected<int, int>(nonstd::unexpect, 17); };
   auto efail =   [](eptr e) { *e = 17; return nonstd::expected<int, eptr>(nonstd::unexpect, std::move(e)); };
-  auto failptr = [](eptr e) { return nonstd::expected<int, eptr>(nonstd::unexpect, std::move(e)); };
   auto failvoid = [](int) {};
   auto failvoidptr = [](const eptr&) { /* don't consume */};
   auto consumeptr = [](eptr) {};
