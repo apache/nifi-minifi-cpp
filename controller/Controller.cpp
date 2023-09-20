@@ -17,6 +17,7 @@
 #include "Controller.h"
 
 #include <utility>
+#include <fstream>
 
 #include "io/BufferStream.h"
 #include "c2/C2Payload.h"
@@ -26,6 +27,7 @@
 #include "asio/connect.hpp"
 #include "core/logging/Logger.h"
 #include "utils/net/AsioSocketUtils.h"
+#include "utils/file/FileUtils.h"
 
 namespace org::apache::nifi::minifi::controller {
 
@@ -223,6 +225,45 @@ bool getJstacks(const utils::net::SocketData& socket_data, std::ostream &out) {
   connection_stream->read(manifest, true);
   out << manifest << std::endl;
   return true;
+}
+
+nonstd::expected<void, std::string> getDebugBundle(const utils::net::SocketData& socket_data, const std::filesystem::path& target_dir) {
+  std::unique_ptr<io::BaseStream> connection_stream = std::make_unique<utils::net::AsioSocketConnection>(socket_data);
+  if (connection_stream->initialize() < 0) {
+    return nonstd::make_unexpected("Could not connect to remote host " + socket_data.host + ":" + std::to_string(socket_data.port));
+  }
+  io::BufferStream buffer;
+  auto op = static_cast<uint8_t>(c2::Operation::transfer);
+  buffer.write(&op, 1);
+  buffer.write("debug");
+  if (io::isError(connection_stream->write(buffer.getBuffer()))) {
+    return nonstd::make_unexpected("Could not write to connection " + socket_data.host + ":" + std::to_string(socket_data.port));
+  }
+  connection_stream->read(op);
+  size_t bundle_size = 0;
+  connection_stream->read(bundle_size);
+  if (bundle_size == 0) {
+    return nonstd::make_unexpected("Failed to retrieve debug bundle");
+  }
+
+  if (std::filesystem::exists(target_dir) && !std::filesystem::is_directory(target_dir)) {
+    return nonstd::make_unexpected("Object specified as the target directory already exists and it is not a directory");
+  }
+
+  if (!std::filesystem::exists(target_dir) && utils::file::create_dir(target_dir) != 0) {
+    return nonstd::make_unexpected("Failed to create target directory: " + target_dir.string());
+  }
+
+  std::ofstream out_file(target_dir / "debug.tar.gz");
+  const size_t BUFFER_SIZE = 4096;
+  std::array<char, BUFFER_SIZE> out_buffer{};
+  while (bundle_size > 0) {
+    const auto next_read_size = (std::min)(bundle_size, BUFFER_SIZE);
+    const auto size_read = connection_stream->read(std::as_writable_bytes(std::span(out_buffer).subspan(0, next_read_size)));
+    bundle_size -= size_read;
+    out_file.write(out_buffer.data(), size_read);
+  }
+  return {};
 }
 
 }  // namespace org::apache::nifi::minifi::controller

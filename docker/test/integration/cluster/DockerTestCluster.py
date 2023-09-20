@@ -15,6 +15,11 @@
 import logging
 import time
 import re
+import tarfile
+import tempfile
+import os
+import gzip
+import shutil
 
 from .LogSource import LogSource
 from .ContainerStore import ContainerStore
@@ -340,7 +345,41 @@ class DockerTestCluster:
     def check_connection_size_through_controller(self, connection: str, size: int, max_size: int, container_name: str) -> bool:
         return self.minifi_controller_executor.get_connection_size(connection, container_name) == (size, max_size)
 
-    @retry_check(10, 1000)
+    @retry_check(10, 1)
     def manifest_can_be_retrieved_through_minifi_controller(self, container_name: str) -> bool:
         manifest = self.minifi_controller_executor.get_manifest(container_name)
         return '"agentManifest": {' in manifest and '"componentManifest": {' in manifest and '"agentType": "cpp"' in manifest
+
+    @retry_check(10, 1)
+    def debug_bundle_can_be_retrieved_through_minifi_controller(self, container_name: str) -> bool:
+        with tempfile.TemporaryDirectory() as td:
+            result = self.minifi_controller_executor.get_debug_bundle(container_name, td)
+            if not result:
+                logging.error("Failed to get debug bundle")
+                return False
+
+            with tarfile.open(os.path.join(td, "debug.tar.gz")) as file:
+                file.extractall(td)
+
+            if not os.path.exists(os.path.join(td, "config.yml")):
+                logging.error("config.yml file was not found in debug bundle")
+                return False
+
+            if not os.path.exists(os.path.join(td, "minifi.properties")):
+                logging.error("minifi.properties file was not found in debug bundle")
+                return False
+
+            if not os.path.exists(os.path.join(td, "minifi.log.gz")):
+                logging.error("minifi.log.gz file was not found in debug bundle")
+                return False
+
+            with gzip.open(os.path.join(td, "minifi.log.gz"), 'rb') as f_in:
+                with open(os.path.join(td, "minifi.log"), 'wb') as f_out:
+                    shutil.copyfileobj(f_in, f_out)
+
+            with open(os.path.join(td, "minifi.log")) as f:
+                if 'MiNiFi started' not in f.read():
+                    logging.error("'MiNiFi started' log entry was not found in minifi.log file")
+                    return False
+
+            return True

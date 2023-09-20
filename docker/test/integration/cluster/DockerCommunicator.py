@@ -66,3 +66,19 @@ class DockerCommunicator:
                 tar.addfile(info, io.BytesIO(content.encode('utf-8')))
             with open(os.path.join(td, 'content.tar'), 'rb') as data:
                 return self.__put_archive(container_name, os.path.dirname(dst_path), data.read())
+
+    def copy_file_from_container(self, container_name, src_path_in_container, dest_dir_on_host) -> bool:
+        try:
+            container = self.client.containers.get(container_name)
+            (bits, _) = container.get_archive(src_path_in_container)
+            tmp_tar_path = os.path.join(dest_dir_on_host, "tmp_debug.tar")
+            with open(tmp_tar_path, 'wb') as out_file:
+                for chunk in bits:
+                    out_file.write(chunk)
+            with tarfile.open(tmp_tar_path, 'r') as tar:
+                tar.extractall(dest_dir_on_host)
+            os.remove(tmp_tar_path)
+            return True
+        except Exception as ex:
+            logging.error('Exception occurred while copying file from container: %s', str(ex))
+            return False

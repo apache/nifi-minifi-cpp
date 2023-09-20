@@ -12,6 +12,7 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
+import logging
 from .DockerCommunicator import DockerCommunicator
 
 
@@ -66,3 +67,11 @@ class MinifiControllerExecutor:
             if not line.startswith('['):
                 manifest += line
         return manifest
+
+    def get_debug_bundle(self, container_name: str, dest: str) -> bool:
+        (code, _) = self.container_communicator.execute_command(container_name, ["/opt/minifi/minifi-current/bin/minificontroller", "--debug", "/opt/minifi/minifi-current/"])
+        if code != 0:
+            logging.error("Minifi controller debug command failed with code: %d", code)
+            return False
+
+        return self.container_communicator.copy_file_from_container(container_name, "/opt/minifi/minifi-current/debug.tar.gz", dest)

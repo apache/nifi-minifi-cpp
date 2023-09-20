@@ -74,3 +74,10 @@ Feature: MiNiFi Controller functionalities
     And controller socket properties are set up
     When all instances start up
     Then manifest can be retrieved through MiNiFi controller
+
+  Scenario: Debug bundle can be retrieved
+    Given a GenerateFlowFile processor
+    And a file with the content "test" is present in "/tmp/input"
+    And controller socket properties are set up
+    When all instances start up
+    Then debug bundle can be retrieved through MiNiFi controller
