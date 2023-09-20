@@ -19,7 +19,7 @@ github:
   labels:
     - nifi
     - minifi
-    - c++
+    - cpp
     - hacktoberfest
   features:
     wiki: false
