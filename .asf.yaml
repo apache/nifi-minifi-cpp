@@ -18,6 +18,7 @@ github:
   homepage: https://nifi.apache.org/minifi/
   labels:
     - nifi
+    - minifi
     - c++
     - hacktoberfest
   features:
