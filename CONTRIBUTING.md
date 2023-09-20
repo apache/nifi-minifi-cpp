@@ -71,7 +71,7 @@ New users can freely request JIRA access on the
 [Self-Service Portal](https://selfserve.apache.org/jira-account.html) for the nifi project. An Apache PMC member will review and
 approve the request as prudent. Unassigned tickets may be assigned to yourself or filed via this JIRA instance. As a new user looking to contribute,
 any tickets that are tagged as "beginner", "starter", or "newbie" are good places to start. Pull requests can be submitted via our
-[Github Mirror](https://github.com/apache/nifi-minifi-cpp). If your contribution does not have a corresponding JIRA issue for it then please create one.
+[Github](https://github.com/apache/nifi-minifi-cpp). If your contribution does not have a corresponding JIRA issue for it then please create one.
 
 Apache NiFi MiNiFi C++ is a review then commit community. As a result, we will review your commits and merge them following
 review. We ask that you provide tests and documentation when possible. Typically PRs are merged after they get 2-3
