@@ -28,6 +28,9 @@
 #include <cstring>
 #include <iostream>
 #include <utility>
+#include <memory>
+
+#include "utils/Deleters.h"
 #endif
 
 #include "utils/OptionalUtils.h"
@@ -42,7 +45,7 @@ namespace {
    */
   optional<std::string> demangle_symbol(const char* symbol_name) {
     int status = 0;
-    std::unique_ptr<char> demangled(abi::__cxa_demangle(symbol_name, nullptr, nullptr, &status));
+    std::unique_ptr<char, org::apache::nifi::minifi::utils::FreeDeleter> demangled(abi::__cxa_demangle(symbol_name, nullptr, nullptr, &status));
     if (status == 0) {
       std::string demangled_name = demangled.get();
       return { demangled_name };
