@@ -164,7 +164,7 @@ std::string extractClassName(const std::string& full_class_name) {
   return minifi::utils::StringUtils::split(full_class_name, ".").back();
 }
 
-constexpr auto LowercaseFirst = [](const auto& key_value) {
+std::string lowercaseFirst(const std::pair<std::string, minifi::ClassDescription>& key_value) {
   return minifi::utils::StringUtils::toLower(key_value.first);
 };
 
@@ -184,8 +184,8 @@ void AgentDocs::generate(const std::filesystem::path& docs_dir) {
       processors.emplace_back(extractClassName(processor_description.full_name_), processor_description);
     }
   }
-  ranges::sort(controller_services, std::less(), LowercaseFirst);
-  ranges::sort(processors, std::less(), LowercaseFirst);
+  ranges::sort(controller_services, std::less(), lowercaseFirst);
+  ranges::sort(processors, std::less(), lowercaseFirst);
 
   std::ofstream controllers_md(docs_dir / "CONTROLLERS.md");
   writeHeader(controllers_md, controller_services);
