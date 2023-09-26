@@ -235,7 +235,7 @@ jobs:
         if: always()
         with:
           path: ~/.ccache
-          key: ubuntu-20.04-all-clang-ccache-${{github.ref}}-${{github.sha}}
+          key: ubuntu-22.04-all-clang-ccache-${{github.ref}}-${{github.sha}}
       - name: test
         id: test
         run: |
