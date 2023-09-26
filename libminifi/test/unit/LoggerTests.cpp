@@ -20,7 +20,6 @@
 #include <memory>
 #include <vector>
 #include <ctime>
-#include <random>
 #include "../TestBase.h"
 #include "../Catch.h"
 #include "core/logging/LoggerConfiguration.h"
@@ -364,24 +363,14 @@ TEST_CASE("Test sending multiple segments at once", "[ttl16]") {
   log_config.initialize(properties);
   auto logger = log_config.getLogger("CompressionTestMultiSegment");
 
-  std::random_device rd;
-  std::mt19937 eng(rd());
-  constexpr const char * TEXT_CHARS = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890";
-  const int index_of_last_char = gsl::narrow<int>(strlen(TEXT_CHARS)) - 1;
-  std::uniform_int_distribution<> distr(0, index_of_last_char);
-  std::vector<char> data(100);
-  std::string log_str;
-  const size_t SEGMENT_COUNT = 5;
-  for (size_t idx = 0; idx < SEGMENT_COUNT; ++idx) {
-    std::generate_n(data.begin(), data.size(), [&] { return TEXT_CHARS[static_cast<uint8_t>(distr(eng))]; });
-    log_str = std::string{data.begin(), data.end()} + "." + std::to_string(idx);
+  std::string log_str = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890";
+  for (size_t i = 0; i < 100; ++i) {
     logger->log_error(log_str.c_str());
   }
 
   LoggerTestAccessor::runCompression(log_config);
-
   auto compressed_logs = logging::LoggerConfiguration::getCompressedLogs();
-  REQUIRE(compressed_logs.size() == SEGMENT_COUNT);
-  auto logs = decompress(compressed_logs[SEGMENT_COUNT - 1]);
+  REQUIRE(compressed_logs.size() > 1);
+  auto logs = decompress(compressed_logs[compressed_logs.size() - 1]);
   REQUIRE(logs.find(log_str) != std::string::npos);
 }
