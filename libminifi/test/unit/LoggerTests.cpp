@@ -362,8 +362,11 @@ TEST_CASE("fmt formatting works with the logger") {
   std::shared_ptr<logging::Logger> logger = logging::LoggerFactory<logging::Logger>::getLogger();
   logger->log_critical("{} equals to {}", 1min, 60s);
   logger->log_critical("{} in hex is {:#x}", 13, 13);
+  logger->log_critical("Unix epoch: {}", std::chrono::system_clock::time_point());
   logger->log_critical("{:%Q %q} equals to {:%Q %q}", 2h, std::chrono::duration_cast<std::chrono::seconds>(2h));
   CHECK(LogTestController::getInstance().contains("[org::apache::nifi::minifi::core::logging::Logger] [critical] 1m equals to 60s"));
+  CHECK(LogTestController::getInstance().contains("[org::apache::nifi::minifi::core::logging::Logger] [critical] 13 in hex is 0xd"));
+  CHECK(LogTestController::getInstance().contains("[org::apache::nifi::minifi::core::logging::Logger] [critical] Unix epoch: 1970-01-01 00:00:00.00"));
   CHECK(LogTestController::getInstance().contains("[org::apache::nifi::minifi::core::logging::Logger] [critical] 2 h equals to 7200 s"));
 
   LogTestController::getInstance().reset();
