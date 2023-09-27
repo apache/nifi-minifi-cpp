@@ -211,19 +211,19 @@ bool ListSFTP::filterFile(const std::string& parent_path, const std::string& fil
   /* Age */
   auto file_age = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now() - std::chrono::system_clock::from_time_t(gsl::narrow<time_t>(attrs.mtime)));
   if (file_age < minimum_file_age_) {
-    logger_->log_debug("Ignoring \"{}/{}\" because it is younger than the Minimum File Age: {} ms < {} ms",
+    logger_->log_debug("Ignoring \"{}/{}\" because it is younger than the Minimum File Age: {} < {}",
         parent_path.c_str(),
         filename.c_str(),
-        file_age.count(),
-        minimum_file_age_.count());
+        file_age,
+        minimum_file_age_);
     return false;
   }
   if (maximum_file_age_ != 0ms && file_age > maximum_file_age_) {
-    logger_->log_debug("Ignoring \"{}/{}\" because it is older than the Maximum File Age: {} ms > {} ms",
+    logger_->log_debug("Ignoring \"{}/{}\" because it is older than the Maximum File Age: {} > {}",
                        parent_path.c_str(),
                        filename.c_str(),
-                       int64_t{file_age.count()},
-                       int64_t{maximum_file_age_.count()});
+                       file_age,
+                       maximum_file_age_);
     return false;
   }
 
@@ -500,7 +500,7 @@ void ListSFTP::listByTrackingTimestamps(
       remote_system_timestamp_precision = TARGET_SYSTEM_TIMESTAMP_PRECISION_SECONDS;
     }
     std::chrono::milliseconds listing_lag{utils::at(LISTING_LAG_MAP, remote_system_timestamp_precision)};
-    logger_->log_debug("The listing lag is {} ms", listing_lag.count());
+    logger_->log_debug("The listing lag is {}", listing_lag);
 
     /* If the latest listing time is equal to the last listing time, there are no entries with a newer timestamp than previously seen */
     if (latest_listed_entry_timestamp_this_cycle == last_listed_latest_entry_timestamp_ && latest_listed_entry_timestamp_this_cycle) {
