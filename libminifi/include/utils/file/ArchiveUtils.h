@@ -26,6 +26,6 @@
 
 namespace org::apache::nifi::minifi::utils::archive {
 
-nonstd::expected<std::shared_ptr<io::BufferStream>, std::string> createArchive(std::map<std::string, std::unique_ptr<io::InputStream>>& files, const std::shared_ptr<core::logging::Logger>& logger);
+nonstd::expected<std::shared_ptr<io::BufferStream>, std::string> createArchive(const std::map<std::string, std::unique_ptr<io::InputStream>>& files);
 
 }  // namespace org::apache::nifi::minifi::utils::archive

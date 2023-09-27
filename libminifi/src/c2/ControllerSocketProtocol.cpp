@@ -374,7 +374,7 @@ void ControllerSocketProtocol::handleDescribe(io::BaseStream &stream) {
 
 void ControllerSocketProtocol::writeDebugBundleResponse(io::BaseStream &stream) {
   auto files = update_sink_.getDebugInfo();
-  auto bundle = utils::archive::createArchive(files, logger_);
+  auto bundle = utils::archive::createArchive(files);
   io::BufferStream resp;
   auto op = static_cast<uint8_t>(Operation::transfer);
   resp.write(&op, 1);

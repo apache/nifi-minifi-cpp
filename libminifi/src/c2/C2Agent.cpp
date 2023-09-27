@@ -679,7 +679,7 @@ C2Payload C2Agent::bundleDebugInfo(std::map<std::string, std::unique_ptr<io::Inp
   }
   files[MANIFEST_FILE_NAME] = std::move(manifest_stream);
 
-  auto bundle = utils::archive::createArchive(files, logger_);
+  auto bundle = utils::archive::createArchive(files);
   if (!bundle) {
     throw C2DebugBundleError(bundle.error());
   }

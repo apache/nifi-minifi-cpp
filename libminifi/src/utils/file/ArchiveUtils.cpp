@@ -21,19 +21,18 @@
 
 namespace org::apache::nifi::minifi::utils::archive {
 
-nonstd::expected<std::shared_ptr<io::BufferStream>, std::string> createArchive(std::map<std::string, std::unique_ptr<io::InputStream>>& files,
-    const std::shared_ptr<core::logging::Logger>& logger) {
+nonstd::expected<std::shared_ptr<io::BufferStream>, std::string> createArchive(const std::map<std::string, std::unique_ptr<io::InputStream>>& files) {
   auto stream_provider = core::ClassLoader::getDefaultClassLoader().instantiate<io::ArchiveStreamProvider>(
       "ArchiveStreamProvider", "ArchiveStreamProvider");
   if (!stream_provider) {
     return nonstd::make_unexpected("Couldn't instantiate archiver provider");
   }
   auto bundle = std::make_shared<io::BufferStream>();
-  auto archiver = stream_provider->createWriteStream(9, "gzip", bundle, logger);
+  auto archiver = stream_provider->createWriteStream(9, "gzip", bundle, nullptr);
   if (!archiver) {
     return nonstd::make_unexpected("Couldn't instantiate archiver");
   }
-  for (auto& [filename, stream] : files) {
+  for (const auto& [filename, stream] : files) {
     size_t file_size = stream->size();
     if (!archiver->newEntry({filename, file_size})) {
       return nonstd::make_unexpected("Couldn't initialize archive entry for '" + filename + "'");
