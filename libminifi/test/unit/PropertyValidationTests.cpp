@@ -24,14 +24,13 @@
 
 namespace org::apache::nifi::minifi::core {
 
-using namespace utils::internal;
 /**
  * This Tests checks a deprecated behavior that should be removed
  * in the next major release.
  */
 TEST_CASE("Some default values get coerced to typed variants") {
   auto prop = Property("prop", "d", "true");
-  REQUIRE_THROWS_AS(prop.setValue("banana"), ConversionException);
+  REQUIRE_THROWS_AS(prop.setValue("banana"), utils::internal::ConversionException);
 
   const std::string SPACE = " ";
   auto prop2 = Property("prop", "d", SPACE + "true");
@@ -44,9 +43,9 @@ TEST_CASE("Converting invalid PropertyValue") {
       .withDefaultValue("0")
       .build();
   Property property{property_definition};
-  REQUIRE_THROWS_AS(property.setValue("not int"), ParseException);
+  REQUIRE_THROWS_AS(property.setValue("not int"), utils::internal::ParseException);
   auto cast_check = [&]{ return static_cast<int>(property.getValue()) == 0; };  // To avoid unused-value warning
-  REQUIRE_THROWS_AS(cast_check(), InvalidValueException);
+  REQUIRE_THROWS_AS(cast_check(), utils::internal::InvalidValueException);
 }
 
 TEST_CASE("Parsing int has baggage after") {
@@ -55,7 +54,7 @@ TEST_CASE("Parsing int has baggage after") {
       .withDefaultValue("0")
       .build();
   Property property{property_definition};
-  REQUIRE_THROWS_AS(property.setValue("55almost int"), ParseException);
+  REQUIRE_THROWS_AS(property.setValue("55almost int"), utils::internal::ParseException);
 }
 
 TEST_CASE("Parsing int has spaces") {
@@ -74,7 +73,7 @@ TEST_CASE("Parsing int out of range") {
       .withDefaultValue("0")
       .build();
   Property property{property_definition};
-  REQUIRE_THROWS_AS(property.setValue("  5000000000  "), ParseException);
+  REQUIRE_THROWS_AS(property.setValue("  5000000000  "), utils::internal::ParseException);
 }
 
 TEST_CASE("Parsing bool has baggage after") {
@@ -83,7 +82,7 @@ TEST_CASE("Parsing bool has baggage after") {
       .withDefaultValue("true")
       .build();
   Property property{property_definition};
-  REQUIRE_THROWS_AS(property.setValue("false almost bool"), ParseException);
+  REQUIRE_THROWS_AS(property.setValue("false almost bool"), utils::internal::ParseException);
 }
 
 class TestConfigurableComponent : public ConfigurableComponent {
@@ -144,7 +143,7 @@ TEST_CASE("Missing Required Without Default") {
   TestConfigurableComponent component;
   component.setSupportedProperties(std::array<PropertyReference, 1>{property_definition});
   std::string value;
-  REQUIRE_THROWS_AS(component.getProperty(property.getName(), value), RequiredPropertyMissingException);
+  REQUIRE_THROWS_AS(component.getProperty(property.getName(), value), utils::internal::RequiredPropertyMissingException);
 }
 
 TEST_CASE("Missing Optional Without Default") {
@@ -180,9 +179,9 @@ TEST_CASE("Invalid With Default") {
   Property property{property_definition};
   TestConfigurableComponent component;
   component.setSupportedProperties(std::array<PropertyReference, 1>{property_definition});
-  REQUIRE_THROWS_AS(component.setProperty("prop", "banana"), ParseException);
+  REQUIRE_THROWS_AS(component.setProperty("prop", "banana"), utils::internal::ParseException);
   std::string value;
-  REQUIRE_THROWS_AS(component.getProperty(property.getName(), value), InvalidValueException);
+  REQUIRE_THROWS_AS(component.getProperty(property.getName(), value), utils::internal::InvalidValueException);
 }
 
 TEST_CASE("Valid With Default") {
@@ -207,7 +206,7 @@ TEST_CASE("Invalid conversion") {
   TestConfigurableComponent component;
   component.setSupportedProperties(std::array<PropertyReference, 1>{property_definition});
   bool value = false;
-  REQUIRE_THROWS_AS(component.getProperty(property.getName(), value), ConversionException);
+  REQUIRE_THROWS_AS(component.getProperty(property.getName(), value), utils::internal::ConversionException);
 }
 
 TEST_CASE("Write Invalid Then Override With Valid") {
@@ -219,7 +218,7 @@ TEST_CASE("Write Invalid Then Override With Valid") {
   Property property{property_definition};
   TestConfigurableComponent component;
   component.setSupportedProperties(std::array<PropertyReference, 1>{property_definition});
-  REQUIRE_THROWS_AS(component.setProperty(property.getName(), "banana"), ConversionException);
+  REQUIRE_THROWS_AS(component.setProperty(property.getName(), "banana"), utils::internal::ConversionException);
   component.setProperty(property.getName(), "98");
   int value = 0;
   REQUIRE(component.getProperty(property.getName(), value));
@@ -238,7 +237,7 @@ TEST_CASE("Property Change notification gets called even on erroneous assignment
   component.setPropertyModifiedCallback([&](const Property &, const Property &) {
     ++callbackCount;
   });
-  REQUIRE_THROWS_AS(component.setProperty(property.getName(), "banana"), ConversionException);
+  REQUIRE_THROWS_AS(component.setProperty(property.getName(), "banana"), utils::internal::ConversionException);
   REQUIRE(callbackCount == 1);
 }
 
@@ -255,7 +254,7 @@ TEST_CASE("Correctly Typed Property With Invalid Validation") {
   component.setPropertyModifiedCallback([&](const Property &, const Property &) {
     ++callbackCount;
   });
-  REQUIRE_THROWS_AS(component.setProperty(property.getName(), "20"), InvalidValueException);
+  REQUIRE_THROWS_AS(component.setProperty(property.getName(), "20"), utils::internal::InvalidValueException);
   REQUIRE(callbackCount == 1);
 }
 
@@ -271,7 +270,7 @@ TEST_CASE("TimePeriodValue Property") {
   TimePeriodValue time_period_value;
   REQUIRE(component.getProperty(property.getName(), time_period_value));
   CHECK(time_period_value.getMilliseconds() == 10min);
-  REQUIRE_THROWS_AS(component.setProperty(property.getName(), "20"), ParseException);
+  REQUIRE_THROWS_AS(component.setProperty(property.getName(), "20"), utils::internal::ParseException);
 }
 
 TEST_CASE("TimePeriodValue Property without validator") {
@@ -286,7 +285,7 @@ TEST_CASE("TimePeriodValue Property without validator") {
   REQUIRE(component.getProperty(property.getName(), time_period_value));
   CHECK(time_period_value.getMilliseconds() == 1h);
   REQUIRE_NOTHROW(component.setProperty(property.getName(), "20"));
-  REQUIRE_THROWS_AS(component.getProperty(property.getName(), time_period_value), ValueException);
+  REQUIRE_THROWS_AS(component.getProperty(property.getName(), time_period_value), utils::internal::ValueException);
 }
 
 TEST_CASE("Validating listener port property") {
@@ -295,9 +294,9 @@ TEST_CASE("Validating listener port property") {
       .build();
   Property property{property_definition};
   REQUIRE_NOTHROW(property.setValue("1234"));
-  REQUIRE_THROWS_AS(property.setValue("banana"), InvalidValueException);
-  REQUIRE_THROWS_AS(property.setValue("65536"), InvalidValueException);
-  REQUIRE_THROWS_AS(property.setValue("-1"), InvalidValueException);
+  REQUIRE_THROWS_AS(property.setValue("banana"), utils::internal::InvalidValueException);
+  REQUIRE_THROWS_AS(property.setValue("65536"), utils::internal::InvalidValueException);
+  REQUIRE_THROWS_AS(property.setValue("-1"), utils::internal::InvalidValueException);
 }
 
 TEST_CASE("Validating data transfer speed property with default value") {

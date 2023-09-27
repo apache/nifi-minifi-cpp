@@ -90,7 +90,7 @@ struct TestJournal final : libwrapper::Journal {
   }
 
   int getCursor(gsl::owner<char*>* const cursor_out) noexcept override {
-    *cursor_out = gsl::owner<char*>(strdup(std::to_string(consumed).c_str()));
+    *cursor_out = strdup(std::to_string(consumed).c_str());  // NOLINT(cppcoreguidelines-owning-memory)
     return *cursor_out ? 0 : -ENOMEM;
   }
 

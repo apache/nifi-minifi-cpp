@@ -44,7 +44,7 @@ std::optional<std::chrono::system_clock::time_point> parseRfc3339(const std::str
     return std::nullopt;
 
   constexpr std::string_view accepted_delimiters = "tT_ ";
-  char delimiter_char;
+  char delimiter_char = 0;
   stream.get(delimiter_char);
 
   if (stream.fail() || !ranges::contains(accepted_delimiters, delimiter_char))
@@ -64,7 +64,7 @@ std::optional<std::chrono::system_clock::time_point> parseRfc3339(const std::str
   if (stream.fail() || (stream.peek() && !stream.eof()))
     return std::nullopt;
 
-  return date::sys_days(date_part) + time_part - offset;
+  return date::sys_days{date_part} + time_part - offset;  // NOLINT(whitespace/braces)
 }
 
 }  // namespace org::apache::nifi::minifi::utils::timeutils

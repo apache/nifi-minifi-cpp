@@ -217,7 +217,7 @@ class ReadCallback {
 
     allocate_message_object(segment_num);
 
-    const auto hdrs_copy = gsl::owner<rd_kafka_headers_t*>(rd_kafka_headers_copy(hdrs.get()));
+    const gsl::owner<rd_kafka_headers_t*> hdrs_copy = rd_kafka_headers_copy(hdrs.get());  // NOLINT(cppcoreguidelines-owning-memory)
     const auto err = rd_kafka_producev(rk_, RD_KAFKA_V_RKT(rkt_), RD_KAFKA_V_PARTITION(RD_KAFKA_PARTITION_UA), RD_KAFKA_V_MSGFLAGS(RD_KAFKA_MSG_F_COPY), RD_KAFKA_V_VALUE(buffer.data(), buflen),
         RD_KAFKA_V_HEADERS(hdrs_copy), RD_KAFKA_V_KEY(key_.c_str(), key_.size()), RD_KAFKA_V_OPAQUE(callback_ptr.get()), RD_KAFKA_V_END);
     if (err == RD_KAFKA_RESP_ERR_NO_ERROR) {
@@ -553,7 +553,7 @@ bool PublishKafka::configureNewConnection(const std::shared_ptr<core::ProcessCon
   rd_kafka_conf_set_log_cb(conf_.get(), &KafkaConnection::logCallback);
 
   // The producer takes ownership of the configuration, we must not free it
-  const auto producer = gsl::owner<rd_kafka_t*>(rd_kafka_new(RD_KAFKA_PRODUCER, conf_.release(), errstr.data(), errstr.size()));
+  const gsl::owner<rd_kafka_t*> producer = rd_kafka_new(RD_KAFKA_PRODUCER, conf_.release(), errstr.data(), errstr.size());  // NOLINT(cppcoreguidelines-owning-memory)
   if (producer == nullptr) {
     auto error_msg = utils::StringUtils::join_pack("Failed to create Kafka producer ", errstr.data());
     throw Exception(PROCESS_SCHEDULE_EXCEPTION, error_msg);
@@ -622,7 +622,7 @@ bool PublishKafka::createNewTopic(const std::shared_ptr<core::ProcessContext> &c
   }
 
   // The topic takes ownership of the configuration, we must not free it
-  const auto topic_reference = gsl::owner<rd_kafka_topic_t*>(rd_kafka_topic_new(conn_->getConnection(), topic_name.c_str(), topic_conf_.release()));
+  const gsl::owner<rd_kafka_topic_t*> topic_reference = rd_kafka_topic_new(conn_->getConnection(), topic_name.c_str(), topic_conf_.release());  // NOLINT(cppcoreguidelines-owning-memory)
   if (topic_reference == nullptr) {
     rd_kafka_resp_err_t resp_err = rd_kafka_last_error();
     logger_->log_error("PublishKafka: failed to create topic {}, error: {}", topic_name.c_str(), rd_kafka_err2str(resp_err));

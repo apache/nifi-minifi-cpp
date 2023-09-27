@@ -36,7 +36,7 @@ namespace org::apache::nifi::minifi::sitetosite {
 std::shared_ptr<utils::IdGenerator> RawSiteToSiteClient::id_generator_ = utils::IdGenerator::getIdGenerator();
 std::shared_ptr<utils::IdGenerator> Transaction::id_generator_ = utils::IdGenerator::getIdGenerator();
 
-const char *RawSiteToSiteClient::HandShakePropertyStr[MAX_HANDSHAKE_PROPERTY] = {
+const char *RawSiteToSiteClient::HandShakePropertyStr[MAX_HANDSHAKE_PROPERTY] = {  // NOLINT(cppcoreguidelines-avoid-c-arrays)
 /**
  * Boolean value indicating whether or not the contents of a FlowFile should
  * be GZipped when transferred.
@@ -126,7 +126,7 @@ bool RawSiteToSiteClient::initiateResourceNegotiation() {
     }
   }
 
-  uint8_t statusCode;
+  uint8_t statusCode = 0;
   {
     const auto ret = peer_->read(statusCode);
     if (ret == 0 || io::isError(ret)) {
@@ -136,11 +136,12 @@ bool RawSiteToSiteClient::initiateResourceNegotiation() {
   }
   logger_->log_debug("status code is {}", statusCode);
   switch (statusCode) {
-    case RESOURCE_OK:
+    case RESOURCE_OK: {
       logger_->log_debug("Site2Site Protocol Negotiate protocol version OK");
       return true;
-    case DIFFERENT_RESOURCE_VERSION:
-      uint32_t serverVersion;
+    }
+    case DIFFERENT_RESOURCE_VERSION: {
+      uint32_t serverVersion = 0;
       {
         const auto ret = peer_->read(serverVersion);
         if (ret == 0 || io::isError(ret)) {
@@ -153,18 +154,21 @@ bool RawSiteToSiteClient::initiateResourceNegotiation() {
       for (unsigned int i = (_currentVersionIndex + 1); i < sizeof(_supportedVersion) / sizeof(uint32_t); i++) {
         if (serverVersion >= _supportedVersion[i]) {
           _currentVersion = _supportedVersion[i];
-          _currentVersionIndex = i;
+          _currentVersionIndex = gsl::narrow<int>(i);
           return initiateResourceNegotiation();
         }
       }
       logger_->log_error("Site2Site Negotiate protocol failed to find a common version with server");
       return false;
-    case NEGOTIATED_ABORT:
+    }
+    case NEGOTIATED_ABORT: {
       logger_->log_error("Site2Site Negotiate protocol response ABORT");
       return false;
-    default:
+    }
+    default: {
       logger_->log_error("Negotiate protocol response unknown code {}", statusCode);
       return false;
+    }
   }
 }
 
@@ -193,7 +197,7 @@ bool RawSiteToSiteClient::initiateCodecResourceNegotiation() {
     }
   }
 
-  uint8_t statusCode;
+  uint8_t statusCode = 0;
   {
     const auto ret = peer_->read(statusCode);
     if (ret == 0 || io::isError(ret)) {
@@ -201,11 +205,12 @@ bool RawSiteToSiteClient::initiateCodecResourceNegotiation() {
     }
   }
   switch (statusCode) {
-    case RESOURCE_OK:
+    case RESOURCE_OK: {
       logger_->log_trace("Site2Site Codec Negotiate version OK");
       return true;
-    case DIFFERENT_RESOURCE_VERSION:
-      uint32_t serverVersion;
+    }
+    case DIFFERENT_RESOURCE_VERSION: {
+      uint32_t serverVersion = 0;
       {
         const auto ret = peer_->read(serverVersion);
         if (ret == 0 || io::isError(ret)) {
@@ -217,18 +222,26 @@ bool RawSiteToSiteClient::initiateCodecResourceNegotiation() {
       for (unsigned int i = (_currentCodecVersionIndex + 1); i < sizeof(_supportedCodecVersion) / sizeof(uint32_t); i++) {
         if (serverVersion >= _supportedCodecVersion[i]) {
           _currentCodecVersion = _supportedCodecVersion[i];
-          _currentCodecVersionIndex = i;
+          _currentCodecVersionIndex = gsl::narrow<int>(i);
           return initiateCodecResourceNegotiation();
         }
       }
       logger_->log_error("Site2Site Negotiate codec failed to find a common version with server");
       return false;
-    case NEGOTIATED_ABORT:
+    }
+    case NEGOTIATED_ABORT: {
       logger_->log_error("Site2Site Codec Negotiate response ABORT");
       return false;
+<<<<<<< HEAD
     default:
       logger_->log_error("Negotiate Codec response unknown code {}", statusCode);
+=======
+    }
+    default: {
+      logger_->log_error("Negotiate Codec response unknown code %d", statusCode);
+>>>>>>> 21e1f9939 (MINIFICPP-1891 Integrate google clang-tidy checks in CI)
       return false;
+    }
   }
 }
 
@@ -292,7 +305,7 @@ bool RawSiteToSiteClient::handShake() {
     logger_->log_debug("Site2Site Protocol Send handshake properties {} {}", it->first, it->second);
   }
 
-  RespondCode code;
+  RespondCode code = RESERVED;
   std::string message;
 
   {
@@ -348,7 +361,7 @@ bool RawSiteToSiteClient::getPeerList(std::vector<PeerStatus> &peers) {
       return false;
     }
 
-    uint32_t number_of_peers;
+    uint32_t number_of_peers = 0;
     {
       const auto ret = peer_->read(number_of_peers);
       if (ret == 0 || io::isError(ret)) {
@@ -366,7 +379,7 @@ bool RawSiteToSiteClient::getPeerList(std::vector<PeerStatus> &peers) {
           return false;
         }
       }
-      uint32_t port;
+      uint32_t port = 0;
       {
         const auto ret = peer_->read(port);
         if (ret == 0 || io::isError(ret)) {
@@ -374,7 +387,7 @@ bool RawSiteToSiteClient::getPeerList(std::vector<PeerStatus> &peers) {
           return false;
         }
       }
-      uint8_t secure;
+      uint8_t secure = 0;
       {
         const auto ret = peer_->read(secure);
         if (ret == 0 || io::isError(ret)) {
@@ -382,7 +395,7 @@ bool RawSiteToSiteClient::getPeerList(std::vector<PeerStatus> &peers) {
           return false;
         }
       }
-      uint32_t count;
+      uint32_t count = 0;
       {
         const auto ret = peer_->read(count);
         if (ret == 0 || io::isError(ret)) {
@@ -419,7 +432,7 @@ bool RawSiteToSiteClient::getPeerList(std::vector<PeerStatus> &peers) {
 
     for (int i = NEGOTIATE_FLOWFILE_CODEC; i <= SHUTDOWN; i++) {
       if (SiteToSiteRequest::RequestTypeStr[i] == requestTypeStr) {
-        type = (RequestType) i;
+        type = static_cast<RequestType>(i);
         return static_cast<int>(ret);
       }
     }
@@ -480,8 +493,8 @@ bool RawSiteToSiteClient::bootstrap() {
 }
 
 std::shared_ptr<Transaction> RawSiteToSiteClient::createTransaction(TransferDirection direction) {
-  int ret;
-  bool dataAvailable;
+  int ret = 0;
+  bool dataAvailable = false;
   std::shared_ptr<Transaction> transaction = nullptr;
 
   if (peer_state_ != READY) {
@@ -499,7 +512,7 @@ std::shared_ptr<Transaction> RawSiteToSiteClient::createTransaction(TransferDire
       return transaction;
     }
 
-    RespondCode code;
+    RespondCode code = RESERVED;
     std::string message;
 
     ret = readRespond(nullptr, code, message);

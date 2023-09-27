@@ -188,5 +188,20 @@ Checks: >
   cppcoreguidelines-rvalue-reference-param-not-moved,
   cppcoreguidelines-slicing,
   cppcoreguidelines-virtual-class-destructor,
-  cppcoreguidelines-macro-usage
+  cppcoreguidelines-macro-usage,
+  google-build-explicit-make-pair,
+  google-build-namespaces,
+  google-build-using-namespace,
+  google-explicit-constructor,
+  google-global-names-in-headers,
+  google-objc-avoid-nsobject-new,
+  google-objc-avoid-throwing-exception,
+  google-objc-function-naming,
+  google-objc-global-variable-declaration,
+  google-readability-avoid-underscore-in-googletest-name,
+  google-readability-casting,
+  google-readability-todo,
+  google-runtime-int,
+  google-runtime-operator,
+  google-upgrade-googletest-case
 FormatStyle: 'file'

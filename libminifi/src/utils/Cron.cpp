@@ -206,7 +206,7 @@ weekday getFieldType(local_seconds time_point) {
 }
 
 bool isWeekday(year_month_day date) {
-  weekday date_weekday = weekday(local_days(date));
+  weekday date_weekday = weekday(local_days{date});
   return date_weekday != Saturday && date_weekday != Sunday;
 }
 
@@ -292,9 +292,9 @@ class LastNthDayInMonthField : public CronField {
 
   [[nodiscard]] bool matches(local_seconds tp) const override {
     year_month_day date(floor<days>(tp));
-    auto last_day = date.year()/date.month()/last;
-    auto target_date = local_days(last_day)-offset_;
-    return local_days(date) == target_date;
+    auto last_day = date.year() / date.month() / last;
+    auto target_date = local_days{last_day} - offset_;  // NOLINT(whitespace/braces)
+    return local_days{date} == target_date;  // NOLINT(whitespace/braces)
   }
 
  private:
@@ -307,8 +307,8 @@ class NthWeekdayField : public CronField {
 
   [[nodiscard]] bool matches(local_seconds tp) const override {
     year_month_day date(floor<days>(tp));
-    auto target_date = date.year()/date.month()/(weekday_[n_]);
-    return local_days(date) == local_days(target_date);
+    auto target_date = date.year() / date.month() / (weekday_[n_]);
+    return local_days{date} == local_days{target_date};
   }
 
  private:

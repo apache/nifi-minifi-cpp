@@ -24,7 +24,7 @@
 
 struct sd_journal;
 
-namespace org { namespace apache { namespace nifi { namespace minifi { namespace extensions { namespace systemd { namespace libwrapper {
+namespace org::apache::nifi::minifi::extensions::systemd::libwrapper {
 
 namespace {
 struct dlclose_deleter {
@@ -72,7 +72,7 @@ class DlopenJournal : public Journal {
   template<typename F>
   F loadSymbol(const char* const symbol_name) {
     // The cast below is supported by POSIX platforms. https://stackoverflow.com/a/1096349
-    F const symbol = (F)dlsym(libhandle_.get(), symbol_name);
+    F const symbol = reinterpret_cast<F>(dlsym(libhandle_.get(), symbol_name));
     const char* const err = dlerror();
     if (err) throw Exception(ExceptionType::GENERAL_EXCEPTION, utils::StringUtils::join_pack("dlsym(", symbol_name, "): ", err));
     return symbol;
@@ -101,10 +101,4 @@ std::unique_ptr<Journal> DlopenWrapper::openJournal(const JournalType type) {
   return std::make_unique<DlopenJournal>(type);
 }
 
-}  // namespace libwrapper
-}  // namespace systemd
-}  // namespace extensions
-}  // namespace minifi
-}  // namespace nifi
-}  // namespace apache
-}  // namespace org
+}  // namespace org::apache::nifi::minifi::extensions::systemd::libwrapper

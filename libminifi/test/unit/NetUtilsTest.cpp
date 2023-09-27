@@ -66,7 +66,7 @@ TEST_CASE("utils::net::getSslContext") {
   auto ssl_context_node = plan->addController("SSLContextService", "ssl_context_service");
   auto ssl_context_service = std::dynamic_pointer_cast<minifi::controllers::SSLContextService>(ssl_context_node->getControllerServiceImplementation());
 
-  const std::filesystem::path cert_dir = std::filesystem::path(minifi::utils::file::FileUtils::get_executable_dir()) / "resources";
+  const std::filesystem::path cert_dir = minifi::utils::file::FileUtils::get_executable_dir() / "resources";
 
   REQUIRE(ssl_context_service->setProperty(minifi::controllers::SSLContextService::CACertificate, (cert_dir / "ca_A.crt").string()));
 
@@ -107,7 +107,7 @@ TEST_CASE("utils::net::getSslContext passphrase problems") {
   auto ssl_context_node = plan->addController("SSLContextService", "ssl_context_service");
   auto ssl_context_service = std::dynamic_pointer_cast<minifi::controllers::SSLContextService>(ssl_context_node->getControllerServiceImplementation());
 
-  const std::filesystem::path cert_dir = std::filesystem::path(minifi::utils::file::FileUtils::get_executable_dir()) / "resources";
+  const std::filesystem::path cert_dir = minifi::utils::file::FileUtils::get_executable_dir() / "resources";
 
   REQUIRE(ssl_context_service->setProperty(minifi::controllers::SSLContextService::CACertificate, (cert_dir / "ca_A.crt").string()));
   REQUIRE(ssl_context_service->setProperty(minifi::controllers::SSLContextService::ClientCertificate, (cert_dir / "alice_by_A.pem").string()));
@@ -138,7 +138,7 @@ TEST_CASE("utils::net::getSslContext missing CA") {
   auto ssl_context_node = plan->addController("SSLContextService", "ssl_context_service");
   auto ssl_context_service = std::dynamic_pointer_cast<minifi::controllers::SSLContextService>(ssl_context_node->getControllerServiceImplementation());
 
-  const std::filesystem::path cert_dir = std::filesystem::path(minifi::utils::file::FileUtils::get_executable_dir()) / "resources";
+  const std::filesystem::path cert_dir = minifi::utils::file::FileUtils::get_executable_dir() / "resources";
 
   REQUIRE(ssl_context_service->setProperty(minifi::controllers::SSLContextService::ClientCertificate, (cert_dir / "alice_by_A.pem").string()));
   REQUIRE(ssl_context_service->setProperty(minifi::controllers::SSLContextService::PrivateKey, (cert_dir / "alice.key").string()));

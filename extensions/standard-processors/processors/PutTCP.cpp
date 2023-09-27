@@ -215,7 +215,7 @@ asio::awaitable<std::error_code> ConnectionHandler<SocketType>::establishNewConn
       continue;
     }
     if (max_size_of_socket_send_buffer_)
-      socket.lowest_layer().set_option(TcpSocket::send_buffer_size(gsl::narrow<int>(*max_size_of_socket_send_buffer_)));
+      socket.lowest_layer().set_option(TcpSocket::send_buffer_size(gsl::narrow<int>(*max_size_of_socket_send_buffer_)));  // NOLINT(google-readability-casting)
     socket_.emplace(std::move(socket));
     co_return std::error_code();
   }

@@ -27,28 +27,28 @@
 namespace org::apache::nifi::minifi::sitetosite {
 
 int SiteToSiteClient::readResponse(const std::shared_ptr<Transaction>& /*transaction*/, RespondCode &code, std::string &message) {
-  uint8_t firstByte;
+  uint8_t firstByte = 0;
   {
     const auto ret = peer_->read(firstByte);
     if (ret == 0 || io::isError(ret) || firstByte != CODE_SEQUENCE_VALUE_1)
       return -1;
   }
 
-  uint8_t secondByte;
+  uint8_t secondByte = 0;
   {
     const auto ret = peer_->read(secondByte);
     if (ret == 0 || io::isError(ret) || secondByte != CODE_SEQUENCE_VALUE_2)
       return -1;
   }
 
-  uint8_t thirdByte;
+  uint8_t thirdByte = 0;
   {
     const auto ret = peer_->read(thirdByte);
     if (ret == 0 || io::isError(ret))
       return static_cast<int>(ret);
   }
 
-  code = (RespondCode) thirdByte;
+  code = static_cast<RespondCode>(thirdByte);
   RespondCodeContext *resCode = this->getRespondCodeContext(code);
   if (!resCode) {
     return -1;
@@ -82,8 +82,8 @@ int SiteToSiteClient::writeResponse(const std::shared_ptr<Transaction>& /*transa
   }
 
   {
-    const uint8_t codeSeq[3] { CODE_SEQUENCE_VALUE_1, CODE_SEQUENCE_VALUE_2, static_cast<uint8_t>(code) };
-    const auto ret = peer_->write(codeSeq, 3);
+    const std::array<uint8_t, 3> codeSeq = { CODE_SEQUENCE_VALUE_1, CODE_SEQUENCE_VALUE_2, static_cast<uint8_t>(code) };
+    const auto ret = peer_->write(codeSeq.data(), 3);
     if (ret != 3)
       return -1;
   }
@@ -190,7 +190,7 @@ bool SiteToSiteClient::transferFlowFiles(const std::shared_ptr<core::ProcessCont
 }
 
 bool SiteToSiteClient::confirm(const utils::Identifier& transactionID) {
-  int ret;
+  int ret = 0;
   std::shared_ptr<Transaction> transaction;
 
   if (peer_state_ != READY) {
@@ -236,7 +236,7 @@ bool SiteToSiteClient::confirm(const utils::Identifier& transactionID) {
     ret = writeResponse(transaction, CONFIRM_TRANSACTION, crc);
     if (ret <= 0)
       return false;
-    RespondCode code;
+    RespondCode code = RESERVED;
     std::string message;
     readResponse(transaction, code, message);
     if (ret <= 0)
@@ -259,7 +259,7 @@ bool SiteToSiteClient::confirm(const utils::Identifier& transactionID) {
     if (ret <= 0) {
       return false;
     }
-    RespondCode code;
+    RespondCode code = RESERVED;
     std::string message;
     readResponse(transaction, code, message);
 
@@ -337,7 +337,7 @@ void SiteToSiteClient::error(const utils::Identifier& transactionID) {
 
 // Complete the transaction
 bool SiteToSiteClient::complete(const utils::Identifier& transactionID) {
-  int ret;
+  int ret = 0;
   std::shared_ptr<Transaction> transaction = nullptr;
 
   if (peer_state_ != READY) {
@@ -374,7 +374,7 @@ bool SiteToSiteClient::complete(const utils::Identifier& transactionID) {
       }
     }
   } else {
-    RespondCode code;
+    RespondCode code = RESERVED;
     std::string message;
 
     ret = readResponse(transaction, code, message);
@@ -553,7 +553,7 @@ bool SiteToSiteClient::receive(const utils::Identifier& transactionID, DataPacke
 
   if (transaction->current_transfers_ > 0) {
     // if we already has transfer before, check to see whether another one is available
-    RespondCode code;
+    RespondCode code = RESERVED;
     std::string message;
 
     if (readResponse(transaction, code, message) <= 0) {
@@ -580,7 +580,7 @@ bool SiteToSiteClient::receive(const utils::Identifier& transactionID, DataPacke
   }
 
   // start to read the packet
-  uint32_t numAttributes;
+  uint32_t numAttributes = 0;
   {
     const auto ret = transaction->getStream().read(numAttributes);
     if (ret == 0 || io::isError(ret) || numAttributes > MAX_NUM_ATTRIBUTES) {
@@ -609,7 +609,7 @@ bool SiteToSiteClient::receive(const utils::Identifier& transactionID, DataPacke
     logger_->log_debug("Site2Site transaction {} receives attribute key {} value {}", transactionID.to_string(), key, value);
   }
 
-  uint64_t len;
+  uint64_t len = 0;
   {
     const auto ret = transaction->getStream().read(len);
     if (ret == 0 || io::isError(ret)) {

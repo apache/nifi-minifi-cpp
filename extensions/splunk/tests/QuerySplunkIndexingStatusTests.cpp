@@ -87,7 +87,7 @@ TEST_CASE("QuerySplunkIndexingStatus tests", "[querysplunkindexingstatus]") {
 
     write_to_flow_file->setContent("");
     plan->reset();
-    std::this_thread::sleep_for(std::chrono::milliseconds(100ms));
+    std::this_thread::sleep_for(100ms);
     test_controller.runSession(plan);
 
     CHECK(read_from_failure->numberOfFlowFilesRead() == 0);

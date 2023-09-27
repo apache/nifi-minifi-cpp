@@ -166,7 +166,7 @@ class PutTCPTestFixture {
   }
 
   void addSSLContextToPutTCP(const std::filesystem::path& ca_cert, const std::optional<std::filesystem::path>& client_cert, const std::optional<std::filesystem::path>& client_cert_key) {
-    const std::filesystem::path ca_dir = std::filesystem::path(minifi::utils::file::FileUtils::get_executable_dir()) / "resources";
+    const std::filesystem::path ca_dir = minifi::utils::file::FileUtils::get_executable_dir() / "resources";
     auto ssl_context_service_node = controller_.plan->addController("SSLContextService", "SSLContextService");
     REQUIRE(controller_.plan->setProperty(ssl_context_service_node, SSLContextService::CACertificate, (ca_dir / ca_cert).string()));
     if (client_cert) {

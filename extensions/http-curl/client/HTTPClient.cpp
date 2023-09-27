@@ -389,7 +389,7 @@ bool HTTPClient::submit() {
   if (read_callback_ == nullptr) {
     content_.close();
   }
-  long http_code = 0;  // NOLINT(runtime/int) long due to libcurl API
+  long http_code = 0;  // NOLINT(runtime/int,google-runtime-int) long due to libcurl API
   curl_easy_getinfo(http_session_.get(), CURLINFO_RESPONSE_CODE, &http_code);
   response_data_.response_code = http_code;
   curl_easy_getinfo(http_session_.get(), CURLINFO_CONTENT_TYPE, &response_data_.response_content_type);
