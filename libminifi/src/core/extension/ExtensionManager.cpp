@@ -31,9 +31,13 @@ namespace org::apache::nifi::minifi::core::extension {
 
 const std::shared_ptr<logging::Logger> ExtensionManager::logger_ = logging::LoggerFactory<ExtensionManager>::getLogger();
 
-ExtensionManager::ExtensionManager() {
-  modules_.push_back(std::make_unique<Executable>());
-  active_module_ = modules_[0].get();  // NOLINT(cppcoreguidelines-prefer-member-initializer)
+ExtensionManager::ExtensionManager()
+    : modules_([] {
+        std::vector<std::unique_ptr<Module>> modules;
+        modules.push_back(std::make_unique<Executable>());
+        return modules;
+      }()),
+      active_module_(modules_[0].get()) {
 }
 
 ExtensionManager& ExtensionManager::get() {

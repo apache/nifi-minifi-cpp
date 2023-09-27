@@ -332,7 +332,6 @@ std::string OsUtils::getMachineArchitecture() {
 
 std::optional<std::string> OsUtils::getHostName() {
   std::array<char, 1024> hostname{};
-  hostname[1023] = '\0';
   if (gethostname(hostname.data(), 1023) != 0) {
     return std::nullopt;
   }

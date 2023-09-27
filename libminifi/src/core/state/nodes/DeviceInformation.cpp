@@ -29,7 +29,6 @@ std::mutex DeviceInfoNode::cpu_load_tracker_mutex_;
 
 Device::Device() {
   std::array<char, 1024> hostname{};
-  hostname[1023] = '\0';
   gethostname(hostname.data(), 1023);
 
   std::ifstream device_id_file(".device_id");

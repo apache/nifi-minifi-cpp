@@ -70,8 +70,8 @@ void KafkaConnection::setConnection(gsl::owner<rd_kafka_t*> producer) {
   startPoll();
 }
 
-gsl::owner<rd_kafka_t*> KafkaConnection::getConnection() const {
-  return kafka_connection_;
+rd_kafka_t* KafkaConnection::getConnection() const {
+  return static_cast<rd_kafka_t*>(kafka_connection_);
 }
 
 bool KafkaConnection::hasTopic(const std::string &topic) const {

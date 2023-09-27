@@ -523,7 +523,7 @@ std::string nodeValue2String(const NodeData& nd) {
     }
     case UA_DATATYPEKIND_FLOAT: {
       if (sizeof(float) == 4 && std::numeric_limits<float>::is_iec559) {
-        float f = NAN;
+        float f = 0;
         memcpy(&f, nd.data.data(), sizeof(float));
         ret_val = std::to_string(f);
       } else {
@@ -533,7 +533,7 @@ std::string nodeValue2String(const NodeData& nd) {
     }
     case UA_DATATYPEKIND_DOUBLE: {
       if (sizeof(double) == 8 && std::numeric_limits<double>::is_iec559) {
-        double d = NAN;
+        double d = 0;
         memcpy(&d, nd.data.data(), sizeof(double));
         ret_val = std::to_string(d);
       } else {

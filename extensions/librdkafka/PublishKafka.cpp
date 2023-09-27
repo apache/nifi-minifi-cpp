@@ -622,7 +622,7 @@ bool PublishKafka::createNewTopic(const std::shared_ptr<core::ProcessContext> &c
   }
 
   // The topic takes ownership of the configuration, we must not free it
-  const auto topic_reference = gsl::owner<rd_kafka_topic_t*>(rd_kafka_topic_new(conn_->getConnection(), topic_name.c_str(), topic_conf_.release()));  // NOLINT(cppcoreguidelines-owning-memory)
+  const auto topic_reference = gsl::owner<rd_kafka_topic_t*>(rd_kafka_topic_new(conn_->getConnection(), topic_name.c_str(), topic_conf_.release()));
   if (topic_reference == nullptr) {
     rd_kafka_resp_err_t resp_err = rd_kafka_last_error();
     logger_->log_error("PublishKafka: failed to create topic %s, error: %s", topic_name.c_str(), rd_kafka_err2str(resp_err));

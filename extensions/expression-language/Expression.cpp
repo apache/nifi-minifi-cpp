@@ -119,7 +119,6 @@ Value resolve_user_id(const std::vector<Value> &args) {
 
 Value expr_hostname(const std::vector<Value> &args) {
   std::array<char, 1024> hostname{};
-  hostname[1023] = '\0';
   gethostname(hostname.data(), 1023);
 
   if (!args.empty() && args[0].asBoolean()) {
@@ -127,7 +126,6 @@ Value expr_hostname(const std::vector<Value> &args) {
     struct addrinfo hints{};
     struct addrinfo *result = nullptr;
     struct addrinfo *addr_cursor = nullptr;
-    memset(&hints, 0, sizeof(hints));
     hints.ai_family = AF_UNSPEC;
     hints.ai_socktype = SOCK_STREAM;
     hints.ai_flags = AI_CANONNAME;
@@ -156,7 +154,6 @@ Value expr_hostname(const std::vector<Value> &args) {
 
 Value expr_ip(const std::vector<Value>& /*args*/) {
   std::array<char, 1024> hostname{};
-  hostname[1023] = '\0';
   gethostname(hostname.data(), 1023);
 
   int status = 0;
@@ -165,7 +162,6 @@ Value expr_ip(const std::vector<Value>& /*args*/) {
   struct addrinfo hints{};
   struct addrinfo *result = nullptr;
   struct addrinfo *addr_cursor = nullptr;
-  memset(&hints, 0, sizeof(hints));
   hints.ai_family = AF_INET;
 
   status = getaddrinfo(hostname.data(), nullptr, &hints, &result);
