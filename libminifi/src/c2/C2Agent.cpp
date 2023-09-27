@@ -44,7 +44,7 @@
 #include "io/ArchiveStream.h"
 #include "io/StreamPipe.h"
 #include "utils/Id.h"
-#include "utils/file/ArchiveUtils.h"
+#include "c2/C2Utils.h"
 
 using namespace std::literals::chrono_literals;
 
@@ -679,7 +679,7 @@ C2Payload C2Agent::bundleDebugInfo(std::map<std::string, std::unique_ptr<io::Inp
   }
   files[MANIFEST_FILE_NAME] = std::move(manifest_stream);
 
-  auto bundle = utils::archive::createArchive(files);
+  auto bundle = createDebugBundleArchive(files);
   if (!bundle) {
     throw C2DebugBundleError(bundle.error());
   }

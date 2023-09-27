@@ -31,7 +31,7 @@
 #include "asio/ssl/stream.hpp"
 #include "asio/detached.hpp"
 #include "utils/net/AsioSocketUtils.h"
-#include "utils/file/ArchiveUtils.h"
+#include "c2/C2Utils.h"
 
 namespace org::apache::nifi::minifi::c2 {
 
@@ -374,7 +374,7 @@ void ControllerSocketProtocol::handleDescribe(io::BaseStream &stream) {
 
 void ControllerSocketProtocol::writeDebugBundleResponse(io::BaseStream &stream) {
   auto files = update_sink_.getDebugInfo();
-  auto bundle = utils::archive::createArchive(files);
+  auto bundle = createDebugBundleArchive(files);
   io::BufferStream resp;
   auto op = static_cast<uint8_t>(Operation::transfer);
   resp.write(&op, 1);

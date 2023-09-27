@@ -20,9 +20,13 @@
 
 #include <string>
 #include <memory>
+#include <map>
 
 #include "properties/Configure.h"
 #include "utils/StringUtils.h"
+#include "io/ArchiveStream.h"
+#include "utils/expected.h"
+#include "io/BufferStream.h"
 
 namespace org::apache::nifi::minifi::c2 {
 
@@ -32,5 +36,6 @@ inline constexpr const char* CONTROLLER_SOCKET_METRICS_PUBLISHER = "ControllerSo
 
 bool isC2Enabled(const std::shared_ptr<Configure>& configuration);
 bool isControllerSocketEnabled(const std::shared_ptr<Configure>& configuration);
+nonstd::expected<std::shared_ptr<io::BufferStream>, std::string> createDebugBundleArchive(const std::map<std::string, std::unique_ptr<io::InputStream>>& files);
 
 }  // namespace org::apache::nifi::minifi::c2
