@@ -19,6 +19,7 @@ import tempfile
 import tarfile
 import os
 import io
+import uuid
 
 
 class DockerCommunicator:
@@ -71,7 +72,7 @@ class DockerCommunicator:
         try:
             container = self.client.containers.get(container_name)
             (bits, _) = container.get_archive(src_path_in_container)
-            tmp_tar_path = os.path.join(dest_dir_on_host, "tmp_debug.tar")
+            tmp_tar_path = os.path.join(dest_dir_on_host, "retrieved_file_" + str(uuid.uuid4()) + ".tar")
             with open(tmp_tar_path, 'wb') as out_file:
                 for chunk in bits:
                     out_file.write(chunk)
