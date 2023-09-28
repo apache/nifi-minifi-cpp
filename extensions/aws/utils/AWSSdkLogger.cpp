@@ -26,13 +26,15 @@ namespace org::apache::nifi::minifi::aws::utils {
 namespace {
 Aws::Utils::Logging::LogLevel mapToAwsLevels(core::logging::LOG_LEVEL level) {
   switch (level) {
-    case core::logging::trace: return Aws::Utils::Logging::LogLevel::Trace;
-    case core::logging::debug: return Aws::Utils::Logging::LogLevel::Debug;
-    case core::logging::info: return Aws::Utils::Logging::LogLevel::Info;
-    case core::logging::warn: return Aws::Utils::Logging::LogLevel::Warn;
-    case core::logging::err: return Aws::Utils::Logging::LogLevel::Error;
-    case core::logging::critical: return Aws::Utils::Logging::LogLevel::Fatal;
-    case core::logging::off: return Aws::Utils::Logging::LogLevel::Off;
+    using core::logging::LOG_LEVEL;
+    using AwsLogLevel = Aws::Utils::Logging::LogLevel;
+    case LOG_LEVEL::trace: return AwsLogLevel::Trace;
+    case LOG_LEVEL::debug: return AwsLogLevel::Debug;
+    case LOG_LEVEL::info: return AwsLogLevel::Info;
+    case LOG_LEVEL::warn: return AwsLogLevel::Warn;
+    case LOG_LEVEL::err: return AwsLogLevel::Error;
+    case LOG_LEVEL::critical: return AwsLogLevel::Fatal;
+    case LOG_LEVEL::off: return AwsLogLevel::Off;
     default:
       throw std::invalid_argument(fmt::format("Invalid LOG_LEVEL {}", magic_enum::enum_underlying(level)));
   }
