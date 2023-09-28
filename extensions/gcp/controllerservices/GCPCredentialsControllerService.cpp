@@ -42,7 +42,7 @@ std::shared_ptr<gcs::oauth2::Credentials> GCPCredentialsControllerService::creat
 std::shared_ptr<gcs::oauth2::Credentials> GCPCredentialsControllerService::createCredentialsFromJsonPath() const {
   std::string json_path;
   if (!getProperty(JsonFilePath, json_path)) {
-    logger_->log_error("Missing or invalid {}", std::string(JsonFilePath.name));
+    logger_->log_error("Missing or invalid {}", JsonFilePath.name);
     return nullptr;
   }
 
@@ -57,7 +57,7 @@ std::shared_ptr<gcs::oauth2::Credentials> GCPCredentialsControllerService::creat
 std::shared_ptr<gcs::oauth2::Credentials> GCPCredentialsControllerService::createCredentialsFromJsonContents() const {
   std::string json_contents;
   if (!getProperty(JsonContents, json_contents)) {
-    logger_->log_error("Missing or invalid {}", std::string(JsonContents.name));
+    logger_->log_error("Missing or invalid {}", JsonContents.name);
     return nullptr;
   }
 
@@ -76,7 +76,7 @@ void GCPCredentialsControllerService::onEnable() {
     credentials_location = magic_enum::enum_cast<CredentialsLocation>(value);
   }
   if (!credentials_location) {
-    logger_->log_error("Invalid Credentials Location, defaulting to {}", std::string{magic_enum::enum_name(CredentialsLocation::USE_DEFAULT_CREDENTIALS)});
+    logger_->log_error("Invalid Credentials Location, defaulting to {}", magic_enum::enum_name(CredentialsLocation::USE_DEFAULT_CREDENTIALS));
     credentials_location = CredentialsLocation::USE_DEFAULT_CREDENTIALS;
   }
   if (*credentials_location == CredentialsLocation::USE_DEFAULT_CREDENTIALS) {

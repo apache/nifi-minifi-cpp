@@ -602,7 +602,7 @@ void ConsumeWindowsEventLog::putEventRenderFlowFileToSession(const cwel::EventRe
   }
 
   if (output_format_ == cwel::OutputFormat::JSON) {
-    logger_->log_trace("Writing rendered {} JSON to a flow file", std::string{magic_enum::enum_name(json_format_)});
+    logger_->log_trace("Writing rendered {} JSON to a flow file", magic_enum::enum_name(json_format_));
     commitFlowFile(eventRender.json, "application/json");
   }
 }

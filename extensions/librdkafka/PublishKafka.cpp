@@ -390,7 +390,7 @@ void PublishKafka::onSchedule(const std::shared_ptr<core::ProcessContext> &conte
 
   std::string message_key_field;
   if (context->getProperty(MessageKeyField, message_key_field) && !message_key_field.empty()) {
-    logger_->log_error("The {} property is set. This property is DEPRECATED and has no effect; please use Kafka Key instead.", std::string{MessageKeyField.name});
+    logger_->log_error("The {} property is set. This property is DEPRECATED and has no effect; please use Kafka Key instead.", MessageKeyField.name);
   }
 
   logger_->log_debug("Successfully configured PublishKafka");

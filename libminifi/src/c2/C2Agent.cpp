@@ -957,7 +957,7 @@ static std::optional<std::string> validateFilePath(const std::filesystem::path& 
 
 void C2Agent::handleAssetUpdate(const C2ContentResponse& resp) {
   auto send_error = [&] (std::string_view error) {
-    logger_->log_error("{}", std::string(error));
+    logger_->log_error("{}", error);
     C2Payload response(Operation::acknowledge, state::UpdateState::SET_ERROR, resp.ident, true);
     response.setRawData(as_bytes(std::span(error.begin(), error.end())));
     enqueue_c2_response(std::move(response));

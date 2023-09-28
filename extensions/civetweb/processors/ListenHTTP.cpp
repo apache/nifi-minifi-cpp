@@ -43,14 +43,14 @@ void ListenHTTP::onSchedule(core::ProcessContext *context, core::ProcessSessionF
 
   if (!context->getProperty(BasePath, basePath)) {
     static_assert(BasePath.default_value);
-    logger_->log_info("{} attribute is missing, so default value of {} will be used", std::string(BasePath.name), std::string(*BasePath.default_value));
+    logger_->log_info("{} attribute is missing, so default value of {} will be used", BasePath.name, *BasePath.default_value);
     basePath = *BasePath.default_value;
   }
 
   basePath.insert(0, "/");
 
   if (!context->getProperty(Port, listeningPort)) {
-    logger_->log_error("{} attribute is missing or invalid", std::string(Port.name));
+    logger_->log_error("{} attribute is missing or invalid", Port.name);
     return;
   }
 
@@ -58,7 +58,7 @@ void ListenHTTP::onSchedule(core::ProcessContext *context, core::ProcessSessionF
 
   std::string authDNPattern;
   if (context->getProperty(AuthorizedDNPattern, authDNPattern) && !authDNPattern.empty()) {
-    logger_->log_debug("ListenHTTP using {}: {}", std::string(AuthorizedDNPattern.name), authDNPattern);
+    logger_->log_debug("ListenHTTP using {}: {}", AuthorizedDNPattern.name, authDNPattern);
   } else {
     authDNPattern = ".*";
     logger_->log_debug("Authorized DN Pattern not set or invalid, using default '{}' pattern", authDNPattern);
@@ -67,7 +67,7 @@ void ListenHTTP::onSchedule(core::ProcessContext *context, core::ProcessSessionF
   std::string sslCertFile;
 
   if (context->getProperty(SSLCertificate, sslCertFile) && !sslCertFile.empty()) {
-    logger_->log_debug("ListenHTTP using {}: {}", std::string(SSLCertificate.name), sslCertFile);
+    logger_->log_debug("ListenHTTP using {}: {}", SSLCertificate.name, sslCertFile);
   }
 
   // Read further TLS/SSL options only if TLS/SSL usage is implied by virtue of certificate value being set
@@ -77,7 +77,7 @@ void ListenHTTP::onSchedule(core::ProcessContext *context, core::ProcessSessionF
 
   if (!sslCertFile.empty()) {
     if (context->getProperty(SSLCertificateAuthority, sslCertAuthorityFile) && !sslCertAuthorityFile.empty()) {
-      logger_->log_debug("ListenHTTP using {}: {}", std::string(SSLCertificateAuthority.name), sslCertAuthorityFile);
+      logger_->log_debug("ListenHTTP using {}: {}", SSLCertificateAuthority.name, sslCertAuthorityFile);
     }
 
     if (context->getProperty(SSLVerifyPeer, sslVerifyPeer)) {
@@ -91,14 +91,14 @@ void ListenHTTP::onSchedule(core::ProcessContext *context, core::ProcessSessionF
     }
 
     if (context->getProperty(SSLMinimumVersion, sslMinVer)) {
-      logger_->log_debug("ListenHTTP using {}: {}", std::string(SSLMinimumVersion.name), sslMinVer);
+      logger_->log_debug("ListenHTTP using {}: {}", SSLMinimumVersion.name, sslMinVer);
     }
   }
 
   std::string headersAsAttributesPattern;
 
   if (context->getProperty(HeadersAsAttributesRegex, headersAsAttributesPattern) && !headersAsAttributesPattern.empty()) {
-    logger_->log_debug("ListenHTTP using {}: {}", std::string(HeadersAsAttributesRegex.name), headersAsAttributesPattern);
+    logger_->log_debug("ListenHTTP using {}: {}", HeadersAsAttributesRegex.name, headersAsAttributesPattern);
   }
 
   auto numThreads = getMaxConcurrentTasks();
@@ -149,7 +149,7 @@ void ListenHTTP::onSchedule(core::ProcessContext *context, core::ProcessSessionF
   server_ = std::make_unique<CivetServer>(options, &callbacks_, &logger_);
 
   context->getProperty(BatchSize, batch_size_);
-  logger_->log_debug("ListenHTTP using {}: {}", std::string(BatchSize.name), batch_size_);
+  logger_->log_debug("ListenHTTP using {}: {}", BatchSize.name, batch_size_);
 
   handler_ = std::make_unique<Handler>(basePath, context, std::move(authDNPattern),
     headersAsAttributesPattern.empty() ? std::nullopt : std::make_optional<utils::Regex>(headersAsAttributesPattern));
@@ -238,7 +238,7 @@ ListenHTTP::Handler::Handler(std::string base_uri, core::ProcessContext *context
       headers_as_attrs_regex_(std::move(headers_as_attrs_regex)),
       process_context_(context) {
   context->getProperty(BufferSize, buffer_size_);
-  logger_->log_debug("ListenHTTP using {}: {}", std::string(BufferSize.name), buffer_size_);
+  logger_->log_debug("ListenHTTP using {}: {}", BufferSize.name, buffer_size_);
 }
 
 void ListenHTTP::Handler::sendHttp500(mg_connection* const conn) {

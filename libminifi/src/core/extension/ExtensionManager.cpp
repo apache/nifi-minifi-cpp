@@ -68,7 +68,7 @@ bool ExtensionManager::initialize(const std::shared_ptr<Configure>& config) {
       return opt_pattern.value_or(DEFAULT_EXTENSION_PATH);
     }();
     auto candidates = utils::file::match(utils::file::FilePattern(pattern, [&] (std::string_view subpattern, std::string_view error_msg) {
-      logger_->log_error("Error in subpattern '{}': {}", std::string{subpattern}, std::string{error_msg});
+      logger_->log_error("Error in subpattern '{}': {}", subpattern, error_msg);
     }));
     for (const auto& candidate : candidates) {
       auto library = internal::asDynamicLibrary(candidate);

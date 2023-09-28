@@ -256,7 +256,7 @@ void TailFile::onSchedule(const std::shared_ptr<core::ProcessContext> &context, 
       delimiter_ = *parsed_delimiter;
     } else {
       logger_->log_error("Invalid {}: \"{}\" (it should be a single character, whether escaped or not). Using the first character as the {}",
-          std::string(TailFile::Delimiter.name), *delimiter_str, std::string(TailFile::Delimiter.name));
+          TailFile::Delimiter.name, *delimiter_str, TailFile::Delimiter.name);
       delimiter_ = getDelimiterOld(*delimiter_str);
     }
   }

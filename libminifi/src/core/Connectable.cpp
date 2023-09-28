@@ -53,7 +53,7 @@ void Connectable::setSupportedRelationships(std::span<const core::RelationshipDe
   relationships_.clear();
   for (const auto& item : relationships) {
     relationships_.emplace(item.name, item);
-    logger_->log_debug("Processor {} supported relationship name {}", name_, std::string(item.name));
+    logger_->log_debug("Processor {} supported relationship name {}", name_, item.name);
   }
 }
 

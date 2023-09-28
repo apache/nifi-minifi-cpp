@@ -93,7 +93,7 @@ void PutFile::onTrigger(core::ProcessContext *context, core::ProcessSession *ses
   }
 
   if (utils::file::exists(*dest_path)) {
-    logger_->log_warn("Destination file {} exists; applying Conflict Resolution Strategy: {}", dest_path->string(), std::string(magic_enum::enum_name(conflict_resolution_strategy_)));
+    logger_->log_warn("Destination file {} exists; applying Conflict Resolution Strategy: {}", dest_path->string(), magic_enum::enum_name(conflict_resolution_strategy_));
     if (conflict_resolution_strategy_ == FileExistsResolutionStrategy::fail) {
       return session->transfer(flow_file, Failure);
     } else if (conflict_resolution_strategy_ == FileExistsResolutionStrategy::ignore) {

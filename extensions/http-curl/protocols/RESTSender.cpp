@@ -59,14 +59,14 @@ void RESTSender::initialize(core::controller::ControllerServiceProvider* control
     }
     if (auto req_encoding_str = configure->get(Configuration::nifi_c2_rest_request_encoding)) {
       if (auto req_encoding = magic_enum::enum_cast<RequestEncoding>(*req_encoding_str, magic_enum::case_insensitive)) {
-        logger_->log_debug("Using request encoding '{}'", std::string{magic_enum::enum_name(*req_encoding)});
+        logger_->log_debug("Using request encoding '{}'", magic_enum::enum_name(*req_encoding));
         req_encoding_ = *req_encoding;
       } else {
         logger_->log_error("Invalid request encoding '{}'", req_encoding_str.value());
         req_encoding_ = RequestEncoding::none;
       }
     } else {
-      logger_->log_debug("Request encoding is not specified, using default '{}'", std::string{magic_enum::enum_name(RequestEncoding::none)});
+      logger_->log_debug("Request encoding is not specified, using default '{}'", magic_enum::enum_name(RequestEncoding::none));
       req_encoding_ = RequestEncoding::none;
     }
   }

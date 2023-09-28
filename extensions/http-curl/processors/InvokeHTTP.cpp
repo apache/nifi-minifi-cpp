@@ -100,7 +100,7 @@ void InvokeHTTP::setupMembersFromProperties(const core::ProcessContext& context)
   attributes_to_send_ = context.getProperty(AttributesToSend)
                         | utils::filter([](const std::string& s) { return !s.empty(); })  // avoid compiling an empty string to regex
                         | utils::transform([](const std::string& regex_str) { return utils::Regex{regex_str}; })
-                        | utils::orElse([this] { logger_->log_debug("{} is missing, so the default value will be used", std::string{AttributesToSend.name}); });
+                        | utils::orElse([this] { logger_->log_debug("{} is missing, so the default value will be used", AttributesToSend.name); });
 
   always_output_response_ = (context.getProperty(AlwaysOutputResponse) | utils::andThen(&utils::StringUtils::toBool)).value_or(false);
   penalize_no_retry_ = (context.getProperty(PenalizeOnNoRetry) | utils::andThen(&utils::StringUtils::toBool)).value_or(false);
@@ -109,7 +109,7 @@ void InvokeHTTP::setupMembersFromProperties(const core::ProcessContext& context)
 
   put_response_body_in_attribute_ = context.getProperty(PutResponseBodyInAttribute);
   if (put_response_body_in_attribute_ && put_response_body_in_attribute_->empty()) {
-    logger_->log_warn("{} is set to an empty string", std::string{PutResponseBodyInAttribute.name});
+    logger_->log_warn("{} is set to an empty string", PutResponseBodyInAttribute.name);
     put_response_body_in_attribute_.reset();
   }
 

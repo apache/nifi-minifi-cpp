@@ -42,15 +42,15 @@ void ReplaceText::onSchedule(const std::shared_ptr<core::ProcessContext>& contex
   gsl_Expects(context);
 
   evaluation_mode_ = utils::parseEnumProperty<EvaluationModeType>(*context, EvaluationMode);
-  logger_->log_debug("the {} property is set to {}", std::string(EvaluationMode.name), std::string{magic_enum::enum_name(evaluation_mode_)});
+  logger_->log_debug("the {} property is set to {}", EvaluationMode.name, magic_enum::enum_name(evaluation_mode_));
 
   if (auto line_by_line_evaluation_mode = utils::parseOptionalEnumProperty<LineByLineEvaluationModeType>(*context, LineByLineEvaluationMode)) {
     line_by_line_evaluation_mode_ = *line_by_line_evaluation_mode;
-    logger_->log_debug("the {} property is set to {}", std::string(LineByLineEvaluationMode.name), std::string{magic_enum::enum_name(line_by_line_evaluation_mode_)});
+    logger_->log_debug("the {} property is set to {}", LineByLineEvaluationMode.name, magic_enum::enum_name(line_by_line_evaluation_mode_));
   }
 
   replacement_strategy_ = utils::parseEnumProperty<ReplacementStrategyType>(*context, ReplacementStrategy);
-  logger_->log_debug("the {} property is set to {}", std::string(ReplacementStrategy.name), std::string{magic_enum::enum_name(replacement_strategy_)});
+  logger_->log_debug("the {} property is set to {}", ReplacementStrategy.name, magic_enum::enum_name(replacement_strategy_));
 }
 
 void ReplaceText::onTrigger(const std::shared_ptr<core::ProcessContext>& context, const std::shared_ptr<core::ProcessSession>& session) {
@@ -88,7 +88,7 @@ ReplaceText::Parameters ReplaceText::readParameters(const std::shared_ptr<core::
     found_search_value = context->getProperty(SearchValue, parameters.search_value_, flow_file);
   }
   if (found_search_value) {
-    logger_->log_debug("the {} property is set to {}", std::string{SearchValue.name}, parameters.search_value_);
+    logger_->log_debug("the {} property is set to {}", SearchValue.name, parameters.search_value_);
     if (replacement_strategy_ == ReplacementStrategyType::REGEX_REPLACE) {
       parameters.search_regex_ = std::regex{parameters.search_value_};
     }
@@ -104,7 +104,7 @@ ReplaceText::Parameters ReplaceText::readParameters(const std::shared_ptr<core::
     found_replacement_value = context->getProperty(ReplacementValue, parameters.replacement_value_, flow_file);
   }
   if (found_replacement_value) {
-    logger_->log_debug("the {} property is set to {}", std::string(ReplacementValue.name), parameters.replacement_value_);
+    logger_->log_debug("the {} property is set to {}", ReplacementValue.name, parameters.replacement_value_);
   } else {
     throw Exception{PROCESSOR_EXCEPTION, utils::StringUtils::join_pack("Missing required property: ", ReplacementValue.name)};
   }
@@ -239,7 +239,7 @@ std::string ReplaceText::getAttributeValue(const std::shared_ptr<core::FlowFile>
   if (attribute_value) {
     return *attribute_value;
   } else {
-    logger_->log_debug("Attribute {} not found in the flow file during {}", attribute_key, std::string{magic_enum::enum_name(ReplacementStrategyType::SUBSTITUTE_VARIABLES)});
+    logger_->log_debug("Attribute {} not found in the flow file during {}", attribute_key, magic_enum::enum_name(ReplacementStrategyType::SUBSTITUTE_VARIABLES));
     return match[0];
   }
 }

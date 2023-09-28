@@ -398,7 +398,7 @@ bool HTTPClient::submit() {
   }
   if (res_ != CURLE_OK) {
     logger_->log_info("{}", request_headers_.size());
-    logger_->log_error("curl_easy_perform() failed {} on {}, error code {}\n", curl_easy_strerror(res_), url_, static_cast<int>(res_));
+    logger_->log_error("curl_easy_perform() failed {} on {}, error code {}\n", curl_easy_strerror(res_), url_, magic_enum::enum_underlying(res_));
     return false;
   }
 
@@ -488,7 +488,7 @@ void HTTPClient::configure_secure_connection() {
     static const auto default_ca_file = utils::getDefaultCAFile();
 
     if (default_ca_file)
-      logger_->log_debug("Using CA certificate file \"{}\"", std::string(*default_ca_file));
+      logger_->log_debug("Using CA certificate file \"{}\"", *default_ca_file);
     else
       logger_->log_error("Could not find valid CA certificate file");
 

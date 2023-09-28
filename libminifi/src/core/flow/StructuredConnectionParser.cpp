@@ -24,7 +24,7 @@ namespace org::apache::nifi::minifi::core::flow {
 
 void StructuredConnectionParser::addNewRelationshipToConnection(std::string_view relationship_name, minifi::Connection& connection) const {
   core::Relationship relationship(std::string(relationship_name), "");
-  logger_->log_debug("parseConnection: relationship => [{}]", std::string(relationship_name));
+  logger_->log_debug("parseConnection: relationship => [{}]", relationship_name);
   connection.addRelationship(relationship);
 }
 
