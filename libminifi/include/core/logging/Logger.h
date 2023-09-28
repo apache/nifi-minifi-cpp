@@ -78,9 +78,8 @@ inline spdlog::level::level_enum mapToSpdLogLevel(LOG_LEVEL level) {
     case err: return spdlog::level::err;
     case critical: return spdlog::level::critical;
     case off: return spdlog::level::off;
-    default:
-      throw std::invalid_argument(fmt::format("Invalid LOG_LEVEL {}", magic_enum::enum_underlying(level)));
   }
+  throw std::invalid_argument(fmt::format("Invalid LOG_LEVEL {}", magic_enum::enum_underlying(level)));
 }
 
 inline LOG_LEVEL mapFromSpdLogLevel(spdlog::level::level_enum level) {
@@ -93,9 +92,8 @@ inline LOG_LEVEL mapFromSpdLogLevel(spdlog::level::level_enum level) {
     case spdlog::level::critical: return LOG_LEVEL::critical;
     case spdlog::level::off: return LOG_LEVEL::off;
     case spdlog::level::n_levels: return LOG_LEVEL::off;
-    default:
-      throw std::invalid_argument(fmt::format("Invalid spdlog::level::level_enum {}", magic_enum::enum_underlying(level)));
   }
+  throw std::invalid_argument(fmt::format("Invalid spdlog::level::level_enum {}", magic_enum::enum_underlying(level)));
 }
 
 class BaseLogger {

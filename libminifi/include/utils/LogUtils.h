@@ -42,9 +42,8 @@ inline LogLevelOption mapToLogLevelOption(core::logging::LOG_LEVEL level) {
     case core::logging::err: return LogLevelOption::LOGGING_ERROR;
     case core::logging::critical: return LogLevelOption::LOGGING_CRITICAL;
     case core::logging::off: return LogLevelOption::LOGGING_OFF;
-    default:
-      throw std::invalid_argument(fmt::format("Invalid LOG_LEVEL {}", magic_enum::enum_underlying(level)));
   }
+  throw std::invalid_argument(fmt::format("Invalid LOG_LEVEL {}", magic_enum::enum_underlying(level)));
 }
 
 inline core::logging::LOG_LEVEL mapToLogLevel(LogLevelOption option) {
@@ -56,9 +55,8 @@ inline core::logging::LOG_LEVEL mapToLogLevel(LogLevelOption option) {
     case LogLevelOption::LOGGING_ERROR: return core::logging::err;
     case LogLevelOption::LOGGING_CRITICAL: return core::logging::critical;
     case LogLevelOption::LOGGING_OFF: return core::logging::off;
-    default:
-      throw std::invalid_argument(fmt::format("Invalid LogLevelOption {}", magic_enum::enum_underlying(option)));
   }
+  throw std::invalid_argument(fmt::format("Invalid LogLevelOption {}", magic_enum::enum_underlying(option)));
 }
 
 }  // namespace org::apache::nifi::minifi::utils::LogUtils

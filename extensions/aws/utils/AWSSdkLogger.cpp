@@ -35,23 +35,23 @@ Aws::Utils::Logging::LogLevel mapToAwsLevels(core::logging::LOG_LEVEL level) {
     case LOG_LEVEL::err: return AwsLogLevel::Error;
     case LOG_LEVEL::critical: return AwsLogLevel::Fatal;
     case LOG_LEVEL::off: return AwsLogLevel::Off;
-    default:
-      throw std::invalid_argument(fmt::format("Invalid LOG_LEVEL {}", magic_enum::enum_underlying(level)));
   }
+  throw std::invalid_argument(fmt::format("Invalid LOG_LEVEL {}", magic_enum::enum_underlying(level)));
 }
 
 core::logging::LOG_LEVEL mapFromAwsLevels(Aws::Utils::Logging::LogLevel level) {
   switch (level) {
-    case Aws::Utils::Logging::LogLevel::Off: return core::logging::off;
-    case Aws::Utils::Logging::LogLevel::Fatal: return core::logging::critical;
-    case Aws::Utils::Logging::LogLevel::Error:return core::logging::err;
-    case Aws::Utils::Logging::LogLevel::Warn: return core::logging::warn;
-    case Aws::Utils::Logging::LogLevel::Info: return core::logging::info;
-    case Aws::Utils::Logging::LogLevel::Debug: return core::logging::debug;
-    case Aws::Utils::Logging::LogLevel::Trace: return core::logging::trace;
-    default:
-      throw std::invalid_argument(fmt::format("Invalid Aws::Utils::Logging::LogLevel {}", magic_enum::enum_underlying(level)));
+    using core::logging::LOG_LEVEL;
+    using AwsLogLevel = Aws::Utils::Logging::LogLevel;
+    case AwsLogLevel::Off: return LOG_LEVEL::off;
+    case AwsLogLevel::Fatal: return LOG_LEVEL::critical;
+    case AwsLogLevel::Error:return LOG_LEVEL::err;
+    case AwsLogLevel::Warn: return LOG_LEVEL::warn;
+    case AwsLogLevel::Info: return LOG_LEVEL::info;
+    case AwsLogLevel::Debug: return LOG_LEVEL::debug;
+    case AwsLogLevel::Trace: return LOG_LEVEL::trace;
   }
+  throw std::invalid_argument(fmt::format("Invalid Aws::Utils::Logging::LogLevel {}", magic_enum::enum_underlying(level)));
 }
 }  // namespace
 
