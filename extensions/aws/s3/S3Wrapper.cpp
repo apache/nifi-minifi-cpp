@@ -324,7 +324,7 @@ std::optional<std::vector<ListedObjectAttributes>> S3Wrapper::listObjects(const 
       return std::nullopt;
     }
     const auto& objects = aws_result->GetContents();
-    logger_->log_debug("AWS S3 List operation returned {} objects. This result is{} truncated.", objects.size(), aws_result->GetIsTruncated() ? "" : "not");
+    logger_->log_debug("AWS S3 List operation returned {} objects. This result is{} truncated.", objects.size(), aws_result->GetIsTruncated() ? "" : " not");
     addListResults(objects, params.min_object_age, attribute_list);
     if (aws_result->GetIsTruncated()) {
       request.SetContinuationToken(aws_result->GetNextContinuationToken());
