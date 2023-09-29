@@ -31,6 +31,7 @@
 #include "spdlog/logger.h"
 #include "utils/gsl.h"
 #include "utils/Enum.h"
+#include "utils/GeneralUtils.h"
 #include "fmt/chrono.h"
 #include "fmt/std.h"
 #include "fmt/ostream.h"
@@ -50,15 +51,6 @@ class LoggerControl {
  protected:
   std::atomic<bool> is_enabled_;
 };
-
-template<typename Arg>
-inline decltype(auto) conditional_stringify(Arg&& arg) {
-  if constexpr (std::is_invocable_v<Arg>) {
-    return std::forward<Arg>(arg)();
-  } else {
-    return std::forward<Arg>(arg);
-  }
-}
 
 enum LOG_LEVEL {
   trace = 0,
@@ -103,7 +95,7 @@ class BaseLogger {
 
   virtual void log_string(LOG_LEVEL level, std::string str) = 0;
   virtual bool should_log(LOG_LEVEL level) = 0;
-  virtual LOG_LEVEL level() const = 0;
+  [[nodiscard]] virtual LOG_LEVEL level() const = 0;
 };
 
 class LogBuilder {
@@ -129,51 +121,52 @@ class LogBuilder {
   LOG_LEVEL level;
 };
 
-template<class... Ts> struct overloaded : Ts... { using Ts::operator()...; };
-template<class... Ts> overloaded(Ts...) -> overloaded<Ts...>;
-const auto map_args = overloaded {
+const auto inline map_args = utils::overloaded {
     [](std::invocable<> auto&& f) { return std::invoke(std::forward<decltype(f)>(f)); },
     [](auto&& value) { return std::forward<decltype(value)>(value); }
 };
+
+template<typename... Args>
+using log_format_string = fmt::format_string<std::invoke_result_t<decltype(map_args), Args>...>;
 
 class Logger : public BaseLogger {
  public:
   Logger(Logger const&) = delete;
   Logger& operator=(Logger const&) = delete;
 
-  template<typename ...Ts>
-  void log_with_level(LOG_LEVEL log_level, fmt::format_string<std::invoke_result_t<decltype(map_args), Ts>...> fmt, Ts&& ...args) {
-    return log(mapToSpdLogLevel(log_level), std::move(fmt), std::forward<Ts>(args)...);
+  template<typename ...Args>
+  void log_with_level(LOG_LEVEL log_level, log_format_string<Args...> fmt, Args&& ...args) {
+    return log(mapToSpdLogLevel(log_level), std::move(fmt), std::forward<Args>(args)...);
   }
 
-  template<typename ...Ts>
-  void log_critical(fmt::format_string<std::invoke_result_t<decltype(map_args), Ts>...> fmt, Ts&& ...args) {
-    log(spdlog::level::critical, std::move(fmt), std::forward<Ts>(args)...);
+  template<typename ...Args>
+  void log_critical(log_format_string<Args...> fmt, Args&& ...args) {
+    log(spdlog::level::critical, std::move(fmt), std::forward<Args>(args)...);
   }
 
-  template<typename ...Ts>
-  void log_error(fmt::format_string<std::invoke_result_t<decltype(map_args), Ts>...> fmt, Ts&& ...args) {
-    log(spdlog::level::err, std::move(fmt), std::forward<Ts>(args)...);
+  template<typename ...Args>
+  void log_error(log_format_string<Args...> fmt, Args&& ...args) {
+    log(spdlog::level::err, std::move(fmt), std::forward<Args>(args)...);
   }
 
-  template<typename ...Ts>
-  void log_warn(fmt::format_string<std::invoke_result_t<decltype(map_args), Ts>...> fmt, Ts&& ...args) {
-    log(spdlog::level::warn, std::move(fmt), std::forward<Ts>(args)...);
+  template<typename ...Args>
+  void log_warn(log_format_string<Args...> fmt, Args&& ...args) {
+    log(spdlog::level::warn, std::move(fmt), std::forward<Args>(args)...);
   }
 
-  template<typename ...Ts>
-  void log_info(fmt::format_string<std::invoke_result_t<decltype(map_args), Ts>...> fmt, Ts&& ...args) {
-    log(spdlog::level::info, std::move(fmt), std::forward<Ts>(args)...);
+  template<typename ...Args>
+  void log_info(log_format_string<Args...> fmt, Args&& ...args) {
+    log(spdlog::level::info, std::move(fmt), std::forward<Args>(args)...);
   }
 
-  template<typename ...Ts>
-  void log_debug(fmt::format_string<std::invoke_result_t<decltype(map_args), Ts>...> fmt, Ts&& ...args) {
-    log(spdlog::level::debug, std::move(fmt), std::forward<Ts>(args)...);
+  template<typename ...Args>
+  void log_debug(log_format_string<Args...> fmt, Args&& ...args) {
+    log(spdlog::level::debug, std::move(fmt), std::forward<Args>(args)...);
   }
 
-  template<typename ...Ts>
-  void log_trace(fmt::format_string<std::invoke_result_t<decltype(map_args), Ts>...> fmt, Ts&& ...args) {
-    log(spdlog::level::trace, std::move(fmt), std::forward<Ts>(args)...);
+  template<typename ...Args>
+  void log_trace(log_format_string<Args...> fmt, Args&& ...args) {
+    log(spdlog::level::trace, std::move(fmt), std::forward<Args>(args)...);
   }
 
   void set_max_log_size(int size) {
