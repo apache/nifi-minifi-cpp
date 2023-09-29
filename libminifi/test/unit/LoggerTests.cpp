@@ -28,6 +28,7 @@
 #include "StreamPipe.h"
 #include "utils/IntegrationTestUtils.h"
 #include "utils/span.h"
+#include "utils/net/AsioSocketUtils.h"
 
 #include "spdlog/spdlog.h"
 
@@ -370,6 +371,11 @@ TEST_CASE("fmt formatting works with the logger") {
   CHECK(LogTestController::getInstance().contains("[org::apache::nifi::minifi::core::logging::Logger] [critical] 2 h equals to 7200 s"));
 
   LogTestController::getInstance().reset();
+}
+
+TEST_CASE("custom fmt formatter tests") {
+  CHECK("abcde" == fmt::format("{}", utils::SmallString<5>{'a', 'b', 'c', 'd', 'e'}));
+  CHECK("127.0.0.1:8080" == fmt::format("{}", asio::ip::tcp::endpoint(asio::ip::make_address("127.0.0.1"), 8080)));
 }
 
 TEST_CASE("Test sending multiple segments at once", "[ttl16]") {

@@ -26,6 +26,7 @@
 #include "core/logging/LoggerConfiguration.h"
 
 #include "asio/ip/udp.hpp"
+#include "utils/net/AsioSocketUtils.h"
 
 using asio::ip::udp;
 
@@ -104,10 +105,11 @@ void PutUDP::onTrigger(core::ProcessContext* context, core::ProcessSession* cons
       }
       socket.send_to(asio::buffer(data.buffer), resolver_entry.endpoint(), udp::socket::message_flags{}, error);
       if (error) {
-        core::logging::LOG_DEBUG(logger) << "sending to endpoint " << resolver_entry.endpoint() << " failed due to " << error.message();
+        logger->log_debug("sending to endpoint {} failed due to {}", resolver_entry.endpoint(), error.message());
         continue;
+
       }
-      core::logging::LOG_DEBUG(logger) << "sending to endpoint " << resolver_entry.endpoint() << " succeeded";
+      logger->log_debug("sending to endpoint {} succeeded", resolver_entry.endpoint());
       return {};
     }
     return nonstd::make_unexpected(error);

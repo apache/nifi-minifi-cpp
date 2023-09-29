@@ -204,13 +204,13 @@ asio::awaitable<std::error_code> ConnectionHandler<SocketType>::establishNewConn
   for (const auto& endpoint : endpoints) {
     auto [connection_error] = co_await asyncOperationWithTimeout(socket.lowest_layer().async_connect(endpoint, use_nothrow_awaitable), timeout_duration_);
     if (connection_error) {
-      core::logging::LOG_DEBUG(logger_) << "Connecting to " << endpoint.endpoint() << " failed due to " << connection_error.message();
+      logger_->log_debug("Connecting to {} failed due to {}", endpoint.endpoint(), connection_error.message());
       last_error = connection_error;
       continue;
     }
     auto [handshake_error] = co_await utils::net::handshake(socket, timeout_duration_);
     if (handshake_error) {
-      core::logging::LOG_DEBUG(logger_) << "Handshake with " << endpoint.endpoint() << " failed due to " << handshake_error.message();
+      logger_->log_debug("Handshake with {} failed due to {}", endpoint.endpoint(), handshake_error.message());
       last_error = handshake_error;
       continue;
     }

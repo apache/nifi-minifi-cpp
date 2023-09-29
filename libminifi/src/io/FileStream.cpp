@@ -155,7 +155,7 @@ size_t FileStream::read(std::span<std::byte> buf) {
     size_t ret = len - offset_;
     offset_ = len;
     length_ = len;
-    core::logging::LOG_DEBUG(logger_) << path_ << " eof bit, ended at " << offset_;
+    logger_->log_debug("{} eof bit, ended at {}", path_, offset_);
     return ret;
   } else {
     offset_ += buf.size();

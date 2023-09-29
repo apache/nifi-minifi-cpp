@@ -521,14 +521,14 @@ void SSLContextService::verifyCertificateExpiration() {
     if (auto end_date = utils::tls::getCertificateExpiration(cert)) {
       std::string end_date_str = utils::timeutils::getTimeStr(*end_date);
       if (end_date.value() < std::chrono::system_clock::now()) {
-        core::logging::LOG_ERROR(logger_) << "Certificate in '" << cert_file << "' expired at " << end_date_str;
+        logger_->log_error("Certificate in '{}' expired at {}", cert_file, end_date_str);
       } else if (auto diff = end_date.value() - std::chrono::system_clock::now(); diff < std::chrono::weeks{2}) {
-        core::logging::LOG_WARN(logger_) << "Certificate in '" << cert_file << "' will expire at " << end_date_str;
+        logger_->log_error("Certificate in '{}' will expire at {}", cert_file, end_date_str);
       } else {
-        core::logging::LOG_DEBUG(logger_) << "Certificate in '" << cert_file << "' will expire at " << end_date_str;
+        logger_->log_error("Certificate in '{}' will expire at {}", cert_file, end_date_str);
       }
     } else {
-      core::logging::LOG_ERROR(logger_) << "Could not determine expiration date for certificate in '" << cert_file << "'";
+      logger_->log_error("Could not determine expiration date for certificate in '{}'", cert_file);
     }
   };
   if (!IsNullOrEmpty(certificate_)) {

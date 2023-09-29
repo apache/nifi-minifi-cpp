@@ -33,6 +33,7 @@
 #include "utils/Enum.h"
 #include "fmt/chrono.h"
 #include "fmt/std.h"
+#include "fmt/ostream.h"
 
 namespace org::apache::nifi::minifi::core::logging {
 
@@ -225,8 +226,6 @@ class Logger : public BaseLogger {
 
   std::atomic<int> max_log_size_{LOG_BUFFER_SIZE};
 };
-
-#define LOG_DEBUG(x) LogBuilder((x).get(), org::apache::nifi::minifi::core::logging::LOG_LEVEL::debug)
 
 #define LOG_INFO(x) LogBuilder((x).get(), org::apache::nifi::minifi::core::logging::LOG_LEVEL::info)
 
