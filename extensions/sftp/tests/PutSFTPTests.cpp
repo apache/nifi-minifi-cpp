@@ -501,7 +501,7 @@ TEST_CASE_METHOD(PutSFTPTestsFixture, "PutSFTP set mtime", "[PutSFTP]") {
   testController.runSession(plan, true);
 
   testFile("nifi_test/tstFile1.ext", "content 1");
-  std::chrono::system_clock::time_point modification_time = date::sys_days{date::January / 24 / 2065} + 5h + 20min;  // NOLINT(whitespace/braces)
+  std::chrono::system_clock::time_point modification_time = date::sys_days(date::January / 24 / 2065) + 5h + 20min;
   testModificationTime("nifi_test/tstFile1.ext", utils::file::from_sys(modification_time));
 }
 

@@ -199,7 +199,6 @@ Checks: >
   google-objc-function-naming,
   google-objc-global-variable-declaration,
   google-readability-avoid-underscore-in-googletest-name,
-  google-readability-casting,
   google-readability-todo,
   google-runtime-int,
   google-runtime-operator,

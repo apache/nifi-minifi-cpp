@@ -1325,9 +1325,9 @@ TEST_CASE("Parse RFC3339 with Expression Language toDate") {
   using namespace std::literals::chrono_literals;
   using std::chrono::milliseconds;
 
-  milliseconds expected_second = std::chrono::floor<milliseconds>((sys_days{2023_y / 03 / 01} + 19h + 04min + 55s).time_since_epoch());  // NOLINT(whitespace/braces)
-  milliseconds expected_tenth_second = std::chrono::floor<milliseconds>((sys_days{2023_y / 03 / 01} + 19h + 04min + 55s + 100ms).time_since_epoch());  // NOLINT(whitespace/braces)
-  milliseconds expected_milli_second = std::chrono::floor<milliseconds>((sys_days{2023_y / 03 / 01} + 19h + 04min + 55s + 190ms).time_since_epoch());  // NOLINT(whitespace/braces)
+  milliseconds expected_second = std::chrono::floor<milliseconds>((sys_days(2023_y / 03 / 01) + 19h + 04min + 55s).time_since_epoch());
+  milliseconds expected_tenth_second = std::chrono::floor<milliseconds>((sys_days(2023_y / 03 / 01) + 19h + 04min + 55s + 100ms).time_since_epoch());
+  milliseconds expected_milli_second = std::chrono::floor<milliseconds>((sys_days(2023_y / 03 / 01) + 19h + 04min + 55s + 190ms).time_since_epoch());
 
   CHECK(expression::compile("${literal('2023-03-01T19:04:55Z'):toDate()}")(expression::Parameters()).asSignedLong() == expected_second.count());
   CHECK(expression::compile("${literal('2023-03-01T19:04:55.1Z'):toDate()}")(expression::Parameters()).asSignedLong() == expected_tenth_second.count());

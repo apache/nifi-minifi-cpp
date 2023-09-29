@@ -80,7 +80,7 @@ TEST_CASE("getRFC2616Format() works correctly", "[getRFC2616Format]") {
   CHECK("Thu, 01 Jan 1970 00:59:59 UTC" == getRFC2616Format(std::chrono::sys_seconds{1h - 1s}));
 
   // Example from https://www.rfc-editor.org/rfc/rfc7231#page-67
-  CHECK("Tue, 15 Nov 1994 08:12:31 UTC" == getRFC2616Format(sys_days{year_month_day(1994_y/11/15)} + 8h + 12min + 31s));
+  CHECK("Tue, 15 Nov 1994 08:12:31 UTC" == getRFC2616Format(sys_days(year_month_day(1994_y/11/15)) + 8h + 12min + 31s));
 }
 
 TEST_CASE("Test time conversion", "[testtimeconversion]") {
@@ -95,12 +95,12 @@ TEST_CASE("Test DateTime Conversion", "[testDateTime]") {
   using date::sys_days;
   using utils::timeutils::parseDateTimeStr;
 
-  CHECK(sys_days{date::year_month_day(1970_y/01/01)} == parseDateTimeStr("1970-01-01T00:00:00Z"));
-  CHECK(sys_days{year_month_day(1970_y/01/01)} + 0h + 59min + 59s == parseDateTimeStr("1970-01-01T00:59:59Z"));
-  CHECK(sys_days{year_month_day(2000_y/06/17)} + 12h + 34min + 21s == parseDateTimeStr("2000-06-17T12:34:21Z"));
-  CHECK(sys_days{year_month_day(2038_y/01/19)} + 3h + 14min + 7s == parseDateTimeStr("2038-01-19T03:14:07Z"));
-  CHECK(sys_days{year_month_day(2065_y/01/24)} + 5h + 20min + 0s == parseDateTimeStr("2065-01-24T05:20:00Z"));
-  CHECK(sys_days{year_month_day(1969_y/01/01)} == parseDateTimeStr("1969-01-01T00:00:00Z"));
+  CHECK(sys_days(date::year_month_day(1970_y/01/01)) == parseDateTimeStr("1970-01-01T00:00:00Z"));
+  CHECK(sys_days(year_month_day(1970_y/01/01)) + 0h + 59min + 59s == parseDateTimeStr("1970-01-01T00:59:59Z"));
+  CHECK(sys_days(year_month_day(2000_y/06/17)) + 12h + 34min + 21s == parseDateTimeStr("2000-06-17T12:34:21Z"));
+  CHECK(sys_days(year_month_day(2038_y/01/19)) + 3h + 14min + 7s == parseDateTimeStr("2038-01-19T03:14:07Z"));
+  CHECK(sys_days(year_month_day(2065_y/01/24)) + 5h + 20min + 0s == parseDateTimeStr("2065-01-24T05:20:00Z"));
+  CHECK(sys_days(year_month_day(1969_y/01/01)) == parseDateTimeStr("1969-01-01T00:00:00Z"));
 
   CHECK_FALSE(utils::timeutils::parseDateTimeStr("1970-01-01A00:00:00Z"));
   CHECK_FALSE(utils::timeutils::parseDateTimeStr("1970-01-01T00:00:00"));
@@ -111,7 +111,7 @@ TEST_CASE("Test DateTime Conversion", "[testDateTime]") {
 
 TEST_CASE("Test system_clock epoch", "[systemclockepoch]") {
   std::chrono::time_point<std::chrono::system_clock> epoch;
-  std::chrono::time_point<std::chrono::system_clock> unix_epoch_plus_3e9_sec = date::sys_days{date::January / 24 / 2065} + 5h + 20min;
+  std::chrono::time_point<std::chrono::system_clock> unix_epoch_plus_3e9_sec = date::sys_days(date::January / 24 / 2065) + 5h + 20min;
   REQUIRE(epoch.time_since_epoch() == 0s);
   REQUIRE(unix_epoch_plus_3e9_sec.time_since_epoch() == 3000000000s);
 }
@@ -121,7 +121,7 @@ TEST_CASE("Test windows file_clock duration period and epoch") {
   static_assert(std::ratio_equal_v<std::chrono::file_clock::duration::period, std::ratio<1, 10000000>>, "file_clock duration tick period must be 100 nanoseconds");
   auto file_clock_epoch = std::chrono::file_clock::time_point{};
   auto file_clock_epoch_as_sys_time = utils::file::to_sys(file_clock_epoch);
-  std::chrono::system_clock::time_point expected_windows_file_epoch = date::sys_days{date::January / 1 / 1601};
+  std::chrono::system_clock::time_point expected_windows_file_epoch = date::sys_days(date::January / 1 / 1601);
   CHECK(file_clock_epoch_as_sys_time == expected_windows_file_epoch);
 }
 
@@ -292,10 +292,10 @@ TEST_CASE("Parse RFC3339", "[parseRfc3339]") {
   using namespace date::literals;  // NOLINT(google-build-using-namespace)
   using namespace std::literals::chrono_literals;
 
-  auto expected_second = sys_days{2023_y / 03 / 01} + 19h + 04min + 55s;
-  auto expected_tenth_second = sys_days{2023_y / 03 / 01} + 19h + 04min + 55s + 100ms;
-  auto expected_milli_second = sys_days{2023_y / 03 / 01} + 19h + 04min + 55s + 190ms;
-  auto expected_micro_second = sys_days{2023_y / 03 / 01} + 19h + 04min + 55s + 190999us;
+  auto expected_second = sys_days(2023_y / 03 / 01) + 19h + 04min + 55s;
+  auto expected_tenth_second = sys_days(2023_y / 03 / 01) + 19h + 04min + 55s + 100ms;
+  auto expected_milli_second = sys_days(2023_y / 03 / 01) + 19h + 04min + 55s + 190ms;
+  auto expected_micro_second = sys_days(2023_y / 03 / 01) + 19h + 04min + 55s + 190999us;
 
   CHECK(parseRfc3339("2023-03-01T19:04:55Z") == expected_second);
   CHECK(parseRfc3339("2023-03-01T19:04:55.1Z") == expected_tenth_second);

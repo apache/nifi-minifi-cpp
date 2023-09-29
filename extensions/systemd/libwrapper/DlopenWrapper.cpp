@@ -72,7 +72,7 @@ class DlopenJournal : public Journal {
   template<typename F>
   F loadSymbol(const char* const symbol_name) {
     // The cast below is supported by POSIX platforms. https://stackoverflow.com/a/1096349
-    F const symbol = (F)dlsym(libhandle_.get(), symbol_name);  // NOLINT(google-readability-casting)
+    F const symbol = (F)dlsym(libhandle_.get(), symbol_name);
     const char* const err = dlerror();
     if (err) throw Exception(ExceptionType::GENERAL_EXCEPTION, utils::StringUtils::join_pack("dlsym(", symbol_name, "): ", err));
     return symbol;

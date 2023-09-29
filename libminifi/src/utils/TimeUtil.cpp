@@ -64,7 +64,7 @@ std::optional<std::chrono::system_clock::time_point> parseRfc3339(const std::str
   if (stream.fail() || (stream.peek() && !stream.eof()))
     return std::nullopt;
 
-  return date::sys_days{date_part} + time_part - offset;  // NOLINT(whitespace/braces)
+  return date::sys_days(date_part) + time_part - offset;
 }
 
 }  // namespace org::apache::nifi::minifi::utils::timeutils
