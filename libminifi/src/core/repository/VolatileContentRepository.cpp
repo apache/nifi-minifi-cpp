@@ -36,8 +36,8 @@ const char *VolatileContentRepository::minimal_locking = "minimal.locking";
 bool VolatileContentRepository::initialize(const std::shared_ptr<Configure> &configure) {
   repo_data_.initialize(configure, getName());
 
-  logging::LOG_INFO(logger_) << "Resizing repo_data_.value_vector for " << getName() << " count is " << repo_data_.max_count;
-  logging::LOG_INFO(logger_) << "Using a maximum size for " << getName() << " of  " << repo_data_.max_size;
+  logger_->log_info("Resizing repo_data_.value_vector for {} count is {}", getName(), repo_data_.max_count);
+  logger_->log_info("Using a maximum size for {} of {}", getName(), repo_data_.max_size);
 
   if (configure != nullptr) {
     std::string value;

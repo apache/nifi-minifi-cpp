@@ -377,7 +377,7 @@ int main(int argc, char **argv) {
 
     std::string content_repo_path;
     if (configure->get(minifi::Configure::nifi_dbcontent_repository_directory_default, content_repo_path) && !content_repo_path.empty()) {
-      core::logging::LOG_INFO(logger) << "setting default dir to " << content_repo_path;
+      logger->log_info("setting default dir to {}", content_repo_path);
       minifi::setDefaultDirectory(content_repo_path);
     }
 

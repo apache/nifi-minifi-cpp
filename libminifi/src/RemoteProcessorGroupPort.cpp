@@ -371,7 +371,7 @@ void RemoteProcessorGroupPort::refreshPeerList() {
   if (protocol)
     protocol->getPeerList(peers_);
 
-  core::logging::LOG_INFO(logger_) << "Have " << peers_.size() << " peers";
+  logger_->log_info("Have {} peers", peers_.size());
 
   if (!peers_.empty())
     peer_index_ = 0;

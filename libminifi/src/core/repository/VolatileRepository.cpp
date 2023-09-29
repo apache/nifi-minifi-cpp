@@ -28,8 +28,8 @@ namespace org::apache::nifi::minifi::core::repository {
 bool VolatileRepository::initialize(const std::shared_ptr<Configure> &configure) {
   repo_data_.initialize(configure, core::ThreadedRepository::getName());
 
-  logging::LOG_INFO(logger_) << "Resizing value_vector for " << core::ThreadedRepository::getName() << " count is " << repo_data_.max_count;
-  logging::LOG_INFO(logger_) << "Using a maximum size for " << core::ThreadedRepository::getName() << " of  " << repo_data_.max_size;
+  logger_->log_info("Resizing value_vector for {} count is {}", core::ThreadedRepository::getName(), repo_data_.max_count);
+  logger_->log_info("Using a maximum size for {} of {}", core::ThreadedRepository::getName(), repo_data_.max_size);
   return true;
 }
 

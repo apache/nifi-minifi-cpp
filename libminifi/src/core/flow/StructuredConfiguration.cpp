@@ -845,7 +845,7 @@ void StructuredConfiguration::raiseComponentError(const std::string &component_n
     err_msg.append(" [in '" + section + "' section of configuration file]");
   }
 
-  logging::LOG_ERROR(logger_) << err_msg;
+  logger_->log_error("{}", err_msg);
 
   throw std::invalid_argument(err_msg);
 }
@@ -886,7 +886,7 @@ std::string StructuredConfiguration::getOptionalField(const Node& node, const st
 
       infoMessage += default_value;
     }
-    logging::LOG_INFO(logger_) << infoMessage;
+    logger_->log_info("{}", infoMessage);
     return default_value;
   }
 

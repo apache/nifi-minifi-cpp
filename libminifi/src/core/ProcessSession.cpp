@@ -218,12 +218,12 @@ void ProcessSession::removeAttribute(const std::shared_ptr<core::FlowFile>& flow
 
 void ProcessSession::penalize(const std::shared_ptr<core::FlowFile> &flow) {
   const std::chrono::milliseconds penalization_period = process_context_->getProcessorNode()->getPenalizationPeriod();
-  logging::LOG_INFO(logger_) << "Penalizing " << flow->getUUIDStr() << " for " << penalization_period.count() << "ms at " << process_context_->getProcessorNode()->getName();
+  logger_->log_info("Penalizing {} for {} at {}", flow->getUUIDStr(), penalization_period, process_context_->getProcessorNode()->getName());
   flow->penalize(penalization_period);
 }
 
 void ProcessSession::transfer(const std::shared_ptr<core::FlowFile>& flow, const Relationship& relationship) {
-  logging::LOG_INFO(logger_) << "Transferring " << flow->getUUIDStr() << " from " << process_context_->getProcessorNode()->getName() << " to relationship " << relationship.getName();
+  logger_->log_info("Transferring {} from {} to relationship {}", flow->getUUIDStr(), process_context_->getProcessorNode()->getName(), relationship.getName());
   utils::Identifier uuid = flow->getUUID();
   if (auto it = added_flowfiles_.find(uuid); it != added_flowfiles_.end()) {
     it->second.rel = &*relationships_.insert(relationship).first;

@@ -512,8 +512,7 @@ int16_t SiteToSiteClient::send(const utils::Identifier &transactionID, DataPacke
   transaction->_state = DATA_EXCHANGED;
   transaction->_bytes += len;
 
-  core::logging::LOG_INFO(logger_) << "Site to Site transaction " << transactionID.to_string() << " sent flow " << transaction->total_transfers_
-                             << "flow records, with total size " << transaction->_bytes;
+  logger_->log_info("Site to Site transaction {} sent flow {} flow records, with total size {}",transactionID.to_string(), transaction->total_transfers_, transaction->_bytes);
 
   return 0;
 }
@@ -630,8 +629,9 @@ bool SiteToSiteClient::receive(const utils::Identifier& transactionID, DataPacke
   }
   transaction->_state = DATA_EXCHANGED;
   transaction->_bytes += len;
-  core::logging::LOG_INFO(logger_) << "Site to Site transaction " << transactionID.to_string() << " received flow record " << transaction->total_transfers_
-                             << ", total length " << transaction->_bytes << ", added " << len;
+
+  logger_->log_info("Site to Site transaction {} received flow record {}, total length {}, added {}",
+      transactionID.to_string(), transaction->total_transfers_, transaction->_bytes, len);
 
   return true;
 }
@@ -723,8 +723,7 @@ bool SiteToSiteClient::receiveFlowFiles(const std::shared_ptr<core::ProcessConte
       transaction_str << "Complete Transaction " << transactionID.to_string() << " Failed";
       throw Exception(SITE2SITE_EXCEPTION, transaction_str.str());
     }
-    core::logging::LOG_INFO(logger_) << "Site to Site transaction " << transactionID.to_string() << " received flow record " << transfers
-                               << ", with content size " << bytes << " bytes";
+    logger_->log_info("Site to Site transaction {} received flow record {}, with content size {} bytes", transactionID.to_string(), transfers, bytes);
     // we yield the receive if we did not get anything
     if (transfers == 0)
       context->yield();

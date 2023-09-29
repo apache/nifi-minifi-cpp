@@ -101,7 +101,7 @@ bool SSLContextService::configure_ssl_context(SSL_CTX *ctx) {
     }
 
     if (!SSL_CTX_check_private_key(ctx)) {
-      core::logging::LOG_ERROR(logger_) << "Private key does not match the public certificate, " << getLatestOpenSSLErrorString();
+      logger_->log_error("Private key does not match the public certificate, {}", getLatestOpenSSLErrorString());
       return false;
     }
   }
@@ -110,7 +110,7 @@ bool SSLContextService::configure_ssl_context(SSL_CTX *ctx) {
 
   if (!ca_certificate_.empty()) {
     if (SSL_CTX_load_verify_locations(ctx, ca_certificate_.string().c_str(), nullptr) == 0) {
-      core::logging::LOG_ERROR(logger_) << "Cannot load CA certificate, exiting, " << getLatestOpenSSLErrorString();
+      logger_->log_error("Cannot load CA certificate, exiting, {}", getLatestOpenSSLErrorString());
       return false;
     }
   }
@@ -166,7 +166,7 @@ bool SSLContextService::addP12CertificateToSSLContext(SSL_CTX* ctx) const {
     }
   });
   if (error) {
-    core::logging::LOG_ERROR(logger_) << error.message();
+    logger_->log_error("{}", error.message());
     return false;
   }
   return true;
@@ -174,7 +174,7 @@ bool SSLContextService::addP12CertificateToSSLContext(SSL_CTX* ctx) const {
 
 bool SSLContextService::addPemCertificateToSSLContext(SSL_CTX* ctx) const {
   if (SSL_CTX_use_certificate_chain_file(ctx, certificate_.string().c_str()) <= 0) {
-    core::logging::LOG_ERROR(logger_) << "Could not load client certificate " << certificate_.string() << ", " << getLatestOpenSSLErrorString();
+    logger_->log_error("Could not load client certificate {}, {}", certificate_.string(), getLatestOpenSSLErrorString());
     return false;
   }
 
@@ -187,7 +187,7 @@ bool SSLContextService::addPemCertificateToSSLContext(SSL_CTX* ctx) const {
   if (!IsNullOrEmpty(private_key_)) {
     int retp = SSL_CTX_use_PrivateKey_file(ctx, private_key_.string().c_str(), SSL_FILETYPE_PEM);
     if (retp != 1) {
-      core::logging::LOG_ERROR(logger_) << "Could not load private key, " << retp << " on " << private_key_ << ", " << getLatestOpenSSLErrorString();
+      logger_->log_error("Could not load private key, {} on {}, {}", retp, private_key_, getLatestOpenSSLErrorString());
       return false;
     }
   }
@@ -545,7 +545,7 @@ void SSLContextService::verifyCertificateExpiration() {
           .priv_key_cb = {}
       });
       if (error) {
-        core::logging::LOG_ERROR(logger_) << error.value();
+        logger_->log_error("{}", error.value());
       }
     } else {
       auto error = utils::tls::processPEMCertificate(certificate_, passphrase_, {
@@ -560,7 +560,7 @@ void SSLContextService::verifyCertificateExpiration() {
           .priv_key_cb = {}
       });
       if (error) {
-        core::logging::LOG_ERROR(logger_) << error.value();
+        logger_->log_error("{}", error.value());
       }
     }
   }
@@ -578,7 +578,7 @@ void SSLContextService::verifyCertificateExpiration() {
         .priv_key_cb = {}
     });
     if (error) {
-      core::logging::LOG_ERROR(logger_) << error.message();
+      logger_->log_error("{}", error.message());
     }
   }
 
