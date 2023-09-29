@@ -113,7 +113,7 @@ class LogBuilder {
 
   void setIgnore();
 
-  void log_string(LOG_LEVEL level) const;
+  void log_string(LOG_LEVEL log_level) const;
 
   template<typename T>
   LogBuilder &operator<<(const T &o) {
@@ -125,7 +125,7 @@ class LogBuilder {
   bool ignore;
   BaseLogger *ptr;
   std::stringstream str;
-  LOG_LEVEL level_;
+  LOG_LEVEL level;
 };
 
 template<class... Ts> struct overloaded : Ts... { using Ts::operator()...; };

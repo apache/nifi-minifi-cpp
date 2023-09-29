@@ -41,7 +41,7 @@ BaseLogger::~BaseLogger() = default;
 LogBuilder::LogBuilder(BaseLogger *l, LOG_LEVEL level)
     : ignore(false),
       ptr(l),
-      level_(level) {
+      level(level) {
   if (!l->should_log(level)) {
     setIgnore();
   }
@@ -49,15 +49,15 @@ LogBuilder::LogBuilder(BaseLogger *l, LOG_LEVEL level)
 
 LogBuilder::~LogBuilder() {
   if (!ignore)
-    log_string(level_);
+    log_string(level);
 }
 
 void LogBuilder::setIgnore() {
   ignore = true;
 }
 
-void LogBuilder::log_string(LOG_LEVEL level) const {
-  ptr->log_string(level, str.str());
+void LogBuilder::log_string(LOG_LEVEL log_level) const {
+  ptr->log_string(log_level, str.str());
 }
 
 
