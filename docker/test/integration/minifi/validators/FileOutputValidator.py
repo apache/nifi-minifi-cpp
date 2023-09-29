@@ -77,5 +77,19 @@ class FileOutputValidator(OutputValidator):
                 files_found += 1
         return files_found
 
+    @staticmethod
+    def get_num_files_with_min_size(dir_path: str, min_size: int):
+        listing = listdir(dir_path)
+        logging.info("Num files in %s: %d", dir_path, len(listing))
+        if not listing:
+            return 0
+        files_found = 0
+        for file_name in listing:
+            full_path = join(dir_path, file_name)
+            if os.path.isfile(full_path) and not is_temporary_output_file(full_path) and os.path.getsize(full_path) >= min_size:
+                logging.info("Found output file in %s: %s", dir_path, file_name)
+                files_found += 1
+        return files_found
+
     def validate(self, dir=''):
         pass

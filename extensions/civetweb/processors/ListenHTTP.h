@@ -131,7 +131,7 @@ class ListenHTTP : public core::Processor {
 
   EXTENSIONAPI static constexpr bool SupportsDynamicProperties = false;
   EXTENSIONAPI static constexpr bool SupportsDynamicRelationships = false;
-  EXTENSIONAPI static constexpr core::annotation::Input InputRequirement = core::annotation::Input::INPUT_FORBIDDEN;
+  EXTENSIONAPI static constexpr core::annotation::Input InputRequirement = core::annotation::Input::INPUT_ALLOWED;
   EXTENSIONAPI static constexpr bool IsSingleThreaded = false;
 
   ADD_COMMON_VIRTUAL_FUNCTIONS_FOR_PROCESSORS
@@ -145,7 +145,7 @@ class ListenHTTP : public core::Processor {
   struct ResponseBody {
     std::string uri;
     std::string mime_type;
-    std::string body;
+    std::vector<std::byte> body;
   };
 
   // HTTP request handler

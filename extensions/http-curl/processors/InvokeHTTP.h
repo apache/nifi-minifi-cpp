@@ -177,8 +177,20 @@ class InvokeHTTP : public core::Processor {
       .withDefaultValue(magic_enum::enum_name(invoke_http::InvalidHTTPHeaderFieldHandlingOption::transform))
       .withAllowedValues(magic_enum::enum_names<invoke_http::InvalidHTTPHeaderFieldHandlingOption>())
       .build();
+  EXTENSIONAPI static constexpr auto UploadBandwidthLimit = core::PropertyDefinitionBuilder<>::createProperty("Upload Bandwidth Limit")
+      .withDescription("Maximum data per second to send, use 0 for unlimited.")
+      .withPropertyType(core::StandardPropertyTypes::DATA_SIZE_TYPE)
+      .withDefaultValue("0 B")
+      .isRequired(true)
+      .build();
+  EXTENSIONAPI static constexpr auto DownloadBandwidthLimit = core::PropertyDefinitionBuilder<>::createProperty("Download Bandwidth Limit")
+      .withDescription("Maximum data per second to receive, use 0 for unlimited.")
+      .withPropertyType(core::StandardPropertyTypes::DATA_SIZE_TYPE)
+      .withDefaultValue("0 B")
+      .isRequired(true)
+      .build();
 
-  EXTENSIONAPI static constexpr auto Properties = std::array<core::PropertyReference, 21>{
+  EXTENSIONAPI static constexpr auto Properties = std::array<core::PropertyReference, 23>{
         Method,
         URL,
         ConnectTimeout,
@@ -199,7 +211,9 @@ class InvokeHTTP : public core::Processor {
         PutResponseBodyInAttribute,
         AlwaysOutputResponse,
         PenalizeOnNoRetry,
-        InvalidHTTPHeaderFieldHandlingStrategy
+        InvalidHTTPHeaderFieldHandlingStrategy,
+        UploadBandwidthLimit,
+        DownloadBandwidthLimit
   };
 
 
@@ -275,6 +289,8 @@ class InvokeHTTP : public core::Processor {
   bool penalize_no_retry_{false};
   bool send_message_body_{true};
   bool send_date_header_{true};
+  uint64_t maximum_upload_bandwidth_{0};
+  uint64_t maximum_download_bandwidth_{0};
 
   invoke_http::InvalidHTTPHeaderFieldHandlingOption invalid_http_header_field_handling_strategy_{};
 

@@ -749,9 +749,10 @@ TEST_CASE("InputRequirementTestForbidden", "[InputRequirement]") {
 
   std::shared_ptr<TestPlan> plan = testController.createPlan();
   plan->addProcessor("GenerateFlowFile", "generateFlowFile");
-  plan->addProcessor("GenerateFlowFile", "generateFlowFile2", core::Relationship("success", "description"), true);
+  auto gen2_proc = plan->addProcessor("GenerateFlowFile", "generateFlowFile2", core::Relationship("success", "description"), true);
 
-  REQUIRE_THROWS_WITH(plan->validateAnnotations(), Catch::Matchers::EndsWith("INPUT_FORBIDDEN was specified for the processor, but there are incoming connections"));
+  REQUIRE_THROWS_WITH(plan->validateAnnotations(), Catch::Matchers::EndsWith("INPUT_FORBIDDEN was specified for processor 'generateFlowFile2' (uuid: '" +
+    gen2_proc->getUUIDStr() + "'), but there are incoming connections"));
   testController.runSession(plan);
 }
 
@@ -760,10 +761,11 @@ TEST_CASE("InputRequirementTestRequired", "[InputRequirement]") {
   LogTestController::getInstance().setDebug<minifi::processors::LogAttribute>();
 
   std::shared_ptr<TestPlan> plan = testController.createPlan();
-  plan->addProcessor("LogAttribute", "logAttribute");
+  auto log_proc = plan->addProcessor("LogAttribute", "logAttribute");
   plan->addProcessor("LogAttribute", "logAttribute2", core::Relationship("success", "description"), true);
 
-  REQUIRE_THROWS_WITH(plan->validateAnnotations(), Catch::Matchers::EndsWith("INPUT_REQUIRED was specified for the processor, but no incoming connections were found"));
+  REQUIRE_THROWS_WITH(plan->validateAnnotations(), Catch::Matchers::EndsWith("INPUT_REQUIRED was specified for processor 'logAttribute' (uuid: '" +
+    log_proc->getUUIDStr() + "'), but no incoming connections were found"));
   testController.runSession(plan);
 }
 

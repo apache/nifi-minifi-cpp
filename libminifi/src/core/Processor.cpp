@@ -345,7 +345,7 @@ void Processor::validateAnnotations() const {
   switch (getInputRequirement()) {
     case annotation::Input::INPUT_REQUIRED: {
       if (!hasIncomingConnections()) {
-        throw Exception(PROCESS_SCHEDULE_EXCEPTION, "INPUT_REQUIRED was specified for the processor, but no incoming connections were found");
+        throw Exception(PROCESS_SCHEDULE_EXCEPTION, "INPUT_REQUIRED was specified for processor '" + getName()  + "' (uuid: '" + getUUIDStr() + "'), but no incoming connections were found");
       }
       break;
     }
@@ -353,7 +353,7 @@ void Processor::validateAnnotations() const {
       break;
     case annotation::Input::INPUT_FORBIDDEN: {
       if (hasIncomingConnections()) {
-        throw Exception(PROCESS_SCHEDULE_EXCEPTION, "INPUT_FORBIDDEN was specified for the processor, but there are incoming connections");
+        throw Exception(PROCESS_SCHEDULE_EXCEPTION, "INPUT_FORBIDDEN was specified for processor '" + getName()  + "' (uuid: '" + getUUIDStr() + "'), but there are incoming connections");
       }
     }
   }

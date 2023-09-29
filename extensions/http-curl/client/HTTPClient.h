@@ -149,6 +149,8 @@ class HTTPClient : public utils::BaseHTTPClient, public core::Connectable {
 
   void setFollowRedirects(bool follow);
 
+  void setMaximumUploadBandwidth(uint64_t max_bandwidth);
+  void setMaximumDownloadBandwidth(uint64_t max_bandwidth);
 
   /**
    * Locates the header value ignoring case. This is different than returning a mapping

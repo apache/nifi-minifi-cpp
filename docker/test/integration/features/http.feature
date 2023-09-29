@@ -109,3 +109,44 @@ Feature: Sending data using InvokeHTTP to a receiver using ListenHTTP
 
     When both instances start up
     Then at least one flowfile with the content "test" is placed in the monitored directory in less than 120 seconds
+
+  Scenario: A MiNiFi instance transfers data to another MiNiFi instance with message body and limited bandwidth
+    Given a GenerateFlowFile processor with the "File Size" property set to "10 MB"
+    And the scheduling period of the GenerateFlowFile processor is set to "30 sec"
+    And a InvokeHTTP processor with the "Remote URL" property set to "http://secondary-${feature_id}:8080/contentListener"
+    And the "HTTP Method" property of the InvokeHTTP processor is set to "POST"
+    And the "Connection Timeout" property of the InvokeHTTP processor is set to "30 s"
+    And the "Read Timeout" property of the InvokeHTTP processor is set to "30 s"
+    And the "Upload Bandwidth Limit" property of the InvokeHTTP processor is set to "800 KB"
+    And the "success" relationship of the GenerateFlowFile processor is connected to the InvokeHTTP
+
+    And a ListenHTTP processor with the "Listening Port" property set to "8080" in a "secondary" flow
+    And a PutFile processor with the "Directory" property set to "/tmp/output" in the "secondary" flow
+    And the "success" relationship of the ListenHTTP processor is connected to the PutFile
+
+    When both instances start up
+    Then at least one flowfile with minimum size of "1 MB" is placed in the monitored directory in less than 120 seconds
+    And the Minifi logs contain the following message: "[warning] InvokeHTTP::onTrigger has been running for" in less than 10 seconds
+
+  Scenario: A MiNiFi instance retrieves data from another MiNiFi instance with message body and limited bandwidth
+    Given a InvokeHTTP processor with the "Remote URL" property set to "http://secondary-${feature_id}:8080/contentListener&testfile"
+    And the scheduling period of the InvokeHTTP processor is set to "3 sec"
+    And the "HTTP Method" property of the InvokeHTTP processor is set to "GET"
+    And the "Connection Timeout" property of the InvokeHTTP processor is set to "30 s"
+    And the "Read Timeout" property of the InvokeHTTP processor is set to "30 s"
+    And the "Download Bandwidth Limit" property of the InvokeHTTP processor is set to "800 KB"
+    And a PutFile processor with the "Directory" property set to "/tmp/output"
+    And the "response" relationship of the InvokeHTTP processor is connected to the PutFile
+
+    And a GenerateFlowFile processor with the "File Size" property set to "10 MB" in the "secondary" flow
+    And the "Data Format" property of the InvokeHTTP processor is set to "Text"
+    And a UpdateAttribute processor with the "http.type" property set to "response_body" in the "secondary" flow
+    And the "filename" property of the UpdateAttribute processor is set to "testfile"
+    And the scheduling period of the GenerateFlowFile processor is set to "30 sec"
+    And a ListenHTTP processor with the "Listening Port" property set to "8080" in a "secondary" flow
+    And the "success" relationship of the GenerateFlowFile processor is connected to the UpdateAttribute
+    And the "success" relationship of the UpdateAttribute processor is connected to the ListenHTTP
+
+    When both instances start up
+    Then at least one flowfile with minimum size of "10 MB" is placed in the monitored directory in less than 120 seconds
+    And the Minifi logs contain the following message: "[warning] InvokeHTTP::onTrigger has been running for" in less than 10 seconds
