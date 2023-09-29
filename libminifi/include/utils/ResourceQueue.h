@@ -117,7 +117,7 @@ class ResourceQueue : public std::enable_shared_from_this<ResourceQueue<Resource
   template<typename ...Args>
   void logDebug(fmt::format_string<std::invoke_result_t<decltype(core::logging::map_args), Args>...> fmt, Args&& ...args) {
     if (logger_)
-       logger_->log_debug(fmt, std::forward<Args>(args)...);
+      logger_->log_debug(fmt, std::forward<Args>(args)...);
   }
 
   const std::function<std::unique_ptr<ResourceType>()> create_new_resource_;
