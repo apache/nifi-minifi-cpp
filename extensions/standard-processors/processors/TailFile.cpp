@@ -501,7 +501,7 @@ bool TailFile::getStateFromLegacyStateFile(const std::shared_ptr<core::ProcessCo
 void TailFile::logState() {
   logger_->log_info("State of the TailFile processor {}:", name_);
   for (const auto& [key, value] : tail_states_) {
-    logger_->log_info("key => {{}}", value)
+    logger_->log_info("key => {{}}", value);
   }
 }
 

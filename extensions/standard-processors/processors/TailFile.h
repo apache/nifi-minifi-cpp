@@ -299,3 +299,6 @@ class TailFile : public core::Processor {
 };
 
 }  // namespace org::apache::nifi::minifi::processors
+
+template <>
+struct fmt::formatter<org::apache::nifi::minifi::processors::TailState> : fmt::ostream_formatter {};
