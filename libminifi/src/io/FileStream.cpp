@@ -82,7 +82,7 @@ FileStream::FileStream(std::filesystem::path path, uint32_t offset, bool write_e
     length_ = len > 0 ? gsl::narrow<size_t>(len) : 0;
     FileStream::seek(offset_);
   } else {
-    logger_->log_error("{} {}", FILE_OPENING_ERROR_MSG, path_, strerror(errno));
+    logger_->log_error("{}{}{}", FILE_OPENING_ERROR_MSG, path_, strerror(errno));
   }
 }
 
