@@ -247,8 +247,8 @@ bool SourceInitiatedSubscriptionListener::Handler::handlePost(CivetServer* /*ser
     int xml_buf_size = 0;
     ws_xml_dump_memory_node_tree_enc(node, &xml_buf, &xml_buf_size, "UTF-8");
     if (xml_buf != nullptr) {
-        core::logging::LOG_TRACE(processor_.logger_) << "Received request: \"" << std::string(xml_buf, xml_buf_size) << "\"";
-        ws_xml_free_memory(xml_buf);
+      processor_.logger_->log_trace("Received request: \"{}\"", std::string_view(xml_buf, xml_buf_size));
+      ws_xml_free_memory(xml_buf);
     }
   }
 
@@ -306,8 +306,7 @@ bool SourceInitiatedSubscriptionListener::Handler::isAckRequested(WsXmlDocH doc)
 }
 
 void SourceInitiatedSubscriptionListener::Handler::sendResponse(struct mg_connection* conn, const std::string& machineId, const std::string& remoteIp, char* xml_buf, size_t xml_buf_size) {
-  core::logging::LOG_TRACE(processor_.logger_) << "Sending response to " << machineId << " (" << remoteIp << "): \"" << std::string(xml_buf, xml_buf_size) << "\"";
-
+  processor_.logger_->log_trace("Sending response to {} ({}) \"{}\"", machineId, remoteIp, std::string_view(xml_buf, xml_buf_size));
   mg_printf(conn, "HTTP/1.1 200 OK\r\n");
   mg_printf(conn, "Content-Type: application/soap+xml;charset=UTF-8\r\n");
   mg_printf(conn, "Authorization: %s\r\n", WSMAN_SECURITY_PROFILE_HTTPS_MUTUAL);

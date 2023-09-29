@@ -226,8 +226,6 @@ class Logger : public BaseLogger {
   std::atomic<int> max_log_size_{LOG_BUFFER_SIZE};
 };
 
-#define LOG_TRACE(x) LogBuilder((x).get(), org::apache::nifi::minifi::core::logging::LOG_LEVEL::trace)
-
 #define LOG_DEBUG(x) LogBuilder((x).get(), org::apache::nifi::minifi::core::logging::LOG_LEVEL::debug)
 
 #define LOG_INFO(x) LogBuilder((x).get(), org::apache::nifi::minifi::core::logging::LOG_LEVEL::info)
@@ -235,7 +233,5 @@ class Logger : public BaseLogger {
 #define LOG_WARN(x) LogBuilder((x).get(), org::apache::nifi::minifi::core::logging::LOG_LEVEL::warn)
 
 #define LOG_ERROR(x) LogBuilder((x).get(), org::apache::nifi::minifi::core::logging::LOG_LEVEL::err)
-
-#define LOG_CRITICAL(x) LogBuilder((x).get(), org::apache::nifi::minifi::core::logging::LOG_LEVEL::err)
 
 }  // namespace org::apache::nifi::minifi::core::logging

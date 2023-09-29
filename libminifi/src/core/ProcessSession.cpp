@@ -585,7 +585,7 @@ void ProcessSession::import(const std::string& source, std::vector<std::shared_p
         logger_->log_trace("Finished reading input {}", source);
         break;
       } else {
-        logging::LOG_TRACE(logger_) << "Read input of " << read;
+        logger_->log_trace("Read input of {}", read);
       }
       uint8_t* begin = buffer.data();
       uint8_t* end = begin + read;
@@ -594,7 +594,7 @@ void ProcessSession::import(const std::string& source, std::vector<std::shared_p
         uint8_t* delimiterPos = std::find(begin, end, static_cast<uint8_t>(inputDelimiter));
         const auto len = gsl::narrow<size_t>(delimiterPos - begin);
 
-        logging::LOG_TRACE(logger_) << "Read input of " << read << " length is " << len << " is at end?" << (delimiterPos == end);
+        logger_->log_trace("Read input of {} length is {} is at end? {}", read, len, delimiterPos==end);
         /*
          * We do not want to process the rest of the buffer after the last delimiter if
          *  - we have reached EOF in the file (we would discard it anyway)
