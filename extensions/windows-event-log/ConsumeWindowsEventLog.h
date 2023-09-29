@@ -216,7 +216,6 @@ class ConsumeWindowsEventLog : public core::Processor {
   void putEventRenderFlowFileToSession(const cwel::EventRender& eventRender, core::ProcessSession& session) const;
   wel::WindowsEventLogHandler& getEventLogHandler(const std::string& name);
   static bool insertHeaderName(wel::METADATA_NAMES& header, const std::string& key, const std::string& value);
-  void LogWindowsError(const std::string& error = "Error") const;
   nonstd::expected<cwel::EventRender, std::string> createEventRender(EVT_HANDLE eventHandle);
   void substituteXMLPercentageItems(pugi::xml_document& doc);
   std::function<std::string(const std::string&)> userIdToUsernameFunction() const;

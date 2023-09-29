@@ -590,7 +590,7 @@ void CollectorInitiatedSubscription::logWindowsError(int line, const std::string
     0,
     NULL);
 
-  logger_->log_error("Line {}: '{}': error {}: {}\n", line, info, static_cast<int>(error), reinterpret_cast<char *>(lpMsg));
+  logger_->log_error("Line {}: '{}': error {}: {}", line, info, static_cast<int>(error), reinterpret_cast<char *>(lpMsg));
 
   LocalFree(lpMsg);
 }

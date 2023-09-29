@@ -108,7 +108,7 @@ void TailEventLog::onTrigger(const std::shared_ptr<core::ProcessContext> &contex
     event_record = reinterpret_cast<EVENTLOGRECORD*>(&buffer);
     logger_->log_trace("All done no more");
   } else {
-    LogWindowsError();
+    logger_->log_error("{}", utils::OsUtils::windowsErrorToErrorCode(GetLastError()).message());
     logger_->log_trace("Yielding due to error");
     context->yield();
   }

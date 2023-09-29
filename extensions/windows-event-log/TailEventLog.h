@@ -119,24 +119,6 @@ class TailEventLog : public core::Processor {
     return str.str();
   }
 
-  void LogWindowsError(void) {
-    auto error_id = GetLastError();
-    LPVOID lpMsg;
-
-    FormatMessage(
-      FORMAT_MESSAGE_ALLOCATE_BUFFER |
-      FORMAT_MESSAGE_FROM_SYSTEM,
-      NULL,
-      error_id,
-      MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT),
-      (LPTSTR)&lpMsg,
-      0, NULL);
-
-    logger_->log_debug("Error {}: {}\n", static_cast<int>(error_id), reinterpret_cast<char *>(lpMsg));
-
-    LocalFree(lpMsg);
-  }
-
  private:
   std::mutex log_mutex_;
   std::string log_source_;
