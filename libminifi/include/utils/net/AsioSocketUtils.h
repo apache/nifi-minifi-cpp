@@ -179,3 +179,6 @@ struct hash<org::apache::nifi::minifi::utils::net::ConnectionId> {
 
 template <typename InternetProtocol>
 struct fmt::formatter<asio::ip::basic_endpoint<InternetProtocol>> : fmt::ostream_formatter {};
+
+template <>
+struct fmt::formatter<asio::ip::address> : fmt::ostream_formatter {};

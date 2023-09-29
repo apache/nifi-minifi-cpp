@@ -229,8 +229,6 @@ class Logger : public BaseLogger {
 
 #define LOG_INFO(x) LogBuilder((x).get(), org::apache::nifi::minifi::core::logging::LOG_LEVEL::info)
 
-#define LOG_WARN(x) LogBuilder((x).get(), org::apache::nifi::minifi::core::logging::LOG_LEVEL::warn)
-
 #define LOG_ERROR(x) LogBuilder((x).get(), org::apache::nifi::minifi::core::logging::LOG_LEVEL::err)
 
 }  // namespace org::apache::nifi::minifi::core::logging

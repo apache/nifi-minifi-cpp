@@ -258,7 +258,7 @@ void IdGenerator::initialize(const std::shared_ptr<Properties>& properties) {
         if (properties->getString("uid.minifi.device.segment", device_segment)) {
           prefix = getDeviceSegmentFromString(device_segment, device_bits);
         } else {
-          core::logging::LOG_WARN(logger_) << "uid.minifi.device.segment not specified, generating random device segment";
+          logger_->log_warn("uid.minifi.device.segment not specified, generating random device segment");
           prefix = getRandomDeviceSegment(device_bits);
         }
         timestamp <<= device_bits;

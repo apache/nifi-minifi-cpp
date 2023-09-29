@@ -100,7 +100,7 @@ asio::awaitable<void> TcpServer::secureSession(asio::ip::tcp::socket socket, asi
   SslSocket ssl_socket(std::move(socket), ssl_context);
   auto [handshake_error] = co_await ssl_socket.async_handshake(HandshakeType::server, use_nothrow_awaitable);
   if (handshake_error) {
-    core::logging::LOG_WARN(logger_) << "Handshake with " << remote_address << " failed due to " << handshake_error.message();
+    logger_->log_warn("Handshake with {} failed due to {}", remote_address, handshake_error.message());
     co_return;
   }
   co_await readLoop(ssl_socket, remote_address, local_port);  // NOLINT
@@ -112,7 +112,7 @@ asio::awaitable<void> TcpServer::secureSession(asio::ip::tcp::socket socket, asi
   }
   auto [shutdown_error] = co_await ssl_socket.async_shutdown(use_nothrow_awaitable);
   if (shutdown_error) {
-    core::logging::LOG_WARN(logger_) << "Shutdown of " << remote_address << " failed with " << shutdown_error.message();
+    logger_->log_warn("Shutdown of {} failed with {}", remote_address, shutdown_error.message());
   }
 }
 
