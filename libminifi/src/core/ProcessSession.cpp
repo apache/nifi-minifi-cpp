@@ -594,7 +594,7 @@ void ProcessSession::import(const std::string& source, std::vector<std::shared_p
         uint8_t* delimiterPos = std::find(begin, end, static_cast<uint8_t>(inputDelimiter));
         const auto len = gsl::narrow<size_t>(delimiterPos - begin);
 
-        logger_->log_trace("Read input of {} length is {} is at end? {}", read, len, delimiterPos==end);
+        logger_->log_trace("Read input of {} length is {} is at end? {}", read, len, delimiterPos == end);
         /*
          * We do not want to process the rest of the buffer after the last delimiter if
          *  - we have reached EOF in the file (we would discard it anyway)
@@ -630,7 +630,8 @@ void ProcessSession::import(const std::string& source, std::vector<std::shared_p
         flowFile->setSize(stream->size());
         flowFile->setOffset(0);
         flowFile->setResourceClaim(claim);
-        logger_->log_debug("Import offset {} length {} into content {}, FlowFile UUID {}", flowFile->getOffset(), flowFile->getSize(), flowFile->getResourceClaim()->getContentFullPath(), flowFile->getUUIDStr());
+        logger_->log_debug("Import offset {} length {} into content {}, FlowFile UUID {}",
+            flowFile->getOffset(), flowFile->getSize(), flowFile->getResourceClaim()->getContentFullPath(), flowFile->getUUIDStr());
         stream->close();
         std::string details = process_context_->getProcessorNode()->getName() + " modify flow record content " + flowFile->getUUIDStr();
         auto duration = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::steady_clock::now() - start_time);

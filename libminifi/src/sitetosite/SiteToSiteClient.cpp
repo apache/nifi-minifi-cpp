@@ -512,7 +512,7 @@ int16_t SiteToSiteClient::send(const utils::Identifier &transactionID, DataPacke
   transaction->_state = DATA_EXCHANGED;
   transaction->_bytes += len;
 
-  logger_->log_info("Site to Site transaction {} sent flow {} flow records, with total size {}",transactionID.to_string(), transaction->total_transfers_, transaction->_bytes);
+  logger_->log_info("Site to Site transaction {} sent flow {} flow records, with total size {}", transactionID.to_string(), transaction->total_transfers_, transaction->_bytes);
 
   return 0;
 }

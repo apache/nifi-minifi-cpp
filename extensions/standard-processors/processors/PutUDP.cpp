@@ -107,7 +107,6 @@ void PutUDP::onTrigger(core::ProcessContext* context, core::ProcessSession* cons
       if (error) {
         logger->log_debug("sending to endpoint {} failed due to {}", resolver_entry.endpoint(), error.message());
         continue;
-
       }
       logger->log_debug("sending to endpoint {} succeeded", resolver_entry.endpoint());
       return {};
