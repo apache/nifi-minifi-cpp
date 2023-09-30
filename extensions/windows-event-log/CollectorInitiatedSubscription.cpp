@@ -578,21 +578,8 @@ void CollectorInitiatedSubscription::logError(int line, const std::string& error
 }
 
 void CollectorInitiatedSubscription::logWindowsError(int line, const std::string& info) {
-  auto error = GetLastError();
-
-  LPVOID lpMsg{};
-  FormatMessage(
-    FORMAT_MESSAGE_ALLOCATE_BUFFER | FORMAT_MESSAGE_FROM_SYSTEM,
-    NULL,
-    error,
-    MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT),
-    (LPTSTR)&lpMsg,
-    0,
-    NULL);
-
-  logger_->log_error("Line {}: '{}': error {}: {}", line, info, static_cast<int>(error), reinterpret_cast<char *>(lpMsg));
-
-  LocalFree(lpMsg);
+  auto last_error = utils::OsUtils::windowsErrorToErrorCode(GetLastError());
+  logger_->log_error("Line {}: '{}': error {}: {}", line, info, last_error, last_error.message());
 }
 
 REGISTER_RESOURCE(CollectorInitiatedSubscription, Processor);

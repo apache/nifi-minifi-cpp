@@ -69,7 +69,8 @@ ConsumeWindowsEventLog::ConsumeWindowsEventLog(const std::string& name, const ut
   if (GetComputerName(buff, &size)) {
     computerName_ = buff;
   } else {
-    logger_->log_error("{}", utils::OsUtils::windowsErrorToErrorCode(GetLastError()).message());
+    auto last_error = utils::OsUtils::windowsErrorToErrorCode(GetLastError());
+    logger_->log_error("{}: {}", last_error, last_error.message());
   }
 }
 
@@ -227,7 +228,8 @@ std::tuple<size_t, std::wstring> ConsumeWindowsEventLog::processEventLogs(const 
     DWORD handles_set_count{};
     if (!EvtNext(event_query_results, 1, &next_event, EVT_NEXT_TIMEOUT_MS, 0, &handles_set_count)) {
       if (ERROR_NO_MORE_ITEMS != GetLastError()) {
-        logger_->log_error("Failed to get next event: {}", utils::OsUtils::windowsErrorToErrorCode(GetLastError()).message());
+        auto last_error = utils::OsUtils::windowsErrorToErrorCode(GetLastError());
+        logger_->log_error("Failed to get next event: {}: {}", last_error, last_error.message());
         continue;
         /* According to MS this iteration should only end when the return value is false AND
           the error code is NO_MORE_ITEMS. See the following page for further details:

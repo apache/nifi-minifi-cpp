@@ -30,11 +30,9 @@
 #include "core/ProcessSession.h"
 #include "core/Resource.h"
 
-namespace org {
-namespace apache {
-namespace nifi {
-namespace minifi {
-namespace processors {
+#include "utils/OsUtils.h"
+
+namespace org::apache::nifi::minifi::processors {
 
 void TailEventLog::initialize() {
   setSupportedProperties(Properties);
@@ -108,7 +106,8 @@ void TailEventLog::onTrigger(const std::shared_ptr<core::ProcessContext> &contex
     event_record = reinterpret_cast<EVENTLOGRECORD*>(&buffer);
     logger_->log_trace("All done no more");
   } else {
-    logger_->log_error("{}", utils::OsUtils::windowsErrorToErrorCode(GetLastError()).message());
+    auto last_error = utils::OsUtils::windowsErrorToErrorCode(GetLastError());
+    logger_->log_error("{}: {}", last_error, last_error.message());
     logger_->log_trace("Yielding due to error");
     context->yield();
   }
@@ -116,8 +115,4 @@ void TailEventLog::onTrigger(const std::shared_ptr<core::ProcessContext> &contex
 
 REGISTER_RESOURCE(TailEventLog, Processor);
 
-} /* namespace processors */
-} /* namespace minifi */
-} /* namespace nifi */
-} /* namespace apache */
-} /* namespace org */
+}  // namespace org::apache::nifi::minifi::processors
