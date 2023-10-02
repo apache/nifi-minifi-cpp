@@ -41,14 +41,22 @@ void JoltTransformJSON::onSchedule(core::ProcessContext* context, core::ProcessS
 }
 
 void JoltTransformJSON::onTrigger(core::ProcessContext* context, core::ProcessSession* session) {
-  gsl_Expects(context && session);
+  gsl_Expects(context && session && spec_);
   auto flowfile = session->get();
   if (!flowfile) {
     context->yield();
     return;
   }
 
+  auto content = session->readBuffer(flowfile);
+  rapidjson::Document doc;
+  rapidjson::ParseResult parse_result = doc.Parse(reinterpret_cast<const char*>(content.buffer.data()), content.buffer.size());
+  if (!parse_result) {
+    session->transfer(flowfile, Failure);
+    return;
+  }
 
+  spec_->
 }
 
 nonstd::expected<JoltTransformJSON::Spec::Template, std::string> JoltTransformJSON::Spec::Template::parse(std::string_view str, const std::string& escapables) {
@@ -268,11 +276,11 @@ std::unique_ptr<JoltTransformJSON::Spec::Pattern> parseMap(const JoltTransformJS
 
   for (auto it = val.MemberBegin(); it != val.MemberEnd(); ++it) {
     std::string_view name{it->name.GetString(), it->name.GetStringLength()};
-    JoltTransformJSON::Spec::Context sub_ctx{.parent = &ctx, .member = name};
+    JoltTransformJSON::Spec::Context sub_ctx{.parent = &ctx, .matches = {name}};
     if (name == "@") {
       map->self = parseDestinations(sub_ctx, it->value);
     } else if (name == "$") {
-      map->value = parseDestinations(sub_ctx, it->value);
+      map->key = parseDestinations(sub_ctx, it->value);
     } else {
       auto templ = JoltTransformJSON::Spec::Template::parse(name, "*");
       auto reg = JoltTransformJSON::Spec::Regex::parse(name, "&");
@@ -342,7 +350,7 @@ JoltTransformJSON::Spec::Destinations parseDestinations(const JoltTransformJSON:
   if (val.IsArray()) {
     for (rapidjson::SizeType i = 0; i < val.GetArray().Size(); ++i) {
       std::string idx_str = std::to_string(i);
-      JoltTransformJSON::Spec::Context sub_ctx{.parent = &ctx, .member = idx_str};
+      JoltTransformJSON::Spec::Context sub_ctx{.parent = &ctx, .matches = {idx_str}};
       res.push_back(parseDestination(sub_ctx, val.GetArray()[i]));
     }
   } else {
@@ -359,6 +367,45 @@ JoltTransformJSON::Spec::Pattern::Value parseValue(const JoltTransformJSON::Spec
   return parseDestinations(ctx, val);
 }
 
+void putValue(const JoltTransformJSON::Spec::Context& ctx, const std::vector<JoltTransformJSON::Spec::Template>& dest, const rapidjson::Value& val, rapidjson::Document& output) {
+  std::reference_wrapper<rapidjson::Value> target = output;
+  for (auto& templ : dest) {
+    auto member = templ.eval(ctx);
+    if (templ.type == JoltTransformJSON::Spec::Template::Type::INDEX) {
+      if (!target.get().IsArray()) {
+        if (!target.get().IsNull()) {
+          throw Exception(GENERAL_EXCEPTION, "Cannot write based on index into non-array");
+        }
+        target.get().SetArray();
+      }
+      size_t idx = std::stoull(member);
+      target.get().Reserve(idx + 1, output.GetAllocator());
+      for (size_t arr_idx = target.get().Size(); arr_idx <= idx; ++arr_idx) {
+        target.get().PushBack(rapidjson::Value{}, output.GetAllocator());
+      }
+      target = target.get()[idx];
+    } else {
+      if (!target.get().IsObject()) {
+        if (!target.get().IsNull()) {
+          throw Exception(GENERAL_EXCEPTION, "Cannot write member into non-object");
+        }
+        target.get().SetObject();
+      }
+      if (!target.get().HasMember(member)) {
+        target.get().AddMember(rapidjson::Value{member.c_str(), gsl::narrow<rapidjson::SizeType>(member.size())}, rapidjson::Value{}, output.GetAllocator());
+      }
+      target = target.get()[member];
+    }
+  }
+  target.get().CopyFrom(val, output.GetAllocator());
+}
+
+void putValue(const JoltTransformJSON::Spec::Context& ctx, const JoltTransformJSON::Spec::Destinations& destinations, const rapidjson::Value& val, rapidjson::Document& output) {
+  for (auto& dest : destinations) {
+    putValue(ctx, dest, val, output);
+  }
+}
+
 }  // namespace
 
 nonstd::expected<JoltTransformJSON::Spec, std::string> JoltTransformJSON::Spec::parse(std::string_view str) {
@@ -373,6 +420,29 @@ nonstd::expected<JoltTransformJSON::Spec, std::string> JoltTransformJSON::Spec::
   } catch (const std::exception& ex) {
     return nonstd::make_unexpected(ex.what());
   }
+}
+
+
+
+nonstd::expected<void, std::string> JoltTransformJSON::Spec::Pattern::process(const Context& ctx, const rapidjson::Value &input, rapidjson::Document &output) const {
+  if (self) {
+    putValue(ctx, self.value(), input, output);
+  }
+  if (key) {
+    auto key_str = ctx.find(0)->matches.at(0);
+    rapidjson::Value key_val{key_str.data(), gsl::narrow<rapidjson::SizeType>(key_str.size())};
+    putValue(ctx, key.value(), key_val, output);
+  }
+  if (!input.IsObject()) {
+    return void();
+  }
+  for (auto& lit : literals) {
+    if (input.HasMember())
+  }
+}
+
+nonstd::expected<void, std::string> JoltTransformJSON::Spec::process(const rapidjson::Value &input, rapidjson::Document &output) const {
+  return value_->process(Context{.matches = {"root"}}, input, output);
 }
 
 REGISTER_RESOURCE(JoltTransformJSON, Processor);

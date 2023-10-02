@@ -103,7 +103,7 @@ class JoltTransformJSON : public core::Processor {
         if (parent) {
           res = parent->path();
         }
-        res.append("/").append(member);
+        res.append("/").append(matches.at(0));
         return res;
       }
 
@@ -113,13 +113,17 @@ class JoltTransformJSON : public core::Processor {
         return nullptr;
       }
 
-      std::string_view member;
       std::vector<std::string_view> matches;
     };
 
     class Template {
       Template() = default;
      public:
+      enum class Type {
+        MEMBER,
+        INDEX
+      };
+
       static nonstd::expected<Template, std::string> parse(std::string_view str, const std::string& escapables);
 
       std::string eval(const Context& ctx) const;
@@ -128,9 +132,10 @@ class JoltTransformJSON : public core::Processor {
         return full <=> other.full;
       }
 
-     private:
       std::vector<std::string> fragments;
       std::vector<std::pair<size_t, size_t>> references;
+
+      Type type;
       std::string full;
     };
 
@@ -155,14 +160,18 @@ class JoltTransformJSON : public core::Processor {
     struct Pattern {
       using Value = std::variant<std::unique_ptr<Pattern>, Destinations>;
 
+      nonstd::expected<void, std::string> process(const Context& ctx, const rapidjson::Value& input, rapidjson::Document& output) const;
+
       std::map<std::string, Value> literals;
       std::map<Template, Value> templates;  // '&'
       std::map<Regex, Value> regexes;  // '*'
       std::optional<Destinations> self;  // '@'
-      std::optional<Destinations> value;  // '$'
+      std::optional<Destinations> key;  // '$'
     };
 
     static nonstd::expected<Spec, std::string> parse(std::string_view str);
+
+    nonstd::expected<void, std::string> process(const rapidjson::Value& input, rapidjson::Document& output) const;
 
    private:
     explicit Spec(std::unique_ptr<Pattern> value): value_(std::move(value)) {}
