@@ -183,9 +183,9 @@ C2Payload RESTSender::sendPayload(const std::string& url, const Direction direct
   const bool clientError = 400 <= respCode && respCode < 500;
   const bool serverError = 500 <= respCode && respCode < 600;
   if (clientError || serverError) {
-    logger_->log_error("Error response code '" "{}' from '{}'", respCode, url);
+    logger_->log_error("Error response code '{}' from '{}'", respCode, url);
   } else {
-    logger_->log_debug("Response code '" "{}' from '{}'", respCode, url);
+    logger_->log_debug("Response code '{}' from '{}'", respCode, url);
   }
   const auto response_body_bytes = gsl::make_span(client.getResponseBody()).as_span<const std::byte>();
   logger_->log_trace("Received response: {}", [&] { return utils::StringUtils::escapeUnprintableBytes(response_body_bytes);});

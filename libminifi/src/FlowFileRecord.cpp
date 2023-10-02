@@ -60,7 +60,7 @@ std::shared_ptr<FlowFileRecord> FlowFileRecord::DeSerialize(const std::string& k
   if (record) {
     logger_->log_debug("NiFi FlowFile retrieve uuid {} size {} connection {} success", record->getUUIDStr(), stream.size(), container.to_string());
   } else {
-    logger_->log_debug("Couldn't deserialize FlowFile {} from the stream of size " "{}", key, stream.size());
+    logger_->log_debug("Couldn't deserialize FlowFile {} from the stream of size {}", key, stream.size());
   }
 
   return record;
@@ -161,12 +161,12 @@ bool FlowFileRecord::Persist(const std::shared_ptr<core::Repository>& flowReposi
   }
 
   if (flowRepository->Put(getUUIDStr(), reinterpret_cast<uint8_t*>(const_cast<std::byte*>(outStream.getBuffer().data())), outStream.size())) {
-    logger_->log_debug("NiFi FlowFile Store event {} size " "{} success", getUUIDStr(), outStream.size());
+    logger_->log_debug("NiFi FlowFile Store event {} size {} success", getUUIDStr(), outStream.size());
     // on behalf of the persisted record instance
     if (claim_) claim_->increaseFlowFileRecordOwnedCount();
     return true;
   } else {
-    logger_->log_error("NiFi FlowFile Store failed {} size " "{}", getUUIDStr(), outStream.size());
+    logger_->log_error("NiFi FlowFile Store failed {} size {}", getUUIDStr(), outStream.size());
     return false;
   }
 
