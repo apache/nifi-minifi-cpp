@@ -24,6 +24,7 @@
 #include "client/HTTPClient.h"
 #include "CivetServer.h"
 #include "ConnectionCountingServer.h"
+#include "magic_enum.hpp"
 #include "utils/BaseHTTPClient.h"
 
 using namespace std::literals::chrono_literals;
@@ -55,7 +56,7 @@ TEST_CASE("HTTPClientTestChunkedResponse", "[basic]") {
     bool handlePost(CivetServer* /*server*/, struct mg_connection* conn) override {
       mg_printf(conn, "HTTP/1.1 100 Continue\r\n\r\n");
 
-      std::array<uint8_t, 16384U> buf;
+      std::array<uint8_t, 16384U> buf{};
       while (mg_read(conn, buf.data(), buf.size()) > 0) {}
 
       send_response(conn);
@@ -81,7 +82,7 @@ TEST_CASE("HTTPClientTestChunkedResponse", "[basic]") {
   const std::string port = std::to_string(vec.at(0));
 
   HTTPClient client;
-  client.initialize("GET", "http://localhost:" + port + "/testytesttest", nullptr);
+  client.initialize(utils::HttpRequestMethod::GET, "http://localhost:" + port + "/testytesttest", nullptr);
 
   REQUIRE(client.submit());
 
@@ -125,13 +126,15 @@ TEST_CASE("HTTPClient should be reusable", "[basic]") {
 
   HTTPClient client;
   client.setKeepAliveProbe(KeepAliveProbeData{2s, 2s});
-  client.initialize("GET", "http://localhost:" + keep_alive_server_.getPort() + "/method", nullptr);
+  client.initialize(utils::HttpRequestMethod::GET, "http://localhost:" + keep_alive_server_.getPort() + "/method", nullptr);
 
-  std::vector<std::string> methods = {"GET", "GET", "PUT", "GET", "GET", "POST", "POST", "PUT"};
+  std::vector<utils::HttpRequestMethod> methods = {
+      utils::HttpRequestMethod::GET, utils::HttpRequestMethod::GET, utils::HttpRequestMethod::PUT, utils::HttpRequestMethod::GET,
+      utils::HttpRequestMethod::GET, utils::HttpRequestMethod::POST, utils::HttpRequestMethod::POST, utils::HttpRequestMethod::PUT };
   uint64_t request_number = 0;
   for (const auto& method: methods) {
     client.set_request_method(method);
-    if (method != "GET") {
+    if (method != utils::HttpRequestMethod::GET) {
       auto callback = std::make_unique<org::apache::nifi::minifi::utils::HTTPUploadByteArrayInputCallback>();
       std::string content = R"({ "content": "a" })";
       callback->write(content);
@@ -148,7 +151,7 @@ TEST_CASE("HTTPClient should be reusable", "[basic]") {
     REQUIRE(headers.contains("Response-number"));
     CHECK(std::to_string(request_number) == headers.at("Response-number"));
     const auto& response = client.getResponseBody();
-    CHECK(method + std::to_string(request_number) == std::string(response.begin(), response.end()));
+    CHECK(std::string(magic_enum::enum_name(method)) + std::to_string(request_number) == std::string(response.begin(), response.end()));
     ++request_number;
   }
 
@@ -159,7 +162,7 @@ TEST_CASE("HTTPClient should be reusable", "[basic]") {
 #ifdef __linux__
 TEST_CASE("SSL without SSLContextService", "[HTTPClient]") {
   HTTPClient client;
-  client.initialize("GET", "https://apache.org", nullptr);
+  client.initialize(utils::HttpRequestMethod::GET, "https://apache.org", nullptr);
   REQUIRE(client.submit());
 }
 #endif

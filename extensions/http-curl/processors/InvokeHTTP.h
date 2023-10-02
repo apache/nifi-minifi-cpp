@@ -67,10 +67,10 @@ class InvokeHTTP : public core::Processor {
                                                           "The destination URL and HTTP Method are configurable. FlowFile attributes are converted to HTTP headers and the "
                                                           "FlowFile contents are included as the body of the request (if the HTTP Method is PUT, POST or PATCH).";
 
-  EXTENSIONAPI static constexpr auto Method = core::PropertyDefinitionBuilder<>::createProperty("HTTP Method")
-      .withDescription("HTTP request method (GET, POST, PUT, PATCH, DELETE, HEAD, OPTIONS). "
-          "Arbitrary methods are also supported. Methods other than POST, PUT and PATCH will be sent without a message body.")
-      .withDefaultValue("GET")
+  EXTENSIONAPI static constexpr auto Method = core::PropertyDefinitionBuilder<magic_enum::enum_count<utils::HttpRequestMethod>()>::createProperty("HTTP Method")
+      .withDescription("HTTP request method. Methods other than POST, PUT and PATCH will be sent without a message body.")
+      .withAllowedValues(magic_enum::enum_names<utils::HttpRequestMethod>())
+      .withDefaultValue(magic_enum::enum_name(utils::HttpRequestMethod::GET))
       .build();
   EXTENSIONAPI static constexpr auto URL = core::PropertyDefinitionBuilder<>::createProperty("Remote URL")
       .withDescription("Remote URL which will be connected to, including scheme, host, port, path.")
@@ -267,7 +267,7 @@ class InvokeHTTP : public core::Processor {
   void setupMembersFromProperties(const core::ProcessContext& context);
   std::unique_ptr<minifi::extensions::curl::HTTPClient> createHTTPClientFromPropertiesAndMembers(const core::ProcessContext& context) const;
 
-  std::string method_;
+  utils::HttpRequestMethod method_{};
   std::optional<utils::Regex> attributes_to_send_;
   std::optional<std::string> put_response_body_in_attribute_;
   bool always_output_response_{false};

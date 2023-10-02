@@ -68,7 +68,7 @@ class RESTSender : public RESTProtocol, public C2Protocol {
    * @param type type of HTTP request
    * @param url HTTP url
    */
-  void setSecurityContext(extensions::curl::HTTPClient &client, const std::string &type, const std::string &url);
+  void setSecurityContext(extensions::curl::HTTPClient &client, utils::HttpRequestMethod type, const std::string &url);
 
   std::shared_ptr<minifi::controllers::SSLContextService> ssl_context_service_;
 

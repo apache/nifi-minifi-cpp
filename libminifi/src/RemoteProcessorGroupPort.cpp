@@ -20,15 +20,10 @@
 
 #include "RemoteProcessorGroupPort.h"
 
-#include <algorithm>
-#include <cstdint>
 #include <memory>
-#include <deque>
 #include <iostream>
-#include <set>
 #include <vector>
 #include <string>
-#include <type_traits>
 #include <utility>
 #include <cinttypes>
 
@@ -41,9 +36,7 @@
 #include "core/logging/Logger.h"
 #include "core/ProcessContext.h"
 #include "core/ProcessorNode.h"
-#include "core/Relationship.h"
 #include "utils/BaseHTTPClient.h"
-#include "utils/net/DNS.h"
 
 #undef GetObject  // windows.h #defines GetObject = GetObjectA or GetObjectW, which conflicts with rapidjson
 
@@ -289,7 +282,7 @@ std::pair<std::string, int> RemoteProcessorGroupPort::refreshRemoteSite2SiteInfo
         return std::make_pair("", -1);
       }
       client = std::unique_ptr<utils::BaseHTTPClient>(dynamic_cast<utils::BaseHTTPClient*>(client_ptr));
-      client->initialize("GET", loginUrl.str(), ssl_service);
+      client->initialize(utils::HttpRequestMethod::GET, loginUrl.str(), ssl_service);
       // use a connection timeout. if this times out we will simply attempt re-connection
       // so no need for configuration parameter that isn't already defined in Processor
       client->setConnectionTimeout(10s);
@@ -308,7 +301,7 @@ std::pair<std::string, int> RemoteProcessorGroupPort::refreshRemoteSite2SiteInfo
     }
     int siteTosite_port_ = -1;
     client = std::unique_ptr<utils::BaseHTTPClient>(dynamic_cast<utils::BaseHTTPClient*>(client_ptr));
-    client->initialize("GET", fullUrl.str(), ssl_service);
+    client->initialize(utils::HttpRequestMethod::GET, fullUrl.str(), ssl_service);
     // use a connection timeout. if this times out we will simply attempt re-connection
     // so no need for configuration parameter that isn't already defined in Processor
     client->setConnectionTimeout(10s);

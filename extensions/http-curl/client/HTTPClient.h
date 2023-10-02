@@ -32,6 +32,7 @@
 #include <limits>
 #include <map>
 #include <memory>
+#include <optional>
 #include <string>
 #include <string_view>
 #include <unordered_map>
@@ -89,7 +90,7 @@ class HTTPClient : public utils::BaseHTTPClient, public core::Connectable {
 
   void forceClose();
 
-  void initialize(std::string method, std::string url, std::shared_ptr<minifi::controllers::SSLContextService> ssl_context_service) override;
+  void initialize(utils::HttpRequestMethod method, std::string url, std::shared_ptr<minifi::controllers::SSLContextService> ssl_context_service) override;
 
   void setConnectionTimeout(std::chrono::milliseconds timeout) override;
 
@@ -118,7 +119,7 @@ class HTTPClient : public utils::BaseHTTPClient, public core::Connectable {
 
   const std::vector<char>& getResponseBody() override;
 
-  void set_request_method(std::string method) override;
+  void set_request_method(utils::HttpRequestMethod method) override;
 
   void setPeerVerification(bool peer_verification) override;
   void setHostVerification(bool host_verification) override;
@@ -227,7 +228,7 @@ class HTTPClient : public utils::BaseHTTPClient, public core::Connectable {
 
   std::shared_ptr<minifi::controllers::SSLContextService> ssl_context_service_;
   std::string url_;
-  std::string method_;
+  std::optional<utils::HttpRequestMethod> method_;
 
   std::chrono::milliseconds connect_timeout_{std::chrono::seconds(30)};
   std::chrono::milliseconds read_timeout_{std::chrono::seconds(30)};

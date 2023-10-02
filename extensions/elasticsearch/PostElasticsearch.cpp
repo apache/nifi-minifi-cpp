@@ -71,7 +71,7 @@ void PostElasticsearch::onSchedule(const std::shared_ptr<core::ProcessContext>& 
   if (!credentials_service_)
     throw Exception(PROCESS_SCHEDULE_EXCEPTION, "Missing Elasticsearch credentials service");
 
-  client_.initialize("POST", host_url_ + "/_bulk", getSSLContextService(*context));
+  client_.initialize(utils::HttpRequestMethod::POST, host_url_ + "/_bulk", getSSLContextService(*context));
   client_.setContentType("application/json");
   credentials_service_->authenticateClient(client_);
 }
