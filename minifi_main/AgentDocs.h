@@ -14,8 +14,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#ifndef MAIN_AGENTDOCS_H_
-#define MAIN_AGENTDOCS_H_
+#pragma once
 
 #include <iostream>
 #include "agent/build_description.h"
@@ -24,12 +23,10 @@ namespace org::apache::nifi::minifi::docs {
 
 class AgentDocs {
  public:
-  void generate(const std::filesystem::path &docsdir, std::ostream &genStream);
+  void generate(const std::filesystem::path& docs_dir);
+
  private:
-  [[nodiscard]] static std::string extractClassName(const std::string &processor);
   BuildDescription build_description_;
 };
 
 }  // namespace org::apache::nifi::minifi::docs
-
-#endif  // MAIN_AGENTDOCS_H_
