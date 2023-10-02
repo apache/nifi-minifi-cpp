@@ -91,6 +91,9 @@ class WindowsCertStore {
 // Returns nullptr on errors
 X509_unique_ptr convertWindowsCertificate(PCCERT_CONTEXT certificate);
 
+// Returns nullptr on errors, or if the input is not an RSA key pair
+EVP_PKEY_unique_ptr convertWindowsRsaKeyPair(std::span<BYTE> data);
+
 // Returns nullptr if the certificate has no associated private key, or the private key could not be extracted
 EVP_PKEY_unique_ptr extractPrivateKey(PCCERT_CONTEXT certificate);
 #endif  // WIN32
