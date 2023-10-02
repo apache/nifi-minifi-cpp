@@ -190,7 +190,7 @@ class Logger : public BaseLogger {
   std::mutex mutex_;
 
  private:
-  std::string trimToMaxSizeAndAddId(std::string&& my_string) {
+  std::string trimToMaxSizeAndAddId(std::string my_string) {
     auto max_log_size = max_log_size_.load();
     if (max_log_size >= 0 && my_string.size() > gsl::narrow<size_t>(max_log_size))
       my_string = my_string.substr(0, max_log_size);
@@ -202,7 +202,7 @@ class Logger : public BaseLogger {
 
   template<typename ...Args>
   std::string stringify(fmt::format_string<Args...> fmt, Args&&... args) {
-    auto log_message = fmt::format(fmt, std::forward<Args>(args)...);
+    auto log_message = fmt::format(std::move(fmt), std::forward<Args>(args)...);
     return trimToMaxSizeAndAddId(std::move(log_message));
   }
 
@@ -214,7 +214,7 @@ class Logger : public BaseLogger {
     if (!delegate_->should_log(level)) {
       return;
     }
-    delegate_->log(level, stringify(fmt, map_args(std::forward<Args>(args))...));
+    delegate_->log(level, stringify(std::move(fmt), map_args(std::forward<Args>(args))...));
   }
 
   std::atomic<int> max_log_size_{LOG_BUFFER_SIZE};
