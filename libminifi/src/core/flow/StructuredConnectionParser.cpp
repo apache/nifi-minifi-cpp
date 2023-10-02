@@ -85,7 +85,7 @@ uint64_t StructuredConnectionParser::getWorkQueueDataSize() const {
     std::string max_work_queue_str = max_work_queue_data_size_node.getIntegerAsString().value();
     uint64_t max_work_queue_data_size = 0;
     if (core::Property::StringToInt(max_work_queue_str, max_work_queue_data_size)) {
-      logger_->log_debug("Setting {}as the max as the max queue data size.", max_work_queue_data_size);
+      logger_->log_debug("Setting {} as the max as the max queue data size.", max_work_queue_data_size);
       return max_work_queue_data_size;
     }
     logger_->log_error("Invalid max queue data size value: {}.", max_work_queue_str);
