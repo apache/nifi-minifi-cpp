@@ -42,6 +42,8 @@ function(use_bundled_curl SOURCE_DIR BINARY_DIR)
             -DCURL_DISABLE_CRYPTO_AUTH=ON
             -DCURL_CA_PATH=none
             -DCURL_USE_LIBSSH2=OFF
+            -DUSE_LIBIDN2=OFF
+            -DCURL_USE_LIBPSL=OFF
             -DCMAKE_DEBUG_POSTFIX=
             -DHAVE_GLIBC_STRERROR_R=1
             -DHAVE_GLIBC_STRERROR_R__TRYRUN_OUTPUT=""
