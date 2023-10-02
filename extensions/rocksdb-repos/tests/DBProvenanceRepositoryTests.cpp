@@ -25,8 +25,8 @@
 #include "TestBase.h"
 #include "Catch.h"
 
-#define TEST_PROVENANCE_STORAGE_SIZE (1024*100)  // 100 KB
-#define TEST_MAX_PROVENANCE_STORAGE_SIZE (100*1024*1024)  // 100 MB
+static constexpr size_t TEST_PROVENANCE_STORAGE_SIZE = 100_KiB;
+static constexpr size_t TEST_MAX_PROVENANCE_STORAGE_SIZE = 100_MiB;
 
 using namespace std::literals::chrono_literals;
 
