@@ -24,13 +24,12 @@ namespace org::apache::nifi::minifi::utils {
 ThreadPool::ThreadPool(int max_worker_threads, core::controller::ControllerServiceProvider* controller_service_provider, std::string name)
     : thread_reduction_count_(0),
       max_worker_threads_(max_worker_threads),
+      current_workers_(0),
       adjust_threads_(false),
       running_(false),
       controller_service_provider_(controller_service_provider),
       name_(std::move(name)),
       logger_(core::logging::LoggerFactory<ThreadPool>::getLogger()) {
-  current_workers_ = 0;
-  thread_manager_ = nullptr;
 }
 
 void ThreadPool::run_tasks(const std::shared_ptr<WorkerThread>& thread) {

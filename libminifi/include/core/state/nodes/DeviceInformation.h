@@ -68,9 +68,9 @@ class Device {
   static std::string getDeviceId();
 
   // connection information
-  int32_t socket_file_descriptor_;
+  int32_t socket_file_descriptor_ = 0;
 
-  addrinfo *addr_info_;
+  addrinfo *addr_info_ = nullptr;
 };
 
 /**

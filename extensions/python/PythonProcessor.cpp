@@ -25,8 +25,8 @@ namespace org::apache::nifi::minifi::extensions::python {
 
 namespace core = org::apache::nifi::minifi::core;
 
-PythonProcessor::PythonProcessor(core::Processor* proc) {
-  processor_ = dynamic_cast<python::processors::ExecutePythonProcessor*>(proc);
+PythonProcessor::PythonProcessor(core::Processor* proc) :
+    processor_(dynamic_cast<python::processors::ExecutePythonProcessor*>(proc)) {
   gsl_Expects(processor_);
 }
 

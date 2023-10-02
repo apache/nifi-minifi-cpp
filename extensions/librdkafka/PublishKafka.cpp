@@ -190,7 +190,7 @@ class ReadCallback {
 
     for (const auto& kv : flow_file.getAttributes()) {
       if (attribute_name_regex && utils::regexMatch(kv.first, *attribute_name_regex)) {
-        rd_kafka_header_add(result, kv.first.c_str(), kv.first.size(), kv.second.c_str(), kv.second.size());
+        rd_kafka_header_add(result, kv.first.c_str(), gsl::narrow<ssize_t>(kv.first.size()), kv.second.c_str(), gsl::narrow<ssize_t>(kv.second.size()));
       }
     }
     return rd_kafka_headers_unique_ptr{ result };
@@ -217,7 +217,7 @@ class ReadCallback {
 
     allocate_message_object(segment_num);
 
-    const gsl::owner<rd_kafka_headers_t*> hdrs_copy = rd_kafka_headers_copy(hdrs.get());
+    const auto hdrs_copy = gsl::owner<rd_kafka_headers_t*>(rd_kafka_headers_copy(hdrs.get()));
     const auto err = rd_kafka_producev(rk_, RD_KAFKA_V_RKT(rkt_), RD_KAFKA_V_PARTITION(RD_KAFKA_PARTITION_UA), RD_KAFKA_V_MSGFLAGS(RD_KAFKA_MSG_F_COPY), RD_KAFKA_V_VALUE(buffer.data(), buflen),
         RD_KAFKA_V_HEADERS(hdrs_copy), RD_KAFKA_V_KEY(key_.c_str(), key_.size()), RD_KAFKA_V_OPAQUE(callback_ptr.get()), RD_KAFKA_V_END);
     if (err == RD_KAFKA_RESP_ERR_NO_ERROR) {
@@ -255,8 +255,11 @@ class ReadCallback {
       logger_(std::move(logger))
   { }
 
+  ReadCallback(ReadCallback&&) = delete;
   ReadCallback(const ReadCallback&) = delete;
-  ReadCallback& operator=(ReadCallback) = delete;
+  ReadCallback& operator=(ReadCallback&&) = delete;
+  ReadCallback& operator=(const ReadCallback&) = delete;
+  ~ReadCallback() = default;
 
   int64_t operator()(const std::shared_ptr<io::InputStream>& stream) {
     std::vector<std::byte> buffer;
@@ -336,7 +339,7 @@ void messageDeliveryCallback(rd_kafka_t* rk, const rd_kafka_message_t* rkmessage
   try {
     (*func)(rk, rkmessage);
   } catch (...) { }
-  delete func;
+  delete func;  // NOLINT(cppcoreguidelines-owning-memory)
 }
 }  // namespace
 
@@ -414,10 +417,10 @@ void PublishKafka::notifyStop() {
 
 bool PublishKafka::configureNewConnection(const std::shared_ptr<core::ProcessContext> &context) {
   std::string value;
-  int64_t valInt;
+  int64_t valInt = 0;
   std::string valueConf;
   std::array<char, 512U> errstr{};
-  rd_kafka_conf_res_t result;
+  rd_kafka_conf_res_t result = RD_KAFKA_CONF_OK;
   const char* const PREFIX_ERROR_MSG = "PublishKafka: configure error result: ";
 
   std::unique_ptr<rd_kafka_conf_t, rd_kafka_conf_deleter> conf_{ rd_kafka_conf_new() };
@@ -467,7 +470,7 @@ bool PublishKafka::configureNewConnection(const std::shared_ptr<core::ProcessCon
     }
   }
   value = "";
-  uint32_t int_val;
+  uint32_t int_val = 0;
   if (context->getProperty(QueueBufferMaxMessage, int_val)) {
     if (int_val < batch_size_) {
       throw Exception(PROCESS_SCHEDULE_EXCEPTION, "Invalid configuration: Batch Size cannot be larger than Queue Max Message");
@@ -550,7 +553,7 @@ bool PublishKafka::configureNewConnection(const std::shared_ptr<core::ProcessCon
   rd_kafka_conf_set_log_cb(conf_.get(), &KafkaConnection::logCallback);
 
   // The producer takes ownership of the configuration, we must not free it
-  gsl::owner<rd_kafka_t*> producer = rd_kafka_new(RD_KAFKA_PRODUCER, conf_.release(), errstr.data(), errstr.size());
+  const auto producer = gsl::owner<rd_kafka_t*>(rd_kafka_new(RD_KAFKA_PRODUCER, conf_.release(), errstr.data(), errstr.size()));
   if (producer == nullptr) {
     auto error_msg = utils::StringUtils::join_pack("Failed to create Kafka producer ", errstr.data());
     throw Exception(PROCESS_SCHEDULE_EXCEPTION, error_msg);
@@ -568,7 +571,7 @@ bool PublishKafka::createNewTopic(const std::shared_ptr<core::ProcessContext> &c
     return false;
   }
 
-  rd_kafka_conf_res_t result;
+  rd_kafka_conf_res_t result = RD_KAFKA_CONF_OK;
   std::string value;
   std::array<char, 512U> errstr{};
   std::string valueConf;
@@ -619,7 +622,7 @@ bool PublishKafka::createNewTopic(const std::shared_ptr<core::ProcessContext> &c
   }
 
   // The topic takes ownership of the configuration, we must not free it
-  gsl::owner<rd_kafka_topic_t*> topic_reference = rd_kafka_topic_new(conn_->getConnection(), topic_name.c_str(), topic_conf_.release());
+  const auto topic_reference = gsl::owner<rd_kafka_topic_t*>(rd_kafka_topic_new(conn_->getConnection(), topic_name.c_str(), topic_conf_.release()));
   if (topic_reference == nullptr) {
     rd_kafka_resp_err_t resp_err = rd_kafka_last_error();
     logger_->log_error("PublishKafka: failed to create topic %s, error: %s", topic_name.c_str(), rd_kafka_err2str(resp_err));
@@ -770,7 +773,7 @@ void PublishKafka::onTrigger(const std::shared_ptr<core::ProcessContext> &contex
   logger_->log_trace("PublishKafka::onTrigger waitForCompletion finish");
 
   messages->iterateFlowFiles([&](size_t index, const FlowFileResult& flow_file) {
-    bool success;
+    bool success = false;
     if (flow_file.flow_file_error) {
       success = false;
     } else {

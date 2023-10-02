@@ -61,9 +61,14 @@ std::unique_ptr<core::ContentRepository> createContentRepository(const std::stri
 
 class NoOpThreadedRepository : public core::ThreadedRepository {
  public:
-  explicit NoOpThreadedRepository(std::string repo_name)
-    : ThreadedRepository(std::move(repo_name)) {
+  explicit NoOpThreadedRepository(std::string_view repo_name)
+    : ThreadedRepository(repo_name) {
   }
+
+  NoOpThreadedRepository(NoOpThreadedRepository&&) = delete;
+  NoOpThreadedRepository(const NoOpThreadedRepository&) = delete;
+  NoOpThreadedRepository& operator=(NoOpThreadedRepository&&) = delete;
+  NoOpThreadedRepository& operator=(const NoOpThreadedRepository&) = delete;
 
   ~NoOpThreadedRepository() override {
     stop();

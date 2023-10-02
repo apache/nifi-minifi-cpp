@@ -28,6 +28,9 @@
 #include <cstring>
 #include <iostream>
 #include <utility>
+#include <memory>
+
+#include "utils/Deleters.h"
 #endif
 
 #include "utils/OptionalUtils.h"
@@ -41,11 +44,10 @@ namespace {
    * @return the demangled name on success, empty string on failure
    */
   optional<std::string> demangle_symbol(const char* symbol_name) {
-    int status;
-    char* demangled = abi::__cxa_demangle(symbol_name, nullptr, nullptr, &status);
+    int status = 0;
+    std::unique_ptr<char, org::apache::nifi::minifi::utils::FreeDeleter> demangled(abi::__cxa_demangle(symbol_name, nullptr, nullptr, &status));
     if (status == 0) {
-      std::string demangled_name = demangled;
-      free(demangled);
+      std::string demangled_name = demangled.get();
       return { demangled_name };
     } else {
       return {};
@@ -56,7 +58,7 @@ namespace {
 
 void pull_trace([[maybe_unused]] uint8_t frames_to_skip /* = 1 */) {
 #ifdef HAS_EXECINFO
-  void* stack_buffer[TRACE_BUFFER_SIZE + 1];
+  void* stack_buffer[TRACE_BUFFER_SIZE + 1];  // NOLINT(cppcoreguidelines-avoid-c-arrays)
 
   /* Get the backtrace of the current thread */
   int trace_size = backtrace(stack_buffer, TRACE_BUFFER_SIZE);
@@ -82,9 +84,9 @@ void pull_trace([[maybe_unused]] uint8_t frames_to_skip /* = 1 */) {
 
     /* Determine the filename of the shared object */
     if (dl_info.dli_fname != nullptr) {
-      const char* last_slash = nullptr;
+      const char* last_slash = strrchr(dl_info.dli_fname, '/');
       /* If the shared object name is a full path, we still only want the filename component */
-      if ((last_slash = strrchr(dl_info.dli_fname, '/')) != nullptr) {
+      if (last_slash != nullptr) {
         file_name = last_slash + 1;
       } else {
         file_name = dl_info.dli_fname;
@@ -108,7 +110,7 @@ void pull_trace([[maybe_unused]] uint8_t frames_to_skip /* = 1 */) {
        * I could not find a difference between the two in my limited measurements, but we will use it too, just to be sure.
        */
       if (l_map != nullptr) {
-        dl_info.dli_fbase = reinterpret_cast<void*>(l_map->l_addr);
+        dl_info.dli_fbase = reinterpret_cast<void*>(l_map->l_addr);  // NOLINT(performance-no-int-to-ptr)
       }
 #endif  // __linux__
       base_address = reinterpret_cast<uintptr_t>(dl_info.dli_fbase);

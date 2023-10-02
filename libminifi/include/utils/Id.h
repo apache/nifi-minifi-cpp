@@ -23,6 +23,7 @@
 #include <string>
 #include <thread>
 #include <utility>
+#include <array>
 
 #ifndef WIN32
 class uuid;
@@ -111,7 +112,7 @@ class IdGenerator {
   int implementation_;
   std::shared_ptr<minifi::core::logging::Logger> logger_;
 
-  unsigned char deterministic_prefix_[8];
+  std::array<unsigned char, 8> deterministic_prefix_{};
   std::atomic<uint64_t> incrementor_;
 
   std::mutex uuid_mutex_;

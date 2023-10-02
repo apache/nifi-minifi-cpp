@@ -106,6 +106,11 @@ class PutTCPTestFixture {
     put_tcp_->setProperty(PutTCP::OutgoingMessageDelimiter, "\n");
   }
 
+  PutTCPTestFixture(PutTCPTestFixture&&) = delete;
+  PutTCPTestFixture(const PutTCPTestFixture&) = delete;
+  PutTCPTestFixture& operator=(PutTCPTestFixture&&) = delete;
+  PutTCPTestFixture& operator=(const PutTCPTestFixture&) = delete;
+
   ~PutTCPTestFixture() {
     stopServers();
   }

@@ -33,7 +33,7 @@ namespace org::apache::nifi::minifi::utils::file {
 
 uint64_t computeChecksum(const std::filesystem::path& file_name, uint64_t up_to_position) {
   constexpr uint64_t BUFFER_SIZE = 4096U;
-  std::array<char, std::size_t{BUFFER_SIZE}> buffer;
+  std::array<char, std::size_t{BUFFER_SIZE}> buffer{};
 
   std::ifstream stream{file_name, std::ios::in | std::ios::binary};
 
@@ -41,7 +41,7 @@ uint64_t computeChecksum(const std::filesystem::path& file_name, uint64_t up_to_
   uint64_t remaining_bytes_to_be_read = up_to_position;
 
   while (stream && remaining_bytes_to_be_read > 0) {
-    stream.read(buffer.data(), std::min(BUFFER_SIZE, remaining_bytes_to_be_read));
+    stream.read(buffer.data(), gsl::narrow<std::streamsize>(std::min(BUFFER_SIZE, remaining_bytes_to_be_read)));
     uInt bytes_read = gsl::narrow<uInt>(stream.gcount());
     checksum = crc32(checksum, reinterpret_cast<unsigned char*>(buffer.data()), bytes_read);
     remaining_bytes_to_be_read -= bytes_read;
@@ -61,7 +61,7 @@ bool contains(const std::filesystem::path& file_path, std::string_view text_to_s
   std::ifstream ifs{file_path, std::ios::binary};
   do {
     std::copy(buf.end() - text_to_search.size(), buf.end(), buf.begin());
-    ifs.read(buf.data() + text_to_search.size(), buf.size() - text_to_search.size());
+    ifs.read(buf.data() + text_to_search.size(), gsl::narrow<std::streamsize>(buf.size() - text_to_search.size()));
     view = std::span<char>(buf.data(), text_to_search.size() + gsl::narrow<size_t>(ifs.gcount()));
     if (std::search(view.begin(), view.end(), searcher) != view.end()) {
       return true;

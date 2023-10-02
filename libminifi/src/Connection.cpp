@@ -49,19 +49,19 @@ Connection::Connection(std::shared_ptr<core::Repository> flow_repository, std::s
 Connection::Connection(std::shared_ptr<core::Repository> flow_repository, std::shared_ptr<core::ContentRepository> content_repo, std::string_view name, const utils::Identifier &uuid,
                        const utils::Identifier& srcUUID)
     : core::Connectable(name, uuid),
+      src_uuid_(srcUUID),
       flow_repository_(std::move(flow_repository)),
       content_repo_(std::move(content_repo)) {
-  src_uuid_ = srcUUID;
   logger_->log_debug("Connection %s created", name_);
 }
 
 Connection::Connection(std::shared_ptr<core::Repository> flow_repository, std::shared_ptr<core::ContentRepository> content_repo, std::string_view name, const utils::Identifier &uuid,
                        const utils::Identifier& srcUUID, const utils::Identifier& destUUID)
     : core::Connectable(name, uuid),
+      src_uuid_(srcUUID),
+      dest_uuid_(destUUID),
       flow_repository_(std::move(flow_repository)),
       content_repo_(std::move(content_repo)) {
-  src_uuid_ = srcUUID;
-  dest_uuid_ = destUUID;
   logger_->log_debug("Connection %s created", name_);
 }
 

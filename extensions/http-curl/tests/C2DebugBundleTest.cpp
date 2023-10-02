@@ -58,7 +58,7 @@ class C2DebugBundleHandler : public ServerAwareHandler {
  public:
   bool handlePost(CivetServer* /*server*/, struct mg_connection *conn) override {
     std::optional<std::string> file_content;
-    mg_form_data_handler form_handler;
+    mg_form_data_handler form_handler{};
     form_handler.field_found = field_found;
     form_handler.field_get = field_get;
     form_handler.user_data = &file_content;

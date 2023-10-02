@@ -144,11 +144,10 @@ TEST_CASE("Double quoted attribute expression", "[expressionLanguageTestDoubleQu
 TEST_CASE("Hostname function", "[expressionLanguageTestHostnameFunction]") {
   auto expr = expression::compile("text_before${\n\t hostname ()\n\t }text_after");
 
-  char hostname[1024];
-  hostname[1023] = '\0';
-  gethostname(hostname, 1023);
+  std::array<char, 1024> hostname{};
+  gethostname(hostname.data(), 1023);
   std::string expected("text_before");
-  expected.append(hostname);
+  expected.append(hostname.data());
   expected.append("text_after");
 
   auto flow_file_a = std::make_shared<core::FlowFile>();

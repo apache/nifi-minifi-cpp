@@ -78,6 +78,11 @@ class VolatileMapStateStorageTestFixture {
     REQUIRE(controller != nullptr);
   }
 
+  VolatileMapStateStorageTestFixture(VolatileMapStateStorageTestFixture&&) = delete;
+  VolatileMapStateStorageTestFixture(const VolatileMapStateStorageTestFixture&) = delete;
+  VolatileMapStateStorageTestFixture& operator=(VolatileMapStateStorageTestFixture&&) = delete;
+  VolatileMapStateStorageTestFixture& operator=(const VolatileMapStateStorageTestFixture&) = delete;
+
   virtual ~VolatileMapStateStorageTestFixture() {
     std::filesystem::current_path(minifi::utils::file::get_executable_dir());
     LogTestController::getInstance().reset();

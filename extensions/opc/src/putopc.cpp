@@ -102,10 +102,10 @@ namespace org::apache::nifi::minifi::processors {
         parentNodeID_.namespaceIndex = nameSpaceIdx_;
         if (idType_ == opc::OPCNodeIDType::Int) {
           parentNodeID_.identifierType = UA_NODEIDTYPE_NUMERIC;
-          parentNodeID_.identifier.numeric = std::stoi(nodeID_);
+          parentNodeID_.identifier.numeric = std::stoi(nodeID_);  // NOLINT(cppcoreguidelines-pro-type-union-access)
         } else {  // idType_ == opc::OPCNodeIDType::String
           parentNodeID_.identifierType = UA_NODEIDTYPE_STRING;
-          parentNodeID_.identifier.string = UA_STRING_ALLOC(nodeID_.c_str());
+          parentNodeID_.identifier.string = UA_STRING_ALLOC(nodeID_.c_str());  // NOLINT(cppcoreguidelines-pro-type-union-access)
         }
         if (!connection_->exists(parentNodeID_)) {
           logger_->log_error("Parent node doesn't exist, no flow files will be put");
@@ -148,7 +148,7 @@ namespace org::apache::nifi::minifi::processors {
         session->transfer(flowFile, Failure);
         return;
       }
-      int32_t nsi;
+      int32_t nsi = 0;
       try {
         nsi = std::stoi(namespaceidx);
       } catch (...) {
@@ -162,7 +162,7 @@ namespace org::apache::nifi::minifi::processors {
       if (targetidtype == "Int") {
         targetnode.identifierType = UA_NODEIDTYPE_NUMERIC;
         try {
-          targetnode.identifier.numeric = std::stoi(targetid);
+          targetnode.identifier.numeric = std::stoi(targetid);  // NOLINT(cppcoreguidelines-pro-type-union-access)
           targetNodeValid = true;
         } catch (...) {
           logger_->log_error("Flowfile %s: target node ID is not a valid integer: %s. Routing to failure!",
@@ -172,7 +172,7 @@ namespace org::apache::nifi::minifi::processors {
         }
       } else if (targetidtype == "String") {
         targetnode.identifierType = UA_NODEIDTYPE_STRING;
-        targetnode.identifier.string = UA_STRING_ALLOC(targetid.c_str());
+        targetnode.identifier.string = UA_STRING_ALLOC(targetid.c_str());  // NOLINT(cppcoreguidelines-pro-type-union-access)
         targetNodeValid = true;
       } else {
         logger_->log_error("Flowfile %s: target node ID type is invalid: %s. Routing to failure!",
@@ -187,7 +187,7 @@ namespace org::apache::nifi::minifi::processors {
     if (targetNodeExists) {
       logger_->log_trace("Node exists, trying to update it");
       try {
-        UA_StatusCode sc;
+        UA_StatusCode sc = 0;
         switch (nodeDataType_) {
           case opc::OPCNodeDataType::Int64: {
             int64_t value = std::stoll(contentstr);
@@ -263,7 +263,7 @@ namespace org::apache::nifi::minifi::processors {
         targetnode = UA_NODEID_NUMERIC(1, 0);
       }
       try {
-        UA_StatusCode sc;
+        UA_StatusCode sc = 0;
         UA_NodeId resultnode;
         switch (nodeDataType_) {
           case opc::OPCNodeDataType::Int64: {

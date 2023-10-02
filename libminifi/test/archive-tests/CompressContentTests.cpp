@@ -55,6 +55,7 @@ class ReadCallback {
   ReadCallback(ReadCallback&&) = delete;
   ReadCallback& operator=(const ReadCallback&) = delete;
   ReadCallback& operator=(ReadCallback&&) = delete;
+  ~ReadCallback() = default;
 
   int64_t operator()(const std::shared_ptr<minifi::io::InputStream>& stream) {
     int64_t total_read = 0;
@@ -63,7 +64,7 @@ class ReadCallback {
       if (ret == 0) break;
       if (minifi::io::isError(ret)) return -1;
       read_size_ += gsl::narrow<size_t>(ret);
-      total_read += ret;
+      total_read += gsl::narrow<int64_t>(ret);
     } while (buffer_.size() != read_size_);
     return total_read;
   }
@@ -73,7 +74,7 @@ class ReadCallback {
     archive_read_support_format_all(a.get());
     archive_read_support_filter_all(a.get());
     archive_read_open_memory(a.get(), buffer_.data(), read_size_);
-    struct archive_entry *ae;
+    struct archive_entry *ae = nullptr;
 
     REQUIRE(archive_read_next_header(a.get(), &ae) == ARCHIVE_OK);
     const auto size = [&] {
@@ -209,7 +210,12 @@ class CompressDecompressionTestController : public TestController {
     return RawContent{std::move(contents)};
   }
 
-  virtual ~CompressDecompressionTestController() = 0;
+  CompressDecompressionTestController() = default;
+  CompressDecompressionTestController(CompressDecompressionTestController&&) = delete;
+  CompressDecompressionTestController(const CompressDecompressionTestController&) = delete;
+  CompressDecompressionTestController& operator=(CompressDecompressionTestController&&) = delete;
+  CompressDecompressionTestController& operator=(const CompressDecompressionTestController&) = delete;
+  virtual ~CompressDecompressionTestController();
 
   std::shared_ptr<core::Processor> processor;
   std::shared_ptr<core::ProcessSession> helper_session;
@@ -262,6 +268,10 @@ class DecompressTestController : public CompressDecompressionTestController{
   DecompressTestController() {
     setupFlow();
   }
+  DecompressTestController(DecompressTestController&&) = delete;
+  DecompressTestController(const DecompressTestController&) = delete;
+  DecompressTestController& operator=(DecompressTestController&&) = delete;
+  DecompressTestController& operator=(const DecompressTestController&) = delete;
   ~DecompressTestController() override {
     tempDir_ = "";
     raw_content_path_ = "";

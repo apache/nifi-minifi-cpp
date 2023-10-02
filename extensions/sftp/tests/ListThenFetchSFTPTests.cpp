@@ -142,6 +142,11 @@ class ListThenFetchSFTPTestsFixture {
     plan->setProperty(put_file, "Create Missing Directories", "true");
   }
 
+  ListThenFetchSFTPTestsFixture(ListThenFetchSFTPTestsFixture&&) = delete;
+  ListThenFetchSFTPTestsFixture(const ListThenFetchSFTPTestsFixture&) = delete;
+  ListThenFetchSFTPTestsFixture& operator=(ListThenFetchSFTPTestsFixture&&) = delete;
+  ListThenFetchSFTPTestsFixture& operator=(const ListThenFetchSFTPTestsFixture&) = delete;
+
   virtual ~ListThenFetchSFTPTestsFixture() {
     LogTestController::getInstance().reset();
   }
@@ -178,7 +183,7 @@ class ListThenFetchSFTPTestsFixture {
     std::stringstream content;
     std::vector<char> buffer(1024U);
     while (file) {
-      file.read(buffer.data(), buffer.size());
+      file.read(buffer.data(), gsl::narrow<std::streamsize>(buffer.size()));
       content << std::string(buffer.data(), file.gcount());
     }
     CHECK(expected_content == content.str());

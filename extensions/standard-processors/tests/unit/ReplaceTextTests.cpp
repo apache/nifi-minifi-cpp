@@ -313,8 +313,8 @@ class HandleEmptyIncomingFlowFile {
  private:
   TestController testController;
   std::shared_ptr<TestPlan> plan = testController.createPlan();
-  minifi::processors::EvaluationModeType evaluation_mode_;
-  minifi::processors::ReplacementStrategyType replacement_strategy_;
+  minifi::processors::EvaluationModeType evaluation_mode_ = minifi::processors::EvaluationModeType::LINE_BY_LINE;
+  minifi::processors::ReplacementStrategyType replacement_strategy_ = minifi::processors::ReplacementStrategyType::REGEX_REPLACE;
   std::string expected_output_;
 };
 

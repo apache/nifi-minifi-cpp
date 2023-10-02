@@ -16,7 +16,7 @@
  * limitations under the License.
  */
 
-#define EXTENSION_LIST "*minifi-system*, *minifi-standard-processors*"
+#define EXTENSION_LIST "*minifi-system*, *minifi-standard-processors*"  // NOLINT(cppcoreguidelines-macro-usage)
 
 #include <memory>
 #include "core/state/nodes/DeviceInformation.h"

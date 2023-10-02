@@ -14,7 +14,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#define EXTENSION_LIST "minifi-gcp"
+#define EXTENSION_LIST "minifi-gcp"  // NOLINT(cppcoreguidelines-macro-usage)
 
 #include "TestBase.h"
 #include "gtest/gtest.h"

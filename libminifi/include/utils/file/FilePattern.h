@@ -82,7 +82,7 @@ class FilePattern {
 
     std::filesystem::path directory_pattern_;
     std::string file_pattern_;
-    bool excluding_;
+    bool excluding_ = false;
   };
 
   using ErrorHandler = std::function<void(std::string_view /*subpattern*/, std::string_view /*error_message*/)>;

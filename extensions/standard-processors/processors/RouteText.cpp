@@ -198,6 +198,7 @@ class RouteText::MatchingContext {
     OwningSearcher(OwningSearcher&&) = delete;
     OwningSearcher& operator=(const OwningSearcher&) = delete;
     OwningSearcher& operator=(OwningSearcher&&) = delete;
+    ~OwningSearcher() = default;
 
     std::string str_;
     utils::Searcher<std::string::const_iterator, CaseAwareHash, CaseAwareEq> searcher_;

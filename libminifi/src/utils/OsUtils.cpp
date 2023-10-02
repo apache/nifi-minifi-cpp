@@ -158,10 +158,10 @@ std::string OsUtils::userIdToUsername(const std::string &uid) {
     char *end = nullptr;  // it will be unused
     uid_t ret = std::strtol(ptr, &end, 10);
     if (ret > 0) {
-      struct passwd pass;
-      struct passwd *result;
-      char localbuf[1024];
-      if (!getpwuid_r(ret, &pass, localbuf, sizeof localbuf, &result)) {
+      struct passwd pass{};
+      struct passwd *result = nullptr;
+      std::array<char, 1024> localbuf{};
+      if (!getpwuid_r(ret, &pass, localbuf.data(), localbuf.size(), &result)) {
         name = pass.pw_name;
       }
     }
@@ -179,9 +179,9 @@ int64_t OsUtils::getCurrentProcessPhysicalMemoryUsage() {
   while (std::getline(status_file, line)) {
     if (line.rfind(resident_set_size_prefix, 0) == 0) {
       std::istringstream resident_set_size_value(line.substr(resident_set_size_prefix.length()));
-      uint64_t memory_usage_in_kBytes;
+      uint64_t memory_usage_in_kBytes = 0;
       resident_set_size_value >> memory_usage_in_kBytes;
-      return memory_usage_in_kBytes * 1024;
+      return gsl::narrow<int64_t>(memory_usage_in_kBytes * 1024);
     }
   }
 
@@ -320,7 +320,7 @@ std::string OsUtils::getMachineArchitecture() {
       return "unknown";
   }
 #else
-  utsname buf;
+  utsname buf{};
   if (uname(&buf) == -1)
     return "unknown";
   else
@@ -331,12 +331,11 @@ std::string OsUtils::getMachineArchitecture() {
 }
 
 std::optional<std::string> OsUtils::getHostName() {
-  char hostname[1024];
-  hostname[1023] = '\0';
-  if (gethostname(hostname, 1023) != 0) {
+  std::array<char, 1024> hostname{};
+  if (gethostname(hostname.data(), 1023) != 0) {
     return std::nullopt;
   }
-  return {hostname};
+  return {hostname.data()};
 }
 
 #ifdef WIN32
@@ -371,8 +370,8 @@ std::string OsUtils::wideStringToString(const std::wstring& wide_string) {
 
 std::optional<double> OsUtils::getSystemLoadAverage() {
 #ifndef WIN32
-  double load_avg[1];
-  auto numSamples = getloadavg(load_avg, 1);
+  std::array<double, 1> load_avg{};
+  auto numSamples = getloadavg(load_avg.data(), 1);
   if (numSamples == -1) {
     return std::nullopt;
   }

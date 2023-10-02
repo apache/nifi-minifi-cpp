@@ -73,38 +73,22 @@ int16_t RESTReceiver::heartbeat(const C2Payload &payload) {
 }
 
 std::unique_ptr<CivetServer> RESTReceiver::start_webserver(const std::string &port, std::string &rooturi, CivetHandler *handler, std::string &ca_cert) {
-  struct mg_callbacks callback;
-
+  struct mg_callbacks callback{};
   memset(&callback, 0, sizeof(callback));
   callback.init_ssl = ssl_protocol_en;
-  std::string my_port = port;
-  my_port += "s";
   callback.log_message = log_message;
-  const char *options[] = { "listening_ports", port.c_str(), "ssl_certificate", ca_cert.c_str(), "ssl_protocol_version", "4", "ssl_cipher_list", "ALL",
-      "ssl_verify_peer", "no", "num_threads", "1", nullptr };
+  std::vector<std::string> cpp_options = { "listening_ports", port, "ssl_certificate", ca_cert, "ssl_protocol_version", "4", "ssl_cipher_list", "ALL",
+      "ssl_verify_peer", "no", "num_threads", "1" };
 
-  std::vector<std::string> cpp_options;
-  for (uint32_t i = 0; i < (sizeof(options) / sizeof(options[0]) - 1); i++) {
-    cpp_options.push_back(options[i]);
-  }
   auto server = std::make_unique<CivetServer>(cpp_options);
-
   server->addHandler(rooturi, handler);
-
   return server;
 }
 
 std::unique_ptr<CivetServer> RESTReceiver::start_webserver(const std::string &port, std::string &rooturi, CivetHandler *handler) {
-  const char *options[] = { "document_root", ".", "listening_ports", port.c_str(), "num_threads", "1", nullptr };
-
-  std::vector<std::string> cpp_options;
-  for (uint32_t i = 0; i < (sizeof(options) / sizeof(options[0]) - 1); i++) {
-    cpp_options.push_back(options[i]);
-  }
+  std::vector<std::string> cpp_options = { "document_root", ".", "listening_ports", port, "num_threads", "1" };
   auto server = std::make_unique<CivetServer>(cpp_options);
-
   server->addHandler(rooturi, handler);
-
   return server;
 }
 

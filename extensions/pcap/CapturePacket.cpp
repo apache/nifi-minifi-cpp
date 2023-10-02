@@ -60,7 +60,7 @@ void CapturePacket::packet_callback(pcpp::RawPacket* packet, pcpp::PcapLiveDevic
   // parse the packet
   auto capture_mechanism = reinterpret_cast<PacketMovers*>(data);
 
-  CapturePacketMechanism *capture;
+  CapturePacketMechanism *capture = nullptr;
 
   if (capture_mechanism->source.try_dequeue(capture)) {
     // if needed - write the packet to the output pcap file
@@ -85,7 +85,7 @@ void CapturePacket::packet_callback(pcpp::RawPacket* packet, pcpp::PcapLiveDevic
 
 CapturePacketMechanism *CapturePacket::create_new_capture(const std::string &base_path, int64_t *max_size) {
   auto new_capture = new CapturePacketMechanism(base_path, generate_new_pcap(base_path), max_size);
-  new_capture->writer_ = new pcpp::PcapFileWriterDevice(new_capture->getFile());
+  new_capture->writer_ = std::make_unique<pcpp::PcapFileWriterDevice>(new_capture->getFile());
   if (!new_capture->writer_->open())
     throw std::runtime_error{utils::StringUtils::join_pack("Failed to open PcapFileWriterDevice with file ", new_capture->getFile().string())};
 
@@ -190,7 +190,7 @@ void CapturePacket::onSchedule(const std::shared_ptr<core::ProcessContext> &cont
 CapturePacket::~CapturePacket() = default;
 
 void CapturePacket::onTrigger(const std::shared_ptr<core::ProcessContext> &context, const std::shared_ptr<core::ProcessSession> &session) {
-  CapturePacketMechanism *capture;
+  gsl::owner<CapturePacketMechanism*> capture = nullptr;
   if (mover->sink.try_dequeue(capture)) {
     auto ff = session->create();
     session->import(capture->getFile(), ff, false, 0);

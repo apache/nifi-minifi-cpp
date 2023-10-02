@@ -42,8 +42,8 @@ class SQLColumnIdentifier {
   friend struct ::std::hash<SQLColumnIdentifier>;
 
  private:
-  std::string original_value_;
   std::string value_;
+  std::string original_value_;
 };
 
 }  // namespace org::apache::nifi::minifi::sql

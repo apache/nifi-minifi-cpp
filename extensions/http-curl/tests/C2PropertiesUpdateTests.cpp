@@ -93,6 +93,7 @@ class VerifyPropertyUpdate : public HTTPIntegrationBase {
   VerifyPropertyUpdate(VerifyPropertyUpdate&&) = default;
   VerifyPropertyUpdate& operator=(const VerifyPropertyUpdate&) = delete;
   VerifyPropertyUpdate& operator=(VerifyPropertyUpdate&&) = default;
+  ~VerifyPropertyUpdate() override = default;
 
   void testSetup() override {}
 

@@ -16,7 +16,6 @@
  * limitations under the License.
  */
 
-#define CURLOPT_SSL_VERIFYPEER_DISABLE 1
 #include <sys/stat.h>
 #undef NDEBUG
 #include <cassert>

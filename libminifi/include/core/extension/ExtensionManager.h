@@ -41,7 +41,7 @@ class ExtensionManager {
  private:
   std::vector<std::unique_ptr<Module>> modules_;
 
-  Module* active_module_;
+  Module* active_module_ = nullptr;
 
   static const std::shared_ptr<logging::Logger> logger_;
 };

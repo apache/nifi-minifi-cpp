@@ -23,7 +23,7 @@ using namespace std::literals::chrono_literals;
 namespace org::apache::nifi::minifi::extensions::procfs {
 
 std::optional<std::pair<std::string, NetDevData>> NetDevData::parseNetDevLine(std::istream& iss) {
-  NetDevData net_dev_data;
+  NetDevData net_dev_data{};
   std::string entry_name;
   iss >> entry_name
       >> net_dev_data.bytes_received_
@@ -52,7 +52,7 @@ std::optional<std::pair<std::string, NetDevData>> NetDevData::parseNetDevLine(st
 }
 
 NetDevData NetDevData::operator-(const NetDevData& rhs) const {
-  NetDevData result;
+  NetDevData result{};
   result.bytes_received_ = bytes_received_-rhs.bytes_received_;
   result.packets_received_ = packets_received_-rhs.packets_received_;
   result.errs_received_ = errs_received_-rhs.errs_received_;

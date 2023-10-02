@@ -36,16 +36,14 @@ FlowFile::FlowFile()
     : CoreComponent("FlowFile"),
       stored(false),
       marked_delete_(false),
+      entry_date_(std::chrono::system_clock::now()),
+      event_time_(entry_date_),
+      lineage_start_date_(entry_date_),
       last_queue_date_(0),
       size_(0),
-      id_(0),
+      id_(numeric_id_generator_->generateId()),
       offset_(0),
-      to_be_processed_after_(std::chrono::steady_clock::now()),
-      claim_(nullptr) {
-  id_ = numeric_id_generator_->generateId();
-  entry_date_ = std::chrono::system_clock::now();
-  event_time_ = entry_date_;
-  lineage_start_date_ = entry_date_;
+      to_be_processed_after_(std::chrono::steady_clock::now()) {
 }
 
 FlowFile& FlowFile::operator=(const FlowFile& other) {

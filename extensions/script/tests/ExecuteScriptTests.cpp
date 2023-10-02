@@ -15,7 +15,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#define EXTENSION_LIST "*minifi-*,!*python*,!*lua*"
+#define EXTENSION_LIST "*minifi-*,!*python*,!*lua*"  // NOLINT(cppcoreguidelines-macro-usage)
 
 #include "SingleProcessorTestController.h"
 #include "TestBase.h"

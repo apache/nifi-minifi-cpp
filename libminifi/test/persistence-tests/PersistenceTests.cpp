@@ -102,7 +102,8 @@ struct TestFlow{
 
     // prepare Merge Processor for execution
     processor_->setScheduledState(core::ScheduledState::RUNNING);
-    processor_->onSchedule(processorContext.get(), new core::ProcessSessionFactory(processorContext));
+    process_session_factory_ = std::make_unique<core::ProcessSessionFactory>(processorContext);
+    processor_->onSchedule(processorContext.get(), process_session_factory_.get());
   }
   std::shared_ptr<core::FlowFile> write(const std::string& data) {
     minifi::io::BufferStream stream(data);
@@ -140,6 +141,7 @@ struct TestFlow{
   std::shared_ptr<core::Repository> prov_repo;
   std::shared_ptr<core::ProcessContext> inputContext;
   std::shared_ptr<core::ProcessContext> processorContext;
+  std::unique_ptr<core::ProcessSessionFactory> process_session_factory_;
 };
 
 std::unique_ptr<MergeContent> setupMergeProcessor(const utils::Identifier& id) {

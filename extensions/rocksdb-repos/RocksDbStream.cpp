@@ -33,11 +33,13 @@ RocksDbStream::RocksDbStream(std::string path, gsl::not_null<minifi::internal::R
       path_(std::move(path)),
       write_enable_(write_enable),
       db_(db),
-      batch_(batch) {
-  auto opendb = db_->open();
-  exists_ = opendb && opendb->Get(rocksdb::ReadOptions(), path_, &value_).ok();
-  offset_ = 0;
-  size_ = value_.size();
+      exists_([this] {
+        auto opendb = db_->open();
+        return opendb && opendb->Get(rocksdb::ReadOptions(), path_, &value_).ok();
+      }()),
+      offset_(0),
+      batch_(batch),
+      size_(value_.size()) {
 }
 
 void RocksDbStream::close() {

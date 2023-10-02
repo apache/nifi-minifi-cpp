@@ -74,7 +74,7 @@ class ProcessContextBuilder : public core::CoreComponent, public std::enable_sha
 
  protected:
   std::shared_ptr<minifi::Configure> configuration_;
-  core::controller::ControllerServiceProvider* controller_service_provider_;
+  core::controller::ControllerServiceProvider* controller_service_provider_ = nullptr;
   std::shared_ptr<core::Repository> prov_repo_;
   std::shared_ptr<core::Repository> flow_repo_;
   std::shared_ptr<core::ContentRepository> content_repo_;

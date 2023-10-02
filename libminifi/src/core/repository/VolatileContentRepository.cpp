@@ -86,7 +86,7 @@ std::shared_ptr<io::BaseStream> VolatileContentRepository::write(const minifi::R
     if (claim_check != master_list_.end()) {
       return std::make_shared<io::AtomicEntryStream<ResourceClaim::Path>>(claim.getContentFullPath(), claim_check->second);
     } else {
-      auto *ent = new AtomicEntry<ResourceClaim::Path>(&repo_data_.current_size, &repo_data_.max_size);
+      auto *ent = new AtomicEntry<ResourceClaim::Path>(&repo_data_.current_size, &repo_data_.max_size);  // NOLINT(cppcoreguidelines-owning-memory)
       if (ent->testAndSetKey(claim.getContentFullPath())) {
         master_list_[claim.getContentFullPath()] = ent;
         return std::make_shared<io::AtomicEntryStream<ResourceClaim::Path>>(claim.getContentFullPath(), ent);
@@ -146,7 +146,7 @@ bool VolatileContentRepository::removeKey(const std::string& content_path) {
     auto claim_item = master_list_.find(content_path);
     if (claim_item != master_list_.end()) {
       auto size = claim_item->second->getLength();
-      delete claim_item->second;
+      delete claim_item->second;  // NOLINT(cppcoreguidelines-owning-memory)
       master_list_.erase(content_path);
       repo_data_.current_size -= size;
     }

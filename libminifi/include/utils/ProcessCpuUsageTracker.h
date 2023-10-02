@@ -23,11 +23,7 @@
 #include <time.h>
 #endif
 
-namespace org {
-namespace apache {
-namespace nifi {
-namespace minifi {
-namespace utils {
+namespace org::apache::nifi::minifi::utils {
 
 class ProcessCpuUsageTrackerBase {
  public:
@@ -85,8 +81,4 @@ class ProcessCpuUsageTracker : ProcessCpuUsageTrackerBase {
 };
 #endif
 
-} /* namespace utils */
-} /* namespace minifi */
-} /* namespace nifi */
-} /* namespace apache */
-} /* namespace org */
+}  // namespace org::apache::nifi::minifi::utils

@@ -70,12 +70,16 @@ void init_file_paths() {
 class FixedBuffer {
  public:
   explicit FixedBuffer(std::size_t capacity) : capacity_(capacity) {
-    buf_.reset(new uint8_t[capacity_]);
+    buf_.reset(new uint8_t[capacity_]);  // NOLINT(cppcoreguidelines-owning-memory)
   }
   FixedBuffer(FixedBuffer&& other) noexcept : buf_(std::move(other.buf_)), size_(other.size_), capacity_(other.capacity_) {
     other.size_ = 0;
     other.capacity_ = 0;
   }
+  FixedBuffer(const FixedBuffer&) = delete;
+  FixedBuffer& operator=(FixedBuffer&&) = delete;
+  FixedBuffer& operator=(const FixedBuffer&) = delete;
+  ~FixedBuffer() = default;
   [[nodiscard]] std::size_t size() const { return size_; }
   [[nodiscard]] std::size_t capacity() const { return capacity_; }
   [[nodiscard]] uint8_t* begin() const { return buf_.get(); }
@@ -104,7 +108,7 @@ class FixedBuffer {
   }
 
  private:
-  std::unique_ptr<uint8_t[]> buf_;
+  std::unique_ptr<uint8_t[]> buf_;  // NOLINT(cppcoreguidelines-avoid-c-arrays)
   std::size_t size_ = 0;
   std::size_t capacity_ = 0;
 };
@@ -121,12 +125,11 @@ std::vector<FixedBuffer> read_archives(const FixedBuffer& input) {
     archive* arch;
   };
   std::vector<FixedBuffer> archive_contents;
-  struct archive *a;
-  a = archive_read_new();
+  struct archive *a = archive_read_new();
   archive_read_support_format_all(a);
   archive_read_support_filter_all(a);
   archive_read_open_memory(a, input.begin(), input.size());
-  struct archive_entry *ae;
+  struct archive_entry *ae = nullptr;
 
   while (archive_read_next_header(a, &ae) == ARCHIVE_OK) {
     int size = gsl::narrow<int>(archive_entry_size(ae));
@@ -193,11 +196,16 @@ class MergeTestController : public TestController {
     }
   }
 
+  MergeTestController(MergeTestController&&) = delete;
+  MergeTestController(const MergeTestController&) = delete;
+  MergeTestController& operator=(MergeTestController&&) = delete;
+  MergeTestController& operator=(const MergeTestController&) = delete;
+
   ~MergeTestController() {
     LogTestController::getInstance().reset();
   }
 
-  std::string flowFileContents_[6];
+  std::array<std::string, 6> flowFileContents_;
   std::shared_ptr<core::ProcessContext> context_;
   std::unique_ptr<core::Processor> merge_content_processor_;
   std::unique_ptr<core::Processor> log_attribute_processor_;
@@ -206,9 +214,9 @@ class MergeTestController : public TestController {
 };
 
 TEST_CASE_METHOD(MergeTestController, "MergeFileDefragment", "[mergefiletest1]") {
-  std::string expected[2]{
-          flowFileContents_[0] + flowFileContents_[1] + flowFileContents_[2],
-          flowFileContents_[3] + flowFileContents_[4] + flowFileContents_[5]
+  std::array<std::string, 2> expected {
+    flowFileContents_[0] + flowFileContents_[1] + flowFileContents_[2],
+    flowFileContents_[3] + flowFileContents_[4] + flowFileContents_[5]
   };
 
   context_->setProperty(minifi::processors::MergeContent::MergeFormat, minifi::processors::merge_content_options::MERGE_FORMAT_CONCAT_VALUE);
@@ -260,9 +268,9 @@ TEST_CASE_METHOD(MergeTestController, "MergeFileDefragment", "[mergefiletest1]")
 }
 
 TEST_CASE_METHOD(MergeTestController, "MergeFileDefragmentDelimiter", "[mergefiletest2]") {
-  std::string expected[2]{
-          "header" + flowFileContents_[0] + "demarcator" + flowFileContents_[1] + "demarcator" + flowFileContents_[2] + "footer",
-          "header" + flowFileContents_[3] + "demarcator" + flowFileContents_[4] + "demarcator" + flowFileContents_[5] + "footer"
+  std::array<std::string, 2> expected {
+    "header" + flowFileContents_[0] + "demarcator" + flowFileContents_[1] + "demarcator" + flowFileContents_[2] + "footer",
+    "header" + flowFileContents_[3] + "demarcator" + flowFileContents_[4] + "demarcator" + flowFileContents_[5] + "footer"
   };
 
   std::ofstream(HEADER_FILE, std::ios::binary) << "header";
@@ -323,9 +331,9 @@ TEST_CASE_METHOD(MergeTestController, "MergeFileDefragmentDelimiter", "[mergefil
 
 TEST_CASE_METHOD(MergeTestController, "MergeFileDefragmentDropFlow", "[mergefiletest3]") {
   // drop record 4
-  std::string expected[2]{
-          flowFileContents_[0] + flowFileContents_[1] + flowFileContents_[2],
-          flowFileContents_[3] + flowFileContents_[5]
+  std::array<std::string, 2> expected {
+    flowFileContents_[0] + flowFileContents_[1] + flowFileContents_[2],
+    flowFileContents_[3] + flowFileContents_[5]
   };
 
   context_->setProperty(minifi::processors::MergeContent::MergeFormat, minifi::processors::merge_content_options::MERGE_FORMAT_CONCAT_VALUE);
@@ -385,9 +393,9 @@ TEST_CASE_METHOD(MergeTestController, "MergeFileDefragmentDropFlow", "[mergefile
 }
 
 TEST_CASE_METHOD(MergeTestController, "MergeFileBinPack", "[mergefiletest4]") {
-  std::string expected[2]{
-          flowFileContents_[0] + flowFileContents_[1] + flowFileContents_[2],
-          flowFileContents_[3] + flowFileContents_[4] + flowFileContents_[5]
+  std::array<std::string, 2> expected {
+    flowFileContents_[0] + flowFileContents_[1] + flowFileContents_[2],
+    flowFileContents_[3] + flowFileContents_[4] + flowFileContents_[5]
   };
 
   context_->setProperty(minifi::processors::MergeContent::MergeFormat, minifi::processors::merge_content_options::MERGE_FORMAT_CONCAT_VALUE);
@@ -536,9 +544,9 @@ TEST_CASE_METHOD(MergeTestController, "MergeFileZip", "[mergefiletest5]") {
 }
 
 TEST_CASE_METHOD(MergeTestController, "MergeFileOnAttribute", "[mergefiletest5]") {
-  std::string expected[2]{
-          flowFileContents_[0] + flowFileContents_[2] + flowFileContents_[4],
-          flowFileContents_[1] + flowFileContents_[3] + flowFileContents_[5]
+  std::array<std::string, 2> expected {
+    flowFileContents_[0] + flowFileContents_[2] + flowFileContents_[4],
+    flowFileContents_[1] + flowFileContents_[3] + flowFileContents_[5]
   };
 
   context_->setProperty(minifi::processors::MergeContent::MergeFormat, minifi::processors::merge_content_options::MERGE_FORMAT_CONCAT_VALUE);
@@ -706,7 +714,7 @@ TEST_CASE("FlowFile serialization", "[testFlowFileSerialization]") {
     return session.read(ff, cb);
   });
 
-  minifi::FlowFileSerializer* usedSerializer;
+  minifi::FlowFileSerializer* usedSerializer = nullptr;
 
   std::vector<std::shared_ptr<core::FlowFile>> files;
 
@@ -778,9 +786,9 @@ TEST_CASE("FlowFile serialization", "[testFlowFileSerialization]") {
 }
 
 TEST_CASE_METHOD(MergeTestController, "Batch Size", "[testMergeFileBatchSize]") {
-  std::string expected[2]{
-          flowFileContents_[0] + flowFileContents_[1] + flowFileContents_[2],
-          flowFileContents_[3] + flowFileContents_[4]
+  std::array<std::string, 2> expected {
+    flowFileContents_[0] + flowFileContents_[1] + flowFileContents_[2],
+    flowFileContents_[3] + flowFileContents_[4]
   };
 
   context_->setProperty(minifi::processors::MergeContent::MergeFormat, minifi::processors::merge_content_options::MERGE_FORMAT_CONCAT_VALUE);
@@ -830,9 +838,9 @@ TEST_CASE_METHOD(MergeTestController, "Maximum Group Size is respected", "[testM
   for (auto& ff : flowFileContents_) {
     REQUIRE(ff.length() == 32);
   }
-  std::string expected[2]{
-      flowFileContents_[0] + flowFileContents_[1],
-      flowFileContents_[2] + flowFileContents_[3]
+  std::array<std::string, 2> expected {
+    flowFileContents_[0] + flowFileContents_[1],
+    flowFileContents_[2] + flowFileContents_[3]
   };
 
   context_->setProperty(minifi::processors::MergeContent::MergeFormat, minifi::processors::merge_content_options::MERGE_FORMAT_CONCAT_VALUE);

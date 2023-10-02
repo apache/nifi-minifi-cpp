@@ -70,6 +70,11 @@ class PersistentStateStorageTestsFixture {
     loadYaml();
   }
 
+  PersistentStateStorageTestsFixture(PersistentStateStorageTestsFixture&&) = delete;
+  PersistentStateStorageTestsFixture(const PersistentStateStorageTestsFixture&) = delete;
+  PersistentStateStorageTestsFixture& operator=(PersistentStateStorageTestsFixture&&) = delete;
+  PersistentStateStorageTestsFixture& operator=(const PersistentStateStorageTestsFixture&) = delete;
+
   virtual ~PersistentStateStorageTestsFixture() {
     LogTestController::getInstance().reset();
     std::filesystem::current_path(minifi::utils::file::get_executable_dir());

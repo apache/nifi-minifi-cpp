@@ -59,6 +59,11 @@ class ListAzureBlobStorageTestsFixture {
     plan_->setProperty(list_azure_blob_storage_, "Storage Account Key", STORAGE_ACCOUNT_KEY);
   }
 
+  ListAzureBlobStorageTestsFixture(ListAzureBlobStorageTestsFixture&&) = delete;
+  ListAzureBlobStorageTestsFixture(const ListAzureBlobStorageTestsFixture&) = delete;
+  ListAzureBlobStorageTestsFixture& operator=(ListAzureBlobStorageTestsFixture&&) = delete;
+  ListAzureBlobStorageTestsFixture& operator=(const ListAzureBlobStorageTestsFixture&) = delete;
+
   virtual ~ListAzureBlobStorageTestsFixture() {
     LogTestController::getInstance().reset();
   }

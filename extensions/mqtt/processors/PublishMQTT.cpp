@@ -102,7 +102,7 @@ bool PublishMQTT::sendMessage(const std::vector<std::byte>& buffer, const std::s
 
   MQTTAsync_message message_to_publish = MQTTAsync_message_initializer;
   message_to_publish.payload = const_cast<std::byte*>(buffer.data());
-  message_to_publish.payloadlen = buffer.size();
+  message_to_publish.payloadlen = gsl::narrow<int>(buffer.size());
   message_to_publish.qos = static_cast<int>(qos_);
   message_to_publish.retained = retain_;
 
@@ -216,15 +216,15 @@ void PublishMQTT::setMqtt5Properties(MQTTAsync_message& message, const std::stri
   if (message_expiry_interval_.has_value()) {
     MQTTProperty property;
     property.identifier = MQTTPROPERTY_CODE_MESSAGE_EXPIRY_INTERVAL;
-    property.value.integer4 = message_expiry_interval_->count();
+    property.value.integer4 = message_expiry_interval_->count();  // NOLINT(cppcoreguidelines-pro-type-union-access)
     MQTTProperties_add(&message.properties, &property);
   }
 
   if (!content_type.empty()) {
     MQTTProperty property;
     property.identifier = MQTTPROPERTY_CODE_CONTENT_TYPE;
-    property.value.data.len = content_type.length();
-    property.value.data.data = const_cast<char*>(content_type.data());
+    property.value.data.len = gsl::narrow<int>(content_type.length());  // NOLINT(cppcoreguidelines-pro-type-union-access)
+    property.value.data.data = const_cast<char*>(content_type.data());  // NOLINT(cppcoreguidelines-pro-type-union-access)
     MQTTProperties_add(&message.properties, &property);
   }
 
@@ -237,12 +237,12 @@ void PublishMQTT::addAttributesAsUserProperties(MQTTAsync_message& message, cons
     property.identifier = MQTTPROPERTY_CODE_USER_PROPERTY;
 
     // key
-    property.value.data.len = key.length();
-    property.value.data.data = const_cast<char*>(key.data());
+    property.value.data.len = gsl::narrow<int>(key.length());  // NOLINT(cppcoreguidelines-pro-type-union-access)
+    property.value.data.data = const_cast<char*>(key.data());  // NOLINT(cppcoreguidelines-pro-type-union-access)
 
     // value
-    property.value.value.len = value.length();
-    property.value.value.data = const_cast<char*>(value.data());
+    property.value.value.len = gsl::narrow<int>(value.length());  // NOLINT(cppcoreguidelines-pro-type-union-access)
+    property.value.value.data = const_cast<char*>(value.data());  // NOLINT(cppcoreguidelines-pro-type-union-access)
 
     MQTTProperties_add(&message.properties, &property);
   }

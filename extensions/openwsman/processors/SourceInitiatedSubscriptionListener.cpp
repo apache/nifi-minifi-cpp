@@ -55,13 +55,15 @@ extern "C" {
 #include "utils/file/FileUtils.h"
 #include "utils/tls/CertificateUtils.h"
 
-#define XML_NS_CUSTOM_SUBSCRIPTION "http://schemas.microsoft.com/wbem/wsman/1/subscription"
-#define XML_NS_CUSTOM_AUTHENTICATION "http://schemas.microsoft.com/wbem/wsman/1/authentication"
-#define XML_NS_CUSTOM_POLICY "http://schemas.xmlsoap.org/ws/2002/12/policy"
-#define XML_NS_CUSTOM_MACHINEID "http://schemas.microsoft.com/wbem/wsman/1/machineid"
-#define WSMAN_CUSTOM_ACTION_ACK "http://schemas.dmtf.org/wbem/wsman/1/wsman/Ack"
-#define WSMAN_CUSTOM_ACTION_HEARTBEAT "http://schemas.dmtf.org/wbem/wsman/1/wsman/Heartbeat"
-#define WSMAN_CUSTOM_ACTION_EVENTS "http://schemas.dmtf.org/wbem/wsman/1/wsman/Events"
+namespace {
+constexpr const char* XML_NS_CUSTOM_SUBSCRIPTION = "http://schemas.microsoft.com/wbem/wsman/1/subscription";
+constexpr const char* XML_NS_CUSTOM_AUTHENTICATION = "http://schemas.microsoft.com/wbem/wsman/1/authentication";
+constexpr const char* XML_NS_CUSTOM_POLICY = "http://schemas.xmlsoap.org/ws/2002/12/policy";
+constexpr const char* XML_NS_CUSTOM_MACHINEID = "http://schemas.microsoft.com/wbem/wsman/1/machineid";
+constexpr const char* WSMAN_CUSTOM_ACTION_ACK = "http://schemas.dmtf.org/wbem/wsman/1/wsman/Ack";
+constexpr const char* WSMAN_CUSTOM_ACTION_HEARTBEAT = "http://schemas.dmtf.org/wbem/wsman/1/wsman/Heartbeat";
+constexpr const char* WSMAN_CUSTOM_ACTION_EVENTS = "http://schemas.dmtf.org/wbem/wsman/1/wsman/Events";
+}  // namespace
 
 namespace org::apache::nifi::minifi::processors {
 
@@ -171,9 +173,9 @@ bool SourceInitiatedSubscriptionListener::loadState() {
 }
 
 std::string SourceInitiatedSubscriptionListener::Handler::millisecondsToXsdDuration(std::chrono::milliseconds milliseconds) {
-  char buf[1024];
-  snprintf(buf, sizeof(buf), "PT%" PRId64 ".%03" PRId64 "S", int64_t{milliseconds.count() / 1000}, int64_t{milliseconds.count() % 1000});
-  return buf;
+  std::array<char, 1024> buf{};
+  (void)snprintf(buf.data(), buf.size(), "PT%" PRId64 ".%03" PRId64 "S", int64_t{milliseconds.count() / 1000}, int64_t{milliseconds.count() % 1000});
+  return buf.data();
 }
 
 bool SourceInitiatedSubscriptionListener::Handler::handlePost(CivetServer* /*server*/, struct mg_connection* conn) {
@@ -218,8 +220,8 @@ bool SourceInitiatedSubscriptionListener::Handler::handlePost(CivetServer* /*ser
 
   std::vector<uint8_t> raw_data;
   {
-    std::array<uint8_t, 16384U> buf;
-    int read_bytes;
+    std::array<uint8_t, 16384U> buf{};
+    int read_bytes = 0;
     while ((read_bytes = mg_read(conn, buf.data(), buf.size())) > 0) {
       size_t orig_size = raw_data.size();
       raw_data.resize(orig_size + read_bytes);
@@ -379,7 +381,7 @@ bool SourceInitiatedSubscriptionListener::Handler::handleSubscriptionManager(str
 
     // Header
     WsXmlNodeH header = ws_xml_get_soap_header(subscription_doc);
-    WsXmlNodeH node;
+    WsXmlNodeH node = nullptr;
 
     // Header/Action
     node = ws_xml_add_child(header, XML_NS_ADDRESSING, WSA_ACTION, EVT_ACTION_SUBSCRIBE);
@@ -736,13 +738,13 @@ void SourceInitiatedSubscriptionListener::onSchedule(const std::shared_ptr<core:
     throw Exception(PROCESSOR_EXCEPTION, "Connection Retry Count attribute is invalid");
   }
 
-  FILE* fp = fopen(ssl_ca_file.c_str(), "rb");
+  gsl::owner<FILE*> fp = fopen(ssl_ca_file.c_str(), "rb");
   if (fp == nullptr) {
     throw Exception(PROCESSOR_EXCEPTION, "Failed to open file specified by SSL Certificate Authority attribute");
   }
   X509* ca = nullptr;
   PEM_read_X509(fp, &ca, nullptr, nullptr);
-  fclose(fp);
+  (void)fclose(fp);
   if (ca == nullptr) {
     throw Exception(PROCESSOR_EXCEPTION, "Failed to parse file specified by SSL Certificate Authority attribute");
   }

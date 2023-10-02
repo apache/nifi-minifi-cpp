@@ -120,6 +120,11 @@ class ConnectionHandler : public ConnectionHandlerBase {
         ssl_context_(ssl_context) {
   }
 
+  ConnectionHandler(ConnectionHandler&&) = delete;
+  ConnectionHandler(const ConnectionHandler&) = delete;
+  ConnectionHandler& operator=(ConnectionHandler&&) = delete;
+  ConnectionHandler& operator=(const ConnectionHandler&) = delete;
+
   ~ConnectionHandler() override {
     shutdownSocket();
   }
@@ -249,12 +254,14 @@ asio::awaitable<std::error_code> ConnectionHandler<SocketType>::send(const std::
     size_t num_read = stream_to_send->read(buffer);
     if (io::isError(num_read))
       co_return std::make_error_code(std::errc::io_error);
-    auto [write_error, bytes_written] = co_await asyncOperationWithTimeout(asio::async_write(*socket_, asio::buffer(data_chunk, num_read), use_nothrow_awaitable), timeout_duration_);
+    auto [write_error, bytes_written] = co_await asyncOperationWithTimeout(
+      asio::async_write(*socket_, asio::buffer(data_chunk, num_read), use_nothrow_awaitable), timeout_duration_);
     if (write_error)
       co_return write_error;
     logger_->log_trace("Writing flowfile(%zu bytes) to socket succeeded", bytes_written);
   }
-  auto [delimiter_write_error, delimiter_bytes_written] = co_await asyncOperationWithTimeout(asio::async_write(*socket_, asio::buffer(delimiter), use_nothrow_awaitable), timeout_duration_);
+  auto [delimiter_write_error, delimiter_bytes_written] = co_await asyncOperationWithTimeout(
+    asio::async_write(*socket_, asio::buffer(delimiter), use_nothrow_awaitable), timeout_duration_);
   if (delimiter_write_error)
     co_return delimiter_write_error;
   logger_->log_trace("Writing delimiter(%zu bytes) to socket succeeded", delimiter_bytes_written);

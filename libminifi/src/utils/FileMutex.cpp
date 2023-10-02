@@ -114,9 +114,9 @@ void FileMutex::lock() {
   if (value == -1) {
     const auto err = utils::getLastError();
     std::string pid_str = "unknown";
-    std::array<char, 16> buffer;
+    std::array<char, 16> buffer{};
     size_t pid_str_size = 0;
-    ssize_t ret;
+    ssize_t ret = 0;
     while ((ret = read(fd, buffer.data() + pid_str_size, buffer.size() - pid_str_size)) > 0) {
       pid_str_size += ret;
     }

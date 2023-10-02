@@ -60,6 +60,11 @@ class ListAzureDataLakeStorageTestsFixture {
     plan_->setProperty(azure_storage_cred_service_, minifi::azure::controllers::AzureStorageCredentialsService::ConnectionString, CONNECTION_STRING);
   }
 
+  ListAzureDataLakeStorageTestsFixture(ListAzureDataLakeStorageTestsFixture&&) = delete;
+  ListAzureDataLakeStorageTestsFixture(const ListAzureDataLakeStorageTestsFixture&) = delete;
+  ListAzureDataLakeStorageTestsFixture& operator=(ListAzureDataLakeStorageTestsFixture&&) = delete;
+  ListAzureDataLakeStorageTestsFixture& operator=(const ListAzureDataLakeStorageTestsFixture&) = delete;
+
   virtual ~ListAzureDataLakeStorageTestsFixture() {
     LogTestController::getInstance().reset();
   }

@@ -263,6 +263,8 @@ jobs:
           # https://stackoverflow.com/questions/58466701/clang-tidy-cant-locate-stdlib-headers
           sed -i -e 's/\/usr\/lib\/ccache\/clang++-16/\/lib\/llvm-16\/bin\/clang++/g' build/compile_commands.json
           sed -i -e 's/\/usr\/lib\/ccache\/clang-16/\/lib\/llvm-16\/bin\/clang/g' build/compile_commands.json
+          sed -i -e 's/\/usr\/lib\/ccache\/c++/\/lib\/llvm-16\/bin\/clang++/g' build/compile_commands.json
+          sed -i -e 's/\/usr\/lib\/ccache\/cc/\/lib\/llvm-16\/bin\/clang/g' build/compile_commands.json
 
           parallel -j$(( $(nproc) + 1 )) ./run_clang_tidy.sh ::: ${FILES}
       - name: check-cores

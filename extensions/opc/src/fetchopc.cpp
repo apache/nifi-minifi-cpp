@@ -95,10 +95,10 @@ namespace org::apache::nifi::minifi::processors {
       myID.namespaceIndex = nameSpaceIdx_;
       if (idType_ == opc::OPCNodeIDType::Int) {
         myID.identifierType = UA_NODEIDTYPE_NUMERIC;
-        myID.identifier.numeric = std::stoi(nodeID_);
+        myID.identifier.numeric = std::stoi(nodeID_);  // NOLINT(cppcoreguidelines-pro-type-union-access)
       } else if (idType_ == opc::OPCNodeIDType::String) {
         myID.identifierType = UA_NODEIDTYPE_STRING;
-        myID.identifier.string = UA_STRING_ALLOC(nodeID_.c_str());
+        myID.identifier.string = UA_STRING_ALLOC(nodeID_.c_str());  // NOLINT(cppcoreguidelines-pro-type-union-access)
       } else {
         logger_->log_error("Unhandled id type: '%d'. No flowfiles are generated.", idType_);
         yield();

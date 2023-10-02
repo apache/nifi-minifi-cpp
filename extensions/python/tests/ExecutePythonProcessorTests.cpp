@@ -43,6 +43,12 @@ class ExecutePythonProcessorTestBase {
     SCRIPT_FILES_DIRECTORY = minifi::utils::file::FileUtils::get_executable_dir() / "resources" / "test_python_scripts";
     reInitialize();
   }
+
+  ExecutePythonProcessorTestBase(ExecutePythonProcessorTestBase&&) = delete;
+  ExecutePythonProcessorTestBase(const ExecutePythonProcessorTestBase&) = delete;
+  ExecutePythonProcessorTestBase& operator=(ExecutePythonProcessorTestBase&&) = delete;
+  ExecutePythonProcessorTestBase& operator=(const ExecutePythonProcessorTestBase&) = delete;
+
   virtual ~ExecutePythonProcessorTestBase() {
     logTestController_.reset();
   }

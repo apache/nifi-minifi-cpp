@@ -28,7 +28,6 @@ static bool isGlobPattern(const std::string& pattern) {
 
 FilePattern::FilePatternSegment::FilePatternSegment(std::string pattern) {
   pattern = utils::StringUtils::trim(pattern);
-  excluding_ = false;
   if (!pattern.empty() && pattern[0] == '!') {
     excluding_ = true;
     pattern = utils::StringUtils::trim(pattern.substr(1));

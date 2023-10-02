@@ -82,19 +82,12 @@ class RocksDbStream : public io::BaseStream {
 
  protected:
   std::string path_;
-
   bool write_enable_;
-
-  bool exists_;
-
-  size_t offset_;
-
-  std::string value_;
-
   gsl::not_null<minifi::internal::RocksDatabase*> db_;
-
+  std::string value_;
+  bool exists_;
+  size_t offset_;
   minifi::internal::WriteBatch* batch_;
-
   size_t size_;
 
  private:

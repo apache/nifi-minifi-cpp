@@ -16,13 +16,13 @@
  * limitations under the License.
  */
 
-#define CURLOPT_SSL_VERIFYPEER_DISABLE 1
 #undef NDEBUG
 #include <cassert>
 #include <chrono>
 #include <string>
 #include <vector>
 #include <iostream>
+#include <memory>
 #include "sitetosite/HTTPProtocol.h"
 #include "InvokeHTTP.h"
 #include "TestBase.h"
@@ -93,7 +93,7 @@ void run_variance(const std::string& test_file_location, bool isSecure, const st
   std::string in_port = "471deef6-2a6e-4a7d-912a-81cc17e3a204";
   std::string out_port = "471deef6-2a6e-4a7d-912a-81cc17e3a203";
 
-  auto *responder = new SiteToSiteLocationResponder(isSecure);
+  auto responder = std::make_unique<SiteToSiteLocationResponder>(isSecure);
 
   auto *transaction_response = new TransactionResponder(url, in_port,
       true, profile.transaction_url_broken, profile.empty_transaction_url);
@@ -109,7 +109,7 @@ void run_variance(const std::string& test_file_location, bool isSecure, const st
 
   harness.setUrl(basesitetosite, base);
 
-  harness.setUrl(controller_loc, responder);
+  harness.setUrl(controller_loc, responder.get());
 
   std::string transaction_url = url + "/data-transfer/input-ports/" + in_port + "/transactions";
   std::string action_url = url + "/site-to-site/input-ports/" + in_port + "/transactions";
@@ -127,7 +127,7 @@ void run_variance(const std::string& test_file_location, bool isSecure, const st
 
   std::string flow_url = action_url + "/" + transaction_id + "/flow-files";
 
-  auto *flowResponder = new FlowFileResponder(true, profile.flow_url_broken, profile.invalid_checksum);
+  auto flowResponder = std::make_unique<FlowFileResponder>(true, profile.flow_url_broken, profile.invalid_checksum);
   flowResponder->setFlowUrl(flow_url);
   auto producedFlows = flowResponder->getFlows();
 
@@ -140,12 +140,12 @@ void run_variance(const std::string& test_file_location, bool isSecure, const st
 
   std::string flow_output_url = action_output_url + "/" + transaction_output_id + "/flow-files";
 
-  auto* flowOutputResponder = new FlowFileResponder(false, profile.flow_url_broken, profile.invalid_checksum);
+  auto flowOutputResponder = std::make_unique<FlowFileResponder>(false, profile.flow_url_broken, profile.invalid_checksum);
   flowOutputResponder->setFlowUrl(flow_output_url);
   flowOutputResponder->setFeed(producedFlows);
 
-  harness.setUrl(flow_url, flowResponder);
-  harness.setUrl(flow_output_url, flowOutputResponder);
+  harness.setUrl(flow_url, flowResponder.get());
+  harness.setUrl(flow_output_url, flowOutputResponder.get());
 
   std::string delete_url = transaction_url + "/" + transaction_id;
   auto *deleteResponse = new DeleteTransactionResponder(delete_url, "201 OK", 12);
