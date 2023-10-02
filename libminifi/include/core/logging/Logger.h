@@ -200,21 +200,21 @@ class Logger : public BaseLogger {
     return my_string;
   }
 
-  template<typename ...T>
-  std::string stringify(fmt::format_string<T...> fmt, T&&... args) {
-    auto log_message = fmt::format(fmt, std::forward<T>(args)...);
+  template<typename ...Args>
+  std::string stringify(fmt::format_string<Args...> fmt, Args&&... args) {
+    auto log_message = fmt::format(fmt, std::forward<Args>(args)...);
     return trimToMaxSizeAndAddId(std::move(log_message));
   }
 
-  template<typename ...T>
-  inline void log(spdlog::level::level_enum level, fmt::format_string<std::invoke_result_t<decltype(map_args), T>...> fmt, T&& ...args) {
+  template<typename ...Args>
+  inline void log(spdlog::level::level_enum level, log_format_string<Args...> fmt, Args&& ...args) {
     if (controller_ && !controller_->is_enabled())
       return;
     std::lock_guard<std::mutex> lock(mutex_);
     if (!delegate_->should_log(level)) {
       return;
     }
-    delegate_->log(level, stringify(fmt, map_args(std::forward<T>(args))...));
+    delegate_->log(level, stringify(fmt, map_args(std::forward<Args>(args))...));
   }
 
   std::atomic<int> max_log_size_{LOG_BUFFER_SIZE};
