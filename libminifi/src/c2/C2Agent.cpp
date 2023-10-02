@@ -1038,7 +1038,7 @@ void C2Agent::handleAssetUpdate(const C2ContentResponse& resp) {
 }
 
 void C2Agent::enqueue_c2_server_response(C2Payload &&resp) {
-  logger_->log_trace("Server response: return {}", [&] { return resp.str(); });
+  logger_->log_trace("Server response: {}", [&] { return resp.str(); });
 
   responses.enqueue(std::move(resp));
 }
