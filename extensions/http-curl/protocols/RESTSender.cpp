@@ -188,7 +188,7 @@ C2Payload RESTSender::sendPayload(const std::string& url, const Direction direct
     logger_->log_debug("Response code '{}' from '{}'", respCode, url);
   }
   const auto response_body_bytes = gsl::make_span(client.getResponseBody()).as_span<const std::byte>();
-  logger_->log_trace("Received response: {}", [&] { return utils::StringUtils::escapeUnprintableBytes(response_body_bytes);});
+  logger_->log_trace("Received response: \"{}\"", [&] { return utils::StringUtils::escapeUnprintableBytes(response_body_bytes);});
   if (isOkay && !clientError && !serverError) {
     if (accepted_formats) {
       C2Payload response_payload(payload.getOperation(), state::UpdateState::READ_COMPLETE, true);
