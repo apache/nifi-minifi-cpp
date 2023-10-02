@@ -129,12 +129,14 @@ bool SourceInitiatedSubscriptionListener::persistState() const {
   size_t i = 0U;
   for (const auto& subscriber : subscribers_) {
     char* xml_buf = nullptr;
+    auto clean_up_xml_buf = gsl::finally([&]{
+      ws_xml_free_memory(xml_buf);
+    });
     int xml_buf_size = 0;
     ws_xml_dump_memory_enc(subscriber.second.bookmark_, &xml_buf, &xml_buf_size, "UTF-8");
     state_map.emplace("subscriber." + std::to_string(i) + ".machineid", subscriber.first);
     state_map.emplace("subscriber." + std::to_string(i) + ".bookmark", std::string(xml_buf, xml_buf_size));
     i++;
-    ws_xml_free_memory(xml_buf);
   }
   return state_manager_->set(state_map);
 }
@@ -244,11 +246,13 @@ bool SourceInitiatedSubscriptionListener::Handler::handlePost(CivetServer* /*ser
   {
     WsXmlNodeH node = ws_xml_get_doc_root(doc);
     char* xml_buf = nullptr;
+    auto clean_up_xml_buf = gsl::finally([&]{
+      ws_xml_free_memory(xml_buf);
+    });
     int xml_buf_size = 0;
     ws_xml_dump_memory_node_tree_enc(node, &xml_buf, &xml_buf_size, "UTF-8");
     if (xml_buf != nullptr) {
       processor_.logger_->log_trace("Received request: \"{}\"", std::string_view(xml_buf, xml_buf_size));
-      ws_xml_free_memory(xml_buf);
     }
   }
 
@@ -514,12 +518,12 @@ bool SourceInitiatedSubscriptionListener::Handler::handleSubscriptionManager(str
 
   // Send response
   char* xml_buf = nullptr;
+  auto clean_up_xml_buf = gsl::finally([&]{
+    ws_xml_free_memory(xml_buf);
+  });
   int xml_buf_size = 0;
   ws_xml_dump_memory_enc(response, &xml_buf, &xml_buf_size, "UTF-8");
-
   sendResponse(conn, machine_id, req_info->remote_addr, xml_buf, xml_buf_size);
-
-  ws_xml_free_memory(xml_buf);
 
   return true;
 }
@@ -629,10 +633,12 @@ bool SourceInitiatedSubscriptionListener::Handler::handleSubscriptions(struct mg
       processor_.persistState();
 
       char* xml_buf = nullptr;
+      auto clean_up_xml_buf = gsl::finally([&]{
+        ws_xml_free_memory(xml_buf);
+      });
       int xml_buf_size = 0;
       ws_xml_dump_memory_enc(bookmark_doc, &xml_buf, &xml_buf_size, "UTF-8");
       processor_.logger_->log_debug("Saved new bookmark for {}: \"{:.{}}\"", machine_id.c_str(), xml_buf, xml_buf_size);
-      ws_xml_free_memory(xml_buf);
     }
   } else {
     processor_.logger_->log_error("{} called by {} ({}) with unknown Action \"{}\"", endpoint.c_str(), machine_id.c_str(), remote_ip.c_str(), action.c_str());
@@ -651,12 +657,14 @@ bool SourceInitiatedSubscriptionListener::Handler::handleSubscriptions(struct mg
 
     // Send ACK
     char* xml_buf = nullptr;
+    auto clean_up_xml_buf = gsl::finally([&]{
+      ws_xml_free_memory(xml_buf);
+    });
     int xml_buf_size = 0;
     ws_xml_dump_memory_enc(ack, &xml_buf, &xml_buf_size, "UTF-8");
 
     sendResponse(conn, machine_id, remote_ip, xml_buf, xml_buf_size);
 
-    ws_xml_free_memory(xml_buf);
     ws_xml_destroy_doc(ack);
   }
 
