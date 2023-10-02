@@ -353,7 +353,6 @@ static std::string buildSchema(const std::unordered_map<std::string, std::string
       "properties": {
         "name": {"type": "string"},
         "version": {"type": "integer"},
-        "onschedule retry interval": {"$ref": "#/definitions/time"},
         )" + process_group_properties + R"(
       }
     },
@@ -368,8 +367,7 @@ static std::string buildSchema(const std::unordered_map<std::string, std::string
           "required": ["name"],
           "properties": {
             "name": {"type": "string"},
-            "version": {"type": "integer"},
-            "onschedule retry interval": {"$ref": "#/definitions/time"}
+            "version": {"type": "integer"}
           }
         },
         )" + process_group_properties + R"(

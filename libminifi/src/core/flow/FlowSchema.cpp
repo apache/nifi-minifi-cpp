@@ -32,7 +32,6 @@ FlowSchema FlowSchema::getDefault() {
       .penalization_period = {"penalization period"},
       .proc_yield_period = {"yield period"},
       .runduration_nanos = {"run duration nanos"},
-      .onschedule_retry_interval = {"onschedule retry interval"},
 
       .connections = {"Connections"},
       .max_queue_size = {"max work queue size"},
@@ -92,7 +91,6 @@ FlowSchema FlowSchema::getNiFiFlowJson() {
       .proc_yield_period = {"yieldDuration"},
       // TODO(adebreceni): MINIFICPP-2033 since this is unused the mismatch between nano and milli is not an issue
       .runduration_nanos = {"runDurationMillis"},
-      .onschedule_retry_interval = {},
 
       .connections = {"connections"},
       .max_queue_size = {"backPressureObjectThreshold"},

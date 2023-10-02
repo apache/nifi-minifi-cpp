@@ -68,6 +68,7 @@ class KamikazeErrorHandlingTests : public IntegrationBase {
     LogTestController::getInstance().setDebug<core::Processor>();
     LogTestController::getInstance().setDebug<core::ProcessSession>();
     LogTestController::getInstance().setDebug<minifi::processors::KamikazeProcessor>();
+    configuration->set(minifi::Configure::nifi_administrative_yield_duration, "100 ms");
   }
 };
 
@@ -109,6 +110,7 @@ class EventDriverScheduleErrorHandlingTests: public IntegrationBase {
 
   void testSetup() override {
     LogTestController::getInstance().setDebug<core::ProcessGroup>();
+    configuration->set(minifi::Configure::nifi_administrative_yield_duration, "100 ms");
   }
 };
 

@@ -132,14 +132,6 @@ class ProcessGroup : public CoreComponent {
     return (yield_period_msec_);
   }
 
-  void setOnScheduleRetryPeriod(int64_t period) {
-    onschedule_retry_msec_ = period;
-  }
-
-  int64_t getOnScheduleRetryPeriod() {
-    return onschedule_retry_msec_;
-  }
-
   int getVersion() const {
     return config_version_;
   }
@@ -247,7 +239,6 @@ class ProcessGroup : public CoreComponent {
   // Yield Period in Milliseconds
   std::atomic<std::chrono::milliseconds> yield_period_msec_;
   std::atomic<uint64_t> timeout_;
-  std::atomic<int64_t> onschedule_retry_msec_;
 
   // URL
   std::string url_;
