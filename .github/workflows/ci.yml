@@ -5,14 +5,12 @@ env:
     -DENABLE_SPLUNK=ON -DENABLE_GCP=ON -DENABLE_OPC=ON -DENABLE_PYTHON_SCRIPTING=ON -DENABLE_LUA_SCRIPTING=ON -DENABLE_KUBERNETES=ON -DENABLE_TEST_PROCESSORS=ON -DENABLE_PROMETHEUS=ON \
     -DENABLE_ELASTICSEARCH=OFF -DDOCKER_BUILD_ONLY=ON
   SCCACHE_GHA_ENABLE: true
+  CCACHE_DIR: ${{ GITHUB.WORKSPACE }}/.ccache
 jobs:
   macos_xcode:
     name: "macos-xcode"
     runs-on: macos-13
     timeout-minutes: 180
-    env:
-      CCACHE_BASEDIR: ${{ GITHUB.WORKSPACE }}
-      CCACHE_DIR: ${{ GITHUB.WORKSPACE }}/.ccache
     steps:
       - id: checkout
         uses: actions/checkout@v3
@@ -133,7 +131,7 @@ jobs:
       - name: cache restore
         uses: actions/cache/restore@v3
         with:
-          path: ~/.ccache
+          path: ${{ env.CCACHE_DIR }}
           key: ubuntu-20.04-ccache-${{github.ref}}-${{github.sha}}
           restore-keys: |
             ubuntu-20.04-ccache-${{github.ref}}-
@@ -158,7 +156,7 @@ jobs:
         uses: actions/cache/save@v3
         if: always()
         with:
-          path: ~/.ccache
+          path: ${{ env.CCACHE_DIR }}
           key: ubuntu-20.04-ccache-${{github.ref}}-${{github.sha}}
       - name: test
         id: test
@@ -190,7 +188,7 @@ jobs:
       - name: cache restore
         uses: actions/cache/restore@v3
         with:
-          path: ~/.ccache
+          path: ${{ env.CCACHE_DIR }}
           key: ubuntu-22.04-all-clang-ccache-${{github.ref}}-${{github.sha}}
           restore-keys: |
             ubuntu-22.04-all-clang-ccache-${{github.ref}}-
@@ -234,7 +232,7 @@ jobs:
         uses: actions/cache/save@v3
         if: always()
         with:
-          path: ~/.ccache
+          path: ${{ env.CCACHE_DIR }}
           key: ubuntu-22.04-all-clang-ccache-${{github.ref}}-${{github.sha}}
       - name: test
         id: test
@@ -291,7 +289,7 @@ jobs:
       - name: cache restore
         uses: actions/cache/restore@v3
         with:
-          path: ~/.ccache
+          path: ${{ env.CCACHE_DIR }}
           key: centos-ccache-${{github.ref}}-${{github.sha}}
           restore-keys: |
             centos-ccache-${{github.ref}}-
@@ -313,18 +311,17 @@ jobs:
           sudo rm -rf "$AGENT_TOOLSDIRECTORY"
       - id: build
         run: |
-          if [ -d ~/.ccache ]; then mv ~/.ccache .; fi
           # centos build can run out of the github runners' disk space if built with RelWithDebInfo so we keep the Release build here
           mkdir build && cd build && cmake -DUSE_SHARED_LIBS=ON -DCI_BUILD=ON -DCMAKE_BUILD_TYPE=Release -DSTRICT_GSL_CHECKS=AUDIT -DFAIL_ON_WARNINGS=ON -DENABLE_AWS=ON -DENABLE_AZURE=ON \
               -DENABLE_COAP=ON -DENABLE_ENCRYPT_CONFIG=ON -DENABLE_GPS=ON -DENABLE_LIBRDKAFKA=ON -DENABLE_MQTT=ON -DENABLE_NANOFI=ON -DENABLE_OPC=ON \
               -DENABLE_OPENCV=ON -DENABLE_OPENWSMAN=ON -DENABLE_OPS=ON -DENABLE_SENSORS=ON -DENABLE_SQL=ON -DENABLE_SYSTEMD=ON \
               -DENABLE_USB_CAMERA=ON -DENABLE_PYTHON_SCRIPTING=ON -DENABLE_LUA_SCRIPTING=ON -DENABLE_KUBERNETES=ON -DENABLE_GCP=ON -DENABLE_PROCFS=ON -DENABLE_PROMETHEUS=ON \
-              -DENABLE_ELASTICSEARCH=ON -DDOCKER_SKIP_TESTS=OFF -DDOCKER_BUILD_ONLY=ON -DDOCKER_CCACHE_DUMP_LOCATION=$HOME/.ccache .. && make centos-test
+              -DENABLE_ELASTICSEARCH=ON -DDOCKER_SKIP_TESTS=OFF -DDOCKER_BUILD_ONLY=ON -DDOCKER_CCACHE_DUMP_LOCATION=${{ env.CCACHE_DIR }} .. && make centos-test
       - name: cache save
         uses: actions/cache/save@v3
         if: always()
         with:
-          path: ~/.ccache
+          path: ${{ env.CCACHE_DIR }}
           key: centos-ccache-${{github.ref}}-${{github.sha}}
       - id: test
         run: |
@@ -362,23 +359,22 @@ jobs:
       - name: cache restore
         uses: actions/cache/restore@v3
         with:
-          path: ~/.ccache
+          path: ${{ env.CCACHE_DIR }}
           key: docker-ccache-${{github.ref}}-${{github.sha}}
           restore-keys: |
             docker-ccache-${{github.ref}}-
             docker-ccache-refs/heads/main
       - id: build
         run: |
-          if [ -d ~/.ccache ]; then mv ~/.ccache .; fi
           mkdir build
           cd build
-          cmake ${DOCKER_CMAKE_FLAGS} -DDOCKER_CCACHE_DUMP_LOCATION=$HOME/.ccache ..
+          cmake ${DOCKER_CMAKE_FLAGS} -DDOCKER_CCACHE_DUMP_LOCATION=${{ env.CCACHE_DIR }} ..
           make docker
       - name: cache save
         uses: actions/cache/save@v3
         if: always()
         with:
-          path: ~/.ccache
+          path: ${{ env.CCACHE_DIR }}
           key: docker-ccache-${{github.ref}}-${{github.sha}}
       - name: Save docker image
         run: cd build && docker save -o minifi_docker.tar apacheminificpp:$(grep CMAKE_PROJECT_VERSION:STATIC CMakeCache.txt | cut -d "=" -f2)
