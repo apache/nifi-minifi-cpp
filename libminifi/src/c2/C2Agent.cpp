@@ -158,9 +158,9 @@ void C2Agent::configure(const std::shared_ptr<Configure> &configure, bool reconf
       logger_->log_warn("Class {} not found", clazz);
       protocol = core::ClassLoader::getDefaultClassLoader().instantiateRaw("RESTSender", "RESTSender");
       if (!protocol) {
-        constexpr std::string_view errmsg = "Attempted to load RESTSender. To enable C2, please specify an active protocol for this agent.";
+        constexpr const char* errmsg = "Attempted to load RESTSender. To enable C2, please specify an active protocol for this agent.";
         logger_->log_error("{}", errmsg);
-        throw Exception{ GENERAL_EXCEPTION, std::string(errmsg) };
+        throw Exception{ GENERAL_EXCEPTION, errmsg };
       }
 
       logger_->log_info("Class is RESTSender");
