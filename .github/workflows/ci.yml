@@ -8,7 +8,7 @@ env:
 jobs:
   macos_xcode:
     name: "macos-xcode"
-    runs-on: macos-13
+    runs-on: macos-latest-xlarge
     timeout-minutes: 180
     env:
       CCACHE_BASEDIR: ${{ GITHUB.WORKSPACE }}
