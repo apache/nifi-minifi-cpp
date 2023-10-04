@@ -513,12 +513,12 @@ void HTTPClient::setFollowRedirects(bool follow) {
   curl_easy_setopt(http_session_.get(), CURLOPT_FOLLOWLOCATION, follow);
 }
 
-void HTTPClient::setMaximumUploadBandwidth(uint64_t max_bandwidth) {
-  curl_easy_setopt(http_session_.get(), CURLOPT_MAX_SEND_SPEED_LARGE, max_bandwidth);
+void HTTPClient::setMaximumUploadBandwidth(uint64_t max_bytes_per_second) {
+  curl_easy_setopt(http_session_.get(), CURLOPT_MAX_SEND_SPEED_LARGE, max_bytes_per_second);
 }
 
-void HTTPClient::setMaximumDownloadBandwidth(uint64_t max_bandwidth) {
-  curl_easy_setopt(http_session_.get(), CURLOPT_MAX_RECV_SPEED_LARGE, max_bandwidth);
+void HTTPClient::setMaximumDownloadBandwidth(uint64_t max_bytes_per_second) {
+  curl_easy_setopt(http_session_.get(), CURLOPT_MAX_RECV_SPEED_LARGE, max_bytes_per_second);
 }
 
 bool HTTPClient::isValidHttpHeaderField(std::string_view field_name) {
