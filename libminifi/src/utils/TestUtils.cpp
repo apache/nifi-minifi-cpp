@@ -33,8 +33,7 @@ void setAclOnFileOrDirectory(std::string file_name, DWORD perms, ACCESS_MODE per
   PSECURITY_DESCRIPTOR security_descriptor = nullptr;
   const auto security_descriptor_deleter = gsl::finally([&security_descriptor] { if (security_descriptor) { LocalFree((HLOCAL) security_descriptor); } });
 
-  PACL old_acl = nullptr;  // will be freed by SetEntriesInAcl
-
+  PACL old_acl = nullptr;  // GetNamedSecurityInfo will set this to a non-owning pointer to a field inside security_descriptor: no need to free it
   if (GetNamedSecurityInfo(file_name.c_str(), SE_FILE_OBJECT, DACL_SECURITY_INFORMATION, NULL, NULL, &old_acl, NULL, &security_descriptor) != ERROR_SUCCESS) {
     throw std::runtime_error("Could not get security info for file: " + file_name);
   }
