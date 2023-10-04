@@ -753,7 +753,7 @@ TEST_CASE("InputRequirementTestForbidden", "[InputRequirement]") {
   auto gen2_proc = plan->addProcessor("GenerateFlowFile", "generateFlowFile2", core::Relationship("success", "description"), true);
 
   REQUIRE_THROWS_WITH(plan->validateAnnotations(), Catch::Matchers::EndsWith(
-    fmt::format("INPUT_FORBIDDEN was specified for processor 'generateFlowFile2' (uuid: '{}'), but there are incoming connections", std::string(gen2_proc->getUUIDStr()))));
+    fmt::format("INPUT_FORBIDDEN was specified for the processor 'generateFlowFile2' (uuid: '{}'), but there are incoming connections", std::string(gen2_proc->getUUIDStr()))));
   testController.runSession(plan);
 }
 
@@ -766,7 +766,7 @@ TEST_CASE("InputRequirementTestRequired", "[InputRequirement]") {
   plan->addProcessor("LogAttribute", "logAttribute2", core::Relationship("success", "description"), true);
 
   REQUIRE_THROWS_WITH(plan->validateAnnotations(), Catch::Matchers::EndsWith(
-    fmt::format("INPUT_REQUIRED was specified for processor 'logAttribute' (uuid: '{}'), but no incoming connections were found", std::string(log_proc->getUUIDStr()))));
+    fmt::format("INPUT_REQUIRED was specified for the processor 'logAttribute' (uuid: '{}'), but no incoming connections were found", std::string(log_proc->getUUIDStr()))));
   testController.runSession(plan);
 }
 

@@ -346,7 +346,7 @@ void Processor::validateAnnotations() const {
   switch (getInputRequirement()) {
     case annotation::Input::INPUT_REQUIRED: {
       if (!hasIncomingConnections()) {
-        throw Exception(PROCESS_SCHEDULE_EXCEPTION, fmt::format("INPUT_REQUIRED was specified for processor '{}' (uuid: '{}'), but no incoming connections were found",
+        throw Exception(PROCESS_SCHEDULE_EXCEPTION, fmt::format("INPUT_REQUIRED was specified for the processor '{}' (uuid: '{}'), but no incoming connections were found",
           getName(), std::string(getUUIDStr())));
       }
       break;
@@ -355,7 +355,7 @@ void Processor::validateAnnotations() const {
       break;
     case annotation::Input::INPUT_FORBIDDEN: {
       if (hasIncomingConnections()) {
-        throw Exception(PROCESS_SCHEDULE_EXCEPTION, fmt::format("INPUT_FORBIDDEN was specified for processor '{}' (uuid: '{}'), but there are incoming connections",
+        throw Exception(PROCESS_SCHEDULE_EXCEPTION, fmt::format("INPUT_FORBIDDEN was specified for the processor '{}' (uuid: '{}'), but there are incoming connections",
           getName(), std::string(getUUIDStr())));
       }
     }
