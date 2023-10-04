@@ -281,7 +281,7 @@ std::string ConsumeKafka::resolve_duplicate_headers(const std::vector<std::strin
 std::vector<std::string> ConsumeKafka::get_matching_headers(const rd_kafka_message_t& message, const std::string& header_name) const {
   // Headers fetched this way are freed when rd_kafka_message_destroy is called
   // Detaching them using rd_kafka_message_detach_headers does not seem to work
-  rd_kafka_headers_t* headers_raw;
+  rd_kafka_headers_t* headers_raw = nullptr;
   const rd_kafka_resp_err_t get_header_response = rd_kafka_message_headers(&message, &headers_raw);
   if (RD_KAFKA_RESP_ERR__NOENT == get_header_response) {
     return {};
@@ -291,8 +291,8 @@ std::vector<std::string> ConsumeKafka::get_matching_headers(const rd_kafka_messa
   }
   std::vector<std::string> matching_headers;
   for (std::size_t header_idx = 0;; ++header_idx) {
-    const char* value;  // Not to be freed
-    std::size_t size;
+    const char* value = nullptr;  // Not to be freed
+    std::size_t size = 0;
     if (RD_KAFKA_RESP_ERR_NO_ERROR != rd_kafka_header_get(headers_raw, header_idx, header_name.c_str(), (const void**)(&value), &size)) {
       break;
     }

@@ -142,7 +142,7 @@ weekday parse<weekday>(const std::string& weekday_str) {
     if (!stream.fail() && parsed_weekday.ok() && stream.peek() == EOF)
       return parsed_weekday;
   } else {
-    unsigned weekday_num;
+    unsigned weekday_num = 0;
     stream >> weekday_num;
     if (!stream.fail() && weekday_num < 7 && stream.peek() == EOF)
       return weekday(weekday_num-1);

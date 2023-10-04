@@ -453,18 +453,20 @@ TEST_CASE("test string::testBase64EncodeDecode", "[test base64 encode decode]") 
 
 TEST_CASE("test string::testJoinPack", "[test join_pack]") {
   std::string stdstr = "std::string";
+  std::string_view strview = "std::string_view";
   const char* cstr = "c string";
-  const char carr[] = "char array";
-  REQUIRE(string::join_pack("rvalue c string, ", cstr, std::string{", rval std::string, "}, stdstr, ", ", carr)
-      == "rvalue c string, c string, rval std::string, std::string, char array");
+  const char carr[] = "char array";  // NOLINT(cppcoreguidelines-avoid-c-arrays): testing const char[] on purpose
+  REQUIRE(string::join_pack("rvalue c string, ", cstr, std::string{", rval std::string, "}, stdstr, ", ", strview, ", ", carr)
+      == "rvalue c string, c string, rval std::string, std::string, std::string_view, char array");
 }
 
 TEST_CASE("test string::testJoinPackWstring", "[test join_pack wstring]") {
   std::wstring stdstr = L"std::string";
+  std::wstring_view strview = L"std::string_view";
   const wchar_t* cstr = L"c string";
-  const wchar_t carr[] = L"char array";
-  REQUIRE(string::join_pack(L"rvalue c string, ", cstr, std::wstring{L", rval std::string, "}, stdstr, L", ", carr)
-      == L"rvalue c string, c string, rval std::string, std::string, char array");
+  const wchar_t carr[] = L"char array";  // NOLINT(cppcoreguidelines-avoid-c-arrays): testing const wchar_t[] on purpose
+  REQUIRE(string::join_pack(L"rvalue c string, ", cstr, std::wstring{L", rval std::string, "}, stdstr, L", ", strview, L", ", carr)
+      == L"rvalue c string, c string, rval std::string, std::string, std::string_view, char array");
 }
 
 /* doesn't and shouldn't compile
@@ -529,7 +531,7 @@ TEST_CASE("string::removeFramingCharacters works correctly", "[removeFramingChar
 
 // ignore terminating \0 character
 template<size_t N>
-std::span<const std::byte> from_cstring(const char (& str)[N]) {
+std::span<const std::byte> from_cstring(const char (& str)[N]) {  // NOLINT(cppcoreguidelines-avoid-c-arrays)
   return as_bytes(std::span<const char>(str, N - 1));
 }
 
@@ -558,7 +560,7 @@ TEST_CASE("string::toLower and toUpper tests") {
 }
 
 TEST_CASE("string::splitToValueAndUnit tests") {
-  int64_t value;
+  int64_t value = 0;
   std::string unit_str;
   SECTION("Simple case") {
     CHECK(string::splitToValueAndUnit("1 horse", value, unit_str));

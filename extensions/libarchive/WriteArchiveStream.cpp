@@ -30,7 +30,7 @@ WriteArchiveStreamImpl::archive_ptr WriteArchiveStreamImpl::createWriteArchive()
     return nullptr;
   }
 
-  int result;
+  int result = 0;
 
   result = archive_write_set_format_ustar(arch.get());
   if (result != ARCHIVE_OK) {
@@ -94,7 +94,7 @@ bool WriteArchiveStreamImpl::newEntry(const EntryInfo& info) {
     return false;
   }
   archive_entry_set_pathname(arch_entry_.get(), info.filename.c_str());
-  archive_entry_set_size(arch_entry_.get(), info.size);
+  archive_entry_set_size(arch_entry_.get(), gsl::narrow<la_int64_t>(info.size));
   archive_entry_set_mode(arch_entry_.get(), S_IFREG | 0755);
 
   int result = archive_write_header(arch_.get(), arch_entry_.get());

@@ -89,7 +89,7 @@ std::unique_ptr<io::InputStream> AzureDataLakeStorageClient::fetchFile(const Fet
   if (params.range_start || params.range_length) {
     Azure::Core::Http::HttpRange range;
     if (params.range_start) {
-      range.Offset = *params.range_start;
+      range.Offset = gsl::narrow<int64_t>(*params.range_start);
     }
 
     if (params.range_length) {
