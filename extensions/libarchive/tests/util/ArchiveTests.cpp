@@ -88,7 +88,7 @@ void build_test_archive(const std::filesystem::path& path, const TAE_MAP_T& entr
 
     archive_entry_set_filetype(entry, test_entry.type);
     archive_entry_set_pathname(entry, test_entry.name.c_str());
-    archive_entry_set_size(entry, test_entry.size);
+    archive_entry_set_size(entry, gsl::narrow<la_int64_t>(test_entry.size));
     archive_entry_set_perm(entry, test_entry.perms);
     archive_entry_set_uid(entry, test_entry.uid);
     archive_entry_set_gid(entry, test_entry.gid);
@@ -113,7 +113,7 @@ bool check_archive_contents(const std::filesystem::path& path, const TAE_MAP_T& 
   FN_VEC_T extra_names;
   bool ok = true;
   struct archive *a = archive_read_new();
-  struct archive_entry *entry;
+  struct archive_entry *entry = nullptr;
 
   archive_read_support_format_all(a);
   archive_read_support_filter_all(a);

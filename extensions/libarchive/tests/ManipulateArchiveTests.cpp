@@ -34,10 +34,10 @@
 #include "unit/ProvenanceTestHelper.h"
 #include "repository/VolatileContentRepository.h"
 
-const char TEST_ARCHIVE_NAME[] = "manipulate_test_archive.tar";
+const char* TEST_ARCHIVE_NAME = "manipulate_test_archive.tar";
 const int NUM_FILES = 3;
-const char* FILE_NAMES[NUM_FILES] = {"first", "middle", "last"};
-const char* FILE_CONTENT[NUM_FILES] = {"Test file 1\n", "Test file 2\n", "Test file 3\n"};
+std::array<const char*, NUM_FILES> FILE_NAMES = {"first", "middle", "last"};
+std::array<const char*, NUM_FILES> FILE_CONTENT = {"Test file 1\n", "Test file 2\n", "Test file 3\n"};
 
 const char* MODIFY_SRC = FILE_NAMES[0];
 const char* ORDER_ANCHOR = FILE_NAMES[1];
@@ -116,7 +116,7 @@ TEST_CASE("Test creation of ManipulateArchive", "[manipulatearchiveCreate]") {
 }
 
 TEST_CASE("Test ManipulateArchive Touch", "[testManipulateArchiveTouch]") {
-  TAE_MAP_T test_archive_map = build_test_archive_map(NUM_FILES, FILE_NAMES, FILE_CONTENT);
+  TAE_MAP_T test_archive_map = build_test_archive_map(NUM_FILES, FILE_NAMES.data(), FILE_CONTENT.data());
 
   PROP_MAP_T properties{
       {ManipulateArchive::Destination, MODIFY_DEST},
@@ -139,7 +139,7 @@ TEST_CASE("Test ManipulateArchive Touch", "[testManipulateArchiveTouch]") {
 }
 
 TEST_CASE("Test ManipulateArchive Copy", "[testManipulateArchiveCopy]") {
-  TAE_MAP_T test_archive_map = build_test_archive_map(NUM_FILES, FILE_NAMES, FILE_CONTENT);
+  TAE_MAP_T test_archive_map = build_test_archive_map(NUM_FILES, FILE_NAMES.data(), FILE_CONTENT.data());
 
   PROP_MAP_T properties{
       {ManipulateArchive::Target, MODIFY_SRC},
@@ -155,7 +155,7 @@ TEST_CASE("Test ManipulateArchive Copy", "[testManipulateArchiveCopy]") {
 }
 
 TEST_CASE("Test ManipulateArchive Move", "[testManipulateArchiveMove]") {
-  TAE_MAP_T test_archive_map = build_test_archive_map(NUM_FILES, FILE_NAMES, FILE_CONTENT);
+  TAE_MAP_T test_archive_map = build_test_archive_map(NUM_FILES, FILE_NAMES.data(), FILE_CONTENT.data());
 
   PROP_MAP_T properties{
       {ManipulateArchive::Target, MODIFY_SRC},
@@ -176,7 +176,7 @@ TEST_CASE("Test ManipulateArchive Move", "[testManipulateArchiveMove]") {
 }
 
 TEST_CASE("Test ManipulateArchive Remove", "[testManipulateArchiveRemove]") {
-  TAE_MAP_T test_archive_map = build_test_archive_map(NUM_FILES, FILE_NAMES, FILE_CONTENT);
+  TAE_MAP_T test_archive_map = build_test_archive_map(NUM_FILES, FILE_NAMES.data(), FILE_CONTENT.data());
 
   PROP_MAP_T properties{
       {ManipulateArchive::Target, MODIFY_SRC},
@@ -193,7 +193,7 @@ TEST_CASE("Test ManipulateArchive Remove", "[testManipulateArchiveRemove]") {
 }
 
 TEST_CASE("Test ManipulateArchive Ordered Touch (before)", "[testManipulateArchiveOrderedTouchBefore]") {
-  OrderedTestArchive test_archive = build_ordered_test_archive(NUM_FILES, FILE_NAMES, FILE_CONTENT);
+  OrderedTestArchive test_archive = build_ordered_test_archive(NUM_FILES, FILE_NAMES.data(), FILE_CONTENT.data());
 
   PROP_MAP_T properties{
       {ManipulateArchive::Destination, MODIFY_DEST},
@@ -220,7 +220,7 @@ TEST_CASE("Test ManipulateArchive Ordered Touch (before)", "[testManipulateArchi
 }
 
 TEST_CASE("Test ManipulateArchive Ordered Copy (before)", "[testManipulateArchiveOrderedCopyBefore]") {
-  OrderedTestArchive test_archive = build_ordered_test_archive(NUM_FILES, FILE_NAMES, FILE_CONTENT);
+  OrderedTestArchive test_archive = build_ordered_test_archive(NUM_FILES, FILE_NAMES.data(), FILE_CONTENT.data());
 
   PROP_MAP_T properties{
       {ManipulateArchive::Target, MODIFY_SRC},
@@ -239,7 +239,7 @@ TEST_CASE("Test ManipulateArchive Ordered Copy (before)", "[testManipulateArchiv
 }
 
 TEST_CASE("Test ManipulateArchive Ordered Move (before)", "[testManipulateArchiveOrderedMoveBefore]") {
-  OrderedTestArchive test_archive = build_ordered_test_archive(NUM_FILES, FILE_NAMES, FILE_CONTENT);
+  OrderedTestArchive test_archive = build_ordered_test_archive(NUM_FILES, FILE_NAMES.data(), FILE_CONTENT.data());
 
   PROP_MAP_T properties{
       {ManipulateArchive::Target, MODIFY_SRC},
@@ -267,7 +267,7 @@ TEST_CASE("Test ManipulateArchive Ordered Move (before)", "[testManipulateArchiv
 }
 
 TEST_CASE("Test ManipulateArchive Ordered Touch (after)", "[testManipulateArchiveOrderedTouchAfter]") {
-  OrderedTestArchive test_archive = build_ordered_test_archive(NUM_FILES, FILE_NAMES, FILE_CONTENT);
+  OrderedTestArchive test_archive = build_ordered_test_archive(NUM_FILES, FILE_NAMES.data(), FILE_CONTENT.data());
 
   PROP_MAP_T properties{
       {ManipulateArchive::Destination, MODIFY_DEST},
@@ -295,7 +295,7 @@ TEST_CASE("Test ManipulateArchive Ordered Touch (after)", "[testManipulateArchiv
 }
 
 TEST_CASE("Test ManipulateArchive Ordered Copy (after)", "[testManipulateArchiveOrderedCopyAfter]") {
-  OrderedTestArchive test_archive = build_ordered_test_archive(NUM_FILES, FILE_NAMES, FILE_CONTENT);
+  OrderedTestArchive test_archive = build_ordered_test_archive(NUM_FILES, FILE_NAMES.data(), FILE_CONTENT.data());
 
   PROP_MAP_T properties{
       {ManipulateArchive::Target, MODIFY_SRC},
@@ -315,7 +315,7 @@ TEST_CASE("Test ManipulateArchive Ordered Copy (after)", "[testManipulateArchive
 }
 
 TEST_CASE("Test ManipulateArchive Ordered Move (after)", "[testManipulateArchiveOrderedMoveAfter]") {
-  OrderedTestArchive test_archive = build_ordered_test_archive(NUM_FILES, FILE_NAMES, FILE_CONTENT);
+  OrderedTestArchive test_archive = build_ordered_test_archive(NUM_FILES, FILE_NAMES.data(), FILE_CONTENT.data());
 
   PROP_MAP_T properties{
       {ManipulateArchive::Target, MODIFY_SRC},
