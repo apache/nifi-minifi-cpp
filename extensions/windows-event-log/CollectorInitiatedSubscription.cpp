@@ -485,7 +485,7 @@ bool CollectorInitiatedSubscription::subscribe(const std::shared_ptr<core::Proce
       if (!EvtRender(NULL, hEvent, EvtRenderEventXml, size, 0, &used, &propertyCount)) {
         if (ERROR_INSUFFICIENT_BUFFER == GetLastError()) {
           if (used > pCollectorInitiatedSubscription->max_buffer_size_.getValue()) {
-            logger->log_error("Dropping event %p because it couldn't be rendered within {} bytes.", hEvent, pCollectorInitiatedSubscription->max_buffer_size_.getValue());
+            logger->log_error("Dropping event {} because it couldn't be rendered within {} bytes.", hEvent, pCollectorInitiatedSubscription->max_buffer_size_.getValue());
             return 0UL;
           }
 

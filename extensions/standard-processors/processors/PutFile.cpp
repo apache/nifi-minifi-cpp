@@ -87,7 +87,7 @@ void PutFile::onTrigger(core::ProcessContext *context, core::ProcessSession *ses
   logger_->log_debug("PutFile writing file {} into directory {}", dest_path->filename(), dest_path->parent_path());
 
   if (directoryIsFull(dest_path->parent_path())) {
-    logger_->log_warn("Routing to failure because the output directory {} has at least %u files, which exceeds the "
+    logger_->log_warn("Routing to failure because the output directory {} has at least {} files, which exceeds the "
                       "configured max number of files", dest_path->parent_path(), *max_dest_files_);
     return session->transfer(flow_file, Failure);
   }
