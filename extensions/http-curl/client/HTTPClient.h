@@ -150,8 +150,8 @@ class HTTPClient : public utils::BaseHTTPClient, public core::Connectable {
   void setFollowRedirects(bool follow);
 
   // Limit connection throughput in bytes per second
-  void setMaximumUploadBandwidth(uint64_t max_bytes_per_second);
-  void setMaximumDownloadBandwidth(uint64_t max_bytes_per_second);
+  void setMaximumUploadSpeed(uint64_t max_bytes_per_second);
+  void setMaximumDownloadSpeed(uint64_t max_bytes_per_second);
 
   /**
    * Locates the header value ignoring case. This is different than returning a mapping

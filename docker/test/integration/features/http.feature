@@ -110,14 +110,14 @@ Feature: Sending data using InvokeHTTP to a receiver using ListenHTTP
     When both instances start up
     Then at least one flowfile with the content "test" is placed in the monitored directory in less than 120 seconds
 
-  Scenario: A MiNiFi instance transfers data to another MiNiFi instance with message body and limited bandwidth
+  Scenario: A MiNiFi instance transfers data to another MiNiFi instance with message body and limited speed
     Given a GenerateFlowFile processor with the "File Size" property set to "10 MB"
     And the scheduling period of the GenerateFlowFile processor is set to "30 sec"
     And a InvokeHTTP processor with the "Remote URL" property set to "http://secondary-${feature_id}:8080/contentListener"
     And the "HTTP Method" property of the InvokeHTTP processor is set to "POST"
     And the "Connection Timeout" property of the InvokeHTTP processor is set to "30 s"
     And the "Read Timeout" property of the InvokeHTTP processor is set to "30 s"
-    And the "Upload Bandwidth Limit" property of the InvokeHTTP processor is set to "800 KB"
+    And the "Upload Speed Limit" property of the InvokeHTTP processor is set to "800 KB"
     And the "success" relationship of the GenerateFlowFile processor is connected to the InvokeHTTP
 
     And a ListenHTTP processor with the "Listening Port" property set to "8080" in a "secondary" flow
@@ -128,13 +128,13 @@ Feature: Sending data using InvokeHTTP to a receiver using ListenHTTP
     Then at least one flowfile with minimum size of "1 MB" is placed in the monitored directory in less than 120 seconds
     And the Minifi logs contain the following message: "[warning] InvokeHTTP::onTrigger has been running for" in less than 10 seconds
 
-  Scenario: A MiNiFi instance retrieves data from another MiNiFi instance with message body and limited bandwidth
+  Scenario: A MiNiFi instance retrieves data from another MiNiFi instance with message body and limited speed
     Given a InvokeHTTP processor with the "Remote URL" property set to "http://secondary-${feature_id}:8080/contentListener&testfile"
     And the scheduling period of the InvokeHTTP processor is set to "3 sec"
     And the "HTTP Method" property of the InvokeHTTP processor is set to "GET"
     And the "Connection Timeout" property of the InvokeHTTP processor is set to "30 s"
     And the "Read Timeout" property of the InvokeHTTP processor is set to "30 s"
-    And the "Download Bandwidth Limit" property of the InvokeHTTP processor is set to "800 KB"
+    And the "Download Speed Limit" property of the InvokeHTTP processor is set to "800 KB"
     And a PutFile processor with the "Directory" property set to "/tmp/output"
     And the "response" relationship of the InvokeHTTP processor is connected to the PutFile
 
