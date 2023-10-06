@@ -537,7 +537,7 @@ void ListSFTP::listByTrackingTimestamps(
       }
       /* If the latest timestamp is not old enough, we wait another cycle */
       if (latest_listed_entry_timestamp_this_cycle && minimum_reliable_timestamp < latest_listed_entry_timestamp_this_cycle) {
-        logger_->log_debug("Skipping files with latest timestamp because their modification date is not smaller than the minimum reliable timestamp: {} ms >= {} ms",
+        logger_->log_debug("Skipping files with latest timestamp because their modification date is not smaller than the minimum reliable timestamp: {} >= {}",
                            latest_listed_entry_timestamp_this_cycle,
                            minimum_reliable_timestamp);
         ordered_files.erase(*latest_listed_entry_timestamp_this_cycle);
