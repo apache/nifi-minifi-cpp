@@ -31,7 +31,7 @@
 #include "Catch.h"
 #include "utils/gsl.h"
 
-TAE_MAP_T build_test_archive_map(int NUM_FILES, const char** FILE_NAMES, const char** FILE_CONTENT) {
+TAE_MAP_T build_test_archive_map(int NUM_FILES, const char* const* FILE_NAMES, const char* const* FILE_CONTENT) {
   TAE_MAP_T test_entries;
 
   for (int i = 0; i < NUM_FILES; i++) {
@@ -54,14 +54,14 @@ TAE_MAP_T build_test_archive_map(int NUM_FILES, const char** FILE_NAMES, const c
   return test_entries;
 }
 
-FN_VEC_T build_test_archive_order(int NUM_FILES, const char** FILE_NAMES) {
+FN_VEC_T build_test_archive_order(int NUM_FILES, const char* const* FILE_NAMES) {
   FN_VEC_T ret;
   for (int i = 0; i < NUM_FILES; i++)
     ret.push_back(FILE_NAMES[i]);
   return ret;
 }
 
-OrderedTestArchive build_ordered_test_archive(int NUM_FILES, const char** FILE_NAMES, const char** FILE_CONTENT) {
+OrderedTestArchive build_ordered_test_archive(int NUM_FILES, const char* const* FILE_NAMES, const char* const* FILE_CONTENT) {
   OrderedTestArchive ret;
   ret.map = build_test_archive_map(NUM_FILES, FILE_NAMES, FILE_CONTENT);
   ret.order = build_test_archive_order(NUM_FILES, FILE_NAMES);
