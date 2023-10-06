@@ -34,7 +34,7 @@
 #include "unit/ProvenanceTestHelper.h"
 #include "repository/VolatileContentRepository.h"
 
-const char* TEST_ARCHIVE_NAME = "manipulate_test_archive.tar";
+constexpr const char* TEST_ARCHIVE_NAME = "manipulate_test_archive.tar";
 const int NUM_FILES = 3;
 std::array<const char*, NUM_FILES> FILE_NAMES = {"first", "middle", "last"};
 std::array<const char*, NUM_FILES> FILE_CONTENT = {"Test file 1\n", "Test file 2\n", "Test file 3\n"};
