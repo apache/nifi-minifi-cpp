@@ -28,9 +28,9 @@ namespace org::apache::nifi::minifi::extensions::lua {
 
 class LuaLogger {
  public:
-  explicit LuaLogger(core::logging::Logger* logger) : logger_(logger) {}
+  explicit LuaLogger(gsl::not_null<core::logging::Logger*> logger) : logger_(logger) {}
 
-  void log_info(std::string log_message) { logger_->log_info("{}", log_message); }
+  void log_info(std::string_view log_message) { logger_->log_info("{}", log_message); }
  private:
   gsl::not_null<core::logging::Logger*> logger_;
 };

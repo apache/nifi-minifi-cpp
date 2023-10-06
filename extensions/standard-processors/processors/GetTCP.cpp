@@ -266,7 +266,7 @@ asio::awaitable<void> GetTCP::TcpClient::doReceiveFrom(const utils::net::Connect
           continue;
       }
     }
-    logger_->log_error("Error connecting to {}:{} due to {}", connection_id.getHostname().data(), connection_id.getService().data(), last_error.message());
+    logger_->log_error("Error connecting to {}:{} due to {}", connection_id.getHostname(), connection_id.getService(), last_error.message());
     co_await utils::net::async_wait(reconnection_interval_);
   }
 }

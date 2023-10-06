@@ -38,7 +38,7 @@ void FetchS3Object::onSchedule(const std::shared_ptr<core::ProcessContext> &cont
   S3Processor::onSchedule(context, sessionFactory);
 
   context->getProperty(RequesterPays, requester_pays_);
-  logger_->log_debug("FetchS3Object: RequesterPays [{}]", requester_pays_ ? "true" : "false");
+  logger_->log_debug("FetchS3Object: RequesterPays [{}]", requester_pays_);
 }
 
 std::optional<aws::s3::GetObjectRequestParameters> FetchS3Object::buildFetchS3RequestParams(

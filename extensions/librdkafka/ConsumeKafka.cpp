@@ -133,7 +133,7 @@ void ConsumeKafka::create_topic_partition_list() {
   // This might happen until the cross-overship between processors and connections are settled
   rd_kafka_resp_err_t subscribe_response = rd_kafka_subscribe(consumer_.get(), kf_topic_partition_list_.get());
   if (RD_KAFKA_RESP_ERR_NO_ERROR != subscribe_response) {
-    logger_->log_error("rd_kafka_subscribe error {}: {}", static_cast<int>(subscribe_response), rd_kafka_err2str(subscribe_response));
+    logger_->log_error("rd_kafka_subscribe error {}: {}", magic_enum::enum_underlying(subscribe_response), rd_kafka_err2str(subscribe_response));
   }
 }
 
@@ -211,7 +211,7 @@ void ConsumeKafka::configure_new_connection(core::ProcessContext& context) {
 
   rd_kafka_resp_err_t poll_set_consumer_response = rd_kafka_poll_set_consumer(consumer_.get());
   if (RD_KAFKA_RESP_ERR_NO_ERROR != poll_set_consumer_response) {
-    logger_->log_error("rd_kafka_poll_set_consumer error {}: {}", static_cast<int>(poll_set_consumer_response), rd_kafka_err2str(poll_set_consumer_response));
+    logger_->log_error("rd_kafka_poll_set_consumer error {}: {}", magic_enum::enum_underlying(poll_set_consumer_response), rd_kafka_err2str(poll_set_consumer_response));
   }
 }
 
@@ -235,7 +235,7 @@ std::vector<std::unique_ptr<rd_kafka_message_t, utils::rd_kafka_message_deleter>
       break;
     }
     if (RD_KAFKA_RESP_ERR_NO_ERROR != message->err) {
-      logger_->log_error("Received message with error {}: {}", static_cast<int>(message->err), rd_kafka_err2str(message->err));
+      logger_->log_error("Received message with error {}: {}", magic_enum::enum_underlying(message->err), rd_kafka_err2str(message->err));
       break;
     }
     utils::print_kafka_message(*message, *logger_);
@@ -287,7 +287,7 @@ std::vector<std::string> ConsumeKafka::get_matching_headers(const rd_kafka_messa
     return {};
   }
   if (RD_KAFKA_RESP_ERR_NO_ERROR != get_header_response) {
-    logger_->log_error("Failed to fetch message headers: {}: {}", static_cast<int>(rd_kafka_last_error()), rd_kafka_err2str(rd_kafka_last_error()));
+    logger_->log_error("Failed to fetch message headers: {}: {}", magic_enum::enum_underlying(rd_kafka_last_error()), rd_kafka_err2str(rd_kafka_last_error()));
   }
   std::vector<std::string> matching_headers;
   for (std::size_t header_idx = 0;; ++header_idx) {
@@ -297,7 +297,7 @@ std::vector<std::string> ConsumeKafka::get_matching_headers(const rd_kafka_messa
       break;
     }
     if (size < 200) {
-      logger_->log_debug("{:.{}}", value, static_cast<int>(size));
+      logger_->log_debug("{:.{}}", value, size);
     } else {
       logger_->log_debug("{:.{}}...", value, 200);
     }

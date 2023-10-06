@@ -58,7 +58,7 @@ void ListS3::onSchedule(const std::shared_ptr<core::ProcessContext> &context, co
   logger_->log_debug("ListS3: Prefix [{}]", list_request_params_->prefix);
 
   context->getProperty(UseVersions, list_request_params_->use_versions);
-  logger_->log_debug("ListS3: UseVersions [{}]", list_request_params_->use_versions ? "true" : "false");
+  logger_->log_debug("ListS3: UseVersions [{}]", list_request_params_->use_versions);
 
   if (auto minimum_object_age = context->getProperty<core::TimePeriodValue>(MinimumObjectAge)) {
     list_request_params_->min_object_age = minimum_object_age->getMilliseconds().count();
@@ -68,13 +68,13 @@ void ListS3::onSchedule(const std::shared_ptr<core::ProcessContext> &context, co
   logger_->log_debug("S3Processor: Minimum Object Age [{}]", list_request_params_->min_object_age);
 
   context->getProperty(WriteObjectTags, write_object_tags_);
-  logger_->log_debug("ListS3: WriteObjectTags [{}]", write_object_tags_ ? "true" : "false");
+  logger_->log_debug("ListS3: WriteObjectTags [{}]", write_object_tags_);
 
   context->getProperty(WriteUserMetadata, write_user_metadata_);
-  logger_->log_debug("ListS3: WriteUserMetadata [{}]", write_user_metadata_ ? "true" : "false");
+  logger_->log_debug("ListS3: WriteUserMetadata [{}]", write_user_metadata_);
 
   context->getProperty(RequesterPays, requester_pays_);
-  logger_->log_debug("ListS3: RequesterPays [{}]", requester_pays_ ? "true" : "false");
+  logger_->log_debug("ListS3: RequesterPays [{}]", requester_pays_);
 }
 
 void ListS3::writeObjectTags(

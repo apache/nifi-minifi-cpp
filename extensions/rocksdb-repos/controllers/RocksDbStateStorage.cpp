@@ -46,7 +46,7 @@ void RocksDbStateStorage::onEnable() {
   }
 
   const auto always_persist = getProperty<bool>(AlwaysPersist).value_or(false);
-  logger_->log_info("Always Persist property: {}", always_persist ? "true" : "false");
+  logger_->log_info("Always Persist property: {}", always_persist);
 
   const auto auto_persistence_interval = getProperty<core::TimePeriodValue>(AutoPersistenceInterval).value_or(core::TimePeriodValue{}).getMilliseconds();
   logger_->log_info("Auto Persistence Interval property: {}", auto_persistence_interval);

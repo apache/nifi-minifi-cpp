@@ -510,7 +510,7 @@ void ListSFTP::listByTrackingTimestamps(
       if (elapsed_time < listing_lag) {
         logger_->log_debug("The latest listed entry timestamp is the same as the last listed entry timestamp ({}) "
                            "and the listing lag has not yet elapsed ({} < {}). Yielding.",
-                           toUnixTime(latest_listed_entry_timestamp_this_cycle), elapsed_time, listing_lag);
+                           latest_listed_entry_timestamp_this_cycle, elapsed_time, listing_lag);
         context->yield();
         return;
       }
@@ -523,7 +523,7 @@ void ListSFTP::listByTrackingTimestamps(
             return latest_identifiers_processed_.count(child.getPath()) == 1U;
           })) {
         logger_->log_debug("The latest listed entry timestamp is the same as the last listed entry timestamp ({}) "
-                           "and all files for that timestamp has been processed. Yielding.", toUnixTime(latest_listed_entry_timestamp_this_cycle));
+                           "and all files for that timestamp has been processed. Yielding.", latest_listed_entry_timestamp_this_cycle);
         context->yield();
         return;
       }
@@ -538,8 +538,8 @@ void ListSFTP::listByTrackingTimestamps(
       /* If the latest timestamp is not old enough, we wait another cycle */
       if (latest_listed_entry_timestamp_this_cycle && minimum_reliable_timestamp < latest_listed_entry_timestamp_this_cycle) {
         logger_->log_debug("Skipping files with latest timestamp because their modification date is not smaller than the minimum reliable timestamp: {} ms >= {} ms",
-                           toUnixTime(latest_listed_entry_timestamp_this_cycle),
-                           toUnixTime(minimum_reliable_timestamp));
+                           latest_listed_entry_timestamp_this_cycle,
+                           minimum_reliable_timestamp);
         ordered_files.erase(*latest_listed_entry_timestamp_this_cycle);
       }
     }

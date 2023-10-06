@@ -110,7 +110,7 @@ void LuaScriptEngine::evalFile(const std::filesystem::path& file_name) {
 }
 
 void LuaScriptEngine::initialize(const core::Relationship& success, const core::Relationship& failure, const std::shared_ptr<core::logging::Logger>& logger) {
-  lua_logger_ = std::make_unique<LuaLogger>(logger.get());
+  lua_logger_ = std::make_unique<LuaLogger>(gsl::make_not_null(logger.get()));
   bind("log", lua_logger_.get());
   bind("REL_SUCCESS", success);
   bind("REL_FAILURE", failure);
