@@ -39,7 +39,7 @@ std::unique_ptr<Azure::Storage::Files::DataLake::DataLakeFileSystemClient> Azure
     const AzureStorageCredentials& credentials, const std::string& file_system_name, std::optional<uint64_t> number_of_retries) {
   Azure::Storage::Files::DataLake::DataLakeClientOptions options;
   if (number_of_retries) {
-    options.Retry.MaxRetries = *number_of_retries;
+    options.Retry.MaxRetries = gsl::narrow<int32_t>(*number_of_retries);
   }
 
   if (credentials.getUseManagedIdentityCredentials()) {
@@ -89,7 +89,7 @@ std::unique_ptr<io::InputStream> AzureDataLakeStorageClient::fetchFile(const Fet
   if (params.range_start || params.range_length) {
     Azure::Core::Http::HttpRange range;
     if (params.range_start) {
-      range.Offset = *params.range_start;
+      range.Offset = gsl::narrow<int64_t>(*params.range_start);
     }
 
     if (params.range_length) {

@@ -20,14 +20,11 @@
 // as we measure the absolute memory usage that would fail this test
 #define EXTENSION_LIST ""  // NOLINT(cppcoreguidelines-macro-usage)
 
-#ifdef WIN32
-#include <Windows.h>
-#endif
-#include <cstring>
 #include <list>
 
 #include "utils/gsl.h"
 #include "utils/OsUtils.h"
+#include "utils/TestUtils.h"
 #include "../TestBase.h"
 #include "../Catch.h"
 #include "utils/Literals.h"
@@ -114,18 +111,10 @@ TEST_CASE("FileSystemRepository can retry removing entry that previously failed 
     REQUIRE(files.size() == 1);
     // ensure that the content is not deleted during resource claim destruction
     filename = (files[0].first / files[0].second).string();
-#ifdef WIN32
-    REQUIRE(SetFileAttributes(filename.c_str(), FILE_ATTRIBUTE_READONLY));
-#else
-    minifi::utils::file::set_permissions(dir, 0555);
-#endif
+    utils::makeFileOrDirectoryNotWritable(dir);
   }
 
-#ifdef WIN32
-  REQUIRE(SetFileAttributes(filename.c_str(), GetFileAttributes(filename.c_str()) & ~FILE_ATTRIBUTE_READONLY));
-#else
-  minifi::utils::file::set_permissions(dir, 0777);
-#endif
+  utils::makeFileOrDirectoryWritable(dir);
   REQUIRE(minifi::utils::file::list_dir_all(dir, testController.getLogger()).size() == 1);
   {
     minifi::ResourceClaim claim(content_repo);
@@ -153,18 +142,10 @@ TEST_CASE("FileSystemRepository removes non-existing resource file from purge li
     REQUIRE(files.size() == 1);
     // ensure that the content is not deleted during resource claim destruction
     filename = (files[0].first / files[0].second).string();
-#ifdef WIN32
-    REQUIRE(SetFileAttributes(filename.c_str(), FILE_ATTRIBUTE_READONLY));
-#else
-    minifi::utils::file::set_permissions(dir, 0555);
-#endif
+    utils::makeFileOrDirectoryNotWritable(dir);
   }
 
-#ifdef WIN32
-  REQUIRE(SetFileAttributes(filename.c_str(), GetFileAttributes(filename.c_str()) & ~FILE_ATTRIBUTE_READONLY));
-#else
-  minifi::utils::file::set_permissions(dir, 0777);
-#endif
+  utils::makeFileOrDirectoryWritable(dir);
   REQUIRE(std::filesystem::remove(filename));
   REQUIRE(minifi::utils::file::list_dir_all(dir, testController.getLogger()).empty());
   {

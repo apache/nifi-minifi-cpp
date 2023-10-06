@@ -23,9 +23,9 @@
 #include <utility>
 #include <fstream>
 
-#include "wel/UnicodeConversion.h"
 #include "utils/file/FileUtils.h"
 #include "utils/OsUtils.h"
+#include "utils/UnicodeConversion.h"
 
 namespace org::apache::nifi::minifi::processors {
 static const std::string BOOKMARK_KEY = "bookmark";
@@ -41,7 +41,7 @@ Bookmark::Bookmark(const wel::EventPath& path,
       state_manager_(state_manager) {
   std::unordered_map<std::string, std::string> state_map;
   if (state_manager_->get(state_map) && state_map.count(BOOKMARK_KEY) == 1U) {
-    bookmarkXml_ = wel::to_wstring(state_map[BOOKMARK_KEY].c_str());
+    bookmarkXml_ = utils::to_wstring(state_map[BOOKMARK_KEY]);
   } else if (!bookmarkRootDir.empty()) {
     filePath_ = bookmarkRootDir / "uuid" / uuid.to_string().view() / "Bookmark.txt";
 
@@ -122,7 +122,7 @@ bool Bookmark::saveBookmarkXml(const std::wstring& bookmarkXml) {
   bookmarkXml_ = bookmarkXml;
 
   std::unordered_map<std::string, std::string> state_map;
-  state_map[BOOKMARK_KEY] = wel::to_string(bookmarkXml_.c_str());
+  state_map[BOOKMARK_KEY] = utils::to_string(bookmarkXml_);
 
   return state_manager_->set(state_map);
 }

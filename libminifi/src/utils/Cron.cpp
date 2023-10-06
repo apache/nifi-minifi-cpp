@@ -109,7 +109,7 @@ days parse<days>(const std::string& days_str) {
 
 template <>
 day parse<day>(const std::string& day_str) {
-  if (auto day_int = fromChars<uint64_t>(day_str); day_int && day_int >= 1 && day_int <= 31)
+  if (auto day_int = fromChars<unsigned int>(day_str); day_int && day_int >= 1 && day_int <= 31)
     return day(*day_int);
   throw BadCronExpression("Invalid day " + day_str);
 }
@@ -142,7 +142,7 @@ weekday parse<weekday>(const std::string& weekday_str) {
     if (!stream.fail() && parsed_weekday.ok() && stream.peek() == EOF)
       return parsed_weekday;
   } else {
-    unsigned weekday_num;
+    unsigned weekday_num = 0;
     stream >> weekday_num;
     if (!stream.fail() && weekday_num < 7 && stream.peek() == EOF)
       return weekday(weekday_num-1);
@@ -152,7 +152,7 @@ weekday parse<weekday>(const std::string& weekday_str) {
 
 template <>
 year parse<year>(const std::string& year_str) {
-  if (auto year_int = fromChars<uint64_t>(year_str); year_int && *year_int >= 1970 && *year_int <= 2999)
+  if (auto year_int = fromChars<int>(year_str); year_int && *year_int >= 1970 && *year_int <= 2999)
     return year(*year_int);
   throw BadCronExpression("Invalid year: " + year_str);
 }
@@ -394,7 +394,7 @@ std::unique_ptr<CronField> parseCronField(const std::string& field_str) {
       if (operands.size() != 2)
         throw BadCronExpression("Invalid field " + field_str);
 
-      if (auto second_operand = fromChars<uint64_t>(operands[1]))
+      if (auto second_operand = fromChars<uint8_t>(operands[1]))
         return std::make_unique<NthWeekdayField>(parse<weekday>(operands[0]), *second_operand);
     }
 

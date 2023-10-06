@@ -28,7 +28,9 @@
 #include "processors/PutFile.h"
 #include "TestBase.h"
 #include "Catch.h"
+#include "utils/StringUtils.h"
 #include "utils/TestUtils.h"
+#include "utils/UnicodeConversion.h"
 #include "utils/file/FileUtils.h"
 #include "utils/gsl.h"
 
@@ -97,7 +99,8 @@ class OutputFormatTestController : public TestController {
 };
 
 void generateLogFile(const std::wstring& channel, const std::filesystem::path& path) {
-  HANDLE event_log = OpenEventLog(NULL, std::string(channel.begin(), channel.end()).c_str());
+  const auto channel_as_string = utils::to_string(channel);
+  HANDLE event_log = OpenEventLog(NULL, channel_as_string.c_str());
   auto guard = gsl::finally([&] {CloseEventLog(event_log);});
 
   if (!EvtExportLog(NULL, channel.c_str(), L"*", path.wstring().c_str(), EvtExportLogChannelPath)) {

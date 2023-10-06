@@ -41,7 +41,7 @@ std::optional<std::string> parseProtocol(const std::string& url_input) {
 
 std::optional<int> parsePortNumber(const std::string& port_string) {
   try {
-    size_t pos;
+    size_t pos = 0;
     int port = std::stoi(port_string, &pos);
     if (pos == port_string.size()) {
       return port;
@@ -94,7 +94,7 @@ URL::URL(const std::string& url_input) {
   std::string::const_iterator current_pos = url_input.begin();
   std::advance(current_pos, protocol_.size());
 
-  constexpr const char HOST_TERMINATORS[] = ":/?#";
+  static constexpr std::string_view HOST_TERMINATORS = ":/?#";
   std::string::const_iterator end_of_host = std::find_first_of(current_pos, url_input.end(), std::begin(HOST_TERMINATORS), std::end(HOST_TERMINATORS));
   host_ = std::string{current_pos, end_of_host};
   if (host_.empty()) {
@@ -104,7 +104,7 @@ URL::URL(const std::string& url_input) {
   current_pos = end_of_host;
 
   if (current_pos != url_input.end() && *current_pos == ':') {
-    constexpr const char PORT_TERMINATORS[] = "/?#";
+    static constexpr std::string_view PORT_TERMINATORS = "/?#";
     ++current_pos;
     std::string::const_iterator end_of_port = std::find_first_of(current_pos, url_input.end(), std::begin(PORT_TERMINATORS), std::end(PORT_TERMINATORS));
     const auto port_number = parsePortNumber(std::string{current_pos, end_of_port});
@@ -204,7 +204,7 @@ int HTTPRequestResponse::seek_callback(void *p, int64_t offset, int) {
       return SEEKFUNC_FAIL;
     }
     auto *callback = reinterpret_cast<HTTPUploadCallback *>(p);
-    return callback->setPosition(offset);
+    return gsl::narrow<int>(callback->setPosition(offset));
   } catch (...) {
     return SEEKFUNC_FAIL;
   }

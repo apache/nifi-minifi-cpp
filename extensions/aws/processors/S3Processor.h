@@ -25,6 +25,7 @@
 #include <optional>
 #include <set>
 #include <string>
+#include <string_view>
 #include <utility>
 
 #include "aws/core/auth/AWSCredentialsProvider.h"

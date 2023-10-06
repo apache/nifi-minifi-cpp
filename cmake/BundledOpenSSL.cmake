@@ -75,7 +75,7 @@ function(use_openssl SOURCE_DIR BINARY_DIR)
                 URL_HASH "SHA256=b3aa61334233b852b63ddb048df181177c2c659eb9d4376008118f9c08d07674"
                 SOURCE_DIR "${BINARY_DIR}/thirdparty/openssl-src"
                 BUILD_IN_SOURCE true
-                CONFIGURE_COMMAND perl Configure "CFLAGS=${PASSTHROUGH_CMAKE_C_FLAGS} -fPIC" "CXXFLAGS=${PASSTHROUGH_CMAKE_CXX_FLAGS} -fPIC" ${OPENSSL_SHARED_FLAG} no-tests "--prefix=${OPENSSL_BIN_DIR}" "--openssldir=${OPENSSL_BIN_DIR}"
+                CONFIGURE_COMMAND perl Configure "CFLAGS=${PASSTHROUGH_CMAKE_C_FLAGS}" "CXXFLAGS=${PASSTHROUGH_CMAKE_CXX_FLAGS}" ${OPENSSL_SHARED_FLAG} no-tests "--prefix=${OPENSSL_BIN_DIR}" "--openssldir=${OPENSSL_BIN_DIR}"
                 BUILD_BYPRODUCTS ${OPENSSL_LIBRARIES_LIST}
                 PATCH_COMMAND ${PC}
                 EXCLUDE_FROM_ALL TRUE

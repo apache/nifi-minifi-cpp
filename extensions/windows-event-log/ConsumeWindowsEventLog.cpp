@@ -36,16 +36,16 @@
 #include "wel/LookupCacher.h"
 #include "wel/MetadataWalker.h"
 #include "wel/XMLString.h"
-#include "wel/UnicodeConversion.h"
 #include "wel/JSONUtils.h"
+#include "wel/UniqueEvtHandle.h"
 
 #include "io/BufferStream.h"
 #include "core/ProcessContext.h"
 #include "core/ProcessSession.h"
 #include "core/Resource.h"
 #include "Bookmark.h"
-#include "wel/UniqueEvtHandle.h"
 #include "utils/Deleters.h"
+#include "utils/UnicodeConversion.h"
 #include "logging/LoggerConfiguration.h"
 
 #include "utils/gsl.h"
@@ -445,7 +445,7 @@ nonstd::expected<std::string, std::string> ConsumeWindowsEventLog::renderEventAs
     }
   }
   logger_->log_trace("Event rendered with size %" PRIu32, used);
-  return wel::to_string(buf.get());
+  return utils::to_string(std::wstring{buf.get()});
 }
 
 nonstd::expected<cwel::EventRender, std::string> ConsumeWindowsEventLog::createEventRender(EVT_HANDLE hEvent) {
@@ -573,7 +573,7 @@ void ConsumeWindowsEventLog::refreshTimeZoneData() {
   tzoffset << (tzbias >= 0 ? '+' : '-') << std::setfill('0') << std::setw(2) << std::abs(tzbias) / 60
       << ":" << std::setfill('0') << std::setw(2) << std::abs(tzbias) % 60;
 
-  timezone_name_ = wel::to_string(tzstr.c_str());
+  timezone_name_ = utils::to_string(tzstr);
   timezone_offset_ = tzoffset.str();
 
   logger_->log_trace("Timezone name: %s, offset: %s", timezone_name_, timezone_offset_);

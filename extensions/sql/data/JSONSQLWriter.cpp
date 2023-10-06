@@ -22,11 +22,7 @@
 #include "rapidjson/prettywriter.h"
 #include "Exception.h"
 
-namespace org {
-namespace apache {
-namespace nifi {
-namespace minifi {
-namespace sql {
+namespace org::apache::nifi::minifi::sql {
 
 JSONSQLWriter::JSONSQLWriter(bool pretty, ColumnFilter column_filter)
   : pretty_(pretty), current_batch_(rapidjson::kArrayType), column_filter_(std::move(column_filter)) {
@@ -83,7 +79,7 @@ void JSONSQLWriter::addToJSONRow(const std::string& column_name, rapidjson::Valu
 
 rapidjson::Value JSONSQLWriter::toJSONString(const std::string& s) {
   rapidjson::Value jsonValue;
-  jsonValue.SetString(s.c_str(), s.size(), current_batch_.GetAllocator());
+  jsonValue.SetString(s.c_str(), gsl::narrow<rapidjson::SizeType>(s.size()), current_batch_.GetAllocator());
 
   return jsonValue;
 }
@@ -102,8 +98,4 @@ std::string JSONSQLWriter::toString() {
   return {buffer.GetString(), buffer.GetSize()};
 }
 
-}  // namespace sql
-}  // namespace minifi
-}  // namespace nifi
-}  // namespace apache
-}  // namespace org
+}  // namespace org::apache::nifi::minifi::sql

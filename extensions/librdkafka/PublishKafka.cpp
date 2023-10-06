@@ -306,7 +306,7 @@ class ReadCallback {
         error_ = rd_kafka_err2str(err);
         return read_size_;
       }
-      read_size_ += readRet;
+      read_size_ += gsl::narrow<uint32_t>(readRet);
     }
     return read_size_;
   }

@@ -391,7 +391,7 @@ std::shared_ptr<spdlog::sinks::rotating_file_sink_mt> LoggerConfiguration::getRo
     }
   }
 
-  int max_file_size = 5_MiB;
+  size_t max_file_size = 5_MiB;
   std::string max_file_size_str;
   if (properties->getString(appender_key + ".max_file_size", max_file_size_str)) {
     core::DataSizeValue::StringToInt(max_file_size_str, max_file_size);

@@ -115,7 +115,6 @@ void ProcessCpuUsageTracker::queryCpuTimes() {
   previous_cpu_times_ = cpu_times_;
   previous_sys_cpu_times_ = sys_cpu_times_;
   previous_user_cpu_times_ = user_cpu_times_;
-  SYSTEM_INFO sysInfo;
   FILETIME ftime, fsys, fuser;
   GetSystemTimeAsFileTime(&ftime);
 

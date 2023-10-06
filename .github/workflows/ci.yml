@@ -67,10 +67,10 @@ jobs:
         with:
           name: macos-binaries
           path: build/bin
-  windows_VS2019:
-    name: "windows-2019"
-    runs-on: windows-2019
-    timeout-minutes: 180
+  windows_VS2022:
+    name: "windows-2022"
+    runs-on: windows-2022
+    timeout-minutes: 240
     steps:
       - name: Support longpaths
         run: git config --system core.longpaths true
@@ -80,11 +80,11 @@ jobs:
         uses: actions/cache/restore@v3
         with:
           path: ~/AppData/Local/Mozilla/sccache/cache
-          key: ${{ runner.os }}-sccache-${{ github.ref }}-${{ github.sha }}
+          key: ${{ runner.os }}-2022-sccache-${{ github.ref }}-${{ github.sha }}
           restore-keys: |
-            ${{ runner.os }}-sccache-${{ github.ref }}
-            ${{ runner.os }}-sccache-refs/heads/main
-            ${{ runner.os }}-sccache
+            ${{ runner.os }}-2022-sccache-${{ github.ref }}
+            ${{ runner.os }}-2022-sccache-refs/heads/main
+            ${{ runner.os }}-2022-sccache
       - name: Run sccache-cache
         uses: mozilla-actions/sccache-action@v0.0.3
       - name: Install ninja-build tool
@@ -114,12 +114,63 @@ jobs:
         if: always()
         with:
           path: ~/AppData/Local/Mozilla/sccache/cache
-          key: ${{ runner.os }}-sccache-${{ github.ref }}-${{ github.sha }}
+          key: ${{ runner.os }}-2022-sccache-${{ github.ref }}-${{ github.sha }}
       - name: test
         run: cd ..\b && ctest --timeout 300 --parallel %NUMBER_OF_PROCESSORS% -C Release --output-on-failure
         shell: cmd
       - name: linter
         run: cd ..\b && cmake --build . --target linter --config Release -j 8
+        shell: cmd
+  windows_VS2019:
+    name: "windows-2019"
+    runs-on: windows-2019
+    timeout-minutes: 240
+    steps:
+      - name: Support longpaths
+        run: git config --system core.longpaths true
+      - id: checkout
+        uses: actions/checkout@v3
+      - name: sccache cache restore
+        uses: actions/cache/restore@v3
+        with:
+          path: ~/AppData/Local/Mozilla/sccache/cache
+          key: ${{ runner.os }}-2019-sccache-${{ github.ref }}-${{ github.sha }}
+          restore-keys: |
+            ${{ runner.os }}-2019-sccache-${{ github.ref }}
+            ${{ runner.os }}-2019-sccache-refs/heads/main
+            ${{ runner.os }}-2019-sccache
+      - name: Run sccache-cache
+        uses: mozilla-actions/sccache-action@v0.0.3
+      - name: Install ninja-build tool
+        uses: seanmiddleditch/gha-setup-ninja@v3
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.11'
+      - name: Set up Lua
+        uses: xpol/setup-lua@v0.3
+      - name: Set up NASM for OpenSSL
+        uses: ilammy/setup-nasm@v1
+      - id: install-sqliteodbc-driver
+        run: |
+          Invoke-WebRequest -Uri "http://www.ch-werner.de/sqliteodbc/sqliteodbc_w64.exe" -OutFile "sqliteodbc_w64.exe"
+          if ((Get-FileHash 'sqliteodbc_w64.exe').Hash -ne "0df79be4a4412542839ebf405b20d95a7dfc803da0b0b6b0dc653d30dc82ee84") {Write "Hash mismatch"; Exit 1}
+          ./sqliteodbc_w64.exe /S
+        shell: powershell
+      - name: build
+        run: |
+          for /f "usebackq delims=" %%i in (`vswhere.exe -latest -property installationPath`) do if exist "%%i\Common7\Tools\vsdevcmd.bat" call "%%i\Common7\Tools\vsdevcmd.bat" -arch=x64 -host_arch=x64
+          win_build_vs.bat ..\b /64 /CI /S /A /PDH /SPLUNK /GCP /ELASTIC /K /L /R /Z /N /RO /PR /PYTHON_SCRIPTING /LUA_SCRIPTING /MQTT /SCCACHE /NINJA
+          sccache --show-stats
+        shell: cmd
+      - name: sccache cache save
+        uses: actions/cache/save@v3
+        if: always()
+        with:
+          path: ~/AppData/Local/Mozilla/sccache/cache
+          key: ${{ runner.os }}-2019-sccache-${{ github.ref }}-${{ github.sha }}
+      - name: test
+        run: cd ..\b && ctest --timeout 300 --parallel %NUMBER_OF_PROCESSORS% -C Release --output-on-failure
         shell: cmd
   ubuntu_20_04:
     name: "ubuntu-20.04"

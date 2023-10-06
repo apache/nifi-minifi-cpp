@@ -338,36 +338,6 @@ std::optional<std::string> OsUtils::getHostName() {
   return {hostname.data()};
 }
 
-#ifdef WIN32
-std::wstring OsUtils::stringToWideString(const std::string& string) {
-  if (string.empty())
-    return {};
-
-  const auto size_needed = MultiByteToWideChar(CP_UTF8, 0, &string.at(0), gsl::narrow<int>(string.size()), nullptr, 0);
-  if (size_needed <= 0) {
-    throw std::runtime_error(fmt::format("MultiByteToWideChar() returned: {}, due to {}", std::to_string(size_needed), utils::OsUtils::windowsErrorToErrorCode(GetLastError()).message()));
-  }
-
-  std::wstring result(size_needed, L'\0');
-  MultiByteToWideChar(CP_UTF8, 0, &string.at(0), gsl::narrow<int>(string.size()), &result.at(0), size_needed);
-  return result;
-}
-
-std::string OsUtils::wideStringToString(const std::wstring& wide_string) {
-  if (wide_string.empty())
-    return {};
-
-  const auto size_needed = WideCharToMultiByte(CP_UTF8, 0, &wide_string.at(0), gsl::narrow<int>(wide_string.size()), nullptr, 0, nullptr, nullptr);
-  if (size_needed <= 0) {
-    throw std::runtime_error(fmt::format("WideCharToMultiByte() returned: {}, due to {}", std::to_string(size_needed), utils::OsUtils::windowsErrorToErrorCode(GetLastError()).message()));
-  }
-
-  std::string result(size_needed, 0);
-  WideCharToMultiByte(CP_UTF8, 0, &wide_string.at(0), gsl::narrow<int>(wide_string.size()), &result.at(0), size_needed, nullptr, nullptr);
-  return result;
-}
-#endif
-
 std::optional<double> OsUtils::getSystemLoadAverage() {
 #ifndef WIN32
   std::array<double, 1> load_avg{};

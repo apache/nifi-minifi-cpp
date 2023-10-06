@@ -15,6 +15,8 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+#include "WindowsEventLog.h"
+
 #include <winmeta.h>
 
 #include <algorithm>
@@ -22,10 +24,9 @@
 #include <memory>
 #include <string>
 
-#include "WindowsEventLog.h"
-#include "UnicodeConversion.h"
 #include "utils/Deleters.h"
 #include "utils/gsl.h"
+#include "utils/UnicodeConversion.h"
 #include "UniqueEvtHandle.h"
 
 namespace org::apache::nifi::minifi::wel {
@@ -141,9 +142,7 @@ std::string WindowsEventLogMetadataImpl::getEventData(EVT_FORMAT_MESSAGE_FLAGS f
   if (EvtFormatMessageKeyword == flags) {
     buffer.get()[num_chars_used - 1] = L'\0';
   }
-  std::wstring str(buffer.get());
-  event_data = std::string(str.begin(), str.end());
-  return event_data;
+  return utils::to_string(std::wstring{buffer.get()});
 }
 
 nonstd::expected<std::string, std::error_code> WindowsEventLogHandler::getEventMessage(EVT_HANDLE eventHandle) const {
@@ -156,7 +155,7 @@ nonstd::expected<std::string, std::error_code> WindowsEventLogHandler::getEventM
 
   bool evt_format_succeeded = EvtFormatMessage(metadata_provider_.get(), eventHandle, 0, 0, nullptr, EvtFormatMessageEvent, num_chars_in_buffer, buffer.get(), &num_chars_used);
   if (evt_format_succeeded)
-    return to_string(buffer.get());
+    return utils::to_string(std::wstring{buffer.get()});
 
   DWORD status = GetLastError();
 
@@ -170,7 +169,7 @@ nonstd::expected<std::string, std::error_code> WindowsEventLogHandler::getEventM
   if (EvtFormatMessage(metadata_provider_.get(), eventHandle, 0, 0, nullptr,
                        EvtFormatMessageEvent, num_chars_in_buffer,
                        buffer.get(), &num_chars_used))
-    return to_string(buffer.get());
+    return utils::to_string(std::wstring{buffer.get()});
   return nonstd::make_unexpected(utils::OsUtils::windowsErrorToErrorCode(GetLastError()));
 }
 
