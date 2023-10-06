@@ -38,5 +38,5 @@ add_library(minifi-rocksdb-repos SHARED ${SOURCES})
 target_link_libraries(minifi-rocksdb-repos ${LIBMINIFI} Threads::Threads)
 target_link_libraries(minifi-rocksdb-repos RocksDB::RocksDB)
 
-register_extension(minifi-rocksdb-repos "ROCKSDB REPOS" ROCKSDB-REPOS "This Enables persistent provenance, flowfile, and content repositories using RocksDB" "${TEST_DIR}/rocksdb-tests")
+register_extension(minifi-rocksdb-repos "ROCKSDB REPOS" ROCKSDB-REPOS "This Enables persistent provenance, flowfile, and content repositories using RocksDB" "extensions/rocksdb-repos/tests")
 register_extension_linter(minifi-rocksdb-repos-linter)

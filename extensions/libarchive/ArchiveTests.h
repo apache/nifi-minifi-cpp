@@ -50,11 +50,11 @@ typedef struct {
     FN_VEC_T order;
 } OrderedTestArchive;
 
-TAE_MAP_T build_test_archive_map(int, const char**, const char**);
+TAE_MAP_T build_test_archive_map(int, const char* const*, const char* const*);
 
-FN_VEC_T build_test_archive_order(int, const char**);
+FN_VEC_T build_test_archive_order(int, const char* const*);
 
-OrderedTestArchive build_ordered_test_archive(int, const char**, const char**);
+OrderedTestArchive build_ordered_test_archive(int, const char* const*, const char* const*);
 
 void build_test_archive(const std::filesystem::path&, const TAE_MAP_T& entries, FN_VEC_T order = FN_VEC_T());
 void build_test_archive(const std::filesystem::path&, OrderedTestArchive&);

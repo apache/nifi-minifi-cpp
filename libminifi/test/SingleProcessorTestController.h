@@ -28,7 +28,7 @@
 #include "core/Processor.h"
 #include "range/v3/algorithm/all_of.hpp"
 
-using namespace std::chrono_literals;
+using namespace std::literals::chrono_literals;
 
 namespace org::apache::nifi::minifi::test {
 struct InputFlowFileData {

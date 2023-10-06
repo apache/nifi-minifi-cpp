@@ -35,5 +35,5 @@ target_link_libraries(minifi-sensors ${LIBMINIFI} Threads::Threads)
 add_dependencies(minifi-sensors RTIMULib::RTIMULib)
 target_link_libraries(minifi-sensors RTIMULib::RTIMULib)
 
-register_extension(minifi-sensors "SENSOR EXTENSIONS" SENSOR-EXTENSIONS "Enables the package of sensor extensions." "${TEST_DIR}/sensors-tests")
+register_extension(minifi-sensors "SENSOR EXTENSIONS" SENSOR-EXTENSIONS "Enables the package of sensor extensions." "extensions/sensors/tests")
 register_extension_linter(minifi-sensors-linter)

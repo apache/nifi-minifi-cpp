@@ -35,5 +35,5 @@ add_library(minifi-gps SHARED ${SOURCES})
 target_link_libraries(minifi-gps ${LIBMINIFI} )
 target_link_libraries(minifi-gps ${LIBGPS_LIBRARIES})
 
-register_extension(minifi-gps "GPS EXTENSIONS" GPS-EXTENSION "Enables LibGPS Functionality and the GetGPS processor." "${TEST_DIR}/gps-tests")
+register_extension(minifi-gps "GPS EXTENSIONS" GPS-EXTENSION "Enables LibGPS Functionality and the GetGPS processor." "extensions/gps/tests")
 register_extension_linter(minifi-gps-linter)
