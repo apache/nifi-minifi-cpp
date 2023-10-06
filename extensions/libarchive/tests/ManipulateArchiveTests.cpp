@@ -36,8 +36,8 @@
 
 constexpr const char* TEST_ARCHIVE_NAME = "manipulate_test_archive.tar";
 const int NUM_FILES = 3;
-std::array<const char*, NUM_FILES> FILE_NAMES = {"first", "middle", "last"};
-std::array<const char*, NUM_FILES> FILE_CONTENT = {"Test file 1\n", "Test file 2\n", "Test file 3\n"};
+constexpr std::array<const char*, NUM_FILES> FILE_NAMES = {"first", "middle", "last"};
+constexpr std::array<const char*, NUM_FILES> FILE_CONTENT = {"Test file 1\n", "Test file 2\n", "Test file 3\n"};
 
 const char* MODIFY_SRC = FILE_NAMES[0];
 const char* ORDER_ANCHOR = FILE_NAMES[1];
