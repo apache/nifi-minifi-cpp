@@ -117,19 +117,37 @@ class JoltTransformJSON : public core::Processor {
     };
 
     class Template {
-      Template() = default;
      public:
+      Template(std::vector<std::string> frags, std::vector<std::pair<size_t, size_t>> refs) : fragments(std::move(frags)), references(std::move(refs)) {
+        gsl_Expects(fragments.size() == references.size() + 1);  // implies that fragments is non-empty
+        full = fragments.front();
+        for (size_t idx = 0; idx < references.size(); ++idx) {
+          full
+            .append("&(")
+            .append(std::to_string(references[idx].first))
+            .append(",")
+            .append(std::to_string(references[idx].second))
+            .append(")")
+            .append(fragments[idx]);
+        }
+      }
       enum class Type {
         MEMBER,
         INDEX
       };
 
+      // checks if the string is definitely a template (i.e. has an unescaped '&' char)
+      static bool check(std::string_view str);
       static nonstd::expected<Template, std::string> parse(std::string_view str, const std::string& escapables);
 
       std::string eval(const Context& ctx) const;
 
       auto operator<=>(const Template& other) const {
         return full <=> other.full;
+      }
+
+      auto operator==(const Template& other) const {
+        return full == other.full;
       }
 
       std::vector<std::string> fragments;
@@ -140,14 +158,29 @@ class JoltTransformJSON : public core::Processor {
     };
 
     class Regex {
-      Regex() = default;
      public:
+      explicit Regex(std::vector<std::string> frags) : fragments(std::move(frags)) {
+        gsl_Expects(!fragments.empty());
+        full = utils::StringUtils::join("*", fragments);
+      }
+      // checks if the string is definitely a regex (i.e. has an unescaped '*' char)
+      static bool check(std::string_view str);
       static nonstd::expected<Regex, std::string> parse(std::string_view str, const std::string& escapables);
 
       std::optional<std::vector<std::string_view>> match(std::string_view str) const;
 
       auto operator<=>(const Regex& other) const {
         return full <=> other.full;
+      }
+
+      auto operator==(const Template& other) const {
+        return full == other.full;
+      }
+
+      // the size of the match vector on a successful match
+      // e.g. "A*B*" matching on "A12B34" will return ["A12B34", "12", "34"]
+      size_t size() const {
+        return fragments.size();
       }
 
      private:
@@ -160,7 +193,10 @@ class JoltTransformJSON : public core::Processor {
     struct Pattern {
       using Value = std::variant<std::unique_ptr<Pattern>, Destinations>;
 
-      nonstd::expected<void, std::string> process(const Context& ctx, const rapidjson::Value& input, rapidjson::Document& output) const;
+      static void process(const Value& val, const Context& ctx, const rapidjson::Value& input, rapidjson::Document& output);
+
+      void process(const Context& ctx, const rapidjson::Value& input, rapidjson::Document& output) const;
+      void processMember(const Context& ctx, const rapidjson::Value::Member& member, rapidjson::Document& output) const;
 
       std::map<std::string, Value> literals;
       std::map<Template, Value> templates;  // '&'
@@ -171,7 +207,7 @@ class JoltTransformJSON : public core::Processor {
 
     static nonstd::expected<Spec, std::string> parse(std::string_view str);
 
-    nonstd::expected<void, std::string> process(const rapidjson::Value& input, rapidjson::Document& output) const;
+    nonstd::expected<rapidjson::Document, std::string> process(const rapidjson::Value& input) const;
 
    private:
     explicit Spec(std::unique_ptr<Pattern> value): value_(std::move(value)) {}
@@ -182,6 +218,7 @@ class JoltTransformJSON : public core::Processor {
  private:
   jolt_transform_json::JoltTransform transform_;
   std::optional<Spec> spec_;
+  std::shared_ptr<core::logging::Logger> logger_ = core::logging::LoggerFactory<JoltTransformJSON>::getLogger(uuid_);
 };
 
 }  // namespace org::apache::nifi::minifi::processors

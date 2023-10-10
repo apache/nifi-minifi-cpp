@@ -48,23 +48,45 @@ using namespace std::literals::chrono_literals;
 
 namespace org::apache::nifi::minifi::test::utils {
 
+struct JsonContext {
+  const JsonContext* parent{nullptr};
+  std::string_view member;
+
+  std::string path() const {
+    if (!parent) {
+      return "/";
+    }
+    return minifi::utils::StringUtils::join_pack(parent->path(), member, "/");
+  }
+};
+
+#define REQUIRE_WARN(cond, msg) if (!(cond)) {WARN(msg); REQUIRE(cond);}
+
 // carries out a loose match on objects, i.e. it doesn't matter if the
 // actual object has extra fields than expected
-void matchJSON(const rapidjson::Value& actual, const rapidjson::Value& expected) {
+void matchJSON(const JsonContext& ctx, const rapidjson::Value& actual, const rapidjson::Value& expected, bool strict = false) {
   if (expected.IsObject()) {
-    REQUIRE(actual.IsObject());
+    REQUIRE_WARN(actual.IsObject(), fmt::format("Expected object at {}", ctx.path()));
     for (const auto& expected_member : expected.GetObject()) {
-      REQUIRE(actual.HasMember(expected_member.name));
-      matchJSON(actual[expected_member.name], expected_member.value);
+      std::string_view name{expected_member.name.GetString(), expected_member.name.GetStringLength()};
+      REQUIRE_WARN(actual.HasMember(expected_member.name), fmt::format("Expected member '{}' at {}", name, ctx.path()));
+      matchJSON(JsonContext{.parent = &ctx, .member = name}, actual[expected_member.name], expected_member.value, strict);
+    }
+    if (strict) {
+      for (const auto& actual_member : actual.GetObject()) {
+        std::string_view name{actual_member.name.GetString(), actual_member.name.GetStringLength()};
+        REQUIRE_WARN(expected.HasMember(actual_member.name), fmt::format("Did not expect member '{}' at {}", name, ctx.path()));
+        matchJSON(JsonContext{.parent = &ctx, .member = name}, actual_member.value, expected[actual_member.name], strict);
+      }
     }
   } else if (expected.IsArray()) {
-    REQUIRE(actual.IsArray());
-    REQUIRE(actual.Size() == expected.Size());
+    REQUIRE_WARN(actual.IsArray(), fmt::format("Expected array at {}", ctx.path()));
+    REQUIRE_WARN(actual.Size() == expected.Size(), fmt::format("Expected array of length {}, got {} at", expected.Size(), actual.Size(), ctx.path()));
     for (rapidjson::SizeType idx{0}; idx < expected.Size(); ++idx) {
-      matchJSON(actual[idx], expected[idx]);
+      matchJSON(JsonContext{.parent = &ctx, .member = std::to_string(idx)}, actual[idx], expected[idx], strict);
     }
   } else {
-    REQUIRE(actual == expected);
+    REQUIRE_WARN(actual == expected, fmt::format("Values are not equal at {}", ctx.path()));
   }
 }
 
@@ -73,11 +95,7 @@ void verifyJSON(const std::string& actual_str, const std::string& expected_str, 
   REQUIRE_FALSE(actual.Parse(actual_str.c_str()).HasParseError());
   REQUIRE_FALSE(expected.Parse(expected_str.c_str()).HasParseError());
 
-  if (strict) {
-    REQUIRE(actual == expected);
-  } else {
-    matchJSON(actual, expected);
-  }
+  matchJSON(JsonContext{}, actual, expected, strict);
 }
 
 template<typename T>
