@@ -72,18 +72,18 @@ bool AsioSocketConnection::connectTcpSocketOverSsl() {
   asio::error_code err;
   asio::ip::tcp::resolver::results_type endpoints = resolver.resolve(socket_data_.host, std::to_string(socket_data_.port), err);
   if (err) {
-    logger_->log_error("Resolving host '{}' on port '{}' failed with the following message: '{}'", socket_data_.host, std::to_string(socket_data_.port), err.message());
+    logger_->log_error("Resolving host '{}' on port '{}' failed with the following message: '{}'", socket_data_.host, socket_data_.port, err.message());
     return false;
   }
 
   asio::connect(socket.lowest_layer(), endpoints, err);
   if (err) {
-    logger_->log_error("Connecting to host '{}' on port '{}' failed with the following message: '{}'", socket_data_.host, std::to_string(socket_data_.port), err.message());
+    logger_->log_error("Connecting to host '{}' on port '{}' failed with the following message: '{}'", socket_data_.host, socket_data_.port, err.message());
     return false;
   }
   socket.handshake(asio::ssl::stream_base::client, err);
   if (err) {
-    logger_->log_error("SSL handshake failed while connecting to host '{}' on port '{}' with the following message: '{}'", socket_data_.host, std::to_string(socket_data_.port), err.message());
+    logger_->log_error("SSL handshake failed while connecting to host '{}' on port '{}' with the following message: '{}'", socket_data_.host, socket_data_.port, err.message());
     return false;
   }
   stream_ = std::make_unique<io::AsioStream<asio::ssl::stream<asio::ip::tcp::socket>>>(std::move(socket));
@@ -101,13 +101,13 @@ bool AsioSocketConnection::connectTcpSocket() {
   asio::error_code err;
   asio::ip::tcp::resolver::results_type endpoints = resolver.resolve(socket_data_.host, std::to_string(socket_data_.port));
   if (err) {
-    logger_->log_error("Resolving host '{}' on port '{}' failed with the following message: '{}'", socket_data_.host, std::to_string(socket_data_.port), err.message());
+    logger_->log_error("Resolving host '{}' on port '{}' failed with the following message: '{}'", socket_data_.host, socket_data_.port, err.message());
     return false;
   }
 
   asio::connect(socket, endpoints, err);
   if (err) {
-    logger_->log_error("Connecting to host '{}' on port '{}' failed with the following message: '{}'", socket_data_.host, std::to_string(socket_data_.port), err.message());
+    logger_->log_error("Connecting to host '{}' on port '{}' failed with the following message: '{}'", socket_data_.host, socket_data_.port, err.message());
     return false;
   }
   stream_ = std::make_unique<io::AsioStream<asio::ip::tcp::socket>>(std::move(socket));

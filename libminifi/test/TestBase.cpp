@@ -59,7 +59,7 @@ std::shared_ptr<LogTestController> LogTestController::getInstance(const std::sha
 
 void LogTestController::setLevel(std::string_view name, spdlog::level::level_enum level) {
   const auto levelView(spdlog::level::to_string_view(level));
-  logger_->log_info("Setting log level for {} to {}", std::string(name), std::string(levelView.begin(), levelView.end()));
+  logger_->log_info("Setting log level for {} to {}", name, spdlog::level::to_string_view(level));
   std::string adjusted_name{name};
   const std::string clazz = "class ";
   auto haz_clazz = name.find(clazz);

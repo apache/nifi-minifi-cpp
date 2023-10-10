@@ -84,7 +84,7 @@ inline LOG_LEVEL mapFromSpdLogLevel(spdlog::level::level_enum level) {
     case spdlog::level::err: return LOG_LEVEL::err;
     case spdlog::level::critical: return LOG_LEVEL::critical;
     case spdlog::level::off: return LOG_LEVEL::off;
-    case spdlog::level::n_levels: ;  // fallthrough
+    case spdlog::level::n_levels: [[fallthrough]];
   }
   throw std::invalid_argument(fmt::format("Invalid spdlog::level::level_enum {}", magic_enum::enum_underlying(level)));
 }
@@ -96,29 +96,6 @@ class BaseLogger {
   virtual void log_string(LOG_LEVEL level, std::string str) = 0;
   virtual bool should_log(LOG_LEVEL level) = 0;
   [[nodiscard]] virtual LOG_LEVEL level() const = 0;
-};
-
-class LogBuilder {
- public:
-  LogBuilder(BaseLogger *l, LOG_LEVEL level);
-
-  ~LogBuilder();
-
-  void setIgnore();
-
-  void log_string(LOG_LEVEL log_level) const;
-
-  template<typename T>
-  LogBuilder &operator<<(const T &o) {
-    if (!ignore)
-      str << o;
-    return *this;
-  }
-
-  bool ignore;
-  BaseLogger *ptr;
-  std::stringstream str;
-  LOG_LEVEL level;
 };
 
 const auto inline map_args = utils::overloaded {
@@ -175,7 +152,7 @@ class Logger : public BaseLogger {
 
   bool should_log(LOG_LEVEL level) override;
   void log_string(LOG_LEVEL level, std::string str) override;
-  LOG_LEVEL level() const override;
+  [[nodiscard]] LOG_LEVEL level() const override;
 
   virtual std::optional<std::string> get_id() = 0;
 
