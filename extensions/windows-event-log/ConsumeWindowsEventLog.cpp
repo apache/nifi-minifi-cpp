@@ -45,7 +45,6 @@
 #include "core/Resource.h"
 #include "Bookmark.h"
 #include "utils/Deleters.h"
-#include "utils/UnicodeConversion.h"
 #include "logging/LoggerConfiguration.h"
 
 #include "utils/gsl.h"

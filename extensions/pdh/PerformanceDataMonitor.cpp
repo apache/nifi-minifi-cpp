@@ -227,7 +227,7 @@ void PerformanceDataMonitor::addCountersFromPredefinedGroupsProperty(const std::
     } else if (group == "Process") {
       add_process_related_counters(resource_consumption_counters_);
     } else {
-      logger_->log_error((group + " is not a valid predefined group for PerformanceDataMonitor").c_str());
+      logger_->log_error("{} is not a valid predefined group for PerformanceDataMonitor", group);
     }
   }
 }

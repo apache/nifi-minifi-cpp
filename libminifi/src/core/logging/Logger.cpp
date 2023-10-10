@@ -38,28 +38,6 @@ void LoggerControl::setEnabled(bool status) {
 
 BaseLogger::~BaseLogger() = default;
 
-LogBuilder::LogBuilder(BaseLogger *l, LOG_LEVEL level)
-    : ignore(false),
-      ptr(l),
-      level(level) {
-  if (!l->should_log(level)) {
-    setIgnore();
-  }
-}
-
-LogBuilder::~LogBuilder() {
-  if (!ignore)
-    log_string(level);
-}
-
-void LogBuilder::setIgnore() {
-  ignore = true;
-}
-
-void LogBuilder::log_string(LOG_LEVEL log_level) const {
-  ptr->log_string(log_level, str.str());
-}
-
 
 bool Logger::should_log(LOG_LEVEL level) {
   if (controller_ && !controller_->is_enabled())

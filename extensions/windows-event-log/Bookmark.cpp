@@ -24,6 +24,7 @@
 #include <fstream>
 
 #include "utils/file/FileUtils.h"
+#include "utils/OsUtils.h"
 #include "utils/UnicodeConversion.h"
 
 namespace org::apache::nifi::minifi::processors {

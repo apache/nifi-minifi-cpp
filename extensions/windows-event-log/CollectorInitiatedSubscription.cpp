@@ -34,6 +34,7 @@
 #include "core/Resource.h"
 #include "utils/gsl.h"
 #include "utils/OptionalUtils.h"
+#include "utils/OsUtils.h"
 #include "utils/UnicodeConversion.h"
 
 #pragma comment(lib, "wevtapi.lib")
@@ -475,7 +476,7 @@ bool CollectorInitiatedSubscription::subscribe(const std::shared_ptr<core::Proce
       if (ERROR_EVT_QUERY_RESULT_STALE == reinterpret_cast<intptr_t>(hEvent)) {
         logger->log_error("Received missing event notification. Consider triggering processor more frequently or increasing queue size.");
       } else {
-        logger->log_error("Received the following Win32 error: {:#x}", hEvent);
+        logger->log_error("Received the following Win32 error: {:#x}", reinterpret_cast<intptr_t>(hEvent));
       }
     } else if (action == EvtSubscribeActionDeliver) {
       DWORD size = 0;
