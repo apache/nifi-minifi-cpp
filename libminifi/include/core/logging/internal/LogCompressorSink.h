@@ -33,13 +33,7 @@
 
 class LoggerTestAccessor;
 
-namespace org {
-namespace apache {
-namespace nifi {
-namespace minifi {
-namespace core {
-namespace logging {
-namespace internal {
+namespace org::apache::nifi::minifi::core::logging::internal {
 
 struct LogQueueSize {
   size_t max_total_size;
@@ -54,7 +48,7 @@ class LogCompressorSink : public spdlog::sinks::base_sink<std::mutex> {
   void flush_() override;
 
  public:
-  explicit LogCompressorSink(LogQueueSize cache_size, LogQueueSize compressed_size, std::shared_ptr<logging::Logger> logger);
+  LogCompressorSink(LogQueueSize cache_size, LogQueueSize compressed_size, const std::shared_ptr<logging::Logger>& logger);
   ~LogCompressorSink() override;
 
   template<class Rep, class Period>
@@ -107,6 +101,7 @@ class LogCompressorSink : public spdlog::sinks::base_sink<std::mutex> {
 
   std::atomic<bool> running_{true};
   std::thread compression_thread_;
+  std::mutex compress_mutex_;
 
   utils::StagingQueue<LogBuffer> cached_logs_;
   utils::StagingQueue<ActiveCompressor, ActiveCompressor::Allocator> compressed_logs_;
@@ -114,10 +109,4 @@ class LogCompressorSink : public spdlog::sinks::base_sink<std::mutex> {
   std::shared_ptr<logging::Logger> compressor_logger_;
 };
 
-}  // namespace internal
-}  // namespace logging
-}  // namespace core
-}  // namespace minifi
-}  // namespace nifi
-}  // namespace apache
-}  // namespace org
+}  // namespace org::apache::nifi::minifi::core::logging::internal
