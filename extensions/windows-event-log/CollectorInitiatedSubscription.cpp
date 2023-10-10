@@ -34,7 +34,7 @@
 #include "core/Resource.h"
 #include "utils/gsl.h"
 #include "utils/OptionalUtils.h"
-#include "utils/OsUtils.h"
+#include "utils/UnicodeConversion.h"
 
 #pragma comment(lib, "wevtapi.lib")
 #pragma comment(lib, "Wecapi.lib")
@@ -275,7 +275,7 @@ bool CollectorInitiatedSubscription::checkSubscriptionRuntimeStatus() {
     const auto lastError = vProperty->UInt32Val;
 
     if (lastError == 0 && (runtimeStatus == EcRuntimeStatusActiveStatusActive || runtimeStatus == EcRuntimeStatusActiveStatusTrying)) {
-      logger_->log_info("Subscription '{}': status '{}', no error.", utils::OsUtils::wideStringToString(subscription_name_), utils::OsUtils::wideStringToString(strRuntimeStatus));
+      logger_->log_info("Subscription '{}': status '{}', no error.", utils::to_string(subscription_name_), utils::to_string(strRuntimeStatus));
       return true;
     }
 
@@ -295,9 +295,9 @@ bool CollectorInitiatedSubscription::checkSubscriptionRuntimeStatus() {
     }
 
     logger_->log_error("Runtime status: {}, last error: {}, last error message: {}",
-        utils::OsUtils::wideStringToString(strRuntimeStatus),
+        utils::to_string(strRuntimeStatus),
         lastError,
-        utils::OsUtils::wideStringToString(lastErrorMessage));
+        utils::to_string(lastErrorMessage));
 
     return false;
   }

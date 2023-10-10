@@ -50,6 +50,7 @@
 
 #include "utils/gsl.h"
 #include "utils/OsUtils.h"
+#include "utils/UnicodeConversion.h"
 #include "utils/ProcessorConfigUtils.h"
 
 #pragma comment(lib, "wevtapi.lib")
@@ -286,7 +287,7 @@ void ConsumeWindowsEventLog::onTrigger(const std::shared_ptr<core::ProcessContex
     return;
   }
 
-  logger_->log_trace("Retrieved results in Channel: {} with Query: {}", utils::OsUtils::wideStringToString(path_.wstr()), utils::OsUtils::wideStringToString(wstr_query_));
+  logger_->log_trace("Retrieved results in Channel: {} with Query: {}", utils::to_string(path_.wstr()), utils::to_string(wstr_query_));
 
   auto bookmark_handle = bookmark_->getBookmarkHandleFromXML();
   if (!bookmark_handle) {

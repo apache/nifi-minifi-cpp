@@ -24,7 +24,6 @@
 #include <fstream>
 
 #include "utils/file/FileUtils.h"
-#include "utils/OsUtils.h"
 #include "utils/UnicodeConversion.h"
 
 namespace org::apache::nifi::minifi::processors {
@@ -192,7 +191,7 @@ bool Bookmark::getBookmarkXmlFromFile(std::wstring& bookmarkXml) {
   // '!' should be at the end of bookmark.
   auto pos = bookmarkXml.find(L'!');
   if (std::wstring::npos == pos) {
-    logger_->log_error("No '!' in bookmarXml '{}'", utils::OsUtils::wideStringToString(bookmarkXml));
+    logger_->log_error("No '!' in bookmarXml '{}'", utils::to_string(bookmarkXml));
     bookmarkXml.clear();
     return false;
   }
