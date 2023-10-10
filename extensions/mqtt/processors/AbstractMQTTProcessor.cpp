@@ -54,12 +54,12 @@ void AbstractMQTTProcessor::onSchedule(const std::shared_ptr<core::ProcessContex
   if (const auto keep_alive_interval = context->getProperty(KeepAliveInterval) | utils::andThen(&core::TimePeriodValue::fromString)) {
     keep_alive_interval_ = std::chrono::duration_cast<std::chrono::seconds>(keep_alive_interval->getMilliseconds());
   }
-  logger_->log_debug("AbstractMQTTProcessor: KeepAliveInterval [{}] s", int64_t{keep_alive_interval_.count()});
+  logger_->log_debug("AbstractMQTTProcessor: KeepAliveInterval [{}]", keep_alive_interval_);
 
   if (const auto connection_timeout = context->getProperty(ConnectionTimeout) | utils::andThen(&core::TimePeriodValue::fromString)) {
     connection_timeout_ = std::chrono::duration_cast<std::chrono::seconds>(connection_timeout->getMilliseconds());
   }
-  logger_->log_debug("AbstractMQTTProcessor: ConnectionTimeout [{}] s", int64_t{connection_timeout_.count()});
+  logger_->log_debug("AbstractMQTTProcessor: ConnectionTimeout [{}]", connection_timeout_);
 
   qos_ = utils::parseEnumProperty<mqtt::MqttQoS>(*context, QoS);
   logger_->log_debug("AbstractMQTTProcessor: QoS [{}]", static_cast<uint8_t>(qos_));

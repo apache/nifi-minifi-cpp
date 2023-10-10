@@ -54,7 +54,7 @@ void ExecuteProcess::onSchedule(core::ProcessContext* context, core::ProcessSess
   }
   if (auto batch_duration = context->getProperty<core::TimePeriodValue>(BatchDuration)) {
     batch_duration_ = batch_duration->getMilliseconds();
-    logger_->log_debug("Setting batch duration to {} milliseconds", batch_duration_.count());
+    logger_->log_debug("Setting batch duration to {}", batch_duration_);
   }
   if (context->getProperty(RedirectErrorStream, value)) {
     redirect_error_stream_ = org::apache::nifi::minifi::utils::StringUtils::toBool(value).value_or(false);

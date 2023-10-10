@@ -401,7 +401,7 @@ asio::awaitable<void> ControllerSocketProtocol::handleCommand(std::unique_ptr<io
       handleDescribe(*stream);
       break;
     default:
-      logger_->log_error("Unhandled C2 operation: {}", std::to_string(head));
+      logger_->log_error("Unhandled C2 operation: {}", head);
   }
 }
 

@@ -235,7 +235,7 @@ void StructuredConfiguration::parseProcessorNode(const Node& processors_node, co
 
     if (procCfg.schedulingStrategy == "TIMER_DRIVEN" || procCfg.schedulingStrategy == "EVENT_DRIVEN") {
       if (auto scheduling_period = utils::timeutils::StringToDuration<std::chrono::nanoseconds>(procCfg.schedulingPeriod)) {
-        logger_->log_debug("convert: parseProcessorNode: schedulingPeriod => [{}] ns", scheduling_period->count());
+        logger_->log_debug("convert: parseProcessorNode: schedulingPeriod => [{}]", scheduling_period);
         processor->setSchedulingPeriod(*scheduling_period);
       }
     } else {

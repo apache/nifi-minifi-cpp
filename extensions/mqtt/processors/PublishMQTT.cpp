@@ -54,7 +54,7 @@ void PublishMQTT::readProperties(const std::shared_ptr<core::ProcessContext>& co
 
   if (const auto message_expiry_interval = context->getProperty(MessageExpiryInterval) | utils::andThen(&core::TimePeriodValue::fromString)) {
     message_expiry_interval_ = std::chrono::duration_cast<std::chrono::seconds>(message_expiry_interval->getMilliseconds());
-    logger_->log_debug("PublishMQTT: MessageExpiryInterval [{}] s", int64_t{message_expiry_interval_->count()});
+    logger_->log_debug("PublishMQTT: MessageExpiryInterval [{}]", message_expiry_interval_);
   }
 
   in_flight_message_counter_.setEnabled(mqtt_version_ == mqtt::MqttVersions::V_5_0 && qos_ != mqtt::MqttQoS::LEVEL_0);

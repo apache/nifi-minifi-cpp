@@ -59,7 +59,7 @@ void LogMetricsPublisher::readLoggingInterval() {
   if (auto logging_interval_str = configuration_->get(Configure::nifi_metrics_publisher_log_metrics_logging_interval)) {
     if (auto logging_interval = minifi::core::TimePeriodValue::fromString(logging_interval_str.value())) {
       logging_interval_ = logging_interval->getMilliseconds();
-      logger_->log_info("Metric logging interval is set to {} milliseconds", int64_t{logging_interval_.count()});
+      logger_->log_info("Metric logging interval is set to {}", logging_interval_);
       return;
     } else {
       logger_->log_error("Configured logging interval '{}' is invalid!", logging_interval_str.value());

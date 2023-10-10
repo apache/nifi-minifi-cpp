@@ -84,7 +84,7 @@ inline LOG_LEVEL mapFromSpdLogLevel(spdlog::level::level_enum level) {
     case spdlog::level::err: return LOG_LEVEL::err;
     case spdlog::level::critical: return LOG_LEVEL::critical;
     case spdlog::level::off: return LOG_LEVEL::off;
-    case spdlog::level::n_levels: return LOG_LEVEL::off;
+    case spdlog::level::n_levels: ;  // fallthrough
   }
   throw std::invalid_argument(fmt::format("Invalid spdlog::level::level_enum {}", magic_enum::enum_underlying(level)));
 }

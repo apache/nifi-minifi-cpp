@@ -548,7 +548,7 @@ std::vector<TailState> TailFile::findAllRotatedFiles(const TailState &state) con
     if (file_name != state.file_name_ && utils::regexMatch(file_name.string(), pattern_regex)) {
       auto full_file_name = path / file_name;
       TailStateWithMtime::TimePoint mtime{utils::file::last_write_time_point(full_file_name)};
-      logger_->log_debug("File {} with mtime {} matches rolling filename pattern {}, so we are reading it", file_name, int64_t{mtime.time_since_epoch().count()}, pattern);
+      logger_->log_debug("File {} with mtime {} matches rolling filename pattern {}, so we are reading it", file_name, mtime.time_since_epoch(), pattern);
       matched_files_with_mtime.emplace_back(TailState{path, file_name}, mtime);
     }
     return true;
@@ -570,7 +570,7 @@ std::vector<TailState> TailFile::findRotatedFilesAfterLastReadTime(const TailSta
     if (file_name != state.file_name_ && utils::regexMatch(file_name.string(), pattern_regex)) {
       auto full_file_name = path / file_name;
       TailStateWithMtime::TimePoint mtime{utils::file::last_write_time_point(full_file_name)};
-      logger_->log_debug("File {} with mtime {} matches rolling filename pattern {}", file_name, int64_t{mtime.time_since_epoch().count()}, pattern);
+      logger_->log_debug("File {} with mtime {} matches rolling filename pattern {}", file_name, mtime.time_since_epoch(), pattern);
       if (mtime >= std::chrono::time_point_cast<std::chrono::seconds>(state.last_read_time_)) {
         logger_->log_debug("File {} has mtime >= last read time, so we are going to read it", file_name);
         matched_files_with_mtime.emplace_back(TailState{path, file_name}, mtime);

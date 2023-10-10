@@ -190,7 +190,7 @@ std::chrono::milliseconds StructuredConnectionParser::getFlowFileExpiration() co
     logger_->log_debug("Parsing failure for flowfile expiration duration");
     expiration_duration = 0ms;
   }
-  logger_->log_debug("parseConnection: flowfile expiration => [{}]", expiration_duration->count());
+  logger_->log_debug("parseConnection: flowfile expiration => [{}]", expiration_duration);
   return *expiration_duration;
 }
 
