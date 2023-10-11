@@ -167,7 +167,7 @@ class DataTransferSpeedValue : public TransformableValue, public state::response
     if (lower_case_input.ends_with("/s")) {
       return lower_case_input.substr(0, lower_case_input.size() - 2);
     }
-    throw utils::internal::ParseException("Couldn't parse DataTransferSpeedValue, no valid suffix (/s, /sec, ps) found!");
+    throw utils::internal::ParseException("Couldn't parse DataTransferSpeedValue, '/s' suffix was not found!");
   }
 
   template<std::integral T>

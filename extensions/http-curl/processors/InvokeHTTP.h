@@ -285,8 +285,8 @@ class InvokeHTTP : public core::Processor {
   bool penalize_no_retry_{false};
   bool send_message_body_{true};
   bool send_date_header_{true};
-  uint64_t maximum_upload_speed_{0};
-  uint64_t maximum_download_speed_{0};
+  core::DataTransferSpeedValue maximum_upload_speed_{0};
+  core::DataTransferSpeedValue maximum_download_speed_{0};
 
   invoke_http::InvalidHTTPHeaderFieldHandlingOption invalid_http_header_field_handling_strategy_{};
 

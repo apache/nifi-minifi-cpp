@@ -246,15 +246,15 @@ class MiNiFi_integration_test:
         output_validator.set_output_dir(self.file_system_observer.get_output_dir())
         self.__check_output(timeout_seconds, output_validator, max(1, num_flowfiles))
 
-    def check_for_num_file_range_generated_after_timeout(self, min_files: int, max_files: int, wait_time_in_seconds: int):
+    def check_for_num_file_range_generated_after_wait(self, min_files: int, max_files: int, wait_time_in_seconds: int):
         output_validator = NumFileRangeValidator(min_files, max_files)
         output_validator.set_output_dir(self.file_system_observer.get_output_dir())
         self.__check_output_after_time_period(wait_time_in_seconds, output_validator)
 
-    def check_for_num_file_range_generated(self, min_files: int, max_files: int, wait_time_in_seconds: int):
+    def check_for_num_file_range_generated_with_timeout(self, min_files: int, max_files: int, timeout_in_seconds: int):
         output_validator = NumFileRangeValidator(min_files, max_files)
         output_validator.set_output_dir(self.file_system_observer.get_output_dir())
-        self.__check_output_over_time_period(wait_time_in_seconds, output_validator)
+        self.__check_output_over_time_period(timeout_in_seconds, output_validator)
 
     def check_for_num_file_range_and_min_size_generated(self, min_files: int, max_files: int, min_size: int, wait_time_in_seconds: int):
         output_validator = NumFileRangeAndFileSizeValidator(min_files, max_files, min_size)

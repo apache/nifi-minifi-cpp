@@ -143,8 +143,8 @@ std::unique_ptr<minifi::extensions::curl::HTTPClient> InvokeHTTP::createHTTPClie
   setupClientPeerVerification(*client, context);
   setupClientContentType(*client, context, send_message_body_);
   setupClientTransferEncoding(*client, use_chunked_encoding_);
-  client->setMaximumUploadSpeed(maximum_upload_speed_);
-  client->setMaximumDownloadSpeed(maximum_download_speed_);
+  client->setMaximumUploadSpeed(maximum_upload_speed_.getValue());
+  client->setMaximumDownloadSpeed(maximum_download_speed_.getValue());
 
   return client;
 }

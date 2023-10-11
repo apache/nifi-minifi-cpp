@@ -98,7 +98,7 @@ bool integerValidatedProperty(const core::PropertyValidator* const validator) {
 }
 
 std::optional<int64_t> stringToDataSize(std::string_view input) {
-  int64_t value;
+  int64_t value = 0;
   std::string unit_str;
   if (!utils::StringUtils::splitToValueAndUnit(input, value, unit_str)) {
     return std::nullopt;
