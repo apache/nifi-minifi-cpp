@@ -323,7 +323,7 @@ class DataTransferSpeedPropertyType : public PropertyType {
  public:
   constexpr ~DataTransferSpeedPropertyType() override {}  // NOLINT see comment at parent
 
-  [[nodiscard]] std::string_view getValidatorName() const override { return "DATA_SIZE_VALIDATOR"; }
+  [[nodiscard]] std::string_view getValidatorName() const override { return "DATA_TRANSFER_SPEED_VALIDATOR"; }
 
   [[nodiscard]] PropertyValue parse(std::string_view input) const override;
 

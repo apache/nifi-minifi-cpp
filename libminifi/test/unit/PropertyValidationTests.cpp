@@ -311,13 +311,10 @@ TEST_CASE("Validating data transfer speed property") {
   DataTransferSpeedValue data_transfer_speed_value;
   REQUIRE(component.getProperty(property.getName(), data_transfer_speed_value));
   CHECK(data_transfer_speed_value.getValue() == 10_KiB);
-  REQUIRE_NOTHROW(component.setProperty(property.getName(), "20 MB/sec"));
+  REQUIRE_NOTHROW(component.setProperty(property.getName(), "20 MB/s"));
   REQUIRE(component.getProperty(property.getName(), data_transfer_speed_value));
   CHECK(data_transfer_speed_value.getValue() == 20_MiB);
-  REQUIRE_NOTHROW(component.setProperty(property.getName(), "1GBps "));
-  REQUIRE(component.getProperty(property.getName(), data_transfer_speed_value));
-  CHECK(data_transfer_speed_value.getValue() == 1_GiB);
-  REQUIRE_NOTHROW(component.setProperty(property.getName(), "1TB/SEC"));
+  REQUIRE_NOTHROW(component.setProperty(property.getName(), "1TB/S "));
   REQUIRE(component.getProperty(property.getName(), data_transfer_speed_value));
   CHECK(data_transfer_speed_value.getValue() == 1_TiB);
   REQUIRE_NOTHROW(component.setProperty(property.getName(), "1KBinvalidsuffix"));

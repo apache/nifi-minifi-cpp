@@ -164,10 +164,7 @@ class DataTransferSpeedValue : public TransformableValue, public state::response
 
   static std::string removePerSecSuffix(const std::string &input) {
     auto lower_case_input = utils::StringUtils::trim(utils::StringUtils::toLower(input));
-    if (lower_case_input.ends_with("/sec")) {
-      return lower_case_input.substr(0, lower_case_input.size() - 4);
-    }
-    if (lower_case_input.ends_with("/s") || lower_case_input.ends_with("ps")) {
+    if (lower_case_input.ends_with("/s")) {
       return lower_case_input.substr(0, lower_case_input.size() - 2);
     }
     throw utils::internal::ParseException("Couldn't parse DataTransferSpeedValue, no valid suffix (/s, /sec, ps) found!");
