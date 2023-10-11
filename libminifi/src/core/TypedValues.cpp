@@ -22,13 +22,10 @@
 #include "core/TypedValues.h"
 #include "core/logging/LoggerConfiguration.h"
 
-namespace org {
-namespace apache {
-namespace nifi {
-namespace minifi {
-namespace core {
+namespace org::apache::nifi::minifi::core {
 
 const  std::type_index DataSizeValue::type_id = typeid(uint64_t);
+const  std::type_index DataTransferSpeedValue::type_id = typeid(uint64_t);
 const  std::type_index TimePeriodValue::type_id = typeid(uint64_t);
 
 std::shared_ptr<logging::Logger>& DataSizeValue::getLogger() {
@@ -36,8 +33,4 @@ std::shared_ptr<logging::Logger>& DataSizeValue::getLogger() {
   return logger;
 }
 
-} /* namespace core */
-} /* namespace minifi */
-} /* namespace nifi */
-} /* namespace apache */
-} /* namespace org */
+}  // namespace org::apache::nifi::minifi::core

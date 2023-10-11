@@ -38,6 +38,8 @@ static inline std::shared_ptr<state::response::Value> convert(const std::shared_
       return std::make_shared<TimePeriodValue>(ref);
     } else if (std::dynamic_pointer_cast<DataSizeValue>(prior)) {
       return std::make_shared<DataSizeValue>(ref);
+    } else if (std::dynamic_pointer_cast<DataTransferSpeedValue>(prior)) {
+      return std::make_shared<DataTransferSpeedValue>(ref);
     } else {
       return std::make_shared<state::response::UInt64Value>(ref);
     }
@@ -176,6 +178,9 @@ class PropertyValue : public state::response::ValueNode {
       if (std::dynamic_pointer_cast<DataSizeValue>(value_)) {
         value_ = std::make_shared<DataSizeValue>(ref);
         type_id = DataSizeValue::type_id;
+      } else if (std::dynamic_pointer_cast<DataTransferSpeedValue>(value_)) {
+        value_ = std::make_shared<DataTransferSpeedValue>(ref);
+        type_id = DataTransferSpeedValue::type_id;
       } else if (std::dynamic_pointer_cast<TimePeriodValue>(value_)) {
         value_ = std::make_shared<TimePeriodValue>(ref);
         type_id = TimePeriodValue::type_id;
@@ -201,6 +206,7 @@ class PropertyValue : public state::response::ValueNode {
   template<typename T>
   auto operator=(const std::string &ref) -> typename std::enable_if<
   std::is_same<T, DataSizeValue >::value ||
+  std::is_same<T, DataTransferSpeedValue >::value ||
   std::is_same<T, TimePeriodValue >::value, PropertyValue&>::type {
     cached_value_validator_.invalidateCachedResult();
     return WithAssignmentGuard(ref, [&] () -> PropertyValue& {

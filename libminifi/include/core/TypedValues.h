@@ -15,8 +15,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#ifndef LIBMINIFI_INCLUDE_CORE_TYPEDVALUES_H_
-#define LIBMINIFI_INCLUDE_CORE_TYPEDVALUES_H_
+#pragma once
 
 #include <algorithm>
 #include <map>
@@ -33,11 +32,7 @@
 #include "utils/Export.h"
 #include "utils/TimeUtil.h"
 
-namespace org {
-namespace apache {
-namespace nifi {
-namespace minifi {
-namespace core {
+namespace org::apache::nifi::minifi::core {
 
 class TransformableValue {
  public:
@@ -149,10 +144,39 @@ class DataSizeValue : public TransformableValue, public state::response::UInt64V
   }
 };
 
-}  // namespace core
-}  // namespace minifi
-}  // namespace nifi
-}  // namespace apache
-}  // namespace org
+class DataTransferSpeedValue : public TransformableValue, public state::response::UInt64Value {
+ public:
+  MINIFIAPI static const std::type_index type_id;
 
-#endif  // LIBMINIFI_INCLUDE_CORE_TYPEDVALUES_H_
+  explicit DataTransferSpeedValue(const std::string &transfer_speed_string)
+      : state::response::UInt64Value(0) {
+    DataSizeValue::StringToInt<uint64_t>(removePerSecSuffix(transfer_speed_string), value);
+    string_value = transfer_speed_string;
+  }
+
+  explicit DataTransferSpeedValue(uint64_t value)
+      : state::response::UInt64Value(value) {
+  }
+
+  DataTransferSpeedValue()
+      : state::response::UInt64Value(0) {
+  }
+
+  static std::string removePerSecSuffix(const std::string &input) {
+    auto lower_case_input = utils::StringUtils::trim(utils::StringUtils::toLower(input));
+    if (lower_case_input.ends_with("/sec")) {
+      return lower_case_input.substr(0, lower_case_input.size() - 4);
+    }
+    if (lower_case_input.ends_with("/s") || lower_case_input.ends_with("ps")) {
+      return lower_case_input.substr(0, lower_case_input.size() - 2);
+    }
+    throw utils::internal::ParseException("Couldn't parse DataTransferSpeedValue, no valid suffix (/s, /sec, ps) found!");
+  }
+
+  template<std::integral T>
+  static bool StringToInt(const std::string &input, T &output) {
+    return DataSizeValue::StringToInt<uint64_t>(removePerSecSuffix(input), output);
+  }
+};
+
+}  // namespace org::apache::nifi::minifi::core

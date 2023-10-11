@@ -52,4 +52,8 @@ PropertyValue TimePeriodPropertyType::parse(std::string_view input) const {
   return PropertyValue::parse<core::TimePeriodValue>(input, *this);
 }
 
+PropertyValue DataTransferSpeedPropertyType::parse(std::string_view input) const {
+  return PropertyValue::parse<core::DataTransferSpeedValue>(input, *this);
+}
+
 }  // namespace org::apache::nifi::minifi::core

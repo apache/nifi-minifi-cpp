@@ -319,6 +319,24 @@ class TimePeriodPropertyType : public PropertyType {
   }
 };
 
+class DataTransferSpeedPropertyType : public PropertyType {
+ public:
+  constexpr ~DataTransferSpeedPropertyType() override {}  // NOLINT see comment at parent
+
+  [[nodiscard]] std::string_view getValidatorName() const override { return "DATA_SIZE_VALIDATOR"; }
+
+  [[nodiscard]] PropertyValue parse(std::string_view input) const override;
+
+  [[nodiscard]] ValidationResult validate(const std::string &subject, const std::shared_ptr<minifi::state::response::Value> &input) const override {
+    return PropertyType::_validate_internal<core::DataTransferSpeedValue>(subject, input);
+  }
+
+  [[nodiscard]] ValidationResult validate(const std::string &subject, const std::string &input) const override {
+    uint64_t out;
+    return ValidationResult{.valid = core::DataTransferSpeedValue::StringToInt(input, out), .subject = subject, .input = input};
+  }
+};
+
 namespace StandardPropertyTypes {
 inline constexpr auto INVALID_TYPE = NeverValidPropertyType{};
 inline constexpr auto INTEGER_TYPE = IntegerPropertyType{};
@@ -332,10 +350,13 @@ inline constexpr auto NON_BLANK_TYPE = NonBlankPropertyType{};
 inline constexpr auto VALID_TYPE = AlwaysValidPropertyType{};
 inline constexpr auto PORT_TYPE = PortPropertyType{};
 inline constexpr auto LISTEN_PORT_TYPE = ListenPortValidator{};
+inline constexpr auto DATA_TRANSFER_SPEED_TYPE = DataTransferSpeedPropertyType{};
 
 inline gsl::not_null<const PropertyValidator*> getValidator(const std::shared_ptr<minifi::state::response::Value>& input) {
   if (std::dynamic_pointer_cast<core::DataSizeValue>(input) != nullptr) {
     return gsl::make_not_null<const PropertyValidator*>(&DATA_SIZE_TYPE);
+  } else if (std::dynamic_pointer_cast<core::DataTransferSpeedValue>(input) != nullptr) {
+    return gsl::make_not_null<const PropertyValidator*>(&DATA_TRANSFER_SPEED_TYPE);
   } else if (std::dynamic_pointer_cast<core::TimePeriodValue>(input) != nullptr) {
     return gsl::make_not_null<const PropertyValidator*>(&TIME_PERIOD_TYPE);
   } else if (std::dynamic_pointer_cast<minifi::state::response::BoolValue>(input) != nullptr) {

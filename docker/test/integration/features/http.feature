@@ -117,7 +117,7 @@ Feature: Sending data using InvokeHTTP to a receiver using ListenHTTP
     And the "HTTP Method" property of the InvokeHTTP processor is set to "POST"
     And the "Connection Timeout" property of the InvokeHTTP processor is set to "30 s"
     And the "Read Timeout" property of the InvokeHTTP processor is set to "30 s"
-    And the "Upload Speed Limit" property of the InvokeHTTP processor is set to "800 KB"
+    And the "Upload Speed Limit" property of the InvokeHTTP processor is set to "800 KB/s"
     And the "success" relationship of the GenerateFlowFile processor is connected to the InvokeHTTP
 
     And a ListenHTTP processor with the "Listening Port" property set to "8080" in a "secondary" flow
@@ -134,7 +134,7 @@ Feature: Sending data using InvokeHTTP to a receiver using ListenHTTP
     And the "HTTP Method" property of the InvokeHTTP processor is set to "GET"
     And the "Connection Timeout" property of the InvokeHTTP processor is set to "30 s"
     And the "Read Timeout" property of the InvokeHTTP processor is set to "30 s"
-    And the "Download Speed Limit" property of the InvokeHTTP processor is set to "800 KB"
+    And the "Download Speed Limit" property of the InvokeHTTP processor is set to "800 KB/s"
     And a PutFile processor with the "Directory" property set to "/tmp/output"
     And the "response" relationship of the InvokeHTTP processor is connected to the PutFile
 

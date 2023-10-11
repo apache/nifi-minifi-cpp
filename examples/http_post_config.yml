@@ -52,7 +52,7 @@ Processors:
     FlowFiles To Log: 0
     Log Level: warn
     Log Prefix: '=== Failed HTTP request ==='
-    Maxumim Payload Line Length: 0
+    Maximum Payload Line Length: 0
 Connections:
 - name: GetFile/success/InvokeHTTP
   source id: 962790e7-ea35-4096-9362-96f527288669
