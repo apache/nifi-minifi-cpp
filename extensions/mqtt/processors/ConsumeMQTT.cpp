@@ -64,7 +64,7 @@ void ConsumeMQTT::readProperties(const std::shared_ptr<core::ProcessContext>& co
   if (const auto session_expiry_interval = context->getProperty(SessionExpiryInterval) | utils::andThen(&core::TimePeriodValue::fromString)) {
     session_expiry_interval_ = std::chrono::duration_cast<std::chrono::seconds>(session_expiry_interval->getMilliseconds());
   }
-  logger_->log_debug("ConsumeMQTT: SessionExpiryInterval [{}]", session_expiry_interval_);
+  logger_->log_debug("ConsumeMQTT: SessionExpiryInterval [{}] s", int64_t{session_expiry_interval_.count()});
 
   if (const auto value = context->getProperty(QueueBufferMaxMessage) | utils::andThen(&utils::toNumber<uint64_t>)) {
     max_queue_size_ = *value;

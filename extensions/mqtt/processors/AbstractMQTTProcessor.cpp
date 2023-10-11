@@ -54,15 +54,15 @@ void AbstractMQTTProcessor::onSchedule(const std::shared_ptr<core::ProcessContex
   if (const auto keep_alive_interval = context->getProperty(KeepAliveInterval) | utils::andThen(&core::TimePeriodValue::fromString)) {
     keep_alive_interval_ = std::chrono::duration_cast<std::chrono::seconds>(keep_alive_interval->getMilliseconds());
   }
-  logger_->log_debug("AbstractMQTTProcessor: KeepAliveInterval [{}]", keep_alive_interval_);
+  logger_->log_debug("AbstractMQTTProcessor: KeepAliveInterval [{}] s", int64_t{keep_alive_interval_.count()});
 
   if (const auto connection_timeout = context->getProperty(ConnectionTimeout) | utils::andThen(&core::TimePeriodValue::fromString)) {
     connection_timeout_ = std::chrono::duration_cast<std::chrono::seconds>(connection_timeout->getMilliseconds());
   }
-  logger_->log_debug("AbstractMQTTProcessor: ConnectionTimeout [{}]", connection_timeout_);
+  logger_->log_debug("AbstractMQTTProcessor: ConnectionTimeout [{}] s", int64_t{connection_timeout_.count()});
 
   qos_ = utils::parseEnumProperty<mqtt::MqttQoS>(*context, QoS);
-  logger_->log_debug("AbstractMQTTProcessor: QoS [{}]", static_cast<uint8_t>(qos_));
+  logger_->log_debug("AbstractMQTTProcessor: QoS [{}]", magic_enum::enum_name(qos_));
 
   if (const auto security_protocol = context->getProperty(SecurityProtocol)) {
     if (*security_protocol == MQTT_SECURITY_PROTOCOL_SSL) {
@@ -104,7 +104,7 @@ void AbstractMQTTProcessor::onSchedule(const std::shared_ptr<core::ProcessContex
     }
 
     last_will_qos_ = utils::parseEnumProperty<mqtt::MqttQoS>(*context, LastWillQoS);
-    logger_->log_debug("AbstractMQTTProcessor: Last Will QoS [{}]", static_cast<uint8_t>(last_will_qos_));
+    logger_->log_debug("AbstractMQTTProcessor: Last Will QoS [{}]", magic_enum::enum_name(last_will_qos_));
     last_will_->qos = static_cast<int>(last_will_qos_);
 
     if (const auto value = context->getProperty(LastWillRetain) | utils::andThen(&utils::StringUtils::toBool)) {
