@@ -131,10 +131,6 @@ class JoltTransformJSON : public core::Processor {
             .append(fragments[idx]);
         }
       }
-      enum class Type {
-        MEMBER,
-        INDEX
-      };
 
       // checks if the string is definitely a template (i.e. has an unescaped '&' char)
       static bool check(std::string_view str);
@@ -153,7 +149,6 @@ class JoltTransformJSON : public core::Processor {
       std::vector<std::string> fragments;
       std::vector<std::pair<size_t, size_t>> references;
 
-      Type type;
       std::string full;
     };
 
@@ -188,7 +183,13 @@ class JoltTransformJSON : public core::Processor {
       std::string full;
     };
 
-    using Destinations = std::vector<std::vector<Template>>;
+    enum class MemberType {
+      FIELD,
+      INDEX
+    };
+
+    using Destination = std::vector<std::pair<Template, MemberType>>;
+    using Destinations = std::vector<Destination>;
 
     struct Pattern {
       using Value = std::variant<std::unique_ptr<Pattern>, Destinations>;
@@ -196,7 +197,7 @@ class JoltTransformJSON : public core::Processor {
       static void process(const Value& val, const Context& ctx, const rapidjson::Value& input, rapidjson::Document& output);
 
       void process(const Context& ctx, const rapidjson::Value& input, rapidjson::Document& output) const;
-      void processMember(const Context& ctx, const rapidjson::Value::Member& member, rapidjson::Document& output) const;
+      void processMember(const Context& ctx, std::string_view key, const rapidjson::Value& member, rapidjson::Document& output) const;
 
       std::map<std::string, Value> literals;
       std::map<Template, Value> templates;  // '&'

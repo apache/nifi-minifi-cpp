@@ -116,4 +116,150 @@ TEST_CASE("Shiftr invalid reference") {
   REQUIRE(minifi::processors::JoltTransformJSON::Spec::parse(R"json({"a*": {"b*_*c": {"&(0,0)&(0,1)&(0,2)&(1)&(1,1)": "&(0,0)"}}, "b": "out3"})json").has_value());
 }
 
+TEST_CASE("Shiftr matches are correctly ordered") {
+  auto proc = std::make_shared<minifi::processors::JoltTransformJSON>("JoltProc");
+  SingleProcessorTestController controller{proc};
+  proc->setProperty(processors::JoltTransformJSON::JoltTransform, magic_enum::enum_name(processors::jolt_transform_json::JoltTransform::SHIFT));
+  proc->setProperty(processors::JoltTransformJSON::JoltSpecification, R"json(
+    {
+      "a": {
+        "a": {
+          "c": "literal",
+          "&(1,0)": "second<none>",
+          "&0": "first",
+          "*b*": "third",
+          "*a*": "fourth"
+        }
+      }
+    }
+  )json");
+
+  auto res = controller.trigger(R"(
+    {
+      "a": {
+        "a": {
+          "c": "c",
+          "a": "a",
+          "ab": "ab"
+        }
+      }
+    }
+  )");
+
+  CHECK(res[processors::JoltTransformJSON::Failure].size() == 0);
+  CHECK(res[processors::JoltTransformJSON::Success].size() == 1);
+
+  auto content = controller.plan->getContent(res.at(processors::JoltTransformJSON::Success).at(0));
+
+  utils::verifyJSON(content, R"json(
+    {
+      "literal": "c",
+      "first": "a",
+      "fourth": "ab"
+    }
+  )json", true);
+}
+
+TEST_CASE("Shiftr arrays are maps with numeric keys") {
+  auto proc = std::make_shared<minifi::processors::JoltTransformJSON>("JoltProc");
+  SingleProcessorTestController controller{proc};
+  proc->setProperty(processors::JoltTransformJSON::JoltTransform, magic_enum::enum_name(processors::jolt_transform_json::JoltTransform::SHIFT));
+  proc->setProperty(processors::JoltTransformJSON::JoltSpecification, R"json(
+    {
+      "a": {
+        "0": "a_&",
+        "1": "a_&"
+      }
+    }
+  )json");
+
+  auto res = controller.trigger(R"(
+    {
+      "a": ["first", "second"]
+    }
+  )");
+
+  CHECK(res[processors::JoltTransformJSON::Failure].size() == 0);
+  CHECK(res[processors::JoltTransformJSON::Success].size() == 1);
+
+  auto content = controller.plan->getContent(res.at(processors::JoltTransformJSON::Success).at(0));
+
+  utils::verifyJSON(content, R"json(
+    {
+      "a_0": "first",
+      "a_1": "second"
+    }
+  )json", true);
+}
+
+TEST_CASE("Shiftr put into array at index") {
+  auto proc = std::make_shared<minifi::processors::JoltTransformJSON>("JoltProc");
+  SingleProcessorTestController controller{proc};
+  proc->setProperty(processors::JoltTransformJSON::JoltTransform, magic_enum::enum_name(processors::jolt_transform_json::JoltTransform::SHIFT));
+  proc->setProperty(processors::JoltTransformJSON::JoltSpecification, R"json(
+    {
+      "a": "out[1]",
+      "b": "out[2].inner",
+      "*": "arr[&]"
+    }
+  )json");
+
+  auto res = controller.trigger(R"(
+    {
+      "a": "a_val",
+      "b": "b_val",
+      "2": "2_val"
+    }
+  )");
+
+  CHECK(res[processors::JoltTransformJSON::Failure].size() == 0);
+  CHECK(res[processors::JoltTransformJSON::Success].size() == 1);
+
+  auto content = controller.plan->getContent(res.at(processors::JoltTransformJSON::Success).at(0));
+
+  WARN(content);
+
+  utils::verifyJSON(content, R"json(
+    {
+      "out": [null, "a_val", {"inner": "b_val"}],
+      "arr": [null, null, "2_val"]
+    }
+  )json", true);
+}
+
+TEST_CASE("Shiftr multiple patterns") {
+  auto proc = std::make_shared<minifi::processors::JoltTransformJSON>("JoltProc");
+  SingleProcessorTestController controller{proc};
+  proc->setProperty(processors::JoltTransformJSON::JoltTransform, magic_enum::enum_name(processors::jolt_transform_json::JoltTransform::SHIFT));
+  proc->setProperty(processors::JoltTransformJSON::JoltSpecification, R"json(
+    {
+      "a|b": "out1",
+      "b\\||c": "out2"
+    }
+  )json");
+
+  auto res = controller.trigger(R"(
+    {
+      "a": 1,
+      "b": 2,
+      "b|": 3,
+      "c": 4
+    }
+  )");
+
+  CHECK(res[processors::JoltTransformJSON::Failure].size() == 0);
+  CHECK(res[processors::JoltTransformJSON::Success].size() == 1);
+
+  auto content = controller.plan->getContent(res.at(processors::JoltTransformJSON::Success).at(0));
+
+  WARN(content);
+
+  utils::verifyJSON(content, R"json(
+    {
+      "out1": [1, 2],
+      "out2": [3, 4]
+    }
+  )json", true);
+}
+
 }   // namespace org::apache::nifi::minifi::test
