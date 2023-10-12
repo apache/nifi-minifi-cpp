@@ -478,13 +478,12 @@ TEST_CASE("test string::testJoinPackWstring", "[test join_pack wstring]") {
 
 namespace detail {
 template<typename... Strs>
-concept join_pack_works_with_args = requires(Strs...) {
-  string::join_pack(Strs{}...);
+concept join_pack_works_with_args = requires(Strs... strs) {
+  string::join_pack(strs...);
 };
 }  // namespace detail
 
-TEST_CASE("test string::join_pack negative", "[test join_pack negative]") {
-  // join_pack can't combine different char types
+TEST_CASE("test string::join_pack can't combine different char types", "[test join_pack negative][different char types]") {
   STATIC_REQUIRE(!detail::join_pack_works_with_args<const char*&&, const wchar_t*&, std::string, std::wstring, const char*, const wchar_t[]>);  // NOLINT: testing C array
 }
 
