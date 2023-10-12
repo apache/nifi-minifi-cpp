@@ -459,7 +459,12 @@ TEST_CASE("test string::testJoinPack", "[test join_pack]") {
   REQUIRE(string::join_pack("rvalue c string, ", cstr, std::string{", rval std::string, "}, stdstr, ", ", strview, ", ", carr)
       == "rvalue c string, c string, rval std::string, std::string, std::string_view, char array");
 
+  // clang can't use the constexpr string implementation of libstdc++
+#if defined(__cpp_lib_constexpr_string) && __cpp_lib_constexpr_string >= 201907L && (!defined(__clang__) || defined(_LIBCPP_VERSION))
   STATIC_REQUIRE(string::join_pack(std::string{"a"}, std::string_view{"b"}, "c") == "abc");
+#else
+  REQUIRE(string::join_pack(std::string{"a"}, std::string_view{"b"}, "c") == "abc");
+#endif
 }
 
 TEST_CASE("test string::testJoinPackWstring", "[test join_pack wstring]") {
