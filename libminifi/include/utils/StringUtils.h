@@ -187,48 +187,40 @@ constexpr size_t size(const std::basic_string_view<CharT>& str) noexcept { retur
 
 namespace detail {
 // implementation detail of join_pack
-template<typename CharT>
-struct str_detector {
-  template<typename Str>
-  using valid_string_t = decltype(std::declval<std::basic_string<CharT>>().append(std::declval<Str>()));
+template<typename Str, typename CharT>
+concept valid_string = requires(std::basic_string<CharT> left, Str appended) {
+    left.append(appended);
 };
 
-template<typename ResultT, typename CharT, typename... Strs>
-using valid_string_pack_t = std::enable_if_t<(meta::is_detected_v<str_detector<CharT>::template valid_string_t, Strs> && ...), ResultT>;
+// normally CharT would be at the end, because we're checking that Strs are valid strings for CharT,
+// but the syntax needs the parameter pack at the end
+template<typename CharT, typename... Strs>
+concept valid_string_pack = (valid_string<Strs, CharT> && ...);
 
-template<typename CharT, typename... Strs, valid_string_pack_t<void, CharT, Strs...>* = nullptr>
-static std::basic_string<CharT> join_pack(const Strs&... strs) {
-  std::basic_string<CharT> result;
-  result.reserve((size(strs) + ...));
-  (result.append(strs), ...);
-  return result;
-}
+template<typename Str> struct char_type_of_impl {};
+template<typename CharT> struct char_type_of_impl<std::basic_string<CharT>> : std::type_identity<CharT> {};
+template<typename CharT> struct char_type_of_impl<CharT*> : std::type_identity<std::remove_cv_t<CharT>> {};
+template<typename CharT> struct char_type_of_impl<std::basic_string_view<CharT>> : std::type_identity<CharT> {};
+template<typename Str> using char_type_of = typename char_type_of_impl<std::decay_t<Str>>::type;
 }  // namespace detail
 
 /**
  * Join all arguments
- * @tparam CharT Deduced character type
- * @tparam Strs Deduced string types
+ * @tparam HeadStr Deduced type of the first string
+ * @tparam Strs Rest of deduced string types
  * @param head First string, used for CharT deduction
  * @param tail Rest of the strings
- * @return std::basic_string<CharT> containing the resulting string
+ * @return A specialization of std::basic_string containing the resulting string
+ * @pre All strings must have the same character type
  */
-template<typename CharT, typename... Strs>
-inline detail::valid_string_pack_t<std::basic_string<CharT>, CharT, Strs...>
-join_pack(const std::basic_string<CharT>& head, const Strs&... tail) {
-  return detail::join_pack<CharT>(head, tail...);
-}
-
-template<typename CharT, typename... Strs>
-inline detail::valid_string_pack_t<std::basic_string<CharT>, CharT, Strs...>
-join_pack(const CharT* head, const Strs&... tail) {
-  return detail::join_pack<CharT>(head, tail...);
-}
-
-template<typename CharT, typename... Strs>
-inline detail::valid_string_pack_t<std::basic_string<CharT>, CharT, Strs...>
-join_pack(const std::basic_string_view<CharT>& head, const Strs&... tail) {
-  return detail::join_pack<CharT>(head, tail...);
+template<typename HeadStr, typename... Strs>
+requires detail::valid_string_pack<detail::char_type_of<HeadStr>, Strs...>
+inline constexpr auto join_pack(const HeadStr& head, const Strs&... tail) {
+  std::basic_string<detail::char_type_of<HeadStr>> result;
+  result.reserve(size(head) + (size(tail) + ...));
+  result.append(head);
+  (result.append(tail), ...);
+  return result;
 }
 
 /**

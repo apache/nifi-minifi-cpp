@@ -458,6 +458,8 @@ TEST_CASE("test string::testJoinPack", "[test join_pack]") {
   const char carr[] = "char array";  // NOLINT(cppcoreguidelines-avoid-c-arrays): testing const char[] on purpose
   REQUIRE(string::join_pack("rvalue c string, ", cstr, std::string{", rval std::string, "}, stdstr, ", ", strview, ", ", carr)
       == "rvalue c string, c string, rval std::string, std::string, std::string_view, char array");
+
+  STATIC_REQUIRE(string::join_pack(std::string{"a"}, std::string_view{"b"}, "c") == "abc");
 }
 
 TEST_CASE("test string::testJoinPackWstring", "[test join_pack wstring]") {
@@ -469,15 +471,17 @@ TEST_CASE("test string::testJoinPackWstring", "[test join_pack wstring]") {
       == L"rvalue c string, c string, rval std::string, std::string, std::string_view, char array");
 }
 
-/* doesn't and shouldn't compile
-TEST_CASE("test string::testJoinPackNegative", "[test join_pack negative]") {
-  std::wstring stdstr = L"std::string";
-  const wchar_t* cstr = L"c string";
-  const wchar_t carr[] = L"char array";
-  REQUIRE(string::join_pack("rvalue c string, ", cstr, std::string{ ", rval std::string, " }, stdstr, ", ", carr)
-              == "rvalue c string, c string, rval std::string, std::string, char array");
+namespace detail {
+template<typename... Strs>
+concept join_pack_works_with_args = requires(Strs...) {
+  string::join_pack(Strs{}...);
+};
+}  // namespace detail
+
+TEST_CASE("test string::join_pack negative", "[test join_pack negative]") {
+  // join_pack can't combine different char types
+  STATIC_REQUIRE(!detail::join_pack_works_with_args<const char*&&, const wchar_t*&, std::string, std::wstring, const char*, const wchar_t[]>);  // NOLINT: testing C array
 }
- */
 
 TEST_CASE("string::replaceOne works correctly", "[replaceOne]") {
   REQUIRE(string::replaceOne("", "x", "y") == "");
