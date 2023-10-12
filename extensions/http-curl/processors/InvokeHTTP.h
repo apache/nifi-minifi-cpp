@@ -178,11 +178,11 @@ class InvokeHTTP : public core::Processor {
       .withAllowedValues(magic_enum::enum_names<invoke_http::InvalidHTTPHeaderFieldHandlingOption>())
       .build();
   EXTENSIONAPI static constexpr auto UploadSpeedLimit = core::PropertyDefinitionBuilder<>::createProperty("Upload Speed Limit")
-      .withDescription("Maximum data per second to send (e.g. '500 KB/s'). Leave this empty if you want no limit.")
+      .withDescription("Maximum upload speed, e.g. '500 KB/s'. Leave this empty if you want no limit.")
       .withPropertyType(core::StandardPropertyTypes::DATA_TRANSFER_SPEED_TYPE)
       .build();
   EXTENSIONAPI static constexpr auto DownloadSpeedLimit = core::PropertyDefinitionBuilder<>::createProperty("Download Speed Limit")
-      .withDescription("Maximum data per second to receive (e.g. '500 KB/s'). Leave this empty if you want no limit.")
+      .withDescription("Maximum download speed,e.g. '500 KB/s'. Leave this empty if you want no limit.")
       .withPropertyType(core::StandardPropertyTypes::DATA_TRANSFER_SPEED_TYPE)
       .build();
 
