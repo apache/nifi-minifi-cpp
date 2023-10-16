@@ -98,29 +98,6 @@ class BaseLogger {
   [[nodiscard]] virtual LOG_LEVEL level() const = 0;
 };
 
-class LogBuilder {
- public:
-  LogBuilder(BaseLogger *l, LOG_LEVEL level);
-
-  ~LogBuilder();
-
-  void setIgnore();
-
-  void log_string(LOG_LEVEL log_level) const;
-
-  template<typename T>
-  LogBuilder &operator<<(const T &o) {
-    if (!ignore)
-      str << o;
-    return *this;
-  }
-
-  bool ignore;
-  BaseLogger *ptr;
-  std::stringstream str;
-  LOG_LEVEL level;
-};
-
 const auto inline map_args = utils::overloaded {
     [](std::invocable<> auto&& f) { return std::invoke(std::forward<decltype(f)>(f)); },
     [](auto&& value) { return std::forward<decltype(value)>(value); }
