@@ -50,7 +50,7 @@ void ExecuteJavaProcessor::initialize() {
   setSupportedRelationships(Relationships);
 }
 
-void ExecuteJavaProcessor::onSchedule(const std::shared_ptr<core::ProcessContext>& context, const std::shared_ptr<core::ProcessSessionFactory>& /*sessionFactory*/) {
+void ExecuteJavaProcessor::onScheduleSharedPtr(const std::shared_ptr<core::ProcessContext>& context, const std::shared_ptr<core::ProcessSessionFactory>& /*sessionFactory*/) {
   gsl_Expects(context);
 
   std::string controller_service_name;
@@ -204,10 +204,6 @@ void ExecuteJavaProcessor::onTrigger(const std::shared_ptr<core::ProcessContext>
     env->ExceptionClear();
     logger_->log_error(" Exception occurred during onTrigger, reason: {}", e.what());
   }
-}
-
-void ExecuteJavaProcessor::onTrigger(const std::shared_ptr<core::ProcessContext>& /*context*/, const std::shared_ptr<core::ProcessSession>& /*session*/) {
-  // do nothing.
 }
 
 REGISTER_RESOURCE_AS(ExecuteJavaProcessor, Processor, ("ExecuteJavaClass"));

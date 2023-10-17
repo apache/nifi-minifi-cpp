@@ -26,24 +26,23 @@ void WriteToFlowFileTestProcessor::initialize() {
   setSupportedRelationships(Relationships);
 }
 
-void WriteToFlowFileTestProcessor::onSchedule(core::ProcessContext*, core::ProcessSessionFactory*) {
+void WriteToFlowFileTestProcessor::onSchedule(core::ProcessContext&, core::ProcessSessionFactory&) {
   logger_->log_info("{}", ON_SCHEDULE_LOG_STR);
 }
 
-void WriteToFlowFileTestProcessor::onTrigger(core::ProcessContext* context, core::ProcessSession* session) {
-  gsl_Expects(context && session);
+void WriteToFlowFileTestProcessor::onTrigger(core::ProcessContext& context, core::ProcessSession& session) {
   logger_->log_info("{}", ON_TRIGGER_LOG_STR);
   if (content_.empty()) {
-    context->yield();
+    context.yield();
     return;
   }
-  std::shared_ptr<core::FlowFile> flow_file = session->create();
+  std::shared_ptr<core::FlowFile> flow_file = session.create();
   if (!flow_file) {
     logger_->log_error("Failed to create flowfile!");
     return;
   }
-  session->writeBuffer(flow_file, content_);
-  session->transfer(flow_file, Success);
+  session.writeBuffer(flow_file, content_);
+  session.transfer(flow_file, Success);
 }
 
 void WriteToFlowFileTestProcessor::onUnSchedule() {

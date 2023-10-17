@@ -68,32 +68,32 @@ void SFTPProcessorBase::notifyStop() {
   cleanupConnectionCache();
 }
 
-void SFTPProcessorBase::parseCommonPropertiesOnSchedule(const std::shared_ptr<core::ProcessContext>& context) {
+void SFTPProcessorBase::parseCommonPropertiesOnSchedule(core::ProcessContext& context) {
   std::string value;
-  if (!context->getProperty(StrictHostKeyChecking, value)) {
+  if (!context.getProperty(StrictHostKeyChecking, value)) {
     logger_->log_error("Strict Host Key Checking attribute is missing or invalid");
   } else {
     strict_host_checking_ = utils::StringUtils::toBool(value).value_or(false);
   }
-  context->getProperty(HostKeyFile, host_key_file_);
-  if (auto connection_timeout = context->getProperty<core::TimePeriodValue>(ConnectionTimeout)) {
+  context.getProperty(HostKeyFile, host_key_file_);
+  if (auto connection_timeout = context.getProperty<core::TimePeriodValue>(ConnectionTimeout)) {
     connection_timeout_ = connection_timeout->getMilliseconds();
   } else {
     logger_->log_error("Connection Timeout attribute is missing or invalid");
   }
 
-  if (auto data_timeout = context->getProperty<core::TimePeriodValue>(DataTimeout)) {
+  if (auto data_timeout = context.getProperty<core::TimePeriodValue>(DataTimeout)) {
     data_timeout_ = data_timeout->getMilliseconds();
   } else {
     logger_->log_error("Data Timeout attribute is missing or invalid");
   }
 
-  if (!context->getProperty(SendKeepaliveOnTimeout, value)) {
+  if (!context.getProperty(SendKeepaliveOnTimeout, value)) {
     logger_->log_error("Send Keep Alive On Timeout attribute is missing or invalid");
   } else {
     use_keepalive_on_timeout_ = utils::StringUtils::toBool(value).value_or(true);
   }
-  context->getProperty(ProxyType, proxy_type_);
+  context.getProperty(ProxyType, proxy_type_);
 }
 
 SFTPProcessorBase::CommonProperties::CommonProperties()
@@ -101,13 +101,13 @@ SFTPProcessorBase::CommonProperties::CommonProperties()
     , proxy_port(0U) {
 }
 
-bool SFTPProcessorBase::parseCommonPropertiesOnTrigger(const std::shared_ptr<core::ProcessContext>& context, const std::shared_ptr<core::FlowFile>& flow_file, CommonProperties& common_properties) {
+bool SFTPProcessorBase::parseCommonPropertiesOnTrigger(core::ProcessContext& context, const std::shared_ptr<core::FlowFile>& flow_file, CommonProperties& common_properties) {
   std::string value;
-  if (!context->getProperty(Hostname, common_properties.hostname, flow_file)) {
+  if (!context.getProperty(Hostname, common_properties.hostname, flow_file)) {
     logger_->log_error("Hostname attribute is missing");
     return false;
   }
-  if (!context->getProperty(Port, value, flow_file)) {
+  if (!context.getProperty(Port, value, flow_file)) {
     logger_->log_error("Port attribute is missing or invalid");
     return false;
   } else {
@@ -121,16 +121,16 @@ bool SFTPProcessorBase::parseCommonPropertiesOnTrigger(const std::shared_ptr<cor
       common_properties.port = static_cast<uint16_t>(port_tmp);
     }
   }
-  if (!context->getProperty(Username, common_properties.username, flow_file)) {
+  if (!context.getProperty(Username, common_properties.username, flow_file)) {
     logger_->log_error("Username attribute is missing");
     return false;
   }
-  context->getProperty(Password, common_properties.password, flow_file);
-  context->getProperty(PrivateKeyPath, common_properties.private_key_path, flow_file);
-  context->getProperty(PrivateKeyPassphrase, common_properties.private_key_passphrase, flow_file);
-  context->getProperty(Password, common_properties.password, flow_file);
-  context->getProperty(ProxyHost, common_properties.proxy_host, flow_file);
-  if (context->getProperty(ProxyPort, value, flow_file) && !value.empty()) {
+  context.getProperty(Password, common_properties.password, flow_file);
+  context.getProperty(PrivateKeyPath, common_properties.private_key_path, flow_file);
+  context.getProperty(PrivateKeyPassphrase, common_properties.private_key_passphrase, flow_file);
+  context.getProperty(Password, common_properties.password, flow_file);
+  context.getProperty(ProxyHost, common_properties.proxy_host, flow_file);
+  if (context.getProperty(ProxyPort, value, flow_file) && !value.empty()) {
     int port_tmp = 0;
     if (!core::Property::StringToInt(value, port_tmp) ||
         port_tmp <= std::numeric_limits<uint16_t>::min() ||
@@ -141,8 +141,8 @@ bool SFTPProcessorBase::parseCommonPropertiesOnTrigger(const std::shared_ptr<cor
       common_properties.proxy_port = static_cast<uint16_t>(port_tmp);
     }
   }
-  context->getProperty(HttpProxyUsername, common_properties.proxy_username, flow_file);
-  context->getProperty(HttpProxyPassword, common_properties.proxy_password, flow_file);
+  context.getProperty(HttpProxyUsername, common_properties.proxy_username, flow_file);
+  context.getProperty(HttpProxyPassword, common_properties.proxy_password, flow_file);
 
   return true;
 }

@@ -244,10 +244,10 @@ TEST_CASE_METHOD(MergeTestController, "MergeFileDefragment", "[mergefiletest1]")
   }
 
   auto factory = std::make_shared<core::ProcessSessionFactory>(context_);
-  merge_content_processor_->onSchedule(context_, factory);
+  merge_content_processor_->onSchedule(*context_, *factory);
   for (int i = 0; i < 6; i++) {
     auto session = std::make_shared<core::ProcessSession>(context_);
-    merge_content_processor_->onTrigger(context_, session);
+    merge_content_processor_->onTrigger(*context_, *session);
     session->commit();
   }
   // validate the merge content
@@ -306,10 +306,10 @@ TEST_CASE_METHOD(MergeTestController, "MergeFileDefragmentDelimiter", "[mergefil
 
   REQUIRE(merge_content_processor_->getName() == "mergecontent");
   auto factory = std::make_shared<core::ProcessSessionFactory>(context_);
-  merge_content_processor_->onSchedule(context_, factory);
+  merge_content_processor_->onSchedule(*context_, *factory);
   for (int i = 0; i < 6; i++) {
     auto session = std::make_shared<core::ProcessSession>(context_);
-    merge_content_processor_->onTrigger(context_, session);
+    merge_content_processor_->onTrigger(*context_, *session);
     session->commit();
   }
   // validate the merge content
@@ -363,16 +363,16 @@ TEST_CASE_METHOD(MergeTestController, "MergeFileDefragmentDropFlow", "[mergefile
 
   REQUIRE(merge_content_processor_->getName() == "mergecontent");
   auto factory = std::make_shared<core::ProcessSessionFactory>(context_);
-  merge_content_processor_->onSchedule(context_, factory);
+  merge_content_processor_->onSchedule(*context_, *factory);
   for (int i = 0; i < 5; i++) {
     auto session = std::make_shared<core::ProcessSession>(context_);
-    merge_content_processor_->onTrigger(context_, session);
+    merge_content_processor_->onTrigger(*context_, *session);
     session->commit();
   }
   std::this_thread::sleep_for(std::chrono::milliseconds(2000));
   {
     auto session = std::make_shared<core::ProcessSession>(context_);
-    merge_content_processor_->onTrigger(context_, session);
+    merge_content_processor_->onTrigger(*context_, *session);
     session->commit();
   }
   // validate the merge content
@@ -417,10 +417,10 @@ TEST_CASE_METHOD(MergeTestController, "MergeFileBinPack", "[mergefiletest4]") {
 
   REQUIRE(merge_content_processor_->getName() == "mergecontent");
   auto factory = std::make_shared<core::ProcessSessionFactory>(context_);
-  merge_content_processor_->onSchedule(context_, factory);
+  merge_content_processor_->onSchedule(*context_, *factory);
   for (int i = 0; i < 6; i++) {
     auto session = std::make_shared<core::ProcessSession>(context_);
-    merge_content_processor_->onTrigger(context_, session);
+    merge_content_processor_->onTrigger(*context_, *session);
     session->commit();
   }
   // validate the merge content
@@ -461,10 +461,10 @@ TEST_CASE_METHOD(MergeTestController, "MergeFileTar", "[mergefiletest4]") {
 
   REQUIRE(merge_content_processor_->getName() == "mergecontent");
   auto factory = std::make_shared<core::ProcessSessionFactory>(context_);
-  merge_content_processor_->onSchedule(context_, factory);
+  merge_content_processor_->onSchedule(*context_, *factory);
   for (int i = 0; i < 6; i++) {
     auto session = std::make_shared<core::ProcessSession>(context_);
-    merge_content_processor_->onTrigger(context_, session);
+    merge_content_processor_->onTrigger(*context_, *session);
     session->commit();
   }
   // validate the merge content
@@ -512,10 +512,10 @@ TEST_CASE_METHOD(MergeTestController, "MergeFileZip", "[mergefiletest5]") {
 
   REQUIRE(merge_content_processor_->getName() == "mergecontent");
   auto factory = std::make_shared<core::ProcessSessionFactory>(context_);
-  merge_content_processor_->onSchedule(context_, factory);
+  merge_content_processor_->onSchedule(*context_, *factory);
   for (int i = 0; i < 6; i++) {
     auto session = std::make_shared<core::ProcessSession>(context_);
-    merge_content_processor_->onTrigger(context_, session);
+    merge_content_processor_->onTrigger(*context_, *session);
     session->commit();
   }
   // validate the merge content
@@ -571,10 +571,10 @@ TEST_CASE_METHOD(MergeTestController, "MergeFileOnAttribute", "[mergefiletest5]"
 
   REQUIRE(merge_content_processor_->getName() == "mergecontent");
   auto factory = std::make_shared<core::ProcessSessionFactory>(context_);
-  merge_content_processor_->onSchedule(context_, factory);
+  merge_content_processor_->onSchedule(*context_, *factory);
   for (int i = 0; i < 6; i++) {
     auto session = std::make_shared<core::ProcessSession>(context_);
-    merge_content_processor_->onTrigger(context_, session);
+    merge_content_processor_->onTrigger(*context_, *session);
     session->commit();
   }
   // validate the merge content
@@ -624,10 +624,10 @@ TEST_CASE_METHOD(MergeTestController, "Test Merge File Attributes Keeping Only C
   }
 
   auto factory = std::make_shared<core::ProcessSessionFactory>(context_);
-  merge_content_processor_->onSchedule(context_, factory);
+  merge_content_processor_->onSchedule(*context_, *factory);
   for (int i = 0; i < 3; i++) {
     auto session = std::make_shared<core::ProcessSession>(context_);
-    merge_content_processor_->onTrigger(context_, session);
+    merge_content_processor_->onTrigger(*context_, *session);
     session->commit();
   }
   // validate the merge content
@@ -673,10 +673,10 @@ TEST_CASE_METHOD(MergeTestController, "Test Merge File Attributes Keeping All Un
   }
 
   auto factory = std::make_shared<core::ProcessSessionFactory>(context_);
-  merge_content_processor_->onSchedule(context_, factory);
+  merge_content_processor_->onSchedule(*context_, *factory);
   for (int i = 0; i < 3; i++) {
     auto session = std::make_shared<core::ProcessSession>(context_);
-    merge_content_processor_->onTrigger(context_, session);
+    merge_content_processor_->onTrigger(*context_, *session);
     session->commit();
   }
   // validate the merge content
@@ -766,10 +766,10 @@ TEST_CASE("FlowFile serialization", "[testFlowFileSerialization]") {
   const auto expected = utils::span_to<std::string>(utils::as_span<const char>(result->getBuffer()));
 
   auto factory = std::make_shared<core::ProcessSessionFactory>(context);
-  merge_content_processor->onSchedule(context, factory);
+  merge_content_processor->onSchedule(*context, *factory);
   for (int i = 0; i < 3; i++) {
     auto mergeSession = std::make_shared<core::ProcessSession>(context);
-    merge_content_processor->onTrigger(context, mergeSession);
+    merge_content_processor->onTrigger(*context, *mergeSession);
     mergeSession->commit();
   }
 
@@ -808,11 +808,11 @@ TEST_CASE_METHOD(MergeTestController, "Batch Size", "[testMergeFileBatchSize]") 
 
   REQUIRE(merge_content_processor_->getName() == "mergecontent");
   auto factory = std::make_shared<core::ProcessSessionFactory>(context_);
-  merge_content_processor_->onSchedule(context_, factory);
+  merge_content_processor_->onSchedule(*context_, *factory);
   // two trigger is enough to process all five flowFiles
   for (int i = 0; i < 2; i++) {
     auto session = std::make_shared<core::ProcessSession>(context_);
-    merge_content_processor_->onTrigger(context_, session);
+    merge_content_processor_->onTrigger(*context_, *session);
     session->commit();
   }
   // validate the merge content
@@ -867,11 +867,11 @@ TEST_CASE_METHOD(MergeTestController, "Maximum Group Size is respected", "[testM
 
   REQUIRE(merge_content_processor_->getName() == "mergecontent");
   auto factory = std::make_shared<core::ProcessSessionFactory>(context_);
-  merge_content_processor_->onSchedule(context_, factory);
+  merge_content_processor_->onSchedule(*context_, *factory);
   // a single trigger is enough to process all five flowFiles
   {
     auto session = std::make_shared<core::ProcessSession>(context_);
-    merge_content_processor_->onTrigger(context_, session);
+    merge_content_processor_->onTrigger(*context_, *session);
     session->commit();
   }
   // validate the merge content

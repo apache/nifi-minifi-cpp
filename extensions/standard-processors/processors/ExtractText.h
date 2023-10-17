@@ -105,7 +105,7 @@ class ExtractText : public core::Processor {
   EXTENSIONAPI static constexpr bool IsSingleThreaded = false;
   ADD_COMMON_VIRTUAL_FUNCTIONS_FOR_PROCESSORS
 
-  void onTrigger(core::ProcessContext *context, core::ProcessSession *session) override;
+  void onTrigger(core::ProcessContext& context, core::ProcessSession& session) override;
   void initialize() override;
 
   class ReadCallback {

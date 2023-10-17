@@ -101,8 +101,8 @@ class ExecuteProcess : public core::Processor {
   EXTENSIONAPI static constexpr bool IsSingleThreaded = true;
   ADD_COMMON_VIRTUAL_FUNCTIONS_FOR_PROCESSORS
 
-  void onTrigger(core::ProcessContext *context, core::ProcessSession *session) override;
-  void onSchedule(core::ProcessContext *context, core::ProcessSessionFactory *session_factory) override;
+  void onTrigger(core::ProcessContext& context, core::ProcessSession& session) override;
+  void onSchedule(core::ProcessContext& context, core::ProcessSessionFactory& session_factory) override;
   void initialize() override;
 
  private:

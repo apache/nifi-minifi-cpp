@@ -51,14 +51,12 @@ auto getCredentialsService(core::ProcessContext& context) {
 }
 }  // namespace
 
-void PostElasticsearch::onSchedule(const std::shared_ptr<core::ProcessContext>& context, const std::shared_ptr<core::ProcessSessionFactory>&) {
-  gsl_Expects(context);
-
-  context->getProperty(MaxBatchSize, max_batch_size_);
+void PostElasticsearch::onSchedule(core::ProcessContext& context, core::ProcessSessionFactory&) {
+  context.getProperty(MaxBatchSize, max_batch_size_);
   if (max_batch_size_ < 1)
     throw Exception(PROCESS_SCHEDULE_EXCEPTION, "Max Batch Size property is invalid");
 
-  if (auto hosts_str = context->getProperty(Hosts)) {
+  if (auto hosts_str = context.getProperty(Hosts)) {
     auto hosts = utils::StringUtils::split(*hosts_str, ",");
     if (hosts.size() > 1)
       throw Exception(PROCESS_SCHEDULE_EXCEPTION, "Multiple hosts not yet supported");
@@ -67,11 +65,11 @@ void PostElasticsearch::onSchedule(const std::shared_ptr<core::ProcessContext>& 
     throw Exception(PROCESS_SCHEDULE_EXCEPTION, "Missing or invalid hosts");
   }
 
-  credentials_service_ = getCredentialsService(*context);
+  credentials_service_ = getCredentialsService(context);
   if (!credentials_service_)
     throw Exception(PROCESS_SCHEDULE_EXCEPTION, "Missing Elasticsearch credentials service");
 
-  client_.initialize(utils::HttpRequestMethod::POST, host_url_ + "/_bulk", getSSLContextService(*context));
+  client_.initialize(utils::HttpRequestMethod::POST, host_url_ + "/_bulk", getSSLContextService(context));
   client_.setContentType("application/json");
   credentials_service_->authenticateClient(client_);
 }
@@ -245,11 +243,11 @@ std::string PostElasticsearch::collectPayload(core::ProcessContext& context,
   return payload.str();
 }
 
-void PostElasticsearch::onTrigger(const std::shared_ptr<core::ProcessContext>& context, const std::shared_ptr<core::ProcessSession>& session) {
-  gsl_Expects(context && session && max_batch_size_ > 0);
+void PostElasticsearch::onTrigger(core::ProcessContext& context, core::ProcessSession& session) {
+  gsl_Expects(max_batch_size_ > 0);
 
   std::vector<std::shared_ptr<core::FlowFile>> flowfiles_with_payload;
-  auto payload = collectPayload(*context, *session, flowfiles_with_payload);
+  auto payload = collectPayload(context, session, flowfiles_with_payload);
 
   if (flowfiles_with_payload.empty()) {
     return;
@@ -259,11 +257,11 @@ void PostElasticsearch::onTrigger(const std::shared_ptr<core::ProcessContext>& c
   if (!result) {
     logger_->log_error("{}", result.error());
     for (const auto& flow_file_in_payload: flowfiles_with_payload)
-      session->transfer(flow_file_in_payload, Failure);
+      session.transfer(flow_file_in_payload, Failure);
     return;
   }
 
-  processResponseFromElastic(*result, *session, flowfiles_with_payload);
+  processResponseFromElastic(*result, session, flowfiles_with_payload);
 }
 
 REGISTER_RESOURCE(PostElasticsearch, Processor);

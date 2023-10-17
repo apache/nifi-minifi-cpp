@@ -37,8 +37,8 @@ void GetEnvironmentalSensors::initialize() {
   setSupportedRelationships(Relationships);
 }
 
-void GetEnvironmentalSensors::onSchedule(const std::shared_ptr<core::ProcessContext> &context, const std::shared_ptr<core::ProcessSessionFactory> &sessionFactory) {
-  SensorBase::onSchedule(context, sessionFactory);
+void GetEnvironmentalSensors::onSchedule(core::ProcessContext& context, core::ProcessSessionFactory& session_factory) {
+  SensorBase::onSchedule(context, session_factory);
 
   humidity_sensor_ = RTHumidity::createHumidity(&settings_.value());
   if (humidity_sensor_) {
@@ -62,8 +62,8 @@ void GetEnvironmentalSensors::notifyStop() {
 
 GetEnvironmentalSensors::~GetEnvironmentalSensors() = default;
 
-void GetEnvironmentalSensors::onTrigger(const std::shared_ptr<core::ProcessContext>& /*context*/, const std::shared_ptr<core::ProcessSession>& session) {
-  auto flow_file_ = session->create();
+void GetEnvironmentalSensors::onTrigger(core::ProcessContext&, core::ProcessSession& session) {
+  auto flow_file_ = session.create();
 
   if (imu_->IMURead()) {
     RTIMU_DATA imuData = imu_->getIMUData();
@@ -109,8 +109,8 @@ void GetEnvironmentalSensors::onTrigger(const std::shared_ptr<core::ProcessConte
   }
 
   if (have_sensor) {
-    session->writeBuffer(flow_file_, "GetEnvironmentalSensors");
-    session->transfer(flow_file_, Success);
+    session.writeBuffer(flow_file_, "GetEnvironmentalSensors");
+    session.transfer(flow_file_, Success);
   }
 }
 

@@ -38,10 +38,10 @@ void ListenHTTP::initialize() {
   setSupportedRelationships(Relationships);
 }
 
-void ListenHTTP::onSchedule(core::ProcessContext *context, core::ProcessSessionFactory* /*sessionFactory*/) {
+void ListenHTTP::onSchedule(core::ProcessContext& context, core::ProcessSessionFactory&) {
   std::string basePath;
 
-  if (!context->getProperty(BasePath, basePath)) {
+  if (!context.getProperty(BasePath, basePath)) {
     static_assert(BasePath.default_value);
     logger_->log_info("{} attribute is missing, so default value of {} will be used", BasePath.name, *BasePath.default_value);
     basePath = *BasePath.default_value;
@@ -49,7 +49,7 @@ void ListenHTTP::onSchedule(core::ProcessContext *context, core::ProcessSessionF
 
   basePath.insert(0, "/");
 
-  if (!context->getProperty(Port, listeningPort)) {
+  if (!context.getProperty(Port, listeningPort)) {
     logger_->log_error("{} attribute is missing or invalid", Port.name);
     return;
   }
@@ -57,7 +57,7 @@ void ListenHTTP::onSchedule(core::ProcessContext *context, core::ProcessSessionF
   bool randomPort = listeningPort == "0";
 
   std::string authDNPattern;
-  if (context->getProperty(AuthorizedDNPattern, authDNPattern) && !authDNPattern.empty()) {
+  if (context.getProperty(AuthorizedDNPattern, authDNPattern) && !authDNPattern.empty()) {
     logger_->log_debug("ListenHTTP using {}: {}", AuthorizedDNPattern.name, authDNPattern);
   } else {
     authDNPattern = ".*";
@@ -66,7 +66,7 @@ void ListenHTTP::onSchedule(core::ProcessContext *context, core::ProcessSessionF
 
   std::string sslCertFile;
 
-  if (context->getProperty(SSLCertificate, sslCertFile) && !sslCertFile.empty()) {
+  if (context.getProperty(SSLCertificate, sslCertFile) && !sslCertFile.empty()) {
     logger_->log_debug("ListenHTTP using {}: {}", SSLCertificate.name, sslCertFile);
   }
 
@@ -76,11 +76,11 @@ void ListenHTTP::onSchedule(core::ProcessContext *context, core::ProcessSessionF
   std::string sslMinVer;
 
   if (!sslCertFile.empty()) {
-    if (context->getProperty(SSLCertificateAuthority, sslCertAuthorityFile) && !sslCertAuthorityFile.empty()) {
+    if (context.getProperty(SSLCertificateAuthority, sslCertAuthorityFile) && !sslCertAuthorityFile.empty()) {
       logger_->log_debug("ListenHTTP using {}: {}", SSLCertificateAuthority.name, sslCertAuthorityFile);
     }
 
-    if (context->getProperty(SSLVerifyPeer, sslVerifyPeer)) {
+    if (context.getProperty(SSLVerifyPeer, sslVerifyPeer)) {
       if (sslVerifyPeer.empty() || sslVerifyPeer == "no") {
         logger_->log_debug("ListenHTTP will not verify peers");
       } else {
@@ -90,14 +90,14 @@ void ListenHTTP::onSchedule(core::ProcessContext *context, core::ProcessSessionF
       logger_->log_debug("ListenHTTP will not verify peers");
     }
 
-    if (context->getProperty(SSLMinimumVersion, sslMinVer)) {
+    if (context.getProperty(SSLMinimumVersion, sslMinVer)) {
       logger_->log_debug("ListenHTTP using {}: {}", SSLMinimumVersion.name, sslMinVer);
     }
   }
 
   std::string headersAsAttributesPattern;
 
-  if (context->getProperty(HeadersAsAttributesRegex, headersAsAttributesPattern) && !headersAsAttributesPattern.empty()) {
+  if (context.getProperty(HeadersAsAttributesRegex, headersAsAttributesPattern) && !headersAsAttributesPattern.empty()) {
     logger_->log_debug("ListenHTTP using {}: {}", HeadersAsAttributesRegex.name, headersAsAttributesPattern);
   }
 
@@ -148,10 +148,10 @@ void ListenHTTP::onSchedule(core::ProcessContext *context, core::ProcessSessionF
 
   server_ = std::make_unique<CivetServer>(options, &callbacks_, &logger_);
 
-  context->getProperty(BatchSize, batch_size_);
+  context.getProperty(BatchSize, batch_size_);
   logger_->log_debug("ListenHTTP using {}: {}", BatchSize.name, batch_size_);
 
-  handler_ = std::make_unique<Handler>(basePath, context, std::move(authDNPattern),
+  handler_ = std::make_unique<Handler>(basePath, &context, std::move(authDNPattern),
     headersAsAttributesPattern.empty() ? std::nullopt : std::make_optional<utils::Regex>(headersAsAttributesPattern));
   server_->addHandler(basePath, handler_.get());
 
@@ -172,11 +172,10 @@ void ListenHTTP::onSchedule(core::ProcessContext *context, core::ProcessSessionF
 
 ListenHTTP::~ListenHTTP() = default;
 
-void ListenHTTP::onTrigger(core::ProcessContext*, core::ProcessSession* session) {
-  gsl_Expects(session);
+void ListenHTTP::onTrigger(core::ProcessContext&, core::ProcessSession& session) {
   logger_->log_trace("OnTrigger ListenHTTP");
-  const bool incoming_processed = processIncomingFlowFile(*session);
-  const bool request_processed = processRequestBuffer(*session);
+  const bool incoming_processed = processIncomingFlowFile(session);
+  const bool request_processed = processRequestBuffer(session);
   if (!incoming_processed && !request_processed) {
     yield();
   }

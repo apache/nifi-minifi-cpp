@@ -327,10 +327,10 @@ class FragmentGenerator : public core::Processor {
       : Processor(name, uuid) {
   }
 
-  void onTrigger(core::ProcessContext*, core::ProcessSession* session) override {
+  void onTrigger(core::ProcessContext&, core::ProcessSession& session) override {
     std::vector<core::FlowFile> flow_files;
     for (const size_t max_i = i_ + batch_size_; i_ < fragment_contents_.size() && i_ < max_i; ++i_) {
-      std::shared_ptr<core::FlowFile> flow_file = session->create();
+      std::shared_ptr<core::FlowFile> flow_file = session.create();
       if (base_name_attribute_)
         flow_file->addAttribute(textfragmentutils::BASE_NAME_ATTRIBUTE, *base_name_attribute_);
       if (post_name_attribute_)
@@ -340,8 +340,8 @@ class FragmentGenerator : public core::Processor {
       flow_file->addAttribute(textfragmentutils::OFFSET_ATTRIBUTE, std::to_string(offset_));
       auto& fragment_content = fragment_contents_[i_];
       offset_ += fragment_content.size();
-      session->writeBuffer(flow_file, fragment_content);
-      session->transfer(flow_file, Success);
+      session.writeBuffer(flow_file, fragment_content);
+      session.transfer(flow_file, Success);
     }
   }
   void initialize() override { setSupportedRelationships(Relationships); }

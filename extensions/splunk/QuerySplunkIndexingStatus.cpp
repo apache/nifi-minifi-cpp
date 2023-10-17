@@ -139,28 +139,26 @@ void QuerySplunkIndexingStatus::initialize() {
   setSupportedRelationships(Relationships);
 }
 
-void QuerySplunkIndexingStatus::onSchedule(const std::shared_ptr<core::ProcessContext>& context, const std::shared_ptr<core::ProcessSessionFactory>& sessionFactory) {
-  gsl_Expects(context && sessionFactory);
-  SplunkHECProcessor::onSchedule(context, sessionFactory);
+void QuerySplunkIndexingStatus::onSchedule(core::ProcessContext& context, core::ProcessSessionFactory& session_factory) {
+  SplunkHECProcessor::onSchedule(context, session_factory);
   std::string max_wait_time_str;
-  if (auto max_age = context->getProperty<core::TimePeriodValue>(MaximumWaitingTime)) {
+  if (auto max_age = context.getProperty<core::TimePeriodValue>(MaximumWaitingTime)) {
     max_age_ = max_age->getMilliseconds();
   }
 
-  context->getProperty(MaxQuerySize, batch_size_);
-  initializeClient(client_, getNetworkLocation().append(getEndpoint()), getSSLContextService(*context));
+  context.getProperty(MaxQuerySize, batch_size_);
+  initializeClient(client_, getNetworkLocation().append(getEndpoint()), getSSLContextService(context));
 }
 
-void QuerySplunkIndexingStatus::onTrigger(const std::shared_ptr<core::ProcessContext>& context, const std::shared_ptr<core::ProcessSession>& session) {
-  gsl_Expects(context && session);
+void QuerySplunkIndexingStatus::onTrigger(core::ProcessContext&, core::ProcessSession& session) {
   std::string ack_request;
 
-  auto undetermined_flow_files = getUndeterminedFlowFiles(*session, batch_size_);
+  auto undetermined_flow_files = getUndeterminedFlowFiles(session, batch_size_);
   if (undetermined_flow_files.empty())
     return;
   client_.setPostFields(getAckIdsAsPayload(undetermined_flow_files));
   getIndexingStatusFromSplunk(client_, undetermined_flow_files);
-  routeFlowFilesBasedOnIndexingStatus(*session, undetermined_flow_files, max_age_);
+  routeFlowFilesBasedOnIndexingStatus(session, undetermined_flow_files, max_age_);
 }
 
 REGISTER_RESOURCE(QuerySplunkIndexingStatus, Processor);

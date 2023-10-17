@@ -19,7 +19,6 @@
  */
 #include "UnfocusArchiveEntry.h"
 
-#include <cstring>
 #include <iostream>
 #include <fstream>
 #include <memory>
@@ -41,8 +40,8 @@ void UnfocusArchiveEntry::initialize() {
   setSupportedRelationships(Relationships);
 }
 
-void UnfocusArchiveEntry::onTrigger(core::ProcessContext *context, core::ProcessSession *session) {
-  auto flowFile = session->get();
+void UnfocusArchiveEntry::onTrigger(core::ProcessContext& context, core::ProcessSession& session) {
+  auto flowFile = session.get();
 
   if (!flowFile) {
     return;
@@ -64,12 +63,12 @@ void UnfocusArchiveEntry::onTrigger(core::ProcessContext *context, core::Process
           archiveStack.loadJsonString(existingLensStack);
         } catch (Exception &exception) {
           logger_->log_debug("{}", exception.what());
-          context->yield();
+          context.yield();
           return;
         }
       } else {
         logger_->log_error("UnfocusArchiveEntry lens metadata not found");
-        context->yield();
+        context.yield();
         return;
       }
     }
@@ -91,7 +90,7 @@ void UnfocusArchiveEntry::onTrigger(core::ProcessContext *context, core::Process
 
     if (entry.entryName == lensArchiveMetadata.focusedEntry) {
       logger_->log_debug("UnfocusArchiveEntry exporting focused entry to {}", entry.tmpFileName);
-      session->exportContent(entry.tmpFileName.string(), flowFile, false);
+      session.exportContent(entry.tmpFileName.string(), flowFile, false);
     }
   }
 
@@ -106,9 +105,9 @@ void UnfocusArchiveEntry::onTrigger(core::ProcessContext *context, core::Process
     }
 
     logger_->log_debug("UnfocusArchiveEntry exporting entry {} to {}", entry.stashKey, entry.tmpFileName);
-    session->restore(entry.stashKey, flowFile);
+    session.restore(entry.stashKey, flowFile);
     // TODO(calebj) implement copy export/don't worry about multiple claims/optimal efficiency for *now*
-    session->exportContent(entry.tmpFileName.string(), flowFile, false);
+    session.exportContent(entry.tmpFileName.string(), flowFile, false);
   }
 
   if (lensArchiveMetadata.archiveName.empty()) {
@@ -127,10 +126,10 @@ void UnfocusArchiveEntry::onTrigger(core::ProcessContext *context, core::Process
 
   // Create archive by restoring each entry in the archive from tmp files
   WriteCallback cb(&lensArchiveMetadata);
-  session->write(flowFile, std::cref(cb));
+  session.write(flowFile, std::cref(cb));
 
   // Transfer to the relationship
-  session->transfer(flowFile, Success);
+  session.transfer(flowFile, Success);
 }
 
 UnfocusArchiveEntry::WriteCallback::WriteCallback(ArchiveMetadata *archiveMetadata)

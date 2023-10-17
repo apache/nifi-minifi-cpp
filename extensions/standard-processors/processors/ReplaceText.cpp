@@ -38,26 +38,21 @@ void ReplaceText::initialize() {
   setSupportedRelationships(Relationships);
 }
 
-void ReplaceText::onSchedule(const std::shared_ptr<core::ProcessContext>& context, const std::shared_ptr<core::ProcessSessionFactory>&) {
-  gsl_Expects(context);
-
-  evaluation_mode_ = utils::parseEnumProperty<EvaluationModeType>(*context, EvaluationMode);
+void ReplaceText::onSchedule(core::ProcessContext& context, core::ProcessSessionFactory&) {
+  evaluation_mode_ = utils::parseEnumProperty<EvaluationModeType>(context, EvaluationMode);
   logger_->log_debug("the {} property is set to {}", EvaluationMode.name, magic_enum::enum_name(evaluation_mode_));
 
-  if (auto line_by_line_evaluation_mode = utils::parseOptionalEnumProperty<LineByLineEvaluationModeType>(*context, LineByLineEvaluationMode)) {
+  if (auto line_by_line_evaluation_mode = utils::parseOptionalEnumProperty<LineByLineEvaluationModeType>(context, LineByLineEvaluationMode)) {
     line_by_line_evaluation_mode_ = *line_by_line_evaluation_mode;
     logger_->log_debug("the {} property is set to {}", LineByLineEvaluationMode.name, magic_enum::enum_name(line_by_line_evaluation_mode_));
   }
 
-  replacement_strategy_ = utils::parseEnumProperty<ReplacementStrategyType>(*context, ReplacementStrategy);
+  replacement_strategy_ = utils::parseEnumProperty<ReplacementStrategyType>(context, ReplacementStrategy);
   logger_->log_debug("the {} property is set to {}", ReplacementStrategy.name, magic_enum::enum_name(replacement_strategy_));
 }
 
-void ReplaceText::onTrigger(const std::shared_ptr<core::ProcessContext>& context, const std::shared_ptr<core::ProcessSession>& session) {
-  gsl_Expects(context);
-  gsl_Expects(session);
-
-  std::shared_ptr<core::FlowFile> flow_file = session->get();
+void ReplaceText::onTrigger(core::ProcessContext& context, core::ProcessSession& session) {
+  std::shared_ptr<core::FlowFile> flow_file = session.get();
   if (!flow_file) {
     logger_->log_trace("No flow file");
     yield();
@@ -78,14 +73,14 @@ void ReplaceText::onTrigger(const std::shared_ptr<core::ProcessContext>& context
   throw Exception{PROCESSOR_EXCEPTION, utils::StringUtils::join_pack("Unsupported ", EvaluationMode.name, ": ", std::string{magic_enum::enum_name(evaluation_mode_)})};
 }
 
-ReplaceText::Parameters ReplaceText::readParameters(const std::shared_ptr<core::ProcessContext>& context, const std::shared_ptr<core::FlowFile>& flow_file) const {
+ReplaceText::Parameters ReplaceText::readParameters(core::ProcessContext& context, const std::shared_ptr<core::FlowFile>& flow_file) const {
   Parameters parameters;
 
   bool found_search_value;
   if (replacement_strategy_ == ReplacementStrategyType::REGEX_REPLACE) {
-    found_search_value = context->getProperty(SearchValue, parameters.search_value_);
+    found_search_value = context.getProperty(SearchValue, parameters.search_value_);
   } else {
-    found_search_value = context->getProperty(SearchValue, parameters.search_value_, flow_file);
+    found_search_value = context.getProperty(SearchValue, parameters.search_value_, flow_file);
   }
   if (found_search_value) {
     logger_->log_debug("the {} property is set to {}", SearchValue.name, parameters.search_value_);
@@ -99,9 +94,9 @@ ReplaceText::Parameters ReplaceText::readParameters(const std::shared_ptr<core::
 
   bool found_replacement_value;
   if (replacement_strategy_ == ReplacementStrategyType::REGEX_REPLACE) {
-    found_replacement_value = context->getProperty(ReplacementValue, parameters.replacement_value_);
+    found_replacement_value = context.getProperty(ReplacementValue, parameters.replacement_value_);
   } else {
-    found_replacement_value = context->getProperty(ReplacementValue, parameters.replacement_value_, flow_file);
+    found_replacement_value = context.getProperty(ReplacementValue, parameters.replacement_value_, flow_file);
   }
   if (found_replacement_value) {
     logger_->log_debug("the {} property is set to {}", ReplacementValue.name, parameters.replacement_value_);
@@ -117,23 +112,21 @@ ReplaceText::Parameters ReplaceText::readParameters(const std::shared_ptr<core::
   return parameters;
 }
 
-void ReplaceText::replaceTextInEntireFile(const std::shared_ptr<core::FlowFile>& flow_file, const std::shared_ptr<core::ProcessSession>& session, const Parameters& parameters) const {
+void ReplaceText::replaceTextInEntireFile(const std::shared_ptr<core::FlowFile>& flow_file, core::ProcessSession& session, const Parameters& parameters) const {
   gsl_Expects(flow_file);
-  gsl_Expects(session);
 
   try {
-    const auto input = to_string(session->readBuffer(flow_file));
-    session->writeBuffer(flow_file, applyReplacements(input, flow_file, parameters));
-    session->transfer(flow_file, Success);
+    const auto input = to_string(session.readBuffer(flow_file));
+    session.writeBuffer(flow_file, applyReplacements(input, flow_file, parameters));
+    session.transfer(flow_file, Success);
   } catch (const Exception& exception) {
     logger_->log_error("Error in ReplaceText (Entire text mode): {}", exception.what());
-    session->transfer(flow_file, Failure);
+    session.transfer(flow_file, Failure);
   }
 }
 
-void ReplaceText::replaceTextLineByLine(const std::shared_ptr<core::FlowFile>& flow_file, const std::shared_ptr<core::ProcessSession>& session, const Parameters& parameters) const {
+void ReplaceText::replaceTextLineByLine(const std::shared_ptr<core::FlowFile>& flow_file, core::ProcessSession& session, const Parameters& parameters) const {
   gsl_Expects(flow_file);
-  gsl_Expects(session);
 
   try {
     utils::LineByLineInputOutputStreamCallback read_write_callback{[this, &flow_file, &parameters](const std::string& input_line, bool is_first_line, bool is_last_line) {
@@ -151,11 +144,11 @@ void ReplaceText::replaceTextLineByLine(const std::shared_ptr<core::FlowFile>& f
       }
       throw Exception{PROCESSOR_EXCEPTION, utils::StringUtils::join_pack("Unsupported ", LineByLineEvaluationMode.name, ": ", std::string{magic_enum::enum_name(line_by_line_evaluation_mode_)})};
     }};
-    session->readWrite(flow_file, std::move(read_write_callback));
-    session->transfer(flow_file, Success);
+    session.readWrite(flow_file, std::move(read_write_callback));
+    session.transfer(flow_file, Success);
   } catch (const Exception& exception) {
     logger_->log_error("Error in ReplaceText (Line-by-Line mode): {}", exception.what());
-    session->transfer(flow_file, Failure);
+    session.transfer(flow_file, Failure);
   }
 }
 

@@ -31,46 +31,45 @@ void ListSmb::initialize() {
   setSupportedRelationships(Relationships);
 }
 
-void ListSmb::onSchedule(const std::shared_ptr<core::ProcessContext> &context, const std::shared_ptr<core::ProcessSessionFactory> &/*sessionFactory*/) {
-  gsl_Expects(context);
-  smb_connection_controller_service_ = SmbConnectionControllerService::getFromProperty(*context, ListSmb::ConnectionControllerService);
+void ListSmb::onSchedule(core::ProcessContext& context, core::ProcessSessionFactory&) {
+  smb_connection_controller_service_ = SmbConnectionControllerService::getFromProperty(context, ListSmb::ConnectionControllerService);
 
-  auto state_manager = context->getStateManager();
+  auto state_manager = context.getStateManager();
   if (state_manager == nullptr) {
     throw Exception(PROCESSOR_EXCEPTION, "Failed to get StateManager");
   }
   state_manager_ = std::make_unique<minifi::utils::ListingStateManager>(state_manager);
 
-  input_directory_ = context->getProperty(InputDirectory).value_or("");
+  input_directory_ = context.getProperty(InputDirectory).value_or("");
 
-  context->getProperty(RecurseSubdirectories, recurse_subdirectories_);
+  context.getProperty(RecurseSubdirectories, recurse_subdirectories_);
 
   std::string value;
-  if (context->getProperty(FileFilter, value) && !value.empty()) {
+  if (context.getProperty(FileFilter, value) && !value.empty()) {
     file_filter_.filename_filter = std::regex(value);
   }
 
-  if (recurse_subdirectories_ && context->getProperty(PathFilter, value) && !value.empty()) {
+  if (recurse_subdirectories_ && context.getProperty(PathFilter, value) && !value.empty()) {
     file_filter_.path_filter = std::regex(value);
   }
 
-  if (auto minimum_file_age = context->getProperty<core::TimePeriodValue>(MinimumFileAge)) {
+  if (auto minimum_file_age = context.getProperty<core::TimePeriodValue>(MinimumFileAge)) {
     file_filter_.minimum_file_age =  minimum_file_age->getMilliseconds();
   }
 
-  if (auto maximum_file_age = context->getProperty<core::TimePeriodValue>(MaximumFileAge)) {
+  if (auto maximum_file_age = context.getProperty<core::TimePeriodValue>(MaximumFileAge)) {
     file_filter_.maximum_file_age =  maximum_file_age->getMilliseconds();
   }
 
-  if (const auto minimum_file_size = context->getProperty<core::DataSizeValue>(MinimumFileSize)) {
+  if (const auto minimum_file_size = context.getProperty<core::DataSizeValue>(MinimumFileSize)) {
     file_filter_.minimum_file_size = minimum_file_size->getValue();
   }
 
-  if (const auto maximum_file_size = context->getProperty<core::DataSizeValue>(MaximumFileSize)) {
+  if (const auto maximum_file_size = context.getProperty<core::DataSizeValue>(MaximumFileSize)) {
     file_filter_.maximum_file_size = maximum_file_size->getValue();
   }
 
-  context->getProperty(IgnoreHiddenFiles, file_filter_.ignore_hidden_files);
+  context.getProperty(IgnoreHiddenFiles, file_filter_.ignore_hidden_files);
 }
 
 namespace {
@@ -103,12 +102,12 @@ std::shared_ptr<core::FlowFile> ListSmb::createFlowFile(core::ProcessSession& se
   return flow_file;
 }
 
-void ListSmb::onTrigger(const std::shared_ptr<core::ProcessContext> &context, const std::shared_ptr<core::ProcessSession> &session) {
-  gsl_Expects(context && session && smb_connection_controller_service_);
+void ListSmb::onTrigger(core::ProcessContext& context, core::ProcessSession& session) {
+  gsl_Expects(smb_connection_controller_service_);
 
   if (auto connection_error = smb_connection_controller_service_->validateConnection()) {
     logger_->log_error("Couldn't establish connection to the specified network location due to {}", connection_error.message());
-    context->yield();
+    context.yield();
     return;
   }
 
@@ -124,7 +123,7 @@ void ListSmb::onTrigger(const std::shared_ptr<core::ProcessContext> &context, co
       return true;
     }
 
-    session->transfer(createFlowFile(*session, listed_file), Success);
+    session.transfer(createFlowFile(session, listed_file), Success);
     ++files_listed;
     latest_listing_state.updateState(listed_file);
     return true;
@@ -135,7 +134,7 @@ void ListSmb::onTrigger(const std::shared_ptr<core::ProcessContext> &context, co
 
   if (files_listed == 0) {
     logger_->log_debug("No new files were found in input directory '{}' to list", dir);
-    context->yield();
+    context.yield();
   }
 }
 

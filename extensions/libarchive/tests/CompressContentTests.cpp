@@ -170,11 +170,11 @@ class CompressDecompressionTestController : public TestController {
   }
 
   void trigger() {
-    auto factory = std::make_shared<core::ProcessSessionFactory>(context);
-    processor->onSchedule(context, factory);
-    auto session = std::make_shared<core::ProcessSession>(context);
-    processor->onTrigger(context, session);
-    session->commit();
+    auto factory = core::ProcessSessionFactory(context);
+    processor->onSchedule(*context, factory);
+    auto session = core::ProcessSession(context);
+    processor->onTrigger(*context, session);
+    session.commit();
   }
 
   void read(const std::shared_ptr<core::FlowFile>& file, ReadCallback& reader) const {
@@ -648,12 +648,12 @@ TEST_CASE_METHOD(CompressTestController, "Batch CompressFileGZip", "[compressFil
 
   REQUIRE(processor->getName() == "compresscontent");
   auto factory = std::make_shared<core::ProcessSessionFactory>(context);
-  processor->onSchedule(context, factory);
+  processor->onSchedule(*context, *factory);
 
   // Trigger once to process batchSize
   {
     auto session = std::make_shared<core::ProcessSession>(context);
-    processor->onTrigger(context, session);
+    processor->onTrigger(*context, *session);
     session->commit();
   }
 
@@ -667,8 +667,8 @@ TEST_CASE_METHOD(CompressTestController, "Batch CompressFileGZip", "[compressFil
 
   // Trigger a second time to process the remaining files
   {
-    auto session = std::make_shared<core::ProcessSession>(context);
-    processor->onTrigger(context, session);
+    auto session = std::make_unique<core::ProcessSession>(context);
+    processor->onTrigger(*context, *session);
     session->commit();
   }
 

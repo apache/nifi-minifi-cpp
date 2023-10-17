@@ -46,19 +46,17 @@ void ListenSyslog::initialize() {
   setSupportedRelationships(Relationships);
 }
 
-void ListenSyslog::onSchedule(const std::shared_ptr<core::ProcessContext>& context, const std::shared_ptr<core::ProcessSessionFactory>&) {
-  gsl_Expects(context);
-
-  context->getProperty(ParseMessages, parse_messages_);
+void ListenSyslog::onSchedule(core::ProcessContext& context, core::ProcessSessionFactory&) {
+  context.getProperty(ParseMessages, parse_messages_);
 
   std::string protocol_name;
-  context->getProperty(ProtocolProperty, protocol_name);
+  context.getProperty(ProtocolProperty, protocol_name);
   auto protocol = utils::enumCast<utils::net::IpProtocol>(protocol_name);
 
   if (protocol == utils::net::IpProtocol::TCP) {
-    startTcpServer(*context, SSLContextService, ClientAuth);
+    startTcpServer(context, SSLContextService, ClientAuth);
   } else if (protocol == utils::net::IpProtocol::UDP) {
-    startUdpServer(*context);
+    startUdpServer(context);
   } else {
     throw Exception(PROCESS_SCHEDULE_EXCEPTION, "Invalid protocol");
   }

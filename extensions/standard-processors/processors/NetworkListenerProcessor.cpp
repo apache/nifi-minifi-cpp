@@ -26,14 +26,14 @@ NetworkListenerProcessor::~NetworkListenerProcessor() {
   stopServer();
 }
 
-void NetworkListenerProcessor::onTrigger(const std::shared_ptr<core::ProcessContext>&, const std::shared_ptr<core::ProcessSession>& session) {
-  gsl_Expects(session && max_batch_size_ > 0);
+void NetworkListenerProcessor::onTrigger(core::ProcessContext&, core::ProcessSession& session) {
+  gsl_Expects(max_batch_size_ > 0);
   size_t logs_processed = 0;
   while (!server_->queueEmpty() && logs_processed < max_batch_size_) {
     utils::net::Message received_message;
     if (!server_->tryDequeue(received_message))
       break;
-    transferAsFlowFile(received_message, *session);
+    transferAsFlowFile(received_message, session);
     ++logs_processed;
   }
 }

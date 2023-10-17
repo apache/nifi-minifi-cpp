@@ -98,8 +98,8 @@ int SiteToSiteClient::writeResponse(const std::shared_ptr<Transaction>& /*transa
   }
 }
 
-bool SiteToSiteClient::transferFlowFiles(const std::shared_ptr<core::ProcessContext> &context, const std::shared_ptr<core::ProcessSession> &session) {
-  auto flow = session->get();
+bool SiteToSiteClient::transferFlowFiles(core::ProcessContext& context, core::ProcessSession& session) {
+  auto flow = session.get();
 
   std::shared_ptr<Transaction> transaction = nullptr;
 
@@ -113,7 +113,7 @@ bool SiteToSiteClient::transferFlowFiles(const std::shared_ptr<core::ProcessCont
   }
 
   if (peer_state_ != READY) {
-    context->yield();
+    context.yield();
     tearDown();
     throw Exception(SITE2SITE_EXCEPTION, "Can not establish handshake with peer");
   }
@@ -121,7 +121,7 @@ bool SiteToSiteClient::transferFlowFiles(const std::shared_ptr<core::ProcessCont
   // Create the transaction
   transaction = createTransaction(SEND);
   if (transaction == nullptr) {
-    context->yield();
+    context.yield();
     tearDown();
     throw Exception(SITE2SITE_EXCEPTION, "Can not create transaction");
   }
@@ -136,7 +136,7 @@ bool SiteToSiteClient::transferFlowFiles(const std::shared_ptr<core::ProcessCont
       std::string payload;
       DataPacket packet(getLogger(), transaction, flow->getAttributes(), payload);
 
-      int16_t resp = send(transactionID, &packet, flow, session);
+      int16_t resp = send(transactionID, &packet, flow, &session);
       if (resp == -1) {
         throw Exception(SITE2SITE_EXCEPTION, "Send Failed");
       }
@@ -146,15 +146,15 @@ bool SiteToSiteClient::transferFlowFiles(const std::shared_ptr<core::ProcessCont
         auto end_time = std::chrono::steady_clock::now();
         std::string transitUri = peer_->getURL() + "/" + flow->getUUIDStr();
         std::string details = "urn:nifi:" + flow->getUUIDStr() + "Remote Host=" + peer_->getHostName();
-        session->getProvenanceReporter()->send(flow, transitUri, details, std::chrono::duration_cast<std::chrono::milliseconds>(end_time - start_time), false);
+        session.getProvenanceReporter()->send(flow, transitUri, details, std::chrono::duration_cast<std::chrono::milliseconds>(end_time - start_time), false);
       }
-      session->remove(flow);
+      session.remove(flow);
 
       std::chrono::nanoseconds transfer_duration = std::chrono::high_resolution_clock::now() - transaction_started_at;
       if (transfer_duration > _batchSendNanos)
         break;
 
-      flow = session->get();
+      flow = session.get();
 
       if (!flow) {
         continueTransaction = false;
@@ -171,14 +171,14 @@ bool SiteToSiteClient::transferFlowFiles(const std::shared_ptr<core::ProcessCont
   } catch (std::exception &exception) {
     if (transaction)
       deleteTransaction(transactionID);
-    context->yield();
+    context.yield();
     tearDown();
     logger_->log_debug("Caught Exception during SiteToSiteClient::transferFlowFiles, type: {}, what: {}", typeid(exception).name(), exception.what());
     throw;
   } catch (...) {
     if (transaction)
       deleteTransaction(transactionID);
-    context->yield();
+    context.yield();
     tearDown();
     logger_->log_debug("Caught Exception during SiteToSiteClient::transferFlowFiles, type: {}", getCurrentExceptionTypeName());
     throw;
@@ -393,7 +393,7 @@ bool SiteToSiteClient::complete(const utils::Identifier& transactionID) {
   }
 }
 
-int16_t SiteToSiteClient::send(const utils::Identifier &transactionID, DataPacket *packet, const std::shared_ptr<core::FlowFile> &flowFile, const std::shared_ptr<core::ProcessSession> &session) {
+int16_t SiteToSiteClient::send(const utils::Identifier& transactionID, DataPacket* packet, const std::shared_ptr<core::FlowFile> &flowFile, core::ProcessSession* session) {
   if (peer_state_ != READY) {
     bootstrap();
   }
@@ -458,7 +458,7 @@ int16_t SiteToSiteClient::send(const utils::Identifier &transactionID, DataPacke
   }
 
   uint64_t len = 0;
-  if (flowFile && flowfile_has_content) {
+  if (flowFile && flowfile_has_content && session) {
     len = flowFile->getSize();
     const auto ret = transaction->getStream().write(len);
     if (ret != 8) {
@@ -636,7 +636,7 @@ bool SiteToSiteClient::receive(const utils::Identifier& transactionID, DataPacke
   return true;
 }
 
-bool SiteToSiteClient::receiveFlowFiles(const std::shared_ptr<core::ProcessContext> &context, const std::shared_ptr<core::ProcessSession> &session) {
+bool SiteToSiteClient::receiveFlowFiles(core::ProcessContext& context, core::ProcessSession& session) {
   uint64_t bytes = 0;
   int transfers = 0;
   std::shared_ptr<Transaction> transaction = nullptr;
@@ -648,7 +648,7 @@ bool SiteToSiteClient::receiveFlowFiles(const std::shared_ptr<core::ProcessConte
   }
 
   if (peer_state_ != READY) {
-    context->yield();
+    context.yield();
     tearDown();
     throw Exception(SITE2SITE_EXCEPTION, "Can not establish handshake with peer");
   }
@@ -657,7 +657,7 @@ bool SiteToSiteClient::receiveFlowFiles(const std::shared_ptr<core::ProcessConte
   transaction = createTransaction(RECEIVE);
 
   if (transaction == nullptr) {
-    context->yield();
+    context.yield();
     tearDown();
     throw Exception(SITE2SITE_EXCEPTION, "Can not create transaction");
   }
@@ -679,7 +679,7 @@ bool SiteToSiteClient::receiveFlowFiles(const std::shared_ptr<core::ProcessConte
         // transaction done
         break;
       }
-      auto flowFile = session->create();
+      auto flowFile = session.create();
 
       if (!flowFile) {
         throw Exception(SITE2SITE_EXCEPTION, "Flow File Creation Failed");
@@ -693,7 +693,7 @@ bool SiteToSiteClient::receiveFlowFiles(const std::shared_ptr<core::ProcessConte
       }
 
       if (packet._size > 0) {
-        session->write(flowFile, [&packet](const std::shared_ptr<io::OutputStream>& output_stream) -> int64_t {
+        session.write(flowFile, [&packet](const std::shared_ptr<io::OutputStream>& output_stream) -> int64_t {
           return internal::pipe(packet.transaction_->getStream(), *output_stream);
         });
         if (flowFile->getSize() != packet._size) {
@@ -708,8 +708,8 @@ bool SiteToSiteClient::receiveFlowFiles(const std::shared_ptr<core::ProcessConte
       auto end_time = std::chrono::steady_clock::now();
       std::string transitUri = peer_->getURL() + "/" + sourceIdentifier;
       std::string details = "urn:nifi:" + sourceIdentifier + "Remote Host=" + peer_->getHostName();
-      session->getProvenanceReporter()->receive(flowFile, transitUri, sourceIdentifier, details, std::chrono::duration_cast<std::chrono::milliseconds>(end_time - start_time));
-      session->transfer(flowFile, relation);
+      session.getProvenanceReporter()->receive(flowFile, transitUri, sourceIdentifier, details, std::chrono::duration_cast<std::chrono::milliseconds>(end_time - start_time));
+      session.transfer(flowFile, relation);
       // receive the transfer for the flow record
       bytes += packet._size;
       transfers++;
@@ -726,18 +726,18 @@ bool SiteToSiteClient::receiveFlowFiles(const std::shared_ptr<core::ProcessConte
     logger_->log_info("Site to Site transaction {} received flow record {}, with content size {} bytes", transactionID.to_string(), transfers, bytes);
     // we yield the receive if we did not get anything
     if (transfers == 0)
-      context->yield();
+      context.yield();
   } catch (std::exception &exception) {
     if (transaction)
       deleteTransaction(transactionID);
-    context->yield();
+    context.yield();
     tearDown();
     logger_->log_warn("Caught Exception during RawSiteToSiteClient::receiveFlowFiles, type: {}, what: {}", typeid(exception).name(), exception.what());
     throw;
   } catch (...) {
     if (transaction)
       deleteTransaction(transactionID);
-    context->yield();
+    context.yield();
     tearDown();
     logger_->log_warn("Caught Exception during RawSiteToSiteClient::receiveFlowFiles, type: {}", getCurrentExceptionTypeName());
     throw;

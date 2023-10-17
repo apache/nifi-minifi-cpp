@@ -40,43 +40,43 @@ void GetFile::initialize() {
   setSupportedRelationships(Relationships);
 }
 
-void GetFile::onSchedule(core::ProcessContext *context, core::ProcessSessionFactory* /*sessionFactory*/) {
+void GetFile::onSchedule(core::ProcessContext& context, core::ProcessSessionFactory&) {
   std::string value;
-  if (context->getProperty(BatchSize, value)) {
+  if (context.getProperty(BatchSize, value)) {
     core::Property::StringToInt(value, request_.batchSize);
   }
-  if (context->getProperty(IgnoreHiddenFile, value)) {
+  if (context.getProperty(IgnoreHiddenFile, value)) {
     request_.ignoreHiddenFile = org::apache::nifi::minifi::utils::StringUtils::toBool(value).value_or(true);
   }
-  if (context->getProperty(KeepSourceFile, value)) {
+  if (context.getProperty(KeepSourceFile, value)) {
     request_.keepSourceFile = org::apache::nifi::minifi::utils::StringUtils::toBool(value).value_or(false);
   }
 
-  if (auto max_age = context->getProperty<core::TimePeriodValue>(MaxAge))
+  if (auto max_age = context.getProperty<core::TimePeriodValue>(MaxAge))
     request_.maxAge = max_age->getMilliseconds();
-  if (auto min_age = context->getProperty<core::TimePeriodValue>(MinAge))
+  if (auto min_age = context.getProperty<core::TimePeriodValue>(MinAge))
     request_.minAge = min_age->getMilliseconds();
 
-  if (context->getProperty(MaxSize, value)) {
+  if (context.getProperty(MaxSize, value)) {
     core::Property::StringToInt(value, request_.maxSize);
   }
-  if (context->getProperty(MinSize, value)) {
+  if (context.getProperty(MinSize, value)) {
     core::Property::StringToInt(value, request_.minSize);
   }
 
-  if (const auto poll_interval = context->getProperty<core::TimePeriodValue>(PollInterval)) {
+  if (const auto poll_interval = context.getProperty<core::TimePeriodValue>(PollInterval)) {
     request_.pollInterval = poll_interval->getMilliseconds();
   }
 
-  if (context->getProperty(Recurse, value)) {
+  if (context.getProperty(Recurse, value)) {
     request_.recursive = org::apache::nifi::minifi::utils::StringUtils::toBool(value).value_or(true);
   }
 
-  if (context->getProperty(FileFilter, value)) {
+  if (context.getProperty(FileFilter, value)) {
     request_.fileFilter = value;
   }
 
-  if (auto directory_str = context->getProperty(Directory)) {
+  if (auto directory_str = context.getProperty(Directory)) {
     if (!utils::file::is_directory(*directory_str)) {
       throw Exception(PROCESS_SCHEDULE_EXCEPTION, "Input Directory \"" + value + "\" is not a directory");
     }
@@ -86,7 +86,7 @@ void GetFile::onSchedule(core::ProcessContext *context, core::ProcessSessionFact
   }
 }
 
-void GetFile::onTrigger(core::ProcessContext* /*context*/, core::ProcessSession* session) {
+void GetFile::onTrigger(core::ProcessContext&, core::ProcessSession& session) {
   const bool is_dir_empty_before_poll = isListingEmpty();
   logger_->log_debug("Listing is {} before polling directory", is_dir_empty_before_poll ? "empty" : "not empty");
   if (is_dir_empty_before_poll) {
@@ -107,7 +107,7 @@ void GetFile::onTrigger(core::ProcessContext* /*context*/, core::ProcessSession*
   while (!list_of_file_names.empty()) {
     auto file_name = list_of_file_names.front();
     list_of_file_names.pop();
-    getSingleFile(*session, file_name);
+    getSingleFile(session, file_name);
   }
 }
 

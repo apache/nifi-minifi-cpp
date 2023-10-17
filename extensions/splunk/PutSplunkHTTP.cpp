@@ -40,31 +40,31 @@ void PutSplunkHTTP::initialize() {
   setSupportedRelationships(Relationships);
 }
 
-namespace {
-std::optional<std::string> getContentType(core::ProcessContext& context, const core::FlowFile& flow_file) {
-  return context.getProperty(PutSplunkHTTP::ContentType) | utils::orElse ([&flow_file] {return flow_file.getAttribute("mime.type");});
-}
-
-std::string getEndpoint(core::ProcessContext& context, curl::HTTPClient& client) {
+std::string PutSplunkHTTP::getEndpoint(curl::HTTPClient& client) {
   std::stringstream endpoint;
   endpoint << "/services/collector/raw";
   std::vector<std::string> parameters;
-  if (auto source_type = context.getProperty(PutSplunkHTTP::SourceType)) {
-    parameters.push_back("sourcetype=" + client.escape(*source_type));
+  if (source_type_) {
+    parameters.push_back("sourcetype=" + client.escape(*source_type_));
   }
-  if (auto source = context.getProperty(PutSplunkHTTP::Source)) {
-    parameters.push_back("source=" + client.escape(*source));
+  if (source_) {
+    parameters.push_back("source=" + client.escape(*source_));
   }
-  if (auto host = context.getProperty(PutSplunkHTTP::Host)) {
-    parameters.push_back("host=" + client.escape(*host));
+  if (host_) {
+    parameters.push_back("host=" + client.escape(*host_));
   }
-  if (auto index = context.getProperty(PutSplunkHTTP::Index)) {
-    parameters.push_back("index=" + client.escape(*index));
+  if (index_) {
+    parameters.push_back("index=" + client.escape(*index_));
   }
   if (!parameters.empty()) {
     endpoint << "?" << utils::StringUtils::join("&", parameters);
   }
   return endpoint.str();
+}
+
+namespace {
+std::optional<std::string> getContentType(core::ProcessContext& context, const core::FlowFile& flow_file) {
+  return context.getProperty(PutSplunkHTTP::ContentType) | utils::orElse ([&flow_file] {return flow_file.getAttribute("mime.type");});
 }
 
 bool setAttributesFromClientResponse(core::FlowFile& flow_file, curl::HTTPClient& client) {
@@ -112,40 +112,41 @@ void setFlowFileAsPayload(core::ProcessSession& session,
 }
 }  // namespace
 
-void PutSplunkHTTP::onSchedule(const std::shared_ptr<core::ProcessContext>& context, const std::shared_ptr<core::ProcessSessionFactory>& sessionFactory) {
-  SplunkHECProcessor::onSchedule(context, sessionFactory);
-  std::weak_ptr<core::ProcessContext> weak_context = context;
-  auto create_client = [this, weak_context]() -> std::unique_ptr<minifi::extensions::curl::HTTPClient> {
-    if (auto context = weak_context.lock()) {
-      auto client = std::make_unique<curl::HTTPClient>();
-      initializeClient(*client, getNetworkLocation().append(getEndpoint(*context, *client)), getSSLContextService(*context));
-      return client;
-    }
-    return nullptr;
+void PutSplunkHTTP::onSchedule(core::ProcessContext& context, core::ProcessSessionFactory& session_factory) {
+  SplunkHECProcessor::onSchedule(context, session_factory);
+  ssl_context_service_ = getSSLContextService(context);
+  auto create_client = [this]() -> std::unique_ptr<minifi::extensions::curl::HTTPClient> {
+    auto client = std::make_unique<curl::HTTPClient>();
+    initializeClient(*client, getNetworkLocation().append(getEndpoint(*client)), ssl_context_service_);
+    return client;
   };
 
   client_queue_ = utils::ResourceQueue<extensions::curl::HTTPClient>::create(create_client, getMaxConcurrentTasks(), std::nullopt, logger_);
+  source_type_ = context.getProperty(PutSplunkHTTP::SourceType);
+  source_ = context.getProperty(PutSplunkHTTP::Source);
+  host_ = context.getProperty(PutSplunkHTTP::Host);
+  index_ = context.getProperty(PutSplunkHTTP::Index);
 }
 
-void PutSplunkHTTP::onTrigger(const std::shared_ptr<core::ProcessContext>& context, const std::shared_ptr<core::ProcessSession>& session) {
-  gsl_Expects(context && session && client_queue_);
+void PutSplunkHTTP::onTrigger(core::ProcessContext& context, core::ProcessSession& session) {
+  gsl_Expects(client_queue_);
 
-  auto ff = session->get();
+  auto ff = session.get();
   if (!ff) {
-    context->yield();
+    context.yield();
     return;
   }
   auto flow_file = gsl::not_null(std::move(ff));
 
   auto client = client_queue_->getResource();
 
-  setFlowFileAsPayload(*session, *context, *client, flow_file);
+  setFlowFileAsPayload(session, context, *client, flow_file);
 
   bool success = false;
   if (client->submit())
     success = enrichFlowFileWithAttributes(*flow_file, *client);
 
-  session->transfer(flow_file, success ? Success : Failure);
+  session.transfer(flow_file, success ? Success : Failure);
 }
 
 REGISTER_RESOURCE(PutSplunkHTTP, Processor);

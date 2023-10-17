@@ -42,16 +42,16 @@ void GetGPS::initialize() {
   setSupportedRelationships(Relationships);
 }
 
-void GetGPS::onSchedule(const std::shared_ptr<core::ProcessContext> &context, const std::shared_ptr<core::ProcessSessionFactory>& /*sessionFactory*/) {
+void GetGPS::onSchedule(core::ProcessContext& context, core::ProcessSessionFactory&) {
   std::string value;
 
-  if (context->getProperty(GPSDHost, value)) {
+  if (context.getProperty(GPSDHost, value)) {
     gpsdHost_ = value;
   }
-  if (context->getProperty(GPSDPort, value)) {
+  if (context.getProperty(GPSDPort, value)) {
     gpsdPort_ = value;
   }
-  if (context->getProperty(GPSDWaitTime, value)) {
+  if (context.getProperty(GPSDWaitTime, value)) {
     core::Property::StringToInt(value, gpsdWaitTime_);
   }
   logger_->log_trace("GPSD client scheduled");
@@ -65,7 +65,7 @@ int get_gps_status(struct gps_data_t* gps_data) {
 #endif
 }
 
-void GetGPS::onTrigger(const std::shared_ptr<core::ProcessContext>& /*context*/, const std::shared_ptr<core::ProcessSession> &session) {
+void GetGPS::onTrigger(core::ProcessContext&, core::ProcessSession& session) {
   try {
     gpsmm gps_rec(gpsdHost_.c_str(), gpsdPort_.c_str());
 
@@ -93,7 +93,7 @@ void GetGPS::onTrigger(const std::shared_ptr<core::ProcessContext>& /*context*/,
           logger_->log_debug("Longitude: {}\nLatitude: {}\nAltitude: {}\nAccuracy: {}\n\n", gpsdata->fix.latitude, gpsdata->fix.longitude, gpsdata->fix.altitude,
                              (gpsdata->fix.epx > gpsdata->fix.epy) ? gpsdata->fix.epx : gpsdata->fix.epy);
 
-          auto flowFile = session->create();
+          auto flowFile = session.create();
           if (flowFile == nullptr)
             return;
 
@@ -115,7 +115,7 @@ void GetGPS::onTrigger(const std::shared_ptr<core::ProcessContext>& /*context*/,
           // Calculated Accuracy value
           flowFile->addAttribute("gps_accuracy", std::to_string((gpsdata->fix.epx > gpsdata->fix.epy) ? gpsdata->fix.epx : gpsdata->fix.epy));
 
-          session->transfer(flowFile, Success);
+          session.transfer(flowFile, Success);
 
           // Break the for(;;) waiting loop
           break;

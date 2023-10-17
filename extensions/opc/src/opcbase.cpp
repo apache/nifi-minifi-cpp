@@ -27,7 +27,7 @@
 
 namespace org::apache::nifi::minifi::processors {
 
-  void BaseOPCProcessor::onSchedule(const std::shared_ptr<core::ProcessContext> &context, const std::shared_ptr<core::ProcessSessionFactory>& /*factory*/) {
+  void BaseOPCProcessor::onSchedule(core::ProcessContext& context, core::ProcessSessionFactory&) {
     logger_->log_trace("BaseOPCProcessor::onSchedule");
 
     applicationURI_.clear();
@@ -37,16 +37,16 @@ namespace org::apache::nifi::minifi::processors {
     username_.clear();
     trustBuffers_.clear();
 
-    context->getProperty(OPCServerEndPoint, endPointURL_);
-    context->getProperty(ApplicationURI, applicationURI_);
+    context.getProperty(OPCServerEndPoint, endPointURL_);
+    context.getProperty(ApplicationURI, applicationURI_);
 
-    if (context->getProperty(Username, username_) != context->getProperty(Password, password_)) {
+    if (context.getProperty(Username, username_) != context.getProperty(Password, password_)) {
       throw Exception(PROCESS_SCHEDULE_EXCEPTION, "Both or neither of Username and Password should be provided!");
     }
 
-    auto certificatePathRes = context->getProperty(CertificatePath, certpath_);
-    auto keyPathRes = context->getProperty(KeyPath, keypath_);
-    context->getProperty(TrustedPath, trustpath_);
+    auto certificatePathRes = context.getProperty(CertificatePath, certpath_);
+    auto keyPathRes = context.getProperty(KeyPath, keypath_);
+    context.getProperty(TrustedPath, trustpath_);
     if (certificatePathRes != keyPathRes) {
       throw Exception(PROCESS_SCHEDULE_EXCEPTION, "All or none of Certificate path and Key path should be provided!");
     }

@@ -30,11 +30,10 @@ void PutSmb::initialize() {
   setSupportedRelationships(Relationships);
 }
 
-void PutSmb::onSchedule(core::ProcessContext* context, core::ProcessSessionFactory*) {
-  gsl_Expects(context);
-  smb_connection_controller_service_ = SmbConnectionControllerService::getFromProperty(*context, PutSmb::ConnectionControllerService);
-  create_missing_dirs_ = context->getProperty<bool>(PutSmb::CreateMissingDirectories).value_or(true);
-  conflict_resolution_strategy_ = utils::parseEnumProperty<FileExistsResolutionStrategy>(*context, ConflictResolution);
+void PutSmb::onSchedule(core::ProcessContext& context, core::ProcessSessionFactory&) {
+  smb_connection_controller_service_ = SmbConnectionControllerService::getFromProperty(context, PutSmb::ConnectionControllerService);
+  create_missing_dirs_ = context.getProperty<bool>(PutSmb::CreateMissingDirectories).value_or(true);
+  conflict_resolution_strategy_ = utils::parseEnumProperty<FileExistsResolutionStrategy>(context, ConflictResolution);
 }
 
 std::filesystem::path PutSmb::getFilePath(core::ProcessContext& context, const std::shared_ptr<core::FlowFile>& flow_file) {
@@ -42,30 +41,30 @@ std::filesystem::path PutSmb::getFilePath(core::ProcessContext& context, const s
   return smb_connection_controller_service_->getPath() / context.getProperty(Directory, flow_file).value_or("") / filename;
 }
 
-void PutSmb::onTrigger(core::ProcessContext* context, core::ProcessSession* session) {
-  gsl_Expects(context && session && smb_connection_controller_service_);
+void PutSmb::onTrigger(core::ProcessContext& context, core::ProcessSession& session) {
+  gsl_Expects(smb_connection_controller_service_);
 
   if (auto connection_error = smb_connection_controller_service_->validateConnection()) {
     logger_->log_error("Couldn't establish connection to the specified network location due to {}", connection_error.message());
-    context->yield();
+    context.yield();
     return;
   }
 
-  auto flow_file = session->get();
+  auto flow_file = session.get();
   if (!flow_file) {
-    context->yield();
+    context.yield();
     return;
   }
 
-  auto full_file_path = getFilePath(*context, flow_file);
+  auto full_file_path = getFilePath(context, flow_file);
 
   if (utils::file::exists(full_file_path)) {
     logger_->log_info("Destination file {} exists; applying Conflict Resolution Strategy: {}", full_file_path, magic_enum::enum_name(conflict_resolution_strategy_));
     if (conflict_resolution_strategy_ == FileExistsResolutionStrategy::fail) {
-      session->transfer(flow_file, Failure);
+      session.transfer(flow_file, Failure);
       return;
     } else if (conflict_resolution_strategy_ == FileExistsResolutionStrategy::ignore) {
-      session->transfer(flow_file, Success);
+      session.transfer(flow_file, Success);
       return;
     }
   }
@@ -78,7 +77,7 @@ void PutSmb::onTrigger(core::ProcessContext* context, core::ProcessSession* sess
   bool success = false;
 
   utils::FileWriterCallback file_writer_callback(full_file_path);
-  auto read_result = session->read(flow_file, std::ref(file_writer_callback));
+  auto read_result = session.read(flow_file, std::ref(file_writer_callback));
   if (io::isError(read_result)) {
     logger_->log_error("Failed to write to {}", full_file_path);
     success = false;
@@ -86,7 +85,7 @@ void PutSmb::onTrigger(core::ProcessContext* context, core::ProcessSession* sess
     success = file_writer_callback.commit();
   }
 
-  session->transfer(flow_file, success ? Success : Failure);
+  session.transfer(flow_file, success ? Success : Failure);
 }
 
 REGISTER_RESOURCE(PutSmb, Processor);

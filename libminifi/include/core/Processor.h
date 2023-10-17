@@ -180,25 +180,24 @@ class Processor : public Connectable, public ConfigurableComponent, public state
 
   bool addConnection(Connectable* connection);
 
-  virtual void onTrigger(const std::shared_ptr<ProcessContext> &context, const std::shared_ptr<ProcessSessionFactory> &sessionFactory);
-  void onTrigger(ProcessContext *context, ProcessSessionFactory *sessionFactory);
-
   bool canEdit() override {
     return !isRunning();
   }
 
-  virtual void onTrigger(const std::shared_ptr<ProcessContext> &context, const std::shared_ptr<ProcessSession> &session) {
-    onTrigger(context.get(), session.get());
-  }
-  virtual void onTrigger(ProcessContext* /*context*/, ProcessSession* /*session*/) {
-  }
   void initialize() override {
   }
-  virtual void onSchedule(const std::shared_ptr<ProcessContext> &context, const std::shared_ptr<ProcessSessionFactory> &sessionFactory) {
-    onSchedule(context.get(), sessionFactory.get());
+
+  virtual void onTrigger(const std::shared_ptr<ProcessContext>& context, const std::shared_ptr<ProcessSessionFactory>& session_factory);
+
+  virtual void onTriggerSharedPtr(const std::shared_ptr<ProcessContext>& context, const std::shared_ptr<ProcessSession>& session) {
+    onTrigger(*context, *session);
   }
-  virtual void onSchedule(ProcessContext* /*context*/, ProcessSessionFactory* /*sessionFactory*/) {
+  virtual void onTrigger(ProcessContext&, ProcessSession&) {}
+
+  virtual void onScheduleSharedPtr(const std::shared_ptr<ProcessContext>& context, const std::shared_ptr<ProcessSessionFactory>& session_factory) {
+    onSchedule(*context, *session_factory);
   }
+  virtual void onSchedule(ProcessContext&, ProcessSessionFactory&) {}
 
   // Hook executed when onSchedule fails (throws). Configuration should be reset in this
   virtual void onUnSchedule() {

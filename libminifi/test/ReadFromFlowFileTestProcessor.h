@@ -58,8 +58,8 @@ class ReadFromFlowFileTestProcessor : public core::Processor {
 
   ADD_COMMON_VIRTUAL_FUNCTIONS_FOR_PROCESSORS
 
-  void onSchedule(core::ProcessContext *context, core::ProcessSessionFactory *sessionFactory) override;
-  void onTrigger(core::ProcessContext *context, core::ProcessSession *session) override;
+  void onSchedule(core::ProcessContext& context, core::ProcessSessionFactory& session_factory) override;
+  void onTrigger(core::ProcessContext& context, core::ProcessSession& session) override;
   void initialize() override;
   void onUnSchedule() override;
 
@@ -85,7 +85,7 @@ class ReadFromFlowFileTestProcessor : public core::Processor {
 
  private:
   struct FlowFileData {
-    FlowFileData(core::ProcessSession* session, const gsl::not_null<std::shared_ptr<core::FlowFile>>& flow_file);
+    FlowFileData(core::ProcessSession& session, const gsl::not_null<std::shared_ptr<core::FlowFile>>& flow_file);
     std::string content_;
     std::map<std::string, std::string> attributes_;
   };

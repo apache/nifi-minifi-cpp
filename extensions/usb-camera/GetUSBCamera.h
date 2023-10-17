@@ -108,10 +108,10 @@ class GetUSBCamera : public core::Processor {
 
   ADD_COMMON_VIRTUAL_FUNCTIONS_FOR_PROCESSORS
 
-  void onSchedule(core::ProcessContext *context,
-                  core::ProcessSessionFactory *session_factory) override;
-  void onTrigger(core::ProcessContext *context,
-                 core::ProcessSession *session) override;
+  void onSchedule(core::ProcessContext& context,
+      core::ProcessSessionFactory& session_factory) override;
+  void onTrigger(core::ProcessContext& context,
+      core::ProcessSession& session) override;
   void initialize() override;
 
   struct CallbackData {

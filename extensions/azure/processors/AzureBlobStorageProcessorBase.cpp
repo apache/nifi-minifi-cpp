@@ -24,19 +24,18 @@
 
 namespace org::apache::nifi::minifi::azure::processors {
 
-void AzureBlobStorageProcessorBase::onSchedule(const std::shared_ptr<core::ProcessContext>& context, const std::shared_ptr<core::ProcessSessionFactory>& /*sessionFactory*/) {
-  gsl_Expects(context);
+void AzureBlobStorageProcessorBase::onSchedule(core::ProcessContext& context, core::ProcessSessionFactory&) {
   std::string value;
-  if (!context->getProperty(ContainerName, value) || value.empty()) {
+  if (!context.getProperty(ContainerName, value) || value.empty()) {
     throw Exception(PROCESS_SCHEDULE_EXCEPTION, "Container Name property missing or invalid");
   }
 
-  if (context->getProperty(AzureStorageCredentialsService, value) && !value.empty()) {
+  if (context.getProperty(AzureStorageCredentialsService, value) && !value.empty()) {
     logger_->log_info("Getting Azure Storage credentials from controller service with name: '{}'", value);
     return;
   }
 
-  if (!context->getProperty(UseManagedIdentityCredentials, use_managed_identity_credentials_)) {
+  if (!context.getProperty(UseManagedIdentityCredentials, use_managed_identity_credentials_)) {
     throw Exception(PROCESS_SCHEDULE_EXCEPTION, "Use Managed Identity Credentials is invalid.");
   }
 
@@ -45,21 +44,21 @@ void AzureBlobStorageProcessorBase::onSchedule(const std::shared_ptr<core::Proce
     return;
   }
 
-  if (context->getProperty(ConnectionString, value) && !value.empty()) {
+  if (context.getProperty(ConnectionString, value) && !value.empty()) {
     logger_->log_info("Using connectionstring directly for Azure Storage authentication");
     return;
   }
 
-  if (!context->getProperty(StorageAccountName, value) || value.empty()) {
+  if (!context.getProperty(StorageAccountName, value) || value.empty()) {
     throw Exception(PROCESS_SCHEDULE_EXCEPTION, "Storage Account Name property missing or invalid");
   }
 
-  if (context->getProperty(StorageAccountKey, value) && !value.empty()) {
+  if (context.getProperty(StorageAccountKey, value) && !value.empty()) {
     logger_->log_info("Using storage account name and key for authentication");
     return;
   }
 
-  if (!context->getProperty(SASToken, value) || value.empty()) {
+  if (!context.getProperty(SASToken, value) || value.empty()) {
     throw Exception(PROCESS_SCHEDULE_EXCEPTION, "Neither Storage Account Key nor SAS Token property was set.");
   }
 

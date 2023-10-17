@@ -101,19 +101,19 @@ void CapturePacket::initialize() {
   setSupportedRelationships(Relationships);
 }
 
-void CapturePacket::onSchedule(const std::shared_ptr<core::ProcessContext> &context, const std::shared_ptr<core::ProcessSessionFactory>& /*sessionFactory*/) {
+void CapturePacket::onSchedule(core::ProcessContext& context, core::ProcessSessionFactory&) {
   std::string value;
-  if (context->getProperty(BatchSize, value)) {
+  if (context.getProperty(BatchSize, value)) {
     core::Property::StringToInt(value, pcap_batch_size_);
   }
 
   value = "";
-  if (context->getProperty(BaseDir, value)) {
+  if (context.getProperty(BaseDir, value)) {
     base_dir_ = value;
   }
 
   value = "";
-  if (context->getProperty(CaptureBluetooth, value)) {
+  if (context.getProperty(CaptureBluetooth, value)) {
     capture_bluetooth_ = utils::StringUtils::toBool(value).value_or(false);
   }
 
@@ -189,16 +189,16 @@ void CapturePacket::onSchedule(const std::shared_ptr<core::ProcessContext> &cont
 
 CapturePacket::~CapturePacket() = default;
 
-void CapturePacket::onTrigger(const std::shared_ptr<core::ProcessContext> &context, const std::shared_ptr<core::ProcessSession> &session) {
+void CapturePacket::onTrigger(core::ProcessContext& context, core::ProcessSession& session) {
   gsl::owner<CapturePacketMechanism*> capture = nullptr;
   if (mover->sink.try_dequeue(capture)) {
-    auto ff = session->create();
-    session->import(capture->getFile(), ff, false, 0);
+    auto ff = session.create();
+    session.import(capture->getFile(), ff, false, 0);
     logger_->log_debug("Received packet capture in file {} {} for {}", capture->getFile(), capture->getSize(), ff->getResourceClaim()->getContentFullPath());
-    session->transfer(ff, Success);
+    session.transfer(ff, Success);
     delete capture;
   } else {
-    context->yield();
+    context.yield();
   }
 }
 

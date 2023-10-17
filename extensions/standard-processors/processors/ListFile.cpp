@@ -29,49 +29,47 @@ void ListFile::initialize() {
   setSupportedRelationships(Relationships);
 }
 
-void ListFile::onSchedule(const std::shared_ptr<core::ProcessContext> &context, const std::shared_ptr<core::ProcessSessionFactory> &/*sessionFactory*/) {
-  gsl_Expects(context);
-
-  auto state_manager = context->getStateManager();
+void ListFile::onSchedule(core::ProcessContext& context, core::ProcessSessionFactory&) {
+  auto state_manager = context.getStateManager();
   if (state_manager == nullptr) {
     throw Exception(PROCESSOR_EXCEPTION, "Failed to get StateManager");
   }
   state_manager_ = std::make_unique<minifi::utils::ListingStateManager>(state_manager);
 
-  if (auto input_directory_str = context->getProperty(InputDirectory); !input_directory_str || input_directory_str->empty()) {
+  if (auto input_directory_str = context.getProperty(InputDirectory); !input_directory_str || input_directory_str->empty()) {
     throw Exception(PROCESS_SCHEDULE_EXCEPTION, "Input Directory property missing or invalid");
   } else {
     input_directory_ = *input_directory_str;
   }
 
-  context->getProperty(RecurseSubdirectories, recurse_subdirectories_);
+  context.getProperty(RecurseSubdirectories, recurse_subdirectories_);
 
   std::string value;
-  if (context->getProperty(FileFilter.name, value) && !value.empty()) {
+  if (context.getProperty(FileFilter.name, value) && !value.empty()) {
     file_filter_.filename_filter = std::regex(value);
   }
 
-  if (recurse_subdirectories_ && context->getProperty(PathFilter.name, value) && !value.empty()) {
+  if (recurse_subdirectories_ && context.getProperty(PathFilter.name, value) && !value.empty()) {
     file_filter_.path_filter = std::regex(value);
   }
 
-  if (auto minimum_file_age = context->getProperty<core::TimePeriodValue>(MinimumFileAge)) {
+  if (auto minimum_file_age = context.getProperty<core::TimePeriodValue>(MinimumFileAge)) {
     file_filter_.minimum_file_age =  minimum_file_age->getMilliseconds();
   }
 
-  if (auto maximum_file_age = context->getProperty<core::TimePeriodValue>(MaximumFileAge)) {
+  if (auto maximum_file_age = context.getProperty<core::TimePeriodValue>(MaximumFileAge)) {
     file_filter_.maximum_file_age =  maximum_file_age->getMilliseconds();
   }
 
-  if (auto minimum_file_size = context->getProperty<core::DataSizeValue>(MinimumFileSize)) {
+  if (auto minimum_file_size = context.getProperty<core::DataSizeValue>(MinimumFileSize)) {
     file_filter_.minimum_file_size = minimum_file_size->getValue();
   }
 
-  if (auto maximum_file_size = context->getProperty<core::DataSizeValue>(MaximumFileSize)) {
+  if (auto maximum_file_size = context.getProperty<core::DataSizeValue>(MaximumFileSize)) {
     file_filter_.maximum_file_size = maximum_file_size->getValue();
   }
 
-  context->getProperty(IgnoreHiddenFiles.name, file_filter_.ignore_hidden_files);
+  context.getProperty(IgnoreHiddenFiles.name, file_filter_.ignore_hidden_files);
 }
 
 std::shared_ptr<core::FlowFile> ListFile::createFlowFile(core::ProcessSession& session, const utils::ListedFile& listed_file) {
@@ -113,9 +111,7 @@ std::shared_ptr<core::FlowFile> ListFile::createFlowFile(core::ProcessSession& s
   return flow_file;
 }
 
-void ListFile::onTrigger(const std::shared_ptr<core::ProcessContext> &context, const std::shared_ptr<core::ProcessSession> &session) {
-  gsl_Expects(context && session);
-
+void ListFile::onTrigger(core::ProcessContext& context, core::ProcessSession& session) {
   auto stored_listing_state = state_manager_->getCurrentState();
   auto latest_listing_state = stored_listing_state;
   uint32_t files_listed = 0;
@@ -127,7 +123,7 @@ void ListFile::onTrigger(const std::shared_ptr<core::ProcessContext> &context, c
       return true;
     }
 
-    session->transfer(createFlowFile(*session, listed_file), Success);
+    session.transfer(createFlowFile(session, listed_file), Success);
     ++files_listed;
     latest_listing_state.updateState(listed_file);
     return true;
@@ -138,7 +134,7 @@ void ListFile::onTrigger(const std::shared_ptr<core::ProcessContext> &context, c
 
   if (files_listed == 0) {
     logger_->log_debug("No new files were found in input directory '{}' to list", input_directory_);
-    context->yield();
+    context.yield();
   }
 }
 

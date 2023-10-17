@@ -142,7 +142,7 @@ class RawSiteToSiteClient : public sitetosite::SiteToSiteClient {
   std::shared_ptr<Transaction> createTransaction(TransferDirection direction) override;
 
   //! Transfer string for the process session
-  bool transmitPayload(const std::shared_ptr<core::ProcessContext> &context, const std::shared_ptr<core::ProcessSession> &session, const std::string &payload,
+  bool transmitPayload(core::ProcessContext& context, core::ProcessSession& session, const std::string &payload,
       std::map<std::string, std::string> attributes) override;
 
   // bootstrap the protocol to the ready for transaction state by going through the state machine

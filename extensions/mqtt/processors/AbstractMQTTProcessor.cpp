@@ -25,64 +25,64 @@
 
 namespace org::apache::nifi::minifi::processors {
 
-void AbstractMQTTProcessor::onSchedule(const std::shared_ptr<core::ProcessContext> &context, const std::shared_ptr<core::ProcessSessionFactory>& /*factory*/) {
-  if (auto value = context->getProperty(BrokerURI)) {
+void AbstractMQTTProcessor::onSchedule(core::ProcessContext& context, core::ProcessSessionFactory&) {
+  if (auto value = context.getProperty(BrokerURI)) {
     uri_ = std::move(*value);
   }
   logger_->log_debug("AbstractMQTTProcessor: BrokerURI [{}]", uri_);
 
-  mqtt_version_ = utils::parseEnumProperty<mqtt::MqttVersions>(*context, MqttVersion);
+  mqtt_version_ = utils::parseEnumProperty<mqtt::MqttVersions>(context, MqttVersion);
   logger_->log_debug("AbstractMQTTProcessor: MQTT Specification Version: {}", magic_enum::enum_name(mqtt_version_));
 
-  if (auto value = context->getProperty(ClientID)) {
+  if (auto value = context.getProperty(ClientID)) {
     clientID_ = std::move(*value);
   } else if (mqtt_version_ == mqtt::MqttVersions::V_3_1_0) {
     throw minifi::Exception(ExceptionType::PROCESS_SCHEDULE_EXCEPTION, "MQTT 3.1.0 specification does not support empty client IDs");
   }
   logger_->log_debug("AbstractMQTTProcessor: ClientID [{}]", clientID_);
 
-  if (auto value = context->getProperty(Username)) {
+  if (auto value = context.getProperty(Username)) {
     username_ = std::move(*value);
   }
   logger_->log_debug("AbstractMQTTProcessor: Username [{}]", username_);
 
-  if (auto value = context->getProperty(Password)) {
+  if (auto value = context.getProperty(Password)) {
     password_ = std::move(*value);
   }
   logger_->log_debug("AbstractMQTTProcessor: Password [{}]", password_);
 
-  if (const auto keep_alive_interval = context->getProperty(KeepAliveInterval) | utils::andThen(&core::TimePeriodValue::fromString)) {
+  if (const auto keep_alive_interval = context.getProperty(KeepAliveInterval) | utils::andThen(&core::TimePeriodValue::fromString)) {
     keep_alive_interval_ = std::chrono::duration_cast<std::chrono::seconds>(keep_alive_interval->getMilliseconds());
   }
   logger_->log_debug("AbstractMQTTProcessor: KeepAliveInterval [{}] s", int64_t{keep_alive_interval_.count()});
 
-  if (const auto connection_timeout = context->getProperty(ConnectionTimeout) | utils::andThen(&core::TimePeriodValue::fromString)) {
+  if (const auto connection_timeout = context.getProperty(ConnectionTimeout) | utils::andThen(&core::TimePeriodValue::fromString)) {
     connection_timeout_ = std::chrono::duration_cast<std::chrono::seconds>(connection_timeout->getMilliseconds());
   }
   logger_->log_debug("AbstractMQTTProcessor: ConnectionTimeout [{}] s", int64_t{connection_timeout_.count()});
 
-  qos_ = utils::parseEnumProperty<mqtt::MqttQoS>(*context, QoS);
+  qos_ = utils::parseEnumProperty<mqtt::MqttQoS>(context, QoS);
   logger_->log_debug("AbstractMQTTProcessor: QoS [{}]", magic_enum::enum_name(qos_));
 
-  if (const auto security_protocol = context->getProperty(SecurityProtocol)) {
+  if (const auto security_protocol = context.getProperty(SecurityProtocol)) {
     if (*security_protocol == MQTT_SECURITY_PROTOCOL_SSL) {
       sslOpts_ = MQTTAsync_SSLOptions_initializer;
-      if (auto value = context->getProperty(SecurityCA)) {
+      if (auto value = context.getProperty(SecurityCA)) {
         logger_->log_debug("AbstractMQTTProcessor: trustStore [{}]", *value);
         securityCA_ = std::move(*value);
         sslOpts_->trustStore = securityCA_.c_str();
       }
-      if (auto value = context->getProperty(SecurityCert)) {
+      if (auto value = context.getProperty(SecurityCert)) {
         logger_->log_debug("AbstractMQTTProcessor: keyStore [{}]", *value);
         securityCert_ = std::move(*value);
         sslOpts_->keyStore = securityCert_.c_str();
       }
-      if (auto value = context->getProperty(SecurityPrivateKey)) {
+      if (auto value = context.getProperty(SecurityPrivateKey)) {
         logger_->log_debug("AbstractMQTTProcessor: privateKey [{}]", *value);
         securityPrivateKey_ = std::move(*value);
         sslOpts_->privateKey = securityPrivateKey_.c_str();
       }
-      if (auto value = context->getProperty(SecurityPrivateKeyPassword)) {
+      if (auto value = context.getProperty(SecurityPrivateKeyPassword)) {
         logger_->log_debug("AbstractMQTTProcessor: privateKeyPassword [{}]", *value);
         securityPrivateKeyPassword_ = std::move(*value);
         sslOpts_->privateKeyPassword = securityPrivateKeyPassword_.c_str();
@@ -90,30 +90,30 @@ void AbstractMQTTProcessor::onSchedule(const std::shared_ptr<core::ProcessContex
     }
   }
 
-  if (auto last_will_topic = context->getProperty(LastWillTopic); last_will_topic.has_value() && !last_will_topic->empty()) {
+  if (auto last_will_topic = context.getProperty(LastWillTopic); last_will_topic.has_value() && !last_will_topic->empty()) {
     last_will_ = MQTTAsync_willOptions_initializer;
 
     logger_->log_debug("AbstractMQTTProcessor: Last Will Topic [{}]", *last_will_topic);
     last_will_topic_ = std::move(*last_will_topic);
     last_will_->topicName = last_will_topic_.c_str();
 
-    if (auto value = context->getProperty(LastWillMessage)) {
+    if (auto value = context.getProperty(LastWillMessage)) {
       logger_->log_debug("AbstractMQTTProcessor: Last Will Message [{}]", *value);
       last_will_message_ = std::move(*value);
       last_will_->message = last_will_message_.c_str();
     }
 
-    last_will_qos_ = utils::parseEnumProperty<mqtt::MqttQoS>(*context, LastWillQoS);
+    last_will_qos_ = utils::parseEnumProperty<mqtt::MqttQoS>(context, LastWillQoS);
     logger_->log_debug("AbstractMQTTProcessor: Last Will QoS [{}]", magic_enum::enum_name(last_will_qos_));
     last_will_->qos = static_cast<int>(last_will_qos_);
 
-    if (const auto value = context->getProperty(LastWillRetain) | utils::andThen(&utils::StringUtils::toBool)) {
+    if (const auto value = context.getProperty(LastWillRetain) | utils::andThen(&utils::StringUtils::toBool)) {
       logger_->log_debug("AbstractMQTTProcessor: Last Will Retain [{}]", *value);
       last_will_retain_ = {*value};
       last_will_->retained = last_will_retain_;
     }
 
-    if (auto value = context->getProperty(LastWillContentType)) {
+    if (auto value = context.getProperty(LastWillContentType)) {
       logger_->log_debug("AbstractMQTTProcessor: Last Will Content Type [{}]", *value);
       last_will_content_type_ = std::move(*value);
     }
@@ -253,7 +253,7 @@ MQTTAsync_connectOptions AbstractMQTTProcessor::createMqtt5ConnectOptions(MQTTPr
   return connect_options;
 }
 
-void AbstractMQTTProcessor::onTrigger(const std::shared_ptr<core::ProcessContext>& context, const std::shared_ptr<core::ProcessSession>& session) {
+void AbstractMQTTProcessor::onTrigger(core::ProcessContext& context, core::ProcessSession& session) {
   std::shared_lock client_lock{client_mutex_};
   if (client_ == nullptr) {
     logger_->log_debug("Null-op in onTrigger, processor is shutting down.");

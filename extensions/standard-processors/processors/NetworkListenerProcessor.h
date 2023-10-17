@@ -37,7 +37,7 @@ class NetworkListenerProcessor : public core::Processor {
   }
   ~NetworkListenerProcessor() override;
 
-  void onTrigger(const std::shared_ptr<core::ProcessContext>& context, const std::shared_ptr<core::ProcessSession>& session) override;
+  void onTrigger(core::ProcessContext& context, core::ProcessSession& session) override;
 
   EXTENSIONAPI static constexpr bool SupportsDynamicProperties = false;
   EXTENSIONAPI static constexpr bool SupportsDynamicRelationships = false;

@@ -63,7 +63,7 @@ void ExecutePythonProcessor::initalizeThroughScriptEngine() {
   processor_initialized_ = true;
 }
 
-void ExecutePythonProcessor::onSchedule(const std::shared_ptr<core::ProcessContext> &context, const std::shared_ptr<core::ProcessSessionFactory>& /*sessionFactory*/) {
+void ExecutePythonProcessor::onScheduleSharedPtr(const std::shared_ptr<core::ProcessContext> &context, const std::shared_ptr<core::ProcessSessionFactory>& /*sessionFactory*/) {
   if (!processor_initialized_) {
     loadScript();
     python_script_engine_ = createScriptEngine();
@@ -82,7 +82,7 @@ void ExecutePythonProcessor::onSchedule(const std::shared_ptr<core::ProcessConte
   getProperty(ReloadOnScriptChange, reload_on_script_change_);
 }
 
-void ExecutePythonProcessor::onTrigger(const std::shared_ptr<core::ProcessContext> &context, const std::shared_ptr<core::ProcessSession> &session) {
+void ExecutePythonProcessor::onTriggerSharedPtr(const std::shared_ptr<core::ProcessContext> &context, const std::shared_ptr<core::ProcessSession> &session) {
   reloadScriptIfUsingScriptFileProperty();
   if (script_to_exec_.empty()) {
     throw std::runtime_error("Neither Script Body nor Script File is available to execute");

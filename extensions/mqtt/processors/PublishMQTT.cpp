@@ -42,17 +42,17 @@ void PublishMQTT::initialize() {
   setSupportedRelationships(Relationships);
 }
 
-void PublishMQTT::readProperties(const std::shared_ptr<core::ProcessContext>& context) {
-  if (!context->getProperty(Topic).has_value()) {
+void PublishMQTT::readProperties(core::ProcessContext& context) {
+  if (!context.getProperty(Topic).has_value()) {
     throw Exception(PROCESS_SCHEDULE_EXCEPTION, "PublishMQTT: Topic is required");
   }
 
-  if (const auto retain_opt = context->getProperty(Retain) | utils::andThen(&utils::StringUtils::toBool)) {
+  if (const auto retain_opt = context.getProperty(Retain) | utils::andThen(&utils::StringUtils::toBool)) {
     retain_ = *retain_opt;
   }
   logger_->log_debug("PublishMQTT: Retain [{}]", retain_);
 
-  if (const auto message_expiry_interval = context->getProperty(MessageExpiryInterval) | utils::andThen(&core::TimePeriodValue::fromString)) {
+  if (const auto message_expiry_interval = context.getProperty(MessageExpiryInterval) | utils::andThen(&core::TimePeriodValue::fromString)) {
     message_expiry_interval_ = std::chrono::duration_cast<std::chrono::seconds>(message_expiry_interval->getMilliseconds());
     logger_->log_debug("PublishMQTT: MessageExpiryInterval [{}] s", int64_t{message_expiry_interval_->count()});
   }
@@ -60,8 +60,8 @@ void PublishMQTT::readProperties(const std::shared_ptr<core::ProcessContext>& co
   in_flight_message_counter_.setEnabled(mqtt_version_ == mqtt::MqttVersions::V_5_0 && qos_ != mqtt::MqttQoS::LEVEL_0);
 }
 
-void PublishMQTT::onTriggerImpl(const std::shared_ptr<core::ProcessContext>& context, const std::shared_ptr<core::ProcessSession>& session) {
-  std::shared_ptr<core::FlowFile> flow_file = session->get();
+void PublishMQTT::onTriggerImpl(core::ProcessContext& context, core::ProcessSession& session) {
+  std::shared_ptr<core::FlowFile> flow_file = session.get();
 
   if (!flow_file) {
     yield();
@@ -73,17 +73,17 @@ void PublishMQTT::onTriggerImpl(const std::shared_ptr<core::ProcessContext>& con
 
   const auto topic = getTopic(context, flow_file);
   try {
-    const auto result = session->readBuffer(flow_file);
+    const auto result = session.readBuffer(flow_file);
     if (result.status < 0 || !sendMessage(result.buffer, topic, getContentType(context, flow_file), flow_file)) {
       logger_->log_error("Failed to send flow file [{}] to MQTT topic '{}' on broker {}", flow_file->getUUIDStr(), topic, uri_);
-      session->transfer(flow_file, Failure);
+      session.transfer(flow_file, Failure);
       return;
     }
     logger_->log_debug("Sent flow file [{}] with length {} to MQTT topic '{}' on broker {}", flow_file->getUUIDStr(), result.status, topic, uri_);
-    session->transfer(flow_file, Success);
+    session.transfer(flow_file, Success);
   } catch (const Exception& ex) {
     logger_->log_error("Failed to send flow file [{}] to MQTT topic '{}' on broker {}, exception string: '{}'", flow_file->getUUIDStr(), topic, uri_, ex.what());
-    session->transfer(flow_file, Failure);
+    session.transfer(flow_file, Failure);
   }
 }
 
@@ -192,16 +192,16 @@ bool PublishMQTT::notify(const bool success, const std::optional<int> response_c
   return success;
 }
 
-std::string PublishMQTT::getTopic(const std::shared_ptr<core::ProcessContext>& context, const std::shared_ptr<core::FlowFile>& flow_file) const {
-  if (auto value = context->getProperty(Topic, flow_file)) {
+std::string PublishMQTT::getTopic(core::ProcessContext& context, const std::shared_ptr<core::FlowFile>& flow_file) const {
+  if (auto value = context.getProperty(Topic, flow_file)) {
     logger_->log_debug("PublishMQTT: Topic resolved as \"{}\"", *value);
     return *value;
   }
   throw minifi::Exception(ExceptionType::GENERAL_EXCEPTION, "Could not resolve required property Topic");
 }
 
-std::string PublishMQTT::getContentType(const std::shared_ptr<core::ProcessContext>& context, const std::shared_ptr<core::FlowFile>& flow_file) const {
-  if (auto value = context->getProperty(ContentType, flow_file)) {
+std::string PublishMQTT::getContentType(core::ProcessContext& context, const std::shared_ptr<core::FlowFile>& flow_file) const {
+  if (auto value = context.getProperty(ContentType, flow_file)) {
     logger_->log_debug("PublishMQTT: Content Type resolved as \"{}\"", *value);
     return *value;
   }

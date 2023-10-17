@@ -41,13 +41,13 @@ void HashContent::initialize() {
   setSupportedRelationships(Relationships);
 }
 
-void HashContent::onSchedule(core::ProcessContext *context, core::ProcessSessionFactory* /*sessionFactory*/) {
-  context->getProperty(HashAttribute, attrKey_);
-  context->getProperty(FailOnEmpty, failOnEmpty_);
+void HashContent::onSchedule(core::ProcessContext& context, core::ProcessSessionFactory&) {
+  context.getProperty(HashAttribute, attrKey_);
+  context.getProperty(FailOnEmpty, failOnEmpty_);
 
   {
     std::string algo_name;
-    context->getProperty(HashAlgorithm, algo_name);
+    context.getProperty(HashAlgorithm, algo_name);
     std::transform(algo_name.begin(), algo_name.end(), algo_name.begin(), ::toupper);
     std::erase(algo_name, '-');
     if (!HashAlgos.contains(algo_name)) {
@@ -58,8 +58,8 @@ void HashContent::onSchedule(core::ProcessContext *context, core::ProcessSession
   }
 }
 
-void HashContent::onTrigger(core::ProcessContext *, core::ProcessSession *session) {
-  std::shared_ptr<core::FlowFile> flowFile = session->get();
+void HashContent::onTrigger(core::ProcessContext&, core::ProcessSession& session) {
+  std::shared_ptr<core::FlowFile> flowFile = session.get();
 
   if (!flowFile) {
     logger_->log_trace("No flow file");
@@ -68,19 +68,19 @@ void HashContent::onTrigger(core::ProcessContext *, core::ProcessSession *sessio
 
   if (failOnEmpty_ && flowFile->getSize() == 0) {
     logger_->log_debug("Failure as flow file is empty");
-    session->transfer(flowFile, Failure);
+    session.transfer(flowFile, Failure);
     return;
   }
 
   logger_->log_trace("attempting read");
-  session->read(flowFile, [&flowFile, this](const std::shared_ptr<io::InputStream>& stream) {
+  session.read(flowFile, [&flowFile, this](const std::shared_ptr<io::InputStream>& stream) {
     const auto& ret_val = algorithm_(stream);
 
     flowFile->setAttribute(attrKey_, ret_val.first);
 
     return ret_val.second;
   });
-  session->transfer(flowFile, Success);
+  session.transfer(flowFile, Success);
 }
 
 REGISTER_RESOURCE(HashContent, Processor);

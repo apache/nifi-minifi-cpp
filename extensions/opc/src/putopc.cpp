@@ -31,16 +31,16 @@ namespace org::apache::nifi::minifi::processors {
     setSupportedRelationships(Relationships);
   }
 
-  void PutOPCProcessor::onSchedule(const std::shared_ptr<core::ProcessContext> &context, const std::shared_ptr<core::ProcessSessionFactory> &factory) {
+  void PutOPCProcessor::onSchedule(core::ProcessContext& context, core::ProcessSessionFactory& session_factory) {
     logger_->log_trace("PutOPCProcessor::onSchedule");
 
     parentExists_ = false;
 
-    BaseOPCProcessor::onSchedule(context, factory);
+    BaseOPCProcessor::onSchedule(context, session_factory);
 
     std::string value;
-    context->getProperty(ParentNodeID, nodeID_);
-    context->getProperty(ParentNodeIDType, value);
+    context.getProperty(ParentNodeID, nodeID_);
+    context.getProperty(ParentNodeIDType, value);
 
     if (value == "String") {
       idType_ = opc::OPCNodeIDType::String;
@@ -63,18 +63,18 @@ namespace org::apache::nifi::minifi::processors {
       }
     }
     if (idType_ != opc::OPCNodeIDType::Path) {
-      if (!context->getProperty(ParentNameSpaceIndex, nameSpaceIdx_)) {
+      if (!context.getProperty(ParentNameSpaceIndex, nameSpaceIdx_)) {
         auto error_msg = utils::StringUtils::join_pack(ParentNameSpaceIndex.name, " is mandatory in case ", ParentNodeIDType.name, " is not Path");
         throw Exception(PROCESS_SCHEDULE_EXCEPTION, error_msg);
       }
     }
 
     std::string typestr;
-    context->getProperty(ValueType, typestr);
+    context.getProperty(ValueType, typestr);
     nodeDataType_ = utils::at(opc::StringToOPCDataTypeMap, typestr);  // This throws, but allowed values are generated based on this map -> that's a really unexpected error
   }
 
-  void PutOPCProcessor::onTrigger(const std::shared_ptr<core::ProcessContext> &context, const std::shared_ptr<core::ProcessSession> &session) {
+  void PutOPCProcessor::onTrigger(core::ProcessContext& context, core::ProcessSession& session) {
     logger_->log_trace("PutOPCProcessor::onTrigger");
 
     if (!reconnect()) {
@@ -116,7 +116,7 @@ namespace org::apache::nifi::minifi::processors {
       }
     }
 
-    auto flowFile = session->get();
+    auto flowFile = session.get();
 
     // Do nothing if there are no incoming files
     if (!flowFile) {
@@ -129,21 +129,21 @@ namespace org::apache::nifi::minifi::processors {
     bool targetNodeValid = false;
     UA_NodeId targetnode;
 
-    if (context->getProperty(TargetNodeIDType, targetidtype, flowFile)) {
+    if (context.getProperty(TargetNodeIDType, targetidtype, flowFile)) {
       std::string targetid;
       std::string namespaceidx;
 
 
-      if (!context->getProperty(TargetNodeID, targetid, flowFile)) {
+      if (!context.getProperty(TargetNodeID, targetid, flowFile)) {
         logger_->log_error("Flowfile {} had target node ID type specified ({}) without ID, routing to failure!",
                            flowFile->getUUIDStr(), targetidtype);
-        session->transfer(flowFile, Failure);
+        session.transfer(flowFile, Failure);
         return;
       }
 
-      if (!context->getProperty(TargetNodeNameSpaceIndex, namespaceidx, flowFile)) {
+      if (!context.getProperty(TargetNodeNameSpaceIndex, namespaceidx, flowFile)) {
         logger_->log_error("Flowfile {} had target node ID type specified ({}) without namespace index, routing to failure!", flowFile->getUUIDStr(), targetidtype);
-        session->transfer(flowFile, Failure);
+        session.transfer(flowFile, Failure);
         return;
       }
       int32_t nsi = 0;
@@ -152,7 +152,7 @@ namespace org::apache::nifi::minifi::processors {
       } catch (...) {
         logger_->log_error("Flowfile {} has invalid namespace index ({}), routing to failure!",
                            flowFile->getUUIDStr(), namespaceidx);
-        session->transfer(flowFile, Failure);
+        session.transfer(flowFile, Failure);
         return;
       }
 
@@ -165,7 +165,7 @@ namespace org::apache::nifi::minifi::processors {
         } catch (...) {
           logger_->log_error("Flowfile {}: target node ID is not a valid integer: {}. Routing to failure!",
                              flowFile->getUUIDStr(), targetid);
-          session->transfer(flowFile, Failure);
+          session.transfer(flowFile, Failure);
           return;
         }
       } else if (targetidtype == "String") {
@@ -175,13 +175,13 @@ namespace org::apache::nifi::minifi::processors {
       } else {
         logger_->log_error("Flowfile {}: target node ID type is invalid: {}. Routing to failure!",
                            flowFile->getUUIDStr(), targetidtype);
-        session->transfer(flowFile, Failure);
+        session.transfer(flowFile, Failure);
         return;
       }
       targetNodeExists = connection_->exists(targetnode);
     }
 
-    const auto contentstr = to_string(session->readBuffer(flowFile));
+    const auto contentstr = to_string(session.readBuffer(flowFile));
     if (targetNodeExists) {
       logger_->log_trace("Node exists, trying to update it");
       try {
@@ -235,26 +235,26 @@ namespace org::apache::nifi::minifi::processors {
         }
         if (sc != UA_STATUSCODE_GOOD) {
           logger_->log_error("Failed to update node: {}", UA_StatusCode_name(sc));
-          session->transfer(flowFile, Failure);
+          session.transfer(flowFile, Failure);
           return;
         }
       } catch (...) {
         std::string typestr;
-        context->getProperty(ValueType, typestr);
+        context.getProperty(ValueType, typestr);
         logger_->log_error("Failed to convert {} to data type {}", contentstr, typestr);
-        session->transfer(flowFile, Failure);
+        session.transfer(flowFile, Failure);
         return;
       }
       logger_->log_trace("Node successfully updated!");
-      session->transfer(flowFile, Success);
+      session.transfer(flowFile, Success);
       return;
     } else {
       logger_->log_trace("Node doesn't exist, trying to create new node");
       std::string browsename;
-      if (!context->getProperty(TargetNodeBrowseName, browsename, flowFile)) {
+      if (!context.getProperty(TargetNodeBrowseName, browsename, flowFile)) {
         logger_->log_error("Target node browse name is required for flowfile ({}) as new node is to be created",
                            flowFile->getUUIDStr());
-        session->transfer(flowFile, Failure);
+        session.transfer(flowFile, Failure);
         return;
       }
       if (!targetNodeValid) {
@@ -312,18 +312,18 @@ namespace org::apache::nifi::minifi::processors {
         }
         if (sc != UA_STATUSCODE_GOOD) {
           logger_->log_error("Failed to create node: {}", UA_StatusCode_name(sc));
-          session->transfer(flowFile, Failure);
+          session.transfer(flowFile, Failure);
           return;
         }
       } catch (...) {
         std::string typestr;
-        context->getProperty(ValueType, typestr);
+        context.getProperty(ValueType, typestr);
         logger_->log_error("Failed to convert {} to data type {}", contentstr, typestr);
-        session->transfer(flowFile, Failure);
+        session.transfer(flowFile, Failure);
         return;
       }
       logger_->log_trace("Node successfully created!");
-      session->transfer(flowFile, Success);
+      session.transfer(flowFile, Success);
       return;
     }
   }

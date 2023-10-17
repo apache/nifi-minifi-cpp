@@ -99,7 +99,7 @@ TEST_CASE("Test GetFileMultiple", "[getfileCreate3]") {
 
   auto factory = std::make_shared<core::ProcessSessionFactory>(context);
 
-  processor->onSchedule(context, factory);
+  processor->onSchedule(*context, *factory);
 
   for (int i = 1; i < 10; i++) {
     auto session = std::make_shared<core::ProcessSession>(context);
@@ -107,7 +107,7 @@ TEST_CASE("Test GetFileMultiple", "[getfileCreate3]") {
 
     std::shared_ptr<core::FlowFile> record;
 
-    processor->onTrigger(context, session);
+    processor->onTrigger(*context, *session);
 
     auto reporter = session->getProvenanceReporter();
     auto records = reporter->getEvents();
@@ -123,7 +123,7 @@ TEST_CASE("Test GetFileMultiple", "[getfileCreate3]") {
 
     processor->incrementActiveTasks();
     processor->setScheduledState(core::ScheduledState::RUNNING);
-    processor->onTrigger(context, session);
+    processor->onTrigger(*context, *session);
     std::filesystem::remove(path);
     reporter = session->getProvenanceReporter();
 
@@ -182,14 +182,14 @@ TEST_CASE("Test GetFile Ignore", "[getfileCreate3]") {
 
   auto factory = std::make_shared<core::ProcessSessionFactory>(context);
 
-  processor->onSchedule(context, factory);
+  processor->onSchedule(*context, *factory);
 
   auto session = std::make_shared<core::ProcessSession>(context);
   REQUIRE(processor->getName() == "getfileCreate2");
 
   std::shared_ptr<core::FlowFile> record;
 
-  processor->onTrigger(context, session);
+  processor->onTrigger(*context, *session);
 
   auto reporter = session->getProvenanceReporter();
   auto records = reporter->getEvents();
@@ -213,7 +213,7 @@ TEST_CASE("Test GetFile Ignore", "[getfileCreate3]") {
 
   processor->incrementActiveTasks();
   processor->setScheduledState(core::ScheduledState::RUNNING);
-  processor->onTrigger(context, session);
+  processor->onTrigger(*context, *session);
   std::filesystem::remove(hidden_file_name);
   reporter = session->getProvenanceReporter();
 
@@ -264,7 +264,7 @@ TEST_CASE("TestConnectionFull", "[ConnectionFull]") {
 
   auto factory = std::make_shared<core::ProcessSessionFactory>(context);
 
-  processor->onSchedule(context, factory);
+  processor->onSchedule(*context, *factory);
 
   auto session = std::make_shared<core::ProcessSession>(context);
 
@@ -273,7 +273,7 @@ TEST_CASE("TestConnectionFull", "[ConnectionFull]") {
 
   processor->incrementActiveTasks();
   processor->setScheduledState(core::ScheduledState::RUNNING);
-  processor->onTrigger(context, session);
+  processor->onTrigger(*context, *session);
 
   session->commit();
 
@@ -477,7 +477,7 @@ TEST_CASE("Test Find file", "[getfileCreate3]") {
   repo->getElements(recordsReport, deserialized);
   std::function<void(const std::shared_ptr<core::ProcessContext> &, const std::shared_ptr<core::ProcessSession>&)> verifyReporter =
       [&](const std::shared_ptr<core::ProcessContext> &context, const std::shared_ptr<core::ProcessSession> &session) {
-        taskReport->getJsonReport(context, session, recordsReport, jsonStr);
+        taskReport->getJsonReport(*context, *session, recordsReport, jsonStr);
         REQUIRE(recordsReport.size() == 1);
         REQUIRE(taskReport->getName() == std::string(org::apache::nifi::minifi::core::reporting::SiteToSiteProvenanceReportingTask::ReportTaskName));
         REQUIRE(jsonStr.find("\"componentType\": \"getfileCreate2\"") != std::string::npos);
@@ -503,12 +503,11 @@ class TestProcessorNoContent : public minifi::core::Processor {
 
   ADD_COMMON_VIRTUAL_FUNCTIONS_FOR_PROCESSORS
 
-  void onSchedule(core::ProcessContext* /*context*/, core::ProcessSessionFactory* /*sessionFactory*/) override {
-  }
-  void onTrigger(core::ProcessContext* /*context*/, core::ProcessSession *session) override {
-    auto ff = session->create();
+  void onSchedule(core::ProcessContext&, core::ProcessSessionFactory&) override {}
+  void onTrigger(core::ProcessContext&, core::ProcessSession& session) override {
+    auto ff = session.create();
     ff->addAttribute("Attribute", "AttributeValue");
-    session->transfer(ff, Success);
+    session.transfer(ff, Success);
   }
 };
 
@@ -560,7 +559,7 @@ void testRPGBypass(const std::string &host, const std::string &port, const std::
   if (hasException) {
     auto expected_error = "Site2Site Protocol: HTTPClient not resolvable. No peers configured or any port specific hostname and port -- cannot schedule";
     try {
-      rpg->onSchedule(context, psf);
+      rpg->onSchedule(*context, *psf);
     } catch (std::exception &e) {
       REQUIRE(expected_error == std::string(e.what()));
     }

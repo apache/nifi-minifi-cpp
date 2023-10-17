@@ -34,15 +34,15 @@ void FetchS3Object::initialize() {
   setSupportedRelationships(Relationships);
 }
 
-void FetchS3Object::onSchedule(const std::shared_ptr<core::ProcessContext> &context, const std::shared_ptr<core::ProcessSessionFactory> &sessionFactory) {
-  S3Processor::onSchedule(context, sessionFactory);
+void FetchS3Object::onSchedule(core::ProcessContext& context, core::ProcessSessionFactory& session_factory) {
+  S3Processor::onSchedule(context, session_factory);
 
-  context->getProperty(RequesterPays, requester_pays_);
+  context.getProperty(RequesterPays, requester_pays_);
   logger_->log_debug("FetchS3Object: RequesterPays [{}]", requester_pays_);
 }
 
 std::optional<aws::s3::GetObjectRequestParameters> FetchS3Object::buildFetchS3RequestParams(
-    const std::shared_ptr<core::ProcessContext> &context,
+    core::ProcessContext& context,
     const std::shared_ptr<core::FlowFile> &flow_file,
     const CommonProperties &common_properties) const {
   gsl_Expects(client_config_);
@@ -50,41 +50,41 @@ std::optional<aws::s3::GetObjectRequestParameters> FetchS3Object::buildFetchS3Re
   get_object_params.bucket = common_properties.bucket;
   get_object_params.requester_pays = requester_pays_;
 
-  context->getProperty(ObjectKey, get_object_params.object_key, flow_file);
+  context.getProperty(ObjectKey, get_object_params.object_key, flow_file);
   if (get_object_params.object_key.empty() && (!flow_file->getAttribute("filename", get_object_params.object_key) || get_object_params.object_key.empty())) {
     logger_->log_error("No Object Key is set and default object key 'filename' attribute could not be found!");
     return std::nullopt;
   }
   logger_->log_debug("FetchS3Object: Object Key [{}]", get_object_params.object_key);
 
-  context->getProperty(Version, get_object_params.version, flow_file);
+  context.getProperty(Version, get_object_params.version, flow_file);
   logger_->log_debug("FetchS3Object: Version [{}]", get_object_params.version);
   get_object_params.setClientConfig(common_properties.proxy, common_properties.endpoint_override_url);
   return get_object_params;
 }
 
-void FetchS3Object::onTrigger(const std::shared_ptr<core::ProcessContext> &context, const std::shared_ptr<core::ProcessSession> &session) {
+void FetchS3Object::onTrigger(core::ProcessContext& context, core::ProcessSession& session) {
   logger_->log_trace("FetchS3Object onTrigger");
-  std::shared_ptr<core::FlowFile> flow_file = session->get();
+  std::shared_ptr<core::FlowFile> flow_file = session.get();
   if (!flow_file) {
-    context->yield();
+    context.yield();
     return;
   }
 
   auto common_properties = getCommonELSupportedProperties(context, flow_file);
   if (!common_properties) {
-    session->transfer(flow_file, Failure);
+    session.transfer(flow_file, Failure);
     return;
   }
 
   auto get_object_params = buildFetchS3RequestParams(context, flow_file, *common_properties);
   if (!get_object_params) {
-    session->transfer(flow_file, Failure);
+    session.transfer(flow_file, Failure);
     return;
   }
 
   std::optional<minifi::aws::s3::GetObjectResult> result;
-  session->write(flow_file, [&get_object_params, &result, this](const std::shared_ptr<io::OutputStream>& stream) -> int64_t {
+  session.write(flow_file, [&get_object_params, &result, this](const std::shared_ptr<io::OutputStream>& stream) -> int64_t {
     result = s3_wrapper_.getObject(*get_object_params, *stream);
     return (result | minifi::utils::transform(&s3::GetObjectResult::write_size)).value_or(0);
   });
@@ -92,25 +92,25 @@ void FetchS3Object::onTrigger(const std::shared_ptr<core::ProcessContext> &conte
   if (result) {
     auto putAttributeIfNotEmpty = [&](std::string_view attribute, const std::string& value) {
       if (!value.empty()) {
-        session->putAttribute(flow_file, attribute, value);
+        session.putAttribute(flow_file, attribute, value);
       }
     };
 
     logger_->log_debug("Successfully fetched S3 object {} from bucket {}", get_object_params->object_key, get_object_params->bucket);
-    session->putAttribute(flow_file, "s3.bucket", get_object_params->bucket);
-    session->putAttribute(flow_file, core::SpecialFlowAttribute::PATH, result->path.generic_string());
-    session->putAttribute(flow_file, core::SpecialFlowAttribute::ABSOLUTE_PATH, result->absolute_path.generic_string());
-    session->putAttribute(flow_file, core::SpecialFlowAttribute::FILENAME, result->filename.generic_string());
+    session.putAttribute(flow_file, "s3.bucket", get_object_params->bucket);
+    session.putAttribute(flow_file, core::SpecialFlowAttribute::PATH, result->path.generic_string());
+    session.putAttribute(flow_file, core::SpecialFlowAttribute::ABSOLUTE_PATH, result->absolute_path.generic_string());
+    session.putAttribute(flow_file, core::SpecialFlowAttribute::FILENAME, result->filename.generic_string());
     putAttributeIfNotEmpty(core::SpecialFlowAttribute::MIME_TYPE, result->mime_type);
     putAttributeIfNotEmpty("s3.etag", result->etag);
     putAttributeIfNotEmpty("s3.expirationTime", result->expiration.expiration_time);
     putAttributeIfNotEmpty("s3.expirationTimeRuleId", result->expiration.expiration_time_rule_id);
     putAttributeIfNotEmpty("s3.sseAlgorithm", result->ssealgorithm);
     putAttributeIfNotEmpty("s3.version", result->version);
-    session->transfer(flow_file, Success);
+    session.transfer(flow_file, Success);
   } else {
     logger_->log_error("Failed to fetch S3 object {} from bucket {}", get_object_params->object_key, get_object_params->bucket);
-    session->transfer(flow_file, Failure);
+    session.transfer(flow_file, Failure);
   }
 }
 

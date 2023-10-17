@@ -24,13 +24,13 @@ void ForwardingNode::initialize() {
   setSupportedRelationships(Relationships);
 }
 
-void ForwardingNode::onTrigger(const std::shared_ptr<core::ProcessContext>& /*context*/, const std::shared_ptr<core::ProcessSession>& session) {
+void ForwardingNode::onTrigger(core::ProcessContext&, core::ProcessSession& session) {
   logger_->log_trace("On trigger {}", getUUIDStr());
-  std::shared_ptr<core::FlowFile> flow_file = session->get();
+  std::shared_ptr<core::FlowFile> flow_file = session.get();
   if (!flow_file) {
     return;
   }
-  session->transfer(flow_file, Success);
+  session.transfer(flow_file, Success);
 }
 
 }  // namespace org::apache::nifi::minifi

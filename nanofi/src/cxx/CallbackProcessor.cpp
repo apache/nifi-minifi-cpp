@@ -25,15 +25,15 @@ void CallbackProcessor::initialize() {
   setSupportedRelationships(Relationships);
 }
 
-void CallbackProcessor::onSchedule(core::ProcessContext *context, core::ProcessSessionFactory* /*sessionFactory*/) {
+void CallbackProcessor::onSchedule(core::ProcessContext& context, core::ProcessSessionFactory&) {
   if (onschedule_callback_ != nullptr) {
-    onschedule_callback_(context);
+    onschedule_callback_(&context);
   }
 }
 
-void CallbackProcessor::onTrigger(core::ProcessContext *context, core::ProcessSession *session) {
+void CallbackProcessor::onTrigger(core::ProcessContext& context, core::ProcessSession& session) {
  if (ontrigger_callback_ != nullptr) {
-   ontrigger_callback_(session, context);
+   ontrigger_callback_(&session, &context);
  }
 }
 

@@ -72,7 +72,7 @@ class BaseOPCProcessor : public core::Processor {
   : Processor(name, uuid) {
   }
 
-  void onSchedule(const std::shared_ptr<core::ProcessContext> &context, const std::shared_ptr<core::ProcessSessionFactory> &factory) override;
+  void onSchedule(core::ProcessContext& context, core::ProcessSessionFactory& factory) override;
 
  protected:
   virtual bool reconnect();

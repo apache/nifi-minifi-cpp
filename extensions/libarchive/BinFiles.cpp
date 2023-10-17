@@ -47,35 +47,35 @@ void BinFiles::initialize() {
   setSupportedRelationships(Relationships);
 }
 
-void BinFiles::onSchedule(core::ProcessContext *context, core::ProcessSessionFactory* /*sessionFactory*/) {
+void BinFiles::onSchedule(core::ProcessContext& context, core::ProcessSessionFactory&) {
   uint32_t val32;
   uint64_t val64;
-  if (context->getProperty(MinSize, val64)) {
+  if (context.getProperty(MinSize, val64)) {
     this->binManager_.setMinSize(val64);
     logger_->log_debug("BinFiles: MinSize [{}]", val64);
   }
-  if (context->getProperty(MaxSize, val64)) {
+  if (context.getProperty(MaxSize, val64)) {
     this->binManager_.setMaxSize(val64);
     logger_->log_debug("BinFiles: MaxSize [{}]", val64);
   }
-  if (context->getProperty(MinEntries, val32)) {
+  if (context.getProperty(MinEntries, val32)) {
     this->binManager_.setMinEntries(val32);
     logger_->log_debug("BinFiles: MinEntries [{}]", val32);
   }
-  if (context->getProperty(MaxEntries, val32)) {
+  if (context.getProperty(MaxEntries, val32)) {
     this->binManager_.setMaxEntries(val32);
     logger_->log_debug("BinFiles: MaxEntries [{}]", val32);
   }
-  if (context->getProperty(MaxBinCount, maxBinCount_)) {
+  if (context.getProperty(MaxBinCount, maxBinCount_)) {
     logger_->log_debug("BinFiles: MaxBinCount [{}]", maxBinCount_);
   }
-  if (auto max_bin_age = context->getProperty<core::TimePeriodValue>(MaxBinAge)) {
+  if (auto max_bin_age = context.getProperty<core::TimePeriodValue>(MaxBinAge)) {
     // We need to trigger the processor even when there are no incoming flow files so that it can flush the bins.
     setTriggerWhenEmpty(true);
     this->binManager_.setBinAge(max_bin_age->getMilliseconds());
     logger_->log_debug("BinFiles: MaxBinAge [{}]", max_bin_age->getMilliseconds());
   }
-  if (context->getProperty(BatchSize, batchSize_)) {
+  if (context.getProperty(BatchSize, batchSize_)) {
     logger_->log_debug("BinFiles: BatchSize [{}]", batchSize_);
   }
 }
@@ -277,14 +277,14 @@ std::deque<std::unique_ptr<Bin>> BinFiles::gatherReadyBins(core::ProcessContext 
   return ready_bins;
 }
 
-void BinFiles::onTrigger(const std::shared_ptr<core::ProcessContext> &context, const std::shared_ptr<core::ProcessSession> &session) {
-  if (resurrectFlowFiles(*session)) {
-    context->yield();
+void BinFiles::onTrigger(core::ProcessContext& context, core::ProcessSession& session) {
+  if (resurrectFlowFiles(session)) {
+    context.yield();
     return;
   }
 
-  assumeOwnershipOfNextBatch(*session);
-  processReadyBins(gatherReadyBins(*context), *session);
+  assumeOwnershipOfNextBatch(session);
+  processReadyBins(gatherReadyBins(context), session);
 }
 
 void BinFiles::transferFlowsToFail(core::ProcessSession &session, std::unique_ptr<Bin> &bin) {

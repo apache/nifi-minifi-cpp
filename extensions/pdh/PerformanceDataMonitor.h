@@ -101,8 +101,8 @@ class PerformanceDataMonitor : public core::Processor {
 
   ADD_COMMON_VIRTUAL_FUNCTIONS_FOR_PROCESSORS
 
-  void onSchedule(const std::shared_ptr<core::ProcessContext> &context, const std::shared_ptr<core::ProcessSessionFactory> &sessionFactory) override;
-  void onTrigger(core::ProcessContext *context, core::ProcessSession *session) override;
+  void onSchedule(core::ProcessContext& context, core::ProcessSessionFactory& session_factory) override;
+  void onTrigger(core::ProcessContext& context, core::ProcessSession& session) override;
   void initialize() override;
 
  protected:
@@ -112,11 +112,11 @@ class PerformanceDataMonitor : public core::Processor {
 
   rapidjson::Value& prepareJSONBody(rapidjson::Document& root);
 
-  void setupMembersFromProperties(const std::shared_ptr<core::ProcessContext>& context);
-  void setupCountersFromProperties(const std::shared_ptr<core::ProcessContext>& context);
-  void setupPredefinedGroupsFromProperties(const std::shared_ptr<core::ProcessContext>& context);
-  void setupOutputFormatFromProperties(const std::shared_ptr<core::ProcessContext>& context);
-  void setupDecimalPlacesFromProperties(const std::shared_ptr<core::ProcessContext>& context);
+  void setupMembersFromProperties(core::ProcessContext& context);
+  void setupCountersFromProperties(core::ProcessContext& context);
+  void setupPredefinedGroupsFromProperties(core::ProcessContext& context);
+  void setupOutputFormatFromProperties(core::ProcessContext& context);
+  void setupDecimalPlacesFromProperties(core::ProcessContext& context);
   void addCountersFromPredefinedGroupsProperty(const std::string& custom_pdh_counters);
   void addCustomPDHCountersFromProperty(const std::string& custom_pdh_counters);
 

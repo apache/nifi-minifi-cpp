@@ -138,7 +138,7 @@ class ListenSyslog : public NetworkListenerProcessor {
   };
 
   void initialize() override;
-  void onSchedule(const std::shared_ptr<core::ProcessContext>& context, const std::shared_ptr<core::ProcessSessionFactory>& sessionFactory) override;
+  void onSchedule(core::ProcessContext& context, core::ProcessSessionFactory& session_factory) override;
 
  protected:
   core::PropertyReference getMaxBatchSizeProperty() override;

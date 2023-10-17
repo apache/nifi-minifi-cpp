@@ -92,13 +92,13 @@ void GetUSBCamera::onFrame(uvc_frame_t *frame, void *ptr) {
   }
 }
 
-void GetUSBCamera::onSchedule(core::ProcessContext *context, core::ProcessSessionFactory *session_factory) {
+void GetUSBCamera::onSchedule(core::ProcessContext& context, core::ProcessSessionFactory& session_factory) {
   std::lock_guard<std::recursive_mutex> lock(*dev_access_mtx_);
 
   double default_fps = 1;
   double target_fps = default_fps;
   std::string conf_fps_str;
-  context->getProperty("FPS", conf_fps_str);
+  context.getProperty("FPS", conf_fps_str);
 
   if (conf_fps_str.empty()) {
     logger_->log_info("FPS property was not set; using default {}", default_fps);
@@ -113,7 +113,7 @@ void GetUSBCamera::onSchedule(core::ProcessContext *context, core::ProcessSessio
   uint16_t target_width = 0;
   uint16_t target_height = 0;
   std::string conf_width_str;
-  context->getProperty("Width", conf_width_str);
+  context.getProperty("Width", conf_width_str);
 
   if (!conf_width_str.empty()) {
     auto target_width_ul = std::stoul(conf_width_str);
@@ -126,7 +126,7 @@ void GetUSBCamera::onSchedule(core::ProcessContext *context, core::ProcessSessio
   }
 
   std::string conf_height_str;
-  context->getProperty("Height", conf_height_str);
+  context.getProperty("Height", conf_height_str);
 
   if (!conf_height_str.empty()) {
     auto target_height_ul = std::stoul(conf_height_str);
@@ -139,23 +139,23 @@ void GetUSBCamera::onSchedule(core::ProcessContext *context, core::ProcessSessio
   }
 
   std::string conf_format_str;
-  context->getProperty("Format", conf_format_str);
+  context.getProperty("Format", conf_format_str);
 
   int usb_vendor_id;
   std::string conf_vendor_id;
-  context->getProperty("USB Vendor ID", conf_vendor_id);
+  context.getProperty("USB Vendor ID", conf_vendor_id);
   std::stringstream(conf_vendor_id) >> std::hex >> usb_vendor_id;
   logger_->log_info("Using USB Vendor ID: {:#x}", usb_vendor_id);
 
   int usb_product_id;
   std::string conf_product_id;
-  context->getProperty("USB Product ID", conf_product_id);
+  context.getProperty("USB Product ID", conf_product_id);
   std::stringstream(conf_product_id) >> std::hex >> usb_product_id;
   logger_->log_info("Using USB Product ID: {:#x}", usb_product_id);
 
   const char *usb_serial_no = nullptr;
   std::string conf_serial;
-  context->getProperty("USB Serial No.", conf_serial);
+  context.getProperty("USB Serial No.", conf_serial);
 
   if (!conf_serial.empty()) {
     usb_serial_no = conf_serial.c_str();
@@ -271,7 +271,7 @@ void GetUSBCamera::onSchedule(core::ProcessContext *context, core::ProcessSessio
       if (res < 0) {
         logger_->log_error("Failed to find a matching stream profile: {}", uvc_strerror(res));
       } else {
-        cb_data_.session_factory = session_factory;
+        cb_data_.session_factory = &session_factory;
 
         if (frame_buffer_ != nullptr) {
           uvc_free_frame(frame_buffer_);
@@ -286,7 +286,7 @@ void GetUSBCamera::onSchedule(core::ProcessContext *context, core::ProcessSessio
         }
 
         cb_data_.frame_buffer = frame_buffer_;
-        cb_data_.context = context;
+        cb_data_.context = &context;
         cb_data_.png_write_mtx = png_write_mtx_;
         cb_data_.dev_access_mtx = dev_access_mtx_;
         cb_data_.logger = logger_;
@@ -343,12 +343,12 @@ void GetUSBCamera::cleanupUvc() {
   }
 }
 
-void GetUSBCamera::onTrigger(core::ProcessContext* /*context*/, core::ProcessSession *session) {
-  auto flowFile = session->get();
+void GetUSBCamera::onTrigger(core::ProcessContext&, core::ProcessSession& session) {
+  auto flowFile = session.get();
 
   if (flowFile) {
     logger_->log_error("Received flowfile, but this processor does not support input flow files; routing to failure");
-    session->transfer(flowFile, Failure);
+    session.transfer(flowFile, Failure);
   }
 }
 

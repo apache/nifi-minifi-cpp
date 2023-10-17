@@ -58,7 +58,7 @@ class ProcessSession : public ReferenceContainer {
   /*!
    * Create a new process session
    */
-  explicit ProcessSession(std::shared_ptr<ProcessContext> processContext = nullptr);
+  explicit ProcessSession(std::shared_ptr<ProcessContext> processContext);
 
   // Destructor
   virtual ~ProcessSession();

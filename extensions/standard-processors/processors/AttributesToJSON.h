@@ -121,8 +121,8 @@ class AttributesToJSON : public core::Processor {
   }
 
   void initialize() override;
-  void onSchedule(core::ProcessContext *context, core::ProcessSessionFactory* sessionFactory) override;
-  void onTrigger(core::ProcessContext *context, core::ProcessSession *session) override;
+  void onSchedule(core::ProcessContext& context, core::ProcessSessionFactory& session_factory) override;
+  void onTrigger(core::ProcessContext& context, core::ProcessSession& session) override;
 
  private:
   bool isCoreAttributeToBeFiltered(const std::string& attribute) const;

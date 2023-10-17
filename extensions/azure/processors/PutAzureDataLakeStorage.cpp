@@ -34,11 +34,10 @@ void PutAzureDataLakeStorage::initialize() {
   setSupportedRelationships(Relationships);
 }
 
-void PutAzureDataLakeStorage::onSchedule(const std::shared_ptr<core::ProcessContext>& context, const std::shared_ptr<core::ProcessSessionFactory>& sessionFactory) {
-  gsl_Expects(context && sessionFactory);
-  AzureDataLakeStorageFileProcessorBase::onSchedule(context, sessionFactory);
+void PutAzureDataLakeStorage::onSchedule(core::ProcessContext& context, core::ProcessSessionFactory& session_factory) {
+  AzureDataLakeStorageFileProcessorBase::onSchedule(context, session_factory);
   std::optional<storage::AzureStorageCredentials> credentials;
-  std::tie(std::ignore, credentials) = getCredentialsFromControllerService(*context);
+  std::tie(std::ignore, credentials) = getCredentialsFromControllerService(context);
   if (!credentials) {
     throw Exception(PROCESS_SCHEDULE_EXCEPTION, "Azure Storage Credentials Service property missing or invalid");
   }
@@ -48,7 +47,7 @@ void PutAzureDataLakeStorage::onSchedule(const std::shared_ptr<core::ProcessCont
   }
 
   credentials_ = *credentials;
-  conflict_resolution_strategy_ = utils::parseEnumProperty<azure::FileExistsResolutionStrategy>(*context, ConflictResolutionStrategy);
+  conflict_resolution_strategy_ = utils::parseEnumProperty<azure::FileExistsResolutionStrategy>(context, ConflictResolutionStrategy);
 }
 
 std::optional<storage::PutAzureDataLakeStorageParameters> PutAzureDataLakeStorage::buildUploadParameters(
@@ -62,23 +61,22 @@ std::optional<storage::PutAzureDataLakeStorageParameters> PutAzureDataLakeStorag
   return params;
 }
 
-void PutAzureDataLakeStorage::onTrigger(const std::shared_ptr<core::ProcessContext>& context, const std::shared_ptr<core::ProcessSession>& session) {
-  gsl_Expects(context && session);
+void PutAzureDataLakeStorage::onTrigger(core::ProcessContext& context, core::ProcessSession& session) {
   logger_->log_trace("PutAzureDataLakeStorage onTrigger");
-  std::shared_ptr<core::FlowFile> flow_file = session->get();
+  std::shared_ptr<core::FlowFile> flow_file = session.get();
   if (!flow_file) {
-    context->yield();
+    context.yield();
     return;
   }
 
-  const auto params = buildUploadParameters(*context, flow_file);
+  const auto params = buildUploadParameters(context, flow_file);
   if (!params) {
-    session->transfer(flow_file, Failure);
+    session.transfer(flow_file, Failure);
     return;
   }
 
   PutAzureDataLakeStorage::ReadCallback callback(flow_file->getSize(), azure_data_lake_storage_, *params, logger_);
-  session->read(flow_file, std::ref(callback));
+  session.read(flow_file, std::ref(callback));
   const storage::UploadDataLakeStorageResult result = callback.getResult();
 
   if (result.result_code == storage::UploadResultCode::FILE_ALREADY_EXISTS) {
@@ -86,25 +84,25 @@ void PutAzureDataLakeStorage::onTrigger(const std::shared_ptr<core::ProcessConte
     if (conflict_resolution_strategy_ == azure::FileExistsResolutionStrategy::fail) {
       logger_->log_error("Failed to upload file '{}/{}' to filesystem '{}' on Azure Data Lake storage because file already exists",
         params->directory_name, params->filename, params->file_system_name);
-      session->transfer(flow_file, Failure);
+      session.transfer(flow_file, Failure);
       return;
     } else if (conflict_resolution_strategy_ == azure::FileExistsResolutionStrategy::ignore) {
       logger_->log_debug("Upload of file '{}/{}' was ignored because it already exits in filesystem '{}' on Azure Data Lake Storage",
         params->directory_name, params->filename, params->file_system_name);
-      session->transfer(flow_file, Success);
+      session.transfer(flow_file, Success);
       return;
     }
   } else if (result.result_code == storage::UploadResultCode::FAILURE) {
     logger_->log_error("Failed to upload file '{}/{}' to filesystem '{}' on Azure Data Lake storage", params->directory_name, params->filename, params->file_system_name);
-    session->transfer(flow_file, Failure);
+    session.transfer(flow_file, Failure);
   } else {
-    session->putAttribute(flow_file, "azure.filesystem", params->file_system_name);
-    session->putAttribute(flow_file, "azure.directory", params->directory_name);
-    session->putAttribute(flow_file, "azure.filename", params->filename);
-    session->putAttribute(flow_file, "azure.primaryUri", result.primary_uri);
-    session->putAttribute(flow_file, "azure.length", std::to_string(flow_file->getSize()));
+    session.putAttribute(flow_file, "azure.filesystem", params->file_system_name);
+    session.putAttribute(flow_file, "azure.directory", params->directory_name);
+    session.putAttribute(flow_file, "azure.filename", params->filename);
+    session.putAttribute(flow_file, "azure.primaryUri", result.primary_uri);
+    session.putAttribute(flow_file, "azure.length", std::to_string(flow_file->getSize()));
     logger_->log_debug("Successfully uploaded file '{}/{}' to filesystem '{}' on Azure Data Lake storage", params->directory_name, params->filename, params->file_system_name);
-    session->transfer(flow_file, Success);
+    session.transfer(flow_file, Success);
   }
 }
 

@@ -31,18 +31,18 @@ void ListAzureBlobStorage::initialize() {
   setSupportedRelationships(Relationships);
 }
 
-void ListAzureBlobStorage::onSchedule(const std::shared_ptr<core::ProcessContext>& context, const std::shared_ptr<core::ProcessSessionFactory>& session_factory) {
+void ListAzureBlobStorage::onSchedule(core::ProcessContext& context, core::ProcessSessionFactory& session_factory) {
   AzureBlobStorageProcessorBase::onSchedule(context, session_factory);
 
-  auto state_manager = context->getStateManager();
+  auto state_manager = context.getStateManager();
   if (state_manager == nullptr) {
     throw Exception(PROCESSOR_EXCEPTION, "Failed to get StateManager");
   }
   state_manager_ = std::make_unique<minifi::utils::ListingStateManager>(state_manager);
 
-  tracking_strategy_ = utils::parseEnumProperty<azure::EntityTracking>(*context, ListingStrategy);
+  tracking_strategy_ = utils::parseEnumProperty<azure::EntityTracking>(context, ListingStrategy);
 
-  auto params = buildListAzureBlobStorageParameters(*context);
+  auto params = buildListAzureBlobStorageParameters(context);
   if (!params) {
     throw Exception(PROCESS_SCHEDULE_EXCEPTION, "Required parameters for ListAzureBlobStorage processor are missing or invalid");
   }
@@ -76,13 +76,12 @@ std::shared_ptr<core::FlowFile> ListAzureBlobStorage::createNewFlowFile(core::Pr
   return flow_file;
 }
 
-void ListAzureBlobStorage::onTrigger(const std::shared_ptr<core::ProcessContext>& context, const std::shared_ptr<core::ProcessSession>& session) {
-  gsl_Expects(context && session);
+void ListAzureBlobStorage::onTrigger(core::ProcessContext& context, core::ProcessSession& session) {
   logger_->log_trace("ListAzureBlobStorage onTrigger");
 
   auto list_result = azure_blob_storage_.listContainer(list_parameters_);
   if (!list_result || list_result->empty()) {
-    context->yield();
+    context.yield();
     return;
   }
 
@@ -95,8 +94,8 @@ void ListAzureBlobStorage::onTrigger(const std::shared_ptr<core::ProcessContext>
       continue;
     }
 
-    auto flow_file = createNewFlowFile(*session, element);
-    session->transfer(flow_file, Success);
+    auto flow_file = createNewFlowFile(session, element);
+    session.transfer(flow_file, Success);
     ++files_transferred;
     latest_listing_state.updateState(element);
   }
@@ -107,7 +106,7 @@ void ListAzureBlobStorage::onTrigger(const std::shared_ptr<core::ProcessContext>
 
   if (files_transferred == 0) {
     logger_->log_debug("No new Azure Storage blobs were found in container '{}'", list_parameters_.container_name);
-    context->yield();
+    context.yield();
     return;
   }
 }

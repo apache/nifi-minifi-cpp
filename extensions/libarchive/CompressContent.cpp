@@ -53,22 +53,22 @@ void CompressContent::initialize() {
   setSupportedRelationships(Relationships);
 }
 
-void CompressContent::onSchedule(core::ProcessContext *context, core::ProcessSessionFactory* /*sessionFactory*/) {
-  context->getProperty(CompressLevel, compressLevel_);
-  compressMode_ = utils::parseEnumProperty<compress_content::CompressionMode>(*context, CompressMode);
-  compressFormat_ = utils::parseEnumProperty<compress_content::ExtendedCompressionFormat>(*context, CompressFormat);
-  context->getProperty(UpdateFileName, updateFileName_);
-  context->getProperty(EncapsulateInTar, encapsulateInTar_);
-  context->getProperty(BatchSize, batchSize_);
+void CompressContent::onSchedule(core::ProcessContext& context, core::ProcessSessionFactory&) {
+  context.getProperty(CompressLevel, compressLevel_);
+  compressMode_ = utils::parseEnumProperty<compress_content::CompressionMode>(context, CompressMode);
+  compressFormat_ = utils::parseEnumProperty<compress_content::ExtendedCompressionFormat>(context, CompressFormat);
+  context.getProperty(UpdateFileName, updateFileName_);
+  context.getProperty(EncapsulateInTar, encapsulateInTar_);
+  context.getProperty(BatchSize, batchSize_);
 
   logger_->log_info("Compress Content: Mode [{}] Format [{}] Level [{}] UpdateFileName [{}] EncapsulateInTar [{}]",
       magic_enum::enum_name(compressMode_), magic_enum::enum_name(compressFormat_), compressLevel_, updateFileName_, encapsulateInTar_);
 }
 
-void CompressContent::onTrigger(const std::shared_ptr<core::ProcessContext> &context, const std::shared_ptr<core::ProcessSession> &session) {
+void CompressContent::onTrigger(core::ProcessContext& context, core::ProcessSession& session) {
   size_t processedFlowFileCount = 0;
   for (; processedFlowFileCount < batchSize_; ++processedFlowFileCount) {
-    std::shared_ptr<core::FlowFile> flowFile = session->get();
+    std::shared_ptr<core::FlowFile> flowFile = session.get();
     if (!flowFile) {
       break;
     }
@@ -76,13 +76,13 @@ void CompressContent::onTrigger(const std::shared_ptr<core::ProcessContext> &con
   }
   if (processedFlowFileCount == 0) {
     // we got no flowFiles
-    context->yield();
+    context.yield();
     return;
   }
 }
 
-void CompressContent::processFlowFile(const std::shared_ptr<core::FlowFile>& flowFile, const std::shared_ptr<core::ProcessSession>& session) {
-  session->remove(flowFile);
+void CompressContent::processFlowFile(const std::shared_ptr<core::FlowFile>& flowFile, core::ProcessSession& session) {
+  session.remove(flowFile);
 
   io::CompressionFormat compressFormat;
   if (compressFormat_ == compress_content::ExtendedCompressionFormat::USE_MIME_TYPE) {
@@ -90,7 +90,7 @@ void CompressContent::processFlowFile(const std::shared_ptr<core::FlowFile>& flo
     flowFile->getAttribute(core::SpecialFlowAttribute::MIME_TYPE, attr);
     if (attr.empty()) {
       logger_->log_error("No {} attribute existed for the flow, route to failure", core::SpecialFlowAttribute::MIME_TYPE);
-      session->transfer(flowFile, Failure);
+      session.transfer(flowFile, Failure);
       return;
     }
     auto search = compressionFormatMimeTypeMap_.find(attr);
@@ -98,7 +98,7 @@ void CompressContent::processFlowFile(const std::shared_ptr<core::FlowFile>& flo
       compressFormat = search->second;
     } else {
       logger_->log_info("Mime type of {} is not indicated a support format, route to success", attr);
-      session->transfer(flowFile, Success);
+      session.transfer(flowFile, Success);
       return;
     }
   } else {
@@ -109,17 +109,17 @@ void CompressContent::processFlowFile(const std::shared_ptr<core::FlowFile>& flo
   // Validate
   if (!encapsulateInTar_ && compressFormat != io::CompressionFormat::GZIP) {
     logger_->log_error("non-TAR encapsulated format only supports GZIP compression");
-    session->transfer(flowFile, Failure);
+    session.transfer(flowFile, Failure);
     return;
   }
   if (compressFormat == io::CompressionFormat::BZIP2 && archive_bzlib_version() == nullptr) {
     logger_->log_error("{} compression format is requested, but the agent was compiled without BZip2 support", magic_enum::enum_name(compressFormat));
-    session->transfer(flowFile, Failure);
+    session.transfer(flowFile, Failure);
     return;
   }
   if ((compressFormat == io::CompressionFormat::LZMA || compressFormat == io::CompressionFormat::XZ_LZMA2) && archive_liblzma_version() == nullptr) {
     logger_->log_error("{} compression format is requested, but the agent was compiled without LZMA support ", magic_enum::enum_name(compressFormat));
-    session->transfer(flowFile, Failure);
+    session.transfer(flowFile, Failure);
     return;
   }
 
@@ -128,7 +128,7 @@ void CompressContent::processFlowFile(const std::shared_ptr<core::FlowFile>& flo
   if (search != fileExtension_.end()) {
     fileExtension = search->second;
   }
-  std::shared_ptr<core::FlowFile> result = session->create(flowFile);
+  std::shared_ptr<core::FlowFile> result = session.create(flowFile);
   bool success = true;
   if (encapsulateInTar_) {
     std::function<int64_t(const std::shared_ptr<io::InputStream>&, const std::shared_ptr<io::OutputStream>&)> transformer;
@@ -158,47 +158,47 @@ void CompressContent::processFlowFile(const std::shared_ptr<core::FlowFile>& flo
         return ret;
       };
     }
-    session->write(result, [&] (const auto& out) {
-      return session->read(flowFile, [&] (const auto& in) {
+    session.write(result, [&] (const auto& out) {
+      return session.read(flowFile, [&] (const auto& in) {
         return transformer(in, out);
       });
     });
   } else {
     CompressContent::GzipWriteCallback callback(compressMode_, compressLevel_, flowFile, session);
-    session->write(result, std::ref(callback));
+    session.write(result, std::ref(callback));
     success = callback.success_;
   }
 
   if (!success) {
     logger_->log_error("Compress Content processing fail for the flow with UUID {}", flowFile->getUUIDStr());
-    session->transfer(flowFile, Failure);
-    session->remove(result);
+    session.transfer(flowFile, Failure);
+    session.remove(result);
   } else {
     std::string fileName;
     result->getAttribute(core::SpecialFlowAttribute::FILENAME, fileName);
     if (compressMode_ == compress_content::CompressionMode::compress) {
-      session->putAttribute(result, core::SpecialFlowAttribute::MIME_TYPE, mimeType);
+      session.putAttribute(result, core::SpecialFlowAttribute::MIME_TYPE, mimeType);
       if (updateFileName_) {
         if (encapsulateInTar_) {
           fileName = fileName + TAR_EXT;
         }
         fileName = fileName + fileExtension;
-        session->putAttribute(result, core::SpecialFlowAttribute::FILENAME, fileName);
+        session.putAttribute(result, core::SpecialFlowAttribute::FILENAME, fileName);
       }
     } else {
-      session->removeAttribute(result, core::SpecialFlowAttribute::MIME_TYPE);
+      session.removeAttribute(result, core::SpecialFlowAttribute::MIME_TYPE);
       if (updateFileName_) {
         if (utils::StringUtils::endsWith(fileName, fileExtension)) {
           fileName = fileName.substr(0, fileName.size() - fileExtension.size());
           if (encapsulateInTar_ && utils::StringUtils::endsWith(fileName, TAR_EXT)) {
             fileName = fileName.substr(0, fileName.size() - TAR_EXT.size());
           }
-          session->putAttribute(result, core::SpecialFlowAttribute::FILENAME, fileName);
+          session.putAttribute(result, core::SpecialFlowAttribute::FILENAME, fileName);
         }
       }
     }
     logger_->log_debug("Compress Content processing success for the flow with UUID {} name {}", result->getUUIDStr(), fileName);
-    session->transfer(result, Success);
+    session.transfer(result, Success);
   }
 }
 

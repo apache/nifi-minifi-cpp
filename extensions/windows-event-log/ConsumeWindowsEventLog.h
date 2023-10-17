@@ -206,8 +206,8 @@ class ConsumeWindowsEventLog : public core::Processor {
 
   ADD_COMMON_VIRTUAL_FUNCTIONS_FOR_PROCESSORS
 
-  void onSchedule(const std::shared_ptr<core::ProcessContext> &context, const std::shared_ptr<core::ProcessSessionFactory> &sessionFactory) override;
-  void onTrigger(const std::shared_ptr<core::ProcessContext> &context, const std::shared_ptr<core::ProcessSession> &session) override;
+  void onSchedule(core::ProcessContext& context, core::ProcessSessionFactory& session_factory) override;
+  void onTrigger(core::ProcessContext& context, core::ProcessSession& session) override;
   void initialize() override;
   void notifyStop() override;
 
@@ -229,10 +229,9 @@ class ConsumeWindowsEventLog : public core::Processor {
     const decltype(std::chrono::steady_clock::now()) time_ = std::chrono::steady_clock::now();
   };
 
-  bool commitAndSaveBookmark(const std::wstring& bookmarkXml, const std::shared_ptr<core::ProcessContext>& context, const std::shared_ptr<core::ProcessSession>& session);
+  bool commitAndSaveBookmark(const std::wstring& bookmarkXml, core::ProcessContext& context, core::ProcessSession& session);
 
-  std::tuple<size_t, std::wstring> processEventLogs(const std::shared_ptr<core::ProcessContext>& context,
-                                                    const std::shared_ptr<core::ProcessSession>& session,
+  std::tuple<size_t, std::wstring> processEventLogs(core::ProcessSession& session,
                                                     const EVT_HANDLE& event_query_results);
 
   void addMatchedFieldsAsAttributes(const cwel::EventRender &eventRender, core::ProcessSession &session, const std::shared_ptr<core::FlowFile> &flowFile) const;

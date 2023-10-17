@@ -32,25 +32,24 @@ void ListGCSBucket::initialize() {
 }
 
 
-void ListGCSBucket::onSchedule(const std::shared_ptr<core::ProcessContext>& context, const std::shared_ptr<core::ProcessSessionFactory>& session_factory) {
+void ListGCSBucket::onSchedule(core::ProcessContext& context, core::ProcessSessionFactory& session_factory) {
   GCSProcessor::onSchedule(context, session_factory);
-  gsl_Expects(context);
-  context->getProperty(Bucket, bucket_);
+  context.getProperty(Bucket, bucket_);
 }
 
-void ListGCSBucket::onTrigger(const std::shared_ptr<core::ProcessContext>& context, const std::shared_ptr<core::ProcessSession>& session) {
-  gsl_Expects(context && session && gcp_credentials_);
+void ListGCSBucket::onTrigger(core::ProcessContext& context, core::ProcessSession& session) {
+  gsl_Expects(gcp_credentials_);
 
   gcs::Client client = getClient();
-  auto list_all_versions = context->getProperty<bool>(ListAllVersions);
+  auto list_all_versions = context.getProperty<bool>(ListAllVersions);
   gcs::Versions versions = (list_all_versions && *list_all_versions) ? gcs::Versions(true) : gcs::Versions(false);
   auto objects_in_bucket = client.ListObjects(bucket_, versions);
   for (const auto& object_in_bucket : objects_in_bucket) {
     if (object_in_bucket.ok()) {
-      auto flow_file = session->create();
+      auto flow_file = session.create();
       flow_file->updateAttribute(core::SpecialFlowAttribute::FILENAME, object_in_bucket->name());
       setAttributesFromObjectMetadata(*flow_file, *object_in_bucket);
-      session->transfer(flow_file, Success);
+      session.transfer(flow_file, Success);
     } else {
       logger_->log_error("Invalid object in bucket {}", bucket_);
     }

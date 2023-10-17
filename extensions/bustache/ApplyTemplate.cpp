@@ -35,16 +35,15 @@ void ApplyTemplate::initialize() {
   setSupportedRelationships(Relationships);
 }
 
-void ApplyTemplate::onTrigger(const std::shared_ptr<core::ProcessContext> &context,
-                              const std::shared_ptr<core::ProcessSession> &session) {
-  auto flow_file = session->get();
+void ApplyTemplate::onTrigger(core::ProcessContext& context, core::ProcessSession& session) {
+  auto flow_file = session.get();
   if (!flow_file) {
     return;
   }
 
   std::string template_file;
-  context->getProperty(Template, template_file, flow_file);
-  session->write(flow_file, [&template_file, &flow_file, this](const auto& output_stream) {
+  context.getProperty(Template, template_file, flow_file);
+  session.write(flow_file, [&template_file, &flow_file, this](const auto& output_stream) {
     logger_->log_info("ApplyTemplate reading template file from {}", template_file);
     // TODO(szaszm): we might want to return to memory-mapped input files when the next todo is done. Until then, the agents stores the whole result in memory anyway, so no point in not doing the same
     // with the template file itself
@@ -65,7 +64,7 @@ void ApplyTemplate::onTrigger(const std::shared_ptr<core::ProcessContext> &conte
     output_stream->write(gsl::make_span(ostring).as_span<const std::byte>());
     return gsl::narrow<int64_t>(ostring.length());
   });
-  session->transfer(flow_file, Success);
+  session.transfer(flow_file, Success);
 }
 
 REGISTER_RESOURCE(ApplyTemplate, Processor);

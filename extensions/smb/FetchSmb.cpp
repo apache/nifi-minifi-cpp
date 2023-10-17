@@ -26,9 +26,8 @@ void FetchSmb::initialize() {
   setSupportedRelationships(Relationships);
 }
 
-void FetchSmb::onSchedule(const std::shared_ptr<core::ProcessContext>& context, const std::shared_ptr<core::ProcessSessionFactory>&) {
-  gsl_Expects(context);
-  smb_connection_controller_service_ = SmbConnectionControllerService::getFromProperty(*context, FetchSmb::ConnectionControllerService);
+void FetchSmb::onSchedule(core::ProcessContext& context, core::ProcessSessionFactory&) {
+  smb_connection_controller_service_ = SmbConnectionControllerService::getFromProperty(context, FetchSmb::ConnectionControllerService);
 }
 
 namespace {
@@ -43,28 +42,28 @@ std::filesystem::path getTargetRelativePath(core::ProcessContext& context, const
 }
 }  // namespace
 
-void FetchSmb::onTrigger(const std::shared_ptr<core::ProcessContext>& context, const std::shared_ptr<core::ProcessSession>& session) {
-  gsl_Expects(context && session && smb_connection_controller_service_);
+void FetchSmb::onTrigger(core::ProcessContext& context, core::ProcessSession& session) {
+  gsl_Expects(smb_connection_controller_service_);
 
   if (auto connection_error = smb_connection_controller_service_->validateConnection()) {
     logger_->log_error("Couldn't establish connection to the specified network location due to {}", connection_error.message());
-    context->yield();
+    context.yield();
     return;
   }
 
-  auto flow_file = session->get();
+  auto flow_file = session.get();
   if (!flow_file) {
-    context->yield();
+    context.yield();
     return;
   }
 
   try {
-    session->write(flow_file, utils::FileReaderCallback{smb_connection_controller_service_->getPath() / getTargetRelativePath(*context, flow_file)});
-    session->transfer(flow_file, Success);
+    session.write(flow_file, utils::FileReaderCallback{smb_connection_controller_service_->getPath() / getTargetRelativePath(context, flow_file)});
+    session.transfer(flow_file, Success);
   } catch (const utils::FileReaderCallbackIOError& io_error) {
     flow_file->addAttribute(ErrorCode.name, std::to_string(io_error.error_code));
     flow_file->addAttribute(ErrorMessage.name, io_error.what());
-    session->transfer(flow_file, Failure);
+    session.transfer(flow_file, Failure);
   }
 }
 

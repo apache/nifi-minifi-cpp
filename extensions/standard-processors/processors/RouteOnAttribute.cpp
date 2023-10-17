@@ -50,8 +50,8 @@ void RouteOnAttribute::onDynamicPropertyModified(const core::Property& /*orig_pr
   setSupportedRelationships(relationships);
 }
 
-void RouteOnAttribute::onTrigger(core::ProcessContext *context, core::ProcessSession *session) {
-  auto flow_file = session->get();
+void RouteOnAttribute::onTrigger(core::ProcessContext& context, core::ProcessSession& session) {
+  auto flow_file = session.get();
 
   // Do nothing if there are no incoming files
   if (!flow_file) {
@@ -64,23 +64,23 @@ void RouteOnAttribute::onTrigger(core::ProcessContext *context, core::ProcessSes
     // Perform dynamic routing logic
     for (const auto &route : route_properties_) {
       std::string do_route;
-      context->getDynamicProperty(route.second, do_route, flow_file);
+      context.getDynamicProperty(route.second, do_route, flow_file);
 
       if (do_route == "true") {
         did_match = true;
-        auto clone = session->clone(flow_file);
-        session->transfer(clone, route_rels_[route.first]);
+        auto clone = session.clone(flow_file);
+        session.transfer(clone, route_rels_[route.first]);
       }
     }
 
     if (!did_match) {
-      session->transfer(flow_file, Unmatched);
+      session.transfer(flow_file, Unmatched);
     } else {
-      session->remove(flow_file);
+      session.remove(flow_file);
     }
   } catch (const std::exception &e) {
     logger_->log_error("Caught exception while updating attributes: type: {}, what: {}", typeid(e).name(), e.what());
-    session->transfer(flow_file, Failure);
+    session.transfer(flow_file, Failure);
     yield();
   }
 }

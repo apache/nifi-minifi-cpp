@@ -61,7 +61,7 @@ void SmbConnectionControllerService::onEnable()  {
 void SmbConnectionControllerService::notifyStop() {
   auto disconnection_result = disconnect();
   if (!disconnection_result)
-    logger_->log_error("Error while disconnecting from SMB: %s", disconnection_result.error().message());
+    logger_->log_error("Error while disconnecting from SMB: {}", disconnection_result.error().message());
 }
 
 gsl::not_null<std::shared_ptr<SmbConnectionControllerService>> SmbConnectionControllerService::getFromProperty(const core::ProcessContext& context, const core::PropertyReference& property) {
@@ -98,7 +98,7 @@ bool SmbConnectionControllerService::isConnected() {
   std::error_code error_code;
   auto exists = std::filesystem::exists(server_path_, error_code);
   if (error_code) {
-    logger_->log_debug("std::filesystem::exists(%s) failed due to %s", server_path_, error_code.message());
+    logger_->log_debug("std::filesystem::exists({}) failed due to {}", server_path_, error_code.message());
     return false;
   }
   return exists;

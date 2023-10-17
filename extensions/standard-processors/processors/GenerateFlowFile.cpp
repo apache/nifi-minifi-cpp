@@ -57,25 +57,25 @@ void generateData(std::vector<char>& data, bool textData = false) {
   }
 }
 
-void GenerateFlowFile::onSchedule(const std::shared_ptr<core::ProcessContext> &context, const std::shared_ptr<core::ProcessSessionFactory>& /*sessionFactory*/) {
-  if (context->getProperty(FileSize.name, fileSize_)) {
+void GenerateFlowFile::onSchedule(core::ProcessContext& context, core::ProcessSessionFactory&) {
+  if (context.getProperty(FileSize.name, fileSize_)) {
     logger_->log_trace("File size is configured to be {}", fileSize_);
   }
 
-  if (context->getProperty(BatchSize.name, batchSize_)) {
+  if (context.getProperty(BatchSize.name, batchSize_)) {
     logger_->log_trace("Batch size is configured to be {}", batchSize_);
   }
 
   std::string value;
-  if (context->getProperty(DataFormat.name, value)) {
+  if (context.getProperty(DataFormat.name, value)) {
     textData_ = (value == GenerateFlowFile::DATA_FORMAT_TEXT);
   }
-  if (context->getProperty(UniqueFlowFiles.name, uniqueFlowFile_)) {
+  if (context.getProperty(UniqueFlowFiles.name, uniqueFlowFile_)) {
     logger_->log_trace("Unique Flow files is configured to be {}", uniqueFlowFile_);
   }
 
   std::string custom_text;
-  context->getProperty(CustomText, custom_text, nullptr);
+  context.getProperty(CustomText, custom_text, nullptr);
   if (!custom_text.empty()) {
     if (textData_ && !uniqueFlowFile_) {
       data_.assign(custom_text.begin(), custom_text.end());
@@ -91,10 +91,10 @@ void GenerateFlowFile::onSchedule(const std::shared_ptr<core::ProcessContext> &c
   }
 }
 
-void GenerateFlowFile::onTrigger(core::ProcessContext* /*context*/, core::ProcessSession *session) {
+void GenerateFlowFile::onTrigger(core::ProcessContext&, core::ProcessSession& session) {
   for (uint64_t i = 0; i < batchSize_; i++) {
     // For each batch
-    std::shared_ptr<core::FlowFile> flowFile = session->create();
+    std::shared_ptr<core::FlowFile> flowFile = session.create();
     if (!flowFile) {
       logger_->log_error("Failed to create flowfile!");
       return;
@@ -104,11 +104,11 @@ void GenerateFlowFile::onTrigger(core::ProcessContext* /*context*/, core::Proces
       if (fileSize_ > 0) {
         generateData(data, textData_);
       }
-      session->writeBuffer(flowFile, data);
+      session.writeBuffer(flowFile, data);
     } else {
-      session->writeBuffer(flowFile, data_);
+      session.writeBuffer(flowFile, data_);
     }
-    session->transfer(flowFile, Success);
+    session.transfer(flowFile, Success);
   }
 }
 

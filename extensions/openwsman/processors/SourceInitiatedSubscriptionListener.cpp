@@ -671,7 +671,7 @@ bool SourceInitiatedSubscriptionListener::Handler::handleSubscriptions(struct mg
   return true;
 }
 
-void SourceInitiatedSubscriptionListener::onTrigger(const std::shared_ptr<core::ProcessContext>& /*context*/, const std::shared_ptr<core::ProcessSession>& /*session*/) {
+void SourceInitiatedSubscriptionListener::onTrigger(core::ProcessContext&, core::ProcessSession&) {
   logger_->log_trace("SourceInitiatedSubscriptionListener onTrigger called");
 }
 
@@ -682,7 +682,7 @@ void SourceInitiatedSubscriptionListener::initialize() {
   setSupportedRelationships(Relationships);
 }
 
-void SourceInitiatedSubscriptionListener::onSchedule(const std::shared_ptr<core::ProcessContext> &context, const std::shared_ptr<core::ProcessSessionFactory> &sessionFactory) {
+void SourceInitiatedSubscriptionListener::onScheduleSharedPtr(const std::shared_ptr<core::ProcessContext> &context, const std::shared_ptr<core::ProcessSessionFactory> &sessionFactory) {
   std::string ssl_certificate_file;
   std::string ssl_ca_file;
 

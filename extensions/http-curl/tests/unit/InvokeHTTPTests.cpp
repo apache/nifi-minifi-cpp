@@ -96,8 +96,8 @@ TEST_CASE("HTTPTestsWithNoResourceClaimPOST", "[httptest1]") {
   invokehttp->incrementActiveTasks();
   invokehttp->setScheduledState(core::ScheduledState::RUNNING);
   auto factory2 = std::make_shared<core::ProcessSessionFactory>(context);
-  invokehttp->onSchedule(context, factory2);
-  invokehttp->onTrigger(context, session);
+  invokehttp->onSchedule(*context, *factory2);
+  invokehttp->onTrigger(*context, *session);
 
   auto reporter = session->getProvenanceReporter();
   auto records = reporter->getEvents();
@@ -112,7 +112,7 @@ TEST_CASE("HTTPTestsWithNoResourceClaimPOST", "[httptest1]") {
 
   invokehttp->incrementActiveTasks();
   invokehttp->setScheduledState(core::ScheduledState::RUNNING);
-  invokehttp->onTrigger(context, session);
+  invokehttp->onTrigger(*context, *session);
 
   session->commit();
   records = reporter->getEvents();
@@ -185,13 +185,13 @@ TEST_CASE("HTTPTestsWithResourceClaimPOST", "[httptest1]") {
   invokehttp->incrementActiveTasks();
   invokehttp->setScheduledState(core::ScheduledState::RUNNING);
   auto factory2 = std::make_shared<core::ProcessSessionFactory>(context2);
-  invokehttp->onSchedule(context2, factory2);
-  invokehttp->onTrigger(context2, session2);
+  invokehttp->onSchedule(*context2, *factory2);
+  invokehttp->onTrigger(*context2, *session2);
 
   listenhttp->incrementActiveTasks();
   listenhttp->setScheduledState(core::ScheduledState::RUNNING);
-  listenhttp->onSchedule(context, factory);
-  listenhttp->onTrigger(context, session);
+  listenhttp->onSchedule(*context, *factory);
+  listenhttp->onTrigger(*context, *session);
 
   auto reporter = session->getProvenanceReporter();
   auto records = reporter->getEvents();
@@ -201,7 +201,7 @@ TEST_CASE("HTTPTestsWithResourceClaimPOST", "[httptest1]") {
 
   listenhttp->incrementActiveTasks();
   listenhttp->setScheduledState(core::ScheduledState::RUNNING);
-  listenhttp->onTrigger(context, session);
+  listenhttp->onTrigger(*context, *session);
 
   reporter = session->getProvenanceReporter();
 
@@ -210,7 +210,7 @@ TEST_CASE("HTTPTestsWithResourceClaimPOST", "[httptest1]") {
 
   invokehttp->incrementActiveTasks();
   invokehttp->setScheduledState(core::ScheduledState::RUNNING);
-  invokehttp->onTrigger(context2, session2);
+  invokehttp->onTrigger(*context2, *session2);
 
   session2->commit();
   records = reporter->getEvents();

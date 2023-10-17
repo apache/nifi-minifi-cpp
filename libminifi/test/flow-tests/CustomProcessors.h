@@ -76,33 +76,33 @@ class TestProcessor : public core::Processor, public ProcessorWithStatistics {
     setSupportedProperties(Properties);
     setSupportedRelationships(Relationships);
   }
-  void onTrigger(const std::shared_ptr<core::ProcessContext>& /*context*/, const std::shared_ptr<core::ProcessSession> &session) override {
+  void onTrigger(core::ProcessContext&, core::ProcessSession& session) override {
     ++trigger_count;
     if (onTriggerCb_) {
       onTriggerCb_();
     }
-    auto flowFile = session->get();
+    auto flowFile = session.get();
     if (!flowFile) return;
     std::random_device rd{};
     std::uniform_int_distribution<int> dis(0, 100);
     int rand = dis(rd);
     if (rand <= apple_probability_) {
-      session->transfer(flowFile, Apple);
+      session.transfer(flowFile, Apple);
       return;
     }
     rand -= apple_probability_;
     if (rand <= banana_probability_) {
-      session->transfer(flowFile, Banana);
+      session.transfer(flowFile, Banana);
       return;
     }
     throw std::runtime_error("Couldn't route file");
   }
-  void onSchedule(const std::shared_ptr<core::ProcessContext> &context, const std::shared_ptr<core::ProcessSessionFactory>& /*sessionFactory*/) override {
+  void onSchedule(core::ProcessContext& context, core::ProcessSessionFactory&) override {
     int apple;
-    bool appleSuccess = context->getProperty(AppleProbability, apple);
+    bool appleSuccess = context.getProperty(AppleProbability, apple);
     assert(appleSuccess);
     int banana;
-    bool bananaSuccess = context->getProperty(BananaProbability, banana);
+    bool bananaSuccess = context.getProperty(BananaProbability, banana);
     assert(bananaSuccess);
     apple_probability_ = apple;
     banana_probability_ = banana;
@@ -119,12 +119,12 @@ class TestFlowFileGenerator : public processors::GenerateFlowFile, public Proces
   static constexpr const char* Description = "Processor generating files and notifying us";
 
   using processors::GenerateFlowFile::onTrigger;
-  void onTrigger(const std::shared_ptr<core::ProcessContext> &context, const std::shared_ptr<core::ProcessSession> &session) override {
+  void onTrigger(core::ProcessContext& context, core::ProcessSession& session) override {
     ++trigger_count;
     if (onTriggerCb_) {
       onTriggerCb_();
     }
-    GenerateFlowFile::onTrigger(context.get(), session.get());
+    GenerateFlowFile::onTrigger(context, session);
   }
 };
 
