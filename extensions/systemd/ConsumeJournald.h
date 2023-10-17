@@ -123,8 +123,8 @@ class ConsumeJournald final : public core::Processor {
 
   void initialize() final;
   void notifyStop() final;
-  void onSchedule(core::ProcessContext* context, core::ProcessSessionFactory* sessionFactory) final;
-  void onTrigger(core::ProcessContext* context, core::ProcessSession* session) final;
+  void onSchedule(core::ProcessContext& context, core::ProcessSessionFactory& session_factory) final;
+  void onTrigger(core::ProcessContext& context, core::ProcessSession& session) final;
 
   friend struct ConsumeJournaldTestAccessor;
  private:

@@ -40,17 +40,17 @@ void LogAttribute::initialize() {
   setSupportedRelationships(Relationships);
 }
 
-void LogAttribute::onSchedule(const std::shared_ptr<core::ProcessContext> &context, const std::shared_ptr<core::ProcessSessionFactory>& /*factory*/) {
-  context->getProperty(FlowFilesToLog, flowfiles_to_log_);
+void LogAttribute::onSchedule(core::ProcessContext& context, core::ProcessSessionFactory&) {
+  context.getProperty(FlowFilesToLog, flowfiles_to_log_);
   logger_->log_debug("FlowFiles To Log: {}", flowfiles_to_log_);
 
-  context->getProperty(HexencodePayload, hexencode_);
+  context.getProperty(HexencodePayload, hexencode_);
 
-  context->getProperty(MaxPayloadLineLength, max_line_length_);
+  context.getProperty(MaxPayloadLineLength, max_line_length_);
   logger_->log_debug("Maximum Payload Line Length: {}", max_line_length_);
 }
 // OnTrigger method, implemented by NiFi LogAttribute
-void LogAttribute::onTrigger(const std::shared_ptr<core::ProcessContext> &context, const std::shared_ptr<core::ProcessSession> &session) {
+void LogAttribute::onTrigger(core::ProcessContext& context, core::ProcessSession& session) {
   logger_->log_trace("enter log attribute, attempting to retrieve {} flow files", flowfiles_to_log_);
   std::string dashLine = "--------------------------------------------------";
   LogAttrLevel level = LogAttrLevelInfo;
@@ -59,21 +59,21 @@ void LogAttribute::onTrigger(const std::shared_ptr<core::ProcessContext> &contex
   uint64_t i = 0;
   const auto max = flowfiles_to_log_ == 0 ? UINT64_MAX : flowfiles_to_log_;
   for (; i < max; ++i) {
-    std::shared_ptr<core::FlowFile> flow = session->get();
+    std::shared_ptr<core::FlowFile> flow = session.get();
 
     if (!flow) {
       break;
     }
 
     std::string value;
-    if (context->getProperty(LogLevel, value)) {
+    if (context.getProperty(LogLevel, value)) {
       logLevelStringToEnum(value, level);
     }
-    if (context->getProperty(LogPrefix, value)) {
+    if (context.getProperty(LogPrefix, value)) {
       dashLine = "-----" + value + "-----";
     }
 
-    context->getProperty(LogPayload, logPayload);
+    context.getProperty(LogPayload, logPayload);
 
     std::ostringstream message;
     message << "Logging for flow file " << "\n";
@@ -96,7 +96,7 @@ void LogAttribute::onTrigger(const std::shared_ptr<core::ProcessContext> &contex
     }
     if (logPayload && flow->getSize() <= 1024 * 1024) {
       message << "\n" << "Payload:" << "\n";
-      const auto read_result = session->readBuffer(flow);
+      const auto read_result = session.readBuffer(flow);
 
       std::string printable_payload;
       if (hexencode_) {
@@ -137,7 +137,7 @@ void LogAttribute::onTrigger(const std::shared_ptr<core::ProcessContext> &contex
       default:
         break;
     }
-    session->transfer(flow, Success);
+    session.transfer(flow, Success);
   }
   logger_->log_debug("Logged {} flow files", i);
 }

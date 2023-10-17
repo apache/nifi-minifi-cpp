@@ -63,7 +63,7 @@ class GCSProcessor : public core::Processor {
   };
 
 
-  void onSchedule(const std::shared_ptr<core::ProcessContext> &context, const std::shared_ptr<core::ProcessSessionFactory> &sessionFactory) override;
+  void onSchedule(core::ProcessContext& context, core::ProcessSessionFactory& session_factory) override;
 
  protected:
   virtual google::cloud::storage::Client getClient() const;

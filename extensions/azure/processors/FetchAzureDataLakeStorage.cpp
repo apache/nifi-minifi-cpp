@@ -57,24 +57,23 @@ std::optional<storage::FetchAzureDataLakeStorageParameters> FetchAzureDataLakeSt
   return params;
 }
 
-void FetchAzureDataLakeStorage::onTrigger(const std::shared_ptr<core::ProcessContext>& context, const std::shared_ptr<core::ProcessSession>& session) {
-  gsl_Expects(context && session);
+void FetchAzureDataLakeStorage::onTrigger(core::ProcessContext& context, core::ProcessSession& session) {
   logger_->log_trace("FetchAzureDataLakeStorage onTrigger");
-  std::shared_ptr<core::FlowFile> flow_file = session->get();
+  std::shared_ptr<core::FlowFile> flow_file = session.get();
   if (!flow_file) {
-    context->yield();
+    context.yield();
     return;
   }
 
-  const auto params = buildFetchParameters(*context, flow_file);
+  const auto params = buildFetchParameters(context, flow_file);
   if (!params) {
-    session->transfer(flow_file, Failure);
+    session.transfer(flow_file, Failure);
     return;
   }
 
-  auto fetched_flow_file = session->create(flow_file);
+  auto fetched_flow_file = session.create(flow_file);
   std::optional<uint64_t> result;
-  session->write(fetched_flow_file, [&, this](const std::shared_ptr<io::OutputStream>& output_stream) -> int64_t {
+  session.write(fetched_flow_file, [&, this](const std::shared_ptr<io::OutputStream>& output_stream) -> int64_t {
     result = azure_data_lake_storage_.fetchFile(*params, *output_stream);
     if (!result) {
       return 0;
@@ -85,12 +84,12 @@ void FetchAzureDataLakeStorage::onTrigger(const std::shared_ptr<core::ProcessCon
 
   if (result == std::nullopt) {
     logger_->log_error("Failed to fetch file '{}' from Azure Data Lake storage", params->filename);
-    session->transfer(flow_file, Failure);
-    session->remove(fetched_flow_file);
+    session.transfer(flow_file, Failure);
+    session.remove(fetched_flow_file);
   } else {
     logger_->log_debug("Successfully fetched file '{}' from filesystem '{}' on Azure Data Lake storage", params->filename, params->file_system_name);
-    session->transfer(fetched_flow_file, Success);
-    session->remove(flow_file);
+    session.transfer(fetched_flow_file, Success);
+    session.remove(flow_file);
   }
 }
 

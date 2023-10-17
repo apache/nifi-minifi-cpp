@@ -31,10 +31,9 @@ void DeleteAzureBlobStorage::initialize() {
   setSupportedRelationships(Relationships);
 }
 
-void DeleteAzureBlobStorage::onSchedule(const std::shared_ptr<core::ProcessContext>& context, const std::shared_ptr<core::ProcessSessionFactory>& session_factory) {
-  gsl_Expects(context && session_factory);
+void DeleteAzureBlobStorage::onSchedule(core::ProcessContext& context, core::ProcessSessionFactory& session_factory) {
   AzureBlobStorageProcessorBase::onSchedule(context, session_factory);
-  optional_deletion_ = utils::parseEnumProperty<storage::OptionalDeletion>(*context, DeleteSnapshotsOption);
+  optional_deletion_ = utils::parseEnumProperty<storage::OptionalDeletion>(context, DeleteSnapshotsOption);
 }
 
 std::optional<storage::DeleteAzureBlobStorageParameters> DeleteAzureBlobStorage::buildDeleteAzureBlobStorageParameters(
@@ -47,27 +46,26 @@ std::optional<storage::DeleteAzureBlobStorageParameters> DeleteAzureBlobStorage:
   return params;
 }
 
-void DeleteAzureBlobStorage::onTrigger(const std::shared_ptr<core::ProcessContext> &context, const std::shared_ptr<core::ProcessSession> &session) {
-  gsl_Expects(context && session);
+void DeleteAzureBlobStorage::onTrigger(core::ProcessContext& context, core::ProcessSession& session) {
   logger_->log_trace("DeleteAzureBlobStorage onTrigger");
-  std::shared_ptr<core::FlowFile> flow_file = session->get();
+  std::shared_ptr<core::FlowFile> flow_file = session.get();
   if (!flow_file) {
     return;
   }
 
-  auto params = buildDeleteAzureBlobStorageParameters(*context, flow_file);
+  auto params = buildDeleteAzureBlobStorageParameters(context, flow_file);
   if (!params) {
-    session->transfer(flow_file, Failure);
+    session.transfer(flow_file, Failure);
     return;
   }
 
   auto result = azure_blob_storage_.deleteBlob(*params);
   if (result) {
     logger_->log_debug("Successfully deleted blob '{}' from Azure Storage container '{}'", params->blob_name, params->container_name);
-    session->transfer(flow_file, Success);
+    session.transfer(flow_file, Success);
   } else {
     logger_->log_error("Failed to delete blob '{}' from Azure Storage container '{}'", params->blob_name, params->container_name);
-    session->transfer(flow_file, Failure);
+    session.transfer(flow_file, Failure);
   }
 }
 

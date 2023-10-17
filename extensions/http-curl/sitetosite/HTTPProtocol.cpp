@@ -211,7 +211,7 @@ std::shared_ptr<minifi::extensions::curl::HTTPClient> HttpSiteToSiteClient::open
 }
 
 //! Transfer string for the process session
-bool HttpSiteToSiteClient::transmitPayload(const std::shared_ptr<core::ProcessContext>& /*context*/, const std::shared_ptr<core::ProcessSession>& /*session*/, const std::string& /*payload*/,
+bool HttpSiteToSiteClient::transmitPayload(core::ProcessContext&, core::ProcessSession&, const std::string& /*payload*/,
                                            std::map<std::string, std::string> /*attributes*/) {
   return false;
 }

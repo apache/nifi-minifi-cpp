@@ -40,12 +40,11 @@ void ProcFsMonitor::initialize() {
   setSupportedRelationships(Relationships);
 }
 
-void ProcFsMonitor::onSchedule(const std::shared_ptr<core::ProcessContext>& context, const std::shared_ptr<core::ProcessSessionFactory>&) {
-  gsl_Expects(context);
-  output_format_ = utils::parseEnumProperty<OutputFormat>(*context, OutputFormatProperty);
-  output_compactness_ = utils::parseEnumProperty<OutputCompactness>(*context, OutputCompactnessProperty);
-  result_relativeness_ = utils::parseEnumProperty<ResultRelativeness>(*context, ResultRelativenessProperty);
-  setupDecimalPlacesFromProperties(*context);
+void ProcFsMonitor::onSchedule(core::ProcessContext& context, core::ProcessSessionFactory&) {
+  output_format_ = utils::parseEnumProperty<OutputFormat>(context, OutputFormatProperty);
+  output_compactness_ = utils::parseEnumProperty<OutputCompactness>(context, OutputCompactnessProperty);
+  result_relativeness_ = utils::parseEnumProperty<ResultRelativeness>(context, ResultRelativenessProperty);
+  setupDecimalPlacesFromProperties(context);
 }
 
 namespace {
@@ -69,9 +68,8 @@ std::optional<std::chrono::duration<double>> getAggregateCpuDiff(std::vector<std
 }
 }  // namespace
 
-void ProcFsMonitor::onTrigger(core::ProcessContext*, core::ProcessSession* session) {
-  gsl_Expects(session);
-  std::shared_ptr<core::FlowFile> flowFile = session->create();
+void ProcFsMonitor::onTrigger(core::ProcessContext&, core::ProcessSession& session) {
+  std::shared_ptr<core::FlowFile> flowFile = session.create();
 
   rapidjson::Document root = rapidjson::Document(rapidjson::kObjectType);
   rapidjson::Value& body = prepareJSONBody(root);
@@ -97,12 +95,12 @@ void ProcFsMonitor::onTrigger(core::ProcessContext*, core::ProcessSession* sessi
 
   if (output_compactness_ == OutputCompactness::Pretty) {
     utils::PrettyJsonOutputCallback callback(std::move(root), decimal_places_);
-    session->write(flowFile, std::ref(callback));
-    session->transfer(flowFile, Success);
+    session.write(flowFile, std::ref(callback));
+    session.transfer(flowFile, Success);
   } else if (output_compactness_ == OutputCompactness::Compact) {
     utils::JsonOutputCallback callback(std::move(root), decimal_places_);
-    session->write(flowFile, std::ref(callback));
-    session->transfer(flowFile, Success);
+    session.write(flowFile, std::ref(callback));
+    session.transfer(flowFile, Success);
   } else {
     throw Exception(GENERAL_EXCEPTION, "Invalid output compactness");
   }

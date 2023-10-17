@@ -41,26 +41,26 @@ void AppendHostInfo::initialize() {
   setSupportedRelationships(Relationships);
 }
 
-void AppendHostInfo::onSchedule(const std::shared_ptr<core::ProcessContext>& context, const std::shared_ptr<core::ProcessSessionFactory>&) {
+void AppendHostInfo::onSchedule(core::ProcessContext& context, core::ProcessSessionFactory&) {
   std::unique_lock unique_lock(shared_mutex_);
-  context->getProperty(HostAttribute, hostname_attribute_name_);
-  context->getProperty(IPAttribute, ipaddress_attribute_name_);
+  context.getProperty(HostAttribute, hostname_attribute_name_);
+  context.getProperty(IPAttribute, ipaddress_attribute_name_);
   std::string interface_name_filter_str;
-  if (context->getProperty(InterfaceNameFilter, interface_name_filter_str) && !interface_name_filter_str.empty())
+  if (context.getProperty(InterfaceNameFilter, interface_name_filter_str) && !interface_name_filter_str.empty())
     interface_name_filter_.emplace(interface_name_filter_str);
   else
     interface_name_filter_ = std::nullopt;
 
   std::string refresh_policy;
-  context->getProperty(RefreshPolicy, refresh_policy);
+  context.getProperty(RefreshPolicy, refresh_policy);
   if (refresh_policy == REFRESH_POLICY_ON_TRIGGER)
     refresh_on_trigger_ = true;
   else
     refreshHostInfo();
 }
 
-void AppendHostInfo::onTrigger(core::ProcessContext*, core::ProcessSession* session) {
-  std::shared_ptr<core::FlowFile> flow = session->get();
+void AppendHostInfo::onTrigger(core::ProcessContext&, core::ProcessSession& session) {
+  std::shared_ptr<core::FlowFile> flow = session.get();
   if (!flow)
     return;
 
@@ -81,7 +81,7 @@ void AppendHostInfo::onTrigger(core::ProcessContext*, core::ProcessSession* sess
     }
   }
 
-  session->transfer(flow, Success);
+  session.transfer(flow, Success);
 }
 
 void AppendHostInfo::refreshHostInfo() {

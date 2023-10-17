@@ -108,17 +108,17 @@ void RemoteProcessorGroupPort::initialize() {
   logger_->log_trace("Finished initialization");
 }
 
-void RemoteProcessorGroupPort::onSchedule(const std::shared_ptr<core::ProcessContext> &context, const std::shared_ptr<core::ProcessSessionFactory>& /*sessionFactory*/) {
+void RemoteProcessorGroupPort::onSchedule(core::ProcessContext& context, core::ProcessSessionFactory&) {
   std::string value;
-  if (context->getProperty(portUUID, value) && !value.empty()) {
+  if (context.getProperty(portUUID, value) && !value.empty()) {
     protocol_uuid_ = value;
   }
 
   std::string context_name;
-  if (!context->getProperty(SSLContext, context_name) || IsNullOrEmpty(context_name)) {
+  if (!context.getProperty(SSLContext, context_name) || IsNullOrEmpty(context_name)) {
     context_name = RPG_SSL_CONTEXT_SERVICE_NAME;
   }
-  std::shared_ptr<core::controller::ControllerService> service = context->getControllerService(context_name);
+  std::shared_ptr<core::controller::ControllerService> service = context.getControllerService(context_name);
   if (nullptr != service) {
     ssl_service = std::static_pointer_cast<minifi::controllers::SSLContextService>(service);
   } else {
@@ -129,7 +129,7 @@ void RemoteProcessorGroupPort::onSchedule(const std::shared_ptr<core::ProcessCon
     }
   }
   {
-    if (auto idle_timeout = context->getProperty<core::TimePeriodValue>(idleTimeout)) {
+    if (auto idle_timeout = context.getProperty<core::TimePeriodValue>(idleTimeout)) {
       idle_timeout_ = idle_timeout->getMilliseconds();
     } else {
       static_assert(idleTimeout.default_value);
@@ -153,8 +153,8 @@ void RemoteProcessorGroupPort::onSchedule(const std::shared_ptr<core::ProcessCon
     std::string portStr;
     int configured_port = -1;
     // place hostname/port into the log message if we have it
-    context->getProperty(hostName, host);
-    context->getProperty(port, portStr);
+    context.getProperty(hostName, host);
+    context.getProperty(port, portStr);
     if (!host.empty() && !portStr.empty() && !portStr.empty() && core::Property::StringToInt(portStr, configured_port)) {
       nifi_instances_.push_back({ host, configured_port, "" });
       bypass_rest_api_ = true;
@@ -202,7 +202,7 @@ void RemoteProcessorGroupPort::notifyStop() {
   }
 }
 
-void RemoteProcessorGroupPort::onTrigger(const std::shared_ptr<core::ProcessContext> &context, const std::shared_ptr<core::ProcessSession> &session) {
+void RemoteProcessorGroupPort::onTrigger(core::ProcessContext& context, core::ProcessSession& session) {
   logger_->log_trace("On trigger {}", getUUIDStr());
   if (!transmitting_) {
     return;
@@ -221,23 +221,23 @@ void RemoteProcessorGroupPort::onTrigger(const std::shared_ptr<core::ProcessCont
 
     if (!protocol_) {
       logger_->log_info("no protocol, yielding");
-      context->yield();
+      context.yield();
       return;
     }
 
     if (!protocol_->transfer(direction_, context, session)) {
       logger_->log_warn("protocol transmission failed, yielding");
-      context->yield();
+      context.yield();
     }
 
     returnProtocol(std::move(protocol_));
     return;
   } catch (const minifi::Exception &) {
-    context->yield();
-    session->rollback();
+    context.yield();
+    session.rollback();
   } catch (...) {
-    context->yield();
-    session->rollback();
+    context.yield();
+    session.rollback();
   }
 }
 

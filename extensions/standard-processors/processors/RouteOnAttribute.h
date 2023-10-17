@@ -58,7 +58,7 @@ class RouteOnAttribute : public core::Processor {
   ADD_COMMON_VIRTUAL_FUNCTIONS_FOR_PROCESSORS
 
   void onDynamicPropertyModified(const core::Property &orig_property, const core::Property &new_property) override;
-  void onTrigger(core::ProcessContext *context, core::ProcessSession *session) override;
+  void onTrigger(core::ProcessContext& context, core::ProcessSession& session) override;
   void initialize() override;
 
  private:

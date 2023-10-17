@@ -27,9 +27,8 @@ void ListenTCP::initialize() {
   setSupportedRelationships(Relationships);
 }
 
-void ListenTCP::onSchedule(const std::shared_ptr<core::ProcessContext>& context, const std::shared_ptr<core::ProcessSessionFactory>&) {
-  gsl_Expects(context);
-  startTcpServer(*context, SSLContextService, ClientAuth);
+void ListenTCP::onSchedule(core::ProcessContext& context, core::ProcessSessionFactory&) {
+  startTcpServer(context, SSLContextService, ClientAuth);
 }
 
 void ListenTCP::transferAsFlowFile(const utils::net::Message& message, core::ProcessSession& session) {

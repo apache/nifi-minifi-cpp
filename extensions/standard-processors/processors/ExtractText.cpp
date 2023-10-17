@@ -42,15 +42,15 @@ void ExtractText::initialize() {
   setSupportedRelationships(Relationships);
 }
 
-void ExtractText::onTrigger(core::ProcessContext *context, core::ProcessSession *session) {
-  std::shared_ptr<core::FlowFile> flowFile = session->get();
+void ExtractText::onTrigger(core::ProcessContext& context, core::ProcessSession& session) {
+  std::shared_ptr<core::FlowFile> flowFile = session.get();
 
   if (!flowFile) {
     return;
   }
 
-  session->read(flowFile, ReadCallback{flowFile, context, logger_});
-  session->transfer(flowFile, Success);
+  session.read(flowFile, ReadCallback{flowFile, &context, logger_});
+  session.transfer(flowFile, Success);
 }
 
 int64_t ExtractText::ReadCallback::operator()(const std::shared_ptr<io::InputStream>& stream) const {

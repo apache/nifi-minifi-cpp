@@ -38,12 +38,12 @@ class CountOnTriggersProcessor : public minifi::core::Processor {
   static constexpr bool IsSingleThreaded = false;
   ADD_COMMON_VIRTUAL_FUNCTIONS_FOR_PROCESSORS
 
-  void onTrigger(core::ProcessContext* context, core::ProcessSession*) override {
+  void onTrigger(core::ProcessContext& context, core::ProcessSession&) override {
     if (on_trigger_duration_ > 0ms)
       std::this_thread::sleep_for(on_trigger_duration_);
     ++number_of_triggers;
     if (should_yield_)
-      context->yield();
+      context.yield();
   }
 
   size_t getNumberOfTriggers() const { return number_of_triggers; }

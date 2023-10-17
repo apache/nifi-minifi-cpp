@@ -30,27 +30,26 @@ void MotionDetector::initialize() {
   setSupportedRelationships(Relationships);
 }
 
-void MotionDetector::onSchedule(const std::shared_ptr<core::ProcessContext> &context,
-                                  const std::shared_ptr<core::ProcessSessionFactory>& /*sessionFactory*/) {
+void MotionDetector::onSchedule(core::ProcessContext& context, core::ProcessSessionFactory&) {
   std::string value;
 
-  if (context->getProperty(ImageEncoding, value)) {
+  if (context.getProperty(ImageEncoding, value)) {
     image_encoding_ = value;
   }
 
-  if (context->getProperty(MinInterestArea, value)) {
+  if (context.getProperty(MinInterestArea, value)) {
     core::Property::StringToInt(value, min_area_);
   }
 
-  if (context->getProperty(Threshold, value)) {
+  if (context.getProperty(Threshold, value)) {
     core::Property::StringToInt(value, threshold_);
   }
 
-  if (context->getProperty(DilateIter, value)) {
+  if (context.getProperty(DilateIter, value)) {
     core::Property::StringToInt(value, dil_iter_);
   }
 
-  if (context->getProperty(BackgroundFrame, value) && !value.empty()) {
+  if (context.getProperty(BackgroundFrame, value) && !value.empty()) {
     bg_img_ = cv::imread(value, cv::IMREAD_GRAYSCALE);
     double scale = IMG_WIDTH / bg_img_.size().width;
     cv::resize(bg_img_, bg_img_, cv::Size(0, 0), scale, scale);
@@ -105,23 +104,22 @@ bool MotionDetector::detectAndDraw(cv::Mat &frame) {
   return moved;
 }
 
-void MotionDetector::onTrigger(const std::shared_ptr<core::ProcessContext> &context,
-                                 const std::shared_ptr<core::ProcessSession> &session) {
+void MotionDetector::onTrigger(core::ProcessContext& context, core::ProcessSession& session) {
   std::unique_lock<std::mutex> lock(mutex_, std::try_to_lock);
   if (!lock.owns_lock()) {
     logger_->log_info("Cannot process due to an unfinished onTrigger");
-    context->yield();
+    context.yield();
     return;
   }
 
-  auto flow_file = session->get();
+  auto flow_file = session.get();
   if (flow_file->getSize() == 0) {
     logger_->log_info("Empty flow file");
     return;
   }
   cv::Mat frame;
 
-  session->read(flow_file, [&frame](const std::shared_ptr<io::InputStream>& input_stream) -> int64_t {
+  session.read(flow_file, [&frame](const std::shared_ptr<io::InputStream>& input_stream) -> int64_t {
     std::vector<uchar> image_buf;
     image_buf.resize(input_stream->size());
     const auto ret = input_stream->read(as_writable_bytes(std::span(image_buf)));
@@ -134,7 +132,7 @@ void MotionDetector::onTrigger(const std::shared_ptr<core::ProcessContext> &cont
 
   if (frame.empty()) {
     logger_->log_error("Empty frame.");
-    session->transfer(flow_file, Failure);
+    session.transfer(flow_file, Failure);
   }
 
   double scale = IMG_WIDTH / frame.size().width;
@@ -158,15 +156,15 @@ void MotionDetector::onTrigger(const std::shared_ptr<core::ProcessContext> &cont
 
   detectAndDraw(frame);
 
-  session->putAttribute(flow_file, "filename", filename);
+  session.putAttribute(flow_file, "filename", filename);
 
-  session->write(flow_file, [&frame, this](const auto& output_stream) -> int64_t {
+  session.write(flow_file, [&frame, this](const auto& output_stream) -> int64_t {
     std::vector<uchar> image_buf;
     imencode(image_encoding_, frame, image_buf);
     const auto ret = output_stream->write(image_buf.data(), image_buf.size());
     return io::isError(ret) ? -1 : gsl::narrow<int64_t>(ret);
   });
-  session->transfer(flow_file, Success);
+  session.transfer(flow_file, Success);
   logger_->log_trace("Finish motion detecting");
 }
 

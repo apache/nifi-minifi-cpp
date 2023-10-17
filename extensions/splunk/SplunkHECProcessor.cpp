@@ -26,18 +26,17 @@ void SplunkHECProcessor::initialize() {
   setSupportedProperties(Properties);
 }
 
-void SplunkHECProcessor::onSchedule(const std::shared_ptr<core::ProcessContext>& context, const std::shared_ptr<core::ProcessSessionFactory>&) {
-  gsl_Expects(context);
-  if (!context->getProperty(Hostname, hostname_))
+void SplunkHECProcessor::onSchedule(core::ProcessContext& context, core::ProcessSessionFactory&) {
+  if (!context.getProperty(Hostname, hostname_))
     throw Exception(PROCESS_SCHEDULE_EXCEPTION, "Failed to get Hostname");
 
-  if (!context->getProperty(Port, port_))
+  if (!context.getProperty(Port, port_))
     throw Exception(PROCESS_SCHEDULE_EXCEPTION, "Failed to get Port");
 
-  if (!context->getProperty(Token, token_))
+  if (!context.getProperty(Token, token_))
     throw Exception(PROCESS_SCHEDULE_EXCEPTION, "Failed to get Token");
 
-  if (!context->getProperty(SplunkRequestChannel, request_channel_))
+  if (!context.getProperty(SplunkRequestChannel, request_channel_))
     throw Exception(PROCESS_SCHEDULE_EXCEPTION, "Failed to get SplunkRequestChannel");
 }
 

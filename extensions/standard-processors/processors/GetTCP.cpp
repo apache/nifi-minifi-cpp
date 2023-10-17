@@ -97,24 +97,22 @@ uint64_t GetTCP::parseMaxBatchSize(core::ProcessContext& context) {
   return MaxBatchSize.type->parse(*MaxBatchSize.default_value);
 }
 
-void GetTCP::onSchedule(const std::shared_ptr<core::ProcessContext>& context, const std::shared_ptr<core::ProcessSessionFactory>&) {
-  gsl_Expects(context);
+void GetTCP::onSchedule(core::ProcessContext& context, core::ProcessSessionFactory&) {
+  auto connections_to_make = parseEndpointList(context);
+  auto delimiter = parseDelimiter(context);
+  auto ssl_context = parseSSLContext(context);
 
-  auto connections_to_make = parseEndpointList(*context);
-  auto delimiter = parseDelimiter(*context);
-  auto ssl_context = parseSSLContext(*context);
-
-  std::optional<size_t> max_queue_size = context->getProperty<uint64_t>(MaxQueueSize);
-  std::optional<size_t> max_message_size = context->getProperty<uint64_t>(MaxMessageSize);
+  std::optional<size_t> max_queue_size = context.getProperty<uint64_t>(MaxQueueSize);
+  std::optional<size_t> max_message_size = context.getProperty<uint64_t>(MaxMessageSize);
 
 
   asio::steady_timer::duration timeout_duration = 1s;
-  if (auto timeout_value = context->getProperty<core::TimePeriodValue>(Timeout)) {
+  if (auto timeout_value = context.getProperty<core::TimePeriodValue>(Timeout)) {
     timeout_duration = timeout_value->getMilliseconds();
   }
 
   asio::steady_timer::duration reconnection_interval = 1min;
-  if (auto reconnect_interval_value = context->getProperty<core::TimePeriodValue>(ReconnectInterval)) {
+  if (auto reconnect_interval_value = context.getProperty<core::TimePeriodValue>(ReconnectInterval)) {
     reconnection_interval = reconnect_interval_value->getMilliseconds();
   }
 
@@ -122,7 +120,7 @@ void GetTCP::onSchedule(const std::shared_ptr<core::ProcessContext>& context, co
   client_.emplace(delimiter, timeout_duration, reconnection_interval, std::move(ssl_context), max_queue_size, max_message_size, std::move(connections_to_make), logger_);
   client_thread_ = std::thread([this]() { client_->run(); });  // NOLINT
 
-  max_batch_size_ = parseMaxBatchSize(*context);
+  max_batch_size_ = parseMaxBatchSize(context);
 }
 
 void GetTCP::notifyStop() {
@@ -140,14 +138,14 @@ void GetTCP::transferAsFlowFile(const utils::net::Message& message, core::Proces
     session.transfer(flow_file, Success);
 }
 
-void GetTCP::onTrigger(const std::shared_ptr<core::ProcessContext>&, const std::shared_ptr<core::ProcessSession>& session) {
-  gsl_Expects(session && max_batch_size_ > 0);
+void GetTCP::onTrigger(core::ProcessContext&, core::ProcessSession& session) {
+  gsl_Expects(max_batch_size_ > 0);
   size_t logs_processed = 0;
   while (!client_->queueEmpty() && logs_processed < max_batch_size_) {
     utils::net::Message received_message;
     if (!client_->tryDequeue(received_message))
       break;
-    transferAsFlowFile(received_message, *session);
+    transferAsFlowFile(received_message, session);
     ++logs_processed;
   }
 }

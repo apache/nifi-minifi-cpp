@@ -111,25 +111,25 @@ class DefragmentText : public core::Processor {
   EXTENSIONAPI static const core::Relationship Self;
 
   void initialize() override;
-  void onSchedule(core::ProcessContext* context, core::ProcessSessionFactory* sessionFactory) override;
-  void onTrigger(core::ProcessContext* context, core::ProcessSession* session) override;
+  void onSchedule(core::ProcessContext& context, core::ProcessSessionFactory& session_factory) override;
+  void onTrigger(core::ProcessContext& context, core::ProcessSession& session) override;
   void restore(const std::shared_ptr<core::FlowFile>& flowFile) override;
   std::set<core::Connectable*> getOutGoingConnections(const std::string &relationship) override;
 
  protected:
   class Buffer {
    public:
-    void append(core::ProcessSession* session, const gsl::not_null<std::shared_ptr<core::FlowFile>>& flow_file_to_append);
+    void append(core::ProcessSession& session, const gsl::not_null<std::shared_ptr<core::FlowFile>>& flow_file_to_append);
     bool maxSizeReached(const std::optional<size_t> max_size) const;
     bool maxAgeReached(const std::optional<std::chrono::milliseconds> max_age) const;
-    void flushAndReplace(core::ProcessSession* session, const core::Relationship& relationship,
+    void flushAndReplace(core::ProcessSession& session, const core::Relationship& relationship,
                          const std::shared_ptr<core::FlowFile>& new_buffered_flow_file);
 
     bool empty() const { return buffered_flow_file_ == nullptr; }
     std::optional<size_t> getNextFragmentOffset() const;
 
    private:
-    void store(core::ProcessSession* session, const std::shared_ptr<core::FlowFile>& new_buffered_flow_file);
+    void store(core::ProcessSession& session, const std::shared_ptr<core::FlowFile>& new_buffered_flow_file);
 
     std::shared_ptr<core::FlowFile> buffered_flow_file_;
     std::chrono::steady_clock::time_point creation_time_;
@@ -160,9 +160,9 @@ class DefragmentText : public core::Processor {
   core::FlowFileStore flow_file_store_;
   std::unordered_map<FragmentSource::Id, FragmentSource, FragmentSource::Id::hash> fragment_sources_;
 
-  void processNextFragment(core::ProcessSession *session, const gsl::not_null<std::shared_ptr<core::FlowFile>>& next_fragment);
+  void processNextFragment(core::ProcessSession& session, const gsl::not_null<std::shared_ptr<core::FlowFile>>& next_fragment);
 
-  bool splitFlowFileAtLastPattern(core::ProcessSession *session,
+  bool splitFlowFileAtLastPattern(core::ProcessSession& session,
                                   const gsl::not_null<std::shared_ptr<core::FlowFile>> &original_flow_file,
                                   std::shared_ptr<core::FlowFile> &split_before_last_pattern,
                                   std::shared_ptr<core::FlowFile> &split_after_last_pattern) const;

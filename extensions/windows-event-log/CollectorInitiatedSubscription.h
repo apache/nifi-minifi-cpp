@@ -151,16 +151,16 @@ class CollectorInitiatedSubscription : public core::Processor {
 
   ADD_COMMON_VIRTUAL_FUNCTIONS_FOR_PROCESSORS
 
-  void onSchedule(const std::shared_ptr<core::ProcessContext> &context, const std::shared_ptr<core::ProcessSessionFactory> &sessionFactory) override;
-  void onTrigger(const std::shared_ptr<core::ProcessContext> &context, const std::shared_ptr<core::ProcessSession> &session) override;
+  void onSchedule_2(const std::shared_ptr<core::ProcessContext> &context, const std::shared_ptr<core::ProcessSessionFactory> &sessionFactory) override;
+  void onTrigger(core::ProcessContext& context, core::ProcessSession& session) override;
   void initialize(void) override;
   void notifyStop() override;
 
  protected:
-  bool createSubscription(const std::shared_ptr<core::ProcessContext> &context);
-  bool subscribe(const std::shared_ptr<core::ProcessContext> &context);
+  bool createSubscription(core::ProcessContext& context);
+  bool subscribe(core::ProcessContext& context);
   void unsubscribe();
-  int processQueue(const std::shared_ptr<core::ProcessSession> &session);
+  int processQueue(core::ProcessSession& session);
   void logError(int line, const std::string& error);
   void logWindowsError(int line, const std::string& info);
   void logInvalidSubscriptionPropertyType(int line, DWORD type);

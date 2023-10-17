@@ -107,18 +107,18 @@ class MockProcessor : public minifi::core::Processor {
     setSupportedProperties(Properties);
   }
 
-  void onTrigger(minifi::core::ProcessContext *context, minifi::core::ProcessSession* /*session*/) override {
-    std::string linked_service = "";
+  void onTrigger(minifi::core::ProcessContext& context, minifi::core::ProcessSession&) override {
+    std::string linked_service;
     getProperty("linkedService", linked_service);
     if (!IsNullOrEmpty(linked_service)) {
-      std::shared_ptr<minifi::core::controller::ControllerService> service = context->getControllerService(linked_service);
+      std::shared_ptr<minifi::core::controller::ControllerService> service = context.getControllerService(linked_service);
       std::lock_guard<std::mutex> lock(control_mutex);
       if (!disabled.load()) {
-        assert(true == context->isControllerServiceEnabled(linked_service));
+        assert(true == context.isControllerServiceEnabled(linked_service));
         assert(nullptr != service);
         assert("pushitrealgood" == std::static_pointer_cast<MockControllerService>(service)->doSomething());
       } else {
-        assert(false == context->isControllerServiceEnabled(linked_service));
+        assert(false == context.isControllerServiceEnabled(linked_service));
       }
       // verify we have access to the controller service
       // and verify that we can execute it.

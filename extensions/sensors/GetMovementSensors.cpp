@@ -33,8 +33,8 @@ void GetMovementSensors::initialize() {
 
 GetMovementSensors::~GetMovementSensors() = default;
 
-void GetMovementSensors::onTrigger(const std::shared_ptr<core::ProcessContext>& /*context*/, const std::shared_ptr<core::ProcessSession>& session) {
-  auto flow_file_ = session->create();
+void GetMovementSensors::onTrigger(core::ProcessContext& /*context*/, core::ProcessSession& session) {
+  auto flow_file_ = session.create();
 
   if (imu_->IMURead()) {
     RTIMU_DATA imuData = imu_->getIMUData();
@@ -54,8 +54,8 @@ void GetMovementSensors::onTrigger(const std::shared_ptr<core::ProcessContext>& 
       logger_->log_trace("Could not read gyroscope");
     }
 
-    session->writeBuffer(flow_file_, "GetMovementSensors");
-    session->transfer(flow_file_, Success);
+    session.writeBuffer(flow_file_, "GetMovementSensors");
+    session.transfer(flow_file_, Success);
   }
 }
 

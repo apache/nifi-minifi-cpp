@@ -44,8 +44,8 @@ void FocusArchiveEntry::initialize() {
   setSupportedRelationships(Relationships);
 }
 
-void FocusArchiveEntry::onTrigger(core::ProcessContext *context, core::ProcessSession *session) {
-  auto flowFile = session->get();
+void FocusArchiveEntry::onTrigger(core::ProcessContext& context, core::ProcessSession& session) {
+  auto flowFile = session.get();
 
   if (!flowFile) {
     return;
@@ -55,10 +55,10 @@ void FocusArchiveEntry::onTrigger(core::ProcessContext *context, core::ProcessSe
 
   // Extract archive contents
   ArchiveMetadata archiveMetadata;
-  context->getProperty(Path, archiveMetadata.focusedEntry);
+  context.getProperty(Path, archiveMetadata.focusedEntry);
   flowFile->getAttribute("filename", archiveMetadata.archiveName);
 
-  session->read(flowFile, ReadCallback{this, &file_man, &archiveMetadata});
+  session.read(flowFile, ReadCallback{this, &file_man, &archiveMetadata});
 
   // For each extracted entry, import & stash to key
   std::string targetEntryStashKey;
@@ -67,7 +67,7 @@ void FocusArchiveEntry::onTrigger(core::ProcessContext *context, core::ProcessSe
   for (auto &entryMetadata : archiveMetadata.entryMetadata) {
     if (entryMetadata.entryType == AE_IFREG) {
       logger_->log_info("FocusArchiveEntry importing {} from {}", entryMetadata.entryName, entryMetadata.tmpFileName);
-      session->import(entryMetadata.tmpFileName.string(), flowFile, false, 0);
+      session.import(entryMetadata.tmpFileName.string(), flowFile, false, 0);
       utils::Identifier stashKeyUuid = id_generator_->generate();
       logger_->log_debug("FocusArchiveEntry generated stash key {} for entry {}", stashKeyUuid.to_string(), entryMetadata.entryName);
       entryMetadata.stashKey = stashKeyUuid.to_string();
@@ -77,13 +77,13 @@ void FocusArchiveEntry::onTrigger(core::ProcessContext *context, core::ProcessSe
       }
 
       // Stash the content
-      session->stash(entryMetadata.stashKey, flowFile);
+      session.stash(entryMetadata.stashKey, flowFile);
     }
   }
 
   // Restore target archive entry
   if (!targetEntryStashKey.empty()) {
-    session->restore(targetEntryStashKey, flowFile);
+    session.restore(targetEntryStashKey, flowFile);
   } else {
     logger_->log_warn("FocusArchiveEntry failed to locate target entry: {}",
                       archiveMetadata.focusedEntry.c_str());
@@ -101,7 +101,7 @@ void FocusArchiveEntry::onTrigger(core::ProcessContext *context, core::ProcessSe
         archiveStack.loadJsonString(existingLensStack);
       } catch (Exception &exception) {
         logger_->log_debug("{}", exception.what());
-        context->yield();
+        context.yield();
         return;
       }
     }
@@ -120,7 +120,7 @@ void FocusArchiveEntry::onTrigger(core::ProcessContext *context, core::ProcessSe
   flowFile->setAttribute("absolute.path", archiveMetadata.focusedEntry);
 
   // Transfer to the relationship
-  session->transfer(flowFile, Success);
+  session.transfer(flowFile, Success);
 }
 
 struct FocusArchiveEntryReadData {

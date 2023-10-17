@@ -108,10 +108,9 @@ void PutGCSObject::initialize() {
 }
 
 
-void PutGCSObject::onSchedule(const std::shared_ptr<core::ProcessContext>& context, const std::shared_ptr<core::ProcessSessionFactory>& session_factory) {
+void PutGCSObject::onSchedule(core::ProcessContext& context, core::ProcessSessionFactory& session_factory) {
   GCSProcessor::onSchedule(context, session_factory);
-  gsl_Expects(context);
-  if (auto encryption_key = context->getProperty(EncryptionKey)) {
+  if (auto encryption_key = context.getProperty(EncryptionKey)) {
     try {
       encryption_key_ = gcs::EncryptionKey::FromBase64Key(*encryption_key);
     } catch (const google::cloud::RuntimeStatusError&) {
@@ -120,60 +119,60 @@ void PutGCSObject::onSchedule(const std::shared_ptr<core::ProcessContext>& conte
   }
 }
 
-void PutGCSObject::onTrigger(const std::shared_ptr<core::ProcessContext>& context, const std::shared_ptr<core::ProcessSession>& session) {
-  gsl_Expects(context && session && gcp_credentials_);
+void PutGCSObject::onTrigger(core::ProcessContext& context, core::ProcessSession& session) {
+  gsl_Expects(gcp_credentials_);
 
-  auto flow_file = session->get();
+  auto flow_file = session.get();
   if (!flow_file) {
-    context->yield();
+    context.yield();
     return;
   }
 
-  auto bucket = context->getProperty(Bucket, flow_file);
+  auto bucket = context.getProperty(Bucket, flow_file);
   if (!bucket || bucket->empty()) {
     logger_->log_error("Missing bucket name");
-    session->transfer(flow_file, Failure);
+    session.transfer(flow_file, Failure);
     return;
   }
-  auto object_name = context->getProperty(Key, flow_file);
+  auto object_name = context.getProperty(Key, flow_file);
   if (!object_name || object_name->empty()) {
     logger_->log_error("Missing object name");
-    session->transfer(flow_file, Failure);
+    session.transfer(flow_file, Failure);
     return;
   }
 
   gcs::Client client = getClient();
   UploadToGCSCallback callback(client, *bucket, *object_name);
 
-  if (auto crc32_checksum = context->getProperty(Crc32cChecksum, flow_file)) {
+  if (auto crc32_checksum = context.getProperty(Crc32cChecksum, flow_file)) {
     callback.setCrc32CChecksumValue(*crc32_checksum);
   }
 
-  if (auto md5_hash = context->getProperty(MD5Hash, flow_file)) {
+  if (auto md5_hash = context.getProperty(MD5Hash, flow_file)) {
     callback.setHashValue(*md5_hash);
   }
 
-  auto content_type = context->getProperty(ContentType, flow_file);
+  auto content_type = context.getProperty(ContentType, flow_file);
   if (content_type && !content_type->empty())
     callback.setContentType(*content_type);
 
-  if (auto predefined_acl = utils::parseOptionalEnumProperty<put_gcs_object::PredefinedAcl>(*context, ObjectACL))
+  if (auto predefined_acl = utils::parseOptionalEnumProperty<put_gcs_object::PredefinedAcl>(context, ObjectACL))
     callback.setPredefinedAcl(*predefined_acl);
-  callback.setIfGenerationMatch(context->getProperty<bool>(OverwriteObject));
+  callback.setIfGenerationMatch(context.getProperty<bool>(OverwriteObject));
 
   callback.setEncryptionKey(encryption_key_);
 
-  session->read(flow_file, std::ref(callback));
+  session.read(flow_file, std::ref(callback));
   auto& result = callback.getResult();
   if (!result.ok()) {
     flow_file->setAttribute(GCS_STATUS_MESSAGE, result.status().message());
     flow_file->setAttribute(GCS_ERROR_REASON, result.status().error_info().reason());
     flow_file->setAttribute(GCS_ERROR_DOMAIN, result.status().error_info().domain());
     logger_->log_error("Failed to upload to Google Cloud Storage {} {}", result.status().message(), result.status().error_info().reason());
-    session->transfer(flow_file, Failure);
+    session.transfer(flow_file, Failure);
   } else {
     setAttributesFromObjectMetadata(*flow_file, *result);
-    session->transfer(flow_file, Success);
+    session.transfer(flow_file, Success);
   }
 }
 

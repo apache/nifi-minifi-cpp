@@ -156,18 +156,18 @@ class CompressContent : public core::Processor {
 
   class GzipWriteCallback {
    public:
-    GzipWriteCallback(compress_content::CompressionMode compress_mode, int compress_level, std::shared_ptr<core::FlowFile> flow, std::shared_ptr<core::ProcessSession> session)
+    GzipWriteCallback(compress_content::CompressionMode compress_mode, int compress_level, std::shared_ptr<core::FlowFile> flow, core::ProcessSession& session)
       : compress_mode_(compress_mode)
       , compress_level_(compress_level)
       , flow_(std::move(flow))
-      , session_(std::move(session)) {
+      , session_(session) {
     }
 
     std::shared_ptr<core::logging::Logger> logger_ = core::logging::LoggerFactory<CompressContent>::getLogger();
     compress_content::CompressionMode compress_mode_;
     int compress_level_;
     std::shared_ptr<core::FlowFile> flow_;
-    std::shared_ptr<core::ProcessSession> session_;
+    core::ProcessSession& session_;
     bool success_{false};
 
     int64_t operator()(const std::shared_ptr<io::OutputStream>& output_stream) {
@@ -177,7 +177,7 @@ class CompressContent : public core::Processor {
       } else {
         filterStream = std::make_shared<io::ZlibDecompressStream>(gsl::make_not_null(output_stream.get()), io::ZlibCompressionFormat::GZIP);
       }
-      session_->read(flow_, [this, &filterStream](const std::shared_ptr<io::InputStream>& input_stream) -> int64_t {
+      session_.read(flow_, [this, &filterStream](const std::shared_ptr<io::InputStream>& input_stream) -> int64_t {
         std::vector<std::byte> buffer(16 * 1024U);
         size_t read_size = 0;
         while (read_size < flow_->getSize()) {
@@ -204,25 +204,15 @@ class CompressContent : public core::Processor {
     }
   };
 
-  /**
-   * Function that's executed when the processor is scheduled.
-   * @param context process context.
-   * @param sessionFactory process session factory that is used when creating
-   * ProcessSession objects.
-   */
-  void onSchedule(core::ProcessContext *context, core::ProcessSessionFactory *sessionFactory) override;
-  // OnTrigger method, implemented by NiFi CompressContent
-  void onTrigger(core::ProcessContext* /*context*/, core::ProcessSession* /*session*/) override {
-  }
-  // OnTrigger method, implemented by NiFi CompressContent
-  void onTrigger(const std::shared_ptr<core::ProcessContext> &context, const std::shared_ptr<core::ProcessSession> &session) override;
-  // Initialize, over write by NiFi CompressContent
+  void onSchedule(core::ProcessContext& context, core::ProcessSessionFactory& session_factory) override;
+  void onTrigger(core::ProcessContext& context, core::ProcessSession& session) override;
+
   void initialize() override;
 
  private:
   static std::string toMimeType(io::CompressionFormat format);
 
-  void processFlowFile(const std::shared_ptr<core::FlowFile>& flowFile, const std::shared_ptr<core::ProcessSession>& session);
+  void processFlowFile(const std::shared_ptr<core::FlowFile>& flowFile, core::ProcessSession& session);
 
   std::shared_ptr<core::logging::Logger> logger_ = core::logging::LoggerFactory<CompressContent>::getLogger(uuid_);
   int compressLevel_{};

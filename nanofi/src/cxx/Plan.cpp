@@ -155,7 +155,7 @@ bool ExecutionPlan::runNextProcessor(std::function<void(const std::shared_ptr<co
   std::shared_ptr<core::ProcessSessionFactory> factory = std::make_shared<core::ProcessSessionFactory>(context);
   factories_.push_back(factory);
   if (std::find(configured_processors_.begin(), configured_processors_.end(), processor) == configured_processors_.end()) {
-    processor->onSchedule(context, factory);
+    processor->onSchedule(*context, *factory);
     configured_processors_.push_back(processor);
   }
   std::shared_ptr<core::ProcessSession> current_session = std::make_shared<core::ProcessSession>(context);
@@ -176,7 +176,7 @@ bool ExecutionPlan::runNextProcessor(std::function<void(const std::shared_ptr<co
     verify(context, current_session);
   } else {
     logger_->log_debug("Running {}", processor->getName());
-    processor->onTrigger(context, current_session);
+    processor->onTrigger(*context, *current_session);
   }
   current_session->commit();
   current_flowfile_ = current_session->get();

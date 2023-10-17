@@ -45,23 +45,22 @@ void ListAzureDataLakeStorage::initialize() {
   setSupportedRelationships(Relationships);
 }
 
-void ListAzureDataLakeStorage::onSchedule(const std::shared_ptr<core::ProcessContext>& context, const std::shared_ptr<core::ProcessSessionFactory>& sessionFactory) {
-  gsl_Expects(context && sessionFactory);
-  AzureDataLakeStorageProcessorBase::onSchedule(context, sessionFactory);
+void ListAzureDataLakeStorage::onSchedule(core::ProcessContext& context, core::ProcessSessionFactory& session_factory) {
+  AzureDataLakeStorageProcessorBase::onSchedule(context, session_factory);
 
-  auto state_manager = context->getStateManager();
+  auto state_manager = context.getStateManager();
   if (state_manager == nullptr) {
     throw Exception(PROCESSOR_EXCEPTION, "Failed to get StateManager");
   }
   state_manager_ = std::make_unique<minifi::utils::ListingStateManager>(state_manager);
 
-  auto params = buildListParameters(*context);
+  auto params = buildListParameters(context);
   if (!params) {
     throw Exception(PROCESS_SCHEDULE_EXCEPTION, "Required parameters for ListAzureDataLakeStorage processor are missing or invalid");
   }
 
   list_parameters_ = *std::move(params);
-  tracking_strategy_ = utils::parseEnumProperty<azure::EntityTracking>(*context, ListingStrategy);
+  tracking_strategy_ = utils::parseEnumProperty<azure::EntityTracking>(context, ListingStrategy);
 }
 
 std::optional<storage::ListAzureDataLakeStorageParameters> ListAzureDataLakeStorage::buildListParameters(core::ProcessContext& context) {
@@ -95,13 +94,12 @@ std::optional<storage::ListAzureDataLakeStorageParameters> ListAzureDataLakeStor
   return params;
 }
 
-void ListAzureDataLakeStorage::onTrigger(const std::shared_ptr<core::ProcessContext>& context, const std::shared_ptr<core::ProcessSession>& session) {
-  gsl_Expects(context && session);
+void ListAzureDataLakeStorage::onTrigger(core::ProcessContext& context, core::ProcessSession& session) {
   logger_->log_trace("ListAzureDataLakeStorage onTrigger");
 
   auto list_result = azure_data_lake_storage_.listDirectory(list_parameters_);
   if (!list_result || list_result->empty()) {
-    context->yield();
+    context.yield();
     return;
   }
 
@@ -114,8 +112,8 @@ void ListAzureDataLakeStorage::onTrigger(const std::shared_ptr<core::ProcessCont
       continue;
     }
 
-    auto flow_file = createNewFlowFile(*session, element);
-    session->transfer(flow_file, Success);
+    auto flow_file = createNewFlowFile(session, element);
+    session.transfer(flow_file, Success);
     ++files_transferred;
     latest_listing_state.updateState(element);
   }
@@ -126,7 +124,7 @@ void ListAzureDataLakeStorage::onTrigger(const std::shared_ptr<core::ProcessCont
 
   if (files_transferred == 0) {
     logger_->log_debug("No new Azure Data Lake Storage files were found in directory '{}' of filesystem '{}'", list_parameters_.directory_name, list_parameters_.file_system_name);
-    context->yield();
+    context.yield();
     return;
   }
 }

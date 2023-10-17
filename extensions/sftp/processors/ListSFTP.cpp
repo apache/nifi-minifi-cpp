@@ -73,68 +73,68 @@ ListSFTP::ListSFTP(std::string_view name, const utils::Identifier& uuid /*= util
 
 ListSFTP::~ListSFTP() = default;
 
-void ListSFTP::onSchedule(const std::shared_ptr<core::ProcessContext> &context, const std::shared_ptr<core::ProcessSessionFactory>& /*sessionFactory*/) {
+void ListSFTP::onSchedule(core::ProcessContext& context, core::ProcessSessionFactory&) {
   parseCommonPropertiesOnSchedule(context);
 
-  state_manager_ = context->getStateManager();
+  state_manager_ = context.getStateManager();
   if (state_manager_ == nullptr) {
     throw Exception(PROCESSOR_EXCEPTION, "Failed to get StateManager");
   }
 
   std::string value;
-  context->getProperty(ListingStrategy, listing_strategy_);
+  context.getProperty(ListingStrategy, listing_strategy_);
   if (!last_listing_strategy_.empty() && last_listing_strategy_ != listing_strategy_) {
     invalidateCache();
   }
   last_listing_strategy_ = listing_strategy_;
-  if (!context->getProperty(SearchRecursively, value)) {
+  if (!context.getProperty(SearchRecursively, value)) {
     logger_->log_error("Search Recursively attribute is missing or invalid");
   } else {
     search_recursively_ = utils::StringUtils::toBool(value).value_or(false);
   }
-  if (!context->getProperty(FollowSymlink, value)) {
+  if (!context.getProperty(FollowSymlink, value)) {
     logger_->log_error("Follow symlink attribute is missing or invalid");
   } else {
     follow_symlink_ = utils::StringUtils::toBool(value).value_or(false);
   }
-  if (context->getProperty(FileFilterRegex, file_filter_regex_) && !file_filter_regex_.empty()) {
+  if (context.getProperty(FileFilterRegex, file_filter_regex_) && !file_filter_regex_.empty()) {
     try {
       compiled_file_filter_regex_ = utils::Regex(file_filter_regex_);
     } catch (const Exception &e) {
       logger_->log_error("Failed to compile File Filter Regex \"{}\"", file_filter_regex_.c_str());
     }
   }
-  if (context->getProperty(PathFilterRegex, path_filter_regex_) && !path_filter_regex_.empty()) {
+  if (context.getProperty(PathFilterRegex, path_filter_regex_) && !path_filter_regex_.empty()) {
     try {
       compiled_path_filter_regex_ = utils::Regex(path_filter_regex_);
     } catch (const Exception &e) {
       logger_->log_error("Failed to compile Path Filter Regex \"{}\"", path_filter_regex_.c_str());
     }
   }
-  if (!context->getProperty(IgnoreDottedFiles, value)) {
+  if (!context.getProperty(IgnoreDottedFiles, value)) {
     logger_->log_error("Ignore Dotted Files attribute is missing or invalid");
   } else {
     ignore_dotted_files_ = utils::StringUtils::toBool(value).value_or(true);
   }
-  context->getProperty(TargetSystemTimestampPrecision, target_system_timestamp_precision_);
-  context->getProperty(EntityTrackingInitialListingTarget, entity_tracking_initial_listing_target_);
+  context.getProperty(TargetSystemTimestampPrecision, target_system_timestamp_precision_);
+  context.getProperty(EntityTrackingInitialListingTarget, entity_tracking_initial_listing_target_);
 
-  if (auto minimum_file_age = context->getProperty<core::TimePeriodValue>(MinimumFileAge)) {
+  if (auto minimum_file_age = context.getProperty<core::TimePeriodValue>(MinimumFileAge)) {
     minimum_file_age_ = minimum_file_age->getMilliseconds();
   } else {
     logger_->log_error("Minimum File Age attribute is missing or invalid");
   }
 
-  if (auto maximum_file_age = context->getProperty(MaximumFileAge) | utils::andThen(&core::TimePeriodValue::fromString)) {
+  if (auto maximum_file_age = context.getProperty(MaximumFileAge) | utils::andThen(&core::TimePeriodValue::fromString)) {
     maximum_file_age_ = maximum_file_age->getMilliseconds();
   } else {
     logger_->log_error("Maximum File Age attribute is missing or invalid");
   }
 
-  if (!context->getProperty(MinimumFileSize, minimum_file_size_)) {
+  if (!context.getProperty(MinimumFileSize, minimum_file_size_)) {
     logger_->log_error("Minimum File Size attribute is invalid");
   }
-  if (context->getProperty(MaximumFileSize, value)) {
+  if (context.getProperty(MaximumFileSize, value)) {
     if (!core::DataSizeValue::StringToInt(value, maximum_file_size_)) {
       logger_->log_error("Maximum File Size attribute is invalid");
     }
@@ -283,7 +283,7 @@ bool ListSFTP::filterDirectory(const std::string& parent_path, const std::string
 }
 
 bool ListSFTP::createAndTransferFlowFileFromChild(
-    const std::shared_ptr<core::ProcessSession>& session,
+    core::ProcessSession& session,
     const std::string& hostname,
     uint16_t port,
     const std::string& username,
@@ -296,36 +296,36 @@ bool ListSFTP::createAndTransferFlowFileFromChild(
   auto mtime_str = utils::timeutils::getDateTimeStr(date::sys_seconds{std::chrono::seconds(child.attrs.mtime)});
 
   /* Create FlowFile */
-  auto flow_file = session->create();
+  auto flow_file = session.create();
   if (flow_file == nullptr) {
     logger_->log_error("Failed to create FlowFileRecord");
     return false;
   }
 
   /* Set attributes */
-  session->putAttribute(flow_file, ATTRIBUTE_SFTP_REMOTE_HOST, hostname);
-  session->putAttribute(flow_file, ATTRIBUTE_SFTP_REMOTE_PORT, std::to_string(port));
-  session->putAttribute(flow_file, ATTRIBUTE_SFTP_LISTING_USER, username);
+  session.putAttribute(flow_file, ATTRIBUTE_SFTP_REMOTE_HOST, hostname);
+  session.putAttribute(flow_file, ATTRIBUTE_SFTP_REMOTE_PORT, std::to_string(port));
+  session.putAttribute(flow_file, ATTRIBUTE_SFTP_LISTING_USER, username);
 
   /* uid and gid */
-  session->putAttribute(flow_file, ATTRIBUTE_FILE_OWNER, std::to_string(child.attrs.uid));
-  session->putAttribute(flow_file, ATTRIBUTE_FILE_GROUP, std::to_string(child.attrs.gid));
+  session.putAttribute(flow_file, ATTRIBUTE_FILE_OWNER, std::to_string(child.attrs.uid));
+  session.putAttribute(flow_file, ATTRIBUTE_FILE_GROUP, std::to_string(child.attrs.gid));
 
   /* permissions */
   std::stringstream ss;
   ss << std::setfill('0') << std::setw(4) << std::oct << (child.attrs.permissions & 0777);
-  session->putAttribute(flow_file, ATTRIBUTE_FILE_PERMISSIONS, ss.str());
+  session.putAttribute(flow_file, ATTRIBUTE_FILE_PERMISSIONS, ss.str());
 
   /* filesize */
-  session->putAttribute(flow_file, ATTRIBUTE_FILE_SIZE, std::to_string(child.attrs.filesize));
+  session.putAttribute(flow_file, ATTRIBUTE_FILE_SIZE, std::to_string(child.attrs.filesize));
 
   /* mtime */
-  session->putAttribute(flow_file, ATTRIBUTE_FILE_LASTMODIFIEDTIME, mtime_str);
+  session.putAttribute(flow_file, ATTRIBUTE_FILE_LASTMODIFIEDTIME, mtime_str);
 
   flow_file->setAttribute(core::SpecialFlowAttribute::FILENAME, child.filename.generic_string());
   flow_file->setAttribute(core::SpecialFlowAttribute::PATH, child.parent_path.generic_string());
 
-  session->transfer(flow_file, Success);
+  session.transfer(flow_file, Success);
 
   return true;
 }
@@ -340,7 +340,7 @@ ListSFTP::ListedEntity::ListedEntity(uint64_t timestamp_, uint64_t size_)
     , size(size_) {
 }
 
-bool ListSFTP::persistTrackingTimestampsCache(const std::shared_ptr<core::ProcessContext>& /*context*/, const std::string& hostname, const std::string& username, const std::string& remote_path) {
+bool ListSFTP::persistTrackingTimestampsCache(core::ProcessContext& /*context*/, const std::string& hostname, const std::string& username, const std::string& remote_path) {
   std::unordered_map<std::string, std::string> state;
   state["listing_strategy"] = LISTING_STRATEGY_TRACKING_TIMESTAMPS;
   state["hostname"] = hostname;
@@ -356,7 +356,7 @@ bool ListSFTP::persistTrackingTimestampsCache(const std::shared_ptr<core::Proces
   return state_manager_->set(state);
 }
 
-bool ListSFTP::updateFromTrackingTimestampsCache(const std::shared_ptr<core::ProcessContext>& /*context*/, const std::string& hostname, const std::string& username, const std::string& remote_path) {
+bool ListSFTP::updateFromTrackingTimestampsCache(core::ProcessContext& /*context*/, const std::string& hostname, const std::string& username, const std::string& remote_path) {
   std::string state_listing_strategy;
   std::string state_hostname;
   std::string state_username;
@@ -438,8 +438,8 @@ bool ListSFTP::updateFromTrackingTimestampsCache(const std::shared_ptr<core::Pro
 }
 
 void ListSFTP::listByTrackingTimestamps(
-    const std::shared_ptr<core::ProcessContext>& context,
-    const std::shared_ptr<core::ProcessSession>& session,
+    core::ProcessContext& context,
+    core::ProcessSession& session,
     const std::string& hostname,
     uint16_t port,
     const std::string& username,
@@ -511,7 +511,7 @@ void ListSFTP::listByTrackingTimestamps(
         logger_->log_debug("The latest listed entry timestamp is the same as the last listed entry timestamp ({}) "
                            "and the listing lag has not yet elapsed ({} < {}). Yielding.",
                            latest_listed_entry_timestamp_this_cycle, elapsed_time, listing_lag);
-        context->yield();
+        context.yield();
         return;
       }
       /*
@@ -524,7 +524,7 @@ void ListSFTP::listByTrackingTimestamps(
           })) {
         logger_->log_debug("The latest listed entry timestamp is the same as the last listed entry timestamp ({}) "
                            "and all files for that timestamp has been processed. Yielding.", latest_listed_entry_timestamp_this_cycle);
-        context->yield();
+        context.yield();
         return;
       }
     } else {
@@ -561,7 +561,7 @@ void ListSFTP::listByTrackingTimestamps(
           flow_files_created++;
         } else {
           logger_->log_error("Failed to emit FlowFile for \"{}\"", file.filename.generic_string());
-          context->yield();
+          context.yield();
           return;
         }
       }
@@ -592,12 +592,12 @@ void ListSFTP::listByTrackingTimestamps(
     }
   } else {
     logger_->log_debug("There are no files to list. Yielding.");
-    context->yield();
+    context.yield();
     return;
   }
 }
 
-bool ListSFTP::persistTrackingEntitiesCache(const std::shared_ptr<core::ProcessContext>& /*context*/, const std::string& hostname, const std::string& username, const std::string& remote_path) {
+bool ListSFTP::persistTrackingEntitiesCache(core::ProcessContext& /*context*/, const std::string& hostname, const std::string& username, const std::string& remote_path) {
   std::unordered_map<std::string, std::string> state;
   state["listing_strategy"] = listing_strategy_;
   state["hostname"] = hostname;
@@ -613,7 +613,7 @@ bool ListSFTP::persistTrackingEntitiesCache(const std::shared_ptr<core::ProcessC
   return state_manager_->set(state);
 }
 
-bool ListSFTP::updateFromTrackingEntitiesCache(const std::shared_ptr<core::ProcessContext>& /*context*/, const std::string& hostname, const std::string& username, const std::string& remote_path) {
+bool ListSFTP::updateFromTrackingEntitiesCache(core::ProcessContext& /*context*/, const std::string& hostname, const std::string& username, const std::string& remote_path) {
   std::string state_listing_strategy;
   std::string state_hostname;
   std::string state_username;
@@ -693,8 +693,8 @@ bool ListSFTP::updateFromTrackingEntitiesCache(const std::shared_ptr<core::Proce
 }
 
 void ListSFTP::listByTrackingEntities(
-    const std::shared_ptr<core::ProcessContext>& context,
-    const std::shared_ptr<core::ProcessSession>& session,
+    core::ProcessContext& context,
+    core::ProcessSession& session,
     const std::string& hostname,
     uint16_t port,
     const std::string& username,
@@ -729,7 +729,7 @@ void ListSFTP::listByTrackingEntities(
 
   if (files.empty()) {
     logger_->log_debug("No entities to list within the tracking time window");
-    context->yield();
+    context.yield();
     return;
   }
 
@@ -775,7 +775,7 @@ void ListSFTP::listByTrackingEntities(
 
   /* If we have no new files and no expired tracked entities, we have nothing to do */
   if (updated_entities.empty() && old_entity_ids.empty()) {
-    context->yield();
+    context.yield();
     return;
   }
 
@@ -788,7 +788,7 @@ void ListSFTP::listByTrackingEntities(
     /* Create the FlowFile for this path */
     if (!createAndTransferFlowFileFromChild(session, hostname, port, username, updated_entity)) {
       logger_->log_error("Failed to emit FlowFile for \"{}\"", updated_entity.getPath());
-      context->yield();
+      context.yield();
       return;
     }
     already_listed_entities_[updated_entity.getPath()] = ListedEntity(updated_entity.attrs.mtime * 1000, updated_entity.attrs.filesize);
@@ -799,16 +799,16 @@ void ListSFTP::listByTrackingEntities(
   persistTrackingEntitiesCache(context, hostname, username, remote_path);
 }
 
-void ListSFTP::onTrigger(const std::shared_ptr<core::ProcessContext> &context, const std::shared_ptr<core::ProcessSession> &session) {
+void ListSFTP::onTrigger(core::ProcessContext& context, core::ProcessSession& session) {
   /* Parse common properties */
   SFTPProcessorBase::CommonProperties common_properties;
   if (!parseCommonPropertiesOnTrigger(context, nullptr /*flow_file*/, common_properties)) {
-    context->yield();
+    context.yield();
     return;
   }
 
   std::string remote_path_str;
-  context->getProperty(RemotePath, remote_path_str);
+  context.getProperty(RemotePath, remote_path_str);
   /* Remove trailing slashes */
   while (remote_path_str.size() > 1 && remote_path_str.ends_with('/')) {
     remote_path_str.pop_back();
@@ -817,7 +817,7 @@ void ListSFTP::onTrigger(const std::shared_ptr<core::ProcessContext> &context, c
 
   std::string value;
   std::chrono::milliseconds entity_tracking_time_window = 3h;  /* The default is 3 hours */
-  if (context->getProperty(EntityTrackingTimeWindow, value)) {
+  if (context.getProperty(EntityTrackingTimeWindow, value)) {
     if (auto parsed_entity_time_window = utils::timeutils::StringToDuration<std::chrono::milliseconds>(value)) {
       entity_tracking_time_window = parsed_entity_time_window.value();
     } else {
@@ -849,7 +849,7 @@ void ListSFTP::onTrigger(const std::shared_ptr<core::ProcessContext> &context, c
                                       common_properties.private_key_passphrase,
                                       common_properties.proxy_password);
   if (client == nullptr) {
-    context->yield();
+    context.yield();
     return;
   }
 
@@ -906,7 +906,7 @@ void ListSFTP::onTrigger(const std::shared_ptr<core::ProcessContext> &context, c
         common_properties.username, remote_path.generic_string(), entity_tracking_time_window, std::move(files));
   } else {
     logger_->log_error("Unknown Listing Strategy: \"{}\"", listing_strategy_.c_str());
-    context->yield();
+    context.yield();
     return;
   }
 

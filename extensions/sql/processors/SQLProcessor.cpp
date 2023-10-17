@@ -27,11 +27,11 @@
 
 namespace org::apache::nifi::minifi::processors {
 
-void SQLProcessor::onSchedule(const std::shared_ptr<core::ProcessContext>& context, const std::shared_ptr<core::ProcessSessionFactory>& /*sessionFactory*/) {
+void SQLProcessor::onSchedule(core::ProcessContext& context, core::ProcessSessionFactory&) {
   std::string controllerService;
-  context->getProperty(DBControllerService, controllerService);
+  context.getProperty(DBControllerService, controllerService);
 
-  if (auto service = context->getControllerService(controllerService)) {
+  if (auto service = context.getControllerService(controllerService)) {
     db_service_ = std::dynamic_pointer_cast<sql::controllers::DatabaseService>(service);
     if (!db_service_) {
       throw minifi::Exception(PROCESSOR_EXCEPTION, "'" + controllerService + "' is not a DatabaseService");
@@ -40,10 +40,10 @@ void SQLProcessor::onSchedule(const std::shared_ptr<core::ProcessContext>& conte
     throw minifi::Exception(PROCESSOR_EXCEPTION, "Could not find controller service '" + controllerService + "'");
   }
 
-  processOnSchedule(*context);
+  processOnSchedule(context);
 }
 
-void SQLProcessor::onTrigger(const std::shared_ptr<core::ProcessContext>& context, const std::shared_ptr<core::ProcessSession>& session) {
+void SQLProcessor::onTrigger(core::ProcessContext& context, core::ProcessSession& session) {
   try {
     if (!connection_) {
       connection_ = db_service_->getConnection();
@@ -51,7 +51,7 @@ void SQLProcessor::onTrigger(const std::shared_ptr<core::ProcessContext>& contex
     if (!connection_) {
       throw sql::ConnectionError("Could not establish sql connection");
     }
-    processOnTrigger(*context, *session);
+    processOnTrigger(context, session);
   } catch (const sql::ConnectionError& ex) {
     logger_->log_error("Connection error: {}", ex.what());
     // try to reconnect next time

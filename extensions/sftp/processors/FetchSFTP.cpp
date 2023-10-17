@@ -46,22 +46,22 @@ FetchSFTP::FetchSFTP(std::string_view name, const utils::Identifier& uuid /*= ut
 
 FetchSFTP::~FetchSFTP() = default;
 
-void FetchSFTP::onSchedule(const std::shared_ptr<core::ProcessContext> &context, const std::shared_ptr<core::ProcessSessionFactory>& /*sessionFactory*/) {
+void FetchSFTP::onSchedule(core::ProcessContext& context, core::ProcessSessionFactory&) {
   parseCommonPropertiesOnSchedule(context);
 
   std::string value;
-  context->getProperty(CompletionStrategy, completion_strategy_);
-  if (!context->getProperty(CreateDirectory, value)) {
+  context.getProperty(CompletionStrategy, completion_strategy_);
+  if (!context.getProperty(CreateDirectory, value)) {
     logger_->log_error("Create Directory attribute is missing or invalid");
   } else {
     create_directory_ = utils::StringUtils::toBool(value).value_or(false);
   }
-  if (!context->getProperty(DisableDirectoryListing, value)) {
+  if (!context.getProperty(DisableDirectoryListing, value)) {
     logger_->log_error("Disable Directory Listing attribute is missing or invalid");
   } else {
     disable_directory_listing_ = utils::StringUtils::toBool(value).value_or(false);
   }
-  if (!context->getProperty(UseCompression, value)) {
+  if (!context.getProperty(UseCompression, value)) {
     logger_->log_error("Use Compression attribute is missing or invalid");
   } else {
     use_compression_ = utils::StringUtils::toBool(value).value_or(false);
@@ -70,8 +70,8 @@ void FetchSFTP::onSchedule(const std::shared_ptr<core::ProcessContext> &context,
   startKeepaliveThreadIfNeeded();
 }
 
-void FetchSFTP::onTrigger(const std::shared_ptr<core::ProcessContext> &context, const std::shared_ptr<core::ProcessSession> &session) {
-  auto flow_file = session->get();
+void FetchSFTP::onTrigger(core::ProcessContext& context, core::ProcessSession& session) {
+  auto flow_file = session.get();
   if (flow_file == nullptr) {
     return;
   }
@@ -79,17 +79,17 @@ void FetchSFTP::onTrigger(const std::shared_ptr<core::ProcessContext> &context, 
   /* Parse common properties */
   SFTPProcessorBase::CommonProperties common_properties;
   if (!parseCommonPropertiesOnTrigger(context, flow_file, common_properties)) {
-    context->yield();
+    context.yield();
     return;
   }
 
   std::filesystem::path remote_file;
-  if (auto remote_file_str = context->getProperty(RemoteFile, flow_file)) {
+  if (auto remote_file_str = context.getProperty(RemoteFile, flow_file)) {
     remote_file = std::filesystem::path(*remote_file_str, std::filesystem::path::format::generic_format);
   }
 
   std::filesystem::path move_destination_directory;
-  if (auto move_destination_directory_str = context->getProperty(MoveDestinationDirectory, flow_file)) {
+  if (auto move_destination_directory_str = context.getProperty(MoveDestinationDirectory, flow_file)) {
     move_destination_directory = std::filesystem::path(*move_destination_directory_str, std::filesystem::path::format::generic_format);
   }
 
@@ -107,7 +107,7 @@ void FetchSFTP::onTrigger(const std::shared_ptr<core::ProcessContext> &context, 
                                       common_properties.private_key_passphrase,
                                       common_properties.proxy_password);
   if (client == nullptr) {
-    context->yield();
+    context.yield();
     return;
   }
 
@@ -121,7 +121,7 @@ void FetchSFTP::onTrigger(const std::shared_ptr<core::ProcessContext> &context, 
 
   /* Download file */
   try {
-    session->write(flow_file, [&remote_file, &client](const std::shared_ptr<io::OutputStream>& stream) -> int64_t {
+    session.write(flow_file, [&remote_file, &client](const std::shared_ptr<io::OutputStream>& stream) -> int64_t {
       auto bytes_read = client->getFile(remote_file.generic_string(), *stream);
       if (!bytes_read) {
         throw utils::SFTPException{client->getLastError()};
@@ -132,19 +132,19 @@ void FetchSFTP::onTrigger(const std::shared_ptr<core::ProcessContext> &context, 
     logger_->log_debug("{}", ex.what());
     switch (ex.error()) {
       case utils::SFTPError::PermissionDenied:
-        session->transfer(flow_file, PermissionDenied);
+        session.transfer(flow_file, PermissionDenied);
         put_connection_back_to_cache();
         return;
       case utils::SFTPError::FileDoesNotExist:
-        session->transfer(flow_file, NotFound);
+        session.transfer(flow_file, NotFound);
         put_connection_back_to_cache();
         return;
       case utils::SFTPError::CommunicationFailure:
       case utils::SFTPError::IoError:
-        session->transfer(flow_file, CommsFailure);
+        session.transfer(flow_file, CommsFailure);
         return;
       default:
-        session->transfer(flow_file, PermissionDenied);
+        session.transfer(flow_file, PermissionDenied);
         return;
     }
   }
@@ -152,9 +152,9 @@ void FetchSFTP::onTrigger(const std::shared_ptr<core::ProcessContext> &context, 
   /* Set attributes */
   std::string child_path = remote_file.filename().generic_string();
 
-  session->putAttribute(flow_file, ATTRIBUTE_SFTP_REMOTE_HOST, common_properties.hostname);
-  session->putAttribute(flow_file, ATTRIBUTE_SFTP_REMOTE_PORT, std::to_string(common_properties.port));
-  session->putAttribute(flow_file, ATTRIBUTE_SFTP_REMOTE_FILENAME, remote_file.generic_string());
+  session.putAttribute(flow_file, ATTRIBUTE_SFTP_REMOTE_HOST, common_properties.hostname);
+  session.putAttribute(flow_file, ATTRIBUTE_SFTP_REMOTE_PORT, std::to_string(common_properties.port));
+  session.putAttribute(flow_file, ATTRIBUTE_SFTP_REMOTE_FILENAME, remote_file.generic_string());
   flow_file->setAttribute(core::SpecialFlowAttribute::FILENAME, child_path);
   if (!remote_file.parent_path().empty()) {
     flow_file->setAttribute(core::SpecialFlowAttribute::PATH, (remote_file.parent_path() / "").generic_string());
@@ -183,7 +183,7 @@ void FetchSFTP::onTrigger(const std::shared_ptr<core::ProcessContext> &context, 
     }
   }
 
-  session->transfer(flow_file, Success);
+  session.transfer(flow_file, Success);
   put_connection_back_to_cache();
 }
 

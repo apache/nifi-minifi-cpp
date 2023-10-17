@@ -45,69 +45,69 @@ void ConsumeMQTT::enqueueReceivedMQTTMsg(SmartMessage message) {
   queue_.enqueue(std::move(message));
 }
 
-void ConsumeMQTT::readProperties(const std::shared_ptr<core::ProcessContext>& context) {
-  if (auto value = context->getProperty(Topic)) {
+void ConsumeMQTT::readProperties(core::ProcessContext& context) {
+  if (auto value = context.getProperty(Topic)) {
     topic_ = std::move(*value);
   }
   logger_->log_debug("ConsumeMQTT: Topic [{}]", topic_);
 
-  if (const auto value = context->getProperty(CleanSession) | utils::andThen(&utils::StringUtils::toBool)) {
+  if (const auto value = context.getProperty(CleanSession) | utils::andThen(&utils::StringUtils::toBool)) {
     clean_session_ = *value;
   }
   logger_->log_debug("ConsumeMQTT: CleanSession [{}]", clean_session_);
 
-  if (const auto value = context->getProperty(CleanStart) | utils::andThen(&utils::StringUtils::toBool)) {
+  if (const auto value = context.getProperty(CleanStart) | utils::andThen(&utils::StringUtils::toBool)) {
     clean_start_ = *value;
   }
   logger_->log_debug("ConsumeMQTT: CleanStart [{}]", clean_start_);
 
-  if (const auto session_expiry_interval = context->getProperty(SessionExpiryInterval) | utils::andThen(&core::TimePeriodValue::fromString)) {
+  if (const auto session_expiry_interval = context.getProperty(SessionExpiryInterval) | utils::andThen(&core::TimePeriodValue::fromString)) {
     session_expiry_interval_ = std::chrono::duration_cast<std::chrono::seconds>(session_expiry_interval->getMilliseconds());
   }
   logger_->log_debug("ConsumeMQTT: SessionExpiryInterval [{}] s", int64_t{session_expiry_interval_.count()});
 
-  if (const auto value = context->getProperty(QueueBufferMaxMessage) | utils::andThen(&utils::toNumber<uint64_t>)) {
+  if (const auto value = context.getProperty(QueueBufferMaxMessage) | utils::andThen(&utils::toNumber<uint64_t>)) {
     max_queue_size_ = *value;
   }
   logger_->log_debug("ConsumeMQTT: Queue Max Message [{}]", max_queue_size_);
 
-  if (auto value = context->getProperty(AttributeFromContentType)) {
+  if (auto value = context.getProperty(AttributeFromContentType)) {
     attribute_from_content_type_ = std::move(*value);
   }
   logger_->log_debug("ConsumeMQTT: Attribute From Content Type [{}]", attribute_from_content_type_);
 
-  if (const auto topic_alias_maximum = context->getProperty(TopicAliasMaximum) | utils::andThen(&utils::toNumber<uint32_t>)) {
+  if (const auto topic_alias_maximum = context.getProperty(TopicAliasMaximum) | utils::andThen(&utils::toNumber<uint32_t>)) {
     topic_alias_maximum_ = gsl::narrow<uint16_t>(*topic_alias_maximum);
   }
   logger_->log_debug("ConsumeMQTT: Topic Alias Maximum [{}]", topic_alias_maximum_);
 
-  if (const auto receive_maximum = context->getProperty(ReceiveMaximum) | utils::andThen(&utils::toNumber<uint32_t>)) {
+  if (const auto receive_maximum = context.getProperty(ReceiveMaximum) | utils::andThen(&utils::toNumber<uint32_t>)) {
     receive_maximum_ = gsl::narrow<uint16_t>(*receive_maximum);
   }
   logger_->log_debug("ConsumeMQTT: Receive Maximum [{}]", receive_maximum_);
 }
 
-void ConsumeMQTT::onTriggerImpl(const std::shared_ptr<core::ProcessContext>& /*context*/, const std::shared_ptr<core::ProcessSession>& session) {
+void ConsumeMQTT::onTriggerImpl(core::ProcessContext&, core::ProcessSession& session) {
   std::queue<SmartMessage> msg_queue = getReceivedMqttMessages();
   while (!msg_queue.empty()) {
     const auto& message = msg_queue.front();
-    std::shared_ptr<core::FlowFile> flow_file = session->create();
+    std::shared_ptr<core::FlowFile> flow_file = session.create();
     WriteCallback write_callback(message, logger_);
     try {
-      session->write(flow_file, std::ref(write_callback));
+      session.write(flow_file, std::ref(write_callback));
     } catch (const Exception& ex) {
       logger_->log_error("Error when processing message queue: {}", ex.what());
     }
     if (!write_callback.getSuccessStatus()) {
       logger_->log_error("ConsumeMQTT fail for the flow with UUID {}", flow_file->getUUIDStr());
-      session->remove(flow_file);
+      session.remove(flow_file);
     } else {
       putUserPropertiesAsAttributes(message, flow_file, session);
-      session->putAttribute(flow_file, BrokerOutputAttribute.name, uri_);
-      session->putAttribute(flow_file, TopicOutputAttribute.name, message.topic);
+      session.putAttribute(flow_file, BrokerOutputAttribute.name, uri_);
+      session.putAttribute(flow_file, TopicOutputAttribute.name, message.topic);
       fillAttributeFromContentType(message, flow_file, session);
       logger_->log_debug("ConsumeMQTT processing success for the flow with UUID {} topic {}", flow_file->getUUIDStr(), message.topic);
-      session->transfer(flow_file, Success);
+      session.transfer(flow_file, Success);
     }
     msg_queue.pop();
   }
@@ -139,7 +139,7 @@ int64_t ConsumeMQTT::WriteCallback::operator() (const std::shared_ptr<io::Output
   return gsl::narrow<int64_t>(len);
 }
 
-void ConsumeMQTT::putUserPropertiesAsAttributes(const SmartMessage& message, const std::shared_ptr<core::FlowFile>& flow_file, const std::shared_ptr<core::ProcessSession>& session) const {
+void ConsumeMQTT::putUserPropertiesAsAttributes(const SmartMessage& message, const std::shared_ptr<core::FlowFile>& flow_file, core::ProcessSession& session) const {
   if (mqtt_version_ != mqtt::MqttVersions::V_5_0) {
     return;
   }
@@ -149,11 +149,11 @@ void ConsumeMQTT::putUserPropertiesAsAttributes(const SmartMessage& message, con
     MQTTProperty* property = MQTTProperties_getPropertyAt(&message.contents->properties, MQTTPROPERTY_CODE_USER_PROPERTY, i);
     std::string key(property->value.data.data, property->value.data.len);  // NOLINT(cppcoreguidelines-pro-type-union-access)
     std::string value(property->value.value.data, property->value.value.len);  // NOLINT(cppcoreguidelines-pro-type-union-access)
-    session->putAttribute(flow_file, key, value);
+    session.putAttribute(flow_file, key, value);
   }
 }
 
-void ConsumeMQTT::fillAttributeFromContentType(const SmartMessage& message, const std::shared_ptr<core::FlowFile>& flow_file, const std::shared_ptr<core::ProcessSession>& session) const {
+void ConsumeMQTT::fillAttributeFromContentType(const SmartMessage& message, const std::shared_ptr<core::FlowFile>& flow_file, core::ProcessSession& session) const {
   if (mqtt_version_ != mqtt::MqttVersions::V_5_0 || attribute_from_content_type_.empty()) {
     return;
   }
@@ -164,7 +164,7 @@ void ConsumeMQTT::fillAttributeFromContentType(const SmartMessage& message, cons
   }
 
   std::string content_type(property->value.data.data, property->value.data.len);  // NOLINT(cppcoreguidelines-pro-type-union-access)
-  session->putAttribute(flow_file, attribute_from_content_type_, content_type);
+  session.putAttribute(flow_file, attribute_from_content_type_, content_type);
 }
 
 void ConsumeMQTT::startupClient() {

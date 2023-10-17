@@ -49,18 +49,18 @@ std::string MergeContent::readContent(const std::string& path) {
   return (contents);
 }
 
-void MergeContent::onSchedule(core::ProcessContext *context, core::ProcessSessionFactory *sessionFactory) {
-  BinFiles::onSchedule(context, sessionFactory);
+void MergeContent::onSchedule(core::ProcessContext& context, core::ProcessSessionFactory& session_factory) {
+  BinFiles::onSchedule(context, session_factory);
 
-  context->getProperty(MergeStrategy, mergeStrategy_);
-  context->getProperty(MergeFormat, mergeFormat_);
-  context->getProperty(CorrelationAttributeName, correlationAttributeName_);
-  context->getProperty(DelimiterStrategy, delimiterStrategy_);
-  context->getProperty(Header, header_);
-  context->getProperty(Footer, footer_);
-  context->getProperty(Demarcator, demarcator_);
-  context->getProperty(KeepPath, keepPath_);
-  context->getProperty(AttributeStrategy, attributeStrategy_);
+  context.getProperty(MergeStrategy, mergeStrategy_);
+  context.getProperty(MergeFormat, mergeFormat_);
+  context.getProperty(CorrelationAttributeName, correlationAttributeName_);
+  context.getProperty(DelimiterStrategy, delimiterStrategy_);
+  context.getProperty(Header, header_);
+  context.getProperty(Footer, footer_);
+  context.getProperty(Demarcator, demarcator_);
+  context.getProperty(KeepPath, keepPath_);
+  context.getProperty(AttributeStrategy, attributeStrategy_);
 
   validatePropertyOptions();
 
@@ -187,7 +187,7 @@ bool MergeContent::checkDefragment(std::unique_ptr<Bin> &bin) {
   return true;
 }
 
-void MergeContent::onTrigger(core::ProcessContext *context, core::ProcessSession *session) {
+void MergeContent::onTrigger(core::ProcessContext& context, core::ProcessSession& session) {
   BinFiles::onTrigger(context, session);
 }
 

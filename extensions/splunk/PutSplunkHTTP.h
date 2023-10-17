@@ -102,14 +102,20 @@ class PutSplunkHTTP final : public SplunkHECProcessor {
 
   ADD_COMMON_VIRTUAL_FUNCTIONS_FOR_PROCESSORS
 
-  void onTrigger(const std::shared_ptr<core::ProcessContext> &context, const std::shared_ptr<core::ProcessSession> &session) override;
+  void onTrigger(core::ProcessContext& context, core::ProcessSession& session) override;
   void initialize() override;
-  void onSchedule(const std::shared_ptr<core::ProcessContext> &context, const std::shared_ptr<core::ProcessSessionFactory> &sessionFactory) override;
+  void onSchedule(core::ProcessContext& context, core::ProcessSessionFactory& session_factory) override;
 
  private:
+  std::string getEndpoint(curl::HTTPClient& client);
+
+  std::shared_ptr<minifi::controllers::SSLContextService> ssl_context_service_;
+  std::optional<std::string> source_type_;
+  std::optional<std::string> source_;
+  std::optional<std::string> host_;
+  std::optional<std::string> index_;
   std::shared_ptr<core::logging::Logger> logger_{core::logging::LoggerFactory<PutSplunkHTTP>::getLogger(uuid_)};
   std::shared_ptr<utils::ResourceQueue<extensions::curl::HTTPClient>> client_queue_;
 };
 
 }  // namespace org::apache::nifi::minifi::extensions::splunk
-

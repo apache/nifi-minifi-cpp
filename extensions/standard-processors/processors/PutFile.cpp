@@ -41,10 +41,10 @@ void PutFile::initialize() {
   setSupportedRelationships(Relationships);
 }
 
-void PutFile::onSchedule(core::ProcessContext *context, core::ProcessSessionFactory* /*sessionFactory*/) {
-  conflict_resolution_strategy_ = utils::parseEnumProperty<FileExistsResolutionStrategy>(*context, ConflictResolution);
-  try_mkdirs_ = context->getProperty<bool>(CreateDirs).value_or(true);
-  if (auto max_dest_files = context->getProperty<int64_t>(MaxDestFiles); max_dest_files && *max_dest_files > 0) {
+void PutFile::onSchedule(core::ProcessContext& context, core::ProcessSessionFactory&) {
+  conflict_resolution_strategy_ = utils::parseEnumProperty<FileExistsResolutionStrategy>(context, ConflictResolution);
+  try_mkdirs_ = context.getProperty<bool>(CreateDirs).value_or(true);
+  if (auto max_dest_files = context.getProperty<int64_t>(MaxDestFiles); max_dest_files && *max_dest_files > 0) {
     max_dest_files_ = gsl::narrow_cast<uint64_t>(*max_dest_files);
   }
 
@@ -71,17 +71,17 @@ bool PutFile::directoryIsFull(const std::filesystem::path& directory) const {
   return max_dest_files_ && utils::file::countNumberOfFiles(directory) >= *max_dest_files_;
 }
 
-void PutFile::onTrigger(core::ProcessContext *context, core::ProcessSession *session) {
-  std::shared_ptr<core::FlowFile> flow_file = session->get();
+void PutFile::onTrigger(core::ProcessContext& context, core::ProcessSession& session) {
+  std::shared_ptr<core::FlowFile> flow_file = session.get();
 
   // Do nothing if there are no incoming files
   if (!flow_file) {
     return;
   }
 
-  auto dest_path = getDestinationPath(*context, flow_file);
+  auto dest_path = getDestinationPath(context, flow_file);
   if (!dest_path) {
-    return session->transfer(flow_file, Failure);
+    return session.transfer(flow_file, Failure);
   }
 
   logger_->log_trace("PutFile writing file {} into directory {}", dest_path->filename(), dest_path->parent_path());
@@ -89,19 +89,19 @@ void PutFile::onTrigger(core::ProcessContext *context, core::ProcessSession *ses
   if (directoryIsFull(dest_path->parent_path())) {
     logger_->log_warn("Routing to failure because the output directory {} has at least {} files, which exceeds the "
                       "configured max number of files", dest_path->parent_path(), *max_dest_files_);
-    return session->transfer(flow_file, Failure);
+    return session.transfer(flow_file, Failure);
   }
 
   if (utils::file::exists(*dest_path)) {
     logger_->log_info("Destination file {} exists; applying Conflict Resolution Strategy: {}", dest_path->string(), magic_enum::enum_name(conflict_resolution_strategy_));
     if (conflict_resolution_strategy_ == FileExistsResolutionStrategy::fail) {
-      return session->transfer(flow_file, Failure);
+      return session.transfer(flow_file, Failure);
     } else if (conflict_resolution_strategy_ == FileExistsResolutionStrategy::ignore) {
-      return session->transfer(flow_file, Success);
+      return session.transfer(flow_file, Success);
     }
   }
 
-  putFile(*session, flow_file, *dest_path);
+  putFile(session, flow_file, *dest_path);
 }
 
 void PutFile::prepareDirectory(const std::filesystem::path& directory_path) const {
@@ -142,9 +142,9 @@ void PutFile::putFile(core::ProcessSession& session,
 }
 
 #ifndef WIN32
-void PutFile::getPermissions(core::ProcessContext *context) {
+void PutFile::getPermissions(const core::ProcessContext& context) {
   std::string permissions_str;
-  context->getProperty(Permissions, permissions_str);
+  context.getProperty(Permissions, permissions_str);
   if (permissions_str.empty()) {
     return;
   }
@@ -160,9 +160,9 @@ void PutFile::getPermissions(core::ProcessContext *context) {
   }
 }
 
-void PutFile::getDirectoryPermissions(core::ProcessContext *context) {
+void PutFile::getDirectoryPermissions(const core::ProcessContext& context) {
   std::string dir_permissions_str;
-  context->getProperty(DirectoryPermissions, dir_permissions_str);
+  context.getProperty(DirectoryPermissions, dir_permissions_str);
   if (dir_permissions_str.empty()) {
     return;
   }

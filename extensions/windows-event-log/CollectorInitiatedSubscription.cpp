@@ -47,16 +47,6 @@ namespace org::apache::nifi::minifi::processors {
 #define LOG_SUBSCRIPTION_ERROR(error) logError(__LINE__, error)
 #define LOG_SUBSCRIPTION_WINDOWS_ERROR(info) logWindowsError(__LINE__, info)
 
-namespace {
-std::string to_string(const wchar_t *pChar) {
-  return std::wstring_convert<std::codecvt_utf8<wchar_t>>().to_bytes(pChar);
-}
-
-std::wstring to_wstring(const std::string& utf8_string) {
-  return std::wstring_convert<std::codecvt_utf8<wchar_t>>().from_bytes(utf8_string);
-}
-}  // namespace
-
 CollectorInitiatedSubscription::CollectorInitiatedSubscription(const std::string& name, const utils::Identifier& uuid)
   : core::Processor(name, uuid), logger_(core::logging::LoggerFactory<CollectorInitiatedSubscription>::getLogger(uuid_)) {
   char buff[MAX_COMPUTERNAME_LENGTH + 1];
@@ -73,7 +63,7 @@ void CollectorInitiatedSubscription::initialize() {
   setSupportedRelationships(Relationships);
 }
 
-void CollectorInitiatedSubscription::onSchedule(const std::shared_ptr<core::ProcessContext> &context, const std::shared_ptr<core::ProcessSessionFactory> &sessionFactory) {
+void CollectorInitiatedSubscription::onSchedule_2(const std::shared_ptr<core::ProcessContext> &context, const std::shared_ptr<core::ProcessSessionFactory> &sessionFactory) {
   gsl_Expects(context);
 
   if (subscriptionHandle_) {
@@ -81,24 +71,22 @@ void CollectorInitiatedSubscription::onSchedule(const std::shared_ptr<core::Proc
   } else {
     sessionFactory_ = sessionFactory;
 
-    if (!createSubscription(context))
+    if (!createSubscription(*context))
       return;
     if (!checkSubscriptionRuntimeStatus())
       return;
 
-    subscribe(context);
+    subscribe(*context);
   }
 
-  subscription_name_ = to_wstring(context->getProperty(SubscriptionName).value());
+  subscription_name_ = utils::to_wstring(context->getProperty(SubscriptionName).value());
   max_buffer_size_ = context->getProperty<core::DataSizeValue>(MaxBufferSize).value();
 }
 
-void CollectorInitiatedSubscription::onTrigger(const std::shared_ptr<core::ProcessContext> &context, const std::shared_ptr<core::ProcessSession> &session) {
-  gsl_Expects(context);
-
+void CollectorInitiatedSubscription::onTrigger(core::ProcessContext& context, core::ProcessSession& session) {
   if (!subscriptionHandle_) {
     if (!subscribe(context)) {
-      context->yield();
+      context.yield();
       return;
     }
   }
@@ -111,7 +99,7 @@ void CollectorInitiatedSubscription::onTrigger(const std::shared_ptr<core::Proce
 
   if (flowFileCount > 0) {
     lastActivityTimestamp_ = now;
-  } else if (auto inactive_duration_to_reconnect_ms = context->getProperty<core::TimePeriodValue>(InactiveDurationToReconnect)
+  } else if (auto inactive_duration_to_reconnect_ms = context.getProperty<core::TimePeriodValue>(InactiveDurationToReconnect)
              | utils::transform([](const auto& time_period_value) { return time_period_value.getMilliseconds().count(); });
              inactive_duration_to_reconnect_ms && *inactive_duration_to_reconnect_ms > 0) {
     if ((now - lastActivityTimestamp_) > gsl::narrow<uint64_t>(*inactive_duration_to_reconnect_ms)) {
@@ -328,9 +316,7 @@ bool CollectorInitiatedSubscription::getSubscriptionProperty(EC_HANDLE hSubscrip
   return true;
 }
 
-bool CollectorInitiatedSubscription::createSubscription(const std::shared_ptr<core::ProcessContext>& context) {
-  gsl_Expects(context);
-
+bool CollectorInitiatedSubscription::createSubscription(core::ProcessContext& context) {
   // If subcription already exists, delete it.
   EC_HANDLE hSubscription = EcOpenSubscription(subscription_name_.c_str(), EC_READ_ACCESS, EC_OPEN_EXISTING);
   if (hSubscription) {
@@ -375,14 +361,14 @@ bool CollectorInitiatedSubscription::createSubscription(const std::shared_ptr<co
     EC_VARIANT prop_;
   };
 
-  const auto subscription_description = to_wstring(context->getProperty(SubscriptionDescription).value());
-  const auto source_channels = to_wstring(context->getProperty(SourceChannels).value());
-  const auto channel = to_wstring(context->getProperty(Channel).value());
-  const auto max_delivery_items = context->getProperty<core::DataSizeValue>(MaxDeliveryItems).value().getValue();
-  const auto delivery_max_latency_time = context->getProperty<core::TimePeriodValue>(DeliveryMaxLatencyTime).value().getMilliseconds().count();
-  const auto heartbeat_interval = context->getProperty<core::TimePeriodValue>(HeartbeatInterval).value().getMilliseconds().count();
-  const auto source_user_name = to_wstring(context->getProperty(SourceUserName).value());
-  const auto source_password = to_wstring(context->getProperty(SourcePassword).value());
+  const auto subscription_description = utils::to_wstring(context.getProperty(SubscriptionDescription).value());
+  const auto source_channels = utils::to_wstring(context.getProperty(SourceChannels).value());
+  const auto channel = utils::to_wstring(context.getProperty(Channel).value());
+  const auto max_delivery_items = context.getProperty<core::DataSizeValue>(MaxDeliveryItems).value().getValue();
+  const auto delivery_max_latency_time = context.getProperty<core::TimePeriodValue>(DeliveryMaxLatencyTime).value().getMilliseconds().count();
+  const auto heartbeat_interval = context.getProperty<core::TimePeriodValue>(HeartbeatInterval).value().getMilliseconds().count();
+  const auto source_user_name = utils::to_wstring(context.getProperty(SourceUserName).value());
+  const auto source_password = utils::to_wstring(context.getProperty(SourcePassword).value());
 
   std::vector<SubscriptionProperty> listProperty = {
     {EcSubscriptionDescription, subscription_description},
@@ -439,7 +425,7 @@ bool CollectorInitiatedSubscription::createSubscription(const std::shared_ptr<co
     return false;
   }
 
-  const auto source_address = to_wstring(context->getProperty(SourceAddress).value());
+  const auto source_address = utils::to_wstring(context.getProperty(SourceAddress).value());
   for (auto& prop : std::vector<SubscriptionProperty>{{EcSubscriptionEventSourceAddress, source_address}, {EcSubscriptionEventSourceEnabled, true}}) {
     if (!EcSetObjectArrayProperty(hArray, prop.propId_, dwEventSourceCount, 0, &prop.prop_)) {
       LOG_SUBSCRIPTION_WINDOWS_ERROR("EcSetObjectArrayProperty id: " + std::to_string(prop.propId_));
@@ -455,17 +441,15 @@ bool CollectorInitiatedSubscription::createSubscription(const std::shared_ptr<co
   return true;
 }
 
-bool CollectorInitiatedSubscription::subscribe(const std::shared_ptr<core::ProcessContext> &context) {
-  gsl_Expects(context);
-
+bool CollectorInitiatedSubscription::subscribe(core::ProcessContext& context) {
   logger_->log_debug("CollectorInitiatedSubscription: MaxBufferSize {}", max_buffer_size_.getValue());
 
-  const auto channel = context->getProperty(Channel).value();
-  const auto query = context->getProperty(Query).value();
+  const auto channel = context.getProperty(Channel).value();
+  const auto query = context.getProperty(Query).value();
   provenanceUri_ = "winlog://" + computerName_ + "/" + channel + "?" + query;
 
-  const auto channel_ws = to_wstring(context->getProperty(Channel).value());
-  const auto query_ws = to_wstring(context->getProperty(Query).value());
+  const auto channel_ws = utils::to_wstring(context.getProperty(Channel).value());
+  const auto query_ws = utils::to_wstring(context.getProperty(Query).value());
 
   const EVT_SUBSCRIBE_CALLBACK callback = [](EVT_SUBSCRIBE_NOTIFY_ACTION action, PVOID pContext, EVT_HANDLE hEvent) {
     auto pCollectorInitiatedSubscription = static_cast<CollectorInitiatedSubscription*>(pContext);
@@ -493,7 +477,7 @@ bool CollectorInitiatedSubscription::subscribe(const std::shared_ptr<core::Proce
           size = used;
           std::vector<wchar_t> buf(size/2);
           if (EvtRender(NULL, hEvent, EvtRenderEventXml, size, &buf[0], &used, &propertyCount)) {
-            auto xml = to_string(&buf[0]);
+            auto xml = utils::to_string(&buf[0]);
 
             pCollectorInitiatedSubscription->renderedXMLs_.enqueue(std::move(xml));
           } else {
@@ -533,17 +517,17 @@ void CollectorInitiatedSubscription::unsubscribe() {
   }
 }
 
-int CollectorInitiatedSubscription::processQueue(const std::shared_ptr<core::ProcessSession> &session) {
+int CollectorInitiatedSubscription::processQueue(core::ProcessSession& session) {
   int flowFileCount = 0;
 
   std::string xml;
   while (renderedXMLs_.try_dequeue(xml)) {
-    auto flowFile = session->create();
+    auto flowFile = session.create();
 
-    session->writeBuffer(flowFile, xml);
-    session->putAttribute(flowFile, core::SpecialFlowAttribute::MIME_TYPE, "application/xml");
-    session->getProvenanceReporter()->receive(flowFile, provenanceUri_, getUUIDStr(), "Consume windows event logs", 0ms);
-    session->transfer(flowFile, Success);
+    session.writeBuffer(flowFile, xml);
+    session.putAttribute(flowFile, core::SpecialFlowAttribute::MIME_TYPE, "application/xml");
+    session.getProvenanceReporter()->receive(flowFile, provenanceUri_, getUUIDStr(), "Consume windows event logs", 0ms);
+    session.transfer(flowFile, Success);
 
     flowFileCount++;
   }
@@ -563,7 +547,7 @@ void CollectorInitiatedSubscription::notifyStop() {
     if (session) {
       logger_->log_info("Finishing processing leftover events");
 
-      processQueue(session);
+      processQueue(*session);
     } else {
       logger_->log_error(
         "Stopping the processor but there is no ProcessSessionFactory stored and there are messages in the internal queue. "

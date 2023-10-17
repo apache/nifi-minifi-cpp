@@ -24,10 +24,9 @@
 
 namespace org::apache::nifi::minifi::processors {
 
-void StatefulProcessor::onSchedule(const std::shared_ptr<core::ProcessContext>& context, const std::shared_ptr<core::ProcessSessionFactory>&) {
-  gsl_Expects(context);
+void StatefulProcessor::onSchedule(core::ProcessContext& context, core::ProcessSessionFactory&) {
   std::lock_guard<std::mutex> lock(mutex_);
-  state_manager_ = context->getStateManager();
+  state_manager_ = context.getStateManager();
   if (state_manager_ == nullptr) {
     throw Exception(PROCESSOR_EXCEPTION, "Failed to get StateManager");
   }
@@ -37,7 +36,7 @@ void StatefulProcessor::onSchedule(const std::shared_ptr<core::ProcessContext>& 
   }
 }
 
-void StatefulProcessor::onTrigger(const std::shared_ptr<core::ProcessContext>&, const std::shared_ptr<core::ProcessSession>&) {
+void StatefulProcessor::onTrigger(core::ProcessContext&, core::ProcessSession&) {
   std::lock_guard<std::mutex> lock(mutex_);
   if (on_trigger_hook_index_ < on_trigger_hooks_.size()) {
     on_trigger_hooks_[on_trigger_hook_index_++](*state_manager_);

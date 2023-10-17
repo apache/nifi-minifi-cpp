@@ -47,26 +47,25 @@ void ConsumeKafka::initialize() {
   setSupportedRelationships(Relationships);
 }
 
-void ConsumeKafka::onSchedule(core::ProcessContext* context, core::ProcessSessionFactory* /* sessionFactory */) {
-  gsl_Expects(context);
+void ConsumeKafka::onSchedule(core::ProcessContext& context, core::ProcessSessionFactory&) {
   // Required properties
-  kafka_brokers_                = utils::getRequiredPropertyOrThrow(*context, KafkaBrokers.name);
-  topic_names_                  = utils::listFromRequiredCommaSeparatedProperty(*context, TopicNames.name);
-  topic_name_format_            = utils::getRequiredPropertyOrThrow(*context, TopicNameFormat.name);
-  honor_transactions_           = utils::parseBooleanPropertyOrThrow(*context, HonorTransactions.name);
-  group_id_                     = utils::getRequiredPropertyOrThrow(*context, GroupID.name);
-  offset_reset_                 = utils::getRequiredPropertyOrThrow(*context, OffsetReset.name);
-  key_attribute_encoding_       = utils::getRequiredPropertyOrThrow(*context, KeyAttributeEncoding.name);
-  max_poll_time_milliseconds_   = utils::parseTimePropertyMSOrThrow(*context, MaxPollTime.name);
-  session_timeout_milliseconds_ = utils::parseTimePropertyMSOrThrow(*context, SessionTimeout.name);
+  kafka_brokers_                = utils::getRequiredPropertyOrThrow(context, KafkaBrokers.name);
+  topic_names_                  = utils::listFromRequiredCommaSeparatedProperty(context, TopicNames.name);
+  topic_name_format_            = utils::getRequiredPropertyOrThrow(context, TopicNameFormat.name);
+  honor_transactions_           = utils::parseBooleanPropertyOrThrow(context, HonorTransactions.name);
+  group_id_                     = utils::getRequiredPropertyOrThrow(context, GroupID.name);
+  offset_reset_                 = utils::getRequiredPropertyOrThrow(context, OffsetReset.name);
+  key_attribute_encoding_       = utils::getRequiredPropertyOrThrow(context, KeyAttributeEncoding.name);
+  max_poll_time_milliseconds_   = utils::parseTimePropertyMSOrThrow(context, MaxPollTime.name);
+  session_timeout_milliseconds_ = utils::parseTimePropertyMSOrThrow(context, SessionTimeout.name);
 
   // Optional properties
-  context->getProperty(MessageDemarcator, message_demarcator_);
-  context->getProperty(MessageHeaderEncoding, message_header_encoding_);
-  context->getProperty(DuplicateHeaderHandling, duplicate_header_handling_);
+  context.getProperty(MessageDemarcator, message_demarcator_);
+  context.getProperty(MessageHeaderEncoding, message_header_encoding_);
+  context.getProperty(DuplicateHeaderHandling, duplicate_header_handling_);
 
-  headers_to_add_as_attributes_ = utils::listFromCommaSeparatedProperty(*context, HeadersToAddAsAttributes.name);
-  max_poll_records_ = gsl::narrow<std::size_t>(context->getProperty<uint64_t>(MaxPollRecords).value_or(core::StandardPropertyTypes::UNSIGNED_LONG_TYPE.parse(DEFAULT_MAX_POLL_RECORDS)));
+  headers_to_add_as_attributes_ = utils::listFromCommaSeparatedProperty(context, HeadersToAddAsAttributes.name);
+  max_poll_records_ = gsl::narrow<std::size_t>(context.getProperty<uint64_t>(MaxPollRecords).value_or(core::StandardPropertyTypes::UNSIGNED_LONG_TYPE.parse(DEFAULT_MAX_POLL_RECORDS)));
 
   if (!utils::StringUtils::equalsIgnoreCase(KEY_ATTR_ENCODING_UTF_8, key_attribute_encoding_) && !utils::StringUtils::equalsIgnoreCase(KEY_ATTR_ENCODING_HEX, key_attribute_encoding_)) {
     throw Exception(PROCESS_SCHEDULE_EXCEPTION, "Unsupported key attribute encoding: " + key_attribute_encoding_);
@@ -76,7 +75,7 @@ void ConsumeKafka::onSchedule(core::ProcessContext* context, core::ProcessSessio
     throw Exception(PROCESS_SCHEDULE_EXCEPTION, "Unsupported message header encoding: " + key_attribute_encoding_);
   }
 
-  configure_new_connection(*context);
+  configure_new_connection(context);
 }
 
 namespace {
@@ -373,12 +372,12 @@ void ConsumeKafka::process_pending_messages(core::ProcessSession& session) {
   pending_messages_.clear();
 }
 
-void ConsumeKafka::onTrigger(core::ProcessContext* /* context */, core::ProcessSession* session) {
+void ConsumeKafka::onTrigger(core::ProcessContext&, core::ProcessSession& session) {
   std::unique_lock<std::mutex> lock(do_not_call_on_trigger_concurrently_);
   logger_->log_debug("ConsumeKafka onTrigger");
 
   if (!pending_messages_.empty()) {
-    process_pending_messages(*session);
+    process_pending_messages(session);
     return;
   }
 
@@ -386,7 +385,7 @@ void ConsumeKafka::onTrigger(core::ProcessContext* /* context */, core::ProcessS
   if (pending_messages_.empty()) {
     return;
   }
-  process_pending_messages(*session);
+  process_pending_messages(session);
 }
 
 REGISTER_RESOURCE(ConsumeKafka, Processor);

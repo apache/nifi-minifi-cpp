@@ -40,23 +40,22 @@ void ExecuteProcess::initialize() {
   setSupportedRelationships(Relationships);
 }
 
-void ExecuteProcess::onSchedule(core::ProcessContext* context, core::ProcessSessionFactory* /*session_factory*/) {
-  gsl_Expects(context);
+void ExecuteProcess::onSchedule(core::ProcessContext& context, core::ProcessSessionFactory&) {
   std::string value;
-  if (context->getProperty(Command, value)) {
+  if (context.getProperty(Command, value)) {
     command_ = value;
   }
-  if (context->getProperty(CommandArguments, value)) {
+  if (context.getProperty(CommandArguments, value)) {
     command_argument_ = value;
   }
-  if (auto working_dir_str = context->getProperty(WorkingDir)) {
+  if (auto working_dir_str = context.getProperty(WorkingDir)) {
     working_dir_ = *working_dir_str;
   }
-  if (auto batch_duration = context->getProperty<core::TimePeriodValue>(BatchDuration)) {
+  if (auto batch_duration = context.getProperty<core::TimePeriodValue>(BatchDuration)) {
     batch_duration_ = batch_duration->getMilliseconds();
     logger_->log_debug("Setting batch duration to {}", batch_duration_);
   }
-  if (context->getProperty(RedirectErrorStream, value)) {
+  if (context.getProperty(RedirectErrorStream, value)) {
     redirect_error_stream_ = org::apache::nifi::minifi::utils::StringUtils::toBool(value).value_or(false);
   }
   full_command_ = command_ + " " + command_argument_;
@@ -205,8 +204,7 @@ void ExecuteProcess::collectChildProcessOutput(core::ProcessSession& session) {
   pid_ = 0;
 }
 
-void ExecuteProcess::onTrigger(core::ProcessContext *context, core::ProcessSession *session) {
-  gsl_Expects(context && session);
+void ExecuteProcess::onTrigger(core::ProcessContext&, core::ProcessSession& session) {
   if (full_command_.length() == 0) {
     yield();
     return;
@@ -231,7 +229,7 @@ void ExecuteProcess::onTrigger(core::ProcessContext *context, core::ProcessSessi
       executeChildProcess();
       break;
     default:  // this is the code the parent runs
-      collectChildProcessOutput(*session);
+      collectChildProcessOutput(session);
       break;
   }
 }

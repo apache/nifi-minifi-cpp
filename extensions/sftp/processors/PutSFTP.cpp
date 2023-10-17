@@ -51,28 +51,28 @@ PutSFTP::PutSFTP(std::string_view name, const utils::Identifier& uuid /*= utils:
 
 PutSFTP::~PutSFTP() = default;
 
-void PutSFTP::onSchedule(const std::shared_ptr<core::ProcessContext> &context, const std::shared_ptr<core::ProcessSessionFactory>& /*sessionFactory*/) {
+void PutSFTP::onSchedule(core::ProcessContext& context, core::ProcessSessionFactory&) {
   parseCommonPropertiesOnSchedule(context);
 
   std::string value;
-  if (!context->getProperty(CreateDirectory, value)) {
+  if (!context.getProperty(CreateDirectory, value)) {
     logger_->log_error("Create Directory attribute is missing or invalid");
   } else {
     create_directory_ = utils::StringUtils::toBool(value).value_or(false);
   }
-  if (!context->getProperty(BatchSize, value)) {
+  if (!context.getProperty(BatchSize, value)) {
     logger_->log_error("Batch Size attribute is missing or invalid");
   } else {
     core::Property::StringToInt(value, batch_size_);
   }
-  context->getProperty(ConflictResolution, conflict_resolution_);
-  if (context->getProperty(RejectZeroByte, value)) {
+  context.getProperty(ConflictResolution, conflict_resolution_);
+  if (context.getProperty(RejectZeroByte, value)) {
     reject_zero_byte_ = utils::StringUtils::toBool(value).value_or(true);
   }
-  if (context->getProperty(DotRename, value)) {
+  if (context.getProperty(DotRename, value)) {
     dot_rename_ = utils::StringUtils::toBool(value).value_or(true);
   }
-  if (!context->getProperty(UseCompression, value)) {
+  if (!context.getProperty(UseCompression, value)) {
     logger_->log_error("Use Compression attribute is missing or invalid");
   } else {
     use_compression_ = utils::StringUtils::toBool(value).value_or(false);
@@ -81,8 +81,8 @@ void PutSFTP::onSchedule(const std::shared_ptr<core::ProcessContext> &context, c
   startKeepaliveThreadIfNeeded();
 }
 
-bool PutSFTP::processOne(const std::shared_ptr<core::ProcessContext> &context, const std::shared_ptr<core::ProcessSession> &session) {
-  auto flow_file = session->get();
+bool PutSFTP::processOne(core::ProcessContext& context, core::ProcessSession& session) {
+  auto flow_file = session.get();
   if (flow_file == nullptr) {
     return false;
   }
@@ -90,7 +90,7 @@ bool PutSFTP::processOne(const std::shared_ptr<core::ProcessContext> &context, c
   /* Parse common properties */
   SFTPProcessorBase::CommonProperties common_properties;
   if (!parseCommonPropertiesOnTrigger(context, flow_file, common_properties)) {
-    context->yield();
+    context.yield();
     return false;
   }
 
@@ -111,7 +111,7 @@ bool PutSFTP::processOne(const std::shared_ptr<core::ProcessContext> &context, c
     filename = *file_name_str;
 
   std::string value;
-  if (auto remote_path_str = context->getProperty(RemotePath, flow_file)) {
+  if (auto remote_path_str = context.getProperty(RemotePath, flow_file)) {
     remote_path = std::filesystem::path(*remote_path_str, std::filesystem::path::format::generic_format).lexically_normal();
     while (remote_path.filename().empty() && !remote_path.empty())
       remote_path = remote_path.parent_path();
@@ -119,25 +119,25 @@ bool PutSFTP::processOne(const std::shared_ptr<core::ProcessContext> &context, c
       remote_path = ".";
   }
 
-  if (context->getDynamicProperty(std::string{DisableDirectoryListing.name}, value) ||
-      context->getProperty(DisableDirectoryListing, value)) {
+  if (context.getDynamicProperty(std::string{DisableDirectoryListing.name}, value) ||
+      context.getProperty(DisableDirectoryListing, value)) {
     disable_directory_listing = utils::StringUtils::toBool(value).value_or(false);
   }
-  context->getProperty(TempFilename, temp_file_name, flow_file);
-  if (context->getProperty(LastModifiedTime, value, flow_file))
+  context.getProperty(TempFilename, temp_file_name, flow_file);
+  if (context.getProperty(LastModifiedTime, value, flow_file))
     last_modified_ = utils::timeutils::parseDateTimeStr(value);
 
-  if (context->getProperty(Permissions, value, flow_file)) {
+  if (context.getProperty(Permissions, value, flow_file)) {
     if (core::Property::StringToPermissions(value, permissions)) {
       permissions_set = true;
     }
   }
-  if (context->getProperty(RemoteOwner, value, flow_file)) {
+  if (context.getProperty(RemoteOwner, value, flow_file)) {
     if (core::Property::StringToInt(value, remote_owner)) {
       remote_owner_set = true;
     }
   }
-  if (context->getProperty(RemoteGroup, value, flow_file)) {
+  if (context.getProperty(RemoteGroup, value, flow_file)) {
     if (core::Property::StringToInt(value, remote_group)) {
       remote_group_set = true;
     }
@@ -146,7 +146,7 @@ bool PutSFTP::processOne(const std::shared_ptr<core::ProcessContext> &context, c
   /* Reject zero-byte files if needed */
   if (reject_zero_byte_ && flow_file->getSize() == 0U) {
     logger_->log_debug("Rejecting {} because it is zero bytes", filename.generic_string());
-    session->transfer(flow_file, Reject);
+    session.transfer(flow_file, Reject);
     return true;
   }
 
@@ -164,7 +164,7 @@ bool PutSFTP::processOne(const std::shared_ptr<core::ProcessContext> &context, c
                                       common_properties.private_key_passphrase,
                                       common_properties.proxy_password);
   if (client == nullptr) {
-    context->yield();
+    context.yield();
     return false;
   }
 
@@ -184,30 +184,30 @@ bool PutSFTP::processOne(const std::shared_ptr<core::ProcessContext> &context, c
     if (!client->stat(target_path, true /*follow_symlinks*/, attrs)) {
       if (client->getLastError() != utils::SFTPError::FileDoesNotExist) {
         logger_->log_error("Failed to stat {}", target_path.c_str());
-        session->transfer(flow_file, Failure);
+        session.transfer(flow_file, Failure);
         return true;
       }
     } else {
       if ((attrs.flags & LIBSSH2_SFTP_ATTR_PERMISSIONS) && LIBSSH2_SFTP_S_ISDIR(attrs.permissions)) {
         logger_->log_error("Rejecting {} because a directory with the same name already exists", filename.c_str());
-        session->transfer(flow_file, Reject);
+        session.transfer(flow_file, Reject);
         put_connection_back_to_cache();
         return true;
       }
       logger_->log_debug("Found file with the same name as the target file: {}", filename.c_str());
       if (conflict_resolution_ == CONFLICT_RESOLUTION_IGNORE) {
         logger_->log_debug("Routing {} to SUCCESS despite a file with the same name already existing", filename.c_str());
-        session->transfer(flow_file, Success);
+        session.transfer(flow_file, Success);
         put_connection_back_to_cache();
         return true;
       } else if (conflict_resolution_ == CONFLICT_RESOLUTION_REJECT) {
         logger_->log_debug("Routing {} to REJECT because a file with the same name already exists", filename.c_str());
-        session->transfer(flow_file, Reject);
+        session.transfer(flow_file, Reject);
         put_connection_back_to_cache();
         return true;
       } else if (conflict_resolution_ == CONFLICT_RESOLUTION_FAIL) {
         logger_->log_debug("Routing {} to FAILURE because a file with the same name already exists", filename.c_str());
-        session->transfer(flow_file, Failure);
+        session.transfer(flow_file, Failure);
         put_connection_back_to_cache();
         return true;
       } else if (conflict_resolution_ == CONFLICT_RESOLUTION_RENAME) {
@@ -222,7 +222,7 @@ bool PutSFTP::processOne(const std::shared_ptr<core::ProcessContext> &context, c
               break;
             } else {
               logger_->log_error("Failed to stat {}", possible_resolved_path.c_str());
-              session->transfer(flow_file, Failure);
+              session.transfer(flow_file, Failure);
               return true;
             }
           }
@@ -232,7 +232,7 @@ bool PutSFTP::processOne(const std::shared_ptr<core::ProcessContext> &context, c
           resolved_filename = std::move(possible_resolved_filename);
         } else {
           logger_->log_error("Rejecting {} because a unique name could not be determined after 99 attempts", filename.c_str());
-          session->transfer(flow_file, Reject);
+          session.transfer(flow_file, Reject);
           put_connection_back_to_cache();
           return true;
         }
@@ -247,17 +247,17 @@ bool PutSFTP::processOne(const std::shared_ptr<core::ProcessContext> &context, c
       case SFTPProcessorBase::CreateDirectoryHierarchyError::CREATE_DIRECTORY_HIERARCHY_ERROR_OK:
         break;
       case SFTPProcessorBase::CreateDirectoryHierarchyError::CREATE_DIRECTORY_HIERARCHY_ERROR_STAT_FAILED:
-        context->yield();
+        context.yield();
         return false;
       case SFTPProcessorBase::CreateDirectoryHierarchyError::CREATE_DIRECTORY_HIERARCHY_ERROR_NOT_A_DIRECTORY:
       case SFTPProcessorBase::CreateDirectoryHierarchyError::CREATE_DIRECTORY_HIERARCHY_ERROR_NOT_FOUND:
       case SFTPProcessorBase::CreateDirectoryHierarchyError::CREATE_DIRECTORY_HIERARCHY_ERROR_PERMISSION_DENIED:
-        session->transfer(flow_file, Failure);
+        session.transfer(flow_file, Failure);
         put_connection_back_to_cache();
         return true;
       default:
         logger_->log_error("Unknown createDirectoryHierarchy result: {}", magic_enum::enum_underlying(res));
-        context->yield();
+        context.yield();
         return false;
     }
   }
@@ -276,7 +276,7 @@ bool PutSFTP::processOne(const std::shared_ptr<core::ProcessContext> &context, c
   logger_->log_debug("The target path is {}, final target path is {}", target_path.c_str(), final_target_path.c_str());
 
   try {
-    session->read(flow_file, [&client, &target_path, this](const std::shared_ptr<io::InputStream>& stream) {
+    session.read(flow_file, [&client, &target_path, this](const std::shared_ptr<io::InputStream>& stream) {
       if (!client->putFile(target_path.generic_string(),
           *stream,
           conflict_resolution_ == CONFLICT_RESOLUTION_REPLACE /*overwrite*/,
@@ -287,7 +287,7 @@ bool PutSFTP::processOne(const std::shared_ptr<core::ProcessContext> &context, c
     });
   } catch (const utils::SFTPException& ex) {
     logger_->log_debug("{}", ex.what());
-    session->transfer(flow_file, Failure);
+    session.transfer(flow_file, Failure);
     return true;
   }
 
@@ -298,7 +298,7 @@ bool PutSFTP::processOne(const std::shared_ptr<core::ProcessContext> &context, c
       if (!client->removeFile(target_path.generic_string())) {
         logger_->log_error("Failed to remove temporary file {}", target_path.generic_string());
       }
-      session->transfer(flow_file, Failure);
+      session.transfer(flow_file, Failure);
       return true;
     }
   }
@@ -338,12 +338,12 @@ bool PutSFTP::processOne(const std::shared_ptr<core::ProcessContext> &context, c
     }
   }
 
-  session->transfer(flow_file, Success);
+  session.transfer(flow_file, Success);
   put_connection_back_to_cache();
   return true;
 }
 
-void PutSFTP::onTrigger(const std::shared_ptr<core::ProcessContext> &context, const std::shared_ptr<core::ProcessSession> &session) {
+void PutSFTP::onTrigger(core::ProcessContext& context, core::ProcessSession& session) {
   const uint64_t limit = batch_size_ > 0 ? batch_size_ : std::numeric_limits<uint64_t>::max();
   for (uint64_t i = 0; i < limit; i++) {
     if (!this->processOne(context, session)) {

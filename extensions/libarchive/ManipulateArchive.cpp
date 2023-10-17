@@ -49,8 +49,8 @@ void ManipulateArchive::initialize() {
   setSupportedRelationships(Relationships);
 }
 
-void ManipulateArchive::onSchedule(core::ProcessContext *context, core::ProcessSessionFactory* /*sessionFactory*/) {
-    context->getProperty(Operation, operation_);
+void ManipulateArchive::onSchedule(core::ProcessContext& context, core::ProcessSessionFactory&) {
+    context.getProperty(Operation, operation_);
     bool invalid = false;
     std::transform(operation_.begin(), operation_.end(), operation_.begin(), ::tolower);
 
@@ -64,10 +64,10 @@ void ManipulateArchive::onSchedule(core::ProcessContext *context, core::ProcessS
         invalid = true;
     }
 
-    context->getProperty(Target, targetEntry_);
-    context->getProperty(Destination, destination_);
-    context->getProperty(Before, before_);
-    context->getProperty(After, after_);
+    context.getProperty(Target, targetEntry_);
+    context.getProperty(Destination, destination_);
+    context.getProperty(Before, before_);
+    context.getProperty(After, after_);
 
     // All operations which create new entries require a set destination
     if (op_create == destination_.empty()) {
@@ -92,8 +92,8 @@ void ManipulateArchive::onSchedule(core::ProcessContext *context, core::ProcessS
     }
 }
 
-void ManipulateArchive::onTrigger(core::ProcessContext* /*context*/, core::ProcessSession *session) {
-    std::shared_ptr<core::FlowFile> flowFile = session->get();
+void ManipulateArchive::onTrigger(core::ProcessContext&, core::ProcessSession& session) {
+    std::shared_ptr<core::FlowFile> flowFile = session.get();
 
     if (!flowFile) {
         return;
@@ -102,7 +102,7 @@ void ManipulateArchive::onTrigger(core::ProcessContext* /*context*/, core::Proce
     ArchiveMetadata archiveMetadata;
     utils::file::FileManager file_man;
 
-    session->read(flowFile, FocusArchiveEntry::ReadCallback{this, &file_man, &archiveMetadata});
+    session.read(flowFile, FocusArchiveEntry::ReadCallback{this, &file_man, &archiveMetadata});
 
     auto entries_end = archiveMetadata.entryMetadata.end();
 
@@ -111,7 +111,7 @@ void ManipulateArchive::onTrigger(core::ProcessContext* /*context*/, core::Proce
     if (target_position == entries_end && operation_ != OPERATION_TOUCH) {
         logger_->log_warn("ManipulateArchive could not find entry {} to {}!",
                           targetEntry_, operation_);
-        session->transfer(flowFile, Failure);
+        session.transfer(flowFile, Failure);
         return;
     } else {
         logger_->log_info("ManipulateArchive found {} for {}.",
@@ -123,7 +123,7 @@ void ManipulateArchive::onTrigger(core::ProcessContext* /*context*/, core::Proce
         if (dest_position != entries_end) {
             logger_->log_warn("ManipulateArchive cannot perform {} to existing destination_ {}!",
                               operation_, destination_);
-            session->transfer(flowFile, Failure);
+            session.transfer(flowFile, Failure);
             return;
         }
     }
@@ -185,8 +185,8 @@ void ManipulateArchive::onTrigger(core::ProcessContext* /*context*/, core::Proce
         archiveMetadata.entryMetadata.insert(position, touchEntry);
     }
 
-    session->write(flowFile, UnfocusArchiveEntry::WriteCallback{&archiveMetadata});
-    session->transfer(flowFile, Success);
+    session.write(flowFile, UnfocusArchiveEntry::WriteCallback{&archiveMetadata});
+    session.transfer(flowFile, Success);
 }
 
 REGISTER_RESOURCE(ManipulateArchive, Processor);

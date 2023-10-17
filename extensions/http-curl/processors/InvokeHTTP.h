@@ -261,21 +261,21 @@ class InvokeHTTP : public core::Processor {
 
   EXTENSIONAPI static std::string DefaultContentType;
 
-  void onTrigger(const std::shared_ptr<core::ProcessContext>& context, const std::shared_ptr<core::ProcessSession>& session) override;
+  void onTrigger(core::ProcessContext& context, core::ProcessSession& session) override;
   void initialize() override;
-  void onSchedule(const std::shared_ptr<core::ProcessContext>& context, const std::shared_ptr<core::ProcessSessionFactory>& sessionFactory) override;
+  void onSchedule(core::ProcessContext& context, core::ProcessSessionFactory& session_factory) override;
 
  private:
-  void route(const std::shared_ptr<core::FlowFile>& request, const std::shared_ptr<core::FlowFile>& response, const std::shared_ptr<core::ProcessSession>& session,
-             const std::shared_ptr<core::ProcessContext>& context, bool is_success, int64_t status_code);
+  void route(const std::shared_ptr<core::FlowFile>& request, const std::shared_ptr<core::FlowFile>& response, core::ProcessSession& session,
+             core::ProcessContext& context, bool is_success, int64_t status_code);
   [[nodiscard]] bool shouldEmitFlowFile() const;
-  void onTriggerWithClient(const std::shared_ptr<core::ProcessContext>& context, const std::shared_ptr<core::ProcessSession>& session,
+  void onTriggerWithClient(core::ProcessContext& context, core::ProcessSession& session,
                            const std::shared_ptr<core::FlowFile>& flow_file, minifi::extensions::curl::HTTPClient& client);
   [[nodiscard]] bool appendHeaders(const core::FlowFile& flow_file, /*std::invocable<std::string, std::string>*/ auto append_header);
 
 
   void setupMembersFromProperties(const core::ProcessContext& context);
-  std::unique_ptr<minifi::extensions::curl::HTTPClient> createHTTPClientFromPropertiesAndMembers(const core::ProcessContext& context) const;
+  std::unique_ptr<minifi::extensions::curl::HTTPClient> createHTTPClientFromMembers() const;
 
   utils::HttpRequestMethod method_{};
   std::optional<utils::Regex> attributes_to_send_;
@@ -287,6 +287,18 @@ class InvokeHTTP : public core::Processor {
   bool send_date_header_{true};
   core::DataTransferSpeedValue maximum_upload_speed_{0};
   core::DataTransferSpeedValue maximum_download_speed_{0};
+
+  std::string url_;
+  std::shared_ptr<minifi::controllers::SSLContextService> ssl_context_service_;
+
+  std::chrono::milliseconds connect_timeout_{std::chrono::seconds(30)};
+  std::chrono::milliseconds read_timeout_{std::chrono::seconds(30)};
+
+  utils::HTTPProxy proxy_{};
+  bool follow_redirects_ = false;
+  bool disable_peer_verification_ = false;
+  std::optional<std::string> content_type_;
+
 
   invoke_http::InvalidHTTPHeaderFieldHandlingOption invalid_http_header_field_handling_strategy_{};
 

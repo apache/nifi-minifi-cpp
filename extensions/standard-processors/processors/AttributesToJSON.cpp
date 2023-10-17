@@ -35,18 +35,18 @@ void AttributesToJSON::initialize() {
   setSupportedRelationships(Relationships);
 }
 
-void AttributesToJSON::onSchedule(core::ProcessContext* context, core::ProcessSessionFactory* /*sessionFactory*/) {
+void AttributesToJSON::onSchedule(core::ProcessContext& context, core::ProcessSessionFactory&) {
   std::string value;
-  if (context->getProperty(AttributesList, value) && !value.empty()) {
+  if (context.getProperty(AttributesList, value) && !value.empty()) {
     attribute_list_ = utils::StringUtils::splitAndTrimRemovingEmpty(value, ",");
   }
-  if (context->getProperty(AttributesRegularExpression, value) && !value.empty()) {
+  if (context.getProperty(AttributesRegularExpression, value) && !value.empty()) {
     attributes_regular_expression_ = utils::Regex(value);
   }
-  write_destination_ = utils::parseEnumProperty<attributes_to_json::WriteDestination>(*context, Destination);
+  write_destination_ = utils::parseEnumProperty<attributes_to_json::WriteDestination>(context, Destination);
 
-  context->getProperty(IncludeCoreAttributes, include_core_attributes_);
-  context->getProperty(NullValue, null_value_);
+  context.getProperty(IncludeCoreAttributes, include_core_attributes_);
+  context.getProperty(NullValue, null_value_);
 }
 
 bool AttributesToJSON::isCoreAttributeToBeFiltered(const std::string& attribute) const {
@@ -107,8 +107,8 @@ std::string AttributesToJSON::buildAttributeJsonData(const core::FlowFile::Attri
   return buffer.GetString();
 }
 
-void AttributesToJSON::onTrigger(core::ProcessContext* /*context*/, core::ProcessSession* session) {
-  auto flow_file = session->get();
+void AttributesToJSON::onTrigger(core::ProcessContext&, core::ProcessSession& session) {
+  auto flow_file = session.get();
   if (!flow_file) {
     return;
   }
@@ -116,12 +116,12 @@ void AttributesToJSON::onTrigger(core::ProcessContext* /*context*/, core::Proces
   auto json_data = buildAttributeJsonData(*flow_file->getAttributesPtr());
   if (write_destination_ == attributes_to_json::WriteDestination::FLOWFILE_ATTRIBUTE) {
     logger_->log_debug("Writing the following attribute data to JSONAttributes attribute: {}", json_data);
-    session->putAttribute(flow_file, "JSONAttributes", json_data);
-    session->transfer(flow_file, Success);
+    session.putAttribute(flow_file, "JSONAttributes", json_data);
+    session.transfer(flow_file, Success);
   } else {
     logger_->log_debug("Writing the following attribute data to flowfile: {}", json_data);
-    session->writeBuffer(flow_file, json_data);
-    session->transfer(flow_file, Success);
+    session.writeBuffer(flow_file, json_data);
+    session.transfer(flow_file, Success);
   }
 }
 

@@ -143,8 +143,8 @@ class PutTCP final : public core::Processor {
 
   void initialize() final;
   void notifyStop() final;
-  void onSchedule(core::ProcessContext*, core::ProcessSessionFactory*) final;
-  void onTrigger(core::ProcessContext*, core::ProcessSession*) final;
+  void onSchedule(core::ProcessContext& context, core::ProcessSessionFactory& session_factory) final;
+  void onTrigger(core::ProcessContext& context, core::ProcessSession& session) final;
 
  private:
   void removeExpiredConnections();

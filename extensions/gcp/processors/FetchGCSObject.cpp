@@ -88,10 +88,9 @@ void FetchGCSObject::initialize() {
   setSupportedRelationships(Relationships);
 }
 
-void FetchGCSObject::onSchedule(const std::shared_ptr<core::ProcessContext>& context, const std::shared_ptr<core::ProcessSessionFactory>& session_factory) {
+void FetchGCSObject::onSchedule(core::ProcessContext& context, core::ProcessSessionFactory& session_factory) {
   GCSProcessor::onSchedule(context, session_factory);
-  gsl_Expects(context);
-  if (auto encryption_key = context->getProperty(EncryptionKey)) {
+  if (auto encryption_key = context.getProperty(EncryptionKey)) {
     try {
       encryption_key_ = gcs::EncryptionKey::FromBase64Key(*encryption_key);
     } catch (const google::cloud::RuntimeStatusError&) {
@@ -99,25 +98,25 @@ void FetchGCSObject::onSchedule(const std::shared_ptr<core::ProcessContext>& con
   }
 }
 
-void FetchGCSObject::onTrigger(const std::shared_ptr<core::ProcessContext>& context, const std::shared_ptr<core::ProcessSession>& session) {
-  gsl_Expects(context && session && gcp_credentials_);
+void FetchGCSObject::onTrigger(core::ProcessContext& context, core::ProcessSession& session) {
+  gsl_Expects(gcp_credentials_);
 
-  auto flow_file = session->get();
+  auto flow_file = session.get();
   if (!flow_file) {
-    context->yield();
+    context.yield();
     return;
   }
 
-  auto bucket = context->getProperty(Bucket, flow_file);
+  auto bucket = context.getProperty(Bucket, flow_file);
   if (!bucket || bucket->empty()) {
     logger_->log_error("Missing bucket name");
-    session->transfer(flow_file, Failure);
+    session.transfer(flow_file, Failure);
     return;
   }
-  auto object_name = context->getProperty(Key, flow_file);
+  auto object_name = context.getProperty(Key, flow_file);
   if (!object_name || object_name->empty()) {
     logger_->log_error("Missing object name");
-    session->transfer(flow_file, Failure);
+    session.transfer(flow_file, Failure);
     return;
   }
 
@@ -125,25 +124,25 @@ void FetchGCSObject::onTrigger(const std::shared_ptr<core::ProcessContext>& cont
   FetchFromGCSCallback callback(client, *bucket, *object_name);
   callback.setEncryptionKey(encryption_key_);
 
-  if (auto gen_str = context->getProperty(ObjectGeneration, flow_file); gen_str && !gen_str->empty()) {
+  if (auto gen_str = context.getProperty(ObjectGeneration, flow_file); gen_str && !gen_str->empty()) {
     try {
       uint64_t gen;
       utils::internal::ValueParser(*gen_str).parse(gen).parseEnd();
       callback.setGeneration(gcs::Generation(gen));
     } catch (const utils::internal::ValueException&) {
       logger_->log_error("Invalid generation: {}", *gen_str);
-      session->transfer(flow_file, Failure);
+      session.transfer(flow_file, Failure);
       return;
     }
   }
 
-  session->write(flow_file, std::ref(callback));
+  session.write(flow_file, std::ref(callback));
   if (!callback.getStatus().ok()) {
     flow_file->setAttribute(GCS_STATUS_MESSAGE, callback.getStatus().message());
     flow_file->setAttribute(GCS_ERROR_REASON, callback.getStatus().error_info().reason());
     flow_file->setAttribute(GCS_ERROR_DOMAIN, callback.getStatus().error_info().domain());
     logger_->log_error("Failed to fetch from Google Cloud Storage {} {}", callback.getStatus().message(), callback.getStatus().error_info().reason());
-    session->transfer(flow_file, Failure);
+    session.transfer(flow_file, Failure);
     return;
   }
 
@@ -153,7 +152,7 @@ void FetchGCSObject::onTrigger(const std::shared_ptr<core::ProcessContext>& cont
     flow_file->setAttribute(GCS_META_GENERATION, std::to_string(*meta_generation));
   if (auto storage_class = callback.getStorageClass())
     flow_file->setAttribute(GCS_STORAGE_CLASS, *storage_class);
-  session->transfer(flow_file, Success);
+  session.transfer(flow_file, Success);
 }
 
 REGISTER_RESOURCE(FetchGCSObject, Processor);

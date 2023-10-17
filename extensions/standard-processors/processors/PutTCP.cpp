@@ -55,36 +55,34 @@ void PutTCP::initialize() {
 
 void PutTCP::notifyStop() {}
 
-void PutTCP::onSchedule(core::ProcessContext* const context, core::ProcessSessionFactory*) {
-  gsl_Expects(context);
-
+void PutTCP::onSchedule(core::ProcessContext& context, core::ProcessSessionFactory&) {
   // if the required properties are missing or empty even before evaluating the EL expression, then we can throw in onSchedule, before we waste any flow files
-  if (context->getProperty(Hostname).value_or(std::string{}).empty()) {
+  if (context.getProperty(Hostname).value_or(std::string{}).empty()) {
     throw Exception{ExceptionType::PROCESSOR_EXCEPTION, "missing hostname"};
   }
-  if (context->getProperty(Port).value_or(std::string{}).empty()) {
+  if (context.getProperty(Port).value_or(std::string{}).empty()) {
     throw Exception{ExceptionType::PROCESSOR_EXCEPTION, "missing port"};
   }
-  if (auto idle_connection_expiration = context->getProperty<core::TimePeriodValue>(IdleConnectionExpiration); idle_connection_expiration && idle_connection_expiration->getMilliseconds() > 0ms)
+  if (auto idle_connection_expiration = context.getProperty<core::TimePeriodValue>(IdleConnectionExpiration); idle_connection_expiration && idle_connection_expiration->getMilliseconds() > 0ms)
     idle_connection_expiration_ = idle_connection_expiration->getMilliseconds();
   else
     idle_connection_expiration_.reset();
 
-  if (auto timeout = context->getProperty<core::TimePeriodValue>(Timeout); timeout && timeout->getMilliseconds() > 0ms)
+  if (auto timeout = context.getProperty<core::TimePeriodValue>(Timeout); timeout && timeout->getMilliseconds() > 0ms)
     timeout_duration_ = timeout->getMilliseconds();
   else
     timeout_duration_ = 15s;
 
-  if (context->getProperty<bool>(ConnectionPerFlowFile).value_or(false))
+  if (context.getProperty<bool>(ConnectionPerFlowFile).value_or(false))
     connections_.reset();
   else
     connections_.emplace();
 
   std::string context_name;
   ssl_context_.reset();
-  if (context->getProperty(SSLContextService, context_name) && !IsNullOrEmpty(context_name)) {
-    if (auto controller_service = context->getControllerService(context_name)) {
-      if (auto ssl_context_service = std::dynamic_pointer_cast<minifi::controllers::SSLContextService>(context->getControllerService(context_name))) {
+  if (context.getProperty(SSLContextService, context_name) && !IsNullOrEmpty(context_name)) {
+    if (auto controller_service = context.getControllerService(context_name)) {
+      if (auto ssl_context_service = std::dynamic_pointer_cast<minifi::controllers::SSLContextService>(context.getControllerService(context_name))) {
         ssl_context_ = utils::net::getSslContext(*ssl_context_service);
       } else {
         throw Exception(PROCESS_SCHEDULE_EXCEPTION, context_name + " is not an SSL Context Service");
@@ -94,10 +92,10 @@ void PutTCP::onSchedule(core::ProcessContext* const context, core::ProcessSessio
     }
   }
 
-  const auto delimiter_str = context->getProperty(OutgoingMessageDelimiter).value_or(std::string{});
+  const auto delimiter_str = context.getProperty(OutgoingMessageDelimiter).value_or(std::string{});
   delimiter_ = utils::span_to<std::vector>(as_bytes(std::span(delimiter_str)));
 
-  if (auto max_size_of_socket_send_buffer = context->getProperty<core::DataSizeValue>(MaxSizeOfSocketSendBuffer))
+  if (auto max_size_of_socket_send_buffer = context.getProperty<core::DataSizeValue>(MaxSizeOfSocketSendBuffer))
     max_size_of_socket_send_buffer_ = max_size_of_socket_send_buffer->getValue();
   else
     max_size_of_socket_send_buffer_.reset();
@@ -271,10 +269,8 @@ asio::awaitable<std::error_code> ConnectionHandler<SocketType>::send(const std::
 }
 }  // namespace
 
-void PutTCP::onTrigger(core::ProcessContext* context, core::ProcessSession* const session) {
-  gsl_Expects(context && session);
-
-  const auto flow_file = session->get();
+void PutTCP::onTrigger(core::ProcessContext& context, core::ProcessSession& session) {
+  const auto flow_file = session.get();
   if (!flow_file) {
     yield();
     return;
@@ -282,13 +278,13 @@ void PutTCP::onTrigger(core::ProcessContext* context, core::ProcessSession* cons
 
   removeExpiredConnections();
 
-  auto hostname = context->getProperty(Hostname, flow_file).value_or(std::string{});
-  auto port = context->getProperty(Port, flow_file).value_or(std::string{});
+  auto hostname = context.getProperty(Hostname, flow_file).value_or(std::string{});
+  auto port = context.getProperty(Port, flow_file).value_or(std::string{});
   if (hostname.empty() || port.empty()) {
     logger_->log_error("[{}] invalid target endpoint: hostname: {}, port: {}", flow_file->getUUIDStr(),
         hostname.empty() ? "(empty)" : hostname.c_str(),
         port.empty() ? "(empty)" : port.c_str());
-    session->transfer(flow_file, Failure);
+    session.transfer(flow_file, Failure);
     return;
   }
 
@@ -307,7 +303,7 @@ void PutTCP::onTrigger(core::ProcessContext* context, core::ProcessSession* cons
 
   gsl_Expects(handler);
 
-  processFlowFile(handler, *session, flow_file);
+  processFlowFile(handler, session, flow_file);
 }
 
 void PutTCP::removeExpiredConnections() {

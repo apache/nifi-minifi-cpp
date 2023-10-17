@@ -88,7 +88,7 @@ void appendJsonStr(const utils::SmallString<N>& value, rapidjson::Value& parent,
   parent.PushBack(valueVal, alloc);
 }
 
-void SiteToSiteProvenanceReportingTask::getJsonReport(const std::shared_ptr<core::ProcessContext>& /*context*/, const std::shared_ptr<core::ProcessSession>& /*session*/,
+void SiteToSiteProvenanceReportingTask::getJsonReport(core::ProcessContext&, core::ProcessSession&,
                                                       std::vector<std::shared_ptr<core::SerializableComponent>> &records, std::string &report) {
   rapidjson::Document array(rapidjson::kArrayType);
   rapidjson::Document::AllocatorType &alloc = array.GetAllocator();
@@ -151,15 +151,15 @@ void SiteToSiteProvenanceReportingTask::getJsonReport(const std::shared_ptr<core
   report = buffer.GetString();
 }
 
-void SiteToSiteProvenanceReportingTask::onSchedule(const std::shared_ptr<core::ProcessContext>& /*context*/, const std::shared_ptr<core::ProcessSessionFactory>& /*sessionFactory*/) {
+void SiteToSiteProvenanceReportingTask::onSchedule(core::ProcessContext&, core::ProcessSessionFactory&) {
 }
 
-void SiteToSiteProvenanceReportingTask::onTrigger(const std::shared_ptr<core::ProcessContext> &context, const std::shared_ptr<core::ProcessSession> &session) {
+void SiteToSiteProvenanceReportingTask::onTrigger(core::ProcessContext& context, core::ProcessSession& session) {
   logger_->log_debug("SiteToSiteProvenanceReportingTask -- onTrigger");
   std::vector<std::shared_ptr<core::SerializableComponent>> records;
   logger_->log_debug("batch size {} records", batch_size_);
   size_t deserialized = batch_size_;
-  std::shared_ptr<core::Repository> repo = context->getProvenanceRepository();
+  std::shared_ptr<core::Repository> repo = context.getProvenanceRepository();
   if (!repo->getElements(records, deserialized) && deserialized == 0) {
     return;
   }
@@ -173,14 +173,14 @@ void SiteToSiteProvenanceReportingTask::onTrigger(const std::shared_ptr<core::Pr
   auto protocol_ = getNextProtocol(true);
 
   if (!protocol_) {
-    context->yield();
+    context.yield();
     return;
   }
 
   try {
     std::map<std::string, std::string> attributes;
     if (!protocol_->transmitPayload(context, session, jsonStr, attributes)) {
-      context->yield();
+      context.yield();
     }
   } catch (...) {
     // if transfer bytes failed, return instead of purge the provenance records

@@ -32,10 +32,9 @@ void PutAzureBlobStorage::initialize() {
 }
 
 
-void PutAzureBlobStorage::onSchedule(const std::shared_ptr<core::ProcessContext>& context, const std::shared_ptr<core::ProcessSessionFactory>& session_factory) {
-  gsl_Expects(context && session_factory);
+void PutAzureBlobStorage::onSchedule(core::ProcessContext& context, core::ProcessSessionFactory& session_factory) {
   AzureBlobStorageProcessorBase::onSchedule(context, session_factory);
-  context->getProperty(CreateContainer, create_container_);
+  context.getProperty(CreateContainer, create_container_);
 }
 
 std::optional<storage::PutAzureBlobStorageParameters> PutAzureBlobStorage::buildPutAzureBlobStorageParameters(
@@ -49,45 +48,44 @@ std::optional<storage::PutAzureBlobStorageParameters> PutAzureBlobStorage::build
   return params;
 }
 
-void PutAzureBlobStorage::onTrigger(const std::shared_ptr<core::ProcessContext> &context, const std::shared_ptr<core::ProcessSession> &session) {
-  gsl_Expects(context && session);
+void PutAzureBlobStorage::onTrigger(core::ProcessContext& context, core::ProcessSession& session) {
   logger_->log_trace("PutAzureBlobStorage onTrigger");
-  std::shared_ptr<core::FlowFile> flow_file = session->get();
+  std::shared_ptr<core::FlowFile> flow_file = session.get();
   if (!flow_file) {
     return;
   }
 
-  auto params = buildPutAzureBlobStorageParameters(*context, flow_file);
+  auto params = buildPutAzureBlobStorageParameters(context, flow_file);
   if (!params) {
-    session->transfer(flow_file, Failure);
+    session.transfer(flow_file, Failure);
     return;
   }
 
   if (create_container_) {
     auto result = azure_blob_storage_.createContainerIfNotExists(*params);
     if (!result) {
-      session->transfer(flow_file, Failure);
+      session.transfer(flow_file, Failure);
       return;
     }
   }
   PutAzureBlobStorage::ReadCallback callback(flow_file->getSize(), azure_blob_storage_, *params);
-  session->read(flow_file, std::ref(callback));
+  session.read(flow_file, std::ref(callback));
   const std::optional<storage::UploadBlobResult> upload_result = callback.getResult();
 
   if (!upload_result) {
     logger_->log_error("Failed to upload blob '{}' to Azure Storage container '{}'", params->blob_name, params->container_name);
-    session->transfer(flow_file, Failure);
+    session.transfer(flow_file, Failure);
     return;
   }
 
-  session->putAttribute(flow_file, "azure.container", params->container_name);
-  session->putAttribute(flow_file, "azure.blobname", params->blob_name);
-  session->putAttribute(flow_file, "azure.primaryUri", upload_result->primary_uri);
-  session->putAttribute(flow_file, "azure.etag", upload_result->etag);
-  session->putAttribute(flow_file, "azure.length", std::to_string(flow_file->getSize()));
-  session->putAttribute(flow_file, "azure.timestamp", upload_result->timestamp);
+  session.putAttribute(flow_file, "azure.container", params->container_name);
+  session.putAttribute(flow_file, "azure.blobname", params->blob_name);
+  session.putAttribute(flow_file, "azure.primaryUri", upload_result->primary_uri);
+  session.putAttribute(flow_file, "azure.etag", upload_result->etag);
+  session.putAttribute(flow_file, "azure.length", std::to_string(flow_file->getSize()));
+  session.putAttribute(flow_file, "azure.timestamp", upload_result->timestamp);
   logger_->log_debug("Successfully uploaded blob '{}' to Azure Storage container '{}'", params->blob_name, params->container_name);
-  session->transfer(flow_file, Success);
+  session.transfer(flow_file, Success);
 }
 
 REGISTER_RESOURCE(PutAzureBlobStorage, Processor);

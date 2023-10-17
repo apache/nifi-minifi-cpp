@@ -44,15 +44,14 @@ void RouteText::initialize() {
   setSupportedRelationships(Relationships);
 }
 
-void RouteText::onSchedule(core::ProcessContext* context, core::ProcessSessionFactory* /*sessionFactory*/) {
-  gsl_Expects(context);
-  routing_ = utils::parseEnumProperty<route_text::Routing>(*context, RoutingStrategy);
-  matching_ = utils::parseEnumProperty<route_text::Matching>(*context, MatchingStrategy);
-  context->getProperty(TrimWhitespace, trim_);
-  case_policy_ = context->getProperty<bool>(IgnoreCase).value_or(false) ? route_text::CasePolicy::IGNORE_CASE : route_text::CasePolicy::CASE_SENSITIVE;
-  group_regex_ = context->getProperty(GroupingRegex) | utils::transform([] (const auto& str) {return utils::Regex(str);});
-  segmentation_ = utils::parseEnumProperty<route_text::Segmentation>(*context, SegmentationStrategy);
-  context->getProperty(GroupingFallbackValue, group_fallback_);
+void RouteText::onSchedule(core::ProcessContext& context, core::ProcessSessionFactory&) {
+  routing_ = utils::parseEnumProperty<route_text::Routing>(context, RoutingStrategy);
+  matching_ = utils::parseEnumProperty<route_text::Matching>(context, MatchingStrategy);
+  context.getProperty(TrimWhitespace, trim_);
+  case_policy_ = context.getProperty<bool>(IgnoreCase).value_or(false) ? route_text::CasePolicy::IGNORE_CASE : route_text::CasePolicy::CASE_SENSITIVE;
+  group_regex_ = context.getProperty(GroupingRegex) | utils::transform([] (const auto& str) {return utils::Regex(str);});
+  segmentation_ = utils::parseEnumProperty<route_text::Segmentation>(context, SegmentationStrategy);
+  context.getProperty(GroupingFallbackValue, group_fallback_);
 }
 
 class RouteText::ReadCallback {
@@ -218,17 +217,16 @@ struct Route {
 };
 }  // namespace
 
-void RouteText::onTrigger(core::ProcessContext *context, core::ProcessSession *session) {
-  gsl_Expects(context && session);
-  auto flow_file = session->get();
+void RouteText::onTrigger(core::ProcessContext& context, core::ProcessSession& session) {
+  auto flow_file = session.get();
   if (!flow_file) {
-    context->yield();
+    context.yield();
     return;
   }
 
   std::map<Route, std::string> flow_file_contents;
 
-  MatchingContext matching_context(*context, flow_file, case_policy_);
+  MatchingContext matching_context(context, flow_file, case_policy_);
 
   ReadCallback callback(segmentation_, flow_file->getSize(), [&] (Segment segment) {
     std::string_view original_value = segment.value_;
@@ -279,18 +277,18 @@ void RouteText::onTrigger(core::ProcessContext *context, core::ProcessSession *s
     }
     throw Exception(PROCESSOR_EXCEPTION, "Unknown routing strategy");
   });
-  session->read(flow_file, std::move(callback));
+  session.read(flow_file, std::move(callback));
 
   for (const auto& [route, content] : flow_file_contents) {
-    auto new_flow_file = session->create(flow_file);
+    auto new_flow_file = session.create(flow_file);
     if (route.group_name_) {
       new_flow_file->setAttribute(GROUP_ATTRIBUTE_NAME, route.group_name_.value());
     }
-    session->writeBuffer(new_flow_file, content);
-    session->transfer(new_flow_file, route.relationship_);
+    session.writeBuffer(new_flow_file, content);
+    session.transfer(new_flow_file, route.relationship_);
   }
 
-  session->transfer(flow_file, Original);
+  session.transfer(flow_file, Original);
 }
 
 std::string_view RouteText::preprocess(std::string_view str) const {

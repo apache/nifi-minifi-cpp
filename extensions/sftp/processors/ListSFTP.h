@@ -199,9 +199,9 @@ class ListSFTP : public SFTPProcessorBase {
     {ListSFTP::TARGET_SYSTEM_TIMESTAMP_PRECISION_MINUTES, 60000},
   }};
 
-  void onTrigger(const std::shared_ptr<core::ProcessContext> &context, const std::shared_ptr<core::ProcessSession> &session) override;
+  void onTrigger(core::ProcessContext& context, core::ProcessSession& session) override;
   void initialize() override;
-  void onSchedule(const std::shared_ptr<core::ProcessContext> &context, const std::shared_ptr<core::ProcessSessionFactory> &sessionFactory) override;
+  void onSchedule(core::ProcessContext& context, core::ProcessSessionFactory& session_factory) override;
 
  private:
   core::StateManager* state_manager_{};
@@ -260,21 +260,21 @@ class ListSFTP : public SFTPProcessorBase {
   bool filterDirectory(const std::string& parent_path, const std::string& filename, const LIBSSH2_SFTP_ATTRIBUTES& attrs);
 
   bool createAndTransferFlowFileFromChild(
-      const std::shared_ptr<core::ProcessSession>& session,
+      core::ProcessSession& session,
       const std::string& hostname,
       uint16_t port,
       const std::string& username,
       const Child& child);
 
-  bool persistTrackingTimestampsCache(const std::shared_ptr<core::ProcessContext>& context, const std::string& hostname, const std::string& username, const std::string& remote_path);
-  bool updateFromTrackingTimestampsCache(const std::shared_ptr<core::ProcessContext>& context, const std::string& hostname, const std::string& username, const std::string& remote_path);
+  bool persistTrackingTimestampsCache(core::ProcessContext& context, const std::string& hostname, const std::string& username, const std::string& remote_path);
+  bool updateFromTrackingTimestampsCache(core::ProcessContext& context, const std::string& hostname, const std::string& username, const std::string& remote_path);
 
-  bool persistTrackingEntitiesCache(const std::shared_ptr<core::ProcessContext>& context, const std::string& hostname, const std::string& username, const std::string& remote_path);
-  bool updateFromTrackingEntitiesCache(const std::shared_ptr<core::ProcessContext>& context, const std::string& hostname, const std::string& username, const std::string& remote_path);
+  bool persistTrackingEntitiesCache(core::ProcessContext& context, const std::string& hostname, const std::string& username, const std::string& remote_path);
+  bool updateFromTrackingEntitiesCache(core::ProcessContext& context, const std::string& hostname, const std::string& username, const std::string& remote_path);
 
   void listByTrackingTimestamps(
-      const std::shared_ptr<core::ProcessContext>& context,
-      const std::shared_ptr<core::ProcessSession>& session,
+      core::ProcessContext& context,
+      core::ProcessSession& session,
       const std::string& hostname,
       uint16_t port,
       const std::string& username,
@@ -282,8 +282,8 @@ class ListSFTP : public SFTPProcessorBase {
       std::vector<Child>&& files);
 
   void listByTrackingEntities(
-      const std::shared_ptr<core::ProcessContext>& context,
-      const std::shared_ptr<core::ProcessSession>& session,
+      core::ProcessContext& context,
+      core::ProcessSession& session,
       const std::string& hostname,
       uint16_t port,
       const std::string& username,

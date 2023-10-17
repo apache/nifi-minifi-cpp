@@ -108,8 +108,8 @@ class ConsumeMQTT : public processors::AbstractMQTTProcessor {
 
   ADD_COMMON_VIRTUAL_FUNCTIONS_FOR_PROCESSORS
 
-  void readProperties(const std::shared_ptr<core::ProcessContext>& context) override;
-  void onTriggerImpl(const std::shared_ptr<core::ProcessContext>& context, const std::shared_ptr<core::ProcessSession>& session) override;
+  void readProperties(core::ProcessContext& context) override;
+  void onTriggerImpl(core::ProcessContext& context, core::ProcessSession& session) override;
   void initialize() override;
 
  private:
@@ -186,12 +186,12 @@ class ConsumeMQTT : public processors::AbstractMQTTProcessor {
   /**
    * Turn MQTT 5 User Properties to Flow File attributes
    */
-  void putUserPropertiesAsAttributes(const SmartMessage& message, const std::shared_ptr<core::FlowFile>& flow_file, const std::shared_ptr<core::ProcessSession>& session) const;
+  void putUserPropertiesAsAttributes(const SmartMessage& message, const std::shared_ptr<core::FlowFile>& flow_file, core::ProcessSession& session) const;
 
   /**
    * Fill a user-requested Flow File attribute from content type
    */
-  void fillAttributeFromContentType(const SmartMessage& message, const std::shared_ptr<core::FlowFile>& flow_file, const std::shared_ptr<core::ProcessSession>& session) const;
+  void fillAttributeFromContentType(const SmartMessage& message, const std::shared_ptr<core::FlowFile>& flow_file, core::ProcessSession& session) const;
 
   void setProcessorSpecificMqtt5ConnectOptions(MQTTProperties& connect_props) const override;
 

@@ -32,17 +32,16 @@ void FetchFile::initialize() {
   setSupportedRelationships(Relationships);
 }
 
-void FetchFile::onSchedule(const std::shared_ptr<core::ProcessContext> &context, const std::shared_ptr<core::ProcessSessionFactory> &/*sessionFactory*/) {
-  gsl_Expects(context);
-  completion_strategy_ = utils::parseEnumProperty<fetch_file::CompletionStrategyOption>(*context, CompletionStrategy);
+void FetchFile::onSchedule(core::ProcessContext& context, core::ProcessSessionFactory &) {
+  completion_strategy_ = utils::parseEnumProperty<fetch_file::CompletionStrategyOption>(context, CompletionStrategy);
   std::string move_destination_dir;
-  context->getProperty(MoveDestinationDirectory, move_destination_dir);
+  context.getProperty(MoveDestinationDirectory, move_destination_dir);
   if (completion_strategy_ == fetch_file::CompletionStrategyOption::MOVE_FILE && move_destination_dir.empty()) {
     throw Exception(PROCESS_SCHEDULE_EXCEPTION, "Move Destination Directory is required when Completion Strategy is set to Move File");
   }
-  move_confict_strategy_ = utils::parseEnumProperty<fetch_file::MoveConflictStrategyOption>(*context, MoveConflictStrategy);
-  log_level_when_file_not_found_ = utils::parseEnumProperty<utils::LogUtils::LogLevelOption>(*context, LogLevelWhenFileNotFound);
-  log_level_when_permission_denied_ = utils::parseEnumProperty<utils::LogUtils::LogLevelOption>(*context, LogLevelWhenPermissionDenied);
+  move_confict_strategy_ = utils::parseEnumProperty<fetch_file::MoveConflictStrategyOption>(context, MoveConflictStrategy);
+  log_level_when_file_not_found_ = utils::parseEnumProperty<utils::LogUtils::LogLevelOption>(context, LogLevelWhenFileNotFound);
+  log_level_when_permission_denied_ = utils::parseEnumProperty<utils::LogUtils::LogLevelOption>(context, LogLevelWhenPermissionDenied);
 }
 
 std::filesystem::path FetchFile::getFileToFetch(core::ProcessContext& context, const std::shared_ptr<core::FlowFile>& flow_file) {
@@ -116,45 +115,44 @@ void FetchFile::executeCompletionStrategy(const std::filesystem::path& file_to_f
   }
 }
 
-void FetchFile::onTrigger(const std::shared_ptr<core::ProcessContext> &context, const std::shared_ptr<core::ProcessSession> &session) {
-  gsl_Expects(context && session);
+void FetchFile::onTrigger(core::ProcessContext& context, core::ProcessSession& session) {
   logger_->log_trace("FetchFile onTrigger");
-  auto flow_file = session->get();
+  auto flow_file = session.get();
   if (!flow_file) {
-    context->yield();
+    context.yield();
     return;
   }
 
-  const auto file_to_fetch_path = getFileToFetch(*context, flow_file);
+  const auto file_to_fetch_path = getFileToFetch(context, flow_file);
   if (!std::filesystem::is_regular_file(file_to_fetch_path)) {
     logger_->log_with_level(utils::LogUtils::mapToLogLevel(log_level_when_file_not_found_), "File to fetch was not found: '{}'!", file_to_fetch_path);
-    session->transfer(flow_file, NotFound);
+    session.transfer(flow_file, NotFound);
     return;
   }
 
   auto file_name = file_to_fetch_path.filename();
 
   std::string move_destination_directory;
-  context->getProperty(MoveDestinationDirectory, move_destination_directory, flow_file);
+  context.getProperty(MoveDestinationDirectory, move_destination_directory, flow_file);
   move_destination_directory_ = move_destination_directory;
   if (moveWouldFailWithDestinationConflict(file_name)) {
     logger_->log_error("Move destination ({}) conflicts with an already existing file!", move_destination_directory_);
-    session->transfer(flow_file, Failure);
+    session.transfer(flow_file, Failure);
     return;
   }
 
   try {
     utils::FileReaderCallback callback(file_to_fetch_path);
-    session->write(flow_file, std::move(callback));
+    session.write(flow_file, std::move(callback));
     logger_->log_debug("Fetching file '{}' successful!", file_to_fetch_path);
-    session->transfer(flow_file, Success);
+    session.transfer(flow_file, Success);
   } catch (const utils::FileReaderCallbackIOError& io_error) {
     if (io_error.error_code == EACCES) {
       logger_->log_with_level(utils::LogUtils::mapToLogLevel(log_level_when_permission_denied_), "Read permission denied for file '{}' to be fetched!", file_to_fetch_path);
-      session->transfer(flow_file, PermissionDenied);
+      session.transfer(flow_file, PermissionDenied);
     } else {
       logger_->log_error("Fetching file '{}' failed! {}", file_to_fetch_path, io_error.what());
-      session->transfer(flow_file, Failure);
+      session.transfer(flow_file, Failure);
     }
     return;
   }

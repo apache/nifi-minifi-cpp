@@ -38,25 +38,23 @@ void DefragmentText::initialize() {
   setSupportedRelationships(Relationships);
 }
 
-void DefragmentText::onSchedule(core::ProcessContext* context, core::ProcessSessionFactory*) {
-  gsl_Expects(context);
-
-  if (auto max_buffer_age = context->getProperty(MaxBufferAge) | utils::andThen(&core::TimePeriodValue::fromString)) {
+void DefragmentText::onSchedule(core::ProcessContext& context, core::ProcessSessionFactory&) {
+  if (auto max_buffer_age = context.getProperty(MaxBufferAge) | utils::andThen(&core::TimePeriodValue::fromString)) {
     max_age_ = max_buffer_age->getMilliseconds();
     setTriggerWhenEmpty(true);
     logger_->log_trace("The Buffer maximum age is configured to be {}", max_buffer_age->getMilliseconds());
   }
 
-  auto max_buffer_size = context->getProperty<core::DataSizeValue>(MaxBufferSize);
+  auto max_buffer_size = context.getProperty<core::DataSizeValue>(MaxBufferSize);
   if (max_buffer_size.has_value() && max_buffer_size->getValue() > 0) {
     max_size_ = max_buffer_size->getValue();
     logger_->log_trace("The Buffer maximum size is configured to be {} B", max_buffer_size->getValue());
   }
 
-  pattern_location_ = utils::parseEnumProperty<defragment_text::PatternLocation>(*context, PatternLoc);
+  pattern_location_ = utils::parseEnumProperty<defragment_text::PatternLocation>(context, PatternLoc);
 
   std::string pattern_str;
-  if (context->getProperty(Pattern, pattern_str) && !pattern_str.empty()) {
+  if (context.getProperty(Pattern, pattern_str) && !pattern_str.empty()) {
     pattern_ = utils::Regex(pattern_str);
     logger_->log_trace("The Pattern is configured to be {}", pattern_str);
   } else {
@@ -64,15 +62,14 @@ void DefragmentText::onSchedule(core::ProcessContext* context, core::ProcessSess
   }
 }
 
-void DefragmentText::onTrigger(core::ProcessContext*, core::ProcessSession* session) {
-  gsl_Expects(session);
+void DefragmentText::onTrigger(core::ProcessContext&, core::ProcessSession& session) {
   auto flowFiles = flow_file_store_.getNewFlowFiles();
   for (auto& file : flowFiles) {
     if (file)
       processNextFragment(session, gsl::not_null(file));
   }
   {
-    std::shared_ptr<core::FlowFile> original_flow_file = session->get();
+    std::shared_ptr<core::FlowFile> original_flow_file = session.get();
     if (original_flow_file)
       processNextFragment(session, gsl::not_null(std::move(original_flow_file)));
   }
@@ -94,13 +91,13 @@ std::optional<size_t> getFragmentOffset(const core::FlowFile& flow_file) {
 }
 }  // namespace
 
-void DefragmentText::processNextFragment(core::ProcessSession *session, const gsl::not_null<std::shared_ptr<core::FlowFile>>& next_fragment) {
+void DefragmentText::processNextFragment(core::ProcessSession& session, const gsl::not_null<std::shared_ptr<core::FlowFile>>& next_fragment) {
   auto fragment_source_id = FragmentSource::Id(*next_fragment);
   auto& fragment_source = fragment_sources_[fragment_source_id];
   auto& buffer = fragment_source.buffer;
   if (!buffer.empty() && buffer.getNextFragmentOffset() != getFragmentOffset(*next_fragment)) {
     buffer.flushAndReplace(session, Failure, nullptr);
-    session->transfer(next_fragment, Failure);
+    session.transfer(next_fragment, Failure);
     return;
   }
   std::shared_ptr<core::FlowFile> split_before_last_pattern;
@@ -111,7 +108,7 @@ void DefragmentText::processNextFragment(core::ProcessSession *session, const gs
   if (found_pattern) {
     buffer.flushAndReplace(session, Success, split_after_last_pattern);
   }
-  session->remove(next_fragment);
+  session.remove(next_fragment);
 }
 
 
@@ -169,23 +166,23 @@ size_t getSplitPosition(const utils::SMatch& last_match, defragment_text::Patter
 
 }  // namespace
 
-bool DefragmentText::splitFlowFileAtLastPattern(core::ProcessSession *session,
+bool DefragmentText::splitFlowFileAtLastPattern(core::ProcessSession& session,
                                                 const gsl::not_null<std::shared_ptr<core::FlowFile>> &original_flow_file,
                                                 std::shared_ptr<core::FlowFile> &split_before_last_pattern,
                                                 std::shared_ptr<core::FlowFile> &split_after_last_pattern) const {
-  const auto read_result = session->readBuffer(original_flow_file);
+  const auto read_result = session.readBuffer(original_flow_file);
   auto last_regex_match = utils::getLastRegexMatch(to_string(read_result), pattern_);
   if (!last_regex_match.ready()) {
-    split_before_last_pattern = session->clone(original_flow_file);
+    split_before_last_pattern = session.clone(original_flow_file);
     split_after_last_pattern = nullptr;
     return false;
   }
   auto split_position = getSplitPosition(last_regex_match, pattern_location_);
   if (split_position != 0) {
-    split_before_last_pattern = session->clone(original_flow_file, 0, split_position);
+    split_before_last_pattern = session.clone(original_flow_file, 0, split_position);
   }
   if (split_position != original_flow_file->getSize()) {
-    split_after_last_pattern = session->clone(original_flow_file, split_position, original_flow_file->getSize() - split_position);
+    split_after_last_pattern = session.clone(original_flow_file, split_position, original_flow_file->getSize() - split_position);
   }
   updateAttributesForSplitFiles(*original_flow_file, split_before_last_pattern, split_after_last_pattern, split_position);
   return true;
@@ -205,23 +202,23 @@ std::set<core::Connectable*> DefragmentText::getOutGoingConnections(const std::s
   return result;
 }
 
-void DefragmentText::Buffer::append(core::ProcessSession* session, const gsl::not_null<std::shared_ptr<core::FlowFile>>& flow_file_to_append) {
+void DefragmentText::Buffer::append(core::ProcessSession& session, const gsl::not_null<std::shared_ptr<core::FlowFile>>& flow_file_to_append) {
   if (empty()) {
     store(session, flow_file_to_append);
     return;
   }
   auto flowFileReader = [&] (const std::shared_ptr<core::FlowFile>& ff, const io::InputStreamCallback& cb) {
-    return session->read(ff, cb);
+    return session.read(ff, cb);
   };
   PayloadSerializer serializer(flowFileReader);
-  session->add(buffered_flow_file_);
-  session->append(buffered_flow_file_, [&serializer, &flow_file_to_append](const auto& output_stream) -> int64_t {
+  session.add(buffered_flow_file_);
+  session.append(buffered_flow_file_, [&serializer, &flow_file_to_append](const auto& output_stream) -> int64_t {
     return serializer.serialize(flow_file_to_append, output_stream);
   });
   updateAppendedAttributes(*buffered_flow_file_);
-  session->transfer(buffered_flow_file_, Self);
+  session.transfer(buffered_flow_file_, Self);
 
-  session->remove(flow_file_to_append);
+  session.remove(flow_file_to_append);
 }
 
 bool DefragmentText::Buffer::maxSizeReached(const std::optional<size_t> max_size) const {
@@ -236,21 +233,21 @@ bool DefragmentText::Buffer::maxAgeReached(const std::optional<std::chrono::mill
       && (creation_time_ + max_age.value() < std::chrono::steady_clock::now());
 }
 
-void DefragmentText::Buffer::flushAndReplace(core::ProcessSession* session, const core::Relationship& relationship,
+void DefragmentText::Buffer::flushAndReplace(core::ProcessSession& session, const core::Relationship& relationship,
                                              const std::shared_ptr<core::FlowFile>& new_buffered_flow_file) {
   if (!empty()) {
-    session->add(buffered_flow_file_);
-    session->transfer(buffered_flow_file_, relationship);
+    session.add(buffered_flow_file_);
+    session.transfer(buffered_flow_file_, relationship);
   }
   store(session, new_buffered_flow_file);
 }
 
-void DefragmentText::Buffer::store(core::ProcessSession* session, const std::shared_ptr<core::FlowFile>& new_buffered_flow_file) {
+void DefragmentText::Buffer::store(core::ProcessSession& session, const std::shared_ptr<core::FlowFile>& new_buffered_flow_file) {
   buffered_flow_file_ = new_buffered_flow_file;
   creation_time_ = std::chrono::steady_clock::now();
   if (!empty()) {
-    session->add(buffered_flow_file_);
-    session->transfer(buffered_flow_file_, Self);
+    session.add(buffered_flow_file_);
+    session.transfer(buffered_flow_file_, Self);
   }
 }
 

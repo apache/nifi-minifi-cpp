@@ -107,8 +107,8 @@ class PutFile : public core::Processor {
 
   ADD_COMMON_VIRTUAL_FUNCTIONS_FOR_PROCESSORS
 
-  void onSchedule(core::ProcessContext *context, core::ProcessSessionFactory *sessionFactory) override;
-  void onTrigger(core::ProcessContext *context, core::ProcessSession *session) override;
+  void onSchedule(core::ProcessContext& context, core::ProcessSessionFactory& session_factory) override;
+  void onTrigger(core::ProcessContext& context, core::ProcessSession& session) override;
   void initialize() override;
 
  private:
@@ -135,8 +135,8 @@ class PutFile : public core::Processor {
   };
   FilePermissions permissions_;
   FilePermissions directory_permissions_;
-  void getPermissions(core::ProcessContext *context);
-  void getDirectoryPermissions(core::ProcessContext *context);
+  void getPermissions(const core::ProcessContext& context);
+  void getDirectoryPermissions(const core::ProcessContext& context);
 #endif
 };  // NOLINT the linter gets confused by the '{'s inside #ifdef's
 

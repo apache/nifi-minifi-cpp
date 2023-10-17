@@ -128,7 +128,7 @@ class Instance {
     auto processContext = std::make_shared<core::ProcessContext>(proc_node_, nullptr, no_op_repo_, no_op_repo_, configure_, content_repo_);
     auto sessionFactory = std::make_shared<core::ProcessSessionFactory>(processContext);
 
-    rpg_->onSchedule(processContext, sessionFactory);
+    rpg_->onSchedule(*processContext, *sessionFactory);
 
     auto session = std::make_shared<core::ReflexiveSession>(processContext);
 
@@ -136,7 +136,7 @@ class Instance {
     if (stream) {
       session->importFrom(*stream.get(), ff);
     }
-    rpg_->onTrigger(processContext, session);
+    rpg_->onTrigger(*processContext, *session);
   }
 
  protected:

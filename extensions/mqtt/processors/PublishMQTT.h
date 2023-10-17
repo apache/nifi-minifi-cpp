@@ -82,8 +82,8 @@ class PublishMQTT : public processors::AbstractMQTTProcessor {
 
   ADD_COMMON_VIRTUAL_FUNCTIONS_FOR_PROCESSORS
 
-  void readProperties(const std::shared_ptr<core::ProcessContext>& context) override;
-  void onTriggerImpl(const std::shared_ptr<core::ProcessContext>& context, const std::shared_ptr<core::ProcessSession>& session) override;
+  void readProperties(core::ProcessContext& context) override;
+  void onTriggerImpl(core::ProcessContext& context, core::ProcessSession& session) override;
   void initialize() override;
 
  private:
@@ -127,12 +127,12 @@ class PublishMQTT : public processors::AbstractMQTTProcessor {
   /**
    * Resolves topic from expression language
    */
-  std::string getTopic(const std::shared_ptr<core::ProcessContext>& context, const std::shared_ptr<core::FlowFile>& flow_file) const;
+  std::string getTopic(core::ProcessContext& context, const std::shared_ptr<core::FlowFile>& flow_file) const;
 
   /**
    * Resolves content type from expression language
    */
-  std::string getContentType(const std::shared_ptr<core::ProcessContext>& context, const std::shared_ptr<core::FlowFile>& flow_file) const;
+  std::string getContentType(core::ProcessContext& context, const std::shared_ptr<core::FlowFile>& flow_file) const;
 
   /**
    * Sends an MQTT message asynchronously

@@ -33,9 +33,9 @@ void UpdateAttribute::initialize() {
   setSupportedRelationships(Relationships);
 }
 
-void UpdateAttribute::onSchedule(core::ProcessContext *context, core::ProcessSessionFactory* /*sessionFactory*/) {
+void UpdateAttribute::onSchedule(core::ProcessContext& context, core::ProcessSessionFactory&) {
   attributes_.clear();
-  const auto &dynamic_prop_keys = context->getDynamicPropertyKeys();
+  const auto &dynamic_prop_keys = context.getDynamicPropertyKeys();
   logger_->log_info("UpdateAttribute registering {} keys", dynamic_prop_keys.size());
 
   for (const auto &key : dynamic_prop_keys) {
@@ -44,8 +44,8 @@ void UpdateAttribute::onSchedule(core::ProcessContext *context, core::ProcessSes
   }
 }
 
-void UpdateAttribute::onTrigger(core::ProcessContext *context, core::ProcessSession *session) {
-  auto flow_file = session->get();
+void UpdateAttribute::onTrigger(core::ProcessContext& context, core::ProcessSession& session) {
+  auto flow_file = session.get();
 
   // Do nothing if there are no incoming files
   if (!flow_file) {
@@ -55,14 +55,14 @@ void UpdateAttribute::onTrigger(core::ProcessContext *context, core::ProcessSess
   try {
     for (const auto &attribute : attributes_) {
       std::string value;
-      context->getDynamicProperty(attribute, value, flow_file);
+      context.getDynamicProperty(attribute, value, flow_file);
       flow_file->setAttribute(attribute.getName(), value);
       logger_->log_info("Set attribute '{}' of flow file '{}' with value '{}'", attribute.getName(), flow_file->getUUIDStr(), value);
     }
-    session->transfer(flow_file, Success);
+    session.transfer(flow_file, Success);
   } catch (const std::exception &e) {
     logger_->log_error("Caught exception while updating attributes: {}", e.what());
-    session->transfer(flow_file, Failure);
+    session.transfer(flow_file, Failure);
     yield();
   }
 }

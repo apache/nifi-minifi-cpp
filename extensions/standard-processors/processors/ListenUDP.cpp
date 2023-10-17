@@ -27,9 +27,8 @@ void ListenUDP::initialize() {
   setSupportedRelationships(Relationships);
 }
 
-void ListenUDP::onSchedule(const std::shared_ptr<core::ProcessContext>& context, const std::shared_ptr<core::ProcessSessionFactory>&) {
-  gsl_Expects(context);
-  startUdpServer(*context);
+void ListenUDP::onSchedule(core::ProcessContext& context, core::ProcessSessionFactory&) {
+  startUdpServer(context);
 }
 
 void ListenUDP::transferAsFlowFile(const utils::net::Message& message, core::ProcessSession& session) {
