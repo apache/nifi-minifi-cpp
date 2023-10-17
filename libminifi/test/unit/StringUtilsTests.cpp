@@ -484,7 +484,10 @@ concept join_pack_works_with_args = requires(Strs... strs) {
 }  // namespace detail
 
 TEST_CASE("test string::join_pack can't combine different char types", "[test join_pack negative][different char types]") {
-  STATIC_REQUIRE(!detail::join_pack_works_with_args<const char*&&, const wchar_t*&, std::string, std::wstring, const char*, const wchar_t[]>);  // NOLINT: testing C array
+  STATIC_CHECK(!detail::join_pack_works_with_args<const char*&&, const wchar_t*&, std::string, std::wstring, const char*, const wchar_t[]>);  // NOLINT: testing C array
+  STATIC_CHECK(!detail::join_pack_works_with_args<std::string, std::wstring>);
+  STATIC_CHECK(!detail::join_pack_works_with_args<std::wstring_view, std::string_view>);
+  STATIC_CHECK(!detail::join_pack_works_with_args<const char[], std::string, std::wstring>);  // NOLINT: testing C array
 }
 
 TEST_CASE("string::replaceOne works correctly", "[replaceOne]") {
