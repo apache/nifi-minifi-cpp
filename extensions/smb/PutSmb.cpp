@@ -60,7 +60,7 @@ void PutSmb::onTrigger(core::ProcessContext* context, core::ProcessSession* sess
   auto full_file_path = getFilePath(*context, flow_file);
 
   if (utils::file::exists(full_file_path)) {
-    logger_->log_warn("Destination file {} exists; applying Conflict Resolution Strategy: {}", full_file_path, magic_enum::enum_name(conflict_resolution_strategy_));
+    logger_->log_info("Destination file {} exists; applying Conflict Resolution Strategy: {}", full_file_path, magic_enum::enum_name(conflict_resolution_strategy_));
     if (conflict_resolution_strategy_ == FileExistsResolutionStrategy::fail) {
       session->transfer(flow_file, Failure);
       return;
