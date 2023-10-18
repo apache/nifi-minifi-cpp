@@ -25,7 +25,7 @@ void ForwardingNode::initialize() {
 }
 
 void ForwardingNode::onTrigger(const std::shared_ptr<core::ProcessContext>& /*context*/, const std::shared_ptr<core::ProcessSession>& session) {
-  logger_->log_trace("On trigger %s", getUUIDStr());
+  logger_->log_trace("On trigger {}", getUUIDStr());
   std::shared_ptr<core::FlowFile> flow_file = session->get();
   if (!flow_file) {
     return;

@@ -88,14 +88,14 @@ std::shared_ptr<core::FlowFile> ListFile::createFlowFile(core::ProcessSession& s
   if (auto permission_string = utils::file::FileUtils::get_permission_string(listed_file.getPath())) {
     session.putAttribute(flow_file, ListFile::FilePermissions.name, *permission_string);
   } else {
-    logger_->log_warn("Failed to get permissions of file '%s'", listed_file.getPath().string());
+    logger_->log_warn("Failed to get permissions of file '{}'", listed_file.getPath());
     session.putAttribute(flow_file, ListFile::FilePermissions.name, "");
   }
 
   if (auto owner = utils::file::FileUtils::get_file_owner(listed_file.getPath())) {
     session.putAttribute(flow_file, ListFile::FileOwner.name, *owner);
   } else {
-    logger_->log_warn("Failed to get owner of file '%s'", listed_file.getPath().string());
+    logger_->log_warn("Failed to get owner of file '{}'", listed_file.getPath());
     session.putAttribute(flow_file, ListFile::FileOwner.name, "");
   }
 
@@ -103,7 +103,7 @@ std::shared_ptr<core::FlowFile> ListFile::createFlowFile(core::ProcessSession& s
   if (auto group = utils::file::FileUtils::get_file_group(listed_file.getPath())) {
     session.putAttribute(flow_file, ListFile::FileGroup.name, *group);
   } else {
-    logger_->log_warn("Failed to get group of file '%s'", listed_file.getPath().string());
+    logger_->log_warn("Failed to get group of file '{}'", listed_file.getPath());
     session.putAttribute(flow_file, ListFile::FileGroup.name, "");
   }
 #else
@@ -137,7 +137,7 @@ void ListFile::onTrigger(const std::shared_ptr<core::ProcessContext> &context, c
   state_manager_->storeState(latest_listing_state);
 
   if (files_listed == 0) {
-    logger_->log_debug("No new files were found in input directory '%s' to list", input_directory_.string());
+    logger_->log_debug("No new files were found in input directory '{}' to list", input_directory_);
     context->yield();
   }
 }

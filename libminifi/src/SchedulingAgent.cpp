@@ -41,7 +41,7 @@ nonstd::expected<void, std::exception_ptr> SchedulingAgent::onTrigger(core::Proc
     const std::shared_ptr<core::ProcessSessionFactory> &session_factory) {
   gsl_Expects(processor);
   if (processor->isYield()) {
-    logger_->log_debug("Not running %s since it must yield", processor->getName());
+    logger_->log_debug("Not running {} since it must yield", processor->getName());
     return {};
   }
 
@@ -55,7 +55,7 @@ nonstd::expected<void, std::exception_ptr> SchedulingAgent::onTrigger(core::Proc
     return {};
   }
   if (processor->isThrottledByBackpressure()) {
-    logger_->log_debug("backpressure applied because too much outgoing for %s %s", processor->getUUIDStr(), processor->getName());
+    logger_->log_debug("backpressure applied because too much outgoing for {} {}", processor->getUUIDStr(), processor->getName());
     processor->yield(bored_yield_duration);
     return {};
   }
@@ -77,12 +77,12 @@ nonstd::expected<void, std::exception_ptr> SchedulingAgent::onTrigger(core::Proc
   try {
     processor->onTrigger(process_context, session_factory);
   } catch (const std::exception& exception) {
-    logger_->log_warn("Caught Exception during SchedulingAgent::onTrigger of processor %s (uuid: %s), type: %s, what: %s",
+    logger_->log_warn("Caught Exception during SchedulingAgent::onTrigger of processor {} (uuid: {}), type: {}, what: {}",
         processor->getName(), processor->getUUIDStr(), typeid(exception).name(), exception.what());
     processor->yield(admin_yield_duration_);
     return nonstd::make_unexpected(std::current_exception());
   } catch (...) {
-    logger_->log_warn("Caught Exception during SchedulingAgent::onTrigger of processor %s (uuid: %s), type: %s",
+    logger_->log_warn("Caught Exception during SchedulingAgent::onTrigger of processor {} (uuid: {}), type: {}",
         processor->getName(), processor->getUUIDStr(), getCurrentExceptionTypeName());
     processor->yield(admin_yield_duration_);
     return nonstd::make_unexpected(std::current_exception());
@@ -97,7 +97,7 @@ void SchedulingAgent::watchDogFunc() {
     auto elapsed = now - info.last_alert_time_;
     if (elapsed > alert_time_) {
       int64_t elapsed_ms{ std::chrono::duration_cast<std::chrono::milliseconds>(now - info.start_time_).count() };
-      logger_->log_warn("%s::onTrigger has been running for %lld  ms in %s", info.name_, elapsed_ms, info.uuid_);
+      logger_->log_warn("{}::onTrigger has been running for {}  ms in {}", info.name_, elapsed_ms, info.uuid_);
       info.last_alert_time_ = now;
     }
   }

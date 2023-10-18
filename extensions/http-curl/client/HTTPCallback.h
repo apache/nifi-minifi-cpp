@@ -60,7 +60,7 @@ class HttpStreamingCallback final : public utils::HTTPUploadByteArrayInputCallba
   }
 
   void seek(size_t pos) override {
-    logger_->log_trace("seek(pos: %zu) called", pos);
+    logger_->log_trace("seek(pos: {}) called", pos);
     std::unique_lock<std::mutex> lock(mutex_);
     seekInner(lock, pos);
   }
@@ -89,7 +89,7 @@ class HttpStreamingCallback final : public utils::HTTPUploadByteArrayInputCallba
   }
 
   std::byte* getBuffer(size_t pos) override {
-    logger_->log_trace("getBuffer(pos: %zu) called", pos);
+    logger_->log_trace("getBuffer(pos: {}) called", pos);
 
     std::unique_lock<std::mutex> lock(mutex_);
 
@@ -105,7 +105,7 @@ class HttpStreamingCallback final : public utils::HTTPUploadByteArrayInputCallba
   }
 
   size_t getRemaining(size_t pos) override {
-    logger_->log_trace("getRemaining(pos: %zu) called", pos);
+    logger_->log_trace("getRemaining(pos: {}) called", pos);
 
     std::unique_lock<std::mutex> lock(mutex_);
     seekInner(lock, pos);
@@ -142,8 +142,8 @@ class HttpStreamingCallback final : public utils::HTTPUploadByteArrayInputCallba
       current_buffer_start_ = total_bytes_loaded_;
       current_pos_ = current_buffer_start_;
       total_bytes_loaded_ += current_vec_.size();
-      logger_->log_trace("loadNextBuffer() loaded new buffer, ptr_: %p, size: %zu, current_buffer_start_: %zu, current_pos_: %zu, total_bytes_loaded_: %zu",
-          ptr_,
+      logger_->log_trace("loadNextBuffer() loaded new buffer, ptr_: {}, size: {}, current_buffer_start_: {}, current_pos_: {}, total_bytes_loaded_: {}",
+          static_cast<void*>(ptr_),
           current_vec_.size(),
           current_buffer_start_,
           current_pos_,
@@ -159,7 +159,7 @@ class HttpStreamingCallback final : public utils::HTTPUploadByteArrayInputCallba
   int64_t processInner(std::vector<std::byte>&& vec) {
     size_t size = vec.size();
 
-    logger_->log_trace("processInner() called, vec.data(): %p, vec.size(): %zu", vec.data(), size);
+    logger_->log_trace("processInner() called, vec.data(): {}, vec.size(): {}", static_cast<void*>(vec.data()), size);
 
     if (size == 0U) {
       return 0U;
@@ -178,10 +178,10 @@ class HttpStreamingCallback final : public utils::HTTPUploadByteArrayInputCallba
    * @param pos position to seek to
    */
   void seekInner(std::unique_lock<std::mutex>& lock, size_t pos) {
-    logger_->log_trace("seekInner() called, current_pos_: %zu, pos: %zu", current_pos_, pos);
+    logger_->log_trace("seekInner() called, current_pos_: {}, pos: {}", current_pos_, pos);
     if (pos < current_pos_) {
       const std::string errstr = "Seeking backwards is not supported, tried to seek from " + std::to_string(current_pos_) + " to " + std::to_string(pos);
-      logger_->log_error("%s", errstr);
+      logger_->log_error("{}", errstr);
       throw std::logic_error(errstr);
     }
     while ((pos - current_buffer_start_) >= current_vec_.size()) {

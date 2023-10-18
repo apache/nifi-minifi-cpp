@@ -62,7 +62,7 @@ int64_t ProcessSessionReadCallback::operator()(const std::shared_ptr<io::InputSt
 bool ProcessSessionReadCallback::commit() {
   bool success = false;
 
-  logger_->log_debug("committing export operation to %s", dest_file_.string());
+  logger_->log_debug("committing export operation to {}", dest_file_);
 
   if (write_succeeded_) {
     if (!tmp_file_os_.flush()) {
@@ -74,13 +74,13 @@ bool ProcessSessionReadCallback::commit() {
     std::filesystem::rename(tmp_file_, dest_file_, rename_error);
 
     if (rename_error) {
-      logger_->log_warn("commit export operation to %s failed because rename() call failed", dest_file_.string());
+      logger_->log_warn("commit export operation to {} failed because rename() call failed", dest_file_);
     } else {
       success = true;
-      logger_->log_debug("commit export operation to %s succeeded", dest_file_.string());
+      logger_->log_debug("commit export operation to {} succeeded", dest_file_);
     }
   } else {
-    logger_->log_error("commit export operation to %s failed because write failed", dest_file_.string());
+    logger_->log_error("commit export operation to {} failed because write failed", dest_file_);
   }
   return success;
 }

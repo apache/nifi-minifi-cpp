@@ -60,7 +60,7 @@ void ManipulateArchive::onSchedule(core::ProcessContext *context, core::ProcessS
 
     // Operation must be one of copy, move, touch or remove
     if (!op_create && (operation_ != OPERATION_REMOVE)) {
-        logger_->log_error("Invalid operation %s for ManipulateArchive.", operation_);
+        logger_->log_error("Invalid operation {} for ManipulateArchive.", operation_);
         invalid = true;
     }
 
@@ -71,13 +71,13 @@ void ManipulateArchive::onSchedule(core::ProcessContext *context, core::ProcessS
 
     // All operations which create new entries require a set destination
     if (op_create == destination_.empty()) {
-        logger_->log_error("ManipulateArchive requires a destination for %s.", operation_);
+        logger_->log_error("ManipulateArchive requires a destination for {}.", operation_);
         invalid = true;
     }
 
     // The only operation that doesn't require an existing target is touch
     if ((operation_ == OPERATION_TOUCH) != targetEntry_.empty()) {
-        logger_->log_error("ManipulateArchive requires a target for %s.", operation_);
+        logger_->log_error("ManipulateArchive requires a target for {}.", operation_);
         invalid = true;
     }
 
@@ -109,19 +109,19 @@ void ManipulateArchive::onTrigger(core::ProcessContext* /*context*/, core::Proce
     auto target_position = archiveMetadata.find(targetEntry_);
 
     if (target_position == entries_end && operation_ != OPERATION_TOUCH) {
-        logger_->log_warn("ManipulateArchive could not find entry %s to %s!",
+        logger_->log_warn("ManipulateArchive could not find entry {} to {}!",
                           targetEntry_, operation_);
         session->transfer(flowFile, Failure);
         return;
     } else {
-        logger_->log_info("ManipulateArchive found %s for %s.",
+        logger_->log_info("ManipulateArchive found {} for {}.",
                           targetEntry_, operation_);
     }
 
     if (!destination_.empty()) {
         auto dest_position = archiveMetadata.find(destination_);
         if (dest_position != entries_end) {
-            logger_->log_warn("ManipulateArchive cannot perform %s to existing destination_ %s!",
+            logger_->log_warn("ManipulateArchive cannot perform {} to existing destination_ {}!",
                               operation_, destination_);
             session->transfer(flowFile, Failure);
             return;
@@ -136,13 +136,13 @@ void ManipulateArchive::onTrigger(core::ProcessContext* /*context*/, core::Proce
         position = archiveMetadata.find(positionEntry);
 
         if (position == entries_end)
-            logger_->log_warn("ManipulateArchive could not find entry %s to "
-                              "perform %s %s; appending to end of archive...",
+            logger_->log_warn("ManipulateArchive could not find entry {} to "
+                              "perform {} {}; appending to end of archive...",
                               positionEntry, operation_,
                               after_.empty() ? "before" : "after");
 
         else
-            logger_->log_info("ManipulateArchive found entry %s to %s %s.",
+            logger_->log_info("ManipulateArchive found entry {} to {} {}.",
                               positionEntry, operation_,
                               after_.empty() ? "before" : "after");
 

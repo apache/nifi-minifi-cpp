@@ -44,18 +44,18 @@ void KamikazeProcessor::onSchedule(core::ProcessContext *context, core::ProcessS
   if (utils::StringUtils::toBool(value).value_or(false)) {
     throw Exception(PROCESS_SCHEDULE_EXCEPTION, OnScheduleExceptionStr);
   }
-  logger_->log_error("%s", OnScheduleLogStr);
+  logger_->log_error("{}", OnScheduleLogStr);
 }
 
 void KamikazeProcessor::onTrigger(core::ProcessContext *, core::ProcessSession *) {
   if (_throwInOnTrigger) {
     throw Exception(PROCESSOR_EXCEPTION, OnTriggerExceptionStr);
   }
-  logger_->log_error("%s", OnTriggerLogStr);
+  logger_->log_error("{}", OnTriggerLogStr);
 }
 
 void KamikazeProcessor::onUnSchedule() {
-  logger_->log_error("%s", OnUnScheduleLogStr);
+  logger_->log_error("{}", OnUnScheduleLogStr);
 }
 
 REGISTER_RESOURCE(KamikazeProcessor, Processor);

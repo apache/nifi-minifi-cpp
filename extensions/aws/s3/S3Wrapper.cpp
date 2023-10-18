@@ -112,7 +112,7 @@ std::optional<S3Wrapper::UploadPartsResult> S3Wrapper::uploadParts(const PutObje
   result.part_etags = upload_state.uploaded_etags;
   const auto flow_size = upload_state.full_size - upload_state.uploaded_size;
   if (upload_state.part_size == 0) {
-    logger_->log_error("Invalid upload part size 0 was set for S3 object with key '%s' in bucket '%s'", put_object_params.object_key, put_object_params.bucket);
+    logger_->log_error("Invalid upload part size 0 was set for S3 object with key '{}' in bucket '{}'", put_object_params.object_key, put_object_params.bucket);
     return std::nullopt;
   }
   const size_t part_count = minifi::utils::intdiv_ceil(flow_size, upload_state.part_size);
@@ -138,7 +138,7 @@ std::optional<S3Wrapper::UploadPartsResult> S3Wrapper::uploadParts(const PutObje
 
     auto upload_part_result = request_sender_->sendUploadPartRequest(upload_part_request, put_object_params.credentials, put_object_params.client_config, put_object_params.use_virtual_addressing);
     if (!upload_part_result) {
-      logger_->log_error("Failed to upload part %d of %d of S3 object with key '%s'", part_number, last_part, put_object_params.object_key);
+      logger_->log_error("Failed to upload part {} of {} of S3 object with key '{}'", part_number, last_part, put_object_params.object_key);
       return std::nullopt;
     }
     result.part_etags.push_back(upload_part_result->GetETag());
@@ -146,7 +146,7 @@ std::optional<S3Wrapper::UploadPartsResult> S3Wrapper::uploadParts(const PutObje
     upload_state.uploaded_parts += 1;
     upload_state.uploaded_size += read_size;
     multipart_upload_storage_->storeState(put_object_params.bucket, put_object_params.object_key, upload_state);
-    logger_->log_info("Uploaded part %d of %d S3 object with key '%s'", part_number, last_part, put_object_params.object_key);
+    logger_->log_info("Uploaded part {} of {} S3 object with key '{}'", part_number, last_part, put_object_params.object_key);
   }
 
   multipart_upload_storage_->removeState(put_object_params.bucket, put_object_params.object_key);
@@ -191,7 +191,7 @@ std::optional<MultipartUploadState> S3Wrapper::getMultipartUploadState(const Put
     return std::nullopt;
   }
   if (!multipartUploadExistsInS3(put_object_params)) {
-    logger_->log_info("Local upload state for object '%s' in bucket '%s' not found in S3, removing it from local cache.", put_object_params.object_key, put_object_params.bucket);
+    logger_->log_info("Local upload state for object '{}' in bucket '{}' not found in S3, removing it from local cache.", put_object_params.object_key, put_object_params.bucket);
     multipart_upload_storage_->removeState(put_object_params.bucket, put_object_params.object_key);
     return std::nullopt;
   }
@@ -202,12 +202,12 @@ std::optional<PutObjectResult> S3Wrapper::putObjectMultipart(const PutObjectRequ
     uint64_t flow_size, uint64_t multipart_size) {
   gsl_Expects(multipart_upload_storage_);
   if (auto upload_state = getMultipartUploadState(put_object_params)) {
-    logger_->log_info("Found previous multipart upload state for %s in bucket %s, continuing upload", put_object_params.object_key, put_object_params.bucket);
+    logger_->log_info("Found previous multipart upload state for {} in bucket {}, continuing upload", put_object_params.object_key, put_object_params.bucket);
     return uploadParts(put_object_params, stream, std::move(*upload_state))
       | minifi::utils::andThen([&, this](const auto& upload_parts_result) { return completeMultipartUpload(put_object_params, upload_parts_result); })
       | minifi::utils::transform([this](const auto& complete_multipart_upload_result) { return createPutObjectResult(complete_multipart_upload_result); });
   } else {
-    logger_->log_debug("No previous multipart upload state was found for %s in bucket %s", put_object_params.object_key, put_object_params.bucket);
+    logger_->log_debug("No previous multipart upload state was found for {} in bucket {}", put_object_params.object_key, put_object_params.bucket);
     auto request = createPutObjectRequest<Aws::S3::Model::CreateMultipartUploadRequest>(put_object_params);
     return request_sender_->sendCreateMultipartUploadRequest(request, put_object_params.credentials, put_object_params.client_config, put_object_params.use_virtual_addressing)
       | minifi::utils::andThen([&, this](const auto& create_multipart_result) { return uploadParts(put_object_params, stream,
@@ -259,7 +259,7 @@ std::optional<GetObjectResult> S3Wrapper::getObject(const GetObjectRequestParame
 void S3Wrapper::addListResults(const Aws::Vector<Aws::S3::Model::ObjectVersion>& content, const uint64_t min_object_age, std::vector<ListedObjectAttributes>& listed_objects) {
   for (const auto& version : content) {
     if (last_bucket_list_timestamp_ - min_object_age < gsl::narrow<uint64_t>(version.GetLastModified().Millis())) {
-      logger_->log_debug("Object version '%s' of key '%s' skipped due to minimum object age filter", version.GetVersionId(), version.GetKey());
+      logger_->log_debug("Object version '{}' of key '{}' skipped due to minimum object age filter", version.GetVersionId(), version.GetKey());
       continue;
     }
 
@@ -278,7 +278,7 @@ void S3Wrapper::addListResults(const Aws::Vector<Aws::S3::Model::ObjectVersion>&
 void S3Wrapper::addListResults(const Aws::Vector<Aws::S3::Model::Object>& content, const uint64_t min_object_age, std::vector<ListedObjectAttributes>& listed_objects) {
   for (const auto& object : content) {
     if (last_bucket_list_timestamp_ - min_object_age < gsl::narrow<uint64_t>(object.GetLastModified().Millis())) {
-      logger_->log_debug("Object with key '%s' skipped due to minimum object age filter", object.GetKey());
+      logger_->log_debug("Object with key '{}' skipped due to minimum object age filter", object.GetKey());
       continue;
     }
 
@@ -303,7 +303,7 @@ std::optional<std::vector<ListedObjectAttributes>> S3Wrapper::listVersions(const
       return std::nullopt;
     }
     const auto& versions = aws_result->GetVersions();
-    logger_->log_debug("AWS S3 List operation returned %zu versions. This result is%s truncated.", versions.size(), aws_result->GetIsTruncated() ? "" : " not");
+    logger_->log_debug("AWS S3 List operation returned {} versions. This result is{} truncated.", versions.size(), aws_result->GetIsTruncated() ? "" : " not");
     addListResults(versions, params.min_object_age, attribute_list);
     if (aws_result->GetIsTruncated()) {
       request.WithKeyMarker(aws_result->GetNextKeyMarker())
@@ -324,7 +324,7 @@ std::optional<std::vector<ListedObjectAttributes>> S3Wrapper::listObjects(const 
       return std::nullopt;
     }
     const auto& objects = aws_result->GetContents();
-    logger_->log_debug("AWS S3 List operation returned %zu objects. This result is%s truncated.", objects.size(), aws_result->GetIsTruncated() ? "" : "not");
+    logger_->log_debug("AWS S3 List operation returned {} objects. This result is{} truncated.", objects.size(), aws_result->GetIsTruncated() ? "" : " not");
     addListResults(objects, params.min_object_age, attribute_list);
     if (aws_result->GetIsTruncated()) {
       request.SetContinuationToken(aws_result->GetNextContinuationToken());
@@ -416,7 +416,7 @@ void S3Wrapper::addListMultipartUploadResults(const Aws::Vector<Aws::S3::Model::
   for (const auto& upload : uploads) {
     // if age_off_limit is set only list the aged off uploads
     if (age_off_limit && now - upload.GetInitiated() <= *age_off_limit) {
-      logger_->log_debug("Multipart upload with key '%s' and upload id '%s' has not aged off yet", upload.GetKey(), upload.GetUploadId());
+      logger_->log_debug("Multipart upload with key '{}' and upload id '{}' has not aged off yet", upload.GetKey(), upload.GetUploadId());
       continue;
     }
 
@@ -435,7 +435,7 @@ std::optional<std::vector<MultipartUpload>> S3Wrapper::listMultipartUploads(cons
       return std::nullopt;
     }
     const auto& uploads = aws_result->GetUploads();
-    logger_->log_debug("AWS S3 List operation returned %zu multipart uploads. This result is%s truncated.", uploads.size(), aws_result->GetIsTruncated() ? "" : " not");
+    logger_->log_debug("AWS S3 List operation returned {} multipart uploads. This result is{} truncated.", uploads.size(), aws_result->GetIsTruncated() ? "" : " not");
     addListMultipartUploadResults(uploads, params.age_off_limit, result);
     if (aws_result->GetIsTruncated()) {
       request.SetKeyMarker(aws_result->GetNextKeyMarker());

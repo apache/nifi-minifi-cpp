@@ -95,7 +95,7 @@ bool KeyValueStateStorage::getAll(std::unordered_map<utils::Identifier, std::str
     if (optional_uuid) {
       kvs[optional_uuid.value()] = state.second;
     } else {
-      logger_->log_error("Found non-UUID key \"%s\" in storage implementation", state.first);
+      logger_->log_error("Found non-UUID key \"{}\" in storage implementation", state.first);
     }
   }
   return true;

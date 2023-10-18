@@ -49,7 +49,7 @@ std::optional<MultipartUploadState> MultipartUploadStateStorage::getState(const 
 
   std::string state_key = bucket + "/" + key;
   if (!state_map.contains(state_key + ".upload_id")) {
-    logger_->log_warn("Multipart upload state was not found for key '%s'", state_key);
+    logger_->log_warn("Multipart upload state was not found for key '{}'", state_key);
     return std::nullopt;
   }
 
@@ -87,7 +87,7 @@ void MultipartUploadStateStorage::removeState(const std::string& bucket, const s
   }
   std::string state_key = bucket + "/" + key;
   if (!state_map.contains(state_key + ".upload_id")) {
-    logger_->log_warn("Multipart upload state was not found for key '%s'", state_key);
+    logger_->log_warn("Multipart upload state was not found for key '{}'", state_key);
     return;
   }
 
@@ -114,7 +114,7 @@ void MultipartUploadStateStorage::removeAgedStates(std::chrono::milliseconds mul
     }
     int64_t stored_upload_time{};
     if (!core::Property::StringToInt(value, stored_upload_time)) {
-      logger_->log_error("Multipart upload cache key '%s' has invalid value '%s'", property_key, value);
+      logger_->log_error("Multipart upload cache key '{}' has invalid value '{}'", property_key, value);
       continue;
     }
     auto upload_time = Aws::Utils::DateTime(stored_upload_time);
@@ -124,7 +124,7 @@ void MultipartUploadStateStorage::removeAgedStates(std::chrono::milliseconds mul
     }
   }
   for (const auto& key : keys_to_remove) {
-    logger_->log_info("Removing local aged off multipart upload state with key '%s'", key);
+    logger_->log_info("Removing local aged off multipart upload state with key '{}'", key);
     removeKey(key, state_map);
   }
   state_manager_->set(state_map);

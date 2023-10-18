@@ -36,7 +36,7 @@ class ArchiveStreamProviderImpl : public ArchiveStreamProvider {
     auto format = magic_enum::enum_cast<CompressionFormat>(compress_format);
     if (!format) {
       if (logger) {
-        logger->log_error("Unrecognized compression format '%s'", compress_format);
+        logger->log_error("Unrecognized compression format '{}'", compress_format);
       }
       return nullptr;
     }

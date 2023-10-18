@@ -307,7 +307,7 @@ int handShake(struct CRawSiteToSiteClient * client) {
       }
       CPeerStatus status(std::make_shared<CPeer>(port_id_, host, port, secure), count, true);
       peers.push_back(std::move(status));
-      logging::LOG_TRACE(logger_) << "Site2Site Peer host " << host << " port " << port << " Secure " << secure;
+      logger_->log_trace("Site2Site Peer host {} port {} Secure {}", host, port, secure");
     }
 
     tearDown(this);

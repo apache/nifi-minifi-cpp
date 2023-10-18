@@ -36,8 +36,8 @@ const char *VolatileContentRepository::minimal_locking = "minimal.locking";
 bool VolatileContentRepository::initialize(const std::shared_ptr<Configure> &configure) {
   repo_data_.initialize(configure, getName());
 
-  logging::LOG_INFO(logger_) << "Resizing repo_data_.value_vector for " << getName() << " count is " << repo_data_.max_count;
-  logging::LOG_INFO(logger_) << "Using a maximum size for " << getName() << " of  " << repo_data_.max_size;
+  logger_->log_info("Resizing repo_data_.value_vector for {} count is {}", getName(), repo_data_.max_count);
+  logger_->log_info("Using a maximum size for {} of {}", getName(), repo_data_.max_size);
 
   if (configure != nullptr) {
     std::string value;
@@ -55,7 +55,7 @@ bool VolatileContentRepository::initialize(const std::shared_ptr<Configure> &con
 }
 
 std::shared_ptr<io::BaseStream> VolatileContentRepository::write(const minifi::ResourceClaim &claim, bool /*append*/) {
-  logger_->log_info("enter write for %s", claim.getContentFullPath());
+  logger_->log_info("enter write for {}", claim.getContentFullPath());
   {
     std::lock_guard<std::mutex> lock(map_mutex_);
     auto claim_check = master_list_.find(claim.getContentFullPath());
@@ -75,7 +75,7 @@ std::shared_ptr<io::BaseStream> VolatileContentRepository::write(const minifi::R
       if (ent->testAndSetKey(claim.getContentFullPath())) {
         std::lock_guard<std::mutex> lock(map_mutex_);
         master_list_[claim.getContentFullPath()] = ent;
-        logger_->log_info("Minimize locking, return stream for %s", claim.getContentFullPath());
+        logger_->log_info("Minimize locking, return stream for {}", claim.getContentFullPath());
         return std::make_shared<io::AtomicEntryStream<ResourceClaim::Path>>(claim.getContentFullPath(), ent);
       }
       size++;
@@ -93,7 +93,7 @@ std::shared_ptr<io::BaseStream> VolatileContentRepository::write(const minifi::R
       }
     }
   }
-  logger_->log_info("Cannot write %s %d, returning nullptr to roll back session. Repo is either full or locked", claim.getContentFullPath(), size);
+  logger_->log_info("Cannot write {} {}, returning nullptr to roll back session. Repo is either full or locked", claim.getContentFullPath(), size);
   return nullptr;
 }
 
@@ -134,12 +134,12 @@ bool VolatileContentRepository::removeKey(const std::string& content_path) {
       // because of the test and set we need to decrement ownership
       ptr->decrementOwnership();
       if (ptr->freeValue(content_path)) {
-        logger_->log_info("Deleting resource %s", content_path);
+        logger_->log_info("Deleting resource {}", content_path);
       } else {
-        logger_->log_info("free failed for %s", content_path);
+        logger_->log_info("free failed for {}", content_path);
       }
     } else {
-      logger_->log_info("Could not remove %s", content_path);
+      logger_->log_info("Could not remove {}", content_path);
     }
   } else {
     std::lock_guard<std::mutex> lock(map_mutex_);
@@ -152,7 +152,7 @@ bool VolatileContentRepository::removeKey(const std::string& content_path) {
     }
   }
 
-  logger_->log_info("Could not remove %s, may not exist", content_path);
+  logger_->log_info("Could not remove {}, may not exist", content_path);
   return true;
 }
 

@@ -34,37 +34,37 @@ WriteArchiveStreamImpl::archive_ptr WriteArchiveStreamImpl::createWriteArchive()
 
   result = archive_write_set_format_ustar(arch.get());
   if (result != ARCHIVE_OK) {
-    logger_->log_error("Archive write set format ustar error %s", archive_error_string(arch.get()));
+    logger_->log_error("Archive write set format ustar error {}", archive_error_string(arch.get()));
     return nullptr;
   }
   if (compress_format_ == CompressionFormat::GZIP) {
     result = archive_write_add_filter_gzip(arch.get());
     if (result != ARCHIVE_OK) {
-      logger_->log_error("Archive write add filter gzip error %s", archive_error_string(arch.get()));
+      logger_->log_error("Archive write add filter gzip error {}", archive_error_string(arch.get()));
       return nullptr;
     }
     std::string option = "gzip:compression-level=" + std::to_string(compress_level_);
     result = archive_write_set_options(arch.get(), option.c_str());
     if (result != ARCHIVE_OK) {
-      logger_->log_error("Archive write set options error %s", archive_error_string(arch.get()));
+      logger_->log_error("Archive write set options error {}", archive_error_string(arch.get()));
       return nullptr;
     }
   } else if (compress_format_ == CompressionFormat::BZIP2) {
     result = archive_write_add_filter_bzip2(arch.get());
     if (result != ARCHIVE_OK) {
-      logger_->log_error("Archive write add filter bzip2 error %s", archive_error_string(arch.get()));
+      logger_->log_error("Archive write add filter bzip2 error {}", archive_error_string(arch.get()));
       return nullptr;
     }
   } else if (compress_format_ == CompressionFormat::LZMA) {
     result = archive_write_add_filter_lzma(arch.get());
     if (result != ARCHIVE_OK) {
-      logger_->log_error("Archive write add filter lzma error %s", archive_error_string(arch.get()));
+      logger_->log_error("Archive write add filter lzma error {}", archive_error_string(arch.get()));
       return nullptr;
     }
   } else if (compress_format_ == CompressionFormat::XZ_LZMA2) {
     result = archive_write_add_filter_xz(arch.get());
     if (result != ARCHIVE_OK) {
-      logger_->log_error("Archive write add filter xz error %s", archive_error_string(arch.get()));
+      logger_->log_error("Archive write add filter xz error {}", archive_error_string(arch.get()));
       return nullptr;
     }
   } else {
@@ -73,12 +73,12 @@ WriteArchiveStreamImpl::archive_ptr WriteArchiveStreamImpl::createWriteArchive()
   }
   result = archive_write_set_bytes_per_block(arch.get(), 0);
   if (result != ARCHIVE_OK) {
-    logger_->log_error("Archive write set bytes per block error %s", archive_error_string(arch.get()));
+    logger_->log_error("Archive write set bytes per block error {}", archive_error_string(arch.get()));
     return nullptr;
   }
   result = archive_write_open(arch.get(), sink_.get(), nullptr, archive_write, nullptr);
   if (result != ARCHIVE_OK) {
-    logger_->log_error("Archive write open error %s", archive_error_string(arch.get()));
+    logger_->log_error("Archive write open error {}", archive_error_string(arch.get()));
     return nullptr;
   }
   return arch;
@@ -99,7 +99,7 @@ bool WriteArchiveStreamImpl::newEntry(const EntryInfo& info) {
 
   int result = archive_write_header(arch_.get(), arch_entry_.get());
   if (result != ARCHIVE_OK) {
-    logger_->log_error("Archive write header error %s", archive_error_string(arch_.get()));
+    logger_->log_error("Archive write header error {}", archive_error_string(arch_.get()));
     return false;
   }
   return true;
@@ -117,7 +117,7 @@ size_t WriteArchiveStreamImpl::write(const uint8_t* data, size_t len) {
 
   int result = gsl::narrow<int>(archive_write_data(arch_.get(), data, len));
   if (result < 0) {
-    logger_->log_error("Archive write data error %s", archive_error_string(arch_.get()));
+    logger_->log_error("Archive write data error {}", archive_error_string(arch_.get()));
     arch_entry_.reset();
     arch_.reset();
     return STREAM_ERROR;
@@ -134,7 +134,7 @@ bool WriteArchiveStreamImpl::finish() {
   // closing the archive is needed to complete the archive
   bool success = archive_write_close(arch_.get()) == ARCHIVE_OK;
   if (!success) {
-    logger_->log_error("Archive write close error %s", archive_error_string(arch_.get()));
+    logger_->log_error("Archive write close error {}", archive_error_string(arch_.get()));
   }
   arch_.reset();
   return success;
@@ -145,5 +145,3 @@ WriteArchiveStreamImpl::~WriteArchiveStreamImpl() {
 }
 
 }  // namespace org::apache::nifi::minifi::io
-
-

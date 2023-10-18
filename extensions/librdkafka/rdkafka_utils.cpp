@@ -36,7 +36,7 @@ void setKafkaConfigurationField(rd_kafka_conf_t& configuration, const std::strin
 
 void print_topics_list(core::logging::Logger& logger, rd_kafka_topic_partition_list_t& kf_topic_partition_list) {
   for (int i = 0; i < kf_topic_partition_list.cnt; ++i) {
-    logger.log_debug("kf_topic_partition_list: topic: %s, partition: %d, offset: %" PRId64 ".",
+    logger.log_debug("kf_topic_partition_list: topic: {}, partition: {}, offset: {}.",
     kf_topic_partition_list.elems[i].topic, kf_topic_partition_list.elems[i].partition, kf_topic_partition_list.elems[i].offset);
   }
 }
@@ -66,7 +66,7 @@ std::string get_human_readable_kafka_message_headers(const rd_kafka_message_t& r
   if (RD_KAFKA_RESP_ERR__NOENT == get_header_response) {
     return "[None]";
   }
-  logger.log_error("Failed to fetch message headers: %d: %s", rd_kafka_last_error(), rd_kafka_err2str(rd_kafka_last_error()));
+  logger.log_error("Failed to fetch message headers: {}: {}", magic_enum::enum_underlying(rd_kafka_last_error()), rd_kafka_err2str(rd_kafka_last_error()));
   return "[Error]";
 }
 
@@ -90,7 +90,7 @@ void print_kafka_message(const rd_kafka_message_t& rkmessage, core::logging::Log
   message_as_string += get_human_readable_kafka_message_headers(rkmessage, logger) + ")";
   message_as_string += "[Payload](" + message + ")";
 
-  logger.log_debug("Message: %s", message_as_string.c_str());
+  logger.log_debug("Message: {}", message_as_string.c_str());
 }
 
 std::string get_encoded_string(const std::string& input, KafkaEncoding encoding) {

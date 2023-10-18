@@ -74,29 +74,29 @@ class StandardControllerServiceProvider : public ControllerServiceProvider, publ
   }
 
   virtual void enableAllControllerServices() {
-    logger_->log_info("Enabling %u controller services", controller_map_->getAllControllerServices().size());
+    logger_->log_info("Enabling {} controller services", controller_map_->getAllControllerServices().size());
     for (auto service : controller_map_->getAllControllerServices()) {
-      logger_->log_info("Enabling %s", service->getName());
+      logger_->log_info("Enabling {}", service->getName());
       if (!service->canEnable()) {
-        logger_->log_warn("Service %s cannot be enabled", service->getName());
+        logger_->log_warn("Service {} cannot be enabled", service->getName());
         continue;
       }
       if (!service->enable()) {
-        logger_->log_warn("Could not enable %s", service->getName());
+        logger_->log_warn("Could not enable {}", service->getName());
       }
     }
   }
 
   virtual void disableAllControllerServices() {
-    logger_->log_info("Disabling %u controller services", controller_map_->getAllControllerServices().size());
+    logger_->log_info("Disabling {} controller services", controller_map_->getAllControllerServices().size());
     for (auto service : controller_map_->getAllControllerServices()) {
-      logger_->log_info("Disabling %s", service->getName());
+      logger_->log_info("Disabling {}", service->getName());
       if (!service->enabled()) {
-        logger_->log_warn("Service %s is not enabled", service->getName());
+        logger_->log_warn("Service {} is not enabled", service->getName());
         continue;
       }
       if (!service->disable()) {
-        logger_->log_warn("Could not disable %s", service->getName());
+        logger_->log_warn("Could not disable {}", service->getName());
       }
     }
   }

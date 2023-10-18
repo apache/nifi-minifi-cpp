@@ -169,7 +169,7 @@ void PutGCSObject::onTrigger(const std::shared_ptr<core::ProcessContext>& contex
     flow_file->setAttribute(GCS_STATUS_MESSAGE, result.status().message());
     flow_file->setAttribute(GCS_ERROR_REASON, result.status().error_info().reason());
     flow_file->setAttribute(GCS_ERROR_DOMAIN, result.status().error_info().domain());
-    logger_->log_error("Failed to upload to Google Cloud Storage %s %s", result.status().message(), result.status().error_info().reason());
+    logger_->log_error("Failed to upload to Google Cloud Storage {} {}", result.status().message(), result.status().error_info().reason());
     session->transfer(flow_file, Failure);
   } else {
     setAttributesFromObjectMetadata(*flow_file, *result);

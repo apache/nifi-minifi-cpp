@@ -100,7 +100,7 @@ void ConsumeJournald::onSchedule(core::ProcessContext* const context, core::Proc
       const auto ret = journal_->seekCursor(cursor->c_str());
       if (ret < 0) {
         const auto error_message = std::generic_category().default_error_condition(-ret).message();
-        logger_->log_warn("Failed to seek to cursor: %s. Seeking to tail or head (depending on Process Old Messages property) instead. cursor=\"%s\"", error_message, *cursor);
+        logger_->log_warn("Failed to seek to cursor: {}. Seeking to tail or head (depending on Process Old Messages property) instead. cursor=\"{}\"", error_message, *cursor);
         seek_default(*journal_);
       }
     }

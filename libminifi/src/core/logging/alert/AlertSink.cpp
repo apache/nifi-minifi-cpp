@@ -46,7 +46,7 @@ std::shared_ptr<AlertSink> AlertSink::create(const std::string& prop_name_prefix
   if (auto url = logger_properties->getString(prop_name_prefix + ".url")) {
     config.url = url.value();
   } else {
-    logger->log_info("Missing '%s.url' value, network logging won't be available", prop_name_prefix);
+    logger->log_info("Missing '{}.url' value, network logging won't be available", prop_name_prefix);
     return {};
   }
 
@@ -54,11 +54,11 @@ std::shared_ptr<AlertSink> AlertSink::create(const std::string& prop_name_prefix
     try {
       config.filter = utils::Regex{filter_str.value()};
     } catch (const std::regex_error& err) {
-      logger->log_error("Invalid '%s.filter' value, network logging won't be available: %s", prop_name_prefix, err.what());
+      logger->log_error("Invalid '{}.filter' value, network logging won't be available: {}", prop_name_prefix, err.what());
       return {};
     }
   } else {
-    logger->log_error("Missing '%s.filter' value, network logging won't be available", prop_name_prefix);
+    logger->log_error("Missing '{}.filter' value, network logging won't be available", prop_name_prefix);
     return {};
   }
 
@@ -67,9 +67,9 @@ std::shared_ptr<AlertSink> AlertSink::create(const std::string& prop_name_prefix
       if (auto prop_val = parser(prop_str.value())) {
         return prop_val.value();
       }
-      logger->log_error("Invalid '%s' value, using default '%s'", prop_name_prefix + suffix, fallback);
+      logger->log_error("Invalid '{}' value, using default '{}'", prop_name_prefix + suffix, fallback);
     } else {
-      logger->log_info("Missing '%s' value, using default '%s'", prop_name_prefix + suffix, fallback);
+      logger->log_info("Missing '{}' value, using default '{}'", prop_name_prefix + suffix, fallback);
     }
     return parser(fallback).value();
   };
@@ -99,18 +99,18 @@ void AlertSink::initialize(core::controller::ControllerServiceProvider* controll
 
   if (config_.ssl_service_name) {
     if (!controller) {
-      logger_->log_error("Could not find service '%s': no service provider", config_.ssl_service_name.value());
+      logger_->log_error("Could not find service '{}': no service provider", config_.ssl_service_name.value());
       return;
     }
     if (auto service = controller->getControllerService(config_.ssl_service_name.value())) {
       if (auto ssl_service = std::dynamic_pointer_cast<controllers::SSLContextService>(service)) {
         services->ssl_service = ssl_service;
       } else {
-        logger_->log_error("Service '%s' is not an SSLContextService", config_.ssl_service_name.value());
+        logger_->log_error("Service '{}' is not an SSLContextService", config_.ssl_service_name.value());
         return;
       }
     } else {
-      logger_->log_error("Could not find service '%s'", config_.ssl_service_name.value());
+      logger_->log_error("Could not find service '{}'", config_.ssl_service_name.value());
       return;
     }
   }
@@ -163,7 +163,7 @@ void AlertSink::run() {
     try {
       send(*services);
     } catch (const std::exception& err) {
-      logger_->log_error("Exception while sending logs: %s", err.what());
+      logger_->log_error("Exception while sending logs: {}", err.what());
     } catch (...) {
       logger_->log_error("Unknown exception while sending logs");
     }
@@ -224,11 +224,11 @@ void AlertSink::send(Services& services) {
   const bool client_err = 400 <= resp_code && resp_code < 500;
   const bool server_err = 500 <= resp_code && resp_code < 600;
   if (client_err || server_err) {
-    logger_->log_error("Error response code '" "%" PRId64 "' from '%s'", resp_code, config_.url);
+    logger_->log_error("Error response code '{}' from '{}'", resp_code, config_.url);
   } else if (!response_success) {
-    logger_->log_warn("Non-success response code '" "%" PRId64 "' from '%s'", resp_code, config_.url);
+    logger_->log_warn("Non-success response code '{}' from '{}'", resp_code, config_.url);
   } else {
-    logger_->log_debug("Response code '" "%" PRId64 "' from '%s'", resp_code, config_.url);
+    logger_->log_debug("Response code '{}' from '{}'", resp_code, config_.url);
   }
 
   if (!req_success) {

@@ -24,7 +24,7 @@ namespace org::apache::nifi::minifi::core::flow {
 
 void StructuredConnectionParser::addNewRelationshipToConnection(std::string_view relationship_name, minifi::Connection& connection) const {
   core::Relationship relationship(std::string(relationship_name), "");
-  logger_->log_debug("parseConnection: relationship => [%s]", std::string(relationship_name));
+  logger_->log_debug("parseConnection: relationship => [{}]", relationship_name);
   connection.addRelationship(relationship);
 }
 
@@ -37,7 +37,7 @@ void StructuredConnectionParser::addFunnelRelationshipToConnection(minifi::Conne
   }
   auto processor = parent_->findProcessorById(srcUUID);
   if (!processor) {
-    logger_->log_error("Could not find processor with id %s", srcUUID.to_string());
+    logger_->log_error("Could not find processor with id {}", srcUUID.to_string());
     return;
   }
 
@@ -71,10 +71,10 @@ uint64_t StructuredConnectionParser::getWorkQueueSize() const {
     std::string max_work_queue_str = max_work_queue_data_size_node.getIntegerAsString().value();
     uint64_t max_work_queue_size;
     if (core::Property::StringToInt(max_work_queue_str, max_work_queue_size)) {
-      logger_->log_debug("Setting %" PRIu64 " as the max queue size.", max_work_queue_size);
+      logger_->log_debug("Setting {} as the max queue size.", max_work_queue_size);
       return max_work_queue_size;
     }
-    logger_->log_error("Invalid max queue size value: %s.", max_work_queue_str);
+    logger_->log_error("Invalid max queue size value: {}.", max_work_queue_str);
   }
   return Connection::DEFAULT_BACKPRESSURE_THRESHOLD_COUNT;
 }
@@ -85,10 +85,10 @@ uint64_t StructuredConnectionParser::getWorkQueueDataSize() const {
     std::string max_work_queue_str = max_work_queue_data_size_node.getIntegerAsString().value();
     uint64_t max_work_queue_data_size = 0;
     if (core::Property::StringToInt(max_work_queue_str, max_work_queue_data_size)) {
-      logger_->log_debug("Setting %" PRIu64 "as the max as the max queue data size.", max_work_queue_data_size);
+      logger_->log_debug("Setting {} as the max as the max queue data size.", max_work_queue_data_size);
       return max_work_queue_data_size;
     }
-    logger_->log_error("Invalid max queue data size value: %s.", max_work_queue_str);
+    logger_->log_error("Invalid max queue data size value: {}.", max_work_queue_str);
   }
   return Connection::DEFAULT_BACKPRESSURE_THRESHOLD_DATA_SIZE;
 }
@@ -99,10 +99,10 @@ uint64_t StructuredConnectionParser::getSwapThreshold() const {
     auto swap_threshold_str = swap_threshold_node.getString().value();
     uint64_t swap_threshold;
     if (core::Property::StringToInt(swap_threshold_str, swap_threshold)) {
-      logger_->log_debug("Setting %" PRIu64 " as the swap threshold.", swap_threshold);
+      logger_->log_debug("Setting {} as the swap threshold.", swap_threshold);
       return swap_threshold;
     }
-    logger_->log_error("Invalid swap threshold value: %s.", swap_threshold_str);
+    logger_->log_error("Invalid swap threshold value: {}.", swap_threshold_str);
   }
   return 0;
 }
@@ -112,10 +112,10 @@ utils::Identifier StructuredConnectionParser::getSourceUUID() const {
   if (source_id_node) {
     const auto srcUUID = utils::Identifier::parse(source_id_node.getString().value());
     if (srcUUID) {
-      logger_->log_debug("Using 'source id' to match source with same id for connection '%s': source id => [%s]", name_, srcUUID.value().to_string());
+      logger_->log_debug("Using 'source id' to match source with same id for connection '{}': source id => [{}]", name_, srcUUID.value().to_string());
       return srcUUID.value();
     }
-    logger_->log_error("Invalid source id value: %s.", source_id_node.getString().value());
+    logger_->log_error("Invalid source id value: {}.", source_id_node.getString().value());
     throw std::invalid_argument("Invalid source id");
   }
   // if we don't have a source id, try to resolve using source name. config schema v2 will make this unnecessary
@@ -124,18 +124,18 @@ utils::Identifier StructuredConnectionParser::getSourceUUID() const {
   const auto srcUUID = utils::Identifier::parse(connectionSrcProcName);
   if (srcUUID && parent_->findProcessorById(srcUUID.value(), ProcessGroup::Traverse::ExcludeChildren)) {
     // the source name is a remote port id, so use that as the source id
-    logger_->log_debug("Using 'source name' containing a remote port id to match the source for connection '%s': source name => [%s]", name_, connectionSrcProcName);
+    logger_->log_debug("Using 'source name' containing a remote port id to match the source for connection '{}': source name => [{}]", name_, connectionSrcProcName);
     return srcUUID.value();
   }
   // lastly, look the processor up by name
   auto srcProcessor = parent_->findProcessorByName(connectionSrcProcName, ProcessGroup::Traverse::ExcludeChildren);
   if (srcProcessor) {
-    logger_->log_debug("Using 'source name' to match source with same name for connection '%s': source name => [%s]", name_, connectionSrcProcName);
+    logger_->log_debug("Using 'source name' to match source with same name for connection '{}': source name => [{}]", name_, connectionSrcProcName);
     return srcProcessor->getUUID();
   }
   // we ran out of ways to discover the source processor
   const std::string error_msg = "Could not locate a source with name " + connectionSrcProcName + " to create a connection ";
-  logger_->log_error(error_msg.c_str());
+  logger_->log_error("{}", error_msg);
   throw std::invalid_argument(error_msg);
 }
 
@@ -144,10 +144,10 @@ utils::Identifier StructuredConnectionParser::getDestinationUUID() const {
   if (destination_id_node) {
     const auto destUUID = utils::Identifier::parse(destination_id_node.getString().value());
     if (destUUID) {
-      logger_->log_debug("Using 'destination id' to match destination with same id for connection '%s': destination id => [%s]", name_, destUUID.value().to_string());
+      logger_->log_debug("Using 'destination id' to match destination with same id for connection '{}': destination id => [{}]", name_, destUUID.value().to_string());
       return destUUID.value();
     }
-    logger_->log_error("Invalid destination id value: %s.", destination_id_node.getString().value());
+    logger_->log_error("Invalid destination id value: {}.", destination_id_node.getString().value());
     throw std::invalid_argument("Invalid destination id");
   }
   // we use the same logic as above for resolving the source processor
@@ -157,18 +157,18 @@ utils::Identifier StructuredConnectionParser::getDestinationUUID() const {
   const auto destUUID = utils::Identifier::parse(connectionDestProcName);
   if (destUUID && parent_->findProcessorById(destUUID.value(), ProcessGroup::Traverse::ExcludeChildren)) {
     // the destination name is a remote port id, so use that as the dest id
-    logger_->log_debug("Using 'destination name' containing a remote port id to match the destination for connection '%s': destination name => [%s]", name_, connectionDestProcName);
+    logger_->log_debug("Using 'destination name' containing a remote port id to match the destination for connection '{}': destination name => [{}]", name_, connectionDestProcName);
     return destUUID.value();
   }
   // look the processor up by name
   auto destProcessor = parent_->findProcessorByName(connectionDestProcName, ProcessGroup::Traverse::ExcludeChildren);
   if (destProcessor) {
-    logger_->log_debug("Using 'destination name' to match destination with same name for connection '%s': destination name => [%s]", name_, connectionDestProcName);
+    logger_->log_debug("Using 'destination name' to match destination with same name for connection '{}': destination name => [{}]", name_, connectionDestProcName);
     return destProcessor->getUUID();
   }
   // we ran out of ways to discover the destination processor
   const std::string error_msg = "Could not locate a destination with name " + connectionDestProcName + " to create a connection";
-  logger_->log_error(error_msg.c_str());
+  logger_->log_error("{}", error_msg.c_str());
   throw std::invalid_argument(error_msg);
 }
 
@@ -190,7 +190,7 @@ std::chrono::milliseconds StructuredConnectionParser::getFlowFileExpiration() co
     logger_->log_debug("Parsing failure for flowfile expiration duration");
     expiration_duration = 0ms;
   }
-  logger_->log_debug("parseConnection: flowfile expiration => [%d]", expiration_duration->count());
+  logger_->log_debug("parseConnection: flowfile expiration => [{}]", expiration_duration);
   return *expiration_duration;
 }
 

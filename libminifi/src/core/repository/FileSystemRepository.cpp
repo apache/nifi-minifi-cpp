@@ -51,20 +51,20 @@ std::shared_ptr<io::BaseStream> FileSystemRepository::read(const minifi::Resourc
 }
 
 bool FileSystemRepository::removeKey(const std::string& content_path) {
-  logger_->log_debug("Deleting resource %s", content_path);
+  logger_->log_debug("Deleting resource {}", content_path);
   std::error_code ec;
   auto result = std::filesystem::exists(content_path, ec);
   if (ec) {
-    logger_->log_error("Deleting %s from content repository failed with the following error: %s", content_path, ec.message());
+    logger_->log_error("Deleting {} from content repository failed with the following error: {}", content_path, ec.message());
     return false;
   }
   if (!result) {
-    logger_->log_debug("Content path %s does not exist, no need to delete it", content_path);
+    logger_->log_debug("Content path {} does not exist, no need to delete it", content_path);
     return true;
   }
   ec.clear();
   if (!std::filesystem::remove(content_path, ec)) {
-    logger_->log_error("Deleting %s from content repository failed with the following error: %s", content_path, ec.message());
+    logger_->log_error("Deleting {} from content repository failed with the following error: {}", content_path, ec.message());
     return false;
   }
   return true;
@@ -84,14 +84,14 @@ void FileSystemRepository::clearOrphans() {
       is_orphan = it == count_map_.end() || it->second == 0;
     }
     if (is_orphan) {
-      logger_->log_debug("Deleting orphan resource %s", path);
+      logger_->log_debug("Deleting orphan resource {}", path);
       std::error_code ec;
       if (!std::filesystem::remove(path, ec)) {
         {
           std::lock_guard<std::mutex> lock(purge_list_mutex_);
           purge_list_.push_back(path);
         }
-        logger_->log_error("Deleting %s from content repository failed with the following error: %s", path, ec.message());
+        logger_->log_error("Deleting {} from content repository failed with the following error: {}", path, ec.message());
       }
     }
     return true;

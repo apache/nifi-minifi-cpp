@@ -201,7 +201,7 @@ class ListenHTTP : public core::Processor {
       if (logger == nullptr) {
         return 0;
       }
-      core::logging::LOG_ERROR((*logger)) << "CivetWeb error: " << message;
+      (*logger)->log_error("CivetWeb error: {}", message);
     } catch (...) {
     }
     return 0;
@@ -219,7 +219,7 @@ class ListenHTTP : public core::Processor {
       if (logger == nullptr) {
         return 0;
       }
-      core::logging::LOG_DEBUG((*logger)) << "CivetWeb access: " << message;
+      (*logger)->log_debug("CivetWeb access: {}", message);
     } catch (...) {
     }
     return 0;

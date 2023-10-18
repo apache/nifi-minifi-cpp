@@ -62,7 +62,7 @@ bool ConfigurableComponent::setProperty(const std::string& name, const std::stri
     Property& new_property = it->second;
     auto onExit = gsl::finally([&]{
       onPropertyModified(orig_property, new_property);
-      logger_->log_debug("Component %s property name %s value %s", name, new_property.getName(), value);
+      logger_->log_debug("Component {} property name {} value {}", name, new_property.getName(), value);
     });
     new_property.setValue(value);
     return true;
@@ -75,7 +75,7 @@ bool ConfigurableComponent::setProperty(const std::string& name, const std::stri
       properties_.insert(std::pair<std::string, Property>(name, new_property));
       return true;
     } else {
-      logger_->log_debug("Component %s cannot be set to %s", name, value);
+      logger_->log_debug("Component {} cannot be set to {}", name, value);
       return false;
     }
   }
@@ -96,7 +96,7 @@ bool ConfigurableComponent::updateProperty(const std::string &name, const std::s
     Property& new_property = it->second;
     auto onExit = gsl::finally([&] {
       onPropertyModified(orig_property, new_property);
-      logger_->log_debug("Component %s property name %s value %s", name, new_property.getName(), value);
+      logger_->log_debug("Component {} property name {} value {}", name, new_property.getName(), value);
     });
     new_property.addValue(value);
     return true;
@@ -124,7 +124,7 @@ bool ConfigurableComponent::setProperty(const Property& prop, const std::string&
     Property& new_property = it->second;
     auto onExit = gsl::finally([&] {
       onPropertyModified(orig_property, new_property);
-      logger_->log_debug("property name %s value %s and new value is %s", prop.getName(), value, new_property.getValue().to_string());
+      logger_->log_debug("property name {} value {} and new value is {}", prop.getName(), value, new_property.getValue().to_string());
     });
     new_property.setValue(value);
     return true;
@@ -134,7 +134,7 @@ bool ConfigurableComponent::setProperty(const Property& prop, const std::string&
       new_property.setTransient();
       new_property.setValue(value);
       properties_.insert(std::pair<std::string, Property>(prop.getName(), new_property));
-      logger_->log_debug("Adding transient property name %s value %s and new value is %s", prop.getName(), value, new_property.getValue().to_string());
+      logger_->log_debug("Adding transient property name {} value {} and new value is {}", prop.getName(), value, new_property.getValue().to_string());
       return true;
     } else {
       // Should not attempt to update dynamic properties here since the return code
@@ -157,7 +157,7 @@ bool ConfigurableComponent::setProperty(const Property& prop, PropertyValue &val
     Property& new_property = it->second;
     auto onExit = gsl::finally([&] {
       onPropertyModified(orig_property, new_property);
-      logger_->log_debug("property name %s value %s and new value is %s", prop.getName(), new_property.getName(), value, new_property.getValue().to_string());
+      logger_->log_debug("property name {} value {} and new value is {}", prop.getName(), new_property.getName(), value.c_str(), new_property.getValue().to_string());
     });
     new_property.setValue(value);
     return true;
@@ -167,7 +167,7 @@ bool ConfigurableComponent::setProperty(const Property& prop, PropertyValue &val
       new_property.setTransient();
       new_property.setValue(value);
       properties_.insert(std::pair<std::string, Property>(prop.getName(), new_property));
-      logger_->log_debug("Adding transient property name %s value %s and new value is %s", prop.getName(), value, new_property.getValue().to_string());
+      logger_->log_debug("Adding transient property name {} value {} and new value is {}", prop.getName(), value.c_str(), new_property.getValue().to_string());
       return true;
     } else {
       // Should not attempt to update dynamic properties here since the return code
@@ -199,14 +199,14 @@ bool ConfigurableComponent::getDynamicProperty(const std::string& name, std::str
     if (item.getValue().getValue() == nullptr) {
       // empty property value
       if (item.getRequired()) {
-        logger_->log_error("Component %s required dynamic property %s is empty", name, item.getName());
+        logger_->log_error("Component {} required dynamic property {} is empty", name, item.getName());
         throw std::runtime_error("Required dynamic property is empty: " + item.getName());
       }
-      logger_->log_debug("Component %s dynamic property name %s, empty value", name, item.getName());
+      logger_->log_debug("Component {} dynamic property name {}, empty value", name, item.getName());
       return false;
     }
     value = item.getValue().to_string();
-    logger_->log_debug("Component %s dynamic property name %s value %s", name, item.getName(), value);
+    logger_->log_debug("Component {} dynamic property name {} value {}", name, item.getName(), value);
     return true;
   } else {
     return false;
@@ -215,7 +215,7 @@ bool ConfigurableComponent::getDynamicProperty(const std::string& name, std::str
 
 bool ConfigurableComponent::createDynamicProperty(const std::string &name, const std::string &value) {
   if (!supportsDynamicProperties()) {
-    logger_->log_debug("Attempted to create dynamic property %s, but this component does not support creation."
+    logger_->log_debug("Attempted to create dynamic property {}, but this component does not support creation."
                        "of dynamic properties.",
                        name);
     return false;
@@ -224,7 +224,7 @@ bool ConfigurableComponent::createDynamicProperty(const std::string &name, const
   static const std::string DEFAULT_DYNAMIC_PROPERTY_DESC = "Dynamic Property";
   Property new_property(name, DEFAULT_DYNAMIC_PROPERTY_DESC, value, false, { }, { });
   new_property.setSupportsExpressionLanguage(true);
-  logger_->log_info("Processor %s dynamic property '%s' value '%s'", name.c_str(), new_property.getName().c_str(), value.c_str());
+  logger_->log_info("Processor {} dynamic property '{}' value '{}'", name.c_str(), new_property.getName().c_str(), value.c_str());
   dynamic_properties_[new_property.getName()] = new_property;
   onDynamicPropertyModified({ }, new_property);
   return true;
@@ -239,7 +239,7 @@ bool ConfigurableComponent::setDynamicProperty(const std::string& name, const st
     Property& new_property = it->second;
     auto onExit = gsl::finally([&] {
       onDynamicPropertyModified(orig_property, new_property);
-      logger_->log_debug("Component %s dynamic property name %s value %s", name, new_property.getName(), value);
+      logger_->log_debug("Component {} dynamic property name {} value {}", name, new_property.getName(), value);
     });
     new_property.setValue(value);
     new_property.setSupportsExpressionLanguage(true);
@@ -258,7 +258,7 @@ bool ConfigurableComponent::updateDynamicProperty(const std::string &name, const
     Property& new_property = it->second;
     auto onExit = gsl::finally([&] {
       onDynamicPropertyModified(orig_property, new_property);
-      logger_->log_debug("Component %s dynamic property name %s value %s", name, new_property.getName(), value);
+      logger_->log_debug("Component {} dynamic property name {} value {}", name, new_property.getName(), value);
     });
     new_property.addValue(value);
     new_property.setSupportsExpressionLanguage(true);

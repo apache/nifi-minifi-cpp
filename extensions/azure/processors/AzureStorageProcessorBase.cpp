@@ -37,13 +37,13 @@ std::tuple<AzureStorageProcessorBase::GetCredentialsFromControllerResult, std::o
 
   std::shared_ptr<core::controller::ControllerService> service = context.getControllerService(service_name);
   if (nullptr == service) {
-    logger_->log_error("Azure Storage credentials service with name: '%s' could not be found", service_name);
+    logger_->log_error("Azure Storage credentials service with name: '{}' could not be found", service_name);
     return std::make_tuple(GetCredentialsFromControllerResult::CONTROLLER_NAME_INVALID, std::nullopt);
   }
 
   auto azure_credentials_service = std::dynamic_pointer_cast<minifi::azure::controllers::AzureStorageCredentialsService>(service);
   if (!azure_credentials_service) {
-    logger_->log_error("Controller service with name: '%s' is not an Azure Storage credentials service", service_name);
+    logger_->log_error("Controller service with name: '{}' is not an Azure Storage credentials service", service_name);
     return std::make_tuple(GetCredentialsFromControllerResult::CONTROLLER_NAME_INVALID, std::nullopt);
   }
 

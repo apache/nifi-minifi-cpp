@@ -61,9 +61,9 @@ std::vector<std::uintmax_t> check_available_space(const std::vector<std::string>
     std::error_code ec;
     const auto result = utils::file::space(path.c_str(), ec);
     if (ec && logger) {
-      logger->log_info("Couldn't check disk space at %s: %s (ignoring)", path, ec.message());
+      logger->log_info("Couldn't check disk space at {}: {} (ignoring)", path, ec.message());
     } else if (logger) {
-      logger->log_trace("%s available space: %zu bytes", path, gsl::narrow_cast<size_t>(result.available));
+      logger->log_trace("{} available space: {} bytes", path, gsl::narrow_cast<size_t>(result.available));
     }
     return result.available;
   });

@@ -98,7 +98,7 @@ namespace org::apache::nifi::minifi::processors {
 
     auto sc = connection_->connect(endPointURL_, username_, password_);
     if (sc != UA_STATUSCODE_GOOD) {
-      logger_->log_error("Failed to connect: %s!", UA_StatusCode_name(sc));
+      logger_->log_error("Failed to connect: {}!", UA_StatusCode_name(sc));
       return false;
     }
     logger_->log_debug("Successfully connected.");

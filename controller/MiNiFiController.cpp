@@ -108,7 +108,7 @@ int main(int argc, char **argv) {
   try {
     socket_data.ssl_context_service = getSSLContextService(configuration);
   } catch(const minifi::Exception& ex) {
-    logger->log_error(ex.what());
+    logger->log_error("{}", ex.what());
     std::exit(1);
   }
 

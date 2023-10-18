@@ -115,7 +115,7 @@ bool SFTPProcessorBase::parseCommonPropertiesOnTrigger(const std::shared_ptr<cor
     if (!core::Property::StringToInt(value, port_tmp) ||
         port_tmp <= std::numeric_limits<uint16_t>::min() ||
         port_tmp > std::numeric_limits<uint16_t>::max()) {
-      logger_->log_error("Port attribute \"%s\" is invalid", value);
+      logger_->log_error("Port attribute \"{}\" is invalid", value);
       return false;
     } else {
       common_properties.port = static_cast<uint16_t>(port_tmp);
@@ -135,7 +135,7 @@ bool SFTPProcessorBase::parseCommonPropertiesOnTrigger(const std::shared_ptr<cor
     if (!core::Property::StringToInt(value, port_tmp) ||
         port_tmp <= std::numeric_limits<uint16_t>::min() ||
         port_tmp > std::numeric_limits<uint16_t>::max()) {
-      logger_->log_error("Proxy Port attribute \"%s\" is invalid", value);
+      logger_->log_error("Proxy Port attribute \"{}\" is invalid", value);
       return false;
     } else {
       common_properties.proxy_port = static_cast<uint16_t>(port_tmp);
@@ -165,7 +165,7 @@ std::unique_ptr<utils::SFTPClient> SFTPProcessorBase::getConnectionFromCache(con
     return nullptr;
   }
 
-  logger_->log_debug("Removing %s@%s:%hu from SFTP connection pool",
+  logger_->log_debug("Removing {}@{}:{} from SFTP connection pool",
                      key.username,
                      key.hostname,
                      key.port);
@@ -187,7 +187,7 @@ void SFTPProcessorBase::addConnectionToCache(const SFTPProcessorBase::Connection
 
   while (connections_.size() >= SFTPProcessorBase::CONNECTION_CACHE_MAX_SIZE) {
     const auto& lru_key = lru_.back();
-    logger_->log_debug("SFTP connection pool is full, removing %s@%s:%hu",
+    logger_->log_debug("SFTP connection pool is full, removing {}@{}:{}",
                        lru_key.username,
                        lru_key.hostname,
                        lru_key.port);
@@ -195,7 +195,7 @@ void SFTPProcessorBase::addConnectionToCache(const SFTPProcessorBase::Connection
     lru_.pop_back();
   }
 
-  logger_->log_debug("Adding %s@%s:%hu to SFTP connection pool",
+  logger_->log_debug("Adding {}@{}:{} to SFTP connection pool",
                      key.username,
                      key.hostname,
                      key.port);
@@ -223,7 +223,7 @@ void SFTPProcessorBase::keepaliveThreadFunc() {
     for (auto &connection : connections_) {
       int seconds_to_next = 0;
       if (connection.second->sendKeepAliveIfNeeded(seconds_to_next)) {
-        logger_->log_debug("Sent keepalive to %s@%s:%hu if needed, next keepalive in %d s",
+        logger_->log_debug("Sent keepalive to {}@{}:{} if needed, next keepalive in {} s",
                            connection.first.username,
                            connection.first.hostname,
                            connection.first.port,
@@ -232,7 +232,7 @@ void SFTPProcessorBase::keepaliveThreadFunc() {
           min_wait = seconds_to_next;
         }
       } else {
-        logger_->log_debug("Failed to send keepalive to %s@%s:%hu",
+        logger_->log_debug("Failed to send keepalive to {}@{}:{}",
                            connection.first.username,
                            connection.first.hostname,
                            connection.first.port);
@@ -244,7 +244,7 @@ void SFTPProcessorBase::keepaliveThreadFunc() {
       min_wait = 1;
     }
 
-    logger_->log_trace("Keepalive thread is going to sleep for %d s", min_wait);
+    logger_->log_trace("Keepalive thread is going to sleep for {} s", min_wait);
     keepalive_cv_.wait_for(lock, std::chrono::seconds(min_wait), [this] {
       return !running_;
     });
@@ -342,15 +342,15 @@ SFTPProcessorBase::CreateDirectoryHierarchyError SFTPProcessorBase::createDirect
     LIBSSH2_SFTP_ATTRIBUTES attrs;
     if (!client.stat(remote_path, true /*follow_symlinks*/, attrs)) {
       if (client.getLastError() != utils::SFTPError::FileDoesNotExist) {
-        logger_->log_error("Failed to stat %s", remote_path.c_str());
+        logger_->log_error("Failed to stat {}", remote_path.c_str());
       }
       should_create_directory = true;
     } else {
       if (attrs.flags & LIBSSH2_SFTP_ATTR_PERMISSIONS && !LIBSSH2_SFTP_S_ISDIR(attrs.permissions)) {
-        logger_->log_error("Remote path %s is not a directory", remote_path.c_str());
+        logger_->log_error("Remote path {} is not a directory", remote_path.c_str());
         return CreateDirectoryHierarchyError::CREATE_DIRECTORY_HIERARCHY_ERROR_NOT_A_DIRECTORY;
       }
-      logger_->log_debug("Found remote directory %s", remote_path.c_str());
+      logger_->log_debug("Found remote directory {}", remote_path.c_str());
     }
   }
   if (should_create_directory) {
@@ -360,18 +360,18 @@ SFTPProcessorBase::CreateDirectoryHierarchyError SFTPProcessorBase::createDirect
       if (!client.stat(remote_path, true /*follow_symlinks*/, attrs)) {
         auto last_error = client.getLastError();
         if (last_error == utils::SFTPError::FileDoesNotExist) {
-          logger_->log_error("Could not find remote directory %s after creating it", remote_path.c_str());
+          logger_->log_error("Could not find remote directory {} after creating it", remote_path.c_str());
           return CreateDirectoryHierarchyError::CREATE_DIRECTORY_HIERARCHY_ERROR_NOT_FOUND;
         } else if (last_error == utils::SFTPError::PermissionDenied) {
-          logger_->log_error("Permission denied when reading remote directory %s after creating it", remote_path.c_str());
+          logger_->log_error("Permission denied when reading remote directory {} after creating it", remote_path.c_str());
           return CreateDirectoryHierarchyError::CREATE_DIRECTORY_HIERARCHY_ERROR_PERMISSION_DENIED;
         } else {
-          logger_->log_error("Failed to stat %s", remote_path.c_str());
+          logger_->log_error("Failed to stat {}", remote_path.c_str());
           return CreateDirectoryHierarchyError::CREATE_DIRECTORY_HIERARCHY_ERROR_STAT_FAILED;
         }
       } else {
         if ((attrs.flags & LIBSSH2_SFTP_ATTR_PERMISSIONS) && !LIBSSH2_SFTP_S_ISDIR(attrs.permissions)) {
-          logger_->log_error("Remote path %s is not a directory", remote_path.c_str());
+          logger_->log_error("Remote path {} is not a directory", remote_path.c_str());
           return CreateDirectoryHierarchyError::CREATE_DIRECTORY_HIERARCHY_ERROR_NOT_A_DIRECTORY;
         }
       }

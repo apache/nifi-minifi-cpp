@@ -41,17 +41,17 @@ std::optional<storage::FetchAzureDataLakeStorageParameters> FetchAzureDataLakeSt
   std::string value;
   if (context.getProperty(RangeStart, value, flow_file)) {
     params.range_start = std::stoull(value);
-    logger_->log_debug("Range Start property set to %llu", *params.range_start);
+    logger_->log_debug("Range Start property set to {}", *params.range_start);
   }
 
   if (context.getProperty(RangeLength, value, flow_file)) {
     params.range_length = std::stoull(value);
-    logger_->log_debug("Range Length property set to %llu", *params.range_length);
+    logger_->log_debug("Range Length property set to {}", *params.range_length);
   }
 
   if (context.getProperty(NumberOfRetries, value, flow_file)) {
     params.number_of_retries = std::stoull(value);
-    logger_->log_debug("Number Of Retries property set to %llu", *params.number_of_retries);
+    logger_->log_debug("Number Of Retries property set to {}", *params.number_of_retries);
   }
 
   return params;
@@ -84,11 +84,11 @@ void FetchAzureDataLakeStorage::onTrigger(const std::shared_ptr<core::ProcessCon
   });
 
   if (result == std::nullopt) {
-    logger_->log_error("Failed to fetch file '%s' from Azure Data Lake storage", params->filename);
+    logger_->log_error("Failed to fetch file '{}' from Azure Data Lake storage", params->filename);
     session->transfer(flow_file, Failure);
     session->remove(fetched_flow_file);
   } else {
-    logger_->log_debug("Successfully fetched file '%s' from filesystem '%s' on Azure Data Lake storage", params->filename, params->file_system_name);
+    logger_->log_debug("Successfully fetched file '{}' from filesystem '{}' on Azure Data Lake storage", params->filename, params->file_system_name);
     session->transfer(fetched_flow_file, Success);
     session->remove(flow_file);
   }

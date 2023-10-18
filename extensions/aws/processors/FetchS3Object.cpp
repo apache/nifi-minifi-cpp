@@ -38,7 +38,7 @@ void FetchS3Object::onSchedule(const std::shared_ptr<core::ProcessContext> &cont
   S3Processor::onSchedule(context, sessionFactory);
 
   context->getProperty(RequesterPays, requester_pays_);
-  logger_->log_debug("FetchS3Object: RequesterPays [%s]", requester_pays_ ? "true" : "false");
+  logger_->log_debug("FetchS3Object: RequesterPays [{}]", requester_pays_);
 }
 
 std::optional<aws::s3::GetObjectRequestParameters> FetchS3Object::buildFetchS3RequestParams(
@@ -55,10 +55,10 @@ std::optional<aws::s3::GetObjectRequestParameters> FetchS3Object::buildFetchS3Re
     logger_->log_error("No Object Key is set and default object key 'filename' attribute could not be found!");
     return std::nullopt;
   }
-  logger_->log_debug("FetchS3Object: Object Key [%s]", get_object_params.object_key);
+  logger_->log_debug("FetchS3Object: Object Key [{}]", get_object_params.object_key);
 
   context->getProperty(Version, get_object_params.version, flow_file);
-  logger_->log_debug("FetchS3Object: Version [%s]", get_object_params.version);
+  logger_->log_debug("FetchS3Object: Version [{}]", get_object_params.version);
   get_object_params.setClientConfig(common_properties.proxy, common_properties.endpoint_override_url);
   return get_object_params;
 }
@@ -96,7 +96,7 @@ void FetchS3Object::onTrigger(const std::shared_ptr<core::ProcessContext> &conte
       }
     };
 
-    logger_->log_debug("Successfully fetched S3 object %s from bucket %s", get_object_params->object_key, get_object_params->bucket);
+    logger_->log_debug("Successfully fetched S3 object {} from bucket {}", get_object_params->object_key, get_object_params->bucket);
     session->putAttribute(flow_file, "s3.bucket", get_object_params->bucket);
     session->putAttribute(flow_file, core::SpecialFlowAttribute::PATH, result->path.generic_string());
     session->putAttribute(flow_file, core::SpecialFlowAttribute::ABSOLUTE_PATH, result->absolute_path.generic_string());
@@ -109,7 +109,7 @@ void FetchS3Object::onTrigger(const std::shared_ptr<core::ProcessContext> &conte
     putAttributeIfNotEmpty("s3.version", result->version);
     session->transfer(flow_file, Success);
   } else {
-    logger_->log_error("Failed to fetch S3 object %s from bucket %s", get_object_params->object_key, get_object_params->bucket);
+    logger_->log_error("Failed to fetch S3 object {} from bucket {}", get_object_params->object_key, get_object_params->bucket);
     session->transfer(flow_file, Failure);
   }
 }

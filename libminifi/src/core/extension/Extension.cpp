@@ -19,12 +19,7 @@
 #include "core/extension/ExtensionManager.h"
 #include "core/logging/LoggerConfiguration.h"
 
-namespace org {
-namespace apache {
-namespace nifi {
-namespace minifi {
-namespace core {
-namespace extension {
+namespace org::apache::nifi::minifi::core::extension {
 
 static std::shared_ptr<logging::Logger> init_logger = logging::LoggerFactory<ExtensionInitializer>::getLogger();
 
@@ -38,19 +33,14 @@ Extension::~Extension() {
 }
 
 ExtensionInitializer::ExtensionInitializer(Extension& extension, const ExtensionConfig& config): extension_(extension) {
-  init_logger->log_trace("Initializing extension: %s", extension_.getName());
+  init_logger->log_trace("Initializing extension: {}", extension_.getName());
   if (!extension_.init_impl_(config)) {
     throw std::runtime_error("Failed to initialize extension");
   }
 }
 ExtensionInitializer::~ExtensionInitializer() {
-  init_logger->log_trace("Deinitializing extension: %s", extension_.getName());
+  init_logger->log_trace("Deinitializing extension: {}", extension_.getName());
   extension_.deinit_impl_();
 }
 
-}  // namespace extension
-}  // namespace core
-}  // namespace minifi
-}  // namespace nifi
-}  // namespace apache
-}  // namespace org
+}  // namespace org::apache::nifi::minifi::core::extension

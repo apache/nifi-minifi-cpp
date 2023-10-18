@@ -63,7 +63,7 @@ void UnfocusArchiveEntry::onTrigger(core::ProcessContext *context, core::Process
         try {
           archiveStack.loadJsonString(existingLensStack);
         } catch (Exception &exception) {
-          logger_->log_debug(exception.what());
+          logger_->log_debug("{}", exception.what());
           context->yield();
           return;
         }
@@ -90,7 +90,7 @@ void UnfocusArchiveEntry::onTrigger(core::ProcessContext *context, core::Process
     }
 
     if (entry.entryName == lensArchiveMetadata.focusedEntry) {
-      logger_->log_debug("UnfocusArchiveEntry exporting focused entry to %s", entry.tmpFileName.string());
+      logger_->log_debug("UnfocusArchiveEntry exporting focused entry to {}", entry.tmpFileName);
       session->exportContent(entry.tmpFileName.string(), flowFile, false);
     }
   }
@@ -105,7 +105,7 @@ void UnfocusArchiveEntry::onTrigger(core::ProcessContext *context, core::Process
       continue;
     }
 
-    logger_->log_debug("UnfocusArchiveEntry exporting entry %s to %s", entry.stashKey, entry.tmpFileName.string());
+    logger_->log_debug("UnfocusArchiveEntry exporting entry {} to {}", entry.stashKey, entry.tmpFileName);
     session->restore(entry.stashKey, flowFile);
     // TODO(calebj) implement copy export/don't worry about multiple claims/optimal efficiency for *now*
     session->exportContent(entry.tmpFileName.string(), flowFile, false);
@@ -165,12 +165,12 @@ int64_t UnfocusArchiveEntry::WriteCallback::operator()(const std::shared_ptr<io:
 
   for (const auto &entryMetadata : _archiveMetadata->entryMetadata) {
     entry = archive_entry_new();
-    logger_->log_info("UnfocusArchiveEntry writing entry %s", entryMetadata.entryName);
+    logger_->log_info("UnfocusArchiveEntry writing entry {}", entryMetadata.entryName);
 
     if (entryMetadata.entryType == AE_IFREG && entryMetadata.entrySize > 0) {
       size_t stat_ok = stat(entryMetadata.tmpFileName.string().c_str(), &st);
       if (stat_ok != 0) {
-        logger_->log_error("Error statting %s: %s", entryMetadata.tmpFileName.string(), std::system_category().default_error_condition(errno).message());
+        logger_->log_error("Error statting {}: {}", entryMetadata.tmpFileName, std::system_category().default_error_condition(errno).message());
       }
       archive_entry_copy_stat(entry, &st);
     }
@@ -183,15 +183,15 @@ int64_t UnfocusArchiveEntry::WriteCallback::operator()(const std::shared_ptr<io:
     archive_entry_set_gid(entry, entryMetadata.entryGID);
     archive_entry_set_mtime(entry, entryMetadata.entryMTime, gsl::narrow<long>(entryMetadata.entryMTimeNsec));  // NOLINT long comes from libarchive API
 
-    logger_->log_info("Writing %s with type %d, perms %d, size %d, uid %d, gid %d, mtime %d,%d", entryMetadata.entryName, entryMetadata.entryType, entryMetadata.entryPerm,
+    logger_->log_info("Writing {} with type {}, perms {}, size {}, uid {}, gid {}, mtime {},{}", entryMetadata.entryName, entryMetadata.entryType, entryMetadata.entryPerm,
                       entryMetadata.entrySize, entryMetadata.entryUID, entryMetadata.entryGID, entryMetadata.entryMTime, entryMetadata.entryMTimeNsec);
 
     archive_write_header(outputArchive, entry);
 
     // If entry is regular file, copy entry contents
     if (entryMetadata.entryType == AE_IFREG && entryMetadata.entrySize > 0) {
-      logger_->log_info("UnfocusArchiveEntry writing %d bytes of "
-                        "data from tmp file %s to archive entry %s",
+      logger_->log_info("UnfocusArchiveEntry writing {} bytes of "
+                        "data from tmp file {} to archive entry {}",
                         st.st_size, entryMetadata.tmpFileName.string(), entryMetadata.entryName);
       std::ifstream ifs(entryMetadata.tmpFileName, std::ifstream::in | std::ios::binary);
 

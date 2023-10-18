@@ -27,12 +27,12 @@ void WriteToFlowFileTestProcessor::initialize() {
 }
 
 void WriteToFlowFileTestProcessor::onSchedule(core::ProcessContext*, core::ProcessSessionFactory*) {
-  logger_->log_info("%s", ON_SCHEDULE_LOG_STR);
+  logger_->log_info("{}", ON_SCHEDULE_LOG_STR);
 }
 
 void WriteToFlowFileTestProcessor::onTrigger(core::ProcessContext* context, core::ProcessSession* session) {
   gsl_Expects(context && session);
-  logger_->log_info("%s", ON_TRIGGER_LOG_STR);
+  logger_->log_info("{}", ON_TRIGGER_LOG_STR);
   if (content_.empty()) {
     context->yield();
     return;
@@ -47,7 +47,7 @@ void WriteToFlowFileTestProcessor::onTrigger(core::ProcessContext* context, core
 }
 
 void WriteToFlowFileTestProcessor::onUnSchedule() {
-  logger_->log_info("%s", ON_UNSCHEDULE_LOG_STR);
+  logger_->log_info("{}", ON_UNSCHEDULE_LOG_STR);
 }
 
 REGISTER_RESOURCE(WriteToFlowFileTestProcessor, Processor);

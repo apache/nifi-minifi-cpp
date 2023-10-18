@@ -220,7 +220,7 @@ class ArchiveMerge {
           if (flow->getAttribute(BinFiles::TAR_PERMISSIONS_ATTRIBUTE, perm)) {
             try {
               permInt = std::stoi(perm);
-              logger_->log_debug("Merge Tar File %s permission %s", fileName, perm);
+              logger_->log_debug("Merge Tar File {} permission {}", fileName, perm);
               archive_entry_set_perm(entry, (mode_t) permInt);
             } catch (...) {
             }

@@ -50,10 +50,10 @@ int PyStateManager::init(PyStateManager* self, PyObject* args, PyObject*) {
     return -1;
   }
 
-  auto process_context = PyCapsule_GetPointer(weak_ptr_capsule, HeldTypeName);
-  if (!process_context)
+  auto state_manager = PyCapsule_GetPointer(weak_ptr_capsule, HeldTypeName);
+  if (!state_manager)
     throw PyException();
-  self->state_manager_ = *static_cast<HeldType*>(process_context);
+  self->state_manager_ = *static_cast<HeldType*>(state_manager);
   return 0;
 }
 

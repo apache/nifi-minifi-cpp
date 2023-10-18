@@ -61,11 +61,11 @@ AzureDataLakeStorage::AzureDataLakeStorage(std::unique_ptr<DataLakeStorageClient
 
 UploadDataLakeStorageResult AzureDataLakeStorage::uploadFile(const PutAzureDataLakeStorageParameters& params, std::span<const std::byte> buffer) {
   UploadDataLakeStorageResult result;
-  logger_->log_debug("Uploading file '%s/%s' to Azure Data Lake Storage filesystem '%s'", params.directory_name, params.filename, params.file_system_name);
+  logger_->log_debug("Uploading file '{}/{}' to Azure Data Lake Storage filesystem '{}'", params.directory_name, params.filename, params.file_system_name);
   try {
     auto file_created = data_lake_storage_client_->createFile(params);
     if (!file_created && !params.replace_file) {
-      logger_->log_warn("File '%s/%s' already exists on Azure Data Lake Storage filesystem '%s'", params.directory_name, params.filename, params.file_system_name);
+      logger_->log_warn("File '{}/{}' already exists on Azure Data Lake Storage filesystem '{}'", params.directory_name, params.filename, params.file_system_name);
       result.result_code = UploadResultCode::FILE_ALREADY_EXISTS;
       return result;
     }
@@ -77,7 +77,7 @@ UploadDataLakeStorageResult AzureDataLakeStorage::uploadFile(const PutAzureDataL
     result.primary_uri = upload_url;
     return result;
   } catch(const std::exception& ex) {
-    logger_->log_error("An exception occurred while uploading file to Azure Data Lake storage: %s", ex.what());
+    logger_->log_error("An exception occurred while uploading file to Azure Data Lake storage: {}", ex.what());
     result.result_code = UploadResultCode::FAILURE;
     return result;
   }
@@ -87,7 +87,7 @@ bool AzureDataLakeStorage::deleteFile(const DeleteAzureDataLakeStorageParameters
   try {
     return data_lake_storage_client_->deleteFile(params);
   } catch (const std::exception& ex) {
-    logger_->log_error("An exception occurred while deleting '%s/%s' of filesystem '%s': %s", params.directory_name, params.filename, params.file_system_name, ex.what());
+    logger_->log_error("An exception occurred while deleting '{}/{}' of filesystem '{}': {}", params.directory_name, params.filename, params.file_system_name, ex.what());
     return false;
   }
 }
@@ -97,7 +97,7 @@ std::optional<uint64_t> AzureDataLakeStorage::fetchFile(const FetchAzureDataLake
     auto result = data_lake_storage_client_->fetchFile(params);
     return internal::pipe(*result, stream);
   } catch (const std::exception& ex) {
-    logger_->log_error("An exception occurred while fetching '%s/%s' of filesystem '%s': %s", params.directory_name, params.filename, params.file_system_name, ex.what());
+    logger_->log_error("An exception occurred while fetching '{}/{}' of filesystem '{}': {}", params.directory_name, params.filename, params.file_system_name, ex.what());
     return std::nullopt;
   }
 }
@@ -131,7 +131,7 @@ std::optional<ListDataLakeStorageResult> AzureDataLakeStorage::listDirectory(con
     }
     return result;
   } catch (const std::exception& ex) {
-    logger_->log_error("An exception occurred while listing directory '%s' of filesystem '%s': %s", params.directory_name, params.file_system_name, ex.what());
+    logger_->log_error("An exception occurred while listing directory '{}' of filesystem '{}': {}", params.directory_name, params.file_system_name, ex.what());
     return std::nullopt;
   }
 }

@@ -248,13 +248,13 @@ inline void addFilesMatchingExtension(const std::shared_ptr<core::logging::Logge
                                       const std::filesystem::path& extension,
                                       std::vector<std::filesystem::path>& accruedFiles) {
   if (!utils::file::exists(originalPath)) {
-    logger->log_warn("Failed to open directory: %s", originalPath.string());
+    logger->log_warn("Failed to open directory: {}", originalPath);
     return;
   }
 
   if (utils::file::is_directory(originalPath)) {
     // only perform a listing while we are not empty
-    logger->log_debug("Looking for files with %s extension in %s", extension.string(), originalPath.string());
+    logger->log_debug("Looking for files with {} extension in {}", extension, originalPath);
 
     for (const auto& entry: std::filesystem::directory_iterator(originalPath,
                                                                 std::filesystem::directory_options::skip_permission_denied)) {
@@ -262,18 +262,18 @@ inline void addFilesMatchingExtension(const std::shared_ptr<core::logging::Logge
         addFilesMatchingExtension(logger, entry.path(), extension, accruedFiles);
       } else {
         if (entry.path().extension() == extension) {
-          logger->log_info("Adding %s to paths", entry.path().string());
+          logger->log_info("Adding {} to paths", entry.path());
           accruedFiles.push_back(entry.path());
         }
       }
     }
   } else if (std::filesystem::is_regular_file(originalPath)) {
     if (originalPath.extension() == extension) {
-      logger->log_info("Adding %s to paths", originalPath.string());
+      logger->log_info("Adding {} to paths", originalPath);
       accruedFiles.push_back(originalPath);
     }
   } else {
-    logger->log_error("Could not access %s", originalPath.string());
+    logger->log_error("Could not access {}", originalPath);
   }
 }
 
@@ -290,9 +290,9 @@ inline void list_dir(const std::filesystem::path& dir,
                      const std::function<bool(const std::filesystem::path&, const std::filesystem::path&)>& callback,
                      const std::shared_ptr<core::logging::Logger> &logger,
                      const std::function<bool(const std::filesystem::path&)>& dir_callback) {
-  logger->log_debug("Performing file listing against %s", dir.string());
+  logger->log_debug("Performing file listing against {}", dir);
   if (!utils::file::exists(dir)) {
-    logger->log_warn("Failed to open directory: %s", dir.string());
+    logger->log_warn("Failed to open directory: {}", dir);
     return;
   }
 

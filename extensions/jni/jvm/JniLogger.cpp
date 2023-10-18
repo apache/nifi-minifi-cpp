@@ -67,32 +67,32 @@ JNIEXPORT void JNICALL Java_org_apache_nifi_processor_JniLogger_warn(JNIEnv *env
   minifi::jni::JniLogger *logger_ref = minifi::jni::JVMLoader::getPtr<minifi::jni::JniLogger>(env, obj);
   if (!logger_ref)
     return;
-  logger_ref->logger_reference_->log_warn(JniStringToUTF(env, msg).c_str());
+  logger_ref->logger_reference_->log_warn("{}", JniStringToUTF(env, msg));
 }
 
 JNIEXPORT void JNICALL  Java_org_apache_nifi_processor_JniLogger_error(JNIEnv *env, jobject obj, jstring msg) {
   minifi::jni::JniLogger *logger_ref = minifi::jni::JVMLoader::getPtr<minifi::jni::JniLogger>(env, obj);
   if (!logger_ref)
     return;
-  logger_ref->logger_reference_->log_error(JniStringToUTF(env, msg).c_str());
+  logger_ref->logger_reference_->log_error("{}", JniStringToUTF(env, msg));
 }
 JNIEXPORT void JNICALL  Java_org_apache_nifi_processor_JniLogger_info(JNIEnv *env, jobject obj, jstring msg) {
   minifi::jni::JniLogger *logger_ref = minifi::jni::JVMLoader::getPtr<minifi::jni::JniLogger>(env, obj);
   if (!logger_ref)
     return;
-  logger_ref->logger_reference_->log_info(JniStringToUTF(env, msg).c_str());
+  logger_ref->logger_reference_->log_info("{}", JniStringToUTF(env, msg));
 }
 JNIEXPORT void JNICALL  Java_org_apache_nifi_processor_JniLogger_debug(JNIEnv *env, jobject obj, jstring msg) {
   minifi::jni::JniLogger *logger_ref = minifi::jni::JVMLoader::getPtr<minifi::jni::JniLogger>(env, obj);
   if (!logger_ref)
     return;
-  logger_ref->logger_reference_->log_debug(JniStringToUTF(env, msg).c_str());
+  logger_ref->logger_reference_->log_debug("{}", JniStringToUTF(env, msg));
 }
 JNIEXPORT void JNICALL  Java_org_apache_nifi_processor_JniLogger_trace(JNIEnv *env, jobject obj, jstring msg) {
   minifi::jni::JniLogger *logger_ref = minifi::jni::JVMLoader::getPtr<minifi::jni::JniLogger>(env, obj);
   if (!logger_ref)
     return;
-  logger_ref->logger_reference_->log_trace(JniStringToUTF(env, msg).c_str());
+  logger_ref->logger_reference_->log_trace("{}", JniStringToUTF(env, msg));
 }
 
 #ifdef __cplusplus

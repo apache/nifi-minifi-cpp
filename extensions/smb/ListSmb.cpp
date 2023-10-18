@@ -94,7 +94,7 @@ std::shared_ptr<core::FlowFile> ListSmb::createFlowFile(core::ProcessSession& se
     session.putAttribute(flow_file, LastModifiedTime.name, getDateTimeStr(windows_file_times->last_write_time));
     session.putAttribute(flow_file, LastAccessTime.name, getDateTimeStr(windows_file_times->last_access_time));
   } else {
-    logger_->log_warn("Could not get file attributes due to %s", windows_file_times.error().message());
+    logger_->log_warn("Could not get file attributes due to {}", windows_file_times.error().message());
   }
 
   session.putAttribute(flow_file, ServiceLocation.name, smb_connection_controller_service_->getPath().string());
@@ -107,7 +107,7 @@ void ListSmb::onTrigger(const std::shared_ptr<core::ProcessContext> &context, co
   gsl_Expects(context && session && smb_connection_controller_service_);
 
   if (auto connection_error = smb_connection_controller_service_->validateConnection()) {
-    logger_->log_error("Couldn't establish connection to the specified network location due to %s", connection_error.message());
+    logger_->log_error("Couldn't establish connection to the specified network location due to {}", connection_error.message());
     context->yield();
     return;
   }
@@ -134,7 +134,7 @@ void ListSmb::onTrigger(const std::shared_ptr<core::ProcessContext> &context, co
   state_manager_->storeState(latest_listing_state);
 
   if (files_listed == 0) {
-    logger_->log_debug("No new files were found in input directory '%s' to list", dir.string());
+    logger_->log_debug("No new files were found in input directory '{}' to list", dir);
     context->yield();
   }
 }

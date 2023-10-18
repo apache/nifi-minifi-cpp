@@ -91,7 +91,7 @@ asio::awaitable<void> ControllerSocketProtocol::startAccept() {
   while (true) {
     auto [accept_error, socket] = co_await acceptor_->async_accept(utils::net::use_nothrow_awaitable);
     if (accept_error) {
-      logger_->log_error("Controller socket accept failed with the following message: '%s'", accept_error.message());
+      logger_->log_error("Controller socket accept failed with the following message: '{}'", accept_error.message());
       continue;
     }
     auto stream = std::make_unique<io::AsioStream<asio::ip::tcp::socket>>(std::move(socket));
@@ -106,7 +106,7 @@ asio::awaitable<void> ControllerSocketProtocol::handshakeAndHandleCommand(asio::
 
   auto [handshake_error] = co_await ssl_socket.async_handshake(utils::net::HandshakeType::server, utils::net::use_nothrow_awaitable);
   if (handshake_error) {
-    logger_->log_error("Controller socket handshake failed with the following message: '%s'", handshake_error.message());
+    logger_->log_error("Controller socket handshake failed with the following message: '{}'", handshake_error.message());
     co_return;
   }
 
@@ -118,7 +118,7 @@ asio::awaitable<void> ControllerSocketProtocol::startAcceptSsl(std::shared_ptr<m
   while (true) {  // NOLINT(clang-analyzer-core.NullDereference) suppressing asio library linter warning
     auto [accept_error, socket] = co_await acceptor_->async_accept(utils::net::use_nothrow_awaitable);
     if (accept_error) {
-      logger_->log_error("Controller socket accept failed with the following message: '%s'", accept_error.message());
+      logger_->log_error("Controller socket accept failed with the following message: '{}'", accept_error.message());
       continue;
     }
 
@@ -367,7 +367,7 @@ void ControllerSocketProtocol::handleDescribe(io::BaseStream &stream) {
   } else if (what == "jstack") {
     writeJstackResponse(stream);
   } else {
-    logger_->log_error("Unknown C2 describe parameter: %s", what);
+    logger_->log_error("Unknown C2 describe parameter: {}", what);
   }
 }
 
@@ -401,7 +401,7 @@ asio::awaitable<void> ControllerSocketProtocol::handleCommand(std::unique_ptr<io
       handleDescribe(*stream);
       break;
     default:
-      logger_->log_error("Unhandled C2 operation: %s", std::to_string(head));
+      logger_->log_error("Unhandled C2 operation: {}", head);
   }
 }
 

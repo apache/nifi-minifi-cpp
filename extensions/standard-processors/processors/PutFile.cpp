@@ -84,16 +84,16 @@ void PutFile::onTrigger(core::ProcessContext *context, core::ProcessSession *ses
     return session->transfer(flow_file, Failure);
   }
 
-  logger_->log_debug("PutFile writing file %s into directory %s", dest_path->filename().string(), dest_path->parent_path().string());
+  logger_->log_debug("PutFile writing file {} into directory {}", dest_path->filename(), dest_path->parent_path());
 
   if (directoryIsFull(dest_path->parent_path())) {
-    logger_->log_warn("Routing to failure because the output directory %s has at least %u files, which exceeds the "
-                      "configured max number of files", dest_path->parent_path().string(), *max_dest_files_);
+    logger_->log_warn("Routing to failure because the output directory {} has at least {} files, which exceeds the "
+                      "configured max number of files", dest_path->parent_path(), *max_dest_files_);
     return session->transfer(flow_file, Failure);
   }
 
   if (utils::file::exists(*dest_path)) {
-    logger_->log_warn("Destination file %s exists; applying Conflict Resolution Strategy: %s", dest_path->string(), std::string(magic_enum::enum_name(conflict_resolution_strategy_)));
+    logger_->log_warn("Destination file {} exists; applying Conflict Resolution Strategy: {}", dest_path->string(), magic_enum::enum_name(conflict_resolution_strategy_));
     if (conflict_resolution_strategy_ == FileExistsResolutionStrategy::fail) {
       return session->transfer(flow_file, Failure);
     } else if (conflict_resolution_strategy_ == FileExistsResolutionStrategy::ignore) {
@@ -106,7 +106,7 @@ void PutFile::onTrigger(core::ProcessContext *context, core::ProcessSession *ses
 
 void PutFile::prepareDirectory(const std::filesystem::path& directory_path) const {
   if (!utils::file::exists(directory_path) && try_mkdirs_) {
-    logger_->log_debug("Destination directory does not exist; will attempt to create: %s", directory_path.string());
+    logger_->log_debug("Destination directory does not exist; will attempt to create: {}", directory_path);
     utils::file::create_dir(directory_path, true);
 #ifndef WIN32
     if (directory_permissions_.valid()) {
@@ -126,7 +126,7 @@ void PutFile::putFile(core::ProcessSession& session,
   utils::FileWriterCallback file_writer_callback(dest_file);
   auto read_result = session.read(flow_file, std::ref(file_writer_callback));
   if (io::isError(read_result)) {
-    logger_->log_error("Failed to write to %s", dest_file.string());
+    logger_->log_error("Failed to write to {}", dest_file);
     success = false;
   } else {
     success = file_writer_callback.commit();

@@ -32,10 +32,10 @@ std::optional<Aws::S3::Model::PutObjectResult> S3ClientRequestSender::sendPutObj
   auto outcome = s3_client.PutObject(request);
 
   if (outcome.IsSuccess()) {
-      logger_->log_debug("Added S3 object '%s' to bucket '%s'", request.GetKey(), request.GetBucket());
+      logger_->log_debug("Added S3 object '{}' to bucket '{}'", request.GetKey(), request.GetBucket());
       return outcome.GetResultWithOwnership();
   } else {
-    logger_->log_error("PutS3Object failed with the following: '%s'", outcome.GetError().GetMessage());
+    logger_->log_error("PutS3Object failed with the following: '{}'", outcome.GetError().GetMessage());
     return std::nullopt;
   }
 }
@@ -48,13 +48,13 @@ bool S3ClientRequestSender::sendDeleteObjectRequest(
   Aws::S3::Model::DeleteObjectOutcome outcome = s3_client.DeleteObject(request);
 
   if (outcome.IsSuccess()) {
-    logger_->log_debug("Deleted S3 object '%s' from bucket '%s'", request.GetKey(), request.GetBucket());
+    logger_->log_debug("Deleted S3 object '{}' from bucket '{}'", request.GetKey(), request.GetBucket());
     return true;
   } else if (outcome.GetError().GetErrorType() == Aws::S3::S3Errors::NO_SUCH_KEY) {
-    logger_->log_debug("S3 object '%s' was not found in bucket '%s'", request.GetKey(), request.GetBucket());
+    logger_->log_debug("S3 object '{}' was not found in bucket '{}'", request.GetKey(), request.GetBucket());
     return true;
   } else {
-    logger_->log_error("DeleteS3Object failed with the following: '%s'", outcome.GetError().GetMessage());
+    logger_->log_error("DeleteS3Object failed with the following: '{}'", outcome.GetError().GetMessage());
     return false;
   }
 }
@@ -67,10 +67,10 @@ std::optional<Aws::S3::Model::GetObjectResult> S3ClientRequestSender::sendGetObj
   auto outcome = s3_client.GetObject(request);
 
   if (outcome.IsSuccess()) {
-    logger_->log_debug("Fetched S3 object '%s' from bucket '%s'", request.GetKey(), request.GetBucket());
+    logger_->log_debug("Fetched S3 object '{}' from bucket '{}'", request.GetKey(), request.GetBucket());
     return outcome.GetResultWithOwnership();
   } else {
-    logger_->log_error("FetchS3Object failed with the following: '%s'", outcome.GetError().GetMessage());
+    logger_->log_error("FetchS3Object failed with the following: '{}'", outcome.GetError().GetMessage());
     return std::nullopt;
   }
 }
@@ -83,10 +83,10 @@ std::optional<Aws::S3::Model::ListObjectsV2Result> S3ClientRequestSender::sendLi
   auto outcome = s3_client.ListObjectsV2(request);
 
   if (outcome.IsSuccess()) {
-    logger_->log_debug("ListObjectsV2 successful of bucket '%s'", request.GetBucket());
+    logger_->log_debug("ListObjectsV2 successful of bucket '{}'", request.GetBucket());
     return outcome.GetResultWithOwnership();
   } else {
-    logger_->log_error("ListObjectsV2 failed with the following: '%s'", outcome.GetError().GetMessage());
+    logger_->log_error("ListObjectsV2 failed with the following: '{}'", outcome.GetError().GetMessage());
     return std::nullopt;
   }
 }
@@ -99,10 +99,10 @@ std::optional<Aws::S3::Model::ListObjectVersionsResult> S3ClientRequestSender::s
   auto outcome = s3_client.ListObjectVersions(request);
 
   if (outcome.IsSuccess()) {
-    logger_->log_debug("ListObjectVersions successful of bucket '%s'", request.GetBucket());
+    logger_->log_debug("ListObjectVersions successful of bucket '{}'", request.GetBucket());
     return outcome.GetResultWithOwnership();
   } else {
-    logger_->log_error("ListObjectVersions failed with the following: '%s'", outcome.GetError().GetMessage());
+    logger_->log_error("ListObjectVersions failed with the following: '{}'", outcome.GetError().GetMessage());
     return std::nullopt;
   }
 }
@@ -115,10 +115,10 @@ std::optional<Aws::S3::Model::GetObjectTaggingResult> S3ClientRequestSender::sen
   auto outcome = s3_client.GetObjectTagging(request);
 
   if (outcome.IsSuccess()) {
-    logger_->log_debug("Got tags for S3 object '%s' from bucket '%s'", request.GetKey(), request.GetBucket());
+    logger_->log_debug("Got tags for S3 object '{}' from bucket '{}'", request.GetKey(), request.GetBucket());
     return outcome.GetResultWithOwnership();
   } else {
-    logger_->log_error("GetObjectTagging failed with the following: '%s'", outcome.GetError().GetMessage());
+    logger_->log_error("GetObjectTagging failed with the following: '{}'", outcome.GetError().GetMessage());
     return std::nullopt;
   }
 }
@@ -131,10 +131,10 @@ std::optional<Aws::S3::Model::HeadObjectResult> S3ClientRequestSender::sendHeadO
   auto outcome = s3_client.HeadObject(request);
 
   if (outcome.IsSuccess()) {
-    logger_->log_debug("HeadS3Object successful for key '%s' from bucket '%s'", request.GetKey(), request.GetBucket());
+    logger_->log_debug("HeadS3Object successful for key '{}' from bucket '{}'", request.GetKey(), request.GetBucket());
     return outcome.GetResultWithOwnership();
   } else {
-    logger_->log_error("HeadS3Object failed with the following: '%s'", outcome.GetError().GetMessage());
+    logger_->log_error("HeadS3Object failed with the following: '{}'", outcome.GetError().GetMessage());
     return std::nullopt;
   }
 }
@@ -148,10 +148,10 @@ std::optional<Aws::S3::Model::CreateMultipartUploadResult> S3ClientRequestSender
   auto outcome = s3_client.CreateMultipartUpload(request);
 
   if (outcome.IsSuccess()) {
-    logger_->log_debug("CreateMultipartUpload successful for key '%s' and bucket '%s'", request.GetKey(), request.GetBucket());
+    logger_->log_debug("CreateMultipartUpload successful for key '{}' and bucket '{}'", request.GetKey(), request.GetBucket());
     return outcome.GetResultWithOwnership();
   } else {
-    logger_->log_error("CreateMultipartUpload failed for key '%s' and bucket '%s' with the following: '%s'", request.GetKey(), request.GetBucket(), outcome.GetError().GetMessage());
+    logger_->log_error("CreateMultipartUpload failed for key '{}' and bucket '{}' with the following: '{}'", request.GetKey(), request.GetBucket(), outcome.GetError().GetMessage());
     return std::nullopt;
   }
 }
@@ -165,10 +165,10 @@ std::optional<Aws::S3::Model::UploadPartResult> S3ClientRequestSender::sendUploa
   auto outcome = s3_client.UploadPart(request);
 
   if (outcome.IsSuccess()) {
-    logger_->log_debug("UploadPart successful for key '%s' from bucket '%s' with part number %d", request.GetKey(), request.GetBucket(), request.GetPartNumber());
+    logger_->log_debug("UploadPart successful for key '{}' from bucket '{}' with part number {}", request.GetKey(), request.GetBucket(), request.GetPartNumber());
     return outcome.GetResultWithOwnership();
   } else {
-    logger_->log_error("UploadPart failed for key '%s' from bucket '%s' with part number %d with the following: '%s'",
+    logger_->log_error("UploadPart failed for key '{}' from bucket '{}' with part number {} with the following: '{}'",
       request.GetKey(), request.GetBucket(), request.GetPartNumber(), outcome.GetError().GetMessage());
     return std::nullopt;
   }
@@ -183,10 +183,10 @@ std::optional<Aws::S3::Model::CompleteMultipartUploadResult> S3ClientRequestSend
   auto outcome = s3_client.CompleteMultipartUpload(request);
 
   if (outcome.IsSuccess()) {
-    logger_->log_debug("CompleteMultipartUpload successful for key '%s' from bucket '%s'", request.GetKey(), request.GetBucket());
+    logger_->log_debug("CompleteMultipartUpload successful for key '{}' from bucket '{}'", request.GetKey(), request.GetBucket());
     return outcome.GetResultWithOwnership();
   } else {
-    logger_->log_error("CompleteMultipartUpload failed for key '%s' from bucket '%s' with the following: '%s'", request.GetKey(), request.GetBucket(), outcome.GetError().GetMessage());
+    logger_->log_error("CompleteMultipartUpload failed for key '{}' from bucket '{}' with the following: '{}'", request.GetKey(), request.GetBucket(), outcome.GetError().GetMessage());
     return std::nullopt;
   }
 }
@@ -200,10 +200,10 @@ std::optional<Aws::S3::Model::ListMultipartUploadsResult> S3ClientRequestSender:
   auto outcome = s3_client.ListMultipartUploads(request);
 
   if (outcome.IsSuccess()) {
-    logger_->log_debug("ListMultipartUploads successful for bucket '%s'", request.GetBucket());
+    logger_->log_debug("ListMultipartUploads successful for bucket '{}'", request.GetBucket());
     return outcome.GetResultWithOwnership();
   } else {
-    logger_->log_error("ListMultipartUploads failed for bucket '%s' with the following: '%s'", request.GetBucket(), outcome.GetError().GetMessage());
+    logger_->log_error("ListMultipartUploads failed for bucket '{}' with the following: '{}'", request.GetBucket(), outcome.GetError().GetMessage());
     return std::nullopt;
   }
 }
@@ -217,10 +217,10 @@ bool S3ClientRequestSender::sendAbortMultipartUploadRequest(
   auto outcome = s3_client.AbortMultipartUpload(request);
 
   if (outcome.IsSuccess()) {
-    logger_->log_debug("AbortMultipartUpload successful for bucket '%s', key '%s', upload id '%s'", request.GetBucket(), request.GetKey(), request.GetUploadId());
+    logger_->log_debug("AbortMultipartUpload successful for bucket '{}', key '{}', upload id '{}'", request.GetBucket(), request.GetKey(), request.GetUploadId());
     return true;
   } else {
-    logger_->log_error("AbortMultipartUpload failed for bucket '%s', key '%s', upload id '%s' with the following: '%s'",
+    logger_->log_error("AbortMultipartUpload failed for bucket '{}', key '{}', upload id '{}' with the following: '{}'",
       request.GetBucket(), request.GetKey(), request.GetUploadId(), outcome.GetError().GetMessage());
     return false;
   }

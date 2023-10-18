@@ -202,7 +202,7 @@ void addAttributesFromResponse(std::string name, rapidjson::Value::ConstMemberIt
   } else if (object->value.IsDouble()) {
     flow_file.addAttribute(name, std::to_string(object->value.GetDouble()));
   } else {
-    core::logging::LoggerFactory<PostElasticsearch>::getLogger()->log_error("Unexpected %s in response json", object->value.GetType());
+    core::logging::LoggerFactory<PostElasticsearch>::getLogger()->log_error("Unexpected {} in response json", magic_enum::enum_underlying(object->value.GetType()));
   }
 }
 
@@ -234,7 +234,7 @@ std::string PostElasticsearch::collectPayload(core::ProcessContext& context,
       break;
     auto elastic_payload = ElasticPayload::parse(session, context, flow_file);
     if (!elastic_payload) {
-      logger_->log_error(elastic_payload.error().c_str());
+      logger_->log_error("{}", elastic_payload.error());
       session.transfer(flow_file, PostElasticsearch::Failure);
       continue;
     }
@@ -257,7 +257,7 @@ void PostElasticsearch::onTrigger(const std::shared_ptr<core::ProcessContext>& c
 
   auto result = submitRequest(client_, payload, flowfiles_with_payload.size());
   if (!result) {
-    logger_->log_error(result.error().c_str());
+    logger_->log_error("{}", result.error());
     for (const auto& flow_file_in_payload: flowfiles_with_payload)
       session->transfer(flow_file_in_payload, Failure);
     return;

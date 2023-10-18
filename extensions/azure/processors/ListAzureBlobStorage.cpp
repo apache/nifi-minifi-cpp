@@ -103,10 +103,10 @@ void ListAzureBlobStorage::onTrigger(const std::shared_ptr<core::ProcessContext>
 
   state_manager_->storeState(latest_listing_state);
 
-  logger_->log_debug("ListAzureBlobStorage transferred %zu flow files", files_transferred);
+  logger_->log_debug("ListAzureBlobStorage transferred {} flow files", files_transferred);
 
   if (files_transferred == 0) {
-    logger_->log_debug("No new Azure Storage blobs were found in container '%s'", list_parameters_.container_name);
+    logger_->log_debug("No new Azure Storage blobs were found in container '{}'", list_parameters_.container_name);
     context->yield();
     return;
   }

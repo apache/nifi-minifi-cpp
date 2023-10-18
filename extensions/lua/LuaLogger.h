@@ -16,14 +16,23 @@
  * limitations under the License.
  */
 
-#include "DbHandle.h"
-#include "logging/LoggerConfiguration.h"
+#pragma once
 
-namespace org::apache::nifi::minifi::internal {
+#include <string>
+#include <memory>
 
-DbHandle::~DbHandle() {
-  static auto logger = core::logging::LoggerFactory<DbHandle>::getLogger();
-  logger->log_trace("Closing database handle '{}'", handle->GetName());
-}
+#include "sol/sol.hpp"
+#include "core/StateManager.h"
 
-}  // namespace org::apache::nifi::minifi::internal
+namespace org::apache::nifi::minifi::extensions::lua {
+
+class LuaLogger {
+ public:
+  explicit LuaLogger(gsl::not_null<core::logging::Logger*> logger) : logger_(logger) {}
+
+  void log_info(std::string_view log_message) { logger_->log_info("{}", log_message); }
+ private:
+  gsl::not_null<core::logging::Logger*> logger_;
+};
+
+}  // namespace org::apache::nifi::minifi::extensions::lua

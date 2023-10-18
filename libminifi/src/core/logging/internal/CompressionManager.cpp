@@ -39,7 +39,7 @@ std::shared_ptr<LogCompressorSink> CompressionManager::initialize(
       return value;
     }
     if (error_logger) {
-      error_logger->log_error("Invalid format for %s", property_name);
+      error_logger->log_error("Invalid format for {}", property_name);
     }
     return std::nullopt;
   };

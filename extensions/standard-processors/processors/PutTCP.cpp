@@ -188,11 +188,11 @@ void ConnectionHandler<SslSocket>::shutdownSocket() {
     asio::error_code ec;
     socket_->lowest_layer().cancel(ec);
     if (ec) {
-      logger_->log_error("Cancelling asynchronous operations of SSL socket failed with: %s", ec.message());
+      logger_->log_error("Cancelling asynchronous operations of SSL socket failed with: {}", ec.message());
     }
     socket_->shutdown(ec);
     if (ec) {
-      logger_->log_error("Shutdown of SSL socket failed with: %s", ec.message());
+      logger_->log_error("Shutdown of SSL socket failed with: {}", ec.message());
     }
   }
 }
@@ -204,13 +204,13 @@ asio::awaitable<std::error_code> ConnectionHandler<SocketType>::establishNewConn
   for (const auto& endpoint : endpoints) {
     auto [connection_error] = co_await asyncOperationWithTimeout(socket.lowest_layer().async_connect(endpoint, use_nothrow_awaitable), timeout_duration_);
     if (connection_error) {
-      core::logging::LOG_DEBUG(logger_) << "Connecting to " << endpoint.endpoint() << " failed due to " << connection_error.message();
+      logger_->log_debug("Connecting to {} failed due to {}", endpoint.endpoint(), connection_error.message());
       last_error = connection_error;
       continue;
     }
     auto [handshake_error] = co_await utils::net::handshake(socket, timeout_duration_);
     if (handshake_error) {
-      core::logging::LOG_DEBUG(logger_) << "Handshake with " << endpoint.endpoint() << " failed due to " << handshake_error.message();
+      logger_->log_debug("Handshake with {} failed due to {}", endpoint.endpoint(), handshake_error.message());
       last_error = handshake_error;
       continue;
     }
@@ -258,13 +258,13 @@ asio::awaitable<std::error_code> ConnectionHandler<SocketType>::send(const std::
       asio::async_write(*socket_, asio::buffer(data_chunk, num_read), use_nothrow_awaitable), timeout_duration_);
     if (write_error)
       co_return write_error;
-    logger_->log_trace("Writing flowfile(%zu bytes) to socket succeeded", bytes_written);
+    logger_->log_trace("Writing flowfile({} bytes) to socket succeeded", bytes_written);
   }
   auto [delimiter_write_error, delimiter_bytes_written] = co_await asyncOperationWithTimeout(
     asio::async_write(*socket_, asio::buffer(delimiter), use_nothrow_awaitable), timeout_duration_);
   if (delimiter_write_error)
     co_return delimiter_write_error;
-  logger_->log_trace("Writing delimiter(%zu bytes) to socket succeeded", delimiter_bytes_written);
+  logger_->log_trace("Writing delimiter({} bytes) to socket succeeded", delimiter_bytes_written);
 
   last_used_ = steady_clock::now();
   co_return std::error_code();
@@ -285,7 +285,7 @@ void PutTCP::onTrigger(core::ProcessContext* context, core::ProcessSession* cons
   auto hostname = context->getProperty(Hostname, flow_file).value_or(std::string{});
   auto port = context->getProperty(Port, flow_file).value_or(std::string{});
   if (hostname.empty() || port.empty()) {
-    logger_->log_error("[%s] invalid target endpoint: hostname: %s, port: %s", flow_file->getUUIDStr(),
+    logger_->log_error("[{}] invalid target endpoint: hostname: {}, port: {}", flow_file->getUUIDStr(),
         hostname.empty() ? "(empty)" : hostname.c_str(),
         port.empty() ? "(empty)" : port.c_str());
     session->transfer(flow_file, Failure);
@@ -344,14 +344,14 @@ void PutTCP::processFlowFile(std::shared_ptr<ConnectionHandlerBase>& connection_
   std::error_code operation_error = sendFlowFileContent(connection_handler, flow_file_content_stream);
 
   if (operation_error && connection_handler->hasBeenUsed()) {
-    logger_->log_warn("%s with reused connection, retrying...", operation_error.message());
+    logger_->log_warn("{} with reused connection, retrying...", operation_error.message());
     connection_handler->reset();
     operation_error = sendFlowFileContent(connection_handler, flow_file_content_stream);
   }
 
   if (operation_error) {
     connection_handler->reset();
-    logger_->log_error("%s", operation_error.message());
+    logger_->log_error("{}", operation_error.message());
     session.transfer(flow_file, Failure);
   } else {
     session.transfer(flow_file, Success);

@@ -28,17 +28,16 @@ bool ProvenanceRepository::initialize(const std::shared_ptr<org::apache::nifi::m
   if (config->get(Configure::nifi_provenance_repository_directory_default, value) && !value.empty()) {
     directory_ = value;
   }
-  logger_->log_debug("MiNiFi Provenance Repository Directory %s", directory_);
+  logger_->log_debug("MiNiFi Provenance Repository Directory {}", directory_);
   if (config->get(Configure::nifi_provenance_repository_max_storage_size, value)) {
     core::Property::StringToInt(value, max_partition_bytes_);
   }
-  logger_->log_debug("MiNiFi Provenance Max Partition Bytes %d", max_partition_bytes_);
+  logger_->log_debug("MiNiFi Provenance Max Partition Bytes {}", max_partition_bytes_);
   if (config->get(Configure::nifi_provenance_repository_max_storage_time, value)) {
     if (auto max_partition = utils::timeutils::StringToDuration<std::chrono::milliseconds>(value))
       max_partition_millis_ = *max_partition;
   }
-  logger_->log_debug("MiNiFi Provenance Max Storage Time: [%" PRId64 "] ms",
-                      int64_t{max_partition_millis_.count()});
+  logger_->log_debug("MiNiFi Provenance Max Storage Time: [{}]", max_partition_millis_);
 
   auto db_options = [] (minifi::internal::Writable<rocksdb::DBOptions>& db_opts) {
     db_opts.set(&rocksdb::DBOptions::create_if_missing, true);
@@ -63,9 +62,9 @@ bool ProvenanceRepository::initialize(const std::shared_ptr<org::apache::nifi::m
 
   db_ = minifi::internal::RocksDatabase::create(db_options, cf_options, directory_);
   if (db_->open()) {
-    logger_->log_debug("MiNiFi Provenance Repository database open %s success", directory_);
+    logger_->log_debug("MiNiFi Provenance Repository database open {} success", directory_);
   } else {
-    logger_->log_error("MiNiFi Provenance Repository database open %s failed", directory_);
+    logger_->log_error("MiNiFi Provenance Repository database open {} failed", directory_);
     return false;
   }
 

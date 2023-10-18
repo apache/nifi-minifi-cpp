@@ -129,7 +129,7 @@ void FetchSFTP::onTrigger(const std::shared_ptr<core::ProcessContext> &context, 
       return gsl::narrow<int64_t>(*bytes_read);
     });
   } catch (const utils::SFTPException& ex) {
-    logger_->log_debug(ex.what());
+    logger_->log_debug("{}", ex.what());
     switch (ex.error()) {
       case utils::SFTPError::PermissionDenied:
         session->transfer(flow_file, PermissionDenied);
@@ -163,7 +163,7 @@ void FetchSFTP::onTrigger(const std::shared_ptr<core::ProcessContext> &context, 
   /* Execute completion strategy */
   if (completion_strategy_ == COMPLETION_STRATEGY_DELETE_FILE) {
     if (!client->removeFile(remote_file.generic_string())) {
-      logger_->log_warn("Completion Strategy is Delete File, but failed to delete remote file \"%s\"", remote_file.generic_string());
+      logger_->log_warn("Completion Strategy is Delete File, but failed to delete remote file \"{}\"", remote_file.generic_string());
     }
   } else if (completion_strategy_ == COMPLETION_STRATEGY_MOVE_FILE) {
     bool should_move = true;
@@ -174,11 +174,11 @@ void FetchSFTP::onTrigger(const std::shared_ptr<core::ProcessContext> &context, 
       }
     }
     if (!should_move) {
-      logger_->log_warn("Completion Strategy is Move File, but failed to create Move Destination Directory \"%s\"", move_destination_directory.generic_string());
+      logger_->log_warn("Completion Strategy is Move File, but failed to create Move Destination Directory \"{}\"", move_destination_directory.generic_string());
     } else {
       auto target_path = move_destination_directory / child_path;
       if (!client->rename(remote_file.generic_string(), target_path.generic_string(), false /*overwrite*/)) {
-        logger_->log_warn(R"(Completion Strategy is Move File, but failed to move file "%s" to "%s")", remote_file.generic_string(), target_path.generic_string());
+        logger_->log_warn(R"(Completion Strategy is Move File, but failed to move file "{}" to "{}")", remote_file.generic_string(), target_path.generic_string());
       }
     }
   }

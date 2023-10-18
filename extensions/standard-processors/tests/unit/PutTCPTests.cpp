@@ -62,7 +62,7 @@ class CancellableTcpServer : public utils::net::TcpServer {
     while (true) {
       auto [accept_error, socket] = co_await acceptor.async_accept(utils::net::use_nothrow_awaitable);
       if (accept_error) {
-        logger_->log_error("Error during accepting new connection: %s", accept_error.message());
+        logger_->log_error("Error during accepting new connection: {}", accept_error.message());
         break;
       }
       std::error_code error;

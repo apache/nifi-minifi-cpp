@@ -70,7 +70,7 @@ TEST_CASE_METHOD(LogPublisherTestFixture, "Logging interval property is mandator
     configuration_->set(minifi::Configuration::nifi_metrics_publisher_log_metrics_logging_interval, "2s");
     using org::apache::nifi::minifi::utils::verifyLogLinePresenceInPollTime;
     publisher_.initialize(configuration_, response_node_loader_);
-    REQUIRE(verifyLogLinePresenceInPollTime(5s, "Metric logging interval is set to 2000 milliseconds"));
+    REQUIRE(verifyLogLinePresenceInPollTime(5s, "Metric logging interval is set to 2000ms"));
   }
 }
 

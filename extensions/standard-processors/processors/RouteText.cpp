@@ -378,7 +378,7 @@ void RouteText::onDynamicPropertyModified(const core::Property& /*orig_property*
     core::RelationshipDefinition rel{property_name, "Dynamic Route"};
     dynamic_relationships_[property_name] = rel;
     relationships.push_back(rel);
-    logger_->log_info("RouteText registered dynamic route '%s' with expression '%s'", property_name, prop.getValue().to_string());
+    logger_->log_info("RouteText registered dynamic route '{}' with expression '{}'", property_name, prop.getValue().to_string());
   }
 
   setSupportedRelationships(relationships);

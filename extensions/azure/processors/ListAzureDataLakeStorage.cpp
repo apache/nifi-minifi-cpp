@@ -122,10 +122,10 @@ void ListAzureDataLakeStorage::onTrigger(const std::shared_ptr<core::ProcessCont
 
   state_manager_->storeState(latest_listing_state);
 
-  logger_->log_debug("ListAzureDataLakeStorage transferred %zu flow files", files_transferred);
+  logger_->log_debug("ListAzureDataLakeStorage transferred {} flow files", files_transferred);
 
   if (files_transferred == 0) {
-    logger_->log_debug("No new Azure Data Lake Storage files were found in directory '%s' of filesystem '%s'", list_parameters_.directory_name, list_parameters_.file_system_name);
+    logger_->log_debug("No new Azure Data Lake Storage files were found in directory '{}' of filesystem '{}'", list_parameters_.directory_name, list_parameters_.file_system_name);
     context->yield();
     return;
   }

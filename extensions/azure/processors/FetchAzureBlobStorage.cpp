@@ -42,12 +42,12 @@ std::optional<storage::FetchAzureBlobStorageParameters> FetchAzureBlobStorage::b
   std::string value;
   if (context.getProperty(RangeStart, value, flow_file)) {
     params.range_start = std::stoull(value);
-    logger_->log_debug("Range Start property set to %llu", *params.range_start);
+    logger_->log_debug("Range Start property set to {}", *params.range_start);
   }
 
   if (context.getProperty(RangeLength, value, flow_file)) {
     params.range_length = std::stoull(value);
-    logger_->log_debug("Range Length property set to %llu", *params.range_length);
+    logger_->log_debug("Range Length property set to {}", *params.range_length);
   }
 
   return params;
@@ -79,11 +79,11 @@ void FetchAzureBlobStorage::onTrigger(const std::shared_ptr<core::ProcessContext
   });
 
   if (result_size == std::nullopt) {
-    logger_->log_error("Failed to fetch blob '%s' from Azure Blob storage", params->blob_name);
+    logger_->log_error("Failed to fetch blob '{}' from Azure Blob storage", params->blob_name);
     session->transfer(flow_file, Failure);
     session->remove(fetched_flow_file);
   } else {
-    logger_->log_debug("Successfully fetched blob '%s' from container '%s' on Azure Blob storage", params->blob_name, params->container_name);
+    logger_->log_debug("Successfully fetched blob '{}' from container '{}' on Azure Blob storage", params->blob_name, params->container_name);
     session->transfer(fetched_flow_file, Success);
     session->remove(flow_file);
   }

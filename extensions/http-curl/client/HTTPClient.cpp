@@ -72,7 +72,7 @@ HTTPClient::~HTTPClient() {
   // out of good hygiene.
   forceClose();
   content_.close();
-  logger_->log_trace("Closing HTTPClient for %s", url_);
+  logger_->log_trace("Closing HTTPClient for {}", url_);
 }
 
 void HTTPClient::forceClose() {
@@ -91,7 +91,7 @@ int HTTPClient::debug_callback(CURL *handle, curl_infotype type, char *data, siz
     return 0;
   }
   if (type == CURLINFO_TEXT) {
-    core::logging::LOG_DEBUG(*logger) << "CURL(" << reinterpret_cast<void*>(handle) << "): " << std::string(data, size);
+    (*logger)->log_debug("CURL({}): {:.{}}", handle, data, size);
   }
   return 0;
 }
@@ -132,7 +132,7 @@ void HTTPClient::setPeerVerification(bool peer_verification) {
 }
 
 void HTTPClient::setHostVerification(bool host_verification) {
-  logger_->log_debug("%s host verification", host_verification ? "Enabling" : "Disabling");
+  logger_->log_debug("{} host verification", host_verification ? "Enabling" : "Disabling");
   curl_easy_setopt(http_session_.get(), CURLOPT_SSL_VERIFYHOST, host_verification);
 }
 
@@ -250,7 +250,7 @@ void HTTPClient::setKeepAliveProbe(std::optional<KeepAliveProbeData> probe_data)
 
 void HTTPClient::setConnectionTimeout(std::chrono::milliseconds timeout) {
   if (timeout < 0ms) {
-    logger_->log_error("Invalid HTTP connection timeout %" PRId64 " ms", timeout.count());
+    logger_->log_error("Invalid HTTP connection timeout {}", timeout);
     return;
   }
   connect_timeout_ = timeout;
@@ -258,7 +258,7 @@ void HTTPClient::setConnectionTimeout(std::chrono::milliseconds timeout) {
 
 void HTTPClient::setReadTimeout(std::chrono::milliseconds timeout) {
   if (timeout < 0ms) {
-    logger_->log_error("Invalid HTTP read timeout %" PRId64 " ms", timeout.count());
+    logger_->log_error("Invalid HTTP read timeout {}", timeout);
     return;
   }
   read_timeout_ = timeout;
@@ -271,7 +271,7 @@ void HTTPClient::setReadCallback(std::unique_ptr<utils::HTTPReadCallback> callba
 }
 
 void HTTPClient::setUploadCallback(std::unique_ptr<utils::HTTPUploadCallback> callback) {
-  logger_->log_debug("Setting callback for %s", url_);
+  logger_->log_debug("Setting callback for {}", url_);
   write_callback_ = std::move(callback);
   if (method_ == utils::HttpRequestMethod::PUT) {
     curl_easy_setopt(http_session_.get(), CURLOPT_INFILESIZE_LARGE, (curl_off_t) write_callback_->size());
@@ -373,7 +373,7 @@ bool HTTPClient::submit() {
   }
 
   curl_easy_setopt(http_session_.get(), CURLOPT_URL, url_.c_str());
-  logger_->log_debug("Submitting to %s", url_);
+  logger_->log_debug("Submitting to {}", url_);
   if (read_callback_ == nullptr) {
     curl_easy_setopt(http_session_.get(), CURLOPT_WRITEFUNCTION, &utils::HTTPRequestResponse::receiveWrite);
     curl_easy_setopt(http_session_.get(), CURLOPT_WRITEDATA, static_cast<void*>(&content_));
@@ -394,15 +394,15 @@ bool HTTPClient::submit() {
   response_data_.response_code = http_code;
   curl_easy_getinfo(http_session_.get(), CURLINFO_CONTENT_TYPE, &response_data_.response_content_type);
   if (res_ == CURLE_OPERATION_TIMEDOUT) {
-    logger_->log_error("HTTP operation timed out, with absolute timeout %" PRId64 "ms\n", getAbsoluteTimeout().count());
+    logger_->log_error("HTTP operation timed out, with absolute timeout {}\n", getAbsoluteTimeout());
   }
   if (res_ != CURLE_OK) {
-    logger_->log_info("%d", request_headers_.size());
-    logger_->log_error("curl_easy_perform() failed %s on %s, error code %d\n", curl_easy_strerror(res_), url_, res_);
+    logger_->log_info("{}", request_headers_.size());
+    logger_->log_error("curl_easy_perform() failed {} on {}, error code {}\n", curl_easy_strerror(res_), url_, magic_enum::enum_underlying(res_));
     return false;
   }
 
-  logger_->log_debug("Finished with %s", url_);
+  logger_->log_debug("Finished with {}", url_);
   return true;
 }
 
@@ -471,9 +471,7 @@ int HTTPClient::onProgress(void *clientp, curl_off_t /*dltotal*/, curl_off_t dln
   // did not transfer data
   if (elapsed > client.read_timeout_) {
     // timeout
-    client.logger_->log_error("HTTP operation has been idle for %" PRId64 " ms, limit (%" PRId64 "ms) reached, terminating connection\n",
-        int64_t{std::chrono::duration_cast<std::chrono::milliseconds>(elapsed).count()},
-        int64_t{client.read_timeout_.count()});
+    client.logger_->log_error("HTTP operation has been idle for {}, limit ({}) reached, terminating connection\n", elapsed, client.read_timeout_);
     return 1;
   }
   return 0;
@@ -490,7 +488,7 @@ void HTTPClient::configure_secure_connection() {
     static const auto default_ca_file = utils::getDefaultCAFile();
 
     if (default_ca_file)
-      logger_->log_debug("Using CA certificate file \"%s\"", std::string(*default_ca_file));
+      logger_->log_debug("Using CA certificate file \"{}\"", *default_ca_file);
     else
       logger_->log_error("Could not find valid CA certificate file");
 

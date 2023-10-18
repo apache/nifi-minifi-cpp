@@ -140,7 +140,7 @@ void LoggerConfiguration::initialize(const std::shared_ptr<LoggerProperties> &lo
         max_log_entry_length_ = std::stoi(*max_log_entry_length_str);
       }
     } catch (const std::exception& ex) {
-      logger_->log_error("Parsing max log entry length property failed with the following exception: %s", ex.what());
+      logger_->log_error("Parsing max log entry length property failed with the following exception: {}", ex.what());
     }
   }
 
@@ -157,7 +157,7 @@ void LoggerConfiguration::initialize(const std::shared_ptr<LoggerProperties> &lo
     }
     logger_impl->set_delegate(spdlogger);
   }
-  logger_->log_debug("Set following pattern on loggers: %s", spdlog_pattern);
+  logger_->log_debug("Set following pattern on loggers: {}", spdlog_pattern);
 }
 
 std::shared_ptr<Logger> LoggerConfiguration::getLogger(std::string_view name, const std::optional<utils::Identifier>& id) {
@@ -242,7 +242,7 @@ std::shared_ptr<internal::LoggerNamespace> LoggerConfiguration::initialize_names
         if (auto it = sink_map.find(level_name); it != sink_map.end()) {
           sinks.push_back(it->second);
         } else {
-          logger->log_error("Couldn't find sink '%s'", level_name);
+          logger->log_error("Couldn't find sink '{}'", level_name);
         }
       }
     }
@@ -304,8 +304,7 @@ std::shared_ptr<spdlog::logger> LoggerConfiguration::get_logger(const std::share
     current_namespace_str += "::";
   }
   if (logger != nullptr) {
-    const auto levelView(spdlog::level::to_string_view(level));
-    logger->log_debug("%s logger got sinks from namespace %s and level %s from namespace %s", name, sink_namespace_str, std::string(levelView.begin(), levelView.end()), level_namespace_str);
+    logger->log_debug("{} logger got sinks from namespace {} and level {} from namespace {}", name, sink_namespace_str, spdlog::level::to_string_view(level), level_namespace_str);
   }
   std::copy(inherited_sinks.begin(), inherited_sinks.end(), std::back_inserter(sinks));
   spdlogger = std::make_shared<spdlog::logger>(name, begin(sinks), end(sinks));

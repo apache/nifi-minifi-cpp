@@ -31,17 +31,17 @@ ReadArchiveStreamImpl::archive_ptr ReadArchiveStreamImpl::createReadArchive() {
 
   result = archive_read_support_format_all(arch.get());
   if (result != ARCHIVE_OK) {
-    logger_->log_error("Archive read support format all error %s", archive_error_string(arch.get()));
+    logger_->log_error("Archive read support format all error {}", archive_error_string(arch.get()));
     return nullptr;
   }
   result = archive_read_support_filter_all(arch.get());
   if (result != ARCHIVE_OK) {
-    logger_->log_error("Archive read support filter all error %s", archive_error_string(arch.get()));
+    logger_->log_error("Archive read support filter all error {}", archive_error_string(arch.get()));
     return nullptr;
   }
   result = archive_read_open2(arch.get(), &reader_, nullptr, archive_read, nullptr, nullptr);
   if (result != ARCHIVE_OK) {
-    logger_->log_error("Archive read open error %s", archive_error_string(arch.get()));
+    logger_->log_error("Archive read open error {}", archive_error_string(arch.get()));
     return nullptr;
   }
   return arch;
@@ -56,12 +56,12 @@ std::optional<EntryInfo> ReadArchiveStreamImpl::nextEntry() {
   int result = archive_read_next_header(arch_.get(), &entry);
   if (result != ARCHIVE_OK) {
     if (result != ARCHIVE_EOF) {
-      logger_->log_error("Archive read next header error %s", archive_error_string(arch_.get()));
+      logger_->log_error("Archive read next header error {}", archive_error_string(arch_.get()));
     }
     return std::nullopt;
   }
   entry_size_ = gsl::narrow<size_t>(archive_entry_size(entry));
-  logger_->log_debug("Archive entry size %zu", entry_size_.value());
+  logger_->log_debug("Archive entry size {}", entry_size_.value());
   return EntryInfo{archive_entry_pathname(entry), entry_size_.value()};
 }
 
@@ -76,7 +76,7 @@ size_t ReadArchiveStreamImpl::read(const std::span<std::byte> out_buffer) {
 
   const la_ssize_t result = archive_read_data(arch_.get(), out_buffer.data(), out_buffer.size());
   if (result < 0) {
-    logger_->log_error("Archive read data error %s", archive_error_string(arch_.get()));
+    logger_->log_error("Archive read data error {}", archive_error_string(arch_.get()));
     entry_size_.reset();
     arch_.reset();
     return STREAM_ERROR;

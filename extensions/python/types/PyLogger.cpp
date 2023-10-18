@@ -70,7 +70,7 @@ PyObject* PyLogger::error(PyLogger* self, PyObject* args) {
   if (!PyArg_ParseTuple(args, "s", &message)) {
     throw PyException();
   }
-  logger->log_error(message);
+  logger->log_error("{}", message);
   Py_RETURN_NONE;
 }
 
@@ -85,7 +85,7 @@ PyObject* PyLogger::warn(PyLogger* self, PyObject* args) {
   if (!PyArg_ParseTuple(args, "s", &message)) {
     throw PyException();
   }
-  logger->log_warn(message);
+  logger->log_warn("{}", message);
   Py_RETURN_NONE;
 }
 
@@ -100,7 +100,7 @@ PyObject* PyLogger::info(PyLogger* self, PyObject* args) {
   if (!PyArg_ParseTuple(args, "s", &message)) {
     throw PyException();
   }
-  logger->log_info(message);
+  logger->log_info("{}", message);
   Py_RETURN_NONE;
 }
 
@@ -115,7 +115,7 @@ PyObject* PyLogger::debug(PyLogger* self, PyObject* args) {
   if (!PyArg_ParseTuple(args, "s", &message)) {
     throw PyException();
   }
-  logger->log_debug(message);
+  logger->log_debug("{}", message);
   Py_RETURN_NONE;
 }
 
@@ -130,7 +130,7 @@ PyObject* PyLogger::trace(PyLogger* self, PyObject* args) {
   if (!PyArg_ParseTuple(args, "s", &message)) {
     throw PyException();
   }
-  logger->log_trace(message);
+  logger->log_trace("{}", message);
   Py_RETURN_NONE;
 }
 

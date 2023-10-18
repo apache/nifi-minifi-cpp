@@ -36,11 +36,11 @@ void UpdateAttribute::initialize() {
 void UpdateAttribute::onSchedule(core::ProcessContext *context, core::ProcessSessionFactory* /*sessionFactory*/) {
   attributes_.clear();
   const auto &dynamic_prop_keys = context->getDynamicPropertyKeys();
-  logger_->log_info("UpdateAttribute registering %d keys", dynamic_prop_keys.size());
+  logger_->log_info("UpdateAttribute registering {} keys", dynamic_prop_keys.size());
 
   for (const auto &key : dynamic_prop_keys) {
     attributes_.emplace_back(core::PropertyDefinitionBuilder<>::createProperty(key).withDescription("auto generated").supportsExpressionLanguage(true).build());
-    logger_->log_info("UpdateAttribute registered attribute '%s'", key);
+    logger_->log_info("UpdateAttribute registered attribute '{}'", key);
   }
 }
 
@@ -57,11 +57,11 @@ void UpdateAttribute::onTrigger(core::ProcessContext *context, core::ProcessSess
       std::string value;
       context->getDynamicProperty(attribute, value, flow_file);
       flow_file->setAttribute(attribute.getName(), value);
-      logger_->log_info("Set attribute '%s' of flow file '%s' with value '%s'", attribute.getName(), flow_file->getUUIDStr(), value);
+      logger_->log_info("Set attribute '{}' of flow file '{}' with value '{}'", attribute.getName(), flow_file->getUUIDStr(), value);
     }
     session->transfer(flow_file, Success);
   } catch (const std::exception &e) {
-    logger_->log_error("Caught exception while updating attributes: %s", e.what());
+    logger_->log_error("Caught exception while updating attributes: {}", e.what());
     session->transfer(flow_file, Failure);
     yield();
   }

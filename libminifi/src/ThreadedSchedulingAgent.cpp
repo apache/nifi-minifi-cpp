@@ -52,7 +52,7 @@ void ThreadedSchedulingAgent::schedule(core::Processor* processor) {
     std::optional<core::TimePeriodValue> value = core::TimePeriodValue::fromString(yieldValue);
     if (value) {
       admin_yield_duration_ = value->getMilliseconds();
-      logger_->log_debug("nifi_administrative_yield_duration: [%" PRId64 "] ms", int64_t{admin_yield_duration_.count()});
+      logger_->log_debug("nifi_administrative_yield_duration: [{}]", admin_yield_duration_);
     }
   }
 
@@ -61,17 +61,17 @@ void ThreadedSchedulingAgent::schedule(core::Processor* processor) {
     std::optional<core::TimePeriodValue> value = core::TimePeriodValue::fromString(yieldValue);
     if (value) {
       bored_yield_duration_ = value->getMilliseconds();
-      logger_->log_debug("nifi_bored_yield_duration: [%" PRId64 "] ms", int64_t{bored_yield_duration_.count()});
+      logger_->log_debug("nifi_bored_yield_duration: [{}]", bored_yield_duration_);
     }
   }
 
   if (processor->getScheduledState() != core::RUNNING) {
-    logger_->log_debug("Can not schedule threads for processor %s because it is not running", processor->getName());
+    logger_->log_debug("Can not schedule threads for processor {} because it is not running", processor->getName());
     return;
   }
 
   if (thread_pool_.isTaskRunning(processor->getUUIDStr())) {
-    logger_->log_warn("Can not schedule threads for processor %s because there are existing threads running", processor->getName());
+    logger_->log_warn("Can not schedule threads for processor {} because there are existing threads running", processor->getName());
     return;
   }
 
@@ -102,7 +102,7 @@ void ThreadedSchedulingAgent::schedule(core::Processor* processor) {
     std::future<utils::TaskRescheduleInfo> future;
     thread_pool_.execute(utils::Worker{f_ex, processor->getUUIDStr()}, future);
   }
-  logger_->log_debug("Scheduled thread %d concurrent workers for for process %s", processor->getMaxConcurrentTasks(), processor->getName());
+  logger_->log_debug("Scheduled thread {} concurrent workers for for process {}", processor->getMaxConcurrentTasks(), processor->getName());
   processors_running_.insert(processor->getUUID());
 }
 
@@ -110,17 +110,17 @@ void ThreadedSchedulingAgent::stop() {
   SchedulingAgent::stop();
   std::lock_guard<std::mutex> lock(mutex_);
   for (const auto& processor_id : processors_running_) {
-    logger_->log_error("SchedulingAgent is stopped before processor was unscheduled: %s", processor_id.to_string());
+    logger_->log_error("SchedulingAgent is stopped before processor was unscheduled: {}", processor_id.to_string());
     thread_pool_.stopTasks(processor_id.to_string());
   }
 }
 
 void ThreadedSchedulingAgent::unschedule(core::Processor* processor) {
   std::lock_guard<std::mutex> lock(mutex_);
-  logger_->log_debug("Shutting down threads for processor %s/%s", processor->getName(), processor->getUUIDStr());
+  logger_->log_debug("Shutting down threads for processor {}/{}", processor->getName(), processor->getUUIDStr());
 
   if (processor->getScheduledState() != core::RUNNING) {
-    logger_->log_warn("Cannot unschedule threads for processor %s because it is not running", processor->getName());
+    logger_->log_warn("Cannot unschedule threads for processor {} because it is not running", processor->getName());
     return;
   }
 

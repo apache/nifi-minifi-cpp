@@ -100,7 +100,7 @@ void InvokeHTTP::setupMembersFromProperties(const core::ProcessContext& context)
   attributes_to_send_ = context.getProperty(AttributesToSend)
                         | utils::filter([](const std::string& s) { return !s.empty(); })  // avoid compiling an empty string to regex
                         | utils::transform([](const std::string& regex_str) { return utils::Regex{regex_str}; })
-                        | utils::orElse([this] { logger_->log_debug("%s is missing, so the default value will be used", std::string{AttributesToSend.name}); });
+                        | utils::orElse([this] { logger_->log_debug("{} is missing, so the default value will be used", AttributesToSend.name); });
 
   always_output_response_ = (context.getProperty(AlwaysOutputResponse) | utils::andThen(&utils::StringUtils::toBool)).value_or(false);
   penalize_no_retry_ = (context.getProperty(PenalizeOnNoRetry) | utils::andThen(&utils::StringUtils::toBool)).value_or(false);
@@ -109,7 +109,7 @@ void InvokeHTTP::setupMembersFromProperties(const core::ProcessContext& context)
 
   put_response_body_in_attribute_ = context.getProperty(PutResponseBodyInAttribute);
   if (put_response_body_in_attribute_ && put_response_body_in_attribute_->empty()) {
-    logger_->log_warn("%s is set to an empty string", std::string{PutResponseBodyInAttribute.name});
+    logger_->log_warn("{} is set to an empty string", PutResponseBodyInAttribute.name);
     put_response_body_in_attribute_.reset();
   }
 
@@ -129,9 +129,9 @@ std::unique_ptr<minifi::extensions::curl::HTTPClient> InvokeHTTP::createHTTPClie
     if (auto service = context.getControllerService(*ssl_context_name)) {
       ssl_context_service = std::dynamic_pointer_cast<minifi::controllers::SSLContextService>(service);
       if (!ssl_context_service)
-        logger_->log_error("Controller service '%s' is not an SSLContextService", *ssl_context_name);
+        logger_->log_error("Controller service '{}' is not an SSLContextService", *ssl_context_name);
     } else {
-      logger_->log_error("Couldn't find controller service with name '%s'", *ssl_context_name);
+      logger_->log_error("Couldn't find controller service with name '{}'", *ssl_context_name);
     }
   }
 
@@ -209,10 +209,10 @@ void InvokeHTTP::onTrigger(const std::shared_ptr<core::ProcessContext>& context,
 
   if (flow_file == nullptr) {
     if (!shouldEmitFlowFile()) {
-      logger_->log_debug("InvokeHTTP -- create flow file with  %s", std::string(magic_enum::enum_name(method_)));
+      logger_->log_debug("InvokeHTTP -- create flow file with {}", magic_enum::enum_name(method_));
       flow_file = session->create();
     } else {
-      logger_->log_debug("Exiting because method is %s and there is no flowfile available to execute it, yielding", std::string(magic_enum::enum_name(method_)));
+      logger_->log_debug("Exiting because method is {} and there is no flowfile available to execute it, yielding", magic_enum::enum_name(method_));
       yield();
       return;
     }
@@ -227,7 +227,7 @@ void InvokeHTTP::onTrigger(const std::shared_ptr<core::ProcessContext>& context,
 
 void InvokeHTTP::onTriggerWithClient(const std::shared_ptr<core::ProcessContext>& context, const std::shared_ptr<core::ProcessSession>& session,
     const std::shared_ptr<core::FlowFile>& flow_file, minifi::extensions::curl::HTTPClient& client) {
-  logger_->log_debug("onTrigger InvokeHTTP with %s to %s", std::string(magic_enum::enum_name(method_)), client.getURL());
+  logger_->log_debug("onTrigger InvokeHTTP with {} to {}", magic_enum::enum_name(method_), client.getURL());
 
   const auto remove_callback_from_client_at_exit = gsl::finally([&client] {
     client.setUploadCallback({});
@@ -246,7 +246,7 @@ void InvokeHTTP::onTriggerWithClient(const std::shared_ptr<core::ProcessContext>
         callback_obj = std::make_unique<utils::HTTPUploadByteArrayInputCallback>();
       }
       client.setUploadCallback(std::move(callback_obj));
-      logger_->log_trace("InvokeHTTP -- Setting callback, size is %d", flow_file->getSize());
+      logger_->log_trace("InvokeHTTP -- Setting callback, size is {}", flow_file->getSize());
 
       if (!send_message_body_) {
         client.setRequestHeader("Content-Length", "0");
@@ -290,7 +290,7 @@ void InvokeHTTP::onTriggerWithClient(const std::shared_ptr<core::ProcessContext>
 
     bool is_success = ((http_code / 100) == 2);
 
-    logger_->log_debug("isSuccess: %d, response code %" PRId64, is_success, http_code);
+    logger_->log_debug("isSuccess: {}, response code {}", is_success, http_code);
     std::shared_ptr<core::FlowFile> response_flow = nullptr;
 
     if (is_success) {

@@ -198,13 +198,13 @@ uint64_t IdGenerator::getDeviceSegmentFromString(const std::string& str, int num
     } else if (c >= 'A' && c <= 'F') {
       deviceSegment = deviceSegment + (c - 'A' + 10);
     } else {
-      core::logging::LOG_ERROR(logger_) << "Expected hex char (0-9, A-F).  Got " << c;
+      logger_->log_error("Expected hex char (0-9, A-F).  Got {}", c);
     }
     deviceSegment = deviceSegment << 4;
   }
   deviceSegment <<= 64 - (4 * (str.length() + 1));
   deviceSegment >>= 64 - numBits;
-  core::logging::LOG_DEBUG(logger_) << "Using user defined device segment: " << std::hex << deviceSegment;
+  logger_->log_debug("Using user defined device segment: {:#x}", deviceSegment);
   deviceSegment <<= 64 - numBits;
   return deviceSegment;
 }
@@ -230,7 +230,7 @@ uint64_t IdGenerator::getRandomDeviceSegment(int numBits) const {
     }
   }
   deviceSegment >>= 64 - numBits;
-  core::logging::LOG_DEBUG(logger_) << "Using random defined device segment:" << deviceSegment;
+  logger_->log_debug("Using random defined device segment: {:#x}", deviceSegment);
   deviceSegment <<= 64 - numBits;
   return deviceSegment;
 }
@@ -241,13 +241,13 @@ void IdGenerator::initialize(const std::shared_ptr<Properties>& properties) {
   if (properties->getString("uid.implementation", implementation_str)) {
     std::transform(implementation_str.begin(), implementation_str.end(), implementation_str.begin(), ::tolower);
     if (UUID_RANDOM_STR == implementation_str || UUID_WINDOWS_RANDOM_STR == implementation_str) {
-      core::logging::LOG_DEBUG(logger_) << "Using uuid_generate_random for uids.";
+      logger_->log_debug("Using uuid_generate_random for uids.");
       implementation_ = UUID_RANDOM_IMPL;
     } else if (UUID_DEFAULT_STR == implementation_str) {
-      core::logging::LOG_DEBUG(logger_) << "Using uuid_generate for uids.";
+      logger_->log_debug("Using uuid_generate for uids.");
       implementation_ = UUID_DEFAULT_IMPL;
     } else if (MINIFI_UID_STR == implementation_str) {
-      core::logging::LOG_DEBUG(logger_) << "Using minifi uid implementation for uids";
+      logger_->log_debug("Using minifi uid implementation for uids");
       implementation_ = MINIFI_UID_IMPL;
 
       uint64_t timestamp = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now().time_since_epoch()).count();
@@ -258,13 +258,13 @@ void IdGenerator::initialize(const std::shared_ptr<Properties>& properties) {
         if (properties->getString("uid.minifi.device.segment", device_segment)) {
           prefix = getDeviceSegmentFromString(device_segment, device_bits);
         } else {
-          core::logging::LOG_WARN(logger_) << "uid.minifi.device.segment not specified, generating random device segment";
+          logger_->log_warn("uid.minifi.device.segment not specified, generating random device segment");
           prefix = getRandomDeviceSegment(device_bits);
         }
         timestamp <<= device_bits;
         timestamp >>= device_bits;
         prefix = prefix + timestamp;
-        core::logging::LOG_DEBUG(logger_) << "Using minifi uid prefix: " << std::hex << prefix;
+        logger_->log_debug("Using minifi uid prefix: {:#x}", prefix);
       }
       for (int i = 0; i < 8; i++) {
         unsigned char prefix_element = (prefix >> ((7 - i) * 8)) & std::numeric_limits<unsigned char>::max();
@@ -272,12 +272,12 @@ void IdGenerator::initialize(const std::shared_ptr<Properties>& properties) {
       }
       incrementor_ = 0;
     } else if (UUID_TIME_STR == implementation_str || UUID_WINDOWS_STR == implementation_str) {
-      core::logging::LOG_DEBUG(logger_) << "Using uuid_generate_time implementation for uids.";
+      logger_->log_debug("Using uuid_generate_time implementation for uids.");
     } else {
-      core::logging::LOG_DEBUG(logger_) << "Invalid value for uid.implementation (" << implementation_str << "). Using uuid_generate_time implementation for uids.";
+      logger_->log_debug("Invalid value for uid.implementation ({}). Using uuid_generate_time implementation for uids.", implementation_str);
     }
   } else {
-    core::logging::LOG_DEBUG(logger_) << "Using uuid_generate_time implementation for uids.";
+    logger_->log_debug("Using uuid_generate_time implementation for uids.");
   }
 }
 
@@ -292,7 +292,7 @@ bool IdGenerator::generateWithUuidImpl(unsigned int mode, Identifier::Data& outp
     uuid_impl_->make(mode);
     uuid.reset(uuid_impl_->binary());
   } catch (uuid_error_t& uuid_error) {
-    logger_->log_error("Failed to generate UUID, error: %s", uuid_error.string());
+    logger_->log_error("Failed to generate UUID, error: {}", uuid_error.string());
     return false;
   }
 

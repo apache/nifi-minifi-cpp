@@ -32,7 +32,7 @@ class ThreadedRepository : public core::Repository, public core::TraceableResour
 
   ~ThreadedRepository() override {
     if (running_state_.load() != RunningState::Stopped) {
-      logger_->log_error("Thread of %s should have been stopped in subclass before ThreadedRepository's destruction", name_);
+      logger_->log_error("Thread of {} should have been stopped in subclass before ThreadedRepository's destruction", name_);
     }
   }
 
@@ -56,7 +56,7 @@ class ThreadedRepository : public core::Repository, public core::TraceableResour
     running_state_.store(RunningState::Running);
     getThread() = std::thread(&ThreadedRepository::run, this);
 
-    logger_->log_debug("%s ThreadedRepository monitor thread start", name_);
+    logger_->log_debug("{} ThreadedRepository monitor thread start", name_);
     return true;
   }
 
@@ -71,7 +71,7 @@ class ThreadedRepository : public core::Repository, public core::TraceableResour
       getThread().join();
     }
     running_state_.store(RunningState::Stopped);
-    logger_->log_debug("%s ThreadedRepository monitor thread stop", name_);
+    logger_->log_debug("{} ThreadedRepository monitor thread stop", name_);
     return true;
   }
 

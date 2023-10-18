@@ -149,7 +149,7 @@ Client::Client(const std::shared_ptr<core::logging::Logger>& logger, const std::
       UA_ByteString_clear(&trustList[i]);
     }
     if (sc != UA_STATUSCODE_GOOD) {
-      logger->log_error("Configuring the client for encryption failed: %s", UA_StatusCode_name(sc));
+      logger->log_error("Configuring the client for encryption failed: {}", UA_StatusCode_name(sc));
       UA_Client_delete(client_);
       throw OPCException(GENERAL_EXCEPTION, std::string("Failed to created client with the provided encryption settings: ") + UA_StatusCode_name(sc));
     }
@@ -178,7 +178,7 @@ Client::~Client() {
   if (channel_state != UA_SECURECHANNELSTATE_CLOSED) {
     auto sc = UA_Client_disconnect(client_);
     if (sc != UA_STATUSCODE_GOOD) {
-      logger_->log_warn("Failed to disconnect OPC client: %s", UA_StatusCode_name(sc));
+      logger_->log_warn("Failed to disconnect OPC client: {}", UA_StatusCode_name(sc));
     }
   }
   UA_Client_delete(client_);
@@ -336,7 +336,7 @@ bool Client::exists(UA_NodeId nodeId) {
 }
 
 UA_StatusCode Client::translateBrowsePathsToNodeIdsRequest(const std::string& path, std::vector<UA_NodeId>& foundNodeIDs, const std::shared_ptr<core::logging::Logger>& logger) {
-  logger->log_trace("Trying to find node id for %s", path.c_str());
+  logger->log_trace("Trying to find node id for {}", path.c_str());
 
   auto tokens = utils::StringUtils::split(path, "/");
   std::vector<UA_UInt32> ids;
@@ -370,7 +370,7 @@ UA_StatusCode Client::translateBrowsePathsToNodeIdsRequest(const std::string& pa
   });
 
   if (response.resultsSize < 1) {
-    logger->log_warn("No node id in response for %s", path.c_str());
+    logger->log_warn("No node id in response for {}", path.c_str());
     return UA_STATUSCODE_BADNODATAAVAILABLE;
   }
 
@@ -390,10 +390,10 @@ UA_StatusCode Client::translateBrowsePathsToNodeIdsRequest(const std::string& pa
   UA_TranslateBrowsePathsToNodeIdsResponse_clear(&response);
 
   if (foundData) {
-    logger->log_debug("Found %lu nodes for path %s", foundNodeIDs.size(), path.c_str());
+    logger->log_debug("Found {} nodes for path {}", foundNodeIDs.size(), path.c_str());
     return UA_STATUSCODE_GOOD;
   } else {
-    logger->log_warn("No node id found for path %s", path.c_str());
+    logger->log_warn("No node id found for path {}", path.c_str());
     return UA_STATUSCODE_BADNODATAAVAILABLE;
   }
 }
@@ -430,7 +430,7 @@ std::unique_ptr<Client> Client::createClient(const std::shared_ptr<core::logging
   try {
     return ClientPtr(new Client(logger, applicationURI, certBuffer, keyBuffer, trustBuffers));
   } catch (const std::exception& exception) {
-    logger->log_error("Failed to create client: %s", exception.what());
+    logger->log_error("Failed to create client: {}", exception.what());
   }
   return nullptr;
 }

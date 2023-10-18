@@ -21,50 +21,46 @@
 
 #include "aws/core/utils/logging/LogLevel.h"
 
-namespace org {
-namespace apache {
-namespace nifi {
-namespace minifi {
-namespace aws {
-namespace utils {
+namespace org::apache::nifi::minifi::aws::utils {
+
+namespace {
+Aws::Utils::Logging::LogLevel mapToAwsLevels(core::logging::LOG_LEVEL level) {
+  switch (level) {
+    using core::logging::LOG_LEVEL;
+    using AwsLogLevel = Aws::Utils::Logging::LogLevel;
+    case LOG_LEVEL::trace: return AwsLogLevel::Trace;
+    case LOG_LEVEL::debug: return AwsLogLevel::Debug;
+    case LOG_LEVEL::info: return AwsLogLevel::Info;
+    case LOG_LEVEL::warn: return AwsLogLevel::Warn;
+    case LOG_LEVEL::err: return AwsLogLevel::Error;
+    case LOG_LEVEL::critical: return AwsLogLevel::Fatal;
+    case LOG_LEVEL::off: return AwsLogLevel::Off;
+  }
+  throw std::invalid_argument(fmt::format("Invalid LOG_LEVEL {}", magic_enum::enum_underlying(level)));
+}
+
+core::logging::LOG_LEVEL mapFromAwsLevels(Aws::Utils::Logging::LogLevel level) {
+  switch (level) {
+    using core::logging::LOG_LEVEL;
+    using AwsLogLevel = Aws::Utils::Logging::LogLevel;
+    case AwsLogLevel::Off: return LOG_LEVEL::off;
+    case AwsLogLevel::Fatal: return LOG_LEVEL::critical;
+    case AwsLogLevel::Error:return LOG_LEVEL::err;
+    case AwsLogLevel::Warn: return LOG_LEVEL::warn;
+    case AwsLogLevel::Info: return LOG_LEVEL::info;
+    case AwsLogLevel::Debug: return LOG_LEVEL::debug;
+    case AwsLogLevel::Trace: return LOG_LEVEL::trace;
+  }
+  throw std::invalid_argument(fmt::format("Invalid Aws::Utils::Logging::LogLevel {}", magic_enum::enum_underlying(level)));
+}
+}  // namespace
 
 Aws::Utils::Logging::LogLevel AWSSdkLogger::GetLogLevel() const {
-  if (logger_->should_log(minifi::core::logging::LOG_LEVEL::trace))
-    return Aws::Utils::Logging::LogLevel::Trace;
-  if (logger_->should_log(minifi::core::logging::LOG_LEVEL::debug))
-    return Aws::Utils::Logging::LogLevel::Debug;
-  if (logger_->should_log(minifi::core::logging::LOG_LEVEL::info))
-    return Aws::Utils::Logging::LogLevel::Info;
-  if (logger_->should_log(minifi::core::logging::LOG_LEVEL::warn))
-    return Aws::Utils::Logging::LogLevel::Warn;
-  if (logger_->should_log(minifi::core::logging::LOG_LEVEL::err))
-    return Aws::Utils::Logging::LogLevel::Error;
-  if (logger_->should_log(minifi::core::logging::LOG_LEVEL::critical))
-    return Aws::Utils::Logging::LogLevel::Fatal;
-  return Aws::Utils::Logging::LogLevel::Off;
+  return mapToAwsLevels(logger_->level());
 }
 
 void AWSSdkLogger::Log(Aws::Utils::Logging::LogLevel log_level, const char* tag, const char* format_str, ...) {  // NOLINT(cert-dcl50-cpp)
-  switch (log_level) {
-    case Aws::Utils::Logging::LogLevel::Trace:
-      logger_->log_trace("[%s] %s", tag, format_str);
-      break;
-    case Aws::Utils::Logging::LogLevel::Debug:
-      logger_->log_debug("[%s] %s", tag, format_str);
-      break;
-    case Aws::Utils::Logging::LogLevel::Info:
-      logger_->log_info("[%s] %s", tag, format_str);
-      break;
-    case Aws::Utils::Logging::LogLevel::Warn:
-      logger_->log_warn("[%s] %s", tag, format_str);
-      break;
-    case Aws::Utils::Logging::LogLevel::Error:
-    case Aws::Utils::Logging::LogLevel::Fatal:
-      logger_->log_error("[%s] %s", tag, format_str);
-      break;
-    default:
-      break;
-  }
+  logger_->log_with_level(mapFromAwsLevels(log_level), "[{}] {}", tag, format_str);
 }
 
 void AWSSdkLogger::LogStream(Aws::Utils::Logging::LogLevel log_level, const char* tag, const Aws::OStringStream &message_stream) {
@@ -74,9 +70,4 @@ void AWSSdkLogger::LogStream(Aws::Utils::Logging::LogLevel log_level, const char
 void AWSSdkLogger::Flush() {
 }
 
-}  // namespace utils
-}  // namespace aws
-}  // namespace minifi
-}  // namespace nifi
-}  // namespace apache
-}  // namespace org
+}  // namespace org::apache::nifi::minifi::aws::utils

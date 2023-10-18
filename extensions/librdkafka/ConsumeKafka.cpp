@@ -104,11 +104,11 @@ void rebalance_cb(rd_kafka_t* rk, rd_kafka_resp_err_t trigger, rd_kafka_topic_pa
       break;
 
     default:
-      logger->log_debug("failed: %s", rd_kafka_err2str(trigger));
+      logger->log_debug("failed: {}", rd_kafka_err2str(trigger));
       assign_error = rd_kafka_assign(rk, nullptr);
       break;
   }
-  logger->log_debug("assign failure: %s", rd_kafka_err2str(assign_error));
+  logger->log_debug("assign failure: {}", rd_kafka_err2str(assign_error));
 }
 }  // namespace
 
@@ -133,7 +133,7 @@ void ConsumeKafka::create_topic_partition_list() {
   // This might happen until the cross-overship between processors and connections are settled
   rd_kafka_resp_err_t subscribe_response = rd_kafka_subscribe(consumer_.get(), kf_topic_partition_list_.get());
   if (RD_KAFKA_RESP_ERR_NO_ERROR != subscribe_response) {
-    logger_->log_error("rd_kafka_subscribe error %d: %s", subscribe_response, rd_kafka_err2str(subscribe_response));
+    logger_->log_error("rd_kafka_subscribe error {}: {}", magic_enum::enum_underlying(subscribe_response), rd_kafka_err2str(subscribe_response));
   }
 }
 
@@ -144,11 +144,11 @@ void ConsumeKafka::extend_config_from_dynamic_properties(const core::ProcessCont
   if (dynamic_prop_keys.empty()) {
     return;
   }
-  logger_->log_info("Loading %d extra kafka configuration fields from ConsumeKafka dynamic properties:", dynamic_prop_keys.size());
+  logger_->log_info("Loading {} extra kafka configuration fields from ConsumeKafka dynamic properties:", dynamic_prop_keys.size());
   for (const std::string& key : dynamic_prop_keys) {
     std::string value;
     gsl_Expects(context.getDynamicProperty(key, value));
-    logger_->log_info("%s: %s", key.c_str(), value.c_str());
+    logger_->log_info("{}: {}", key.c_str(), value.c_str());
     setKafkaConfigurationField(*conf_, key, value);
   }
 }
@@ -211,7 +211,7 @@ void ConsumeKafka::configure_new_connection(core::ProcessContext& context) {
 
   rd_kafka_resp_err_t poll_set_consumer_response = rd_kafka_poll_set_consumer(consumer_.get());
   if (RD_KAFKA_RESP_ERR_NO_ERROR != poll_set_consumer_response) {
-    logger_->log_error("rd_kafka_poll_set_consumer error %d: %s", poll_set_consumer_response, rd_kafka_err2str(poll_set_consumer_response));
+    logger_->log_error("rd_kafka_poll_set_consumer error {}: {}", magic_enum::enum_underlying(poll_set_consumer_response), rd_kafka_err2str(poll_set_consumer_response));
   }
 }
 
@@ -228,14 +228,14 @@ std::vector<std::unique_ptr<rd_kafka_message_t, utils::rd_kafka_message_deleter>
   const auto start = std::chrono::steady_clock::now();
   auto elapsed = std::chrono::steady_clock::now() - start;
   while (messages.size() < max_poll_records_ && elapsed < max_poll_time_milliseconds_) {
-    logger_->log_debug("Polling for new messages for %d milliseconds...", max_poll_time_milliseconds_.count());
+    logger_->log_debug("Polling for new messages for {}...", max_poll_time_milliseconds_);
     const auto timeout_ms = gsl::narrow<int>(std::chrono::duration_cast<std::chrono::milliseconds>(max_poll_time_milliseconds_ - elapsed).count());
     std::unique_ptr<rd_kafka_message_t, utils::rd_kafka_message_deleter> message{rd_kafka_consumer_poll(consumer_.get(), timeout_ms)};
     if (!message) {
       break;
     }
     if (RD_KAFKA_RESP_ERR_NO_ERROR != message->err) {
-      logger_->log_error("Received message with error %d: %s", message->err, rd_kafka_err2str(message->err));
+      logger_->log_error("Received message with error {}: {}", magic_enum::enum_underlying(message->err), rd_kafka_err2str(message->err));
       break;
     }
     utils::print_kafka_message(*message, *logger_);
@@ -287,7 +287,7 @@ std::vector<std::string> ConsumeKafka::get_matching_headers(const rd_kafka_messa
     return {};
   }
   if (RD_KAFKA_RESP_ERR_NO_ERROR != get_header_response) {
-    logger_->log_error("Failed to fetch message headers: %d: %s", rd_kafka_last_error(), rd_kafka_err2str(rd_kafka_last_error()));
+    logger_->log_error("Failed to fetch message headers: {}: {}", magic_enum::enum_underlying(rd_kafka_last_error()), rd_kafka_err2str(rd_kafka_last_error()));
   }
   std::vector<std::string> matching_headers;
   for (std::size_t header_idx = 0;; ++header_idx) {
@@ -297,9 +297,9 @@ std::vector<std::string> ConsumeKafka::get_matching_headers(const rd_kafka_messa
       break;
     }
     if (size < 200) {
-      logger_->log_debug("%.*s", static_cast<int>(size), value);
+      logger_->log_debug("{:.{}}", value, size);
     } else {
-      logger_->log_debug("%.*s...", 200, value);
+      logger_->log_debug("{:.{}}...", value, 200);
     }
     matching_headers.emplace_back(value, size);
   }

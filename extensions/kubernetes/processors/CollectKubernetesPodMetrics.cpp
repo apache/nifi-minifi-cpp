@@ -59,7 +59,7 @@ void CollectKubernetesPodMetrics::onTrigger(const std::shared_ptr<core::ProcessC
 
   const auto metrics = kubernetes::metrics::podMetricsList(*api_client);
   if (!metrics) {
-    logger_->log_error("Could not get metrics from the Kubernetes API: %s", metrics.error());
+    logger_->log_error("Could not get metrics from the Kubernetes API: {}", metrics.error());
     return;
   }
 
@@ -67,11 +67,11 @@ void CollectKubernetesPodMetrics::onTrigger(const std::shared_ptr<core::ProcessC
     return kubernetes_controller_service_->matchesRegexFilters(container_info);
   });
   if (!metrics_filtered) {
-    logger_->log_error("Error parsing or filtering the metrics received from the Kubernetes API: %s", metrics_filtered.error());
+    logger_->log_error("Error parsing or filtering the metrics received from the Kubernetes API: {}", metrics_filtered.error());
     return;
   }
 
-  logger_->log_debug("Metrics received from the Kubernetes API: %s", metrics_filtered.value());
+  logger_->log_debug("Metrics received from the Kubernetes API: {}", metrics_filtered.value());
 
   const auto flow_file = session->create();
   session->writeBuffer(flow_file, metrics_filtered.value());

@@ -79,14 +79,14 @@ std::vector<NetworkInterfaceInfo> NetworkInterfaceInfo::getNetworkInterfaceInfos
   ULONG buffer_length = sizeof(IP_ADAPTER_ADDRESSES);
   auto get_adapters_err = GetAdaptersAddresses(0, 0, nullptr, nullptr, &buffer_length);
   if (ERROR_BUFFER_OVERFLOW != get_adapters_err) {
-    logger_->log_error("GetAdaptersAddresses failed: %lu", get_adapters_err);
+    logger_->log_error("GetAdaptersAddresses failed: {}", get_adapters_err);
     return network_adapters;
   }
   std::vector<char> bytes(buffer_length, 0);
   auto* adapter = reinterpret_cast<IP_ADAPTER_ADDRESSES*>(bytes.data());
   get_adapters_err = GetAdaptersAddresses(0, 0, nullptr, adapter, &buffer_length);
   if (NO_ERROR != get_adapters_err) {
-    logger_->log_error("GetAdaptersAddresses failed: %lu", get_adapters_err);
+    logger_->log_error("GetAdaptersAddresses failed: {}", get_adapters_err);
     return network_adapters;
   }
   while (adapter != nullptr) {
@@ -107,7 +107,7 @@ std::vector<NetworkInterfaceInfo> NetworkInterfaceInfo::getNetworkInterfaceInfos
   struct ifaddrs* interface_addresses = nullptr;
   auto cleanup = gsl::finally([&interface_addresses] { freeifaddrs(interface_addresses); });
   if (getifaddrs(&interface_addresses) == -1) {
-    logger_->log_error("getifaddrs failed: %s", std::strerror(errno));
+    logger_->log_error("getifaddrs failed: {}", std::strerror(errno));
     return network_adapters;
   }
 

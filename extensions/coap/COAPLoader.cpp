@@ -28,7 +28,7 @@ static bool init(const std::shared_ptr<org::apache::nifi::minifi::Configure> & /
   static WSADATA s_wsaData;
   int iWinSockInitResult = WSAStartup(MAKEWORD(2, 2), &s_wsaData);
   if (iWinSockInitResult != 0) {
-    core::logging::LoggerFactory<COAPObjectFactoryInitializer>::getLogger()->log_error("WSAStartup failed with error %d", iWinSockInitResult);
+    core::logging::LoggerFactory<COAPObjectFactoryInitializer>::getLogger()->log_error("WSAStartup failed with error {}", iWinSockInitResult);
     return false;
   } else {
     return true;

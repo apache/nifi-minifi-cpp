@@ -27,7 +27,7 @@ HeartbeatLogger::HeartbeatLogger(std::string_view name, const utils::Identifier&
 
 int16_t HeartbeatLogger::heartbeat(const C2Payload &heartbeat) {
   std::string serialized = serializeJsonRootPayload(heartbeat);
-  logger_->log_trace("%s", serialized);
+  logger_->log_trace("{}", serialized);
   return 0;
 }
 

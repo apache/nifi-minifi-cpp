@@ -39,7 +39,7 @@ bool RocksDbRepository::ExecuteWithRetry(const std::function<rocksdb::Status()>&
       logger_->log_trace("Rocksdb operation executed successfully");
       return true;
     }
-    logger_->log_error("Rocksdb operation failed: %s", status.ToString());
+    logger_->log_error("Rocksdb operation failed: {}", status.ToString());
     wait_time += FLOWFILE_REPOSITORY_RETRY_INTERVAL_INCREMENTS;
     std::this_thread::sleep_for(wait_time);
   }

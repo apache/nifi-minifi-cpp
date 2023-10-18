@@ -48,16 +48,16 @@ AzureSdkLogger::AzureSdkLogger() {
   Azure::Core::Diagnostics::Logger::SetListener([&](Azure::Core::Diagnostics::Logger::Level level, const std::string& message) {
     switch (level) {
       case Azure::Core::Diagnostics::Logger::Level::Verbose:
-        logger_->log_debug(message.c_str());
+        logger_->log_debug("{}", message);
         break;
       case Azure::Core::Diagnostics::Logger::Level::Informational:
-        logger_->log_info(message.c_str());
+        logger_->log_info("{}", message);
         break;
       case Azure::Core::Diagnostics::Logger::Level::Warning:
-        logger_->log_warn(message.c_str());
+        logger_->log_warn("{}", message);
         break;
       case Azure::Core::Diagnostics::Logger::Level::Error:
-        logger_->log_error(message.c_str());
+        logger_->log_error("{}", message);
         break;
       default:
         break;

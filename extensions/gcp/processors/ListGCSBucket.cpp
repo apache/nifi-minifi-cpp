@@ -52,7 +52,7 @@ void ListGCSBucket::onTrigger(const std::shared_ptr<core::ProcessContext>& conte
       setAttributesFromObjectMetadata(*flow_file, *object_in_bucket);
       session->transfer(flow_file, Success);
     } else {
-      logger_->log_error("Invalid object in bucket %s", bucket_);
+      logger_->log_error("Invalid object in bucket {}", bucket_);
     }
   }
 }

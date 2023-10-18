@@ -25,7 +25,7 @@ namespace org::apache::nifi::minifi::core::controller {
 bool StandardControllerServiceNode::enable() {
   Property property("Linked Services", "Referenced Controller Services");
   controller_service_->setState(ENABLED);
-  logger_->log_trace("Enabling CSN %s", getName());
+  logger_->log_trace("Enabling CSN {}", getName());
   if (getProperty(property.getName(), property)) {
     active = true;
     for (const auto& linked_service : property.getValues()) {

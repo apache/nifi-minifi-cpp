@@ -37,7 +37,7 @@ bool Repository::storeElement(const std::shared_ptr<core::SerializableComponent>
   element->serialize(stream);
 
   if (!Put(element->getUUIDStr(), reinterpret_cast<const uint8_t*>(stream.getBuffer().data()), stream.size())) {
-    logger_->log_error("NiFi Provenance Store event %s size %llu fail", element->getUUIDStr(), stream.size());
+    logger_->log_error("NiFi Provenance Store event {} size {} fail", element->getUUIDStr(), stream.size());
     return false;
   }
   return true;

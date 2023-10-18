@@ -52,7 +52,7 @@ ProcessGroup::ProcessGroup(ProcessGroupType type, std::string_view name, const u
       transmitting_(false),
       transport_protocol_("RAW"),
       logger_(logging::LoggerFactory<ProcessGroup>::getLogger()) {
-  logger_->log_debug("ProcessGroup %s created", name_);
+  logger_->log_debug("ProcessGroup {} created", name_);
 }
 
 ProcessGroup::ProcessGroup(ProcessGroupType type, std::string_view name)
@@ -64,7 +64,7 @@ ProcessGroup::ProcessGroup(ProcessGroupType type, std::string_view name)
       transmitting_(false),
       transport_protocol_("RAW"),
       logger_(logging::LoggerFactory<ProcessGroup>::getLogger()) {
-  logger_->log_debug("ProcessGroup %s created", name_);
+  logger_->log_debug("ProcessGroup {} created", name_);
 }
 
 ProcessGroup::~ProcessGroup() {
@@ -88,9 +88,9 @@ std::tuple<Processor*, bool> ProcessGroup::addProcessor(std::unique_ptr<Processo
   std::lock_guard<std::recursive_mutex> lock(mutex_);
   const auto [iter, inserted] = processors_.insert(std::move(processor));
   if (inserted) {
-    logger_->log_debug("Add processor %s into process group %s", name, name_);
+    logger_->log_debug("Add processor {} into process group {}", name, name_);
   } else {
-    logger_->log_debug("Not adding processor %s into process group %s, as it is already there", name, name_);
+    logger_->log_debug("Not adding processor {} into process group {}, as it is already there", name, name_);
   }
   return std::make_tuple(iter->get(), inserted);
 }
@@ -108,7 +108,7 @@ void ProcessGroup::addProcessGroup(std::unique_ptr<ProcessGroup> child) {
 
   if (child_process_groups_.find(child) == child_process_groups_.end()) {
     // We do not have the same child process group in this process group yet
-    logger_->log_debug("Add child process group %s into process group %s", child->getName(), name_);
+    logger_->log_debug("Add child process group {} into process group {}", child->getName(), name_);
     child_process_groups_.emplace(std::move(child));
   }
 }
@@ -121,7 +121,7 @@ void ProcessGroup::startProcessingProcessors(TimerDrivenSchedulingAgent& timeSch
 
   for (const auto processor : failed_processors_) {
     try {
-      logger_->log_debug("Starting %s", processor->getName());
+      logger_->log_debug("Starting {}", processor->getName());
       processor->setScheduledState(core::ScheduledState::RUNNING);
       switch (processor->getSchedulingStrategy()) {
         case TIMER_DRIVEN:
@@ -136,12 +136,12 @@ void ProcessGroup::startProcessingProcessors(TimerDrivenSchedulingAgent& timeSch
       }
     }
     catch (const std::exception &e) {
-      logger_->log_error("Failed to start processor %s (%s): %s", processor->getUUIDStr(), processor->getName(), e.what());
+      logger_->log_error("Failed to start processor {} ({}): {}", processor->getUUIDStr(), processor->getName(), e.what());
       processor->setScheduledState(core::ScheduledState::STOPPED);
       failed_processors.insert(processor);
     }
     catch (...) {
-      logger_->log_error("Failed to start processor %s (%s)", processor->getUUIDStr(), processor->getName());
+      logger_->log_error("Failed to start processor {} ({})", processor->getUUIDStr(), processor->getName());
       processor->setScheduledState(core::ScheduledState::STOPPED);
       failed_processors.insert(processor);
     }
@@ -152,16 +152,16 @@ void ProcessGroup::startProcessingProcessors(TimerDrivenSchedulingAgent& timeSch
     try {
       processor->onUnSchedule();
     } catch (const std::exception& ex) {
-      logger_->log_error("Exception occured during unscheduling processor: %s (%s), type: %s, what: %s", processor->getUUIDStr(), processor->getName(), typeid(ex).name(), ex.what());
+      logger_->log_error("Exception occured during unscheduling processor: {} ({}), type: {}, what: {}", processor->getUUIDStr(), processor->getName(), typeid(ex).name(), ex.what());
     } catch (...) {
-      logger_->log_error("Exception occured during unscheduling processor: %s (%s), type: %s", processor->getUUIDStr(), processor->getName(), getCurrentExceptionTypeName());
+      logger_->log_error("Exception occured during unscheduling processor: {} ({}), type: {}", processor->getUUIDStr(), processor->getName(), getCurrentExceptionTypeName());
     }
   }
 
   // The admin yield duration comes from the configuration, should be equal in all three schedulers
   std::chrono::milliseconds admin_yield_duration = timeScheduler.getAdminYieldDuration();
   if (!onScheduleTimer_ && !failed_processors_.empty() && admin_yield_duration > 0ms) {
-    logger_->log_info("Retrying failed processors in %lld msec", admin_yield_duration.count());
+    logger_->log_info("Retrying failed processors in {}", admin_yield_duration);
     auto func = [this, eventScheduler = &eventScheduler, cronScheduler = &cronScheduler, timeScheduler = &timeScheduler]() {
       this->startProcessingProcessors(*timeScheduler, *eventScheduler, *cronScheduler);
     };
@@ -190,10 +190,10 @@ void ProcessGroup::startProcessing(TimerDrivenSchedulingAgent& timeScheduler, Ev
       processGroup->startProcessing(timeScheduler, eventScheduler, cronScheduler);
     }
   } catch (std::exception &exception) {
-    logger_->log_debug("Caught Exception %s", exception.what());
+    logger_->log_debug("Caught Exception {}", exception.what());
     throw;
   } catch (...) {
-    logger_->log_debug("Caught Exception during process group start processing, type: %s", getCurrentExceptionTypeName());
+    logger_->log_debug("Caught Exception during process group start processing, type: {}", getCurrentExceptionTypeName());
     throw;
   }
 }
@@ -214,7 +214,7 @@ void ProcessGroup::stopProcessing(TimerDrivenSchedulingAgent& timeScheduler, Eve
       if (filter && !filter(processor.get())) {
         continue;
       }
-      logger_->log_debug("Stopping %s", processor->getName());
+      logger_->log_debug("Stopping {}", processor->getName());
       switch (processor->getSchedulingStrategy()) {
         case TIMER_DRIVEN:
           timeScheduler.unschedule(processor.get());
@@ -232,17 +232,17 @@ void ProcessGroup::stopProcessing(TimerDrivenSchedulingAgent& timeScheduler, Eve
       childGroup->stopProcessing(timeScheduler, eventScheduler, cronScheduler, filter);
     }
   } catch (const std::exception& exception) {
-    logger_->log_debug("Caught Exception type: %s, what: %s", typeid(exception).name(), exception.what());
+    logger_->log_debug("Caught Exception type: {}, what: {}", typeid(exception).name(), exception.what());
     throw;
   } catch (...) {
-    logger_->log_debug("Caught Exception during process group stop processing, type: %s", getCurrentExceptionTypeName());
+    logger_->log_debug("Caught Exception during process group stop processing, type: {}", getCurrentExceptionTypeName());
     throw;
   }
 }
 
 Processor* ProcessGroup::findProcessorById(const utils::Identifier& uuid, Traverse traverse) const {
   const auto id_matches = [&] (const std::unique_ptr<Processor>& processor) {
-    logger_->log_trace("Searching for processor by id, checking processor %s", processor->getName());
+    logger_->log_trace("Searching for processor by id, checking processor {}", processor->getName());
     utils::Identifier processorUUID = processor->getUUID();
     return processorUUID && uuid == processorUUID;
   };
@@ -251,7 +251,7 @@ Processor* ProcessGroup::findProcessorById(const utils::Identifier& uuid, Traver
 
 Processor* ProcessGroup::findProcessorByName(const std::string &processorName, Traverse traverse) const {
   const auto name_matches = [&] (const std::unique_ptr<Processor>& processor) {
-    logger_->log_trace("Searching for processor by name, checking processor %s", processor->getName());
+    logger_->log_trace("Searching for processor by name, checking processor {}", processor->getName());
     return processor->getName() == processorName;
   };
   return findProcessor(name_matches, traverse);
@@ -274,7 +274,7 @@ void ProcessGroup::getAllProcessors(std::vector<Processor*>& processor_vec) cons
   std::lock_guard<std::recursive_mutex> lock(mutex_);
 
   for (const auto& processor : processors_) {
-    logger_->log_trace("Collecting all processors, current processor is %s", processor->getName());
+    logger_->log_trace("Collecting all processors, current processor is {}", processor->getName());
     processor_vec.push_back(processor.get());
   }
   for (const auto& processGroup : child_process_groups_) {
@@ -365,24 +365,24 @@ void ProcessGroup::addConnection(std::unique_ptr<Connection> connection) {
 
   auto& insertedConnection = *insertPos;
 
-  logger_->log_debug("Add connection %s into process group %s", insertedConnection->getName(), name_);
+  logger_->log_debug("Add connection {} into process group {}", insertedConnection->getName(), name_);
   // only allow connections between processors of the same process group or in/output ports of child process groups
   // check input and output ports connection restrictions inside and outside a process group
   Processor* source = findPortById(insertedConnection->getSourceUUID());
   if (source && static_cast<Port*>(source)->getPortType() == PortType::OUTPUT) {
-    logger_->log_error("Output port [id = '%s'] cannot be a source inside the process group in the connection [name = '%s', id = '%s']",
+    logger_->log_error("Output port [id = '{}'] cannot be a source inside the process group in the connection [name = '{}', id = '{}']",
                        insertedConnection->getSourceUUID().to_string(), insertedConnection->getName(), insertedConnection->getUUIDStr());
     source = nullptr;
   } else if (!source) {
     source = findChildPortById(insertedConnection->getSourceUUID());
     if (source && static_cast<Port*>(source)->getPortType() == PortType::INPUT) {
-      logger_->log_error("Input port [id = '%s'] cannot be a source outside the process group in the connection [name = '%s', id = '%s']",
+      logger_->log_error("Input port [id = '{}'] cannot be a source outside the process group in the connection [name = '{}', id = '{}']",
                           insertedConnection->getSourceUUID().to_string(), insertedConnection->getName(), insertedConnection->getUUIDStr());
       source = nullptr;
     } else if (!source) {
       source = findProcessorById(insertedConnection->getSourceUUID(), Traverse::ExcludeChildren);
       if (!source) {
-        logger_->log_error("Cannot find the source processor with id '%s' for the connection [name = '%s', id = '%s']",
+        logger_->log_error("Cannot find the source processor with id '{}' for the connection [name = '{}', id = '{}']",
                           insertedConnection->getSourceUUID().to_string(), insertedConnection->getName(), insertedConnection->getUUIDStr());
       }
     }
@@ -394,19 +394,19 @@ void ProcessGroup::addConnection(std::unique_ptr<Connection> connection) {
 
   Processor* destination = findPortById(insertedConnection->getDestinationUUID());
   if (destination && static_cast<Port*>(destination)->getPortType() == PortType::INPUT) {
-    logger_->log_error("Input port [id = '%s'] cannot be a destination inside the process group in the connection [name = '%s', id = '%s']",
+    logger_->log_error("Input port [id = '{}'] cannot be a destination inside the process group in the connection [name = '{}', id = '{}']",
                        insertedConnection->getDestinationUUID().to_string(), insertedConnection->getName(), insertedConnection->getUUIDStr());
     destination = nullptr;
   } else if (!destination) {
     destination = findChildPortById(insertedConnection->getDestinationUUID());
     if (destination && static_cast<Port*>(destination)->getPortType() == PortType::OUTPUT) {
-      logger_->log_error("Output port [id = '%s'] cannot be a destination outside the process group in the connection [name = '%s', id = '%s']",
+      logger_->log_error("Output port [id = '{}'] cannot be a destination outside the process group in the connection [name = '{}', id = '{}']",
                           insertedConnection->getDestinationUUID().to_string(), insertedConnection->getName(), insertedConnection->getUUIDStr());
       destination = nullptr;
     } else if (!destination) {
       destination = findProcessorById(insertedConnection->getDestinationUUID(), Traverse::ExcludeChildren);
       if (!destination) {
-        logger_->log_error("Cannot find the destination processor with id '%s' for the connection [name = '%s', id = '%s']",
+        logger_->log_error("Cannot find the destination processor with id '{}' for the connection [name = '{}', id = '{}']",
                           insertedConnection->getDestinationUUID().to_string(), insertedConnection->getName(), insertedConnection->getUUIDStr());
       }
     }

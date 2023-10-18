@@ -35,17 +35,17 @@ AzureBlobStorage::AzureBlobStorage(std::unique_ptr<BlobStorageClient> blob_stora
 
 std::optional<bool> AzureBlobStorage::createContainerIfNotExists(const PutAzureBlobStorageParameters& params) {
   try {
-    logger_->log_debug("Trying to create Azure blob container %s", params.container_name);
+    logger_->log_debug("Trying to create Azure blob container {}", params.container_name);
     return blob_storage_client_->createContainerIfNotExists(params);
   } catch (const std::exception& ex) {
-    logger_->log_error("An exception occurred while creating container: %s", ex.what());
+    logger_->log_error("An exception occurred while creating container: {}", ex.what());
     return std::nullopt;
   }
 }
 
 std::optional<UploadBlobResult> AzureBlobStorage::uploadBlob(const PutAzureBlobStorageParameters& params, std::span<const std::byte> buffer) {
   try {
-    logger_->log_debug("Uploading Azure blob %s to container %s", params.blob_name, params.container_name);
+    logger_->log_debug("Uploading Azure blob {} to container {}", params.blob_name, params.container_name);
     auto response = blob_storage_client_->uploadBlob(params, buffer);
 
     UploadBlobResult result;
@@ -60,7 +60,7 @@ std::optional<UploadBlobResult> AzureBlobStorage::uploadBlob(const PutAzureBlobS
     result.timestamp = response.LastModified.ToString(Azure::DateTime::DateFormat::Rfc1123);
     return result;
   } catch (const std::exception& ex) {
-    logger_->log_error("An exception occurred while uploading blob: %s", ex.what());
+    logger_->log_error("An exception occurred while uploading blob: {}", ex.what());
     return std::nullopt;
   }
 }
@@ -70,7 +70,7 @@ bool AzureBlobStorage::deleteBlob(const DeleteAzureBlobStorageParameters& params
     blob_storage_client_->deleteBlob(params);
     return true;
   } catch (const std::exception& ex) {
-    logger_->log_error("An exception occurred while deleting blob: %s", ex.what());
+    logger_->log_error("An exception occurred while deleting blob: {}", ex.what());
     return false;
   }
 }
@@ -80,7 +80,7 @@ std::optional<uint64_t> AzureBlobStorage::fetchBlob(const FetchAzureBlobStorageP
     auto fetch_res = blob_storage_client_->fetchBlob(params);
     return internal::pipe(*fetch_res, stream);
   } catch (const std::exception& ex) {
-    logger_->log_error("An exception occurred while fetching blob '%s' of container '%s': %s", params.blob_name, params.container_name, ex.what());
+    logger_->log_error("An exception occurred while fetching blob '{}' of container '{}': {}", params.blob_name, params.container_name, ex.what());
     return std::nullopt;
   }
 }
@@ -104,7 +104,7 @@ std::optional<ListContainerResult> AzureBlobStorage::listContainer(const ListAzu
     }
     return result;
   } catch (const std::exception& ex) {
-    logger_->log_error("An exception occurred while listing container: %s", ex.what());
+    logger_->log_error("An exception occurred while listing container: {}", ex.what());
     return std::nullopt;
   }
 }

@@ -29,6 +29,7 @@
 #include "LuaScriptEngine.h"
 #include "LuaScriptProcessContext.h"
 #include "LuaScriptException.h"
+#include "LuaLogger.h"
 
 #include "LuaProcessSession.h"
 
@@ -75,6 +76,7 @@ class LuaScriptEngine {
  private:
   void executeScriptWithAppendedModulePaths(std::string& script);
 
+  std::unique_ptr<LuaLogger> lua_logger_;
   std::vector<std::filesystem::path> module_paths_;
   sol::state lua_;
 };

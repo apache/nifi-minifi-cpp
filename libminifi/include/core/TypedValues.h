@@ -134,7 +134,7 @@ class DataSizeValue : public TransformableValue, public state::response::UInt64V
       if (auto unit_multiplier = getUnitMultiplier(unit_str)) {
         value *= *unit_multiplier;
       } else {
-        getLogger()->log_warn("Unrecognized data unit: '%s', in the future this will constitute as an error", unit_str);
+        getLogger()->log_warn("Unrecognized data unit: '{}', in the future this will constitute as an error", unit_str);
         // backwards compatibility
       }
     }

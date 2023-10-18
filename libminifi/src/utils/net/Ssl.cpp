@@ -26,10 +26,10 @@ std::optional<utils::net::SslData> getSslData(const core::ProcessContext& contex
         if (auto ssl_service = std::dynamic_pointer_cast<org::apache::nifi::minifi::controllers::SSLContextService>(service)) {
           return ssl_service;
         } else {
-          logger->log_warn("SSL Context Service property is set to '%s', but it is not a valid SSLContextService.", *ssl_service_name);
+          logger->log_warn("SSL Context Service property is set to '{}', but it is not a valid SSLContextService.", *ssl_service_name);
         }
       } else {
-        logger->log_warn("SSL Context Service property is set to '%s', but the controller service could not be found.", *ssl_service_name);
+        logger->log_warn("SSL Context Service property is set to '{}', but the controller service could not be found.", *ssl_service_name);
       }
     } else {
       logger->log_warn("No valid SSL Context Service property is set.");

@@ -44,13 +44,13 @@ void DefragmentText::onSchedule(core::ProcessContext* context, core::ProcessSess
   if (auto max_buffer_age = context->getProperty(MaxBufferAge) | utils::andThen(&core::TimePeriodValue::fromString)) {
     max_age_ = max_buffer_age->getMilliseconds();
     setTriggerWhenEmpty(true);
-    logger_->log_trace("The Buffer maximum age is configured to be %" PRId64 " ms", int64_t{max_buffer_age->getMilliseconds().count()});
+    logger_->log_trace("The Buffer maximum age is configured to be {}", max_buffer_age->getMilliseconds());
   }
 
   auto max_buffer_size = context->getProperty<core::DataSizeValue>(MaxBufferSize);
   if (max_buffer_size.has_value() && max_buffer_size->getValue() > 0) {
     max_size_ = max_buffer_size->getValue();
-    logger_->log_trace("The Buffer maximum size is configured to be %" PRIu64 " B", max_buffer_size->getValue());
+    logger_->log_trace("The Buffer maximum size is configured to be {} B", max_buffer_size->getValue());
   }
 
   pattern_location_ = utils::parseEnumProperty<defragment_text::PatternLocation>(*context, PatternLoc);
@@ -58,7 +58,7 @@ void DefragmentText::onSchedule(core::ProcessContext* context, core::ProcessSess
   std::string pattern_str;
   if (context->getProperty(Pattern, pattern_str) && !pattern_str.empty()) {
     pattern_ = utils::Regex(pattern_str);
-    logger_->log_trace("The Pattern is configured to be %s", pattern_str);
+    logger_->log_trace("The Pattern is configured to be {}", pattern_str);
   } else {
     throw Exception(PROCESS_SCHEDULE_EXCEPTION, "Pattern property missing or invalid");
   }

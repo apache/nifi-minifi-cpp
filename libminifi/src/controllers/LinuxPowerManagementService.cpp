@@ -122,13 +122,13 @@ bool LinuxPowerManagerService::shouldReduce() {
           overConsume = true;
           logger_->log_trace("All banks are discharging, suggesting reduction");
         } else {
-          core::logging::LOG_DEBUG(logger_) << "dischaging but can't reduce due to time " << curr_time << " " << last_time_ << "  " << wait_period_;
+          logger_->log_debug("Discharging but can't reduce due to time {} {} {}", curr_time, last_time_.load(), wait_period_.load());
         }
       }
     }
 
   } else {
-    logger_->log_trace("%d level is not below trigger of %d", battery_level_.load(), trigger_);
+    logger_->log_trace("{} level is not below trigger of {}", battery_level_.load(), trigger_);
   }
 
   return overConsume;

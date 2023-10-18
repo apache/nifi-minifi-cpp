@@ -247,7 +247,7 @@ TEST_CASE("Test Hex Device Segment 16 bits correct digits", "[id]") {
   REQUIRE(0xaf == data[1]);
   REQUIRE(1 == data[15]);
 
-  REQUIRE(true == LogTestController::getInstance().contains("Using user defined device segment: 9af"));
+  REQUIRE(true == LogTestController::getInstance().contains("Using user defined device segment: 0x9af"));
   LogTestController::getInstance().reset();
 }
 
@@ -275,7 +275,7 @@ TEST_CASE("Test Hex Device Segment 16 bits too many digits", "[id]") {
   REQUIRE(0 == (data[2] & 128));
   REQUIRE(1 == data[15]);
 
-  REQUIRE(true == LogTestController::getInstance().contains("Using user defined device segment: 9af"));
+  REQUIRE(true == LogTestController::getInstance().contains("Using user defined device segment: 0x9af"));
   LogTestController::getInstance().reset();
 }
 
@@ -308,7 +308,7 @@ TEST_CASE("Test Hex Device Segment 18 bits", "[id]") {
   REQUIRE(uuid.to_string() != uuid2.to_string());
   REQUIRE(uuid != uuid2);
 
-  REQUIRE(true == LogTestController::getInstance().contains("Using minifi uid prefix: 9af8"));
+  REQUIRE(true == LogTestController::getInstance().contains("Using minifi uid prefix: 0x9af8"));
   LogTestController::getInstance().reset();
 }
 

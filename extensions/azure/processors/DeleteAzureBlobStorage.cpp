@@ -63,10 +63,10 @@ void DeleteAzureBlobStorage::onTrigger(const std::shared_ptr<core::ProcessContex
 
   auto result = azure_blob_storage_.deleteBlob(*params);
   if (result) {
-    logger_->log_debug("Successfully deleted blob '%s' from Azure Storage container '%s'", params->blob_name, params->container_name);
+    logger_->log_debug("Successfully deleted blob '{}' from Azure Storage container '{}'", params->blob_name, params->container_name);
     session->transfer(flow_file, Success);
   } else {
-    logger_->log_error("Failed to delete blob '%s' from Azure Storage container '%s'", params->blob_name, params->container_name);
+    logger_->log_error("Failed to delete blob '{}' from Azure Storage container '{}'", params->blob_name, params->container_name);
     session->transfer(flow_file, Failure);
   }
 }

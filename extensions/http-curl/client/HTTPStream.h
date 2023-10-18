@@ -62,7 +62,7 @@ class HttpStream : public io::BaseStream {
       if (http_client_future_.valid()) {
         http_client_future_.get();
       } else {
-        logger_->log_warn("Future status already cleared for %s, continuing", http_client_->getURL());
+        logger_->log_warn("Future status already cleared for {}, continuing", http_client_->getURL());
       }
 
       started_ = false;

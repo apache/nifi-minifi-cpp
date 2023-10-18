@@ -44,21 +44,21 @@ int64_t FileReaderCallback::operator()(const std::shared_ptr<io::OutputStream>& 
   if (!input_stream.is_open()) {
     throw FileReaderCallbackIOError(StringUtils::join_pack("Error opening file: ", std::strerror(errno)), errno);
   }
-  logger_->log_debug("Opening %s", file_path_.string());
+  logger_->log_debug("Opening {}", file_path_);
   while (input_stream.good()) {
     input_stream.read(buffer.data(), buffer.size());
     if (input_stream.bad()) {
       throw FileReaderCallbackIOError(StringUtils::join_pack("Error reading file: ", std::strerror(errno)), errno);
     }
     const auto num_bytes_read = input_stream.gcount();
-    logger_->log_trace("Read %jd bytes of input", std::intmax_t{num_bytes_read});
+    logger_->log_trace("Read {} bytes of input", std::intmax_t{num_bytes_read});
     const auto len = gsl::narrow<size_t>(num_bytes_read);
     output_stream->write(reinterpret_cast<uint8_t*>(buffer.data()), len);
     num_bytes_written += len;
   }
   input_stream.close();
 
-  logger_->log_debug("Finished reading %" PRIu64 " bytes from the file", num_bytes_written);
+  logger_->log_debug("Finished reading {} bytes from the file", num_bytes_written);
   return num_bytes_written;
 }
 

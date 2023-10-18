@@ -26,6 +26,7 @@
 #include "core/logging/LoggerConfiguration.h"
 
 #include "asio/ip/udp.hpp"
+#include "utils/net/AsioSocketUtils.h"
 
 using asio::ip::udp;
 
@@ -68,7 +69,7 @@ void PutUDP::onTrigger(core::ProcessContext* context, core::ProcessSession* cons
   const auto hostname = context->getProperty(Hostname, flow_file).value_or(std::string{});
   const auto port = context->getProperty(Port, flow_file).value_or(std::string{});
   if (hostname.empty() || port.empty()) {
-    logger_->log_error("[%s] invalid target endpoint: hostname: %s, port: %s", flow_file->getUUIDStr(),
+    logger_->log_error("[{}] invalid target endpoint: hostname: {}, port: {}", flow_file->getUUIDStr(),
         hostname.empty() ? "(empty)" : hostname.c_str(),
         port.empty() ? "(empty)" : port.c_str());
     session->transfer(flow_file, Failure);
@@ -99,15 +100,15 @@ void PutUDP::onTrigger(core::ProcessContext* context, core::ProcessSession* cons
       udp::socket socket(io_context);
       socket.open(resolver_entry.endpoint().protocol(), error);
       if (error) {
-        logger->log_debug("opening %s socket failed due to %s ", resolver_entry.endpoint().protocol() == udp::v4() ? "IPv4" : "IPv6", error.message());
+        logger->log_debug("opening {} socket failed due to {} ", resolver_entry.endpoint().protocol() == udp::v4() ? "IPv4" : "IPv6", error.message());
         continue;
       }
       socket.send_to(asio::buffer(data.buffer), resolver_entry.endpoint(), udp::socket::message_flags{}, error);
       if (error) {
-        core::logging::LOG_DEBUG(logger) << "sending to endpoint " << resolver_entry.endpoint() << " failed due to " << error.message();
+        logger->log_debug("sending to endpoint {} failed due to {}", resolver_entry.endpoint(), error.message());
         continue;
       }
-      core::logging::LOG_DEBUG(logger) << "sending to endpoint " << resolver_entry.endpoint() << " succeeded";
+      logger->log_debug("sending to endpoint {} succeeded", resolver_entry.endpoint());
       return {};
     }
     return nonstd::make_unexpected(error);
@@ -119,7 +120,7 @@ void PutUDP::onTrigger(core::ProcessContext* context, core::ProcessSession* cons
 
   const auto transfer_to_failure = [&session, &flow_file, &logger = this->logger_](std::error_code ec) -> void {
     gsl_Expects(ec);
-    logger->log_error("%s", ec.message());
+    logger->log_error("{}", ec.message());
     session->transfer(flow_file, Failure);
   };
 

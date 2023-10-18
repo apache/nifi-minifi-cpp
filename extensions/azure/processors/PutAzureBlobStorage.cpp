@@ -75,7 +75,7 @@ void PutAzureBlobStorage::onTrigger(const std::shared_ptr<core::ProcessContext> 
   const std::optional<storage::UploadBlobResult> upload_result = callback.getResult();
 
   if (!upload_result) {
-    logger_->log_error("Failed to upload blob '%s' to Azure Storage container '%s'", params->blob_name, params->container_name);
+    logger_->log_error("Failed to upload blob '{}' to Azure Storage container '{}'", params->blob_name, params->container_name);
     session->transfer(flow_file, Failure);
     return;
   }
@@ -86,7 +86,7 @@ void PutAzureBlobStorage::onTrigger(const std::shared_ptr<core::ProcessContext> 
   session->putAttribute(flow_file, "azure.etag", upload_result->etag);
   session->putAttribute(flow_file, "azure.length", std::to_string(flow_file->getSize()));
   session->putAttribute(flow_file, "azure.timestamp", upload_result->timestamp);
-  logger_->log_debug("Successfully uploaded blob '%s' to Azure Storage container '%s'", params->blob_name, params->container_name);
+  logger_->log_debug("Successfully uploaded blob '{}' to Azure Storage container '{}'", params->blob_name, params->container_name);
   session->transfer(flow_file, Success);
 }
 

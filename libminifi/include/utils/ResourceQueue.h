@@ -74,15 +74,15 @@ class ResourceQueue : public std::enable_shared_from_this<ResourceQueue<Resource
     std::unique_ptr<ResourceType> resource;
     // Use an existing resource, if one is available
     if (internal_queue_.tryDequeue(resource)) {
-      logDebug("Using available [%p] resource instance", resource.get());
+      logDebug("Using available [{}] resource instance", static_cast<void*>(resource.get()));
       return ResourceWrapper(this->weak_from_this(), std::move(resource));
     } else {
       const std::lock_guard<std::mutex> lock(counter_mutex_);
       if (!maximum_number_of_creatable_resources_ || resources_created_ < maximum_number_of_creatable_resources_) {
         ++resources_created_;
         resource = create_new_resource_();
-        logDebug("Created new [%p] resource instance. Number of instances: %d%s.",
-                 resource.get(),
+        logDebug("Created new [{}] resource instance. Number of instances: {}{}.",
+                 static_cast<void*>(resource.get()),
                  resources_created_,
                  maximum_number_of_creatable_resources_ ? " / " + std::to_string(*maximum_number_of_creatable_resources_) : "");
         return ResourceWrapper(this->weak_from_this(), std::move(resource));
@@ -108,16 +108,16 @@ class ResourceQueue : public std::enable_shared_from_this<ResourceQueue<Resource
 
  private:
   void returnResource(std::unique_ptr<ResourceType> resource) {
-    logDebug("Returning [%p] resource", resource.get());
+    logDebug("Returning [{}] resource", static_cast<void*>(resource.get()));
     if (reset_fn_)
       reset_fn_.value()(*resource);
     internal_queue_.enqueue(std::move(resource));
   }
 
   template<typename ...Args>
-  void logDebug(const char * const format, Args&& ...args) {
+  void logDebug(core::logging::log_format_string<Args...> fmt, Args&& ...args) {
     if (logger_)
-      logger_->log_debug(format, std::forward<Args>(args)...);
+      logger_->log_debug(fmt, std::forward<Args>(args)...);
   }
 
   const std::function<std::unique_ptr<ResourceType>()> create_new_resource_;

@@ -55,7 +55,7 @@ void KubernetesControllerService::onEnable() {
   try {
     api_client_ = std::make_unique<kubernetes::ApiClient>();
   } catch (const std::runtime_error& ex) {
-    logger_->log_error("Could not create the API client in the Kubernetes Controller Service: %s", ex.what());
+    logger_->log_error("Could not create the API client in the Kubernetes Controller Service: {}", ex.what());
   }
 
   std::string namespace_filter;
@@ -94,7 +94,7 @@ v1_pod_list_unique_ptr getPods(gsl::not_null<apiClient_t*> api_client, core::log
                                                                     nullptr,  // resourceVersionMatch
                                                                     0,  // timeoutSeconds
                                                                     0)};  // watch
-  logger.log_info("The return code of the Kubernetes API listPodForAllNamespaces call: %ld", api_client->response_code);
+  logger.log_info("The return code of the Kubernetes API listPodForAllNamespaces call: {}", api_client->response_code);
   return pod_list;
 }
 
@@ -138,7 +138,7 @@ std::optional<std::vector<KubernetesControllerService::AttributeMap>> Kubernetes
     }
   }
 
-  logger_->log_info("Found %zu containers (after regex filtering) in %ld Kubernetes pods (unfiltered)", container_attribute_maps.size(), pod_list->items->count);
+  logger_->log_info("Found {} containers (after regex filtering) in {} Kubernetes pods (unfiltered)", container_attribute_maps.size(), pod_list->items->count);
   return container_attribute_maps;
 }
 

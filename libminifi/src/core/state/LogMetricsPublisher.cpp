@@ -50,7 +50,7 @@ void LogMetricsPublisher::logMetrics() {
         parent_node.children.push_back(metric_response_node);
       }
     }
-    utils::LogUtils::logWithLevel(logger_, log_level_, parent_node.to_pretty_string().c_str());
+    logger_->log_string(utils::LogUtils::mapToLogLevel(log_level_), parent_node.to_pretty_string());
   } while (!utils::StoppableThread::waitForStopRequest(logging_interval_));
 }
 
@@ -59,10 +59,10 @@ void LogMetricsPublisher::readLoggingInterval() {
   if (auto logging_interval_str = configuration_->get(Configure::nifi_metrics_publisher_log_metrics_logging_interval)) {
     if (auto logging_interval = minifi::core::TimePeriodValue::fromString(logging_interval_str.value())) {
       logging_interval_ = logging_interval->getMilliseconds();
-      logger_->log_info("Metric logging interval is set to %" PRId64 " milliseconds", int64_t{logging_interval_.count()});
+      logger_->log_info("Metric logging interval is set to {}", logging_interval_);
       return;
     } else {
-      logger_->log_error("Configured logging interval '%s' is invalid!", logging_interval_str.value());
+      logger_->log_error("Configured logging interval '{}' is invalid!", logging_interval_str.value());
     }
   }
 
@@ -73,7 +73,7 @@ void LogMetricsPublisher::readLogLevel() {
   gsl_Expects(configuration_);
   if (auto log_level_str = configuration_->get(Configure::nifi_metrics_publisher_log_metrics_log_level)) {
     log_level_ = magic_enum::enum_cast<utils::LogUtils::LogLevelOption>(*log_level_str, magic_enum::case_insensitive).value_or(utils::LogUtils::LogLevelOption::LOGGING_INFO);
-    logger_->log_info("Metric log level is set to %s", std::string{magic_enum::enum_name(log_level_)});
+    logger_->log_info("Metric log level is set to {}", magic_enum::enum_name(log_level_));
     return;
   }
 
@@ -104,7 +104,7 @@ void LogMetricsPublisher::loadMetricNodes() {
     for (const std::string& clazz : metric_classes) {
       auto loaded_response_nodes = response_node_loader_->loadResponseNodes(clazz);
       if (loaded_response_nodes.empty()) {
-        logger_->log_warn("Metric class '%s' could not be loaded.", clazz);
+        logger_->log_warn("Metric class '{}' could not be loaded.", clazz);
         continue;
       }
       response_nodes_.insert(response_nodes_.end(), loaded_response_nodes.begin(), loaded_response_nodes.end());

@@ -28,8 +28,8 @@ namespace org::apache::nifi::minifi::core::repository {
 bool VolatileRepository::initialize(const std::shared_ptr<Configure> &configure) {
   repo_data_.initialize(configure, core::ThreadedRepository::getName());
 
-  logging::LOG_INFO(logger_) << "Resizing value_vector for " << core::ThreadedRepository::getName() << " count is " << repo_data_.max_count;
-  logging::LOG_INFO(logger_) << "Using a maximum size for " << core::ThreadedRepository::getName() << " of  " << repo_data_.max_size;
+  logger_->log_info("Resizing value_vector for {} count is {}", core::ThreadedRepository::getName(), repo_data_.max_count);
+  logger_->log_info("Using a maximum size for {} of {}", core::ThreadedRepository::getName(), repo_data_.max_size);
   return true;
 }
 
@@ -53,7 +53,7 @@ bool VolatileRepository::Put(const std::string& key, const uint8_t *buf, size_t 
     }
 
     updated = repo_data_.value_vector.at(private_index)->setRepoValue(new_value, old_value, reclaimed_size);
-    logger_->log_debug("Set repo value at %u out of %u updated %u current_size %u, adding %u to  %u",
+    logger_->log_debug("Set repo value at {} out of {} updated {} current_size {}, adding {} to  {}",
       private_index, repo_data_.max_count, updated, reclaimed_size, size, repo_data_.current_size.load());
     if (updated && reclaimed_size > 0) {
       emplace(old_value);
@@ -75,7 +75,7 @@ bool VolatileRepository::Put(const std::string& key, const uint8_t *buf, size_t 
     ++repo_data_.current_entry_count;
   }
 
-  logger_->log_debug("VolatileRepository -- put %zu %" PRIu32, repo_data_.current_size.load(), current_index_.load());
+  logger_->log_debug("VolatileRepository -- put {} {}", repo_data_.current_size.load(), current_index_.load());
   return true;
 }
 

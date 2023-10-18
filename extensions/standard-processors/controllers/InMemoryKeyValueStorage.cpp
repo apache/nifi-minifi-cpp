@@ -61,7 +61,7 @@ bool InMemoryKeyValueStorage::update(const std::string& key, const std::function
       return false;
     }
   } catch (const std::exception& e) {
-    logger_->log_error("update_func failed with an exception: %s", e.what());
+    logger_->log_error("update_func failed with an exception: {}", e.what());
     return false;
   } catch (...) {
     logger_->log_error("update_func failed with an exception");

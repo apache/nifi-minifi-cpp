@@ -110,10 +110,10 @@ bool FlowController::applyConfiguration(const std::string &source, const std::st
   try {
     newRoot = updateFromPayload(source, configurePayload, flow_id);
   } catch (const std::exception& ex) {
-    logger_->log_error("Invalid configuration payload, type: %s, what: %s", typeid(ex).name(), ex.what());
+    logger_->log_error("Invalid configuration payload, type: {}, what: {}", typeid(ex).name(), ex.what());
     return false;
   } catch (...) {
-    logger_->log_error("Invalid configuration payload, type: %s", getCurrentExceptionTypeName());
+    logger_->log_error("Invalid configuration payload, type: {}", getCurrentExceptionTypeName());
     return false;
   }
 
@@ -123,7 +123,7 @@ bool FlowController::applyConfiguration(const std::string &source, const std::st
   if (!isRunning())
     return false;
 
-  logger_->log_info("Starting to reload Flow Controller with flow control name %s, version %d", newRoot->getName(), newRoot->getVersion());
+  logger_->log_info("Starting to reload Flow Controller with flow control name {}, version {}", newRoot->getName(), newRoot->getVersion());
 
   bool started = false;
   {
@@ -137,9 +137,9 @@ bool FlowController::applyConfiguration(const std::string &source, const std::st
       load(true);
       started = start() == 0;
     } catch (const std::exception& ex) {
-      logger_->log_error("Caught exception while starting flow, type %s, what: %s", typeid(ex).name(), ex.what());
+      logger_->log_error("Caught exception while starting flow, type {}, what: {}", typeid(ex).name(), ex.what());
     } catch (...) {
-      logger_->log_error("Caught unknown exception while starting flow, type %s", getCurrentExceptionTypeName());
+      logger_->log_error("Caught unknown exception while starting flow, type {}", getCurrentExceptionTypeName());
     }
     if (!started) {
       logger_->log_error("Failed to start new flow, restarting previous flow");
@@ -154,8 +154,8 @@ bool FlowController::applyConfiguration(const std::string &source, const std::st
   if (started) {
     auto flowVersion = flow_configuration_->getFlowVersion();
     if (flowVersion) {
-      logger_->log_debug("Setting flow id to %s", flowVersion->getFlowId());
-      logger_->log_debug("Setting flow url to %s", flowVersion->getFlowIdentifier()->getRegistryUrl());
+      logger_->log_debug("Setting flow id to {}", flowVersion->getFlowId());
+      logger_->log_debug("Setting flow url to {}", flowVersion->getFlowIdentifier()->getRegistryUrl());
       configuration_->set(Configure::nifi_c2_flow_id, flowVersion->getFlowId());
       configuration_->set(Configure::nifi_c2_flow_url, flowVersion->getFlowIdentifier()->getRegistryUrl());
     } else {
@@ -415,7 +415,7 @@ void FlowController::executeOnComponent(const std::string &id_or_name, std::func
   if (auto* component = getComponent(id_or_name); component != nullptr) {
     func(*component);
   } else {
-    logger_->log_error("Could not get execute requested callback for component \"%s\", because component was not found", id_or_name);
+    logger_->log_error("Could not get execute requested callback for component \"{}\", because component was not found", id_or_name);
   }
 }
 

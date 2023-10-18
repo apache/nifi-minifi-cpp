@@ -41,12 +41,12 @@ bool Configure::get(const std::string& key, const std::string& alternate_key, st
   if (get(key, value)) {
     if (get(alternate_key)) {
       const auto logger = core::logging::LoggerFactory<Configure>::getLogger();
-      logger->log_warn("Both the property '%s' and an alternate property '%s' are set. Using '%s'.", key, alternate_key, key);
+      logger->log_warn("Both the property '{}' and an alternate property '{}' are set. Using '{}'.", key, alternate_key, key);
     }
     return true;
   } else if (get(alternate_key, value)) {
     const auto logger = core::logging::LoggerFactory<Configure>::getLogger();
-    logger->log_warn("%s is an alternate property that may not be supported in future releases. Please use %s instead.", alternate_key, key);
+    logger->log_warn("{} is an alternate property that may not be supported in future releases. Please use {} instead.", alternate_key, key);
     return true;
   } else {
     return false;

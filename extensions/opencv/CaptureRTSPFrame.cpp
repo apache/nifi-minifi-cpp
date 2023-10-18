@@ -84,7 +84,7 @@ void CaptureRTSPFrame::onTrigger(const std::shared_ptr<core::ProcessContext> &co
     video_capture_.open(rtsp_url_);
     video_backend_driver_ = video_capture_.getBackendName();
   } catch (const cv::Exception &e) {
-    logger_->log_error("Unable to open RTSP stream: %s", e.what());
+    logger_->log_error("Unable to open RTSP stream: {}", e.what());
     context->yield();
     return;
   } catch (...) {

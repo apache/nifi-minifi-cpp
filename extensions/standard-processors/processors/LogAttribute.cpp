@@ -42,16 +42,16 @@ void LogAttribute::initialize() {
 
 void LogAttribute::onSchedule(const std::shared_ptr<core::ProcessContext> &context, const std::shared_ptr<core::ProcessSessionFactory>& /*factory*/) {
   context->getProperty(FlowFilesToLog, flowfiles_to_log_);
-  logger_->log_debug("FlowFiles To Log: %llu", flowfiles_to_log_);
+  logger_->log_debug("FlowFiles To Log: {}", flowfiles_to_log_);
 
   context->getProperty(HexencodePayload, hexencode_);
 
   context->getProperty(MaxPayloadLineLength, max_line_length_);
-  logger_->log_debug("Maximum Payload Line Length: %u", max_line_length_);
+  logger_->log_debug("Maximum Payload Line Length: {}", max_line_length_);
 }
 // OnTrigger method, implemented by NiFi LogAttribute
 void LogAttribute::onTrigger(const std::shared_ptr<core::ProcessContext> &context, const std::shared_ptr<core::ProcessSession> &session) {
-  logger_->log_trace("enter log attribute, attempting to retrieve %u flow files", flowfiles_to_log_);
+  logger_->log_trace("enter log attribute, attempting to retrieve {} flow files", flowfiles_to_log_);
   std::string dashLine = "--------------------------------------------------";
   LogAttrLevel level = LogAttrLevelInfo;
   bool logPayload = false;
@@ -120,26 +120,26 @@ void LogAttribute::onTrigger(const std::shared_ptr<core::ProcessContext> &contex
 
     switch (level) {
       case LogAttrLevelInfo:
-        core::logging::LOG_INFO(logger_) << output;
+        logger_->log_info("{}", output);
         break;
       case LogAttrLevelDebug:
-        core::logging::LOG_DEBUG(logger_) << output;
+        logger_->log_debug("{}", output);
         break;
       case LogAttrLevelError:
-        core::logging::LOG_ERROR(logger_) << output;
+        logger_->log_error("{}", output);
         break;
       case LogAttrLevelTrace:
-        core::logging::LOG_TRACE(logger_) << output;
+        logger_->log_trace("{}", output);
         break;
       case LogAttrLevelWarn:
-        core::logging::LOG_WARN(logger_) << output;
+        logger_->log_warn("{}", output);
         break;
       default:
         break;
     }
     session->transfer(flow, Success);
   }
-  logger_->log_debug("Logged %d flow files", i);
+  logger_->log_debug("Logged {} flow files", i);
 }
 
 REGISTER_RESOURCE(LogAttribute, Processor);

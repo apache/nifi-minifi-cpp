@@ -45,7 +45,7 @@ bool AzureDataLakeStorageProcessorBase::setCommonParameters(
   params.credentials = credentials_;
 
   if (!context.getProperty(FilesystemName, params.file_system_name, flow_file) || params.file_system_name.empty()) {
-    logger_->log_error("Filesystem Name '%s' is invalid or empty!", params.file_system_name);
+    logger_->log_error("Filesystem Name '{}' is invalid or empty!", params.file_system_name);
     return false;
   }
 

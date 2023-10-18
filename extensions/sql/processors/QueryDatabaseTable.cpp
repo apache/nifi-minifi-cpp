@@ -92,7 +92,7 @@ void QueryDatabaseTable::processOnSchedule(core::ProcessContext& context) {
 void QueryDatabaseTable::processOnTrigger(core::ProcessContext& /*context*/, core::ProcessSession& session) {
   const auto& selectQuery = buildSelectQuery();
 
-  logger_->log_info("QueryDatabaseTable: selectQuery: '%s'", selectQuery.c_str());
+  logger_->log_info("QueryDatabaseTable: selectQuery: '{}'", selectQuery.c_str());
 
   auto statement = connection_->prepareStatement(selectQuery);
 
@@ -135,7 +135,7 @@ bool QueryDatabaseTable::loadMaxValuesFromStoredState(const std::unordered_map<s
     return false;
   }
   if (state.at(TABLENAME_KEY) != table_name_) {
-    logger_->log_info("Querying new table \"%s\", resetting state.", table_name_);
+    logger_->log_info("Querying new table \"{}\", resetting state.", table_name_);
     return false;
   }
   for (auto& elem : state) {
@@ -145,14 +145,14 @@ bool QueryDatabaseTable::loadMaxValuesFromStoredState(const std::unordered_map<s
       if (std::find(max_value_columns_.begin(), max_value_columns_.end(), column_name) != max_value_columns_.end()) {
         new_max_values.emplace(column_name, elem.second);
       } else {
-        logger_->log_info("State contains obsolete maximum-value column \"%s\", resetting state.", column_name.str());
+        logger_->log_info("State contains obsolete maximum-value column \"{}\", resetting state.", column_name.str());
         return false;
       }
     }
   }
   for (auto& column : max_value_columns_) {
     if (new_max_values.find(column) == new_max_values.end()) {
-      logger_->log_info("New maximum-value column \"%s\" specified, resetting state.", column.str());
+      logger_->log_info("New maximum-value column \"{}\" specified, resetting state.", column.str());
       return false;
     }
   }
@@ -181,7 +181,7 @@ void QueryDatabaseTable::initializeMaxValues(core::ProcessContext &context) {
 
 void QueryDatabaseTable::loadMaxValuesFromDynamicProperties(core::ProcessContext &context) {
   const auto dynamic_prop_keys = context.getDynamicPropertyKeys();
-  logger_->log_info("Received %zu dynamic properties", dynamic_prop_keys.size());
+  logger_->log_info("Received {} dynamic properties", dynamic_prop_keys.size());
 
   for (const auto& key : dynamic_prop_keys) {
     if (!utils::StringUtils::startsWith(key, InitialMaxValueDynamicPropertyPrefix)) {
@@ -190,7 +190,7 @@ void QueryDatabaseTable::loadMaxValuesFromDynamicProperties(core::ProcessContext
     sql::SQLColumnIdentifier column_name(key.substr(InitialMaxValueDynamicPropertyPrefix.length()));
     auto it = max_values_.find(column_name);
     if (it == max_values_.end()) {
-      logger_->log_warn("Initial maximum value specified for column \"%s\", which is not specified as a Maximum-value Column. Ignoring.", column_name.str());
+      logger_->log_warn("Initial maximum value specified for column \"{}\", which is not specified as a Maximum-value Column. Ignoring.", column_name.str());
       continue;
     }
     // do not overwrite existing max value
@@ -200,7 +200,7 @@ void QueryDatabaseTable::loadMaxValuesFromDynamicProperties(core::ProcessContext
     std::string value;
     if (context.getDynamicProperty(key, value) && !value.empty()) {
       it->second = value;
-      logger_->log_info("Setting initial maximum value of %s to %s", column_name.str(), value);
+      logger_->log_info("Setting initial maximum value of {} to {}", column_name.str(), value);
     }
   }
 }
