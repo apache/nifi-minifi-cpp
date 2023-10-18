@@ -186,7 +186,7 @@ void ControllerSocketProtocol::handleStart(io::BaseStream &stream) {
       });
     }
   } else {
-    logger_->log_debug("Connection broke");
+    logger_->log_error("Connection broke");
   }
 }
 
@@ -198,7 +198,7 @@ void ControllerSocketProtocol::handleStop(io::BaseStream &stream) {
       component.stop();
     });
   } else {
-    logger_->log_debug("Connection broke");
+    logger_->log_error("Connection broke");
   }
 }
 
@@ -215,7 +215,7 @@ void ControllerSocketProtocol::handleUpdate(io::BaseStream &stream) {
   {
     const auto size = stream.read(what);
     if (io::isError(size)) {
-      logger_->log_debug("Connection broke");
+      logger_->log_error("Connection broke");
       return;
     }
   }
@@ -224,7 +224,7 @@ void ControllerSocketProtocol::handleUpdate(io::BaseStream &stream) {
     {
       const auto size = stream.read(ff_loc);
       if (io::isError(size)) {
-        logger_->log_debug("Connection broke");
+        logger_->log_error("Connection broke");
         return;
       }
     }
@@ -239,7 +239,7 @@ void ControllerSocketProtocol::writeQueueSizesResponse(io::BaseStream &stream) {
   std::string connection;
   const auto size_ = stream.read(connection);
   if (io::isError(size_)) {
-    logger_->log_debug("Connection broke");
+    logger_->log_error("Connection broke");
     return;
   }
   std::unordered_map<std::string, ControllerSocketReporter::QueueSize> sizes;
@@ -352,7 +352,7 @@ void ControllerSocketProtocol::handleDescribe(io::BaseStream &stream) {
   std::string what;
   const auto size = stream.read(what);
   if (io::isError(size)) {
-    logger_->log_debug("Connection broke");
+    logger_->log_error("Connection broke");
     return;
   }
   if (what == "queue") {
@@ -379,7 +379,7 @@ void ControllerSocketProtocol::writeDebugBundleResponse(io::BaseStream &stream) 
   auto op = static_cast<uint8_t>(Operation::transfer);
   resp.write(&op, 1);
   if (!bundle) {
-    logger_->log_error(bundle.error().c_str());
+    logger_->log_error("Creating debug bundle failed: {}", bundle.error());
     resp.write(static_cast<size_t>(0));
     stream.write(resp.getBuffer());
     return;
@@ -403,20 +403,20 @@ void ControllerSocketProtocol::handleTransfer(io::BaseStream &stream) {
   std::string what;
   const auto size = stream.read(what);
   if (io::isError(size)) {
-    logger_->log_debug("Connection broke");
+    logger_->log_error("Connection broke");
     return;
   }
   if (what == "debug") {
     writeDebugBundleResponse(stream);
   } else {
-    logger_->log_error("Unknown C2 transfer parameter: %s", what);
+    logger_->log_error("Unknown C2 transfer parameter: {}", what);
   }
 }
 
 asio::awaitable<void> ControllerSocketProtocol::handleCommand(std::unique_ptr<io::BaseStream> stream) {
   uint8_t head;
   if (stream->read(head) != 1) {
-    logger_->log_debug("Connection broke");
+    logger_->log_error("Connection broke");
     co_return;
   }
 
