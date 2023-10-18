@@ -232,14 +232,9 @@ bool RawSiteToSiteClient::initiateCodecResourceNegotiation() {
     case NEGOTIATED_ABORT: {
       logger_->log_error("Site2Site Codec Negotiate response ABORT");
       return false;
-<<<<<<< HEAD
-    default:
-      logger_->log_error("Negotiate Codec response unknown code {}", statusCode);
-=======
     }
     default: {
-      logger_->log_error("Negotiate Codec response unknown code %d", statusCode);
->>>>>>> 21e1f9939 (MINIFICPP-1891 Integrate google clang-tidy checks in CI)
+      logger_->log_error("Negotiate Codec response unknown code {}", statusCode);
       return false;
     }
   }

@@ -317,9 +317,9 @@ TEST_CASE("Validating data transfer speed property with default value") {
   REQUIRE(component.getProperty(property.getName(), data_transfer_speed_value));
   CHECK(data_transfer_speed_value.getValue() == 1_TiB);
   REQUIRE_NOTHROW(component.setProperty(property.getName(), "1KBinvalidsuffix"));
-  REQUIRE_THROWS_AS(component.getProperty(property.getName(), data_transfer_speed_value), ValueException);
+  REQUIRE_THROWS_AS(component.getProperty(property.getName(), data_transfer_speed_value), utils::internal::ValueException);
   REQUIRE_NOTHROW(component.setProperty(property.getName(), "1KB"));
-  REQUIRE_THROWS_AS(component.getProperty(property.getName(), data_transfer_speed_value), ValueException);
+  REQUIRE_THROWS_AS(component.getProperty(property.getName(), data_transfer_speed_value), utils::internal::ValueException);
 }
 
 TEST_CASE("Validating data transfer speed property without default value") {
@@ -335,8 +335,8 @@ TEST_CASE("Validating data transfer speed property without default value") {
   REQUIRE_NOTHROW(component.setProperty(property.getName(), "1TB/S "));
   REQUIRE(component.getProperty(property.getName(), data_transfer_speed_value));
   CHECK(data_transfer_speed_value.getValue() == 1_TiB);
-  REQUIRE_THROWS_AS(component.setProperty(property.getName(), "1KBinvalidsuffix"), ValueException);
-  REQUIRE_THROWS_AS(component.setProperty(property.getName(), "1KB"), ValueException);
+  REQUIRE_THROWS_AS(component.setProperty(property.getName(), "1KBinvalidsuffix"), utils::internal::ValueException);
+  REQUIRE_THROWS_AS(component.setProperty(property.getName(), "1KB"), utils::internal::ValueException);
 }
 
 }  // namespace org::apache::nifi::minifi::core
