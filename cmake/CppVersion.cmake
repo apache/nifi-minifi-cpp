@@ -17,11 +17,11 @@
 
 function(set_cpp_version)
     if (MSVC)
-        if ((MSVC_VERSION GREATER "1910") OR (MSVC_VERSION EQUAL "1910"))
+        if ((MSVC_VERSION GREATER "1930") OR (MSVC_VERSION EQUAL "1930"))
             add_compile_options("/std:c++latest")
             add_compile_options("/permissive-")
         else()
-            message(STATUS "The Visual Studio C++ compiler ${CMAKE_CXX_COMPILER} is not supported. Please use Visual Studio 2019 or newer.")
+            message(STATUS "The Visual Studio C++ compiler ${CMAKE_CXX_COMPILER} is not supported. Please use Visual Studio 2022 or newer.")
         endif()
         set(CMAKE_CXX_STANDARD 20 PARENT_SCOPE)
     else()
