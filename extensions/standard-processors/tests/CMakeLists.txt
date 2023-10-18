@@ -18,6 +18,7 @@
 #
 
 include(Coroutines)
+include(JoltTests)
 enable_coroutines()
 
 file(GLOB PROCESSOR_UNIT_TESTS  "unit/*.cpp")
@@ -42,6 +43,7 @@ FOREACH(testfile ${PROCESSOR_UNIT_TESTS})
     target_link_libraries(${testfilename} minifi-expression-language-extensions)
     target_link_libraries(${testfilename} minifi-standard-processors)
     target_link_libraries(${testfilename} minifi-civet-extensions)
+    target_compile_definitions("${testfilename}" PRIVATE JOLT_TESTS_DIR="${jolt_tests_SOURCE_DIR}/jolt-core/src/test/resources/json/shiftr")
     if (NOT DISABLE_ROCKSDB)
         target_link_libraries(${testfilename} minifi-rocksdb-repos)
     endif()

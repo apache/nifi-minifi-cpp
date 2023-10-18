@@ -94,6 +94,8 @@ class JoltTransformJSON : public core::Processor {
 
   class Spec {
    public:
+    using It = std::string_view::const_iterator;
+
     struct Context {
      public:
       const Context* parent{nullptr};
@@ -113,7 +115,22 @@ class JoltTransformJSON : public core::Processor {
         return nullptr;
       }
 
+      ::gsl::final_action<std::function<void()>> log(std::function<void(std::shared_ptr<core::logging::Logger>)> on_enter, std::function<void(std::shared_ptr<core::logging::Logger>)> on_exit) const {
+        if (logger) {
+          on_enter(logger);
+          return gsl::finally<std::function<void()>>([on_exit, logger = logger] {
+            on_exit(logger);
+          });
+        }
+        if (parent) {
+          return parent->log(on_enter, on_exit);
+        }
+        return gsl::finally<std::function<void()>>([]{});
+      }
+
       std::vector<std::string_view> matches;
+      const rapidjson::Value* node{nullptr};
+      std::shared_ptr<core::logging::Logger> logger;
     };
 
     class Template {
@@ -128,13 +145,23 @@ class JoltTransformJSON : public core::Processor {
             .append(",")
             .append(std::to_string(references[idx].second))
             .append(")")
-            .append(fragments[idx]);
+            .append(fragments[idx + 1]);
         }
       }
 
       // checks if the string is definitely a template (i.e. has an unescaped '&' char)
       static bool check(std::string_view str);
-      static nonstd::expected<Template, std::string> parse(std::string_view str, const std::string& escapables);
+      static nonstd::expected<Template, std::string> parse(std::string_view str, std::string_view escapables) {
+        if (auto res = parse(str.begin(), str.end(), escapables)) {
+          if (res->second != str.end()) {
+            return nonstd::make_unexpected("Failed to fully parse template");
+          }
+          return {std::move(res->first)};
+        } else {
+          return nonstd::make_unexpected(std::move(res.error()));
+        }
+      }
+      static nonstd::expected<std::pair<Template, It>, std::string> parse(It begin, It end, std::string_view escapables);
 
       std::string eval(const Context& ctx) const;
 
@@ -144,6 +171,10 @@ class JoltTransformJSON : public core::Processor {
 
       auto operator==(const Template& other) const {
         return full == other.full;
+      }
+
+      bool empty() const {
+        return fragments.size() == 1 && fragments.front().empty();
       }
 
       std::vector<std::string> fragments;
@@ -160,7 +191,7 @@ class JoltTransformJSON : public core::Processor {
       }
       // checks if the string is definitely a regex (i.e. has an unescaped '*' char)
       static bool check(std::string_view str);
-      static nonstd::expected<Regex, std::string> parse(std::string_view str, const std::string& escapables);
+      static nonstd::expected<Regex, std::string> parse(std::string_view str, std::string_view escapables);
 
       std::optional<std::vector<std::string_view>> match(std::string_view str) const;
 
@@ -188,7 +219,9 @@ class JoltTransformJSON : public core::Processor {
       INDEX
     };
 
-    using Destination = std::vector<std::pair<Template, MemberType>>;
+    using Path = std::vector<std::pair<Template, MemberType>>;
+    using ValueRef = std::pair<size_t, Path>;
+    using Destination = std::vector<std::pair<std::variant<Template, ValueRef>, MemberType>>;
     using Destinations = std::vector<Destination>;
 
     struct Pattern {
@@ -202,13 +235,14 @@ class JoltTransformJSON : public core::Processor {
       std::map<std::string, Value> literals;
       std::map<Template, Value> templates;  // '&'
       std::map<Regex, Value> regexes;  // '*'
-      std::optional<Destinations> self;  // '@'
-      std::optional<Destinations> key;  // '$'
+      std::vector<std::pair<ValueRef, Value>> values;  // '@', '@1', '@(1,key.path)'
+      std::map<std::pair<size_t, size_t>, Destinations> keys;  // '$', '$(0,1)'
+      std::map<std::string, Destinations> defaults; // #thing: a.b
     };
 
     static nonstd::expected<Spec, std::string> parse(std::string_view str);
 
-    nonstd::expected<rapidjson::Document, std::string> process(const rapidjson::Value& input) const;
+    nonstd::expected<rapidjson::Document, std::string> process(const rapidjson::Value& input, std::shared_ptr<core::logging::Logger> logger = {}) const;
 
    private:
     explicit Spec(std::unique_ptr<Pattern> value): value_(std::move(value)) {}
