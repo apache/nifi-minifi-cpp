@@ -809,7 +809,12 @@ def step_impl(context, num_flowfiles, duration):
 
 @then("at least one flowfile is placed in the monitored directory in less than {duration}")
 def step_impl(context, duration):
-    context.test.check_for_num_file_range_generated(1, float('inf'), humanfriendly.parse_timespan(duration))
+    context.test.check_for_num_file_range_generated_with_timeout(1, float('inf'), humanfriendly.parse_timespan(duration))
+
+
+@then("at least one flowfile with minimum size of \"{size}\" is placed in the monitored directory in less than {duration}")
+def step_impl(context, duration: str, size: str):
+    context.test.check_for_num_file_range_and_min_size_generated(1, float('inf'), humanfriendly.parse_size(size), humanfriendly.parse_timespan(duration))
 
 
 @then("one flowfile with the contents \"{content}\" is placed in the monitored directory in less than {duration}")
@@ -830,7 +835,7 @@ def step_impl(context, duration, contents):
 
 @then("after a wait of {duration}, at least {lower_bound:d} and at most {upper_bound:d} flowfiles are produced and placed in the monitored directory")
 def step_impl(context, lower_bound, upper_bound, duration):
-    context.test.check_for_num_file_range_generated(lower_bound, upper_bound, humanfriendly.parse_timespan(duration))
+    context.test.check_for_num_file_range_generated_after_wait(lower_bound, upper_bound, humanfriendly.parse_timespan(duration))
 
 
 @then("{number_of_files:d} flowfiles are placed in the monitored directory in {duration}")

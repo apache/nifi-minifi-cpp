@@ -200,7 +200,7 @@ bool ListenHTTP::processIncomingFlowFile(core::ProcessSession &session) {
       logger_->log_warn("Using default mime type of application/octet-stream for response body file: %s", response.uri);
       response.mime_type = "application/octet-stream";
     }
-    response.body = to_string(session.readBuffer(flow_file));
+    response.body = session.readBuffer(flow_file).buffer;
     handler_->setResponseBody(response);
   }
 
@@ -397,7 +397,6 @@ void ListenHTTP::Handler::writeBody(mg_connection *conn, const mg_request_info *
 
   if (request_uri_str.size() > base_uri_.size() + 1) {
     ResponseBody response;
-
     {
       // Attempt to minimize time holding mutex (it would be nice to have a lock-free concurrent map here)
       std::lock_guard<std::mutex> guard(uri_map_mutex_);
@@ -417,7 +416,7 @@ void ListenHTTP::Handler::writeBody(mg_connection *conn, const mg_request_info *
       mg_printf(conn, "%s", std::to_string(response.body.size()).c_str());
       mg_printf(conn, "\r\n\r\n");
       if (include_payload) {
-        mg_printf(conn, "%s", response.body.c_str());
+        mg_write(conn, reinterpret_cast<char*>(response.body.data()), response.body.size());
       }
     } else {
       logger_->log_debug("No response body available for URI: %s", req_info->request_uri);
@@ -433,25 +432,25 @@ std::unique_ptr<io::BufferStream> ListenHTTP::Handler::createContentBuffer(struc
   auto content_buffer = std::make_unique<io::BufferStream>();
   size_t nlen = 0;
   int64_t tlen = req_info->content_length;
-  uint8_t buf[16384];
+  std::array<uint8_t, 16384> buf{};
 
   // if we have no content length we should call mg_read until
   // there is no data left from the stream to be HTTP/1.1 compliant
   while (tlen == -1 || (tlen > 0 && nlen < gsl::narrow<size_t>(tlen))) {
-    auto rlen = tlen == -1 ? sizeof(buf) : gsl::narrow<size_t>(tlen) - nlen;
-    if (rlen > sizeof(buf)) {
-      rlen = sizeof(buf);
+    auto rlen = tlen == -1 ? buf.size() : gsl::narrow<size_t>(tlen) - nlen;
+    if (rlen > buf.size()) {
+      rlen = buf.size();
     }
 
     // Read a buffer of data from client
-    const auto mg_read_return = mg_read(conn, &buf[0], rlen);
+    const auto mg_read_return = mg_read(conn, buf.data(), rlen);
     if (mg_read_return <= 0) {
       break;
     }
     rlen = gsl::narrow<size_t>(mg_read_return);
 
     // Transfer buffer data to the output stream
-    content_buffer->write(&buf[0], rlen);
+    content_buffer->write(buf.data(), rlen);
 
     nlen += rlen;
   }

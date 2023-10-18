@@ -115,6 +115,8 @@ void InvokeHTTP::setupMembersFromProperties(const core::ProcessContext& context)
 
   use_chunked_encoding_ = (context.getProperty(UseChunkedEncoding) | utils::andThen(&utils::StringUtils::toBool)).value_or(false);
   send_date_header_ = context.getProperty<bool>(DateHeader).value_or(true);
+  context.getProperty(UploadSpeedLimit, maximum_upload_speed_);
+  context.getProperty(DownloadSpeedLimit, maximum_download_speed_);
 }
 
 std::unique_ptr<minifi::extensions::curl::HTTPClient> InvokeHTTP::createHTTPClientFromPropertiesAndMembers(const core::ProcessContext& context) const {
@@ -141,6 +143,8 @@ std::unique_ptr<minifi::extensions::curl::HTTPClient> InvokeHTTP::createHTTPClie
   setupClientPeerVerification(*client, context);
   setupClientContentType(*client, context, send_message_body_);
   setupClientTransferEncoding(*client, use_chunked_encoding_);
+  client->setMaximumUploadSpeed(maximum_upload_speed_.getValue());
+  client->setMaximumDownloadSpeed(maximum_download_speed_.getValue());
 
   return client;
 }

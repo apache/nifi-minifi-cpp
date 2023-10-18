@@ -177,8 +177,16 @@ class InvokeHTTP : public core::Processor {
       .withDefaultValue(magic_enum::enum_name(invoke_http::InvalidHTTPHeaderFieldHandlingOption::transform))
       .withAllowedValues(magic_enum::enum_names<invoke_http::InvalidHTTPHeaderFieldHandlingOption>())
       .build();
+  EXTENSIONAPI static constexpr auto UploadSpeedLimit = core::PropertyDefinitionBuilder<>::createProperty("Upload Speed Limit")
+      .withDescription("Maximum upload speed, e.g. '500 KB/s'. Leave this empty if you want no limit.")
+      .withPropertyType(core::StandardPropertyTypes::DATA_TRANSFER_SPEED_TYPE)
+      .build();
+  EXTENSIONAPI static constexpr auto DownloadSpeedLimit = core::PropertyDefinitionBuilder<>::createProperty("Download Speed Limit")
+      .withDescription("Maximum download speed,e.g. '500 KB/s'. Leave this empty if you want no limit.")
+      .withPropertyType(core::StandardPropertyTypes::DATA_TRANSFER_SPEED_TYPE)
+      .build();
 
-  EXTENSIONAPI static constexpr auto Properties = std::array<core::PropertyReference, 21>{
+  EXTENSIONAPI static constexpr auto Properties = std::array<core::PropertyReference, 23>{
         Method,
         URL,
         ConnectTimeout,
@@ -199,7 +207,9 @@ class InvokeHTTP : public core::Processor {
         PutResponseBodyInAttribute,
         AlwaysOutputResponse,
         PenalizeOnNoRetry,
-        InvalidHTTPHeaderFieldHandlingStrategy
+        InvalidHTTPHeaderFieldHandlingStrategy,
+        UploadSpeedLimit,
+        DownloadSpeedLimit
   };
 
 
@@ -275,6 +285,8 @@ class InvokeHTTP : public core::Processor {
   bool penalize_no_retry_{false};
   bool send_message_body_{true};
   bool send_date_header_{true};
+  core::DataTransferSpeedValue maximum_upload_speed_{0};
+  core::DataTransferSpeedValue maximum_download_speed_{0};
 
   invoke_http::InvalidHTTPHeaderFieldHandlingOption invalid_http_header_field_handling_strategy_{};
 

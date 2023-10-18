@@ -27,6 +27,7 @@ from minifi.core.InputPort import InputPort
 
 from cluster.DockerTestCluster import DockerTestCluster
 
+from minifi.validators.OutputValidator import OutputValidator
 from minifi.validators.EmptyFilesOutPutValidator import EmptyFilesOutPutValidator
 from minifi.validators.NoFileOutPutValidator import NoFileOutPutValidator
 from minifi.validators.SingleFileOutputValidator import SingleFileOutputValidator
@@ -35,6 +36,7 @@ from minifi.validators.SingleOrMultiFileOutputValidator import SingleOrMultiFile
 from minifi.validators.SingleOrMultiFileOutputRegexValidator import SingleOrMultiFileOutputRegexValidator
 from minifi.validators.NoContentCheckFileNumberValidator import NoContentCheckFileNumberValidator
 from minifi.validators.NumFileRangeValidator import NumFileRangeValidator
+from minifi.validators.NumFileRangeAndFileSizeValidator import NumFileRangeAndFileSizeValidator
 from minifi.validators.SingleJSONFileOutputValidator import SingleJSONFileOutputValidator
 from utils import decode_escaped_str, get_minifi_pid, get_peak_memory_usage
 
@@ -244,10 +246,20 @@ class MiNiFi_integration_test:
         output_validator.set_output_dir(self.file_system_observer.get_output_dir())
         self.__check_output(timeout_seconds, output_validator, max(1, num_flowfiles))
 
-    def check_for_num_file_range_generated(self, min_files, max_files, wait_time_in_seconds):
+    def check_for_num_file_range_generated_after_wait(self, min_files: int, max_files: int, wait_time_in_seconds: int):
         output_validator = NumFileRangeValidator(min_files, max_files)
         output_validator.set_output_dir(self.file_system_observer.get_output_dir())
         self.__check_output_after_time_period(wait_time_in_seconds, output_validator)
+
+    def check_for_num_file_range_generated_with_timeout(self, min_files: int, max_files: int, timeout_in_seconds: int):
+        output_validator = NumFileRangeValidator(min_files, max_files)
+        output_validator.set_output_dir(self.file_system_observer.get_output_dir())
+        self.__check_output_over_time_period(timeout_in_seconds, output_validator)
+
+    def check_for_num_file_range_and_min_size_generated(self, min_files: int, max_files: int, min_size: int, wait_time_in_seconds: int):
+        output_validator = NumFileRangeAndFileSizeValidator(min_files, max_files, min_size)
+        output_validator.set_output_dir(self.file_system_observer.get_output_dir())
+        self.__check_output_over_time_period(wait_time_in_seconds, output_validator)
 
     def check_for_an_empty_file_generated(self, timeout_seconds):
         output_validator = EmptyFilesOutPutValidator()
@@ -257,6 +269,17 @@ class MiNiFi_integration_test:
     def __check_output_after_time_period(self, wait_time_in_seconds, output_validator):
         time.sleep(wait_time_in_seconds)
         self.__validate(output_validator)
+
+    def __check_output_over_time_period(self, wait_time_in_seconds: int, output_validator: OutputValidator):
+        start_time = time.perf_counter()
+        while True:
+            assert not self.cluster.segfault_happened() or self.cluster.log_app_output()
+            if output_validator.validate():
+                return
+            time.sleep(1)
+            if wait_time_in_seconds < (time.perf_counter() - start_time):
+                break
+        assert output_validator.validate() or self.cluster.log_app_output()
 
     def __check_output(self, timeout_seconds, output_validator, max_files=0):
         result = self.file_system_observer.validate_output(timeout_seconds, output_validator, max_files)

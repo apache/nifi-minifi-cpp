@@ -194,7 +194,7 @@ TEST_CASE("Valid With Default") {
   TestConfigurableComponent component;
   component.setSupportedProperties(std::array<PropertyReference, 1>{property_definition});
   REQUIRE(component.setProperty("prop", "23"));
-  int value;
+  int value = 0;
   REQUIRE(component.getProperty(property.getName(), value));
   REQUIRE(value == 23);
 }
@@ -206,7 +206,7 @@ TEST_CASE("Invalid conversion") {
   Property property{property_definition};
   TestConfigurableComponent component;
   component.setSupportedProperties(std::array<PropertyReference, 1>{property_definition});
-  bool value;
+  bool value = false;
   REQUIRE_THROWS_AS(component.getProperty(property.getName(), value), ConversionException);
 }
 
@@ -221,7 +221,7 @@ TEST_CASE("Write Invalid Then Override With Valid") {
   component.setSupportedProperties(std::array<PropertyReference, 1>{property_definition});
   REQUIRE_THROWS_AS(component.setProperty(property.getName(), "banana"), ConversionException);
   component.setProperty(property.getName(), "98");
-  int value;
+  int value = 0;
   REQUIRE(component.getProperty(property.getName(), value));
   REQUIRE(value == 98);
 }
@@ -298,6 +298,46 @@ TEST_CASE("Validating listener port property") {
   REQUIRE_THROWS_AS(property.setValue("banana"), InvalidValueException);
   REQUIRE_THROWS_AS(property.setValue("65536"), InvalidValueException);
   REQUIRE_THROWS_AS(property.setValue("-1"), InvalidValueException);
+}
+
+TEST_CASE("Validating data transfer speed property with default value") {
+  using namespace std::literals::chrono_literals;
+  static constexpr auto property_definition = PropertyDefinitionBuilder<>::createProperty("prop")
+      .withDefaultValue("10 KB/s")
+      .build();
+  Property property{property_definition};
+  TestConfigurableComponent component;
+  component.setSupportedProperties(std::array<PropertyReference, 1>{property_definition});
+  DataTransferSpeedValue data_transfer_speed_value;
+  REQUIRE(component.getProperty(property.getName(), data_transfer_speed_value));
+  CHECK(data_transfer_speed_value.getValue() == 10_KiB);
+  REQUIRE_NOTHROW(component.setProperty(property.getName(), "20 MB/s"));
+  REQUIRE(component.getProperty(property.getName(), data_transfer_speed_value));
+  CHECK(data_transfer_speed_value.getValue() == 20_MiB);
+  REQUIRE_NOTHROW(component.setProperty(property.getName(), "1TB/S "));
+  REQUIRE(component.getProperty(property.getName(), data_transfer_speed_value));
+  CHECK(data_transfer_speed_value.getValue() == 1_TiB);
+  REQUIRE_NOTHROW(component.setProperty(property.getName(), "1KBinvalidsuffix"));
+  REQUIRE_THROWS_AS(component.getProperty(property.getName(), data_transfer_speed_value), ValueException);
+  REQUIRE_NOTHROW(component.setProperty(property.getName(), "1KB"));
+  REQUIRE_THROWS_AS(component.getProperty(property.getName(), data_transfer_speed_value), ValueException);
+}
+
+TEST_CASE("Validating data transfer speed property without default value") {
+  using namespace std::literals::chrono_literals;
+  static constexpr auto property_definition = PropertyDefinitionBuilder<>::createProperty("prop")
+      .withPropertyType(core::StandardPropertyTypes::DATA_TRANSFER_SPEED_TYPE)
+      .build();
+  Property property{property_definition};
+  TestConfigurableComponent component;
+  component.setSupportedProperties(std::array<PropertyReference, 1>{property_definition});
+  DataTransferSpeedValue data_transfer_speed_value;
+  REQUIRE_FALSE(component.getProperty(property.getName(), data_transfer_speed_value));
+  REQUIRE_NOTHROW(component.setProperty(property.getName(), "1TB/S "));
+  REQUIRE(component.getProperty(property.getName(), data_transfer_speed_value));
+  CHECK(data_transfer_speed_value.getValue() == 1_TiB);
+  REQUIRE_THROWS_AS(component.setProperty(property.getName(), "1KBinvalidsuffix"), ValueException);
+  REQUIRE_THROWS_AS(component.setProperty(property.getName(), "1KB"), ValueException);
 }
 
 }  // namespace org::apache::nifi::minifi::core

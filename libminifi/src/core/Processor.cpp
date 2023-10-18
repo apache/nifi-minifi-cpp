@@ -35,6 +35,7 @@
 #include "core/ProcessSessionFactory.h"
 #include "utils/gsl.h"
 #include "range/v3/algorithm/any_of.hpp"
+#include "fmt/format.h"
 
 using namespace std::literals::chrono_literals;
 
@@ -345,7 +346,8 @@ void Processor::validateAnnotations() const {
   switch (getInputRequirement()) {
     case annotation::Input::INPUT_REQUIRED: {
       if (!hasIncomingConnections()) {
-        throw Exception(PROCESS_SCHEDULE_EXCEPTION, "INPUT_REQUIRED was specified for the processor, but no incoming connections were found");
+        throw Exception(PROCESS_SCHEDULE_EXCEPTION, fmt::format("INPUT_REQUIRED was specified for the processor '{}' (uuid: '{}'), but no incoming connections were found",
+          getName(), std::string(getUUIDStr())));
       }
       break;
     }
@@ -353,7 +355,8 @@ void Processor::validateAnnotations() const {
       break;
     case annotation::Input::INPUT_FORBIDDEN: {
       if (hasIncomingConnections()) {
-        throw Exception(PROCESS_SCHEDULE_EXCEPTION, "INPUT_FORBIDDEN was specified for the processor, but there are incoming connections");
+        throw Exception(PROCESS_SCHEDULE_EXCEPTION, fmt::format("INPUT_FORBIDDEN was specified for the processor '{}' (uuid: '{}'), but there are incoming connections",
+          getName(), std::string(getUUIDStr())));
       }
     }
   }

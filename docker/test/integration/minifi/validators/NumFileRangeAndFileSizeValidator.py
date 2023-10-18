@@ -12,19 +12,17 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-
-
 import logging
 import os
 
 from .FileOutputValidator import FileOutputValidator
 
 
-class NumFileRangeValidator(FileOutputValidator):
-
-    def __init__(self, min_files, max_files):
+class NumFileRangeAndFileSizeValidator(FileOutputValidator):
+    def __init__(self, min_files: int, max_files: int, min_size: int):
         self.min_files = min_files
         self.max_files = max_files
+        self.min_size = min_size
 
     def validate(self):
         full_dir = os.path.join(self.output_dir)
@@ -33,6 +31,6 @@ class NumFileRangeValidator(FileOutputValidator):
         if not os.path.isdir(full_dir):
             return False
 
-        num_files = self.get_num_files(full_dir)
-        logging.info("Number of files generated: %d", num_files)
+        num_files = self.get_num_files_with_min_size(full_dir, self.min_size)
+        logging.info("Number of files with min size %d generated: %d", self.min_size, num_files)
         return self.min_files <= num_files and num_files <= self.max_files

@@ -98,7 +98,7 @@ bool integerValidatedProperty(const core::PropertyValidator* const validator) {
 }
 
 std::optional<int64_t> stringToDataSize(std::string_view input) {
-  int64_t value;
+  int64_t value = 0;
   std::string unit_str;
   if (!utils::StringUtils::splitToValueAndUnit(input, value, unit_str)) {
     return std::nullopt;
@@ -108,6 +108,16 @@ std::optional<int64_t> stringToDataSize(std::string_view input) {
     return value * *unit_multiplier;
   }
   return std::nullopt;
+}
+
+std::optional<int64_t> stringToDataTransferSpeed(std::string_view input) {
+  std::string data_size;
+  try {
+    data_size = core::DataTransferSpeedValue::removePerSecSuffix(std::string(input));
+  } catch (const utils::internal::ParseException&) {
+    return std::nullopt;
+  }
+  return stringToDataSize(data_size);
 }
 
 std::optional<std::string> ensureIntegerValidatedPropertyHasNoUnit(const core::PropertyValidator* const validator, std::string& value) {
@@ -121,6 +131,10 @@ std::optional<std::string> ensureIntegerValidatedPropertyHasNoUnit(const core::P
 
   if (auto parsed_data_size = stringToDataSize(value)) {
     return fmt::format("{}", *parsed_data_size);
+  }
+
+  if (auto parsed_data_transfer_speed = stringToDataTransferSpeed(value)) {
+    return fmt::format("{}", *parsed_data_transfer_speed);
   }
 
   return std::nullopt;
