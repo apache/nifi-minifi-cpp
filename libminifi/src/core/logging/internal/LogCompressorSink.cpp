@@ -19,15 +19,9 @@
 #include "core/logging/internal/LogCompressorSink.h"
 #include "spdlog/details/log_msg.h"
 
-namespace org {
-namespace apache {
-namespace nifi {
-namespace minifi {
-namespace core {
-namespace logging {
-namespace internal {
+namespace org::apache::nifi::minifi::core::logging::internal {
 
-LogCompressorSink::LogCompressorSink(LogQueueSize cache_size, LogQueueSize compressed_size, std::shared_ptr<logging::Logger> logger)
+LogCompressorSink::LogCompressorSink(LogQueueSize cache_size, LogQueueSize compressed_size, const std::shared_ptr<logging::Logger>& logger)
   : cached_logs_(cache_size.max_total_size, cache_size.max_segment_size),
     compressed_logs_(compressed_size.max_total_size, compressed_size.max_segment_size, ActiveCompressor::Allocator{logger}),
     compressor_logger_(logger) {
@@ -44,6 +38,7 @@ void LogCompressorSink::sink_it_(const spdlog::details::log_msg &msg) {
   formatter_->format(msg, formatted);
   cached_logs_.modify([&] (LogBuffer& active) {
     active.buffer_->write(reinterpret_cast<const uint8_t*>(formatted.data()), formatted.size());
+    return false;
   });
 }
 
@@ -59,6 +54,7 @@ void LogCompressorSink::run() {
 
 LogCompressorSink::CompressionResult LogCompressorSink::compress(bool force_rotation) {
   LogBuffer log_cache;
+  std::lock_guard<std::mutex> lock{compress_mutex_};
   if (!cached_logs_.tryDequeue(log_cache)) {
     if (force_rotation) {
       compressed_logs_.commit();
@@ -80,10 +76,4 @@ std::unique_ptr<io::InputStream> LogCompressorSink::createEmptyArchive() {
   return std::move(compressor.commit().buffer_);
 }
 
-}  // namespace internal
-}  // namespace logging
-}  // namespace core
-}  // namespace minifi
-}  // namespace nifi
-}  // namespace apache
-}  // namespace org
+}  // namespace org::apache::nifi::minifi::core::logging::internal
