@@ -432,7 +432,7 @@ C2Payload C2Agent::prepareConfigurationOptions(const C2ContentResponse &resp) co
 }
 
 void C2Agent::handle_clear(const C2ContentResponse &resp) {
-  ClearOperand operand;
+  ClearOperand operand = ClearOperand::connection;
   try {
     operand = utils::enumCast<ClearOperand>(resp.name, true);
   } catch(const std::runtime_error&) {
@@ -487,7 +487,7 @@ void C2Agent::handle_clear(const C2ContentResponse &resp) {
  * to be put into the acknowledgement
  */
 void C2Agent::handle_describe(const C2ContentResponse &resp) {
-  DescribeOperand operand;
+  DescribeOperand operand = DescribeOperand::metrics;
   try {
     operand = utils::enumCast<DescribeOperand>(resp.name, true);
   } catch(const std::runtime_error&) {
@@ -589,7 +589,7 @@ void C2Agent::handle_describe(const C2ContentResponse &resp) {
 }
 
 void C2Agent::handle_update(const C2ContentResponse &resp) {
-  UpdateOperand operand;
+  UpdateOperand operand = UpdateOperand::configuration;
   try {
     operand = utils::enumCast<UpdateOperand>(resp.name, true);
   } catch(const std::runtime_error&) {
@@ -693,7 +693,7 @@ C2Payload C2Agent::bundleDebugInfo(std::map<std::string, std::unique_ptr<io::Inp
 }
 
 void C2Agent::handle_transfer(const C2ContentResponse &resp) {
-  TransferOperand operand;
+  TransferOperand operand = TransferOperand::debug;
   try {
     operand = utils::enumCast<TransferOperand>(resp.name, true);
   } catch(const std::runtime_error&) {
@@ -1009,7 +1009,7 @@ void C2Agent::handleAssetUpdate(const C2ContentResponse& resp) {
 
   {
     std::ofstream file{file_path, std::ofstream::binary};
-    file.write(reinterpret_cast<const char*>(raw_data.data()), raw_data.size());
+    file.write(reinterpret_cast<const char*>(raw_data.data()), gsl::narrow<std::streamsize>(raw_data.size()));
   }
 
   C2Payload response(Operation::acknowledge, state::UpdateState::FULLY_APPLIED, resp.ident, true);

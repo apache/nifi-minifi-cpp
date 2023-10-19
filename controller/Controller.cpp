@@ -261,7 +261,7 @@ nonstd::expected<void, std::string> getDebugBundle(const utils::net::SocketData&
     const auto next_read_size = (std::min)(bundle_size, BUFFER_SIZE);
     const auto size_read = connection_stream->read(std::as_writable_bytes(std::span(out_buffer).subspan(0, next_read_size)));
     bundle_size -= size_read;
-    out_file.write(out_buffer.data(), size_read);
+    out_file.write(out_buffer.data(), gsl::narrow<std::streamsize>(size_read));
   }
   return {};
 }

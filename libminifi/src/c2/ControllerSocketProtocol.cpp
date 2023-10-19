@@ -414,7 +414,7 @@ void ControllerSocketProtocol::handleTransfer(io::BaseStream &stream) {
 }
 
 asio::awaitable<void> ControllerSocketProtocol::handleCommand(std::unique_ptr<io::BaseStream> stream) {
-  uint8_t head;
+  uint8_t head = 0;
   if (stream->read(head) != 1) {
     logger_->log_error("Connection broke");
     co_return;
