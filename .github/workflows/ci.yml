@@ -103,6 +103,10 @@ jobs:
           if ((Get-FileHash 'sqliteodbc_w64.exe').Hash -ne "0df79be4a4412542839ebf405b20d95a7dfc803da0b0b6b0dc653d30dc82ee84") {Write "Hash mismatch"; Exit 1}
           ./sqliteodbc_w64.exe /S
         shell: powershell
+      - id: remove-strawberry-perl-patch-exe
+        run: |
+          Remove-Item -Path "C:\Strawberry\c\bin" -Recurse -Force
+        shell: pwsh
       - name: build
         run: |
           for /f "usebackq delims=" %%i in (`vswhere.exe -latest -property installationPath`) do if exist "%%i\Common7\Tools\vsdevcmd.bat" call "%%i\Common7\Tools\vsdevcmd.bat" -arch=x64 -host_arch=x64
