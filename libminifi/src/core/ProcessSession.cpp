@@ -484,7 +484,7 @@ void ProcessSession::importFrom(io::InputStream &stream, const std::shared_ptr<c
   }
 }
 
-void ProcessSession::import(std::string source, const std::shared_ptr<FlowFile> &flow, bool keepSource, uint64_t offset) {
+void ProcessSession::import(const std::string& source, const std::shared_ptr<FlowFile> &flow, bool keepSource, uint64_t offset) {
   std::shared_ptr<ResourceClaim> claim = content_session_->create();
   size_t size = getpagesize();
   std::vector<uint8_t> charBuffer(size);
@@ -657,7 +657,7 @@ void ProcessSession::import(const std::string& source, std::vector<std::shared_p
   }
 }
 
-void ProcessSession::import(std::string source, std::vector<std::shared_ptr<FlowFile>> &flows, bool keepSource, uint64_t offset, char inputDelimiter) {
+void ProcessSession::import(const std::string& source, std::vector<std::shared_ptr<FlowFile>> &flows, bool keepSource, uint64_t offset, char inputDelimiter) {
 // this function calls a deprecated function, but it is itself deprecated, so suppress warnings
 #if defined(__clang__)
 #pragma clang diagnostic push
