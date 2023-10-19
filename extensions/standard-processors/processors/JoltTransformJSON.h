@@ -130,6 +130,7 @@ class JoltTransformJSON : public core::Processor {
 
       std::vector<std::string_view> matches;
       const rapidjson::Value* node{nullptr};
+      size_t match_count{0};
       std::shared_ptr<core::logging::Logger> logger;
     };
 
@@ -221,7 +222,8 @@ class JoltTransformJSON : public core::Processor {
 
     using Path = std::vector<std::pair<Template, MemberType>>;
     using ValueRef = std::pair<size_t, Path>;
-    using Destination = std::vector<std::pair<std::variant<Template, ValueRef>, MemberType>>;
+    using MatchingIndex = size_t;
+    using Destination = std::vector<std::pair<std::variant<Template, ValueRef, MatchingIndex>, MemberType>>;
     using Destinations = std::vector<Destination>;
 
     struct Pattern {
@@ -230,9 +232,11 @@ class JoltTransformJSON : public core::Processor {
       static void process(const Value& val, const Context& ctx, const rapidjson::Value& input, rapidjson::Document& output);
 
       void process(const Context& ctx, const rapidjson::Value& input, rapidjson::Document& output) const;
-      void processMember(const Context& ctx, std::string_view key, const rapidjson::Value& member, rapidjson::Document& output) const;
+      bool processMember(const Context& ctx, std::string_view key, const rapidjson::Value& member, rapidjson::Document& output) const;
 
-      std::map<std::string, Value> literals;
+      std::unordered_map<std::string, size_t> literal_indices;
+      std::vector<std::tuple<std::string, std::optional<size_t>, Value>> literals;
+
       std::map<Template, Value> templates;  // '&'
       std::map<Regex, Value> regexes;  // '*'
       std::vector<std::pair<ValueRef, Value>> values;  // '@', '@1', '@(1,key.path)'

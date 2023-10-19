@@ -508,7 +508,7 @@ nonstd::expected<std::pair<JoltTransformJSON::Spec::Path, JoltTransformJSON::Spe
   }
   JoltTransformJSON::Spec::Path result;
   for (auto&& [member, type] : std::move(dst->first)) {
-    if (holds_alternative<JoltTransformJSON::Spec::ValueRef>(member)) {
+    if (!holds_alternative<JoltTransformJSON::Spec::Template>(member)) {
       return nonstd::make_unexpected(fmt::format("Value reference at {} cannot contain nested value reference path", ctx.path()));
     }
     result.emplace_back(std::move(std::get<JoltTransformJSON::Spec::Template>(member)), std::move(type));
@@ -516,7 +516,7 @@ nonstd::expected<std::pair<JoltTransformJSON::Spec::Path, JoltTransformJSON::Spe
   return std::pair<JoltTransformJSON::Spec::Path, JoltTransformJSON::Spec::It>{result, dst->second};
 }
 
-nonstd::expected<std::pair<JoltTransformJSON::Spec::ValueRef, JoltTransformJSON::Spec::It>, std::string> parseValueReference(const JoltTransformJSON::Spec::Context& ctx, JoltTransformJSON::Spec::It begin, JoltTransformJSON::Spec::It end) {
+nonstd::expected<std::pair<JoltTransformJSON::Spec::ValueRef, JoltTransformJSON::Spec::It>, std::string> parseValueReference(const JoltTransformJSON::Spec::Context& ctx, JoltTransformJSON::Spec::It begin, JoltTransformJSON::Spec::It end, bool greedy_path) {
   using ResultT = std::pair<JoltTransformJSON::Spec::ValueRef, JoltTransformJSON::Spec::It>;
   auto it = begin;
   if (it == end) {
@@ -539,10 +539,18 @@ nonstd::expected<std::pair<JoltTransformJSON::Spec::ValueRef, JoltTransformJSON:
       return ResultT{{std::stoull(std::string{idx_begin, it}), {}}, it};
     }
     // format is @field.inner
-    if (auto path = parsePath(ctx, it, end)) {
-      return ResultT{{0, std::move(path->first)}, path->second};
+    if (greedy_path) {
+      if (auto path = parsePath(ctx, it, end)) {
+        return ResultT{{0, std::move(path->first)}, path->second};
+      } else {
+        return ResultT {{0, {}}, it};
+      }
     } else {
-      return ResultT {{0, {}}, it};
+      if (auto templ = JoltTransformJSON::Spec::Template::parse(it, end, {SPECIAL_CHARS.begin(), SPECIAL_CHARS.end()})) {
+        return ResultT{{0, JoltTransformJSON::Spec::Path{{std::move(templ->first), JoltTransformJSON::Spec::MemberType::FIELD}}}, templ->second};
+      } else {
+        return ResultT {{0, {}}, it};
+      }
     }
   }
   ++it;
@@ -584,7 +592,7 @@ nonstd::expected<std::pair<JoltTransformJSON::Spec::ValueRef, JoltTransformJSON:
 
 void parseMember(const JoltTransformJSON::Spec::Context& ctx, const std::unique_ptr<JoltTransformJSON::Spec::Pattern>& result, std::string_view name, const rapidjson::Value& member) {
   if (name.starts_with("@")) {
-    if (auto ref = parseValueReference(ctx, name.begin(), name.end())) {
+    if (auto ref = parseValueReference(ctx, name.begin(), name.end(), true)) {
       if (ref->second != name.end()) {
         throw Exception(GENERAL_EXCEPTION, "Failed to fully parse value reference");
       }
@@ -626,7 +634,13 @@ void parseMember(const JoltTransformJSON::Spec::Context& ctx, const std::unique_
       }
     } else {
       JoltTransformJSON::Spec::Context sub_ctx{.parent = &ctx, .matches = {name}};
-      result->literals.insert({parseLiteral(name), parseValue(sub_ctx, member)});
+      std::optional<size_t> numeric_value;
+      auto literal_name = parseLiteral(name);
+      result->literal_indices.insert({literal_name, result->literals.size()});
+      if (std::all_of(literal_name.begin(), literal_name.end(), [] (auto ch) {return std::isdigit(static_cast<unsigned char>(ch));})) {
+        numeric_value = std::stoull(literal_name);
+      }
+      result->literals.push_back({literal_name, numeric_value, parseValue(sub_ctx, member)});
     }
   }
 }
@@ -681,13 +695,41 @@ std::unique_ptr<JoltTransformJSON::Spec::Pattern> parseMap(const JoltTransformJS
   return map;
 }
 
+nonstd::expected<std::pair<JoltTransformJSON::Spec::MatchingIndex, JoltTransformJSON::Spec::It>, std::string> parseMatchingIndex(JoltTransformJSON::Spec::It begin, JoltTransformJSON::Spec::It end) {
+  auto it = begin;
+  if (it == end) {
+    return nonstd::make_unexpected("Empty matching index");
+  }
+  if (*it != '#') {
+    return nonstd::make_unexpected("Matching must start with a '#'");
+  }
+  ++it;
+  auto idx_begin = it;
+  while (it != end && std::isdigit(static_cast<unsigned char>(*it))) {
+    ++it;
+  }
+  return std::pair<JoltTransformJSON::Spec::MatchingIndex, JoltTransformJSON::Spec::It>{std::stoull(std::string{idx_begin, it}), it};
+}
+
 // dot-delimited list of templates and value references
 nonstd::expected<std::pair<JoltTransformJSON::Spec::Destination, JoltTransformJSON::Spec::It>, std::string> parseDestination(const JoltTransformJSON::Spec::Context& ctx, JoltTransformJSON::Spec::It begin, JoltTransformJSON::Spec::It end) {
   JoltTransformJSON::Spec::Destination result;
   JoltTransformJSON::Spec::MemberType type = JoltTransformJSON::Spec::MemberType::FIELD;
   auto ch_it = begin;
-  while (ch_it != end && *ch_it != ')') {
-    if (auto val_ref = parseValueReference(ctx, ch_it, end)) {
+  auto isEnd = [&] () {
+    return ch_it == end || *ch_it == ')';
+  };
+  while (!isEnd()) {
+    if (auto match_idx = parseMatchingIndex(ch_it, end)) {
+      if (type != JoltTransformJSON::Spec::MemberType::INDEX) {
+        return nonstd::make_unexpected("Matching index can only be used in index context, e.g. apple[#2]");
+      }
+      if (!ctx.find(match_idx->first)) {
+        return nonstd::make_unexpected(fmt::format("Invalid matching index at {} to ancestor {}", ctx.path(), match_idx->first));
+      }
+      result.push_back({std::move(match_idx->first), type});
+      ch_it = match_idx->second;
+    } else if (auto val_ref = parseValueReference(ctx, ch_it, end, false)) {
       result.push_back({std::move(val_ref->first), type});
       ch_it = val_ref->second;
     } else if (auto templ = JoltTransformJSON::Spec::Template::parse(ch_it, end, {SPECIAL_CHARS.begin(), SPECIAL_CHARS.end()})) {
@@ -704,7 +746,7 @@ nonstd::expected<std::pair<JoltTransformJSON::Spec::Destination, JoltTransformJS
       }
       ++ch_it;
     }
-    if (ch_it != end && *ch_it != ')') {
+    if (!isEnd()) {
       if (*ch_it == '.') {
         type = JoltTransformJSON::Spec::MemberType::FIELD;
       } else if (*ch_it == '[') {
@@ -866,6 +908,16 @@ void putValue(const JoltTransformJSON::Spec::Context& ctx, const JoltTransformJS
       continue;
     }
 
+    if (auto* match_idx = std::get_if<JoltTransformJSON::Spec::MatchingIndex>(&templ)) {
+      gsl_Expects(type == JoltTransformJSON::Spec::MemberType::INDEX);
+      auto* target = ctx.find(*match_idx);
+      if (!target) {
+        throw Exception(GENERAL_EXCEPTION, fmt::format("Could not find ancestor at index {} from {}", *match_idx, ctx.path()));
+      }
+      evaled_dest.push_back({std::to_string(target->match_count), type});
+      continue;
+    }
+
     // empty segment is self-reference, e.g. a..b == a.b
     if (type == JoltTransformJSON::Spec::MemberType::FIELD && get<JoltTransformJSON::Spec::Template>(templ).empty()) {
       continue;
@@ -987,32 +1039,33 @@ void JoltTransformJSON::Spec::Pattern::process(const Value& val, const Context& 
   }, val);
 }
 
-void JoltTransformJSON::Spec::Pattern::processMember(const Context& ctx, std::string_view name, const rapidjson::Value& member, rapidjson::Document& output) const {
+bool JoltTransformJSON::Spec::Pattern::processMember(const Context& ctx, std::string_view name, const rapidjson::Value& member, rapidjson::Document& output) const {
   auto on_exit = ctx.log([&] (auto logger) {
     logger->log_trace("%s", fmt::format("Processing member '{}' of {}", name, ctx.path()));
   }, [&] (auto logger) {
     logger->log_trace("%s", fmt::format("Finished processing member '{}' of {}", name, ctx.path()));
   });
-  if (auto it = literals.find(std::string{name}); it != literals.end()) {
+  if (auto it = literal_indices.find(std::string{name}); it != literal_indices.end()) {
     // literal is matched
     Context new_ctx{.parent = &ctx, .matches = {name}, .node = &member};
-    process(it->second, new_ctx, member, output);
-    return;
+    process(std::get<2>(literals.at(it->second)), new_ctx, member, output);
+    return true;
   }
   for (auto& templ : templates) {
     if (templ.first.eval(ctx) == name) {
       Context new_ctx{.parent = &ctx, .matches = {name}, .node = &member};
       process(templ.second, new_ctx, member, output);
-      return;
+      return true;
     }
   }
   for (auto& reg : regexes) {
     if (auto matches = reg.first.match(name)) {
       Context new_ctx{.parent = &ctx, .matches = matches.value(), .node = &member};
       process(reg.second, new_ctx, member, output);
-      return;
+      return true;
     }
   }
+  return false;
 }
 
 void JoltTransformJSON::Spec::Pattern::process(const Context& ctx, const rapidjson::Value &input, rapidjson::Document &output) const {
@@ -1050,28 +1103,48 @@ void JoltTransformJSON::Spec::Pattern::process(const Context& ctx, const rapidjs
     putValue(sub_ctx, dest, rapidjson::Value{value.data(), gsl::narrow<rapidjson::SizeType>(value.size()), output.GetAllocator()}, output);
   }
   if (input.IsArray()) {
+    Context sub_ctx = ctx;
+    for (auto& [key, numeric_key, value] : literals) {
+      if (numeric_key && numeric_key.value() < input.GetArray().Size()) {
+        if (processMember(sub_ctx, key, input[numeric_key.value()], output)) {
+          ++sub_ctx.match_count;
+        }
+      }
+    }
     for (rapidjson::SizeType  i = 0; i < input.GetArray().Size(); ++i) {
-      processMember(ctx, std::to_string(i), input[i], output);
+      if (literal_indices.contains(std::to_string(i))) {
+        continue;
+      }
+      if (processMember(sub_ctx, std::to_string(i), input[i], output)) {
+        ++sub_ctx.match_count;
+      }
     }
-  }
-  if (input.IsObject()) {
+  } else if (input.IsObject()) {
+    Context sub_ctx = ctx;
+    for (auto& [key, numeric_key, value] : literals) {
+      if (input.GetObject().HasMember(key)) {
+        if (processMember(sub_ctx, key, input[key], output)) {
+          ++sub_ctx.match_count;
+        }
+      }
+    }
     for (auto& [name, member] : input.GetObject()) {
-      processMember(ctx, std::string_view{name.GetString(), name.GetStringLength()}, member, output);
+      if (literal_indices.contains(std::string{name.GetString(), name.GetStringLength()})) {
+        continue;
+      }
+      if (processMember(sub_ctx, std::string_view{name.GetString(), name.GetStringLength()}, member, output)) {
+        ++sub_ctx.match_count;
+      }
     }
-  }
-  if (input.IsString()) {
+  } else if (input.IsString()) {
     processMember(ctx, std::string_view{input.GetString(), input.GetStringLength()}, rapidjson::Value{}, output);
-  }
-  if (input.IsUint64()) {
+  } else if (input.IsUint64()) {
     processMember(ctx, std::to_string(input.GetUint64()), rapidjson::Value{}, output);
-  }
-  if (input.IsInt64()) {
+  } else if (input.IsInt64()) {
     processMember(ctx, std::to_string(input.GetInt64()), rapidjson::Value{}, output);
-  }
-  if (input.IsDouble()) {
+  } else if (input.IsDouble()) {
     processMember(ctx, std::to_string(input.GetDouble()), rapidjson::Value{}, output);
-  }
-  if (input.IsBool()) {
+  } else if (input.IsBool()) {
     processMember(ctx, input.GetBool() ? "true" : "false", rapidjson::Value{}, output);
   }
 }

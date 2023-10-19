@@ -288,38 +288,37 @@ std::pair<size_t, size_t> offsetToCursor(std::string_view str, size_t offset) {
 TEST_CASE("Run tests from https://github.com/bazaarvoice/jolt") {
   std::set<std::filesystem::path> test_files{std::filesystem::directory_iterator(JOLT_TESTS_DIR), std::filesystem::directory_iterator{}};
   std::vector<std::string> exceptions{
-      "/mapToList.json", "/mapToList2.json", "/transposeComplex4_lhs-multipart-rhs-sugar.json", "/wildcardsWithOr.json"
   };
   for (auto& entry : test_files) {
     if (std::any_of(exceptions.begin(), exceptions.end(), [&] (const auto& ex) {return entry.string().find(ex) != std::string::npos;})) {
       continue;
     }
-      INFO(entry);
-      std::ifstream file{entry, std::ios::binary};
-      std::string file_content{std::istreambuf_iterator<char>(file), {}};
-      rapidjson::Document doc;
-      rapidjson::ParseResult parse_res = doc.Parse<rapidjson::kParseCommentsFlag>(file_content);
-      if (!parse_res) {
-        auto cursor = offsetToCursor(file_content, parse_res.Offset());
-        throw std::logic_error(fmt::format("Error in test json '{}' at {}:{} : {}", entry.string(), cursor.first, cursor.second, rapidjson::GetParseError_En(parse_res.Code())));
-      }
+    INFO(entry);
+    std::ifstream file{entry, std::ios::binary};
+    std::string file_content{std::istreambuf_iterator<char>(file), {}};
+    rapidjson::Document doc;
+    rapidjson::ParseResult parse_res = doc.Parse<rapidjson::kParseCommentsFlag>(file_content);
+    if (!parse_res) {
+      auto cursor = offsetToCursor(file_content, parse_res.Offset());
+      throw std::logic_error(fmt::format("Error in test json '{}' at {}:{} : {}", entry.string(), cursor.first, cursor.second, rapidjson::GetParseError_En(parse_res.Code())));
+    }
 
-      auto proc = std::make_shared<minifi::processors::JoltTransformJSON>("JoltProc");
-      SingleProcessorTestController controller{proc};
-      LogTestController::getInstance().setTrace<minifi::processors::JoltTransformJSON>();
-      proc->setProperty(processors::JoltTransformJSON::JoltTransform, magic_enum::enum_name(processors::jolt_transform_json::JoltTransform::SHIFT));
-      proc->setProperty(processors::JoltTransformJSON::JoltSpecification, to_string(doc["spec"]));
+    auto proc = std::make_shared<minifi::processors::JoltTransformJSON>("JoltProc");
+    SingleProcessorTestController controller{proc};
+    LogTestController::getInstance().setTrace<minifi::processors::JoltTransformJSON>();
+    proc->setProperty(processors::JoltTransformJSON::JoltTransform, magic_enum::enum_name(processors::jolt_transform_json::JoltTransform::SHIFT));
+    proc->setProperty(processors::JoltTransformJSON::JoltSpecification, to_string(doc["spec"]));
 
-      auto res = controller.trigger(to_string(doc["input"]));
+    auto res = controller.trigger(to_string(doc["input"]));
 
-      CHECK(res[processors::JoltTransformJSON::Failure].size() == 0);
-      CHECK(res[processors::JoltTransformJSON::Success].size() == 1);
+    CHECK(res[processors::JoltTransformJSON::Failure].size() == 0);
+    CHECK(res[processors::JoltTransformJSON::Success].size() == 1);
 
-      auto content = controller.plan->getContent(res.at(processors::JoltTransformJSON::Success).at(0));
+    auto content = controller.plan->getContent(res.at(processors::JoltTransformJSON::Success).at(0));
 
-      INFO(content);
+    INFO(content);
 
-      utils::verifyJSON(content, to_string(doc["expected"]), true);
+    utils::verifyJSON(content, to_string(doc["expected"]), true);
   }
 }
 
