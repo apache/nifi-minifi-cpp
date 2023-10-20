@@ -105,6 +105,7 @@ jobs:
         shell: powershell
       - id: remove-strawberry-perl-tool-executables
         run: |
+          # Remove conflicting Strawberry Perl executables like patch.exe and cmcldeps.exe (More information in the note under System Requirements in README.md)
           Remove-Item -Path "C:\Strawberry\c\bin" -Recurse -Force
         shell: pwsh
       - name: build
