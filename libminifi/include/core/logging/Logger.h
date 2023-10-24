@@ -98,8 +98,8 @@ class BaseLogger {
   [[nodiscard]] virtual LOG_LEVEL level() const = 0;
 };
 
-const auto inline map_args = utils::overloaded {
-    [](std::invocable<> auto&& f) { return std::invoke(std::forward<decltype(f)>(f)); },
+inline constexpr auto map_args = utils::overloaded {
+    [](auto&& f) requires(std::is_invocable_v<decltype(f)>) { return std::invoke(std::forward<decltype(f)>(f)); },
     [](auto&& value) { return std::forward<decltype(value)>(value); }
 };
 
