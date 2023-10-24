@@ -104,21 +104,21 @@ TEST_CASE("Shiftr multiple destination") {
 
 TEST_CASE("Shiftr destination is a string or array of strings") {
   /// sanity check
-  REQUIRE(minifi::processors::JoltTransformJSON::Spec::parse(R"json({"a": ["out", "out2"], "b": "out3"})json"));
-  REQUIRE_FALSE(minifi::processors::JoltTransformJSON::Spec::parse(R"json({"a": 3})json"));
-  REQUIRE_FALSE(minifi::processors::JoltTransformJSON::Spec::parse(R"json({"a": ["out", 1]})json"));
-  REQUIRE_FALSE(minifi::processors::JoltTransformJSON::Spec::parse(R"json({"a": ["out", {"@": "invalid"}]})json"));
+  REQUIRE(minifi::utils::jolt::Spec::parse(R"json({"a": ["out", "out2"], "b": "out3"})json"));
+  REQUIRE_FALSE(minifi::utils::jolt::Spec::parse(R"json({"a": 3})json"));
+  REQUIRE_FALSE(minifi::utils::jolt::Spec::parse(R"json({"a": ["out", 1]})json"));
+  REQUIRE_FALSE(minifi::utils::jolt::Spec::parse(R"json({"a": ["out", {"@": "invalid"}]})json"));
 }
 
 TEST_CASE("Shiftr template is correctly parsed") {
-  using Template = minifi::processors::JoltTransformJSON::Spec::Template;
+  using Template = minifi::utils::jolt::Spec::Template;
   REQUIRE(Template::parse("a&0b", "").value() == Template({"a", "b"}, {{0, 0}}));
   REQUIRE(Template::parse("a&12&(4,5)b&c", "").value() == Template({"a", "", "b", "c"}, {{12, 0}, {4, 5}, {0, 0}}));
 }
 
 TEST_CASE("Shiftr invalid reference") {
   /// sanity check
-  REQUIRE(minifi::processors::JoltTransformJSON::Spec::parse(R"json({"a*": {"b*_*c": {"&(0,0)&(0,1)&(0,2)&(1)&(1,1)": "&(0,0)"}}, "b": "out3"})json").has_value());
+  REQUIRE(minifi::utils::jolt::Spec::parse(R"json({"a*": {"b*_*c": {"&(0,0)&(0,1)&(0,2)&(1)&(1,1)": "&(0,0)"}}, "b": "out3"})json").has_value());
 }
 
 TEST_CASE("Shiftr matches are correctly ordered") {
