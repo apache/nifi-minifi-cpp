@@ -41,8 +41,7 @@ constexpr const char *SEEKG_CALL_ERROR_MSG = "seekg call on file stream failed";
 constexpr const char *SEEKP_CALL_ERROR_MSG = "seekp call on file stream failed";
 
 FileStream::FileStream(std::filesystem::path path, bool append)
-    : offset_(0),
-      path_(std::move(path)) {
+    : path_(std::move(path)) {
   file_stream_ = std::make_unique<std::fstream>();
   if (append) {
     file_stream_->open(path_, std::fstream::in | std::fstream::out | std::fstream::app | std::fstream::binary);
@@ -58,7 +57,6 @@ FileStream::FileStream(std::filesystem::path path, bool append)
     }
   } else {
     file_stream_->open(path_, std::fstream::out | std::fstream::binary);
-    length_ = 0;
     if (!file_stream_->is_open()) {
       logger_->log_error("{}{} {}", FILE_OPENING_ERROR_MSG, path_, strerror(errno));
     }
@@ -74,7 +72,6 @@ FileStream::FileStream(std::filesystem::path path, uint32_t offset, bool write_e
   } else {
     file_stream_->open(path_, std::fstream::in | std::fstream::binary);
   }
-  length_ = 0;
   if (file_stream_->is_open()) {
     seekToEndOfFile(FILE_OPENING_ERROR_MSG);
     auto len = file_stream_->tellg();

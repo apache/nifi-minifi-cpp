@@ -88,9 +88,9 @@ class FileStream : public io::BaseStream {
 
   std::mutex file_lock_;
   std::unique_ptr<std::fstream> file_stream_;
-  size_t offset_;
+  size_t offset_{0};
   std::filesystem::path path_;
-  size_t length_;
+  size_t length_{0};
 
   std::shared_ptr<core::logging::Logger> logger_ = core::logging::LoggerFactory<FileStream>::getLogger();
 };
