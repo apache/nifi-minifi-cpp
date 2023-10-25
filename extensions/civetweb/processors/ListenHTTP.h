@@ -173,7 +173,7 @@ class ListenHTTP : public core::Processor {
     static void sendHttp500(struct mg_connection *conn);
     static void sendHttp503(struct mg_connection *conn);
     bool authRequest(mg_connection *conn, const mg_request_info *req_info) const;
-    void setHeaderAttributes(const mg_request_info *req_info, const std::shared_ptr<core::FlowFile> &flow_file) const;
+    void setHeaderAttributes(const mg_request_info *req_info, core::FlowFile& flow_file) const;
     void writeBody(mg_connection *conn, const mg_request_info *req_info, bool include_payload = true);
     static std::unique_ptr<io::BufferStream> createContentBuffer(struct mg_connection *conn, const struct mg_request_info *req_info);
     void enqueueRequest(mg_connection *conn, const mg_request_info *req_info, std::unique_ptr<io::BufferStream>);

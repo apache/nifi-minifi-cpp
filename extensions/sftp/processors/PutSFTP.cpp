@@ -89,7 +89,7 @@ bool PutSFTP::processOne(core::ProcessContext& context, core::ProcessSession& se
 
   /* Parse common properties */
   SFTPProcessorBase::CommonProperties common_properties;
-  if (!parseCommonPropertiesOnTrigger(context, flow_file, common_properties)) {
+  if (!parseCommonPropertiesOnTrigger(context, flow_file.get(), common_properties)) {
     context.yield();
     return false;
   }
@@ -111,7 +111,7 @@ bool PutSFTP::processOne(core::ProcessContext& context, core::ProcessSession& se
     filename = *file_name_str;
 
   std::string value;
-  if (auto remote_path_str = context.getProperty(RemotePath, flow_file)) {
+  if (auto remote_path_str = context.getProperty(RemotePath, flow_file.get())) {
     remote_path = std::filesystem::path(*remote_path_str, std::filesystem::path::format::generic_format).lexically_normal();
     while (remote_path.filename().empty() && !remote_path.empty())
       remote_path = remote_path.parent_path();
@@ -123,21 +123,21 @@ bool PutSFTP::processOne(core::ProcessContext& context, core::ProcessSession& se
       context.getProperty(DisableDirectoryListing, value)) {
     disable_directory_listing = utils::string::toBool(value).value_or(false);
   }
-  context.getProperty(TempFilename, temp_file_name, flow_file);
-  if (context.getProperty(LastModifiedTime, value, flow_file))
+  context.getProperty(TempFilename, temp_file_name, flow_file.get());
+  if (context.getProperty(LastModifiedTime, value, flow_file.get()))
     last_modified_ = utils::timeutils::parseDateTimeStr(value);
 
-  if (context.getProperty(Permissions, value, flow_file)) {
+  if (context.getProperty(Permissions, value, flow_file.get())) {
     if (core::Property::StringToPermissions(value, permissions)) {
       permissions_set = true;
     }
   }
-  if (context.getProperty(RemoteOwner, value, flow_file)) {
+  if (context.getProperty(RemoteOwner, value, flow_file.get())) {
     if (core::Property::StringToInt(value, remote_owner)) {
       remote_owner_set = true;
     }
   }
-  if (context.getProperty(RemoteGroup, value, flow_file)) {
+  if (context.getProperty(RemoteGroup, value, flow_file.get())) {
     if (core::Property::StringToInt(value, remote_group)) {
       remote_group_set = true;
     }

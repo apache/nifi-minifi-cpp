@@ -101,7 +101,7 @@ SFTPProcessorBase::CommonProperties::CommonProperties()
     , proxy_port(0U) {
 }
 
-bool SFTPProcessorBase::parseCommonPropertiesOnTrigger(core::ProcessContext& context, const std::shared_ptr<core::FlowFile>& flow_file, CommonProperties& common_properties) {
+bool SFTPProcessorBase::parseCommonPropertiesOnTrigger(core::ProcessContext& context, const core::FlowFile* const flow_file, CommonProperties& common_properties) {
   std::string value;
   if (!context.getProperty(Hostname, common_properties.hostname, flow_file)) {
     logger_->log_error("Hostname attribute is missing");

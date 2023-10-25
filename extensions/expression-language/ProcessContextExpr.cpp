@@ -21,7 +21,7 @@
 
 namespace org::apache::nifi::minifi::core {
 
-bool ProcessContextExpr::getProperty(bool supports_expression_language, std::string_view property_name, std::string& value, const std::shared_ptr<FlowFile>& flow_file) {
+bool ProcessContextExpr::getProperty(bool supports_expression_language, std::string_view property_name, std::string& value, const FlowFile* const flow_file) {
   if (!supports_expression_language) {
     return ProcessContext::getProperty(property_name, value);
   }
@@ -42,15 +42,15 @@ bool ProcessContextExpr::getProperty(bool supports_expression_language, std::str
   return true;
 }
 
-bool ProcessContextExpr::getProperty(const Property& property, std::string& value, const std::shared_ptr<FlowFile>& flow_file) {
+bool ProcessContextExpr::getProperty(const Property& property, std::string& value, const FlowFile* const flow_file) {
   return getProperty(property.supportsExpressionLanguage(), property.getName(), value, flow_file);
 }
 
-bool ProcessContextExpr::getProperty(const PropertyReference& property, std::string& value, const std::shared_ptr<FlowFile>& flow_file) {
+bool ProcessContextExpr::getProperty(const PropertyReference& property, std::string& value, const FlowFile* const flow_file) {
   return getProperty(property.supports_expression_language, property.name, value, flow_file);
 }
 
-bool ProcessContextExpr::getDynamicProperty(const Property &property, std::string &value, const std::shared_ptr<FlowFile> &flow_file) {
+bool ProcessContextExpr::getDynamicProperty(const Property &property, std::string &value, const FlowFile* const flow_file) {
   if (!property.supportsExpressionLanguage()) {
     return ProcessContext::getDynamicProperty(property.getName(), value);
   }

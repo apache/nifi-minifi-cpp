@@ -156,7 +156,7 @@ void MotionDetector::onTrigger(core::ProcessContext& context, core::ProcessSessi
 
   detectAndDraw(frame);
 
-  session.putAttribute(flow_file, "filename", filename);
+  session.putAttribute(*flow_file, "filename", filename);
 
   session.write(flow_file, [&frame, this](const auto& output_stream) -> int64_t {
     std::vector<uchar> image_buf;

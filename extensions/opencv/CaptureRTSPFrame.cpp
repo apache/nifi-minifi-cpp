@@ -105,8 +105,8 @@ void CaptureRTSPFrame::onTrigger(core::ProcessContext& context, core::ProcessSes
       auto filename = oss.str();
       filename.append(image_encoding_);
 
-      session.putAttribute(flow_file, "filename", filename);
-      session.putAttribute(flow_file, "video.backend.driver", video_backend_driver_);
+      session.putAttribute(*flow_file, "filename", filename);
+      session.putAttribute(*flow_file, "video.backend.driver", video_backend_driver_);
 
       session.write(flow_file, [&frame, this](const std::shared_ptr<io::OutputStream>& output_stream) -> int64_t {
         std::vector<uchar> image_buf;

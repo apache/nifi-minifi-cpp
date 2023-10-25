@@ -97,13 +97,13 @@ class AzureBlobStorageProcessorBase : public AzureStorageProcessorBase {
   }
 
   storage::AzureStorageCredentials getAzureCredentialsFromProperties(
-    core::ProcessContext &context, const std::shared_ptr<core::FlowFile> &flow_file) const;
+    core::ProcessContext &context, const core::FlowFile* const flow_file) const;
   std::optional<storage::AzureStorageCredentials> getCredentials(
-    core::ProcessContext &context, const std::shared_ptr<core::FlowFile> &flow_file) const;
+    core::ProcessContext &context, const core::FlowFile* const flow_file) const;
   bool setCommonStorageParameters(
     storage::AzureBlobStorageParameters& params,
     core::ProcessContext &context,
-    const std::shared_ptr<core::FlowFile> &flow_file);
+    const core::FlowFile* const flow_file);
 
   storage::AzureBlobStorage azure_blob_storage_;
   bool use_managed_identity_credentials_ = false;

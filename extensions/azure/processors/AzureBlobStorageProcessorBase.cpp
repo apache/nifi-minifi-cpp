@@ -66,7 +66,7 @@ void AzureBlobStorageProcessorBase::onSchedule(core::ProcessContext& context, co
 }
 
 storage::AzureStorageCredentials AzureBlobStorageProcessorBase::getAzureCredentialsFromProperties(
-    core::ProcessContext &context, const std::shared_ptr<core::FlowFile> &flow_file) const {
+    core::ProcessContext &context, const core::FlowFile* const flow_file) const {
   storage::AzureStorageCredentials credentials;
   std::string value;
   if (context.getProperty(StorageAccountName, value, flow_file)) {
@@ -91,7 +91,7 @@ storage::AzureStorageCredentials AzureBlobStorageProcessorBase::getAzureCredenti
 bool AzureBlobStorageProcessorBase::setCommonStorageParameters(
     storage::AzureBlobStorageParameters& params,
     core::ProcessContext &context,
-    const std::shared_ptr<core::FlowFile> &flow_file) {
+    const core::FlowFile* const flow_file) {
   auto credentials = getCredentials(context, flow_file);
   if (!credentials) {
     return false;
@@ -109,7 +109,7 @@ bool AzureBlobStorageProcessorBase::setCommonStorageParameters(
 
 std::optional<storage::AzureStorageCredentials> AzureBlobStorageProcessorBase::getCredentials(
     core::ProcessContext &context,
-    const std::shared_ptr<core::FlowFile> &flow_file) const {
+    const core::FlowFile* const flow_file) const {
   auto [result, controller_service_creds] = getCredentialsFromControllerService(context);
   if (controller_service_creds) {
     if (controller_service_creds->isValid()) {

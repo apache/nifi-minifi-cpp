@@ -62,8 +62,8 @@ void PutUDP::onTrigger(core::ProcessContext& context, core::ProcessSession& sess
     return;
   }
 
-  const auto hostname = context.getProperty(Hostname, flow_file).value_or(std::string{});
-  const auto port = context.getProperty(Port, flow_file).value_or(std::string{});
+  const auto hostname = context.getProperty(Hostname, flow_file.get()).value_or(std::string{});
+  const auto port = context.getProperty(Port, flow_file.get()).value_or(std::string{});
   if (hostname.empty() || port.empty()) {
     logger_->log_error("[{}] invalid target endpoint: hostname: {}, port: {}", flow_file->getUUIDStr(),
         hostname.empty() ? "(empty)" : hostname.c_str(),

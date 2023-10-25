@@ -36,9 +36,9 @@ void PutSmb::onSchedule(core::ProcessContext& context, core::ProcessSessionFacto
   conflict_resolution_strategy_ = utils::parseEnumProperty<FileExistsResolutionStrategy>(context, ConflictResolution);
 }
 
-std::filesystem::path PutSmb::getFilePath(core::ProcessContext& context, const std::shared_ptr<core::FlowFile>& flow_file) {
-  auto filename = flow_file->getAttribute(core::SpecialFlowAttribute::FILENAME).value_or(flow_file->getUUIDStr());
-  return smb_connection_controller_service_->getPath() / context.getProperty(Directory, flow_file).value_or("") / filename;
+std::filesystem::path PutSmb::getFilePath(core::ProcessContext& context, const core::FlowFile& flow_file) {
+  auto filename = flow_file.getAttribute(core::SpecialFlowAttribute::FILENAME).value_or(flow_file.getUUIDStr());
+  return smb_connection_controller_service_->getPath() / context.getProperty(Directory, &flow_file).value_or("") / filename;
 }
 
 void PutSmb::onTrigger(core::ProcessContext& context, core::ProcessSession& session) {
@@ -56,7 +56,7 @@ void PutSmb::onTrigger(core::ProcessContext& context, core::ProcessSession& sess
     return;
   }
 
-  auto full_file_path = getFilePath(context, flow_file);
+  auto full_file_path = getFilePath(context, *flow_file);
 
   if (utils::file::exists(full_file_path)) {
     logger_->log_info("Destination file {} exists; applying Conflict Resolution Strategy: {}", full_file_path, magic_enum::enum_name(conflict_resolution_strategy_));

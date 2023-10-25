@@ -47,6 +47,7 @@ class FetchS3Object : public S3Processor {
       .build();
   EXTENSIONAPI static constexpr auto Version = core::PropertyDefinitionBuilder<>::createProperty("Version")
       .withDescription("The Version of the Object to download")
+      .withDescription("The Version of the Object to download")
       .supportsExpressionLanguage(true)
       .build();
   EXTENSIONAPI static constexpr auto RequesterPays = core::PropertyDefinitionBuilder<>::createProperty("Requester Pays")
@@ -93,7 +94,7 @@ class FetchS3Object : public S3Processor {
 
   std::optional<aws::s3::GetObjectRequestParameters> buildFetchS3RequestParams(
     core::ProcessContext& context,
-    const std::shared_ptr<core::FlowFile> &flow_file,
+    const core::FlowFile& flow_file,
     const CommonProperties &common_properties) const;
 
   bool requester_pays_ = false;

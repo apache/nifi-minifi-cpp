@@ -37,7 +37,7 @@ void DeleteAzureBlobStorage::onSchedule(core::ProcessContext& context, core::Pro
 }
 
 std::optional<storage::DeleteAzureBlobStorageParameters> DeleteAzureBlobStorage::buildDeleteAzureBlobStorageParameters(
-    core::ProcessContext &context, const std::shared_ptr<core::FlowFile> &flow_file) {
+    core::ProcessContext& context, const core::FlowFile& flow_file) {
   storage::DeleteAzureBlobStorageParameters params;
   if (!setBlobOperationParameters(params, context, flow_file)) {
     return std::nullopt;
@@ -53,7 +53,7 @@ void DeleteAzureBlobStorage::onTrigger(core::ProcessContext& context, core::Proc
     return;
   }
 
-  auto params = buildDeleteAzureBlobStorageParameters(context, flow_file);
+  auto params = buildDeleteAzureBlobStorageParameters(context, *flow_file);
   if (!params) {
     session.transfer(flow_file, Failure);
     return;

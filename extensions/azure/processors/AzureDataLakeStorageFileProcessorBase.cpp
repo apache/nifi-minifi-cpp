@@ -26,13 +26,13 @@
 namespace org::apache::nifi::minifi::azure::processors {
 
 bool AzureDataLakeStorageFileProcessorBase::setFileOperationCommonParameters(
-    storage::AzureDataLakeStorageFileOperationParameters& params, core::ProcessContext& context, const std::shared_ptr<core::FlowFile>& flow_file) {
-  if (!setCommonParameters(params, context, flow_file)) {
+    storage::AzureDataLakeStorageFileOperationParameters& params, core::ProcessContext& context, const core::FlowFile& flow_file) {
+  if (!setCommonParameters(params, context, &flow_file)) {
     return false;
   }
 
-  context.getProperty(FileName, params.filename, flow_file);
-  if (params.filename.empty() && (!flow_file->getAttribute("filename", params.filename) || params.filename.empty())) {
+  context.getProperty(FileName, params.filename, &flow_file);
+  if (params.filename.empty() && (!flow_file.getAttribute("filename", params.filename) || params.filename.empty())) {
     logger_->log_error("No File Name is set and default object key 'filename' attribute could not be found!");
     return false;
   }

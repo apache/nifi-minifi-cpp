@@ -135,7 +135,11 @@ std::chrono::system_clock::time_point FlowFile::getlineageStartDate() const {
   return lineage_start_date_;
 }
 
-std::vector<utils::Identifier> &FlowFile::getlineageIdentifiers() {
+const std::vector<utils::Identifier>& FlowFile::getlineageIdentifiers() const {
+  return lineage_Identifiers_;
+}
+
+std::vector<utils::Identifier>& FlowFile::getlineageIdentifiers() {
   return lineage_Identifiers_;
 }
 

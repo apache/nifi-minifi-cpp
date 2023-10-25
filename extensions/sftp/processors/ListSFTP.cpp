@@ -303,24 +303,24 @@ bool ListSFTP::createAndTransferFlowFileFromChild(
   }
 
   /* Set attributes */
-  session.putAttribute(flow_file, ATTRIBUTE_SFTP_REMOTE_HOST, hostname);
-  session.putAttribute(flow_file, ATTRIBUTE_SFTP_REMOTE_PORT, std::to_string(port));
-  session.putAttribute(flow_file, ATTRIBUTE_SFTP_LISTING_USER, username);
+  session.putAttribute(*flow_file, ATTRIBUTE_SFTP_REMOTE_HOST, hostname);
+  session.putAttribute(*flow_file, ATTRIBUTE_SFTP_REMOTE_PORT, std::to_string(port));
+  session.putAttribute(*flow_file, ATTRIBUTE_SFTP_LISTING_USER, username);
 
   /* uid and gid */
-  session.putAttribute(flow_file, ATTRIBUTE_FILE_OWNER, std::to_string(child.attrs.uid));
-  session.putAttribute(flow_file, ATTRIBUTE_FILE_GROUP, std::to_string(child.attrs.gid));
+  session.putAttribute(*flow_file, ATTRIBUTE_FILE_OWNER, std::to_string(child.attrs.uid));
+  session.putAttribute(*flow_file, ATTRIBUTE_FILE_GROUP, std::to_string(child.attrs.gid));
 
   /* permissions */
   std::stringstream ss;
   ss << std::setfill('0') << std::setw(4) << std::oct << (child.attrs.permissions & 0777);
-  session.putAttribute(flow_file, ATTRIBUTE_FILE_PERMISSIONS, ss.str());
+  session.putAttribute(*flow_file, ATTRIBUTE_FILE_PERMISSIONS, ss.str());
 
   /* filesize */
-  session.putAttribute(flow_file, ATTRIBUTE_FILE_SIZE, std::to_string(child.attrs.filesize));
+  session.putAttribute(*flow_file, ATTRIBUTE_FILE_SIZE, std::to_string(child.attrs.filesize));
 
   /* mtime */
-  session.putAttribute(flow_file, ATTRIBUTE_FILE_LASTMODIFIEDTIME, mtime_str);
+  session.putAttribute(*flow_file, ATTRIBUTE_FILE_LASTMODIFIEDTIME, mtime_str);
 
   flow_file->setAttribute(core::SpecialFlowAttribute::FILENAME, child.filename.generic_string());
   flow_file->setAttribute(core::SpecialFlowAttribute::PATH, child.parent_path.generic_string());

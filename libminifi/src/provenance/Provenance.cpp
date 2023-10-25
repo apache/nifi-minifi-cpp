@@ -465,8 +465,8 @@ void ProvenanceReporter::commit() {
   repo_->MultiPut(flowData);
 }
 
-void ProvenanceReporter::create(const std::shared_ptr<core::FlowFile>& flow, const std::string& detail) {
-  auto event = allocate(ProvenanceEventRecord::CREATE, flow);
+void ProvenanceReporter::create(const core::FlowFile& flow_file, const std::string& detail) {
+  auto event = allocate(ProvenanceEventRecord::CREATE, flow_file);
 
   if (event) {
     event->setDetails(detail);
@@ -474,8 +474,8 @@ void ProvenanceReporter::create(const std::shared_ptr<core::FlowFile>& flow, con
   }
 }
 
-void ProvenanceReporter::route(const std::shared_ptr<core::FlowFile>& flow, const core::Relationship& relation, const std::string& detail, std::chrono::milliseconds processingDuration) {
-  auto event = allocate(ProvenanceEventRecord::ROUTE, flow);
+void ProvenanceReporter::route(const core::FlowFile& flow_file, const core::Relationship& relation, const std::string& detail, std::chrono::milliseconds processingDuration) {
+  auto event = allocate(ProvenanceEventRecord::ROUTE, flow_file);
 
   if (event) {
     event->setDetails(detail);
@@ -485,8 +485,8 @@ void ProvenanceReporter::route(const std::shared_ptr<core::FlowFile>& flow, cons
   }
 }
 
-void ProvenanceReporter::modifyAttributes(const std::shared_ptr<core::FlowFile>& flow, const std::string& detail) {
-  auto event = allocate(ProvenanceEventRecord::ATTRIBUTES_MODIFIED, flow);
+void ProvenanceReporter::modifyAttributes(const core::FlowFile& flow_file, const std::string& detail) {
+  auto event = allocate(ProvenanceEventRecord::ATTRIBUTES_MODIFIED, flow_file);
 
   if (event) {
     event->setDetails(detail);
@@ -494,8 +494,8 @@ void ProvenanceReporter::modifyAttributes(const std::shared_ptr<core::FlowFile>&
   }
 }
 
-void ProvenanceReporter::modifyContent(const std::shared_ptr<core::FlowFile>& flow, const std::string& detail, std::chrono::milliseconds processingDuration) {
-  auto event = allocate(ProvenanceEventRecord::CONTENT_MODIFIED, flow);
+void ProvenanceReporter::modifyContent(const core::FlowFile& flow_file, const std::string& detail, std::chrono::milliseconds processingDuration) {
+  auto event = allocate(ProvenanceEventRecord::CONTENT_MODIFIED, flow_file);
 
   if (event) {
     event->setDetails(detail);
@@ -504,7 +504,7 @@ void ProvenanceReporter::modifyContent(const std::shared_ptr<core::FlowFile>& fl
   }
 }
 
-void ProvenanceReporter::clone(const std::shared_ptr<core::FlowFile>& parent, const std::shared_ptr<core::FlowFile>& child) {
+void ProvenanceReporter::clone(const core::FlowFile& parent, const core::FlowFile& child) {
   auto event = allocate(ProvenanceEventRecord::CLONE, parent);
 
   if (event) {
@@ -514,38 +514,8 @@ void ProvenanceReporter::clone(const std::shared_ptr<core::FlowFile>& parent, co
   }
 }
 
-void ProvenanceReporter::join(const std::vector<std::shared_ptr<core::FlowFile>>& parents, const std::shared_ptr<core::FlowFile>& child,
-    const std::string& detail, std::chrono::milliseconds processingDuration) {
-  auto event = allocate(ProvenanceEventRecord::JOIN, child);
-
-  if (event) {
-    event->addChildFlowFile(child);
-    for (const auto& parent : parents) {
-      event->addParentFlowFile(parent);
-    }
-    event->setDetails(detail);
-    event->setEventDuration(processingDuration);
-    add(event);
-  }
-}
-
-void ProvenanceReporter::fork(const std::vector<std::shared_ptr<core::FlowFile>>& children, const std::shared_ptr<core::FlowFile>& parent,
-    const std::string& detail, std::chrono::milliseconds processingDuration) {
-  auto event = allocate(ProvenanceEventRecord::FORK, parent);
-
-  if (event) {
-    event->addParentFlowFile(parent);
-    for (const auto& child : children) {
-      event->addChildFlowFile(child);
-    }
-    event->setDetails(detail);
-    event->setEventDuration(processingDuration);
-    add(event);
-  }
-}
-
-void ProvenanceReporter::expire(const std::shared_ptr<core::FlowFile>& flow, const std::string& detail) {
-  auto event = allocate(ProvenanceEventRecord::EXPIRE, flow);
+void ProvenanceReporter::expire(const core::FlowFile& flow_file, const std::string& detail) {
+  auto event = allocate(ProvenanceEventRecord::EXPIRE, flow_file);
 
   if (event) {
     event->setDetails(detail);
@@ -553,8 +523,8 @@ void ProvenanceReporter::expire(const std::shared_ptr<core::FlowFile>& flow, con
   }
 }
 
-void ProvenanceReporter::drop(const std::shared_ptr<core::FlowFile>& flow, const std::string& reason) {
-  auto event = allocate(ProvenanceEventRecord::DROP, flow);
+void ProvenanceReporter::drop(const core::FlowFile& flow_file, const std::string& reason) {
+  auto event = allocate(ProvenanceEventRecord::DROP, flow_file);
 
   if (event) {
     std::string dropReason = "Discard reason: " + reason;
@@ -563,8 +533,8 @@ void ProvenanceReporter::drop(const std::shared_ptr<core::FlowFile>& flow, const
   }
 }
 
-void ProvenanceReporter::send(const std::shared_ptr<core::FlowFile>& flow, const std::string& transitUri, const std::string& detail, std::chrono::milliseconds processingDuration, bool force) {
-  auto event = allocate(ProvenanceEventRecord::SEND, flow);
+void ProvenanceReporter::send(const core::FlowFile& flow_file, const std::string& transitUri, const std::string& detail, std::chrono::milliseconds processingDuration, bool force) {
+  auto event = allocate(ProvenanceEventRecord::SEND, flow_file);
 
   if (event) {
     event->setTransitUri(transitUri);
@@ -579,12 +549,12 @@ void ProvenanceReporter::send(const std::shared_ptr<core::FlowFile>& flow, const
   }
 }
 
-void ProvenanceReporter::receive(const std::shared_ptr<core::FlowFile>& flow,
+void ProvenanceReporter::receive(const core::FlowFile& flow_file,
                                  const std::string& transitUri,
                                  const std::string& sourceSystemFlowFileIdentifier,
                                  const std::string& detail,
                                  std::chrono::milliseconds processingDuration) {
-  auto event = allocate(ProvenanceEventRecord::RECEIVE, flow);
+  auto event = allocate(ProvenanceEventRecord::RECEIVE, flow_file);
 
   if (event) {
     event->setTransitUri(transitUri);
@@ -595,8 +565,8 @@ void ProvenanceReporter::receive(const std::shared_ptr<core::FlowFile>& flow,
   }
 }
 
-void ProvenanceReporter::fetch(const std::shared_ptr<core::FlowFile>& flow, const std::string& transitUri, const std::string& detail, std::chrono::milliseconds processingDuration) {
-  auto event = allocate(ProvenanceEventRecord::FETCH, flow);
+void ProvenanceReporter::fetch(const core::FlowFile& flow_file, const std::string& transitUri, const std::string& detail, std::chrono::milliseconds processingDuration) {
+  auto event = allocate(ProvenanceEventRecord::FETCH, flow_file);
 
   if (event) {
     event->setTransitUri(transitUri);

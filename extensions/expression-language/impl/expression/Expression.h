@@ -30,15 +30,15 @@
 namespace org::apache::nifi::minifi::expression {
 
 struct Parameters {
-  std::weak_ptr<core::FlowFile> flow_file;
+  const core::FlowFile* const flow_file;
   std::weak_ptr<core::VariableRegistry> registry_;
-  explicit Parameters(std::shared_ptr<core::VariableRegistry> reg, std::shared_ptr<core::FlowFile> ff = nullptr)
-      : registry_(reg) {
-    flow_file = ff;
+  explicit Parameters(const std::shared_ptr<core::VariableRegistry>& reg, const core::FlowFile* const ff = nullptr)
+      : flow_file(ff),
+      registry_(reg) {
   }
 
-  explicit Parameters(std::shared_ptr<core::FlowFile> ff = nullptr) {
-    flow_file = ff;
+  explicit Parameters(const core::FlowFile* const ff = nullptr)
+      : flow_file(ff) {
   }
 };
 
@@ -51,15 +51,13 @@ static const std::function<Value(const Parameters &params, const std::vector<Exp
  */
 class Expression {
  public:
-  Expression() {
-    val_fn_ = NOOP_FN;
+  Expression() : val_fn_(NOOP_FN) {
   }
 
   explicit Expression(Value val, std::function<Value(const Parameters &, const std::vector<Expression> &)> val_fn = NOOP_FN)
-      : val_fn_(std::move(val_fn)),
-        fn_args_(),
+      : val_(val),
+        val_fn_(std::move(val_fn)),
         is_multi_(false) {
-    val_ = val;
     sub_expr_generator_ = [](const Parameters& /*params*/) -> std::vector<Expression> {return {};};
   }
 
@@ -70,12 +68,12 @@ class Expression {
    *
    * @return true if expression is dynamic
    */
-  bool is_dynamic() const;
+  [[nodiscard]] bool is_dynamic() const;
 
   /**
    * Whether or not this expression is a multi-expression.
    */
-  bool is_multi() const {
+  [[nodiscard]] bool is_multi() const {
     return is_multi_;
   }
 

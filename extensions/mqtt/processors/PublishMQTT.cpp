@@ -71,10 +71,10 @@ void PublishMQTT::onTriggerImpl(core::ProcessContext& context, core::ProcessSess
   // broker's Receive Maximum can change after reconnect
   in_flight_message_counter_.setMax(broker_receive_maximum_.value_or(MQTT_MAX_RECEIVE_MAXIMUM));
 
-  const auto topic = getTopic(context, flow_file);
+  const auto topic = getTopic(context, flow_file.get());
   try {
     const auto result = session.readBuffer(flow_file);
-    if (result.status < 0 || !sendMessage(result.buffer, topic, getContentType(context, flow_file), flow_file)) {
+    if (result.status < 0 || !sendMessage(result.buffer, topic, getContentType(context, flow_file.get()), flow_file)) {
       logger_->log_error("Failed to send flow file [{}] to MQTT topic '{}' on broker {}", flow_file->getUUIDStr(), topic, uri_);
       session.transfer(flow_file, Failure);
       return;
@@ -192,7 +192,7 @@ bool PublishMQTT::notify(const bool success, const std::optional<int> response_c
   return success;
 }
 
-std::string PublishMQTT::getTopic(core::ProcessContext& context, const std::shared_ptr<core::FlowFile>& flow_file) const {
+std::string PublishMQTT::getTopic(core::ProcessContext& context, const core::FlowFile* const flow_file) const {
   if (auto value = context.getProperty(Topic, flow_file)) {
     logger_->log_debug("PublishMQTT: Topic resolved as \"{}\"", *value);
     return *value;
@@ -200,7 +200,7 @@ std::string PublishMQTT::getTopic(core::ProcessContext& context, const std::shar
   throw minifi::Exception(ExceptionType::GENERAL_EXCEPTION, "Could not resolve required property Topic");
 }
 
-std::string PublishMQTT::getContentType(core::ProcessContext& context, const std::shared_ptr<core::FlowFile>& flow_file) const {
+std::string PublishMQTT::getContentType(core::ProcessContext& context, const core::FlowFile* const flow_file) const {
   if (auto value = context.getProperty(ContentType, flow_file)) {
     logger_->log_debug("PublishMQTT: Content Type resolved as \"{}\"", *value);
     return *value;

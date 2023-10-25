@@ -123,41 +123,25 @@ class ProcessContext : public controller::ControllerServiceLookup, public core::
     return getPropertyImp(std::string{property.name}, value);
   }
 
-  std::optional<std::string> getProperty(const Property&, const std::shared_ptr<FlowFile>&);
+  std::optional<std::string> getProperty(const Property&, const FlowFile* const);
 
-  std::optional<std::string> getProperty(const PropertyReference&, const std::shared_ptr<FlowFile>&);
+  std::optional<std::string> getProperty(const PropertyReference&, const FlowFile* const);
 
-  virtual bool getProperty(const Property &property, std::string &value, const std::shared_ptr<FlowFile>& /*flow_file*/) {
+  virtual bool getProperty(const Property &property, std::string &value, const FlowFile* const) {
     return getProperty(property.getName(), value);
   }
 
-  virtual bool getProperty(const PropertyReference& property, std::string &value, const std::shared_ptr<FlowFile>& /*flow_file*/) {
+  virtual bool getProperty(const PropertyReference& property, std::string &value, const FlowFile* const) {
     return getProperty(property.name, value);
   }
 
   bool getDynamicProperty(const std::string &name, std::string &value) const {
     return processor_node_->getDynamicProperty(name, value);
   }
-  virtual bool getDynamicProperty(const Property &property, std::string &value, const std::shared_ptr<FlowFile>& /*flow_file*/) {
+  virtual bool getDynamicProperty(const Property &property, std::string &value, const FlowFile* const) {
     return getDynamicProperty(property.getName(), value);
   }
-  bool getDynamicProperty(const Property &property, std::string &value, const std::shared_ptr<FlowFile>& flow_file, const std::map<std::string, std::string>& variables) {
-    std::map<std::string, std::optional<std::string>> original_attributes;
-    for (const auto& [variable, attr_value] : variables) {
-      original_attributes[variable] = flow_file->getAttribute(variable);
-      flow_file->setAttribute(variable, attr_value);
-    }
-    auto onExit = gsl::finally([&]{
-      for (const auto& attr : original_attributes) {
-        if (attr.second) {
-          flow_file->setAttribute(attr.first, attr.second.value());
-        } else {
-          flow_file->removeAttribute(attr.first);
-        }
-      }
-    });
-    return getDynamicProperty(property, value, flow_file);
-  }
+
   std::vector<std::string> getDynamicPropertyKeys() const {
     return processor_node_->getDynamicPropertyKeys();
   }
@@ -411,13 +395,13 @@ class ProcessContext : public controller::ControllerServiceLookup, public core::
   bool initialized_;
 };
 
-inline std::optional<std::string> ProcessContext::getProperty(const Property& property, const std::shared_ptr<FlowFile>& flow_file) {
+inline std::optional<std::string> ProcessContext::getProperty(const Property& property, const FlowFile* const flow_file) {
   std::string value;
   if (!getProperty(property, value, flow_file)) return std::nullopt;
   return value;
 }
 
-inline std::optional<std::string> ProcessContext::getProperty(const PropertyReference& property, const std::shared_ptr<FlowFile>& flow_file) {
+inline std::optional<std::string> ProcessContext::getProperty(const PropertyReference& property, const FlowFile* const flow_file) {
   std::string value;
   if (!getProperty(property, value, flow_file)) return std::nullopt;
   return value;

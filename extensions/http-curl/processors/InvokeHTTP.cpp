@@ -221,7 +221,7 @@ void InvokeHTTP::onTriggerWithClient(core::ProcessContext& context, core::Proces
 
   if (shouldEmitFlowFile()) {
     logger_->log_trace("InvokeHTTP -- reading flowfile");
-    const auto flow_file_reader_stream = session.getFlowFileContentStream(flow_file);
+    const auto flow_file_reader_stream = session.getFlowFileContentStream(*flow_file);
     if (flow_file_reader_stream) {
       std::unique_ptr<utils::HTTPUploadCallback> callback_obj;
       if (send_message_body_) {
@@ -279,11 +279,7 @@ void InvokeHTTP::onTriggerWithClient(core::ProcessContext& context, core::Proces
 
     if (is_success) {
       if (!put_response_body_in_attribute_) {
-        if (flow_file != nullptr) {
-          response_flow = session.create(flow_file);
-        } else {
-          response_flow = session.create();
-        }
+        response_flow = session.create(flow_file.get());
 
         // if content type isn't returned we should return application/octet-stream
         // as per RFC 2046 -- 4.5.1

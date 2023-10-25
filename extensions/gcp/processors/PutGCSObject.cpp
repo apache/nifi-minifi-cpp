@@ -128,13 +128,13 @@ void PutGCSObject::onTrigger(core::ProcessContext& context, core::ProcessSession
     return;
   }
 
-  auto bucket = context.getProperty(Bucket, flow_file);
+  auto bucket = context.getProperty(Bucket, flow_file.get());
   if (!bucket || bucket->empty()) {
     logger_->log_error("Missing bucket name");
     session.transfer(flow_file, Failure);
     return;
   }
-  auto object_name = context.getProperty(Key, flow_file);
+  auto object_name = context.getProperty(Key, flow_file.get());
   if (!object_name || object_name->empty()) {
     logger_->log_error("Missing object name");
     session.transfer(flow_file, Failure);
@@ -144,15 +144,15 @@ void PutGCSObject::onTrigger(core::ProcessContext& context, core::ProcessSession
   gcs::Client client = getClient();
   UploadToGCSCallback callback(client, *bucket, *object_name);
 
-  if (auto crc32_checksum = context.getProperty(Crc32cChecksum, flow_file)) {
+  if (auto crc32_checksum = context.getProperty(Crc32cChecksum, flow_file.get())) {
     callback.setCrc32CChecksumValue(*crc32_checksum);
   }
 
-  if (auto md5_hash = context.getProperty(MD5Hash, flow_file)) {
+  if (auto md5_hash = context.getProperty(MD5Hash, flow_file.get())) {
     callback.setHashValue(*md5_hash);
   }
 
-  auto content_type = context.getProperty(ContentType, flow_file);
+  auto content_type = context.getProperty(ContentType, flow_file.get());
   if (content_type && !content_type->empty())
     callback.setContentType(*content_type);
 

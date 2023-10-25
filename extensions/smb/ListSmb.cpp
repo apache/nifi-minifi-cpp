@@ -80,23 +80,23 @@ std::string getDateTimeStr(std::chrono::file_clock::time_point time_point) {
 
 std::shared_ptr<core::FlowFile> ListSmb::createFlowFile(core::ProcessSession& session, const utils::ListedFile& listed_file) {
   auto flow_file = session.create();
-  session.putAttribute(flow_file, core::SpecialFlowAttribute::FILENAME, listed_file.getPath().filename().string());
-  session.putAttribute(flow_file, core::SpecialFlowAttribute::ABSOLUTE_PATH, (listed_file.getPath().parent_path() / "").string());
+  session.putAttribute(*flow_file, core::SpecialFlowAttribute::FILENAME, listed_file.getPath().filename().string());
+  session.putAttribute(*flow_file, core::SpecialFlowAttribute::ABSOLUTE_PATH, (listed_file.getPath().parent_path() / "").string());
 
   auto relative_path = std::filesystem::relative(listed_file.getPath().parent_path(), smb_connection_controller_service_->getPath());
-  session.putAttribute(flow_file, core::SpecialFlowAttribute::PATH, (relative_path / "").string());
+  session.putAttribute(*flow_file, core::SpecialFlowAttribute::PATH, (relative_path / "").string());
 
-  session.putAttribute(flow_file, Size.name, std::to_string(utils::file::file_size(listed_file.getPath())));
+  session.putAttribute(*flow_file, Size.name, std::to_string(utils::file::file_size(listed_file.getPath())));
 
   if (auto windows_file_times = utils::file::getWindowsFileTimes(listed_file.getPath())) {
-    session.putAttribute(flow_file, CreationTime.name, getDateTimeStr(windows_file_times->creation_time));
-    session.putAttribute(flow_file, LastModifiedTime.name, getDateTimeStr(windows_file_times->last_write_time));
-    session.putAttribute(flow_file, LastAccessTime.name, getDateTimeStr(windows_file_times->last_access_time));
+    session.putAttribute(*flow_file, CreationTime.name, getDateTimeStr(windows_file_times->creation_time));
+    session.putAttribute(*flow_file, LastModifiedTime.name, getDateTimeStr(windows_file_times->last_write_time));
+    session.putAttribute(*flow_file, LastAccessTime.name, getDateTimeStr(windows_file_times->last_access_time));
   } else {
     logger_->log_warn("Could not get file attributes due to {}", windows_file_times.error().message());
   }
 
-  session.putAttribute(flow_file, ServiceLocation.name, smb_connection_controller_service_->getPath().string());
+  session.putAttribute(*flow_file, ServiceLocation.name, smb_connection_controller_service_->getPath().string());
 
 
   return flow_file;

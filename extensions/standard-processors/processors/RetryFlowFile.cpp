@@ -112,7 +112,7 @@ std::optional<uint64_t> RetryFlowFile::getRetryPropertyValue(const std::shared_p
 void RetryFlowFile::setRetriesExceededAttributesOnFlowFile(core::ProcessContext& context, const std::shared_ptr<core::FlowFile>& flow_file) const {
   for (const auto& attribute : exceeded_flowfile_attribute_keys_) {
     std::string value;
-    context.getDynamicProperty(attribute, value, flow_file);
+    context.getDynamicProperty(attribute, value, flow_file.get());
     flow_file->setAttribute(attribute.getName(), value);
     logger_->log_info("Set attribute '{}' of flow file '{}' with value '{}'", attribute.getName(), flow_file->getUUIDStr(), value);
   }

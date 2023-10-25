@@ -117,9 +117,9 @@ std::string PutS3Object::parseAccessControlList(const std::string &comma_separat
 
 bool PutS3Object::setCannedAcl(
     core::ProcessContext& context,
-    const std::shared_ptr<core::FlowFile> &flow_file,
+    const core::FlowFile& flow_file,
     aws::s3::PutObjectRequestParameters &put_s3_request_params) const {
-  context.getProperty(CannedACL, put_s3_request_params.canned_acl, flow_file);
+  context.getProperty(CannedACL, put_s3_request_params.canned_acl, &flow_file);
   if (!put_s3_request_params.canned_acl.empty() && !ranges::contains(CANNED_ACLS, put_s3_request_params.canned_acl)) {
     logger_->log_error("Canned ACL is invalid!");
     return false;
@@ -130,22 +130,22 @@ bool PutS3Object::setCannedAcl(
 
 bool PutS3Object::setAccessControl(
       core::ProcessContext& context,
-      const std::shared_ptr<core::FlowFile> &flow_file,
+      const core::FlowFile& flow_file,
       aws::s3::PutObjectRequestParameters &put_s3_request_params) const {
   std::string value;
-  if (context.getProperty(FullControlUserList, value, flow_file) && !value.empty()) {
+  if (context.getProperty(FullControlUserList, value, &flow_file) && !value.empty()) {
     put_s3_request_params.fullcontrol_user_list = parseAccessControlList(value);
     logger_->log_debug("PutS3Object: Full Control User List [{}]", value);
   }
-  if (context.getProperty(ReadPermissionUserList, value, flow_file) && !value.empty()) {
+  if (context.getProperty(ReadPermissionUserList, value, &flow_file) && !value.empty()) {
     put_s3_request_params.read_permission_user_list = parseAccessControlList(value);
     logger_->log_debug("PutS3Object: Read Permission User List [{}]", value);
   }
-  if (context.getProperty(ReadACLUserList, value, flow_file) && !value.empty()) {
+  if (context.getProperty(ReadACLUserList, value, &flow_file) && !value.empty()) {
     put_s3_request_params.read_acl_user_list = parseAccessControlList(value);
     logger_->log_debug("PutS3Object: Read ACL User List [{}]", value);
   }
-  if (context.getProperty(WriteACLUserList, value, flow_file) && !value.empty()) {
+  if (context.getProperty(WriteACLUserList, value, &flow_file) && !value.empty()) {
     put_s3_request_params.write_acl_user_list = parseAccessControlList(value);
     logger_->log_debug("PutS3Object: Write ACL User List [{}]", value);
   }
@@ -155,7 +155,7 @@ bool PutS3Object::setAccessControl(
 
 std::optional<aws::s3::PutObjectRequestParameters> PutS3Object::buildPutS3RequestParams(
     core::ProcessContext& context,
-    const std::shared_ptr<core::FlowFile> &flow_file,
+    const core::FlowFile& flow_file,
     const CommonProperties &common_properties) const {
   gsl_Expects(client_config_);
   aws::s3::PutObjectRequestParameters params(common_properties.credentials, *client_config_);
@@ -165,14 +165,14 @@ std::optional<aws::s3::PutObjectRequestParameters> PutS3Object::buildPutS3Reques
   params.server_side_encryption = server_side_encryption_;
   params.storage_class = storage_class_;
 
-  context.getProperty(ObjectKey, params.object_key, flow_file);
-  if (params.object_key.empty() && (!flow_file->getAttribute("filename", params.object_key) || params.object_key.empty())) {
+  context.getProperty(ObjectKey, params.object_key, &flow_file);
+  if (params.object_key.empty() && (!flow_file.getAttribute("filename", params.object_key) || params.object_key.empty())) {
     logger_->log_error("No Object Key is set and default object key 'filename' attribute could not be found!");
     return std::nullopt;
   }
   logger_->log_debug("PutS3Object: Object Key [{}]", params.object_key);
 
-  context.getProperty(ContentType, params.content_type, flow_file);
+  context.getProperty(ContentType, params.content_type, &flow_file);
   logger_->log_debug("PutS3Object: Content Type [{}]", params.content_type);
 
   if (!setAccessControl(context, flow_file, params)) {
@@ -185,7 +185,7 @@ std::optional<aws::s3::PutObjectRequestParameters> PutS3Object::buildPutS3Reques
 
 void PutS3Object::setAttributes(
     core::ProcessSession& session,
-    const std::shared_ptr<core::FlowFile> &flow_file,
+    core::FlowFile& flow_file,
     const aws::s3::PutObjectRequestParameters &put_s3_request_params,
     const minifi::aws::s3::PutObjectResult &put_object_result) const {
   session.putAttribute(flow_file, "s3.bucket", put_s3_request_params.bucket);
@@ -263,7 +263,7 @@ void PutS3Object::onTrigger(core::ProcessContext& context, core::ProcessSession&
     return;
   }
 
-  auto common_properties = getCommonELSupportedProperties(context, flow_file);
+  auto common_properties = getCommonELSupportedProperties(context, flow_file.get());
   if (!common_properties) {
     session.transfer(flow_file, Failure);
     return;
@@ -271,7 +271,7 @@ void PutS3Object::onTrigger(core::ProcessContext& context, core::ProcessSession&
 
   ageOffMultipartUploads(*common_properties);
 
-  auto put_s3_request_params = buildPutS3RequestParams(context, flow_file, *common_properties);
+  auto put_s3_request_params = buildPutS3RequestParams(context, *flow_file, *common_properties);
   if (!put_s3_request_params) {
     session.transfer(flow_file, Failure);
     return;
@@ -298,7 +298,7 @@ void PutS3Object::onTrigger(core::ProcessContext& context, core::ProcessSession&
     logger_->log_error("Failed to upload S3 object to bucket '{}'", put_s3_request_params->bucket);
     session.transfer(flow_file, Failure);
   } else {
-    setAttributes(session, flow_file, *put_s3_request_params, *result);
+    setAttributes(session, *flow_file, *put_s3_request_params, *result);
     logger_->log_debug("Successfully uploaded S3 object '{}' to bucket '{}'", put_s3_request_params->object_key, put_s3_request_params->bucket);
     session.transfer(flow_file, Success);
   }

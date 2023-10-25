@@ -95,7 +95,7 @@ std::shared_ptr<core::FlowFile> PyProcessSession::create(const std::shared_ptr<c
     throw std::runtime_error("Access of ProcessSession after it has been released");
   }
 
-  auto result = session_->create(flow_file);
+  auto result = session_->create(flow_file.get());
 
   flow_files_.push_back(result);
   return result;

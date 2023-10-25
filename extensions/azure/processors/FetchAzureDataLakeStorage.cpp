@@ -32,24 +32,24 @@ void FetchAzureDataLakeStorage::initialize() {
 }
 
 std::optional<storage::FetchAzureDataLakeStorageParameters> FetchAzureDataLakeStorage::buildFetchParameters(
-    core::ProcessContext& context, const std::shared_ptr<core::FlowFile>& flow_file) {
+    core::ProcessContext& context, const core::FlowFile& flow_file) {
   storage::FetchAzureDataLakeStorageParameters params;
   if (!setFileOperationCommonParameters(params, context, flow_file)) {
     return std::nullopt;
   }
 
   std::string value;
-  if (context.getProperty(RangeStart, value, flow_file)) {
+  if (context.getProperty(RangeStart, value, &flow_file)) {
     params.range_start = std::stoull(value);
     logger_->log_debug("Range Start property set to {}", *params.range_start);
   }
 
-  if (context.getProperty(RangeLength, value, flow_file)) {
+  if (context.getProperty(RangeLength, value, &flow_file)) {
     params.range_length = std::stoull(value);
     logger_->log_debug("Range Length property set to {}", *params.range_length);
   }
 
-  if (context.getProperty(NumberOfRetries, value, flow_file)) {
+  if (context.getProperty(NumberOfRetries, value, &flow_file)) {
     params.number_of_retries = std::stoull(value);
     logger_->log_debug("Number Of Retries property set to {}", *params.number_of_retries);
   }
@@ -65,13 +65,13 @@ void FetchAzureDataLakeStorage::onTrigger(core::ProcessContext& context, core::P
     return;
   }
 
-  const auto params = buildFetchParameters(context, flow_file);
+  const auto params = buildFetchParameters(context, *flow_file);
   if (!params) {
     session.transfer(flow_file, Failure);
     return;
   }
 
-  auto fetched_flow_file = session.create(flow_file);
+  auto fetched_flow_file = session.create(flow_file.get());
   std::optional<uint64_t> result;
   session.write(fetched_flow_file, [&, this](const std::shared_ptr<io::OutputStream>& output_stream) -> int64_t {
     result = azure_data_lake_storage_.fetchFile(*params, *output_stream);

@@ -74,38 +74,38 @@ void ListFile::onSchedule(core::ProcessContext& context, core::ProcessSessionFac
 
 std::shared_ptr<core::FlowFile> ListFile::createFlowFile(core::ProcessSession& session, const utils::ListedFile& listed_file) {
   auto flow_file = session.create();
-  session.putAttribute(flow_file, core::SpecialFlowAttribute::FILENAME, listed_file.getPath().filename().string());
-  session.putAttribute(flow_file, core::SpecialFlowAttribute::ABSOLUTE_PATH, (listed_file.getPath().parent_path() / "").string());
+  session.putAttribute(*flow_file, core::SpecialFlowAttribute::FILENAME, listed_file.getPath().filename().string());
+  session.putAttribute(*flow_file, core::SpecialFlowAttribute::ABSOLUTE_PATH, (listed_file.getPath().parent_path() / "").string());
 
   auto relative_path = std::filesystem::relative(listed_file.getPath().parent_path(), listed_file.getDirectory());
-  session.putAttribute(flow_file, core::SpecialFlowAttribute::PATH, (relative_path / "").string());
+  session.putAttribute(*flow_file, core::SpecialFlowAttribute::PATH, (relative_path / "").string());
 
-  session.putAttribute(flow_file, ListFile::FileSize.name, std::to_string(utils::file::file_size(listed_file.getPath())));
-  session.putAttribute(flow_file, ListFile::FileLastModifiedTime.name, utils::timeutils::getDateTimeStr(std::chrono::time_point_cast<std::chrono::seconds>(listed_file.getLastModified())));
+  session.putAttribute(*flow_file, ListFile::FileSize.name, std::to_string(utils::file::file_size(listed_file.getPath())));
+  session.putAttribute(*flow_file, ListFile::FileLastModifiedTime.name, utils::timeutils::getDateTimeStr(std::chrono::time_point_cast<std::chrono::seconds>(listed_file.getLastModified())));
 
   if (auto permission_string = utils::file::FileUtils::get_permission_string(listed_file.getPath())) {
-    session.putAttribute(flow_file, ListFile::FilePermissions.name, *permission_string);
+    session.putAttribute(*flow_file, ListFile::FilePermissions.name, *permission_string);
   } else {
     logger_->log_warn("Failed to get permissions of file '{}'", listed_file.getPath());
-    session.putAttribute(flow_file, ListFile::FilePermissions.name, "");
+    session.putAttribute(*flow_file, ListFile::FilePermissions.name, "");
   }
 
   if (auto owner = utils::file::FileUtils::get_file_owner(listed_file.getPath())) {
-    session.putAttribute(flow_file, ListFile::FileOwner.name, *owner);
+    session.putAttribute(*flow_file, ListFile::FileOwner.name, *owner);
   } else {
     logger_->log_warn("Failed to get owner of file '{}'", listed_file.getPath());
-    session.putAttribute(flow_file, ListFile::FileOwner.name, "");
+    session.putAttribute(*flow_file, ListFile::FileOwner.name, "");
   }
 
 #ifndef WIN32
   if (auto group = utils::file::FileUtils::get_file_group(listed_file.getPath())) {
-    session.putAttribute(flow_file, ListFile::FileGroup.name, *group);
+    session.putAttribute(*flow_file, ListFile::FileGroup.name, *group);
   } else {
     logger_->log_warn("Failed to get group of file '{}'", listed_file.getPath());
-    session.putAttribute(flow_file, ListFile::FileGroup.name, "");
+    session.putAttribute(*flow_file, ListFile::FileGroup.name, "");
   }
 #else
-  session.putAttribute(flow_file, ListFile::FileGroup.name, "");
+  session.putAttribute(*flow_file, ListFile::FileGroup.name, "");
 #endif
 
   return flow_file;

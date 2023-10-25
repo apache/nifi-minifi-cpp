@@ -63,15 +63,15 @@ std::optional<storage::ListAzureBlobStorageParameters> ListAzureBlobStorage::bui
 
 std::shared_ptr<core::FlowFile> ListAzureBlobStorage::createNewFlowFile(core::ProcessSession &session, const storage::ListContainerResultElement &element) {
   auto flow_file = session.create();
-  session.putAttribute(flow_file, "azure.container", list_parameters_.container_name);
-  session.putAttribute(flow_file, "azure.blobname", element.blob_name);
-  session.putAttribute(flow_file, "azure.primaryUri", element.primary_uri);
-  session.putAttribute(flow_file, "azure.etag", element.etag);
-  session.putAttribute(flow_file, "azure.length", std::to_string(element.length));
-  session.putAttribute(flow_file, "azure.timestamp", std::to_string(element.last_modified.time_since_epoch() / std::chrono::milliseconds(1)));
-  session.putAttribute(flow_file, core::SpecialFlowAttribute::MIME_TYPE, element.mime_type);
-  session.putAttribute(flow_file, "lang", element.language);
-  session.putAttribute(flow_file, "azure.blobtype", element.blob_type);
+  session.putAttribute(*flow_file, "azure.container", list_parameters_.container_name);
+  session.putAttribute(*flow_file, "azure.blobname", element.blob_name);
+  session.putAttribute(*flow_file, "azure.primaryUri", element.primary_uri);
+  session.putAttribute(*flow_file, "azure.etag", element.etag);
+  session.putAttribute(*flow_file, "azure.length", std::to_string(element.length));
+  session.putAttribute(*flow_file, "azure.timestamp", std::to_string(element.last_modified.time_since_epoch() / std::chrono::milliseconds(1)));
+  session.putAttribute(*flow_file, core::SpecialFlowAttribute::MIME_TYPE, element.mime_type);
+  session.putAttribute(*flow_file, "lang", element.language);
+  session.putAttribute(*flow_file, "azure.blobtype", element.blob_type);
   session.transfer(flow_file, Success);
   return flow_file;
 }

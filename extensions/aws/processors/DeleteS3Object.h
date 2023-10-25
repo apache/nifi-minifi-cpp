@@ -82,7 +82,7 @@ class DeleteS3Object : public S3Processor {
 
   std::optional<aws::s3::DeleteObjectRequestParameters> buildDeleteS3RequestParams(
     core::ProcessContext& context,
-    const std::shared_ptr<core::FlowFile> &flow_file,
+    const core::FlowFile& flow_file,
     const CommonProperties &common_properties) const;
 };
 

@@ -74,28 +74,23 @@ class ProcessSession : public ReferenceContainer {
   // writes the created contents to the underlying repository
   void flushContent();
 
-  // Get the FlowFile from the highest priority queue
   virtual std::shared_ptr<core::FlowFile> get();
-  // Create a new UUID FlowFile with no content resource claim and inherit all attributes from parent
-  std::shared_ptr<core::FlowFile> create(const std::shared_ptr<core::FlowFile> &parent = {});
-  // Add a FlowFile to the session
+
+  std::shared_ptr<core::FlowFile> create(const core::FlowFile* const parent = nullptr);
   virtual void add(const std::shared_ptr<core::FlowFile> &record);
-  // Clone a new UUID FlowFile from parent both for content resource claim and attributes
-  std::shared_ptr<core::FlowFile> clone(const std::shared_ptr<core::FlowFile> &parent);
-  // Clone a new UUID FlowFile from parent for attributes and sub set of parent content resource claim
-  std::shared_ptr<core::FlowFile> clone(const std::shared_ptr<core::FlowFile> &parent, int64_t offset, int64_t size);
+  std::shared_ptr<core::FlowFile> clone(const core::FlowFile& parent);
+  std::shared_ptr<core::FlowFile> clone(const core::FlowFile& parent, int64_t offset, int64_t size);
   // Transfer the FlowFile to the relationship
   virtual void transfer(const std::shared_ptr<core::FlowFile>& flow, const Relationship& relationship);
-  // Put Attribute
-  void putAttribute(const std::shared_ptr<core::FlowFile>& flow, std::string_view key, const std::string& value);
-  // Remove Attribute
-  void removeAttribute(const std::shared_ptr<core::FlowFile>& flow, std::string_view key);
-  // Remove Flow File
+
+  void putAttribute(core::FlowFile& flow, std::string_view key, const std::string& value);
+  void removeAttribute(core::FlowFile& flow, std::string_view key);
+
   void remove(const std::shared_ptr<core::FlowFile> &flow);
   // Access the contents of the flow file as an input stream; returns null if the flow file has no content claim
-  std::shared_ptr<io::InputStream> getFlowFileContentStream(const std::shared_ptr<core::FlowFile>& flow_file);
+  std::shared_ptr<io::InputStream> getFlowFileContentStream(const core::FlowFile& flow_file);
   // Execute the given read callback against the content
-  int64_t read(const std::shared_ptr<core::FlowFile> &flow, const io::InputStreamCallback& callback);
+  int64_t read(const std::shared_ptr<core::FlowFile>& flow_file, const io::InputStreamCallback& callback);
   // Read content into buffer
   detail::ReadBufferResult readBuffer(const std::shared_ptr<core::FlowFile>& flow);
   // Execute the given write callback against the content
@@ -207,7 +202,7 @@ class ProcessSession : public ReferenceContainer {
       const std::map<Connectable*, std::vector<std::shared_ptr<core::FlowFile>>>& transactionMap);
 
   // Clone the flow file during transfer to multiple connections for a relationship
-  std::shared_ptr<core::FlowFile> cloneDuringTransfer(const std::shared_ptr<core::FlowFile> &parent);
+  std::shared_ptr<core::FlowFile> cloneDuringTransfer(const core::FlowFile& parent);
   // ProcessContext
   std::shared_ptr<ProcessContext> process_context_;
   // Logger

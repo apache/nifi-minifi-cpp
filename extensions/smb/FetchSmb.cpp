@@ -31,13 +31,13 @@ void FetchSmb::onSchedule(core::ProcessContext& context, core::ProcessSessionFac
 }
 
 namespace {
-std::filesystem::path getTargetRelativePath(core::ProcessContext& context, const std::shared_ptr<core::FlowFile>& flow_file) {
-  auto remote_file = context.getProperty(FetchSmb::RemoteFile, flow_file);
+std::filesystem::path getTargetRelativePath(core::ProcessContext& context, const core::FlowFile& flow_file) {
+  auto remote_file = context.getProperty(FetchSmb::RemoteFile, &flow_file);
   if (remote_file && !remote_file->empty()) {
     return std::filesystem::path{*remote_file}.relative_path();  // We need to make sure that the path remains relative (e.g. ${path}/foo where ${path} is empty can lead to /foo)
   }
-  std::filesystem::path path = flow_file->getAttribute(core::SpecialFlowAttribute::PATH).value_or("");
-  std::filesystem::path filename = flow_file->getAttribute(core::SpecialFlowAttribute::FILENAME).value_or("");
+  std::filesystem::path path = flow_file.getAttribute(core::SpecialFlowAttribute::PATH).value_or("");
+  std::filesystem::path filename = flow_file.getAttribute(core::SpecialFlowAttribute::FILENAME).value_or("");
   return path / filename;
 }
 }  // namespace
@@ -58,7 +58,7 @@ void FetchSmb::onTrigger(core::ProcessContext& context, core::ProcessSession& se
   }
 
   try {
-    session.write(flow_file, utils::FileReaderCallback{smb_connection_controller_service_->getPath() / getTargetRelativePath(context, flow_file)});
+    session.write(flow_file, utils::FileReaderCallback{smb_connection_controller_service_->getPath() / getTargetRelativePath(context, *flow_file)});
     session.transfer(flow_file, Success);
   } catch (const utils::FileReaderCallbackIOError& io_error) {
     flow_file->addAttribute(ErrorCode.name, std::to_string(io_error.error_code));

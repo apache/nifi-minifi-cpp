@@ -173,16 +173,16 @@ bool DefragmentText::splitFlowFileAtLastPattern(core::ProcessSession& session,
   const auto read_result = session.readBuffer(original_flow_file);
   auto last_regex_match = utils::getLastRegexMatch(to_string(read_result), pattern_);
   if (!last_regex_match.ready()) {
-    split_before_last_pattern = session.clone(original_flow_file);
+    split_before_last_pattern = session.clone(*original_flow_file);
     split_after_last_pattern = nullptr;
     return false;
   }
   auto split_position = getSplitPosition(last_regex_match, pattern_location_);
   if (split_position != 0) {
-    split_before_last_pattern = session.clone(original_flow_file, 0, split_position);
+    split_before_last_pattern = session.clone(*original_flow_file, 0, split_position);
   }
   if (split_position != original_flow_file->getSize()) {
-    split_after_last_pattern = session.clone(original_flow_file, split_position, original_flow_file->getSize() - split_position);
+    split_after_last_pattern = session.clone(*original_flow_file, split_position, original_flow_file->getSize() - split_position);
   }
   updateAttributesForSplitFiles(*original_flow_file, split_before_last_pattern, split_after_last_pattern, split_position);
   return true;

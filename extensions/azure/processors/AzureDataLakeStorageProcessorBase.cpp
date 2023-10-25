@@ -40,7 +40,7 @@ void AzureDataLakeStorageProcessorBase::onSchedule(core::ProcessContext& context
 }
 
 bool AzureDataLakeStorageProcessorBase::setCommonParameters(
-    storage::AzureDataLakeStorageParameters& params, core::ProcessContext& context, const std::shared_ptr<core::FlowFile>& flow_file) {
+    storage::AzureDataLakeStorageParameters& params, core::ProcessContext& context, const core::FlowFile* const flow_file) {
   params.credentials = credentials_;
 
   if (!context.getProperty(FilesystemName, params.file_system_name, flow_file) || params.file_system_name.empty()) {

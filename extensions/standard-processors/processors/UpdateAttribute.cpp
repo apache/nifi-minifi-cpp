@@ -55,7 +55,7 @@ void UpdateAttribute::onTrigger(core::ProcessContext& context, core::ProcessSess
   try {
     for (const auto &attribute : attributes_) {
       std::string value;
-      context.getDynamicProperty(attribute, value, flow_file);
+      context.getDynamicProperty(attribute, value, flow_file.get());
       flow_file->setAttribute(attribute.getName(), value);
       logger_->log_info("Set attribute '{}' of flow file '{}' with value '{}'", attribute.getName(), flow_file->getUUIDStr(), value);
     }

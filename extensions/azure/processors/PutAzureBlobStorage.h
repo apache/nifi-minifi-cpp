@@ -111,7 +111,7 @@ class PutAzureBlobStorage final : public AzureBlobStorageSingleBlobProcessorBase
     : AzureBlobStorageSingleBlobProcessorBase(name, uuid, core::logging::LoggerFactory<PutAzureBlobStorage>::getLogger(), std::move(blob_storage_client)) {
   }
 
-  std::optional<storage::PutAzureBlobStorageParameters> buildPutAzureBlobStorageParameters(core::ProcessContext &context, const std::shared_ptr<core::FlowFile> &flow_file);
+  std::optional<storage::PutAzureBlobStorageParameters> buildPutAzureBlobStorageParameters(core::ProcessContext &context, const core::FlowFile& flow_file);
 
   bool create_container_ = false;
 };

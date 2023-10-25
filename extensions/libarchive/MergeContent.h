@@ -256,7 +256,7 @@ class AttributeMerger {
  public:
   explicit AttributeMerger(std::deque<std::shared_ptr<org::apache::nifi::minifi::core::FlowFile>> &flows)
     : flows_(flows) {}
-  void mergeAttributes(core::ProcessSession &session, const std::shared_ptr<core::FlowFile> &merge_flow);
+  void mergeAttributes(core::ProcessSession &session, core::FlowFile& merge_flow);
   virtual ~AttributeMerger() = default;
 
  protected:

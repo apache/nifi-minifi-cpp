@@ -64,11 +64,11 @@ void RouteOnAttribute::onTrigger(core::ProcessContext& context, core::ProcessSes
     // Perform dynamic routing logic
     for (const auto &route : route_properties_) {
       std::string do_route;
-      context.getDynamicProperty(route.second, do_route, flow_file);
+      context.getDynamicProperty(route.second, do_route, flow_file.get());
 
       if (do_route == "true") {
         did_match = true;
-        auto clone = session.clone(flow_file);
+        auto clone = session.clone(*flow_file);
         session.transfer(clone, route_rels_[route.first]);
       }
     }

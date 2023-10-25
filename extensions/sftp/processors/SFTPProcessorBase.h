@@ -184,7 +184,7 @@ class SFTPProcessorBase : public core::Processor {
 
     CommonProperties();
   };
-  bool parseCommonPropertiesOnTrigger(core::ProcessContext& context, const std::shared_ptr<core::FlowFile>& flow_file, CommonProperties& common_properties);
+  bool parseCommonPropertiesOnTrigger(core::ProcessContext& context, const core::FlowFile* const flow_file, CommonProperties& common_properties);
 
   static constexpr size_t CONNECTION_CACHE_MAX_SIZE = 8U;
   struct ConnectionCacheKey {

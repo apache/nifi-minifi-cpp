@@ -68,7 +68,7 @@ class AzureDataLakeStorageProcessorBase : public AzureStorageProcessorBase {
       azure_data_lake_storage_(std::move(data_lake_storage_client)) {
   }
 
-  bool setCommonParameters(storage::AzureDataLakeStorageParameters& params, core::ProcessContext& context, const std::shared_ptr<core::FlowFile>& flow_file);
+  bool setCommonParameters(storage::AzureDataLakeStorageParameters& params, core::ProcessContext& context, const core::FlowFile* const flow_file);
 
   storage::AzureStorageCredentials credentials_;
   storage::AzureDataLakeStorage azure_data_lake_storage_;

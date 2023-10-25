@@ -809,7 +809,7 @@ std::string TailFile::baseDirectoryFromAttributes(const controllers::AttributePr
   for (const auto& [key, value] : attribute_map) {
     flow_file->setAttribute(key, value);
   }
-  return context.getProperty(BaseDirectory, flow_file).value();
+  return context.getProperty(BaseDirectory, flow_file.get()).value();
 }
 
 std::chrono::milliseconds TailFile::getLookupFrequency() const {

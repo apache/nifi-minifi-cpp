@@ -146,7 +146,7 @@ class RouteText::MatchingContext {
       return it->second;
     }
     std::string value;
-    if (!process_context_.getDynamicProperty(prop, value, flow_file_)) {
+    if (!process_context_.getDynamicProperty(prop, value, flow_file_.get())) {
       throw Exception(PROCESSOR_EXCEPTION, "Missing dynamic property: '" + prop.getName() + "'");
     }
     std::vector<utils::Regex::Mode> flags;
@@ -162,7 +162,7 @@ class RouteText::MatchingContext {
       return it->second;
     }
     std::string value;
-    if (!process_context_.getDynamicProperty(prop, value, flow_file_)) {
+    if (!process_context_.getDynamicProperty(prop, value, flow_file_.get())) {
       throw Exception(PROCESSOR_EXCEPTION, "Missing dynamic property: '" + prop.getName() + "'");
     }
     return (string_values_[prop.getName()] = value);
@@ -174,7 +174,7 @@ class RouteText::MatchingContext {
       return it->second.searcher_;
     }
     std::string value;
-    if (!process_context_.getDynamicProperty(prop, value, flow_file_)) {
+    if (!process_context_.getDynamicProperty(prop, value, flow_file_.get())) {
       throw Exception(PROCESSOR_EXCEPTION, "Missing dynamic property: '" + prop.getName() + "'");
     }
 
@@ -280,7 +280,7 @@ void RouteText::onTrigger(core::ProcessContext& context, core::ProcessSession& s
   session.read(flow_file, std::move(callback));
 
   for (const auto& [route, content] : flow_file_contents) {
-    auto new_flow_file = session.create(flow_file);
+    auto new_flow_file = session.create(flow_file.get());
     if (route.group_name_) {
       new_flow_file->setAttribute(GROUP_ATTRIBUTE_NAME, route.group_name_.value());
     }
@@ -307,6 +307,30 @@ std::string_view RouteText::preprocess(std::string_view str) const {
   return str;
 }
 
+namespace {
+bool getDynamicPropertyWithOverrides(core::ProcessContext& context,
+    const core::Property &property,
+    std::string &value,
+    core::FlowFile& flow_file,
+    const std::map<std::string, std::string>& overrides) {
+  std::map<std::string, std::optional<std::string>> original_attributes;
+  for (const auto& [override_key, override_value] : overrides) {
+    original_attributes[override_key] = flow_file.getAttribute(override_key);
+    flow_file.setAttribute(override_key, override_value);
+  }
+  auto onExit = gsl::finally([&]{
+    for (const auto& attr : original_attributes) {
+      if (attr.second) {
+        flow_file.setAttribute(attr.first, attr.second.value());
+      } else {
+        flow_file.removeAttribute(attr.first);
+      }
+    }
+  });
+  return context.getDynamicProperty(property, value, &flow_file);
+}
+}  // namespace
+
 bool RouteText::matchSegment(MatchingContext& context, const Segment& segment, const core::Property& prop) const {
   switch (matching_) {
     case route_text::Matching::EXPRESSION: {
@@ -319,7 +343,7 @@ bool RouteText::matchSegment(MatchingContext& context, const Segment& segment, c
         variables["lineNo"] = std::to_string(segment.idx_);
       }
       std::string result;
-      if (context.process_context_.getDynamicProperty(prop, result, context.flow_file_, variables)) {
+      if (context.process_context_.getDynamicProperty(prop, result, *context.flow_file_, variables)) {
         return utils::string::toBool(result).value_or(false);
       } else {
         throw Exception(PROCESSOR_EXCEPTION, "Missing dynamic property: '" + prop.getName() + "'");

@@ -84,7 +84,7 @@ class PutSmb : public core::Processor {
   void initialize() override;
 
  private:
-  std::filesystem::path getFilePath(core::ProcessContext& context, const std::shared_ptr<core::FlowFile>& flow_file);
+  std::filesystem::path getFilePath(core::ProcessContext& context, const core::FlowFile& flow_file);
   bool create_missing_dirs_ = true;
   FileExistsResolutionStrategy conflict_resolution_strategy_ = FileExistsResolutionStrategy::fail;
   std::shared_ptr<SmbConnectionControllerService> smb_connection_controller_service_;

@@ -50,8 +50,8 @@ class AzureBlobStorageSingleBlobProcessorBase : public AzureBlobStorageProcessor
 
   bool setBlobOperationParameters(
     storage::AzureBlobStorageBlobOperationParameters& params,
-    core::ProcessContext &context,
-    const std::shared_ptr<core::FlowFile> &flow_file);
+    core::ProcessContext& context,
+    const core::FlowFile& flow_file);
 };
 
 }  // namespace org::apache::nifi::minifi::azure::processors
