@@ -266,10 +266,10 @@ void StructuredConfiguration::parseProcessorNode(const Node& processors_node, co
       logger_->log_debug("setting scheduling strategy as {}", procCfg.schedulingStrategy);
     }
 
-    int32_t maxConcurrentTasks = 0;
+    uint8_t maxConcurrentTasks = 0;
     if (core::Property::StringToInt(procCfg.maxConcurrentTasks, maxConcurrentTasks)) {
       logger_->log_debug("parseProcessorNode: maxConcurrentTasks => [{}]", maxConcurrentTasks);
-      processor->setMaxConcurrentTasks(static_cast<uint8_t>(maxConcurrentTasks));
+      processor->setMaxConcurrentTasks(maxConcurrentTasks);
     }
 
     if (core::Property::StringToInt(procCfg.runDurationNanos, runDurationNanos)) {

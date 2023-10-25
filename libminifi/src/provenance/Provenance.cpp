@@ -257,7 +257,12 @@ bool ProvenanceEventRecord::deserialize(io::InputStream &input_stream) {
     }
   }
 
-  _eventType = static_cast<ProvenanceEventRecord::ProvenanceEventType>(eventType);
+  if (auto event_type_opt = magic_enum::enum_cast<ProvenanceEventRecord::ProvenanceEventType>(eventType)) {
+    _eventType = *event_type_opt;
+  } else {
+    return false;
+  }
+
   {
     uint64_t event_time_in_ms = 0;
     const auto ret = input_stream.read(event_time_in_ms);

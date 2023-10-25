@@ -175,7 +175,7 @@ std::shared_ptr<core::FlowFile> ProcessSession::cloneDuringTransfer(const std::s
 }
 
 std::shared_ptr<core::FlowFile> ProcessSession::clone(const std::shared_ptr<core::FlowFile> &parent, int64_t offset, int64_t size) {
-  if (static_cast<uint64_t>(offset + size) > parent->getSize()) {
+  if (gsl::narrow<uint64_t>(offset + size) > parent->getSize()) {
     // Set offset and size
     logger_->log_error("clone offset {} and size {} exceed parent size {}", offset, size, parent->getSize());
     return nullptr;

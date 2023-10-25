@@ -201,7 +201,7 @@ class PutSFTPTestsFixture {
 
 namespace {
 std::size_t directoryContentCount(const std::filesystem::path& dir) {
-  return static_cast<std::size_t>(std::distance(std::filesystem::directory_iterator{dir}, std::filesystem::directory_iterator{}));
+  return gsl::narrow<std::size_t>(std::distance(std::filesystem::directory_iterator{dir}, std::filesystem::directory_iterator{}));
 }
 }  // namespace
 
