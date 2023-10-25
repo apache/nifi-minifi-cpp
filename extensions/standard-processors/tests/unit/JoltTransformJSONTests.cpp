@@ -287,12 +287,7 @@ std::pair<size_t, size_t> offsetToCursor(std::string_view str, size_t offset) {
 
 TEST_CASE("Run tests from https://github.com/bazaarvoice/jolt") {
   std::set<std::filesystem::path> test_files{std::filesystem::directory_iterator(JOLT_TESTS_DIR), std::filesystem::directory_iterator{}};
-  std::vector<std::string> exceptions{
-  };
   for (auto& entry : test_files) {
-    if (std::any_of(exceptions.begin(), exceptions.end(), [&] (const auto& ex) {return entry.string().find(ex) != std::string::npos;})) {
-      continue;
-    }
     INFO(entry);
     std::ifstream file{entry, std::ios::binary};
     std::string file_content{std::istreambuf_iterator<char>(file), {}};
