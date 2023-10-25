@@ -78,8 +78,10 @@ class JoltTransformJSON : public core::Processor {
       JoltSpecification
   };
 
-  EXTENSIONAPI static constexpr auto Success = core::RelationshipDefinition{"success", "The FlowFile with transformed content will be routed to this relationship"};
-  EXTENSIONAPI static constexpr auto Failure = core::RelationshipDefinition{"failure", "If a FlowFile fails processing for any reason (for example, the FlowFile is not valid JSON), it will be routed to this relationship"};
+  EXTENSIONAPI static constexpr auto Success = core::RelationshipDefinition{"success",
+      "The FlowFile with transformed content will be routed to this relationship"};
+  EXTENSIONAPI static constexpr auto Failure = core::RelationshipDefinition{"failure",
+      "If a FlowFile fails processing for any reason (for example, the FlowFile is not valid JSON), it will be routed to this relationship"};
   EXTENSIONAPI static constexpr auto Relationships = std::array{Success, Failure};
 
   EXTENSIONAPI static constexpr bool SupportsDynamicProperties = false;

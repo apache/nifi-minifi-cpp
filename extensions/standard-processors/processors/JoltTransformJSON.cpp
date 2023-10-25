@@ -33,7 +33,7 @@ void JoltTransformJSON::onSchedule(core::ProcessContext* context, core::ProcessS
   gsl_Expects(context);
   transform_ = utils::parseEnumProperty<jolt_transform_json::JoltTransform>(*context, JoltTransform);
   const std::string spec_str = utils::getRequiredPropertyOrThrow(*context, JoltSpecification.name);
-  if (auto spec = utils::jolt::Spec::parse(spec_str)) {
+  if (auto spec = utils::jolt::Spec::parse(spec_str, logger_)) {
     spec_ = std::move(spec.value());
   } else {
     throw Exception(PROCESS_SCHEDULE_EXCEPTION, fmt::format("The value of '{}' is not a valid jolt specification: {}", JoltSpecification.name, spec.error()));

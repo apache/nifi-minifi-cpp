@@ -190,7 +190,7 @@ class Spec {
     std::map<std::string, Destinations> defaults;  // #thing: a.b
   };
 
-  static nonstd::expected<Spec, std::string> parse(std::string_view str);
+  static nonstd::expected<Spec, std::string> parse(std::string_view str, std::shared_ptr<core::logging::Logger> logger = {});
 
   nonstd::expected<rapidjson::Document, std::string> process(const rapidjson::Value& input, std::shared_ptr<core::logging::Logger> logger = {}) const;
 
@@ -200,4 +200,4 @@ class Spec {
   std::unique_ptr<Pattern> value_;
 };
 
-}  // org::apache::nifi::minifi::utils::jolt
+}  // namespace org::apache::nifi::minifi::utils::jolt

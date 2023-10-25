@@ -823,7 +823,7 @@ void putValue(const Spec::Context& ctx, const Spec::Destination& dest, const rap
       } else {
         auto sub_path = toString(ctx, val_ref->second);
         ctx.log([&] (auto logger) {
-          logger->log_trace("%s", fmt::format("Could not find member at @({},{} as {}) from {}", val_ref->first, sub_path.first, sub_path.second, ctx.path()));
+          logger->log_trace("Could not find member at @({},{} as {}) from {}", val_ref->first, sub_path.first, sub_path.second, ctx.path());
         }, [] (auto) {});
         // do not write anything and do not throw
         return;
@@ -973,14 +973,14 @@ nonstd::expected<std::reference_wrapper<const rapidjson::Value>, std::string> re
 
 }  // namespace
 
-nonstd::expected<Spec, std::string> Spec::parse(std::string_view str) {
+nonstd::expected<Spec, std::string> Spec::parse(std::string_view str, std::shared_ptr<core::logging::Logger> logger) {
   rapidjson::Document doc;
   rapidjson::ParseResult res = doc.Parse(str.data(), str.length());
   if (!res) {
     return nonstd::make_unexpected(fmt::format("{} at {}", rapidjson::GetParseError_En(res.Code()), res.Offset()));
   }
   try {
-    Spec::Context ctx{.matches = {"root"}};
+    Spec::Context ctx{.matches = {"root"}, .logger = logger};
     return Spec{parseMap(ctx, doc)};
   } catch (const std::exception& ex) {
     return nonstd::make_unexpected(ex.what());
@@ -999,9 +999,9 @@ void Spec::Pattern::process(const Value& val, const Context& ctx, const rapidjso
 
 bool Spec::Pattern::processMember(const Context& ctx, std::string_view name, const rapidjson::Value& member, rapidjson::Document& output) const {
   auto on_exit = ctx.log([&] (auto logger) {
-    logger->log_trace("%s", fmt::format("Processing member '{}' of {}", name, ctx.path()));
+    logger->log_trace("Processing member '{}' of {}", name, ctx.path());
   }, [&] (auto logger) {
-    logger->log_trace("%s", fmt::format("Finished processing member '{}' of {}", name, ctx.path()));
+    logger->log_trace("Finished processing member '{}' of {}", name, ctx.path());
   });
   if (auto it = literal_indices.find(std::string{name}); it != literal_indices.end()) {
     // literal is matched
@@ -1028,9 +1028,9 @@ bool Spec::Pattern::processMember(const Context& ctx, std::string_view name, con
 
 void Spec::Pattern::process(const Context& ctx, const rapidjson::Value &input, rapidjson::Document &output) const {
   auto on_exit = ctx.log([&] (auto logger) {
-    logger->log_trace("%s", fmt::format("Processing node at {}", ctx.path()));
+    logger->log_trace("Processing node at {}", ctx.path());
   }, [&] (auto logger) {
-    logger->log_trace("%s", fmt::format("Finished processing node at {}", ctx.path()));
+    logger->log_trace("Finished processing node at {}", ctx.path());
   });
   for (auto& [val_ref, dest] : values) {
     auto& [idx, path] = val_ref;
@@ -1047,7 +1047,7 @@ void Spec::Pattern::process(const Context& ctx, const rapidjson::Value &input, r
     } else {
       ctx.log([&, path_ptr = &path] (auto logger) {
         auto path_str = toString(ctx, *path_ptr);
-        logger->log_trace("%s", fmt::format("Failed to resolve value path {} (evaled as {}) at {} (triggered from {}): {}", path_str.first, path_str.second, target->path(), ctx.path(), value.error()));
+        logger->log_trace("Failed to resolve value path {} (evaled as {}) at {} (triggered from {}): {}", path_str.first, path_str.second, target->path(), ctx.path(), value.error());
       }, [&] (auto) {});
       // pass, non-existent member is not an error
     }
