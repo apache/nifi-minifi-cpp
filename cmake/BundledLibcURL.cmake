@@ -18,10 +18,8 @@
 function(use_bundled_curl SOURCE_DIR BINARY_DIR)
     # Define patch step
     set(PATCH_FILE_1 "${SOURCE_DIR}/thirdparty/curl/module-path.patch")
-    set(PATCH_FILE_2 "${SOURCE_DIR}/thirdparty/curl/strerror.patch")
     set(PC ${Bash_EXECUTABLE} -c "set -x && \
-            (\"${Patch_EXECUTABLE}\" -p1 -R -s -f --dry-run -i \"${PATCH_FILE_1}\" || \"${Patch_EXECUTABLE}\" -p1 -N -i \"${PATCH_FILE_1}\") && \
-            (\"${Patch_EXECUTABLE}\" -p1 -R -s -f --dry-run -i \"${PATCH_FILE_2}\" || \"${Patch_EXECUTABLE}\" -p1 -N -i \"${PATCH_FILE_2}\")")
+            (\"${Patch_EXECUTABLE}\" -p1 -R -s -f --dry-run -i \"${PATCH_FILE_1}\" || \"${Patch_EXECUTABLE}\" -p1 -N -i \"${PATCH_FILE_1}\")")
     # Define byproducts
     if (WIN32)
         set(BYPRODUCT "lib/libcurl.lib")
@@ -39,19 +37,10 @@ function(use_bundled_curl SOURCE_DIR BINARY_DIR)
             -DBUILD_TESTING=OFF
             -DBUILD_SHARED_LIBS=OFF
             -DHTTP_ONLY=ON
-            -DCURL_DISABLE_CRYPTO_AUTH=ON
             -DCURL_CA_PATH=none
             -DCURL_USE_LIBSSH2=OFF
             -DUSE_LIBIDN2=OFF
             -DCURL_USE_LIBPSL=OFF
-            -DCMAKE_DEBUG_POSTFIX=
-            -DHAVE_GLIBC_STRERROR_R=1
-            -DHAVE_GLIBC_STRERROR_R__TRYRUN_OUTPUT=""
-            -DHAVE_POSIX_STRERROR_R=0
-            -DHAVE_POSIX_STRERROR_R__TRYRUN_OUTPUT=""
-            -DHAVE_POLL_FINE_EXITCODE=0
-            -DHAVE_FSETXATTR_5=0
-            -DHAVE_FSETXATTR_5__TRYRUN_OUTPUT=""
             )
     if (OPENSSL_OFF)
         list(APPEND CURL_CMAKE_ARGS -DCURL_USE_OPENSSL=OFF)
@@ -64,8 +53,8 @@ function(use_bundled_curl SOURCE_DIR BINARY_DIR)
     # Build project
     ExternalProject_Add(
             curl-external
-            URL "https://github.com/curl/curl/releases/download/curl-8_1_0/curl-8.1.0.tar.gz"
-            URL_HASH "SHA256=15c00ae8d1b535ac7a7629224d36e564ce9c296698b9297bf854dd38abf226aa"
+            URL "https://github.com/curl/curl/releases/download/curl-8_4_0/curl-8.4.0.tar.gz"
+            URL_HASH "SHA256=816e41809c043ff285e8c0f06a75a1fa250211bbfb2dc0a037eeef39f1a9e427"
             SOURCE_DIR "${BINARY_DIR}/thirdparty/curl-src"
             LIST_SEPARATOR % # This is needed for passing semicolon-separated lists
             CMAKE_ARGS ${CURL_CMAKE_ARGS}
