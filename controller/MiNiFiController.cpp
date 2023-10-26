@@ -19,6 +19,7 @@
 #include <iostream>
 #include <string>
 #include <string_view>
+#include <filesystem>
 
 #include "MainHelper.h"
 #include "properties/Configure.h"
@@ -158,7 +159,15 @@ int main(int argc, char **argv) {
   addFlagOption("--manifest", "Generates a manifest for the current binary");
   addFlagOption("--noheaders", "Removes headers from output streams");
 
+  argument_parser.add_argument("-d", "--debug").metavar("BUNDLE_OUT_DIR")
+    .help("Get debug bundle");
+
   bool show_headers = true;
+
+  if (argc <= 1) {
+    std::cerr << argument_parser;
+    std::exit(1);
+  }
 
   try {
     argument_parser.parse_args(argc, argv);
@@ -254,11 +263,20 @@ int main(int argc, char **argv) {
       if (!minifi::controller::getJstacks(socket_data, std::cout))
         std::cout << "Could not connect to remote host " << socket_data.host << ":" << socket_data.port << std::endl;
     }
+
+    if (const auto& debug_path = argument_parser.present("--debug")) {
+      auto debug_res = minifi::controller::getDebugBundle(socket_data, std::filesystem::path(*debug_path));
+      if (!debug_res)
+        std::cout << debug_res.error() << std::endl;
+      else
+        std::cout << "Debug bundle written to " << std::filesystem::path(*debug_path) / "debug.tar.gz";
+    }
   } catch (const std::exception &exc) {
     // catch anything thrown within try block that derives from std::exception
     std::cerr << exc.what() << std::endl;
+    std::exit(1);
   } catch (...) {
-    std::cerr << argument_parser;
+    std::cerr << "Caught unknown exception" << std::endl;
     std::exit(1);
   }
   return 0;

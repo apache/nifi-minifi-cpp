@@ -20,6 +20,7 @@
 #include <utility>
 #include <string>
 #include <filesystem>
+#include <fstream>
 #include "range/v3/algorithm/find.hpp"
 
 #include "TestBase.h"
@@ -516,6 +517,60 @@ TEST_CASE_METHOD(ControllerTestFixture, "Test jstack getter", "[controllerTests]
     "trace2 -- bt line 2 for trace2\n"
     "trace2 -- bt line 3 for trace2\n\n";
   REQUIRE(jstack_stream.str() == expected_trace);
+}
+
+TEST_CASE_METHOD(ControllerTestFixture, "Test debug bundle getter", "[controllerTests]") {
+  SECTION("With SSL from service provider") {
+    setConnectionType(ControllerTestFixture::ConnectionType::SSL_FROM_SERVICE_PROVIDER);
+  }
+
+  SECTION("With SSL from properties") {
+    setConnectionType(ControllerTestFixture::ConnectionType::SSL_FROM_CONFIGURATION);
+  }
+
+  SECTION("Without SSL") {
+    setConnectionType(ControllerTestFixture::ConnectionType::UNSECURE);
+  }
+
+  auto reporter = std::make_shared<minifi::c2::ControllerSocketMetricsPublisher>("ControllerSocketMetricsPublisher");
+  auto response_node_loader = std::make_shared<minifi::state::response::ResponseNodeLoader>(configuration_, std::vector<std::shared_ptr<core::RepositoryMetricsSource>>{}, nullptr);
+  reporter->initialize(configuration_, response_node_loader);
+  initalizeControllerSocket(reporter);
+
+  TestController test_controller;
+  auto output_dir = test_controller.createTempDirectory();
+  REQUIRE(minifi::controller::getDebugBundle(controller_socket_data_, output_dir));
+  REQUIRE(std::filesystem::exists(output_dir / "debug.tar.gz"));
+}
+
+TEST_CASE_METHOD(ControllerTestFixture, "Test debug bundle is created to non-existent folder", "[controllerTests]") {
+  setConnectionType(ControllerTestFixture::ConnectionType::UNSECURE);
+
+  auto reporter = std::make_shared<minifi::c2::ControllerSocketMetricsPublisher>("ControllerSocketMetricsPublisher");
+  auto response_node_loader = std::make_shared<minifi::state::response::ResponseNodeLoader>(configuration_, std::vector<std::shared_ptr<core::RepositoryMetricsSource>>{}, nullptr);
+  reporter->initialize(configuration_, response_node_loader);
+  initalizeControllerSocket(reporter);
+
+  TestController test_controller;
+  auto output_dir = test_controller.createTempDirectory() / "subfolder";
+  REQUIRE(minifi::controller::getDebugBundle(controller_socket_data_, output_dir));
+  REQUIRE(std::filesystem::exists(output_dir / "debug.tar.gz"));
+}
+
+TEST_CASE_METHOD(ControllerTestFixture, "Debug bundle retrieval fails if target path is an existing file", "[controllerTests]") {
+  setConnectionType(ControllerTestFixture::ConnectionType::UNSECURE);
+
+  auto reporter = std::make_shared<minifi::c2::ControllerSocketMetricsPublisher>("ControllerSocketMetricsPublisher");
+  auto response_node_loader = std::make_shared<minifi::state::response::ResponseNodeLoader>(configuration_, std::vector<std::shared_ptr<core::RepositoryMetricsSource>>{}, nullptr);
+  reporter->initialize(configuration_, response_node_loader);
+  initalizeControllerSocket(reporter);
+
+  TestController test_controller;
+  auto invalid_path = test_controller.createTempDirectory() / "test.log";
+  std::ofstream file(invalid_path);
+  auto result = minifi::controller::getDebugBundle(controller_socket_data_, invalid_path);
+  REQUIRE(!result);
+  REQUIRE(result.error() == "Object specified as the target directory already exists and it is not a directory");
 }
 
 }  // namespace org::apache::nifi::minifi::test

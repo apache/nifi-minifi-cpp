@@ -21,6 +21,7 @@
 #include <string>
 
 #include "utils/net/AsioSocketUtils.h"
+#include "utils/expected.h"
 
 namespace org::apache::nifi::minifi::controller {
 
@@ -35,5 +36,6 @@ bool listComponents(const utils::net::SocketData& socket_data, std::ostream &out
 bool listConnections(const utils::net::SocketData& socket_data, std::ostream &out, bool show_header = true);
 bool printManifest(const utils::net::SocketData& socket_data, std::ostream &out);
 bool getJstacks(const utils::net::SocketData& socket_data, std::ostream &out);
+nonstd::expected<void, std::string> getDebugBundle(const utils::net::SocketData& socket_data, const std::filesystem::path& target_dir);
 
 }  // namespace org::apache::nifi::minifi::controller

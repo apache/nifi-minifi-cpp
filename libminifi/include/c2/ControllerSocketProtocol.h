@@ -51,12 +51,14 @@ class ControllerSocketProtocol {
   void handleStop(io::BaseStream &stream);
   void handleClear(io::BaseStream &stream);
   void handleUpdate(io::BaseStream &stream);
+  void handleTransfer(io::BaseStream &stream);
   void writeQueueSizesResponse(io::BaseStream &stream);
   void writeComponentsResponse(io::BaseStream &stream);
   void writeConnectionsResponse(io::BaseStream &stream);
   void writeGetFullResponse(io::BaseStream &stream);
   void writeManifestResponse(io::BaseStream &stream);
   void writeJstackResponse(io::BaseStream &stream);
+  void writeDebugBundleResponse(io::BaseStream &stream);
   void handleDescribe(io::BaseStream &stream);
   asio::awaitable<void> handleCommand(std::unique_ptr<io::BaseStream> stream);
   asio::awaitable<void> handshakeAndHandleCommand(asio::ip::tcp::socket&& socket, std::shared_ptr<minifi::controllers::SSLContextService> ssl_context_service);

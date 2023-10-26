@@ -1204,3 +1204,13 @@ def step_impl(context, minifi_container_name: str):
 @then(u'manifest can be retrieved through MiNiFi controller')
 def step_impl(context):
     context.execute_steps(f"then manifest can be retrieved through MiNiFi controller in the \"minifi-cpp-flow-{context.feature_id}\" flow")
+
+
+@then(u'debug bundle can be retrieved through MiNiFi controller in the \"{minifi_container_name}\" flow')
+def step_impl(context, minifi_container_name: str):
+    context.test.debug_bundle_can_be_retrieved_through_minifi_controller(minifi_container_name)
+
+
+@then(u'debug bundle can be retrieved through MiNiFi controller')
+def step_impl(context):
+    context.execute_steps(f"then debug bundle can be retrieved through MiNiFi controller in the \"minifi-cpp-flow-{context.feature_id}\" flow")
