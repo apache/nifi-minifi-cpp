@@ -266,10 +266,10 @@ void StructuredConfiguration::parseProcessorNode(const Node& processors_node, co
       logger_->log_debug("setting scheduling strategy as {}", procCfg.schedulingStrategy);
     }
 
-    int32_t maxConcurrentTasks;
+    uint8_t maxConcurrentTasks = 0;
     if (core::Property::StringToInt(procCfg.maxConcurrentTasks, maxConcurrentTasks)) {
       logger_->log_debug("parseProcessorNode: maxConcurrentTasks => [{}]", maxConcurrentTasks);
-      processor->setMaxConcurrentTasks((uint8_t) maxConcurrentTasks);
+      processor->setMaxConcurrentTasks(maxConcurrentTasks);
     }
 
     if (core::Property::StringToInt(procCfg.runDurationNanos, runDurationNanos)) {
@@ -366,7 +366,7 @@ void StructuredConfiguration::parseRemoteProcessGroup(const Node& rpg_node_seq, 
           }
           if (currRpgNode[schema_.rpg_proxy_port]) {
             auto http_proxy_port = currRpgNode[schema_.rpg_proxy_port].getIntegerAsString().value();
-            int32_t port;
+            int32_t port = 0;
             if (core::Property::StringToInt(http_proxy_port, port)) {
               logger_->log_debug("parseRemoteProcessGroup: proxy port => [{}]", port);
               group->setHttpProxyPort(port);
@@ -436,7 +436,7 @@ void StructuredConfiguration::parseProvenanceReporting(const Node& node, core::P
     throw std::invalid_argument("Invalid scheduling strategy " + schedulingStrategyStr);
   }
 
-  int64_t lvalue;
+  int64_t lvalue = 0;
   if (node["host"] && node["port"]) {
     auto hostStr = node["host"].getString().value();
 
@@ -610,7 +610,7 @@ void StructuredConfiguration::parseRPGPort(const Node& port_node, core::ProcessG
 
   if (auto tasksNode = port_node[schema_.max_concurrent_tasks]) {
     std::string rawMaxConcurrentTasks = tasksNode.getIntegerAsString().value();
-    int32_t maxConcurrentTasks;
+    int32_t maxConcurrentTasks = 0;
     if (core::Property::StringToInt(rawMaxConcurrentTasks, maxConcurrentTasks)) {
       processor.setMaxConcurrentTasks(maxConcurrentTasks);
     }

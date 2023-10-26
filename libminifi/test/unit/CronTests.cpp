@@ -129,7 +129,7 @@ TEST_CASE("Cron allowed nonnumerical inputs", "[cron]") {
 
 TEST_CASE("Cron::calculateNextTrigger", "[cron]") {
   using date::sys_days;
-  using namespace date::literals;
+  using namespace date::literals;  // NOLINT(google-build-using-namespace)
   using namespace std::literals::chrono_literals;
 #ifdef WIN32
   date::set_install(TZ_DATA_DIR);
@@ -415,7 +415,7 @@ TEST_CASE("Cron::calculateNextTrigger with timezones", "[cron]") {
   using date::local_days;
   using date::locate_zone;
   using date::zoned_time;
-  using namespace date::literals;
+  using namespace date::literals;  // NOLINT(google-build-using-namespace)
   using namespace std::literals::chrono_literals;
 #ifdef WIN32
   date::set_install(TZ_DATA_DIR);

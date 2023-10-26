@@ -71,32 +71,30 @@ bool contains(const std::filesystem::path& file_path, std::string_view text_to_s
 }
 
 std::chrono::system_clock::time_point to_sys(std::chrono::file_clock::time_point file_time) {
-  using namespace std::chrono;  // NOLINT(build/namespaces)
 #if defined(WIN32)
   // workaround for https://github.com/microsoft/STL/issues/2446
   // clock_cast can fail on older windows versions
-  constexpr file_clock::duration clock_epoch_diff{std::filesystem::__std_fs_file_time_epoch_adjustment};
-  return system_clock::time_point(file_time.time_since_epoch() - clock_epoch_diff);
+  constexpr std::chrono::file_clock::duration clock_epoch_diff{std::filesystem::__std_fs_file_time_epoch_adjustment};
+  return std::chrono::system_clock::time_point(file_time.time_since_epoch() - clock_epoch_diff);
 #elif(defined(_LIBCPP_VERSION) && (_LIBCPP_VERSION < 14000))
   // relies on file_clock and system_clock having the same epoch
-  return system_clock::time_point(duration_cast<system_clock::duration>(file_time.time_since_epoch()));
+  return std::chrono::system_clock::time_point(duration_cast<std::chrono::system_clock::duration>(file_time.time_since_epoch()));
 #else
-  return time_point_cast<system_clock::duration>(file_clock::to_sys(file_time));
+  return time_point_cast<std::chrono::system_clock::duration>(std::chrono::file_clock::to_sys(file_time));
 #endif
 }
 
 std::chrono::file_clock::time_point from_sys(std::chrono::system_clock::time_point sys_time) {
-  using namespace std::chrono;  // NOLINT(build/namespaces)
 #if defined(WIN32)
   // workaround for https://github.com/microsoft/STL/issues/2446
   // clock_cast can fail on older windows versions
-  constexpr file_clock::duration clock_epoch_diff{std::filesystem::__std_fs_file_time_epoch_adjustment};
-  return file_clock::time_point(sys_time.time_since_epoch() + clock_epoch_diff);
+  constexpr std::chrono::file_clock::duration clock_epoch_diff{std::filesystem::__std_fs_file_time_epoch_adjustment};
+  return std::chrono::file_clock::time_point(sys_time.time_since_epoch() + clock_epoch_diff);
 #elif(defined(_LIBCPP_VERSION) && (_LIBCPP_VERSION < 14000))
   // relies on file_clock and system_clock having the same epoch
-  return file_clock::time_point(duration_cast<file_clock::duration>(sys_time.time_since_epoch()));
+  return std::chrono::file_clock::time_point(duration_cast<std::chrono::file_clock::duration>(sys_time.time_since_epoch()));
 #else
-  return time_point_cast<file_clock::duration>(file_clock::from_sys(sys_time));
+  return time_point_cast<std::chrono::file_clock::duration>(std::chrono::file_clock::from_sys(sys_time));
 #endif
 }
 

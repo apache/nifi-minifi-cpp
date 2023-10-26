@@ -19,16 +19,10 @@
 #include "LibWrapper.h"
 #include <memory>
 
-namespace org { namespace apache { namespace nifi { namespace minifi { namespace extensions { namespace systemd { namespace libwrapper {
+namespace org::apache::nifi::minifi::extensions::systemd::libwrapper {
 
 struct DlopenWrapper : LibWrapper {
   std::unique_ptr<Journal> openJournal(JournalType) override;
 };
 
-}  // namespace libwrapper
-}  // namespace systemd
-}  // namespace extensions
-}  // namespace minifi
-}  // namespace nifi
-}  // namespace apache
-}  // namespace org
+}  // namespace org::apache::nifi::minifi::extensions::systemd::libwrapper

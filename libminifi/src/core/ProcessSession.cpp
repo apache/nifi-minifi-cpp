@@ -175,7 +175,7 @@ std::shared_ptr<core::FlowFile> ProcessSession::cloneDuringTransfer(const std::s
 }
 
 std::shared_ptr<core::FlowFile> ProcessSession::clone(const std::shared_ptr<core::FlowFile> &parent, int64_t offset, int64_t size) {
-  if ((uint64_t) (offset + size) > parent->getSize()) {
+  if (gsl::narrow<uint64_t>(offset + size) > parent->getSize()) {
     // Set offset and size
     logger_->log_error("clone offset {} and size {} exceed parent size {}", offset, size, parent->getSize());
     return nullptr;
@@ -484,7 +484,7 @@ void ProcessSession::importFrom(io::InputStream &stream, const std::shared_ptr<c
   }
 }
 
-void ProcessSession::import(std::string source, const std::shared_ptr<FlowFile> &flow, bool keepSource, uint64_t offset) {
+void ProcessSession::import(const std::string& source, const std::shared_ptr<FlowFile> &flow, bool keepSource, uint64_t offset) {
   std::shared_ptr<ResourceClaim> claim = content_session_->create();
   size_t size = getpagesize();
   std::vector<uint8_t> charBuffer(size);
@@ -502,14 +502,14 @@ void ProcessSession::import(std::string source, const std::shared_ptr<FlowFile> 
       bool invalidWrite = false;
       // Open the source file and stream to the flow file
       if (offset != 0) {
-        input.seekg(offset);
+        input.seekg(gsl::narrow<std::streamoff>(offset));
         if (!input.good()) {
           logger_->log_error("Seeking to {} failed for file {} (does file/filesystem support seeking?)", offset, source);
           invalidWrite = true;
         }
       }
       while (input.good()) {
-        input.read(reinterpret_cast<char*>(charBuffer.data()), size);
+        input.read(reinterpret_cast<char*>(charBuffer.data()), gsl::narrow<std::streamsize>(size));
         if (input) {
           if (io::isError(stream->write(charBuffer.data(), size))) {
             invalidWrite = true;
@@ -533,8 +533,9 @@ void ProcessSession::import(std::string source, const std::shared_ptr<FlowFile> 
 
         stream->close();
         input.close();
-        if (!keepSource)
-          std::remove(source.c_str());
+        if (!keepSource) {
+          (void)std::remove(source.c_str());
+        }
         std::stringstream details;
         details << process_context_->getProcessorNode()->getName() << " modify flow record content " << flow->getUUIDStr();
         auto duration = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::steady_clock::now() - start_time);
@@ -569,14 +570,14 @@ void ProcessSession::import(const std::string& source, std::vector<std::shared_p
       throw Exception(FILE_OPERATION_EXCEPTION, utils::StringUtils::join_pack("File Import Error: failed to open file \'", source, "\'"));
     }
     if (offset != 0U) {
-      input.seekg(offset, std::ifstream::beg);
+      input.seekg(gsl::narrow<std::streamoff>(offset), std::ifstream::beg);
       if (!input.good()) {
         logger_->log_error("Seeking to {} failed for file {} (does file/filesystem support seeking?)", offset, source);
         throw Exception(FILE_OPERATION_EXCEPTION, utils::StringUtils::join_pack("File Import Error: Couldn't seek to offset ", std::to_string(offset)));
       }
     }
     while (input.good()) {
-      input.read(reinterpret_cast<char*>(buffer.data()), buffer.size());
+      input.read(reinterpret_cast<char*>(buffer.data()), gsl::narrow<std::streamsize>(buffer.size()));
       std::streamsize read = input.gcount();
       if (read < 0) {
         throw Exception(FILE_OPERATION_EXCEPTION, "std::ifstream::gcount returned negative value");
@@ -656,7 +657,7 @@ void ProcessSession::import(const std::string& source, std::vector<std::shared_p
   }
 }
 
-void ProcessSession::import(std::string source, std::vector<std::shared_ptr<FlowFile>> &flows, bool keepSource, uint64_t offset, char inputDelimiter) {
+void ProcessSession::import(const std::string& source, std::vector<std::shared_ptr<FlowFile>> &flows, bool keepSource, uint64_t offset, char inputDelimiter) {
 // this function calls a deprecated function, but it is itself deprecated, so suppress warnings
 #if defined(__clang__)
 #pragma clang diagnostic push
@@ -678,7 +679,7 @@ void ProcessSession::import(std::string source, std::vector<std::shared_ptr<Flow
 #endif
   logger_->log_trace("Closed input {}, keeping source ? {}", source, keepSource);
   if (!keepSource) {
-    std::remove(source.c_str());
+    (void)std::remove(source.c_str());
   }
 }
 

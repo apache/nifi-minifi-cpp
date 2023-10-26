@@ -24,7 +24,7 @@
 
 struct sd_journal;
 
-namespace org { namespace apache { namespace nifi { namespace minifi { namespace extensions { namespace systemd { namespace libwrapper {
+namespace org::apache::nifi::minifi::extensions::systemd::libwrapper {
 
 namespace {
 struct dlclose_deleter {
@@ -101,10 +101,4 @@ std::unique_ptr<Journal> DlopenWrapper::openJournal(const JournalType type) {
   return std::make_unique<DlopenJournal>(type);
 }
 
-}  // namespace libwrapper
-}  // namespace systemd
-}  // namespace extensions
-}  // namespace minifi
-}  // namespace nifi
-}  // namespace apache
-}  // namespace org
+}  // namespace org::apache::nifi::minifi::extensions::systemd::libwrapper

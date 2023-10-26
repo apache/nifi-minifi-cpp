@@ -51,7 +51,7 @@ bool RocksDbRepository::Put(const std::string& key, const uint8_t *buf, size_t b
   if (!opendb) {
     return false;
   }
-  rocksdb::Slice value((const char *) buf, bufLen);
+  rocksdb::Slice value(reinterpret_cast<const char *>(buf), bufLen);
   auto operation = [&key, &value, &opendb]() { return opendb->Put(rocksdb::WriteOptions(), key, value); };
   return ExecuteWithRetry(operation);
 }

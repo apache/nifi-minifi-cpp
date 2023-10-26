@@ -40,7 +40,7 @@ const std::string extension_file = "libextension.so";
 
 struct Fixture : public TestController {
   Fixture() {
-    extension_ = std::filesystem::path(createTempDirectory()) / extension_file;
+    extension_ = createTempDirectory() / extension_file;
   }
   std::filesystem::path extension_;
 };

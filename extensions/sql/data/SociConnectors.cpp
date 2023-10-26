@@ -83,12 +83,12 @@ int SociRow::getInteger(std::size_t index) const {
   return current_->get<int>(index);
 }
 
-long long SociRow::getLongLong(std::size_t index) const {
-  return current_->get<long long>(index);
+long long SociRow::getLongLong(std::size_t index) const {  // NOLINT(google-runtime-int)
+  return current_->get<long long>(index);  // NOLINT(google-runtime-int)
 }
 
-unsigned long long SociRow::getUnsignedLongLong(std::size_t index) const {
-  return current_->get<unsigned long long>(index);
+unsigned long long SociRow::getUnsignedLongLong(std::size_t index) const {  // NOLINT(google-runtime-int)
+  return current_->get<unsigned long long>(index);  // NOLINT(google-runtime-int)
 }
 
 std::tm SociRow::getDate(std::size_t index) const {

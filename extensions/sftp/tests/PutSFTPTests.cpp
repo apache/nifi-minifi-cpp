@@ -201,7 +201,7 @@ class PutSFTPTestsFixture {
 
 namespace {
 std::size_t directoryContentCount(const std::filesystem::path& dir) {
-  return (std::size_t)std::distance(std::filesystem::directory_iterator{dir}, std::filesystem::directory_iterator{});
+  return gsl::narrow<std::size_t>(std::distance(std::filesystem::directory_iterator{dir}, std::filesystem::directory_iterator{}));
 }
 }  // namespace
 
@@ -501,8 +501,7 @@ TEST_CASE_METHOD(PutSFTPTestsFixture, "PutSFTP set mtime", "[PutSFTP]") {
   testController.runSession(plan, true);
 
   testFile("nifi_test/tstFile1.ext", "content 1");
-  using namespace std::chrono;  // NOLINT(build/namespaces)
-  system_clock::time_point modification_time = date::sys_days(date::January / 24 / 2065) + 5h + 20min;
+  std::chrono::system_clock::time_point modification_time = date::sys_days(date::January / 24 / 2065) + 5h + 20min;
   testModificationTime("nifi_test/tstFile1.ext", utils::file::from_sys(modification_time));
 }
 

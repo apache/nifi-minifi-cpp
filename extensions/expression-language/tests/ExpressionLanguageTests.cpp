@@ -1321,7 +1321,7 @@ TEST_CASE("Now Date", "[expressionNowDate]") {
 TEST_CASE("Parse RFC3339 with Expression Language toDate") {
   using date::sys_days;
   using org::apache::nifi::minifi::utils::timeutils::parseRfc3339;
-  using namespace date::literals;
+  using namespace date::literals;  // NOLINT(google-build-using-namespace)
   using namespace std::literals::chrono_literals;
   using std::chrono::milliseconds;
 

@@ -941,7 +941,7 @@ void C2Agent::handleAssetUpdate(const C2ContentResponse& resp) {
     response.setRawData(as_bytes(std::span(error.begin(), error.end())));
     enqueue_c2_response(std::move(response));
   };
-  std::filesystem::path asset_dir = std::filesystem::path(configuration_->getHome()) / "asset";
+  std::filesystem::path asset_dir = configuration_->getHome() / "asset";
   if (auto asset_dir_str = configuration_->get(Configuration::nifi_asset_directory)) {
     asset_dir = asset_dir_str.value();
   }

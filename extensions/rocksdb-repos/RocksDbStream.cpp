@@ -60,7 +60,7 @@ size_t RocksDbStream::write(const uint8_t *value, size_t size) {
   if (!opendb) {
     return STREAM_ERROR;
   }
-  rocksdb::Slice slice_value((const char*)value, size);
+  rocksdb::Slice slice_value(reinterpret_cast<const char*>(value), size);
   rocksdb::Status status;
   size_ += size;
   if (batch_ != nullptr) {
