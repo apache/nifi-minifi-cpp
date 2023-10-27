@@ -15,7 +15,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#define EXTENSION_LIST "*minifi-*,!*http-curl*,!*coap*,!*splunk*,!*elastic*"  // NOLINT(cppcoreguidelines-macro-usage)
+#define EXTENSION_LIST "*minifi-*,!*http-curl*,!*coap*,!*splunk*,!*elastic*,!*grafana-loki*"  // NOLINT(cppcoreguidelines-macro-usage)
 
 #include <cstdio>
 #include <utility>

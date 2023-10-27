@@ -20,6 +20,7 @@ import tempfile
 import os
 import gzip
 import shutil
+from typing import List
 
 from .LogSource import LogSource
 from .ContainerStore import ContainerStore
@@ -32,6 +33,7 @@ from .checkers.GcsChecker import GcsChecker
 from .checkers.PostgresChecker import PostgresChecker
 from .checkers.PrometheusChecker import PrometheusChecker
 from .checkers.SplunkChecker import SplunkChecker
+from .checkers.GrafanaLokiChecker import GrafanaLokiChecker
 from utils import get_peak_memory_usage, get_minifi_pid, get_memory_usage, retry_check
 
 
@@ -48,6 +50,7 @@ class DockerTestCluster:
         self.postgres_checker = PostgresChecker(self.container_communicator)
         self.splunk_checker = SplunkChecker(self.container_communicator)
         self.prometheus_checker = PrometheusChecker()
+        self.grafana_loki_checker = GrafanaLokiChecker()
         self.minifi_controller_executor = MinifiControllerExecutor(self.container_communicator)
 
     def cleanup(self):
@@ -97,6 +100,12 @@ class DockerTestCluster:
 
     def enable_sql_in_minifi(self):
         self.container_store.enable_sql_in_minifi()
+
+    def enable_ssl_in_grafana_loki(self):
+        self.container_store.enable_ssl_in_grafana_loki()
+
+    def enable_multi_tenancy_in_grafana_loki(self):
+        self.container_store.enable_multi_tenancy_in_grafana_loki()
 
     def set_yaml_in_minifi(self):
         self.container_store.set_yaml_in_minifi()
@@ -383,3 +392,6 @@ class DockerTestCluster:
                     return False
 
             return True
+
+    def wait_for_lines_on_grafana_loki(self, lines: List[str], timeout_seconds: int, ssl: bool, tenant_id: str):
+        return self.grafana_loki_checker.wait_for_lines_on_grafana_loki(lines, timeout_seconds, ssl, tenant_id)

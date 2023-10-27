@@ -94,6 +94,7 @@ After the build directory it will take optional parameters modifying the CMake c
 | /OPENWSMAN           | Enables OpenWSMAN extension                                                         |
 | /NO_OPS              | Disables OPS extension                                                              |
 | /PCAP                | Enables PCAP extension                                                              |
+| /LOKI                | Enables Grafana Loki extension                                                      |
 | /NONFREEUCRT         | Enables inclusion of non-free UCRT libraries in the installer (not redistributable) |
 
 Examples:

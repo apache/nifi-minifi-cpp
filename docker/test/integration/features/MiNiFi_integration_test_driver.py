@@ -17,6 +17,7 @@
 import logging
 import time
 import uuid
+from typing import List
 
 import OpenSSL.crypto
 
@@ -410,6 +411,12 @@ class MiNiFi_integration_test:
     def enable_sql_in_minifi(self):
         self.cluster.enable_sql_in_minifi()
 
+    def enable_ssl_in_grafana_loki(self):
+        self.cluster.enable_ssl_in_grafana_loki()
+
+    def enable_multi_tenancy_in_grafana_loki(self):
+        self.cluster.enable_multi_tenancy_in_grafana_loki()
+
     def set_yaml_in_minifi(self):
         self.cluster.set_yaml_in_minifi()
 
@@ -451,3 +458,6 @@ class MiNiFi_integration_test:
 
     def debug_bundle_can_be_retrieved_through_minifi_controller(self, container_name: str):
         assert self.cluster.debug_bundle_can_be_retrieved_through_minifi_controller(container_name) or self.cluster.log_app_output()
+
+    def check_lines_on_grafana_loki(self, lines: List[str], timeout_seconds: int, ssl: bool, tenant_id=None):
+        assert self.cluster.wait_for_lines_on_grafana_loki(lines, timeout_seconds, ssl, tenant_id) or self.cluster.log_app_output()
