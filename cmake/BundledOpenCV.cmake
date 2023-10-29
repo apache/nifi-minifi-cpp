@@ -210,5 +210,8 @@ function(use_bundled_opencv SOURCE_DIR BINARY_DIR)
 
     add_library(OPENCV::libopencv INTERFACE IMPORTED)
     target_link_libraries(OPENCV::libopencv INTERFACE OPENCV::libopencv-flann OPENCV::libopencv-dnn OPENCV::libopencv-objdetect OPENCV::libopencv-core OPENCV::libopencv-gapi OPENCV::libopencv-imgcodecs OPENCV::libopencv-calib3d OPENCV::libopencv-imgproc OPENCV::libopencv-photo OPENCV::libopencv-videoio OPENCV::libopencv-video OPENCV::libopencv-stitching OPENCV::libopencv-features2d)
-
+    if (APPLE)
+        target_link_libraries(OPENCV::libopencv INTERFACE "-framework AVFoundation" "-framework CoreFoundation" "-framework CoreGraphics" "-framework CoreMedia" "-framework CoreVideo" "-framework Foundation" "-framework OpenCL")
+        target_link_libraries(OPENCV::libopencv INTERFACE -llapack -lblas)
+    endif()
 endfunction(use_bundled_opencv)

@@ -32,10 +32,6 @@ add_library(minifi-opencv SHARED ${SOURCES})
 
 target_link_libraries(minifi-opencv ${LIBMINIFI})
 target_link_libraries(minifi-opencv OPENCV::libopencv)
-if (APPLE)
-    target_link_libraries(minifi-opencv "-framework AVFoundation" "-framework CoreFoundation" "-framework CoreGraphics" "-framework CoreMedia" "-framework CoreVideo" "-framework Foundation" "-framework OpenCL")
-    target_link_libraries(minifi-opencv -llapack -lblas)
-endif()
 
 register_extension(minifi-opencv "OPENCV EXTENSIONS" OPENCV-EXTENSIONS "This enables OpenCV support" "extensions/opencv/tests")
 register_extension_linter(minifi-opencv-linter)
