@@ -15,46 +15,14 @@
  * limitations under the License.
  */
 
-#include <memory>
 #include <optional>
 #include <string>
+
 #include "utils/crypto/EncryptionManager.h"
 #include "properties/Properties.h"
 #include "utils/StringUtils.h"
-#include "utils/crypto/ciphers/XSalsa20.h"
-#include "utils/crypto/ciphers/Aes256Ecb.h"
-#include "core/logging/LoggerConfiguration.h"
 
 namespace org::apache::nifi::minifi::utils::crypto {
-
-const auto DEFAULT_NIFI_BOOTSTRAP_FILE = std::filesystem::path("conf") / "bootstrap.conf";
-
-std::shared_ptr<core::logging::Logger> EncryptionManager::logger_{core::logging::LoggerFactory<EncryptionManager>::getLogger()};
-
-std::optional<XSalsa20Cipher> EncryptionManager::createXSalsa20Cipher(const std::string &key_name) const {
-  return readKey(key_name)
-         | utils::transform([] (const Bytes& key) {return XSalsa20Cipher{key};});
-}
-
-std::optional<Aes256EcbCipher> EncryptionManager::createAes256EcbCipher(const std::string &key_name) const {
-  auto key = readKey(key_name);
-  if (!key) {
-    logger_->log_info("No encryption key found for '{}'", key_name);
-    return std::nullopt;
-  }
-  if (key->empty()) {
-    // generate new key
-    logger_->log_info("Generating encryption key '{}'", key_name);
-    key = Aes256EcbCipher::generateKey();
-    if (!writeKey(key_name, key.value())) {
-      logger_->log_warn("Failed to write key '{}'", key_name);
-    }
-  } else {
-    logger_->log_info("Using existing encryption key '{}'", key_name);
-  }
-  return Aes256EcbCipher{key.value()};
-}
-
 
 std::optional<Bytes> EncryptionManager::readKey(const std::string& key_name) const {
   minifi::Properties bootstrap_conf;

@@ -43,9 +43,11 @@ class AzureStorageCredentialsService : public core::controller::ControllerServic
   EXTENSIONAPI static constexpr auto StorageAccountKey = core::PropertyDefinitionBuilder<>::createProperty("Storage Account Key")
       .withDescription("The storage account key. This is an admin-like password providing access to every container in this account. "
           "It is recommended one uses Shared Access Signature (SAS) token instead for fine-grained control with policies.")
+      .isSensitive(true)
       .build();
   EXTENSIONAPI static constexpr auto SASToken = core::PropertyDefinitionBuilder<>::createProperty("SAS Token")
       .withDescription("Shared Access Signature token. Specify either SAS Token (recommended) or Storage Account Key together with Storage Account Name if Managed Identity is not used.")
+      .isSensitive(true)
       .build();
   EXTENSIONAPI static constexpr auto CommonStorageAccountEndpointSuffix = core::PropertyDefinitionBuilder<>::createProperty("Common Storage Account Endpoint Suffix")
       .withDescription("Storage accounts in public Azure always use a common FQDN suffix. Override this endpoint suffix with a "

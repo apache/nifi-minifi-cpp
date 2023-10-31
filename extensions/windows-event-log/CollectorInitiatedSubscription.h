@@ -68,6 +68,7 @@ class CollectorInitiatedSubscription : public core::Processor {
       .isRequired(true)
       .withDescription("The password, which is used by the remote computer (event source) to authenticate the user.")
       .supportsExpressionLanguage(true)
+      .isSensitive(true)
       .build();
   EXTENSIONAPI static constexpr auto SourceChannels = core::PropertyDefinitionBuilder<>::createProperty("Source Channels")
       .isRequired(true)

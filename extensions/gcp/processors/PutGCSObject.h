@@ -110,6 +110,7 @@ class PutGCSObject : public GCSProcessor {
       .withDescription("An AES256 Encryption Key (encoded in base64) for server-side encryption of the object.")
       .isRequired(false)
       .supportsExpressionLanguage(true)
+      .isSensitive(true)
       .build();
   EXTENSIONAPI static constexpr auto ObjectACL = core::PropertyDefinitionBuilder<magic_enum::enum_count<put_gcs_object::PredefinedAcl>()>::createProperty("Object ACL")
       .withDescription("Access Control to be attached to the object uploaded. Not providing this will revert to bucket defaults.")

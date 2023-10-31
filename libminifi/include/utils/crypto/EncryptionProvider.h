@@ -20,6 +20,7 @@
 #include <memory>
 #include <optional>
 #include <string>
+#include <string_view>
 #include <utility>
 #include <filesystem>
 
@@ -27,12 +28,7 @@
 #include "utils/crypto/ciphers/XSalsa20.h"
 #include "core/logging/Logger.h"
 
-namespace org {
-namespace apache {
-namespace nifi {
-namespace minifi {
-namespace utils {
-namespace crypto {
+namespace org::apache::nifi::minifi::utils::crypto {
 
 class EncryptionProvider {
  public:
@@ -40,6 +36,7 @@ class EncryptionProvider {
   explicit EncryptionProvider(XSalsa20Cipher cipher_impl) : cipher_impl_(std::move(cipher_impl)) {}
 
   static std::optional<EncryptionProvider> create(const std::filesystem::path& home_path);
+  static EncryptionProvider createSensitivePropertiesEncryptor(const std::filesystem::path& home_path);
 
   [[nodiscard]] std::string encrypt(const std::string& data) const {
     return cipher_impl_.encrypt(data);
@@ -53,9 +50,4 @@ class EncryptionProvider {
   const XSalsa20Cipher cipher_impl_;
 };
 
-}  // namespace crypto
-}  // namespace utils
-}  // namespace minifi
-}  // namespace nifi
-}  // namespace apache
-}  // namespace org
+}  // namespace org::apache::nifi::minifi::utils::crypto

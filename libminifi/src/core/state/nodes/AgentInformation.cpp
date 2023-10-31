@@ -91,6 +91,7 @@ void ComponentManifest::serializeClassDescription(const std::vector<ClassDescrip
         child.children.push_back({.name = "description", .value = prop.getDescription()});
         child.children.push_back({.name = "validator", .value = std::string{prop.getValidator().getValidatorName()}});
         child.children.push_back({.name = "required", .value = prop.getRequired()});
+        child.children.push_back({.name = "sensitive", .value = prop.isSensitive()});
         child.children.push_back({.name = "expressionLanguageScope", .value = prop.supportsExpressionLanguage() ? "FLOWFILE_ATTRIBUTES" : "NONE"});
         child.children.push_back({.name = "defaultValue", .value = prop.getValue()});  // NOLINT(cppcoreguidelines-slicing)
         child.children.push_back(descriptorDependentProperties);

@@ -144,7 +144,9 @@ class TestVolatileFlowFileRepository : public core::repository::VolatileFlowFile
 };
 
 TEST_CASE("ProcessSession::commit avoids dangling ResourceClaims when using VolatileFlowFileRepository", "[incrementbefore]") {
+  TempDirectory tmp_dir;
   auto configuration = std::make_shared<minifi::Configure>();
+  configuration->setHome(tmp_dir.getPath());
   configuration->set(minifi::Configure::nifi_volatile_repository_options_flowfile_max_count, "2");
   auto ff_repo = std::make_shared<TestVolatileFlowFileRepository>("flowfile");
   Fixture fixture({

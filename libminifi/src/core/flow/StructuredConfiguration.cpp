@@ -620,20 +620,26 @@ void StructuredConfiguration::parseRPGPort(const Node& port_node, core::ProcessG
 }
 
 void StructuredConfiguration::parsePropertyValueSequence(const std::string& property_name, const Node& property_value_node, core::ConfigurableComponent& component) {
+  core::Property myProp(property_name, "", "");
+  component.getProperty(property_name, myProp);
+
   for (const auto& nodeVal : property_value_node) {
     if (nodeVal) {
       Node propertiesNode = nodeVal["value"];
-      // must insert the sequence in differently.
-      const auto rawValueString = propertiesNode.getString().value();
-      logger_->log_debug("Found {}={}", property_name, rawValueString);
+      auto rawValueString = propertiesNode.getString().value();
+      if (myProp.isSensitive()) {
+        rawValueString = decryptProperty(rawValueString);
+      }
+      logger_->log_debug("Found property {}", property_name);
+
       if (!component.updateProperty(property_name, rawValueString)) {
         auto proc = dynamic_cast<core::Connectable*>(&component);
         if (proc) {
           logger_->log_warn("Received property {} with value {} but is not one of the properties for {}. Attempting to add as dynamic property.", property_name, rawValueString, proc->getName());
           if (!component.setDynamicProperty(property_name, rawValueString)) {
-            logger_->log_warn("Unable to set the dynamic property {} with value {}", property_name, rawValueString);
+            logger_->log_warn("Unable to set the dynamic property {}", property_name);
           } else {
-            logger_->log_warn("Dynamic property {} with value {} set", property_name, rawValueString);
+            logger_->log_warn("Dynamic property {} has been set", property_name);
           }
         }
       }
@@ -659,6 +665,8 @@ PropertyValue StructuredConfiguration::getValidatedProcessorPropertyForDefaultTy
       coercedValue = gsl::narrow<int>(int64_val.value());
     } else if (defaultType == Value::BOOL_TYPE && property_value_node.getBool()) {
       coercedValue = property_value_node.getBool().value();
+    } else if (property_from_processor.isSensitive()) {
+      coercedValue = decryptProperty(property_value_node.getScalarAsString().value());
     } else {
       coercedValue = property_value_node.getScalarAsString().value();
     }
@@ -675,7 +683,9 @@ PropertyValue StructuredConfiguration::getValidatedProcessorPropertyForDefaultTy
 void StructuredConfiguration::parseSingleProperty(const std::string& property_name, const Node& property_value_node, core::ConfigurableComponent& processor) {
   core::Property myProp(property_name, "", "");
   processor.getProperty(property_name, myProp);
+
   const PropertyValue coercedValue = getValidatedProcessorPropertyForDefaultTypeInfo(myProp, property_value_node);
+
   bool property_set = false;
   try {
     property_set = processor.setProperty(myProp, coercedValue);
@@ -692,15 +702,15 @@ void StructuredConfiguration::parseSingleProperty(const std::string& property_na
     const auto rawValueString = property_value_node.getScalarAsString().value();
     auto proc = dynamic_cast<core::Connectable*>(&processor);
     if (proc) {
-      logger_->log_warn("Received property {} with value {} but is not one of the properties for {}. Attempting to add as dynamic property.", property_name, rawValueString, proc->getName());
+      logger_->log_warn("Received property {} but is not one of the properties for {}. Attempting to add as dynamic property.", property_name, proc->getName());
       if (!processor.setDynamicProperty(property_name, rawValueString)) {
-        logger_->log_warn("Unable to set the dynamic property {} with value {}", property_name, rawValueString);
+        logger_->log_warn("Unable to set the dynamic property {}", property_name);
       } else {
-        logger_->log_warn("Dynamic property {} with value {} set", property_name, rawValueString);
+        logger_->log_warn("Dynamic property {} has been set", property_name);
       }
     }
   } else {
-    logger_->log_debug("Property {} with value {} set", property_name, coercedValue.to_string());
+    logger_->log_debug("Property {} has been set", property_name);
   }
 }
 
@@ -795,7 +805,7 @@ void StructuredConfiguration::validateComponentProperties(ConfigurableComponent&
         std::string reason = utils::string::join_pack("required property '", prop_pair.second.getName(), "' is not set");
         raiseComponentError(component_name, section, reason);
       } else if (!prop_pair.second.getValue().validate(prop_pair.first).valid) {
-        std::string reason = utils::string::join_pack("the value '", prop_pair.first, "' is not valid for property '", prop_pair.second.getName(), "'");
+        std::string reason = utils::string::join_pack("the configured value is not valid for property '", prop_pair.second.getName(), "'");
         raiseComponentError(component_name, section, reason);
       }
     }
@@ -898,6 +908,57 @@ void StructuredConfiguration::addNewId(const std::string& uuid) {
   if (!success) {
     throw Exception(ExceptionType::GENERAL_EXCEPTION, "UUID " + uuid + " is duplicated in the flow configuration");
   }
+}
+
+void StructuredConfiguration::encryptSensitivePropertiesInYaml(YAML::Node property_yamls, const std::map<std::string, Property>& properties) {
+  for (auto kv : property_yamls) {
+    auto name = kv.first.as<std::string>();
+    if (properties.at(name).isSensitive()) {
+      auto value = kv.second.as<std::string>();
+      property_yamls[name] = encryptProperty(value);
+    }
+  }
+}
+
+std::string StructuredConfiguration::serializeYaml(const core::ProcessGroup& process_group) {
+  gsl_Expects(schema_.processors.size() == 1 && schema_.identifier.size() == 1 && schema_.processor_properties.size() == 1 && schema_.controller_service_properties.size() == 1);
+
+  auto flow_definition_yaml = YAML::Clone(flow_definition_yaml_);
+
+  for (auto processor_yaml : flow_definition_yaml[schema_.processors[0]]) {
+    const auto processor_id = utils::Identifier::parse(processor_yaml[schema_.identifier[0]].Scalar());
+    if (!processor_id) {
+      throw minifi::Exception(FLOW_EXCEPTION, utils::string::join_pack("Invalid processor ID found in the flow definition", processor_yaml[schema_.identifier[0]].Scalar()));
+    }
+    const auto* processor = process_group.findProcessorById(*processor_id);
+    if (!processor) {
+      throw minifi::Exception(FLOW_EXCEPTION, utils::string::join_pack("Processor ", processor_id->to_string(), " not found in the flow definition"));
+    }
+    encryptSensitivePropertiesInYaml(processor_yaml[schema_.processor_properties[0]], processor->getProperties());
+  }
+
+  for (auto controller_service_yaml : flow_definition_yaml[schema_.controller_services[0]]) {
+    const auto controller_service_id = controller_service_yaml[schema_.identifier[0]].Scalar();
+    const auto controller_service_node = process_group.findControllerService(controller_service_id);
+    if (!controller_service_node) {
+      throw minifi::Exception(FLOW_EXCEPTION, utils::string::join_pack("Controller service node ", controller_service_id, " not found in the flow definition"));
+    }
+    auto controller_service = controller_service_node->getControllerServiceImplementation();
+    if (!controller_service) {
+      throw minifi::Exception(FLOW_EXCEPTION, utils::string::join_pack("Controller service ", controller_service_id, " not found in the flow definition"));
+    }
+    encryptSensitivePropertiesInYaml(controller_service_yaml[schema_.controller_service_properties[0]], controller_service->getProperties());
+  }
+
+  return YAML::Dump(flow_definition_yaml) + '\n';
+}
+
+std::string StructuredConfiguration::serializeJson(const core::ProcessGroup& /*process_group*/) {
+  // TODO(fgerlits): encrypt sensitive properties
+  rapidjson::StringBuffer buffer;
+  rapidjson::Writer<rapidjson::StringBuffer> writer{buffer};
+  flow_definition_json_.Accept(writer);
+  return std::string(buffer.GetString(), buffer.GetSize()) + '\n';
 }
 
 }  // namespace org::apache::nifi::minifi::core::flow

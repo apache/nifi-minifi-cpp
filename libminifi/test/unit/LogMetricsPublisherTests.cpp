@@ -39,6 +39,7 @@ class LogPublisherTestFixture {
       response_node_loader_(std::make_shared<state::response::ResponseNodeLoader>(configuration_,
         std::vector<std::shared_ptr<core::RepositoryMetricsSource>>{provenance_repo_, flow_file_repo_}, nullptr)),
       publisher_("LogMetricsPublisher") {
+    configuration_->setHome(temp_directory_.getPath());
     provenance_repo_->initialize(configuration_);
     flow_file_repo_->initialize(configuration_);
   }
@@ -54,6 +55,7 @@ class LogPublisherTestFixture {
   }
 
  protected:
+  TempDirectory temp_directory_;
   std::shared_ptr<Configure> configuration_;
   std::shared_ptr<core::Repository> provenance_repo_;
   std::shared_ptr<core::Repository> flow_file_repo_;

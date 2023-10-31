@@ -22,16 +22,15 @@
 
 #include "utils/crypto/EncryptionUtils.h"
 
-namespace org {
-namespace apache {
-namespace nifi {
-namespace minifi {
-namespace utils {
-namespace crypto {
+namespace org::apache::nifi::minifi::utils::crypto {
 
 class XSalsa20Cipher {
  public:
   explicit XSalsa20Cipher(Bytes encryption_key) : encryption_key_(std::move(encryption_key)) {}
+
+  static Bytes generateKey() {
+    return utils::crypto::generateKey();
+  }
 
   std::string encrypt(const std::string& data) const {
     return utils::crypto::encrypt(data, encryption_key_);
@@ -45,9 +44,4 @@ class XSalsa20Cipher {
   const Bytes encryption_key_;
 };
 
-}  // namespace crypto
-}  // namespace utils
-}  // namespace minifi
-}  // namespace nifi
-}  // namespace apache
-}  // namespace org
+}  // namespace org::apache::nifi::minifi::utils::crypto

@@ -180,11 +180,17 @@ void Properties::loadConfigureFile(const std::filesystem::path& configuration_fi
     return;
   }
 
+  if (!utils::file::exists(getHome() / configuration_file)) {
+    if (utils::file::create_dir((getHome() / configuration_file).parent_path()) == 0) {
+      std::ofstream file{getHome() / configuration_file};
+    }
+  }
+
   std::error_code ec;
   properties_file_ = std::filesystem::canonical(getHome() / configuration_file, ec);
 
   if (ec.value() != 0) {
-    logger_->log_warn("Configuration file '{}' does not exist, so it could not be loaded.", configuration_file);
+    logger_->log_warn("Configuration file '{}' does not exist, and it could not be created", configuration_file);
     return;
   }
 

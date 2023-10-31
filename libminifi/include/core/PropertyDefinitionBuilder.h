@@ -53,6 +53,11 @@ struct PropertyDefinitionBuilder {
     return *this;
   }
 
+  constexpr PropertyDefinitionBuilder<NumAllowedValues, NumDependentProperties, NumExclusiveOfProperties> isSensitive(bool sensitive) {
+    property.is_sensitive = sensitive;
+    return *this;
+  }
+
   constexpr PropertyDefinitionBuilder<NumAllowedValues, NumDependentProperties, NumExclusiveOfProperties> supportsExpressionLanguage(bool supports_expression_language) {
     property.supports_expression_language = supports_expression_language;
     return *this;

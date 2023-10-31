@@ -17,6 +17,7 @@
 
 #include "properties/Decryptor.h"
 #include "../Catch.h"
+#include "../TestBase.h"
 #include "StringUtils.h"
 #include "properties/Configure.h"
 
@@ -117,6 +118,7 @@ TEST_CASE("Decryptor can be created from a bootstrap file", "[create]") {
   REQUIRE(valid_decryptor);
   REQUIRE(valid_decryptor->decrypt("HvbPejGT3ur9/00gXQK/dJCYwaNqhopf||CiXKiNaljSN7VkLXP5zfJnb4+4UcKIG3ddwuVfSPpkRRfT4=") == "SpeakFriendAndEnter");
 
-  const auto invalid_decryptor = minifi::Decryptor::create("there.is.no.such.directory");
+  TempDirectory temp_dir;
+  const auto invalid_decryptor = minifi::Decryptor::create(temp_dir.getPath() / "there.is.no.such.directory");
   REQUIRE_FALSE(invalid_decryptor);
 }

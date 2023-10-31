@@ -266,7 +266,7 @@ void ProcessGroup::addControllerService(const std::string &nodeId, const std::sh
  * @param node node identifier
  * @return controller service node, if it exists.
  */
-std::shared_ptr<core::controller::ControllerServiceNode> ProcessGroup::findControllerService(const std::string &nodeId) {
+std::shared_ptr<core::controller::ControllerServiceNode> ProcessGroup::findControllerService(const std::string &nodeId) const {
   return controller_service_map_.getControllerServiceNode(nodeId);
 }
 

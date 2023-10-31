@@ -123,6 +123,7 @@ class InvokeHTTP : public core::Processor {
   EXTENSIONAPI static constexpr auto ProxyPassword = core::PropertyDefinitionBuilder<>::createProperty("invokehttp-proxy-password", "Proxy Password")
       .withDescription("Password to set when authenticating against proxy")
       .isRequired(false)
+      .isSensitive(true)
       .build();
   EXTENSIONAPI static constexpr auto ContentType = core::PropertyDefinitionBuilder<>::createProperty("Content-type")
       .withDescription("The Content-Type to specify for when content is being transmitted through a PUT, "

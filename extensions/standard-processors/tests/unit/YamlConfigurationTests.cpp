@@ -501,8 +501,7 @@ Processors:
   REQUIRE(uuid);
   REQUIRE(!rootFlowConfig->findProcessorByName("GenerateFlowFile")->getUUIDStr().empty());
 
-  REQUIRE(LogTestController::getInstance().contains("[warning] Unable to set the dynamic property "
-                                                    "Dynamic Property with value Bad"));
+  REQUIRE(LogTestController::getInstance().contains("[warning] Unable to set the dynamic property Dynamic Property"));
 }
 
 TEST_CASE("Test Required Property", "[YamlConfigurationRequiredProperty]") {
@@ -795,4 +794,281 @@ TEST_CASE("Configuration is not valid yaml", "[YamlConfiguration]") {
   core::YamlConfiguration yaml_config(test_controller.getContext());
   REQUIRE_THROWS(yaml_config.getRootFromPayload("}"));
   REQUIRE(utils::verifyLogLinePresenceInPollTime(0s, "Configuration is not valid yaml"));
+}
+
+namespace {
+inline constexpr std::string_view TEST_FLOW_WITH_SENSITIVE_PROPERTIES = R"(MiNiFi Config Version: 3
+Flow Controller:
+  name: root
+  comment: ''
+Core Properties:
+  flow controller graceful shutdown period: 10 sec
+  flow service write delay interval: 500 ms
+  administrative yield duration: 30 sec
+  bored yield duration: 10 millis
+  max concurrent threads: 1
+  variable registry properties: ''
+FlowFile Repository:
+  implementation: org.apache.nifi.controller.repository.WriteAheadFlowFileRepository
+  partitions: 256
+  checkpoint interval: 2 mins
+  always sync: false
+  Swap:
+    threshold: 20000
+    in period: 5 sec
+    in threads: 1
+    out period: 5 sec
+    out threads: 4
+Content Repository:
+  implementation: org.apache.nifi.controller.repository.FileSystemRepository
+  content claim max appendable size: 10 MB
+  content claim max flow files: 100
+  content repository archive enabled: false
+  content repository archive max retention period: 12 hours
+  content repository archive max usage percentage: 50%
+  always sync: false
+Provenance Repository:
+  provenance rollover time: 1 min
+  implementation: org.apache.nifi.provenance.WriteAheadProvenanceRepository
+  provenance index shard size: 500 MB
+  provenance max storage size: 1 GB
+  provenance max storage time: 24 hours
+  provenance buffer size: 10000
+Component Status Repository:
+  buffer size: 1440
+  snapshot frequency: 1 min
+Security Properties:
+  keystore: ''
+  keystore type: ''
+  keystore password: ''
+  key password: ''
+  truststore: ''
+  truststore type: ''
+  truststore password: ''
+  ssl protocol: ''
+  Sensitive Props:
+    key:
+    algorithm: NIFI_PBKDF2_AES_GCM_256
+Processors:
+- id: 5f69344a-15e6-43ba-911c-7e9dd2595d1c
+  name: GenerateFlowFile
+  class: org.apache.nifi.minifi.processors.GenerateFlowFile
+  max concurrent tasks: 1
+  scheduling strategy: TIMER_DRIVEN
+  scheduling period: 10s
+  penalization period: 30000 ms
+  yield period: 1000 ms
+  run duration nanos: 0
+  auto-terminated relationships list: []
+  Properties:
+    Batch Size: '1'
+    Data Format: Text
+    File Size: 100 B
+    Unique FlowFiles: 'true'
+- id: f5f77e5d-4df2-4762-8ecc-d0dc07e36921
+  name: InvokeHTTP
+  class: org.apache.nifi.minifi.processors.InvokeHTTP
+  max concurrent tasks: 1
+  scheduling strategy: TIMER_DRIVEN
+  scheduling period: 1000 ms
+  penalization period: 30000 ms
+  yield period: 1000 ms
+  run duration nanos: 0
+  auto-terminated relationships list:
+  - success
+  - response
+  - failure
+  - retry
+  - no retry
+  Properties:
+    Always Output Response: 'false'
+    Connection Timeout: 5 s
+    Content-type: application/octet-stream
+    Disable Peer Verification: 'false'
+    Follow Redirects: 'true'
+    HTTP Method: POST
+    Include Date Header: 'true'
+    Invalid HTTP Header Field Handling Strategy: transform
+    Penalize on "No Retry": 'false'
+    Proxy Host: myproxy.com
+    Proxy Port: '8080'
+    Read Timeout: 15 s
+    Remote URL: https://myremoteserver.com
+    SSL Context Service: a00f8722-2419-44ee-929c-ad68644ad557
+    Send Message Body: 'true'
+    Use Chunked Encoding: 'false'
+    invokehttp-proxy-password: password123
+    invokehttp-proxy-username: user
+    send-message-body: 'true'
+Controller Services:
+- id: a00f8722-2419-44ee-929c-ad68644ad557
+  name: SSLContextService
+  type: org.apache.nifi.minifi.controllers.SSLContextService
+  Properties:
+    CA Certificate:
+    Client Certificate:
+    Passphrase: secret1!!1!
+    Private Key: /opt/secrets/private-key.pem
+    Use System Cert Store: 'true'
+Process Groups: []
+Input Ports: []
+Output Ports: []
+Funnels: []
+Connections:
+- id: 361bf7a6-e63d-4967-95f5-7bbeec3175bc
+  name: GenerateFlowFile/success/InvokeHTTP
+  source id: 5f69344a-15e6-43ba-911c-7e9dd2595d1c
+  source relationship names:
+  - success
+  destination id: f5f77e5d-4df2-4762-8ecc-d0dc07e36921
+  max work queue size: 2000
+  max work queue data size: 100 MB
+  flowfile expiration: 0 seconds
+  queue prioritizer class: ''
+Remote Process Groups: []
+NiFi Properties Overrides: {}
+)";
+
+inline constexpr std::string_view TEST_FLOW_WITH_SENSITIVE_PROPERTIES_ENCRYPTED = R"(MiNiFi Config Version: 3
+Flow Controller:
+  name: root
+  comment: ""
+Core Properties:
+  flow controller graceful shutdown period: 10 sec
+  flow service write delay interval: 500 ms
+  administrative yield duration: 30 sec
+  bored yield duration: 10 millis
+  max concurrent threads: 1
+  variable registry properties: ""
+FlowFile Repository:
+  implementation: org.apache.nifi.controller.repository.WriteAheadFlowFileRepository
+  partitions: 256
+  checkpoint interval: 2 mins
+  always sync: false
+  Swap:
+    threshold: 20000
+    in period: 5 sec
+    in threads: 1
+    out period: 5 sec
+    out threads: 4
+Content Repository:
+  implementation: org.apache.nifi.controller.repository.FileSystemRepository
+  content claim max appendable size: 10 MB
+  content claim max flow files: 100
+  content repository archive enabled: false
+  content repository archive max retention period: 12 hours
+  content repository archive max usage percentage: 50%
+  always sync: false
+Provenance Repository:
+  provenance rollover time: 1 min
+  implementation: org.apache.nifi.provenance.WriteAheadProvenanceRepository
+  provenance index shard size: 500 MB
+  provenance max storage size: 1 GB
+  provenance max storage time: 24 hours
+  provenance buffer size: 10000
+Component Status Repository:
+  buffer size: 1440
+  snapshot frequency: 1 min
+Security Properties:
+  keystore: ""
+  keystore type: ""
+  keystore password: ""
+  key password: ""
+  truststore: ""
+  truststore type: ""
+  truststore password: ""
+  ssl protocol: ""
+  Sensitive Props:
+    key: ~
+    algorithm: NIFI_PBKDF2_AES_GCM_256
+Processors:
+  - id: 5f69344a-15e6-43ba-911c-7e9dd2595d1c
+    name: GenerateFlowFile
+    class: org.apache.nifi.minifi.processors.GenerateFlowFile
+    max concurrent tasks: 1
+    scheduling strategy: TIMER_DRIVEN
+    scheduling period: 10s
+    penalization period: 30000 ms
+    yield period: 1000 ms
+    run duration nanos: 0
+    auto-terminated relationships list: []
+    Properties:
+      Batch Size: 1
+      Data Format: Text
+      File Size: 100 B
+      Unique FlowFiles: true
+  - id: f5f77e5d-4df2-4762-8ecc-d0dc07e36921
+    name: InvokeHTTP
+    class: org.apache.nifi.minifi.processors.InvokeHTTP
+    max concurrent tasks: 1
+    scheduling strategy: TIMER_DRIVEN
+    scheduling period: 1000 ms
+    penalization period: 30000 ms
+    yield period: 1000 ms
+    run duration nanos: 0
+    auto-terminated relationships list:
+      - success
+      - response
+      - failure
+      - retry
+      - no retry
+    Properties:
+      Always Output Response: false
+      Connection Timeout: 5 s
+      Content-type: application/octet-stream
+      Disable Peer Verification: false
+      Follow Redirects: true
+      HTTP Method: POST
+      Include Date Header: true
+      Invalid HTTP Header Field Handling Strategy: transform
+      Penalize on "No Retry": false
+      Proxy Host: myproxy.com
+      Proxy Port: 8080
+      Read Timeout: 15 s
+      Remote URL: https://myremoteserver.com
+      SSL Context Service: a00f8722-2419-44ee-929c-ad68644ad557
+      Send Message Body: true
+      Use Chunked Encoding: false
+      invokehttp-proxy-password: enc{...}
+      invokehttp-proxy-username: user
+      send-message-body: true
+Controller Services:
+  - id: a00f8722-2419-44ee-929c-ad68644ad557
+    name: SSLContextService
+    type: org.apache.nifi.minifi.controllers.SSLContextService
+    Properties:
+      CA Certificate: ~
+      Client Certificate: ~
+      Passphrase: enc{...}
+      Private Key: /opt/secrets/private-key.pem
+      Use System Cert Store: true
+Process Groups: []
+Input Ports: []
+Output Ports: []
+Funnels: []
+Connections:
+  - id: 361bf7a6-e63d-4967-95f5-7bbeec3175bc
+    name: GenerateFlowFile/success/InvokeHTTP
+    source id: 5f69344a-15e6-43ba-911c-7e9dd2595d1c
+    source relationship names:
+      - success
+    destination id: f5f77e5d-4df2-4762-8ecc-d0dc07e36921
+    max work queue size: 2000
+    max work queue data size: 100 MB
+    flowfile expiration: 0 seconds
+    queue prioritizer class: ""
+Remote Process Groups: []
+NiFi Properties Overrides: {}
+)";
+}  // namespace
+
+TEST_CASE("Test serialization", "[YamlConfiguration]") {
+  ConfigurationTestController test_controller;
+  core::YamlConfiguration yaml_config(test_controller.getContext());
+  std::unique_ptr<core::ProcessGroup> root_flow_definition = yaml_config.getRootFromPayload(std::string{TEST_FLOW_WITH_SENSITIVE_PROPERTIES});
+  REQUIRE(root_flow_definition);
+  const std::string serialized_flow_definition = yaml_config.serialize(*root_flow_definition);
+  // we can't directly compare the encrypted values, because they contain a random nonce
+  const std::string serialized_flow_definition_masked = std::regex_replace(serialized_flow_definition, std::regex{"enc\\{.*\\}"}, "enc{...}");
+  CHECK(serialized_flow_definition_masked == TEST_FLOW_WITH_SENSITIVE_PROPERTIES_ENCRYPTED);
 }

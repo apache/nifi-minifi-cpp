@@ -23,6 +23,8 @@
 
 #include "core/ConfigurableComponent.h"
 #include "core/logging/LoggerConfiguration.h"
+#include "range/v3/range/conversion.hpp"
+#include "range/v3/view/transform.hpp"
 #include "utils/gsl.h"
 
 namespace org::apache::nifi::minifi::core {
@@ -124,7 +126,11 @@ bool ConfigurableComponent::setProperty(const Property& prop, const std::string&
     Property& new_property = it->second;
     auto onExit = gsl::finally([&] {
       onPropertyModified(orig_property, new_property);
-      logger_->log_debug("property name {} value {} and new value is {}", prop.getName(), value, new_property.getValue().to_string());
+      if (prop.isSensitive()) {
+        logger_->log_debug("sensitive property name {} value has changed", prop.getName());
+      } else {
+        logger_->log_debug("property name {} value {} and new value is {}", prop.getName(), value, new_property.getValue().to_string());
+      }
     });
     new_property.setValue(value);
     return true;
@@ -134,7 +140,11 @@ bool ConfigurableComponent::setProperty(const Property& prop, const std::string&
       new_property.setTransient();
       new_property.setValue(value);
       properties_.insert(std::pair<std::string, Property>(prop.getName(), new_property));
-      logger_->log_debug("Adding transient property name {} value {} and new value is {}", prop.getName(), value, new_property.getValue().to_string());
+      if (prop.isSensitive()) {
+        logger_->log_debug("Adding transient sensitive property name {}", prop.getName());
+      } else {
+        logger_->log_debug("Adding transient property name {} value {} and new value is {}", prop.getName(), value, new_property.getValue().to_string());
+      }
       return true;
     } else {
       // Should not attempt to update dynamic properties here since the return code
@@ -157,7 +167,11 @@ bool ConfigurableComponent::setProperty(const Property& prop, PropertyValue &val
     Property& new_property = it->second;
     auto onExit = gsl::finally([&] {
       onPropertyModified(orig_property, new_property);
-      logger_->log_debug("property name {} value {} and new value is {}", prop.getName(), new_property.getName(), value.c_str(), new_property.getValue().to_string());
+      if (prop.isSensitive()) {
+        logger_->log_debug("sensitive property name {} value has changed", prop.getName());
+      } else {
+        logger_->log_debug("property name {} value {} and new value is {}", prop.getName(), value.to_string(), new_property.getValue().to_string());
+      }
     });
     new_property.setValue(value);
     return true;
@@ -167,7 +181,11 @@ bool ConfigurableComponent::setProperty(const Property& prop, PropertyValue &val
       new_property.setTransient();
       new_property.setValue(value);
       properties_.insert(std::pair<std::string, Property>(prop.getName(), new_property));
-      logger_->log_debug("Adding transient property name {} value {} and new value is {}", prop.getName(), value.c_str(), new_property.getValue().to_string());
+      if (prop.isSensitive()) {
+        logger_->log_debug("Adding transient sensitive property name {}", prop.getName());
+      } else {
+        logger_->log_debug("Adding transient property name {} value {} and new value is {}", prop.getName(), value.to_string(), new_property.getValue().to_string());
+      }
       return true;
     } else {
       // Should not attempt to update dynamic properties here since the return code
@@ -271,13 +289,9 @@ bool ConfigurableComponent::updateDynamicProperty(const std::string &name, const
 std::vector<std::string> ConfigurableComponent::getDynamicPropertyKeys() const {
   std::lock_guard<std::mutex> lock(configuration_mutex_);
 
-  std::vector<std::string> result;
-
-  for (const auto &pair : dynamic_properties_) {
-    result.emplace_back(pair.first);
-  }
-
-  return result;
+  return dynamic_properties_
+      | ranges::views::transform([](const auto& kv) { return kv.first; })
+      | ranges::to<std::vector>();
 }
 
 std::map<std::string, Property> ConfigurableComponent::getProperties() const {

@@ -108,6 +108,7 @@ class S3Processor : public core::Processor {
   EXTENSIONAPI static constexpr auto SecretKey = core::PropertyDefinitionBuilder<>::createProperty("Secret Key")
       .withDescription("AWS account secret key")
       .supportsExpressionLanguage(true)
+      .isSensitive(true)
       .build();
   EXTENSIONAPI static constexpr auto CredentialsFile = core::PropertyDefinitionBuilder<>::createProperty("Credentials File")
       .withDescription("Path to a file containing AWS access key and secret key in properties file format. Properties used: accessKey and secretKey")
@@ -149,6 +150,7 @@ class S3Processor : public core::Processor {
   EXTENSIONAPI static constexpr auto ProxyPassword = core::PropertyDefinitionBuilder<>::createProperty("Proxy Password")
       .withDescription("Password to set when authenticating against proxy")
       .supportsExpressionLanguage(true)
+      .isSensitive(true)
       .build();
   EXTENSIONAPI static constexpr auto UseDefaultCredentials = core::PropertyDefinitionBuilder<>::createProperty("Use Default Credentials")
       .withDescription("If true, uses the Default Credential chain, including EC2 instance profiles or roles, environment variables, default user credentials, etc.")

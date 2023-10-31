@@ -101,8 +101,14 @@ class PersistentStateStorageTestsFixture {
     content_repo = std::make_shared<core::repository::VolatileContentRepository>();
     content_repo->initialize(configuration);
 
-    yaml_config = std::make_unique<core::YamlConfiguration>(core::ConfigurationContext{test_repo, content_repo, configuration, config_yaml});
-
+    yaml_config = std::make_unique<core::YamlConfiguration>(core::ConfigurationContext{
+        .flow_file_repo = test_repo,
+        .content_repo = content_repo,
+        .configuration = configuration,
+        .path = config_yaml,
+        .filesystem = std::make_shared<utils::file::FileSystem>(),
+        .sensitive_properties_encryptor = utils::crypto::EncryptionProvider{utils::crypto::XSalsa20Cipher{utils::crypto::XSalsa20Cipher::generateKey()}}
+    });
     process_group = yaml_config->getRoot();
     persistable_key_value_store_service_node = process_group->findControllerService("testcontroller");
     REQUIRE(persistable_key_value_store_service_node != nullptr);

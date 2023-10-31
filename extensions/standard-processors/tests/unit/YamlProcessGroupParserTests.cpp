@@ -22,7 +22,14 @@
 #include "IntegrationTestUtils.h"
 #include "ProcessGroupTestUtils.h"
 
-static core::YamlConfiguration config({nullptr, nullptr, std::make_shared<minifi::Configure>()});
+static core::YamlConfiguration config{core::ConfigurationContext{
+    .flow_file_repo = nullptr,
+    .content_repo = nullptr,
+    .configuration = std::make_shared<minifi::Configure>(),
+    .path = "",
+    .filesystem = std::make_shared<utils::file::FileSystem>(),
+    .sensitive_properties_encryptor = utils::crypto::EncryptionProvider{utils::crypto::XSalsa20Cipher{utils::crypto::XSalsa20Cipher::generateKey()}}
+}};
 
 TEST_CASE("Root process group is correctly parsed", "[YamlProcessGroupParser]") {
   auto pattern = Group("root")

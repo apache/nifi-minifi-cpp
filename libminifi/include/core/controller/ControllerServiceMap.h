@@ -15,8 +15,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#ifndef LIBMINIFI_INCLUDE_CORE_CONTROLLER_CONTROLLERSERVICEMAP_H_
-#define LIBMINIFI_INCLUDE_CORE_CONTROLLER_CONTROLLERSERVICEMAP_H_
+#pragma once
 
 #include <memory>
 #include <set>
@@ -26,12 +25,7 @@
 #include "ControllerServiceNode.h"
 #include "io/validation.h"
 
-namespace org {
-namespace apache {
-namespace nifi {
-namespace minifi {
-namespace core {
-namespace controller {
+namespace org::apache::nifi::minifi::core::controller {
 
 /**
  * Purpose: Controller service map is the mapping between service names
@@ -43,15 +37,18 @@ namespace controller {
 class ControllerServiceMap {
  public:
   ControllerServiceMap() = default;
-
-  virtual ~ControllerServiceMap() = default;
+  ~ControllerServiceMap() = default;
+  ControllerServiceMap(const ControllerServiceMap&) = delete;
+  ControllerServiceMap& operator=(const ControllerServiceMap&) = delete;
+  ControllerServiceMap(ControllerServiceMap&&) = delete;
+  ControllerServiceMap& operator=(ControllerServiceMap&&) = delete;
 
   /**
    * Gets the controller service node using the <code>id</code>
    * @param id identifier for controller service.
    * @return nullptr if node does not exist or controller service node shared pointer.
    */
-  virtual std::shared_ptr<ControllerServiceNode> getControllerServiceNode(const std::string &id) {
+  std::shared_ptr<ControllerServiceNode> getControllerServiceNode(const std::string &id) const {
     std::lock_guard<std::mutex> lock(mutex_);
     auto exists = controller_services_.find(id);
     if (exists != controller_services_.end())
@@ -65,8 +62,8 @@ class ControllerServiceMap {
    * @param serviceNode service node to remove
    *
    */
-  virtual bool removeControllerService(const std::shared_ptr<ControllerServiceNode> &serviceNode) {
-    if (serviceNode == nullptr || serviceNode.get() == nullptr)
+  bool removeControllerService(const std::shared_ptr<ControllerServiceNode> &serviceNode) {
+    if (serviceNode == nullptr || serviceNode == nullptr)
       return false;
     std::lock_guard<std::mutex> lock(mutex_);
     controller_services_[serviceNode->getName()] = nullptr;
@@ -80,8 +77,8 @@ class ControllerServiceMap {
    * @param serviceNode controller service node shared pointer.
    *
    */
-  virtual bool put(const std::string &id, const std::shared_ptr<ControllerServiceNode> &serviceNode) {
-    if (id.empty() || serviceNode == nullptr || serviceNode.get() == nullptr)
+  bool put(const std::string &id, const std::shared_ptr<ControllerServiceNode> &serviceNode) {
+    if (id.empty() || serviceNode == nullptr || serviceNode == nullptr)
       return false;
     std::lock_guard<std::mutex> lock(mutex_);
     controller_services_[id] = serviceNode;
@@ -102,24 +99,15 @@ class ControllerServiceMap {
    * Gets all controller services.
    * @return controller service node shared pointers.
    */
-  std::vector<std::shared_ptr<ControllerServiceNode>> getAllControllerServices() {
+  std::vector<std::shared_ptr<ControllerServiceNode>> getAllControllerServices() const {
     std::lock_guard<std::mutex> lock(mutex_);
-    return std::vector<std::shared_ptr<ControllerServiceNode>>(controller_services_list_.begin(), controller_services_list_.end());
+    return {controller_services_list_.begin(), controller_services_list_.end()};
   }
 
-  ControllerServiceMap(const ControllerServiceMap &other) = delete;
-
  protected:
-  std::mutex mutex_;
+  mutable std::mutex mutex_;
   std::set<std::shared_ptr<ControllerServiceNode>> controller_services_list_;
   std::map<std::string, std::shared_ptr<ControllerServiceNode>> controller_services_;
 };
 
-}  // namespace controller
-}  // namespace core
-}  // namespace minifi
-}  // namespace nifi
-}  // namespace apache
-}  // namespace org
-
-#endif  // LIBMINIFI_INCLUDE_CORE_CONTROLLER_CONTROLLERSERVICEMAP_H_
+}  // namespace org::apache::nifi::minifi::core::controller

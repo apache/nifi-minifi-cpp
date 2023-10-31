@@ -34,6 +34,8 @@ class AdaptiveConfiguration : public StructuredConfiguration {
   }
 
   std::unique_ptr<core::ProcessGroup> getRootFromPayload(const std::string &payload) override;
+
+  std::string serialize(const core::ProcessGroup& process_group) override;
 };
 
 }  // namespace org::apache::nifi::minifi::core::flow

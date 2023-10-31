@@ -74,13 +74,11 @@ TEST_CASE("Test Valid Regex", "[validRegex]") {
   const auto &prop_descriptors = proc_0.children[0];
   REQUIRE_FALSE(prop_descriptors.children.empty());
   const auto &prop_0 = prop_descriptors.children[0];
-  REQUIRE(prop_0.children.size() >= 6);
-  const auto &df = prop_0.children[3];
-  REQUIRE("required" == df.name);
-  const auto &prop_0_els = prop_0.children[4];
-  REQUIRE("expressionLanguageScope" == prop_0_els.name);
-  const auto &prop_0_valid_regex = prop_0.children[5];
-  REQUIRE("defaultValue" == prop_0_valid_regex.name);
+  REQUIRE(prop_0.children.size() >= 7);
+  CHECK("required" == prop_0.children[3].name);
+  CHECK("sensitive" == prop_0.children[4].name);
+  CHECK("expressionLanguageScope" == prop_0.children[5].name);
+  CHECK("defaultValue" == prop_0.children[6].name);
 }
 
 TEST_CASE("Test Relationships", "[rel1]") {
@@ -139,14 +137,14 @@ TEST_CASE("Test Dependent", "[dependent]") {
 #ifndef WIN32
   REQUIRE_FALSE(proc_0.children.empty());
   const auto &prop_descriptors = proc_0.children[0];
-  REQUIRE_FALSE(prop_descriptors.children.empty());
+  REQUIRE(prop_descriptors.children.size() >= 3);
   const auto &prop_0 = prop_descriptors.children[1];
-  REQUIRE(prop_0.children.size() >= 3);
-  REQUIRE("required" == prop_0.children[3].name);
-  REQUIRE("expressionLanguageScope" == prop_0.children[4].name);
-  REQUIRE("defaultValue" == prop_0.children[5].name);
-  const auto &prop_0_dependent_0 = prop_descriptors.children[2];
-  REQUIRE("Directory" == prop_0_dependent_0.name);
+  REQUIRE(prop_0.children.size() >= 7);
+  CHECK("required" == prop_0.children[3].name);
+  CHECK("sensitive" == prop_0.children[4].name);
+  CHECK("expressionLanguageScope" == prop_0.children[5].name);
+  CHECK("defaultValue" == prop_0.children[6].name);
+  CHECK("Directory" == prop_descriptors.children[2].name);
 #endif
 }
 

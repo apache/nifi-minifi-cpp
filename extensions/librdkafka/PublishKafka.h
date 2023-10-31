@@ -159,6 +159,7 @@ class PublishKafka : public KafkaProcessorBase {
       .build();
   EXTENSIONAPI static constexpr auto SecurityPrivateKeyPassWord = core::PropertyDefinitionBuilder<>::createProperty("Security Pass Phrase")
       .withDescription("DEPRECATED in favor of SSL Context Service.Private key passphrase")
+      .isSensitive(true)
       .build();
   EXTENSIONAPI static constexpr auto KafkaKey = core::PropertyDefinitionBuilder<>::createProperty("Kafka Key")
       .withDescription("The key to use for the message. If not specified, the UUID of the flow file is used as the message key.")

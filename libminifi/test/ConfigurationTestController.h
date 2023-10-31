@@ -39,11 +39,14 @@ class ConfigurationTestController : public TestController {
     LogTestController::getInstance().setTrace<core::flow::AdaptiveConfiguration>();
   }
 
-  core::ConfigurationContext getContext() const {
+  [[nodiscard]] core::ConfigurationContext getContext() const {
     return core::ConfigurationContext{
         .flow_file_repo = flow_file_repo_,
         .content_repo = content_repo_,
-        .configuration = configuration_
+        .configuration = configuration_,
+        .path = "",
+        .filesystem = std::make_shared<utils::file::FileSystem>(),
+        .sensitive_properties_encryptor = utils::crypto::EncryptionProvider{utils::crypto::XSalsa20Cipher{utils::crypto::XSalsa20Cipher::generateKey()}}
     };
   }
 

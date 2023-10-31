@@ -62,6 +62,7 @@ class AWSCredentialsService : public core::controller::ControllerService {
       .build();
   EXTENSIONAPI static constexpr auto SecretKey = core::PropertyDefinitionBuilder<>::createProperty("Secret Key")
       .withDescription("Specifies the AWS Secret Key.")
+      .isSensitive(true)
       .build();
   EXTENSIONAPI static constexpr auto CredentialsFile = core::PropertyDefinitionBuilder<>::createProperty("Credentials File")
       .withDescription("Path to a file containing AWS access key and secret key in properties file format. Properties used: accessKey and secretKey")

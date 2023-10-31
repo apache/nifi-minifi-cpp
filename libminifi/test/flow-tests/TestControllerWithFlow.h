@@ -65,7 +65,14 @@ class TestControllerWithFlow: public TestController {
 
     REQUIRE(content_repo->initialize(configuration_));
 
-    auto flow = std::make_shared<core::YamlConfiguration>(core::ConfigurationContext{ff_repo, content_repo, configuration_, yaml_path_.string()});
+    auto flow = std::make_shared<core::YamlConfiguration>(core::ConfigurationContext{
+        .flow_file_repo = ff_repo,
+        .content_repo = content_repo,
+        .configuration = configuration_,
+        .path = yaml_path_.string(),
+        .filesystem = std::make_shared<utils::file::FileSystem>(),
+        .sensitive_properties_encryptor = utils::crypto::EncryptionProvider{utils::crypto::XSalsa20Cipher{utils::crypto::XSalsa20Cipher::generateKey()}}
+    });
     auto root = flow->getRoot();
     root_ = root.get();
     std::vector<std::shared_ptr<core::RepositoryMetricsSource>> repo_metric_sources{prov_repo, ff_repo, content_repo};

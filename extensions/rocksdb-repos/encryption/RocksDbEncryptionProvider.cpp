@@ -77,7 +77,7 @@ class EncryptingEnv : public rocksdb::EnvWrapper {
 std::shared_ptr<logging::Logger> AES256BlockCipher::logger_ = logging::LoggerFactory<AES256BlockCipher>::getLogger();
 
 std::shared_ptr<rocksdb::Env> createEncryptingEnv(const utils::crypto::EncryptionManager& manager, const DbEncryptionOptions& options) {
-  auto cipher_impl = manager.createAes256EcbCipher(options.encryption_key_name);
+  auto cipher_impl = manager.getOptionalKeyCreateIfBlank<Aes256EcbCipher>(options.encryption_key_name);
   if (!cipher_impl) {
     return {};
   }

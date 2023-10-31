@@ -172,6 +172,7 @@ TEST_CASE("Processors Can Store FlowFiles", "[TestP1]") {
   auto dir = testController.createTempDirectory();
 
   auto config = std::make_shared<minifi::Configure>();
+  config->setHome(dir);
   config->set(minifi::Configure::nifi_dbcontent_repository_directory_default, (dir / "content_repository").string());
   config->set(minifi::Configure::nifi_flowfile_repository_directory_default, (dir / "flowfile_repository").string());
 
@@ -181,7 +182,14 @@ TEST_CASE("Processors Can Store FlowFiles", "[TestP1]") {
   ff_repository->initialize(config);
   content_repo->initialize(config);
 
-  auto flowConfig = std::make_unique<core::FlowConfiguration>(core::ConfigurationContext{ff_repository, content_repo, config, ""});
+  auto flowConfig = std::make_unique<core::FlowConfiguration>(core::ConfigurationContext{
+      .flow_file_repo = ff_repository,
+      .content_repo = content_repo,
+      .configuration = config,
+      .path = "",
+      .filesystem = std::make_shared<utils::file::FileSystem>(),
+      .sensitive_properties_encryptor = utils::crypto::EncryptionProvider{utils::crypto::XSalsa20Cipher{utils::crypto::XSalsa20Cipher::generateKey()}}
+  });
   auto flowController = std::make_shared<minifi::FlowController>(prov_repo, ff_repository, config, std::move(flowConfig), content_repo);
 
   {
@@ -278,6 +286,7 @@ TEST_CASE("Persisted flowFiles are updated on modification", "[TestP1]") {
   auto dir = testController.createTempDirectory();
 
   auto config = std::make_shared<minifi::Configure>();
+  config->setHome(dir);
   config->set(minifi::Configure::nifi_dbcontent_repository_directory_default, (dir / "content_repository").string());
   config->set(minifi::Configure::nifi_flowfile_repository_directory_default, (dir / "flowfile_repository").string());
   config->set(minifi::Configure::nifi_dbcontent_repository_purge_period, "0 s");
@@ -300,7 +309,14 @@ TEST_CASE("Persisted flowFiles are updated on modification", "[TestP1]") {
   ff_repository->initialize(config);
   content_repo->initialize(config);
 
-  auto flowConfig = std::make_unique<core::FlowConfiguration>(core::ConfigurationContext{ff_repository, content_repo, config, ""});
+  auto flowConfig = std::make_unique<core::FlowConfiguration>(core::ConfigurationContext{
+      .flow_file_repo = ff_repository,
+      .content_repo = content_repo,
+      .configuration = config,
+      .path = "",
+      .filesystem = std::make_shared<utils::file::FileSystem>(),
+      .sensitive_properties_encryptor = utils::crypto::EncryptionProvider{utils::crypto::XSalsa20Cipher{utils::crypto::XSalsa20Cipher::generateKey()}}
+  });
   auto flowController = std::make_shared<minifi::FlowController>(prov_repo, ff_repository, config, std::move(flowConfig), content_repo);
 
   {

@@ -242,7 +242,7 @@ std::unique_ptr<core::ProcessGroup> FlowController::loadInitialFlow() {
   root = updateFromPayload(*opt_flow_url, *opt_source);
   if (root) {
     logger_->log_info("Successfully fetched valid flow configuration");
-    if (!flow_configuration_->persist(*opt_source)) {
+    if (!flow_configuration_->persist(*root)) {
       logger_->log_info("Failed to write the fetched flow to disk");
     }
   }
@@ -384,7 +384,9 @@ std::vector<std::string> FlowController::getSupportedConfigurationFormats() cons
 int16_t FlowController::applyUpdate(const std::string &source, const std::string &configuration, bool persist, const std::optional<std::string>& flow_id) {
   if (applyConfiguration(source, configuration, flow_id)) {
     if (persist) {
-      flow_configuration_->persist(configuration);
+      const auto* process_group = root_wrapper_.getRoot();
+      gsl_Expects(process_group);
+      flow_configuration_->persist(*process_group);
     }
     return 0;
   } else {

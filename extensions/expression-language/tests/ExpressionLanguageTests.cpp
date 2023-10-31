@@ -195,6 +195,7 @@ TEST_CASE("GetFile PutFile dynamic attribute", "[expressionLanguageTestGetFilePu
   LogTestController::getInstance().setTrace<minifi::processors::UpdateAttribute>();
 
   auto conf = std::make_shared<minifi::Configure>();
+  conf->setHome(testController.createTempDirectory());
 
   conf->set("nifi.my.own.property", "custom_value");
 

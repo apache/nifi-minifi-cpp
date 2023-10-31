@@ -23,8 +23,9 @@
 #include <string>
 
 #include "core/ClassLoader.h"
-#include "utils/StringUtils.h"
 #include "processors/ProcessorUtils.h"
+#include "utils/RegexUtils.h"
+#include "utils/StringUtils.h"
 
 namespace org::apache::nifi::minifi::core {
 
@@ -34,6 +35,7 @@ FlowConfiguration::FlowConfiguration(ConfigurationContext ctx)
       content_repo_(std::move(ctx.content_repo)),
       configuration_(std::move(ctx.configuration)),
       filesystem_(std::move(ctx.filesystem)),
+      sensitive_properties_encryptor_(std::move(ctx.sensitive_properties_encryptor.value())),
       logger_(logging::LoggerFactory<FlowConfiguration>::getLogger()) {
   controller_services_ = std::make_shared<core::controller::ControllerServiceMap>();
   service_provider_ = std::make_shared<core::controller::StandardControllerServiceProvider>(controller_services_, configuration_);
@@ -117,9 +119,14 @@ std::unique_ptr<core::ProcessGroup> FlowConfiguration::updateFromPayload(const s
   return payload;
 }
 
-bool FlowConfiguration::persist(const std::string &configuration) {
+bool FlowConfiguration::persist(const core::ProcessGroup& process_group) {
+  std::string serialized_flow = serialize(process_group);
+  return persist(serialized_flow);
+}
+
+bool FlowConfiguration::persist(const std::string& serialized_flow) {
   if (!config_path_) {
-    logger_->log_error("No flow configuration path is specified, cannot persist changes.");
+    logger_->log_error("No flow serialized_flow path is specified, cannot persist changes.");
     return false;
   }
 
@@ -136,7 +143,7 @@ bool FlowConfiguration::persist(const std::string &configuration) {
     logger_->log_debug("Copy {} to {}", *config_path_, config_file_backup);
   }
 
-  const bool status = filesystem_->write(*config_path_, configuration);
+  const bool status = filesystem_->write(*config_path_, serialized_flow);
   checksum_calculator_.invalidateChecksum();
   return status;
 }
@@ -172,6 +179,24 @@ std::shared_ptr<core::controller::ControllerServiceNode> FlowConfiguration::crea
   if (nullptr != controllerServicesNode)
     controllerServicesNode->setUUID(uuid);
   return controllerServicesNode;
+}
+
+std::string FlowConfiguration::decryptProperty(const std::string& encrypted_value) const {
+  static const utils::Regex is_encrypted{R"(enc\{.*\})"};
+  if (!utils::regexMatch(encrypted_value, is_encrypted)) {
+    // this is normal: sensitive properties come from the C2 server in cleartext over TLS
+    return encrypted_value;
+  }
+
+  static constexpr size_t WrapperBeginSize = std::char_traits<char>::length("enc{");
+  static constexpr size_t WrapperEndSize = std::char_traits<char>::length("}");
+  static constexpr size_t WrapperSize = WrapperBeginSize + WrapperEndSize;
+
+  return sensitive_properties_encryptor_.decrypt(encrypted_value.substr(WrapperBeginSize, encrypted_value.length() - WrapperSize));
+}
+
+std::string FlowConfiguration::encryptProperty(const std::string& cleartext_value) const {
+  return utils::string::join_pack("enc{", sensitive_properties_encryptor_.encrypt(cleartext_value), "}");
 }
 
 }  // namespace org::apache::nifi::minifi::core
