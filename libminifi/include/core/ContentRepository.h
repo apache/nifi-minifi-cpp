@@ -31,7 +31,6 @@
 #include "ContentSession.h"
 #include "core/RepositoryMetricsSource.h"
 #include "core/Core.h"
-#include "core/StreamAppendLock.h"
 
 namespace org::apache::nifi::minifi::core {
 

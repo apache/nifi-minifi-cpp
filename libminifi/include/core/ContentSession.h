@@ -23,10 +23,10 @@
 #include <map>
 #include "ResourceClaim.h"
 #include "io/BaseStream.h"
-#include "StreamAppendLock.h"
 
 namespace org::apache::nifi::minifi::core {
 
+class StreamAppendLock;
 class ContentRepository;
 
 class ContentSession {

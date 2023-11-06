@@ -33,6 +33,11 @@ namespace nifi {
 namespace minifi {
 namespace core {
 
+class StreamAppendLock {
+ public:
+  virtual ~StreamAppendLock() = default;
+};
+
 /**
  * Purpose: Provides a base for all stream based managers. The goal here is to provide
  * a small set of interfaces that provide a small set of operations to provide state 
