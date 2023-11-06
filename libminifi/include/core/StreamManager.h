@@ -15,8 +15,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#ifndef LIBMINIFI_INCLUDE_CORE_STREAMMANAGER_H_
-#define LIBMINIFI_INCLUDE_CORE_STREAMMANAGER_H_
+#pragma once
 
 #include <memory>
 #include <string>
@@ -27,11 +26,7 @@
 #include "io/BufferStream.h"
 #include "io/BaseStream.h"
 
-namespace org {
-namespace apache {
-namespace nifi {
-namespace minifi {
-namespace core {
+namespace org::apache::nifi::minifi::core {
 
 class StreamAppendLock {
  public:
@@ -99,10 +94,4 @@ class StreamManager {
   virtual bool exists(const T &streamId) = 0;
 };
 
-}  // namespace core
-}  // namespace minifi
-}  // namespace nifi
-}  // namespace apache
-}  // namespace org
-
-#endif  // LIBMINIFI_INCLUDE_CORE_STREAMMANAGER_H_
+}  // namespace org::apache::nifi::minifi::core
