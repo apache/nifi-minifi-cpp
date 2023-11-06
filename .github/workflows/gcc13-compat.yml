@@ -36,8 +36,8 @@ jobs:
       - name: test
         id: test
         run: |
-          # Set core file size limit to 1GiB
-          ulimit -c 1048576
+          # Set core file size limit to unlimited
+          ulimit -c unlimited
           cd build && make test ARGS="--timeout 300 -j8 --output-on-failure"
       - name: check-cores
         if: ${{ failure() && steps.test.conclusion == 'failure' }}
