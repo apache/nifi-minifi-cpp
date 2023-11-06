@@ -78,9 +78,10 @@ ControllerSocketProtocol::~ControllerSocketProtocol() {
 }
 
 void ControllerSocketProtocol::stopListener() {
-  io_context_.stop();
   if (acceptor_) {
-    acceptor_->close();
+    asio::post(io_context_, [this] {
+      acceptor_->close();
+    });
   }
   if (server_thread_.joinable()) {
     server_thread_.join();
@@ -92,6 +93,10 @@ asio::awaitable<void> ControllerSocketProtocol::startAccept() {
   while (true) {
     auto [accept_error, socket] = co_await acceptor_->async_accept(utils::net::use_nothrow_awaitable);
     if (accept_error) {
+      if (accept_error == asio::error::operation_aborted || accept_error == asio::error::bad_descriptor) {
+        logger_->log_debug("Controller socket accept aborted");
+        co_return;
+      }
       logger_->log_error("Controller socket accept failed with the following message: '{}'", accept_error.message());
       continue;
     }
@@ -119,6 +124,10 @@ asio::awaitable<void> ControllerSocketProtocol::startAcceptSsl(std::shared_ptr<m
   while (true) {  // NOLINT(clang-analyzer-core.NullDereference) suppressing asio library linter warning
     auto [accept_error, socket] = co_await acceptor_->async_accept(utils::net::use_nothrow_awaitable);
     if (accept_error) {
+      if (accept_error == asio::error::operation_aborted || accept_error == asio::error::bad_descriptor) {
+        logger_->log_debug("Controller socket accept aborted");
+        co_return;
+      }
       logger_->log_error("Controller socket accept failed with the following message: '{}'", accept_error.message());
       continue;
     }
