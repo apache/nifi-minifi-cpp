@@ -22,6 +22,3 @@ FetchContent_Declare(range-v3_src
     URL_HASH SHA256=015adb2300a98edfceaf0725beec3337f542af4915cec4d0b89fa0886f4ba9cb
 )
 FetchContent_MakeAvailable(range-v3_src)
-
-# for better error messages
-target_compile_options(range-v3 INTERFACE $<$<COMPILE_LANG_AND_ID:CXX,GNU>:-fconcepts>)
