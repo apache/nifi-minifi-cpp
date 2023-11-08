@@ -1057,7 +1057,7 @@ void Spec::Pattern::process(const Context& ctx, const rapidjson::Value &input, r
     putValue(ctx.extend({key_str}, nullptr), dest, rapidjson::Value{key_str.data(), gsl::narrow<rapidjson::SizeType>(key_str.size()), output.GetAllocator()}, output);
   }
   for (auto& [value, dest] : defaults) {
-    Context sub_ctx = ctx.extend( {value}, nullptr);
+    Context sub_ctx = ctx.extend({value}, nullptr);
     putValue(sub_ctx, dest, rapidjson::Value{value.data(), gsl::narrow<rapidjson::SizeType>(value.size()), output.GetAllocator()}, output);
   }
   if (input.IsArray()) {
