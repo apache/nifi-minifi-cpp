@@ -193,7 +193,7 @@ void InvokeHTTP::onTrigger(core::ProcessContext& context, core::ProcessSession& 
 
   if (flow_file == nullptr) {
     if (!shouldEmitFlowFile()) {
-      logger_->log_debug("InvokeHTTP -- create flow file with  {}", std::string(magic_enum::enum_name(method_)));
+      logger_->log_debug("InvokeHTTP -- create flow file with  {}", magic_enum::enum_name(method_));
       flow_file = session.create();
     } else {
       logger_->log_debug("Exiting because method is {} and there is no flowfile available to execute it, yielding", magic_enum::enum_name(method_));
