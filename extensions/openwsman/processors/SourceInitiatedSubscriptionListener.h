@@ -182,7 +182,7 @@ class SourceInitiatedSubscriptionListener : public core::Processor {
 
   void onTrigger(core::ProcessContext& context, core::ProcessSession& session) override;
   void initialize() override;
-  void onSchedule_2(const std::shared_ptr<core::ProcessContext> &context, const std::shared_ptr<core::ProcessSessionFactory> &sessionFactory) override;
+  void onScheduleSharedPtr(const std::shared_ptr<core::ProcessContext> &context, const std::shared_ptr<core::ProcessSessionFactory> &sessionFactory) override;
   void notifyStop() override;
 
   class Handler: public CivetHandler {

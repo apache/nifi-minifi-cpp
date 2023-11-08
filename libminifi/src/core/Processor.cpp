@@ -188,7 +188,7 @@ void Processor::onTrigger(const std::shared_ptr<ProcessContext>& context, const 
   try {
     // Call the virtual trigger function
     auto start = std::chrono::steady_clock::now();
-    onTrigger_2(context, session);
+    onTriggerSharedPtr(context, session);
     metrics_->addLastOnTriggerRuntime(std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::steady_clock::now() - start));
     start = std::chrono::steady_clock::now();
     session->commit();

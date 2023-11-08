@@ -50,7 +50,7 @@ void ExecuteJavaProcessor::initialize() {
   setSupportedRelationships(Relationships);
 }
 
-void ExecuteJavaProcessor::onSchedule_2(const std::shared_ptr<core::ProcessContext>& context, const std::shared_ptr<core::ProcessSessionFactory>& /*sessionFactory*/) {
+void ExecuteJavaProcessor::onScheduleSharedPtr(const std::shared_ptr<core::ProcessContext>& context, const std::shared_ptr<core::ProcessSessionFactory>& /*sessionFactory*/) {
   gsl_Expects(context);
 
   std::string controller_service_name;

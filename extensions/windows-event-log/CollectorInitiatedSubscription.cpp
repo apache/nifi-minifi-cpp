@@ -63,7 +63,7 @@ void CollectorInitiatedSubscription::initialize() {
   setSupportedRelationships(Relationships);
 }
 
-void CollectorInitiatedSubscription::onSchedule_2(const std::shared_ptr<core::ProcessContext> &context, const std::shared_ptr<core::ProcessSessionFactory> &sessionFactory) {
+void CollectorInitiatedSubscription::onScheduleSharedPtr(const std::shared_ptr<core::ProcessContext> &context, const std::shared_ptr<core::ProcessSessionFactory> &sessionFactory) {
   gsl_Expects(context);
 
   if (subscriptionHandle_) {
