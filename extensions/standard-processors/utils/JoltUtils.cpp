@@ -1026,6 +1026,46 @@ bool Spec::Pattern::processMember(const Context& ctx, std::string_view name, con
   return false;
 }
 
+void Spec::Pattern::processArray(const Context& ctx, const rapidjson::Value &input, rapidjson::Document &output) const {
+  gsl_Expects(input.IsArray());
+  Context sub_ctx = ctx;
+  for (auto& [key, numeric_key, value] : literals) {
+    if (numeric_key && numeric_key.value() < input.GetArray().Size()) {
+      if (processMember(sub_ctx, key, input[numeric_key.value()], output)) {
+        ++sub_ctx.match_count;
+      }
+    }
+  }
+  for (rapidjson::SizeType  i = 0; i < input.GetArray().Size(); ++i) {
+    if (literal_indices.contains(std::to_string(i))) {
+      continue;
+    }
+    if (processMember(sub_ctx, std::to_string(i), input[i], output)) {
+      ++sub_ctx.match_count;
+    }
+  }
+}
+
+void Spec::Pattern::processObject(const Context& ctx, const rapidjson::Value &input, rapidjson::Document &output) const {
+  gsl_Expects(input.IsObject());
+  Context sub_ctx = ctx;
+  for (auto& [key, numeric_key, value] : literals) {
+    if (input.GetObject().HasMember(key)) {
+      if (processMember(sub_ctx, key, input[key], output)) {
+        ++sub_ctx.match_count;
+      }
+    }
+  }
+  for (auto& [name, member] : input.GetObject()) {
+    if (literal_indices.contains(std::string{name.GetString(), name.GetStringLength()})) {
+      continue;
+    }
+    if (processMember(sub_ctx, std::string_view{name.GetString(), name.GetStringLength()}, member, output)) {
+      ++sub_ctx.match_count;
+    }
+  }
+}
+
 void Spec::Pattern::process(const Context& ctx, const rapidjson::Value &input, rapidjson::Document &output) const {
   auto on_exit = ctx.log([&] (auto logger) {
     logger->log_trace("Processing node at {}", ctx.path());
@@ -1061,39 +1101,9 @@ void Spec::Pattern::process(const Context& ctx, const rapidjson::Value &input, r
     putValue(sub_ctx, dest, rapidjson::Value{value.data(), gsl::narrow<rapidjson::SizeType>(value.size()), output.GetAllocator()}, output);
   }
   if (input.IsArray()) {
-    Context sub_ctx = ctx;
-    for (auto& [key, numeric_key, value] : literals) {
-      if (numeric_key && numeric_key.value() < input.GetArray().Size()) {
-        if (processMember(sub_ctx, key, input[numeric_key.value()], output)) {
-          ++sub_ctx.match_count;
-        }
-      }
-    }
-    for (rapidjson::SizeType  i = 0; i < input.GetArray().Size(); ++i) {
-      if (literal_indices.contains(std::to_string(i))) {
-        continue;
-      }
-      if (processMember(sub_ctx, std::to_string(i), input[i], output)) {
-        ++sub_ctx.match_count;
-      }
-    }
+    processArray(ctx, input, output);
   } else if (input.IsObject()) {
-    Context sub_ctx = ctx;
-    for (auto& [key, numeric_key, value] : literals) {
-      if (input.GetObject().HasMember(key)) {
-        if (processMember(sub_ctx, key, input[key], output)) {
-          ++sub_ctx.match_count;
-        }
-      }
-    }
-    for (auto& [name, member] : input.GetObject()) {
-      if (literal_indices.contains(std::string{name.GetString(), name.GetStringLength()})) {
-        continue;
-      }
-      if (processMember(sub_ctx, std::string_view{name.GetString(), name.GetStringLength()}, member, output)) {
-        ++sub_ctx.match_count;
-      }
-    }
+    processObject(ctx, input, output);
   } else if (input.IsString()) {
     processMember(ctx, std::string_view{input.GetString(), input.GetStringLength()}, rapidjson::Value{}, output);
   } else if (input.IsUint64()) {

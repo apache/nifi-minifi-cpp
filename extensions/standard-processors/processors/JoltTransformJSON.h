@@ -29,22 +29,9 @@
 
 namespace org::apache::nifi::minifi::processors::jolt_transform_json {
 enum class JoltTransform {
-  SHIFT
+  Shift
 };
 }  // namespace org::apache::nifi::minifi::processors::jolt_transform_json
-
-namespace magic_enum::customize {
-using JoltTransform = org::apache::nifi::minifi::processors::jolt_transform_json::JoltTransform;
-
-template <>
-constexpr customize_t enum_name<JoltTransform>(JoltTransform value) noexcept {
-  switch (value) {
-    case JoltTransform::SHIFT:
-      return "Shift";
-  }
-  return invalid_tag;
-}
-}  // namespace magic_enum::customize
 
 namespace org::apache::nifi::minifi::processors {
 
@@ -60,7 +47,7 @@ class JoltTransformJSON : public core::Processor {
 
   EXTENSIONAPI static constexpr auto JoltTransform = core::PropertyDefinitionBuilder<magic_enum::enum_count<jolt_transform_json::JoltTransform>()>::createProperty("Jolt Transformation DSL")
       .withDescription("Specifies the Jolt Transformation that should be used with the provided specification.")
-      .withDefaultValue(magic_enum::enum_name(jolt_transform_json::JoltTransform::SHIFT))
+      .withDefaultValue(magic_enum::enum_name(jolt_transform_json::JoltTransform::Shift))
       .withAllowedValues(magic_enum::enum_names<jolt_transform_json::JoltTransform>())
       .isRequired(true)
       .build();
