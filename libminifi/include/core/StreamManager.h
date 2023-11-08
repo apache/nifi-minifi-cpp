@@ -22,7 +22,6 @@
 
 #include "properties/Configure.h"
 #include "ResourceClaim.h"
-#include "StreamAppendLock.h"
 #include "io/BufferStream.h"
 #include "io/BaseStream.h"
 
