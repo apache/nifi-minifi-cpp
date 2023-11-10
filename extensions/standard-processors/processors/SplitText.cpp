@@ -276,32 +276,40 @@ void SplitText::onTrigger(const std::shared_ptr<core::ProcessContext> &context, 
   }
 }
 
-void SplitText::ReadCallback::setAttributesOfDoneSegment(const std::shared_ptr<core::FlowFile>& current_flow_file, uint64_t line_count) {
-  if (!current_flow_file) {
-    return;
-  }
+void SplitText::ReadCallback::setAttributesOfDoneSegment(core::FlowFile& current_flow_file, uint64_t line_count) {
   const std::string original_filename_or_uuid = flow_file_->getAttribute(core::SpecialFlowAttribute::FILENAME).value_or(flow_file_->getUUIDStr());
-  current_flow_file->setAttribute(core::SpecialFlowAttribute::FILENAME, original_filename_or_uuid + ".fragment." + fragment_identifier_ + "." + std::to_string(emitted_fragment_index_));
-  current_flow_file->setAttribute(SplitText::TextLineCountOutputAttribute.name, std::to_string(line_count));
-  current_flow_file->setAttribute(SplitText::FragmentSizeOutputAttribute.name, std::to_string(current_flow_file->getSize()));
-  current_flow_file->setAttribute(SplitText::FragmentIdentifierOutputAttribute.name, fragment_identifier_);
-  current_flow_file->setAttribute(SplitText::FragmentIndexOutputAttribute.name, std::to_string(emitted_fragment_index_));
-  current_flow_file->setAttribute(SplitText::SegmentOriginalFilenameOutputAttribute.name, flow_file_->getAttribute(core::SpecialFlowAttribute::FILENAME).value_or(""));
+  current_flow_file.setAttribute(core::SpecialFlowAttribute::FILENAME, original_filename_or_uuid + ".fragment." + fragment_identifier_ + "." + std::to_string(emitted_fragment_index_));
+  current_flow_file.setAttribute(SplitText::TextLineCountOutputAttribute.name, std::to_string(line_count));
+  current_flow_file.setAttribute(SplitText::FragmentSizeOutputAttribute.name, std::to_string(current_flow_file.getSize()));
+  current_flow_file.setAttribute(SplitText::FragmentIdentifierOutputAttribute.name, fragment_identifier_);
+  current_flow_file.setAttribute(SplitText::FragmentIndexOutputAttribute.name, std::to_string(emitted_fragment_index_));
+  current_flow_file.setAttribute(SplitText::SegmentOriginalFilenameOutputAttribute.name, flow_file_->getAttribute(core::SpecialFlowAttribute::FILENAME).value_or(""));
   ++emitted_fragment_index_;
 }
 
 void SplitText::ReadCallback::createHeaderOnlyFragmentFlow(const detail::SplitTextFragmentGenerator::Fragment& header_fragment) {
   gsl_Expects(split_text_config_.remove_trailing_new_lines);  // This is only possible if the split fragment has no content and the endlines are trimmed
-  std::shared_ptr<core::FlowFile> header_only_flow;
-  header_only_flow = session_->clone(flow_file_, gsl::narrow<int64_t>(header_fragment.fragment_offset), gsl::narrow<int64_t>(header_fragment.fragment_size - header_fragment.endline_size));
+  auto header_only_flow = session_->clone(flow_file_, gsl::narrow<int64_t>(header_fragment.fragment_offset), gsl::narrow<int64_t>(header_fragment.fragment_size - header_fragment.endline_size));
+  if (!header_only_flow) {
+    logger_->log_error("Failed to clone header only fragment flow!");
+    return;
+  }
   logger_->log_debug("Creating a header only fragment with fragment index: {} fragment size: {}", emitted_fragment_index_, header_only_flow->getSize());
-  setAttributesOfDoneSegment(header_only_flow, 0);
+  setAttributesOfDoneSegment(*header_only_flow, 0);
   results.push_back(header_only_flow);
 }
 
 void SplitText::ReadCallback::mergeHeaderAndFragmentFlows(const std::shared_ptr<core::FlowFile>& header_flow, const detail::SplitTextFragmentGenerator::Fragment& fragment, size_t fragment_trim_size) {
   auto fragment_flow = session_->clone(flow_file_, gsl::narrow<int64_t>(fragment.fragment_offset), gsl::narrow<int64_t>(fragment.fragment_size - fragment_trim_size));
+  if (!fragment_flow) {
+    logger_->log_error("Failed to clone fragment flow!");
+    return;
+  }
   auto merged_flow = session_->clone(header_flow);  // clone header to copy attributes
+  if (!merged_flow) {
+    logger_->log_error("Failed to clone merged fragment flow!");
+    return;
+  }
   session_->write(merged_flow, [this, &fragment_flow, &header_flow](const std::shared_ptr<io::OutputStream>& output_stream) -> int64_t {
     session_->read(header_flow, [&output_stream](const std::shared_ptr<io::InputStream>& header_input_stream) -> int64_t {
       return internal::pipe(*header_input_stream, *output_stream);
@@ -311,15 +319,19 @@ void SplitText::ReadCallback::mergeHeaderAndFragmentFlows(const std::shared_ptr<
     });
   });
   logger_->log_debug("Creating fragment with header with fragment index: {} fragment size: {}", emitted_fragment_index_, merged_flow->getSize());
-  setAttributesOfDoneSegment(merged_flow, fragment.text_line_count);
+  setAttributesOfDoneSegment(*merged_flow, fragment.text_line_count);
   results.push_back(merged_flow);
   session_->remove(fragment_flow);
 }
 
 void SplitText::ReadCallback::createFragmentFlowWithoutHeader(const detail::SplitTextFragmentGenerator::Fragment& fragment, size_t fragment_trim_size) {
   auto fragment_flow = session_->clone(flow_file_, gsl::narrow<int64_t>(fragment.fragment_offset), gsl::narrow<int64_t>(fragment.fragment_size - fragment_trim_size));
+  if (!fragment_flow) {
+    logger_->log_error("Failed to clone fragment flow without header!");
+    return;
+  }
   logger_->log_debug("Creating fragment with header with fragment index: {} fragment size: {}", emitted_fragment_index_, fragment_flow->getSize());
-  setAttributesOfDoneSegment(fragment_flow, fragment.text_line_count);
+  setAttributesOfDoneSegment(*fragment_flow, fragment.text_line_count);
   results.push_back(fragment_flow);
 }
 
@@ -334,6 +346,10 @@ int64_t SplitText::ReadCallback::operator()(const std::shared_ptr<io::InputStrea
       return gsl::narrow<int64_t>(flow_file_->getSize());
     }
     header_flow = session_->clone(flow_file_, gsl::narrow<int64_t>(header_fragment->fragment_offset), gsl::narrow<int64_t>(header_fragment->fragment_size));
+    if (!header_flow) {
+      logger_->log_error("Failed to clone header flow!");
+      return -1;
+    }
   }
 
   while (auto fragment = fragment_generator.readNextFragment()) {

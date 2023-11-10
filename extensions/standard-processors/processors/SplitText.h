@@ -46,7 +46,7 @@ struct SplitTextConfiguration {
 
 namespace detail {
 
-const size_t SPLIT_TEXT_BUFFER_SIZE = 8192;
+constexpr size_t SPLIT_TEXT_BUFFER_SIZE = 8192;
 
 enum class StreamReadState {
   Ok,
@@ -67,7 +67,6 @@ class LineReader {
 
   explicit LineReader(const std::shared_ptr<io::InputStream>& stream);
   std::optional<LineInfo> readNextLine(const std::optional<std::string>& starts_with = std::nullopt);
-  std::optional<std::string> extractNextLine();
   StreamReadState getState() const { return state_; }
 
  private:
@@ -213,7 +212,7 @@ class SplitText : public core::Processor {
     std::vector<std::shared_ptr<org::apache::nifi::minifi::core::FlowFile>> results;
 
    private:
-    void setAttributesOfDoneSegment(const std::shared_ptr<core::FlowFile>& current_flow_file, uint64_t line_count);
+    void setAttributesOfDoneSegment(core::FlowFile& current_flow_file, uint64_t line_count);
     void createHeaderOnlyFragmentFlow(const detail::SplitTextFragmentGenerator::Fragment& header_fragment);
     void mergeHeaderAndFragmentFlows(const std::shared_ptr<core::FlowFile>& header_flow, const detail::SplitTextFragmentGenerator::Fragment& fragment, size_t fragment_trim_size);
     void createFragmentFlowWithoutHeader(const detail::SplitTextFragmentGenerator::Fragment& fragment, size_t fragment_trim_size);
