@@ -480,15 +480,19 @@ def step_impl(context):
     context.test.create_doc_elasticsearch(context.test.get_container_name_with_postfix("opensearch"), "my_index", "preloaded_id")
 
 
-@given(u'a SSL context service is set up for PostElasticsearch and Elasticsearch')
-def step_impl(context):
+def setUpSslContextServiceForProcessor(context, processor_name: str):
     minifi_crt_file = '/tmp/resources/minifi_client.crt'
     minifi_key_file = '/tmp/resources/minifi_client.key'
     root_ca_crt_file = '/tmp/resources/root_ca.crt'
     ssl_context_service = SSLContextService(cert=minifi_crt_file, ca_cert=root_ca_crt_file, key=minifi_key_file)
-    post_elasticsearch_json = context.test.get_node_by_name("PostElasticsearch")
+    post_elasticsearch_json = context.test.get_node_by_name(processor_name)
     post_elasticsearch_json.controller_services.append(ssl_context_service)
     post_elasticsearch_json.set_property("SSL Context Service", ssl_context_service.name)
+
+
+@given(u'a SSL context service is set up for PostElasticsearch and Elasticsearch')
+def step_impl(context):
+    setUpSslContextServiceForProcessor(context, "PostElasticsearch")
 
 
 @given(u'a SSL context service is set up for PostElasticsearch and Opensearch')
@@ -1253,15 +1257,9 @@ def step_impl(context, lines: str, timeout_seconds: int):
     context.test.check_lines_on_grafana_loki(lines.split(";"), timeout_seconds, True)
 
 
-@given(u'a SSL context service is set up for PushGrafanaLokiREST')
-def step_impl(context):
-    minifi_crt_file = '/tmp/resources/minifi_client.crt'
-    minifi_key_file = '/tmp/resources/minifi_client.key'
-    root_ca_crt_file = '/tmp/resources/root_ca.crt'
-    ssl_context_service = SSLContextService(cert=minifi_crt_file, ca_cert=root_ca_crt_file, key=minifi_key_file)
-    push_grafana_loki_rest = context.test.get_node_by_name("PushGrafanaLokiREST")
-    push_grafana_loki_rest.controller_services.append(ssl_context_service)
-    push_grafana_loki_rest.set_property("SSL Context Service", ssl_context_service.name)
+@given(u'a SSL context service is set up for Grafana Loki processor \"{processor_name}\"')
+def step_impl(context, processor_name: str):
+    setUpSslContextServiceForProcessor(context, processor_name)
 
 
 # Nginx reverse proxy

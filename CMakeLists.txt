@@ -332,6 +332,10 @@ else()
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -Wextra")
     if(FAIL_ON_WARNINGS)
         set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Werror")
+        # -Wrestrict may cause build failure in GCC 12  https://gcc.gnu.org/bugzilla/show_bug.cgi?id=104336
+        if ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "GNU")
+            set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wno-error=restrict")
+        endif()
     endif()
 endif()
 
@@ -350,6 +354,10 @@ endif()
 if (ENABLE_ALL OR ENABLE_PROMETHEUS OR NOT DISABLE_CIVET)
     include(CivetWeb)
     list(APPEND CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/cmake/civetweb/dummy")
+endif()
+
+if (ENABLE_ALL OR ENABLE_GCP OR ENABLE_GRAFANA_LOKI)
+    include(Abseil)
 endif()
 
 ## Add extensions
@@ -517,7 +525,7 @@ else()
     set(CPACK_SOURCE_GENERATOR "TGZ")
 endif(WIN32)
 set(CPACK_SOURCE_PACKAGE_FILE_NAME "${ASSEMBLY_BASE_NAME}-source")
-set(CPACK_SOURCE_IGNORE_FILES "/docs/generated/;${CMAKE_SOURCE_DIR}/build/;~$;${CPACK_SOURCE_IGNORE_FILES};${CMAKE_SOURCE_DIR}/.git/;${CMAKE_SOURCE_DIR}/.idea/;${CMAKE_SOURCE_DIR}/cmake-build-debug/;${CMAKE_SOURCE_DIR}/extensions/expression-language/Scanner.h;${CMAKE_SOURCE_DIR}/extensions/expression-language/Scanner.cpp;${CMAKE_SOURCE_DIR}/extensions/expression-language/Parser.cpp;${CMAKE_SOURCE_DIR}/extensions/expression-language/Parser.hpp;${CMAKE_SOURCE_DIR}/extensions/expression-language/scanner.hh;${CMAKE_SOURCE_DIR}/extensions/expression-language/position.hh;${CMAKE_SOURCE_DIR}/extensions/expression-language/location.hh;${CMAKE_SOURCE_DIR}/extensions/expression-language/stack.hh")
+set(CPACK_SOURCE_IGNORE_FILES "/docs/generated/;${CMAKE_SOURCE_DIR}/build/;~$;${CPACK_SOURCE_IGNORE_FILES};${CMAKE_SOURCE_DIR}/.git/;${CMAKE_SOURCE_DIR}/.idea/;${CMAKE_SOURCE_DIR}/cmake-build-debug/;${CMAKE_SOURCE_DIR}/extensions/expression-language/Scanner.h;${CMAKE_SOURCE_DIR}/extensions/expression-language/Scanner.cpp;${CMAKE_SOURCE_DIR}/extensions/expression-language/Parser.cpp;${CMAKE_SOURCE_DIR}/extensions/expression-language/Parser.hpp;${CMAKE_SOURCE_DIR}/extensions/expression-language/scanner.hh;${CMAKE_SOURCE_DIR}/extensions/expression-language/position.hh;${CMAKE_SOURCE_DIR}/extensions/expression-language/location.hh;${CMAKE_SOURCE_DIR}/extensions/expression-language/stack.hh;${CMAKE_SOURCE_DIR}/extensions/grafana-loki/protobuf-generated/grafana-loki-push.grpc.pb.h;${CMAKE_SOURCE_DIR}/extensions/grafana-loki/protobuf-generated/grafana-loki-push.grpc.pb.cc;extensions/grafana-loki/protobuf-generated/grafana-loki-push.pb.h;extensions/grafana-loki/protobuf-generated/grafana-loki-push.pb.cc")
 
 # Generate binary assembly. Exclude conf for windows since we'll be doing the work in the WiX template
 if (NOT WIN32)
