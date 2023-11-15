@@ -21,6 +21,12 @@
 
 namespace org::apache::nifi::minifi::utils::jolt {
 
+
+static bool isSpecialChar(char ch) {
+  static constexpr std::array SPECIAL_CHARS{'.', '[', ']', '$', '&', '@', '#', '*'};
+  return std::find(SPECIAL_CHARS.begin(), SPECIAL_CHARS.end(), ch) != SPECIAL_CHARS.end();
+}
+
 bool Spec::Template::check(std::string_view str) {
   enum class State {
     Plain,
@@ -45,7 +51,7 @@ bool Spec::Template::check(std::string_view str) {
   return false;
 }
 
-nonstd::expected<std::pair<Spec::Template, Spec::It>, std::string> Spec::Template::parse(It begin, It end, std::string_view escapables) {
+nonstd::expected<std::pair<Spec::Template, Spec::It>, std::string> Spec::Template::parse(It begin, It end) {
   enum class State {
     Plain,
     Escaped,
@@ -89,7 +95,7 @@ nonstd::expected<std::pair<Spec::Template, Spec::It>, std::string> Spec::Templat
         if (!ch) {
           return nonstd::make_unexpected("Unterminated escape sequence");
         }
-        if (!(ch == '\\' || ch == '&' || std::find(escapables.begin(), escapables.end(), ch.value()) != escapables.end())) {
+        if (ch != '\\' && !isSpecialChar(ch.value())) {
           return nonstd::make_unexpected(fmt::format("Unknown escape sequence in template '\\{}'", ch.value()));
         }
         fragments.back() += ch.value();
@@ -205,7 +211,7 @@ bool Spec::Regex::check(std::string_view str) {
   return false;
 }
 
-nonstd::expected<Spec::Regex, std::string> Spec::Regex::parse(std::string_view str, std::string_view escapables) {
+nonstd::expected<Spec::Regex, std::string> Spec::Regex::parse(std::string_view str) {
   enum class State {
     Plain,
     Escaped
@@ -233,7 +239,7 @@ nonstd::expected<Spec::Regex, std::string> Spec::Regex::parse(std::string_view s
         if (!ch) {
           return nonstd::make_unexpected("Unterminated escape sequence");
         }
-        if (!(ch == '\\' || ch == '&' || std::find(escapables.begin(), escapables.end(), ch.value()) != escapables.end())) {
+        if (ch != '\\' && !isSpecialChar(ch.value())) {
           return nonstd::make_unexpected(fmt::format("Unknown escape sequence in pattern '\\{}'", ch.value()));
         }
         fragments.back() += ch.value();
@@ -414,8 +420,6 @@ std::pair<size_t, size_t> parseKeyAccess(std::string_view str) {
   return result;
 }
 
-static constexpr std::array SPECIAL_CHARS{'.', '[', ']', '$', '&', '@', '#', '*'};
-
 std::string parseLiteral(std::string_view str) {
   enum class State {
     Plain,
@@ -440,7 +444,7 @@ std::string parseLiteral(std::string_view str) {
         if (!ch) {
           throw Exception(GENERAL_EXCEPTION, fmt::format("Unterminated escape sequence in '{}'", str));
         }
-        if (!(ch == '\\' || std::find(SPECIAL_CHARS.begin(), SPECIAL_CHARS.end(), ch.value()) != SPECIAL_CHARS.end())) {
+        if (ch != '\\' && !isSpecialChar(ch.value())) {
           throw Exception(GENERAL_EXCEPTION, fmt::format("Unknown escape sequence in literal '\\{}'", ch.value()));
         }
         result += ch.value();
@@ -499,7 +503,7 @@ nonstd::expected<std::pair<Spec::ValueRef, Spec::It>, std::string> parseValueRef
         return ResultT {{0, {}}, it};
       }
     } else {
-      if (auto templ = Spec::Template::parse(it, end, {SPECIAL_CHARS.begin(), SPECIAL_CHARS.end()})) {
+      if (auto templ = Spec::Template::parse(it, end)) {
         return ResultT{{0, Spec::Path{{std::move(templ->first), Spec::MemberType::FIELD}}}, templ->second};
       } else {
         return ResultT {{0, {}}, it};
@@ -571,7 +575,7 @@ void parseMember(const Spec::Context& ctx, const std::unique_ptr<Spec::Pattern>&
       throw Exception(GENERAL_EXCEPTION, "Pattern cannot contain both & and *");
     }
     if (is_template) {
-      if (auto templ = Spec::Template::parse(name.begin(), name.end(), {SPECIAL_CHARS.begin(), SPECIAL_CHARS.end()})) {
+      if (auto templ = Spec::Template::parse(name.begin(), name.end())) {
         if (templ->second != name.end()) {
           throw Exception(GENERAL_EXCEPTION, fmt::format("Failed to parse template at {}, unexpected char at {}", ctx.path(), std::distance(name.begin(), templ->second)));
         }
@@ -583,7 +587,7 @@ void parseMember(const Spec::Context& ctx, const std::unique_ptr<Spec::Pattern>&
         throw Exception(GENERAL_EXCEPTION, fmt::format("Error while parsing key template at {}: {}", ctx.path(), templ.error()));
       }
     } else if (is_regex) {
-      if (auto reg = Spec::Regex::parse(name, {SPECIAL_CHARS.begin(), SPECIAL_CHARS.end()})) {
+      if (auto reg = Spec::Regex::parse(name)) {
         Spec::Context sub_ctx = ctx.extend({name}, nullptr);
         sub_ctx.matches.resize(reg.value().size());
         result->regexes.insert({reg.value(), parseValue(sub_ctx, member)});
@@ -690,7 +694,7 @@ nonstd::expected<std::pair<Spec::Destination, Spec::It>, std::string> parseDesti
     } else if (auto val_ref = parseValueReference(ctx, ch_it, end, false)) {
       result.push_back({std::move(val_ref->first), type});
       ch_it = val_ref->second;
-    } else if (auto templ = Spec::Template::parse(ch_it, end, {SPECIAL_CHARS.begin(), SPECIAL_CHARS.end()})) {
+    } else if (auto templ = Spec::Template::parse(ch_it, end)) {
       // dry eval to verify that references are valid
       (void)templ->first.eval(ctx);
       result.push_back({std::move(templ->first), type});

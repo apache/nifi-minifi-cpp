@@ -26,6 +26,7 @@
 
 namespace org::apache::nifi::minifi::test {
 
+// NOLINTBEGIN(readability-container-size-empty)
 
 TEST_CASE("Shiftr successful case") {
   auto proc = std::make_shared<minifi::processors::JoltTransformJSON>("JoltProc");
@@ -318,3 +319,5 @@ TEST_CASE("Run tests from https://github.com/bazaarvoice/jolt") {
 }
 
 }   // namespace org::apache::nifi::minifi::test
+
+// NOLINTEND(readability-container-size-empty)

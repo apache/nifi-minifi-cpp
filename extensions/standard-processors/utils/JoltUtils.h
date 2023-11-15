@@ -98,8 +98,8 @@ class Spec {
 
     // checks if the string is definitely a template (i.e. has an unescaped '&' char)
     static bool check(std::string_view str);
-    static nonstd::expected<Template, std::string> parse(std::string_view str, std::string_view escapables) {
-      if (auto res = parse(str.begin(), str.end(), escapables)) {
+    static nonstd::expected<Template, std::string> parse(std::string_view str) {
+      if (auto res = parse(str.begin(), str.end())) {
         if (res->second != str.end()) {
           return nonstd::make_unexpected("Failed to fully parse template");
         }
@@ -108,7 +108,7 @@ class Spec {
         return nonstd::make_unexpected(std::move(res.error()));
       }
     }
-    static nonstd::expected<std::pair<Template, It>, std::string> parse(It begin, It end, std::string_view escapables);
+    static nonstd::expected<std::pair<Template, It>, std::string> parse(It begin, It end);
 
     std::string eval(const Context& ctx) const;
 
@@ -138,7 +138,7 @@ class Spec {
     }
     // checks if the string is definitely a regex (i.e. has an unescaped '*' char)
     static bool check(std::string_view str);
-    static nonstd::expected<Regex, std::string> parse(std::string_view str, std::string_view escapables);
+    static nonstd::expected<Regex, std::string> parse(std::string_view str);
 
     std::optional<std::vector<std::string_view>> match(std::string_view str) const;
 
