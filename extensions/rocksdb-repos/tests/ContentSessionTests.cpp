@@ -70,7 +70,7 @@ const std::shared_ptr<minifi::io::InputStream>& operator>>(const std::shared_ptr
   return stream;
 }
 
-void NO_CREATE(std::shared_ptr<minifi::ResourceClaim>) {
+void NO_CREATE(const std::shared_ptr<minifi::ResourceClaim>&) {
   REQUIRE(false);
 }
 

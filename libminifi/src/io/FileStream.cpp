@@ -97,9 +97,9 @@ void FileStream::seek(size_t offset) {
   }
   offset_ = offset;
   file_stream_->clear();
-  if (!file_stream_->seekg(offset_))
+  if (!file_stream_->seekg(gsl::narrow<std::streamoff>(offset_)))
     logger_->log_error("{}{}", SEEK_ERROR_MSG, SEEKG_CALL_ERROR_MSG);
-  if (!file_stream_->seekp(offset_))
+  if (!file_stream_->seekp(gsl::narrow<std::streamoff>(offset_)))
     logger_->log_error("{}{}", SEEK_ERROR_MSG, SEEKP_CALL_ERROR_MSG);
 }
 
