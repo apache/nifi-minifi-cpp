@@ -46,7 +46,7 @@ struct SplitTextConfiguration {
 
 namespace detail {
 
-constexpr size_t SPLIT_TEXT_BUFFER_SIZE = 8192;
+inline constexpr size_t SPLIT_TEXT_BUFFER_SIZE = 8192;
 
 enum class StreamReadState {
   Ok,
@@ -97,15 +97,15 @@ class SplitTextFragmentGenerator {
 
   SplitTextFragmentGenerator(const std::shared_ptr<io::InputStream>& stream, const SplitTextConfiguration& split_text_config);
   std::optional<Fragment> readNextFragment();
-  nonstd::expected<SplitTextFragmentGenerator::Fragment, std::string> readHeaderFragment();
+  nonstd::expected<Fragment, std::string> readHeaderFragment();
   StreamReadState getState() const { return line_reader_.getState(); }
 
  private:
   static void addLineToFragment(Fragment& fragment, const LineReader::LineInfo& line);
   void finalizeFragmentOffset(Fragment& current_fragment);
   bool lineSizeWouldExceedMaxFragmentSize(const LineReader::LineInfo& line, uint64_t fragment_size) const;
-  nonstd::expected<SplitTextFragmentGenerator::Fragment, std::string> createHeaderFragmentUsingLineCount();
-  nonstd::expected<SplitTextFragmentGenerator::Fragment, std::string> createHeaderFragmentUsingHeaderMarkerCharacters();
+  nonstd::expected<Fragment, std::string> createHeaderFragmentUsingLineCount();
+  nonstd::expected<Fragment, std::string> createHeaderFragmentUsingHeaderMarkerCharacters();
 
   LineReader line_reader_;
   // In case the read line would exceed the maximum fragment size, we need to buffer it for the next fragment
@@ -113,6 +113,29 @@ class SplitTextFragmentGenerator {
   uint64_t flow_file_offset_ = 0;
   const SplitTextConfiguration& split_text_config_;
   uint64_t header_fragment_size_ = 0;
+};
+
+class ReadCallback {
+  public:
+  ReadCallback(std::shared_ptr<core::FlowFile> flow_file, const SplitTextConfiguration& split_text_config,
+    core::ProcessSession *session, std::shared_ptr<core::logging::Logger> logger);
+  int64_t operator()(const std::shared_ptr<io::InputStream>& stream);
+  std::optional<std::string> error;
+  std::vector<std::shared_ptr<org::apache::nifi::minifi::core::FlowFile>> results;
+
+  private:
+  void setAttributesOfDoneSegment(core::FlowFile& current_flow_file, uint64_t line_count);
+  void createHeaderOnlyFragmentFlow(const SplitTextFragmentGenerator::Fragment& header_fragment);
+  void mergeHeaderAndFragmentFlows(const std::shared_ptr<core::FlowFile>& header_flow, const SplitTextFragmentGenerator::Fragment& fragment, size_t fragment_trim_size);
+  void createFragmentFlowWithoutHeader(const SplitTextFragmentGenerator::Fragment& fragment, size_t fragment_trim_size);
+
+  std::shared_ptr<io::InputStream> stream_;
+  std::shared_ptr<core::FlowFile> flow_file_;
+  const SplitTextConfiguration& split_text_config_;
+  core::ProcessSession *session_;
+  size_t emitted_fragment_index_ = 1;
+  const std::string fragment_identifier_ = utils::IdGenerator::getIdGenerator()->generate().to_string();
+  std::shared_ptr<core::logging::Logger> logger_;
 };
 
 }  // namespace detail
@@ -154,7 +177,7 @@ class SplitText : public core::Processor {
       .build();
   EXTENSIONAPI static constexpr auto RemoveTrailingNewlines = core::PropertyDefinitionBuilder<>::createProperty("Remove Trailing Newlines")
       .withDescription("Whether to remove newlines at the end of each split file. This should be false if you intend to merge the split files later. If this is set to 'true' and a FlowFile is "
-        "generated that contains only 'empty lines' (i.e., consists only of and characters), the FlowFile will not be emitted. Note, however, that if header lines are specified, the resultant "
+        "generated that contains only 'empty lines' (i.e., consists only of \r and \n characters), the FlowFile will not be emitted. Note, however, that if header lines are specified, the resultant "
         "FlowFile will never be empty as it will consist of the header lines, so a FlowFile may be emitted that contains only the header lines.")
       .withPropertyType(core::StandardPropertyTypes::BOOLEAN_TYPE)
       .withDefaultValue("true")
@@ -202,29 +225,6 @@ class SplitText : public core::Processor {
   void onSchedule(const std::shared_ptr<core::ProcessContext> &context, const std::shared_ptr<core::ProcessSessionFactory> &session_factory) override;
   void onTrigger(const std::shared_ptr<core::ProcessContext> &context, const std::shared_ptr<core::ProcessSession> &session) override;
   void initialize() override;
-
-  class ReadCallback {
-   public:
-    ReadCallback(std::shared_ptr<core::FlowFile> flow_file, const SplitTextConfiguration& split_text_config,
-      core::ProcessSession *session, std::shared_ptr<core::logging::Logger> logger);
-    int64_t operator()(const std::shared_ptr<io::InputStream>& stream);
-    std::optional<std::string> error;
-    std::vector<std::shared_ptr<org::apache::nifi::minifi::core::FlowFile>> results;
-
-   private:
-    void setAttributesOfDoneSegment(core::FlowFile& current_flow_file, uint64_t line_count);
-    void createHeaderOnlyFragmentFlow(const detail::SplitTextFragmentGenerator::Fragment& header_fragment);
-    void mergeHeaderAndFragmentFlows(const std::shared_ptr<core::FlowFile>& header_flow, const detail::SplitTextFragmentGenerator::Fragment& fragment, size_t fragment_trim_size);
-    void createFragmentFlowWithoutHeader(const detail::SplitTextFragmentGenerator::Fragment& fragment, size_t fragment_trim_size);
-
-    std::shared_ptr<io::InputStream> stream_;
-    std::shared_ptr<core::FlowFile> flow_file_;
-    const SplitTextConfiguration& split_text_config_;
-    core::ProcessSession *session_;
-    size_t emitted_fragment_index_ = 1;
-    const std::string fragment_identifier_ = utils::IdGenerator::getIdGenerator()->generate().to_string();
-    std::shared_ptr<core::logging::Logger> logger_;
-  };
 
  private:
   SplitTextConfiguration split_text_config_;
