@@ -116,14 +116,14 @@ class SplitTextFragmentGenerator {
 };
 
 class ReadCallback {
-  public:
+ public:
   ReadCallback(std::shared_ptr<core::FlowFile> flow_file, const SplitTextConfiguration& split_text_config,
     core::ProcessSession *session, std::shared_ptr<core::logging::Logger> logger);
   int64_t operator()(const std::shared_ptr<io::InputStream>& stream);
   std::optional<std::string> error;
   std::vector<std::shared_ptr<org::apache::nifi::minifi::core::FlowFile>> results;
 
-  private:
+ private:
   void setAttributesOfDoneSegment(core::FlowFile& current_flow_file, uint64_t line_count);
   void createHeaderOnlyFragmentFlow(const SplitTextFragmentGenerator::Fragment& header_fragment);
   void mergeHeaderAndFragmentFlows(const std::shared_ptr<core::FlowFile>& header_flow, const SplitTextFragmentGenerator::Fragment& fragment, size_t fragment_trim_size);
@@ -177,8 +177,8 @@ class SplitText : public core::Processor {
       .build();
   EXTENSIONAPI static constexpr auto RemoveTrailingNewlines = core::PropertyDefinitionBuilder<>::createProperty("Remove Trailing Newlines")
       .withDescription("Whether to remove newlines at the end of each split file. This should be false if you intend to merge the split files later. If this is set to 'true' and a FlowFile is "
-        "generated that contains only 'empty lines' (i.e., consists only of \r and \n characters), the FlowFile will not be emitted. Note, however, that if header lines are specified, the resultant "
-        "FlowFile will never be empty as it will consist of the header lines, so a FlowFile may be emitted that contains only the header lines.")
+        "generated that contains only 'empty lines' (i.e., consists only of \\r and \\n characters), the FlowFile will not be emitted. Note, however, that if header lines are specified, "
+        "the resultant FlowFile will never be empty as it will consist of the header lines, so a FlowFile may be emitted that contains only the header lines.")
       .withPropertyType(core::StandardPropertyTypes::BOOLEAN_TYPE)
       .withDefaultValue("true")
       .isRequired(true)
