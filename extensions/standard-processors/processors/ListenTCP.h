@@ -86,7 +86,7 @@ class ListenTCP : public NetworkListenerProcessor {
   EXTENSIONAPI static constexpr auto OutputAttributes = std::array<core::OutputAttributeReference, 2>{PortOutputAttribute, Sender};
 
   void initialize() override;
-  void onSchedule(core::ProcessContext& context, core::ProcessSessionFactory& session_Factory) override;
+  void onSchedule(core::ProcessContext& context, core::ProcessSessionFactory& session_factory) override;
 
  protected:
   core::PropertyReference getMaxBatchSizeProperty() override;
