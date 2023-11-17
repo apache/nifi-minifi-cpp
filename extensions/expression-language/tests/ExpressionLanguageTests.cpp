@@ -22,7 +22,11 @@
 #include <string>
 #ifndef DISABLE_CURL
 #ifdef WIN32
+#ifdef _DEBUG
+#pragma comment(lib, "libcurl-d.lib")
+#else
 #pragma comment(lib, "libcurl.lib")
+#endif
 #pragma comment(lib, "Ws2_32.lib")
 #pragma comment(lib, "legacy_stdio_definitions.lib")
 #pragma comment(lib, "crypt32.lib")
