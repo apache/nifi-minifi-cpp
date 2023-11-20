@@ -17,6 +17,7 @@ limitations under the License.
 
 - [AppendHostInfo](#AppendHostInfo)
 - [ApplyTemplate](#ApplyTemplate)
+- [AttributeRollingWindow](#AttributeRollingWindow)
 - [AttributesToJSON](#AttributesToJSON)
 - [BinFiles](#BinFiles)
 - [CapturePacket](#CapturePacket)
@@ -145,6 +146,44 @@ In the list below, the names of required properties appear in bold. Any other pr
 | Name    | Description                            |
 |---------|----------------------------------------|
 | success | success operational on the flow record |
+
+
+## AttributeRollingWindow
+
+### Description
+
+Track a Rolling Window based on evaluating an Expression Language expression on each FlowFile. Each FlowFile will be emitted with the count of FlowFiles and total aggregate value of values processed in the current window.
+
+### Properties
+
+In the list below, the names of required properties appear in bold. Any other properties (not in bold) are considered optional. The table also indicates any default values, and whether a property supports the NiFi Expression Language.
+
+| Name                      | Default Value   | Allowable Values | Description                                                                                                                                                                                      |
+|---------------------------|-----------------|------------------|--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| **Value to track**        |                 |                  | The expression on which to evaluate each FlowFile. The result of the expression will be added to the rolling window value.<br/>**Supports Expression Language: true**                            |
+| Time window               |                 |                  | The amount of time for a rolling window. The format of the value is expected to be a count followed by a time unit. For example 5 millis, 10 secs, 1 min, 3 hours, 2 days, etc.                  |
+| **Window length**         | 0               |                  | The window length in number of values. Takes precedence over 'Time window'. If set to zero, the 'Time window' property is used instead.                                                          |
+| **Attribute name prefix** | rolling.window. |                  | The prefix to add to the generated attribute names. For example, if this is set to 'rolling.window.', then the full attribute names will be 'rolling.window.value', 'rolling.window.count', etc. |
+
+### Relationships
+
+| Name    | Description                                                                    |
+|---------|--------------------------------------------------------------------------------|
+| success | All FlowFiles that are successfully processed are routed to this relationship. |
+| failure | When a FlowFile fails, it is routed here.                                      |
+
+### Output Attributes
+
+| Attribute        | Relationship | Description                                            |
+|------------------|--------------|--------------------------------------------------------|
+| <prefix>count    | success      | Number of the values in the rolling window             |
+| <prefix>value    | success      | Sum of the values in the rolling window                |
+| <prefix>mean     | success      | Mean of the values in the rolling window               |
+| <prefix>median   | success      | Median of the values in the rolling window             |
+| <prefix>variance | success      | Variance of the values in the rolling window           |
+| <prefix>stddev   | success      | Standard deviation of the values in the rolling window |
+| <prefix>min      | success      | Smallest value in the rolling window                   |
+| <prefix>max      | success      | Largest value in the rolling window                    |
 
 
 ## AttributesToJSON

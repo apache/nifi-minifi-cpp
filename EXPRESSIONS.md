@@ -225,6 +225,7 @@ token, filename.
 - [`UUID`](#uuid)
 - [`literal`](#literal)
 - [`reverseDnsLookup`](#reversednslookup)
+- [`nextInt`](#nextInt)
 
 ### Evaluating Multiple Attributes
 
@@ -258,7 +259,6 @@ token, filename.
 
 ### Subjectless Functions
 
-- `nextInt`
 - `getStateValue`
 
 ## Unsupported Features
@@ -950,7 +950,7 @@ filename.txt".
 
 **Arguments**: No arguments
 
-**Return Type**: String
+**Return Type**: Number
 
 **Examples**: If the attribute "filename" has a value of "a brand new
 filename.txt" and the attribute "hello" does not exist, then the Expression
@@ -1289,7 +1289,7 @@ found at the beginning of the Subject, the value returned will be `0`, not `1`.
 | - | - |
 | value | The value to search for in the Subject |
 
-**Return Type**: Boolean
+**Return Type**: Number
 
 **Examples**:
 
@@ -1320,7 +1320,7 @@ found at the beginning of the Subject, the value returned will be `0`, not `1`.
 | - | - |
 | value | The value to search for in the Subject |
 
-**Return Type**: Boolean
+**Return Type**: Number
 
 **Examples**:
 
@@ -1615,6 +1615,23 @@ more than 3 attributes whose names begin with the letter a.
 | `${reverseDnsLookup('::1')}`                       | `localhost`  |
 | `${reverseDnsLookup('2001:4860:4860::8888'), 100}` | `dns.google` |
 
+### nextInt
+
+**Description**: Returns a one-up value (starting at 0) and increasing over the
+lifetime of the running instance of MiNiFi. This value is not persisted across restarts.
+This counter is shared across all MiNiFi components, so calling this function multiple
+times from one Processor will not guarantee sequential values within the context of a
+particular Processor.
+
+**Subject Type**: No subject
+
+**Arguments**: No arguments
+
+**Return Type**: Number
+
+**Examples**: If the previous value returned by nextInt was 5, the Expression
+${nextInt():divide(2)} obtains the next available integer (6) and divides the result
+by 2, returning a value of 3.
 
 ## Evaluating Multiple Attributes
 
