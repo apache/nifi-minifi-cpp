@@ -29,6 +29,7 @@
 #include "core/PropertyDefinitionBuilder.h"
 #include "core/PropertyType.h"
 #include "core/RelationshipDefinition.h"
+#include "RollingWindow.h"
 #include "StateManager.h"
 
 namespace org::apache::nifi::minifi::processors {
@@ -38,8 +39,8 @@ class AttributeRollingWindow final : public core::AbstractProcessor<AttributeRol
   using core::AbstractProcessor<AttributeRollingWindow>::AbstractProcessor;
 
   EXTENSIONAPI static constexpr auto Description = "Track a Rolling Window based on evaluating an Expression Language "
-      "expression on each FlowFile and add that value to the processor's state. Each FlowFile will be emitted with the "
-      "count of FlowFiles and total aggregate value of values processed in the current time window.";
+      "expression on each FlowFile. Each FlowFile will be emitted with the count of FlowFiles and total aggregate value"
+      "of values processed in the current window.";
 
   EXTENSIONAPI static constexpr auto ValueToTrack = core::PropertyDefinitionBuilder<>::createProperty("Value to track")
       .withDescription("The expression on which to evaluate each FlowFile. The result of the expression will be added "
@@ -67,8 +68,8 @@ class AttributeRollingWindow final : public core::AbstractProcessor<AttributeRol
 
   EXTENSIONAPI static constexpr auto Success = core::RelationshipDefinition{"success", "All FlowFiles that are "
       "successfully processed are routed to this relationship."};
-  EXTENSIONAPI static constexpr auto Failure = core::RelationshipDefinition{"failure", "When a FlowFile fails for a "
-      "reason other than failing to set state, it is routed here."};
+  EXTENSIONAPI static constexpr auto Failure = core::RelationshipDefinition{"failure", "When a FlowFile fails, "
+      "it is routed here."};
   EXTENSIONAPI static constexpr auto Relationships = std::array{Success, Failure};
 
   EXTENSIONAPI static constexpr bool SupportsDynamicProperties = false;
@@ -79,25 +80,15 @@ class AttributeRollingWindow final : public core::AbstractProcessor<AttributeRol
   void onSchedule(core::ProcessContext*, core::ProcessSessionFactory*) final;
   void onTrigger(core::ProcessContext*, core::ProcessSession*) final;
 
-  struct Entry {
-    std::chrono::time_point<std::chrono::system_clock> timestamp;
-    double value{};
-  };
-  struct EntryComparator {
-    bool operator()(const Entry& lhs, const Entry& rhs) const { return lhs.timestamp > rhs.timestamp; }
-  };
  private:
   bool runningInvariant() const {
     // Either time_window_ or window_length_ must be set. If window_length_ is set, it is > 0.
     return (time_window_ || window_length_) && (!window_length_ || *window_length_ > 0);
   }
-  void removeOutdatedEntries(std::lock_guard<std::mutex>& state_lock, std::chrono::time_point<std::chrono::system_clock> timestamp);
-  void addEntry(std::lock_guard<std::mutex>& state_lock, std::chrono::time_point<std::chrono::system_clock> timestamp, double value);
   static void calculateAndSetAttributes(core::FlowFile&, std::span<const double> sorted_values);
 
-
   mutable std::mutex state_mutex_;
-  std::priority_queue<Entry, std::vector<Entry>, EntryComparator> state_;
+  standard::utils::RollingWindow<std::chrono::time_point<std::chrono::system_clock>, double> state_;
 
   std::optional<std::chrono::milliseconds> time_window_{};
   std::optional<size_t> window_length_{};

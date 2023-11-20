@@ -38,47 +38,6 @@ void AttributeRollingWindow::onSchedule(core::ProcessContext* context, core::Pro
   gsl_Ensures(runningInvariant());
 }
 
-void AttributeRollingWindow::addEntry(std::lock_guard<std::mutex>&,
-    std::chrono::time_point<std::chrono::system_clock> timestamp,
-    double value) {
-  state_.push({timestamp, value});
-}
-
-/**
- * If the window length is set, remove the oldest entries from the state until the state size is less than or equal to the window length.
- * If the time window is set, remove entries from the state until all entries are within the time window.
- */
-void AttributeRollingWindow::removeOutdatedEntries(std::lock_guard<std::mutex>&,
-    std::chrono::time_point<std::chrono::system_clock> now) {
-  gsl_Expects(runningInvariant());
-  if (window_length_) {
-    // Normally this should only run once
-    while (state_.size() > *window_length_ && !state_.empty()) {
-      state_.pop();
-    }
-  } else if (time_window_) {
-    const auto oldest_allowed_timestamp = now - *time_window_;
-    while(!state_.empty() && state_.top().timestamp < oldest_allowed_timestamp) {
-      state_.pop();
-    }
-  }
-}
-
-namespace {
-template<typename T, typename Underlying, typename Comp>
-struct StateCopy : std::priority_queue<T, Underlying, Comp> {
-  explicit StateCopy(std::priority_queue<T, Underlying, Comp> source)
-    : std::priority_queue<T, Underlying, Comp>{std::move(source)} {}
-
-  // expose the protected underlying container
-  Underlying get() && {
-    return std::move(this->c);
-  }
-};
-template<typename T, typename Underlying, typename Comp>
-StateCopy(std::priority_queue<T, Underlying, Comp>) -> StateCopy<T, Underlying, Comp>;
-}  // namespace
-
 void AttributeRollingWindow::onTrigger(core::ProcessContext* context, core::ProcessSession* session) {
   gsl_Expects(context && session && runningInvariant());
   const auto flow_file = session->get();
@@ -99,15 +58,19 @@ void AttributeRollingWindow::onTrigger(core::ProcessContext* context, core::Proc
     }
   }();
   // copy: so we can release the lock sooner
-  // wrap: so we can access the protected underlying container c for later calculations
   const auto state_copy = [&, now = std::chrono::system_clock::now()] {
     std::lock_guard lg{state_mutex_};
-    addEntry(lg, now, current_value);
-    removeOutdatedEntries(lg, now);
-    return StateCopy{state_}.get();
+    state_.add(now, current_value);
+    if (window_length_) {
+      state_.shrinkToSize(*window_length_);
+    } else {
+      gsl_Assert(time_window_);
+      state_.removeOlderThan(now - *time_window_);
+    }
+    return state_.getEntries();
   }();
   const auto sorted_values = [&state_copy] {
-    auto values = state_copy | ranges::view::transform(&Entry::value) | ranges::to<std::vector>;
+    auto values = state_copy | ranges::views::transform(&decltype(state_)::Entry::value) | ranges::to<std::vector>;
     std::sort(std::begin(values), std::end(values));
     return values;
   }();
