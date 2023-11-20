@@ -72,8 +72,12 @@ bool ExtensionManager::initialize(const std::shared_ptr<Configure>& config) {
     }));
     for (const auto& candidate : candidates) {
       auto library = internal::asDynamicLibrary(candidate);
-      if (!library || !library->verify(logger_)) {
+      if (!library) {
         continue;
+      }
+      if (!library->verify(logger_)) {
+        logger_->log_warn("Skipping library '{}' at '{}': failed verification, different build?",
+            library->name, library->getFullPath());
       }
       auto module = std::make_unique<DynamicLibrary>(library->name, library->getFullPath());
       active_module_ = module.get();

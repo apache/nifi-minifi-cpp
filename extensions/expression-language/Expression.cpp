@@ -1046,6 +1046,11 @@ Value expr_ifElse(const std::vector<Value> &args) {
   }
 }
 
+Value expr_nextInt(const std::vector<Value>&) {
+  static int64_t counter = 0;
+  return Value(counter++);
+}
+
 Expression make_allAttributes(const std::string &function_name, const std::vector<Expression> &args) {
   if (args.empty()) {
     std::stringstream message_ss;
@@ -1519,6 +1524,8 @@ Expression make_dynamic_function(const std::string &function_name, const std::ve
     return make_dynamic_function_incomplete<expr_toDate>(function_name, args, 0);
   } else if (function_name == "now") {
     return make_dynamic_function_incomplete<expr_now>(function_name, args, 0);
+  } else if (function_name == "nextInt") {
+    return make_dynamic_function_incomplete<expr_nextInt>(function_name, args, 0);
   } else {
     std::string msg("Unknown expression function: ");
     msg.append(function_name);
