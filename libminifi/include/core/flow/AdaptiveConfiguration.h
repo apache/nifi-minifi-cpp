@@ -30,7 +30,7 @@ class AdaptiveConfiguration : public StructuredConfiguration {
   explicit AdaptiveConfiguration(ConfigurationContext ctx);
 
   std::vector<std::string> getSupportedFormats() const override {
-    return {"application/vnd.minifi-c2+json;version=1", "text/yml"};
+    return {"application/json", "text/yml"};
   }
 
   std::unique_ptr<core::ProcessGroup> getRootFromPayload(const std::string &payload) override;

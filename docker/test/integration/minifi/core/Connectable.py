@@ -23,6 +23,7 @@ class Connectable(object):
                  auto_terminate=None):
 
         self.uuid = uuid.uuid4()
+        self.instance_id = uuid.uuid4()
 
         if name is None:
             self.name = "node_of_" + str(self.uuid)

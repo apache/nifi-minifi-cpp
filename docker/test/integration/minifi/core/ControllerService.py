@@ -22,6 +22,7 @@ class ControllerService(object):
     def __init__(self, name=None, properties=None):
 
         self.id = str(uuid.uuid4())
+        self.instance_id = str(uuid.uuid4())
 
         if name is None:
             self.name = str(uuid.uuid4())
