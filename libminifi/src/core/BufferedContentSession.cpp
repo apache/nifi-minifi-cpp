@@ -45,7 +45,6 @@ std::shared_ptr<io::BaseStream> BufferedContentSession::write(const std::shared_
 std::shared_ptr<io::BaseStream> BufferedContentSession::append(
     const std::shared_ptr<ResourceClaim>& resource_id, size_t offset,
     const std::function<void(const std::shared_ptr<ResourceClaim>&)>& on_copy) {
-
   if (auto it = managed_resources_.find(resource_id); it != managed_resources_.end()) {
     return it->second;
   }
