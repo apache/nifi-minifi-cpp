@@ -15,8 +15,15 @@
  * limitations under the License.
  */
 
-#include "core/Processor.h"
+#include <string>
+#include <string_view>
+#include <type_traits>
 #include "range/v3/view/transform.hpp"
+#include "core/Annotation.h"
+#include "core/Core.h"
+#include "core/Processor.h"
+#include "core/PropertyDefinition.h"
+#include "core/RelationshipDefinition.h"
 
 namespace org::apache::nifi::minifi::core {
 template<typename ProcessorT>

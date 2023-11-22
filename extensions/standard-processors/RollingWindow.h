@@ -16,7 +16,6 @@
  */
 #pragma once
 
-#include <chrono>
 #include <mutex>
 #include <queue>
 #include <vector>
@@ -48,7 +47,7 @@ class RollingWindow {
     }
   };
 
-  void removeOlderThan(std::chrono::time_point<std::chrono::system_clock> timestamp) {
+  void removeOlderThan(Timestamp timestamp) {
     while (!state_.empty() && state_.top().timestamp < timestamp) {
       state_.pop();
     }

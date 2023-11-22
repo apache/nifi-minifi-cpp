@@ -17,10 +17,10 @@
 #include "AttributeRollingWindow.h"
 #include <algorithm>
 #include <numeric>
+#include "fmt/format.h"
 #include "core/ProcessContext.h"
 #include "core/ProcessSession.h"
 #include "core/Resource.h"
-#include "fmt/format.h"
 #include "utils/expected.h"
 #include "utils/OptionalUtils.h"
 
