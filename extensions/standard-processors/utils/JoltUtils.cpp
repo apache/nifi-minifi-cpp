@@ -300,7 +300,7 @@ std::optional<std::vector<std::string_view>> Spec::Regex::match(std::string_view
     // not enough characters left
     return std::nullopt;
   }
-  auto next_it = (str.rbegin() + fragments.back().size()).base();
+  auto next_it = std::next(str.rbegin(), fragments.back().size()).base();
   if (std::string_view(next_it, str.end()) != fragments.back()) {
     return std::nullopt;
   }
@@ -468,7 +468,7 @@ nonstd::expected<std::pair<Spec::Path, Spec::It>, std::string> parsePath(const S
     if (!holds_alternative<Spec::Template>(member)) {
       return nonstd::make_unexpected(fmt::format("Value reference at {} cannot contain nested value reference path", ctx.path()));
     }
-    result.emplace_back(std::move(std::get<Spec::Template>(member)), std::move(type));
+    result.emplace_back(std::move(std::get<Spec::Template>(member)), type);
   }
   return std::pair<Spec::Path, Spec::It>{result, dst->second};
 }
@@ -689,7 +689,7 @@ nonstd::expected<std::pair<Spec::Destination, Spec::It>, std::string> parseDesti
       if (!ctx.find(match_idx->first)) {
         return nonstd::make_unexpected(fmt::format("Invalid matching index at {} to ancestor {}", ctx.path(), match_idx->first));
       }
-      result.push_back({std::move(match_idx->first), type});
+      result.push_back({match_idx->first, type});
       ch_it = match_idx->second;
     } else if (auto val_ref = parseValueReference(ctx, ch_it, end, false)) {
       result.push_back({std::move(val_ref->first), type});
@@ -837,14 +837,14 @@ void putValue(const Spec::Context& ctx, const Spec::Destination& dest, const rap
         if (member_value.get().IsUint64()) {
           idx = gsl::narrow<size_t>(member_value.get().GetUint64());
         } else if (member_value.get().IsInt64()) {
-          int64_t idx_val = idx = member_value.get().GetInt64();
+          int64_t idx_val = member_value.get().GetInt64();
           if (idx_val < 0) {
             return;
           }
           idx = gsl::narrow<size_t>(idx_val);
         } else if (member_value.get().IsDouble()) {
           // no words
-          double idx_val = idx = member_value.get().GetDouble();
+          double idx_val = member_value.get().GetDouble();
           if (idx_val < 0) {
             return;
           }
@@ -984,7 +984,7 @@ nonstd::expected<Spec, std::string> Spec::parse(std::string_view str, std::share
     return nonstd::make_unexpected(fmt::format("{} at {}", rapidjson::GetParseError_En(res.Code()), res.Offset()));
   }
   try {
-    Spec::Context ctx{.matches = {"root"}, .logger = logger};
+    Spec::Context ctx{.matches = {"root"}, .logger = std::move(logger)};
     return Spec{parseMap(ctx, doc)};
   } catch (const std::exception& ex) {
     return nonstd::make_unexpected(ex.what());
@@ -1124,7 +1124,7 @@ void Spec::Pattern::process(const Context& ctx, const rapidjson::Value &input, r
 nonstd::expected<rapidjson::Document, std::string> Spec::process(const rapidjson::Value &input, std::shared_ptr<core::logging::Logger> logger) const {
   rapidjson::Document output;
   try {
-    value_->process(Context{.matches = {"root"}, .node = &input, .logger = logger}, input, output);
+    value_->process(Context{.matches = {"root"}, .node = &input, .logger = std::move(logger)}, input, output);
     return output;
   } catch (const std::exception& ex) {
     return nonstd::make_unexpected(ex.what());
