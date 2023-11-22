@@ -60,10 +60,17 @@ class AttributeRollingWindow final : public core::AbstractProcessor<AttributeRol
       .withDefaultValue("0")
       .withPropertyType(core::StandardPropertyTypes::UNSIGNED_INT_TYPE)
       .build();
-  EXTENSIONAPI static constexpr auto Properties = std::array<core::PropertyReference, 3>{
+  EXTENSIONAPI static constexpr auto AttributeNamePrefix = core::PropertyDefinitionBuilder<>::createProperty("Attribute name prefix")
+      .withDescription("The prefix to add to the generated attribute names. For example, if this is set to 'rolling.window.', "
+                       "then the full attribute names will be 'rolling.window.value', 'rolling.window.count', etc.")
+      .isRequired(true)
+      .withDefaultValue("rolling.window.")
+      .build();
+  EXTENSIONAPI static constexpr auto Properties = std::array<core::PropertyReference, 4>{
     ValueToTrack,
     TimeWindow,
     WindowLength,
+    AttributeNamePrefix
   };
 
   EXTENSIONAPI static constexpr auto Success = core::RelationshipDefinition{"success", "All FlowFiles that are "
@@ -85,13 +92,14 @@ class AttributeRollingWindow final : public core::AbstractProcessor<AttributeRol
     // Either time_window_ or window_length_ must be set. If window_length_ is set, it is > 0.
     return (time_window_ || window_length_) && (!window_length_ || *window_length_ > 0);
   }
-  static void calculateAndSetAttributes(core::FlowFile&, std::span<const double> sorted_values);
+  void calculateAndSetAttributes(core::FlowFile&, std::span<const double> sorted_values) const;
 
   mutable std::mutex state_mutex_;
   standard::utils::RollingWindow<std::chrono::time_point<std::chrono::system_clock>, double> state_;
 
   std::optional<std::chrono::milliseconds> time_window_{};
   std::optional<size_t> window_length_{};
+  std::string attribute_name_prefix_;
   std::shared_ptr<core::logging::Logger> logger_ = core::logging::LoggerFactory<AttributeRollingWindow>::getLogger(uuid_);
 };
 

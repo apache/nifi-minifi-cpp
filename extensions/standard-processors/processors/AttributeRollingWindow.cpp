@@ -35,6 +35,10 @@ void AttributeRollingWindow::onSchedule(core::ProcessContext* context, core::Pro
   if (!time_window_ && !window_length_) {
     throw minifi::Exception{ExceptionType::PROCESS_SCHEDULE_EXCEPTION, "Either 'Time window' or 'Window length' must be set"};
   }
+  attribute_name_prefix_ = (context->getProperty(AttributeNamePrefix)
+      | utils::orElse([] {
+        throw minifi::Exception{ExceptionType::PROCESS_SCHEDULE_EXCEPTION, "'Attribute name prefix' must be set"};
+      })).value();
   gsl_Ensures(runningInvariant());
 }
 
@@ -82,27 +86,32 @@ void AttributeRollingWindow::onTrigger(core::ProcessContext* context, core::Proc
  * Calculate statistical properties of the values in the rolling window and set them as attributes on the flow file.
  * Properties: count, value (sum), mean (average), median, variance, stddev
  */
-void AttributeRollingWindow::calculateAndSetAttributes(core::FlowFile& flow_file, std::span<const double> sorted_values) {
-  flow_file.setAttribute("rolling_window_count", std::to_string(sorted_values.size()));
+void AttributeRollingWindow::calculateAndSetAttributes(core::FlowFile &flow_file,
+    std::span<const double> sorted_values) const {
+  const auto attribute_name = [this](std::string_view suffix) {
+    return utils::string::join_pack(attribute_name_prefix_, suffix);
+  };
+  const auto set_aggregate = [&flow_file, attribute_name](std::string_view name, double value) {
+    flow_file.setAttribute(attribute_name(name), std::to_string(value));
+  };
+  set_aggregate("count", sorted_values.size());
   const auto sum = std::accumulate(std::begin(sorted_values), std::end(sorted_values), 0.0);
-  flow_file.setAttribute("rolling_window_value", std::to_string(sum));
+  set_aggregate("value", sum);
   const auto mean = sum / gsl::narrow_cast<double>(sorted_values.size());
-  flow_file.setAttribute("rolling_window_mean", std::to_string(mean));
-  const auto median = [&] {
-    if (sorted_values.size() % 2 == 0) {
-      const auto mid = sorted_values.size() / 2;
-      return (sorted_values[mid] + sorted_values[mid - 1]) / 2;
-    } else {
-      return sorted_values[sorted_values.size() / 2];
-    }
-  }();
-  flow_file.setAttribute("rolling_window_median", std::to_string(median));
+  set_aggregate("mean", mean);
+  set_aggregate("median", [&] {
+    const auto mid = sorted_values.size() / 2;
+    return sorted_values.size() % 2 == 0
+        ? std::midpoint(sorted_values[mid], sorted_values[mid - 1])  // even number of values: average the two middle values
+        : sorted_values[mid];  // odd number of values: take the middle value
+  }());
   const auto variance = std::accumulate(std::begin(sorted_values), std::end(sorted_values), 0.0, [&](double acc, double value) {
     return acc + std::pow(value - mean, 2) / gsl::narrow_cast<double>(sorted_values.size());
   });
-  flow_file.setAttribute("rolling_window_variance", std::to_string(variance));
-  const auto stddev = std::sqrt(variance);
-  flow_file.setAttribute("rolling_window_stddev", std::to_string(stddev));
+  set_aggregate("variance", variance);
+  set_aggregate("stddev", std::sqrt(variance));
+  set_aggregate("min", sorted_values.front());
+  set_aggregate("max", sorted_values.back());
 }
 
 REGISTER_RESOURCE(AttributeRollingWindow, Processor);
