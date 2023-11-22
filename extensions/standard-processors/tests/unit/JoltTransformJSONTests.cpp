@@ -113,8 +113,14 @@ TEST_CASE("Shiftr destination is a string or array of strings") {
 
 TEST_CASE("Shiftr template is correctly parsed") {
   using Template = minifi::utils::jolt::Spec::Template;
-  REQUIRE(Template::parse("a&0b", "").value() == Template({"a", "b"}, {{0, 0}}));
-  REQUIRE(Template::parse("a&12&(4,5)b&c", "").value() == Template({"a", "", "b", "c"}, {{12, 0}, {4, 5}, {0, 0}}));
+  {
+    const std::string_view test_str = "a&0b";
+    REQUIRE(Template::parse(test_str.begin(), test_str.end()).value().first == Template({"a", "b"}, {{0, 0}}));
+  }
+  {
+    const std::string_view test_str = "a&12&(4,5)b&c";
+    REQUIRE(Template::parse(test_str.begin(), test_str.end()).value().first == Template({"a", "", "b", "c"}, {{12, 0}, {4, 5}, {0, 0}}));
+  }
 }
 
 TEST_CASE("Shiftr invalid reference") {
