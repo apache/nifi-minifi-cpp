@@ -42,7 +42,6 @@ function(use_openssl SOURCE_DIR BINARY_DIR)
 
     if (APPLE AND (CMAKE_SYSTEM_PROCESSOR MATCHES "x86_64|amd64|AMD64"))
         set(OPENSSL_SHARED_FLAG "" CACHE STRING "" FORCE)
-        install(FILES ${BYPRODUCTS} DESTINATION bin COMPONENT bin)
     else()
         set(OPENSSL_SHARED_FLAG "no-shared" CACHE STRING "" FORCE)
     endif()
@@ -52,6 +51,10 @@ function(use_openssl SOURCE_DIR BINARY_DIR)
     FOREACH(BYPRODUCT ${BYPRODUCTS})
         LIST(APPEND OPENSSL_LIBRARIES_LIST "${OPENSSL_BIN_DIR}/${BYPRODUCT}")
     ENDFOREACH(BYPRODUCT)
+
+    if (APPLE AND (CMAKE_SYSTEM_PROCESSOR MATCHES "x86_64|amd64|AMD64"))
+        install(FILES ${OPENSSL_LIBRARIES_LIST} DESTINATION bin COMPONENT bin)
+    else()
 
     # Define patch step
     set(PATCH_FILE "${SOURCE_DIR}/thirdparty/openssl/Tidy-up-aarch64-feature-detection-code-in-armcap.c.patch")
