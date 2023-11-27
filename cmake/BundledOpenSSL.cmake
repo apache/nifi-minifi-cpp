@@ -35,16 +35,17 @@ function(use_openssl SOURCE_DIR BINARY_DIR)
         set(BYPRODUCT_SUFFIX ".a" CACHE STRING "" FORCE)
     endif()
 
-    if (APPLE AND (CMAKE_SYSTEM_PROCESSOR MATCHES "x86_64|amd64|AMD64"))
-        set(OPENSSL_SHARED_FLAG "" CACHE STRING "" FORCE)
-    else()
-        set(OPENSSL_SHARED_FLAG "no-shared" CACHE STRING "" FORCE)
-    endif()
-
     set(BYPRODUCTS
             "${LIBDIR}/${BYPRODUCT_PREFIX}ssl${BYPRODUCT_SUFFIX}"
             "${LIBDIR}/${BYPRODUCT_PREFIX}crypto${BYPRODUCT_SUFFIX}"
             )
+
+    if (APPLE AND (CMAKE_SYSTEM_PROCESSOR MATCHES "x86_64|amd64|AMD64"))
+        set(OPENSSL_SHARED_FLAG "" CACHE STRING "" FORCE)
+        install(FILES ${BYPRODUCTS} DESTINATION bin COMPONENT bin)
+    else()
+        set(OPENSSL_SHARED_FLAG "no-shared" CACHE STRING "" FORCE)
+    endif()
 
     set(OPENSSL_BIN_DIR "${BINARY_DIR}/thirdparty/openssl-install" CACHE STRING "" FORCE)
 
