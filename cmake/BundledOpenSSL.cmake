@@ -54,7 +54,7 @@ function(use_openssl SOURCE_DIR BINARY_DIR)
 
     if (APPLE AND (CMAKE_SYSTEM_PROCESSOR MATCHES "x86_64|amd64|AMD64"))
         install(FILES ${OPENSSL_LIBRARIES_LIST} DESTINATION bin COMPONENT bin)
-    else()
+    endif()
 
     # Define patch step
     set(PATCH_FILE "${SOURCE_DIR}/thirdparty/openssl/Tidy-up-aarch64-feature-detection-code-in-armcap.c.patch")
