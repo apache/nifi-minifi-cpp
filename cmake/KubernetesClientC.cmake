@@ -55,17 +55,10 @@ set(K8S_PC ${Bash_EXECUTABLE} -c "set -x &&\
 FetchContent_Declare(kubernetes
     URL             https://github.com/kubernetes-client/c/archive/refs/tags/v0.5.0.tar.gz
     URL_HASH        SHA256=dbb6e6cd29ae2ac6c15de894aefb9b1e3d48916541d443f089aa0ffad6517ec6
-    PATCH_COMMAND "${K8S_PC}"
+    PATCH_COMMAND   "${K8S_PC}"
+    SOURCE_SUBDIR   kubernetes
 )
 
-# With CMake >= 3.18, this block could be replaced with FetchContent_MakeAvailable(kubernetes),
-# if we add the `SOURCE_SUBDIR kubernetes` option to FetchContent_Declare() [this option is not available in CMake < 3.18].
-# As of July 2022, one of our supported platforms, Centos 7, comes with CMake 3.17.
-FetchContent_GetProperties(kubernetes)
-if(NOT kubernetes_POPULATED)
-    FetchContent_Populate(kubernetes)
-    # the top level doesn't contain CMakeLists.txt, it is in the "kubernetes" subdirectory
-    add_subdirectory(${kubernetes_SOURCE_DIR}/kubernetes ${kubernetes_BINARY_DIR})
-endif()
+FetchContent_MakeAvailable(kubernetes)
 
 add_dependencies(websockets CURL::libcurl OpenSSL::Crypto OpenSSL::SSL)

@@ -25,17 +25,10 @@ set(BUILD_STATIC_LIBS ON CACHE BOOL "" FORCE)
 FetchContent_Declare(lz4
     URL            https://github.com/lz4/lz4/archive/refs/tags/v1.9.4.tar.gz
     URL_HASH       SHA256=0b0e3aa07c8c063ddf40b082bdf7e37a1562bda40a0ff5272957f3e987e0e54b
+    SOURCE_SUBDIR  build/cmake
 )
 
-# With CMake >= 3.18, this block could be replaced with FetchContent_MakeAvailable(lz4),
-# if we add the `SOURCE_SUBDIR build/cmake` option to FetchContent_Declare() [this option is not available in CMake < 3.18].
-# As of July 2022, one of our supported platforms, Centos 7, comes with CMake 3.17.
-FetchContent_GetProperties(lz4)
-if(NOT lz4_POPULATED)
-    FetchContent_Populate(lz4)
-    # the top level doesn't contain CMakeLists.txt, it is in the "build/cmake" subdirectory
-    add_subdirectory(${lz4_SOURCE_DIR}/build/cmake ${lz4_BINARY_DIR})
-endif()
+FetchContent_MakeAvailable(lz4)
 
 add_library(lz4::lz4 ALIAS lz4_static)
 
