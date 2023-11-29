@@ -26,11 +26,14 @@ function(use_openssl SOURCE_DIR BINARY_DIR)
 
     # Define byproducts
     set(BYPRODUCT_PREFIX "lib" CACHE STRING "" FORCE)
+    set(OPENSSL_BUILD_SHARED "NO" CACHE STRING "" FORCE)
+
     if (WIN32)
         set(BYPRODUCT_SUFFIX ".lib" CACHE STRING "" FORCE)
     # Due to OpenSSL 3's static linking issue on x86 MacOS platform we make an exception to build a shared library instead
     elseif (APPLE AND (CMAKE_SYSTEM_PROCESSOR MATCHES "x86_64|amd64|AMD64"))
         set(BYPRODUCT_SUFFIX ".dylib" CACHE STRING "" FORCE)
+        set(OPENSSL_BUILD_SHARED "YES" CACHE STRING "" FORCE)
     else()
         set(BYPRODUCT_SUFFIX ".a" CACHE STRING "" FORCE)
     endif()
@@ -40,7 +43,7 @@ function(use_openssl SOURCE_DIR BINARY_DIR)
             "${LIBDIR}/${BYPRODUCT_PREFIX}crypto${BYPRODUCT_SUFFIX}"
             )
 
-    if (APPLE AND (CMAKE_SYSTEM_PROCESSOR MATCHES "x86_64|amd64|AMD64"))
+    if (OPENSSL_BUILD_SHARED)
         set(OPENSSL_SHARED_FLAG "" CACHE STRING "" FORCE)
     else()
         set(OPENSSL_SHARED_FLAG "no-shared" CACHE STRING "" FORCE)
@@ -52,7 +55,7 @@ function(use_openssl SOURCE_DIR BINARY_DIR)
         LIST(APPEND OPENSSL_LIBRARIES_LIST "${OPENSSL_BIN_DIR}/${BYPRODUCT}")
     ENDFOREACH(BYPRODUCT)
 
-    if (APPLE AND (CMAKE_SYSTEM_PROCESSOR MATCHES "x86_64|amd64|AMD64"))
+    if (OPENSSL_BUILD_SHARED)
         install(FILES ${OPENSSL_LIBRARIES_LIST} DESTINATION bin COMPONENT bin)
     endif()
 
