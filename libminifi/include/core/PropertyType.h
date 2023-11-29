@@ -338,6 +338,7 @@ class DataTransferSpeedPropertyType : public PropertyType {
 };
 
 namespace StandardPropertyTypes {
+
 inline constexpr auto INVALID_TYPE = NeverValidPropertyType{};
 inline constexpr auto INTEGER_TYPE = IntegerPropertyType{};
 inline constexpr auto UNSIGNED_INT_TYPE = UnsignedIntPropertyType{};
@@ -373,6 +374,19 @@ inline gsl::not_null<const PropertyValidator*> getValidator(const std::shared_pt
     return gsl::make_not_null<const PropertyValidator*>(&VALID_TYPE);
   }
 }
+
+enum class PropertyTypeCode : int64_t {
+  INTEGER = 0,
+  LONG = 1,
+  BOOLEAN = 2,
+  DATA_SIZE = 3,
+  TIME_PERIOD = 4,
+  NON_BLANK = 5,
+  PORT = 6
+};
+
+const core::PropertyType& translateCodeToPropertyType(const PropertyTypeCode& code);
+
 }  // namespace StandardPropertyTypes
 
 }  // namespace org::apache::nifi::minifi::core

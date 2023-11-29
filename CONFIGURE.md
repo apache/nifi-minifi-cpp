@@ -634,6 +634,9 @@ To notify the agent which extensions it should load see [Loading extensions](Ext
 ### JNI Functionality
 Please see the [JNI Configuration Guide](JNI.md).
 
+### Python processors
+Please see the [Python Processors Readme](extensions/python/PYTHON.md).
+
 ## Log configuration
 By default the application logs for Apache MiNiFi C++ can be found in the ${MINIFI_HOME}/logs/minifi-app.log file with default INFO level logging. The logger can be reconfigured in the ${MINIFI_HOME}/conf/minifi-log.properties file to use different output streams, log level, and output format.
 

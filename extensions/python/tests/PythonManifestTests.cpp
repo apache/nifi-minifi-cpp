@@ -101,7 +101,7 @@ TEST_CASE("Python processor's description is part of the manifest") {
     REQUIRE(getNode(MyPyProc->children, "type").value == "org.apache.nifi.minifi.processors.MyPyProc");
 
     auto& rels = getNode(MyPyProc->children, "supportedRelationships").children;
-    REQUIRE(rels.size() == 2);
+    REQUIRE(rels.size() == 3);
 
     auto* success = findNode(rels, [] (auto& rel) {return getNode(rel.children, "name").value == "success";});
     REQUIRE(success);
@@ -133,7 +133,7 @@ TEST_CASE("Python processor's description is part of the manifest") {
     REQUIRE(getNode(properties[0].children, "defaultValue").value == "banana");
 
     auto& rels = getNode(MyPyProc2->children, "supportedRelationships").children;
-    REQUIRE(rels.size() == 2);
+    REQUIRE(rels.size() == 3);
 
     auto* success = findNode(rels, [] (auto& rel) {return getNode(rel.children, "name").value == "success";});
     REQUIRE(success);

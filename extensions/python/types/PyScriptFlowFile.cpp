@@ -22,16 +22,18 @@
 extern "C" {
 namespace org::apache::nifi::minifi::extensions::python {
 
-static PyMethodDef PyScriptFlowFile_methods[] = {
+static PyMethodDef PyScriptFlowFile_methods[] = {  // NOLINT(cppcoreguidelines-avoid-c-arrays)
     {"getAttribute", (PyCFunction) PyScriptFlowFile::getAttribute, METH_VARARGS, nullptr},
     {"addAttribute", (PyCFunction) PyScriptFlowFile::addAttribute, METH_VARARGS, nullptr},
     {"updateAttribute", (PyCFunction) PyScriptFlowFile::updateAttribute, METH_VARARGS, nullptr},
     {"removeAttribute", (PyCFunction) PyScriptFlowFile::removeAttribute, METH_VARARGS, nullptr},
     {"setAttribute", (PyCFunction) PyScriptFlowFile::setAttribute, METH_VARARGS, nullptr},
+    {"getSize", (PyCFunction) PyScriptFlowFile::getSize, METH_VARARGS, nullptr},
+    {"getAttributes", (PyCFunction) PyScriptFlowFile::getAttributes, METH_VARARGS, nullptr},
     {}  /* Sentinel */
 };
 
-static PyType_Slot PyScriptFlowFileTypeSpecSlots[] = {
+static PyType_Slot PyScriptFlowFileTypeSpecSlots[] = {  // NOLINT(cppcoreguidelines-avoid-c-arrays)
     {Py_tp_dealloc, reinterpret_cast<void*>(pythonAllocatedInstanceDealloc<PyScriptFlowFile>)},
     {Py_tp_init, reinterpret_cast<void*>(PyScriptFlowFile::init)},
     {Py_tp_methods, reinterpret_cast<void*>(PyScriptFlowFile_methods)},
@@ -68,7 +70,7 @@ PyObject* PyScriptFlowFile::getAttribute(PyScriptFlowFile* self, PyObject* args)
     return nullptr;
   }
 
-  const char* attribute;
+  const char* attribute = nullptr;
   if (!PyArg_ParseTuple(args, "s", &attribute)) {
     throw PyException();
   }
@@ -82,8 +84,8 @@ PyObject* PyScriptFlowFile::addAttribute(PyScriptFlowFile* self, PyObject* args)
     return nullptr;
   }
 
-  const char* key;
-  const char* value;
+  const char* key = nullptr;
+  const char* value = nullptr;
   if (!PyArg_ParseTuple(args, "ss", &key, &value)) {
     throw PyException();
   }
@@ -98,8 +100,8 @@ PyObject* PyScriptFlowFile::updateAttribute(PyScriptFlowFile* self, PyObject* ar
     return nullptr;
   }
 
-  const char* key;
-  const char* value;
+  const char* key = nullptr;
+  const char* value = nullptr;
   if (!PyArg_ParseTuple(args, "ss", &key, &value)) {
     throw PyException();
   }
@@ -114,7 +116,7 @@ PyObject* PyScriptFlowFile::removeAttribute(PyScriptFlowFile* self, PyObject* ar
     return nullptr;
   }
 
-  const char* attribute;
+  const char* attribute = nullptr;
   if (!PyArg_ParseTuple(args, "s", &attribute)) {
     throw PyException();
   }
@@ -128,13 +130,38 @@ PyObject* PyScriptFlowFile::setAttribute(PyScriptFlowFile* self, PyObject* args)
     return nullptr;
   }
 
-  const char* key;
-  const char* value;
+  const char* key = nullptr;
+  const char* value = nullptr;
   if (!PyArg_ParseTuple(args, "ss", &key, &value)) {
     throw PyException();
   }
 
   return object::returnReference(flow_file->setAttribute(key, value));
+}
+
+PyObject* PyScriptFlowFile::getSize(PyScriptFlowFile* self, PyObject* /*args*/) {
+  auto flow_file = self->script_flow_file_.lock();
+  if (!flow_file) {
+    PyErr_SetString(PyExc_AttributeError, "tried reading FlowFile outside 'on_trigger'");
+    return nullptr;
+  }
+
+  return object::returnReference(flow_file->getSize());
+}
+
+PyObject* PyScriptFlowFile::getAttributes(PyScriptFlowFile* self, PyObject* /*args*/) {
+  auto flow_file = self->script_flow_file_.lock();
+  if (!flow_file) {
+    PyErr_SetString(PyExc_AttributeError, "tried reading FlowFile outside 'on_trigger'");
+    return nullptr;
+  }
+
+  auto attributes = OwnedDict::create();
+  for (const auto& [key, value] : flow_file->getAttributes()) {
+    attributes.put(key, value);
+  }
+
+  return object::returnReference(attributes);
 }
 
 PyTypeObject* PyScriptFlowFile::typeObject() {

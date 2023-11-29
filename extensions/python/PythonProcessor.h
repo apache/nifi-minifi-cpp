@@ -20,6 +20,7 @@
 
 #include <string>
 #include <memory>
+#include <optional>
 
 #include "core/Processor.h"
 
@@ -37,7 +38,8 @@ class PythonProcessor {
 
   void setDescription(const std::string& desc);
 
-  void addProperty(const std::string& name, const std::string& description, const std::string& defaultvalue, bool required, bool el);
+  void addProperty(const std::string& name, const std::string& description, const std::optional<std::string>& defaultvalue,
+    bool required, bool el, bool sensitive, const std::optional<int64_t>& property_type_code);
 
  private:
   python::processors::ExecutePythonProcessor* processor_;

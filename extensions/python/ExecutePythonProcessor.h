@@ -24,6 +24,7 @@
 #include <string>
 #include <utility>
 #include <vector>
+#include <filesystem>
 
 #include "concurrentqueue.h"
 #include "core/Processor.h"
@@ -81,7 +82,8 @@ class ExecutePythonProcessor : public core::Processor {
 
   EXTENSIONAPI static constexpr auto Success = core::RelationshipDefinition{"success", "Script succeeds"};
   EXTENSIONAPI static constexpr auto Failure = core::RelationshipDefinition{"failure", "Script fails"};
-  EXTENSIONAPI static constexpr auto Relationships = std::array{Success, Failure};
+  EXTENSIONAPI static constexpr auto Original = core::RelationshipDefinition{"original", "Original flow file"};
+  EXTENSIONAPI static constexpr auto Relationships = std::array{Success, Failure, Original};
 
   EXTENSIONAPI static constexpr bool SupportsDynamicProperties = false;
   EXTENSIONAPI static constexpr bool SupportsDynamicRelationships = false;
@@ -97,12 +99,11 @@ class ExecutePythonProcessor : public core::Processor {
     python_dynamic_ = true;
   }
 
-  void addProperty(const std::string &name, const std::string &description, const std::string &defaultvalue, bool required, bool el) {
-    python_properties_.emplace_back(
-        core::PropertyDefinitionBuilder<>::createProperty(name).withDefaultValue(defaultvalue).withDescription(description).isRequired(required).supportsExpressionLanguage(el).build());
-  }
+  void addProperty(const std::string &name, const std::string &description, const std::optional<std::string> &defaultvalue, bool required, bool el,
+      bool sensitive, const std::optional<int64_t>& property_type_code);
 
-  const std::vector<core::Property> &getPythonProperties() const {
+  std::vector<core::Property> getPythonProperties() const {
+    std::lock_guard<std::mutex> lock(python_properties_mutex_);
     return python_properties_;
   }
 
@@ -118,7 +119,21 @@ class ExecutePythonProcessor : public core::Processor {
     return description_;
   }
 
+  void setPythonClassName(const std::string& python_class_name) {
+    python_class_name_ = python_class_name;
+  }
+
+  void setPythonPaths(const std::vector<std::filesystem::path>& python_paths) {
+    python_paths_ = python_paths;
+  }
+
+  std::map<std::string, core::Property> getProperties() const override;
+
+ protected:
+  const core::Property* findProperty(const std::string& name) const override;
+
  private:
+  mutable std::mutex python_properties_mutex_;
   std::vector<core::Property> python_properties_;
 
   std::string description_;
@@ -134,6 +149,8 @@ class ExecutePythonProcessor : public core::Processor {
   std::string script_file_path_;
   std::shared_ptr<core::logging::Logger> python_logger_;
   std::unique_ptr<PythonScriptEngine> python_script_engine_;
+  std::optional<std::string> python_class_name_;
+  std::vector<std::filesystem::path> python_paths_;
 
   void appendPathForImportModules();
   void loadScriptFromFile();

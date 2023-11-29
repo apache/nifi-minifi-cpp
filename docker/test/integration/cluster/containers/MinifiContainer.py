@@ -33,6 +33,7 @@ class MinifiOptions:
         self.enable_prometheus = False
         self.enable_prometheus_with_ssl = False
         self.enable_sql = False
+        self.use_nifi_python_processors = False
         self.config_format = "json"
         self.use_flow_config_from_url = False
         self.set_ssl_context_properties = False
@@ -165,6 +166,8 @@ class MinifiContainer(FlowContainer):
 
         if self.options.enable_sql:
             image = self.image_store.get_image('minifi-cpp-sql')
+        elif self.options.use_nifi_python_processors:
+            image = self.image_store.get_image('minifi-cpp-nifi-python')
         else:
             image = 'apacheminificpp:' + MinifiContainer.MINIFI_TAG_PREFIX + MinifiContainer.MINIFI_VERSION
 

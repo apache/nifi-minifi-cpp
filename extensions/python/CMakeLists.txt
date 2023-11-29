@@ -43,5 +43,24 @@ endif()
 target_include_directories(minifi-python-script-extension PRIVATE BEFORE "${CMAKE_SOURCE_DIR}/extensions/python")
 target_include_directories(minifi-python-script-extension PUBLIC ${Python_INCLUDE_DIRS})
 
+get_target_property(TARGET_EXT minifi-python-script-extension SUFFIX)
+
+if (NOT WIN32)
+    add_custom_command(
+        TARGET minifi-python-script-extension
+        POST_BUILD
+        COMMAND ${CMAKE_COMMAND} -E create_symlink
+            "libminifi-python-script-extension$<TARGET_FILE_SUFFIX:minifi-python-script-extension>"
+            "${CMAKE_BINARY_DIR}/bin/minifi_native$<TARGET_FILE_SUFFIX:minifi-python-script-extension>"
+        COMMENT "Creating symlink for minifi-python-script-extension"
+    )
+
+    install(
+        FILES "${CMAKE_BINARY_DIR}/bin/minifi_native$<TARGET_FILE_SUFFIX:minifi-python-script-extension>"
+        DESTINATION extensions
+        COMPONENT minifi_python_native_module
+    )
+endif()
+
 register_extension(minifi-python-script-extension "PYTHON SCRIPTING ENGINE" PYTHON-SCRIPTING-EXTENSIONS "This enables python script engine" "extensions/python/tests")
 register_extension_linter(minifi-python-script-extension-linter)

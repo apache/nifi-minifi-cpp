@@ -31,6 +31,7 @@
 #include "utils/Literals.h"
 #include "utils/Export.h"
 #include "utils/TimeUtil.h"
+#include "core/logging/Logger.h"
 
 namespace org::apache::nifi::minifi::core {
 

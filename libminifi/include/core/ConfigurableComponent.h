@@ -178,7 +178,7 @@ class ConfigurableComponent {
    *
    * @return map of property keys to Property instances.
    */
-  std::map<std::string, Property> getProperties() const;
+  virtual std::map<std::string, Property> getProperties() const;
 
   /**
    * @return if property exists and is explicitly set, not just falling back to default value
@@ -212,7 +212,10 @@ class ConfigurableComponent {
   // Dynamic properties
   std::map<std::string, Property> dynamic_properties_;
 
+  virtual const Property* findProperty(const std::string& name) const;
+
  private:
+  Property* findProperty(const std::string& name);
   std::shared_ptr<logging::Logger> logger_;
 
   bool createDynamicProperty(const std::string &name, const std::string &value);
@@ -222,9 +225,9 @@ template<typename T>
 bool ConfigurableComponent::getProperty(const std::string& name, T &value) const {
   std::lock_guard<std::mutex> lock(configuration_mutex_);
 
-  const auto property_name_and_object = properties_.find(name);
-  if (property_name_and_object != properties_.end()) {
-    const Property& property = property_name_and_object->second;
+  const auto prop_ptr = findProperty(name);
+  if (prop_ptr != nullptr) {
+    const Property& property = *prop_ptr;
     if (property.getValue().getValue() == nullptr) {
       // empty value
       if (property.getRequired()) {

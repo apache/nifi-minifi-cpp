@@ -36,18 +36,32 @@ ConfigurableComponent::ConfigurableComponent()
 
 ConfigurableComponent::~ConfigurableComponent() = default;
 
+const Property* ConfigurableComponent::findProperty(const std::string& name) const {
+  const auto& it = properties_.find(name);
+  if (it != properties_.end()) {
+    return &it->second;
+  }
+  return nullptr;
+}
+
+Property* ConfigurableComponent::findProperty(const std::string& name) {
+  const auto& const_self = *this;
+  return const_cast<Property*>(const_self.findProperty(name));
+}
+
 bool ConfigurableComponent::getProperty(const std::string &name, Property &prop) const {
   std::lock_guard<std::mutex> lock(configuration_mutex_);
 
-  auto &&it = properties_.find(name);
+  auto prop_ptr = findProperty(name);
 
-  if (it != properties_.end()) {
-    prop = it->second;
+  if (prop_ptr != nullptr) {
+    prop = *prop_ptr;
     return true;
   } else {
     return false;
   }
 }
+
 
 /**
  * Sets the property using the provided name
@@ -57,11 +71,11 @@ bool ConfigurableComponent::getProperty(const std::string &name, Property &prop)
  */
 bool ConfigurableComponent::setProperty(const std::string& name, const std::string& value) {
   std::lock_guard<std::mutex> lock(configuration_mutex_);
-  auto it = properties_.find(name);
+  auto prop_ptr = findProperty(name);
 
-  if (it != properties_.end()) {
-    Property orig_property = it->second;
-    Property& new_property = it->second;
+  if (prop_ptr != nullptr) {
+    Property orig_property = *prop_ptr;
+    Property& new_property = *prop_ptr;
     auto onExit = gsl::finally([&]{
       onPropertyModified(orig_property, new_property);
       logger_->log_debug("Component {} property name {} value {}", name, new_property.getName(), value);
@@ -91,11 +105,11 @@ bool ConfigurableComponent::setProperty(const std::string& name, const std::stri
  */
 bool ConfigurableComponent::updateProperty(const std::string &name, const std::string &value) {
   std::lock_guard<std::mutex> lock(configuration_mutex_);
-  auto &&it = properties_.find(name);
+  auto prop_ptr = findProperty(name);
 
-  if (it != properties_.end()) {
-    Property orig_property = it->second;
-    Property& new_property = it->second;
+  if (prop_ptr != nullptr) {
+    Property orig_property = *prop_ptr;
+    Property& new_property = *prop_ptr;
     auto onExit = gsl::finally([&] {
       onPropertyModified(orig_property, new_property);
       logger_->log_debug("Component {} property name {} value {}", name, new_property.getName(), value);
@@ -119,11 +133,11 @@ bool ConfigurableComponent::updateProperty(const PropertyReference& property, st
  */
 bool ConfigurableComponent::setProperty(const Property& prop, const std::string& value) {
   std::lock_guard<std::mutex> lock(configuration_mutex_);
-  auto it = properties_.find(prop.getName());
+  auto prop_ptr = findProperty(prop.getName());
 
-  if (it != properties_.end()) {
-    Property orig_property = it->second;
-    Property& new_property = it->second;
+  if (prop_ptr != nullptr) {
+    Property orig_property = *prop_ptr;
+    Property& new_property = *prop_ptr;
     auto onExit = gsl::finally([&] {
       onPropertyModified(orig_property, new_property);
       if (prop.isSensitive()) {
@@ -160,11 +174,11 @@ bool ConfigurableComponent::setProperty(const PropertyReference& property, std::
 
 bool ConfigurableComponent::setProperty(const Property& prop, PropertyValue &value) {
   std::lock_guard<std::mutex> lock(configuration_mutex_);
-  auto it = properties_.find(prop.getName());
+  auto prop_ptr = findProperty(prop.getName());
 
-  if (it != properties_.end()) {
-    Property orig_property = it->second;
-    Property& new_property = it->second;
+  if (prop_ptr != nullptr) {
+    Property orig_property = *prop_ptr;
+    Property& new_property = *prop_ptr;
     auto onExit = gsl::finally([&] {
       onPropertyModified(orig_property, new_property);
       if (prop.isSensitive()) {

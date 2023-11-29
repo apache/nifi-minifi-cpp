@@ -794,6 +794,7 @@ def step_impl(context, content, duration):
 
 
 @then("at least one flowfile's content match the following regex: \"{regex}\" in less than {duration}")
+@then("at least one flowfile's content match the following regex: '{regex}' in less than {duration}")
 def step_impl(context, regex: str, duration: str):
     context.test.check_for_at_least_one_file_with_matching_content(regex, humanfriendly.parse_timespan(duration))
 
@@ -1047,7 +1048,7 @@ def step_impl(context):
     context.test.enable_c2_with_ssl_in_minifi()
 
 
-@given("a ssl properties are set up for MiNiFi C2 server")
+@given("ssl properties are set up for MiNiFi C2 server")
 def step_impl(context):
     context.test.enable_c2_with_ssl_in_minifi()
     context.test.set_ssl_context_properties_in_minifi()

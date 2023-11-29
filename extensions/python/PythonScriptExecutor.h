@@ -36,6 +36,7 @@ class PythonScriptExecutor : public script::ScriptExecutor {
       size_t max_concurrent_engines,
       const core::Relationship& success,
       const core::Relationship& failure,
+      const core::Relationship& original,
       const std::shared_ptr<core::logging::Logger>& logger) override;
 
 
