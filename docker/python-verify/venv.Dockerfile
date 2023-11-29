@@ -26,7 +26,7 @@ USER ${USER}
 WORKDIR ${MINIFI_HOME}
 
 RUN python3 -m venv venv
-RUN . ./venv/bin/activate && pip install --upgrade pip && pip install numpy
+RUN . ./venv/bin/activate && pip install --upgrade pip && pip install numpy langchain
 
 # Start MiNiFi CPP in the foreground
 CMD ["/bin/bash", "-c", "source ./venv/bin/activate && ./bin/minifi.sh run"]

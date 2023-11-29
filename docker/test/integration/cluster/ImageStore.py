@@ -15,6 +15,7 @@
 
 
 from .containers.MinifiContainer import MinifiContainer
+from .containers.NifiContainer import NifiContainer
 import logging
 import tarfile
 import docker
@@ -41,6 +42,8 @@ class ImageStore:
 
         if container_engine == "minifi-cpp-sql":
             image = self.__build_minifi_cpp_sql_image()
+        elif container_engine == "minifi-cpp-nifi-python":
+            image = self.__build_minifi_cpp_image_with_nifi_python_processors()
         elif container_engine == "http-proxy":
             image = self.__build_http_proxy_image()
         elif container_engine == "postgresql-server":
@@ -88,7 +91,28 @@ class ImageStore:
                     echo "Password = password" >> /etc/odbc.ini && \
                     echo "Database = postgres" >> /etc/odbc.ini
                 USER minificpp
-                """.format(base_image='apacheminificpp:' + MinifiContainer.MINIFI_VERSION))
+                """.format(base_image='apacheminificpp:' + MinifiContainer.MINIFI_TAG_PREFIX + MinifiContainer.MINIFI_VERSION))
+
+        return self.__build_image(dockerfile)
+
+    def __build_minifi_cpp_image_with_nifi_python_processors(self):
+        parse_document_url = "https://raw.githubusercontent.com/apache/nifi/rel/nifi-" + NifiContainer.NIFI_VERSION + "/nifi-python-extensions/nifi-text-embeddings-module/src/main/python/ParseDocument.py"
+        chunk_document_url = "https://raw.githubusercontent.com/apache/nifi/rel/nifi-" + NifiContainer.NIFI_VERSION + "/nifi-python-extensions/nifi-text-embeddings-module/src/main/python/ChunkDocument.py"
+        pip3_install_command = ""
+        if not MinifiContainer.MINIFI_TAG_PREFIX:
+            pip3_install_command = "RUN apk --update --no-cache add py3-pip"
+        dockerfile = dedent("""\
+                FROM {base_image}
+                USER root
+                {pip3_install_command}
+                RUN pip3 install langchain
+                USER minificpp
+                RUN wget {parse_document_url} --directory-prefix=/opt/minifi/minifi-current/minifi-python/nifi_python_processors && \\
+                    wget {chunk_document_url} --directory-prefix=/opt/minifi/minifi-current/minifi-python/nifi_python_processors
+                """.format(base_image='apacheminificpp:' + MinifiContainer.MINIFI_TAG_PREFIX + MinifiContainer.MINIFI_VERSION,
+                           pip3_install_command=pip3_install_command,
+                           parse_document_url=parse_document_url,
+                           chunk_document_url=chunk_document_url))
 
         return self.__build_image(dockerfile)
 
@@ -186,3 +210,26 @@ class ImageStore:
         except Exception as e:
             logging.info(e)
             raise
+
+    def get_minifi_image_python_version(self):
+        result = self.client.containers.run(
+            image='apacheminificpp:' + MinifiContainer.MINIFI_TAG_PREFIX + MinifiContainer.MINIFI_VERSION,
+            command=['python3', '-c', 'import platform; print(platform.python_version())'],
+            remove=True
+        )
+
+        python_ver_str = result.decode('utf-8')
+        logging.info('MiNiFi python version: %s', python_ver_str)
+        return tuple(map(int, python_ver_str.split('.')))
+
+    def is_conda_available_in_minifi_image(self):
+        try:
+            result = self.client.containers.run(
+                image='apacheminificpp:' + MinifiContainer.MINIFI_TAG_PREFIX + MinifiContainer.MINIFI_VERSION,
+                command=['conda', '--version'],
+                remove=True
+            )
+        except docker.errors.APIError:
+            return False
+
+        return result.decode('utf-8').startswith('conda ')

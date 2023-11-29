@@ -62,6 +62,15 @@ Licensed to the Apache Software Foundation (ASF) under one or more
       <ComponentRef Id="UpdateConfigNotExist"/>
     </Feature>
 
+    <Feature Id="InstallMiNiFiPython" Title="Apache NiFi MiNiFi C++ Python processors" AllowAdvertise="yes"  Level="1">
+      <ComponentRef Id="PythonProcessorExampleFiles"/>
+      <ComponentRef Id="NifiPythonProcessorFiles"/>
+      <ComponentRef Id="PythonProcessorMojoFiles"/>
+      <ComponentRef Id="PythonProcessorH2oFiles"/>
+      <ComponentRef Id="PythonProcessorNifiApiFiles"/>
+      <ComponentRef Id="PythonProcessorGoogleFiles"/>
+    </Feature>
+
     <FeatureRef Id="ProductFeature"/>
 
     <?ifdef CPACK_WIX_UI_DIALOG?>
@@ -233,13 +242,13 @@ Licensed to the Apache Software Foundation (ASF) under one or more
           <Condition Action="disable"><![CDATA[ENABLEC2<>1]]></Condition>
           <Condition Action="enable">ENABLEC2="1"</Condition>
         </Control>
-        <!-- 
+        <!--
         comment when available
         <Control Id="AgentProtocolLabel" Type="Text" X="20" Y="240" Width="60" Height="20" NoPrefix="yes" Text="Agent Protocol" />
         <Control Id="AgentProtocolComboBreaker" Type="ComboBox" X="20" Y="260" Width="300" Height="17" Property="AGENT_PROTOCOL" >
 
 
-        
+
          <ComboBox Property="AGENT_PROTOCOL">
             <ListItem Value="RESTSender" />
             <ListItem Value="COAPProtocol" />
@@ -266,10 +275,22 @@ Licensed to the Apache Software Foundation (ASF) under one or more
     <Property Id="SERVICEACCOUNTPASSWORD" />
 
     <SetProperty Id="AGENT_IDENTIFIER" After="AppSearch" Value="[ComputerName]" Sequence="first" />
-    
+
     <SetProperty Id="ENABLEC2" After="AppSearch" Value="0" Sequence="first" >
       <![CDATA[ENABLEC2 = 0]]>
     </SetProperty>
+
+
+    <CustomAction Id="MakeSymbolicLink" Directory="RootInstallDir" ExeCommand="cmd /c mklink extensions\minifi_native.pyd minifi-python-script-extension.dll" Execute="deferred" Impersonate="no" />
+    <CustomAction Id="RemoveSymbolicLink" Directory="RootInstallDir"  ExeCommand="cmd /c DEL extensions\minifi_native.pyd" Execute="deferred" Impersonate="no"/>
+
+    <InstallExecuteSequence>
+      <Custom Action="MakeSymbolicLink" After="InstallFiles">NOT Installed</Custom>
+    </InstallExecuteSequence>
+
+    <InstallExecuteSequence>
+      <Custom Action="RemoveSymbolicLink" After="InstallInitialize">Installed AND NOT REINSTALL</Custom>
+    </InstallExecuteSequence>
   </Product>
 
   <Fragment>
@@ -391,6 +412,48 @@ Licensed to the Apache Software Foundation (ASF) under one or more
                 <?endif ?>
               </Component>
 
+            </Directory>
+
+            <Directory Id="INSTALLPYTHONDIR" Name="minifi-python">
+              <Directory Id="INSTALLEXAMPLESDIR" Name="examples">
+                <Component Id="PythonProcessorExampleFiles" Guid="2508ace9-6f5d-4cb1-af66-58d5f44ae2b1">
+                  <File Id="Examples_AddPythonAttribute" Name="AddPythonAttribute.py" KeyPath="no" Source="..\extensions\python\pythonprocessors\examples\AddPythonAttribute.py"/>
+                  <File Id="Examples_CountingProcessor" Name="CountingProcessor.py" KeyPath="no" Source="..\extensions\python\pythonprocessors\examples\CountingProcessor.py"/>
+                  <File Id="Examples_GaussianDistributionWithNumpy" Name="GaussianDistributionWithNumpy.py" KeyPath="no" Source="..\extensions\python\pythonprocessors\examples\GaussianDistributionWithNumpy.py"/>
+                  <File Id="Examples_MoveContentToJson" Name="MoveContentToJson.py" KeyPath="no" Source="..\extensions\python\pythonprocessors\examples\MoveContentToJson.py"/>
+                  <File Id="Examples_RemoveFlowFile" Name="RemoveFlowFile.py" KeyPath="no" Source="..\extensions\python\pythonprocessors\examples\RemoveFlowFile.py"/>
+                  <File Id="Examples_SentimentAnalysis" Name="SentimentAnalysis.py" KeyPath="no" Source="..\extensions\python\pythonprocessors\examples\SentimentAnalysis.py"/>
+                </Component>
+              </Directory>
+              <Directory Id="INSTALLGOOGLEDIR" Name="google">
+                <Component Id="PythonProcessorGoogleFiles" Guid="90b898a9-76fb-4888-a4aa-adcd22097863">
+                  <File Id="Google_SentimentAnalyzer" Name="SentimentAnalyzer.py" KeyPath="yes" Source="..\extensions\python\pythonprocessors\google\SentimentAnalyzer.py"/>
+                </Component>
+              </Directory>
+              <Directory Id="INSTALLH2ODIR" Name="h2o">
+                <Component Id="PythonProcessorH2oFiles" Guid="b290aeb3-c67a-4cd1-a0a4-1ba049a2e44e">
+                  <File Id="H2o_ConvertDsToCsv" Name="ConvertDsToCsv.py" KeyPath="yes" Source="..\extensions\python\pythonprocessors\h2o\ConvertDsToCsv.py"/>
+                </Component>
+                <Directory Id="INSTALLH2O3DIR" Name="h2o3">
+                  <Directory Id="INSTALLMOJODIR" Name="mojo">
+                    <Component Id="PythonProcessorMojoFiles" Guid="d2b803da-1cd1-4925-802b-19f3e09fc0f7">
+                      <File Id="H2o_ExecuteH2oMojoScoring" Name="ExecuteH2oMojoScoring.py" KeyPath="yes" Source="..\extensions\python\pythonprocessors\h2o\h2o3\mojo\ExecuteH2oMojoScoring.py"/>
+                    </Component>
+                  </Directory>
+                </Directory>
+              </Directory>
+              <Directory Id="INSTALLNIFIAPIDIR" Name="nifiapi">
+                <Component Id="PythonProcessorNifiApiFiles" Guid="a9cb7b7b-e66d-4e32-9115-eab4aa980124">
+                  <File Id="NifiApi_flowfiletransform" Name="flowfiletransform.py" KeyPath="no" Source="..\extensions\python\pythonprocessors\nifiapi\flowfiletransform.py"/>
+                  <File Id="NifiApi_properties" Name="properties.py" KeyPath="no" Source="..\extensions\python\pythonprocessors\nifiapi\properties.py"/>
+                  <File Id="NifiApi_init" Name="__init__.py" KeyPath="no" Source="..\extensions\python\pythonprocessors\nifiapi\__init__.py"/>
+                </Component>
+              </Directory>
+              <Directory Id="INSTALLNIFIPYTHONPROCESSORSDIR" Name="nifi_python_processors">
+                <Component Id="NifiPythonProcessorFiles" Guid="66ce16d4-aea4-4fcb-bbbb-8a28813e2138">
+                  <File Id="NifiPythonProcessors_init" Name="__init__.py" KeyPath="yes" Source="..\extensions\python\pythonprocessors\nifi_python_processors\__init__.py"/>
+                </Component>
+              </Directory>
             </Directory>
           </Directory>
     </DirectoryRef>

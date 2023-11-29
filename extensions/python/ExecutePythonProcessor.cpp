@@ -27,6 +27,7 @@
 #include "utils/file/FileUtils.h"
 #include "core/Resource.h"
 #include "range/v3/range/conversion.hpp"
+#include "range/v3/algorithm/find_if.hpp"
 
 namespace org::apache::nifi::minifi::extensions::python::processors {
 
@@ -44,8 +45,7 @@ void ExecutePythonProcessor::initialize() {
 
   try {
     loadScript();
-  } catch(const std::runtime_error&) {
-    logger_->log_warn("Could not load python script while initializing. In case of non-native python processor this is normal and will be done in the schedule phase.");
+  } catch(const std::runtime_error& err) {
     return;
   }
 
@@ -57,13 +57,18 @@ void ExecutePythonProcessor::initialize() {
 
 void ExecutePythonProcessor::initalizeThroughScriptEngine() {
   appendPathForImportModules();
+  python_script_engine_->appendModulePaths(python_paths_);
   python_script_engine_->eval(script_to_exec_);
+  if (python_class_name_) {
+    python_script_engine_->initializeProcessorObject(*python_class_name_);
+  }
   python_script_engine_->describe(this);
   python_script_engine_->onInitialize(this);
   processor_initialized_ = true;
 }
 
 void ExecutePythonProcessor::onScheduleSharedPtr(const std::shared_ptr<core::ProcessContext> &context, const std::shared_ptr<core::ProcessSessionFactory>& /*sessionFactory*/) {
+  setAutoTerminatedRelationships(std::vector<core::Relationship>{Original});
   if (!processor_initialized_) {
     loadScript();
     python_script_engine_ = createScriptEngine();
@@ -95,7 +100,7 @@ void ExecutePythonProcessor::appendPathForImportModules() {
   std::string module_directory;
   getProperty(ModuleDirectory, module_directory);
   if (!module_directory.empty()) {
-    python_script_engine_->setModulePaths(utils::string::splitAndTrimRemovingEmpty(module_directory, ",") | ranges::to<std::vector<std::filesystem::path>>());
+    python_script_engine_->appendModulePaths(utils::string::splitAndTrimRemovingEmpty(module_directory, ",") | ranges::to<std::vector<std::filesystem::path>>());
   }
 }
 
@@ -146,9 +151,45 @@ std::unique_ptr<PythonScriptEngine> ExecutePythonProcessor::createScriptEngine()
   auto engine = std::make_unique<PythonScriptEngine>();
 
   python_logger_ = core::logging::LoggerFactory<ExecutePythonProcessor>::getAliasedLogger(getName());
-  engine->initialize(Success, Failure, python_logger_);
+  engine->initialize(Success, Failure, Original, python_logger_);
 
   return engine;
+}
+
+core::Property* ExecutePythonProcessor::findProperty(const std::string& name) const {
+  if (auto prop_ptr = core::ConfigurableComponent::findProperty(name)) {
+    return prop_ptr;
+  }
+
+  auto it = ranges::find_if(python_properties_, [&name](const auto& item){
+    return item.getName() == name;
+  });
+  if (it != python_properties_.end()) {
+    return const_cast<core::Property*>(&*it);
+  }
+
+  return nullptr;
+}
+
+const core::PropertyType& ExecutePythonProcessor::translateCodeToPropertyType(const PropertyTypeCode& code) {
+  switch (code) {
+    case PropertyTypeCode::INTEGER_TYPE:
+      return core::StandardPropertyTypes::INTEGER_TYPE;
+    case PropertyTypeCode::LONG_TYPE:
+      return core::StandardPropertyTypes::LONG_TYPE;
+    case PropertyTypeCode::BOOLEAN_TYPE:
+      return core::StandardPropertyTypes::BOOLEAN_TYPE;
+    case PropertyTypeCode::DATA_SIZE_TYPE:
+      return core::StandardPropertyTypes::DATA_SIZE_TYPE;
+    case PropertyTypeCode::TIME_PERIOD_TYPE:
+      return core::StandardPropertyTypes::TIME_PERIOD_TYPE;
+    case PropertyTypeCode::NON_BLANK_TYPE:
+      return core::StandardPropertyTypes::NON_BLANK_TYPE;
+    case PropertyTypeCode::PORT_TYPE:
+      return core::StandardPropertyTypes::PORT_TYPE;
+    default:
+      throw std::invalid_argument("Unknown PropertyTypeCode");
+  }
 }
 
 REGISTER_RESOURCE(ExecutePythonProcessor, Processor);

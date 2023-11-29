@@ -31,10 +31,12 @@ class PyProcessSession {
 
   std::shared_ptr<core::FlowFile> get();
   std::shared_ptr<core::FlowFile> create(const std::shared_ptr<core::FlowFile>& flow_file = nullptr);
+  std::shared_ptr<core::FlowFile> clone(const std::shared_ptr<core::FlowFile>& flow_file);
   void transfer(const std::shared_ptr<core::FlowFile>& flow_file, const core::Relationship& relationship);
   void read(const std::shared_ptr<core::FlowFile>& flow_file, BorrowedObject input_stream_callback);
   void write(const std::shared_ptr<core::FlowFile>& flow_file, BorrowedObject output_stream_callback);
   void remove(const std::shared_ptr<core::FlowFile>& flow_file);
+  std::string getContentsAsString(const std::shared_ptr<core::FlowFile>& flow_file);
 
  private:
   std::vector<std::shared_ptr<core::FlowFile>> flow_files_;
@@ -53,10 +55,12 @@ struct PyProcessSessionObject {
 
   static PyObject* get(PyProcessSessionObject* self, PyObject* args);
   static PyObject* create(PyProcessSessionObject* self, PyObject* args);
+  static PyObject* clone(PyProcessSessionObject* self, PyObject* args);
   static PyObject* read(PyProcessSessionObject* self, PyObject* args);
   static PyObject* write(PyProcessSessionObject* self, PyObject* args);
   static PyObject* transfer(PyProcessSessionObject* self, PyObject* args);
   static PyObject* remove(PyProcessSessionObject* self, PyObject* args);
+  static PyObject* getContentsAsBytes(PyProcessSessionObject* self, PyObject* args);
 
   static PyTypeObject* typeObject();
 };

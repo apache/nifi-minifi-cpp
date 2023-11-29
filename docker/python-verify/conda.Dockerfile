@@ -24,12 +24,13 @@ ENV CONDA_HOME /opt/conda
 ENV LD_LIBRARY_PATH /opt/conda/lib
 ENV MINIFI_BASE_DIR /opt/minifi
 ENV MINIFI_HOME ${MINIFI_BASE_DIR}/minifi-current
+ENV PATH ${CONDA_HOME}/bin:${PATH}
 
 USER root
 
-RUN wget https://repo.anaconda.com/archive/Anaconda3-2022.10-Linux-x86_64.sh -P /tmp \
-    && echo "e7ecbccbc197ebd7e1f211c59df2e37bc6959d081f2235d387e08c9026666acd /tmp/Anaconda3-2022.10-Linux-x86_64.sh" | sha256sum -c \
-    && bash /tmp/Anaconda3-2022.10-Linux-x86_64.sh -b -p /opt/conda  \
+RUN wget https://repo.anaconda.com/archive/Anaconda3-2023.09-0-Linux-x86_64.sh -P /tmp \
+    && echo "6c8a4abb36fbb711dc055b7049a23bbfd61d356de9468b41c5140f8a11abd851 /tmp/Anaconda3-2023.09-0-Linux-x86_64.sh" | sha256sum -c \
+    && bash /tmp/Anaconda3-2023.09-0-Linux-x86_64.sh -b -p /opt/conda  \
     && chown -R ${USER}:${USER} /opt/conda \
     && mkdir /home/${USER}  \
     && chown -R ${USER}:${USER} /home/${USER}
@@ -37,6 +38,8 @@ RUN wget https://repo.anaconda.com/archive/Anaconda3-2022.10-Linux-x86_64.sh -P 
 USER ${USER}
 
 RUN ${CONDA_HOME}/bin/conda init bash
+RUN ${CONDA_HOME}/bin/conda install langchain -c conda-forge
+
 WORKDIR ${MINIFI_HOME}
 
 # Start MiNiFi CPP in the foreground

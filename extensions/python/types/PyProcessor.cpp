@@ -17,20 +17,21 @@
 
 #include "PyProcessor.h"
 #include <string>
+#include <optional>
 #include "PyException.h"
 #include "Types.h"
 
 extern "C" {
 namespace org::apache::nifi::minifi::extensions::python {
 
-static PyMethodDef PyProcessor_methods[] = {
+static PyMethodDef PyProcessor_methods[] = {  // NOLINT(cppcoreguidelines-avoid-c-arrays)
     {"setSupportsDynamicProperties", (PyCFunction) PyProcessor::setSupportsDynamicProperties, METH_VARARGS, nullptr},
     {"setDescription", (PyCFunction) PyProcessor::setDescription, METH_VARARGS, nullptr},
     {"addProperty", (PyCFunction) PyProcessor::addProperty, METH_VARARGS, nullptr},
     {}  /* Sentinel */
 };
 
-static PyType_Slot PyProcessorTypeSpecSlots[] = {
+static PyType_Slot PyProcessorTypeSpecSlots[] = {  // NOLINT(cppcoreguidelines-avoid-c-arrays)
     {Py_tp_dealloc, reinterpret_cast<void*>(pythonAllocatedInstanceDealloc<PyProcessor>)},
     {Py_tp_init, reinterpret_cast<void*>(PyProcessor::init)},
     {Py_tp_methods, reinterpret_cast<void*>(PyProcessor_methods)},
@@ -77,7 +78,7 @@ PyObject* PyProcessor::setDescription(PyProcessor* self, PyObject* args) {
     Py_RETURN_NONE;
   }
 
-  const char* description;
+  const char* description = nullptr;
   if (!PyArg_ParseTuple(args, "s", &description)) {
     throw PyException();
   }
@@ -110,11 +111,24 @@ PyObject* PyProcessor::addProperty(PyProcessor* self, PyObject* args) {
 
   BorrowedStr name = BorrowedStr::fromTuple(args, 0);
   BorrowedStr description = BorrowedStr::fromTuple(args, 1);
-  BorrowedStr default_value = BorrowedStr::fromTuple(args, 2);
+  std::optional<std::string> default_value;
+  auto default_value_pystr = BorrowedStr::fromTuple(args, 2);
+  if (default_value_pystr.get() && default_value_pystr.get() != Py_None) {
+    default_value = default_value_pystr.toUtf8String();
+  }
   bool is_required = getBoolFromTuple(args, 3);
   bool supports_expression_language = getBoolFromTuple(args, 4);
 
-  processor->addProperty(name.toUtf8String(), description.toUtf8String(), default_value.toUtf8String(), is_required, supports_expression_language);
+  std::optional<int64_t> validator_value;
+  auto arg_size = PyTuple_Size(args);
+  if (arg_size > 5) {
+    auto validator_value_pyint = BorrowedLong::fromTuple(args, 5);
+    if (validator_value_pyint.get() && validator_value_pyint.get() != Py_None) {
+      validator_value = validator_value_pyint.asInt64();
+    }
+  }
+
+  processor->addProperty(name.toUtf8String(), description.toUtf8String(), default_value, is_required, supports_expression_language, validator_value);
   Py_RETURN_NONE;
 }
 

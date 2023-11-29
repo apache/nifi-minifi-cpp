@@ -35,7 +35,7 @@ void PythonScriptExecutor::onTrigger(const std::shared_ptr<core::ProcessContext>
   gsl_Expects(std::holds_alternative<std::filesystem::path>(script_to_run_) || std::holds_alternative<std::string>(script_to_run_));
 
   if (module_directory_) {
-    python_script_engine_->setModulePaths(utils::string::splitAndTrimRemovingEmpty(*module_directory_, ",") | ranges::to<std::vector<std::filesystem::path>>());
+    python_script_engine_->appendModulePaths(utils::string::splitAndTrimRemovingEmpty(*module_directory_, ",") | ranges::to<std::vector<std::filesystem::path>>());
   }
 
   if (std::holds_alternative<std::filesystem::path>(script_to_run_))
@@ -52,6 +52,7 @@ void PythonScriptExecutor::initialize(std::filesystem::path script_file,
     size_t /*max_concurrent_engines*/,
     const core::Relationship& success,
     const core::Relationship& failure,
+    const core::Relationship& original,
     const std::shared_ptr<core::logging::Logger>& logger) {
   if (script_file.empty() == script_body.empty())
     throw std::runtime_error("Exactly one of these must be non-empty: ScriptBody, ScriptFile");
@@ -65,7 +66,7 @@ void PythonScriptExecutor::initialize(std::filesystem::path script_file,
   module_directory_ = std::move(module_directory);
 
   python_script_engine_ = std::make_unique<python::PythonScriptEngine>();
-  python_script_engine_->initialize(success, failure, logger);
+  python_script_engine_->initialize(success, failure, original, logger);
 }
 
 REGISTER_RESOURCE(PythonScriptExecutor, InternalResource);

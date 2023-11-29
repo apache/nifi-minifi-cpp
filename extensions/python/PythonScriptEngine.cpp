@@ -92,6 +92,7 @@ PythonScriptEngine::PythonScriptEngine() {
 PythonScriptEngine::~PythonScriptEngine() {
   GlobalInterpreterLock lock;
   bindings_.resetReference();
+  processor_instance_.resetReference();
 }
 
 void PythonScriptEngine::eval(const std::string& script) {
@@ -129,27 +130,44 @@ void PythonScriptEngine::evalFile(const std::filesystem::path& file_name) {
 
 void PythonScriptEngine::onInitialize(core::Processor* proc) {
   auto newproc = std::make_shared<python::PythonProcessor>(proc);
-  call("onInitialize", std::weak_ptr(newproc));
+  if (processor_instance_.get() != nullptr) {
+    callProcessorObjectMethod("onInitialize", std::weak_ptr(newproc));
+  } else {
+    call("onInitialize", std::weak_ptr(newproc));
+  }
 }
 
 void PythonScriptEngine::describe(core::Processor* proc) {
   auto newproc = std::make_shared<python::PythonProcessor>(proc);
-  callRequiredFunction("describe", std::weak_ptr(newproc));
+  if (processor_instance_.get() != nullptr) {
+    callRequiredProcessorObjectMethod("describe", std::weak_ptr(newproc));
+  } else {
+    callRequiredFunction("describe", std::weak_ptr(newproc));
+  }
 }
 
 void PythonScriptEngine::onSchedule(const std::shared_ptr<core::ProcessContext> &context) {
-  call("onSchedule", std::weak_ptr(context));
+  if (processor_instance_.get() != nullptr) {
+    callProcessorObjectMethod("onSchedule", std::weak_ptr(context));
+  } else {
+    call("onSchedule", std::weak_ptr(context));
+  }
 }
 
 void PythonScriptEngine::onTrigger(const std::shared_ptr<core::ProcessContext> &context, const std::shared_ptr<core::ProcessSession> &session) {
   auto py_session = std::make_shared<python::PyProcessSession>(session);
-  call("onTrigger", std::weak_ptr(context), std::weak_ptr(py_session));
+  if (processor_instance_.get() != nullptr) {
+    callProcessorObjectMethod("onTrigger", std::weak_ptr(context), std::weak_ptr(py_session));
+  } else {
+    call("onTrigger", std::weak_ptr(context), std::weak_ptr(py_session));
+  }
 }
 
-void PythonScriptEngine::initialize(const core::Relationship& success, const core::Relationship& failure, const std::shared_ptr<core::logging::Logger>& logger) {
+void PythonScriptEngine::initialize(const core::Relationship& success, const core::Relationship& failure, const core::Relationship& original, const std::shared_ptr<core::logging::Logger>& logger) {
   bind("log", std::weak_ptr<core::logging::Logger>(logger));
   bind("REL_SUCCESS", success);
   bind("REL_FAILURE", failure);
+  bind("REL_ORIGINAL", original);
 }
 
 void PythonScriptEngine::evalInternal(std::string_view script) {
@@ -166,17 +184,46 @@ void PythonScriptEngine::evalInternal(std::string_view script) {
 
 void PythonScriptEngine::evaluateModuleImports() {
   bindings_.put("__builtins__", OwnedObject(PyImport_ImportModule("builtins")));
+  evalInternal("import sys");
   if (module_paths_.empty()) {
     return;
   }
 
-  evalInternal("import sys");
   for (const auto& module_path : module_paths_) {
     if (std::filesystem::is_regular_file(module_path)) {
       evalInternal("sys.path.append(r'" + module_path.parent_path().string() + "')");
     } else {
       evalInternal("sys.path.append(r'" + module_path.string() + "')");
     }
+  }
+}
+
+void PythonScriptEngine::initializeProcessorObject(const std::string& python_class_name) {
+  GlobalInterpreterLock gil;
+  if (auto python_class = bindings_[python_class_name]) {
+    processor_instance_ = OwnedObject(PyObject_CallObject(python_class->get(), nullptr));
+    if (processor_instance_.get() == nullptr) {
+      throw PythonScriptException(PyException().what());
+    }
+
+    auto result = PyObject_SetAttrString(processor_instance_.get(), "logger", bindings_[std::string("log")]->get());
+    if (result < 0) {
+      throw PythonScriptException("Could not bind 'logger' object to '" + python_class_name + "' python processor object");
+    }
+    result = PyObject_SetAttrString(processor_instance_.get(), "REL_SUCCESS", bindings_[std::string("REL_SUCCESS")]->get());
+    if (result < 0) {
+      throw PythonScriptException("Could not bind 'REL_SUCCESS' object to '" + python_class_name + "' python processor object");
+    }
+    result = PyObject_SetAttrString(processor_instance_.get(), "REL_FAILURE", bindings_[std::string("REL_FAILURE")]->get());
+    if (result < 0) {
+      throw PythonScriptException("Could not bind 'REL_FAILURE' object to '" + python_class_name + "' python processor object");
+    }
+    result = PyObject_SetAttrString(processor_instance_.get(), "REL_ORIGINAL", bindings_[std::string("REL_ORIGINAL")]->get());
+    if (result < 0) {
+      throw PythonScriptException("Could not bind 'REL_ORIGINAL' object to '" + python_class_name + "' python processor object");
+    }
+  } else {
+    throw PythonScriptException("No python class '" + python_class_name + "' was found!");
   }
 }
 

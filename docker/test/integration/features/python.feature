@@ -63,3 +63,22 @@ Feature: MiNiFi can use python processors in its flows
 
     When all instances start up
     Then flowfiles with these contents are placed in the monitored directory in less than 5 seconds: "0,1,2,3,4,5"
+
+  @USE_NIFI_PYTHON_PROCESSORS
+  Scenario: MiNiFi C++ can use NiFi native python processors
+    Given a GetFile processor with the "Input Directory" property set to "/tmp/input"
+    And a file with filename "test_file.log" and content "test_data" is present in "/tmp/input"
+    And a ParseDocument processor
+    And a ChunkDocument processor with the "Chunk Size" property set to "5"
+    And the "Chunk Overlap" property of the ChunkDocument processor is set to "3"
+    And a PutFile processor with the "Directory" property set to "/tmp/output"
+    And a LogAttribute processor with the "FlowFiles To Log" property set to "0"
+
+    And the "success" relationship of the GetFile processor is connected to the ParseDocument
+    And the "success" relationship of the ParseDocument processor is connected to the ChunkDocument
+    And the "success" relationship of the ChunkDocument processor is connected to the PutFile
+    And the "success" relationship of the PutFile processor is connected to the LogAttribute
+
+    When all instances start up
+    Then at least one flowfile's content match the following regex: '{"text": "test_", "metadata": {"filename": "test_file.log", "uuid": "", "chunk_index": 1, "chunk_count": 5}}' in less than 30 seconds
+    And the Minifi logs contain the following message: "key:document.count value:5" in less than 10 seconds

@@ -16,31 +16,33 @@
  * limitations under the License.
  */
 
-#include <string>
+#include "PyDataConverter.h"
 
-#include "ExecutePythonProcessor.h"
-#include "PythonProcessor.h"
+#include "PyException.h"
+#include "core/TypedValues.h"
 
 namespace org::apache::nifi::minifi::extensions::python {
 
-namespace core = org::apache::nifi::minifi::core;
+PyObject* timePeriodStringToMilliseconds(PyObject* /*self*/, PyObject* args) {
+  const char* time_period_str = nullptr;
+  if (!PyArg_ParseTuple(args, "s", &time_period_str)) {
+    throw PyException();
+  }
 
-PythonProcessor::PythonProcessor(core::Processor* proc) :
-    processor_(dynamic_cast<python::processors::ExecutePythonProcessor*>(proc)) {
-  gsl_Expects(processor_);
+  auto milliseconds = core::TimePeriodValue(std::string(time_period_str)).getMilliseconds().count();
+
+  return object::returnReference(milliseconds);
 }
 
-void PythonProcessor::setSupportsDynamicProperties() {
-  processor_->setSupportsDynamicProperties();
-}
+PyObject* dataSizeStringToBytes(PyObject* /*self*/, PyObject* args) {
+  const char* data_size_str = nullptr;
+  if (!PyArg_ParseTuple(args, "s", &data_size_str)) {
+    throw PyException();
+  }
 
-void PythonProcessor::setDescription(const std::string& desc) {
-  processor_->setDescription(desc);
-}
+  uint64_t bytes = core::DataSizeValue(std::string(data_size_str)).getValue();
 
-void PythonProcessor::addProperty(const std::string& name, const std::string& description, const std::optional<std::string>& defaultvalue,
-    bool required, bool el, const std::optional<int64_t>& validator_value) {
-  processor_->addProperty(name, description, defaultvalue, required, el, validator_value);
+  return object::returnReference(bytes);
 }
 
 }  // namespace org::apache::nifi::minifi::extensions::python

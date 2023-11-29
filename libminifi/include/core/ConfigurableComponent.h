@@ -212,6 +212,8 @@ class ConfigurableComponent {
   // Dynamic properties
   std::map<std::string, Property> dynamic_properties_;
 
+  virtual Property* findProperty(const std::string& name) const;
+
  private:
   std::shared_ptr<logging::Logger> logger_;
 
@@ -222,9 +224,9 @@ template<typename T>
 bool ConfigurableComponent::getProperty(const std::string& name, T &value) const {
   std::lock_guard<std::mutex> lock(configuration_mutex_);
 
-  const auto property_name_and_object = properties_.find(name);
-  if (property_name_and_object != properties_.end()) {
-    const Property& property = property_name_and_object->second;
+  const auto prop_ptr = findProperty(name);
+  if (prop_ptr != nullptr) {
+    const Property& property = *prop_ptr;
     if (property.getValue().getValue() == nullptr) {
       // empty value
       if (property.getRequired()) {

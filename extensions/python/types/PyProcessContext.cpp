@@ -17,19 +17,20 @@ a * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 
 #include "PyProcessContext.h"
 #include "PyStateManager.h"
+#include "PyScriptFlowFile.h"
 #include <string>
 #include "PyException.h"
 
 extern "C" {
 namespace org::apache::nifi::minifi::extensions::python {
 
-static PyMethodDef PyProcessContext_methods[] = {
+static PyMethodDef PyProcessContext_methods[] = {  // NOLINT(cppcoreguidelines-avoid-c-arrays)
     {"getProperty", (PyCFunction) PyProcessContext::getProperty, METH_VARARGS, nullptr},
     {"getStateManager", (PyCFunction) PyProcessContext::getStateManager, METH_VARARGS, nullptr},
     {}  /* Sentinel */
 };
 
-static PyType_Slot PyProcessContextTypeSpecSlots[] = {
+static PyType_Slot PyProcessContextTypeSpecSlots[] = {  // NOLINT(cppcoreguidelines-avoid-c-arrays)
     {Py_tp_dealloc, reinterpret_cast<void*>(pythonAllocatedInstanceDealloc<PyProcessContext>)},
     {Py_tp_init, reinterpret_cast<void*>(PyProcessContext::init)},
     {Py_tp_methods, reinterpret_cast<void*>(PyProcessContext_methods)},
@@ -65,12 +66,29 @@ PyObject* PyProcessContext::getProperty(PyProcessContext* self, PyObject* args) 
     return nullptr;
   }
 
-  const char* property;
-  if (!PyArg_ParseTuple(args, "s", &property)) {
+  const char* property = nullptr;
+  PyObject* script_flow_file = nullptr;
+  if (!PyArg_ParseTuple(args, "s|O", &property, &script_flow_file)) {
     throw PyException();
   }
+
   std::string value;
-  context->getProperty(property, value);
+  if (!script_flow_file) {
+    if (!context->getProperty(property, value)) {
+      Py_RETURN_NONE;
+    }
+  } else {
+    auto py_flow = reinterpret_cast<PyScriptFlowFile*>(script_flow_file);
+    const auto flow_file = py_flow->script_flow_file_.lock();
+    if (!flow_file) {
+      PyErr_SetString(PyExc_AttributeError, "tried reading FlowFile outside 'on_trigger'");
+      return nullptr;
+    }
+    if (!context->getProperty(true, property, value, flow_file)) {
+      Py_RETURN_NONE;
+    }
+  }
+
   return object::returnReference(value);
 }
 
