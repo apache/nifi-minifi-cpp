@@ -77,6 +77,7 @@ This software includes third party software subject to the following copyrights:
 - bitwizeshift.github.io - Copyright (c) 2020 Matthew Rodusek
 - magic_enum - Copyright (c) 2019 - 2023 Daniil Goncharov
 - argparse - Copyright (c) 2018 Pranav Srinivas Kumar <pranav.srinivas.kumar@gmail.com>
+- liblzma from xz-utils (tukaani-project/xz) - public domain, thanks to Lasse Collin, Jia Tan, Igor Pavlov, and other contributors
 
 The licenses for these third party components are included in LICENSE.txt
 

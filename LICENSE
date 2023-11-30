@@ -2663,7 +2663,10 @@ This enables machine processing of license information based on the SPDX
 License Identifiers that are here available: http://spdx.org/licenses/
 
 
-This product bundles 'liblzma' which is in the public domain.
+This product bundles 'liblzma' (from XZ Utils) which is in the public domain.
+more details:
+- https://github.com/tukaani-project/xz/blob/v5.4.5/COPYING
+- https://github.com/tukaani-project/xz/blob/v5.4.5/AUTHORS
 
 
 This product bundles 'bzip2' under a BSD-like licence:
