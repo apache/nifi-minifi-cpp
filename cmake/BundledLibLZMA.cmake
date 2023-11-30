@@ -41,8 +41,8 @@ function(use_bundled_liblzma SOURCE_DIR BINARY_DIR)
     endif()
 
     # Build project
-    set(LIBLZMA_URL https://tukaani.org/xz/xz-5.2.5.tar.gz https://gentoo.osuosl.org/distfiles/xz-5.2.5.tar.gz)
-    set(LIBLZMA_URL_HASH "SHA256=f6f4910fd033078738bd82bfba4f49219d03b17eb0794eb91efbae419f4aba10")
+    set(LIBLZMA_URL "https://github.com/tukaani-project/xz/releases/download/v5.4.5/xz-5.4.5.tar.zst")
+    set(LIBLZMA_URL_HASH "SHA256=9ab5561ce9fed7860695c14b955a0ebec2df9a00fb171862a25910546a1737cc")
 
     if (WIN32)
         ExternalProject_Add(
