@@ -56,6 +56,7 @@ class ContentSession {
  protected:
   virtual std::shared_ptr<io::BaseStream> append(const std::shared_ptr<ResourceClaim>& resource_id) = 0;
 
+  // contains aux data on resources that have been appended to
   std::map<std::shared_ptr<ResourceClaim>, ExtensionData> extensions_;
   std::shared_ptr<ContentRepository> repository_;
 };

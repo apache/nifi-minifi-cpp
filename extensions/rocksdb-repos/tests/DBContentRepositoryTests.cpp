@@ -157,18 +157,18 @@ TEST_CASE("Append Claim", "[TestDBCR1]") {
   content_repo->write(*claim)->write(as_bytes(std::span(content)));
 
   // requesting append before content end fails
-  CHECK(content_repo->append(*claim, 0) == nullptr);
-  auto lock = content_repo->append(*claim, content.length());
+  CHECK(content_repo->lockAppend(*claim, 0) == nullptr);
+  auto lock = content_repo->lockAppend(*claim, content.length());
   // trying to append to the end succeeds
   CHECK(lock != nullptr);
   // simultaneously trying to append to the same claim fails
-  CHECK(content_repo->append(*claim, content.length()) == nullptr);
+  CHECK(content_repo->lockAppend(*claim, content.length()) == nullptr);
 
   // manually deleting append lock
   lock.reset();
 
   // appending after lock is released succeeds
-  lock = content_repo->append(*claim, content.length());
+  lock = content_repo->lockAppend(*claim, content.length());
   CHECK(lock != nullptr);
 
   const std::string appended = "General Kenobi!";
@@ -177,9 +177,9 @@ TEST_CASE("Append Claim", "[TestDBCR1]") {
   lock.reset();
 
   // size has changed
-  CHECK(content_repo->append(*claim, content.length()) == nullptr);
+  CHECK(content_repo->lockAppend(*claim, content.length()) == nullptr);
 
-  CHECK(content_repo->append(*claim, content.length() + appended.length()) != nullptr);
+  CHECK(content_repo->lockAppend(*claim, content.length() + appended.length()) != nullptr);
 }
 
 TEST_CASE("Test Empty Claim", "[TestDBCR3]") {
