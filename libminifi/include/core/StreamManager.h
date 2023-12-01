@@ -58,7 +58,7 @@ class StreamManager {
   /**
    * Queries the stream and locks it to be appended to
    */
-  virtual std::unique_ptr<StreamAppendLock> append(const T &streamId, size_t offset) = 0;
+  virtual std::unique_ptr<StreamAppendLock> lockAppend(const T &streamId, size_t offset) = 0;
 
   /**
    * Create a read stream using the streamId as a reference.

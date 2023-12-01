@@ -72,7 +72,7 @@ class ContentRepository : public core::CoreComponent, public StreamManager<minif
     return getName();
   }
 
-  std::unique_ptr<StreamAppendLock> append(const ResourceClaim& claim, size_t offset) override;
+  std::unique_ptr<StreamAppendLock> lockAppend(const ResourceClaim& claim, size_t offset) override;
 
  protected:
   void removeFromPurgeList();

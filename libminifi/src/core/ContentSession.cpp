@@ -29,7 +29,7 @@ std::shared_ptr<io::BaseStream> ContentSession::append(const std::shared_ptr<Res
     return it->second.stream;
   }
   if (it == extensions_.end()) {
-    if (auto append_lock = repository_->append(*resource_id, offset)) {
+    if (auto append_lock = repository_->lockAppend(*resource_id, offset)) {
       return (extensions_[resource_id] = {
           .stream = append(resource_id),
           .base_size = repository_->size(*resource_id),

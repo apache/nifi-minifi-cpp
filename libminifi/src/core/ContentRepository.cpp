@@ -98,7 +98,7 @@ bool ContentRepository::remove(const minifi::ResourceClaim &streamId) {
   return true;
 }
 
-std::unique_ptr<StreamAppendLock> ContentRepository::append(const org::apache::nifi::minifi::ResourceClaim &claim, size_t offset) {
+std::unique_ptr<StreamAppendLock> ContentRepository::lockAppend(const org::apache::nifi::minifi::ResourceClaim &claim, size_t offset) {
   std::lock_guard guard(appending_mutex_);
   if (offset != size(claim)) {
     // we are trying to append to a resource that has already been appended to
