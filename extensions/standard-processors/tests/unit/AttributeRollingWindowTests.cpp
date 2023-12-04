@@ -20,8 +20,6 @@
 #include "Catch.h"
 #include "AttributeRollingWindow.h"
 #include "SingleProcessorTestController.h"
-#include "fmt/format.h"
-#include "fmt/ranges.h"
 
 namespace org::apache::nifi::minifi::test {
 using AttributeRollingWindow = processors::AttributeRollingWindow;
@@ -43,7 +41,7 @@ TEST_CASE("AttributeRollingWindow properly forwards properties to RollingWindow 
   proc->setProperty(AttributeRollingWindow::WindowLength, "3");
   const auto trigger_with_value_and_check_attributes = [&controller](const std::string& value, const std::map<std::string, std::string>& expected_out_attributes) {
     const auto rel = [](auto name) { return core::Relationship{std::move(name), "description"}; };
-    const auto out = controller.trigger({.content="content", .attributes={{"value", value}}});
+    const auto out = controller.trigger({.content = "content", .attributes = {{"value", value}}});
     REQUIRE(out.at(rel("failure")).empty());
     const auto out_flow_files = out.at(rel("success"));
     REQUIRE(out_flow_files.size() == 1);

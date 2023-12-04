@@ -101,7 +101,7 @@ TEST_CASE("RollingWindow: fix length, oldest entries are removed first", "[rolli
     window.shrinkToSize(1);
     const auto entries = window.getEntries();
     REQUIRE(compareEntriesTimestamps(entries, {42}));
-    REQUIRE(std::string_view{entries[0].value} == "foo");
+    REQUIRE(std::string_view{entries[0].value} == "foo");  // NOLINT(whitespace/braces)
   }
 }
 

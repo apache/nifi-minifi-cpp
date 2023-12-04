@@ -114,4 +114,4 @@ class AttributeRollingWindow final : public core::AbstractProcessor<AttributeRol
   std::shared_ptr<core::logging::Logger> logger_ = core::logging::LoggerFactory<AttributeRollingWindow>::getLogger(uuid_);
 };
 
-} // org::apache::nifi::minifi::processors
+}  // namespace org::apache::nifi::minifi::processors

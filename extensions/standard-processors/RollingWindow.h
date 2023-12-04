@@ -64,6 +64,7 @@ class RollingWindow {
 
   std::vector<Entry> getEntries() const & { return state_.get_container(); }
   std::vector<Entry> getEntries() && { return std::move(state_).get_container(); }
+
  private:
   detail::priority_queue<Entry, std::vector<Entry>, EntryComparator> state_;
 };

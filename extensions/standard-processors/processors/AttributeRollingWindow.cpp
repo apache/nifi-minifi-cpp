@@ -119,4 +119,4 @@ void AttributeRollingWindow::calculateAndSetAttributes(core::FlowFile &flow_file
 
 REGISTER_RESOURCE(AttributeRollingWindow, Processor);
 
-} // org::apache::nifi::minifi::processors
+}  // namespace org::apache::nifi::minifi::processors
