@@ -79,6 +79,17 @@ class AttributeRollingWindow final : public core::AbstractProcessor<AttributeRol
       "it is routed here."};
   EXTENSIONAPI static constexpr auto Relationships = std::array{Success, Failure};
 
+  EXTENSIONAPI static constexpr auto Count = core::OutputAttributeDefinition<1>{"<prefix>count", {Success}, "Number of the values in the rolling window"};
+  EXTENSIONAPI static constexpr auto Value = core::OutputAttributeDefinition<1>{"<prefix>value", {Success}, "Sum of the values in the rolling window"};
+  EXTENSIONAPI static constexpr auto Mean = core::OutputAttributeDefinition<1>{"<prefix>mean", {Success}, "Mean of the values in the rolling window"};
+  EXTENSIONAPI static constexpr auto Median = core::OutputAttributeDefinition<1>{"<prefix>median", {Success}, "Median of the values in the rolling window"};
+  EXTENSIONAPI static constexpr auto Variance = core::OutputAttributeDefinition<1>{"<prefix>variance", {Success}, "Variance of the values in the rolling window"};
+  EXTENSIONAPI static constexpr auto Stddev = core::OutputAttributeDefinition<1>{"<prefix>stddev", {Success}, "Standard deviation of the values in the rolling window"};
+  EXTENSIONAPI static constexpr auto Min = core::OutputAttributeDefinition<1>{"<prefix>min", {Success}, "Smallest value in the rolling window"};
+  EXTENSIONAPI static constexpr auto Max = core::OutputAttributeDefinition<1>{"<prefix>max", {Success}, "Largest value in the rolling window"};
+  EXTENSIONAPI static constexpr auto OutputAttributes = std::array<core::OutputAttributeReference, 8>{
+      Count, Value, Mean, Median, Variance, Stddev, Min, Max};
+
   EXTENSIONAPI static constexpr bool SupportsDynamicProperties = false;
   EXTENSIONAPI static constexpr bool SupportsDynamicRelationships = false;
   EXTENSIONAPI static constexpr core::annotation::Input InputRequirement = core::annotation::Input::INPUT_REQUIRED;
