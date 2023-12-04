@@ -95,7 +95,7 @@ void AttributeRollingWindow::calculateAndSetAttributes(core::FlowFile &flow_file
   const auto set_aggregate = [&flow_file, attribute_name](std::string_view name, double value) {
     flow_file.setAttribute(attribute_name(name), std::to_string(value));
   };
-  set_aggregate("count", sorted_values.size());
+  set_aggregate("count", static_cast<double>(sorted_values.size()));
   const auto sum = std::accumulate(std::begin(sorted_values), std::end(sorted_values), 0.0);
   set_aggregate("value", sum);
   const auto mean = sum / gsl::narrow_cast<double>(sorted_values.size());
