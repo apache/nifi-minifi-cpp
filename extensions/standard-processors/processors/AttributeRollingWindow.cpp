@@ -105,9 +105,11 @@ void AttributeRollingWindow::calculateAndSetAttributes(core::FlowFile &flow_file
         ? std::midpoint(sorted_values[mid], sorted_values[mid - 1])  // even number of values: average the two middle values
         : sorted_values[mid];  // odd number of values: take the middle value
   }());
-  const auto variance = std::accumulate(std::begin(sorted_values), std::end(sorted_values), 0.0, [&](double acc, double value) {
-    return acc + std::pow(value - mean, 2) / gsl::narrow_cast<double>(sorted_values.size());
+  // https://math.stackexchange.com/questions/1720876/sums-of-squares-minus-square-of-sums
+  const auto avg_of_squares = std::accumulate(std::begin(sorted_values), std::end(sorted_values), 0.0, [&](double acc, double value) {
+    return acc + std::pow(value, 2) / gsl::narrow_cast<double>(sorted_values.size());
   });
+  const auto variance = avg_of_squares - std::pow(mean, 2);
   set_aggregate("variance", variance);
   set_aggregate("stddev", std::sqrt(variance));
   set_aggregate("min", sorted_values.front());
