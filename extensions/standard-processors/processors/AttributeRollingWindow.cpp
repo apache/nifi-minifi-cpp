@@ -30,8 +30,9 @@ void AttributeRollingWindow::onSchedule(core::ProcessContext* context, core::Pro
   gsl_Expects(context);
   time_window_ = context->getProperty<core::TimePeriodValue>(TimeWindow)
       | utils::transform(&core::TimePeriodValue::getMilliseconds);
-  window_length_ = context->getProperty<size_t>(WindowLength)
-      | utils::filter([](size_t value) { return value > 0; });
+  window_length_ = context->getProperty<uint64_t>(WindowLength)
+      | utils::filter([](uint64_t value) { return value > 0; })
+      | utils::transform([](uint64_t value) { return size_t{value}; });
   if (!time_window_ && !window_length_) {
     throw minifi::Exception{ExceptionType::PROCESS_SCHEDULE_EXCEPTION, "Either 'Time window' or 'Window length' must be set"};
   }

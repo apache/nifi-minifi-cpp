@@ -16,31 +16,31 @@
  * limitations under the License.
  */
 #define EXTENSION_LIST ""  // NOLINT(cppcoreguidelines-macro-usage)
+#include <array>
 #include "../Catch.h"
 #include "core/AbstractProcessor.h"
 #include "core/PropertyDefinitionBuilder.h"
-#include <array>
 
 namespace org::apache::nifi::minifi::test {
 
 struct AbstractProcessorTestCase1 : core::AbstractProcessor<AbstractProcessorTestCase1> {
-  EXTENSIONAPI static constexpr auto SupportsDynamicProperties = true;
-  EXTENSIONAPI static constexpr auto SupportsDynamicRelationships = true;
-  EXTENSIONAPI static constexpr core::annotation::Input InputRequirement = core::annotation::Input::INPUT_FORBIDDEN;
-  EXTENSIONAPI static constexpr auto IsSingleThreaded = true;
-  EXTENSIONAPI static constexpr auto Property1 = core::PropertyDefinitionBuilder<>::createProperty("Property 1")
+  static constexpr auto SupportsDynamicProperties = true;
+  static constexpr auto SupportsDynamicRelationships = true;
+  static constexpr core::annotation::Input InputRequirement = core::annotation::Input::INPUT_FORBIDDEN;
+  static constexpr auto IsSingleThreaded = true;
+  static constexpr auto Property1 = core::PropertyDefinitionBuilder<>::createProperty("Property 1")
       .withDefaultValue("foo")
       .supportsExpressionLanguage(true)
       .isRequired(true)
       .build();
-  EXTENSIONAPI static constexpr auto Property2 = core::PropertyDefinitionBuilder<>::createProperty("Property 2")
+  static constexpr auto Property2 = core::PropertyDefinitionBuilder<>::createProperty("Property 2")
       .withDefaultValue("bar")
       .supportsExpressionLanguage(false)
       .isRequired(false)
       .build();
-  EXTENSIONAPI static constexpr auto Properties = std::array<core::PropertyReference, 2>{Property1, Property2};
-  EXTENSIONAPI static constexpr core::RelationshipDefinition Rel1{"rel1", "rel1 description"};
-  EXTENSIONAPI static constexpr auto Relationships = std::array{Rel1};
+  static constexpr auto Properties = std::array<core::PropertyReference, 2>{Property1, Property2};
+  static constexpr core::RelationshipDefinition Rel1{"rel1", "rel1 description"};
+  static constexpr auto Relationships = std::array{Rel1};
   AbstractProcessorTestCase1() :core::AbstractProcessor<AbstractProcessorTestCase1>{"TestCase1"} {}
   void onSchedule(core::ProcessContext *, core::ProcessSessionFactory *) override {}
   void onTrigger(core::ProcessContext *, core::ProcessSession *) override {}
