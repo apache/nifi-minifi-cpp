@@ -20,17 +20,84 @@
 #include "Catch.h"
 #include "AttributeRollingWindow.h"
 #include "SingleProcessorTestController.h"
-#include "range/v3/view/zip.hpp"
-#include "range/v3/algorithm/contains.hpp"
+#include "fmt/format.h"
+#include "fmt/ranges.h"
 
 namespace org::apache::nifi::minifi::test {
 using AttributeRollingWindow = processors::AttributeRollingWindow;
 
-TEST_CASE("AttributeRollingWindow", "[attributerollingwindow]") {
+bool checkAttributes(const std::map<std::string, std::string>& expected, const std::map<std::string, std::string>& actual) {
+  // expected may be incomplete, but if something is specified in expected, they also need to be in the actual
+  // set of attributes
+  return std::all_of(std::begin(expected), std::end(expected), [&actual](const auto& kvpair) {
+    const auto& key = kvpair.first;
+    const auto& value = kvpair.second;
+    return actual.at(key) == value;
+  });
+}
+
+TEST_CASE("AttributeRollingWindow properly forwards properties to RollingWindow", "[attributerollingwindow]") {
   const auto proc = std::make_shared<AttributeRollingWindow>("AttributeRollingWindow");
+  SingleProcessorTestController controller{proc};
   proc->setProperty(AttributeRollingWindow::ValueToTrack, "${value}");
   proc->setProperty(AttributeRollingWindow::WindowLength, "3");
-  SingleProcessorTestController controller{proc};
+  const auto trigger_with_value_and_check_attributes = [&controller](const std::string& value, const std::map<std::string, std::string>& expected_out_attributes) {
+    const auto rel = [](auto name) { return core::Relationship{std::move(name), "description"}; };
+    const auto out = controller.trigger({.content="content", .attributes={{"value", value}}});
+    REQUIRE(out.at(rel("failure")).empty());
+    const auto out_flow_files = out.at(rel("success"));
+    REQUIRE(out_flow_files.size() == 1);
+    const auto out_attrs = out_flow_files[0]->getAttributes();
+    REQUIRE(checkAttributes(expected_out_attributes, out_attrs));
+  };
+  trigger_with_value_and_check_attributes("1", {
+      // [1]
+      {"value", "1"},
+      {"rolling.window.count", "1.000000"},
+      {"rolling.window.value", "1.000000"},
+      {"rolling.window.mean", "1.000000"},
+      {"rolling.window.variance", "0.000000"},
+      {"rolling.window.stddev", "0.000000"},
+      {"rolling.window.median", "1.000000"},
+      {"rolling.window.min", "1.000000"},
+      {"rolling.window.max", "1.000000"}
+  });
+  trigger_with_value_and_check_attributes("3", {
+      // [1, 3]
+      {"value", "3"},
+      {"rolling.window.count", "2.000000"},
+      {"rolling.window.value", "4.000000"},
+      {"rolling.window.mean", "2.000000"},
+      {"rolling.window.variance", "1.000000"},
+      {"rolling.window.stddev", "1.000000"},
+      {"rolling.window.median", "2.000000"},
+      {"rolling.window.min", "1.000000"},
+      {"rolling.window.max", "3.000000"}
+  });
+  trigger_with_value_and_check_attributes("6", {
+      // [1, 3, 6]
+      {"value", "6"},
+      {"rolling.window.count", "3.000000"},
+      {"rolling.window.value", "10.000000"},
+      {"rolling.window.mean", "3.333333"},
+      {"rolling.window.variance", "4.222222"},
+      {"rolling.window.stddev", "2.054805"},
+      {"rolling.window.median", "3.000000"},
+      {"rolling.window.min", "1.000000"},
+      {"rolling.window.max", "6.000000"}
+  });
+  trigger_with_value_and_check_attributes("9", {
+      // [3, 6, 9]
+      {"value", "9"},
+      {"rolling.window.count", "3.000000"},
+      {"rolling.window.value", "18.000000"},
+      {"rolling.window.mean", "6.000000"},
+      {"rolling.window.variance", "6.000000"},
+      {"rolling.window.stddev", "2.449490"},
+      {"rolling.window.median", "6.000000"},
+      {"rolling.window.min", "3.000000"},
+      {"rolling.window.max", "9.000000"}
+  });
 }
 
 }  // namespace org::apache::nifi::minifi::test

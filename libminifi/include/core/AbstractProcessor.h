@@ -28,6 +28,7 @@
 namespace org::apache::nifi::minifi::core {
 template<typename ProcessorT>
 class AbstractProcessor : public Processor {
+ public:
   using Processor::Processor;
 
   void initialize() final {
@@ -37,10 +38,13 @@ class AbstractProcessor : public Processor {
     setSupportedRelationships(ProcessorT::Relationships);
   }
 
-  bool supportsDynamicProperties() const final { return ProcessorT::SupportsDynamicProperties; }
-  bool supportsDynamicRelationships() const final { return ProcessorT::SupportsDynamicRelationships; }
-  minifi::core::annotation::Input getInputRequirement() const final { return ProcessorT::InputRequirement; }
-  bool isSingleThreaded() const final { return ProcessorT::IsSingleThreaded; }
+  void onSchedule(core::ProcessContext*, core::ProcessSessionFactory*) override = 0;
+  void onTrigger(core::ProcessContext*, core::ProcessSession*) override = 0;
+
+  bool supportsDynamicProperties() const noexcept final { return ProcessorT::SupportsDynamicProperties; }
+  bool supportsDynamicRelationships() const noexcept final { return ProcessorT::SupportsDynamicRelationships; }
+  minifi::core::annotation::Input getInputRequirement() const noexcept final { return ProcessorT::InputRequirement; }
+  bool isSingleThreaded() const noexcept final { return ProcessorT::IsSingleThreaded; }
   std::string getProcessorType() const final {
     constexpr auto class_name = className<ProcessorT>();
     constexpr auto last_colon_index = class_name.find_last_of(':');

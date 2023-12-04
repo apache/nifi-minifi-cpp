@@ -63,7 +63,7 @@ void AttributeRollingWindow::onTrigger(core::ProcessContext* context, core::Proc
   }();
   // copy: so we can release the lock sooner
   const auto state_copy = [&, now = std::chrono::system_clock::now()] {
-    std::lock_guard lg{state_mutex_};
+    const std::lock_guard lg{state_mutex_};
     state_.add(now, current_value);
     if (window_length_) {
       state_.shrinkToSize(*window_length_);
