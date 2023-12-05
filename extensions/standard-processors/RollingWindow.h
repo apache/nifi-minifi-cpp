@@ -55,7 +55,7 @@ class RollingWindow {
 
   /** Remove the oldest entries until the size is <= size. */
   void shrinkToSize(size_t size) {
-    while (state_.size() > size && !state_.empty()) {
+    while (state_.size() > size) {
       state_.pop();
     }
   }
