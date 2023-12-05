@@ -152,7 +152,7 @@ In the list below, the names of required properties appear in bold. Any other pr
 
 ### Description
 
-Track a Rolling Window based on evaluating an Expression Language expression on each FlowFile. Each FlowFile will be emitted with the count of FlowFiles and total aggregate valueof values processed in the current window.
+Track a Rolling Window based on evaluating an Expression Language expression on each FlowFile. Each FlowFile will be emitted with the count of FlowFiles and total aggregate value of values processed in the current window.
 
 ### Properties
 

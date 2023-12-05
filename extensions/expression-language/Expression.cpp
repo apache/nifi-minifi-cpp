@@ -15,6 +15,7 @@
  * limitations under the License.
  */
 
+#include <atomic>
 #include <chrono>
 #include <utility>
 #include <iostream>
@@ -1047,7 +1048,7 @@ Value expr_ifElse(const std::vector<Value> &args) {
 }
 
 Value expr_nextInt(const std::vector<Value>&) {
-  static int64_t counter = 0;
+  static std::atomic<int64_t> counter{0};
   return Value(counter++);
 }
 

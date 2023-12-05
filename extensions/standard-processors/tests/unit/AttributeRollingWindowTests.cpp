@@ -30,7 +30,7 @@ bool checkAttributes(const std::map<std::string, std::string>& expected, const s
   return std::all_of(std::begin(expected), std::end(expected), [&actual](const auto& kvpair) {
     const auto& key = kvpair.first;
     const auto& value = kvpair.second;
-    return actual.at(key) == value;
+    return actual.contains(key) && actual.at(key) == value;
   });
 }
 

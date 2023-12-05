@@ -49,11 +49,10 @@ class AbstractProcessor : public Processor {
   std::string getProcessorType() const final {
     constexpr auto class_name = className<ProcessorT>();
     constexpr auto last_colon_index = class_name.find_last_of(':');
-    constexpr auto end = class_name.substr(last_colon_index + 1);
     if constexpr (last_colon_index == std::string_view::npos) {
       return std::string{class_name};
     }
-    return std::string{end};
+    return std::string{class_name.substr(last_colon_index + 1)};
   }
 };
 }  // namespace org::apache::nifi::minifi::core

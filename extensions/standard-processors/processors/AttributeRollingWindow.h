@@ -40,7 +40,7 @@ class AttributeRollingWindow final : public core::AbstractProcessor<AttributeRol
 
   EXTENSIONAPI static constexpr auto Description = "Track a Rolling Window based on evaluating an Expression Language "
       "expression on each FlowFile. Each FlowFile will be emitted with the count of FlowFiles and total aggregate value"
-      "of values processed in the current window.";
+      " of values processed in the current window.";
 
   EXTENSIONAPI static constexpr auto ValueToTrack = core::PropertyDefinitionBuilder<>::createProperty("Value to track")
       .withDescription("The expression on which to evaluate each FlowFile. The result of the expression will be added "
@@ -79,14 +79,14 @@ class AttributeRollingWindow final : public core::AbstractProcessor<AttributeRol
       "it is routed here."};
   EXTENSIONAPI static constexpr auto Relationships = std::array{Success, Failure};
 
-  EXTENSIONAPI static constexpr auto Count = core::OutputAttributeDefinition<1>{"<prefix>count", {Success}, "Number of the values in the rolling window"};
-  EXTENSIONAPI static constexpr auto Value = core::OutputAttributeDefinition<1>{"<prefix>value", {Success}, "Sum of the values in the rolling window"};
-  EXTENSIONAPI static constexpr auto Mean = core::OutputAttributeDefinition<1>{"<prefix>mean", {Success}, "Mean of the values in the rolling window"};
-  EXTENSIONAPI static constexpr auto Median = core::OutputAttributeDefinition<1>{"<prefix>median", {Success}, "Median of the values in the rolling window"};
-  EXTENSIONAPI static constexpr auto Variance = core::OutputAttributeDefinition<1>{"<prefix>variance", {Success}, "Variance of the values in the rolling window"};
-  EXTENSIONAPI static constexpr auto Stddev = core::OutputAttributeDefinition<1>{"<prefix>stddev", {Success}, "Standard deviation of the values in the rolling window"};
-  EXTENSIONAPI static constexpr auto Min = core::OutputAttributeDefinition<1>{"<prefix>min", {Success}, "Smallest value in the rolling window"};
-  EXTENSIONAPI static constexpr auto Max = core::OutputAttributeDefinition<1>{"<prefix>max", {Success}, "Largest value in the rolling window"};
+  EXTENSIONAPI static constexpr auto Count = core::OutputAttributeDefinition<>{"<prefix>count", {Success}, "Number of the values in the rolling window"};
+  EXTENSIONAPI static constexpr auto Value = core::OutputAttributeDefinition<>{"<prefix>value", {Success}, "Sum of the values in the rolling window"};
+  EXTENSIONAPI static constexpr auto Mean = core::OutputAttributeDefinition<>{"<prefix>mean", {Success}, "Mean of the values in the rolling window"};
+  EXTENSIONAPI static constexpr auto Median = core::OutputAttributeDefinition<>{"<prefix>median", {Success}, "Median of the values in the rolling window"};
+  EXTENSIONAPI static constexpr auto Variance = core::OutputAttributeDefinition<>{"<prefix>variance", {Success}, "Variance of the values in the rolling window"};
+  EXTENSIONAPI static constexpr auto Stddev = core::OutputAttributeDefinition<>{"<prefix>stddev", {Success}, "Standard deviation of the values in the rolling window"};
+  EXTENSIONAPI static constexpr auto Min = core::OutputAttributeDefinition<>{"<prefix>min", {Success}, "Smallest value in the rolling window"};
+  EXTENSIONAPI static constexpr auto Max = core::OutputAttributeDefinition<>{"<prefix>max", {Success}, "Largest value in the rolling window"};
   EXTENSIONAPI static constexpr auto OutputAttributes = std::array<core::OutputAttributeReference, 8>{
       Count, Value, Mean, Median, Variance, Stddev, Min, Max};
 
