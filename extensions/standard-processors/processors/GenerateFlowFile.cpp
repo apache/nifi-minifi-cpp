@@ -43,10 +43,10 @@ void GenerateFlowFile::initialize() {
   setSupportedRelationships(Relationships);
 }
 
-void generateData(std::vector<char>& data, bool textData = false) {
+void generateData(std::vector<char>& data, const bool text_data = false) {
   std::random_device rd;
   std::mt19937 eng(rd());
-  if (textData) {
+  if (text_data) {
     const int index_of_last_char = gsl::narrow<int>(strlen(TEXT_CHARS)) - 1;
     std::uniform_int_distribution<> distr(0, index_of_last_char);
     std::generate_n(data.begin(), data.size(), [&] { return TEXT_CHARS[static_cast<uint8_t>(distr(eng))]; });
@@ -58,57 +58,69 @@ void generateData(std::vector<char>& data, bool textData = false) {
 }
 
 void GenerateFlowFile::onSchedule(core::ProcessContext& context, core::ProcessSessionFactory&) {
-  if (context.getProperty(FileSize.name, fileSize_)) {
-    logger_->log_trace("File size is configured to be {}", fileSize_);
+  if (context.getProperty(FileSize.name, file_size_)) {
+    logger_->log_trace("File size is configured to be {}", file_size_);
   }
 
-  if (context.getProperty(BatchSize.name, batchSize_)) {
-    logger_->log_trace("Batch size is configured to be {}", batchSize_);
+  if (context.getProperty(BatchSize.name, batch_size_)) {
+    logger_->log_trace("Batch size is configured to be {}", batch_size_);
   }
 
-  std::string value;
-  if (context.getProperty(DataFormat.name, value)) {
-    textData_ = (value == GenerateFlowFile::DATA_FORMAT_TEXT);
+  if (auto data_format = context.getProperty(DataFormat)) {
+    textData_ = (*data_format == DATA_FORMAT_TEXT);
   }
-  if (context.getProperty(UniqueFlowFiles.name, uniqueFlowFile_)) {
-    logger_->log_trace("Unique Flow files is configured to be {}", uniqueFlowFile_);
+  if (context.getProperty(UniqueFlowFiles.name, unique_flow_file_)) {
+    logger_->log_trace("Unique Flow files is configured to be {}", unique_flow_file_);
   }
 
   std::string custom_text;
   context.getProperty(CustomText, custom_text, nullptr);
   if (!custom_text.empty()) {
-    if (textData_ && !uniqueFlowFile_) {
-      data_.assign(custom_text.begin(), custom_text.end());
+    if (textData_ && !unique_flow_file_) {
+      non_unique_data_.assign(custom_text.begin(), custom_text.end());
       return;
-    } else {
-      logger_->log_warn("Custom Text property is set, but not used!");
     }
+    logger_->log_warn("Custom Text property is set, but not used!");
   }
 
-  if (!uniqueFlowFile_) {
-    data_.resize(gsl::narrow<size_t>(fileSize_));
-    generateData(data_, textData_);
+  if (!unique_flow_file_) {
+    non_unique_data_.resize(gsl::narrow<size_t>(file_size_));
+    generateData(non_unique_data_, textData_);
   }
 }
 
-void GenerateFlowFile::onTrigger(core::ProcessContext&, core::ProcessSession& session) {
-  for (uint64_t i = 0; i < batchSize_; i++) {
+// If the Data Format is text and if Unique FlowFiles is false, the custom text has to be evaluated once per batch
+void GenerateFlowFile::regenerateNonUniqueData(core::ProcessContext& context) {
+  std::string custom_text;
+  context.getProperty(CustomText, custom_text, nullptr);
+  if (!custom_text.empty()) {
+    if (textData_ && !unique_flow_file_) {
+      non_unique_data_.assign(custom_text.begin(), custom_text.end());
+      return;
+    }
+    logger_->log_warn("Custom Text property is set, but not used!");
+  }
+}
+
+void GenerateFlowFile::onTrigger(core::ProcessContext& context, core::ProcessSession& session) {
+  regenerateNonUniqueData(context);
+  for (uint64_t i = 0; i < batch_size_; i++) {
     // For each batch
-    std::shared_ptr<core::FlowFile> flowFile = session.create();
-    if (!flowFile) {
+    std::shared_ptr<core::FlowFile> flow_file = session.create();
+    if (!flow_file) {
       logger_->log_error("Failed to create flowfile!");
       return;
     }
-    if (uniqueFlowFile_) {
-      std::vector<char> data(gsl::narrow<size_t>(fileSize_));
-      if (fileSize_ > 0) {
+    if (unique_flow_file_) {
+      std::vector<char> data(gsl::narrow<size_t>(file_size_));
+      if (file_size_ > 0) {
         generateData(data, textData_);
       }
-      session.writeBuffer(flowFile, data);
+      session.writeBuffer(flow_file, data);
     } else {
-      session.writeBuffer(flowFile, data_);
+      session.writeBuffer(flow_file, non_unique_data_);
     }
-    session.transfer(flowFile, Success);
+    session.transfer(flow_file, Success);
   }
 }
 

@@ -39,12 +39,8 @@ namespace org::apache::nifi::minifi::processors {
 
 class GenerateFlowFile : public core::Processor {
  public:
-  GenerateFlowFile(std::string_view name, const utils::Identifier& uuid = {}) // NOLINT
+  explicit GenerateFlowFile(const std::string_view name, const utils::Identifier& uuid = {}) // NOLINT
       : Processor(name, uuid) {
-    batchSize_ = 1;
-    uniqueFlowFile_ = true;
-    fileSize_ = 1024;
-    textData_ = false;
   }
   ~GenerateFlowFile() override = default;
 
@@ -104,13 +100,15 @@ class GenerateFlowFile : public core::Processor {
   void onTrigger(core::ProcessContext& context, core::ProcessSession& session) override;
   void initialize() override;
 
- protected:
-  std::vector<char> data_;
+  void regenerateNonUniqueData(core::ProcessContext& context);
 
-  uint64_t batchSize_;
-  bool uniqueFlowFile_;
-  uint64_t fileSize_;
-  bool textData_;
+ protected:
+  std::vector<char> non_unique_data_;
+
+  uint64_t batch_size_{1};
+  bool unique_flow_file_{true};
+  uint64_t file_size_{1024};
+  bool textData_{false};
 
  private:
   std::shared_ptr<core::logging::Logger> logger_ = core::logging::LoggerFactory<GenerateFlowFile>::getLogger(uuid_);
