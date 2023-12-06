@@ -28,18 +28,11 @@ endif()
 FetchContent_Declare(zstd
     URL            https://github.com/facebook/zstd/archive/refs/tags/v1.5.2.tar.gz
     URL_HASH       SHA256=f7de13462f7a82c29ab865820149e778cbfe01087b3a55b5332707abf9db4a6e
-    PATCH_COMMAND "${PC}"
+    PATCH_COMMAND  "${PC}"
+    SOURCE_SUBDIR  build/cmake
 )
 
-# With CMake >= 3.18, this block could be replaced with FetchContent_MakeAvailable(zstd),
-# if we add the `SOURCE_SUBDIR build/cmake` option to FetchContent_Declare() [this option is not available in CMake < 3.18].
-# As of July 2022, one of our supported platforms, Centos 7, comes with CMake 3.17.
-FetchContent_GetProperties(zstd)
-if(NOT zstd_POPULATED)
-    FetchContent_Populate(zstd)
-    # the top level doesn't contain CMakeLists.txt, it is in the "build/cmake" subdirectory
-    add_subdirectory(${zstd_SOURCE_DIR}/build/cmake ${zstd_BINARY_DIR})
-endif()
+FetchContent_MakeAvailable(zstd)
 
 add_library(zstd::zstd ALIAS libzstd_static)
 
