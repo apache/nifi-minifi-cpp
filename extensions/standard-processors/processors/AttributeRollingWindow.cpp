@@ -26,29 +26,28 @@
 
 namespace org::apache::nifi::minifi::processors {
 
-void AttributeRollingWindow::onSchedule(core::ProcessContext* context, core::ProcessSessionFactory*) {
-  gsl_Expects(context);
-  time_window_ = context->getProperty<core::TimePeriodValue>(TimeWindow)
+void AttributeRollingWindow::onSchedule(core::ProcessContext& context, core::ProcessSessionFactory&) {
+  time_window_ = context.getProperty<core::TimePeriodValue>(TimeWindow)
       | utils::transform(&core::TimePeriodValue::getMilliseconds);
-  window_length_ = context->getProperty<uint64_t>(WindowLength)
+  window_length_ = context.getProperty<uint64_t>(WindowLength)
       | utils::filter([](uint64_t value) { return value > 0; })
       | utils::transform([](uint64_t value) { return gsl::narrow<size_t>(value); });  // narrowing on 32 bit ABI
   if (!time_window_ && !window_length_) {
     throw minifi::Exception{ExceptionType::PROCESS_SCHEDULE_EXCEPTION, "Either 'Time window' or 'Window length' must be set"};
   }
-  context->getProperty(AttributeNamePrefix, attribute_name_prefix_);
+  context.getProperty(AttributeNamePrefix, attribute_name_prefix_);
   gsl_Ensures(runningInvariant());
 }
 
-void AttributeRollingWindow::onTrigger(core::ProcessContext* context, core::ProcessSession* session) {
-  gsl_Expects(context && session && runningInvariant());
-  const auto flow_file = session->get();
+void AttributeRollingWindow::onTrigger(core::ProcessContext& context, core::ProcessSession& session) {
+  gsl_Expects(runningInvariant());
+  const auto flow_file = session.get();
   if (!flow_file) { yield(); return; }
   gsl_Assert(flow_file);
-  const auto current_value_opt_str = context->getProperty(ValueToTrack, flow_file);
+  const auto current_value_opt_str = context.getProperty(ValueToTrack, flow_file);
   if (!current_value_opt_str) {
     logger_->log_warn("Missing value to track, flow file uuid: {}", flow_file->getUUIDStr());
-    session->transfer(flow_file, Failure);
+    session.transfer(flow_file, Failure);
     return;
   }
   const auto current_value = [&current_value_opt_str]() -> std::optional<double> {
@@ -60,7 +59,7 @@ void AttributeRollingWindow::onTrigger(core::ProcessContext* context, core::Proc
   }();
   if (!current_value) {
     logger_->log_warn("Failed to convert 'Value to track' of '{}' to double", *current_value_opt_str);
-    session->transfer(flow_file, Failure);
+    session.transfer(flow_file, Failure);
     return;
   }
   // copy: so we can release the lock sooner
@@ -81,7 +80,7 @@ void AttributeRollingWindow::onTrigger(core::ProcessContext* context, core::Proc
     return values;
   }();
   calculateAndSetAttributes(*flow_file, sorted_values);
-  session->transfer(flow_file, Success);
+  session.transfer(flow_file, Success);
 }
 
 /**

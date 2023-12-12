@@ -95,8 +95,8 @@ class AttributeRollingWindow final : public core::AbstractProcessor<AttributeRol
   EXTENSIONAPI static constexpr core::annotation::Input InputRequirement = core::annotation::Input::INPUT_REQUIRED;
   EXTENSIONAPI static constexpr bool IsSingleThreaded = false;
 
-  void onSchedule(core::ProcessContext*, core::ProcessSessionFactory*) final;
-  void onTrigger(core::ProcessContext*, core::ProcessSession*) final;
+  void onSchedule(core::ProcessContext&, core::ProcessSessionFactory&) final;
+  void onTrigger(core::ProcessContext&, core::ProcessSession&) final;
 
  private:
   bool runningInvariant() const {

@@ -42,8 +42,8 @@ struct AbstractProcessorTestCase1 : core::AbstractProcessor<AbstractProcessorTes
   static constexpr core::RelationshipDefinition Rel1{"rel1", "rel1 description"};
   static constexpr auto Relationships = std::array{Rel1};
   AbstractProcessorTestCase1() :core::AbstractProcessor<AbstractProcessorTestCase1>{"TestCase1"} {}
-  void onSchedule(core::ProcessContext *, core::ProcessSessionFactory *) override {}
-  void onTrigger(core::ProcessContext *, core::ProcessSession *) override {}
+  void onSchedule(core::ProcessContext&, core::ProcessSessionFactory&) override {}
+  void onTrigger(core::ProcessContext&, core::ProcessSession&) override {}
 };
 
 TEST_CASE("AbstractProcessor case1", "[processor][abstractprocessor][case1]") {
@@ -86,8 +86,8 @@ struct AbstractProcessorTestCase2 : core::AbstractProcessor<AbstractProcessorTes
   static constexpr core::RelationshipDefinition Rel1{"Relationship1", "rel1 description"};
   static constexpr auto Relationships = std::array{Rel1};
   AbstractProcessorTestCase2() :core::AbstractProcessor<AbstractProcessorTestCase2>{"TestCase2"} {}
-  void onSchedule(core::ProcessContext *, core::ProcessSessionFactory *) override {}
-  void onTrigger(core::ProcessContext *, core::ProcessSession *) override {}
+  void onSchedule(core::ProcessContext&, core::ProcessSessionFactory&) override {}
+  void onTrigger(core::ProcessContext&, core::ProcessSession&) override {}
 };
 
 TEST_CASE("AbstractProcessor case2", "[processor][abstractprocessor][case2]") {

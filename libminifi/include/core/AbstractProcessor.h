@@ -39,8 +39,8 @@ class AbstractProcessor : public Processor {
     setSupportedRelationships(ProcessorT::Relationships);
   }
 
-  void onSchedule(core::ProcessContext*, core::ProcessSessionFactory*) override = 0;
-  void onTrigger(core::ProcessContext*, core::ProcessSession*) override = 0;
+  void onSchedule(core::ProcessContext&, core::ProcessSessionFactory&) override = 0;
+  void onTrigger(core::ProcessContext&, core::ProcessSession&) override = 0;
 
   bool supportsDynamicProperties() const noexcept final { return ProcessorT::SupportsDynamicProperties; }
   bool supportsDynamicRelationships() const noexcept final { return ProcessorT::SupportsDynamicRelationships; }
