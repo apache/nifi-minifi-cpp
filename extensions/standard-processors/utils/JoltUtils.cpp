@@ -112,6 +112,7 @@ nonstd::expected<std::pair<Spec::Template, Spec::It>, std::string> Spec::Templat
         } else {
           state = State::Plain;
           // reprocess this char in a different state
+          gsl_Expects(ch_it != begin);
           --ch_it;
         }
         break;
@@ -123,6 +124,7 @@ nonstd::expected<std::pair<Spec::Template, Spec::It>, std::string> Spec::Templat
           references.back().first = std::stoi(target);
           state = State::Plain;
           // reprocess this char in a different state
+          gsl_Expects(ch_it != begin);
           --ch_it;
         }
         break;
@@ -300,7 +302,7 @@ std::optional<std::vector<std::string_view>> Spec::Regex::match(std::string_view
     // not enough characters left
     return std::nullopt;
   }
-  auto next_it = std::next(str.rbegin(), fragments.back().size()).base();
+  auto next_it = std::next(str.rbegin(), gsl::narrow<decltype(str.rbegin())::difference_type>(fragments.back().size())).base();
   if (std::string_view(next_it, str.end()) != fragments.back()) {
     return std::nullopt;
   }
@@ -643,8 +645,10 @@ std::unique_ptr<Spec::Pattern> parseMap(const Spec::Context& ctx, const rapidjso
             throw Exception(GENERAL_EXCEPTION, "Unterminated escape sequence");
           }
           if (ch == '|') {
+            // this is an extension so we can escape '|' characters
             subkey += "|";
           } else {
+            // leave the escape character for further processing
             subkey += "\\";
             subkey += ch.value();
           }

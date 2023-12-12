@@ -238,6 +238,7 @@ TEST_CASE("Shiftr put into array at index") {
 }
 
 TEST_CASE("Shiftr multiple patterns") {
+  // this is an extension, so we can escape and match on a '|' character
   auto proc = std::make_shared<minifi::processors::JoltTransformJSON>("JoltProc");
   SingleProcessorTestController controller{proc};
   proc->setProperty(processors::JoltTransformJSON::JoltTransform, magic_enum::enum_name(processors::jolt_transform_json::JoltTransform::Shift));

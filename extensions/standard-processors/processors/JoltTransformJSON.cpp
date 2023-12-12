@@ -29,10 +29,9 @@ void JoltTransformJSON::initialize() {
   setSupportedRelationships(Relationships);
 }
 
-void JoltTransformJSON::onSchedule(core::ProcessContext* context, core::ProcessSessionFactory* /*session_factory*/) {
-  gsl_Expects(context);
-  transform_ = utils::parseEnumProperty<jolt_transform_json::JoltTransform>(*context, JoltTransform);
-  const std::string spec_str = utils::getRequiredPropertyOrThrow(*context, JoltSpecification.name);
+void JoltTransformJSON::onSchedule(core::ProcessContext& context, core::ProcessSessionFactory& /*session_factory*/) {
+  transform_ = utils::parseEnumProperty<jolt_transform_json::JoltTransform>(context, JoltTransform);
+  const std::string spec_str = utils::getRequiredPropertyOrThrow(context, JoltSpecification.name);
   if (auto spec = utils::jolt::Spec::parse(spec_str, logger_)) {
     spec_ = std::move(spec.value());
   } else {
@@ -40,19 +39,20 @@ void JoltTransformJSON::onSchedule(core::ProcessContext* context, core::ProcessS
   }
 }
 
-void JoltTransformJSON::onTrigger(core::ProcessContext* context, core::ProcessSession* session) {
-  gsl_Expects(context && session && spec_);
-  auto flowfile = session->get();
+void JoltTransformJSON::onTrigger(core::ProcessContext& context, core::ProcessSession& session) {
+  gsl_Expects(spec_);
+  auto flowfile = session.get();
   if (!flowfile) {
-    context->yield();
+    context.yield();
     return;
   }
 
-  auto content = session->readBuffer(flowfile);
+  auto content = session.readBuffer(flowfile);
   rapidjson::Document input;
   rapidjson::ParseResult parse_result = input.Parse(reinterpret_cast<const char*>(content.buffer.data()), content.buffer.size());
   if (!parse_result) {
-    session->transfer(flowfile, Failure);
+    logger_->log_warn("Failed to parse flowfile content as json: {} ({})", rapidjson::GetParseError_En(parse_result.Code()), gsl::narrow<size_t>(parse_result.Offset()));
+    session.transfer(flowfile, Failure);
     return;
   }
 
@@ -60,11 +60,11 @@ void JoltTransformJSON::onTrigger(core::ProcessContext* context, core::ProcessSe
     rapidjson::StringBuffer buffer;
     rapidjson::Writer<rapidjson::StringBuffer> writer(buffer);
     result.value().Accept(writer);
-    session->writeBuffer(flowfile, std::span<const char>(buffer.GetString(), buffer.GetSize()));
-    session->transfer(flowfile, Success);
+    session.writeBuffer(flowfile, std::span<const char>(buffer.GetString(), buffer.GetSize()));
+    session.transfer(flowfile, Success);
   } else {
-    logger_->log_debug("Failed to apply transformation: %s", result.error());
-    session->transfer(flowfile, Failure);
+    logger_->log_info("Failed to apply transformation: %s", result.error());
+    session.transfer(flowfile, Failure);
   }
 }
 

@@ -180,7 +180,7 @@ class Spec {
     void process(const Context& ctx, const rapidjson::Value& input, rapidjson::Document& output) const;
     void processArray(const Context& ctx, const rapidjson::Value &input, rapidjson::Document &output) const;
     void processObject(const Context& ctx, const rapidjson::Value &input, rapidjson::Document &output) const;
-    bool processMember(const Context& ctx, std::string_view key, const rapidjson::Value& member, rapidjson::Document& output) const;
+    bool processMember(const Context& ctx, std::string_view name, const rapidjson::Value& member, rapidjson::Document& output) const;
 
     std::unordered_map<std::string, size_t> literal_indices;
     std::vector<std::tuple<std::string, std::optional<size_t>, Value>> literals;
