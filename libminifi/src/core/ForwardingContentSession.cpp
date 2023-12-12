@@ -54,12 +54,12 @@ std::shared_ptr<io::BaseStream> ForwardingContentSession::append(const std::shar
 
 void ForwardingContentSession::commit() {
   created_claims_.clear();
-  extensions_.clear();
+  append_state_.clear();
 }
 
 void ForwardingContentSession::rollback() {
   created_claims_.clear();
-  extensions_.clear();
+  append_state_.clear();
 }
 
 }  // namespace org::apache::nifi::minifi::core

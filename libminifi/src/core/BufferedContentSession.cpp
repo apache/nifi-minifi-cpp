@@ -59,7 +59,7 @@ std::shared_ptr<io::BaseStream> BufferedContentSession::read(const std::shared_p
   // TODO(adebreceni):
   //  after the stream refactor is merged we should be able to share the underlying buffer
   //  between multiple InputStreams, moreover create a ConcatInputStream
-  if (managed_resources_.contains(resource_id) || extensions_.contains(resource_id)) {
+  if (managed_resources_.contains(resource_id) || append_state_.contains(resource_id)) {
     throw Exception(REPOSITORY_EXCEPTION, "Can only read non-modified resource");
   }
   return repository_->read(*resource_id);
@@ -77,7 +77,7 @@ void BufferedContentSession::commit() {
       throw Exception(REPOSITORY_EXCEPTION, "Failed to write new resource: " + resource.first->getContentFullPath());
     }
   }
-  for (const auto& resource : extensions_) {
+  for (const auto& resource : append_state_) {
     auto outStream = repository_->write(*resource.first, true);
     if (outStream == nullptr) {
       throw Exception(REPOSITORY_EXCEPTION, "Couldn't open the underlying resource for append: " + resource.first->getContentFullPath());
@@ -90,12 +90,12 @@ void BufferedContentSession::commit() {
   }
 
   managed_resources_.clear();
-  extensions_.clear();
+  append_state_.clear();
 }
 
 void BufferedContentSession::rollback() {
   managed_resources_.clear();
-  extensions_.clear();
+  append_state_.clear();
 }
 
 }  // namespace org::apache::nifi::minifi::core

@@ -30,7 +30,7 @@ class StreamAppendLock;
 class ContentRepository;
 
 class ContentSession {
-  struct ExtensionData {
+  struct AppendState {
     std::shared_ptr<io::BaseStream> stream;
     size_t base_size;
     std::unique_ptr<StreamAppendLock> lock;
@@ -57,7 +57,7 @@ class ContentSession {
   virtual std::shared_ptr<io::BaseStream> append(const std::shared_ptr<ResourceClaim>& resource_id) = 0;
 
   // contains aux data on resources that have been appended to
-  std::map<std::shared_ptr<ResourceClaim>, ExtensionData> extensions_;
+  std::map<std::shared_ptr<ResourceClaim>, AppendState> append_state_;
   std::shared_ptr<ContentRepository> repository_;
 };
 
