@@ -425,7 +425,7 @@ if(WIN32)
     #file(COPY "${CMAKE_CURRENT_SOURCE_DIR}/README.md" DESTINATION "${CMAKE_CURRENT_BINARY_DIR}")
     file(COPY "${CMAKE_CURRENT_SOURCE_DIR}/NOTICE" DESTINATION "${CMAKE_CURRENT_BINARY_DIR}")
     file(GLOB markdown_docs "${CMAKE_CURRENT_SOURCE_DIR}/*.md")
-    foreach(mddocfile ${markdown_docs)
+    foreach(mddocfile ${markdown_docs})
         file(COPY "${mddocfile}" DESTINATION "${CMAKE_CURRENT_BINARY_DIR}")
     endforeach()
 
