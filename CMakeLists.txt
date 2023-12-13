@@ -422,8 +422,11 @@ if(WIN32)
 
     file(COPY "${CMAKE_CURRENT_SOURCE_DIR}/conf/" DESTINATION "${CMAKE_CURRENT_BINARY_DIR}/conf/")
     file(COPY "${CMAKE_CURRENT_SOURCE_DIR}/LICENSE" DESTINATION "${CMAKE_CURRENT_BINARY_DIR}")
-    file(COPY "${CMAKE_CURRENT_SOURCE_DIR}/README.md" DESTINATION "${CMAKE_CURRENT_BINARY_DIR}")
     file(COPY "${CMAKE_CURRENT_SOURCE_DIR}/NOTICE" DESTINATION "${CMAKE_CURRENT_BINARY_DIR}")
+    file(GLOB markdown_docs "${CMAKE_CURRENT_SOURCE_DIR}/*.md")
+    foreach(mddocfile ${markdown_docs})
+        file(COPY "${mddocfile}" DESTINATION "${CMAKE_CURRENT_BINARY_DIR}")
+    endforeach()
 
     # Determine the path of the VC Redistributable Merge Modules
     if (DEFINED ENV{VCToolsRedistDir})
@@ -531,7 +534,11 @@ if (NOT WIN32)
         COMPONENT bin)
 endif()
 
-install(FILES LICENSE README.md NOTICE
+install(FILES LICENSE NOTICE
+    DESTINATION .
+    COMPONENT bin)
+file(GLOB markdown_docs "*.md")
+install(FILES ${markdown_docs}
     DESTINATION .
     COMPONENT bin)
 
