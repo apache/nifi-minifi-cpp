@@ -216,7 +216,7 @@ std::optional<SplitTextFragmentGenerator::Fragment> SplitTextFragmentGenerator::
 }
 
 ReadCallback::ReadCallback(std::shared_ptr<core::FlowFile> flow_file, const SplitTextConfiguration& split_text_config,
-  core::ProcessSession *session,  std::shared_ptr<core::logging::Logger> logger)
+  core::ProcessSession& session,  std::shared_ptr<core::logging::Logger> logger)
     : flow_file_(std::move(flow_file)),
       split_text_config_(split_text_config),
       session_(session),
@@ -236,7 +236,7 @@ void ReadCallback::setAttributesOfDoneSegment(core::FlowFile& current_flow_file,
 
 void ReadCallback::createHeaderOnlyFragmentFlow(const SplitTextFragmentGenerator::Fragment& header_fragment) {
   gsl_Expects(split_text_config_.remove_trailing_new_lines);  // This is only possible if the split fragment has no content and the endlines are trimmed
-  auto header_only_flow = session_->clone(flow_file_, gsl::narrow<int64_t>(header_fragment.fragment_offset), gsl::narrow<int64_t>(header_fragment.fragment_size - header_fragment.endline_size));
+  auto header_only_flow = session_.clone(flow_file_, gsl::narrow<int64_t>(header_fragment.fragment_offset), gsl::narrow<int64_t>(header_fragment.fragment_size - header_fragment.endline_size));
   if (!header_only_flow) {
     logger_->log_error("Failed to clone header only fragment flow!");
     return;
@@ -247,32 +247,32 @@ void ReadCallback::createHeaderOnlyFragmentFlow(const SplitTextFragmentGenerator
 }
 
 void ReadCallback::mergeHeaderAndFragmentFlows(const std::shared_ptr<core::FlowFile>& header_flow, const SplitTextFragmentGenerator::Fragment& fragment, size_t fragment_trim_size) {
-  auto fragment_flow = session_->clone(flow_file_, gsl::narrow<int64_t>(fragment.fragment_offset), gsl::narrow<int64_t>(fragment.fragment_size - fragment_trim_size));
+  auto fragment_flow = session_.clone(flow_file_, gsl::narrow<int64_t>(fragment.fragment_offset), gsl::narrow<int64_t>(fragment.fragment_size - fragment_trim_size));
   if (!fragment_flow) {
     logger_->log_error("Failed to clone fragment flow!");
     return;
   }
-  auto merged_flow = session_->clone(header_flow);  // clone header to copy attributes
+  auto merged_flow = session_.clone(header_flow);  // clone header to copy attributes
   if (!merged_flow) {
     logger_->log_error("Failed to clone merged fragment flow!");
     return;
   }
-  session_->write(merged_flow, [this, &fragment_flow, &header_flow](const std::shared_ptr<io::OutputStream>& output_stream) -> int64_t {
-    session_->read(header_flow, [&output_stream](const std::shared_ptr<io::InputStream>& header_input_stream) -> int64_t {
+  session_.write(merged_flow, [this, &fragment_flow, &header_flow](const std::shared_ptr<io::OutputStream>& output_stream) -> int64_t {
+    session_.read(header_flow, [&output_stream](const std::shared_ptr<io::InputStream>& header_input_stream) -> int64_t {
       return internal::pipe(*header_input_stream, *output_stream);
     });
-    return session_->read(fragment_flow, [&output_stream](const std::shared_ptr<io::InputStream>& fragment_input_stream) -> int64_t {
+    return session_.read(fragment_flow, [&output_stream](const std::shared_ptr<io::InputStream>& fragment_input_stream) -> int64_t {
       return internal::pipe(*fragment_input_stream, *output_stream);
     });
   });
   logger_->log_debug("Creating fragment with header with fragment index: {} fragment size: {}", emitted_fragment_index_, merged_flow->getSize());
   setAttributesOfDoneSegment(*merged_flow, fragment.text_line_count);
   results.push_back(merged_flow);
-  session_->remove(fragment_flow);
+  session_.remove(fragment_flow);
 }
 
 void ReadCallback::createFragmentFlowWithoutHeader(const SplitTextFragmentGenerator::Fragment& fragment, size_t fragment_trim_size) {
-  auto fragment_flow = session_->clone(flow_file_, gsl::narrow<int64_t>(fragment.fragment_offset), gsl::narrow<int64_t>(fragment.fragment_size - fragment_trim_size));
+  auto fragment_flow = session_.clone(flow_file_, gsl::narrow<int64_t>(fragment.fragment_offset), gsl::narrow<int64_t>(fragment.fragment_size - fragment_trim_size));
   if (!fragment_flow) {
     logger_->log_error("Failed to clone fragment flow without header!");
     return;
@@ -292,7 +292,7 @@ int64_t ReadCallback::operator()(const std::shared_ptr<io::InputStream>& stream)
       error = header_fragment.error();
       return gsl::narrow<int64_t>(flow_file_->getSize());
     }
-    header_flow = session_->clone(flow_file_, gsl::narrow<int64_t>(header_fragment->fragment_offset), gsl::narrow<int64_t>(header_fragment->fragment_size));
+    header_flow = session_.clone(flow_file_, gsl::narrow<int64_t>(header_fragment->fragment_offset), gsl::narrow<int64_t>(header_fragment->fragment_size));
     if (!header_flow) {
       logger_->log_error("Failed to clone header flow!");
       return -1;
@@ -312,7 +312,7 @@ int64_t ReadCallback::operator()(const std::shared_ptr<io::InputStream>& stream)
     }
   }
   if (header_flow) {
-    session_->remove(header_flow);
+    session_.remove(header_flow);
   }
   return fragment_generator.getState() == detail::StreamReadState::EndOfStream ? gsl::narrow<int64_t>(flow_file_->getSize()) : -1;
 }
@@ -324,11 +324,10 @@ void SplitText::initialize() {
   setSupportedRelationships(Relationships);
 }
 
-void SplitText::onSchedule(const std::shared_ptr<core::ProcessContext> &context, const std::shared_ptr<core::ProcessSessionFactory>& /*sessionFactory*/) {
-  gsl_Expects(context);
-  split_text_config_.line_split_count = utils::getRequiredPropertyOrThrow<uint64_t>(*context, LineSplitCount.name);
+void SplitText::onSchedule(core::ProcessContext& context, core::ProcessSessionFactory& /*sessionFactory*/) {
+  split_text_config_.line_split_count = utils::getRequiredPropertyOrThrow<uint64_t>(context, LineSplitCount.name);
   logger_->log_debug("SplitText line split count: {}", split_text_config_.line_split_count);
-  auto max_fragment_data_size_value = context->getProperty<core::DataSizeValue>(MaximumFragmentSize);
+  auto max_fragment_data_size_value = context.getProperty<core::DataSizeValue>(MaximumFragmentSize);
   if (max_fragment_data_size_value) {
     split_text_config_.maximum_fragment_size = max_fragment_data_size_value->getValue();
     logger_->log_debug("SplitText maximum fragment size: {}", split_text_config_.maximum_fragment_size.value());
@@ -339,39 +338,38 @@ void SplitText::onSchedule(const std::shared_ptr<core::ProcessContext> &context,
   if (split_text_config_.line_split_count == 0 && !split_text_config_.maximum_fragment_size) {
     throw Exception(PROCESS_SCHEDULE_EXCEPTION, "Line Split Count is set to 0, but Maximum Fragment Size is not set!");
   }
-  split_text_config_.header_line_count = utils::getRequiredPropertyOrThrow<uint64_t>(*context, HeaderLineCount.name);
+  split_text_config_.header_line_count = utils::getRequiredPropertyOrThrow<uint64_t>(context, HeaderLineCount.name);
   logger_->log_debug("SplitText header line count: {}", split_text_config_.header_line_count);
-  split_text_config_.header_line_marker_characters = context->getProperty(HeaderLineMarkerCharacters);
+  split_text_config_.header_line_marker_characters = context.getProperty(HeaderLineMarkerCharacters);
   if (split_text_config_.header_line_marker_characters && split_text_config_.header_line_marker_characters->size() >= detail::SPLIT_TEXT_BUFFER_SIZE) {
     throw Exception(PROCESS_SCHEDULE_EXCEPTION, fmt::format("SplitText header line marker characters length is larger than the maximum allowed: {}", detail::SPLIT_TEXT_BUFFER_SIZE));
   }
   if (split_text_config_.header_line_marker_characters) {
     logger_->log_debug("SplitText header line marker characters were set: {}", *split_text_config_.header_line_marker_characters);
   }
-  split_text_config_.remove_trailing_new_lines = utils::getRequiredPropertyOrThrow<bool>(*context, RemoveTrailingNewlines.name);
+  split_text_config_.remove_trailing_new_lines = utils::getRequiredPropertyOrThrow<bool>(context, RemoveTrailingNewlines.name);
   logger_->log_debug("SplitText should remove trailing new lines: {}", split_text_config_.remove_trailing_new_lines);
 }
 
-void SplitText::onTrigger(const std::shared_ptr<core::ProcessContext> &context, const std::shared_ptr<core::ProcessSession> &session) {
-  gsl_Expects(context && session);
-  std::shared_ptr<core::FlowFile> flow_file = session->get();
+void SplitText::onTrigger(core::ProcessContext& context, core::ProcessSession& session) {
+  std::shared_ptr<core::FlowFile> flow_file = session.get();
   if (!flow_file) {
-    context->yield();
+    context.yield();
     return;
   }
 
-  detail::ReadCallback callback{flow_file, split_text_config_, session.get(), logger_};
-  session->read(flow_file, std::ref(callback));
+  detail::ReadCallback callback{flow_file, split_text_config_, session, logger_};
+  session.read(flow_file, std::ref(callback));
   if (callback.error) {
     logger_->log_error("Splitting flow file failed with error: {}", *callback.error);
-    session->transfer(flow_file, Failure);
+    session.transfer(flow_file, Failure);
   } else {
     logger_->log_info("Splitting flow file '{}' (id: {}) resulted in {} fragments", flow_file->getName(), flow_file->getUUIDStr(), callback.results.size());
     for (const auto& res : callback.results) {
       res->setAttribute(SplitText::FragmentCountOutputAttribute.name, std::to_string(callback.results.size()));
-      session->transfer(res, Splits);
+      session.transfer(res, Splits);
     }
-    session->transfer(flow_file, Original);
+    session.transfer(flow_file, Original);
   }
 }
 

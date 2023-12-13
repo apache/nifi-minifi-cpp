@@ -118,7 +118,7 @@ class SplitTextFragmentGenerator {
 class ReadCallback {
  public:
   ReadCallback(std::shared_ptr<core::FlowFile> flow_file, const SplitTextConfiguration& split_text_config,
-    core::ProcessSession *session, std::shared_ptr<core::logging::Logger> logger);
+    core::ProcessSession& session, std::shared_ptr<core::logging::Logger> logger);
   int64_t operator()(const std::shared_ptr<io::InputStream>& stream);
   std::optional<std::string> error;
   std::vector<std::shared_ptr<org::apache::nifi::minifi::core::FlowFile>> results;
@@ -132,7 +132,7 @@ class ReadCallback {
   std::shared_ptr<io::InputStream> stream_;
   std::shared_ptr<core::FlowFile> flow_file_;
   const SplitTextConfiguration& split_text_config_;
-  core::ProcessSession *session_;
+  core::ProcessSession& session_;
   size_t emitted_fragment_index_ = 1;
   const std::string fragment_identifier_ = utils::IdGenerator::getIdGenerator()->generate().to_string();
   std::shared_ptr<core::logging::Logger> logger_;
@@ -222,8 +222,8 @@ class SplitText : public core::Processor {
   EXTENSIONAPI static constexpr bool IsSingleThreaded = false;
   ADD_COMMON_VIRTUAL_FUNCTIONS_FOR_PROCESSORS
 
-  void onSchedule(const std::shared_ptr<core::ProcessContext> &context, const std::shared_ptr<core::ProcessSessionFactory> &session_factory) override;
-  void onTrigger(const std::shared_ptr<core::ProcessContext> &context, const std::shared_ptr<core::ProcessSession> &session) override;
+  void onSchedule(core::ProcessContext& context, core::ProcessSessionFactory& session_factory) override;
+  void onTrigger(core::ProcessContext& context, core::ProcessSession& session) override;
   void initialize() override;
 
  private:
