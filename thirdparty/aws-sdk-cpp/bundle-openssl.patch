@@ -1,11 +1,10 @@
-diff --git a/cmake/external_dependencies.cmake b/cmake/external_dependencies.cmake
-index 20feb6de51..aa63b4633c 100644
---- a/cmake/external_dependencies.cmake
-+++ b/cmake/external_dependencies.cmake
-@@ -34,14 +34,14 @@ elseif(ENABLE_OPENSSL_ENCRYPTION)
+diff -rupN a/cmake/external_dependencies.cmake b/cmake/external_dependencies.cmake
+--- a/cmake/external_dependencies.cmake 2023-12-11 13:15:43.194940468 +0100
++++ b/cmake/external_dependencies.cmake 2023-12-11 13:30:56.553108740 +0100
+@@ -40,14 +40,14 @@ elseif(ENABLE_OPENSSL_ENCRYPTION)
      add_definitions(-DENABLE_OPENSSL_ENCRYPTION)
      message(STATUS "Encryption: LibCrypto")
- 
+
 -    set(CRYPTO_TARGET_NAME "AWS::crypto")
 +    set(CRYPTO_TARGET_NAME "OpenSSL::Crypto")
      if(PLATFORM_ANDROID AND ANDROID_BUILD_OPENSSL)
@@ -19,20 +18,10 @@ index 20feb6de51..aa63b4633c 100644
      endif()
      set(CRYPTO_LIBS ${CRYPTO_TARGET_NAME} ${ZLIB_LIBRARIES})
      # ssl depends on libcrypto
-diff --git a/crt/aws-crt-cpp/crt/s2n/CMakeLists.txt b/crt/aws-crt-cpp/crt/s2n/CMakeLists.txt
-index f5ee8379..9dcfc7ab 100644
---- a/crt/aws-crt-cpp/crt/s2n/CMakeLists.txt
-+++ b/crt/aws-crt-cpp/crt/s2n/CMakeLists.txt
-@@ -116,7 +116,7 @@ else()
-     # supports it and set proper compiler flags to be added later to the
-     # Kyber compilation units.
-     if(${CMAKE_SYSTEM_PROCESSOR} MATCHES "^(x86_64|amd64|AMD64)$")
--    
-+
-         set(KYBER512R3_AVX2_BMI2_FLAGS "-mavx2 -mavx -mbmi2")
-         try_compile(KYBER512R3_AVX2_BMI2_SUPPORTED
-             ${CMAKE_BINARY_DIR}
-@@ -380,9 +380,9 @@ if (TARGET crypto)
+diff -rupN a/crt/aws-crt-cpp/crt/s2n/CMakeLists.txt b/crt/aws-crt-cpp/crt/s2n/CMakeLists.txt
+--- a/crt/aws-crt-cpp/crt/s2n/CMakeLists.txt    2023-12-11 13:15:44.264958227 +0100
++++ b/crt/aws-crt-cpp/crt/s2n/CMakeLists.txt    2023-12-11 13:34:38.190054072 +0100
+@@ -262,9 +262,9 @@ if (TARGET crypto)
      message(STATUS "S2N found target: crypto")
      set(LINK_LIB "crypto")
  else()
@@ -42,5 +31,31 @@ index f5ee8379..9dcfc7ab 100644
 -    set(LINK_LIB "AWS::crypto")
 +    set(LINK_LIB "OpenSSL::Crypto")
  endif()
- 
+
  if (S2N_INTERN_LIBCRYPTO)
+@@ -395,11 +395,11 @@ feature_probe_result(S2N_KYBER512R3_AVX2
+
+ if (S2N_INTERN_LIBCRYPTO)
+
+-    # Check if the AWS::crypto target has beeen added and handle it
+-    if (TARGET AWS::crypto)
++    # Check if the OpenSSL::Crypto target has beeen added and handle it
++    if (TARGET OpenSSL::Crypto)
+         # Get the target library type (shared or static)
+-        get_target_property(target_type AWS::crypto TYPE)
+-        message(STATUS "AWS::crypto target type: ${target_type}")
++        get_target_property(target_type OpenSSL::Crypto TYPE)
++        message(STATUS "OpenSSL::Crypto target type: ${target_type}")
+
+         # If we didn't find the a target with static library type, fallback to
+         # existing crypto_STATIC_LIBRARY and crypto_INCLUDE_DIR
+@@ -408,8 +408,8 @@ if (S2N_INTERN_LIBCRYPTO)
+             # The finder module defines these appropriately, but if we go through
+             # the target config we need to query this information from the target
+             # first.
+-            get_target_property(crypto_STATIC_LIBRARY AWS::crypto LOCATION)
+-            get_target_property(crypto_INCLUDE_DIR AWS::crypto INTERFACE_INCLUDE_DIRECTORIES)
++            get_target_property(crypto_STATIC_LIBRARY OpenSSL::Crypto LOCATION)
++            get_target_property(crypto_INCLUDE_DIR OpenSSL::Crypto INTERFACE_INCLUDE_DIRECTORIES)
+         endif()
+     endif()
