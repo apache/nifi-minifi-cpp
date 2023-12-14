@@ -24,7 +24,6 @@
 
 #include "core/ClassLoader.h"
 #include "processors/ProcessorUtils.h"
-#include "utils/RegexUtils.h"
 #include "utils/StringUtils.h"
 
 namespace org::apache::nifi::minifi::core {
@@ -182,17 +181,16 @@ std::shared_ptr<core::controller::ControllerServiceNode> FlowConfiguration::crea
 }
 
 std::string FlowConfiguration::decryptProperty(const std::string& encrypted_value) const {
-  static const utils::Regex is_encrypted{R"(enc\{.*\})"};
-  if (!utils::regexMatch(encrypted_value, is_encrypted)) {
+  static constexpr std::string_view WrapperBegin = "enc{";
+  static constexpr std::string_view WrapperEnd = "}";
+
+  if (!(encrypted_value.starts_with(WrapperBegin) && encrypted_value.ends_with(WrapperEnd))) {
     // this is normal: sensitive properties come from the C2 server in cleartext over TLS
     return encrypted_value;
   }
 
-  static constexpr size_t WrapperBeginSize = std::char_traits<char>::length("enc{");
-  static constexpr size_t WrapperEndSize = std::char_traits<char>::length("}");
-  static constexpr size_t WrapperSize = WrapperBeginSize + WrapperEndSize;
-
-  return sensitive_properties_encryptor_.decrypt(encrypted_value.substr(WrapperBeginSize, encrypted_value.length() - WrapperSize));
+  const std::string unwrapped_value = encrypted_value.substr(WrapperBegin.size(), encrypted_value.length() - (WrapperBegin.size() + WrapperEnd.size()));
+  return sensitive_properties_encryptor_.decrypt(unwrapped_value);
 }
 
 std::string FlowConfiguration::encryptProperty(const std::string& cleartext_value) const {
