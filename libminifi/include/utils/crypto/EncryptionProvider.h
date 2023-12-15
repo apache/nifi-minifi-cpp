@@ -38,11 +38,11 @@ class EncryptionProvider {
   static std::optional<EncryptionProvider> create(const std::filesystem::path& home_path);
   static EncryptionProvider createSensitivePropertiesEncryptor(const std::filesystem::path& home_path);
 
-  [[nodiscard]] std::string encrypt(const std::string& data) const {
+  [[nodiscard]] std::string encrypt(std::string_view data) const {
     return cipher_impl_.encrypt(data);
   }
 
-  [[nodiscard]] std::string decrypt(const std::string& data) const {
+  [[nodiscard]] std::string decrypt(std::string_view data) const {
     return cipher_impl_.decrypt(data);
   }
 

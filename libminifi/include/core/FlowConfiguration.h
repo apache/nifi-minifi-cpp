@@ -20,6 +20,7 @@
 #include <memory>
 #include <optional>
 #include <string>
+#include <string_view>
 #include <utility>
 #include <vector>
 #include <filesystem>
@@ -131,8 +132,8 @@ class FlowConfiguration : public CoreComponent {
 
   utils::ChecksumCalculator& getChecksumCalculator() { return checksum_calculator_; }
 
-  std::string decryptProperty(const std::string& encrypted_value) const;
-  std::string encryptProperty(const std::string& cleartext_value) const;
+  [[nodiscard]] std::string decryptProperty(std::string_view encrypted_value) const;
+  [[nodiscard]] std::string encryptProperty(std::string_view cleartext_value) const;
 
  protected:
   // service provider reference.

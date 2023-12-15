@@ -32,11 +32,11 @@ class XSalsa20Cipher {
     return utils::crypto::generateKey();
   }
 
-  std::string encrypt(const std::string& data) const {
+  std::string encrypt(std::string_view data) const {
     return utils::crypto::encrypt(data, encryption_key_);
   }
 
-  std::string decrypt(const std::string& data) const {
+  std::string decrypt(std::string_view data) const {
     return utils::crypto::decrypt(data, encryption_key_);
   }
 

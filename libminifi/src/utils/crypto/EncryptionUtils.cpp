@@ -27,7 +27,7 @@
 
 namespace org::apache::nifi::minifi::utils::crypto {
 
-Bytes stringToBytes(const std::string& text) {
+Bytes stringToBytes(std::string_view text) {
   return utils::span_to<std::vector>(utils::as_span<const Bytes::value_type>(std::span(text)));
 }
 
@@ -73,7 +73,7 @@ Bytes encryptRaw(const Bytes& plaintext, const Bytes& key, const Bytes& nonce) {
     return ciphertext_plus_mac;
 }
 
-std::string encrypt(const std::string& plaintext, const Bytes& key) {
+std::string encrypt(std::string_view plaintext, const Bytes& key) {
   Bytes nonce = randomBytes(EncryptionType::nonceLength());
   Bytes ciphertext_plus_mac = encryptRaw(stringToBytes(plaintext), key, nonce);
 
@@ -104,13 +104,13 @@ Bytes decryptRaw(const Bytes& input, const Bytes& key, const Bytes& nonce) {
   return plaintext;
 }
 
-std::string decrypt(const std::string& input, const Bytes& key) {
+std::string decrypt(std::string_view input, const Bytes& key) {
   auto data = parseEncrypted(input);
   Bytes plaintext = decryptRaw(data.ciphertext_plus_mac, key, data.nonce);
   return bytesToString(plaintext);
 }
 
-EncryptedData parseEncrypted(const std::string& input) {
+EncryptedData parseEncrypted(std::string_view input) {
   std::vector<std::string> nonce_and_rest = utils::string::split(input, EncryptionType::separator());
   if (nonce_and_rest.size() != 2) {
     throw std::invalid_argument{"Incorrect input; expected '<nonce>" + EncryptionType::separator() + "<ciphertext_plus_mac>'"};
@@ -122,7 +122,7 @@ EncryptedData parseEncrypted(const std::string& input) {
   return EncryptedData{nonce, ciphertext_plus_mac};
 }
 
-bool isEncrypted(const std::string& input) {
+bool isEncrypted(std::string_view input) {
   try {
     parseEncrypted(input);
     return true;

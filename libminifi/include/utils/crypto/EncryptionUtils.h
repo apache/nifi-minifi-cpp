@@ -17,20 +17,16 @@
 #pragma once
 
 #include <string>
+#include <string_view>
 #include <vector>
 
 #include "utils/OptionalUtils.h"
 
-namespace org {
-namespace apache {
-namespace nifi {
-namespace minifi {
-namespace utils {
-namespace crypto {
+namespace org::apache::nifi::minifi::utils::crypto {
 
 using Bytes = std::vector<std::byte>;
 
-Bytes stringToBytes(const std::string& text);
+Bytes stringToBytes(std::string_view text);
 
 std::string bytesToString(const Bytes& bytes);
 
@@ -78,7 +74,7 @@ Bytes encryptRaw(const Bytes& plaintext, const Bytes& key, const Bytes& nonce);
  * * base64-encodes the nonce and the ciphertext-plus-MAC, and
  * * returns <encoded nonce><EncryptionType::separator()><encoded ciphertext-plus-MAC>.
  */
-std::string encrypt(const std::string& plaintext, const Bytes& key);
+std::string encrypt(std::string_view plaintext, const Bytes& key);
 
 /**
  * Decrypt the input (raw version).
@@ -106,19 +102,14 @@ Bytes decryptRaw(const Bytes& input, const Bytes& key, const Bytes& nonce);
  * * calls deryptRaw(),
  * * returns the decrypted plaintext.
  */
-std::string decrypt(const std::string& input, const Bytes& key);
+std::string decrypt(std::string_view input, const Bytes& key);
 
 /**
  * Checks if the input of the form nonce + EncryptionType::separator() + ciphertext_plus_MAC,
  * indicating that it is most likely encrypted.
  */
-bool isEncrypted(const std::string& input);
+bool isEncrypted(std::string_view input);
 
-EncryptedData parseEncrypted(const std::string& input);
+EncryptedData parseEncrypted(std::string_view input);
 
-}  // namespace crypto
-}  // namespace utils
-}  // namespace minifi
-}  // namespace nifi
-}  // namespace apache
-}  // namespace org
+}  // namespace org::apache::nifi::minifi::utils::crypto
