@@ -92,7 +92,7 @@ TEST_CASE("Modify and overflow triggered automatic commit", "[TestStagingQueue4]
   }
   queue.modify([] (MockItem& item) {
     // a new item has been allocated
-    REQUIRE(item.data_ == "");
+    REQUIRE(item.data_.empty());
   });
   REQUIRE(queue.size() == 11);
   MockItem out;

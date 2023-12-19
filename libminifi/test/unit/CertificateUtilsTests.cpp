@@ -26,7 +26,7 @@
 namespace utils = org::apache::nifi::minifi::utils;
 
 TEST_CASE("getCertificateExpiration() works correctly") {
-  using namespace date::literals;
+  using namespace date::literals;  // NOLINT(google-build-using-namespace)
   using namespace std::literals::chrono_literals;
 
   const auto executable_dir = utils::file::get_executable_dir();

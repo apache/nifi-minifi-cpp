@@ -84,7 +84,7 @@ void CompressContent::onTrigger(core::ProcessContext& context, core::ProcessSess
 void CompressContent::processFlowFile(const std::shared_ptr<core::FlowFile>& flowFile, core::ProcessSession& session) {
   session.remove(flowFile);
 
-  io::CompressionFormat compressFormat;
+  io::CompressionFormat compressFormat{};
   if (compressFormat_ == compress_content::ExtendedCompressionFormat::USE_MIME_TYPE) {
     std::string attr;
     flowFile->getAttribute(core::SpecialFlowAttribute::MIME_TYPE, attr);

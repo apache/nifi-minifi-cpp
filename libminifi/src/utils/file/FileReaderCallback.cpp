@@ -59,7 +59,7 @@ int64_t FileReaderCallback::operator()(const std::shared_ptr<io::OutputStream>& 
   input_stream.close();
 
   logger_->log_debug("Finished reading {} bytes from the file", num_bytes_written);
-  return num_bytes_written;
+  return gsl::narrow<int64_t>(num_bytes_written);
 }
 
 }  // namespace org::apache::nifi::minifi::utils

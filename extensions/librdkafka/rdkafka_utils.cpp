@@ -26,7 +26,7 @@ namespace org::apache::nifi::minifi::utils {
 
 void setKafkaConfigurationField(rd_kafka_conf_t& configuration, const std::string& field_name, const std::string& value) {
   static std::array<char, 512U> errstr{};
-  rd_kafka_conf_res_t result;
+  rd_kafka_conf_res_t result{};
   result = rd_kafka_conf_set(&configuration, field_name.c_str(), value.c_str(), errstr.data(), errstr.size());
   if (RD_KAFKA_CONF_OK != result) {
     const std::string error_msg { errstr.data() };
@@ -42,9 +42,8 @@ void print_topics_list(core::logging::Logger& logger, rd_kafka_topic_partition_l
 }
 
 std::string get_human_readable_kafka_message_timestamp(const rd_kafka_message_t& rkmessage) {
-  rd_kafka_timestamp_type_t tstype;
-  int64_t timestamp;
-  timestamp = rd_kafka_message_timestamp(&rkmessage, &tstype);
+  rd_kafka_timestamp_type_t tstype{};
+  int64_t timestamp = rd_kafka_message_timestamp(&rkmessage, &tstype);
   const char *tsname = "?";
   if (tstype == RD_KAFKA_TIMESTAMP_CREATE_TIME) {
     tsname = "create time";
@@ -56,7 +55,7 @@ std::string get_human_readable_kafka_message_timestamp(const rd_kafka_message_t&
 }
 
 std::string get_human_readable_kafka_message_headers(const rd_kafka_message_t& rkmessage, core::logging::Logger& logger) {
-  rd_kafka_headers_t* hdrs;
+  rd_kafka_headers_t* hdrs = nullptr;
   const rd_kafka_resp_err_t get_header_response = rd_kafka_message_headers(&rkmessage, &hdrs);
   if (RD_KAFKA_RESP_ERR_NO_ERROR == get_header_response) {
     std::vector<std::string> header_list;

@@ -71,7 +71,7 @@ C2Payload RESTProtocol::parseJsonResponse(const C2Payload &payload, std::span<co
         }
       }
 
-      int size = 0;
+      rapidjson::SizeType size = 0;
       for (auto key : {"requested_operations", "requestedOperations"}) {
         if (root.HasMember(key)) {
           if (!root[key].IsNull()) {

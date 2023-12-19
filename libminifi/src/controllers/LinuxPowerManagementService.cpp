@@ -159,7 +159,7 @@ void LinuxPowerManagerService::onEnable() {
   core::Property capacityPaths;
   core::Property statusPaths;
 
-  uint64_t wait;
+  uint64_t wait = 0;
   if (getProperty(TriggerThreshold, trigger_) && getProperty(WaitPeriod, wait)) {
     wait_period_ = wait;
 

@@ -90,7 +90,7 @@ TEST_CASE("Decryptor can decrypt a configuration file", "[decryptSensitiveProper
   minifi::Configure configuration{decryptor};
   configuration.setHome("resources");
   configuration.loadConfigureFile("encrypted.minifi.properties");
-  REQUIRE(configuration.getConfiguredKeys().size() > 0);
+  REQUIRE_FALSE(configuration.getConfiguredKeys().empty());
 
   const auto passphrase = configuration.get(minifi::Configure::nifi_security_client_pass_phrase);
   REQUIRE(passphrase);

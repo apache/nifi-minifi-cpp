@@ -21,12 +21,7 @@
 
 #include "utils/StringUtils.h"
 
-namespace org {
-namespace apache {
-namespace nifi {
-namespace minifi {
-namespace utils {
-namespace tls {
+namespace org::apache::nifi::minifi::utils::tls {
 
 DistinguishedName::DistinguishedName(const std::vector<std::string>& components) {
   std::transform(components.begin(), components.end(), std::back_inserter(components_),
@@ -56,9 +51,4 @@ std::string DistinguishedName::toString() const {
   return utils::string::join(", ", components_);
 }
 
-}  // namespace tls
-}  // namespace utils
-}  // namespace minifi
-}  // namespace nifi
-}  // namespace apache
-}  // namespace org
+}  // namespace org::apache::nifi::minifi::utils::tls

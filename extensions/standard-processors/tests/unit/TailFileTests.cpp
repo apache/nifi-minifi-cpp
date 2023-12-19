@@ -578,10 +578,10 @@ TEST_CASE("TailFile processes a very long line correctly", "[simple]") {
   std::string line1("012\n");
   std::string line2(8050, 0);
   std::mt19937 gen(std::random_device{}());  // NOLINT (linter wants a space before '{') [whitespace/braces]
-  std::generate_n(line2.begin(), line2.size() - 1, [&]() -> char {
+  std::generate_n(line2.begin(), line2.size() - 1, [&] {
     // Make sure to only generate from characters that don't intersect with line1 and 3-4
     // Starting generation from 64 ensures that no numeric digit characters are added
-    return 64 + gen() % (127 - 64);
+    return gsl::narrow<char>(64 + gen() % (127 - 64));
   });
   line2.back() = '\n';
   std::string line3("345\n");
@@ -653,10 +653,10 @@ TEST_CASE("TailFile processes a long line followed by multiple newlines correctl
   // Test having two delimiters on the buffer boundary
   std::string line1(4098, '\n');
   std::mt19937 gen(std::random_device { }());
-  std::generate_n(line1.begin(), 4095, [&]() -> char {
+  std::generate_n(line1.begin(), 4095, [&] {
     // Make sure to only generate from characters that don't intersect with line2-4
     // Starting generation from 64 ensures that no numeric digit characters are added
-    return 64 + gen() % (127 - 64);
+    return gsl::narrow<char>(64 + gen() % (127 - 64));
   });
   std::string line2("012\n");
   std::string line3("345\n");

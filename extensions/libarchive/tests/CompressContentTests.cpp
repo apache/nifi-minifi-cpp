@@ -169,7 +169,7 @@ class CompressDecompressionTestController : public TestController {
     return flow;
   }
 
-  void trigger() {
+  void trigger() const {
     auto factory = core::ProcessSessionFactory(context);
     processor->onSchedule(*context, factory);
     auto session = core::ProcessSession(context);

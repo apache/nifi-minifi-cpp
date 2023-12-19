@@ -76,12 +76,8 @@ void ReplaceText::onTrigger(core::ProcessContext& context, core::ProcessSession&
 ReplaceText::Parameters ReplaceText::readParameters(core::ProcessContext& context, const std::shared_ptr<core::FlowFile>& flow_file) const {
   Parameters parameters;
 
-  bool found_search_value;
-  if (replacement_strategy_ == ReplacementStrategyType::REGEX_REPLACE) {
-    found_search_value = context.getProperty(SearchValue, parameters.search_value_);
-  } else {
-    found_search_value = context.getProperty(SearchValue, parameters.search_value_, flow_file);
-  }
+  bool found_search_value = (replacement_strategy_ == ReplacementStrategyType::REGEX_REPLACE ?
+      context.getProperty(SearchValue, parameters.search_value_) : context.getProperty(SearchValue, parameters.search_value_, flow_file));
   if (found_search_value) {
     logger_->log_debug("the {} property is set to {}", SearchValue.name, parameters.search_value_);
     if (replacement_strategy_ == ReplacementStrategyType::REGEX_REPLACE) {
@@ -92,12 +88,8 @@ ReplaceText::Parameters ReplaceText::readParameters(core::ProcessContext& contex
     throw Exception{PROCESSOR_EXCEPTION, utils::string::join_pack("Error: missing or empty ", SearchValue.name, " property")};
   }
 
-  bool found_replacement_value;
-  if (replacement_strategy_ == ReplacementStrategyType::REGEX_REPLACE) {
-    found_replacement_value = context.getProperty(ReplacementValue, parameters.replacement_value_);
-  } else {
-    found_replacement_value = context.getProperty(ReplacementValue, parameters.replacement_value_, flow_file);
-  }
+  bool found_replacement_value = (replacement_strategy_ == ReplacementStrategyType::REGEX_REPLACE ?
+      context.getProperty(ReplacementValue, parameters.replacement_value_) : context.getProperty(ReplacementValue, parameters.replacement_value_, flow_file));
   if (found_replacement_value) {
     logger_->log_debug("the {} property is set to {}", ReplacementValue.name, parameters.replacement_value_);
   } else {
