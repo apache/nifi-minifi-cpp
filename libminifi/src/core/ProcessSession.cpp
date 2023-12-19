@@ -203,7 +203,7 @@ void ProcessSession::remove(const std::shared_ptr<core::FlowFile> &flow) {
 
 void ProcessSession::putAttribute(core::FlowFile& flow_file, std::string_view key, const std::string& value) {
   flow_file.setAttribute(key, value);
-  std::string details = fmt::format("{} modify flow record {} attribute {} : {}", process_context_->getProcessorNode()->getName(), flow_file.getUUIDStr(), key, value);
+  std::string details = fmt::format("{} modify flow record {} attribute {}:{}", process_context_->getProcessorNode()->getName(), flow_file.getUUIDStr(), key, value);
   provenance_report_->modifyAttributes(flow_file, details);
 }
 

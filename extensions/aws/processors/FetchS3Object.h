@@ -47,7 +47,6 @@ class FetchS3Object : public S3Processor {
       .build();
   EXTENSIONAPI static constexpr auto Version = core::PropertyDefinitionBuilder<>::createProperty("Version")
       .withDescription("The Version of the Object to download")
-      .withDescription("The Version of the Object to download")
       .supportsExpressionLanguage(true)
       .build();
   EXTENSIONAPI static constexpr auto RequesterPays = core::PropertyDefinitionBuilder<>::createProperty("Requester Pays")
