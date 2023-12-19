@@ -71,7 +71,7 @@ std::optional<std::string> Configure::getWithFallback(const std::string& key, co
 
 std::optional<std::string> Configure::getRawValue(const std::string& key) const {
   static constexpr std::string_view log_prefix = "nifi.log.";
-  if (utils::StringUtils::startsWith(key, log_prefix)) {
+  if (utils::string::startsWith(key, log_prefix)) {
     if (logger_properties_) {
       return logger_properties_->getString(key.substr(log_prefix.length()));
     }
@@ -111,7 +111,7 @@ void Configure::setFallbackAgentIdentifier(const std::string& id) {
 
 void Configure::set(const std::string& key, const std::string& value, PropertyChangeLifetime lifetime) {
   const std::string_view log_prefix = "nifi.log.";
-  if (utils::StringUtils::startsWith(key, log_prefix)) {
+  if (utils::string::startsWith(key, log_prefix)) {
     if (logger_properties_) {
       logger_properties_changed_ = true;
       logger_properties_->set(key.substr(log_prefix.length()), value, lifetime);

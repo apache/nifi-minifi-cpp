@@ -73,7 +73,7 @@ void SFTPProcessorBase::parseCommonPropertiesOnSchedule(core::ProcessContext& co
   if (!context.getProperty(StrictHostKeyChecking, value)) {
     logger_->log_error("Strict Host Key Checking attribute is missing or invalid");
   } else {
-    strict_host_checking_ = utils::StringUtils::toBool(value).value_or(false);
+    strict_host_checking_ = utils::string::toBool(value).value_or(false);
   }
   context.getProperty(HostKeyFile, host_key_file_);
   if (auto connection_timeout = context.getProperty<core::TimePeriodValue>(ConnectionTimeout)) {
@@ -91,7 +91,7 @@ void SFTPProcessorBase::parseCommonPropertiesOnSchedule(core::ProcessContext& co
   if (!context.getProperty(SendKeepaliveOnTimeout, value)) {
     logger_->log_error("Send Keep Alive On Timeout attribute is missing or invalid");
   } else {
-    use_keepalive_on_timeout_ = utils::StringUtils::toBool(value).value_or(true);
+    use_keepalive_on_timeout_ = utils::string::toBool(value).value_or(true);
   }
   context.getProperty(ProxyType, proxy_type_);
 }

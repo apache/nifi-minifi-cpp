@@ -56,7 +56,7 @@ void ExecuteProcess::onSchedule(core::ProcessContext& context, core::ProcessSess
     logger_->log_debug("Setting batch duration to {}", batch_duration_);
   }
   if (context.getProperty(RedirectErrorStream, value)) {
-    redirect_error_stream_ = org::apache::nifi::minifi::utils::StringUtils::toBool(value).value_or(false);
+    redirect_error_stream_ = org::apache::nifi::minifi::utils::string::toBool(value).value_or(false);
   }
   full_command_ = command_ + " " + command_argument_;
 }

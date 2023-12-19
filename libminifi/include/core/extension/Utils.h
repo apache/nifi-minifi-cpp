@@ -61,7 +61,7 @@ struct LibraryDescriptor {
     }};
     const std::string_view begin_marker = "__EXTENSION_BUILD_IDENTIFIER_BEGIN__";
     const std::string_view end_marker = "__EXTENSION_BUILD_IDENTIFIER_END__";
-    const std::string magic_constant = utils::StringUtils::join_pack(begin_marker, AgentBuild::BUILD_IDENTIFIER, end_marker);
+    const std::string magic_constant = utils::string::join_pack(begin_marker, AgentBuild::BUILD_IDENTIFIER, end_marker);
     return utils::file::contains(path, magic_constant);
   }
 

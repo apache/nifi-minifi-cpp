@@ -61,7 +61,7 @@ std::shared_ptr<sitetosite::Transaction> HttpSiteToSiteClient::createTransaction
   if (client->getResponseCode() == 201) {
     // parse the headers
     auto intent_name = client->getHeaderValue("x-location-uri-intent");
-    if (utils::StringUtils::equalsIgnoreCase(intent_name, "transaction-url")) {
+    if (utils::string::equalsIgnoreCase(intent_name, "transaction-url")) {
       auto url = client->getHeaderValue("Location");
 
       if (IsNullOrEmpty(url)) {

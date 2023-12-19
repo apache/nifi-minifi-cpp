@@ -51,12 +51,12 @@ void ConsumeMQTT::readProperties(core::ProcessContext& context) {
   }
   logger_->log_debug("ConsumeMQTT: Topic [{}]", topic_);
 
-  if (const auto value = context.getProperty(CleanSession) | utils::andThen(&utils::StringUtils::toBool)) {
+  if (const auto value = context.getProperty(CleanSession) | utils::andThen(&utils::string::toBool)) {
     clean_session_ = *value;
   }
   logger_->log_debug("ConsumeMQTT: CleanSession [{}]", clean_session_);
 
-  if (const auto value = context.getProperty(CleanStart) | utils::andThen(&utils::StringUtils::toBool)) {
+  if (const auto value = context.getProperty(CleanStart) | utils::andThen(&utils::string::toBool)) {
     clean_start_ = *value;
   }
   logger_->log_debug("ConsumeMQTT: CleanStart [{}]", clean_start_);
@@ -295,7 +295,7 @@ void ConsumeMQTT::checkBrokerLimitsImpl() {
     throw Exception(PROCESS_SCHEDULE_EXCEPTION, os.str());
   }
 
-  if (utils::StringUtils::startsWith(topic_, "$share/")) {
+  if (utils::string::startsWith(topic_, "$share/")) {
     if (mqtt_version_ == mqtt::MqttVersions::V_5_0) {
       // shared topic are supported on MQTT 5, unless explicitly denied by broker
       if (shared_subscription_available_ == false) {

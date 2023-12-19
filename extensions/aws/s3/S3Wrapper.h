@@ -301,7 +301,7 @@ class S3Wrapper {
     return {
       .version = upload_result.GetVersionId(),
       // Etags are returned by AWS in quoted form that should be removed
-      .etag = minifi::utils::StringUtils::removeFramingCharacters(upload_result.GetETag(), '"'),
+      .etag = minifi::utils::string::removeFramingCharacters(upload_result.GetETag(), '"'),
       // GetExpiration returns a string pair with a date and a ruleid in 'expiry-date=\"<DATE>\", rule-id=\"<RULEID>\"' format
       // s3.expiration only needs the date member of this pair
       .expiration = getExpiration(upload_result.GetExpiration()).expiration_time,

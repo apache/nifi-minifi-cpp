@@ -171,10 +171,10 @@ class ListenHTTPTestsFixture {
       if (!update_attribute->getDynamicProperty("mime.type", content_type)) {
         content_type = "application/octet-stream";
       }
-      REQUIRE(content_type == minifi::utils::StringUtils::trim(client->getResponseHeaderMap().at("Content-type")));
-      REQUIRE("19" == minifi::utils::StringUtils::trim(client->getResponseHeaderMap().at("Content-length")));
+      REQUIRE(content_type == minifi::utils::string::trim(client->getResponseHeaderMap().at("Content-type")));
+      REQUIRE("19" == minifi::utils::string::trim(client->getResponseHeaderMap().at("Content-length")));
     } else {
-      REQUIRE("0" == minifi::utils::StringUtils::trim(client->getResponseHeaderMap().at("Content-length")));
+      REQUIRE("0" == minifi::utils::string::trim(client->getResponseHeaderMap().at("Content-length")));
     }
   }
 

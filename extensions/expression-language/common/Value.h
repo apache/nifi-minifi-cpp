@@ -131,7 +131,7 @@ class Value {
       [](int64_t i) { return i != 0; },
       [](uint64_t i) { return i != 0; },
       [](long double d) { return d != 0.0; },
-      [](const std::string& str) { return utils::StringUtils::toBool(str).value_or(false); },
+      [](const std::string& str) { return utils::string::toBool(str).value_or(false); },
       [](auto) { return false; }
     }, value_);
   }
@@ -143,9 +143,9 @@ class Value {
     try {
       return std::invoke(conversion_function, value);
     } catch (const std::invalid_argument&) {
-      throw std::invalid_argument{utils::StringUtils::join_pack(context, " failed to parse \"", value, "\": invalid argument")};
+      throw std::invalid_argument{utils::string::join_pack(context, " failed to parse \"", value, "\": invalid argument")};
     } catch (const std::out_of_range&) {
-      throw std::out_of_range{utils::StringUtils::join_pack(context, " failed to parse \"", value, "\": out of range")};
+      throw std::out_of_range{utils::string::join_pack(context, " failed to parse \"", value, "\": out of range")};
     }
   }
 

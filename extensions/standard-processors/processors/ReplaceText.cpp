@@ -70,7 +70,7 @@ void ReplaceText::onTrigger(core::ProcessContext& context, core::ProcessSession&
       return;
   }
 
-  throw Exception{PROCESSOR_EXCEPTION, utils::StringUtils::join_pack("Unsupported ", EvaluationMode.name, ": ", std::string{magic_enum::enum_name(evaluation_mode_)})};
+  throw Exception{PROCESSOR_EXCEPTION, utils::string::join_pack("Unsupported ", EvaluationMode.name, ": ", std::string{magic_enum::enum_name(evaluation_mode_)})};
 }
 
 ReplaceText::Parameters ReplaceText::readParameters(core::ProcessContext& context, const std::shared_ptr<core::FlowFile>& flow_file) const {
@@ -89,7 +89,7 @@ ReplaceText::Parameters ReplaceText::readParameters(core::ProcessContext& contex
     }
   }
   if ((replacement_strategy_ == ReplacementStrategyType::REGEX_REPLACE || replacement_strategy_ == ReplacementStrategyType::LITERAL_REPLACE) && parameters.search_value_.empty()) {
-    throw Exception{PROCESSOR_EXCEPTION, utils::StringUtils::join_pack("Error: missing or empty ", SearchValue.name, " property")};
+    throw Exception{PROCESSOR_EXCEPTION, utils::string::join_pack("Error: missing or empty ", SearchValue.name, " property")};
   }
 
   bool found_replacement_value;
@@ -101,11 +101,11 @@ ReplaceText::Parameters ReplaceText::readParameters(core::ProcessContext& contex
   if (found_replacement_value) {
     logger_->log_debug("the {} property is set to {}", ReplacementValue.name, parameters.replacement_value_);
   } else {
-    throw Exception{PROCESSOR_EXCEPTION, utils::StringUtils::join_pack("Missing required property: ", ReplacementValue.name)};
+    throw Exception{PROCESSOR_EXCEPTION, utils::string::join_pack("Missing required property: ", ReplacementValue.name)};
   }
 
   if (evaluation_mode_ == EvaluationModeType::LINE_BY_LINE) {
-    auto [chomped_value, line_ending] = utils::StringUtils::chomp(parameters.replacement_value_);
+    auto [chomped_value, line_ending] = utils::string::chomp(parameters.replacement_value_);
     parameters.replacement_value_ = std::move(chomped_value);
   }
 
@@ -142,7 +142,7 @@ void ReplaceText::replaceTextLineByLine(const std::shared_ptr<core::FlowFile>& f
         case LineByLineEvaluationModeType::EXCEPT_LAST_LINE:
           return is_last_line ? input_line: applyReplacements(input_line, flow_file, parameters);
       }
-      throw Exception{PROCESSOR_EXCEPTION, utils::StringUtils::join_pack("Unsupported ", LineByLineEvaluationMode.name, ": ", std::string{magic_enum::enum_name(line_by_line_evaluation_mode_)})};
+      throw Exception{PROCESSOR_EXCEPTION, utils::string::join_pack("Unsupported ", LineByLineEvaluationMode.name, ": ", std::string{magic_enum::enum_name(line_by_line_evaluation_mode_)})};
     }};
     session.readWrite(flow_file, std::move(read_write_callback));
     session.transfer(flow_file, Success);
@@ -153,7 +153,7 @@ void ReplaceText::replaceTextLineByLine(const std::shared_ptr<core::FlowFile>& f
 }
 
 std::string ReplaceText::applyReplacements(const std::string& input, const std::shared_ptr<core::FlowFile>& flow_file, const Parameters& parameters) const {
-  const auto [chomped_input, line_ending] = utils::StringUtils::chomp(input);
+  const auto [chomped_input, line_ending] = utils::string::chomp(input);
 
   switch (replacement_strategy_) {
     case ReplacementStrategyType::PREPEND:
@@ -175,7 +175,7 @@ std::string ReplaceText::applyReplacements(const std::string& input, const std::
       return applySubstituteVariables(chomped_input, flow_file) + line_ending;
   }
 
-  throw Exception{PROCESSOR_EXCEPTION, utils::StringUtils::join_pack("Unsupported ", ReplacementStrategy.name, ": ", std::string{magic_enum::enum_name(replacement_strategy_)})};
+  throw Exception{PROCESSOR_EXCEPTION, utils::string::join_pack("Unsupported ", ReplacementStrategy.name, ": ", std::string{magic_enum::enum_name(replacement_strategy_)})};
 }
 
 std::string ReplaceText::applyLiteralReplace(const std::string& input, const Parameters& parameters) {

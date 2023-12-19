@@ -122,17 +122,17 @@ void ConsumeWindowsEventLog::onSchedule(core::ProcessContext& context, core::Pro
 
   header_names_.clear();
   if (auto header = context.getProperty(EventHeader)) {
-    auto keyValueSplit = utils::StringUtils::split(*header, ",");
+    auto keyValueSplit = utils::string::split(*header, ",");
     for (const auto &kv : keyValueSplit) {
-      auto splitKeyAndValue = utils::StringUtils::split(kv, "=");
+      auto splitKeyAndValue = utils::string::split(kv, "=");
       if (splitKeyAndValue.size() == 2) {
-        auto key = utils::StringUtils::trim(splitKeyAndValue.at(0));
-        auto value = utils::StringUtils::trim(splitKeyAndValue.at(1));
+        auto key = utils::string::trim(splitKeyAndValue.at(0));
+        auto value = utils::string::trim(splitKeyAndValue.at(1));
         if (!insertHeaderName(header_names_, key, value)) {
           logger_->log_error("{} is an invalid key for the header map", key);
         }
       } else if (splitKeyAndValue.size() == 1) {
-        auto key = utils::StringUtils::trim(splitKeyAndValue.at(0));
+        auto key = utils::string::trim(splitKeyAndValue.at(0));
         if (!insertHeaderName(header_names_, key, "")) {
           logger_->log_error("{} is an invalid key for the header map", key);
         }
@@ -381,7 +381,7 @@ void ConsumeWindowsEventLog::substituteXMLPercentageItems(pugi::xml_document& do
             value = pBuffer;
             LocalFree(pBuffer);
 
-            value = utils::StringUtils::trimRight(value);
+            value = utils::string::trimRight(value);
 
             xmlPercentageItemsResolutions_.insert({key, value});
           } else {
@@ -481,7 +481,7 @@ nonstd::expected<cwel::EventRender, std::string> ConsumeWindowsEventLog::createE
         if (map_entry.first.empty() || map_entry.second.empty()) {
           continue;
         }
-        utils::StringUtils::replaceAll(*event_message, map_entry.first, map_entry.second);
+        utils::string::replaceAll(*event_message, map_entry.first, map_entry.second);
       }
     }
 

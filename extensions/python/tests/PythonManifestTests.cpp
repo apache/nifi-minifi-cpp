@@ -86,7 +86,7 @@ TEST_CASE("Python processor's description is part of the manifest") {
     // single processor in each bundle
     REQUIRE(py_processors.children.size() == 1);
 
-    return findNode(py_processors.children, [&] (auto& child) {return utils::StringUtils::endsWith(child.name, name);});
+    return findNode(py_processors.children, [&] (auto& child) {return utils::string::endsWith(child.name, name);});
   };
 
   {

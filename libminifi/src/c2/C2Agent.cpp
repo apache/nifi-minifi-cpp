@@ -194,7 +194,7 @@ void C2Agent::configure(const std::shared_ptr<Configure> &configure, bool reconf
 
   std::string heartbeat_reporters;
   if (configure->get(Configuration::nifi_c2_agent_heartbeat_reporter_classes, "c2.agent.heartbeat.reporter.classes", heartbeat_reporters)) {
-    std::vector<std::string> reporters = utils::StringUtils::splitAndTrim(heartbeat_reporters, ",");
+    std::vector<std::string> reporters = utils::string::splitAndTrim(heartbeat_reporters, ",");
     std::lock_guard<std::mutex> lock(heartbeat_mutex);
     for (const auto& reporter : reporters) {
       auto heartbeat_reporter_obj = core::ClassLoader::getDefaultClassLoader().instantiate<HeartbeatReporter>(reporter, reporter);
@@ -209,7 +209,7 @@ void C2Agent::configure(const std::shared_ptr<Configure> &configure, bool reconf
 
   std::string trigger_classes;
   if (configure->get(Configuration::nifi_c2_agent_trigger_classes, "c2.agent.trigger.classes", trigger_classes)) {
-    std::vector<std::string> triggers = utils::StringUtils::splitAndTrim(trigger_classes, ",");
+    std::vector<std::string> triggers = utils::string::splitAndTrim(trigger_classes, ",");
     std::lock_guard<std::mutex> lock(heartbeat_mutex);
     for (const auto& trigger : triggers) {
       auto trigger_obj = core::ClassLoader::getDefaultClassLoader().instantiate<C2Trigger>(trigger, trigger);
@@ -633,7 +633,7 @@ void C2Agent::handlePropertyUpdate(const C2ContentResponse &resp) {
     bool persist = (
         value.getAnnotation("persist")
         | utils::transform(&AnnotatedValue::to_string)
-        | utils::andThen(utils::StringUtils::toBool)).value_or(true);
+        | utils::andThen(utils::string::toBool)).value_or(true);
     PropertyChangeLifetime lifetime = persist ? PropertyChangeLifetime::PERSISTENT : PropertyChangeLifetime::TRANSIENT;
     changeUpdateState(update_property(name, value.to_string(), lifetime));
   }
@@ -784,19 +784,19 @@ utils::TaskRescheduleInfo C2Agent::consume() {
 }
 
 std::optional<std::string> C2Agent::resolveFlowUrl(const std::string& url) const {
-  if (utils::StringUtils::startsWith(url, "http")) {
+  if (utils::string::startsWith(url, "http")) {
     return url;
   }
   std::string base;
   if (configuration_->get(Configure::nifi_c2_flow_base_url, base)) {
-    base = utils::StringUtils::trim(base);
-    if (!utils::StringUtils::endsWith(base, "/")) {
+    base = utils::string::trim(base);
+    if (!utils::string::endsWith(base, "/")) {
       base += "/";
     }
     base += url;
     return base;
   } else if (configuration_->get(Configuration::nifi_c2_rest_url, "c2.rest.url", base)) {
-    utils::URL base_url{utils::StringUtils::trim(base)};
+    utils::URL base_url{utils::string::trim(base)};
     if (base_url.isValid()) {
       return base_url.hostPort() + "/c2/api/" + url;
     }
@@ -807,7 +807,7 @@ std::optional<std::string> C2Agent::resolveFlowUrl(const std::string& url) const
 }
 
 std::optional<std::string> C2Agent::resolveUrl(const std::string& url) const {
-  if (!utils::StringUtils::startsWith(url, "/")) {
+  if (!utils::string::startsWith(url, "/")) {
     return url;
   }
   std::string base;
@@ -815,7 +815,7 @@ std::optional<std::string> C2Agent::resolveUrl(const std::string& url) const {
     logger_->log_error("Missing C2 REST URL");
     return std::nullopt;
   }
-  utils::URL base_url{utils::StringUtils::trim(base)};
+  utils::URL base_url{utils::string::trim(base)};
   if (base_url.isValid()) {
     return base_url.hostPort() + url;
   }
@@ -824,7 +824,7 @@ std::optional<std::string> C2Agent::resolveUrl(const std::string& url) const {
 }
 
 std::optional<std::string> C2Agent::fetchFlow(const std::string& uri) const {
-  if (!utils::StringUtils::startsWith(uri, "http") || protocol_.load() == nullptr) {
+  if (!utils::string::startsWith(uri, "http") || protocol_.load() == nullptr) {
     // try to open the file
     auto content = filesystem_->read(uri);
     if (content) {
@@ -886,7 +886,7 @@ bool C2Agent::handleConfigurationUpdate(const C2ContentResponse &resp) {
     if (persist == resp.operation_arguments.end()) {
       return false;
     }
-    return utils::StringUtils::equalsIgnoreCase(persist->second.to_string(), "true");
+    return utils::string::equalsIgnoreCase(persist->second.to_string(), "true");
   }();
 
   int16_t err = {update_sink_->applyUpdate(file_uri, configuration_str, should_persist, getFlowIdFromConfigUpdate(resp))};
@@ -976,9 +976,9 @@ void C2Agent::handleAssetUpdate(const C2ContentResponse& resp) {
   // forceDownload
   bool force_download = false;
   if (auto force_download_str = resp.getArgument("forceDownload")) {
-    if (utils::StringUtils::equalsIgnoreCase(force_download_str.value(), "true")) {
+    if (utils::string::equalsIgnoreCase(force_download_str.value(), "true")) {
       force_download = true;
-    } else if (utils::StringUtils::equalsIgnoreCase(force_download_str.value(), "false")) {
+    } else if (utils::string::equalsIgnoreCase(force_download_str.value(), "false")) {
       force_download = false;
     } else {
       send_error("Argument 'forceDownload' must be either 'true' or 'false'");

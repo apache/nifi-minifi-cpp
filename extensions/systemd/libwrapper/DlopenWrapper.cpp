@@ -74,13 +74,13 @@ class DlopenJournal : public Journal {
     // The cast below is supported by POSIX platforms. https://stackoverflow.com/a/1096349
     F const symbol = (F)dlsym(libhandle_.get(), symbol_name);
     const char* const err = dlerror();
-    if (err) throw Exception(ExceptionType::GENERAL_EXCEPTION, utils::StringUtils::join_pack("dlsym(", symbol_name, "): ", err));
+    if (err) throw Exception(ExceptionType::GENERAL_EXCEPTION, utils::string::join_pack("dlsym(", symbol_name, "): ", err));
     return symbol;
   }
 
   std::unique_ptr<void, dlclose_deleter> libhandle_{[] {
     auto* const handle = dlopen("libsystemd.so.0", RTLD_LAZY);
-    if (!handle) throw Exception(ExceptionType::GENERAL_EXCEPTION, utils::StringUtils::join_pack("dlopen failed: ", dlerror()));
+    if (!handle) throw Exception(ExceptionType::GENERAL_EXCEPTION, utils::string::join_pack("dlopen failed: ", dlerror()));
     return handle;
   }()};
 

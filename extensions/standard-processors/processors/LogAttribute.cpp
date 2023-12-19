@@ -100,7 +100,7 @@ void LogAttribute::onTrigger(core::ProcessContext& context, core::ProcessSession
 
       std::string printable_payload;
       if (hexencode_) {
-        printable_payload = utils::StringUtils::to_hex(read_result.buffer);
+        printable_payload = utils::string::to_hex(read_result.buffer);
       } else {
         printable_payload = to_string(read_result);
       }

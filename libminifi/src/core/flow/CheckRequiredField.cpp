@@ -31,7 +31,7 @@ std::string buildErrorMessage(const Node &node, const std::vector<std::string> &
   const Node name_node = node["name"];
   // Build a helpful error message for the user so they can fix the
   // invalid config file, using the component name if present
-  auto field_list_string = utils::StringUtils::join(", ", alternate_field_names);
+  auto field_list_string = utils::string::join(", ", alternate_field_names);
   std::string err_msg =
       name_node ?
           "Unable to parse configuration file for component named '" + name_node.getString().value() + "' as none of the possible required fields [" + field_list_string + "] is available" :

@@ -41,7 +41,7 @@ std::vector<gsl::not_null<std::unique_ptr<MetricsPublisher>>> createMetricsPubli
     const std::shared_ptr<Configure>& configuration, const std::shared_ptr<state::response::ResponseNodeLoader>& response_node_loader) {
   if (auto metrics_publisher_class_str = configuration->get(minifi::Configure::nifi_metrics_publisher_class)) {
     std::vector<gsl::not_null<std::unique_ptr<MetricsPublisher>>> publishers;
-    auto publisher_classes = minifi::utils::StringUtils::split(*metrics_publisher_class_str, ",");
+    auto publisher_classes = minifi::utils::string::split(*metrics_publisher_class_str, ",");
     publishers.reserve(publisher_classes.size());
     for (const auto& publisher_class : publisher_classes) {
       publishers.push_back(createMetricsPublisher(publisher_class, configuration, response_node_loader));

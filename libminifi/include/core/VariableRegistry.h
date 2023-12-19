@@ -62,7 +62,7 @@ class VariableRegistry {
 
     // only allow those in the white liset
     if (configuration_->get(white_list_opt, white_list)) {
-      options = utils::StringUtils::split(white_list, ",");
+      options = utils::string::split(white_list, ",");
     }
 
     for (const auto &opt : options) {
@@ -73,7 +73,7 @@ class VariableRegistry {
     // even if a white list is configured, remove the black listed fields
 
     if (configuration_->get(black_list_opt, black_list)) {
-      auto bl_opts = utils::StringUtils::split(black_list, ",");
+      auto bl_opts = utils::string::split(black_list, ",");
       for (const auto &opt : bl_opts) {
         options.erase(std::remove(options.begin(), options.end(), opt), options.end());
       }

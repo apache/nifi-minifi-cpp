@@ -462,7 +462,7 @@ Value expr_unescapeJson(const std::vector<Value> &args) {
 }
 
 Value expr_escapeHtml3(const std::vector<Value> &args) {
-  return Value(utils::StringUtils::replaceMap(args[0].asString(), { { "!", "&excl;" }, { "\"", "&quot;" }, { "#", "&num;" }, { "$", "&dollar;" }, { "%", "&percnt;" }, { "&", "&amp;" },
+  return Value(utils::string::replaceMap(args[0].asString(), { { "!", "&excl;" }, { "\"", "&quot;" }, { "#", "&num;" }, { "$", "&dollar;" }, { "%", "&percnt;" }, { "&", "&amp;" },
                                                   { "'", "&apos;" }, { "(", "&lpar;" }, { ")", "&rpar;" }, { "*", "&ast;" }, { "+", "&plus;" }, { ",", "&comma;" }, { "-", "&minus;" }, { ".",
                                                       "&period;" }, { "/", "&sol;" }, { ":", "&colon;" }, { ";", "&semi;" }, { "<", "&lt;" }, { "=", "&equals;" }, { ">", "&gt;" }, { "?", "&quest;" },
                                                   { "@", "&commat;" }, { "[", "&lsqb;" }, { "\\", "&bsol;" }, { "]", "&rsqb;" }, { "^", "&circ;" }, { "_", "&lowbar;" }, { "`", "&grave;" }, { "{",
@@ -483,7 +483,7 @@ Value expr_escapeHtml3(const std::vector<Value> &args) {
 }
 
 Value expr_escapeHtml4(const std::vector<Value> &args) {
-  return Value(utils::StringUtils::replaceMap(args[0].asString(), { { "!", "&excl;" }, { "\"", "&quot;" }, { "#", "&num;" }, { "$", "&dollar;" }, { "%", "&percnt;" }, { "&", "&amp;" },
+  return Value(utils::string::replaceMap(args[0].asString(), { { "!", "&excl;" }, { "\"", "&quot;" }, { "#", "&num;" }, { "$", "&dollar;" }, { "%", "&percnt;" }, { "&", "&amp;" },
                                                   { "'", "&apos;" }, { "(", "&lpar;" }, { ")", "&rpar;" }, { "*", "&ast;" }, { "+", "&plus;" }, { ",", "&comma;" }, { "-", "&minus;" }, { ".",
                                                       "&period;" }, { "/", "&sol;" }, { ":", "&colon;" }, { ";", "&semi;" }, { "<", "&lt;" }, { "=", "&equals;" }, { ">", "&gt;" }, { "?", "&quest;" },
                                                   { "@", "&commat;" }, { "[", "&lsqb;" }, { "\\", "&bsol;" }, { "]", "&rsqb;" }, { "^", "&circ;" }, { "_", "&lowbar;" }, { "`", "&grave;" }, { "{",
@@ -531,7 +531,7 @@ Value expr_escapeHtml4(const std::vector<Value> &args) {
 }
 
 Value expr_unescapeHtml3(const std::vector<Value> &args) {
-  return Value(utils::StringUtils::replaceMap(args[0].asString(), { { "&excl;", "!" }, { "&quot;", "\"" }, { "&num;", "#" }, { "&dollar;", "$" }, { "&percnt;", "%" }, { "&amp;", "&" },
+  return Value(utils::string::replaceMap(args[0].asString(), { { "&excl;", "!" }, { "&quot;", "\"" }, { "&num;", "#" }, { "&dollar;", "$" }, { "&percnt;", "%" }, { "&amp;", "&" },
                                                   { "&apos;", "'" }, { "&lpar;", "(" }, { "&rpar;", ")" }, { "&ast;", "*" }, { "&plus;", "+" }, { "&comma;", "," }, { "&minus;", "-" }, { "&period;",
                                                       "." }, { "&sol;", "/" }, { "&colon;", ":" }, { "&semi;", ";" }, { "&lt;", "<" }, { "&equals;", "=" }, { "&gt;", ">" }, { "&quest;", "?" }, {
                                                       "&commat;", "@" }, { "&lsqb;", "[" }, { "&bsol;", "\\" }, { "&rsqb;", "]" }, { "&circ;", "^" }, { "&lowbar;", "_" }, { "&grave;", "`" }, {
@@ -552,7 +552,7 @@ Value expr_unescapeHtml3(const std::vector<Value> &args) {
 }
 
 Value expr_unescapeHtml4(const std::vector<Value> &args) {
-  return Value(utils::StringUtils::replaceMap(args[0].asString(), { { "&excl;", "!" }, { "&quot;", "\"" }, { "&num;", "#" }, { "&dollar;", "$" }, { "&percnt;", "%" }, { "&amp;", "&" },
+  return Value(utils::string::replaceMap(args[0].asString(), { { "&excl;", "!" }, { "&quot;", "\"" }, { "&num;", "#" }, { "&dollar;", "$" }, { "&percnt;", "%" }, { "&amp;", "&" },
                                                   { "&apos;", "'" }, { "&lpar;", "(" }, { "&rpar;", ")" }, { "&ast;", "*" }, { "&plus;", "+" }, { "&comma;", "," }, { "&minus;", "-" }, { "&period;",
                                                       "." }, { "&sol;", "/" }, { "&colon;", ":" }, { "&semi;", ";" }, { "&lt;", "<" }, { "&equals;", "=" }, { "&gt;", ">" }, { "&quest;", "?" }, {
                                                       "&commat;", "@" }, { "&lsqb;", "[" }, { "&bsol;", "\\" }, { "&rsqb;", "]" }, { "&circ;", "^" }, { "&lowbar;", "_" }, { "&grave;", "`" }, {
@@ -600,11 +600,11 @@ Value expr_unescapeHtml4(const std::vector<Value> &args) {
 }
 
 Value expr_escapeXml(const std::vector<Value> &args) {
-  return Value(utils::StringUtils::replaceMap(args[0].asString(), { { "\"", "&quot;" }, { "'", "&apos;" }, { "<", "&lt;" }, { ">", "&gt;" }, { "&", "&amp;" } }));
+  return Value(utils::string::replaceMap(args[0].asString(), { { "\"", "&quot;" }, { "'", "&apos;" }, { "<", "&lt;" }, { ">", "&gt;" }, { "&", "&amp;" } }));
 }
 
 Value expr_unescapeXml(const std::vector<Value> &args) {
-  return Value(utils::StringUtils::replaceMap(args[0].asString(), { { "&quot;", "\"" }, { "&apos;", "'" }, { "&lt;", "<" }, { "&gt;", ">" }, { "&amp;", "&" } }));
+  return Value(utils::string::replaceMap(args[0].asString(), { { "&quot;", "\"" }, { "&apos;", "'" }, { "&lt;", "<" }, { "&gt;", ">" }, { "&amp;", "&" } }));
 }
 
 Value expr_escapeCsv(const std::vector<Value> &args) {
@@ -621,7 +621,7 @@ Value expr_escapeCsv(const std::vector<Value> &args) {
 
   if (quote_required) {
     std::string quoted_result = "\"";
-    quoted_result.append(utils::StringUtils::replaceMap(result, { { "\"", "\"\"" } }));
+    quoted_result.append(utils::string::replaceMap(result, { { "\"", "\"\"" } }));
     quoted_result.append("\"");
     return Value(quoted_result);
   }
@@ -694,7 +694,7 @@ Value expr_unescapeCsv(const std::vector<Value> &args) {
     }
 
     if (quote_required) {
-      return Value(utils::StringUtils::replaceMap(result.substr(1, result.size() - 2), { { "\"\"", "\"" } }));
+      return Value(utils::string::replaceMap(result.substr(1, result.size() - 2), { { "\"\"", "\"" } }));
     }
   }
 
@@ -749,11 +749,11 @@ Value expr_urlDecode(const std::vector<Value> &args) {
 }
 
 Value expr_base64Encode(const std::vector<Value> &args) {
-  return Value(utils::StringUtils::to_base64(args[0].asString()));
+  return Value(utils::string::to_base64(args[0].asString()));
 }
 
 Value expr_base64Decode(const std::vector<Value> &args) {
-  return Value(utils::StringUtils::from_base64(args[0].asString(), utils::as_string));
+  return Value(utils::string::from_base64(args[0].asString(), utils::as_string));
 }
 
 Value expr_replace(const std::vector<Value> &args) {
@@ -816,7 +816,7 @@ Value expr_find(const std::vector<Value> &args) {
 }
 
 Value expr_trim(const std::vector<Value> &args) {
-  return Value{utils::StringUtils::trim(args[0].asString())};
+  return Value{utils::string::trim(args[0].asString())};
 }
 
 Value expr_append(const std::vector<Value> &args) {
@@ -1270,7 +1270,7 @@ Expression make_allDelineatedValues(const std::string &function_name, const std:
   result.make_multi([=](const Parameters &params) -> std::vector<Expression> {
     std::vector<Expression> out_exprs;
 
-    for (const auto &val : utils::StringUtils::split(args[0](params).asString(), args[1](params).asString())) {
+    for (const auto &val : utils::string::split(args[0](params).asString(), args[1](params).asString())) {
       out_exprs.emplace_back(make_static(val));
     }
 
@@ -1302,7 +1302,7 @@ Expression make_anyDelineatedValue(const std::string &function_name, const std::
   result.make_multi([=](const Parameters &params) -> std::vector<Expression> {
     std::vector<Expression> out_exprs;
 
-    for (const auto &val : utils::StringUtils::split(args[0](params).asString(), args[1](params).asString())) {
+    for (const auto &val : utils::string::split(args[0](params).asString(), args[1](params).asString())) {
       out_exprs.emplace_back(make_static(val));
     }
 

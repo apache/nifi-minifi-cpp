@@ -77,7 +77,7 @@ std::shared_ptr<minifi::controllers::SSLContextService> getSSLContextService(con
 
   if (nullptr == secure_context) {
     std::string secureStr;
-    if (configuration->get(minifi::Configure::nifi_remote_input_secure, secureStr) && minifi::utils::StringUtils::toBool(secureStr).value_or(false)) {
+    if (configuration->get(minifi::Configure::nifi_remote_input_secure, secureStr) && minifi::utils::string::toBool(secureStr).value_or(false)) {
       secure_context = std::make_shared<minifi::controllers::SSLContextService>("ControllerSocketProtocolSSL", configuration);
       secure_context->onEnable();
     }

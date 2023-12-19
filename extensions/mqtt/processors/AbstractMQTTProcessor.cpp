@@ -107,7 +107,7 @@ void AbstractMQTTProcessor::onSchedule(core::ProcessContext& context, core::Proc
     logger_->log_debug("AbstractMQTTProcessor: Last Will QoS [{}]", magic_enum::enum_name(last_will_qos_));
     last_will_->qos = static_cast<int>(last_will_qos_);
 
-    if (const auto value = context.getProperty(LastWillRetain) | utils::andThen(&utils::StringUtils::toBool)) {
+    if (const auto value = context.getProperty(LastWillRetain) | utils::andThen(&utils::string::toBool)) {
       logger_->log_debug("AbstractMQTTProcessor: Last Will Retain [{}]", *value);
       last_will_retain_ = {*value};
       last_will_->retained = last_will_retain_;

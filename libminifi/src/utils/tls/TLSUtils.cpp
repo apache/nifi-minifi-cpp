@@ -33,7 +33,7 @@ namespace tls {
 int pemPassWordCb(char *buf, int size, int /*rwflag*/, void *userdata) {
   const std::string * const origPass = reinterpret_cast<std::string*>(userdata);
   // make copy the password, trimming it
-  const auto pass = utils::StringUtils::trimRight(*origPass);
+  const auto pass = utils::string::trimRight(*origPass);
   /**
    * 1) Ensure that password is trimmed.
    * 2) Don't attempt a larger copy than the buffer we are allowed.

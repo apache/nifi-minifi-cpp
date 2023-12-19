@@ -47,7 +47,7 @@ bool LinuxPowerManagerService::canIncrease() {
       std::getline(status_file, status_str);
       status_file.close();
 
-      if (!utils::StringUtils::equalsIgnoreCase(status_keyword_, status_str)) {
+      if (!utils::string::equalsIgnoreCase(status_keyword_, status_str)) {
         return true;
       }
     } catch (...) {
@@ -97,7 +97,7 @@ bool LinuxPowerManagerService::shouldReduce() {
       std::getline(status_file, status_str);
       status_file.close();
 
-      if (!utils::StringUtils::equalsIgnoreCase(status_keyword_, status_str)) {
+      if (!utils::string::equalsIgnoreCase(status_keyword_, status_str)) {
         all_discharging &= false;
       }
     } catch (...) {

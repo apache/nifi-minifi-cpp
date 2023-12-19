@@ -95,7 +95,7 @@ void ExecutePythonProcessor::appendPathForImportModules() {
   std::string module_directory;
   getProperty(ModuleDirectory, module_directory);
   if (!module_directory.empty()) {
-    python_script_engine_->setModulePaths(utils::StringUtils::splitAndTrimRemovingEmpty(module_directory, ",") | ranges::to<std::vector<std::filesystem::path>>());
+    python_script_engine_->setModulePaths(utils::string::splitAndTrimRemovingEmpty(module_directory, ",") | ranges::to<std::vector<std::filesystem::path>>());
   }
 }
 

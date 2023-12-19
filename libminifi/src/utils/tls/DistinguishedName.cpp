@@ -30,16 +30,16 @@ namespace tls {
 
 DistinguishedName::DistinguishedName(const std::vector<std::string>& components) {
   std::transform(components.begin(), components.end(), std::back_inserter(components_),
-      [](const std::string& component) { return utils::StringUtils::trim(component); });
+      [](const std::string& component) { return utils::string::trim(component); });
   std::sort(components_.begin(), components_.end());
 }
 
 DistinguishedName DistinguishedName::fromCommaSeparated(const std::string& comma_separated_components) {
-  return DistinguishedName{utils::StringUtils::splitRemovingEmpty(comma_separated_components, ",")};
+  return DistinguishedName{utils::string::splitRemovingEmpty(comma_separated_components, ",")};
 }
 
 DistinguishedName DistinguishedName::fromSlashSeparated(const std::string &slash_separated_components) {
-  return DistinguishedName{utils::StringUtils::splitRemovingEmpty(slash_separated_components, "/")};
+  return DistinguishedName{utils::string::splitRemovingEmpty(slash_separated_components, "/")};
 }
 
 std::optional<std::string> DistinguishedName::getCN() const {
@@ -53,7 +53,7 @@ std::optional<std::string> DistinguishedName::getCN() const {
 }
 
 std::string DistinguishedName::toString() const {
-  return utils::StringUtils::join(", ", components_);
+  return utils::string::join(", ", components_);
 }
 
 }  // namespace tls

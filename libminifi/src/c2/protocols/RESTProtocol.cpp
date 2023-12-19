@@ -148,7 +148,7 @@ void RESTProtocol::initialize(core::controller::ControllerServiceProvider* /*con
   if (configure) {
     std::string value_str;
     if (configure->get(minifi::Configuration::nifi_c2_rest_heartbeat_minimize_updates, "c2.rest.heartbeat.minimize.updates", value_str)) {
-      auto opt_value = utils::StringUtils::toBool(value_str);
+      auto opt_value = utils::string::toBool(value_str);
       if (!opt_value) {
         logger_->log_error("Cannot convert '{}' to bool for property '{}'", value_str, minifi::Configuration::nifi_c2_rest_heartbeat_minimize_updates);
         minimize_updates_ = false;

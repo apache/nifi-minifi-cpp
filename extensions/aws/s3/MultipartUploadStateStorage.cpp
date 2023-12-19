@@ -31,7 +31,7 @@ void MultipartUploadStateStorage::storeState(const std::string& bucket, const st
   stored_state[state_key + ".uploaded_size"] = std::to_string(state.uploaded_size);
   stored_state[state_key + ".part_size"] = std::to_string(state.part_size);
   stored_state[state_key + ".full_size"] = std::to_string(state.full_size);
-  stored_state[state_key + ".uploaded_etags"] = minifi::utils::StringUtils::join(";", state.uploaded_etags);
+  stored_state[state_key + ".uploaded_etags"] = minifi::utils::string::join(";", state.uploaded_etags);
   state_manager_->set(stored_state);
   state_manager_->commit();
   state_manager_->persist();
@@ -64,7 +64,7 @@ std::optional<MultipartUploadState> MultipartUploadStateStorage::getState(const 
   core::Property::StringToInt(state_map[state_key + ".uploaded_size"], state.uploaded_size);
   core::Property::StringToInt(state_map[state_key + ".part_size"], state.part_size);
   core::Property::StringToInt(state_map[state_key + ".full_size"], state.full_size);
-  state.uploaded_etags = minifi::utils::StringUtils::splitAndTrimRemovingEmpty(state_map[state_key + ".uploaded_etags"], ";");
+  state.uploaded_etags = minifi::utils::string::splitAndTrimRemovingEmpty(state_map[state_key + ".uploaded_etags"], ";");
   return state;
 }
 
@@ -109,7 +109,7 @@ void MultipartUploadStateStorage::removeAgedStates(std::chrono::milliseconds mul
   std::vector<std::string> keys_to_remove;
   for (const auto& [property_key, value] : state_map) {
     std::string upload_time_suffix = ".upload_time";
-    if (!minifi::utils::StringUtils::endsWith(property_key, upload_time_suffix)) {
+    if (!minifi::utils::string::endsWith(property_key, upload_time_suffix)) {
       continue;
     }
     int64_t stored_upload_time{};

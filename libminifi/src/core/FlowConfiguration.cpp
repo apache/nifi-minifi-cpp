@@ -101,7 +101,7 @@ std::unique_ptr<core::ProcessGroup> FlowConfiguration::updateFromPayload(const s
   if (!url.empty() && payload != nullptr) {
     std::string payload_flow_id;
     std::string bucket_id;
-    auto path_split = utils::StringUtils::split(url, "/");
+    auto path_split = utils::string::split(url, "/");
     for (auto it = path_split.cbegin(); it != path_split.cend(); ++it) {
       if (*it == "flows" && std::next(it) != path_split.cend()) {
         payload_flow_id = *++it;
@@ -126,7 +126,7 @@ bool FlowConfiguration::persist(const std::string &configuration) {
   auto config_file_backup = *config_path_;
   config_file_backup += ".bak";
   bool backup_file = (configuration_->get(minifi::Configure::nifi_flow_configuration_file_backup_update)
-                      | utils::andThen(utils::StringUtils::toBool)).value_or(false);
+                      | utils::andThen(utils::string::toBool)).value_or(false);
 
   if (backup_file) {
     if (utils::file::FileUtils::copy_file(*config_path_, config_file_backup) != 0) {

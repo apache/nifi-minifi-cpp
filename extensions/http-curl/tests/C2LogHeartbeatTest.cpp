@@ -56,7 +56,7 @@ class VerifyLogC2Heartbeat : public VerifyC2Base {
     const auto log = LogTestController::getInstance().getLogs();
     auto types_in_heartbeat = log | ranges::views::split('\n')
         | ranges::views::transform([](auto&& rng) { return rng | ranges::to<std::string>; })
-        | ranges::views::filter([](auto&& line) { return utils::StringUtils::startsWith(line, "                                \"type\":"); })
+        | ranges::views::filter([](auto&& line) { return utils::string::startsWith(line, "                                \"type\":"); })
         | ranges::to<std::vector<std::string>>;
     const auto num_types = types_in_heartbeat.size();
     types_in_heartbeat |= ranges::actions::sort | ranges::actions::unique;

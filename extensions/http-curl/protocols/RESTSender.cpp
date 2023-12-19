@@ -52,7 +52,7 @@ void RESTSender::initialize(core::controller::ControllerServiceProvider* control
     }
     if (nullptr == ssl_context_service_) {
       std::string ssl_context_str;
-      if (configure->get(Configure::nifi_remote_input_secure, ssl_context_str) && org::apache::nifi::minifi::utils::StringUtils::toBool(ssl_context_str).value_or(false)) {
+      if (configure->get(Configure::nifi_remote_input_secure, ssl_context_str) && org::apache::nifi::minifi::utils::string::toBool(ssl_context_str).value_or(false)) {
         ssl_context_service_ = std::make_shared<minifi::controllers::SSLContextService>("RESTSenderSSL", configure);
         ssl_context_service_->onEnable();
       }
@@ -170,7 +170,7 @@ C2Payload RESTSender::sendPayload(const std::string& url, const Direction direct
     auto read = std::make_unique<utils::HTTPReadCallback>(std::numeric_limits<size_t>::max());
     client.setReadCallback(std::move(read));
     if (accepted_formats && !accepted_formats->empty()) {
-      client.setRequestHeader("Accept", utils::StringUtils::join(", ", accepted_formats.value()));
+      client.setRequestHeader("Accept", utils::string::join(", ", accepted_formats.value()));
     }
   } else {
     // Due to a bug in MiNiFi C2 the Accept header is not handled properly thus we need to exclude it to be compatible
@@ -188,7 +188,7 @@ C2Payload RESTSender::sendPayload(const std::string& url, const Direction direct
     logger_->log_debug("Response code '{}' from '{}'", respCode, url);
   }
   const auto response_body_bytes = gsl::make_span(client.getResponseBody()).as_span<const std::byte>();
-  logger_->log_trace("Received response: \"{}\"", [&] { return utils::StringUtils::escapeUnprintableBytes(response_body_bytes); });
+  logger_->log_trace("Received response: \"{}\"", [&] { return utils::string::escapeUnprintableBytes(response_body_bytes); });
   if (isOkay && !clientError && !serverError) {
     if (accepted_formats) {
       C2Payload response_payload(payload.getOperation(), state::UpdateState::READ_COMPLETE, true);

@@ -66,7 +66,7 @@ TEST_CASE("PutUDP", "[putudp]") {
     listener.stop();
     server_thread.join();
   });
-  put_udp->setProperty(PutUDP::Port, utils::StringUtils::join_pack("${literal('", std::to_string(port), "')}"));
+  put_udp->setProperty(PutUDP::Port, utils::string::join_pack("${literal('", std::to_string(port), "')}"));
 
   {
     const char* const message = "first message: hello";

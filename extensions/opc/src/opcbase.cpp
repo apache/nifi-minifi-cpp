@@ -68,11 +68,11 @@ namespace org::apache::nifi::minifi::processors {
     }
 
     if (certBuffer_.empty()) {
-      auto error_msg = utils::StringUtils::join_pack("Failed to load cert from path: ", certpath_);
+      auto error_msg = utils::string::join_pack("Failed to load cert from path: ", certpath_);
       throw Exception(PROCESS_SCHEDULE_EXCEPTION, error_msg);
     }
     if (keyBuffer_.empty()) {
-      auto error_msg = utils::StringUtils::join_pack("Failed to load key from path: ", keypath_);
+      auto error_msg = utils::string::join_pack("Failed to load key from path: ", keypath_);
       throw Exception(PROCESS_SCHEDULE_EXCEPTION, error_msg);
     }
 
@@ -81,7 +81,7 @@ namespace org::apache::nifi::minifi::processors {
       if (input_trust.good()) {
         trustBuffers_.push_back(std::vector<char>(std::istreambuf_iterator<char>(input_trust), {}));
       } else {
-        auto error_msg = utils::StringUtils::join_pack("Failed to load trusted server certs from path: ", trustpath_);
+        auto error_msg = utils::string::join_pack("Failed to load trusted server certs from path: ", trustpath_);
         throw Exception(PROCESS_SCHEDULE_EXCEPTION, error_msg);
       }
     }

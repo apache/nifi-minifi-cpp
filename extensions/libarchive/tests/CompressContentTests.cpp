@@ -631,8 +631,8 @@ TEST_CASE_METHOD(TestController, "RawGzipCompressionDecompression", "[compressfi
 
 TEST_CASE_METHOD(CompressTestController, "Batch CompressFileGZip", "[compressFileBatchTest]") {
   std::vector<std::string> flowFileContents{
-    utils::StringUtils::repeat("0", 1000), utils::StringUtils::repeat("1", 1000),
-    utils::StringUtils::repeat("2", 1000), utils::StringUtils::repeat("3", 1000),
+    utils::string::repeat("0", 1000), utils::string::repeat("1", 1000),
+    utils::string::repeat("2", 1000), utils::string::repeat("3", 1000),
   };
   const std::size_t batchSize = 3;
 

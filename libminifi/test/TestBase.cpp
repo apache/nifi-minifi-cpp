@@ -144,7 +144,7 @@ std::optional<std::smatch> LogTestController::matchesRegex(const std::string& re
 }
 
 int LogTestController::countOccurrences(const std::string& pattern) const {
-  return minifi::utils::StringUtils::countOccurrences(getLogs(), pattern).second;
+  return minifi::utils::string::countOccurrences(getLogs(), pattern).second;
 }
 
 void LogTestController::reset() {

@@ -114,7 +114,7 @@ class DataSizeValue : public TransformableValue, public state::response::UInt64V
         {"K", 1_KB}, {"M", 1_MB}, {"G", 1_GB}, {"T", 1_TB}, {"P", 1_PB},
         {"KB", 1_KiB}, {"MB", 1_MiB}, {"GB", 1_GiB}, {"TB", 1_TiB}, {"PB", 1_PiB},
     };
-    unit_str = utils::StringUtils::toUpper(unit_str);
+    unit_str = utils::string::toUpper(unit_str);
 
     return unit_map.contains(unit_str) ? std::optional(unit_map.at(unit_str)) : std::nullopt;
   }
@@ -125,7 +125,7 @@ class DataSizeValue : public TransformableValue, public state::response::UInt64V
     int64_t value;
     std::string unit_str;
     try {
-      unit_str = utils::StringUtils::trim(utils::internal::ValueParser(input).parse(value).rest());
+      unit_str = utils::string::trim(utils::internal::ValueParser(input).parse(value).rest());
     } catch (const utils::internal::ParseException&) {
       return false;
     }
@@ -163,7 +163,7 @@ class DataTransferSpeedValue : public TransformableValue, public state::response
   }
 
   static std::string removePerSecSuffix(const std::string &input) {
-    auto lower_case_input = utils::StringUtils::trim(utils::StringUtils::toLower(input));
+    auto lower_case_input = utils::string::trim(utils::string::toLower(input));
     if (lower_case_input.ends_with("/s")) {
       return lower_case_input.substr(0, lower_case_input.size() - 2);
     }

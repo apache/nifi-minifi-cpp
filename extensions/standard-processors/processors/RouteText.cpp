@@ -302,7 +302,7 @@ std::string_view RouteText::preprocess(std::string_view str) const {
     }
   }
   if (trim_) {
-    str = utils::StringUtils::trim(str);
+    str = utils::string::trim(str);
   }
   return str;
 }
@@ -320,22 +320,22 @@ bool RouteText::matchSegment(MatchingContext& context, const Segment& segment, c
       }
       std::string result;
       if (context.process_context_.getDynamicProperty(prop, result, context.flow_file_, variables)) {
-        return utils::StringUtils::toBool(result).value_or(false);
+        return utils::string::toBool(result).value_or(false);
       } else {
         throw Exception(PROCESSOR_EXCEPTION, "Missing dynamic property: '" + prop.getName() + "'");
       }
     }
     case route_text::Matching::STARTS_WITH: {
-      return utils::StringUtils::startsWith(segment.value_, context.getStringProperty(prop), case_policy_ == route_text::CasePolicy::CASE_SENSITIVE);
+      return utils::string::startsWith(segment.value_, context.getStringProperty(prop), case_policy_ == route_text::CasePolicy::CASE_SENSITIVE);
     }
     case route_text::Matching::ENDS_WITH: {
-      return utils::StringUtils::endsWith(segment.value_, context.getStringProperty(prop), case_policy_ == route_text::CasePolicy::CASE_SENSITIVE);
+      return utils::string::endsWith(segment.value_, context.getStringProperty(prop), case_policy_ == route_text::CasePolicy::CASE_SENSITIVE);
     }
     case route_text::Matching::CONTAINS: {
       return std::search(segment.value_.begin(), segment.value_.end(), context.getSearcher(prop)) != segment.value_.end();
     }
     case route_text::Matching::EQUALS: {
-      return utils::StringUtils::equals(segment.value_, context.getStringProperty(prop), case_policy_ == route_text::CasePolicy::CASE_SENSITIVE);
+      return utils::string::equals(segment.value_, context.getStringProperty(prop), case_policy_ == route_text::CasePolicy::CASE_SENSITIVE);
     }
     case route_text::Matching::CONTAINS_REGEX: {
       std::string segment_str = std::string(segment.value_);

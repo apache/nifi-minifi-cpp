@@ -34,7 +34,7 @@ namespace org::apache::nifi::minifi::azure::storage {
 
 namespace {
 bool matchesPathFilter(std::string_view base_directory, const std::optional<minifi::utils::Regex>& path_regex, std::string path) {
-  gsl_Expects(utils::implies(!base_directory.empty(), minifi::utils::StringUtils::startsWith(path, base_directory)));
+  gsl_Expects(utils::implies(!base_directory.empty(), minifi::utils::string::startsWith(path, base_directory)));
   if (!path_regex) {
     return true;
   }

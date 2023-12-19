@@ -27,7 +27,7 @@ EventPath::EventPath(const std::wstring& wstr) : EventPath(utils::to_string(wstr
 
 EventPath::EventPath(std::string str) {
   constexpr std::string_view saved_log_prefix = "SavedLog:";
-  if (utils::StringUtils::startsWith(str, saved_log_prefix)) {
+  if (utils::string::startsWith(str, saved_log_prefix)) {
     str_ = str.substr(saved_log_prefix.size());
     kind_ = Kind::FILE;
   } else {

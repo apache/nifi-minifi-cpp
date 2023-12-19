@@ -87,7 +87,7 @@ CapturePacketMechanism *CapturePacket::create_new_capture(const std::string &bas
   auto new_capture = new CapturePacketMechanism(base_path, generate_new_pcap(base_path), max_size);
   new_capture->writer_ = std::make_unique<pcpp::PcapFileWriterDevice>(new_capture->getFile());
   if (!new_capture->writer_->open())
-    throw std::runtime_error{utils::StringUtils::join_pack("Failed to open PcapFileWriterDevice with file ", new_capture->getFile().string())};
+    throw std::runtime_error{utils::string::join_pack("Failed to open PcapFileWriterDevice with file ", new_capture->getFile().string())};
 
   return new_capture;
 }
@@ -114,7 +114,7 @@ void CapturePacket::onSchedule(core::ProcessContext& context, core::ProcessSessi
 
   value = "";
   if (context.getProperty(CaptureBluetooth, value)) {
-    capture_bluetooth_ = utils::StringUtils::toBool(value).value_or(false);
+    capture_bluetooth_ = utils::string::toBool(value).value_or(false);
   }
 
   core::Property attached_controllers("Network Controllers", "List of network controllers to attach to -- each may be a regex", ".*");

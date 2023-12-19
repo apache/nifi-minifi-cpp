@@ -51,7 +51,7 @@ namespace {
 // This has been fixed in gcc12.2
 std::stringstream getCaseInsensitiveCStream(const std::string& str) {
 #if defined(__GNUC__) && (__GNUC__ < 12 || (__GNUC__ == 12 && __GNUC_MINOR__ < 2))
-  auto patched_str = StringUtils::toLower(str);
+  auto patched_str = string::toLower(str);
   if (!patched_str.empty())
     patched_str[0] = static_cast<char>(std::toupper(static_cast<unsigned char>(patched_str[0])));
   auto stream = std::stringstream{patched_str};
@@ -390,7 +390,7 @@ std::unique_ptr<CronField> parseCronField(const std::string& field_str) {
     if (field_str.find('#') != std::string::npos) {
       if constexpr (!std::is_same<weekday, FieldType>())
         throw BadCronExpression("# can only be used in the Day of week field");
-      auto operands = StringUtils::split(field_str, "#");
+      auto operands = string::split(field_str, "#");
       if (operands.size() != 2)
         throw BadCronExpression("Invalid field " + field_str);
 
@@ -399,7 +399,7 @@ std::unique_ptr<CronField> parseCronField(const std::string& field_str) {
     }
 
     if (field_str.find('-') != std::string::npos) {
-      auto operands = StringUtils::split(field_str, "-");
+      auto operands = string::split(field_str, "-");
       if (operands.size() != 2)
         throw BadCronExpression("Invalid field " + field_str);
       if (operands[0] == "L") {
@@ -417,7 +417,7 @@ std::unique_ptr<CronField> parseCronField(const std::string& field_str) {
     }
 
     if (field_str.find('/') != std::string::npos) {
-      auto operands = StringUtils::split(field_str, "/");
+      auto operands = string::split(field_str, "/");
       if (operands.size() != 2)
         throw BadCronExpression("Invalid field " + field_str);
       if (operands[0] == "*")
@@ -427,7 +427,7 @@ std::unique_ptr<CronField> parseCronField(const std::string& field_str) {
     }
 
     if (field_str.find(',') != std::string::npos) {
-      auto operands_str = StringUtils::split(field_str, ",");
+      auto operands_str = string::split(field_str, ",");
       std::vector<FieldType> operands;
       std::transform(operands_str.begin(), operands_str.end(), std::back_inserter(operands), parse<FieldType>);
       return std::make_unique<ListField<FieldType>>(std::move(operands));
@@ -436,7 +436,7 @@ std::unique_ptr<CronField> parseCronField(const std::string& field_str) {
     if (field_str.ends_with('W')) {
       if constexpr (!std::is_same<day, FieldType>())
         throw BadCronExpression("W can only be used in the Day of month field");
-      auto operands_str = StringUtils::split(field_str, "W");
+      auto operands_str = string::split(field_str, "W");
       if (operands_str.size() != 2)
         throw BadCronExpression("Invalid field " + field_str);
       return std::make_unique<ClosestWeekdayToTheNthDayOfTheMonth>(parse<day>(operands_str[0]));
@@ -450,7 +450,7 @@ std::unique_ptr<CronField> parseCronField(const std::string& field_str) {
 }  // namespace
 
 Cron::Cron(const std::string& expression) {
-  auto tokens = StringUtils::split(expression, " ");
+  auto tokens = string::split(expression, " ");
 
   if (tokens.size() != 6 && tokens.size() != 7)
     throw BadCronExpression("malformed cron string (must be 6 or 7 fields): " + expression);

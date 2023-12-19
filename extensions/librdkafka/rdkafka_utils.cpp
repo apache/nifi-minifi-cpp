@@ -61,7 +61,7 @@ std::string get_human_readable_kafka_message_headers(const rd_kafka_message_t& r
   if (RD_KAFKA_RESP_ERR_NO_ERROR == get_header_response) {
     std::vector<std::string> header_list;
     kafka_headers_for_each(*hdrs, [&] (const std::string& key, std::span<const char> val) { header_list.emplace_back(key + ": " + std::string{ val.data(), val.size() }); });
-    return StringUtils::join(", ", header_list);
+    return string::join(", ", header_list);
   }
   if (RD_KAFKA_RESP_ERR__NOENT == get_header_response) {
     return "[None]";
@@ -98,7 +98,7 @@ std::string get_encoded_string(const std::string& input, KafkaEncoding encoding)
     case KafkaEncoding::UTF8:
       return input;
     case KafkaEncoding::HEX:
-      return StringUtils::to_hex(input, /* uppercase = */ true);
+      return string::to_hex(input, /* uppercase = */ true);
   }
   throw std::runtime_error("Invalid encoding selected: " + input);
 }

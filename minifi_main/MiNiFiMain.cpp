@@ -139,7 +139,7 @@ void writeJsonSchema(const std::shared_ptr<minifi::Configure> &configuration, st
 void overridePropertiesFromCommandLine(const argparse::ArgumentParser& parser, const std::shared_ptr<minifi::Configure>& configure) {
   const auto& properties = parser.get<std::vector<std::string>>("--property");
   for (const auto& property : properties) {
-    auto property_key_and_value = utils::StringUtils::splitAndTrimRemovingEmpty(property, "=");
+    auto property_key_and_value = utils::string::splitAndTrimRemovingEmpty(property, "=");
     if (property_key_and_value.size() != 2) {
       std::cerr << "Command line property must be defined in <key>=<value> format, invalid property: " << property << std::endl;
       std::cerr << parser;
@@ -384,7 +384,7 @@ int main(int argc, char **argv) {
     configure->get(minifi::Configure::nifi_configuration_class_name, nifi_configuration_class_name);
 
     bool should_encrypt_flow_config = (configure->get(minifi::Configure::nifi_flow_configuration_encrypt)
-        | utils::andThen(utils::StringUtils::toBool)).value_or(false);
+        | utils::andThen(utils::string::toBool)).value_or(false);
 
     auto filesystem = std::make_shared<utils::file::FileSystem>(
         should_encrypt_flow_config,
@@ -405,7 +405,7 @@ int main(int argc, char **argv) {
       prov_repo, flow_repo, configure, std::move(flow_configuration), content_repo, std::move(metrics_publisher_store), filesystem, request_restart);
 
     const bool disk_space_watchdog_enable = configure->get(minifi::Configure::minifi_disk_space_watchdog_enable)
-        | utils::andThen(utils::StringUtils::toBool)
+        | utils::andThen(utils::string::toBool)
         | utils::valueOrElse([] { return true; });
 
     std::unique_ptr<utils::CallBackTimer> disk_space_watchdog;

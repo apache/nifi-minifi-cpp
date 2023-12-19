@@ -208,7 +208,7 @@ class PutTCPTestFixture {
   }
 
   void setPutTCPPort(uint16_t port) {
-    put_tcp_->setProperty(PutTCP::Port, utils::StringUtils::join_pack("${literal('", std::to_string(port), "')}"));
+    put_tcp_->setProperty(PutTCP::Port, utils::string::join_pack("${literal('", std::to_string(port), "')}"));
   }
 
   void setPutTCPPort(const std::string& port_str) {

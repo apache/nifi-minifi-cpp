@@ -41,7 +41,7 @@ namespace org::apache::nifi::minifi::c2 {
 
 void C2MetricsPublisher::loadNodeClasses(const std::string& class_definitions, const state::response::SharedResponseNode& new_node) {
   gsl_Expects(response_node_loader_);
-  auto classes = utils::StringUtils::split(class_definitions, ",");
+  auto classes = utils::string::split(class_definitions, ",");
   for (const std::string& clazz : classes) {
     auto response_nodes = response_node_loader_->loadResponseNodes(clazz);
     if (response_nodes.empty()) {
@@ -60,11 +60,11 @@ void C2MetricsPublisher::loadC2ResponseConfiguration(const std::string &prefix) 
     return;
   }
 
-  std::vector<std::string> classes = utils::StringUtils::split(class_definitions, ",");
+  std::vector<std::string> classes = utils::string::split(class_definitions, ",");
 
   for (const std::string& metricsClass : classes) {
     try {
-      std::string option = utils::StringUtils::join_pack(prefix, ".", metricsClass);
+      std::string option = utils::string::join_pack(prefix, ".", metricsClass);
       std::string classOption = option + ".classes";
       std::string nameOption = option + ".name";
 
@@ -76,7 +76,7 @@ void C2MetricsPublisher::loadC2ResponseConfiguration(const std::string &prefix) 
       if (configuration_->get(classOption, class_definitions)) {
         loadNodeClasses(class_definitions, new_node);
       } else {
-        std::string optionName = utils::StringUtils::join_pack(option, ".", name);
+        std::string optionName = utils::string::join_pack(option, ".", name);
         loadC2ResponseConfiguration(optionName, new_node);
       }
 
@@ -97,11 +97,11 @@ state::response::SharedResponseNode C2MetricsPublisher::loadC2ResponseConfigurat
   if (!configuration_->get(prefix, class_definitions)) {
     return prev_node;
   }
-  std::vector<std::string> classes = utils::StringUtils::split(class_definitions, ",");
+  std::vector<std::string> classes = utils::string::split(class_definitions, ",");
 
   for (const std::string& metricsClass : classes) {
     try {
-      std::string option = utils::StringUtils::join_pack(prefix, ".", metricsClass);
+      std::string option = utils::string::join_pack(prefix, ".", metricsClass);
       std::string classOption = option + ".classes";
       std::string nameOption = option + ".name";
 
@@ -111,7 +111,7 @@ state::response::SharedResponseNode C2MetricsPublisher::loadC2ResponseConfigurat
       }
       state::response::SharedResponseNode new_node = gsl::make_not_null(std::make_shared<state::response::ObjectNode>(name));
       if (name.find(',') != std::string::npos) {
-        std::vector<std::string> sub_classes = utils::StringUtils::split(name, ",");
+        std::vector<std::string> sub_classes = utils::string::split(name, ",");
         for (const std::string& subClassStr : classes) {
           auto node = loadC2ResponseConfiguration(subClassStr, prev_node);
           static_cast<state::response::ObjectNode*>(prev_node.get())->add_node(node);
@@ -123,7 +123,7 @@ state::response::SharedResponseNode C2MetricsPublisher::loadC2ResponseConfigurat
             static_cast<state::response::ObjectNode*>(prev_node.get())->add_node(new_node);
           }
         } else {
-          std::string optionName = utils::StringUtils::join_pack(option, ".", name);
+          std::string optionName = utils::string::join_pack(option, ".", name);
           auto sub_node = loadC2ResponseConfiguration(optionName, new_node);
           static_cast<state::response::ObjectNode*>(prev_node.get())->add_node(sub_node);
         }
@@ -166,7 +166,7 @@ std::optional<state::response::NodeReporter::ReportedNode> C2MetricsPublisher::g
 std::vector<state::response::NodeReporter::ReportedNode> C2MetricsPublisher::getHeartbeatNodes(bool include_manifest) const {
   gsl_Expects(configuration_);
   bool full_heartbeat = configuration_->get(minifi::Configuration::nifi_c2_full_heartbeat)
-      | utils::andThen(utils::StringUtils::toBool)
+      | utils::andThen(utils::string::toBool)
       | utils::valueOrElse([] {return true;});
 
   bool include = include_manifest || full_heartbeat;
@@ -198,7 +198,7 @@ void C2MetricsPublisher::loadMetricNodes() {
   std::string class_csv;
   std::lock_guard<std::mutex> guard{metrics_mutex_};
   if (configuration_->get(minifi::Configuration::nifi_c2_root_classes, class_csv)) {
-    std::vector<std::string> classes = utils::StringUtils::split(class_csv, ",");
+    std::vector<std::string> classes = utils::string::split(class_csv, ",");
 
     for (const std::string& clazz : classes) {
       auto response_nodes = response_node_loader_->loadResponseNodes(clazz);

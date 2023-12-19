@@ -29,7 +29,7 @@ namespace {
 gsl::not_null<apiClient_t*> createApiClient(char **base_path, sslConfig_t** ssl_config, list_t** api_keys) {
   int rc = load_incluster_config(base_path, ssl_config, api_keys);
   if (rc != 0) {
-    throw std::runtime_error(org::apache::nifi::minifi::utils::StringUtils::join_pack("load_incluster_config() failed with error code ", std::to_string(rc)));
+    throw std::runtime_error(org::apache::nifi::minifi::utils::string::join_pack("load_incluster_config() failed with error code ", std::to_string(rc)));
   }
   const auto api_client = apiClient_create_with_base_path(*base_path, *ssl_config, *api_keys);
   if (!api_client) {

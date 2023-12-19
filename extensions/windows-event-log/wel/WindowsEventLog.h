@@ -194,7 +194,7 @@ std::string WindowsEventLogHeader::getEventHeader(const MetadataCollection& meta
       eventHeader << *custom_delimiter_;
     else
       eventHeader << createDefaultDelimiter(name.size());
-    eventHeader << utils::StringUtils::trim(metadata_collection(option.first)) << std::endl;
+    eventHeader << utils::string::trim(metadata_collection(option.first)) << std::endl;
   }
 
   return eventHeader.str();

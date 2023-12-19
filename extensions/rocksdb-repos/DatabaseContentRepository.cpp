@@ -41,7 +41,7 @@ bool DatabaseContentRepository::initialize(const std::shared_ptr<minifi::Configu
   } else {
     directory_ = (configuration->getHome() / "dbcontentrepository").string();
   }
-  auto purge_period_str = utils::StringUtils::trim(configuration->get(Configure::nifi_dbcontent_repository_purge_period).value_or("1 s"));
+  auto purge_period_str = utils::string::trim(configuration->get(Configure::nifi_dbcontent_repository_purge_period).value_or("1 s"));
   if (purge_period_str == "0") {
     purge_period_ = std::chrono::seconds{0};
   } else if (auto purge_period_val = core::TimePeriodValue::fromString(purge_period_str)) {

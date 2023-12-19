@@ -67,9 +67,9 @@ ExtendedKeyUsage::ExtendedKeyUsage(const EXTENDED_KEY_USAGE& key_usage_asn1) : E
 }
 
 ExtendedKeyUsage::ExtendedKeyUsage(const std::string& key_usage_str) : ExtendedKeyUsage{} {
-  const std::vector<std::string> key_usages = utils::StringUtils::split(key_usage_str, ",");
+  const std::vector<std::string> key_usages = utils::string::split(key_usage_str, ",");
   for (const auto& key_usage : key_usages) {
-    const std::string key_usage_trimmed = utils::StringUtils::trim(key_usage);
+    const std::string key_usage_trimmed = utils::string::trim(key_usage);
     const auto it = std::find_if(EXT_KEY_USAGE_NAME_TO_BIT_POS.begin(), EXT_KEY_USAGE_NAME_TO_BIT_POS.end(),
                                  [key_usage_trimmed](const KeyValuePair& kv){ return kv.key == key_usage_trimmed; });
     if (it != EXT_KEY_USAGE_NAME_TO_BIT_POS.end()) {

@@ -54,17 +54,17 @@ void FetchSFTP::onSchedule(core::ProcessContext& context, core::ProcessSessionFa
   if (!context.getProperty(CreateDirectory, value)) {
     logger_->log_error("Create Directory attribute is missing or invalid");
   } else {
-    create_directory_ = utils::StringUtils::toBool(value).value_or(false);
+    create_directory_ = utils::string::toBool(value).value_or(false);
   }
   if (!context.getProperty(DisableDirectoryListing, value)) {
     logger_->log_error("Disable Directory Listing attribute is missing or invalid");
   } else {
-    disable_directory_listing_ = utils::StringUtils::toBool(value).value_or(false);
+    disable_directory_listing_ = utils::string::toBool(value).value_or(false);
   }
   if (!context.getProperty(UseCompression, value)) {
     logger_->log_error("Use Compression attribute is missing or invalid");
   } else {
-    use_compression_ = utils::StringUtils::toBool(value).value_or(false);
+    use_compression_ = utils::string::toBool(value).value_or(false);
   }
 
   startKeepaliveThreadIfNeeded();

@@ -49,7 +49,7 @@ void extractExpectedErrors(nlohmann::json& node, const std::string& path, std::u
   }
   if (node.is_object() || node.is_array()) {
     for (auto& [key, val] : node.items()) {
-      extractExpectedErrors(val, utils::StringUtils::join_pack(path, "/", key), errors);
+      extractExpectedErrors(val, utils::string::join_pack(path, "/", key), errors);
     }
   }
 }

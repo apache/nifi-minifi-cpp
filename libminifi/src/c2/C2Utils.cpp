@@ -25,13 +25,13 @@ namespace org::apache::nifi::minifi::c2 {
 bool isC2Enabled(const std::shared_ptr<Configure>& configuration) {
   std::string c2_enable_str;
   configuration->get(minifi::Configuration::nifi_c2_enable, "c2.enable", c2_enable_str);
-  return utils::StringUtils::toBool(c2_enable_str).value_or(false);
+  return utils::string::toBool(c2_enable_str).value_or(false);
 }
 
 bool isControllerSocketEnabled(const std::shared_ptr<Configure>& configuration) {
   std::string controller_socket_enable_str;
   configuration->get(minifi::Configuration::controller_socket_enable, controller_socket_enable_str);
-  return utils::StringUtils::toBool(controller_socket_enable_str).value_or(false);
+  return utils::string::toBool(controller_socket_enable_str).value_or(false);
 }
 
 nonstd::expected<std::shared_ptr<io::BufferStream>, std::string> createDebugBundleArchive(const std::map<std::string, std::unique_ptr<io::InputStream>>& files) {

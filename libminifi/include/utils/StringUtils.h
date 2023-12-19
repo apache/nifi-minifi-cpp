@@ -432,6 +432,4 @@ struct ParseError {};
 nonstd::expected<std::optional<char>, ParseError> parseCharacter(std::string_view input);
 }  // namespace string
 
-namespace StringUtils = string;
-
 }  // namespace org::apache::nifi::minifi::utils

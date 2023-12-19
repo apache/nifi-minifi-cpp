@@ -67,7 +67,7 @@ void QueryDatabaseTable::processOnSchedule(core::ProcessContext& context) {
 
   return_columns_.clear();
   queried_columns_.clear();
-  for (auto&& raw_col : utils::StringUtils::splitAndTrimRemovingEmpty(context.getProperty(ColumnNames).value_or(""), ",")) {
+  for (auto&& raw_col : utils::string::splitAndTrimRemovingEmpty(context.getProperty(ColumnNames).value_or(""), ",")) {
     if (!queried_columns_.empty()) {
       queried_columns_ += ", ";
     }
@@ -76,7 +76,7 @@ void QueryDatabaseTable::processOnSchedule(core::ProcessContext& context) {
   }
 
   max_value_columns_.clear();
-  for (auto&& raw_col : utils::StringUtils::splitAndTrimRemovingEmpty(context.getProperty(MaxValueColumnNames).value_or(""), ",")) {
+  for (auto&& raw_col : utils::string::splitAndTrimRemovingEmpty(context.getProperty(MaxValueColumnNames).value_or(""), ",")) {
     sql::SQLColumnIdentifier col_id(raw_col);
     if (!queried_columns_.empty() && !return_columns_.contains(col_id)) {
       // columns will be explicitly enumerated, we need to add the max value columns as it is not yet queried
@@ -139,7 +139,7 @@ bool QueryDatabaseTable::loadMaxValuesFromStoredState(const std::unordered_map<s
     return false;
   }
   for (auto& elem : state) {
-    if (utils::StringUtils::startsWith(elem.first, MAXVALUE_KEY_PREFIX)) {
+    if (utils::string::startsWith(elem.first, MAXVALUE_KEY_PREFIX)) {
       sql::SQLColumnIdentifier column_name(elem.first.substr(MAXVALUE_KEY_PREFIX.length()));
       // add only those columns that we care about
       if (std::find(max_value_columns_.begin(), max_value_columns_.end(), column_name) != max_value_columns_.end()) {
@@ -184,7 +184,7 @@ void QueryDatabaseTable::loadMaxValuesFromDynamicProperties(core::ProcessContext
   logger_->log_info("Received {} dynamic properties", dynamic_prop_keys.size());
 
   for (const auto& key : dynamic_prop_keys) {
-    if (!utils::StringUtils::startsWith(key, InitialMaxValueDynamicPropertyPrefix)) {
+    if (!utils::string::startsWith(key, InitialMaxValueDynamicPropertyPrefix)) {
       throw minifi::Exception(PROCESSOR_EXCEPTION, "QueryDatabaseTable: Unsupported dynamic property \"" + key + "\"");
     }
     sql::SQLColumnIdentifier column_name(key.substr(InitialMaxValueDynamicPropertyPrefix.length()));
@@ -221,7 +221,7 @@ std::string QueryDatabaseTable::buildSelectQuery() {
     // Logic to differentiate ">" vs ">=" based on index is copied from:
     // https://github.com/apache/nifi/blob/master/nifi-nar-bundles/nifi-standard-bundle/nifi-standard-processors/src/main/java/org/apache/nifi/processors/standard/AbstractQueryDatabaseTable.java
     // (under comment "Add a condition for the WHERE clause"). And implementation explanation: https://issues.apache.org/jira/browse/NIFI-2712.
-    where_clauses.push_back(utils::StringUtils::join_pack(column_name.str(), index == 0 ? " > " : " >= ", max_value));
+    where_clauses.push_back(utils::string::join_pack(column_name.str(), index == 0 ? " > " : " >= ", max_value));
   }
 
   if (!extra_where_clause_.empty()) {
@@ -229,7 +229,7 @@ std::string QueryDatabaseTable::buildSelectQuery() {
   }
 
   if (!where_clauses.empty()) {
-    query += " where " + utils::StringUtils::join(" and ", where_clauses);
+    query += " where " + utils::string::join(" and ", where_clauses);
   }
 
   return query;

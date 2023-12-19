@@ -77,8 +77,8 @@ std::string encrypt(const std::string& plaintext, const Bytes& key) {
   Bytes nonce = randomBytes(EncryptionType::nonceLength());
   Bytes ciphertext_plus_mac = encryptRaw(stringToBytes(plaintext), key, nonce);
 
-  std::string nonce_base64 = utils::StringUtils::to_base64(nonce);
-  std::string ciphertext_plus_mac_base64 = utils::StringUtils::to_base64(ciphertext_plus_mac);
+  std::string nonce_base64 = utils::string::to_base64(nonce);
+  std::string ciphertext_plus_mac_base64 = utils::string::to_base64(ciphertext_plus_mac);
   return nonce_base64 + EncryptionType::separator() + ciphertext_plus_mac_base64;
 }
 
@@ -111,13 +111,13 @@ std::string decrypt(const std::string& input, const Bytes& key) {
 }
 
 EncryptedData parseEncrypted(const std::string& input) {
-  std::vector<std::string> nonce_and_rest = utils::StringUtils::split(input, EncryptionType::separator());
+  std::vector<std::string> nonce_and_rest = utils::string::split(input, EncryptionType::separator());
   if (nonce_and_rest.size() != 2) {
     throw std::invalid_argument{"Incorrect input; expected '<nonce>" + EncryptionType::separator() + "<ciphertext_plus_mac>'"};
   }
 
-  Bytes nonce = utils::StringUtils::from_base64(nonce_and_rest[0]);
-  Bytes ciphertext_plus_mac = utils::StringUtils::from_base64(nonce_and_rest[1]);
+  Bytes nonce = utils::string::from_base64(nonce_and_rest[0]);
+  Bytes ciphertext_plus_mac = utils::string::from_base64(nonce_and_rest[1]);
 
   return EncryptedData{nonce, ciphertext_plus_mac};
 }

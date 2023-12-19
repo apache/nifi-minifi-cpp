@@ -62,11 +62,11 @@ struct Exception : public std::runtime_error {
    * Create a new exception
    */
   Exception(ExceptionType type, const std::string& errorMsg)
-      :Exception{ utils::StringUtils::join_pack(ExceptionTypeToString(type), ": ", errorMsg) }
+      :Exception{ utils::string::join_pack(ExceptionTypeToString(type), ": ", errorMsg) }
   { }
 
   Exception(ExceptionType type, const char* errorMsg)
-      :Exception{ utils::StringUtils::join_pack(ExceptionTypeToString(type), ": ", errorMsg) }
+      :Exception{ utils::string::join_pack(ExceptionTypeToString(type), ": ", errorMsg) }
   { }
 
  protected:
@@ -80,7 +80,7 @@ struct Exception : public std::runtime_error {
 
 struct SystemErrorException : Exception {
   explicit SystemErrorException(const char* const operation, std::error_condition error_condition)
-      :Exception{ utils::StringUtils::join_pack(operation, ": ", error_condition.message()) },
+      :Exception{ utils::string::join_pack(operation, ": ", error_condition.message()) },
       error_condition_{ error_condition }
   {}
 

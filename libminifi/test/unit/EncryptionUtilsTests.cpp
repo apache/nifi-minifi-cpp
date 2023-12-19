@@ -23,9 +23,9 @@
 namespace utils = org::apache::nifi::minifi::utils;
 
 namespace {
-const utils::crypto::Bytes SECRET_KEY = utils::StringUtils::from_hex("aa411f289c91685ef9d5a9e5a4fad9393ff4c7a78ab978484323488caed7a9ab");
+const utils::crypto::Bytes SECRET_KEY = utils::string::from_hex("aa411f289c91685ef9d5a9e5a4fad9393ff4c7a78ab978484323488caed7a9ab");
 
-const utils::crypto::Bytes NONCE = utils::StringUtils::from_base64("RBrWo9lv7xNA6JJWHCa9avnT42CCr1bn");
+const utils::crypto::Bytes NONCE = utils::string::from_base64("RBrWo9lv7xNA6JJWHCa9avnT42CCr1bn");
 }  // namespace
 
 TEST_CASE("EncryptionUtils can do a simple encryption", "[encryptRaw]") {
@@ -34,11 +34,11 @@ TEST_CASE("EncryptionUtils can do a simple encryption", "[encryptRaw]") {
   utils::crypto::Bytes output = utils::crypto::encryptRaw(plaintext, SECRET_KEY, NONCE);
 
   REQUIRE(output.size() == plaintext.size() + utils::crypto::EncryptionType::macLength());
-  REQUIRE(utils::StringUtils::to_base64(output) == "x3WIHJGb+7hGlfIQd3gz8zw11EP0uFh9Ml1XBEAPCX5OTKqWcY+o+Q==");
+  REQUIRE(utils::string::to_base64(output) == "x3WIHJGb+7hGlfIQd3gz8zw11EP0uFh9Ml1XBEAPCX5OTKqWcY+o+Q==");
 }
 
 TEST_CASE("EncryptionUtils can do a simple decryption", "[decryptRaw]") {
-  utils::crypto::Bytes ciphertext_plus_mac = utils::StringUtils::from_base64("x3WIHJGb+7hGlfIQd3gz8zw11EP0uFh9Ml1XBEAPCX5OTKqWcY+o+Q==");
+  utils::crypto::Bytes ciphertext_plus_mac = utils::string::from_base64("x3WIHJGb+7hGlfIQd3gz8zw11EP0uFh9Ml1XBEAPCX5OTKqWcY+o+Q==");
 
   utils::crypto::Bytes output = utils::crypto::decryptRaw(ciphertext_plus_mac, SECRET_KEY, NONCE);
 

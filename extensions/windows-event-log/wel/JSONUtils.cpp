@@ -168,7 +168,7 @@ rapidjson::Document toJSONImpl(const pugi::xml_node& root, bool flatten) {
       for (const auto& event_data_child : eventData_xml.children()) {
         std::string key = "EventData";
         if (auto name_attr = event_data_child.attribute("Name"); !name_attr.empty()) {
-          key = utils::StringUtils::join_pack(key, ".", name_attr.value());
+          key = utils::string::join_pack(key, ".", name_attr.value());
         }
 
         doc.AddMember(rapidjson::Value(createUniqueKey(key, doc), doc.GetAllocator()).Move(), rapidjson::StringRef(event_data_child.text().get()), doc.GetAllocator());

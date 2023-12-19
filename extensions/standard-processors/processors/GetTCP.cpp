@@ -44,8 +44,8 @@ void GetTCP::initialize() {
 std::vector<utils::net::ConnectionId> GetTCP::parseEndpointList(core::ProcessContext& context) {
   std::vector<utils::net::ConnectionId> connections_to_make;
   if (auto endpoint_list_str = context.getProperty(EndpointList)) {
-    for (const auto& endpoint_str : utils::StringUtils::splitAndTrim(*endpoint_list_str, ",")) {
-      auto hostname_service_pair = utils::StringUtils::splitAndTrim(endpoint_str, ":");
+    for (const auto& endpoint_str : utils::string::splitAndTrim(*endpoint_list_str, ",")) {
+      auto hostname_service_pair = utils::string::splitAndTrim(endpoint_str, ":");
       if (hostname_service_pair.size() != 2) {
         logger_->log_error("{} endpoint is invalid, expected {{hostname}}:{{service}} format", endpoint_str);
         continue;
@@ -62,7 +62,7 @@ std::vector<utils::net::ConnectionId> GetTCP::parseEndpointList(core::ProcessCon
 char GetTCP::parseDelimiter(core::ProcessContext& context) {
   char delimiter = '\n';
   if (auto delimiter_str = context.getProperty(GetTCP::MessageDelimiter)) {
-    auto parsed_delimiter = utils::StringUtils::parseCharacter(*delimiter_str);
+    auto parsed_delimiter = utils::string::parseCharacter(*delimiter_str);
     if (!parsed_delimiter || !parsed_delimiter->has_value())
       throw Exception(PROCESS_SCHEDULE_EXCEPTION, fmt::format("Invalid delimiter: {} (it must be a single (escaped or not) character", *delimiter_str));
     delimiter = **parsed_delimiter;

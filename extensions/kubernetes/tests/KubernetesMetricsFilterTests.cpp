@@ -40,7 +40,7 @@ constexpr const char* SYSTEM_POD = R"({"metadata":{"name":"kube-apiserver-kind-c
     R"("labels":{"component":"kube-apiserver","tier":"control-plane"}},"timestamp":"2022-07-15T14:08:29Z","window":"18.516s",)"
     R"("containers":[{"name":"kube-apiserver","usage":{"cpu":"83095152n","memory":"270396Ki"}}]})";
 
-const std::string API_RESULT = minifi::utils::StringUtils::join_pack(
+const std::string API_RESULT = minifi::utils::string::join_pack(
     RESULT_HEADER, HELLO_WORLD_POD_HEADER, HELLO_WORLD_CONTAINER_ONE, ",", HELLO_WORLD_CONTAINER_TWO, "]},", MINIFI_POD, ",", SYSTEM_POD, "]}");
 
 void testSuccessfulFiltering(const std::function<bool(const minifi::kubernetes::ContainerInfo&)>& filter, const std::string& expected_result) {
@@ -58,26 +58,26 @@ TEST_CASE("Without filtering, we get the full result back", "[kubernetes][metric
 
 TEST_CASE("We can filter to get metrics for the default namespace only", "[kubernetes][metrics_filter]") {
   const auto default_namespace_only = [](const minifi::kubernetes::ContainerInfo& container_info) { return container_info.name_space == "default"; };
-  const auto expected_result = minifi::utils::StringUtils::join_pack(
+  const auto expected_result = minifi::utils::string::join_pack(
       RESULT_HEADER, HELLO_WORLD_POD_HEADER, HELLO_WORLD_CONTAINER_ONE, ",", HELLO_WORLD_CONTAINER_TWO, "]},", MINIFI_POD, "]}");
   testSuccessfulFiltering(default_namespace_only, expected_result);
 }
 
 TEST_CASE("We can filter to get metrics for a selected pod only", "[kubernetes][metrics_filter]") {
   const auto minifi_pod_only = [](const minifi::kubernetes::ContainerInfo& container_info) { return container_info.pod_name == "minifi"; };
-  const auto expected_result = minifi::utils::StringUtils::join_pack(RESULT_HEADER, MINIFI_POD, "]}");
+  const auto expected_result = minifi::utils::string::join_pack(RESULT_HEADER, MINIFI_POD, "]}");
   testSuccessfulFiltering(minifi_pod_only, expected_result);
 }
 
 TEST_CASE("We can filter to get metrics for a selected container only", "[kubernetes][metrics_filter]") {
   const auto one_container_only = [](const minifi::kubernetes::ContainerInfo& container_info) { return container_info.pod_name == "hello-world" && container_info.container_name == "echo-two"; };
-  const auto expected_result = minifi::utils::StringUtils::join_pack(RESULT_HEADER, HELLO_WORLD_POD_HEADER, HELLO_WORLD_CONTAINER_TWO, "]}]}");
+  const auto expected_result = minifi::utils::string::join_pack(RESULT_HEADER, HELLO_WORLD_POD_HEADER, HELLO_WORLD_CONTAINER_TWO, "]}]}");
   testSuccessfulFiltering(one_container_only, expected_result);
 }
 
 TEST_CASE("We can filter to get no metrics (not super useful)", "[kubernetes][metrics_filter]") {
   const auto always_false = [](const minifi::kubernetes::ContainerInfo&) { return false; };
-  const auto expected_result = minifi::utils::StringUtils::join_pack(RESULT_HEADER, "]}");
+  const auto expected_result = minifi::utils::string::join_pack(RESULT_HEADER, "]}");
   testSuccessfulFiltering(always_false, expected_result);
 }
 

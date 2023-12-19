@@ -244,7 +244,7 @@ int main() {
       // this op failed no file made on the disk
       continue;
     }
-    expected_files[(asset_dir / op.args["file"]).string()] = utils::StringUtils::endsWith(op.args["url"], "A.txt") ? file_A : file_B;
+    expected_files[(asset_dir / op.args["file"]).string()] = utils::string::endsWith(op.args["url"], "A.txt") ? file_A : file_B;
   }
 
   size_t file_count = utils::file::list_dir_all(asset_dir.string(), controller.getLogger()).size();

@@ -100,7 +100,7 @@ bool integerValidatedProperty(const core::PropertyValidator* const validator) {
 std::optional<int64_t> stringToDataSize(std::string_view input) {
   int64_t value = 0;
   std::string unit_str;
-  if (!utils::StringUtils::splitToValueAndUnit(input, value, unit_str)) {
+  if (!utils::string::splitToValueAndUnit(input, value, unit_str)) {
     return std::nullopt;
   }
 
@@ -201,7 +201,7 @@ void Properties::loadConfigureFile(const std::filesystem::path& configuration_fi
   for (const auto& line : PropertiesFile{file}) {
     auto key = line.getKey();
     auto persisted_value = line.getValue();
-    auto value = utils::StringUtils::replaceEnvironmentVariables(persisted_value);
+    auto value = utils::string::replaceEnvironmentVariables(persisted_value);
     bool need_to_persist_new_value = false;
     fixValidatedProperty(std::string(prefix) + key, persisted_value, value, need_to_persist_new_value, *logger_);
     dirty_ = dirty_ || need_to_persist_new_value;

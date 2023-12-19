@@ -567,13 +567,13 @@ void ProcessSession::import(const std::string& source, std::vector<std::shared_p
     std::ifstream input{source, std::ios::in | std::ios::binary};
     logger_->log_debug("Opening {}", source);
     if (!input.is_open() || !input.good()) {
-      throw Exception(FILE_OPERATION_EXCEPTION, utils::StringUtils::join_pack("File Import Error: failed to open file \'", source, "\'"));
+      throw Exception(FILE_OPERATION_EXCEPTION, utils::string::join_pack("File Import Error: failed to open file \'", source, "\'"));
     }
     if (offset != 0U) {
       input.seekg(gsl::narrow<std::streamoff>(offset), std::ifstream::beg);
       if (!input.good()) {
         logger_->log_error("Seeking to {} failed for file {} (does file/filesystem support seeking?)", offset, source);
-        throw Exception(FILE_OPERATION_EXCEPTION, utils::StringUtils::join_pack("File Import Error: Couldn't seek to offset ", std::to_string(offset)));
+        throw Exception(FILE_OPERATION_EXCEPTION, utils::string::join_pack("File Import Error: Couldn't seek to offset ", std::to_string(offset)));
       }
     }
     while (input.good()) {

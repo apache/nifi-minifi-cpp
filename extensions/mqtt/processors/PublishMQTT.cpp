@@ -47,7 +47,7 @@ void PublishMQTT::readProperties(core::ProcessContext& context) {
     throw Exception(PROCESS_SCHEDULE_EXCEPTION, "PublishMQTT: Topic is required");
   }
 
-  if (const auto retain_opt = context.getProperty(Retain) | utils::andThen(&utils::StringUtils::toBool)) {
+  if (const auto retain_opt = context.getProperty(Retain) | utils::andThen(&utils::string::toBool)) {
     retain_ = *retain_opt;
   }
   logger_->log_debug("PublishMQTT: Retain [{}]", retain_);

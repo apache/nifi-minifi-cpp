@@ -99,7 +99,7 @@ void LogMetricsPublisher::loadMetricNodes() {
     metric_classes_str = configuration_->get(minifi::Configuration::nifi_metrics_publisher_metrics);
   }
   if (metric_classes_str && !metric_classes_str->empty()) {
-    auto metric_classes = utils::StringUtils::split(*metric_classes_str, ",");
+    auto metric_classes = utils::string::split(*metric_classes_str, ",");
     std::lock_guard<std::mutex> lock(response_nodes_mutex_);
     for (const std::string& clazz : metric_classes) {
       auto loaded_response_nodes = response_node_loader_->loadResponseNodes(clazz);

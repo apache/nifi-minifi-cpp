@@ -33,17 +33,17 @@ void CollectKubernetesPodMetrics::initialize() {
 void CollectKubernetesPodMetrics::onSchedule(core::ProcessContext& context, core::ProcessSessionFactory&) {
   const auto controller_service_name = context.getProperty(KubernetesControllerService);
   if (!controller_service_name || controller_service_name->empty()) {
-    throw minifi::Exception{ExceptionType::PROCESS_SCHEDULE_EXCEPTION, utils::StringUtils::join_pack("Missing '", KubernetesControllerService.name, "' property")};
+    throw minifi::Exception{ExceptionType::PROCESS_SCHEDULE_EXCEPTION, utils::string::join_pack("Missing '", KubernetesControllerService.name, "' property")};
   }
 
   std::shared_ptr<core::controller::ControllerService> controller_service = context.getControllerService(*controller_service_name);
   if (!controller_service) {
-    throw minifi::Exception{ExceptionType::PROCESS_SCHEDULE_EXCEPTION, utils::StringUtils::join_pack("Controller service '", *controller_service_name, "' not found")};
+    throw minifi::Exception{ExceptionType::PROCESS_SCHEDULE_EXCEPTION, utils::string::join_pack("Controller service '", *controller_service_name, "' not found")};
   }
 
   kubernetes_controller_service_ = std::dynamic_pointer_cast<minifi::controllers::KubernetesControllerService>(controller_service);
   if (!kubernetes_controller_service_) {
-    throw minifi::Exception{ExceptionType::PROCESS_SCHEDULE_EXCEPTION, utils::StringUtils::join_pack("Controller service '", *controller_service_name, "' is not a KubernetesControllerService")};
+    throw minifi::Exception{ExceptionType::PROCESS_SCHEDULE_EXCEPTION, utils::string::join_pack("Controller service '", *controller_service_name, "' is not a KubernetesControllerService")};
   }
 }
 

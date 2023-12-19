@@ -44,7 +44,7 @@ bool VolatileContentRepository::initialize(const std::shared_ptr<Configure> &con
     std::stringstream strstream;
     strstream << Configure::nifi_volatile_repository_options << getName() << "." << minimal_locking;
     if (configure->get(strstream.str(), value)) {
-      minimize_locking_ =  utils::StringUtils::toBool(value).value_or(true);
+      minimize_locking_ =  utils::string::toBool(value).value_or(true);
     }
   }
   if (!minimize_locking_) {

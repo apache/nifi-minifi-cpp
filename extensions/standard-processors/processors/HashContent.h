@@ -71,7 +71,7 @@ namespace { // NOLINT
     if (ret_val.second > 0) {
       std::array<std::byte, MD5_DIGEST_LENGTH> digest{};
       EVP_DigestFinal_ex(context, reinterpret_cast<unsigned char*>(digest.data()), nullptr);
-      ret_val.first = org::apache::nifi::minifi::utils::StringUtils::to_hex(digest, true /*uppercase*/);
+      ret_val.first = org::apache::nifi::minifi::utils::string::to_hex(digest, true /*uppercase*/);
     }
     return ret_val;
   }
@@ -98,7 +98,7 @@ namespace { // NOLINT
     if (ret_val.second > 0) {
       std::array<std::byte, SHA_DIGEST_LENGTH> digest{};
       EVP_DigestFinal_ex(context, reinterpret_cast<unsigned char*>(digest.data()), nullptr);
-      ret_val.first = org::apache::nifi::minifi::utils::StringUtils::to_hex(digest, true /*uppercase*/);
+      ret_val.first = org::apache::nifi::minifi::utils::string::to_hex(digest, true /*uppercase*/);
     }
     return ret_val;
   }
@@ -125,7 +125,7 @@ namespace { // NOLINT
     if (ret_val.second > 0) {
       std::array<std::byte, SHA256_DIGEST_LENGTH> digest{};
       EVP_DigestFinal_ex(context, reinterpret_cast<unsigned char*>(digest.data()), nullptr);
-      ret_val.first = org::apache::nifi::minifi::utils::StringUtils::to_hex(digest, true /*uppercase*/);
+      ret_val.first = org::apache::nifi::minifi::utils::string::to_hex(digest, true /*uppercase*/);
     }
     return ret_val;
   }

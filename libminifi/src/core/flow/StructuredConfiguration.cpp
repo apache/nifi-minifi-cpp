@@ -792,10 +792,10 @@ void StructuredConfiguration::validateComponentProperties(ConfigurableComponent&
   for (const auto &prop_pair : component_properties) {
     if (prop_pair.second.getRequired()) {
       if (prop_pair.second.getValue().to_string().empty()) {
-        std::string reason = utils::StringUtils::join_pack("required property '", prop_pair.second.getName(), "' is not set");
+        std::string reason = utils::string::join_pack("required property '", prop_pair.second.getName(), "' is not set");
         raiseComponentError(component_name, section, reason);
       } else if (!prop_pair.second.getValue().validate(prop_pair.first).valid) {
-        std::string reason = utils::StringUtils::join_pack("the value '", prop_pair.first, "' is not valid for property '", prop_pair.second.getName(), "'");
+        std::string reason = utils::string::join_pack("the value '", prop_pair.first, "' is not valid for property '", prop_pair.second.getName(), "'");
         raiseComponentError(component_name, section, reason);
       }
     }
@@ -811,7 +811,7 @@ void StructuredConfiguration::validateComponentProperties(ConfigurableComponent&
 
     for (const auto &dep_prop_key : dep_props) {
       if (component_properties.at(dep_prop_key).getValue().to_string().empty()) {
-        std::string reason = utils::StringUtils::join_pack("property '", prop_pair.second.getName(),
+        std::string reason = utils::string::join_pack("property '", prop_pair.second.getName(),
             "' depends on property '", dep_prop_key, "' which is not set");
         raiseComponentError(component_name, section, reason);
       }
@@ -829,7 +829,7 @@ void StructuredConfiguration::validateComponentProperties(ConfigurableComponent&
     for (const auto &excl_pair : excl_props) {
       utils::Regex excl_expr(excl_pair.second);
       if (utils::regexMatch(component_properties.at(excl_pair.first).getValue().to_string(), excl_expr)) {
-        std::string reason = utils::StringUtils::join_pack("property '", prop_pair.second.getName(),
+        std::string reason = utils::string::join_pack("property '", prop_pair.second.getName(),
             "' must not be set when the value of property '", excl_pair.first, "' matches '", excl_pair.second, "'");
         raiseComponentError(component_name, section, reason);
       }
@@ -857,7 +857,7 @@ std::string StructuredConfiguration::getOrGenerateId(const Node& node) {
       addNewId(id);
       return id;
     }
-    throw std::invalid_argument("getOrGenerateId: idField '" + utils::StringUtils::join(",", schema_.identifier) + "' is expected to contain string.");
+    throw std::invalid_argument("getOrGenerateId: idField '" + utils::string::join(",", schema_.identifier) + "' is expected to contain string.");
   }
 
   auto id = id_generator_->generate().to_string();
@@ -878,7 +878,7 @@ std::string StructuredConfiguration::getOptionalField(const Node& node, const st
   if (!result) {
     if (infoMessage.empty()) {
       // Build a helpful info message for the user to inform them that a default is being used
-      infoMessage = "Using default value for optional field '" + utils::StringUtils::join(",", field_name) + "'";
+      infoMessage = "Using default value for optional field '" + utils::string::join(",", field_name) + "'";
       if (auto name = node["name"]) {
         infoMessage += "' in component named '" + name.getString().value() + "'";
       }

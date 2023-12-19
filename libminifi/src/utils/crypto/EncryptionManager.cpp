@@ -61,14 +61,14 @@ std::optional<Bytes> EncryptionManager::readKey(const std::string& key_name) con
   bootstrap_conf.setHome(key_dir_);
   bootstrap_conf.loadConfigureFile(DEFAULT_NIFI_BOOTSTRAP_FILE);
   return bootstrap_conf.getString(key_name)
-         | utils::transform([](const std::string &encryption_key_hex) { return utils::StringUtils::from_hex(encryption_key_hex); });
+         | utils::transform([](const std::string &encryption_key_hex) { return utils::string::from_hex(encryption_key_hex); });
 }
 
 bool EncryptionManager::writeKey(const std::string &key_name, const Bytes& key) const {
   minifi::Properties bootstrap_conf;
   bootstrap_conf.setHome(key_dir_);
   bootstrap_conf.loadConfigureFile(DEFAULT_NIFI_BOOTSTRAP_FILE);
-  bootstrap_conf.set(key_name, utils::StringUtils::to_hex(key));
+  bootstrap_conf.set(key_name, utils::string::to_hex(key));
   return bootstrap_conf.commitChanges();
 }
 

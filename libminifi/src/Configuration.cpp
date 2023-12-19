@@ -161,7 +161,7 @@ const std::array<const char*, 2> Configuration::DEFAULT_SENSITIVE_PROPERTIES = {
 std::vector<std::string> Configuration::mergeProperties(std::vector<std::string> properties,
                                                         const std::vector<std::string>& additional_properties) {
   for (const auto& property_name : additional_properties) {
-    std::string property_name_trimmed = utils::StringUtils::trim(property_name);
+    std::string property_name_trimmed = utils::string::trim(property_name);
     if (!property_name_trimmed.empty()) {
       properties.push_back(std::move(property_name_trimmed));
     }
@@ -178,7 +178,7 @@ std::vector<std::string> Configuration::getSensitiveProperties(const std::functi
   if (reader) {
     const auto additional_sensitive_props_list = reader(Configuration::nifi_sensitive_props_additional_keys);
     if (additional_sensitive_props_list) {
-      std::vector<std::string> additional_sensitive_properties = utils::StringUtils::split(*additional_sensitive_props_list, ",");
+      std::vector<std::string> additional_sensitive_properties = utils::string::split(*additional_sensitive_props_list, ",");
       return Configuration::mergeProperties(sensitive_properties, additional_sensitive_properties);
     }
   }

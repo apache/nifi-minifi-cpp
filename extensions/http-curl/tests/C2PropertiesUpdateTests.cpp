@@ -74,7 +74,7 @@ class C2HeartbeatHandler : public ServerAwareHandler {
           "operationid" : "79",
           "name": "properties",
           "args": {)" +
-            utils::StringUtils::join(", ", fields)
+            utils::string::join(", ", fields)
           + R"(}
         }]
       })";

@@ -27,10 +27,10 @@ static bool isGlobPattern(const std::string& pattern) {
 }
 
 FilePattern::FilePatternSegment::FilePatternSegment(std::string pattern) {
-  pattern = utils::StringUtils::trim(pattern);
+  pattern = utils::string::trim(pattern);
   if (!pattern.empty() && pattern[0] == '!') {
     excluding_ = true;
-    pattern = utils::StringUtils::trim(pattern.substr(1));
+    pattern = utils::string::trim(pattern.substr(1));
   }
   if (pattern.empty()) {
     throw FilePatternSegmentError("Empty pattern");
@@ -79,7 +79,7 @@ std::filesystem::path FilePattern::FilePatternSegment::getBaseDirectory() const 
 }
 
 FilePattern::FilePattern(const std::string &pattern, const ErrorHandler& error_handler) {
-  for (const auto& segment : StringUtils::split(pattern, ",")) {
+  for (const auto& segment : string::split(pattern, ",")) {
     try {
       segments_.emplace_back(segment);
     } catch (const FilePatternSegmentError& segment_error) {

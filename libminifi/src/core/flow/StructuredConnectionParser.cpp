@@ -197,7 +197,7 @@ std::chrono::milliseconds StructuredConnectionParser::getFlowFileExpiration() co
 bool StructuredConnectionParser::getDropEmpty() const {
   const flow::Node drop_empty_node = connectionNode_[schema_.drop_empty];
   if (drop_empty_node) {
-    return utils::StringUtils::toBool(drop_empty_node.getString().value()).value_or(false);
+    return utils::string::toBool(drop_empty_node.getString().value()).value_or(false);
   }
   return false;
 }

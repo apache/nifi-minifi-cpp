@@ -63,7 +63,7 @@ class Properties {
   }
   // Set the config value
   virtual void set(const std::string &key, const std::string &value, PropertyChangeLifetime lifetime) {
-    auto active_value = utils::StringUtils::replaceEnvironmentVariables(value);
+    auto active_value = utils::string::replaceEnvironmentVariables(value);
     std::lock_guard<std::mutex> lock(mutex_);
     bool should_persist = lifetime == PropertyChangeLifetime::PERSISTENT;
     if (auto it = properties_.find(key); it != properties_.end()) {

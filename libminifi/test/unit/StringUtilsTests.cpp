@@ -36,7 +36,7 @@ namespace org::apache::nifi::minifi::utils {
 
 // NOLINTBEGIN(readability-container-size-empty)
 
-TEST_CASE("string::chomp works correctly", "[StringUtils][chomp]") {
+TEST_CASE("string::chomp works correctly", "[chomp]") {
   using pair_of = std::pair<std::string, std::string>;
   CHECK(string::chomp("foobar") == pair_of{"foobar", ""});
   CHECK(string::chomp("foobar\n") == pair_of{"foobar", "\n"});

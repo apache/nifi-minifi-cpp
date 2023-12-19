@@ -567,7 +567,7 @@ inline std::optional<std::string> get_file_group(const std::filesystem::path& fi
 #endif
 
 inline std::optional<std::filesystem::path> get_relative_path(const std::filesystem::path& path, const std::filesystem::path& base_path) {
-  if (!utils::StringUtils::startsWith(path.string(), base_path.string())) {
+  if (!utils::string::startsWith(path.string(), base_path.string())) {
     return std::nullopt;
   }
 

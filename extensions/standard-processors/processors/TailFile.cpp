@@ -250,7 +250,7 @@ void TailFile::onSchedule(core::ProcessContext& context, core::ProcessSessionFac
   }
 
   if (auto delimiter_str = context.getProperty(Delimiter)) {
-    if (auto parsed_delimiter = utils::StringUtils::parseCharacter(*delimiter_str)) {
+    if (auto parsed_delimiter = utils::string::parseCharacter(*delimiter_str)) {
       delimiter_ = *parsed_delimiter;
     } else {
       logger_->log_error("Invalid {}: \"{}\" (it should be a single character, whether escaped or not). Using the first character as the {}",
@@ -329,13 +329,13 @@ void TailFile::parseAttributeProviderServiceProperty(core::ProcessContext& conte
 
   std::shared_ptr<core::controller::ControllerService> controller_service = context.getControllerService(*attribute_provider_service_name);
   if (!controller_service) {
-    throw minifi::Exception{ExceptionType::PROCESS_SCHEDULE_EXCEPTION, utils::StringUtils::join_pack("Controller service '", *attribute_provider_service_name, "' not found")};
+    throw minifi::Exception{ExceptionType::PROCESS_SCHEDULE_EXCEPTION, utils::string::join_pack("Controller service '", *attribute_provider_service_name, "' not found")};
   }
 
   // we drop ownership of the service here -- in the long term, getControllerService() should return a non-owning pointer or optional reference
   attribute_provider_service_ = dynamic_cast<minifi::controllers::AttributeProviderService*>(controller_service.get());
   if (!attribute_provider_service_) {
-    throw minifi::Exception{ExceptionType::PROCESS_SCHEDULE_EXCEPTION, utils::StringUtils::join_pack("Controller service '", *attribute_provider_service_name, "' is not an AttributeProviderService")};
+    throw minifi::Exception{ExceptionType::PROCESS_SCHEDULE_EXCEPTION, utils::string::join_pack("Controller service '", *attribute_provider_service_name, "' is not an AttributeProviderService")};
   }
 }
 
@@ -370,8 +370,8 @@ void TailFile::parseStateFileLine(char *buf, std::map<std::filesystem::path, Tai
   }
 
   std::string value = equal;
-  key = utils::StringUtils::trimRight(key);
-  value = utils::StringUtils::trimRight(value);
+  key = utils::string::trimRight(key);
+  value = utils::string::trimRight(value);
 
   if (key == "FILENAME") {
     std::filesystem::path file_path = value;
@@ -532,7 +532,7 @@ bool TailFile::storeState() {
 std::string TailFile::parseRollingFilePattern(const TailState &state) const {
   std::size_t last_dot_position = state.file_name_.string().find_last_of('.');
   std::string base_name = state.file_name_.string().substr(0, last_dot_position);
-  return utils::StringUtils::replaceOne(rolling_filename_pattern_, "${filename}", base_name);
+  return utils::string::replaceOne(rolling_filename_pattern_, "${filename}", base_name);
 }
 
 std::vector<TailState> TailFile::findAllRotatedFiles(const TailState &state) const {
