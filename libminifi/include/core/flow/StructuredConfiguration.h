@@ -208,8 +208,8 @@ class StructuredConfiguration : public FlowConfiguration {
    */
   std::string getOptionalField(const Node& node, const std::vector<std::string>& field_name, const std::string& default_value, const std::string& info_message = "");
 
-  std::string serializeYaml(const core::ProcessGroup& process_group);
-  std::string serializeJson(const core::ProcessGroup& process_group);
+  [[nodiscard]] std::string serializeYaml(const core::ProcessGroup& process_group) const;
+  [[nodiscard]] std::string serializeJson(const core::ProcessGroup& process_group) const;
 
   FlowSchema schema_;
   static std::shared_ptr<utils::IdGenerator> id_generator_;
@@ -223,7 +223,8 @@ class StructuredConfiguration : public FlowConfiguration {
   void parsePropertyValueSequence(const std::string& property_name, const Node& property_value_node, core::ConfigurableComponent& component);
   void parseSingleProperty(const std::string& property_name, const Node& property_value_node, core::ConfigurableComponent& processor);
   void parsePropertyNodeElement(const std::string& property_name, const Node& property_value_node, core::ConfigurableComponent& processor);
-  void encryptSensitivePropertiesInYaml(YAML::Node property_yamls, const std::map<std::string, Property>& properties);
+  void encryptSensitivePropertiesInYaml(YAML::Node property_yamls, const std::map<std::string, Property>& properties) const;
+  void encryptSensitivePropertiesInJson(rapidjson::Value& property_jsons, rapidjson::Document::AllocatorType& alloc, const std::map<std::string, Property>& properties) const;
   void addNewId(const std::string& uuid);
 
   /**

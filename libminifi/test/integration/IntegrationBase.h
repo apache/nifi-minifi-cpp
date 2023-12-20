@@ -183,7 +183,8 @@ void IntegrationBase::run(const std::optional<std::filesystem::path>& test_file_
       if (home_path) {
         return utils::crypto::EncryptionProvider::createSensitivePropertiesEncryptor(*home_path);
       } else {
-        return utils::crypto::EncryptionProvider{utils::crypto::XSalsa20Cipher{utils::crypto::XSalsa20Cipher::generateKey()}};
+        auto encryption_key = utils::string::from_hex("e4bce4be67f417ed2530038626da57da7725ff8c0b519b692e4311e4d4fe8a28");
+        return utils::crypto::EncryptionProvider{utils::crypto::XSalsa20Cipher{encryption_key}};
       }
     }();
 

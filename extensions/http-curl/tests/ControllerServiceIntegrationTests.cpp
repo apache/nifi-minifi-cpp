@@ -66,13 +66,14 @@ int main(int argc, char **argv) {
 
   std::shared_ptr<core::ContentRepository> content_repo = std::make_shared<core::repository::VolatileContentRepository>();
   content_repo->initialize(configuration);
+  auto encryption_key = utils::string::from_hex("e4bce4be67f417ed2530038626da57da7725ff8c0b519b692e4311e4d4fe8a28");
   std::unique_ptr<core::FlowConfiguration> yaml_ptr = std::make_unique<core::YamlConfiguration>(core::ConfigurationContext{
       .flow_file_repo = test_repo,
       .content_repo = content_repo,
       .configuration = configuration,
       .path = args.test_file,
       .filesystem = std::make_shared<utils::file::FileSystem>(),
-      .sensitive_properties_encryptor = utils::crypto::EncryptionProvider{utils::crypto::XSalsa20Cipher{utils::crypto::XSalsa20Cipher::generateKey()}}
+      .sensitive_properties_encryptor = utils::crypto::EncryptionProvider{utils::crypto::XSalsa20Cipher{encryption_key}}
   });
   const auto controller = std::make_shared<minifi::FlowController>(test_repo, test_flow_repo, configuration, std::move(yaml_ptr), content_repo);
 
@@ -85,7 +86,7 @@ int main(int argc, char **argv) {
       .configuration = configuration,
       .path = args.test_file,
       .filesystem = std::make_shared<utils::file::FileSystem>(),
-      .sensitive_properties_encryptor = utils::crypto::EncryptionProvider{utils::crypto::XSalsa20Cipher{utils::crypto::XSalsa20Cipher::generateKey()}}
+      .sensitive_properties_encryptor = utils::crypto::EncryptionProvider{utils::crypto::XSalsa20Cipher{encryption_key}}
   });
   auto pg = yaml_config.getRoot();
 

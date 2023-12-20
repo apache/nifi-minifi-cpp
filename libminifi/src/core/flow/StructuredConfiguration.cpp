@@ -19,16 +19,21 @@
 #include <memory>
 #include <vector>
 #include <set>
-#include <cinttypes>
 
+#include "rapidjson/document.h"
+#include "rapidjson/prettywriter.h"
 #include "core/flow/StructuredConfiguration.h"
 #include "core/flow/CheckRequiredField.h"
 #include "core/flow/StructuredConnectionParser.h"
 #include "core/state/Value.h"
-#include "Defaults.h"
 #include "utils/TimeUtil.h"
 #include "utils/RegexUtils.h"
 #include "Funnel.h"
+
+#ifdef WIN32
+#pragma push_macro("GetObject")
+#undef GetObject  // windows.h #defines GetObject = GetObjectA or GetObjectW, which conflicts with rapidjson
+#endif
 
 namespace org::apache::nifi::minifi::core::flow {
 
@@ -44,7 +49,10 @@ std::unique_ptr<core::ProcessGroup> StructuredConfiguration::getRoot() {
     // non-existence of flow config file is not a dealbreaker, the caller might fetch it from network
     return nullptr;
   }
-  return getRootFromPayload(configuration.value());
+  auto process_group = getRootFromPayload(configuration.value());
+  gsl_Expects(process_group);
+  persist(*process_group);
+  return process_group;
 }
 
 StructuredConfiguration::StructuredConfiguration(ConfigurationContext ctx, std::shared_ptr<logging::Logger> logger)
@@ -910,29 +918,44 @@ void StructuredConfiguration::addNewId(const std::string& uuid) {
   }
 }
 
-void StructuredConfiguration::encryptSensitivePropertiesInYaml(YAML::Node property_yamls, const std::map<std::string, Property>& properties) {
+void StructuredConfiguration::encryptSensitivePropertiesInYaml(YAML::Node property_yamls, const std::map<std::string, Property>& properties) const {
   for (auto kv : property_yamls) {
     auto name = kv.first.as<std::string>();
+    if (!properties.contains(name)) {
+      logger_->log_warn("Property {} found in flow definition does not exist!", name);
+      continue;
+    }
     if (properties.at(name).isSensitive()) {
-      auto value = kv.second.as<std::string>();
-      property_yamls[name] = encryptProperty(value);
+      if (kv.second.IsSequence()) {
+        for (auto property_item : kv.second) {
+          auto value = property_item["value"].as<std::string>();
+          property_item["value"] = encryptProperty(value);
+        }
+      } else {
+        auto value = kv.second.as<std::string>();
+        property_yamls[name] = encryptProperty(value);
+      }
     }
   }
 }
 
-std::string StructuredConfiguration::serializeYaml(const core::ProcessGroup& process_group) {
-  gsl_Expects(schema_.processors.size() == 1 && schema_.identifier.size() == 1 && schema_.processor_properties.size() == 1 && schema_.controller_service_properties.size() == 1);
+std::string StructuredConfiguration::serializeYaml(const core::ProcessGroup& process_group) const {
+  gsl_Expects(schema_.identifier.size() == 1 &&
+      schema_.processors.size() == 1 && schema_.processor_properties.size() == 1 &&
+      schema_.controller_services.size() == 1 && schema_.controller_service_properties.size() == 1);
 
   auto flow_definition_yaml = YAML::Clone(flow_definition_yaml_);
 
   for (auto processor_yaml : flow_definition_yaml[schema_.processors[0]]) {
     const auto processor_id = utils::Identifier::parse(processor_yaml[schema_.identifier[0]].Scalar());
     if (!processor_id) {
-      throw minifi::Exception(FLOW_EXCEPTION, utils::string::join_pack("Invalid processor ID found in the flow definition", processor_yaml[schema_.identifier[0]].Scalar()));
+      logger_->log_warn("Invalid processor ID found in the flow definition: {}", processor_yaml[schema_.identifier[0]].Scalar());
+      continue;
     }
     const auto* processor = process_group.findProcessorById(*processor_id);
     if (!processor) {
-      throw minifi::Exception(FLOW_EXCEPTION, utils::string::join_pack("Processor ", processor_id->to_string(), " not found in the flow definition"));
+      logger_->log_warn("Processor {} not found in the flow definition", processor_id->to_string());
+      continue;
     }
     encryptSensitivePropertiesInYaml(processor_yaml[schema_.processor_properties[0]], processor->getProperties());
   }
@@ -941,11 +964,13 @@ std::string StructuredConfiguration::serializeYaml(const core::ProcessGroup& pro
     const auto controller_service_id = controller_service_yaml[schema_.identifier[0]].Scalar();
     const auto controller_service_node = process_group.findControllerService(controller_service_id);
     if (!controller_service_node) {
-      throw minifi::Exception(FLOW_EXCEPTION, utils::string::join_pack("Controller service node ", controller_service_id, " not found in the flow definition"));
+      logger_->log_warn("Controller service node {} not found in the flow definition", controller_service_id);
+      continue;
     }
     auto controller_service = controller_service_node->getControllerServiceImplementation();
     if (!controller_service) {
-      throw minifi::Exception(FLOW_EXCEPTION, utils::string::join_pack("Controller service ", controller_service_id, " not found in the flow definition"));
+      logger_->log_warn("Controller service {} not found in the flow definition", controller_service_id);
+      continue;
     }
     encryptSensitivePropertiesInYaml(controller_service_yaml[schema_.controller_service_properties[0]], controller_service->getProperties());
   }
@@ -953,12 +978,71 @@ std::string StructuredConfiguration::serializeYaml(const core::ProcessGroup& pro
   return YAML::Dump(flow_definition_yaml) + '\n';
 }
 
-std::string StructuredConfiguration::serializeJson(const core::ProcessGroup& /*process_group*/) {
-  // TODO(fgerlits): encrypt sensitive properties
+void StructuredConfiguration::encryptSensitivePropertiesInJson(rapidjson::Value& property_jsons, rapidjson::Document::AllocatorType& alloc, const std::map<std::string, Property>& properties) const {
+  for (auto& property : property_jsons.GetObject()) {
+    std::string name{property.name.GetString()};
+    if (!properties.contains(name)) {
+      logger_->log_warn("Property {} found in flow definition does not exist!", name);
+      continue;
+    }
+    if (properties.at(name).isSensitive()) {
+      auto& value = property.value;
+      std::string encrypted_value = encryptProperty(value.GetString());
+      value.SetString(encrypted_value.c_str(), encrypted_value.size(), alloc);
+    }
+  }
+}
+
+std::string StructuredConfiguration::serializeJson(const core::ProcessGroup& process_group) const {
+  gsl_Expects(schema_.root_group.size() == 1 && schema_.identifier.size() == 1 &&
+      schema_.processors.size() == 1 && schema_.processor_properties.size() == 1 &&
+      schema_.controller_services.size() == 1 && schema_.controller_service_properties.size() == 1);
+
+  rapidjson::Document doc;
+  auto alloc = doc.GetAllocator();
+  rapidjson::Value flow_definition_json;
+  flow_definition_json.CopyFrom(flow_definition_json_, alloc);
+  auto& root_group = flow_definition_json[schema_.root_group[0]];
+
+  auto processors = root_group[schema_.processors[0]].GetArray();
+  for (auto& processor_json : processors) {
+    const auto processor_id = utils::Identifier::parse(processor_json[schema_.identifier[0]].GetString());
+    if (!processor_id) {
+      logger_->log_warn("Invalid processor ID found in the flow definition: {}", processor_json[schema_.identifier[0]].GetString());
+      continue;
+    }
+    const auto processor = process_group.findProcessorById(*processor_id);
+    if (!processor) {
+      logger_->log_warn("Processor {} not found in the flow definition", processor_id->to_string());
+      continue;
+    }
+    encryptSensitivePropertiesInJson(processor_json[schema_.processor_properties[0]], alloc, processor->getProperties());
+  }
+
+  auto controller_services = root_group[schema_.controller_services[0]].GetArray();
+  for (auto& controller_service_json : controller_services) {
+    const auto controller_service_id = controller_service_json[schema_.identifier[0]].GetString();
+    const auto controller_service_node = process_group.findControllerService(controller_service_id);
+    if (!controller_service_node) {
+      logger_->log_warn("Controller service node {} not found in the flow definition", controller_service_id);
+      continue;
+    }
+    const auto controller_service = controller_service_node->getControllerServiceImplementation();
+    if (!controller_service) {
+      logger_->log_warn("Controller service {} not found in the flow definition", controller_service_id);
+      continue;
+    }
+    encryptSensitivePropertiesInJson(controller_service_json[schema_.controller_service_properties[0]], alloc, controller_service->getProperties());
+  }
+
   rapidjson::StringBuffer buffer;
-  rapidjson::Writer<rapidjson::StringBuffer> writer{buffer};
-  flow_definition_json_.Accept(writer);
+  rapidjson::PrettyWriter<rapidjson::StringBuffer> writer{buffer};
+  flow_definition_json.Accept(writer);
   return std::string(buffer.GetString(), buffer.GetSize()) + '\n';
 }
 
 }  // namespace org::apache::nifi::minifi::core::flow
+
+#ifdef WIN32
+#pragma pop_macro("GetObject")
+#endif

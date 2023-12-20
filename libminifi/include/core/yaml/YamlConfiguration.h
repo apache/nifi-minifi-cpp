@@ -61,7 +61,7 @@ class YamlConfiguration : public flow::StructuredConfiguration {
    */
   std::unique_ptr<core::ProcessGroup> getRootFromPayload(const std::string &yamlConfigPayload) override;
 
-  std::string serialize(const core::ProcessGroup& process_group) override { return serializeYaml(process_group); };
+  std::string serialize(const core::ProcessGroup& process_group) override { return serializeYaml(process_group); }
 };
 
 }  // namespace org::apache::nifi::minifi::core
