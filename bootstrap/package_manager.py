@@ -12,12 +12,10 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-import glob
 import os
 import platform
 import subprocess
 import sys
-import re
 from typing import Dict, Set
 
 from distro import distro
@@ -175,13 +173,6 @@ class PacmanPackageManager(PackageManager):
         return ""
 
 
-def _fix_strawberry_perl_install():
-    strawberry_perl_toolchain_path = "c:/strawberry/c/bin/*"
-    for strawberry_tool in glob.glob(strawberry_perl_toolchain_path):
-        if not strawberry_tool.endswith("nasm.exe"):
-            os.remove(strawberry_tool)
-
-
 def _get_vs_dev_cmd_path() -> str:
     vswhere_results = subprocess.run(
         "vswhere -products * -property installationPath -requires Microsoft.VisualStudio.Component.VC.ATL",
@@ -197,6 +188,7 @@ def _get_vs_dev_cmd_path() -> str:
 def _get_vs_dev_cmd() -> str:
     vs_dev_path = _get_vs_dev_cmd_path()
     return f"{vs_dev_path} -arch=x64 -host_arch=x64"
+
 
 class ChocolateyPackageManager(PackageManager):
     def __init__(self, no_confirm):
@@ -220,15 +212,15 @@ class ChocolateyPackageManager(PackageManager):
                                     "libusb": set(),
                                     "make": set(),
                                     "jni": {"openjdk", "maven"},
-                                    "openssl": {"strawberryperl"}})
-        if "openssl" in dependencies:
-            _fix_strawberry_perl_install()
+                                    "openssl": {"strawberryperl", "NASM"}})
         return True
 
     def _get_installed_packages(self) -> Set[str]:
         result = subprocess.run(['choco', 'list'], text=True, capture_output=True, check=True)
         lines = [line.split(' ')[0] for line in result.stdout.splitlines()]
         lines = [line.rsplit('.', 1)[0] for line in lines]
+        if os.path.exists("C:\\Program Files\\NASM"):
+            lines.append("NASM")    # choco doesnt remember NASM
         return set(lines)
 
     def install_compiler(self) -> str:
@@ -240,7 +232,9 @@ class ChocolateyPackageManager(PackageManager):
         return ""
 
     def run_cmd(self, cmd: str) -> bool:
-        res = subprocess.run(f"refreshenv & {_get_vs_dev_cmd()} & {cmd}", shell=True)
+        cmd_command = f"refreshenv & {_get_vs_dev_cmd()} & set PATH=!PATH:C:\\Strawberry\\c\\bin;=!;C:\\Program Files\\NASM; & {cmd}"
+        cmd_command_list = f'cmd /V:ON /C {cmd_command}'
+        res = subprocess.run(cmd_command_list, check=True, text=True)
 
         return res.returncode == 0
 

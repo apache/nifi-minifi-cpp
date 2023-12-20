@@ -216,12 +216,8 @@ jobs:
           if ((Get-FileHash 'sqliteodbc_w64.exe').Hash -ne "a4804e4f54f42c721df1323c5fcac101a8c7a577e7f20979227324ceab572d51") {Write "Hash mismatch"; Exit 1}
           Start-Process -FilePath ".\sqliteodbc_w64.exe" -ArgumentList "/S" -Wait
         shell: powershell
-      - name: Install NASM
-        run: |
-          choco install nasm -y
-        shell: cmd
-      - name: Add NASM and sccache to path
-        run: '[Environment]::SetEnvironmentVariable("PATH", [Environment]::GetEnvironmentVariable("PATH", [EnvironmentVariableTarget]::Machine) + ";C:\Program Files\NASM;C:\hostedtoolcache\windows\sccache\0.7.4\x64\", [EnvironmentVariableTarget]::Machine);'
+      - name: Add sccache to path
+        run: '[Environment]::SetEnvironmentVariable("PATH", [Environment]::GetEnvironmentVariable("PATH", [EnvironmentVariableTarget]::Machine) + ";C:\hostedtoolcache\windows\sccache\0.7.4\x64\", [EnvironmentVariableTarget]::Machine);'
         shell: powershell
       - name: build
         run: |
