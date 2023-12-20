@@ -62,7 +62,7 @@ add_minifi_option(MINIFI_USE_REAL_ODBC_TEST_DRIVER "Use SQLite ODBC driver in SQ
 # By default, neither Clang or GCC will add ANSI-formatted colors to your output if they detect
 # the output medium is not a terminal. This means no coloring when using a generator
 # different than "GNU Makefiles".
-add_minifi_option(FORCE_COLORED_OUTPUT "Always produce ANSI-colored output (GNU/Clang only)." FALSE)
+add_minifi_option(FORCE_COLORED_OUTPUT "Always produce ANSI-colored output (GNU/Clang only)." ON)
 add_minifi_option(AWS_ENABLE_UNITY_BUILD "If enabled, AWS SDK libraries will be built as a single, generated .cpp file. \
     This can significantly reduce static library size as well as speed up a single compilation time, but it is regenerated \
     and recompiled in every iterative build instance. Turn off to avoid recompilation." ON)
