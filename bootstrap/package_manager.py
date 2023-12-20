@@ -88,7 +88,7 @@ class BrewPackageManager(PackageManager):
                                            "jni": {"maven"}})
 
     def install_compiler(self) -> str:
-        self.install({"compiler": {"llvm"}})
+        self.install({"compiler": set()})
         return ""
 
     def _get_installed_packages(self) -> Set[str]:
@@ -122,7 +122,7 @@ class AptPackageManager(PackageManager):
 
     def install_compiler(self) -> str:
         if distro.id() == "ubuntu" and int(distro.major_version()) < 22:
-            self.install({"compiler_prereq": {"software-properties-common"}})
+            self.install({"compiler_prereq": {"apt-transport-https", "ca-certificates", "software-properties-common"}})
             _run_command_with_confirm("sudo add-apt-repository -y ppa:ubuntu-toolchain-r/test",
                                       no_confirm=self.no_confirm)
             self.install({"compiler": {"build-essential", "g++-11"}})
@@ -197,66 +197,6 @@ def _get_vs_dev_cmd_path() -> str:
 def _get_vs_dev_cmd() -> str:
     vs_dev_path = _get_vs_dev_cmd_path()
     return f"{vs_dev_path} -arch=x64 -host_arch=x64"
-
-
-class WingetPackageManager(PackageManager):
-    def __init__(self, no_confirm):
-        PackageManager.__init__(self, no_confirm)
-
-    # winget cant install maven due to github.com/microsoft/winget-cli/issues/3386
-    @staticmethod
-    def _install_maven():
-        subprocess.run("pip install maven", text=True, shell=True)
-
-    def install(self, dependencies: Dict[str, Set[str]]) -> bool:
-        if "maven" in dependencies:
-            self._install_maven()
-            dependencies.pop("maven")
-        self._install(dependencies=dependencies,
-                      install_cmd="winget install --disable-interactivity --accept-package-agreements",
-                      replace_dict={"lua": {"DEVCOM.Lua"},
-                                    "python": set(),
-                                    "patch": set(),
-                                    "bison": set(),
-                                    "flex": set(),
-                                    "libarchive": set(),
-                                    "libpcap": set(),
-                                    "libpng": set(),
-                                    "gpsd": set(),
-                                    "automake": set(),
-                                    "autoconf": set(),
-                                    "libtool": set(),
-                                    "libusb": set(),
-                                    "make": set(),
-                                    "jni": {"AdoptOpenJDK.OpenJDK.8"},
-                                    "openssl": {"StrawberryPerl.StrawberryPerl"}})
-        if "openssl" in dependencies:
-            _fix_strawberry_perl_install()
-        return True
-
-    def _get_installed_packages(self) -> Set[str]:
-        result = subprocess.run(['winget', 'list'], text=True, capture_output=True, check=True)
-        separator_index = result.stdout.find("-----")
-        result_set = set()
-
-        for line in result.stdout[separator_index:].splitlines()[1:]:
-            package_columns = re.split(r"\s{2,}", line)
-            result_set.add(package_columns[0])  # name
-            result_set.add(package_columns[1])  # id
-        return result_set
-
-    def install_compiler(self) -> str:
-        self.install({"path_updater": {"WingetPathUpdater"}})
-        self.install({"compiler": {'Microsoft.VisualStudio.2022.BuildTools --silent --override "--wait --quiet '
-                                   '--add Microsoft.VisualStudio.Workload.VCTools '
-                                   '--add Microsoft.VisualStudio.Component.VC.ATL --includeRecommended"'}})
-        return ""
-
-    def run_cmd(self, cmd: str) -> bool:
-        res = subprocess.run(f"{_get_vs_dev_cmd()} & {cmd}", shell=True)
-
-        return res.returncode == 0
-
 
 class ChocolateyPackageManager(PackageManager):
     def __init__(self, no_confirm):
