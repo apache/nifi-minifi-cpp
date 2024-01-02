@@ -114,7 +114,7 @@ class PushGrafanaLokiREST : public core::Processor {
   };
 
   EXTENSIONAPI static constexpr auto Success = core::RelationshipDefinition{"success", "All flowfiles that succeed in being transferred into Grafana Loki go here."};
-  EXTENSIONAPI static constexpr auto Failure = core::RelationshipDefinition{"failure", "All flowfiles that fail for reasons unrelated to server availability go to this relationship."};
+  EXTENSIONAPI static constexpr auto Failure = core::RelationshipDefinition{"failure", "If a submitted request fails all flow files in the batch are transferred to this relationship."};
   EXTENSIONAPI static constexpr auto Relationships = std::array{Success, Failure};
 
   EXTENSIONAPI static constexpr bool SupportsDynamicProperties = false;
@@ -144,12 +144,12 @@ class PushGrafanaLokiREST : public core::Processor {
     void setLogLineBatchSize(std::optional<uint64_t> log_line_batch_size);
     void setLogLineBatchWait(std::optional<std::chrono::milliseconds> log_line_batch_wait);
     void setStateManager(core::StateManager* state_manager);
-    void setStartPushTime(std::chrono::steady_clock::time_point start_push_time);
+    void setStartPushTime(std::chrono::system_clock::time_point start_push_time);
 
    private:
     std::optional<uint64_t> log_line_batch_size_ = 1;
     std::optional<std::chrono::milliseconds> log_line_batch_wait_;
-    std::chrono::steady_clock::time_point start_push_time_;
+    std::chrono::system_clock::time_point start_push_time_;
     std::vector<std::shared_ptr<core::FlowFile>> batched_flowfiles_;
     core::StateManager* state_manager_;
     std::shared_ptr<core::logging::Logger> logger_;

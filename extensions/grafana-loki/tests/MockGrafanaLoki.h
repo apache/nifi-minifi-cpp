@@ -60,8 +60,11 @@ class GrafanaLokiHandler : public CivetHandler {
     }
 
     std::array<char, 2048> request;
-    size_t chars_read = mg_read(conn, request.data(), 2048);
-    std::string json_str(request.data(), chars_read);
+    auto chars_read = mg_read(conn, request.data(), 2048);
+    if (chars_read < 0) {
+      return false;
+    }
+    std::string json_str(request.data(), gsl::narrow<size_t>(chars_read));
     request_received_.Parse(json_str.c_str());
 
     mg_printf(conn, "HTTP/1.1 204 OK\r\n");
@@ -77,14 +80,10 @@ class GrafanaLokiHandler : public CivetHandler {
 
 class MockGrafanaLoki {
  public:
-  explicit MockGrafanaLoki(std::string port) : port_(std::move(port)) {
-    std::vector<std::string> options;
-    options.emplace_back("listening_ports");
-    options.emplace_back(port_);
-
-    server_ = std::make_unique<CivetServer>(options, &callbacks_, &logger_);
-    loki_handler_ = std::make_unique<GrafanaLokiHandler>();
-    server_->addHandler("/loki/api/v1/push", *loki_handler_);
+  explicit MockGrafanaLoki(std::string port) :
+      port_(std::move(port)),
+      server_{{"listening_ports", port_}, &callbacks_, &logger_} {
+    server_.addHandler("/loki/api/v1/push", loki_handler_);
   }
 
   [[nodiscard]] const std::string& getPort() const {
@@ -92,25 +91,24 @@ class MockGrafanaLoki {
   }
 
   const rapidjson::Document& getLastRequest() const {
-    return loki_handler_->getLastRequest();
+    return loki_handler_.getLastRequest();
   }
 
   std::string getLastTenantId() const {
-    return loki_handler_->getLastTenantId();
+    return loki_handler_.getLastTenantId();
   }
 
   std::string getLastAuthorization() const {
-    return loki_handler_->getLastAuthorization();
+    return loki_handler_.getLastAuthorization();
   }
 
  private:
   CivetLibrary lib_;
   std::string port_;
-  std::unique_ptr<CivetServer> server_;
-  std::unique_ptr<GrafanaLokiHandler> loki_handler_;
-
   CivetCallbacks callbacks_;
   std::shared_ptr<org::apache::nifi::minifi::core::logging::Logger> logger_ = org::apache::nifi::minifi::core::logging::LoggerFactory<MockGrafanaLoki>::getLogger();
+  CivetServer server_;
+  GrafanaLokiHandler loki_handler_;
 };
 
 }  // namespace org::apache::nifi::minifi::extensions::grafana::loki::test

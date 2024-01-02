@@ -34,21 +34,21 @@ class GrafanaLokiChecker:
             headers = {'X-Scope-OrgID': tenant_id}
 
         response = requests.get(query_url, verify=False, timeout=30, headers=headers)
-        if response.status_code >= 200 and response.status_code < 300:
-            json_response = response.json()
-            if "data" not in json_response or "result" not in json_response["data"] or len(json_response["data"]["result"]) < 1:
+        if response.status_code < 200 or response.status_code >= 300:
+            return False
+
+        json_response = response.json()
+        if "data" not in json_response or "result" not in json_response["data"] or len(json_response["data"]["result"]) < 1:
+            return False
+
+        result = json_response["data"]["result"][0]
+        if "values" not in result:
+            return False
+
+        for line in lines:
+            if line not in str(result["values"]):
                 return False
-
-            result = json_response["data"]["result"][0]
-            if "values" not in result:
-                return False
-
-            for line in lines:
-                if line not in str(result["values"]):
-                    return False
-            return True
-
-        return False
+        return True
 
     def wait_for_lines_on_grafana_loki(self, lines: List[str], timeout_seconds: int, ssl: bool, tenant_id: str):
         return wait_for(lambda: self.veify_log_lines_on_grafana_loki(lines, ssl, tenant_id), timeout_seconds)

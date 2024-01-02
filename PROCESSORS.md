@@ -2225,10 +2225,10 @@ In the list below, the names of required properties appear in bold. Any other pr
 
 ### Relationships
 
-| Name    | Description                                                                                   |
-|---------|-----------------------------------------------------------------------------------------------|
-| success | All flowfiles that succeed in being transferred into Grafana Loki go here.                    |
-| failure | All flowfiles that fail for reasons unrelated to server availability go to this relationship. |
+| Name    | Description                                                                                    |
+|---------|------------------------------------------------------------------------------------------------|
+| success | All flowfiles that succeed in being transferred into Grafana Loki go here.                     |
+| failure | If a submitted request fails all flow files in the batch are transferred to this relationship. |
 
 
 ## PutAzureBlobStorage

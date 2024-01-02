@@ -34,7 +34,7 @@ namespace org::apache::nifi::minifi::extensions::grafana::loki {
 void PushGrafanaLokiREST::LogBatch::add(const std::shared_ptr<core::FlowFile>& flowfile) {
   gsl_Expects(state_manager_);
   if (log_line_batch_wait_ && batched_flowfiles_.empty()) {
-    start_push_time_ = std::chrono::steady_clock::now();
+    start_push_time_ = std::chrono::system_clock::now();
     std::unordered_map<std::string, std::string> state;
     state["start_push_time"] = std::to_string(std::chrono::duration_cast<std::chrono::milliseconds>(start_push_time_.time_since_epoch()).count());
     logger_->log_debug("Saved start push time to state: {}", state["start_push_time"]);
@@ -53,7 +53,6 @@ std::vector<std::shared_ptr<core::FlowFile>> PushGrafanaLokiREST::LogBatch::flus
   auto result = batched_flowfiles_;
   batched_flowfiles_.clear();
   if (log_line_batch_wait_) {
-    start_push_time_ = {};
     std::unordered_map<std::string, std::string> state;
     logger_->log_debug("Reset start push time state");
     state["start_push_time"] = "0";
@@ -63,7 +62,7 @@ std::vector<std::shared_ptr<core::FlowFile>> PushGrafanaLokiREST::LogBatch::flus
 }
 
 bool PushGrafanaLokiREST::LogBatch::isReady() const {
-  return (log_line_batch_size_ && batched_flowfiles_.size() >= *log_line_batch_size_) || (log_line_batch_wait_ && std::chrono::steady_clock::now() - start_push_time_ >= *log_line_batch_wait_);
+  return (log_line_batch_size_ && batched_flowfiles_.size() >= *log_line_batch_size_) || (log_line_batch_wait_ && std::chrono::system_clock::now() - start_push_time_ >= *log_line_batch_wait_);
 }
 
 void PushGrafanaLokiREST::LogBatch::setLogLineBatchSize(std::optional<uint64_t> log_line_batch_size) {
@@ -78,7 +77,7 @@ void PushGrafanaLokiREST::LogBatch::setStateManager(core::StateManager* state_ma
   state_manager_ = state_manager;
 }
 
-void PushGrafanaLokiREST::LogBatch::setStartPushTime(std::chrono::steady_clock::time_point start_push_time) {
+void PushGrafanaLokiREST::LogBatch::setStartPushTime(std::chrono::system_clock::time_point start_push_time) {
   start_push_time_ = start_push_time;
 }
 
@@ -96,11 +95,6 @@ auto getSSLContextService(core::ProcessContext& context) {
   }
   return std::shared_ptr<minifi::controllers::SSLContextService>{};
 }
-
-std::string readLogLineFromFlowFile(const std::shared_ptr<core::FlowFile>& flow_file, core::ProcessSession& session) {
-  auto read_buffer_result = session.readBuffer(flow_file);
-  return {reinterpret_cast<const char*>(read_buffer_result.buffer.data()), read_buffer_result.buffer.size()};
-}
 }  // namespace
 
 void PushGrafanaLokiREST::setUpStateManager(core::ProcessContext& context) {
@@ -115,7 +109,7 @@ void PushGrafanaLokiREST::setUpStateManager(core::ProcessContext& context) {
     auto it = state_map.find("start_push_time");
     if (it != state_map.end()) {
       logger_->log_info("Restored start push time from processor state: {}", it->second);
-      std::chrono::steady_clock::time_point start_push_time{std::chrono::milliseconds{std::stoll(it->second)}};
+      std::chrono::system_clock::time_point start_push_time{std::chrono::milliseconds{std::stoll(it->second)}};
       log_batch_.setStartPushTime(start_push_time);
     }
   }
@@ -125,17 +119,17 @@ void PushGrafanaLokiREST::setUpStreamLabels(core::ProcessContext& context) {
   if (auto stream_labels_str = context.getProperty(StreamLabels)) {
     auto stream_labels = utils::StringUtils::splitAndTrimRemovingEmpty(*stream_labels_str, ",");
     if (stream_labels.empty()) {
-      throw Exception(PROCESS_SCHEDULE_EXCEPTION, "Missing or invalid Stream Label Attributes");
+      throw Exception(PROCESS_SCHEDULE_EXCEPTION, "Missing or invalid Stream Labels property");
     }
     for (const auto& label : stream_labels) {
       auto stream_labels = utils::StringUtils::splitAndTrimRemovingEmpty(label, "=");
       if (stream_labels.size() != 2) {
-        throw Exception(PROCESS_SCHEDULE_EXCEPTION, "Missing or invalid Stream Label Attributes");
+        throw Exception(PROCESS_SCHEDULE_EXCEPTION, "Missing or invalid Stream Labels property");
       }
       stream_label_attributes_[stream_labels[0]] = stream_labels[1];
     }
   } else {
-    throw Exception(PROCESS_SCHEDULE_EXCEPTION, "Missing or invalid Stream Label Attributes");
+    throw Exception(PROCESS_SCHEDULE_EXCEPTION, "Missing or invalid Stream Labels property");
   }
 }
 
@@ -162,7 +156,7 @@ void PushGrafanaLokiREST::setAuthorization(const core::ProcessContext& context) 
     if (!std::filesystem::exists(*bearer_token_file) || !std::filesystem::is_regular_file(*bearer_token_file)) {
       throw Exception(PROCESS_SCHEDULE_EXCEPTION, "Bearer Token File is not a regular file!");
     }
-    std::ifstream file(*bearer_token_file);
+    std::ifstream file(*bearer_token_file, std::ios::binary);
     std::stringstream buffer;
     buffer << file.rdbuf();
     std::string bearer_token = utils::StringUtils::trim(buffer.str());
@@ -206,7 +200,7 @@ void PushGrafanaLokiREST::onSchedule(core::ProcessContext& context, core::Proces
   }
   auto log_line_batch_wait = context.getProperty<core::TimePeriodValue>(LogLineBatchWait);
   auto log_line_batch_size = context.getProperty<uint64_t>(LogLineBatchSize);
-    if (log_line_batch_size && *log_line_batch_size < 1) {
+  if (log_line_batch_size && *log_line_batch_size < 1) {
     throw Exception(PROCESS_SCHEDULE_EXCEPTION, "Log Line Batch Size property is invalid!");
   }
   log_line_batch_size_is_set_ = log_line_batch_size.has_value();
@@ -272,7 +266,7 @@ std::string PushGrafanaLokiREST::createLokiJson(const std::vector<std::shared_pt
     timestamp.SetString(timestamp_str.c_str(), gsl::narrow<rapidjson::SizeType>(timestamp_str.length()), allocator);
     rapidjson::Value log_line_value;
 
-    auto line = readLogLineFromFlowFile(flow_file, session);
+    auto line = to_string(session.readBuffer(flow_file));
     log_line_value.SetString(line.c_str(), gsl::narrow<rapidjson::SizeType>(line.length()), allocator);
 
     log_line.PushBack(timestamp, allocator);
