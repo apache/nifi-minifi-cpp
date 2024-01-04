@@ -91,15 +91,11 @@ void GenerateFlowFile::onSchedule(core::ProcessContext& context, core::ProcessSe
 
 // If the Data Format is text and if Unique FlowFiles is false, the custom text has to be evaluated once per batch
 void GenerateFlowFile::regenerateNonUniqueData(core::ProcessContext& context) {
+  if (!textData_ || unique_flow_file_) return;
+
   std::string custom_text;
   context.getProperty(CustomText, custom_text, nullptr);
-  if (!custom_text.empty()) {
-    if (textData_ && !unique_flow_file_) {
-      non_unique_data_.assign(custom_text.begin(), custom_text.end());
-      return;
-    }
-    logger_->log_warn("Custom Text property is set, but not used!");
-  }
+  non_unique_data_.assign(custom_text.begin(), custom_text.end());
 }
 
 void GenerateFlowFile::onTrigger(core::ProcessContext& context, core::ProcessSession& session) {
