@@ -37,6 +37,7 @@ jobs:
     timeout-minutes: 180
     needs: centos-build
     strategy:
+      fail-fast: false
       matrix:
         platform: [
           { name: "Rocky Linux 8",
@@ -82,3 +83,9 @@ jobs:
           output-to: 'step-summary'
           list-tests: 'failed'
           list-suites: 'failed'
+      - name: Upload artifact
+        if: failure()
+        uses: actions/upload-artifact@v3
+        with:
+          name: behavex_output
+          path: build/behavex_output
