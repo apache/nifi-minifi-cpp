@@ -66,14 +66,15 @@ class GenerateFlowFile : public core::Processor {
       .withDefaultValue("Binary")
       .build();
   EXTENSIONAPI static constexpr auto UniqueFlowFiles = core::PropertyDefinitionBuilder<>::createProperty("Unique FlowFiles")
-      .withDescription("If true, each FlowFile that is generated will be unique. If false, a random value will be generated and all FlowFiles")
+      .withDescription("If true, each FlowFile that is generated will be unique. "
+          "If false, a random value will be generated and all FlowFiles will get the same content but this offers much higher throughput")
       .isRequired(false)
       .withPropertyType(core::StandardPropertyTypes::BOOLEAN_TYPE)
       .withDefaultValue("true")
       .build();
   EXTENSIONAPI static constexpr auto CustomText = core::PropertyDefinitionBuilder<>::createProperty("Custom Text")
       .withDescription("If Data Format is text and if Unique FlowFiles is false, then this custom text will be used as content of the generated FlowFiles and the File Size will be ignored. "
-                       "Finally, if Expression Language is used, evaluation will be performed only once per batch of generated FlowFiles")
+          "Finally, if Expression Language is used, evaluation will be performed only once per batch of generated FlowFiles")
       .supportsExpressionLanguage(true)
       .build();
   EXTENSIONAPI static constexpr auto Properties = std::array<core::PropertyReference, 5>{

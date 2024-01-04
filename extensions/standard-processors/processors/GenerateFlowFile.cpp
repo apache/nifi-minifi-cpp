@@ -58,11 +58,11 @@ void generateData(std::vector<char>& data, const bool text_data = false) {
 }
 
 void GenerateFlowFile::onSchedule(core::ProcessContext& context, core::ProcessSessionFactory&) {
-  if (context.getProperty(FileSize.name, file_size_)) {
+  if (context.getProperty(FileSize, file_size_)) {
     logger_->log_trace("File size is configured to be {}", file_size_);
   }
 
-  if (context.getProperty(BatchSize.name, batch_size_)) {
+  if (context.getProperty(BatchSize, batch_size_)) {
     logger_->log_trace("Batch size is configured to be {}", batch_size_);
   }
 
@@ -93,9 +93,9 @@ void GenerateFlowFile::onSchedule(core::ProcessContext& context, core::ProcessSe
 void GenerateFlowFile::regenerateNonUniqueData(core::ProcessContext& context) {
   if (!textData_ || unique_flow_file_) return;
 
-  std::string custom_text;
-  context.getProperty(CustomText, custom_text, nullptr);
-  non_unique_data_.assign(custom_text.begin(), custom_text.end());
+  if (auto custom_text = context.getProperty(CustomText, nullptr)) {
+    non_unique_data_.assign(custom_text->begin(), custom_text->end());
+  }
 }
 
 void GenerateFlowFile::onTrigger(core::ProcessContext& context, core::ProcessSession& session) {
