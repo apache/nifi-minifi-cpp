@@ -252,7 +252,7 @@ std::vector<SharedResponseNode> ResponseNodeLoader::getComponentMetricsNodes(con
   }
   std::lock_guard<std::mutex> lock(component_metrics_mutex_);
   static const std::string PROCESSOR_FILTER_PREFIX = "processorMetrics/";
-  if (utils::StringUtils::startsWith(metrics_class, PROCESSOR_FILTER_PREFIX)) {
+  if (utils::string::startsWith(metrics_class, PROCESSOR_FILTER_PREFIX)) {
     auto regex_str = metrics_class.substr(PROCESSOR_FILTER_PREFIX.size());
     return getMatchingComponentMetricsNodes(regex_str);
   } else {

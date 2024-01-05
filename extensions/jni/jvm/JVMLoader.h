@@ -153,7 +153,7 @@ class JVMLoader {
     // / to . to normalize. Forcing all classes that enter this method
     // to be a certain way isn't very defensible.
     std::string name = clazz_name;
-    name = utils::StringUtils::replaceAll(name, ".", "/");
+    name = utils::string::replaceAll(name, ".", "/");
 
     if (env == nullptr) {
       env = attach(name);
@@ -168,7 +168,7 @@ class JVMLoader {
     }
 
     std::string modifiedName = name;
-    modifiedName = utils::StringUtils::replaceAll(modifiedName, "/", ".");
+    modifiedName = utils::string::replaceAll(modifiedName, "/", ".");
 
     auto jstringclass = env->NewStringUTF(modifiedName.c_str());
 

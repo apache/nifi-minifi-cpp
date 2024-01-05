@@ -46,10 +46,10 @@ void PutS3Object::fillUserMetadata(core::ProcessContext& context) {
       logger_->log_debug("PutS3Object: DynamicProperty: [{}] -> [{}]", prop_key, prop_value);
       user_metadata_map_.emplace(prop_key, prop_value);
       if (first_property) {
-        user_metadata_ = minifi::utils::StringUtils::join_pack(prop_key, "=", prop_value);
+        user_metadata_ = minifi::utils::string::join_pack(prop_key, "=", prop_value);
         first_property = false;
       } else {
-        user_metadata_ += minifi::utils::StringUtils::join_pack(",", prop_key, "=", prop_value);
+        user_metadata_ += minifi::utils::string::join_pack(",", prop_key, "=", prop_value);
       }
     }
   }
@@ -103,16 +103,16 @@ void PutS3Object::onSchedule(core::ProcessContext& context, core::ProcessSession
 }
 
 std::string PutS3Object::parseAccessControlList(const std::string &comma_separated_list) {
-  auto users = minifi::utils::StringUtils::split(comma_separated_list, ",");
+  auto users = minifi::utils::string::split(comma_separated_list, ",");
   for (auto& user : users) {
-    auto trimmed_user = minifi::utils::StringUtils::trim(user);
+    auto trimmed_user = minifi::utils::string::trim(user);
     if (trimmed_user.find('@') != std::string::npos) {
       user = "emailAddress=\"" + trimmed_user + "\"";
     } else {
       user = "id=" + trimmed_user;
     }
   }
-  return minifi::utils::StringUtils::join(", ", users);
+  return minifi::utils::string::join(", ", users);
 }
 
 bool PutS3Object::setCannedAcl(

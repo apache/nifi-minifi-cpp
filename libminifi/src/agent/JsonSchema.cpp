@@ -36,9 +36,9 @@
 namespace org::apache::nifi::minifi::docs {
 
 static std::string escape(std::string str) {
-  utils::StringUtils::replaceAll(str, "\\", "\\\\");
-  utils::StringUtils::replaceAll(str, "\"", "\\\"");
-  utils::StringUtils::replaceAll(str, "\n", "\\n");
+  utils::string::replaceAll(str, "\\", "\\\\");
+  utils::string::replaceAll(str, "\"", "\\\"");
+  utils::string::replaceAll(str, "\n", "\\n");
   return str;
 }
 
@@ -462,7 +462,7 @@ std::string generateJsonSchema() {
     }
   }
 
-  return buildSchema(relationships, utils::StringUtils::join(", ", proc_schemas), utils::StringUtils::join(", ", controller_services));
+  return buildSchema(relationships, utils::string::join(", ", proc_schemas), utils::string::join(", ", controller_services));
 }
 
 }  // namespace org::apache::nifi::minifi::docs

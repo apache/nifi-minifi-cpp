@@ -54,7 +54,7 @@ std::string hashResponseNodes(const std::vector<SerializedResponseNode>& nodes) 
   }
   std::array<std::byte, EVP_MAX_MD_SIZE> digest{};
   EVP_DigestFinal_ex(ctx, reinterpret_cast<unsigned char*>(digest.data()), nullptr);
-  return utils::StringUtils::to_hex(digest, true /*uppercase*/);
+  return utils::string::to_hex(digest, true /*uppercase*/);
 }
 
 rapidjson::Value SerializedResponseNode::nodeToJson(const SerializedResponseNode& node, rapidjson::MemoryPoolAllocator<rapidjson::CrtAllocator>& alloc) {

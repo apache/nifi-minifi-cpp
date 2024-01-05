@@ -33,9 +33,9 @@
 namespace org::apache::nifi::minifi::utils::file {
 
 std::string globToRegex(std::string glob) {
-  utils::StringUtils::replaceAll(glob, ".", "\\.");
-  utils::StringUtils::replaceAll(glob, "*", ".*");
-  utils::StringUtils::replaceAll(glob, "?", ".");
+  utils::string::replaceAll(glob, ".", "\\.");
+  utils::string::replaceAll(glob, "*", ".*");
+  utils::string::replaceAll(glob, "?", ".");
   return glob;
 }
 

@@ -35,7 +35,7 @@ std::unique_ptr<RocksDatabase> RocksDatabase::create(const DBOptionsPatch& db_op
   logger_->log_info("Acquiring database handle '{}'", uri);
   std::string db_path = uri;
   std::string db_column = "default";
-  if (utils::StringUtils::startsWith(uri, scheme)) {
+  if (utils::string::startsWith(uri, scheme)) {
     const std::string path = uri.substr(scheme.length());
     logger_->log_info("RocksDB scheme is detected in '{}'", uri);
     // last segment is treated as the column name

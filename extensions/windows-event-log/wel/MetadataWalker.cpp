@@ -69,7 +69,7 @@ bool MetadataWalker::for_each(pugi::xml_node &node) {
         std::string replacement = "%{" + id + "}";
         replaced_identifiers_[id] = resolved;
         replaced_identifiers_[replacement] = resolved;
-        nodeText = utils::StringUtils::replaceAll(nodeText, replacement, resolved);
+        nodeText = utils::string::replaceAll(nodeText, replacement, resolved);
       }
       node.text().set(nodeText.c_str());
     }

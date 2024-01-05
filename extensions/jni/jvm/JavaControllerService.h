@@ -104,7 +104,7 @@ class JavaControllerService : public core::controller::ControllerService, public
 
   JavaClass loadClass(const std::string &class_name_) override {
     std::string modifiedName = class_name_;
-    modifiedName = utils::StringUtils::replaceAll(modifiedName, ".", "/");
+    modifiedName = utils::string::replaceAll(modifiedName, ".", "/");
     return loader->load_class(modifiedName);
   }
 

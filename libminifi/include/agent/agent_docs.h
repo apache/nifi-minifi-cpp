@@ -74,7 +74,7 @@ inline auto toVector(std::span<const core::RelationshipDefinition> relationships
 template<typename T>
 std::string classNameWithDots() {
   std::string class_name{core::className<T>()};
-  return utils::StringUtils::replaceAll(class_name, "::", ".");
+  return utils::string::replaceAll(class_name, "::", ".");
 }
 }  // namespace detail
 

@@ -66,7 +66,7 @@ TEST_CASE("gzip compression and decompression", "[basic]") {
   REQUIRE(0U < compressBuffer.size());
 
   if (compressBuffer.size() < 64U) {
-    std::cerr << utils::StringUtils::to_hex(compressBuffer.getBuffer()) << std::endl;
+    std::cerr << utils::string::to_hex(compressBuffer.getBuffer()) << std::endl;
   }
 
   /* Decompression */

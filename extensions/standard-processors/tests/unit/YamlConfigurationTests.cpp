@@ -784,7 +784,7 @@ TEST_CASE("Test UUID duplication checks", "[YamlConfiguration]") {
               class: SSLContextService
             )";
 
-      utils::StringUtils::replaceAll(config_yaml, std::string("00000000-0000-0000-0000-00000000000") + i, "99999999-9999-9999-9999-999999999999");
+      utils::string::replaceAll(config_yaml, std::string("00000000-0000-0000-0000-00000000000") + i, "99999999-9999-9999-9999-999999999999");
       REQUIRE_THROWS_WITH(yaml_config.getRootFromPayload(config_yaml), "General Operation: UUID 99999999-9999-9999-9999-999999999999 is duplicated in the flow configuration");
     }
   }

@@ -210,7 +210,7 @@ void add_system_related_counters(std::vector<std::unique_ptr<PerformanceDataCoun
 }
 
 void PerformanceDataMonitor::addCountersFromPredefinedGroupsProperty(const std::string& predefined_groups) {
-  auto groups = utils::StringUtils::splitAndTrim(predefined_groups, ",");
+  auto groups = utils::string::splitAndTrim(predefined_groups, ",");
   for (const auto& group : groups) {
     if (group == "CPU") {
       add_cpu_related_counters(resource_consumption_counters_);
@@ -233,7 +233,7 @@ void PerformanceDataMonitor::addCountersFromPredefinedGroupsProperty(const std::
 }
 
 void PerformanceDataMonitor::addCustomPDHCountersFromProperty(const std::string& custom_pdh_counters) {
-  const auto custom_counters = utils::StringUtils::splitAndTrim(custom_pdh_counters, ",");
+  const auto custom_counters = utils::string::splitAndTrim(custom_pdh_counters, ",");
   for (const auto& custom_counter : custom_counters) {
     auto counter = PDHCounter::createPDHCounter(custom_counter);
     if (counter != nullptr)

@@ -50,7 +50,7 @@ namespace org::apache::nifi::minifi::processors {
       idType_ = opc::OPCNodeIDType::Path;
     } else {
       // Where have our validators gone?
-      auto error_msg = utils::StringUtils::join_pack(value, " is not a valid node ID type!");
+      auto error_msg = utils::string::join_pack(value, " is not a valid node ID type!");
       throw Exception(PROCESS_SCHEDULE_EXCEPTION, error_msg);
     }
 
@@ -58,13 +58,13 @@ namespace org::apache::nifi::minifi::processors {
       try {
         std::stoi(nodeID_);
       } catch(...) {
-        auto error_msg = utils::StringUtils::join_pack(nodeID_, " cannot be used as an int type node ID");
+        auto error_msg = utils::string::join_pack(nodeID_, " cannot be used as an int type node ID");
         throw Exception(PROCESS_SCHEDULE_EXCEPTION, error_msg);
       }
     }
     if (idType_ != opc::OPCNodeIDType::Path) {
       if (!context.getProperty(ParentNameSpaceIndex, nameSpaceIdx_)) {
-        auto error_msg = utils::StringUtils::join_pack(ParentNameSpaceIndex.name, " is mandatory in case ", ParentNodeIDType.name, " is not Path");
+        auto error_msg = utils::string::join_pack(ParentNameSpaceIndex.name, " is mandatory in case ", ParentNodeIDType.name, " is not Path");
         throw Exception(PROCESS_SCHEDULE_EXCEPTION, error_msg);
       }
     }
@@ -208,7 +208,7 @@ namespace org::apache::nifi::minifi::processors {
             break;
           }
           case opc::OPCNodeDataType::Boolean: {
-            const auto contentstr_parsed = utils::StringUtils::toBool(contentstr);
+            const auto contentstr_parsed = utils::string::toBool(contentstr);
             if (contentstr_parsed) {
               sc = connection_->update_node(targetnode, contentstr_parsed.value());
             } else {
@@ -285,7 +285,7 @@ namespace org::apache::nifi::minifi::processors {
             break;
           }
           case opc::OPCNodeDataType::Boolean: {
-            const auto contentstr_parsed = utils::StringUtils::toBool(contentstr);
+            const auto contentstr_parsed = utils::string::toBool(contentstr);
             if (contentstr_parsed) {
               sc = connection_->add_node(parentNodeID_, targetnode, browsename, contentstr_parsed.value(), &resultnode);
             } else {

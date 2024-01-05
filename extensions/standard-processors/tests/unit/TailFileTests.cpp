@@ -578,10 +578,10 @@ TEST_CASE("TailFile processes a very long line correctly", "[simple]") {
   std::string line1("012\n");
   std::string line2(8050, 0);
   std::mt19937 gen(std::random_device{}());  // NOLINT (linter wants a space before '{') [whitespace/braces]
-  std::generate_n(line2.begin(), line2.size() - 1, [&]() -> char {
+  std::generate_n(line2.begin(), line2.size() - 1, [&] {
     // Make sure to only generate from characters that don't intersect with line1 and 3-4
     // Starting generation from 64 ensures that no numeric digit characters are added
-    return 64 + gen() % (127 - 64);
+    return gsl::narrow<char>(64 + gen() % (127 - 64));
   });
   line2.back() = '\n';
   std::string line3("345\n");
@@ -632,8 +632,8 @@ TEST_CASE("TailFile processes a very long line correctly", "[simple]") {
   testController.runSession(plan, true);
 
   REQUIRE(LogTestController::getInstance().contains("Logged 3 flow files"));
-  REQUIRE(LogTestController::getInstance().contains(utils::StringUtils::to_hex(line1)));
-  auto line2_hex = utils::StringUtils::to_hex(line2);
+  REQUIRE(LogTestController::getInstance().contains(utils::string::to_hex(line1)));
+  auto line2_hex = utils::string::to_hex(line2);
   if (line_length == 0U) {
     REQUIRE(LogTestController::getInstance().contains(line2_hex));
   } else {
@@ -643,8 +643,8 @@ TEST_CASE("TailFile processes a very long line correctly", "[simple]") {
     }
     REQUIRE(LogTestController::getInstance().contains(line2_hex_lines.str()));
   }
-  REQUIRE(LogTestController::getInstance().contains(utils::StringUtils::to_hex(line3)));
-  REQUIRE(false == LogTestController::getInstance().contains(utils::StringUtils::to_hex(line4), std::chrono::seconds(0)));
+  REQUIRE(LogTestController::getInstance().contains(utils::string::to_hex(line3)));
+  REQUIRE(false == LogTestController::getInstance().contains(utils::string::to_hex(line4), std::chrono::seconds(0)));
 
   LogTestController::getInstance().reset();
 }
@@ -653,10 +653,10 @@ TEST_CASE("TailFile processes a long line followed by multiple newlines correctl
   // Test having two delimiters on the buffer boundary
   std::string line1(4098, '\n');
   std::mt19937 gen(std::random_device { }());
-  std::generate_n(line1.begin(), 4095, [&]() -> char {
+  std::generate_n(line1.begin(), 4095, [&] {
     // Make sure to only generate from characters that don't intersect with line2-4
     // Starting generation from 64 ensures that no numeric digit characters are added
-    return 64 + gen() % (127 - 64);
+    return gsl::narrow<char>(64 + gen() % (127 - 64));
   });
   std::string line2("012\n");
   std::string line3("345\n");
@@ -691,15 +691,15 @@ TEST_CASE("TailFile processes a long line followed by multiple newlines correctl
   testController.runSession(plan, true);
 
   REQUIRE(LogTestController::getInstance().contains("Logged 5 flow files"));
-  auto line1_hex = utils::StringUtils::to_hex(line1.substr(0, 4096));
+  auto line1_hex = utils::string::to_hex(line1.substr(0, 4096));
   std::stringstream line1_hex_lines;
   for (size_t i = 0; i < line1_hex.size(); i += 80) {
     line1_hex_lines << line1_hex.substr(i, 80) << '\n';
   }
   REQUIRE(LogTestController::getInstance().contains(line1_hex_lines.str()));
-  REQUIRE(LogTestController::getInstance().contains(utils::StringUtils::to_hex(line2)));
-  REQUIRE(LogTestController::getInstance().contains(utils::StringUtils::to_hex(line3)));
-  REQUIRE(false == LogTestController::getInstance().contains(utils::StringUtils::to_hex(line4), std::chrono::seconds(0)));
+  REQUIRE(LogTestController::getInstance().contains(utils::string::to_hex(line2)));
+  REQUIRE(LogTestController::getInstance().contains(utils::string::to_hex(line3)));
+  REQUIRE(false == LogTestController::getInstance().contains(utils::string::to_hex(line4), std::chrono::seconds(0)));
 
   LogTestController::getInstance().reset();
 }
@@ -1327,7 +1327,7 @@ TEST_CASE("TailFile handles the Delimiter setting correctly", "[delimiter]") {
     auto temp_directory = testController.createTempDirectory();
 
     std::string delimiter = test_case.second;
-    auto full_file_name = createTempFile(temp_directory, "test.log", utils::StringUtils::join_pack("one", delimiter, "two", delimiter));
+    auto full_file_name = createTempFile(temp_directory, "test.log", utils::string::join_pack("one", delimiter, "two", delimiter));
 
     auto plan = testController.createPlan();
 

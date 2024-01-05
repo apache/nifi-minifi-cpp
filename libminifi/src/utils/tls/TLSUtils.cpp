@@ -23,17 +23,12 @@
 #include "utils/gsl.h"
 #include "utils/StringUtils.h"
 
-namespace org {
-namespace apache {
-namespace nifi {
-namespace minifi {
-namespace utils {
-namespace tls {
+namespace org::apache::nifi::minifi::utils::tls {
 
 int pemPassWordCb(char *buf, int size, int /*rwflag*/, void *userdata) {
   const std::string * const origPass = reinterpret_cast<std::string*>(userdata);
   // make copy the password, trimming it
-  const auto pass = utils::StringUtils::trimRight(*origPass);
+  const auto pass = utils::string::trimRight(*origPass);
   /**
    * 1) Ensure that password is trimmed.
    * 2) Don't attempt a larger copy than the buffer we are allowed.
@@ -51,9 +46,4 @@ int pemPassWordCb(char *buf, int size, int /*rwflag*/, void *userdata) {
   return -1;
 }
 
-}  // namespace tls
-}  // namespace utils
-}  // namespace minifi
-}  // namespace nifi
-}  // namespace apache
-}  // namespace org
+}  // namespace org::apache::nifi::minifi::utils::tls

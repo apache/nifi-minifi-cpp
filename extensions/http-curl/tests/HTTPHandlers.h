@@ -455,7 +455,7 @@ class HeartbeatHandler : public ServerAwareHandler {
     assert(manifestHash.length() == 128);
 
     // throws if not a valid hexadecimal hash
-    const auto hashVec = utils::StringUtils::from_hex(manifestHash);
+    const auto hashVec = utils::string::from_hex(manifestHash);
     assert(hashVec.size() == 64);
 
     for (auto &bundle : root["agentInfo"]["agentManifest"]["bundles"].GetArray()) {

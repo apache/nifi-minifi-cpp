@@ -166,7 +166,7 @@ void IntegrationBase::run(const std::optional<std::filesystem::path>& test_file_
     running = false;  // Stop running after this iteration, unless restart is explicitly requested
 
     bool should_encrypt_flow_config = (configuration->get(minifi::Configure::nifi_flow_configuration_encrypt)
-        | utils::andThen(utils::StringUtils::toBool)).value_or(false);
+        | utils::andThen(utils::string::toBool)).value_or(false);
 
     std::shared_ptr<utils::file::FileSystem> filesystem;
     if (home_path) {

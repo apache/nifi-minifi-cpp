@@ -104,16 +104,16 @@ const std::unordered_map<std::string, std::string> exampleState2{{"key3", "value
 
 auto standardLogChecker = [] {
   const std::string logs = LogTestController::getInstance().getLogs();
-  const auto errorResult = utils::StringUtils::countOccurrences(logs, "[error]");
-  const auto warningResult = utils::StringUtils::countOccurrences(logs, "[warning]");
+  const auto errorResult = utils::string::countOccurrences(logs, "[error]");
+  const auto warningResult = utils::string::countOccurrences(logs, "[warning]");
   return errorResult.second == 0 && warningResult.second == 0;
 };
 
 auto exceptionRollbackWarnings = [] {
   const std::string logs = LogTestController::getInstance().getLogs();
-  const auto errorResult = utils::StringUtils::countOccurrences(logs, "[error]");
-  const auto exceptionWarningResult = utils::StringUtils::countOccurrences(logs, "[warning] Caught \"Triggering rollback\"");
-  const auto rollbackWarningResult = utils::StringUtils::countOccurrences(logs, "[warning] ProcessSession rollback for statefulProcessor executed");
+  const auto errorResult = utils::string::countOccurrences(logs, "[error]");
+  const auto exceptionWarningResult = utils::string::countOccurrences(logs, "[warning] Caught \"Triggering rollback\"");
+  const auto rollbackWarningResult = utils::string::countOccurrences(logs, "[warning] ProcessSession rollback for statefulProcessor executed");
   return errorResult.second == 0 && exceptionWarningResult.second == 1 && rollbackWarningResult.second == 1;
 };
 

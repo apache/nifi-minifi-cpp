@@ -338,7 +338,7 @@ bool Client::exists(UA_NodeId nodeId) {
 UA_StatusCode Client::translateBrowsePathsToNodeIdsRequest(const std::string& path, std::vector<UA_NodeId>& foundNodeIDs, const std::shared_ptr<core::logging::Logger>& logger) {
   logger->log_trace("Trying to find node id for {}", path.c_str());
 
-  auto tokens = utils::StringUtils::split(path, "/");
+  auto tokens = utils::string::split(path, "/");
   std::vector<UA_UInt32> ids;
   for (size_t i = 0; i < tokens.size(); ++i) {
     UA_UInt32 val = (i ==0) ? UA_NS0ID_ORGANIZES : UA_NS0ID_HASCOMPONENT;

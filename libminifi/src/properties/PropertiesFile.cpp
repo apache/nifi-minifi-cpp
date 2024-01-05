@@ -25,21 +25,21 @@
 namespace org::apache::nifi::minifi {
 
 PropertiesFile::Line::Line(std::string line) : line_(line) {
-  line = utils::StringUtils::trim(line);
+  line = utils::string::trim(line);
   if (line.empty() || line[0] == '#') { return; }
 
   size_t index_of_first_equals_sign = line.find('=');
   if (index_of_first_equals_sign == std::string::npos) { return; }
 
-  std::string key = utils::StringUtils::trim(line.substr(0, index_of_first_equals_sign));
+  std::string key = utils::string::trim(line.substr(0, index_of_first_equals_sign));
   if (key.empty()) { return; }
 
   key_ = key;
-  value_ = utils::StringUtils::trim(line.substr(index_of_first_equals_sign + 1));
+  value_ = utils::string::trim(line.substr(index_of_first_equals_sign + 1));
 }
 
 PropertiesFile::Line::Line(std::string key, std::string value)
-  : line_{utils::StringUtils::join_pack(key, "=", value)}, key_{std::move(key)}, value_{std::move(value)} {
+  : line_{utils::string::join_pack(key, "=", value)}, key_{std::move(key)}, value_{std::move(value)} {
 }
 
 bool PropertiesFile::Line::isValidKey(const std::string &key) {

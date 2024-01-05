@@ -125,11 +125,11 @@ void LoggerConfiguration::initialize(const std::shared_ptr<LoggerProperties> &lo
    * There is no need to shorten names per spdlog sink as this is a per log instance.
    */
   if (const auto shorten_names_str = logger_properties->getString("spdlog.shorten_names")) {
-    shorten_names_ = utils::StringUtils::toBool(*shorten_names_str).value_or(false);
+    shorten_names_ = utils::string::toBool(*shorten_names_str).value_or(false);
   }
 
   if (const auto include_uuid_str = logger_properties->getString("logger.include.uuid")) {
-    include_uuid_ = utils::StringUtils::toBool(*include_uuid_str).value_or(true);
+    include_uuid_ = utils::string::toBool(*include_uuid_str).value_or(true);
   }
 
   if (const auto max_log_entry_length_str = logger_properties->getString("max.log.entry.length")) {
@@ -230,8 +230,8 @@ std::shared_ptr<internal::LoggerNamespace> LoggerConfiguration::initialize_names
     bool first = true;
     spdlog::level::level_enum level = spdlog::level::info;
     std::vector<std::shared_ptr<spdlog::sinks::sink>> sinks;
-    for (auto const & segment : utils::StringUtils::split(logger_def, ",")) {
-      std::string level_name = utils::StringUtils::trim(segment);
+    for (auto const & segment : utils::string::split(logger_def, ",")) {
+      std::string level_name = utils::string::trim(segment);
       if (first) {
         first = false;
         auto opt_level = utils::parse_log_level(level_name);
@@ -248,7 +248,7 @@ std::shared_ptr<internal::LoggerNamespace> LoggerConfiguration::initialize_names
     }
     std::shared_ptr<internal::LoggerNamespace> current_namespace = root_namespace;
     if (logger_key != "logger.root") {
-      for (auto const & name : utils::StringUtils::split(logger_key.substr(logger_type.length() + 1, logger_key.length() - logger_type.length()), "::")) {
+      for (auto const & name : utils::string::split(logger_key.substr(logger_type.length() + 1, logger_key.length() - logger_type.length()), "::")) {
         auto child_pair = current_namespace->children.find(name);
         std::shared_ptr<internal::LoggerNamespace> child;
         if (child_pair == current_namespace->children.end()) {
@@ -285,7 +285,7 @@ std::shared_ptr<spdlog::logger> LoggerConfiguration::get_logger(const std::share
   std::string current_namespace_str;
   std::string sink_namespace_str = "root";
   std::string level_namespace_str = "root";
-  for (auto const & name_segment : utils::StringUtils::split(name, "::")) {
+  for (auto const & name_segment : utils::string::split(name, "::")) {
     current_namespace_str += name_segment;
     auto child_pair = current_namespace->children.find(name_segment);
     if (child_pair == current_namespace->children.end()) {

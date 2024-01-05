@@ -276,7 +276,7 @@ class SSLContextService : public core::controller::ControllerService {
 #endif
 
   static bool isFileTypeP12(const std::filesystem::path& filename) {
-    return utils::StringUtils::endsWith(filename.string(), "p12", false);
+    return utils::string::endsWith(filename.string(), "p12", false);
   }
 
  private:

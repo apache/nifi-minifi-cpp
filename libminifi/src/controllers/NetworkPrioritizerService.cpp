@@ -173,7 +173,7 @@ void NetworkPrioritizerService::onEnable() {
     getProperty(MaxPayload, max_payload_);
 
     if (!controllers.empty()) {
-      network_controllers_ = utils::StringUtils::split(controllers, ",");
+      network_controllers_ = utils::string::split(controllers, ",");
       for (const auto &ifc : network_controllers_) {
         logger_->log_trace("{} added to list of applied interfaces", ifc);
       }

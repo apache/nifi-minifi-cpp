@@ -169,11 +169,11 @@ std::unique_ptr<MockRowset> MockRowset::select(const std::vector<std::string>& c
 }
 
 std::unique_ptr<Rowset> MockDB::execute(const std::string& query, const std::vector<std::string>& args) {
-  if (minifi::utils::StringUtils::startsWith(query, "create table", false)) {
+  if (minifi::utils::string::startsWith(query, "create table", false)) {
     createTable(query);
-  } else if (minifi::utils::StringUtils::startsWith(query, "insert into", false)) {
+  } else if (minifi::utils::string::startsWith(query, "insert into", false)) {
     insertInto(query, args);
-  } else if (minifi::utils::StringUtils::startsWith(query, "select", false)) {
+  } else if (minifi::utils::string::startsWith(query, "select", false)) {
     return select(query, args);
   } else {
     throw sql::StatementError("Unknown query type");
@@ -187,11 +187,11 @@ void MockDB::createTable(const std::string& query) {
   std::regex expr(R"(create table (\w+)\s*\((.*)\);)", std::regex_constants::icase);
   std::regex_search(query, match, expr);
   std::string table_name = match[1];
-  auto columns_with_type = minifi::utils::StringUtils::splitAndTrimRemovingEmpty(match[2].str(), ",");
+  auto columns_with_type = minifi::utils::string::splitAndTrimRemovingEmpty(match[2].str(), ",");
   std::vector<std::string> col_names;
   std::vector<DataType> col_types;
   for (const auto& col_with_type : columns_with_type) {
-    auto splitted = minifi::utils::StringUtils::splitAndTrimRemovingEmpty(col_with_type, " ");
+    auto splitted = minifi::utils::string::splitAndTrimRemovingEmpty(col_with_type, " ");
     col_names.push_back(splitted[0]);
     col_types.push_back(stringToDataType(splitted[1]));
   }
@@ -202,7 +202,7 @@ void MockDB::createTable(const std::string& query) {
 void MockDB::insertInto(const std::string& query, const std::vector<std::string>& args) {
   std::string replaced_query = query;
   for (const auto& arg : args) {
-    replaced_query = minifi::utils::StringUtils::replaceOne(replaced_query, "?", arg);
+    replaced_query = minifi::utils::string::replaceOne(replaced_query, "?", arg);
   }
   if (replaced_query.find('?') != std::string::npos) {
     throw sql::StatementError("Less arguments than required by the insert query");
@@ -215,11 +215,11 @@ void MockDB::insertInto(const std::string& query, const std::vector<std::string>
   if (!tables_.contains(table_name)) {
     throw sql::StatementError("No such table: '" + table_name + "'");
   }
-  std::vector<std::string> values = minifi::utils::StringUtils::splitAndTrimRemovingEmpty(match[4].str(), ",");
+  std::vector<std::string> values = minifi::utils::string::splitAndTrimRemovingEmpty(match[4].str(), ",");
   for (auto& value : values) {
-    value = minifi::utils::StringUtils::removeFramingCharacters(value, '\'');
+    value = minifi::utils::string::removeFramingCharacters(value, '\'');
   }
-  auto insert_col_names = minifi::utils::StringUtils::splitAndTrimRemovingEmpty(match[3].str(), ",");
+  auto insert_col_names = minifi::utils::string::splitAndTrimRemovingEmpty(match[3].str(), ",");
   if (!insert_col_names.empty()) {
     auto col_names = tables_.at(table_name).getColumnNames();
     std::vector<std::string> row;
@@ -242,7 +242,7 @@ void MockDB::insertInto(const std::string& query, const std::vector<std::string>
 std::unique_ptr<Rowset> MockDB::select(const std::string& query, const std::vector<std::string>& args) {
   std::string replaced_query = query;
   for (const auto& arg : args) {
-    replaced_query = minifi::utils::StringUtils::replaceOne(replaced_query, "?", arg);
+    replaced_query = minifi::utils::string::replaceOne(replaced_query, "?", arg);
   }
   if (replaced_query.find('?') != std::string::npos) {
     throw sql::StatementError("Less arguments than required by the select query");
@@ -251,7 +251,7 @@ std::unique_ptr<Rowset> MockDB::select(const std::string& query, const std::vect
   std::smatch match;
   std::regex expr(R"(select\s+(.+)\s+from\s+(\w+)\s*(where ((.+(?= order by))|.+$))*\s*(order by (.+))*)", std::regex_constants::icase);
   std::regex_search(replaced_query, match, expr);
-  auto cols = minifi::utils::StringUtils::splitAndTrimRemovingEmpty(match[1].str(), ",");
+  auto cols = minifi::utils::string::splitAndTrimRemovingEmpty(match[1].str(), ",");
   if (cols[0] == "*") {
     cols = {};
   }
@@ -265,9 +265,9 @@ std::unique_ptr<Rowset> MockDB::select(const std::string& query, const std::vect
   std::string order_col;
   bool descending = false;
   if (!order.empty()) {
-    auto order_col_and_sort = minifi::utils::StringUtils::splitAndTrimRemovingEmpty(order, " ");
+    auto order_col_and_sort = minifi::utils::string::splitAndTrimRemovingEmpty(order, " ");
     order_col = order_col_and_sort[0];
-    descending = minifi::utils::StringUtils::equalsIgnoreCase(order_col_and_sort[1], "desc");
+    descending = minifi::utils::string::equalsIgnoreCase(order_col_and_sort[1], "desc");
   }
   return tables_.at(table_name).select(cols, condition, order_col, !descending);
 }
@@ -278,25 +278,25 @@ std::function<bool(const MockRow&)> MockDB::parseWhereCondition(const std::strin
   }
 
   std::vector<std::string> condition_strings;
-  // TODO(adebreceni): let StringUtils::split* functions take either multiple delimiters or specify case sensitivity
-  for (auto&& condition : minifi::utils::StringUtils::splitAndTrimRemovingEmpty(full_condition_str, "and")) {
-    for (auto&& subcondition : minifi::utils::StringUtils::splitAndTrimRemovingEmpty(condition, "AND")) {
+  // TODO(adebreceni): let string::split* functions take either multiple delimiters or specify case sensitivity
+  for (auto&& condition : minifi::utils::string::splitAndTrimRemovingEmpty(full_condition_str, "and")) {
+    for (auto&& subcondition : minifi::utils::string::splitAndTrimRemovingEmpty(condition, "AND")) {
       condition_strings.push_back(std::move(subcondition));
     }
   }
   std::vector<std::function<bool(const MockRow&)>> condition_parts;
   for (const auto& condition_str : condition_strings) {
     if (condition_str.find(">") != std::string::npos) {
-      auto elements = minifi::utils::StringUtils::splitAndTrimRemovingEmpty(condition_str, ">");
+      auto elements = minifi::utils::string::splitAndTrimRemovingEmpty(condition_str, ">");
       condition_parts.push_back([elements](const MockRow& row){ return std::stoi(row.getValue(elements[0])) > std::stoi(elements[1]); });
     } else if (condition_str.find("<") != std::string::npos) {
-      auto elements = minifi::utils::StringUtils::splitAndTrimRemovingEmpty(condition_str, "<");
+      auto elements = minifi::utils::string::splitAndTrimRemovingEmpty(condition_str, "<");
       condition_parts.push_back([elements](const MockRow& row){ return std::stoi(row.getValue(elements[0])) < std::stoi(elements[1]); });
     } else if (condition_str.find("=") != std::string::npos) {
-      auto elements = minifi::utils::StringUtils::splitAndTrimRemovingEmpty(condition_str, "=");
+      auto elements = minifi::utils::string::splitAndTrimRemovingEmpty(condition_str, "=");
       condition_parts.push_back([elements](const MockRow& row) {
         if (row.getDataType(elements[0]) == DataType::STRING) {
-          return row.getValue(elements[0]) == minifi::utils::StringUtils::removeFramingCharacters(elements[1], '"');
+          return row.getValue(elements[0]) == minifi::utils::string::removeFramingCharacters(elements[1], '"');
         } else {
           return std::stoi(row.getValue(elements[0])) == std::stoi(elements[1]);
         }
@@ -326,18 +326,18 @@ void MockDB::readDb() {
   while (std::getline(file, line)) {
     switch (phase) {
       case ParsePhase::NEW_TABLE: {
-        table_name = minifi::utils::StringUtils::trim(line);
+        table_name = minifi::utils::string::trim(line);
         phase = ParsePhase::COLUMN_NAMES;
         break;
       }
       case ParsePhase::COLUMN_NAMES: {
-        column_names = minifi::utils::StringUtils::splitAndTrimRemovingEmpty(line, "|");
+        column_names = minifi::utils::string::splitAndTrimRemovingEmpty(line, "|");
         phase = ParsePhase::COLUMN_TYPES;
         break;
       }
       case ParsePhase::COLUMN_TYPES: {
         column_types.clear();
-        auto type_strs = minifi::utils::StringUtils::splitAndTrimRemovingEmpty(line, "|");
+        auto type_strs = minifi::utils::string::splitAndTrimRemovingEmpty(line, "|");
         for (const auto& type : type_strs) {
           column_types.push_back(stringToDataType(type));
         }
@@ -346,12 +346,12 @@ void MockDB::readDb() {
         break;
       }
       case ParsePhase::ROW_VALUES: {
-        line = minifi::utils::StringUtils::trim(line);
+        line = minifi::utils::string::trim(line);
         if (line.empty()) {
           phase = ParsePhase::NEW_TABLE;
           break;
         }
-        auto cells = minifi::utils::StringUtils::splitAndTrimRemovingEmpty(line, "|");
+        auto cells = minifi::utils::string::splitAndTrimRemovingEmpty(line, "|");
         tables_.at(table_name).addRow(cells);
         break;
       }
@@ -383,9 +383,9 @@ void MockDB::storeDb() {
 }
 
 DataType MockDB::stringToDataType(const std::string& type_str) {
-  if (utils::StringUtils::equalsIgnoreCase(type_str, "integer")) return DataType::INTEGER;
-  if (utils::StringUtils::equalsIgnoreCase(type_str, "text")) return DataType::STRING;
-  if (utils::StringUtils::equalsIgnoreCase(type_str, "real")) return DataType::DOUBLE;
+  if (utils::string::equalsIgnoreCase(type_str, "integer")) return DataType::INTEGER;
+  if (utils::string::equalsIgnoreCase(type_str, "text")) return DataType::STRING;
+  if (utils::string::equalsIgnoreCase(type_str, "real")) return DataType::DOUBLE;
   throw std::runtime_error("Unimplemented data type");
 }
 

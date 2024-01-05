@@ -57,7 +57,7 @@ void PostElasticsearch::onSchedule(core::ProcessContext& context, core::ProcessS
     throw Exception(PROCESS_SCHEDULE_EXCEPTION, "Max Batch Size property is invalid");
 
   if (auto hosts_str = context.getProperty(Hosts)) {
-    auto hosts = utils::StringUtils::split(*hosts_str, ",");
+    auto hosts = utils::string::split(*hosts_str, ",");
     if (hosts.size() > 1)
       throw Exception(PROCESS_SCHEDULE_EXCEPTION, "Multiple hosts not yet supported");
     host_url_ = hosts[0];

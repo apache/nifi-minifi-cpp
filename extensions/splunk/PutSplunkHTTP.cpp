@@ -57,7 +57,7 @@ std::string PutSplunkHTTP::getEndpoint(curl::HTTPClient& client) {
     parameters.push_back("index=" + client.escape(*index_));
   }
   if (!parameters.empty()) {
-    endpoint << "?" << utils::StringUtils::join("&", parameters);
+    endpoint << "?" << utils::string::join("&", parameters);
   }
   return endpoint.str();
 }

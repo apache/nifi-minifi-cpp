@@ -48,7 +48,7 @@ class JVMCreator : public minifi::core::CoreComponent {
   void configure(const std::vector<std::string> &jarFileListings) {
     std::vector<std::string> pathOrFiles;
     for (const auto &path : jarFileListings) {
-      const auto vec = utils::StringUtils::split(path, ",");
+      const auto vec = utils::string::split(path, ",");
       pathOrFiles.insert(pathOrFiles.end(), vec.begin(), vec.end());
     }
 
@@ -69,7 +69,7 @@ class JVMCreator : public minifi::core::CoreComponent {
       configure(paths);
 
       if (configuration->get(minifi::Configuration::nifi_jvm_options, jvmOptionsStr)) {
-        jvm_options_ = utils::StringUtils::split(jvmOptionsStr, ",");
+        jvm_options_ = utils::string::split(jvmOptionsStr, ",");
       }
 
       initializeJVM();

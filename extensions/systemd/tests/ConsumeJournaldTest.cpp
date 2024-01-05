@@ -43,16 +43,16 @@ struct JournalEntry final {
   {
     auto extra_fields_size = fields.size();
     fields.reserve(fields.size() + 4);
-    fields.push_back(utils::StringUtils::join_pack("MESSAGE=", message));
-    fields.push_back(utils::StringUtils::join_pack("SYSLOG_IDENTIFIER=", identifier));
+    fields.push_back(utils::string::join_pack("MESSAGE=", message));
+    fields.push_back(utils::string::join_pack("SYSLOG_IDENTIFIER=", identifier));
     if (pid != 0) {
       // The intention of the long expression below is a simple pseudo-random to test both branches equally
       // without having to pull in complex random logic
       const char* const pid_key =
           (int{message[0]} + int{identifier[0]} + static_cast<int>(extra_fields_size) + pid + int{hostname[0]}) % 2 == 0 ? "_PID" : "SYSLOG_PID";
-      fields.push_back(utils::StringUtils::join_pack(pid_key, "=", std::to_string(pid)));
+      fields.push_back(utils::string::join_pack(pid_key, "=", std::to_string(pid)));
     }
-    fields.push_back(utils::StringUtils::join_pack("_HOSTNAME=", hostname));
+    fields.push_back(utils::string::join_pack("_HOSTNAME=", hostname));
   }
 
   std::vector<std::string> fields;  // in KEY=VALUE format, like systemd

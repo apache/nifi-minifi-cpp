@@ -56,11 +56,11 @@ void UpdatePolicyControllerService::onEnable() {
 
   bool enable_all = false;
   if (getProperty(AllowAllProperties, enableStr)) {
-    enable_all = utils::StringUtils::toBool(enableStr).value_or(false);
+    enable_all = utils::string::toBool(enableStr).value_or(false);
   }
 
   if (getProperty(PersistUpdates, persistStr)) {
-    persist_updates_ = utils::StringUtils::toBool(persistStr).value_or(false);
+    persist_updates_ = utils::string::toBool(persistStr).value_or(false);
   }
 
   auto builder = state::UpdatePolicyBuilder::newBuilder(enable_all);

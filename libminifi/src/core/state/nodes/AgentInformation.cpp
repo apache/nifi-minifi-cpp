@@ -71,9 +71,9 @@ void ComponentManifest::serializeClassDescription(const std::vector<ClassDescrip
           SerializedResponseNode allowed_type;
           allowed_type.name = "typeProvidedByValue";
           for (const auto &type : allowed_types) {
-            std::string class_name = utils::StringUtils::split(type, "::").back();
+            std::string class_name = utils::string::split(type, "::").back();
             std::string typeClazz = type;
-            utils::StringUtils::replaceAll(typeClazz, "::", ".");
+            utils::string::replaceAll(typeClazz, "::", ".");
             allowed_type.children.push_back({.name = "type", .value = typeClazz});
             allowed_type.children.push_back({.name = "group", .value = GROUP_STR});
             allowed_type.children.push_back({.name = "artifact", .value = core::ClassLoader::getDefaultClassLoader().getGroupForClass(class_name).value_or("")});

@@ -24,10 +24,10 @@ Node::Iterator::Value Node::Iterator::operator*() const {
   Value value = impl_->operator*();
   if (value) {
     // sequence iterator
-    value.path_ = utils::StringUtils::join_pack(path_, "/", std::to_string(idx_));
+    value.path_ = utils::string::join_pack(path_, "/", std::to_string(idx_));
   } else if (value.second) {
     // map iterator
-    value.second.path_ = utils::StringUtils::join_pack(path_, "/", value.first.getString().value());
+    value.second.path_ = utils::string::join_pack(path_, "/", value.first.getString().value());
   }
   return value;
 }

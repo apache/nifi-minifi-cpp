@@ -65,12 +65,12 @@ std::string formatAllowedValues(const minifi::core::Property& property) {
 
 std::string formatDescription(std::string_view description_view, bool supports_expression_language = false) {
   std::string description{description_view};
-  minifi::utils::StringUtils::replaceAll(description, "\n", "<br/>");
+  minifi::utils::string::replaceAll(description, "\n", "<br/>");
   return supports_expression_language ? description + "<br/>**Supports Expression Language: true**" : description;
 }
 
 std::string formatListOfRelationships(std::span<const minifi::core::RelationshipDefinition> relationships) {
-  return minifi::utils::StringUtils::join(", ", relationships, [](const auto& relationship) { return relationship.name; });
+  return minifi::utils::string::join(", ", relationships, [](const auto& relationship) { return relationship.name; });
 }
 
 inline constexpr std::string_view APACHE_LICENSE = R"license(<!--
@@ -161,11 +161,11 @@ void writeOutputAttributes(std::ostream& docs, const minifi::ClassDescription& d
 }
 
 std::string extractClassName(const std::string& full_class_name) {
-  return minifi::utils::StringUtils::split(full_class_name, ".").back();
+  return minifi::utils::string::split(full_class_name, ".").back();
 }
 
 std::string lowercaseFirst(const std::pair<std::string, minifi::ClassDescription>& key_value) {
-  return minifi::utils::StringUtils::toLower(key_value.first);
+  return minifi::utils::string::toLower(key_value.first);
 };
 
 }  // namespace

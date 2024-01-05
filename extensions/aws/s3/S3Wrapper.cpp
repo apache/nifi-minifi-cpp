@@ -264,7 +264,7 @@ void S3Wrapper::addListResults(const Aws::Vector<Aws::S3::Model::ObjectVersion>&
     }
 
     ListedObjectAttributes attributes;
-    attributes.etag = minifi::utils::StringUtils::removeFramingCharacters(version.GetETag(), '"');
+    attributes.etag = minifi::utils::string::removeFramingCharacters(version.GetETag(), '"');
     attributes.filename = version.GetKey();
     attributes.is_latest = version.GetIsLatest();
     attributes.last_modified = version.GetLastModified().UnderlyingTimestamp();
@@ -283,7 +283,7 @@ void S3Wrapper::addListResults(const Aws::Vector<Aws::S3::Model::Object>& conten
     }
 
     ListedObjectAttributes attributes;
-    attributes.etag = minifi::utils::StringUtils::removeFramingCharacters(object.GetETag(), '"');
+    attributes.etag = minifi::utils::string::removeFramingCharacters(object.GetETag(), '"');
     attributes.filename = object.GetKey();
     attributes.is_latest = true;
     attributes.last_modified = object.GetLastModified().UnderlyingTimestamp();
@@ -400,7 +400,7 @@ FetchObjectResult S3Wrapper::fillFetchObjectResult(const GetObjectRequestParamet
   FetchObjectResult result;
   result.setFilePaths(get_object_params.object_key);
   result.mime_type = fetch_object_result.GetContentType();
-  result.etag = minifi::utils::StringUtils::removeFramingCharacters(fetch_object_result.GetETag(), '"');
+  result.etag = minifi::utils::string::removeFramingCharacters(fetch_object_result.GetETag(), '"');
   result.expiration = getExpiration(fetch_object_result.GetExpiration());
   result.ssealgorithm = getEncryptionString(fetch_object_result.GetServerSideEncryption());
   result.version = fetch_object_result.GetVersionId();

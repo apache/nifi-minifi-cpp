@@ -31,7 +31,7 @@ struct Lines {
   std::vector<std::string> lines;
 
   std::string join(const std::string& delim) const {
-    return utils::StringUtils::join(delim, lines);
+    return utils::string::join(delim, lines);
   }
 
   Lines& indentAll() & {

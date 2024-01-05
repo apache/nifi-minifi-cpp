@@ -148,14 +148,14 @@ void ControllerSocketProtocol::initialize() {
   }
   if (nullptr == secure_context) {
     std::string secure_str;
-    if (configuration_->get(Configure::nifi_remote_input_secure, secure_str) && org::apache::nifi::minifi::utils::StringUtils::toBool(secure_str).value_or(false)) {
+    if (configuration_->get(Configure::nifi_remote_input_secure, secure_str) && org::apache::nifi::minifi::utils::string::toBool(secure_str).value_or(false)) {
       secure_context = std::make_shared<minifi::controllers::SSLContextService>("ControllerSocketProtocolSSL", configuration_);
       secure_context->onEnable();
     }
   }
 
   std::string limit_str;
-  const bool any_interface = configuration_->get(Configuration::controller_socket_local_any_interface, limit_str) && utils::StringUtils::toBool(limit_str).value_or(false);
+  const bool any_interface = configuration_->get(Configuration::controller_socket_local_any_interface, limit_str) && utils::string::toBool(limit_str).value_or(false);
 
   // if host name isn't defined we will use localhost
   std::string host = "localhost";

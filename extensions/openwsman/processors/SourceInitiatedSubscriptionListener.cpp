@@ -709,7 +709,7 @@ void SourceInitiatedSubscriptionListener::onScheduleSharedPtr(const std::shared_
   if (!context->getProperty(SSLVerifyPeer, value)) {
     throw Exception(PROCESSOR_EXCEPTION, "SSL Verify Peer attribute is missing");
   }
-  bool verify_peer = utils::StringUtils::toBool(value).value_or(true);
+  bool verify_peer = utils::string::toBool(value).value_or(true);
   context->getProperty(XPathXmlQuery, xpath_xml_query_);
   if (!context->getProperty(InitialExistingEventsStrategy, initial_existing_events_strategy_)) {
     throw Exception(PROCESSOR_EXCEPTION, "Initial Existing Events Strategy attribute is missing or invalid");
@@ -762,7 +762,7 @@ void SourceInitiatedSubscriptionListener::onScheduleSharedPtr(const std::shared_
   if (ret != 1) {
     throw Exception(PROCESSOR_EXCEPTION, "Failed to get fingerprint for CA specified by SSL Certificate Authority attribute");
   }
-  ssl_ca_cert_thumbprint_ = utils::StringUtils::to_hex(hash_buf, true /*uppercase*/);
+  ssl_ca_cert_thumbprint_ = utils::string::to_hex(hash_buf, true /*uppercase*/);
   logger_->log_debug("{} SHA-1 thumbprint is {}", ssl_ca_file.c_str(), ssl_ca_cert_thumbprint_.c_str());
 
   session_factory_ = sessionFactory;

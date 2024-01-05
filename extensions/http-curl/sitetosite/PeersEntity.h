@@ -69,12 +69,12 @@ class PeersEntity {
             } else if (peer["secure"].IsString()) {
               std::string secureStr = peer["secure"].GetString();
 
-              if (utils::StringUtils::equalsIgnoreCase(secureStr, "true")) {
+              if (utils::string::equalsIgnoreCase(secureStr, "true")) {
                 secure = true;
-              } else if (utils::StringUtils::equalsIgnoreCase(secureStr, "false")) {
+              } else if (utils::string::equalsIgnoreCase(secureStr, "false")) {
                 secure = false;
               } else {
-                const auto err = utils::StringUtils::join_pack("could not parse secure string ", secureStr);
+                const auto err = utils::string::join_pack("could not parse secure string ", secureStr);
                 logger->log_error("{}", err);
                 throw std::logic_error{err};
               }

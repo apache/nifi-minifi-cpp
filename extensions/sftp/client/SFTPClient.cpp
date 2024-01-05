@@ -362,7 +362,7 @@ bool SFTPClient::connect() {
         logger_->log_warn("Host {} not found in the host key file", hostname_.c_str());
         break;
       case LIBSSH2_KNOWNHOST_CHECK_MISMATCH: {
-        auto hostkey_b64 = utils::StringUtils::to_base64(hostkey);
+        auto hostkey_b64 = utils::string::to_base64(hostkey);
         logger_->log_warn("Host key mismatch for {}, expected: {}, actual: {}", hostname_.c_str(),
                           known_host == nullptr ? "" : known_host->key, hostkey_b64.c_str());
         break;
@@ -384,7 +384,7 @@ bool SFTPClient::connect() {
     if (fingerprint == nullptr) {
       logger_->log_warn("Cannot get remote server fingerprint");
     } else {
-      auto fingerprint_hex = utils::StringUtils::to_hex(fingerprint_span.as_span<const std::byte>());
+      auto fingerprint_hex = utils::string::to_hex(fingerprint_span.as_span<const std::byte>());
       std::stringstream fingerprint_hex_colon;
       for (size_t i = 0; i < 20; i++) {
         fingerprint_hex_colon << fingerprint_hex.substr(i * 2, 2);
@@ -409,7 +409,7 @@ bool SFTPClient::connect() {
       return false;
     }
   } else {
-    auto methods_split = utils::StringUtils::split(userauthlist, ",");
+    auto methods_split = utils::string::split(userauthlist, ",");
     auth_methods.insert(std::make_move_iterator(methods_split.begin()), std::make_move_iterator(methods_split.end()));
   }
 
@@ -656,7 +656,7 @@ bool SFTPClient::createDirectoryHierarchy(const std::string& path) {
     return false;
   }
   bool absolute = path[0] == '/';
-  auto elements = utils::StringUtils::split(path, "/");
+  auto elements = utils::string::split(path, "/");
   std::stringstream dir;
   if (absolute) {
     dir << "/";

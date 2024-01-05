@@ -182,8 +182,8 @@ class MetricsHandler: public HeartbeatHandler {
   [[nodiscard]] static std::string getReplacementConfigAsJsonValue(const std::string& replacement_config_path) {
     std::ifstream is(replacement_config_path);
     auto content = std::string((std::istreambuf_iterator<char>(is)), std::istreambuf_iterator<char>());
-    content = minifi::utils::StringUtils::replaceAll(content, "\n", "\\n");
-    content = minifi::utils::StringUtils::replaceAll(content, "\"", "\\\"");
+    content = minifi::utils::string::replaceAll(content, "\n", "\\n");
+    content = minifi::utils::string::replaceAll(content, "\"", "\\\"");
     return content;
   }
 
@@ -209,7 +209,7 @@ int main(int argc, char **argv) {
   harness.getConfiguration()->set("nifi.c2.root.class.definitions.metrics.metrics.processorMetrics.classes", "processorMetrics/GetTCP.*");
   harness.setKeyDir(args.key_dir);
   auto replacement_path = args.test_file;
-  minifi::utils::StringUtils::replaceAll(replacement_path, "TestC2Metrics", "TestC2MetricsUpdate");
+  minifi::utils::string::replaceAll(replacement_path, "TestC2Metrics", "TestC2MetricsUpdate");
   org::apache::nifi::minifi::test::MetricsHandler handler(metrics_updated_successfully, harness.getConfiguration(), replacement_path);
   harness.setUrl(args.url, &handler);
   harness.run(args.test_file);

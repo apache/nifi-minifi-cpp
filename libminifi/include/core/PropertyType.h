@@ -117,7 +117,7 @@ class BooleanPropertyType : public PropertyType {
   }
 
   [[nodiscard]] ValidationResult validate(const std::string &subject, const std::string &input) const override {
-    if (utils::StringUtils::equalsIgnoreCase(input, "true") || utils::StringUtils::equalsIgnoreCase(input, "false"))
+    if (utils::string::equalsIgnoreCase(input, "true") || utils::string::equalsIgnoreCase(input, "false"))
       return ValidationResult{.valid = true, .subject = subject, .input = input};
     else
       return ValidationResult{.valid = false, .subject = subject, .input = input};
@@ -256,7 +256,7 @@ class NonBlankPropertyType : public PropertyType {
   }
 
   [[nodiscard]] ValidationResult validate(const std::string& subject, const std::string& input) const final {
-    return ValidationResult{.valid = !utils::StringUtils::trimLeft(input).empty(), .subject = subject, .input = input};
+    return ValidationResult{.valid = !utils::string::trimLeft(input).empty(), .subject = subject, .input = input};
   }
 };
 

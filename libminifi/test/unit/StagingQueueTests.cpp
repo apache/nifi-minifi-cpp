@@ -92,7 +92,7 @@ TEST_CASE("Modify and overflow triggered automatic commit", "[TestStagingQueue4]
   }
   queue.modify([] (MockItem& item) {
     // a new item has been allocated
-    REQUIRE(item.data_ == "");
+    REQUIRE(item.data_.empty());
   });
   REQUIRE(queue.size() == 11);
   MockItem out;
@@ -105,7 +105,7 @@ TEST_CASE("Discard overflow", "[TestStagingQueue5]") {
   StagingQueue<MockItem> queue(30, 10);
   for (size_t idx = 0; idx < 5; ++idx) {
     queue.modify([&] (MockItem& item) {
-      item.data_ = utils::StringUtils::repeat(std::to_string(idx), 10);
+      item.data_ = utils::string::repeat(std::to_string(idx), 10);
     });
     queue.commit();
   }
@@ -116,7 +116,7 @@ TEST_CASE("Discard overflow", "[TestStagingQueue5]") {
   // idx 0 and 1 have been discarded
   for (size_t idx = 2; idx < 5; ++idx) {
     REQUIRE(queue.tryDequeue(out));
-    REQUIRE(out.data_ == utils::StringUtils::repeat(std::to_string(idx), 10));
+    REQUIRE(out.data_ == utils::string::repeat(std::to_string(idx), 10));
   }
   REQUIRE(queue.size() == 0);
 }

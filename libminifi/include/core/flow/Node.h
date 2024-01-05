@@ -145,14 +145,14 @@ class Node {
   // considers @key to be a member of this node as is
   Node getMember(std::string_view key) {
     Node result = impl_->operator[](key);
-    result.path_ = utils::StringUtils::join_pack(path_, "/", key);
+    result.path_ = utils::string::join_pack(path_, "/", key);
     return result;
   }
 
   // considers @key to be a '/'-delimited access path
   Node operator[](std::string_view key) const {
     Node result = *this;
-    for (auto& field : utils::StringUtils::split(std::string{key}, "/")) {
+    for (auto& field : utils::string::split(std::string{key}, "/")) {
       if (key == ".") {
         // pass: self
       } else {

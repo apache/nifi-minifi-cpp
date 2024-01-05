@@ -42,13 +42,13 @@ int64_t FileReaderCallback::operator()(const std::shared_ptr<io::OutputStream>& 
 
   std::ifstream input_stream{file_path_, std::ifstream::in | std::ifstream::binary};
   if (!input_stream.is_open()) {
-    throw FileReaderCallbackIOError(StringUtils::join_pack("Error opening file: ", std::strerror(errno)), errno);
+    throw FileReaderCallbackIOError(string::join_pack("Error opening file: ", std::strerror(errno)), errno);
   }
   logger_->log_debug("Opening {}", file_path_);
   while (input_stream.good()) {
     input_stream.read(buffer.data(), buffer.size());
     if (input_stream.bad()) {
-      throw FileReaderCallbackIOError(StringUtils::join_pack("Error reading file: ", std::strerror(errno)), errno);
+      throw FileReaderCallbackIOError(string::join_pack("Error reading file: ", std::strerror(errno)), errno);
     }
     const auto num_bytes_read = input_stream.gcount();
     logger_->log_trace("Read {} bytes of input", std::intmax_t{num_bytes_read});
@@ -59,7 +59,7 @@ int64_t FileReaderCallback::operator()(const std::shared_ptr<io::OutputStream>& 
   input_stream.close();
 
   logger_->log_debug("Finished reading {} bytes from the file", num_bytes_written);
-  return num_bytes_written;
+  return gsl::narrow<int64_t>(num_bytes_written);
 }
 
 }  // namespace org::apache::nifi::minifi::utils

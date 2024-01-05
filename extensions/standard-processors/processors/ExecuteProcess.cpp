@@ -19,6 +19,7 @@
  */
 #ifndef WIN32
 #include "ExecuteProcess.h"
+#include <array>
 #include <memory>
 #include <string>
 #include <iomanip>
@@ -56,7 +57,7 @@ void ExecuteProcess::onSchedule(core::ProcessContext& context, core::ProcessSess
     logger_->log_debug("Setting batch duration to {}", batch_duration_);
   }
   if (context.getProperty(RedirectErrorStream, value)) {
-    redirect_error_stream_ = org::apache::nifi::minifi::utils::StringUtils::toBool(value).value_or(false);
+    redirect_error_stream_ = org::apache::nifi::minifi::utils::string::toBool(value).value_or(false);
   }
   full_command_ = command_ + " " + command_argument_;
 }
@@ -112,8 +113,8 @@ void ExecuteProcess::executeChildProcess() {
 void ExecuteProcess::readOutputInBatches(core::ProcessSession& session) {
   while (true) {
     std::this_thread::sleep_for(batch_duration_);
-    char buffer[4096];
-    const auto num_read = read(pipefd_[0], buffer, sizeof(buffer));
+    std::array<char, 4096> buffer;  // NOLINT(cppcoreguidelines-pro-type-member-init)
+    const auto num_read = read(pipefd_[0], buffer.data(), buffer.size());
     if (num_read <= 0) {
       break;
     }
@@ -125,7 +126,7 @@ void ExecuteProcess::readOutputInBatches(core::ProcessSession& session) {
     }
     flow_file->addAttribute("command", command_);
     flow_file->addAttribute("command.arguments", command_argument_);
-    session.writeBuffer(flow_file, gsl::make_span(buffer, gsl::narrow<size_t>(num_read)));
+    session.writeBuffer(flow_file, gsl::make_span(buffer.data(), gsl::narrow<size_t>(num_read)));
     session.transfer(flow_file, Success);
     session.commit();
   }
@@ -148,32 +149,32 @@ bool ExecuteProcess::writeToFlowFile(core::ProcessSession& session, std::shared_
 }
 
 void ExecuteProcess::readOutput(core::ProcessSession& session) {
-  char buffer[4096];
-  char *buf_ptr = buffer;
+  std::array<char, 4096> buffer;  // NOLINT(cppcoreguidelines-pro-type-member-init)
+  char *buf_ptr = buffer.data();
   size_t read_to_buffer = 0;
   std::shared_ptr<core::FlowFile> flow_file;
-  auto num_read = read(pipefd_[0], buf_ptr, sizeof(buffer));
+  auto num_read = read(pipefd_[0], buf_ptr, buffer.size());
   while (num_read > 0) {
-    if (num_read == static_cast<ssize_t>(sizeof(buffer) - read_to_buffer)) {
+    if (num_read == static_cast<ssize_t>(buffer.size() - read_to_buffer)) {
       // we reach the max buffer size
-      logger_->log_debug("Execute Command Max Respond {}", sizeof(buffer));
+      logger_->log_debug("Execute Command Max Respond {}", buffer.size());
       if (!writeToFlowFile(session, flow_file, buffer)) {
         continue;
       }
       // Rewind
       read_to_buffer = 0;
-      buf_ptr = buffer;
+      buf_ptr = buffer.data();
     } else {
       read_to_buffer += num_read;
       buf_ptr += num_read;
     }
-    num_read = read(pipefd_[0], buf_ptr, (sizeof(buffer) - read_to_buffer));
+    num_read = read(pipefd_[0], buf_ptr, (buffer.size() - read_to_buffer));
   }
 
   if (read_to_buffer > 0) {
     logger_->log_debug("Execute Command Respond {}", read_to_buffer);
     // child exits and close the pipe
-    const auto buffer_span = gsl::make_span(buffer, read_to_buffer);
+    const auto buffer_span = gsl::make_span(buffer.data(), read_to_buffer);
     if (!writeToFlowFile(session, flow_file, buffer_span)) {
       return;
     }

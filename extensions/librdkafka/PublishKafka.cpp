@@ -102,7 +102,7 @@ class PublishKafka::Messages {
       }
       oss << "}, ";
     }
-    oss << "in-flight (" << flow_files_in_flight.size() << "): " << utils::StringUtils::join(",", flow_files_in_flight);
+    oss << "in-flight (" << flow_files_in_flight.size() << "): " << utils::string::join(",", flow_files_in_flight);
     return oss.str();
   }
 
@@ -436,7 +436,7 @@ bool PublishKafka::configureNewConnection(core::ProcessContext& context) {
   result = rd_kafka_conf_set(conf_.get(), "bootstrap.servers", key->brokers_.c_str(), errstr.data(), errstr.size());
   logger_->log_debug("PublishKafka: bootstrap.servers [{}]", key->brokers_);
   if (result != RD_KAFKA_CONF_OK) {
-    auto error_msg = utils::StringUtils::join_pack(PREFIX_ERROR_MSG, errstr.data());
+    auto error_msg = utils::string::join_pack(PREFIX_ERROR_MSG, errstr.data());
     throw Exception(PROCESS_SCHEDULE_EXCEPTION, error_msg);
   }
 
@@ -446,7 +446,7 @@ bool PublishKafka::configureNewConnection(core::ProcessContext& context) {
   result = rd_kafka_conf_set(conf_.get(), "client.id", key->client_id_.c_str(), errstr.data(), errstr.size());
   logger_->log_debug("PublishKafka: client.id [{}]", key->client_id_);
   if (result != RD_KAFKA_CONF_OK) {
-    auto error_msg = utils::StringUtils::join_pack(PREFIX_ERROR_MSG, errstr.data());
+    auto error_msg = utils::string::join_pack(PREFIX_ERROR_MSG, errstr.data());
     throw Exception(PROCESS_SCHEDULE_EXCEPTION, error_msg);
   }
 
@@ -455,7 +455,7 @@ bool PublishKafka::configureNewConnection(core::ProcessContext& context) {
     result = rd_kafka_conf_set(conf_.get(), "debug", value.c_str(), errstr.data(), errstr.size());
     logger_->log_debug("PublishKafka: debug [{}]", value);
     if (result != RD_KAFKA_CONF_OK) {
-      auto error_msg = utils::StringUtils::join_pack(PREFIX_ERROR_MSG, errstr.data());
+      auto error_msg = utils::string::join_pack(PREFIX_ERROR_MSG, errstr.data());
       throw Exception(PROCESS_SCHEDULE_EXCEPTION, error_msg);
     }
   }
@@ -465,7 +465,7 @@ bool PublishKafka::configureNewConnection(core::ProcessContext& context) {
     result = rd_kafka_conf_set(conf_.get(), "message.max.bytes", value.c_str(), errstr.data(), errstr.size());
     logger_->log_debug("PublishKafka: message.max.bytes [{}]", value);
     if (result != RD_KAFKA_CONF_OK) {
-      auto error_msg = utils::StringUtils::join_pack(PREFIX_ERROR_MSG, errstr.data());
+      auto error_msg = utils::string::join_pack(PREFIX_ERROR_MSG, errstr.data());
       throw Exception(PROCESS_SCHEDULE_EXCEPTION, error_msg);
     }
   }
@@ -480,7 +480,7 @@ bool PublishKafka::configureNewConnection(core::ProcessContext& context) {
     result = rd_kafka_conf_set(conf_.get(), "queue.buffering.max.messages", value.c_str(), errstr.data(), errstr.size());
     logger_->log_debug("PublishKafka: queue.buffering.max.messages [{}]", value);
     if (result != RD_KAFKA_CONF_OK) {
-      auto error_msg = utils::StringUtils::join_pack(PREFIX_ERROR_MSG, errstr.data());
+      auto error_msg = utils::string::join_pack(PREFIX_ERROR_MSG, errstr.data());
       throw Exception(PROCESS_SCHEDULE_EXCEPTION, error_msg);
     }
   }
@@ -491,7 +491,7 @@ bool PublishKafka::configureNewConnection(core::ProcessContext& context) {
     result = rd_kafka_conf_set(conf_.get(), "queue.buffering.max.kbytes", valueConf.c_str(), errstr.data(), errstr.size());
     logger_->log_debug("PublishKafka: queue.buffering.max.kbytes [{}]", valueConf);
     if (result != RD_KAFKA_CONF_OK) {
-      auto error_msg = utils::StringUtils::join_pack(PREFIX_ERROR_MSG, errstr.data());
+      auto error_msg = utils::string::join_pack(PREFIX_ERROR_MSG, errstr.data());
       throw Exception(PROCESS_SCHEDULE_EXCEPTION, error_msg);
     }
   }
@@ -501,7 +501,7 @@ bool PublishKafka::configureNewConnection(core::ProcessContext& context) {
     result = rd_kafka_conf_set(conf_.get(), "queue.buffering.max.ms", valueConf.c_str(), errstr.data(), errstr.size());
     logger_->log_debug("PublishKafka: queue.buffering.max.ms [{}]", valueConf);
     if (result != RD_KAFKA_CONF_OK) {
-      auto error_msg = utils::StringUtils::join_pack(PREFIX_ERROR_MSG, errstr.data());
+      auto error_msg = utils::string::join_pack(PREFIX_ERROR_MSG, errstr.data());
       throw Exception(PROCESS_SCHEDULE_EXCEPTION, error_msg);
     }
   }
@@ -510,7 +510,7 @@ bool PublishKafka::configureNewConnection(core::ProcessContext& context) {
     result = rd_kafka_conf_set(conf_.get(), "batch.num.messages", value.c_str(), errstr.data(), errstr.size());
     logger_->log_debug("PublishKafka: batch.num.messages [{}]", value);
     if (result != RD_KAFKA_CONF_OK) {
-      auto error_msg = utils::StringUtils::join_pack(PREFIX_ERROR_MSG, errstr.data());
+      auto error_msg = utils::string::join_pack(PREFIX_ERROR_MSG, errstr.data());
       throw Exception(PROCESS_SCHEDULE_EXCEPTION, error_msg);
     }
   }
@@ -519,7 +519,7 @@ bool PublishKafka::configureNewConnection(core::ProcessContext& context) {
     result = rd_kafka_conf_set(conf_.get(), "compression.codec", value.c_str(), errstr.data(), errstr.size());
     logger_->log_debug("PublishKafka: compression.codec [{}]", value);
     if (result != RD_KAFKA_CONF_OK) {
-      auto error_msg = utils::StringUtils::join_pack(PREFIX_ERROR_MSG, errstr.data());
+      auto error_msg = utils::string::join_pack(PREFIX_ERROR_MSG, errstr.data());
       throw Exception(PROCESS_SCHEDULE_EXCEPTION, error_msg);
     }
   }
@@ -538,7 +538,7 @@ bool PublishKafka::configureNewConnection(core::ProcessContext& context) {
       logger_->log_debug("PublishKafka: DynamicProperty: [{}] -> [{}]", prop_key, dynamic_property_value);
       result = rd_kafka_conf_set(conf_.get(), prop_key.c_str(), dynamic_property_value.c_str(), errstr.data(), errstr.size());
       if (result != RD_KAFKA_CONF_OK) {
-        auto error_msg = utils::StringUtils::join_pack(PREFIX_ERROR_MSG, errstr.data());
+        auto error_msg = utils::string::join_pack(PREFIX_ERROR_MSG, errstr.data());
         throw Exception(PROCESS_SCHEDULE_EXCEPTION, error_msg);
       }
     } else {
@@ -555,7 +555,7 @@ bool PublishKafka::configureNewConnection(core::ProcessContext& context) {
   // The producer takes ownership of the configuration, we must not free it
   const auto producer = gsl::owner<rd_kafka_t*>(rd_kafka_new(RD_KAFKA_PRODUCER, conf_.release(), errstr.data(), errstr.size()));
   if (producer == nullptr) {
-    auto error_msg = utils::StringUtils::join_pack("Failed to create Kafka producer ", errstr.data());
+    auto error_msg = utils::string::join_pack("Failed to create Kafka producer ", errstr.data());
     throw Exception(PROCESS_SCHEDULE_EXCEPTION, error_msg);
   }
 

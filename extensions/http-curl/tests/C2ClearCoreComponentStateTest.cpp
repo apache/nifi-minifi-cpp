@@ -141,7 +141,7 @@ class ClearCoreComponentStateHandler: public HeartbeatHandler {
           const std::string tailing_file_pattern = "[debug] Tailing file " + file_1_location_.string();
           const std::string tail_file_committed_pattern = "[trace] ProcessSession committed for TailFile1";
           const std::vector<std::string> patterns = {tailing_file_pattern, tailing_file_pattern, tail_file_committed_pattern};
-          return utils::StringUtils::matchesSequence(log_contents, patterns);
+          return utils::string::matchesSequence(log_contents, patterns);
         };
         if (tail_file_ran_again_checker()) {
           flow_state_ = FlowState::CLEAR_SENT_ACK;

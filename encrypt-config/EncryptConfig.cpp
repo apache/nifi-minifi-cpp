@@ -138,7 +138,7 @@ EncryptionKeys EncryptConfig::getEncryptionKeys() const {
 
 std::string EncryptConfig::hexDecodeAndValidateKey(const std::string& key, const std::string& key_name) const {
   // Note: from_hex() allows [and skips] non-hex characters
-  std::string binary_key = utils::StringUtils::from_hex(key, utils::as_string);
+  std::string binary_key = utils::string::from_hex(key, utils::as_string);
   if (binary_key.size() == utils::crypto::EncryptionType::keyLength()) {
     return binary_key;
   } else {
@@ -151,7 +151,7 @@ std::string EncryptConfig::hexDecodeAndValidateKey(const std::string& key, const
 }
 
 void EncryptConfig::writeEncryptionKeyToBootstrapFile(const utils::crypto::Bytes& encryption_key) const {
-  std::string key_encoded = utils::StringUtils::to_hex(utils::crypto::bytesToString(encryption_key));
+  std::string key_encoded = utils::string::to_hex(utils::crypto::bytesToString(encryption_key));
   encrypt_config::ConfigFile bootstrap_file{std::ifstream{bootstrapFilePath()}};
 
   if (bootstrap_file.hasValue(ENCRYPTION_KEY_PROPERTY_NAME)) {

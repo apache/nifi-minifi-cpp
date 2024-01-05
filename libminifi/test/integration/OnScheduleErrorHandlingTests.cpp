@@ -35,7 +35,7 @@ class KamikazeErrorHandlingTests : public IntegrationBase {
     using org::apache::nifi::minifi::utils::verifyEventHappenedInPollTime;
     assert(verifyEventHappenedInPollTime(wait_time_, [&] {
       const std::string logs = LogTestController::getInstance().getLogs();
-      const auto result = utils::StringUtils::countOccurrences(logs, minifi::processors::KamikazeProcessor::OnScheduleExceptionStr);
+      const auto result = utils::string::countOccurrences(logs, minifi::processors::KamikazeProcessor::OnScheduleExceptionStr);
       const int occurrences = result.second;
       return 1 < occurrences;
     }));
@@ -48,7 +48,7 @@ class KamikazeErrorHandlingTests : public IntegrationBase {
 
     const bool test_success = verifyEventHappenedInPollTime(std::chrono::milliseconds(wait_time_), [&] {
       const std::string logs = LogTestController::getInstance().getLogs();
-      const auto result = utils::StringUtils::countOccurrences(logs, minifi::processors::KamikazeProcessor::OnScheduleExceptionStr);
+      const auto result = utils::string::countOccurrences(logs, minifi::processors::KamikazeProcessor::OnScheduleExceptionStr);
       size_t last_pos = result.first;
       for (const std::string& msg : must_appear_byorder_msgs) {
         last_pos = logs.find(msg, last_pos);

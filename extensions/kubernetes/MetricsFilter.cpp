@@ -28,7 +28,7 @@ nonstd::expected<std::string, std::string> filter(const std::string& metrics_jso
   rapidjson::Document document;
   rapidjson::ParseResult parse_result = document.Parse<rapidjson::kParseStopWhenDoneFlag>(metrics_json.data());
   if (parse_result.IsError()) {
-    return nonstd::make_unexpected(utils::StringUtils::join_pack("Error parsing the metrics received from the Kubernetes API at offset ",
+    return nonstd::make_unexpected(utils::string::join_pack("Error parsing the metrics received from the Kubernetes API at offset ",
         std::to_string(parse_result.Offset()), ": ", rapidjson::GetParseError_En(parse_result.Code())));
   }
 

@@ -27,12 +27,12 @@ namespace org::apache::nifi::minifi::utils {
 
 bool ClassUtils::shortenClassName(std::string_view class_name, std::string &out) {
   std::string class_delim = "::";
-  auto class_split = utils::StringUtils::split(class_name, class_delim);
+  auto class_split = utils::string::split(class_name, class_delim);
   // support . and ::
   if (class_split.size() <= 1) {
     if (class_name.find('.') != std::string::npos) {
       class_delim = ".";
-      class_split = utils::StringUtils::split(class_name, class_delim);
+      class_split = utils::string::split(class_name, class_delim);
     } else {
       // if no update can be performed, return false to let the developer know
       // this. Out will have no updates
@@ -45,7 +45,7 @@ bool ClassUtils::shortenClassName(std::string_view class_name, std::string &out)
     }
   }
 
-  out = utils::StringUtils::join(class_delim, class_split);
+  out = utils::string::join(class_delim, class_split);
   return true;
 }
 

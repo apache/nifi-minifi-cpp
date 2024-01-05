@@ -35,7 +35,7 @@ void PythonScriptExecutor::onTrigger(const std::shared_ptr<core::ProcessContext>
   gsl_Expects(std::holds_alternative<std::filesystem::path>(script_to_run_) || std::holds_alternative<std::string>(script_to_run_));
 
   if (module_directory_) {
-    python_script_engine_->setModulePaths(utils::StringUtils::splitAndTrimRemovingEmpty(*module_directory_, ",") | ranges::to<std::vector<std::filesystem::path>>());
+    python_script_engine_->setModulePaths(utils::string::splitAndTrimRemovingEmpty(*module_directory_, ",") | ranges::to<std::vector<std::filesystem::path>>());
   }
 
   if (std::holds_alternative<std::filesystem::path>(script_to_run_))

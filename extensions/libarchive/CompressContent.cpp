@@ -84,7 +84,7 @@ void CompressContent::onTrigger(core::ProcessContext& context, core::ProcessSess
 void CompressContent::processFlowFile(const std::shared_ptr<core::FlowFile>& flowFile, core::ProcessSession& session) {
   session.remove(flowFile);
 
-  io::CompressionFormat compressFormat;
+  io::CompressionFormat compressFormat{};
   if (compressFormat_ == compress_content::ExtendedCompressionFormat::USE_MIME_TYPE) {
     std::string attr;
     flowFile->getAttribute(core::SpecialFlowAttribute::MIME_TYPE, attr);
@@ -188,9 +188,9 @@ void CompressContent::processFlowFile(const std::shared_ptr<core::FlowFile>& flo
     } else {
       session.removeAttribute(result, core::SpecialFlowAttribute::MIME_TYPE);
       if (updateFileName_) {
-        if (utils::StringUtils::endsWith(fileName, fileExtension)) {
+        if (utils::string::endsWith(fileName, fileExtension)) {
           fileName = fileName.substr(0, fileName.size() - fileExtension.size());
-          if (encapsulateInTar_ && utils::StringUtils::endsWith(fileName, TAR_EXT)) {
+          if (encapsulateInTar_ && utils::string::endsWith(fileName, TAR_EXT)) {
             fileName = fileName.substr(0, fileName.size() - TAR_EXT.size());
           }
           session.putAttribute(result, core::SpecialFlowAttribute::FILENAME, fileName);

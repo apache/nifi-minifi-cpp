@@ -90,12 +90,12 @@ void ListSFTP::onSchedule(core::ProcessContext& context, core::ProcessSessionFac
   if (!context.getProperty(SearchRecursively, value)) {
     logger_->log_error("Search Recursively attribute is missing or invalid");
   } else {
-    search_recursively_ = utils::StringUtils::toBool(value).value_or(false);
+    search_recursively_ = utils::string::toBool(value).value_or(false);
   }
   if (!context.getProperty(FollowSymlink, value)) {
     logger_->log_error("Follow symlink attribute is missing or invalid");
   } else {
-    follow_symlink_ = utils::StringUtils::toBool(value).value_or(false);
+    follow_symlink_ = utils::string::toBool(value).value_or(false);
   }
   if (context.getProperty(FileFilterRegex, file_filter_regex_) && !file_filter_regex_.empty()) {
     try {
@@ -114,7 +114,7 @@ void ListSFTP::onSchedule(core::ProcessContext& context, core::ProcessSessionFac
   if (!context.getProperty(IgnoreDottedFiles, value)) {
     logger_->log_error("Ignore Dotted Files attribute is missing or invalid");
   } else {
-    ignore_dotted_files_ = utils::StringUtils::toBool(value).value_or(true);
+    ignore_dotted_files_ = utils::string::toBool(value).value_or(true);
   }
   context.getProperty(TargetSystemTimestampPrecision, target_system_timestamp_precision_);
   context.getProperty(EntityTrackingInitialListingTarget, entity_tracking_initial_listing_target_);
@@ -268,7 +268,7 @@ bool ListSFTP::filterDirectory(const std::string& parent_path, const std::string
 
   /* Path Filter Regex */
   if (compiled_path_filter_regex_) {
-    std::string dir_path = utils::StringUtils::join_pack(parent_path, "/", filename);
+    std::string dir_path = utils::string::join_pack(parent_path, "/", filename);
     bool match = false;
     match = utils::regexMatch(dir_path, *compiled_path_filter_regex_);
     if (!match) {

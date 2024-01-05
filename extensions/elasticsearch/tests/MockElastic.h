@@ -98,7 +98,7 @@ class BulkElasticHandler : public CivetHandler {
     char request[2048];
     size_t chars_read = mg_read(conn, request, 2048);
 
-    std::vector<std::string> lines = utils::StringUtils::splitRemovingEmpty({request, chars_read}, "\n");
+    std::vector<std::string> lines = utils::string::splitRemovingEmpty({request, chars_read}, "\n");
     rapidjson::Document response{rapidjson::kObjectType};
     response.AddMember("took", 30, response.GetAllocator());
     response.AddMember("errors", ret_error_, response.GetAllocator());

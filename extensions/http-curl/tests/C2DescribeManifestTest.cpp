@@ -51,7 +51,7 @@ int main(int argc, char **argv) {
   const cmd_args args = parse_cmdline_args(argc, argv, "heartbeat");
   std::atomic_bool verified{false};
   VerifyC2Describe harness(verified);
-  utils::crypto::Bytes encryption_key = utils::StringUtils::from_hex("4024b327fdc987ce3eb43dd1f690b9987e4072e0020e3edf4349ce1ad91a4e38");
+  utils::crypto::Bytes encryption_key = utils::string::from_hex("4024b327fdc987ce3eb43dd1f690b9987e4072e0020e3edf4349ce1ad91a4e38");
   minifi::Decryptor decryptor{utils::crypto::EncryptionProvider{encryption_key}};
   std::string encrypted_value = "l3WY1V27knTiPa6jVX0jrq4qjmKsySOu||ErntqZpHP1M+6OkA14p5sdnqJhuNHWHDVUU5EyMloTtSytKk9a5xNKo=";
 

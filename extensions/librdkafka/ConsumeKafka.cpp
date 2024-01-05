@@ -67,11 +67,11 @@ void ConsumeKafka::onSchedule(core::ProcessContext& context, core::ProcessSessio
   headers_to_add_as_attributes_ = utils::listFromCommaSeparatedProperty(context, HeadersToAddAsAttributes.name);
   max_poll_records_ = gsl::narrow<std::size_t>(context.getProperty<uint64_t>(MaxPollRecords).value_or(core::StandardPropertyTypes::UNSIGNED_LONG_TYPE.parse(DEFAULT_MAX_POLL_RECORDS)));
 
-  if (!utils::StringUtils::equalsIgnoreCase(KEY_ATTR_ENCODING_UTF_8, key_attribute_encoding_) && !utils::StringUtils::equalsIgnoreCase(KEY_ATTR_ENCODING_HEX, key_attribute_encoding_)) {
+  if (!utils::string::equalsIgnoreCase(KEY_ATTR_ENCODING_UTF_8, key_attribute_encoding_) && !utils::string::equalsIgnoreCase(KEY_ATTR_ENCODING_HEX, key_attribute_encoding_)) {
     throw Exception(PROCESS_SCHEDULE_EXCEPTION, "Unsupported key attribute encoding: " + key_attribute_encoding_);
   }
 
-  if (!utils::StringUtils::equalsIgnoreCase(MSG_HEADER_ENCODING_UTF_8, message_header_encoding_) && !utils::StringUtils::equalsIgnoreCase(MSG_HEADER_ENCODING_HEX, message_header_encoding_)) {
+  if (!utils::string::equalsIgnoreCase(MSG_HEADER_ENCODING_UTF_8, message_header_encoding_) && !utils::string::equalsIgnoreCase(MSG_HEADER_ENCODING_HEX, message_header_encoding_)) {
     throw Exception(PROCESS_SCHEDULE_EXCEPTION, "Unsupported message header encoding: " + key_attribute_encoding_);
   }
 
@@ -115,7 +115,7 @@ void ConsumeKafka::create_topic_partition_list() {
   kf_topic_partition_list_ = { rd_kafka_topic_partition_list_new(gsl::narrow<int>(topic_names_.size())), utils::rd_kafka_topic_partition_list_deleter() };
 
   // On subscriptions any topics prefixed with ^ will be regex matched
-  if (utils::StringUtils::equalsIgnoreCase(TOPIC_FORMAT_PATTERNS, topic_name_format_)) {
+  if (utils::string::equalsIgnoreCase(TOPIC_FORMAT_PATTERNS, topic_name_format_)) {
     for (const std::string& topic : topic_names_) {
       const std::string regex_format = "^" + topic;
       rd_kafka_topic_partition_list_add(kf_topic_partition_list_.get(), regex_format.c_str(), RD_KAFKA_PARTITION_UA);
@@ -245,20 +245,20 @@ std::vector<std::unique_ptr<rd_kafka_message_t, utils::rd_kafka_message_deleter>
 }
 
 utils::KafkaEncoding ConsumeKafka::key_attr_encoding_attr_to_enum() const {
-  if (utils::StringUtils::equalsIgnoreCase(key_attribute_encoding_, KEY_ATTR_ENCODING_UTF_8)) {
+  if (utils::string::equalsIgnoreCase(key_attribute_encoding_, KEY_ATTR_ENCODING_UTF_8)) {
     return utils::KafkaEncoding::UTF8;
   }
-  if (utils::StringUtils::equalsIgnoreCase(key_attribute_encoding_, KEY_ATTR_ENCODING_HEX)) {
+  if (utils::string::equalsIgnoreCase(key_attribute_encoding_, KEY_ATTR_ENCODING_HEX)) {
     return utils::KafkaEncoding::HEX;
   }
   throw minifi::Exception(ExceptionType::PROCESSOR_EXCEPTION, "\"Key Attribute Encoding\" property not recognized.");
 }
 
 utils::KafkaEncoding ConsumeKafka::message_header_encoding_attr_to_enum() const {
-  if (utils::StringUtils::equalsIgnoreCase(message_header_encoding_, MSG_HEADER_ENCODING_UTF_8)) {
+  if (utils::string::equalsIgnoreCase(message_header_encoding_, MSG_HEADER_ENCODING_UTF_8)) {
     return utils::KafkaEncoding::UTF8;
   }
-  if (utils::StringUtils::equalsIgnoreCase(message_header_encoding_, MSG_HEADER_ENCODING_HEX)) {
+  if (utils::string::equalsIgnoreCase(message_header_encoding_, MSG_HEADER_ENCODING_HEX)) {
     return utils::KafkaEncoding::HEX;
   }
   throw minifi::Exception(ExceptionType::PROCESSOR_EXCEPTION, "\"Message Header Encoding\" property not recognized.");
@@ -272,7 +272,7 @@ std::string ConsumeKafka::resolve_duplicate_headers(const std::vector<std::strin
     return matching_headers.back();
   }
   if (MSG_HEADER_COMMA_SEPARATED_MERGE == duplicate_header_handling_) {
-    return utils::StringUtils::join(", ", matching_headers);
+    return utils::string::join(", ", matching_headers);
   }
   throw minifi::Exception(ExceptionType::PROCESSOR_EXCEPTION, "\"Duplicate Header Handling\" property not recognized.");
 }
@@ -334,7 +334,7 @@ std::optional<std::vector<std::shared_ptr<FlowFileRecord>>> ConsumeKafka::transf
     std::string message_content = extract_message(*message);
     std::vector<std::pair<std::string, std::string>> attributes_from_headers = get_flowfile_attributes_from_message_header(*message);
     std::vector<std::string> split_message{ !message_demarcator_.empty() ?
-      utils::StringUtils::split(message_content, message_demarcator_) :
+      utils::string::split(message_content, message_demarcator_) :
       std::vector<std::string>{ message_content }};
     for (auto& flowfile_content : split_message) {
       std::shared_ptr<FlowFileRecord> flow_file = std::static_pointer_cast<FlowFileRecord>(session.create());

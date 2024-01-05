@@ -163,7 +163,7 @@ class HTTPClient : public utils::BaseHTTPClient, public core::Connectable {
   std::string getHeaderValue(const std::string &key) {
     std::string ret;
     for (const auto &kv : response_data_.header_response.getHeaderMap()) {
-      if (utils::StringUtils::equalsIgnoreCase(key, kv.first)) {
+      if (utils::string::equalsIgnoreCase(key, kv.first)) {
         ret = kv.second;
         break;
       }

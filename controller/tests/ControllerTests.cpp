@@ -451,7 +451,7 @@ TEST_CASE_METHOD(ControllerTestFixture, "Test connection getters", "[controllerT
   {
     std::stringstream connection_stream;
     minifi::controller::listConnections(controller_socket_data_, connection_stream);
-    auto lines = minifi::utils::StringUtils::splitRemovingEmpty(connection_stream.str(), "\n");
+    auto lines = minifi::utils::string::splitRemovingEmpty(connection_stream.str(), "\n");
     CHECK(lines.size() == 3);
     CHECK(ranges::find(lines, "Connection Names:") != ranges::end(lines));
     CHECK(ranges::find(lines, "con1") != ranges::end(lines));
@@ -461,7 +461,7 @@ TEST_CASE_METHOD(ControllerTestFixture, "Test connection getters", "[controllerT
   {
     std::stringstream connection_stream;
     minifi::controller::listConnections(controller_socket_data_, connection_stream, false);
-    auto lines = minifi::utils::StringUtils::splitRemovingEmpty(connection_stream.str(), "\n");
+    auto lines = minifi::utils::string::splitRemovingEmpty(connection_stream.str(), "\n");
     CHECK(lines.size() == 2);
     CHECK(ranges::find(lines, "con1") != ranges::end(lines));
     CHECK(ranges::find(lines, "con2") != ranges::end(lines));

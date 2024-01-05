@@ -37,11 +37,11 @@ void KamikazeProcessor::initialize() {
 void KamikazeProcessor::onSchedule(core::ProcessContext& context, core::ProcessSessionFactory&) {
   std::string value;
   context.getProperty(ThrowInOnTrigger, value);
-  _throwInOnTrigger = utils::StringUtils::toBool(value).value_or(false);
+  _throwInOnTrigger = utils::string::toBool(value).value_or(false);
 
   context.getProperty(ThrowInOnSchedule, value);
 
-  if (utils::StringUtils::toBool(value).value_or(false)) {
+  if (utils::string::toBool(value).value_or(false)) {
     throw Exception(PROCESS_SCHEDULE_EXCEPTION, OnScheduleExceptionStr);
   }
   logger_->log_error("{}", OnScheduleLogStr);

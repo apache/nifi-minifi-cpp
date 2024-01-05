@@ -161,9 +161,9 @@ class RemoteProcessorGroupPort : public core::Processor {
    * Sets the url. Supports a CSV
    */
   void setURL(std::string val) {
-    auto urls = utils::StringUtils::split(val, ",");
+    auto urls = utils::string::split(val, ",");
     for (const auto& url : urls) {
-      utils::URL parsed_url{utils::StringUtils::trim(url)};
+      utils::URL parsed_url{utils::string::trim(url)};
       if (parsed_url.isValid()) {
         logger_->log_debug("Parsed RPG URL '{}' -> '{}'", url, parsed_url.hostPort());
         nifi_instances_.push_back({parsed_url.host(), parsed_url.port(), parsed_url.protocol()});

@@ -69,7 +69,7 @@ void StructuredConnectionParser::configureConnectionSourceRelationships(minifi::
 uint64_t StructuredConnectionParser::getWorkQueueSize() const {
   if (auto max_work_queue_data_size_node = connectionNode_[schema_.max_queue_size]) {
     std::string max_work_queue_str = max_work_queue_data_size_node.getIntegerAsString().value();
-    uint64_t max_work_queue_size;
+    uint64_t max_work_queue_size = 0;
     if (core::Property::StringToInt(max_work_queue_str, max_work_queue_size)) {
       logger_->log_debug("Setting {} as the max queue size.", max_work_queue_size);
       return max_work_queue_size;
@@ -97,7 +97,7 @@ uint64_t StructuredConnectionParser::getSwapThreshold() const {
   const flow::Node swap_threshold_node = connectionNode_[schema_.swap_threshold];
   if (swap_threshold_node) {
     auto swap_threshold_str = swap_threshold_node.getString().value();
-    uint64_t swap_threshold;
+    uint64_t swap_threshold = 0;
     if (core::Property::StringToInt(swap_threshold_str, swap_threshold)) {
       logger_->log_debug("Setting {} as the swap threshold.", swap_threshold);
       return swap_threshold;
@@ -197,7 +197,7 @@ std::chrono::milliseconds StructuredConnectionParser::getFlowFileExpiration() co
 bool StructuredConnectionParser::getDropEmpty() const {
   const flow::Node drop_empty_node = connectionNode_[schema_.drop_empty];
   if (drop_empty_node) {
-    return utils::StringUtils::toBool(drop_empty_node.getString().value()).value_or(false);
+    return utils::string::toBool(drop_empty_node.getString().value()).value_or(false);
   }
   return false;
 }

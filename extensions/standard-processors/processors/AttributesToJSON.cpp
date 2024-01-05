@@ -38,7 +38,7 @@ void AttributesToJSON::initialize() {
 void AttributesToJSON::onSchedule(core::ProcessContext& context, core::ProcessSessionFactory&) {
   std::string value;
   if (context.getProperty(AttributesList, value) && !value.empty()) {
-    attribute_list_ = utils::StringUtils::splitAndTrimRemovingEmpty(value, ",");
+    attribute_list_ = utils::string::splitAndTrimRemovingEmpty(value, ",");
   }
   if (context.getProperty(AttributesRegularExpression, value) && !value.empty()) {
     attributes_regular_expression_ = utils::Regex(value);

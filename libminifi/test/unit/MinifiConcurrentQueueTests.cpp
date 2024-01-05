@@ -250,7 +250,7 @@ TEST_CASE("TestConcurrentQueue: test simple producer and consumer", "[ProducerCo
     consumer.join();
   }
 
-  REQUIRE(utils::StringUtils::join("-", results) == "ba-dum-tss");
+  REQUIRE(utils::string::join("-", results) == "ba-dum-tss");
 }
 
 TEST_CASE("TestConcurrentQueue: test timed waiting consumers", "[ProducerConsumer]") {
@@ -273,7 +273,7 @@ TEST_CASE("TestConcurrentQueue: test timed waiting consumers", "[ProducerConsume
   producer.join();
   consumer.join();
 
-  REQUIRE(utils::StringUtils::join("-", results) == "ba-dum-tss");
+  REQUIRE(utils::string::join("-", results) == "ba-dum-tss");
 }
 
 TEST_CASE("TestConcurrentQueue: test untimed waiting consumers", "[ProducerConsumer]") {
@@ -298,7 +298,7 @@ TEST_CASE("TestConcurrentQueue: test untimed waiting consumers", "[ProducerConsu
   queue.stop();
   consumer.join();
 
-  REQUIRE(utils::StringUtils::join("-", results) == "ba-dum-tss");
+  REQUIRE(utils::string::join("-", results) == "ba-dum-tss");
 }
 
 TEST_CASE("TestConcurrentQueue: test the readding dequeue consumer", "[ProducerConsumer]") {
@@ -317,7 +317,7 @@ TEST_CASE("TestConcurrentQueue: test the readding dequeue consumer", "[ProducerC
   producer.join();
   consumer.join();
 
-  REQUIRE(utils::StringUtils::join("-", results) == "ba-dum-tss");
+  REQUIRE(utils::string::join("-", results) == "ba-dum-tss");
 }
 
 TEST_CASE("TestConcurrentQueue: test waiting consumers with blocked producer", "[ProducerConsumer]") {

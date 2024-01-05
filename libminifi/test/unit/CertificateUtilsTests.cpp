@@ -26,7 +26,7 @@
 namespace utils = org::apache::nifi::minifi::utils;
 
 TEST_CASE("getCertificateExpiration() works correctly") {
-  using namespace date::literals;
+  using namespace date::literals;  // NOLINT(google-build-using-namespace)
   using namespace std::literals::chrono_literals;
 
   const auto executable_dir = utils::file::get_executable_dir();
@@ -106,7 +106,7 @@ constexpr std::string_view expected_iqmp =
     "31FE9F07A8CCF56D820E6A3F4E620A9B40EC64805EF935F0A2CC608C";
 
 TEST_CASE("convertWindowsRsaKeyPair() works correctly") {
-  std::vector<std::byte> windows_private_key_blob = utils::StringUtils::from_hex(BCRYPT_RSAFULLPRIVATE_BLOB_example);
+  std::vector<std::byte> windows_private_key_blob = utils::string::from_hex(BCRYPT_RSAFULLPRIVATE_BLOB_example);
   utils::tls::EVP_PKEY_unique_ptr openssl_private_key = utils::tls::convertWindowsRsaKeyPair(utils::as_span<BYTE>(std::span{windows_private_key_blob}));
   REQUIRE(openssl_private_key);
 

@@ -19,27 +19,21 @@
  */
 
 #include <algorithm>
-#include <cinttypes>
-#include <cstdint>
+#include <array>
 #include <iostream>
-#include <limits>
 #include <map>
 #include <unordered_map>
 #include <memory>
-#include <set>
 #include <string>
 #include <utility>
 #include <vector>
 
 #include "range/v3/action/sort.hpp"
-#include "range/v3/range/conversion.hpp"
-#include "range/v3/view/transform.hpp"
 
 #include "FlowFileRecord.h"
 #include "io/CRCStream.h"
 #include "utils/file/FileUtils.h"
 #include "utils/file/PathUtils.h"
-#include "utils/TimeUtil.h"
 #include "utils/StringUtils.h"
 #include "utils/ProcessorConfigUtils.h"
 #include "TextFragmentUtils.h"
@@ -48,7 +42,6 @@
 #include "core/ProcessSession.h"
 #include "core/Resource.h"
 #include "utils/RegexUtils.h"
-#include "utils/expected.h"
 
 namespace org::apache::nifi::minifi::processors {
 
@@ -98,7 +91,7 @@ void openFile(const std::filesystem::path& file_path, uint64_t offset, std::ifst
     throw Exception(FILE_OPERATION_EXCEPTION, "Could not open file: " + file_path.string());
   }
   if (offset != 0U) {
-    input_stream.seekg(offset, std::ifstream::beg);
+    input_stream.seekg(gsl::narrow<std::ifstream::off_type>(offset), std::ifstream::beg);
     if (!input_stream.good()) {
       logger->log_error("Seeking to {} failed for file {} (does file/filesystem support seeking?)", offset, file_path);
       throw Exception(FILE_OPERATION_EXCEPTION, "Could not seek file " + file_path.string() + " to offset " + std::to_string(offset));
@@ -151,7 +144,7 @@ class FileReaderCallback {
       latest_flow_file_ends_with_delimiter_ = false;
     }
 
-    return num_bytes_written;
+    return gsl::narrow<int64_t>(num_bytes_written);
   }
 
   uint64_t checksum() const {
@@ -213,7 +206,7 @@ class WholeFileReaderCallback {
 
     checksum_ = crc_stream.getCRC();
 
-    return num_bytes_written;
+    return gsl::narrow<int64_t>(num_bytes_written);
   }
 
  private:
@@ -250,7 +243,7 @@ void TailFile::onSchedule(core::ProcessContext& context, core::ProcessSessionFac
   }
 
   if (auto delimiter_str = context.getProperty(Delimiter)) {
-    if (auto parsed_delimiter = utils::StringUtils::parseCharacter(*delimiter_str)) {
+    if (auto parsed_delimiter = utils::string::parseCharacter(*delimiter_str)) {
       delimiter_ = *parsed_delimiter;
     } else {
       logger_->log_error("Invalid {}: \"{}\" (it should be a single character, whether escaped or not). Using the first character as the {}",
@@ -283,13 +276,8 @@ void TailFile::onSchedule(core::ProcessContext& context, core::ProcessSessionFac
 
     context.getProperty(RecursiveLookup, recursive_lookup_);
 
-    // NOTE:
-    //   context.getProperty(LookupFrequency, lookup_frequency_);
-    // is incorrect, as std::chrono::milliseconds::rep is unspecified, and may not be supported by getProperty()
-    // (e.g. in clang/libc++, this underlying type is long long)
-    int64_t lookup_frequency;
-    if (context.getProperty(LookupFrequency, lookup_frequency)) {
-      lookup_frequency_ = std::chrono::milliseconds{lookup_frequency};
+    if (auto lookup_frequency = context.getProperty<core::TimePeriodValue>(LookupFrequency)) {
+      lookup_frequency_ = lookup_frequency->getMilliseconds();
     }
 
     recoverState(context);
@@ -329,13 +317,13 @@ void TailFile::parseAttributeProviderServiceProperty(core::ProcessContext& conte
 
   std::shared_ptr<core::controller::ControllerService> controller_service = context.getControllerService(*attribute_provider_service_name);
   if (!controller_service) {
-    throw minifi::Exception{ExceptionType::PROCESS_SCHEDULE_EXCEPTION, utils::StringUtils::join_pack("Controller service '", *attribute_provider_service_name, "' not found")};
+    throw minifi::Exception{ExceptionType::PROCESS_SCHEDULE_EXCEPTION, utils::string::join_pack("Controller service '", *attribute_provider_service_name, "' not found")};
   }
 
   // we drop ownership of the service here -- in the long term, getControllerService() should return a non-owning pointer or optional reference
   attribute_provider_service_ = dynamic_cast<minifi::controllers::AttributeProviderService*>(controller_service.get());
   if (!attribute_provider_service_) {
-    throw minifi::Exception{ExceptionType::PROCESS_SCHEDULE_EXCEPTION, utils::StringUtils::join_pack("Controller service '", *attribute_provider_service_name, "' is not an AttributeProviderService")};
+    throw minifi::Exception{ExceptionType::PROCESS_SCHEDULE_EXCEPTION, utils::string::join_pack("Controller service '", *attribute_provider_service_name, "' is not an AttributeProviderService")};
   }
 }
 
@@ -370,8 +358,8 @@ void TailFile::parseStateFileLine(char *buf, std::map<std::filesystem::path, Tai
   }
 
   std::string value = equal;
-  key = utils::StringUtils::trimRight(key);
-  value = utils::StringUtils::trimRight(value);
+  key = utils::string::trimRight(key);
+  value = utils::string::trimRight(value);
 
   if (key == "FILENAME") {
     std::filesystem::path file_path = value;
@@ -487,9 +475,9 @@ bool TailFile::getStateFromLegacyStateFile(core::ProcessContext& context,
   }
 
   std::map<std::filesystem::path, TailState> legacy_tail_states;
-  char buf[BUFFER_SIZE];
-  for (file.getline(buf, BUFFER_SIZE); file.good(); file.getline(buf, BUFFER_SIZE)) {
-    parseStateFileLine(buf, legacy_tail_states);
+  std::array<char, BUFFER_SIZE> buf{};
+  for (file.getline(buf.data(), BUFFER_SIZE); file.good(); file.getline(buf.data(), BUFFER_SIZE)) {
+    parseStateFileLine(buf.data(), legacy_tail_states);
   }
 
   new_tail_states = update_keys_in_legacy_states(legacy_tail_states);
@@ -532,7 +520,7 @@ bool TailFile::storeState() {
 std::string TailFile::parseRollingFilePattern(const TailState &state) const {
   std::size_t last_dot_position = state.file_name_.string().find_last_of('.');
   std::string base_name = state.file_name_.string().substr(0, last_dot_position);
-  return utils::StringUtils::replaceOne(rolling_filename_pattern_, "${filename}", base_name);
+  return utils::string::replaceOne(rolling_filename_pattern_, "${filename}", base_name);
 }
 
 std::vector<TailState> TailFile::findAllRotatedFiles(const TailState &state) const {

@@ -147,13 +147,13 @@ struct HTTPHeaderResponse {
         if (separator_pos == std::string::npos) {
           if (!last_key.empty() && (header_line[0] == ' ' || header_line[0] == '\t')) {
             // This is a "folded header", which is deprecated (https://www.ietf.org/rfc/rfc7230.txt) but here we are
-            header_mapping_[last_key].append(" " + utils::StringUtils::trim(header_line));
+            header_mapping_[last_key].append(" " + utils::string::trim(header_line));
           }
           continue;
         }
         auto key = header_line.substr(0, separator_pos);
         /* This will remove leading and trailing LWS and the ending CRLF from the value */
-        auto value = utils::StringUtils::trim(header_line.substr(separator_pos + 1));
+        auto value = utils::string::trim(header_line.substr(separator_pos + 1));
         header_mapping_[key] = value;
         last_key = key;
       }
