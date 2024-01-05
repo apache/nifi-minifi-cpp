@@ -132,7 +132,7 @@ versions of OpenSSL, cURL, or zlib are used:
 * automake
 * libtool
 
-**NOTE** if Expression Language support is enabled, FlexLexer must be in the include path and the version must be compatible with the version of flex used when generating lexer sources. On macOS and FreeBSD, make sure that the system version is overridden with the correct flex version, which may require merging your CPPFLAGS into CFLAGS and CXXFLAGS. Lexer source generation is automatically performed during CMake builds. To re-generate the sources, remove:
+**NOTE:** if Expression Language support is enabled, FlexLexer must be in the include path and the version must be compatible with the version of flex used when generating lexer sources. On macOS and FreeBSD, make sure that the system version is overridden with the correct flex version, which may require merging your CPPFLAGS into CFLAGS and CXXFLAGS. Lexer source generation is automatically performed during CMake builds. To re-generate the sources, remove:
 
  * extensions/expression-language/Parser.cpp
  * extensions/expression-language/Parser.hpp
@@ -154,7 +154,7 @@ and rebuild.
 * perl -- Required for OpenSSL configuration
 * NASM -- Required for OpenSSL only on Windows
 
-**NOTE** On Windows if Strawberry Perl is used the `${StrawberryPerlRoot}\c\bin` directory should not be part of the %PATH% variable or make sure to find git's patch executable before that as Strawberry Perl's patch.exe will be found as the patch executable in the configure phase instead of the git patch executable. Also on Windows CMake's CPack is used for MSI generation, building WIX files and calling WIX toolset tools to create an MSI. If Chocolatey package manager is used its CPack can conflict with CMake, so make sure that CMake's CPack is found in the %PATH% before that.
+**NOTE:** On Windows if Strawberry Perl is used the `${StrawberryPerlRoot}\c\bin` directory should not be part of the PATH environment variable. Alternatively make sure that git's patch executable path comes before Strawberry Perl's patch.exe path in the PATH environment variable, so that the git patch executable is found in the in the CMake configuration phase. Also on Windows CMake's CPack is used for MSI generation, building WIX files and calling WIX toolset tools to create an MSI. If Chocolatey package manager is used its CPack can conflict with CMake, so make sure that CMake's CPack is found in the %PATH% before that.
 
 #### CentOS 7
 
@@ -198,7 +198,7 @@ The needed dependencies can be installed with the following commands for:
 
 ##### rpm-based Linux Distributions
 
-**NOTE** it is recommended to use the newest compiler using the latest devtoolset-*/gcc-toolset-*/llvm-toolset-* packages from the Software Collections (SCL).
+**NOTE:** it is recommended to use the newest compiler using the latest devtoolset-*/gcc-toolset-*/llvm-toolset-* packages from the Software Collections (SCL).
 
 ```
 # ~/Development/code/apache/nifi-minifi-cpp on git:master

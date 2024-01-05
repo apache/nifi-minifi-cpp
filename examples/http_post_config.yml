@@ -55,10 +55,12 @@ Processors:
     Maximum Payload Line Length: 0
 Connections:
 - name: GetFile/success/InvokeHTTP
+  id: 168cc31e-be1d-4ed3-bebc-8bf652dde104
   source id: 962790e7-ea35-4096-9362-96f527288669
   source relationship name: success
   destination id: 33b373b6-6f19-4194-b45a-1ef73c357a8e
 - name: InvokeHTTP/failure/InvokeHTTP
+  id: 0d55009a-adcc-4722-b889-570b6d26cfee
   source id: 33b373b6-6f19-4194-b45a-1ef73c357a8e
   source relationship name: failure
   destination id: 33b373b6-6f19-4194-b45a-1ef73c357a8e
@@ -78,6 +80,7 @@ Connections:
   source relationship names: retries_exceeded
   destination id: 1f669bb0-6d50-41e6-9230-90c1cc3e21f9
 - name: InvokeHTTP/no retry/LogAttribute
+  id: 8f6008ba-e1c7-433b-88f1-1e461bb82e29
   source id: 33b373b6-6f19-4194-b45a-1ef73c357a8e
   source relationship name: no retry
   destination id: 1f669bb0-6d50-41e6-9230-90c1cc3e21f9

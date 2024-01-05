@@ -38,6 +38,7 @@ Processors:
     Secret Key: test_secret
 Connections:
 - name: GetFile/success/PutS3Object
+  id: ad443bb0-0254-47e9-b113-7122244a46b3
   source id: bfd376a8-c845-453b-9f74-4cf6f3a95e74
   source relationship name: success
   destination id: 8c9e2512-e814-4b73-ac5c-f33753332128
