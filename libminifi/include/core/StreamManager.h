@@ -15,8 +15,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#ifndef LIBMINIFI_INCLUDE_CORE_STREAMMANAGER_H_
-#define LIBMINIFI_INCLUDE_CORE_STREAMMANAGER_H_
+#pragma once
 
 #include <memory>
 #include <string>
@@ -26,11 +25,12 @@
 #include "io/BufferStream.h"
 #include "io/BaseStream.h"
 
-namespace org {
-namespace apache {
-namespace nifi {
-namespace minifi {
-namespace core {
+namespace org::apache::nifi::minifi::core {
+
+class StreamAppendLock {
+ public:
+  virtual ~StreamAppendLock() = default;
+};
 
 /**
  * Purpose: Provides a base for all stream based managers. The goal here is to provide
@@ -56,11 +56,18 @@ class StreamManager {
   virtual std::shared_ptr<io::BaseStream> write(const T &streamId, bool append = false) = 0;
 
   /**
+   * Queries the stream and locks it to be appended to
+   */
+  virtual std::unique_ptr<StreamAppendLock> lockAppend(const T &streamId, size_t offset) = 0;
+
+  /**
    * Create a read stream using the streamId as a reference.
    * @param streamId stream identifier
    * @return stream pointer.
    */
   virtual std::shared_ptr<io::BaseStream> read(const T &streamId) = 0;
+
+  virtual size_t size(const T &streamId) {return read(streamId)->size();}
 
   /**
    * Closes the stream
@@ -86,10 +93,4 @@ class StreamManager {
   virtual bool exists(const T &streamId) = 0;
 };
 
-}  // namespace core
-}  // namespace minifi
-}  // namespace nifi
-}  // namespace apache
-}  // namespace org
-
-#endif  // LIBMINIFI_INCLUDE_CORE_STREAMMANAGER_H_
+}  // namespace org::apache::nifi::minifi::core

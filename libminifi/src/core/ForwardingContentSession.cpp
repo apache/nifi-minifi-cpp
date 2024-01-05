@@ -24,10 +24,12 @@
 #include "ResourceClaim.h"
 #include "io/BaseStream.h"
 #include "Exception.h"
+#include "io/StreamPipe.h"
+#include "io/StreamSlice.h"
 
 namespace org::apache::nifi::minifi::core {
 
-ForwardingContentSession::ForwardingContentSession(std::shared_ptr<ContentRepository> repository) : repository_(std::move(repository)) {}
+ForwardingContentSession::ForwardingContentSession(std::shared_ptr<ContentRepository> repository) : ContentSession(std::move(repository)) {}
 
 std::shared_ptr<ResourceClaim> ForwardingContentSession::create() {
   auto claim = std::make_shared<ResourceClaim>(repository_);
@@ -42,20 +44,22 @@ std::shared_ptr<io::BaseStream> ForwardingContentSession::write(const std::share
   return repository_->write(*resource_id, false);
 }
 
-std::shared_ptr<io::BaseStream> ForwardingContentSession::append(const std::shared_ptr<ResourceClaim>& resource_id) {
-  return repository_->write(*resource_id, true);
-}
-
 std::shared_ptr<io::BaseStream> ForwardingContentSession::read(const std::shared_ptr<ResourceClaim>& resource_id) {
   return repository_->read(*resource_id);
 }
 
+std::shared_ptr<io::BaseStream> ForwardingContentSession::append(const std::shared_ptr<ResourceClaim>& resource_id) {
+  return repository_->write(*resource_id, true);
+}
+
 void ForwardingContentSession::commit() {
   created_claims_.clear();
+  append_state_.clear();
 }
 
 void ForwardingContentSession::rollback() {
   created_claims_.clear();
+  append_state_.clear();
 }
 
 }  // namespace org::apache::nifi::minifi::core

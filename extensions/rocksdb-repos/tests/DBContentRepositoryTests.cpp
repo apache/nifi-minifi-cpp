@@ -51,7 +51,11 @@ TEST_CASE("Write Claim", "[TestDBCR1]") {
   auto claim = std::make_shared<minifi::ResourceClaim>(content_repo);
   auto stream = content_repo->write(*claim);
 
-  stream->write("well hello there");
+  const std::string content = "well hello there";
+
+  stream->write(as_bytes(std::span(content)));
+
+  REQUIRE(content_repo->size(*claim) == content.length());
 
   stream->close();
 
@@ -67,10 +71,11 @@ TEST_CASE("Write Claim", "[TestDBCR1]") {
 
   auto read_stream = content_repo->read(*claim);
 
-  std::string readstr;
-  read_stream->read(readstr);
+  std::string read_content;
+  read_content.resize(content.length());
+  read_stream->read(as_writable_bytes(std::span(read_content)));
 
-  REQUIRE(readstr == "well hello there");
+  REQUIRE(read_content == content);
 
   // should not be able to write to the read stream
   // -1 will indicate that we were not able to write any data
@@ -134,6 +139,47 @@ TEST_CASE("Delete Claim", "[TestDBCR2]") {
       return minifi::io::isError(content_repo->read(*claim)->read(readstr));
     }));
   }
+}
+
+TEST_CASE("Append Claim", "[TestDBCR1]") {
+  TestController testController;
+  auto dir = testController.createTempDirectory();
+  auto content_repo = std::make_shared<TestDatabaseContentRepository>();
+
+  auto configuration = std::make_shared<org::apache::nifi::minifi::Configure>();
+  configuration->set(minifi::Configure::nifi_dbcontent_repository_directory_default, dir.string());
+  REQUIRE(content_repo->initialize(configuration));
+
+
+  const std::string content = "well hello there";
+
+  auto claim = std::make_shared<minifi::ResourceClaim>(content_repo);
+  content_repo->write(*claim)->write(as_bytes(std::span(content)));
+
+  // requesting append before content end fails
+  CHECK(content_repo->lockAppend(*claim, 0) == nullptr);
+  auto lock = content_repo->lockAppend(*claim, content.length());
+  // trying to append to the end succeeds
+  CHECK(lock != nullptr);
+  // simultaneously trying to append to the same claim fails
+  CHECK(content_repo->lockAppend(*claim, content.length()) == nullptr);
+
+  // manually deleting append lock
+  lock.reset();
+
+  // appending after lock is released succeeds
+  lock = content_repo->lockAppend(*claim, content.length());
+  CHECK(lock != nullptr);
+
+  const std::string appended = "General Kenobi!";
+  content_repo->write(*claim, true)->write(as_bytes(std::span(appended)));
+
+  lock.reset();
+
+  // size has changed
+  CHECK(content_repo->lockAppend(*claim, content.length()) == nullptr);
+
+  CHECK(content_repo->lockAppend(*claim, content.length() + appended.length()) != nullptr);
 }
 
 TEST_CASE("Test Empty Claim", "[TestDBCR3]") {

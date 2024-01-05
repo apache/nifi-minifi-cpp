@@ -21,6 +21,7 @@
 #include <memory>
 #include <string>
 #include <string_view>
+#include <unordered_set>
 #include <utility>
 #include <list>
 
@@ -37,6 +38,15 @@ namespace org::apache::nifi::minifi::core {
  * Content repository definition that extends StreamManager.
  */
 class ContentRepository : public core::CoreComponent, public StreamManager<minifi::ResourceClaim>, public utils::EnableSharedFromThis<ContentRepository>, public core::RepositoryMetricsSource {
+  class ContentStreamAppendLock : public StreamAppendLock {
+   public:
+    ContentStreamAppendLock(std::shared_ptr<ContentRepository> repository, const minifi::ResourceClaim& claim): repository_(std::move(repository)), content_path_(claim.getContentFullPath()) {}
+    ~ContentStreamAppendLock() override {repository_->unlockAppend(content_path_);}
+   private:
+    std::shared_ptr<ContentRepository> repository_;
+    ResourceClaim::Path content_path_;
+  };
+
  public:
   explicit ContentRepository(std::string_view name, const utils::Identifier& uuid = {}) : core::CoreComponent(name, uuid) {}
   ~ContentRepository() override = default;
@@ -62,15 +72,24 @@ class ContentRepository : public core::CoreComponent, public StreamManager<minif
     return getName();
   }
 
+  std::unique_ptr<StreamAppendLock> lockAppend(const ResourceClaim& claim, size_t offset) override;
+
  protected:
   void removeFromPurgeList();
   virtual bool removeKey(const std::string& content_path) = 0;
 
+ private:
+  void unlockAppend(const ResourceClaim::Path& path);
+
+ protected:
   std::string directory_;
   std::mutex count_map_mutex_;
   std::mutex purge_list_mutex_;
   std::map<std::string, uint32_t> count_map_;
   std::list<std::string> purge_list_;
+
+  std::mutex appending_mutex_;
+  std::unordered_set<ResourceClaim::Path> appending_;
 };
 
 }  // namespace org::apache::nifi::minifi::core

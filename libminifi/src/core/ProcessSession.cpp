@@ -291,7 +291,8 @@ void ProcessSession::append(const std::shared_ptr<core::FlowFile> &flow, const i
 
   try {
     auto start_time = std::chrono::steady_clock::now();
-    std::shared_ptr<io::BaseStream> stream = content_session_->append(claim);
+    size_t end_offset = flow->getOffset() + flow->getSize();
+    std::shared_ptr<io::BaseStream> stream = content_session_->append(claim, end_offset, [&] (const auto& new_claim) {flow->setResourceClaim(new_claim);});
     if (nullptr == stream) {
       throw Exception(FILE_OPERATION_EXCEPTION, "Failed to open flowfile content for append");
     }

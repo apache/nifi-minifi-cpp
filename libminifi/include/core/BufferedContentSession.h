@@ -41,7 +41,7 @@ class BufferedContentSession : public ContentSession {
 
   std::shared_ptr<io::BaseStream> write(const std::shared_ptr<ResourceClaim>& resource_id) override;
 
-  std::shared_ptr<io::BaseStream> append(const std::shared_ptr<ResourceClaim>& resource_id) override;
+  std::shared_ptr<io::BaseStream> append(const std::shared_ptr<ResourceClaim>& resource_id, size_t offset, const std::function<void(const std::shared_ptr<ResourceClaim>&)>& on_copy) override;
 
   std::shared_ptr<io::BaseStream> read(const std::shared_ptr<ResourceClaim>& resource_id) override;
 
@@ -50,9 +50,9 @@ class BufferedContentSession : public ContentSession {
   void rollback() override;
 
  protected:
+  std::shared_ptr<io::BaseStream> append(const std::shared_ptr<ResourceClaim>& resource_id) override;
+
   std::map<std::shared_ptr<ResourceClaim>, std::shared_ptr<io::BufferStream>> managed_resources_;
-  std::map<std::shared_ptr<ResourceClaim>, std::shared_ptr<io::BufferStream>> extended_resources_;
-  std::shared_ptr<ContentRepository> repository_;
 };
 
 }  // namespace org::apache::nifi::minifi::core
