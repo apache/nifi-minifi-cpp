@@ -137,3 +137,18 @@ TEST_CASE("GenerateFlowFile reevaluating CustomText") {
     CHECK(batch_0 == std::to_string(i));
   }
 }
+
+TEST_CASE("GenerateFlowFile CustomText evaluates to empty string") {
+  std::shared_ptr<GenerateFlowFile> generate_flow_file = std::make_shared<GenerateFlowFile>("GenerateFlowFile");
+  minifi::test::SingleProcessorTestController test_controller{generate_flow_file};
+  test_controller.plan->setProperty(generate_flow_file, GenerateFlowFile::DataFormat, "Text");
+  test_controller.plan->setProperty(generate_flow_file, GenerateFlowFile::UniqueFlowFiles, "false");
+  test_controller.plan->setProperty(generate_flow_file, GenerateFlowFile::CustomText, "${invalid_variable}");
+  test_controller.plan->setProperty(generate_flow_file, GenerateFlowFile::BatchSize, "2");
+
+  auto batch = test_controller.trigger();
+  auto batch_0 = test_controller.plan->getContent(batch.at(GenerateFlowFile::Success)[0]);
+  auto batch_1 = test_controller.plan->getContent(batch.at(GenerateFlowFile::Success)[1]);
+  CHECK(batch_0 == batch_1);
+  CHECK(batch_0 == "");
+}
