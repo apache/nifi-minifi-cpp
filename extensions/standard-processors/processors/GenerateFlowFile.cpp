@@ -95,7 +95,7 @@ void GenerateFlowFile::onSchedule(core::ProcessContext& context, core::ProcessSe
     generateData(non_unique_data_, isText(mode_));
   }
 
-  logger_->log_trace("GenerateFlowFile is configure in {} mode", magic_enum::enum_name(mode_));
+  logger_->log_trace("GenerateFlowFile is configured in {} mode", magic_enum::enum_name(mode_));
   if (mode_ != Mode::CustomText && has_custom_text)
     logger_->log_warn("Custom Text property is set, but not used!");
 }
