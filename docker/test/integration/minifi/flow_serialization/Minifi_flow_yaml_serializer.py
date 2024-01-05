@@ -82,7 +82,7 @@ class Minifi_flow_yaml_serializer:
                 res['Remote Processing Groups'].append(res_group)
 
             res_group['Input Ports'].append({
-                'id': str(connectable.uuid),
+                'id': str(connectable.instance_id),
                 'name': connectable.name,
                 'max concurrent tasks': 1,
                 'Properties': {}
@@ -128,7 +128,7 @@ class Minifi_flow_yaml_serializer:
                     res['Connections'].append({
                         'name': str(uuid.uuid4()),
                         'source id': str(connectable.uuid),
-                        'destination id': str(proc.uuid),
+                        'destination id': str(proc.uuid) if not isinstance(proc, InputPort) else str(proc.instance_id),
                         'drop empty': ("true" if proc.drop_empty_flowfiles else "false")
                     })
                     if (all(str(connectable.uuid) != x['id'] for x in res['Funnels'])):
@@ -139,7 +139,7 @@ class Minifi_flow_yaml_serializer:
                 res['Connections'].append({
                     'name': str(uuid.uuid4()),
                     'source id': str(connectable.uuid),
-                    'destination id': str(conn_procs.uuid),
+                    'destination id': str(conn_procs.uuid) if not isinstance(conn_procs, InputPort) else str(conn_procs.instance_id),
                     'drop empty': ("true" if proc.drop_empty_flowfiles else "false")
                 })
                 if (all(str(connectable.uuid) != x['id'] for x in res['Funnels'])):

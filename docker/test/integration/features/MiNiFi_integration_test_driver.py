@@ -182,7 +182,7 @@ class MiNiFi_integration_test:
         for node in self.remote_process_groups:
             if name == node.get_name():
                 return node
-        raise Exception("Trying to fetch unknow node: \"%s\"" % name)
+        raise Exception("Trying to fetch unknown node: \"%s\"" % name)
 
     @staticmethod
     def generate_input_port_for_remote_process_group(remote_process_group, name):

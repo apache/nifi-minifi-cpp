@@ -321,6 +321,7 @@ def step_impl(context, processor_name):
 def step_impl(context, source_name):
     remote_process_group = context.test.get_remote_process_group_by_name("RemoteProcessGroup")
     source = context.test.generate_input_port_for_remote_process_group(remote_process_group, source_name)
+    source.instance_id = context.test.get_node_by_name("to_nifi").instance_id
     context.test.add_node(source)
     container = context.test.acquire_container(context=context, name='nifi', engine='nifi')
     # Assume that the first node declared is primary unless specified otherwise

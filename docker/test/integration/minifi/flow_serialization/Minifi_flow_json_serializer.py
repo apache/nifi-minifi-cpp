@@ -74,7 +74,7 @@ class Minifi_flow_json_serializer:
                 root['remoteProcessGroups'].append(res_group)
 
             res_group['inputPorts'].append({
-                'identifier': str(connectable.uuid),
+                'identifier': str(connectable.instance_id),
                 'name': connectable.name
             })
 
@@ -120,7 +120,7 @@ class Minifi_flow_json_serializer:
                 root['connections'].append({
                     'name': str(uuid.uuid4()),
                     'source': {'id': str(connectable.uuid)},
-                    'destination': {'id': str(proc.uuid)}
+                    'destination': {'id': str(proc.uuid) if not isinstance(proc, InputPort) else str(proc.instance_id)}
                 })
                 if (all(str(connectable.uuid) != x['identifier'] for x in root['funnels'])):
                     root['connections'][-1]['selectedRelationships'] = [conn_name]
