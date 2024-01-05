@@ -15,22 +15,18 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#include <utility>
 #include <memory>
 #include <string>
-#include <vector>
 #include <set>
 
 #include "TestBase.h"
 #include "SingleProcessorTestController.h"
 #include "Catch.h"
-#include "utils/file/FileUtils.h"
 #include "GenerateFlowFile.h"
-#include "PutFile.h"
 
 using minifi::processors::GenerateFlowFile;
 
-TEST_CASE("GenerateFlowFileWithBinaryData", "[generateflowfiletest]") {
+TEST_CASE("GenerateFlowFileWithBinaryData") {
   std::optional<bool> is_unique;
 
   SECTION("Not unique") {
@@ -69,7 +65,7 @@ TEST_CASE("GenerateFlowFileWithBinaryData", "[generateflowfiletest]") {
   CHECK(LogTestController::getInstance().contains("Custom Text property is set, but not used!"));
 }
 
-TEST_CASE("GenerateFlowFileTestEmpty", "[generateemptyfiletest]") {
+TEST_CASE("GenerateFlowFileTestEmpty") {
   std::shared_ptr<GenerateFlowFile> generate_flow_file = std::make_shared<GenerateFlowFile>("GenerateFlowFile");
   minifi::test::SingleProcessorTestController test_controller{generate_flow_file};
 
@@ -83,7 +79,7 @@ TEST_CASE("GenerateFlowFileTestEmpty", "[generateemptyfiletest]") {
   CHECK(result_0.empty());
 }
 
-TEST_CASE("GenerateFlowFileCustomTextTest", "[generateflowfiletest]") {
+TEST_CASE("GenerateFlowFileCustomTextTest") {
   std::shared_ptr<GenerateFlowFile> generate_flow_file = std::make_shared<GenerateFlowFile>("GenerateFlowFile");
   minifi::test::SingleProcessorTestController test_controller{generate_flow_file};
 
@@ -99,7 +95,7 @@ TEST_CASE("GenerateFlowFileCustomTextTest", "[generateflowfiletest]") {
   CHECK(result_0.length() == uuid_string_length);
 }
 
-TEST_CASE("GenerateFlowFileCustomTextEmptyTest", "[generateflowfiletest]") {
+TEST_CASE("GenerateFlowFileCustomTextEmptyTest") {
   std::shared_ptr<GenerateFlowFile> generate_flow_file = std::make_shared<GenerateFlowFile>("GenerateFlowFile");
   minifi::test::SingleProcessorTestController test_controller{generate_flow_file};
 
@@ -150,5 +146,5 @@ TEST_CASE("GenerateFlowFile CustomText evaluates to empty string") {
   auto batch_0 = test_controller.plan->getContent(batch.at(GenerateFlowFile::Success)[0]);
   auto batch_1 = test_controller.plan->getContent(batch.at(GenerateFlowFile::Success)[1]);
   CHECK(batch_0 == batch_1);
-  CHECK(batch_0 == "");
+  CHECK(batch_0.empty());
 }
