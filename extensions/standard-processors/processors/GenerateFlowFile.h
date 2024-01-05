@@ -101,16 +101,28 @@ class GenerateFlowFile : public core::Processor {
   void onTrigger(core::ProcessContext& context, core::ProcessSession& session) override;
   void initialize() override;
 
-  void regenerateNonUniqueData(core::ProcessContext& context);
+  void refreshNonUniqueData(core::ProcessContext& context);
 
  protected:
+  enum class Mode {
+    UniqueByte,
+    UniqueText,
+    NotUniqueByte,
+    NotUniqueText,
+    CustomText,
+    Empty
+  };
+
+  Mode mode_;
+
   std::vector<char> non_unique_data_;
 
   uint64_t batch_size_{1};
-  bool unique_flow_file_{true};
   uint64_t file_size_{1024};
-  bool textData_{false};
 
+  static Mode getMode(bool is_unique, bool is_text, bool has_custom_text, uint64_t file_size);
+  static bool isUnique(Mode mode) { return mode == Mode::UniqueText || mode == Mode::UniqueByte; }
+  static bool isText(Mode mode) { return mode == Mode::UniqueText || mode == Mode::CustomText || mode == Mode::NotUniqueText; }
  private:
   std::shared_ptr<core::logging::Logger> logger_ = core::logging::LoggerFactory<GenerateFlowFile>::getLogger(uuid_);
 };

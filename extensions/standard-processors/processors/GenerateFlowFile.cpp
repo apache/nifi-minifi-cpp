@@ -24,11 +24,10 @@
 #include <memory>
 #include <random>
 #include <string>
-#include <utility>
 #include <vector>
 
 #include "utils/gsl.h"
-#include "utils/StringUtils.h"
+#include "utils/OptionalUtils.h"
 #include "core/ProcessContext.h"
 #include "core/ProcessSession.h"
 #include "core/Resource.h"
@@ -57,49 +56,61 @@ void generateData(std::vector<char>& data, const bool text_data = false) {
   }
 }
 
-void GenerateFlowFile::onSchedule(core::ProcessContext& context, core::ProcessSessionFactory&) {
-  if (context.getProperty(FileSize, file_size_)) {
-    logger_->log_trace("File size is configured to be {}", file_size_);
-  }
+GenerateFlowFile::Mode GenerateFlowFile::getMode(bool is_unique, bool is_text, bool has_custom_text, uint64_t file_size) {
+  if (is_text && !is_unique && has_custom_text)
+    return Mode::CustomText;
 
-  if (context.getProperty(BatchSize, batch_size_)) {
-    logger_->log_trace("Batch size is configured to be {}", batch_size_);
-  }
+  if (file_size == 0)
+    return Mode::Empty;
 
-  if (auto data_format = context.getProperty(DataFormat)) {
-    textData_ = (*data_format == DATA_FORMAT_TEXT);
-  }
-  if (context.getProperty(UniqueFlowFiles.name, unique_flow_file_)) {
-    logger_->log_trace("Unique Flow files is configured to be {}", unique_flow_file_);
-  }
-
-  std::string custom_text;
-  context.getProperty(CustomText, custom_text, nullptr);
-  if (!custom_text.empty()) {
-    if (textData_ && !unique_flow_file_) {
-      non_unique_data_.assign(custom_text.begin(), custom_text.end());
-      return;
-    }
-    logger_->log_warn("Custom Text property is set, but not used!");
-  }
-
-  if (!unique_flow_file_) {
-    non_unique_data_.resize(gsl::narrow<size_t>(file_size_));
-    generateData(non_unique_data_, textData_);
+  if (is_unique) {
+    if (is_text)
+      return Mode::UniqueText;
+    else
+      return Mode::UniqueByte;
+  } else {
+    if (is_text)
+      return Mode::NotUniqueText;
+    else
+      return Mode::NotUniqueByte;
   }
 }
 
-// If the Data Format is text and if Unique FlowFiles is false, the custom text has to be evaluated once per batch
-void GenerateFlowFile::regenerateNonUniqueData(core::ProcessContext& context) {
-  if (!textData_ || unique_flow_file_) return;
+void GenerateFlowFile::onSchedule(core::ProcessContext& context, core::ProcessSessionFactory&) {
+  bool is_text = context.getProperty<std::string>(DataFormat)
+      | utils::transform([](const std::string& data_format) { return data_format == DATA_FORMAT_TEXT;})
+      | utils::valueOrElse([]() {return false;});
+  bool is_unique = context.getProperty<bool>(UniqueFlowFiles) | utils::valueOrElse([] { return true; });
 
-  if (auto custom_text = context.getProperty(CustomText, nullptr)) {
-    non_unique_data_.assign(custom_text->begin(), custom_text->end());
+  auto custom_text_without_evaluation = context.getProperty(CustomText);
+  bool has_custom_text = custom_text_without_evaluation.has_value() && !custom_text_without_evaluation->empty();
+
+  context.getProperty(FileSize, file_size_);
+  context.getProperty(BatchSize, batch_size_);
+
+  mode_ = getMode(is_unique, is_text, has_custom_text, file_size_);
+
+  if (!isUnique(mode_)) {
+    non_unique_data_.resize(gsl::narrow<size_t>(file_size_));
+    generateData(non_unique_data_, isText(mode_));
   }
+
+  logger_->log_trace("GenerateFlowFile is configure in {} mode", magic_enum::enum_name(mode_));
+  if (mode_ != Mode::CustomText && has_custom_text)
+    logger_->log_warn("Custom Text property is set, but not used!");
+}
+
+// The custom text has to be reevaluated once per batch
+void GenerateFlowFile::refreshNonUniqueData(core::ProcessContext& context) {
+  if (mode_ != Mode::CustomText)
+    return;
+  std::string custom_text;
+  context.getProperty(CustomText, custom_text, nullptr);
+  non_unique_data_.assign(custom_text.begin(), custom_text.end());
 }
 
 void GenerateFlowFile::onTrigger(core::ProcessContext& context, core::ProcessSession& session) {
-  regenerateNonUniqueData(context);
+  refreshNonUniqueData(context);
   for (uint64_t i = 0; i < batch_size_; i++) {
     // For each batch
     std::shared_ptr<core::FlowFile> flow_file = session.create();
@@ -107,12 +118,12 @@ void GenerateFlowFile::onTrigger(core::ProcessContext& context, core::ProcessSes
       logger_->log_error("Failed to create flowfile!");
       return;
     }
-    if (unique_flow_file_) {
-      std::vector<char> data(gsl::narrow<size_t>(file_size_));
-      if (file_size_ > 0) {
-        generateData(data, textData_);
-      }
-      session.writeBuffer(flow_file, data);
+    if (mode_ == Mode::Empty) {
+      // noop
+    } else if (isUnique(mode_)) {
+      std::vector<char> unique_data(gsl::narrow<size_t>(file_size_));
+      generateData(unique_data, isText(mode_));
+      session.writeBuffer(flow_file, unique_data);
     } else {
       session.writeBuffer(flow_file, non_unique_data_);
     }

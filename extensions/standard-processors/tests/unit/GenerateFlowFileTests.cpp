@@ -110,40 +110,30 @@ TEST_CASE("GenerateFlowFileCustomTextEmptyTest", "[generateflowfiletest]") {
   test_controller.plan->setProperty(generate_flow_file, GenerateFlowFile::DataFormat, "Text");
   SECTION("Empty custom data") {
     test_controller.plan->setProperty(generate_flow_file, GenerateFlowFile::CustomText, "");
-    auto result = test_controller.trigger();
-    REQUIRE(result.at(GenerateFlowFile::Success).size() == 1);
-    auto result_0 = test_controller.plan->getContent(result.at(GenerateFlowFile::Success)[0]);
-    CHECK(result_0.empty());
   }
 
   SECTION("No custom data") {
-    auto result = test_controller.trigger();
-    REQUIRE(result.at(GenerateFlowFile::Success).size() == 1);
-    auto result_0 = test_controller.plan->getContent(result.at(GenerateFlowFile::Success)[0]);
-    CHECK(result_0.length() == file_size);
   }
+
+  auto result = test_controller.trigger();
+  REQUIRE(result.at(GenerateFlowFile::Success).size() == 1);
+  auto result_0 = test_controller.plan->getContent(result.at(GenerateFlowFile::Success)[0]);
+  CHECK(result_0.length() == file_size);
 }
 
-TEST_CASE("GenerateFlowFile should reevaluate CustomText once per batch", "[generateflowfiletest]") {
+TEST_CASE("GenerateFlowFile reevaluating CustomText") {
   std::shared_ptr<GenerateFlowFile> generate_flow_file = std::make_shared<GenerateFlowFile>("GenerateFlowFile");
   minifi::test::SingleProcessorTestController test_controller{generate_flow_file};
   test_controller.plan->setProperty(generate_flow_file, GenerateFlowFile::DataFormat, "Text");
   test_controller.plan->setProperty(generate_flow_file, GenerateFlowFile::UniqueFlowFiles, "false");
-  test_controller.plan->setProperty(generate_flow_file, GenerateFlowFile::CustomText, "${now()}");
+  test_controller.plan->setProperty(generate_flow_file, GenerateFlowFile::CustomText, "${nextInt()}");
   test_controller.plan->setProperty(generate_flow_file, GenerateFlowFile::BatchSize, "2");
 
-  auto first_batch = test_controller.trigger();
-  REQUIRE(first_batch.at(GenerateFlowFile::Success).size() == 2);
-  auto first_batch_0 = test_controller.plan->getContent(first_batch.at(GenerateFlowFile::Success)[0]);
-  auto first_batch_1 = test_controller.plan->getContent(first_batch.at(GenerateFlowFile::Success)[1]);
-  CHECK(first_batch_0 == first_batch_1);
-
-  std::this_thread::sleep_for(2ms);
-  auto second_batch = test_controller.trigger();
-  REQUIRE(second_batch.at(GenerateFlowFile::Success).size() == 2);
-  auto second_batch_0 = test_controller.plan->getContent(second_batch.at(GenerateFlowFile::Success)[0]);
-  auto second_batch_1 = test_controller.plan->getContent(second_batch.at(GenerateFlowFile::Success)[1]);
-  CHECK(second_batch_0 == second_batch_1);
-
-  CHECK(first_batch_0 != second_batch_0);
+  for (auto i = 0; i < 100; ++i) {
+    auto batch = test_controller.trigger();
+    auto batch_0 = test_controller.plan->getContent(batch.at(GenerateFlowFile::Success)[0]);
+    auto batch_1 = test_controller.plan->getContent(batch.at(GenerateFlowFile::Success)[1]);
+    CHECK(batch_0 == batch_1);
+    CHECK(batch_0 == std::to_string(i));
+  }
 }
