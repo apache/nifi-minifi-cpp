@@ -48,6 +48,7 @@ class SplunkHECProcessor : public core::Processor {
   EXTENSIONAPI static constexpr auto Token = core::PropertyDefinitionBuilder<>::createProperty("Token")
       .withDescription("HTTP Event Collector token starting with the string Splunk. For example \'Splunk 1234578-abcd-1234-abcd-1234abcd\'")
       .isRequired(true)
+      .isSensitive(true)
       .build();
   EXTENSIONAPI static constexpr auto SplunkRequestChannel = core::PropertyDefinitionBuilder<>::createProperty("Splunk Request Channel")
       .withDescription("Identifier of the used request channel.")
