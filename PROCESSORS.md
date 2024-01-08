@@ -58,6 +58,7 @@ limitations under the License.
 - [GetUSBCamera](#GetUSBCamera)
 - [HashContent](#HashContent)
 - [InvokeHTTP](#InvokeHTTP)
+- [JoltTransformJSON](#JoltTransformJSON)
 - [ListAzureBlobStorage](#ListAzureBlobStorage)
 - [ListAzureDataLakeStorage](#ListAzureDataLakeStorage)
 - [ListenHTTP](#ListenHTTP)
@@ -1380,6 +1381,29 @@ In the list below, the names of required properties appear in bold. Any other pr
 | invokehttp.status.message | success, response, retry, no retry | The status message that is returned                            |
 | invokehttp.request.url    | success, response, retry, no retry | The original request URL                                       |
 | invokehttp.tx.id          | success, response, retry, no retry | The transaction ID that is returned after reading the response |
+
+
+## JoltTransformJSON
+
+### Description
+
+Applies a list of Jolt specifications to the flowfile JSON payload. A new FlowFile is created with transformed content and is routed to the 'success' relationship. If the JSON transform fails, the original FlowFile is routed to the 'failure' relationship.
+
+### Properties
+
+In the list below, the names of required properties appear in bold. Any other properties (not in bold) are considered optional. The table also indicates any default values, and whether a property supports the NiFi Expression Language.
+
+| Name                        | Default Value | Allowable Values | Description                                                                                                                                                                                                                                                                                                                      |
+|-----------------------------|---------------|------------------|----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| **Jolt Transformation DSL** | Shift         | Shift            | Specifies the Jolt Transformation that should be used with the provided specification.                                                                                                                                                                                                                                           |
+| **Jolt Specification**      |               |                  | Jolt Specification for transformation of JSON data. The value for this property may be the text of a Jolt specification or the path to a file containing a Jolt specification. 'Jolt Specification' must be set, or the value is ignored if the Jolt Sort Transformation is selected.<br/>**Supports Expression Language: true** |
+
+### Relationships
+
+| Name    | Description                                                                                                                         |
+|---------|-------------------------------------------------------------------------------------------------------------------------------------|
+| success | The FlowFile with transformed content will be routed to this relationship                                                           |
+| failure | If a FlowFile fails processing for any reason (for example, the FlowFile is not valid JSON), it will be routed to this relationship |
 
 
 ## ListAzureBlobStorage

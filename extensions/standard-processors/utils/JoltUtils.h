@@ -134,7 +134,7 @@ class Spec {
    public:
     explicit Regex(std::vector<std::string> frags) : fragments(std::move(frags)) {
       gsl_Expects(!fragments.empty());
-      full = utils::StringUtils::join("*", fragments);
+      full = utils::string::join("*", fragments);
     }
     // checks if the string is definitely a regex (i.e. has an unescaped '*' char)
     static bool check(std::string_view str);
