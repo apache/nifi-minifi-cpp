@@ -343,7 +343,7 @@ bool RouteText::matchSegment(MatchingContext& context, const Segment& segment, c
         variables["lineNo"] = std::to_string(segment.idx_);
       }
       std::string result;
-      if (context.process_context_.getDynamicProperty(prop, result, *context.flow_file_, variables)) {
+      if (getDynamicPropertyWithOverrides(context.process_context_, prop, result, *context.flow_file_, variables)) {
         return utils::string::toBool(result).value_or(false);
       } else {
         throw Exception(PROCESSOR_EXCEPTION, "Missing dynamic property: '" + prop.getName() + "'");
