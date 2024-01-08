@@ -151,6 +151,7 @@ TEST_CASE("Append Claim", "[TestDBCR1]") {
   auto content_repo = std::make_shared<TestDatabaseContentRepository>();
 
   auto configuration = std::make_shared<org::apache::nifi::minifi::Configure>();
+  configuration->setHome(dir);
   configuration->set(minifi::Configure::nifi_dbcontent_repository_directory_default, dir.string());
   REQUIRE(content_repo->initialize(configuration));
 
