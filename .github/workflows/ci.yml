@@ -93,7 +93,7 @@ jobs:
           export PATH="/usr/local/opt/flex/bin:/usr/local/opt/bison/bin:$PATH"
           export LDFLAGS="-L/usr/local/opt/flex/lib,-L/usr/local/opt/bison/lib"
           export CPPFLAGS="-I/usr/local/opt/flex/include"
-          python -m venv venv && source venv/bin/activate && pip install -r requirements.txt && python main.py --noninteractive --skip_compiler_install --cmake_options="-DCMAKE_C_FLAGS=${CPPFLAGS} ${CFLAGS} -DCMAKE_CXX_FLAGS=${CPPFLAGS} ${CXXFLAGS}" --minifi_options="${MACOS_MINIFI_OPTIONS}"
+          python -m venv venv && source venv/bin/activate && pip install -r requirements.txt && python main.py --noninteractive --skip-compiler-install --cmake-options="-DCMAKE_C_FLAGS=${CPPFLAGS} ${CFLAGS} -DCMAKE_CXX_FLAGS=${CPPFLAGS} ${CXXFLAGS}" --minifi-options="${MACOS_MINIFI_OPTIONS}"
         working-directory: bootstrap
       - name: cache save
         uses: actions/cache/save@v4
@@ -221,7 +221,7 @@ jobs:
         shell: powershell
       - name: build
         run: |
-          python -m venv venv & venv\Scripts\activate & pip install -r requirements.txt & python main.py --noninteractive --skip_compiler_install --minifi_options="%WINDOWS_MINIFI_OPTIONS%" --cmake_options="-DCMAKE_C_COMPILER_LAUNCHER=sccache -DCMAKE_CXX_COMPILER_LAUNCHER=sccache"
+          python -m venv venv & venv\Scripts\activate & pip install -r requirements.txt & python main.py --noninteractive --skip-compiler-install --minifi-options="%WINDOWS_MINIFI_OPTIONS%" --cmake-options="-DCMAKE_C_COMPILER_LAUNCHER=sccache -DCMAKE_CXX_COMPILER_LAUNCHER=sccache"
         shell: cmd
         working-directory: bootstrap
       - name: Save cache
@@ -316,7 +316,7 @@ jobs:
         run: |
           python3 -m venv venv && source venv/bin/activate \
             && pip install -r requirements.txt \
-            && python main.py --noninteractive --minifi_options="${UBUNTU_GCC_MINIFI_OPTIONS}" --cmake_options="-DSTRICT_GSL_CHECKS=AUDIT"
+            && python main.py --noninteractive --minifi-options="${UBUNTU_GCC_MINIFI_OPTIONS}" --cmake-options="-DSTRICT_GSL_CHECKS=AUDIT"
         working-directory: bootstrap
       - name: cache save
         uses: actions/cache/save@v4
@@ -439,7 +439,7 @@ jobs:
         run: |
           python3 -m venv venv && source venv/bin/activate \
             && pip install -r requirements.txt \
-            && python main.py --noninteractive --skip_compiler_install --cmake_options="-DCMAKE_C_COMPILER=clang-16 -DCMAKE_CXX_COMPILER=clang++-16 -DSTRICT_GSL_CHECKS=AUDIT -DCMAKE_EXPORT_COMPILE_COMMANDS=ON" --minifi_options="${UBUNTU_CLANG_MINIFI_OPTIONS}"
+            && python main.py --noninteractive --skip-compiler-install --cmake-options="-DCMAKE_C_COMPILER=clang-16 -DCMAKE_CXX_COMPILER=clang++-16 -DSTRICT_GSL_CHECKS=AUDIT -DCMAKE_EXPORT_COMPILE_COMMANDS=ON" --minifi-options="${UBUNTU_CLANG_MINIFI_OPTIONS}"
         working-directory: bootstrap
       - id: cache_save
         uses: actions/cache/save@v4

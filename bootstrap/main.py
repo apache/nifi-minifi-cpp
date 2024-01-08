@@ -26,10 +26,10 @@ if __name__ == '__main__':
         parser = argparse.ArgumentParser()
         parser.add_argument('--noconfirm', action="store_true", default=False,
                             help="Bypass any and all “Are you sure?” messages.")
-        parser.add_argument('--minifi_options', default="", help="Overrides the default minifi options during the "
+        parser.add_argument('--minifi-options', default="", help="Overrides the default minifi options during the "
                                                                  "initial parsing")
-        parser.add_argument('--cmake_options', default="", help="Appends this to the final cmake command")
-        parser.add_argument('--skip_compiler_install', action="store_true", default=False,
+        parser.add_argument('--cmake-options', default="", help="Appends this to the final cmake command")
+        parser.add_argument('--skip-compiler-install', action="store_true", default=False,
                             help="Skips the installation of the default compiler")
         parser.add_argument('--noninteractive', action="store_true", default=False,
                             help="Initiates the one click build")
