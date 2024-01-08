@@ -63,10 +63,24 @@ std::string formatAllowedValues(const minifi::core::Property& property) {
   }
 }
 
-std::string formatDescription(std::string_view description_view, bool supports_expression_language = false) {
+std::string formatDescription(std::string_view description_view, bool is_sensitive = false, bool supports_expression_language = false) {
   std::string description{description_view};
   minifi::utils::string::replaceAll(description, "\n", "<br/>");
-  return supports_expression_language ? description + "<br/>**Supports Expression Language: true**" : description;
+  if (is_sensitive) {
+    description += "<br/>**Sensitive Property: true**";
+  }
+  if (supports_expression_language) {
+    description += "<br/>**Supports Expression Language: true**";
+  }
+  return description;
+}
+
+std::string formatDescription(const minifi::core::Property& property) {
+  return formatDescription(property.getDescription(), property.isSensitive(), property.supportsExpressionLanguage());
+}
+
+std::string formatDescription(const minifi::core::DynamicProperty& dynamic_property) {
+  return formatDescription(dynamic_property.description, false, dynamic_property.supports_expression_language);
 }
 
 std::string formatListOfRelationships(std::span<const minifi::core::RelationshipDefinition> relationships) {
@@ -116,7 +130,7 @@ void writeProperties(std::ostream& docs, const minifi::ClassDescription& documen
         formatName(property.getName(), property.getRequired()),
         property.getDefaultValue().to_string(),
         formatAllowedValues(property),
-        formatDescription(property.getDescription(), property.supportsExpressionLanguage())
+        formatDescription(property)
     });
   }
   docs << "\n\n" << properties.toString();
@@ -131,7 +145,7 @@ void writeDynamicProperties(std::ostream& docs, const minifi::ClassDescription& 
     dynamic_properties.addRow({
         formatName(dynamic_property.name, false),
         std::string(dynamic_property.value),
-        formatDescription(dynamic_property.description, dynamic_property.supports_expression_language)
+        formatDescription(dynamic_property)
     });
   }
   docs << dynamic_properties.toString();
