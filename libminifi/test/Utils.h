@@ -57,7 +57,7 @@ struct JsonContext {
     if (!parent) {
       return "/";
     }
-    return minifi::utils::StringUtils::join_pack(parent->path(), member, "/");
+    return minifi::utils::string::join_pack(parent->path(), member, "/");
   }
 };
 }  // namespace internal
