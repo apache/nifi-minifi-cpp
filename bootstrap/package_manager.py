@@ -212,7 +212,7 @@ class ChocolateyPackageManager(PackageManager):
                                     "libusb": set(),
                                     "make": set(),
                                     "jni": {"openjdk", "maven"},
-                                    "openssl": {"strawberryperl", "NASM"}})
+                                    "perl": {"strawberryperl", "NASM"}})
         return True
 
     def _get_installed_packages(self) -> Set[str]:
