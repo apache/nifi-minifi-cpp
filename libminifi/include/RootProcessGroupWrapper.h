@@ -52,6 +52,7 @@ class RootProcessGroupWrapper {
   std::string getName() const;
   utils::Identifier getComponentUUID() const;
   std::string getVersion() const;
+  const core::ProcessGroup* getRoot() const { return root_.get(); }
   void setNewRoot(std::unique_ptr<core::ProcessGroup> new_root);
   void restoreBackup();
   void clearBackup();

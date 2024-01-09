@@ -56,6 +56,7 @@ class SmbConnectionControllerService : public core::controller::ControllerServic
       .withDescription("The password used for authentication. Required if Username is set.")
       .isRequired(false)
       .withDependentProperties({"Username"})
+      .isSensitive(true)
       .build();
 
   static constexpr auto Properties = std::array<core::PropertyReference, 5>{

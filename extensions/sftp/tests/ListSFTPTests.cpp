@@ -71,12 +71,15 @@ class ListSFTPTestsFixture {
     LogTestController::getInstance().setDebug<minifi::processors::LogAttribute>();
     LogTestController::getInstance().setDebug<SFTPTestServer>();
 
-    REQUIRE_FALSE(src_dir.empty());
+    REQUIRE_FALSE(working_directory.empty());
 
     // Start SFTP server
-    sftp_server = std::make_unique<SFTPTestServer>(src_dir);
+    sftp_server = std::make_unique<SFTPTestServer>(working_directory);
     REQUIRE(true == sftp_server->start());
 
+    if (configuration) {
+      configuration->setHome(working_directory);
+    }
     // Build MiNiFi processing graph
     createPlan(nullptr, configuration);
   }
@@ -97,6 +100,9 @@ class ListSFTPTestsFixture {
     list_sftp.reset();
     plan.reset();
 
+    if (configuration) {
+      configuration->setHome(working_directory);
+    }
     plan = testController.createPlan(configuration, state_dir);
     if (list_sftp_uuid == nullptr) {
       list_sftp = plan->addProcessor(
@@ -140,7 +146,7 @@ class ListSFTPTestsFixture {
   // Create source file
   void createFile(const std::filesystem::path& relative_path, const std::string& content, std::optional<std::chrono::file_clock::time_point> modification_time) {
     std::fstream file;
-    std::filesystem::path full_path = src_dir / "vfs" / relative_path;
+    std::filesystem::path full_path = working_directory / "vfs" / relative_path;
     std::filesystem::create_directories(full_path.parent_path());
     file.open(full_path, std::ios::out);
     file << content;
@@ -156,7 +162,7 @@ class ListSFTPTestsFixture {
 
  protected:
   TestController testController;
-  std::filesystem::path src_dir = testController.createTempDirectory();
+  std::filesystem::path working_directory = testController.createTempDirectory();
   std::shared_ptr<TestPlan> plan;
   std::unique_ptr<SFTPTestServer> sftp_server;
   std::shared_ptr<core::Processor> list_sftp;
@@ -211,14 +217,14 @@ TEST_CASE_METHOD(ListSFTPTestsFixture, "ListSFTP list non-readable dir", "[ListS
     return;
   }
   createFileWithModificationTimeDiff("nifi_test/tstFile.ext", "Test content 1");
-  std::filesystem::permissions(src_dir / "vfs" / "nifi_test", static_cast<std::filesystem::perms>(0000));
+  std::filesystem::permissions(working_directory / "vfs" / "nifi_test", static_cast<std::filesystem::perms>(0000));
 
   testController.runSession(plan, true);
 
   REQUIRE(false == LogTestController::getInstance().contains("from ListSFTP to relationship success"));
   REQUIRE(LogTestController::getInstance().contains("Failed to open remote directory \"nifi_test\", error: LIBSSH2_FX_PERMISSION_DENIED"));
   REQUIRE(LogTestController::getInstance().contains("There are no files to list. Yielding."));
-  std::filesystem::permissions(src_dir / "vfs" / "nifi_test", static_cast<std::filesystem::perms>(0755));
+  std::filesystem::permissions(working_directory / "vfs" / "nifi_test", static_cast<std::filesystem::perms>(0755));
 }
 #endif
 
@@ -227,7 +233,7 @@ TEST_CASE_METHOD(ListSFTPTestsFixture, "ListSFTP list one file writes attributes
 
   testController.runSession(plan, true);
 
-  auto file = src_dir / "vfs" / "nifi_test" / "tstFile.ext";
+  auto file = working_directory / "vfs" / "nifi_test" / "tstFile.ext";
   auto mtime_str = utils::timeutils::getDateTimeStr(std::chrono::time_point_cast<std::chrono::seconds>(utils::file::to_sys(utils::file::last_write_time(file).value())));
   uint64_t uid = 0;
   uint64_t gid = 0;
@@ -357,7 +363,7 @@ TEST_CASE_METHOD(ListSFTPTestsFixture, "ListSFTP Path Filter Regex", "[ListSFTP]
 #ifndef WIN32
 TEST_CASE_METHOD(ListSFTPTestsFixture, "ListSFTP Follow symlink false file symlink", "[ListSFTP][follow-symlink]") {
   createFileWithModificationTimeDiff("nifi_test/file1.ext", "Test content 1");
-  std::filesystem::create_symlink(src_dir / "vfs" / "nifi_test" / "file1.ext", src_dir / "vfs" / "nifi_test" / "file2.ext");
+  std::filesystem::create_symlink(working_directory / "vfs" / "nifi_test" / "file1.ext", working_directory / "vfs" / "nifi_test" / "file2.ext");
 
   testController.runSession(plan, true);
 
@@ -371,7 +377,7 @@ TEST_CASE_METHOD(ListSFTPTestsFixture, "ListSFTP Follow symlink true file symlin
   plan->setProperty(list_sftp, "Follow symlink", "true");
 
   createFileWithModificationTimeDiff("nifi_test/file1.ext", "Test content 1");
-  std::filesystem::create_symlink(src_dir / "vfs" / "nifi_test" / "file1.ext", src_dir / "vfs" / "nifi_test" / "file2.ext");
+  std::filesystem::create_symlink(working_directory / "vfs" / "nifi_test" / "file1.ext", working_directory / "vfs" / "nifi_test" / "file2.ext");
 
   testController.runSession(plan, true);
 
@@ -385,7 +391,7 @@ TEST_CASE_METHOD(ListSFTPTestsFixture, "ListSFTP Follow symlink false directory 
   plan->setProperty(list_sftp, "Search Recursively", "true");
 
   createFileWithModificationTimeDiff("nifi_test/dir1/file1.ext", "Test content 1");
-  std::filesystem::create_directory_symlink(src_dir / "vfs" / "nifi_test" / "dir1", src_dir / "vfs" / "nifi_test" / "dir2");
+  std::filesystem::create_directory_symlink(working_directory / "vfs" / "nifi_test" / "dir1", working_directory / "vfs" / "nifi_test" / "dir2");
 
   testController.runSession(plan, true);
 
@@ -400,7 +406,7 @@ TEST_CASE_METHOD(ListSFTPTestsFixture, "ListSFTP Follow symlink true directory s
   plan->setProperty(list_sftp, "Follow symlink", "true");
 
   createFileWithModificationTimeDiff("nifi_test/dir1/file1.ext", "Test content 1");
-  std::filesystem::create_directory_symlink(src_dir / "vfs" / "nifi_test" / "dir1", src_dir / "vfs" / "nifi_test" / "dir2");
+  std::filesystem::create_directory_symlink(working_directory / "vfs" / "nifi_test" / "dir1", working_directory / "vfs" / "nifi_test" / "dir2");
 
   testController.runSession(plan, true);
 
@@ -477,7 +483,7 @@ TEST_CASE_METHOD(ListSFTPTestsFixture, "ListSFTP Tracking Timestamps one file an
 
   createFileWithModificationTimeDiff("nifi_test/file1.ext", "Test content 1");
 
-  auto mtime = utils::file::last_write_time(src_dir / "vfs" / "nifi_test" / "file1.ext").value();
+  auto mtime = utils::file::last_write_time(working_directory / "vfs" / "nifi_test" / "file1.ext").value();
   testController.runSession(plan, true);
 
   REQUIRE(LogTestController::getInstance().contains("from ListSFTP to relationship success"));
@@ -503,7 +509,7 @@ TEST_CASE_METHOD(ListSFTPTestsFixture, "ListSFTP Tracking Timestamps one file ti
 
   createFileWithModificationTimeDiff("nifi_test/file1.ext", "Test content 1");
 
-  auto file = src_dir / "vfs" / "nifi_test" / "file1.ext";
+  auto file = working_directory / "vfs" / "nifi_test" / "file1.ext";
   auto mtime = utils::file::last_write_time(file).value();
   testController.runSession(plan, true);
 
@@ -739,7 +745,7 @@ TEST_CASE_METHOD(ListSFTPTestsFixture, "ListSFTP Tracking Entities one file anot
 
   createFileWithModificationTimeDiff("nifi_test/file1.ext", "Test content 1");
 
-  auto mtime = utils::file::last_write_time(src_dir / "vfs" / "nifi_test" / "file1.ext").value();
+  auto mtime = utils::file::last_write_time(working_directory / "vfs" / "nifi_test" / "file1.ext").value();
   testController.runSession(plan, true);
 
   REQUIRE(LogTestController::getInstance().contains("from ListSFTP to relationship success"));
@@ -763,7 +769,7 @@ TEST_CASE_METHOD(ListSFTPTestsFixture, "ListSFTP Tracking Entities one file time
 
   createFileWithModificationTimeDiff("nifi_test/file1.ext", "Test content 1");
 
-  auto file = src_dir / "vfs" / "nifi_test" / "file1.ext";
+  auto file = working_directory / "vfs" / "nifi_test" / "file1.ext";
   auto mtime = utils::file::last_write_time(file).value();
 
   testController.runSession(plan, true);
@@ -796,7 +802,7 @@ TEST_CASE_METHOD(ListSFTPTestsFixture, "ListSFTP Tracking Entities one file size
 
   createFileWithModificationTimeDiff("nifi_test/file1.ext", "Test content 1");
 
-  auto mtime = utils::file::last_write_time(src_dir / "vfs" / "nifi_test" / "file1.ext").value();
+  auto mtime = utils::file::last_write_time(working_directory / "vfs" / "nifi_test" / "file1.ext").value();
 
   testController.runSession(plan, true);
 

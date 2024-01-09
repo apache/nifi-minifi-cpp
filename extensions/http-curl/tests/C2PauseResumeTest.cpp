@@ -130,15 +130,27 @@ int main(int argc, char **argv) {
   std::shared_ptr<core::ContentRepository> content_repo = std::make_shared<core::repository::VolatileContentRepository>();
   content_repo->initialize(configuration);
 
-  auto yaml_ptr = std::make_shared<core::YamlConfiguration>(core::ConfigurationContext{test_repo, content_repo, configuration, args.test_file});
-
+  auto yaml_ptr = std::make_shared<core::YamlConfiguration>(core::ConfigurationContext{
+      .flow_file_repo = test_repo,
+      .content_repo = content_repo,
+      .configuration = configuration,
+      .path = args.test_file,
+      .filesystem = std::make_shared<utils::file::FileSystem>(),
+      .sensitive_properties_encryptor = utils::crypto::EncryptionProvider{utils::crypto::XSalsa20Cipher{utils::crypto::XSalsa20Cipher::generateKey()}}
+  });
   std::vector<std::shared_ptr<core::RepositoryMetricsSource>> repo_metric_sources{test_repo, test_flow_repo, content_repo};
   auto metrics_publisher_store = std::make_unique<minifi::state::MetricsPublisherStore>(configuration, repo_metric_sources, yaml_ptr);
   std::shared_ptr<minifi::FlowController> controller = std::make_shared<minifi::FlowController>(test_repo, test_flow_repo, configuration,
       std::move(yaml_ptr), content_repo, std::move(metrics_publisher_store));
 
-  core::YamlConfiguration yaml_config({test_repo, content_repo, configuration, args.test_file});
-
+  core::YamlConfiguration yaml_config(core::ConfigurationContext{
+    .flow_file_repo = test_repo,
+    .content_repo = content_repo,
+    .configuration = configuration,
+    .path = args.test_file,
+    .filesystem = std::make_shared<utils::file::FileSystem>(),
+    .sensitive_properties_encryptor = utils::crypto::EncryptionProvider{utils::crypto::XSalsa20Cipher{utils::crypto::XSalsa20Cipher::generateKey()}}
+  });
   auto root = yaml_config.getRoot();
   const auto proc = root->findProcessorByName("invoke");
   assert(proc != nullptr);

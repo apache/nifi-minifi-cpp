@@ -90,7 +90,16 @@ class VerifyInvokeHTTP : public HTTPIntegrationBase {
     configuration->set(minifi::Configure::nifi_c2_agent_heartbeat_period, "200");
     std::shared_ptr<core::ContentRepository> content_repo = std::make_shared<core::repository::VolatileContentRepository>();
     content_repo->initialize(configuration);
-    auto yaml_ptr = std::make_unique<core::YamlConfiguration>(core::ConfigurationContext{test_repo, content_repo, configuration, flow_yml_path});
+    auto encryption_key = utils::string::from_hex("e4bce4be67f417ed2530038626da57da7725ff8c0b519b692e4311e4d4fe8a28");
+    auto configuration_context = core::ConfigurationContext{
+        .flow_file_repo = test_repo,
+        .content_repo = content_repo,
+        .configuration = configuration,
+        .path = flow_yml_path,
+        .filesystem = std::make_shared<utils::file::FileSystem>(),
+        .sensitive_properties_encryptor = utils::crypto::EncryptionProvider{utils::crypto::XSalsa20Cipher{encryption_key}}
+    };
+    auto yaml_ptr = std::make_unique<core::YamlConfiguration>(configuration_context);
     flowController_ = std::make_unique<minifi::FlowController>(test_repo, test_flow_repo, configuration, std::move(yaml_ptr), content_repo);
     flowController_->load();
 

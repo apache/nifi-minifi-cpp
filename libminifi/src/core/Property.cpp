@@ -21,6 +21,8 @@
 #include <utility>
 
 #include "core/PropertyType.h"
+#include "range/v3/range/conversion.hpp"
+#include "range/v3/view/transform.hpp"
 
 namespace org::apache::nifi::minifi::core {
 
@@ -51,6 +53,10 @@ bool Property::getRequired() const {
   return is_required_;
 }
 
+bool Property::isSensitive() const {
+  return is_sensitive_;
+}
+
 bool Property::supportsExpressionLanguage() const {
   return supports_el_;
 }
@@ -60,11 +66,9 @@ const PropertyValidator& Property::getValidator() const {
 }
 
 std::vector<std::string> Property::getValues() {
-  std::vector<std::string> values;
-  for (const auto &v : values_) {
-    values.push_back(v.to_string());
-  }
-  return values;
+  return values_
+      | ranges::views::transform([](const auto& property_value) { return property_value.to_string(); })
+      | ranges::to<std::vector>();
 }
 
 void Property::setSupportsExpressionLanguage(bool supportEl) {
@@ -112,6 +116,7 @@ Property::Property(const PropertyReference& compile_time_property)
     : name_(compile_time_property.name),
       description_(compile_time_property.description),
       is_required_(compile_time_property.is_required),
+      is_sensitive_(compile_time_property.is_sensitive),
       dependent_properties_(createStrings(compile_time_property.dependent_properties)),
       exclusive_of_properties_(createStrings(compile_time_property.exclusive_of_properties)),
       is_collection_(false),

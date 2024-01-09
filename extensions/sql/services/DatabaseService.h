@@ -55,6 +55,7 @@ class DatabaseService : public core::controller::ControllerService {
   EXTENSIONAPI static constexpr auto ConnectionString = core::PropertyDefinitionBuilder<>::createProperty("Connection String")
       .withDescription("Database Connection String")
       .isRequired(true)
+      .isSensitive(true)
       .build();
   EXTENSIONAPI static constexpr auto Properties = std::array<core::PropertyReference, 1>{ConnectionString};
 

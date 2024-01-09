@@ -98,6 +98,7 @@ class Property {
   const PropertyValidator& getValidator() const;
   const PropertyValue &getValue() const;
   bool getRequired() const;
+  bool isSensitive() const;
   bool supportsExpressionLanguage() const;
   std::vector<std::string> getDependentProperties() const;
   std::vector<std::pair<std::string, std::string>> getExclusiveOfProperties() const;
@@ -246,6 +247,7 @@ class Property {
   std::string name_;
   std::string description_;
   bool is_required_;
+  bool is_sensitive_ = false;
   std::vector<std::string> dependent_properties_;
   std::vector<std::pair<std::string, std::string>> exclusive_of_properties_;
   bool is_collection_;

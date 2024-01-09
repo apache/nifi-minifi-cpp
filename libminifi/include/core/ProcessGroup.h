@@ -203,7 +203,7 @@ class ProcessGroup : public CoreComponent {
    * @param node node identifier
    * @return controller service node, if it exists.
    */
-  std::shared_ptr<core::controller::ControllerServiceNode> findControllerService(const std::string &nodeId);
+  std::shared_ptr<core::controller::ControllerServiceNode> findControllerService(const std::string &nodeId) const;
 
   // update property value
   void updatePropertyValue(const std::string& processorName, const std::string& propertyName, const std::string& propertyValue);

@@ -19,16 +19,21 @@
 #include <memory>
 #include <vector>
 #include <set>
-#include <cinttypes>
 
+#include "rapidjson/document.h"
+#include "rapidjson/prettywriter.h"
 #include "core/flow/StructuredConfiguration.h"
 #include "core/flow/CheckRequiredField.h"
 #include "core/flow/StructuredConnectionParser.h"
 #include "core/state/Value.h"
-#include "Defaults.h"
 #include "utils/TimeUtil.h"
 #include "utils/RegexUtils.h"
 #include "Funnel.h"
+
+#ifdef WIN32
+#pragma push_macro("GetObject")
+#undef GetObject  // windows.h #defines GetObject = GetObjectA or GetObjectW, which conflicts with rapidjson
+#endif
 
 namespace org::apache::nifi::minifi::core::flow {
 
@@ -44,7 +49,10 @@ std::unique_ptr<core::ProcessGroup> StructuredConfiguration::getRoot() {
     // non-existence of flow config file is not a dealbreaker, the caller might fetch it from network
     return nullptr;
   }
-  return getRootFromPayload(configuration.value());
+  auto process_group = getRootFromPayload(configuration.value());
+  gsl_Expects(process_group);
+  persist(*process_group);
+  return process_group;
 }
 
 StructuredConfiguration::StructuredConfiguration(ConfigurationContext ctx, std::shared_ptr<logging::Logger> logger)
@@ -620,20 +628,26 @@ void StructuredConfiguration::parseRPGPort(const Node& port_node, core::ProcessG
 }
 
 void StructuredConfiguration::parsePropertyValueSequence(const std::string& property_name, const Node& property_value_node, core::ConfigurableComponent& component) {
+  core::Property myProp(property_name, "", "");
+  component.getProperty(property_name, myProp);
+
   for (const auto& nodeVal : property_value_node) {
     if (nodeVal) {
       Node propertiesNode = nodeVal["value"];
-      // must insert the sequence in differently.
-      const auto rawValueString = propertiesNode.getString().value();
-      logger_->log_debug("Found {}={}", property_name, rawValueString);
+      auto rawValueString = propertiesNode.getString().value();
+      if (myProp.isSensitive()) {
+        rawValueString = decryptProperty(rawValueString);
+      }
+      logger_->log_debug("Found property {}", property_name);
+
       if (!component.updateProperty(property_name, rawValueString)) {
         auto proc = dynamic_cast<core::Connectable*>(&component);
         if (proc) {
           logger_->log_warn("Received property {} with value {} but is not one of the properties for {}. Attempting to add as dynamic property.", property_name, rawValueString, proc->getName());
           if (!component.setDynamicProperty(property_name, rawValueString)) {
-            logger_->log_warn("Unable to set the dynamic property {} with value {}", property_name, rawValueString);
+            logger_->log_warn("Unable to set the dynamic property {}", property_name);
           } else {
-            logger_->log_warn("Dynamic property {} with value {} set", property_name, rawValueString);
+            logger_->log_warn("Dynamic property {} has been set", property_name);
           }
         }
       }
@@ -659,6 +673,8 @@ PropertyValue StructuredConfiguration::getValidatedProcessorPropertyForDefaultTy
       coercedValue = gsl::narrow<int>(int64_val.value());
     } else if (defaultType == Value::BOOL_TYPE && property_value_node.getBool()) {
       coercedValue = property_value_node.getBool().value();
+    } else if (property_from_processor.isSensitive()) {
+      coercedValue = decryptProperty(property_value_node.getScalarAsString().value());
     } else {
       coercedValue = property_value_node.getScalarAsString().value();
     }
@@ -675,7 +691,9 @@ PropertyValue StructuredConfiguration::getValidatedProcessorPropertyForDefaultTy
 void StructuredConfiguration::parseSingleProperty(const std::string& property_name, const Node& property_value_node, core::ConfigurableComponent& processor) {
   core::Property myProp(property_name, "", "");
   processor.getProperty(property_name, myProp);
+
   const PropertyValue coercedValue = getValidatedProcessorPropertyForDefaultTypeInfo(myProp, property_value_node);
+
   bool property_set = false;
   try {
     property_set = processor.setProperty(myProp, coercedValue);
@@ -692,15 +710,15 @@ void StructuredConfiguration::parseSingleProperty(const std::string& property_na
     const auto rawValueString = property_value_node.getScalarAsString().value();
     auto proc = dynamic_cast<core::Connectable*>(&processor);
     if (proc) {
-      logger_->log_warn("Received property {} with value {} but is not one of the properties for {}. Attempting to add as dynamic property.", property_name, rawValueString, proc->getName());
+      logger_->log_warn("Received property {} but is not one of the properties for {}. Attempting to add as dynamic property.", property_name, proc->getName());
       if (!processor.setDynamicProperty(property_name, rawValueString)) {
-        logger_->log_warn("Unable to set the dynamic property {} with value {}", property_name, rawValueString);
+        logger_->log_warn("Unable to set the dynamic property {}", property_name);
       } else {
-        logger_->log_warn("Dynamic property {} with value {} set", property_name, rawValueString);
+        logger_->log_warn("Dynamic property {} has been set", property_name);
       }
     }
   } else {
-    logger_->log_debug("Property {} with value {} set", property_name, coercedValue.to_string());
+    logger_->log_debug("Property {} has been set", property_name);
   }
 }
 
@@ -795,7 +813,7 @@ void StructuredConfiguration::validateComponentProperties(ConfigurableComponent&
         std::string reason = utils::string::join_pack("required property '", prop_pair.second.getName(), "' is not set");
         raiseComponentError(component_name, section, reason);
       } else if (!prop_pair.second.getValue().validate(prop_pair.first).valid) {
-        std::string reason = utils::string::join_pack("the value '", prop_pair.first, "' is not valid for property '", prop_pair.second.getName(), "'");
+        std::string reason = utils::string::join_pack("the configured value is not valid for property '", prop_pair.second.getName(), "'");
         raiseComponentError(component_name, section, reason);
       }
     }
@@ -900,4 +918,131 @@ void StructuredConfiguration::addNewId(const std::string& uuid) {
   }
 }
 
+void StructuredConfiguration::encryptSensitivePropertiesInYaml(YAML::Node property_yamls, const std::map<std::string, Property>& properties) const {
+  for (auto kv : property_yamls) {
+    auto name = kv.first.as<std::string>();
+    if (!properties.contains(name)) {
+      logger_->log_warn("Property {} found in flow definition does not exist!", name);
+      continue;
+    }
+    if (properties.at(name).isSensitive()) {
+      if (kv.second.IsSequence()) {
+        for (auto property_item : kv.second) {
+          auto value = property_item["value"].as<std::string>();
+          property_item["value"] = encryptProperty(value);
+        }
+      } else {
+        auto value = kv.second.as<std::string>();
+        property_yamls[name] = encryptProperty(value);
+      }
+    }
+  }
+}
+
+std::string StructuredConfiguration::serializeYaml(const core::ProcessGroup& process_group) const {
+  gsl_Expects(schema_.identifier.size() == 1 &&
+      schema_.processors.size() == 1 && schema_.processor_properties.size() == 1 &&
+      schema_.controller_services.size() == 1 && schema_.controller_service_properties.size() == 1);
+
+  auto flow_definition_yaml = YAML::Clone(flow_definition_yaml_);
+
+  for (auto processor_yaml : flow_definition_yaml[schema_.processors[0]]) {
+    const auto processor_id = utils::Identifier::parse(processor_yaml[schema_.identifier[0]].Scalar());
+    if (!processor_id) {
+      logger_->log_warn("Invalid processor ID found in the flow definition: {}", processor_yaml[schema_.identifier[0]].Scalar());
+      continue;
+    }
+    const auto* processor = process_group.findProcessorById(*processor_id);
+    if (!processor) {
+      logger_->log_warn("Processor {} not found in the flow definition", processor_id->to_string());
+      continue;
+    }
+    encryptSensitivePropertiesInYaml(processor_yaml[schema_.processor_properties[0]], processor->getProperties());
+  }
+
+  for (auto controller_service_yaml : flow_definition_yaml[schema_.controller_services[0]]) {
+    const auto controller_service_id = controller_service_yaml[schema_.identifier[0]].Scalar();
+    const auto controller_service_node = process_group.findControllerService(controller_service_id);
+    if (!controller_service_node) {
+      logger_->log_warn("Controller service node {} not found in the flow definition", controller_service_id);
+      continue;
+    }
+    auto controller_service = controller_service_node->getControllerServiceImplementation();
+    if (!controller_service) {
+      logger_->log_warn("Controller service {} not found in the flow definition", controller_service_id);
+      continue;
+    }
+    encryptSensitivePropertiesInYaml(controller_service_yaml[schema_.controller_service_properties[0]], controller_service->getProperties());
+  }
+
+  return YAML::Dump(flow_definition_yaml) + '\n';
+}
+
+void StructuredConfiguration::encryptSensitivePropertiesInJson(rapidjson::Value& property_jsons, rapidjson::Document::AllocatorType& alloc, const std::map<std::string, Property>& properties) const {
+  for (auto& property : property_jsons.GetObject()) {
+    std::string name{property.name.GetString()};
+    if (!properties.contains(name)) {
+      logger_->log_warn("Property {} found in flow definition does not exist!", name);
+      continue;
+    }
+    if (properties.at(name).isSensitive()) {
+      auto& value = property.value;
+      std::string encrypted_value = encryptProperty(value.GetString());
+      value.SetString(encrypted_value.c_str(), encrypted_value.size(), alloc);
+    }
+  }
+}
+
+std::string StructuredConfiguration::serializeJson(const core::ProcessGroup& process_group) const {
+  gsl_Expects(schema_.root_group.size() == 1 && schema_.identifier.size() == 1 &&
+      schema_.processors.size() == 1 && schema_.processor_properties.size() == 1 &&
+      schema_.controller_services.size() == 1 && schema_.controller_service_properties.size() == 1);
+
+  rapidjson::Document doc;
+  auto alloc = doc.GetAllocator();
+  rapidjson::Value flow_definition_json;
+  flow_definition_json.CopyFrom(flow_definition_json_, alloc);
+  auto& root_group = flow_definition_json[schema_.root_group[0]];
+
+  auto processors = root_group[schema_.processors[0]].GetArray();
+  for (auto& processor_json : processors) {
+    const auto processor_id = utils::Identifier::parse(processor_json[schema_.identifier[0]].GetString());
+    if (!processor_id) {
+      logger_->log_warn("Invalid processor ID found in the flow definition: {}", processor_json[schema_.identifier[0]].GetString());
+      continue;
+    }
+    const auto processor = process_group.findProcessorById(*processor_id);
+    if (!processor) {
+      logger_->log_warn("Processor {} not found in the flow definition", processor_id->to_string());
+      continue;
+    }
+    encryptSensitivePropertiesInJson(processor_json[schema_.processor_properties[0]], alloc, processor->getProperties());
+  }
+
+  auto controller_services = root_group[schema_.controller_services[0]].GetArray();
+  for (auto& controller_service_json : controller_services) {
+    const auto controller_service_id = controller_service_json[schema_.identifier[0]].GetString();
+    const auto controller_service_node = process_group.findControllerService(controller_service_id);
+    if (!controller_service_node) {
+      logger_->log_warn("Controller service node {} not found in the flow definition", controller_service_id);
+      continue;
+    }
+    const auto controller_service = controller_service_node->getControllerServiceImplementation();
+    if (!controller_service) {
+      logger_->log_warn("Controller service {} not found in the flow definition", controller_service_id);
+      continue;
+    }
+    encryptSensitivePropertiesInJson(controller_service_json[schema_.controller_service_properties[0]], alloc, controller_service->getProperties());
+  }
+
+  rapidjson::StringBuffer buffer;
+  rapidjson::PrettyWriter<rapidjson::StringBuffer> writer{buffer};
+  flow_definition_json.Accept(writer);
+  return std::string(buffer.GetString(), buffer.GetSize()) + '\n';
+}
+
 }  // namespace org::apache::nifi::minifi::core::flow
+
+#ifdef WIN32
+#pragma pop_macro("GetObject")
+#endif

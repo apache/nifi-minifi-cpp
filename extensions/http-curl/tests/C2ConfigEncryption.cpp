@@ -47,11 +47,11 @@ int main(int argc, char **argv) {
   auto encryptor = utils::crypto::EncryptionProvider::create(args.key_dir);
   assert(encryptor);
 
-  std::ifstream encrypted_file{live_config_file, std::ios::binary};
+  std::ifstream encrypted_file{live_config_file};
   std::string decrypted_config = encryptor->decrypt(std::string(std::istreambuf_iterator<char>(encrypted_file), {}));
 
-  std::ifstream original_file{args.test_file, std::ios::binary};
-  std::string original_config{std::istreambuf_iterator<char>(original_file), {}};
+  std::ifstream expected_file{args.test_file + ".reformatted"};
+  std::string expected_config{std::istreambuf_iterator<char>(expected_file), {}};
 
-  assert(decrypted_config == original_config);
+  assert(decrypted_config == expected_config);
 }

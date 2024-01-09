@@ -94,8 +94,14 @@ class VolatileMapStateStorageTestFixture {
   std::shared_ptr<core::Repository> test_flow_repo = std::make_shared<TestFlowRepository>();
   std::shared_ptr<core::ContentRepository> content_repo = std::make_shared<core::repository::VolatileContentRepository>();
 
-  std::unique_ptr<core::YamlConfiguration> yaml_config = std::make_unique<core::YamlConfiguration>(
-      core::ConfigurationContext{test_repo, content_repo, configuration, config_yaml});
+  std::unique_ptr<core::YamlConfiguration> yaml_config = std::make_unique<core::YamlConfiguration>(core::ConfigurationContext{
+      .flow_file_repo = test_repo,
+      .content_repo = content_repo,
+      .configuration = configuration,
+      .path = config_yaml,
+      .filesystem = std::make_shared<utils::file::FileSystem>(),
+      .sensitive_properties_encryptor = utils::crypto::EncryptionProvider{utils::crypto::XSalsa20Cipher{utils::crypto::XSalsa20Cipher::generateKey()}}
+  });
   std::unique_ptr<core::ProcessGroup> process_group;
 
   std::shared_ptr<core::controller::ControllerServiceNode> key_value_store_service_node;

@@ -77,6 +77,7 @@ class KafkaProcessorBase : public core::Processor {
       .build();
   EXTENSIONAPI static constexpr auto Password = core::PropertyDefinitionBuilder<>::createProperty("Password")
       .withDescription("The password for the given username when the SASL Mechanism is sasl_plaintext")
+      .isSensitive(true)
       .build();
   EXTENSIONAPI static constexpr auto Properties = std::array<core::PropertyReference, 8>{
       SSLContextService,

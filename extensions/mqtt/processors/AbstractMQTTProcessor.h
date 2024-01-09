@@ -148,6 +148,7 @@ class AbstractMQTTProcessor : public core::Processor {
       .build();
   EXTENSIONAPI static constexpr auto Password = core::PropertyDefinitionBuilder<>::createProperty("Password")
       .withDescription("Password to use when connecting to the broker")
+      .isSensitive(true)
       .build();
   EXTENSIONAPI static constexpr auto SecurityProtocol = core::PropertyDefinitionBuilder<>::createProperty("Security Protocol")
       .withDescription("Protocol used to communicate with brokers")
@@ -163,6 +164,7 @@ class AbstractMQTTProcessor : public core::Processor {
       .build();
   EXTENSIONAPI static constexpr auto SecurityPrivateKeyPassword = core::PropertyDefinitionBuilder<>::createProperty("Security Pass Phrase")
       .withDescription("Private key passphrase")
+      .isSensitive(true)
       .build();
   EXTENSIONAPI static constexpr auto BasicProperties = std::array<core::PropertyReference, 3>{
       BrokerURI,

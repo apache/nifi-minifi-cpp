@@ -55,6 +55,7 @@ class FetchGCSObject : public GCSProcessor {
       .withDescription("The AES256 Encryption Key (encoded in base64) for server-side decryption of the object.")
       .isRequired(false)
       .supportsExpressionLanguage(true)
+      .isSensitive(true)
       .build();
   EXTENSIONAPI static constexpr auto ObjectGeneration = core::PropertyDefinitionBuilder<>::createProperty("Object Generation")
       .withDescription("The generation of the Object to download. If left empty, then it will download the latest generation.")

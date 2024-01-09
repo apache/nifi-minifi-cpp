@@ -64,9 +64,17 @@ class CoapIntegrationBase : public IntegrationBase {
 
     std::shared_ptr<core::ContentRepository> content_repo = std::make_shared<core::repository::VolatileContentRepository>();
     content_repo->initialize(configuration);
-    auto yaml_ptr = std::make_shared<core::YamlConfiguration>(core::ConfigurationContext{test_repo, content_repo, configuration, test_file_location});
 
-    core::YamlConfiguration yaml_config({test_repo, content_repo, configuration, test_file_location});
+    auto configuration_context = core::ConfigurationContext{
+        .flow_file_repo = test_repo,
+        .content_repo = content_repo,
+        .configuration = configuration,
+        .path = test_file_location,
+        .filesystem = std::make_shared<utils::file::FileSystem>(),
+        .sensitive_properties_encryptor = utils::crypto::EncryptionProvider{utils::crypto::XSalsa20Cipher{utils::crypto::XSalsa20Cipher::generateKey()}}
+    };
+    auto yaml_ptr = std::make_shared<core::YamlConfiguration>(configuration_context);
+    core::YamlConfiguration yaml_config(configuration_context);
 
     std::shared_ptr<core::ProcessGroup> pg{ yaml_config.getRoot() };
 

@@ -396,7 +396,9 @@ int main(int argc, char **argv) {
           .content_repo = content_repo,
           .configuration = configure,
           .path = configure->get(minifi::Configure::nifi_flow_configuration_file),
-          .filesystem = filesystem}, nifi_configuration_class_name);
+          .filesystem = filesystem,
+          .sensitive_properties_encryptor = utils::crypto::EncryptionProvider::createSensitivePropertiesEncryptor(minifiHome)
+      }, nifi_configuration_class_name);
 
     std::vector<std::shared_ptr<core::RepositoryMetricsSource>> repo_metric_sources{prov_repo, flow_repo, content_repo};
     auto metrics_publisher_store = std::make_unique<minifi::state::MetricsPublisherStore>(configure, repo_metric_sources, flow_configuration);

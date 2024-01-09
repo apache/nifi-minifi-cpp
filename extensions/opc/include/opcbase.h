@@ -47,6 +47,7 @@ class BaseOPCProcessor : public core::Processor {
       .build();
   EXTENSIONAPI static constexpr auto Password = core::PropertyDefinitionBuilder<>::createProperty("Password")
       .withDescription("Password to log in with.")
+      .isSensitive(true)
       .build();
   EXTENSIONAPI static constexpr auto CertificatePath = core::PropertyDefinitionBuilder<>::createProperty("Certificate path")
       .withDescription("Path to the DER-encoded cert file")

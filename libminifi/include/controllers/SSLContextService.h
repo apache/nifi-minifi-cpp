@@ -213,6 +213,7 @@ class SSLContextService : public core::controller::ControllerService {
   MINIFIAPI static constexpr auto Passphrase = core::PropertyDefinitionBuilder<>::createProperty("Passphrase")
       .withDescription("Client passphrase. Either a file or unencrypted text")
       .isRequired(false)
+      .isSensitive(true)
       .build();
   MINIFIAPI static constexpr auto CACertificate = core::PropertyDefinitionBuilder<>::createProperty("CA Certificate")
       .withDescription("CA certificate file")

@@ -66,6 +66,7 @@ class SFTPProcessorBase : public core::Processor {
       .withDescription("Password for the user account")
       .isRequired(false)
       .supportsExpressionLanguage(true)
+      .isSensitive(true)
       .build();
   EXTENSIONAPI static constexpr auto PrivateKeyPath = core::PropertyDefinitionBuilder<>::createProperty("Private Key Path")
       .withDescription("The fully qualified path to the Private Key file")
@@ -76,6 +77,7 @@ class SFTPProcessorBase : public core::Processor {
       .withDescription("Password for the private key")
       .isRequired(false)
       .supportsExpressionLanguage(true)
+      .isSensitive(true)
       .build();
   EXTENSIONAPI static constexpr auto StrictHostKeyChecking = core::PropertyDefinitionBuilder<>::createProperty("Strict Host Key Checking")
       .withDescription("Indicates whether or not strict enforcement of hosts keys should be applied")
@@ -131,6 +133,7 @@ class SFTPProcessorBase : public core::Processor {
       .withDescription("Http Proxy Password")
       .isRequired(false)
       .supportsExpressionLanguage(true)
+      .isSensitive(true)
       .build();
   EXTENSIONAPI static constexpr auto Properties = std::array<core::PropertyReference, 16>{
       Hostname,

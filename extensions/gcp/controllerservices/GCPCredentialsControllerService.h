@@ -80,6 +80,7 @@ class GCPCredentialsControllerService : public core::controller::ControllerServi
   EXTENSIONAPI static constexpr auto JsonContents = core::PropertyDefinitionBuilder<>::createProperty("Service Account JSON")
       .withDescription("The raw JSON containing a Service Account keyfile.")
       .isRequired(false)
+      .isSensitive(true)
       .build();
   EXTENSIONAPI static constexpr auto Properties = std::array<core::PropertyReference, 3>{
       CredentialsLoc,

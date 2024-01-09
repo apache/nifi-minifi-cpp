@@ -42,8 +42,9 @@ YamlConfiguration::YamlConfiguration(ConfigurationContext ctx)
 
 std::unique_ptr<core::ProcessGroup> YamlConfiguration::getRootFromPayload(const std::string &yamlConfigPayload) {
   try {
-    YAML::Node rootYamlNode = YAML::Load(yamlConfigPayload);
-    flow::Node root{std::make_shared<YamlNode>(rootYamlNode)};
+    flow_definition_yaml_ = YAML::Load(yamlConfigPayload);
+    flow::Node root{std::make_shared<YamlNode>(flow_definition_yaml_)};
+    flow_serialization_type_ = FlowSerializationType::Yaml;
     return getRootFrom(root, flow::FlowSchema::getDefault());
   } catch (const YAML::ParserException &pe) {
     logger_->log_error("Configuration is not valid yaml: {}", pe.what());

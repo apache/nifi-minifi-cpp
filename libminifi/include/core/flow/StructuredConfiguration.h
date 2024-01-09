@@ -34,6 +34,8 @@
 #include "utils/file/FileSystem.h"
 #include "core/flow/Node.h"
 #include "FlowSchema.h"
+#include "rapidjson/document.h"
+#include "yaml-cpp/yaml.h"
 
 namespace org::apache::nifi::minifi::core::flow {
 
@@ -103,8 +105,6 @@ class StructuredConfiguration : public FlowConfiguration {
    * @return
    */
   std::unique_ptr<core::ProcessGroup> parseRootProcessGroup(const Node& root_flow_node);
-
-  void parseProcessorProperty(const Node& doc, const Node& node, std::shared_ptr<core::Processor> processor);
 
   void parseControllerServices(const Node& controller_services_node);
 
@@ -208,10 +208,14 @@ class StructuredConfiguration : public FlowConfiguration {
    */
   std::string getOptionalField(const Node& node, const std::vector<std::string>& field_name, const std::string& default_value, const std::string& info_message = "");
 
-  FlowSchema schema_;
+  [[nodiscard]] std::string serializeYaml(const core::ProcessGroup& process_group) const;
+  [[nodiscard]] std::string serializeJson(const core::ProcessGroup& process_group) const;
 
+  FlowSchema schema_;
   static std::shared_ptr<utils::IdGenerator> id_generator_;
   std::unordered_set<std::string> uuids_;
+  YAML::Node flow_definition_yaml_;
+  rapidjson::Document flow_definition_json_;
   std::shared_ptr<logging::Logger> logger_;
 
  private:
@@ -219,6 +223,8 @@ class StructuredConfiguration : public FlowConfiguration {
   void parsePropertyValueSequence(const std::string& property_name, const Node& property_value_node, core::ConfigurableComponent& component);
   void parseSingleProperty(const std::string& property_name, const Node& property_value_node, core::ConfigurableComponent& processor);
   void parsePropertyNodeElement(const std::string& property_name, const Node& property_value_node, core::ConfigurableComponent& processor);
+  void encryptSensitivePropertiesInYaml(YAML::Node property_yamls, const std::map<std::string, Property>& properties) const;
+  void encryptSensitivePropertiesInJson(rapidjson::Value& property_jsons, rapidjson::Document::AllocatorType& alloc, const std::map<std::string, Property>& properties) const;
   void addNewId(const std::string& uuid);
 
   /**

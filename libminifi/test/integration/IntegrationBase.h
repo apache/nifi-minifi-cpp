@@ -33,6 +33,7 @@
 #include "properties/Configure.h"
 #include "../unit/ProvenanceTestHelper.h"
 #include "RemoteProcessorGroupPort.h"
+#include "core/ConfigurationFactory.h"
 #include "core/ConfigurableComponent.h"
 #include "controllers/SSLContextService.h"
 #include "HTTPUtils.h"
@@ -40,6 +41,7 @@
 #include "core/state/MetricsPublisherFactory.h"
 #include "c2/C2Utils.h"
 #include "utils/net/DNS.h"
+#include "utils/crypto/ciphers/XSalsa20.h"
 
 namespace minifi = org::apache::nifi::minifi;
 namespace core = minifi::core;
@@ -177,7 +179,27 @@ void IntegrationBase::run(const std::optional<std::filesystem::path>& test_file_
       filesystem = std::make_shared<utils::file::FileSystem>();
     }
 
-    auto flow_config = std::make_shared<core::YamlConfiguration>(core::ConfigurationContext{test_repo, content_repo, configuration, test_file_location, filesystem});
+    std::optional<utils::crypto::EncryptionProvider> sensitive_properties_encryptor = [&]() {
+      if (home_path) {
+        return utils::crypto::EncryptionProvider::createSensitivePropertiesEncryptor(*home_path);
+      } else {
+        auto encryption_key = utils::string::from_hex("e4bce4be67f417ed2530038626da57da7725ff8c0b519b692e4311e4d4fe8a28");
+        return utils::crypto::EncryptionProvider{utils::crypto::XSalsa20Cipher{encryption_key}};
+      }
+    }();
+
+    std::string nifi_configuration_class_name = "adaptiveconfiguration";
+    configuration->get(minifi::Configure::nifi_configuration_class_name, nifi_configuration_class_name);
+
+    std::shared_ptr<core::FlowConfiguration> flow_config = core::createFlowConfiguration(
+        core::ConfigurationContext{
+            .flow_file_repo = test_repo,
+            .content_repo = content_repo,
+            .configuration = configuration,
+            .path = test_file_location,
+            .filesystem = filesystem,
+            .sensitive_properties_encryptor = sensitive_properties_encryptor
+        }, nifi_configuration_class_name);
 
     auto controller_service_provider = flow_config->getControllerServiceProvider();
     char state_dir_name_template[] = "/var/tmp/integrationstate.XXXXXX";

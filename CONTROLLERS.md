@@ -47,7 +47,7 @@ In the list below, the names of required properties appear in bold. Any other pr
 |-----------------------------|---------------|------------------|---------------------------------------------------------------------------------------------------------------------------------------------|
 | **Use Default Credentials** | false         | true<br/>false   | If true, uses the Default Credential chain, including EC2 instance profiles or roles, environment variables, default user credentials, etc. |
 | Access Key                  |               |                  | Specifies the AWS Access Key.                                                                                                               |
-| Secret Key                  |               |                  | Specifies the AWS Secret Key.                                                                                                               |
+| Secret Key                  |               |                  | Specifies the AWS Secret Key.<br/>**Sensitive Property: true**                                                                              |
 | Credentials File            |               |                  | Path to a file containing AWS access key and secret key in properties file format. Properties used: accessKey and secretKey                 |
 
 
@@ -61,14 +61,14 @@ Manages the credentials for an Azure Storage account. This allows for multiple A
 
 In the list below, the names of required properties appear in bold. Any other properties (not in bold) are considered optional. The table also indicates any default values, and whether a property supports the NiFi Expression Language.
 
-| Name                                   | Default Value | Allowable Values | Description                                                                                                                                                                                                                 |
-|----------------------------------------|---------------|------------------|-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
-| Storage Account Name                   |               |                  | The storage account name.                                                                                                                                                                                                   |
-| Storage Account Key                    |               |                  | The storage account key. This is an admin-like password providing access to every container in this account. It is recommended one uses Shared Access Signature (SAS) token instead for fine-grained control with policies. |
-| SAS Token                              |               |                  | Shared Access Signature token. Specify either SAS Token (recommended) or Storage Account Key together with Storage Account Name if Managed Identity is not used.                                                            |
-| Common Storage Account Endpoint Suffix |               |                  | Storage accounts in public Azure always use a common FQDN suffix. Override this endpoint suffix with a different suffix in certain circumstances (like Azure Stack or non-public Azure regions).                            |
-| Connection String                      |               |                  | Connection string used to connect to Azure Storage service. This overrides all other set credential properties if Managed Identity is not used.                                                                             |
-| **Use Managed Identity Credentials**   | false         | true<br/>false   | If true Managed Identity credentials will be used together with the Storage Account Name for authentication.                                                                                                                |
+| Name                                   | Default Value | Allowable Values | Description                                                                                                                                                                                                                                                  |
+|----------------------------------------|---------------|------------------|--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| Storage Account Name                   |               |                  | The storage account name.                                                                                                                                                                                                                                    |
+| Storage Account Key                    |               |                  | The storage account key. This is an admin-like password providing access to every container in this account. It is recommended one uses Shared Access Signature (SAS) token instead for fine-grained control with policies.<br/>**Sensitive Property: true** |
+| SAS Token                              |               |                  | Shared Access Signature token. Specify either SAS Token (recommended) or Storage Account Key together with Storage Account Name if Managed Identity is not used.<br/>**Sensitive Property: true**                                                            |
+| Common Storage Account Endpoint Suffix |               |                  | Storage accounts in public Azure always use a common FQDN suffix. Override this endpoint suffix with a different suffix in certain circumstances (like Azure Stack or non-public Azure regions).                                                             |
+| Connection String                      |               |                  | Connection string used to connect to Azure Storage service. This overrides all other set credential properties if Managed Identity is not used.                                                                                                              |
+| **Use Managed Identity Credentials**   | false         | true<br/>false   | If true Managed Identity credentials will be used together with the Storage Account Name for authentication.                                                                                                                                                 |
 
 
 ## ElasticsearchCredentialsControllerService
@@ -81,11 +81,11 @@ Elasticsearch/Opensearch Credentials Controller Service
 
 In the list below, the names of required properties appear in bold. Any other properties (not in bold) are considered optional. The table also indicates any default values, and whether a property supports the NiFi Expression Language.
 
-| Name     | Default Value | Allowable Values | Description                                                                      |
-|----------|---------------|------------------|----------------------------------------------------------------------------------|
-| Username |               |                  | The username for basic authentication<br/>**Supports Expression Language: true** |
-| Password |               |                  | The password for basic authentication<br/>**Supports Expression Language: true** |
-| API Key  |               |                  | The API Key to use                                                               |
+| Name     | Default Value | Allowable Values | Description                                                                                                       |
+|----------|---------------|------------------|-------------------------------------------------------------------------------------------------------------------|
+| Username |               |                  | The username for basic authentication<br/>**Supports Expression Language: true**                                  |
+| Password |               |                  | The password for basic authentication<br/>**Sensitive Property: true**<br/>**Supports Expression Language: true** |
+| API Key  |               |                  | The API Key to use<br/>**Sensitive Property: true**                                                               |
 
 
 ## ExecuteJavaControllerService
@@ -113,11 +113,11 @@ Manages the credentials for Google Cloud Platform. This allows for multiple Goog
 
 In the list below, the names of required properties appear in bold. Any other properties (not in bold) are considered optional. The table also indicates any default values, and whether a property supports the NiFi Expression Language.
 
-| Name                      | Default Value                          | Allowable Values                                                                                                                                               | Description                                                          |
-|---------------------------|----------------------------------------|----------------------------------------------------------------------------------------------------------------------------------------------------------------|----------------------------------------------------------------------|
-| **Credentials Location**  | Google Application Default Credentials | Google Application Default Credentials<br/>Use Compute Engine Credentials<br/>Service Account JSON File<br/>Service Account JSON<br/>Use Anonymous credentials | The location of the credentials.                                     |
-| Service Account JSON File |                                        |                                                                                                                                                                | Path to a file containing a Service Account key file in JSON format. |
-| Service Account JSON      |                                        |                                                                                                                                                                | The raw JSON containing a Service Account keyfile.                   |
+| Name                      | Default Value                          | Allowable Values                                                                                                                                               | Description                                                                         |
+|---------------------------|----------------------------------------|----------------------------------------------------------------------------------------------------------------------------------------------------------------|-------------------------------------------------------------------------------------|
+| **Credentials Location**  | Google Application Default Credentials | Google Application Default Credentials<br/>Use Compute Engine Credentials<br/>Service Account JSON File<br/>Service Account JSON<br/>Use Anonymous credentials | The location of the credentials.                                                    |
+| Service Account JSON File |                                        |                                                                                                                                                                | Path to a file containing a Service Account key file in JSON format.                |
+| Service Account JSON      |                                        |                                                                                                                                                                | The raw JSON containing a Service Account keyfile.<br/>**Sensitive Property: true** |
 
 
 ## JavaControllerService
@@ -203,9 +203,9 @@ Controller service that provides ODBC database connection
 
 In the list below, the names of required properties appear in bold. Any other properties (not in bold) are considered optional. The table also indicates any default values, and whether a property supports the NiFi Expression Language.
 
-| Name                  | Default Value | Allowable Values | Description                |
-|-----------------------|---------------|------------------|----------------------------|
-| **Connection String** |               |                  | Database Connection String |
+| Name                  | Default Value | Allowable Values | Description                                                 |
+|-----------------------|---------------|------------------|-------------------------------------------------------------|
+| **Connection String** |               |                  | Database Connection String<br/>**Sensitive Property: true** |
 
 
 ## PersistentMapStateStorage
@@ -258,7 +258,7 @@ In the list below, the names of required properties appear in bold. Any other pr
 | **Share**    |               |                  | The network share to which files should be written. This is the "first folder" after the hostname: \\hostname\[share]\dir1\dir2 |
 | Domain       |               |                  | The domain used for authentication. Optional, in most cases username and password is sufficient.                                |
 | Username     |               |                  | The username used for authentication. If no username is set then anonymous authentication is attempted.                         |
-| Password     |               |                  | The password used for authentication. Required if Username is set.                                                              |
+| Password     |               |                  | The password used for authentication. Required if Username is set.<br/>**Sensitive Property: true**                             |
 
 
 ## SSLContextService
@@ -280,7 +280,7 @@ In the list below, the names of required properties appear in bold. Any other pr
 | Client Cert Key Usage      | Client Authentication |                                                                                                                                                          | Comma-separated list of enhanced key usage values that the client certificate is required to have (Windows only)                         |
 | Client Certificate         |                       |                                                                                                                                                          | Client Certificate                                                                                                                       |
 | Private Key                |                       |                                                                                                                                                          | Private Key file                                                                                                                         |
-| Passphrase                 |                       |                                                                                                                                                          | Client passphrase. Either a file or unencrypted text                                                                                     |
+| Passphrase                 |                       |                                                                                                                                                          | Client passphrase. Either a file or unencrypted text<br/>**Sensitive Property: true**                                                    |
 | CA Certificate             |                       |                                                                                                                                                          | CA certificate file                                                                                                                      |
 | Use System Cert Store      | false                 | true<br/>false                                                                                                                                           | Whether to use the certificates in the OS's certificate store                                                                            |
 

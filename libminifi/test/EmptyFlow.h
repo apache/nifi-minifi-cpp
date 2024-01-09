@@ -18,11 +18,10 @@
 
 #pragma once
 
-constexpr const char* empty_flow = R"(
-  Flow Controller:
-    name: Banana Bread
-  Processors: []
-  Connections: []
-  Remote Processing Groups: []
-  Provenance Reporting:
+constexpr const char* empty_flow = R"(Flow Controller:
+  name: Banana Bread
+Processors: []
+Connections: []
+Remote Processing Groups: []
+Provenance Reporting: ~
 )";

@@ -48,6 +48,7 @@ class CaptureRTSPFrame : public core::Processor {
     .build();
   EXTENSIONAPI static constexpr auto RTSPPassword = core::PropertyDefinitionBuilder<>::createProperty("RTSP Password")
     .withDescription("Password used to connect to the RTSP stream")
+    .isSensitive(true)
     .build();
   EXTENSIONAPI static constexpr auto RTSPHostname = core::PropertyDefinitionBuilder<>::createProperty("RTSP Hostname")
     .withDescription("Hostname of the RTSP stream we are trying to connect to")
