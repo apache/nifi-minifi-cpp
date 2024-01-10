@@ -117,12 +117,12 @@ void PushGrafanaLokiREST::setUpStateManager(core::ProcessContext& context) {
 
 void PushGrafanaLokiREST::setUpStreamLabels(core::ProcessContext& context) {
   if (auto stream_labels_str = context.getProperty(StreamLabels)) {
-    auto stream_labels = utils::StringUtils::splitAndTrimRemovingEmpty(*stream_labels_str, ",");
+    auto stream_labels = utils::string::splitAndTrimRemovingEmpty(*stream_labels_str, ",");
     if (stream_labels.empty()) {
       throw Exception(PROCESS_SCHEDULE_EXCEPTION, "Missing or invalid Stream Labels property");
     }
     for (const auto& label : stream_labels) {
-      auto stream_labels = utils::StringUtils::splitAndTrimRemovingEmpty(label, "=");
+      auto stream_labels = utils::string::splitAndTrimRemovingEmpty(label, "=");
       if (stream_labels.size() != 2) {
         throw Exception(PROCESS_SCHEDULE_EXCEPTION, "Missing or invalid Stream Labels property");
       }
@@ -150,7 +150,7 @@ void PushGrafanaLokiREST::setAuthorization(const core::ProcessContext& context) 
       throw Exception(PROCESS_SCHEDULE_EXCEPTION, "Username is set, but Password property is not!");
     }
     std::string auth = *username + ":" + *password;
-    auto base64_encoded_auth = utils::StringUtils::to_base64(auth);
+    auto base64_encoded_auth = utils::string::to_base64(auth);
     client_.setRequestHeader("Authorization", "Basic " + base64_encoded_auth);
   } else if (auto bearer_token_file = context.getProperty(PushGrafanaLokiREST::BearerTokenFile)) {
     if (!std::filesystem::exists(*bearer_token_file) || !std::filesystem::is_regular_file(*bearer_token_file)) {
@@ -159,7 +159,7 @@ void PushGrafanaLokiREST::setAuthorization(const core::ProcessContext& context) 
     std::ifstream file(*bearer_token_file, std::ios::binary);
     std::stringstream buffer;
     buffer << file.rdbuf();
-    std::string bearer_token = utils::StringUtils::trim(buffer.str());
+    std::string bearer_token = utils::string::trim(buffer.str());
     client_.setRequestHeader("Authorization", "Bearer " + bearer_token);
   } else {
     client_.setRequestHeader("Authorization", std::nullopt);
@@ -171,7 +171,7 @@ void PushGrafanaLokiREST::initializeHttpClient(core::ProcessContext& context) {
   if (url.empty()) {
     throw Exception(PROCESS_SCHEDULE_EXCEPTION, "Url property cannot be empty!");
   }
-  if (utils::StringUtils::endsWith(url, "/")) {
+  if (utils::string::endsWith(url, "/")) {
     url += "loki/api/v1/push";
   } else {
     url += "/loki/api/v1/push";
@@ -189,7 +189,7 @@ void PushGrafanaLokiREST::onSchedule(core::ProcessContext& context, core::Proces
   setUpStreamLabels(context);
 
   if (auto log_line_metadata_attributes = context.getProperty(LogLineMetadataAttributes)) {
-    log_line_metadata_attributes_ = utils::StringUtils::splitAndTrimRemovingEmpty(*log_line_metadata_attributes, ",");
+    log_line_metadata_attributes_ = utils::string::splitAndTrimRemovingEmpty(*log_line_metadata_attributes, ",");
   }
 
   auto tenant_id = context.getProperty(TenantID);
