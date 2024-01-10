@@ -395,6 +395,8 @@ As stated before each of the repositories can be configured to be volatile (stat
     # limits locking for the content repository
     nifi.volatile.repository.options.content.minimal.locking=true
 
+**NOTE:** If the volatile repository reaches the maximum number of entries, it will start to drop the oldest entries, and replace them with the new entries in round robin manner. Make sure to set the maximum number of entries to a reasonable value, so that the repository does not run out of memory.
+
 ### Configuring Repository storage locations
 Persistent repositories, such as the Flow File repository, use a configurable path to store data.
 The repository locations and their defaults are defined below. By default the MINIFI_HOME env
@@ -673,7 +675,7 @@ After the appenders are defined you can set the log level and logging target for
     # Set the rolling appender to log everything with INFO level
     logger.root=INFO,rolling
     # But only write logs from the org::apache::nifi::minifi::FlowController class with ERROR level
-    logger.org::apache::nifi::minifi::core::logging::LoggerConfiguration=ERROR,rolling
+    logger.org::apache::nifi::minifi::core::logging::FlowController=ERROR,rolling
 
     # Write all error logs in the minifi namespace to the alert1 appender
     logger.org::apache::nifi::minifi=ERROR,alert1
