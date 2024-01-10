@@ -97,7 +97,8 @@ void GenerateFlowFile::onSchedule(core::ProcessContext& context, core::ProcessSe
 
   logger_->log_trace("GenerateFlowFile is configured in {} mode", magic_enum::enum_name(mode_));
   if (mode_ != Mode::CustomText && has_custom_text)
-    logger_->log_warn("Custom Text property is set, but not used!");
+    logger_->log_warn("Custom Text property is set but not used. "
+      "For Custom Text to be used, Data Format needs to be Text, and Unique FlowFiles needs to be false.");
 }
 
 // The custom text has to be reevaluated once per batch
@@ -112,14 +113,13 @@ void GenerateFlowFile::refreshNonUniqueData(core::ProcessContext& context) {
 void GenerateFlowFile::onTrigger(core::ProcessContext& context, core::ProcessSession& session) {
   refreshNonUniqueData(context);
   for (uint64_t i = 0; i < batch_size_; i++) {
-    // For each batch
     std::shared_ptr<core::FlowFile> flow_file = session.create();
     if (!flow_file) {
       logger_->log_error("Failed to create flowfile!");
       return;
     }
     if (mode_ == Mode::Empty) {
-      // noop
+      // the newly created flowfile is empty by default
     } else if (isUnique(mode_)) {
       std::vector<char> unique_data(gsl::narrow<size_t>(file_size_));
       generateData(unique_data, isText(mode_));

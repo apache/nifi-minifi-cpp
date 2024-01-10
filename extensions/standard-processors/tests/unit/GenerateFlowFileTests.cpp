@@ -62,7 +62,7 @@ TEST_CASE("GenerateFlowFileWithBinaryData") {
     CHECK(first_batch_0 == first_batch_1);
   }
 
-  CHECK(LogTestController::getInstance().contains("Custom Text property is set, but not used!"));
+  CHECK(LogTestController::getInstance().contains("Custom Text property is set but not used. For Custom Text to be used, Data Format needs to be Text, and Unique FlowFiles needs to be false."));
 }
 
 TEST_CASE("GenerateFlowFileTestEmpty") {
