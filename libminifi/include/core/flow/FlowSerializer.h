@@ -1,5 +1,4 @@
 /**
- *
  * Licensed to the Apache Software Foundation (ASF) under one or more
  * contributor license agreements.  See the NOTICE file distributed with
  * this work for additional information regarding copyright ownership.
@@ -18,22 +17,24 @@
 #pragma once
 
 #include <string>
-#include <memory>
-#include <vector>
 
-#include "StructuredConfiguration.h"
+#include "core/flow/FlowSchema.h"
+#include "core/ProcessGroup.h"
+#include "utils/crypto/EncryptionProvider.h"
 
 namespace org::apache::nifi::minifi::core::flow {
 
-class AdaptiveConfiguration : public StructuredConfiguration {
+class FlowSerializer {
  public:
-  explicit AdaptiveConfiguration(ConfigurationContext ctx);
+  FlowSerializer() = default;
+  virtual ~FlowSerializer() = default;
 
-  std::vector<std::string> getSupportedFormats() const override {
-    return {"application/json", "text/yml"};
-  }
+  FlowSerializer(const FlowSerializer&) = delete;
+  FlowSerializer& operator=(const FlowSerializer&) = delete;
+  FlowSerializer(FlowSerializer&&) = delete;
+  FlowSerializer& operator=(FlowSerializer&&) = delete;
 
-  std::unique_ptr<core::ProcessGroup> getRootFromPayload(const std::string &payload) override;
+  [[nodiscard]] virtual std::string serialize(const core::ProcessGroup& process_group, const FlowSchema& schema, const utils::crypto::EncryptionProvider& encryption_provider) const = 0;
 };
 
 }  // namespace org::apache::nifi::minifi::core::flow

@@ -17,17 +17,13 @@
  */
 
 #include <memory>
-#include <vector>
-#include <set>
-#include <cinttypes>
 
 #include "core/yaml/YamlConfiguration.h"
-#include "core/state/Value.h"
-#include "Defaults.h"
-#include "utils/TimeUtil.h"
-#include "yaml-cpp/yaml.h"
+#include "core/yaml/YamlFlowSerializer.h"
 #include "core/yaml/YamlNode.h"
+#include "Defaults.h"
 #include "utils/RegexUtils.h"
+#include "yaml-cpp/yaml.h"
 
 namespace org::apache::nifi::minifi::core {
 
@@ -42,9 +38,9 @@ YamlConfiguration::YamlConfiguration(ConfigurationContext ctx)
 
 std::unique_ptr<core::ProcessGroup> YamlConfiguration::getRootFromPayload(const std::string &yamlConfigPayload) {
   try {
-    flow_definition_yaml_ = YAML::Load(yamlConfigPayload);
-    flow::Node root{std::make_shared<YamlNode>(flow_definition_yaml_)};
-    flow_serialization_type_ = FlowSerializationType::Yaml;
+    YAML::Node rootYamlNode = YAML::Load(yamlConfigPayload);
+    flow::Node root{std::make_shared<YamlNode>(rootYamlNode)};
+    flow_serializer_ = std::make_unique<core::yaml::YamlFlowSerializer>(rootYamlNode);
     return getRootFrom(root, flow::FlowSchema::getDefault());
   } catch (const YAML::ParserException &pe) {
     logger_->log_error("Configuration is not valid yaml: {}", pe.what());
