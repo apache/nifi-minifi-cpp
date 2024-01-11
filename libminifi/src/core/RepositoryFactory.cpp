@@ -105,7 +105,7 @@ std::unique_ptr<core::Repository> createRepository(const std::string& configurat
   // if the desired repos don't exist, we can try doing string matches and rely on volatile repositories
   if (class_name_lc == "flowfilerepository" || class_name_lc == "volatileflowfilerepository") {
     return instantiate<repository::VolatileFlowFileRepository>(repo_name);
-  } else if (class_name_lc == "provenancerepository" || class_name_lc == "volatileprovenancefilerepository") {
+  } else if (class_name_lc == "provenancerepository" || class_name_lc == "volatileprovenancerepository") {
     return instantiate<repository::VolatileProvenanceRepository>(repo_name);
   } else if (class_name_lc == "nooprepository") {
     return std::make_unique<core::NoOpThreadedRepository>(repo_name);

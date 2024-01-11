@@ -133,7 +133,7 @@ MiNiFi supports YAML and JSON configuration formats. The desired configuration f
 ### Scheduling strategies
 Currently Apache NiFi MiNiFi C++ supports TIMER_DRIVEN, EVENT_DRIVEN, and CRON_DRIVEN. TIMER_DRIVEN uses periods to execute your processor(s) at given intervals.
 The EVENT_DRIVEN strategy awaits for data be available or some other notification mechanism to trigger execution. EVENT_DRIVEN is the recommended strategy for non-source processors.
-CRON_DRIVEN executes at the desired intervals based on the CRON periods. Apache NiFi MiNiFi C++ supports standard CRON expressions without intervals ( */5 * * * * ).
+CRON_DRIVEN executes at the desired intervals based on the CRON periods.
 
 ### Configuring encryption for flow configuration
 
@@ -343,26 +343,26 @@ Another option to define a state storage is to use the following properties in t
 
 ### Configuring Repositories
 
-Apache MiNiFi C++ uses three repositories similarily to Apache NiFi:
-- The Flow File Repository holds the metadata (like flow file attributes) of the flow Files.
+Apache MiNiFi C++ uses three repositories similarly to Apache NiFi:
+- The Flow File Repository holds the metadata (like flow file attributes) of the flow files.
 - The Content Repository holds the content of the flow files.
 - The Provenance Repository holds the history of the flow files.
 
 The underlying implementation to use for these repositories can be configured in the minifi.properties file.
 
-The Flow File Repository can be configured with the `nifi.flowfile.repository.class.name` property. If not specified, it uses the `FlowFileRepository` class by default, which stores the flow file metadata in a RocksDB database. Alternatively it can be configured to use a `VolatileFlowFileRepository` that keeps the state in memory and flushes upon restart, or the `NoOpRepository` for not keeping any state.
+The Flow File Repository can be configured with the `nifi.flowfile.repository.class.name` property. If not specified, it uses the `FlowFileRepository` class by default, which stores the flow file metadata in a RocksDB database. Alternatively it can be configured to use a `VolatileFlowFileRepository` that keeps the state in memory (so the state gets lost upon restart), or the `NoOpRepository` for not keeping any state.
 
     # in minifi.properties
     nifi.flowfile.repository.class.name=VolatileFlowFileRepository
 
-The Content Repository can be configured with the `nifi.content.repository.class.name` property. If not specified, it uses the `DatabaseContentRepository` class by default, which persists the content in a RocksDB database. `DatabaseContentRepository` is also the default value specified in the minifi.properties file. Alternatively it can be configured to use a `VolatileContentRepository` that keeps the state in memory and flushes upon restart, or the `FileSystemRepository` to keep the state in regular files.
+The Content Repository can be configured with the `nifi.content.repository.class.name` property. If not specified, it uses the `DatabaseContentRepository` class by default, which persists the content in a RocksDB database. `DatabaseContentRepository` is also the default value specified in the minifi.properties file. Alternatively it can be configured to use a `VolatileContentRepository` that keeps the state in memory (so the state gets lost upon restart), or the `FileSystemRepository` to keep the state in regular files.
 
-**NOTE:** RocksDB database has a limit of 4GB for the size of a database object. Due to this if you are expecting to process larger flow files than 4GB you should use the `FileSystemRepository`. The downside of using `FileSystemRepository` is that it does not have the transactional guarantees of the RocksDB repository implementation.
+**NOTE:** RocksDB database has a limit of 4GB for the size of a database object. Due to this if you expect to process larger flow files than 4GB you should use the `FileSystemRepository`. The downside of using `FileSystemRepository` is that it does not have the transactional guarantees of the RocksDB repository implementation.
 
     # in minifi.properties
     nifi.content.repository.class.name=FileSystemRepository
 
-The Provenance Repository can be configured with the `nifi.provenance.repository.class.name` property. If not specified, it uses the `ProvenanceRepository` class by default, which persists the provenance events in a RocksDB database. Alternatively it can be configured to use a `VolatileProvenanceRepository` that keeps the state in memory and flushes upon restart, or the `NoOpRepository` to not keep track of the provenance events. By default we do not keep track of the provenance data, so `NoOpRepository` is the value specified in the default minifi.properties file.
+The Provenance Repository can be configured with the `nifi.provenance.repository.class.name` property. If not specified, it uses the `ProvenanceRepository` class by default, which persists the provenance events in a RocksDB database. Alternatively it can be configured to use a `VolatileProvenanceRepository` that keeps the state in memory (so the state gets lost upon restart), or the `NoOpRepository` to not keep track of the provenance events. By default we do not keep track of the provenance data, so `NoOpRepository` is the value specified in the default minifi.properties file.
 
     # in minifi.properties
     nifi.flowfile.repository.class.name=NoOpRepository
@@ -379,19 +379,19 @@ As stated before each of the repositories can be configured to be volatile (stat
 
     # configuration options
     # maximum number of entries to keep in memory
-    nifi.volatile.repository.options.flowfile.max.count=10000
+    nifi.volatile.repository.options.flowfile.max.count=15000
     # maximum number of bytes to keep in memory, also limited by option above
-    nifi.volatile.repository.options.flowfile.max.bytes=1M
+    nifi.volatile.repository.options.flowfile.max.bytes=7680 KB
 
     # maximum number of entries to keep in memory
-    nifi.volatile.repository.options.provenance.max.count=10000
+    nifi.volatile.repository.options.provenance.max.count=15000
     # maximum number of bytes to keep in memory, also limited by option above
-    nifi.volatile.repository.options.provenance.max.bytes=1M
+    nifi.volatile.repository.options.provenance.max.bytes=7680 KB
 
     # maximum number of entries to keep in memory
-    nifi.volatile.repository.options.content.max.count=100000
+    nifi.volatile.repository.options.content.max.count=15000
     # maximum number of bytes to keep in memory, also limited by option above
-    nifi.volatile.repository.options.content.max.bytes=1M
+    nifi.volatile.repository.options.content.max.bytes=7680 KB
     # limits locking for the content repository
     nifi.volatile.repository.options.content.minimal.locking=true
 
@@ -669,7 +669,7 @@ Here's an example of an alert appender with its available properties:
     appender.alert1.ssl.context.service=<Name of the SSLContextService>
 
 ### Log levels
-After the appenders are defined you can set the log level and logging target for each of them. Appenders can be set to log everything on a specific log level, but you can also define some appenders to only write logs from specific namespaces or classes with different log levels. The log level can be set to one of the following values: OFF, TRACE, DEBUG, INFO, WARN, ERROR. The log levels can be set in the following way:
+After the appenders are defined you can set the log level and logging target for each of them. Appenders can be set to log everything on a specific log level, but you can also define some appenders to only write logs from specific namespaces or classes with different log levels. The log level can be set to one of the following values: OFF, TRACE, DEBUG, INFO, WARN, ERROR, CRITICAL. The log levels can be set in the following way:
 
     # in minifi-log.properties
     # Set the rolling appender to log everything with INFO level
@@ -687,7 +687,7 @@ After the appenders are defined you can set the log level and logging target for
     logger.org::apache::nifi::minifi::core::logging::LoggerConfiguration=WARN
 
 ### Log pattern
-The log pattern can be changed if needed using the `spdlog.pattern` property. The default log pattern is the following, but there are additional examples in the default minifi-log.properties file:
+The log pattern can be changed if needed using the `spdlog.pattern` property. The documentation of the pattern flags can be found on the [spdlog's custom formatting wiki page](https://github.com/gabime/spdlog/wiki/3.-Custom-formatting#customizing-format-using-set_pattern). The default log pattern is the following, but there are additional examples in the default minifi-log.properties file:
 
     # in minifi-log.properties
     spdlog.pattern=[%Y-%m-%d %H:%M:%S.%e] [%n] [%l] %v
