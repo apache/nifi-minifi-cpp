@@ -32,7 +32,7 @@ ENV MINIFI_HOME ${MINIFI_BASE_DIR}/minifi-current
 ENV MINIFI_VERSIONED_HOME ${MINIFI_BASE_DIR}/nifi-minifi-cpp-${MINIFI_VERSION}
 
 
-RUN groupadd -g ${GID} ${USER} && useradd -g ${GID} ${USER} && \
+RUN groupadd -g ${GID} ${USER} && useradd -m -g ${GID} ${USER} && \
     install -d -o ${USER} -g ${USER} ${MINIFI_BASE_DIR} && ln -s ${MINIFI_VERSIONED_HOME} ${MINIFI_HOME}
 
 ADD ${ARCHIVE_LOCATION} ${MINIFI_BASE_DIR}

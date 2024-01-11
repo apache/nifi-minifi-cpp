@@ -25,6 +25,9 @@ This readme defines the configuration parameters to use ExecutePythonProcessor t
 - [Configuration](#configuration)
 - [Processors](#processors)
 - [Using NiFi Python Processors](#using-nifi-python-processors)
+- [Use Python processors from virtualenv](#use-python-processors-from-virtualenv)
+- [Automatically install dependencies from requirements.txt files](#automatically-install-dependencies-from-requirementstxt-files)
+- [Set python binary for virtualenv creation and package installation](#set-python-binary-for-virtualenv-creation-and-package-installation)
 
 
 ## Requirements
@@ -130,9 +133,9 @@ Therefore if the nifi.python.processor.dir is /tmp/ and you have a subdirectory 
 produce a processor with the name org.apache.nifi.minifi.processors.packagedir.file. Note that each subdirectory will append a package
 to the reference class name.
 
-    in minifi.properties
-	#directory where processors exist
-	nifi.python.processor.dir=XXXX
+    # in minifi.properties
+    #directory where processors exist
+    nifi.python.processor.dir=XXXX
 
 
 ## Processors
@@ -142,8 +145,8 @@ exist.
 ### Sentiment Analysis
 
 The SentimentAnalysis processor will perform a Vader Sentiment Analysis. This requires that you install nltk and VaderSentiment
-		pip install nltk
-		pip install VaderSentiment
+    pip install nltk
+    pip install VaderSentiment
 
 ## Using NiFi Python Processors
 
@@ -155,10 +158,33 @@ In the flow configuration these Python processors can be referenced by their ful
 
 Due to some differences between the NiFi and MiNiFi C++ processors and implementation, there are some limitations using the NiFi Python processors:
 - Record based processors are not yet supported in MiNiFi C++, so the NiFi Python processors inherited from RecordTransform are not supported.
-- Virtualenv support is not yet available in MiNiFi C++, so all required packages must be installed on the system.
 - Controller properties are not supported at the moment.
 - There are some validators in NiFi that are not present in MiNiFi C++, so some property validations will be missing using the NiFi Python processors.
 - Allowable values specified in NiFi Python processors are ignored in MiNiFi C++ (due to MiNiFi C++ requiring them to be specified at compile time), so the property values are not pre-verified.
 - MiNiFi C++ only supports expression language with flow file attributes, so only FLOWFILE_ATTRIBUTES expression language scope is supported, otherwise the expression language will not be evaluated.
 - MiNiFi C++ does not support property dependencies, so the property dependencies will be ignored. If a property depends on another property, the property will not be required.
 - MiNiFi C++ does not support the use of self.jvm member in Python processors that provides JVM bindings in NiFi, it is set to None in MiNiFi C++.
+- Inline definition of Python package dependencies, defined in the ProcessorDetails nested class are not supported as in NiFi, so the dependencies must be defined in the requirements.txt files. If a processor's dependencies are defined in the ProcessorDetails class, the dependencies should be copied to the requirements.txt file.
+
+## Use Python processors from virtualenv
+
+It is possible to set a virtualenv to be used by the Python processors in Apache MiNiFi C++. If the virtualenv directory is set, the Python processors will be executed using the packages installed in the virtualenv. If the virtualenv directory is not set, the Python processors will be executed using the packages installed on the system.
+
+    # in minifi.properties
+    nifi.python.virtualenv.directory=${MINIFI_HOME}/minifi-python-env
+
+**NOTE:* Using different python versions for the system and the virtualenv is not supported. The virtualenv must be created using the same python version as the system python.
+
+## Automatically install dependencies from requirements.txt files
+
+It is possible to automatically install the dependencies of the Python processors in the virtualenv defined in requirements.txt files. To enable this feature, the `nifi.python.install.packages.automatically` property must be set to true. If this property is set to true, then all requirements.txt files that appear under the MiNiFi Python directory and its subdirectories (defined by the `nifi.python.processor.dir` property) will be used to install the Python packages. If the `nifi.python.virtualenv.directory` property is set, the packages are installed in the virtualenv, otherwise this option is ignored. Due to install schema differences in different platforms, system level packages are expected to be installed manually by the user.
+
+    # in minifi.properties
+    nifi.python.install.packages.automatically=true
+
+## Set python binary for virtualenv creation and package installation
+
+By default the `python3` command is used on Unix systems and `python` command is used on Windows to create virtualenvs and call the `pip` command for installing Python packages. This can be changed using the `nifi.python.env.setup.binary` property to use a different python command or a specific python binary path.
+
+    # in minifi.properties
+    nifi.python.env.setup.binary=python3
