@@ -133,7 +133,7 @@ MiNiFi supports YAML and JSON configuration formats. The desired configuration f
 ### Scheduling strategies
 Currently Apache NiFi MiNiFi C++ supports TIMER_DRIVEN, EVENT_DRIVEN, and CRON_DRIVEN. TIMER_DRIVEN uses periods to execute your processor(s) at given intervals.
 The EVENT_DRIVEN strategy awaits for data be available or some other notification mechanism to trigger execution. EVENT_DRIVEN is the recommended strategy for non-source processors.
-CRON_DRIVEN executes at the desired intervals based on the CRON periods.
+CRON_DRIVEN executes at the desired intervals based on the CRON periods. Apache NiFi MiNiFi C++ supports standard CRON expressions ( */5 * * * * ).
 
 ### Configuring encryption for flow configuration
 
