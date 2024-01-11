@@ -152,7 +152,11 @@ const std::unordered_map<std::string_view, gsl::not_null<const core::PropertyVal
   {Configuration::controller_socket_local_any_interface, gsl::make_not_null(&core::StandardPropertyTypes::BOOLEAN_TYPE)},
   {Configuration::controller_socket_host, gsl::make_not_null(&core::StandardPropertyTypes::VALID_TYPE)},
   {Configuration::controller_socket_port, gsl::make_not_null(&core::StandardPropertyTypes::PORT_TYPE)},
-  {Configuration::controller_ssl_context_service, gsl::make_not_null(&core::StandardPropertyTypes::VALID_TYPE)}
+  {Configuration::controller_ssl_context_service, gsl::make_not_null(&core::StandardPropertyTypes::VALID_TYPE)},
+  {Configuration::nifi_flow_file_repository_check_health, gsl::make_not_null(&core::StandardPropertyTypes::BOOLEAN_TYPE)},
+  {Configuration::nifi_python_virtualenv_directory, gsl::make_not_null(&core::StandardPropertyTypes::VALID_TYPE)},
+  {Configuration::nifi_python_env_setup_binary, gsl::make_not_null(&core::StandardPropertyTypes::VALID_TYPE)},
+  {Configuration::nifi_python_install_packages_automatically, gsl::make_not_null(&core::StandardPropertyTypes::BOOLEAN_TYPE)}
 };
 
 const std::array<const char*, 2> Configuration::DEFAULT_SENSITIVE_PROPERTIES = {Configuration::nifi_security_client_pass_phrase,

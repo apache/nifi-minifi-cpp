@@ -1267,3 +1267,16 @@ def step_impl(context, processor_name: str):
 @given(u'a reverse proxy is set up to forward requests to the Grafana Loki server')
 def step_impl(context):
     context.test.acquire_container(context=context, name="reverse-proxy", engine="reverse-proxy")
+
+
+# Python
+@given("python is installed on the MiNiFi agent {install_mode}")
+def step_impl(context, install_mode):
+    if install_mode == "with required python packages":
+        context.test.use_nifi_python_processors_with_system_python_packages_installed_in_minifi()
+    elif install_mode == "with a pre-created virtualenv":
+        context.test.use_nifi_python_processors_with_virtualenv_in_minifi()
+    elif install_mode == "with a pre-created virtualenv containing the required python packages":
+        context.test.use_nifi_python_processors_with_virtualenv_packages_installed_in_minifi()
+    else:
+        raise Exception("Unknown python install mode.")
