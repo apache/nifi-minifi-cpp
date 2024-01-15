@@ -2220,7 +2220,7 @@ In the list below, the names of required properties appear in bold. Any other pr
 | **Read Timeout**             | 15 s          |                  | Max wait time for response from remote service.                                                                                                                                                    |
 | SSL Context Service          |               |                  | The SSL Context Service used to provide client certificate information for TLS/SSL (https) connections.                                                                                            |
 | Username                     |               |                  | Username for authenticating using basic authentication.                                                                                                                                            |
-| Password                     |               |                  | Password for authenticating using basic authentication.                                                                                                                                            |
+| Password                     |               |                  | Password for authenticating using basic authentication.<br/>**Sensitive Property: true**                                                                                                           |
 | Bearer Token File            |               |                  | Path of file containing bearer token for bearer token authentication.                                                                                                                              |
 
 ### Relationships
