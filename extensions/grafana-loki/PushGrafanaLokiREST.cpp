@@ -201,7 +201,7 @@ void PushGrafanaLokiREST::onSchedule(core::ProcessContext& context, core::Proces
   auto log_line_batch_wait = context.getProperty<core::TimePeriodValue>(LogLineBatchWait);
   auto log_line_batch_size = context.getProperty<uint64_t>(LogLineBatchSize);
   if (log_line_batch_size && *log_line_batch_size < 1) {
-    throw Exception(PROCESS_SCHEDULE_EXCEPTION, "Log Line Batch Size property is invalid!");
+    throw Exception(PROCESS_SCHEDULE_EXCEPTION, "Log Line Batch Size property is missing or less than 1!");
   }
   log_line_batch_size_is_set_ = log_line_batch_size.has_value();
   log_line_batch_wait_is_set_ = log_line_batch_wait.has_value();

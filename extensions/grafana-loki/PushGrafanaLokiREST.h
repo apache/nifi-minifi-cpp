@@ -58,7 +58,7 @@ class PushGrafanaLokiREST : public core::Processor {
     .withDescription("The tenant ID used by default to push logs to Grafana Loki. If omitted or empty it assumes Grafana Loki is running in single-tenant mode and no X-Scope-OrgID header is sent.")
     .build();
   EXTENSIONAPI static constexpr auto MaxBatchSize = core::PropertyDefinitionBuilder<>::createProperty("Max Batch Size")
-    .withDescription("The maximum number of flow files to process at a time. If not set, or set to 0, all FlowFiles will be processed at once.")
+    .withDescription("The maximum number of flow files to process at a time. If it is set to 0, all FlowFiles will be processed at once.")
     .withPropertyType(core::StandardPropertyTypes::UNSIGNED_LONG_TYPE)
     .withDefaultValue("100")
     .build();
