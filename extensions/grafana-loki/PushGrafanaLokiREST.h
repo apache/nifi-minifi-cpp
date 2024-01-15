@@ -93,6 +93,7 @@ class PushGrafanaLokiREST : public core::Processor {
     .build();
   EXTENSIONAPI static constexpr auto Password = core::PropertyDefinitionBuilder<>::createProperty("Password")
     .withDescription("Password for authenticating using basic authentication.")
+    .isSensitive(true)
     .build();
   EXTENSIONAPI static constexpr auto BearerTokenFile = core::PropertyDefinitionBuilder<>::createProperty("Bearer Token File")
     .withDescription("Path of file containing bearer token for bearer token authentication.")
