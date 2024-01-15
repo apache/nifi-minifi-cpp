@@ -99,7 +99,7 @@ std::optional<LineReader::LineInfo> LineReader::readNextLine(const std::optional
       return std::nullopt;
     }
 
-    auto endline_pos = std::find_if(buffer_.begin() + buffer_offset_, buffer_.begin() + last_read_size_, [this](const auto& buffer_element) { return buffer_element == '\n'; });
+    auto endline_pos = std::find_if(buffer_.begin() + buffer_offset_, buffer_.begin() + last_read_size_, [](const auto& buffer_element) { return buffer_element == '\n'; });
     if (endline_pos != buffer_.begin() + last_read_size_) {
       const auto line_length = std::distance(buffer_.begin(), endline_pos);
       buffer_offset_ = line_length + 1;
