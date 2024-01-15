@@ -17,6 +17,8 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+#include <algorithm>
+
 #include "SplitText.h"
 #include "core/ProcessContext.h"
 #include "core/ProcessSession.h"
@@ -36,12 +38,12 @@ LineReader::LineReader(const std::shared_ptr<io::InputStream>& stream)
   }
 }
 
-uint8_t LineReader::getEndLineSize(size_t newline_index) {
-  gsl_Expects(buffer_.size() > newline_index);
-  if (buffer_[newline_index] != '\n') {
+uint8_t LineReader::getEndLineSize(size_t newline_position) {
+  gsl_Expects(buffer_.size() > newline_position);
+  if (buffer_[newline_position] != '\n') {
     return 0;
   }
-  if (newline_index == 0 || buffer_[newline_index - 1] != '\r') {
+  if (newline_position == 0 || buffer_[newline_position - 1] != '\r') {
     return 1;
   }
   return 2;
@@ -69,11 +71,11 @@ bool LineReader::readNextBuffer() {
   buffer_offset_ = 0;
   last_read_size_ = (std::min)(gsl::narrow<size_t>(stream_->size() - read_size_), SPLIT_TEXT_BUFFER_SIZE);
   const auto read_ret = stream_->read(as_writable_bytes(std::span(buffer_).subspan(0, last_read_size_)));
-  read_size_ += read_ret;
   if (io::isError(read_ret)) {
     state_ = StreamReadState::StreamReadError;
     return false;
   }
+  read_size_ += read_ret;
   ++current_buffer_count_;
   return true;
 }
@@ -97,18 +99,76 @@ std::optional<LineReader::LineInfo> LineReader::readNextLine(const std::optional
       return std::nullopt;
     }
 
-    for (auto i = buffer_offset_; i < last_read_size_; ++i) {
-      if (buffer_[i] == '\n') {
-        buffer_offset_ = i + 1;
-        return finalizeLineInfo(getEndLineSize(i), starts_with);
-      }
+    auto endline_pos = std::find_if(buffer_.begin() + buffer_offset_, buffer_.begin() + last_read_size_, [this](const auto& buffer_element) { return buffer_element == '\n'; });
+    if (endline_pos != buffer_.begin() + last_read_size_) {
+      const auto line_length = std::distance(buffer_.begin(), endline_pos);
+      buffer_offset_ = line_length + 1;
+      return finalizeLineInfo(getEndLineSize(line_length), starts_with);
+    } else {
+      buffer_offset_ = last_read_size_;
     }
-    buffer_offset_ = last_read_size_;
   }
 
   state_ = StreamReadState::EndOfStream;
   return finalizeLineInfo(0, starts_with);
 }
+
+}  // namespace detail
+
+namespace {
+
+class SplitTextFragmentGenerator {
+ public:
+  struct Fragment {
+    uint64_t text_line_count = 0;
+    uint64_t processed_line_count = 0;
+    uint64_t fragment_size = 0;
+    uint64_t fragment_offset = 0;
+    uint8_t endline_size = 0;
+  };
+
+  SplitTextFragmentGenerator(const std::shared_ptr<io::InputStream>& stream, const SplitTextConfiguration& split_text_config);
+  std::optional<Fragment> readNextFragment();
+  nonstd::expected<Fragment, const char*> readHeaderFragment();
+  detail::StreamReadState getState() const { return line_reader_.getState(); }
+
+ private:
+  static void addLineToFragment(Fragment& fragment, const detail::LineReader::LineInfo& line);
+  void finalizeFragmentOffset(Fragment& current_fragment);
+  bool lineSizeWouldExceedMaxFragmentSize(const detail::LineReader::LineInfo& line, uint64_t fragment_size) const;
+  nonstd::expected<Fragment, const char*> createHeaderFragmentUsingLineCount();
+  nonstd::expected<Fragment, const char*> createHeaderFragmentUsingHeaderMarkerCharacters();
+
+  detail::LineReader line_reader_;
+  // In case the read line would exceed the maximum fragment size, we need to buffer it for the next fragment
+  std::optional<detail::LineReader::LineInfo> buffered_line_info_;
+  uint64_t flow_file_offset_ = 0;
+  const SplitTextConfiguration& split_text_config_;
+  uint64_t header_fragment_size_ = 0;
+};
+
+class ReadCallback {
+ public:
+  ReadCallback(std::shared_ptr<core::FlowFile> flow_file, const SplitTextConfiguration& split_text_config,
+    core::ProcessSession& session, std::shared_ptr<core::logging::Logger> logger);
+  int64_t operator()(const std::shared_ptr<io::InputStream>& stream);
+  std::optional<const char*> error;
+  std::vector<std::shared_ptr<org::apache::nifi::minifi::core::FlowFile>> results;
+
+ private:
+  void setAttributesOfDoneSegment(core::FlowFile& current_flow_file, uint64_t line_count);
+  void createHeaderOnlyFragmentFlow(const SplitTextFragmentGenerator::Fragment& header_fragment);
+  void mergeHeaderAndFragmentFlows(const std::shared_ptr<core::FlowFile>& header_flow, const SplitTextFragmentGenerator::Fragment& fragment, size_t fragment_trim_size);
+  void createFragmentFlowWithoutHeader(const SplitTextFragmentGenerator::Fragment& fragment, size_t fragment_trim_size);
+
+  std::shared_ptr<io::InputStream> stream_;
+  std::shared_ptr<core::FlowFile> flow_file_;
+  const SplitTextConfiguration& split_text_config_;
+  core::ProcessSession& session_;
+  size_t emitted_fragment_index_ = 1;
+  const std::string fragment_identifier_ = utils::IdGenerator::getIdGenerator()->generate().to_string();
+  std::shared_ptr<core::logging::Logger> logger_;
+};
 
 SplitTextFragmentGenerator::SplitTextFragmentGenerator(const std::shared_ptr<io::InputStream>& stream, const SplitTextConfiguration& split_text_config)
     : line_reader_(stream),
@@ -120,7 +180,7 @@ void SplitTextFragmentGenerator::finalizeFragmentOffset(Fragment& current_fragme
   flow_file_offset_ += current_fragment.fragment_size;
 }
 
-void SplitTextFragmentGenerator::addLineToFragment(Fragment& current_fragment, const LineReader::LineInfo& line) {
+void SplitTextFragmentGenerator::addLineToFragment(Fragment& current_fragment, const detail::LineReader::LineInfo& line) {
   if (line.endline_size == line.size) {  // if line consists only of endline characters, we need to append the fragment trim size
     current_fragment.endline_size += line.endline_size;
   } else {
@@ -130,16 +190,16 @@ void SplitTextFragmentGenerator::addLineToFragment(Fragment& current_fragment, c
   current_fragment.fragment_size += line.size;
 }
 
-bool SplitTextFragmentGenerator::lineSizeWouldExceedMaxFragmentSize(const LineReader::LineInfo& line, uint64_t fragment_size) const {
+bool SplitTextFragmentGenerator::lineSizeWouldExceedMaxFragmentSize(const detail::LineReader::LineInfo& line, uint64_t fragment_size) const {
   return split_text_config_.maximum_fragment_size && fragment_size + line.size + header_fragment_size_ > split_text_config_.maximum_fragment_size.value();
 }
 
-nonstd::expected<SplitTextFragmentGenerator::Fragment, std::string> SplitTextFragmentGenerator::createHeaderFragmentUsingLineCount() {
+nonstd::expected<SplitTextFragmentGenerator::Fragment, const char*> SplitTextFragmentGenerator::createHeaderFragmentUsingLineCount() {
   Fragment header_fragment;
   for (uint64_t i = 0; i < split_text_config_.header_line_count; ++i) {
     auto line = line_reader_.readNextLine();
     if (!line) {
-      if (getState() == StreamReadState::EndOfStream) {
+      if (getState() == detail::StreamReadState::EndOfStream) {
         return nonstd::make_unexpected("The flow file's line count is less than the specified header line count!");
       } else {
         return nonstd::make_unexpected("Error while reading flow file stream!");
@@ -157,7 +217,7 @@ nonstd::expected<SplitTextFragmentGenerator::Fragment, std::string> SplitTextFra
   return header_fragment;
 }
 
-nonstd::expected<SplitTextFragmentGenerator::Fragment, std::string> SplitTextFragmentGenerator::createHeaderFragmentUsingHeaderMarkerCharacters() {
+nonstd::expected<SplitTextFragmentGenerator::Fragment, const char*> SplitTextFragmentGenerator::createHeaderFragmentUsingHeaderMarkerCharacters() {
   Fragment header_fragment;
   while (auto line = line_reader_.readNextLine(split_text_config_.header_line_marker_characters)) {
     if (line->size < split_text_config_.header_line_marker_characters->size() || !line->matches_starts_with) {
@@ -176,7 +236,7 @@ nonstd::expected<SplitTextFragmentGenerator::Fragment, std::string> SplitTextFra
   return header_fragment;
 }
 
-nonstd::expected<SplitTextFragmentGenerator::Fragment, std::string> SplitTextFragmentGenerator::readHeaderFragment() {
+nonstd::expected<SplitTextFragmentGenerator::Fragment, const char*> SplitTextFragmentGenerator::readHeaderFragment() {
   gsl_Expects(flow_file_offset_ == 0 && (split_text_config_.header_line_count > 0 || split_text_config_.header_line_marker_characters));
   if (split_text_config_.header_line_count > 0) {
     return createHeaderFragmentUsingLineCount();
@@ -258,9 +318,13 @@ void ReadCallback::mergeHeaderAndFragmentFlows(const std::shared_ptr<core::FlowF
     return;
   }
   session_.write(merged_flow, [this, &fragment_flow, &header_flow](const std::shared_ptr<io::OutputStream>& output_stream) -> int64_t {
-    session_.read(header_flow, [&output_stream](const std::shared_ptr<io::InputStream>& header_input_stream) -> int64_t {
+    auto header_write_result = session_.read(header_flow, [&output_stream](const std::shared_ptr<io::InputStream>& header_input_stream) -> int64_t {
       return internal::pipe(*header_input_stream, *output_stream);
     });
+    if (header_write_result < 0) {
+      logger_->log_error("Failed to write header to fragment!");
+      return header_write_result;
+    }
     return session_.read(fragment_flow, [&output_stream](const std::shared_ptr<io::InputStream>& fragment_input_stream) -> int64_t {
       return internal::pipe(*fragment_input_stream, *output_stream);
     });
@@ -284,7 +348,7 @@ void ReadCallback::createFragmentFlowWithoutHeader(const SplitTextFragmentGenera
 
 int64_t ReadCallback::operator()(const std::shared_ptr<io::InputStream>& stream) {
   SplitTextFragmentGenerator fragment_generator(stream, split_text_config_);
-  nonstd::expected<SplitTextFragmentGenerator::Fragment, std::string> header_fragment;
+  nonstd::expected<SplitTextFragmentGenerator::Fragment, const char*> header_fragment;
   std::shared_ptr<core::FlowFile> header_flow;  // cache header flow file to avoid cloning it for each fragment
   if (split_text_config_.header_line_count > 0 || split_text_config_.header_line_marker_characters) {
     header_fragment = fragment_generator.readHeaderFragment();
@@ -317,7 +381,7 @@ int64_t ReadCallback::operator()(const std::shared_ptr<io::InputStream>& stream)
   return fragment_generator.getState() == detail::StreamReadState::EndOfStream ? gsl::narrow<int64_t>(flow_file_->getSize()) : -1;
 }
 
-}  // namespace detail
+}  // namespace
 
 void SplitText::initialize() {
   setSupportedProperties(Properties);
@@ -342,7 +406,8 @@ void SplitText::onSchedule(core::ProcessContext& context, core::ProcessSessionFa
   logger_->log_debug("SplitText header line count: {}", split_text_config_.header_line_count);
   split_text_config_.header_line_marker_characters = context.getProperty(HeaderLineMarkerCharacters);
   if (split_text_config_.header_line_marker_characters && split_text_config_.header_line_marker_characters->size() >= detail::SPLIT_TEXT_BUFFER_SIZE) {
-    throw Exception(PROCESS_SCHEDULE_EXCEPTION, fmt::format("SplitText header line marker characters length is larger than the maximum allowed: {}", detail::SPLIT_TEXT_BUFFER_SIZE));
+    throw Exception(PROCESS_SCHEDULE_EXCEPTION, fmt::format("SplitText header line marker characters length is larger than the maximum allowed: {} > {}",
+      split_text_config_.header_line_marker_characters->size(), detail::SPLIT_TEXT_BUFFER_SIZE - 1));
   }
   if (split_text_config_.header_line_marker_characters) {
     logger_->log_debug("SplitText header line marker characters were set: {}", *split_text_config_.header_line_marker_characters);
@@ -358,7 +423,7 @@ void SplitText::onTrigger(core::ProcessContext& context, core::ProcessSession& s
     return;
   }
 
-  detail::ReadCallback callback{flow_file, split_text_config_, session, logger_};
+  ReadCallback callback{flow_file, split_text_config_, session, logger_};
   session.read(flow_file, std::ref(callback));
   if (callback.error) {
     logger_->log_error("Splitting flow file failed with error: {}", *callback.error);
