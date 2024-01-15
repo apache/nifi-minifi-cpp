@@ -17,6 +17,7 @@
 # under the License.
 #
 include(FetchContent)
+include(Abseil)
 include(Crc32c)
 
 set(PATCH_FILE_1 "${CMAKE_SOURCE_DIR}/thirdparty/google-cloud-cpp/remove-find_package.patch")

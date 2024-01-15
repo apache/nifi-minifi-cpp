@@ -57,10 +57,6 @@ extensions/expression-language/Scanner.cpp
 extensions/expression-language/location.hh
 extensions/expression-language/position.hh
 extensions/expression-language/stack.h
-extensions/grafana-loki/protobuf-generated/grafana-loki-push.grpc.pb.h
-extensions/grafana-loki/protobuf-generated/grafana-loki-push.grpc.pb.cc
-extensions/grafana-loki/protobuf-generated/grafana-loki-push.pb.h
-extensions/grafana-loki/protobuf-generated/grafana-loki-push.pb.cc
 
 thirdparty/uuid/tst_uuid*
 thirdparty/apache-rat/apache-rat*

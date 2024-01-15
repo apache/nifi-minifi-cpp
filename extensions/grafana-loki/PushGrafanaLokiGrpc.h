@@ -19,8 +19,8 @@
 #include "PushGrafanaLoki.h"
 
 #include "core/StateManager.h"
-#include "protobuf-generated/grafana-loki-push.pb.h"
-#include "protobuf-generated/grafana-loki-push.grpc.pb.h"
+#include "grafana-loki-push.pb.h"
+#include "grafana-loki-push.grpc.pb.h"
 #include "grpc/grpc.h"
 
 namespace org::apache::nifi::minifi::extensions::grafana::loki {

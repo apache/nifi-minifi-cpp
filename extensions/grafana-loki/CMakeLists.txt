@@ -22,22 +22,24 @@ endif()
 
 include(${CMAKE_SOURCE_DIR}/extensions/ExtensionHeader.txt)
 
-if (ENABLE_GRPC)
+if (ENABLE_GRPC_FOR_LOKI)
+    include(Abseil)
     include(Grpc)
 
-    file(MAKE_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/protobuf-generated)
+    set(LOKI_PROTOBUF_GENERATED_DIR ${CMAKE_BINARY_DIR}/grafana-loki-protobuf-generated)
+    file(MAKE_DIRECTORY ${LOKI_PROTOBUF_GENERATED_DIR})
 
     add_custom_command(
-        OUTPUT  ${CMAKE_CURRENT_SOURCE_DIR}/protobuf-generated/grafana-loki-push.grpc.pb.cc ${CMAKE_CURRENT_SOURCE_DIR}/protobuf-generated/grafana-loki-push.grpc.pb.h ${CMAKE_CURRENT_SOURCE_DIR}/protobuf-generated/grafana-loki-push.pb.h ${CMAKE_CURRENT_SOURCE_DIR}/protobuf-generated/grafana-loki-push.pb.cc
-        COMMAND ${PROTOBUF_COMPILER} --plugin=protoc-gen-grpc=${GRPC_CPP_PLUGIN} -I=${CMAKE_CURRENT_SOURCE_DIR}/protos/ -I=${protobuf_SOURCE_DIR}/src --grpc_out=${CMAKE_CURRENT_SOURCE_DIR}/protobuf-generated/ --cpp_out=${CMAKE_CURRENT_SOURCE_DIR}/protobuf-generated/ ${CMAKE_CURRENT_SOURCE_DIR}/protos/grafana-loki-push.proto
+        OUTPUT  ${LOKI_PROTOBUF_GENERATED_DIR}/grafana-loki-push.grpc.pb.cc ${LOKI_PROTOBUF_GENERATED_DIR}/grafana-loki-push.grpc.pb.h ${LOKI_PROTOBUF_GENERATED_DIR}/grafana-loki-push.pb.h ${LOKI_PROTOBUF_GENERATED_DIR}/grafana-loki-push.pb.cc
+        COMMAND ${PROTOBUF_COMPILER} --plugin=protoc-gen-grpc=${GRPC_CPP_PLUGIN} -I=${CMAKE_CURRENT_SOURCE_DIR}/protos/ -I=${protobuf_SOURCE_DIR}/src --grpc_out=${LOKI_PROTOBUF_GENERATED_DIR} --cpp_out=${LOKI_PROTOBUF_GENERATED_DIR} ${CMAKE_CURRENT_SOURCE_DIR}/protos/grafana-loki-push.proto
         DEPENDS protobuf::protoc grpc_cpp_plugin)
 
-    add_custom_target(grafana-loki-protos ALL DEPENDS ${CMAKE_CURRENT_SOURCE_DIR}/protobuf-generated/grafana-loki-push.grpc.pb.cc ${CMAKE_CURRENT_SOURCE_DIR}/protobuf-generated/grafana-loki-push.grpc.pb.h ${CMAKE_CURRENT_SOURCE_DIR}/protobuf-generated/grafana-loki-push.pb.h ${CMAKE_CURRENT_SOURCE_DIR}/protobuf-generated/grafana-loki-push.pb.cc)
+    add_custom_target(grafana-loki-protos ALL DEPENDS ${LOKI_PROTOBUF_GENERATED_DIR}/grafana-loki-push.grpc.pb.cc ${LOKI_PROTOBUF_GENERATED_DIR}/grafana-loki-push.grpc.pb.h ${LOKI_PROTOBUF_GENERATED_DIR}/grafana-loki-push.pb.h ${LOKI_PROTOBUF_GENERATED_DIR}/grafana-loki-push.pb.cc)
 
     file(GLOB SOURCES "*.cpp")
     list(APPEND SOURCES
-        ${CMAKE_CURRENT_SOURCE_DIR}/protobuf-generated/grafana-loki-push.grpc.pb.cc
-        ${CMAKE_CURRENT_SOURCE_DIR}/protobuf-generated/grafana-loki-push.pb.cc
+        ${LOKI_PROTOBUF_GENERATED_DIR}/grafana-loki-push.grpc.pb.cc
+        ${LOKI_PROTOBUF_GENERATED_DIR}/grafana-loki-push.pb.cc
     )
 else()
     set(SOURCES
@@ -51,10 +53,10 @@ target_include_directories(minifi-grafana-loki PRIVATE BEFORE "${CMAKE_SOURCE_DI
 target_link_libraries(minifi-grafana-loki ${LIBMINIFI} minifi-http-curl)
 add_dependencies(minifi-grafana-loki minifi-http-curl)
 
-if (ENABLE_GRPC)
-    target_include_directories(minifi-grafana-loki PRIVATE BEFORE "${GRPC_INCLUDE_DIR}" "${PROTOBUF_INCLUDE_DIR}")
+if (ENABLE_GRPC_FOR_LOKI)
+    target_include_directories(minifi-grafana-loki PRIVATE BEFORE "${LOKI_PROTOBUF_GENERATED_DIR}" "${GRPC_INCLUDE_DIR}" "${PROTOBUF_INCLUDE_DIR}")
     target_link_libraries(minifi-grafana-loki grpc++ protobuf::libprotobuf)
-    add_dependencies(minifi-grafana-loki grpc grpc++ protobuf::libprotobuf grafana-loki-protos)
+    add_dependencies(minifi-grafana-loki grpc grafana-loki-protos)
 endif()
 
 register_extension(minifi-grafana-loki "GRAFANA LOKI EXTENSIONS" GRAFANA-LOKI-EXTENSIONS "This enables Grafana Loki support" "extensions/grafana-loki/tests")
