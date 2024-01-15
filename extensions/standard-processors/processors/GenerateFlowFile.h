@@ -67,7 +67,8 @@ class GenerateFlowFile : public core::Processor {
       .build();
   EXTENSIONAPI static constexpr auto UniqueFlowFiles = core::PropertyDefinitionBuilder<>::createProperty("Unique FlowFiles")
       .withDescription("If true, each FlowFile that is generated will be unique. "
-          "If false, a random value will be generated and all FlowFiles will get the same content but this offers much higher throughput")
+          "If false, a random value will be generated and all FlowFiles will get the same content but this offers much higher throughput "
+          "(but see the description of Custom Text for special non-random use cases)")
       .isRequired(false)
       .withPropertyType(core::StandardPropertyTypes::BOOLEAN_TYPE)
       .withDefaultValue("true")
