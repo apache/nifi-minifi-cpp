@@ -745,8 +745,9 @@ Spec::Destinations parseDestinations(const Spec::Context& ctx, const rapidjson::
       if (!item.IsString()) {
         throw Exception(GENERAL_EXCEPTION, fmt::format("Expected a string or array of strings at '{}/{}'", ctx.path(), i));
       }
-      if (auto dst = parseDestination(ctx, item.GetString(), item.GetString() + item.GetStringLength())) {
-        if (dst->second != item.GetString() + item.GetStringLength()) {
+      std::string_view item_str{item.GetString(), item.GetStringLength()};
+      if (auto dst = parseDestination(ctx, item_str.begin(), item_str.end())) {
+        if (dst->second != item_str.end()) {
           throw Exception(GENERAL_EXCEPTION, fmt::format("Failed to fully parse destination at '{}/{}'", ctx.path(), i));
         }
         res.push_back(std::move(dst->first));
@@ -758,8 +759,9 @@ Spec::Destinations parseDestinations(const Spec::Context& ctx, const rapidjson::
     if (!val.IsString()) {
       throw Exception(GENERAL_EXCEPTION, fmt::format("Expected a string or array of strings at '{}'", ctx.path()));
     }
-    if (auto dst = parseDestination(ctx, val.GetString(), val.GetString() + val.GetStringLength())) {
-      if (dst->second != val.GetString() + val.GetStringLength()) {
+    std::string_view val_str{val.GetString(), val.GetStringLength()};
+    if (auto dst = parseDestination(ctx, val_str.begin(), val_str.end())) {
+      if (dst->second != val_str.end()) {
         throw Exception(GENERAL_EXCEPTION, fmt::format("Failed to fully parse destination at '{}'", ctx.path()));
       }
       res.push_back(std::move(dst->first));
