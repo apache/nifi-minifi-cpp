@@ -130,12 +130,12 @@ class SplitTextFragmentGenerator {
   SplitTextFragmentGenerator(const std::shared_ptr<io::InputStream>& stream, const SplitTextConfiguration& split_text_config);
   std::optional<Fragment> readNextFragment();
   nonstd::expected<Fragment, const char*> readHeaderFragment();
-  detail::StreamReadState getState() const { return line_reader_.getState(); }
+  [[nodiscard]] detail::StreamReadState getState() const { return line_reader_.getState(); }
 
  private:
   static void addLineToFragment(Fragment& fragment, const detail::LineReader::LineInfo& line);
   void finalizeFragmentOffset(Fragment& current_fragment);
-  bool lineSizeWouldExceedMaxFragmentSize(const detail::LineReader::LineInfo& line, uint64_t fragment_size) const;
+  [[nodiscard]] bool lineSizeWouldExceedMaxFragmentSize(const detail::LineReader::LineInfo& line, uint64_t fragment_size) const;
   nonstd::expected<Fragment, const char*> createHeaderFragmentUsingLineCount();
   nonstd::expected<Fragment, const char*> createHeaderFragmentUsingHeaderMarkerCharacters();
 
