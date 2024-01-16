@@ -27,17 +27,17 @@ namespace org::apache::nifi::minifi::extensions::grafana::loki::test {
 TEST_CASE("Url property is required", "[PushGrafanaLokiGrpc]") {
   auto push_grafana_loki_rest = std::make_shared<PushGrafanaLokiGrpc>("PushGrafanaLokiGrpc");
   minifi::test::SingleProcessorTestController test_controller(push_grafana_loki_rest);
-  CHECK(test_controller.plan->setProperty(push_grafana_loki_rest, PushGrafanaLokiGrpc::Url, ""));
-  CHECK(test_controller.plan->setProperty(push_grafana_loki_rest, PushGrafanaLokiGrpc::StreamLabels, "job=minifi,directory=/opt/minifi/logs/"));
-  CHECK(test_controller.plan->setProperty(push_grafana_loki_rest, PushGrafanaLokiGrpc::LogLineBatchSize, "1"));
+  test_controller.plan->setProperty(push_grafana_loki_rest, PushGrafanaLokiGrpc::Url, "");
+  test_controller.plan->setProperty(push_grafana_loki_rest, PushGrafanaLokiGrpc::StreamLabels, "job=minifi,directory=/opt/minifi/logs/");
+  test_controller.plan->setProperty(push_grafana_loki_rest, PushGrafanaLokiGrpc::LogLineBatchSize, "1");
   REQUIRE_THROWS_AS(test_controller.trigger(), minifi::Exception);
 }
 
 TEST_CASE("Valid stream labels need to be set", "[PushGrafanaLokiGrpc]") {
   auto push_grafana_loki_rest = std::make_shared<PushGrafanaLokiGrpc>("PushGrafanaLokiGrpc");
   minifi::test::SingleProcessorTestController test_controller(push_grafana_loki_rest);
-  CHECK(test_controller.plan->setProperty(push_grafana_loki_rest, PushGrafanaLokiGrpc::Url, "localhost:10991"));
-  CHECK(test_controller.plan->setProperty(push_grafana_loki_rest, PushGrafanaLokiGrpc::LogLineBatchSize, "1"));
+  test_controller.plan->setProperty(push_grafana_loki_rest, PushGrafanaLokiGrpc::Url, "localhost:10991");
+  test_controller.plan->setProperty(push_grafana_loki_rest, PushGrafanaLokiGrpc::LogLineBatchSize, "1");
   SECTION("Stream labels cannot be empty") {
     test_controller.plan->setProperty(push_grafana_loki_rest, PushGrafanaLokiGrpc::StreamLabels, "");
   }

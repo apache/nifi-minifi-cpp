@@ -20,6 +20,7 @@
 
 #include "utils/ProcessorConfigUtils.h"
 #include "core/Resource.h"
+#include "core/ProcessSession.h"
 #include "grpcpp/create_channel.h"
 #include "grpcpp/security/credentials.h"
 #include "google/protobuf/util/time_util.h"
@@ -120,7 +121,7 @@ nonstd::expected<void, std::string> PushGrafanaLokiGrpc::submitRequest(const std
     auto timestamp_nanos = std::stoll(timestamp_str);
     *entry->mutable_timestamp() = google::protobuf::util::TimeUtil::NanosecondsToTimestamp(timestamp_nanos);
 
-    entry->set_line(readLogLineFromFlowFile(flow_file, session));
+    entry->set_line(to_string(session.readBuffer(flow_file)));
 
     for (const auto& label_attribute : log_line_metadata_attributes_) {
       auto label_value = flow_file->getAttribute(label_attribute);

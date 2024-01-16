@@ -121,19 +121,18 @@ class PushGrafanaLoki : public core::Processor {
     void setLogLineBatchSize(std::optional<uint64_t> log_line_batch_size);
     void setLogLineBatchWait(std::optional<std::chrono::milliseconds> log_line_batch_wait);
     void setStateManager(core::StateManager* state_manager);
-    void setStartPushTime(std::chrono::steady_clock::time_point start_push_time);
+    void setStartPushTime(std::chrono::system_clock::time_point start_push_time);
 
    private:
     std::optional<uint64_t> log_line_batch_size_ = 1;
     std::optional<std::chrono::milliseconds> log_line_batch_wait_;
-    std::chrono::steady_clock::time_point start_push_time_;
+    std::chrono::system_clock::time_point start_push_time_;
     std::vector<std::shared_ptr<core::FlowFile>> batched_flowfiles_;
     core::StateManager* state_manager_;
     std::shared_ptr<core::logging::Logger> logger_;
   };
 
   static std::shared_ptr<minifi::controllers::SSLContextService> getSSLContextService(core::ProcessContext& context);
-  static std::string readLogLineFromFlowFile(const std::shared_ptr<core::FlowFile>& flow_file, core::ProcessSession& session);
   static std::map<std::string, std::string> buildStreamLabelMap(core::ProcessContext& context);
 
   void processBatch(const std::vector<std::shared_ptr<core::FlowFile>>& batched_flow_files, core::ProcessSession& session);
