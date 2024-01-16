@@ -30,8 +30,6 @@
 #include "utils/span.h"
 #include "utils/net/AsioSocketUtils.h"
 
-#include "spdlog/spdlog.h"
-
 using namespace std::literals::chrono_literals;
 
 TEST_CASE("Test log Levels", "[ttl1]") {
@@ -101,7 +99,6 @@ TEST_CASE("Logger configured with an ID prints this ID in every log line", "[log
 }
 
 TEST_CASE("Printing of the ID can be disabled in the config", "[logger][id][configuration]") {
-  LogTestController::getInstance().clear();
   auto properties = std::make_shared<logging::LoggerProperties>();
 
   bool id_is_present{};
@@ -120,10 +117,8 @@ TEST_CASE("Printing of the ID can be disabled in the config", "[logger][id][conf
   const auto uuid = utils::IdGenerator::getIdGenerator()->generate();
   std::shared_ptr<logging::Logger> logger = LogTestController::getInstance(properties)->getLogger<logging::Logger>(uuid);
   logger->log_error("hello {}", "world");
-
-  CHECK(LogTestController::getInstance().contains("[org::apache::nifi::minifi::core::logging::Logger] [error] hello world"));
-  CHECK(id_is_present == LogTestController::getInstance().contains(uuid.to_string()));
-  LogTestController::getInstance().reset();
+  CHECK(LogTestController::getInstance(properties)->contains("[org::apache::nifi::minifi::core::logging::Logger] [error] hello world"));
+  CHECK(id_is_present == LogTestController::getInstance(properties)->contains(uuid.to_string()));
 }
 
 struct CStringConvertible {
@@ -135,6 +130,7 @@ struct CStringConvertible {
 };
 
 TEST_CASE("Test log custom string formatting", "[ttl6]") {
+  LogTestController::getInstance().reset();
   LogTestController::getInstance().clear();
   LogTestController::getInstance().setTrace<logging::Logger>();
   std::shared_ptr<logging::Logger> logger = logging::LoggerFactory<logging::Logger>::getLogger();
@@ -145,6 +141,7 @@ TEST_CASE("Test log custom string formatting", "[ttl6]") {
 }
 
 TEST_CASE("Test log lazy string generation", "[ttl7]") {
+  LogTestController::getInstance().reset();
   LogTestController::getInstance().clear();
   LogTestController::getInstance().setDebug<logging::Logger>();
   std::shared_ptr<logging::Logger> logger = logging::LoggerFactory<logging::Logger>::getLogger();

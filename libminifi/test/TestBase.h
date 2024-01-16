@@ -130,9 +130,9 @@ class LogTestController {
 
   bool contains(const std::string &ending, std::chrono::milliseconds timeout = std::chrono::seconds(3), std::chrono::milliseconds sleep_interval = std::chrono::milliseconds(200)) const;
 
-  bool contains(const std::ostringstream &stream, const std::string &ending,
-                std::chrono::milliseconds timeout = std::chrono::seconds(3),
-                std::chrono::milliseconds sleep_interval = std::chrono::milliseconds(200)) const;
+  static bool contains(const std::ostringstream &stream, const std::string &ending,
+      std::chrono::milliseconds timeout = std::chrono::seconds(3),
+      std::chrono::milliseconds sleep_interval = std::chrono::milliseconds(200));
 
   std::optional<std::smatch> matchesRegex(const std::string &regex_str,
                 std::chrono::milliseconds timeout = std::chrono::seconds(3),
@@ -163,7 +163,7 @@ class LogTestController {
 
   void init(const std::shared_ptr<logging::LoggerProperties>& logger_props);
   void setLevel(std::string_view name, spdlog::level::level_enum level);
-  bool contains(const std::function<std::string()>& log_string_getter, const std::string& ending, std::chrono::milliseconds timeout, std::chrono::milliseconds sleep_interval) const;
+  static bool contains(const std::function<std::string()>& log_string_getter, const std::string& ending, std::chrono::milliseconds timeout, std::chrono::milliseconds sleep_interval);
 
   mutable std::shared_ptr<std::mutex> log_output_mutex_ = std::make_shared<std::mutex>();
   std::shared_ptr<std::ostringstream> log_output_ptr_ = std::make_shared<std::ostringstream>();

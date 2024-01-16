@@ -38,6 +38,7 @@
 class FetchSFTPTestsFixture {
  public:
   FetchSFTPTestsFixture() {
+    LogTestController::getInstance().reset();
     LogTestController::getInstance().setTrace<TestPlan>();
     LogTestController::getInstance().setDebug<minifi::FlowController>();
     LogTestController::getInstance().setDebug<minifi::SchedulingAgent>();
@@ -110,12 +111,10 @@ class FetchSFTPTestsFixture {
   FetchSFTPTestsFixture& operator=(FetchSFTPTestsFixture&&) = delete;
   FetchSFTPTestsFixture& operator=(const FetchSFTPTestsFixture&) = delete;
 
-  virtual ~FetchSFTPTestsFixture() {
-    LogTestController::getInstance().reset();
-  }
+  virtual ~FetchSFTPTestsFixture() = default;
 
   // Create source file
-  void createFile(const std::string& relative_path, const std::string& content) {
+  void createFile(const std::string& relative_path, const std::string& content) const {
     const auto file_path = src_dir / "vfs" / relative_path;
     std::filesystem::create_directories(file_path.parent_path());
 
@@ -130,8 +129,8 @@ class FetchSFTPTestsFixture {
     IN_SOURCE
   };
 
-  void testFile(TestWhere where, const std::filesystem::path& relative_path, std::string_view expected_content) {
-    std::filesystem::path expected_path = where == IN_DESTINATION ? dst_dir / relative_path : src_dir / "vfs" / relative_path;
+  void testFile(TestWhere where, const std::filesystem::path& relative_path, std::string_view expected_content) const {
+    const auto expected_path = where == IN_DESTINATION ? dst_dir / relative_path : src_dir / "vfs" / relative_path;
     REQUIRE(std::filesystem::exists(expected_path));
     std::filesystem::permissions(expected_path, static_cast<std::filesystem::perms>(0644));
 
@@ -146,8 +145,8 @@ class FetchSFTPTestsFixture {
     CHECK(expected_content == content.str());
   }
 
-  void testFileNotExists(TestWhere where, const std::string& relative_path) {
-    std::filesystem::path expected_path = where == IN_DESTINATION ? dst_dir / relative_path : src_dir / "vfs" / relative_path;
+  void testFileNotExists(TestWhere where, const std::string& relative_path) const {
+    const auto expected_path = where == IN_DESTINATION ? dst_dir / relative_path : src_dir / "vfs" / relative_path;
     CHECK(!std::filesystem::exists(expected_path));
   }
 

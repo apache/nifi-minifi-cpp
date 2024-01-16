@@ -36,19 +36,15 @@
 
 #include "TestBase.h"
 #include "Catch.h"
-#include "utils/StringUtils.h"
 #include "utils/file/FileUtils.h"
-#include "core/Core.h"
 #include "core/logging/Logger.h"
 #include "core/ProcessGroup.h"
 #include "FlowController.h"
-#include "properties/Configure.h"
 #include "unit/ProvenanceTestHelper.h"
 #include "processors/FetchSFTP.h"
 #include "processors/ListSFTP.h"
 #include "processors/GenerateFlowFile.h"
 #include "processors/LogAttribute.h"
-#include "processors/UpdateAttribute.h"
 #include "processors/PutFile.h"
 #include "tools/SFTPTestServer.h"
 
@@ -57,6 +53,7 @@ using namespace std::literals::chrono_literals;
 class ListThenFetchSFTPTestsFixture {
  public:
   ListThenFetchSFTPTestsFixture() {
+    LogTestController::getInstance().reset();
     LogTestController::getInstance().setTrace<TestPlan>();
     LogTestController::getInstance().setDebug<minifi::FlowController>();
     LogTestController::getInstance().setDebug<minifi::SchedulingAgent>();
@@ -147,14 +144,12 @@ class ListThenFetchSFTPTestsFixture {
   ListThenFetchSFTPTestsFixture& operator=(ListThenFetchSFTPTestsFixture&&) = delete;
   ListThenFetchSFTPTestsFixture& operator=(const ListThenFetchSFTPTestsFixture&) = delete;
 
-  virtual ~ListThenFetchSFTPTestsFixture() {
-    LogTestController::getInstance().reset();
-  }
+  virtual ~ListThenFetchSFTPTestsFixture() = default;
 
   // Create source file
-  void createFile(const std::string& relative_path, const std::string& content, std::optional<std::chrono::file_clock::time_point> modification_time) {
+  void createFile(const std::string& relative_path, const std::string& content, const std::optional<std::chrono::file_clock::time_point>& modification_time) const {
     std::fstream file;
-    std::filesystem::path full_path = src_dir / "vfs" / relative_path;
+    const auto full_path = src_dir / "vfs" / relative_path;
     std::filesystem::create_directories(full_path.parent_path());
     file.open(full_path, std::ios::out);
     file << content;
@@ -164,7 +159,7 @@ class ListThenFetchSFTPTestsFixture {
     }
   }
 
-  void createFileWithModificationTimeDiff(const std::string& relative_path, const std::string& content, std::chrono::seconds modification_timediff = -5min) {
+  void createFileWithModificationTimeDiff(const std::string& relative_path, const std::string& content, std::chrono::seconds modification_timediff = -5min) const {
     return createFile(relative_path, content, std::chrono::file_clock::now() + modification_timediff);
   }
 
@@ -173,7 +168,7 @@ class ListThenFetchSFTPTestsFixture {
     IN_SOURCE
   };
 
-  void testFile(TestWhere where, const std::filesystem::path& relative_path, std::string_view expected_content) {
+  void testFile(TestWhere where, const std::filesystem::path& relative_path, std::string_view expected_content) const {
     std::filesystem::path expected_path = where == IN_DESTINATION ? dst_dir / relative_path : src_dir / "vfs" / relative_path;
     REQUIRE(std::filesystem::exists(expected_path));
     std::filesystem::permissions(expected_path, static_cast<std::filesystem::perms>(0644));;

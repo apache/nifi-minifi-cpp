@@ -17,16 +17,17 @@
  */
 
 #include <algorithm>
+#include <iostream>
 #include <memory>
+#include <sstream>
 #include <string>
 #include <vector>
-#include <sstream>
-#include <iostream>
 
-#include "../TestBase.h"
 #include "../Catch.h"
+#include "../TestBase.h"
 #include "core/logging/LoggerConfiguration.h"
 #include "spdlog/formatter.h"
+#include "spdlog/pattern_formatter.h"
 #include "spdlog/sinks/ostream_sink.h"
 
 TEST_CASE("TestLoggerProperties::get_keys_of_type", "[test get_keys_of_type]") {
@@ -49,8 +50,10 @@ class TestLoggerConfiguration : public logging::LoggerConfiguration {
   static std::shared_ptr<logging::internal::LoggerNamespace> initialize_namespaces(const std::shared_ptr<logging::LoggerProperties> &logger_properties) {
     return logging::LoggerConfiguration::initialize_namespaces(logger_properties);
   }
-  static std::shared_ptr<spdlog::logger> get_logger(const std::shared_ptr<logging::internal::LoggerNamespace> &root_namespace, const std::string &name, std::shared_ptr<spdlog::formatter> formatter) {
-    return logging::LoggerConfiguration::get_logger(LogTestController::getInstance().logger_, root_namespace, name, formatter);
+  static std::shared_ptr<spdlog::logger> get_logger(const std::shared_ptr<logging::internal::LoggerNamespace> &root_namespace,
+      const std::string &name,
+      const std::shared_ptr<spdlog::formatter>& formatter) {
+    return logging::LoggerConfiguration::get_logger(root_namespace, name, formatter);
   }
 };
 
@@ -78,26 +81,26 @@ TEST_CASE("TestLoggerConfiguration::initialize_namespaces", "[test initialize_na
   std::shared_ptr<spdlog::logger> logger = TestLoggerConfiguration::get_logger(root_namespace, "org::apache::nifi::minifi::fake::test::ClassName1", formatter);
   std::string test_log_statement = "Test log statement";
   logger->info(test_log_statement);
-  REQUIRE(true == logTestController.contains(stdout, test_log_statement));
-  REQUIRE(true == logTestController.contains(stderr, test_log_statement));
+  REQUIRE(true == LogTestController::contains(stdout, test_log_statement));
+  REQUIRE(true == LogTestController::contains(stderr, test_log_statement));
   logTestController.resetStream(stdout);
   logTestController.resetStream(stderr);
 
   logger = TestLoggerConfiguration::get_logger(root_namespace, stdout_only_warn_class, formatter);
   logger->info(test_log_statement);
-  REQUIRE(false == logTestController.contains(stdout, test_log_statement, std::chrono::seconds(0)));
+  REQUIRE(false == LogTestController::contains(stdout, test_log_statement, std::chrono::seconds(0)));
   logger->warn(test_log_statement);
-  REQUIRE(true == logTestController.contains(stdout, test_log_statement));
-  REQUIRE(false == logTestController.contains(stderr, test_log_statement, std::chrono::seconds(0)));
+  REQUIRE(true == LogTestController::contains(stdout, test_log_statement));
+  REQUIRE(false == LogTestController::contains(stderr, test_log_statement, std::chrono::seconds(0)));
   logTestController.resetStream(stdout);
   logTestController.resetStream(stderr);
 
   logger = TestLoggerConfiguration::get_logger(root_namespace, stderr_only_error_class, formatter);
   logger->warn(test_log_statement);
-  REQUIRE(false == logTestController.contains(stderr, test_log_statement, std::chrono::seconds(0)));
+  REQUIRE(false == LogTestController::contains(stderr, test_log_statement, std::chrono::seconds(0)));
   logger->error(test_log_statement);
-  REQUIRE(false == logTestController.contains(stdout, test_log_statement, std::chrono::seconds(0)));
-  REQUIRE(true == logTestController.contains(stderr, test_log_statement));
+  REQUIRE(false == LogTestController::contains(stdout, test_log_statement, std::chrono::seconds(0)));
+  REQUIRE(true == LogTestController::contains(stderr, test_log_statement));
   logTestController.resetStream(stdout);
   logTestController.resetStream(stderr);
 }

@@ -27,12 +27,7 @@
 
 #include "properties/Properties.h"
 
-namespace org {
-namespace apache {
-namespace nifi {
-namespace minifi {
-namespace core {
-namespace logging {
+namespace org::apache::nifi::minifi::core::logging {
 
 class LoggerProperties : public Properties {
  public:
@@ -45,12 +40,12 @@ class LoggerProperties : public Properties {
    * Ex: with type argument "appender"
    * you would get back a property of "appender.rolling" but not "appender.rolling.file_name"
    */
-  std::vector<std::string> get_keys_of_type(const std::string &type);
+  std::vector<std::string> get_keys_of_type(const std::string &type) const;
 
   /**
    * Registers a sink witht the given name. This allows for programmatic definition of sinks.
    */
-  void add_sink(const std::string &name, std::shared_ptr<spdlog::sinks::sink> sink) {
+  void add_sink(const std::string &name, const std::shared_ptr<spdlog::sinks::sink>& sink) {
     sinks_[name] = sink;
   }
   std::map<std::string, std::shared_ptr<spdlog::sinks::sink>> initial_sinks() {
@@ -61,9 +56,9 @@ class LoggerProperties : public Properties {
   std::map<std::string, std::shared_ptr<spdlog::sinks::sink>> sinks_;
 };
 
-}  // namespace logging
-}  // namespace core
-}  // namespace minifi
-}  // namespace nifi
-}  // namespace apache
-}  // namespace org
+}  // namespace org::apache::nifi::minifi::core::logging
+
+
+
+
+
