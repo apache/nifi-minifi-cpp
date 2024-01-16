@@ -688,9 +688,9 @@ if (ENABLE_COVERAGE)
     setup_target_for_coverage_gcovr_html(
         NAME coverage
         EXCLUDE "build/*" "cmake/*" "minifi_main/*" "nanofi/*" "thirdparty/*" "libminifi/test/*" "extensions/http-curl/tests/*" "encrypt-config/tests/*" "extensions/aws/tests/*"
-            "extensions/civetweb/tests/*" "extensions/coap/tests/*" "extensions/elasticsearch/tests/*" "extensions/expression-language/tests/*" "extensions/gcp/tests/*" "extensions/kubernetes/tests/*"
-            "extensions/librdkafka/tests/*" "extensions/lua/tests/*" "extensions/mqtt/tests/*" "extensions/opencv/tests/*" "extensions/procfs/tests/*" "extensions/prometheus/tests/*" "extensions/script/tests/*"
-            "extensions/sftp/tests/*" "extensions/splunk/tests/*" "extensions/standard-processors/tests/*" "extensions/systemd/tests/*" "extensions/test-processors/*" "libminifi/include/utils/IntegrationTestUtils.h"
-            "libminifi/include/utils/TestUtils.h" "controller/MiNiFiController.cpp"
+            "extensions/civetweb/tests/*" "extensions/coap/tests/*" "extensions/elasticsearch/tests/*" "extensions/expression-language/tests/*" "extensions/gcp/tests/*" "extensions/grafana-loki/tests/*"
+            "extensions/kubernetes/tests/*" "extensions/librdkafka/tests/*" "extensions/lua/tests/*" "extensions/mqtt/tests/*" "extensions/opencv/tests/*" "extensions/procfs/tests/*" "extensions/prometheus/tests/*"
+            "extensions/script/tests/*" "extensions/sftp/tests/*" "extensions/splunk/tests/*" "extensions/standard-processors/tests/*" "extensions/systemd/tests/*" "extensions/test-processors/*"
+            "libminifi/include/utils/IntegrationTestUtils.h" "libminifi/include/utils/TestUtils.h" "controller/MiNiFiController.cpp"
     )
 endif()

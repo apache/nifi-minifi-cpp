@@ -389,6 +389,7 @@ show_supported_features() {
   echo "AD. ProcFs Support .............$(print_feature_status PROCFS_ENABLED)"
   echo "AE. Prometheus Support .........$(print_feature_status PROMETHEUS_ENABLED)"
   echo "AF. Elasticsearch Support ......$(print_feature_status ELASTIC_ENABLED)"
+  echo "AG. Grafana Loki Support .......$(print_feature_status GRAFANA_LOKI_ENABLED)"
   echo "****************************************"
   echo "            Build Options."
   echo "****************************************"
@@ -444,6 +445,7 @@ read_feature_options(){
     ad) ToggleFeature PROCFS_ENABLED ;;
     ae) ToggleFeature PROMETHEUS_ENABLED ;;
     af) ToggleFeature ELASTIC_ENABLED ;;
+    ag) ToggleFeature GRAFANA_LOKI_ENABLED ;;
     1) ToggleFeature TESTS_ENABLED ;;
     2) EnableAllFeatures ;;
     3) ToggleFeature JNI_ENABLED;;
