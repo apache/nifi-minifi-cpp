@@ -69,6 +69,22 @@ std::string JsonFlowSerializer::serialize(const core::ProcessGroup &process_grou
     encryptSensitiveProperties(processor_json[schema.processor_properties[0]], alloc, processor->getProperties(), encryption_provider);
   }
 
+  auto controller_services = root_group[schema.controller_services[0]].GetArray();
+  for (auto &controller_service_json : controller_services) {
+    const auto controller_service_id = controller_service_json[schema.identifier[0]].GetString();
+    const auto controller_service_node = process_group.findControllerService(controller_service_id);
+    if (!controller_service_node) {
+      logger_->log_warn("Controller service node {} not found in the flow definition", controller_service_id);
+      continue;
+    }
+    const auto controller_service = controller_service_node->getControllerServiceImplementation();
+    if (!controller_service) {
+      logger_->log_warn("Controller service {} not found in the flow definition", controller_service_id);
+      continue;
+    }
+    encryptSensitiveProperties(controller_service_json[schema.controller_service_properties[0]], alloc, controller_service->getProperties(), encryption_provider);
+  }
+
   rapidjson::StringBuffer buffer;
   rapidjson::PrettyWriter<rapidjson::StringBuffer> writer{buffer};
   flow_definition_json.Accept(writer);
