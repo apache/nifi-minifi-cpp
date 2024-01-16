@@ -39,12 +39,8 @@ namespace org::apache::nifi::minifi::processors {
 
 class GenerateFlowFile : public core::Processor {
  public:
-  GenerateFlowFile(std::string_view name, const utils::Identifier& uuid = {}) // NOLINT
+  explicit GenerateFlowFile(const std::string_view name, const utils::Identifier& uuid = {}) // NOLINT
       : Processor(name, uuid) {
-    batchSize_ = 1;
-    uniqueFlowFile_ = true;
-    fileSize_ = 1024;
-    textData_ = false;
   }
   ~GenerateFlowFile() override = default;
 
@@ -70,14 +66,16 @@ class GenerateFlowFile : public core::Processor {
       .withDefaultValue("Binary")
       .build();
   EXTENSIONAPI static constexpr auto UniqueFlowFiles = core::PropertyDefinitionBuilder<>::createProperty("Unique FlowFiles")
-      .withDescription("If true, each FlowFile that is generated will be unique. If false, a random value will be generated and all FlowFiles")
+      .withDescription("If true, each FlowFile that is generated will be unique. "
+          "If false, a random value will be generated and all FlowFiles will get the same content but this offers much higher throughput "
+          "(but see the description of Custom Text for special non-random use cases)")
       .isRequired(false)
       .withPropertyType(core::StandardPropertyTypes::BOOLEAN_TYPE)
       .withDefaultValue("true")
       .build();
   EXTENSIONAPI static constexpr auto CustomText = core::PropertyDefinitionBuilder<>::createProperty("Custom Text")
       .withDescription("If Data Format is text and if Unique FlowFiles is false, then this custom text will be used as content of the generated FlowFiles and the File Size will be ignored. "
-                       "Finally, if Expression Language is used, evaluation will be performed only once per batch of generated FlowFiles")
+          "Finally, if Expression Language is used, evaluation will be performed only once per batch of generated FlowFiles")
       .supportsExpressionLanguage(true)
       .build();
   EXTENSIONAPI static constexpr auto Properties = std::array<core::PropertyReference, 5>{
@@ -104,15 +102,29 @@ class GenerateFlowFile : public core::Processor {
   void onTrigger(core::ProcessContext& context, core::ProcessSession& session) override;
   void initialize() override;
 
- protected:
-  std::vector<char> data_;
-
-  uint64_t batchSize_;
-  bool uniqueFlowFile_;
-  uint64_t fileSize_;
-  bool textData_;
+  void refreshNonUniqueData(core::ProcessContext& context);
 
  private:
+  enum class Mode {
+    UniqueByte,
+    UniqueText,
+    NotUniqueByte,
+    NotUniqueText,
+    CustomText,
+    Empty
+  };
+
+  Mode mode_;
+
+  std::vector<char> non_unique_data_;
+
+  uint64_t batch_size_{1};
+  uint64_t file_size_{1024};
+
+  static Mode getMode(bool is_unique, bool is_text, bool has_custom_text, uint64_t file_size);
+  static bool isUnique(Mode mode) { return mode == Mode::UniqueText || mode == Mode::UniqueByte; }
+  static bool isText(Mode mode) { return mode == Mode::UniqueText || mode == Mode::CustomText || mode == Mode::NotUniqueText; }
+
   std::shared_ptr<core::logging::Logger> logger_ = core::logging::LoggerFactory<GenerateFlowFile>::getLogger(uuid_);
 };
 
