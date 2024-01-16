@@ -403,7 +403,7 @@ TEST_CASE("JsonFlowSerializer can encrypt the sensitive properties") {
 
   std::string config_json_encrypted = flow_serializer.serialize(*process_group, schema, encryption_provider);
 
-  SECTION("check the encryption of invokehttp-proxy-password") {
+  {
     std::regex regex{R"_("invokehttp-proxy-password": "(enc\{.*\})",)_"};
     std::smatch match_results;
     CHECK(std::regex_search(config_json_encrypted, match_results, regex));
@@ -413,7 +413,7 @@ TEST_CASE("JsonFlowSerializer can encrypt the sensitive properties") {
     CHECK(utils::crypto::property_encryption::decrypt(encrypted_value, encryption_provider) == "very_secure_password");
   }
 
-  SECTION("check the encryption of Passphrase") {
+  {
     std::regex regex{R"_("Passphrase": "(enc\{.*\})",)_"};
     std::smatch match_results;
     CHECK(std::regex_search(config_json_encrypted, match_results, regex));
