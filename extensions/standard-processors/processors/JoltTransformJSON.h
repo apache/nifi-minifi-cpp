@@ -56,7 +56,6 @@ class JoltTransformJSON : public core::Processor {
       .withDescription("Jolt Specification for transformation of JSON data. The value for this property may be the text of a Jolt specification "
           "or the path to a file containing a Jolt specification. 'Jolt Specification' must be set, or "
           "the value is ignored if the Jolt Sort Transformation is selected.")
-      .supportsExpressionLanguage(true)
       .isRequired(true)
       .build();
 

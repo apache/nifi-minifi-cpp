@@ -25,6 +25,7 @@
 #include <unordered_map>
 #include <memory>
 #include <compare>
+#include <concepts>
 
 #include "logging/Logger.h"
 #include "utils/gsl.h"
@@ -57,7 +58,8 @@ class Spec {
       return nullptr;
     }
 
-    ::gsl::final_action<std::function<void()>> log(std::function<void(std::shared_ptr<core::logging::Logger>)> on_enter, std::function<void(std::shared_ptr<core::logging::Logger>)> on_exit) const {
+    template<std::invocable<std::shared_ptr<core::logging::Logger>> OnEnterFn, std::invocable<std::shared_ptr<core::logging::Logger>> OnExitFn>
+    ::gsl::final_action<std::function<void()>> log(OnEnterFn on_enter, OnExitFn on_exit) const {
       if (logger) {
         on_enter(logger);
         return gsl::finally<std::function<void()>>([on_exit, logger = logger] {
