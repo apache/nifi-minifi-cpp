@@ -30,14 +30,15 @@ namespace org::apache::nifi::minifi::core::json {
 void JsonFlowSerializer::encryptSensitiveProperties(rapidjson::Value &property_jsons, rapidjson::Document::AllocatorType &alloc,
     const std::map<std::string, Property> &properties, const utils::crypto::EncryptionProvider &encryption_provider) const {
   for (auto &property : property_jsons.GetObject()) {
-    std::string name{property.name.GetString()};
+    const std::string name{property.name.GetString(), property.name.GetStringLength()};
     if (!properties.contains(name)) {
       logger_->log_warn("Property {} found in flow definition does not exist!", name);
       continue;
     }
     if (properties.at(name).isSensitive()) {
-      auto &value = property.value;
-      std::string encrypted_value = utils::crypto::property_encryption::encrypt(value.GetString(), encryption_provider);
+      auto& value = property.value;
+      const std::string_view value_sv{value.GetString(), value.GetStringLength()};
+      const std::string encrypted_value = utils::crypto::property_encryption::encrypt(value_sv, encryption_provider);
       value.SetString(encrypted_value.c_str(), encrypted_value.size(), alloc);
     }
   }
@@ -56,9 +57,10 @@ std::string JsonFlowSerializer::serialize(const core::ProcessGroup &process_grou
 
   auto processors = root_group[schema.processors[0]].GetArray();
   for (auto &processor_json : processors) {
-    const auto processor_id = utils::Identifier::parse(processor_json[schema.identifier[0]].GetString());
+    const std::string processor_id_str{processor_json[schema.identifier[0]].GetString(), processor_json[schema.identifier[0]].GetStringLength()};
+    const auto processor_id = utils::Identifier::parse(processor_id_str);
     if (!processor_id) {
-      logger_->log_warn("Invalid processor ID found in the flow definition: {}", processor_json[schema.identifier[0]].GetString());
+      logger_->log_warn("Invalid processor ID found in the flow definition: {}", processor_id_str);
       continue;
     }
     const auto processor = process_group.findProcessorById(*processor_id);
@@ -71,7 +73,7 @@ std::string JsonFlowSerializer::serialize(const core::ProcessGroup &process_grou
 
   auto controller_services = root_group[schema.controller_services[0]].GetArray();
   for (auto &controller_service_json : controller_services) {
-    const auto controller_service_id = controller_service_json[schema.identifier[0]].GetString();
+    const std::string controller_service_id{controller_service_json[schema.identifier[0]].GetString(), controller_service_json[schema.identifier[0]].GetStringLength()};
     const auto controller_service_node = process_group.findControllerService(controller_service_id);
     if (!controller_service_node) {
       logger_->log_warn("Controller service node {} not found in the flow definition", controller_service_id);
