@@ -1,4 +1,3 @@
-#
 # Licensed to the Apache Software Foundation (ASF) under one
 # or more contributor license agreements.  See the NOTICE file
 # distributed with this work for additional information
@@ -15,23 +14,15 @@
 # KIND, either express or implied.  See the License for the
 # specific language governing permissions and limitations
 # under the License.
-#
 
+include(FetchContent)
 
-include(${CMAKE_SOURCE_DIR}/extensions/ExtensionHeader.txt)
+FetchContent_Declare(jolt_tests
+        URL      https://github.com/bazaarvoice/jolt/archive/refs/tags/jolt-0.1.8.tar.gz
+        URL_HASH SHA256=7423c5b98244260f89a975f5e21150c02a6a1fa88e3af07c90d43fef0eebdcbb
+        )
 
-file(GLOB SOURCES "processors/*.cpp" "controllers/*.cpp" "utils/*.cpp")
-
-add_library(minifi-standard-processors SHARED ${SOURCES})
-target_include_directories(minifi-standard-processors PUBLIC "${CMAKE_SOURCE_DIR}/extensions/standard-processors")
-
-include(RangeV3)
-include(Asio)
-target_link_libraries(minifi-standard-processors ${LIBMINIFI} Threads::Threads range-v3 asio)
-
-include(Coroutines)
-enable_coroutines()
-
-register_extension(minifi-standard-processors "STANDARD PROCESSORS" STANDARD-PROCESSORS "Provides standard processors" "extensions/standard-processors/tests/")
-
-register_extension_linter(minifi-standard-processors-linter)
+FetchContent_GetProperties(jolt_tests)
+if (NOT jolt_tests_POPULATED)
+    FetchContent_Populate(jolt_tests)
+endif()
