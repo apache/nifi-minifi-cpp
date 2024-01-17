@@ -23,7 +23,7 @@ namespace org::apache::nifi::minifi::core::json {
 
 class JsonFlowSerializer : public core::flow::FlowSerializer {
  public:
-  explicit JsonFlowSerializer(rapidjson::Document&& document) : flow_definition_json_(std::move(document)) {}
+  explicit JsonFlowSerializer(rapidjson::Document document) : flow_definition_json_(std::move(document)) {}
 
   [[nodiscard]] std::string serialize(const core::ProcessGroup& process_group, const core::flow::FlowSchema& schema, const utils::crypto::EncryptionProvider& encryption_provider) const override;
 

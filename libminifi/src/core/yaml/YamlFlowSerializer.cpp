@@ -70,7 +70,7 @@ std::string YamlFlowSerializer::serialize(const core::ProcessGroup& process_grou
       logger_->log_warn("Controller service node {} not found in the flow definition", controller_service_id);
       continue;
     }
-    auto controller_service = controller_service_node->getControllerServiceImplementation();
+    const auto controller_service = controller_service_node->getControllerServiceImplementation();
     if (!controller_service) {
       logger_->log_warn("Controller service {} not found in the flow definition", controller_service_id);
       continue;
