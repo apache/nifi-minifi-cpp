@@ -48,8 +48,8 @@ void BinFiles::initialize() {
 }
 
 void BinFiles::onSchedule(core::ProcessContext& context, core::ProcessSessionFactory&) {
-  uint32_t val32;
-  uint64_t val64;
+  uint32_t val32 = 0;
+  uint64_t val64 = 0;
   if (context.getProperty(MinSize, val64)) {
     this->binManager_.setMinSize(val64);
     logger_->log_debug("BinFiles: MinSize [{}]", val64);
@@ -123,7 +123,7 @@ void BinManager::gatherReadyBins() {
 void BinManager::removeOldestBin() {
   std::lock_guard < std::mutex > lock(mutex_);
   std::chrono::system_clock::time_point olddate = std::chrono::system_clock::time_point::max();
-  std::unique_ptr < std::deque<std::unique_ptr<Bin>>>* oldqueue;
+  std::unique_ptr < std::deque<std::unique_ptr<Bin>>>* oldqueue = nullptr;
   for (auto& [_, queue] : groupBinMap_) {
     if (!queue->empty()) {
       std::unique_ptr<Bin> &bin = queue->front();

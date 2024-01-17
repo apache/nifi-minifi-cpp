@@ -77,6 +77,10 @@ This software includes third party software subject to the following copyrights:
 - bitwizeshift.github.io - Copyright (c) 2020 Matthew Rodusek
 - magic_enum - Copyright (c) 2019 - 2023 Daniil Goncharov
 - argparse - Copyright (c) 2018 Pranav Srinivas Kumar <pranav.srinivas.kumar@gmail.com>
+- gRPC - Copyright 2014 gRPC authors.
+- protbuf - Copyright 2008 Google Inc.  All rights reserved.
+- RE2 - Copyright (c) 2009 The RE2 Authors. All rights reserved.
+- c-ares - Copyright (c) 1998 Massachusetts Institute of Technology Copyright (c) 2007 - 2023 Daniel Stenberg with many contributors, see AUTHORS file.
 
 The licenses for these third party components are included in LICENSE.txt
 

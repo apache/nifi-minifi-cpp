@@ -16,7 +16,11 @@
 # specific language governing permissions and limitations
 # under the License.
 #
-file(GLOB GRAFANA_LOKI_TESTS  "*.cpp")
+if (ENABLE_GRPC_FOR_LOKI)
+    file(GLOB GRAFANA_LOKI_TESTS  "*.cpp")
+else()
+    set(GRAFANA_LOKI_TESTS  "PushGrafanaLokiRESTTest.cpp")
+endif()
 
 SET(GRAFANA_LOKI_TEST_COUNT 0)
 FOREACH(testfile ${GRAFANA_LOKI_TESTS})
@@ -24,6 +28,9 @@ FOREACH(testfile ${GRAFANA_LOKI_TESTS})
     add_executable("${testfilename}" "${testfile}")
     target_include_directories(${testfilename} PRIVATE BEFORE "${CMAKE_SOURCE_DIR}/extensions/standard-processors")
     target_include_directories(${testfilename} PRIVATE BEFORE "${CMAKE_SOURCE_DIR}/extensions/grafana-loki")
+    if (ENABLE_GRPC_FOR_LOKI)
+        target_include_directories(${testfilename} PRIVATE BEFORE "${CMAKE_BINARY_DIR}/grafana-loki-protobuf-generated")
+    endif()
     target_include_directories(${testfilename} PRIVATE BEFORE "${CMAKE_SOURCE_DIR}/libminifi/test/")
     target_include_directories(${testfilename} BEFORE PRIVATE "${CMAKE_SOURCE_DIR}/extensions/civetweb/")
     target_include_directories(${testfilename} BEFORE PRIVATE "${CMAKE_SOURCE_DIR}/extensions/http-curl/")

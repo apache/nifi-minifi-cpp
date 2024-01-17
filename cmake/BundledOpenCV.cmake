@@ -40,7 +40,6 @@ function(use_bundled_opencv SOURCE_DIR BINARY_DIR)
     set(OPENCV_BYPRODUCT_DIR "${CMAKE_CURRENT_BINARY_DIR}/thirdparty/opencv-install")
     set(BYPRODUCTS
         "${OPENCV_BYPRODUCT_DIR}/${LIBDIR}/${PREFIX}opencv_flann${SUFFIX}"
-        "${OPENCV_BYPRODUCT_DIR}/${LIBDIR}/${PREFIX}opencv_dnn${SUFFIX}"
         "${OPENCV_BYPRODUCT_DIR}/${LIBDIR}/${PREFIX}opencv_objdetect${SUFFIX}"
         "${OPENCV_BYPRODUCT_DIR}/${LIBDIR}/${PREFIX}opencv_core${SUFFIX}"
         "${OPENCV_BYPRODUCT_DIR}/${LIBDIR}/${PREFIX}opencv_gapi${SUFFIX}"
@@ -68,7 +67,7 @@ function(use_bundled_opencv SOURCE_DIR BINARY_DIR)
             "-DBUILD_TESTS=OFF"
             "-DBUILD_opencv_calib3d=ON"
             "-DBUILD_opencv_core=ON"
-            "-DBUILD_opencv_dnn=ON"
+            "-DBUILD_opencv_dnn=OFF"
             "-DBUILD_opencv_features2d=ON"
             "-DBUILD_opencv_flann=ON"
             "-DBUILD_opencv_gapi=ON"
@@ -98,6 +97,7 @@ function(use_bundled_opencv SOURCE_DIR BINARY_DIR)
             "-DWITH_OPENJPEG=OFF"
             "-DWITH_TIFF=OFF"
             "-DWITH_CAROTENE=OFF"
+            "-DWITH_PROTOBUF=OFF"
     )
 
     append_third_party_passthrough_args(OPENCV_CMAKE_ARGS "${OPENCV_CMAKE_ARGS}")
@@ -149,11 +149,6 @@ function(use_bundled_opencv SOURCE_DIR BINARY_DIR)
     set_target_properties(OPENCV::libopencv-flann PROPERTIES IMPORTED_LOCATION "${OPENCV_BYPRODUCT_DIR}/${LIBDIR}/${PREFIX}opencv_flann${SUFFIX}")
     add_dependencies(OPENCV::libopencv-flann opencv-external)
     target_include_directories(OPENCV::libopencv-flann INTERFACE ${OPENCV_INCLUDE_DIR})
-
-    add_library(OPENCV::libopencv-dnn STATIC IMPORTED)
-    set_target_properties(OPENCV::libopencv-dnn PROPERTIES IMPORTED_LOCATION "${OPENCV_BYPRODUCT_DIR}/${LIBDIR}/${PREFIX}opencv_dnn${SUFFIX}")
-    add_dependencies(OPENCV::libopencv-dnn opencv-external)
-    target_include_directories(OPENCV::libopencv-dnn INTERFACE ${OPENCV_INCLUDE_DIR})
 
     add_library(OPENCV::libopencv-objdetect STATIC IMPORTED)
     set_target_properties(OPENCV::libopencv-objdetect PROPERTIES IMPORTED_LOCATION "${OPENCV_BYPRODUCT_DIR}/${LIBDIR}/${PREFIX}opencv_objdetect${SUFFIX}")
@@ -209,7 +204,7 @@ function(use_bundled_opencv SOURCE_DIR BINARY_DIR)
     target_include_directories(OPENCV::libopencv-features2d INTERFACE ${OPENCV_INCLUDE_DIR})
 
     add_library(OPENCV::libopencv INTERFACE IMPORTED)
-    target_link_libraries(OPENCV::libopencv INTERFACE OPENCV::libopencv-flann OPENCV::libopencv-dnn OPENCV::libopencv-objdetect OPENCV::libopencv-core OPENCV::libopencv-gapi OPENCV::libopencv-imgcodecs OPENCV::libopencv-calib3d OPENCV::libopencv-imgproc OPENCV::libopencv-photo OPENCV::libopencv-videoio OPENCV::libopencv-video OPENCV::libopencv-stitching OPENCV::libopencv-features2d)
+    target_link_libraries(OPENCV::libopencv INTERFACE OPENCV::libopencv-flann OPENCV::libopencv-objdetect OPENCV::libopencv-core OPENCV::libopencv-gapi OPENCV::libopencv-imgcodecs OPENCV::libopencv-calib3d OPENCV::libopencv-imgproc OPENCV::libopencv-photo OPENCV::libopencv-videoio OPENCV::libopencv-video OPENCV::libopencv-stitching OPENCV::libopencv-features2d)
     if (APPLE)
         target_link_libraries(OPENCV::libopencv INTERFACE "-framework AVFoundation" "-framework CoreFoundation" "-framework CoreGraphics" "-framework CoreMedia" "-framework CoreVideo" "-framework Foundation" "-framework OpenCL" "-framework Accelerate")
     endif()

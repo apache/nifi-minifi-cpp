@@ -78,16 +78,12 @@ class GrafanaLokiHandler : public CivetHandler {
   std::string authorization_set_;
 };
 
-class MockGrafanaLoki {
+class MockGrafanaLokiREST {
  public:
-  explicit MockGrafanaLoki(std::string port) :
+  explicit MockGrafanaLokiREST(std::string port) :
       port_(std::move(port)),
       server_{{"listening_ports", port_}, &callbacks_, &logger_} {
     server_.addHandler("/loki/api/v1/push", loki_handler_);
-  }
-
-  [[nodiscard]] const std::string& getPort() const {
-    return port_;
   }
 
   const rapidjson::Document& getLastRequest() const {
@@ -106,7 +102,7 @@ class MockGrafanaLoki {
   CivetLibrary lib_;
   std::string port_;
   CivetCallbacks callbacks_;
-  std::shared_ptr<org::apache::nifi::minifi::core::logging::Logger> logger_ = org::apache::nifi::minifi::core::logging::LoggerFactory<MockGrafanaLoki>::getLogger();
+  std::shared_ptr<org::apache::nifi::minifi::core::logging::Logger> logger_ = org::apache::nifi::minifi::core::logging::LoggerFactory<MockGrafanaLokiREST>::getLogger();
   CivetServer server_;
   GrafanaLokiHandler loki_handler_;
 };

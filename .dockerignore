@@ -57,6 +57,7 @@ extensions/expression-language/Scanner.cpp
 extensions/expression-language/location.hh
 extensions/expression-language/position.hh
 extensions/expression-language/stack.h
+
 thirdparty/uuid/tst_uuid*
 thirdparty/apache-rat/apache-rat*
 thirdparty/**/*.o

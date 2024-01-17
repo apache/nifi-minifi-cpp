@@ -122,6 +122,7 @@ add_minifi_option(ENABLE_KUBERNETES "Enables the Kubernetes extensions." ON)
 add_minifi_option(ENABLE_TEST_PROCESSORS "Enables test processors" OFF)
 add_minifi_option(ENABLE_PROMETHEUS "Enables Prometheus support." ON)
 add_minifi_option(ENABLE_GRAFANA_LOKI "Enable Grafana Loki support" OFF)
+add_minifi_option(ENABLE_GRPC_FOR_LOKI "Enable gRPC for Grafana Loki extension" ON)
 add_minifi_option(DISABLE_JEMALLOC "Disables jemalloc." OFF)
 add_minifi_dependent_option(ENABLE_CONTROLLER "Enables the build of MiNiFi controller binary." ON "NOT DISABLE_CURL" OFF)
 

@@ -16,7 +16,7 @@
  */
 
 #include "../PushGrafanaLokiREST.h"
-#include "MockGrafanaLoki.h"
+#include "MockGrafanaLokiREST.h"
 #include "SingleProcessorTestController.h"
 #include "Catch.h"
 #include "utils/StringUtils.h"
@@ -153,7 +153,7 @@ class PushGrafanaLokiRESTTestFixture {
   }
 
  protected:
-  MockGrafanaLoki mock_loki_;
+  MockGrafanaLokiREST mock_loki_;
   std::shared_ptr<PushGrafanaLokiREST> push_grafana_loki_rest_;
   minifi::test::SingleProcessorTestController test_controller_;
 };
@@ -162,9 +162,9 @@ TEST_CASE_METHOD(PushGrafanaLokiRESTTestFixture, "PushGrafanaLokiREST should sen
   uint64_t start_timestamp = std::chrono::system_clock::now().time_since_epoch() / std::chrono::nanoseconds(1);
   setProperty(PushGrafanaLokiREST::LogLineBatchSize, "1");
   setProperty(PushGrafanaLokiREST::MaxBatchSize, "1");
-  auto results = test_controller_.trigger({minifi::test::InputFlowFileData{"log line 1", {}}, minifi::test::InputFlowFileData{"log line 2", {}}});
+  auto results = test_controller_.trigger({minifi::test::InputFlowFileData{"孫子兵法", {}}, minifi::test::InputFlowFileData{"Война и мир", {}}});
   verifyStreamLabels();
-  std::vector<std::string> expected_log_values = {"log line 1"};
+  std::vector<std::string> expected_log_values = {"孫子兵法"};
   verifySentRequestToLoki(start_timestamp, expected_log_values);
   verifyTransferredFlowContent(results.at(PushGrafanaLokiREST::Success), expected_log_values);
 }

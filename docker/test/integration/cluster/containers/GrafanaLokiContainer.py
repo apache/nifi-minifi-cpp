@@ -57,6 +57,40 @@ class GrafanaLokiContainer(Container):
     key_file: /etc/loki/key.pem
     client_ca_file: /etc/loki/root_ca.crt
     client_auth_type: VerifyClientCertIfGiven
+
+  grpc_tls_config:
+    cert_file: /etc/loki/cert.pem
+    key_file: /etc/loki/key.pem
+    client_ca_file: /etc/loki/root_ca.crt
+    client_auth_type: VerifyClientCertIfGiven
+
+query_scheduler:
+  grpc_client_config:
+    grpc_compression: snappy
+    tls_enabled: true
+    tls_ca_path: /etc/loki/root_ca.crt
+    tls_insecure_skip_verify: true
+
+ingester_client:
+  grpc_client_config:
+    grpc_compression: snappy
+    tls_enabled: true
+    tls_ca_path: /etc/loki/root_ca.crt
+    tls_insecure_skip_verify: true
+
+frontend:
+  grpc_client_config:
+    grpc_compression: snappy
+    tls_enabled: true
+    tls_ca_path: /etc/loki/root_ca.crt
+    tls_insecure_skip_verify: true
+
+frontend_worker:
+  grpc_client_config:
+    grpc_compression: snappy
+    tls_enabled: true
+    tls_ca_path: /etc/loki/root_ca.crt
+    tls_insecure_skip_verify: true
 """
 
         grafana_loki_yml_content = """
@@ -64,6 +98,7 @@ auth_enabled: {enable_multi_tenancy}
 
 server:
   http_listen_port: 3100
+  grpc_listen_port: 9095
 {extra_ssl_settings}
 
 common:
