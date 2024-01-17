@@ -46,6 +46,7 @@ Controller Services:
     Connection String: Driver={PostgreSQL ANSI};Server=postgresql-server;Port=5432;Database=postgres;Uid=postgres;Pwd=password;
 Connections:
 - name: QueryDatabaseTable/success/PutFile
+  id: 2308c4f7-4710-4bd1-a949-141265771b2f
   destination id: 32700228-e078-42a6-89d7-03e4e478c9da
   source id: 0bd6ebcd-7fef-47e3-8e36-4413d39d01d5
   source relationship name: success

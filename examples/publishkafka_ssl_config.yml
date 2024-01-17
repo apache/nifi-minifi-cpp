@@ -48,6 +48,7 @@ Processors:
     Topic Name: test
 Connections:
 - name: GetFile/success/PublishKafka
+  id: ab45e106-3d97-4a59-8021-e50aa68f1a32
   source id: a78f9d7d-cc68-4f30-aac1-ee716d42bf9d
   source relationship name: success
   destination id: 8c0791c7-920c-4541-bcde-f5d559f42ed2

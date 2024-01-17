@@ -39,6 +39,7 @@ Processors:
     Create Container: 'true'
 Connections:
 - name: GetFile/success/PutAzureBlobStorage
+  id: 781aa97f-534f-416a-985c-dc046e2a527a
   source id: d5fef466-fef0-4d90-814e-9c19a67e454a
   source relationship name: success
   destination id: e7b3f9c6-d1ee-4d9b-b676-48c872cc7ae3

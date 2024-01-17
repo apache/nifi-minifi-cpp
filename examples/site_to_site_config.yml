@@ -37,6 +37,7 @@ Remote Processing Groups:
   yield period: 3 sec
 Connections:
 - name: GetFile/success/RPG
+  id: 3952ac3c-c0a8-46fe-936a-e9faa7123275
   source id: 45c2a56e-7c29-42f3-8c1d-89c0c84a6ee7
   source relationship name: success
   destination id: 4222cd3a-746e-3497-abd0-b7695faa750c
