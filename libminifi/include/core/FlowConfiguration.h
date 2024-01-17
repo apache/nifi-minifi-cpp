@@ -132,9 +132,6 @@ class FlowConfiguration : public CoreComponent {
 
   utils::ChecksumCalculator& getChecksumCalculator() { return checksum_calculator_; }
 
-  [[nodiscard]] std::string decryptProperty(std::string_view encrypted_value) const;
-  [[nodiscard]] std::string encryptProperty(std::string_view cleartext_value) const;
-
  protected:
   // service provider reference.
   std::shared_ptr<core::controller::StandardControllerServiceProvider> service_provider_;
@@ -151,7 +148,6 @@ class FlowConfiguration : public CoreComponent {
   std::shared_ptr<utils::file::FileSystem> filesystem_;
   utils::crypto::EncryptionProvider sensitive_properties_encryptor_;
   utils::ChecksumCalculator checksum_calculator_;
-  FlowSerializationType flow_serialization_type_ = FlowSerializationType::Json;
 
  private:
   bool persist(const std::string& serialized_flow);

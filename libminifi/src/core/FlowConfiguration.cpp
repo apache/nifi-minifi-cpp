@@ -181,29 +181,4 @@ std::shared_ptr<core::controller::ControllerServiceNode> FlowConfiguration::crea
   return controllerServicesNode;
 }
 
-namespace {
-inline constexpr std::string_view WrapperBegin = "enc{";
-inline constexpr std::string_view WrapperEnd = "}";
-
-bool isEncrypted(std::string_view value) {
-  return (value.starts_with(WrapperBegin) && value.ends_with(WrapperEnd));
-}
-}  // namespace
-
-std::string FlowConfiguration::decryptProperty(std::string_view encrypted_value) const {
-  if (!isEncrypted(encrypted_value)) {
-    // this is normal: sensitive properties come from the C2 server in cleartext over TLS
-    return std::string{encrypted_value};
-  }
-  auto unwrapped_value = encrypted_value.substr(WrapperBegin.size(), encrypted_value.length() - (WrapperBegin.size() + WrapperEnd.size()));
-  return sensitive_properties_encryptor_.decrypt(unwrapped_value);
-}
-
-std::string FlowConfiguration::encryptProperty(std::string_view cleartext_value) const {
-  if (isEncrypted(cleartext_value)) {
-    return std::string{cleartext_value};
-  }
-  return utils::string::join_pack("enc{", sensitive_properties_encryptor_.encrypt(cleartext_value), "}");
-}
-
 }  // namespace org::apache::nifi::minifi::core

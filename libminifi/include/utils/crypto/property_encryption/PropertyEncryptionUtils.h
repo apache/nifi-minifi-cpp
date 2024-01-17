@@ -1,5 +1,4 @@
 /**
- *
  * Licensed to the Apache Software Foundation (ASF) under one or more
  * contributor license agreements.  See the NOTICE file distributed with
  * this work for additional information regarding copyright ownership.
@@ -15,25 +14,17 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 #pragma once
 
 #include <string>
-#include <memory>
-#include <vector>
+#include <string_view>
 
-#include "StructuredConfiguration.h"
+#include "utils/crypto/EncryptionProvider.h"
 
-namespace org::apache::nifi::minifi::core::flow {
+namespace org::apache::nifi::minifi::utils::crypto::property_encryption {
 
-class AdaptiveConfiguration : public StructuredConfiguration {
- public:
-  explicit AdaptiveConfiguration(ConfigurationContext ctx);
+std::string decrypt(std::string_view input, const EncryptionProvider& encryption_provider);
+std::string encrypt(std::string_view input, const EncryptionProvider& encryption_provider);
 
-  std::vector<std::string> getSupportedFormats() const override {
-    return {"application/json", "text/yml"};
-  }
-
-  std::unique_ptr<core::ProcessGroup> getRootFromPayload(const std::string &payload) override;
-};
-
-}  // namespace org::apache::nifi::minifi::core::flow
+}  // namespace org::apache::nifi::minifi::utils::crypto::property_encryption

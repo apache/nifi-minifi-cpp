@@ -18,7 +18,9 @@
 
 #include "core/flow/AdaptiveConfiguration.h"
 
+#include "core/json/JsonFlowSerializer.h"
 #include "core/json/JsonNode.h"
+#include "core/yaml/YamlFlowSerializer.h"
 #include "core/yaml/YamlNode.h"
 #include "yaml-cpp/yaml.h"
 #include "utils/file/FileUtils.h"
@@ -44,37 +46,28 @@ std::unique_ptr<core::ProcessGroup> AdaptiveConfiguration::getRootFromPayload(co
   rapidjson::Document doc;
   rapidjson::ParseResult res = doc.Parse(payload.c_str(), payload.length());
   if (res) {
-    flow_definition_json_.Swap(doc);
-    flow::Node root{std::make_shared<JsonNode>(&flow_definition_json_)};
+    flow::Node root{std::make_shared<JsonNode>(&doc)};
+    const auto at_exit = gsl::finally([&] { flow_serializer_ = std::make_unique<core::json::JsonFlowSerializer>(std::move(doc)); });
     if (root[FlowSchema::getDefault().flow_header]) {
       logger_->log_debug("Processing configuration as default json");
-      flow_serialization_type_ = FlowSerializationType::Json;
       return getRootFrom(root, FlowSchema::getDefault());
     } else {
       logger_->log_debug("Processing configuration as nifi flow json");
-      flow_serialization_type_ = FlowSerializationType::NifiJson;
       return getRootFrom(root, FlowSchema::getNiFiFlowJson());
     }
   }
+
   logger_->log_debug("Could not parse configuration as json, trying yaml");
 
   try {
-    flow_definition_yaml_ = YAML::Load(payload);
-    flow::Node root{std::make_shared<YamlNode>(flow_definition_yaml_)};
-    flow_serialization_type_ = FlowSerializationType::Yaml;
+    YAML::Node rootYamlNode = YAML::Load(payload);
+    flow::Node root{std::make_shared<YamlNode>(rootYamlNode)};
+    flow_serializer_ = std::make_unique<core::yaml::YamlFlowSerializer>(rootYamlNode);
     return getRootFrom(root, FlowSchema::getDefault());
   } catch (const YAML::ParserException& ex) {
     logger_->log_error("Configuration file is not valid json: {} ({})", rapidjson::GetParseError_En(res.Code()), gsl::narrow<size_t>(res.Offset()));
     logger_->log_error("Configuration file is not valid yaml: {}", ex.what());
     throw;
-  }
-}
-
-std::string AdaptiveConfiguration::serialize(const core::ProcessGroup& process_group) {
-  if (flow_serialization_type_ == FlowSerializationType::Yaml) {
-    return serializeYaml(process_group);
-  } else {
-    return serializeJson(process_group);
   }
 }
 
