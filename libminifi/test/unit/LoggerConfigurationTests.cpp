@@ -53,7 +53,12 @@ class TestLoggerConfiguration : public logging::LoggerConfiguration {
   static std::shared_ptr<spdlog::logger> get_logger(const std::shared_ptr<logging::internal::LoggerNamespace> &root_namespace,
       const std::string &name,
       const std::shared_ptr<spdlog::formatter>& formatter) {
-    return logging::LoggerConfiguration::get_logger(root_namespace, name, formatter);
+    auto& config = getConfiguration();
+    // TODO(MINIFICPP-2289) This is an ugly hack so we dont lose test coverage
+    // It should not be this easy to override the lock requirement
+    std::mutex mutex;
+    const std::lock_guard<std::mutex> lock(mutex);
+    return config.get_logger(lock, root_namespace, name, formatter);
   }
 };
 
