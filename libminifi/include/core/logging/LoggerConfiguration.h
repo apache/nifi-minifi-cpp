@@ -34,13 +34,11 @@
 #include "spdlog/sinks/sink.h"
 #include "spdlog/logger.h"
 #include "spdlog/formatter.h"
-#include "spdlog/pattern_formatter.h"
 
 #include "core/Core.h"
 #include "core/logging/Logger.h"
 #include "LoggerProperties.h"
 #include "internal/CompressionManager.h"
-#include "core/logging/LoggerFactory.h"
 #include "alert/AlertSink.h"
 
 class LoggerTestAccessor;
@@ -61,7 +59,7 @@ struct LoggerNamespace {
   void forEachSink(const std::function<void(const std::shared_ptr<spdlog::sinks::sink>&)>& op) const;
 };
 
-inline std::optional<std::string> formatId(std::optional<utils::Identifier> opt_id) {
+inline std::optional<std::string> formatId(const std::optional<utils::Identifier>& opt_id) {
   return opt_id | utils::transform([](auto id) { return " (" + std::string(id.to_string()) + ")"; });
 }
 
@@ -118,8 +116,19 @@ class LoggerConfiguration {
 
  protected:
   static std::shared_ptr<internal::LoggerNamespace> initialize_namespaces(const std::shared_ptr<LoggerProperties> &logger_properties, const std::shared_ptr<Logger> &logger = {});
-  static std::shared_ptr<spdlog::logger> get_logger(const std::shared_ptr<Logger>& logger, const std::shared_ptr<internal::LoggerNamespace> &root_namespace, std::string_view name_view,
-                                                    const std::shared_ptr<spdlog::formatter>& formatter, bool remove_if_present = false);
+  static std::shared_ptr<spdlog::logger> get_logger(const std::lock_guard<std::mutex>&,
+      const std::shared_ptr<internal::LoggerNamespace> &root_namespace,
+      const std::string& name,
+      const std::shared_ptr<spdlog::formatter>& formatter);
+  static std::shared_ptr<spdlog::logger> create_logger(const std::lock_guard<std::mutex>&,
+      const std::shared_ptr<internal::LoggerNamespace> &root_namespace,
+      const std::string& name,
+      const std::shared_ptr<spdlog::formatter>& formatter);
+  static void setupSpdLogger(const std::lock_guard<std::mutex>&,
+      const std::shared_ptr<spdlog::logger>& spd_logger,
+      const std::shared_ptr<internal::LoggerNamespace> &root_namespace,
+      const std::string& name,
+      const std::shared_ptr<spdlog::formatter>& formatter);
 
  private:
   std::shared_ptr<Logger> getLogger(std::string_view name, const std::optional<utils::Identifier>& id, const std::lock_guard<std::mutex>& lock);
@@ -135,9 +144,9 @@ class LoggerConfiguration {
 
   class LoggerImpl : public Logger {
    public:
-    explicit LoggerImpl(std::string_view name, std::optional<utils::Identifier> id, const std::shared_ptr<LoggerControl> &controller, const std::shared_ptr<spdlog::logger> &delegate)
+    explicit LoggerImpl(std::string name, const std::optional<utils::Identifier>& id, const std::shared_ptr<LoggerControl> &controller, const std::shared_ptr<spdlog::logger> &delegate)
         : Logger(delegate, controller),
-          name(name),
+          name(std::move(name)),
           id(internal::formatId(id)) {
     }
 
@@ -157,9 +166,15 @@ class LoggerConfiguration {
   LoggerConfiguration();
   internal::CompressionManager compression_manager_;
   std::shared_ptr<internal::LoggerNamespace> root_namespace_;
-  std::vector<std::shared_ptr<LoggerImpl>> loggers;
+
+  struct LoggerId {
+    std::string name;
+    std::optional<utils::Identifier> uuid;
+  };
+  LoggerId calculateLoggerId(std::string_view name, const std::optional<utils::Identifier>& id) const;
+
   std::shared_ptr<spdlog::formatter> formatter_;
-  std::mutex mutex;
+  std::mutex mutex_;
   std::shared_ptr<LoggerImpl> logger_ = nullptr;
   std::shared_ptr<LoggerControl> controller_;
   std::unordered_set<std::shared_ptr<AlertSink>> alert_sinks_;

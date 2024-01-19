@@ -39,7 +39,6 @@
 
 #include "TestBase.h"
 #include "Catch.h"
-#include "utils/StringUtils.h"
 #include "utils/file/FileUtils.h"
 #include "core/Core.h"
 #include "core/logging/Logger.h"
@@ -50,7 +49,6 @@
 #include "processors/ListSFTP.h"
 #include "processors/GenerateFlowFile.h"
 #include "processors/LogAttribute.h"
-#include "processors/UpdateAttribute.h"
 #include "tools/SFTPTestServer.h"
 #include "utils/TestUtils.h"
 
@@ -59,6 +57,7 @@ using namespace std::literals::chrono_literals;
 class ListSFTPTestsFixture {
  public:
   explicit ListSFTPTestsFixture(const std::shared_ptr<minifi::Configure>& configuration = nullptr) {
+    LogTestController::getInstance().reset();
     LogTestController::getInstance().setTrace<TestPlan>();
     LogTestController::getInstance().setDebug<minifi::FlowController>();
     LogTestController::getInstance().setDebug<minifi::SchedulingAgent>();
@@ -89,11 +88,9 @@ class ListSFTPTestsFixture {
   ListSFTPTestsFixture& operator=(ListSFTPTestsFixture&&) = delete;
   ListSFTPTestsFixture& operator=(const ListSFTPTestsFixture&) = delete;
 
-  virtual ~ListSFTPTestsFixture() {
-    LogTestController::getInstance().reset();
-  }
+  virtual ~ListSFTPTestsFixture() = default;
 
-  void createPlan(utils::Identifier* list_sftp_uuid = nullptr, const std::shared_ptr<minifi::Configure>& configuration = nullptr) {
+  void createPlan(const utils::Identifier* list_sftp_uuid = nullptr, const std::shared_ptr<minifi::Configure>& configuration = nullptr) {
     const auto state_dir = plan == nullptr ? testController.createTempDirectory() : plan->getStateDir();
 
     log_attribute.reset();
@@ -144,9 +141,9 @@ class ListSFTPTestsFixture {
   }
 
   // Create source file
-  void createFile(const std::filesystem::path& relative_path, const std::string& content, std::optional<std::chrono::file_clock::time_point> modification_time) {
+  void createFile(const std::filesystem::path& relative_path, const std::string& content, const std::optional<std::chrono::file_clock::time_point>& modification_time) const {
     std::fstream file;
-    std::filesystem::path full_path = working_directory / "vfs" / relative_path;
+    const auto full_path = working_directory / "vfs" / relative_path;
     std::filesystem::create_directories(full_path.parent_path());
     file.open(full_path, std::ios::out);
     file << content;
@@ -156,7 +153,7 @@ class ListSFTPTestsFixture {
     }
   }
 
-  void createFileWithModificationTimeDiff(const std::filesystem::path& relative_path, const std::string& content, std::chrono::seconds modification_timediff = -5min) {
+  void createFileWithModificationTimeDiff(const std::filesystem::path& relative_path, const std::string& content, std::chrono::seconds modification_timediff = -5min) const {
     return createFile(relative_path, content, std::chrono::file_clock::now() + modification_timediff);
   }
 

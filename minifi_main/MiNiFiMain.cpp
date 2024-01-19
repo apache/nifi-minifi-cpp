@@ -46,7 +46,6 @@
 #include <atomic>
 #include <cstdlib>
 #include <iostream>
-#include <memory>
 #include <vector>
 
 #include "ResourceClaim.h"
@@ -69,7 +68,6 @@
 #include "agent/JsonSchema.h"
 #include "core/state/nodes/ResponseNodeLoader.h"
 #include "c2/C2Agent.h"
-#include "core/state/MetricsPublisherFactory.h"
 #include "core/state/MetricsPublisherStore.h"
 #include "argparse/argparse.hpp"
 #include "agent/agent_version.h"
@@ -116,8 +114,8 @@ void sigHandler(int signal) {
   }
 }
 
-void dumpDocs(const std::shared_ptr<minifi::Configure> &configuration, const std::string &dir) {
-  auto pythoncreator = core::ClassLoader::getDefaultClassLoader().instantiate("PythonCreator", "PythonCreator");
+void dumpDocs(const std::shared_ptr<minifi::Configure>& configuration, const std::string& dir) {
+  const auto pythoncreator = core::ClassLoader::getDefaultClassLoader().instantiate("PythonCreator", "PythonCreator");
   if (nullptr != pythoncreator) {
     pythoncreator->configure(configuration);
   }
@@ -127,8 +125,8 @@ void dumpDocs(const std::shared_ptr<minifi::Configure> &configuration, const std
   docsCreator.generate(dir);
 }
 
-void writeJsonSchema(const std::shared_ptr<minifi::Configure> &configuration, std::ostream& out) {
-  auto pythoncreator = core::ClassLoader::getDefaultClassLoader().instantiate("PythonCreator", "PythonCreator");
+void writeJsonSchema(const std::shared_ptr<minifi::Configure>& configuration, std::ostream& out) {
+  const auto pythoncreator = core::ClassLoader::getDefaultClassLoader().instantiate("PythonCreator", "PythonCreator");
   if (nullptr != pythoncreator) {
     pythoncreator->configure(configuration);
   }
@@ -174,7 +172,7 @@ void writeSchemaIfRequested(const argparse::ArgumentParser& parser, const std::s
     std::exit(1);
   }
 
-  auto parent_dir = std::filesystem::path(schema_path).parent_path();
+  const auto parent_dir = std::filesystem::path(schema_path).parent_path();
   if (utils::file::create_dir(parent_dir) != 0) {
     std::cerr << "JSON schema parent directory doesn't exist and cannot be created: " << parent_dir << std::endl;
     std::exit(1);
@@ -224,8 +222,10 @@ int main(int argc, char **argv) {
   if (utils::Environment::isRunningAsService()) {
     setSyslogLogger();
   }
-  const auto logger = core::logging::LoggerConfiguration::getConfiguration().getLogger("main");
-
+  auto& logger_configuration = core::logging::LoggerConfiguration::getConfiguration();
+  const auto logger = logger_configuration.getLogger("main");
+  auto startup_timepoint = std::chrono::system_clock::now();
+  auto log_runtime = gsl::finally([&](){logger->log_info("Runtime was {}", std::chrono::system_clock::now()-startup_timepoint);});
 #ifdef WIN32
   if (isStartedByService) {
     if (!CreateServiceTerminationThread(logger, terminationEventHandler)) {
@@ -311,7 +311,7 @@ int main(int argc, char **argv) {
     log_properties->setHome(minifiHome);
     log_properties->loadConfigureFile(DEFAULT_LOG_PROPERTIES_FILE, "nifi.log.");
 
-    core::logging::LoggerConfiguration::getConfiguration().initialize(log_properties);
+    logger_configuration.initialize(log_properties);
 
     std::shared_ptr<minifi::Properties> uid_properties = std::make_shared<minifi::Properties>("UID properties");
     uid_properties->setHome(minifiHome);
@@ -404,7 +404,7 @@ int main(int argc, char **argv) {
     auto metrics_publisher_store = std::make_unique<minifi::state::MetricsPublisherStore>(configure, repo_metric_sources, flow_configuration);
 
     const auto controller = std::make_unique<minifi::FlowController>(
-      prov_repo, flow_repo, configure, std::move(flow_configuration), content_repo, std::move(metrics_publisher_store), filesystem, request_restart);
+        prov_repo, flow_repo, configure, std::move(flow_configuration), content_repo, std::move(metrics_publisher_store), filesystem, request_restart);
 
     const bool disk_space_watchdog_enable = configure->get(minifi::Configure::minifi_disk_space_watchdog_enable)
         | utils::andThen(utils::string::toBool)
@@ -465,12 +465,10 @@ int main(int argc, char **argv) {
     // Load flow from specified configuration file
     try {
       controller->load();
-    }
-    catch (std::exception& e) {
+    } catch (std::exception& e) {
       logger->log_error("Failed to load configuration due to exception: {}", e.what());
       return -1;
-    }
-    catch (...) {
+    } catch (...) {
       logger->log_error("Failed to load configuration due to unknown exception");
       return -1;
     }

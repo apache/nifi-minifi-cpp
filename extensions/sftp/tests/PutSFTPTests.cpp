@@ -41,19 +41,16 @@
 #include "Catch.h"
 #include "Exception.h"
 #include "date/date.h"
-#include "utils/StringUtils.h"
 #include "utils/file/FileUtils.h"
 #include "core/Core.h"
 #include "core/logging/Logger.h"
 #include "core/ProcessGroup.h"
 #include "FlowController.h"
-#include "properties/Configure.h"
 #include "unit/ProvenanceTestHelper.h"
 #include "processors/PutSFTP.h"
 #include "processors/GetFile.h"
 #include "processors/LogAttribute.h"
 #include "processors/ExtractText.h"
-#include "processors/UpdateAttribute.h"
 #include "tools/SFTPTestServer.h"
 
 constexpr const char* PUBLIC_KEY_AUTH_ERROR_MESSAGE = "Failed to authenticate with publickey, error: Unable to extract public key from private key file: Wrong passphrase or invalid/unrecognized private key file format";  // NOLINT(whitespace/line_length)
@@ -62,6 +59,7 @@ using namespace std::literals::chrono_literals;
 class PutSFTPTestsFixture {
  public:
   PutSFTPTestsFixture() {
+    LogTestController::getInstance().reset();
     LogTestController::getInstance().setTrace<TestPlan>();
     LogTestController::getInstance().setDebug<minifi::FlowController>();
     LogTestController::getInstance().setDebug<minifi::SchedulingAgent>();
@@ -124,9 +122,7 @@ class PutSFTPTestsFixture {
   PutSFTPTestsFixture& operator=(PutSFTPTestsFixture&&) = delete;
   PutSFTPTestsFixture& operator=(const PutSFTPTestsFixture&) = delete;
 
-  virtual ~PutSFTPTestsFixture() {
-    LogTestController::getInstance().reset();
-  }
+  virtual ~PutSFTPTestsFixture() = default;
 
   // Create source file
   static void createFile(const std::string &dir, const std::string& relative_path, const std::string& content) {
@@ -139,7 +135,7 @@ class PutSFTPTestsFixture {
   }
 
   // Test target file
-  void testFile(const std::string& relative_path, const std::string& expected_content) {
+  void testFile(const std::string& relative_path, const std::string& expected_content) const {
     auto result_file = dst_dir / "vfs" / relative_path;
     std::ifstream file(result_file);
     REQUIRE(true == file.good());
@@ -152,27 +148,27 @@ class PutSFTPTestsFixture {
     REQUIRE(expected_content == content.str());
   }
 
-  void testFileNotExists(const std::string& relative_path) {
+  void testFileNotExists(const std::string& relative_path) const {
     auto result_file = dst_dir / "vfs" / relative_path;
     std::ifstream file(result_file);
     REQUIRE(false == file.is_open());
     REQUIRE(false == file.good());
   }
 
-  void testModificationTime(const std::string& relative_path, std::chrono::file_clock::time_point mtime) {
-    auto result_file = dst_dir / "vfs" / relative_path;
+  void testModificationTime(const std::string& relative_path, std::chrono::file_clock::time_point mtime) const {
+    const auto result_file = dst_dir / "vfs" / relative_path;
     REQUIRE(mtime == utils::file::last_write_time(result_file).value());
   }
 
-  void testPermissions(const std::string& relative_path, uint32_t expected_permissions) {
-    auto result_file = dst_dir / "vfs" / relative_path;
+  void testPermissions(const std::string& relative_path, uint32_t expected_permissions) const {
+    const auto result_file = dst_dir / "vfs" / relative_path;
     uint32_t permissions = 0U;
     REQUIRE(true == utils::file::get_permissions(result_file, permissions));
     REQUIRE(expected_permissions == permissions);
   }
 
-  void testOwner(const std::string& relative_path, uint64_t expected_uid) {
-    auto result_file = dst_dir / "vfs" / relative_path;
+  void testOwner(const std::string& relative_path, uint64_t expected_uid) const {
+    const auto result_file = dst_dir / "vfs" / relative_path;
 
     uint64_t uid = 0U;
     uint64_t gid = 0U;
@@ -180,8 +176,8 @@ class PutSFTPTestsFixture {
     REQUIRE(expected_uid == uid);
   }
 
-  void testGroup(const std::string& relative_path, uint64_t expected_gid) {
-    auto result_file = dst_dir / "vfs" / relative_path;
+  void testGroup(const std::string& relative_path, uint64_t expected_gid) const {
+    const auto result_file = dst_dir / "vfs" / relative_path;
 
     uint64_t uid = 0U;
     uint64_t gid = 0U;
@@ -230,7 +226,7 @@ TEST_CASE_METHOD(PutSFTPTestsFixture, "PutSFTP bad password", "[PutSFTP][authent
   try {
     testController.runSession(plan, true);
   } catch (std::exception &e) {
-    std::string expected = minifi::Exception(minifi::PROCESS_SESSION_EXCEPTION, "Can not find the transfer relationship for the updated flow").what();
+    const std::string expected = minifi::Exception(minifi::PROCESS_SESSION_EXCEPTION, "Can not find the transfer relationship for the updated flow").what();
     REQUIRE(0 == std::string(e.what()).compare(0, expected.size(), expected));
   }
 
@@ -260,7 +256,7 @@ TEST_CASE_METHOD(PutSFTPTestsFixture, "PutSFTP public key authentication bad pas
   try {
     testController.runSession(plan, true);
   } catch (std::exception &e) {
-    std::string expected = minifi::Exception(minifi::PROCESS_SESSION_EXCEPTION, "Can not find the transfer relationship for the updated flow").what();
+    const std::string expected = minifi::Exception(minifi::PROCESS_SESSION_EXCEPTION, "Can not find the transfer relationship for the updated flow").what();
     REQUIRE(0 == std::string(e.what()).compare(0, expected.size(), expected));
   }
   REQUIRE(LogTestController::getInstance().contains(PUBLIC_KEY_AUTH_ERROR_MESSAGE));
@@ -303,7 +299,7 @@ TEST_CASE_METHOD(PutSFTPTestsFixture, "PutSFTP host key checking missing strict"
   try {
     testController.runSession(plan, true);
   } catch (std::exception &e) {
-    std::string expected = minifi::Exception(minifi::PROCESS_SESSION_EXCEPTION, "Can not find the transfer relationship for the updated flow").what();
+    const std::string expected = minifi::Exception(minifi::PROCESS_SESSION_EXCEPTION, "Can not find the transfer relationship for the updated flow").what();
     REQUIRE(0 == std::string(e.what()).compare(0, expected.size(), expected));
   }
 
@@ -333,7 +329,7 @@ TEST_CASE_METHOD(PutSFTPTestsFixture, "PutSFTP host key checking mismatch strict
   try {
     testController.runSession(plan, true);
   } catch (std::exception &e) {
-    std::string expected = minifi::Exception(minifi::PROCESS_SESSION_EXCEPTION, "Can not find the transfer relationship for the updated flow").what();
+    const std::string expected = minifi::Exception(minifi::PROCESS_SESSION_EXCEPTION, "Can not find the transfer relationship for the updated flow").what();
     REQUIRE(0 == std::string(e.what()).compare(0, expected.size(), expected));
   }
 
@@ -501,7 +497,7 @@ TEST_CASE_METHOD(PutSFTPTestsFixture, "PutSFTP set mtime", "[PutSFTP]") {
   testController.runSession(plan, true);
 
   testFile("nifi_test/tstFile1.ext", "content 1");
-  std::chrono::system_clock::time_point modification_time = date::sys_days(date::January / 24 / 2065) + 5h + 20min;
+  constexpr auto modification_time = date::sys_days(date::January / 24 / 2065) + 5h + 20min;
   testModificationTime("nifi_test/tstFile1.ext", utils::file::from_sys(modification_time));
 }
 
@@ -663,13 +659,13 @@ TEST_CASE_METHOD(PutSFTPTestsFixture, "PutSFTP connection caching does not reuse
   createFile(src_dir, "tstFile1.ext", "content 1");
 
   /* Simulate connection failure */
-  auto port = sftp_server->getPort();
+  const auto port = sftp_server->getPort();
   sftp_server.reset();
 
   try {
     testController.runSession(plan, true);
   } catch (std::exception &e) {
-    std::string expected = minifi::Exception(minifi::PROCESS_SESSION_EXCEPTION, "Can not find the transfer relationship for the updated flow").what();
+    const std::string expected = minifi::Exception(minifi::PROCESS_SESSION_EXCEPTION, "Can not find the transfer relationship for the updated flow").what();
     REQUIRE(0 == std::string(e.what()).compare(0, expected.size(), expected));
   }
 
@@ -815,7 +811,7 @@ TEST_CASE_METHOD(PutSFTPTestsFixture, "PutSFTP expression language test", "[PutS
   get_file = plan->addProcessor(
       "GetFile",
       "GetFile");
-  auto update_attribute = plan->addProcessor(
+  const auto update_attribute = plan->addProcessor(
       "UpdateAttribute",
       "UpdateAttribute",
       core::Relationship("success", "d"),

@@ -33,7 +33,6 @@
 #include "unit/ProvenanceTestHelper.h"
 #include "utils/ClassUtils.h"
 #include "utils/IntegrationTestUtils.h"
-#include "core/extension/ExtensionManager.h"
 #include "utils/Id.h"
 #include "utils/StringUtils.h"
 #include "utils/span.h"
@@ -67,7 +66,9 @@ void LogTestController::setLevel(std::string_view name, spdlog::level::level_enu
   if (config && config->shortenClassNames()) {
     minifi::utils::ClassUtils::shortenClassName(adjusted_name, adjusted_name);
   }
-  logging::LoggerConfiguration::getSpdlogLogger(adjusted_name)->set_level(level);
+  if (const auto spd_logger = logging::LoggerConfiguration::getSpdlogLogger(adjusted_name)) {
+    spd_logger->set_level(level);
+  }
 }
 
 std::shared_ptr<logging::Logger> LogTestController::getLoggerByClassName(std::string_view class_name, const std::optional<utils::Identifier>& id) {
@@ -91,7 +92,7 @@ void LogTestController::setLevelByClassName(spdlog::level::level_enum level, std
   }
 }
 
-bool LogTestController::contains(const std::ostringstream& stream, const std::string& ending, std::chrono::milliseconds timeout, std::chrono::milliseconds sleep_interval) const {
+bool LogTestController::contains(const std::ostringstream& stream, const std::string& ending, std::chrono::milliseconds timeout, std::chrono::milliseconds sleep_interval) {
   return contains([&stream](){ return stream.str(); }, ending, timeout, sleep_interval);
 }
 
@@ -99,7 +100,7 @@ bool LogTestController::contains(const std::string& ending, std::chrono::millise
   return contains([this](){ return getLogs(); }, ending, timeout, sleep_interval);
 }
 
-bool LogTestController::contains(const std::function<std::string()>& log_string_getter, const std::string& ending, std::chrono::milliseconds timeout, std::chrono::milliseconds sleep_interval) const {
+bool LogTestController::contains(const std::function<std::string()>& log_string_getter, const std::string& ending, std::chrono::milliseconds timeout, std::chrono::milliseconds sleep_interval) {
   if (ending.length() == 0) {
     return false;
   }
@@ -116,7 +117,6 @@ bool LogTestController::contains(const std::function<std::string()>& log_string_
     }
   } while (!found && !timed_out);
 
-  logger_->log_info("{} {} in log output.", found ? "Successfully found" : "Failed to find", ending);
   return found;
 }
 
