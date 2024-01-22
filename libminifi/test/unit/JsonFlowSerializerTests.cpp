@@ -29,7 +29,82 @@
 namespace core = org::apache::nifi::minifi::core;
 namespace utils = org::apache::nifi::minifi::utils;
 
-constexpr std::string_view config_json = R"({
+constexpr std::string_view config_json_with_default_schema = R"({
+  "MiNiFi Config Version": 3,
+  "Flow Controller": {
+    "name": "MiNiFi Flow"
+  },
+  "Processors": [
+    {
+      "name": "Generate random data",
+      "id": "aabb6d26-8a8d-4338-92c9-1b8c67ec18e0",
+      "class": "org.apache.nifi.minifi.processors.GenerateFlowFile",
+      "scheduling strategy": "TIMER_DRIVEN",
+      "scheduling period": "15 sec",
+      "Properties": {
+        "File Size": "100B",
+        "Batch Size": "1",
+        "Unique FlowFiles": "true",
+        "Data Format": "Text"
+      }
+    },
+    {
+      "name": "Post files via secure HTTP",
+      "id": "469617f1-3898-4bbf-91fe-27d8f4dd2a75",
+      "class": "org.apache.nifi.minifi.processors.InvokeHTTP",
+      "scheduling strategy": "EVENT_DRIVEN",
+      "auto-terminated relationships list": ["success", "response", "failure", "retry", "no retry"],
+      "Properties": {
+        "Proxy Host": "https://my-proxy.com",
+        "Invalid HTTP Header Field Handling Strategy": "transform",
+        "Read Timeout": "15 s",
+        "invokehttp-proxy-password": "very_secure_password",
+        "Send Message Body": "true",
+        "Proxy Port": "12345",
+        "invokehttp-proxy-username": "user",
+        "Connection Timeout": "5 s",
+        "send-message-body": "true",
+        "Content-type": "application/octet-stream",
+        "SSL Context Service": "b9801278-7b5d-4314-aed6-713fd4b5f933",
+        "Always Output Response": "false",
+        "HTTP Method": "POST",
+        "Include Date Header": "true",
+        "Use Chunked Encoding": "false",
+        "Disable Peer Verification": "false",
+        "Penalize on \"No Retry\"": "false",
+        "Follow Redirects": "true",
+        "Remote URL": "https://my-storage-server.com/postdata"
+      }
+    }
+  ],
+  "Connections": [
+    {
+      "name": "GenerateFlowFile/success/InvokeHTTP",
+      "id": "5c3d809b-0866-4c19-8287-439e5282c9c6",
+      "source id": "aabb6d26-8a8d-4338-92c9-1b8c67ec18e0",
+      "source relationship names": ["success"],
+      "destination id": "469617f1-3898-4bbf-91fe-27d8f4dd2a75"
+    }
+  ],
+  "Controller Services": [
+    {
+      "name": "SSLContextService",
+      "id": "b9801278-7b5d-4314-aed6-713fd4b5f933",
+      "class": "org.apache.nifi.minifi.controllers.SSLContextService",
+      "Properties": {
+        "Private Key": "certs/agent-key.pem",
+        "Client Certificate": "certs/agent-cert.pem",
+        "Passphrase": "very_secure_passphrase",
+        "CA Certificate": "certs/ca-cert.pem",
+        "Use System Cert Store": "false"
+      }
+    }
+  ],
+  "Remote Process Groups": []
+}
+)";
+
+constexpr std::string_view config_json_with_nifi_schema = R"({
     "encodingVersion": {
         "majorVersion": 2,
         "minorVersion": 0
@@ -391,13 +466,23 @@ const utils::crypto::EncryptionProvider encryption_provider{secret_key};
 TEST_CASE("JsonFlowSerializer can encrypt the sensitive properties") {
   ConfigurationTestController test_controller;
   core::flow::AdaptiveConfiguration json_configuration{test_controller.getContext()};
-  const auto process_group = json_configuration.getRootFromPayload(std::string{config_json});
+
+  core::flow::FlowSchema schema;
+  std::string flow_definition;
+  SECTION("Default schema") {
+    schema = core::flow::FlowSchema::getDefault();
+    flow_definition = std::string{config_json_with_default_schema};
+  }
+  SECTION("NiFi schema") {
+    schema = core::flow::FlowSchema::getNiFiFlowJson();
+    flow_definition = std::string{config_json_with_nifi_schema};
+  }
+
+  const auto process_group = json_configuration.getRootFromPayload(flow_definition);
   REQUIRE(process_group);
 
-  const auto schema = core::flow::FlowSchema::getNiFiFlowJson();
-
   rapidjson::Document doc;
-  rapidjson::ParseResult res = doc.Parse(config_json.data(), config_json.size());
+  rapidjson::ParseResult res = doc.Parse(flow_definition.data(), flow_definition.size());
   REQUIRE(res);
   const auto flow_serializer = core::json::JsonFlowSerializer{std::move(doc)};
 
