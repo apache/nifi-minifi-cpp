@@ -59,9 +59,9 @@ class FlowFileTransform(ABC):
     def onInitialize(self, processor: Processor):
         processor.setSupportsDynamicProperties()
         for property in self.getPropertyDescriptors():
-            validator = translateStandardValidatorToMiNiFiPropertype(property.validators)
+            property_type_code = translateStandardValidatorToMiNiFiPropertype(property.validators)
             expression_language_supported = True if property.expressionLanguageScope != ExpressionLanguageScope.NONE else False
-            processor.addProperty(property.name, property.description, property.defaultValue, property.required, expression_language_supported, validator)
+            processor.addProperty(property.name, property.description, property.defaultValue, property.required, expression_language_supported, property_type_code)
 
     def onTrigger(self, context: ProcessContext, session: ProcessSession):
         original_flow_file = session.get()

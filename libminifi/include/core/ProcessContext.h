@@ -135,10 +135,6 @@ class ProcessContext : public controller::ControllerServiceLookup, public core::
     return getProperty(property.name, value);
   }
 
-  virtual bool getProperty(bool /*supports_expression_language*/, std::string_view property_name, std::string& value, const std::shared_ptr<FlowFile>& /*flow_file*/) {
-    return getProperty(property_name, value);
-  }
-
   bool getDynamicProperty(const std::string &name, std::string &value) const {
     return processor_node_->getDynamicProperty(name, value);
   }

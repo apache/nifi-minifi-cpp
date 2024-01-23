@@ -38,7 +38,7 @@ class PythonProcessor {
 
   void setDescription(const std::string& desc);
 
-  void addProperty(const std::string& name, const std::string& description, const std::optional<std::string>& defaultvalue, bool required, bool el, const std::optional<int64_t>& validator_value);
+  void addProperty(const std::string& name, const std::string& description, const std::optional<std::string>& defaultvalue, bool required, bool el, const std::optional<int64_t>& property_type_code);
 
  private:
   python::processors::ExecutePythonProcessor* processor_;

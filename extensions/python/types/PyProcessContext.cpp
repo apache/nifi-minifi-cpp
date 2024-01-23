@@ -66,15 +66,15 @@ PyObject* PyProcessContext::getProperty(PyProcessContext* self, PyObject* args) 
     return nullptr;
   }
 
-  const char* property = nullptr;
+  const char* property_name = nullptr;
   PyObject* script_flow_file = nullptr;
-  if (!PyArg_ParseTuple(args, "s|O", &property, &script_flow_file)) {
+  if (!PyArg_ParseTuple(args, "s|O", &property_name, &script_flow_file)) {
     throw PyException();
   }
 
   std::string value;
   if (!script_flow_file) {
-    if (!context->getProperty(property, value)) {
+    if (!context->getProperty(property_name, value)) {
       Py_RETURN_NONE;
     }
   } else {
@@ -84,7 +84,9 @@ PyObject* PyProcessContext::getProperty(PyProcessContext* self, PyObject* args) 
       PyErr_SetString(PyExc_AttributeError, "tried reading FlowFile outside 'on_trigger'");
       return nullptr;
     }
-    if (!context->getProperty(true, property, value, flow_file)) {
+    core::Property property{property_name, ""};
+    property.setSupportsExpressionLanguage(true);
+    if (!context->getProperty(property, value, flow_file)) {
       Py_RETURN_NONE;
     }
   }

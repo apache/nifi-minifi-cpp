@@ -50,7 +50,7 @@ def before_scenario(context, scenario):
 
     if "USE_NIFI_PYTHON_PROCESSORS" in scenario.effective_tags:
         if not context.image_store.is_conda_available_in_minifi_image() and context.image_store.get_minifi_image_python_version() < (3, 8, 1):
-            scenario.skip("NiFi Python processor tests use langchain library therefore Python 3.8.1 or later is needed in the MiNiFi container.")
+            scenario.skip("NiFi Python processor tests use langchain library which requires Python 3.8.1 or later.")
             return
         context.test.use_nifi_python_processors_in_minifi()
 
