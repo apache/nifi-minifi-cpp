@@ -27,6 +27,16 @@
 
 namespace org::apache::nifi::minifi::core::json {
 
+namespace {
+rapidjson::Value& getMember(rapidjson::Value& node, const std::string& member_name) {
+  if (member_name == ".") {
+    return node;
+  } else {
+    return node[member_name];
+  }
+}
+}
+
 void JsonFlowSerializer::encryptSensitiveProperties(rapidjson::Value &property_jsons, rapidjson::Document::AllocatorType &alloc,
     const std::map<std::string, Property> &properties, const utils::crypto::EncryptionProvider &encryption_provider) const {
   for (auto &property : property_jsons.GetObject()) {
@@ -53,11 +63,11 @@ std::string JsonFlowSerializer::serialize(const core::ProcessGroup &process_grou
   auto alloc = doc.GetAllocator();
   rapidjson::Value flow_definition_json;
   flow_definition_json.CopyFrom(flow_definition_json_, alloc);
-  auto &root_group = flow_definition_json[schema.root_group[0]];
+  auto& root_group = getMember(flow_definition_json, schema.root_group[0]);
 
-  auto processors = root_group[schema.processors[0]].GetArray();
+  auto processors = getMember(root_group, schema.processors[0]).GetArray();
   for (auto &processor_json : processors) {
-    const std::string processor_id_str{processor_json[schema.identifier[0]].GetString(), processor_json[schema.identifier[0]].GetStringLength()};
+    const std::string processor_id_str{getMember(processor_json, schema.identifier[0]).GetString(), getMember(processor_json, schema.identifier[0]).GetStringLength()};
     const auto processor_id = utils::Identifier::parse(processor_id_str);
     if (!processor_id) {
       logger_->log_warn("Invalid processor ID found in the flow definition: {}", processor_id_str);
@@ -68,12 +78,12 @@ std::string JsonFlowSerializer::serialize(const core::ProcessGroup &process_grou
       logger_->log_warn("Processor {} not found in the flow definition", processor_id->to_string());
       continue;
     }
-    encryptSensitiveProperties(processor_json[schema.processor_properties[0]], alloc, processor->getProperties(), encryption_provider);
+    encryptSensitiveProperties(getMember(processor_json, schema.processor_properties[0]), alloc, processor->getProperties(), encryption_provider);
   }
 
-  auto controller_services = root_group[schema.controller_services[0]].GetArray();
+  auto controller_services = getMember(root_group, schema.controller_services[0]).GetArray();
   for (auto &controller_service_json : controller_services) {
-    const std::string controller_service_id{controller_service_json[schema.identifier[0]].GetString(), controller_service_json[schema.identifier[0]].GetStringLength()};
+    const std::string controller_service_id{getMember(controller_service_json, schema.identifier[0]).GetString(), getMember(controller_service_json, schema.identifier[0]).GetStringLength()};
     const auto controller_service_node = process_group.findControllerService(controller_service_id);
     if (!controller_service_node) {
       logger_->log_warn("Controller service node {} not found in the flow definition", controller_service_id);
@@ -84,7 +94,7 @@ std::string JsonFlowSerializer::serialize(const core::ProcessGroup &process_grou
       logger_->log_warn("Controller service {} not found in the flow definition", controller_service_id);
       continue;
     }
-    encryptSensitiveProperties(controller_service_json[schema.controller_service_properties[0]], alloc, controller_service->getProperties(), encryption_provider);
+    encryptSensitiveProperties(getMember(controller_service_json, schema.controller_service_properties[0]), alloc, controller_service->getProperties(), encryption_provider);
   }
 
   rapidjson::StringBuffer buffer;
