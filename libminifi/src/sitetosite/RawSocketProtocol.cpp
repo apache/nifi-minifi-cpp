@@ -595,7 +595,7 @@ bool RawSiteToSiteClient::transmitPayload(core::ProcessContext& context, core::P
     if (!confirm(transactionID)) {
       throw Exception(SITE2SITE_EXCEPTION, "Confirm Failed in transaction " + transactionID.to_string());
     }
-    if (!complete(transactionID)) {
+    if (!complete(context, transactionID)) {
       throw Exception(SITE2SITE_EXCEPTION, "Complete Failed in transaction " + transactionID.to_string());
     }
     logger_->log_info("Site2Site transaction {} successfully send flow record {} content bytes {}", transactionID.to_string(), transaction->current_transfers_, transaction->_bytes);
