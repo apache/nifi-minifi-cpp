@@ -78,7 +78,7 @@ void GetFile::onSchedule(core::ProcessContext& context, core::ProcessSessionFact
 
   if (auto directory_str = context.getProperty(Directory)) {
     if (!utils::file::is_directory(*directory_str)) {
-      throw Exception(PROCESS_SCHEDULE_EXCEPTION, "Input Directory \"" + value + "\" is not a directory");
+      throw Exception(PROCESS_SCHEDULE_EXCEPTION, utils::string::join_pack("Input Directory \"", *directory_str, "\" is not a directory"));
     }
     request_.inputDirectory = *directory_str;
   } else {
