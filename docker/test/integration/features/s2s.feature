@@ -34,6 +34,21 @@ Feature: Sending data from MiNiFi-C++ to NiFi using S2S protocol
 
     When both instances start up
     Then a flowfile with the content "test" is placed in the monitored directory in less than 90 seconds
+    And the Minifi logs do not contain the following message: "ProcessSession rollback" after 1 seconds
+
+  Scenario: A MiNiFi instance produces and transfers a large data file to a NiFi instance via s2s
+    Given a GetFile processor with the "Input Directory" property set to "/tmp/input"
+    And a file with the content "this is a very long file we want to send by site-to-site" is present in "/tmp/input"
+    And a RemoteProcessGroup node opened on "http://nifi-${feature_id}:8080/nifi"
+    And the "success" relationship of the GetFile processor is connected to the input port on the RemoteProcessGroup
+
+    And a NiFi flow receiving data from a RemoteProcessGroup "from-minifi" on port 8080
+    And a PutFile processor with the "Directory" property set to "/tmp/output" in the "nifi" flow
+    And the "success" relationship of the from-minifi is connected to the PutFile
+
+    When both instances start up
+    Then a flowfile with the content "this is a very long file we want to send by site-to-site" is placed in the monitored directory in less than 90 seconds
+    And the Minifi logs do not contain the following message: "ProcessSession rollback" after 1 seconds
 
   Scenario: Zero length files are transfered between via s2s if the "drop empty" connection property is false
     Given a MiNiFi CPP server with yaml config

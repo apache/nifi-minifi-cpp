@@ -201,7 +201,7 @@ class SiteToSiteClient : public core::Connectable {
   // Cancel the transaction
   virtual void cancel(const utils::Identifier &transactionID);
   // Complete the transaction
-  virtual bool complete(const utils::Identifier &transactionID);
+  virtual bool complete(core::ProcessContext& context, const utils::Identifier &transactionID);
   // Error the transaction
   virtual void error(const utils::Identifier &transactionID);
 

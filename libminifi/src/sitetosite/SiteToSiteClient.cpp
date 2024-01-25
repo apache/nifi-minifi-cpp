@@ -164,7 +164,7 @@ bool SiteToSiteClient::transferFlowFiles(core::ProcessContext& context, core::Pr
     if (!confirm(transactionID)) {
       throw Exception(SITE2SITE_EXCEPTION, "Confirm Failed for " + transactionID.to_string());
     }
-    if (!complete(transactionID)) {
+    if (!complete(context, transactionID)) {
       throw Exception(SITE2SITE_EXCEPTION, "Complete Failed for " + transactionID.to_string());
     }
     logger_->log_debug("Site2Site transaction {} successfully sent flow record {}, content bytes {}", transactionID.to_string(), transaction->total_transfers_, transaction->_bytes);
@@ -336,7 +336,7 @@ void SiteToSiteClient::error(const utils::Identifier& transactionID) {
 }
 
 // Complete the transaction
-bool SiteToSiteClient::complete(const utils::Identifier& transactionID) {
+bool SiteToSiteClient::complete(core::ProcessContext& context, const utils::Identifier& transactionID) {
   int ret = 0;
   std::shared_ptr<Transaction> transaction = nullptr;
 
@@ -382,12 +382,17 @@ bool SiteToSiteClient::complete(const utils::Identifier& transactionID) {
     if (ret <= 0)
       return false;
 
-    if (code == TRANSACTION_FINISHED) {
+    if (code == TRANSACTION_FINISHED || code == TRANSACTION_FINISHED_BUT_DESTINATION_FULL) {
       logger_->log_info("Site2Site transaction {} peer finished transaction", transactionID.to_string());
       transaction->_state = TRANSACTION_COMPLETED;
+
+      if (code == TRANSACTION_FINISHED_BUT_DESTINATION_FULL) {
+        logger_->log_info("Site2Site transaction {} reported destination full, yielding", transactionID.to_string());
+        context.yield();
+      }
       return true;
     } else {
-      logger_->log_warn("Site2Site transaction {} peer unknown respond code {}", transactionID.to_string(), magic_enum::enum_underlying(code));
+      logger_->log_warn("Site2Site transaction {} peer unexpected respond code {}: {}", transactionID.to_string(), magic_enum::enum_underlying(code), magic_enum::enum_name(code));
       return false;
     }
   }
@@ -718,7 +723,7 @@ bool SiteToSiteClient::receiveFlowFiles(core::ProcessContext& context, core::Pro
     if (transfers > 0 && !confirm(transactionID)) {
       throw Exception(SITE2SITE_EXCEPTION, "Confirm Transaction Failed");
     }
-    if (!complete(transactionID)) {
+    if (!complete(context, transactionID)) {
       std::stringstream transaction_str;
       transaction_str << "Complete Transaction " << transactionID.to_string() << " Failed";
       throw Exception(SITE2SITE_EXCEPTION, transaction_str.str());
