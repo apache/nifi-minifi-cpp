@@ -137,13 +137,14 @@ The SentimentAnalysis processor will perform a Vader Sentiment Analysis. This re
 
 ## Using NiFi Python Processors
 
-MiNiFi C++ supports the use of NiFi Python processors, that are inherited from the FlowFileTransform base class. To use these processors, you must copy the Python processor module under the nifi_python_processors directory located under the python directory (by default it can be found at ${minifi_root}/minifi-python/nifi_python_processors).
+MiNiFi C++ supports the use of NiFi Python processors, that are inherited from the FlowFileTransform base class. To use these processors, you must copy the Python processor module under the nifi_python_processors directory located under the python directory (by default it can be found at ${minifi_root}/minifi-python/nifi_python_processors). To see how to to write NiFi Python processors, please refer to the Python Developer Guide under the [Apache NiFi documentation](https://nifi.apache.org/documentation/v2/).
 
 In the flow configuration these Python processors can be referenced by their fully qualified class name, which looks like this: org.apache.nifi.minifi.processors.nifi_python_processors.<package_name>.<processor_name>. For example, the fully qualified class name of the PromptChatGPT processor implemented in the file nifi_python_processors/PromptChatGPT.py is org.apache.nifi.minifi.processors.nifi_python_processors.PromptChatGPT. If a processor is copied under a subdirectory, because it is part of a python submodule, the submodule name will be appended to the fully qualified class name. For example, if the QueryPinecone processor is implemented in the QueryPinecone.py file that is copied to nifi_python_processors/vectorstores/QueryPinecone.py, the fully qualified class name will be org.apache.nifi.minifi.processors.nifi_python_processors.vectorstores.QueryPinecone in the configuration file.
 
 Due to some differences between the NiFi and MiNiFi C++ processors and implementation, there are some limitations using the NiFi Python processors:
 - Record based processors are not yet supported in MiNiFi C++, so the NiFi Python processors inherited from RecordTransform are not supported.
 - Virtualenv support is not yet available in MiNiFi C++, so all required packaged must be installed on the system.
+- Controller properties are not supported at the moment.
 - There are some validators in NiFi that are not present in MiNiFi C++, so some property validations will be missing using the NiFi Python processors.
 - Allowable values specified in NiFi Python processors are ignored in MiNiFi C++ (due to MiNiFi C++ requiring them to be specified in compile time), so the property values are not pre-verified.
 - MiNiFi C++ does not support custom relationship names in Python processors, the only available relationships are "success", "failure" and "original".
