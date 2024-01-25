@@ -143,7 +143,7 @@ bool FlowConfiguration::persist(const std::string& serialized_flow) {
   }
 
   const bool status = filesystem_->write(*config_path_, serialized_flow);
-  logger_->log_info("Result of updating the config file {}: {}", config_path_, status ? "success" : "failure");
+  logger_->log_info("Result of updating the config file {}: {}", *config_path_, status ? "success" : "failure");
   checksum_calculator_.invalidateChecksum();
   return status;
 }
