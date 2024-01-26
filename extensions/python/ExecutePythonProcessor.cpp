@@ -171,27 +171,6 @@ core::Property* ExecutePythonProcessor::findProperty(const std::string& name) co
   return nullptr;
 }
 
-const core::PropertyType& ExecutePythonProcessor::translateCodeToPropertyType(const PropertyTypeCode& code) {
-  switch (code) {
-    case PropertyTypeCode::INTEGER_TYPE:
-      return core::StandardPropertyTypes::INTEGER_TYPE;
-    case PropertyTypeCode::LONG_TYPE:
-      return core::StandardPropertyTypes::LONG_TYPE;
-    case PropertyTypeCode::BOOLEAN_TYPE:
-      return core::StandardPropertyTypes::BOOLEAN_TYPE;
-    case PropertyTypeCode::DATA_SIZE_TYPE:
-      return core::StandardPropertyTypes::DATA_SIZE_TYPE;
-    case PropertyTypeCode::TIME_PERIOD_TYPE:
-      return core::StandardPropertyTypes::TIME_PERIOD_TYPE;
-    case PropertyTypeCode::NON_BLANK_TYPE:
-      return core::StandardPropertyTypes::NON_BLANK_TYPE;
-    case PropertyTypeCode::PORT_TYPE:
-      return core::StandardPropertyTypes::PORT_TYPE;
-    default:
-      throw std::invalid_argument("Unknown PropertyTypeCode");
-  }
-}
-
 REGISTER_RESOURCE(ExecutePythonProcessor, Processor);
 
 }  // namespace org::apache::nifi::minifi::extensions::python::processors

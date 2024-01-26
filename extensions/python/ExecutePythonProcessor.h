@@ -105,7 +105,7 @@ class ExecutePythonProcessor : public core::Processor {
       property.withDefaultValue(*defaultvalue);
     }
     if (property_type_code) {
-      property.withPropertyType(translateCodeToPropertyType(static_cast<PropertyTypeCode>(*property_type_code)));
+      property.withPropertyType(core::StandardPropertyTypes::translateCodeToPropertyType(static_cast<core::StandardPropertyTypes::PropertyTypeCode>(*property_type_code)));
     }
     python_properties_.emplace_back(property.build());
   }
@@ -138,18 +138,6 @@ class ExecutePythonProcessor : public core::Processor {
   core::Property* findProperty(const std::string& name) const override;
 
  private:
-  enum class PropertyTypeCode : int64_t {
-    INTEGER_TYPE = 0,
-    LONG_TYPE = 1,
-    BOOLEAN_TYPE = 2,
-    DATA_SIZE_TYPE = 3,
-    TIME_PERIOD_TYPE = 4,
-    NON_BLANK_TYPE = 5,
-    PORT_TYPE = 6
-  };
-
-  static const core::PropertyType& translateCodeToPropertyType(const PropertyTypeCode& code);
-
   std::vector<core::Property> python_properties_;
 
   std::string description_;
