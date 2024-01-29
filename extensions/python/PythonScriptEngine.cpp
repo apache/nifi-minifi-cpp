@@ -201,7 +201,11 @@ void PythonScriptEngine::evaluateModuleImports() {
 void PythonScriptEngine::initializeProcessorObject(const std::string& python_class_name) {
   GlobalInterpreterLock gil;
   if (auto python_class = bindings_[python_class_name]) {
-    processor_instance_ = OwnedObject(PyObject_CallObject(python_class->get(), nullptr));
+    auto kwargs = OwnedDict::create();
+    auto value = OwnedObject(Py_None);
+    kwargs.put("jvm", value);
+    auto args = OwnedObject(PyTuple_New(0));
+    processor_instance_ = OwnedObject(PyObject_Call(python_class->get(), args.get(), kwargs.get()));
     if (processor_instance_.get() == nullptr) {
       throw PythonScriptException(PyException().what());
     }

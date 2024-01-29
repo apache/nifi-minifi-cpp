@@ -257,20 +257,27 @@ class PythonPropertyValue:
             return int(bytes / 1000 / 1000 / 1000 / 1000)
         return 0
 
-    def evaluateAttributeExpressions(self, flow_file_proxy: FlowFileProxy):
+    def evaluateAttributeExpressions(self, flow_file_proxy: FlowFileProxy = None):
+        if flow_file_proxy is None or not self.el_supported:
+            return self
         # If Expression Language is supported and present, evaluate it and return a new PropertyValue.
         # Otherwise just return self, in order to avoid the cost of making the call to cpp for getProperty
-        if self.el_supported:
-            new_string_value = self.cpp_context.getProperty(self.name, flow_file_proxy.flow_file)
-            return PythonPropertyValue(self.cpp_context, self.name, new_string_value, self.el_supported)
-
-        return self
+        new_string_value = self.cpp_context.getProperty(self.name, flow_file_proxy.flow_file)
+        return PythonPropertyValue(self.cpp_context, self.name, new_string_value, self.el_supported)
 
 
 class ProcessContextProxy:
     def __init__(self, cpp_context: ProcessContext):
         self.cpp_context = cpp_context
 
-    def getProperty(self, descriptor: PropertyDescriptor) -> PythonPropertyValue:
-        property_value = self.cpp_context.getProperty(descriptor.name)
-        return PythonPropertyValue(self.cpp_context, descriptor.name, property_value, descriptor.expressionLanguageScope != ExpressionLanguageScope.NONE)
+    def getProperty(self, descriptor) -> PythonPropertyValue:
+        if descriptor is None:
+            return None
+        if isinstance(descriptor, str):
+            property_name = descriptor
+            expression_language_support = True
+        else:
+            property_name = descriptor.name
+            expression_language_support = descriptor.expressionLanguageScope != ExpressionLanguageScope.NONE
+        property_value = self.cpp_context.getProperty(property_name)
+        return PythonPropertyValue(self.cpp_context, property_name, property_value, expression_language_support)

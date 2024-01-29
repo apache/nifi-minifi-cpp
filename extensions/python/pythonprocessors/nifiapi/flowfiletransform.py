@@ -14,7 +14,8 @@
 # limitations under the License.
 
 from abc import ABC, abstractmethod
-from .properties import ExpressionLanguageScope, FlowFileProxy, ProcessContextProxy, translateStandardValidatorToMiNiFiPropertype
+from typing import List
+from .properties import ExpressionLanguageScope, FlowFileProxy, ProcessContextProxy, PropertyDescriptor, translateStandardValidatorToMiNiFiPropertype
 from minifi_native import OutputStream, Processor, ProcessContext, ProcessSession
 
 
@@ -54,7 +55,10 @@ class FlowFileTransform(ABC):
     REL_ORIGINAL = None
 
     def describe(self, processor: Processor):
-        processor.setDescription(self.ProcessorDetails.description)
+        if hasattr(self, 'ProcessorDetails') and hasattr(self.ProcessorDetails, 'description'):
+            processor.setDescription(self.ProcessorDetails.description)
+        else:
+            processor.setDescription(self.__class__.__name__)
 
     def onInitialize(self, processor: Processor):
         processor.setSupportsDynamicProperties()
@@ -62,6 +66,13 @@ class FlowFileTransform(ABC):
             property_type_code = translateStandardValidatorToMiNiFiPropertype(property.validators)
             expression_language_supported = True if property.expressionLanguageScope != ExpressionLanguageScope.NONE else False
             processor.addProperty(property.name, property.description, property.defaultValue, property.required, expression_language_supported, property_type_code)
+
+    def onScheduled(self, context_proxy: ProcessContextProxy):
+        pass
+
+    def onSchedule(self, context: ProcessContext):
+        context_proxy = ProcessContextProxy(context)
+        self.onScheduled(context_proxy)
 
     def onTrigger(self, context: ProcessContext, session: ProcessSession):
         original_flow_file = session.get()
@@ -100,3 +111,6 @@ class FlowFileTransform(ABC):
     @abstractmethod
     def transform(self, context: ProcessContextProxy, flowFile: FlowFileProxy) -> FlowFileTransformResult:
         pass
+
+    def getPropertyDescriptors(self) -> List[PropertyDescriptor]:
+        return []
