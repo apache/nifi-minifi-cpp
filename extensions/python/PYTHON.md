@@ -151,3 +151,4 @@ Due to some differences between the NiFi and MiNiFi C++ processors and implement
 - Allowable values specified in NiFi Python processors are ignored in MiNiFi C++ (due to MiNiFi C++ requiring them to be specified in compile time), so the property values are not pre-verified.
 - MiNiFi C++ does not support custom relationship names in Python processors, the only available relationships are "success", "failure" and "original".
 - MiNiFi C++ only supports expression language with flow file attributes, so only FLOWFILE_ATTRIBUTES expression language scope is supported, otherwise the expression language will not be evaluated.
+- MiNiFi C++ does not support property dependencies, so the property dependencies will be ignored. If a property depends on another property, the property will not be required.
