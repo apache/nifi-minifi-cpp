@@ -95,7 +95,7 @@ CN=minifi-cpp-flow-{feature_id}:
                 target='/opt/minifi-c2/minifi-c2-current/certs/minifi-c2-server-truststore.p12'
             ))
         self.docker_container = self.client.containers.run(
-            image='apache/nifi-minifi-c2:1.25.0',
+            image='apache/nifi-minifi-c2:1.24.0',
             detach=True,
             name=self.name,
             network=self.network.name,
