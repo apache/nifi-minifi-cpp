@@ -80,5 +80,5 @@ Feature: MiNiFi can use python processors in its flows
     And the "success" relationship of the PutFile processor is connected to the LogAttribute
 
     When all instances start up
-    Then at least one flowfile's content match the following regex: '{"text": "test_", "metadata": {"filename": "test_file.log", "uuid": "", "chunk_index": 1, "chunk_count": 5}}' in less than 30 seconds
-    And the Minifi logs contain the following message: "key:document.count value:5" in less than 10 seconds
+    Then at least one flowfile's content match the following regex: '{"text": "test_", "metadata": {"filename": "test_file.log", "uuid": "", "chunk_index": 0, "chunk_count": 3}}' in less than 30 seconds
+    And the Minifi logs contain the following message: "key:document.count value:3" in less than 10 seconds
