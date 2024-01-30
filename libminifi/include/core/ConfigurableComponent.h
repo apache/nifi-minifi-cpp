@@ -178,7 +178,7 @@ class ConfigurableComponent {
    *
    * @return map of property keys to Property instances.
    */
-  std::map<std::string, Property> getProperties() const;
+  virtual std::map<std::string, Property> getProperties() const;
 
   /**
    * @return if property exists and is explicitly set, not just falling back to default value

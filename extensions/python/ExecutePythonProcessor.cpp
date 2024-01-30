@@ -171,6 +171,18 @@ core::Property* ExecutePythonProcessor::findProperty(const std::string& name) co
   return nullptr;
 }
 
+std::map<std::string, core::Property> ExecutePythonProcessor::getProperties() const {
+  auto result = ConfigurableComponent::getProperties();
+
+  std::lock_guard<std::mutex> lock(configuration_mutex_);
+
+  for (const auto &property : python_properties_) {
+    result.insert({ property.getName(), property });
+  }
+
+  return result;
+}
+
 REGISTER_RESOURCE(ExecutePythonProcessor, Processor);
 
 }  // namespace org::apache::nifi::minifi::extensions::python::processors

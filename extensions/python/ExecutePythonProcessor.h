@@ -99,8 +99,9 @@ class ExecutePythonProcessor : public core::Processor {
     python_dynamic_ = true;
   }
 
-  void addProperty(const std::string &name, const std::string &description, const std::optional<std::string> &defaultvalue, bool required, bool el, const std::optional<int64_t>& property_type_code) {
-    auto property = core::PropertyDefinitionBuilder<>::createProperty(name).withDescription(description).isRequired(required).supportsExpressionLanguage(el);
+  void addProperty(const std::string &name, const std::string &description, const std::optional<std::string> &defaultvalue, bool required, bool el,
+      bool sensitive, const std::optional<int64_t>& property_type_code) {
+    auto property = core::PropertyDefinitionBuilder<>::createProperty(name).withDescription(description).isRequired(required).supportsExpressionLanguage(el).isSensitive(sensitive);
     if (defaultvalue) {
       property.withDefaultValue(*defaultvalue);
     }
@@ -133,6 +134,8 @@ class ExecutePythonProcessor : public core::Processor {
   void setPythonPaths(const std::vector<std::filesystem::path>& python_paths) {
     python_paths_ = python_paths;
   }
+
+  std::map<std::string, core::Property> getProperties() const override;
 
  protected:
   core::Property* findProperty(const std::string& name) const override;

@@ -87,12 +87,22 @@ def describe(processor):
 ```
 
 onInitialize is also passed the processor reference and can be where you set properties. The first argument is the property display name,
-followed by the description, and default value. The last two arguments are booleans describing if the property is required or requires EL.
+followed by the description, and default value. The next three arguments are booleans describing if the property is required, support expression language, and if it is a sensitive property.
+The last argument is the property type code. The property type code is an integer that represents the type of the property. The supported property type codes and their corresponding types:
+```
+INTEGER = 0
+LONG = 1
+BOOLEAN = 2
+DATA_SIZE = 3
+TIME_PERIOD = 4
+NON_BLANK = 5
+PORT = 6
+```
 
 ```python
 def onInitialize(processor):
   processor.setSupportsDynamicProperties()
-  processor.addProperty("property name","description","default value", True, False)
+  processor.addProperty("property name","description","default value", True /*required*/, False /*expression language supported*/, False /*sensitive*/, 1 /*property type code*/)
 ```
 
 The onSchedule function is passed the context and session factory. This should be where your processor loads and reads properties via

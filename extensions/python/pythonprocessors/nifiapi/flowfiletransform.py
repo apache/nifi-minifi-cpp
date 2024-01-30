@@ -68,7 +68,7 @@ class FlowFileTransform(ABC):
 
             # MiNiFi C++ does not support dependant properties, so if a property depends on another property, it should not be required
             is_required = True if property.required and not property.dependencies else False
-            processor.addProperty(property.name, property.description, property.defaultValue, is_required, expression_language_supported, property_type_code)
+            processor.addProperty(property.name, property.description, property.defaultValue, is_required, expression_language_supported, property.sensitive, property_type_code)
 
     def onScheduled(self, context_proxy: ProcessContextProxy):
         pass
