@@ -64,8 +64,8 @@ CN=minifi-cpp-flow-{feature_id}:
         test_dir = os.environ['TEST_DIRECTORY']  # Based on DockerVerify.sh
         mounts = [docker.types.Mount(
             type='bind',
-            source=os.path.join(test_dir, "resources/minifi-c2-server/config-ssl.json" if self.ssl else "resources/minifi-c2-server/config.json"),
-            target='/opt/minifi-c2/minifi-c2-current/files/minifi-test-class/config.application.json.v1'
+            source=os.path.join(test_dir, "resources/minifi-c2-server/config-ssl.yml" if self.ssl else "resources/minifi-c2-server/config.yml"),
+            target='/opt/minifi-c2/minifi-c2-current/files/minifi-test-class/config.text.yml.v1'
         )]
 
         if self.ssl:
