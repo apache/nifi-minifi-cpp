@@ -270,6 +270,10 @@ std::shared_ptr<core::controller::ControllerServiceNode> ProcessGroup::findContr
   return controller_service_map_.getControllerServiceNode(nodeId);
 }
 
+std::vector<std::shared_ptr<core::controller::ControllerServiceNode>> ProcessGroup::getAllControllerServices() const {
+  return controller_service_map_.getAllControllerServices();
+}
+
 void ProcessGroup::getAllProcessors(std::vector<Processor*>& processor_vec) const {
   std::lock_guard<std::recursive_mutex> lock(mutex_);
 

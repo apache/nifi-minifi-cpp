@@ -30,28 +30,56 @@ int main(int argc, char* argv[]) try {
     .required()
     .metavar("MINIFI_HOME")
     .help("Specifies the home directory used by the minifi agent");
+  argument_parser.add_argument("-p", "--sensitive-values-in-minifi-properties")
+    .flag()
+    .help("Encrypt sensitive values in minifi.properties");
+  argument_parser.add_argument("-c", "--sensitive-values-in-flow-config")
+    .flag()
+    .help("Encrypt sensitive values in the flow configuration file (config.yml or as specified in minifi.properties)");
   argument_parser.add_argument("-e", "--encrypt-flow-config")
-    .default_value(false)
-    .implicit_value(true)
-    .help("If set, the flow configuration file (as specified in minifi.properties) is also encrypted.");
+    .flag()
+    .help("Encrypt the flow configuration file (config.yml or as specified in minifi.properties) as a blob");
 
   try {
     argument_parser.parse_args(argc, argv);
   } catch (const std::runtime_error& err) {
-    std::cerr << err.what() << std::endl;
-    std::cerr << argument_parser;
-    std::exit(1);
+    std::cerr << err.what() << "\n\n" << argument_parser;
+    return 1;
+  }
+
+  bool sensitive_values_in_minifi_properties = argument_parser.get<bool>("--sensitive-values-in-minifi-properties");
+  const bool sensitive_values_in_flow_config = argument_parser.get<bool>("--sensitive-values-in-flow-config");
+  const bool flow_config_blob = argument_parser.get<bool>("--encrypt-flow-config");
+
+  if (!(sensitive_values_in_minifi_properties || sensitive_values_in_flow_config || flow_config_blob)) {
+    std::cout << "No options were selected, defaulting to --sensitive-values-in-minifi-properties.\n";
+    sensitive_values_in_minifi_properties = true;
   }
 
   EncryptConfig encrypt_config{argument_parser.get("-m")};
-  EncryptConfig::EncryptionType type = encrypt_config.encryptSensitiveProperties();
-  if (argument_parser.get<bool>("--encrypt-flow-config")) {
-    encrypt_config.encryptFlowConfig();
-  } else if (type == EncryptConfig::EncryptionType::RE_ENCRYPT) {
-    std::cout << "WARNING: you did not request the flow config to be updated, "
-              << "if it is currently encrypted and the old key is removed, "
-              << "you won't be able to recover the flow config.\n";
+
+  if (sensitive_values_in_minifi_properties) {
+    encrypt_config.encryptSensitiveValuesInMinifiProperties();
   }
+  if (sensitive_values_in_flow_config) {
+    encrypt_config.encryptSensitiveValuesInFlowConfig();
+  }
+  if (flow_config_blob) {
+    encrypt_config.encryptFlowConfigBlob();
+  }
+
+  if (encrypt_config.encryptionType() == EncryptConfig::EncryptionType::RE_ENCRYPT && !sensitive_values_in_minifi_properties) {
+    std::cout << "WARNING: an .old key was provided but "
+        << "--sensitive-values-in-minifi-properties was not requested. If sensitive values in minifi.properties are "
+        << "currently encrypted with the old key and the old key is removed, you won't be able to recover these values!\n";
+  }
+
+  if (encrypt_config.encryptionType() == EncryptConfig::EncryptionType::RE_ENCRYPT && !flow_config_blob) {
+    std::cout << "WARNING: an .old key was provided but "
+        << "--encrypt-flow-config was not requested. If the flow config file is "
+        << "currently encrypted with the old key and the old key is removed, you won't be able to recover these values!\n";
+  }
+
   return 0;
 } catch (const std::exception& ex) {
   std::cerr << ex.what() << "\n(" << typeid(ex).name() << ")\n";

@@ -107,6 +107,7 @@ class FlowConfiguration : public CoreComponent {
   }
 
   bool persist(const core::ProcessGroup& process_group);
+  bool persist(const std::string& serialized_flow);
 
   /**
    * Returns the configuration path string
@@ -150,7 +151,6 @@ class FlowConfiguration : public CoreComponent {
   utils::ChecksumCalculator checksum_calculator_;
 
  private:
-  bool persist(const std::string& serialized_flow);
   virtual std::string serialize(const ProcessGroup&) { return ""; }
 
   std::shared_ptr<logging::Logger> logger_;

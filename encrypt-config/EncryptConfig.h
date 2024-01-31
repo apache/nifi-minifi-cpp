@@ -21,11 +21,7 @@
 
 #include "Utils.h"
 
-namespace org {
-namespace apache {
-namespace nifi {
-namespace minifi {
-namespace encrypt_config {
+namespace org::apache::nifi::minifi::encrypt_config {
 
 class EncryptConfig {
  public:
@@ -35,26 +31,28 @@ class EncryptConfig {
   };
 
   explicit EncryptConfig(const std::string& minifi_home);
-  EncryptionType encryptSensitiveProperties() const;
+  [[nodiscard]] EncryptionType encryptionType() const;
 
-  void encryptFlowConfig() const;
+  void encryptSensitiveValuesInMinifiProperties() const;
+  void encryptSensitiveValuesInFlowConfig() const;
+  void encryptFlowConfigBlob() const;
 
  private:
-  std::filesystem::path bootstrapFilePath() const;
-  std::filesystem::path propertiesFilePath() const;
+  [[nodiscard]] std::filesystem::path bootstrapFilePath() const;
+  [[nodiscard]] std::filesystem::path propertiesFilePath() const;
+  [[nodiscard]] std::filesystem::path flowConfigPath() const;
+  static std::string flowConfigContent(const std::filesystem::path& config_path);
 
-  EncryptionKeys getEncryptionKeys() const;
-  std::string hexDecodeAndValidateKey(const std::string& key, const std::string& key_name) const;
-  void writeEncryptionKeyToBootstrapFile(const utils::crypto::Bytes& encryption_key) const;
+  [[nodiscard]] EncryptionKeys getEncryptionKeys(std::string_view property_name) const;
+  [[nodiscard]] std::string hexDecodeAndValidateKey(const std::string& key, const std::string& key_name) const;
+  void writeEncryptionKeyToBootstrapFile(const std::string& encryption_key_name, const utils::crypto::Bytes& encryption_key) const;
 
-  void encryptSensitiveProperties(const EncryptionKeys& keys) const;
+  void encryptSensitiveValuesInMinifiProperties(const EncryptionKeys& keys) const;
+  void encryptSensitiveValuesInFlowConfig(const EncryptionKeys& keys) const;
 
   const std::filesystem::path minifi_home_;
   EncryptionKeys keys_;
+  EncryptionKeys sensitive_properties_keys_;
 };
 
-}  // namespace encrypt_config
-}  // namespace minifi
-}  // namespace nifi
-}  // namespace apache
-}  // namespace org
+}  // namespace org::apache::nifi::minifi::encrypt_config

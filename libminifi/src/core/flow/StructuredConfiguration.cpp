@@ -914,7 +914,7 @@ void StructuredConfiguration::addNewId(const std::string& uuid) {
 
 std::string StructuredConfiguration::serialize(const core::ProcessGroup& process_group) {
   gsl_Expects(flow_serializer_);
-  return flow_serializer_->serialize(process_group, schema_, sensitive_properties_encryptor_);
+  return flow_serializer_->serialize(process_group, schema_, sensitive_properties_encryptor_, {});
 }
 
 }  // namespace org::apache::nifi::minifi::core::flow
