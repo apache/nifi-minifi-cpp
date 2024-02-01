@@ -230,6 +230,10 @@ void ProcessSession::transfer(const std::shared_ptr<core::FlowFile>& flow, const
   flow->setDeleted(false);
 }
 
+void ProcessSession::transferToDynamicRelationship(const std::shared_ptr<core::FlowFile>& flow, const std::string& relationship_name) {
+  transfer(flow, Relationship{relationship_name, relationship_name});
+}
+
 void ProcessSession::write(const std::shared_ptr<core::FlowFile> &flow, const io::OutputStreamCallback& callback) {
   gsl_ExpectsAudit(updated_flowfiles_.contains(flow->getUUID())
       || added_flowfiles_.contains(flow->getUUID())

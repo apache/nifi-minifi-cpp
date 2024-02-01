@@ -63,6 +63,18 @@ void PyProcessSession::transfer(const std::shared_ptr<core::FlowFile>& flow_file
   session_->transfer(flow_file, relationship);
 }
 
+void PyProcessSession::transferToDynamicRelationship(const std::shared_ptr<core::FlowFile>& flow_file, const std::string& relationship_name) {
+  if (!session_) {
+    throw std::runtime_error("Access of ProcessSession after it has been released");
+  }
+
+  if (!flow_file) {
+    throw std::runtime_error("Access of FlowFile after it has been released");
+  }
+
+  session_->transferToDynamicRelationship(flow_file, relationship_name);
+}
+
 void PyProcessSession::read(const std::shared_ptr<core::FlowFile>& flow_file, BorrowedObject input_stream_callback) {
   if (!session_) {
     throw std::runtime_error("Access of ProcessSession after it has been released");
@@ -153,6 +165,7 @@ static PyMethodDef PyProcessSessionObject_methods[] = {  // NOLINT(cppcoreguidel
     {"read", (PyCFunction) PyProcessSessionObject::read, METH_VARARGS, nullptr},
     {"write", (PyCFunction) PyProcessSessionObject::write, METH_VARARGS, nullptr},
     {"transfer", (PyCFunction) PyProcessSessionObject::transfer, METH_VARARGS, nullptr},
+    {"transferToDynamicRelationship", (PyCFunction) PyProcessSessionObject::transferToDynamicRelationship, METH_VARARGS, nullptr},
     {"remove", (PyCFunction) PyProcessSessionObject::remove, METH_VARARGS, nullptr},
     {"getContentsAsBytes", (PyCFunction) PyProcessSessionObject::getContentsAsBytes, METH_VARARGS, nullptr},
     {}  /* Sentinel */
@@ -305,6 +318,30 @@ PyObject* PyProcessSessionObject::transfer(PyProcessSessionObject* self, PyObjec
     Py_RETURN_NONE;
   }
   session->transfer(flow_file, reinterpret_cast<PyRelationship*>(relationship)->relationship_);
+  Py_RETURN_NONE;
+}
+
+PyObject* PyProcessSessionObject::transferToDynamicRelationship(PyProcessSessionObject* self, PyObject* args) {
+  auto session = self->process_session_.lock();
+  if (!session) {
+    PyErr_SetString(PyExc_AttributeError, "tried reading process session outside 'on_trigger'");
+    Py_RETURN_NONE;
+  }
+
+  PyObject* script_flow_file = nullptr;
+  const char* relationship_name = nullptr;
+  if (!PyArg_ParseTuple(args, "O!s", PyScriptFlowFile::typeObject(), &script_flow_file, &relationship_name)) {
+    throw PyException();
+  }
+
+  const auto flow_file = reinterpret_cast<PyScriptFlowFile*>(script_flow_file)->script_flow_file_.lock();
+  if (!flow_file) {
+    PyErr_SetString(PyExc_AttributeError, "tried reading FlowFile outside 'on_trigger'");
+    Py_RETURN_NONE;
+  }
+
+  BorrowedStr name = BorrowedStr::fromTuple(args, 0);
+  session->transferToDynamicRelationship(flow_file, relationship_name);
   Py_RETURN_NONE;
 }
 

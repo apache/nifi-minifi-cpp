@@ -108,7 +108,10 @@ class FlowFileTransform(ABC):
         if result_content is not None:
             session.write(flow_file, WriteCallback(result_content))
 
-        session.transfer(flow_file, self.REL_SUCCESS)
+        if result.getRelationship() == "success":
+            session.transfer(flow_file, self.REL_SUCCESS)
+        else:
+            session.transferToDynamicRelationship(flow_file, result.getRelationship())
         session.transfer(original_flow_file, self.REL_ORIGINAL)
 
     @abstractmethod

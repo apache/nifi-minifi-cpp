@@ -82,3 +82,23 @@ Feature: MiNiFi can use python processors in its flows
     When all instances start up
     Then at least one flowfile's content match the following regex: '{"text": "test_", "metadata": {"filename": "test_file.log", "uuid": "", "chunk_index": 0, "chunk_count": 3}}' in less than 30 seconds
     And the Minifi logs contain the following message: "key:document.count value:3" in less than 10 seconds
+
+  @USE_NIFI_PYTHON_PROCESSORS
+  Scenario: MiNiFi C++ can use custom relationships in NiFi native python processors
+    Given a GetFile processor with the "Input Directory" property set to "/tmp/input"
+    And a file with filename "test_file.log" and content "test_data_one" is present in "/tmp/input"
+    And a file with filename "test_file2.log" and content "test_data_two" is present in "/tmp/input"
+    And a file with filename "test_file3.log" and content "test_data_three" is present in "/tmp/input"
+    And a file with filename "test_file4.log" and content "test_data_four" is present in "/tmp/input"
+    And a RotatingForwarder processor
+    And a PutFile processor with the "Directory" property set to "/tmp/output"
+
+    And the "success" relationship of the GetFile processor is connected to the RotatingForwarder
+    And the "first" relationship of the RotatingForwarder processor is connected to the PutFile
+    And the "second" relationship of the RotatingForwarder processor is connected to the PutFile
+    And the "third" relationship of the RotatingForwarder processor is connected to the PutFile
+    And the "fourth" relationship of the RotatingForwarder processor is connected to the PutFile
+
+    When all instances start up
+
+    Then flowfiles with these contents are placed in the monitored directory in less than 10 seconds: "test_data_one,test_data_two,test_data_three,test_data_four"
