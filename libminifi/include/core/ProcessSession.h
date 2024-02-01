@@ -82,6 +82,7 @@ class ProcessSession : public ReferenceContainer {
   std::shared_ptr<core::FlowFile> clone(const core::FlowFile& parent, int64_t offset, int64_t size);
   // Transfer the FlowFile to the relationship
   virtual void transfer(const std::shared_ptr<core::FlowFile>& flow, const Relationship& relationship);
+  void transferToCustomRelationship(const std::shared_ptr<core::FlowFile>& flow, const std::string& relationship_name);
 
   void putAttribute(core::FlowFile& flow, std::string_view key, const std::string& value);
   void removeAttribute(core::FlowFile& flow, std::string_view key);

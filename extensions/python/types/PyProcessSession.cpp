@@ -63,6 +63,18 @@ void PyProcessSession::transfer(const std::shared_ptr<core::FlowFile>& flow_file
   session_->transfer(flow_file, relationship);
 }
 
+void PyProcessSession::transferToCustomRelationship(const std::shared_ptr<core::FlowFile>& flow_file, const std::string& relationship_name) {
+  if (!session_) {
+    throw std::runtime_error("Access of ProcessSession after it has been released");
+  }
+
+  if (!flow_file) {
+    throw std::runtime_error("Access of FlowFile after it has been released");
+  }
+
+  session_->transferToCustomRelationship(flow_file, relationship_name);
+}
+
 void PyProcessSession::read(const std::shared_ptr<core::FlowFile>& flow_file, BorrowedObject input_stream_callback) {
   if (!session_) {
     throw std::runtime_error("Access of ProcessSession after it has been released");
@@ -153,6 +165,7 @@ static PyMethodDef PyProcessSessionObject_methods[] = {  // NOLINT(cppcoreguidel
     {"read", (PyCFunction) PyProcessSessionObject::read, METH_VARARGS, nullptr},
     {"write", (PyCFunction) PyProcessSessionObject::write, METH_VARARGS, nullptr},
     {"transfer", (PyCFunction) PyProcessSessionObject::transfer, METH_VARARGS, nullptr},
+    {"transferToCustomRelationship", (PyCFunction) PyProcessSessionObject::transferToCustomRelationship, METH_VARARGS, nullptr},
     {"remove", (PyCFunction) PyProcessSessionObject::remove, METH_VARARGS, nullptr},
     {"getContentsAsBytes", (PyCFunction) PyProcessSessionObject::getContentsAsBytes, METH_VARARGS, nullptr},
     {}  /* Sentinel */
@@ -305,6 +318,41 @@ PyObject* PyProcessSessionObject::transfer(PyProcessSessionObject* self, PyObjec
     Py_RETURN_NONE;
   }
   session->transfer(flow_file, reinterpret_cast<PyRelationship*>(relationship)->relationship_);
+  Py_RETURN_NONE;
+}
+
+PyObject* PyProcessSessionObject::transferToCustomRelationship(PyProcessSessionObject* self, PyObject* args) {
+  auto session = self->process_session_.lock();
+  if (!session) {
+    PyErr_SetString(PyExc_AttributeError, "tried reading process session outside 'on_trigger'");
+    Py_RETURN_NONE;
+  }
+
+  PyObject* script_flow_file = nullptr;
+  const char* relationship_name = nullptr;
+  if (!PyArg_ParseTuple(args, "O!s", PyScriptFlowFile::typeObject(), &script_flow_file, &relationship_name)) {
+    throw PyException();
+  }
+
+  if (!relationship_name) {
+    PyErr_SetString(PyExc_AttributeError, "Custom relationship name is invalid!");
+    return nullptr;
+  }
+
+  std::string relationship_name_str(relationship_name);
+  if (relationship_name_str.empty()) {
+    PyErr_SetString(PyExc_AttributeError, "Custom relationship name is empty!");
+    return nullptr;
+  }
+
+  const auto flow_file = reinterpret_cast<PyScriptFlowFile*>(script_flow_file)->script_flow_file_.lock();
+  if (!flow_file) {
+    PyErr_SetString(PyExc_AttributeError, "tried reading FlowFile outside 'on_trigger'");
+    Py_RETURN_NONE;
+  }
+
+  BorrowedStr name = BorrowedStr::fromTuple(args, 0);
+  session->transferToCustomRelationship(flow_file, relationship_name_str);
   Py_RETURN_NONE;
 }
 

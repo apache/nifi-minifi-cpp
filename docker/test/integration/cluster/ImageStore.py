@@ -107,6 +107,7 @@ class ImageStore:
                 {pip3_install_command}
                 RUN pip3 install langchain
                 USER minificpp
+                COPY RotatingForwarder.py /opt/minifi/minifi-current/minifi-python/nifi_python_processors/RotatingForwarder.py
                 RUN wget {parse_document_url} --directory-prefix=/opt/minifi/minifi-current/minifi-python/nifi_python_processors && \\
                     wget {chunk_document_url} --directory-prefix=/opt/minifi/minifi-current/minifi-python/nifi_python_processors
                 """.format(base_image='apacheminificpp:' + MinifiContainer.MINIFI_TAG_PREFIX + MinifiContainer.MINIFI_VERSION,
@@ -114,7 +115,7 @@ class ImageStore:
                            parse_document_url=parse_document_url,
                            chunk_document_url=chunk_document_url))
 
-        return self.__build_image(dockerfile)
+        return self.__build_image(dockerfile, [os.path.join(self.test_dir, "resources", "python", "RotatingForwarder.py")])
 
     def __build_http_proxy_image(self):
         dockerfile = dedent("""\
@@ -178,11 +179,11 @@ class ImageStore:
                 docker_context.addfile(dockerfile_info,
                                        fileobj=conf_dockerfile_buffer)
 
-                for context_file in context_files:
-                    file_info = tarfile.TarInfo(context_file['name'])
-                    file_info.size = context_file['size']
-                    docker_context.addfile(file_info,
-                                           fileobj=context_file['file_obj'])
+                for context_file_path in context_files:
+                    with open(context_file_path, 'rb') as file:
+                        file_info = tarfile.TarInfo(os.path.basename(context_file_path))
+                        file_info.size = os.path.getsize(context_file_path)
+                        docker_context.addfile(file_info, file)
             docker_context_buffer.seek(0)
 
             logging.info('Creating configured image...')
