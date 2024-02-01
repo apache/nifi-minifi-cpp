@@ -223,13 +223,15 @@ class ImageStore:
         return tuple(map(int, python_ver_str.split('.')))
 
     def is_conda_available_in_minifi_image(self):
+        container = self.client.containers.create(
+            image='apacheminificpp:' + MinifiContainer.MINIFI_TAG_PREFIX + MinifiContainer.MINIFI_VERSION,
+            command=['conda', '--version'],
+        )
         try:
-            result = self.client.containers.run(
-                image='apacheminificpp:' + MinifiContainer.MINIFI_TAG_PREFIX + MinifiContainer.MINIFI_VERSION,
-                command=['conda', '--version'],
-                remove=True
-            )
+            result = container.start()
         except docker.errors.APIError:
+            container.remove()
             return False
 
+        container.remove()
         return result.decode('utf-8').startswith('conda ')
