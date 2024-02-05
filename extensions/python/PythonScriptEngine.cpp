@@ -201,11 +201,40 @@ void PythonScriptEngine::evaluateModuleImports() {
 void PythonScriptEngine::initializeProcessorObject(const std::string& python_class_name) {
   GlobalInterpreterLock gil;
   if (auto python_class = bindings_[python_class_name]) {
-    auto kwargs = OwnedDict::create();
-    auto value = OwnedObject(Py_None);
-    kwargs.put("jvm", value);
-    auto args = OwnedObject(PyTuple_New(0));
-    processor_instance_ = OwnedObject(PyObject_Call(python_class->get(), args.get(), kwargs.get()));
+    auto num_args = [&]() -> size_t {
+      auto class_init = OwnedObject(PyObject_GetAttrString(python_class->get(), "__init__"));
+      if (!class_init.get()) {
+        return 0;
+      }
+
+      auto inspect_module = OwnedObject(PyImport_ImportModule("inspect"));
+      if (!inspect_module.get()) {
+        return 0;
+      }
+
+      auto inspect_args = OwnedObject(PyObject_CallMethod(inspect_module.get(), "getfullargspec", "O", class_init.get()));
+      if (!inspect_args.get()) {
+        return 0;
+      }
+
+      auto arg_list = OwnedObject(PyObject_GetAttrString(inspect_args.get(), "args"));
+      if (!arg_list.get()) {
+        return 0;
+      }
+
+      return PyList_Size(arg_list.get());
+    }();
+
+    if (num_args > 1) {
+      auto kwargs = OwnedDict::create();
+      auto value = OwnedObject(Py_None);
+      kwargs.put("jvm", value);
+      auto args = OwnedObject(PyTuple_New(0));
+      processor_instance_ = OwnedObject(PyObject_Call(python_class->get(), args.get(), kwargs.get()));
+    } else {
+      processor_instance_ = OwnedObject(PyObject_CallObject(python_class->get(), nullptr));
+    }
+
     if (processor_instance_.get() == nullptr) {
       throw PythonScriptException(PyException().what());
     }
