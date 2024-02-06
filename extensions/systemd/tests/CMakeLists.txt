@@ -19,7 +19,7 @@
 
 function(add_systemd_test testfile)
     get_filename_component(TEST_TARGET "${testfile}" NAME_WE)
-    add_executable(${TEST_TARGET} "${testfile}")
+    add_minifi_executable(${TEST_TARGET} "${testfile}")
     target_include_directories(${TEST_TARGET} PRIVATE BEFORE "${CMAKE_SOURCE_DIR}/extensions/systemd/")
     target_include_directories(${TEST_TARGET} PRIVATE BEFORE "${CMAKE_SOURCE_DIR}/extensions/standard-processors")
     target_include_directories(${TEST_TARGET} PRIVATE BEFORE "${CMAKE_SOURCE_DIR}/libminifi/test")

@@ -30,14 +30,7 @@ endif()
 include(CppVersion)
 set_cpp_version()
 
-if (WIN32)
-    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /W3")
-else()
-    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -Wno-reorder")
-endif()
-
 include_directories(include)
-
 
 if(WIN32)
     include_directories(opsys/win)
@@ -69,7 +62,7 @@ endif()
 file(GLOB PROCESSOR_SOURCES  "src/processors/*.cpp" )
 
 
-add_library(core-minifi SHARED ${SOURCES})
+add_minifi_library(core-minifi SHARED ${SOURCES})
 target_compile_definitions(core-minifi PRIVATE "LIBMINIFI=1")
 if(WIN32)
     set_target_properties(core-minifi PROPERTIES WINDOWS_EXPORT_ALL_SYMBOLS TRUE)

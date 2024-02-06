@@ -23,7 +23,7 @@ SET(EXTENSIONS_TEST_COUNT 0)
 
 FOREACH(testfile ${EXECUTESCRIPT_LUA_TESTS})
     get_filename_component(testfilename "${testfile}" NAME_WE)
-    add_executable("${testfilename}" "${testfile}")
+    add_minifi_executable("${testfilename}" "${testfile}")
     target_include_directories(${testfilename} PRIVATE BEFORE "${CMAKE_SOURCE_DIR}/extensions/lua")
     target_include_directories(${testfilename} PRIVATE BEFORE "${CMAKE_SOURCE_DIR}/libminifi/test/")
     target_include_directories(${testfilename} SYSTEM PRIVATE BEFORE "${SOL2_INCLUDE_DIR}")

@@ -23,7 +23,7 @@ SET(FLOW_TEST_COUNT 0)
 
 FOREACH(testfile ${FLOW_TESTS})
     get_filename_component(testfilename "${testfile}" NAME_WE)
-    add_executable("${testfilename}" "${testfile}" )
+    add_minifi_executable("${testfilename}" "${testfile}")
     target_include_directories(${testfilename} PRIVATE BEFORE "${CMAKE_SOURCE_DIR}/libminifi/test/")
     target_include_directories(${testfilename} PRIVATE BEFORE "${CMAKE_SOURCE_DIR}/extensions/standard-processors/")
     createTests("${testfilename}")

@@ -43,9 +43,9 @@ const char *ProvenanceEventRecord::ProvenanceEventTypeStr[REPLAY + 1] = { "CREAT
 ProvenanceEventRecord::ProvenanceEventRecord(ProvenanceEventRecord::ProvenanceEventType event, std::string componentId, std::string componentType)
     : core::SerializableComponent(core::className<ProvenanceEventRecord>()),
       _eventType(event),
+      _eventTime(std::chrono::system_clock::now()),
       _componentId(std::move(componentId)),
-      _componentType(std::move(componentType)),
-      _eventTime(std::chrono::system_clock::now()) {
+      _componentType(std::move(componentType)) {
 }
 
 bool ProvenanceEventRecord::loadFromRepository(const std::shared_ptr<core::Repository> &repo) {

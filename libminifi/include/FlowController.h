@@ -188,6 +188,8 @@ class FlowController : public core::controller::ForwardingControllerServiceProvi
   std::unique_ptr<EventDrivenSchedulingAgent> event_scheduler_;
   std::unique_ptr<CronDrivenSchedulingAgent> cron_scheduler_;
   std::chrono::steady_clock::time_point start_time_;
+  // Thread pool for schedulers
+  utils::ThreadPool thread_pool_;
   std::shared_ptr<Configure> configuration_;
   std::shared_ptr<core::Repository> provenance_repo_;
   std::shared_ptr<core::Repository> flow_file_repo_;
@@ -198,9 +200,6 @@ class FlowController : public core::controller::ForwardingControllerServiceProvi
   std::unique_ptr<c2::C2Agent> c2_agent_{};
   std::unique_ptr<c2::ControllerSocketProtocol> controller_socket_protocol_;
   std::shared_ptr<core::logging::Logger> logger_ = core::logging::LoggerFactory<FlowController>::getLogger();
-
-  // Thread pool for schedulers
-  utils::ThreadPool thread_pool_;
 };
 
 }  // namespace org::apache::nifi::minifi

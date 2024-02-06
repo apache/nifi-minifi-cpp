@@ -61,13 +61,15 @@ class SystemCpuUsageTracker : public SystemCpuUsageTrackerBase {
 
  private:
   uint64_t total_user_;
-  uint64_t total_user_low_;
-  uint64_t total_sys_;
-  uint64_t total_idle_;
-
   uint64_t previous_total_user_;
+
+  uint64_t total_user_low_;
   uint64_t previous_total_user_low_;
+
+  uint64_t total_sys_;
   uint64_t previous_total_sys_;
+
+  uint64_t total_idle_;
   uint64_t previous_total_idle_;
 };
 #endif  // linux
@@ -111,9 +113,9 @@ class SystemCpuUsageTracker : public SystemCpuUsageTrackerBase {
 
  private:
   uint64_t total_ticks_;
-  uint64_t idle_ticks_;
-
   uint64_t previous_total_ticks_;
+
+  uint64_t idle_ticks_;
   uint64_t previous_idle_ticks_;
 };
 #endif  // macOS
