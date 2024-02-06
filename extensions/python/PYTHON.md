@@ -158,7 +158,8 @@ Due to some differences between the NiFi and MiNiFi C++ processors and implement
 - Virtualenv support is not yet available in MiNiFi C++, so all required packaged must be installed on the system.
 - Controller properties are not supported at the moment.
 - There are some validators in NiFi that are not present in MiNiFi C++, so some property validations will be missing using the NiFi Python processors.
-- Allowable values specified in NiFi Python processors are ignored in MiNiFi C++ (due to MiNiFi C++ requiring them to be specified in compile time), so the property values are not pre-verified.
+- Allowable values specified in NiFi Python processors are ignored in MiNiFi C++ (due to MiNiFi C++ requiring them to be specified at compile time), so the property values are not pre-verified.
 - MiNiFi C++ does not support custom relationship names in Python processors, the only available relationships are "success", "failure" and "original".
 - MiNiFi C++ only supports expression language with flow file attributes, so only FLOWFILE_ATTRIBUTES expression language scope is supported, otherwise the expression language will not be evaluated.
 - MiNiFi C++ does not support property dependencies, so the property dependencies will be ignored. If a property depends on another property, the property will not be required.
+- MiNiFi C++ does not support the use of self.jvm member in Python processors that provides JVM bindings in NiFi, it is set to None in MiNiFi C++.
