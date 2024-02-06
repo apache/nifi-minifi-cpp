@@ -25,7 +25,7 @@ include(${CMAKE_SOURCE_DIR}/extensions/ExtensionHeader.txt)
 
 file(GLOB SOURCES "*.cpp" "processors/*.cpp" "utils/*.cpp")
 
-add_library(minifi-procfs SHARED ${SOURCES})
+add_minifi_library(minifi-procfs SHARED "${SOURCES}")
 target_link_libraries(minifi-procfs ${LIBMINIFI})
 
 register_extension(minifi-procfs "PROCFS EXTENSIONS" PROCFS-EXTENSIONS "Enabled metrics collection from procfs" "extensions/procfs/tests")

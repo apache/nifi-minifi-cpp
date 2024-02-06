@@ -25,7 +25,7 @@ include(${CMAKE_SOURCE_DIR}/extensions/ExtensionHeader.txt)
 
 file(GLOB SOURCES  "*.cpp")
 
-add_library(minifi-pdh SHARED ${SOURCES})
+add_minifi_library(minifi-pdh SHARED "${SOURCES}")
 
 target_link_libraries(minifi-pdh ${LIBMINIFI} pdh)
 

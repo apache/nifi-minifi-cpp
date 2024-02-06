@@ -35,7 +35,7 @@ include_directories(include)
 
 file(GLOB SOURCES "src/*.cpp")
 
-add_library(minifi-opc-extensions SHARED ${SOURCES})
+add_minifi_library(minifi-opc-extensions SHARED "${SOURCES}")
 
 target_link_libraries(minifi-opc-extensions ${LIBMINIFI} Threads::Threads)
 target_link_libraries(minifi-opc-extensions ${CMAKE_DL_LIBS} spdlog open62541::open62541)

@@ -28,7 +28,7 @@ include_directories(".")
 
 file(GLOB SOURCES  "*.cpp" "services/*.cpp" "processors/*.cpp"  "data/*.cpp")
 
-add_library(minifi-sql SHARED ${SOURCES})
+add_minifi_library(minifi-sql SHARED "${SOURCES}")
 
 if(WIN32)
     find_package(ODBC REQUIRED)

@@ -25,7 +25,7 @@ include(${CMAKE_SOURCE_DIR}/extensions/ExtensionHeader.txt)
 
 file(GLOB SOURCES  "processors/*.cpp" "protocols/*.cpp")
 
-add_library(minifi-civet-extensions SHARED ${SOURCES})
+add_minifi_library(minifi-civet-extensions SHARED "${SOURCES}")
 target_include_directories(minifi-civet-extensions BEFORE PUBLIC
                            ${CMAKE_SOURCE_DIR}/libminifi/include
                            ${CMAKE_SOURCE_DIR}/libminifi/include/core

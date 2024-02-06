@@ -27,7 +27,7 @@ include(${CMAKE_SOURCE_DIR}/extensions/ExtensionHeader.txt)
 
 file(GLOB SOURCES  "*.cpp")
 
-add_library(minifi-lua-script-extension SHARED ${SOURCES})
+add_minifi_library(minifi-lua-script-extension SHARED "${SOURCES}")
 
 target_link_libraries(minifi-lua-script-extension PRIVATE ${LIBMINIFI} Threads::Threads)
 

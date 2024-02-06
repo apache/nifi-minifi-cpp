@@ -103,7 +103,7 @@ if (NOT WIN32)
     set_source_files_properties(${FLEX_el-scanner_OUTPUTS} PROPERTIES COMPILE_FLAGS -Wno-error)
 endif()
 
-add_library(minifi-expression-language-extensions SHARED ${SOURCES} ${BISON_el-parser_OUTPUTS} ${FLEX_el-scanner_OUTPUTS})
+add_minifi_library(minifi-expression-language-extensions SHARED "${SOURCES}" "${BISON_el-parser_OUTPUTS}" "${FLEX_el-scanner_OUTPUTS}")
 
 target_link_libraries(minifi-expression-language-extensions ${LIBMINIFI})
 target_link_libraries(minifi-expression-language-extensions RapidJSON CURL::libcurl)

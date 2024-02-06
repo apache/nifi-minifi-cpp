@@ -39,7 +39,7 @@ if (WIN32)
     list(APPEND MINIFI_CONTROLLER_SOURCES "${CMAKE_CURRENT_BINARY_DIR}/versioninfo.rc")
 endif()
 
-add_executable(minificontroller ${MINIFI_CONTROLLER_SOURCES})
+add_minifi_executable(minificontroller "${MINIFI_CONTROLLER_SOURCES}")
 include(ArgParse)
 target_link_libraries(minificontroller ${LIBMINIFI} argparse Threads::Threads)
 

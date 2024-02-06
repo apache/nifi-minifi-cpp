@@ -28,7 +28,7 @@ include(${CMAKE_SOURCE_DIR}/extensions/ExtensionHeader.txt)
 
 file(GLOB SOURCES  "*.cpp" "wel/*.cpp")
 
-add_library(minifi-wel SHARED ${SOURCES})
+add_minifi_library(minifi-wel SHARED "${SOURCES}")
 
 target_link_libraries(minifi-wel ${LIBMINIFI} Threads::Threads)
 target_link_libraries(minifi-wel PUGI::libpugixml ZLIB::ZLIB Wevtapi.lib)

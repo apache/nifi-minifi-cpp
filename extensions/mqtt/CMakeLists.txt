@@ -26,7 +26,7 @@ include_directories(./processors ../../libminifi/include  ../../libminifi/includ
 
 file(GLOB SOURCES "processors/*.cpp")
 
-add_library(minifi-mqtt-extensions SHARED ${SOURCES})
+add_minifi_library(minifi-mqtt-extensions SHARED "${SOURCES}")
 
 target_link_libraries(minifi-mqtt-extensions ${LIBMINIFI})
 

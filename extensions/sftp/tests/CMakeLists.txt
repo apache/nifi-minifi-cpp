@@ -28,7 +28,7 @@ if (NOT SKIP_TESTS AND Java_FOUND AND Maven_FOUND AND NOT DISABLE_EXPRESSION_LAN
     SET(SFTP-EXTENSIONS_TEST_COUNT 0)
     FOREACH(testfile ${SFTP_INTEGRATION_TESTS})
         get_filename_component(testfilename "${testfile}" NAME_WE)
-        add_executable("${testfilename}" "${testfile}")
+        add_minifi_executable("${testfilename}" "${testfile}")
         target_include_directories(${testfilename} BEFORE PRIVATE ${LIBSSH2_INCLUDE_DIR})
         target_include_directories(${testfilename} BEFORE PRIVATE "${CMAKE_SOURCE_DIR}/extensions/standard-processors")
         target_include_directories(${testfilename} BEFORE PRIVATE "${CMAKE_SOURCE_DIR}/extensions/standard-processors/processors")

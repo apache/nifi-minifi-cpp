@@ -41,6 +41,9 @@ if (ENABLE_GRPC_FOR_LOKI)
         ${LOKI_PROTOBUF_GENERATED_DIR}/grafana-loki-push.grpc.pb.cc
         ${LOKI_PROTOBUF_GENERATED_DIR}/grafana-loki-push.pb.cc
     )
+
+    set_source_files_properties(${LOKI_PROTOBUF_GENERATED_DIR}/grafana-loki-push.grpc.pb.cc PROPERTIES COMPILE_FLAGS -Wno-error)
+    set_source_files_properties(${LOKI_PROTOBUF_GENERATED_DIR}/grafana-loki-push.pb.cc PROPERTIES COMPILE_FLAGS -Wno-error)
 else()
     set(SOURCES
         ${CMAKE_CURRENT_SOURCE_DIR}/PushGrafanaLoki.cpp
@@ -48,13 +51,13 @@ else()
     )
 endif()
 
-add_library(minifi-grafana-loki SHARED ${SOURCES})
+add_minifi_library(minifi-grafana-loki SHARED "${SOURCES}")
 target_include_directories(minifi-grafana-loki PRIVATE BEFORE "${CMAKE_SOURCE_DIR}/extensions/http-curl")
 target_link_libraries(minifi-grafana-loki ${LIBMINIFI} minifi-http-curl)
 add_dependencies(minifi-grafana-loki minifi-http-curl)
 
 if (ENABLE_GRPC_FOR_LOKI)
-    target_include_directories(minifi-grafana-loki PRIVATE BEFORE "${LOKI_PROTOBUF_GENERATED_DIR}" "${GRPC_INCLUDE_DIR}" "${PROTOBUF_INCLUDE_DIR}")
+    target_include_directories(minifi-grafana-loki SYSTEM PRIVATE BEFORE "${LOKI_PROTOBUF_GENERATED_DIR}" "${GRPC_INCLUDE_DIR}" "${PROTOBUF_INCLUDE_DIR}")
     target_link_libraries(minifi-grafana-loki grpc++ protobuf::libprotobuf)
     add_dependencies(minifi-grafana-loki grpc grafana-loki-protos)
 endif()

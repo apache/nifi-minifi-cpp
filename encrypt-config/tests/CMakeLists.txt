@@ -24,7 +24,7 @@ list(REMOVE_ITEM ENCRYPT_CONFIG_SOURCES "${CMAKE_SOURCE_DIR}/encrypt-config/Encr
 set(ENCRYPT_CONFIG_TEST_COUNT 0)
 foreach(testfile ${ENCRYPT_CONFIG_TESTS})
     get_filename_component(testfilename "${testfile}" NAME_WE)
-    add_executable(${testfilename} "${testfile}" ${ENCRYPT_CONFIG_SOURCES})
+    add_minifi_executable(${testfilename} "${testfile}" "${ENCRYPT_CONFIG_SOURCES}")
 
     target_include_directories(${testfilename} BEFORE PRIVATE "${CMAKE_SOURCE_DIR}/encrypt-config")
     target_include_directories(${testfilename} BEFORE PRIVATE "${CMAKE_SOURCE_DIR}/libminifi/include")

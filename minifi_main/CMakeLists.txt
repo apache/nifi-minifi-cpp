@@ -43,7 +43,7 @@ if(WIN32)
     configure_file(${CMAKE_SOURCE_DIR}/versioninfo.rc.in ${CMAKE_CURRENT_BINARY_DIR}/versioninfo.rc @ONLY)
     list(APPEND MINIFIEXE_SOURCES "${CMAKE_CURRENT_BINARY_DIR}/versioninfo.rc")
 endif()
-add_executable(minifiexe ${MINIFIEXE_SOURCES})
+add_minifi_executable(minifiexe "${MINIFIEXE_SOURCES}")
 
 if (NOT USE_SHARED_LIBS)
     if (LIBC_STATIC)

@@ -20,15 +20,15 @@
 cmake_minimum_required(VERSION 3.24)
 
 if (NOT WIN32)
-    add_executable(log_aggregator log_aggregator.c)
+    add_minifi_executable(log_aggregator log_aggregator.c)
     target_link_libraries(log_aggregator nanofi Threads::Threads)
     target_link_libraries(log_aggregator minifi-http-curl)
 
-    add_executable(tailfile_chunk tailfile_chunk.c)
+    add_minifi_executable(tailfile_chunk tailfile_chunk.c)
     target_link_libraries(tailfile_chunk nanofi Threads::Threads)
     target_link_libraries(tailfile_chunk minifi-http-curl)
 
-    add_executable(tailfile_delimited tailfile_delimited.c)
+    add_minifi_executable(tailfile_delimited tailfile_delimited.c)
     target_link_libraries(tailfile_delimited nanofi Threads::Threads)
     target_link_libraries(tailfile_delimited minifi-http-curl)
 endif()

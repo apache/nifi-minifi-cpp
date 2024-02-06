@@ -24,6 +24,3 @@ FetchContent_Declare(json-schema-validator
 FetchContent_MakeAvailable(json-schema-validator)
 
 target_compile_options(nlohmann_json_schema_validator PRIVATE -fsigned-char)
-if (NOT WIN32)
-  target_compile_options(nlohmann_json_schema_validator PRIVATE -Wno-error)
-endif()

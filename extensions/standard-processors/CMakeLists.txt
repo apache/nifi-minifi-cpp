@@ -22,7 +22,7 @@ include(${CMAKE_SOURCE_DIR}/extensions/ExtensionHeader.txt)
 
 file(GLOB SOURCES "processors/*.cpp" "controllers/*.cpp" "utils/*.cpp")
 
-add_library(minifi-standard-processors SHARED ${SOURCES})
+add_minifi_library(minifi-standard-processors SHARED "${SOURCES}")
 target_include_directories(minifi-standard-processors PUBLIC "${CMAKE_SOURCE_DIR}/extensions/standard-processors")
 
 include(RangeV3)

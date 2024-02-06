@@ -57,7 +57,7 @@ class SSLContext {
       : context_(context) {
   }
 #else
-  SSLContext(void *context) {} // NOLINT
+  SSLContext(void*) {} // NOLINT
 #endif
   ~SSLContext() {
 #ifdef OPENSSL_SUPPORT

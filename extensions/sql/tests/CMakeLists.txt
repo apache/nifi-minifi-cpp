@@ -17,7 +17,7 @@
 # under the License.
 
 file(GLOB SQL_MOCK_SOURCES  "mocks/*.cpp")
-add_library(minifi-sql-mocks STATIC ${SQL_MOCK_SOURCES})
+add_minifi_library(minifi-sql-mocks STATIC "${SQL_MOCK_SOURCES}")
 target_include_directories(minifi-sql-mocks BEFORE PRIVATE "${CMAKE_SOURCE_DIR}/libminifi/include")
 target_include_directories(minifi-sql-mocks BEFORE PRIVATE "${CMAKE_SOURCE_DIR}/extensions/sql")
 target_include_directories(minifi-sql-mocks BEFORE PRIVATE "mocks")
@@ -27,7 +27,7 @@ file(GLOB SQL_TESTS  "*.cpp")
 set(SQL_TEST_COUNT 0)
 foreach(testfile ${SQL_TESTS})
     get_filename_component(testfilename "${testfile}" NAME_WE)
-    add_executable(${testfilename} "${testfile}")
+    add_minifi_executable(${testfilename} "${testfile}")
 
     target_include_directories(${testfilename} BEFORE PRIVATE "${CMAKE_SOURCE_DIR}/extensions/sql")
     target_include_directories(${testfilename} PRIVATE BEFORE "${CMAKE_SOURCE_DIR}/extensions/standard-processors")

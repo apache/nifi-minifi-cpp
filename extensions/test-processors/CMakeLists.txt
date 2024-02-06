@@ -25,7 +25,7 @@ include(../ExtensionHeader.txt)
 
 file(GLOB SOURCES  "*.cpp")
 
-add_library(minifi-test-processors SHARED ${SOURCES})
+add_minifi_library(minifi-test-processors SHARED "${SOURCES}")
 
 target_link_libraries(minifi-test-processors ${LIBMINIFI})
 

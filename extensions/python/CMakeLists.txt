@@ -25,7 +25,7 @@ include(${CMAKE_SOURCE_DIR}/extensions/ExtensionHeader.txt)
 
 file(GLOB SOURCES "*.cpp" "types/*.cpp" "pythonloader/PyProcLoader.cpp")
 
-add_library(minifi-python-script-extension SHARED ${SOURCES})
+add_minifi_library(minifi-python-script-extension SHARED "${SOURCES}")
 
 target_link_libraries(minifi-python-script-extension PRIVATE ${LIBMINIFI} Threads::Threads)
 

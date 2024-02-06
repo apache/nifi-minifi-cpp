@@ -28,7 +28,7 @@ include(${CMAKE_SOURCE_DIR}/extensions/ExtensionHeader.txt)
 
 file(GLOB SOURCES "processors/*.cpp")
 
-add_library(minifi-openwsman SHARED ${SOURCES})
+add_minifi_library(minifi-openwsman SHARED "${SOURCES}")
 
 target_link_libraries(minifi-openwsman ${LIBMINIFI} Threads::Threads)
 target_link_libraries(minifi-openwsman OpenWSMAN::libwsman civetweb::civetweb-cpp civetweb::c-library LibXml2::LibXml2)

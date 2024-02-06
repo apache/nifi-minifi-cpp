@@ -29,7 +29,7 @@ include_directories(${LIBGPS_INCLUDE_DIRS})
 
 file(GLOB SOURCES  "*.cpp")
 
-add_library(minifi-gps SHARED ${SOURCES})
+add_minifi_library(minifi-gps SHARED "${SOURCES}")
 
 # Include UUID
 target_link_libraries(minifi-gps ${LIBMINIFI} )

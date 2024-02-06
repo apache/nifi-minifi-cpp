@@ -28,7 +28,7 @@ include_directories(protocols client processors sitetosite)
 
 file(GLOB SOURCES  "*.cpp" "protocols/*.cpp" "client/*.cpp" "processors/*.cpp" "sitetosite/*.cpp")
 
-add_library(minifi-http-curl SHARED ${SOURCES})
+add_minifi_library(minifi-http-curl SHARED "${SOURCES}")
 
 target_link_libraries(minifi-http-curl ${LIBMINIFI} Threads::Threads)
 target_link_libraries(minifi-http-curl CURL::libcurl RapidJSON)

@@ -201,6 +201,9 @@ set(PASSTHROUGH_CMAKE_ARGS -DANDROID_ABI=${ANDROID_ABI}
     -G${CMAKE_GENERATOR}
     )
 
+set(MINIFI_CPP_COMPILE_OPTIONS "")
+set(MINIFI_CPP_COMPILE_DEFINITIONS "")
+
 if(CUSTOM_MALLOC)
     if (CUSTOM_MALLOC STREQUAL jemalloc)
         include(BundledJemalloc)
@@ -227,8 +230,7 @@ endif()
 
 if(NOT WIN32)
     if (ENABLE_JNI)
-        set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DENABLE_JNI")
-        set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -DENABLE_JNI")
+        set(MINIFI_CPP_COMPILE_DEFINITIONS ${MINIFI_CPP_COMPILE_DEFINITIONS} ENABLE_JNI)
     endif()
 endif()
 
@@ -249,15 +251,14 @@ if (NOT OPENSSL_OFF)
     use_openssl("${CMAKE_CURRENT_SOURCE_DIR}" "${CMAKE_CURRENT_BINARY_DIR}")
     list(APPEND CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/cmake/ssl")
 
-    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DOPENSSL_SUPPORT")
-    set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -DOPENSSL_SUPPORT")
+    set(MINIFI_CPP_COMPILE_DEFINITIONS ${MINIFI_CPP_COMPILE_DEFINITIONS} OPENSSL_SUPPORT)
 endif()
 
 # libsodium
 include(BundledLibSodium)
 use_bundled_libsodium("${CMAKE_CURRENT_SOURCE_DIR}" "${CMAKE_CURRENT_BINARY_DIR}")
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DSODIUM_STATIC=1")
-set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -DSODIUM_STATIC=1")
+
+set(MINIFI_CPP_COMPILE_DEFINITIONS ${MINIFI_CPP_COMPILE_DEFINITIONS} SODIUM_STATIC=1)
 
 # zlib
 include(BundledZLIB)
@@ -274,8 +275,7 @@ if(NOT DISABLE_CURL)
     use_bundled_curl(${CMAKE_CURRENT_SOURCE_DIR} ${CMAKE_CURRENT_BINARY_DIR})
     list(APPEND CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/cmake/curl/dummy")
 else()
-    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DDISABLE_CURL")
-    set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -DDISABLE_CURL")
+    set(MINIFI_CPP_COMPILE_DEFINITIONS ${MINIFI_CPP_COMPILE_DEFINITIONS} DISABLE_CURL)
 endif()
 
 # spdlog
@@ -325,19 +325,32 @@ include(MagicEnum)
 
 # Setup warning flags
 if(MSVC)
+set(MINIFI_CPP_COMPILE_OPTIONS ${MINIFI_CPP_COMPILE_OPTIONS} /W3)
     if(FAIL_ON_WARNINGS)
-        set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /WX")
+        set(MINIFI_CPP_COMPILE_OPTIONS ${MINIFI_CPP_COMPILE_OPTIONS} /WX)
     endif()
 else()
-    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -Wextra")
+    set(MINIFI_CPP_COMPILE_OPTIONS ${MINIFI_CPP_COMPILE_OPTIONS} -Wall -Wextra -Wno-reorder)
     if(FAIL_ON_WARNINGS)
-        set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Werror")
+        set(MINIFI_CPP_COMPILE_OPTIONS ${MINIFI_CPP_COMPILE_OPTIONS} -Werror)
         # -Wrestrict may cause build failure in GCC 12  https://gcc.gnu.org/bugzilla/show_bug.cgi?id=104336
         if ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "GNU")
-            set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wno-error=restrict")
+            set(MINIFI_CPP_COMPILE_OPTIONS ${MINIFI_CPP_COMPILE_OPTIONS} -Wno-error=restrict)
         endif()
     endif()
 endif()
+
+function(add_minifi_library LIBRARY_NAME LINK_TYPE)
+    add_library(${LIBRARY_NAME} ${LINK_TYPE} ${ARGN})
+    target_compile_options(${LIBRARY_NAME} PRIVATE ${MINIFI_CPP_COMPILE_OPTIONS})
+    target_compile_definitions(${LIBRARY_NAME} PRIVATE ${MINIFI_CPP_COMPILE_DEFINITIONS})
+endfunction()
+
+function(add_minifi_executable EXECUTABLE_NAME)
+    add_executable(${EXECUTABLE_NAME} ${ARGN})
+    target_compile_options(${EXECUTABLE_NAME} PRIVATE ${MINIFI_CPP_COMPILE_OPTIONS})
+    target_compile_definitions(${EXECUTABLE_NAME} PRIVATE ${MINIFI_CPP_COMPILE_DEFINITIONS})
+endfunction()
 
 #### Extensions ####
 SET(TEST_DIR ${CMAKE_SOURCE_DIR}/libminifi/test)
@@ -396,7 +409,7 @@ if (WIN32)
         ${CMAKE_CURRENT_BINARY_DIR}/libminifi
         "${CMAKE_CXX_COMPILER}"
         "${CMAKE_CXX_COMPILER_VERSION}"
-        "${CMAKE_CXX_FLAGS}"
+        "${CMAKE_CXX_FLAGS};${MINIFI_CPP_COMPILE_OPTIONS};${MINIFI_CPP_COMPILE_DEFINITIONS}"
         \"${selected_extensions}\"
         "${BUILD_IDENTIFIER}"
         "${BUILD_REV}")
@@ -408,7 +421,7 @@ else()
         ${CMAKE_CURRENT_BINARY_DIR}/libminifi
         "${CMAKE_CXX_COMPILER}"
         "${CMAKE_CXX_COMPILER_VERSION}"
-        "${CMAKE_CXX_FLAGS}"
+        "${CMAKE_CXX_FLAGS};${MINIFI_CPP_COMPILE_OPTIONS};${MINIFI_CPP_COMPILE_DEFINITIONS}"
         "${selected_extensions}"
         "${BUILD_IDENTIFIER}")
 endif()
