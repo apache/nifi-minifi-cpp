@@ -71,7 +71,7 @@ TEST_CASE("Test Flowfile record added to provenance", "[TestFlowAndProv1]") {
   ffr1->setAttribute("potato", "potatoe");
   ffr1->setAttribute("tomato", "tomatoe");
 
-  record1->addChildFlowFile(ffr1);
+  record1->addChildFlowFile(*ffr1);
 
   auto sample = 65555ms;
   std::shared_ptr<core::Repository> testRepository = std::make_shared<TestRepository>();
@@ -122,7 +122,7 @@ TEST_CASE("Test Flowfile record added to provenance using Volatile Repo", "[Test
   ffr1->setAttribute("potato", "potatoe");
   ffr1->setAttribute("tomato", "tomatoe");
 
-  record1->addChildFlowFile(ffr1);
+  record1->addChildFlowFile(*ffr1);
 
   auto sample = 65555ms;
   std::shared_ptr<core::Repository> testRepository = std::make_shared<core::repository::VolatileProvenanceRepository>();

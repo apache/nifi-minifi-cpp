@@ -46,7 +46,7 @@ void FetchFile::onSchedule(core::ProcessContext& context, core::ProcessSessionFa
 
 std::filesystem::path FetchFile::getFileToFetch(core::ProcessContext& context, const std::shared_ptr<core::FlowFile>& flow_file) {
   std::string file_to_fetch_path;
-  context.getProperty(FileToFetch, file_to_fetch_path, flow_file);
+  context.getProperty(FileToFetch, file_to_fetch_path, flow_file.get());
   if (!file_to_fetch_path.empty()) {
     return file_to_fetch_path;
   }
@@ -133,7 +133,7 @@ void FetchFile::onTrigger(core::ProcessContext& context, core::ProcessSession& s
   auto file_name = file_to_fetch_path.filename();
 
   std::string move_destination_directory;
-  context.getProperty(MoveDestinationDirectory, move_destination_directory, flow_file);
+  context.getProperty(MoveDestinationDirectory, move_destination_directory, flow_file.get());
   move_destination_directory_ = move_destination_directory;
   if (moveWouldFailWithDestinationConflict(file_name)) {
     logger_->log_error("Move destination ({}) conflicts with an already existing file!", move_destination_directory_);

@@ -525,8 +525,8 @@ int CollectorInitiatedSubscription::processQueue(core::ProcessSession& session) 
     auto flowFile = session.create();
 
     session.writeBuffer(flowFile, xml);
-    session.putAttribute(flowFile, core::SpecialFlowAttribute::MIME_TYPE, "application/xml");
-    session.getProvenanceReporter()->receive(flowFile, provenanceUri_, getUUIDStr(), "Consume windows event logs", 0ms);
+    session.putAttribute(*flowFile, core::SpecialFlowAttribute::MIME_TYPE, "application/xml");
+    session.getProvenanceReporter()->receive(*flowFile, provenanceUri_, getUUIDStr(), "Consume windows event logs", 0ms);
     session.transfer(flowFile, Success);
 
     flowFileCount++;

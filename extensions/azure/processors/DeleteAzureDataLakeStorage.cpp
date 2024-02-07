@@ -33,7 +33,7 @@ void DeleteAzureDataLakeStorage::initialize() {
 }
 
 std::optional<storage::DeleteAzureDataLakeStorageParameters> DeleteAzureDataLakeStorage::buildDeleteParameters(
-    core::ProcessContext& context, const std::shared_ptr<core::FlowFile>& flow_file) {
+    core::ProcessContext& context, const core::FlowFile& flow_file) {
   storage::DeleteAzureDataLakeStorageParameters params;
   if (!setFileOperationCommonParameters(params, context, flow_file)) {
     return std::nullopt;
@@ -50,7 +50,7 @@ void DeleteAzureDataLakeStorage::onTrigger(core::ProcessContext& context, core::
     return;
   }
 
-  const auto params = buildDeleteParameters(context, flow_file);
+  const auto params = buildDeleteParameters(context, *flow_file);
   if (!params) {
     session.transfer(flow_file, Failure);
     return;

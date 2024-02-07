@@ -127,12 +127,12 @@ class PublishMQTT : public processors::AbstractMQTTProcessor {
   /**
    * Resolves topic from expression language
    */
-  std::string getTopic(core::ProcessContext& context, const std::shared_ptr<core::FlowFile>& flow_file) const;
+  std::string getTopic(core::ProcessContext& context, const core::FlowFile* const flow_file) const;
 
   /**
    * Resolves content type from expression language
    */
-  std::string getContentType(core::ProcessContext& context, const std::shared_ptr<core::FlowFile>& flow_file) const;
+  std::string getContentType(core::ProcessContext& context, const core::FlowFile* const flow_file) const;
 
   /**
    * Sends an MQTT message asynchronously

@@ -252,20 +252,20 @@ void ListenHTTP::Handler::sendHttp503(mg_connection* const conn) {
                   "Content-Length: 0\r\n\r\n");
 }
 
-void ListenHTTP::Handler::setHeaderAttributes(const mg_request_info *req_info, const std::shared_ptr<core::FlowFile> &flow_file) const {
+void ListenHTTP::Handler::setHeaderAttributes(const mg_request_info *req_info, core::FlowFile& flow_file) const {
   // Add filename from "filename" header value (and pattern headers)
   for (int i = 0; i < req_info->num_headers; i++) {
     auto header = &req_info->http_headers[i];
 
     if (strcmp("filename", header->name) == 0) {
-      flow_file->setAttribute("filename", header->value);
+      flow_file.setAttribute("filename", header->value);
     } else if (headers_as_attrs_regex_ && utils::regexMatch(header->name, *headers_as_attrs_regex_)) {
-      flow_file->setAttribute(header->name, header->value);
+      flow_file.setAttribute(header->name, header->value);
     }
   }
 
   if (req_info->query_string) {
-    flow_file->addAttribute("http.query", req_info->query_string);
+    flow_file.addAttribute("http.query", req_info->query_string);
   }
 }
 
@@ -276,7 +276,7 @@ void ListenHTTP::Handler::enqueueRequest(mg_connection *conn, const mg_request_i
     flow_file->setAttribute(core::SpecialFlowAttribute::FLOW_ID, flow_version->getFlowId());
   }
 
-  setHeaderAttributes(req_info, flow_file);
+  setHeaderAttributes(req_info, *flow_file);
 
   if (buffer_size_ == 0 || request_buffer_.size() < buffer_size_) {
     request_buffer_.enqueue(std::make_pair(std::move(flow_file), std::move(content_buffer)));

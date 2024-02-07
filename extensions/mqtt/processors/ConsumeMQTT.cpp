@@ -103,8 +103,8 @@ void ConsumeMQTT::onTriggerImpl(core::ProcessContext&, core::ProcessSession& ses
       session.remove(flow_file);
     } else {
       putUserPropertiesAsAttributes(message, flow_file, session);
-      session.putAttribute(flow_file, BrokerOutputAttribute.name, uri_);
-      session.putAttribute(flow_file, TopicOutputAttribute.name, message.topic);
+      session.putAttribute(*flow_file, BrokerOutputAttribute.name, uri_);
+      session.putAttribute(*flow_file, TopicOutputAttribute.name, message.topic);
       fillAttributeFromContentType(message, flow_file, session);
       logger_->log_debug("ConsumeMQTT processing success for the flow with UUID {} topic {}", flow_file->getUUIDStr(), message.topic);
       session.transfer(flow_file, Success);
@@ -149,7 +149,7 @@ void ConsumeMQTT::putUserPropertiesAsAttributes(const SmartMessage& message, con
     MQTTProperty* property = MQTTProperties_getPropertyAt(&message.contents->properties, MQTTPROPERTY_CODE_USER_PROPERTY, i);
     std::string key(property->value.data.data, property->value.data.len);  // NOLINT(cppcoreguidelines-pro-type-union-access)
     std::string value(property->value.value.data, property->value.value.len);  // NOLINT(cppcoreguidelines-pro-type-union-access)
-    session.putAttribute(flow_file, key, value);
+    session.putAttribute(*flow_file, key, value);
   }
 }
 
@@ -164,7 +164,7 @@ void ConsumeMQTT::fillAttributeFromContentType(const SmartMessage& message, cons
   }
 
   std::string content_type(property->value.data.data, property->value.data.len);  // NOLINT(cppcoreguidelines-pro-type-union-access)
-  session.putAttribute(flow_file, attribute_from_content_type_, content_type);
+  session.putAttribute(*flow_file, attribute_from_content_type_, content_type);
 }
 
 void ConsumeMQTT::startupClient() {

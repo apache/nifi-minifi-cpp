@@ -146,7 +146,7 @@ bool SiteToSiteClient::transferFlowFiles(core::ProcessContext& context, core::Pr
         auto end_time = std::chrono::steady_clock::now();
         std::string transitUri = peer_->getURL() + "/" + flow->getUUIDStr();
         std::string details = "urn:nifi:" + flow->getUUIDStr() + "Remote Host=" + peer_->getHostName();
-        session.getProvenanceReporter()->send(flow, transitUri, details, std::chrono::duration_cast<std::chrono::milliseconds>(end_time - start_time), false);
+        session.getProvenanceReporter()->send(*flow, transitUri, details, std::chrono::duration_cast<std::chrono::milliseconds>(end_time - start_time), false);
       }
       session.remove(flow);
 
@@ -713,7 +713,7 @@ bool SiteToSiteClient::receiveFlowFiles(core::ProcessContext& context, core::Pro
       auto end_time = std::chrono::steady_clock::now();
       std::string transitUri = peer_->getURL() + "/" + sourceIdentifier;
       std::string details = "urn:nifi:" + sourceIdentifier + "Remote Host=" + peer_->getHostName();
-      session.getProvenanceReporter()->receive(flowFile, transitUri, sourceIdentifier, details, std::chrono::duration_cast<std::chrono::milliseconds>(end_time - start_time));
+      session.getProvenanceReporter()->receive(*flowFile, transitUri, sourceIdentifier, details, std::chrono::duration_cast<std::chrono::milliseconds>(end_time - start_time));
       session.transfer(flowFile, relation);
       // receive the transfer for the flow record
       bytes += packet._size;

@@ -585,10 +585,10 @@ void ConsumeWindowsEventLog::putEventRenderFlowFileToSession(const cwel::EventRe
     auto flow_file = session.create();
     addMatchedFieldsAsAttributes(eventRender, session, flow_file);
     session.writeBuffer(flow_file, content);
-    session.putAttribute(flow_file, core::SpecialFlowAttribute::MIME_TYPE, mimeType);
-    session.putAttribute(flow_file, "timezone.name", timezone_name_);
-    session.putAttribute(flow_file, "timezone.offset", timezone_offset_);
-    session.getProvenanceReporter()->receive(flow_file, provenanceUri_, getUUIDStr(), "Consume windows event logs", 0ms);
+    session.putAttribute(*flow_file, core::SpecialFlowAttribute::MIME_TYPE, mimeType);
+    session.putAttribute(*flow_file, "timezone.name", timezone_name_);
+    session.putAttribute(*flow_file, "timezone.offset", timezone_offset_);
+    session.getProvenanceReporter()->receive(*flow_file, provenanceUri_, getUUIDStr(), "Consume windows event logs", 0ms);
     session.transfer(flow_file, Success);
   };
 
@@ -611,7 +611,7 @@ void ConsumeWindowsEventLog::putEventRenderFlowFileToSession(const cwel::EventRe
 void ConsumeWindowsEventLog::addMatchedFieldsAsAttributes(const cwel::EventRender& eventRender, core::ProcessSession& session, const std::shared_ptr<core::FlowFile>& flowFile) const {
   for (const auto &fieldMapping : eventRender.matched_fields) {
     if (!fieldMapping.second.empty()) {
-      session.putAttribute(flowFile, fieldMapping.first, fieldMapping.second);
+      session.putAttribute(*flowFile, fieldMapping.first, fieldMapping.second);
     }
   }
 }

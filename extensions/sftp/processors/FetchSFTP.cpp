@@ -78,18 +78,18 @@ void FetchSFTP::onTrigger(core::ProcessContext& context, core::ProcessSession& s
 
   /* Parse common properties */
   SFTPProcessorBase::CommonProperties common_properties;
-  if (!parseCommonPropertiesOnTrigger(context, flow_file, common_properties)) {
+  if (!parseCommonPropertiesOnTrigger(context, flow_file.get(), common_properties)) {
     context.yield();
     return;
   }
 
   std::filesystem::path remote_file;
-  if (auto remote_file_str = context.getProperty(RemoteFile, flow_file)) {
+  if (auto remote_file_str = context.getProperty(RemoteFile, flow_file.get())) {
     remote_file = std::filesystem::path(*remote_file_str, std::filesystem::path::format::generic_format);
   }
 
   std::filesystem::path move_destination_directory;
-  if (auto move_destination_directory_str = context.getProperty(MoveDestinationDirectory, flow_file)) {
+  if (auto move_destination_directory_str = context.getProperty(MoveDestinationDirectory, flow_file.get())) {
     move_destination_directory = std::filesystem::path(*move_destination_directory_str, std::filesystem::path::format::generic_format);
   }
 
@@ -152,9 +152,9 @@ void FetchSFTP::onTrigger(core::ProcessContext& context, core::ProcessSession& s
   /* Set attributes */
   std::string child_path = remote_file.filename().generic_string();
 
-  session.putAttribute(flow_file, ATTRIBUTE_SFTP_REMOTE_HOST, common_properties.hostname);
-  session.putAttribute(flow_file, ATTRIBUTE_SFTP_REMOTE_PORT, std::to_string(common_properties.port));
-  session.putAttribute(flow_file, ATTRIBUTE_SFTP_REMOTE_FILENAME, remote_file.generic_string());
+  session.putAttribute(*flow_file, ATTRIBUTE_SFTP_REMOTE_HOST, common_properties.hostname);
+  session.putAttribute(*flow_file, ATTRIBUTE_SFTP_REMOTE_PORT, std::to_string(common_properties.port));
+  session.putAttribute(*flow_file, ATTRIBUTE_SFTP_REMOTE_FILENAME, remote_file.generic_string());
   flow_file->setAttribute(core::SpecialFlowAttribute::FILENAME, child_path);
   if (!remote_file.parent_path().empty()) {
     flow_file->setAttribute(core::SpecialFlowAttribute::PATH, (remote_file.parent_path() / "").generic_string());

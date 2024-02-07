@@ -129,19 +129,19 @@ namespace org::apache::nifi::minifi::processors {
     bool targetNodeValid = false;
     UA_NodeId targetnode;
 
-    if (context.getProperty(TargetNodeIDType, targetidtype, flowFile)) {
+    if (context.getProperty(TargetNodeIDType, targetidtype, flowFile.get())) {
       std::string targetid;
       std::string namespaceidx;
 
 
-      if (!context.getProperty(TargetNodeID, targetid, flowFile)) {
+      if (!context.getProperty(TargetNodeID, targetid, flowFile.get())) {
         logger_->log_error("Flowfile {} had target node ID type specified ({}) without ID, routing to failure!",
                            flowFile->getUUIDStr(), targetidtype);
         session.transfer(flowFile, Failure);
         return;
       }
 
-      if (!context.getProperty(TargetNodeNameSpaceIndex, namespaceidx, flowFile)) {
+      if (!context.getProperty(TargetNodeNameSpaceIndex, namespaceidx, flowFile.get())) {
         logger_->log_error("Flowfile {} had target node ID type specified ({}) without namespace index, routing to failure!", flowFile->getUUIDStr(), targetidtype);
         session.transfer(flowFile, Failure);
         return;
@@ -251,7 +251,7 @@ namespace org::apache::nifi::minifi::processors {
     } else {
       logger_->log_trace("Node doesn't exist, trying to create new node");
       std::string browsename;
-      if (!context.getProperty(TargetNodeBrowseName, browsename, flowFile)) {
+      if (!context.getProperty(TargetNodeBrowseName, browsename, flowFile.get())) {
         logger_->log_error("Target node browse name is required for flowfile ({}) as new node is to be created",
                            flowFile->getUUIDStr());
         session.transfer(flowFile, Failure);

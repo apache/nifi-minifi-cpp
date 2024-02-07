@@ -257,16 +257,16 @@ class ProvenanceEventRecord : public core::SerializableComponent {
       _parentUuids.push_back(uuid);
   }
 
-  void addParentFlowFile(const std::shared_ptr<core::FlowFile>& flow) {
-    addParentUuid(flow->getUUID());
+  void addParentFlowFile(const core::FlowFile& flow_file) {
+    addParentUuid(flow_file.getUUID());
   }
 
   void removeParentUuid(const utils::Identifier& uuid) {
     _parentUuids.erase(std::remove(_parentUuids.begin(), _parentUuids.end(), uuid), _parentUuids.end());
   }
 
-  void removeParentFlowFile(const std::shared_ptr<core::FlowFile>& flow) {
-    removeParentUuid(flow->getUUID());
+  void removeParentFlowFile(const core::FlowFile& flow_file) {
+    removeParentUuid(flow_file.getUUID());
   }
 
   std::vector<utils::Identifier> getChildrenUuids() const {
@@ -280,8 +280,8 @@ class ProvenanceEventRecord : public core::SerializableComponent {
       _childrenUuids.push_back(uuid);
   }
 
-  void addChildFlowFile(const std::shared_ptr<core::FlowFile>& flow) {
-    addChildUuid(flow->getUUID());
+  void addChildFlowFile(const core::FlowFile& flow_file) {
+    addChildUuid(flow_file.getUUID());
     return;
   }
 
@@ -289,8 +289,8 @@ class ProvenanceEventRecord : public core::SerializableComponent {
     _childrenUuids.erase(std::remove(_childrenUuids.begin(), _childrenUuids.end(), uuid), _childrenUuids.end());
   }
 
-  void removeChildFlowFile(const std::shared_ptr<core::FlowFile>& flow) {
-    removeChildUuid(flow->getUUID());
+  void removeChildFlowFile(const core::FlowFile& flow_file) {
+    removeChildUuid(flow_file.getUUID());
   }
 
   std::string getAlternateIdentifierUri() const {
@@ -317,18 +317,18 @@ class ProvenanceEventRecord : public core::SerializableComponent {
     _sourceQueueIdentifier = identifier;
   }
 
-  void fromFlowFile(const std::shared_ptr<core::FlowFile> &flow) {
-    _entryDate = flow->getEntryDate();
-    _lineageStartDate = flow->getlineageStartDate();
-    _lineageIdentifiers = flow->getlineageIdentifiers();
-    flow_uuid_ = flow->getUUID();
-    _attributes = flow->getAttributes();
-    _size = flow->getSize();
-    _offset = flow->getOffset();
-    if (flow->getConnection())
-      _sourceQueueIdentifier = flow->getConnection()->getName();
-    if (flow->getResourceClaim()) {
-      _contentFullPath = flow->getResourceClaim()->getContentFullPath();
+  void fromFlowFile(const core::FlowFile& flow_file) {
+    _entryDate = flow_file.getEntryDate();
+    _lineageStartDate = flow_file.getlineageStartDate();
+    _lineageIdentifiers = flow_file.getlineageIdentifiers();
+    flow_uuid_ = flow_file.getUUID();
+    _attributes = flow_file.getAttributes();
+    _size = flow_file.getSize();
+    _offset = flow_file.getOffset();
+    if (flow_file.getConnection())
+      _sourceQueueIdentifier = flow_file.getConnection()->getName();
+    if (flow_file.getResourceClaim()) {
+      _contentFullPath = flow_file.getResourceClaim()->getContentFullPath();
     }
   }
 
@@ -405,29 +405,27 @@ class ProvenanceReporter {
   }
 
   void commit();
-  void create(const std::shared_ptr<core::FlowFile>& flow, const std::string& detail);
-  void route(const std::shared_ptr<core::FlowFile>& flow, const core::Relationship& relation, const std::string& detail, std::chrono::milliseconds processingDuration);
-  void modifyAttributes(const std::shared_ptr<core::FlowFile>& flow, const std::string& detail);
-  void modifyContent(const std::shared_ptr<core::FlowFile>& flow, const std::string& detail, std::chrono::milliseconds processingDuration);
-  void clone(const std::shared_ptr<core::FlowFile>& parent, const std::shared_ptr<core::FlowFile>& child);
-  void join(const std::vector<std::shared_ptr<core::FlowFile>>& parents, const std::shared_ptr<core::FlowFile>& child, const std::string& detail, std::chrono::milliseconds processingDuration);
-  void fork(const std::vector<std::shared_ptr<core::FlowFile>>& children, const std::shared_ptr<core::FlowFile>& parent, const std::string& detail, std::chrono::milliseconds processingDuration);
-  void expire(const std::shared_ptr<core::FlowFile>& flow, const std::string& detail);
-  void drop(const std::shared_ptr<core::FlowFile>& flow, const std::string& reason);
-  void send(const std::shared_ptr<core::FlowFile>& flow, const std::string& transitUri, const std::string& detail, std::chrono::milliseconds processingDuration, bool force);
-  void fetch(const std::shared_ptr<core::FlowFile>& flow, const std::string& transitUri, const std::string& detail, std::chrono::milliseconds processingDuration);
-  void receive(const std::shared_ptr<core::FlowFile>& flow, const std::string& transitUri,
+  void create(const core::FlowFile& flow_file, const std::string& detail);
+  void route(const core::FlowFile& flow_file, const core::Relationship& relation, const std::string& detail, std::chrono::milliseconds processingDuration);
+  void modifyAttributes(const core::FlowFile& flow_file, const std::string& detail);
+  void modifyContent(const core::FlowFile& flow_file, const std::string& detail, std::chrono::milliseconds processingDuration);
+  void clone(const core::FlowFile& parent, const core::FlowFile& child);
+  void expire(const core::FlowFile& flow_file, const std::string& detail);
+  void drop(const core::FlowFile& flow_file, const std::string& reason);
+  void send(const core::FlowFile& flow_file, const std::string& transitUri, const std::string& detail, std::chrono::milliseconds processingDuration, bool force);
+  void fetch(const core::FlowFile& flow_file, const std::string& transitUri, const std::string& detail, std::chrono::milliseconds processingDuration);
+  void receive(const core::FlowFile& flow_file, const std::string& transitUri,
     const std::string& sourceSystemFlowFileIdentifier, const std::string& detail, std::chrono::milliseconds processingDuration);
 
  protected:
-  std::shared_ptr<ProvenanceEventRecord> allocate(ProvenanceEventRecord::ProvenanceEventType eventType, const std::shared_ptr<core::FlowFile>& flow) {
+  std::shared_ptr<ProvenanceEventRecord> allocate(ProvenanceEventRecord::ProvenanceEventType eventType, const core::FlowFile& flow_file) {
     if (repo_->isNoop()) {
       return nullptr;
     }
 
     auto event = std::make_shared<ProvenanceEventRecord>(eventType, _componentId, _componentType);
     if (event)
-      event->fromFlowFile(flow);
+      event->fromFlowFile(flow_file);
 
     return event;
   }

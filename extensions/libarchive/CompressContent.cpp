@@ -128,7 +128,7 @@ void CompressContent::processFlowFile(const std::shared_ptr<core::FlowFile>& flo
   if (search != fileExtension_.end()) {
     fileExtension = search->second;
   }
-  std::shared_ptr<core::FlowFile> result = session.create(flowFile);
+  std::shared_ptr<core::FlowFile> result = session.create(flowFile.get());
   bool success = true;
   if (encapsulateInTar_) {
     std::function<int64_t(const std::shared_ptr<io::InputStream>&, const std::shared_ptr<io::OutputStream>&)> transformer;
@@ -177,23 +177,23 @@ void CompressContent::processFlowFile(const std::shared_ptr<core::FlowFile>& flo
     std::string fileName;
     result->getAttribute(core::SpecialFlowAttribute::FILENAME, fileName);
     if (compressMode_ == compress_content::CompressionMode::compress) {
-      session.putAttribute(result, core::SpecialFlowAttribute::MIME_TYPE, mimeType);
+      session.putAttribute(*result, core::SpecialFlowAttribute::MIME_TYPE, mimeType);
       if (updateFileName_) {
         if (encapsulateInTar_) {
           fileName = fileName + TAR_EXT;
         }
         fileName = fileName + fileExtension;
-        session.putAttribute(result, core::SpecialFlowAttribute::FILENAME, fileName);
+        session.putAttribute(*result, core::SpecialFlowAttribute::FILENAME, fileName);
       }
     } else {
-      session.removeAttribute(result, core::SpecialFlowAttribute::MIME_TYPE);
+      session.removeAttribute(*result, core::SpecialFlowAttribute::MIME_TYPE);
       if (updateFileName_) {
         if (utils::string::endsWith(fileName, fileExtension)) {
           fileName = fileName.substr(0, fileName.size() - fileExtension.size());
           if (encapsulateInTar_ && utils::string::endsWith(fileName, TAR_EXT)) {
             fileName = fileName.substr(0, fileName.size() - TAR_EXT.size());
           }
-          session.putAttribute(result, core::SpecialFlowAttribute::FILENAME, fileName);
+          session.putAttribute(*result, core::SpecialFlowAttribute::FILENAME, fileName);
         }
       }
     }

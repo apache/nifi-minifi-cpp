@@ -33,18 +33,18 @@ void DeleteS3Object::initialize() {
 
 std::optional<aws::s3::DeleteObjectRequestParameters> DeleteS3Object::buildDeleteS3RequestParams(
     core::ProcessContext& context,
-    const std::shared_ptr<core::FlowFile> &flow_file,
+    const core::FlowFile& flow_file,
     const CommonProperties &common_properties) const {
   gsl_Expects(client_config_);
   aws::s3::DeleteObjectRequestParameters params(common_properties.credentials, *client_config_);
-  context.getProperty(ObjectKey, params.object_key, flow_file);
-  if (params.object_key.empty() && (!flow_file->getAttribute("filename", params.object_key) || params.object_key.empty())) {
+  context.getProperty(ObjectKey, params.object_key, &flow_file);
+  if (params.object_key.empty() && (!flow_file.getAttribute("filename", params.object_key) || params.object_key.empty())) {
     logger_->log_error("No Object Key is set and default object key 'filename' attribute could not be found!");
     return std::nullopt;
   }
   logger_->log_debug("DeleteS3Object: Object Key [{}]", params.object_key);
 
-  context.getProperty(Version, params.version, flow_file);
+  context.getProperty(Version, params.version, &flow_file);
   logger_->log_debug("DeleteS3Object: Version [{}]", params.version);
 
   params.bucket = common_properties.bucket;
@@ -60,13 +60,13 @@ void DeleteS3Object::onTrigger(core::ProcessContext& context, core::ProcessSessi
     return;
   }
 
-  auto common_properties = getCommonELSupportedProperties(context, flow_file);
+  auto common_properties = getCommonELSupportedProperties(context, flow_file.get());
   if (!common_properties) {
     session.transfer(flow_file, Failure);
     return;
   }
 
-  auto params = buildDeleteS3RequestParams(context, flow_file, *common_properties);
+  auto params = buildDeleteS3RequestParams(context, *flow_file, *common_properties);
   if (!params) {
     session.transfer(flow_file, Failure);
     return;

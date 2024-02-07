@@ -577,7 +577,7 @@ bool PublishKafka::createNewTopic(core::ProcessContext& context, const std::stri
   std::string valueConf;
 
   value = "";
-  if (context.getProperty(DeliveryGuarantee, value, flow_file) && !value.empty()) {
+  if (context.getProperty(DeliveryGuarantee, value, flow_file.get()) && !value.empty()) {
     /*
      * Because of a previous error in this processor, the default value of this property was "DELIVERY_ONE_NODE".
      * As this is not a valid value for "request.required.acks", the following rd_kafka_topic_conf_set call failed,
@@ -701,7 +701,7 @@ void PublishKafka::onTrigger(core::ProcessContext& context, core::ProcessSession
 
     // Get Topic (FlowFile-dependent EL property)
     std::string topic;
-    if (context.getProperty(Topic, topic, flowFile)) {
+    if (context.getProperty(Topic, topic, flowFile.get())) {
       logger_->log_debug("PublishKafka: topic for flow file {} is '{}'", flowFile->getUUIDStr(), topic);
     } else {
       logger_->log_error("Flow file {} does not have a valid Topic", flowFile->getUUIDStr());
@@ -723,7 +723,7 @@ void PublishKafka::onTrigger(core::ProcessContext& context, core::ProcessSession
     }
 
     std::string kafkaKey;
-    if (!context.getProperty(KafkaKey, kafkaKey, flowFile) || kafkaKey.empty()) {
+    if (!context.getProperty(KafkaKey, kafkaKey, flowFile.get()) || kafkaKey.empty()) {
       kafkaKey = flowFile->getUUIDStr();
     }
     logger_->log_debug("PublishKafka: Message Key [{}]", kafkaKey);

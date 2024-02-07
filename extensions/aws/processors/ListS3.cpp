@@ -80,7 +80,7 @@ void ListS3::onSchedule(core::ProcessContext& context, core::ProcessSessionFacto
 void ListS3::writeObjectTags(
     const aws::s3::ListedObjectAttributes &object_attributes,
     core::ProcessSession &session,
-    const std::shared_ptr<core::FlowFile> &flow_file) {
+    core::FlowFile& flow_file) {
   if (!write_object_tags_) {
     return;
   }
@@ -102,7 +102,7 @@ void ListS3::writeObjectTags(
 void ListS3::writeUserMetadata(
     const aws::s3::ListedObjectAttributes &object_attributes,
     core::ProcessSession &session,
-    const std::shared_ptr<core::FlowFile> &flow_file) {
+    core::FlowFile& flow_file) {
   if (!write_user_metadata_) {
     return;
   }
@@ -126,18 +126,18 @@ void ListS3::createNewFlowFile(
     core::ProcessSession &session,
     const aws::s3::ListedObjectAttributes &object_attributes) {
   auto flow_file = session.create();
-  session.putAttribute(flow_file, "s3.bucket", list_request_params_->bucket);
-  session.putAttribute(flow_file, core::SpecialFlowAttribute::FILENAME, object_attributes.filename);
-  session.putAttribute(flow_file, "s3.etag", object_attributes.etag);
-  session.putAttribute(flow_file, "s3.isLatest", object_attributes.is_latest ? "true" : "false");
-  session.putAttribute(flow_file, "s3.lastModified", std::to_string(object_attributes.last_modified.time_since_epoch() / std::chrono::milliseconds(1)));
-  session.putAttribute(flow_file, "s3.length", std::to_string(object_attributes.length));
-  session.putAttribute(flow_file, "s3.storeClass", object_attributes.store_class);
+  session.putAttribute(*flow_file, "s3.bucket", list_request_params_->bucket);
+  session.putAttribute(*flow_file, core::SpecialFlowAttribute::FILENAME, object_attributes.filename);
+  session.putAttribute(*flow_file, "s3.etag", object_attributes.etag);
+  session.putAttribute(*flow_file, "s3.isLatest", object_attributes.is_latest ? "true" : "false");
+  session.putAttribute(*flow_file, "s3.lastModified", std::to_string(object_attributes.last_modified.time_since_epoch() / std::chrono::milliseconds(1)));
+  session.putAttribute(*flow_file, "s3.length", std::to_string(object_attributes.length));
+  session.putAttribute(*flow_file, "s3.storeClass", object_attributes.store_class);
   if (!object_attributes.version.empty()) {
-    session.putAttribute(flow_file, "s3.version", object_attributes.version);
+    session.putAttribute(*flow_file, "s3.version", object_attributes.version);
   }
-  writeObjectTags(object_attributes, session, flow_file);
-  writeUserMetadata(object_attributes, session, flow_file);
+  writeObjectTags(object_attributes, session, *flow_file);
+  writeUserMetadata(object_attributes, session, *flow_file);
 
   session.transfer(flow_file, Success);
 }

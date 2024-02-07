@@ -278,8 +278,8 @@ void PutTCP::onTrigger(core::ProcessContext& context, core::ProcessSession& sess
 
   removeExpiredConnections();
 
-  auto hostname = context.getProperty(Hostname, flow_file).value_or(std::string{});
-  auto port = context.getProperty(Port, flow_file).value_or(std::string{});
+  auto hostname = context.getProperty(Hostname, flow_file.get()).value_or(std::string{});
+  auto port = context.getProperty(Port, flow_file.get()).value_or(std::string{});
   if (hostname.empty() || port.empty()) {
     logger_->log_error("[{}] invalid target endpoint: hostname: {}, port: {}", flow_file->getUUIDStr(),
         hostname.empty() ? "(empty)" : hostname.c_str(),
@@ -331,7 +331,7 @@ std::error_code PutTCP::sendFlowFileContent(std::shared_ptr<ConnectionHandlerBas
 void PutTCP::processFlowFile(std::shared_ptr<ConnectionHandlerBase>& connection_handler,
     core::ProcessSession& session,
     const std::shared_ptr<core::FlowFile>& flow_file) {
-  auto flow_file_content_stream = session.getFlowFileContentStream(flow_file);
+  auto flow_file_content_stream = session.getFlowFileContentStream(*flow_file);
   if (!flow_file_content_stream) {
     session.transfer(flow_file, Failure);
     return;

@@ -83,7 +83,7 @@ class FetchAzureBlobStorage final : public AzureBlobStorageSingleBlobProcessorBa
   }
 
   std::optional<storage::FetchAzureBlobStorageParameters> buildFetchAzureBlobStorageParameters(
-    core::ProcessContext &context, const std::shared_ptr<core::FlowFile> &flow_file);
+    core::ProcessContext &context, const core::FlowFile& flow_file);
 };
 
 }  // namespace org::apache::nifi::minifi::azure::processors

@@ -68,13 +68,13 @@ TEST_CASE("Attribute expression", "[expressionLanguageTestAttributeExpression]")
   auto flow_file = std::make_shared<core::FlowFile>();
   flow_file->addAttribute("attr_a", "__attr_value_a__");
   auto expr = expression::compile("text_before${attr_a}text_after");
-  REQUIRE("text_before__attr_value_a__text_after" == expr(expression::Parameters{ flow_file }).asString());
+  REQUIRE("text_before__attr_value_a__text_after" == expr(expression::Parameters{ flow_file.get() }).asString());
 }
 
 TEST_CASE("Attribute expression (Null)", "[expressionLanguageTestAttributeExpressionNull]") {
   auto expr = expression::compile("text_before${attr_a}text_after");
   std::shared_ptr<core::FlowFile> flow_file = nullptr;
-  REQUIRE("text_beforetext_after" == expr(expression::Parameters{ flow_file }).asString());
+  REQUIRE("text_beforetext_after" == expr(expression::Parameters{ flow_file.get() }).asString());
 }
 
 TEST_CASE("Multi-attribute expression", "[expressionLanguageTestMultiAttributeExpression]") {
@@ -82,7 +82,7 @@ TEST_CASE("Multi-attribute expression", "[expressionLanguageTestMultiAttributeEx
   flow_file->addAttribute("attr_a", "__attr_value_a__");
   flow_file->addAttribute("attr_b", "__attr_value_b__");
   auto expr = expression::compile("text_before${attr_a}text_between${attr_b}text_after");
-  REQUIRE("text_before__attr_value_a__text_between__attr_value_b__text_after" == expr(expression::Parameters{ flow_file }).asString());
+  REQUIRE("text_before__attr_value_a__text_between__attr_value_b__text_after" == expr(expression::Parameters{ flow_file.get() }).asString());
 }
 
 TEST_CASE("Multi-flowfile attribute expression",
@@ -91,18 +91,18 @@ TEST_CASE("Multi-flowfile attribute expression",
 
   auto flow_file_a = std::make_shared<core::FlowFile>();
   flow_file_a->addAttribute("attr_a", "__flow_a_attr_value_a__");
-  REQUIRE("text_before__flow_a_attr_value_a__text_after" == expr(expression::Parameters{ flow_file_a }).asString());
+  REQUIRE("text_before__flow_a_attr_value_a__text_after" == expr(expression::Parameters{ flow_file_a.get() }).asString());
 
   auto flow_file_b = std::make_shared<core::FlowFile>();
   flow_file_b->addAttribute("attr_a", "__flow_b_attr_value_a__");
-  REQUIRE("text_before__flow_b_attr_value_a__text_after" == expr(expression::Parameters{ flow_file_b }).asString());
+  REQUIRE("text_before__flow_b_attr_value_a__text_after" == expr(expression::Parameters{ flow_file_b.get() }).asString());
 }
 
 TEST_CASE("Attribute expression with whitespace", "[expressionLanguageTestAttributeExpressionWhitespace]") {
   auto flow_file = std::make_shared<core::FlowFile>();
   flow_file->addAttribute("attr_a", "__attr_value_a__");
   auto expr = expression::compile("text_before${\n\tattr_a \r}text_after");
-  REQUIRE("text_before__attr_value_a__text_after" == expr(expression::Parameters{ flow_file }).asString());
+  REQUIRE("text_before__attr_value_a__text_after" == expr(expression::Parameters{ flow_file.get() }).asString());
 }
 
 TEST_CASE("Special characters expression", "[expressionLanguageTestSpecialCharactersExpression]") {
@@ -110,7 +110,7 @@ TEST_CASE("Special characters expression", "[expressionLanguageTestSpecialCharac
 
   auto flow_file_a = std::make_shared<core::FlowFile>();
   flow_file_a->addAttribute("attr_a", "__flow_a_attr_value_a__");
-  REQUIRE("text_before|{}()[],:;\\/*#'\" \t\r\n__flow_a_attr_value_a__}()text_after" == expr(expression::Parameters{ flow_file_a }).asString());
+  REQUIRE("text_before|{}()[],:;\\/*#'\" \t\r\n__flow_a_attr_value_a__}()text_after" == expr(expression::Parameters{ flow_file_a.get() }).asString());
 }
 
 TEST_CASE("UTF-8 characters expression", "[expressionLanguageTestUTF8Expression]") {
@@ -118,7 +118,7 @@ TEST_CASE("UTF-8 characters expression", "[expressionLanguageTestUTF8Expression]
 
   auto flow_file_a = std::make_shared<core::FlowFile>();
   flow_file_a->addAttribute("attr_a", "__flow_a_attr_value_a__");
-  REQUIRE("text_before¥£€¢₡₢₣₤₥₦₧₨₩₪₫₭₮₯₹__flow_a_attr_value_a__text_after" == expr(expression::Parameters{ flow_file_a }).asString());
+  REQUIRE("text_before¥£€¢₡₢₣₤₥₦₧₨₩₪₫₭₮₯₹__flow_a_attr_value_a__text_after" == expr(expression::Parameters{ flow_file_a.get() }).asString());
 }
 
 TEST_CASE("UTF-8 characters attribute", "[expressionLanguageTestUTF8Attribute]") {
@@ -126,7 +126,7 @@ TEST_CASE("UTF-8 characters attribute", "[expressionLanguageTestUTF8Attribute]")
 
   auto flow_file_a = std::make_shared<core::FlowFile>();
   flow_file_a->addAttribute("attr_a", "__¥£€¢₡₢₣₤₥₦₧₨₩₪₫₭₮₯₹__");
-  REQUIRE("text_before__¥£€¢₡₢₣₤₥₦₧₨₩₪₫₭₮₯₹__text_after" == expr(expression::Parameters{ flow_file_a }).asString());
+  REQUIRE("text_before__¥£€¢₡₢₣₤₥₦₧₨₩₪₫₭₮₯₹__text_after" == expr(expression::Parameters{ flow_file_a.get() }).asString());
 }
 
 TEST_CASE("Single quoted attribute expression", "[expressionLanguageTestSingleQuotedAttributeExpression]") {
@@ -134,7 +134,7 @@ TEST_CASE("Single quoted attribute expression", "[expressionLanguageTestSingleQu
 
   auto flow_file_a = std::make_shared<core::FlowFile>();
   flow_file_a->addAttribute("|{}()[],:;\\/*# \t\r\n$", "__flow_a_attr_value_a__");
-  REQUIRE("text_before__flow_a_attr_value_a__text_after" == expr(expression::Parameters{ flow_file_a }).asString());
+  REQUIRE("text_before__flow_a_attr_value_a__text_after" == expr(expression::Parameters{ flow_file_a.get() }).asString());
 }
 
 TEST_CASE("Double quoted attribute expression", "[expressionLanguageTestDoubleQuotedAttributeExpression]") {
@@ -142,7 +142,7 @@ TEST_CASE("Double quoted attribute expression", "[expressionLanguageTestDoubleQu
 
   auto flow_file_a = std::make_shared<core::FlowFile>();
   flow_file_a->addAttribute("|{}()[],:;\\/*# \t\r\n$", "__flow_a_attr_value_a__");
-  REQUIRE("text_before__flow_a_attr_value_a__text_after" == expr(expression::Parameters{ flow_file_a }).asString());
+  REQUIRE("text_before__flow_a_attr_value_a__text_after" == expr(expression::Parameters{ flow_file_a.get() }).asString());
 }
 
 TEST_CASE("Hostname function", "[expressionLanguageTestHostnameFunction]") {
@@ -155,7 +155,7 @@ TEST_CASE("Hostname function", "[expressionLanguageTestHostnameFunction]") {
   expected.append("text_after");
 
   auto flow_file_a = std::make_shared<core::FlowFile>();
-  REQUIRE(expected == expr(expression::Parameters{ flow_file_a }).asString());
+  REQUIRE(expected == expr(expression::Parameters{ flow_file_a.get() }).asString());
 }
 
 TEST_CASE("ToUpper function", "[expressionLanguageTestToUpperFunction]") {
@@ -164,14 +164,14 @@ TEST_CASE("ToUpper function", "[expressionLanguageTestToUpperFunction]") {
                                      }text_after)");
   auto flow_file_a = std::make_shared<core::FlowFile>();
   flow_file_a->addAttribute("attr_a", "__flow_a_attr_value_a__");
-  REQUIRE("text_before__FLOW_A_ATTR_VALUE_A__text_after" == expr(expression::Parameters{ flow_file_a }).asString());
+  REQUIRE("text_before__FLOW_A_ATTR_VALUE_A__text_after" == expr(expression::Parameters{ flow_file_a.get() }).asString());
 }
 
 TEST_CASE("ToUpper function w/o whitespace", "[expressionLanguageTestToUpperFunctionWithoutWhitespace]") {
   auto expr = expression::compile(R"(text_before${attr_a:toUpper()}text_after)");
   auto flow_file_a = std::make_shared<core::FlowFile>();
   flow_file_a->addAttribute("attr_a", "__flow_a_attr_value_a__");
-  REQUIRE("text_before__FLOW_A_ATTR_VALUE_A__text_after" == expr(expression::Parameters{ flow_file_a }).asString());
+  REQUIRE("text_before__FLOW_A_ATTR_VALUE_A__text_after" == expr(expression::Parameters{ flow_file_a.get() }).asString());
 }
 
 TEST_CASE("ToLower function", "[expressionLanguageTestToLowerFunction]") {
@@ -180,7 +180,7 @@ TEST_CASE("ToLower function", "[expressionLanguageTestToLowerFunction]") {
                                      }text_after)");
   auto flow_file_a = std::make_shared<core::FlowFile>();
   flow_file_a->addAttribute("attr_a", "__FLOW_A_ATTR_VALUE_A__");
-  REQUIRE("text_before__flow_a_attr_value_a__text_after" == expr(expression::Parameters{ flow_file_a }).asString());
+  REQUIRE("text_before__flow_a_attr_value_a__text_after" == expr(expression::Parameters{ flow_file_a.get() }).asString());
 }
 
 TEST_CASE("GetFile PutFile dynamic attribute", "[expressionLanguageTestGetFilePutFileDynamicAttribute]") {
@@ -255,7 +255,7 @@ TEST_CASE("Substring 2 arg", "[expressionLanguageSubstring2]") {
 
   auto flow_file_a = std::make_shared<core::FlowFile>();
   flow_file_a->addAttribute("attr", "__flow_a_attr_value_a__");
-  REQUIRE("text_before_a_attr_text_after" == expr(expression::Parameters{ flow_file_a }).asString());
+  REQUIRE("text_before_a_attr_text_after" == expr(expression::Parameters{ flow_file_a.get() }).asString());
 }
 
 TEST_CASE("Substring 1 arg", "[expressionLanguageSubstring1]") {
@@ -263,7 +263,7 @@ TEST_CASE("Substring 1 arg", "[expressionLanguageSubstring1]") {
 
   auto flow_file_a = std::make_shared<core::FlowFile>();
   flow_file_a->addAttribute("attr", "__flow_a_attr_value_a__");
-  REQUIRE("text_before_a_attr_value_a__text_after" == expr(expression::Parameters{ flow_file_a }).asString());
+  REQUIRE("text_before_a_attr_value_a__text_after" == expr(expression::Parameters{ flow_file_a.get() }).asString());
 }
 
 TEST_CASE("Substring Before", "[expressionLanguageSubstringBefore]") {
@@ -271,7 +271,7 @@ TEST_CASE("Substring Before", "[expressionLanguageSubstringBefore]") {
 
   auto flow_file_a = std::make_shared<core::FlowFile>();
   flow_file_a->addAttribute("attr", "__flow_a_attr_value_a__");
-  REQUIRE("__flow_a_" == expr(expression::Parameters{ flow_file_a }).asString());
+  REQUIRE("__flow_a_" == expr(expression::Parameters{ flow_file_a.get() }).asString());
 }
 
 TEST_CASE("Substring Before Last", "[expressionLanguageSubstringBeforeLast]") {
@@ -279,7 +279,7 @@ TEST_CASE("Substring Before Last", "[expressionLanguageSubstringBeforeLast]") {
 
   auto flow_file_a = std::make_shared<core::FlowFile>();
   flow_file_a->addAttribute("attr", "__flow_a_attr_value_a__");
-  REQUIRE("__flow_a_attr_value" == expr(expression::Parameters{ flow_file_a }).asString());
+  REQUIRE("__flow_a_attr_value" == expr(expression::Parameters{ flow_file_a.get() }).asString());
 }
 
 TEST_CASE("Substring After", "[expressionLanguageSubstringAfter]") {
@@ -287,7 +287,7 @@ TEST_CASE("Substring After", "[expressionLanguageSubstringAfter]") {
 
   auto flow_file_a = std::make_shared<core::FlowFile>();
   flow_file_a->addAttribute("attr", "__flow_a_attr_value_a__");
-  REQUIRE("_attr_value_a__" == expr(expression::Parameters{ flow_file_a }).asString());
+  REQUIRE("_attr_value_a__" == expr(expression::Parameters{ flow_file_a.get() }).asString());
 }
 
 TEST_CASE("Substring After Last", "[expressionLanguageSubstringAfterLast]") {
@@ -295,7 +295,7 @@ TEST_CASE("Substring After Last", "[expressionLanguageSubstringAfterLast]") {
 
   auto flow_file_a = std::make_shared<core::FlowFile>();
   flow_file_a->addAttribute("attr", "__flow_a_attr_value_a__");
-  REQUIRE("__" == expr(expression::Parameters{ flow_file_a }).asString());
+  REQUIRE("__" == expr(expression::Parameters{ flow_file_a.get() }).asString());
 }
 
 TEST_CASE("Get Delimited", "[expressionLanguageGetDelimited]") {
@@ -303,7 +303,7 @@ TEST_CASE("Get Delimited", "[expressionLanguageGetDelimited]") {
 
   auto flow_file_a = std::make_shared<core::FlowFile>();
   flow_file_a->addAttribute("attr", "\"Jacobson, John\", 32, Mr.");
-  REQUIRE(" 32" == expr(expression::Parameters{ flow_file_a }).asString());
+  REQUIRE(" 32" == expr(expression::Parameters{ flow_file_a.get() }).asString());
 }
 
 TEST_CASE("Get Delimited 2", "[expressionLanguageGetDelimited2]") {
@@ -311,7 +311,7 @@ TEST_CASE("Get Delimited 2", "[expressionLanguageGetDelimited2]") {
 
   auto flow_file_a = std::make_shared<core::FlowFile>();
   flow_file_a->addAttribute("attr", "\"Jacobson, John\", 32, Mr.");
-  REQUIRE("\"Jacobson, John\"" == expr(expression::Parameters{ flow_file_a }).asString());
+  REQUIRE("\"Jacobson, John\"" == expr(expression::Parameters{ flow_file_a.get() }).asString());
 }
 
 TEST_CASE("Get Delimited 3", "[expressionLanguageGetDelimited3]") {
@@ -319,7 +319,7 @@ TEST_CASE("Get Delimited 3", "[expressionLanguageGetDelimited3]") {
 
   auto flow_file_a = std::make_shared<core::FlowFile>();
   flow_file_a->addAttribute("attr", "\"Jacobson, John\", 32, Mr.");
-  REQUIRE("Jacobson, John" == expr(expression::Parameters{ flow_file_a }).asString());
+  REQUIRE("Jacobson, John" == expr(expression::Parameters{ flow_file_a.get() }).asString());
 }
 
 TEST_CASE("Starts With", "[expressionLanguageStartsWith]") {
@@ -327,7 +327,7 @@ TEST_CASE("Starts With", "[expressionLanguageStartsWith]") {
 
   auto flow_file_a = std::make_shared<core::FlowFile>();
   flow_file_a->addAttribute("attr", "A BRAND TEST");
-  REQUIRE("false" == expr(expression::Parameters{ flow_file_a }).asString());
+  REQUIRE("false" == expr(expression::Parameters{ flow_file_a.get() }).asString());
 }
 
 TEST_CASE("Starts With 2", "[expressionLanguageStartsWith2]") {
@@ -335,7 +335,7 @@ TEST_CASE("Starts With 2", "[expressionLanguageStartsWith2]") {
 
   auto flow_file_a = std::make_shared<core::FlowFile>();
   flow_file_a->addAttribute("attr", "a brand TEST");
-  REQUIRE("true" == expr(expression::Parameters{ flow_file_a }).asString());
+  REQUIRE("true" == expr(expression::Parameters{ flow_file_a.get() }).asString());
 }
 
 TEST_CASE("Ends With", "[expressionLanguageEndsWith]") {
@@ -343,7 +343,7 @@ TEST_CASE("Ends With", "[expressionLanguageEndsWith]") {
 
   auto flow_file_a = std::make_shared<core::FlowFile>();
   flow_file_a->addAttribute("attr", "a brand new filename.TXT");
-  REQUIRE("false" == expr(expression::Parameters{ flow_file_a }).asString());
+  REQUIRE("false" == expr(expression::Parameters{ flow_file_a.get() }).asString());
 }
 
 TEST_CASE("Ends With 2", "[expressionLanguageEndsWith2]") {
@@ -351,7 +351,7 @@ TEST_CASE("Ends With 2", "[expressionLanguageEndsWith2]") {
 
   auto flow_file_a = std::make_shared<core::FlowFile>();
   flow_file_a->addAttribute("attr", "a brand new filename.TXT");
-  REQUIRE("true" == expr(expression::Parameters{ flow_file_a }).asString());
+  REQUIRE("true" == expr(expression::Parameters{ flow_file_a.get() }).asString());
 }
 
 TEST_CASE("Contains", "[expressionLanguageContains]") {
@@ -359,7 +359,7 @@ TEST_CASE("Contains", "[expressionLanguageContains]") {
 
   auto flow_file_a = std::make_shared<core::FlowFile>();
   flow_file_a->addAttribute("attr", "a brand new filename.txt");
-  REQUIRE("true" == expr(expression::Parameters{ flow_file_a }).asString());
+  REQUIRE("true" == expr(expression::Parameters{ flow_file_a.get() }).asString());
 }
 
 TEST_CASE("Contains 2", "[expressionLanguageContains2]") {
@@ -367,7 +367,7 @@ TEST_CASE("Contains 2", "[expressionLanguageContains2]") {
 
   auto flow_file_a = std::make_shared<core::FlowFile>();
   flow_file_a->addAttribute("attr", "a brand new filename.txt");
-  REQUIRE("false" == expr(expression::Parameters{ flow_file_a }).asString());
+  REQUIRE("false" == expr(expression::Parameters{ flow_file_a.get() }).asString());
 }
 
 TEST_CASE("In", "[expressionLanguageIn]") {
@@ -375,7 +375,7 @@ TEST_CASE("In", "[expressionLanguageIn]") {
 
   auto flow_file_a = std::make_shared<core::FlowFile>();
   flow_file_a->addAttribute("attr", "JOHN");
-  REQUIRE("true" == expr(expression::Parameters{ flow_file_a }).asString());
+  REQUIRE("true" == expr(expression::Parameters{ flow_file_a.get() }).asString());
 }
 
 TEST_CASE("In 2", "[expressionLanguageIn2]") {
@@ -383,7 +383,7 @@ TEST_CASE("In 2", "[expressionLanguageIn2]") {
 
   auto flow_file_a = std::make_shared<core::FlowFile>();
   flow_file_a->addAttribute("attr", "JOHN");
-  REQUIRE("false" == expr(expression::Parameters{ flow_file_a }).asString());
+  REQUIRE("false" == expr(expression::Parameters{ flow_file_a.get() }).asString());
 }
 
 TEST_CASE("Substring Before No Args", "[expressionLanguageSubstringBeforeNoArgs]") {
@@ -399,7 +399,7 @@ TEST_CASE("Replace", "[expressionLanguageReplace]") {
 
   auto flow_file_a = std::make_shared<core::FlowFile>();
   flow_file_a->addAttribute("attr", "a brand new filename.txt");
-  REQUIRE("a brand new filename_txt" == expr(expression::Parameters{ flow_file_a }).asString());
+  REQUIRE("a brand new filename_txt" == expr(expression::Parameters{ flow_file_a.get() }).asString());
 }
 
 TEST_CASE("Replace 2", "[expressionLanguageReplace2]") {
@@ -407,7 +407,7 @@ TEST_CASE("Replace 2", "[expressionLanguageReplace2]") {
 
   auto flow_file_a = std::make_shared<core::FlowFile>();
   flow_file_a->addAttribute("attr", "a brand new filename.txt");
-  REQUIRE("a.brand.new.filename.txt" == expr(expression::Parameters{ flow_file_a }).asString());
+  REQUIRE("a.brand.new.filename.txt" == expr(expression::Parameters{ flow_file_a.get() }).asString());
 }
 
 TEST_CASE("Replace First", "[expressionLanguageReplaceFirst]") {
@@ -415,7 +415,7 @@ TEST_CASE("Replace First", "[expressionLanguageReplaceFirst]") {
 
   auto flow_file_a = std::make_shared<core::FlowFile>();
   flow_file_a->addAttribute("attr", "a brand new filename.txt");
-  REQUIRE("the brand new filename.txt" == expr(expression::Parameters{ flow_file_a }).asString());
+  REQUIRE("the brand new filename.txt" == expr(expression::Parameters{ flow_file_a.get() }).asString());
 }
 
 TEST_CASE("Replace First Regex", "[expressionLanguageReplaceFirstRegex]") {
@@ -423,7 +423,7 @@ TEST_CASE("Replace First Regex", "[expressionLanguageReplaceFirstRegex]") {
 
   auto flow_file_a = std::make_shared<core::FlowFile>();
   flow_file_a->addAttribute("attr", "a brand new filename.txt");
-  REQUIRE("a grand new filename.txt" == expr(expression::Parameters{ flow_file_a }).asString());
+  REQUIRE("a grand new filename.txt" == expr(expression::Parameters{ flow_file_a.get() }).asString());
 }
 
 TEST_CASE("Replace All", "[expressionLanguageReplaceAll]") {
@@ -431,7 +431,7 @@ TEST_CASE("Replace All", "[expressionLanguageReplaceAll]") {
 
   auto flow_file_a = std::make_shared<core::FlowFile>();
   flow_file_a->addAttribute("attr", "a brand new filename.txt");
-  REQUIRE("a brand new filename" == expr(expression::Parameters{ flow_file_a }).asString());
+  REQUIRE("a brand new filename" == expr(expression::Parameters{ flow_file_a.get() }).asString());
 }
 
 TEST_CASE("Replace All 2", "[expressionLanguageReplaceAll2]") {
@@ -439,7 +439,7 @@ TEST_CASE("Replace All 2", "[expressionLanguageReplaceAll2]") {
 
   auto flow_file_a = std::make_shared<core::FlowFile>();
   flow_file_a->addAttribute("attr", "a brand new filename.txt");
-  REQUIRE("new filename.txt" == expr(expression::Parameters{ flow_file_a }).asString());
+  REQUIRE("new filename.txt" == expr(expression::Parameters{ flow_file_a.get() }).asString());
 }
 
 TEST_CASE("Replace All 3", "[expressionLanguageReplaceAll3]") {
@@ -447,7 +447,7 @@ TEST_CASE("Replace All 3", "[expressionLanguageReplaceAll3]") {
 
   auto flow_file_a = std::make_shared<core::FlowFile>();
   flow_file_a->addAttribute("attr", "a brand new filename.txt");
-  REQUIRE("a brand new filename.txt" == expr(expression::Parameters{ flow_file_a }).asString());
+  REQUIRE("a brand new filename.txt" == expr(expression::Parameters{ flow_file_a.get() }).asString());
 }
 
 TEST_CASE("Replace Null", "[expressionLanguageReplaceNull]") {
@@ -455,7 +455,7 @@ TEST_CASE("Replace Null", "[expressionLanguageReplaceNull]") {
 
   auto flow_file_a = std::make_shared<core::FlowFile>();
   flow_file_a->addAttribute("attr", "a brand new filename.txt");
-  REQUIRE("a brand new filename.txt" == expr(expression::Parameters{ flow_file_a }).asString());
+  REQUIRE("a brand new filename.txt" == expr(expression::Parameters{ flow_file_a.get() }).asString());
 }
 
 TEST_CASE("Replace Null 2", "[expressionLanguageReplaceNull2]") {
@@ -463,7 +463,7 @@ TEST_CASE("Replace Null 2", "[expressionLanguageReplaceNull2]") {
 
   auto flow_file_a = std::make_shared<core::FlowFile>();
   flow_file_a->addAttribute("attr2", "a brand new filename.txt");
-  REQUIRE("abc" == expr(expression::Parameters{ flow_file_a }).asString());
+  REQUIRE("abc" == expr(expression::Parameters{ flow_file_a.get() }).asString());
 }
 
 TEST_CASE("Replace Empty", "[expressionLanguageReplaceEmpty]") {
@@ -471,7 +471,7 @@ TEST_CASE("Replace Empty", "[expressionLanguageReplaceEmpty]") {
 
   auto flow_file_a = std::make_shared<core::FlowFile>();
   flow_file_a->addAttribute("attr", "a brand new filename.txt");
-  REQUIRE("a brand new filename.txt" == expr(expression::Parameters{ flow_file_a }).asString());
+  REQUIRE("a brand new filename.txt" == expr(expression::Parameters{ flow_file_a.get() }).asString());
 }
 
 TEST_CASE("Replace Empty 2", "[expressionLanguageReplaceEmpty2]") {
@@ -479,7 +479,7 @@ TEST_CASE("Replace Empty 2", "[expressionLanguageReplaceEmpty2]") {
 
   auto flow_file_a = std::make_shared<core::FlowFile>();
   flow_file_a->addAttribute("attr", "  \t  \r  \n  ");
-  REQUIRE("abc" == expr(expression::Parameters{ flow_file_a }).asString());
+  REQUIRE("abc" == expr(expression::Parameters{ flow_file_a.get() }).asString());
 }
 
 TEST_CASE("Replace Empty 3", "[expressionLanguageReplaceEmpty2]") {
@@ -487,7 +487,7 @@ TEST_CASE("Replace Empty 3", "[expressionLanguageReplaceEmpty2]") {
 
   auto flow_file_a = std::make_shared<core::FlowFile>();
   flow_file_a->addAttribute("attr2", "test");
-  REQUIRE("abc" == expr(expression::Parameters{ flow_file_a }).asString());
+  REQUIRE("abc" == expr(expression::Parameters{ flow_file_a.get() }).asString());
 }
 
 TEST_CASE("Matches", "[expressionLanguageMatches]") {
@@ -495,7 +495,7 @@ TEST_CASE("Matches", "[expressionLanguageMatches]") {
 
   auto flow_file_a = std::make_shared<core::FlowFile>();
   flow_file_a->addAttribute("attr", "At:est");
-  REQUIRE("true" == expr(expression::Parameters{ flow_file_a }).asString());
+  REQUIRE("true" == expr(expression::Parameters{ flow_file_a.get() }).asString());
 }
 
 TEST_CASE("Matches 2", "[expressionLanguageMatches2]") {
@@ -503,7 +503,7 @@ TEST_CASE("Matches 2", "[expressionLanguageMatches2]") {
 
   auto flow_file_a = std::make_shared<core::FlowFile>();
   flow_file_a->addAttribute("attr", "At:something");
-  REQUIRE("false" == expr(expression::Parameters{ flow_file_a }).asString());
+  REQUIRE("false" == expr(expression::Parameters{ flow_file_a.get() }).asString());
 }
 
 TEST_CASE("Matches 3", "[expressionLanguageMatches3]") {
@@ -511,7 +511,7 @@ TEST_CASE("Matches 3", "[expressionLanguageMatches3]") {
 
   auto flow_file_a = std::make_shared<core::FlowFile>();
   flow_file_a->addAttribute("attr", " At:est");
-  REQUIRE("false" == expr(expression::Parameters{ flow_file_a }).asString());
+  REQUIRE("false" == expr(expression::Parameters{ flow_file_a.get() }).asString());
 }
 
 TEST_CASE("Find", "[expressionLanguageFind]") {
@@ -519,7 +519,7 @@ TEST_CASE("Find", "[expressionLanguageFind]") {
 
   auto flow_file_a = std::make_shared<core::FlowFile>();
   flow_file_a->addAttribute("attr", "a brand new filename.txt");
-  REQUIRE("true" == expr(expression::Parameters{ flow_file_a }).asString());
+  REQUIRE("true" == expr(expression::Parameters{ flow_file_a.get() }).asString());
 }
 
 TEST_CASE("Find 2", "[expressionLanguageFind2]") {
@@ -527,7 +527,7 @@ TEST_CASE("Find 2", "[expressionLanguageFind2]") {
 
   auto flow_file_a = std::make_shared<core::FlowFile>();
   flow_file_a->addAttribute("attr", "a brand new filename.txt");
-  REQUIRE("false" == expr(expression::Parameters{ flow_file_a }).asString());
+  REQUIRE("false" == expr(expression::Parameters{ flow_file_a.get() }).asString());
 }
 
 TEST_CASE("Find 3", "[expressionLanguageFind3]") {
@@ -535,7 +535,7 @@ TEST_CASE("Find 3", "[expressionLanguageFind3]") {
 
   auto flow_file_a = std::make_shared<core::FlowFile>();
   flow_file_a->addAttribute("attr", "a brand new filename.txt");
-  REQUIRE("true" == expr(expression::Parameters{ flow_file_a }).asString());
+  REQUIRE("true" == expr(expression::Parameters{ flow_file_a.get() }).asString());
 }
 
 TEST_CASE("IndexOf", "[expressionLanguageIndexOf]") {
@@ -543,7 +543,7 @@ TEST_CASE("IndexOf", "[expressionLanguageIndexOf]") {
 
   auto flow_file_a = std::make_shared<core::FlowFile>();
   flow_file_a->addAttribute("attr", "a brand new filename.txt");
-  REQUIRE("-1" == expr(expression::Parameters{ flow_file_a }).asString());
+  REQUIRE("-1" == expr(expression::Parameters{ flow_file_a.get() }).asString());
 }
 
 TEST_CASE("IndexOf2", "[expressionLanguageIndexOf2]") {
@@ -551,7 +551,7 @@ TEST_CASE("IndexOf2", "[expressionLanguageIndexOf2]") {
 
   auto flow_file_a = std::make_shared<core::FlowFile>();
   flow_file_a->addAttribute("attr", "a brand new filename.txt");
-  REQUIRE("20" == expr(expression::Parameters{ flow_file_a }).asString());
+  REQUIRE("20" == expr(expression::Parameters{ flow_file_a.get() }).asString());
 }
 
 TEST_CASE("IndexOf3", "[expressionLanguageIndexOf3]") {
@@ -559,7 +559,7 @@ TEST_CASE("IndexOf3", "[expressionLanguageIndexOf3]") {
 
   auto flow_file_a = std::make_shared<core::FlowFile>();
   flow_file_a->addAttribute("attr", "a brand new filename.txt");
-  REQUIRE("0" == expr(expression::Parameters{ flow_file_a }).asString());
+  REQUIRE("0" == expr(expression::Parameters{ flow_file_a.get() }).asString());
 }
 
 TEST_CASE("IndexOf4", "[expressionLanguageIndexOf4]") {
@@ -567,7 +567,7 @@ TEST_CASE("IndexOf4", "[expressionLanguageIndexOf4]") {
 
   auto flow_file_a = std::make_shared<core::FlowFile>();
   flow_file_a->addAttribute("attr", "a brand new filename.txt");
-  REQUIRE("1" == expr(expression::Parameters{ flow_file_a }).asString());
+  REQUIRE("1" == expr(expression::Parameters{ flow_file_a.get() }).asString());
 }
 
 TEST_CASE("LastIndexOf", "[expressionLanguageLastIndexOf]") {
@@ -575,7 +575,7 @@ TEST_CASE("LastIndexOf", "[expressionLanguageLastIndexOf]") {
 
   auto flow_file_a = std::make_shared<core::FlowFile>();
   flow_file_a->addAttribute("attr", "a brand new filename.txt");
-  REQUIRE("-1" == expr(expression::Parameters{ flow_file_a }).asString());
+  REQUIRE("-1" == expr(expression::Parameters{ flow_file_a.get() }).asString());
 }
 
 TEST_CASE("LastIndexOf2", "[expressionLanguageLastIndexOf2]") {
@@ -583,7 +583,7 @@ TEST_CASE("LastIndexOf2", "[expressionLanguageLastIndexOf2]") {
 
   auto flow_file_a = std::make_shared<core::FlowFile>();
   flow_file_a->addAttribute("attr", "a brand new filename.txt");
-  REQUIRE("20" == expr(expression::Parameters{ flow_file_a }).asString());
+  REQUIRE("20" == expr(expression::Parameters{ flow_file_a.get() }).asString());
 }
 
 TEST_CASE("LastIndexOf3", "[expressionLanguageLastIndexOf3]") {
@@ -591,7 +591,7 @@ TEST_CASE("LastIndexOf3", "[expressionLanguageLastIndexOf3]") {
 
   auto flow_file_a = std::make_shared<core::FlowFile>();
   flow_file_a->addAttribute("attr", "a brand new filename.txt");
-  REQUIRE("17" == expr(expression::Parameters{ flow_file_a }).asString());
+  REQUIRE("17" == expr(expression::Parameters{ flow_file_a.get() }).asString());
 }
 
 TEST_CASE("LastIndexOf4", "[expressionLanguageLastIndexOf4]") {
@@ -599,7 +599,7 @@ TEST_CASE("LastIndexOf4", "[expressionLanguageLastIndexOf4]") {
 
   auto flow_file_a = std::make_shared<core::FlowFile>();
   flow_file_a->addAttribute("attr", "a brand new filename.txt");
-  REQUIRE("11" == expr(expression::Parameters{ flow_file_a }).asString());
+  REQUIRE("11" == expr(expression::Parameters{ flow_file_a.get() }).asString());
 }
 
 TEST_CASE("Plus Integer", "[expressionLanguagePlusInteger]") {
@@ -607,7 +607,7 @@ TEST_CASE("Plus Integer", "[expressionLanguagePlusInteger]") {
 
   auto flow_file_a = std::make_shared<core::FlowFile>();
   flow_file_a->addAttribute("attr", "11");
-  REQUIRE("24" == expr(expression::Parameters{ flow_file_a }).asString());
+  REQUIRE("24" == expr(expression::Parameters{ flow_file_a.get() }).asString());
 }
 
 TEST_CASE("Plus Decimal", "[expressionLanguagePlusDecimal]") {
@@ -615,7 +615,7 @@ TEST_CASE("Plus Decimal", "[expressionLanguagePlusDecimal]") {
 
   auto flow_file_a = std::make_shared<core::FlowFile>();
   flow_file_a->addAttribute("attr", "11.1");
-  REQUIRE("-2.24567" == expr(expression::Parameters{ flow_file_a }).asString());
+  REQUIRE("-2.24567" == expr(expression::Parameters{ flow_file_a.get() }).asString());
 }
 
 TEST_CASE("Plus Exponent", "[expressionLanguagePlusExponent]") {
@@ -623,7 +623,7 @@ TEST_CASE("Plus Exponent", "[expressionLanguagePlusExponent]") {
 
   auto flow_file_a = std::make_shared<core::FlowFile>();
   flow_file_a->addAttribute("attr", "11");
-  REQUIRE("10000011" == expr(expression::Parameters{ flow_file_a }).asString());
+  REQUIRE("10000011" == expr(expression::Parameters{ flow_file_a.get() }).asString());
 }
 
 TEST_CASE("Plus Exponent 2", "[expressionLanguagePlusExponent2]") {
@@ -631,7 +631,7 @@ TEST_CASE("Plus Exponent 2", "[expressionLanguagePlusExponent2]") {
 
   auto flow_file_a = std::make_shared<core::FlowFile>();
   flow_file_a->addAttribute("attr", "11.345678901234");
-  REQUIRE(10000011.345678901234 == Catch::Approx(expr(expression::Parameters{ flow_file_a }).asLongDouble()));
+  REQUIRE(10000011.345678901234 == Catch::Approx(expr(expression::Parameters{ flow_file_a.get() }).asLongDouble()));
 }
 
 TEST_CASE("Minus Integer", "[expressionLanguageMinusInteger]") {
@@ -639,7 +639,7 @@ TEST_CASE("Minus Integer", "[expressionLanguageMinusInteger]") {
 
   auto flow_file_a = std::make_shared<core::FlowFile>();
   flow_file_a->addAttribute("attr", "11");
-  REQUIRE("-2" == expr(expression::Parameters{ flow_file_a }).asString());
+  REQUIRE("-2" == expr(expression::Parameters{ flow_file_a.get() }).asString());
 }
 
 TEST_CASE("Minus Decimal", "[expressionLanguageMinusDecimal]") {
@@ -647,7 +647,7 @@ TEST_CASE("Minus Decimal", "[expressionLanguageMinusDecimal]") {
 
   auto flow_file_a = std::make_shared<core::FlowFile>();
   flow_file_a->addAttribute("attr", "11.1");
-  REQUIRE("24.44567" == expr(expression::Parameters{ flow_file_a }).asString());
+  REQUIRE("24.44567" == expr(expression::Parameters{ flow_file_a.get() }).asString());
 }
 
 TEST_CASE("Multiply Integer", "[expressionLanguageMultiplyInteger]") {
@@ -655,7 +655,7 @@ TEST_CASE("Multiply Integer", "[expressionLanguageMultiplyInteger]") {
 
   auto flow_file_a = std::make_shared<core::FlowFile>();
   flow_file_a->addAttribute("attr", "11");
-  REQUIRE("143" == expr(expression::Parameters{ flow_file_a }).asString());
+  REQUIRE("143" == expr(expression::Parameters{ flow_file_a.get() }).asString());
 }
 
 TEST_CASE("Multiply Decimal", "[expressionLanguageMultiplyDecimal]") {
@@ -663,7 +663,7 @@ TEST_CASE("Multiply Decimal", "[expressionLanguageMultiplyDecimal]") {
 
   auto flow_file_a = std::make_shared<core::FlowFile>();
   flow_file_a->addAttribute("attr", "11.1");
-  REQUIRE(-148.136937 == Catch::Approx(expr(expression::Parameters{ flow_file_a }).asLongDouble()));
+  REQUIRE(-148.136937 == Catch::Approx(expr(expression::Parameters{ flow_file_a.get() }).asLongDouble()));
 }
 
 TEST_CASE("Divide Integer", "[expressionLanguageDivideInteger]") {
@@ -671,7 +671,7 @@ TEST_CASE("Divide Integer", "[expressionLanguageDivideInteger]") {
 
   auto flow_file_a = std::make_shared<core::FlowFile>();
   flow_file_a->addAttribute("attr", "11");
-  REQUIRE("0.846153846153846" == expr(expression::Parameters{ flow_file_a }).asString());
+  REQUIRE("0.846153846153846" == expr(expression::Parameters{ flow_file_a.get() }).asString());
 }
 
 TEST_CASE("Divide Decimal", "[expressionLanguageDivideDecimal]") {
@@ -679,7 +679,7 @@ TEST_CASE("Divide Decimal", "[expressionLanguageDivideDecimal]") {
 
   auto flow_file_a = std::make_shared<core::FlowFile>();
   flow_file_a->addAttribute("attr", "11.1");
-  REQUIRE("-0.831730441409086" == expr(expression::Parameters{ flow_file_a }).asString());
+  REQUIRE("-0.831730441409086" == expr(expression::Parameters{ flow_file_a.get() }).asString());
 }
 
 TEST_CASE("To Radix", "[expressionLanguageToRadix]") {
@@ -687,7 +687,7 @@ TEST_CASE("To Radix", "[expressionLanguageToRadix]") {
 
   auto flow_file_a = std::make_shared<core::FlowFile>();
   flow_file_a->addAttribute("attr", "10");
-  REQUIRE("0000000000001010" == expr(expression::Parameters{ flow_file_a }).asString());
+  REQUIRE("0000000000001010" == expr(expression::Parameters{ flow_file_a.get() }).asString());
 }
 
 TEST_CASE("To Radix 2", "[expressionLanguageToRadix2]") {
@@ -695,7 +695,7 @@ TEST_CASE("To Radix 2", "[expressionLanguageToRadix2]") {
 
   auto flow_file_a = std::make_shared<core::FlowFile>();
   flow_file_a->addAttribute("attr", "13");
-  REQUIRE("d" == expr(expression::Parameters{ flow_file_a }).asString());
+  REQUIRE("d" == expr(expression::Parameters{ flow_file_a.get() }).asString());
 }
 
 TEST_CASE("To Radix 3", "[expressionLanguageToRadix3]") {
@@ -703,7 +703,7 @@ TEST_CASE("To Radix 3", "[expressionLanguageToRadix3]") {
 
   auto flow_file_a = std::make_shared<core::FlowFile>();
   flow_file_a->addAttribute("attr", "-2347");
-  REQUIRE("-000004a1" == expr(expression::Parameters{ flow_file_a }).asString());
+  REQUIRE("-000004a1" == expr(expression::Parameters{ flow_file_a.get() }).asString());
 }
 
 TEST_CASE("From Radix", "[expressionLanguageFromRadix]") {
@@ -711,7 +711,7 @@ TEST_CASE("From Radix", "[expressionLanguageFromRadix]") {
 
   auto flow_file_a = std::make_shared<core::FlowFile>();
   flow_file_a->addAttribute("attr", "0000000000001010");
-  REQUIRE("10" == expr(expression::Parameters{ flow_file_a }).asString());
+  REQUIRE("10" == expr(expression::Parameters{ flow_file_a.get() }).asString());
 }
 
 TEST_CASE("From Radix 2", "[expressionLanguageFromRadix2]") {
@@ -719,7 +719,7 @@ TEST_CASE("From Radix 2", "[expressionLanguageFromRadix2]") {
 
   auto flow_file_a = std::make_shared<core::FlowFile>();
   flow_file_a->addAttribute("attr", "d");
-  REQUIRE("13" == expr(expression::Parameters{ flow_file_a }).asString());
+  REQUIRE("13" == expr(expression::Parameters{ flow_file_a.get() }).asString());
 }
 
 TEST_CASE("From Radix 3", "[expressionLanguageFromRadix3]") {
@@ -727,14 +727,14 @@ TEST_CASE("From Radix 3", "[expressionLanguageFromRadix3]") {
 
   auto flow_file_a = std::make_shared<core::FlowFile>();
   flow_file_a->addAttribute("attr", "-000004a1");
-  REQUIRE("-2347" == expr(expression::Parameters{ flow_file_a }).asString());
+  REQUIRE("-2347" == expr(expression::Parameters{ flow_file_a.get() }).asString());
 }
 
 TEST_CASE("Random", "[expressionLanguageRandom]") {
   auto expr = expression::compile("${random()}");
 
   auto flow_file_a = std::make_shared<core::FlowFile>();
-  auto result = expr(expression::Parameters{ flow_file_a }).asSignedLong();
+  auto result = expr(expression::Parameters{ flow_file_a.get() }).asSignedLong();
   REQUIRE(result > 0);
 }
 
@@ -743,14 +743,14 @@ TEST_CASE("Chained call", "[expressionChainedCall]") {
 
   auto flow_file_a = std::make_shared<core::FlowFile>();
   flow_file_a->addAttribute("attr", "7");
-  REQUIRE("22" == expr(expression::Parameters{ flow_file_a }).asString());
+  REQUIRE("22" == expr(expression::Parameters{ flow_file_a.get() }).asString());
 }
 
 TEST_CASE("Chained call 2", "[expressionChainedCall2]") {
   auto expr = expression::compile("${literal(10):multiply(2):plus(1):multiply(2)}");
 
   auto flow_file_a = std::make_shared<core::FlowFile>();
-  REQUIRE(42 == expr(expression::Parameters{ flow_file_a }).asSignedLong());
+  REQUIRE(42 == expr(expression::Parameters{ flow_file_a.get() }).asSignedLong());
 }
 
 TEST_CASE("Chained call 3", "[expressionChainedCall3]") {
@@ -758,7 +758,7 @@ TEST_CASE("Chained call 3", "[expressionChainedCall3]") {
 
   auto flow_file_a = std::make_shared<core::FlowFile>();
   flow_file_a->addAttribute("attr", "7");
-  REQUIRE("238" == expr(expression::Parameters{ flow_file_a }).asString());
+  REQUIRE("238" == expr(expression::Parameters{ flow_file_a.get() }).asString());
 }
 
 TEST_CASE("LiteralBool", "[expressionLiteralBool]") {
@@ -766,7 +766,7 @@ TEST_CASE("LiteralBool", "[expressionLiteralBool]") {
 
   auto flow_file_a = std::make_shared<core::FlowFile>();
   flow_file_a->addAttribute("attr", "7");
-  REQUIRE(true == expr(expression::Parameters{ flow_file_a }).asBoolean());
+  REQUIRE(true == expr(expression::Parameters{ flow_file_a.get() }).asBoolean());
 }
 
 TEST_CASE("LiteralBool 2", "[expressionLiteralBool2]") {
@@ -774,7 +774,7 @@ TEST_CASE("LiteralBool 2", "[expressionLiteralBool2]") {
 
   auto flow_file_a = std::make_shared<core::FlowFile>();
   flow_file_a->addAttribute("attr", "7");
-  REQUIRE(false == expr(expression::Parameters{ flow_file_a }).asBoolean());
+  REQUIRE(false == expr(expression::Parameters{ flow_file_a.get() }).asBoolean());
 }
 
 TEST_CASE("Is Null", "[expressionIsNull]") {
@@ -782,7 +782,7 @@ TEST_CASE("Is Null", "[expressionIsNull]") {
 
   auto flow_file_a = std::make_shared<core::FlowFile>();
   flow_file_a->addAttribute("attr", "7");
-  REQUIRE("true" == expr(expression::Parameters{ flow_file_a }).asString());
+  REQUIRE("true" == expr(expression::Parameters{ flow_file_a.get() }).asString());
 }
 
 TEST_CASE("Is Null 2", "[expressionIsNull2]") {
@@ -790,7 +790,7 @@ TEST_CASE("Is Null 2", "[expressionIsNull2]") {
 
   auto flow_file_a = std::make_shared<core::FlowFile>();
   flow_file_a->addAttribute("filename", "7");
-  REQUIRE("false" == expr(expression::Parameters{ flow_file_a }).asString());
+  REQUIRE("false" == expr(expression::Parameters{ flow_file_a.get() }).asString());
 }
 
 TEST_CASE("Not Null", "[expressionNotNull]") {
@@ -798,7 +798,7 @@ TEST_CASE("Not Null", "[expressionNotNull]") {
 
   auto flow_file_a = std::make_shared<core::FlowFile>();
   flow_file_a->addAttribute("attr", "7");
-  REQUIRE("false" == expr(expression::Parameters{ flow_file_a }).asString());
+  REQUIRE("false" == expr(expression::Parameters{ flow_file_a.get() }).asString());
 }
 
 TEST_CASE("Not Null 2", "[expressionNotNull2]") {
@@ -806,7 +806,7 @@ TEST_CASE("Not Null 2", "[expressionNotNull2]") {
 
   auto flow_file_a = std::make_shared<core::FlowFile>();
   flow_file_a->addAttribute("filename", "7");
-  REQUIRE("true" == expr(expression::Parameters{ flow_file_a }).asString());
+  REQUIRE("true" == expr(expression::Parameters{ flow_file_a.get() }).asString());
 }
 
 TEST_CASE("Is Empty", "[expressionIsEmpty]") {
@@ -814,7 +814,7 @@ TEST_CASE("Is Empty", "[expressionIsEmpty]") {
 
   auto flow_file_a = std::make_shared<core::FlowFile>();
   flow_file_a->addAttribute("attr", "7");
-  REQUIRE("true" == expr(expression::Parameters{ flow_file_a }).asString());
+  REQUIRE("true" == expr(expression::Parameters{ flow_file_a.get() }).asString());
 }
 
 TEST_CASE("Is Empty 2", "[expressionIsEmpty2]") {
@@ -822,7 +822,7 @@ TEST_CASE("Is Empty 2", "[expressionIsEmpty2]") {
 
   auto flow_file_a = std::make_shared<core::FlowFile>();
   flow_file_a->addAttribute("attr", "7");
-  REQUIRE("false" == expr(expression::Parameters{ flow_file_a }).asString());
+  REQUIRE("false" == expr(expression::Parameters{ flow_file_a.get() }).asString());
 }
 
 TEST_CASE("Is Empty 3", "[expressionIsEmpty3]") {
@@ -830,7 +830,7 @@ TEST_CASE("Is Empty 3", "[expressionIsEmpty3]") {
 
   auto flow_file_a = std::make_shared<core::FlowFile>();
   flow_file_a->addAttribute("attr", " \t\r\n ");
-  REQUIRE("true" == expr(expression::Parameters{ flow_file_a }).asString());
+  REQUIRE("true" == expr(expression::Parameters{ flow_file_a.get() }).asString());
 }
 
 TEST_CASE("Is Empty 4", "[expressionIsEmpty4]") {
@@ -838,7 +838,7 @@ TEST_CASE("Is Empty 4", "[expressionIsEmpty4]") {
 
   auto flow_file_a = std::make_shared<core::FlowFile>();
   flow_file_a->addAttribute("attr", "");
-  REQUIRE("true" == expr(expression::Parameters{ flow_file_a }).asString());
+  REQUIRE("true" == expr(expression::Parameters{ flow_file_a.get() }).asString());
 }
 
 TEST_CASE("Is Empty 5", "[expressionIsEmpty5]") {
@@ -846,7 +846,7 @@ TEST_CASE("Is Empty 5", "[expressionIsEmpty5]") {
 
   auto flow_file_a = std::make_shared<core::FlowFile>();
   flow_file_a->addAttribute("attr", " \t\r\n a \t\r\n ");
-  REQUIRE("false" == expr(expression::Parameters{ flow_file_a }).asString());
+  REQUIRE("false" == expr(expression::Parameters{ flow_file_a.get() }).asString());
 }
 
 TEST_CASE("Equals", "[expressionEquals]") {
@@ -854,7 +854,7 @@ TEST_CASE("Equals", "[expressionEquals]") {
 
   auto flow_file_a = std::make_shared<core::FlowFile>();
   flow_file_a->addAttribute("attr", "hello.txt");
-  REQUIRE("true" == expr(expression::Parameters{ flow_file_a }).asString());
+  REQUIRE("true" == expr(expression::Parameters{ flow_file_a.get() }).asString());
 }
 
 TEST_CASE("Equals 2", "[expressionEquals2]") {
@@ -862,7 +862,7 @@ TEST_CASE("Equals 2", "[expressionEquals2]") {
 
   auto flow_file_a = std::make_shared<core::FlowFile>();
   flow_file_a->addAttribute("attr", "helllo.txt");
-  REQUIRE("false" == expr(expression::Parameters{ flow_file_a }).asString());
+  REQUIRE("false" == expr(expression::Parameters{ flow_file_a.get() }).asString());
 }
 
 TEST_CASE("Equals 3", "[expressionEquals3]") {
@@ -870,7 +870,7 @@ TEST_CASE("Equals 3", "[expressionEquals3]") {
 
   auto flow_file_a = std::make_shared<core::FlowFile>();
   flow_file_a->addAttribute("attr", "1");
-  REQUIRE("true" == expr(expression::Parameters{ flow_file_a }).asString());
+  REQUIRE("true" == expr(expression::Parameters{ flow_file_a.get() }).asString());
 }
 
 TEST_CASE("Equals Ignore Case", "[expressionEqualsIgnoreCase]") {
@@ -878,7 +878,7 @@ TEST_CASE("Equals Ignore Case", "[expressionEqualsIgnoreCase]") {
 
   auto flow_file_a = std::make_shared<core::FlowFile>();
   flow_file_a->addAttribute("attr", "hello.txt");
-  REQUIRE("true" == expr(expression::Parameters{ flow_file_a }).asString());
+  REQUIRE("true" == expr(expression::Parameters{ flow_file_a.get() }).asString());
 }
 
 TEST_CASE("Equals Ignore Case 2", "[expressionEqualsIgnoreCase2]") {
@@ -886,7 +886,7 @@ TEST_CASE("Equals Ignore Case 2", "[expressionEqualsIgnoreCase2]") {
 
   auto flow_file_a = std::make_shared<core::FlowFile>();
   flow_file_a->addAttribute("attr", "1");
-  REQUIRE("true" == expr(expression::Parameters{ flow_file_a }).asString());
+  REQUIRE("true" == expr(expression::Parameters{ flow_file_a.get() }).asString());
 }
 
 TEST_CASE("GT", "[expressionGT]") {
@@ -894,7 +894,7 @@ TEST_CASE("GT", "[expressionGT]") {
 
   auto flow_file_a = std::make_shared<core::FlowFile>();
   flow_file_a->addAttribute("attr", "1");
-  REQUIRE("true" == expr(expression::Parameters{ flow_file_a }).asString());
+  REQUIRE("true" == expr(expression::Parameters{ flow_file_a.get() }).asString());
 }
 
 TEST_CASE("GT2", "[expressionGT2]") {
@@ -902,7 +902,7 @@ TEST_CASE("GT2", "[expressionGT2]") {
 
   auto flow_file_a = std::make_shared<core::FlowFile>();
   flow_file_a->addAttribute("attr", "1");
-  REQUIRE("true" == expr(expression::Parameters{ flow_file_a }).asString());
+  REQUIRE("true" == expr(expression::Parameters{ flow_file_a.get() }).asString());
 }
 
 TEST_CASE("GT3", "[expressionGT3]") {
@@ -910,7 +910,7 @@ TEST_CASE("GT3", "[expressionGT3]") {
 
   auto flow_file_a = std::make_shared<core::FlowFile>();
   flow_file_a->addAttribute("attr", "1");
-  REQUIRE("false" == expr(expression::Parameters{ flow_file_a }).asString());
+  REQUIRE("false" == expr(expression::Parameters{ flow_file_a.get() }).asString());
 }
 
 // using :gt() to test string to integer parsing code
@@ -941,7 +941,7 @@ TEST_CASE("GT4 Value parsing errors", "[expressionGT4][outofrange]") {
   auto flow_file = std::make_shared<core::FlowFile>();
   flow_file->addAttribute("attr1", test_str);
   try {
-    const auto result = expr(expression::Parameters{flow_file}).asString();
+    const auto result = expr(expression::Parameters{flow_file.get()}).asString();
     REQUIRE(false);
   } catch (const std::exception& ex) {
     const std::string message = ex.what();
@@ -956,7 +956,7 @@ TEST_CASE("GE", "[expressionGE]") {
 
   auto flow_file_a = std::make_shared<core::FlowFile>();
   flow_file_a->addAttribute("attr", "1");
-  REQUIRE("true" == expr(expression::Parameters{ flow_file_a }).asString());
+  REQUIRE("true" == expr(expression::Parameters{ flow_file_a.get() }).asString());
 }
 
 TEST_CASE("GE2", "[expressionGE2]") {
@@ -964,7 +964,7 @@ TEST_CASE("GE2", "[expressionGE2]") {
 
   auto flow_file_a = std::make_shared<core::FlowFile>();
   flow_file_a->addAttribute("attr", "1");
-  REQUIRE("true" == expr(expression::Parameters{ flow_file_a }).asString());
+  REQUIRE("true" == expr(expression::Parameters{ flow_file_a.get() }).asString());
 }
 
 TEST_CASE("GE3", "[expressionGE3]") {
@@ -972,7 +972,7 @@ TEST_CASE("GE3", "[expressionGE3]") {
 
   auto flow_file_a = std::make_shared<core::FlowFile>();
   flow_file_a->addAttribute("attr", "1");
-  REQUIRE("false" == expr(expression::Parameters{ flow_file_a }).asString());
+  REQUIRE("false" == expr(expression::Parameters{ flow_file_a.get() }).asString());
 }
 
 TEST_CASE("LT", "[expressionLT]") {
@@ -980,7 +980,7 @@ TEST_CASE("LT", "[expressionLT]") {
 
   auto flow_file_a = std::make_shared<core::FlowFile>();
   flow_file_a->addAttribute("attr", "1");
-  REQUIRE("false" == expr(expression::Parameters{ flow_file_a }).asString());
+  REQUIRE("false" == expr(expression::Parameters{ flow_file_a.get() }).asString());
 }
 
 TEST_CASE("LT2", "[expressionLT2]") {
@@ -988,7 +988,7 @@ TEST_CASE("LT2", "[expressionLT2]") {
 
   auto flow_file_a = std::make_shared<core::FlowFile>();
   flow_file_a->addAttribute("attr", "1");
-  REQUIRE("false" == expr(expression::Parameters{ flow_file_a }).asString());
+  REQUIRE("false" == expr(expression::Parameters{ flow_file_a.get() }).asString());
 }
 
 TEST_CASE("LT3", "[expressionLT3]") {
@@ -996,7 +996,7 @@ TEST_CASE("LT3", "[expressionLT3]") {
 
   auto flow_file_a = std::make_shared<core::FlowFile>();
   flow_file_a->addAttribute("attr", "1");
-  REQUIRE("true" == expr(expression::Parameters{ flow_file_a }).asString());
+  REQUIRE("true" == expr(expression::Parameters{ flow_file_a.get() }).asString());
 }
 
 TEST_CASE("LE", "[expressionLE]") {
@@ -1004,7 +1004,7 @@ TEST_CASE("LE", "[expressionLE]") {
 
   auto flow_file_a = std::make_shared<core::FlowFile>();
   flow_file_a->addAttribute("attr", "1");
-  REQUIRE("true" == expr(expression::Parameters{ flow_file_a }).asString());
+  REQUIRE("true" == expr(expression::Parameters{ flow_file_a.get() }).asString());
 }
 
 TEST_CASE("LE2", "[expressionLE2]") {
@@ -1012,7 +1012,7 @@ TEST_CASE("LE2", "[expressionLE2]") {
 
   auto flow_file_a = std::make_shared<core::FlowFile>();
   flow_file_a->addAttribute("attr", "1");
-  REQUIRE("false" == expr(expression::Parameters{ flow_file_a }).asString());
+  REQUIRE("false" == expr(expression::Parameters{ flow_file_a.get() }).asString());
 }
 
 TEST_CASE("LE3", "[expressionLE3]") {
@@ -1020,7 +1020,7 @@ TEST_CASE("LE3", "[expressionLE3]") {
 
   auto flow_file_a = std::make_shared<core::FlowFile>();
   flow_file_a->addAttribute("attr", "1");
-  REQUIRE("true" == expr(expression::Parameters{ flow_file_a }).asString());
+  REQUIRE("true" == expr(expression::Parameters{ flow_file_a.get() }).asString());
 }
 
 TEST_CASE("And", "[expressionAnd]") {
@@ -1028,7 +1028,7 @@ TEST_CASE("And", "[expressionAnd]") {
 
   auto flow_file_a = std::make_shared<core::FlowFile>();
   flow_file_a->addAttribute("filename", "an example file.txt");
-  REQUIRE("true" == expr(expression::Parameters{ flow_file_a }).asString());
+  REQUIRE("true" == expr(expression::Parameters{ flow_file_a.get() }).asString());
 }
 
 TEST_CASE("And 2", "[expressionAnd2]") {
@@ -1036,7 +1036,7 @@ TEST_CASE("And 2", "[expressionAnd2]") {
 
   auto flow_file_a = std::make_shared<core::FlowFile>();
   flow_file_a->addAttribute("filename", "an example file.txt");
-  REQUIRE("false" == expr(expression::Parameters{ flow_file_a }).asString());
+  REQUIRE("false" == expr(expression::Parameters{ flow_file_a.get() }).asString());
 }
 
 TEST_CASE("Or", "[expressionOr]") {
@@ -1044,7 +1044,7 @@ TEST_CASE("Or", "[expressionOr]") {
 
   auto flow_file_a = std::make_shared<core::FlowFile>();
   flow_file_a->addAttribute("filename", "an example file.txt");
-  REQUIRE("true" == expr(expression::Parameters{ flow_file_a }).asString());
+  REQUIRE("true" == expr(expression::Parameters{ flow_file_a.get() }).asString());
 }
 
 TEST_CASE("Or 2", "[expressionOr2]") {
@@ -1052,7 +1052,7 @@ TEST_CASE("Or 2", "[expressionOr2]") {
 
   auto flow_file_a = std::make_shared<core::FlowFile>();
   flow_file_a->addAttribute("filename", "an example file.txt");
-  REQUIRE("true" == expr(expression::Parameters{ flow_file_a }).asString());
+  REQUIRE("true" == expr(expression::Parameters{ flow_file_a.get() }).asString());
 }
 
 TEST_CASE("Not", "[expressionNot]") {
@@ -1060,7 +1060,7 @@ TEST_CASE("Not", "[expressionNot]") {
 
   auto flow_file_a = std::make_shared<core::FlowFile>();
   flow_file_a->addAttribute("filename", "an example file.txt");
-  REQUIRE("false" == expr(expression::Parameters{ flow_file_a }).asString());
+  REQUIRE("false" == expr(expression::Parameters{ flow_file_a.get() }).asString());
 }
 
 TEST_CASE("Not 2", "[expressionNot2]") {
@@ -1068,7 +1068,7 @@ TEST_CASE("Not 2", "[expressionNot2]") {
 
   auto flow_file_a = std::make_shared<core::FlowFile>();
   flow_file_a->addAttribute("filename", "an example file.txt");
-  REQUIRE("true" == expr(expression::Parameters{ flow_file_a }).asString());
+  REQUIRE("true" == expr(expression::Parameters{ flow_file_a.get() }).asString());
 }
 
 TEST_CASE("If Else", "[expressionIfElse]") {
@@ -1076,7 +1076,7 @@ TEST_CASE("If Else", "[expressionIfElse]") {
 
   auto flow_file_a = std::make_shared<core::FlowFile>();
   flow_file_a->addAttribute("filename", "an example file.txt");
-  REQUIRE("yes" == expr(expression::Parameters{ flow_file_a }).asString());
+  REQUIRE("yes" == expr(expression::Parameters{ flow_file_a.get() }).asString());
 }
 
 TEST_CASE("If Else 2", "[expressionIfElse2]") {
@@ -1084,7 +1084,7 @@ TEST_CASE("If Else 2", "[expressionIfElse2]") {
 
   auto flow_file_a = std::make_shared<core::FlowFile>();
   flow_file_a->addAttribute("filename", "An example file.txt");
-  REQUIRE("no" == expr(expression::Parameters{ flow_file_a }).asString());
+  REQUIRE("no" == expr(expression::Parameters{ flow_file_a.get() }).asString());
 }
 
 TEST_CASE("Encode JSON", "[expressionEncodeJSON]") {
@@ -1092,7 +1092,7 @@ TEST_CASE("Encode JSON", "[expressionEncodeJSON]") {
 
   auto flow_file_a = std::make_shared<core::FlowFile>();
   flow_file_a->addAttribute("message", "This is a \"test!\"");
-  REQUIRE("This is a \\\"test!\\\"" == expr(expression::Parameters{ flow_file_a }).asString());
+  REQUIRE("This is a \\\"test!\\\"" == expr(expression::Parameters{ flow_file_a.get() }).asString());
 }
 
 TEST_CASE("Decode JSON", "[expressionDecodeJSON]") {
@@ -1100,7 +1100,7 @@ TEST_CASE("Decode JSON", "[expressionDecodeJSON]") {
 
   auto flow_file_a = std::make_shared<core::FlowFile>();
   flow_file_a->addAttribute("message", R"(This is a \"test!\")");
-  REQUIRE("This is a \"test!\"" == expr(expression::Parameters{ flow_file_a }).asString());
+  REQUIRE("This is a \"test!\"" == expr(expression::Parameters{ flow_file_a.get() }).asString());
 }
 
 TEST_CASE("Encode Decode JSON", "[expressionEncodeDecodeJSON]") {
@@ -1108,7 +1108,7 @@ TEST_CASE("Encode Decode JSON", "[expressionEncodeDecodeJSON]") {
 
   auto flow_file_a = std::make_shared<core::FlowFile>();
   flow_file_a->addAttribute("message", "This is a \"test!\"");
-  REQUIRE("This is a \"test!\"" == expr(expression::Parameters{ flow_file_a }).asString());
+  REQUIRE("This is a \"test!\"" == expr(expression::Parameters{ flow_file_a.get() }).asString());
 }
 
 TEST_CASE("Encode XML", "[expressionEncodeXML]") {
@@ -1116,7 +1116,7 @@ TEST_CASE("Encode XML", "[expressionEncodeXML]") {
 
   auto flow_file_a = std::make_shared<core::FlowFile>();
   flow_file_a->addAttribute("message", "Zero > One < \"two!\" & 'true'");
-  REQUIRE("Zero &gt; One &lt; &quot;two!&quot; &amp; &apos;true&apos;" == expr(expression::Parameters{ flow_file_a }).asString());
+  REQUIRE("Zero &gt; One &lt; &quot;two!&quot; &amp; &apos;true&apos;" == expr(expression::Parameters{ flow_file_a.get() }).asString());
 }
 
 TEST_CASE("Decode XML", "[expressionDecodeXML]") {
@@ -1124,7 +1124,7 @@ TEST_CASE("Decode XML", "[expressionDecodeXML]") {
 
   auto flow_file_a = std::make_shared<core::FlowFile>();
   flow_file_a->addAttribute("message", "Zero &gt; One &lt; &quot;two!&quot; &amp; &apos;true&apos;");
-  REQUIRE("Zero > One < \"two!\" & 'true'" == expr(expression::Parameters{ flow_file_a }).asString());
+  REQUIRE("Zero > One < \"two!\" & 'true'" == expr(expression::Parameters{ flow_file_a.get() }).asString());
 }
 
 TEST_CASE("Encode Decode XML", "[expressionEncodeDecodeXML]") {
@@ -1132,7 +1132,7 @@ TEST_CASE("Encode Decode XML", "[expressionEncodeDecodeXML]") {
 
   auto flow_file_a = std::make_shared<core::FlowFile>();
   flow_file_a->addAttribute("message", "Zero > One < \"two!\" & 'true'");
-  REQUIRE("Zero > One < \"two!\" & 'true'" == expr(expression::Parameters{ flow_file_a }).asString());
+  REQUIRE("Zero > One < \"two!\" & 'true'" == expr(expression::Parameters{ flow_file_a.get() }).asString());
 }
 
 TEST_CASE("Encode HTML3", "[expressionEncodeHTML3]") {
@@ -1140,7 +1140,7 @@ TEST_CASE("Encode HTML3", "[expressionEncodeHTML3]") {
 
   auto flow_file_a = std::make_shared<core::FlowFile>();
   flow_file_a->addAttribute("message", "¥ & < «");
-  REQUIRE("&yen; &amp; &lt; &laquo;" == expr(expression::Parameters{ flow_file_a }).asString());
+  REQUIRE("&yen; &amp; &lt; &laquo;" == expr(expression::Parameters{ flow_file_a.get() }).asString());
 }
 
 TEST_CASE("Decode HTML3", "[expressionDecodeHTML3]") {
@@ -1148,7 +1148,7 @@ TEST_CASE("Decode HTML3", "[expressionDecodeHTML3]") {
 
   auto flow_file_a = std::make_shared<core::FlowFile>();
   flow_file_a->addAttribute("message", "&yen; &amp; &lt; &laquo;");
-  REQUIRE("¥ & < «" == expr(expression::Parameters{ flow_file_a }).asString());
+  REQUIRE("¥ & < «" == expr(expression::Parameters{ flow_file_a.get() }).asString());
 }
 
 TEST_CASE("Encode Decode HTML3", "[expressionEncodeDecodeHTML3]") {
@@ -1156,7 +1156,7 @@ TEST_CASE("Encode Decode HTML3", "[expressionEncodeDecodeHTML3]") {
 
   auto flow_file_a = std::make_shared<core::FlowFile>();
   flow_file_a->addAttribute("message", "&yen; &amp; &lt; &laquo;");
-  REQUIRE("&yen; &amp; &lt; &laquo;" == expr(expression::Parameters{ flow_file_a }).asString());
+  REQUIRE("&yen; &amp; &lt; &laquo;" == expr(expression::Parameters{ flow_file_a.get() }).asString());
 }
 
 TEST_CASE("Encode HTML4", "[expressionEncodeHTML4]") {
@@ -1164,7 +1164,7 @@ TEST_CASE("Encode HTML4", "[expressionEncodeHTML4]") {
 
   auto flow_file_a = std::make_shared<core::FlowFile>();
   flow_file_a->addAttribute("message", "¥ & Φ < «");
-  REQUIRE("&yen; &amp; &Phi; &lt; &laquo;" == expr(expression::Parameters{ flow_file_a }).asString());
+  REQUIRE("&yen; &amp; &Phi; &lt; &laquo;" == expr(expression::Parameters{ flow_file_a.get() }).asString());
 }
 
 TEST_CASE("Decode HTML4", "[expressionDecodeHTML4]") {
@@ -1172,7 +1172,7 @@ TEST_CASE("Decode HTML4", "[expressionDecodeHTML4]") {
 
   auto flow_file_a = std::make_shared<core::FlowFile>();
   flow_file_a->addAttribute("message", "&yen; &iota; &amp; &lt; &laquo;");
-  REQUIRE("¥ ι & < «" == expr(expression::Parameters{ flow_file_a }).asString());
+  REQUIRE("¥ ι & < «" == expr(expression::Parameters{ flow_file_a.get() }).asString());
 }
 
 TEST_CASE("Encode Decode HTML4", "[expressionEncodeDecodeHTML4]") {
@@ -1180,7 +1180,7 @@ TEST_CASE("Encode Decode HTML4", "[expressionEncodeDecodeHTML4]") {
 
   auto flow_file_a = std::make_shared<core::FlowFile>();
   flow_file_a->addAttribute("message", "&yen; &amp; &lt; &Pi; &laquo;");
-  REQUIRE("&yen; &amp; &lt; &Pi; &laquo;" == expr(expression::Parameters{ flow_file_a }).asString());
+  REQUIRE("&yen; &amp; &lt; &Pi; &laquo;" == expr(expression::Parameters{ flow_file_a.get() }).asString());
 }
 
 TEST_CASE("Encode CSV", "[expressionEncodeCSV]") {
@@ -1188,7 +1188,7 @@ TEST_CASE("Encode CSV", "[expressionEncodeCSV]") {
 
   auto flow_file_a = std::make_shared<core::FlowFile>();
   flow_file_a->addAttribute("message", "Zero > One < \"two!\" & 'true'");
-  REQUIRE("\"Zero > One < \"\"two!\"\" & 'true'\"" == expr(expression::Parameters{ flow_file_a }).asString());
+  REQUIRE("\"Zero > One < \"\"two!\"\" & 'true'\"" == expr(expression::Parameters{ flow_file_a.get() }).asString());
 }
 
 TEST_CASE("Decode CSV", "[expressionDecodeCSV]") {
@@ -1196,7 +1196,7 @@ TEST_CASE("Decode CSV", "[expressionDecodeCSV]") {
 
   auto flow_file_a = std::make_shared<core::FlowFile>();
   flow_file_a->addAttribute("message", R"("Zero > One < ""two!"" & 'true'")");
-  REQUIRE("Zero > One < \"two!\" & 'true'" == expr(expression::Parameters{ flow_file_a }).asString());
+  REQUIRE("Zero > One < \"two!\" & 'true'" == expr(expression::Parameters{ flow_file_a.get() }).asString());
 }
 
 TEST_CASE("Decode CSV 2", "[expressionDecodeCSV2]") {
@@ -1204,7 +1204,7 @@ TEST_CASE("Decode CSV 2", "[expressionDecodeCSV2]") {
 
   auto flow_file_a = std::make_shared<core::FlowFile>();
   flow_file_a->addAttribute("message", R"("quoted")");
-  REQUIRE("\"quoted\"" == expr(expression::Parameters{ flow_file_a }).asString());
+  REQUIRE("\"quoted\"" == expr(expression::Parameters{ flow_file_a.get() }).asString());
 }
 
 TEST_CASE("Encode Decode CSV", "[expressionEncodeDecodeCSV]") {
@@ -1212,7 +1212,7 @@ TEST_CASE("Encode Decode CSV", "[expressionEncodeDecodeCSV]") {
 
   auto flow_file_a = std::make_shared<core::FlowFile>();
   flow_file_a->addAttribute("message", "Zero > One < \"two!\" & 'true'");
-  REQUIRE("Zero > One < \"two!\" & 'true'" == expr(expression::Parameters{ flow_file_a }).asString());
+  REQUIRE("Zero > One < \"two!\" & 'true'" == expr(expression::Parameters{ flow_file_a.get() }).asString());
 }
 
 #ifndef DISABLE_CURL
@@ -1221,7 +1221,7 @@ TEST_CASE("Encode URL", "[expressionEncodeURL]") {
 
   auto flow_file_a = std::make_shared<core::FlowFile>();
   flow_file_a->addAttribute("message", "some value with spaces");
-  REQUIRE("some%20value%20with%20spaces" == expr(expression::Parameters{ flow_file_a }).asString());
+  REQUIRE("some%20value%20with%20spaces" == expr(expression::Parameters{ flow_file_a.get() }).asString());
 }
 
 TEST_CASE("Decode URL", "[expressionDecodeURL]") {
@@ -1229,7 +1229,7 @@ TEST_CASE("Decode URL", "[expressionDecodeURL]") {
 
   auto flow_file_a = std::make_shared<core::FlowFile>();
   flow_file_a->addAttribute("message", "some%20value%20with%20spaces");
-  REQUIRE("some value with spaces" == expr(expression::Parameters{ flow_file_a }).asString());
+  REQUIRE("some value with spaces" == expr(expression::Parameters{ flow_file_a.get() }).asString());
 }
 
 TEST_CASE("Encode Decode URL", "[expressionEncodeDecodeURL]") {
@@ -1237,7 +1237,7 @@ TEST_CASE("Encode Decode URL", "[expressionEncodeDecodeURL]") {
 
   auto flow_file_a = std::make_shared<core::FlowFile>();
   flow_file_a->addAttribute("message", "some value with spaces");
-  REQUIRE("some value with spaces" == expr(expression::Parameters{ flow_file_a }).asString());
+  REQUIRE("some value with spaces" == expr(expression::Parameters{ flow_file_a.get() }).asString());
 }
 #else
 TEST_CASE("Encode URL", "[expressionEncodeURLExcept]") {
@@ -1271,28 +1271,28 @@ TEST_CASE("Parse Date", "[expressionParseDate]") {
 #endif
   auto flow_file_a = std::make_shared<core::FlowFile>();
   flow_file_a->addAttribute("message", "2014/04/30");
-  CHECK("1398841200000" == expression::compile("${message:toDate('%Y/%m/%d', 'America/Los_Angeles')}")(expression::Parameters{ flow_file_a }).asString());
+  CHECK("1398841200000" == expression::compile("${message:toDate('%Y/%m/%d', 'America/Los_Angeles')}")(expression::Parameters{ flow_file_a.get() }).asString());
 
   flow_file_a->addAttribute("trillion_utc", "2001/09/09 01:46:40.000Z");
   flow_file_a->addAttribute("trillion_paris", "2001/09/09 03:46:40.000Z");
   flow_file_a->addAttribute("trillion_la", "2001/09/08 18:46:40.000Z");
-  CHECK("1000000000000" == expression::compile("${trillion_utc:toDate('%Y/%m/%d %H:%M:%SZ', 'UTC')}")(expression::Parameters{ flow_file_a }).asString());
-  CHECK("1000000000000" == expression::compile("${trillion_paris:toDate('%Y/%m/%d %H:%M:%SZ', 'Europe/Paris')}")(expression::Parameters{ flow_file_a }).asString());
-  CHECK("1000000000000" == expression::compile("${trillion_la:toDate('%Y/%m/%d %H:%M:%SZ', 'America/Los_Angeles')}")(expression::Parameters{ flow_file_a }).asString());
+  CHECK("1000000000000" == expression::compile("${trillion_utc:toDate('%Y/%m/%d %H:%M:%SZ', 'UTC')}")(expression::Parameters{ flow_file_a.get() }).asString());
+  CHECK("1000000000000" == expression::compile("${trillion_paris:toDate('%Y/%m/%d %H:%M:%SZ', 'Europe/Paris')}")(expression::Parameters{ flow_file_a.get() }).asString());
+  CHECK("1000000000000" == expression::compile("${trillion_la:toDate('%Y/%m/%d %H:%M:%SZ', 'America/Los_Angeles')}")(expression::Parameters{ flow_file_a.get() }).asString());
 
   flow_file_a->addAttribute("timestamp_with_zone_info_00_00", "2023-03-02T03:49:55.190+08:45");
   flow_file_a->addAttribute("timestamp_with_zone_info_08_45", "2023-03-02T03:49:55.190+08:45");
 
-  CHECK("1677697495190" == expression::compile("${timestamp_with_zone_info_00_00:toDate('%FT%T%Ez', 'UTC')}")(expression::Parameters{ flow_file_a }).asString());
-  CHECK("1677697495190" == expression::compile("${timestamp_with_zone_info_08_45:toDate('%FT%T%Ez', 'UTC')}")(expression::Parameters{ flow_file_a }).asString());
+  CHECK("1677697495190" == expression::compile("${timestamp_with_zone_info_00_00:toDate('%FT%T%Ez', 'UTC')}")(expression::Parameters{ flow_file_a.get() }).asString());
+  CHECK("1677697495190" == expression::compile("${timestamp_with_zone_info_08_45:toDate('%FT%T%Ez', 'UTC')}")(expression::Parameters{ flow_file_a.get() }).asString());
 
   flow_file_a->addAttribute("invalid_timestamp_1", " 2023-03-02T03:49:55.190+08:45");
   flow_file_a->addAttribute("invalid_timestamp_2", "2023-03-02T03:49:55.190+08:45 ");
   flow_file_a->addAttribute("invalid_timestamp_3", "2023-03-02 03:49:55.190+08:45 ");
 
-  REQUIRE_THROWS_AS(expression::compile("${invalid_timestamp_1:toDate('%FT%T%Ez', 'UTC')}")(expression::Parameters{ flow_file_a }), std::runtime_error);
-  REQUIRE_THROWS_AS(expression::compile("${invalid_timestamp_2:toDate('%FT%T%Ez', 'UTC')}")(expression::Parameters{ flow_file_a }), std::runtime_error);
-  REQUIRE_THROWS_AS(expression::compile("${invalid_timestamp_3:toDate('%FT%T%Ez', 'UTC')}")(expression::Parameters{ flow_file_a }), std::runtime_error);
+  REQUIRE_THROWS_AS(expression::compile("${invalid_timestamp_1:toDate('%FT%T%Ez', 'UTC')}")(expression::Parameters{ flow_file_a.get() }), std::runtime_error);
+  REQUIRE_THROWS_AS(expression::compile("${invalid_timestamp_2:toDate('%FT%T%Ez', 'UTC')}")(expression::Parameters{ flow_file_a.get() }), std::runtime_error);
+  REQUIRE_THROWS_AS(expression::compile("${invalid_timestamp_3:toDate('%FT%T%Ez', 'UTC')}")(expression::Parameters{ flow_file_a.get() }), std::runtime_error);
 }
 
 TEST_CASE("Reformat Date", "[expressionReformatDate]") {
@@ -1303,14 +1303,14 @@ TEST_CASE("Reformat Date", "[expressionReformatDate]") {
   flow_file_a->addAttribute("message", "2014/03/14");
   flow_file_a->addAttribute("blue", "20130917162643");
 
-  CHECK("03-13-2014" == expression::compile("${message:toDate('%Y/%m/%d', 'UTC'):format('%m-%d-%Y', 'America/New_York')}")(expression::Parameters{ flow_file_a }).asString());
+  CHECK("03-13-2014" == expression::compile("${message:toDate('%Y/%m/%d', 'UTC'):format('%m-%d-%Y', 'America/New_York')}")(expression::Parameters{ flow_file_a.get() }).asString());
 
   auto blue_utc_expr = expression::compile("${blue:toDate('%Y%m%d%H%M%S', 'UTC'):format('%Y/%m/%d %H:%M:%SZ', 'UTC')}");
   auto blue_paris_expr = expression::compile("${blue:toDate('%Y%m%d%H%M%S', 'UTC'):format('%Y/%m/%d %H:%M:%SZ', 'Europe/Paris')}");
   auto blue_la_expr = expression::compile("${blue:toDate('%Y%m%d%H%M%S', 'UTC'):format('%Y/%m/%d %H:%M:%SZ', 'America/Los_Angeles')}");
-  CHECK("2013/09/17 16:26:43.000Z" == blue_utc_expr(expression::Parameters{ flow_file_a }).asString());
-  CHECK("2013/09/17 18:26:43.000Z" == blue_paris_expr(expression::Parameters{ flow_file_a }).asString());
-  CHECK("2013/09/17 09:26:43.000Z" == blue_la_expr(expression::Parameters{ flow_file_a }).asString());
+  CHECK("2013/09/17 16:26:43.000Z" == blue_utc_expr(expression::Parameters{ flow_file_a.get() }).asString());
+  CHECK("2013/09/17 18:26:43.000Z" == blue_paris_expr(expression::Parameters{ flow_file_a.get() }).asString());
+  CHECK("2013/09/17 09:26:43.000Z" == blue_la_expr(expression::Parameters{ flow_file_a.get() }).asString());
 }
 
 TEST_CASE("Now Date", "[expressionNowDate]") {
@@ -1386,23 +1386,23 @@ TEST_CASE("Format Date", "[expressionFormatDate]") {
 #endif
   auto flow_file_a = std::make_shared<core::FlowFile>();
   flow_file_a->addAttribute("trillion_milliseconds", "1000000000000");
-  CHECK(expression::compile("${trillion_milliseconds:format('%Y/%m/%d %H:%M:%SZ', 'UTC')}")(expression::Parameters{ flow_file_a }).asString() == "2001/09/09 01:46:40.000Z");
-  CHECK(expression::compile("${trillion_milliseconds:format('%Y/%m/%d %H:%M:%SZ', 'Europe/Paris')}")(expression::Parameters{ flow_file_a }).asString() == "2001/09/09 03:46:40.000Z");
-  CHECK(expression::compile("${trillion_milliseconds:format('%Y/%m/%d %H:%M:%SZ', 'America/Los_Angeles')}")(expression::Parameters{ flow_file_a }).asString() == "2001/09/08 18:46:40.000Z");
+  CHECK(expression::compile("${trillion_milliseconds:format('%Y/%m/%d %H:%M:%SZ', 'UTC')}")(expression::Parameters{ flow_file_a.get() }).asString() == "2001/09/09 01:46:40.000Z");
+  CHECK(expression::compile("${trillion_milliseconds:format('%Y/%m/%d %H:%M:%SZ', 'Europe/Paris')}")(expression::Parameters{ flow_file_a.get() }).asString() == "2001/09/09 03:46:40.000Z");
+  CHECK(expression::compile("${trillion_milliseconds:format('%Y/%m/%d %H:%M:%SZ', 'America/Los_Angeles')}")(expression::Parameters{ flow_file_a.get() }).asString() == "2001/09/08 18:46:40.000Z");
 }
 
 TEST_CASE("IP", "[expressionIP]") {
   auto expr = expression::compile("${ip()}");
 
   auto flow_file_a = std::make_shared<core::FlowFile>();
-  REQUIRE(!expr(expression::Parameters{ flow_file_a }).asString().empty());
+  REQUIRE(!expr(expression::Parameters{ flow_file_a.get() }).asString().empty());
 }
 
 TEST_CASE("Full Hostname", "[expressionFullHostname]") {
   auto expr = expression::compile("${hostname('true')}");
 
   auto flow_file_a = std::make_shared<core::FlowFile>();
-  REQUIRE(!expr(expression::Parameters{ flow_file_a }).asString().empty());
+  REQUIRE(!expr(expression::Parameters{ flow_file_a.get() }).asString().empty());
 }
 
 TEST_CASE("Reverse DNS lookup with valid ip", "[ExpressionLanguage][reverseDnsLookup]") {
@@ -1435,7 +1435,7 @@ TEST_CASE("Reverse DNS lookup with valid ip", "[ExpressionLanguage][reverseDnsLo
     expected_hostname = "192.0.2.0";
   }
 
-  REQUIRE(expr(expression::Parameters{ flow_file_a }).asString() ==  expected_hostname);
+  REQUIRE(expr(expression::Parameters{ flow_file_a.get() }).asString() ==  expected_hostname);
 }
 
 TEST_CASE("Reverse DNS lookup with invalid ip", "[ExpressionLanguage][reverseDnsLookup]") {
@@ -1444,7 +1444,7 @@ TEST_CASE("Reverse DNS lookup with invalid ip", "[ExpressionLanguage][reverseDns
   auto flow_file_a = std::make_shared<core::FlowFile>();
   flow_file_a->addAttribute("ip_addr", "banana");
 
-  REQUIRE_THROWS_AS(expr(expression::Parameters{flow_file_a}), std::runtime_error);
+  REQUIRE_THROWS_AS(expr(expression::Parameters{flow_file_a.get()}), std::runtime_error);
 }
 
 TEST_CASE("Reverse DNS lookup with invalid timeout parameter", "[ExpressionLanguage][reverseDnsLookup]") {
@@ -1454,7 +1454,7 @@ TEST_CASE("Reverse DNS lookup with invalid timeout parameter", "[ExpressionLangu
   flow_file_a->addAttribute("ip_addr", "192.0.2.1");
   flow_file_a->addAttribute("timeout", "strawberry");
 
-  REQUIRE_THROWS_AS(expr(expression::Parameters{ flow_file_a }), std::invalid_argument);
+  REQUIRE_THROWS_AS(expr(expression::Parameters{ flow_file_a.get() }), std::invalid_argument);
 }
 
 TEST_CASE("Reverse DNS lookup with valid timeout parameter", "[ExpressionLanguage][reverseDnsLookup]") {
@@ -1467,7 +1467,7 @@ TEST_CASE("Reverse DNS lookup with valid timeout parameter", "[ExpressionLanguag
 
   SECTION("Shouldn't timeout") {
     auto reverse_lookup_expr_500ms = expression::compile("${reverseDnsLookup(${ip_addr}, 500)}");
-    CHECK(reverse_lookup_expr_500ms(expression::Parameters{flow_file_a}).asString() == "dns.google");
+    CHECK(reverse_lookup_expr_500ms(expression::Parameters{flow_file_a.get()}).asString() == "dns.google");
     CHECK_FALSE(LogTestController::getInstance().contains("reverseDnsLookup timed out", 0ms));
   }
 }
@@ -1476,7 +1476,7 @@ TEST_CASE("UUID", "[expressionUuid]") {
   auto expr = expression::compile("${UUID()}");
 
   auto flow_file_a = std::make_shared<core::FlowFile>();
-  REQUIRE(36 == expr(expression::Parameters{ flow_file_a }).asString().length());
+  REQUIRE(36 == expr(expression::Parameters{ flow_file_a.get() }).asString().length());
 }
 
 TEST_CASE("Trim", "[expressionTrim]") {
@@ -1484,7 +1484,7 @@ TEST_CASE("Trim", "[expressionTrim]") {
 
   auto flow_file_a = std::make_shared<core::FlowFile>();
   flow_file_a->addAttribute("message", " 1 2 3 ");
-  REQUIRE("1 2 3" == expr(expression::Parameters{ flow_file_a }).asString());
+  REQUIRE("1 2 3" == expr(expression::Parameters{ flow_file_a.get() }).asString());
 }
 
 TEST_CASE("Append", "[expressionAppend]") {
@@ -1492,7 +1492,7 @@ TEST_CASE("Append", "[expressionAppend]") {
 
   auto flow_file_a = std::make_shared<core::FlowFile>();
   flow_file_a->addAttribute("message", "a brand new filename.txt");
-  REQUIRE("a brand new filename.txt.gz" == expr(expression::Parameters{ flow_file_a }).asString());
+  REQUIRE("a brand new filename.txt.gz" == expr(expression::Parameters{ flow_file_a.get() }).asString());
 }
 
 TEST_CASE("Prepend", "[expressionPrepend]") {
@@ -1500,7 +1500,7 @@ TEST_CASE("Prepend", "[expressionPrepend]") {
 
   auto flow_file_a = std::make_shared<core::FlowFile>();
   flow_file_a->addAttribute("message", "filename.txt");
-  REQUIRE("a brand new filename.txt" == expr(expression::Parameters{ flow_file_a }).asString());
+  REQUIRE("a brand new filename.txt" == expr(expression::Parameters{ flow_file_a.get() }).asString());
 }
 
 TEST_CASE("Length", "[expressionLength]") {
@@ -1508,7 +1508,7 @@ TEST_CASE("Length", "[expressionLength]") {
 
   auto flow_file_a = std::make_shared<core::FlowFile>();
   flow_file_a->addAttribute("message", "a brand new filename.txt");
-  REQUIRE(24 == expr(expression::Parameters{ flow_file_a }).asUnsignedLong());
+  REQUIRE(24 == expr(expression::Parameters{ flow_file_a.get() }).asUnsignedLong());
 }
 
 TEST_CASE("Encode B64", "[expressionEncodeB64]") {
@@ -1516,7 +1516,7 @@ TEST_CASE("Encode B64", "[expressionEncodeB64]") {
 
   auto flow_file_a = std::make_shared<core::FlowFile>();
   flow_file_a->addAttribute("message", "admin:admin");
-  REQUIRE("YWRtaW46YWRtaW4=" == expr(expression::Parameters{ flow_file_a }).asString());
+  REQUIRE("YWRtaW46YWRtaW4=" == expr(expression::Parameters{ flow_file_a.get() }).asString());
 }
 
 TEST_CASE("Decode B64", "[expressionDecodeB64]") {
@@ -1524,7 +1524,7 @@ TEST_CASE("Decode B64", "[expressionDecodeB64]") {
 
   auto flow_file_a = std::make_shared<core::FlowFile>();
   flow_file_a->addAttribute("message", "YWRtaW46YWRtaW4=");
-  REQUIRE("admin:admin" == expr(expression::Parameters{ flow_file_a }).asString());
+  REQUIRE("admin:admin" == expr(expression::Parameters{ flow_file_a.get() }).asString());
 }
 
 TEST_CASE("Encode Decode B64", "[expressionEncodeDecodeB64]") {
@@ -1532,7 +1532,7 @@ TEST_CASE("Encode Decode B64", "[expressionEncodeDecodeB64]") {
 
   auto flow_file_a = std::make_shared<core::FlowFile>();
   flow_file_a->addAttribute("message", "Zero > One < \"two!\" & 'true'");
-  REQUIRE("Zero > One < \"two!\" & 'true'" == expr(expression::Parameters{ flow_file_a }).asString());
+  REQUIRE("Zero > One < \"two!\" & 'true'" == expr(expression::Parameters{ flow_file_a.get() }).asString());
 }
 
 TEST_CASE("All Contains", "[expressionAllContains]") {
@@ -1541,7 +1541,7 @@ TEST_CASE("All Contains", "[expressionAllContains]") {
   auto flow_file_a = std::make_shared<core::FlowFile>();
   flow_file_a->addAttribute("a", "hello 1");
   flow_file_a->addAttribute("b", "hello 2");
-  REQUIRE(expr(expression::Parameters{ flow_file_a }).asBoolean());
+  REQUIRE(expr(expression::Parameters{ flow_file_a.get() }).asBoolean());
 }
 
 TEST_CASE("All Contains 2", "[expressionAllContains2]") {
@@ -1550,7 +1550,7 @@ TEST_CASE("All Contains 2", "[expressionAllContains2]") {
   auto flow_file_a = std::make_shared<core::FlowFile>();
   flow_file_a->addAttribute("a", "hello 1");
   flow_file_a->addAttribute("b", "mello 2");
-  REQUIRE(!expr(expression::Parameters{ flow_file_a }).asBoolean());
+  REQUIRE(!expr(expression::Parameters{ flow_file_a.get() }).asBoolean());
 }
 
 TEST_CASE("Any Contains", "[expressionAnyContains]") {
@@ -1559,7 +1559,7 @@ TEST_CASE("Any Contains", "[expressionAnyContains]") {
   auto flow_file_a = std::make_shared<core::FlowFile>();
   flow_file_a->addAttribute("a", "hello 1");
   flow_file_a->addAttribute("b", "mello 2");
-  REQUIRE(expr(expression::Parameters{ flow_file_a }).asBoolean());
+  REQUIRE(expr(expression::Parameters{ flow_file_a.get() }).asBoolean());
 }
 
 TEST_CASE("Any Contains 2", "[expressionAnyContains2]") {
@@ -1568,7 +1568,7 @@ TEST_CASE("Any Contains 2", "[expressionAnyContains2]") {
   auto flow_file_a = std::make_shared<core::FlowFile>();
   flow_file_a->addAttribute("a", "mello 1");
   flow_file_a->addAttribute("b", "mello 2");
-  REQUIRE(!expr(expression::Parameters{ flow_file_a }).asBoolean());
+  REQUIRE(!expr(expression::Parameters{ flow_file_a.get() }).asBoolean());
 }
 
 TEST_CASE("All Matching Contains", "[expressionAllMatchingContains]") {
@@ -1577,7 +1577,7 @@ TEST_CASE("All Matching Contains", "[expressionAllMatchingContains]") {
   auto flow_file_a = std::make_shared<core::FlowFile>();
   flow_file_a->addAttribute("xyz_1", "hello 1");
   flow_file_a->addAttribute("xyz_2", "hello 2");
-  REQUIRE(expr(expression::Parameters{ flow_file_a }).asBoolean());
+  REQUIRE(expr(expression::Parameters{ flow_file_a.get() }).asBoolean());
 }
 
 TEST_CASE("All Matching Contains 2", "[expressionAllMatchingContains2]") {
@@ -1586,7 +1586,7 @@ TEST_CASE("All Matching Contains 2", "[expressionAllMatchingContains2]") {
   auto flow_file_a = std::make_shared<core::FlowFile>();
   flow_file_a->addAttribute("xyz_1", "hello 1");
   flow_file_a->addAttribute("xyz_2", "hello 2");
-  REQUIRE(!expr(expression::Parameters{ flow_file_a }).asBoolean());
+  REQUIRE(!expr(expression::Parameters{ flow_file_a.get() }).asBoolean());
 }
 
 TEST_CASE("All Matching Contains 3", "[expressionAllMatchingContains3]") {
@@ -1595,7 +1595,7 @@ TEST_CASE("All Matching Contains 3", "[expressionAllMatchingContains3]") {
   auto flow_file_a = std::make_shared<core::FlowFile>();
   flow_file_a->addAttribute("xyz_1", "hello 1");
   flow_file_a->addAttribute("abc_2", "hello 2");
-  REQUIRE(expr(expression::Parameters{ flow_file_a }).asBoolean());
+  REQUIRE(expr(expression::Parameters{ flow_file_a.get() }).asBoolean());
 }
 
 TEST_CASE("All Matching Contains 4", "[expressionAllMatchingContains4]") {
@@ -1604,7 +1604,7 @@ TEST_CASE("All Matching Contains 4", "[expressionAllMatchingContains4]") {
   auto flow_file_a = std::make_shared<core::FlowFile>();
   flow_file_a->addAttribute("xyz_1", "hello 1");
   flow_file_a->addAttribute("xyz_2", "2");
-  REQUIRE(!expr(expression::Parameters{ flow_file_a }).asBoolean());
+  REQUIRE(!expr(expression::Parameters{ flow_file_a.get() }).asBoolean());
 }
 
 TEST_CASE("Any Matching Contains", "[expressionAnyMatchingContains]") {
@@ -1613,7 +1613,7 @@ TEST_CASE("Any Matching Contains", "[expressionAnyMatchingContains]") {
   auto flow_file_a = std::make_shared<core::FlowFile>();
   flow_file_a->addAttribute("xyz_1", "hello 1");
   flow_file_a->addAttribute("xyz_2", "mello 2");
-  REQUIRE(expr(expression::Parameters{ flow_file_a }).asBoolean());
+  REQUIRE(expr(expression::Parameters{ flow_file_a.get() }).asBoolean());
 }
 
 TEST_CASE("Any Matching Contains 2", "[expressionAnyMatchingContains2]") {
@@ -1622,7 +1622,7 @@ TEST_CASE("Any Matching Contains 2", "[expressionAnyMatchingContains2]") {
   auto flow_file_a = std::make_shared<core::FlowFile>();
   flow_file_a->addAttribute("xyz_1", "hello 1");
   flow_file_a->addAttribute("xyz_2", "mello 2");
-  REQUIRE(!expr(expression::Parameters{ flow_file_a }).asBoolean());
+  REQUIRE(!expr(expression::Parameters{ flow_file_a.get() }).asBoolean());
 }
 
 TEST_CASE("Any Matching Contains 3", "[expressionAnyMatchingContains3]") {
@@ -1631,7 +1631,7 @@ TEST_CASE("Any Matching Contains 3", "[expressionAnyMatchingContains3]") {
   auto flow_file_a = std::make_shared<core::FlowFile>();
   flow_file_a->addAttribute("abc_1", "hello 1");
   flow_file_a->addAttribute("xyz_2", "mello 2");
-  REQUIRE(expr(expression::Parameters{ flow_file_a }).asBoolean());
+  REQUIRE(expr(expression::Parameters{ flow_file_a.get() }).asBoolean());
 }
 
 TEST_CASE("Any Matching Contains 4", "[expressionAnyMatchingContains4]") {
@@ -1640,7 +1640,7 @@ TEST_CASE("Any Matching Contains 4", "[expressionAnyMatchingContains4]") {
   auto flow_file_a = std::make_shared<core::FlowFile>();
   flow_file_a->addAttribute("xyz_1", "mello 1");
   flow_file_a->addAttribute("xyz_2", "mello 2");
-  REQUIRE(!expr(expression::Parameters{ flow_file_a }).asBoolean());
+  REQUIRE(!expr(expression::Parameters{ flow_file_a.get() }).asBoolean());
 }
 
 TEST_CASE("All Delineated Contains", "[expressionAllDelineatedContains]") {
@@ -1648,7 +1648,7 @@ TEST_CASE("All Delineated Contains", "[expressionAllDelineatedContains]") {
 
   auto flow_file_a = std::make_shared<core::FlowFile>();
   flow_file_a->addAttribute("word_list", "hello_1,hello_2");
-  REQUIRE(expr(expression::Parameters{ flow_file_a }).asBoolean());
+  REQUIRE(expr(expression::Parameters{ flow_file_a.get() }).asBoolean());
 }
 
 TEST_CASE("All Delineated Contains 2", "[expressionAllDelineatedContains2]") {
@@ -1656,7 +1656,7 @@ TEST_CASE("All Delineated Contains 2", "[expressionAllDelineatedContains2]") {
 
   auto flow_file_a = std::make_shared<core::FlowFile>();
   flow_file_a->addAttribute("word_list", "hello_1,mello_2");
-  REQUIRE(!expr(expression::Parameters{ flow_file_a }).asBoolean());
+  REQUIRE(!expr(expression::Parameters{ flow_file_a.get() }).asBoolean());
 }
 
 TEST_CASE("All Delineated Contains 3", "[expressionAllDelineatedContains3]") {
@@ -1664,7 +1664,7 @@ TEST_CASE("All Delineated Contains 3", "[expressionAllDelineatedContains3]") {
 
   auto flow_file_a = std::make_shared<core::FlowFile>();
   flow_file_a->addAttribute("word_list", "hello_1,hello_2");
-  REQUIRE(expr(expression::Parameters{ flow_file_a }).asBoolean());
+  REQUIRE(expr(expression::Parameters{ flow_file_a.get() }).asBoolean());
 }
 
 TEST_CASE("Any Delineated Contains", "[expressionAnyDelineatedContains]") {
@@ -1672,7 +1672,7 @@ TEST_CASE("Any Delineated Contains", "[expressionAnyDelineatedContains]") {
 
   auto flow_file_a = std::make_shared<core::FlowFile>();
   flow_file_a->addAttribute("word_list", "hello_1,mello_2");
-  REQUIRE(expr(expression::Parameters{ flow_file_a }).asBoolean());
+  REQUIRE(expr(expression::Parameters{ flow_file_a.get() }).asBoolean());
 }
 
 TEST_CASE("Any Delineated Contains 2", "[expressionAnyDelineatedContains2]") {
@@ -1680,7 +1680,7 @@ TEST_CASE("Any Delineated Contains 2", "[expressionAnyDelineatedContains2]") {
 
   auto flow_file_a = std::make_shared<core::FlowFile>();
   flow_file_a->addAttribute("word_list", "mello_1,mello_2");
-  REQUIRE(!expr(expression::Parameters{ flow_file_a }).asBoolean());
+  REQUIRE(!expr(expression::Parameters{ flow_file_a.get() }).asBoolean());
 }
 
 TEST_CASE("Count", "[expressionCount]") {
@@ -1689,7 +1689,7 @@ TEST_CASE("Count", "[expressionCount]") {
   auto flow_file_a = std::make_shared<core::FlowFile>();
   flow_file_a->addAttribute("a", "hello 1");
   flow_file_a->addAttribute("b", "mello 2");
-  REQUIRE(1 == expr(expression::Parameters{ flow_file_a }).asUnsignedLong());
+  REQUIRE(1 == expr(expression::Parameters{ flow_file_a.get() }).asUnsignedLong());
 }
 
 TEST_CASE("Count 2", "[expressionCount2]") {
@@ -1699,7 +1699,7 @@ TEST_CASE("Count 2", "[expressionCount2]") {
   flow_file_a->addAttribute("a", "mello 1");
   flow_file_a->addAttribute("b", "mello 2");
   flow_file_a->addAttribute("c", "hello 3");
-  REQUIRE(2 == expr(expression::Parameters{ flow_file_a }).asUnsignedLong());
+  REQUIRE(2 == expr(expression::Parameters{ flow_file_a.get() }).asUnsignedLong());
 }
 
 TEST_CASE("Count 3", "[expressionCount3]") {
@@ -1709,7 +1709,7 @@ TEST_CASE("Count 3", "[expressionCount3]") {
   flow_file_a->addAttribute("a", "mello 1");
   flow_file_a->addAttribute("b", "mello 2");
   flow_file_a->addAttribute("c", "hello 3");
-  REQUIRE("abc2xyz" == expr(expression::Parameters{ flow_file_a }).asString());
+  REQUIRE("abc2xyz" == expr(expression::Parameters{ flow_file_a.get() }).asString());
 }
 
 TEST_CASE("Join", "[expressionJoin]") {
@@ -1718,7 +1718,7 @@ TEST_CASE("Join", "[expressionJoin]") {
   auto flow_file_a = std::make_shared<core::FlowFile>();
   flow_file_a->addAttribute("a", "hello");
   flow_file_a->addAttribute("b", "mello");
-  REQUIRE("abc_def_hello_ghi|def_mello_ghi_xyz" == expr(expression::Parameters{ flow_file_a }).asString());
+  REQUIRE("abc_def_hello_ghi|def_mello_ghi_xyz" == expr(expression::Parameters{ flow_file_a.get() }).asString());
 }
 
 TEST_CASE("Join 2", "[expressionJoin2]") {
@@ -1727,7 +1727,7 @@ TEST_CASE("Join 2", "[expressionJoin2]") {
   auto flow_file_a = std::make_shared<core::FlowFile>();
   flow_file_a->addAttribute("a", "hello");
   flow_file_a->addAttribute("b", "mello");
-  REQUIRE("abc_def_hello|mello_ghi_xyz" == expr(expression::Parameters{ flow_file_a }).asString());
+  REQUIRE("abc_def_hello|mello_ghi_xyz" == expr(expression::Parameters{ flow_file_a.get() }).asString());
 }
 
 TEST_CASE("resolve_user_id_test", "[resolve_user_id tests]") {
@@ -1737,16 +1737,16 @@ TEST_CASE("resolve_user_id_test", "[resolve_user_id tests]") {
 
   SECTION("TEST 0") {
   flow_file_a->addAttribute("attribute_sid", "0");
-  REQUIRE("0" == expr(expression::Parameters{flow_file_a}).asString());
+  REQUIRE("0" == expr(expression::Parameters{flow_file_a.get()}).asString());
 }
 
   SECTION("TEST abcd") {
   flow_file_a->addAttribute("attribute_sid", "abcd");
-  REQUIRE("abcd" == expr(expression::Parameters{flow_file_a}).asString());
+  REQUIRE("abcd" == expr(expression::Parameters{flow_file_a.get()}).asString());
 }
 
   SECTION("TEST empty") {
   flow_file_a->addAttribute("attribute_sid", "");
-  REQUIRE(expr(expression::Parameters{flow_file_a}).asString().empty());
+  REQUIRE(expr(expression::Parameters{flow_file_a.get()}).asString().empty());
 }
 }

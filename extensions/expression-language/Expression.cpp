@@ -93,7 +93,7 @@ Expression make_dynamic(const std::function<Value(const Parameters &params, cons
 Expression make_dynamic_attr(const std::string &attribute_id) {
   return make_dynamic([attribute_id](const Parameters &params, const std::vector<Expression>& /*sub_exprs*/) -> Value {
     std::string result;
-    const auto cur_flow_file = params.flow_file.lock();
+    const auto cur_flow_file = params.flow_file;
     if (cur_flow_file && cur_flow_file->getAttribute(attribute_id, result)) {
       return Value(result);
     } else {
@@ -1081,7 +1081,7 @@ Expression make_allAttributes(const std::string &function_name, const std::vecto
                 attr_id = arg(params).asString();
                 std::string attr_val;
 
-                const auto cur_flow_file = params.flow_file.lock();
+                const auto cur_flow_file = params.flow_file;
 
                 if (cur_flow_file && cur_flow_file->getAttribute(attr_id, attr_val)) {
                   return Value(attr_val);
@@ -1126,7 +1126,7 @@ Expression make_anyAttribute(const std::string &function_name, const std::vector
                 attr_id = arg(params).asString();
                 std::string attr_val;
 
-                const auto cur_flow_file = params.flow_file.lock();
+                const auto cur_flow_file = params.flow_file;
 
                 if (cur_flow_file && cur_flow_file->getAttribute(attr_id, attr_val)) {
                   return Value(attr_val);
@@ -1166,7 +1166,7 @@ Expression make_allMatchingAttributes(const std::string &function_name, const st
 
     for (const auto &arg : args) {
       const auto attr_regex = utils::Regex(arg(params).asString());
-      const auto cur_flow_file = params.flow_file.lock();
+      const auto cur_flow_file = params.flow_file;
       std::map<std::string, std::string> attrs;
 
       if (cur_flow_file) {
@@ -1219,7 +1219,7 @@ Expression make_anyMatchingAttribute(const std::string &function_name, const std
 
     for (const auto &arg : args) {
       const auto attr_regex = utils::Regex(arg(params).asString());
-      const auto cur_flow_file = params.flow_file.lock();
+      const auto cur_flow_file = params.flow_file;
       std::map<std::string, std::string> attrs;
 
       if (cur_flow_file) {

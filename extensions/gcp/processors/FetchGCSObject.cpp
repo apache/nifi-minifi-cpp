@@ -107,13 +107,13 @@ void FetchGCSObject::onTrigger(core::ProcessContext& context, core::ProcessSessi
     return;
   }
 
-  auto bucket = context.getProperty(Bucket, flow_file);
+  auto bucket = context.getProperty(Bucket, flow_file.get());
   if (!bucket || bucket->empty()) {
     logger_->log_error("Missing bucket name");
     session.transfer(flow_file, Failure);
     return;
   }
-  auto object_name = context.getProperty(Key, flow_file);
+  auto object_name = context.getProperty(Key, flow_file.get());
   if (!object_name || object_name->empty()) {
     logger_->log_error("Missing object name");
     session.transfer(flow_file, Failure);
@@ -124,9 +124,9 @@ void FetchGCSObject::onTrigger(core::ProcessContext& context, core::ProcessSessi
   FetchFromGCSCallback callback(client, *bucket, *object_name);
   callback.setEncryptionKey(encryption_key_);
 
-  if (auto gen_str = context.getProperty(ObjectGeneration, flow_file); gen_str && !gen_str->empty()) {
+  if (auto gen_str = context.getProperty(ObjectGeneration, flow_file.get()); gen_str && !gen_str->empty()) {
     try {
-      uint64_t gen;
+      int64_t gen = 0;
       utils::internal::ValueParser(*gen_str).parse(gen).parseEnd();
       callback.setGeneration(gcs::Generation(gen));
     } catch (const utils::internal::ValueException&) {

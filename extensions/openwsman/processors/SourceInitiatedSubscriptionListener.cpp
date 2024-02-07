@@ -555,7 +555,7 @@ int SourceInitiatedSubscriptionListener::Handler::enumerateEventCallback(WsXmlNo
 
     session->writeBuffer(flow_file, std::string_view{text});
 
-    session->putAttribute(flow_file, core::SpecialFlowAttribute::MIME_TYPE, "application/xml");
+    session->putAttribute(*flow_file, core::SpecialFlowAttribute::MIME_TYPE, "application/xml");
     flow_file->addAttribute(ATTRIBUTE_WEF_REMOTE_MACHINEID, machine_id);
     flow_file->addAttribute(ATTRIBUTE_WEF_REMOTE_IP, remote_ip);
 

@@ -152,7 +152,7 @@ bool MergeContent::checkDefragment(std::unique_ptr<Bin> &bin) {
     std::string fragCount;
     if (!front->getAttribute(BinFiles::FRAGMENT_COUNT_ATTRIBUTE, fragCount))
       return false;
-    int fragCountInt;
+    int fragCountInt = 0;
     try {
       fragCountInt = std::stoi(fragCount);
     }
@@ -220,9 +220,9 @@ bool MergeContent::processBin(core::ProcessSession &session, std::unique_ptr<Bin
     }
   });
   if (attributeStrategy_ == merge_content_options::ATTRIBUTE_STRATEGY_KEEP_COMMON) {
-    KeepOnlyCommonAttributesMerger(bin->getFlowFile()).mergeAttributes(session, merge_flow);
+    KeepOnlyCommonAttributesMerger(bin->getFlowFile()).mergeAttributes(session, *merge_flow);
   } else if (attributeStrategy_ == merge_content_options::ATTRIBUTE_STRATEGY_KEEP_ALL_UNIQUE) {
-    KeepAllUniqueAttributesMerger(bin->getFlowFile()).mergeAttributes(session, merge_flow);
+    KeepAllUniqueAttributesMerger(bin->getFlowFile()).mergeAttributes(session, *merge_flow);
   } else {
     logger_->log_error("Attribute strategy not supported {}", attributeStrategy_);
     return false;
@@ -256,7 +256,7 @@ bool MergeContent::processBin(core::ProcessSession &session, std::unique_ptr<Bin
 
   try {
     mergeBin->merge(session, bin->getFlowFile(), *serializer, merge_flow);
-    session.putAttribute(merge_flow, core::SpecialFlowAttribute::MIME_TYPE, mimeType);
+    session.putAttribute(*merge_flow, core::SpecialFlowAttribute::MIME_TYPE, mimeType);
   } catch (const std::exception& ex) {
     logger_->log_error("Merge Content merge catch exception, type: {}, what: {}", typeid(ex).name(), ex.what());
     return false;
@@ -264,7 +264,7 @@ bool MergeContent::processBin(core::ProcessSession &session, std::unique_ptr<Bin
     logger_->log_error("Merge Content merge catch exception, type: {}", getCurrentExceptionTypeName());
     return false;
   }
-  session.putAttribute(merge_flow, BinFiles::FRAGMENT_COUNT_ATTRIBUTE, std::to_string(bin->getSize()));
+  session.putAttribute(*merge_flow, BinFiles::FRAGMENT_COUNT_ATTRIBUTE, std::to_string(bin->getSize()));
 
   // we successfully merge the flow
   session.transfer(merge_flow, Merge);
@@ -292,7 +292,7 @@ void BinaryConcatenationMerge::merge(core::ProcessSession &session,
     flows.front()->getAttribute(BinFiles::SEGMENT_ORIGINAL_FILENAME, fileName);
   }
   if (!fileName.empty())
-    session.putAttribute(merge_flow, core::SpecialFlowAttribute::FILENAME, fileName);
+    session.putAttribute(*merge_flow, core::SpecialFlowAttribute::FILENAME, fileName);
 }
 
 void TarMerge::merge(core::ProcessSession &session,
@@ -307,7 +307,7 @@ void TarMerge::merge(core::ProcessSession &session,
   }
   if (!fileName.empty()) {
     fileName += ".tar";
-    session.putAttribute(merge_flow, core::SpecialFlowAttribute::FILENAME, fileName);
+    session.putAttribute(*merge_flow, core::SpecialFlowAttribute::FILENAME, fileName);
   }
 }
 
@@ -323,11 +323,11 @@ void ZipMerge::merge(core::ProcessSession &session,
   }
   if (!fileName.empty()) {
     fileName += ".zip";
-    session.putAttribute(merge_flow, core::SpecialFlowAttribute::FILENAME, fileName);
+    session.putAttribute(*merge_flow, core::SpecialFlowAttribute::FILENAME, fileName);
   }
 }
 
-void AttributeMerger::mergeAttributes(core::ProcessSession &session, const std::shared_ptr<core::FlowFile> &merge_flow) {
+void AttributeMerger::mergeAttributes(core::ProcessSession &session, core::FlowFile& merge_flow) {
   for (const auto& pair : getMergedAttributes()) {
     session.putAttribute(merge_flow, pair.first, pair.second);
   }
@@ -358,7 +358,7 @@ void KeepAllUniqueAttributesMerger::processFlowFile(const std::shared_ptr<core::
       continue;
     }
     std::map<std::string, std::string>::iterator insertion_res;
-    bool insertion_happened;
+    bool insertion_happened = false;
     std::tie(insertion_res, insertion_happened) = merged_attributes.insert(attr);
     if (!insertion_happened && insertion_res->second != attr.second) {
       merged_attributes.erase(insertion_res);

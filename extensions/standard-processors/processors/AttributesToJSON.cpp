@@ -116,7 +116,7 @@ void AttributesToJSON::onTrigger(core::ProcessContext&, core::ProcessSession& se
   auto json_data = buildAttributeJsonData(*flow_file->getAttributesPtr());
   if (write_destination_ == attributes_to_json::WriteDestination::FLOWFILE_ATTRIBUTE) {
     logger_->log_debug("Writing the following attribute data to JSONAttributes attribute: {}", json_data);
-    session.putAttribute(flow_file, "JSONAttributes", json_data);
+    session.putAttribute(*flow_file, "JSONAttributes", json_data);
     session.transfer(flow_file, Success);
   } else {
     logger_->log_debug("Writing the following attribute data to flowfile: {}", json_data);

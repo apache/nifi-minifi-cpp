@@ -101,8 +101,8 @@ void testReadOnSmallerClonedFlowFiles(std::shared_ptr<core::ContentRepository> c
   fixture.writeToFlowFile(original_ff, "foobar");
   fixture.transferAndCommit(original_ff);
   REQUIRE(original_ff);
-  auto clone_first_half = process_session.clone(original_ff, 0, 3);
-  auto clone_second_half = process_session.clone(original_ff, 3, 3);
+  auto clone_first_half = process_session.clone(*original_ff, 0, 3);
+  auto clone_second_half = process_session.clone(*original_ff, 3, 3);
   REQUIRE(clone_first_half != nullptr);
   REQUIRE(clone_second_half != nullptr);
   ReadUntilItCan read_until_it_can_callback;

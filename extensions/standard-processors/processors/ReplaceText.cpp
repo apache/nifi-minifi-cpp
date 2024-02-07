@@ -77,7 +77,7 @@ ReplaceText::Parameters ReplaceText::readParameters(core::ProcessContext& contex
   Parameters parameters;
 
   bool found_search_value = (replacement_strategy_ == ReplacementStrategyType::REGEX_REPLACE ?
-      context.getProperty(SearchValue, parameters.search_value_) : context.getProperty(SearchValue, parameters.search_value_, flow_file));
+      context.getProperty(SearchValue, parameters.search_value_) : context.getProperty(SearchValue, parameters.search_value_, flow_file.get()));
   if (found_search_value) {
     logger_->log_debug("the {} property is set to {}", SearchValue.name, parameters.search_value_);
     if (replacement_strategy_ == ReplacementStrategyType::REGEX_REPLACE) {
@@ -89,7 +89,7 @@ ReplaceText::Parameters ReplaceText::readParameters(core::ProcessContext& contex
   }
 
   bool found_replacement_value = (replacement_strategy_ == ReplacementStrategyType::REGEX_REPLACE ?
-      context.getProperty(ReplacementValue, parameters.replacement_value_) : context.getProperty(ReplacementValue, parameters.replacement_value_, flow_file));
+      context.getProperty(ReplacementValue, parameters.replacement_value_) : context.getProperty(ReplacementValue, parameters.replacement_value_, flow_file.get()));
   if (found_replacement_value) {
     logger_->log_debug("the {} property is set to {}", ReplacementValue.name, parameters.replacement_value_);
   } else {

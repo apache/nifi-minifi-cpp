@@ -90,15 +90,15 @@ class ElasticPayload {
   }
 
   static nonstd::expected<ElasticPayload, std::string> parse(core::ProcessSession& session, core::ProcessContext& context, const std::shared_ptr<core::FlowFile>& flow_file) {
-    auto action = context.getProperty(PostElasticsearch::Action, flow_file);
+    auto action = context.getProperty(PostElasticsearch::Action, flow_file.get());
     if (!action || (action != "index" && action != "create" && action != "delete" && action != "update" && action != "upsert"))
       return nonstd::make_unexpected("Missing or invalid action");
 
-    auto index = context.getProperty(PostElasticsearch::Index, flow_file);
+    auto index = context.getProperty(PostElasticsearch::Index, flow_file.get());
     if (!index)
       return nonstd::make_unexpected("Missing index");
 
-    auto id = context.getProperty(PostElasticsearch::Identifier, flow_file);
+    auto id = context.getProperty(PostElasticsearch::Identifier, flow_file.get());
     if (!id && (action == "delete" || action == "update" || action == "upsert"))
       return nonstd::make_unexpected("Identifier is required for DELETE,UPDATE and UPSERT actions");
 

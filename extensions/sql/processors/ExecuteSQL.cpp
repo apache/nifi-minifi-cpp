@@ -55,7 +55,7 @@ void ExecuteSQL::processOnTrigger(core::ProcessContext& context, core::ProcessSe
   auto input_flow_file = session.get();
 
   std::string query;
-  if (!context.getProperty(SQLSelectQuery, query, input_flow_file)) {
+  if (!context.getProperty(SQLSelectQuery, query, input_flow_file.get())) {
     if (!input_flow_file) {
       throw Exception(PROCESSOR_EXCEPTION,
                       "No incoming FlowFile and the \"" + std::string{SQLSelectQuery.name} + "\" processor property is not specified");

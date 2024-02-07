@@ -114,7 +114,7 @@ std::shared_ptr<LuaScriptFlowFile> LuaProcessSession::create(const std::shared_p
   if (flow_file == nullptr) {
     result = std::make_shared<LuaScriptFlowFile>(session_->create());
   } else {
-    result = std::make_shared<LuaScriptFlowFile>(session_->create(flow_file->getFlowFile()));
+    result = std::make_shared<LuaScriptFlowFile>(session_->create(flow_file->getFlowFile().get()));
   }
 
   flow_files_.push_back(result);

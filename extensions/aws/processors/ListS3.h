@@ -111,11 +111,11 @@ class ListS3 : public S3Processor {
   void writeObjectTags(
     const aws::s3::ListedObjectAttributes &object_attributes,
     core::ProcessSession &session,
-    const std::shared_ptr<core::FlowFile> &flow_file);
+    core::FlowFile& flow_file);
   void writeUserMetadata(
     const aws::s3::ListedObjectAttributes &object_attributes,
     core::ProcessSession &session,
-    const std::shared_ptr<core::FlowFile> &flow_file);
+    core::FlowFile& flow_file);
   void createNewFlowFile(
     core::ProcessSession &session,
     const aws::s3::ListedObjectAttributes &object_attributes);

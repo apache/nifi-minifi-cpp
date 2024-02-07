@@ -83,7 +83,8 @@ class FlowFile : public CoreComponent, public ReferenceContainer {
   /**
    * Get lineage identifiers
    */
-  std::vector<utils::Identifier> &getlineageIdentifiers();
+  const std::vector<utils::Identifier>& getlineageIdentifiers() const;
+  std::vector<utils::Identifier>& getlineageIdentifiers();
 
   /**
    * Returns whether or not this flow file record

@@ -101,7 +101,7 @@ class PutAzureDataLakeStorage final : public AzureDataLakeStorageFileProcessorBa
       : AzureDataLakeStorageFileProcessorBase(name, uuid, core::logging::LoggerFactory<PutAzureDataLakeStorage>::getLogger(), std::move(data_lake_storage_client)) {
   }
 
-  std::optional<storage::PutAzureDataLakeStorageParameters> buildUploadParameters(core::ProcessContext &context, const std::shared_ptr<core::FlowFile> &flow_file);
+  std::optional<storage::PutAzureDataLakeStorageParameters> buildUploadParameters(core::ProcessContext &context, const core::FlowFile& flow_file);
 
   azure::FileExistsResolutionStrategy conflict_resolution_strategy_;
 };

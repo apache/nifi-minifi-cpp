@@ -51,7 +51,7 @@ class AzureDataLakeStorageFileProcessorBase : public AzureDataLakeStorageProcess
   bool setFileOperationCommonParameters(
     storage::AzureDataLakeStorageFileOperationParameters& params,
     core::ProcessContext& context,
-    const std::shared_ptr<core::FlowFile>& flow_file);
+    const core::FlowFile& flow_file);
 };
 
 }  // namespace org::apache::nifi::minifi::azure::processors

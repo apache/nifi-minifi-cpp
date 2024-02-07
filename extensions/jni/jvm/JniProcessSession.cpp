@@ -149,7 +149,7 @@ JNIEXPORT jobject JNICALL Java_org_apache_nifi_processor_JniProcessSession_clone
 
     minifi::jni::ThrowIf(env);
 
-    auto flow_file = session->getSession()->clone(ptr->get());
+    auto flow_file = session->getSession()->clone(*ptr->get());
 
     auto flow = std::make_shared<minifi::jni::JniFlowFile>(flow_file, session->getServicer(), ff_instance);
 
@@ -268,7 +268,7 @@ JNIEXPORT jobject JNICALL Java_org_apache_nifi_processor_JniProcessSession_creat
 
     minifi::jni::ThrowIf(env);
 
-    auto flow_file = session->getSession()->create(ptr->get());
+    auto flow_file = session->getSession()->create(ptr->get().get());
 
     auto flow = std::make_shared<minifi::jni::JniFlowFile>(flow_file, session->getServicer(), ff_instance);
 
@@ -403,7 +403,7 @@ JNIEXPORT jobject JNICALL  Java_org_apache_nifi_processor_JniProcessSession_clon
 
     minifi::jni::ThrowIf(env);
 
-    auto flow_file = session->getSession()->clone(ptr->get(), offset, size);
+    auto flow_file = session->getSession()->clone(*ptr->get(), offset, size);
 
     auto flow = std::make_shared<minifi::jni::JniFlowFile>(flow_file, session->getServicer(), ff_instance);
 

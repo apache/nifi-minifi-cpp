@@ -44,7 +44,7 @@ void AttributeRollingWindow::onTrigger(core::ProcessContext& context, core::Proc
   const auto flow_file = session.get();
   if (!flow_file) { yield(); return; }
   gsl_Assert(flow_file);
-  const auto current_value_opt_str = context.getProperty(ValueToTrack, flow_file);
+  const auto current_value_opt_str = context.getProperty(ValueToTrack, flow_file.get());
   if (!current_value_opt_str) {
     logger_->log_warn("Missing value to track, flow file uuid: {}", flow_file->getUUIDStr());
     session.transfer(flow_file, Failure);

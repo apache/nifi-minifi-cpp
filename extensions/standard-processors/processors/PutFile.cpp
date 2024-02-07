@@ -56,7 +56,7 @@ void PutFile::onSchedule(core::ProcessContext& context, core::ProcessSessionFact
 
 std::optional<std::filesystem::path> PutFile::getDestinationPath(core::ProcessContext& context, const std::shared_ptr<core::FlowFile>& flow_file) {
   std::filesystem::path directory;
-  if (auto directory_str = context.getProperty(Directory, flow_file); directory_str && !directory_str->empty()) {
+  if (auto directory_str = context.getProperty(Directory, flow_file.get()); directory_str && !directory_str->empty()) {
     directory = *directory_str;
   } else {
     logger_->log_error("Directory attribute evaluated to invalid value");

@@ -27,13 +27,13 @@ namespace org::apache::nifi::minifi::azure::processors {
 bool AzureBlobStorageSingleBlobProcessorBase::setBlobOperationParameters(
     storage::AzureBlobStorageBlobOperationParameters& params,
     core::ProcessContext &context,
-    const std::shared_ptr<core::FlowFile> &flow_file) {
-  if (!setCommonStorageParameters(params, context, flow_file)) {
+    const core::FlowFile& flow_file) {
+  if (!setCommonStorageParameters(params, context, &flow_file)) {
     return false;
   }
 
-  context.getProperty(Blob, params.blob_name, flow_file);
-  if (params.blob_name.empty() && (!flow_file->getAttribute("filename", params.blob_name) || params.blob_name.empty())) {
+  context.getProperty(Blob, params.blob_name, &flow_file);
+  if (params.blob_name.empty() && (!flow_file.getAttribute("filename", params.blob_name) || params.blob_name.empty())) {
     logger_->log_error("Blob is not set and default 'filename' attribute could not be found!");
     return false;
   }

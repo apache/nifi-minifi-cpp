@@ -296,7 +296,7 @@ void ReadCallback::setAttributesOfDoneSegment(core::FlowFile& current_flow_file,
 
 void ReadCallback::createHeaderOnlyFragmentFlow(const SplitTextFragmentGenerator::Fragment& header_fragment) {
   gsl_Expects(split_text_config_.remove_trailing_new_lines);  // This is only possible if the split fragment has no content and the endlines are trimmed
-  auto header_only_flow = session_.clone(flow_file_, gsl::narrow<int64_t>(header_fragment.fragment_offset), gsl::narrow<int64_t>(header_fragment.fragment_size - header_fragment.endline_size));
+  auto header_only_flow = session_.clone(*flow_file_, gsl::narrow<int64_t>(header_fragment.fragment_offset), gsl::narrow<int64_t>(header_fragment.fragment_size - header_fragment.endline_size));
   if (!header_only_flow) {
     logger_->log_error("Failed to clone header only fragment flow!");
     return;
@@ -307,12 +307,12 @@ void ReadCallback::createHeaderOnlyFragmentFlow(const SplitTextFragmentGenerator
 }
 
 void ReadCallback::mergeHeaderAndFragmentFlows(const std::shared_ptr<core::FlowFile>& header_flow, const SplitTextFragmentGenerator::Fragment& fragment, size_t fragment_trim_size) {
-  auto fragment_flow = session_.clone(flow_file_, gsl::narrow<int64_t>(fragment.fragment_offset), gsl::narrow<int64_t>(fragment.fragment_size - fragment_trim_size));
+  auto fragment_flow = session_.clone(*flow_file_, gsl::narrow<int64_t>(fragment.fragment_offset), gsl::narrow<int64_t>(fragment.fragment_size - fragment_trim_size));
   if (!fragment_flow) {
     logger_->log_error("Failed to clone fragment flow!");
     return;
   }
-  auto merged_flow = session_.clone(header_flow);  // clone header to copy attributes
+  auto merged_flow = session_.clone(*header_flow);  // clone header to copy attributes
   if (!merged_flow) {
     logger_->log_error("Failed to clone merged fragment flow!");
     return;
@@ -336,7 +336,7 @@ void ReadCallback::mergeHeaderAndFragmentFlows(const std::shared_ptr<core::FlowF
 }
 
 void ReadCallback::createFragmentFlowWithoutHeader(const SplitTextFragmentGenerator::Fragment& fragment, size_t fragment_trim_size) {
-  auto fragment_flow = session_.clone(flow_file_, gsl::narrow<int64_t>(fragment.fragment_offset), gsl::narrow<int64_t>(fragment.fragment_size - fragment_trim_size));
+  auto fragment_flow = session_.clone(*flow_file_, gsl::narrow<int64_t>(fragment.fragment_offset), gsl::narrow<int64_t>(fragment.fragment_size - fragment_trim_size));
   if (!fragment_flow) {
     logger_->log_error("Failed to clone fragment flow without header!");
     return;
@@ -356,7 +356,7 @@ int64_t ReadCallback::operator()(const std::shared_ptr<io::InputStream>& stream)
       error = header_fragment.error();
       return gsl::narrow<int64_t>(flow_file_->getSize());
     }
-    header_flow = session_.clone(flow_file_, gsl::narrow<int64_t>(header_fragment->fragment_offset), gsl::narrow<int64_t>(header_fragment->fragment_size));
+    header_flow = session_.clone(*flow_file_, gsl::narrow<int64_t>(header_fragment->fragment_offset), gsl::narrow<int64_t>(header_fragment->fragment_size));
     if (!header_flow) {
       logger_->log_error("Failed to clone header flow!");
       return -1;

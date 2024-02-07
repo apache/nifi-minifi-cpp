@@ -39,7 +39,7 @@ void PutAzureBlobStorage::onSchedule(core::ProcessContext& context, core::Proces
 
 std::optional<storage::PutAzureBlobStorageParameters> PutAzureBlobStorage::buildPutAzureBlobStorageParameters(
     core::ProcessContext &context,
-    const std::shared_ptr<core::FlowFile> &flow_file) {
+    const core::FlowFile& flow_file) {
   storage::PutAzureBlobStorageParameters params;
   if (!setBlobOperationParameters(params, context, flow_file)) {
     return std::nullopt;
@@ -55,7 +55,7 @@ void PutAzureBlobStorage::onTrigger(core::ProcessContext& context, core::Process
     return;
   }
 
-  auto params = buildPutAzureBlobStorageParameters(context, flow_file);
+  auto params = buildPutAzureBlobStorageParameters(context, *flow_file);
   if (!params) {
     session.transfer(flow_file, Failure);
     return;
@@ -78,12 +78,12 @@ void PutAzureBlobStorage::onTrigger(core::ProcessContext& context, core::Process
     return;
   }
 
-  session.putAttribute(flow_file, "azure.container", params->container_name);
-  session.putAttribute(flow_file, "azure.blobname", params->blob_name);
-  session.putAttribute(flow_file, "azure.primaryUri", upload_result->primary_uri);
-  session.putAttribute(flow_file, "azure.etag", upload_result->etag);
-  session.putAttribute(flow_file, "azure.length", std::to_string(flow_file->getSize()));
-  session.putAttribute(flow_file, "azure.timestamp", upload_result->timestamp);
+  session.putAttribute(*flow_file, "azure.container", params->container_name);
+  session.putAttribute(*flow_file, "azure.blobname", params->blob_name);
+  session.putAttribute(*flow_file, "azure.primaryUri", upload_result->primary_uri);
+  session.putAttribute(*flow_file, "azure.etag", upload_result->etag);
+  session.putAttribute(*flow_file, "azure.length", std::to_string(flow_file->getSize()));
+  session.putAttribute(*flow_file, "azure.timestamp", upload_result->timestamp);
   logger_->log_debug("Successfully uploaded blob '{}' to Azure Storage container '{}'", params->blob_name, params->container_name);
   session.transfer(flow_file, Success);
 }

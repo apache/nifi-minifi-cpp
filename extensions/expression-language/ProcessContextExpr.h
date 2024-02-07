@@ -50,18 +50,18 @@ class ProcessContextExpr final : public core::ProcessContext {
 
   ~ProcessContextExpr() override = default;
 
-  bool getProperty(const Property& property, std::string &value, const std::shared_ptr<FlowFile> &flow_file) override;
+  bool getProperty(const Property& property, std::string &value, const FlowFile* const flow_file) override;
 
-  bool getProperty(const PropertyReference& property, std::string &value, const std::shared_ptr<FlowFile> &flow_file) override;
+  bool getProperty(const PropertyReference& property, std::string &value, const FlowFile* const flow_file) override;
 
-  bool getDynamicProperty(const Property &property, std::string &value, const std::shared_ptr<FlowFile> &flow_file) override;
+  bool getDynamicProperty(const Property &property, std::string &value, const FlowFile* const flow_file) override;
 
   bool setProperty(const std::string& property, std::string value) override;
 
   bool setDynamicProperty(const std::string& property, std::string value) override;
 
  private:
-  bool getProperty(bool supports_expression_language, std::string_view property_name, std::string& value, const std::shared_ptr<FlowFile>& flow_file);
+  bool getProperty(bool supports_expression_language, std::string_view property_name, std::string& value, const FlowFile* const flow_file);
 
   std::unordered_map<std::string, org::apache::nifi::minifi::expression::Expression> expressions_;
   std::unordered_map<std::string, org::apache::nifi::minifi::expression::Expression> dynamic_property_expressions_;

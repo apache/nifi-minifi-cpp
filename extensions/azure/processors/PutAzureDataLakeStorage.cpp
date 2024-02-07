@@ -51,7 +51,7 @@ void PutAzureDataLakeStorage::onSchedule(core::ProcessContext& context, core::Pr
 }
 
 std::optional<storage::PutAzureDataLakeStorageParameters> PutAzureDataLakeStorage::buildUploadParameters(
-    core::ProcessContext& context, const std::shared_ptr<core::FlowFile>& flow_file) {
+    core::ProcessContext& context, const core::FlowFile& flow_file) {
   storage::PutAzureDataLakeStorageParameters params;
   if (!setFileOperationCommonParameters(params, context, flow_file)) {
     return std::nullopt;
@@ -69,7 +69,7 @@ void PutAzureDataLakeStorage::onTrigger(core::ProcessContext& context, core::Pro
     return;
   }
 
-  const auto params = buildUploadParameters(context, flow_file);
+  const auto params = buildUploadParameters(context, *flow_file);
   if (!params) {
     session.transfer(flow_file, Failure);
     return;
@@ -96,11 +96,11 @@ void PutAzureDataLakeStorage::onTrigger(core::ProcessContext& context, core::Pro
     logger_->log_error("Failed to upload file '{}/{}' to filesystem '{}' on Azure Data Lake storage", params->directory_name, params->filename, params->file_system_name);
     session.transfer(flow_file, Failure);
   } else {
-    session.putAttribute(flow_file, "azure.filesystem", params->file_system_name);
-    session.putAttribute(flow_file, "azure.directory", params->directory_name);
-    session.putAttribute(flow_file, "azure.filename", params->filename);
-    session.putAttribute(flow_file, "azure.primaryUri", result.primary_uri);
-    session.putAttribute(flow_file, "azure.length", std::to_string(flow_file->getSize()));
+    session.putAttribute(*flow_file, "azure.filesystem", params->file_system_name);
+    session.putAttribute(*flow_file, "azure.directory", params->directory_name);
+    session.putAttribute(*flow_file, "azure.filename", params->filename);
+    session.putAttribute(*flow_file, "azure.primaryUri", result.primary_uri);
+    session.putAttribute(*flow_file, "azure.length", std::to_string(flow_file->getSize()));
     logger_->log_debug("Successfully uploaded file '{}/{}' to filesystem '{}' on Azure Data Lake storage", params->directory_name, params->filename, params->file_system_name);
     session.transfer(flow_file, Success);
   }
