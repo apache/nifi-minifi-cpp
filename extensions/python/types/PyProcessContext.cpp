@@ -86,7 +86,7 @@ PyObject* PyProcessContext::getProperty(PyProcessContext* self, PyObject* args) 
     }
     core::Property property{property_name, ""};
     property.setSupportsExpressionLanguage(true);
-    if (!context->getProperty(property, value, flow_file)) {
+    if (!context->getProperty(property, value, flow_file.get())) {
       Py_RETURN_NONE;
     }
   }

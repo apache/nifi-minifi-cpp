@@ -111,7 +111,7 @@ std::shared_ptr<core::FlowFile> PyProcessSession::clone(const std::shared_ptr<co
     throw std::runtime_error("Flow file to clone is nullptr");
   }
 
-  auto result = session_->clone(flow_file);
+  auto result = session_->clone(*flow_file);
 
   flow_files_.push_back(result);
   return result;
