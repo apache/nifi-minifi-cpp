@@ -67,4 +67,17 @@ std::optional<T> parseOptionalEnumProperty(const core::ProcessContext& context, 
   return result.value();
 }
 
+template<typename T>
+std::optional<T> parseOptionalEnumProperty(const core::ConfigurableComponent& component, const core::PropertyReference& property) {
+  std::string str_value;
+  if (!component.getProperty(property, str_value)) {
+    return std::nullopt;
+  }
+  auto enum_value = magic_enum::enum_cast<T>(str_value);
+  if (!enum_value) {
+    throw Exception(PROCESS_SCHEDULE_EXCEPTION, fmt::format("Property '{}' has invalid value {}", property.name, str_value));
+  }
+  return *enum_value;
+}
+
 }  // namespace org::apache::nifi::minifi::utils
