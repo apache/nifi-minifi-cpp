@@ -26,8 +26,6 @@ set(PROJECT_NAME "nifi-libcore-minifi")
 if (WIN32)
     add_definitions(-DWIN32_LEAN_AND_MEAN)
 endif()
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DYAML_SUPPORT")
-set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -DYAML_SUPPORT")
 
 include(CppVersion)
 set_cpp_version()
