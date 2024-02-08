@@ -21,6 +21,8 @@ limitations under the License.
 - [ExecuteJavaControllerService](#ExecuteJavaControllerService)
 - [GCPCredentialsControllerService](#GCPCredentialsControllerService)
 - [JavaControllerService](#JavaControllerService)
+- [JsonRecordSetReader](#JsonRecordSetReader)
+- [JsonRecordSetWriter](#JsonRecordSetWriter)
 - [KubernetesControllerService](#KubernetesControllerService)
 - [LinuxPowerManagerService](#LinuxPowerManagerService)
 - [NetworkPrioritizerService](#NetworkPrioritizerService)
@@ -152,6 +154,36 @@ In the list below, the names of required properties appear in bold. Any other pr
 | Namespace Filter      | default       |                  | Limit the output to pods in namespaces which match this regular expression                   |
 | Pod Name Filter       |               |                  | If present, limit the output to pods the name of which matches this regular expression       |
 | Container Name Filter |               |                  | If present, limit the output to containers the name of which matches this regular expression |
+
+
+## JsonRecordSetReader
+
+### Description
+
+Parses JSON into individual Record objects. While the reader expects each record to be well-formed JSON, the content of a FlowFile may consist of many records, each as a well-formed JSON array or JSON object with optional whitespace between them, such as the common 'JSON-per-line' format. If an array is encountered, each element in that array will be treated as a separate record. If the schema that is configured contains a field that is not present in the JSON, a null value will be used. If the JSON contains a field that is not present in the schema, that field will be skipped.
+
+### Properties
+
+In the list below, the names of required properties appear in bold. Any other properties (not in bold) are considered optional. The table also indicates any default values, and whether a property supports the NiFi Expression Language.
+
+| Name | Default Value | Allowable Values | Description |
+|------|---------------|------------------|-------------|
+
+
+## JsonRecordSetWriter
+
+### Description
+
+Writes the results of a RecordSet as either a JSON Array or one JSON object per line. If using Array output, then even if the RecordSet consists of a single row, it will be written as an array with a single element. If using One Line Per Object output, the JSON objects cannot be pretty-printed.
+
+### Properties
+
+In the list below, the names of required properties appear in bold. Any other properties (not in bold) are considered optional. The table also indicates any default values, and whether a property supports the NiFi Expression Language.
+
+| Name                | Default Value | Allowable Values              | Description                                                                                                                                 |
+|---------------------|---------------|-------------------------------|---------------------------------------------------------------------------------------------------------------------------------------------|
+| **Output Grouping** | Array         | Array<br/>One Line Per Object | Specifies how the writer should output the JSON records. Note that if 'One Line Per Object' is selected, then Pretty Print JSON is ignored. |
+| Pretty Print JSON   | false         | true<br/>false                | Specifies whether or not the JSON should be pretty printed (only used when Array output is selected)                                        |
 
 
 ## LinuxPowerManagerService
