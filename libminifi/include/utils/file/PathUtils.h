@@ -82,4 +82,12 @@ class filesystem_error : public std::system_error {
 space_info space(path);
 space_info space(path, std::error_code&) noexcept;
 
+inline char getSeparator() {
+#ifdef _WIN32
+    return '\\';
+#else
+    return '/';
+#endif
+}
+
 }  // namespace org::apache::nifi::minifi::utils::file

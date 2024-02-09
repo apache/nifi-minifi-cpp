@@ -20,6 +20,7 @@
 #include <utility>
 
 #include "ExecutePythonProcessor.h"
+#include "PythonConfigState.h"
 #include "types/PyRelationship.h"
 #include "types/PyLogger.h"
 

@@ -98,6 +98,20 @@ void PythonDependencyInstaller::createVirtualEnvIfSpecified() const {
   }
 }
 
+void PythonDependencyInstaller::runInstallCommandInVirtualenv(const std::string& install_command) const {
+  std::string command_with_virtualenv;
+#if WIN32
+  command_with_virtualenv.append("\"").append((virtualenv_path_ / "Scripts" / "activate.bat").string()).append("\" && ");
+#else
+  command_with_virtualenv.append(". \"").append((virtualenv_path_ / "bin" / "activate").string()).append("\" && ");
+#endif
+  command_with_virtualenv.append(install_command);
+  auto return_value = std::system(encapsulateCommandInQuotesIfNeeded(command_with_virtualenv).c_str());
+  if (return_value != 0) {
+    throw PythonScriptException(fmt::format("The following command to install python packages failed: '{}'", command_with_virtualenv));
+  }
+}
+
 void PythonDependencyInstaller::installDependenciesFromRequirementsFiles() const {
   if (!isPackageInstallationNeeded()) {
     return;
@@ -105,17 +119,8 @@ void PythonDependencyInstaller::installDependenciesFromRequirementsFiles() const
   auto requirement_file_paths = getRequirementsFilePaths();
   for (const auto& requirements_file_path : requirement_file_paths) {
     logger_->log_info("Installing python packages from the following requirements.txt file: {}", requirements_file_path.string());
-    std::string pip_command;
-#if WIN32
-    pip_command.append("\"").append((virtualenv_path_ / "Scripts" / "activate.bat").string()).append("\" && ");
-#else
-    pip_command.append(". \"").append((virtualenv_path_ / "bin" / "activate").string()).append("\" && ");
-#endif
-    pip_command.append("\"").append(python_binary_).append("\" -m pip install --no-cache-dir -r \"").append(requirements_file_path.string()).append("\"");
-    auto return_value = std::system(encapsulateCommandInQuotesIfNeeded(pip_command).c_str());
-    if (return_value != 0) {
-      throw PythonScriptException(fmt::format("The following command to install python packages failed: '{}'", pip_command));
-    }
+    auto install_command = std::string("\"").append(python_binary_).append("\" -m pip install --no-cache-dir -r \"").append(requirements_file_path.string()).append("\"");
+    runInstallCommandInVirtualenv(install_command);
   }
 }
 
@@ -161,6 +166,20 @@ void PythonDependencyInstaller::addVirtualenvToPath() const {
     }
     evalScript("import sys\nsys.path.append(r'" + site_package_path.string() + "')");
   }
+}
+
+void PythonDependencyInstaller::installInlinePythonDependencies(const std::filesystem::path& script_file_path) const {
+  if (!isPackageInstallationNeeded()) {
+    return;
+  }
+  auto dependency_installer_path = python_processor_dir_ / "nifi_python_processors" / "utils" / "inline_dependency_installer.py";
+  if (ython_processor_dir_.empty() || !std::filesystem::exists(dependency_installer_path) || !std::filesystem::exists(script_file_path)) {
+    return;
+  }
+  logger_->log_info("Checking and installing inline defined Python dependencies of {}", script_file_path.string());
+  auto install_command = std::string("\"").append(python_binary_).append("\" \"").append(dependency_installer_path.string())
+    .append("\" \"").append(script_file_path.string()).append("\"");
+  runInstallCommandInVirtualenv(install_command);
 }
 
 }  // namespace org::apache::nifi::minifi::extensions::python
