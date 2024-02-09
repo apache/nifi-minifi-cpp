@@ -24,6 +24,12 @@ from textwrap import dedent
 import os
 
 
+class PythonOptions:
+    REQUIREMENTS_FILE = 0
+    SYSTEM_INSTALLED_PACKAGES = 1
+    INLINE_DEFINED_PACKAGES = 2
+
+
 class ImageStore:
     def __init__(self):
         self.client = docker.from_env()
@@ -43,9 +49,11 @@ class ImageStore:
         if container_engine == "minifi-cpp-sql":
             image = self.__build_minifi_cpp_sql_image()
         elif container_engine == "minifi-cpp-nifi-python":
-            image = self.__build_minifi_cpp_image_with_nifi_python_processors()
+            image = self.__build_minifi_cpp_image_with_nifi_python_processors(PythonOptions.REQUIREMENTS_FILE)
         elif container_engine == "minifi-cpp-nifi-python-system-python-packages":
-            image = self.__build_minifi_cpp_image_with_nifi_python_processors('RUN pip3 install "langchain<=0.17.0"')
+            image = self.__build_minifi_cpp_image_with_nifi_python_processors(PythonOptions.SYSTEM_INSTALLED_PACKAGES)
+        elif container_engine == "minifi-cpp-nifi-with-inline-python-dependencies":
+            image = self.__build_minifi_cpp_image_with_nifi_python_processors(PythonOptions.INLINE_DEFINED_PACKAGES)
         elif container_engine == "http-proxy":
             image = self.__build_http_proxy_image()
         elif container_engine == "postgresql-server":
@@ -97,10 +105,21 @@ class ImageStore:
 
         return self.__build_image(dockerfile)
 
-    def __build_minifi_cpp_image_with_nifi_python_processors(self, additional_cmd=""):
+    def __build_minifi_cpp_image_with_nifi_python_processors(self, python_option):
         parse_document_url = "https://raw.githubusercontent.com/apache/nifi/rel/nifi-" + NifiContainer.NIFI_VERSION + "/nifi-python-extensions/nifi-text-embeddings-module/src/main/python/ParseDocument.py"
         chunk_document_url = "https://raw.githubusercontent.com/apache/nifi/rel/nifi-" + NifiContainer.NIFI_VERSION + "/nifi-python-extensions/nifi-text-embeddings-module/src/main/python/ChunkDocument.py"
         pip3_install_command = ""
+        requirements_install_command = ""
+        additional_cmd = ""
+        parse_document_sed_cmd = 'sed -i "54d;55d" /opt/minifi/minifi-current/minifi-python/nifi_python_processors/ParseDocument.py && \\'
+        chunk_document_sed_cmd = 'sed -i "112d" /opt/minifi/minifi-current/minifi-python/nifi_python_processors/ChunkDocument.py && \\'
+        if python_option == PythonOptions.SYSTEM_INSTALLED_PACKAGES:
+            additional_cmd = "RUN pip3 install 'langchain<=0.17.0'"
+        elif python_option == PythonOptions.REQUIREMENTS_FILE:
+            requirements_install_command = "echo 'langchain<=0.17.0' > /opt/minifi/minifi-current/minifi-python/nifi_python_processors/requirements.txt && \\"
+        elif python_option == PythonOptions.INLINE_DEFINED_PACKAGES:
+            parse_document_sed_cmd = parse_document_sed_cmd[:-2] + ' sed -i "54 i \\ \\ \\ \\ \\ \\ \\ \\ dependencies = [\\"langchain<=0.17.0\\"]" /opt/minifi/minifi-current/minifi-python/nifi_python_processors/ParseDocument.py && \\'
+            chunk_document_sed_cmd = 'sed -i "s/\\[\\\'langchain\\\'\\]/\\[\\\'langchain<=0.17.0\\\'\\]/" /opt/minifi/minifi-current/minifi-python/nifi_python_processors/ChunkDocument.py && \\'
         if not MinifiContainer.MINIFI_TAG_PREFIX:
             pip3_install_command = "RUN apk --update --no-cache add py3-pip"
         dockerfile = dedent("""\
@@ -113,6 +132,9 @@ class ImageStore:
                 RUN wget {parse_document_url} --directory-prefix=/opt/minifi/minifi-current/minifi-python/nifi_python_processors && \\
                     wget {chunk_document_url} --directory-prefix=/opt/minifi/minifi-current/minifi-python/nifi_python_processors && \\
                     echo 'langchain<=0.17.0' > /opt/minifi/minifi-current/minifi-python/nifi_python_processors/requirements.txt && \\
+                    {requirements_install_command}
+                    {parse_document_sed_cmd}
+                    {chunk_document_sed_cmd}
                     python3 -m venv /opt/minifi/minifi-current/venv && \\
                     python3 -m venv /opt/minifi/minifi-current/venv-with-langchain && \\
                     . /opt/minifi/minifi-current/venv-with-langchain/bin/activate && python3 -m pip install --no-cache-dir "langchain<=0.17.0" && \\
@@ -121,7 +143,10 @@ class ImageStore:
                            pip3_install_command=pip3_install_command,
                            parse_document_url=parse_document_url,
                            chunk_document_url=chunk_document_url,
-                           additional_cmd=additional_cmd))
+                           additional_cmd=additional_cmd,
+                           requirements_install_command=requirements_install_command,
+                           parse_document_sed_cmd=parse_document_sed_cmd,
+                           chunk_document_sed_cmd=chunk_document_sed_cmd))
 
         return self.__build_image(dockerfile, [os.path.join(self.test_dir, "resources", "python", "RotatingForwarder.py")])
 
