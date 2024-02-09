@@ -60,7 +60,7 @@ std::vector<SensitiveProperty> listSensitiveProperties(const minifi::core::Proce
     gsl_Expects(processor);
     for (const auto& [_, property] : processor->getProperties()) {
       if (property.isSensitive()) {
-        sensitive_properties.emplace_back(Type::Processor, processor->getUUID(), processor->getName(), property.getDisplayName());
+        sensitive_properties.push_back(SensitiveProperty{Type::Processor, processor->getUUID(), processor->getName(), property.getDisplayName()});
       }
     }
   }
@@ -71,7 +71,7 @@ std::vector<SensitiveProperty> listSensitiveProperties(const minifi::core::Proce
     gsl_Expects(controller_service);
     for (const auto& [_, property] : controller_service->getProperties()) {
       if (property.isSensitive()) {
-        sensitive_properties.emplace_back(Type::ControllerService, controller_service->getUUID(), controller_service->getName(), property.getDisplayName());
+        sensitive_properties.push_back(SensitiveProperty{Type::ControllerService, controller_service->getUUID(), controller_service->getName(), property.getDisplayName()});
       }
     }
   }
