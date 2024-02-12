@@ -49,6 +49,7 @@ struct SensitiveProperty {
   minifi::utils::Identifier id;
   std::string name;
   std::string property_name;
+  std::string property_display_name;
 };
 
 std::vector<SensitiveProperty> listSensitiveProperties(const minifi::core::ProcessGroup& process_group) {
@@ -60,7 +61,7 @@ std::vector<SensitiveProperty> listSensitiveProperties(const minifi::core::Proce
     gsl_Expects(processor);
     for (const auto& [_, property] : processor->getProperties()) {
       if (property.isSensitive()) {
-        sensitive_properties.push_back(SensitiveProperty{Type::Processor, processor->getUUID(), processor->getName(), property.getDisplayName()});
+        sensitive_properties.push_back(SensitiveProperty{Type::Processor, processor->getUUID(), processor->getName(), property.getName(), property.getDisplayName()});
       }
     }
   }
@@ -71,7 +72,7 @@ std::vector<SensitiveProperty> listSensitiveProperties(const minifi::core::Proce
     gsl_Expects(controller_service);
     for (const auto& [_, property] : controller_service->getProperties()) {
       if (property.isSensitive()) {
-        sensitive_properties.push_back(SensitiveProperty{Type::ControllerService, controller_service->getUUID(), controller_service->getName(), property.getDisplayName()});
+        sensitive_properties.push_back(SensitiveProperty{Type::ControllerService, controller_service->getUUID(), controller_service->getName(), property.getName(), property.getDisplayName()});
       }
     }
   }
@@ -292,7 +293,7 @@ void EncryptConfig::encryptSensitiveValuesInFlowConfig(const EncryptionKeys& key
   std::cout << '\n';
   for (const auto& sensitive_property : sensitive_properties) {
     std::cout << magic_enum::enum_name(sensitive_property.type) << " " << sensitive_property.name << " (" << sensitive_property.id.to_string() << ") "
-        << "has sensitive property " << sensitive_property.property_name << "\n    enter a new value or press Enter to keep the current value unchanged: ";
+        << "has sensitive property " << sensitive_property.property_display_name << "\n    enter a new value or press Enter to keep the current value unchanged: ";
     std::cout.flush();
     std::string new_value;
     std::getline(std::cin, new_value);
