@@ -193,9 +193,6 @@ class C2Agent : public state::UpdateController {
   // maximum number of queued messages to send to the c2 server
   size_t max_c2_responses;
 
-  // time point the last time we performed a heartbeat.
-  std::chrono::steady_clock::time_point last_run_;
-
   // function that performs the heartbeat
   std::function<utils::TaskRescheduleInfo()> c2_producer_;
 
@@ -214,6 +211,8 @@ class C2Agent : public state::UpdateController {
 
   // shared pointer to the configuration of this agent
   std::shared_ptr<Configure> configuration_;
+
+  std::weak_ptr<state::response::NodeReporter> node_reporter_;
 
   std::shared_ptr<utils::file::FileSystem> filesystem_;
 
@@ -235,9 +234,11 @@ class C2Agent : public state::UpdateController {
 
   const uint64_t C2RESPONSE_POLL_MS = 100;
 
-  std::weak_ptr<state::response::NodeReporter> node_reporter_;
   std::atomic<bool> restart_needed_ = false;
   std::function<void()> request_restart_;
+
+  // time point the last time we performed a heartbeat.
+  std::chrono::steady_clock::time_point last_run_;
 };
 
 }  // namespace org::apache::nifi::minifi::c2
