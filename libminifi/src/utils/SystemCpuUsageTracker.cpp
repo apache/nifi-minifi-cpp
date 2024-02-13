@@ -84,8 +84,9 @@ double SystemCpuUsageTracker::getCpuUsageBetweenLastTwoQueries() const {
 
 #ifdef WIN32
 SystemCpuUsageTracker::SystemCpuUsageTracker() :
-    total_idle_(0), total_sys_(0), total_user_(0),
-    previous_total_idle_(0), previous_total_sys_(0), previous_total_user_(0) {
+    total_user_(0), previous_total_user_(0),
+    total_sys_(0), previous_total_sys_(0),
+    total_idle_(0), previous_total_idle_(0) {
   queryCpuTimes();
 }
 
