@@ -446,6 +446,7 @@ Licensed to the Apache Software Foundation (ASF) under one or more
                 <Component Id="PythonProcessorNifiApiFiles" Guid="a9cb7b7b-e66d-4e32-9115-eab4aa980124">
                   <File Id="NifiApi_flowfiletransform" Name="flowfiletransform.py" KeyPath="no" Source="..\extensions\python\pythonprocessors\nifiapi\flowfiletransform.py"/>
                   <File Id="NifiApi_properties" Name="properties.py" KeyPath="no" Source="..\extensions\python\pythonprocessors\nifiapi\properties.py"/>
+                  <File Id="NifiApi_documentation" Name="documentation.py" KeyPath="no" Source="..\extensions\python\pythonprocessors\nifiapi\documentation.py"/>
                   <File Id="NifiApi_init" Name="__init__.py" KeyPath="no" Source="..\extensions\python\pythonprocessors\nifiapi\__init__.py"/>
                 </Component>
               </Directory>
