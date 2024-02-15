@@ -38,7 +38,7 @@ rapidjson::Value& getMember(rapidjson::Value& node, const std::string& member_na
 }
 
 void JsonFlowSerializer::encryptSensitiveProperties(rapidjson::Value &property_jsons, rapidjson::Document::AllocatorType &alloc,
-    const std::map<std::string, Property> &properties, const utils::crypto::EncryptionProvider &encryption_provider, std::unordered_map<std::string, std::string> overrides) const {
+    const std::map<std::string, Property> &properties, const utils::crypto::EncryptionProvider &encryption_provider, std::unordered_map<std::string, std::string> component_overrides) const {
   for (auto &property : property_jsons.GetObject()) {
     const std::string name{property.name.GetString(), property.name.GetStringLength()};
     if (!properties.contains(name)) {
@@ -47,14 +47,14 @@ void JsonFlowSerializer::encryptSensitiveProperties(rapidjson::Value &property_j
     }
     if (properties.at(name).isSensitive()) {
       auto& value = property.value;
-      const std::string_view value_sv = overrides.contains(name) ? overrides.at(name) : std::string_view{value.GetString(), value.GetStringLength()};
+      const std::string_view value_sv = component_overrides.contains(name) ? component_overrides.at(name) : std::string_view{value.GetString(), value.GetStringLength()};
       const std::string encrypted_value = utils::crypto::property_encryption::encrypt(value_sv, encryption_provider);
       value.SetString(encrypted_value.c_str(), encrypted_value.size(), alloc);
     }
-    overrides.erase(name);
+    component_overrides.erase(name);
   }
 
-  for (const auto& [name, value] : overrides) {
+  for (const auto& [name, value] : component_overrides) {
     const std::string encrypted_value = utils::crypto::property_encryption::encrypt(value, encryption_provider);
     property_jsons.AddMember(rapidjson::Value(name, alloc), rapidjson::Value(encrypted_value, alloc), alloc);
   }

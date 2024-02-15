@@ -22,7 +22,7 @@
 namespace org::apache::nifi::minifi::core::yaml {
 
 void YamlFlowSerializer::encryptSensitiveProperties(YAML::Node property_yamls, const std::map<std::string, Property>& properties, const utils::crypto::EncryptionProvider& encryption_provider,
-    std::unordered_map<std::string, std::string> overrides) const {
+    std::unordered_map<std::string, std::string> component_overrides) const {
   for (auto kv : property_yamls) {
     auto name = kv.first.as<std::string>();
     if (!properties.contains(name)) {
@@ -32,18 +32,18 @@ void YamlFlowSerializer::encryptSensitiveProperties(YAML::Node property_yamls, c
     if (properties.at(name).isSensitive()) {
       if (kv.second.IsSequence()) {
         for (auto property_item : kv.second) {
-          auto value = overrides.contains(name) ? overrides.at(name) : property_item["value"].as<std::string>();
+          auto value = component_overrides.contains(name) ? component_overrides.at(name) : property_item["value"].as<std::string>();
           property_item["value"] = utils::crypto::property_encryption::encrypt(value, encryption_provider);
         }
       } else {
-        auto value = overrides.contains(name) ? overrides.at(name) : kv.second.as<std::string>();
+        auto value = component_overrides.contains(name) ? component_overrides.at(name) : kv.second.as<std::string>();
         property_yamls[name] = utils::crypto::property_encryption::encrypt(value, encryption_provider);
       }
-      overrides.erase(name);
+      component_overrides.erase(name);
     }
   }
 
-  for (const auto& [name, value] : overrides) {
+  for (const auto& [name, value] : component_overrides) {
     property_yamls[name] = utils::crypto::property_encryption::encrypt(value, encryption_provider);
   }
 }

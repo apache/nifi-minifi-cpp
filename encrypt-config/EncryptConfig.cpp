@@ -25,72 +25,16 @@
 
 #include "ConfigFile.h"
 #include "ConfigFileEncryptor.h"
-#include "core/flow/AdaptiveConfiguration.h"
-#include "core/FlowConfiguration.h"
-#include "core/RepositoryFactory.h"
-#include "core/repository/VolatileContentRepository.h"
 #include "utils/Enum.h"
 #include "utils/file/FileUtils.h"
 #include "Defaults.h"
 #include "core/extension/ExtensionManager.h"
+#include "FlowConfigEncryptor.h"
 
 namespace {
-namespace minifi = org::apache::nifi::minifi;
-
 constexpr std::string_view ENCRYPTION_KEY_PROPERTY_NAME = "nifi.bootstrap.sensitive.key";
 constexpr std::string_view SENSITIVE_PROPERTIES_KEY_PROPERTY_NAME = "nifi.bootstrap.sensitive.properties.key";
-
-enum class Type {
-  Processor, ControllerService
-};
-
-struct SensitiveProperty {
-  Type type;
-  minifi::utils::Identifier id;
-  std::string name;
-  std::string property_name;
-  std::string property_display_name;
-};
-
-std::vector<SensitiveProperty> listSensitiveProperties(const minifi::core::ProcessGroup& process_group) {
-  std::vector<SensitiveProperty> sensitive_properties;
-
-  std::vector<minifi::core::Processor*> processors;
-  process_group.getAllProcessors(processors);
-  for (const auto* processor : processors) {
-    gsl_Expects(processor);
-    for (const auto& [_, property] : processor->getProperties()) {
-      if (property.isSensitive()) {
-        sensitive_properties.push_back(SensitiveProperty{Type::Processor, processor->getUUID(), processor->getName(), property.getName(), property.getDisplayName()});
-      }
-    }
-  }
-
-  for (const auto& controller_service_node : process_group.getAllControllerServices()) {
-    gsl_Expects(controller_service_node);
-    const auto controller_service = controller_service_node->getControllerServiceImplementation();
-    gsl_Expects(controller_service);
-    for (const auto& [_, property] : controller_service->getProperties()) {
-      if (property.isSensitive()) {
-        sensitive_properties.push_back(SensitiveProperty{Type::ControllerService, controller_service->getUUID(), controller_service->getName(), property.getName(), property.getDisplayName()});
-      }
-    }
-  }
-
-  return sensitive_properties;
-}
 }  // namespace
-
-namespace magic_enum::customize {
-template<>
-constexpr customize_t enum_name<Type>(Type type) noexcept {
-  switch (type) {
-    case Type::Processor: return "Processor";
-    case Type::ControllerService: return "Controller service";
-  }
-  return invalid_tag;
-}
-}  // namespace magic_enum::customize
 
 namespace org::apache::nifi::minifi::encrypt_config {
 
@@ -101,21 +45,15 @@ EncryptConfig::EncryptConfig(const std::string& minifi_home) : minifi_home_(mini
   }
 
   std::filesystem::current_path(minifi_home_);
-
-  keys_ = getEncryptionKeys(ENCRYPTION_KEY_PROPERTY_NAME);
-  sensitive_properties_keys_ = getEncryptionKeys(SENSITIVE_PROPERTIES_KEY_PROPERTY_NAME);
 }
 
-EncryptConfig::EncryptionType EncryptConfig::encryptionType() const {
-  return keys_.old_key ? EncryptionType::RE_ENCRYPT : EncryptionType::ENCRYPT;
-}
+bool EncryptConfig::isReencrypting() const {
+  encrypt_config::ConfigFile bootstrap_file{std::ifstream{bootstrapFilePath()}};
 
-void EncryptConfig::encryptSensitiveValuesInMinifiProperties() const {
-  encryptSensitiveValuesInMinifiProperties(keys_);
-}
+  std::string decryption_key_name = utils::string::join_pack(ENCRYPTION_KEY_PROPERTY_NAME, ".old");
+  std::optional<std::string> decryption_key_hex = bootstrap_file.getValue(decryption_key_name);
 
-void EncryptConfig::encryptSensitiveValuesInFlowConfig() const {
-  encryptSensitiveValuesInFlowConfig(sensitive_properties_keys_);
+  return (decryption_key_hex && !decryption_key_hex->empty());
 }
 
 std::filesystem::path EncryptConfig::flowConfigPath() const {
@@ -142,22 +80,24 @@ std::string EncryptConfig::flowConfigContent(const std::filesystem::path& config
   }
 }
 
-void EncryptConfig::encryptFlowConfigBlob() const {
+void EncryptConfig::encryptWholeFlowConfigFile() const {
+  EncryptionKeys keys = getEncryptionKeys(ENCRYPTION_KEY_PROPERTY_NAME);
+
   std::filesystem::path config_path = flowConfigPath();
   std::string config_content = flowConfigContent(config_path);
   try {
-    utils::crypto::decrypt(config_content, keys_.encryption_key);
+    utils::crypto::decrypt(config_content, keys.encryption_key);
     std::cout << "Flow config file is already properly encrypted.\n";
     return;
   } catch (const std::exception&) {}
 
   if (utils::crypto::isEncrypted(config_content)) {
-    if (!keys_.old_key) {
+    if (!keys.old_key) {
       throw std::runtime_error("Config file is encrypted, but no old encryption key is set.");
     }
     std::cout << "Trying to decrypt flow config file using the old key ...\n";
     try {
-      config_content = utils::crypto::decrypt(config_content, *keys_.old_key);
+      config_content = utils::crypto::decrypt(config_content, *keys.old_key);
     } catch (const std::exception&) {
       throw std::runtime_error("Flow config is encrypted, but couldn't be decrypted.");
     }
@@ -165,7 +105,7 @@ void EncryptConfig::encryptFlowConfigBlob() const {
     std::cout << "Flow config file is not encrypted, using as-is.\n";
   }
 
-  std::string encrypted_content = utils::crypto::encrypt(config_content, keys_.encryption_key);
+  std::string encrypted_content = utils::crypto::encrypt(config_content, keys.encryption_key);
   try {
     std::ofstream encrypted_file{config_path, std::ios::binary};
     encrypted_file.exceptions(std::ios::failbit | std::ios::badbit);
@@ -241,7 +181,9 @@ void EncryptConfig::writeEncryptionKeyToBootstrapFile(const std::string& encrypt
   bootstrap_file.writeTo(bootstrapFilePath());
 }
 
-void EncryptConfig::encryptSensitiveValuesInMinifiProperties(const EncryptionKeys& keys) const {
+void EncryptConfig::encryptSensitiveValuesInMinifiProperties() const {
+  EncryptionKeys keys = getEncryptionKeys(ENCRYPTION_KEY_PROPERTY_NAME);
+
   encrypt_config::ConfigFile properties_file{std::ifstream{propertiesFilePath()}};
   if (properties_file.size() == 0) {
     throw std::runtime_error{"Properties file " + propertiesFilePath().string() + " not found!"};
@@ -258,52 +200,17 @@ void EncryptConfig::encryptSensitiveValuesInMinifiProperties(const EncryptionKey
       << (num_properties_encrypted == 1 ? "property" : "properties") << " in " << propertiesFilePath() << '\n';
 }
 
-void EncryptConfig::encryptSensitiveValuesInFlowConfig(const EncryptionKeys& keys) const {
-  const auto configure = std::make_shared<minifi::Configure>();
-  configure->setHome(minifi_home_);
-  configure->loadConfigureFile(DEFAULT_NIFI_PROPERTIES_FILE);
-
-  bool bulk_encrypt_flow_config = (configure->get(minifi::Configure::nifi_flow_configuration_encrypt) | utils::andThen(utils::string::toBool)).value_or(false);
-  auto encryptor = bulk_encrypt_flow_config ? utils::crypto::EncryptionProvider::create(minifi_home_) : std::nullopt;
-  auto filesystem = std::make_shared<utils::file::FileSystem>(bulk_encrypt_flow_config, encryptor);
-
-  minifi::core::extension::ExtensionManager::get().initialize(configure);
-
-  const std::filesystem::path flow_config_path = flowConfigPath();
-  const auto configuration_context = core::ConfigurationContext{
-      .flow_file_repo = core::createRepository("flowfilerepository"),
-      .content_repo = std::make_shared<core::repository::VolatileContentRepository>(),
-      .configuration = configure,
-      .path = flow_config_path,
-      .filesystem = filesystem,
-      .sensitive_properties_encryptor = utils::crypto::EncryptionProvider{utils::crypto::XSalsa20Cipher{keys.encryption_key}}
-  };
-  core::flow::AdaptiveConfiguration adaptive_configuration{configuration_context};
-
-  const auto flow_config_content = filesystem->read(flow_config_path);
-  if (!flow_config_content) {
-    throw std::runtime_error(utils::string::join_pack("Could not read the flow configuration file \"", flow_config_path.string(), "\""));
+void EncryptConfig::encryptSensitiveValuesInFlowConfig(
+    const std::optional<std::string>& component_id, const std::optional<std::string>& property_name, const std::optional<std::string>& property_value) const {
+  if (!component_id && !property_name && !property_value) {
+    EncryptionKeys keys = getEncryptionKeys(SENSITIVE_PROPERTIES_KEY_PROPERTY_NAME);
+    flow_config_encryptor::encryptSensitiveValuesInFlowConfig(keys, minifi_home_, flowConfigPath());
+  } else if (component_id && property_name && property_value) {
+    EncryptionKeys keys = getEncryptionKeys(SENSITIVE_PROPERTIES_KEY_PROPERTY_NAME);
+    flow_config_encryptor::encryptSensitiveValuesInFlowConfig(keys, minifi_home_, flowConfigPath(), *component_id, *property_name, *property_value);
+  } else {
+    throw std::runtime_error("either all of --component-id, --property-name and --property-value should be given (for batch mode) or none of them (for interactive mode)");
   }
-
-  const auto process_group = adaptive_configuration.getRootFromPayload(*flow_config_content);
-  gsl_Expects(process_group);
-  const auto sensitive_properties = listSensitiveProperties(*process_group);
-
-  std::unordered_map<utils::Identifier, std::unordered_map<std::string, std::string>> new_sensitive_property_values;
-  std::cout << '\n';
-  for (const auto& sensitive_property : sensitive_properties) {
-    std::cout << magic_enum::enum_name(sensitive_property.type) << " " << sensitive_property.name << " (" << sensitive_property.id.to_string() << ") "
-        << "has sensitive property " << sensitive_property.property_display_name << "\n    enter a new value or press Enter to keep the current value unchanged: ";
-    std::cout.flush();
-    std::string new_value;
-    std::getline(std::cin, new_value);
-    if (!new_value.empty()) {
-      new_sensitive_property_values[sensitive_property.id].emplace(sensitive_property.property_name, new_value);
-    }
-  }
-
-  std::string flow_config_str = adaptive_configuration.serializeWithOverrides(*process_group, new_sensitive_property_values);
-  adaptive_configuration.persist(flow_config_str);
 }
 
 }  // namespace org::apache::nifi::minifi::encrypt_config

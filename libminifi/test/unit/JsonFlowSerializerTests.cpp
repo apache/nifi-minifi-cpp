@@ -532,10 +532,8 @@ TEST_CASE("JsonFlowSerializer can encrypt the sensitive properties") {
   core::flow::AdaptiveConfiguration json_configuration{test_controller.getContext()};
 
   const auto [schema, flow_definition] = GENERATE(
-      std::make_tuple(core::flow::FlowSchema::getDefault(),
-          std::string{config_json_with_default_schema}),
-      std::make_tuple(core::flow::FlowSchema::getNiFiFlowJson(),
-          utils::string::join_pack(std::string{config_json_with_nifi_schema_part_1}, std::string{config_json_with_nifi_schema_part_2})));
+      std::make_tuple(core::flow::FlowSchema::getDefault(), std::string{config_json_with_default_schema}),
+      std::make_tuple(core::flow::FlowSchema::getNiFiFlowJson(), utils::string::join_pack(config_json_with_nifi_schema_part_1, config_json_with_nifi_schema_part_2)));
 
   const auto process_group = json_configuration.getRootFromPayload(flow_definition);
   REQUIRE(process_group);
@@ -587,7 +585,7 @@ TEST_CASE("JsonFlowSerializer with an override can add a new property to the flo
   core::flow::AdaptiveConfiguration json_configuration{test_controller.getContext()};
 
   const auto schema = core::flow::FlowSchema::getNiFiFlowJson();
-  const auto config_json_with_nifi_schema = utils::string::join_pack(std::string{config_json_with_nifi_schema_part_1}, std::string{config_json_with_nifi_schema_part_2});
+  const auto config_json_with_nifi_schema = utils::string::join_pack(config_json_with_nifi_schema_part_1, config_json_with_nifi_schema_part_2);
   const auto process_group = json_configuration.getRootFromPayload(config_json_with_nifi_schema);
   REQUIRE(process_group);
 

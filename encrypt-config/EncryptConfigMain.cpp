@@ -21,24 +21,33 @@
 #include "EncryptConfig.h"
 #include "argparse/argparse.hpp"
 #include "agent/agent_version.h"
+#include "utils/StringUtils.h"
 
-using org::apache::nifi::minifi::encrypt_config::EncryptConfig;
+namespace minifi = org::apache::nifi::minifi;
+using minifi::encrypt_config::EncryptConfig;
+
+constexpr std::string_view OPERATION_MINIFI_PROPERTIES = "minifi-properties";
+constexpr std::string_view OPERATION_FLOW_CONFIG = "flow-config";
+constexpr std::string_view OPERATION_WHOLE_FLOW_CONFIG_FILE = "whole-flow-config-file";
 
 int main(int argc, char* argv[]) try {
   argparse::ArgumentParser argument_parser("Apache MiNiFi C++ Encrypt-Config", org::apache::nifi::minifi::AgentBuild::VERSION);
+  argument_parser.add_argument("operation")
+      .default_value("minifi-properties")
+      .help(minifi::utils::string::join_pack("what to encrypt: ", OPERATION_MINIFI_PROPERTIES, " | ", OPERATION_FLOW_CONFIG, " | ", OPERATION_WHOLE_FLOW_CONFIG_FILE));
   argument_parser.add_argument("-m", "--minifi-home")
-    .required()
-    .metavar("MINIFI_HOME")
-    .help("Specifies the home directory used by the minifi agent");
-  argument_parser.add_argument("-p", "--sensitive-values-in-minifi-properties")
-    .flag()
-    .help("Encrypt sensitive values in minifi.properties");
-  argument_parser.add_argument("-c", "--sensitive-values-in-flow-config")
-    .flag()
-    .help("Encrypt sensitive values in the flow configuration file (config.yml or as specified in minifi.properties)");
-  argument_parser.add_argument("-e", "--encrypt-flow-config")
-    .flag()
-    .help("Encrypt the flow configuration file (config.yml or as specified in minifi.properties) as a blob");
+      .required()
+      .metavar("MINIFI_HOME")
+      .help("Specifies the home directory used by the minifi agent");
+  argument_parser.add_argument("--component-id")
+      .metavar("ID")
+      .help(minifi::utils::string::join_pack("Processor or controller service id (", OPERATION_FLOW_CONFIG, " only)"));
+  argument_parser.add_argument("--property-name")
+      .metavar("NAME")
+      .help(minifi::utils::string::join_pack("The name of the sensitive property (", OPERATION_FLOW_CONFIG, " only)"));
+  argument_parser.add_argument("--property-value")
+      .metavar("VALUE")
+      .help(minifi::utils::string::join_pack("The new value of the sensitive property (", OPERATION_FLOW_CONFIG, " only)"));
 
   try {
     argument_parser.parse_args(argc, argv);
@@ -47,37 +56,27 @@ int main(int argc, char* argv[]) try {
     return 1;
   }
 
-  bool sensitive_values_in_minifi_properties = argument_parser.get<bool>("--sensitive-values-in-minifi-properties");
-  const bool sensitive_values_in_flow_config = argument_parser.get<bool>("--sensitive-values-in-flow-config");
-  const bool flow_config_blob = argument_parser.get<bool>("--encrypt-flow-config");
-
-  if (!(sensitive_values_in_minifi_properties || sensitive_values_in_flow_config || flow_config_blob)) {
-    std::cout << "No options were selected, defaulting to --sensitive-values-in-minifi-properties.\n";
-    sensitive_values_in_minifi_properties = true;
-  }
-
   EncryptConfig encrypt_config{argument_parser.get("-m")};
+  std::string operation = argument_parser.get("operation");
 
-  if (sensitive_values_in_minifi_properties) {
+  if (operation == OPERATION_MINIFI_PROPERTIES) {
     encrypt_config.encryptSensitiveValuesInMinifiProperties();
-  }
-  if (sensitive_values_in_flow_config) {
-    encrypt_config.encryptSensitiveValuesInFlowConfig();
-  }
-  if (flow_config_blob) {
-    encrypt_config.encryptFlowConfigBlob();
-  }
-
-  if (encrypt_config.encryptionType() == EncryptConfig::EncryptionType::RE_ENCRYPT && !sensitive_values_in_minifi_properties) {
-    std::cout << "WARNING: an .old key was provided but "
-        << "--sensitive-values-in-minifi-properties was not requested. If sensitive values in minifi.properties are "
-        << "currently encrypted with the old key and the old key is removed, you won't be able to recover these values!\n";
+  } else if (operation == OPERATION_FLOW_CONFIG) {
+    auto component_id = argument_parser.present("--component-id");
+    auto property_name = argument_parser.present("--property-name");
+    auto property_value = argument_parser.present("--property-value");
+    encrypt_config.encryptSensitiveValuesInFlowConfig(component_id, property_name, property_value);
+  } else if (operation == OPERATION_WHOLE_FLOW_CONFIG_FILE) {
+    encrypt_config.encryptWholeFlowConfigFile();
+  } else {
+    std::cerr << "Unknown operation: " << operation << "\n\n" << argument_parser;
+    return 4;
   }
 
-  if (encrypt_config.encryptionType() == EncryptConfig::EncryptionType::RE_ENCRYPT && !flow_config_blob) {
-    std::cout << "WARNING: an .old key was provided but "
-        << "--encrypt-flow-config was not requested. If the flow config file is "
-        << "currently encrypted with the old key and the old key is removed, you won't be able to recover these values!\n";
+  if ((operation == OPERATION_MINIFI_PROPERTIES || operation == OPERATION_WHOLE_FLOW_CONFIG_FILE) && encrypt_config.isReencrypting()) {
+    std::cout << "WARNING: an .old key was provided, which is used for both " << OPERATION_MINIFI_PROPERTIES << " and " << OPERATION_WHOLE_FLOW_CONFIG_FILE << ".\n"
+        << "If both are currently encrypted, make sure to run " << argv[0] << " to re-encrypt both before removing the .old key,\n"
+        << "otherwise you won't be able to recover the encrypted data!\n";
   }
 
   return 0;

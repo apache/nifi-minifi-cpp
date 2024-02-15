@@ -25,17 +25,13 @@ namespace org::apache::nifi::minifi::encrypt_config {
 
 class EncryptConfig {
  public:
-  enum class EncryptionType {
-    ENCRYPT,
-    RE_ENCRYPT
-  };
-
   explicit EncryptConfig(const std::string& minifi_home);
-  [[nodiscard]] EncryptionType encryptionType() const;
 
   void encryptSensitiveValuesInMinifiProperties() const;
-  void encryptSensitiveValuesInFlowConfig() const;
-  void encryptFlowConfigBlob() const;
+  void encryptSensitiveValuesInFlowConfig(const std::optional<std::string>& component_id, const std::optional<std::string>& property_name, const std::optional<std::string>& property_value) const;
+  void encryptWholeFlowConfigFile() const;
+
+  [[nodiscard]] bool isReencrypting() const;
 
  private:
   [[nodiscard]] std::filesystem::path bootstrapFilePath() const;
@@ -47,12 +43,7 @@ class EncryptConfig {
   [[nodiscard]] std::string hexDecodeAndValidateKey(const std::string& key, const std::string& key_name) const;
   void writeEncryptionKeyToBootstrapFile(const std::string& encryption_key_name, const utils::crypto::Bytes& encryption_key) const;
 
-  void encryptSensitiveValuesInMinifiProperties(const EncryptionKeys& keys) const;
-  void encryptSensitiveValuesInFlowConfig(const EncryptionKeys& keys) const;
-
   const std::filesystem::path minifi_home_;
-  EncryptionKeys keys_;
-  EncryptionKeys sensitive_properties_keys_;
 };
 
 }  // namespace org::apache::nifi::minifi::encrypt_config

@@ -31,7 +31,7 @@ class JsonFlowSerializer : public core::flow::FlowSerializer {
  private:
   void encryptSensitiveProperties(rapidjson::Value& property_jsons, rapidjson::Document::AllocatorType& alloc,
       const std::map<std::string, Property>& properties, const utils::crypto::EncryptionProvider& encryption_provider,
-      std::unordered_map<std::string, std::string> overrides) const;
+      std::unordered_map<std::string, std::string> component_overrides) const;
 
   rapidjson::Document flow_definition_json_;
   std::shared_ptr<logging::Logger> logger_{logging::LoggerFactory<JsonFlowSerializer>::getLogger()};
