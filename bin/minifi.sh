@@ -162,6 +162,17 @@ stop_service() {
     echo "MiNiFi stopped"
 }
 
+restart_service() {
+    check_service_installed
+    if [ "${darwin}" = "true"  ]; then
+      launchctl stop org.apache.nifi.minifi
+      launchctl start org.apache.nifi.minifi
+    else
+      systemctl restart minifi.service
+    fi
+    echo "MiNiFi restarted"
+}
+
 status_service() {
     check_service_installed
     if [ "${darwin}" = "true"  ]; then
@@ -185,9 +196,7 @@ case "$1" in
       status_service
       ;;
     restart)
-      stop_service
-      start_service
-      echo "MiNiFi restarted"
+      restart_service
       ;;
     install)
       install "$@"
