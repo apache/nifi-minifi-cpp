@@ -33,7 +33,7 @@ class PyProcessSession {
   std::shared_ptr<core::FlowFile> create(const std::shared_ptr<core::FlowFile>& flow_file = nullptr);
   std::shared_ptr<core::FlowFile> clone(const std::shared_ptr<core::FlowFile>& flow_file);
   void transfer(const std::shared_ptr<core::FlowFile>& flow_file, const core::Relationship& relationship);
-  void transferToDynamicRelationship(const std::shared_ptr<core::FlowFile>& flow_file, const std::string& relationship_name);
+  void transferToCustomRelationship(const std::shared_ptr<core::FlowFile>& flow_file, const std::string& relationship_name);
   void read(const std::shared_ptr<core::FlowFile>& flow_file, BorrowedObject input_stream_callback);
   void write(const std::shared_ptr<core::FlowFile>& flow_file, BorrowedObject output_stream_callback);
   void remove(const std::shared_ptr<core::FlowFile>& flow_file);
@@ -60,7 +60,7 @@ struct PyProcessSessionObject {
   static PyObject* read(PyProcessSessionObject* self, PyObject* args);
   static PyObject* write(PyProcessSessionObject* self, PyObject* args);
   static PyObject* transfer(PyProcessSessionObject* self, PyObject* args);
-  static PyObject* transferToDynamicRelationship(PyProcessSessionObject* self, PyObject* args);
+  static PyObject* transferToCustomRelationship(PyProcessSessionObject* self, PyObject* args);
   static PyObject* remove(PyProcessSessionObject* self, PyObject* args);
   static PyObject* getContentsAsBytes(PyProcessSessionObject* self, PyObject* args);
 

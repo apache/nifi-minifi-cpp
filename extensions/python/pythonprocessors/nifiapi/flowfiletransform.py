@@ -111,7 +111,7 @@ class FlowFileTransform(ABC):
         if result.getRelationship() == "success":
             session.transfer(flow_file, self.REL_SUCCESS)
         else:
-            session.transferToDynamicRelationship(flow_file, result.getRelationship())
+            session.transferToCustomRelationship(flow_file, result.getRelationship())
         session.transfer(original_flow_file, self.REL_ORIGINAL)
 
     @abstractmethod

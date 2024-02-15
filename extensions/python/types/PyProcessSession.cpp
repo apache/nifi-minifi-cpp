@@ -63,7 +63,7 @@ void PyProcessSession::transfer(const std::shared_ptr<core::FlowFile>& flow_file
   session_->transfer(flow_file, relationship);
 }
 
-void PyProcessSession::transferToDynamicRelationship(const std::shared_ptr<core::FlowFile>& flow_file, const std::string& relationship_name) {
+void PyProcessSession::transferToCustomRelationship(const std::shared_ptr<core::FlowFile>& flow_file, const std::string& relationship_name) {
   if (!session_) {
     throw std::runtime_error("Access of ProcessSession after it has been released");
   }
@@ -72,7 +72,7 @@ void PyProcessSession::transferToDynamicRelationship(const std::shared_ptr<core:
     throw std::runtime_error("Access of FlowFile after it has been released");
   }
 
-  session_->transferToDynamicRelationship(flow_file, relationship_name);
+  session_->transferToCustomRelationship(flow_file, relationship_name);
 }
 
 void PyProcessSession::read(const std::shared_ptr<core::FlowFile>& flow_file, BorrowedObject input_stream_callback) {
@@ -165,7 +165,7 @@ static PyMethodDef PyProcessSessionObject_methods[] = {  // NOLINT(cppcoreguidel
     {"read", (PyCFunction) PyProcessSessionObject::read, METH_VARARGS, nullptr},
     {"write", (PyCFunction) PyProcessSessionObject::write, METH_VARARGS, nullptr},
     {"transfer", (PyCFunction) PyProcessSessionObject::transfer, METH_VARARGS, nullptr},
-    {"transferToDynamicRelationship", (PyCFunction) PyProcessSessionObject::transferToDynamicRelationship, METH_VARARGS, nullptr},
+    {"transferToCustomRelationship", (PyCFunction) PyProcessSessionObject::transferToCustomRelationship, METH_VARARGS, nullptr},
     {"remove", (PyCFunction) PyProcessSessionObject::remove, METH_VARARGS, nullptr},
     {"getContentsAsBytes", (PyCFunction) PyProcessSessionObject::getContentsAsBytes, METH_VARARGS, nullptr},
     {}  /* Sentinel */
@@ -321,7 +321,7 @@ PyObject* PyProcessSessionObject::transfer(PyProcessSessionObject* self, PyObjec
   Py_RETURN_NONE;
 }
 
-PyObject* PyProcessSessionObject::transferToDynamicRelationship(PyProcessSessionObject* self, PyObject* args) {
+PyObject* PyProcessSessionObject::transferToCustomRelationship(PyProcessSessionObject* self, PyObject* args) {
   auto session = self->process_session_.lock();
   if (!session) {
     PyErr_SetString(PyExc_AttributeError, "tried reading process session outside 'on_trigger'");
@@ -341,7 +341,7 @@ PyObject* PyProcessSessionObject::transferToDynamicRelationship(PyProcessSession
   }
 
   BorrowedStr name = BorrowedStr::fromTuple(args, 0);
-  session->transferToDynamicRelationship(flow_file, relationship_name);
+  session->transferToCustomRelationship(flow_file, relationship_name);
   Py_RETURN_NONE;
 }
 
