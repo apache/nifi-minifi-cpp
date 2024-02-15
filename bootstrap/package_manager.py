@@ -28,7 +28,7 @@ def _query_yes_no(question: str, no_confirm: bool) -> bool:
         print("Running {} with noconfirm".format(question))
         return True
     while True:
-        print("{} [y/n]".format(question))
+        print("{} [y/n]".format(question), end=' ', flush=True)
         choice = input().lower()
         if choice in valid:
             return valid[choice]
