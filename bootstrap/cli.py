@@ -24,19 +24,24 @@ from system_dependency import install_required
 
 
 def install_dependencies(minifi_options: MinifiOptions, package_manager: PackageManager) -> bool:
-    return install_required(minifi_options, package_manager)
-
+    res = install_required(minifi_options, package_manager)
+    print("Installation went smoothly" if res else "There were some error during installation")
+    return res
 
 def run_cmake(minifi_options: MinifiOptions, package_manager: PackageManager):
     if not os.path.exists(minifi_options.build_dir):
         os.mkdir(minifi_options.build_dir)
     cmake_cmd = f"cmake -G Ninja {minifi_options.create_cmake_options_str()} {minifi_options.source_dir} -B {minifi_options.build_dir}"
-    return package_manager.run_cmd(cmake_cmd)
+    res = package_manager.run_cmd(cmake_cmd)
+    print("CMake command run successfully" if res else "CMake command run unsuccessfully")
+    return res
 
 
 def do_build(minifi_options: MinifiOptions, package_manager: PackageManager):
     build_cmd = f"cmake --build {str(minifi_options.build_dir)}"
-    return package_manager.run_cmd(build_cmd)
+    res = package_manager.run_cmd(build_cmd)
+    print("Build was successful" if res else "Build was unsuccessful")
+    return res
 
 
 def do_one_click_build(minifi_options: MinifiOptions, package_manager: PackageManager) -> bool:
@@ -136,5 +141,6 @@ def step_by_step_menu(minifi_options: MinifiOptions, package_manager: PackageMan
         ]
 
         step_by_step_prompt = inquirer.prompt(questions)
-        done = step_by_step_options[step_by_step_prompt["selection"]](minifi_options, package_manager)
+        step_by_step_options[step_by_step_prompt["selection"]](minifi_options, package_manager)
+        done = step_by_step_prompt['selection'] == 'Back'
     return False
