@@ -28,6 +28,7 @@ def install_dependencies(minifi_options: MinifiOptions, package_manager: Package
     print("Installation went smoothly" if res else "There were some error during installation")
     return res
 
+
 def run_cmake(minifi_options: MinifiOptions, package_manager: PackageManager):
     if not os.path.exists(minifi_options.build_dir):
         os.mkdir(minifi_options.build_dir)
