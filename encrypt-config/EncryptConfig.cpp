@@ -34,6 +34,16 @@
 namespace {
 constexpr std::string_view ENCRYPTION_KEY_PROPERTY_NAME = "nifi.bootstrap.sensitive.key";
 constexpr std::string_view SENSITIVE_PROPERTIES_KEY_PROPERTY_NAME = "nifi.bootstrap.sensitive.properties.key";
+
+std::string readFile(const std::filesystem::path& file_path) {
+  try {
+    std::ifstream file_stream{file_path, std::ios::binary};
+    file_stream.exceptions(std::ios::failbit | std::ios::badbit);
+    return {std::istreambuf_iterator<char>(file_stream), {}};
+  } catch (...) {
+    throw std::runtime_error("Error while reading file \"" + file_path.string() + "\"");
+  }
+}
 }  // namespace
 
 namespace org::apache::nifi::minifi::encrypt_config {
@@ -69,22 +79,11 @@ std::filesystem::path EncryptConfig::flowConfigPath() const {
   return *config_path;
 }
 
-std::string EncryptConfig::flowConfigContent(const std::filesystem::path& config_path) {
-  std::string config_content;
-  try {
-    std::ifstream config_file{config_path, std::ios::binary};
-    config_file.exceptions(std::ios::failbit | std::ios::badbit);
-    return {std::istreambuf_iterator<char>(config_file), {}};
-  } catch (...) {
-    throw std::runtime_error("Error while reading flow configuration file \"" + config_path.string() + "\"");
-  }
-}
-
 void EncryptConfig::encryptWholeFlowConfigFile() const {
   EncryptionKeys keys = getEncryptionKeys(ENCRYPTION_KEY_PROPERTY_NAME);
 
   std::filesystem::path config_path = flowConfigPath();
-  std::string config_content = flowConfigContent(config_path);
+  std::string config_content = readFile(config_path);
   try {
     utils::crypto::decrypt(config_content, keys.encryption_key);
     std::cout << "Flow config file is already properly encrypted.\n";

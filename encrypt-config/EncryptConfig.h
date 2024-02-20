@@ -37,7 +37,6 @@ class EncryptConfig {
   [[nodiscard]] std::filesystem::path bootstrapFilePath() const;
   [[nodiscard]] std::filesystem::path propertiesFilePath() const;
   [[nodiscard]] std::filesystem::path flowConfigPath() const;
-  static std::string flowConfigContent(const std::filesystem::path& config_path);
 
   [[nodiscard]] EncryptionKeys getEncryptionKeys(std::string_view property_name) const;
   [[nodiscard]] std::string hexDecodeAndValidateKey(const std::string& key, const std::string& key_name) const;
