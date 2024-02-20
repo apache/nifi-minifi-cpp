@@ -31,7 +31,8 @@ namespace minifi = org::apache::nifi::minifi;
 
 namespace {
 enum class Type {
-  Processor, ControllerService
+  Processor,
+  ControllerService
 };
 
 struct SensitiveProperty {
