@@ -13,9 +13,9 @@ jobs:
     timeout-minutes: 180
     steps:
       - id: checkout
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
       - name: cache restore
-        uses: actions/cache/restore@v3
+        uses: actions/cache/restore@v4
         with:
           path: ${{ env.CCACHE_DIR }}
           key: macos-xcode-ccache-${{github.ref}}-${{github.sha}}
@@ -42,7 +42,7 @@ jobs:
           # CPPFLAGS are not recognized by cmake, so we have to force them to CFLAGS and CXXFLAGS to have flex 2.6 working
           ./bootstrap.sh -e -t && cd build  && cmake -G Ninja -DCMAKE_BUILD_TYPE=Release -DCI_BUILD=ON -DCMAKE_C_FLAGS="${CPPFLAGS} ${CFLAGS}" -DCMAKE_CXX_FLAGS="${CPPFLAGS} ${CXXFLAGS}" -DENABLE_PYTHON_SCRIPTING=ON -DENABLE_LUA_SCRIPTING=ON -DENABLE_SQL=ON -DUSE_REAL_ODBC_TEST_DRIVER=ON -DENABLE_AZURE=ON -DENABLE_GCP=ON -DENABLE_OPENCV=ON -DCMAKE_VERBOSE_MAKEFILE=ON -DCMAKE_RULE_MESSAGES=OFF -DSTRICT_GSL_CHECKS=AUDIT -DFAIL_ON_WARNINGS=ON .. && cmake --build . --parallel 4
       - name: cache save
-        uses: actions/cache/save@v3
+        uses: actions/cache/save@v4
         if: always()
         with:
           path: ${{ env.CCACHE_DIR }}
@@ -59,12 +59,12 @@ jobs:
         if: ${{ failure() && steps.test.conclusion == 'failure' }}
         run: |
           if [ "$(ls -A /cores)" ]; then echo "CORES_EXIST=true" >> $GITHUB_ENV; fi
-      - uses: actions/upload-artifact@v3.1.2
+      - uses: actions/upload-artifact@v4
         if: ${{ failure() && env.CORES_EXIST == 'true' }}
         with:
           name: macos-coredumps
           path: /cores
-      - uses: actions/upload-artifact@v3.1.2
+      - uses: actions/upload-artifact@v4
         if: ${{ failure() && env.CORES_EXIST == 'true' }}
         with:
           name: macos-binaries
@@ -79,9 +79,9 @@ jobs:
       - name: Support longpaths
         run: git config --system core.longpaths true
       - id: checkout
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
       - name: sccache cache restore
-        uses: actions/cache/restore@v3
+        uses: actions/cache/restore@v4
         with:
           path: ~/AppData/Local/Mozilla/sccache/cache
           key: ${{ runner.os }}-2022-sccache-${{ github.ref }}-${{ github.sha }}
@@ -90,11 +90,11 @@ jobs:
             ${{ runner.os }}-2022-sccache-refs/heads/main
             ${{ runner.os }}-2022-sccache
       - name: Run sccache-cache
-        uses: mozilla-actions/sccache-action@v0.0.3
+        uses: mozilla-actions/sccache-action@v0.0.4
       - name: Install ninja-build tool
-        uses: seanmiddleditch/gha-setup-ninja@v3
+        uses: seanmiddleditch/gha-setup-ninja@v4
       - name: Set up Python
-        uses: actions/setup-python@v4
+        uses: actions/setup-python@v5
         with:
           python-version: '3.11'
       - name: Set up Lua
@@ -119,7 +119,7 @@ jobs:
           sccache --show-stats
         shell: cmd
       - name: sccache cache save
-        uses: actions/cache/save@v3
+        uses: actions/cache/save@v4
         if: always()
         with:
           path: ~/AppData/Local/Mozilla/sccache/cache
@@ -136,9 +136,9 @@ jobs:
     timeout-minutes: 120
     steps:
       - id: checkout
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
       - name: cache restore
-        uses: actions/cache/restore@v3
+        uses: actions/cache/restore@v4
         with:
           path: ${{ env.CCACHE_DIR }}
           key: ubuntu-20.04-ccache-${{github.ref}}-${{github.sha}}
@@ -162,7 +162,7 @@ jobs:
               -DENABLE_LUA_SCRIPTING=OFF -DENABLE_PYTHON_SCRIPTING=OFF -DENABLE_MQTT=OFF -DENABLE_ELASTICSEARCH=OFF -DENABLE_KUBERNETES=OFF -DENABLE_OPC=OFF ..
           make -j$(nproc) VERBOSE=1
       - name: cache save
-        uses: actions/cache/save@v3
+        uses: actions/cache/save@v4
         if: always()
         with:
           path: ${{ env.CCACHE_DIR }}
@@ -177,12 +177,12 @@ jobs:
         if: ${{ failure() && steps.test.conclusion == 'failure' }}
         run: |
           if [ "$(ls -A /var/lib/apport/coredump/)" ]; then echo "CORES_EXIST=true" >> $GITHUB_ENV; fi
-      - uses: actions/upload-artifact@v3.1.2
+      - uses: actions/upload-artifact@v4
         if: ${{ failure() && env.CORES_EXIST == 'true' }}
         with:
           name: ubuntu-coredumps
           path: /var/lib/apport/coredump/
-      - uses: actions/upload-artifact@v3.1.2
+      - uses: actions/upload-artifact@v4
         if: ${{ failure() && env.CORES_EXIST == 'true' }}
         with:
           name: ubuntu-binaries
@@ -193,9 +193,9 @@ jobs:
     timeout-minutes: 240
     steps:
       - id: checkout
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
       - name: cache restore
-        uses: actions/cache/restore@v3
+        uses: actions/cache/restore@v4
         with:
           path: ${{ env.CCACHE_DIR }}
           key: ubuntu-22.04-all-clang-ccache-${{github.ref}}-${{github.sha}}
@@ -238,7 +238,7 @@ jobs:
               -DENABLE_GRAFANA_LOKI=ON -DCMAKE_EXPORT_COMPILE_COMMANDS=ON ..
           cmake --build . --parallel $(nproc)
       - id: cache_save
-        uses: actions/cache/save@v3
+        uses: actions/cache/save@v4
         if: always()
         with:
           path: ${{ env.CCACHE_DIR }}
@@ -278,12 +278,12 @@ jobs:
         if: ${{ failure() && steps.test.conclusion == 'failure' }}
         run: |
           if [ "$(ls -A /var/lib/apport/coredump/)" ]; then echo "CORES_EXIST=true" >> $GITHUB_ENV; fi
-      - uses: actions/upload-artifact@v3.1.2
+      - uses: actions/upload-artifact@v4
         if: ${{ failure() && env.CORES_EXIST == 'true' }}
         with:
           name: ubuntu-clang-coredumps
           path: /var/lib/apport/coredump/
-      - uses: actions/upload-artifact@v3.1.2
+      - uses: actions/upload-artifact@v4
         if: ${{ failure() && env.CORES_EXIST == 'true' }}
         with:
           name: ubuntu-clang-binaries
@@ -294,9 +294,9 @@ jobs:
     timeout-minutes: 180
     steps:
       - id: checkout
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
       - name: cache restore
-        uses: actions/cache/restore@v3
+        uses: actions/cache/restore@v4
         with:
           path: ${{ env.CCACHE_DIR }}
           key: centos-ccache-${{github.ref}}-${{github.sha}}
@@ -327,7 +327,7 @@ jobs:
               -DENABLE_USB_CAMERA=ON -DENABLE_PYTHON_SCRIPTING=ON -DENABLE_LUA_SCRIPTING=ON -DENABLE_KUBERNETES=ON -DENABLE_GCP=ON -DENABLE_PROCFS=ON -DENABLE_PROMETHEUS=ON \
               -DENABLE_ELASTICSEARCH=ON -DENABLE_GRAFANA_LOKI=ON -DDOCKER_SKIP_TESTS=OFF -DDOCKER_BUILD_ONLY=ON -DDOCKER_CCACHE_DUMP_LOCATION=${{ env.CCACHE_DIR }} .. && make centos-test
       - name: cache save
-        uses: actions/cache/save@v3
+        uses: actions/cache/save@v4
         if: always()
         with:
           path: ${{ env.CCACHE_DIR }}
@@ -348,12 +348,12 @@ jobs:
             docker cp centos-test:/opt/minifi/build/bin /tmp
             sudo chmod -R 777 /cores
           fi
-      - uses: actions/upload-artifact@v3.1.2
+      - uses: actions/upload-artifact@v4
         if: ${{ failure() && env.CORES_EXIST == 'true' }}
         with:
           name: centos-crashes
           path: /cores
-      - uses: actions/upload-artifact@v3.1.2
+      - uses: actions/upload-artifact@v4
         if: ${{ failure() && env.CORES_EXIST == 'true' }}
         with:
           name: centos-binaries
@@ -364,9 +364,9 @@ jobs:
     timeout-minutes: 180
     steps:
       - id: checkout
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
       - name: cache restore
-        uses: actions/cache/restore@v3
+        uses: actions/cache/restore@v4
         with:
           path: ${{ env.CCACHE_DIR }}
           key: docker-ccache-${{github.ref}}-${{github.sha}}
@@ -380,7 +380,7 @@ jobs:
           cmake ${DOCKER_CMAKE_FLAGS} -DDOCKER_CCACHE_DUMP_LOCATION=${{ env.CCACHE_DIR }} ..
           make docker
       - name: cache save
-        uses: actions/cache/save@v3
+        uses: actions/cache/save@v4
         if: always()
         with:
           path: ${{ env.CCACHE_DIR }}
@@ -388,7 +388,7 @@ jobs:
       - name: Save docker image
         run: cd build && docker save -o minifi_docker.tar apacheminificpp:$(grep CMAKE_PROJECT_VERSION:STATIC CMakeCache.txt | cut -d "=" -f2)
       - name: Upload artifact
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: minifi_docker
           path: build/minifi_docker.tar
@@ -399,7 +399,7 @@ jobs:
     timeout-minutes: 180
     steps:
       - id: checkout
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
       - id: run_cmake
         name: Run CMake
         run: |
@@ -407,7 +407,7 @@ jobs:
           cd build
           cmake ${DOCKER_CMAKE_FLAGS} ..
       - name: Download artifact
-        uses: actions/download-artifact@v3
+        uses: actions/download-artifact@v4
         with:
           name: minifi_docker
           path: build
@@ -436,7 +436,7 @@ jobs:
           list-suites: 'failed'
       - name: Upload artifact
         if: failure()
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: behavex_output
           path: build/behavex_output
