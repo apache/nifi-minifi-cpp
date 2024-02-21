@@ -21,6 +21,7 @@
 #include <memory>
 #include <optional>
 #include <string>
+#include <unordered_map>
 
 #include "rocksdb/db.h"
 #include "logging/Logger.h"
@@ -40,9 +41,11 @@ class RocksDatabase {
   static std::unique_ptr<RocksDatabase> create(const DBOptionsPatch& db_options_patch,
                                                const ColumnFamilyOptionsPatch& cf_options_patch,
                                                const std::string& uri,
+                                               const std::unordered_map<std::string, std::string>& db_config_override,
                                                RocksDbMode mode = RocksDbMode::ReadWrite);
 
-  RocksDatabase(std::shared_ptr<RocksDbInstance> db, std::string column, const DBOptionsPatch& db_options_patch, const ColumnFamilyOptionsPatch& cf_options_patch);
+  RocksDatabase(std::shared_ptr<RocksDbInstance> db, std::string column, const DBOptionsPatch& db_options_patch, const ColumnFamilyOptionsPatch& cf_options_patch,
+    const std::unordered_map<std::string, std::string>& db_config_override);
 
   RocksDatabase(const RocksDatabase&) = delete;
   RocksDatabase(RocksDatabase&&) = delete;

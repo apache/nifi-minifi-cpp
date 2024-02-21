@@ -27,9 +27,12 @@ function(use_bundled_rocksdb SOURCE_DIR BINARY_DIR)
     endif()
 
     # Patch to fix build issue on ARM7 architecture: https://github.com/facebook/rocksdb/issues/8609#issuecomment-1009572506
-    set(PATCH_FILE "${SOURCE_DIR}/thirdparty/rocksdb/arm7.patch")
-    set(PC ${Bash_EXECUTABLE} -c "set -x && \
-            (\"${Patch_EXECUTABLE}\" -p1 -R -s -f --dry-run -i \"${PATCH_FILE}\" || \"${Patch_EXECUTABLE}\" -p1 -N -i \"${PATCH_FILE}\")")
+    set(PATCH_FILE_1 "${SOURCE_DIR}/thirdparty/rocksdb/arm7.patch")
+    set(PATCH_FILE_2 "${SOURCE_DIR}/thirdparty/rocksdb/dboptions_equality_operator.patch")
+    set(PC ${Bash_EXECUTABLE} -c "set -x &&\
+            (\"${Patch_EXECUTABLE}\" -p1 -R -s -f --dry-run -i \"${PATCH_FILE_1}\" || \"${Patch_EXECUTABLE}\" -p1 -N -i \"${PATCH_FILE_1}\") &&\
+            (\"${Patch_EXECUTABLE}\" -p1 -R -s -f --dry-run -i \"${PATCH_FILE_2}\" || \"${Patch_EXECUTABLE}\" -p1 -N -i \"${PATCH_FILE_2}\") ")
+
     # Define byproducts
     if (WIN32)
         set(BYPRODUCT "lib/rocksdb.lib")
@@ -49,7 +52,6 @@ function(use_bundled_rocksdb SOURCE_DIR BINARY_DIR)
             -DUSE_RTTI=1
             -DROCKSDB_BUILD_SHARED=OFF
             -DFAIL_ON_WARNINGS=OFF
-            -DCMAKE_CXX_STANDARD=17  # RocksDB fails to build in C++20 mode on GCC 11: https://godbolt.org/z/YeMcEzs8W
             )
     if(PORTABLE)
         list(APPEND ROCKSDB_CMAKE_ARGS -DPORTABLE=ON)
@@ -71,8 +73,8 @@ function(use_bundled_rocksdb SOURCE_DIR BINARY_DIR)
     # Build project
     ExternalProject_Add(
             rocksdb-external
-            URL "https://github.com/facebook/rocksdb/archive/refs/tags/v8.1.1.tar.gz"
-            URL_HASH "SHA256=9102704e169cfb53e7724a30750eeeb3e71307663852f01fa08d5a320e6155a8"
+            URL "https://github.com/facebook/rocksdb/archive/refs/tags/v8.10.2.tar.gz"
+            URL_HASH "SHA256=44b6ec2f4723a0d495762da245d4a59d38704e0d9d3d31c45af4014bee853256"
             SOURCE_DIR "${BINARY_DIR}/thirdparty/rocksdb-src"
             CMAKE_ARGS ${ROCKSDB_CMAKE_ARGS}
             PATCH_COMMAND ${PC}

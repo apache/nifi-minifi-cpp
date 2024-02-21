@@ -56,10 +56,7 @@ bool DatabaseContentRepository::initialize(const std::shared_ptr<minifi::Configu
   setCompactionPeriod(configuration);
 
   auto set_db_opts = [encrypted_env] (minifi::internal::Writable<rocksdb::DBOptions>& db_opts) {
-    db_opts.set(&rocksdb::DBOptions::create_if_missing, true);
-    db_opts.set(&rocksdb::DBOptions::use_direct_io_for_flush_and_compaction, true);
-    db_opts.set(&rocksdb::DBOptions::use_direct_reads, true);
-    db_opts.set(&rocksdb::DBOptions::error_if_exists, false);
+    minifi::internal::setCommonRocksDbOptions(db_opts);
     if (encrypted_env) {
       db_opts.set(&rocksdb::DBOptions::env, encrypted_env.get(), EncryptionEq{});
     } else {
@@ -74,7 +71,7 @@ bool DatabaseContentRepository::initialize(const std::shared_ptr<minifi::Configu
       cf_opts.compression = *compression_type;
     }
   };
-  db_ = minifi::internal::RocksDatabase::create(set_db_opts, set_cf_opts, directory_);
+  db_ = minifi::internal::RocksDatabase::create(set_db_opts, set_cf_opts, directory_, minifi::internal::getGlobalRocksDbOptionsToOverride(configuration));
   if (db_->open()) {
     logger_->log_debug("NiFi Content DB Repository database open {} success", directory_);
     is_valid_ = true;

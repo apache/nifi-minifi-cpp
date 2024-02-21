@@ -36,6 +36,7 @@ class Configuration : public Properties {
   Configuration() : Properties("MiNiFi configuration") {}
 
   static constexpr const char *nifi_volatile_repository_options = "nifi.volatile.repository.options.";
+  static constexpr const char *nifi_global_rocksdb_options = "nifi.global.rocksdb.options.";
 
   // nifi.flow.configuration.file
   static constexpr const char *nifi_default_directory = "nifi.default.directory";

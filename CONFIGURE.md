@@ -425,6 +425,20 @@ Rocksdb has an option to run compaction at specific intervals not just when need
      nifi.flowfile.repository.rocksdb.compaction.period=2 min
      nifi.database.content.repository.rocksdb.compaction.period=2 min
 
+### Global RocksDB options
+
+There are a few options for RocksDB that are set for all used RocksDB databases in MiNiFi:
+    `create_if_missing` is set to `true`
+    `use_direct_io_for_flush_and_compaction` is set to `true`
+    `use_direct_reads` is set to `true`
+    `keep_log_file_num` is set to `5`
+
+Any RocksDB option can be set or overriden using the `nifi.global.rocksdb.options.` prefix in the minifi.properties file.
+
+    # in minifi.properties
+    nifi.global.rocksdb.options.keep_log_file_num=7
+    nifi.global.rocksdb.options.atomic_flush=true
+
 #### Shared database
 
 It is also possible to use a single database to store multiple repositories with the `minifidb://` scheme.

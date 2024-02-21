@@ -67,9 +67,7 @@ void RocksDbStateStorage::onEnable() {
   logger_->log_info("Using {} RocksDbStateStorage", encrypted_env ? "encrypted" : "plaintext");
 
   auto set_db_opts = [encrypted_env] (internal::Writable<rocksdb::DBOptions>& db_opts) {
-    db_opts.set(&rocksdb::DBOptions::create_if_missing, true);
-    db_opts.set(&rocksdb::DBOptions::use_direct_io_for_flush_and_compaction, true);
-    db_opts.set(&rocksdb::DBOptions::use_direct_reads, true);
+    minifi::internal::setCommonRocksDbOptions(db_opts);
     if (encrypted_env) {
       db_opts.set(&rocksdb::DBOptions::env, encrypted_env.get(), core::repository::EncryptionEq{});
     } else {
@@ -81,7 +79,7 @@ void RocksDbStateStorage::onEnable() {
     cf_opts.write_buffer_size = 8ULL << 20U;
     cf_opts.min_write_buffer_number_to_merge = 1;
   };
-  db_ = minifi::internal::RocksDatabase::create(set_db_opts, set_cf_opts, directory_);
+  db_ = minifi::internal::RocksDatabase::create(set_db_opts, set_cf_opts, directory_, minifi::internal::getGlobalRocksDbOptionsToOverride(configuration_));
   if (db_->open()) {
     logger_->log_trace("Successfully opened RocksDB database at {}", directory_.c_str());
   } else {

@@ -42,9 +42,11 @@ void RocksDbInstance::invalidate(const std::lock_guard<std::mutex>&) {
   impl_.reset();
 }
 
-void RocksDbInstance::registerColumnConfig(const std::string& column, const DBOptionsPatch& db_options_patch, const ColumnFamilyOptionsPatch& cf_options_patch) {
+void RocksDbInstance::registerColumnConfig(const std::string& column, const DBOptionsPatch& db_options_patch, const ColumnFamilyOptionsPatch& cf_options_patch,
+    const std::unordered_map<std::string, std::string>& db_config_override) {
   std::lock_guard<std::mutex> db_guard{mtx_};
   logger_->log_trace("Registering column '{}' in database '{}'", column, db_name_);
+  db_config_override_ = db_config_override;
   auto [_, inserted] = column_configs_.insert({column, ColumnConfig{.dbo_patch = db_options_patch, .cfo_patch = cf_options_patch}});
   if (!inserted) {
     throw std::runtime_error("Configuration is already registered for column '" + column + "'");
@@ -60,8 +62,14 @@ void RocksDbInstance::registerColumnConfig(const std::string& column, const DBOp
       Writable<rocksdb::DBOptions> db_opts_writer(db_opts_copy);
       if (db_options_patch) {
         db_options_patch(db_opts_writer);
-        if (db_opts_writer.isModified()) {
-          logger_->log_trace("Requested a difference DBOptions than the one that was used to open the database");
+        rocksdb::ConfigOptions conf_options;
+        conf_options.sanity_level = rocksdb::ConfigOptions::kSanityLevelLooselyCompatible;
+        auto db_config_override_status = rocksdb::GetDBOptionsFromMap(conf_options, db_opts_copy, db_config_override_, &db_opts_copy);
+        if (!db_config_override_status.ok()) {
+          throw std::runtime_error("Failed to override RocksDB options from minifi.properties file: " + db_config_override_status.ToString());
+        }
+        if (db_opts_copy != db_options_) {
+          logger_->log_trace("Requested a different DBOptions than the one that was used to open the database");
           return true;
         }
       }
@@ -130,7 +138,7 @@ std::optional<OpenRocksDb> RocksDbInstance::open(const std::string& column) {
     }
     db_options_ = rocksdb::DBOptions{};
     std::vector<rocksdb::ColumnFamilyDescriptor> cf_descriptors;
-    rocksdb::Status option_status = rocksdb::LoadLatestOptions(conf_options, db_name_, &db_options_, &cf_descriptors);
+    rocksdb::Status latest_option_status = rocksdb::LoadLatestOptions(conf_options, db_name_, &db_options_, &cf_descriptors);
     {
       // apply the database options patchers
       Writable<rocksdb::DBOptions> db_options_writer(db_options_);
@@ -148,14 +156,19 @@ std::optional<OpenRocksDb> RocksDbInstance::open(const std::string& column) {
         }
       }
     }
-    if (option_status.ok()) {
+    auto db_config_override_status = rocksdb::GetDBOptionsFromMap(conf_options, db_options_, db_config_override_, &db_options_);
+    if (!db_config_override_status.ok()) {
+      logger_->log_error("Failed to override RocksDB options from minifi.properties file: {}", db_config_override_status.ToString());
+      return std::nullopt;
+    }
+    if (latest_option_status.ok()) {
       logger_->log_trace("Found existing database '{}', checking compatibility", db_name_);
       rocksdb::Status compat_status = rocksdb::CheckOptionsCompatibility(conf_options, db_name_, db_options_, cf_descriptors);
       if (!compat_status.ok()) {
         logger_->log_error("Incompatible database options: {}", compat_status.ToString());
         return std::nullopt;
       }
-    } else if (option_status.IsNotFound()) {
+    } else if (latest_option_status.IsNotFound()) {
       logger_->log_trace("Database at '{}' not found, creating", db_name_);
       rocksdb::ColumnFamilyOptions default_cf_options;
       if (auto it = column_configs_.find("default"); it != column_configs_.end()) {
@@ -164,8 +177,8 @@ std::optional<OpenRocksDb> RocksDbInstance::open(const std::string& column) {
         }
       }
       cf_descriptors.emplace_back("default", default_cf_options);
-    } else if (!option_status.ok()) {
-      logger_->log_error("Couldn't query database '{}' for options: '{}'", db_name_, option_status.ToString());
+    } else if (!latest_option_status.ok()) {
+      logger_->log_error("Couldn't query database '{}' for options: '{}'", db_name_, latest_option_status.ToString());
       return std::nullopt;
     }
     std::vector<rocksdb::ColumnFamilyHandle*> column_handles;

@@ -51,4 +51,23 @@ std::optional<rocksdb::CompressionType> readConfiguredCompressionType(const std:
 #endif
 }
 
+
+void setCommonRocksDbOptions(Writable<rocksdb::DBOptions>& db_opts) {
+  db_opts.set(&rocksdb::DBOptions::create_if_missing, true);
+  db_opts.set(&rocksdb::DBOptions::use_direct_io_for_flush_and_compaction, true);
+  db_opts.set(&rocksdb::DBOptions::use_direct_reads, true);
+  db_opts.set(&rocksdb::DBOptions::keep_log_file_num, 5);
+}
+
+std::unordered_map<std::string, std::string> getGlobalRocksDbOptionsToOverride(const std::shared_ptr<Configure> &configuration) {
+  std::unordered_map<std::string, std::string> options;
+  const std::string prefix = Configuration::nifi_global_rocksdb_options;
+  for (const auto& [key, value] : configuration->getProperties()) {
+    if (key.starts_with(Configuration::nifi_global_rocksdb_options)) {
+      options[key.substr(prefix.size())] = value;
+    }
+  }
+  return options;
+}
+
 }  // namespace org::apache::nifi::minifi::internal
