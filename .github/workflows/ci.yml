@@ -71,6 +71,8 @@ jobs:
     name: "windows-2022"
     runs-on: windows-2022
     timeout-minutes: 240
+    env:
+      LUA_DIR: D:\a\nifi-minifi-cpp\nifi-minifi-cpp\.lua
     steps:
       - name: Support longpaths
         run: git config --system core.longpaths true
