@@ -31,6 +31,8 @@ jobs:
         name: setup enviroment
         run: |
           echo "PATH=/usr/lib/ccache:/usr/local/opt/ccache/bin:/usr/local/opt/ccache/libexec:$PATH" >> $GITHUB_ENV
+          # macOS no longer searches /usr/local/lib for dynamic libraries, e.g. for libsqlite3odbc.so
+          echo "DYLD_LIBRARY_PATH=$(brew --prefix)/lib" >> $GITHUB_ENV
           echo -e "127.0.0.1\t$HOSTNAME" | sudo tee -a /etc/hosts > /dev/null
       - name: build
         run: |
