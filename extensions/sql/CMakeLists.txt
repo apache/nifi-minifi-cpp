@@ -131,6 +131,8 @@ if(NOT WIN32)
         "-DEXPORTED_IODBC_LIBRARIES=${EXPORTED_IODBC_LIBRARIES}")
 endif()
 
+set(PC "${Patch_EXECUTABLE}" -p1 -i "${CMAKE_SOURCE_DIR}/thirdparty/soci/sqlite3-path.patch")
+
 # Build project
 ExternalProject_Add(
     soci-external
@@ -138,6 +140,7 @@ ExternalProject_Add(
     URL_HASH "SHA256=fa69347b1a1ef74450c0382b665a67bd6777cc7005bbe09726479625bcf1e29c"
     SOURCE_DIR "${CMAKE_CURRENT_BINARY_DIR}/thirdparty/soci-src"
     CMAKE_ARGS ${SOCI_CMAKE_ARGS}
+    PATCH_COMMAND ${PC}
     BUILD_BYPRODUCTS ${SOCI_LIBRARIES_LIST}
     EXCLUDE_FROM_ALL TRUE
 )
