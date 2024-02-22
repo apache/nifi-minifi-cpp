@@ -73,3 +73,30 @@ Feature: TailFile can collect logs from Kubernetes pods
     And the Minifi logs contain the following message: "key:kubernetes.pod value:hello-world-one" in less than 1 second
     And the Minifi logs contain the following message: "key:kubernetes.uid value:" in less than 1 second
     And the Minifi logs contain the following message: "key:kubernetes.container value:echo-one" in less than 1 second
+
+  Scenario: Collect all metrics from the default namespace
+    Given a CollectKubernetesPodMetrics processor in a Kubernetes cluster
+    And the CollectKubernetesPodMetrics processor has a Kubernetes Controller Service which is a Kubernetes Controller Service
+    And a PutFile processor in the Kubernetes cluster
+    And the "Directory" property of the PutFile processor is set to "/tmp/output"
+    And the "success" relationship of the CollectKubernetesPodMetrics processor is connected to the PutFile
+    When the MiNiFi instance starts up
+    Then at least one flowfile with the content '"kind":"PodMetricsList","apiVersion":"metrics.k8s.io/v1beta1"' is placed in the monitored directory in less than 2 minutes
+
+  Scenario: Collect metrics from selected pods
+    Given a CollectKubernetesPodMetrics processor in a Kubernetes cluster
+    And the CollectKubernetesPodMetrics processor has a Kubernetes Controller Service which is a Kubernetes Controller Service with the "Pod Name Filter" property set to ".*one"
+    And a PutFile processor in the Kubernetes cluster
+    And the "Directory" property of the PutFile processor is set to "/tmp/output"
+    And the "success" relationship of the CollectKubernetesPodMetrics processor is connected to the PutFile
+    When the MiNiFi instance starts up
+    Then at least one flowfile with the content '"metadata":{"name":"hello-world-one","namespace":"default"' is placed in the monitored directory in less than 2 minutes
+
+  Scenario: Collect metrics from selected containers
+    Given a CollectKubernetesPodMetrics processor in a Kubernetes cluster
+    And the CollectKubernetesPodMetrics processor has a Kubernetes Controller Service which is a Kubernetes Controller Service with the "Container Name Filter" property set to "echo-[^o].."
+    And a PutFile processor in the Kubernetes cluster
+    And the "Directory" property of the PutFile processor is set to "/tmp/output"
+    And the "success" relationship of the CollectKubernetesPodMetrics processor is connected to the PutFile
+    When the MiNiFi instance starts up
+    Then at least one flowfile with the content '"containers":[{"name":"echo-two","usage":{"cpu":"0","memory":' is placed in the monitored directory in less than 2 minutes
