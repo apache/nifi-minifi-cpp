@@ -100,16 +100,7 @@ class ExecutePythonProcessor : public core::Processor {
   }
 
   void addProperty(const std::string &name, const std::string &description, const std::optional<std::string> &defaultvalue, bool required, bool el,
-      bool sensitive, const std::optional<int64_t>& property_type_code) {
-    auto property = core::PropertyDefinitionBuilder<>::createProperty(name).withDescription(description).isRequired(required).supportsExpressionLanguage(el).isSensitive(sensitive);
-    if (defaultvalue) {
-      property.withDefaultValue(*defaultvalue);
-    }
-    if (property_type_code) {
-      property.withPropertyType(core::StandardPropertyTypes::translateCodeToPropertyType(static_cast<core::StandardPropertyTypes::PropertyTypeCode>(*property_type_code)));
-    }
-    python_properties_.emplace_back(property.build());
-  }
+      bool sensitive, const std::optional<int64_t>& property_type_code);
 
   const std::vector<core::Property> &getPythonProperties() const {
     return python_properties_;
@@ -138,9 +129,10 @@ class ExecutePythonProcessor : public core::Processor {
   std::map<std::string, core::Property> getProperties() const override;
 
  protected:
-  core::Property* findProperty(const std::string& name) const override;
+  const core::Property* findProperty(const std::string& name) const override;
 
  private:
+  mutable std::mutex python_properties_mutex_;
   std::vector<core::Property> python_properties_;
 
   std::string description_;

@@ -156,16 +156,32 @@ std::unique_ptr<PythonScriptEngine> ExecutePythonProcessor::createScriptEngine()
   return engine;
 }
 
-core::Property* ExecutePythonProcessor::findProperty(const std::string& name) const {
+void ExecutePythonProcessor::addProperty(const std::string &name, const std::string &description, const std::optional<std::string> &defaultvalue, bool required, bool el,
+      bool sensitive, const std::optional<int64_t>& property_type_code) {
+  auto property = core::PropertyDefinitionBuilder<>::createProperty(name).withDescription(description).isRequired(required).supportsExpressionLanguage(el).isSensitive(sensitive);
+  if (defaultvalue) {
+    property.withDefaultValue(*defaultvalue);
+  }
+  if (property_type_code) {
+    property.withPropertyType(core::StandardPropertyTypes::translateCodeToPropertyType(static_cast<core::StandardPropertyTypes::PropertyTypeCode>(*property_type_code)));
+  }
+
+  std::lock_guard<std::mutex> lock(python_properties_mutex_);
+  python_properties_.emplace_back(property.build());
+}
+
+const core::Property* ExecutePythonProcessor::findProperty(const std::string& name) const {
   if (auto prop_ptr = core::ConfigurableComponent::findProperty(name)) {
     return prop_ptr;
   }
+
+  std::lock_guard<std::mutex> lock(python_properties_mutex_);
 
   auto it = ranges::find_if(python_properties_, [&name](const auto& item){
     return item.getName() == name;
   });
   if (it != python_properties_.end()) {
-    return const_cast<core::Property*>(&*it);
+    return &*it;
   }
 
   return nullptr;
@@ -174,7 +190,7 @@ core::Property* ExecutePythonProcessor::findProperty(const std::string& name) co
 std::map<std::string, core::Property> ExecutePythonProcessor::getProperties() const {
   auto result = ConfigurableComponent::getProperties();
 
-  std::lock_guard<std::mutex> lock(configuration_mutex_);
+  std::lock_guard<std::mutex> lock(python_properties_mutex_);
 
   for (const auto &property : python_properties_) {
     result.insert({ property.getName(), property });

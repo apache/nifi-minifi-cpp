@@ -36,12 +36,17 @@ ConfigurableComponent::ConfigurableComponent()
 
 ConfigurableComponent::~ConfigurableComponent() = default;
 
-Property* ConfigurableComponent::findProperty(const std::string& name) const {
+const Property* ConfigurableComponent::findProperty(const std::string& name) const {
   const auto& it = properties_.find(name);
   if (it != properties_.end()) {
-    return const_cast<Property*>(&it->second);
+    return &it->second;
   }
   return nullptr;
+}
+
+Property* ConfigurableComponent::findProperty(const std::string& name) {
+  const auto& const_self = *this;
+  return const_cast<Property*>(const_self.findProperty(name));
 }
 
 bool ConfigurableComponent::getProperty(const std::string &name, Property &prop) const {

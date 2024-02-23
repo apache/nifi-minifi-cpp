@@ -212,9 +212,10 @@ class ConfigurableComponent {
   // Dynamic properties
   std::map<std::string, Property> dynamic_properties_;
 
-  virtual Property* findProperty(const std::string& name) const;
+  virtual const Property* findProperty(const std::string& name) const;
 
  private:
+  Property* findProperty(const std::string& name);
   std::shared_ptr<logging::Logger> logger_;
 
   bool createDynamicProperty(const std::string &name, const std::string &value);

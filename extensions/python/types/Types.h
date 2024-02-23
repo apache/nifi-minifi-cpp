@@ -22,6 +22,7 @@
 #include <utility>
 
 #include "../PyException.h"
+#include "utils/gsl.h"
 
 namespace org::apache::nifi::minifi::extensions::python {
 
@@ -164,7 +165,7 @@ class Long : public ReferenceHolder<reference_type> {
     if (long_value == -1 && PyErr_Occurred()) {
       throw PyException();
     }
-    return static_cast<int64_t>(long_value);
+    return gsl::narrow<int64_t>(long_value);
   }
 
   static BorrowedLong fromTuple(PyObject* tuple, Py_ssize_t location) requires(reference_type == ReferenceType::BORROWED) {
