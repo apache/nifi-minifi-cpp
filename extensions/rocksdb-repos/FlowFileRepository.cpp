@@ -208,7 +208,8 @@ bool FlowFileRepository::initialize(const std::shared_ptr<Configure> &configure)
       cf_opts.compression = *compression_type;
     }
   };
-  db_ = minifi::internal::RocksDatabase::create(db_options, cf_options, directory_, minifi::internal::getGlobalRocksDbOptionsToOverride(configure));
+  db_ = minifi::internal::RocksDatabase::create(db_options, cf_options, directory_,
+    minifi::internal::getRocksDbOptionsToOverride(configure, Configure::nifi_flowfile_repository_rocksdb_options));
   if (db_->open()) {
     logger_->log_debug("NiFi FlowFile Repository database open {} success", directory_);
     return true;

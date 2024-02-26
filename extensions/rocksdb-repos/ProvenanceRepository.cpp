@@ -58,7 +58,8 @@ bool ProvenanceRepository::initialize(const std::shared_ptr<org::apache::nifi::m
     }
   };
 
-  db_ = minifi::internal::RocksDatabase::create(db_options, cf_options, directory_, minifi::internal::getGlobalRocksDbOptionsToOverride(config));
+  db_ = minifi::internal::RocksDatabase::create(db_options, cf_options, directory_,
+    minifi::internal::getRocksDbOptionsToOverride(config, Configure::nifi_provenance_repository_rocksdb_options));
   if (db_->open()) {
     logger_->log_debug("MiNiFi Provenance Repository database open {} success", directory_);
   } else {

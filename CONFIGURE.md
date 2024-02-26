@@ -439,6 +439,14 @@ Any RocksDB option can be set or overriden using the `nifi.global.rocksdb.option
     nifi.global.rocksdb.options.keep_log_file_num=7
     nifi.global.rocksdb.options.atomic_flush=true
 
+RocksDB options can also be overridden for a specific repository using the `nifi.<repository>.rocksdb.options.` prefix in the minifi.properties file.
+
+    # in minifi.properties
+    nifi.flowfile.repository.rocksdb.options.keep_log_file_num=3
+    nifi.content.repository.rocksdb.options.atomic_flush=true
+    nifi.provenance.repository.rocksdb.options.use_direct_reads=false
+    nifi.state.storage.rocksdb.options.use_direct_io_for_flush_and_compaction=false
+
 #### Shared database
 
 It is also possible to use a single database to store multiple repositories with the `minifidb://` scheme.

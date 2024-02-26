@@ -79,7 +79,8 @@ void RocksDbStateStorage::onEnable() {
     cf_opts.write_buffer_size = 8ULL << 20U;
     cf_opts.min_write_buffer_number_to_merge = 1;
   };
-  db_ = minifi::internal::RocksDatabase::create(set_db_opts, set_cf_opts, directory_, minifi::internal::getGlobalRocksDbOptionsToOverride(configuration_));
+  db_ = minifi::internal::RocksDatabase::create(set_db_opts, set_cf_opts, directory_,
+    minifi::internal::getRocksDbOptionsToOverride(configuration_, Configure::nifi_state_storage_rocksdb_options));
   if (db_->open()) {
     logger_->log_trace("Successfully opened RocksDB database at {}", directory_.c_str());
   } else {

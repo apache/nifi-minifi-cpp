@@ -71,7 +71,8 @@ bool DatabaseContentRepository::initialize(const std::shared_ptr<minifi::Configu
       cf_opts.compression = *compression_type;
     }
   };
-  db_ = minifi::internal::RocksDatabase::create(set_db_opts, set_cf_opts, directory_, minifi::internal::getGlobalRocksDbOptionsToOverride(configuration));
+  db_ = minifi::internal::RocksDatabase::create(set_db_opts, set_cf_opts, directory_,
+    minifi::internal::getRocksDbOptionsToOverride(configuration, Configure::nifi_content_repository_rocksdb_options));
   if (db_->open()) {
     logger_->log_debug("NiFi Content DB Repository database open {} success", directory_);
     is_valid_ = true;

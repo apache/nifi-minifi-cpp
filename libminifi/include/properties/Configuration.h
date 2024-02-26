@@ -37,6 +37,10 @@ class Configuration : public Properties {
 
   static constexpr const char *nifi_volatile_repository_options = "nifi.volatile.repository.options.";
   static constexpr const char *nifi_global_rocksdb_options = "nifi.global.rocksdb.options.";
+  static constexpr const char *nifi_flowfile_repository_rocksdb_options = "nifi.flowfile.repository.rocksdb.options.";
+  static constexpr const char *nifi_content_repository_rocksdb_options = "nifi.content.repository.rocksdb.options.";
+  static constexpr const char *nifi_provenance_repository_rocksdb_options = "nifi.provenance.repository.rocksdb.options.";
+  static constexpr const char *nifi_state_storage_rocksdb_options = "nifi.state.storage.rocksdb.options.";
 
   // nifi.flow.configuration.file
   static constexpr const char *nifi_default_directory = "nifi.default.directory";
