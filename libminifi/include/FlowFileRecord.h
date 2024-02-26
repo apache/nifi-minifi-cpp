@@ -66,7 +66,7 @@ class FlowFileRecord : public core::FlowFile {
   static std::shared_ptr<FlowFileRecord> DeSerialize(const std::string& key, const std::shared_ptr<core::Repository>& flowRepository,
       const std::shared_ptr<core::ContentRepository> &content_repo, utils::Identifier &container);
 
-  std::string getContentFullPath() {
+  std::string getContentFullPath() const {
     return claim_ ? claim_->getContentFullPath() : "";
   }
 

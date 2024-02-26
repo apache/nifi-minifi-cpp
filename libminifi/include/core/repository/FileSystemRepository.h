@@ -18,11 +18,8 @@
 
 #pragma once
 
-#include <memory>
 #include <string>
 #include <string_view>
-#include <utility>
-#include <algorithm>
 
 #include "../ContentRepository.h"
 #include "properties/Configure.h"
@@ -31,21 +28,25 @@
 
 namespace org::apache::nifi::minifi::core::repository {
 
-class FileSystemRepository : public core::ContentRepository {
+class FileSystemRepository : public ContentRepository {
  public:
-  explicit FileSystemRepository(std::string_view name = className<FileSystemRepository>())
-    : core::ContentRepository(name),
+  explicit FileSystemRepository(const std::string_view name = className<FileSystemRepository>())
+    : ContentRepository(name),
       logger_(logging::LoggerFactory<FileSystemRepository>::getLogger()) {
   }
 
+  FileSystemRepository(FileSystemRepository&&) = delete;
+  FileSystemRepository(const FileSystemRepository&) = delete;
+  FileSystemRepository& operator=(FileSystemRepository&&) = delete;
+  FileSystemRepository& operator=(const FileSystemRepository&) = delete;
   ~FileSystemRepository() override = default;
 
-  bool initialize(const std::shared_ptr<minifi::Configure>& configuration) override;
-  bool exists(const minifi::ResourceClaim& streamId) override;
-  std::shared_ptr<io::BaseStream> write(const minifi::ResourceClaim& claim, bool append = false) override;
-  std::shared_ptr<io::BaseStream> read(const minifi::ResourceClaim& claim) override;
+  bool initialize(const std::shared_ptr<Configure>& configuration) override;
+  bool exists(const ResourceClaim& streamId) override;
+  std::shared_ptr<io::BaseStream> write(const ResourceClaim& claim, bool append = false) override;
+  std::shared_ptr<io::BaseStream> read(const ResourceClaim& claim) override;
 
-  bool close(const minifi::ResourceClaim& claim) override {
+  bool close(const ResourceClaim& claim) override {
     return remove(claim);
   }
 
@@ -57,13 +58,9 @@ class FileSystemRepository : public core::ContentRepository {
     return utils::file::path_size(directory_);
   }
 
-  uint64_t getRepositoryEntryCount() const override {
-    auto dir_it = std::filesystem::recursive_directory_iterator(directory_, std::filesystem::directory_options::skip_permission_denied);
-    return std::count_if(
-      std::filesystem::begin(dir_it),
-      std::filesystem::end(dir_it),
-      [](auto& entry) { return entry.is_regular_file(); });
-  }
+  size_t size(const ResourceClaim& claim) override;
+
+  uint64_t getRepositoryEntryCount() const override;
 
  protected:
   bool removeKey(const std::string& content_path) override;
