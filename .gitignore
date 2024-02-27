@@ -64,6 +64,7 @@ __pycache__/
 /content_repository
 /provenance_repository
 /logs
+msi/WixWin.wsi
 
 .vs/**
 *.swp

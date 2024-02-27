@@ -1,0 +1,3 @@
+<Feature Id="VCRedist" Title="Visual C++ 14.0 Runtime" AllowAdvertise="yes"  Level="1">
+  <MergeRef Id="VCRedist"/>
+</Feature>

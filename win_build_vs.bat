@@ -60,6 +60,7 @@ set strict_gsl_checks=
 set redist=
 set real_odbc=OFF
 set sccache_arg=
+set without_redist=OFF
 
 set arg_counter=0
 for %%x in (%*) do (
@@ -104,6 +105,7 @@ for %%x in (%*) do (
     if [%%~x] EQU [/RO]               set real_odbc=ON
     if [%%~x] EQU [/NINJA]            set generator="Ninja"
     if [%%~x] EQU [/SCCACHE]          set "sccache_arg=-DCMAKE_C_COMPILER_LAUNCHER=sccache -DCMAKE_CXX_COMPILER_LAUNCHER=sccache"
+    if [%%~x] EQU [/NO_REDIST]        set without_redist=ON
 )
 
 mkdir %builddir%
@@ -124,7 +126,7 @@ cmake -G %generator% %build_platform_cmd% -DINSTALLER_MERGE_MODULES=%installer_m
         -DENABLE_BUSTACHE=%enable_bustache% -DENABLE_ENCRYPT_CONFIG=%enable_encrypt_config% -DENABLE_LUA_SCRIPTING=%enable_lua_scripting% -DENABLE_SMB=%enable_smb% ^
         -DENABLE_MQTT=%enable_mqtt% -DENABLE_OPC=%enable_opc% -DENABLE_OPENWSMAN=%enable_openwsman% -DENABLE_OPS=%enable_ops% -DENABLE_PCAP=%enable_pcap% ^
         -DENABLE_PYTHON_SCRIPTING=%enable_python_scripting% -DENABLE_SENSORS=%enable_sensors% -DENABLE_USB_CAMERA=%enable_usb_camera% -DENABLE_GRAFANA_LOKI=%enable_grafana_loki% ^
-        -DBUILD_ROCKSDB=ON -DUSE_SYSTEM_UUID=OFF -DENABLE_LIBARCHIVE=ON -DENABLE_WEL=ON -DMINIFI_FAIL_ON_WARNINGS=OFF -DSKIP_TESTS=%skiptests% ^
+        -DBUILD_ROCKSDB=ON -DUSE_SYSTEM_UUID=OFF -DENABLE_LIBARCHIVE=ON -DENABLE_WEL=ON -DMINIFI_FAIL_ON_WARNINGS=OFF -DSKIP_TESTS=%skiptests% -DINSTALLER_WITHOUT_REDISTRIBUTABLES=%without_redist% ^
         %strict_gsl_checks% %redist% %sccache_arg% %EXTRA_CMAKE_ARGUMENTS% "%scriptdir%" && %buildcmd%
 IF %ERRORLEVEL% NEQ 0 EXIT /b %ERRORLEVEL%
 if [%cpack%] EQU [ON] (
