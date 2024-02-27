@@ -48,7 +48,7 @@ function(use_bundled_libsodium SOURCE_DIR BINARY_DIR)
     if (WIN32)
         ExternalProject_Add(
                 libsodium-external
-                URL "${LIBSODIUM_OFFICIAL_MIRROR_URL} ${LIBSODIUM_GITHUB_MIRROR_URL} ${LIBSODIUM_GENTOO_MIRROR_URL}"
+                URL "${LIBSODIUM_OFFICIAL_MIRROR_URL}" "${LIBSODIUM_GITHUB_MIRROR_URL}" "${LIBSODIUM_GENTOO_MIRROR_URL}"
                 URL_HASH ${LIBSODIUM_URL_HASH}
                 SOURCE_DIR "${BINARY_DIR}/thirdparty/libsodium-src"
                 LIST_SEPARATOR % # This is needed for passing semicolon-separated lists
@@ -62,7 +62,7 @@ function(use_bundled_libsodium SOURCE_DIR BINARY_DIR)
 
         ExternalProject_Add(
                 libsodium-external
-                URL "${LIBSODIUM_OFFICIAL_MIRROR_URL} ${LIBSODIUM_GITHUB_MIRROR_URL} ${LIBSODIUM_GENTOO_MIRROR_URL}"
+                URL "${LIBSODIUM_OFFICIAL_MIRROR_URL}" "${LIBSODIUM_GITHUB_MIRROR_URL}" "${LIBSODIUM_GENTOO_MIRROR_URL}"
                 URL_HASH ${LIBSODIUM_URL_HASH}
                 BUILD_IN_SOURCE true
                 SOURCE_DIR "${BINARY_DIR}/thirdparty/libsodium-src"
