@@ -350,11 +350,10 @@ ${WIX_EXTRA_FEATURES}
                         RestartServiceDelayInSeconds="60"/>
                 </ServiceInstall>
                 <RegistryValue Root="HKLM" Key="SYSTEM\CurrentControlSet\Services\Apache NiFi MiNiFi" Type="integer" Name="DelayedAutostart" Value="1"/>
-                <!--
                 <ServiceControl Id="ServiceControl_Start"
                       Name="Apache NiFi MiNiFi"
                       Start="install"
-                      Wait="no" />-->
+                      Wait="no" />
                 <ServiceControl Id="ServiceControl_Stop"
                                 Name="Apache NiFi MiNiFi"
                                 Stop="both"
@@ -379,11 +378,10 @@ ${WIX_EXTRA_FEATURES}
                                 Start="auto"
                                 Interactive="no" />
                 <RegistryValue Root="HKLM" Key="SYSTEM\CurrentControlSet\Services\Apache NiFi MiNiFi" Type="integer" Name="DelayedAutostart" Value="1"/>
-                <!--
-                <ServiceControl Id="ServiceControl_Start"
+                <ServiceControl Id="ServiceControl_Start_WithPassword"
                       Name="Apache NiFi MiNiFi"
                       Start="install"
-                      Wait="no" />-->
+                      Wait="no" />
                 <ServiceControl Id="ServiceControl_Stop_WithPassword"
                                 Name="Apache NiFi MiNiFi"
                                 Stop="both"
