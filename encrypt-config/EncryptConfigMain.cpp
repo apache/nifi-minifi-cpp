@@ -48,6 +48,9 @@ int main(int argc, char* argv[]) try {
   argument_parser.add_argument("--property-value")
       .metavar("VALUE")
       .help(minifi::utils::string::join_pack("The new value of the sensitive property (", OPERATION_FLOW_CONFIG, " only)"));
+  argument_parser.add_argument("--re-encrypt")
+      .flag()
+      .help(minifi::utils::string::join_pack("Decrypt all properties with the old key and re-encrypt them with a new key (", OPERATION_FLOW_CONFIG, " only)"));
 
   try {
     argument_parser.parse_args(argc, argv);
@@ -62,10 +65,11 @@ int main(int argc, char* argv[]) try {
   if (operation == OPERATION_MINIFI_PROPERTIES) {
     encrypt_config.encryptSensitiveValuesInMinifiProperties();
   } else if (operation == OPERATION_FLOW_CONFIG) {
+    auto re_encrypt = argument_parser.get<bool>("--re-encrypt");
     auto component_id = argument_parser.present("--component-id");
     auto property_name = argument_parser.present("--property-name");
     auto property_value = argument_parser.present("--property-value");
-    encrypt_config.encryptSensitiveValuesInFlowConfig(component_id, property_name, property_value);
+    encrypt_config.encryptSensitiveValuesInFlowConfig(re_encrypt, component_id, property_name, property_value);
   } else if (operation == OPERATION_WHOLE_FLOW_CONFIG_FILE) {
     encrypt_config.encryptWholeFlowConfigFile();
   } else {
@@ -73,7 +77,7 @@ int main(int argc, char* argv[]) try {
     return 4;
   }
 
-  if ((operation == OPERATION_MINIFI_PROPERTIES || operation == OPERATION_WHOLE_FLOW_CONFIG_FILE) && encrypt_config.isReencrypting()) {
+  if ((operation == OPERATION_MINIFI_PROPERTIES || operation == OPERATION_WHOLE_FLOW_CONFIG_FILE) && encrypt_config.isReEncrypting()) {
     std::cout << "WARNING: an .old key was provided, which is used for both " << OPERATION_MINIFI_PROPERTIES << " and " << OPERATION_WHOLE_FLOW_CONFIG_FILE << ".\n"
         << "If both are currently encrypted, make sure to run " << argv[0] << " to re-encrypt both before removing the .old key,\n"
         << "otherwise you won't be able to recover the encrypted data!\n";

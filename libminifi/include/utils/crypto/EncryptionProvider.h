@@ -47,7 +47,7 @@ class EncryptionProvider {
   }
 
  private:
-  const XSalsa20Cipher cipher_impl_;
+  XSalsa20Cipher cipher_impl_;
 };
 
 }  // namespace org::apache::nifi::minifi::utils::crypto
