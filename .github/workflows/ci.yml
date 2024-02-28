@@ -256,7 +256,7 @@ jobs:
       - id: flake8_check
         run: cd build && make flake8
       - id: files
-        uses: Ana06/get-changed-files@v2.2.0
+        uses: Ana06/get-changed-files@v2.3.0
         continue-on-error: true
       - name: clang-tidy
         run: |
