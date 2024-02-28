@@ -17,7 +17,7 @@
 # under the License.
 
 file(GLOB SQL_MOCK_SOURCES  "mocks/*.cpp")
-add_minifi_library(minifi-sql-mocks STATIC "${SQL_MOCK_SOURCES}")
+add_minifi_library(minifi-sql-mocks STATIC ${SQL_MOCK_SOURCES})
 target_include_directories(minifi-sql-mocks BEFORE PRIVATE "${CMAKE_SOURCE_DIR}/libminifi/include")
 target_include_directories(minifi-sql-mocks BEFORE PRIVATE "${CMAKE_SOURCE_DIR}/extensions/sql")
 target_include_directories(minifi-sql-mocks BEFORE PRIVATE "mocks")

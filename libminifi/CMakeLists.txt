@@ -66,7 +66,7 @@ endif()
 file(GLOB PROCESSOR_SOURCES  "src/processors/*.cpp" )
 
 
-add_minifi_library(core-minifi SHARED "${SOURCES}")
+add_minifi_library(core-minifi SHARED ${SOURCES})
 target_compile_definitions(core-minifi PRIVATE "LIBMINIFI=1")
 if(WIN32)
     set_target_properties(core-minifi PROPERTIES WINDOWS_EXPORT_ALL_SYMBOLS TRUE)

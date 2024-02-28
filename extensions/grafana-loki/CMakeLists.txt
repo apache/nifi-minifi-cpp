@@ -51,7 +51,7 @@ else()
     )
 endif()
 
-add_minifi_library(minifi-grafana-loki SHARED "${SOURCES}")
+add_minifi_library(minifi-grafana-loki SHARED ${SOURCES})
 target_include_directories(minifi-grafana-loki PRIVATE BEFORE "${CMAKE_SOURCE_DIR}/extensions/http-curl")
 target_link_libraries(minifi-grafana-loki ${LIBMINIFI} minifi-http-curl)
 add_dependencies(minifi-grafana-loki minifi-http-curl)
