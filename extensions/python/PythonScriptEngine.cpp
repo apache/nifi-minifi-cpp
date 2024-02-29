@@ -239,19 +239,19 @@ void PythonScriptEngine::initializeProcessorObject(const std::string& python_cla
       throw PythonScriptException(PyException().what());
     }
 
-    auto result = PyObject_SetAttrString(processor_instance_.get(), "logger", bindings_[std::string("log")]->get());
+    auto result = PyObject_SetAttrString(processor_instance_.get(), "logger", bindings_[std::string_view("log")]->get());
     if (result < 0) {
       throw PythonScriptException("Could not bind 'logger' object to '" + python_class_name + "' python processor object");
     }
-    result = PyObject_SetAttrString(processor_instance_.get(), "REL_SUCCESS", bindings_[std::string("REL_SUCCESS")]->get());
+    result = PyObject_SetAttrString(processor_instance_.get(), "REL_SUCCESS", bindings_[std::string_view("REL_SUCCESS")]->get());
     if (result < 0) {
       throw PythonScriptException("Could not bind 'REL_SUCCESS' object to '" + python_class_name + "' python processor object");
     }
-    result = PyObject_SetAttrString(processor_instance_.get(), "REL_FAILURE", bindings_[std::string("REL_FAILURE")]->get());
+    result = PyObject_SetAttrString(processor_instance_.get(), "REL_FAILURE", bindings_[std::string_view("REL_FAILURE")]->get());
     if (result < 0) {
       throw PythonScriptException("Could not bind 'REL_FAILURE' object to '" + python_class_name + "' python processor object");
     }
-    result = PyObject_SetAttrString(processor_instance_.get(), "REL_ORIGINAL", bindings_[std::string("REL_ORIGINAL")]->get());
+    result = PyObject_SetAttrString(processor_instance_.get(), "REL_ORIGINAL", bindings_[std::string_view("REL_ORIGINAL")]->get());
     if (result < 0) {
       throw PythonScriptException("Could not bind 'REL_ORIGINAL' object to '" + python_class_name + "' python processor object");
     }

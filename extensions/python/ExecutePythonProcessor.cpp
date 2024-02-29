@@ -45,7 +45,7 @@ void ExecutePythonProcessor::initialize() {
 
   try {
     loadScript();
-  } catch(const std::runtime_error& err) {
+  } catch(const std::runtime_error&) {
     return;
   }
 
