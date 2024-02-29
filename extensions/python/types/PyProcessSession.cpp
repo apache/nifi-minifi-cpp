@@ -334,6 +334,17 @@ PyObject* PyProcessSessionObject::transferToCustomRelationship(PyProcessSessionO
     throw PyException();
   }
 
+  if (!relationship_name) {
+    PyErr_SetString(PyExc_AttributeError, "Custom relationship name is invalid!");
+    return nullptr;
+  }
+
+  std::string relationship_name_str(relationship_name);
+  if (relationship_name_str.empty()) {
+    PyErr_SetString(PyExc_AttributeError, "Custom relationship name is empty!");
+    return nullptr;
+  }
+
   const auto flow_file = reinterpret_cast<PyScriptFlowFile*>(script_flow_file)->script_flow_file_.lock();
   if (!flow_file) {
     PyErr_SetString(PyExc_AttributeError, "tried reading FlowFile outside 'on_trigger'");
@@ -341,7 +352,7 @@ PyObject* PyProcessSessionObject::transferToCustomRelationship(PyProcessSessionO
   }
 
   BorrowedStr name = BorrowedStr::fromTuple(args, 0);
-  session->transferToCustomRelationship(flow_file, relationship_name);
+  session->transferToCustomRelationship(flow_file, relationship_name_str);
   Py_RETURN_NONE;
 }
 
