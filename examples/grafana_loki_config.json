@@ -1,0 +1,52 @@
+{
+    "rootGroup": {
+        "name": "MiNiFi Flow",
+        "processors": [
+            {
+                "name": "Tail /tmp/input/test_file.log",
+                "identifier": "962c76c4-013e-40c0-ac21-9fd6db4593a3",
+                "type": "org.apache.nifi.processors.standard.TailFile",
+                "schedulingStrategy": "TIMER_DRIVEN",
+                "schedulingPeriod": "1 sec",
+                "properties": {
+                    "File to Tail": "/tmp/input/test_file.log"
+                },
+                "autoTerminatedRelationships": []
+            },
+            {
+                "name": "PushGrafanaLokiREST",
+                "identifier": "6a9f6c0e-f70c-4778-be8b-ca2494eb0042",
+                "type": "org.apache.nifi.processors.standard.PushGrafanaLokiREST",
+                "schedulingStrategy": "EVENT_DRIVEN",
+                "properties": {
+                    "Url": "http://127.0.0.1:3100/",
+                    "Stream Labels": "job=minifi,id=logs",
+                    "Log Line Metadata Attributes": "filename",
+                    "Max Batch Size": "50"
+                },
+                "autoTerminatedRelationships": [
+                    "success",
+                    "failure"
+                ]
+            }
+        ],
+        "funnels": [],
+        "connections": [
+            {
+                "identifier": "32f1aa1b-05c8-4fc1-941f-1e3dc70cb1b2",
+                "name": "TailFile/success/PushGrafanaLokiREST",
+                "source": {
+                    "id": "962c76c4-013e-40c0-ac21-9fd6db4593a3"
+                },
+                "destination": {
+                    "id": "6a9f6c0e-f70c-4778-be8b-ca2494eb0042"
+                },
+                "selectedRelationships": [
+                    "success"
+                ]
+            }
+        ],
+        "remoteProcessGroups": [],
+        "controllerServices": []
+    }
+}

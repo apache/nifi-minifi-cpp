@@ -1,0 +1,86 @@
+{
+    "rootGroup": {
+        "name": "MiNiFi Flow",
+        "processors": [
+            {
+                "name": "Get files from /tmp/input",
+                "identifier": "a8fd96f8-6f3e-4ab8-9cc7-7dcb3304d60b",
+                "type": "org.apache.nifi.processors.standard.GetFile",
+                "schedulingStrategy": "TIMER_DRIVEN",
+                "schedulingPeriod": "2 sec",
+                "penaltyDuration": "30 sec",
+                "yieldDuration": "1 sec",
+                "properties": {
+                    "Input Directory": "/tmp/input"
+                },
+                "autoTerminatedRelationships": []
+            },
+            {
+                "name": "Split text by lines skipping the first 3 header lines",
+                "identifier": "40b45f52-ae1d-443c-9465-7e070ce3bea0",
+                "type": "org.apache.nifi.processors.standard.SplitText",
+                "schedulingStrategy": "EVENT_DRIVEN",
+                "schedulingPeriod": "1 sec",
+                "penaltyDuration": "30 sec",
+                "yieldDuration": "1 sec",
+                "properties": {
+                    "Header Line Count": "3",
+                    "Line Split Count": "1",
+                    "Remove Trailing Newlines": "false"
+                },
+                "autoTerminatedRelationships": [
+                    "failure",
+                    "original"
+                ]
+            },
+            {
+                "name": "Put data to TCP server",
+                "identifier": "11167a2c-9778-48ba-be2d-d1f9f4b0433f",
+                "type": "org.apache.nifi.processors.standard.PutTCP",
+                "schedulingStrategy": "EVENT_DRIVEN",
+                "schedulingPeriod": "1 sec",
+                "penaltyDuration": "30 sec",
+                "yieldDuration": "1 sec",
+                "properties": {
+                    "Hostname": "192.168.1.5",
+                    "Port": "8081"
+                },
+                "autoTerminatedRelationships": [
+                    "success",
+                    "failure"
+                ]
+            }
+        ],
+        "funnels": [],
+        "connections": [
+            {
+                "identifier": "76bc36d3-f484-49a4-ad69-bec47cd921c8",
+                "name": "GetFile/success/SplitText",
+                "source": {
+                    "id": "a8fd96f8-6f3e-4ab8-9cc7-7dcb3304d60b"
+                },
+                "destination": {
+                    "id": "40b45f52-ae1d-443c-9465-7e070ce3bea0"
+                },
+                "selectedRelationships": [
+                    "success"
+                ]
+            },
+            {
+                "identifier": "25ee2e5c-fc74-4575-a510-db33e6c5683d",
+                "name": "SplitText/splits/PutTCP",
+                "source": {
+                    "id": "40b45f52-ae1d-443c-9465-7e070ce3bea0"
+                },
+                "destination": {
+                    "id": "11167a2c-9778-48ba-be2d-d1f9f4b0433f"
+                },
+                "selectedRelationships": [
+                    "splits"
+                ]
+            }
+        ],
+        "remoteProcessGroups": [],
+        "controllerServices": []
+    }
+}

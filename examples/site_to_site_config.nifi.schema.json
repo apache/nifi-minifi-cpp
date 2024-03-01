@@ -1,0 +1,195 @@
+{
+    "encodingVersion": {
+        "majorVersion": 2,
+        "minorVersion": 0
+    },
+    "maxTimerDrivenThreadCount": 1,
+    "maxEventDrivenThreadCount": 1,
+    "parameterContexts": [],
+    "rootGroup": {
+        "identifier": "1c2f34d2-ee57-448a-b150-8140f0f7643c",
+        "instanceIdentifier": "9af45830-320e-437e-8204-dcd3c2933aa6",
+        "name": "root",
+        "position": {
+            "x": 0.0,
+            "y": 0.0
+        },
+        "processGroups": [],
+        "remoteProcessGroups": [
+            {
+                "identifier": "7b8d0cc8-b565-4b98-b5e5-da30e15e8cb1",
+                "instanceIdentifier": "bcfea0da-bc85-4cf7-86ec-da8745567213",
+                "name": "http://localhost:8080/nifi",
+                "position": {
+                    "x": 368.2260680186778,
+                    "y": 52.5556140585133
+                },
+                "targetUri": "http://localhost:8080/nifi",
+                "targetUris": "http://localhost:8080/nifi",
+                "communicationsTimeout": "30 secs",
+                "yieldDuration": "3 sec",
+                "transportProtocol": "RAW",
+                "inputPorts": [
+                    {
+                        "identifier": "4222cd3a-746e-3497-abd0-b7695faa750c",
+                        "instanceIdentifier": "4222cd3a-746e-3497-abd0-b7695faa750c",
+                        "remoteGroupId": "7b8d0cc8-b565-4b98-b5e5-da30e15e8cb1",
+                        "concurrentlySchedulableTaskCount": 1,
+                        "useCompression": true,
+                        "componentType": "REMOTE_INPUT_PORT",
+                        "targetId": "4222cd3a-746e-3497-abd0-b7695faa750c",
+                        "scheduledState": "RUNNING",
+                        "groupIdentifier": "7b8d0cc8-b565-4b98-b5e5-da30e15e8cb1"
+                    }
+                ],
+                "outputPorts": [],
+                "componentType": "REMOTE_PROCESS_GROUP",
+                "groupIdentifier": "1c2f34d2-ee57-448a-b150-8140f0f7643c"
+            }
+        ],
+        "processors": [
+            {
+                "identifier": "e974fc57-9bb5-42e1-a807-1da267e6b281",
+                "instanceIdentifier": "9def2e01-4843-486d-9e87-a60af90b874c",
+                "name": "Get files from /tmp/input",
+                "comments": "",
+                "position": {
+                    "x": -0.7739701282948772,
+                    "y": 45.5556140585133
+                },
+                "type": "org.apache.nifi.minifi.processors.GetFile",
+                "bundle": {
+                    "group": "org.apache.nifi.minifi",
+                    "artifact": "minifi-standard-processors",
+                    "version": "0.15.0"
+                },
+                "properties": {
+                    "Keep Source File": "false",
+                    "Minimum File Age": "0 sec",
+                    "Polling Interval": "0 sec",
+                    "Input Directory": "/tmp/input",
+                    "Maximum File Age": "0 sec",
+                    "Batch Size": "10",
+                    "Maximum File Size": "0 B",
+                    "Minimum File Size": "0 B",
+                    "Ignore Hidden Files": "true",
+                    "Recurse Subdirectories": "true",
+                    "File Filter": ".*"
+                },
+                "propertyDescriptors": {
+                    "Keep Source File": {
+                        "name": "Keep Source File",
+                        "identifiesControllerService": false,
+                        "sensitive": false
+                    },
+                    "Minimum File Age": {
+                        "name": "Minimum File Age",
+                        "identifiesControllerService": false,
+                        "sensitive": false
+                    },
+                    "Polling Interval": {
+                        "name": "Polling Interval",
+                        "identifiesControllerService": false,
+                        "sensitive": false
+                    },
+                    "Input Directory": {
+                        "name": "Input Directory",
+                        "identifiesControllerService": false,
+                        "sensitive": false
+                    },
+                    "Maximum File Age": {
+                        "name": "Maximum File Age",
+                        "identifiesControllerService": false,
+                        "sensitive": false
+                    },
+                    "Batch Size": {
+                        "name": "Batch Size",
+                        "identifiesControllerService": false,
+                        "sensitive": false
+                    },
+                    "Maximum File Size": {
+                        "name": "Maximum File Size",
+                        "identifiesControllerService": false,
+                        "sensitive": false
+                    },
+                    "Minimum File Size": {
+                        "name": "Minimum File Size",
+                        "identifiesControllerService": false,
+                        "sensitive": false
+                    },
+                    "Ignore Hidden Files": {
+                        "name": "Ignore Hidden Files",
+                        "identifiesControllerService": false,
+                        "sensitive": false
+                    },
+                    "Recurse Subdirectories": {
+                        "name": "Recurse Subdirectories",
+                        "identifiesControllerService": false,
+                        "sensitive": false
+                    },
+                    "File Filter": {
+                        "name": "File Filter",
+                        "identifiesControllerService": false,
+                        "sensitive": false
+                    }
+                },
+                "style": {},
+                "schedulingPeriod": "2 sec",
+                "schedulingStrategy": "TIMER_DRIVEN",
+                "executionNode": "ALL",
+                "penaltyDuration": "30000 ms",
+                "yieldDuration": "1000 ms",
+                "bulletinLevel": "WARN",
+                "runDurationMillis": 0,
+                "concurrentlySchedulableTaskCount": 1,
+                "autoTerminatedRelationships": [],
+                "componentType": "PROCESSOR",
+                "groupIdentifier": "1c2f34d2-ee57-448a-b150-8140f0f7643c"
+            }
+        ],
+        "inputPorts": [],
+        "outputPorts": [],
+        "connections": [
+            {
+                "identifier": "4f72d514-8d0d-4783-859a-945eb5a7ed0f",
+                "instanceIdentifier": "08b12177-6667-4e96-9f87-0896e39d9a22",
+                "name": "to_nifi",
+                "position": {
+                    "x": 0.0,
+                    "y": 0.0
+                },
+                "source": {
+                    "id": "e974fc57-9bb5-42e1-a807-1da267e6b281",
+                    "type": "PROCESSOR",
+                    "groupId": "1c2f34d2-ee57-448a-b150-8140f0f7643c",
+                    "name": "Get files from /tmp/input",
+                    "instanceIdentifier": "9def2e01-4843-486d-9e87-a60af90b874c"
+                },
+                "destination": {
+                    "id": "4222cd3a-746e-3497-abd0-b7695faa750c",
+                    "type": "REMOTE_INPUT_PORT",
+                    "groupId": "7b8d0cc8-b565-4b98-b5e5-da30e15e8cb1",
+                    "name": "4222cd3a-746e-3497-abd0-b7695faa750c",
+                    "instanceIdentifier": "4222cd3a-746e-3497-abd0-b7695faa750c"
+                },
+                "labelIndex": 1,
+                "zIndex": 0,
+                "selectedRelationships": [
+                    "success"
+                ],
+                "backPressureObjectThreshold": 2000,
+                "backPressureDataSizeThreshold": "100 MB",
+                "flowFileExpiration": "0 seconds",
+                "prioritizers": [],
+                "bends": [],
+                "componentType": "CONNECTION",
+                "groupIdentifier": "1c2f34d2-ee57-448a-b150-8140f0f7643c"
+            }
+        ],
+        "labels": [],
+        "funnels": [],
+        "controllerServices": [],
+        "variables": {},
+        "componentType": "PROCESS_GROUP"
+    }
+}

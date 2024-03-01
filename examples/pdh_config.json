@@ -1,0 +1,53 @@
+{
+  "rootGroup": {
+    "name": "MiNiFi Flow",
+    "processors": [
+      {
+        "name": "Read disk and CPU performance data",
+        "identifier": "2f2a3b47-f5ba-49f6-82b5-bc1c86b96e27",
+        "type": "org.apache.nifi.minifi.processors.PerformanceDataMonitor",
+        "schedulingStrategy": "TIMER_DRIVEN",
+        "schedulingPeriod": "10000 ms",
+        "properties": {
+          "Predefined Groups": "Disk,CPU",
+          "Custom PDH Counters": "\\System\\Processes,\\Process(*)\\ID Process,\\Process(*)\\Private Bytes",
+          "Output Format": "JSON",
+          "Output Compactness": "Compact"
+        },
+        "autoTerminatedRelationships": []
+      },
+      {
+        "name": "Put files to C:\\temp\\",
+        "identifier": "e143601d-de4f-44ba-a6ec-d1f97d77ec94",
+        "type": "org.apache.nifi.minifi.processors.PutFile",
+        "schedulingStrategy": "EVENT_DRIVEN",
+        "properties": {
+          "Conflict Resolution Strategy": "fail",
+          "Create Missing Directories": "true",
+          "Directory": "C:\\temp\\"
+        },
+        "autoTerminatedRelationships": [
+          "failure",
+          "success"
+        ]
+      }
+    ],
+    "connections": [
+      {
+        "name": "PerformanceDataMonitor/success/PutFile",
+        "identifier": "098a56ba-f4bf-4323-a3f3-6f8a5e3586bf",
+        "source": {
+          "id": "2f2a3b47-f5ba-49f6-82b5-bc1c86b96e27"
+        },
+        "destination": {
+          "id": "e143601d-de4f-44ba-a6ec-d1f97d77ec94"
+        },
+        "selectedRelationships": [
+          "success"
+        ]
+      }
+    ],
+    "remoteProcessGroups": [],
+    "controllerServices": []
+  }
+}

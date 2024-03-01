@@ -1,0 +1,49 @@
+{
+    "rootGroup": {
+        "name": "MiNiFi Flow",
+        "processors": [
+            {
+                "name": "Consume journal messages",
+                "identifier": "66fbb65d-8b11-43a9-aaad-746a07d2fe35",
+                "type": "org.apache.nifi.minifi.extensions.systemd.ConsumeJournald",
+                "schedulingStrategy": "TIMER_DRIVEN",
+                "schedulingPeriod": "5 sec",
+                "properties": {},
+                "autoTerminatedRelationships": []
+            },
+            {
+                "name": "Log messages to info level",
+                "identifier": "f7281113-9576-4680-9a87-a8e961101b5c",
+                "type": "org.apache.nifi.minifi.processors.LogAttribute",
+                "schedulingStrategy": "EVENT_DRIVEN",
+                "properties": {
+                    "FlowFiles To Log": "0",
+                    "Log Level": "info",
+                    "Log Payload": true,
+                    "Log Prefix": "=====",
+                    "Maxumim Payload Line Length": "0"
+                },
+                "autoTerminatedRelationships": [
+                    "success"
+                ]
+            }
+        ],
+        "connections": [
+            {
+                "name": "ConsumeJournald/success/LogAttribute",
+                "identifier": "f57713d9-fa0b-4416-948d-4b316b1a1c0d",
+                "source": {
+                    "id": "66fbb65d-8b11-43a9-aaad-746a07d2fe35"
+                },
+                "destination": {
+                    "id": "f7281113-9576-4680-9a87-a8e961101b5c"
+                },
+                "selectedRelationships": [
+                    "success"
+                ]
+            }
+        ],
+        "remoteProcessGroups": [],
+        "controllerServices": []
+    }
+}

@@ -1,0 +1,51 @@
+{
+    "rootGroup": {
+        "name": "MiNiFi Flow",
+        "processors": [
+            {
+                "name": "GetFile",
+                "identifier": "b01793b6-5275-4ee3-9fc0-d9e39ce3162f",
+                "type": "org.apache.nifi.processors.standard.GetFile",
+                "schedulingStrategy": "TIMER_DRIVEN",
+                "schedulingPeriod": "2 sec",
+                "properties": {
+                    "Input Directory": "/tmp/input"
+                },
+                "autoTerminatedRelationships": []
+            },
+            {
+                "name": "PutFile",
+                "identifier": "a7ee8464-8f5a-4448-b40b-1d2d2c5e9610",
+                "type": "org.apache.nifi.processors.standard.PutFile",
+                "schedulingStrategy": "EVENT_DRIVEN",
+                "schedulingPeriod": "1 sec",
+                "properties": {
+                    "Directory": "/tmp/output",
+                    "Directory Permissions": "777",
+                    "Permissions": "777"
+                },
+                "autoTerminatedRelationships": [
+                    "success",
+                    "failure"
+                ]
+            }
+        ],
+        "connections": [
+            {
+                "identifier": "098a56ba-f4bf-4323-a3f3-6f8a5e3586bf",
+                "name": "GetFile/success/PutFile",
+                "source": {
+                    "id": "b01793b6-5275-4ee3-9fc0-d9e39ce3162f"
+                },
+                "destination": {
+                    "id": "a7ee8464-8f5a-4448-b40b-1d2d2c5e9610"
+                },
+                "selectedRelationships": [
+                    "success"
+                ]
+            }
+        ],
+        "remoteProcessGroups": [],
+        "controllerServices": []
+    }
+}
