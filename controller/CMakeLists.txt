@@ -59,6 +59,3 @@ if (NOT WIN32)
 endif()
 
 install(TARGETS minificontroller RUNTIME DESTINATION bin COMPONENT bin)
-
-add_custom_command(TARGET minificontroller POST_BUILD
-    COMMAND cat ${CMAKE_BINARY_DIR}/all.log)
