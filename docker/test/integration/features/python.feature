@@ -99,6 +99,7 @@ Feature: MiNiFi can use python processors in its flows
     And a file with filename "test_file4.log" and content "test_data_four" is present in "/tmp/input"
     And a RotatingForwarder processor
     And a PutFile processor with the "Directory" property set to "/tmp/output"
+    And python is installed on the MiNiFi agent with a pre-created virtualenv
 
     And the "success" relationship of the GetFile processor is connected to the RotatingForwarder
     And the "first" relationship of the RotatingForwarder processor is connected to the PutFile
