@@ -163,7 +163,7 @@ void FlowFileRepository::initialize_repository() {
       continue;
     }
     if (check_flowfile_content_size_ && !contentSizeIsAmpleForFlowFile(*eventRead, claim)) {
-      logger_->log_warn("Content size was insufficient for flowfile {}", eventRead->getContentFullPath());
+      logger_->log_warn("Content is missing or too small for flowfile {}", eventRead->getContentFullPath());
       keys_to_delete_.enqueue({.key = key, .content = eventRead->getResourceClaim()});
       continue;
     }
