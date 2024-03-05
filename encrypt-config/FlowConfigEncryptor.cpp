@@ -164,7 +164,7 @@ void encryptSensitiveValuesInFlowConfig(const EncryptionKeys& keys, const std::f
   auto whole_file_encryptor = encrypt_whole_flow_config_file ? utils::crypto::EncryptionProvider::create(minifi_home) : std::nullopt;
   auto filesystem = std::make_shared<utils::file::FileSystem>(encrypt_whole_flow_config_file, whole_file_encryptor);
 
-  auto sensitive_properties_encryptor = is_re_encrypting ?
+  auto sensitive_properties_decryptor = is_re_encrypting ?
       utils::crypto::EncryptionProvider{utils::crypto::XSalsa20Cipher{*keys.old_key}} :
       utils::crypto::EncryptionProvider{utils::crypto::XSalsa20Cipher{keys.encryption_key}};
 
@@ -176,7 +176,7 @@ void encryptSensitiveValuesInFlowConfig(const EncryptionKeys& keys, const std::f
       .configuration = configure,
       .path = flow_config_path,
       .filesystem = filesystem,
-      .sensitive_properties_encryptor = sensitive_properties_encryptor
+      .sensitive_properties_encryptor = sensitive_properties_decryptor
   }};
 
   const auto flow_config_content = filesystem->read(flow_config_path);
