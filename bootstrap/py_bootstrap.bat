@@ -18,11 +18,11 @@ set "SCRIPT_DIR=%~dp0"
 set "VENV_DIR=%SCRIPT_DIR%venv"
 
 if exist "%VENV_DIR%" (
-    call "%VENV_DIR%\Scripts\activate"
+    call "%VENV_DIR%\Scripts\activate.bat"
 ) else (
     echo Creating virtualenv
     python -m venv "%VENV_DIR%"
-    call "%VENV_DIR%\Scripts\activate"
+    call "%VENV_DIR%\Scripts\activate.bat"
     pip install -r "%SCRIPT_DIR%requirements.txt"
 )
 
