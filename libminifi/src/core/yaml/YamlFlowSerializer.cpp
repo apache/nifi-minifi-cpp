@@ -44,6 +44,7 @@ void YamlFlowSerializer::encryptSensitiveProperties(YAML::Node property_yamls, c
   }
 
   for (const auto& [name, value] : component_overrides) {
+    gsl_Expects(properties.contains(name) && properties.at(name).isSensitive());
     property_yamls[name] = utils::crypto::property_encryption::encrypt(value, encryption_provider);
   }
 }

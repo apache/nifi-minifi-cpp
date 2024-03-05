@@ -55,6 +55,7 @@ void JsonFlowSerializer::encryptSensitiveProperties(rapidjson::Value &property_j
   }
 
   for (const auto& [name, value] : component_overrides) {
+    gsl_Expects(properties.contains(name) && properties.at(name).isSensitive());
     const std::string encrypted_value = utils::crypto::property_encryption::encrypt(value, encryption_provider);
     property_jsons.AddMember(rapidjson::Value(name, alloc), rapidjson::Value(encrypted_value, alloc), alloc);
   }
