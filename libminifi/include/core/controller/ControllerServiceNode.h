@@ -79,6 +79,7 @@ class ControllerServiceNode : public CoreComponent, public ConfigurableComponent
    * @return the implementation of the Controller Service
    */
   std::shared_ptr<ControllerService> &getControllerServiceImplementation();
+  const ControllerService* getControllerServiceImplementation() const;
   std::vector<std::shared_ptr<ControllerServiceNode> > &getLinkedControllerServices();
   std::vector<std::shared_ptr<ConfigurableComponent> > &getLinkedComponents();
 

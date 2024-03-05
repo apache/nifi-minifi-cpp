@@ -75,9 +75,9 @@ std::vector<SensitiveProperty> listSensitiveProperties(const minifi::core::Proce
     }
   }
 
-  for (const auto &controller_service_node : process_group.getAllControllerServices()) {
+  for (const auto* controller_service_node : process_group.getAllControllerServices()) {
     gsl_Expects(controller_service_node);
-    const auto controller_service = controller_service_node->getControllerServiceImplementation();
+    const auto* controller_service = controller_service_node->getControllerServiceImplementation();
     gsl_Expects(controller_service);
     for (const auto& [_, property] : controller_service->getProperties()) {
       if (property.isSensitive()) {

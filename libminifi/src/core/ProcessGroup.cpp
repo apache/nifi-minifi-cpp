@@ -270,8 +270,12 @@ std::shared_ptr<core::controller::ControllerServiceNode> ProcessGroup::findContr
   return controller_service_map_.getControllerServiceNode(nodeId);
 }
 
-std::vector<std::shared_ptr<core::controller::ControllerServiceNode>> ProcessGroup::getAllControllerServices() const {
-  return controller_service_map_.getAllControllerServices();
+std::vector<const core::controller::ControllerServiceNode*> ProcessGroup::getAllControllerServices() const {
+  std::vector<const core::controller::ControllerServiceNode*> controller_service_nodes;
+  for (const auto& node : controller_service_map_.getAllControllerServices()) {
+    controller_service_nodes.push_back(node.get());
+  }
+  return controller_service_nodes;
 }
 
 void ProcessGroup::getAllProcessors(std::vector<Processor*>& processor_vec) const {
