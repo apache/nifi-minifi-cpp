@@ -45,10 +45,16 @@ def do_build(minifi_options: MinifiOptions, package_manager: PackageManager):
     return res
 
 
+def do_package(minifi_options: MinifiOptions, package_manager: PackageManager):
+    build_cmd = f"cmake --build {str(minifi_options.build_dir)} --target package"
+    return package_manager.run_cmd(build_cmd)
+
+
 def do_one_click_build(minifi_options: MinifiOptions, package_manager: PackageManager) -> bool:
     assert install_dependencies(minifi_options, package_manager)
     assert run_cmake(minifi_options, package_manager)
     assert do_build(minifi_options, package_manager)
+    assert do_package(minifi_options, package_manager)
     return True
 
 
@@ -131,6 +137,7 @@ def step_by_step_menu(minifi_options: MinifiOptions, package_manager: PackageMan
             "Install dependencies": install_dependencies,
             "Run cmake": run_cmake,
             "Build": do_build,
+            "Package": do_package,
             "Back": lambda _options, _manager: True,
         }
         questions = [

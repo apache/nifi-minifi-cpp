@@ -41,12 +41,17 @@ if __name__ == '__main__':
             compiler_override = package_manager.install_compiler()
         else:
             compiler_override = ""
+        package_manager.ensure_environment()
+
         cmake_options_for_parsing = " ".join(filter(None, [args.minifi_options, compiler_override]))
         cmake_options_for_cmake = " ".join(filter(None, [args.cmake_options, compiler_override]))
 
         path = pathlib.Path(__file__).parent.resolve() / '..' / "cmake" / "MiNiFiOptions.cmake"
 
-        minifi_options = parse_minifi_options(str(path.as_posix()), cmake_options_for_parsing, package_manager, cmake_cache_dir)
+        minifi_options = parse_minifi_options(str(path.as_posix()),
+                                              cmake_options_for_parsing,
+                                              package_manager,
+                                              cmake_cache_dir)
         minifi_options.no_confirm = no_confirm
         minifi_options.set_cmake_override(cmake_options_for_cmake)
 

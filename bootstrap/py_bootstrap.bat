@@ -25,5 +25,5 @@ if exist "%VENV_DIR%" (
     call "%VENV_DIR%\Scripts\activate.bat"
     pip install -r "%SCRIPT_DIR%requirements.txt"
 )
-
 python "%SCRIPT_DIR%main.py"
+deactivate

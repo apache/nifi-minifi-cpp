@@ -13,12 +13,19 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 import os
+import pathlib
 import platform
 import subprocess
 import sys
+from enum import Enum
 from typing import Dict, Set
 
 from distro import distro
+
+
+class VsWhereLocation(Enum):
+    CHOCO = 1
+    DEFAULT = 2
 
 
 def _query_yes_no(question: str, no_confirm: bool) -> bool:
@@ -51,6 +58,9 @@ class PackageManager(object):
 
     def install_compiler(self) -> str:
         raise Exception("NotImplementedException")
+
+    def ensure_environment(self):
+        pass
 
     def _install(self, dependencies: Dict[str, Set[str]], replace_dict: Dict[str, Set[str]], install_cmd: str) -> bool:
         dependencies.update({k: v for k, v in replace_dict.items() if k in dependencies})
@@ -173,21 +183,55 @@ class PacmanPackageManager(PackageManager):
         return ""
 
 
-def _get_vs_dev_cmd_path() -> str:
+def _get_vs_dev_cmd_path(vs_where_location: VsWhereLocation):
+    if vs_where_location == VsWhereLocation.CHOCO:
+        vs_where_path = "vswhere"
+    else:
+        vs_where_path = "%ProgramFiles(x86)%\\Microsoft Visual Studio\\Installer\\vswhere.exe"
+
     vswhere_results = subprocess.run(
-        "vswhere -products * -property installationPath -requires Microsoft.VisualStudio.Component.VC.ATL",
+        f"{vs_where_path} -products * "
+        f"-property installationPath "
+        f"-requires Microsoft.VisualStudio.Component.VC.ATL "
+        f"-version 17",
         capture_output=True)
 
     for vswhere_result in vswhere_results.stdout.splitlines():
         possible_path = f"{vswhere_result.decode()}\\Common7\\Tools\\VsDevCmd.bat"
         if os.path.exists(possible_path):
             return f'"{possible_path}"'
-    raise Exception("Could not find valid Visual Studio installation")
+    return None
 
 
-def _get_vs_dev_cmd() -> str:
-    vs_dev_path = _get_vs_dev_cmd_path()
+def _get_vs_dev_cmd(vs_where_location: VsWhereLocation) -> str:
+    vs_dev_path = _get_vs_dev_cmd_path(vs_where_location)
     return f"{vs_dev_path} -arch=x64 -host_arch=x64"
+
+
+def _get_activate_venv_path():
+    return pathlib.Path(__file__).parent.resolve() / "venv" / "Scripts" / "activate.bat"
+
+
+def _minifi_setup_env_str(vs_where_location: VsWhereLocation) -> str:
+    return f"""
+call refreshenv
+call {_get_vs_dev_cmd(vs_where_location)}
+setlocal EnableDelayedExpansion
+  set PATH=!PATH:C:\\Strawberry\\c\\bin;=!;C:\\Program Files\\NASM;
+endlocal & set PATH=%PATH%
+set build_platform=x64
+IF "%VIRTUALENV%"=="" (
+  echo already in venv
+) ELSE (
+  {_get_activate_venv_path()}
+)
+
+"""
+
+
+def _create_minifi_setup_env_batch(vs_where_location: VsWhereLocation):
+    with open("build_environment.bat", "w") as f:
+        f.write(_minifi_setup_env_str(vs_where_location))
 
 
 class ChocolateyPackageManager(PackageManager):
@@ -220,23 +264,38 @@ class ChocolateyPackageManager(PackageManager):
         lines = [line.split(' ')[0] for line in result.stdout.splitlines()]
         lines = [line.rsplit('.', 1)[0] for line in lines]
         if os.path.exists("C:\\Program Files\\NASM"):
-            lines.append("NASM")    # choco doesnt remember NASM
+            lines.append("NASM")  # choco doesnt remember NASM
         return set(lines)
 
+    def _acquire_vswhere(self):
+        installed_packages = self._get_installed_packages()
+        if "vswhere" in installed_packages:
+            return VsWhereLocation.CHOCO
+        vswhere_default_path = "%ProgramFiles(x86)%\\Microsoft Visual Studio\\Installer\\vswhere.exe"
+        if os.path.exists(vswhere_default_path):
+            return VsWhereLocation.DEFAULT
+        self.install({"vswhere": {"vswhere"}})
+        return VsWhereLocation.CHOCO
+
     def install_compiler(self) -> str:
-        self.install({"visualstudio2022buildtools": {'visualstudio2022buildtools --package-parameters "--wait --quiet '
-                                                     '--add Microsoft.VisualStudio.Workload.VCTools '
-                                                     '--add Microsoft.VisualStudio.Component.VC.ATL '
-                                                     '--includeRecommended"'},
-                      "vswhere": {"vswhere"}})
+        vs_where_loc = self._acquire_vswhere()
+        vs_dev_path = _get_vs_dev_cmd_path(vs_where_loc)
+        if not vs_dev_path:
+            self.install(
+                {"visualstudio2022buildtools": {'visualstudio2022buildtools --package-parameters "--wait --quiet '
+                                                '--add Microsoft.VisualStudio.Workload.VCTools '
+                                                '--add Microsoft.VisualStudio.Component.VC.ATL '
+                                                '--includeRecommended"'}})
         return ""
 
     def run_cmd(self, cmd: str) -> bool:
-        cmd_command = f"refreshenv & {_get_vs_dev_cmd()} & set PATH=!PATH:C:\\Strawberry\\c\\bin;=!;C:\\Program Files\\NASM; & {cmd}"
-        cmd_command_list = f'cmd /V:ON /C {cmd_command}'
-        res = subprocess.run(cmd_command_list, check=True, text=True)
+        env_bat_path = pathlib.Path(__file__).parent.resolve() / "build_environment.bat"
+        res = subprocess.run(f"{env_bat_path} & {cmd}", check=True, text=True)
 
         return res.returncode == 0
+
+    def ensure_environment(self):
+        _create_minifi_setup_env_batch(self._acquire_vswhere())
 
 
 def get_package_manager(no_confirm: bool) -> PackageManager:
