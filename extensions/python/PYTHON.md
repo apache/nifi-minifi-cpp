@@ -177,7 +177,7 @@ It is possible to set a virtualenv to be used by the Python processors in Apache
 
 ## Automatically install dependencies from requirements.txt files
 
-It is possible to automatically install the dependencies of the Python processors in the virtualenv defined in requirements.txt files. To enable this feature, the `nifi.python.install.packages.automatically` property must be set to true. If this property is set to true, then all requirements.txt files that appear under the MiNiFi Python directory and its subdirectories (defined by the `nifi.python.processor.dir` property) will be used to install the Python packages. If the `nifi.python.virtualenv.directory` property is set, the packages are installed in the virtualenv, otherwise this option is ignored. Due to install schema differences in different platforms, system level packages are expected to be installed manually by the user.
+It is possible to automatically install the dependencies of the Python processors defined in requirements.txt files into a virtualenv. To enable this feature, the `nifi.python.install.packages.automatically` property must be set to true, and the `nifi.python.virtualenv.directory` property must be set to a directory where a virtualenv either already exists, or it can be set up. In this case, all requirements.txt files that appear under the MiNiFi Python directory (defined by the `nifi.python.processor.dir` property) and its subdirectories will be used to install the Python packages into the given virtualenv. Due to install schema differences in different platforms, system level packages are expected to be installed manually by the user.
 
     # in minifi.properties
     nifi.python.install.packages.automatically=true

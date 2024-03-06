@@ -18,25 +18,8 @@
 
 #pragma once
 
-#include <vector>
-#include <utility>
-#include <algorithm>
-#include <string>
-#include <memory>
 #include <filesystem>
-#include "core/Core.h"
-#include "core/logging/LoggerConfiguration.h"
-#include "core/Resource.h"
-#include "ExecutePythonProcessor.h"
-#include "PythonObjectFactory.h"
-#include "agent/agent_version.h"
-#include "agent/build_description.h"
-#include "utils/file/FileUtils.h"
-#include "utils/StringUtils.h"
-#include "range/v3/algorithm.hpp"
-#include "properties/Configuration.h"
-#include "utils/file/FilePattern.h"
-#include "range/v3/view/filter.hpp"
+#include <string>
 
 namespace org::apache::nifi::minifi::extensions::python {
 
