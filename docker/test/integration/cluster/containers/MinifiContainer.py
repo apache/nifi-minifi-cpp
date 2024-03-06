@@ -36,8 +36,6 @@ class MinifiOptions:
         self.use_nifi_python_processors_with_system_python_packages_installed = False
         self.use_nifi_python_processors_with_virtualenv = False
         self.use_nifi_python_processors_with_virtualenv_packages_installed = False
-        self.create_python_virtualenv = False
-        self.install = False
         self.config_format = "json"
         self.use_flow_config_from_url = False
         self.set_ssl_context_properties = False

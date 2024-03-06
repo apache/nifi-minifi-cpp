@@ -103,7 +103,7 @@ std::string getPythonBinary(const std::shared_ptr<Configure> &configuration) {
 void createVirtualEnvIfSpecified(const std::shared_ptr<Configure> &configuration) {
   if (auto path = configuration->get(minifi::Configuration::nifi_python_virtualenv_directory)) {
     PythonConfigState::getInstance().virtualenv_path = *path;
-    if (!std::filesystem::exists(PythonConfigState::getInstance().virtualenv_path) || !std::filesystem::is_empty(PythonConfigState::getInstance().virtualenv_path)) {
+    if (!std::filesystem::exists(PythonConfigState::getInstance().virtualenv_path) || std::filesystem::is_empty(PythonConfigState::getInstance().virtualenv_path)) {
       auto venv_command = "\"" + PythonConfigState::getInstance().python_binary + "\" -m venv \"" + PythonConfigState::getInstance().virtualenv_path.string() + "\"";
       auto return_value = std::system(encapsulateCommandInQuotesIfNeeded(venv_command).c_str());
       if (return_value != 0) {
