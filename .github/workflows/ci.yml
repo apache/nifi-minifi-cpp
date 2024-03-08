@@ -238,6 +238,12 @@ jobs:
         run: cmake --build . --target linter --config Release -j 8
         shell: cmd
         working-directory: ./build
+      - name: Upload artifact
+        if: failure()
+        uses: actions/upload-artifact@v3
+        with:
+          name: cpack_error
+          path: D:/a/nifi-minifi-cpp/nifi-minifi-cpp/build/_CPack_Packages/win64/WIX/wix.log
   ubuntu_20_04:
     name: "ubuntu-20.04"
     runs-on: ubuntu-20.04
