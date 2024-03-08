@@ -54,7 +54,7 @@ void PushGrafanaLokiGrpc::setUpStreamLabels(core::ProcessContext& context) {
 }
 
 void PushGrafanaLokiGrpc::setUpGrpcChannel(const std::string& url, core::ProcessContext& context) {
-  ::grpc::ChannelArguments args{};
+  ::grpc::ChannelArguments args;
 
   if (auto keep_alive_time = context.getProperty<core::TimePeriodValue>(PushGrafanaLokiGrpc::KeepAliveTime)) {
     logger_->log_debug("PushGrafanaLokiGrpc Keep Alive Time is set to {} ms", keep_alive_time->getMilliseconds().count());
@@ -109,10 +109,7 @@ void PushGrafanaLokiGrpc::onSchedule(core::ProcessContext& context, core::Proces
 
 nonstd::expected<void, std::string> PushGrafanaLokiGrpc::submitRequest(const std::vector<std::shared_ptr<core::FlowFile>>& batched_flow_files, core::ProcessSession& session) {
   logproto::PushRequest current_batch;
-
-  current_batch = logproto::PushRequest{};
-  current_batch.add_streams();
-  logproto::StreamAdapter *stream = current_batch.mutable_streams(0);
+  logproto::StreamAdapter *stream = current_batch.add_streams();
   stream->set_labels(stream_labels_);
 
   for (const auto& flow_file : batched_flow_files) {
@@ -139,7 +136,7 @@ nonstd::expected<void, std::string> PushGrafanaLokiGrpc::submitRequest(const std
     return nonstd::make_unexpected("Timeout waiting for connection to Grafana Loki gRPC server");
   }
 
-  logproto::PushResponse response{};
+  logproto::PushResponse response;
 
   ::grpc::ClientContext ctx;
   if (tenant_id_) {

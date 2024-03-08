@@ -95,7 +95,7 @@ for %%x in (%*) do (
     if [%%~x] EQU [/NO_PYTHON_SCRIPTING] set enable_python_scripting=OFF
     if [%%~x] EQU [/SENSORS]          set enable_sensors=ON
     if [%%~x] EQU [/USB_CAMERA]       set enable_usb_camera=ON
-    if [%%~x] EQU [/LOKI]             set enable_grafana_loki=OFF
+    if [%%~x] EQU [/LOKI]             set enable_grafana_loki=ON
     if [%%~x] EQU [/32]               set build_platform=Win32
     if [%%~x] EQU [/D]                set cmake_build_type=RelWithDebInfo
     if [%%~x] EQU [/DD]               set cmake_build_type=Debug

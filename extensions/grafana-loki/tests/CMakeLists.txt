@@ -16,6 +16,8 @@
 # specific language governing permissions and limitations
 # under the License.
 #
+include(WholeArchive)
+
 if (ENABLE_GRPC_FOR_LOKI)
     file(GLOB GRAFANA_LOKI_TESTS  "*.cpp")
 else()
@@ -38,6 +40,9 @@ FOREACH(testfile ${GRAFANA_LOKI_TESTS})
     createTests("${testfilename}")
     target_link_libraries(${testfilename} Catch2WithMain)
     target_link_libraries(${testfilename} minifi-grafana-loki)
+    if (WIN32)
+        target_wholearchive_library(${testfilename} grafana-loki-protos)
+    endif()
     target_link_libraries(${testfilename} minifi-civet-extensions)
     target_link_libraries(${testfilename} minifi-http-curl)
     target_link_libraries(${testfilename} minifi-standard-processors)
