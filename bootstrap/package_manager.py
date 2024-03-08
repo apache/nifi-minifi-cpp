@@ -230,7 +230,7 @@ IF "%VIRTUALENV%"=="" (
 
 
 def _create_minifi_setup_env_batch(vs_where_location: VsWhereLocation):
-    with open("build_environment.bat", "w") as f:
+    with open(pathlib.Path(__file__).parent.resolve() / "build_environment.bat", "w") as f:
         f.write(_minifi_setup_env_str(vs_where_location))
 
 
