@@ -68,6 +68,8 @@ void initThreads() {
 #endif
 }
 
+// On Windows when calling a system command using std::system, the whole command needs to be encapsulated in additional quotes,
+// due to the std::system passing the command to 'cmd.exe /C' which needs the additional quotes to handle the command as a single argument
 std::string encapsulateCommandInQuotesIfNeeded(const std::string& command) {
 #if WIN32
     return "\"" + command + "\"";
