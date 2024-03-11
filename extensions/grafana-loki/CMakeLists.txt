@@ -58,7 +58,7 @@ add_dependencies(minifi-grafana-loki minifi-http-curl)
 
 if (ENABLE_GRPC_FOR_LOKI)
     target_include_directories(minifi-grafana-loki SYSTEM PRIVATE BEFORE "${LOKI_PROTOBUF_GENERATED_DIR}" "${GRPC_INCLUDE_DIR}" "${PROTOBUF_INCLUDE_DIR}")
-    target_link_libraries(minifi-grafana-loki grafana-loki-protos grpc++ protobuf::libprotobuf)
+    target_link_libraries(minifi-grafana-loki grafana-loki-protos)
     add_dependencies(minifi-grafana-loki grafana-loki-protos)
 endif()
 
