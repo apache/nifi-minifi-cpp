@@ -1,5 +1,4 @@
 /**
- *
  * Licensed to the Apache Software Foundation (ASF) under one or more
  * contributor license agreements.  See the NOTICE file distributed with
  * this work for additional information regarding copyright ownership.
@@ -15,23 +14,35 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
 #pragma once
 
-#include <filesystem>
-#include <string>
+#include "Python.h"
 
 namespace org::apache::nifi::minifi::extensions::python {
 
-struct PythonConfigState {
-  bool isPackageInstallationNeeded() const {
-    return install_python_packages_automatically && !virtualenv_path.empty();
-  }
+class GlobalInterpreterLock {
+ public:
+  GlobalInterpreterLock();
+  ~GlobalInterpreterLock();
 
-  std::filesystem::path virtualenv_path;
-  std::filesystem::path python_processor_dir;
-  std::string python_binary;
-  bool install_python_packages_automatically = false;
+ private:
+  PyGILState_STATE gil_state_;
+};
+
+class Interpreter {
+  Interpreter();
+  ~Interpreter();
+
+ public:
+  static Interpreter* getInterpreter();
+
+  Interpreter(const Interpreter& other) = delete;
+  Interpreter(Interpreter&& other) = delete;
+  Interpreter& operator=(const Interpreter& other) = delete;
+  Interpreter& operator=(Interpreter&& other) = delete;
+
+ public:
+  PyThreadState* saved_thread_state_ = nullptr;
 };
 
 }  // namespace org::apache::nifi::minifi::extensions::python

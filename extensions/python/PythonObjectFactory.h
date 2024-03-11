@@ -28,10 +28,6 @@
 #include "ExecutePythonProcessor.h"
 #include "utils/StringUtils.h"
 
-#if defined(__GNUC__) || defined(__GNUG__)
-#pragma GCC visibility push(hidden)
-#endif
-
 enum class PythonProcessorType {
   MINIFI_TYPE,
   NIFI_TYPE
@@ -100,7 +96,3 @@ class PythonObjectFactory : public org::apache::nifi::minifi::core::DefautObject
   std::vector<std::filesystem::path> python_paths_;
   PythonProcessorType python_processor_type_;
 };
-
-#if defined(__GNUC__) || defined(__GNUG__)
-#pragma GCC visibility pop
-#endif

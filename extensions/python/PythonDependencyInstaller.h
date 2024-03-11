@@ -15,23 +15,31 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
 #pragma once
 
+#include <memory>
 #include <filesystem>
-#include <string>
+
+#include "PythonConfigState.h"
+#include "core/logging/Logger.h"
+#include "core/logging/LoggerConfiguration.h"
+#include "properties/Configure.h"
 
 namespace org::apache::nifi::minifi::extensions::python {
 
-struct PythonConfigState {
-  bool isPackageInstallationNeeded() const {
-    return install_python_packages_automatically && !virtualenv_path.empty();
-  }
+class PythonDependencyInstaller {
+ public:
+  explicit PythonDependencyInstaller(const std::shared_ptr<Configure> &configuration);
+  void installDependenciesFromRequirementsFiles() const;
 
-  std::filesystem::path virtualenv_path;
-  std::filesystem::path python_processor_dir;
-  std::string python_binary;
-  bool install_python_packages_automatically = false;
+ private:
+  std::vector<std::filesystem::path> getRequirementsFilePaths() const;
+  void createVirtualEnvIfSpecified() const;
+  static void evalScript(std::string_view script);
+  void addVirtualenvToPath() const;
+
+  PythonConfigState config_state_;
+  std::shared_ptr<core::logging::Logger> logger_ = core::logging::LoggerFactory<PythonDependencyInstaller>::getLogger();
 };
 
 }  // namespace org::apache::nifi::minifi::extensions::python
