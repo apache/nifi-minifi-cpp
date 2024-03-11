@@ -7,7 +7,7 @@ if ! command -v python3 &>/dev/null; then
 fi
 
 # Check if virtualenv is installed
-if ! command -v virtualenv &>/dev/null; then
+if ! command -v python3 -m venv --help &>/dev/null; then
     echo "virtualenv is not installed"
     exit 1
 fi
