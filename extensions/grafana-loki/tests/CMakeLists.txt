@@ -16,8 +16,6 @@
 # specific language governing permissions and limitations
 # under the License.
 #
-include(WholeArchive)
-
 if (ENABLE_GRPC_FOR_LOKI)
     file(GLOB GRAFANA_LOKI_TESTS  "*.cpp")
 else()
