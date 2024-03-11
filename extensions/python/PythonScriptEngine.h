@@ -34,48 +34,11 @@
 #include "types/PyProcessSession.h"
 #include "PythonScriptException.h"
 #include "properties/Configuration.h"
-
-#if defined(__GNUC__) || defined(__GNUG__)
-#pragma GCC visibility push(hidden)
-#endif
+#include "PythonInterpreter.h"
 
 namespace org::apache::nifi::minifi::extensions::python {
 
-#if defined(__GNUC__) || defined(__GNUG__)
-class __attribute__((visibility("default"))) GlobalInterpreterLock {
-#else
-class GlobalInterpreterLock {
-#endif
- public:
-  GlobalInterpreterLock();
-  ~GlobalInterpreterLock();
-
- private:
-  PyGILState_STATE gil_state_;
-};
-
-class Interpreter {
-  Interpreter();
-  ~Interpreter();
-
- public:
-  static Interpreter* getInterpreter();
-
-  Interpreter(const Interpreter& other) = delete;
-  Interpreter(Interpreter&& other) = delete;
-  Interpreter& operator=(const Interpreter& other) = delete;
-  Interpreter& operator=(Interpreter&& other) = delete;
-
- public:
-  PyThreadState* saved_thread_state_ = nullptr;
-};
-
-
-#if defined(__GNUC__) || defined(__GNUG__)
-class __attribute__((visibility("default"))) PythonScriptEngine {
-#else
 class PythonScriptEngine {
-#endif
  public:
   PythonScriptEngine();
   ~PythonScriptEngine();
@@ -186,7 +149,3 @@ class PythonScriptEngine {
 };
 
 }  // namespace org::apache::nifi::minifi::extensions::python
-
-#if defined(__GNUC__) || defined(__GNUG__)
-#pragma GCC visibility pop
-#endif

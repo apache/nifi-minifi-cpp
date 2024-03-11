@@ -37,6 +37,7 @@
 #include "properties/Configuration.h"
 #include "utils/file/FilePattern.h"
 #include "range/v3/view/filter.hpp"
+#include "PythonDependencyInstaller.h"
 
 namespace org::apache::nifi::minifi::extensions::python {
 
@@ -56,8 +57,8 @@ class PythonCreator : public minifi::core::CoreComponent {
   }
 
   void configure(const std::shared_ptr<Configure> &configuration) override {
-    python::PythonScriptEngine::initialize(configuration, logger_);
-
+    PythonDependencyInstaller dependency_installer(configuration);
+    dependency_installer.installDependenciesFromRequirementsFiles();
     auto engine = std::make_shared<python::PythonScriptEngine>();
     std::optional<std::string> pathListings = configuration ? configuration->get(minifi::Configuration::nifi_python_processor_dir) : std::nullopt;
     if (!pathListings) {

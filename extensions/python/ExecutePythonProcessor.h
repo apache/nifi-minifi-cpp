@@ -35,10 +35,6 @@
 #include "PythonScriptEngine.h"
 #include "PythonScriptEngine.h"
 
-#if defined(__GNUC__) || defined(__GNUG__)
-#pragma GCC visibility push(hidden)
-#endif
-
 namespace org::apache::nifi::minifi::extensions::python::processors {
 
 class ExecutePythonProcessor : public core::Processor {
@@ -162,7 +158,3 @@ class ExecutePythonProcessor : public core::Processor {
 };
 
 }  // namespace org::apache::nifi::minifi::extensions::python::processors
-
-#if defined(__GNUC__) || defined(__GNUG__)
-#pragma GCC visibility pop
-#endif
