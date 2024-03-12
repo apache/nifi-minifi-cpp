@@ -70,7 +70,7 @@ macro(register_extension extension-name extension-display-name extension-guard d
         if(WIN32)
             install(TARGETS ${extension-name} RUNTIME DESTINATION extensions COMPONENT ${component-name})
         else()
-            if("${CMAKE_CXX_COMPILER_ID}" STREQUAL "GNU")
+            if("${CMAKE_CXX_COMPILER_ID}" STREQUAL "GNU" AND NOT APPLE)
                 target_link_options(${extension-name} PRIVATE "-Wl,--disable-new-dtags")
             endif()
             if (APPLE)

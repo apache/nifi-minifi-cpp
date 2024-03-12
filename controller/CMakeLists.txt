@@ -48,7 +48,7 @@ set_target_properties(minificontroller PROPERTIES
     RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/bin")
 
 if (NOT WIN32)
-    if ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "GNU")
+    if ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "GNU" AND NOT APPLE)
         target_link_options(minificontroller PRIVATE "-Wl,--disable-new-dtags")
     endif()
     if (APPLE)
