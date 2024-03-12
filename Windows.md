@@ -15,27 +15,6 @@
 
 # Apache NiFi -  MiNiFi - C++ Windows Build Guide
 
-## Requirements
-
-Apache NiFi MiNiFi C++ has been built on Window Server 2016, 2019, and Windows 10 operating systems. The project is CMake focused we suggest building via Visual Studio 2022 or our `win_build_vs.bat` script.
-
-The project previously required OpenSSL to be installed. If you follow our build procedures, below, you will not need to install that dependency.
-
-### Required software
-
- - Visual Studio 2022
- - [CMake](https://cmake.org/download/)
- - [Git](https://git-scm.com/download/win) (the build process requires the bash.exe and patch.exe tools packaged with Git)
- - [Perl](https://strawberryperl.com/)
- - [NASM](https://nasm.us)
- - (Optional) [WiX Toolset](https://wixtoolset.org/releases/) (only for building the MSI)
- - (Optional) JDK (only for JNI support)
-
-### JNI support
-Though the project is written in C++, JNI functionality supports running Java processors stored in NiFi Archives. These can be run
-in a much smaller memory footprint and consume fewer resources. If your systems do not support Java or you do not want a JDK installed, please use non-JNI builds.
-
-
 ## Python based bootstrapping (recommended)
 Prerequisites:
 - [python](https://docs.python.org/)
@@ -46,11 +25,32 @@ Prerequisites:
 ```
 
 This will set up a virtual environment in the bootstrap folder, and guide you through the build process.
+This will also download and install all dependencies required for the selected components.
 It will also create a batch file (.\bootstrap\build_environment.bat),
 which sets the necessary environment variables for the build, so it can be built without bootstrapping everytime.
 
 
-## Building with Visual Studio
+## Alternative: Building via build script (advanced)
+
+Apache NiFi MiNiFi C++ has been built on Window Server 2016, 2019, and Windows 10 operating systems. The project is CMake focused we suggest building via Visual Studio 2022 or our `win_build_vs.bat` script.
+
+The project previously required OpenSSL to be installed. If you follow our build procedures, below, you will not need to install that dependency.
+
+#### Required software
+
+ - Visual Studio 2022
+ - [CMake](https://cmake.org/download/)
+ - [Git](https://git-scm.com/download/win) (the build process requires the bash.exe and patch.exe tools packaged with Git)
+ - [Perl](https://strawberryperl.com/)
+ - [NASM](https://nasm.us)
+ - (Optional) [WiX Toolset](https://wixtoolset.org/releases/) (only for building the MSI)
+ - (Optional) JDK (only for JNI support)
+
+#### JNI support
+Though the project is written in C++, JNI functionality supports running Java processors stored in NiFi Archives. These can be run
+in a much smaller memory footprint and consume fewer resources. If your systems do not support Java or you do not want a JDK installed, please use non-JNI builds.
+
+### Building with Visual Studio
 
 Make sure your Visual Studio installation includes the "Visual C++ tools for CMake" and "Visual C++ ATL for x86 and x64" options.
 You can also add these after installation using the Visual Studio Installer app. We also advise
@@ -64,7 +64,7 @@ that you build `minifi.lib` then `minifi.exe` targets.  `Build All` works, too, 
 Once you have built these targets, you may use the `cpack` command to build your MSI. If you are building with JNI functionality the MSI will be
 significantly larger (about 160 MB) since it contains the base NARs to run the standard set of Apache NiFi processors.
 
-## Building via the build script
+### Building via the build script
 
 The preferred way of building the project is via the `win_build_vs.bat` script found in our root source folder. Its first parameter is mandatory, the directory in which it will build the project. `build` is a good default choice for this.
 
@@ -124,7 +124,7 @@ You can specify additional CMake arguments by setting the EXTRA_CMAKE_ARGUMENTS 
 > win_build_vs.bat ...
 ```
 
-## Alternative: Manual bootstrapping (advanced)
+### Alternative building: Manual bootstrapping (advanced)
 
 The project can also be built manually using CMake. It requires the same environment the build script does (the proper Native Tools Command Prompt).
 
