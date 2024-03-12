@@ -61,11 +61,13 @@ class RocksDbInstance {
 
   void invalidate(const std::lock_guard<std::mutex>&);
 
-  void registerColumnConfig(const std::string& column, const DBOptionsPatch& db_options_patch, const ColumnFamilyOptionsPatch& cf_options_patch);
+  void registerColumnConfig(const std::string& column, const DBOptionsPatch& db_options_patch, const ColumnFamilyOptionsPatch& cf_options_patch,
+    const std::unordered_map<std::string, std::string>& db_config_override);
   void unregisterColumnConfig(const std::string& column);
 
   rocksdb::DBOptions db_options_;
   const std::string db_name_;
+  std::unordered_map<std::string, std::string> db_config_override_;
   const RocksDbMode mode_;
 
   std::mutex mtx_;

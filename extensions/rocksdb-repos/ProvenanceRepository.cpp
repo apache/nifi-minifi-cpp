@@ -40,9 +40,7 @@ bool ProvenanceRepository::initialize(const std::shared_ptr<org::apache::nifi::m
   logger_->log_debug("MiNiFi Provenance Max Storage Time: [{}]", max_partition_millis_);
 
   auto db_options = [] (minifi::internal::Writable<rocksdb::DBOptions>& db_opts) {
-    db_opts.set(&rocksdb::DBOptions::create_if_missing, true);
-    db_opts.set(&rocksdb::DBOptions::use_direct_io_for_flush_and_compaction, true);
-    db_opts.set(&rocksdb::DBOptions::use_direct_reads, true);
+    minifi::internal::setCommonRocksDbOptions(db_opts);
   };
 
   // Rocksdb write buffers act as a log of database operation: grow till reaching the limit, serialized after
@@ -60,7 +58,8 @@ bool ProvenanceRepository::initialize(const std::shared_ptr<org::apache::nifi::m
     }
   };
 
-  db_ = minifi::internal::RocksDatabase::create(db_options, cf_options, directory_);
+  db_ = minifi::internal::RocksDatabase::create(db_options, cf_options, directory_,
+    minifi::internal::getRocksDbOptionsToOverride(config, Configure::nifi_provenance_repository_rocksdb_options));
   if (db_->open()) {
     logger_->log_debug("MiNiFi Provenance Repository database open {} success", directory_);
   } else {

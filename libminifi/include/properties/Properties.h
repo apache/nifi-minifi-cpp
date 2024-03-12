@@ -139,7 +139,6 @@ class Properties {
 
   std::filesystem::path getFilePath() const;
 
- protected:
   std::map<std::string, std::string> getProperties() const;
 
  private:

@@ -70,7 +70,7 @@ void new_db_opts(minifi::internal::Writable<rocksdb::DBOptions>& db_opts) {
 }
 
 TEST_CASE_METHOD(RocksDBTest, "Malformed database uri - Missing column name", "[rocksDBTest1]") {
-  auto db = minifi::internal::RocksDatabase::create({}, {}, "minifidb://malformed");
+  auto db = minifi::internal::RocksDatabase::create({}, {}, "minifidb://malformed", {});
   REQUIRE(!db);
   REQUIRE(utils::verifyLogLinePresenceInPollTime(
       std::chrono::seconds{1}, "Couldn't detect the column name in 'minifidb://malformed'"));
@@ -78,7 +78,7 @@ TEST_CASE_METHOD(RocksDBTest, "Malformed database uri - Missing column name", "[
 
 TEST_CASE_METHOD(RocksDBTest, "Can write to default column", "[rocksDBTest2]") {
   {
-    auto db = minifi::internal::RocksDatabase::create(new_db_opts, {}, db_dir);
+    auto db = minifi::internal::RocksDatabase::create(new_db_opts, {}, db_dir, {});
     auto opendb = db->open();
     opendb->Put(rocksdb::WriteOptions{}, "fruit", "apple");
   }
@@ -92,7 +92,7 @@ TEST_CASE_METHOD(RocksDBTest, "Can write to default column", "[rocksDBTest2]") {
 
 TEST_CASE_METHOD(RocksDBTest, "Can write to specific column using the rocksdb uri scheme", "[rocksDBTest3]") {
   {
-    auto db = minifi::internal::RocksDatabase::create(new_db_opts, {}, "minifidb://" + db_dir + "/column_one");
+    auto db = minifi::internal::RocksDatabase::create(new_db_opts, {}, "minifidb://" + db_dir + "/column_one", {});
     auto opendb = db->open();
     opendb->Put(rocksdb::WriteOptions{}, "fruit", "apple");
   }
@@ -106,11 +106,11 @@ TEST_CASE_METHOD(RocksDBTest, "Can write to specific column using the rocksdb ur
 
 TEST_CASE_METHOD(RocksDBTest, "Can write to two specific columns at once", "[rocksDBTest4]") {
   {
-    auto db1 = minifi::internal::RocksDatabase::create(new_db_opts, {}, "minifidb://" + db_dir + "/column_one");
+    auto db1 = minifi::internal::RocksDatabase::create(new_db_opts, {}, "minifidb://" + db_dir + "/column_one", {});
     auto opendb1 = db1->open();
     REQUIRE(opendb1);
     opendb1->Put(rocksdb::WriteOptions{}, "fruit", "apple");
-    auto db2 = minifi::internal::RocksDatabase::create(new_db_opts, {}, "minifidb://" + db_dir + "/column_two");
+    auto db2 = minifi::internal::RocksDatabase::create(new_db_opts, {}, "minifidb://" + db_dir + "/column_two", {});
     auto opendb2 = db2->open();
     REQUIRE(opendb2);
     opendb2->Put(rocksdb::WriteOptions{}, "animal", "penguin");
@@ -128,11 +128,11 @@ TEST_CASE_METHOD(RocksDBTest, "Can write to two specific columns at once", "[roc
 
 TEST_CASE_METHOD(RocksDBTest, "Can write to the default and a specific column at once", "[rocksDBTest5]") {
   {
-    auto db1 = minifi::internal::RocksDatabase::create(new_db_opts, {}, "minifidb://" + db_dir + "/column_one");
+    auto db1 = minifi::internal::RocksDatabase::create(new_db_opts, {}, "minifidb://" + db_dir + "/column_one", {});
     auto opendb1 = db1->open();
     REQUIRE(opendb1);
     opendb1->Put(rocksdb::WriteOptions{}, "fruit", "apple");
-    auto db2 = minifi::internal::RocksDatabase::create(new_db_opts, {}, db_dir);
+    auto db2 = minifi::internal::RocksDatabase::create(new_db_opts, {}, db_dir, {});
     auto opendb2 = db2->open();
     REQUIRE(opendb2);
     opendb2->Put(rocksdb::WriteOptions{}, "animal", "penguin");
@@ -149,13 +149,13 @@ TEST_CASE_METHOD(RocksDBTest, "Can write to the default and a specific column at
 }
 
 TEST_CASE_METHOD(RocksDBTest, "Logged if the options are incompatible with an existing column family", "[rocksDBTest6]") {
-  auto db = minifi::internal::RocksDatabase::create(new_db_opts, {}, "minifidb://" + db_dir + "/column_one");
+  auto db = minifi::internal::RocksDatabase::create(new_db_opts, {}, "minifidb://" + db_dir + "/column_one", {});
   REQUIRE(db->open());
   // implicitly created the "default" column family, but with the default options
   auto cf_opts = [] (rocksdb::ColumnFamilyOptions& cf_opts) {
     cf_opts.merge_operator = std::make_shared<minifi::core::repository::StringAppender>();
   };
-  auto default_db = minifi::internal::RocksDatabase::create(new_db_opts, cf_opts, "minifidb://" + db_dir + "/default");
+  auto default_db = minifi::internal::RocksDatabase::create(new_db_opts, cf_opts, "minifidb://" + db_dir + "/default", {});
   REQUIRE(default_db->open());
   REQUIRE(utils::verifyLogLinePresenceInPollTime(
       std::chrono::seconds{1}, "Could not determine if we definitely need to reopen or we are definitely safe, requesting reopen"));
@@ -170,16 +170,16 @@ TEST_CASE_METHOD(RocksDBTest, "Error is logged if different DBOptions are used",
     db_opts.set(&rocksdb::DBOptions::create_if_missing, true);
     db_opts.set(&rocksdb::DBOptions::manual_wal_flush, true);
   };
-  auto col_1 = minifi::internal::RocksDatabase::create(db_opt_1, {}, "minifidb://" + db_dir + "/column_one");
+  auto col_1 = minifi::internal::RocksDatabase::create(db_opt_1, {}, "minifidb://" + db_dir + "/column_one", {});
   REQUIRE(col_1->open());
-  auto col_2 = minifi::internal::RocksDatabase::create(db_opt_2, {}, "minifidb://" + db_dir + "/column_two");
+  auto col_2 = minifi::internal::RocksDatabase::create(db_opt_2, {}, "minifidb://" + db_dir + "/column_two", {});
   REQUIRE_FALSE(col_2->open());
   REQUIRE(utils::verifyLogLinePresenceInPollTime(
       std::chrono::seconds{1}, "Conflicting database options requested for '" + db_dir + "'"));
 }
 
 TEST_CASE_METHOD(RocksDBTest, "Sanity check: merge fails without merge_operator", "[rocksDBTest8]") {
-  auto db = minifi::internal::RocksDatabase::create(new_db_opts, {}, "minifidb://" + db_dir + "/col_one");
+  auto db = minifi::internal::RocksDatabase::create(new_db_opts, {}, "minifidb://" + db_dir + "/col_one", {});
   REQUIRE(db);
 
   auto opendb = db->open();
@@ -203,7 +203,7 @@ TEST_CASE_METHOD(RocksDBTest, "Column options are applied", "[rocksDBTest9]") {
   SECTION("Implicit default column") {
     db_uri = db_dir;
   }
-  auto db = minifi::internal::RocksDatabase::create(new_db_opts, cf_opts, db_uri);
+  auto db = minifi::internal::RocksDatabase::create(new_db_opts, cf_opts, db_uri, {});
   REQUIRE(db);
 
   auto opendb = db->open();
@@ -238,25 +238,25 @@ TEST_CASE_METHOD(RocksDBTest, "Error is logged if different encryption keys are 
     << "encryption.key.two=" << "905D7B95EF44DC27C87FFBC4DFDE376DAE604D55DB2C5496DEEF5236362DE62E" << "\n";
 
   auto db_opt_1 = createEncrSetter(home_dir, "one", "encryption.key.one");
-  auto col_1 = minifi::internal::RocksDatabase::create(db_opt_1, {}, "minifidb://" + db_dir + "/column_one");
+  auto col_1 = minifi::internal::RocksDatabase::create(db_opt_1, {}, "minifidb://" + db_dir + "/column_one", {});
   REQUIRE(col_1->open());
 
   SECTION("Using the same encryption key is OK") {
     auto db_opt_2 = createEncrSetter(home_dir, "two", "encryption.key.one");
-    auto col_2 = minifi::internal::RocksDatabase::create(db_opt_2, {}, "minifidb://" + db_dir + "/column_two");
+    auto col_2 = minifi::internal::RocksDatabase::create(db_opt_2, {}, "minifidb://" + db_dir + "/column_two", {});
     REQUIRE(col_2->open());
   }
 
   SECTION("Using different encryption key") {
     auto db_opt_2 = createEncrSetter(home_dir, "two", "encryption.key.two");
-    auto col_2 = minifi::internal::RocksDatabase::create(db_opt_2, {}, "minifidb://" + db_dir + "/column_two");
+    auto col_2 = minifi::internal::RocksDatabase::create(db_opt_2, {}, "minifidb://" + db_dir + "/column_two", {});
     REQUIRE_FALSE(col_2->open());
     REQUIRE(utils::verifyLogLinePresenceInPollTime(
         std::chrono::seconds{1}, "Conflicting database options requested for '" + db_dir + "'"));
   }
 
   SECTION("Using no encryption key") {
-    auto col_2 = minifi::internal::RocksDatabase::create(withDefaultEnv, {}, "minifidb://" + db_dir + "/column_two");
+    auto col_2 = minifi::internal::RocksDatabase::create(withDefaultEnv, {}, "minifidb://" + db_dir + "/column_two", {});
     REQUIRE_FALSE(col_2->open());
     REQUIRE(utils::verifyLogLinePresenceInPollTime(
         std::chrono::seconds{1}, "Conflicting database options requested for '" + db_dir + "'"));
@@ -265,7 +265,7 @@ TEST_CASE_METHOD(RocksDBTest, "Error is logged if different encryption keys are 
 
 TEST_CASE_METHOD(RocksDBTest, "RocksDb works correctly on changed (but compatible) ColumnFamilyOptions change", "[rocksDBTest11]") {
   {
-    auto col1 = minifi::internal::RocksDatabase::create(new_db_opts, {}, db_dir);
+    auto col1 = minifi::internal::RocksDatabase::create(new_db_opts, {}, db_dir, {});
     auto opendb = col1->open();
     REQUIRE(opendb);
     REQUIRE(opendb->Put({}, "fruit", "apple").ok());
@@ -275,7 +275,7 @@ TEST_CASE_METHOD(RocksDBTest, "RocksDb works correctly on changed (but compatibl
     cf_opts.OptimizeForPointLookup(4);
   };
 
-  auto col2 = minifi::internal::RocksDatabase::create(new_db_opts, cf_opts, db_dir);
+  auto col2 = minifi::internal::RocksDatabase::create(new_db_opts, cf_opts, db_dir, {});
   REQUIRE(col2);
   {
     auto opendb = col2->open();

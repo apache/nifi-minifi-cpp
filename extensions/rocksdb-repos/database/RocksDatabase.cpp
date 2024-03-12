@@ -29,7 +29,8 @@ namespace org::apache::nifi::minifi::internal {
 
 std::shared_ptr<core::logging::Logger> RocksDatabase::logger_ = core::logging::LoggerFactory<RocksDatabase>::getLogger();
 
-std::unique_ptr<RocksDatabase> RocksDatabase::create(const DBOptionsPatch& db_options_patch, const ColumnFamilyOptionsPatch& cf_options_patch, const std::string& uri, RocksDbMode mode) {
+std::unique_ptr<RocksDatabase> RocksDatabase::create(const DBOptionsPatch& db_options_patch, const ColumnFamilyOptionsPatch& cf_options_patch, const std::string& uri,
+    const std::unordered_map<std::string, std::string>& db_config_override, RocksDbMode mode) {
   const std::string scheme = "minifidb://";
 
   logger_->log_info("Acquiring database handle '{}'", uri);
@@ -56,7 +57,7 @@ std::unique_ptr<RocksDatabase> RocksDatabase::create(const DBOptionsPatch& db_op
 
   if (mode == RocksDbMode::ReadOnly) {
     // no need to cache anything with read-only databases
-    return std::make_unique<RocksDatabase>(std::make_shared<RocksDbInstance>(db_path, mode), db_column, db_options_patch, cf_options_patch);
+    return std::make_unique<RocksDatabase>(std::make_shared<RocksDbInstance>(db_path, mode), db_column, db_options_patch, cf_options_patch, db_config_override);
   }
 
   static std::mutex mtx;
@@ -74,12 +75,13 @@ std::unique_ptr<RocksDatabase> RocksDatabase::create(const DBOptionsPatch& db_op
       logger_->log_info("Using previously opened rocksdb instance '{}'", db_path);
     }
   }
-  return std::make_unique<RocksDatabase>(instance, db_column, db_options_patch, cf_options_patch);
+  return std::make_unique<RocksDatabase>(instance, db_column, db_options_patch, cf_options_patch, db_config_override);
 }
 
-RocksDatabase::RocksDatabase(std::shared_ptr<RocksDbInstance> db, std::string column, const DBOptionsPatch& db_options_patch, const ColumnFamilyOptionsPatch& cf_options_patch)
+RocksDatabase::RocksDatabase(std::shared_ptr<RocksDbInstance> db, std::string column, const DBOptionsPatch& db_options_patch, const ColumnFamilyOptionsPatch& cf_options_patch,
+  const std::unordered_map<std::string, std::string>& db_config_override)
     : column_(std::move(column)), db_(std::move(db)) {
-  db_->registerColumnConfig(column_, db_options_patch, cf_options_patch);
+  db_->registerColumnConfig(column_, db_options_patch, cf_options_patch, db_config_override);
 }
 
 RocksDatabase::~RocksDatabase() {

@@ -185,9 +185,7 @@ bool FlowFileRepository::initialize(const std::shared_ptr<Configure> &configure)
   logger_->log_info("Using {} FlowFileRepository", encrypted_env ? "encrypted" : "plaintext");
 
   auto db_options = [encrypted_env] (minifi::internal::Writable<rocksdb::DBOptions>& options) {
-    options.set(&rocksdb::DBOptions::create_if_missing, true);
-    options.set(&rocksdb::DBOptions::use_direct_io_for_flush_and_compaction, true);
-    options.set(&rocksdb::DBOptions::use_direct_reads, true);
+    minifi::internal::setCommonRocksDbOptions(options);
     if (encrypted_env) {
       options.set(&rocksdb::DBOptions::env, encrypted_env.get(), EncryptionEq{});
     } else {
@@ -210,7 +208,8 @@ bool FlowFileRepository::initialize(const std::shared_ptr<Configure> &configure)
       cf_opts.compression = *compression_type;
     }
   };
-  db_ = minifi::internal::RocksDatabase::create(db_options, cf_options, directory_);
+  db_ = minifi::internal::RocksDatabase::create(db_options, cf_options, directory_,
+    minifi::internal::getRocksDbOptionsToOverride(configure, Configure::nifi_flowfile_repository_rocksdb_options));
   if (db_->open()) {
     logger_->log_debug("NiFi FlowFile Repository database open {} success", directory_);
     return true;

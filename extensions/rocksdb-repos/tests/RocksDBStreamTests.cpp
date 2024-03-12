@@ -34,7 +34,7 @@ class RocksDBStreamTest : TestController {
     auto set_cf_opts = [] (rocksdb::ColumnFamilyOptions& cf_opts) {
       cf_opts.merge_operator = std::make_shared<core::repository::StringAppender>();
     };
-    db = minifi::internal::RocksDatabase::create(set_db_opts, set_cf_opts, dbPath);
+    db = minifi::internal::RocksDatabase::create(set_db_opts, set_cf_opts, dbPath, {});
     REQUIRE(db->open());
   }
 

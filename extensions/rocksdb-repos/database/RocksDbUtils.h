@@ -22,6 +22,7 @@
 #include <optional>
 #include <memory>
 #include <string>
+#include <unordered_map>
 
 #include "rocksdb/db.h"
 #include "rocksdb/options.h"
@@ -71,5 +72,7 @@ using DBOptionsPatch = std::function<void(Writable<rocksdb::DBOptions>&)>;
 using ColumnFamilyOptionsPatch = std::function<void(rocksdb::ColumnFamilyOptions&)>;
 
 std::optional<rocksdb::CompressionType> readConfiguredCompressionType(const std::shared_ptr<Configure> &configuration, const std::string& config_key);
+void setCommonRocksDbOptions(Writable<rocksdb::DBOptions>& db_opts);
+std::unordered_map<std::string, std::string> getRocksDbOptionsToOverride(const std::shared_ptr<Configure> &configuration, std::string_view custom_db_prefix);
 
 }  // namespace org::apache::nifi::minifi::internal
