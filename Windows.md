@@ -35,6 +35,21 @@ The project previously required OpenSSL to be installed. If you follow our build
 Though the project is written in C++, JNI functionality supports running Java processors stored in NiFi Archives. These can be run
 in a much smaller memory footprint and consume fewer resources. If your systems do not support Java or you do not want a JDK installed, please use non-JNI builds.
 
+
+## Python based bootstrapping (recommended)
+Prerequisites:
+- [python](https://docs.python.org/)
+- [venv](https://docs.python.org/3/library/venv.html)
+- [chocolatey](https://chocolatey.org/)
+```dos
+.\bootstrap\py_bootstrap.bat
+```
+
+This will set up a virtual environment in the bootstrap folder, and guide you through the build process.
+It will also create a batch file (.\bootstrap\build_environment.bat),
+which sets the necessary environment variables for the build, so it can be built without bootstrapping everytime.
+
+
 ## Building with Visual Studio
 
 Make sure your Visual Studio installation includes the "Visual C++ tools for CMake" and "Visual C++ ATL for x86 and x64" options.
@@ -109,7 +124,7 @@ You can specify additional CMake arguments by setting the EXTRA_CMAKE_ARGUMENTS 
 > win_build_vs.bat ...
 ```
 
-## Building directly with CMake
+## Alternative: Manual bootstrapping (advanced)
 
 The project can also be built manually using CMake. It requires the same environment the build script does (the proper Native Tools Command Prompt).
 
@@ -141,16 +156,3 @@ Logon failure: the user has not been granted the requested logon type at this co
 ```
 
 This right can be granted using the Local Security Policy tool (`secpol.msc`). Navigate to `Local Policies` -> `User Rights Assignment` -> `Log on as a service` and add the account.
-
-## Python based bootstrapping (recommended)
-Prerequisites:
-- [python](https://docs.python.org/)
-- [venv](https://docs.python.org/3/library/venv.html)
-- [chocolatey](https://chocolatey.org/)
-```dos
-.\bootstrap\py_bootstrap.bat
-```
-
-This will set up a virtual environment in the bootstrap folder, and guide you through the build process.
-It will also create a batch file (.\bootstrap\build_environment.bat),
-which sets the necessary environment variables for the build, so it can be built without bootstrapping everytime.
