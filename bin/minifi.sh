@@ -54,18 +54,35 @@ detectOS() {
          export LDR_CNTRL=MAXDATA=0xB0000000@DSA
          echo ${LDR_CNTRL}
     fi
+
+    if [ "${cygwin}" = "true" ]; then
+       echo 'Apache MiNiFi as a service is not supported on Cygwin.'
+       exit 1
+    fi
 }
 
-install() {
-    detectOS
-    if [ "${darwin}" = "true"  ] || [ "${cygwin}" = "true" ]; then
-        echo 'Installing Apache MiNiFi as a service is not supported on OS X or Cygwin.'
+install_macos() {
+    target_dir="/Library/LaunchDaemons"
+    echo "Installing MiNiFi as a LaunchDaemon to ${target_dir}"
+    cp -fv "${bin_dir}"/minifi.plist "${target_dir}"
+    chmod 644 "${target_dir}"/minifi.plist
+    sed -i '' "s|/opt/minifi-cpp|${MINIFI_HOME}|g" "${target_dir}"/minifi.plist
+    launchctl load -w "${target_dir}"/minifi.plist
+}
+
+uninstall_macos() {
+    launchctl unload "/Library/LaunchDaemons/minifi.plist" 2>/dev/null
+    rm -fv "/Library/LaunchDaemons/minifi.plist" || :
+}
+
+check_service_installed_macos() {
+    if [ ! -f "/Library/LaunchDaemons/minifi.plist" ]; then
+        echo "MiNiFi is not installed as a service. Please run 'minifi.sh install' first."
         exit 1
     fi
+}
 
-    echo "Uninstalling any previous versions"
-    uninstall
-
+install_linux() {
     target_dir="/usr/local/lib/systemd/system"
     mkdir -p "${target_dir}" || die "Unable to create ${target_dir}. Cannot install MiNiFi as a service."
 
@@ -77,13 +94,7 @@ install() {
     systemctl enable minifi.service
 }
 
-uninstall() {
-    detectOS
-    if [ "${darwin}" = "true"  ] || [ "${cygwin}" = "true" ]; then
-        echo 'Apache MiNiFi as a service is not supported on OS X or Cygwin.'
-        exit 1
-    fi
-
+uninstall_linux() {
     # Uninstall legacy init.d service files, if exists
     rm -fv "/etc/init.d/minifi" || :
     rm -fv "/etc/rc2.d/S65minifi" || :
@@ -94,39 +105,102 @@ uninstall() {
     systemctl daemon-reload
 }
 
-check_service_installed() {
+check_service_installed_linux() {
     if [ ! -f "/usr/local/lib/systemd/system/minifi.service" ]; then
         echo "MiNiFi is not installed as a service. Please run 'minifi.sh install' first."
         exit 1
     fi
 }
 
+install() {
+    echo "Uninstalling any previous versions"
+    uninstall
+
+    detectOS
+    if [ "${darwin}" = "true"  ]; then
+      install_macos
+    else
+      install_linux
+    fi
+}
+
+uninstall() {
+    detectOS
+    if [ "${darwin}" = "true"  ]; then
+      uninstall_macos
+    else
+      uninstall_linux
+    fi
+}
+
+check_service_installed() {
+    detectOS
+    if [ "${darwin}" = "true"  ]; then
+      check_service_installed_macos
+    else
+      check_service_installed_linux
+    fi
+}
+
+start_service() {
+    check_service_installed
+    if [ "${darwin}" = "true"  ]; then
+      launchctl start org.apache.nifi.minifi
+    else
+      systemctl start minifi.service
+    fi
+    echo "MiNiFi started"
+}
+
+stop_service() {
+    check_service_installed
+    if [ "${darwin}" = "true"  ]; then
+      launchctl stop org.apache.nifi.minifi
+    else
+      systemctl stop minifi.service
+    fi
+    echo "MiNiFi stopped"
+}
+
+restart_service() {
+    check_service_installed
+    if [ "${darwin}" = "true"  ]; then
+      launchctl stop org.apache.nifi.minifi
+      launchctl start org.apache.nifi.minifi
+    else
+      systemctl restart minifi.service
+    fi
+    echo "MiNiFi restarted"
+}
+
+status_service() {
+    check_service_installed
+    if [ "${darwin}" = "true"  ]; then
+      launchctl list | grep org.apache.nifi.minifi
+    else
+      systemctl status minifi.service
+    fi
+}
+
 case "$1" in
     start)
-      check_service_installed
-      systemctl start minifi.service
-      echo "MiNiFi started"
+      start_service
       ;;
     stop)
-      check_service_installed
-      systemctl stop minifi.service
-      echo "MiNiFi stopped"
+      stop_service
       ;;
     run)
       exec "${minifi_executable}"
       ;;
     status)
-      check_service_installed
-      systemctl status minifi.service
+      status_service
       ;;
     restart)
-      check_service_installed
-      systemctl restart minifi.service
-      echo "MiNiFi restarted"
+      restart_service
       ;;
     install)
       install "$@"
-      echo "Service minifi installed. Please start it using 'minifi.sh start' or 'systemctl start minifi.service'"
+      echo "Service minifi installed. Please start it using 'minifi.sh start'"
       ;;
     uninstall)
       uninstall "$@"
