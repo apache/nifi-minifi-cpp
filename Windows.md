@@ -126,3 +126,18 @@ copy minifi_main\Release\minifi.exe minifi_main\
 cpack
 ctest -C Release
 ```
+
+## Using MiNiFi C++ as a Windows service
+
+Building and packaging MiNiFi C++ results in an MSI installer. This installer can be used to install MiNiFi C++ as a Windows service. Depending on the build options, specific extensions can be selected for installation.
+
+The installer also provides an option to specify a service account to be used for the Windows service. By default, the `LocalSystem` account is used. If you want to specify a different account, make sure to provide the account name in the `DOMAIN\username` format.
+
+**NOTE:** To start the Windows service using the specified account, the account must have the `Log on as a service` right. If this right is missing, the following error event will appear in the system logs:
+
+```
+The Apache NiFi MiNiFi service was unable to log on as .\username with the currently configured password due to the following error:
+Logon failure: the user has not been granted the requested logon type at this computer.
+```
+
+This right can be granted using the Local Security Policy tool (`secpol.msc`). Navigate to `Local Policies` -> `User Rights Assignment` -> `Log on as a service` and add the account.
