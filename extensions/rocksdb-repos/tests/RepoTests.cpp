@@ -38,6 +38,7 @@
 #include "core/repository/VolatileFlowFileRepository.h"
 #include "core/repository/VolatileProvenanceRepository.h"
 #include "DatabaseContentRepository.h"
+#include "catch2/generators/catch_generators.hpp"
 
 using namespace std::literals::chrono_literals;
 
@@ -810,29 +811,15 @@ TEST_CASE("FlowFileRepository can filter out too small contents") {
   auto config = std::make_shared<minifi::Configure>();
   config->set(minifi::Configure::nifi_flowfile_repository_directory_default, ff_dir.string());
   config->set(minifi::Configure::nifi_dbcontent_repository_directory_default, content_dir.string());
-  size_t expected_flowfiles = std::numeric_limits<size_t>::max();
-  std::shared_ptr<core::ContentRepository> content_repo;
 
-  SECTION("nifi.flowfile.repository.check.health set to false") {
-    config->set(minifi::Configure::nifi_flow_file_repository_check_health, "false");
-    expected_flowfiles = 2;
-    SECTION("FileSystemRepository") {
-      content_repo = std::make_shared<core::repository::FileSystemRepository>();
-    }
-    SECTION("RocksDB") {
-      content_repo = std::make_shared<core::repository::DatabaseContentRepository>();
-    }
-  }
-  SECTION("nifi.flowfile.repository.check.health set to true") {
-    config->set(minifi::Configure::nifi_flow_file_repository_check_health, "true");
-    expected_flowfiles = 1;
-    SECTION("FileSystemRepository") {
-      content_repo = std::make_shared<core::repository::FileSystemRepository>();
-    }
-    SECTION("RocksDB") {
-      content_repo = std::make_shared<core::repository::DatabaseContentRepository>();
-    }
-  }
+  const auto [check_health, expected_flowfiles] = GENERATE(
+      std::make_tuple("false", size_t{2}),
+      std::make_tuple("true", size_t{1}));
+  config->set(minifi::Configure::nifi_flow_file_repository_check_health, check_health);
+  const auto content_repo = GENERATE(
+      static_cast<std::shared_ptr<core::ContentRepository>>(std::make_shared<core::repository::FileSystemRepository>()),
+      static_cast<std::shared_ptr<core::ContentRepository>>(std::make_shared<core::repository::DatabaseContentRepository>()));
+
 
   auto ff_repo = std::make_shared<core::repository::FlowFileRepository>();
   REQUIRE(ff_repo->initialize(config));
