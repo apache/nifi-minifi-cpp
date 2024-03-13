@@ -787,7 +787,7 @@ std::shared_ptr<minifi::FlowFileRecord> createFlowFileWithContent(core::ContentR
   const auto claim = content_session->create();
   const auto stream = content_session->write(claim);
 
-  stream->write(utils::as_span<const std::byte>(std::span(content));
+  stream->write(utils::as_span<const std::byte>(std::span(content)));
   flow_file->setResourceClaim(claim);
   flow_file->setSize(stream->size());
   flow_file->setOffset(0);
