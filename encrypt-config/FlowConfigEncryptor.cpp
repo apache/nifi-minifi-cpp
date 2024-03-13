@@ -97,8 +97,8 @@ std::vector<SensitiveProperty> listSensitiveProperties(const minifi::core::Proce
   return sensitive_properties;
 }
 
-std::unordered_map<minifi::utils::Identifier, std::unordered_map<std::string, std::string>> createOverridesInteractively(const std::vector<SensitiveProperty>& sensitive_properties) {
-  std::unordered_map<minifi::utils::Identifier, std::unordered_map<std::string, std::string>> overrides;
+minifi::core::flow::Overrides createOverridesInteractively(const std::vector<SensitiveProperty>& sensitive_properties) {
+  minifi::core::flow::Overrides overrides;
   std::cout << '\n';
   for (const auto& sensitive_property : sensitive_properties) {
     std::cout << magic_enum::enum_name(sensitive_property.component_type) << " " << sensitive_property.component_name << " (" << sensitive_property.component_id.to_string() << ") "
@@ -107,13 +107,13 @@ std::unordered_map<minifi::utils::Identifier, std::unordered_map<std::string, st
     std::string new_value;
     std::getline(std::cin, new_value);
     if (!new_value.empty()) {
-      overrides[sensitive_property.component_id].emplace(sensitive_property.property_name, new_value);
+      overrides.add(sensitive_property.component_id, sensitive_property.property_name, new_value);
     }
   }
   return overrides;
 }
 
-std::unordered_map<minifi::utils::Identifier, std::unordered_map<std::string, std::string>> createOverridesForSingleProperty(
+minifi::core::flow::Overrides createOverridesForSingleProperty(
     const std::vector<SensitiveProperty>& sensitive_properties, const std::string& component_id, const std::string& property_name, const std::string& property_value) {
   const auto sensitive_property_it = std::ranges::find_if(sensitive_properties, [&](const auto& sensitive_property) {
     return sensitive_property.component_id.to_string().view() == component_id && (sensitive_property.property_name == property_name || sensitive_property.property_display_name == property_name);
@@ -122,13 +122,13 @@ std::unordered_map<minifi::utils::Identifier, std::unordered_map<std::string, st
     std::cout << "No sensitive property found with this component ID and property name.\n";
     return {};
   }
-  return {{sensitive_property_it->component_id, {{sensitive_property_it->property_name, property_value}}}};
+  return minifi::core::flow::Overrides{}.add(sensitive_property_it->component_id, sensitive_property_it->property_name, property_value);
 }
 
-std::unordered_map<minifi::utils::Identifier, std::unordered_map<std::string, std::string>> createOverridesForReEncryption(const std::vector<SensitiveProperty>& sensitive_properties) {
-  std::unordered_map<minifi::utils::Identifier, std::unordered_map<std::string, std::string>> overrides;
+minifi::core::flow::Overrides createOverridesForReEncryption(const std::vector<SensitiveProperty>& sensitive_properties) {
+  minifi::core::flow::Overrides overrides;
   for (const auto& sensitive_property : sensitive_properties) {
-    overrides[sensitive_property.component_id].emplace(sensitive_property.property_name, sensitive_property.property_value);
+    overrides.addOptional(sensitive_property.component_id, sensitive_property.property_name, sensitive_property.property_value);
   }
   return overrides;
 }
@@ -188,15 +188,15 @@ void encryptSensitiveValuesInFlowConfig(const EncryptionKeys& keys, const std::f
   gsl_Expects(process_group);
   const auto sensitive_properties = listSensitiveProperties(*process_group);
 
-  auto overrides = [&]() -> std::unordered_map<utils::Identifier, std::unordered_map<std::string, std::string>> {
+  const auto overrides = [&]() {
     switch (request.type) {
       case EncryptionType::Interactive: return createOverridesInteractively(sensitive_properties);
       case EncryptionType::SingleProperty: return createOverridesForSingleProperty(sensitive_properties, request.component_id, request.property_name, request.property_value);
       case EncryptionType::ReEncrypt: return createOverridesForReEncryption(sensitive_properties);
     }
-    return {};
+    return core::flow::Overrides{};
   }();
-  if (overrides.empty()) {
+  if (overrides.isEmpty()) {
     return;
   }
 

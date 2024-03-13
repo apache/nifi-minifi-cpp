@@ -184,24 +184,24 @@ TEST_CASE("YamlFlowSerializer can encrypt the sensitive properties") {
   YAML::Node root_yaml_node = YAML::Load(std::string{config_yaml});
   const auto flow_serializer = core::yaml::YamlFlowSerializer{root_yaml_node};
 
-  using Overrides = std::unordered_map<utils::Identifier, std::unordered_map<std::string, std::string>>;
   const auto processor_id = utils::Identifier::parse("469617f1-3898-4bbf-91fe-27d8f4dd2a75").value();
   const auto controller_service_id = utils::Identifier::parse("b9801278-7b5d-4314-aed6-713fd4b5f933").value();
 
   const auto [overrides, expected_results] = GENERATE_REF(
-      std::make_tuple(Overrides{},
+      std::make_tuple(core::flow::Overrides{},
           std::array{"very_secure_password", "very_secure_passphrase"}),
-      std::make_tuple(Overrides{{processor_id, {{"invokehttp-proxy-password", "password123"}}}},
+      std::make_tuple(core::flow::Overrides{}.add(processor_id, "invokehttp-proxy-password", "password123"),
           std::array{"password123", "very_secure_passphrase"}),
-      std::make_tuple(Overrides{{controller_service_id, {{"Passphrase", "speak friend and enter"}}}},
+      std::make_tuple(core::flow::Overrides{}.add(controller_service_id, "Passphrase", "speak friend and enter"),
           std::array{"very_secure_password", "speak friend and enter"}),
-      std::make_tuple(Overrides{{processor_id, {{"invokehttp-proxy-password", "password123"}}}, {controller_service_id, {{"Passphrase", "speak friend and enter"}}}},
+      std::make_tuple(core::flow::Overrides{}.add(processor_id, "invokehttp-proxy-password", "password123")
+                                             .add(controller_service_id, "Passphrase", "speak friend and enter"),
           std::array{"password123", "speak friend and enter"}));
 
   std::string config_yaml_encrypted = flow_serializer.serialize(*process_group, schema, encryption_provider, overrides);
 
   {
-    std::regex regex{R"_(invokehttp-proxy-password: (enc\{.*\}))_"};
+    std::regex regex{R"_(invokehttp-proxy-password: (.*))_"};
     std::smatch match_results;
     CHECK(std::regex_search(config_yaml_encrypted, match_results, regex));
 
@@ -211,7 +211,7 @@ TEST_CASE("YamlFlowSerializer can encrypt the sensitive properties") {
   }
 
   {
-    std::regex regex{R"_(Passphrase: (enc\{.*\}))_"};
+    std::regex regex{R"_(Passphrase: (.*))_"};
     std::smatch match_results;
     CHECK(std::regex_search(config_yaml_encrypted, match_results, regex));
 
@@ -233,17 +233,43 @@ TEST_CASE("YamlFlowSerializer with an override can add a new property to the flo
   const auto flow_serializer = core::yaml::YamlFlowSerializer{root_yaml_node};
 
   const auto second_controller_service_id = utils::Identifier::parse("b418f4ff-e598-4ea2-921f-14f9dd864482").value();
-  const auto overrides = std::unordered_map<utils::Identifier, std::unordered_map<std::string, std::string>>{{second_controller_service_id, {{"Passphrase", "new passphrase"}}}};
 
-  std::string config_yaml_encrypted = flow_serializer.serialize(*process_group, schema, encryption_provider, overrides);
+  SECTION("with required overrides") {
+    const auto overrides = core::flow::Overrides{}.add(second_controller_service_id, "Passphrase", "new passphrase");
 
-  // find the second match
-  std::regex regex{R"_(Passphrase: (enc\{.*\}))_"};
-  std::smatch match_results;
-  REQUIRE(std::regex_search(config_yaml_encrypted.cbegin(), config_yaml_encrypted.cend(), match_results, regex));
-  REQUIRE(std::regex_search(match_results.suffix().first, config_yaml_encrypted.cend(), match_results, regex));
-  REQUIRE(match_results.size() == 2);
+    std::string config_yaml_encrypted = flow_serializer.serialize(*process_group, schema, encryption_provider, overrides);
 
-  std::string encrypted_value = match_results[1];
-  CHECK(utils::crypto::property_encryption::decrypt(encrypted_value, encryption_provider) == "new passphrase");
+    std::regex regex{R"_(Passphrase: (.*))_"};
+    std::smatch match_results;
+
+    // skip the first match
+    REQUIRE(std::regex_search(config_yaml_encrypted.cbegin(), config_yaml_encrypted.cend(), match_results, regex));
+
+    // verify the second match
+    REQUIRE(std::regex_search(match_results.suffix().first, config_yaml_encrypted.cend(), match_results, regex));
+    REQUIRE(match_results.size() == 2);
+    std::string encrypted_value = match_results[1];
+    CHECK(utils::crypto::property_encryption::decrypt(encrypted_value, encryption_provider) == "new passphrase");
+  }
+
+  SECTION("with optional overrides: the override is only used if the property is already in the flow config") {
+    const auto first_controller_service_id = utils::Identifier::parse("b9801278-7b5d-4314-aed6-713fd4b5f933").value();
+    const auto overrides = core::flow::Overrides{}
+        .addOptional(first_controller_service_id, "Passphrase", "first new passphrase")
+        .addOptional(second_controller_service_id, "Passphrase", "second new passphrase");
+
+    std::string config_yaml_encrypted = flow_serializer.serialize(*process_group, schema, encryption_provider, overrides);
+
+    std::regex regex{R"_(Passphrase: (.*))_"};
+    std::smatch match_results;
+
+    // verify the first match
+    REQUIRE(std::regex_search(config_yaml_encrypted.cbegin(), config_yaml_encrypted.cend(), match_results, regex));
+    REQUIRE(match_results.size() == 2);
+    std::string encrypted_value = match_results[1];
+    CHECK(utils::crypto::property_encryption::decrypt(encrypted_value, encryption_provider) == "first new passphrase");
+
+    // check that there is no second match
+    CHECK_FALSE(std::regex_search(match_results.suffix().first, config_yaml_encrypted.cend(), match_results, regex));
+  }
 }

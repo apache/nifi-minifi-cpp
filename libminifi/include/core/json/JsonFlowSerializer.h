@@ -26,12 +26,12 @@ class JsonFlowSerializer : public core::flow::FlowSerializer {
   explicit JsonFlowSerializer(rapidjson::Document document) : flow_definition_json_(std::move(document)) {}
 
   [[nodiscard]] std::string serialize(const core::ProcessGroup& process_group, const core::flow::FlowSchema& schema, const utils::crypto::EncryptionProvider& encryption_provider,
-      const std::unordered_map<utils::Identifier, std::unordered_map<std::string, std::string>>& overrides) const override;
+      const core::flow::Overrides& overrides) const override;
 
  private:
   void encryptSensitiveProperties(rapidjson::Value& property_jsons, rapidjson::Document::AllocatorType& alloc,
       const std::map<std::string, Property>& properties, const utils::crypto::EncryptionProvider& encryption_provider,
-      std::unordered_map<std::string, std::string> component_overrides) const;
+      const core::flow::Overrides& overrides, const utils::Identifier& component_id) const;
 
   rapidjson::Document flow_definition_json_;
   std::shared_ptr<logging::Logger> logger_{logging::LoggerFactory<JsonFlowSerializer>::getLogger()};
