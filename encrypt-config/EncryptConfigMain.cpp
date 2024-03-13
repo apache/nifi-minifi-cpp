@@ -60,15 +60,21 @@ int main(int argc, char* argv[]) try {
   }
 
   EncryptConfig encrypt_config{argument_parser.get("-m")};
+
   std::string operation = argument_parser.get("operation");
+  const auto re_encrypt = argument_parser.get<bool>("--re-encrypt");
+  const auto component_id = argument_parser.present("--component-id");
+  const auto property_name = argument_parser.present("--property-name");
+  const auto property_value = argument_parser.present("--property-value");
+
+  if (operation != OPERATION_FLOW_CONFIG && (re_encrypt || component_id || property_name || property_value)) {
+    std::cerr << "Unsupported option for operation '" << operation << "'\n\n" << argument_parser;
+    return 5;
+  }
 
   if (operation == OPERATION_MINIFI_PROPERTIES) {
     encrypt_config.encryptSensitiveValuesInMinifiProperties();
   } else if (operation == OPERATION_FLOW_CONFIG) {
-    auto re_encrypt = argument_parser.get<bool>("--re-encrypt");
-    auto component_id = argument_parser.present("--component-id");
-    auto property_name = argument_parser.present("--property-name");
-    auto property_value = argument_parser.present("--property-value");
     encrypt_config.encryptSensitiveValuesInFlowConfig(re_encrypt, component_id, property_name, property_value);
   } else if (operation == OPERATION_WHOLE_FLOW_CONFIG_FILE) {
     encrypt_config.encryptWholeFlowConfigFile();
