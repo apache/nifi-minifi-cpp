@@ -108,8 +108,8 @@ void encryptSensitiveValuesInFlowConfigImpl(
   minifi::core::extension::ExtensionManager::get().initialize(configure);
 
   minifi::core::flow::AdaptiveConfiguration adaptive_configuration{minifi::core::ConfigurationContext{
-      .flow_file_repo = minifi::core::createRepository("flowfilerepository"),
-      .content_repo = std::make_shared<minifi::core::repository::VolatileContentRepository>(),
+      .flow_file_repo = nullptr,
+      .content_repo = nullptr,
       .configuration = configure,
       .path = flow_config_path,
       .filesystem = filesystem,
