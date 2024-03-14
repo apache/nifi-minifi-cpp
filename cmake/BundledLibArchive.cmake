@@ -50,9 +50,9 @@ function(use_bundled_libarchive SOURCE_DIR BINARY_DIR)
             -DENABLE_WERROR=OFF)
 
     if (MINIFI_OPENSSL)
-        list(APPEND LIBARCHIVE_CMAKE_ARGS -DENABLE_OPENSSL=OFF)
-    else()
         list(APPEND LIBARCHIVE_CMAKE_ARGS -DENABLE_OPENSSL=ON)
+    else()
+        list(APPEND LIBARCHIVE_CMAKE_ARGS -DENABLE_OPENSSL=OFF)
     endif()
 
     if (NOT ENABLE_LZMA)
