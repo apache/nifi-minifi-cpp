@@ -199,6 +199,8 @@ class Configuration : public Properties {
   static constexpr const char *controller_socket_port = "controller.socket.port";
   static constexpr const char *controller_ssl_context_service = "controller.ssl.context.service";
 
+  static constexpr const char *nifi_flow_file_repository_check_health = "nifi.flowfile.repository.check.health";
+
   MINIFIAPI static const std::unordered_map<std::string_view, gsl::not_null<const core::PropertyValidator*>> CONFIGURATION_PROPERTIES;
   MINIFIAPI static const std::array<const char*, 2> DEFAULT_SENSITIVE_PROPERTIES;
 

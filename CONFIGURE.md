@@ -362,6 +362,10 @@ The Content Repository can be configured with the `nifi.content.repository.class
     # in minifi.properties
     nifi.content.repository.class.name=FileSystemRepository
 
+During startup, MiNiFi checks if the flowfiles and their respective content are in good health (corruption can rarely occur due to ungraceful shutdowns) and filters out these corrupt flowfiles.
+This can slow down startup if there is a significant number of flowfiles. This health check can be disabled by setting `nifi.flowfile.repository.check.health` to `false`
+
+
 The Provenance Repository can be configured with the `nifi.provenance.repository.class.name` property. If not specified, it uses the `ProvenanceRepository` class by default, which persists the provenance events in a RocksDB database. Alternatively it can be configured to use a `VolatileProvenanceRepository` that keeps the state in memory (so the state gets lost upon restart), or the `NoOpRepository` to not keep track of the provenance events. By default we do not keep track of the provenance data, so `NoOpRepository` is the value specified in the default minifi.properties file.
 
     # in minifi.properties

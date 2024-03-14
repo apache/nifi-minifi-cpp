@@ -67,7 +67,12 @@ class StreamManager {
    */
   virtual std::shared_ptr<io::BaseStream> read(const T &streamId) = 0;
 
-  virtual size_t size(const T &streamId) {return read(streamId)->size();}
+  virtual size_t size(const T &streamId) {
+    auto stream = read(streamId);
+    if (!stream)
+     return 0;
+    return stream->size();
+  }
 
   /**
    * Closes the stream

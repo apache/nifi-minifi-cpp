@@ -18,7 +18,6 @@
 
 #include <chrono>
 #include <map>
-#include <memory>
 #include <string>
 #include <thread>
 #include <optional>
@@ -39,13 +38,14 @@
 #include "core/repository/VolatileFlowFileRepository.h"
 #include "core/repository/VolatileProvenanceRepository.h"
 #include "DatabaseContentRepository.h"
+#include "catch2/generators/catch_generators.hpp"
 
 using namespace std::literals::chrono_literals;
 
 namespace {
 
 namespace {
-class TestProcessor : public minifi::core::Processor {
+class TestProcessor final : public core::Processor {
  public:
   using Processor::Processor;
 
@@ -58,10 +58,10 @@ class TestProcessor : public minifi::core::Processor {
 }  // namespace
 
 TEST_CASE("Test Repo Names", "[TestFFR1]") {
-  auto repoA = minifi::core::createRepository("FlowFileRepository", "flowfile");
+  const auto repoA = minifi::core::createRepository("FlowFileRepository", "flowfile");
   REQUIRE("flowfile" == repoA->getName());
 
-  auto repoB = minifi::core::createRepository("ProvenanceRepository", "provenance");
+  const auto repoB = minifi::core::createRepository("ProvenanceRepository", "provenance");
   REQUIRE("provenance" == repoB->getName());
 }
 
@@ -70,15 +70,15 @@ TEST_CASE("Test Repo Empty Value Attribute", "[TestFFR1]") {
   LogTestController::getInstance().setDebug<core::repository::FileSystemRepository>();
   LogTestController::getInstance().setDebug<core::repository::FlowFileRepository>();
   TestController testController;
-  auto dir = testController.createTempDirectory();
-  std::shared_ptr<core::repository::FlowFileRepository> repository = std::make_shared<core::repository::FlowFileRepository>("ff", dir.string(), 0ms, 0, 1ms);
+  const auto dir = testController.createTempDirectory();
+  const auto repository = std::make_shared<core::repository::FlowFileRepository>("ff", dir.string(), 0ms, 0, 1ms);
 
   const auto configuration = std::make_shared<minifi::Configure>();
   configuration->setHome(dir);
   repository->initialize(configuration);
 
   std::shared_ptr<core::ContentRepository> content_repo = std::make_shared<core::repository::VolatileContentRepository>();
-  auto file = std::make_shared<minifi::FlowFileRecord>();
+  const auto file = std::make_shared<minifi::FlowFileRecord>();
 
   file->addAttribute("keyA", "");
 
@@ -92,14 +92,14 @@ TEST_CASE("Test Repo Empty Key Attribute ", "[TestFFR2]") {
   LogTestController::getInstance().setDebug<core::repository::FileSystemRepository>();
   LogTestController::getInstance().setDebug<core::repository::FlowFileRepository>();
   TestController testController;
-  auto dir = testController.createTempDirectory();
-  std::shared_ptr<core::repository::FlowFileRepository> repository = std::make_shared<core::repository::FlowFileRepository>("ff", dir.string(), 0ms, 0, 1ms);
+  const auto dir = testController.createTempDirectory();
+  const auto repository = std::make_shared<core::repository::FlowFileRepository>("ff", dir.string(), 0ms, 0, 1ms);
 
   const auto configuration = std::make_shared<minifi::Configure>();
   configuration->setHome(dir);
   repository->initialize(configuration);
   std::shared_ptr<core::ContentRepository> content_repo = std::make_shared<core::repository::VolatileContentRepository>();
-  auto file = std::make_shared<minifi::FlowFileRecord>();
+  const auto file = std::make_shared<minifi::FlowFileRecord>();
 
   file->addAttribute("keyA", "hasdgasdgjsdgasgdsgsadaskgasd");
 
@@ -116,7 +116,7 @@ TEST_CASE("Test Repo Key Attribute Verify ", "[TestFFR3]") {
   LogTestController::getInstance().setDebug<core::repository::FlowFileRepository>();
   TestController testController;
   auto dir = testController.createTempDirectory();
-  std::shared_ptr<core::repository::FlowFileRepository> repository = std::make_shared<core::repository::FlowFileRepository>("ff", dir.string(), 0ms, 0, 1ms);
+  const auto repository = std::make_shared<core::repository::FlowFileRepository>("ff", dir.string(), 0ms, 0, 1ms);
 
   const auto configuration = std::make_shared<minifi::Configure>();
   configuration->setHome(dir);
@@ -166,7 +166,7 @@ TEST_CASE("Test Delete Content ", "[TestFFR4]") {
 
   auto dir = testController.createTempDirectory();
 
-  std::shared_ptr<core::repository::FlowFileRepository> repository = std::make_shared<core::repository::FlowFileRepository>("ff", dir.string(), 0ms, 0, 1ms);
+  const auto repository = std::make_shared<core::repository::FlowFileRepository>("ff", dir.string(), 0ms, 0, 1ms);
 
   std::fstream file;
   file.open(dir / "tstFile.ext", std::ios::out);
@@ -183,7 +183,7 @@ TEST_CASE("Test Delete Content ", "[TestFFR4]") {
 
 
   {
-    std::shared_ptr<minifi::ResourceClaim> claim = std::make_shared<minifi::ResourceClaim>((dir / "tstFile.ext").string(), content_repo);
+    const auto claim = std::make_shared<minifi::ResourceClaim>((dir / "tstFile.ext").string(), content_repo);
     minifi::FlowFileRecord record;
     record.setResourceClaim(claim);
 
@@ -217,7 +217,7 @@ TEST_CASE("Test Validate Checkpoint ", "[TestFFR5]") {
 
   auto dir = testController.createTempDirectory();
 
-  std::shared_ptr<core::repository::FlowFileRepository> repository = std::make_shared<core::repository::FlowFileRepository>("ff", dir.string(), 0ms, 0, 1ms);
+  const auto repository = std::make_shared<core::repository::FlowFileRepository>("ff", dir.string(), 0ms, 0, 1ms);
 
   std::fstream file;
   file.open(dir / "tstFile.ext", std::ios::out);
@@ -232,7 +232,8 @@ TEST_CASE("Test Validate Checkpoint ", "[TestFFR5]") {
 
   repository->loadComponent(content_repo);
 
-  std::shared_ptr<minifi::ResourceClaim> claim = std::make_shared<minifi::ResourceClaim>((dir / "tstFile.ext").string(), content_repo);
+  auto claim = std::make_shared<minifi::ResourceClaim>((dir / "tstFile.ext").string(), content_repo);
+
   {
     minifi::FlowFileRecord record;
     record.setResourceClaim(claim);
@@ -306,9 +307,6 @@ TEST_CASE("Test FlowFile Restore", "[TestFFR6]") {
   });
   auto flowController = std::make_shared<minifi::FlowController>(prov_repo, ff_repository, config, std::move(flowConfig), content_repo);
 
-  std::string data = "banana";
-  minifi::io::BufferStream content(data);
-
   /**
    * Currently it is the Connection's responsibility to persist the incoming
    * flowFiles to the FlowFileRepository. Upon restart the FlowFileRepository
@@ -317,6 +315,8 @@ TEST_CASE("Test FlowFile Restore", "[TestFFR6]") {
    * which case the orphan FlowFiles are deleted.)
    */
   {
+    std::string data = "banana";
+    minifi::io::BufferStream content(data);
     std::shared_ptr<core::Processor> processor = std::make_shared<TestProcessor>("dummy");
     utils::Identifier uuid = processor->getUUID();
     REQUIRE(uuid);
@@ -345,7 +345,7 @@ TEST_CASE("Test FlowFile Restore", "[TestFFR6]") {
   // this will first check the persisted repo and restore all FlowFiles
   // that still has an owner Connectable
   ff_repository->start();
-  LogTestController::getInstance().contains("Found connection for");
+  CHECK(LogTestController::getInstance().contains("Found connection for"));
 
   // check if the @input Connection's FlowFile was restored
   // upon the FlowFileRepository's startup
@@ -379,13 +379,13 @@ TEST_CASE("Flush deleted flowfiles before shutdown", "[TestFFR7]") {
   };
 
   TestController testController;
-  auto dir = testController.createTempDirectory();
+  const auto dir = testController.createTempDirectory();
 
-  auto config = std::make_shared<minifi::Configure>();
+  const auto config = std::make_shared<minifi::Configure>();
   config->setHome(dir);
   config->set(minifi::Configure::nifi_flowfile_repository_directory_default, (dir / "flowfile_repository").string());
 
-  auto content_repo = std::make_shared<core::repository::VolatileContentRepository>();
+  const auto content_repo = std::make_shared<core::repository::VolatileContentRepository>();
 
   auto connection = std::make_shared<minifi::Connection>(nullptr, nullptr, "Connection");
   std::map<std::string, core::Connectable*> connectionMap{{connection->getUUIDStr(), connection.get()}};
@@ -395,7 +395,7 @@ TEST_CASE("Flush deleted flowfiles before shutdown", "[TestFFR7]") {
     int flush_counter{0};
     std::atomic<bool> stop{false};
 
-    std::shared_ptr<TestFlowFileRepository> ff_repository = std::make_shared<TestFlowFileRepository>("flowFileRepository");
+    const auto ff_repository = std::make_shared<TestFlowFileRepository>("flowFileRepository");
 
     std::thread shutdown{[&] {
       while (!stop.load()) {
@@ -406,7 +406,7 @@ TEST_CASE("Flush deleted flowfiles before shutdown", "[TestFFR7]") {
 
     ff_repository->onFlush_ = [&] {
       {
-        std::lock_guard<std::mutex> lock(flush_counter_mutex);
+        std::lock_guard lock(flush_counter_mutex);
         if (++flush_counter != 1) {
           return;
         }
@@ -439,7 +439,7 @@ TEST_CASE("Flush deleted flowfiles before shutdown", "[TestFFR7]") {
 
   // check if the deleted flowfiles are indeed deleted
   {
-    std::shared_ptr<TestFlowFileRepository> ff_repository = std::make_shared<TestFlowFileRepository>("flowFileRepository");
+    const auto ff_repository = std::make_shared<TestFlowFileRepository>("flowFileRepository");
     ff_repository->setConnectionMap(connectionMap);
     REQUIRE(ff_repository->initialize(config));
     ff_repository->loadComponent(content_repo);
@@ -490,18 +490,18 @@ TEST_CASE("FlowFileRepository synchronously pushes existing flow files") {
   LogTestController::getInstance().setDebug<core::repository::FileSystemRepository>();
   LogTestController::getInstance().setDebug<core::repository::FlowFileRepository>();
   TestController testController;
-  auto home_dir = testController.createTempDirectory();
-  auto ff_dir = testController.createTempDirectory();
-  auto content_dir = testController.createTempDirectory();
+  const auto home_dir = testController.createTempDirectory();
+  const auto ff_dir = testController.createTempDirectory();
+  const auto content_dir = testController.createTempDirectory();
 
-  auto config = std::make_shared<minifi::Configure>();
+  const auto config = std::make_shared<minifi::Configure>();
   config->setHome(home_dir);
   config->set(minifi::Configure::nifi_flowfile_repository_directory_default, ff_dir.string());
   config->set(minifi::Configure::nifi_dbcontent_repository_directory_default, content_dir.string());
 
 
   utils::Identifier ff_id;
-  auto connection_id = utils::IdGenerator::getIdGenerator()->generate();
+  const auto connection_id = utils::IdGenerator::getIdGenerator()->generate();
 
   {
     auto ff_repo = std::make_shared<core::repository::FlowFileRepository>();
@@ -621,15 +621,15 @@ TEST_CASE("Test getting flow file repository size properties", "[TestGettingRepo
 
 TEST_CASE("Test getting noop repository size properties", "[TestGettingRepositorySize]") {
   TestController testController;
-  auto dir = testController.createTempDirectory();
+  const auto dir = testController.createTempDirectory();
 
-  auto repository = minifi::core::createRepository("NoOpRepository", "ff");
+  const auto repository = minifi::core::createRepository("NoOpRepository", "ff");
 
   const auto configuration = std::make_shared<minifi::Configure>();
   configuration->setHome(dir);
   repository->initialize(configuration);
 
-  auto flow_file = std::make_shared<minifi::FlowFileRecord>();
+  const auto flow_file = std::make_shared<minifi::FlowFileRecord>();
 
   flow_file->addAttribute("key", "testattributevalue");
 
@@ -648,12 +648,12 @@ TEST_CASE("Test getting content repository size properties", "[TestGettingReposi
   LogTestController::getInstance().setDebug<core::repository::VolatileContentRepository>();
   LogTestController::getInstance().setDebug<core::repository::DatabaseContentRepository>();
   TestController testController;
-  auto dir = testController.createTempDirectory();
+  const auto dir = testController.createTempDirectory();
 
-  auto repository = std::make_shared<core::repository::FlowFileRepository>("ff", dir.string(), 0ms, 0, 1ms);
+  const auto repository = std::make_shared<core::repository::FlowFileRepository>("ff", dir.string(), 0ms, 0, 1ms);
 
-  auto content_repo_dir = testController.createTempDirectory();
-  auto configuration = std::make_shared<minifi::Configure>();
+  const auto content_repo_dir = testController.createTempDirectory();
+  const auto configuration = std::make_shared<minifi::Configure>();
   configuration->setHome(dir);
   configuration->set(minifi::Configure::nifi_dbcontent_repository_directory_default, content_repo_dir.string());
   std::string content = "content";
@@ -723,7 +723,7 @@ TEST_CASE("Flow file repositories can be stopped", "[TestRepoIsRunning]") {
   LogTestController::getInstance().setDebug<core::repository::VolatileFlowFileRepository>();
   LogTestController::getInstance().setDebug<core::repository::VolatileProvenanceRepository>();
   TestController testController;
-  auto dir = testController.createTempDirectory();
+  const auto dir = testController.createTempDirectory();
 
   std::shared_ptr<core::Repository> repository;
   SECTION("FlowFileRepository") {
@@ -743,7 +743,7 @@ TEST_CASE("Flow file repositories can be stopped", "[TestRepoIsRunning]") {
   }
 
   SECTION("NoOpRepository") {
-    repository = minifi::core::createRepository("NoOpRepository", "ff");
+    repository = core::createRepository("NoOpRepository", "ff");
   }
 
   const auto configuration = std::make_shared<minifi::Configure>();
@@ -763,7 +763,7 @@ TEST_CASE("Content repositories are always running", "[TestRepoIsRunning]") {
   LogTestController::getInstance().setDebug<core::repository::VolatileContentRepository>();
   LogTestController::getInstance().setDebug<core::repository::DatabaseContentRepository>();
   TestController testController;
-  auto dir = testController.createTempDirectory();
+  const auto dir = testController.createTempDirectory();
 
   std::shared_ptr<core::ContentRepository> content_repo;
   SECTION("FileSystemRepository") {
@@ -779,6 +779,71 @@ TEST_CASE("Content repositories are always running", "[TestRepoIsRunning]") {
   }
 
   REQUIRE(content_repo->isRunning());
+}
+
+std::shared_ptr<minifi::FlowFileRecord> createFlowFileWithContent(core::ContentRepository& content_repo, std::string_view content) {
+  auto flow_file = std::make_shared<minifi::FlowFileRecord>();
+  const auto content_session = content_repo.createSession();
+  const auto claim = content_session->create();
+  const auto stream = content_session->write(claim);
+
+  stream->write(utils::as_span<const std::byte>(std::span(content)));
+  flow_file->setResourceClaim(claim);
+  flow_file->setSize(stream->size());
+  flow_file->setOffset(0);
+  stream->close();
+  content_session->commit();
+  return flow_file;
+}
+
+void corruptFlowFile(core::FlowFile& ff) {
+  ff.setSize(ff.getSize()*2);
+}
+
+TEST_CASE("FlowFileRepository can filter out too small contents") {
+  LogTestController::getInstance().setDebug<core::ContentRepository>();
+  LogTestController::getInstance().setDebug<core::repository::FileSystemRepository>();
+  LogTestController::getInstance().setDebug<core::repository::FlowFileRepository>();
+  TestController testController;
+  const auto ff_dir = testController.createTempDirectory();
+  const auto content_dir = testController.createTempDirectory();
+
+  auto config = std::make_shared<minifi::Configure>();
+  config->set(minifi::Configure::nifi_flowfile_repository_directory_default, ff_dir.string());
+  config->set(minifi::Configure::nifi_dbcontent_repository_directory_default, content_dir.string());
+
+  const auto [check_health, expected_flowfiles] = GENERATE(
+      std::make_tuple("false", size_t{2}),
+      std::make_tuple("true", size_t{1}));
+  config->set(minifi::Configure::nifi_flow_file_repository_check_health, check_health);
+  const auto content_repo = GENERATE(
+      static_cast<std::shared_ptr<core::ContentRepository>>(std::make_shared<core::repository::FileSystemRepository>()),
+      static_cast<std::shared_ptr<core::ContentRepository>>(std::make_shared<core::repository::DatabaseContentRepository>()));
+
+
+  auto ff_repo = std::make_shared<core::repository::FlowFileRepository>();
+  REQUIRE(ff_repo->initialize(config));
+  REQUIRE(content_repo->initialize(config));
+  auto connection_id = utils::IdGenerator::getIdGenerator()->generate();
+  auto connection = std::make_shared<minifi::Connection>(ff_repo, content_repo, "TestConnection", connection_id);
+
+  auto first_flow_file = createFlowFileWithContent(*content_repo, "foo");
+  auto second_flow_file = createFlowFileWithContent(*content_repo, "bar");
+
+  std::map<std::string, core::Connectable*> connection_map{{connection->getUUIDStr(), connection.get()}};
+
+  first_flow_file->setConnection(connection.get());
+  first_flow_file->Persist(ff_repo);
+
+  second_flow_file->setConnection(connection.get());
+  corruptFlowFile(*second_flow_file);
+  second_flow_file->Persist(ff_repo);
+
+  ff_repo->setConnectionMap(connection_map);
+
+  CHECK(connection->getQueueSize() == 0);
+  ff_repo->loadComponent(content_repo);
+  CHECK(connection->getQueueSize() == expected_flowfiles);
 }
 
 }  // namespace

@@ -41,6 +41,9 @@
 #include "utils/StoppableThread.h"
 #include "RocksDbRepository.h"
 
+namespace org::apache::nifi::minifi {
+class FlowFileRecord;
+}
 namespace org::apache::nifi::minifi::core::repository {
 
 #ifdef WIN32
@@ -114,6 +117,9 @@ class FlowFileRepository : public RocksDbRepository, public SwapManager {
 
   void deserializeFlowFilesWithNoContentClaim(minifi::internal::OpenRocksDb& opendb, std::list<ExpiredFlowFileInfo>& flow_files);
 
+  bool contentSizeIsAmpleForFlowFile(const FlowFileRecord& flow_file_record, const std::shared_ptr<ResourceClaim>& resource_claim) const;
+  Connectable* getContainer(const std::string& container_id);
+
   moodycamel::ConcurrentQueue<ExpiredFlowFileInfo> keys_to_delete_;
   std::shared_ptr<core::ContentRepository> content_repo_;
   std::unique_ptr<FlowFileLoader> swap_loader_;
@@ -121,6 +127,7 @@ class FlowFileRepository : public RocksDbRepository, public SwapManager {
 
   std::chrono::milliseconds compaction_period_;
   std::unique_ptr<utils::StoppableThread> compaction_thread_;
+  bool check_flowfile_content_size_ = true;
 };
 
 }  // namespace org::apache::nifi::minifi::core::repository

@@ -17,7 +17,6 @@
  */
 
 #include "core/repository/FileSystemRepository.h"
-#include <memory>
 #include <string>
 #include <filesystem>
 #include "io/FileStream.h"
@@ -26,9 +25,8 @@
 
 namespace org::apache::nifi::minifi::core::repository {
 
-bool FileSystemRepository::initialize(const std::shared_ptr<minifi::Configure>& configuration) {
-  std::string directory_str;
-  if (configuration->get(Configure::nifi_dbcontent_repository_directory_default, directory_str) && !directory_str.empty()) {
+bool FileSystemRepository::initialize(const std::shared_ptr<Configure>& configuration) {
+  if (std::string directory_str; configuration->get(Configure::nifi_dbcontent_repository_directory_default, directory_str) && !directory_str.empty()) {
     directory_ = directory_str;
   } else {
     directory_ = configuration->getHome().string();
@@ -37,23 +35,23 @@ bool FileSystemRepository::initialize(const std::shared_ptr<minifi::Configure>& 
   return true;
 }
 
-std::shared_ptr<io::BaseStream> FileSystemRepository::write(const minifi::ResourceClaim& claim, bool append) {
+std::shared_ptr<io::BaseStream> FileSystemRepository::write(const ResourceClaim& claim, bool append) {
   return std::make_shared<io::FileStream>(claim.getContentFullPath(), append);
 }
 
-bool FileSystemRepository::exists(const minifi::ResourceClaim& streamId) {
-  std::ifstream file(streamId.getContentFullPath());
+bool FileSystemRepository::exists(const ResourceClaim& streamId) {
+  const std::ifstream file(streamId.getContentFullPath());
   return file.good();
 }
 
-std::shared_ptr<io::BaseStream> FileSystemRepository::read(const minifi::ResourceClaim& claim) {
+std::shared_ptr<io::BaseStream> FileSystemRepository::read(const ResourceClaim& claim) {
   return std::make_shared<io::FileStream>(claim.getContentFullPath(), 0, false);
 }
 
 bool FileSystemRepository::removeKey(const std::string& content_path) {
   logger_->log_debug("Deleting resource {}", content_path);
   std::error_code ec;
-  auto result = std::filesystem::exists(content_path, ec);
+  const auto result = std::filesystem::exists(content_path, ec);
   if (ec) {
     logger_->log_error("Deleting {} from content repository failed with the following error: {}", content_path, ec.message());
     return false;
@@ -79,14 +77,13 @@ void FileSystemRepository::clearOrphans() {
     auto path = directory_ +  "/" + filename.string();
     bool is_orphan = false;
     {
-      std::lock_guard<std::mutex> lock(count_map_mutex_);
+      std::lock_guard lock(count_map_mutex_);
       auto it = count_map_.find(path);
       is_orphan = it == count_map_.end() || it->second == 0;
     }
     if (is_orphan) {
       logger_->log_debug("Deleting orphan resource {}", path);
-      std::error_code ec;
-      if (!std::filesystem::remove(path, ec)) {
+      if (std::error_code ec; !std::filesystem::remove(path, ec)) {
         {
           std::lock_guard<std::mutex> lock(purge_list_mutex_);
           purge_list_.push_back(path);
@@ -96,6 +93,22 @@ void FileSystemRepository::clearOrphans() {
     }
     return true;
   }, logger_, false);
+}
+
+size_t FileSystemRepository::size(const ResourceClaim& claim) {
+  std::error_code ec;
+  const auto size = std::filesystem::file_size(claim.getContentFullPath(), ec);
+  if (ec)
+    return 0;
+  return size;
+}
+
+uint64_t FileSystemRepository::getRepositoryEntryCount() const {
+  auto dir_it = std::filesystem::recursive_directory_iterator(directory_, std::filesystem::directory_options::skip_permission_denied);
+  return std::count_if(
+    begin(dir_it),
+    end(dir_it),
+    [](auto& entry) { return entry.is_regular_file(); });
 }
 
 }  // namespace org::apache::nifi::minifi::core::repository

@@ -25,7 +25,6 @@
 #include <vector>
 
 #include "rocksdb/options.h"
-#include "rocksdb/write_batch.h"
 #include "rocksdb/slice.h"
 #include "FlowFileRecord.h"
 #include "utils/gsl.h"
@@ -119,6 +118,22 @@ void FlowFileRepository::run() {
   flush();
 }
 
+bool FlowFileRepository::contentSizeIsAmpleForFlowFile(const FlowFileRecord& flow_file_record, const std::shared_ptr<ResourceClaim>& resource_claim) const {
+  const auto stream_size = resource_claim ? content_repo_->size(*resource_claim) : 0;
+  const auto required_size = flow_file_record.getOffset() + flow_file_record.getSize();
+  return stream_size >= required_size;
+}
+
+Connectable* FlowFileRepository::getContainer(const std::string& container_id) {
+  auto container = containers_.find(container_id);
+  if (container != containers_.end())
+    return container->second;
+  // for backward compatibility
+  container = connection_map_.find(container_id);
+  if (container != connection_map_.end())
+    return container->second;
+  return nullptr;
+}
 void FlowFileRepository::initialize_repository() {
   auto opendb = db_->open();
   if (!opendb) {
@@ -127,37 +142,37 @@ void FlowFileRepository::initialize_repository() {
   }
   logger_->log_info("Reading existing flow files from database");
 
-  auto it = opendb->NewIterator(rocksdb::ReadOptions());
+  const auto it = opendb->NewIterator(rocksdb::ReadOptions());
   for (it->SeekToFirst(); it->Valid(); it->Next()) {
     utils::Identifier container_id;
     auto eventRead = FlowFileRecord::DeSerialize(gsl::make_span(it->value()).as_span<const std::byte>(), content_repo_, container_id);
-    std::string key = it->key().ToString();
-    if (eventRead) {
-      // on behalf of the just resurrected persisted instance
-      auto claim = eventRead->getResourceClaim();
-      if (claim) claim->increaseFlowFileRecordOwnedCount();
-      bool found = false;
-      auto search = containers_.find(container_id.to_string());
-      found = (search != containers_.end());
-      if (!found) {
-        // for backward compatibility
-        search = connection_map_.find(container_id.to_string());
-        found = (search != connection_map_.end());
-      }
-      if (found) {
-        logger_->log_debug("Found connection for {}, path {} ", container_id.to_string(), eventRead->getContentFullPath());
-        eventRead->setStoredToRepository(true);
-        // we found the connection for the persistent flowFile
-        // even if a processor immediately marks it for deletion, flush only happens after prune_stored_flowfiles
-        search->second->restore(eventRead);
-      } else {
-        logger_->log_warn("Could not find connection for {}, path {} ", container_id.to_string(), eventRead->getContentFullPath());
-        keys_to_delete_.enqueue({.key = key, .content = eventRead->getResourceClaim()});
-      }
-    } else {
+    const std::string key = it->key().ToString();
+    if (!eventRead) {
       // failed to deserialize FlowFile, cannot clear claim
       keys_to_delete_.enqueue({.key = key});
+      continue;
     }
+    auto claim = eventRead->getResourceClaim();
+    if (claim) {
+      claim->increaseFlowFileRecordOwnedCount();
+    }
+    const auto container = getContainer(container_id.to_string());
+    if (!container) {
+      logger_->log_warn("Could not find connection for %s, path %s ", container_id.to_string(), eventRead->getContentFullPath());
+      keys_to_delete_.enqueue({.key = key, .content = eventRead->getResourceClaim()});
+      continue;
+    }
+    if (check_flowfile_content_size_ && !contentSizeIsAmpleForFlowFile(*eventRead, claim)) {
+      logger_->log_warn("Content is missing or too small for flowfile {}", eventRead->getContentFullPath());
+      keys_to_delete_.enqueue({.key = key, .content = eventRead->getResourceClaim()});
+      continue;
+    }
+
+    logger_->log_debug("Found connection for %s, path %s ", container_id.to_string(), eventRead->getContentFullPath());
+    eventRead->setStoredToRepository(true);
+    // we found the connection for the persistent flowFile
+    // even if a processor immediately marks it for deletion, flush only happens after prune_stored_flowfiles
+    container->restore(eventRead);
   }
   flush();
   content_repo_->clearOrphans();
@@ -170,6 +185,14 @@ void FlowFileRepository::loadComponent(const std::shared_ptr<core::ContentReposi
   initialize_repository();
 }
 
+namespace {
+bool getRepositoryCheckHealth(const Configure& configure) {
+  std::string check_health_str;
+  configure.get(Configure::nifi_flow_file_repository_check_health, check_health_str);
+  return utils::string::toBool(check_health_str).value_or(true);
+}
+}  // namespace
+
 bool FlowFileRepository::initialize(const std::shared_ptr<Configure> &configure) {
   config_ = configure;
   std::string value;
@@ -177,6 +200,7 @@ bool FlowFileRepository::initialize(const std::shared_ptr<Configure> &configure)
   if (configure->get(Configure::nifi_flowfile_repository_directory_default, value) && !value.empty()) {
     directory_ = value;
   }
+  check_flowfile_content_size_ = getRepositoryCheckHealth(*configure);
   logger_->log_debug("NiFi FlowFile Repository Directory {}", directory_);
 
   setCompactionPeriod(configure);
