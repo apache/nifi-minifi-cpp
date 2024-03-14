@@ -15,8 +15,6 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
-#undef NDEBUG
 #include <chrono>
 #include <map>
 #include <memory>
@@ -29,13 +27,13 @@
 #include "FlowFileRecord.h"
 #include "provenance/Provenance.h"
 #include "properties/Configure.h"
-#include "../unit/ProvenanceTestHelper.h"
-#include "../TestBase.h"
-#include "../Catch.h"
+#include "unit/ProvenanceTestHelper.h"
+#include "unit/TestBase.h"
+#include "unit/Catch.h"
 #include "CustomProcessors.h"
-#include "TestControllerWithFlow.h"
-#include "EmptyFlow.h"
-#include "utils/IntegrationTestUtils.h"
+#include "unit/TestControllerWithFlow.h"
+#include "unit/EmptyFlow.h"
+#include "unit/TestUtils.h"
 
 using namespace std::literals::chrono_literals;
 
@@ -295,6 +293,6 @@ Controller Services: []
   // manually destroy the controller
   controller.controller_.reset();
 
-  REQUIRE(utils::verifyLogLinePresenceInPollTime(0s, "Destroying FlowController"));
+  REQUIRE(minifi::test::utils::verifyLogLinePresenceInPollTime(0s, "Destroying FlowController"));
   REQUIRE(LogTestController::getInstance().countOccurrences("Destroying scheduling agent") == 3);
 }

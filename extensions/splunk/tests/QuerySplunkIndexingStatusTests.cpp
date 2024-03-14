@@ -20,11 +20,11 @@
 #include "QuerySplunkIndexingStatus.h"
 #include "MockSplunkHEC.h"
 #include "SplunkAttributes.h"
-#include "TestBase.h"
-#include "Catch.h"
+#include "unit/TestBase.h"
+#include "unit/Catch.h"
 #include "processors/UpdateAttribute.h"
-#include "ReadFromFlowFileTestProcessor.h"
-#include "WriteToFlowFileTestProcessor.h"
+#include "unit/ReadFromFlowFileTestProcessor.h"
+#include "unit/WriteToFlowFileTestProcessor.h"
 
 using QuerySplunkIndexingStatus = org::apache::nifi::minifi::extensions::splunk::QuerySplunkIndexingStatus;
 using ReadFromFlowFileTestProcessor = org::apache::nifi::minifi::processors::ReadFromFlowFileTestProcessor;

@@ -22,8 +22,8 @@
 #include <vector>
 #include <string>
 
-#include "TestBase.h"
-#include "Catch.h"
+#include "unit/TestBase.h"
+#include "unit/Catch.h"
 
 #include "processors/PutSQL.h"
 #include "processors/GenerateFlowFile.h"

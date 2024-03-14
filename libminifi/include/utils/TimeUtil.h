@@ -42,6 +42,10 @@
 
 #include "date/date.h"
 
+#ifdef WIN32
+#include "date/tz.h"
+#endif
+
 #define TIME_FORMAT "%Y-%m-%d %H:%M:%S"
 
 #if defined(_LIBCPP_VERSION) && _LIBCPP_VERSION < 170000
@@ -280,5 +284,11 @@ inline date::local_seconds roundToNextMinute(date::local_seconds tp) {
 inline date::local_seconds roundToNextSecond(date::local_seconds tp) {
   return std::chrono::floor<std::chrono::seconds>(tp) + std::chrono::seconds(1);
 }
+
+#ifdef WIN32
+// The tzdata location is set as a global variable in date-tz library
+// We need to set it from from libminifi to effect calls made from libminifi (on Windows)
+void dateSetInstall(const std::string& install);
+#endif
 
 }  // namespace org::apache::nifi::minifi::utils::timeutils

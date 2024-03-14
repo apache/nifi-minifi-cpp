@@ -15,7 +15,7 @@
  * limitations under the License.
  */
 
-#include "Catch.h"
+#include "unit/Catch.h"
 #include "ProcFs.h"
 #include "MockProcFs.h"
 

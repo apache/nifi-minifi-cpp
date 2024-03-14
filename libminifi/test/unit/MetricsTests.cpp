@@ -19,13 +19,13 @@
 
 #include "../../include/core/state/nodes/QueueMetrics.h"
 #include "../../include/core/state/nodes/RepositoryMetrics.h"
-#include "../TestBase.h"
-#include "../Catch.h"
+#include "unit/TestBase.h"
+#include "unit/Catch.h"
 #include "core/Processor.h"
 #include "core/ClassLoader.h"
 #include "repository/VolatileContentRepository.h"
-#include "ProvenanceTestHelper.h"
-#include "../DummyProcessor.h"
+#include "unit/ProvenanceTestHelper.h"
+#include "unit/DummyProcessor.h"
 #include "range/v3/algorithm/find_if.hpp"
 
 using namespace std::literals::chrono_literals;

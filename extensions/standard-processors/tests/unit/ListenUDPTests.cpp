@@ -16,12 +16,12 @@
  */
 #include <string>
 
-#include "Catch.h"
+#include "unit/Catch.h"
 #include "processors/ListenUDP.h"
-#include "SingleProcessorTestController.h"
-#include "Utils.h"
+#include "unit/SingleProcessorTestController.h"
 #include "controllers/SSLContextService.h"
 #include "range/v3/algorithm/contains.hpp"
+#include "unit/TestUtils.h"
 
 using ListenUDP = org::apache::nifi::minifi::processors::ListenUDP;
 

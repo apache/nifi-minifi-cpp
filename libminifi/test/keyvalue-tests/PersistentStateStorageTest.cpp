@@ -21,10 +21,8 @@
 #include <memory>
 #include <string>
 
-#include "Catch.h"
-
-#include "../TestBase.h"
-#include "../Catch.h"
+#include "unit/Catch.h"
+#include "unit/TestBase.h"
 #include "catch2/catch_session.hpp"
 #include "core/controller/ControllerService.h"
 #include "core/ProcessGroup.h"

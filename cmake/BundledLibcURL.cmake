@@ -50,12 +50,8 @@ function(use_bundled_curl SOURCE_DIR BINARY_DIR)
             -DCURL_USE_LIBSSH2=OFF
             -DUSE_LIBIDN2=OFF
             -DCURL_USE_LIBPSL=OFF
+            -DCURL_USE_OPENSSL=ON
             )
-    if (NOT MINIFI_OPENSSL)
-        list(APPEND CURL_CMAKE_ARGS -DCURL_USE_OPENSSL=OFF)
-    else()
-        list(APPEND CURL_CMAKE_ARGS -DCURL_USE_OPENSSL=ON)
-    endif()
 
     append_third_party_passthrough_args(CURL_CMAKE_ARGS "${CURL_CMAKE_ARGS}")
 
@@ -73,10 +69,7 @@ function(use_bundled_curl SOURCE_DIR BINARY_DIR)
     )
 
     # Set dependencies
-    add_dependencies(curl-external ZLIB::ZLIB)
-    if (MINIFI_OPENSSL)
-        add_dependencies(curl-external OpenSSL::SSL OpenSSL::Crypto)
-    endif()
+    add_dependencies(curl-external ZLIB::ZLIB OpenSSL::SSL OpenSSL::Crypto)
 
     # Set variables
     set(CURL_FOUND "YES" CACHE STRING "" FORCE)
@@ -96,13 +89,10 @@ function(use_bundled_curl SOURCE_DIR BINARY_DIR)
     set_target_properties(CURL::libcurl PROPERTIES IMPORTED_LOCATION "${CURL_LIBRARY}")
     add_dependencies(CURL::libcurl curl-external)
     target_include_directories(CURL::libcurl INTERFACE ${CURL_INCLUDE_DIRS})
-    target_link_libraries(CURL::libcurl INTERFACE ZLIB::ZLIB Threads::Threads)
+    target_link_libraries(CURL::libcurl INTERFACE ZLIB::ZLIB Threads::Threads OpenSSL::SSL OpenSSL::Crypto)
     if (APPLE)
         target_link_libraries(CURL::libcurl INTERFACE "-framework CoreFoundation")
         target_link_libraries(CURL::libcurl INTERFACE "-framework SystemConfiguration")
         target_link_libraries(CURL::libcurl INTERFACE "-framework CoreServices")
-    endif()
-    if (MINIFI_OPENSSL)
-        target_link_libraries(CURL::libcurl INTERFACE OpenSSL::SSL OpenSSL::Crypto)
     endif()
 endfunction(use_bundled_curl SOURCE_DIR BINARY_DIR)

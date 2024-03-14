@@ -45,7 +45,6 @@ add_minifi_option(PORTABLE "Instructs the compiler to remove architecture specif
 add_minifi_option(USE_SHARED_LIBS "Builds using shared libraries" ON)
 add_minifi_dependent_option(STATIC_BUILD "Attempts to statically link as many dependencies as possible." ON "NOT USE_SHARED_LIBS" OFF)
 add_minifi_option(LIBC_STATIC "Instructs the build system to statically link libstdc++ and glibc into minifiexe. Experiemental" OFF)
-add_minifi_option(MINIFI_OPENSSL "Enables OpenSSL" ON)
 add_minifi_option(ENABLE_OPS "Enable Operations/zlib Tools" ON)
 add_minifi_option(ENABLE_JNI "Instructs the build system to enable the JNI extension" OFF)
 add_minifi_option(ENABLE_OPC "Instructs the build system to enable the OPC extension" ON)
@@ -53,7 +52,6 @@ add_minifi_option(ENABLE_NANOFI "Instructs the build system to enable nanofi lib
 add_minifi_option(BUILD_SHARED_LIBS "Build yaml cpp shared lib" OFF)
 
 add_minifi_option(BUILD_ROCKSDB "Instructs the build system to use RocksDB from the third party directory" ON)
-add_minifi_option(ENABLE_CURL "Enables libCurl Properties." ON)
 
 add_minifi_option(MINIFI_FAIL_ON_WARNINGS "Treat warnings as errors" OFF)
 add_minifi_option(MINIFI_USE_REAL_ODBC_TEST_DRIVER "Use SQLite ODBC driver in SQL extenstion unit tests instead of a mock database" OFF)
@@ -123,7 +121,7 @@ add_minifi_option(ENABLE_TEST_PROCESSORS "Enables test processors" OFF)
 add_minifi_option(ENABLE_PROMETHEUS "Enables Prometheus support." ON)
 add_minifi_option(ENABLE_GRAFANA_LOKI "Enable Grafana Loki support" OFF)
 add_minifi_option(ENABLE_GRPC_FOR_LOKI "Enable gRPC for Grafana Loki extension" ON)
-add_minifi_dependent_option(ENABLE_CONTROLLER "Enables the build of MiNiFi controller binary." ON "ENABLE_CURL" OFF)
+add_minifi_option(ENABLE_CONTROLLER "Enables the build of MiNiFi controller binary." ON)
 
 set_minifi_cache_variable(CUSTOM_MALLOC OFF "Overwrite malloc implementation.")
 set_property(CACHE CUSTOM_MALLOC PROPERTY STRINGS "jemalloc" "mimalloc" "rpmalloc" OFF)

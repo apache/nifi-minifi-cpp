@@ -38,7 +38,7 @@ void ElasticsearchCredentialsControllerService::onEnable() {
     throw Exception(PROCESS_SCHEDULE_EXCEPTION, "Either an API Key or Username and Password must be provided");
 }
 
-void ElasticsearchCredentialsControllerService::authenticateClient(curl::HTTPClient& client) {
+void ElasticsearchCredentialsControllerService::authenticateClient(http::HTTPClient& client) {
   gsl_Expects(api_key_.has_value() != username_password_.has_value());
   if (api_key_) {
     client.setRequestHeader("Authorization", "ApiKey " + *api_key_);

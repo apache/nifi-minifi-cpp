@@ -32,8 +32,8 @@
 #include "processors/LogAttribute.h"
 #include "processors/PutFile.h"
 #include "UnfocusArchiveEntry.h"
-#include "TestBase.h"
-#include "Catch.h"
+#include "unit/TestBase.h"
+#include "unit/Catch.h"
 #include "repository/VolatileContentRepository.h"
 #include "unit/ProvenanceTestHelper.h"
 

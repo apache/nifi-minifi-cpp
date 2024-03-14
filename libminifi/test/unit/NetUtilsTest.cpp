@@ -18,13 +18,13 @@
 
 #include <string>
 
-#include "../TestBase.h"
-#include "../Catch.h"
+#include "unit/TestBase.h"
+#include "unit/Catch.h"
 #include "utils/net/DNS.h"
 #include "utils/net/AsioSocketUtils.h"
 #include "utils/StringUtils.h"
 #include "controllers/SSLContextService.h"
-#include "../Utils.h"
+#include "unit/TestUtils.h"
 
 namespace utils = org::apache::nifi::minifi::utils;
 namespace net = utils::net;

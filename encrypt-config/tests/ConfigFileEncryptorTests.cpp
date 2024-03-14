@@ -23,8 +23,8 @@
 #include "properties/Configuration.h"
 #include "utils/RegexUtils.h"
 
-#include "TestBase.h"
-#include "Catch.h"
+#include "unit/TestBase.h"
+#include "unit/Catch.h"
 
 using org::apache::nifi::minifi::encrypt_config::ConfigFile;
 using org::apache::nifi::minifi::encrypt_config::encryptSensitivePropertiesInFile;

@@ -20,8 +20,8 @@
 #include <new>
 #include <random>
 #include <string>
-#include "SingleProcessorTestController.h"
-#include "Catch.h"
+#include "unit/SingleProcessorTestController.h"
+#include "unit/Catch.h"
 #include "PutUDP.h"
 #include "core/ProcessContext.h"
 #include "utils/net/UdpServer.h"

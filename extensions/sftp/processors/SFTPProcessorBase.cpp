@@ -300,7 +300,7 @@ std::unique_ptr<utils::SFTPClient> SFTPProcessorBase::getOrCreateConnection(
       client->setPublicKeyAuthenticationCredentials(private_key_path, private_key_passphrase);
     }
     if (connection_cache_key.proxy_type != PROXY_TYPE_DIRECT) {
-      utils::HTTPProxy proxy;
+      http::HTTPProxy proxy;
       proxy.host = connection_cache_key.proxy_host;
       proxy.port = connection_cache_key.proxy_port;
       proxy.username = connection_cache_key.proxy_username;

@@ -20,9 +20,9 @@
 
 #include "rapidjson/writer.h"
 #include "rapidjson/stringbuffer.h"
-#include "TestBase.h"
-#include "Catch.h"
-#include "utils/TestUtils.h"
+#include "unit/TestBase.h"
+#include "unit/Catch.h"
+#include "unit/TestUtils.h"
 #include "AttributesToJSON.h"
 #include "GetFile.h"
 #include "PutFile.h"
@@ -61,7 +61,7 @@ class AttributesToJSONTestFixture {
     update_attribute_->setDynamicProperty("other_attribute", "other_value");
     update_attribute_->setDynamicProperty("empty_attribute", "");
 
-    utils::putFileToDir(dir_, TEST_FILE_NAME, TEST_FILE_CONTENT);
+    minifi::test::utils::putFileToDir(dir_, TEST_FILE_NAME, TEST_FILE_CONTENT);
   }
 
   static void assertJSONAttributesFromLog(const std::unordered_map<std::string, std::optional<std::string>>& expected_attributes) {

@@ -22,7 +22,7 @@
 #include <utility>
 #include <vector>
 #include <CivetServer.h>
-#include "tests/CivetLibrary.h"
+#include "integration/CivetLibrary.h"
 #include "core/logging/Logger.h"
 #include "core/logging/LoggerConfiguration.h"
 #include "rapidjson/document.h"

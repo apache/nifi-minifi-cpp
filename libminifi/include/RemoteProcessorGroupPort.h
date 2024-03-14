@@ -26,7 +26,7 @@
 #include <memory>
 #include <stack>
 
-#include "utils/BaseHTTPClient.h"
+#include "http/BaseHTTPClient.h"
 #include "concurrentqueue.h"
 #include "FlowFileRecord.h"
 #include "core/Processor.h"
@@ -163,7 +163,7 @@ class RemoteProcessorGroupPort : public core::Processor {
   void setURL(std::string val) {
     auto urls = utils::string::split(val, ",");
     for (const auto& url : urls) {
-      utils::URL parsed_url{utils::string::trim(url)};
+      http::URL parsed_url{utils::string::trim(url)};
       if (parsed_url.isValid()) {
         logger_->log_debug("Parsed RPG URL '{}' -> '{}'", url, parsed_url.hostPort());
         nifi_instances_.push_back({parsed_url.host(), parsed_url.port(), parsed_url.protocol()});
@@ -177,10 +177,10 @@ class RemoteProcessorGroupPort : public core::Processor {
     return nifi_instances_;
   }
 
-  void setHTTPProxy(const utils::HTTPProxy &proxy) {
+  void setHTTPProxy(const http::HTTPProxy &proxy) {
     this->proxy_ = proxy;
   }
-  utils::HTTPProxy getHTTPProxy() {
+  http::HTTPProxy getHTTPProxy() {
     return this->proxy_;
   }
   // refresh remoteSite2SiteInfo via nifi rest api
@@ -232,7 +232,7 @@ class RemoteProcessorGroupPort : public core::Processor {
   std::vector<struct RPG> nifi_instances_;
 
   // http proxy
-  utils::HTTPProxy proxy_;
+  http::HTTPProxy proxy_;
 
   bool bypass_rest_api_;
 

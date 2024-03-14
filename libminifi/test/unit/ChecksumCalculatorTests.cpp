@@ -17,9 +17,9 @@
 
 #include <numeric>
 
-#include "../TestBase.h"
-#include "../Catch.h"
-#include "utils/TestUtils.h"
+#include "unit/TestBase.h"
+#include "unit/Catch.h"
+#include "unit/TestUtils.h"
 #include "utils/ChecksumCalculator.h"
 
 namespace {
@@ -30,7 +30,7 @@ namespace {
 TEST_CASE("ChecksumCalculator can calculate the checksum, which is equal to sha256sum", "[ChecksumCalculator]") {
   TestController test_controller;
   auto test_dir = test_controller.createTempDirectory();
-  auto file_location = utils::putFileToDir(test_dir, "simple.txt", "one line of text\n");
+  auto file_location = minifi::test::utils::putFileToDir(test_dir, "simple.txt", "one line of text\n");
 
   REQUIRE(std::string{utils::ChecksumCalculator::CHECKSUM_TYPE} == std::string{"SHA256"});
   // the first size_t{} is required by Catch2; it can't use a constexpr expression directly
@@ -44,7 +44,7 @@ TEST_CASE("ChecksumCalculator can calculate the checksum, which is equal to sha2
 TEST_CASE("On Windows text files, the checksum calculated is also the same as sha256sum", "[ChecksumCalculator]") {
   TestController test_controller;
   auto test_dir = test_controller.createTempDirectory();
-  auto file_location = utils::putFileToDir(test_dir, "simple.txt", "one line of text\r\n");
+  auto file_location = minifi::test::utils::putFileToDir(test_dir, "simple.txt", "one line of text\r\n");
 
   utils::ChecksumCalculator checksum_calculator;
   checksum_calculator.setFileLocation(file_location);
@@ -54,7 +54,7 @@ TEST_CASE("On Windows text files, the checksum calculated is also the same as sh
 TEST_CASE("The checksum can be reset and recomputed", "[ChecksumCalculator]") {
   TestController test_controller;
   auto test_dir = test_controller.createTempDirectory();
-  auto file_location = utils::putFileToDir(test_dir, "simple.txt", "one line of text\n");
+  auto file_location = minifi::test::utils::putFileToDir(test_dir, "simple.txt", "one line of text\n");
 
   utils::ChecksumCalculator checksum_calculator;
   checksum_calculator.setFileLocation(file_location);
@@ -73,13 +73,13 @@ TEST_CASE("The checksum can be reset and recomputed", "[ChecksumCalculator]") {
 TEST_CASE("If the file location is updated, the checksum will be recomputed", "[ChecksumCalculator]") {
   TestController test_controller;
   auto test_dir = test_controller.createTempDirectory();
-  auto file_location = utils::putFileToDir(test_dir, "simple.txt", "one line of text\n");
+  auto file_location = minifi::test::utils::putFileToDir(test_dir, "simple.txt", "one line of text\n");
 
   utils::ChecksumCalculator checksum_calculator;
   checksum_calculator.setFileLocation(file_location);
   REQUIRE(checksum_calculator.getChecksum() == CHECKSUM_FOR_ONE_LINE_OF_TEXT);
 
-  auto other_file_location = utils::putFileToDir(test_dir, "long.txt", "one line of text\nanother line of text\n");
+  auto other_file_location = minifi::test::utils::putFileToDir(test_dir, "long.txt", "one line of text\nanother line of text\n");
   checksum_calculator.setFileLocation(other_file_location);
   REQUIRE(checksum_calculator.getChecksum() == CHECKSUM_FOR_TWO_LINES_OF_TEXT);
 }
@@ -89,7 +89,7 @@ TEST_CASE("Checksums can be computed for binary (eg. encrypted) files, too", "[C
   auto test_dir = test_controller.createTempDirectory();
   std::string binary_data(size_t{256}, '\0');
   std::iota(binary_data.begin(), binary_data.end(), 'x');
-  auto file_location = utils::putFileToDir(test_dir, "simple.txt", binary_data);
+  auto file_location = minifi::test::utils::putFileToDir(test_dir, "simple.txt", binary_data);
 
   utils::ChecksumCalculator checksum_calculator;
   checksum_calculator.setFileLocation(file_location);
@@ -99,11 +99,11 @@ TEST_CASE("Checksums can be computed for binary (eg. encrypted) files, too", "[C
 TEST_CASE("The agent identifier is excluded from the checksum", "[ChecksumCalculator]") {
   TestController test_controller;
   auto test_dir = test_controller.createTempDirectory();
-  auto file_location_1 = utils::putFileToDir(test_dir, "agent_one.txt",
+  auto file_location_1 = minifi::test::utils::putFileToDir(test_dir, "agent_one.txt",
       "nifi.c2.agent.class=Test\n"
       "nifi.c2.agent.identifier=Test-111\n"
       "nifi.c2.agent.heartbeat.period=10 sec\n");
-  auto file_location_2 = utils::putFileToDir(test_dir, "agent_two.txt",
+  auto file_location_2 = minifi::test::utils::putFileToDir(test_dir, "agent_two.txt",
       "nifi.c2.agent.class=Test\n"
       "nifi.c2.agent.identifier=Test-222\n"
       "nifi.c2.agent.heartbeat.period=10 sec\n");

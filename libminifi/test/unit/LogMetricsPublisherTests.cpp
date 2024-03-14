@@ -18,12 +18,12 @@
 #include <memory>
 #include <thread>
 
-#include "../TestBase.h"
-#include "../Catch.h"
+#include "unit/TestBase.h"
+#include "unit/Catch.h"
 #include "core/state/LogMetricsPublisher.h"
 #include "core/state/nodes/ResponseNodeLoader.h"
 #include "core/RepositoryFactory.h"
-#include "utils/IntegrationTestUtils.h"
+#include "unit/TestUtils.h"
 #include "utils/file/FileUtils.h"
 
 using namespace std::literals::chrono_literals;
@@ -70,7 +70,7 @@ TEST_CASE_METHOD(LogPublisherTestFixture, "Logging interval property is mandator
   }
   SECTION("Logging interval is set to 2 seconds") {
     configuration_->set(minifi::Configuration::nifi_metrics_publisher_log_metrics_logging_interval, "2s");
-    using org::apache::nifi::minifi::utils::verifyLogLinePresenceInPollTime;
+    using org::apache::nifi::minifi::test::utils::verifyLogLinePresenceInPollTime;
     publisher_.initialize(configuration_, response_node_loader_);
     REQUIRE(verifyLogLinePresenceInPollTime(5s, "Metric logging interval is set to 2000ms"));
   }
@@ -85,7 +85,7 @@ TEST_CASE_METHOD(LogPublisherTestFixture, "Verify empty metrics if no valid metr
   }
   publisher_.initialize(configuration_, response_node_loader_);
   publisher_.loadMetricNodes();
-  using org::apache::nifi::minifi::utils::verifyLogLinePresenceInPollTime;
+  using org::apache::nifi::minifi::test::utils::verifyLogLinePresenceInPollTime;
   REQUIRE(verifyLogLinePresenceInPollTime(5s, "LogMetricsPublisher is configured without any valid metrics!"));
 }
 
@@ -95,7 +95,7 @@ TEST_CASE_METHOD(LogPublisherTestFixture, "Verify multiple metric nodes in logs"
   configuration_->set(Configure::nifi_metrics_publisher_metrics, "RepositoryMetrics,DeviceInfoNode");
   publisher_.initialize(configuration_, response_node_loader_);
   publisher_.loadMetricNodes();
-  using org::apache::nifi::minifi::utils::verifyLogLinePresenceInPollTime;
+  using org::apache::nifi::minifi::test::utils::verifyLogLinePresenceInPollTime;
   std::string expected_log = R"([info] {
     "LogMetrics": {
         "RepositoryMetrics": {
@@ -129,7 +129,7 @@ TEST_CASE_METHOD(LogPublisherTestFixture, "Verify reloading different metrics", 
   configuration_->set(Configure::nifi_metrics_publisher_metrics, "RepositoryMetrics");
   publisher_.initialize(configuration_, response_node_loader_);
   publisher_.loadMetricNodes();
-  using org::apache::nifi::minifi::utils::verifyLogLinePresenceInPollTime;
+  using org::apache::nifi::minifi::test::utils::verifyLogLinePresenceInPollTime;
   std::string expected_log = R"([info] {
     "LogMetrics": {
         "RepositoryMetrics": {
@@ -182,7 +182,7 @@ TEST_CASE_METHOD(LogPublisherTestFixture, "Verify generic and publisher specific
   }
   publisher_.initialize(configuration_, response_node_loader_);
   publisher_.loadMetricNodes();
-  using org::apache::nifi::minifi::utils::verifyLogLinePresenceInPollTime;
+  using org::apache::nifi::minifi::test::utils::verifyLogLinePresenceInPollTime;
   std::string expected_log = R"([info] {
     "LogMetrics": {
         "RepositoryMetrics": {
@@ -217,7 +217,7 @@ TEST_CASE_METHOD(LogPublisherTestFixture, "Verify changing log level property fo
   configuration_->set(Configure::nifi_metrics_publisher_metrics, "RepositoryMetrics");
   publisher_.initialize(configuration_, response_node_loader_);
   publisher_.loadMetricNodes();
-  using org::apache::nifi::minifi::utils::verifyLogLinePresenceInPollTime;
+  using org::apache::nifi::minifi::test::utils::verifyLogLinePresenceInPollTime;
   std::string expected_log = R"([debug] {
     "LogMetrics": {
         "RepositoryMetrics": {

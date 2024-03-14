@@ -17,8 +17,8 @@
 
 #include <regex>
 
-#include "../Catch.h"
-#include "../ConfigurationTestController.h"
+#include "unit/Catch.h"
+#include "unit/ConfigurationTestController.h"
 #include "catch2/generators/catch_generators.hpp"
 #include "core/flow/FlowSchema.h"
 #include "core/yaml/YamlFlowSerializer.h"

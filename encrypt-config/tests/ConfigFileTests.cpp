@@ -25,8 +25,8 @@
 
 #include "utils/gsl.h"
 
-#include "TestBase.h"
-#include "Catch.h"
+#include "unit/TestBase.h"
+#include "unit/Catch.h"
 #include "utils/file/FileUtils.h"
 
 using org::apache::nifi::minifi::encrypt_config::ConfigFile;

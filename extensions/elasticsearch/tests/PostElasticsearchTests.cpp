@@ -18,8 +18,8 @@
 #include "../PostElasticsearch.h"
 #include "../ElasticsearchCredentialsControllerService.h"
 #include "MockElastic.h"
-#include "SingleProcessorTestController.h"
-#include "Catch.h"
+#include "unit/SingleProcessorTestController.h"
+#include "unit/Catch.h"
 
 namespace org::apache::nifi::minifi::extensions::elasticsearch::test {
 

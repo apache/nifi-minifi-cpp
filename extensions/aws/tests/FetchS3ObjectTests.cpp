@@ -20,12 +20,12 @@
 
 #include "S3TestsFixture.h"
 #include "processors/FetchS3Object.h"
-#include "utils/IntegrationTestUtils.h"
+#include "unit/TestUtils.h"
 #include "utils/file/FileUtils.h"
 
 namespace {
 
-using org::apache::nifi::minifi::utils::verifyLogLinePresenceInPollTime;
+using org::apache::nifi::minifi::test::utils::verifyLogLinePresenceInPollTime;
 using org::apache::nifi::minifi::utils::file::get_content;
 
 class FetchS3ObjectTestsFixture : public FlowProcessorS3TestsFixture<minifi::aws::processors::FetchS3Object> {

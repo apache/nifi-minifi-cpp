@@ -20,9 +20,9 @@
 
 #include "core/yaml/YamlConfiguration.h"
 #include "TailFile.h"
-#include "TestBase.h"
-#include "Catch.h"
-#include "utils/TestUtils.h"
+#include "unit/TestBase.h"
+#include "unit/Catch.h"
+#include "unit/TestUtils.h"
 #include "core/yaml/YamlNode.h"
 
 using namespace std::literals::chrono_literals;
@@ -80,8 +80,8 @@ TEST_CASE("Connections components are parsed from yaml", "[YamlConfiguration]") 
     REQUIRE(231 == yaml_connection_parser.getSwapThreshold());
   }
   SECTION("Source and destination names and uuids are read") {
-    const utils::Identifier expected_source_id = utils::generateUUID();
-    const utils::Identifier expected_destination_id = utils::generateUUID();
+    const utils::Identifier expected_source_id = minifi::test::utils::generateUUID();
+    const utils::Identifier expected_destination_id = minifi::test::utils::generateUUID();
     std::string serialized_yaml;
     parent.addProcessor(std::make_unique<minifi::processors::TailFile>("TailFile_1", expected_source_id));
     parent.addProcessor(std::make_unique<minifi::processors::TailFile>("TailFile_2", expected_destination_id));

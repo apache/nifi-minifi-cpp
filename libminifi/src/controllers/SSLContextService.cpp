@@ -17,7 +17,6 @@
 
 #include "controllers/SSLContextService.h"
 
-#ifdef OPENSSL_SUPPORT
 #include <openssl/err.h>
 #include <openssl/ssl.h>
 #include <openssl/x509v3.h>
@@ -27,7 +26,6 @@
 #pragma comment(lib, "Ws2_32.lib")
 #include <optional>
 #endif  // WIN32
-#endif  // OPENSSL_SUPPORT
 
 #include <fstream>
 #include <memory>
@@ -87,7 +85,6 @@ void SSLContextService::initialize() {
   initialized_ = true;
 }
 
-#ifdef OPENSSL_SUPPORT
 bool SSLContextService::configure_ssl_context(SSL_CTX *ctx) {
   if (!certificate_.empty()) {
     if (isFileTypeP12(certificate_)) {
@@ -355,7 +352,6 @@ bool SSLContextService::useServerCertificate(PCCERT_CONTEXT certificate, ServerC
   return cb(std::move(x509_cert));
 }
 #endif  // WIN32
-#endif  // OPENSSL_SUPPORT
 
 /**
  * If OpenSSL is not installed we may still continue operations. Nullptr will
@@ -363,7 +359,6 @@ bool SSLContextService::useServerCertificate(PCCERT_CONTEXT certificate, ServerC
  * recoverable.
  */
 std::unique_ptr<SSLContext> SSLContextService::createSSLContext() {
-#ifdef OPENSSL_SUPPORT
   SSL_library_init();
   const SSL_METHOD *method = nullptr;
 
@@ -382,9 +377,6 @@ std::unique_ptr<SSLContext> SSLContextService::createSSLContext() {
   }
 
   return std::make_unique<SSLContext>(ctx);
-#else
-  return nullptr;
-#endif
 }
 
 const std::filesystem::path &SSLContextService::getCertificateFile() const {
@@ -523,9 +515,9 @@ void SSLContextService::verifyCertificateExpiration() {
       if (end_date.value() < std::chrono::system_clock::now()) {
         logger_->log_error("Certificate in '{}' expired at {}", cert_file, end_date_str);
       } else if (auto diff = end_date.value() - std::chrono::system_clock::now(); diff < std::chrono::weeks{2}) {
-        logger_->log_error("Certificate in '{}' will expire at {}", cert_file, end_date_str);
+        logger_->log_warn("Certificate in '{}' will expire at {}", cert_file, end_date_str);
       } else {
-        logger_->log_error("Certificate in '{}' will expire at {}", cert_file, end_date_str);
+        logger_->log_debug("Certificate in '{}' will expire at {}", cert_file, end_date_str);
       }
     } else {
       logger_->log_error("Could not determine expiration date for certificate in '{}'", cert_file);

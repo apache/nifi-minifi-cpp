@@ -15,9 +15,9 @@
  * limitations under the License.
  */
 
-#include "TestBase.h"
-#include "Catch.h"
-#include "Utils.h"
+#include "unit/TestBase.h"
+#include "unit/Catch.h"
+#include "unit/TestUtils.h"
 #include "LuaScriptEngine.h"
 
 namespace org::apache::nifi::minifi::extensions::lua::test {

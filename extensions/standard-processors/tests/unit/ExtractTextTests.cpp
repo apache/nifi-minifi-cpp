@@ -23,12 +23,12 @@
 #include <set>
 #include <iostream>
 
-#include "TestBase.h"
-#include "Catch.h"
+#include "unit/TestBase.h"
+#include "unit/Catch.h"
 #include "core/Core.h"
 #include "unit/ProvenanceTestHelper.h"
 #include "repository/VolatileContentRepository.h"
-#include "utils/TestUtils.h"
+#include "unit/TestUtils.h"
 
 #include "core/FlowFile.h"
 #include "core/Processor.h"
@@ -217,7 +217,7 @@ TEST_CASE("Test usage of ExtractText in regex mode with large regex matches", "[
   plan->setProperty(log_attribute_processor, org::apache::nifi::minifi::processors::LogAttribute::AttributesToLog, TEST_ATTR);
 
   std::string additional_long_string(100'000, '.');
-  utils::putFileToDir(dir, TEST_FILE, "Speed limit 80" + additional_long_string);
+  minifi::test::utils::putFileToDir(dir, TEST_FILE, "Speed limit 80" + additional_long_string);
 
   test_controller.runSession(plan);
 

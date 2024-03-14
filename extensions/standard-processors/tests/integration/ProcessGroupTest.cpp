@@ -15,21 +15,21 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
-#undef NDEBUG
-#include <cassert>
 #include <string>
 
 #include "core/logging/Logger.h"
 #include "FlowController.h"
-#include "TestBase.h"
+#include "unit/TestBase.h"
 #include "processors/GenerateFlowFile.h"
 #include "processors/LogAttribute.h"
 #include "processors/UpdateAttribute.h"
 #include "integration/IntegrationBase.h"
-#include "utils/IntegrationTestUtils.h"
+#include "unit/TestUtils.h"
+#include "unit/Catch.h"
 
 using namespace std::literals::chrono_literals;
+
+namespace org::apache::nifi::minifi::test {
 
 class ProcessGroupTestHarness : public IntegrationBase {
  public:
@@ -43,20 +43,16 @@ class ProcessGroupTestHarness : public IntegrationBase {
   }
 
   void runAssertions() override {
-    using org::apache::nifi::minifi::utils::verifyLogLinePresenceInPollTime;
-    assert(verifyLogLinePresenceInPollTime(std::chrono::milliseconds(wait_time_),
+    using org::apache::nifi::minifi::test::utils::verifyLogLinePresenceInPollTime;
+    REQUIRE(verifyLogLinePresenceInPollTime(std::chrono::milliseconds(wait_time_),
         "key:test_attribute value:success"));
   }
 };
 
-int main(int argc, char **argv) {
-  std::string test_file_location;
-  if (argc > 1) {
-    test_file_location = argv[1];
-  }
-
+TEST_CASE("ProcessGroupTest", "[ProcessGroupTest]") {
   ProcessGroupTestHarness harness;
-  harness.run(test_file_location);
-
-  return 0;
+  auto test_file_path = std::filesystem::path(TEST_RESOURCES) / "TestProcessGroup.yml";
+  harness.run(test_file_path);
 }
+
+}  // namespace org::apache::nifi::minifi::test

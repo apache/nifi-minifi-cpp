@@ -15,23 +15,24 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
-#undef NDEBUG
-#include <cassert>
 #include <cstdio>
 #include <string>
 #include <iostream>
+#include <filesystem>
 
 #include "FlowController.h"
-#include "TestBase.h"
+#include "unit/TestBase.h"
 #include "processors/TailFile.h"
 #include "processors/LogAttribute.h"
 #include "state/ProcessorController.h"
 #include "integration/IntegrationBase.h"
-#include "utils/IntegrationTestUtils.h"
-#include "utils/TestUtils.h"
+#include "unit/TestUtils.h"
+#include "unit/Catch.h"
+#include "utils/TimeUtil.h"
 
 using namespace std::literals::chrono_literals;
+
+namespace org::apache::nifi::minifi::test {
 
 class TailFileTestHarness : public IntegrationBase {
  public:
@@ -50,7 +51,7 @@ class TailFileTestHarness : public IntegrationBase {
     LogTestController::getInstance().setTrace<minifi::processors::TailFile>();
     LogTestController::getInstance().setTrace<minifi::FlowController>();
 #ifdef WIN32
-    utils::dateSetInstall(TZ_DATA_DIR);
+    minifi::utils::timeutils::dateSetInstall(TZ_DATA_DIR);
 #endif
   }
 
@@ -61,8 +62,7 @@ class TailFileTestHarness : public IntegrationBase {
   }
 
   void runAssertions() override {
-    using org::apache::nifi::minifi::utils::verifyLogLinePresenceInPollTime;
-    assert(verifyLogLinePresenceInPollTime(wait_time_,
+    REQUIRE(minifi::test::utils::verifyLogLinePresenceInPollTime(wait_time_,
         "5 flowfiles were received from TailFile input",
         "Looking for delimiter 0xA",
         "li\\ne5"));
@@ -84,15 +84,16 @@ class TailFileTestHarness : public IntegrationBase {
   TestController testController;
 };
 
-int main(int argc, char **argv) {
-  std::string test_file_location;
-  if (argc > 1) {
-    test_file_location = argv[1];
-  }
-
+TEST_CASE("TailFile integration test", "[tailfile]") {
   TailFileTestHarness harness;
-
-  harness.run(test_file_location);
-
-  return 0;
+  std::filesystem::path test_file_path;
+  SECTION("Timer driven") {
+    test_file_path = std::filesystem::path(TEST_RESOURCES) / "TestTailFile.yml";
+  }
+  SECTION("Cron driven") {
+    test_file_path = std::filesystem::path(TEST_RESOURCES) / "TestTailFileCron.yml";
+  }
+  harness.run(test_file_path);
 }
+
+}  // namespace org::apache::nifi::minifi::test

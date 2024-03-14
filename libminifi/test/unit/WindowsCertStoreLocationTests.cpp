@@ -18,8 +18,8 @@
 #include <windows.h>
 #include <wincrypt.h>
 
-#include "TestUtils.h"
-#include "../Catch.h"
+#include "unit/TestUtils.h"
+#include "unit/Catch.h"
 #include "utils/tls/WindowsCertStoreLocation.h"
 #include "range/v3/algorithm/contains.hpp"
 

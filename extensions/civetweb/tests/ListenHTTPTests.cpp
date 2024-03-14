@@ -22,26 +22,26 @@
 #include <set>
 #include <iostream>
 
-#include "TestBase.h"
-#include "Catch.h"
+#include "unit/TestBase.h"
+#include "unit/Catch.h"
 
 #include "utils/file/FileUtils.h"
 #include "processors/GetFile.h"
 #include "processors/UpdateAttribute.h"
 #include "processors/LogAttribute.h"
 #include "processors/ListenHTTP.h"
-#include "client/HTTPClient.h"
+#include "http/HTTPClient.h"
 #include "controllers/SSLContextService.h"
 #include "properties/Configure.h"
 #include "FlowController.h"
 #include "SchedulingAgent.h"
 #include "core/ProcessGroup.h"
-#include "SingleProcessorTestController.h"
+#include "unit/SingleProcessorTestController.h"
 
 namespace org::apache::nifi::minifi::test {
 
 using namespace std::literals::chrono_literals;
-using HttpRequestMethod = org::apache::nifi::minifi::utils::HttpRequestMethod;
+using HttpRequestMethod = org::apache::nifi::minifi::http::HttpRequestMethod;
 
 class ListenHTTPTestsFixture {
  public:
@@ -63,7 +63,7 @@ class ListenHTTPTestsFixture {
     LogTestController::getInstance().setTrace<minifi::processors::ListenHTTP>();
     LogTestController::getInstance().setTrace<minifi::processors::ListenHTTP::Handler>();
     LogTestController::getInstance().setDebug<minifi::processors::LogAttribute>();
-    LogTestController::getInstance().setDebug<minifi::extensions::curl::HTTPClient>();
+    LogTestController::getInstance().setDebug<minifi::http::HTTPClient>();
     LogTestController::getInstance().setDebug<minifi::controllers::SSLContextService>();
 
     // Create temporary directories
@@ -154,7 +154,7 @@ class ListenHTTPTestsFixture {
       return;
     }
 
-    client = std::make_unique<minifi::extensions::curl::HTTPClient>();
+    client = std::make_unique<minifi::http::HTTPClient>();
     client->initialize(method, url, ssl_context_service);
     client->setVerbose(false);
     for (const auto &header : headers) {
@@ -239,7 +239,7 @@ class ListenHTTPTestsFixture {
   std::string payload;
   std::string endpoint = "test";
   std::string url;
-  std::unique_ptr<minifi::extensions::curl::HTTPClient> client;
+  std::unique_ptr<minifi::http::HTTPClient> client;
   std::size_t batch_size_ = 0;
   std::size_t buffer_size_ = 0;
 };
@@ -429,7 +429,6 @@ TEST_CASE_METHOD(ListenHTTPTestsFixture, "HTTP Batch tests", "[batch]") {
   test_connect(requests, expected_processed_request_count);
 }
 
-#ifdef OPENSSL_SUPPORT
 TEST_CASE_METHOD(ListenHTTPTestsFixture, "HTTPS without CA", "[basic][https]") {
   plan->setProperty(listen_http, minifi::processors::ListenHTTP::SSLCertificate, (minifi::utils::file::FileUtils::get_executable_dir() / "resources" / "server.pem").string());
 
@@ -640,7 +639,6 @@ TEST_CASE_METHOD(ListenHTTPTestsFixture, "HTTPS with client cert with non-matchi
   test_connect({HttpResponseExpectations{true, response_code}}, expected_commited_requests);
 }
 
-#if CURL_AT_LEAST_VERSION(7, 54, 0)
 TEST_CASE_METHOD(ListenHTTPTestsFixture, "HTTPS minimum SSL version", "[https]") {
   auto executable_dir = minifi::utils::file::FileUtils::get_executable_dir();
   plan->setProperty(listen_http, minifi::processors::ListenHTTP::SSLCertificate, (executable_dir / "resources" / "server.pem").string());
@@ -661,18 +659,16 @@ TEST_CASE_METHOD(ListenHTTPTestsFixture, "HTTPS minimum SSL version", "[https]")
 
   run_server();
 
-  client = std::make_unique<minifi::extensions::curl::HTTPClient>();
+  client = std::make_unique<minifi::http::HTTPClient>();
   client->setVerbose(false);
   client->initialize(method, url, ssl_context_service);
   if (method == HttpRequestMethod::POST) {
     client->setPostFields(payload);
   }
-  REQUIRE(client->setSpecificSSLVersion(minifi::utils::SSLVersion::TLSv1_1));
+  REQUIRE(client->setSpecificSSLVersion(minifi::http::SSLVersion::TLSv1_1));
 
   test_connect({HttpResponseExpectations{false, 0}}, 0);
 }
-#endif
-#endif
 
 TEST_CASE("ListenHTTP bored yield", "[listenhttp][bored][yield]") {
   using processors::ListenHTTP;

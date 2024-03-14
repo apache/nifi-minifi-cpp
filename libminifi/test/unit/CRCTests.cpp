@@ -20,8 +20,8 @@
 #include <vector>
 #include "io/CRCStream.h"
 #include "io/OutputStream.h"
-#include "../TestBase.h"
-#include "../Catch.h"
+#include "unit/TestBase.h"
+#include "unit/Catch.h"
 #include "utils/gsl.h"
 
 TEST_CASE("Test CRC1", "[testcrc1]") {

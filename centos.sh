@@ -70,7 +70,7 @@ bootstrap_compiler() {
 }
 
 build_deps() {
-    COMMAND="install_pkgs libuuid libuuid-devel libtool patch epel-release"
+    COMMAND="install_pkgs libuuid libuuid-devel libtool patch epel-release perl"
     INSTALLED=()
     for option in "${OPTIONS[@]}" ; do
         option_value="${!option}"
@@ -107,8 +107,6 @@ build_deps() {
                         INSTALLED+=("bzip2-devel")
                     elif [ "$FOUND_VALUE" = "libssh2" ]; then
                         INSTALLED+=("libssh2-devel")
-                    elif [ "$FOUND_VALUE" = "opensslbuild" ]; then
-                        INSTALLED+=("perl")
                     fi
                 fi
             done

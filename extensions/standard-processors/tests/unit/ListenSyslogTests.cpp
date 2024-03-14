@@ -16,10 +16,10 @@
  */
 
 
-#include "Catch.h"
+#include "unit/Catch.h"
 #include "ListenSyslog.h"
-#include "SingleProcessorTestController.h"
-#include "Utils.h"
+#include "unit/SingleProcessorTestController.h"
+#include "unit/TestUtils.h"
 #include "controllers/SSLContextService.h"
 #include "range/v3/algorithm/contains.hpp"
 

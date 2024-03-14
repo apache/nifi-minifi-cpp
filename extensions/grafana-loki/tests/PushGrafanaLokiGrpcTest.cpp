@@ -17,10 +17,10 @@
 
 #include "../PushGrafanaLokiGrpc.h"
 #include "MockGrafanaLokiGrpc.h"
-#include "SingleProcessorTestController.h"
-#include "Catch.h"
+#include "unit/SingleProcessorTestController.h"
+#include "unit/Catch.h"
 #include "utils/StringUtils.h"
-#include "utils/TestUtils.h"
+#include "unit/TestUtils.h"
 
 namespace org::apache::nifi::minifi::extensions::grafana::loki::test {
 

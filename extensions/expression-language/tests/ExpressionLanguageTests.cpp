@@ -20,7 +20,6 @@
 
 #include <memory>
 #include <string>
-#ifdef ENABLE_CURL
 #ifdef WIN32
 #ifdef _DEBUG
 #pragma comment(lib, "libcurl-d.lib")
@@ -32,7 +31,6 @@
 #pragma comment(lib, "crypt32.lib")
 #endif
 #include <curl/curl.h>
-#endif
 #include "impl/expression/Expression.h"
 #include <ExtractText.h>
 #include <GetFile.h>
@@ -41,12 +39,12 @@
 #include "core/FlowFile.h"
 #include <LogAttribute.h>
 #include "utils/gsl.h"
-#include "TestBase.h"
-#include "Catch.h"
+#include "unit/TestBase.h"
+#include "unit/Catch.h"
 #include "catch2/catch_approx.hpp"
 #include "unit/ProvenanceTestHelper.h"
 #include "date/tz.h"
-#include "Utils.h"
+#include "unit/TestUtils.h"
 
 namespace expression = org::apache::nifi::minifi::expression;
 
@@ -1215,7 +1213,6 @@ TEST_CASE("Encode Decode CSV", "[expressionEncodeDecodeCSV]") {
   REQUIRE("Zero > One < \"two!\" & 'true'" == expr(expression::Parameters{ flow_file_a.get() }).asString());
 }
 
-#ifdef ENABLE_CURL
 TEST_CASE("Encode URL", "[expressionEncodeURL]") {
   auto expr = expression::compile("${message:urlEncode()}");
 
@@ -1239,31 +1236,6 @@ TEST_CASE("Encode Decode URL", "[expressionEncodeDecodeURL]") {
   flow_file_a->addAttribute("message", "some value with spaces");
   REQUIRE("some value with spaces" == expr(expression::Parameters{ flow_file_a.get() }).asString());
 }
-#else
-TEST_CASE("Encode URL", "[expressionEncodeURLExcept]") {
-  auto expr = expression::compile("${message:urlEncode()}");
-
-  auto flow_file_a = std::make_shared<core::FlowFile>();
-  flow_file_a->addAttribute("message", "some value with spaces");
-  REQUIRE_THROWS(expr(expression::Parameters{flow_file_a}).asString());
-}
-
-TEST_CASE("Decode URL", "[expressionDecodeURLExcept]") {
-  auto expr = expression::compile("${message:urlDecode()}");
-
-  auto flow_file_a = std::make_shared<core::FlowFile>();
-  flow_file_a->addAttribute("message", "some%20value%20with%20spaces");
-  REQUIRE_THROWS(expr(expression::Parameters{flow_file_a}).asString());
-}
-
-TEST_CASE("Encode Decode URL", "[expressionEncodeDecodeURLExcept]") {
-  auto expr = expression::compile("${message:urlEncode():urlDecode()}");
-
-  auto flow_file_a = std::make_shared<core::FlowFile>();
-  flow_file_a->addAttribute("message", "some value with spaces");
-  REQUIRE_THROWS(expr(expression::Parameters{flow_file_a}).asString());
-}
-#endif
 
 TEST_CASE("Parse Date", "[expressionParseDate]") {
 #ifdef WIN32

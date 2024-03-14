@@ -38,7 +38,7 @@ target_include_directories(minifi-azure BEFORE PRIVATE storage)
 target_include_directories(minifi-azure BEFORE PRIVATE ${CMAKE_SOURCE_DIR}/extensions/azure)
 
 target_link_libraries(minifi-azure ${LIBMINIFI} Threads::Threads)
-target_link_libraries(minifi-azure CURL::libcurl LibXml2::LibXml2)
+target_link_libraries(minifi-azure LibXml2::LibXml2)
 target_link_libraries(minifi-azure AZURE::azure-storage-files-datalake AZURE::azure-storage-blobs AZURE::azure-storage-common AZURE::azure-core AZURE::azure-identity)
 
 if (WIN32)

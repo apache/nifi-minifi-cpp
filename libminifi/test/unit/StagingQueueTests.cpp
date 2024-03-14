@@ -19,8 +19,8 @@
 #include <string>
 
 #include "utils/StringUtils.h"
-#include "../TestBase.h"
-#include "../Catch.h"
+#include "unit/TestBase.h"
+#include "unit/Catch.h"
 #include "utils/StagingQueue.h"
 
 using org::apache::nifi::minifi::utils::StagingQueue;

@@ -19,12 +19,12 @@
 
 #include "S3TestsFixture.h"
 #include "processors/DeleteS3Object.h"
-#include "utils/IntegrationTestUtils.h"
+#include "unit/TestUtils.h"
 
 namespace {
 
 using DeleteS3ObjectTestsFixture = FlowProcessorS3TestsFixture<minifi::aws::processors::DeleteS3Object>;
-using org::apache::nifi::minifi::utils::verifyLogLinePresenceInPollTime;
+using org::apache::nifi::minifi::test::utils::verifyLogLinePresenceInPollTime;
 
 TEST_CASE_METHOD(DeleteS3ObjectTestsFixture, "Test AWS credential setting", "[awsCredentials]") {
   setBucket();

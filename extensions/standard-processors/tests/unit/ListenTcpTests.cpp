@@ -16,20 +16,18 @@
  */
 #include <string>
 
-#include "Catch.h"
+#include "unit/Catch.h"
 #include "processors/ListenTCP.h"
-#include "SingleProcessorTestController.h"
-#include "Utils.h"
+#include "unit/SingleProcessorTestController.h"
 #include "controllers/SSLContextService.h"
 #include "range/v3/algorithm/contains.hpp"
-#include "utils/IntegrationTestUtils.h"
-#include "utils/StringUtils.h"
 #include "catch2/generators/catch_generators.hpp"
+#include "unit/TestUtils.h"
 
 using ListenTCP = org::apache::nifi::minifi::processors::ListenTCP;
 
 using namespace std::literals::chrono_literals;
-using org::apache::nifi::minifi::utils::verifyLogLineVariantPresenceInPollTime;
+using org::apache::nifi::minifi::test::utils::verifyLogLineVariantPresenceInPollTime;
 
 namespace org::apache::nifi::minifi::test {
 

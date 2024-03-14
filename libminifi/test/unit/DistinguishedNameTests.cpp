@@ -16,7 +16,7 @@
  */
 
 #include "utils/tls/DistinguishedName.h"
-#include "../Catch.h"
+#include "unit/Catch.h"
 
 namespace utils = org::apache::nifi::minifi::utils;
 
