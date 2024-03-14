@@ -16,7 +16,6 @@
  */
 #pragma once
 
-#include <thread>
 #include <memory>
 #include <string>
 #include <vector>
@@ -90,14 +89,6 @@ class MockGrafanaLokiGrpc {
     builder.RegisterService(&loki_grpc_service_);
 
     grpc_server_ = builder.BuildAndStart();
-    server_thread_ = std::thread([this] { grpc_server_->Wait(); });
-  }
-
-  ~MockGrafanaLokiGrpc() {
-    grpc_server_->Shutdown();
-    if (server_thread_.joinable()) {
-      server_thread_.join();
-    }
   }
 
   GrafanaLokiGrpcRequest getLastRequest() const {
@@ -109,7 +100,6 @@ class MockGrafanaLokiGrpc {
   }
 
  private:
-  std::thread server_thread_;
   GrafanaLokiGrpcService loki_grpc_service_;
   std::unique_ptr<::grpc::Server> grpc_server_;
 };
