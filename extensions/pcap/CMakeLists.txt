@@ -52,10 +52,10 @@ endif ()
 set(PCAPPLUSPLUS_LIB_DIR "${PCAPPLUSPLUS_BASE_DIR}/Dist")
 
 add_custom_target(
-        pcappp
-        COMMAND make libs
-        BYPRODUCTS ${PCAPPLUSPLUS_LIB_DIR}/libPcap++.a ${PCAPPLUSPLUS_LIB_DIR}/libPacket++.a ${PCAPPLUSPLUS_LIB_DIR}/libCommon++.a
-        WORKING_DIRECTORY ${PCAPPLUSPLUS_BASE_DIR}
+    pcappp
+    COMMAND make libs
+    BYPRODUCTS ${PCAPPLUSPLUS_LIB_DIR}/libPcap++.a ${PCAPPLUSPLUS_LIB_DIR}/libPacket++.a ${PCAPPLUSPLUS_LIB_DIR}/libCommon++.a
+    WORKING_DIRECTORY ${PCAPPLUSPLUS_BASE_DIR}
 )
 
 file(GLOB SOURCES  "*.cpp")

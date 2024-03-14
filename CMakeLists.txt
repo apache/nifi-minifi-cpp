@@ -75,8 +75,8 @@ if (${FORCE_COLORED_OUTPUT})
     endif()
 endif()
 
-if (USE_REAL_ODBC_TEST_DRIVER)
-    add_definitions("-DUSE_REAL_ODBC_TEST_DRIVER")
+if (MINIFI_USE_REAL_ODBC_TEST_DRIVER)
+    add_definitions("-DMINIFI_USE_REAL_ODBC_TEST_DRIVER")
 endif()
 
 # Use ccache if present
@@ -86,15 +86,6 @@ if(CCACHE_FOUND)
     set_property(GLOBAL PROPERTY RULE_LAUNCH_LINK ccache)
     message("-- Found ccache: ${CCACHE_FOUND}")
 endif(CCACHE_FOUND)
-
-# Use gold linker if instructed
-if (UNIX AND USE_GOLD_LINKER AND NOT APPLE )
-    execute_process(COMMAND ${CMAKE_C_COMPILER} -fuse-ld=gold -Wl,--version ERROR_QUIET OUTPUT_VARIABLE ld_version)
-    if ("${ld_version}" MATCHES "GNU gold")
-        set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -fuse-ld=gold -Wl,--disable-new-dtags")
-        set(CMAKE_SHARED_LINKER_FLAGS "${CMAKE_SHARED_LINKER_FLAGS} -fuse-ld=gold -Wl,--disable-new-dtags")
-    endif()
-endif()
 
 # Check for exec info before we enable the backtrace features.
 CHECK_INCLUDE_FILE("execinfo.h" HAS_EXECINFO)
@@ -137,7 +128,7 @@ message("THREADS_HAVE_PTHREAD_ARG is ${THREADS_HAVE_PTHREAD_ARG}")
 set(CMAKE_POSITION_INDEPENDENT_CODE ON)
 
 # Use ASAN if instructed
-if (ASAN_BUILD)
+if (MINIFI_ADVANCED_ASAN_BUILD)
     set(ASAN_FLAGS "-g -fsanitize=address -fsanitize-address-use-after-scope -fno-omit-frame-pointer")
     set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} ${ASAN_FLAGS}")
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${ASAN_FLAGS}")
@@ -145,7 +136,7 @@ if (ASAN_BUILD)
     set(CMAKE_SHARED_LINKER_FLAGS "${CMAKE_SHARED_LINKER_FLAGS} ${ASAN_FLAGS}")
 endif()
 
-if (ENABLE_COVERAGE)
+if (MINIFI_ADVANCED_CODE_COVERAGE)
     include(CodeCoverage)
     append_coverage_compiler_flags()
 endif()
@@ -222,7 +213,7 @@ else()
     message(VERBOSE "No custom malloc implementation")
 endif()
 
-if (NOT DISABLE_BZIP2 AND (NOT DISABLE_LIBARCHIVE OR (NOT DISABLE_ROCKSDB AND NOT WIN32)))
+if (ENABLE_BZIP2 AND (ENABLE_LIBARCHIVE OR (ENABLE_ROCKSDB AND NOT WIN32)))
     include(BundledBZip2)
     use_bundled_bzip2(${CMAKE_SOURCE_DIR} ${CMAKE_BINARY_DIR})
     list(APPEND CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/cmake/bzip2/dummy")
@@ -246,7 +237,7 @@ if(NOT WIN32)
 endif()
 
 # OpenSSL
-if (NOT OPENSSL_OFF)
+if (MINIFI_OPENSSL)
     include(BundledOpenSSL)
     use_openssl("${CMAKE_CURRENT_SOURCE_DIR}" "${CMAKE_CURRENT_BINARY_DIR}")
     list(APPEND CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/cmake/ssl")
@@ -269,12 +260,11 @@ add_library(ut INTERFACE)
 target_include_directories(ut SYSTEM INTERFACE "${CMAKE_CURRENT_SOURCE_DIR}/thirdparty/ut")
 
 # cURL
-if(NOT DISABLE_CURL)
+if(ENABLE_CURL)
     include(BundledLibcURL)
     use_bundled_curl(${CMAKE_CURRENT_SOURCE_DIR} ${CMAKE_CURRENT_BINARY_DIR})
     list(APPEND CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/cmake/curl/dummy")
-else()
-    list(APPEND MINIFI_CPP_COMPILE_DEFINITIONS DISABLE_CURL)
+    list(APPEND MINIFI_CPP_COMPILE_DEFINITIONS ENABLE_CURL)
 endif()
 
 # spdlog
@@ -325,12 +315,12 @@ include(MagicEnum)
 # Setup warning flags
 if(MSVC)
     list(APPEND MINIFI_CPP_COMPILE_OPTIONS /W3)
-    if(FAIL_ON_WARNINGS)
+    if(MINIFI_FAIL_ON_WARNINGS)
         list(APPEND MINIFI_CPP_COMPILE_OPTIONS /WX)
     endif()
 else()
     list(APPEND MINIFI_CPP_COMPILE_OPTIONS -Wall -Wextra)
-    if(FAIL_ON_WARNINGS)
+    if(MINIFI_FAIL_ON_WARNINGS)
         list(APPEND MINIFI_CPP_COMPILE_OPTIONS -Werror)
         # -Wrestrict may cause build failure in GCC 12  https://gcc.gnu.org/bugzilla/show_bug.cgi?id=104336
         if ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "GNU")
@@ -357,13 +347,13 @@ include(Extensions)
 
 add_subdirectory(libminifi)
 
-if ((ENABLE_OPENWSMAN AND NOT DISABLE_CIVET AND NOT DISABLE_CURL) OR ENABLE_ALL OR ENABLE_AZURE)
+if ((ENABLE_OPENWSMAN AND ENABLE_CIVET AND ENABLE_CURL) OR ENABLE_ALL OR ENABLE_AZURE)
     include(BundledLibXml2)
     use_bundled_libxml2(${CMAKE_CURRENT_SOURCE_DIR} ${CMAKE_CURRENT_BINARY_DIR})
     list(APPEND CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/cmake/libxml2/dummy")
 endif()
 
-if (ENABLE_ALL OR ENABLE_PROMETHEUS OR NOT DISABLE_CIVET)
+if (ENABLE_ALL OR ENABLE_PROMETHEUS OR ENABLE_CIVET)
     include(CivetWeb)
     list(APPEND CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/cmake/civetweb/dummy")
 endif()
@@ -387,7 +377,7 @@ if (ENABLE_ENCRYPT_CONFIG)
     add_subdirectory(encrypt-config)
 endif()
 
-if (NOT DISABLE_CURL AND ENABLE_CONTROLLER)
+if (ENABLE_CURL AND ENABLE_CONTROLLER)
     add_subdirectory(controller)
 endif()
 
@@ -428,6 +418,7 @@ endif()
 # Generate source assembly
 set(ASSEMBLY_BASE_NAME "${CMAKE_PROJECT_NAME}-${PROJECT_VERSION_MAJOR}.${PROJECT_VERSION_MINOR}.${PROJECT_VERSION_PATCH}")
 if(WIN32)
+    set(CPACK_PRE_BUILD_SCRIPTS "${CMAKE_CURRENT_SOURCE_DIR}/cmake/prep_for_win_package.cmake")
     set(CPACK_ALL_INSTALL_TYPES Full Developer)
     set(CPACK_COMPONENT_LIBRARIES_INSTALL_TYPES Developer Full)
     set(CPACK_COMPONENT_HEADERS_INSTALL_TYPES Developer Full)
@@ -653,7 +644,7 @@ registerTest("${TEST_DIR}/flow-tests")
 
 registerTest("${TEST_DIR}/schema-tests")
 
-if (NOT DISABLE_ROCKSDB AND NOT DISABLE_LIBARCHIVE)
+if (ENABLE_ROCKSDB AND ENABLE_LIBARCHIVE)
     registerTest("${TEST_DIR}/persistence-tests")
 endif()
 
@@ -707,7 +698,7 @@ add_custom_target(
 
 feature_summary(WHAT ALL FILENAME ${CMAKE_BINARY_DIR}/all.log)
 
-if (ENABLE_COVERAGE)
+if (MINIFI_ADVANCED_CODE_COVERAGE)
     set(GCOVR_ADDITIONAL_ARGS --gcov-ignore-parse-errors=negative_hits.warn --gcov-ignore-errors=no_working_dir_found)
     setup_target_for_coverage_gcovr_html(
         NAME coverage

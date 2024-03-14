@@ -30,5 +30,6 @@ FetchContent_Declare(
         URL      https://github.com/abseil/abseil-cpp/archive/refs/tags/20230802.0.tar.gz
         URL_HASH SHA256=59d2976af9d6ecf001a81a35749a6e551a335b949d34918cfade07737b9d93c5
         PATCH_COMMAND "${PC}"
+        OVERRIDE_FIND_PACKAGE
 )
 FetchContent_MakeAvailable(absl)

@@ -34,7 +34,7 @@
 #include "processors/QueryDatabaseTable.h"
 #include "SQLTestPlan.h"
 
-#ifdef USE_REAL_ODBC_TEST_DRIVER
+#ifdef MINIFI_USE_REAL_ODBC_TEST_DRIVER
 #include "services/ODBCConnector.h"
 using ODBCConnection = minifi::sql::ODBCConnection;
 #else

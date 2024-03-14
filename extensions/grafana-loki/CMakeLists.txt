@@ -42,8 +42,10 @@ if (ENABLE_GRPC_FOR_LOKI)
         ${LOKI_PROTOBUF_GENERATED_DIR}/grafana-loki-push.pb.cc
     )
 
-    set_source_files_properties(${LOKI_PROTOBUF_GENERATED_DIR}/grafana-loki-push.grpc.pb.cc PROPERTIES COMPILE_FLAGS -Wno-error)
-    set_source_files_properties(${LOKI_PROTOBUF_GENERATED_DIR}/grafana-loki-push.pb.cc PROPERTIES COMPILE_FLAGS -Wno-error)
+    if (NOT WIN32)
+        set_source_files_properties(${LOKI_PROTOBUF_GENERATED_DIR}/grafana-loki-push.grpc.pb.cc PROPERTIES COMPILE_FLAGS -Wno-error)
+        set_source_files_properties(${LOKI_PROTOBUF_GENERATED_DIR}/grafana-loki-push.pb.cc PROPERTIES COMPILE_FLAGS -Wno-error)
+    endif()
 else()
     set(SOURCES
         ${CMAKE_CURRENT_SOURCE_DIR}/PushGrafanaLoki.cpp

@@ -45,7 +45,7 @@ verify_enable_platform() {
 
 add_os_flags() {
     get_toolset_name
-    source /opt/rh/$TOOLSET_NAME/enable
+    source "/opt/rh/$TOOLSET_NAME/enable"
 }
 install_bison() {
     INSTALLED+=("bison")

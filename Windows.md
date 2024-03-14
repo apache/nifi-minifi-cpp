@@ -15,13 +15,28 @@
 
 # Apache NiFi -  MiNiFi - C++ Windows Build Guide
 
-## Requirements
+## Python based bootstrapping (recommended)
+Prerequisites:
+- [python](https://docs.python.org/)
+- [venv](https://docs.python.org/3/library/venv.html)
+- [chocolatey](https://chocolatey.org/)
+```dos
+.\bootstrap\py_bootstrap.bat
+```
+
+This will set up a virtual environment in the bootstrap folder, and guide you through the build process.
+This will also download and install all dependencies required for the selected components.
+It will also create a batch file (.\bootstrap\build_environment.bat),
+which sets the necessary environment variables for the build, so it can be built without bootstrapping everytime.
+
+
+## Alternative: Building via build script (advanced)
 
 Apache NiFi MiNiFi C++ has been built on Window Server 2016, 2019, and Windows 10 operating systems. The project is CMake focused we suggest building via Visual Studio 2022 or our `win_build_vs.bat` script.
 
 The project previously required OpenSSL to be installed. If you follow our build procedures, below, you will not need to install that dependency.
 
-### Required software
+#### Required software
 
  - Visual Studio 2022
  - [CMake](https://cmake.org/download/)
@@ -31,11 +46,11 @@ The project previously required OpenSSL to be installed. If you follow our build
  - (Optional) [WiX Toolset](https://wixtoolset.org/releases/) (only for building the MSI)
  - (Optional) JDK (only for JNI support)
 
-### JNI support
+#### JNI support
 Though the project is written in C++, JNI functionality supports running Java processors stored in NiFi Archives. These can be run
 in a much smaller memory footprint and consume fewer resources. If your systems do not support Java or you do not want a JDK installed, please use non-JNI builds.
 
-## Building with Visual Studio
+### Building with Visual Studio
 
 Make sure your Visual Studio installation includes the "Visual C++ tools for CMake" and "Visual C++ ATL for x86 and x64" options.
 You can also add these after installation using the Visual Studio Installer app. We also advise
@@ -49,7 +64,7 @@ that you build `minifi.lib` then `minifi.exe` targets.  `Build All` works, too, 
 Once you have built these targets, you may use the `cpack` command to build your MSI. If you are building with JNI functionality the MSI will be
 significantly larger (about 160 MB) since it contains the base NARs to run the standard set of Apache NiFi processors.
 
-## Building via the build script
+### Building via the build script
 
 The preferred way of building the project is via the `win_build_vs.bat` script found in our root source folder. Its first parameter is mandatory, the directory in which it will build the project. `build` is a good default choice for this.
 
@@ -109,7 +124,7 @@ You can specify additional CMake arguments by setting the EXTRA_CMAKE_ARGUMENTS 
 > win_build_vs.bat ...
 ```
 
-## Building directly with CMake
+### Alternative building: Manual bootstrapping (advanced)
 
 The project can also be built manually using CMake. It requires the same environment the build script does (the proper Native Tools Command Prompt).
 
@@ -120,7 +135,7 @@ A basic working CMake configuration can be inferred from the `win_build_vs.bat`.
 ```
 mkdir build
 cd build
-cmake -G "Visual Studio 17 2022" -A x64 -DINSTALLER_MERGE_MODULES=OFF -DTEST_CUSTOM_WEL_PROVIDER=OFF -DENABLE_SQL=OFF -DUSE_REAL_ODBC_TEST_DRIVER=OFF -DCMAKE_BUILD_TYPE_INIT=Release -DCMAKE_BUILD_TYPE=Release -DWIN32=WIN32 -DENABLE_LIBRDKAFKA=OFF -DENABLE_JNI=OFF -DOPENSSL_OFF=OFF -DENABLE_COAP=OFF -DENABLE_AWS=OFF -DENABLE_PDH= -DENABLE_AZURE=OFF -DENABLE_SFTP=OFF -DENABLE_SPLUNK= -DENABLE_GCP= -DENABLE_NANOFI=OFF -DENABLE_OPENCV=OFF -DENABLE_PROMETHEUS=OFF -DENABLE_ELASTICSEARCH= -DUSE_SHARED_LIBS=OFF -DENABLE_CONTROLLER=ON -DENABLE_BUSTACHE=OFF -DENABLE_COAP=OFF -DENABLE_ENCRYPT_CONFIG=OFF -DENABLE_GPS=OFF -DENABLE_LUA_SCRIPTING=OFF -DENABLE_MQTT=OFF -DENABLE_OPC=OFF -DENABLE_OPENWSMAN=OFF -DENABLE_OPS=OFF -DENABLE_PCAP=OFF -DENABLE_PYTHON_SCRIPTING= -DENABLE_SENSORS=OFF -DENABLE_USB_CAMERA=OFF -DBUILD_ROCKSDB=ON -DFORCE_WINDOWS=ON -DUSE_SYSTEM_UUID=OFF -DDISABLE_LIBARCHIVE=OFF -DENABLE_WEL=ON -DFAIL_ON_WARNINGS=OFF -DSKIP_TESTS=OFF ..
+cmake -G "Visual Studio 17 2022" -A x64 -DINSTALLER_MERGE_MODULES=OFF -DTEST_CUSTOM_WEL_PROVIDER=OFF -DENABLE_SQL=OFF -DMINIFI_USE_REAL_ODBC_TEST_DRIVER=OFF -DCMAKE_BUILD_TYPE_INIT=Release -DCMAKE_BUILD_TYPE=Release -DWIN32=WIN32 -DENABLE_LIBRDKAFKA=OFF -DENABLE_JNI=OFF -DMINIFI_OPENSSL=ON -DENABLE_COAP=OFF -DENABLE_AWS=OFF -DENABLE_PDH= -DENABLE_AZURE=OFF -DENABLE_SFTP=OFF -DENABLE_SPLUNK= -DENABLE_GCP= -DENABLE_NANOFI=OFF -DENABLE_OPENCV=OFF -DENABLE_PROMETHEUS=OFF -DENABLE_ELASTICSEARCH= -DUSE_SHARED_LIBS=OFF -DENABLE_CONTROLLER=ON -DENABLE_BUSTACHE=OFF -DENABLE_COAP=OFF -DENABLE_ENCRYPT_CONFIG=OFF -DENABLE_GPS=OFF -DENABLE_LUA_SCRIPTING=OFF -DENABLE_MQTT=OFF -DENABLE_OPC=OFF -DENABLE_OPENWSMAN=OFF -DENABLE_OPS=OFF -DENABLE_PCAP=OFF -DENABLE_PYTHON_SCRIPTING= -DENABLE_SENSORS=OFF -DENABLE_USB_CAMERA=OFF -DBUILD_ROCKSDB=ON -DUSE_SYSTEM_UUID=OFF -DENABLE_LIBARCHIVE=ON -DENABLE_WEL=ON -DMINIFI_FAIL_ON_WARNINGS=OFF -DSKIP_TESTS=OFF ..
 msbuild /m nifi-minifi-cpp.sln /property:Configuration=Release /property:Platform=x64
 copy minifi_main\Release\minifi.exe minifi_main\
 cpack

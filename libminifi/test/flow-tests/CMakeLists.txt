@@ -28,7 +28,7 @@ FOREACH(testfile ${FLOW_TESTS})
     target_include_directories(${testfilename} PRIVATE BEFORE "${CMAKE_SOURCE_DIR}/extensions/standard-processors/")
     createTests("${testfilename}")
     target_link_libraries(${testfilename} minifi-standard-processors)
-    if (NOT DISABLE_ROCKSDB)
+    if (ENABLE_ROCKSDB)
         target_link_libraries(${testfilename} minifi-rocksdb-repos)
     endif()
 

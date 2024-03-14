@@ -14,7 +14,7 @@
 # KIND, either express or implied.  See the License for the
 # specific language governing permissions and limitations
 # under the License.
-if (NOT (CMAKE_SYSTEM_NAME STREQUAL "Linux" AND (ENABLE_ALL OR ENABLE_KUBERNETES)) OR OPENSSL_OFF)
+if (NOT (CMAKE_SYSTEM_NAME STREQUAL "Linux" AND (ENABLE_ALL OR ENABLE_KUBERNETES)) OR NOT MINIFI_OPENSSL)
     return()
 endif()
 

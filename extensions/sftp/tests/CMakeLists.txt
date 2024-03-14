@@ -23,7 +23,7 @@ find_package(Maven)
 message(STATUS "JAVA_HOME: '$ENV{JAVA_HOME}'")
 message(STATUS "MAVEN: ${MAVEN_EXECUTABLE}")
 
-if (NOT SKIP_TESTS AND Java_FOUND AND Maven_FOUND AND NOT DISABLE_EXPRESSION_LANGUAGE)
+if (NOT SKIP_TESTS AND Java_FOUND AND Maven_FOUND AND ENABLE_EXPRESSION_LANGUAGE)
     file(GLOB SFTP_INTEGRATION_TESTS "*.cpp")
     SET(SFTP-EXTENSIONS_TEST_COUNT 0)
     FOREACH(testfile ${SFTP_INTEGRATION_TESTS})
@@ -46,7 +46,7 @@ if (NOT SKIP_TESTS AND Java_FOUND AND Maven_FOUND AND NOT DISABLE_EXPRESSION_LAN
         target_link_libraries(${testfilename} minifi-sftp)
         target_link_libraries(${testfilename} minifi-expression-language-extensions)
         target_link_libraries(${testfilename} minifi-standard-processors)
-        if (NOT DISABLE_ROCKSDB)
+        if (ENABLE_ROCKSDB)
             target_link_libraries(${testfilename} minifi-rocksdb-repos)
         endif()
 

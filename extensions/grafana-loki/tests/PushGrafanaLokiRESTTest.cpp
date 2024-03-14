@@ -22,6 +22,11 @@
 #include "utils/StringUtils.h"
 #include "utils/TestUtils.h"
 
+#ifdef WIN32
+#pragma push_macro("GetObject")
+#undef GetObject  // windows.h #defines GetObject = GetObjectA or GetObjectW, which conflicts with rapidjson
+#endif
+
 namespace org::apache::nifi::minifi::extensions::grafana::loki::test {
 
 TEST_CASE("Url property is required", "[PushGrafanaLokiREST]") {
@@ -295,3 +300,7 @@ TEST_CASE_METHOD(PushGrafanaLokiRESTTestFixture, "Bearer token is set for authen
 }
 
 }  // namespace org::apache::nifi::minifi::extensions::grafana::loki::test
+
+#ifdef WIN32
+#pragma pop_macro("GetObject")
+#endif

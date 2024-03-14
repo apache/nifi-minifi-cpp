@@ -17,7 +17,7 @@
 # under the License.
 #
 
-if (NOT ((ENABLE_ALL OR ENABLE_SFTP) AND NOT DISABLE_CURL))
+if (NOT ((ENABLE_ALL OR ENABLE_SFTP) AND ENABLE_CURL))
     return()
 endif()
 

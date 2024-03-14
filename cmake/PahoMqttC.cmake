@@ -22,7 +22,7 @@ set(PAHO_BUILD_STATIC ON CACHE BOOL "" FORCE)
 set(PAHO_BUILD_SHARED OFF CACHE BOOL "" FORCE)
 set(PAHO_ENABLE_TESTING OFF CACHE BOOL "" FORCE)
 
-if (OPENSSL_OFF)
+if (NOT MINIFI_OPENSSL)
     set(PAHO_WITH_SSL OFF CACHE BOOL "" FORCE)
 else()
     set(PAHO_WITH_SSL ON CACHE BOOL "" FORCE)
@@ -42,7 +42,7 @@ FetchContent_Declare(
 FetchContent_MakeAvailable(paho.mqtt.c-external)
 
 # Set dependencies and target to link to
-if (NOT OPENSSL_OFF)
+if (MINIFI_OPENSSL)
     add_library(paho.mqtt.c ALIAS paho-mqtt3as-static)
     add_dependencies(common_ssl_obj_static OpenSSL::SSL OpenSSL::Crypto)
 else()

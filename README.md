@@ -77,8 +77,8 @@ Through JNI extensions you can run NiFi processors using NARs. The JNI extension
 | Archive Extensions          | [ApplyTemplate](PROCESSORS.md#applytemplate)<br/>[BinFiles](PROCESSORS.md#binfiles)<br/>[CompressContent](PROCESSORS.md#compresscontent)<br/>[ManipulateArchive](PROCESSORS.md#manipulatearchive)<br/>[MergeContent](PROCESSORS.md#mergecontent)<br/>[FocusArchiveEntry](PROCESSORS.md#focusarchiveentry)<br/>[UnfocusArchiveEntry](PROCESSORS.md#unfocusarchiveentry)                                                                                                                                                                                                                                                                          | -DBUILD_LIBARCHIVE=ON        |
 | AWS                         | [AWSCredentialsService](CONTROLLERS.md#awscredentialsservice)<br/>[PutS3Object](PROCESSORS.md#puts3object)<br/>[DeleteS3Object](PROCESSORS.md#deletes3object)<br/>[FetchS3Object](PROCESSORS.md#fetchs3object)<br/>[ListS3](PROCESSORS.md#lists3)                                                                                                                                                                                                                                                                                                                                                                                               | -DENABLE_AWS=ON              |
 | Azure                       | [AzureStorageCredentialsService](CONTROLLERS.md#azurestoragecredentialsservice)<br/>[PutAzureBlobStorage](PROCESSORS.md#putazureblobstorage)<br/>[DeleteAzureBlobStorage](PROCESSORS.md#deleteazureblobstorage)<br/>[FetchAzureBlobStorage](PROCESSORS.md#fetchazureblobstorage)<br/>[ListAzureBlobStorage](PROCESSORS.md#listazureblobstorage)<br/>[PutAzureDataLakeStorage](PROCESSORS.md#putazuredatalakestorage)<br/>[DeleteAzureDataLakeStorage](PROCESSORS.md#deleteazuredatalakestorage)<br/>[FetchAzureDataLakeStorage](PROCESSORS.md#fetchazuredatalakestorage)<br/>[ListAzureDataLakeStorage](PROCESSORS.md#listazuredatalakestorage) | -DENABLE_AZURE=ON            |
-| CivetWeb                    | [ListenHTTP](PROCESSORS.md#listenhttp)                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                          | -DDISABLE_CIVET=ON           |
-| CURL                        | [InvokeHTTP](PROCESSORS.md#invokehttp)                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                          | -DDISABLE_CURL=ON            |
+| CivetWeb                    | [ListenHTTP](PROCESSORS.md#listenhttp)                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                          | -DENABLE_CIVET=ON            |
+| CURL                        | [InvokeHTTP](PROCESSORS.md#invokehttp)                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                          | -DENABLE_CURL=ON             |
 | Elasticsearch               | [ElasticsearchCredentialsControllerService](CONTROLLERS.md#elasticsearchcredentialscontrollerservice)<br/>[PostElasticsearch](PROCESSORS.md#postelasticsearch)                                                                                                                                                                                                                                                                                                                                                                                                                                                                                  | -DENABLE_ELASTICSEARCH=ON    |
 | GPS (Linux and macOS)       | [GetGPS](PROCESSORS.md#getgps)                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                  | -DENABLE_GPS=ON              |
 | Google Cloud Platform       | [DeleteGCSObject](PROCESSORS.md#deletegcsobject)<br>[FetchGCSObject](PROCESSORS.md#fetchgcsobject)<br>[GCPCredentialsControllerService](CONTROLLERS.md#gcpcredentialscontrollerservice)<br>[ListGCSBucket](PROCESSORS.md#listgcsbucket)<br>[PutGCSObject](PROCESSORS.md#putgcsobject)                                                                                                                                                                                                                                                                                                                                                           | -DENABLE_GCP=ON              |
@@ -305,8 +305,40 @@ sudo brew install libpcap
 
 ### Bootstrapping
 
-- MiNiFi C++ offers a bootstrap script in the root of our github repo that will bootstrap the cmake and build process for you without the need to install dependencies yourself. To use this
-  process, please run the command `bootstrap.sh` from the root of the MiNiFi C++ source tree.
+MiNiFi C++ offers bootstrap scripts that will bootstrap the cmake and build process for you without the need to install dependencies yourself.
+
+#### Python based bootstrapping (recommended)
+##### Linux
+Prerequisites:
+- [python](https://docs.python.org/)
+- [venv](https://docs.python.org/3/library/venv.html)
+
+```bash
+./bootstrap/py_bootstrap.sh
+```
+
+#### macOS
+Prerequisites:
+- [python](https://docs.python.org/)
+- [venv](https://docs.python.org/3/library/venv.html)
+- [Homebrew](https://brew.sh/)
+```bash
+./bootstrap/py_bootstrap.sh
+```
+
+#### Windows
+Prerequisites:
+- [python](https://docs.python.org/)
+- [venv](https://docs.python.org/3/library/venv.html)
+- [chocolatey](https://chocolatey.org/)
+```dos
+.\bootstrap\py_bootstrap.bat
+```
+
+This will set up a virtual environment in the bootstrap folder, and guide you through the build process.
+
+#### Shell based bootstrapping (linux and macOS)
+- Please run the command `bootstrap.sh` from the root of the MiNiFi C++ source tree.
 
 - Per the table, below, you will be presented with a menu guided bootstrap process. You may enable and disable extensions ( further defined below ). Once you are finished selecting the features
   you wish to build, enter P to continue with the process. CMAKE dependencies will be resolved for your distro. You may enter command line options -n to force yes to all prompts

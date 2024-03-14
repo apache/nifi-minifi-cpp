@@ -17,7 +17,7 @@
 # under the License.
 #
 
-if (DISABLE_ROCKSDB)
+if (NOT ENABLE_ROCKSDB)
     return()
 endif()
 
