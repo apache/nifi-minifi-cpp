@@ -66,9 +66,8 @@ bootstrap_compiler() {
 }
 build_deps(){
   # Install epel-release so that cmake3 will be available for installation
-  COMMAND="sudo zypper in -y libuuid1 libuuid-devel"
+  COMMAND="sudo zypper in -y libuuid1 libuuid-devel perl libbz2-devel"
   INSTALLED=()
-  INSTALLED+=("libbz2-devel")
   for option in "${OPTIONS[@]}" ; do
     option_value="${!option}"
     if [ "$option_value" = "${TRUE}" ]; then
@@ -103,8 +102,6 @@ build_deps(){
             INSTALLED+=("xz-devel")
           elif [ "$FOUND_VALUE" = "libssh2" ]; then
             INSTALLED+=("libssh2-devel")
-          elif [ "$FOUND_VALUE" = "opensslbuild" ]; then
-            INSTALLED+=("perl")
           fi
         fi
       done

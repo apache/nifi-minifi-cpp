@@ -15,7 +15,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#define EXTENSION_LIST "*minifi-*,!*http-curl*,!*coap*,!*splunk*,!*elastic*,!*grafana-loki*"  // NOLINT(cppcoreguidelines-macro-usage)
+#define EXTENSION_LIST "*minifi-*,!*coap*,!*splunk*,!*elastic*,!*grafana-loki*"  // NOLINT(cppcoreguidelines-macro-usage)
 
 #include <cstdio>
 #include <utility>
@@ -30,8 +30,8 @@
 #include <system_error>
 #endif /* WIN32 */
 
-#include "TestBase.h"
-#include "Catch.h"
+#include "unit/TestBase.h"
+#include "unit/Catch.h"
 #include "catch2/matchers/catch_matchers_string.hpp"
 #include "LogAttribute.h"
 #include "GetFile.h"
@@ -47,8 +47,7 @@
 #include "core/Resource.h"
 #include "utils/gsl.h"
 #include "utils/PropertyErrors.h"
-#include "utils/IntegrationTestUtils.h"
-#include "Utils.h"
+#include "unit/TestUtils.h"
 #include "io/BufferStream.h"
 #include "fmt/format.h"
 
@@ -524,7 +523,7 @@ TEST_CASE("TestEmptyContent", "[emptyContent]") {
 
   plan->runNextProcessor();
 
-  REQUIRE(utils::verifyLogLinePresenceInPollTime(std::chrono::seconds{0}, "did not create a ResourceClaim"));
+  REQUIRE(minifi::test::utils::verifyLogLinePresenceInPollTime(std::chrono::seconds{0}, "did not create a ResourceClaim"));
 
   LogTestController::getInstance().reset();
 }
@@ -536,7 +535,7 @@ TEST_CASE("TestEmptyContent", "[emptyContent]") {
  * @param portVal port value to search in the corresponding log message
  * @param hasException dictates if a failure should occur
  */
-void testRPGBypass(const std::string &host, const std::string &port, const std::string &portVal = "-1", bool hasException = true) {
+void testRPGBypass(const std::string &host, const std::string &port, bool has_error = true) {
   TestController testController;
   LogTestController::getInstance().setTrace<minifi::RemoteProcessorGroupPort>();
   LogTestController::getInstance().setTrace<minifi::core::ProcessSession>();
@@ -556,23 +555,14 @@ void testRPGBypass(const std::string &host, const std::string &port, const std::
   auto node = std::make_shared<core::ProcessorNode>(rpg.get());
   auto context = std::make_shared<core::ProcessContext>(node, nullptr, repo, repo, content_repo);
   auto psf = std::make_shared<core::ProcessSessionFactory>(context);
-  if (hasException) {
-    auto expected_error = "Site2Site Protocol: HTTPClient not resolvable. No peers configured or any port specific hostname and port -- cannot schedule";
-    try {
-      rpg->onSchedule(*context, *psf);
-    } catch (std::exception &e) {
-      REQUIRE(expected_error == std::string(e.what()));
-    }
-    std::stringstream search_expr;
-    search_expr << " " << host << "/" << port << "/" << portVal << " -- configuration values after eval of configuration options";
-    REQUIRE(LogTestController::getInstance().contains(search_expr.str()));
+  if (has_error) {
+    rpg->onSchedule(*context, *psf);
+    auto expected_error = "No peers selected during scheduling";
+    REQUIRE(LogTestController::getInstance().contains(expected_error));
   }
   LogTestController::getInstance().reset();
 }
 
-/**
- * Since there is no curl loaded in this test folder, we will have is_http_disabled be true.
- */
 TEST_CASE("TestRPGNoSettings", "[TestRPG1]") {
   testRPGBypass("", "");
 }
@@ -594,7 +584,7 @@ TEST_CASE("TestRPGWithoutHostInvalidPort", "[TestRPG5]") {
 }
 
 TEST_CASE("TestRPGValid", "[TestRPG6]") {
-  testRPGBypass("", "8080", "8080", false);
+  testRPGBypass("", "8080", false);
 }
 
 namespace {
@@ -680,7 +670,7 @@ TEST_CASE_METHOD(ProcessorWithIncomingConnectionTest, "A Processor detects corre
 
     REQUIRE_FALSE(processor_->isWorkAvailable());
     const auto penalty_has_expired = [flow_file] { return !flow_file->isPenalized(); };
-    REQUIRE(utils::verifyEventHappenedInPollTime(std::chrono::seconds{1}, penalty_has_expired, std::chrono::milliseconds{10}));
+    REQUIRE(minifi::test::utils::verifyEventHappenedInPollTime(std::chrono::seconds{1}, penalty_has_expired, std::chrono::milliseconds{10}));
     REQUIRE(processor_->isWorkAvailable());
   }
 }
@@ -691,7 +681,7 @@ TEST_CASE_METHOD(ProcessorWithIncomingConnectionTest, "A failed and re-penalized
   session_->penalize(penalized_flow_file);
   incoming_connection_->put(penalized_flow_file);
   const auto penalty_has_expired = [penalized_flow_file] { return !penalized_flow_file->isPenalized(); };
-  REQUIRE(utils::verifyEventHappenedInPollTime(std::chrono::seconds{1}, penalty_has_expired, std::chrono::milliseconds{10}));
+  REQUIRE(minifi::test::utils::verifyEventHappenedInPollTime(std::chrono::seconds{1}, penalty_has_expired, std::chrono::milliseconds{10}));
 
   const auto flow_file_1 = session_->create();
   incoming_connection_->put(flow_file_1);
@@ -724,7 +714,7 @@ TEST_CASE_METHOD(ProcessorWithIncomingConnectionTest, "A failed and re-penalized
   REQUIRE(next_flow_file_4 != penalized_flow_file);
   REQUIRE(next_flow_file_4 == flow_file_3);
 
-  REQUIRE(utils::verifyEventHappenedInPollTime(std::chrono::seconds{1}, penalty_has_expired, std::chrono::milliseconds{10}));
+  REQUIRE(minifi::test::utils::verifyEventHappenedInPollTime(std::chrono::seconds{1}, penalty_has_expired, std::chrono::milliseconds{10}));
   REQUIRE(incoming_connection_->isWorkAvailable());
   const auto next_flow_file_5 = incoming_connection_->poll(expired_flow_files);
   REQUIRE(next_flow_file_5 == penalized_flow_file);

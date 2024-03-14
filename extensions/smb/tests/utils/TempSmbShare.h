@@ -24,7 +24,7 @@
 #include "lm.h"
 #include "utils/OsUtils.h"
 #include "utils/expected.h"
-#include "TestUtils.h"
+#include "unit/TestUtils.h"
 #include "ListSmb.h"
 
 using namespace std::literals::chrono_literals;

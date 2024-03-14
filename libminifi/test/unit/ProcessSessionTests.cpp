@@ -21,13 +21,12 @@
 
 #include "core/ProcessSession.h"
 #include "core/Resource.h"
-#include "../TestBase.h"
-#include "../Catch.h"
-#include "ContentRepositoryDependentTests.h"
+#include "unit/TestBase.h"
+#include "unit/Catch.h"
+#include "unit/ContentRepositoryDependentTests.h"
 #include "Processor.h"
 #include "core/repository/VolatileFlowFileRepository.h"
-#include "IntegrationTestUtils.h"
-#include "../Utils.h"
+#include "unit/TestUtils.h"
 
 namespace {
 

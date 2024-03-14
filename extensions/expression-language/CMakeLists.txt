@@ -132,7 +132,7 @@ endif()
 add_minifi_library(minifi-expression-language-extensions SHARED ${SOURCES} ${BISON_el-parser_OUTPUTS} ${FLEX_el-scanner_OUTPUTS})
 
 target_link_libraries(minifi-expression-language-extensions ${LIBMINIFI})
-target_link_libraries(minifi-expression-language-extensions RapidJSON CURL::libcurl)
+target_link_libraries(minifi-expression-language-extensions RapidJSON)
 if (BREW_FLEX_INCLUDE)
     target_include_directories(minifi-expression-language-extensions PRIVATE ${BREW_FLEX_INCLUDE})
 endif()

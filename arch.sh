@@ -31,10 +31,9 @@ bootstrap_compiler(){
     sudo pacman -S --noconfirm gcc
 }
 build_deps(){
-    COMMAND="sudo pacman -S --noconfirm --needed cmake zlib openssl util-linux make patch which pkgconf"
+    COMMAND="sudo pacman -S --noconfirm --needed cmake zlib openssl util-linux make patch which pkgconf perl bzip2 curl"
 
     INSTALLED=()
-    INSTALLED+=("bzip2")
     for option in "${OPTIONS[@]}" ; do
         option_value="${!option}"
         if [ "$option_value" = "${TRUE}" ]; then
@@ -45,9 +44,7 @@ build_deps(){
                 VALUE=${cmake_opt#*:}
                 if [ "$KEY" = "$option" ]; then
                     FOUND_VALUE="$VALUE"
-                    if [ "$FOUND_VALUE" = "libcurl" ]; then
-                        INSTALLED+=("curl")
-                    elif [ "$FOUND_VALUE" = "libpcap" ]; then
+                    if [ "$FOUND_VALUE" = "libpcap" ]; then
                         INSTALLED+=("libpcap")
                     elif [ "$FOUND_VALUE" = "openssl" ]; then
                         INSTALLED+=("openssl")
@@ -74,8 +71,6 @@ build_deps(){
                         INSTALLED+=("gpsd")
                     elif [ "$FOUND_VALUE" = "libarchive" ]; then
                         INSTALLED+=("libarchive")
-                    elif [ "$FOUND_VALUE" = "opensslbuild" ]; then
-                        INSTALLED+=("perl")
                     fi
                 fi
             done

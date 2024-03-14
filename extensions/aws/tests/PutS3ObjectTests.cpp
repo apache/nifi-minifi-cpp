@@ -18,11 +18,11 @@
 
 #include "S3TestsFixture.h"
 #include "processors/PutS3Object.h"
-#include "utils/IntegrationTestUtils.h"
+#include "unit/TestUtils.h"
 
 namespace {
 
-using org::apache::nifi::minifi::utils::verifyLogLinePresenceInPollTime;
+using org::apache::nifi::minifi::test::utils::verifyLogLinePresenceInPollTime;
 
 class PutS3ObjectTestsFixture : public FlowProcessorS3TestsFixture<minifi::aws::processors::PutS3Object> {
  public:

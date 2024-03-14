@@ -16,11 +16,11 @@
  * limitations under the License.
  */
 
-#include "TestBase.h"
-#include "Catch.h"
+#include "unit/TestBase.h"
+#include "unit/Catch.h"
 #include "PutSmb.h"
 #include "utils/MockSmbConnectionControllerService.h"
-#include "SingleProcessorTestController.h"
+#include "unit/SingleProcessorTestController.h"
 #include "range/v3/algorithm/count_if.hpp"
 #include "core/Resource.h"
 

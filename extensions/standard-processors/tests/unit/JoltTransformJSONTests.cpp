@@ -16,12 +16,11 @@
  * limitations under the License.
  */
 
-#include "TestBase.h"
-#include "Catch.h"
-#include "TestUtils.h"
-#include "Utils.h"
+#include "unit/TestBase.h"
+#include "unit/Catch.h"
+#include "unit/TestUtils.h"
 #include "processors/JoltTransformJSON.h"
-#include "SingleProcessorTestController.h"
+#include "unit/SingleProcessorTestController.h"
 #include "rapidjson/error/en.h"
 
 namespace org::apache::nifi::minifi::test {

@@ -14,8 +14,6 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#ifdef OPENSSL_SUPPORT
-
 #include "utils/tls/ExtendedKeyUsage.h"
 
 #include <openssl/x509v3.h>
@@ -94,5 +92,3 @@ bool operator!=(const ExtendedKeyUsage& left, const ExtendedKeyUsage& right) {
 }
 
 }  // namespace org::apache::nifi::minifi::utils::tls
-
-#endif  // OPENSSL_SUPPORT

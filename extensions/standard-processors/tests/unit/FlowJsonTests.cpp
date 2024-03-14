@@ -23,9 +23,9 @@
 #include "core/ProcessGroup.h"
 #include "core/yaml/YamlConfiguration.h"
 #include "TailFile.h"
-#include "Catch.h"
+#include "unit/Catch.h"
 #include "utils/StringUtils.h"
-#include "ConfigurationTestController.h"
+#include "unit/ConfigurationTestController.h"
 #include "Funnel.h"
 
 using namespace std::literals::chrono_literals;

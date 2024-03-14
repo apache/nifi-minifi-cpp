@@ -16,10 +16,10 @@
  * limitations under the License.
  */
 
-#include "TestBase.h"
-#include "Catch.h"
+#include "unit/TestBase.h"
+#include "unit/Catch.h"
 #include "FlowFileRepository.h"
-#include "utils/IntegrationTestUtils.h"
+#include "unit/TestUtils.h"
 #include "repository/VolatileContentRepository.h"
 #include "FlowFileRecord.h"
 #include "utils/span.h"
@@ -93,7 +93,7 @@ TEST_CASE_METHOD(FFRepoFixture, "FlowFileRepository creates checkpoint and loads
 
   runWithNewRepository([&] (const std::shared_ptr<core::repository::FlowFileRepository>& /*repo*/) {
     // wait for the flowfiles to be loaded
-    bool success = utils::verifyEventHappenedInPollTime(std::chrono::seconds{5}, [&] {
+    bool success = minifi::test::utils::verifyEventHappenedInPollTime(std::chrono::seconds{5}, [&] {
       return !container_->isEmpty();
     });
     REQUIRE(success);

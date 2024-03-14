@@ -15,10 +15,8 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
-#undef NDEBUG
 #include "CustomProcessors.h"
-#include "TestControllerWithFlow.h"
+#include "unit/TestControllerWithFlow.h"
 
 // A flow with structure:
 //
@@ -118,7 +116,7 @@ TEST_CASE("Flow with two long cycle", "[FlowWithCycle]") {
   auto procB = static_cast<org::apache::nifi::minifi::processors::TestProcessor*>(root->findProcessorByName("B"));
 
   int tryCount = 0;
-  while (tryCount++ < 10 && !(procA->trigger_count.load() >= 10 && procB->trigger_count.load() >= 10)) {
+  while (tryCount++ < 10 && (procA->trigger_count.load() < 10 || procB->trigger_count.load() < 10)) {
     std::this_thread::sleep_for(std::chrono::milliseconds{1000});
   }
 

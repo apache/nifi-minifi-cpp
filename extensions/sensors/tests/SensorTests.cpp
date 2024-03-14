@@ -15,10 +15,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
 #include <sys/stat.h>
-#undef NDEBUG
-#include <cassert>
 #include <utility>
 #include <chrono>
 #include <fstream>
@@ -29,7 +26,7 @@
 #include <vector>
 #include <iostream>
 #include <sstream>
-#include "TestBase.h"
+#include "unit/TestBase.h"
 #include "utils/StringUtils.h"
 #include "core/Core.h"
 #include "core/logging/Logger.h"
@@ -40,11 +37,14 @@
 #include "core/ConfigurableComponent.h"
 #include "integration/IntegrationBase.h"
 #include "GetEnvironmentalSensors.h"
-#include "utils/IntegrationTestUtils.h"
+#include "unit/TestUtils.h"
+#include "unit/Catch.h"
 
-class PcapTestHarness : public IntegrationBase {
+namespace org::apache::nifi::minifi::test {
+
+class SensorTestHarness : public IntegrationBase {
  public:
-  PcapTestHarness() {
+  SensorTestHarness() {
     dir = testController.createTempDirectory();
   }
 
@@ -63,16 +63,15 @@ class PcapTestHarness : public IntegrationBase {
   }
 
   void runAssertions() override {
-    using org::apache::nifi::minifi::utils::verifyLogLinePresenceInPollTime;
-    assert(verifyLogLinePresenceInPollTime(std::chrono::milliseconds(wait_time_), "Initializing EnvironmentalSensors"));
+    REQUIRE(minifi::test::utils::verifyLogLinePresenceInPollTime(std::chrono::milliseconds(wait_time_), "Initializing EnvironmentalSensors"));
   }
 
   void queryRootProcessGroup(std::shared_ptr<core::ProcessGroup> pg) override {
     const auto proc = pg->findProcessorByName("pcap");
-    assert(proc != nullptr);
+    REQUIRE(proc != nullptr);
 
     auto inv = dynamic_cast<minifi::processors::GetEnvironmentalSensors*>(proc);
-    assert(inv != nullptr);
+    REQUIRE(inv != nullptr);
 
     configuration->set(org::apache::nifi::minifi::Configuration::nifi_c2_enable, "false");
   }
@@ -82,21 +81,10 @@ class PcapTestHarness : public IntegrationBase {
   TestController testController;
 };
 
-int main(int argc, char **argv) {
-  std::string key_dir;
-  std::string test_file_location;
-  std::string url;
-
-  if (argc > 1) {
-    test_file_location = argv[1];
-  }
-
-
-  PcapTestHarness harness;
-
-  harness.setKeyDir(key_dir);
-
-  harness.run(test_file_location);
-
-  return 0;
+TEST_CASE("SensorTests", "[sensor]") {
+  SensorTestHarness harness;
+  const auto test_file_path = std::filesystem::path(TEST_RESOURCES) / "TestEnvironmental.yml";
+  harness.run(test_file_path);
 }
+
+}  // namespace org::apache::nifi::minifi::test

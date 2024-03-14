@@ -245,12 +245,9 @@ if(NOT WIN32)
 endif()
 
 # OpenSSL
-if (MINIFI_OPENSSL)
-    include(BundledOpenSSL)
-    use_openssl("${CMAKE_CURRENT_SOURCE_DIR}" "${CMAKE_CURRENT_BINARY_DIR}")
-    list(APPEND CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/cmake/ssl")
-    list(APPEND MINIFI_CPP_COMPILE_DEFINITIONS OPENSSL_SUPPORT)
-endif()
+include(BundledOpenSSL)
+use_openssl("${CMAKE_CURRENT_SOURCE_DIR}" "${CMAKE_CURRENT_BINARY_DIR}")
+list(APPEND CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/cmake/ssl")
 
 # libsodium
 include(BundledLibSodium)
@@ -268,12 +265,9 @@ add_library(ut INTERFACE)
 target_include_directories(ut SYSTEM INTERFACE "${CMAKE_CURRENT_SOURCE_DIR}/thirdparty/ut")
 
 # cURL
-if(ENABLE_CURL)
-    include(BundledLibcURL)
-    use_bundled_curl(${CMAKE_CURRENT_SOURCE_DIR} ${CMAKE_CURRENT_BINARY_DIR})
-    list(APPEND CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/cmake/curl/dummy")
-    list(APPEND MINIFI_CPP_COMPILE_DEFINITIONS ENABLE_CURL)
-endif()
+include(BundledLibcURL)
+use_bundled_curl(${CMAKE_CURRENT_SOURCE_DIR} ${CMAKE_CURRENT_BINARY_DIR})
+list(APPEND CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/cmake/curl/dummy")
 
 # spdlog
 include(Spdlog)
@@ -355,7 +349,7 @@ include(Extensions)
 
 add_subdirectory(libminifi)
 
-if ((ENABLE_OPENWSMAN AND ENABLE_CIVET AND ENABLE_CURL) OR ENABLE_ALL OR ENABLE_AZURE)
+if ((ENABLE_OPENWSMAN AND ENABLE_CIVET) OR ENABLE_ALL OR ENABLE_AZURE)
     include(BundledLibXml2)
     use_bundled_libxml2(${CMAKE_CURRENT_SOURCE_DIR} ${CMAKE_CURRENT_BINARY_DIR})
     list(APPEND CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/cmake/libxml2/dummy")
@@ -385,7 +379,7 @@ if (ENABLE_ENCRYPT_CONFIG)
     add_subdirectory(encrypt-config)
 endif()
 
-if (ENABLE_CURL AND ENABLE_CONTROLLER)
+if (ENABLE_CONTROLLER)
     add_subdirectory(controller)
 endif()
 
@@ -638,7 +632,6 @@ set(EXTENSIONS_ENABLED_BY_DEFAULT (
     minifi-expression-language-extensions
     minifi-gcp
     minifi-grafana-loki
-    minifi-http-curl
     minifi-archive-extensions
     minifi-mqtt-extensions
     minifi-rdkafka-extensions
@@ -679,24 +672,30 @@ include(CPack)
 
 if (NOT SKIP_TESTS)
     include(BuildTests)
+
+    add_subdirectory("${TEST_DIR}/libtest")
+
+    add_subdirectory("${TEST_DIR}/unit")
+
+    add_subdirectory("${TEST_DIR}/integration")
+
+    ## Add KeyValueStorageService tests
+    add_subdirectory("${TEST_DIR}/keyvalue-tests")
+
+    add_subdirectory("${TEST_DIR}/flow-tests")
+
+    add_subdirectory("${TEST_DIR}/schema-tests")
+
+    if (ENABLE_ROCKSDB AND ENABLE_LIBARCHIVE)
+        add_subdirectory("${TEST_DIR}/persistence-tests")
+    endif()
+
+    add_subdirectory("minifi_main/tests")
+
+    add_subdirectory("encrypt-config/tests")
+
+    add_subdirectory("controller/tests")
 endif()
-
-## Add KeyValueStorageService tests
-registerTest("${TEST_DIR}/keyvalue-tests")
-
-registerTest("${TEST_DIR}/flow-tests")
-
-registerTest("${TEST_DIR}/schema-tests")
-
-if (ENABLE_ROCKSDB AND ENABLE_LIBARCHIVE)
-    registerTest("${TEST_DIR}/persistence-tests")
-endif()
-
-registerTest("minifi_main/tests")
-
-registerTest("encrypt-config/tests")
-
-registerTest("controller/tests")
 
 include(BuildDocs)
 
@@ -746,10 +745,10 @@ if (MINIFI_ADVANCED_CODE_COVERAGE)
     set(GCOVR_ADDITIONAL_ARGS --gcov-ignore-parse-errors=negative_hits.warn --gcov-ignore-errors=no_working_dir_found)
     setup_target_for_coverage_gcovr_html(
         NAME coverage
-        EXCLUDE "build/*" "cmake/*" "minifi_main/*" "nanofi/*" "thirdparty/*" "libminifi/test/*" "extensions/http-curl/tests/*" "encrypt-config/tests/*" "extensions/aws/tests/*"
+        EXCLUDE "build/*" "cmake/*" "minifi_main/*" "nanofi/*" "thirdparty/*" "libminifi/test/*" "encrypt-config/tests/*" "extensions/aws/tests/*"
             "extensions/civetweb/tests/*" "extensions/coap/tests/*" "extensions/elasticsearch/tests/*" "extensions/expression-language/tests/*" "extensions/gcp/tests/*" "extensions/grafana-loki/tests/*"
             "extensions/kubernetes/tests/*" "extensions/librdkafka/tests/*" "extensions/lua/tests/*" "extensions/mqtt/tests/*" "extensions/opencv/tests/*" "extensions/procfs/tests/*" "extensions/prometheus/tests/*"
             "extensions/script/tests/*" "extensions/sftp/tests/*" "extensions/splunk/tests/*" "extensions/standard-processors/tests/*" "extensions/systemd/tests/*" "extensions/test-processors/*"
-            "libminifi/include/utils/IntegrationTestUtils.h" "libminifi/include/utils/TestUtils.h" "controller/MiNiFiController.cpp"
+            "controller/MiNiFiController.cpp"
     )
 endif()

@@ -25,8 +25,8 @@
 #include "utils/Environment.h"
 #include "utils/file/PathUtils.h"
 #include "utils/gsl.h"
-#include "../TestBase.h"
-#include "../Catch.h"
+#include "unit/TestBase.h"
+#include "unit/Catch.h"
 
 TEST_CASE("getenv already existing", "[getenv]") {
   auto res = utils::Environment::getEnvironmentVariable("PATH");

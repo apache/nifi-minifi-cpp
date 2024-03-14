@@ -19,10 +19,10 @@
 #include <cstdlib>
 #include <memory>
 
-#include "TestBase.h"
-#include "Catch.h"
+#include "unit/TestBase.h"
+#include "unit/Catch.h"
 #include "controllerservices/AWSCredentialsService.h"
-#include "Utils.h"
+#include "unit/TestUtils.h"
 #include "core/controller/ControllerServiceNode.h"
 
 class AWSCredentialsServiceTestAccessor {

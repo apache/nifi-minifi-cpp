@@ -69,7 +69,7 @@ void PostElasticsearch::onSchedule(core::ProcessContext& context, core::ProcessS
   if (!credentials_service_)
     throw Exception(PROCESS_SCHEDULE_EXCEPTION, "Missing Elasticsearch credentials service");
 
-  client_.initialize(utils::HttpRequestMethod::POST, host_url_ + "/_bulk", getSSLContextService(context));
+  client_.initialize(http::HttpRequestMethod::POST, host_url_ + "/_bulk", getSSLContextService(context));
   client_.setContentType("application/json");
   credentials_service_->authenticateClient(client_);
 }
@@ -165,7 +165,7 @@ class ElasticPayload {
   std::optional<rapidjson::Document> payload_;
 };
 
-nonstd::expected<rapidjson::Document, std::string> submitRequest(curl::HTTPClient& client, const std::string& payload, const size_t expected_items) {
+nonstd::expected<rapidjson::Document, std::string> submitRequest(http::HTTPClient& client, const std::string& payload, const size_t expected_items) {
   client.setPostFields(payload);
   if (!client.submit())
     return nonstd::make_unexpected("Submit failed");

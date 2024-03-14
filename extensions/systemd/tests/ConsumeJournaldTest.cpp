@@ -20,13 +20,13 @@
 #include <string>
 #include <vector>
 
-#include "TestBase.h"
-#include "Catch.h"
+#include "unit/TestBase.h"
+#include "unit/Catch.h"
 #include "ConsumeJournald.h"
 #include "libwrapper/LibWrapper.h"
 #include "utils/gsl.h"
 #include "utils/StringUtils.h"
-#include "Utils.h"
+#include "unit/TestUtils.h"
 
 namespace minifi = org::apache::nifi::minifi;
 namespace utils = minifi::utils;

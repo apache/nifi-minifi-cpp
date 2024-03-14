@@ -22,8 +22,8 @@
 #include <vector>
 
 #include "ProvenanceRepository.h"
-#include "TestBase.h"
-#include "Catch.h"
+#include "unit/TestBase.h"
+#include "unit/Catch.h"
 
 static constexpr size_t TEST_PROVENANCE_STORAGE_SIZE = 100_KiB;
 static constexpr size_t TEST_MAX_PROVENANCE_STORAGE_SIZE = 100_MiB;

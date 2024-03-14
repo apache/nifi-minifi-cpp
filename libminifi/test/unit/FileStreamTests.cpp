@@ -19,8 +19,8 @@
 #include <string>
 #include <vector>
 
-#include "../Catch.h"
-#include "../TestBase.h"
+#include "unit/Catch.h"
+#include "unit/TestBase.h"
 #include "TestUtils.h"
 #include "io/FileStream.h"
 #include "utils/file/FileUtils.h"

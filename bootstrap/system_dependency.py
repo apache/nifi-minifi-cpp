@@ -23,7 +23,7 @@ import platform
 
 
 def _create_system_dependencies(minifi_options: MinifiOptions) -> Dict[str, Set[str]]:
-    system_dependencies = {'patch': {'patch'}, 'make': {'make'}}
+    system_dependencies = {'patch': {'patch'}, 'make': {'make'}, 'perl': {'perl'}}
     if minifi_options.is_enabled("ENABLE_EXPRESSION_LANGUAGE"):
         system_dependencies['bison'] = {'bison'}
         system_dependencies['flex'] = {'flex'}
@@ -43,8 +43,6 @@ def _create_system_dependencies(minifi_options: MinifiOptions) -> Dict[str, Set[
         system_dependencies['libtool'] = {'libtool'}
     if minifi_options.is_enabled("ENABLE_PYTHON_SCRIPTING"):
         system_dependencies['python'] = {'python'}
-    if minifi_options.is_enabled("MINIFI_OPENSSL"):
-        system_dependencies['perl'] = {'perl'}
     if minifi_options.is_enabled("ENABLE_JNI"):
         system_dependencies['jni'] = {'openjdk'}
         system_dependencies['maven'] = {'maven'}

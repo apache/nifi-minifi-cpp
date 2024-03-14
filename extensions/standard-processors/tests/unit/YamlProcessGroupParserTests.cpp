@@ -15,11 +15,10 @@
  * limitations under the License.
  */
 
-#include "TestBase.h"
-#include "Catch.h"
+#include "unit/TestBase.h"
+#include "unit/Catch.h"
 #include "YamlConfiguration.h"
-#include "Utils.h"
-#include "IntegrationTestUtils.h"
+#include "unit/TestUtils.h"
 #include "ProcessGroupTestUtils.h"
 
 static core::YamlConfiguration config{core::ConfigurationContext{

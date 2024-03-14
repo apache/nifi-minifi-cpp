@@ -17,7 +17,7 @@
 # under the License.
 #
 
-if (NOT ((ENABLE_ALL OR ENABLE_SFTP) AND ENABLE_CURL))
+if (NOT (ENABLE_ALL OR ENABLE_SFTP))
     return()
 endif()
 
@@ -33,7 +33,7 @@ file(GLOB SOURCES  "*.cpp" "client/*.cpp" "processors/*.cpp")
 add_minifi_library(minifi-sftp SHARED ${SOURCES})
 
 target_link_libraries(minifi-sftp ${LIBMINIFI} Threads::Threads)
-target_link_libraries(minifi-sftp CURL::libcurl libssh2 RapidJSON)
+target_link_libraries(minifi-sftp libssh2 RapidJSON)
 
 register_extension(minifi-sftp "SFTP EXTENSIONS" SFTP "This enables SFTP support" "extensions/sftp/tests")
 register_extension_linter(minifi-sftp-linter)

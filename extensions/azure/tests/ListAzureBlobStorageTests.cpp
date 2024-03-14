@@ -16,10 +16,10 @@
  * limitations under the License.
  */
 
-#include "TestBase.h"
-#include "Catch.h"
+#include "unit/TestBase.h"
+#include "unit/Catch.h"
 #include "MockBlobStorage.h"
-#include "utils/IntegrationTestUtils.h"
+#include "unit/TestUtils.h"
 #include "processors/LogAttribute.h"
 #include "processors/ListAzureBlobStorage.h"
 #include "controllerservices/AzureStorageCredentialsService.h"
@@ -226,7 +226,7 @@ TEST_CASE_METHOD(ListAzureBlobStorageTestsFixture, "List all files every time", 
   plan_->setProperty(list_azure_blob_storage_, minifi::azure::processors::ListAzureBlobStorage::Prefix, PREFIX);
   plan_->setProperty(list_azure_blob_storage_, minifi::azure::processors::ListAzureBlobStorage::ListingStrategy, magic_enum::enum_name(minifi::azure::EntityTracking::none));
   test_controller_.runSession(plan_, true);
-  using org::apache::nifi::minifi::utils::verifyLogLinePresenceInPollTime;
+  using org::apache::nifi::minifi::test::utils::verifyLogLinePresenceInPollTime;
   auto run_assertions = [this]() {
     auto passed_params = mock_blob_storage_ptr_->getPassedListParams();
     CHECK(passed_params.container_name == CONTAINER_NAME);
@@ -261,7 +261,7 @@ TEST_CASE_METHOD(ListAzureBlobStorageTestsFixture, "Do not list same files the s
   plan_->setProperty(list_azure_blob_storage_, minifi::azure::processors::ListAzureBlobStorage::Prefix, PREFIX);
   plan_->setProperty(list_azure_blob_storage_, minifi::azure::processors::ListAzureBlobStorage::ListingStrategy, magic_enum::enum_name(minifi::azure::EntityTracking::timestamps));
   test_controller_.runSession(plan_, true);
-  using org::apache::nifi::minifi::utils::verifyLogLinePresenceInPollTime;
+  using org::apache::nifi::minifi::test::utils::verifyLogLinePresenceInPollTime;
   auto passed_params = mock_blob_storage_ptr_->getPassedListParams();
   CHECK(passed_params.container_name == CONTAINER_NAME);
   CHECK(passed_params.prefix == PREFIX);

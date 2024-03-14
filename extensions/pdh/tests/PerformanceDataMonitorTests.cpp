@@ -22,11 +22,11 @@
 #include <fstream>
 #include <functional>
 
-#include "TestBase.h"
-#include "Catch.h"
+#include "unit/TestBase.h"
+#include "unit/Catch.h"
 #include "processors/PutFile.h"
 #include "utils/file/FileUtils.h"
-#include "utils/TestUtils.h"
+#include "unit/TestUtils.h"
 #include "PerformanceDataMonitor.h"
 #include "rapidjson/filereadstream.h"
 

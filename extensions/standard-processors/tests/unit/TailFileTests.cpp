@@ -28,8 +28,8 @@
 #include <random>
 #include <cstdlib>
 #include "FlowController.h"
-#include "TestBase.h"
-#include "Catch.h"
+#include "unit/TestBase.h"
+#include "unit/Catch.h"
 #include "core/Core.h"
 #include "core/FlowFile.h"
 #include "utils/file/FileUtils.h"
@@ -42,9 +42,9 @@
 #include "core/Resource.h"
 #include "TailFile.h"
 #include "LogAttribute.h"
-#include "utils/TestUtils.h"
+#include "unit/TestUtils.h"
 #include "utils/StringUtils.h"
-#include "SingleProcessorTestController.h"
+#include "unit/SingleProcessorTestController.h"
 
 using namespace std::literals::chrono_literals;
 

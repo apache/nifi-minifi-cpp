@@ -17,10 +17,10 @@
  */
 #include <array>
 
-#include "TestBase.h"
-#include "Catch.h"
-#include "WriteToFlowFileTestProcessor.h"
-#include "ReadFromFlowFileTestProcessor.h"
+#include "unit/TestBase.h"
+#include "unit/Catch.h"
+#include "unit/WriteToFlowFileTestProcessor.h"
+#include "unit/ReadFromFlowFileTestProcessor.h"
 #include "UpdateAttribute.h"
 #include "DefragmentText.h"
 #include "TextFragmentUtils.h"

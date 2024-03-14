@@ -19,10 +19,9 @@
 #include <memory>
 #include <string>
 
-#include "SiteToSiteHelper.h"
-#include "../TestBase.h"
-#include "../Catch.h"
-#include "../unit/SiteToSiteHelper.h"
+#include "unit/TestBase.h"
+#include "unit/Catch.h"
+#include "unit/SiteToSiteHelper.h"
 
 #define FMT_DEFAULT fmt_lower
 

@@ -22,7 +22,7 @@
 #include <utility>
 #include <memory>
 
-#include "client/HTTPClient.h"
+#include "http/HTTPClient.h"
 #include "core/controller/ControllerService.h"
 #include "core/PropertyDefinition.h"
 #include "core/PropertyDefinitionBuilder.h"
@@ -73,7 +73,7 @@ class ElasticsearchCredentialsControllerService : public core::controller::Contr
 
   void onEnable() override;
 
-  void authenticateClient(curl::HTTPClient& client);
+  void authenticateClient(http::HTTPClient& client);
 
  private:
   std::optional<std::pair<std::string, std::string>> username_password_;

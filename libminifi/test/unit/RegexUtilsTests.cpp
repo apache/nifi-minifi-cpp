@@ -20,8 +20,8 @@
 #include <vector>
 
 #include "utils/RegexUtils.h"
-#include "../TestBase.h"
-#include "../Catch.h"
+#include "unit/TestBase.h"
+#include "unit/Catch.h"
 #include "catch2/catch_all.hpp"
 #include "catch2/matchers/catch_matchers_string.hpp"
 

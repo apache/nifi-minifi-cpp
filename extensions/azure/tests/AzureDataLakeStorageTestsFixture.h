@@ -25,10 +25,9 @@
 #include <string>
 
 #include "MockDataLakeStorageClient.h"
-#include "TestBase.h"
-#include "Catch.h"
-#include "utils/TestUtils.h"
-#include "utils/IntegrationTestUtils.h"
+#include "unit/TestBase.h"
+#include "unit/Catch.h"
+#include "unit/TestUtils.h"
 #include "core/Processor.h"
 #include "processors/GetFile.h"
 #include "processors/PutFile.h"
@@ -64,7 +63,7 @@ class AzureDataLakeStorageTestsFixture {
     azure_data_lake_storage_ = std::shared_ptr<AzureDataLakeStorageProcessor>(
       new AzureDataLakeStorageProcessor("AzureDataLakeStorageProcessor", utils::Identifier(), std::move(mock_data_lake_storage_client)));
     auto input_dir = test_controller_.createTempDirectory();
-    utils::putFileToDir(input_dir, GETFILE_FILE_NAME, TEST_DATA);
+    minifi::test::utils::putFileToDir(input_dir, GETFILE_FILE_NAME, TEST_DATA);
 
     get_file_ = plan_->addProcessor("GetFile", "GetFile");
     plan_->setProperty(get_file_, minifi::processors::GetFile::Directory, input_dir.string());

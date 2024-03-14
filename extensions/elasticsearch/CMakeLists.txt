@@ -27,9 +27,7 @@ file(GLOB SOURCES  "*.cpp")
 
 add_minifi_library(minifi-elasticsearch SHARED ${SOURCES})
 
-target_include_directories(minifi-elasticsearch PRIVATE BEFORE "${CMAKE_SOURCE_DIR}/extensions/http-curl")
 target_link_libraries(minifi-elasticsearch ${LIBMINIFI})
-target_link_libraries(minifi-elasticsearch minifi-http-curl)
 
 register_extension(minifi-elasticsearch "ELASTICSEARCH EXTENSIONS" ELASTICSEARCH-EXTENSIONS "This enables elasticsearch support" "extensions/elasticsearch/tests")
 

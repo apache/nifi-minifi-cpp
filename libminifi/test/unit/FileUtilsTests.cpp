@@ -23,8 +23,8 @@
 #include <thread>
 #include <vector>
 #include <algorithm>
-#include "../TestBase.h"
-#include "../Catch.h"
+#include "unit/TestBase.h"
+#include "unit/Catch.h"
 #include "core/Core.h"
 #include "utils/file/FileUtils.h"
 #include "utils/gsl.h"

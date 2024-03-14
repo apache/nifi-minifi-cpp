@@ -15,11 +15,8 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
-#undef NDEBUG
-
-#include "TestBase.h"
-#include "Catch.h"
+#include "unit/TestBase.h"
+#include "unit/Catch.h"
 #include "data/SQLColumnIdentifier.h"
 
 using org::apache::nifi::minifi::sql::SQLColumnIdentifier;

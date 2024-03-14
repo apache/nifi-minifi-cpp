@@ -44,7 +44,5 @@ add_minifi_library(nanofi STATIC ${NANOFI_SOURCES})
 
 target_link_libraries(nanofi spdlog ut core-minifi minifi-standard-processors)
 
-if (ENABLE_CURL)
-    add_subdirectory(examples)
-    add_subdirectory(ecu)
-endif()
+add_subdirectory(examples)
+add_subdirectory(ecu)

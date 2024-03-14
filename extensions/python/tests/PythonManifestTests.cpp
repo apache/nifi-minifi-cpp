@@ -17,13 +17,12 @@
 
 #define CUSTOM_EXTENSION_INIT
 
-#undef NDEBUG
 #include <fstream>
 
-#include "TestBase.h"
-#include "Catch.h"
-#include "flow-tests/TestControllerWithFlow.h"
-#include "EmptyFlow.h"
+#include "unit/TestBase.h"
+#include "unit/Catch.h"
+#include "unit/TestControllerWithFlow.h"
+#include "unit/EmptyFlow.h"
 #include "c2/C2MetricsPublisher.h"
 #include "utils/gsl.h"
 
@@ -60,7 +59,7 @@ TEST_CASE("Python processor's description is part of the manifest") {
     "  proc.addProperty('Prop1', 'A great property', 'banana', True, False)\n";
 
   controller.configuration_->set(minifi::Configuration::nifi_python_processor_dir, python_dir.string());
-  controller.configuration_->set(minifi::Configuration::nifi_extension_path, "*minifi-python-script*,*minifi-http-curl*");
+  controller.configuration_->set(minifi::Configuration::nifi_extension_path, "*minifi-python-script*");
 
   core::extension::ExtensionManager::get().initialize(controller.configuration_);
 

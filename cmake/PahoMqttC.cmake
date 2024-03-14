@@ -21,12 +21,7 @@ include(FetchContent)
 set(PAHO_BUILD_STATIC ON CACHE BOOL "" FORCE)
 set(PAHO_BUILD_SHARED OFF CACHE BOOL "" FORCE)
 set(PAHO_ENABLE_TESTING OFF CACHE BOOL "" FORCE)
-
-if (NOT MINIFI_OPENSSL)
-    set(PAHO_WITH_SSL OFF CACHE BOOL "" FORCE)
-else()
-    set(PAHO_WITH_SSL ON CACHE BOOL "" FORCE)
-endif()
+set(PAHO_WITH_SSL ON CACHE BOOL "" FORCE)
 
 set(PATCH_FILE "${CMAKE_SOURCE_DIR}/thirdparty/paho-mqtt/cmake-openssl.patch")
 set(PC ${Bash_EXECUTABLE}  -c "set -x &&\
@@ -42,9 +37,5 @@ FetchContent_Declare(
 FetchContent_MakeAvailable(paho.mqtt.c-external)
 
 # Set dependencies and target to link to
-if (MINIFI_OPENSSL)
-    add_library(paho.mqtt.c ALIAS paho-mqtt3as-static)
-    add_dependencies(common_ssl_obj_static OpenSSL::SSL OpenSSL::Crypto)
-else()
-    add_library(paho.mqtt.c ALIAS paho-mqtt3a-static)
-endif()
+add_library(paho.mqtt.c ALIAS paho-mqtt3as-static)
+add_dependencies(common_ssl_obj_static OpenSSL::SSL OpenSSL::Crypto)

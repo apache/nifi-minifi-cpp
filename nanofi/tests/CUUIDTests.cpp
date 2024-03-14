@@ -19,8 +19,8 @@
 #include <string>
 #include <cstring>
 #include <thread>
-#include "TestBase.h"
-#include "Catch.h"
+#include "unit/TestBase.h"
+#include "unit/Catch.h"
 #include "core/cuuid.h"
 
 bool verify_uuid(const char * uuid) {

@@ -105,12 +105,6 @@ macro(register_extension_test extension-dir)
     endif()
 endmacro()
 
-function(registerTest dirName)
-    if(NOT SKIP_TESTS)
-        add_subdirectory(${dirName})
-    endif()
-endfunction(registerTest)
-
 macro(register_extension_linter target-name)
     get_property(extensions GLOBAL PROPERTY EXTENSION-LINTERS)
     set_property(GLOBAL APPEND PROPERTY EXTENSION-LINTERS "${target-name}")
