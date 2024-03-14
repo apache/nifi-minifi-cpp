@@ -1,0 +1,3 @@
+<Feature Id="InstallVSRedistributableFiles" Title="Visual Studio redistributable files" AllowAdvertise="no" Display="hidden" Level="1">
+  <ComponentRef Id="VSRedistributableFiles"/>
+</Feature>

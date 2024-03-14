@@ -1,0 +1,13 @@
+<Component Id="VSRedistributableFiles" Guid="7923f16d-785a-41cb-aa74-17e0fa5f1314">
+  <File Id="MiNiFiExe_concrt140" Name="concrt140.dll" KeyPath="no" Source="redist\concrt140.dll"/>
+  <File Id="MiNiFiExe_msvcp140" Name="msvcp140.dll" KeyPath="no" Source="redist\msvcp140.dll"/>
+  <File Id="MiNiFiExe_msvcp140_1" Name="msvcp140_1.dll" KeyPath="no" Source="redist\msvcp140_1.dll"/>
+  <File Id="MiNiFiExe_msvcp140_2" Name="msvcp140_2.dll" KeyPath="no" Source="redist\msvcp140_2.dll"/>
+  <File Id="MiNiFiExe_vccorlib140" Name="vccorlib140.dll" KeyPath="no" Source="redist\vccorlib140.dll"/>
+  <File Id="MiNiFiExe_vcruntime140" Name="vcruntime140.dll" KeyPath="no" Source="redist\vcruntime140.dll"/>
+  <File Id="MiNiFiExe_msvcp140_atomic_wait" Name="msvcp140_atomic_wait.dll" KeyPath="no" Source="redist\msvcp140_atomic_wait.dll"/>
+  <File Id="MiNiFiExe_msvcp140_codecvt_ids" Name="msvcp140_codecvt_ids.dll" KeyPath="no" Source="redist\msvcp140_codecvt_ids.dll"/>
+  <?if $(env.build_platform) = x64 ?>
+    <File Id="MiNiFiExe_vcruntime140_1" Name="vcruntime140_1.dll" KeyPath="no" Source="redist\vcruntime140_1.dll"/>
+  <?endif ?>
+</Component>
